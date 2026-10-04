@@ -1,0 +1,14 @@
+{
+  "text": "Archive this",
+  "context": {
+    "keys": [
+      {
+        "inbox_id": "inbox-a",
+        "message_id": "m6",
+        "folder": "INBOX"
+      }
+    ],
+    "timezone": "Europe/Oslo"
+  },
+  "conversation": null
+}

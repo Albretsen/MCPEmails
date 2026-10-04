@@ -483,6 +483,18 @@
     color: var(--amber-500);
   }
 }
+/* Read-only workspace member: the star is an indicator, not a control. */
+.starLocked {
+  cursor: default;
+}
+.starLocked:not(.starOn) {
+  opacity: 0.45;
+}
+@media (hover: hover) {
+  .starLocked:not(.starOn):hover {
+    color: var(--ink-300);
+  }
+}
 
 /* ---------- touch ---------- */
 @media (pointer: coarse) {
@@ -576,4 +588,39 @@
 }
 .fab:active {
   background: var(--brand-press);
+}
+.fab:disabled {
+  background: var(--ink-300);
+  box-shadow: none;
+  cursor: default;
+}
+
+/* One mailbox of the unified view did not answer: the rest is shown. */
+.partial {
+  flex: none;
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 7px 16px;
+  border-bottom: 1px solid var(--border-1);
+  background: var(--amber-100);
+  color: var(--amber-700);
+  font-size: 12.5px;
+}
+.partialText {
+  flex: 1;
+  min-width: 0;
+  overflow-wrap: anywhere;
+}
+.partial a,
+.partialRetry {
+  flex: none;
+  padding: 0;
+  border: none;
+  background: none;
+  color: inherit;
+  font-size: inherit;
+  font-weight: 600;
+  text-decoration: underline;
+  cursor: pointer;
 }

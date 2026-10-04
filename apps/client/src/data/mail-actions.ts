@@ -1,4 +1,4 @@
-import { getMailApi } from "../api";
+import { ApiError, attachmentsTooLargeMessage, describeError, getMailApi, newIdempotencyKey } from "../api";
 import {
   type DraftInput,
   type FolderRef,
@@ -8,6 +8,8 @@ import {
   type MessageKey,
   type MessageRow,
   type MoveResult,
+  MAX_ATTACHMENT_BYTES,
+  type OutgoingAttachment,
   isNameRef,
   isRoleRef,
   parseAddressList,
@@ -16,6 +18,7 @@ import { useAssistantStore } from "../state/assistant-store";
 import { type ComposeMode, type ComposeState, composeSignature, isComposeEmpty, useComposeStore } from "../state/compose-store";
 import { neighbourAfterRemoval, useSelectionStore } from "../state/selection-store";
 import { showToast, useToastStore } from "../state/toast-store";
+import { canWrite, refuseWrite } from "../state/permissions";
 import { isPhone } from "../state/ui-store";
 import {
   type MailSnapshot,
@@ -32,8 +35,10 @@ import {
   restoreMail,
   snapshotMail,
 } from "./cache";
+import { blobToBase64 } from "../lib/base64";
 import { keys } from "./keys";
 import { queryClient } from "./query-client";
+import { applyKeyRemap } from "./remap";
 import { dropUndo, pushUndo, runUndo } from "./undo";
 
 /* Every user-initiated mailbox change. Plain functions (not hooks) so the
@@ -48,11 +53,17 @@ import { dropUndo, pushUndo, runUndo } from "./undo";
 
 export const DEFAULT_UNDO_SEND_MS = 5000;
 
-function rollback(snap: MailSnapshot, message: string): void {
+/** Retry is offered where doing the thing again is harmless: the request
+ *  never reached the server, or the server said it is safe to repeat. */
+function retryOf(err: unknown, run: () => void): { label: string; run: () => void } | undefined {
+  return err instanceof ApiError && (err.retryable || err.code === "offline") ? { label: "Retry", run } : undefined;
+}
+
+function rollback(snap: MailSnapshot, message: string, action?: { label: string; run: () => void }): void {
   restoreMail(snap);
   refreshLists();
   refreshFolders();
-  showToast({ text: message, kind: "error" });
+  showToast({ text: message, kind: "error", action });
 }
 
 function folderLabel(ref: FolderRef): string {
@@ -72,7 +83,7 @@ interface RelocateOptions {
 }
 
 async function relocate(target: MessageKey[], o: RelocateOptions): Promise<void> {
-  if (!target.length) return;
+  if (!target.length || refuseWrite()) return;
   const rows = findRows(target);
   const rowByKey = new Map(rows.map((r) => [r.key, r]));
   const snap = snapshotMail();
@@ -100,18 +111,40 @@ async function relocate(target: MessageKey[], o: RelocateOptions): Promise<void>
     if (!result) return;
     // Move each message back to where it was, using the key it has NOW.
     const byOrigin = new Map<string, { origin: FolderRef; keys: MessageKey[] }>();
+    let lost = 0;
     for (const m of result.moved) {
       const row = rowByKey.get(m.key);
       if (!row) continue;
+      // The server could not say which id the message has now: it cannot be
+      // addressed, so it cannot be moved back from here.
+      if (m.id_unknown) {
+        lost++;
+        continue;
+      }
       const id = `${row.inbox_id}|${row.folder}`;
       const group = byOrigin.get(id) ?? { origin: originOf(row), keys: [] };
       group.keys.push(m.new_key);
       byOrigin.set(id, group);
     }
     try {
-      for (const g of byOrigin.values()) await getMailApi().moveMessages(g.keys, g.origin);
+      for (const g of byOrigin.values()) {
+        const back = await getMailApi().moveMessages(g.keys, g.origin);
+        // Back in its folder under yet another id (IMAP): the restored rows,
+        // the open message and any reply being written follow it.
+        const now = new Map(back.moved.map((m) => [m.key, m.new_key]));
+        const pairs = result.moved
+          .filter((m) => now.has(m.new_key))
+          .map((m) => ({ key: m.key, new_key: now.get(m.new_key) ?? m.new_key }));
+        applyKeyRemap(pairs, g.origin);
+      }
     } catch {
       showToast({ text: "Could not undo that.", kind: "error" });
+    }
+    if (lost) {
+      showToast({
+        text: `This mailbox does not report where moved mail went, so ${lost === 1 ? "it" : `${lost} emails`} could not be moved back. Find ${lost === 1 ? "it" : "them"} in ${o.label.replace(/^.* to /, "") || "the destination folder"}.`,
+        kind: "error",
+      });
     }
     refreshLists();
     refreshFolders();
@@ -121,12 +154,20 @@ async function relocate(target: MessageKey[], o: RelocateOptions): Promise<void>
   showToast({ text: o.label, undo: () => void runUndo(entry.id) });
 
   try {
-    await pending;
-    if (!undone) refreshLists((meta) => listShows(meta, o.destination));
-  } catch {
+    const result = await pending;
+    if (undone) return;
+    // The messages have new ids now (IMAP). Rows that stay visible (search,
+    // Starred), cached bodies, the selection and an open reply follow them.
+    applyKeyRemap(result.moved.filter((m) => !m.id_unknown), o.destination);
+    refreshLists((meta) => listShows(meta, o.destination));
+  } catch (err) {
     dropUndo(entry.id);
     if (undone) return;
-    rollback(snap, o.failure);
+    rollback(
+      snap,
+      describeError(err, o.failure),
+      retryOf(err, () => void relocate(target, o)),
+    );
     if (hitSelected && !isPhone()) useSelectionStore.getState().select(prevSelected);
   }
 }
@@ -165,6 +206,7 @@ export interface FlagOptions {
 }
 
 export async function markRead(target: MessageKey[], read: boolean, opts: FlagOptions = {}): Promise<void> {
+  if (opts.silent ? !canWrite() : refuseWrite()) return;
   const rows = findRows(target).filter((r) => r.is_read !== read);
   const changing = rows.length ? rows.map((r) => r.key) : target;
   if (!changing.length) return;
@@ -177,30 +219,40 @@ export async function markRead(target: MessageKey[], read: boolean, opts: FlagOp
   }
   try {
     await getMailApi().setFlags(changing, { read });
-  } catch {
+  } catch (err) {
     // Targeted rollback (not a snapshot restore): flag changes overlap with
     // other optimistic updates all the time, e.g. archive selects the next
     // row, which marks it read.
     applyFlags(changing, { read: !read });
     refreshFolders();
     // Opening a message marks it read quietly; failing at that is not worth a toast.
-    if (!opts.silent) showToast({ text: read ? "Could not mark as read." : "Could not mark as unread.", kind: "error" });
+    if (!opts.silent) {
+      showToast({
+        text: describeError(err, read ? "Could not mark as read." : "Could not mark as unread."),
+        kind: "error",
+        action: retryOf(err, () => void markRead(changing, read, opts)),
+      });
+    }
   }
 }
 
 export async function star(target: MessageKey[], starred: boolean): Promise<void> {
-  if (!target.length) return;
+  if (!target.length || refuseWrite()) return;
   // Unstarring drops rows from the Starred list, so that case needs the snapshot.
   const snap = starred ? null : snapshotMail();
   applyFlags(target, { starred });
   try {
     await getMailApi().setFlags(target, { starred });
     refreshLists((meta) => meta.folder === "starred");
-  } catch {
+  } catch (err) {
     if (snap) restoreMail(snap);
     else applyFlags(target, { starred: false });
     refreshLists((meta) => meta.folder === "starred");
-    showToast({ text: starred ? "Could not star that." : "Could not remove the star.", kind: "error" });
+    showToast({
+      text: describeError(err, starred ? "Could not star that." : "Could not remove the star."),
+      kind: "error",
+      action: retryOf(err, () => void star(target, starred)),
+    });
   }
 }
 
@@ -220,13 +272,26 @@ export function defaultInboxId(): string {
 }
 
 export function newCompose(init: Partial<ComposeState> = {}): void {
+  if (refuseWrite()) return;
   useComposeStore.getState().open({ inbox_id: defaultInboxId(), mode: "new", ...init });
 }
 
 const stripRe = (s: string) => s.replace(/^(re|fwd?):\s*/i, "");
 
+/** Starts the preview of the original in a forward's editor. The server relays
+ *  the original itself (HTML, inline images, attachments), so everything from
+ *  this line on is shown for reference and NOT sent: only the note above it is. */
+export const FORWARD_MARKER = "---------- Forwarded message ----------";
+
+/** The note the person wrote above the forwarded original. */
+export function forwardNote(body: string): string {
+  const at = body.indexOf(FORWARD_MARKER);
+  return (at < 0 ? body : body.slice(0, at)).trimEnd();
+}
+
 /** Opens a reply / reply-all / forward for a message, from whatever is cached. */
 export function startReply(key: MessageKey, mode: Exclude<ComposeMode, "new">): void {
+  if (refuseWrite()) return;
   const detail = queryClient.getQueryData<MessageDetail>(keys.message(key));
   const row: MessageRow | MessageDetail | undefined = findRow(key) ?? detail;
   if (!row || row.folder_role === "drafts") return;
@@ -242,7 +307,7 @@ export function startReply(key: MessageKey, mode: Exclude<ComposeMode, "new">): 
       cc: "",
       bcc: "",
       subject: `Fwd: ${subject}`,
-      body: `\n\n---------- Forwarded message ----------\nFrom: ${row.from.name} <${row.from.email}>\nSubject: ${row.subject}\n\n${body}`,
+      body: `\n\n${FORWARD_MARKER}\nFrom: ${row.from.name} <${row.from.email}>\nSubject: ${row.subject}\n\n${body}`,
     };
     useComposeStore.getState().open({ mode, inbox_id, replyTo: key, ...init, pristine: composeSignature(init) });
     return;
@@ -259,6 +324,7 @@ export function startReply(key: MessageKey, mode: Exclude<ComposeMode, "new">): 
 /** Opens a draft row for editing. The form appears at once; the body follows
  *  (draft list rows carry no body). */
 export async function openDraft(row: MessageRow): Promise<void> {
+  if (refuseWrite()) return;
   useSelectionStore.getState().select(null);
   useComposeStore.getState().open({
     mode: "new",
@@ -325,7 +391,8 @@ export interface SaveDraftOptions {
 export async function saveDraft(opts: SaveDraftOptions = {}): Promise<void> {
   const store = useComposeStore.getState();
   const c = store.compose;
-  if (!c || c.streaming || c.held) return;
+  // Quietly: autosave must not nag a read-only member.
+  if (!c || c.streaming || c.held || !canWrite()) return;
   if (isComposeEmpty(c)) {
     if (!opts.keepOpen) store.close();
     return;
@@ -347,15 +414,24 @@ export async function saveDraft(opts: SaveDraftOptions = {}): Promise<void> {
       if (!opts.silent) showToast("Saved to Drafts");
     }
     refreshDrafts();
-  } catch {
+  } catch (err) {
+    // What was typed is never lost: the form stays (or comes back) as it was.
     if (!opts.keepOpen && !useComposeStore.getState().compose) useComposeStore.getState().open(c);
-    showToast({ text: "Could not save the draft. It is still open.", kind: "error" });
+    const offline = err instanceof ApiError && err.code === "offline";
+    // Autosave while offline would nag on every pause in typing.
+    if (!(opts.keepOpen && offline)) {
+      showToast({
+        text: offline ? "You are offline. The draft is kept here until you are back." : "Could not save the draft. It is still open.",
+        kind: "error",
+      });
+    }
   }
 }
 
 export async function discardDraft(): Promise<void> {
   const c = useComposeStore.getState().discard();
   if (!c) return;
+  if (!canWrite()) return;
   const entry = pushUndo("Draft discarded", () => {
     useComposeStore.getState().open({ ...c, draft_id: undefined, held: undefined, streaming: null, segments: undefined });
   });
@@ -379,17 +455,68 @@ interface PendingSend {
 }
 const pendingSends = new Map<number, PendingSend>();
 
+/** Size of the files on a compose, in bytes. */
+export function attachmentBytes(c: Pick<ComposeState, "attachments">): number {
+  return (c.attachments ?? []).reduce((n, a) => n + a.size, 0);
+}
+
+/** The reason this compose cannot be sent because of its files, or null. */
+export function attachmentProblem(c: Pick<ComposeState, "attachments">): string | null {
+  const total = attachmentBytes(c);
+  return total > MAX_ATTACHMENT_BYTES ? attachmentsTooLargeMessage(total) : null;
+}
+
+async function outgoingAttachments(c: ComposeState): Promise<OutgoingAttachment[] | undefined> {
+  const files = (c.attachments ?? []).filter((a) => a.file);
+  if (!files.length) return undefined;
+  return Promise.all(
+    files.map(async (a) => ({
+      filename: a.name,
+      mime_type: a.type || "application/octet-stream",
+      data: await blobToBase64(a.file as File),
+    })),
+  );
+}
+
+type Keyed = ComposeState & { sendKey: NonNullable<ComposeState["sendKey"]> };
+
+/** The idempotency key for sending this exact content: the same one as the
+ *  last attempt when nothing was changed since, a new one otherwise. */
+function withSendKey(c: ComposeState): Keyed {
+  const signature = [
+    c.mode,
+    c.inbox_id,
+    c.replyTo ?? "",
+    composeSignature(c),
+    (c.attachments ?? []).map((a) => `${a.name}:${a.size}`).join("|"),
+  ].join("\u0001");
+  const sendKey = c.sendKey?.signature === signature ? c.sendKey : { key: newIdempotencyKey(), signature };
+  return { ...c, sendKey };
+}
+
 async function deliver(c: ComposeState): Promise<void> {
   const api = getMailApi();
   const to = parseAddressList(c.to);
   const cc = parseAddressList(c.cc);
   const bcc = parseAddressList(c.bcc);
+  const extras = { attachments: await outgoingAttachments(c), idempotency_key: c.sendKey?.key };
   if ((c.mode === "reply" || c.mode === "reply_all") && c.replyTo) {
-    await api.replyToMessage({ key: c.replyTo, reply_all: c.mode === "reply_all", to, cc, bcc, body_text: c.body });
+    // What is on screen is what is sent: the To, Cc and Bcc lines go out as
+    // they stand (the server derives nothing when `to` is given), threaded.
+    await api.replyToMessage({
+      key: c.replyTo,
+      reply_all: c.mode === "reply_all",
+      to,
+      cc,
+      bcc,
+      subject: c.subject,
+      body_text: c.body,
+      ...extras,
+    });
   } else if (c.mode === "forward" && c.replyTo) {
-    await api.forwardMessage({ key: c.replyTo, to, cc, bcc, body_text: c.body });
+    await api.forwardMessage({ key: c.replyTo, to, cc, bcc, body_text: forwardNote(c.body), ...extras });
   } else {
-    await api.sendMessage({ inbox_id: c.inbox_id, to, cc, bcc, subject: c.subject, body_text: c.body });
+    await api.sendMessage({ inbox_id: c.inbox_id, to, cc, bcc, subject: c.subject, body_text: c.body, ...extras });
   }
   // The saved draft is now redundant. Best effort: a leftover draft is harmless.
   if (c.draft_id) await api.deleteDraft(c.inbox_id, c.draft_id).catch(() => {});
@@ -409,15 +536,21 @@ export interface SendOptions {
 /** Sends the given compose after an undo window. The form closes at once; the
  *  API call is delayed client-side, and Undo reopens the form untouched.
  *  Returns false (with a toast) when it cannot be sent as is. */
-export function send(c: ComposeState, opts: SendOptions = {}): boolean {
-  if (c.streaming) return false;
-  if (!parseAddressList(c.to).length) {
+export function send(draft: ComposeState, opts: SendOptions = {}): boolean {
+  if (draft.streaming || refuseWrite()) return false;
+  if (!parseAddressList(draft.to).length) {
     showToast("Add a recipient before sending.");
     return false;
   }
+  const problem = attachmentProblem(draft);
+  if (problem) {
+    showToast({ text: problem, kind: "error" });
+    return false;
+  }
+  const c = withSendKey(draft);
   const windowMs = opts.undoWindowMs ?? DEFAULT_UNDO_SEND_MS;
   const store = useComposeStore.getState();
-  if (store.compose === c || (store.compose && store.compose.replyTo === c.replyTo)) store.discard();
+  if (store.compose === draft || (store.compose && store.compose.replyTo === c.replyTo)) store.discard();
   if (c.replyTo) useAssistantStore.getState().setLabel([c.replyTo], null);
 
   const fire = async () => {
@@ -431,9 +564,21 @@ export function send(c: ComposeState, opts: SendOptions = {}): boolean {
       // Confirm, unless a newer toast (another action's Undo) is on screen.
       const shown = useToastStore.getState().toast;
       if (!shown || shown.id === sendingToast) showToast(`Sent to ${c.to.trim()}`);
-    } catch {
+    } catch (err) {
+      // Never lost: the message goes back into the editor exactly as it was,
+      // with the same idempotency key for the next attempt.
       reopen(c);
-      showToast({ text: "Could not send. Your message is back in the editor.", kind: "error" });
+      const offline = err instanceof ApiError && err.code === "offline";
+      showToast({
+        text: offline
+          ? "You are offline. Your message is back in the editor."
+          : describeError(err, "Could not send. Your message is back in the editor."),
+        kind: "error",
+        action: retryOf(err, () => {
+          const now = useComposeStore.getState().compose;
+          if (now) send(now, { undoWindowMs: 0 });
+        }),
+      });
     }
   };
 
@@ -449,21 +594,31 @@ export function send(c: ComposeState, opts: SendOptions = {}): boolean {
   return true;
 }
 
-/** Sends everything still inside its undo window right now (page is closing). */
-export function flushPendingSends(): void {
+/** Sends everything still inside its undo window right now (page is closing,
+ *  signing out). Resolves when those sends have settled. */
+export function flushPendingSends(): Promise<void> {
+  const fires: Promise<void>[] = [];
   for (const p of [...pendingSends.values()]) {
     clearTimeout(p.timer);
-    void p.fire();
+    fires.push(p.fire());
   }
+  return Promise.all(fires).then(() => {});
 }
 
 /** Queues the compose for later. `sendAt` is an ISO timestamp with timezone. */
-export async function schedule(c: ComposeState, sendAt: string, label?: string): Promise<boolean> {
-  const to = parseAddressList(c.to);
+export async function schedule(draft: ComposeState, sendAt: string, label?: string): Promise<boolean> {
+  if (refuseWrite()) return false;
+  const to = parseAddressList(draft.to);
   if (!to.length) {
     showToast("Add a recipient before scheduling.");
     return false;
   }
+  const problem = attachmentProblem(draft);
+  if (problem) {
+    showToast({ text: problem, kind: "error" });
+    return false;
+  }
+  const c = withSendKey(draft);
   useComposeStore.getState().discard();
   try {
     const api = getMailApi();
@@ -475,6 +630,8 @@ export async function schedule(c: ComposeState, sendAt: string, label?: string):
       subject: c.subject,
       body_text: c.body,
       send_at: sendAt,
+      attachments: await outgoingAttachments(c),
+      idempotency_key: c.sendKey.key,
     });
     if (c.draft_id) await api.deleteDraft(c.inbox_id, c.draft_id).catch(() => {});
     useAssistantStore.getState().bumpFolder({ role: "scheduled" });
@@ -490,14 +647,15 @@ export async function schedule(c: ComposeState, sendAt: string, label?: string):
     });
     showToast({ text: `Scheduled for ${label ?? new Date(sendAt).toLocaleString()}`, undo: () => void runUndo(entry.id) });
     return true;
-  } catch {
+  } catch (err) {
     reopen(c);
-    showToast({ text: "Could not schedule. Your message is back in the editor.", kind: "error" });
+    showToast({ text: describeError(err, "Could not schedule. Your message is back in the editor."), kind: "error" });
     return false;
   }
 }
 
 export async function cancelScheduled(inbox_id: string, id: string): Promise<void> {
+  if (refuseWrite()) return;
   try {
     await getMailApi().cancelScheduled(inbox_id, id);
     showToast("Scheduled send cancelled");
@@ -521,7 +679,7 @@ export function undoLast(): void {
 
 /** Opens a row the way a click does: drafts open the editor, the rest the reader. */
 export function openRow(row: MessageRow): void {
-  if (row.folder_role === "drafts") void openDraft(row);
+  if (row.folder_role === "drafts" && canWrite()) void openDraft(row);
   else useSelectionStore.getState().select(row.key);
 }
 

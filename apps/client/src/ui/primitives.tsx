@@ -53,9 +53,11 @@ export function Button({ variant = "secondary", size = "md", shortcut, className
 
 /* ---------- IconButton ---------- */
 
-export interface IconButtonProps extends Omit<ButtonHTMLAttributes<HTMLButtonElement>, "aria-label" | "title"> {
+export interface IconButtonProps extends Omit<ButtonHTMLAttributes<HTMLButtonElement>, "aria-label"> {
   /** Accessible name. Also the tooltip (with the shortcut hint appended). */
   label: string;
+  /** Replaces the tooltip (why the control is disabled). The name stays `label`. */
+  title?: string;
   /** Human hint appended to the tooltip: "E", "⌘J". */
   hint?: string;
   /** aria-keyshortcuts value: "E", "Meta+J". */
@@ -76,13 +78,14 @@ export function IconButton({
   danger,
   className,
   type,
+  title,
   ...rest
 }: IconButtonProps) {
   return (
     <button
       type={type ?? "button"}
       aria-label={label}
-      title={hint ? `${label} (${hint})` : label}
+      title={title ?? (hint ? `${label} (${hint})` : label)}
       aria-keyshortcuts={shortcut}
       aria-pressed={active === undefined ? undefined : active}
       className={cx(s.iconButton, size === "sm" && s.iconSm, active && s.iconActive, danger && s.iconDanger, className)}

@@ -7,12 +7,15 @@
  *   ?q=...                              search (on any of the above)
  *   /compose                            new message; the mail location it was
  *                                       opened from rides in history.state
+ *   /auth/callback                      sign-in return; replaced at once by the
+ *                                       URL the visitor asked for (auth/callback.ts)
  *
  * {folder} is a FolderRef id (see folderRefId): a role ("inbox"), a custom
  * folder by name ("name:Receipts"), or one exact folder ("id:{inbox}:{folder}").
  * Every segment is URI-encoded.
  */
 
+import { captureAuthCallback } from "../auth/callback";
 import {
   type FolderRef,
   type MailboxScope,
@@ -146,7 +149,12 @@ function ensureListening(): void {
 
 export function getRoute(): Route {
   if (typeof window === "undefined") return DEFAULT_ROUTE;
-  if (!current) current = read();
+  if (!current) {
+    // /auth/callback (OAuth, emailed link): the code is taken out of the URL
+    // and the originally requested URL put back, before anything is parsed.
+    captureAuthCallback();
+    current = read();
+  }
   return current;
 }
 

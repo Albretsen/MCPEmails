@@ -1,0 +1,6 @@
+data: {"type":"run_started","run_id":"run_t"}
+
+data: {"type":"status","text":"Working"}
+
+data: {"type":"error","message":"You have used all of this month's assistant requests. It resets on 2026-11-01.","code":"allowance_exhausted","retryable":false,"resets_at":"2026-11-01T00:00:00Z"}
+

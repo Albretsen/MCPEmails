@@ -41,6 +41,9 @@ export interface Shortcut {
   palette?: boolean;
   /** Listed in the help dialog (default true). */
   help?: boolean;
+  /** Changes mail or sends it. Refused, with an explanation, for a read-only
+   *  workspace member (state/permissions.ts). */
+  write?: boolean;
 }
 
 /** The parts of a KeyboardEvent the matcher reads. */

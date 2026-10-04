@@ -1,0 +1,48 @@
+data: {"type":"run_started","run_id":"run_t"}
+
+data: {"type":"status","text":"Working"}
+
+data: {"type":"status","text":"Checking your inbox","progress":{"i":1,"n":2}}
+
+data: {"type":"tool_call","message_id":"run_t_m1","call":{"id":"run_t_c1","tool":"email_read","action":"list","human":"Checking your inbox","keys":[],"folder":{"role":"inbox"},"meta":"","state":"running"}}
+
+data: {"type":"status","text":"Checking your inbox"}
+
+data: {"type":"tool_call","message_id":"run_t_m1","call":{"id":"run_t_c2","tool":"folder_list","human":"Checking your folders","keys":[],"meta":"","state":"running"}}
+
+data: {"type":"status","text":"Checking your folders"}
+
+data: {"type":"tool_call","message_id":"run_t_m1","call":{"id":"run_t_c1","tool":"email_read","action":"list","human":"Checking your inbox","keys":[],"folder":{"role":"inbox"},"meta":"6 emails","state":"done"}}
+
+data: {"type":"tool_call","message_id":"run_t_m1","call":{"id":"run_t_c2","tool":"folder_list","human":"Checking your folders","keys":[],"meta":"4 folders","state":"done"}}
+
+data: {"type":"tool_call","message_id":"run_t_m2","call":{"id":"run_t_c3","tool":"email_organize","action":"move_batch","human":"Moving 2 emails to Receipts","keys":["inbox-a:m2","inbox-a:m3"],"folder":{"inbox_id":"inbox-a","folder_id":"Receipts"},"meta":"","state":"running"}}
+
+data: {"type":"status","text":"Moving 2 emails to Receipts"}
+
+data: {"type":"mail_effect","effect":{"kind":"moved","keys":["inbox-a:m2","inbox-a:m3"],"new_keys":["inbox-a:m2-in-receipts","inbox-a:m3-in-receipts"],"from":{"inbox_id":"inbox-a","folder_id":"INBOX"},"to":{"inbox_id":"inbox-a","folder_id":"Receipts"},"call_id":"run_t_c3"}}
+
+data: {"type":"tool_call","message_id":"run_t_m2","call":{"id":"run_t_c3","tool":"email_organize","action":"move_batch","human":"Moving 2 emails to Receipts","keys":["inbox-a:m2","inbox-a:m3"],"folder":{"inbox_id":"inbox-a","folder_id":"Receipts"},"meta":"","state":"done"}}
+
+data: {"type":"text_delta","message_id":"run_t_m3","delta":"I mov"}
+
+data: {"type":"text_delta","message_id":"run_t_m3","delta":"ed th"}
+
+data: {"type":"text_delta","message_id":"run_t_m3","delta":"e two"}
+
+data: {"type":"text_delta","message_id":"run_t_m3","delta":" rece"}
+
+data: {"type":"text_delta","message_id":"run_t_m3","delta":"ipts "}
+
+data: {"type":"text_delta","message_id":"run_t_m3","delta":"to Re"}
+
+data: {"type":"text_delta","message_id":"run_t_m3","delta":"ceipt"}
+
+data: {"type":"text_delta","message_id":"run_t_m3","delta":"s."}
+
+data: {"type":"text_delta","message_id":"run_t_m3","delta":"","done":true}
+
+data: {"type":"chips","message_id":"run_t_m3","chips":[{"kind":"folder","folder":{"inbox_id":"inbox-a","folder_id":"Receipts"},"label":"Receipts","sub":"2 moved"}]}
+
+data: {"type":"done","conversation":{"v":1,"summary":"","turns":[{"u":"Move my receipts to Receipts","a":"I moved the two receipts to Receipts.","calls":[{"h":"Checking your inbox","k":[]},{"h":"Checking your folders","k":[]},{"h":"Moving 2 emails to Receipts","k":["inbox-a:m2","inbox-a:m3"]}],"refs":[]}]},"usage":{"input_tokens":3000,"output_tokens":150,"cost_micro_usd":2925,"model":"gpt-5.4-mini","rounds":3},"summary":{"text":"Moved 2 emails to Receipts","undoable":true}}
+

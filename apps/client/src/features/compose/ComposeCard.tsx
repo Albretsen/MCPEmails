@@ -1,12 +1,14 @@
 import { CalendarClock, Clock, Paperclip, ShieldAlert, Trash2, X } from "lucide-react";
 import { type ChangeEvent, type KeyboardEvent, useEffect, useId, useRef, useState } from "react";
 import { mailActions, useInboxes, useMailActions } from "../../data";
+import { attachmentProblem } from "../../data/mail-actions";
 import { cx } from "../../lib/cx";
 import { formatBytes } from "../../lib/format";
 import { usePrefersReducedMotion } from "../../lib/hooks";
 import { isTypingTarget, modKey } from "../../lib/platform";
 import { revealAssistant, useAssistantStore } from "../../state/assistant-store";
 import { type ComposeAttachment, type ComposeState, isAiDraftEdited, useComposeStore } from "../../state/compose-store";
+import { READ_ONLY_EXPLANATION, canWrite, refuseWrite, useCanWrite } from "../../state/permissions";
 import { showToast } from "../../state/toast-store";
 import { useUiStore } from "../../state/ui-store";
 import { Button, IconButton, Kbd, LogoMark, Menu, MenuItem, MenuLabel, MenuSeparator, Spinner } from "../../ui";
@@ -36,7 +38,9 @@ export async function closeCompose(opts: { silent?: boolean } = {}): Promise<voi
     return;
   }
   await settleAutosave();
-  await mailActions.saveDraft({ silent: opts.silent });
+  // A read-only member cannot save: the form just closes.
+  if (canWrite()) await mailActions.saveDraft({ silent: opts.silent });
+  else useComposeStore.getState().discard();
 }
 
 let attachmentSeq = 0;
@@ -46,6 +50,7 @@ let attachmentSeq = 0;
  *  held send. */
 export function ComposeCard({ inline }: ComposeCardProps) {
   const c = useComposeStore((x) => x.compose);
+  const mayWrite = useCanWrite();
   const opened = useComposeStore((x) => x.openSeq);
   const patch = useComposeStore((x) => x.patch);
   const scheduleOpen = useUiStore((u) => u.menu === "schedule");
@@ -152,7 +157,7 @@ export function ComposeCard({ inline }: ComposeCardProps) {
   const sendNow = async () => {
     await settleAutosave();
     const cur = live();
-    if (!cur || cur.streaming) return;
+    if (!cur || cur.streaming || refuseWrite()) return;
     if (cur.held) void useAssistantStore.getState().resolveApproval("approve");
     else actions.send(cur, { undoWindowMs: UNDO_SEND_MS });
   };
@@ -160,12 +165,13 @@ export function ComposeCard({ inline }: ComposeCardProps) {
     closeMenu();
     await settleAutosave();
     const cur = live();
-    if (!cur || cur.streaming) return;
+    if (!cur || cur.streaming || refuseWrite()) return;
     void actions.schedule(cur, at.toISOString(), describeSchedule(at).full);
   };
   const discard = async () => {
     await settleAutosave();
-    void actions.discardDraft();
+    if (canWrite()) void actions.discardDraft();
+    else useComposeStore.getState().discard();
   };
   const submitCustom = () => {
     const at = parseLocalInputValue(customTime);
@@ -187,10 +193,11 @@ export function ComposeCard({ inline }: ComposeCardProps) {
       type: file.type,
       file,
     }));
-    patch({ attachments: [...(live()?.attachments ?? []), ...added] });
-    showToast(
-      `${files.length === 1 ? `Attached ${files[0]?.name ?? "file"}` : `Attached ${files.length} files`}. Uploading attachments is not connected yet.`,
-    );
+    const all = [...(live()?.attachments ?? []), ...added];
+    patch({ attachments: all });
+    // Said now, not when Send is pressed: the limit is on the whole message.
+    const problem = attachmentProblem({ attachments: all });
+    if (problem) showToast({ text: problem, kind: "error" });
   };
   const removeAttachment = (id: string) => patch({ attachments: attachments.filter((a) => a.id !== id) });
 
@@ -367,7 +374,8 @@ export function ComposeCard({ inline }: ComposeCardProps) {
             <Button
               variant="primary"
               shortcut="Meta+Enter Control+Enter"
-              title={`Approve and send (${sendHint})`}
+              disabled={!mayWrite}
+              title={mayWrite ? `Approve and send (${sendHint})` : READ_ONLY_EXPLANATION}
               onClick={() => void useAssistantStore.getState().resolveApproval("approve")}
             >
               Approve and send
@@ -375,6 +383,8 @@ export function ComposeCard({ inline }: ComposeCardProps) {
             </Button>
             <Button
               className={s.heldEdit}
+              disabled={!mayWrite}
+              title={mayWrite ? undefined : READ_ONLY_EXPLANATION}
               onClick={() => {
                 void useAssistantStore.getState().resolveApproval("edit");
                 setTimeout(() => bodyRef.current?.focus(), 40);
@@ -391,9 +401,9 @@ export function ComposeCard({ inline }: ComposeCardProps) {
         <div className={s.foot}>
           <Button
             variant="primary"
-            disabled={!!streaming}
+            disabled={!!streaming || !mayWrite}
             shortcut="Meta+Enter Control+Enter"
-            title={`Send (${sendHint})`}
+            title={mayWrite ? `Send (${sendHint})` : READ_ONLY_EXPLANATION}
             onClick={() => void sendNow()}
           >
             Send
@@ -402,14 +412,15 @@ export function ComposeCard({ inline }: ComposeCardProps) {
           <IconButton
             label="Schedule send"
             className={s.scheduleButton}
-            disabled={!!streaming}
+            disabled={!!streaming || !mayWrite}
+            title={mayWrite ? undefined : READ_ONLY_EXPLANATION}
             aria-haspopup="menu"
             aria-expanded={scheduleOpen}
             onClick={() => useUiStore.getState().toggleMenu("schedule")}
           >
             <Clock size={15} aria-hidden="true" />
           </IconButton>
-          <Menu open={scheduleOpen} onClose={closeMenu} label="Schedule send" className={s.scheduleMenu}>
+          <Menu open={scheduleOpen && mayWrite} onClose={closeMenu} label="Schedule send" className={s.scheduleMenu}>
             <MenuLabel>Schedule send</MenuLabel>
             {picking ? (
               <form

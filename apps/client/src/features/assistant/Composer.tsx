@@ -1,5 +1,6 @@
 import { ArrowUp, Mail, Maximize2, Plus, Square, X } from "lucide-react";
 import { type KeyboardEvent, useLayoutEffect, useRef, useState } from "react";
+import { isAllowanceExhausted } from "../../api/types";
 import { findRow, useAssistantAllowance } from "../../data";
 import { cx } from "../../lib/cx";
 import { displayName, firstName } from "../../lib/format";
@@ -58,7 +59,11 @@ export function Composer({ phone, compact }: { phone: boolean; compact: boolean 
     }
     return undefined;
   });
-  const firstRun = useAssistantAllowance().data?.plan === "free";
+  const allowance = useAssistantAllowance().data;
+  const firstRun = allowance?.plan === "free";
+  const blocked = useAssistantStore((a) => a.allowanceBlocked);
+  // Used up: say so here, with the date it comes back. Nothing is retried.
+  const exhausted = !!allowance && (blocked || isAllowanceExhausted(allowance)) && allowance.cap != null;
 
   const target = attachable(selectedKey ? findRow(selectedKey) : undefined);
   const reader = !!target;
@@ -136,6 +141,13 @@ export function Composer({ phone, compact }: { phone: boolean; compact: boolean 
           <button type="button" className={s.compactStop} onClick={() => useAssistantStore.getState().stop()}>
             Stop
           </button>
+        </div>
+      ) : null}
+
+      {exhausted && allowance ? (
+        <div className={s.exhausted} role="status">
+          You have used all {(allowance.cap ?? 0).toLocaleString("en-US")} assistant requests for this month. The allowance
+          resets on {formatResetDate(allowance.resets_at)}.
         </div>
       ) : null}
 
@@ -255,4 +267,10 @@ export function Composer({ phone, compact }: { phone: boolean; compact: boolean 
       </div>
     </div>
   );
+}
+
+function formatResetDate(iso: string): string {
+  const d = new Date(iso);
+  if (Number.isNaN(d.getTime())) return "the first of next month";
+  return d.toLocaleDateString(undefined, { month: "long", day: "numeric" });
 }

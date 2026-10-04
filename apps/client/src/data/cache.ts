@@ -200,6 +200,8 @@ export function adjustUnreadCounts(rows: readonly MessageRow[], read: boolean): 
 
 /** Adds arriving rows to their folder's counts. */
 export function addToFolderCounts(rows: readonly MessageRow[]): void {
+  // HTTP mode: `status` already delivered the counts that include these rows.
+  if (folderRefresher) return;
   const byInbox = new Map<string, MessageRow[]>();
   for (const r of rows) byInbox.set(r.inbox_id, [...(byInbox.get(r.inbox_id) ?? []), r]);
   for (const [inbox_id, mine] of byInbox) {
@@ -248,8 +250,61 @@ export function refreshLists(match?: (meta: ListMeta) => boolean): void {
   });
 }
 
+/* HTTP mode: listing folders is the slowest call the backend has, and the
+ * sync engine's `status` call returns the same counts cheaply. While a
+ * refresher is installed, "refresh the folders" means "ask for status". */
+let folderRefresher: (() => void) | null = null;
+
+export function setFolderRefresher(fn: (() => void) | null): void {
+  folderRefresher = fn;
+}
+
 export function refreshFolders(): void {
-  void queryClient.invalidateQueries({ queryKey: keys.foldersRoot });
+  if (folderRefresher) folderRefresher();
+  else void queryClient.invalidateQueries({ queryKey: keys.foldersRoot });
+}
+
+/** Rows of one inbox in one cached list, in page order. */
+export function rowsOfList(key: QueryKey, inbox_id: string): MessageRow[] {
+  const data = queryClient.getQueryData<ListData>(key);
+  const out: MessageRow[] = [];
+  for (const page of data?.pages ?? []) for (const r of page.rows) if (r.inbox_id === inbox_id) out.push(r);
+  return out;
+}
+
+/** Every cached folder listing (not searches), with its meta. */
+export function cachedFolderLists(): { key: QueryKey; meta: ListMeta }[] {
+  const out: { key: QueryKey; meta: ListMeta }[] = [];
+  for (const [key, data] of lists()) {
+    if (!data) continue;
+    const meta = metaOf(key);
+    if (!meta.query) out.push({ key, meta });
+  }
+  return out;
+}
+
+/** A message has a new id (IMAP: ids are per folder, so a move changes them).
+ *  Rewrites every cached row and detail that still carries the old key.
+ *  `patch` may add what is known about where the message is now. */
+export function remapKeys(
+  pairs: readonly { key: MessageKey; new_key: MessageKey }[],
+  patch: (row: MessageRow) => Partial<MessageRow> = () => ({}),
+): void {
+  const map = new Map<MessageKey, MessageKey>();
+  for (const p of pairs) if (p.key !== p.new_key) map.set(p.key, p.new_key);
+  if (!map.size) return;
+  const idOf = (key: MessageKey) => key.slice(key.indexOf(":") + 1);
+  mapRows((row) => {
+    const next = map.get(row.key);
+    return next ? { ...row, ...patch(row), key: next, id: idOf(next) } : row;
+  });
+  for (const [old, next] of map) {
+    const detail = queryClient.getQueryData<MessageDetail>(keys.message(old));
+    if (detail) {
+      queryClient.setQueryData<MessageDetail>(keys.message(next), { ...detail, key: next, id: idOf(next) });
+      queryClient.removeQueries({ queryKey: keys.message(old), exact: true });
+    }
+  }
 }
 
 /** True when a list shows the folder a ref points at. */

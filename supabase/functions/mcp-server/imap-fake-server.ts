@@ -43,6 +43,8 @@ export interface FakeMailbox {
   messages: FakeMessage[];
   /** STATUS answers NO for this mailbox (and LIST-STATUS leaves it out). */
   statusFails?: boolean;
+  /** When set, STATUS reports it as HIGHESTMODSEQ and a UID STORE bumps it. */
+  modSeq?: number;
 }
 
 export interface FakeServerOptions {
@@ -55,6 +57,8 @@ export interface FakeServerOptions {
   expungedFetch?: "omit" | "no";
   /** Leave the `* n EXISTS` line out of a SELECT reply. */
   omitExists?: boolean;
+  /** `false`: UID MOVE succeeds but reports no COPYUID (a server without UIDPLUS). */
+  uidplus?: boolean;
   /** Runs before a command is answered; may mutate the mailboxes. */
   onCommand?: (command: string, server: FakeImapServer) => void;
   /** A tagged reply ("NO ...") to send INSTEAD of answering, or null. */
@@ -346,6 +350,9 @@ export class FakeImapServer {
       UIDNEXT: box.messages.reduce((max, m) => Math.max(max, m.uid), 0) + 1,
       UIDVALIDITY: 1,
     };
+    // Only for a mailbox that opted in (client-api's status tests), and only
+    // ever asked for by `mailboxChangeState`.
+    if (box.modSeq !== undefined) values["HIGHESTMODSEQ"] = box.modSeq;
     const body = items.trim().split(/\s+/).filter((item) => item in values)
       .map((item) => `${item} ${values[item]}`).join(" ");
     const name = this.#options.statusName?.(box.name) ?? box.name;
@@ -391,6 +398,55 @@ export class FakeImapServer {
     if (verb === "CAPABILITY") {
       const caps = this.#options.capabilities ?? ["IMAP4rev1"];
       return `* CAPABILITY ${caps.join(" ")}${CRLF}` + ok("CAPABILITY completed");
+    }
+
+    // NOOP and UID STORE were added for client-api's session-pool and flag
+    // tests; no mcp-server test sends either.
+    if (verb === "NOOP") return ok("NOOP completed");
+
+    const store = /^UID STORE (\S+) ([+-])FLAGS(?:\.SILENT)? \(([^)]*)\)$/i.exec(command);
+    if (store) {
+      const selected = this.#selected;
+      if (!selected) return `${tag} BAD No mailbox selected${CRLF}`;
+      const largest = selected.uids[selected.uids.length - 1] ?? 0;
+      const flags = store[3].split(/\s+/).filter(Boolean);
+      for (const uid of parseSet(store[1], largest)) {
+        const message = selected.mailbox.messages.find((m) => m.uid === uid);
+        if (!message) continue;
+        message.flags = store[2] === "+"
+          ? [...new Set([...message.flags, ...flags])]
+          : message.flags.filter((flag) => !flags.includes(flag));
+      }
+      if (selected.mailbox.modSeq !== undefined) selected.mailbox.modSeq += 1;
+      return ok("STORE completed");
+    }
+
+    // UID MOVE (RFC 6851) with COPYUID (RFC 4315), added for client-api's
+    // move / archive / delete tests; no mcp-server test sends it. A server
+    // built with `uidplus: false` moves the same way and reports no COPYUID.
+    const move = /^UID MOVE (\S+) (.+)$/i.exec(command);
+    if (move) {
+      const selected = this.#selected;
+      if (!selected) return `${tag} BAD No mailbox selected${CRLF}`;
+      const target = this.#mailbox(decodeModifiedUtf7(takeArgument(move[2]).value));
+      if (!target) return `${tag} NO [TRYCREATE] Mailbox does not exist${CRLF}`;
+      const largest = selected.uids[selected.uids.length - 1] ?? 0;
+      const from: number[] = [];
+      const to: number[] = [];
+      for (const uid of parseSet(move[1], largest)) {
+        const message = selected.mailbox.messages.find((m) => m.uid === uid);
+        if (!message) continue;
+        const next = target.messages.reduce((max, m) => Math.max(max, m.uid), 0) + 1;
+        selected.mailbox.messages = selected.mailbox.messages.filter((m) => m !== message);
+        target.messages.push({ ...message, uid: next });
+        from.push(uid);
+        to.push(next);
+      }
+      selected.uids = selected.mailbox.messages.map((m) => m.uid).sort((a, b) => a - b);
+      const copyuid = from.length > 0 && this.#options.uidplus !== false
+        ? `* OK [COPYUID 1 ${from.join(",")} ${to.join(",")}] Moved${CRLF}`
+        : "";
+      return copyuid + ok("MOVE completed");
     }
 
     if (verb === "LOGOUT") {

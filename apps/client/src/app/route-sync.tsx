@@ -1,6 +1,7 @@
 import { useEffect } from "react";
 import { useInboxes } from "../data/hooks";
 import { mailActions } from "../data/mail-actions";
+import { canWrite } from "../state/permissions";
 import { type DeepLink, NOTIFICATION_ACTION } from "../platform";
 import { useAssistantStore } from "../state/assistant-store";
 import { useComposeStore } from "../state/compose-store";
@@ -31,7 +32,8 @@ export function initRouting(): () => void {
     if (cause !== "pop") return;
     const c = useComposeStore.getState().compose;
     if (route.compose && !c) {
-      mailActions.newCompose();
+      // A read-only member has nothing to compose: /compose just shows the list.
+      if (canWrite()) mailActions.newCompose();
       return;
     }
     if (route.compose || !c || c.replyTo) return;
@@ -44,7 +46,8 @@ export function initRouting(): () => void {
       return;
     }
     // Same as Esc: keep what was typed as a draft and close the form.
-    void mailActions.saveDraft();
+    if (canWrite()) void mailActions.saveDraft();
+    else useComposeStore.getState().discard();
   });
 }
 
@@ -64,7 +67,7 @@ export function RouteEffects() {
     }
     // Loaded on /compose (the manifest's Compose shortcut, a reload): open the
     // form now that there is a mailbox to send from.
-    if (getRoute().compose && !useComposeStore.getState().compose && inboxes.length) mailActions.newCompose();
+    if (getRoute().compose && !useComposeStore.getState().compose && inboxes.length && canWrite()) mailActions.newCompose();
   }, [inboxes]);
 
   return null;
@@ -91,7 +94,7 @@ export function openDeepLink(link: DeepLink): void {
       // Approve only the send that is actually being held, and only when the
       // user pressed Approve. Anything else (Review, a tap on the body, an id
       // that no longer matches) just shows the draft: unanswered means not sent.
-      if (link.action === NOTIFICATION_ACTION.approve) void useAssistantStore.getState().resolveApproval("approve");
+      if (link.action === NOTIFICATION_ACTION.approve && canWrite()) void useAssistantStore.getState().resolveApproval("approve");
       return;
     }
     // Stale approval: fall through and just open the location.
@@ -99,7 +102,7 @@ export function openDeepLink(link: DeepLink): void {
 
   const route = parseLocation(url.pathname, url.search);
   if (route.compose) {
-    if (!compose) mailActions.newCompose();
+    if (!compose && canWrite()) mailActions.newCompose();
     return;
   }
   const selection = useSelectionStore.getState();

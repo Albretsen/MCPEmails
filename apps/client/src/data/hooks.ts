@@ -10,6 +10,7 @@ import {
   type FolderRef,
   type FolderRole,
   type Inbox,
+  type InboxFailure,
   type MailboxScope,
   type MessageDetail,
   type MessageKey,
@@ -26,7 +27,7 @@ import { useAssistantStore } from "../state/assistant-store";
 import { getVisibleKeys } from "../state/selection-store";
 import { type ListData, findRow, resolveFolderEntry } from "./cache";
 import { keys, listMeta } from "./keys";
-import { STALE_MS } from "./query-client";
+import { FOLDERS_STALE_MS, STALE_MS } from "./query-client";
 import { type MailActions, mailActions } from "./mail-actions";
 
 /* ------------------------------------------------------------------
@@ -82,7 +83,7 @@ function useFolderEntries(inboxIds: string[]): (FolderEntry[] | undefined)[] {
     queries: inboxIds.map((id) => ({
       queryKey: keys.folders(id),
       queryFn: ({ signal }: { signal: AbortSignal }) => getMailApi().listFolders(id, signal),
-      staleTime: STALE_MS,
+      staleTime: FOLDERS_STALE_MS,
     })),
     combine: (results) => results.map((r) => r.data),
   });
@@ -192,8 +193,12 @@ export interface MessageListResult {
   /** Call with the index of the last row on screen: loads more near the end. */
   onLastVisibleIndex: (index: number) => void;
   error: Error | null;
+  /** Unified view: mailboxes that did not answer. The others are shown. */
+  failedInboxes: InboxFailure[];
   refetch: () => void;
 }
+
+const NO_FAILURES: InboxFailure[] = [];
 
 const byDateDesc = (a: MessageRow, b: MessageRow) => (a.date < b.date ? 1 : a.date > b.date ? -1 : 0);
 const LOAD_MORE_WITHIN = 12;
@@ -267,6 +272,7 @@ export function useMessageList({ scope, folder, query = "" }: MessageListArgs): 
     fetchNextPage: loadMore,
     onLastVisibleIndex,
     error: q.error,
+    failedInboxes: first?.failed_inboxes ?? NO_FAILURES,
     refetch: () => void q.refetch(),
   };
 }
@@ -356,23 +362,55 @@ export interface PrefetchHandlers {
 }
 
 export const PREFETCH_DELAY_MS = 50;
+/** Hover prefetches in flight at once. More intent than that is dropped: the
+ *  pointer has moved on, and opening a row fetches it anyway. */
+export const PREFETCH_MAX_IN_FLIGHT = 3;
+
+let prefetching = 0;
+
+/** True when a slot was free. The slot is released when the fetch settles. */
+function prefetchLimited(run: () => Promise<unknown>): boolean {
+  if (prefetching >= PREFETCH_MAX_IN_FLIGHT) return false;
+  prefetching++;
+  void run().finally(() => {
+    prefetching--;
+  });
+  return true;
+}
 
 /** Prefetches message bodies on intent so opening a row is instant. The
  *  returned handlers are stable: safe to pass to memoised rows. */
 export function usePrefetchMessage(): PrefetchHandlers {
   const qc = useQueryClient();
   const timer = useRef<ReturnType<typeof setTimeout> | null>(null);
+  /** The row whose prefetch was started by hover and may still be cancelled. */
+  const hovering = useRef<MessageKey | null>(null);
 
   const prefetch = useCallback(
     (key: MessageKey) => {
-      void qc.prefetchQuery(messageQuery(key));
+      const q = messageQuery(key);
+      const state = qc.getQueryState(q.queryKey);
+      // Nothing to do: already loading, or fresh enough.
+      if (state?.fetchStatus === "fetching") return;
+      if (state?.data !== undefined && !state.isInvalidated && Date.now() - state.dataUpdatedAt < STALE_MS) return;
+      if (prefetchLimited(() => qc.prefetchQuery(q))) hovering.current = key;
     },
     [qc],
   );
   const onIntentEnd = useCallback(() => {
     if (timer.current) clearTimeout(timer.current);
     timer.current = null;
-  }, []);
+    // The pointer left before the body arrived: stop the request, unless the
+    // row was opened meanwhile (then someone is waiting for it).
+    const key = hovering.current;
+    hovering.current = null;
+    if (!key) return;
+    const queryKey = keys.message(key);
+    const query = qc.getQueryCache().find({ queryKey, exact: true });
+    if (query && query.getObserversCount() === 0 && query.state.fetchStatus === "fetching") {
+      void qc.cancelQueries({ queryKey, exact: true });
+    }
+  }, [qc]);
   const onIntent = useCallback(
     (key: MessageKey) => {
       onIntentEnd();

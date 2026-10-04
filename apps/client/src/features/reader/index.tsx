@@ -19,6 +19,7 @@ import {
   Trash2,
 } from "lucide-react";
 import { type ReactNode, useEffect, useId, useLayoutEffect, useMemo, useRef, useState } from "react";
+import { describeError, getMailApi, isAbortError } from "../../api";
 import { canGoBack, goBack } from "../../app/router";
 import {
   type EmailAddressEntry,
@@ -32,10 +33,12 @@ import {
 } from "../../api/types";
 import { findRow, useFolders, useInboxes, useMailActions, useMessage, usePrefetchNeighbours } from "../../data";
 import { cx } from "../../lib/cx";
+import { saveBlob } from "../../lib/download";
 import { displayName, formatBytes, formatFullTime } from "../../lib/format";
 import { sanitizeEmailHtml } from "../../lib/sanitize-email-html";
 import { useAssistantStore } from "../../state/assistant-store";
 import { useComposeStore } from "../../state/compose-store";
+import { READ_ONLY_EXPLANATION, canWrite, useCanWrite } from "../../state/permissions";
 import { getVisibleKeys, useSelectionStore } from "../../state/selection-store";
 import { showToast } from "../../state/toast-store";
 import { useUiStore } from "../../state/ui-store";
@@ -69,7 +72,8 @@ export function ReaderPane() {
   // itself never changes the flag. Runs when the open message CHANGES, so
   // "mark unread" on the open message sticks.
   useEffect(() => {
-    if (!key) return;
+    // A read-only member reads without changing the flag: the server would refuse it.
+    if (!key || !canWrite()) return;
     const row = findRow(key);
     if (row && !row.is_read && row.folder_role !== "drafts") void actions.markRead([key], true, { silent: true });
   }, [key, actions]);
@@ -175,9 +179,27 @@ interface ToolProps {
   text?: boolean;
   onClick: () => void;
   expanded?: boolean;
+  /** Read-only workspace member: shown, disabled, with the explanation. */
+  readOnly?: boolean;
 }
 
-function Tool({ label, hint, shortcut, icon, text, onClick, expanded }: ToolProps) {
+function Tool({ label, hint, shortcut, icon, text, onClick, expanded, readOnly }: ToolProps) {
+  if (readOnly) {
+    // Disabled rather than hidden, so the toolbar keeps its shape and says why.
+    if (text) {
+      return (
+        <Button variant="ghost" className={s.barButton} title={READ_ONLY_EXPLANATION} disabled>
+          {icon}
+          {label}
+        </Button>
+      );
+    }
+    return (
+      <IconButton label={label} title={READ_ONLY_EXPLANATION} className={s.tool} disabled>
+        {icon}
+      </IconButton>
+    );
+  }
   if (text) {
     return (
       <Button variant="ghost" className={s.barButton} title={`${label} (${hint})`} shortcut={shortcut} onClick={onClick}>
@@ -207,6 +229,7 @@ function Toolbar({ messageKey, labels, phone }: { messageKey: MessageKey; labels
   const currentFolder = useSelectionStore((x) => folderRefId(x.folder));
   const { folders } = useFolders(scope);
   const actions = useMailActions();
+  const readOnly = !useCanWrite();
   const keys = [messageKey];
 
   const list = getVisibleKeys();
@@ -223,13 +246,18 @@ function Toolbar({ messageKey, labels, phone }: { messageKey: MessageKey; labels
   };
 
   return (
-    <div className={cx(s.bar, phone && s.actions)} role="toolbar" aria-label="Email actions">
-      <Tool label="Reply" hint="R" shortcut="R" text={labels} icon={<Reply size={15} aria-hidden="true" />} onClick={() => actions.startReply(messageKey, "reply")} />
-      <Tool label="Reply all" hint="A" shortcut="A" icon={<ReplyAll size={15} aria-hidden="true" />} onClick={() => actions.startReply(messageKey, "reply_all")} />
-      <Tool label="Forward" hint="F" shortcut="F" text={labels} icon={<Forward size={15} aria-hidden="true" />} onClick={() => actions.startReply(messageKey, "forward")} />
+    <div
+      className={cx(s.bar, phone && s.actions)}
+      role="toolbar"
+      aria-label={readOnly ? `Email actions. ${READ_ONLY_EXPLANATION}` : "Email actions"}
+    >
+      <Tool readOnly={readOnly} label="Reply" hint="R" shortcut="R" text={labels} icon={<Reply size={15} aria-hidden="true" />} onClick={() => actions.startReply(messageKey, "reply")} />
+      <Tool readOnly={readOnly} label="Reply all" hint="A" shortcut="A" icon={<ReplyAll size={15} aria-hidden="true" />} onClick={() => actions.startReply(messageKey, "reply_all")} />
+      <Tool readOnly={readOnly} label="Forward" hint="F" shortcut="F" text={labels} icon={<Forward size={15} aria-hidden="true" />} onClick={() => actions.startReply(messageKey, "forward")} />
       {phone ? null : <span className={s.divider} aria-hidden="true" />}
-      <Tool label="Archive" hint="E" shortcut="E" icon={<Archive size={15} aria-hidden="true" />} onClick={() => void actions.archive(keys)} />
+      <Tool readOnly={readOnly} label="Archive" hint="E" shortcut="E" icon={<Archive size={15} aria-hidden="true" />} onClick={() => void actions.archive(keys)} />
       <Tool
+        readOnly={readOnly}
         label="Move to folder"
         hint="V"
         shortcut="V"
@@ -237,9 +265,9 @@ function Toolbar({ messageKey, labels, phone }: { messageKey: MessageKey; labels
         expanded={moveOpen}
         onClick={() => useUiStore.getState().toggleMenu("move")}
       />
-      <Tool label="Delete" hint="#" shortcut="#" icon={<Trash2 size={15} aria-hidden="true" />} onClick={() => void actions.trash(keys)} />
-      <Tool label="Mark unread" hint="U" shortcut="U" icon={<MailOpen size={15} aria-hidden="true" />} onClick={() => void actions.markRead(keys, false)} />
-      <Menu open={moveOpen} onClose={closeMenu} label="Move to" className={s.moveMenu}>
+      <Tool readOnly={readOnly} label="Delete" hint="#" shortcut="#" icon={<Trash2 size={15} aria-hidden="true" />} onClick={() => void actions.trash(keys)} />
+      <Tool readOnly={readOnly} label="Mark unread" hint="U" shortcut="U" icon={<MailOpen size={15} aria-hidden="true" />} onClick={() => void actions.markRead(keys, false)} />
+      <Menu open={moveOpen && !readOnly} onClose={closeMenu} label="Move to" className={s.moveMenu}>
         <MenuLabel>Move to</MenuLabel>
         {targets.map((t) => (
           <MenuItem
@@ -437,7 +465,7 @@ function Body({ message, pending, showSkeleton, failed, refetch }: BodyProps) {
         {useHtml && html?.truncated && !pending ? <p className={s.preview}>This email is very long. The end was left out.</p> : null}
       </div>
 
-      {message.attachments.length ? <Attachments list={message.attachments} /> : null}
+      {message.attachments.length ? <Attachments messageKey={message.key} list={message.attachments} /> : null}
 
       <div className={s.safety}>
         <ShieldCheck size={13} aria-hidden="true" className={s.safetyIcon} />
@@ -472,7 +500,29 @@ function attachmentIcon(a: ReadEmailAttachmentMeta): ReactNode {
   return <File {...props} />;
 }
 
-function Attachments({ list }: { list: ReadEmailAttachmentMeta[] }) {
+function Attachments({ messageKey, list }: { messageKey: MessageKey; list: ReadEmailAttachmentMeta[] }) {
+  /** Index of the attachment being downloaded. One at a time per message. */
+  const [busy, setBusy] = useState<number | null>(null);
+
+  const download = async (a: ReadEmailAttachmentMeta, index: number) => {
+    if (busy != null) return;
+    setBusy(index);
+    try {
+      const file = await getMailApi().downloadAttachment(messageKey, index);
+      // The name the message gave it wins: the server's header is a fallback.
+      saveBlob(file.blob, a.filename || file.filename);
+    } catch (err) {
+      if (!isAbortError(err)) {
+        showToast({
+          text: describeError(err, `Could not download ${a.filename || "that attachment"}.`),
+          kind: "error",
+          action: { label: "Retry", run: () => void download(a, index) },
+        });
+      }
+    }
+    setBusy(null);
+  };
+
   return (
     <ul className={s.attachments} aria-label={list.length === 1 ? "1 attachment" : `${list.length} attachments`}>
       {list.map((a, i) => (
@@ -480,8 +530,10 @@ function Attachments({ list }: { list: ReadEmailAttachmentMeta[] }) {
           <button
             type="button"
             className={s.attachment}
-            title={a.filename}
-            onClick={() => showToast("Attachment download is not connected yet")}
+            title={`Download ${a.filename}`}
+            aria-busy={busy === (a.attachment_index ?? i) || undefined}
+            disabled={busy != null}
+            onClick={() => void download(a, a.attachment_index ?? i)}
           >
             <span className={s.attachmentIcon}>{attachmentIcon(a)}</span>
             <span className={s.attachmentName}>{a.filename}</span>

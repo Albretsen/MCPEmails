@@ -7,6 +7,10 @@ export interface InboxPage {
   total: number | null;
   total_is_estimate?: boolean;
   has_more: boolean;
+  /** The backend's own `next_offset`, when it gave one. Used instead of
+   *  `offset + rows` once every fetched row was emitted: a short page is not
+   *  proof of the end, and the backend may skip rows. */
+  next_offset?: number | null;
 }
 
 export type FetchInboxPage = (inbox_id: string, offset: number, limit: number) => Promise<InboxPage>;
@@ -64,7 +68,9 @@ export async function mergeInboxPages(
     emitted.push(...safe);
     const start = offsets[p.inbox_id] as number;
     const consumedAll = safe.length === p.rows.length;
-    next[p.inbox_id] = consumedAll && !p.has_more ? null : start + safe.length;
+    if (consumedAll && !p.has_more) next[p.inbox_id] = null;
+    else if (consumedAll && p.next_offset != null && p.next_offset > start) next[p.inbox_id] = p.next_offset;
+    else next[p.inbox_id] = start + safe.length;
   }
   emitted.sort(byDateDesc);
 

@@ -30,8 +30,11 @@ export type ToolName =
   | "contact_search";
 
 /** The compose state the assistant may be asked to edit or send. */
+export type DraftKind = "reply" | "reply_all" | "new" | "forward";
+
 export interface AssistantDraftContext {
   inbox_id: string;
+  kind?: DraftKind;
   to: string;
   cc?: string;
   bcc?: string;
@@ -41,11 +44,24 @@ export interface AssistantDraftContext {
   draft_id?: string;
 }
 
+/** What happened, client side, to something the assistant asked for. Sent
+ *  with the next run so the assistant knows (the server keeps no state). */
+export type AssistantContextNote = {
+  type: "approval";
+  approval_id: string;
+  decision: "approved" | "rejected" | "edited";
+};
+
 export interface AssistantRequest {
   text: string;
-  /** Emails attached as chips. Empty = the request is about all mail. */
-  context: { keys: MessageKey[] };
+  /** Emails attached as chips. Empty = the request is about all mail.
+   *  On the wire (HTTP) each key goes out as `{ inbox_id, message_id, folder? }`:
+   *  `folder` is where the message is now, so a move of it can be undone. */
+  context: { keys: MessageKey[]; notes?: AssistantContextNote[]; timezone?: string };
   conversation_id: string;
+  /** Opaque state from the previous run's `done` event (HTTP transport: the
+   *  server is stateless). Null or absent on the first turn. */
+  conversation?: unknown;
   /** Current compose state, sent when the user may be asking for edits. */
   draft?: AssistantDraftContext;
   /** Set when a suggestion card or quick action started the run. */
@@ -80,6 +96,9 @@ export interface MailEffect {
   to?: FolderRef;
   from?: FolderRef;
   flags?: MessageFlags;
+  /** `moved`: the keys the messages have NOW, parallel to `keys` (IMAP ids
+   *  change per folder). Absent when the ids did not change. */
+  new_keys?: MessageKey[];
   call_id: string;
 }
 
@@ -87,6 +106,8 @@ export interface DraftFields {
   inbox_id?: string;
   to: string;
   subject: string;
+  /** Comma separated, like `to`. */
+  cc?: string;
 }
 
 export type DiffSegment = { k: "keep" | "del" | "ins"; t: string };
@@ -117,6 +138,9 @@ export interface ApprovalDraft {
   subject: string;
   body: string;
   reply_to?: MessageKey;
+  cc?: string;
+  /** How the message goes out when the human approves. */
+  kind?: DraftKind;
 }
 
 export type AssistantEvent =
@@ -146,17 +170,41 @@ export type AssistantEvent =
       call_id?: string;
       message_id?: string;
       done?: boolean;
+      kind?: DraftKind;
     }
   /** Fail closed: an unanswered approval is a denial. */
   | { type: "approval_required"; approval_id: string; call_id: string; draft: ApprovalDraft; external: boolean }
   | { type: "cards"; message_id: string; cards: AssistantCard[] }
   | { type: "chips"; message_id: string; chips: AssistantChip[] }
-  | { type: "done"; summary?: { text: string; undoable: boolean } }
-  | { type: "error"; message: string };
+  /** The last event of a run that started working (also after `error`, so the
+   *  conversation and the undo summary of what already changed are kept).
+   *  `conversation`: opaque state to send back with the next run.
+   *  `stopped`: a limit ended the run (`max_rounds`, `timeout`,
+   *  `token_ceiling`, `output_limit`); the engine has already said so in a
+   *  text message of its own. */
+  | { type: "done"; summary?: { text: string; undoable: boolean }; conversation?: unknown; usage?: RunUsage; stopped?: string }
+  /** `code` is the API error code when there is one (`allowance_exhausted`...).
+   *  `retryable`: asking the same thing again may work. `resets_at`: with
+   *  `allowance_exhausted`, when the allowance resets. A run that had started
+   *  working still ends with `done` after this; one refused at the door
+   *  (allowance, not configured) ends here. */
+  | { type: "error"; message: string; code?: string; retryable?: boolean; resets_at?: string };
+
+export interface RunUsage {
+  input_tokens: number;
+  output_tokens: number;
+  cost_micro_usd: number;
+  model: string;
+  rounds: number;
+}
 
 export type ApprovalDecision = "approve" | "reject" | "edit";
 
 export interface AssistantTransport {
+  /** True when a run ENDS with `approval_required` and the approval is answered
+   *  afterwards (HTTP). False / absent when the run stays open while it waits
+   *  (mock), where an approval still unanswered at the end is a denial. */
+  readonly approvalsOutliveRun?: boolean;
   /** Abort via `opts.signal`: the iterator must end promptly and stop acting. */
   run(req: AssistantRequest, opts: { signal: AbortSignal }): AsyncIterable<AssistantEvent>;
   resolveApproval(approval_id: string, decision: ApprovalDecision): Promise<void>;

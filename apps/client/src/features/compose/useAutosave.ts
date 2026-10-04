@@ -1,6 +1,7 @@
 import { useEffect, useMemo } from "react";
 import { mailActions } from "../../data";
 import { isComposeEmpty, useComposeStore } from "../../state/compose-store";
+import { canWrite } from "../../state/permissions";
 import { type Autosaver, createAutosaver, useAutosaveStatus } from "./autosave";
 
 /* Wires the autosaver to the compose form. One instance at a time (there is
@@ -23,6 +24,8 @@ export async function settleAutosave(): Promise<void> {
 
 async function saveOnce(): Promise<void> {
   const before = useComposeStore.getState().compose;
+  // A read-only workspace member cannot save drafts.
+  if (!canWrite()) return;
   if (!before || before.streaming || before.held || isComposeEmpty(before)) return;
   await mailActions.saveDraft({ keepOpen: true, silent: true });
   const after = useComposeStore.getState().compose;

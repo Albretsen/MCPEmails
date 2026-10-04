@@ -13,6 +13,7 @@ import {
   selectTrace,
   useAssistantStore,
 } from "../../state/assistant-store";
+import { READ_ONLY_EXPLANATION } from "../../state/permissions";
 import { useSelectionStore } from "../../state/selection-store";
 import { Icon, LogoMark } from "../../ui";
 import s from "./List.module.css";
@@ -30,6 +31,8 @@ export interface RowProps {
   unread: boolean;
   starred: boolean;
   canStar: boolean;
+  /** Read-only workspace member: the star shows its state but cannot be changed. */
+  readOnly?: boolean;
   /** Can ride along as assistant context (not mail the user wrote). */
   attachable: boolean;
   hasAttachment: boolean;
@@ -174,8 +177,8 @@ export const Row = memo(function Row(p: RowProps) {
           {p.canStar ? (
             <span
               data-act="star"
-              className={cx(s.star, p.starred && s.starOn)}
-              title={p.starred ? "Remove star (S)" : "Star (S)"}
+              className={cx(s.star, p.starred && s.starOn, p.readOnly && s.starLocked)}
+              title={p.readOnly ? READ_ONLY_EXPLANATION : p.starred ? "Remove star (S)" : "Star (S)"}
               aria-hidden="true"
             >
               <Star size={14} fill={p.starred ? "currentColor" : "none"} />

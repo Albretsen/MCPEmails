@@ -1138,6 +1138,7 @@ export type Database = {
           inbox_ids: string[] | null
           key_hash: string
           key_prefix: string
+          kind: string | null
           last_used_at: string | null
           name: string
           scopes: string[]
@@ -1154,6 +1155,7 @@ export type Database = {
           inbox_ids?: string[] | null
           key_hash: string
           key_prefix: string
+          kind?: string | null
           last_used_at?: string | null
           name: string
           scopes?: string[]
@@ -1170,6 +1172,7 @@ export type Database = {
           inbox_ids?: string[] | null
           key_hash?: string
           key_prefix?: string
+          kind?: string | null
           last_used_at?: string | null
           name?: string
           scopes?: string[]
@@ -1229,6 +1232,110 @@ export type Database = {
           stack?: string | null
         }
         Relationships: []
+      }
+      assistant_usage: {
+        Row: {
+          cost_micro_usd: number
+          created_at: string
+          id: string
+          input_tokens: number
+          model: string
+          occurred_at: string
+          output_tokens: number
+          user_id: string | null
+          workspace_id: string
+        }
+        Insert: {
+          cost_micro_usd?: number
+          created_at?: string
+          id?: string
+          input_tokens?: number
+          model: string
+          occurred_at?: string
+          output_tokens?: number
+          user_id?: string | null
+          workspace_id: string
+        }
+        Update: {
+          cost_micro_usd?: number
+          created_at?: string
+          id?: string
+          input_tokens?: number
+          model?: string
+          occurred_at?: string
+          output_tokens?: number
+          user_id?: string | null
+          workspace_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "assistant_usage_user_id_fkey"
+            columns: ["user_id"]
+            isOneToOne: false
+            referencedRelation: "users"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "assistant_usage_workspace_id_fkey"
+            columns: ["workspace_id"]
+            isOneToOne: false
+            referencedRelation: "billing_funnel_by_workspace"
+            referencedColumns: ["workspace_id"]
+          },
+          {
+            foreignKeyName: "assistant_usage_workspace_id_fkey"
+            columns: ["workspace_id"]
+            isOneToOne: false
+            referencedRelation: "workspaces"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      assistant_usage_reservations: {
+        Row: {
+          created_at: string
+          expires_at: string
+          id: string
+          user_id: string | null
+          workspace_id: string
+        }
+        Insert: {
+          created_at?: string
+          expires_at: string
+          id?: string
+          user_id?: string | null
+          workspace_id: string
+        }
+        Update: {
+          created_at?: string
+          expires_at?: string
+          id?: string
+          user_id?: string | null
+          workspace_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "assistant_usage_reservations_user_id_fkey"
+            columns: ["user_id"]
+            isOneToOne: false
+            referencedRelation: "users"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "assistant_usage_reservations_workspace_id_fkey"
+            columns: ["workspace_id"]
+            isOneToOne: false
+            referencedRelation: "billing_funnel_by_workspace"
+            referencedColumns: ["workspace_id"]
+          },
+          {
+            foreignKeyName: "assistant_usage_reservations_workspace_id_fkey"
+            columns: ["workspace_id"]
+            isOneToOne: false
+            referencedRelation: "workspaces"
+            referencedColumns: ["id"]
+          },
+        ]
       }
       auth_logs: {
         Row: {
@@ -3495,6 +3602,7 @@ export type Database = {
           slug: string
           stripe_customer_id: string | null
           updated_at: string
+          web_client_enabled: boolean
         }
         Insert: {
           acquisition_email_segment?: string | null
@@ -3540,6 +3648,7 @@ export type Database = {
           slug: string
           stripe_customer_id?: string | null
           updated_at?: string
+          web_client_enabled?: boolean
         }
         Update: {
           acquisition_email_segment?: string | null
@@ -3585,6 +3694,7 @@ export type Database = {
           slug?: string
           stripe_customer_id?: string | null
           updated_at?: string
+          web_client_enabled?: boolean
         }
         Relationships: [
           {
@@ -3725,6 +3835,16 @@ export type Database = {
       expire_workspace_invites: { Args: never; Returns: undefined }
       finalize_action_usage_reservation: {
         Args: { p_reservation_id: string; p_succeeded: boolean }
+        Returns: boolean
+      }
+      finalize_assistant_run: {
+        Args: {
+          p_cost_micro_usd: number
+          p_input_tokens: number
+          p_model: string
+          p_output_tokens: number
+          p_reservation_id: string
+        }
         Returns: boolean
       }
       get_current_user_sessions: {
@@ -4301,6 +4421,20 @@ export type Database = {
           used_actions: number
         }[]
       }
+      reserve_assistant_run: {
+        Args: { p_user_id: string; p_workspace_id: string }
+        Returns: {
+          allowed: boolean
+          cap: number
+          max_tokens_per_run: number
+          period_end: string
+          period_start: string
+          plan: string
+          remaining: number
+          reservation_id: string
+          used: number
+        }[]
+      }
       resolve_synthetic_monitor_incidents: {
         Args: { p_run_id: string }
         Returns: {
@@ -4341,6 +4475,21 @@ export type Database = {
           grace_ends_at: string
           in_grace: boolean
           owner_id: string
+          period_end: string
+          period_start: string
+          plan: string
+          remaining: number
+          used: number
+        }[]
+      }
+      workspace_assistant_allowance: {
+        Args: { p_workspace_id: string }
+        Returns: {
+          cap: number
+          cost_micro_usd: number
+          input_tokens: number
+          max_tokens_per_run: number
+          output_tokens: number
           period_end: string
           period_start: string
           plan: string

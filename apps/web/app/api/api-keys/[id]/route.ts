@@ -187,6 +187,7 @@ export async function PATCH(
     .eq('id', keyId)
     .eq('workspace_id', workspaceId)
     .is('deleted_at', null)
+    .is('kind', null)
     .select('id, name, key_prefix, scopes, inbox_ids, created_at, last_used_at, expires_at');
 
   if (updateError) {

@@ -180,6 +180,11 @@ const Message = memo(function Message({ m, first, open, onToggle, showMeta, flas
               {m.streaming ? <span className={s.cursor} aria-hidden="true" /> : null}
             </div>
           ) : null}
+          {m.retryable ? (
+            <button type="button" className={s.textButton} onClick={() => void useAssistantStore.getState().retry()}>
+              Try again
+            </button>
+          ) : null}
           {current && !expanded ? (
             <div className={s.stepRow}>
               <Step call={current} showMeta={showMeta} flash={flash === current.id} variant="line" />

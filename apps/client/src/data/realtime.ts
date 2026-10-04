@@ -6,6 +6,7 @@ import { useComposeStore } from "../state/compose-store";
 import { useSelectionStore } from "../state/selection-store";
 import { useUiStore } from "../state/ui-store";
 import { addToFolderCounts, applyFlags, insertInboxRows, refreshFolders, refreshLists, removeMovedRows } from "./cache";
+import { canWrite } from "../state/permissions";
 import { flushPendingSends, newCompose, saveDraft } from "./mail-actions";
 
 /* Wires the outside world into the cache and keeps the stores consistent with
@@ -83,6 +84,8 @@ export function startRealtime(): () => void {
       const c = useComposeStore.getState().compose;
       if (!c || c.replyTo === s.selectedKey || c.held || c.streaming) return;
       if (useAssistantStore.getState().busy && c.ai) return;
+      // A read-only member cannot save drafts (and never has a form open).
+      if (!canWrite()) return;
       void saveDraft({ silent: true });
     }),
   );
@@ -92,6 +95,7 @@ export function startRealtime(): () => void {
     subscribeRoute((route, cause) => {
       if (cause !== "pop") return;
       const c = useComposeStore.getState().compose;
+      if (!canWrite()) return;
       if (!route.compose && c && !c.replyTo) void saveDraft({ silent: true });
       else if (route.compose && !c) newCompose();
     }),

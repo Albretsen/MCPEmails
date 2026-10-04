@@ -24,6 +24,7 @@
 
 import type {
   AssistantAllowance,
+  AttachmentDownload,
   ContactHit,
   DraftDetail,
   DraftInput,
@@ -60,6 +61,8 @@ export interface MailApi {
     signal?: AbortSignal,
   ): Promise<MessageDetail>;
   searchMessages(params: SearchMessagesParams, signal?: AbortSignal): Promise<MessagePage>;
+  /** The bytes of one attachment (`attachment_index` from ReadEmailAttachmentMeta). */
+  downloadAttachment(key: MessageKey, attachment_index: number, signal?: AbortSignal): Promise<AttachmentDownload>;
 
   /* ---- message mutations ---- */
   setFlags(keys: MessageKey[], flags: MessageFlags): Promise<void>;

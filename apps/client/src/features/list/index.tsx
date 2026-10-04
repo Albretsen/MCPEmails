@@ -25,6 +25,7 @@ import {
   usePrefetchMessage,
   usePrefetchNeighbours,
 } from "../../data";
+import { DASHBOARD_URL } from "../../config";
 import { pluralize } from "../../lib/format";
 import { useDelayedFlag } from "../../lib/hooks";
 import { useAssistantStore } from "../../state/assistant-store";
@@ -32,6 +33,8 @@ import { selectHasMulti, setVisibleKeys, useSelectionStore } from "../../state/s
 import { Button, EmptyState, Kbd, Skeleton } from "../../ui";
 import { SEARCH_INPUT_ATTR, useShell } from "../shell";
 import s from "./List.module.css";
+import { READ_ONLY_EXPLANATION, useCanWrite } from "../../state/permissions";
+import { openRow } from "./open-row";
 import { Row, rowDomId } from "./Row";
 import { anchoredOffset, emptyState, folderRefLabel, indexByKey, listCountText, listSetSize, listTitle, phoneNavValue, rowView } from "./model";
 import { useListInteractions } from "./useListInteractions";
@@ -59,6 +62,7 @@ export function ListPane() {
   const query = useSelectionStore((x) => x.query);
   const selectedKey = useSelectionStore((x) => x.selectedKey);
   const multi = useSelectionStore(selectHasMulti);
+  const mayWrite = useCanWrite();
   // Search as you type: the field stays instant, the list follows when it can.
   const deferredQuery = useDeferredValue(query);
 
@@ -231,7 +235,7 @@ export function ListPane() {
       const row = selectedIndex >= 0 ? rows[selectedIndex] : rows[0];
       if (!row) return;
       e.preventDefault();
-      mailActions.openRow(row);
+      openRow(row);
     } else if (e.key === "Escape" && anchor) {
       setAnchor(null);
     }
@@ -251,6 +255,26 @@ export function ListPane() {
           <h1 className="sr-only">{title}</h1>
         )}
       </div>
+
+      {list.failedInboxes.length && hasRows ? (
+        <div className={s.partial} role="status">
+          <span className={s.partialText}>
+            {partialFailureText(
+              list.failedInboxes.map((f) => inboxes?.find((i) => i.inbox_id === f.inbox_id)?.email_address ?? "A mailbox"),
+              list.failedInboxes.every((f) => f.code === "reconnect_required"),
+            )}
+          </span>
+          {list.failedInboxes.every((f) => f.code === "reconnect_required") ? (
+            <a href={DASHBOARD_URL} target="_blank" rel="noreferrer">
+              Reconnect
+            </a>
+          ) : (
+            <button type="button" className={s.partialRetry} onClick={list.refetch}>
+              Retry
+            </button>
+          )}
+        </div>
+      ) : null}
 
       <div className={s.scrollWrap}>
         {holdNote || pendingCount > 0 ? (
@@ -320,6 +344,7 @@ export function ListPane() {
                       unread={!row.is_read}
                       starred={row.is_starred}
                       canStar={view.canStar}
+                      readOnly={!mayWrite}
                       attachable={!view.outgoing}
                       hasAttachment={row.has_attachments}
                       boxName={boxNames[row.inbox_id] ?? ""}
@@ -341,7 +366,14 @@ export function ListPane() {
       </div>
 
       {phone ? (
-        <button type="button" className={s.fab} aria-label="Compose" title="Compose" onClick={() => mailActions.newCompose()}>
+        <button
+          type="button"
+          className={s.fab}
+          aria-label="Compose"
+          title={mayWrite ? "Compose" : READ_ONLY_EXPLANATION}
+          disabled={!mayWrite}
+          onClick={() => mailActions.newCompose()}
+        >
           <PenLine size={20} aria-hidden="true" />
         </button>
       ) : null}
@@ -466,3 +498,10 @@ const PhoneNav = memo(function PhoneNav({ scope, folderId, isInbox, inboxes, fol
 });
 
 export default ListPane;
+
+/** "Could not load a@x.com. The other mailboxes are shown." */
+function partialFailureText(names: string[], reconnect: boolean): string {
+  const who = names.length === 1 ? (names[0] ?? "A mailbox") : `${names.length} mailboxes`;
+  if (reconnect) return `${who} ${names.length === 1 ? "needs" : "need"} reconnecting. The other mailboxes are shown.`;
+  return `Could not load ${who}. The other mailboxes are shown.`;
+}

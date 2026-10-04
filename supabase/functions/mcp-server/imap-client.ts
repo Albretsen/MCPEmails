@@ -22,6 +22,7 @@
 
 import { previewFromBodyPartSource } from "./text-extract.ts";
 import { connectGuardedTcp } from "./host-guard.ts";
+import { firstPartyContext } from "./first-party.ts";
 import { decodeModifiedUtf7, encodeModifiedUtf7 } from "./utf7.ts";
 import { parseCopyUid } from "./imap-copyuid.ts";
 import {
@@ -579,6 +580,17 @@ export class ImapClient {
    * `imap_auth_failed`.
    */
   static async connect(cfg: ImapConnectConfig): Promise<ImapClient> {
+    // client-api only (see first-party.ts): its session pool may answer with a
+    // connection it already holds. The store is never opened for an MCP
+    // request, so there this is one undefined read and the dial below runs
+    // exactly as it always has.
+    const pooled = firstPartyContext.getStore()?.imapConnect;
+    if (pooled) return await pooled(cfg, () => ImapClient.dial(cfg));
+    return await ImapClient.dial(cfg);
+  }
+
+  /** The dial {@link connect} has always performed: timed connect-with-retry. */
+  private static async dial(cfg: ImapConnectConfig): Promise<ImapClient> {
     const timing = currentImapTimings();
     if (timing === null) return await ImapClient.connectWithRetry(cfg, null);
     const startedMs = imapClockMs();
@@ -1280,6 +1292,29 @@ export class ImapClient {
     }, "fetch");
   }
 
+  /**
+   * NOOP: one round trip that proves the connection is still alive and
+   * authenticated. Used by client-api's session pool to validate a connection
+   * that has sat idle before handing it out again; the MCP server, which
+   * dials per call, never needs it. Throws when the server does not answer OK.
+   */
+  noop(): Promise<void> {
+    return this.runExclusive(async () => {
+      const tag = this.nextTag();
+      await this.write(`${tag} NOOP${CRLF}`);
+      const resp = await this.readTagged(tag);
+      if (resp.status !== "OK") throw new Error(`NOOP failed: ${resp.text}`);
+    });
+  }
+
+  /**
+   * True once the socket is known to be unusable (destroyed, or EOF seen).
+   * Read by client-api's session pool when a lease is returned.
+   */
+  get dead(): boolean {
+    return this.destroyed || this.eofReached;
+  }
+
   /** Mark a message read by setting the \Seen flag. Best-effort. */
   markSeen(uid: number): Promise<void> {
     return this.runExclusive(async () => {
@@ -1568,6 +1603,66 @@ export class ImapClient {
       }
       return statusFromLine(resp.untagged.find((l) => /^\* STATUS\b/.test(l)));
     }, "status");
+  }
+
+  /**
+   * STATUS for change detection: the counters {@link mailboxStatus} reads,
+   * plus HIGHESTMODSEQ when the server advertises CONDSTORE or QRESYNC (RFC
+   * 7162), which moves on ANY change to the mailbox including a flag change.
+   * `highestModSeq` is null on a server without it. A new method rather than
+   * a new item on `mailboxStatus`, so the command every existing caller sends
+   * stays byte for byte what it was. Used by client-api's `status` op only.
+   */
+  mailboxChangeState(
+    mailbox: string,
+  ): Promise<ImapMailboxStatus & { highestModSeq: string | null }> {
+    return this.runExclusive(async () => {
+      const condstore = this.capabilities?.has("CONDSTORE") === true ||
+        this.capabilities?.has("QRESYNC") === true;
+      const tag = this.nextTag();
+      await this.write(
+        `${tag} STATUS ${quoteMailbox(mailbox)} (MESSAGES UNSEEN UIDNEXT UIDVALIDITY` +
+          `${condstore ? " HIGHESTMODSEQ" : ""})${CRLF}`,
+      );
+      const resp = await this.readTagged(tag);
+      if (resp.status !== "OK") {
+        throw new Error(`STATUS failed for "${mailbox}": ${resp.text}`);
+      }
+      const line = resp.untagged.find((l) => /^\* STATUS\b/.test(l));
+      const modSeq = line ? /\bHIGHESTMODSEQ\s+(\d+)/.exec(line) : null;
+      return { ...statusFromLine(line), highestModSeq: modSeq ? modSeq[1] : null };
+    }, "status");
+  }
+
+  /**
+   * `FETCH first:last (UID FLAGS)` on the SELECTED mailbox, as one compact
+   * string (`uid:flag,flag;uid:...`, flags sorted), or null when the server
+   * refuses the range. No envelope, no body: a few dozen bytes per message.
+   *
+   * Used by client-api's `status` op only, and only on a server WITHOUT
+   * CONDSTORE, where STATUS cannot see a star set from another mail client:
+   * the caller hashes this for the newest messages of a folder. A new method,
+   * so no command an existing caller sends changes.
+   */
+  flagsBySequence(first: number, last: number): Promise<string | null> {
+    if (!Number.isInteger(first) || !Number.isInteger(last) || first < 1 || last < first) {
+      return Promise.resolve("");
+    }
+    return this.runExclusive(async () => {
+      const tag = this.nextTag();
+      await this.write(`${tag} FETCH ${first}:${last} (UID FLAGS)${CRLF}`);
+      const resp = await this.readTagged(tag);
+      if (resp.status !== "OK") return null;
+      const rows: string[] = [];
+      for (const line of resp.untagged) {
+        if (!/^\* \d+ FETCH /.test(line)) continue;
+        const uid = /\bUID (\d+)/.exec(line);
+        const flags = /\bFLAGS \(([^)]*)\)/.exec(line);
+        if (!uid) continue;
+        rows.push(`${uid[1]}:${(flags?.[1] ?? "").split(/\s+/).filter(Boolean).sort().join(",")}`);
+      }
+      return rows.join(";");
+    }, "fetch");
   }
 
   /**
