@@ -15,12 +15,12 @@ import { ASSISTANT_INPUT_ATTR, useShell } from "../shell";
 import s from "./Assistant.module.css";
 import {
   type Suggestion,
-  attachable,
   chipKeys,
   chipLabel,
   composerPlaceholder,
   fitSuggestions,
   inboxSuggestions,
+  onScreenTarget,
   panelStatus,
   standardActions,
   threadSuggestions,
@@ -70,7 +70,10 @@ export function Composer({ phone, compact }: { phone: boolean; compact: boolean 
   // Used up: say so here, with the date it comes back. Nothing is retried.
   const exhausted = !!allowance && (blocked || isAllowanceExhausted(allowance)) && allowance.cap != null;
 
-  const target = attachable(selectedKey ? findRow(focusedKey ?? selectedKey) : undefined);
+  // Phone: the per-message actions and the chip exist only while the reader is
+  // the screen showing (model.ts `onScreenTarget`). The selection itself stays.
+  const screen = useUiStore((u) => u.screen);
+  const target = onScreenTarget(selectedKey ? findRow(focusedKey ?? selectedKey) : undefined, { phone, screen });
   const reader = !!target;
   // Every message of the open conversation, the person's own replies
   // included (they are half of it). `threadSize` is read so this follows
@@ -84,7 +87,7 @@ export function Composer({ phone, compact }: { phone: boolean; compact: boolean 
         : [],
     [selectedKey, threadSize],
   );
-  const canWiden = conversation.length > 1 && multiSel.length < 2;
+  const canWiden = reader && conversation.length > 1 && multiSel.length < 2;
   const whole = ctxConversation && canWiden;
   const inline = isInlineCompose(compose, selectedKey);
   const held = !!compose?.held || pushPending;

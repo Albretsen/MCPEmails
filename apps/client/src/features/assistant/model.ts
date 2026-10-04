@@ -31,6 +31,22 @@ export function attachable(row: MessageRow | undefined): MessageRow | null {
   return role === "drafts" || role === "sent" || role === "scheduled" ? null : row;
 }
 
+/**
+ * The email the composer acts on RIGHT NOW: the attachable open email, and on
+ * phone only while the reader is the screen showing. A phone shows one screen
+ * at a time and the selection outlives the reader (it is what restores the
+ * list's position on the way back), so on the list or the compose screen the
+ * "open" email is not on screen: no "Draft a reply", no "Summarize", no chip
+ * naming an email the person cannot see.
+ */
+export function onScreenTarget(
+  row: MessageRow | undefined,
+  view: { phone: boolean; screen: "list" | "reader" | "compose" },
+): MessageRow | null {
+  if (view.phone && view.screen !== "reader") return null;
+  return attachable(row);
+}
+
 /** Emails that ride along with the next message. `conversation`: every
  *  message of the open conversation, given when the person chose "the whole
  *  conversation" (otherwise the chip carries the focused message alone). */
