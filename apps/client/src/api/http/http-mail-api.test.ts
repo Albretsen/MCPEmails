@@ -470,7 +470,17 @@ describe("HttpMailApi: sending", () => {
     const file = await api.downloadAttachment("a:m1", 0);
     expect(file.filename).toBe("Übersicht 2026.pdf");
     expect(file.mime_type).toBe("application/pdf");
-    expect(await file.blob.text()).toBe("PDF!");
+    // The Blob is Node's or jsdom's depending on the runtime; only one of them has text().
+    const blob = file.blob as Blob & { text?: () => Promise<string> };
+    const text = typeof blob.text === "function"
+      ? await blob.text()
+      : await new Promise<string>((resolve, reject) => {
+          const reader = new FileReader();
+          reader.onload = () => resolve(String(reader.result));
+          reader.onerror = () => reject(reader.error);
+          reader.readAsText(blob);
+        });
+    expect(text).toBe("PDF!");
     expect(backend.calls("attachment")[0]?.args).toEqual({ message_id: "m1", attachment_index: 0 });
   });
 });

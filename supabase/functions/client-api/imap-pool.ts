@@ -87,7 +87,7 @@ interface Entry<C> {
   flow: object | null;
   leasedAt: number;
   idleSince: number;
-  idleTimer: number | null;
+  idleTimer: TimerHandle | null;
   /** Every live connection for this key, pooled and overflow. */
   live: number;
   waiters: Array<() => void>;
@@ -113,9 +113,14 @@ const defaults = {
   maxIdleTotal: 64,
 };
 
-function unref(timer: number): void {
+/** `setTimeout` returns a number on older Deno and a Timeout object on newer ones. */
+type TimerHandle = ReturnType<typeof setTimeout>;
+
+function unref(timer: TimerHandle): void {
   try {
-    (Deno as unknown as { unrefTimer?: (id: number) => void }).unrefTimer?.(timer);
+    const handle = timer as unknown as { unref?: () => void };
+    if (typeof handle === "object" && handle !== null && typeof handle.unref === "function") handle.unref();
+    else (Deno as unknown as { unrefTimer?: (id: unknown) => void }).unrefTimer?.(timer);
   } catch { /* not available: the timer just keeps the loop alive until it fires */ }
 }
 

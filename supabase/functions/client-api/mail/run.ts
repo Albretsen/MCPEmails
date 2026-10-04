@@ -193,7 +193,7 @@ function isErrorOutcome(outcome: ExecutorOutcome): boolean {
 }
 
 function withTimeout<T>(work: Promise<T>, ms: number): Promise<T> {
-  let timer: number | undefined;
+  let timer: ReturnType<typeof setTimeout> | undefined;
   const timeout = new Promise<never>((_, reject) => {
     timer = setTimeout(
       () => reject(new ApiError(504, "timeout", "The mail provider took too long. Try again.", { retryable: true })),
