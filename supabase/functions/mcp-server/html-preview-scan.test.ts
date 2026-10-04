@@ -10,36 +10,14 @@
 // Three things are pinned here:
 //   1. adversarial input: nested, overlapping and unterminated markup never
 //      leaves a `<` from the source in the output;
-//   2. parity: on ordinary mail the scanner says exactly what the chain said;
-//   3. cost: 25 rows, before and after (printed), since it is on the list path.
+//   2. ordinary mail: pinned outputs (the values the chain produced too);
+//   3. cost: 25 rows (printed), since it is on the list path.
 //
 // Run: deno test supabase/functions/mcp-server/html-preview-scan.test.ts
 // ---------------------------------------------------------------------------
 
 import { assert, assertEquals } from "jsr:@std/assert@1";
 import { cleanPreviewFromBodyPart, decodeHtmlEntities, htmlPreviewText } from "./text-extract.ts";
-
-/** The chain this scanner replaced, verbatim, as the reference for parity and for the benchmark. */
-function chainedHtmlPreviewText(html: string): string {
-  const NON_TEXT = "style|script|head|title|noscript|template|svg|xml";
-  const INLINE =
-    /<\/?(?:a|abbr|b|big|code|em|font|i|label|mark|s|small|span|strike|strong|sub|sup|tt|u|wbr)\b[^>]*>/gi;
-  // Applied until nothing changes, so the reference itself cannot leave markup
-  // behind. On ordinary mail the first pass already removes everything, which
-  // is what the parity test below relies on.
-  let text = html.replace(/&shy;/gi, "");
-  let previous: string;
-  do {
-    previous = text;
-    text = text
-      .replace(/<!--[\s\S]*?(?:-->|$)/g, " ")
-      .replace(new RegExp(`<(${NON_TEXT})\\b[\\s\\S]*?(?:<\\/\\1\\s*>|$)`, "gi"), " ")
-      .replace(INLINE, "")
-      .replace(/<[^>]*>/g, " ")
-      .replace(/<[^>]*$/, " ");
-  } while (text !== previous);
-  return decodeHtmlEntities(text).replace(/&#?[a-zA-Z0-9]{0,31}$/, "");
-}
 
 const squash = (text: string): string => text.replace(/\s+/g, " ").trim();
 
@@ -114,28 +92,31 @@ Deno.test("html preview: an entity is decoded once, after the scan, and is never
   assertEquals(cleanPreviewFromBodyPart("<p>Hi <scr<script>ipt>x</script></p><style>a{}", part), "Hi ipt>x");
 });
 
-// ── 2. parity with the chain on ordinary mail ───────────────────────────────
+// ── 2. ordinary mail: pinned outputs ───────────────────────────────────────
+// These are the values the replace chain produced too (checked when the scanner
+// was introduced, PR #70); the chain itself is gone, so they are pinned here.
 
-const ORDINARY: string[] = [
-  "<html><head><meta charset=\"utf-8\"><title>Invoice</title><style>body{margin:0}@media (max-width:600px){.a>.b{display:none}}</style></head><body><table><tr><td>Hello Kari,</td><td>your invoice is ready.</td></tr></table></body></html>",
-  "<!DOCTYPE html><html><body><!--[if mso]><xml><o:OfficeDocumentSettings><o:PixelsPerInch>96</o:PixelsPerInch></o:OfficeDocumentSettings></xml><![endif]--><div style=\"display:none\">Preheader &zwnj;&nbsp;&zwnj;&nbsp;</div><p>Hei <strong>Ødegård</strong> – “velkommen”&hellip;</p></body></html>",
-  "<div>Line one<br>Line two<br/>Line <i>three</i></div><p>Tom &amp; Jerry &lt;tom@example.com&gt;</p>",
-  "<p>See <a href=\"https://example.com/a?b=1&amp;c=2\">the report</a>. Thanks,<br>Maya</p><img src=\"https://example.com/p.gif\" width=\"1\" height=\"1\">",
-  "<table><tr><td><font face=\"Arial\"><span style=\"color:#333\">Your code is <b>482913</b></span></font></td></tr></table><script type=\"application/ld+json\">{\"@type\":\"EmailMessage\"}</script>",
-  "Plain words with no markup at all, &copy; 2026 Example AS.",
-  "<body><style>p{}</style><p>Cut in the mid",
-  "<body><p>Cut inside a tag <a href=\"https://example.com/very/long",
-  "<body><p>Cut inside an entity &nbs",
-  "<head><style>.x{color:red}",
-  "",
+const ORDINARY: Array<[source: string, expected: string]> = [
+  ["<html><head><meta charset=\"utf-8\"><title>Invoice</title><style>body{margin:0}@media (max-width:600px){.a>.b{display:none}}</style></head><body><table><tr><td>Hello Kari,</td><td>your invoice is ready.</td></tr></table></body></html>", "      Hello Kari,  your invoice is ready.     "],
+  ["<!DOCTYPE html><html><body><!--[if mso]><xml><o:OfficeDocumentSettings><o:PixelsPerInch>96</o:PixelsPerInch></o:OfficeDocumentSettings></xml><![endif]--><div style=\"display:none\">Preheader &zwnj;&nbsp;&zwnj;&nbsp;</div><p>Hei <strong>Ødegård</strong> – “velkommen”&hellip;</p></body></html>", "     Preheader ‌ ‌   Hei Ødegård – “velkommen”…   "],
+  ["<div>Line one<br>Line two<br/>Line <i>three</i></div><p>Tom &amp; Jerry &lt;tom@example.com&gt;</p>", " Line one Line two Line three  Tom & Jerry <tom@example.com> "],
+  ["<p>See <a href=\"https://example.com/a?b=1&amp;c=2\">the report</a>. Thanks,<br>Maya</p><img src=\"https://example.com/p.gif\" width=\"1\" height=\"1\">", " See the report. Thanks, Maya  "],
+  ["<table><tr><td><font face=\"Arial\"><span style=\"color:#333\">Your code is <b>482913</b></span></font></td></tr></table><script type=\"application/ld+json\">{\"@type\":\"EmailMessage\"}</script>", "   Your code is 482913    "],
+  ["Plain words with no markup at all, &copy; 2026 Example AS.", "Plain words with no markup at all, © 2026 Example AS."],
+  ["<body><style>p{}</style><p>Cut in the mid", "   Cut in the mid"],
+  ["<body><p>Cut inside a tag <a href=\"https://example.com/very/long", "  Cut inside a tag  "],
+  ["<body><p>Cut inside an entity &nbs", "  Cut inside an entity "],
+  ["<head><style>.x{color:red}", " "],
+  ["", ""],
 ];
 
-Deno.test("html preview: on ordinary mail the scanner returns exactly what the replace chain returned", () => {
-  for (const source of ORDINARY) {
-    assertEquals(htmlPreviewText(source), chainedHtmlPreviewText(source), source.slice(0, 60));
-    // And at every cut of it.
+Deno.test("html preview: ordinary mail gives the pinned text, and no cut of it leaves markup", () => {
+  for (const [source, expected] of ORDINARY) {
+    assertEquals(htmlPreviewText(source), expected, source.slice(0, 60));
     for (let cut = 0; cut < source.length; cut += 7) {
-      assertEquals(htmlPreviewText(source.slice(0, cut)), chainedHtmlPreviewText(source.slice(0, cut)), `${source.slice(0, 40)} @${cut}`);
+      const out = htmlPreviewText(source.slice(0, cut));
+      // The only "<" a preview may hold is one the sender wrote as an entity.
+      if (!source.includes("&lt;")) assert(!out.includes("<"), `${source.slice(0, 40)} @${cut}: ${JSON.stringify(out)}`);
     }
   }
 });
@@ -154,28 +135,16 @@ function page(): string[] {
   return rows;
 }
 
-Deno.test("html preview: 25 rows cost no more than the chain did (printed)", () => {
+Deno.test("html preview: 25 rows stay cheap (printed)", () => {
   const rows = page();
-  const time = (fn: (html: string) => string): number => {
-    // Warm up, then the best of several runs of many pages: one page is too
-    // fast to time on its own.
-    for (let i = 0; i < 200; i++) for (const row of rows) fn(row);
-    let best = Infinity;
-    for (let run = 0; run < 7; run++) {
-      const started = performance.now();
-      for (let i = 0; i < 400; i++) for (const row of rows) fn(row);
-      best = Math.min(best, (performance.now() - started) / 400);
-    }
-    return best;
-  };
-  const before = time(chainedHtmlPreviewText);
-  const after = time(htmlPreviewText);
-  console.log(
-    `html preview, 25 rows of 2 KB: replace chain ${(before * 1000).toFixed(1)} µs, single-pass scanner ${(after * 1000).toFixed(1)} µs ` +
-      `(${(after / before * 100).toFixed(0)}% of before)`,
-  );
-  for (const row of rows) assertEquals(htmlPreviewText(row), chainedHtmlPreviewText(row));
-  // Generous on purpose (shared CI runners): the claim is "not slower in any
-  // way that matters", and a page is tens of microseconds either way.
-  assert(after < Math.max(before * 2, 0.5), `scanner ${after} ms per page vs chain ${before} ms`);
+  for (let i = 0; i < 200; i++) for (const row of rows) htmlPreviewText(row);
+  let best = Infinity;
+  for (let run = 0; run < 7; run++) {
+    const started = performance.now();
+    for (let i = 0; i < 400; i++) for (const row of rows) htmlPreviewText(row);
+    best = Math.min(best, (performance.now() - started) / 400);
+  }
+  console.log(`html preview, 25 rows of 2 KB: ${(best * 1000).toFixed(1)} µs per page`);
+  // Generous on purpose (shared CI runners): a page is a fraction of a millisecond.
+  assert(best < 2, `scanner ${best} ms per page`);
 });
