@@ -1,6 +1,6 @@
 'use client';
 
-import { useState, useEffect, useCallback } from 'react';
+import { useState, useEffect, useCallback, useRef } from 'react';
 import { useTranslations } from 'next-intl';
 import { useRouter, useSearchParams } from 'next/navigation';
 import { useTweaks, TweakSection, TweakRadio, TweakToggle, TweaksPanel } from '../tweaks-panel';
@@ -18,6 +18,12 @@ import { warmSignatureEditor } from './signature-editor-loader.mjs';
 import { trackProductEvent } from '@/lib/analytics.mjs';
 import { parseUpgradeIntent } from '@/lib/billing/upgrade-intent.mjs';
 import { isBusinessShapedWorkspace } from '@/lib/segment/consumer-domains.mjs';
+import {
+  connectIntentStorage,
+  takeConnectIntent,
+  withoutConnectIntent,
+} from '@/lib/connect/intent-carry.mjs';
+import { findMailHostPreset } from '@/lib/email-providers/host-presets';
 
 /* App.jsx: dashboard root. Owns state, route, modals.
    firstrun param auto-opens the connect modal.
@@ -263,6 +269,13 @@ function DashboardInner({ initialRoute = 'overview', user, workspace: serverWork
     if (syncedFrom.invites !== serverPendingInvites) setPendingInvites(serverPendingInvites ?? []);
   }
   const [showConnect, setShowConnect] = useState(false);
+  // The provider a /connect/<slug> landing page sent this person for, resolved
+  // into what the ConnectModal preselects. Set at most once per page load (see
+  // the first-run effect below) and dropped when the modal closes, so every
+  // later opening of the modal is the ordinary one.
+  const [connectPreselect, setConnectPreselect] = useState(null);
+  // undefined = not looked at yet, null = nothing (or already spent).
+  const connectIntentSlug = useRef(undefined);
   // The shareable Microsoft 365 admin-consent link (AdminConsentLinkDialog).
   const [showAdminLink, setShowAdminLink] = useState(false);
   // When set, the ConnectModal opens in reconnect mode for this existing inbox
@@ -340,12 +353,69 @@ function DashboardInner({ initialRoute = 'overview', user, workspace: serverWork
     // eslint-disable-next-line
   }, []);
 
-  // Auto-open Connect modal on first run, with a brief welcome delay
+  // Auto-open Connect modal on first run, with a brief welcome delay.
+  //
+  // A visitor who came from a provider landing page ("Connect IONOS free")
+  // carries that provider here as `?provider=<slug>` and/or in browser storage
+  // (lib/connect/intent-carry.mjs). For them the modal opens with that provider
+  // preselected, on a first run and on an ordinary sign-in alike. For everyone
+  // else `slug` is null and this is the same timer it has always been.
   useEffect(() => {
-    if (firstrun) {
-      const id = setTimeout(() => setShowConnect(true), 400);
-      return () => clearTimeout(id);
+    if (connectIntentSlug.current === undefined) {
+      // Read it and spend it in the same breath: the stored record is removed
+      // and the parameter leaves the address bar before anything is shown, so
+      // a reload, a dismissal or a finished connection never sees it again.
+      // The ref (not the storage) is what a development double-run of this
+      // effect reads the second time.
+      let slug = null;
+      try {
+        slug = takeConnectIntent({ search: window.location.search, storage: connectIntentStorage() });
+        const stripped = withoutConnectIntent(window.location.href);
+        if (stripped !== window.location.href) window.history.replaceState({}, '', stripped);
+      } catch { /* a hint is never worth an error */ }
+      connectIntentSlug.current = slug;
     }
+    const slug = connectIntentSlug.current;
+
+    if (!slug) {
+      if (firstrun) {
+        const id = setTimeout(() => setShowConnect(true), 400);
+        return () => clearTimeout(id);
+      }
+      return;
+    }
+
+    // The registry is 80 KB, so it is loaded only for someone who arrived with
+    // a hint, and the modal waits for it: ConnectModal reads `preselect` once,
+    // when it mounts. The first-run welcome delay is kept alongside.
+    let cancelled = false;
+    const welcome = new Promise(resolve => setTimeout(resolve, firstrun ? 400 : 0));
+    const resolved = import('@/lib/connect/intent.mjs')
+      .then(({ resolveConnectIntent, connectPreselectFor }) =>
+        connectPreselectFor(resolveConnectIntent(slug), findMailHostPreset))
+      // Failing to load a hint must leave the dashboard exactly as it was.
+      .catch(() => null);
+    Promise.all([resolved, welcome]).then(([preselect]) => {
+      if (cancelled) return;
+      connectIntentSlug.current = null;
+      // An unknown, unreleased or unsupported provider resolves to null. So
+      // does nothing at all: a first run still gets its modal, and an ordinary
+      // sign-in gets the dashboard and no modal.
+      // At the inbox cap the modal IS the upgrade panel, and a hint never opens
+      // a paywall on its own.
+      const atCap = planLimits != null && planLimits.maxInboxes != null
+        && (serverInboxes?.length ?? 0) >= planLimits.maxInboxes;
+      if (preselect && !atCap) {
+        setConnectPreselect(preselect);
+        setShowConnect(true);
+      } else if (firstrun) {
+        setShowConnect(true);
+      }
+    });
+    return () => { cancelled = true; };
+    // Runs once per `firstrun`; the plan and inbox props it reads are the ones
+    // the page loaded with, which is the moment the question is about.
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [firstrun]);
 
   // Handle ?connected=<provider> and ?error=<code> params injected by OAuth callbacks.
@@ -895,6 +965,7 @@ function DashboardInner({ initialRoute = 'overview', user, workspace: serverWork
     });
     setReconnectInbox(null);
     setShowConnect(false);
+    setConnectPreselect(null);
     // Say which settings the mailbox is actually on, when they are not the ones
     // the user submitted. All three connect routes autodetect the transport and
     // store what worked, and they have always reported it back; nothing read
@@ -1130,8 +1201,9 @@ function DashboardInner({ initialRoute = 'overview', user, workspace: serverWork
       {showConnect && (
         <ConnectModal
           reconnect={reconnectInbox}
-          onClose={() => { setShowConnect(false); setReconnectInbox(null); }}
+          onClose={() => { setShowConnect(false); setReconnectInbox(null); setConnectPreselect(null); }}
           onConnect={onConnect}
+          preselect={reconnectInbox == null ? connectPreselect : null}
           atInboxLimit={reconnectInbox == null && planLimits != null && planLimits.maxInboxes != null && inboxes.length >= planLimits.maxInboxes}
           planName={planDisplayName(workspace?.plan)}
           inboxCount={inboxes.length}
