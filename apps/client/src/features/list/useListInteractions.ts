@@ -6,6 +6,8 @@ import { useLatest } from "../../lib/hooks";
 import { getPlatform } from "../../platform";
 import { revealAssistant, useAssistantStore } from "../../state/assistant-store";
 import { useSelectionStore } from "../../state/selection-store";
+import { canWrite, refuseWrite } from "../../state/permissions";
+import { openRow } from "./open-row";
 import { type SwipeAllowed, swipeAllowed, swipeArmed, swipeDirection, swipeIntent, swipeOffset, swipeOutcome, swipeVelocity } from "./swipe";
 
 /* Every pointer, touch and click on the list is handled HERE, by delegation
@@ -142,7 +144,7 @@ export function useListInteractions(options: ListInteractionOptions): ListIntera
       const row = o.getRow(key);
       if (!row) return;
       if (o.anchor) o.setAnchor(null);
-      mailActions.openRow(row);
+      openRow(row);
     };
 
     const ticking = () => opts.current.anchor != null || useSelectionStore.getState().multiSel.length > 1;
@@ -150,6 +152,7 @@ export function useListInteractions(options: ListInteractionOptions): ListIntera
     const act = (name: string, key: MessageKey) => {
       if (name === "check") tick(key);
       else if (name === "star") {
+        if (refuseWrite()) return;
         const row = opts.current.getRow(key);
         if (row) void mailActions.star([key], !row.is_starred);
       } else if (name === "trace") {
@@ -192,6 +195,7 @@ export function useListInteractions(options: ListInteractionOptions): ListIntera
       }
       getPlatform().haptics.tick();
       const run = () => {
+        if (!canWrite()) return;
         void (action === "archive" ? mailActions.archive([key]) : mailActions.trash([key]));
         // The row normally unmounts with the cache write. If it stays (the
         // action did not remove it from this list), put it back.
@@ -302,7 +306,7 @@ export function useListInteractions(options: ListInteractionOptions): ListIntera
           y0: t.clientY,
           // One layout read per touch, in the handler, never during render.
           width: rowEl.offsetWidth,
-          allowed: swipeAllowed(row?.folder_role ?? null, !o.phone || isGhost || ticking() || !!actOf(e.target)),
+          allowed: swipeAllowed(row?.folder_role ?? null, !o.phone || isGhost || ticking() || !!actOf(e.target) || !canWrite()),
           intent: null,
           dx: 0,
           px: t.clientX,

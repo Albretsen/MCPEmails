@@ -4,6 +4,7 @@ import fs from 'node:fs';
 import path from 'node:path';
 import { fileURLToPath } from 'node:url';
 import {
+  assertWorkspaceResources,
   FILTER_BOOLEAN_FIELDS,
   FILTER_DATE_FIELDS,
   FILTER_STRING_FIELDS,
@@ -208,4 +209,42 @@ test('the edge function still refuses the same filters at write time', () => {
     /unappliedSearchFields\(check\.value, inboxProvider\)/,
     'validateAutomationBody no longer refuses unrunnable filters; the dashboard check below it is now a second opinion',
   );
+});
+
+test('the hidden web-client key cannot be bound to an automation', async () => {
+  // api_keys.kind is NULL for every ordinary key and 'web_client' for the one
+  // system-owned key the client-api edge function acts through. The dashboard
+  // API runs this check as the service role, so RLS does not hide that row:
+  // the query has to. A hidden key must answer exactly like a missing one.
+  const rows: Record<string, Record<string, unknown>[]> = {
+    inboxes: [{ id: 'inbox-1', workspace_id: 'ws-1', deleted_at: null }],
+    api_keys: [
+      { id: 'key-plain', workspace_id: 'ws-1', kind: null, scopes: [], inbox_ids: null, deleted_at: null },
+      { id: 'key-hidden', workspace_id: 'ws-1', kind: 'web_client', scopes: [], inbox_ids: null, deleted_at: null },
+    ],
+  };
+  const db = {
+    from(table: string) {
+      let matches = rows[table] ?? [];
+      const chain = {
+        select: () => chain,
+        eq: (column: string, value: unknown) => {
+          matches = matches.filter((row) => row[column] === value);
+          return chain;
+        },
+        is: (column: string, value: unknown) => {
+          matches = matches.filter((row) => (row[column] ?? null) === value);
+          return chain;
+        },
+        maybeSingle: async () => ({ data: matches[0] ?? null, error: null }),
+      };
+      return chain;
+    },
+  };
+
+  assert.equal(await assertWorkspaceResources(db, 'ws-1', 'inbox-1', 'key-plain'), null);
+  const missing = await assertWorkspaceResources(db, 'ws-1', 'inbox-1', 'key-absent');
+  const hidden = await assertWorkspaceResources(db, 'ws-1', 'inbox-1', 'key-hidden');
+  assert.deepEqual(missing, { error: 'That API key is not available in this workspace.', status: 400 });
+  assert.deepEqual(hidden, missing);
 });

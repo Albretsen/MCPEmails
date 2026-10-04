@@ -7,6 +7,8 @@ export interface ToastInput {
   text: string;
   /** Shows an Undo button. Runs at most once. */
   undo?: () => void | Promise<void>;
+  /** Another button ("Retry"). Runs at most once; ignored when `undo` is set. */
+  action?: { label: string; run: () => void | Promise<void> };
   durationMs?: number;
   kind?: "info" | "error";
 }
@@ -26,6 +28,8 @@ export interface ToastState {
   dismiss(id?: number): void;
   /** Runs the toast's undo and dismisses it. */
   runUndo(): void;
+  /** Runs the toast's action and dismisses it. */
+  runAction(): void;
   pause(): void;
   resume(): void;
 }
@@ -76,6 +80,12 @@ export const useToastStore = create<ToastState>((set, get) => {
       if (!cur) return;
       get().dismiss(cur.id);
       void cur.undo?.();
+    },
+    runAction: () => {
+      const cur = get().toast;
+      if (!cur) return;
+      get().dismiss(cur.id);
+      void cur.action?.run();
     },
     pause: () => {
       if (!get().toast || get().paused) return;

@@ -20,8 +20,13 @@
  * A faithful Node reference lives at apps/web/src/lib/email/imap.ts.
  */
 
-import { previewFromBodyPartSource } from "./text-extract.ts";
+import {
+  cleanPreviewFromBodyPart,
+  previewFromBodyPartSource,
+  type PreviewPartInfo,
+} from "./text-extract.ts";
 import { connectGuardedTcp } from "./host-guard.ts";
+import { firstPartyContext, summaryPreviewItem, wantsCleanPreview } from "./first-party.ts";
 import { decodeModifiedUtf7, encodeModifiedUtf7 } from "./utf7.ts";
 import { parseCopyUid } from "./imap-copyuid.ts";
 import {
@@ -579,6 +584,17 @@ export class ImapClient {
    * `imap_auth_failed`.
    */
   static async connect(cfg: ImapConnectConfig): Promise<ImapClient> {
+    // client-api only (see first-party.ts): its session pool may answer with a
+    // connection it already holds. The store is never opened for an MCP
+    // request, so there this is one undefined read and the dial below runs
+    // exactly as it always has.
+    const pooled = firstPartyContext.getStore()?.imapConnect;
+    if (pooled) return await pooled(cfg, () => ImapClient.dial(cfg));
+    return await ImapClient.dial(cfg);
+  }
+
+  /** The dial {@link connect} has always performed: timed connect-with-retry. */
+  private static async dial(cfg: ImapConnectConfig): Promise<ImapClient> {
     const timing = currentImapTimings();
     if (timing === null) return await ImapClient.connectWithRetry(cfg, null);
     const startedMs = imapClockMs();
@@ -738,7 +754,15 @@ export class ImapClient {
       // rather than at the greeting (text like [OVERQUOTA]/[UNAVAILABLE]/
       // "too many connections"). Treat those as retryable; everything else is
       // a genuine credential failure.
-      if (isConnectionLimitResponse(resp.text)) {
+      //
+      // client-api only: a refusal that carries [AUTHENTICATIONFAILED] is
+      // about the credentials whatever else its text says, so it is not
+      // retried (15 s of back-off in front of a person, and two more failed
+      // logins against a mailbox that may lock). The store is never open for
+      // an MCP request, so there the classification is what it always was.
+      const definitive = firstPartyContext.getStore() !== undefined &&
+        /\[AUTHENTICATIONFAILED\]/i.test(resp.text);
+      if (!definitive && isConnectionLimitResponse(resp.text)) {
         throw new ImapConnectionLimitError(
           `IMAP connection refused at auth: ${text}`,
         );
@@ -1204,9 +1228,11 @@ export class ImapClient {
     options: { includePreview?: boolean; maxLiteralBytes?: number },
   ): Promise<{ status: "OK" | "NO" | "BAD"; text: string; summaries: ImapMessageSummary[] }> {
     const tag = this.nextTag();
+    // `summaryPreviewItem()` is " BODY.PEEK[1]<0.2048>" for every MCP call;
+    // only client-api can ask for a different size (first-party.ts).
     const previewPart = options.includePreview === false
       ? ""
-      : " BODY.PEEK[1]<0.2048>";
+      : summaryPreviewItem();
     await this.write(
       `${tag} ${verb} ${set} (UID FLAGS ENVELOPE BODYSTRUCTURE${previewPart})${CRLF}`,
     );
@@ -1278,6 +1304,29 @@ export class ImapClient {
       }
       return { raw, flags };
     }, "fetch");
+  }
+
+  /**
+   * NOOP: one round trip that proves the connection is still alive and
+   * authenticated. Used by client-api's session pool to validate a connection
+   * that has sat idle before handing it out again; the MCP server, which
+   * dials per call, never needs it. Throws when the server does not answer OK.
+   */
+  noop(): Promise<void> {
+    return this.runExclusive(async () => {
+      const tag = this.nextTag();
+      await this.write(`${tag} NOOP${CRLF}`);
+      const resp = await this.readTagged(tag);
+      if (resp.status !== "OK") throw new Error(`NOOP failed: ${resp.text}`);
+    });
+  }
+
+  /**
+   * True once the socket is known to be unusable (destroyed, or EOF seen).
+   * Read by client-api's session pool when a lease is returned.
+   */
+  get dead(): boolean {
+    return this.destroyed || this.eofReached;
   }
 
   /** Mark a message read by setting the \Seen flag. Best-effort. */
@@ -1568,6 +1617,66 @@ export class ImapClient {
       }
       return statusFromLine(resp.untagged.find((l) => /^\* STATUS\b/.test(l)));
     }, "status");
+  }
+
+  /**
+   * STATUS for change detection: the counters {@link mailboxStatus} reads,
+   * plus HIGHESTMODSEQ when the server advertises CONDSTORE or QRESYNC (RFC
+   * 7162), which moves on ANY change to the mailbox including a flag change.
+   * `highestModSeq` is null on a server without it. A new method rather than
+   * a new item on `mailboxStatus`, so the command every existing caller sends
+   * stays byte for byte what it was. Used by client-api's `status` op only.
+   */
+  mailboxChangeState(
+    mailbox: string,
+  ): Promise<ImapMailboxStatus & { highestModSeq: string | null }> {
+    return this.runExclusive(async () => {
+      const condstore = this.capabilities?.has("CONDSTORE") === true ||
+        this.capabilities?.has("QRESYNC") === true;
+      const tag = this.nextTag();
+      await this.write(
+        `${tag} STATUS ${quoteMailbox(mailbox)} (MESSAGES UNSEEN UIDNEXT UIDVALIDITY` +
+          `${condstore ? " HIGHESTMODSEQ" : ""})${CRLF}`,
+      );
+      const resp = await this.readTagged(tag);
+      if (resp.status !== "OK") {
+        throw new Error(`STATUS failed for "${mailbox}": ${resp.text}`);
+      }
+      const line = resp.untagged.find((l) => /^\* STATUS\b/.test(l));
+      const modSeq = line ? /\bHIGHESTMODSEQ\s+(\d+)/.exec(line) : null;
+      return { ...statusFromLine(line), highestModSeq: modSeq ? modSeq[1] : null };
+    }, "status");
+  }
+
+  /**
+   * `FETCH first:last (UID FLAGS)` on the SELECTED mailbox, as one compact
+   * string (`uid:flag,flag;uid:...`, flags sorted), or null when the server
+   * refuses the range. No envelope, no body: a few dozen bytes per message.
+   *
+   * Used by client-api's `status` op only, and only on a server WITHOUT
+   * CONDSTORE, where STATUS cannot see a star set from another mail client:
+   * the caller hashes this for the newest messages of a folder. A new method,
+   * so no command an existing caller sends changes.
+   */
+  flagsBySequence(first: number, last: number): Promise<string | null> {
+    if (!Number.isInteger(first) || !Number.isInteger(last) || first < 1 || last < first) {
+      return Promise.resolve("");
+    }
+    return this.runExclusive(async () => {
+      const tag = this.nextTag();
+      await this.write(`${tag} FETCH ${first}:${last} (UID FLAGS)${CRLF}`);
+      const resp = await this.readTagged(tag);
+      if (resp.status !== "OK") return null;
+      const rows: string[] = [];
+      for (const line of resp.untagged) {
+        if (!/^\* \d+ FETCH /.test(line)) continue;
+        const uid = /\bUID (\d+)/.exec(line);
+        const flags = /\bFLAGS \(([^)]*)\)/.exec(line);
+        if (!uid) continue;
+        rows.push(`${uid[1]}:${(flags?.[1] ?? "").split(/\s+/).filter(Boolean).sort().join(",")}`);
+      }
+      return rows.join(";");
+    }, "fetch");
   }
 
   /**
@@ -2664,6 +2773,11 @@ function parseFetchLine(line: string): ImapMessageSummary | null {
   };
   let hasAttachments = false;
   let preview = "";
+  // client-api only: the preview is decoded after the loop, from what
+  // BODYSTRUCTURE (in the same reply, in either order) says part one is.
+  const clean = wantsCleanPreview();
+  let structure: Token[] | null = null;
+  let previewSource: string | null = null;
 
   for (let i = 0; i < attrs.length; i++) {
     const key = attrs[i];
@@ -2675,12 +2789,17 @@ function parseFetchLine(line: string): ImapMessageSummary | null {
       envelope = parseEnvelope(attrs[i + 1] as Token[]);
     } else if (key === "BODYSTRUCTURE" && Array.isArray(attrs[i + 1])) {
       hasAttachments = bodyStructureHasAttachment(attrs[i + 1] as Token[]);
+      structure = attrs[i + 1] as Token[];
     } else if (
       typeof key === "string" && key.startsWith("BODY[") &&
       typeof attrs[i + 1] === "string"
     ) {
-      preview = previewFromBodyPartSource(attrs[i + 1] as string);
+      if (clean) previewSource = attrs[i + 1] as string;
+      else preview = previewFromBodyPartSource(attrs[i + 1] as string);
     }
+  }
+  if (previewSource !== null) {
+    preview = cleanPreviewFromBodyPart(previewSource, structure ? partOneOfStructure(structure) : null);
   }
 
   if (!uid) return null;
@@ -2730,6 +2849,32 @@ function parseAddressList(token: Token | undefined): ImapAddress[] {
     if (email) out.push({ name, email });
   }
   return out;
+}
+
+/**
+ * What a BODYSTRUCTURE says about the part `BODY[1]` addresses: the message
+ * itself when it is not a multipart, otherwise its first child. Null when that
+ * child is a multipart too (its source then carries its own part headers).
+ */
+function partOneOfStructure(structure: Token[]): PreviewPartInfo | null {
+  let part: Token[] = structure;
+  if (Array.isArray(part[0])) part = part[0];
+  if (Array.isArray(part[0])) return null;
+  const type = asStr(part[0]).toLowerCase();
+  if (!type) return null;
+  let charset: string | null = null;
+  const params = part[2];
+  if (Array.isArray(params)) {
+    for (let i = 0; i + 1 < params.length; i += 2) {
+      if (asStr(params[i]).toLowerCase() === "charset") charset = asStr(params[i + 1]) || null;
+    }
+  }
+  return {
+    type,
+    subtype: asStr(part[1]).toLowerCase(),
+    charset,
+    encoding: asStr(part[5]).toLowerCase() || null,
+  };
 }
 
 /** Heuristic: a BODYSTRUCTURE contains an attachment disposition. */

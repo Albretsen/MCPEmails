@@ -2,6 +2,7 @@ import type { InfiniteData, QueryKey } from "@tanstack/react-query";
 import {
   type FolderEntry,
   type FolderRef,
+  type FolderRole,
   type MessageDetail,
   type MessageFlags,
   type MessageKey,
@@ -143,10 +144,51 @@ export function insertInboxRows(rows: readonly MessageRow[]): void {
   }
 }
 
+/* Folder roles the folder list itself does not reveal. A provider with opaque
+ * folder ids and localised names (Outlook: "Innboks", "Kladd") cannot be
+ * matched by name; the server resolves the role aliases, and `status` answers
+ * with the real id. The sync engine records those here (inbox -> id -> role). */
+const learnedRoles = new Map<string, Map<string, FolderRole>>();
+
+/** Returns true when something new was learned. */
+export function learnFolderRoles(inbox_id: string, pairs: readonly { id: string; role: FolderRole }[]): boolean {
+  const known = learnedRoles.get(inbox_id) ?? new Map<string, FolderRole>();
+  let changed = false;
+  for (const p of pairs) {
+    if (known.get(p.id) === p.role) continue;
+    known.set(p.id, p.role);
+    changed = true;
+  }
+  if (changed) learnedRoles.set(inbox_id, known);
+  return changed;
+}
+
+export function forgetFolderRoles(): void {
+  learnedRoles.clear();
+}
+
+/** The role of one folder of one inbox, or null for a folder of the person's own. */
+export function folderRoleOf(inbox_id: string, f: Pick<FolderEntry, "id" | "name" | "role">): FolderRole | null {
+  // The server's word, when it sends one (null = a folder of the person's own).
+  if (f.role !== undefined) return f.role;
+  return learnedRoles.get(inbox_id)?.get(f.id) ?? roleOfFolder(f.id) ?? roleOfFolder(f.name);
+}
+
+/** The folder list carries the server's `role` field. */
+export function hasServerRoles(entries: readonly FolderEntry[]): boolean {
+  return entries.some((f) => f.role !== undefined);
+}
+
 /** Finds the FolderEntry a ref points at inside one inbox's folder list. */
 export function resolveFolderEntry(entries: readonly FolderEntry[], inbox_id: string, ref: FolderRef): FolderEntry | undefined {
   if (isExactRef(ref)) return ref.inbox_id === inbox_id ? entries.find((f) => f.id === ref.folder_id) : undefined;
   if (isNameRef(ref)) return entries.find((f) => f.name.toLowerCase() === ref.name.toLowerCase());
+  // Roles from the server decide alone: a mailbox it gives no Archive has
+  // none, whatever its folders are called.
+  if (hasServerRoles(entries)) return entries.find((f) => f.role === ref.role);
+  const known = learnedRoles.get(inbox_id);
+  const learned = known ? entries.find((f) => known.get(f.id) === ref.role) : undefined;
+  if (learned) return learned;
   return entries.find((f) => roleOfFolder(f.id) === ref.role) ?? entries.find((f) => roleOfFolder(f.name) === ref.role);
 }
 
@@ -200,6 +242,8 @@ export function adjustUnreadCounts(rows: readonly MessageRow[], read: boolean): 
 
 /** Adds arriving rows to their folder's counts. */
 export function addToFolderCounts(rows: readonly MessageRow[]): void {
+  // HTTP mode: `status` already delivered the counts that include these rows.
+  if (folderRefresher) return;
   const byInbox = new Map<string, MessageRow[]>();
   for (const r of rows) byInbox.set(r.inbox_id, [...(byInbox.get(r.inbox_id) ?? []), r]);
   for (const [inbox_id, mine] of byInbox) {
@@ -248,8 +292,66 @@ export function refreshLists(match?: (meta: ListMeta) => boolean): void {
   });
 }
 
-export function refreshFolders(): void {
-  void queryClient.invalidateQueries({ queryKey: keys.foldersRoot });
+/* HTTP mode: listing folders is the slowest call the backend has, and the
+ * sync engine's `status` call returns the same counts cheaply. While a
+ * refresher is installed, "refresh the folders" means "ask for status". */
+let folderRefresher: (() => void) | null = null;
+
+export function setFolderRefresher(fn: (() => void) | null): void {
+  folderRefresher = fn;
+}
+
+/** `own`: the caller's own mutation just succeeded. In HTTP mode the sync
+ *  engine hears of every mutation itself and asks `status` for exactly the
+ *  folders it can have changed, so there is nothing to do here: a status
+ *  sweep of every mailbox after each draft autosave would be waste. */
+export function refreshFolders(opts: { own?: boolean } = {}): void {
+  if (folderRefresher) {
+    if (!opts.own) folderRefresher();
+  } else void queryClient.invalidateQueries({ queryKey: keys.foldersRoot });
+}
+
+/** Rows of one inbox in one cached list, in page order. */
+export function rowsOfList(key: QueryKey, inbox_id: string): MessageRow[] {
+  const data = queryClient.getQueryData<ListData>(key);
+  const out: MessageRow[] = [];
+  for (const page of data?.pages ?? []) for (const r of page.rows) if (r.inbox_id === inbox_id) out.push(r);
+  return out;
+}
+
+/** Every cached folder listing (not searches), with its meta. */
+export function cachedFolderLists(): { key: QueryKey; meta: ListMeta }[] {
+  const out: { key: QueryKey; meta: ListMeta }[] = [];
+  for (const [key, data] of lists()) {
+    if (!data) continue;
+    const meta = metaOf(key);
+    if (!meta.query) out.push({ key, meta });
+  }
+  return out;
+}
+
+/** A message has a new id (IMAP: ids are per folder, so a move changes them).
+ *  Rewrites every cached row and detail that still carries the old key.
+ *  `patch` may add what is known about where the message is now. */
+export function remapKeys(
+  pairs: readonly { key: MessageKey; new_key: MessageKey }[],
+  patch: (row: MessageRow) => Partial<MessageRow> = () => ({}),
+): void {
+  const map = new Map<MessageKey, MessageKey>();
+  for (const p of pairs) if (p.key !== p.new_key) map.set(p.key, p.new_key);
+  if (!map.size) return;
+  const idOf = (key: MessageKey) => key.slice(key.indexOf(":") + 1);
+  mapRows((row) => {
+    const next = map.get(row.key);
+    return next ? { ...row, ...patch(row), key: next, id: idOf(next) } : row;
+  });
+  for (const [old, next] of map) {
+    const detail = queryClient.getQueryData<MessageDetail>(keys.message(old));
+    if (detail) {
+      queryClient.setQueryData<MessageDetail>(keys.message(next), { ...detail, key: next, id: idOf(next) });
+      queryClient.removeQueries({ queryKey: keys.message(old), exact: true });
+    }
+  }
 }
 
 /** True when a list shows the folder a ref points at. */

@@ -24,6 +24,7 @@
 
 import type {
   AssistantAllowance,
+  AttachmentDownload,
   ContactHit,
   DraftDetail,
   DraftInput,
@@ -48,18 +49,25 @@ import type {
   SendResult,
 } from "./types";
 
+export type PartialPageListener = (page: MessagePage) => void;
+
 export interface MailApi {
   /* ---- reads ---- */
   listInboxes(signal?: AbortSignal): Promise<Inbox[]>;
   listFolders(inbox_id: string, signal?: AbortSignal): Promise<FolderEntry[]>;
-  listMessages(params: ListMessagesParams, signal?: AbortSignal): Promise<MessagePage>;
+  /** `onPartial`: for the first page of a unified listing, called with a
+   *  provisional page each time a mailbox answers while others are still out
+   *  (`MessagePage.pending_inboxes`). An implementation may never call it. */
+  listMessages(params: ListMessagesParams, signal?: AbortSignal, onPartial?: PartialPageListener): Promise<MessagePage>;
   readMessage(
     inbox_id: string,
     id: string,
     opts: { include_html: boolean },
     signal?: AbortSignal,
   ): Promise<MessageDetail>;
-  searchMessages(params: SearchMessagesParams, signal?: AbortSignal): Promise<MessagePage>;
+  searchMessages(params: SearchMessagesParams, signal?: AbortSignal, onPartial?: PartialPageListener): Promise<MessagePage>;
+  /** The bytes of one attachment (`attachment_index` from ReadEmailAttachmentMeta). */
+  downloadAttachment(key: MessageKey, attachment_index: number, signal?: AbortSignal): Promise<AttachmentDownload>;
 
   /* ---- message mutations ---- */
   setFlags(keys: MessageKey[], flags: MessageFlags): Promise<void>;

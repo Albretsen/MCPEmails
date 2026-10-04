@@ -7,7 +7,10 @@ import { saveDraft } from "../../data/mail-actions";
 import { queryClient } from "../../data/query-client";
 import { useComposeStore } from "../../state/compose-store";
 import { useUiStore } from "../../state/ui-store";
+import { inboxHealth } from "../../api/inbox-health";
+import type { Inbox } from "../../api/types";
 import { type AutosaveStatus, createAutosaver } from "./autosave";
+import { fromChoices, fromOptionLabel } from "./from";
 import {
   addRecipients,
   chipsOf,
@@ -68,6 +71,33 @@ describe("recipients", () => {
     expect(moveActive(0, 3, "prev")).toBe(2);
     expect(moveActive(1, 0, "next")).toBe(-1);
     expect(moveActive(1, 3, "last")).toBe(2);
+  });
+});
+
+describe("the From menu", () => {
+  const box = (inbox_id: string, state: Partial<Pick<Inbox, "status" | "status_reason">> = { status: "ok", status_reason: null }) => {
+    const inbox = { inbox_id, email_address: `${inbox_id}@x.io`, display_name: inbox_id.toUpperCase(), sender_identity_status: "available" as const, ...state };
+    return { ...inbox, health: inboxHealth(inbox) };
+  };
+  const boxes = [
+    box("a"),
+    box("b", { status: "reconnect_required", status_reason: "password_refused" }),
+    box("c", { status: "reconnect_required", status_reason: "sender_identity" }),
+    box("d", { status: "error", status_reason: "no_mailbox" }),
+  ];
+
+  it("offers only mailboxes whose mail works", () => {
+    expect(fromChoices(boxes, "a").map((b) => b.inbox_id)).toEqual(["a", "c"]);
+  });
+
+  it("keeps the mailbox the form is already set to, whatever its state", () => {
+    expect(fromChoices(boxes, "b").map((b) => b.inbox_id)).toEqual(["a", "b", "c"]);
+  });
+
+  it("says in the menu when only the send-as addresses need a reconnect", () => {
+    expect(fromOptionLabel(boxes[0]!, true)).toBe("a@x.io · A");
+    expect(fromOptionLabel(boxes[0]!, false)).toBe("a@x.io");
+    expect(fromOptionLabel(boxes[2]!, true)).toBe("c@x.io · C (send-as addresses need a reconnect)");
   });
 });
 

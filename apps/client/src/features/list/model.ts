@@ -1,6 +1,7 @@
 import type { ToolCallState, ToolName } from "../../api/assistant-api";
 import { toolIcon, toolTag } from "../../api/assistant-api";
 import { FOLDER_ROLE_LABEL, type FolderRef, type MessageKey, type MessageRow, isNameRef, isRoleRef } from "../../api/types";
+import { INBOX_NOTICE } from "../../api/inbox-health";
 import { displayName, pluralize } from "../../lib/format";
 
 /* Pure derivations for the message list: what a row shows, what the header
@@ -178,6 +179,42 @@ export function emptyState(i: EmptyInput): { title: string; sub: string } {
     // Only the inbox fills by itself: the line would be false for Trash or Starred.
     sub: i.filteredTo ? `Showing ${i.filteredTo} only.` : i.isInbox ? "New mail appears here as it arrives." : "",
   };
+}
+
+export interface FailureNotice {
+  text: string;
+  /** What the person can do about it: reconnect in the dashboard, ask
+   *  again, or nothing (a mailbox that is gone). */
+  action: "reconnect" | "retry" | "none";
+}
+
+const SHOWN = "The other mailboxes are shown.";
+
+/** The line above a unified list when some mailboxes are left out of it.
+ *  `failures` carry the copy for a mailbox the session calls down. */
+export function failureNotice(failures: readonly { inbox_id: string; code: string; message: string }[], addressOf: (inbox_id: string) => string | undefined): FailureNotice | null {
+  const first = failures[0];
+  if (!first) return null;
+  const known = (code: string) => code === "reconnect_required" || code === "inbox_unavailable";
+  const reconnectable = failures.some((f) => f.code === "reconnect_required");
+  if (failures.length === 1) {
+    const who = addressOf(first.inbox_id) ?? "A mailbox";
+    if (!known(first.code)) return { text: `Could not load ${who}. ${SHOWN}`, action: "retry" };
+    // Only our own copy (the session's reason): never a raw server message.
+    const ours = (Object.values(INBOX_NOTICE) as string[]).includes(first.message);
+    const why = ours ? first.message : first.code === "inbox_unavailable" ? INBOX_NOTICE.unavailable : INBOX_NOTICE.generic;
+    return { text: `${who}: ${why} ${SHOWN}`, action: reconnectable ? "reconnect" : "none" };
+  }
+  const n = failures.length;
+  if (failures.every((f) => f.code === "reconnect_required")) return { text: `${n} mailboxes need reconnecting. ${SHOWN}`, action: "reconnect" };
+  if (failures.every((f) => known(f.code))) return { text: `${n} mailboxes need attention. ${SHOWN}`, action: reconnectable ? "reconnect" : "none" };
+  return { text: `Could not load ${n} mailboxes. ${SHOWN}`, action: "retry" };
+}
+
+/** "Still loading a@x.com" / "Still loading 2 mailboxes: a@x.com, b@x.com". */
+export function pendingTitle(names: readonly string[]): string {
+  if (!names.length) return "";
+  return names.length === 1 ? `Still loading ${names[0]}` : `Still loading ${names.length} mailboxes: ${names.join(", ")}`;
 }
 
 /** Value of the phone title <select>: the inbox is reached through the

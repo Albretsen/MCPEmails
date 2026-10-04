@@ -884,3 +884,14 @@
 .pushPhone .pushButton {
   height: 44px;
 }
+
+/* The month's allowance is used up. Quiet, in place, with the reset date. */
+.exhausted {
+  padding: 8px 10px;
+  border-radius: 8px;
+  background: var(--amber-100);
+  color: var(--amber-700);
+  font-size: 12.5px;
+  line-height: 1.45;
+  text-wrap: pretty;
+}

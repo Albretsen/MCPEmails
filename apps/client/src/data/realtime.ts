@@ -3,9 +3,11 @@ import { getMailApi } from "../api";
 import type { MailEvent, MessageRow } from "../api/types";
 import { useAssistantStore } from "../state/assistant-store";
 import { useComposeStore } from "../state/compose-store";
+import { hasHeldRows, releaseHeldRows } from "../state/held-rows";
 import { useSelectionStore } from "../state/selection-store";
 import { useUiStore } from "../state/ui-store";
 import { addToFolderCounts, applyFlags, insertInboxRows, refreshFolders, refreshLists, removeMovedRows } from "./cache";
+import { canWrite } from "../state/permissions";
 import { flushPendingSends, newCompose, saveDraft } from "./mail-actions";
 
 /* Wires the outside world into the cache and keeps the stores consistent with
@@ -28,6 +30,8 @@ export function insertNewMail(rows: MessageRow[]): void {
  *  (pointer left, or the "N new emails" pill was pressed). */
 export function flushPendingNew(): void {
   insertNewMail(useAssistantStore.getState().takePendingNew());
+  // Rows of a mailbox that answered late wait behind the same pill.
+  releaseHeldRows();
 }
 
 function onMailEvent(event: MailEvent): void {
@@ -68,7 +72,7 @@ export function startRealtime(): () => void {
       leaveTimer = null;
       if (s.listHover) return;
       useAssistantStore.getState().setLinkCall(null);
-      if (!useAssistantStore.getState().pendingNew.length) return;
+      if (!useAssistantStore.getState().pendingNew.length && !hasHeldRows()) return;
       leaveTimer = setTimeout(() => {
         if (!useUiStore.getState().listHover) flushPendingNew();
       }, INSERT_AFTER_LEAVE_MS);
@@ -83,6 +87,8 @@ export function startRealtime(): () => void {
       const c = useComposeStore.getState().compose;
       if (!c || c.replyTo === s.selectedKey || c.held || c.streaming) return;
       if (useAssistantStore.getState().busy && c.ai) return;
+      // A read-only member cannot save drafts (and never has a form open).
+      if (!canWrite()) return;
       void saveDraft({ silent: true });
     }),
   );
@@ -92,6 +98,7 @@ export function startRealtime(): () => void {
     subscribeRoute((route, cause) => {
       if (cause !== "pop") return;
       const c = useComposeStore.getState().compose;
+      if (!canWrite()) return;
       if (!route.compose && c && !c.replyTo) void saveDraft({ silent: true });
       else if (route.compose && !c) newCompose();
     }),

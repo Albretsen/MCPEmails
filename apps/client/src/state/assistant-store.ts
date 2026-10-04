@@ -7,6 +7,7 @@ import type {
   AssistantChip,
   AssistantEvent,
   AssistantToolCall,
+  DraftFields,
   MailEffect,
   ToolCallState,
   ToolName,
@@ -23,8 +24,10 @@ import {
 import { applyFlags, findRow, refreshFolders, refreshLists, removeMovedRows } from "../data/cache";
 import { keys } from "../data/keys";
 import { queryClient } from "../data/query-client";
+import { onKeyRemap } from "../data/remap";
 import { getPlatform } from "../platform";
 import { useComposeStore } from "./compose-store";
+import { refuseWrite } from "./permissions";
 import { useSelectionStore } from "./selection-store";
 import { showToast } from "./toast-store";
 import { useUiStore } from "./ui-store";
@@ -56,6 +59,8 @@ export interface AssistantMessage {
   turn: number;
   /** User messages: the emails that were attached as a chip. */
   context: { keys: MessageKey[]; label: string } | null;
+  /** An error the server called retryable: the panel offers "Try again". */
+  retryable?: boolean;
 }
 
 export interface TouchInfo {
@@ -105,6 +110,12 @@ export interface AssistantState {
   /** Id of the run in flight, or of the last one. */
   runId: string | null;
   conversationId: string;
+  /** HTTP transport: the server's opaque state of each conversation, from
+   *  its last `done` event. Sent back with the next run of that conversation. */
+  conversations: Record<string, unknown>;
+  /** The month's allowance is used up (the server said so, or the cached
+   *  allowance does). The panel shows when it resets; nothing is retried. */
+  allowanceBlocked: boolean;
   /** Rows a tool call is touching right now. */
   aiTouch: Record<MessageKey, TouchInfo>;
   ghosts: Record<MessageKey, Ghost>;
@@ -140,6 +151,10 @@ export interface AssistantState {
   lastAct: Record<MessageKey, LastAct>;
 
   run(text: string, opts?: RunOptions): Promise<void>;
+  /** Asks the last request again (after a retryable error). No new user bubble. */
+  retry(): Promise<void>;
+  /** Why the last run ended early (`done.stopped`), or null. */
+  lastStopped: string | null;
   stop(): void;
   /** New conversation. */
   clear(): void;
@@ -187,6 +202,7 @@ const nextId = (p: string) => `${p}${seq++}`;
 const newConversationId = () => `conv_${Date.now().toString(36)}_${seq++}`;
 
 let controller: AbortController | null = null;
+let lastRequest: { text: string; opts: RunOptions } | null = null;
 const bumpTimers = new Map<string, ReturnType<typeof setTimeout>>();
 
 const ACTIVE: ReadonlySet<ToolCallState> = new Set<ToolCallState>(["running", "waiting", "held"]);
@@ -305,6 +321,9 @@ export const useAssistantStore = create<AssistantState>((set, get) => {
     }
   };
 
+  /** Bcc of the draft the current run was started with, and what it answers. */
+  let runBcc: { reply_to: MessageKey | undefined; bcc: string } | null = null;
+
   const applyDraftStream = (ev: Extract<AssistantEvent, { type: "draft_stream" }>) => {
     const store = useComposeStore.getState();
     let c = store.compose;
@@ -316,9 +335,11 @@ export const useAssistantStore = create<AssistantState>((set, get) => {
         useSelectionStore.getState().select(ev.reply_to);
       }
       store.open({
-        mode: ev.reply_to ? "reply" : "new",
+        mode: ev.reply_to ? (ev.kind === "reply_all" || ev.kind === "forward" ? ev.kind : "reply") : "new",
         inbox_id,
         to: ev.fields.to,
+        cc: ev.fields.cc ?? "",
+        bcc: runBcc && runBcc.reply_to === ev.reply_to ? runBcc.bcc : "",
         subject: ev.fields.subject,
         body: "",
         replyTo: ev.reply_to,
@@ -327,7 +348,25 @@ export const useAssistantStore = create<AssistantState>((set, get) => {
       c = useComposeStore.getState().compose;
     }
     if (!c) return;
-    const patch: Partial<typeof c> = { ai: true, to: ev.fields.to || c.to, subject: ev.fields.subject || c.subject };
+    // Bcc is never in `patch`: the server does not carry it, so a Bcc the
+    // person typed stays exactly as it is across anything the assistant does.
+    const patch: Partial<typeof c> = { ai: true };
+    const fields = ev.fields as Partial<DraftFields>;
+    if (ev.phase === "editing") {
+      // An edit says what the draft's header is NOW. A field that is present
+      // is taken as it stands, empty included (the assistant removed the last
+      // recipient: the line is cleared); a field that is absent was not
+      // touched.
+      if (typeof fields.to === "string") patch.to = fields.to;
+      if (typeof fields.cc === "string") patch.cc = fields.cc;
+      if (typeof fields.subject === "string") patch.subject = fields.subject;
+    } else {
+      // Writing: the header streams in piece by piece, and an empty field
+      // only means "not there yet".
+      patch.to = fields.to || c.to;
+      patch.subject = fields.subject || c.subject;
+      if (fields.cc) patch.cc = fields.cc;
+    }
     if (ev.call_id && ev.message_id) patch.draftCall = { call_id: ev.call_id, message_id: ev.message_id };
     if (ev.done && ev.draft_id) patch.draft_id = ev.draft_id;
     if (ev.done) {
@@ -360,22 +399,36 @@ export const useAssistantStore = create<AssistantState>((set, get) => {
       const body = c.streaming === "editing" ? (c.preEdit ?? c.body) : c.body;
       store.patch({ streaming: null, segments: undefined, preEdit: undefined, body, aiOriginal: body });
     }
-    if (c?.held) store.patch({ held: undefined });
-    set((s) => ({
-      aiTouch: {},
-      leaving: {},
-      holdNote: hasHeldNote(),
-      // An approval nobody answered is a denial: its notice goes with it.
-      push: s.push?.approval_id ? null : s.push,
-      messages: s.messages.map((m) => ({
-        ...m,
-        streaming: false,
-        calls:
-          cancelMeta == null
-            ? m.calls
-            : m.calls.map((x) => (ACTIVE.has(x.state) ? { ...x, state: "cancelled" as const, meta: cancelMeta } : x)),
-      })),
-    }));
+    // HTTP: a run ENDS by asking for approval, and the answer comes later.
+    // The hold survives a normal end; Stop or a failure is still a denial.
+    const keepApproval = cancelMeta == null && getAssistantTransport().approvalsOutliveRun === true;
+    if (c?.held && !keepApproval) store.patch({ held: undefined });
+    set((s) => {
+      const waitingKeys = new Set<MessageKey>();
+      if (keepApproval) {
+        for (const m of s.messages) for (const x of m.calls) if (x.state === "waiting") for (const k of x.keys) waitingKeys.add(k);
+      }
+      const aiTouch: Record<MessageKey, TouchInfo> = {};
+      for (const k of waitingKeys) {
+        const t = s.aiTouch[k];
+        if (t) aiTouch[k] = t;
+      }
+      return {
+        aiTouch,
+        leaving: {},
+        holdNote: hasHeldNote(),
+        // An approval nobody answered is a denial: its notice goes with it.
+        push: s.push?.approval_id && !keepApproval ? null : s.push,
+        messages: s.messages.map((m) => ({
+          ...m,
+          streaming: false,
+          calls:
+            cancelMeta == null
+              ? m.calls
+              : m.calls.map((x) => (ACTIVE.has(x.state) ? { ...x, state: "cancelled" as const, meta: cancelMeta } : x)),
+        })),
+      };
+    });
   };
 
   return {
@@ -385,6 +438,8 @@ export const useAssistantStore = create<AssistantState>((set, get) => {
     progress: null,
     runId: null,
     conversationId: newConversationId(),
+    conversations: {},
+    allowanceBlocked: false,
     aiTouch: {},
     ghosts: {},
     leaving: {},
@@ -408,13 +463,46 @@ export const useAssistantStore = create<AssistantState>((set, get) => {
       if (get().busy) return;
       const allowance = queryClient.getQueryData<AssistantAllowance>(keys.allowance);
       if (!opts.free && allowance && isAllowanceExhausted(allowance)) {
+        // No request, no retry: the panel says when the allowance resets.
+        if (!get().allowanceBlocked) set({ allowanceBlocked: true });
         showToast(`You've used all ${(allowance.cap ?? 0).toLocaleString("en-US")} assistant actions this month.`);
         return;
       }
+      if (get().allowanceBlocked) set({ allowanceBlocked: false });
+      // A send still waiting for approval when the next request starts was
+      // not approved (fail closed). The transport tells the assistant.
+      if (getAssistantTransport().approvalsOutliveRun) {
+        if (useComposeStore.getState().compose?.held) useComposeStore.getState().patch({ held: undefined });
+        if (get().push?.approval_id) set({ push: null });
+        // Its call in the transcript is closed too: no event of the old run
+        // will ever do it, and a call left "waiting" would keep its row tagged.
+        if (get().messages.some((m) => m.calls.some((x) => x.state === "waiting"))) {
+          set((s) => {
+            const aiTouch = { ...s.aiTouch };
+            const messages = s.messages.map((m) =>
+              m.calls.some((x) => x.state === "waiting")
+                ? {
+                    ...m,
+                    calls: m.calls.map((x) => {
+                      if (x.state !== "waiting") return x;
+                      for (const k of x.keys) if (aiTouch[k]?.call_id === x.id) delete aiTouch[k];
+                      return { ...x, state: "cancelled" as const, meta: "not sent" };
+                    }),
+                  }
+                : m,
+            );
+            return { aiTouch, messages };
+          });
+        }
+      }
+      lastRequest = { text, opts };
       const ctxKeys = opts.keys ?? [];
       const abort = new AbortController();
       controller = abort;
       const c = useComposeStore.getState().compose;
+      // The server does not know about Bcc: if the assistant reopens this
+      // draft after the form was closed, the Bcc typed on it comes back.
+      runBcc = c?.bcc.trim() ? { reply_to: c.replyTo, bcc: c.bcc } : null;
       const turn = get().turn + 1;
       // Counted now, so the meter moves with the click. The server's number
       // replaces it when the run ends.
@@ -431,6 +519,7 @@ export const useAssistantStore = create<AssistantState>((set, get) => {
         status: "Working",
         progress: null,
         lastSummary: null,
+        lastStopped: null,
         runId: null,
         turn,
         showEarlier: false,
@@ -453,10 +542,12 @@ export const useAssistantStore = create<AssistantState>((set, get) => {
             text,
             context: { keys: ctxKeys },
             conversation_id: get().conversationId,
+            conversation: get().conversations[get().conversationId] ?? null,
             intent: opts.intent,
             draft: c
               ? {
                   inbox_id: c.inbox_id,
+                  kind: c.mode,
                   to: c.to,
                   cc: c.cc,
                   bcc: c.bcc,
@@ -508,6 +599,16 @@ export const useAssistantStore = create<AssistantState>((set, get) => {
       }
     },
 
+    retry: async () => {
+      const last = lastRequest;
+      if (!last || get().busy) return;
+      // The failed attempt's "Try again" is spent.
+      set((s) => ({ messages: s.messages.map((m) => (m.retryable ? { ...m, retryable: false } : m)) }));
+      await get().run(last.text, { ...last.opts, silent: true });
+    },
+
+    lastStopped: null,
+
     stop: () => {
       const approval_id = useComposeStore.getState().compose?.held?.approval_id ?? get().push?.approval_id;
       // Fail closed: stopping while a send is held is a denial.
@@ -525,6 +626,7 @@ export const useAssistantStore = create<AssistantState>((set, get) => {
         linkEmail: null,
         showEarlier: false,
         conversationId: newConversationId(),
+        conversations: {},
       });
     },
 
@@ -623,12 +725,33 @@ export const useAssistantStore = create<AssistantState>((set, get) => {
           set((s) => ({
             messages: s.messages.map((m) => (m.streaming ? { ...m, streaming: false } : m)),
             lastSummary: event.summary ? { ...event.summary, run_id: s.runId } : s.lastSummary,
+            lastStopped: event.stopped ?? null,
+            conversations:
+              event.conversation !== undefined ? { ...s.conversations, [s.conversationId]: event.conversation } : s.conversations,
           }));
           break;
         case "error":
           settle("failed");
+          if (event.code === "allowance_exhausted") {
+            // An inline state in the panel (with the reset date), not a chat
+            // bubble and not something to try again.
+            const a = queryClient.getQueryData<AssistantAllowance>(keys.allowance);
+            if (a && a.cap != null) {
+              queryClient.setQueryData<AssistantAllowance>(keys.allowance, {
+                ...a,
+                used: Math.max(a.used, a.cap),
+                remaining: 0,
+                resets_at: event.resets_at ?? a.resets_at,
+              });
+            }
+            set({ allowanceBlocked: true });
+            break;
+          }
           set((s) => ({
-            messages: [...s.messages, { ...emptyMessage(nextId("am_"), "assistant", s.runId, s.turn), text: event.message }],
+            messages: [
+              ...s.messages,
+              { ...emptyMessage(nextId("am_"), "assistant", s.runId, s.turn), text: event.message, retryable: event.retryable === true },
+            ],
           }));
           break;
       }
@@ -648,18 +771,44 @@ export const useAssistantStore = create<AssistantState>((set, get) => {
       // Held in the compose view, or only announced by the notice.
       const approval_id = held?.approval_id ?? get().push?.approval_id;
       if (!approval_id) return;
+      // A read-only member cannot send: approving explains, rejecting works.
+      if (decision !== "reject" && refuseWrite()) return;
       if (held) store.patch({ held: undefined });
       if (get().push?.approval_id === approval_id) set({ push: null });
+      const transport = getAssistantTransport();
+      let ok = true;
       try {
-        await getAssistantTransport().resolveApproval(approval_id, decision);
+        await transport.resolveApproval(approval_id, decision);
       } catch {
+        ok = false;
         showToast({ text: "Could not reach the assistant. Nothing was sent.", kind: "error" });
       }
+      if (!transport.approvalsOutliveRun) return;
+      // The run is over, so no event will close the call that was waiting.
+      const sent = ok && decision === "approve";
+      set((s) => {
+        const aiTouch = { ...s.aiTouch };
+        const messages = s.messages.map((m) => {
+          if (!m.calls.some((x) => x.state === "waiting")) return m;
+          return {
+            ...m,
+            calls: m.calls.map((x) => {
+              if (x.state !== "waiting") return x;
+              for (const k of x.keys) if (aiTouch[k]?.call_id === x.id) delete aiTouch[k];
+              return sent
+                ? { ...x, state: "done" as const, meta: "approved" }
+                : { ...x, state: "cancelled" as const, meta: decision === "edit" ? "editing" : "not sent" };
+            }),
+          };
+        });
+        return { aiTouch, messages, status: "" };
+      });
     },
 
     undoRun: async (run_id) => {
       const id = run_id ?? get().lastSummary?.run_id ?? get().runId;
       if (!id) return;
+      if (refuseWrite()) return;
       // Moves of this run that were still waiting for the pointer never show.
       heldChanges = heldChanges.filter((h) => h.run_id !== id);
       const mine = Object.entries(get().ghosts).filter(([, g]) => g.run_id === id);
@@ -821,9 +970,10 @@ export const useAssistantStore = create<AssistantState>((set, get) => {
       const same = !!c && (d.reply_to ? c.replyTo === d.reply_to : !c.replyTo);
       if (!same) {
         store.open({
-          mode: d.reply_to ? "reply" : "new",
+          mode: d.reply_to ? (d.kind === "reply_all" || d.kind === "forward" ? d.kind : "reply") : "new",
           inbox_id: d.inbox_id,
           to: d.to,
+          cc: d.cc ?? "",
           subject: d.subject,
           body: d.body,
           replyTo: d.reply_to,
@@ -865,7 +1015,14 @@ export const useAssistantStore = create<AssistantState>((set, get) => {
         showEarlier: false,
         lastAct: {},
         conversationId: newConversationId(),
+        conversations: {},
+        allowanceBlocked: false,
+        busy: false,
+        runId: null,
+        turn: 0,
+        lastStopped: null,
       });
+      lastRequest = null;
     },
   };
 });
@@ -898,6 +1055,21 @@ export function setAssistantPinned(pinned: boolean): void {
 export function isAssistantPinned(): boolean {
   return assistantPinned;
 }
+
+/* A move gave messages new ids: what is keyed by message follows them. */
+onKeyRemap((map) => {
+  const move = <T,>(rec: Record<MessageKey, T>): Record<MessageKey, T> => {
+    let out: Record<MessageKey, T> | null = null;
+    for (const [old, next] of map) {
+      if (!(old in rec)) continue;
+      out ??= { ...rec };
+      out[next] = out[old] as T;
+      delete out[old];
+    }
+    return out ?? rec;
+  };
+  useAssistantStore.setState((s) => ({ labels: move(s.labels), lastTrace: move(s.lastTrace), lastAct: move(s.lastAct) }));
+});
 
 /* Ghost rows belong to the view they were made in: leaving it drops them. */
 useSelectionStore.subscribe((s, prev) => {

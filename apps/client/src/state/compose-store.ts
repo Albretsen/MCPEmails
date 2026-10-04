@@ -55,6 +55,10 @@ export interface ComposeState {
   /** `composeSignature` of a reply / forward as it was opened: closing it
    *  unchanged leaves no draft behind. */
   pristine?: string;
+  /** Idempotency key of the last send attempt and the content it was for.
+   *  Sending the same content again (after a failure) reuses the key, so a
+   *  send whose answer was lost cannot go out twice. */
+  sendKey?: { key: string; signature: string };
 }
 
 export interface ComposeAttachment {

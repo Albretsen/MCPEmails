@@ -265,6 +265,17 @@ jobs:
         env:
           HOST_GUARD_SKIP_NETWORK_TESTS: '1'
         run: deno test --node-modules-dir=none --allow-read --allow-env --allow-run=git supabase/functions/mcp-server/
+      # client-api (the web mail client's function) imports the tool layer
+      # above in-process, so it is checked and tested in the same job, with the
+      # same flags and for the same reasons. No --allow-net here either: its
+      # IMAP tests run on the scripted fake server and its JWT tests on
+      # locally generated keys, so a test that reaches for a socket fails.
+      - name: Type check client-api
+        run: deno check --node-modules-dir=none supabase/functions/client-api/index.ts
+      - name: Run client-api tests
+        env:
+          HOST_GUARD_SKIP_NETWORK_TESTS: '1'
+        run: deno test --node-modules-dir=none --allow-read --allow-env --allow-run=git supabase/functions/client-api/
 
   build:
     name: Build Check

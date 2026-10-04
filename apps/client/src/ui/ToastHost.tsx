@@ -11,6 +11,7 @@ export function ToastHost() {
   const pause = useToastStore((t) => t.pause);
   const resume = useToastStore((t) => t.resume);
   const runUndo = useToastStore((t) => t.runUndo);
+  const runAction = useToastStore((t) => t.runAction);
   const phone = useUiStore(selectIsPhone);
 
   return (
@@ -28,6 +29,10 @@ export function ToastHost() {
           {toast.undo ? (
             <button type="button" className={s.toastUndo} onClick={runUndo} aria-keyshortcuts="Z">
               Undo
+            </button>
+          ) : toast.action ? (
+            <button type="button" className={s.toastUndo} onClick={runAction}>
+              {toast.action.label}
             </button>
           ) : null}
         </div>

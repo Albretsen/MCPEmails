@@ -1,11 +1,14 @@
 import { FlaskConical } from "lucide-react";
 import { Suspense, lazy } from "react";
+import { IS_MOCK_BACKEND } from "../api";
 import { selectIsPhone, useUiStore } from "../state/ui-store";
 import s from "./Scenes.module.css";
 
-/** Scenes are available in dev builds, or anywhere with `?scenes` in the URL. */
+/** Scenes drive the mock mailbox, so they only exist in mock mode: in dev
+ *  builds, or anywhere with `?scenes` in the URL. */
 export const SCENES_ENABLED: boolean =
-  import.meta.env.DEV || (typeof location !== "undefined" && new URLSearchParams(location.search).has("scenes"));
+  IS_MOCK_BACKEND &&
+  (import.meta.env.DEV || (typeof location !== "undefined" && new URLSearchParams(location.search).has("scenes")));
 
 const ScenesMenu = lazy(() => import("./ScenesMenu"));
 

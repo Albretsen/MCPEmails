@@ -3,6 +3,7 @@ import { cx } from "../../lib/cx";
 import { modKey } from "../../lib/platform";
 import { selectCanClear, selectHasGhosts, useAssistantStore } from "../../state/assistant-store";
 import { useComposeStore } from "../../state/compose-store";
+import { READ_ONLY_EXPLANATION, useCanWrite } from "../../state/permissions";
 import { useUiStore } from "../../state/ui-store";
 import { Button, IconButton, LogoMark } from "../../ui";
 import { useShell } from "../shell";
@@ -45,6 +46,7 @@ function Header({ phone }: { phone: boolean }) {
   const pushPending = useAssistantStore((a) => !!a.push?.approval_id);
   const held = useComposeStore((x) => !!x.compose?.held) || pushPending;
   const a = useAssistantStore.getState();
+  const mayWrite = useCanWrite();
   const sub = panelStatus({ held, busy, status, progress });
 
   return (
@@ -62,7 +64,7 @@ function Header({ phone }: { phone: boolean }) {
         </Button>
       ) : null}
       {undoable ? (
-        <Button size="sm" onClick={() => void a.undoRun()}>
+        <Button size="sm" disabled={!mayWrite} title={mayWrite ? undefined : READ_ONLY_EXPLANATION} onClick={() => void a.undoRun()}>
           Undo
         </Button>
       ) : null}

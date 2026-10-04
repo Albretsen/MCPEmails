@@ -52,6 +52,12 @@
 .compose:focus-visible {
   outline-offset: 2px;
 }
+/* Read-only workspace member. */
+.compose:disabled {
+  background: var(--ink-100);
+  color: var(--fg-3);
+  cursor: default;
+}
 .composeLabel {
   flex: 1;
   text-align: left;
@@ -251,6 +257,28 @@
   background: var(--amber-500);
 }
 
+/* "Read-only": shown once, for a workspace member who may not change mail. */
+.readOnly {
+  align-self: flex-start;
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
+  margin: 0 6px;
+  padding: 2px 8px;
+  border: 1px solid var(--border-1);
+  border-radius: 999px;
+  color: var(--fg-2);
+  font-size: 11.5px;
+  line-height: 1.5;
+  white-space: nowrap;
+  cursor: default;
+}
+.rail .readOnly {
+  align-self: center;
+  margin: 0;
+  padding: 5px;
+}
+
 .userRow {
   display: flex;
   align-items: center;
@@ -276,4 +304,85 @@
 .userPlan {
   font-size: 11.5px;
   color: var(--fg-3);
+}
+
+/* ---------- a mailbox needs reconnecting ---------- */
+.reconnect {
+  flex: none;
+  margin: 8px 4px 0;
+  padding: 8px 10px;
+  border-radius: 8px;
+  background: var(--amber-100);
+  color: var(--amber-700);
+  font-size: 12px;
+  line-height: 1.4;
+  overflow-wrap: anywhere;
+}
+.reconnect a {
+  color: inherit;
+  font-weight: 600;
+  text-decoration: underline;
+}
+
+/* ---------- account menu (HTTP mode) ---------- */
+.account {
+  position: relative;
+  flex: 1;
+  min-width: 0;
+}
+.rail .account {
+  flex: none;
+}
+.accountButton {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  width: 100%;
+  min-height: 40px;
+  padding: 4px 6px;
+  margin-left: -6px;
+  border: none;
+  border-radius: 8px;
+  background: transparent;
+  text-align: left;
+  cursor: pointer;
+  transition: background var(--dur-1) var(--ease-out);
+}
+.rail .accountButton {
+  width: auto;
+  margin-left: 0;
+  justify-content: center;
+}
+.accountButton:hover,
+.accountOpen {
+  background: var(--ink-100);
+}
+.accountButton .userText {
+  display: flex;
+  flex-direction: column;
+}
+.accountButton .userPlan {
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+.accountChevron {
+  flex: none;
+  color: var(--fg-3);
+}
+.accountMenu {
+  left: -6px;
+  bottom: calc(100% + 6px);
+  width: max(100%, 232px);
+}
+.accountHead {
+  padding: 6px 8px;
+  min-width: 0;
+}
+.accountEmail {
+  font-size: 12px;
+  color: var(--fg-3);
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
 }

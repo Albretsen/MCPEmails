@@ -176,6 +176,59 @@ describe("visible AI", () => {
     expect((await api.readDraft("outlook", c.draft_id!)).body_text).toBe(shorter);
   });
 
+  describe("an edit of the draft's header", () => {
+    const KEY = "outlook:maya" as const;
+    const open = () =>
+      useComposeStore.getState().open({
+        mode: "reply",
+        inbox_id: "outlook",
+        replyTo: KEY,
+        to: "maya@lattice-labs.io, sam@example.com",
+        cc: "lee@example.com",
+        bcc: "boss@example.com",
+        subject: "Re: Q4 renewal",
+        body: "Hello.",
+      });
+    const edit = (fields: Record<string, string>, extra: Record<string, unknown> = { body: "Hello.", done: true }) =>
+      A().applyEvent({ type: "draft_stream", phase: "editing", reply_to: KEY, fields: fields as never, ...extra });
+    const form = () => useComposeStore.getState().compose!;
+
+    it("a field that is present and empty is cleared; one that is absent is left as it was", () => {
+      open();
+      // The assistant removed the Cc recipient and one of two To recipients.
+      edit({ inbox_id: "outlook", to: "maya@lattice-labs.io", cc: "", subject: "Re: Q4 renewal" });
+      expect(form()).toMatchObject({ to: "maya@lattice-labs.io", cc: "", subject: "Re: Q4 renewal", body: "Hello." });
+
+      // Nothing about the header in this one: nothing changes.
+      useComposeStore.getState().patch({ cc: "lee@example.com" });
+      edit({ inbox_id: "outlook" }, { body: "Hello again.", done: true });
+      expect(form()).toMatchObject({ to: "maya@lattice-labs.io", cc: "lee@example.com", subject: "Re: Q4 renewal", body: "Hello again." });
+
+      // The last recipient goes too: the To line is empty, not the old address.
+      edit({ inbox_id: "outlook", to: "", subject: "" });
+      expect(form()).toMatchObject({ to: "", cc: "lee@example.com", subject: "" });
+    });
+
+    it("the diff phase applies the same rule before the final text arrives", () => {
+      open();
+      edit({ inbox_id: "outlook", to: "maya@lattice-labs.io", cc: "", subject: "Re: Q4 renewal" }, { segments: [{ k: "keep", t: "Hello." }] });
+      expect(form()).toMatchObject({ streaming: "editing", to: "maya@lattice-labs.io", cc: "" });
+    });
+
+    it("never touches a Bcc the person typed", () => {
+      open();
+      edit({ inbox_id: "outlook", to: "maya@lattice-labs.io", cc: "", subject: "Re: Q4 renewal" });
+      edit({ inbox_id: "outlook", to: "", cc: "", subject: "" });
+      expect(form().bcc).toBe("boss@example.com");
+    });
+
+    it("while a draft is being written, an empty field only means it has not streamed in yet", () => {
+      open();
+      A().applyEvent({ type: "draft_stream", phase: "writing", reply_to: KEY, fields: { inbox_id: "outlook", to: "", subject: "" }, body_delta: "Hi" });
+      expect(form()).toMatchObject({ to: "maya@lattice-labs.io, sam@example.com", cc: "lee@example.com", subject: "Re: Q4 renewal", bcc: "boss@example.com" });
+    });
+  });
+
   it("send: holds the draft in compose, sends on approve and closes it", async () => {
     const running = A().run("Reply that Thursday works, and send it", { keys: ["outlook:maya"] });
     await until(() => !!useComposeStore.getState().compose?.held);

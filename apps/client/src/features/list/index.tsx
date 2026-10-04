@@ -14,6 +14,9 @@ import {
   useRef,
   useState,
 } from "react";
+import { isApiError } from "../../api";
+import { INBOX_NOTICE } from "../../api/inbox-health";
+import { releaseHeldRows } from "../../state/held-rows";
 import { type Inbox, type MessageKey, type MessageRow, folderRefId, isRoleRef, parseFolderRefId } from "../../api/types";
 import {
   type FolderNavItem,
@@ -25,15 +28,30 @@ import {
   usePrefetchMessage,
   usePrefetchNeighbours,
 } from "../../data";
+import { DASHBOARD_URL } from "../../config";
 import { pluralize } from "../../lib/format";
-import { useDelayedFlag } from "../../lib/hooks";
+import { useDebouncedValue, useDelayedFlag } from "../../lib/hooks";
 import { useAssistantStore } from "../../state/assistant-store";
 import { selectHasMulti, setVisibleKeys, useSelectionStore } from "../../state/selection-store";
-import { Button, EmptyState, Kbd, Skeleton } from "../../ui";
+import { Button, EmptyState, Kbd, Skeleton, Spinner } from "../../ui";
 import { SEARCH_INPUT_ATTR, useShell } from "../shell";
 import s from "./List.module.css";
+import { READ_ONLY_EXPLANATION, useCanWrite } from "../../state/permissions";
+import { openRow } from "./open-row";
 import { Row, rowDomId } from "./Row";
-import { anchoredOffset, emptyState, folderRefLabel, indexByKey, listCountText, listSetSize, listTitle, phoneNavValue, rowView } from "./model";
+import {
+  anchoredOffset,
+  emptyState,
+  failureNotice,
+  folderRefLabel,
+  indexByKey,
+  listCountText,
+  listSetSize,
+  listTitle,
+  pendingTitle,
+  phoneNavValue,
+  rowView,
+} from "./model";
 import { useListInteractions } from "./useListInteractions";
 
 /* The message list: search, title and count, a virtualised listbox with every
@@ -46,6 +64,9 @@ export const ROW_HEIGHT_TOUCH = 84;
 const OVERSCAN = 8;
 /** A skeleton is shown only when nothing is cached and the answer is slow. */
 const SKELETON_DELAY_MS = 300;
+/** Quiet time after the last keystroke before a search is sent. */
+const SEARCH_DEBOUNCE_MS = 300;
+const isBlank = (q: string) => q.trim() === "";
 
 /** Scroll offset per (scope, folder, query), restored when you come back. */
 const scrollOffsets = new Map<string, number>();
@@ -59,8 +80,11 @@ export function ListPane() {
   const query = useSelectionStore((x) => x.query);
   const selectedKey = useSelectionStore((x) => x.selectedKey);
   const multi = useSelectionStore(selectHasMulti);
-  // Search as you type: the field stays instant, the list follows when it can.
-  const deferredQuery = useDeferredValue(query);
+  const mayWrite = useCanWrite();
+  // Search as you type: the field stays instant; the list (and the server:
+  // one search per mailbox, which cannot be cancelled there) follows once the
+  // typing pauses. Clearing the field restores the folder at once.
+  const deferredQuery = useDeferredValue(useDebouncedValue(query, SEARCH_DEBOUNCE_MS, isBlank));
 
   const { data: inboxes } = useInboxes();
   const { folders } = useFolders(scope);
@@ -69,7 +93,9 @@ export function ListPane() {
   const prefetch = usePrefetchMessage();
   usePrefetchNeighbours(selectedKey);
 
-  const pendingCount = useAssistantStore((a) => a.pendingNew.length);
+  // New mail held back, plus rows of a mailbox that answered late: both wait
+  // behind the same pill while the pointer is over the list.
+  const pendingCount = useAssistantStore((a) => a.pendingNew.length) + list.heldCount;
   const holdNote = useAssistantStore((a) => a.holdNote);
   // Changes only when the assistant or the server removes rows, never on hover.
   const leaving = useAssistantStore((a) => a.leaving);
@@ -79,6 +105,8 @@ export function ListPane() {
   const listId = `${scope}|${q ? `q:${q}` : folderId}`;
   const rowHeight = phone ? ROW_HEIGHT_TOUCH : ROW_HEIGHT;
   const scrollRef = useRef<HTMLDivElement>(null);
+  // Rows held back for one list are not hidden in the next one.
+  useEffect(() => releaseHeldRows, [listId]);
 
   /* ---- derived row data ---- */
   const keyList = useMemo(() => rows.map((r) => r.key), [rows]);
@@ -211,6 +239,9 @@ export function ListPane() {
   const title = listTitle({ query: q, isInbox, folderName, scopeIsAll: scope === "all", scopeName });
 
   const loadedUnread = useMemo(() => rows.reduce((n, r) => n + (r.is_read ? 0 : 1), 0), [rows]);
+  // More pages, or mailboxes that have not answered yet: never "N emails" as
+  // if that were all of them.
+  const incomplete = list.hasNextPage || list.pendingInboxes.length > 0;
   const countText = listCountText({
     searching: !!q,
     folderUnread: navItem?.unread,
@@ -218,9 +249,11 @@ export function ListPane() {
     listTotal: list.total,
     loadedCount: rows.length,
     loadedUnread,
-    hasMore: list.hasNextPage,
+    hasMore: incomplete,
   });
-  const setSize = listSetSize(q ? list.total : (navItem?.total ?? list.total), rows.length, list.hasNextPage);
+  const setSize = listSetSize(q ? list.total : (navItem?.total ?? list.total), rows.length, incomplete);
+  const pendingNames = list.pendingInboxes.map((id) => inboxes?.find((i) => i.inbox_id === id)?.email_address ?? "a mailbox");
+  const failure = hasRows ? failureNotice(list.failedInboxes, (id) => inboxes?.find((i) => i.inbox_id === id)?.email_address) : null;
   const empty = emptyState({ query: q, isInbox, folderName, filteredTo: scope !== "all" && multiInbox ? scopeName : null });
 
   const showSkeleton = useDelayedFlag(list.isLoading, SKELETON_DELAY_MS);
@@ -231,7 +264,7 @@ export function ListPane() {
       const row = selectedIndex >= 0 ? rows[selectedIndex] : rows[0];
       if (!row) return;
       e.preventDefault();
-      mailActions.openRow(row);
+      openRow(row);
     } else if (e.key === "Escape" && anchor) {
       setAnchor(null);
     }
@@ -245,12 +278,42 @@ export function ListPane() {
         {!phone ? (
           <div className={s.titleRow}>
             <h1 className={s.title}>{title}</h1>
-            <span className={s.countText}>{list.isLoading ? "" : countText}</span>
+            {/* Rows are shown as each mailbox answers; this says which are still out. */}
+            {pendingNames.length && hasRows ? (
+              <span className={s.pending} title={pendingTitle(pendingNames)}>
+                <Spinner label={pendingTitle(pendingNames)} />
+              </span>
+            ) : null}
+            {/* No count for a list that could not be loaded: "0 emails" would be a claim. */}
+            <span className={s.countText}>{list.isLoading || (list.error && !hasRows) ? "" : countText}</span>
           </div>
         ) : (
-          <h1 className="sr-only">{title}</h1>
+          <>
+            <h1 className="sr-only">{title}</h1>
+            {pendingNames.length && hasRows ? (
+              <span className="sr-only" role="status">
+                {pendingTitle(pendingNames)}
+              </span>
+            ) : null}
+          </>
         )}
       </div>
+
+      {/* A mailbox that is left out says so above the rows of the others. */}
+      {failure ? (
+        <div className={s.partial} role="status">
+          <span className={s.partialText}>{failure.text}</span>
+          {failure.action === "reconnect" ? (
+            <a href={DASHBOARD_URL} target="_blank" rel="noreferrer">
+              Reconnect
+            </a>
+          ) : failure.action === "retry" ? (
+            <button type="button" className={s.partialRetry} onClick={list.refetch}>
+              Retry
+            </button>
+          ) : null}
+        </div>
+      ) : null}
 
       <div className={s.scrollWrap}>
         {holdNote || pendingCount > 0 ? (
@@ -287,6 +350,22 @@ export function ListPane() {
             showSkeleton ? (
               <SkeletonRows count={9} height={rowHeight} />
             ) : null
+          ) : isApiError(list.error, "inbox_unavailable") && !hasRows ? (
+            // Nothing to retry and nothing to reconnect.
+            <EmptyState icon={<InboxIcon size={20} aria-hidden="true" />} title={INBOX_NOTICE.unavailable} />
+          ) : isApiError(list.error, "reconnect_required") && !hasRows ? (
+            // Not a failure to retry: the provider refuses the stored
+            // credentials until the mailbox is reconnected in the dashboard.
+            // The session's own reason when there is one.
+            <EmptyState
+              icon={<InboxIcon size={20} aria-hidden="true" />}
+              title={ownNotice(list.error.message) ?? "This mailbox needs reconnecting."}
+            >
+              {ownNotice(list.error.message) ? null : "Its mail provider no longer accepts the saved sign-in. "}
+              <a href={DASHBOARD_URL} target="_blank" rel="noreferrer">
+                Reconnect in the dashboard
+              </a>
+            </EmptyState>
           ) : list.error && !hasRows ? (
             <EmptyState icon={<InboxIcon size={20} aria-hidden="true" />} title="Could not load this list.">
               <Button size="sm" onClick={list.refetch}>
@@ -320,6 +399,7 @@ export function ListPane() {
                       unread={!row.is_read}
                       starred={row.is_starred}
                       canStar={view.canStar}
+                      readOnly={!mayWrite}
                       attachable={!view.outgoing}
                       hasAttachment={row.has_attachments}
                       boxName={boxNames[row.inbox_id] ?? ""}
@@ -341,7 +421,14 @@ export function ListPane() {
       </div>
 
       {phone ? (
-        <button type="button" className={s.fab} aria-label="Compose" title="Compose" onClick={() => mailActions.newCompose()}>
+        <button
+          type="button"
+          className={s.fab}
+          aria-label="Compose"
+          title={mayWrite ? "Compose" : READ_ONLY_EXPLANATION}
+          disabled={!mayWrite}
+          onClick={() => mailActions.newCompose()}
+        >
           <PenLine size={20} aria-hidden="true" />
         </button>
       ) : null}
@@ -466,3 +553,9 @@ const PhoneNav = memo(function PhoneNav({ scope, folderId, isInbox, inboxes, fol
 });
 
 export default ListPane;
+
+/** The message when it is one of our own per-reason notices, else null (a
+ *  raw server message is never shown). */
+function ownNotice(message: string): string | null {
+  return (Object.values(INBOX_NOTICE) as string[]).includes(message) && message !== INBOX_NOTICE.generic ? message : null;
+}

@@ -1,0 +1,27 @@
+{
+  "text": "Make it shorter",
+  "context": {
+    "keys": [],
+    "timezone": "Europe/Oslo",
+    "notes": [
+      {
+        "type": "approval",
+        "approval_id": "run_t_ap1",
+        "decision": "edited"
+      }
+    ]
+  },
+  "conversation": null,
+  "draft": {
+    "inbox_id": "inbox-a",
+    "kind": "reply",
+    "to": "maya@lumenworks.example",
+    "cc": "",
+    "subject": "Re: Q4 renewal terms",
+    "body": "Hi Maya,\n\nWe will keep the 40 seats.\n\nBest,\nAda",
+    "reply_to": {
+      "inbox_id": "inbox-a",
+      "message_id": "m1"
+    }
+  }
+}

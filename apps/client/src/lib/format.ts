@@ -19,7 +19,9 @@ export function formatListTime(iso: string, now: number = Date.now()): string {
   const t = Date.parse(iso);
   if (Number.isNaN(t)) return "";
   const days = Math.round((startOfDay(now) - startOfDay(t)) / DAY);
-  if (days <= 0) return timeFmt.format(t);
+  if (days === 0) return timeFmt.format(t);
+  // A later day (a scheduled send): the time alone would read as today.
+  if (days < 0) return days > -7 ? `${weekdayFmt.format(t)} ${timeFmt.format(t)}` : monthDayFmt.format(t);
   if (days < 7) return weekdayFmt.format(t);
   if (new Date(t).getFullYear() === new Date(now).getFullYear()) return monthDayFmt.format(t);
   return yearFmt.format(t);

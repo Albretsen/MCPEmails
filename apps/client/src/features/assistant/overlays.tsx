@@ -1,6 +1,7 @@
 import { useId } from "react";
 import { cx } from "../../lib/cx";
 import { useAssistantStore } from "../../state/assistant-store";
+import { READ_ONLY_EXPLANATION, useCanWrite } from "../../state/permissions";
 import { selectIsPhone, useUiStore } from "../../state/ui-store";
 import { LogoMark } from "../../ui";
 import s from "./Assistant.module.css";
@@ -19,9 +20,11 @@ function PushCard() {
   const phone = useUiStore(selectIsPhone);
   const titleId = useId();
   const textId = useId();
+  const mayWrite = useCanWrite();
   if (!push) return null;
   const a = useAssistantStore.getState();
   const approve = () => {
+    if (!mayWrite) return;
     if (push.approval_id) void a.resolveApproval("approve");
     else a.setPush(null);
   };
@@ -47,7 +50,13 @@ function PushCard() {
         <button type="button" className={s.pushButton} onClick={a.reviewPush}>
           Review
         </button>
-        <button type="button" className={cx(s.pushButton, s.pushApprove)} onClick={approve}>
+        <button
+          type="button"
+          className={cx(s.pushButton, s.pushApprove)}
+          onClick={approve}
+          disabled={!mayWrite}
+          title={mayWrite ? undefined : READ_ONLY_EXPLANATION}
+        >
           Approve
         </button>
       </div>

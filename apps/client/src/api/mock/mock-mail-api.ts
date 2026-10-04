@@ -8,6 +8,7 @@ import type { MailApi } from "../mail-api";
 import { mergeInboxPages } from "../merge";
 import {
   type AssistantAllowance,
+  type AttachmentDownload,
   type ContactHit,
   type DraftDetail,
   type DraftInput,
@@ -37,6 +38,7 @@ import {
   isNameRef,
   isRoleRef,
   makeKey,
+  parseKey,
   roleOfFolder,
 } from "../types";
 import { readDelay, writeDelay } from "./latency";
@@ -321,6 +323,16 @@ export class MockMailApi implements MailApi {
       };
     }
     throw new Error("message_not_found");
+  }
+
+  async downloadAttachment(key: MessageKey, attachment_index: number, signal?: AbortSignal): Promise<AttachmentDownload> {
+    await readDelay(signal);
+    const { inbox_id, id } = parseKey(key);
+    const detail = await this.readMessage(inbox_id, id, { include_html: false }, signal);
+    const meta = detail.attachments.find((a, i) => (a.attachment_index ?? i) === attachment_index);
+    if (!meta) throw new Error("attachment_not_found");
+    const blob = new Blob([`Mock attachment: ${meta.filename}\n`], { type: "text/plain" });
+    return { blob, filename: meta.filename, mime_type: meta.mime_type };
   }
 
   async searchMessages(params: SearchMessagesParams, signal?: AbortSignal): Promise<MessagePage> {

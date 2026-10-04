@@ -16,6 +16,8 @@ export function listMeta(scope: MailboxScope, folder: FolderRef, query = ""): Li
 }
 
 export const keys = {
+  /** HTTP mode: the last `GET /session` answer (boots the next load). */
+  session: ["session"] as const,
   inboxes: ["inboxes"] as const,
   foldersRoot: ["folders"] as const,
   folders: (inbox_id: string) => ["folders", inbox_id] as const,

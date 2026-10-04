@@ -5,6 +5,7 @@ import { mailActions } from "../../data/mail-actions";
 import { isMac, isTypingTarget } from "../../lib/platform";
 import { useAssistantStore } from "../../state/assistant-store";
 import { useComposeStore } from "../../state/compose-store";
+import { canWrite, guardWrite } from "../../state/permissions";
 import { getVisibleKeys, useSelectionStore } from "../../state/selection-store";
 import { selectAssistantVisible, useUiStore } from "../../state/ui-store";
 import {
@@ -17,6 +18,7 @@ import {
   formatKeys,
   matchShortcut,
 } from "./keymap";
+import { openRow } from "../list/open-row";
 import { ASSISTANT_INPUT_ATTR, PANE_ID, SHELL_MENU, focusAssistantInput, focusPane, focusSearch } from "./shell-context";
 
 /* The keyboard system. ONE registry (SHORTCUTS) drives three things, so they
@@ -90,7 +92,7 @@ function openSelected(): void {
   const key = selection.selectedKey ?? getVisibleKeys()[0] ?? null;
   if (!key) return;
   const row = findRow(key);
-  if (row && row.key !== selection.selectedKey) mailActions.openRow(row);
+  if (row && row.key !== selection.selectedKey) openRow(row);
   else if (!selection.selectedKey) selection.select(key);
   if (useUiStore.getState().viewport !== "phone") setTimeout(() => focusPane(PANE_ID.reader), 0);
 }
@@ -105,7 +107,11 @@ function escape(target: EventTarget | null): void {
   const typing = isTypingTarget(target);
   if (ui.menu) ui.setMenu(null);
   else if (assistant.busy && !c?.held) assistant.stop();
-  else if (c && !c.held && !typing) void mailActions.saveDraft();
+  else if (c && !c.held && !typing) {
+    // A read-only member cannot save: just close what is open.
+    if (canWrite()) void mailActions.saveDraft();
+    else useComposeStore.getState().discard();
+  }
   else if (typing) (target as HTMLElement).blur();
   else if (ui.viewport === "phone" && ui.chatFull) ui.setChatFull(false);
   else if (useSelectionStore.getState().multiSel.length) useSelectionStore.getState().clearMulti();
@@ -129,7 +135,10 @@ let eventTarget: EventTarget | null = null;
  * The registry
  * ------------------------------------------------------------------ */
 
-export const SHORTCUTS: readonly Shortcut[] = [
+/* Entries marked `write` change mail or send it. Their `run` is wrapped below,
+ * so the key handler, the palette and anything else that runs a registered
+ * shortcut shows a read-only member the explanation instead of acting. */
+const REGISTRY: readonly Shortcut[] = [
   // ---- Navigation
   { id: "next", keys: ["j", "ArrowDown"], label: "Next email", group: "Navigation", repeat: true, palette: false, run: () => useSelectionStore.getState().step(1) },
   { id: "previous", keys: ["k", "ArrowUp"], label: "Previous email", group: "Navigation", repeat: true, palette: false, run: () => useSelectionStore.getState().step(-1) },
@@ -141,6 +150,7 @@ export const SHORTCUTS: readonly Shortcut[] = [
   // ---- Email
   {
     id: "archive",
+    write: true,
     keys: ["e"],
     label: "Archive",
     group: "Email",
@@ -152,6 +162,7 @@ export const SHORTCUTS: readonly Shortcut[] = [
   },
   {
     id: "trash",
+    write: true,
     keys: ["#"],
     label: "Move to Trash",
     group: "Email",
@@ -161,12 +172,13 @@ export const SHORTCUTS: readonly Shortcut[] = [
       keepFocusInList();
     },
   },
-  { id: "move", keys: ["v"], label: "Move to folder", group: "Email", when: hasTargets, run: () => useUiStore.getState().setMenu("move") },
-  { id: "reply", keys: ["r"], label: "Reply", group: "Email", when: hasOpen, run: () => mailActions.startReply(openKey()!, "reply") },
-  { id: "reply-all", keys: ["a"], label: "Reply all", group: "Email", when: hasOpen, run: () => mailActions.startReply(openKey()!, "reply_all") },
-  { id: "forward", keys: ["f"], label: "Forward", group: "Email", when: hasOpen, run: () => mailActions.startReply(openKey()!, "forward") },
+  { id: "move", write: true, keys: ["v"], label: "Move to folder", group: "Email", when: hasTargets, run: () => useUiStore.getState().setMenu("move") },
+  { id: "reply", write: true, keys: ["r"], label: "Reply", group: "Email", when: hasOpen, run: () => mailActions.startReply(openKey()!, "reply") },
+  { id: "reply-all", write: true, keys: ["a"], label: "Reply all", group: "Email", when: hasOpen, run: () => mailActions.startReply(openKey()!, "reply_all") },
+  { id: "forward", write: true, keys: ["f"], label: "Forward", group: "Email", when: hasOpen, run: () => mailActions.startReply(openKey()!, "forward") },
   {
     id: "star",
+    write: true,
     keys: ["s"],
     label: "Star or unstar",
     group: "Email",
@@ -177,8 +189,8 @@ export const SHORTCUTS: readonly Shortcut[] = [
       void mailActions.star(sel, !first?.is_starred);
     },
   },
-  { id: "mark-unread", keys: ["u", "Shift+U"], label: "Mark as unread", group: "Email", when: hasTargets, run: () => void mailActions.markRead(targets(), false) },
-  { id: "mark-read", keys: ["Shift+I"], label: "Mark as read", group: "Email", when: hasTargets, run: () => void mailActions.markRead(targets(), true) },
+  { id: "mark-unread", write: true, keys: ["u", "Shift+U"], label: "Mark as unread", group: "Email", when: hasTargets, run: () => void mailActions.markRead(targets(), false) },
+  { id: "mark-read", write: true, keys: ["Shift+I"], label: "Mark as read", group: "Email", when: hasTargets, run: () => void mailActions.markRead(targets(), true) },
   { id: "select", keys: ["x"], label: "Select for the assistant", group: "Email", when: hasOpen, run: () => useSelectionStore.getState().toggleMulti(openKey()!) },
   { id: "undo", keys: ["z"], label: "Undo", group: "Email", run: () => mailActions.undoLast() },
 
@@ -191,9 +203,10 @@ export const SHORTCUTS: readonly Shortcut[] = [
 
   // ---- Compose
   // Not while a message is being written: opening a new one would replace it.
-  { id: "compose", keys: ["c"], label: "Compose", group: "Compose", when: () => useComposeStore.getState().compose == null, run: () => mailActions.newCompose() },
+  { id: "compose", write: true, keys: ["c"], label: "Compose", group: "Compose", when: () => useComposeStore.getState().compose == null, run: () => mailActions.newCompose() },
   {
     id: "send",
+    write: true,
     keys: ["Mod+Enter"],
     label: "Send, or approve a held send",
     group: "Compose",
@@ -209,6 +222,8 @@ export const SHORTCUTS: readonly Shortcut[] = [
   { id: "help", keys: ["?"], label: "Keyboard shortcuts", group: "App", modal: true, run: () => useUiStore.getState().toggleMenu(SHELL_MENU.help) },
   { id: "escape", keys: ["Escape"], label: "Close, stop the assistant, or leave a field", group: "App", modal: true, passive: true, palette: false, run: () => escape(eventTarget) },
 ];
+
+export const SHORTCUTS: readonly Shortcut[] = REGISTRY.map((s) => (s.write ? { ...s, run: guardWrite(s.run) } : s));
 
 const byId = new Map(SHORTCUTS.map((s) => [s.id, s]));
 

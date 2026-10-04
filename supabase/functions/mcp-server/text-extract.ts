@@ -368,3 +368,192 @@ export function preferredBodyText(
   return text ?? null;
 }
 
+// ---------------------------------------------------------------------------
+// The first-party preview (client-api only; see first-party.ts `cleanPreview`).
+//
+// `previewFromBodyPartSource` above has to GUESS what a fetched part is: its
+// transfer encoding by a ratio test, its charset as "UTF-8, else latin1", and
+// whether it is HTML not at all. The same FETCH that carries the bytes also
+// carries BODYSTRUCTURE, which states all three. This path reads them, and is
+// written for a source that stops wherever the partial fetch stopped:
+//
+//   * `<style>`, `<script>`, `<head>`, `<title>` and comments go WITH their
+//     content, closed or not. A 2 KB prefix of an HTML-only message is very
+//     often an unterminated `<style>` block, which the closed-tag rules in
+//     `stripHtmlToText` cannot match, so the CSS shipped as the preview.
+//   * Octets are recovered exactly. A literal comes off the socket through
+//     TextDecoder("latin1"), which is windows-1252: an 8bit UTF-8 "Ø" (C3 98)
+//     reads as "Ã" + U+02DC, and `charCodeAt & 0xff` then turns 0x98 into 0xDC.
+//     That, not the cut at 2 KB, was the usual source of U+FFFD in a preview.
+//   * The declared charset decodes the octets, as a STREAM, so a multi-byte
+//     character cut by the fetch is held back instead of becoming U+FFFD.
+//   * A quoted-printable escape or soft break cut in half is dropped.
+//   * Nothing returned ever contains U+FFFD.
+//
+// MCP output is unchanged by all of this: nothing outside client-api sets the
+// option. It is a pure correctness improvement and worth enabling there too,
+// as its own change with its own baseline update.
+// ---------------------------------------------------------------------------
+
+/** What BODYSTRUCTURE says about the part a preview was fetched from. */
+export interface PreviewPartInfo {
+  /** Lower-cased media type and subtype, e.g. "text", "html". */
+  type: string;
+  subtype: string;
+  /** Declared charset, or null. */
+  charset: string | null;
+  /** Lower-cased Content-Transfer-Encoding, or null. */
+  encoding: string | null;
+}
+
+/** windows-1252 code points for 0x80-0x9F, inverted: see `singleByteTextToBytes` in imap-client.ts. */
+const CP1252_TO_OCTET: Map<number, number> = (() => {
+  const bytes = new Uint8Array(0x20);
+  for (let i = 0; i < 0x20; i++) bytes[i] = 0x80 + i;
+  const chars = new TextDecoder("latin1").decode(bytes);
+  const map = new Map<number, number>();
+  for (let i = 0; i < chars.length; i++) map.set(chars.charCodeAt(i), 0x80 + i);
+  return map;
+})();
+
+/** The octets a single-byte socket read produced. A character no such read yields becomes "?". */
+function sourceOctets(source: string): Uint8Array {
+  const out = new Uint8Array(source.length);
+  for (let i = 0; i < source.length; i++) {
+    const code = source.charCodeAt(i);
+    out[i] = code <= 0xff ? code : CP1252_TO_OCTET.get(code) ?? 0x3f;
+  }
+  return out;
+}
+
+function octetString(bytes: Uint8Array): string {
+  let out = "";
+  for (let i = 0; i < bytes.length; i += 8192) out += String.fromCharCode(...bytes.subarray(i, i + 8192));
+  return out;
+}
+
+/** Undo a transfer encoding on a source that may stop anywhere. */
+function decodeTransferTolerant(octets: Uint8Array, encoding: string | null): Uint8Array | null {
+  if (encoding === "base64") {
+    const clean = octetString(octets).replace(/[^A-Za-z0-9+/]/g, "");
+    const whole = clean.slice(0, clean.length - (clean.length % 4));
+    try {
+      const bin = atob(whole);
+      const out = new Uint8Array(bin.length);
+      for (let i = 0; i < bin.length; i++) out[i] = bin.charCodeAt(i);
+      return out;
+    } catch {
+      return null;
+    }
+  }
+  if (encoding === "quoted-printable") {
+    const text = octetString(octets)
+      // A soft break or an escape the fetch cut in half.
+      .replace(/=(?:\r|[0-9A-Fa-f])?$/, "")
+      .replace(/=\r?\n/g, "")
+      .replace(/=([0-9A-Fa-f]{2})/g, (_, hex) => String.fromCharCode(parseInt(hex, 16)));
+    const out = new Uint8Array(text.length);
+    for (let i = 0; i < text.length; i++) out[i] = text.charCodeAt(i) & 0xff;
+    return out;
+  }
+  return octets;
+}
+
+const REPLACEMENT = /�/g;
+
+function countReplacements(text: string): number {
+  return (text.match(REPLACEMENT) ?? []).length;
+}
+
+/**
+ * Octets to text by the declared charset. Streamed, so an incomplete trailing
+ * sequence is withheld; an unknown or wrong label falls back to UTF-8 and then
+ * to windows-1252, whichever reads cleanly.
+ */
+function decodeCharsetTolerant(bytes: Uint8Array, charset: string | null): string {
+  const stream = (label: string): string | null => {
+    try {
+      return new TextDecoder(label, { fatal: false }).decode(bytes, { stream: true });
+    } catch {
+      return null;
+    }
+  };
+  const label = (charset ?? "").trim().toLowerCase();
+  const declared = label && label !== "us-ascii" && label !== "ascii" ? stream(label) : null;
+  if (declared !== null && countReplacements(declared) === 0) return declared;
+  const utf8 = stream("utf-8") ?? "";
+  if (countReplacements(utf8) === 0) return utf8;
+  // Not what it said it was, and not UTF-8. A stray invalid octet or two is
+  // dropped; anything worse is read as single-byte text, which has no invalid
+  // sequences at all.
+  if (declared !== null && countReplacements(declared) <= 2) return declared.replace(REPLACEMENT, "");
+  if (countReplacements(utf8) <= 2) return utf8.replace(REPLACEMENT, "");
+  return stream("windows-1252") ?? "";
+}
+
+/** Elements whose CONTENT is not message text. */
+const NON_TEXT_ELEMENTS = "style|script|head|title|noscript|template|svg|xml";
+
+/** HTML, possibly cut off anywhere, to the text a reader would see first. */
+export function htmlPreviewText(html: string): string {
+  const text = html
+    .replace(/<!--[\s\S]*?(?:-->|$)/g, " ")
+    // Closed, or running to the end of what was fetched.
+    .replace(new RegExp(`<(${NON_TEXT_ELEMENTS})\\b[\\s\\S]*?(?:<\\/\\1\\s*>|$)`, "gi"), " ")
+    .replace(/<[^>]*>/g, " ")
+    // A tag the fetch cut in half.
+    .replace(/<[^>]*$/, " ");
+  return decodeHtmlEntities(text)
+    // An entity the fetch cut in half.
+    .replace(/&#?[a-zA-Z0-9]{0,31}$/, "");
+}
+
+const HTML_TAG = /<\/?(?:html|head|body|div|p|br|table|tr|td|span|a|font|center|meta|style|img|b|strong|h[1-6])\b[^<>]*>/gi;
+
+/**
+ * Markup under a text/plain label (some senders do this): a document start,
+ * or at least two real HTML tags. `<https://example.com>` and `<a@b.example>`
+ * in ordinary plain text are neither.
+ */
+function looksLikeHtml(text: string): boolean {
+  if (/^\s*(?:<!doctype html|<html[\s>]|<head[\s>]|<body[\s>]|<table[\s>]|<div[\s>])/i.test(text)) return true;
+  return (text.match(HTML_TAG) ?? []).length >= 2;
+}
+
+function finishPreview(text: string): string {
+  return normalizePreview(text.replace(REPLACEMENT, ""));
+}
+
+/**
+ * The preview for one fetched IMAP body part, given what BODYSTRUCTURE says
+ * the part is. `part` is null when part one is itself a multipart: its source
+ * then carries each child's own headers, and those are read instead.
+ */
+export function cleanPreviewFromBodyPart(source: string, part: PreviewPartInfo | null): string {
+  const octets = sourceOctets(source);
+  if (part === null || part.type === "multipart") {
+    const nested = parseMultipartBodySource(octetString(octets));
+    if (!nested) {
+      // Not a multipart after all (BODYSTRUCTURE was missing or odd): read it
+      // as text of unknown encoding.
+      if (part === null) return finishPreview(leafText(octets, { type: "text", subtype: "plain", charset: null, encoding: null }));
+      return "";
+    }
+    if (typeof nested.text === "string" && nested.text.trim() !== "") {
+      return finishPreview(looksLikeHtml(nested.text) ? htmlPreviewText(nested.text) : nested.text);
+    }
+    if (typeof nested.html === "string" && nested.html !== "") return finishPreview(htmlPreviewText(nested.html));
+    return "";
+  }
+  // An image, a PDF, a calendar file: nothing to preview.
+  if (part.type !== "text") return "";
+  return finishPreview(leafText(octets, part));
+}
+
+function leafText(octets: Uint8Array, part: PreviewPartInfo): string {
+  const bytes = decodeTransferTolerant(octets, part.encoding);
+  if (bytes === null) return "";
+  const text = decodeCharsetTolerant(bytes, part.charset);
+  return part.subtype === "html" || looksLikeHtml(text) ? htmlPreviewText(text) : text;
+}
+

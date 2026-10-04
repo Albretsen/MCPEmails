@@ -35,6 +35,13 @@ describe("format", () => {
     expect(formatListTime("not a date", now)).toBe("");
   });
 
+  it("a later day (a scheduled send) is not shown as a bare time", () => {
+    // Tomorrow 8:00: "Sun 8:00 AM", never "8:00 AM" (which would read as today).
+    expect(formatListTime(new Date(2026, 9, 4, 8, 0).toISOString(), now)).toMatch(/Sun.*8:00/);
+    expect(formatListTime(new Date(2026, 9, 3, 23, 30).toISOString(), now)).toMatch(/^11:30/);
+    expect(formatListTime(new Date(2026, 10, 20, 8, 0).toISOString(), now)).toMatch(/Nov 20/);
+  });
+
   it("makes initials, sizes and plurals", () => {
     expect(initials("Maya Chen")).toBe("MC");
     expect(initials("", "kale@hn.com")).toBe("K");
