@@ -72,10 +72,16 @@ export function Composer({ phone, compact }: { phone: boolean; compact: boolean 
 
   const target = attachable(selectedKey ? findRow(focusedKey ?? selectedKey) : undefined);
   const reader = !!target;
-  // Every message of the open conversation the assistant may be given.
-  // `threadSize` is read so this follows messages the thread finds later.
+  // Every message of the open conversation, the person's own replies
+  // included (they are half of it). `threadSize` is read so this follows
+  // messages the thread finds later.
   const conversation = useMemo(
-    () => (selectedKey && threadSize > 1 ? conversationMessages(selectedKey).filter((r) => attachable(r) != null).map((r) => r.key) : []),
+    () =>
+      selectedKey && threadSize > 1
+        ? conversationMessages(selectedKey)
+            .filter((r) => r.folder_role !== "drafts" && r.folder_role !== "scheduled")
+            .map((r) => r.key)
+        : [],
     [selectedKey, threadSize],
   );
   const canWiden = conversation.length > 1 && multiSel.length < 2;
@@ -217,17 +223,20 @@ export function Composer({ phone, compact }: { phone: boolean; compact: boolean 
                 <X size={13} aria-hidden="true" />
               </button>
             </span>
-            {canWiden && !inboxRun ? (
-              <button
-                type="button"
-                className={s.ctxAdd}
-                aria-pressed={whole}
-                title={whole ? "Attach only the focused message" : `Attach all ${conversation.length} messages of this conversation`}
-                onClick={() => useSelectionStore.getState().setCtxConversation(!whole)}
-              >
-                {whole ? "Only this message" : `The whole conversation (${conversation.length})`}
-              </button>
-            ) : null}
+          </div>
+        ) : null}
+        {/* A thread is open: the chip carries its focused message; this widens it to all of them. */}
+        {keys.length && canWiden && !inboxRun ? (
+          <div className={s.chipLine}>
+            <button
+              type="button"
+              className={s.ctxAdd}
+              aria-pressed={whole}
+              title={whole ? "Attach only the focused message" : `Attach all ${conversation.length} messages of this conversation`}
+              onClick={() => useSelectionStore.getState().setCtxConversation(!whole)}
+            >
+              {whole ? "Only the focused message" : `The whole conversation (${conversation.length})`}
+            </button>
           </div>
         ) : null}
         {canAttach && !keys.length ? (

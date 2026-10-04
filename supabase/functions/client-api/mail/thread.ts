@@ -35,7 +35,10 @@
 //            folder-name lookup the list already does). Every folder; drafts,
 //            Deleted Items and Junk are left out. strategy "outlook_conversation".
 //            Graph cannot combine this filter with $orderby; rows are sorted here.
-//   IMAP     on the inbox's pooled connection (no dial when one is open):
+//   IMAP     on the inbox's pooled connection (no dial when one is open),
+//            which is handed back to the pool after the anchor and after every
+//            folder, so a `list` or `read` the person is waiting for is never
+//            queued behind the whole search, only behind one folder of it:
 //              1. UID FETCH the anchor's summary (envelope + References).
 //              2. For each of at most MAX_FOLDERS folders (the anchor's own,
 //                 then Inbox, Sent, Archive; on Gmail-over-IMAP the archive
@@ -84,7 +87,7 @@ import { decodeEncodedWords } from "../../mcp-server/mime.ts";
 import { graphFetch, graphFolderLabels } from "../../mcp-server/outlook-graph.ts";
 import { normalizePreview } from "../../mcp-server/text-extract.ts";
 import { ApiError } from "../errors.ts";
-import type { ApiKeyRow, InboxRow, McpSeam } from "../seam.ts";
+import type { ApiKeyRow, ImapSessionLike, InboxRow, McpSeam } from "../seam.ts";
 import { reconnectMessage } from "./health.ts";
 import { outlookRoleFolderIds } from "./roles.ts";
 import { normalizeSubject, threadKeyOf } from "./thread-key.ts";
@@ -528,11 +531,19 @@ async function imapThread(
 ): Promise<ThreadResult> {
   const anchor = decodeImapId(args.message_id);
   if (!Number.isInteger(anchor.uid) || anchor.uid <= 0) throw notFound();
-  const session = mcp.imapSessionFor(inbox);
-  if (!session) throw new ApiError(502, "provider_error", "This inbox has no IMAP session.");
   const started = clock();
-  try {
-    // 1. The anchor: its ids are what the thread is searched by.
+  /** One step on the pooled connection, which goes back to the pool after it. */
+  const step = async <T>(work: (session: ImapSessionLike) => Promise<T>): Promise<T> => {
+    const session = mcp.imapSessionFor(inbox);
+    if (!session) throw new ApiError(502, "provider_error", "This inbox has no IMAP session.");
+    try {
+      return await work(session);
+    } finally {
+      await session.close().catch(() => {});
+    }
+  };
+  // 1. The anchor: its ids are what the thread is searched by.
+  const anchorSummary = await step(async (session) => {
     let client;
     try {
       client = await session.select(imapMailboxForServerFolder(anchor.folder));
@@ -540,19 +551,21 @@ async function imapThread(
       if (isFatal(error)) throw error;
       throw notFound();
     }
-    const [anchorSummary] = await client.fetchSummaries([anchor.uid]);
-    if (!anchorSummary) throw notFound();
-    const anchorRow = imapRow(anchor.folder, anchorSummary);
-    const links = linksOf(anchorSummary);
-    const criteria = headerSearchCriteria(links.own, links.inReplyTo, links.references);
-    if (criteria === null) {
-      // No Message-ID, no In-Reply-To, no References: nothing can link to it.
-      return finish([anchorRow], limit, { thread_key: anchorRow.thread_key, strategy: "single", folders: [anchor.folder] });
-    }
+    return (await client.fetchSummaries([anchor.uid]))[0];
+  });
+  if (!anchorSummary) throw notFound();
+  const anchorRow = imapRow(anchor.folder, anchorSummary);
+  const links = linksOf(anchorSummary);
+  const criteria = headerSearchCriteria(links.own, links.inReplyTo, links.references);
+  if (criteria === null) {
+    // No Message-ID, no In-Reply-To, no References: nothing can link to it.
+    return finish([anchorRow], limit, { thread_key: anchorRow.thread_key, strategy: "single", folders: [anchor.folder] });
+  }
 
-    // 2. The folders, the anchor's own first. An alias this mailbox does not
-    //    have (no Archive) is simply not searched.
-    const folders: string[] = [anchor.folder];
+  // 2. The folders, the anchor's own first. An alias this mailbox does not
+  //    have (no Archive) is simply not searched.
+  const folders: string[] = [anchor.folder];
+  await step(async (session) => {
     for (const alias of ["inbox", "sent", "archive"]) {
       if (folders.length >= MAX_FOLDERS) break;
       try {
@@ -562,25 +575,27 @@ async function imapThread(
         if (isFatal(error)) throw error;
       }
     }
+  });
 
-    const known = new Set<string>([links.own, links.inReplyTo, ...links.references].filter(Boolean));
-    const baseSubject = normalizeSubject(anchorRow.subject);
-    const anchorMs = Date.parse(anchorRow.date);
-    const since = imapDate((Number.isFinite(anchorMs) ? anchorMs : clock()) - FALLBACK_WINDOW_DAYS * 86_400_000);
-    const subjectQuoted = baseSubject ? quoted(baseSubject) : null;
+  const known = new Set<string>([links.own, links.inReplyTo, ...links.references].filter(Boolean));
+  const baseSubject = normalizeSubject(anchorRow.subject);
+  const anchorMs = Date.parse(anchorRow.date);
+  const since = imapDate((Number.isFinite(anchorMs) ? anchorMs : clock()) - FALLBACK_WINDOW_DAYS * 86_400_000);
+  const subjectQuoted = baseSubject ? quoted(baseSubject) : null;
 
-    const rows = new Map<string, ThreadRow>([[anchorRow.id, anchorRow]]);
-    const seenMessageIds = new Set<string>(links.own ? [links.own] : []);
-    const searched: string[] = [];
-    let fallback = false;
-    let reason: ThreadResult["partial_reason"];
+  const rows = new Map<string, ThreadRow>([[anchorRow.id, anchorRow]]);
+  const seenMessageIds = new Set<string>(links.own ? [links.own] : []);
+  const searched: string[] = [];
+  let fallback = false;
+  let reason: ThreadResult["partial_reason"];
 
-    for (const folder of folders) {
-      if (clock() - started > TIME_BUDGET_MS) {
-        reason = "time_budget";
-        break;
-      }
-      try {
+  for (const folder of folders) {
+    if (clock() - started > TIME_BUDGET_MS) {
+      reason = "time_budget";
+      break;
+    }
+    try {
+      await step(async (session) => {
         const selected = await session.select(imapMailboxForServerFolder(folder));
         let uids: number[] = [];
         if (!fallback) {
@@ -593,7 +608,7 @@ async function imapThread(
         if (fallback) {
           if (subjectQuoted === null) {
             searched.push(folder);
-            continue;
+            return;
           }
           uids = await selected.uidSearch(`SUBJECT ${subjectQuoted} SINCE ${since}`);
           uids.sort((a, b) => b - a);
@@ -627,23 +642,21 @@ async function imapThread(
           rows.set(row.id, row);
         }
         searched.push(folder);
-      } catch (error) {
-        if (isFatal(error)) throw error;
-        // This folder could not be searched (a SELECT or SEARCH the server
-        // refused): the others still answer.
-        reason ??= "folder_error";
-      }
+      });
+    } catch (error) {
+      if (isFatal(error)) throw error;
+      // This folder could not be searched (a SELECT or SEARCH the server
+      // refused): the others still answer.
+      reason ??= "folder_error";
     }
-
-    return finish([...rows.values()], limit, {
-      thread_key: anchorRow.thread_key,
-      strategy: fallback ? "imap_subject_fallback" : "imap_header_search",
-      folders: searched,
-      partial_reason: reason,
-    });
-  } finally {
-    await session.close().catch(() => {});
   }
+
+  return finish([...rows.values()], limit, {
+    thread_key: anchorRow.thread_key,
+    strategy: fallback ? "imap_subject_fallback" : "imap_header_search",
+    folders: searched,
+    partial_reason: reason,
+  });
 }
 
 /** Must be called inside `firstPartyContext.run` with `threadHeaders` set. */

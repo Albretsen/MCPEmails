@@ -15,9 +15,15 @@ export function pinnedScrollTop(scrollTop: number, before: number, after: number
   return Math.max(0, scrollTop + (after - before));
 }
 
+/** The CSS selector of one message's <li>. (Not `CSS.escape`: inside a quoted
+ *  attribute value only the quote and the backslash need escaping.) */
+export function messageSelector(key: MessageKey): string {
+  return `[${THREAD_MESSAGE_ATTR}="${key.replace(/["\\]/g, "\\$&")}"]`;
+}
+
 function headOf(key: MessageKey): HTMLElement | null {
   const pane = document.getElementById(PANE_ID.reader) ?? document;
-  return pane.querySelector<HTMLElement>(`[${THREAD_MESSAGE_ATTR}="${CSS.escape(key)}"] > button`);
+  return pane.querySelector<HTMLElement>(`${messageSelector(key)} > button`);
 }
 
 /** True while the reader shows a thread (two or more messages). */
@@ -35,7 +41,7 @@ export function stepThread(dir: 1 | -1): void {
     const head = headOf(next);
     if (!head) return;
     head.focus({ preventScroll: true });
-    head.scrollIntoView({ block: "nearest" });
+    head.scrollIntoView?.({ block: "nearest" });
   });
 }
 

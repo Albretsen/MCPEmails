@@ -1,7 +1,7 @@
 import { describe, expect, it } from "vitest";
 import { MAX_ATTACHMENT_BYTES, type MessageKey, makeKey } from "../types";
 import { ApiClient, type ApiClientOptions, ApiError, REFUSED_RECHECK_MS, isAbortError } from "./client";
-import { FakeBackend, fakeInbox, fakeMessage } from "./fake-backend";
+import { FakeBackend, fakeInbox, fakeMessage, fakeThreadMessage } from "./fake-backend";
 import { HttpMailApi, base64Bytes, filenameFromDisposition, parseMoveResult } from "./http-mail-api";
 
 const day = (n: number) => `2026-10-${String(n).padStart(2, "0")}T12:00:00Z`;
@@ -764,4 +764,53 @@ describe("helpers", () => {
     expect(base64Bytes("")).toBe(0);
   });
 
+});
+
+describe("HttpMailApi: conversations", () => {
+  it("list rows carry the thread fields the server sends, untouched", async () => {
+    const { backend, api } = setup();
+    const root = fakeThreadMessage("r1", day(1), null);
+    backend.add("a", root, fakeThreadMessage("r2", day(2), root), fakeMessage("old", day(3)));
+    const page = await api.listMessages({ scope: "a", folder: { role: "inbox" }, limit: 10 });
+    const byId = new Map(page.rows.map((r) => [r.id, r]));
+    expect([byId.get("r2")?.thread_key, byId.get("r2")?.message_id_header, byId.get("r2")?.in_reply_to, byId.get("r2")?.references]).toEqual([
+      "m:r1@fake.mail",
+      "r2@fake.mail",
+      "r1@fake.mail",
+      ["r1@fake.mail"],
+    ]);
+    // A server that predates threading sends none of them.
+    expect(byId.get("old")?.thread_key).toBeUndefined();
+  });
+
+  it("getThread: one `thread` op, the conversation across folders oldest first, as rows with keys and roles, without bodies", async () => {
+    const { backend, api } = setup({ inboxes: ["a", "b"] });
+    const root = fakeThreadMessage("r1", day(1), null);
+    const mine = fakeThreadMessage("r2", day(2), root, { folder: "Sent", is_read: true, is_flagged: true });
+    const last = fakeThreadMessage("r3", day(3), mine);
+    backend.add("a", last, mine, root, fakeThreadMessage("other", day(4), null), fakeThreadMessage("gone", day(5), root, { folder: "Trash" }));
+    // The same conversation key in another mailbox is another conversation.
+    backend.add("b", fakeThreadMessage("r9", day(6), root));
+
+    const before = backend.calls().length;
+    const thread = await api.getThread(makeKey("a", "r3"), { thread_key: "m:r1@fake.mail" });
+    expect(backend.calls().slice(before)).toEqual([{ op: "thread", inbox_id: "a", args: { message_id: "r3", thread_key: "m:r1@fake.mail" } }]);
+    expect(thread.thread_key).toBe("m:r1@fake.mail");
+    expect(thread.partial).toBe(false);
+    expect(thread.rows.map((r) => [r.key, r.folder, r.folder_role, r.is_starred])).toEqual([
+      ["a:r1", "INBOX", "inbox", false],
+      ["a:r2", "Sent", "sent", true],
+      ["a:r3", "INBOX", "inbox", false],
+    ]);
+    expect(thread.rows.every((r) => r.inbox_id === "a" && !("body_text" in r))).toBe(true);
+  });
+
+  it("getThread: a cut answer says partial, and a message that is gone is an error", async () => {
+    const { backend, api } = setup();
+    const root = fakeThreadMessage("r1", day(1), null);
+    backend.add("a", root, fakeThreadMessage("r2", day(2), root), fakeThreadMessage("r3", day(3), root));
+    const cut = await api.getThread(makeKey("a", "r1"), { limit: 2 });
+    expect([cut.rows.map((r) => r.id), cut.partial]).toEqual([["r2", "r3"], true]);
+    await expect(api.getThread(makeKey("a", "nope"))).rejects.toMatchObject({ code: "not_found" });
+  });
 });

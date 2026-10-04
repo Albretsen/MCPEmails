@@ -60,7 +60,7 @@ import { ComposeCard } from "../compose";
 import { useShell } from "../shell";
 import { EmailFrame } from "./EmailFrame";
 import { restoreFocusSoon } from "./focus";
-import { THREAD_MESSAGE_ATTR, pinnedScrollTop } from "./thread";
+import { THREAD_MESSAGE_ATTR, messageSelector, pinnedScrollTop } from "./thread";
 import s from "./Reader.module.css";
 
 /* The reader: toolbar, header, body (plain text or sandboxed HTML),
@@ -522,7 +522,7 @@ function ThreadView({ threadId, subject, messages, scroller, searching, partial 
    * getSnapshotBeforeUpdate) and put back after. */
   const pin = useRef<{ thread: string; order: string; key: MessageKey | null; top: number } | null>(null);
   const el = (key: MessageKey | null) =>
-    key ? scroller.current?.querySelector<HTMLElement>(`[${THREAD_MESSAGE_ATTR}="${CSS.escape(key)}"]`) ?? null : null;
+    key ? (scroller.current?.querySelector<HTMLElement>(messageSelector(key)) ?? null) : null;
   const offsetOf = (node: HTMLElement | null) =>
     node && scroller.current ? node.getBoundingClientRect().top - scroller.current.getBoundingClientRect().top : null;
   const before = pin.current;

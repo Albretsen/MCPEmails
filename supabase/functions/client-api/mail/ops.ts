@@ -376,7 +376,10 @@ export const OPS: Record<string, OpSpec> = {
     flagged: true,
     threads: true,
     uidOnly: true,
-    // Behind a `read` the person is waiting for, ahead of nothing.
+    // The thread fills in behind what the person is already reading: a `list`
+    // or `read` that is waiting for the connection goes first (imap-pool.ts
+    // rule 8), and the op gives the connection back between folders.
+    priority: "background",
     build(args) {
       only(args, ["message_id", "thread_key", "limit"], "thread");
       return [{
