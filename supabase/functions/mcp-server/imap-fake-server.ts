@@ -35,6 +35,14 @@ export interface FakeMessage {
   flags: string[];
   /** The raw RFC 822 message, one character per octet. */
   raw: string;
+  /**
+   * Gmail's ids and labels (X-GM-THRID, X-GM-MSGID, X-GM-LABELS), answered when
+   * a FETCH asks for them and searched by `X-GM-THRID <id>`. Labels are given
+   * as they go on the wire (`\\Inbox`, `"My label"` unquoted here).
+   */
+  gmThreadId?: string;
+  gmMessageId?: string;
+  gmLabels?: string[];
 }
 
 export interface FakeMailbox {
@@ -84,6 +92,23 @@ export interface FakeServerOptions {
    * what Migadu does. Added for client-api's `thread` op tests.
    */
   headerSearchBroken?: boolean;
+  /**
+   * What Migadu really does (found live 2026-10-04): `HEADER Message-ID`
+   * matches, while a `HEADER References` or `HEADER In-Reply-To` key silently
+   * matches nothing. An OR of the three therefore finds the message itself and
+   * none of its replies.
+   */
+  headerReferencesSearchBroken?: boolean;
+  /**
+   * A search rate limit: after this many UID SEARCH commands (counted across
+   * every connection sharing this options object's `searchCount`), each further
+   * one is answered `NO [LIMIT] ...` and the connection stays open and in sync.
+   */
+  searchLimit?: number;
+  /** Shared counter for `searchLimit`; pass one object to every connection. */
+  searchCount?: { n: number };
+  /** Every UID SEARCH is answered this many milliseconds late. */
+  searchDelayMs?: number;
   /** `UID SEARCH CHARSET ...` is answered NO [BADCHARSET]. */
   rejectCharset?: boolean;
   /** `false`: a `{n}` at the end of a UID SEARCH line is not treated as a literal. */
@@ -244,7 +269,10 @@ function partOneOf(raw: string): string {
  * `OR a b`, `HEADER <field> <string>`, `SUBJECT <string>`, `SINCE <date>`,
  * with juxtaposition meaning AND. Returns null for anything else.
  */
-function searchPredicate(criteria: string): ((message: FakeMessage) => boolean) | null {
+function searchPredicate(
+  criteria: string,
+  quirks: { headerReferencesSearchBroken?: boolean } = {},
+): ((message: FakeMessage) => boolean) | null {
   let rest = criteria;
   const word = (): string => {
     const arg = takeArgument(rest);
@@ -263,7 +291,12 @@ function searchPredicate(criteria: string): ((message: FakeMessage) => boolean) 
     if (name === "HEADER") {
       const field = word();
       const value = word().toLowerCase();
+      if (quirks.headerReferencesSearchBroken && /^(references|in-reply-to)$/i.test(field)) return () => false;
       return (m) => header(m, field).toLowerCase().includes(value);
+    }
+    if (name === "X-GM-THRID") {
+      const id = word();
+      return (m) => m.gmThreadId === id;
     }
     if (name === "SUBJECT") {
       // Compared as text, the way a server that honours CHARSET does.
@@ -440,8 +473,17 @@ export class FakeImapServer {
       this.#late += replies.join("");
       return;
     }
-    this.#send(this.#late + replies.join(""));
+    const out = this.#late + replies.join("");
     this.#late = "";
+    const delay = this.#options.searchDelayMs ?? 0;
+    if (delay > 0 && /^UID SEARCH /i.test(this.commands[this.commands.length - 1] ?? "")) {
+      // A slow search: the server says nothing, then answers.
+      setTimeout(() => {
+        if (!this.closed) this.#send(out);
+      }, delay);
+      return;
+    }
+    this.#send(out);
   }
 
   #wireName(name: string): string {
@@ -487,6 +529,11 @@ export class FakeImapServer {
           const field = rawHeaderField(splitRaw(message.raw).head, "references");
           const block = field === null ? CRLF : `${field}${CRLF}${CRLF}`;
           parts.push(`BODY[HEADER.FIELDS (REFERENCES)] {${block.length}}${CRLF}${block}`);
+        } else if (item === "X-GM-THRID") parts.push(`X-GM-THRID ${message.gmThreadId ?? "0"}`);
+        else if (item === "X-GM-MSGID") parts.push(`X-GM-MSGID ${message.gmMessageId ?? "0"}`);
+        else if (item === "X-GM-LABELS") {
+          // System labels go out quoted with the backslash escaped, as Gmail sends them.
+          parts.push(`X-GM-LABELS (${(message.gmLabels ?? []).map((label) => quote(label)).join(" ")})`);
         } else if (item === "UID") parts.push(`UID ${uid}`);
         else if (item === "FLAGS") parts.push(`FLAGS (${message.flags.join(" ")})`);
         else if (item === "ENVELOPE") parts.push(`ENVELOPE ${envelopeOf(message.raw)}`);
@@ -623,6 +670,11 @@ export class FakeImapServer {
     if (verb === "UID" && /^UID SEARCH /i.test(command)) {
       const selected = this.#selected;
       if (!selected) return `${tag} BAD No mailbox selected${CRLF}`;
+      if (this.#options.searchLimit !== undefined) {
+        const counter = (this.#options.searchCount ??= { n: 0 });
+        counter.n++;
+        if (counter.n > this.#options.searchLimit) return `${tag} NO [LIMIT] Search rate limit exceeded, try again later${CRLF}`;
+      }
       let criteria = command.slice("UID SEARCH ".length).trim();
       const charset = /^CHARSET (\S+) /i.exec(criteria);
       if (charset) {
@@ -638,7 +690,7 @@ export class FakeImapServer {
         const wanted = new Set(parseSet(criteria.slice(4), live[live.length - 1]?.uid ?? 0));
         hits = live.filter((m) => wanted.has(m.uid));
       } else {
-        const predicate = searchPredicate(criteria);
+        const predicate = searchPredicate(criteria, this.#options);
         if (!predicate) return `${tag} BAD Unsupported search in the fake${CRLF}`;
         hits = this.#options.headerSearchBroken && /\bHEADER\b/i.test(criteria) ? [] : live.filter(predicate);
       }

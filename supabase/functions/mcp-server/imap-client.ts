@@ -257,6 +257,14 @@ export interface ImapMessageSummary {
    * it, which only a client-api call does (`summaryReferencesItem`).
    */
   referencesHeader?: string;
+  /**
+   * Gmail's X-GM-THRID / X-GM-MSGID (decimal strings) and X-GM-LABELS. Present
+   * only when the FETCH asked for them, which only a client-api call on a
+   * server advertising X-GM-EXT-1 does (`gmailSummaryItems`).
+   */
+  gmThreadId?: string;
+  gmMessageId?: string;
+  gmLabels?: string[];
 }
 
 export interface ImapRawMessage {
@@ -1189,7 +1197,7 @@ export class ImapClient {
    */
   fetchSummaries(
     uids: number[],
-    options: { includePreview?: boolean; maxLiteralBytes?: number } = {},
+    options: { includePreview?: boolean; maxLiteralBytes?: number; gmailLabels?: boolean } = {},
   ): Promise<ImapMessageSummary[]> {
     if (uids.length === 0) return Promise.resolve([]);
     return this.runExclusive(async () => {
@@ -1237,7 +1245,7 @@ export class ImapClient {
   private async fetchSummariesUnlocked(
     verb: "UID FETCH" | "FETCH",
     set: string,
-    options: { includePreview?: boolean; maxLiteralBytes?: number },
+    options: { includePreview?: boolean; maxLiteralBytes?: number; gmailLabels?: boolean },
   ): Promise<{ status: "OK" | "NO" | "BAD"; text: string; summaries: ImapMessageSummary[] }> {
     const tag = this.nextTag();
     // `summaryPreviewItem()` is " BODY.PEEK[1]<0.2048>" for every MCP call;
@@ -1245,9 +1253,12 @@ export class ImapClient {
     const previewPart = options.includePreview === false
       ? ""
       : summaryPreviewItem();
-    // `summaryReferencesItem()` is "" for every MCP call (first-party.ts).
+    // `summaryReferencesItem()` is "" for every MCP call (first-party.ts), and
+    // so is `gmailSummaryItems()`.
     await this.write(
-      `${tag} ${verb} ${set} (UID FLAGS ENVELOPE BODYSTRUCTURE${previewPart}${summaryReferencesItem()})${CRLF}`,
+      `${tag} ${verb} ${set} (UID FLAGS ENVELOPE BODYSTRUCTURE${previewPart}${summaryReferencesItem()}${
+        this.gmailSummaryItems(options.gmailLabels === true)
+      })${CRLF}`,
     );
     const resp = await this.readTagged(tag, {
       maxLiteralBytes: options.maxLiteralBytes,
@@ -1316,6 +1327,51 @@ export class ImapClient {
         }
       }
       return { raw, flags };
+    }, "fetch");
+  }
+
+  /**
+   * Does the server advertise this capability (as read off its answer to the
+   * authentication; see `capabilities`)? client-api only: the `thread` op asks
+   * for X-GM-EXT-1. Nothing on the MCP path calls it.
+   */
+  hasCapability(name: string): boolean {
+    return this.capabilities?.has(name.toUpperCase()) === true;
+  }
+
+  /**
+   * The Gmail items a summary FETCH adds: the thread id and message id in the
+   * SAME command as the envelope (no extra round trip), plus the labels when
+   * the caller asks. "" unless this is a client-api call that wants thread
+   * headers AND the server advertises X-GM-EXT-1, so the command an MCP call
+   * sends is the literal it has always been, on Gmail too.
+   */
+  private gmailSummaryItems(labels: boolean): string {
+    if (!wantsThreadHeaders() || this.capabilities?.has("X-GM-EXT-1") !== true) return "";
+    return labels ? " X-GM-THRID X-GM-MSGID X-GM-LABELS" : " X-GM-THRID X-GM-MSGID";
+  }
+
+  /**
+   * `UID FETCH <uids> (X-GM-THRID X-GM-MSGID)`: Gmail's thread and message ids
+   * for these UIDs of the selected mailbox, nothing else. client-api's `thread`
+   * op only (it checks `hasCapability("X-GM-EXT-1")` first).
+   */
+  fetchGmailIds(uids: number[]): Promise<Array<{ uid: number; threadId: string; messageId: string }>> {
+    if (uids.length === 0) return Promise.resolve([]);
+    return this.runExclusive(async () => {
+      const tag = this.nextTag();
+      await this.write(`${tag} UID FETCH ${uids.join(",")} (X-GM-THRID X-GM-MSGID)${CRLF}`);
+      const resp = await this.readTagged(tag, { maxLiteralBytes: 64 * 1024 });
+      if (resp.status !== "OK") throw new Error(`UID FETCH failed: ${resp.text}`);
+      const out: Array<{ uid: number; threadId: string; messageId: string }> = [];
+      for (const line of resp.untagged) {
+        if (!/^\* \d+ FETCH /.test(line)) continue;
+        const uid = /\bUID (\d+)/.exec(line)?.[1];
+        const threadId = /\bX-GM-THRID (\d+)/.exec(line)?.[1];
+        const messageId = /\bX-GM-MSGID (\d+)/.exec(line)?.[1];
+        if (uid && threadId) out.push({ uid: Number(uid), threadId, messageId: messageId ?? "" });
+      }
+      return out;
     }, "fetch");
   }
 
@@ -2831,11 +2887,22 @@ function parseFetchLine(line: string): ImapMessageSummary | null {
   let structure: Token[] | null = null;
   let previewSource: string | null = null;
   let referencesHeader: string | undefined;
+  // Gmail items: only ever in a reply to a client-api FETCH that asked for them.
+  let gm: { gmThreadId?: string; gmMessageId?: string; gmLabels?: string[] } | null = null;
 
   for (let i = 0; i < attrs.length; i++) {
     const key = attrs[i];
     if (key === "UID" && typeof attrs[i + 1] === "string") {
       uid = Number(attrs[i + 1]);
+    } else if (key === "X-GM-THRID" && typeof attrs[i + 1] === "string") {
+      (gm ??= {}).gmThreadId = attrs[i + 1] as string;
+      i++;
+    } else if (key === "X-GM-MSGID" && typeof attrs[i + 1] === "string") {
+      (gm ??= {}).gmMessageId = attrs[i + 1] as string;
+      i++;
+    } else if (key === "X-GM-LABELS" && Array.isArray(attrs[i + 1])) {
+      (gm ??= {}).gmLabels = (attrs[i + 1] as Token[]).filter((t): t is string => typeof t === "string");
+      i++;
     } else if (key === "FLAGS" && Array.isArray(attrs[i + 1])) {
       flags = (attrs[i + 1] as Token[]).filter((t): t is string => typeof t === "string");
     } else if (key === "ENVELOPE" && Array.isArray(attrs[i + 1])) {
@@ -2869,8 +2936,10 @@ function parseFetchLine(line: string): ImapMessageSummary | null {
   }
 
   if (!uid) return null;
-  if (referencesHeader !== undefined) return { uid, flags, envelope, hasAttachments, preview, referencesHeader };
-  return { uid, flags, envelope, hasAttachments, preview };
+  if (referencesHeader !== undefined) {
+    return { uid, flags, envelope, hasAttachments, preview, referencesHeader, ...(gm ?? {}) };
+  }
+  return { uid, flags, envelope, hasAttachments, preview, ...(gm ?? {}) };
 }
 
 // The preview generator is `cleanPreviewFromBodyPart` in text-extract.ts, for

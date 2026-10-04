@@ -50,7 +50,16 @@ export interface ImapStatusClient {
   /** `UID SEARCH <criteria>` in the selected mailbox (the `thread` op). */
   uidSearch(criteria: string): Promise<number[]>;
   /** The summary FETCH a listing issues, for these UIDs (the `thread` op). */
-  fetchSummaries(uids: number[], options?: { includePreview?: boolean }): Promise<ImapMessageSummary[]>;
+  fetchSummaries(
+    uids: number[],
+    options?: { includePreview?: boolean; gmailLabels?: boolean },
+  ): Promise<ImapMessageSummary[]>;
+  /** Did the server advertise this capability when the connection authenticated. */
+  hasCapability(name: string): boolean;
+  /** `UID FETCH <uids> (X-GM-THRID X-GM-MSGID)` (Gmail over IMAP; the `thread` op). */
+  fetchGmailIds(uids: number[]): Promise<Array<{ uid: number; threadId: string; messageId: string }>>;
+  /** True while a command is in flight (a search that outlived its budget). */
+  readonly busy?: boolean;
 }
 
 export interface ImapSessionLike {

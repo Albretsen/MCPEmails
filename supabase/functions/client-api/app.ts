@@ -33,6 +33,7 @@ import type { ImapPool, PoolableClient } from "./imap-pool.ts";
 import { parseBatch, runMailBatch } from "./mail/batch.ts";
 import { type HealthRow, InboxHealth, type InboxState } from "./mail/health.ts";
 import { OPS } from "./mail/ops.ts";
+import { ThreadMemory } from "./mail/thread.ts";
 import { InboxRowCache, type MailEnv, type MailRequest, type OpTimings, resultJson, runExecutor, runMailOp } from "./mail/run.ts";
 import { settleAfterResponse } from "../mcp-server/request-pipeline.ts";
 import { type DispatchSummary, gmailPushStub } from "./push/dispatch.ts";
@@ -60,6 +61,8 @@ export interface AppDeps {
   inboxes?: InboxRowCache;
   /** Tests only: the inbox health map (see mail/health.ts). */
   health?: InboxHealth;
+  /** Tests only: the `thread` op's memory (see mail/thread.ts). */
+  threads?: ThreadMemory;
   /** Loads ./assistant/mod.ts. Kept lazy so mail routes never pay for it. */
   assistant?: () => Promise<HandleAssistantRun>;
   /** Web push (push/). Absent: the /push routes answer 404. */
@@ -188,6 +191,7 @@ export function createApp(deps: AppDeps): (req: Request) => Promise<Response> {
   const readEnv = deps.env ?? ((name) => Deno.env.get(name));
   const inboxRows = deps.inboxes ?? new InboxRowCache();
   const health = deps.health ?? new InboxHealth(now);
+  const threads = deps.threads ?? new ThreadMemory();
   const keys = new Map<string, { row: ApiKeyRow; at: number }>();
   const inboxLists = new Map<string, { inboxes: Inbox[]; at: number }>();
 
@@ -246,6 +250,7 @@ export function createApp(deps: AppDeps): (req: Request) => Promise<Response> {
     arrival,
     imapDial: deps.imapDial,
     inboxes: inboxRows,
+    threads,
     apiKey: callerKey(row, membership, true),
     canWrite: canWrite(membership.role),
     health,

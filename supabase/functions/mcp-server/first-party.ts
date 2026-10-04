@@ -32,6 +32,9 @@
 //                    (`BODY.PEEK[HEADER.FIELDS (REFERENCES)]`); Gmail adds
 //                    three names to `metadataHeaders`; Graph adds
 //                    `internetMessageId` to `$select`. No extra round trip.
+//                    On a Gmail address connected over IMAP (the server
+//                    advertises X-GM-EXT-1) the same FETCH also asks for
+//                    X-GM-THRID and X-GM-MSGID, and rows carry `gm_thread_id`.
 //
 // All of it rides one AsyncLocalStorage. NOTHING in the MCP server ever opens
 // this store: `handleRequest` does not call `firstPartyContext.run`, so for
@@ -215,6 +218,18 @@ export function threadFields(
     in_reply_to: messageIdsOf(raw.inReplyTo)[0] ?? null,
     references: boundedReferences(references),
   };
+}
+
+/**
+ * `{ gm_thread_id }` for an IMAP list/search row whose summary carried Gmail's
+ * X-GM-THRID (a Gmail address connected over IMAP; the id rides the same FETCH,
+ * see `ImapClient.gmailSummaryItems`), or `{}`: always `{}` for MCP traffic.
+ * client-api turns it into the row's `thread_key` ("g:<id>") and removes it.
+ */
+export function gmailThreadField(read: () => string | null | undefined): { gm_thread_id?: string } {
+  if (!wantsThreadHeaders()) return {};
+  const id = read();
+  return typeof id === "string" && /^\d{1,24}$/.test(id) ? { gm_thread_id: id } : {};
 }
 
 /** `{ message_id_header }` for a row whose provider gives nothing else cheaply (Graph). */
