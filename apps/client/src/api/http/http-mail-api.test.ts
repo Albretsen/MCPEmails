@@ -813,4 +813,36 @@ describe("HttpMailApi: conversations", () => {
     expect([cut.rows.map((r) => r.id), cut.partial]).toEqual([["r2", "r3"], true]);
     await expect(api.getThread(makeKey("a", "nope"))).rejects.toMatchObject({ code: "not_found" });
   });
+
+  it("getThread: a partial answer keeps its messages and says why; a whole one carries no reason", async () => {
+    const { backend, api } = setup();
+    const root = fakeThreadMessage("r1", day(1), null);
+    backend.add("a", root, fakeThreadMessage("r2", day(2), root));
+    expect((await api.getThread(makeKey("a", "r1"), { limit: 1 })).partial_reason).toBe("limit");
+    for (const reason of ["rate_limited", "time_budget", "folder_error", "candidates", "something_newer"]) {
+      backend.threadPartial = reason;
+      const t = await api.getThread(makeKey("a", "r1"));
+      expect([t.rows.map((r) => r.id), t.partial, t.partial_reason]).toEqual([["r1", "r2"], true, reason]);
+    }
+    backend.threadPartial = null;
+    const whole = await api.getThread(makeKey("a", "r1"));
+    expect([whole.partial, "partial_reason" in whole]).toEqual([false, false]);
+  });
+
+  it("getThread: an aborted request rejects with AbortError, aborts the HTTP request, and its answer is dropped", async () => {
+    const { backend, api } = setup();
+    backend.add("a", fakeThreadMessage("r1", day(1), null));
+    backend.delayOp("thread", 40);
+    const controller = new AbortController();
+    const pending = api.getThread(makeKey("a", "r1"), {}, controller.signal);
+    const outcome = pending.then(
+      () => "answered",
+      (e: unknown) => (e as { name?: string }).name,
+    );
+    await new Promise((r) => setTimeout(r, 15));
+    expect(backend.calls("thread")).toHaveLength(1);
+    controller.abort();
+    expect(await outcome).toBe("AbortError");
+    expect(backend.abortedCalls.map((c) => c.op)).toEqual(["thread"]);
+  });
 });

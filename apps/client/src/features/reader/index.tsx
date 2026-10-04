@@ -84,6 +84,9 @@ export function ReaderPane() {
   const thread = useConversationThread(key);
   const messages = thread.messages;
   const isThread = messages.length > 1;
+  // The server ran out of time or was told to slow down: what came back is
+  // shown, and asking again may find the rest.
+  const mayRetry = thread.partial && (thread.partialReason === "rate_limited" || thread.partialReason === "time_budget");
   // What the thread's state hangs on: the conversation, so a reply arriving
   // (a new head) does not start it over.
   const threadId = (key && conversationOf(key)?.id) || key || "";
@@ -181,6 +184,8 @@ export function ReaderPane() {
             scroller={scroller}
             searching={thread.isFetching}
             partial={thread.partial}
+            mayRetry={mayRetry}
+            onRetry={thread.retry}
           />
         ) : (
           <>
@@ -193,6 +198,8 @@ export function ReaderPane() {
               failed={!!error}
               refetch={refetch}
             />
+            {/* The one message that came back may not be the whole conversation. */}
+            {mayRetry ? <MissingNote searching={thread.isFetching} onRetry={thread.retry} /> : null}
           </>
         )}
         {inlineCompose ? <ComposeCard inline /> : null}
@@ -508,9 +515,25 @@ interface ThreadViewProps {
   /** The `thread` op is still looking in other folders. */
   searching: boolean;
   partial: boolean;
+  /** Partial for a passing reason (rate limit, time budget): offer Retry. */
+  mayRetry: boolean;
+  onRetry: () => void;
 }
 
-function ThreadView({ threadId, subject, messages, scroller, searching, partial }: ThreadViewProps) {
+/** The conversation may be incomplete for a passing reason. Quiet: one muted
+ *  line under the messages, which stays put while the retry is out. */
+function MissingNote({ searching, onRetry }: { searching: boolean; onRetry: () => void }) {
+  return (
+    <p className={s.threadNote}>
+      Some messages may be missing
+      <button type="button" className={s.threadRetry} onClick={onRetry} disabled={searching} aria-busy={searching || undefined}>
+        Retry
+      </button>
+    </p>
+  );
+}
+
+function ThreadView({ threadId, subject, messages, scroller, searching, partial, mayRetry, onRetry }: ThreadViewProps) {
   const { data: inboxes } = useInboxes();
   const self = inboxes?.find((i) => i.inbox_id === messages[0]?.inbox_id)?.email_address ?? "";
   const states = useMemo(() => messages.map((m) => ({ key: m.key, is_read: m.is_read })), [messages]);
@@ -575,9 +598,19 @@ function ThreadView({ threadId, subject, messages, scroller, searching, partial 
       </ol>
       {/* Said, not shown: nothing on screen moves while the other folders are searched. */}
       <span className="sr-only" role="status">
-        {searching ? "Looking for more of this conversation in other folders." : partial ? "Some folders could not be searched. There may be more messages." : ""}
+        {searching
+          ? "Looking for more of this conversation in other folders."
+          : mayRetry
+            ? "Some messages may be missing."
+            : partial
+              ? "Some folders could not be searched. There may be more messages."
+              : ""}
       </span>
-      {partial && !searching ? <p className={s.threadNote}>Some folders could not be searched. There may be more messages in this conversation.</p> : null}
+      {mayRetry ? (
+        <MissingNote searching={searching} onRetry={onRetry} />
+      ) : partial && !searching ? (
+        <p className={s.threadNote}>Some folders could not be searched. There may be more messages in this conversation.</p>
+      ) : null}
     </>
   );
 }

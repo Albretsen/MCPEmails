@@ -371,6 +371,20 @@ export class FakeBackend {
   hold: Promise<void> | null = null;
   /** HTTP-level failures by path, consumed in order. */
   httpFailures: { path: string; status: number; error?: WireError }[] = [];
+  /** When set, the `thread` op answers `partial: true` with this reason (the
+   *  messages it found are still sent), as the server does when it ran out of
+   *  time or was rate limited by the provider. */
+  threadPartial: string | null = null;
+  /** Mail calls whose HTTP request was aborted while it waited (`delayOp`). */
+  abortedCalls: FakeCall[] = [];
+  private opDelays = new Map<string, number>();
+
+  /** From now on, HTTP requests carrying this op answer after `ms` (or reject
+   *  when aborted first). 0 removes the delay. */
+  delayOp(op: string, ms: number): void {
+    if (ms > 0) this.opDelays.set(op, ms);
+    else this.opDelays.delete(op);
+  }
 
   private failures: Failure[] = [];
   private prints = new Map<string, number>();
@@ -501,6 +515,24 @@ export class FakeBackend {
       await new Promise<void>((resolve, reject) => {
         signal?.addEventListener("abort", () => reject(new DOMException("aborted", "AbortError")), { once: true });
         void Promise.all(held).then(() => resolve());
+      });
+    }
+
+    // A slow op: answers after its delay, unless the request is aborted first.
+    const mailCalls = path === "/mail" ? [body as FakeCall] : path === "/mail/batch" ? ((body as { calls?: FakeCall[] }).calls ?? []) : [];
+    const delay = Math.max(0, ...mailCalls.map((c) => this.opDelays.get(c?.op ?? "") ?? 0));
+    if (delay > 0) {
+      await new Promise<void>((resolve, reject) => {
+        const timer = setTimeout(resolve, delay);
+        signal?.addEventListener(
+          "abort",
+          () => {
+            clearTimeout(timer);
+            this.abortedCalls.push(...mailCalls);
+            reject(new DOMException("aborted", "AbortError"));
+          },
+          { once: true },
+        );
       });
     }
 
@@ -700,8 +732,8 @@ export class FakeBackend {
         return {
           thread_key: keyOf(anchor),
           messages: (over ? rows.slice(rows.length - limit) : rows).map(({ body_text: _b, attachments: _a, ...summary }) => summary),
-          partial: over,
-          ...(over ? { partial_reason: "limit" } : {}),
+          partial: over || this.threadPartial != null,
+          ...(this.threadPartial != null ? { partial_reason: this.threadPartial } : over ? { partial_reason: "limit" } : {}),
           strategy: "fake",
           folders: ["*"],
         };
