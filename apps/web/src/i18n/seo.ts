@@ -186,14 +186,17 @@ function reviewMarkup() {
 
 /**
  * Structured-data graph for the home page (Organization + WebSite +
- * SoftwareApplication). This is the product's primary acquisition surface:
+ * SoftwareApplication, plus FAQPage when the visible FAQ is passed in). This is the product's primary acquisition surface:
  * AI assistants and search engines read it to describe and recommend
  * mcpemails. Everything here must be literally true: no aggregateRating or
  * other invented signals. The offers mirror the real plan catalogue.
  */
 export function homeJsonLd(
   locale: string,
-  { description }: { name: string; description: string }
+  {
+    description,
+    faq = [],
+  }: { name: string; description: string; faq?: { q: string; a: string }[] }
 ) {
   const home = localePath(locale, '');
   const orgId = `${APP_URL}/#organization`;
@@ -250,6 +253,24 @@ export function homeJsonLd(
         offers: planOffers(localePath(locale, '/pricing')),
         ...reviewMarkup(),
       },
+      // The same `home.faq.items` the Faq section renders, so the markup can
+      // never claim a question the page does not show. Not here for a rich
+      // result (see the note in `connectJsonLd`): the question/answer pairing
+      // is what generative results quote.
+      ...(faq.length > 0
+        ? [
+            {
+              '@type': 'FAQPage',
+              '@id': `${home}#faq`,
+              inLanguage: locale,
+              mainEntity: faq.map((f) => ({
+                '@type': 'Question',
+                name: f.q,
+                acceptedAnswer: { '@type': 'Answer', text: f.a },
+              })),
+            },
+          ]
+        : []),
     ],
   };
 }
