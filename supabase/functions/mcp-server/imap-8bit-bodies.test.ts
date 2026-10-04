@@ -33,7 +33,7 @@ import { assert, assertEquals, assertNotEquals } from "jsr:@std/assert@1";
 import { bytesToByteString } from "./byte-string.ts";
 import { ImapClient, singleByteTextToBytes } from "./imap-client.ts";
 import { FakeImapServer, type FakeMessage } from "./imap-fake-server.ts";
-import { parseEmail } from "./mime.ts";
+import { parseEmail, parseMultipartBodySource } from "./mime.ts";
 
 const CRLF = "\r\n";
 const utf8 = new TextEncoder();
@@ -336,15 +336,20 @@ Deno.test("a declared charset is respected even when the octets would also be va
   assertEquals(parsed.text, "Ã©");
 });
 
-Deno.test("a UTF-8 body cut in the middle of a character stays UTF-8", () => {
+Deno.test("a UTF-8 part cut in the middle of a character stays UTF-8, on the preview path only", () => {
   // The preview path parses a 2 KB prefix of a part: the last character can
   // be half there. That is not "invalid UTF-8", and must not flip the whole
   // text to windows-1252.
   const whole = utf8.encode("Blåbær – Ødegård");
-  const raw = ["Content-Type: text/plain", "Content-Transfer-Encoding: 8bit", "", byteString(whole.subarray(0, whole.length - 3))]
+  const part = ["Content-Type: text/plain", "Content-Transfer-Encoding: 8bit", "", byteString(whole.subarray(0, whole.length - 3))]
     .join(CRLF);
-  const text = parseEmail(raw).text ?? "";
+  const prefix = ["--b", part].join(CRLF);
+  const text = parseMultipartBodySource(prefix)?.text ?? "";
   assert(text.startsWith("Blåbær – Ødeg"), text);
+  // A COMPLETE message gets no such leniency (review of the combined change):
+  // windows-1252 text ending in "é" (0xE9, also a UTF-8 lead octet) is not
+  // "UTF-8, cut short". See imap-read-review.test.ts.
+  assertEquals(parseEmail(["Content-Type: text/plain", "", "Caf\xe9"].join(CRLF)).text, "Café");
 });
 
 // ── raw 8-bit header values ────────────────────────────────────────────────

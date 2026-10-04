@@ -713,7 +713,7 @@ export class ImapClient {
     // Server greeting: expect "* OK ...". A "* BYE" (or any non-OK greeting)
     // carrying a connection-limit marker means the account is over its cap —
     // retryable. Other non-OK greetings are a protocol error.
-    const greeting = await client.readLine();
+    const greeting = serverText(await client.readLine());
     if (!greeting.startsWith("* OK")) {
       client.close();
       if (isConnectionLimitResponse(greeting)) {
@@ -853,7 +853,7 @@ export class ImapClient {
         if (line.startsWith(`${tag} `)) {
           const m = /^\S+\s+(OK|NO|BAD)\s*(.*)$/.exec(line);
           return {
-            resp: { status: (m?.[1] as "OK" | "NO" | "BAD") ?? "BAD", text: m?.[2] ?? line },
+            resp: { status: (m?.[1] as "OK" | "NO" | "BAD") ?? "BAD", text: serverText(m?.[2] ?? line) },
             sent: "",
           };
         }
@@ -884,7 +884,7 @@ export class ImapClient {
       if (!cont.startsWith("+")) {
         this.close();
         throw new ImapAuthError(
-          `IMAP server refused SASL PLAIN: ${redactImapAuthText(cont.slice(0, 120), [username, password, token])}`,
+          `IMAP server refused SASL PLAIN: ${redactImapAuthText(serverText(cont).slice(0, 120), [username, password, token])}`,
         );
       }
       await this.write(`${token}${CRLF}`);
@@ -1127,7 +1127,7 @@ export class ImapClient {
       if (line.startsWith("+")) return null;
       if (line.startsWith(`${tag} `)) {
         const m = /^\S+\s+(OK|NO|BAD)\s*(.*)$/.exec(line);
-        return { status: (m?.[1] as "OK" | "NO" | "BAD") ?? "BAD", text: m?.[2] ?? line };
+        return { status: (m?.[1] as "OK" | "NO" | "BAD") ?? "BAD", text: serverText(m?.[2] ?? line) };
       }
       if (this.eofReached) {
         if (this.destroyed) throw destroyedError();
@@ -2172,7 +2172,7 @@ export class ImapClient {
           }
           const m = /^(\S+)\s+(OK|NO|BAD)\s*(.*)$/.exec(line);
           const status = (m?.[2] as "OK" | "NO" | "BAD") ?? "BAD";
-          return { status, text: m?.[3] ?? line, untagged, literals };
+          return { status, text: serverText(m?.[3] ?? line), untagged, literals };
         }
         if (this.eofReached) {
           // The peer hung up before completing the response, or destroy() did
@@ -2573,6 +2573,26 @@ export function singleByteTextToBytes(text: string): Uint8Array {
 }
 
 /**
+ * Text a server wrote for a person: the reason after a tagged NO / BAD, a
+ * greeting, a refused continuation. These reach error messages, and from
+ * there tool results, so they must be text and not a byte string. ASCII (all
+ * but a few localised servers) is returned as is; raw 8-bit text is read as
+ * UTF-8 when it is valid UTF-8 and as windows-1252 otherwise, which for
+ * non-UTF-8 text is exactly what the old TextDecoder("latin1") reader gave.
+ */
+function serverText(line: string): string {
+  return decodeRawHeaderOctets(line);
+}
+
+/** What the reader used to return for these octets: see {@link repairRawUtf8Name}. */
+const LEGACY_SINGLE_BYTE = new TextDecoder("latin1");
+
+/** `trim()` for a byte string: ASCII blanks only, never the octet 0xA0. */
+function trimAsciiBlanks(value: string): string {
+  return value.replace(/^[ \t]+|[ \t]+$/g, "");
+}
+
+/**
  * Undo the byte-per-character reading of a mailbox name that a non-compliant
  * server sent as raw UTF-8 octets instead of modified UTF-7.
  *
@@ -2608,7 +2628,10 @@ function repairRawUtf8Name(name: string): string {
   try {
     return new TextDecoder("utf-8", { fatal: true }).decode(octets);
   } catch {
-    return name;
+    // Not UTF-8: a raw single-byte name. A folder name is an id a client was
+    // given earlier and hands back, so it has to stay the string it was when
+    // the reader decoded as windows-1252 (0x80 as "€", not as U+0080).
+    return LEGACY_SINGLE_BYTE.decode(octets);
   }
 }
 
@@ -2625,7 +2648,9 @@ export function capabilitiesAfterAuth(
 
 /** Read a mailbox name as it appears in a LIST or STATUS reply. */
 function decodeWireMailboxName(token: string): string {
-  let name = token.trim();
+  // ASCII blanks only: `trim()` also strips U+00A0, which in a byte string is
+  // the last octet of a raw UTF-8 name ending in "à" (C3 A0).
+  let name = trimAsciiBlanks(token);
   if (name.startsWith('"')) {
     name = name.slice(1, -1).replace(/\\(.)/g, "$1");
   }
@@ -2881,6 +2906,8 @@ function partOneOfStructure(structure: Token[]): PreviewPartInfo | null {
     subtype: asStr(part[1]).toLowerCase(),
     charset,
     encoding: asStr(part[5]).toLowerCase() || null,
+    // body-fld-octets: lets the preview tell a whole part from a cut prefix.
+    size: typeof part[6] === "string" && /^\d+$/.test(part[6]) ? Number(part[6]) : null,
   };
 }
 

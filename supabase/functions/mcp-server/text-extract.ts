@@ -138,11 +138,31 @@ const PREVIEW_ONLY_INVISIBLE = /[\u00ad\u034f]/g;
  * because it is boilerplate; "View in browser" is text and stays.
  */
 export function normalizePreview(text: string): string {
-  return stripInvisibleText(decodeHtmlEntities(text.replace(/&shy;/gi, "")))
+  return tidyPreview(decodeHtmlEntities(text.replace(/&shy;/gi, "")));
+}
+
+/**
+ * {@link normalizePreview} without the entity decode: drop invisible
+ * characters, collapse whitespace, cap. For text whose entities have ALREADY
+ * been decoded, which is every IMAP preview by the time index.ts builds the
+ * row (`cleanPreviewFromBodyPart` decodes exactly once). Decoding again there
+ * turned a message that shows the text `&lt;b&gt;` (written `&amp;lt;b&amp;gt;`
+ * in its HTML) into `<b>`. Idempotent, so running it on a finished preview is
+ * free.
+ *
+ * The cap never ends on half a surrogate pair: `slice` counts UTF-16 code
+ * units, and a preview whose 200th unit is the first half of an emoji would
+ * put a lone surrogate into the JSON result.
+ */
+export function tidyPreview(text: string): string {
+  const tidy = stripInvisibleText(text)
     .replace(PREVIEW_ONLY_INVISIBLE, "")
     .replace(/\s+/g, " ")
-    .trim()
-    .slice(0, PREVIEW_MAX_CHARS);
+    .trim();
+  if (tidy.length <= PREVIEW_MAX_CHARS) return tidy;
+  const last = tidy.charCodeAt(PREVIEW_MAX_CHARS - 1);
+  const cut = last >= 0xd800 && last <= 0xdbff ? PREVIEW_MAX_CHARS - 1 : PREVIEW_MAX_CHARS;
+  return tidy.slice(0, cut);
 }
 
 /**
@@ -273,10 +293,14 @@ export function preferredBodyText(
 //     content, closed or not. A 2 KB prefix of an HTML-only message is very
 //     often an unterminated `<style>` block, which a closed-tag rule cannot
 //     match, so the CSS used to ship as the preview.
-//   * Octets are recovered exactly. A literal comes off the socket through
+//   * Octets are taken exactly. The IMAP reader hands over a byte string (one
+//     character per octet) since 2026-10-04. It used to decode through
 //     TextDecoder("latin1"), which is windows-1252: an 8bit UTF-8 "Ø" (C3 98)
-//     reads as "Ã" + U+02DC, and `charCodeAt & 0xff` then turns 0x98 into 0xDC.
+//     read as "Ã" + U+02DC, and `charCodeAt & 0xff` then turned 0x98 into 0xDC.
 //     That, not the cut at 2 KB, was the usual source of U+FFFD in a preview.
+//     `sourceOctets` still accepts a string read the old way.
+//   * Entities are decoded exactly once (`finishPreview`), and index.ts does
+//     not decode an IMAP row again.
 //   * The declared charset decodes the octets, as a STREAM, so a multi-byte
 //     character cut by the fetch is held back instead of becoming U+FFFD.
 //   * A quoted-printable escape or soft break cut in half is dropped, and
@@ -305,6 +329,12 @@ export interface PreviewPartInfo {
   charset: string | null;
   /** Lower-cased Content-Transfer-Encoding, or null. */
   encoding: string | null;
+  /**
+   * The part's size in octets as BODYSTRUCTURE states it, when known. A source
+   * at least this long is the WHOLE part, not a prefix the fetch cut, and its
+   * last octets are then judged as they stand (see `decodeCharsetTolerant`).
+   */
+  size?: number | null;
 }
 
 /** windows-1252 code points for 0x80-0x9F, inverted: see `singleByteTextToBytes` in imap-client.ts. */
@@ -370,26 +400,43 @@ function countReplacements(text: string): number {
  * Octets to text by the declared charset. Streamed, so an incomplete trailing
  * sequence is withheld; an unknown or wrong label falls back to UTF-8 and then
  * to windows-1252, whichever reads cleanly.
+ *
+ * `complete` says the octets are the whole part, not a prefix. It matters for
+ * one case only: octets that are ASCII plus a few invalid or unfinished UTF-8
+ * sequences and NOT ONE valid multi-byte character. That is single-byte text
+ * under a wrong or missing label ("Café olé" in windows-1252), not UTF-8 with a
+ * stray octet, and dropping the "strays" ate every accented letter of a short
+ * message. An unfinished sequence at the very end counts as such an octet only
+ * when the source is complete; in a prefix it is where the fetch stopped.
  */
-function decodeCharsetTolerant(bytes: Uint8Array, charset: string | null): string {
-  const stream = (label: string): string | null => {
+function decodeCharsetTolerant(bytes: Uint8Array, charset: string | null, complete = false): string {
+  const stream = (label: string): { text: string; cut: boolean } | null => {
     try {
-      return new TextDecoder(label, { fatal: false }).decode(bytes, { stream: true });
+      const decoder = new TextDecoder(label, { fatal: false });
+      const text = decoder.decode(bytes, { stream: true });
+      // Flushing yields U+FFFD exactly when a sequence was left unfinished.
+      return { text, cut: decoder.decode() !== "" };
     } catch {
       return null;
     }
   };
   const label = (charset ?? "").trim().toLowerCase();
-  const declared = label && label !== "us-ascii" && label !== "ascii" ? stream(label) : null;
+  const utf8Label = label === "utf-8" || label === "utf8";
+  const declared = label && label !== "us-ascii" && label !== "ascii" && !utf8Label ? stream(label)?.text ?? null : null;
   if (declared !== null && countReplacements(declared) === 0) return declared;
-  const utf8 = stream("utf-8") ?? "";
-  if (countReplacements(utf8) === 0) return utf8;
+  const utf8 = stream("utf-8") ?? { text: "", cut: false };
+  // deno-lint-ignore no-control-regex
+  const hasMultiByte = /[^\x00-\x7f\ufffd]/.test(utf8.text);
+  if (!hasMultiByte && (countReplacements(utf8.text) > 0 || (utf8.cut && complete))) {
+    return stream("windows-1252")?.text ?? "";
+  }
+  if (countReplacements(utf8.text) === 0) return utf8.text;
   // Not what it said it was, and not UTF-8. A stray invalid octet or two is
   // dropped; anything worse is read as single-byte text, which has no invalid
   // sequences at all.
   if (declared !== null && countReplacements(declared) <= 2) return declared.replace(REPLACEMENT, "");
-  if (countReplacements(utf8) <= 2) return utf8.replace(REPLACEMENT, "");
-  return stream("windows-1252") ?? "";
+  if (countReplacements(utf8.text) <= 2) return utf8.text.replace(REPLACEMENT, "");
+  return stream("windows-1252")?.text ?? "";
 }
 
 /** Elements whose CONTENT is not message text. */
@@ -408,6 +455,9 @@ const INLINE_TAG =
 /** HTML, possibly cut off anywhere, to the text a reader would see first. */
 export function htmlPreviewText(html: string): string {
   const text = html
+    // Not an entity `decodeHtmlEntities` knows, and invisible: drop it here,
+    // before the one decode, as `normalizePreview` does for the other providers.
+    .replace(/&shy;/gi, "")
     .replace(/<!--[\s\S]*?(?:-->|$)/g, " ")
     // Closed, or running to the end of what was fetched.
     .replace(new RegExp(`<(${NON_TEXT_ELEMENTS})\\b[\\s\\S]*?(?:<\\/\\1\\s*>|$)`, "gi"), " ")
@@ -432,8 +482,20 @@ function looksLikeHtml(text: string): boolean {
   return (text.match(HTML_TAG) ?? []).length >= 2;
 }
 
-function finishPreview(text: string): string {
-  return normalizePreview(text.replace(REPLACEMENT, ""));
+/**
+ * The last step for text taken from a part. Entities are decoded exactly ONCE
+ * on the way to a preview: by `htmlPreviewText` when the source was markup
+ * (`decoded`), here when it was plain text (senders do put `&nbsp;` in a
+ * text/plain part). Never twice.
+ */
+function finishPreview(text: string, decoded: boolean): string {
+  const clean = text.replace(REPLACEMENT, "");
+  return decoded ? tidyPreview(clean) : normalizePreview(clean);
+}
+
+/** Text as it was decoded from a part, reduced to its visible text when it is markup. */
+function previewOfText(text: string, html: boolean): string {
+  return html || looksLikeHtml(text) ? finishPreview(htmlPreviewText(text), true) : finishPreview(text, false);
 }
 
 /** A quoted-printable soft break or escape that the partial fetch cut in half. */
@@ -478,25 +540,21 @@ export function cleanPreviewFromBodyPart(source: string, part: PreviewPartInfo |
     if (!nested) {
       if (part !== null) return "";
       // Not a multipart after all: a leaf nothing described.
-      return finishPreview(
-        leafText(octets, { type: "text", subtype: "plain", charset: null, encoding: guessTransferEncoding(wire) }),
-      );
+      return leafPreview(octets, { type: "text", subtype: "plain", charset: null, encoding: guessTransferEncoding(wire) });
     }
-    if (typeof nested.text === "string" && nested.text.trim() !== "") {
-      return finishPreview(looksLikeHtml(nested.text) ? htmlPreviewText(nested.text) : nested.text);
-    }
-    if (typeof nested.html === "string" && nested.html !== "") return finishPreview(htmlPreviewText(nested.html));
+    if (typeof nested.text === "string" && nested.text.trim() !== "") return previewOfText(nested.text, false);
+    if (typeof nested.html === "string" && nested.html !== "") return previewOfText(nested.html, true);
     return "";
   }
   // An image, a PDF, a calendar file: nothing to preview.
   if (part.type !== "text") return "";
-  return finishPreview(leafText(octets, part));
+  return leafPreview(octets, part);
 }
 
-function leafText(octets: Uint8Array, part: PreviewPartInfo): string {
+function leafPreview(octets: Uint8Array, part: PreviewPartInfo): string {
   const bytes = decodeTransferTolerant(octets, part.encoding);
   if (bytes === null) return "";
-  const text = decodeCharsetTolerant(bytes, part.charset);
-  return part.subtype === "html" || looksLikeHtml(text) ? htmlPreviewText(text) : text;
+  const complete = typeof part.size === "number" && octets.length >= part.size;
+  return previewOfText(decodeCharsetTolerant(bytes, part.charset, complete), part.subtype === "html");
 }
 

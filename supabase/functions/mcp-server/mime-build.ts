@@ -377,6 +377,31 @@ export function buildDraftMime(params: MimeMessageParams): string {
  * envelope. The BCC addresses are read from the stored MIME for RCPT TO and
  * then this strips the header from the transmitted body.
  */
+/**
+ * The octets `draft_send` transmits (and files in Sent) for a stored IMAP
+ * draft: the draft as it is in the mailbox, minus its Bcc header.
+ *
+ * `rawMime` is a byte string, one character per octet, as the IMAP reader
+ * returns it. It goes back to bytes octet for octet. Sending the string
+ * itself made the SMTP and APPEND writers UTF-8-encode it, so a draft another
+ * mail client saved with 8bit content ("Ødegård" as C3 98 ...) went out with
+ * every one of those octets doubled (C3 83 C2 98 ...): mojibake for the
+ * recipient, and a body that no longer matched its declared charset.
+ *
+ * A string holding anything that is not an octet cannot have come from the
+ * reader; it is encoded as text, which is what happened to every draft before.
+ */
+export function draftSendBytes(rawMime: string): Uint8Array {
+  const stripped = stripBccHeader(rawMime);
+  const bytes = new Uint8Array(stripped.length);
+  for (let i = 0; i < stripped.length; i++) {
+    const code = stripped.charCodeAt(i);
+    if (code > 0xff) return new TextEncoder().encode(stripped);
+    bytes[i] = code;
+  }
+  return bytes;
+}
+
 export function stripBccHeader(rawMime: string): string {
   // Split header block from body on the first blank line (CRLF or LF).
   const sep = rawMime.search(/\r?\n\r?\n/);

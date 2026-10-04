@@ -386,7 +386,7 @@ Deno.test("preview (outlook): a bodyPreview's line breaks and padding are normal
   assertEquals(preview.length, 200);
 });
 
-Deno.test("preview: index.ts sends every provider's preview through normalizePreview", async () => {
+Deno.test("preview: index.ts cleans every provider's preview, and decodes entities only where the provider has not", async () => {
   const index = await Deno.readTextFile(new URL("./index.ts", import.meta.url));
   const sites = index.split("\n").filter((line) => /^\s+preview: .*,$/.test(line) && !line.includes("=>") && !line.includes("{"));
   assertEquals(sites.map((line) => line.trim()).sort(), [
@@ -394,7 +394,9 @@ Deno.test("preview: index.ts sends every provider's preview through normalizePre
     'preview: normalizePreview(msg.bodyPreview ?? ""),',
     'preview: normalizePreview(msg.snippet ?? ""),',
     'preview: normalizePreview(msg.snippet ?? ""),',
-    "preview: normalizePreview(s.preview),",
-    "preview: normalizePreview(s.preview),",
+    // IMAP: `cleanPreviewFromBodyPart` already decoded the entities, once.
+    // A second decode here is what turned `&amp;lt;` into `<`.
+    "preview: tidyPreview(s.preview),",
+    "preview: tidyPreview(s.preview),",
   ], "list and search, for Gmail, Graph and IMAP: a new preview site must be cleaned too");
 });

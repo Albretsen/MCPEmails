@@ -73,6 +73,18 @@ function splitHeadersBody(raw: string): { headerBlock: string; body: string } {
   return { headerBlock: raw.slice(0, idx), body: raw.slice(idx + sep) };
 }
 
+/**
+ * `String.prototype.trim` for a byte string: ASCII whitespace only.
+ *
+ * `trim()` also removes U+00A0, and in a byte string U+00A0 is the octet 0xA0,
+ * which is the LAST octet of "à" (C3 A0), "Š", a third of CJK and of every
+ * emoji ending in A0. Trimming a raw UTF-8 header value that ends in one cut
+ * the character in half: "Subject: Voilà" read back as "Voil" + U+FFFD.
+ */
+function trimAscii(value: string): string {
+  return value.replace(/^[ \t\r\n\f\v]+|[ \t\r\n\f\v]+$/g, "");
+}
+
 export function parseHeaders(block: string): Map<string, string[]> {
   const headers = new Map<string, string[]>();
   // Unfold: lines beginning with whitespace continue the previous header.
@@ -80,7 +92,7 @@ export function parseHeaders(block: string): Map<string, string[]> {
   const unfolded: string[] = [];
   for (const line of lines) {
     if (/^[ \t]/.test(line) && unfolded.length > 0) {
-      unfolded[unfolded.length - 1] += " " + line.trim();
+      unfolded[unfolded.length - 1] += " " + trimAscii(line);
     } else {
       unfolded.push(line);
     }
@@ -88,8 +100,8 @@ export function parseHeaders(block: string): Map<string, string[]> {
   for (const line of unfolded) {
     const colon = line.indexOf(":");
     if (colon === -1) continue;
-    const key = line.slice(0, colon).trim().toLowerCase();
-    const value = line.slice(colon + 1).trim();
+    const key = trimAscii(line.slice(0, colon)).toLowerCase();
+    const value = trimAscii(line.slice(colon + 1));
     const existing = headers.get(key);
     if (existing) existing.push(value);
     else headers.set(key, [value]);
@@ -105,13 +117,13 @@ export interface ContentType {
 export function parseContentType(value: string | null): ContentType {
   if (!value) return { mediaType: "text/plain", params: {} };
   const parts = value.split(";");
-  const mediaType = parts[0].trim().toLowerCase();
+  const mediaType = trimAscii(parts[0]).toLowerCase();
   const params: Record<string, string> = {};
   for (let i = 1; i < parts.length; i++) {
     const eq = parts[i].indexOf("=");
     if (eq === -1) continue;
-    const k = parts[i].slice(0, eq).trim().toLowerCase();
-    let v = parts[i].slice(eq + 1).trim();
+    const k = trimAscii(parts[i].slice(0, eq)).toLowerCase();
+    let v = trimAscii(parts[i].slice(eq + 1));
     if (v.startsWith('"') && v.endsWith('"')) v = v.slice(1, -1);
     params[k] = v;
   }
@@ -122,6 +134,7 @@ function parsePart(
   headers: Map<string, string[]>,
   body: string,
   out: ParsedEmail,
+  cutTail = false,
 ): void {
   const ct = parseContentType(getHeader(headers, "content-type"));
   const cte = (getHeader(headers, "content-transfer-encoding") ?? "7bit").toLowerCase();
@@ -132,7 +145,7 @@ function parsePart(
   if (ct.mediaType.startsWith("multipart/")) {
     const boundary = ct.params["boundary"];
     if (!boundary) return;
-    parseMultipartInto(body, boundary, out);
+    parseMultipartInto(body, boundary, out, cutTail);
     return;
   }
 
@@ -140,11 +153,8 @@ function parsePart(
   const bytes = decodeContent(body, cte);
 
   if (isAttachment) {
-    const filename = decodeEncodedWords(
-      decodeRawHeaderOctets(ct.params["name"] ?? filenameFromDisposition(disposition) ?? "attachment"),
-    );
     out.attachments.push({
-      filename,
+      filename: attachmentFilename(ct, disposition),
       mimeType: ct.mediaType,
       size: bytes.length,
       content: bytes,
@@ -156,11 +166,11 @@ function parsePart(
   // octets instead of assuming.
   const charset = ct.params["charset"] ?? "";
   if (ct.mediaType === "text/plain" && out.text === null) {
-    out.text = decodeCharset(bytes, charset);
+    out.text = decodeCharset(bytes, charset, cutTail);
   } else if (ct.mediaType === "text/html" && out.html === null) {
-    out.html = decodeCharset(bytes, charset);
+    out.html = decodeCharset(bytes, charset, cutTail);
   } else if (ct.mediaType.startsWith("text/") && out.text === null) {
-    out.text = decodeCharset(bytes, charset);
+    out.text = decodeCharset(bytes, charset, cutTail);
   }
 }
 
@@ -374,9 +384,7 @@ function joinedPart(
   const bytes = decodeContent(body, cte);
   if (isAttachment) {
     (depth === 0 ? out.attachments : out.embeddedAttachments).push({
-      filename: decodeEncodedWords(
-        decodeRawHeaderOctets(ct.params["name"] ?? filenameFromDisposition(disposition) ?? "attachment"),
-      ),
+      filename: attachmentFilename(ct, disposition),
       mimeType: ct.mediaType,
       size: bytes.length,
       content: bytes,
@@ -404,10 +412,10 @@ function bytesToLatin(bytes: Uint8Array): string {
  * shared with {@link parseMultipartBodySource} — the entry point for the case
  * where the multipart's own headers were never fetched.
  */
-function parseMultipartInto(body: string, boundary: string, out: ParsedEmail): void {
+function parseMultipartInto(body: string, boundary: string, out: ParsedEmail, cutTail = false): void {
   for (const sub of splitMultipart(body, boundary)) {
     const { headerBlock, body: subBody } = splitHeadersBody(sub);
-    parsePart(parseHeaders(headerBlock), subBody, out);
+    parsePart(parseHeaders(headerBlock), subBody, out, cutTail);
   }
 }
 
@@ -464,14 +472,71 @@ export function parseMultipartBodySource(source: string): ParsedEmail | null {
   const boundary = multipartBoundaryOfSource(source);
   if (!boundary) return null;
   const out: ParsedEmail = { headers: new Map(), text: null, html: null, attachments: [] };
-  parseMultipartInto(source, boundary, out);
+  // The one caller is the preview, whose source is a PREFIX of the part: a
+  // UTF-8 sequence may be cut at its end (see decodeUndeclared).
+  parseMultipartInto(source, boundary, out, true);
   return out;
 }
 
 function filenameFromDisposition(disposition: string): string | null {
-  const m = /filename\*?=(?:"([^"]+)"|([^;]+))/i.exec(disposition);
+  const m = /filename=(?:"([^"]+)"|([^;]+))/i.exec(disposition);
   if (!m) return null;
-  return (m[1] ?? m[2] ?? "").trim();
+  return trimAscii(m[1] ?? m[2] ?? "");
+}
+
+/**
+ * An RFC 2231 parameter (`name*=charset'lang'%XX...`, or the continuation
+ * forms `name*0*=` / `name*1=`) of a header value, decoded; null when the
+ * header carries none for `name`.
+ *
+ * Until 2026-10-04 `filename*=UTF-8''%E2%82%AC.pdf` was read by the plain
+ * `filename=` rule and the attachment was listed as "UTF-8''%E2%82%AC.pdf".
+ */
+function rfc2231Parameter(header: string, name: string): string | null {
+  const pattern = new RegExp(`(?:^|;)[ \\t\\r\\n]*${name}\\*(?:(\\d+)(\\*)?)?=[ \\t]*("[^"]*"|[^;]*)`, "gi");
+  const segments: { index: number; extended: boolean; value: string }[] = [];
+  for (let m = pattern.exec(header); m !== null; m = pattern.exec(header)) {
+    let value = trimAscii(m[3]);
+    if (value.startsWith('"') && value.endsWith('"') && value.length >= 2) value = value.slice(1, -1);
+    segments.push({ index: m[1] === undefined ? 0 : Number(m[1]), extended: m[1] === undefined || m[2] === "*", value });
+  }
+  if (segments.length === 0) return null;
+  segments.sort((a, b) => a.index - b.index);
+  let charset = "";
+  let octets = "";
+  segments.forEach((segment, i) => {
+    let value = segment.value;
+    if (!segment.extended) {
+      octets += value;
+      return;
+    }
+    if (i === 0) {
+      const quoted = /^([^']*)'[^']*'([\s\S]*)$/.exec(value);
+      if (quoted) {
+        charset = quoted[1];
+        value = quoted[2];
+      }
+    }
+    octets += value.replace(/%([0-9A-Fa-f]{2})/g, (_, hex) => String.fromCharCode(parseInt(hex, 16)));
+  });
+  return decodeCharset(latinToBytes(octets), charset);
+}
+
+/**
+ * The name an attachment part is listed under. In order: the Content-Type
+ * `name`, the disposition's RFC 2231 `filename*`, its plain `filename`. The
+ * plain forms may hold RFC 2047 encoded-words or raw 8-bit octets, and both
+ * are decoded. (Whether a part IS an attachment is decided by the caller and
+ * does not look at `filename*`, so no attachment index moves.)
+ */
+function attachmentFilename(ct: ContentType, disposition: string): string {
+  const plain = ct.params["name"];
+  if (plain !== undefined) return decodeEncodedWords(decodeRawHeaderOctets(plain));
+  const extended = rfc2231Parameter(disposition, "filename");
+  if (extended !== null && extended !== "") return extended;
+  const filename = filenameFromDisposition(disposition);
+  if (filename !== null) return decodeEncodedWords(decodeRawHeaderOctets(filename));
+  return "attachment";
 }
 
 /** Split a multipart body into its constituent parts by boundary. */
@@ -560,16 +625,21 @@ const WINDOWS_1252 = new TextDecoder("windows-1252");
  * valid UTF-8, windows-1252 otherwise.
  *
  * One decode in the common case. The lenient result is checked for U+FFFD, and
- * only when one is present are the octets validated strictly. `stream: true`
- * makes that validation accept a sequence cut off at the very end, which is
- * what a partial fetch (the 2 KB preview prefix) legitimately ends in and must
- * not turn the whole text into windows-1252.
+ * only when one is present are the octets validated strictly.
+ *
+ * `cutTail` is for a source known to be a PREFIX (the 2 KB preview fetch): the
+ * validation then accepts a sequence cut off at the very end (`stream: true`),
+ * which must not turn the whole text into windows-1252. It is off for anything
+ * complete, a header value or a whole body, because there the same leniency
+ * misreads windows-1252 text that ENDS in an accented letter: 0xE9 ("é") is
+ * also the first octet of a three-octet UTF-8 sequence, so "Café" passed as
+ * "valid UTF-8, cut short" and read back as "Caf" + U+FFFD.
  */
-function decodeUndeclared(bytes: Uint8Array): string {
+function decodeUndeclared(bytes: Uint8Array, cutTail = false): string {
   const lenient = UTF8_LENIENT.decode(bytes);
-  if (!lenient.includes("�")) return lenient;
+  if (!lenient.includes("\ufffd")) return lenient;
   try {
-    new TextDecoder("utf-8", { fatal: true }).decode(bytes, { stream: true });
+    new TextDecoder("utf-8", { fatal: true }).decode(bytes, { stream: cutTail });
     return lenient;
   } catch {
     return WINDOWS_1252.decode(bytes);
@@ -584,7 +654,7 @@ function decodeUndeclared(bytes: Uint8Array): string {
  * standard specifies and as every mail client does: mail labelled 8859-1 that
  * uses 0x80-0x9F means curly quotes, not C1 controls.
  */
-function decodeCharset(bytes: Uint8Array, charset: string): string {
+function decodeCharset(bytes: Uint8Array, charset: string, cutTail = false): string {
   const label = charset.trim().toLowerCase();
   if (!UNINFORMATIVE_CHARSETS.has(label)) {
     try {
@@ -593,7 +663,7 @@ function decodeCharset(bytes: Uint8Array, charset: string): string {
       // Not a label this runtime knows: let the octets decide.
     }
   }
-  return decodeUndeclared(bytes);
+  return decodeUndeclared(bytes, cutTail);
 }
 
 /** Any octet above 0x7F, in a byte string. */
@@ -638,11 +708,32 @@ export function decodeEncodedWords(input: string): string {
   // in a single pass. Whitespace NOT between two encoded-words is real text
   // and is left alone.
   const joined = input.replace(/\?=[ \t]*(?:\r?\n)?[ \t]+(?==\?)/g, "?=");
-  return joined.replace(
-    /=\?([^?]+)\?([BbQq])\?([^?]*)\?=/g,
-    (_, charset: string, enc: string, data: string) => {
+  // A RUN of adjacent encoded-words is decoded together: the octets of
+  // neighbours that name the same charset are concatenated before the charset
+  // decode. RFC 2047 forbids splitting a multi-byte character across two
+  // words, and senders do it anyway (a long UTF-8 or GBK subject cut every N
+  // octets); decoded one word at a time, each half became U+FFFD.
+  return joined.replace(/(?:=\?[^?]+\?[BbQq]\?[^?]*\?=)+/g, (run) => {
+    let out = "";
+    let charset = "";
+    let pending: Uint8Array[] = [];
+    const flush = () => {
+      if (pending.length === 0) return;
+      let size = 0;
+      for (const p of pending) size += p.length;
+      const all = new Uint8Array(size);
+      let at = 0;
+      for (const p of pending) {
+        all.set(p, at);
+        at += p.length;
+      }
+      out += decodeCharset(all, charset);
+      pending = [];
+    };
+    for (const word of run.matchAll(/=\?([^?]+)\?([BbQq])\?([^?]*)\?=/g)) {
+      const [, wordCharset, enc, data] = word;
+      let bytes: Uint8Array;
       try {
-        let bytes: Uint8Array;
         if (enc.toUpperCase() === "B") {
           const bin = atob(data.replace(/\s/g, ""));
           bytes = new Uint8Array(bin.length);
@@ -652,10 +743,16 @@ export function decodeEncodedWords(input: string): string {
           const qp = data.replace(/_/g, " ");
           bytes = latinToBytes(decodeQuotedPrintable(qp));
         }
-        return decodeCharset(bytes, charset);
       } catch {
-        return data;
+        flush();
+        out += data;
+        continue;
       }
-    },
-  );
+      if (pending.length > 0 && wordCharset.toLowerCase() !== charset.toLowerCase()) flush();
+      charset = wordCharset;
+      pending.push(bytes);
+    }
+    flush();
+    return out;
+  });
 }

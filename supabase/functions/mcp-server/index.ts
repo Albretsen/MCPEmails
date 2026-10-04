@@ -178,7 +178,7 @@ import {
   buildMimeMessage,
   formatMailbox,
   mimeMessageToBase64url,
-  stripBccHeader,
+  draftSendBytes,
 } from "./mime-build.ts";
 import {
   consolidatedSecurityScopes,
@@ -281,6 +281,7 @@ import {
 import { contactDisplayName } from "./contact-display-name.ts";
 import {
   normalizePreview,
+  tidyPreview,
   preferredBodyText,
   stripHtmlToText,
 } from "./text-extract.ts";
@@ -11139,7 +11140,7 @@ async function listImapMessages(
         to: s.envelope.to.map(decodeEnvelopeAddress),
         subject: decodeEnvelopeSubject(s.envelope.subject),
         date: s.envelope.date,
-        preview: normalizePreview(s.preview),
+        preview: tidyPreview(s.preview),
         is_read: s.flags.includes("\\Seen"),
         has_attachments: s.hasAttachments,
         folder,
@@ -11534,7 +11535,7 @@ async function searchImapMessages(
       to: s.envelope.to.map(decodeEnvelopeAddress),
       subject: decodeEnvelopeSubject(s.envelope.subject),
       date: s.envelope.date,
-      preview: normalizePreview(s.preview),
+      preview: tidyPreview(s.preview),
       is_read: s.flags.includes("\\Seen"),
       has_attachments: s.hasAttachments,
       folder,
@@ -24821,7 +24822,10 @@ async function imapSendDraft(
       // NOT contain a Bcc header — strip it so To/Cc recipients never see the BCC
       // addresses. (The draft still in the Drafts folder may keep its Bcc header;
       // that's the user's own copy.)
-      const sentMime = stripBccHeader(rawMime);
+      // Octets, not a string: `rawMime` is the draft's exact octets, one per
+      // character, and handing that string to SMTP / APPEND would UTF-8-encode
+      // it, turning every 8-bit octet of a draft another client wrote into two.
+      const sentMime = draftSendBytes(rawMime);
 
       return { sentMime, recipients, parsed, folder, uid, password };
     });
