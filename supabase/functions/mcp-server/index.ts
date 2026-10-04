@@ -24,6 +24,7 @@ import {
   isHumanBulk,
   readExtraFields,
   wantsFlagged,
+  wantsJoinedInlineParts,
   wantsReplyRecipients,
   wantsTrashIds,
 } from "./first-party.ts";
@@ -269,7 +270,14 @@ import {
   type RecipientAddress,
   replyNoRecipientsMessage,
 } from "./recipient-rules.ts";
-import { decodeEncodedWords, getHeader, parseEmail } from "./mime.ts";
+import {
+  decodeEncodedWords,
+  getHeader,
+  joinShownParts,
+  parseEmail,
+  parseEmailJoined,
+  type ShownBody,
+} from "./mime.ts";
 import { contactDisplayName } from "./contact-display-name.ts";
 import {
   normalizePreview,
@@ -11228,7 +11236,16 @@ async function readImapMessage(
     );
     if (!msg) throw new Error("message_not_found");
 
+    // client-api only (first-party.ts `joinInlineParts`): the inline text
+    // parts of a multipart/mixed are joined, so a forward reads back whole.
+    // An MCP read is `parseEmail`, as it has always been.
     const parsed = parseEmail(msg.raw);
+    if (wantsJoinedInlineParts()) {
+      const joined = parseEmailJoined(msg.raw, (html) => stripHtmlToText(html, { keepLinks: true }));
+      parsed.text = joined.text;
+      parsed.html = joined.html;
+      parsed.attachments = joined.attachments;
+    }
     const h = parsed.headers;
 
     const subject = decodeEncodedWords(getHeader(h, "subject") ?? "(no subject)");
@@ -12326,6 +12343,41 @@ function walkGmailPayload(part: GmailFullPart): {
 }
 
 /**
+ * {@link walkGmailPayload} for client-api (first-party.ts `joinInlineParts`):
+ * the inline text parts of a multipart/mixed are joined in order instead of
+ * the first one winning. Same attachments, in the same order.
+ */
+function walkGmailPayloadJoined(root: GmailFullPart): {
+  textPlain: string | null;
+  textHtml: string | null;
+  attachments: GmailAttachmentRef[];
+} {
+  const attachments: GmailAttachmentRef[] = [];
+  const htmlToText = (html: string) => stripHtmlToText(html, { keepLinks: true });
+  const walk = (part: GmailFullPart): ShownBody => {
+    let own: ShownBody = { text: null, html: null };
+    if (typeof part.filename === "string" && part.filename.length > 0) {
+      attachments.push({
+        filename: part.filename as string,
+        mimeType: part.mimeType ?? "application/octet-stream",
+        sizeBytes: part.body?.size ?? 0,
+        inlineData: part.body?.data ?? null,
+        attachmentId: part.body?.attachmentId ?? null,
+      });
+    } else if (part.mimeType === "text/plain" && part.body?.data) {
+      own = { text: base64urlToUtf8(part.body.data), html: null };
+    } else if (part.mimeType === "text/html" && part.body?.data) {
+      own = { text: null, html: base64urlToUtf8(part.body.data) };
+    }
+    const children = (part.parts ?? []).map(walk);
+    if (children.length === 0) return own;
+    return joinShownParts(part.mimeType ?? "", [own, ...children], htmlToText);
+  };
+  const shown = walk(root);
+  return { textPlain: shown.text, textHtml: shown.html, attachments };
+}
+
+/**
  * Implements `email_read` for Gmail.
  *
  * Flow:
@@ -12384,7 +12436,9 @@ async function readGmailMessage(
 
   // Step 3: Walk MIME tree.
   const { textPlain, textHtml, attachments: attachmentRefs } =
-    walkGmailPayload(msg.payload ?? {});
+    wantsJoinedInlineParts()
+      ? walkGmailPayloadJoined(msg.payload ?? {})
+      : walkGmailPayload(msg.payload ?? {});
 
   // Step 4: Fetch attachment content if requested. Budget defaults to 10 MB for
   // a whole-message read; the single-file download path raises it so one file

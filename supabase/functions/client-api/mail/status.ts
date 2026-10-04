@@ -33,6 +33,7 @@
 // only; the others still answer.
 // ---------------------------------------------------------------------------
 
+import { lookupCanonicalAlias } from "../../mcp-server/imap-folder-target.ts";
 import { graphFetch } from "../../mcp-server/outlook-graph.ts";
 import { ApiError } from "../errors.ts";
 import { reconnectMessage } from "./health.ts";
@@ -100,14 +101,18 @@ function isAuthFailure(error: unknown): boolean {
 }
 
 async function imapStatus(mcp: McpSeam, inbox: InboxRow, folders: string[]): Promise<FolderStatus[]> {
-  const session = mcp.imapSessionFor(inbox);
-  if (!session) throw new ApiError(502, "provider_error", "This inbox has no IMAP session.");
   const out: FolderStatus[] = [];
-  try {
-    // In order, on ONE connection: the session opens it on first use and the
-    // pool keeps it for the next poll.
-    let digests = 0;
-    for (const folder of folders) {
+  // In order, on ONE connection, which is handed back to the pool after every
+  // folder and taken again for the next. With nobody else waiting that costs
+  // nothing (the same connection comes straight back). With a `list` or
+  // `read` waiting (imap-pool.ts rule 8) it lets that go first: a poll of six
+  // folders is six round trips, and a person's click should wait for one of
+  // them at most, not for all six.
+  let digests = 0;
+  for (const folder of folders) {
+    const session = mcp.imapSessionFor(inbox);
+    if (!session) throw new ApiError(502, "provider_error", "This inbox has no IMAP session.");
+    try {
       let id: string | null = null;
       try {
         id = await mcp.resolveFolderId(inbox, folder, { strict: true, forRead: true, session });
@@ -144,9 +149,9 @@ async function imapStatus(mcp: McpSeam, inbox: InboxRow, folders: string[]): Pro
         if (error instanceof Error && error.name === "ImapPoolBusyError") throw error;
         out.push(failed(folder, id, errorCode(error)));
       }
+    } finally {
+      await session.close();
     }
-  } finally {
-    await session.close();
   }
   return out;
 }
@@ -193,10 +198,18 @@ async function gmailStatus(mcp: McpSeam, inbox: InboxRow, folders: string[]): Pr
 
 async function outlookStatus(mcp: McpSeam, inbox: InboxRow, folders: string[]): Promise<FolderStatus[]> {
   const token = await mcp.withFreshOutlookToken(inbox);
-  return await Promise.all(folders.map(async (folder): Promise<FolderStatus> => {
+  const one = async (folder: string): Promise<FolderStatus> => {
     let id: string | null = null;
     try {
-      id = await mcp.resolveFolderId(inbox, folder, { strict: true, forRead: true });
+      // An alias ("sent", "trash", "spam", "archive", ...) is Graph's own
+      // well-known folder name (sentitems, deleteditems, junkemail, archive):
+      // addressed directly, in any display language, with no folder walk.
+      // Every alias used to walk the whole folder tree first, all of them at
+      // once, on top of two requests per folder: far past the four concurrent
+      // requests Exchange allows one mailbox, and the folders at the end of
+      // the list (spam) answered provider_error.
+      const alias = lookupCanonicalAlias(folder);
+      id = alias ? alias.outlook : await mcp.resolveFolderId(inbox, folder, { strict: true, forRead: true });
       const segment = mcp.outlookFolderPathSegment(id);
       const [countsResp, latestResp] = await Promise.all([
         graphFetch(token, `/me/mailFolders/${segment}?$select=id,totalItemCount,unreadItemCount`),
@@ -228,7 +241,18 @@ async function outlookStatus(mcp: McpSeam, inbox: InboxRow, folders: string[]): 
       if (error instanceof Error && error.name === "OutlookNoMailboxError") throw error;
       return failed(folder, id, errorCode(error));
     }
-  }));
+  };
+  // Two folders (four requests) at a time, results in the order asked.
+  const rows: FolderStatus[] = new Array(folders.length);
+  let next = 0;
+  const worker = async (): Promise<void> => {
+    while (next < folders.length) {
+      const index = next++;
+      rows[index] = await one(folders[index]);
+    }
+  };
+  await Promise.all([worker(), worker()]);
+  return rows;
 }
 
 /** Must be called inside `firstPartyContext.run` so the inbox cache and IMAP pool apply. */

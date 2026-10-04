@@ -23,6 +23,17 @@
 //                    IS the reviewer that gate waits for.
 //   trashIds         an IMAP delete-to-trash reports the ids the messages have
 //                    in Trash (COPYUID), so the client can undo it.
+//   cleanPreview     an IMAP list/search row's `preview` is decoded from what
+//                    BODYSTRUCTURE says part one is (charset, transfer
+//                    encoding, HTML or not) instead of guessed from its bytes:
+//                    no CSS, no replacement characters. See
+//                    `cleanPreviewFromBodyPart` in text-extract.ts.
+//   listPreviewBytes how much of part one an IMAP listing fetches for that
+//                    preview (0: none, the rows then carry `preview: ""`).
+//   joinInlineParts  an IMAP `email_read` joins the inline text parts of a
+//                    multipart/mixed message in order instead of keeping only
+//                    the first, so a forwarded message's `body_text` holds the
+//                    note AND the original. See `parseEmailJoined` in mime.ts.
 //
 // All of it rides one AsyncLocalStorage. NOTHING in the MCP server ever opens
 // this store: `handleRequest` does not call `firstPartyContext.run`, so for
@@ -67,6 +78,12 @@ export interface FirstPartyContext {
   humanBulk?: boolean;
   /** IMAP delete-to-trash rows carry `new_message_id`. */
   trashIds?: boolean;
+  /** IMAP summary previews are decoded from BODYSTRUCTURE and cleaned of markup. */
+  cleanPreview?: boolean;
+  /** Octets of part one an IMAP listing fetches for the preview; 0 fetches none. */
+  listPreviewBytes?: number;
+  /** IMAP `email_read` joins every inline text part of a multipart/mixed message. */
+  joinInlineParts?: boolean;
 }
 
 /** Opened by client-api around each executor call; absent for MCP traffic. */
@@ -110,4 +127,25 @@ export function isHumanBulk(): boolean {
 /** True only inside a client-api delete that wants the Trash ids back. */
 export function wantsTrashIds(): boolean {
   return firstPartyContext.getStore()?.trashIds === true;
+}
+
+/** True only inside a client-api call: previews are decoded from BODYSTRUCTURE. */
+export function wantsCleanPreview(): boolean {
+  return firstPartyContext.getStore()?.cleanPreview === true;
+}
+
+/**
+ * The partial-fetch item an IMAP summary FETCH asks for. For MCP traffic (no
+ * store) this is the literal the command has always carried.
+ */
+export function summaryPreviewItem(): string {
+  const bytes = firstPartyContext.getStore()?.listPreviewBytes;
+  if (bytes === undefined) return " BODY.PEEK[1]<0.2048>";
+  if (!Number.isInteger(bytes) || bytes <= 0) return "";
+  return ` BODY.PEEK[1]<0.${Math.min(bytes, 8192)}>`;
+}
+
+/** True only inside a client-api read: inline text parts are joined. */
+export function wantsJoinedInlineParts(): boolean {
+  return firstPartyContext.getStore()?.joinInlineParts === true;
 }

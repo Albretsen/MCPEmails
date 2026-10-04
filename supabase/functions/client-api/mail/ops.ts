@@ -42,6 +42,14 @@ export interface OpSpec {
   uidOnly?: boolean;
   /** IMAP: this op is the folder listing; it never reads the pool's remembered list. */
   freshList?: boolean;
+  /**
+   * Place in the per-inbox IMAP queue (imap-pool.ts rule 8). `interactive`:
+   * a person is waiting for exactly this (`list`, `read`); it goes ahead of
+   * queued `background` polls (`status`, `folders`). Absent: plain FIFO.
+   */
+  priority?: "interactive" | "background";
+  /** The result is a folder listing: every entry gets `role` (mail/roles.ts). */
+  roles?: boolean;
   /** `combine` needs to know the inbox's provider. */
   needsProvider?: boolean;
   build(args: Record<string, unknown>): ExecutorCall[];
@@ -256,8 +264,12 @@ export const OPS: Record<string, OpSpec> = {
     needsInbox: true,
     idempotency: "none",
     flagged: true,
+    priority: "interactive",
     build(args) {
-      only(args, ["folder", "limit", "offset", "unread"], "list");
+      // `preview: false` is read by runMailOp (no body bytes are fetched on
+      // IMAP and every row's `preview` is ""); it is not an executor argument.
+      only(args, ["folder", "limit", "offset", "unread", "preview"], "list");
+      bool(args, "preview", "list");
       return [{
         tool: "email_list",
         args: defined({
@@ -277,6 +289,7 @@ export const OPS: Record<string, OpSpec> = {
     // The result carries `is_flagged` and `folder` (see first-party.ts).
     flagged: true,
     uidOnly: true,
+    priority: "interactive",
     build(args) {
       only(args, [
         "message_id",
@@ -350,6 +363,8 @@ export const OPS: Record<string, OpSpec> = {
     needsInbox: true,
     idempotency: "none",
     freshList: true,
+    roles: true,
+    priority: "background",
     build(args) {
       only(args, [], "folders");
       return [{ tool: "folder_list", args: {} }];
@@ -361,6 +376,7 @@ export const OPS: Record<string, OpSpec> = {
     needsInbox: true,
     idempotency: "none",
     special: "status",
+    priority: "background",
     build(args) {
       only(args, ["folders"], "status");
       const folders = strList(args, "folders", "status", { max: MAX_FOLDERS, maxChars: 1024 }) ?? ["inbox"];

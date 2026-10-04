@@ -289,7 +289,9 @@ Deno.test("a failed dial frees the slot and wakes a waiter", async () => {
   const pool = new ImapPool<ImapClient>();
   const d = dialer();
   let fail = true;
-  const flaky = () => (fail ? Promise.reject(new Error("imap_auth_failed")) : d.dial());
+  // A connection-level failure. (A REFUSED LOGIN is rule 7: the waiter is
+  // answered with it instead of dialling; see server-fixes.test.ts.)
+  const flaky = () => (fail ? Promise.reject(new Error("connection reset")) : d.dial());
   const failing = pool.checkout("k", { op: 1 }, async () => {
     await tick(5);
     return await flaky();
@@ -298,7 +300,7 @@ Deno.test("a failed dial frees the slot and wakes a waiter", async () => {
     fail = false;
     return d.dial();
   });
-  await assertRejects(() => failing, Error, "imap_auth_failed");
+  await assertRejects(() => failing, Error, "connection reset");
   const lease = await waiter;
   await lease.selectMailbox("INBOX");
   await lease.logout();

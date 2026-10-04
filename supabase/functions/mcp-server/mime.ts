@@ -148,6 +148,140 @@ function parsePart(
   }
 }
 
+// ---------------------------------------------------------------------------
+// The first-party read (client-api only; first-party.ts `joinInlineParts`).
+//
+// `parsePart` keeps the FIRST text/plain and the FIRST text/html it meets and
+// drops every later one. For a multipart/alternative that is right: the parts
+// are one body in several forms. For a multipart/mixed it loses content: its
+// inline text parts are shown one after another by every mail client. The
+// forward this server itself composes (forward-relay.ts) is exactly that
+// shape, note first and the original's own body second, so reading one back
+// returned the note and the forwarded-message block and none of the original.
+//
+// `parseEmailJoined` walks the same tree with the same leaf decoding and joins
+// the visible parts of a multipart/mixed (or any container that is not
+// alternative/related) in order. It also restores the exact octets of an 8bit
+// source first: the raw message arrives through TextDecoder("latin1"), which
+// is windows-1252, and `latinToBytes` cannot undo that for 0x80-0x9F.
+//
+// MCP reads still go through `parseEmail`, unchanged.
+// ---------------------------------------------------------------------------
+
+/** What one part contributes to the displayed body. */
+export interface ShownBody {
+  text: string | null;
+  html: string | null;
+  /** A text part that is neither plain nor HTML: used only when nothing else is. */
+  fallback?: boolean;
+}
+
+function escapeAsHtml(text: string): string {
+  const escaped = text.replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;");
+  return `<div style="white-space:pre-wrap">${escaped}</div>`;
+}
+
+/**
+ * Fold the children of one container into the body it displays.
+ * `alternative` / `related`: one body, first text and first HTML found.
+ * Anything else: every visible child, in order.
+ */
+export function joinShownParts(
+  mediaType: string,
+  children: readonly ShownBody[],
+  htmlToText: (html: string) => string,
+): ShownBody {
+  let visible = children.filter((c) => c.text !== null || c.html !== null);
+  if (visible.some((c) => !c.fallback)) visible = visible.filter((c) => !c.fallback);
+  if (visible.length === 0) return { text: null, html: null };
+  if (mediaType === "multipart/alternative" || mediaType === "multipart/related" || visible.length === 1) {
+    return {
+      text: visible.find((c) => c.text !== null)?.text ?? null,
+      html: visible.find((c) => c.html !== null)?.html ?? null,
+    };
+  }
+  const texts = visible
+    .map((c) => c.text !== null && c.text.trim() !== "" ? c.text : c.html ? htmlToText(c.html) : "")
+    .map((t) => t.replace(/\s+$/, ""))
+    .filter((t) => t !== "");
+  const anyHtml = visible.some((c) => c.html !== null);
+  return {
+    text: texts.length ? texts.join("\n\n") : null,
+    html: anyHtml ? visible.map((c) => c.html ?? escapeAsHtml(c.text ?? "")).join("\n") : null,
+  };
+}
+
+/** The 0x80-0x9F code points of windows-1252, back to their octets. */
+const CP1252_OCTETS: Map<number, number> = (() => {
+  const bytes = new Uint8Array(0x20);
+  for (let i = 0; i < 0x20; i++) bytes[i] = 0x80 + i;
+  const chars = new TextDecoder("latin1").decode(bytes);
+  const map = new Map<number, number>();
+  for (let i = 0; i < chars.length; i++) map.set(chars.charCodeAt(i), 0x80 + i);
+  return map;
+})();
+
+/** One character per octet, exactly, from a string read through TextDecoder("latin1"). */
+function exactOctetString(raw: string): string {
+  // deno-lint-ignore no-control-regex
+  if (!/[^\x00-\xff]/.test(raw)) return raw;
+  // deno-lint-ignore no-control-regex
+  return raw.replace(/[^\x00-\xff]/g, (ch) => {
+    const octet = CP1252_OCTETS.get(ch.charCodeAt(0));
+    return octet === undefined ? ch : String.fromCharCode(octet);
+  });
+}
+
+/** {@link parseEmail}, with the inline text parts of a multipart/mixed joined. */
+export function parseEmailJoined(raw: string, htmlToText: (html: string) => string): ParsedEmail {
+  const { headerBlock, body } = splitHeadersBody(exactOctetString(raw));
+  const headers = parseHeaders(headerBlock);
+  const out: ParsedEmail = { headers, text: null, html: null, attachments: [] };
+  const shown = joinedPart(headers, body, out, htmlToText);
+  out.text = shown.text;
+  out.html = shown.html;
+  return out;
+}
+
+function joinedPart(
+  headers: Map<string, string[]>,
+  body: string,
+  out: ParsedEmail,
+  htmlToText: (html: string) => string,
+): ShownBody {
+  const ct = parseContentType(getHeader(headers, "content-type"));
+  const cte = (getHeader(headers, "content-transfer-encoding") ?? "7bit").toLowerCase();
+  const disposition = getHeader(headers, "content-disposition") ?? "";
+  const isAttachment = /attachment/i.test(disposition) ||
+    (!!ct.params["name"] || /filename=/i.test(disposition));
+
+  if (ct.mediaType.startsWith("multipart/")) {
+    const boundary = ct.params["boundary"];
+    if (!boundary) return { text: null, html: null };
+    const children = splitMultipart(body, boundary).map((sub) => {
+      const { headerBlock, body: subBody } = splitHeadersBody(sub);
+      return joinedPart(parseHeaders(headerBlock), subBody, out, htmlToText);
+    });
+    return joinShownParts(ct.mediaType, children, htmlToText);
+  }
+
+  const bytes = decodeContent(body, cte);
+  if (isAttachment) {
+    out.attachments.push({
+      filename: decodeEncodedWords(ct.params["name"] ?? filenameFromDisposition(disposition) ?? "attachment"),
+      mimeType: ct.mediaType,
+      size: bytes.length,
+      content: bytes,
+    });
+    return { text: null, html: null };
+  }
+  const charset = ct.params["charset"] ?? "utf-8";
+  if (ct.mediaType === "text/plain") return { text: decodeCharset(bytes, charset), html: null };
+  if (ct.mediaType === "text/html") return { text: null, html: decodeCharset(bytes, charset) };
+  if (ct.mediaType.startsWith("text/")) return { text: decodeCharset(bytes, charset), html: null, fallback: true };
+  return { text: null, html: null };
+}
+
 /**
  * Walk every child of a multipart body into `out`.
  *

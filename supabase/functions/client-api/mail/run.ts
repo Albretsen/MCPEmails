@@ -25,6 +25,7 @@ import { type ImapPool, isLoginRefusal, poolKey, type PoolableClient } from "../
 import type { ApiKeyRow, ExecutorOutcome, InboxRow, McpSeam } from "../seam.ts";
 import { type HealthRow, type InboxHealth, reconnectMessage } from "./health.ts";
 import { type ExecutorCall, OPS, type OpSpec } from "./ops.ts";
+import { withFolderRoles } from "./roles.ts";
 import { mailboxStatus } from "./status.ts";
 
 const UUID_RE = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
@@ -81,6 +82,12 @@ export interface MailEnv {
   onLoginRefused?: (inboxId: string) => void;
   /** A login this request dialled worked for an inbox whose row carries a refusal marker: clear it. */
   onLoginAccepted?: (inboxId: string) => void;
+  /**
+   * When this request arrived, as `pool.arrival()` taken at the top of the
+   * handler: its place in every per-inbox IMAP queue it joins. Absent (tests,
+   * the assistant): the moment each op reaches the pool.
+   */
+  arrival?: number;
   now?: () => number;
 }
 
@@ -180,9 +187,15 @@ export function firstPartyFor(
     uidOnly?: boolean;
     /** The op is the folder listing itself (see `OpSpec.freshList`). */
     freshList?: boolean;
+    /** See `OpSpec.priority`. */
+    priority?: "interactive" | "background";
+    /** IMAP listing: octets of part one fetched per row for the preview (0: none). */
+    previewBytes?: number;
     timings: OpTimings;
   },
 ): FirstPartyContext {
+  // One place in line for everything this op does on the connection.
+  const order = { seq: env.arrival ?? env.pool.arrival(), cls: options.priority ?? "normal" as const };
   return {
     includeFlagged: options.flagged === true,
     // The signed-in human only, never the assistant: an edited reply To list
@@ -192,6 +205,11 @@ export function firstPartyFor(
     humanBulk: options.human === true,
     // Human and assistant alike: both need the Trash ids to undo a delete.
     trashIds: true,
+    // Previews decoded from BODYSTRUCTURE, and a read that joins the inline
+    // parts of a multipart/mixed (a forward reads back whole).
+    cleanPreview: true,
+    joinInlineParts: true,
+    listPreviewBytes: options.previewBytes,
     inboxRow: options.fresh ? undefined : (id, workspaceId) => env.inboxes.get(id, workspaceId),
     rememberInboxRow: (row) => {
       env.inboxes.remember(row as InboxRow);
@@ -221,6 +239,7 @@ export function firstPartyFor(
       }, {
         reuseSelection: options.uidOnly === true,
         freshList: options.freshList === true,
+        order,
         trace: (method, ms) => {
           const calls = (options.timings.imapCalls ??= []);
           if (calls.length < MAX_TRACED_CALLS && /^[A-Za-z]{1,40}$/.test(method)) calls.push(`${method}:${Math.round(ms)}`);
@@ -304,6 +323,8 @@ export async function runExecutor(
     idempotencyKey?: string;
     uidOnly?: boolean;
     freshList?: boolean;
+    priority?: "interactive" | "background";
+    previewBytes?: number;
     timings: OpTimings;
     apiKey?: ApiKeyRow;
   },
@@ -321,6 +342,8 @@ export async function runExecutor(
     fresh: options.fresh,
     uidOnly: options.uidOnly,
     freshList: options.freshList,
+    priority: options.priority,
+    previewBytes: options.previewBytes,
     human: apiKey.firstPartyHuman === true,
     timings: options.timings,
   });
@@ -503,7 +526,7 @@ export async function runMailOp(
     if (spec.special === "status") {
       assertReachable(env, inboxId);
       const started = performance.now();
-      const context = firstPartyFor(env, { scope: inboxId!, flow, timings });
+      const context = firstPartyFor(env, { scope: inboxId!, flow, priority: spec.priority, timings });
       try {
         const result = await firstPartyContext.run(
           context,
@@ -523,6 +546,8 @@ export async function runMailOp(
         flagged: spec.flagged,
         uidOnly: spec.uidOnly,
         freshList: spec.freshList,
+        priority: spec.priority,
+        previewBytes: request.op === "list" && request.args?.["preview"] === false ? 0 : undefined,
         fresh: spec.kind === "send",
         // Two executor calls must not share one ledger row.
         idempotencyKey: idempotencyKey === undefined
@@ -555,6 +580,16 @@ export async function runMailOp(
     }
 
     const json = results.map(resultJson);
+    if (spec.roles && inboxId) {
+      const context = firstPartyFor(env, { scope: inboxId, flow, priority: spec.priority, timings });
+      const started = performance.now();
+      const withRoles = await firstPartyContext.run(
+        context,
+        () => withFolderRoles(env.mcp, env.apiKey, inboxId, json[0], (env.now ?? Date.now)()),
+      );
+      timings.providerMs += performance.now() - started;
+      return { type: "json", result: withRoles, timings };
+    }
     if (!spec.combine) return { type: "json", result: json[0], timings };
     let provider: string | null = null;
     if (spec.needsProvider && inboxId) {

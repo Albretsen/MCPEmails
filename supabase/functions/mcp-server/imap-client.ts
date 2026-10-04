@@ -20,9 +20,13 @@
  * A faithful Node reference lives at apps/web/src/lib/email/imap.ts.
  */
 
-import { previewFromBodyPartSource } from "./text-extract.ts";
+import {
+  cleanPreviewFromBodyPart,
+  previewFromBodyPartSource,
+  type PreviewPartInfo,
+} from "./text-extract.ts";
 import { connectGuardedTcp } from "./host-guard.ts";
-import { firstPartyContext } from "./first-party.ts";
+import { firstPartyContext, summaryPreviewItem, wantsCleanPreview } from "./first-party.ts";
 import { decodeModifiedUtf7, encodeModifiedUtf7 } from "./utf7.ts";
 import { parseCopyUid } from "./imap-copyuid.ts";
 import {
@@ -750,7 +754,15 @@ export class ImapClient {
       // rather than at the greeting (text like [OVERQUOTA]/[UNAVAILABLE]/
       // "too many connections"). Treat those as retryable; everything else is
       // a genuine credential failure.
-      if (isConnectionLimitResponse(resp.text)) {
+      //
+      // client-api only: a refusal that carries [AUTHENTICATIONFAILED] is
+      // about the credentials whatever else its text says, so it is not
+      // retried (15 s of back-off in front of a person, and two more failed
+      // logins against a mailbox that may lock). The store is never open for
+      // an MCP request, so there the classification is what it always was.
+      const definitive = firstPartyContext.getStore() !== undefined &&
+        /\[AUTHENTICATIONFAILED\]/i.test(resp.text);
+      if (!definitive && isConnectionLimitResponse(resp.text)) {
         throw new ImapConnectionLimitError(
           `IMAP connection refused at auth: ${text}`,
         );
@@ -1216,9 +1228,11 @@ export class ImapClient {
     options: { includePreview?: boolean; maxLiteralBytes?: number },
   ): Promise<{ status: "OK" | "NO" | "BAD"; text: string; summaries: ImapMessageSummary[] }> {
     const tag = this.nextTag();
+    // `summaryPreviewItem()` is " BODY.PEEK[1]<0.2048>" for every MCP call;
+    // only client-api can ask for a different size (first-party.ts).
     const previewPart = options.includePreview === false
       ? ""
-      : " BODY.PEEK[1]<0.2048>";
+      : summaryPreviewItem();
     await this.write(
       `${tag} ${verb} ${set} (UID FLAGS ENVELOPE BODYSTRUCTURE${previewPart})${CRLF}`,
     );
@@ -2759,6 +2773,11 @@ function parseFetchLine(line: string): ImapMessageSummary | null {
   };
   let hasAttachments = false;
   let preview = "";
+  // client-api only: the preview is decoded after the loop, from what
+  // BODYSTRUCTURE (in the same reply, in either order) says part one is.
+  const clean = wantsCleanPreview();
+  let structure: Token[] | null = null;
+  let previewSource: string | null = null;
 
   for (let i = 0; i < attrs.length; i++) {
     const key = attrs[i];
@@ -2770,12 +2789,17 @@ function parseFetchLine(line: string): ImapMessageSummary | null {
       envelope = parseEnvelope(attrs[i + 1] as Token[]);
     } else if (key === "BODYSTRUCTURE" && Array.isArray(attrs[i + 1])) {
       hasAttachments = bodyStructureHasAttachment(attrs[i + 1] as Token[]);
+      structure = attrs[i + 1] as Token[];
     } else if (
       typeof key === "string" && key.startsWith("BODY[") &&
       typeof attrs[i + 1] === "string"
     ) {
-      preview = previewFromBodyPartSource(attrs[i + 1] as string);
+      if (clean) previewSource = attrs[i + 1] as string;
+      else preview = previewFromBodyPartSource(attrs[i + 1] as string);
     }
+  }
+  if (previewSource !== null) {
+    preview = cleanPreviewFromBodyPart(previewSource, structure ? partOneOfStructure(structure) : null);
   }
 
   if (!uid) return null;
@@ -2825,6 +2849,32 @@ function parseAddressList(token: Token | undefined): ImapAddress[] {
     if (email) out.push({ name, email });
   }
   return out;
+}
+
+/**
+ * What a BODYSTRUCTURE says about the part `BODY[1]` addresses: the message
+ * itself when it is not a multipart, otherwise its first child. Null when that
+ * child is a multipart too (its source then carries its own part headers).
+ */
+function partOneOfStructure(structure: Token[]): PreviewPartInfo | null {
+  let part: Token[] = structure;
+  if (Array.isArray(part[0])) part = part[0];
+  if (Array.isArray(part[0])) return null;
+  const type = asStr(part[0]).toLowerCase();
+  if (!type) return null;
+  let charset: string | null = null;
+  const params = part[2];
+  if (Array.isArray(params)) {
+    for (let i = 0; i + 1 < params.length; i += 2) {
+      if (asStr(params[i]).toLowerCase() === "charset") charset = asStr(params[i + 1]) || null;
+    }
+  }
+  return {
+    type,
+    subtype: asStr(part[1]).toLowerCase(),
+    charset,
+    encoding: asStr(part[5]).toLowerCase() || null,
+  };
 }
 
 /** Heuristic: a BODYSTRUCTURE contains an attachment disposition. */

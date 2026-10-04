@@ -226,9 +226,10 @@ export function createApp(deps: AppDeps): (req: Request) => Promise<Response> {
     ...(human ? { firstPartyHuman: true as const } : {}),
   });
 
-  const mailEnvFor = (row: ApiKeyRow, membership: Membership, requestId: string): MailEnv => ({
+  const mailEnvFor = (row: ApiKeyRow, membership: Membership, requestId: string, arrival: number): MailEnv => ({
     mcp: deps.mcp,
     pool: deps.pool,
+    arrival,
     imapDial: deps.imapDial,
     inboxes: inboxRows,
     apiKey: callerKey(row, membership, true),
@@ -371,6 +372,9 @@ export function createApp(deps: AppDeps): (req: Request) => Promise<Response> {
 
   return async function handle(req: Request): Promise<Response> {
     const startedAt = performance.now();
+    // Taken before the first await: on a socket this is the order the frames
+    // arrived in, which is the order one inbox's IMAP queue serves them in.
+    const arrival = deps.pool.arrival();
     const origin = req.headers.get("origin");
     const given = req.headers.get("x-request-id");
     const requestId = given && REQUEST_ID_RE.test(given) ? given : crypto.randomUUID();
@@ -506,7 +510,7 @@ export function createApp(deps: AppDeps): (req: Request) => Promise<Response> {
       const keyStarted = performance.now();
       const keyRow = await workspaceKey(membership.workspace_id, timing);
       fields["key_ms"] = Math.round(performance.now() - keyStarted);
-      const env = mailEnvFor(keyRow, membership, requestId);
+      const env = mailEnvFor(keyRow, membership, requestId, arrival);
 
       // ── routes ────────────────────────────────────────────────────────────
       if (route === "/allowance") {

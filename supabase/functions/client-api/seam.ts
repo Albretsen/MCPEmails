@@ -42,6 +42,8 @@ export interface ImapStatusClient {
   }>;
   /** Messages in the mailbox as of the last SELECT, or null. */
   selectedMessageCount(): number | null;
+  /** `LIST "" "*"`: every mailbox with its attributes (SPECIAL-USE included). */
+  listMailboxes(): Promise<Array<{ name: string; delimiter: string; flags: string[] }>>;
   /** `uid:flags;...` for a sequence range of the selected mailbox, or null. */
   flagsBySequence(first: number, last: number): Promise<string | null>;
 }

@@ -41,6 +41,13 @@
 //      Migadu, 2026-10-04: every login refused, SMTP answering 454, for well
 //      over half an hour). A poll every 30 s must not be what keeps a lock
 //      alive. New credentials are a new key and dial at once.
+//   8. FIRST COME, FIRST SERVED, per inbox, by the order the REQUESTS arrived
+//      (not the order they happened to reach the pool: a request does a
+//      database read or two first, and those finish in any order). One
+//      exception: an interactive request (`list`, `read`) goes ahead of a
+//      queued background one (`status`, `folders`), including one that is
+//      still dialling: the connection it opens is handed to the interactive
+//      request first. See `nextInQueue`.
 //
 // OVERFLOW. When the pooled connection is leased and the SAME operation asks
 // for a second one (a few executors hold two at once), waiting would deadlock,
@@ -92,6 +99,45 @@ export interface LeaseOptions {
    * server, and what it learns replaces the remembered list.
    */
   freshList?: boolean;
+  /**
+   * Where this checkout stands in the per-inbox queue (rule 8). Absent: it
+   * queues as a `normal` request that arrived when it reached the pool.
+   */
+  order?: QueueOrder;
+}
+
+/**
+ * `interactive`: someone is looking at the result right now (`list`, `read`).
+ * `background`: a poll nobody is waiting on (`status`, `folders`).
+ */
+export type QueueClass = "interactive" | "normal" | "background";
+
+export interface QueueOrder {
+  /** From {@link ImapPool.arrival}, taken when the REQUEST arrived. */
+  seq: number;
+  cls: QueueClass;
+}
+
+interface Waiter extends QueueOrder {
+  /** Arrival at the pool: orders checkouts that share a request. */
+  sub: number;
+  wake: () => void;
+}
+
+/**
+ * Who is served next. Strictly first come, first served, with one exception:
+ * when the request at the head is a background one and an interactive request
+ * is queued behind it, the (earliest) interactive one goes first.
+ */
+export function nextInQueue<T extends { seq: number; sub: number; cls: QueueClass }>(queue: readonly T[]): T | null {
+  let head: T | null = null;
+  let interactive: T | null = null;
+  const before = (a: T, b: T) => a.seq < b.seq || (a.seq === b.seq && a.sub < b.sub);
+  for (const item of queue) {
+    if (head === null || before(item, head)) head = item;
+    if (item.cls === "interactive" && (interactive === null || before(item, interactive))) interactive = item;
+  }
+  return head !== null && head.cls === "background" && interactive !== null ? interactive : head;
 }
 
 export interface PoolStats {
@@ -106,6 +152,8 @@ export interface PoolStats {
   refusals: number;
   /** Folder lists answered from memory instead of a LIST round trip. */
   listHits: number;
+  /** A connection handed to a queued request that outranked the one that dialled it. */
+  handovers: number;
   idle: number;
   leased: number;
 }
@@ -121,7 +169,9 @@ interface Entry<C> {
   idleTimer: TimerHandle | null;
   /** Every live connection for this key, pooled and overflow. */
   live: number;
-  waiters: Array<() => void>;
+  waiters: Waiter[];
+  /** The waiter the connection was just offered to, until it resumes. */
+  handoff: Waiter | null;
   /** Checkouts currently working on this entry. */
   pending: number;
   /** Marks the current pooled lease; a stale release compares and no-ops. */
@@ -173,7 +223,8 @@ export class ImapPool<C extends PoolableClient> {
   readonly #entries = new Map<string, Entry<C>>();
   readonly #opts: Required<Omit<ImapPoolOptions, "now">>;
   readonly #now: () => number;
-  readonly #stats = { dials: 0, reuses: 0, overflows: 0, validations: 0, drops: 0, evictions: 0, waits: 0, refusals: 0, listHits: 0 };
+  readonly #stats = { dials: 0, reuses: 0, overflows: 0, validations: 0, drops: 0, evictions: 0, waits: 0, refusals: 0, listHits: 0, handovers: 0 };
+  #arrivals = 0;
   readonly #refused = new Map<string, { error: Error; until: number }>();
   /** The mailbox each live connection has selected (set by a successful SELECT through a handle). */
   readonly #selected = new WeakMap<object, string>();
@@ -209,6 +260,14 @@ export class ImapPool<C extends PoolableClient> {
       if (e.state === "leased") leased++;
     }
     return { ...this.#stats, idle, leased };
+  }
+
+  /**
+   * A place in line. Call it when a request ARRIVES and pass the number as
+   * `LeaseOptions.order.seq` on every checkout that request makes.
+   */
+  arrival(): number {
+    return ++this.#arrivals;
   }
 
   /**
@@ -255,9 +314,32 @@ export class ImapPool<C extends PoolableClient> {
   async #acquire(entry: Entry<C>, key: string, flow: object, dial: () => Promise<C>, lease?: LeaseOptions): Promise<C> {
     const trace = lease?.trace;
     const deadline = this.#now() + this.#opts.waitMs;
+    const sub = ++this.#arrivals;
+    const me: Waiter = { seq: lease?.order?.seq ?? sub, cls: lease?.order?.cls ?? "normal", sub, wake: () => {} };
 
     for (;;) {
-      if (entry.state === "idle" && entry.client) {
+      // Rule 7, for a request that was QUEUED behind the login that was just
+      // refused. Checking only on entry (as this did) let each of them dial
+      // in turn: seen live 2026-10-04, a client's opening status + folders +
+      // list for one refused mailbox made three logins and answered at 3.8,
+      // 7.5 and 11 s, each waiting out the server's own failed-login delay.
+      // They now all answer when the first refusal arrives.
+      if (entry.state === "empty") {
+        const refusedNow = this.#refused.get(key);
+        if (refusedNow && refusedNow.until > this.#now()) {
+          this.#stats.refusals++;
+          if (entry.handoff === me) entry.handoff = null;
+          for (const waiter of [...entry.waiters]) waiter.wake();
+          throw refusedNow.error;
+        }
+      }
+      // Rule 8: a free connection goes to whoever is next in line, which is
+      // not necessarily whoever is looking at it right now.
+      const myTurn = entry.handoff === null
+        ? entry.waiters.length === 0 || nextInQueue([...entry.waiters, me]) === me
+        : entry.handoff === me;
+      if (myTurn && entry.state === "idle" && entry.client) {
+        entry.handoff = null;
         const client = entry.client;
         this.#clearIdleTimer(entry);
         entry.state = "leased";
@@ -286,7 +368,8 @@ export class ImapPool<C extends PoolableClient> {
         return this.#lease(entry, key, client, generation, lease);
       }
 
-      if (entry.state === "empty" && entry.live < this.#opts.maxPerKey) {
+      if (myTurn && entry.state === "empty" && entry.live < this.#opts.maxPerKey) {
+        entry.handoff = null;
         entry.state = "dialing";
         entry.flow = flow;
         entry.live++;
@@ -313,7 +396,26 @@ export class ImapPool<C extends PoolableClient> {
         entry.client = client;
         entry.state = "leased";
         entry.leasedAt = this.#now();
+        if (entry.waiters.length > 0 && nextInQueue([...entry.waiters, me]) !== me) {
+          // Someone who outranks this request queued up while it was dialling
+          // (a `list` behind a `status` on a cold connection): they get the
+          // connection first, and this request takes its place in line.
+          this.#stats.handovers++;
+          this.#returnPooled(entry, client, generation, false);
+          continue;
+        }
         return this.#lease(entry, key, client, generation, lease);
+      }
+
+      // Not taken. A reservation this request could not use is released, and
+      // if the connection is free for someone ahead of it, they are told: a
+      // free connection never sits beside a sleeping waiter.
+      if (entry.handoff === me) entry.handoff = null;
+      if (
+        !myTurn && entry.handoff === null &&
+        (entry.state === "idle" || (entry.state === "empty" && entry.live < this.#opts.maxPerKey))
+      ) {
+        this.#wake(entry);
       }
 
       // The pooled connection is leased or being dialled by someone.
@@ -347,7 +449,7 @@ export class ImapPool<C extends PoolableClient> {
         if (timedOut) throw new ImapPoolBusyError();
       }
       this.#stats.waits++;
-      await this.#wait(entry, Math.max(1, deadline - this.#now()));
+      await this.#wait(entry, me, Math.max(1, deadline - this.#now()));
     }
   }
 
@@ -388,6 +490,7 @@ export class ImapPool<C extends PoolableClient> {
         idleTimer: null,
         live: 0,
         waiters: [],
+        handoff: null,
         pending: 0,
         generation: 0,
       };
@@ -415,23 +518,35 @@ export class ImapPool<C extends PoolableClient> {
   }
 
   #wake(entry: Entry<C>): void {
-    const next = entry.waiters.shift();
-    next?.();
+    const next = nextInQueue(entry.waiters);
+    if (!next) {
+      entry.handoff = null;
+      return;
+    }
+    // Reserved for `next` until it resumes, so a request arriving in between
+    // cannot slip in front of it.
+    entry.handoff = next;
+    next.wake();
   }
 
-  #wait(entry: Entry<C>, ms: number): Promise<void> {
+  #wait(entry: Entry<C>, me: Waiter, ms: number): Promise<void> {
     return new Promise<void>((resolve) => {
       let done = false;
       const finish = () => {
         if (done) return;
         done = true;
         clearTimeout(timer);
-        const at = entry.waiters.indexOf(finish);
+        const at = entry.waiters.indexOf(me);
         if (at !== -1) entry.waiters.splice(at, 1);
         resolve();
       };
-      const timer = setTimeout(finish, ms);
-      entry.waiters.push(finish);
+      const timer = setTimeout(() => {
+        // Gave up waiting: whatever was reserved for it is free again.
+        if (entry.handoff === me) entry.handoff = null;
+        finish();
+      }, ms);
+      me.wake = finish;
+      entry.waiters.push(me);
     });
   }
 
@@ -620,10 +735,15 @@ export class ImapPool<C extends PoolableClient> {
             }
             after = (result) => this.#rememberList(key, result);
           } else if (prop === "listMailboxesWithStatus") {
-            after = (result) => {
-              const mailboxes = (result as { mailboxes?: unknown } | null)?.mailboxes;
-              if (Array.isArray(mailboxes)) this.#rememberList(key, mailboxes);
-            };
+            // NOT remembered, and what was remembered is dropped. An extended
+            // LIST (`RETURN (STATUS ...)`) need not carry the SPECIAL-USE
+            // attributes a plain LIST does (RFC 6154 section 2), and Gmail
+            // leaves them out: found live 2026-10-04, a `status` within a
+            // minute of a `folders` answered folder_not_found for sent,
+            // drafts, trash and spam, because the alias matcher was reading
+            // this reply. The next plain LIST (the `folders` op makes one for
+            // the roles) is what gets remembered.
+            this.#lists.delete(key);
           } else if (prop === "createMailbox" || prop === "deleteMailbox" || prop === "renameMailbox") {
             // Whatever the outcome, the remembered list may now be wrong; and
             // a deleted or renamed mailbox may be the selected one.
