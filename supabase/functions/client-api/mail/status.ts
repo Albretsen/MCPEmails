@@ -100,7 +100,7 @@ function isAuthFailure(error: unknown): boolean {
     (/^(gmail|outlook|imap|fastmail)_auth_failed$/.test(error.message) || error.name === "ImapAuthError");
 }
 
-async function imapStatus(mcp: McpSeam, inbox: InboxRow, folders: string[]): Promise<FolderStatus[]> {
+async function imapStatus(mcp: McpSeam, inbox: InboxRow, folders: string[], flagsDigest = true): Promise<FolderStatus[]> {
   const out: FolderStatus[] = [];
   // In order, on ONE connection, which is handed back to the pool after every
   // folder and taken again for the next. With nobody else waiting that costs
@@ -121,7 +121,7 @@ async function imapStatus(mcp: McpSeam, inbox: InboxRow, folders: string[]): Pro
         // No CONDSTORE: STATUS cannot see a flag change, so look at the flags
         // of the newest messages for the first few folders (see the header).
         let flags = "-";
-        if (s.highestModSeq === null && s.messages > 0 && digests < FLAGS_DIGEST_FOLDERS) {
+        if (flagsDigest && s.highestModSeq === null && s.messages > 0 && digests < FLAGS_DIGEST_FOLDERS) {
           digests++;
           try {
             const selected = await session.select(id);
@@ -261,6 +261,13 @@ export async function mailboxStatus(
   apiKey: ApiKeyRow,
   inboxId: string,
   folders: string[],
+  /**
+   * `flagsDigest: false` skips the SELECT + FETCH a server without CONDSTORE
+   * otherwise costs (see the header). For the push watcher (push/mail.ts),
+   * which only asks whether mail ARRIVED and so has no use for flag changes.
+   * The client's own `status` op never passes it.
+   */
+  options: { flagsDigest?: boolean } = {},
 ): Promise<StatusResult> {
   const inbox = await mcp.resolveInbox(inboxId, apiKey);
   if (!inbox) throw new ApiError(404, "inbox_not_found", "Inbox not found.", { toolCode: "inbox_not_found" });
@@ -269,7 +276,7 @@ export async function mailboxStatus(
       ? await gmailStatus(mcp, inbox, folders)
       : inbox.provider === "outlook"
       ? await outlookStatus(mcp, inbox, folders)
-      : await imapStatus(mcp, inbox, folders);
+      : await imapStatus(mcp, inbox, folders, options.flagsDigest !== false);
     return { inbox_id: inbox.id, provider: inbox.provider, folders: rows };
   } catch (error) {
     if (error instanceof ApiError) throw error;

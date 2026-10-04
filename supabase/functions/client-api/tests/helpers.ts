@@ -251,6 +251,7 @@ export function testApp(options: {
   limiter?: RateLimiter;
   pool?: ImapPool<PoolableClient>;
   assistant?: Parameters<typeof createApp>[0]["assistant"];
+  push?: Parameters<typeof createApp>[0]["push"];
   env?: (name: string) => string | undefined;
 } = {}): TestApp {
   const store = options.store ?? fakeStore();
@@ -267,6 +268,7 @@ export function testApp(options: {
     limiter,
     pool,
     assistant: options.assistant,
+    push: options.push,
     env: options.env ?? (() => undefined),
     log: (event, fields) => logs.push({ event, fields }),
   });

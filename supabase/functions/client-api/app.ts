@@ -6,6 +6,9 @@
 //   POST /mail/batch      { calls: [...] } (<= 12) -> { results: [...] }
 //   GET  /allowance       the assistant allowance
 //   POST /assistant/run   text/event-stream (handled by ./assistant/mod.ts)
+//   *    /push/...        web push: subscribe, preferences, test, and the cron
+//                         dispatcher (see ./push/routes.ts for the list and
+//                         for which of them take no user token)
 //   OPTIONS *             CORS preflight
 //
 // Order of work on every request, cheapest refusal first:
@@ -25,13 +28,22 @@ import type { AssistantAllowance, HandleAssistantRun, Inbox } from "./assistant-
 import { buildAssistantDeps } from "./assistant-wiring.ts";
 import { type AuthedUser, bearerToken, canWrite, type JwtVerifier, type Membership, type WorkspaceGate } from "./auth.ts";
 import { corsHeaders, preflightResponse } from "./cors.ts";
-import { ApiError, invalidRequest, toApiError } from "./errors.ts";
+import { ApiError, invalidRequest, toApiError, unauthenticated } from "./errors.ts";
 import type { ImapPool, PoolableClient } from "./imap-pool.ts";
 import { parseBatch, runMailBatch } from "./mail/batch.ts";
 import { type HealthRow, InboxHealth, type InboxState } from "./mail/health.ts";
 import { OPS } from "./mail/ops.ts";
 import { InboxRowCache, type MailEnv, type MailRequest, type OpTimings, resultJson, runExecutor, runMailOp } from "./mail/run.ts";
 import { settleAfterResponse } from "../mcp-server/request-pipeline.ts";
+import { type DispatchSummary, gmailPushStub } from "./push/dispatch.ts";
+import {
+  handlePushUserRoute,
+  handleResubscribe,
+  isDispatchAuthorized,
+  PUSH_ROUTES,
+  type PushMethod,
+  type PushRoutesDeps,
+} from "./push/routes.ts";
 import type { LimitClass, RateLimiter } from "./rate-limit.ts";
 import type { ApiKeyRow, McpSeam } from "./seam.ts";
 import { planSlug, type Store, toAssistantAllowance } from "./store.ts";
@@ -50,6 +62,8 @@ export interface AppDeps {
   health?: InboxHealth;
   /** Loads ./assistant/mod.ts. Kept lazy so mail routes never pay for it. */
   assistant?: () => Promise<HandleAssistantRun>;
+  /** Web push (push/). Absent: the /push routes answer 404. */
+  push?: PushRoutesDeps & { dispatch: () => Promise<DispatchSummary> };
   env?: (name: string) => string | undefined;
   log?: (event: string, fields: Record<string, unknown>) => void;
   now?: () => number;
@@ -434,9 +448,42 @@ export function createApp(deps: AppDeps): (req: Request) => Promise<Response> {
     try {
       if (req.method === "OPTIONS") return finish(preflightResponse(origin));
 
+      // The push routes (push/routes.ts). Three of them take no user token and
+      // are answered here, before the bearer check: the cron dispatcher (its
+      // own secret header), the service worker's subscription rotation (the
+      // old subscription's auth secret) and the unbuilt Gmail push stub.
+      const pushRoute = deps.push && Object.hasOwn(PUSH_ROUTES, route) ? PUSH_ROUTES[route] : undefined;
+      if (pushRoute && deps.push) {
+        if (!pushRoute.methods.includes(req.method as PushMethod)) {
+          throw new ApiError(405, "invalid_request", `Use ${pushRoute.methods.join(" or ")} for this route.`);
+        }
+        if (route === "/push/dispatch") {
+          // A valid user token is NOT a way in: only the secret header is read.
+          if (!await isDispatchAuthorized(req, readEnv)) throw unauthenticated("Invalid or missing dispatch secret.");
+          const summary = await deps.push.dispatch();
+          Object.assign(fields, { push: "dispatch", ...summary });
+          return json(summary);
+        }
+        if (route === "/push/resubscribe") {
+          const decision = deps.limiter.take("push:resubscribe", "write");
+          if (!decision.ok) {
+            throw new ApiError(429, "rate_limited", "Too many requests. Slow down and try again.", {
+              retryable: true,
+              retryAfter: decision.retryAfter,
+            });
+          }
+          fields["push"] = "resubscribe";
+          return json(await handleResubscribe(deps.push, await readJson(req)));
+        }
+        if (pushRoute.auth === "none") {
+          const stub = gmailPushStub();
+          throw new ApiError(stub.status, "not_found", "Gmail push delivery is not set up.", { toolCode: stub.code });
+        }
+      }
+
       const method = ROUTES[route];
-      if (!method) throw new ApiError(404, "not_found", "No such route.");
-      if (req.method !== method) throw new ApiError(405, "invalid_request", `Use ${method} for this route.`);
+      if (!method && !pushRoute) throw new ApiError(404, "not_found", "No such route.");
+      if (method && req.method !== method) throw new ApiError(405, "invalid_request", `Use ${method} for this route.`);
 
       // ── who ────────────────────────────────────────────────────────────────
       const authStarted = performance.now();
@@ -498,6 +545,10 @@ export function createApp(deps: AppDeps): (req: Request) => Promise<Response> {
         }
       } else if (route === "/assistant/run") {
         limitClass = "assistant";
+      } else if (pushRoute) {
+        if (req.method !== "GET") body = await readJson(req);
+        // A test push leaves this server for a third party: the strictest bucket.
+        limitClass = route === "/push/test" ? "send" : req.method === "GET" ? "read" : "write";
       }
       const decision = deps.limiter.take(user.id, limitClass, cost);
       if (!decision.ok) {
@@ -513,6 +564,19 @@ export function createApp(deps: AppDeps): (req: Request) => Promise<Response> {
       const env = mailEnvFor(keyRow, membership, requestId, arrival);
 
       // ── routes ────────────────────────────────────────────────────────────
+      if (pushRoute && deps.push) {
+        const outcome = await handlePushUserRoute(deps.push, route, req.method, body, {
+          userId: user.id,
+          workspaceId: membership.workspace_id,
+          userAgent: req.headers.get("user-agent"),
+          inboxIds: async () =>
+            (await listInboxes(env, membership.workspace_id, { providerMs: 0, connectMs: 0, imapDials: 0, imapReuses: 0 }))
+              .map((inbox) => inbox.inbox_id),
+        });
+        Object.assign(fields, outcome.fields);
+        return json(outcome.body);
+      }
+
       if (route === "/allowance") {
         return json(await readAllowance(membership, timing, requestId));
       }

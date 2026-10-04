@@ -1878,6 +1878,59 @@ export type Database = {
           },
         ]
       }
+      inbox_watch_state: {
+        Row: {
+          backoff_until: string | null
+          created_at: string
+          failure_count: number
+          folders: Json
+          inbox_id: string
+          last_changed_at: string | null
+          last_checked_at: string | null
+          last_error_code: string | null
+          last_notified_at: string | null
+          lease_id: string | null
+          leased_until: string | null
+          next_check_at: string
+        }
+        Insert: {
+          backoff_until?: string | null
+          created_at?: string
+          failure_count?: number
+          folders?: Json
+          inbox_id: string
+          last_changed_at?: string | null
+          last_checked_at?: string | null
+          last_error_code?: string | null
+          last_notified_at?: string | null
+          lease_id?: string | null
+          leased_until?: string | null
+          next_check_at?: string
+        }
+        Update: {
+          backoff_until?: string | null
+          created_at?: string
+          failure_count?: number
+          folders?: Json
+          inbox_id?: string
+          last_changed_at?: string | null
+          last_checked_at?: string | null
+          last_error_code?: string | null
+          last_notified_at?: string | null
+          lease_id?: string | null
+          leased_until?: string | null
+          next_check_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "inbox_watch_state_inbox_id_fkey"
+            columns: ["inbox_id"]
+            isOneToOne: true
+            referencedRelation: "inboxes"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       inboxes: {
         Row: {
           bulk_review_mode: string
@@ -2545,6 +2598,124 @@ export type Database = {
           },
           {
             foreignKeyName: "product_funnel_events_workspace_id_fkey"
+            columns: ["workspace_id"]
+            isOneToOne: false
+            referencedRelation: "workspaces"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      push_preferences: {
+        Row: {
+          created_at: string
+          enabled: boolean
+          inbox_id: string
+          payload_mode: string
+          quiet_end: number | null
+          quiet_start: number | null
+          quiet_timezone: string | null
+          updated_at: string
+          user_id: string
+        }
+        Insert: {
+          created_at?: string
+          enabled?: boolean
+          inbox_id: string
+          payload_mode?: string
+          quiet_end?: number | null
+          quiet_start?: number | null
+          quiet_timezone?: string | null
+          updated_at?: string
+          user_id: string
+        }
+        Update: {
+          created_at?: string
+          enabled?: boolean
+          inbox_id?: string
+          payload_mode?: string
+          quiet_end?: number | null
+          quiet_start?: number | null
+          quiet_timezone?: string | null
+          updated_at?: string
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "push_preferences_inbox_id_fkey"
+            columns: ["inbox_id"]
+            isOneToOne: false
+            referencedRelation: "inboxes"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "push_preferences_user_id_fkey"
+            columns: ["user_id"]
+            isOneToOne: false
+            referencedRelation: "users"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      push_subscriptions: {
+        Row: {
+          auth: string
+          created_at: string
+          disabled_at: string | null
+          endpoint: string
+          failure_count: number
+          id: string
+          last_success_at: string | null
+          p256dh: string
+          updated_at: string
+          user_agent: string | null
+          user_id: string
+          workspace_id: string
+        }
+        Insert: {
+          auth: string
+          created_at?: string
+          disabled_at?: string | null
+          endpoint: string
+          failure_count?: number
+          id?: string
+          last_success_at?: string | null
+          p256dh: string
+          updated_at?: string
+          user_agent?: string | null
+          user_id: string
+          workspace_id: string
+        }
+        Update: {
+          auth?: string
+          created_at?: string
+          disabled_at?: string | null
+          endpoint?: string
+          failure_count?: number
+          id?: string
+          last_success_at?: string | null
+          p256dh?: string
+          updated_at?: string
+          user_agent?: string | null
+          user_id?: string
+          workspace_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "push_subscriptions_user_id_fkey"
+            columns: ["user_id"]
+            isOneToOne: false
+            referencedRelation: "users"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "push_subscriptions_workspace_id_fkey"
+            columns: ["workspace_id"]
+            isOneToOne: false
+            referencedRelation: "billing_funnel_by_workspace"
+            referencedColumns: ["workspace_id"]
+          },
+          {
+            foreignKeyName: "push_subscriptions_workspace_id_fkey"
             columns: ["workspace_id"]
             isOneToOne: false
             referencedRelation: "workspaces"
@@ -3783,6 +3954,7 @@ export type Database = {
         Args: { p_mode?: string }
         Returns: undefined
       }
+      dispatch_inbox_watch: { Args: never; Returns: undefined }
       dispatch_scheduled_sends: { Args: never; Returns: undefined }
       dispatch_triage_rules: { Args: never; Returns: undefined }
       effective_workspace_plan: {
@@ -4365,6 +4537,20 @@ export type Database = {
         Args: { controlled_failure?: boolean; mode: string }
         Returns: undefined
       }
+      lease_inbox_watches: {
+        Args: { p_lease_seconds?: number; p_limit?: number }
+        Returns: {
+          failure_count: number
+          folders: Json
+          inbox_id: string
+          inbox_last_error: string
+          last_checked_at: string
+          lease_id: string
+          mail_host: string
+          provider: string
+          workspace_id: string
+        }[]
+      }
       mark_synthetic_monitor_incident_alerted: {
         Args: { p_incident_id: string }
         Returns: undefined
@@ -4374,9 +4560,27 @@ export type Database = {
         Returns: undefined
       }
       my_workspace_ids: { Args: never; Returns: string[] }
+      push_recipients: {
+        Args: { p_inbox_id: string }
+        Returns: {
+          auth: string
+          endpoint: string
+          p256dh: string
+          payload_mode: string
+          quiet_end: number
+          quiet_start: number
+          quiet_timezone: string
+          subscription_id: string
+          user_id: string
+        }[]
+      }
       rate_limit_check: {
         Args: { p_key: string; p_max_count: number; p_window_ms: number }
         Returns: boolean
+      }
+      record_push_results: {
+        Args: { p_failed: string[]; p_gone: string[]; p_sent: string[] }
+        Returns: undefined
       }
       record_signup_marketing_consent: {
         Args: { p_source: string; p_user_id: string }
@@ -4466,6 +4670,7 @@ export type Database = {
           total: number
         }[]
       }
+      sync_inbox_watch_state: { Args: never; Returns: undefined }
       workspace_action_allowance: {
         Args: { p_workspace_id: string }
         Returns: {
