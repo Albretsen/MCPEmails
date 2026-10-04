@@ -53,8 +53,14 @@ export interface ThreadRowLike {
 
 const PREFIX = /^\s*(?:(?:re|fwd?|fw|sv|vs|aw|wg|antw|tr|rv|res|enc)(?:\[\d+\])?\s*[:：]\s*)+/i;
 
-/** See the header comment. */
-export function normalizeSubject(subject: unknown): string {
+/**
+ * The subject without its reply/forward prefixes, whitespace collapsed, in the
+ * case the sender wrote it. This is what an IMAP `SEARCH SUBJECT` is given
+ * (mail/thread.ts): a server matches ASCII without regard to case, but not
+ * every server folds case outside ASCII, so "Ødegård" must not be sent as
+ * "ødegård".
+ */
+export function baseSubject(subject: unknown): string {
   if (typeof subject !== "string") return "";
   let text = subject.replace(/\s+/g, " ").trim();
   for (let i = 0; i < 8; i++) {
@@ -62,8 +68,12 @@ export function normalizeSubject(subject: unknown): string {
     if (next === text) break;
     text = next;
   }
-  text = text.toLowerCase();
-  return text === "(no subject)" ? "" : text;
+  return text.toLowerCase() === "(no subject)" ? "" : text;
+}
+
+/** See the header comment. */
+export function normalizeSubject(subject: unknown): string {
+  return baseSubject(subject).toLowerCase();
 }
 
 /** cyrb53: a 53-bit string hash. A grouping key, not a security boundary. */

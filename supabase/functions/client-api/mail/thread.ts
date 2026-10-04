@@ -53,7 +53,10 @@
 //            guessed: the first search runs in the anchor's own folder and must
 //            return the anchor itself (it matches `HEADER Message-ID <own>`).
 //            When it does not, every folder is searched with
-//                SUBJECT "<normalised subject>" SINCE <anchor date - 180 days>
+//                SUBJECT "<subject without Re:/Fwd:>" SINCE <anchor date - 180 days>
+//            (a subject outside ASCII goes out as a UTF-8 literal with
+//            CHARSET UTF-8; a server that refuses the charset gets the ASCII
+//            folding `uidSearch` allows, or that folder is reported partial)
 //            instead, the newest MAX_FALLBACK_CANDIDATES hits are fetched
 //            WITHOUT previews, and the function keeps only the ones the
 //            headers link to the thread. Subject never decides membership: it
@@ -90,7 +93,7 @@ import { ApiError } from "../errors.ts";
 import type { ApiKeyRow, ImapSessionLike, InboxRow, McpSeam } from "../seam.ts";
 import { reconnectMessage } from "./health.ts";
 import { outlookRoleFolderIds } from "./roles.ts";
-import { normalizeSubject, threadKeyOf } from "./thread-key.ts";
+import { baseSubject, threadKeyOf } from "./thread-key.ts";
 
 export const DEFAULT_THREAD_LIMIT = 50;
 export const MAX_THREAD_LIMIT = 100;
@@ -578,10 +581,13 @@ async function imapThread(
   });
 
   const known = new Set<string>([links.own, links.inReplyTo, ...links.references].filter(Boolean));
-  const baseSubject = normalizeSubject(anchorRow.subject);
+  // The subject as text (the row's, decoded from RFC 2047 or raw 8-bit octets),
+  // in the sender's case. `uidSearch` sends anything outside ASCII as a UTF-8
+  // literal under `CHARSET UTF-8` (imap-client.ts), never as raw command octets.
+  const subject = baseSubject(anchorRow.subject);
   const anchorMs = Date.parse(anchorRow.date);
   const since = imapDate((Number.isFinite(anchorMs) ? anchorMs : clock()) - FALLBACK_WINDOW_DAYS * 86_400_000);
-  const subjectQuoted = baseSubject ? quoted(baseSubject) : null;
+  const subjectQuoted = subject ? quoted(subject) : null;
 
   const rows = new Map<string, ThreadRow>([[anchorRow.id, anchorRow]]);
   const seenMessageIds = new Set<string>(links.own ? [links.own] : []);

@@ -296,7 +296,7 @@ Deno.test("thread (imap): a server whose SEARCH HEADER finds nothing (Migadu) fa
   assertEquals([value.body.strategy, value.body.partial], ["imap_subject_fallback", false]);
   const searches = pool.servers[0].commands.filter((c) => /^UID SEARCH/.test(c));
   assertEquals(searches[0].includes("HEADER Message-ID"), true, "the header search is tried first, in the anchor's folder");
-  assertEquals(searches.slice(1), Array(3).fill('UID SEARCH SUBJECT "invoice" SINCE 7-Mar-2026'));
+  assertEquals(searches.slice(1), Array(3).fill('UID SEARCH SUBJECT "Invoice" SINCE 7-Mar-2026'));
   // Candidates are fetched without a preview; only the kept ones with.
   const fetches = pool.servers[0].commands.filter((c) => /^UID FETCH/.test(c));
   assert(fetches.some((c) => !/BODY\.PEEK\[1\]/.test(c)) && fetches.some((c) => /BODY\.PEEK\[1\]/.test(c)));
@@ -541,4 +541,167 @@ Deno.test("thread (outlook): filter by conversationId, sorted here, drafts and D
   assertEquals(value.body.messages[0].message_id_header, "o1@outlook.example");
   assert(value.body.messages.every((m: { thread_key: string; folder: string }) => m.thread_key === "o:C'1" && m.folder.length > 0));
   assert(!urls.some((u) => /\$orderby/.test(u) && /conversationId/.test(u)), "Graph refuses this filter with $orderby");
+});
+
+// ── With the byte-exact IMAP reader (the read fixes of 2026-10-04) ──────────
+//
+// The reader hands every literal back as a byte string (one character per
+// octet). The References literal is a header value, so it is decoded like every
+// ENVELOPE string before an id is taken from it: no byte string reaches
+// `references`, `thread_key` or the JSON.
+
+/** Text as it is on the wire: its UTF-8 octets, one character each. */
+function wire(text: string): string {
+  let out = "";
+  for (const byte of new TextEncoder().encode(text)) out += String.fromCharCode(byte);
+  return out;
+}
+
+/** A message whose header lines are given verbatim (folding and all). */
+function rawMail(uid: number, headers: string[], flags: string[] = []): FakeMessage {
+  return { uid, flags, raw: [...headers, "Content-Type: text/plain; charset=utf-8", "", `Body ${uid}.`].join(CRLF) };
+}
+
+function assertNoByteStrings(value: unknown, what: string): void {
+  const json = JSON.stringify(value);
+  // Mojibake of UTF-8 read one octet at a time ("Ã˜", "Ã¥", "â€“"), and U+FFFD.
+  assert(!/[ÂÃâ][\u0080-¿˜€“”]/.test(json), `${what}: a byte string leaked: ${json}`);
+  assert(!json.includes("�"), `${what}: U+FFFD: ${json}`);
+}
+
+Deno.test("list (imap): a folded References header gives the same ids and thread_key as an unfolded one", async () => {
+  const ids = Array.from({ length: 14 }, (_, i) => `ref-${i}.${"x".repeat(40)}@mail.example.com`);
+  const date = "Date: 03 Sep 2026 10:00:00 +0000";
+  const common = [date, 'From: "Maya" <maya@example.com>', "To: <owner@example.com>", "Subject: Re: Invoice"];
+  const boxes: FakeMailbox[] = [{
+    name: "INBOX",
+    messages: [
+      // One line.
+      rawMail(1, [...common, "Message-ID: <one@example.com>", `In-Reply-To: <${ids[13]}>`, `References: ${ids.map((id) => `<${id}>`).join(" ")}`]),
+      // Folded after every id, with a space, a tab, and several of each.
+      rawMail(2, [...common, "Message-ID: <two@example.com>", `In-Reply-To: <${ids[13]}>`, `References: <${ids[0]}>`, ...ids.slice(1).map((id, i) => `${[" ", "\t", "   ", "\t \t"][i % 4]}<${id}>`)]),
+      // Folded straight after the colon, the first id on the continuation line.
+      rawMail(3, [...common, "Message-ID: <three@example.com>", `In-Reply-To: <${ids[13]}>`, "References:", ...ids.map((id) => `\t<${id}>`)]),
+    ],
+  }];
+  const { app, pool, run } = await rig({ boxes });
+  const { value } = await run(() => app.mail("list", { folder: "inbox", limit: 10 }));
+  assertEquals(value.status, 200, JSON.stringify(value.body));
+  const rows = value.body.messages as Array<Record<string, unknown>>;
+  assertEquals(rows.length, 3);
+  // The root and the newest nine (MAX_ROW_REFERENCES), whatever the folding.
+  const expected = [ids[0], ...ids.slice(-9)];
+  for (const row of rows) {
+    assertEquals(row["references"], expected, String(row["id"]));
+    assertEquals(row["in_reply_to"], ids[13]);
+    assertEquals(row["thread_key"], `m:${ids[0]}`);
+    for (const id of row["references"] as string[]) assert(!/[\s<>]/.test(id), `whitespace or a bracket in an id: ${JSON.stringify(id)}`);
+  }
+  assertNoByteStrings(rows, "rows");
+  await pool.closeAll();
+});
+
+Deno.test("list (imap): References with odd whitespace, no whitespace, comments and raw 8-bit octets yields clean ids only", async () => {
+  const common = ["Date: 03 Sep 2026 10:00:00 +0000", 'From: "Maya" <maya@example.com>', "To: <owner@example.com>", "Subject: Re: Odd"];
+  const boxes: FakeMailbox[] = [{
+    name: "INBOX",
+    messages: [
+      // Tabs, runs of spaces, trailing whitespace, ids with nothing between them.
+      rawMail(1, [...common, "Message-ID:   <a1@example.com>  ", "In-Reply-To: \t <p@example.com>\t", "References:\t<root@example.com>   <b@example.com><c@example.com>\t\t<p@example.com>   "]),
+      // A no-break space (UTF-8 C2 A0 on the wire) between ids, and a raw 8-bit
+      // UTF-8 id: both arrive as octets and must come out as text.
+      rawMail(2, [...common, "Message-ID: <a2@example.com>", `References: <root@example.com>${wire(" ")}<${wire("blåbær")}@example.com>`]),
+      // Commas, a comment, and an id broken by folding (dropped, not glued).
+      rawMail(3, [...common, "Message-ID: <a3@example.com>", "References: <root@example.com>, <b@example.com> (was: <not-an-id>),", " <broken@", " example.com> <c@example.com>"]),
+      // An empty References field.
+      rawMail(4, [...common, "Message-ID: <a4@example.com>", "References:  "]),
+    ],
+  }];
+  const { app, pool, run } = await rig({ boxes });
+  const { value } = await run(() => app.mail("list", { folder: "inbox", limit: 10 }));
+  assertEquals(value.status, 200, JSON.stringify(value.body));
+  const byId = new Map((value.body.messages as Array<Record<string, unknown>>).map((r) => [r["id"], r]));
+
+  assertEquals(byId.get("INBOX:1")!["references"], ["root@example.com", "b@example.com", "c@example.com", "p@example.com"]);
+  assertEquals([byId.get("INBOX:1")!["message_id_header"], byId.get("INBOX:1")!["in_reply_to"]], ["a1@example.com", "p@example.com"]);
+  assertEquals(byId.get("INBOX:2")!["references"], ["root@example.com", "blåbær@example.com"], "decoded text, not octets");
+  assertEquals(byId.get("INBOX:3")!["references"], ["root@example.com", "b@example.com", "not-an-id", "c@example.com"]);
+  assertEquals(byId.get("INBOX:4")!["references"], []);
+  assertEquals(byId.get("INBOX:4")!["thread_key"], "m:a4@example.com");
+  for (const n of [1, 2, 3]) assertEquals(byId.get(`INBOX:${n}`)!["thread_key"], "m:root@example.com");
+  assertNoByteStrings(value.body, "rows");
+  // What the client receives is valid, round-trippable JSON text.
+  assertEquals(JSON.parse(JSON.stringify(value.body)), value.body);
+  await pool.closeAll();
+});
+
+Deno.test("thread (imap): the subject fallback sends a non-ASCII subject as a UTF-8 literal with CHARSET, in the sender's case", async () => {
+  const subject = "Faktura – Ødegård & Sønn";
+  const mk = (uid: number, id: string, subjectHeader: string, o: { inReplyTo?: string; references?: string[]; from?: string } = {}) =>
+    rawMail(uid, [
+      `Date: 0${uid} Sep 2026 10:00:00 +0000`,
+      `From: ${o.from ?? '"Maya" <maya@example.com>'}`,
+      "To: <owner@example.com>",
+      `Subject: ${subjectHeader}`,
+      `Message-ID: <${id}>`,
+      ...(o.inReplyTo ? [`In-Reply-To: <${o.inReplyTo}>`] : []),
+      ...(o.references ? [`References: ${o.references.map((r) => `<${r}>`).join(" ")}`] : []),
+    ]);
+  const boxes: FakeMailbox[] = [
+    {
+      name: "INBOX",
+      attrs: ["\\HasNoChildren"],
+      messages: [
+        // Raw 8-bit UTF-8 in the header (no RFC 2047), as some senders write it.
+        mk(1, "root@example.com", wire(subject)),
+        // RFC 2047, base64.
+        mk(3, "c@example.com", `=?UTF-8?B?${btoa(wire(`SV: ${subject}`))}?=`, { inReplyTo: "b@example.com", references: ["root@example.com", "b@example.com"] }),
+        // The same subject from someone else, linked to nothing: stays out.
+        mk(5, "other@example.com", wire(`Re: ${subject}`), { from: '"Odd" <odd@example.com>', inReplyTo: "elsewhere@example.com", references: ["elsewhere@example.com"] }),
+      ],
+    },
+    {
+      name: "Sent",
+      attrs: ["\\HasNoChildren", "\\Sent"],
+      messages: [
+        // RFC 2047, quoted-printable, split over two encoded words.
+        mk(2, "b@example.com", "=?UTF-8?Q?Re:_Faktura_=E2=80=93_=C3=98deg=C3=A5rd?= =?UTF-8?Q?_&_S=C3=B8nn?=", { from: "<owner@example.com>", inReplyTo: "root@example.com", references: ["root@example.com"] }),
+      ],
+    },
+  ];
+  const { app, pool, run } = await rig({ headerSearchBroken: true, boxes });
+  const { value } = await run(() => app.mail("thread", { message_id: "INBOX:3" }));
+  assertEquals(value.status, 200, JSON.stringify(value.body));
+  assertEquals(value.body.messages.map((m: { id: string }) => m.id), ["INBOX:1", "Sent:2", "INBOX:3"]);
+  assertEquals([value.body.strategy, value.body.partial, value.body.thread_key], ["imap_subject_fallback", false, "m:root@example.com"]);
+  assertEquals(value.body.messages.map((m: { subject: string }) => m.subject), [subject, `Re: ${subject}`, `SV: ${subject}`]);
+  assertNoByteStrings(value.body, "thread");
+
+  // The fake records a literal as the quoted text its octets spell.
+  const searches = pool.servers[0].commands.filter((c) => /^UID SEARCH/.test(c));
+  const fallback = searches.filter((c) => /SUBJECT/.test(c));
+  assert(fallback.length >= 2, searches.join(" | "));
+  for (const command of fallback) {
+    assertEquals(command, `UID SEARCH CHARSET UTF-8 SUBJECT "${subject}" SINCE 7-Mar-2026`, "CHARSET named, the subject whole and in its own case");
+  }
+  await pool.closeAll();
+});
+
+Deno.test("thread (imap): a server that refuses CHARSET and a subject with no ASCII folding: the anchor alone, reported partial", async () => {
+  const mk = (uid: number, id: string, subject: string, refs?: string[]) =>
+    rawMail(uid, [`Date: 0${uid} Sep 2026 10:00:00 +0000`, 'From: "Maya" <maya@example.com>', "To: <owner@example.com>", `Subject: ${wire(subject)}`, `Message-ID: <${id}>`, ...(refs ? [`References: ${refs.map((r) => `<${r}>`).join(" ")}`] : [])]);
+  // A CJK subject has no ASCII folding: the search is not run for something else.
+  const boxes: FakeMailbox[] = [{ name: "INBOX", messages: [mk(1, "r@example.com", "請求書"), mk(2, "s@example.com", "Re: 請求書", ["r@example.com"])] }];
+  const advertised = ["IMAP4REV1"];
+  const pool = new FakeDialPool(() =>
+    Object.assign(new FakeImapServer({ mailboxes: boxes, capabilities: advertised, headerSearchBroken: true, rejectCharset: true }), { advertised })
+  );
+  const app = await realApp({ pool });
+  const inbox = await imapInbox();
+  const { value } = await harness.runTool(inbox, noHandler, () => app.mail("thread", { message_id: "INBOX:2" }));
+  assertEquals(value.status, 200, JSON.stringify(value.body));
+  assertEquals(value.body.messages.map((m: { id: string }) => m.id), ["INBOX:2"], "the anchor alone");
+  assertEquals([value.body.partial, value.body.partial_reason], [true, "folder_error"]);
+  assertEquals(value.body.messages[0].subject, "Re: 請求書");
+  await pool.closeAll();
 });
