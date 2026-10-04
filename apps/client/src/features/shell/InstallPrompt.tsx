@@ -1,5 +1,6 @@
 import { Bell, ChevronDown, Download, Share, X } from "lucide-react";
 import { useCallback, useEffect, useId, useState, useSyncExternalStore } from "react";
+import { getPushController } from "../../app/backend";
 import { type NotificationPermissionState, getPlatform } from "../../platform";
 import { useSelectionStore } from "../../state/selection-store";
 import { showToast } from "../../state/toast-store";
@@ -113,16 +114,25 @@ export function InstallPrompt() {
     setBusy(true);
     const result = await platform.notifications.requestPermission();
     setPermission(result);
-    setBusy(false);
     if (result === "granted") {
-      void platform.notifications.subscribePush();
-      showToast("Notifications are on");
+      // Permission is granted, so this does not prompt again: it creates the
+      // push subscription and registers it with the server (src/app/push.ts).
+      const outcome = (await getPushController()?.enable()) ?? "unavailable";
+      setBusy(false);
+      showToast(
+        outcome === "enabled"
+          ? "Notifications are on"
+          : outcome === "failed"
+            ? { text: "Notifications could not be turned on. Try again from the account menu.", kind: "error" }
+            : "Notifications are allowed. They will start once they are available for your account.",
+      );
       // Stay up only if there is still an install to offer.
       if (!platform.install.canPrompt()) dismiss();
     } else if (result === "denied") {
+      setBusy(false);
       showToast("Notifications are blocked. You can allow them in your browser's site settings.");
       dismiss();
-    }
+    } else setBusy(false);
   };
 
   const install = async () => {
@@ -157,7 +167,7 @@ export function InstallPrompt() {
               mcpemails from there.
             </p>
           ) : variant === "notify" ? (
-            <p className={s.noticeBody}>Know when new mail arrives, and when the assistant needs your approval to send.</p>
+            <p className={s.noticeBody}>Know when new mail arrives, even when mcpemails is not open.</p>
           ) : (
             <p className={s.noticeBody}>Its own window, in your dock or on your home screen.</p>
           )}

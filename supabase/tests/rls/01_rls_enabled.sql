@@ -10,7 +10,7 @@
 
 BEGIN;
 
-SELECT plan(17);
+SELECT plan(20);
 
 -- ----------------------------------------------------------------
 -- Assertion helper: checks relrowsecurity flag in pg_class
@@ -207,6 +207,42 @@ SELECT ok(
     AND    c.relkind = 'r'
   ),
   'assistant_usage_reservations table has RLS enabled'
+);
+
+SELECT ok(
+  (
+    SELECT c.relrowsecurity
+    FROM   pg_class c
+    JOIN   pg_namespace n ON n.oid = c.relnamespace
+    WHERE  n.nspname = 'public'
+    AND    c.relname = 'push_subscriptions'
+    AND    c.relkind = 'r'
+  ),
+  'push_subscriptions table has RLS enabled'
+);
+
+SELECT ok(
+  (
+    SELECT c.relrowsecurity
+    FROM   pg_class c
+    JOIN   pg_namespace n ON n.oid = c.relnamespace
+    WHERE  n.nspname = 'public'
+    AND    c.relname = 'push_preferences'
+    AND    c.relkind = 'r'
+  ),
+  'push_preferences table has RLS enabled'
+);
+
+SELECT ok(
+  (
+    SELECT c.relrowsecurity
+    FROM   pg_class c
+    JOIN   pg_namespace n ON n.oid = c.relnamespace
+    WHERE  n.nspname = 'public'
+    AND    c.relname = 'inbox_watch_state'
+    AND    c.relkind = 'r'
+  ),
+  'inbox_watch_state table has RLS enabled'
 );
 
 -- ----------------------------------------------------------------

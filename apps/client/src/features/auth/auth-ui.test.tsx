@@ -243,6 +243,7 @@ describe("account menu", () => {
       "AcmePro",
       "Side projectWeb client not enabled",
       "Conversation viewOn: replies are grouped with the email they answer",
+      "Notifications",
       "Dashboard settings",
       "Sign out",
     ]);
@@ -256,6 +257,7 @@ describe("account menu", () => {
     await click(q('button[aria-haspopup="menu"]'));
     expect([...host.querySelectorAll('[role="menuitem"]')].map((i) => i.textContent)).toEqual([
       "Conversation viewOn: replies are grouped with the email they answer",
+      "Notifications",
       "Dashboard settings",
       "Sign out",
     ]);

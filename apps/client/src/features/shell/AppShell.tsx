@@ -19,6 +19,7 @@ import { type PaneKind, useUiStore } from "../../state/ui-store";
 import { LogoMark, Spinner, ToastHost } from "../../ui";
 import s from "./AppShell.module.css";
 import { HelpDialog } from "./HelpDialog";
+import { NotificationSettings } from "./NotificationSettings";
 import { InstallPrompt } from "./InstallPrompt";
 import { Splitter } from "./Splitter";
 import { KeyHint, OfflineIndicator, ShellEffects } from "./effects";
@@ -78,6 +79,7 @@ export function AppShell({ sidebar, list, reader, compose, assistant, overlays }
 
   const busy = useAssistantStore((a) => a.busy);
   const helpOpen = useUiStore((u) => u.menu === SHELL_MENU.help);
+  const notificationsOpen = useUiStore((u) => u.menu === SHELL_MENU.notifications);
 
   const layout = useMemo(
     () => computeLayout(vw, { sideW, listW, panelW }, { panelOpen, panelForced, hasSelection }),
@@ -299,6 +301,7 @@ export function AppShell({ sidebar, list, reader, compose, assistant, overlays }
         <OfflineIndicator />
         <KeyHint />
         {helpOpen ? <HelpDialog /> : null}
+        {notificationsOpen ? <NotificationSettings /> : null}
         {/* Phone: a zero-height slot at the bottom of the list / reader row, so
             the toast sits above the dock (and the notice) whatever their height. */}
         <div className={cx(s.toastSlot, phone && showMain && s.toastSlotReader)}>
