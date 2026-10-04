@@ -74,7 +74,15 @@ export function isAllowedPushEndpoint(endpoint: unknown): endpoint is string {
     return false;
   }
   if (url.protocol !== "https:" || url.port !== "" || url.username !== "" || url.password !== "") return false;
+  // The PARSED hostname, never the string: "https://fcm.googleapis.com.evil.example",
+  // "https://evil.example/?fcm.googleapis.com" and "https://fcm.googleapis.com@evil.example"
+  // all contain an allowed host and are none of them.
   const host = url.hostname.toLowerCase();
+  // An IP literal (v6 in brackets, v4 in any spelling the parser normalised to
+  // dotted decimal) and a rooted name ("host.") are never a push service.
+  if (host === "" || host.startsWith("[") || host.endsWith(".") || /^[0-9.]+$/.test(host)) return false;
+  // Exact, or a label boundary in front: ".googleapis.com" style suffixes are
+  // dot-anchored, so "evilfcm.googleapis.com" does not match "fcm.googleapis.com".
   return PUSH_SERVICE_HOSTS.some((allowed) => host === allowed || host.endsWith(`.${allowed}`));
 }
 

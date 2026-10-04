@@ -219,6 +219,73 @@ Deno.test("endpoints: only https URLs on the push services browsers use", () => 
   ]) assert(!isAllowedPushEndpoint(bad), String(bad).slice(0, 60));
 });
 
+Deno.test("endpoints: the allow-list compares the parsed hostname, exactly or at a label boundary (adversarial)", () => {
+  for (const bad of [
+    // An allowed host as a PREFIX, a SUFFIX without a dot, or a substring.
+    "https://fcm.googleapis.com.evil.example",
+    "https://fcm.googleapis.com.evil.example/fcm/send/abc",
+    "https://evilgoogleapis.com/fcm/send/abc",
+    "https://evilfcm.googleapis.com/fcm/send/abc",
+    "https://xpush.apple.com/x",
+    "https://evilnotify.windows.com/x",
+    "https://fcm-googleapis.com/x",
+    "https://googleapis.com/fcm/send/abc",
+    "https://storage.googleapis.com/fcm.googleapis.com/x",
+    // An allowed host anywhere but the host.
+    "https://evil.example/fcm.googleapis.com/fcm/send/abc",
+    "https://evil.example/?h=fcm.googleapis.com",
+    "https://evil.example/#fcm.googleapis.com",
+    "https://evil.example\\@fcm.googleapis.com.evil.example/x",
+    // Userinfo, in every form.
+    "https://fcm.googleapis.com@evil.example/x",
+    "https://fcm.googleapis.com:443@evil.example/x",
+    "https://user@fcm.googleapis.com/x",
+    "https://:pass@fcm.googleapis.com/x",
+    "https://evil.example%2f@fcm.googleapis.com/x",
+    // Schemes.
+    "http://fcm.googleapis.com/x",
+    "HTTP://fcm.googleapis.com/x",
+    "ws://fcm.googleapis.com/x",
+    "wss://fcm.googleapis.com/x",
+    "ftp://fcm.googleapis.com/x",
+    "//fcm.googleapis.com/x",
+    "fcm.googleapis.com/x",
+    "data:text/plain,https://fcm.googleapis.com/",
+    // Ports.
+    "https://fcm.googleapis.com:8443/x",
+    "https://fcm.googleapis.com:80/x",
+    "https://fcm.googleapis.com:0/x",
+    // IP literals, in the spellings a URL parser accepts.
+    "https://127.0.0.1/x",
+    "https://2130706433/x",
+    "https://0x7f.0.0.1/x",
+    "https://017700000001/x",
+    "https://10.0.0.1/x",
+    "https://169.254.169.254/latest/meta-data",
+    "https://[::1]/x",
+    "https://[::ffff:127.0.0.1]/x",
+    "https://[fd00::1]/x",
+    // A rooted name, and things that are not URLs.
+    "https://fcm.googleapis.com./x",
+    "https://fcm.googleapis.com../x",
+    "https:///fcm.googleapis.com.evil.example/x",
+    " ",
+    "https://",
+  ]) assert(!isAllowedPushEndpoint(bad), `accepted: ${bad}`);
+
+  // What stays allowed: the host itself and real subdomains of it, in any case.
+  for (const ok of [
+    "https://fcm.googleapis.com/fcm/send/abc",
+    "https://FCM.GoogleAPIs.com/fcm/send/abc",
+    "https://fcm.googleapis.com:443/fcm/send/abc",
+    "https://updates.push.services.mozilla.com/wpush/v2/x",
+    "https://web.push.apple.com/x",
+    "https://wns2-db5p.notify.windows.com/w/?token=x",
+    // The path may say anything: only the host is the service.
+    "https://fcm.googleapis.com/evil.example/@x?y=https://evil.example",
+  ]) assert(isAllowedPushEndpoint(ok), `refused: ${ok}`);
+});
+
 Deno.test("keys and topics: shape checks", async () => {
   const browser = await newBrowser();
   assert(isP256PublicKey(browser.p256dh));
