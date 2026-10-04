@@ -19,6 +19,8 @@ import { INBOX_NOTICE } from "../../api/inbox-health";
 import { releaseHeldRows } from "../../state/held-rows";
 import { type Inbox, type MessageKey, type MessageRow, folderRefId, isRoleRef, parseFolderRefId } from "../../api/types";
 import {
+  type Conversation,
+  ConversationGrouper,
   type FolderNavItem,
   flushPendingNew,
   mailActions,
@@ -32,7 +34,9 @@ import { DASHBOARD_URL } from "../../config";
 import { pluralize } from "../../lib/format";
 import { useDebouncedValue, useDelayedFlag } from "../../lib/hooks";
 import { useAssistantStore } from "../../state/assistant-store";
+import { setConversationList, useThreadStore } from "../../state/conversation-store";
 import { selectHasMulti, setVisibleKeys, useSelectionStore } from "../../state/selection-store";
+import { selectConversationView, useUiStore } from "../../state/ui-store";
 import { Button, EmptyState, Kbd, Skeleton, Spinner } from "../../ui";
 import { SEARCH_INPUT_ATTR, useShell } from "../shell";
 import s from "./List.module.css";
@@ -41,6 +45,7 @@ import { openRow } from "./open-row";
 import { Row, rowDomId } from "./Row";
 import {
   anchoredOffset,
+  conversationWho,
   emptyState,
   failureNotice,
   folderRefLabel,
@@ -89,7 +94,7 @@ export function ListPane() {
   const { data: inboxes } = useInboxes();
   const { folders } = useFolders(scope);
   const list = useMessageList({ scope, folder, query: deferredQuery });
-  const { rows } = list;
+  const { rows: messageRows } = list;
   const prefetch = usePrefetchMessage();
   usePrefetchNeighbours(selectedKey);
 
@@ -105,6 +110,19 @@ export function ListPane() {
   const listId = `${scope}|${q ? `q:${q}` : folderId}`;
   const rowHeight = phone ? ROW_HEIGHT_TOUCH : ROW_HEIGHT;
   const scrollRef = useRef<HTMLDivElement>(null);
+
+  /* ---- conversations ----
+   * One list row per conversation, standing on its newest message (the head).
+   * The grouper belongs to this list and only does work for rows it has not
+   * seen (data/conversations.ts); everything below works on the heads. */
+  const conversationView = useUiStore(selectConversationView);
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  const grouper = useMemo(() => new ConversationGrouper(), [listId]);
+  const grouped = useMemo(() => grouper.group(messageRows, conversationView), [grouper, messageRows, conversationView]);
+  const conversations = grouped.conversations;
+  const rows = useMemo(() => conversations.map((c) => c.head), [conversations]);
+  const convIds = useMemo(() => conversations.map((c) => c.id), [conversations]);
+  const convIndex = useMemo(() => indexByKey(convIds), [convIds]);
   // Rows held back for one list are not hidden in the next one.
   useEffect(() => releaseHeldRows, [listId]);
 
@@ -122,7 +140,19 @@ export function ListPane() {
   // `step` (j/k) and "select the next row after archive" read this.
   useLayoutEffect(() => {
     setVisibleKeys(keyList);
-  }, [keyList]);
+    setConversationList(grouped);
+  }, [keyList, grouped]);
+
+  // The open message is no longer the newest of its conversation (a reply
+  // arrived, or a link went to an older message): the selection moves to the
+  // row that stands for the conversation, and the reader keeps its place.
+  useEffect(() => {
+    if (!selectedKey || multi) return;
+    const conv = grouped.byKey.get(selectedKey);
+    if (!conv || conv.head.key === selectedKey) return;
+    useThreadStore.getState().wantFocus(selectedKey);
+    useSelectionStore.getState().select(conv.head.key);
+  }, [selectedKey, grouped, multi]);
 
   /* ---- ticking rows for the assistant ---- */
   const [anchorState, setAnchor] = useState<{ list: string; key: MessageKey } | null>(null);
@@ -138,7 +168,8 @@ export function ListPane() {
     for (const _ in leaving) return true;
     return false;
   }, [leaving]);
-  const getItemKey = useCallback((i: number) => rows[i]?.key ?? i, [rows]);
+  // A conversation keeps its React key when a newer message becomes its head.
+  const getItemKey = useCallback((i: number) => convIds[i] ?? i, [convIds]);
   // A row the assistant is removing collapses to nothing; the rows below slide up.
   const estimateSize = useCallback(
     (i: number) => {
@@ -169,7 +200,7 @@ export function ListPane() {
   const listIdRef = useRef(listId);
   /** Set while a list is waiting for its rows: scroll events are not its own yet. */
   const restoring = useRef(true);
-  const prevList = useRef({ id: listId, keys: keyList });
+  const prevList = useRef({ id: listId, keys: convIds });
 
   // Restore this list's own offset when switching to it (once it has rows).
   useLayoutEffect(() => {
@@ -184,15 +215,17 @@ export function ListPane() {
   // Rows inserted or removed above the viewport must not move what is on screen.
   useLayoutEffect(() => {
     const prev = prevList.current;
-    prevList.current = { id: listId, keys: keyList };
-    if (prev.id !== listId || prev.keys === keyList) return;
+    prevList.current = { id: listId, keys: convIds };
+    if (prev.id !== listId || prev.keys === convIds) return;
     const el = scrollRef.current;
     if (!el) return;
-    const next = anchoredOffset(prev.keys, keyIndex, virtualizer.scrollOffset ?? 0, rowHeight);
+    // By conversation, not by head: a conversation whose head changed is
+    // still the same row to anchor on.
+    const next = anchoredOffset(prev.keys, convIndex, virtualizer.scrollOffset ?? 0, rowHeight);
     if (next != null) el.scrollTop = next;
     // rowHeight / virtualizer are read, not reacted to.
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [listId, keyList, keyIndex]);
+  }, [listId, convIds, convIndex]);
 
   const onScroll = useCallback((e: UIEvent<HTMLDivElement>) => {
     if (!restoring.current) scrollOffsets.set(listIdRef.current, e.currentTarget.scrollTop);
@@ -217,12 +250,20 @@ export function ListPane() {
   const activeId =
     selectedKey && selectedIndex >= firstIndex && selectedIndex <= lastIndex ? rowDomId(selectedKey) : undefined;
   const { onLastVisibleIndex } = list;
+  // The hook counts messages; the list shows conversations. Same distance
+  // from the end either way.
+  const folded = messageRows.length - rows.length;
   useEffect(() => {
-    if (lastIndex >= 0) onLastVisibleIndex(lastIndex);
-  }, [lastIndex, onLastVisibleIndex]);
+    if (lastIndex >= 0) onLastVisibleIndex(lastIndex + folded);
+  }, [lastIndex, folded, onLastVisibleIndex]);
 
   /* ---- header ---- */
   const multiInbox = (inboxes?.length ?? 0) > 1;
+  const selfOf = useMemo(() => {
+    const out: Record<string, string> = {};
+    for (const i of inboxes ?? []) out[i.inbox_id] = i.email_address;
+    return out;
+  }, [inboxes]);
   const boxNames = useMemo(() => {
     if (scope !== "all" || !multiInbox) return EMPTY_BOX_NAMES;
     const out: Record<string, string> = {};
@@ -238,7 +279,8 @@ export function ListPane() {
   const isInbox = isRoleRef(folder) && folder.role === "inbox";
   const title = listTitle({ query: q, isInbox, folderName, scopeIsAll: scope === "all", scopeName });
 
-  const loadedUnread = useMemo(() => rows.reduce((n, r) => n + (r.is_read ? 0 : 1), 0), [rows]);
+  // Counts are of emails, whatever the grouping.
+  const loadedUnread = useMemo(() => messageRows.reduce((n, r) => n + (r.is_read ? 0 : 1), 0), [messageRows]);
   // More pages, or mailboxes that have not answered yet: never "N emails" as
   // if that were all of them.
   const incomplete = list.hasNextPage || list.pendingInboxes.length > 0;
@@ -247,11 +289,14 @@ export function ListPane() {
     folderUnread: navItem?.unread,
     folderTotal: navItem?.total,
     listTotal: list.total,
-    loadedCount: rows.length,
+    loadedCount: messageRows.length,
     loadedUnread,
     hasMore: incomplete,
   });
-  const setSize = listSetSize(q ? list.total : (navItem?.total ?? list.total), rows.length, incomplete);
+  // Rows are conversations once anything is grouped: the set is then as big
+  // as the rows loaded, and unknown while more can load.
+  const setSize =
+    folded > 0 ? (incomplete ? -1 : rows.length) : listSetSize(q ? list.total : (navItem?.total ?? list.total), rows.length, incomplete);
   const pendingNames = list.pendingInboxes.map((id) => inboxes?.find((i) => i.inbox_id === id)?.email_address ?? "a mailbox");
   const failure = hasRows ? failureNotice(list.failedInboxes, (id) => inboxes?.find((i) => i.inbox_id === id)?.email_address) : null;
   const empty = emptyState({ query: q, isInbox, folderName, filteredTo: scope !== "all" && multiInbox ? scopeName : null });
@@ -385,23 +430,25 @@ export function ListPane() {
                 style={{ height: virtualizer.getTotalSize() }}
               >
                 {items.map((v) => {
-                  const row = rows[v.index];
-                  if (!row) return null;
+                  const conv = conversations[v.index] as Conversation | undefined;
+                  if (!conv) return null;
+                  const row = conv.head;
                   const view = rowView(row);
                   return (
                     <Row
-                      key={row.key}
+                      key={conv.id}
                       rowKey={row.key}
-                      who={view.who}
+                      who={conv.rows.length > 1 ? conversationWho(conv, selfOf[row.inbox_id] ?? "", view.who) : view.who}
+                      count={conv.count}
                       subject={view.subject}
                       preview={row.preview}
                       date={row.date}
-                      unread={!row.is_read}
-                      starred={row.is_starred}
+                      unread={conv.unread}
+                      starred={conv.starred}
                       canStar={view.canStar}
                       readOnly={!mayWrite}
                       attachable={!view.outgoing}
-                      hasAttachment={row.has_attachments}
+                      hasAttachment={conv.hasAttachment}
                       boxName={boxNames[row.inbox_id] ?? ""}
                       index={v.index}
                       setSize={setSize}

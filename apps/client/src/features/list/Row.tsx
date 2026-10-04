@@ -24,6 +24,8 @@ import { folderRefLabel, rowAriaLabel, rowDecor } from "./model";
 export interface RowProps {
   rowKey: MessageKey;
   who: string;
+  /** Messages in the conversation this row stands for (1: a single email). */
+  count?: number;
   subject: string;
   preview: string;
   /** ISO date. */
@@ -100,6 +102,7 @@ export const Row = memo(function Row(p: RowProps) {
         time,
         status: decor.tag?.text ?? decor.note,
         hasAttachment: p.hasAttachment,
+        count: p.count,
       })}
       data-row={key}
       className={cx(
@@ -136,7 +139,12 @@ export const Row = memo(function Row(p: RowProps) {
               {checked ? <Check size={11} /> : null}
             </span>
           </span>
-          <span className={s.from}>{p.who}</span>
+          <span className={cx(s.from, p.count && p.count > 1 && s.fromCounted)}>{p.who}</span>
+          {p.count && p.count > 1 ? (
+            <span className={s.count} title={`${p.count} messages in this conversation`} aria-hidden="true">
+              {p.count}
+            </span>
+          ) : null}
           {decor.tag ? (
             <span
               data-act="trace"

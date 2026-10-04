@@ -7,6 +7,7 @@
 // imported, and it does so only after guaranteeing its `Deno.serve` cannot run.
 // ---------------------------------------------------------------------------
 
+import type { ImapMessageSummary } from "../mcp-server/imap-client.ts";
 import type { ApiKeyRow, ExecutorOutcome, InboxRow } from "../mcp-server/index.ts";
 
 export type { ApiKeyRow, ExecutorOutcome, InboxRow };
@@ -46,6 +47,10 @@ export interface ImapStatusClient {
   listMailboxes(): Promise<Array<{ name: string; delimiter: string; flags: string[] }>>;
   /** `uid:flags;...` for a sequence range of the selected mailbox, or null. */
   flagsBySequence(first: number, last: number): Promise<string | null>;
+  /** `UID SEARCH <criteria>` in the selected mailbox (the `thread` op). */
+  uidSearch(criteria: string): Promise<number[]>;
+  /** The summary FETCH a listing issues, for these UIDs (the `thread` op). */
+  fetchSummaries(uids: number[], options?: { includePreview?: boolean }): Promise<ImapMessageSummary[]>;
 }
 
 export interface ImapSessionLike {

@@ -45,7 +45,7 @@ beforeEach(async () => {
   window.history.replaceState(null, "", "/all/inbox");
   resetRouterForTests();
   useSelectionStore.setState({ scope: "all", folder: { role: "inbox" }, query: "", selectedKey: null, multiSel: [] });
-  useUiStore.setState({ menu: null, viewport: "desktop", settings: { shortcutsEnabled: true } });
+  useUiStore.setState({ menu: null, viewport: "desktop", settings: { shortcutsEnabled: true, conversationView: true } });
   Object.defineProperty(window, "innerWidth", { value: 1440, configurable: true });
 
   host = document.createElement("div");

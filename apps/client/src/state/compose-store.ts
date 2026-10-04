@@ -1,4 +1,5 @@
 import { create } from "zustand";
+import { isOpenInReader } from "./conversation-store";
 import { getRoute, navigate } from "../app/router";
 import type { DiffSegment } from "../api/assistant-api";
 import type { MessageKey } from "../api/types";
@@ -87,7 +88,7 @@ export interface ComposeStore {
 
 /** Inline (under the email) when it answers the open message, else full pane. */
 export function isInlineCompose(c: ComposeState | null, selectedKey: MessageKey | null): boolean {
-  return !!c && !!c.replyTo && c.replyTo === selectedKey;
+  return !!c && !!c.replyTo && isOpenInReader(c.replyTo, selectedKey);
 }
 
 /** Everything the user can type, as one comparable string. */

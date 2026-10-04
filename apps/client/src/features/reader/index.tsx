@@ -19,7 +19,7 @@ import {
   ShieldCheck,
   Trash2,
 } from "lucide-react";
-import { type ReactNode, useEffect, useId, useLayoutEffect, useMemo, useRef, useState } from "react";
+import { type ReactNode, type RefObject, memo, useEffect, useId, useLayoutEffect, useMemo, useRef, useState } from "react";
 import { describeError, getMailApi, isAbortError } from "../../api";
 import { canGoBack, goBack } from "../../app/router";
 import {
@@ -28,18 +28,29 @@ import {
   FOLDER_ROLE_LABEL,
   type MessageDetail,
   type MessageKey,
+  type MessageRow,
   type ReadEmailAttachmentMeta,
   folderRefId,
   isRoleRef,
   parseKey,
 } from "../../api/types";
-import { findRow, useFolders, useInboxes, useMailActions, useMessage, usePrefetchNeighbours } from "../../data";
+import {
+  conversationKeys,
+  findRow,
+  useConversationThread,
+  useFolders,
+  useInboxes,
+  useMailActions,
+  useMessage,
+  usePrefetchNeighbours,
+} from "../../data";
 import { cx } from "../../lib/cx";
 import { saveBlob } from "../../lib/download";
 import { displayName, formatBytes, formatFullTime } from "../../lib/format";
 import { sanitizeEmailHtml } from "../../lib/sanitize-email-html";
 import { useAssistantStore } from "../../state/assistant-store";
 import { useComposeStore } from "../../state/compose-store";
+import { conversationOf, selectExpanded, selectFocused, useThreadStore } from "../../state/conversation-store";
 import { READ_ONLY_EXPLANATION, canWrite, useCanWrite } from "../../state/permissions";
 import { getVisibleKeys, useSelectionStore } from "../../state/selection-store";
 import { showToast } from "../../state/toast-store";
@@ -49,6 +60,7 @@ import { ComposeCard } from "../compose";
 import { useShell } from "../shell";
 import { EmailFrame } from "./EmailFrame";
 import { restoreFocusSoon } from "./focus";
+import { THREAD_MESSAGE_ATTR, messageSelector, pinnedScrollTop } from "./thread";
 import s from "./Reader.module.css";
 
 /* The reader: toolbar, header, body (plain text or sandboxed HTML),
@@ -57,32 +69,62 @@ import s from "./Reader.module.css";
  * The header and a first line of the body paint from the list row in the same
  * frame as the click; only the body waits for the network, and its skeleton
  * appears after 300 ms.
+ *
+ * A conversation of more than one message is shown as a thread: its messages
+ * in date order, as a list of expandable items. Older ones are collapsed to a
+ * line; the latest, and every unread one, is open. The thread paints from the
+ * rows the list already holds; the `thread` op then adds the messages that sit
+ * in other folders, and what is being read stays where it is.
  */
 
 export function ReaderPane() {
   const { phone, toolbarLabels } = useShell();
   const key = useSelectionStore((x) => x.selectedKey);
   const { message, showBodySkeleton, isBodyPending, error, refetch } = useMessage(key);
-  const inlineCompose = useComposeStore((x) => !!x.compose && x.compose.replyTo != null && x.compose.replyTo === key);
+  const thread = useConversationThread(key);
+  const messages = thread.messages;
+  const isThread = messages.length > 1;
+  // What the thread's state hangs on: the conversation, so a reply arriving
+  // (a new head) does not start it over.
+  const threadId = (key && conversationOf(key)?.id) || key || "";
+  const focusedKey = useThreadStore((t) => (isThread ? t.focused : null));
+  // Reply, Reply all and Forward act on the focused message (default: the latest).
+  const replyKey = isThread && focusedKey && messages.some((m) => m.key === focusedKey) ? focusedKey : key;
+  const inlineCompose = useComposeStore(
+    (x) => !!x.compose && x.compose.replyTo != null && (x.compose.replyTo === key || (isThread && messages.some((m) => m.key === x.compose?.replyTo))),
+  );
+  // (The shell uses the same rule to decide between this and the full-pane editor: `isOpenInReader`.)
   const actions = useMailActions();
   const scroller = useRef<HTMLElement>(null);
   const folderTitle = useFolderTitle();
 
   usePrefetchNeighbours(key);
 
-  // Opening a message marks it read. A separate, quiet flag call: reading
-  // itself never changes the flag. Runs when the open message CHANGES, so
-  // "mark unread" on the open message sticks.
+  // Opening a conversation marks its unread messages read: ONE quiet flag call
+  // with all of them (reading itself never changes the flag). A message is
+  // handled once per opening, when it first shows up here, so "mark unread"
+  // on the open conversation sticks, and a message the `thread` op finds
+  // later (or a reply that arrives) is marked too.
+  const handled = useRef<{ key: MessageKey | null; seen: Set<MessageKey> }>({ key: null, seen: new Set() });
   useEffect(() => {
+    if (handled.current.key !== key) handled.current = { key, seen: new Set() };
     // A read-only member reads without changing the flag: the server would refuse it.
     if (!key || !canWrite()) return;
-    const row = findRow(key);
-    if (row && !row.is_read && row.folder_role !== "drafts") void actions.markRead([key], true, { silent: true });
-  }, [key, actions]);
+    const seen = handled.current.seen;
+    const unread: MessageKey[] = [];
+    for (const m of messages) {
+      if (seen.has(m.key)) continue;
+      seen.add(m.key);
+      if (!m.is_read && m.folder_role !== "drafts") unread.push(m.key);
+    }
+    if (unread.length) void actions.markRead(unread, true, { silent: true });
+  }, [key, messages, actions]);
 
-  // A new message always starts at the top.
+  // A new message always starts at the top. (A thread places itself.)
   useLayoutEffect(() => {
-    if (scroller.current) scroller.current.scrollTop = 0;
+    if (scroller.current && !isThread) scroller.current.scrollTop = 0;
+    // Only when the open message changes.
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [key]);
 
   // Archive / delete / move on the last row (or on phone) closes the reader and
@@ -118,7 +160,7 @@ export function ReaderPane() {
     message.folder_role === "scheduled" ? (
       <ScheduledToolbar messageKey={key} phone={phone} />
     ) : (
-      <Toolbar messageKey={key} labels={toolbarLabels} phone={phone} />
+      <Toolbar messageKey={key} replyKey={replyKey ?? key} labels={toolbarLabels} phone={phone} />
     );
 
   return (
@@ -131,15 +173,28 @@ export function ReaderPane() {
         toolbar
       )}
       <article ref={scroller} className={s.body} aria-label={message.subject || "(no subject)"}>
-        <Header message={message} showTime={toolbarLabels} showBadgeLabel={toolbarLabels} />
-        <Body
-          key={key}
-          message={message}
-          pending={isBodyPending}
-          showSkeleton={showBodySkeleton}
-          failed={!!error}
-          refetch={refetch}
-        />
+        {isThread ? (
+          <ThreadView
+            threadId={threadId}
+            subject={message.subject || "(no subject)"}
+            messages={messages}
+            scroller={scroller}
+            searching={thread.isFetching}
+            partial={thread.partial}
+          />
+        ) : (
+          <>
+            <Header message={message} showTime={toolbarLabels} showBadgeLabel={toolbarLabels} />
+            <Body
+              key={key}
+              message={message}
+              pending={isBodyPending}
+              showSkeleton={showBodySkeleton}
+              failed={!!error}
+              refetch={refetch}
+            />
+          </>
+        )}
         {inlineCompose ? <ComposeCard inline /> : null}
       </article>
       {phone ? toolbar : null}
@@ -232,14 +287,26 @@ function Tool({ label, hint, shortcut, icon, text, onClick, expanded, readOnly }
   );
 }
 
-function Toolbar({ messageKey, labels, phone }: { messageKey: MessageKey; labels: boolean; phone: boolean }) {
+interface ToolbarProps {
+  /** The open row: archive, move, delete and mark unread act on its whole
+   *  conversation (every message of it in the folder on screen). */
+  messageKey: MessageKey;
+  /** The message Reply, Reply all and Forward act on. */
+  replyKey: MessageKey;
+  labels: boolean;
+  phone: boolean;
+}
+
+function Toolbar({ messageKey, replyKey, labels, phone }: ToolbarProps) {
   const moveOpen = useUiStore((u) => u.menu === "move");
   const scope = useSelectionStore((x) => x.scope);
   const currentFolder = useSelectionStore((x) => folderRefId(x.folder));
   const { folders } = useFolders(scope);
   const actions = useMailActions();
   const readOnly = !useCanWrite();
-  const keys = [messageKey];
+  // Read when an action runs, not when the toolbar renders: the conversation
+  // may have grown since.
+  const all = () => conversationKeys(messageKey);
 
   const list = getVisibleKeys();
   const pos = list.indexOf(messageKey);
@@ -250,8 +317,8 @@ function Toolbar({ messageKey, labels, phone }: { messageKey: MessageKey; labels
   const closeMenu = () => useUiStore.getState().setMenu(null);
   const moveTo = (ref: FolderRef) => {
     closeMenu();
-    if (isRoleRef(ref) && ref.role === "archive") void actions.archive(keys);
-    else void actions.move(keys, ref);
+    if (isRoleRef(ref) && ref.role === "archive") void actions.archive(all());
+    else void actions.move(all(), ref);
   };
 
   return (
@@ -260,11 +327,11 @@ function Toolbar({ messageKey, labels, phone }: { messageKey: MessageKey; labels
       role="toolbar"
       aria-label={readOnly ? `Email actions. ${READ_ONLY_EXPLANATION}` : "Email actions"}
     >
-      <Tool readOnly={readOnly} label="Reply" hint="R" shortcut="R" text={labels} icon={<Reply size={15} aria-hidden="true" />} onClick={() => actions.startReply(messageKey, "reply")} />
-      <Tool readOnly={readOnly} label="Reply all" hint="A" shortcut="A" icon={<ReplyAll size={15} aria-hidden="true" />} onClick={() => actions.startReply(messageKey, "reply_all")} />
-      <Tool readOnly={readOnly} label="Forward" hint="F" shortcut="F" text={labels} icon={<Forward size={15} aria-hidden="true" />} onClick={() => actions.startReply(messageKey, "forward")} />
+      <Tool readOnly={readOnly} label="Reply" hint="R" shortcut="R" text={labels} icon={<Reply size={15} aria-hidden="true" />} onClick={() => actions.startReply(replyKey, "reply")} />
+      <Tool readOnly={readOnly} label="Reply all" hint="A" shortcut="A" icon={<ReplyAll size={15} aria-hidden="true" />} onClick={() => actions.startReply(replyKey, "reply_all")} />
+      <Tool readOnly={readOnly} label="Forward" hint="F" shortcut="F" text={labels} icon={<Forward size={15} aria-hidden="true" />} onClick={() => actions.startReply(replyKey, "forward")} />
       {phone ? null : <span className={s.divider} aria-hidden="true" />}
-      <Tool readOnly={readOnly} label="Archive" hint="E" shortcut="E" icon={<Archive size={15} aria-hidden="true" />} onClick={() => void actions.archive(keys)} />
+      <Tool readOnly={readOnly} label="Archive" hint="E" shortcut="E" icon={<Archive size={15} aria-hidden="true" />} onClick={() => void actions.archive(all())} />
       <Tool
         readOnly={readOnly}
         label="Move to folder"
@@ -274,8 +341,8 @@ function Toolbar({ messageKey, labels, phone }: { messageKey: MessageKey; labels
         expanded={moveOpen}
         onClick={() => useUiStore.getState().toggleMenu("move")}
       />
-      <Tool readOnly={readOnly} label="Delete" hint="#" shortcut="#" icon={<Trash2 size={15} aria-hidden="true" />} onClick={() => void actions.trash(keys)} />
-      <Tool readOnly={readOnly} label="Mark unread" hint="U" shortcut="U" icon={<MailOpen size={15} aria-hidden="true" />} onClick={() => void actions.markRead(keys, false)} />
+      <Tool readOnly={readOnly} label="Delete" hint="#" shortcut="#" icon={<Trash2 size={15} aria-hidden="true" />} onClick={() => void actions.trash(all())} />
+      <Tool readOnly={readOnly} label="Mark unread" hint="U" shortcut="U" icon={<MailOpen size={15} aria-hidden="true" />} onClick={() => void actions.markRead(all(), false)} />
       <Menu open={moveOpen && !readOnly} onClose={closeMenu} label="Move to" className={s.moveMenu}>
         <MenuLabel>Move to</MenuLabel>
         {targets.map((t) => (
@@ -426,6 +493,158 @@ function Header({ message, showTime, showBadgeLabel }: { message: MessageDetail;
       ) : null}
     </>
   );
+}
+
+/* ------------------------------------------------------------------
+ * Thread
+ * ------------------------------------------------------------------ */
+
+interface ThreadViewProps {
+  threadId: string;
+  subject: string;
+  /** Oldest first. */
+  messages: MessageRow[];
+  scroller: RefObject<HTMLElement | null>;
+  /** The `thread` op is still looking in other folders. */
+  searching: boolean;
+  partial: boolean;
+}
+
+function ThreadView({ threadId, subject, messages, scroller, searching, partial }: ThreadViewProps) {
+  const { data: inboxes } = useInboxes();
+  const self = inboxes?.find((i) => i.inbox_id === messages[0]?.inbox_id)?.email_address ?? "";
+  const states = useMemo(() => messages.map((m) => ({ key: m.key, is_read: m.is_read })), [messages]);
+  const order = useMemo(() => messages.map((m) => m.key).join("\n"), [messages]);
+
+  /* Messages found in another folder are inserted where their date puts
+   * them, often ABOVE what is being read. The position of the focused
+   * message is read before the DOM changes (during render, like
+   * getSnapshotBeforeUpdate) and put back after. */
+  const pin = useRef<{ thread: string; order: string; key: MessageKey | null; top: number } | null>(null);
+  const el = (key: MessageKey | null) =>
+    key ? (scroller.current?.querySelector<HTMLElement>(messageSelector(key)) ?? null) : null;
+  const offsetOf = (node: HTMLElement | null) =>
+    node && scroller.current ? node.getBoundingClientRect().top - scroller.current.getBoundingClientRect().top : null;
+  const before = pin.current;
+  if (before && before.thread === threadId && before.order !== order) {
+    const top = offsetOf(el(before.key));
+    if (top != null) before.top = top;
+  }
+
+  useLayoutEffect(() => {
+    const store = useThreadStore.getState();
+    const prev = pin.current;
+    store.sync(threadId, states);
+    const focused = useThreadStore.getState().focused;
+    const box = scroller.current;
+    if (box) {
+      if (!prev || prev.thread !== threadId) {
+        // Opened: start at the first message that is open (the first unread,
+        // else the latest). The whole thread's top when that is the first.
+        const first = messages.find((m) => selectExpanded(m.key)(useThreadStore.getState()));
+        const top = first && first !== messages[0] ? offsetOf(el(first.key)) : null;
+        box.scrollTop = top == null ? 0 : pinnedScrollTop(box.scrollTop, 0, top - 12);
+      } else if (prev.order !== order) {
+        const top = offsetOf(el(prev.key));
+        if (top != null) box.scrollTop = pinnedScrollTop(box.scrollTop, prev.top, top);
+      }
+    }
+    pin.current = { thread: threadId, order, key: focused, top: offsetOf(el(focused)) ?? 0 };
+    // `messages` is read for the opening position only; `order` is what changes it.
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [threadId, order, states]);
+
+  // The pin follows the focus (n / p, a click): the next insertion is
+  // measured against what is being read now.
+  const focused = useThreadStore((t) => t.focused);
+  useLayoutEffect(() => {
+    if (pin.current && pin.current.thread === threadId) pin.current.key = focused;
+  }, [focused, threadId]);
+
+  const n = messages.length;
+  return (
+    <>
+      <div className={s.titleRow}>
+        <h1 className={s.subject}>{subject}</h1>
+        <span className={s.threadCount}>{n} messages</span>
+      </div>
+      <ol className={s.thread} aria-label={`Conversation: ${n} messages, oldest first`}>
+        {messages.map((m, i) => (
+          <ThreadMessage key={m.key} row={m} position={i + 1} total={n} self={self} />
+        ))}
+      </ol>
+      {/* Said, not shown: nothing on screen moves while the other folders are searched. */}
+      <span className="sr-only" role="status">
+        {searching ? "Looking for more of this conversation in other folders." : partial ? "Some folders could not be searched. There may be more messages." : ""}
+      </span>
+      {partial && !searching ? <p className={s.threadNote}>Some folders could not be searched. There may be more messages in this conversation.</p> : null}
+    </>
+  );
+}
+
+interface ThreadMessageProps {
+  row: MessageRow;
+  position: number;
+  total: number;
+  /** The mailbox's own address. */
+  self: string;
+}
+
+/** One message of a thread: a header that expands it, and (expanded) its body. */
+const ThreadMessage = memo(function ThreadMessage({ row, position, total, self }: ThreadMessageProps) {
+  const key = row.key;
+  const expanded = useThreadStore(selectExpanded(key));
+  const focused = useThreadStore(selectFocused(key));
+  const bodyId = useId();
+  const mine = !!self && row.from.email.toLowerCase() === self.toLowerCase();
+  const who = mine ? "me" : displayName(row.from);
+  const folder = row.folder_role && row.folder_role !== "inbox" ? FOLDER_ROLE_LABEL[row.folder_role] : "";
+  const to = row.to.map((a) => (self && a.email.toLowerCase() === self.toLowerCase() ? "me" : displayName(a))).join(", ");
+
+  return (
+    <li className={cx(s.msg, expanded && s.msgOpen, focused && s.msgFocused, !row.is_read && s.msgUnread)} {...{ [THREAD_MESSAGE_ATTR]: key }}>
+      <button
+        type="button"
+        className={s.msgHead}
+        aria-expanded={expanded}
+        aria-controls={expanded ? bodyId : undefined}
+        title={expanded ? "Collapse" : "Expand"}
+        onClick={() => useThreadStore.getState().toggle(key)}
+        onFocus={() => useThreadStore.getState().focus(key)}
+      >
+        <Avatar name={row.from.name} email={row.from.email} size="sm" />
+        <span className={s.msgText}>
+          <span className={s.msgWho}>
+            {!row.is_read ? <span className="sr-only">Unread. </span> : null}
+            {who}
+            {row.is_starred ? <span className="sr-only">, starred</span> : null}
+          </span>
+          <span className={s.msgLine}>{expanded ? `to ${to || "(no recipients)"}${folder ? ` · in ${folder}` : ""}` : row.preview}</span>
+        </span>
+        {row.has_attachments ? <span className="sr-only">, has attachment</span> : null}
+        <time className={s.msgTime} dateTime={row.date}>
+          {formatFullTime(row.date)}
+        </time>
+        <span className="sr-only">
+          . Message {position} of {total}
+        </span>
+        <ChevronDown size={14} aria-hidden="true" className={cx(s.chevron, expanded && s.chevronOpen)} />
+      </button>
+      {expanded ? (
+        <div id={bodyId} className={s.msgBody}>
+          <ThreadBody messageKey={key} />
+        </div>
+      ) : null}
+    </li>
+  );
+});
+
+/** The body of one expanded message: read through the same query (and the
+ *  same prefetched cache) as a single open message. */
+function ThreadBody({ messageKey }: { messageKey: MessageKey }) {
+  const { message, showBodySkeleton, isBodyPending, error, refetch } = useMessage(messageKey);
+  if (!message) return null;
+  return <Body message={message} pending={isBodyPending} showSkeleton={showBodySkeleton} failed={!!error} refetch={refetch} />;
 }
 
 /* ------------------------------------------------------------------

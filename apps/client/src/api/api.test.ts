@@ -2,7 +2,7 @@ import { beforeAll, describe, expect, it } from "vitest";
 import { type InboxPage, mergeInboxPages } from "./merge";
 import { MockMailApi } from "./mock/mock-mail-api";
 import { setLatency } from "./mock/latency";
-import { FILLER_COUNT, SEED, generateFiller } from "./mock/seed";
+import { FILLER_COUNT, SEED, THREADS, generateFiller } from "./mock/seed";
 import {
   type MessageRow,
   type PageCursor,
@@ -151,7 +151,7 @@ describe("MockMailApi", () => {
 
   it("pages the unified inbox through every message once", async () => {
     const api = new MockMailApi("pro");
-    const expected = SEED.filter((e) => e.folder === "inbox").length + FILLER_COUNT;
+    const expected = [...SEED, ...THREADS].filter((e) => e.folder === "inbox").length + FILLER_COUNT;
     const keys: string[] = [];
     let cursor: PageCursor | null = null;
     let first = true;
@@ -268,5 +268,44 @@ describe("MockMailApi", () => {
     await expect(api.archiveMessages(["gmail:delta"])).rejects.toThrow();
     expect(api.toRow(api.getMessage("gmail:delta")!).folder_role).toBe("inbox");
     setLatency({ failWrites: false });
+  });
+});
+
+describe("MockMailApi: conversations", () => {
+  it("seeds conversations in every mailbox, keyed the way each provider's server keys them", async () => {
+    const api = new MockMailApi("pro");
+    const key = (inbox: string, id: string) => api.toRow(api.getMessage(`${inbox}:${id}`)!).thread_key;
+    // Outlook: the conversation id. Gmail: the thread id. IMAP: the root Message-ID.
+    expect([key("outlook", "limits-1"), key("outlook", "limits-3")]).toEqual(["o:t-limits-1", "o:t-limits-1"]);
+    expect([key("gmail", "gh-1"), key("gmail", "gh-3")]).toEqual(["g:t-gh-1", "g:t-gh-1"]);
+    expect([key("imap", "dana-1"), key("imap", "dana-4")]).toEqual(["m:dana-1@mock.mail", "m:dana-1@mock.mail"]);
+    const reply = api.toRow(api.getMessage("imap:dana-3")!);
+    expect([reply.in_reply_to, reply.references]).toEqual(["dana-2@mock.mail", ["dana-1@mock.mail", "dana-2@mock.mail"]]);
+    // Everything else is a conversation of one.
+    expect(key("outlook", "maya")).toBe("o:t-maya");
+  });
+
+  it("getThread returns the conversation across Inbox and Sent, oldest first; a sent reply joins it", async () => {
+    const api = new MockMailApi("pro");
+    const thread = await api.getThread("imap:dana-3");
+    expect(thread.rows.map((r) => [r.id, r.folder])).toEqual([
+      ["dana-1", "INBOX"],
+      ["dana-2", "Sent"],
+      ["dana-3", "INBOX"],
+      ["dana-4", "Sent"],
+    ]);
+    expect([thread.thread_key, thread.partial]).toEqual(["m:dana-1@mock.mail", false]);
+    // Only two of the four are in the inbox list.
+    const inbox = await api.listMessages({ scope: "imap", folder: { role: "inbox" }, limit: 50 });
+    expect(inbox.rows.filter((r) => r.thread_key === thread.thread_key).map((r) => r.id)).toEqual(["dana-3", "dana-1"]);
+
+    await api.replyToMessage({ key: "imap:dana-3", body_text: "Signed." });
+    const after = await api.getThread("imap:dana-1");
+    expect(after.rows).toHaveLength(5);
+    const sent = after.rows[4]!;
+    expect([sent.folder, sent.thread_key, sent.in_reply_to]).toEqual(["Sent", "m:dana-1@mock.mail", "dana-3@mock.mail"]);
+    // A trashed message leaves the thread.
+    await api.deleteMessages(["imap:dana-1"]);
+    expect((await api.getThread("imap:dana-3")).rows.map((r) => r.id)).not.toContain("dana-1");
   });
 });

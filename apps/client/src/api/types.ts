@@ -30,6 +30,32 @@ export interface EmailSummary {
   thread_id: string;
   /** Starred / flagged. Sent by the client API on every list and search row. */
   is_flagged?: boolean;
+  /* ---- Conversation threading. Sent by the client API on every list, search
+   *      and thread row; ABSENT from an older server and from rows cached
+   *      before it (such a row is then a conversation of one). ---- */
+  /** RFC 5322 Message-ID without the angle brackets. */
+  message_id_header?: string | null;
+  /** The parent's Message-ID. IMAP and Gmail; null on Outlook. */
+  in_reply_to?: string | null;
+  /** Ancestors' Message-IDs, oldest first (the root is kept when truncated). */
+  references?: string[];
+  /** The conversation, as the server computed it. Opaque apart from its first
+   *  letter: `g:` Gmail thread, `o:` Outlook conversation, `m:` root
+   *  Message-ID, `s:` subject + participants (no headers), `u:` a lone message. */
+  thread_key?: string;
+}
+
+/** The `thread` op's result: the messages of one conversation across folders,
+ *  date ASCENDING, without bodies. */
+export interface ThreadResult {
+  thread_key: string;
+  messages: EmailSummary[];
+  /** Something bounded the answer (a limit, the time budget, a folder that
+   *  could not be searched): there may be more. */
+  partial: boolean;
+  partial_reason?: string;
+  strategy?: string;
+  folders?: string[];
 }
 
 export interface ListInboxResult {
@@ -71,6 +97,9 @@ export interface ReadEmailResult {
   references: string[];
   /** Starred / flagged. Sent by the client API on every `read`. */
   is_flagged?: boolean;
+  /** See EmailSummary. */
+  message_id_header?: string | null;
+  thread_key?: string;
   /** The folder the message is in, as a list row of that folder names it.
    *  Sent by the client API on every `read`; valid as a move destination. */
   folder?: string;
@@ -314,6 +343,14 @@ export type MessageDetail = ReadEmailResult & {
   /** True while this is only the list row dressed up as a detail (body not loaded). */
   is_partial?: boolean;
 };
+
+/** One conversation as the `thread` op returned it, addressed like list rows. */
+export interface MessageThread {
+  thread_key: string;
+  /** Date ascending. */
+  rows: MessageRow[];
+  partial: boolean;
+}
 
 /** Per-inbox offsets for a merged listing. `null` = that inbox is exhausted.
  *  For a single-inbox scope it has exactly one entry, which is the backend's

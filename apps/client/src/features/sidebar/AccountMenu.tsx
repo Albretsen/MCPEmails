@@ -1,10 +1,10 @@
-import { Check, ChevronsUpDown, ExternalLink, LogOut } from "lucide-react";
+import { Check, ChevronsUpDown, ExternalLink, LogOut, MessagesSquare } from "lucide-react";
 import { planDisplayName } from "../../api/types";
 import { signOutEverywhere, switchWorkspace } from "../../app/backend";
 import { activeWorkspace, useAuthStore, useSessionStore } from "../../auth";
 import { DASHBOARD_SETTINGS_URL } from "../../config";
 import { cx } from "../../lib/cx";
-import { useUiStore } from "../../state/ui-store";
+import { selectConversationView, useUiStore } from "../../state/ui-store";
 import { Avatar, Menu, MenuItem, MenuLabel, MenuSeparator } from "../../ui";
 import s from "./Sidebar.module.css";
 
@@ -20,6 +20,7 @@ export function AccountMenu({ rail }: { rail: boolean }) {
   const user = useAuthStore((a) => a.user);
   const session = useSessionStore((x) => x.session);
   const open = useUiStore((u) => u.menu === ACCOUNT_MENU);
+  const conversationView = useUiStore(selectConversationView);
   const workspace = activeWorkspace(session);
   const workspaces = session?.workspaces ?? [];
   const name = session?.user.display_name || user?.name || user?.email || "Account";
@@ -84,6 +85,14 @@ export function AccountMenu({ rail }: { rail: boolean }) {
           </>
         ) : null}
         <MenuSeparator />
+        <MenuItem
+          icon={<MessagesSquare size={15} aria-hidden="true" />}
+          onSelect={run(() => useUiStore.getState().setSetting("conversationView", !conversationView))}
+          sub={conversationView ? "On: replies are grouped with the email they answer" : "Off: every email is its own row"}
+          trailing={conversationView ? <Check size={14} aria-label="On" /> : undefined}
+        >
+          Conversation view
+        </MenuItem>
         <MenuItem icon={<ExternalLink size={15} aria-hidden="true" />} onSelect={run(openSettings)}>
           Dashboard settings
         </MenuItem>
