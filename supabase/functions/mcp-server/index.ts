@@ -23,6 +23,11 @@ import {
   flaggedField,
   isHumanBulk,
   readExtraFields,
+  referencesOfHeaderBlock,
+  threadFields,
+  threadGraphSelect,
+  threadMessageIdField,
+  threadMetadataHeaders,
   wantsFlagged,
   wantsJoinedInlineParts,
   wantsReplyRecipients,
@@ -10270,6 +10275,10 @@ interface EmailSummary {
    * never has this key, so the advertised output schema is unchanged.
    */
   is_flagged?: boolean;
+  /** Threading headers: client-api only (`threadFields` in first-party.ts). */
+  message_id_header?: string | null;
+  in_reply_to?: string | null;
+  references?: string[];
 }
 
 interface ListInboxResult {
@@ -10566,7 +10575,7 @@ async function listGmailMessages(
     pageRefs.map(({ id }) => {
       const mp = new URLSearchParams({ format: "metadata" });
       // Multiple metadataHeaders values must be repeated params.
-      for (const h of ["From", "To", "Subject", "Date"]) {
+      for (const h of ["From", "To", "Subject", "Date", ...threadMetadataHeaders()]) {
         mp.append("metadataHeaders", h);
       }
       return fetch(
@@ -10603,6 +10612,7 @@ async function listGmailMessages(
       folder,
       thread_id: msg.threadId ?? pageRefs[i].threadId,
       ...flaggedField(() => (msg.labelIds ?? []).includes("STARRED")),
+      ...threadFields(() => ({ messageId: hdrs["message-id"], inReplyTo: hdrs["in-reply-to"], references: hdrs["references"] })),
     };
   });
 
@@ -10761,7 +10771,7 @@ async function listOutlookMessages(
     $select:
       "id,conversationId,from,toRecipients,subject,receivedDateTime,bodyPreview,isRead,hasAttachments" +
       // client-api only; for MCP traffic this appends "" and the URL is unchanged.
-      (wantsFlagged() ? ",flag" : ""),
+      (wantsFlagged() ? ",flag" : "") + threadGraphSelect(),
     $top: String(limit + 1),
     $skip: String(offset),
     $orderby: "receivedDateTime desc",
@@ -10821,6 +10831,7 @@ async function listOutlookMessages(
     folder: label || folder,
     thread_id: msg.conversationId ?? msg.id,
     ...flaggedField(() => msg.flag?.flagStatus === "flagged"),
+    ...threadMessageIdField(() => msg.internetMessageId),
   }));
 
   // Exact when known (folder counters, or the last page), null otherwise.
@@ -11145,6 +11156,7 @@ async function listImapMessages(
         folder,
         thread_id: String(s.uid),
         ...flaggedField(() => s.flags.includes("\\Flagged")),
+        ...threadFields(() => ({ messageId: s.envelope.messageId, inReplyTo: s.envelope.inReplyTo, references: referencesOfHeaderBlock(s.referencesHeader) })),
       });
     }
 
@@ -11310,6 +11322,7 @@ async function readImapMessage(
         .map(stripAngleBrackets)
         .filter(Boolean),
       ...readExtraFields(() => ({ is_flagged: msg.flags.includes("\\Flagged"), folder })),
+      ...threadMessageIdField(() => getHeader(h, "message-id")),
     };
   } catch (err) {
     if (err instanceof ImapAuthError) throw new Error("imap_auth_failed");
@@ -11531,6 +11544,7 @@ async function searchImapMessages(
       thread_id: String(s.uid),
       relevance_score: null,
       ...flaggedField(() => s.flags.includes("\\Flagged")),
+      ...threadFields(() => ({ messageId: s.envelope.messageId, inReplyTo: s.envelope.inReplyTo, references: referencesOfHeaderBlock(s.referencesHeader) })),
     }));
 
     return {
@@ -12152,6 +12166,8 @@ interface ReadEmailResult {
    */
   is_flagged?: boolean;
   folder?: string;
+  /** client-api only (`threadMessageIdField` in first-party.ts). */
+  message_id_header?: string | null;
   from: EmailAddressEntry;
   to: EmailAddressEntry[];
   cc: EmailAddressEntry[];
@@ -12577,6 +12593,7 @@ async function readGmailMessage(
       is_flagged: labelIds.includes("STARRED"),
       folder: gmailFolderOfLabels(labelIds),
     })),
+    ...threadMessageIdField(() => hdrs["message-id"]),
   };
 }
 
@@ -12839,6 +12856,7 @@ async function readOutlookMessage(
       is_flagged: msg.flag?.flagStatus === "flagged",
       folder: firstPartyFolder,
     })),
+    ...threadMessageIdField(() => msg.internetMessageId),
   };
 }
 
@@ -17684,7 +17702,7 @@ async function searchGmailMessages(
   const metaResults = await Promise.all(
     pageRefs.map(({ id }) => {
       const mp = new URLSearchParams({ format: "metadata" });
-      for (const h of ["From", "To", "Subject", "Date"]) {
+      for (const h of ["From", "To", "Subject", "Date", ...threadMetadataHeaders()]) {
         mp.append("metadataHeaders", h);
       }
       return fetch(
@@ -17730,6 +17748,7 @@ async function searchGmailMessages(
       thread_id: msg.threadId ?? pageRefs[i].threadId,
       relevance_score: null,
       ...flaggedField(() => labelIds.includes("STARRED")),
+      ...threadFields(() => ({ messageId: hdrs["message-id"], inReplyTo: hdrs["in-reply-to"], references: hdrs["references"] })),
     };
   });
 
@@ -17944,6 +17963,7 @@ async function searchOutlookMessages(
     thread_id: msg.conversationId ?? msg.id,
     relevance_score: null,
     ...flaggedField(() => msg.flag?.flagStatus === "flagged"),
+    ...threadMessageIdField(() => msg.internetMessageId),
   }));
 
   return {

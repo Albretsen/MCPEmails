@@ -487,7 +487,8 @@ Deno.test("batch: one failing call fills its own slot and the rest still run", a
   assertEquals(body.results[1].error.code, "not_found");
   assertEquals(body.results[2].error.code, "invalid_request");
   assertEquals(body.results[3].error.code, "invalid_request");
-  assertEquals(body.results[4].result, { id: "b" });
+  // A read result carries its conversation key (mail/thread-key.ts).
+  assertEquals(body.results[4].result, { id: "b", thread_key: "u:b" });
 });
 
 Deno.test("batch: more than 12 calls, an empty list and a non-array are refused", async () => {

@@ -27,6 +27,8 @@ import { type HealthRow, type InboxHealth, reconnectMessage } from "./health.ts"
 import { type ExecutorCall, OPS, type OpSpec } from "./ops.ts";
 import { withFolderRoles } from "./roles.ts";
 import { mailboxStatus } from "./status.ts";
+import { mailThread, type ThreadArgs } from "./thread.ts";
+import { withThreadKeys } from "./thread-key.ts";
 
 const UUID_RE = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
 
@@ -191,6 +193,8 @@ export function firstPartyFor(
     priority?: "interactive" | "background";
     /** IMAP listing: octets of part one fetched per row for the preview (0: none). */
     previewBytes?: number;
+    /** See `OpSpec.threads`. */
+    threads?: boolean;
     timings: OpTimings;
   },
 ): FirstPartyContext {
@@ -210,6 +214,7 @@ export function firstPartyFor(
     cleanPreview: true,
     joinInlineParts: true,
     listPreviewBytes: options.previewBytes,
+    threadHeaders: options.threads === true,
     inboxRow: options.fresh ? undefined : (id, workspaceId) => env.inboxes.get(id, workspaceId),
     rememberInboxRow: (row) => {
       env.inboxes.remember(row as InboxRow);
@@ -325,6 +330,7 @@ export async function runExecutor(
     freshList?: boolean;
     priority?: "interactive" | "background";
     previewBytes?: number;
+    threads?: boolean;
     timings: OpTimings;
     apiKey?: ApiKeyRow;
   },
@@ -344,6 +350,7 @@ export async function runExecutor(
     freshList: options.freshList,
     priority: options.priority,
     previewBytes: options.previewBytes,
+    threads: options.threads,
     human: apiKey.firstPartyHuman === true,
     timings: options.timings,
   });
@@ -538,6 +545,41 @@ export async function runMailOp(
       }
     }
 
+    if (spec.special === "thread") {
+      assertReachable(env, inboxId);
+      const started = performance.now();
+      const context = firstPartyFor(env, {
+        scope: inboxId!,
+        flow,
+        flagged: true,
+        threads: true,
+        uidOnly: true,
+        priority: spec.priority,
+        timings,
+      });
+      try {
+        const result = await firstPartyContext.run(
+          context,
+          () => mailThread(env.mcp, env.apiKey, inboxId!, calls[0].args as unknown as ThreadArgs, env.now),
+        );
+        return { type: "json", result, timings };
+      } finally {
+        timings.providerMs += performance.now() - started;
+      }
+    }
+
+    // `inboxes.provider`, for ops whose result depends on it. The executor that
+    // just ran loaded (and cached) the row; the lookup is the fallback for a
+    // cache that has since been cleared.
+    const providerOf = async (): Promise<string | null> => {
+      if (!inboxId) return null;
+      const cached = env.inboxes.get(inboxId, env.apiKey.workspace_id)?.provider ?? null;
+      if (cached !== null) return cached;
+      const context = firstPartyFor(env, { scope: inboxId, flow, timings });
+      return (await firstPartyContext.run(context, () => env.mcp.resolveInbox(inboxId, env.apiKey))
+        .catch(() => null))?.provider ?? null;
+    };
+
     const results: unknown[] = [];
     for (const call of calls) {
       const outcome = await runExecutor(env, call, {
@@ -548,6 +590,7 @@ export async function runMailOp(
         freshList: spec.freshList,
         priority: spec.priority,
         previewBytes: request.op === "list" && request.args?.["preview"] === false ? 0 : undefined,
+        threads: spec.threads,
         fresh: spec.kind === "send",
         // Two executor calls must not share one ledger row.
         idempotencyKey: idempotencyKey === undefined
@@ -590,18 +633,9 @@ export async function runMailOp(
       timings.providerMs += performance.now() - started;
       return { type: "json", result: withRoles, timings };
     }
+    if (spec.threads) return { type: "json", result: withThreadKeys(json[0], await providerOf()), timings };
     if (!spec.combine) return { type: "json", result: json[0], timings };
-    let provider: string | null = null;
-    if (spec.needsProvider && inboxId) {
-      // The executor that just ran loaded (and cached) the row; the lookup
-      // below is the fallback for a cache that has since been cleared.
-      provider = env.inboxes.get(inboxId, env.apiKey.workspace_id)?.provider ?? null;
-      if (provider === null) {
-        const context = firstPartyFor(env, { scope: inboxId, flow, timings });
-        provider = (await firstPartyContext.run(context, () => env.mcp.resolveInbox(inboxId, env.apiKey))
-          .catch(() => null))?.provider ?? null;
-      }
-    }
+    const provider = spec.needsProvider ? await providerOf() : null;
     return { type: "json", result: spec.combine(json, calls, { provider }), timings };
   })();
 

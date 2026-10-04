@@ -78,6 +78,11 @@ export interface FakeServerOptions {
   stall?: (command: string) => boolean;
   /** How long a read waits for the server before failing. Default 2000. */
   readTimeoutMs?: number;
+  /**
+   * `UID SEARCH` with a HEADER key answers OK with no hits, whatever is asked:
+   * what Migadu does. Added for client-api's `thread` op tests.
+   */
+  headerSearchBroken?: boolean;
 }
 
 const CRLF = "\r\n";
@@ -202,6 +207,52 @@ function partOneOf(raw: string): string {
     return splitRaw(first).body;
   }
   return body;
+}
+
+/**
+ * A small evaluator for the UID SEARCH keys client-api's `thread` op sends:
+ * `OR a b`, `HEADER <field> <string>`, `SUBJECT <string>`, `SINCE <date>`,
+ * with juxtaposition meaning AND. Returns null for anything else.
+ */
+function searchPredicate(criteria: string): ((message: FakeMessage) => boolean) | null {
+  let rest = criteria;
+  const word = (): string => {
+    const arg = takeArgument(rest);
+    rest = arg.rest;
+    return arg.value;
+  };
+  const header = (message: FakeMessage, name: string): string =>
+    (parseHeaders(splitRaw(message.raw).head).get(name.toLowerCase()) ?? []).join(" ");
+  const key = (): ((message: FakeMessage) => boolean) | null => {
+    const name = word().toUpperCase();
+    if (name === "OR") {
+      const a = key();
+      const b = key();
+      return a && b ? (m) => a(m) || b(m) : null;
+    }
+    if (name === "HEADER") {
+      const field = word();
+      const value = word().toLowerCase();
+      return (m) => header(m, field).toLowerCase().includes(value);
+    }
+    if (name === "SUBJECT") {
+      const value = word().toLowerCase();
+      return (m) => header(m, "subject").toLowerCase().includes(value);
+    }
+    if (name === "SINCE") {
+      const at = Date.parse(`${word().replace(/-/g, " ")} 00:00:00 +0000`);
+      return (m) => Date.parse(header(m, "date")) >= at;
+    }
+    if (name === "ALL") return () => true;
+    return null;
+  };
+  const all: Array<(message: FakeMessage) => boolean> = [];
+  while (rest.trim() !== "") {
+    const next = key();
+    if (!next) return null;
+    all.push(next);
+  }
+  return all.length > 0 ? (m) => all.every((p) => p(m)) : null;
 }
 
 export class FakeImapServer {
@@ -373,8 +424,13 @@ export class FakeImapServer {
         continue;
       }
       const parts: string[] = [];
-      for (const item of items.split(/\s+/)) {
-        if (item === "UID") parts.push(`UID ${uid}`);
+      // The one item with a space in it is given a spaceless stand-in first.
+      for (const item of items.replace("BODY.PEEK[HEADER.FIELDS (REFERENCES)]", "REFERENCES-HEADER").split(/\s+/)) {
+        if (item === "REFERENCES-HEADER") {
+          const value = parseHeaders(splitRaw(message.raw).head).get("references")?.[0];
+          const block = value === undefined ? CRLF : `References: ${value}${CRLF}${CRLF}`;
+          parts.push(`BODY[HEADER.FIELDS (REFERENCES)] {${block.length}}${CRLF}${block}`);
+        } else if (item === "UID") parts.push(`UID ${uid}`);
         else if (item === "FLAGS") parts.push(`FLAGS (${message.flags.join(" ")})`);
         else if (item === "ENVELOPE") parts.push(`ENVELOPE ${envelopeOf(message.raw)}`);
         else if (item === "BODYSTRUCTURE") parts.push(`BODYSTRUCTURE ${bodyStructureOf(message.raw)}`);
@@ -519,7 +575,11 @@ export class FakeImapServer {
       else if (/^UID /.test(criteria)) {
         const wanted = new Set(parseSet(criteria.slice(4), live[live.length - 1]?.uid ?? 0));
         hits = live.filter((m) => wanted.has(m.uid));
-      } else return `${tag} BAD Unsupported search in the fake${CRLF}`;
+      } else {
+        const predicate = searchPredicate(criteria);
+        if (!predicate) return `${tag} BAD Unsupported search in the fake${CRLF}`;
+        hits = this.#options.headerSearchBroken && /\bHEADER\b/i.test(criteria) ? [] : live.filter(predicate);
+      }
       return `* SEARCH${hits.map((m) => ` ${m.uid}`).join("")}${CRLF}` + ok("SEARCH completed");
     }
 

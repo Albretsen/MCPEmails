@@ -31,7 +31,12 @@ export interface OpSpec {
   /** Ask list/search for `is_flagged` on each row, and read for `is_flagged` + `folder`. */
   flagged?: boolean;
   /** Handled by client-api itself rather than by an executor. */
-  special?: "status" | "attachment";
+  special?: "status" | "attachment" | "thread";
+  /**
+   * Rows carry the threading headers (`message_id_header`, `in_reply_to`,
+   * `references`) and the `thread_key` computed from them (mail/thread-key.ts).
+   */
+  threads?: boolean;
   /**
    * IMAP: every command this op sends after SELECT addresses messages by UID
    * (UID FETCH / STORE / MOVE / SEARCH / EXPUNGE). The session pool may then
@@ -264,6 +269,7 @@ export const OPS: Record<string, OpSpec> = {
     needsInbox: true,
     idempotency: "none",
     flagged: true,
+    threads: true,
     priority: "interactive",
     build(args) {
       // `preview: false` is read by runMailOp (no body bytes are fetched on
@@ -288,6 +294,7 @@ export const OPS: Record<string, OpSpec> = {
     idempotency: "none",
     // The result carries `is_flagged` and `folder` (see first-party.ts).
     flagged: true,
+    threads: true,
     uidOnly: true,
     priority: "interactive",
     build(args) {
@@ -337,6 +344,7 @@ export const OPS: Record<string, OpSpec> = {
     needsInbox: true,
     idempotency: "none",
     flagged: true,
+    threads: true,
     uidOnly: true,
     build(args) {
       const text = ["text", "from", "to", "cc", "subject", "body", "since", "before", "query"];
@@ -353,6 +361,30 @@ export const OPS: Record<string, OpSpec> = {
           include_folders: strList(args, "include_folders", "search", { max: MAX_FOLDERS, maxChars: 1024 }),
           limit: int(args, "limit", "search", 1, 100) ?? 50,
           offset: int(args, "offset", "search", 0, 1_000_000) ?? 0,
+        }),
+      }];
+    },
+  },
+
+  // The messages of one conversation across folders, without bodies. The
+  // contract, the per-provider behaviour and the bounds are in mail/thread.ts.
+  thread: {
+    kind: "read",
+    needsInbox: true,
+    idempotency: "none",
+    special: "thread",
+    flagged: true,
+    threads: true,
+    uidOnly: true,
+    // Behind a `read` the person is waiting for, ahead of nothing.
+    build(args) {
+      only(args, ["message_id", "thread_key", "limit"], "thread");
+      return [{
+        tool: "thread",
+        args: defined({
+          message_id: str(args, "message_id", "thread", { required: true }),
+          thread_key: str(args, "thread_key", "thread", { max: MAX_ID_CHARS }),
+          limit: int(args, "limit", "thread", 1, 100),
         }),
       }];
     },

@@ -40,6 +40,11 @@ Deno.test("list (gmail): rows are the MCP rows plus is_flagged from the STARRED 
     "folder",
     "thread_id",
     "is_flagged",
+    // Conversation threading (thread.test.ts).
+    "message_id_header",
+    "in_reply_to",
+    "references",
+    "thread_key",
   ]);
 });
 
@@ -220,7 +225,7 @@ Deno.test("list (outlook): is_flagged from flag.flagStatus, and `flag` is select
   const viaClient = await harness.runTool(await harness.inboxRow("outlook"), graphHandler(selects), () => app.mail("list", { folder: "inbox", limit: 10 }));
   assertEquals(viaClient.value.status, 200, JSON.stringify(viaClient.value.body));
   assertEquals(viaClient.value.body.messages.map((m: { id: string; is_flagged: boolean }) => [m.id, m.is_flagged]), [["o1", true], ["o2", false]]);
-  assert(selects.every((s) => s.endsWith(",flag")), selects.join(" | "));
+  assert(selects.every((s) => s.endsWith(",flag,internetMessageId")), selects.join(" | "));
 
   const mcpSelects: string[] = [];
   const viaMcp = await harness.runTool(await harness.inboxRow("outlook"), graphHandler(mcpSelects), () =>

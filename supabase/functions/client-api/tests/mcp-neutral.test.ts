@@ -51,7 +51,9 @@ async function mcpToolsCall(name: string, args: Record<string, unknown>, world: 
 function withoutFlag(rows: Record<string, unknown>[]): Record<string, unknown>[] {
   return rows.map((row) => {
     const copy = { ...row };
-    delete copy["is_flagged"];
+    // Everything client-api adds to a row: the star, and the conversation
+    // threading fields (thread.test.ts).
+    for (const key of ["is_flagged", "message_id_header", "in_reply_to", "references", "thread_key"]) delete copy[key];
     return copy;
   });
 }
@@ -77,7 +79,12 @@ Deno.test("MCP tools/call list: no is_flagged on the wire, and byte-identical to
   assertEquals(JSON.stringify(withoutFlag(clientRows)), JSON.stringify(mcpRows), "identical bytes once is_flagged is removed");
 
   // And the provider saw the same requests either way.
-  assertEquals(harness.requestMultiset(viaClient.world), harness.requestMultiset(viaMcp.world));
+  // And the provider saw the same requests either way, but for the three
+  // header names client-api adds to each metadata get it was already making.
+  const threadHeaders = "&metadataHeaders=Message-ID&metadataHeaders=In-Reply-To&metadataHeaders=References";
+  const clientRequests = harness.requestMultiset(viaClient.world);
+  assert(clientRequests.some((r) => r.includes(threadHeaders)));
+  assertEquals(clientRequests.map((r) => r.replace(threadHeaders, "")).sort(), harness.requestMultiset(viaMcp.world));
 });
 
 Deno.test("MCP tools/call search: no is_flagged on the wire either", async () => {

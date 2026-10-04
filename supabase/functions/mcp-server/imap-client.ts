@@ -26,7 +26,13 @@ import {
   type PreviewPartInfo,
 } from "./text-extract.ts";
 import { connectGuardedTcp } from "./host-guard.ts";
-import { firstPartyContext, summaryPreviewItem, wantsCleanPreview } from "./first-party.ts";
+import {
+  firstPartyContext,
+  summaryPreviewItem,
+  summaryReferencesItem,
+  wantsCleanPreview,
+  wantsThreadHeaders,
+} from "./first-party.ts";
 import { decodeModifiedUtf7, encodeModifiedUtf7 } from "./utf7.ts";
 import { parseCopyUid } from "./imap-copyuid.ts";
 import {
@@ -235,6 +241,8 @@ export interface ImapEnvelope {
   to: ImapAddress[];
   date: string;
   messageId: string;
+  /** ENVELOPE's in-reply-to field, verbatim; "" when NIL. */
+  inReplyTo?: string;
 }
 
 export interface ImapMessageSummary {
@@ -244,6 +252,11 @@ export interface ImapMessageSummary {
   hasAttachments: boolean;
   /** Best-effort plain-text preview (≤200 chars); "" when unavailable. */
   preview: string;
+  /**
+   * The raw `References:` header block. Present only when the FETCH asked for
+   * it, which only a client-api call does (`summaryReferencesItem`).
+   */
+  referencesHeader?: string;
 }
 
 export interface ImapRawMessage {
@@ -1233,8 +1246,9 @@ export class ImapClient {
     const previewPart = options.includePreview === false
       ? ""
       : summaryPreviewItem();
+    // `summaryReferencesItem()` is "" for every MCP call (first-party.ts).
     await this.write(
-      `${tag} ${verb} ${set} (UID FLAGS ENVELOPE BODYSTRUCTURE${previewPart})${CRLF}`,
+      `${tag} ${verb} ${set} (UID FLAGS ENVELOPE BODYSTRUCTURE${previewPart}${summaryReferencesItem()})${CRLF}`,
     );
     const resp = await this.readTagged(tag, {
       maxLiteralBytes: options.maxLiteralBytes,
@@ -2778,6 +2792,7 @@ function parseFetchLine(line: string): ImapMessageSummary | null {
   const clean = wantsCleanPreview();
   let structure: Token[] | null = null;
   let previewSource: string | null = null;
+  let referencesHeader: string | undefined;
 
   for (let i = 0; i < attrs.length; i++) {
     const key = attrs[i];
@@ -2791,6 +2806,17 @@ function parseFetchLine(line: string): ImapMessageSummary | null {
       hasAttachments = bodyStructureHasAttachment(attrs[i + 1] as Token[]);
       structure = attrs[i + 1] as Token[];
     } else if (
+      // `BODY[HEADER.FIELDS (REFERENCES)] <string>` tokenizes as the atom
+      // "BODY[HEADER.FIELDS", the list, the atom "]", then the value. Only a
+      // client-api FETCH asks for it; without this branch the value is ignored
+      // exactly as before (it is never mistaken for the preview: the token
+      // after "BODY[HEADER.FIELDS" is a list, not a string).
+      key === "BODY[HEADER.FIELDS" && Array.isArray(attrs[i + 1]) && attrs[i + 2] === "]" &&
+      typeof attrs[i + 3] === "string"
+    ) {
+      referencesHeader = attrs[i + 3] as string;
+      i += 3;
+    } else if (
       typeof key === "string" && key.startsWith("BODY[") &&
       typeof attrs[i + 1] === "string"
     ) {
@@ -2803,6 +2829,7 @@ function parseFetchLine(line: string): ImapMessageSummary | null {
   }
 
   if (!uid) return null;
+  if (referencesHeader !== undefined) return { uid, flags, envelope, hasAttachments, preview, referencesHeader };
   return { uid, flags, envelope, hasAttachments, preview };
 }
 
@@ -2833,6 +2860,8 @@ function parseEnvelope(env: Token[]): ImapEnvelope {
     to,
     date: date ? normalizeDate(date) : new Date().toISOString(),
     messageId: messageId || "",
+    // client-api only; an MCP call's envelope object has the keys it always had.
+    ...(wantsThreadHeaders() ? { inReplyTo: asStr(env[8]) || "" } : {}),
   };
 }
 

@@ -576,7 +576,10 @@ Deno.test("list (imap): previews are clean for client-api and byte-identical to 
 
   const bare = await harness.runTool(inbox, none, () => app.mail("list", { folder: "INBOX", limit: 10, preview: false }));
   assertEquals(bare.value.body.messages.map((r: { preview: string }) => r.preview), ["", "", ""]);
-  assert(pool.servers[0].commands.some((c) => /^FETCH .*BODYSTRUCTURE\)$/.test(c)), "preview:false fetches no body bytes");
+  assert(
+    pool.servers[0].commands.some((c) => /^FETCH .*BODYSTRUCTURE BODY\.PEEK\[HEADER\.FIELDS \(REFERENCES\)\]\)$/.test(c)),
+    "preview:false fetches no body bytes (the References header is not body)",
+  );
   await pool.closeAll();
 
   const plainPool = new FakeDialPool(imapServer(boxes));
@@ -594,6 +597,6 @@ Deno.test("list (imap): previews are clean for client-api and byte-identical to 
   ]);
   assert(hasCss(String(mcpRows[2]["preview"])));
   assert(plainPool.servers[0].commands.some((c) => c.includes("BODY.PEEK[1]<0.2048>")), "and the FETCH it sends is the same");
-  const strip = (rows: Record<string, unknown>[]) => rows.map(({ preview: _p, is_flagged: _f, ...rest }) => rest);
+  const strip = (rows: Record<string, unknown>[]) => rows.map(({ preview: _p, is_flagged: _f, message_id_header: _m, in_reply_to: _i, references: _r, thread_key: _k, ...rest }) => rest);
   assertEquals(JSON.stringify(strip(clientRows)), JSON.stringify(strip(mcpRows)), "nothing but the preview differs");
 });

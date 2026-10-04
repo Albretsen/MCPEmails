@@ -125,7 +125,11 @@ Deno.test("read (gmail): carries is_flagged and folder; the MCP result has neith
   const stripped = { ...viaClient.value.body };
   delete stripped.is_flagged;
   delete stripped.folder;
-  assertEquals(JSON.stringify(stripped), JSON.stringify(result.structuredContent), "identical bytes once the two keys are removed");
+  // Conversation threading: the Message-ID and the key computed from it.
+  assertEquals(typeof stripped.thread_key, "string");
+  delete stripped.message_id_header;
+  delete stripped.thread_key;
+  assertEquals(JSON.stringify(stripped), JSON.stringify(result.structuredContent), "identical bytes once the client-only keys are removed");
   assertEquals(harness.requestMultiset(viaClient.world), harness.requestMultiset(viaMcp.world), "same provider requests");
 });
 
