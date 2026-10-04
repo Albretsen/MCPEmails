@@ -24,13 +24,20 @@ function chainedHtmlPreviewText(html: string): string {
   const NON_TEXT = "style|script|head|title|noscript|template|svg|xml";
   const INLINE =
     /<\/?(?:a|abbr|b|big|code|em|font|i|label|mark|s|small|span|strike|strong|sub|sup|tt|u|wbr)\b[^>]*>/gi;
-  const text = html
-    .replace(/&shy;/gi, "")
-    .replace(/<!--[\s\S]*?(?:-->|$)/g, " ")
-    .replace(new RegExp(`<(${NON_TEXT})\\b[\\s\\S]*?(?:<\\/\\1\\s*>|$)`, "gi"), " ")
-    .replace(INLINE, "")
-    .replace(/<[^>]*>/g, " ")
-    .replace(/<[^>]*$/, " ");
+  // Applied until nothing changes, so the reference itself cannot leave markup
+  // behind. On ordinary mail the first pass already removes everything, which
+  // is what the parity test below relies on.
+  let text = html.replace(/&shy;/gi, "");
+  let previous: string;
+  do {
+    previous = text;
+    text = text
+      .replace(/<!--[\s\S]*?(?:-->|$)/g, " ")
+      .replace(new RegExp(`<(${NON_TEXT})\\b[\\s\\S]*?(?:<\\/\\1\\s*>|$)`, "gi"), " ")
+      .replace(INLINE, "")
+      .replace(/<[^>]*>/g, " ")
+      .replace(/<[^>]*$/, " ");
+  } while (text !== previous);
   return decodeHtmlEntities(text).replace(/&#?[a-zA-Z0-9]{0,31}$/, "");
 }
 
