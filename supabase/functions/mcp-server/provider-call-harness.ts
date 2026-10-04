@@ -210,6 +210,7 @@ applyEnv(envBeforeImport);
 export const executeListDrafts = server.executeListDrafts;
 export const executeListInbox = server.executeListInbox;
 export const executeReadEmails = server.executeReadEmails;
+export const executeReadEmail = server.executeReadEmail;
 
 /** The API key projection the executors read. Full scopes, no inbox allowlist. */
 // deno-lint-ignore no-explicit-any

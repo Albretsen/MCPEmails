@@ -30,10 +30,13 @@
 //                    `cleanPreviewFromBodyPart` in text-extract.ts.
 //   listPreviewBytes how much of part one an IMAP listing fetches for that
 //                    preview (0: none, the rows then carry `preview: ""`).
-//   joinInlineParts  an IMAP `email_read` joins the inline text parts of a
-//                    multipart/mixed message in order instead of keeping only
-//                    the first, so a forwarded message's `body_text` holds the
-//                    note AND the original. See `parseEmailJoined` in mime.ts.
+//   exactOctets      an IMAP `email_read` restores the exact octets of an 8bit
+//                    message before decoding it (see `parseEmailJoined` in
+//                    mime.ts). This was `joinInlineParts` until 2026-10-04,
+//                    when joining the inline text parts of a multipart/mixed
+//                    became what every read does, MCP included; the octet
+//                    repair is the part that still differs, because turning it
+//                    on for MCP would change a single-part body's bytes.
 //
 // All of it rides one AsyncLocalStorage. NOTHING in the MCP server ever opens
 // this store: `handleRequest` does not call `firstPartyContext.run`, so for
@@ -82,8 +85,8 @@ export interface FirstPartyContext {
   cleanPreview?: boolean;
   /** Octets of part one an IMAP listing fetches for the preview; 0 fetches none. */
   listPreviewBytes?: number;
-  /** IMAP `email_read` joins every inline text part of a multipart/mixed message. */
-  joinInlineParts?: boolean;
+  /** IMAP `email_read` decodes an 8bit message from its exact octets. */
+  exactOctets?: boolean;
 }
 
 /** Opened by client-api around each executor call; absent for MCP traffic. */
@@ -145,7 +148,7 @@ export function summaryPreviewItem(): string {
   return ` BODY.PEEK[1]<0.${Math.min(bytes, 8192)}>`;
 }
 
-/** True only inside a client-api read: inline text parts are joined. */
-export function wantsJoinedInlineParts(): boolean {
-  return firstPartyContext.getStore()?.joinInlineParts === true;
+/** True only inside a client-api read: an 8bit message is decoded from its exact octets. */
+export function wantsExactOctets(): boolean {
+  return firstPartyContext.getStore()?.exactOctets === true;
 }
