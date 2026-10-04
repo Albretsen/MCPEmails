@@ -51,7 +51,9 @@ async function mcpToolsCall(name: string, args: Record<string, unknown>, world: 
 function withoutFlag(rows: Record<string, unknown>[]): Record<string, unknown>[] {
   return rows.map((row) => {
     const copy = { ...row };
-    delete copy["is_flagged"];
+    // Everything client-api adds to a row: the star, and the conversation
+    // threading fields (thread.test.ts).
+    for (const key of ["is_flagged", "message_id_header", "in_reply_to", "references", "thread_key"]) delete copy[key];
     return copy;
   });
 }
@@ -77,7 +79,12 @@ Deno.test("MCP tools/call list: no is_flagged on the wire, and byte-identical to
   assertEquals(JSON.stringify(withoutFlag(clientRows)), JSON.stringify(mcpRows), "identical bytes once is_flagged is removed");
 
   // And the provider saw the same requests either way.
-  assertEquals(harness.requestMultiset(viaClient.world), harness.requestMultiset(viaMcp.world));
+  // And the provider saw the same requests either way, but for the three
+  // header names client-api adds to each metadata get it was already making.
+  const threadHeaders = "&metadataHeaders=Message-ID&metadataHeaders=In-Reply-To&metadataHeaders=References";
+  const clientRequests = harness.requestMultiset(viaClient.world);
+  assert(clientRequests.some((r) => r.includes(threadHeaders)));
+  assertEquals(clientRequests.map((r) => r.replace(threadHeaders, "")).sort(), harness.requestMultiset(viaMcp.world));
 });
 
 Deno.test("MCP tools/call search: no is_flagged on the wire either", async () => {
@@ -156,4 +163,133 @@ Deno.test("structure: an authenticated MCP key row can never carry the marker", 
   const body = source.slice(start, end);
   assert(!body.includes("firstPartyHuman"), "authenticateRequest does not mention the marker");
   assert(!/select\(\s*["'`]\*["'`]\s*\)/.test(body), "the key row is selected by named columns, not *");
+});
+
+// ── What differs for MCP after the integration, and what does not ───────────
+//
+// Two changes meet in a row. The read fixes (one byte-exact IMAP reader, one
+// preview generator, raw 8-bit headers decoded) apply to EVERY caller, MCP
+// included. Conversation threading (`message_id_header`, `in_reply_to`,
+// `references`, `thread_key`, and the References item of the FETCH) is
+// first-party only. This pins exactly that split on one mailbox.
+
+const THREAD_KEYS = ["message_id_header", "in_reply_to", "references", "thread_key"];
+
+Deno.test("MCP IMAP list: the read fixes apply (decoded subject, clean preview); the threading fields and FETCH item do not", async () => {
+  const utf8 = (text: string) => {
+    let out = "";
+    for (const byte of new TextEncoder().encode(text)) out += String.fromCharCode(byte);
+    return out;
+  };
+  const message = (uid: number, subject: string, type: string, body: string, extra: string[] = []) => ({
+    uid,
+    flags: [] as string[],
+    raw: [
+      "Date: 01 Oct 2026 10:00:00 +0000",
+      'From: "Maya" <maya@example.com>',
+      "To: <owner@example.com>",
+      `Subject: ${subject}`,
+      `Message-ID: <m${uid}@example.com>`,
+      ...extra,
+      `Content-Type: ${type}`,
+      "Content-Transfer-Encoding: 8bit",
+      "",
+      body,
+    ].join("\r\n"),
+  });
+  const boxes = [{
+    name: "INBOX",
+    messages: [
+      // A raw 8-bit UTF-8 subject and body: the octets C3 98 must read as "Ø".
+      message(1, utf8("Faktura – Ødegård"), "text/plain; charset=utf-8", utf8("Hei Åse – “velkommen”")),
+      // A reply with thread headers, HTML whose first bytes are CSS and nested markup.
+      message(2, "Re: plain", "text/html; charset=utf-8", "<style>p{color:red}</style><scr<script>ipt>x()</script><p>Visible <b>text</b>.</p>", [
+        "In-Reply-To: <m1@example.com>",
+        "References: <root@example.com>\r\n <m1@example.com>",
+      ]),
+    ],
+  }];
+  const inbox = await imapInbox();
+  const none: harness.ProviderHandler = () => harness.json({}, 500);
+
+  const plainPool = new FakeDialPool(imapServer(boxes));
+  const plain = await harness.runTool(inbox, none, () =>
+    firstPartyContext.run(
+      { imapConnect: <C>() => plainPool.dial() as unknown as Promise<C> },
+      () => mcp.dispatchExecutor("email_list", { inbox_id: INBOX_ID, folder: "INBOX", limit: 10 }, harness.API_KEY),
+    ));
+  const wireJson = JSON.stringify(plain.value);
+  const mcpRows = (plain.value!.result as { structuredContent: { messages: Record<string, unknown>[] } }).structuredContent.messages;
+
+  // The read fixes DO apply to MCP.
+  const byId = new Map(mcpRows.map((r) => [r["id"], r]));
+  assertEquals([byId.get("INBOX:1")!["subject"], byId.get("INBOX:1")!["preview"]], ["Faktura – Ødegård", "Hei Åse – “velkommen”"]);
+  assertEquals(byId.get("INBOX:2")!["preview"], "ipt>x() Visible text.");
+  assert(!wireJson.includes("�") && !/Ã|â€/.test(wireJson), "no replacement character and no octets read as characters");
+  assert(!wireJson.includes("color:red"), "no CSS in a preview");
+
+  // The threading fields do NOT: not a key, not a value, not a FETCH item.
+  assertEquals(Object.keys(mcpRows[0]), ["id", "from", "to", "subject", "date", "preview", "is_read", "has_attachments", "folder", "thread_id"]);
+  for (const key of [...THREAD_KEYS, "is_flagged"]) assert(!wireJson.includes(`"${key}"`), `${key} on the MCP wire`);
+  assert(!wireJson.includes("root@example.com"), "nothing read from References reaches an MCP result");
+  const mcpFetches = plainPool.servers[0].commands.filter((c) => /FETCH/.test(c));
+  assertEquals(mcpFetches, ["FETCH 1:2 (UID FLAGS ENVELOPE BODYSTRUCTURE BODY.PEEK[1]<0.2048>)"], "the FETCH MCP has always sent");
+
+  // client-api: the same rows, byte for byte, plus exactly its own keys.
+  const pool = new FakeDialPool(imapServer(boxes));
+  const app = await realApp({ pool });
+  const viaClient = await harness.runTool(inbox, none, () => app.mail("list", { folder: "INBOX", limit: 10 }));
+  const clientRows = viaClient.value.body.messages as Record<string, unknown>[];
+  assertEquals(Object.keys(clientRows[0]).slice(-5), ["is_flagged", ...THREAD_KEYS]);
+  assertEquals(JSON.stringify(withoutFlag(clientRows)), JSON.stringify(mcpRows), "identical bytes once the first-party keys are removed");
+  const reply = clientRows.find((r) => r["id"] === "INBOX:2")!;
+  assertEquals([reply["in_reply_to"], reply["references"], reply["thread_key"]], ["m1@example.com", ["root@example.com", "m1@example.com"], "m:root@example.com"]);
+  assert(pool.servers[0].commands.some((c) => c.includes("BODY.PEEK[HEADER.FIELDS (REFERENCES)]")));
+  await pool.closeAll();
+});
+
+Deno.test("MCP IMAP read: body and headers take the read fixes; message_id_header and thread_key stay first-party", async () => {
+  const boxes = [{
+    name: "INBOX",
+    messages: [{
+      uid: 1,
+      flags: [] as string[],
+      raw: [
+        "Date: 01 Oct 2026 10:00:00 +0000",
+        'From: "Maya" <maya@example.com>',
+        "To: <owner@example.com>",
+        "Subject: Caf\xe9",
+        "Message-ID: <r1@example.com>",
+        "In-Reply-To: <r0@example.com>",
+        "References: <r0@example.com>",
+        "Content-Type: text/plain; charset=utf-8",
+        "Content-Transfer-Encoding: 8bit",
+        "",
+        "Bl\xc3\xa5b\xc3\xa6r \xe2\x80\x93 ok",
+      ].join("\r\n"),
+    }],
+  }];
+  const inbox = await imapInbox();
+  const none: harness.ProviderHandler = () => harness.json({}, 500);
+  const plainPool = new FakeDialPool(imapServer(boxes));
+  const plain = await harness.runTool(inbox, none, () =>
+    firstPartyContext.run(
+      { imapConnect: <C>() => plainPool.dial() as unknown as Promise<C> },
+      () => mcp.dispatchExecutor("email_read", { inbox_id: INBOX_ID, message_id: "INBOX:1" }, harness.API_KEY),
+    ));
+  const result = (plain.value!.result as { structuredContent: Record<string, unknown> }).structuredContent;
+  const wireJson = JSON.stringify(plain.value);
+  assertEquals(result["subject"], "Café");
+  assert(String(result["body_text"]).includes("Blåbær – ok"), String(result["body_text"]));
+  // `in_reply_to` and `references` have always been part of an MCP read.
+  assertEquals([result["in_reply_to"], result["references"]], ["r0@example.com", ["r0@example.com"]]);
+  for (const key of ["message_id_header", "thread_key", "is_flagged"]) assert(!wireJson.includes(`"${key}"`), `${key} on the MCP wire`);
+
+  const pool = new FakeDialPool(imapServer(boxes));
+  const app = await realApp({ pool });
+  const viaClient = await harness.runTool(inbox, none, () => app.mail("read", { message_id: "INBOX:1", include_html: false }));
+  const body = viaClient.value.body as Record<string, unknown>;
+  assertEquals([body["message_id_header"], body["thread_key"], body["subject"]], ["r1@example.com", "m:r0@example.com", "Café"]);
+  assertEquals(body["body_text"], result["body_text"], "one decode path for both callers");
+  await pool.closeAll();
 });

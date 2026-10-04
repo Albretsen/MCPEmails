@@ -50,6 +50,7 @@ import {
   type MessageKey,
   type MessagePage,
   type MessageRow,
+  type MessageThread,
   type MoveResult,
   type OutgoingAttachment,
   type ReadEmailResult,
@@ -61,6 +62,7 @@ import {
   type SendMessageInput,
   type SendResult,
   type SessionInfo,
+  type ThreadResult,
   isExactRef,
   isRoleRef,
   makeKey,
@@ -675,6 +677,21 @@ export class HttpMailApi implements MailApi {
       is_starred: r.is_flagged ?? seen?.starred ?? false,
       folder,
       folder_role: this.roleOfId(inbox_id, folder) ?? seen?.role ?? null,
+    };
+  }
+
+  /** `thread`: one op, on the background lane so it never delays the `read`
+   *  of the message the person just opened. */
+  async getThread(key: MessageKey, opts: { thread_key?: string; limit?: number } = {}, signal?: AbortSignal): Promise<MessageThread> {
+    const { inbox_id, id } = parseKey(key);
+    const args: Record<string, unknown> = { message_id: id };
+    if (opts.thread_key) args.thread_key = opts.thread_key;
+    if (opts.limit) args.limit = opts.limit;
+    const r = await this.client.read<ThreadResult>("thread", inbox_id, args, signal, "background");
+    return {
+      thread_key: typeof r?.thread_key === "string" ? r.thread_key : (opts.thread_key ?? ""),
+      rows: arr<EmailSummary>(r, "messages").map((m) => this.toRow(inbox_id, m)),
+      partial: r?.partial === true,
     };
   }
 

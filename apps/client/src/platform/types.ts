@@ -19,6 +19,30 @@ export interface AppNotification {
   requireInteraction?: boolean;
 }
 
+/** The JSON a push carries (server: supabase/functions/client-api/push/notify.ts).
+ *  `title` / `body` are ready to show; the rest says what it is about. */
+export interface PushPayload {
+  type: "new_mail" | "approval_required" | "test" | (string & {});
+  title?: string;
+  body?: string;
+  /** In-app path to open. */
+  url?: string;
+  tag?: string;
+  /** new_mail: "rich" shows sender and subject, "private" only a count. */
+  mode?: "rich" | "private";
+  inbox_id?: string;
+  count?: number;
+  /** new_mail: unread messages in that mailbox's inbox. */
+  unread?: number | null;
+  approval_id?: string;
+}
+
+export interface BackgroundPushConfig {
+  /** `{FUNCTIONS_URL}/client-api`, no trailing slash. */
+  apiBase: string;
+  vapidPublicKey: string;
+}
+
 /** Notification action ids. Keep in sync with public/sw.js. */
 export const NOTIFICATION_ACTION = { approve: "approve", review: "review" } as const;
 
@@ -48,10 +72,23 @@ export interface PlatformAdapter {
     /** Must be called from a user gesture (required on iOS). */
     requestPermission(): Promise<NotificationPermissionState>;
     show(n: AppNotification): Promise<void>;
-    /** Web Push subscription for the server to deliver to. Null when
-     *  unsupported, denied, or no VAPID key is configured. The key defaults to
-     *  VITE_VAPID_PUBLIC_KEY. */
+    /** The browser's Web Push subscription, creating one if there is none.
+     *  Null when unsupported, not granted, no service worker is registered, or
+     *  no VAPID key is configured (the key defaults to VITE_VAPID_PUBLIC_KEY).
+     *  A subscription made with a DIFFERENT key is replaced. It only talks to
+     *  the browser: sending the result to the server is src/app/push.ts. */
     subscribePush(vapidPublicKey?: string): Promise<PushSubscriptionJSON | null>;
+    /** The existing subscription, never creating one and never prompting. */
+    currentPushSubscription(): Promise<PushSubscriptionJSON | null>;
+    /** Ends the browser's subscription. Resolves to what it was (so the
+     *  server can be told), or null when there was none. */
+    unsubscribePush(): Promise<PushSubscriptionJSON | null>;
+    /** A push arrived while this window was visible. The service worker shows
+     *  no system notification then; it hands the payload to the page. */
+    onPush(listener: (payload: PushPayload) => void): () => void;
+    /** What the service worker needs to re-register a subscription the
+     *  browser rotated while no page was open (public values only). */
+    configureBackground(config: BackgroundPushConfig): Promise<void>;
   };
 
   /** Small async key-value store for app state that should outlive a reload

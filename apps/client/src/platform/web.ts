@@ -1,5 +1,13 @@
 import { del, get, set } from "idb-keyval";
-import type { AppNotification, DeepLink, InstallOutcome, NotificationPermissionState, PlatformAdapter } from "./types";
+import type {
+  AppNotification,
+  BackgroundPushConfig,
+  DeepLink,
+  InstallOutcome,
+  NotificationPermissionState,
+  PlatformAdapter,
+  PushPayload,
+} from "./types";
 
 /* Web implementation. Every capability is feature-detected; nothing here
  * throws when an API is missing (Safari without Home Screen install, private
@@ -21,17 +29,27 @@ const hasServiceWorker = typeof navigator !== "undefined" && "serviceWorker" in 
 const hasPush = hasServiceWorker && hasNotification && "PushManager" in window;
 const hasIdb = typeof indexedDB !== "undefined";
 
-/** Web Push application server key.
- *  PLACEHOLDER: there is no push backend yet, so no key is configured. Set
- *  VITE_VAPID_PUBLIC_KEY at build time once there is. Empty = never subscribe. */
+/** Web Push application server key (public). Set VITE_VAPID_PUBLIC_KEY at
+ *  build time to the value scripts/generate-vapid-keys.ts printed. Empty =
+ *  never subscribe: every push control says notifications are unavailable. */
 export const VAPID_PUBLIC_KEY: string = (import.meta.env.VITE_VAPID_PUBLIC_KEY as string | undefined) ?? "";
 
-/** TODO(push backend): the endpoint that stores a push subscription for the
- *  signed-in user does not exist yet. When it does, send `sub` to it here, and
- *  remove it again on sign-out or when permission is revoked. Until then the
- *  subscription is created in the browser and delivered nowhere. */
-async function sendSubscriptionToServer(_sub: PushSubscriptionJSON): Promise<void> {
-  /* intentionally empty: see the TODO above */
+/* What the page shares with the service worker (public/sw.js reads the same
+ * names). The Cache API is the one store both sides can reach without a
+ * library; nothing secret goes in it: the API base URL, the PUBLIC key, and
+ * the unread total for the app badge. */
+export const SW_STORE = "mcpe-push";
+export const SW_CONFIG_URL = "/__push/config";
+export const SW_BADGE_URL = "/__push/badge";
+
+async function swStorePut(url: string, value: unknown): Promise<void> {
+  if (typeof caches === "undefined") return;
+  try {
+    const cache = await caches.open(SW_STORE);
+    await cache.put(url, new Response(JSON.stringify(value), { headers: { "Content-Type": "application/json" } }));
+  } catch {
+    /* private mode, storage full: the service worker falls back to asking the page */
+  }
 }
 
 /** Falls back to memory when IndexedDB is unavailable. */
@@ -43,6 +61,12 @@ function urlBase64ToUint8Array(base64: string): Uint8Array<ArrayBuffer> {
   const out = new Uint8Array(new ArrayBuffer(raw.length));
   for (let i = 0; i < raw.length; i++) out[i] = raw.charCodeAt(i);
   return out;
+}
+
+function sameKey(a: ArrayBuffer | null | undefined, b: Uint8Array): boolean {
+  if (!a) return false;
+  const x = new Uint8Array(a);
+  return x.length === b.length && x.every((v, i) => v === b[i]);
 }
 
 function isStandaloneDisplay(): boolean {
@@ -61,15 +85,42 @@ function detectIOS(): boolean {
 
 export function createWebPlatform(): PlatformAdapter {
   const linkListeners = new Set<(link: DeepLink) => void>();
+  const pushListeners = new Set<(payload: PushPayload) => void>();
 
   if (hasServiceWorker) {
-    // The service worker posts this when a notification is clicked.
     navigator.serviceWorker.addEventListener("message", (event: MessageEvent) => {
-      const d = event.data as { type?: string; url?: string; action?: string | null; data?: Record<string, unknown> };
+      const d = event.data as {
+        type?: string;
+        url?: string;
+        action?: string | null;
+        data?: Record<string, unknown>;
+        payload?: PushPayload;
+      };
+      // A push arrived while this window was visible (no system notification was shown).
+      if (d?.type === "push" && d.payload && typeof d.payload === "object") {
+        for (const l of [...pushListeners]) l(d.payload);
+        return;
+      }
+      // The browser rotated the subscription: the app registers the new one.
+      if (d?.type === "push_subscription_changed") {
+        for (const l of [...pushListeners]) l({ type: "subscription_changed" });
+        return;
+      }
+      // A notification was clicked.
       if (d?.type !== "deep_link" || typeof d.url !== "string") return;
       for (const l of [...linkListeners]) l({ url: d.url, action: d.action ?? null, data: d.data });
     });
   }
+
+  /** The registration, without waiting for one: dev builds register none. */
+  const registration = async (): Promise<ServiceWorkerRegistration | null> => {
+    if (!hasPush) return null;
+    try {
+      return (await navigator.serviceWorker.getRegistration()) ?? null;
+    } catch {
+      return null;
+    }
+  };
 
   // Chromium fires beforeinstallprompt once, early. Keep it so a button can use it later.
   let installEvent: BeforeInstallPromptEvent | null = null;
@@ -132,22 +183,50 @@ export function createWebPlatform(): PlatformAdapter {
         if (!vapidPublicKey || !hasPush) return null;
         if (Notification.permission !== "granted") return null;
         try {
-          // Dev builds register no service worker: do not wait on `ready` forever.
-          const reg = await navigator.serviceWorker.getRegistration();
+          const reg = await registration();
           if (!reg) return null;
-          const existing = await reg.pushManager.getSubscription();
-          const sub =
-            existing ??
-            (await reg.pushManager.subscribe({
-              userVisibleOnly: true,
-              applicationServerKey: urlBase64ToUint8Array(vapidPublicKey),
-            }));
+          const key = urlBase64ToUint8Array(vapidPublicKey);
+          let sub = await reg.pushManager.getSubscription();
+          // Made with another server key (the keys were replaced): the push
+          // service would reject this server's messages. Subscribe afresh.
+          if (sub && sub.options?.applicationServerKey && !sameKey(sub.options.applicationServerKey, key)) {
+            await sub.unsubscribe();
+            sub = null;
+          }
+          sub ??= await reg.pushManager.subscribe({ userVisibleOnly: true, applicationServerKey: key });
+          return sub.toJSON();
+        } catch {
+          return null;
+        }
+      },
+      async currentPushSubscription(): Promise<PushSubscriptionJSON | null> {
+        try {
+          const reg = await registration();
+          return (await reg?.pushManager.getSubscription())?.toJSON() ?? null;
+        } catch {
+          return null;
+        }
+      },
+      async unsubscribePush(): Promise<PushSubscriptionJSON | null> {
+        try {
+          const reg = await registration();
+          const sub = await reg?.pushManager.getSubscription();
+          if (!sub) return null;
           const json = sub.toJSON();
-          await sendSubscriptionToServer(json);
+          await sub.unsubscribe();
           return json;
         } catch {
           return null;
         }
+      },
+      onPush(listener: (payload: PushPayload) => void): () => void {
+        pushListeners.add(listener);
+        return () => {
+          pushListeners.delete(listener);
+        };
+      },
+      async configureBackground(config: BackgroundPushConfig): Promise<void> {
+        await swStorePut(SW_CONFIG_URL, config);
       },
     },
 
@@ -184,6 +263,9 @@ export function createWebPlatform(): PlatformAdapter {
     badge: {
       supported: typeof nav.setAppBadge === "function",
       async set(count: number): Promise<void> {
+        // The service worker continues from this total when a push arrives
+        // with no window open (public/sw.js).
+        if (hasPush) void swStorePut(SW_BADGE_URL, { total: Math.max(0, count), inboxes: {} });
         try {
           if (count > 0) await nav.setAppBadge?.(count);
           else await nav.clearAppBadge?.();

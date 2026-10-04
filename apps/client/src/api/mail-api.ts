@@ -38,6 +38,7 @@ import type {
   MailEventListener,
   MessageDetail,
   MessageFlags,
+  MessageThread,
   MessageKey,
   MessagePage,
   MoveResult,
@@ -66,6 +67,10 @@ export interface MailApi {
     signal?: AbortSignal,
   ): Promise<MessageDetail>;
   searchMessages(params: SearchMessagesParams, signal?: AbortSignal, onPartial?: PartialPageListener): Promise<MessagePage>;
+  /** The messages of the conversation `key` belongs to, across folders
+   *  (Inbox, Sent, Archive; all mail on Gmail), oldest first, WITHOUT bodies.
+   *  `thread_key` is the key that row carried. Never merges mailboxes. */
+  getThread(key: MessageKey, opts?: { thread_key?: string; limit?: number }, signal?: AbortSignal): Promise<MessageThread>;
   /** The bytes of one attachment (`attachment_index` from ReadEmailAttachmentMeta). */
   downloadAttachment(key: MessageKey, attachment_index: number, signal?: AbortSignal): Promise<AttachmentDownload>;
 

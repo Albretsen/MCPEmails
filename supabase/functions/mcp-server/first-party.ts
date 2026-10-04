@@ -23,21 +23,24 @@
 //                    IS the reviewer that gate waits for.
 //   trashIds         an IMAP delete-to-trash reports the ids the messages have
 //                    in Trash (COPYUID), so the client can undo it.
-//   cleanPreview     an IMAP list/search row's `preview` is decoded from what
-//                    BODYSTRUCTURE says part one is (charset, transfer
-//                    encoding, HTML or not) instead of guessed from its bytes:
-//                    no CSS, no replacement characters. See
-//                    `cleanPreviewFromBodyPart` in text-extract.ts.
 //   listPreviewBytes how much of part one an IMAP listing fetches for that
 //                    preview (0: none, the rows then carry `preview: ""`).
-//   joinInlineParts  an IMAP `email_read` joins the inline text parts of a
-//                    multipart/mixed message in order instead of keeping only
-//                    the first, so a forwarded message's `body_text` holds the
-//                    note AND the original. See `parseEmailJoined` in mime.ts.
+//   threadHeaders    list/search rows carry `message_id_header`, `in_reply_to`
+//                    and `references`, and a read carries `message_id_header`,
+//                    so the web client can group mail into conversations. On
+//                    IMAP the References header rides the SAME summary FETCH
+//                    (`BODY.PEEK[HEADER.FIELDS (REFERENCES)]`); Gmail adds
+//                    three names to `metadataHeaders`; Graph adds
+//                    `internetMessageId` to `$select`. No extra round trip.
 //
 // All of it rides one AsyncLocalStorage. NOTHING in the MCP server ever opens
 // this store: `handleRequest` does not call `firstPartyContext.run`, so for
 // every MCP request `getStore()` is undefined and each hook below is inert.
+// (The clean IMAP preview started here as a `cleanPreview` option. It is the
+// behaviour for every caller since 2026-10-04, so the option is gone. So are
+// `joinInlineParts` and `exactOctets`: every read joins the inline text parts,
+// and the IMAP reader hands every caller exact octets. Body and preview
+// decoding has no first-party branch left.)
 // That is the whole behaviour-neutrality argument, and
 // client-api/tests/mcp-neutral.test.ts pins it on the bytes of a real
 // `tools/call` response.
@@ -78,12 +81,10 @@ export interface FirstPartyContext {
   humanBulk?: boolean;
   /** IMAP delete-to-trash rows carry `new_message_id`. */
   trashIds?: boolean;
-  /** IMAP summary previews are decoded from BODYSTRUCTURE and cleaned of markup. */
-  cleanPreview?: boolean;
   /** Octets of part one an IMAP listing fetches for the preview; 0 fetches none. */
   listPreviewBytes?: number;
-  /** IMAP `email_read` joins every inline text part of a multipart/mixed message. */
-  joinInlineParts?: boolean;
+  /** Rows carry the RFC 5322 threading headers (see the header comment). */
+  threadHeaders?: boolean;
 }
 
 /** Opened by client-api around each executor call; absent for MCP traffic. */
@@ -129,11 +130,6 @@ export function wantsTrashIds(): boolean {
   return firstPartyContext.getStore()?.trashIds === true;
 }
 
-/** True only inside a client-api call: previews are decoded from BODYSTRUCTURE. */
-export function wantsCleanPreview(): boolean {
-  return firstPartyContext.getStore()?.cleanPreview === true;
-}
-
 /**
  * The partial-fetch item an IMAP summary FETCH asks for. For MCP traffic (no
  * store) this is the literal the command has always carried.
@@ -145,7 +141,83 @@ export function summaryPreviewItem(): string {
   return ` BODY.PEEK[1]<0.${Math.min(bytes, 8192)}>`;
 }
 
-/** True only inside a client-api read: inline text parts are joined. */
-export function wantsJoinedInlineParts(): boolean {
-  return firstPartyContext.getStore()?.joinInlineParts === true;
+// ── Conversation threading (client-api only) ────────────────────────────────
+
+/** References kept on a row: the root (first) plus the newest nine. */
+export const MAX_ROW_REFERENCES = 10;
+
+export interface ThreadHeaderFields {
+  /** RFC 5322 Message-ID without the angle brackets, or null. */
+  message_id_header?: string | null;
+  /** The first id of In-Reply-To without the angle brackets, or null. */
+  in_reply_to?: string | null;
+  /** Ids of References, oldest first; the root is always kept when truncated. */
+  references?: string[];
+}
+
+/** True only inside a client-api call that asked for the threading headers. */
+export function wantsThreadHeaders(): boolean {
+  return firstPartyContext.getStore()?.threadHeaders === true;
+}
+
+/**
+ * The extra item an IMAP summary FETCH asks for: the References header, in the
+ * same command as the envelope. For MCP traffic (no store) this is "" and the
+ * command is the literal it has always been.
+ */
+export function summaryReferencesItem(): string {
+  return wantsThreadHeaders() ? " BODY.PEEK[HEADER.FIELDS (REFERENCES)]" : "";
+}
+
+/** The header names a Gmail `format=metadata` get adds; none for MCP traffic. */
+export function threadMetadataHeaders(): string[] {
+  return wantsThreadHeaders() ? ["Message-ID", "In-Reply-To", "References"] : [];
+}
+
+/** ",internetMessageId" for a Graph `$select`; "" for MCP traffic. */
+export function threadGraphSelect(): string {
+  return wantsThreadHeaders() ? ",internetMessageId" : "";
+}
+
+/** Every `<id>` of a header value, without brackets; a bare token counts as one id. */
+export function messageIdsOf(value: string | null | undefined): string[] {
+  if (!value) return [];
+  const unfolded = value.replace(/\r?\n[ \t]+/g, " ");
+  const bracketed = unfolded.match(/<[^<>\s]+>/g);
+  if (bracketed) return bracketed.map((id) => id.slice(1, -1));
+  return unfolded.split(/[\s,]+/).map((id) => id.trim()).filter((id) => id.length > 0 && id.length <= 998);
+}
+
+/** The value of a raw `References: ...` header block (as HEADER.FIELDS returns it). */
+export function referencesOfHeaderBlock(block: string | null | undefined): string[] {
+  if (!block) return [];
+  const m = /^references:([\s\S]*)$/im.exec(block.replace(/\r?\n[ \t]+/g, " "));
+  return messageIdsOf(m ? m[1].split(/\r?\n/)[0] : "");
+}
+
+function boundedReferences(ids: string[]): string[] {
+  return ids.length <= MAX_ROW_REFERENCES ? ids : [ids[0], ...ids.slice(-(MAX_ROW_REFERENCES - 1))];
+}
+
+/**
+ * `{ message_id_header, in_reply_to, references }` to spread into a list or
+ * search row, or `{}` for MCP traffic (the byte-identity argument of
+ * `flaggedField`). `read` is a thunk so the MCP path evaluates nothing.
+ */
+export function threadFields(
+  read: () => { messageId?: string | null; inReplyTo?: string | null; references?: string | string[] | null },
+): ThreadHeaderFields {
+  if (!wantsThreadHeaders()) return {};
+  const raw = read();
+  const references = Array.isArray(raw.references) ? raw.references : messageIdsOf(raw.references);
+  return {
+    message_id_header: messageIdsOf(raw.messageId)[0] ?? null,
+    in_reply_to: messageIdsOf(raw.inReplyTo)[0] ?? null,
+    references: boundedReferences(references),
+  };
+}
+
+/** `{ message_id_header }` for a row whose provider gives nothing else cheaply (Graph). */
+export function threadMessageIdField(read: () => string | null | undefined): { message_id_header?: string | null } {
+  return wantsThreadHeaders() ? { message_id_header: messageIdsOf(read())[0] ?? null } : {};
 }

@@ -44,13 +44,14 @@ import {
 import { applyKeyRemap } from "../data/remap";
 import { SYNC_INTERVAL_LIVE_MS, SYNC_INTERVAL_MS, type SyncEngine, createSyncEngine } from "../data/sync";
 import { clearUndo } from "../data/undo";
-import { getPlatform } from "../platform";
+import { VAPID_PUBLIC_KEY, getPlatform } from "../platform";
 import { useAssistantStore } from "../state/assistant-store";
 import { type ComposeState, useComposeStore } from "../state/compose-store";
 import { markInboxAuth, useConnectionStore, useReconnectStore } from "../state/connection-store";
 import { releaseHeldRows } from "../state/held-rows";
 import { useSelectionStore } from "../state/selection-store";
 import { useToastStore } from "../state/toast-store";
+import { type PushController, createPushController } from "./push";
 import { DEFAULT_ROUTE, getRoute, navigate } from "./router";
 
 /* HTTP mode wiring: the one place where auth, the API client, the session,
@@ -71,6 +72,7 @@ let client: ApiClient | null = null;
 let api: HttpMailApi | null = null;
 let transport: HttpAssistantTransport | null = null;
 let sync: SyncEngine | null = null;
+let push: PushController | null = null;
 let workspaceId: string | null = null;
 let sessionLoad: Promise<void> | null = null;
 let installed = false;
@@ -84,6 +86,16 @@ const FOLDERS_REFRESH_DELAY_MS = 5000;
 
 export function getHttpMailApi(): HttpMailApi | null {
   return api;
+}
+
+/** Web push for this account (HTTP mode only; null in mock mode). */
+export function getPushController(): PushController | null {
+  return push;
+}
+
+/** One sync run now (a push arrived, or a notification was clicked). */
+export function syncNow(): void {
+  if (syncWanted) void sync?.syncNow();
 }
 
 /* Which mailboxes need reconnecting, kept across reloads (ids only): a load
@@ -324,6 +336,10 @@ async function onSignIn(info: SignedInInfo): Promise<void> {
 
 async function onSignOut(info: SignedOutInfo): Promise<void> {
   sync?.stop();
+  // However the session ended, this browser stops receiving the account's
+  // notifications: its push subscription is ended (there may be no token left
+  // to tell the server with; the push service then reports it gone).
+  void push?.signOut({ authed: false }).catch(() => {});
   client?.disconnect();
   api?.reset();
   transport?.reset();
@@ -358,6 +374,19 @@ export function installHttpBackend(): HttpMailApi {
   const mail = new HttpMailApi({ client });
   api = mail;
   mail.onSession(applySession);
+  const pushClient = client;
+  push = createPushController({
+    platform: getPlatform,
+    request: (method, path, body) => pushClient.request(method, path, body),
+    apiBase: config.apiBase,
+    vapidPublicKey: VAPID_PUBLIC_KEY,
+    workspaceId: () => workspaceId,
+  });
+  // Every session the server answers with: make sure it has this browser's
+  // current push subscription for this workspace (a no-op unless
+  // notifications were turned on here).
+  const pushSync = push;
+  mail.onSession(() => void pushSync.sync().catch(() => {}));
   transport = new HttpAssistantTransport({
     client,
     sendApproved,
@@ -449,6 +478,9 @@ export function switchWorkspace(id: string): Promise<void> {
 /** Sign out here: pending sends go out first, then everything is forgotten. */
 export async function signOutEverywhere(): Promise<void> {
   await Promise.race([flushPendingSends(), new Promise((r) => setTimeout(r, 4000))]);
+  // While there is still a token: remove this browser's push subscription
+  // from the server, so no notification about this account reaches it again.
+  if (push) await Promise.race([push.signOut({ authed: true }).catch(() => {}), new Promise((r) => setTimeout(r, 3000))]);
   await signOut();
 }
 

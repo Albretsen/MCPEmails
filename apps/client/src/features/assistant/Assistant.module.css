@@ -695,6 +695,13 @@
   border-color: var(--cobalt-300);
   color: var(--cobalt-700);
 }
+/* "The whole conversation": on. */
+.ctxAdd[aria-pressed="true"] {
+  border-style: solid;
+  border-color: var(--cobalt-200);
+  background: var(--cobalt-50);
+  color: var(--cobalt-800);
+}
 .inputRow {
   display: flex;
   align-items: center;

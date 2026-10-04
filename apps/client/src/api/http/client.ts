@@ -448,6 +448,13 @@ export class ApiClient {
     return this.noteInbox(inbox_id, this.json<T>("POST", "/mail", { op, inbox_id, args }));
   }
 
+  /** A plain JSON request that is not a mail op (the push routes): always
+   *  HTTP, sent once, no retry and no de-duplication. Same token handling,
+   *  timeout and typed errors as everything else. */
+  request<T>(method: "GET" | "POST" | "PUT" | "DELETE", path: string, body?: unknown, signal?: AbortSignal): Promise<T> {
+    return this.overHttp<T>(method, path, body, signal);
+  }
+
   /** A streaming POST (the assistant run). The timeout covers the wait for
    *  the response headers only; the body is the caller's to read. */
   stream(path: string, body: unknown, signal: AbortSignal): Promise<Response> {

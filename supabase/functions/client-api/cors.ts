@@ -38,7 +38,8 @@ export function preflightResponse(origin: string | null): Response {
     status: 204,
     headers: {
       "Access-Control-Allow-Origin": origin,
-      "Access-Control-Allow-Methods": "GET, POST, OPTIONS",
+      // PUT and DELETE are the push routes (push/routes.ts).
+      "Access-Control-Allow-Methods": "GET, POST, PUT, DELETE, OPTIONS",
       "Access-Control-Allow-Headers": ALLOW_HEADERS,
       "Access-Control-Max-Age": "600",
       Vary: "Origin",

@@ -239,7 +239,14 @@ describe("account menu", () => {
     await click(trigger);
     expect(trigger?.getAttribute("aria-expanded")).toBe("true");
     const items = [...host.querySelectorAll('[role="menuitem"]')].map((i) => i.textContent);
-    expect(items).toEqual(["AcmePro", "Side projectWeb client not enabled", "Dashboard settings", "Sign out"]);
+    expect(items).toEqual([
+      "AcmePro",
+      "Side projectWeb client not enabled",
+      "Conversation viewOn: replies are grouped with the email they answer",
+      "Notifications",
+      "Dashboard settings",
+      "Sign out",
+    ]);
     expect(q('[role="menu"]')?.textContent).toContain("me@example.com");
   });
 
@@ -248,6 +255,11 @@ describe("account menu", () => {
     useSessionStore.setState({ status: "ready", session: { ...session, workspaces: session.workspaces.slice(0, 1) } });
     await render(<AccountMenu rail={false} />);
     await click(q('button[aria-haspopup="menu"]'));
-    expect([...host.querySelectorAll('[role="menuitem"]')].map((i) => i.textContent)).toEqual(["Dashboard settings", "Sign out"]);
+    expect([...host.querySelectorAll('[role="menuitem"]')].map((i) => i.textContent)).toEqual([
+      "Conversation viewOn: replies are grouped with the email they answer",
+      "Notifications",
+      "Dashboard settings",
+      "Sign out",
+    ]);
   });
 });

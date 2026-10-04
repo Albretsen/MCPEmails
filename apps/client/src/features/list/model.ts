@@ -2,6 +2,7 @@ import type { ToolCallState, ToolName } from "../../api/assistant-api";
 import { toolIcon, toolTag } from "../../api/assistant-api";
 import { FOLDER_ROLE_LABEL, type FolderRef, type MessageKey, type MessageRow, isNameRef, isRoleRef } from "../../api/types";
 import { INBOX_NOTICE } from "../../api/inbox-health";
+import { type Conversation, participantNames } from "../../data/conversations";
 import { displayName, pluralize } from "../../lib/format";
 
 /* Pure derivations for the message list: what a row shows, what the header
@@ -39,6 +40,20 @@ export function rowView(row: MessageRow): RowView {
   };
   viewCache.set(row, view);
   return view;
+}
+
+const whoCache = new WeakMap<Conversation, { self: string; who: string }>();
+
+/** The first line of a conversation row: "Maya, me". A conversation that is
+ *  all the person's own mail (the Sent list) keeps the head's "To: …". Cached
+ *  per conversation object, which is kept until its rows change. */
+export function conversationWho(conv: Conversation, self: string, headWho: string): string {
+  const hit = whoCache.get(conv);
+  if (hit && hit.self === self) return hit.who;
+  const outgoing = (role: MessageRow["folder_role"]) => role === "sent" || role === "drafts" || role === "scheduled";
+  const who = conv.rows.every((r) => outgoing(r.folder_role)) ? headWho : participantNames(conv.rows, self);
+  whoCache.set(conv, { self, who });
+  return who;
 }
 
 export interface RowDecorInput {
@@ -97,11 +112,14 @@ export interface RowLabelInput {
   /** Assistant tag ("Reading") or note ("Moved to Receipts"), if any. */
   status?: string | null;
   hasAttachment?: boolean;
+  /** Messages in the conversation, when more than one. */
+  count?: number;
 }
 
 /** "Unread. Maya Chen, Q3 numbers, 9:41". */
 export function rowAriaLabel(i: RowLabelInput): string {
   let out = `${i.unread ? "Unread. " : ""}${i.who}, ${i.subject}${i.time ? `, ${i.time}` : ""}`;
+  if (i.count && i.count > 1) out += `, ${i.count} messages`;
   if (i.starred) out += ", starred";
   if (i.hasAttachment) out += ", has attachment";
   if (i.status) out += `. Assistant: ${i.status}`;
@@ -234,9 +252,9 @@ const ANCHOR_SEARCH = 12;
  *  row at the top of the viewport where it was, or null when nothing needs to
  *  change. At the very top (offset 0) new rows are allowed to push the list
  *  down: that is where the user expects to see them arrive. */
-export function anchoredOffset(
-  prevKeys: readonly MessageKey[],
-  nextIndex: ReadonlyMap<MessageKey, number>,
+export function anchoredOffset<K extends string = MessageKey>(
+  prevKeys: readonly K[],
+  nextIndex: ReadonlyMap<K, number>,
   offset: number,
   rowHeight: number,
 ): number | null {
@@ -253,8 +271,8 @@ export function anchoredOffset(
   return null;
 }
 
-export function indexByKey(keys: readonly MessageKey[]): Map<MessageKey, number> {
-  const out = new Map<MessageKey, number>();
-  for (let i = 0; i < keys.length; i++) out.set(keys[i] as MessageKey, i);
+export function indexByKey<K extends string = MessageKey>(keys: readonly K[]): Map<K, number> {
+  const out = new Map<K, number>();
+  for (let i = 0; i < keys.length; i++) out.set(keys[i] as K, i);
   return out;
 }

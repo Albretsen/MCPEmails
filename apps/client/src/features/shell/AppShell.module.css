@@ -499,6 +499,88 @@
   outline: 2px solid var(--border-focus);
   outline-offset: 2px;
 }
+/* ---------- notification settings (account menu) ---------- */
+.settingsBody {
+  flex: 1;
+  min-height: 0;
+  overflow-y: auto;
+  padding: 14px 18px 6px;
+}
+.settingsGroup {
+  margin: 0 0 16px;
+  padding: 0;
+  border: 0;
+  min-width: 0;
+}
+.settingsGroup legend {
+  padding: 0;
+}
+.settingsRow {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 16px;
+  min-height: 32px;
+  font-size: 13px;
+  color: var(--fg-1);
+}
+label.settingsRow {
+  cursor: pointer;
+}
+.settingsLabel {
+  min-width: 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+.settingsChoice {
+  display: flex;
+  align-items: flex-start;
+  gap: 10px;
+  padding: 5px 0;
+  font-size: 13px;
+  color: var(--fg-1);
+  cursor: pointer;
+}
+.settingsChoice input {
+  flex: none;
+  margin: 3px 0 0;
+  accent-color: var(--brand);
+}
+.settingsHint {
+  display: block;
+  font-size: 12px;
+  font-weight: 400;
+  color: var(--fg-3);
+}
+.settingsTimes {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 6px 14px;
+  padding: 2px 0 4px;
+  font-size: 13px;
+  color: var(--fg-2);
+}
+.settingsTimes input {
+  font: inherit;
+  color: var(--fg-1);
+  padding: 3px 6px;
+  border: 1px solid var(--border-1);
+  border-radius: 6px;
+  background: var(--bg-surface);
+}
+.settingsTimes .settingsHint {
+  flex-basis: 100%;
+}
+@media (pointer: coarse) {
+  .settingsRow {
+    min-height: 44px;
+  }
+  .settingsChoice {
+    padding: 10px 0;
+  }
+}
 .dialogNote {
   margin: 4px 0 0;
   font-size: 12px;

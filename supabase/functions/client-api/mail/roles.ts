@@ -111,6 +111,23 @@ async function outlookFolderRoles(mcp: McpSeam, inbox: InboxRow, now: number): P
 }
 
 /**
+ * The ids of this Outlook mailbox's folders with one of `roles` (the `thread`
+ * op leaves Deleted Items, Junk and Drafts out of a conversation). Served from
+ * the remembered well-known ids when the `folders` op has run in this isolate.
+ */
+export async function outlookRoleFolderIds(
+  mcp: McpSeam,
+  inbox: InboxRow,
+  now: number,
+  roles: readonly FolderRole[],
+): Promise<Set<string>> {
+  const all = await outlookFolderRoles(mcp, inbox, now);
+  const out = new Set<string>();
+  for (const [id, role] of all) if (roles.includes(role)) out.add(id);
+  return out;
+}
+
+/**
  * The `folders` result with `role` on every entry. Must run inside
  * `firstPartyContext.run` (the IMAP branch asks the pooled connection for the
  * folder list it has just remembered: no extra round trip).

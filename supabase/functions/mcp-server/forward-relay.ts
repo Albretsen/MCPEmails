@@ -30,7 +30,7 @@
 // byte identity that is the whole point.
 // ---------------------------------------------------------------------------
 
-import { decodeEncodedWords, parseContentType, parseHeaders } from "./mime.ts";
+import { decodeEncodedWords, decodeRawHeaderOctets, parseContentType, parseHeaders } from "./mime.ts";
 import { encodeMimeHeaderValue, encodeTextAsBase64Lines } from "./mime-build.ts";
 
 /**
@@ -190,12 +190,17 @@ export interface OriginalSummary {
   subject: string;
 }
 
-/** The four lines of the forwarded-message block, RFC 2047 decoded. */
+/**
+ * The four lines of the forwarded-message block, RFC 2047 decoded. A header
+ * written in raw 8-bit octets (UTF-8, or windows-1252 from old systems) is
+ * decoded the way `email_read` decodes it, not copied octet-per-character
+ * into the note.
+ */
 export function summarizeOriginal(headerBlock: string): OriginalSummary {
   const headers = parseHeaders(headerBlock);
   const first = (name: string) => {
     const v = headers.get(name);
-    return v && v.length ? v[0] : "";
+    return v && v.length ? decodeRawHeaderOctets(v[0]) : "";
   };
   return {
     from: decodeEncodedWords(first("from")),

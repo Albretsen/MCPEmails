@@ -20,6 +20,10 @@ import { JwtVerifier, WorkspaceGate } from "./auth.ts";
 import { corsHeaders, preflightResponse } from "./cors.ts";
 import { ImapPool, type PoolableClient } from "./imap-pool.ts";
 import { withHealthColumns } from "./mail/health.ts";
+import { runDispatch } from "./push/dispatch.ts";
+import { createWatchMail } from "./push/mail.ts";
+import { supabasePushStore } from "./push/store.ts";
+import { createPushSender, vapidFromEnv } from "./push/webpush.ts";
 import { RateLimiter } from "./rate-limit.ts";
 import { loadMcpSeam } from "./seam.ts";
 import { recycleSockets, serveSocket } from "./ws.ts";
@@ -96,6 +100,11 @@ async function start(): Promise<Started> {
     jwtSecret: Deno.env.get("SUPABASE_JWT_SECRET") ?? Deno.env.get("JWT_SECRET") ?? undefined,
     apiKey: Deno.env.get("SUPABASE_ANON_KEY") ?? Deno.env.get("SUPABASE_SERVICE_ROLE_KEY") ?? undefined,
   });
+  // Web push. Without the three VAPID secrets there is no sender: subscribe
+  // and test answer 503, and the watcher checks mailboxes but sends nothing.
+  const pushStore = supabasePushStore(mcp.serviceRoleClient);
+  const vapid = vapidFromEnv((name) => Deno.env.get(name));
+  const pushSender = vapid ? createPushSender({ vapid }) : null;
   return {
     handler: createApp({
       mcp,
@@ -113,6 +122,26 @@ async function start(): Promise<Started> {
       // close (ws.ts) ends it when the tab stops talking.
       pool: new ImapPool<PoolableClient>({ idleTtlMs: 70_000 }),
       assistant: loadAssistant,
+      push: {
+        store: pushStore,
+        sender: pushSender,
+        // One pass of the new-mail watcher (push/dispatch.ts). It gets its own
+        // IMAP pool, closed when the pass ends, and reads mailboxes with the
+        // workspace's hidden key narrowed to read scopes.
+        dispatch: () =>
+          runDispatch({
+            store: pushStore,
+            sender: pushSender,
+            mail: createWatchMail({
+              mcp,
+              workspaceKey: (workspaceId) => store.ensureWebClientKey(workspaceId),
+              onLoginRefused: (inboxId, workspaceId) => {
+                void store.markLoginRefused(inboxId, workspaceId, Date.now()).catch(() => {});
+              },
+            }),
+            log: (event, fields) => console.log(`[client-api] ${event}`, fields),
+          }),
+      },
     }),
     authenticate: (token) => verifier.verify(token).then(() => true, () => false),
   };

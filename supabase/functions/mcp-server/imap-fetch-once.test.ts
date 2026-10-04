@@ -271,7 +271,12 @@ Deno.test("readImapMessage fetches through the map, and only selects on a miss",
   assert(body.includes("const select = () => session.select(imapMailboxForServerFolder(folder));"));
   assert(/await imapRawMessageOnce\(\s*fetchedThisCall,\s*messageId,\s*uid,\s*select,\s*\)/.test(body));
   assert(!body.includes("client.fetchMessageRaw("), "no second way to download");
-  assert(body.includes("const parsed = parseEmail(msg.raw);"), "the same parser, on the same bytes");
+  // Two parsers since 2026-10-04 (the read tools join the inline text parts,
+  // see read-joined-body.test.ts), both on the bytes this call fetched once.
+  assert(
+    /const parsed = joinInlineParts\s*\? parseEmailJoined\(msg\.raw, htmlPartToBodyText\)\s*: parseEmail\(msg\.raw\);/.test(body),
+    "parsed from the same bytes",
+  );
 });
 
 Deno.test("there is no module-level state: nothing outlives the call that made the map", () => {

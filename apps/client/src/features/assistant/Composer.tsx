@@ -1,12 +1,13 @@
 import { ArrowUp, Mail, Maximize2, Plus, Square, X } from "lucide-react";
-import { type KeyboardEvent, useLayoutEffect, useRef, useState } from "react";
+import { type KeyboardEvent, useLayoutEffect, useMemo, useRef, useState } from "react";
 import { isAllowanceExhausted } from "../../api/types";
-import { findRow, useAssistantAllowance } from "../../data";
+import { conversationMessages, findRow, useAssistantAllowance } from "../../data";
 import { cx } from "../../lib/cx";
 import { displayName, firstName } from "../../lib/format";
 import { modKey } from "../../lib/platform";
 import { useAssistantStore } from "../../state/assistant-store";
 import { isInlineCompose, useComposeStore } from "../../state/compose-store";
+import { useThreadStore } from "../../state/conversation-store";
 import { useSelectionStore } from "../../state/selection-store";
 import { useUiStore } from "../../state/ui-store";
 import { Icon, Kbd, LogoMark, Spinner } from "../../ui";
@@ -14,12 +15,12 @@ import { ASSISTANT_INPUT_ATTR, useShell } from "../shell";
 import s from "./Assistant.module.css";
 import {
   type Suggestion,
-  attachable,
   chipKeys,
   chipLabel,
   composerPlaceholder,
   fitSuggestions,
   inboxSuggestions,
+  onScreenTarget,
   panelStatus,
   standardActions,
   threadSuggestions,
@@ -49,6 +50,10 @@ export function Composer({ phone, compact }: { phone: boolean; compact: boolean 
   const selectedKey = useSelectionStore((x) => x.selectedKey);
   const multiSel = useSelectionStore((x) => x.multiSel);
   const ctxOff = useSelectionStore((x) => x.ctxOff);
+  const ctxConversation = useSelectionStore((x) => x.ctxConversation);
+  // The focused message of the open thread: the chip follows it.
+  const focusedKey = useThreadStore((t) => (selectedKey && t.order.length > 1 && t.order.includes(selectedKey) ? t.focused : null));
+  const threadSize = useThreadStore((t) => (selectedKey && t.order.includes(selectedKey) ? t.order.length : 0));
   const compose = useComposeStore((x) => x.compose);
   const act = useAssistantStore((a) => (selectedKey ? a.lastAct[selectedKey] : undefined));
   const lastQuestion = useAssistantStore((a) => {
@@ -65,13 +70,30 @@ export function Composer({ phone, compact }: { phone: boolean; compact: boolean 
   // Used up: say so here, with the date it comes back. Nothing is retried.
   const exhausted = !!allowance && (blocked || isAllowanceExhausted(allowance)) && allowance.cap != null;
 
-  const target = attachable(selectedKey ? findRow(selectedKey) : undefined);
+  // Phone: the per-message actions and the chip exist only while the reader is
+  // the screen showing (model.ts `onScreenTarget`). The selection itself stays.
+  const screen = useUiStore((u) => u.screen);
+  const target = onScreenTarget(selectedKey ? findRow(focusedKey ?? selectedKey) : undefined, { phone, screen });
   const reader = !!target;
+  // Every message of the open conversation, the person's own replies
+  // included (they are half of it). `threadSize` is read so this follows
+  // messages the thread finds later.
+  const conversation = useMemo(
+    () =>
+      selectedKey && threadSize > 1
+        ? conversationMessages(selectedKey)
+            .filter((r) => r.folder_role !== "drafts" && r.folder_role !== "scheduled")
+            .map((r) => r.key)
+        : [],
+    [selectedKey, threadSize],
+  );
+  const canWiden = reader && conversation.length > 1 && multiSel.length < 2;
+  const whole = ctxConversation && canWiden;
   const inline = isInlineCompose(compose, selectedKey);
   const held = !!compose?.held || pushPending;
   const aiDraftReady = inline && !!compose?.ai && !compose.held && !compose.streaming;
-  const keys = chipKeys({ inboxRun, multiSel, target, ctxOff });
-  const label = chipLabel(keys, target);
+  const keys = chipKeys({ inboxRun, multiSel, target, ctxOff, conversation: whole ? conversation : null });
+  const label = chipLabel(keys, target, whole);
   const who = target ? firstName(displayName(target.from)) : "";
 
   const std = standardActions({ target, inline });
@@ -204,6 +226,20 @@ export function Composer({ phone, compact }: { phone: boolean; compact: boolean 
                 <X size={13} aria-hidden="true" />
               </button>
             </span>
+          </div>
+        ) : null}
+        {/* A thread is open: the chip carries its focused message; this widens it to all of them. */}
+        {keys.length && canWiden && !inboxRun ? (
+          <div className={s.chipLine}>
+            <button
+              type="button"
+              className={s.ctxAdd}
+              aria-pressed={whole}
+              title={whole ? "Attach only the focused message" : `Attach all ${conversation.length} messages of this conversation`}
+              onClick={() => useSelectionStore.getState().setCtxConversation(!whole)}
+            >
+              {whole ? "Only the focused message" : `The whole conversation (${conversation.length})`}
+            </button>
           </div>
         ) : null}
         {canAttach && !keys.length ? (

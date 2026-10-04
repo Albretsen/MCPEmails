@@ -61,4 +61,4 @@ export function focusPane(id: string): void {
 
 /** ui-store menu ids owned by the shell. Menus are mutually exclusive, so the
  *  Esc ladder and "one thing open at a time" come for free. */
-export const SHELL_MENU = { help: "help", palette: "palette" } as const;
+export const SHELL_MENU = { help: "help", palette: "palette", notifications: "notifications" } as const;

@@ -27,6 +27,7 @@ import {
   type MessageKey,
   type MessagePage,
   type MessageRow,
+  type MessageThread,
   type MoveResult,
   type ReplyMessageInput,
   type ScheduledSend,
@@ -50,8 +51,10 @@ import {
   MOCK_PROFILES,
   type MockBox,
   type MockProfile,
+  type SeedEmail,
   SEED,
   SEED_RICH,
+  THREADS,
   generateFiller,
   hintsOf,
 } from "./seed";
@@ -72,7 +75,14 @@ export interface MockMessage {
   /** Folder id. Opaque to the UI. */
   folder: string;
   thread_id: string;
+  /** Threading headers, as the client API sends them on every row. */
+  message_id_header: string;
+  in_reply_to: string | null;
+  references: string[];
 }
+
+const MOCK_ID_DOMAIN = "mock.mail";
+const messageIdOf = (id: string) => `${id}@${MOCK_ID_DOMAIN}`;
 
 interface MockScheduled extends ScheduledSend {
   body_text: string;
@@ -161,7 +171,27 @@ export class MockMailApi implements MailApi {
       thread_id: m.thread_id,
       is_starred: m.is_starred,
       folder_role: roleOfFolder(m.folder),
+      message_id_header: m.message_id_header,
+      in_reply_to: m.in_reply_to,
+      references: m.references,
+      thread_key: this.threadKey(m),
     };
+  }
+
+  /** The conversation key the real server would compute (client-api
+   *  mail/thread-key.ts): the provider's thread id on Gmail and Outlook, the
+   *  root Message-ID everywhere else. */
+  private threadKey(m: MockMessage): string {
+    const provider = this.inboxes.find((i) => i.inbox_id === m.inbox_id)?.provider;
+    if (provider === "gmail") return `g:${m.thread_id}`;
+    if (provider === "outlook") return `o:${m.thread_id}`;
+    return `m:${m.references[0] ?? m.in_reply_to ?? m.message_id_header}`;
+  }
+
+  /** The headers of a reply to `parent`. */
+  private replyHeaders(parent: MockMessage | undefined): Pick<MockMessage, "in_reply_to" | "references"> {
+    if (!parent) return { in_reply_to: null, references: [] };
+    return { in_reply_to: parent.message_id_header, references: [...parent.references, parent.message_id_header] };
   }
 
   /** Emits to subscribers as if the server pushed it. */
@@ -193,6 +223,9 @@ export class MockMailApi implements MailApi {
       has_attachments: false,
       folder: ALIAS_FOLDER.inbox,
       thread_id: `t-${id}`,
+      message_id_header: messageIdOf(id),
+      in_reply_to: null,
+      references: [],
     };
     const key = makeKey(m.inbox_id, m.id);
     this.messages.set(key, m);
@@ -275,6 +308,10 @@ export class MockMailApi implements MailApi {
       return {
         ...this.detailBase(key, inbox_id, id),
         thread_id: m.thread_id,
+        message_id_header: m.message_id_header,
+        in_reply_to: m.in_reply_to,
+        references: m.references,
+        thread_key: this.threadKey(m),
         from: m.from,
         to: m.to,
         cc: m.cc,
@@ -323,6 +360,25 @@ export class MockMailApi implements MailApi {
       };
     }
     throw new Error("message_not_found");
+  }
+
+  /** Like the real `thread` op: every message of the conversation in this
+   *  mailbox, whatever its folder (not Trash, Spam or Drafts), oldest first. */
+  async getThread(key: MessageKey, _opts?: { thread_key?: string; limit?: number }, signal?: AbortSignal): Promise<MessageThread> {
+    await readDelay(signal);
+    const anchor = this.messages.get(key);
+    if (!anchor) throw new Error("message_not_found");
+    const rows = this.allMessages()
+      .filter(
+        (m) =>
+          m.inbox_id === anchor.inbox_id &&
+          m.thread_id === anchor.thread_id &&
+          m.folder !== ALIAS_FOLDER.trash &&
+          m.folder !== ALIAS_FOLDER.spam,
+      )
+      .map((m) => this.toRow(m))
+      .sort((a, b) => (a.date < b.date ? -1 : a.date > b.date ? 1 : 0));
+    return { thread_key: this.threadKey(anchor), rows, partial: false };
   }
 
   async downloadAttachment(key: MessageKey, attachment_index: number, signal?: AbortSignal): Promise<AttachmentDownload> {
@@ -427,7 +483,7 @@ export class MockMailApi implements MailApi {
     const to = input.to ?? [orig.from];
     const cc =
       input.cc ?? (input.reply_all ? [...orig.to, ...orig.cc].filter((a) => a.email !== selfAddr) : []);
-    return this.deliver(orig.inbox_id, to, cc, `Re: ${orig.subject.replace(/^Re: /i, "")}`, input.body_text, orig.thread_id);
+    return this.deliver(orig.inbox_id, to, cc, `Re: ${orig.subject.replace(/^Re: /i, "")}`, input.body_text, orig);
   }
 
   async forwardMessage(input: ForwardMessageInput): Promise<SendResult> {
@@ -583,7 +639,15 @@ export class MockMailApi implements MailApi {
     const boxOf = (b: MockBox): MockBox => (first ? "gmail" : b);
 
     // First run mirrors the prototype: only the inbox, everything in one mailbox.
-    const seeds = first ? SEED.filter((e) => e.folder === "inbox") : SEED;
+    const everything = [...SEED, ...THREADS];
+    const seeds = first ? everything.filter((e) => e.folder === "inbox") : everything;
+    const byId = new Map(everything.map((e) => [e.id, e]));
+    /** The ancestors of a seed, oldest first, and the conversation's root. */
+    const chain = (e: SeedEmail): string[] => {
+      const out: string[] = [];
+      for (let p = e.replyTo ? byId.get(e.replyTo) : undefined; p; p = p.replyTo ? byId.get(p.replyTo) : undefined) out.unshift(p.id);
+      return out;
+    };
     for (const e of seeds) {
       const inbox = MOCK_INBOXES[boxOf(e.box)];
       const self = { name: "Jordan Reyes", email: inbox.email_address };
@@ -620,9 +684,12 @@ export class MockMailApi implements MailApi {
         body_text: e.body,
         is_read: !e.unread,
         is_starred: false,
-        has_attachments: e.id === "priya" || !!SEED_RICH[e.id]?.attachments,
+        has_attachments: e.id === "priya" || e.id === "dana-1" || !!SEED_RICH[e.id]?.attachments,
         folder,
-        thread_id: `t-${e.id}`,
+        thread_id: `t-${chain(e)[0] ?? e.id}`,
+        message_id_header: messageIdOf(e.id),
+        in_reply_to: e.replyTo ? messageIdOf(e.replyTo) : null,
+        references: chain(e).map(messageIdOf),
       });
       const h = hintsOf(e);
       if (h) this.hints.set(key, h);
@@ -645,6 +712,9 @@ export class MockMailApi implements MailApi {
         has_attachments: f.has_attachments,
         folder: ALIAS_FOLDER.inbox,
         thread_id: `t-${f.id}`,
+        message_id_header: messageIdOf(f.id),
+        in_reply_to: null,
+        references: [],
       });
     }
   }
@@ -793,7 +863,8 @@ export class MockMailApi implements MailApi {
     cc: EmailAddressEntry[],
     subject: string,
     body_text: string,
-    thread_id?: string,
+    /** The message being answered: the new one joins its conversation. */
+    parent?: MockMessage,
   ): SendResult {
     const id = `s${this.seq++}`;
     this.messages.set(makeKey(inbox_id, id), {
@@ -810,7 +881,9 @@ export class MockMailApi implements MailApi {
       is_starred: false,
       has_attachments: false,
       folder: ALIAS_FOLDER.sent,
-      thread_id: thread_id ?? `t-${id}`,
+      thread_id: parent?.thread_id ?? `t-${id}`,
+      message_id_header: messageIdOf(id),
+      ...this.replyHeaders(parent),
     });
     return { message_id: id, inbox_id };
   }

@@ -3,6 +3,7 @@ import { setAssistantTransport, setMailApi } from "../api";
 import { ScriptedAssistantTransport, setAssistantPace } from "../api/mock/assistant";
 import { setLatency } from "../api/mock/latency";
 import { MockMailApi } from "../api/mock/mock-mail-api";
+import { THREADS } from "../api/mock/seed";
 import type { AssistantAllowance } from "../api/types";
 import { resetRouterForTests } from "../app/router";
 import { type ListData, findRow } from "../data/cache";
@@ -23,7 +24,9 @@ let api: MockMailApi;
 const INBOX = keys.messages(listMeta("all", { role: "inbox" }));
 const flush = () => new Promise((r) => setTimeout(r, 0));
 const A = () => useAssistantStore.getState();
-const sentCount = () => api.allMessages().filter((m) => m.folder === "Sent").length;
+// Mail in Sent, not counting the seeded conversations' own replies.
+const SEEDED_REPLIES = THREADS.filter((e) => e.folder === "sent").length;
+const sentCount = () => api.allMessages().filter((m) => m.folder === "Sent").length - SEEDED_REPLIES;
 
 async function until(cond: () => boolean): Promise<void> {
   for (let i = 0; i < 200 && !cond(); i++) await flush();

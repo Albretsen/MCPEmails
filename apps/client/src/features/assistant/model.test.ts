@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest";
-import type { MessageRow } from "../../api/types";
+import type { MessageKey, MessageRow } from "../../api/types";
 import type { AssistantMessage } from "../../state/assistant-store";
 import {
   attachable,
@@ -53,6 +53,20 @@ describe("assistant panel model", () => {
     expect(chipLabel(["outlook:maya"], maya)).toBe("Maya Chen · Q4 renewal");
     expect(chipLabel(["a:1", "a:2", "a:3"], maya)).toBe("3 emails");
     expect(chipLabel([], maya)).toBe("");
+  });
+
+  it("the chip carries the focused message, or the whole conversation when asked", () => {
+    const base = { inboxRun: false, multiSel: [], target: maya, ctxOff: false };
+    const conversation: MessageKey[] = ["outlook:m1", "outlook:m2", "outlook:maya"];
+    expect(chipKeys({ ...base, conversation: null })).toEqual(["outlook:maya"]);
+    expect(chipKeys({ ...base, conversation })).toEqual(conversation);
+    // Removed, ticked rows and a run about all mail win, as before.
+    expect(chipKeys({ ...base, conversation, ctxOff: true })).toEqual([]);
+    expect(chipKeys({ ...base, conversation, multiSel: ["a:1", "a:2"] })).toEqual(["a:1", "a:2"]);
+    expect(chipKeys({ ...base, conversation, inboxRun: true })).toEqual([]);
+    // A conversation of one is just the message.
+    expect(chipKeys({ ...base, conversation: ["outlook:maya"] })).toEqual(["outlook:maya"]);
+    expect(chipLabel(conversation, maya, true)).toBe("Conversation · Q4 renewal (3 emails)");
   });
 
   it("words the placeholder for each state", () => {

@@ -23,8 +23,12 @@ import {
   flaggedField,
   isHumanBulk,
   readExtraFields,
+  referencesOfHeaderBlock,
+  threadFields,
+  threadGraphSelect,
+  threadMessageIdField,
+  threadMetadataHeaders,
   wantsFlagged,
-  wantsJoinedInlineParts,
   wantsReplyRecipients,
   wantsTrashIds,
 } from "./first-party.ts";
@@ -179,7 +183,7 @@ import {
   buildMimeMessage,
   formatMailbox,
   mimeMessageToBase64url,
-  stripBccHeader,
+  draftSendBytes,
 } from "./mime-build.ts";
 import {
   consolidatedSecurityScopes,
@@ -272,6 +276,7 @@ import {
 } from "./recipient-rules.ts";
 import {
   decodeEncodedWords,
+  embeddedMessageBody,
   getHeader,
   joinShownParts,
   parseEmail,
@@ -281,6 +286,7 @@ import {
 import { contactDisplayName } from "./contact-display-name.ts";
 import {
   normalizePreview,
+  tidyPreview,
   preferredBodyText,
   stripHtmlToText,
 } from "./text-extract.ts";
@@ -10270,6 +10276,10 @@ interface EmailSummary {
    * never has this key, so the advertised output schema is unchanged.
    */
   is_flagged?: boolean;
+  /** Threading headers: client-api only (`threadFields` in first-party.ts). */
+  message_id_header?: string | null;
+  in_reply_to?: string | null;
+  references?: string[];
 }
 
 interface ListInboxResult {
@@ -10566,7 +10576,7 @@ async function listGmailMessages(
     pageRefs.map(({ id }) => {
       const mp = new URLSearchParams({ format: "metadata" });
       // Multiple metadataHeaders values must be repeated params.
-      for (const h of ["From", "To", "Subject", "Date"]) {
+      for (const h of ["From", "To", "Subject", "Date", ...threadMetadataHeaders()]) {
         mp.append("metadataHeaders", h);
       }
       return fetch(
@@ -10603,6 +10613,7 @@ async function listGmailMessages(
       folder,
       thread_id: msg.threadId ?? pageRefs[i].threadId,
       ...flaggedField(() => (msg.labelIds ?? []).includes("STARRED")),
+      ...threadFields(() => ({ messageId: hdrs["message-id"], inReplyTo: hdrs["in-reply-to"], references: hdrs["references"] })),
     };
   });
 
@@ -10761,7 +10772,7 @@ async function listOutlookMessages(
     $select:
       "id,conversationId,from,toRecipients,subject,receivedDateTime,bodyPreview,isRead,hasAttachments" +
       // client-api only; for MCP traffic this appends "" and the URL is unchanged.
-      (wantsFlagged() ? ",flag" : ""),
+      (wantsFlagged() ? ",flag" : "") + threadGraphSelect(),
     $top: String(limit + 1),
     $skip: String(offset),
     $orderby: "receivedDateTime desc",
@@ -10821,6 +10832,7 @@ async function listOutlookMessages(
     folder: label || folder,
     thread_id: msg.conversationId ?? msg.id,
     ...flaggedField(() => msg.flag?.flagStatus === "flagged"),
+    ...threadMessageIdField(() => msg.internetMessageId),
   }));
 
   // Exact when known (folder counters, or the last page), null otherwise.
@@ -11139,12 +11151,13 @@ async function listImapMessages(
         to: s.envelope.to.map(decodeEnvelopeAddress),
         subject: decodeEnvelopeSubject(s.envelope.subject),
         date: s.envelope.date,
-        preview: normalizePreview(s.preview),
+        preview: tidyPreview(s.preview),
         is_read: s.flags.includes("\\Seen"),
         has_attachments: s.hasAttachments,
         folder,
         thread_id: String(s.uid),
         ...flaggedField(() => s.flags.includes("\\Flagged")),
+        ...threadFields(() => ({ messageId: s.envelope.messageId, inReplyTo: s.envelope.inReplyTo, references: referencesOfHeaderBlock(s.referencesHeader) })),
       });
     }
 
@@ -11171,6 +11184,14 @@ async function listImapMessages(
 // ---------------------------------------------------------------------------
 // Generic IMAP provider — email_read
 // ---------------------------------------------------------------------------
+
+/**
+ * An HTML-only part as `body_text` shows it: the same conversion
+ * `preferredBodyText` applies to an HTML-only message, links kept.
+ */
+function htmlPartToBodyText(html: string): string {
+  return stripHtmlToText(html, { keepLinks: true });
+}
 
 /**
  * Implements `email_read` for IMAP inboxes. The message id is "<folder>:<uid>"
@@ -11216,6 +11237,14 @@ async function readImapMessage(
    * imap-fetch-once.ts.
    */
   fetchedThisCall?: ImapFetchedThisCall,
+  /**
+   * Return the DISPLAYED body: the inline text parts of a multipart/mixed
+   * joined in order, so a forwarded message reads back with its original text
+   * (see `parseEmailJoined` in mime.ts). Only the read tools set it, through
+   * readOneMessage. The callers that quote a body into an outgoing message
+   * keep the first-part body they have always had.
+   */
+  joinInlineParts = false,
 ): Promise<ReadEmailResult> {
   if (!inbox.imap_host || !inbox.imap_port || !inbox.imap_password) {
     throw new Error("imap_auth_failed");
@@ -11236,16 +11265,10 @@ async function readImapMessage(
     );
     if (!msg) throw new Error("message_not_found");
 
-    // client-api only (first-party.ts `joinInlineParts`): the inline text
-    // parts of a multipart/mixed are joined, so a forward reads back whole.
-    // An MCP read is `parseEmail`, as it has always been.
-    const parsed = parseEmail(msg.raw);
-    if (wantsJoinedInlineParts()) {
-      const joined = parseEmailJoined(msg.raw, (html) => stripHtmlToText(html, { keepLinks: true }));
-      parsed.text = joined.text;
-      parsed.html = joined.html;
-      parsed.attachments = joined.attachments;
-    }
+    // One decode path for MCP and client-api: `msg.raw` is exact octets.
+    const parsed = joinInlineParts
+      ? parseEmailJoined(msg.raw, htmlPartToBodyText)
+      : parseEmail(msg.raw);
     const h = parsed.headers;
 
     const subject = decodeEncodedWords(getHeader(h, "subject") ?? "(no subject)");
@@ -11310,6 +11333,7 @@ async function readImapMessage(
         .map(stripAngleBrackets)
         .filter(Boolean),
       ...readExtraFields(() => ({ is_flagged: msg.flags.includes("\\Flagged"), folder })),
+      ...threadMessageIdField(() => getHeader(h, "message-id")),
     };
   } catch (err) {
     if (err instanceof ImapAuthError) throw new Error("imap_auth_failed");
@@ -11524,13 +11548,14 @@ async function searchImapMessages(
       to: s.envelope.to.map(decodeEnvelopeAddress),
       subject: decodeEnvelopeSubject(s.envelope.subject),
       date: s.envelope.date,
-      preview: normalizePreview(s.preview),
+      preview: tidyPreview(s.preview),
       is_read: s.flags.includes("\\Seen"),
       has_attachments: s.hasAttachments,
       folder,
       thread_id: String(s.uid),
       relevance_score: null,
       ...flaggedField(() => s.flags.includes("\\Flagged")),
+      ...threadFields(() => ({ messageId: s.envelope.messageId, inReplyTo: s.envelope.inReplyTo, references: referencesOfHeaderBlock(s.referencesHeader) })),
     }));
 
     return {
@@ -12152,6 +12177,8 @@ interface ReadEmailResult {
    */
   is_flagged?: boolean;
   folder?: string;
+  /** client-api only (`threadMessageIdField` in first-party.ts). */
+  message_id_header?: string | null;
   from: EmailAddressEntry;
   to: EmailAddressEntry[];
   cc: EmailAddressEntry[];
@@ -12299,6 +12326,9 @@ interface GmailAttachmentRef {
  *   - multipart/related (body + inline images)
  * Each case is handled by recursion; the first encountered text/plain and
  * text/html wins (they are usually encountered depth-first, alternatives first).
+ *
+ * That first-wins body is what the callers that QUOTE a message get. The read
+ * tools use {@link walkGmailPayloadJoined} below.
  */
 function walkGmailPayload(part: GmailFullPart): {
   textPlain: string | null;
@@ -12343,9 +12373,17 @@ function walkGmailPayload(part: GmailFullPart): {
 }
 
 /**
- * {@link walkGmailPayload} for client-api (first-party.ts `joinInlineParts`):
- * the inline text parts of a multipart/mixed are joined in order instead of
- * the first one winning. Same attachments, in the same order.
+ * {@link walkGmailPayload} for the read tools: the DISPLAYED body, by the same
+ * rules as `parseEmailJoined` in mime.ts. The inline text parts of a
+ * multipart/mixed are joined in order instead of the first one winning, so a
+ * forwarded message reads back with its original text. Same attachments, in
+ * the same order, as walkGmailPayload.
+ *
+ * Gmail parses a message/rfc822 part for us: its `parts` hold the embedded
+ * message, whose own headers sit on the first of them. An inline one (no
+ * filename) is shown under a forwarded-message block; an attached one stays
+ * an attachment and its text is used only when the message shows nothing else,
+ * which is what walkGmailPayload's first-wins descent already did.
  */
 function walkGmailPayloadJoined(root: GmailFullPart): {
   textPlain: string | null;
@@ -12353,10 +12391,10 @@ function walkGmailPayloadJoined(root: GmailFullPart): {
   attachments: GmailAttachmentRef[];
 } {
   const attachments: GmailAttachmentRef[] = [];
-  const htmlToText = (html: string) => stripHtmlToText(html, { keepLinks: true });
   const walk = (part: GmailFullPart): ShownBody => {
     let own: ShownBody = { text: null, html: null };
-    if (typeof part.filename === "string" && part.filename.length > 0) {
+    const isAttachment = typeof part.filename === "string" && part.filename.length > 0;
+    if (isAttachment) {
       attachments.push({
         filename: part.filename as string,
         mimeType: part.mimeType ?? "application/octet-stream",
@@ -12371,7 +12409,18 @@ function walkGmailPayloadJoined(root: GmailFullPart): {
     }
     const children = (part.parts ?? []).map(walk);
     if (children.length === 0) return own;
-    return joinShownParts(part.mimeType ?? "", [own, ...children], htmlToText);
+    if (part.mimeType === "message/rfc822") {
+      const inner = joinShownParts("multipart/mixed", children, htmlPartToBodyText);
+      if (isAttachment) return { ...inner, fallback: true };
+      const header = (name: string) =>
+        part.parts?.[0]?.headers?.find((h) => h.name.toLowerCase() === name)?.value ?? "";
+      return embeddedMessageBody(
+        { from: header("from"), date: header("date"), subject: header("subject"), to: header("to") },
+        inner,
+        htmlPartToBodyText,
+      );
+    }
+    return joinShownParts(part.mimeType ?? "", [own, ...children], htmlPartToBodyText);
   };
   const shown = walk(root);
   return { textPlain: shown.text, textHtml: shown.html, attachments };
@@ -12404,6 +12453,8 @@ async function readGmailMessage(
    * to relaying the raw original (forward-relay.ts); kept for that next caller.
    */
   perFileMaxBytes?: number,
+  /** As on readImapMessage: the displayed body, for the read tools only. */
+  joinInlineParts = false,
 ): Promise<ReadEmailResult> {
   const accessToken = await withFreshGmailToken(inbox);
 
@@ -12435,10 +12486,9 @@ async function readGmailMessage(
   }
 
   // Step 3: Walk MIME tree.
-  const { textPlain, textHtml, attachments: attachmentRefs } =
-    wantsJoinedInlineParts()
-      ? walkGmailPayloadJoined(msg.payload ?? {})
-      : walkGmailPayload(msg.payload ?? {});
+  const { textPlain, textHtml, attachments: attachmentRefs } = joinInlineParts
+    ? walkGmailPayloadJoined(msg.payload ?? {})
+    : walkGmailPayload(msg.payload ?? {});
 
   // Step 4: Fetch attachment content if requested. Budget defaults to 10 MB for
   // a whole-message read; the single-file download path raises it so one file
@@ -12577,6 +12627,7 @@ async function readGmailMessage(
       is_flagged: labelIds.includes("STARRED"),
       folder: gmailFolderOfLabels(labelIds),
     })),
+    ...threadMessageIdField(() => hdrs["message-id"]),
   };
 }
 
@@ -12839,6 +12890,7 @@ async function readOutlookMessage(
       is_flagged: msg.flag?.flagStatus === "flagged",
       folder: firstPartyFolder,
     })),
+    ...threadMessageIdField(() => msg.internetMessageId),
   };
 }
 
@@ -13025,9 +13077,12 @@ async function readOneMessage(
         opts.mark_as_read,
         attachmentBudgetBytes,
         selectOnlyIndex,
+        undefined,
+        true,
       );
       break;
     case "outlook":
+      // Graph returns ONE already-flattened body, so there is nothing to join.
       result = await readOutlookMessage(
         inbox,
         messageId,
@@ -13050,6 +13105,7 @@ async function readOneMessage(
         opts.imap_session,
         undefined,
         opts.imap_fetched,
+        true,
       );
       break;
     default:
@@ -17684,7 +17740,7 @@ async function searchGmailMessages(
   const metaResults = await Promise.all(
     pageRefs.map(({ id }) => {
       const mp = new URLSearchParams({ format: "metadata" });
-      for (const h of ["From", "To", "Subject", "Date"]) {
+      for (const h of ["From", "To", "Subject", "Date", ...threadMetadataHeaders()]) {
         mp.append("metadataHeaders", h);
       }
       return fetch(
@@ -17730,6 +17786,7 @@ async function searchGmailMessages(
       thread_id: msg.threadId ?? pageRefs[i].threadId,
       relevance_score: null,
       ...flaggedField(() => labelIds.includes("STARRED")),
+      ...threadFields(() => ({ messageId: hdrs["message-id"], inReplyTo: hdrs["in-reply-to"], references: hdrs["references"] })),
     };
   });
 
@@ -17944,6 +18001,7 @@ async function searchOutlookMessages(
     thread_id: msg.conversationId ?? msg.id,
     relevance_score: null,
     ...flaggedField(() => msg.flag?.flagStatus === "flagged"),
+    ...threadMessageIdField(() => msg.internetMessageId),
   }));
 
   return {
@@ -24784,7 +24842,10 @@ async function imapSendDraft(
       // NOT contain a Bcc header — strip it so To/Cc recipients never see the BCC
       // addresses. (The draft still in the Drafts folder may keep its Bcc header;
       // that's the user's own copy.)
-      const sentMime = stripBccHeader(rawMime);
+      // Octets, not a string: `rawMime` is the draft's exact octets, one per
+      // character, and handing that string to SMTP / APPEND would UTF-8-encode
+      // it, turning every 8-bit octet of a draft another client wrote into two.
+      const sentMime = draftSendBytes(rawMime);
 
       return { sentMime, recipients, parsed, folder, uid, password };
     });
@@ -32191,6 +32252,11 @@ export {
 // statement rather than three more names in the block above, so the two do not
 // collide when another branch edits that list.
 export { executeListDrafts, executeListInbox, executeReadEmails };
+
+// Exported for read-joined-body.test.ts only: the single-message read, run
+// against the same fakes, so the forwarded-message fix is pinned on the tool
+// result of `email_read` as well as of `email_read_batch`.
+export { executeReadEmail };
 
 // ---------------------------------------------------------------------------
 // Exported for `client-api` (supabase/functions/client-api), the web mail

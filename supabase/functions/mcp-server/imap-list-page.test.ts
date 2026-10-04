@@ -317,6 +317,6 @@ Deno.test("listImapMessages gets its page from fetchImapListPage and searches no
   const body = INDEX.slice(start, INDEX.indexOf("\n}\n", start));
   assert(body.includes("await fetchImapListPage(client, {"));
   assert(!body.includes("uidSearch("), "the handler no longer lists every UID");
-  assert(body.includes("preview: normalizePreview(s.preview)"), "the preview it fetches is returned");
+  assert(body.includes("preview: tidyPreview(s.preview)"), "the preview it fetches is returned");
   assert(body.includes("has_more: offset + limit < total"));
 });

@@ -17,6 +17,8 @@ const SETTINGS_STORAGE_KEY = "mc-settings-v1";
 export interface UiSettings {
   /** Single-key shortcuts (WCAG 2.1.4: must be possible to turn off). */
   shortcutsEnabled: boolean;
+  /** Group mail into conversations (list rows and the reader). Default on. */
+  conversationView: boolean;
 }
 
 export interface UiState {
@@ -98,7 +100,10 @@ export const useUiStore = create<UiState>((set, get) => {
     chatFull: false,
     menu: null,
     listHover: false,
-    settings: { shortcutsEnabled: savedSettings.shortcutsEnabled !== false },
+    settings: {
+      shortcutsEnabled: savedSettings.shortcutsEnabled !== false,
+      conversationView: savedSettings.conversationView !== false,
+    },
 
     setViewport: (viewport) => {
       if (get().viewport !== viewport) set({ viewport, listHover: false });
@@ -149,5 +154,7 @@ export const selectIsPhone = (s: UiState): boolean => s.viewport === "phone";
 export const selectLayoutCustom = (s: UiState): boolean => s.sideW != null || s.listW != null || s.panelW != null;
 /** Whether the assistant's transcript is on screen right now. */
 export const selectAssistantVisible = (s: UiState): boolean => (s.viewport === "phone" ? s.chatFull : s.panelOpen);
+
+export const selectConversationView = (s: UiState): boolean => s.settings.conversationView;
 
 export const isPhone = (): boolean => useUiStore.getState().viewport === "phone";
