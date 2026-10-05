@@ -9,10 +9,10 @@
 // and no cron job. Remove this file once the trip is over; nothing else depends
 // on it.
 //
-// Only events that report GOOD news or customer behaviour are muted.
-// automation.auto_disabled stays on: it is a failure alert, and some of its
-// error codes (invalid_filter, invalid_action) are our bugs. The synthetic
-// monitor is a separate function and is untouched.
+// Muted: signups, checkout feedback and automation.auto_disabled (mostly
+// customer-side failures, and Asgeir cannot act on them from a phone without
+// the admin tools). The synthetic monitor is a separate function and is
+// untouched: it is the one alert that stays on.
 
 // 2026-10-06 00:00 and 2026-10-14 00:00 in Europe/Oslo (CEST, UTC+2 until Oct 25).
 export const QUIET_FROM = "2026-10-05T22:00:00.000Z";
@@ -21,6 +21,7 @@ export const QUIET_UNTIL = "2026-10-13T22:00:00.000Z";
 export const QUIET_EVENT_TYPES: ReadonlySet<string> = new Set([
   "user.signup",
   "checkout.feedback",
+  "automation.auto_disabled",
 ]);
 
 // Written to system_events.error so a muted row is findable afterwards.

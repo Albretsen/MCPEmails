@@ -24,11 +24,12 @@ test('mail resumes at 00:00 Oslo on the 14th and was not muted before the 6th', 
   }
 });
 
-test('failure alerts are never muted, in or out of the window', () => {
-  assert.equal(isQuiet('automation.auto_disabled', at('2026-10-10T12:00:00Z')), false);
+test('unknown events are never muted, and automation alerts follow the window', () => {
+  assert.equal(isQuiet('automation.auto_disabled', at('2026-10-10T12:00:00Z')), true);
+  assert.equal(isQuiet('automation.auto_disabled', at('2026-10-14T08:00:00Z')), false);
   assert.equal(isQuiet('some.future_event', at('2026-10-10T12:00:00Z')), false);
 });
 
-test('the muted set is exactly the two good-news events', () => {
-  assert.deepEqual([...QUIET_EVENT_TYPES].sort(), ['checkout.feedback', 'user.signup']);
+test('the muted set is exactly the three events', () => {
+  assert.deepEqual([...QUIET_EVENT_TYPES].sort(), ['automation.auto_disabled', 'checkout.feedback', 'user.signup']);
 });
