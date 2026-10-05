@@ -1,6 +1,7 @@
 import "jsr:@supabase/functions-js/edge-runtime.d.ts";
 import { createClient, SupabaseClient } from "npm:@supabase/supabase-js@2";
 import { type CheckoutFeedbackContext, renderCheckoutFeedbackEmail } from "./checkout-feedback.ts";
+import { isQuiet, QUIET_MARKER } from "./quiet-window.ts";
 
 const PUBLIC_MCP_ENDPOINT = Deno.env.get("SYSTEM_NOTIFY_MCP_ENDPOINT") ?? "https://mcpemails.com/api/mcp";
 // The connected/authenticated inbox we send FROM (must be a real inbox_list entry with credentials).
@@ -659,6 +660,13 @@ Deno.serve(async (request) => {
   const markProcessed = async (status: "sent" | "failed", error: string | null) => {
     await supabase.from("system_events").update({ status, error, processed_at: new Date().toISOString() }).eq("id", eventId);
   };
+
+  // Operator vacation: skip before building the template, which would run the
+  // growth queries for an email nobody will read. See ./quiet-window.ts.
+  if (isQuiet(eventType, new Date())) {
+    await markProcessed("sent", QUIET_MARKER);
+    return json(200, { event_id: eventId, status: "muted" });
+  }
 
   try {
     const template = await buildTemplate(eventType, payload, supabase);
