@@ -1330,7 +1330,9 @@ a.footer-copy-value:hover { color: #fff; text-decoration: none; }
 
 @media (max-width: 767px) {
   /* Show hamburger, hide desktop nav + cta */
-  .nav-hamburger { display: flex; }
+  /* margin-left: auto pins it to the right edge: .nav-grow, the spacer that
+     does that on desktop, is hidden below. */
+  .nav-hamburger { display: flex; margin-left: auto; }
   .nav-links { display: none !important; }
   .nav-grow { display: none; }
   .nav-cta { display: none !important; }
