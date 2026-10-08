@@ -383,6 +383,7 @@ import {
   summarizeForwardBatch,
 } from "./forward-batch.ts";
 import { attachResultNote, attachResultNotes, withResultNotesProperty } from "./result-notes.ts";
+import { SENT_COPY_NOT_SAVED_NOTE, sentCopyCandidates } from "./sent-copy.ts";
 import {
   buildUsageLimitText,
   FREE_ACTION_GRACE_DAYS,
@@ -557,9 +558,24 @@ const supabase = createClient(supabaseUrl, supabaseServiceKey, {
 interface ActivityContext {
   inboxId: string | null;
   outlookNoMailbox?: boolean;
+  /**
+   * Notes a provider layer raised for the in-flight call (e.g. a Sent copy
+   * that could not be saved), attached to the result after dispatch. Absent
+   * outside a tools/call, such as a scheduled send, where there is no result
+   * to attach them to.
+   */
+  resultNotes?: string[];
 }
 
 const activityInboxStore = new AsyncLocalStorage<ActivityContext>();
+
+/** Queue a note for the current tool result; once per distinct note. */
+function noteForResult(note: string): void {
+  const store = activityInboxStore.getStore();
+  if (!store) return;
+  store.resultNotes ??= [];
+  if (!store.resultNotes.includes(note)) store.resultNotes.push(note);
+}
 
 // ---------------------------------------------------------------------------
 // Reconnect / auth-failure helpers
@@ -11620,18 +11636,19 @@ async function imapSmtpSend(
   }
 }
 
-/** Common names for the Sent mailbox across IMAP providers, tried in order. */
-const SENT_FOLDER_CANDIDATES = ["Sent", "Sent Messages", "Sent Items", "INBOX.Sent"];
-
 /**
  * Best-effort: file a copy of an outgoing message in the Sent folder via IMAP
  * APPEND. SMTP submission does not do this automatically (unlike the Gmail /
  * Graph / JMAP send APIs). Never throws — a failed Sent copy must not fail the
- * send itself.
+ * send itself — but a copy that was not saved is disclosed on the tool result
+ * (see sent-copy.ts), so the caller is not told "sent" with a silent gap in
+ * Sent.
  */
 async function appendToSentFolder(inbox: InboxRow, mimeMessage: string | Uint8Array): Promise<void> {
   if (!inbox.imap_host || !inbox.imap_port || !inbox.imap_password) return;
   let client: ImapClient | null = null;
+  let saved = false;
+  let error: string | null = null;
   try {
     const password = await decryptStoredToken(inbox.imap_password);
     client = await ImapClient.connect({
@@ -11641,20 +11658,27 @@ async function appendToSentFolder(inbox: InboxRow, mimeMessage: string | Uint8Ar
       email: imapAuthUser(inbox),
       password,
     });
-    for (const mbox of SENT_FOLDER_CANDIDATES) {
+    // A layout that cannot be listed still gets the legacy names tried.
+    const mailboxes = await client.listMailboxes().catch(() => []);
+    for (const mbox of sentCopyCandidates(mailboxes)) {
       try {
-        if (await client.append(mbox, mimeMessage)) break;
+        if (await client.append(mbox, mimeMessage)) {
+          saved = true;
+          break;
+        }
       } catch {
         // Try the next candidate folder name.
       }
     }
+    if (!saved) error = "no Sent mailbox accepted the copy";
   } catch (err) {
-    console.warn("[mcp-server] imap_sent_append_failed", {
-      inbox_id: inbox.id,
-      error: err instanceof Error ? err.message : String(err),
-    });
+    error = err instanceof Error ? err.message : String(err);
   } finally {
     if (client) await client.logout().catch(() => {});
+  }
+  if (!saved) {
+    console.warn("[mcp-server] imap_sent_append_failed", { inbox_id: inbox.id, error });
+    noteForResult(SENT_COPY_NOT_SAVED_NOTE);
   }
 }
 
@@ -29906,6 +29930,10 @@ async function handleToolsCall(
   // handler wrapped that in its own words ("Provider error ... try again in a
   // moment"), which is advice that can never work; say what is actually wrong.
   if (logCtx.outlookNoMailbox) rewriteNoMailboxResult(toolResult);
+
+  // Notes the provider layer raised during dispatch (a Sent copy that was not
+  // saved). Successful results only, like every other note.
+  attachResultNotes(toolResult, logCtx.resultNotes);
 
   // Disclose any argument leniency dropped. This is not optional bookkeeping:
   // dropping a filter instead of refusing the call is only defensible because
