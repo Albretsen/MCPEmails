@@ -44,6 +44,13 @@ export const KINDS = ['added', 'improved', 'fixed', 'changed'];
 export const ENTRIES = [
   /* ── October 2026 ──────────────────────────────────────────── */
   {
+    date: '2026-10-08',
+    kind: 'fixed',
+    title: 'Sent copies land in the real Sent folder on IMAP',
+    body:
+      'Mail sent from an IMAP inbox is now filed in the folder the server marks as Sent, including Chinese-named folders such as QQ Mail\'s 已发送, which also now resolve as sent, drafts, trash and spam. If no Sent folder accepts the copy, the result says so instead of silently leaving Sent empty.',
+  },
+  {
     date: '2026-10-03',
     kind: 'improved',
     title: 'Faster mailbox reads on IMAP accounts',
