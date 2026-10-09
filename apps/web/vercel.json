@@ -1,5 +1,6 @@
 {
   "$schema": "https://openapi.vercel.sh/vercel.json",
+  "github": { "silent": true },
   "functions": {
     "app/api/mcp/route.ts": { "regions": ["iad1"] },
     "app/api/automations/preview/route.ts": { "regions": ["iad1"] },
