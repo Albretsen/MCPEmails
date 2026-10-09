@@ -1,0 +1,47 @@
+name: Deploy edge function
+
+# Run by hand (Actions tab -> "Deploy edge function" -> Run workflow) to deploy
+# one edge function from main. Uses the SUPABASE_ACCESS_TOKEN repository secret,
+# so a deploy can be started from a phone, or from a cloud session whose network
+# policy does not reach api.supabase.com.
+#
+# Deploys from main only: concurrent sessions share this repository, and
+# deploying from a stale branch silently reverts other people's live work.
+
+on:
+  workflow_dispatch:
+    inputs:
+      function:
+        description: Edge function to deploy
+        required: true
+        default: mcp-server
+        type: choice
+        options:
+          - mcp-server
+          - client-api
+
+concurrency:
+  group: deploy-${{ inputs.function }}
+  cancel-in-progress: false
+
+permissions:
+  contents: read
+
+jobs:
+  deploy:
+    name: Deploy ${{ inputs.function }}
+    runs-on: ubuntu-latest
+    if: github.ref == 'refs/heads/main'
+    steps:
+      - uses: actions/checkout@v4
+      - uses: supabase/setup-cli@v1
+        with:
+          version: latest
+      - name: Deploy
+        env:
+          SUPABASE_ACCESS_TOKEN: ${{ secrets.SUPABASE_ACCESS_TOKEN }}
+        run: |
+          supabase functions deploy "${{ inputs.function }}" \
+            --project-ref swvaxorwumispmjaaszb \
+            --no-verify-jwt \
+            --use-api
