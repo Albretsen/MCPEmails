@@ -35,6 +35,7 @@ import {
 } from "./first-party.ts";
 import { decodeModifiedUtf7, encodeModifiedUtf7 } from "./utf7.ts";
 import { parseCopyUid } from "./imap-copyuid.ts";
+import { IMAP_CLIENT_ID, imapServerWantsId } from "./imap-id.ts";
 import {
   chooseImapPasswordMechanism,
   cramMd5Response,
@@ -794,7 +795,32 @@ export class ImapClient {
       );
     }
     client.capabilities = capabilitiesAfterAuth(resp);
+
+    // NetEase refuses every SELECT from a client that has not sent ID, while
+    // still answering LIST and STATUS; see imap-id.ts.
+    if (imapServerWantsId(cfg.host, greeting)) {
+      const idFromMs = imapClockMs();
+      try {
+        await client.identify();
+      } catch (err) {
+        client.close();
+        throw err;
+      }
+      if (timing) timing.authMs += imapClockMs() - idFromMs;
+    }
     return client;
+  }
+
+  /**
+   * Send the RFC 2971 ID command and wait for its answer, whatever it is: a
+   * server that does not know ID answers BAD and the session is no worse off.
+   * Only called from connectOnce, before the session is handed to anyone, so
+   * it does not take the command lock.
+   */
+  async identify(): Promise<void> {
+    const tag = this.nextTag();
+    await this.write(`${tag} ID ${IMAP_CLIENT_ID}${CRLF}`);
+    await this.readTagged(tag);
   }
 
   /**

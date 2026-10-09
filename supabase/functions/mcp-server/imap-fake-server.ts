@@ -113,6 +113,11 @@ export interface FakeServerOptions {
   rejectCharset?: boolean;
   /** `false`: a `{n}` at the end of a UID SEARCH line is not treated as a literal. */
   clientLiterals?: boolean;
+  /**
+   * What NetEase (163.com) does: every SELECT is refused "Unsafe Login" until
+   * the client has sent ID (RFC 2971). LIST and STATUS still answer.
+   */
+  requireId?: boolean;
 }
 
 const CRLF = "\r\n";
@@ -340,6 +345,8 @@ export class FakeImapServer {
   #wake: (() => void) | null = null;
   #selected: { mailbox: FakeMailbox; uids: number[] } | null = null;
   #heldLogoutTag: string | null = null;
+  /** The parameter list of the last ID command, once one has arrived. */
+  idReceived: string | null = null;
   #late = "";
 
   constructor(options: FakeServerOptions) {
@@ -628,6 +635,16 @@ export class FakeImapServer {
         return "";
       }
       return `* BYE logging out${CRLF}` + ok("LOGOUT completed");
+    }
+
+    if (verb === "ID") {
+      this.idReceived = command.slice(3);
+      return `* ID ("name" "fake")${CRLF}` + ok("ID completed");
+    }
+
+    if (verb === "SELECT" && this.#options.requireId && this.idReceived === null) {
+      this.#selected = null;
+      return `${tag} NO SELECT Unsafe Login. Please contact kefu@188.com for help${CRLF}`;
     }
 
     if (verb === "SELECT") {
