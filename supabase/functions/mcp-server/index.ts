@@ -2556,9 +2556,15 @@ async function checkRateLimit(
  * `checkRateLimit()` above cannot see them: a client looping any of them could
  * otherwise hammer the endpoint unbounded (observed in prod: one key looping a
  * `ping`-sized request at ~2 req/s, ~168k requests/day, with zero 429s). These
- * limits are generous for any legitimate client — a normal session calls
- * `initialize` once, `tools/list` a handful of times, and pings occasionally —
- * while capping a runaway loop to cheap 429s.
+ * limits must sit above what a legitimate session can reach, and "a normal
+ * session calls `initialize` once" does not hold for every host: ChatGPT (and
+ * Notion) re-handshake around every tool call, measured in prod at about 2.2
+ * discovery requests per `tools/call`. At the old 30/min and 200/hr that capped
+ * those hosts at roughly 90 tool calls an hour, far below RATE_LIMIT_WINDOWS,
+ * and the 429 named a limit the docs never mention. The ceilings are therefore
+ * pinned above the per-key `tools/call` limits (100/min, 1000/hr) times that
+ * ratio, with headroom, so a session is throttled on `tools/call` first. A
+ * runaway loop (2 req/s is 7,200/hr) still gets cheap 429s.
  *
  * Counted atomically per key via the `rate_limit_check` RPC against
  * `rate_limit_buckets`, independent of `activity_log`.
@@ -2571,8 +2577,8 @@ interface SlidingWindowLimit {
 }
 
 const DISCOVERY_RATE_LIMITS: SlidingWindowLimit[] = [
-  { label: "per_minute", bucket: "min", max: 30, windowMs: 60_000 },
-  { label: "per_hour", bucket: "hr", max: 200, windowMs: 3_600_000 },
+  { label: "per_minute", bucket: "min", max: 250, windowMs: 60_000 },
+  { label: "per_hour", bucket: "hr", max: 2_500, windowMs: 3_600_000 },
 ];
 
 /**
@@ -2581,13 +2587,13 @@ const DISCOVERY_RATE_LIMITS: SlidingWindowLimit[] = [
  *
  * `resources/*` is new non-`tools/call` traffic and so must be throttled for
  * exactly the reason DISCOVERY_RATE_LIMITS exists — but it cannot share that
- * 30/min budget, because its traffic shape is completely different. Phase 0 Q4
+ * discovery budget, because its traffic shape is completely different. Phase 0 Q4
  * measured the reference host re-fetching the UI resource on **every single
  * tool call**, with no caching within a session, let alone across sessions
  * (the host's own `appHtmlCache` field is declared and never consulted). The
  * card's own `resources/read` is a further fresh POST on top of that. So
  * `resources/read` traffic tracks `tools/call` traffic roughly 1:1 and would
- * exhaust a 30/min discovery bucket long before the tool limiter noticed.
+ * exhaust the discovery bucket long before the tool limiter noticed.
  *
  * These ceilings are therefore pinned above the per-key `tools/call` limits
  * (RATE_LIMIT_WINDOWS: 100/min, 1000/hr) with headroom for the card's extra
@@ -28730,7 +28736,7 @@ async function handleToolsList(
 //     ties the request to a rate-limit bucket, not what protects the payload.
 //  2. They are called far more often than their "discovery method" siblings.
 //     The host re-reads the resource on every tool call and does not cache, so
-//     they get their own budget (RESOURCE_RATE_LIMITS), not the 30/min
+//     they get their own budget (RESOURCE_RATE_LIMITS), not the
 //     discovery one.
 //  3. `_meta.ui` is emitted unconditionally, never contingent on the client
 //     having declared the UI extension — see clientSupportsUiExtension.
@@ -31801,7 +31807,7 @@ async function handleMeteredRequest(req: Request): Promise<Response> {
   // non-activity_log method this guard exists for — but in its own bucket
   // namespace with a much larger budget, because an MCP Apps host re-reads the
   // UI resource on every single tool call and caches nothing. Sharing the
-  // 30/min discovery bucket would throttle a perfectly normal session. See
+  // discovery bucket would throttle a perfectly normal session. See
   // RESOURCE_RATE_LIMITS for the sizing argument.
   const isResourceMethod = rpcRequest.method.startsWith("resources/");
   // Every limiter and quota below counts rows in a database. Introspection
