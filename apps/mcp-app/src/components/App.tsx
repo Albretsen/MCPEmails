@@ -111,7 +111,22 @@ export function App(props: { bridge: HostBridge }) {
   // host-context-changed on every iframe resize, that writes to the store, and
   // the resulting sync would clobber a post-decision envelope with the original
   // one from the tool result.
-  useEffect(() => subscribe(() => force((n) => n + 1)), []);
+  //
+  // SUBSCRIBED DURING THE FIRST RENDER, NOT IN AN EFFECT. An effect runs after
+  // the first frame, and `main.tsx` starts the handshake the moment `render()`
+  // returns, so a host that answered `ui/initialize` within that frame set
+  // `connected` (and delivered tool-input) before anything was listening. The
+  // card then sat on its first, empty render and told the host its height was
+  // 0 until the tool result arrived seconds later: a sliver where the loading
+  // line belongs. Measured on build 9d48a45f766d in a cross-origin frame: 13 of
+  // 20 mounts stayed blank when the host answered at once, 0 of 10 when it
+  // took 150ms. The listener only schedules a re-render, so registering it
+  // before the component has committed is safe.
+  const unsubscribe = useRef<(() => void) | null>(null);
+  if (unsubscribe.current === null) {
+    unsubscribe.current = subscribe(() => force((n) => n + 1));
+  }
+  useEffect(() => () => unsubscribe.current?.(), []);
 
   const store = getState();
   const envelope = store.envelope;
@@ -377,11 +392,20 @@ export function App(props: { bridge: HostBridge }) {
       // Three separate statuses, one rendering, on purpose: the distinction is
       // real and is kept where it is still known, and the fact that it does not
       // change what the user sees is the point rather than a redundancy.
-      if (
-        store.resultStatus === "foreign" ||
-        store.resultStatus === "cancelled"
-      ) {
-        return null;
+      //
+      // CORRECTION, 2026-10-12: silence is not what the user gets. Claude keeps
+      // its own "Widget from ..." header and an empty container over a frame
+      // that reports height 0, so "nothing at all" reads as a card that failed
+      // to load. It is also not only the benign cases: a draft whose editor
+      // could not be built server-side arrives here as `foreign` too. So both
+      // now say so in one quiet line, the same shape as every other
+      // nothing-to-show state. Still never a warning: the operation succeeded
+      // and the message above carries it.
+      if (store.resultStatus === "foreign") {
+        return oneLine(`${toolLabel(store.toolInfo?.tool)}: no preview for this result.`);
+      }
+      if (store.resultStatus === "cancelled") {
+        return oneLine(`${toolLabel(store.toolInfo?.tool)}: cancelled.`);
       }
 
       // OUR PAYLOAD, UNREADABLE -> LOUD. Something that identified itself as our
@@ -425,7 +449,25 @@ export function App(props: { bridge: HostBridge }) {
       //
       // This does not fix the remount. Nothing on this side can: the card is
       // not running. It stops the failure from being loud.
-      return store.connected ? <Loading /> : null;
+      //
+      // CORRECTION, 2026-10-12: the gate is gone, and the paragraph above is
+      // why rather than in spite of itself. Its whole case for `null` rests on
+      // "`.card:empty` collapses the shell, leaving the host's own header and
+      // the message text below it to carry the result" — and that premise is
+      // false in Claude, measured the same day as the subscription race above:
+      // the host keeps its "Widget from ..." header and an empty container over
+      // a frame reporting height 0, so the pre-handshake frame is not invisible,
+      // it is the sliver the founder complained about. Given that the frame is
+      // on screen either way, one line is the honest content for it.
+      //
+      // It is also BOUNDED, which the "a lie that sits on screen forever"
+      // objection assumed it was not: connect() shares one
+      // INITIALIZE_TIMEOUT_MS deadline across its retries, so a host that never
+      // answers rejects within 10s and `store.connectError` replaces this with
+      // the "not shown here" one-liner. The only way this line can persist is a
+      // frame whose timers never run at all, and in that frame there is nothing
+      // else the card could have drawn instead.
+      return <Loading />;
     }
 
     // ---- version gate -------------------------------------------------------

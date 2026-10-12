@@ -217,6 +217,7 @@ import {
   cardEnvelopeIn,
   stampDiagnostics,
 } from "./card-diagnostics.ts";
+import { readFlagWithOneRetry } from "./flag-read-retry.ts";
 import { REVIEW_CARD_BUILD_ID } from "./ui/review-card.html.ts";
 import {
   APPROVAL_TOOL_DEFINITIONS,
@@ -25677,11 +25678,18 @@ async function workspaceDraftEditorGate(
   // introspection mode leaves pointing at nothing.
   if (INTROSPECTION_ONLY && db === supabase) return closed;
   try {
-    const { data, error } = await db
-      .from("workspaces")
-      .select("draft_editor_enabled, draft_editor_hidden")
-      .eq("id", workspaceId)
-      .maybeSingle();
+    // One retry: a gateway blip on this read used to cost the user the card on
+    // a draft that had been written fine. See flag-read-retry.ts.
+    const { data, error, retried } = await readFlagWithOneRetry(() =>
+      db
+        .from("workspaces")
+        .select("draft_editor_enabled, draft_editor_hidden")
+        .eq("id", workspaceId)
+        .maybeSingle()
+    );
+    if (retried && !error) {
+      console.warn("[mcp-server] draft_editor_gate_read_retried", { workspace_id: workspaceId });
+    }
     if (error) {
       console.warn("[mcp-server] draft_editor_gate_query_failed", {
         workspace_id: workspaceId,
@@ -25795,11 +25803,18 @@ async function workspaceCardDiagnostics(workspaceId: string): Promise<boolean> {
 async function readInboxDraftEditorHidden(inboxId: string): Promise<boolean> {
   if (INTROSPECTION_ONLY) return true;
   try {
-    const { data, error } = await supabase
-      .from("inboxes")
-      .select("draft_editor_hidden")
-      .eq("id", inboxId)
-      .maybeSingle();
+    // One retry, for the failure this reader actually meets in production: on
+    // 2026-10-12 PostgREST answered it with a 502 and the card was dropped.
+    const { data, error, retried } = await readFlagWithOneRetry(() =>
+      supabase
+        .from("inboxes")
+        .select("draft_editor_hidden")
+        .eq("id", inboxId)
+        .maybeSingle()
+    );
+    if (retried && !error) {
+      console.warn("[mcp-server] draft_editor_inbox_flag_read_retried", { inbox_id: inboxId });
+    }
     if (error) {
       console.warn("[mcp-server] draft_editor_inbox_flag_query_failed", {
         inbox_id: inboxId,

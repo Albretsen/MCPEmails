@@ -194,6 +194,47 @@ client sees the same facts in prose. The card is an enhancement, never the only 
 mirrored into `content` — which is exactly what the codebase's `jsonOk()` helper does. Hand-write a
 body-free summary for `content` on any tool that returns message content. Do not reach for `jsonOk` there.
 
+### Empty-frame rule (2026-10-12)
+
+**The card never renders an empty tree, and never reports a height of 0.** Every state it can be in —
+before the handshake, waiting for a result, a result that is not ours, a cancelled call, a handshake that
+failed, a remount with nothing remembered — renders at least one line.
+
+This replaces the rule it shipped with, which was the opposite: render nothing, let `.card:empty {
+display: none }` collapse the shell, and let the host's own message text carry the result. That rested on
+a premise about the host that is false. Measured in Claude on 2026-10-12: the host keeps its "Widget from
+…" header and an empty container around a frame that reports height 0. So an empty tree is not an absent
+card, it is a thin sliver under a header that promises a card — which reads as a card that failed to
+load, on operations that all succeeded.
+
+Three consequences, all of them things a future change must not quietly undo:
+
+* **A quiet line, never a warning.** These states are not failures and must not be dressed as ones. The
+  shape is the same one-line header every other nothing-to-show state uses, with a neutral dot and the
+  dashboard link when one is known: `MCP Emails: no preview for this result.`, `… cancelled.`,
+  `… not shown here.`, `… nothing to show here.` The label is the dispatched tool name when the host
+  sends `toolInfo` and the product name when it does not, which in Claude is always.
+* **`observeSize()` starts at mount, not after the handshake.** It used to start inside connect()'s
+  `.then()`, so the two states that exist *because* the handshake did not succeed were the two the host
+  was never told a height for. One `size-changed` now goes out before `ui/initialize` completes; it is a
+  notification, so a host that is not ready drops it exactly as it drops the `ui/initialize` sent in the
+  same tick.
+* **A frame that gets no animation frames still reports.** The measurement needs layout, so it was
+  scheduled on `requestAnimationFrame` alone — and an unpainted frame gets none, which left `scheduled`
+  stuck true so that later ResizeObserver callbacks returned early too. A timer now runs alongside the
+  frame request and whichever arrives first wins.
+
+Pinned by `apps/mcp-app/harness/card-render.test.mjs`, which evaluates the real `main.tsx` in jsdom and
+asserts on `.card` having children rather than on a pixel height, because jsdom has no layout and
+`.card:empty` is the actual collapse mechanism.
+
+**The one case this makes slightly worse, knowingly.** A user who hides the editor for *one* of several
+inboxes still gets `_meta.ui` on the tool (it is per-tool, not per-inbox), so that inbox's drafts now
+show `no preview for this result.` where they used to show nothing. The host draws its header over that
+frame either way, so the opt-out was never fully silent; one honest line is better than an empty box
+under a widget header. A key whose every reachable inbox hides the editor still loses `_meta.ui` at
+`tools/list` and mounts no card at all.
+
 ---
 
 ## 2. `outbound` — the send under review
@@ -271,7 +312,8 @@ An earlier version of this document assumed the model would call `approval_revie
 
 * the held send returned a flat `{status:"pending_approval", approval_id, inbox_id, review_url, message}`
   object with no `schema_version`, so `classifyResult` in `apps/mcp-app/src/store.ts` classified it
-  `"foreign"` and the card rendered nothing (correctly: see §1's degradation rule);
+  `"foreign"` and the card rendered nothing (correctly, under the rule of the day; since 2026-10-12 a
+  foreign result renders one quiet line instead — see §1's empty-frame rule);
 * `approval_review` is `visibility: ["app"]`, which the card only calls from an already-rendered card;
 * nothing in the `message` text asked the model to make the call, and adding such an instruction would
   violate the rule against writing model directives into tool output.
@@ -341,8 +383,9 @@ In every case the body is kept out of `content`, so none of it reaches model con
 
 Building the envelope must never turn a queued send into an error: the approval row is already written,
 and the call sites' `catch` reports "no email was sent". So a failure degrades to exactly the old
-pending-approval payload, the send stays queued, and the card renders nothing, which is the pre-card
-behaviour.
+pending-approval payload and the send stays queued, which is the pre-card behaviour for the *result*.
+The card, which has no envelope to read, reports one line (§1's empty-frame rule) rather than the
+nothing it rendered until 2026-10-12.
 
 ---
 
@@ -679,7 +722,9 @@ an envelope, as one object in `content` (JSON text) and in `structuredContent`:
   reports it as foreign, which is what keeps a hidden editor hidden: a restoring cell cannot
   render an editor from it and ends on its one-line fallback, and a Refresh in an editor that is
   still open keeps the editor and its unsaved text and shows a notice. `draft_editor_save` is
-  still refused in those states, so a hidden editor still cannot write.
+  still refused in those states, so a hidden editor still cannot write. Since 2026-10-12 "hidden"
+  means one quiet line rather than an empty frame; see the last paragraph of §1's empty-frame rule
+  for why that is the better of the two for an opt-out the host draws a header over regardless.
 * **Why a read and not a refusal.** With the gate shut the tool carries no `_meta.ui`, so a host
   lists it to the model as an ordinary tool. It is the only tool that returns one draft's body
   (`draft_list` and the draft writes return none), so the refusal left a model with no way to
@@ -734,6 +779,17 @@ still returns `draft_editor_disabled`.)
 (`workspaceDraftEditorEnabled` in `index.ts`), and resolved once more at `tools/list` as a third
 `ReviewCardGates` member. `draft` moved out of `REVIEW_CARD_TOOL_NAMES` into
 `DRAFT_EDITOR_CARD_TOOL_NAMES`; `email_compose` and `schedule` stay on the outbound gate.
+
+**Each flag read is retried once (2026-10-12).** Fail-closed is the right answer for a column that does
+not exist yet — a hand-deployed function landing before its migration must behave as it did yesterday,
+not 500 — and it was the wrong answer for the failure these readers actually meet. On 2026-10-12 at
+16:13:51Z PostgREST answered `readInboxDraftEditorHidden` with a `502 Bad Gateway`: the draft was written
+fine, the result carried no envelope, and the user got a card-less widget frame. A 502 is over in
+milliseconds, so `flag-read-retry.ts#readFlagWithOneRetry` asks once more after 150 ms before the caller
+falls back. One retry, not a loop: this runs inside a draft write the user is waiting on, and a flag that
+fails twice is treated exactly as before. A retry that then succeeds logs
+`draft_editor_gate_read_retried` / `draft_editor_inbox_flag_read_retried`, which is how often this is
+happening in production.
 
 Deviations, all small and all deliberate:
 
