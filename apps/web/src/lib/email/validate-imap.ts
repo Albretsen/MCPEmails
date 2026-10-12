@@ -72,12 +72,6 @@ export interface ImapCredential {
    * ciphertext and certificate validation is unchanged.
    */
   tunnel?: () => Promise<net.Socket>;
-  /**
-   * Use this password mechanism instead of the one the capabilities suggest.
-   * Only for the diagnostic probe (relay-probe.ts), which needs to know
-   * whether a provider's refusal follows the mechanism.
-   */
-  mechanism?: ImapPasswordMechanism;
 }
 
 /**
@@ -352,10 +346,9 @@ export async function authenticateImapPassword(
   socket: net.Socket,
   greeting: string | null,
   username: string,
-  password: string,
-  forced?: ImapPasswordMechanism
+  password: string
 ): Promise<TaggedResponse & { token: string; mechanism: ImapPasswordMechanism }> {
-  const mechanism = forced ?? chooseImapPasswordMechanism(await readCapabilities(socket, greeting));
+  const mechanism = chooseImapPasswordMechanism(await readCapabilities(socket, greeting));
   const result = mechanism === 'LOGIN'
     ? await authenticateLogin(socket, username, password)
     : mechanism === 'CRAM-MD5'
@@ -452,7 +445,7 @@ export async function validateImapCredential(cred: ImapCredential): Promise<Imap
 
       phase = 'authentication';
       const username = cred.username || cred.email;
-      const auth = await authenticateImapPassword(socket, greeting, username, cred.password, cred.mechanism);
+      const auth = await authenticateImapPassword(socket, greeting, username, cred.password);
       if (auth.status !== 'OK') {
         return {
           ok: false,
