@@ -219,6 +219,7 @@ const REASON_DETAIL_KEYS: Partial<Record<AuthFailureReason, string>> = {
   app_password_required: 'connect.appPasswordRequiredDetail',
   account_password_used: 'connect.appPasswordAccountDetail',
   app_password_length: 'connect.appPasswordLengthDetail',
+  provider_refused_signin: 'connect.providerRefusedDetail',
 };
 
 function normalizeHost(value: string | null | undefined): string {

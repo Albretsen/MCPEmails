@@ -192,3 +192,46 @@ Only on evidence, meaning a logged rejection that names our sending address.
 Append the registrable domain to `SMTP_RELAY_HOSTS`, add it to the relay's own
 allowlist, and set the secret. No code change and no deploy: the function reads
 the secret per isolate.
+
+## The connect-time IMAP probe (web app)
+
+The same relay carries one more thing, from the web app rather than the edge
+function: a single repeat of a refused IMAP login, for diagnosis only.
+
+`imap.orange.fr` answers some sign-ins from our servers with
+`NO [ALERT] Authentication failed.`, which is not its wrong-password answer
+(`NO [AUTHENTICATIONFAILED] ...`, what a made-up address gets from AWS, from the
+relay and from a residential line). Dovecot sends `[ALERT]` only when its auth
+backend attached a refusal reason of its own, so Orange is turning the sign-in
+down on purpose. Orange mailboxes are only issued with a French internet
+contract, so we have none to test with. When `/api/inboxes/imap` gets exactly
+that refusal it therefore repeats the login once through the relay
+(`apps/web/src/lib/email/relay-probe.ts`) and records the outcome on the
+`app_errors` row as `relayProbe`:
+
+| `relayProbe` | Meaning |
+| --- | --- |
+| `accepted` | The relay's address got in. Orange objects to where we connect from. |
+| `refused_same` | Same `[ALERT]` through the relay. A different address did not help. |
+| `refused_other` | Refused with a different answer, kept in `relayDetail`. |
+| `inconclusive` | The relay reached the host and the check died before a login was answered. |
+| `unavailable` | The relay could not carry the connection. |
+| `not_configured` | `MAIL_RELAY_URL` is not set. |
+
+The inbox is never connected on `accepted`: the edge function would still dial
+Orange directly for every read and send. Routing Orange's IMAP through the relay
+at runtime is the follow-up, and only worth building once a row says `accepted`.
+
+Setup, on top of the SMTP relay above:
+
+- Vercel (production): `MAIL_RELAY_URL`, same shape as `SMTP_RELAY_URL`.
+- Relay: `ConnectPort 993`, and `^imap\.orange\.fr$` in the filter file.
+
+Reading the result:
+
+```sql
+select created_at, context->>'relayProbe', context->>'relayDetail', context->>'workspaceId'
+from app_errors
+where context->>'authReason' = 'provider_refused_signin'
+order by created_at desc;
+```

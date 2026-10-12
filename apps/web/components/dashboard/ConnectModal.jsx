@@ -109,6 +109,8 @@ const AUTH_REASON_HEADLINE_KEYS = {
   app_password_required: 'connect.errorAuthAppPassword',
   account_password_used: 'connect.errorAuthAccountPassword',
   app_password_length: 'connect.errorAuthAppPasswordLength',
+  // The provider refused the sign-in itself; the password is not the story.
+  provider_refused_signin: 'connect.errorAuthProviderRefused',
   login_username_required: 'connect.errorAuthLoginName',
   // The plain case keeps the plain headline. It is listed so the reason is
   // kept: what to do next is host-specific, and lib/email/auth-failure-help
@@ -1741,9 +1743,13 @@ export function ConnectModal({
         setInvalidFields(
           reason === 'login_username_required'
             ? ['username']
-            : code === 'auth_failed'
-              ? ['password']
-              : []
+            : reason === 'provider_refused_signin'
+              // The provider refused the sign-in, not the password. Marking the
+              // password box invalid would ask for an edit that cannot help.
+              ? []
+              : code === 'auth_failed'
+                ? ['password']
+                : []
         );
         bumpErrorSeq();
         setErrorDetail(detail);
@@ -1787,7 +1793,7 @@ export function ConnectModal({
         // rather than edited, so hand the field back ready to overwrite. Only
         // for auth failures: stealing focus when the fix is a host or a port
         // would move the user away from the field they need.
-        if (code === 'auth_failed' && passwordRef.current) {
+        if (code === 'auth_failed' && reason !== 'provider_refused_signin' && passwordRef.current) {
           // Arm the one-shot select first: taking focus fires the focus
           // handler, which spends the flag, so the contents are selected
           // exactly once per rejection and never on an ordinary click-back.
