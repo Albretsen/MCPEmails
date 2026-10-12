@@ -58,12 +58,15 @@ export const MAIL_RELAY_HANDSHAKE_TIMEOUT_MS = 5_000;
 const MAX_CONNECT_HEAD_BYTES = 2_048;
 
 /**
- * Read the relay from `MAIL_RELAY_URL` (`http://user:password@host:port`).
+ * Read one relay from `name` (`http://user:password@host:port`).
  * Null when it is unset or unusable, which callers treat as "no relay": the
  * feature is optional and its absence must never fail a connection.
  */
-export function mailRelayConfigFromEnv(env: Record<string, string | undefined> = process.env): MailRelayConfig | null {
-  const raw = (env.MAIL_RELAY_URL ?? '').trim();
+export function mailRelayConfigFromEnv(
+  env: Record<string, string | undefined> = process.env,
+  name: string = 'MAIL_RELAY_URL'
+): MailRelayConfig | null {
+  const raw = (env[name] ?? '').trim();
   if (!raw) return null;
   let url: URL;
   try {
@@ -81,6 +84,32 @@ export function mailRelayConfigFromEnv(env: Record<string, string | undefined> =
     ? `Basic ${Buffer.from(`${user}:${password}`, 'utf8').toString('base64')}`
     : null;
   return { host: url.hostname, port, authorization };
+}
+
+/**
+ * Where a relay's address is, which is the whole point of having two: a
+ * provider that turns down a German datacenter and accepts a French one is
+ * telling us something a single relay cannot.
+ */
+export type MailRelayId = 'fr' | 'de';
+
+export interface NamedMailRelay {
+  id: MailRelayId;
+  config: MailRelayConfig;
+}
+
+/**
+ * Every relay configured in this environment, French first because it is the
+ * likeliest to be accepted by a French provider. `MAIL_RELAY_URL` is the
+ * original relay (Germany), `MAIL_RELAY_URL_FR` the French one.
+ */
+export function mailRelaysFromEnv(env: Record<string, string | undefined> = process.env): NamedMailRelay[] {
+  const relays: NamedMailRelay[] = [];
+  const fr = mailRelayConfigFromEnv(env, 'MAIL_RELAY_URL_FR');
+  if (fr) relays.push({ id: 'fr', config: fr });
+  const de = mailRelayConfigFromEnv(env, 'MAIL_RELAY_URL');
+  if (de) relays.push({ id: 'de', config: de });
+  return relays;
 }
 
 /** A mail host name is letters, digits, dots and hyphens. Nothing else may reach the request line. */

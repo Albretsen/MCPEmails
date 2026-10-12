@@ -3,6 +3,7 @@ import assert from 'node:assert/strict';
 import * as net from 'net';
 import {
   mailRelayConfigFromEnv,
+  mailRelaysFromEnv,
   openMailRelayTunnel,
   MailRelayUnavailableError,
 } from './mail-relay.ts';
@@ -116,4 +117,11 @@ test('a target that is not a plain host and port never reaches the request line'
   } finally {
     proxy.close();
   }
+});
+
+test('relays are named by where they are, French first', () => {
+  const both = mailRelaysFromEnv({ MAIL_RELAY_URL: 'http://203.0.113.2:3128', MAIL_RELAY_URL_FR: 'http://203.0.113.1:3128' });
+  assert.deepEqual(both.map((relay) => [relay.id, relay.config.host]), [['fr', '203.0.113.1'], ['de', '203.0.113.2']]);
+  assert.deepEqual(mailRelaysFromEnv({ MAIL_RELAY_URL: 'http://203.0.113.2:3128' }).map((relay) => relay.id), ['de']);
+  assert.deepEqual(mailRelaysFromEnv({}), []);
 });
