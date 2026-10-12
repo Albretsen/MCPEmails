@@ -8,6 +8,7 @@ import { findOtherProviderInbox, otherProviderErrorBody } from '@/lib/inboxes/pr
 import { validateImapCredential } from '@/lib/email/validate-imap';
 import { validateSmtpCredential } from '@/lib/email/validate-smtp';
 import { normalizeSecurity } from '@/lib/email/connection-config';
+import { probeProviderRefusal } from '@/lib/email/relay-probe';
 import { detectTransport, transportPlan } from '@/lib/email/transport-autodetect';
 import { guardMailHost } from '@/lib/email/host-guard';
 import { findConflictingInbox } from '@/lib/email/imap-login-collision';
@@ -227,6 +228,31 @@ export async function POST(request: NextRequest): Promise<NextResponse> {
             usernameProvided: Boolean(username),
           })
         : null;
+    // The provider refused the sign-in itself (see `isProviderRefusal`). Put
+    // every question we would otherwise have to come back for to this one
+    // attempt, from addresses that are not ours, and record the answers: the
+    // provider issues no test mailboxes, so a customer's login is the only one
+    // that can tell us what it objects to. See relay-probe.ts for the steps.
+    //
+    // This is the one place a refused login is repeated, against the rule in
+    // transport-autodetect.ts, and only behind an exact match on one host's
+    // refusal. The inbox is NOT connected on a relay success: every later read
+    // and send would still leave from the address that was refused. The
+    // outcome is diagnostic only.
+    const relayProbe =
+      authFailure?.reason === 'provider_refused_signin' && imapDetection.candidate.security === 'tls'
+        ? await probeProviderRefusal({
+            email,
+            username: username || undefined,
+            password: appPassword,
+            imapHost,
+            imapPort: imapDetection.candidate.port,
+            smtpHost,
+            smtpPort,
+            smtpSecurity,
+            smtpPinnedAddress: smtpGuard.address,
+          })
+        : null;
     await recordProductFunnelEvent(db, { workspaceId, stage: 'inbox_connection', outcome: 'failure', category: 'generic_imap', errorCategory: validation.code === 'AUTH_FAILED' ? 'auth_failed' : 'validation_failed', phase: validation.phase, connectionType: alreadyConnected ? 'reconnect' : 'first_connect', authReason: authFailure?.reason ?? null });
     // Every validator code is surfaced, not just AUTH_FAILED, and in the same
     // lower-cased form the SMTP branch below already uses. A timeout or a TLS
@@ -281,6 +307,10 @@ export async function POST(request: NextRequest): Promise<NextResponse> {
       // three means every standard transport was exhausted, which is the row
       // that says the host itself is the problem.
       attempts: imapDetection.attempts,
+      // What the same login got from other addresses, when it was asked. An
+      // `imap_*=accepted` means the provider objects to where we connect from.
+      relayProbe: relayProbe?.summary ?? null,
+      relayProbeSteps: relayProbe?.steps ?? null,
       workspaceId,
     });
     return NextResponse.json(body, { status: 422 });

@@ -192,3 +192,73 @@ Only on evidence, meaning a logged rejection that names our sending address.
 Append the registrable domain to `SMTP_RELAY_HOSTS`, add it to the relay's own
 allowlist, and set the secret. No code change and no deploy: the function reads
 the secret per isolate.
+
+## The connect-time probe (web app)
+
+The relays carry one more thing, from the web app rather than the edge
+function: a handful of repeat logins after one refused sign-in, for diagnosis
+only.
+
+`imap.orange.fr` answers some sign-ins from our servers with
+`NO [ALERT] Authentication failed.`, which is not its wrong-password answer
+(`NO [AUTHENTICATIONFAILED] ...`, what a made-up address gets from AWS, from
+both relays and from a residential line). Dovecot sends `[ALERT]` only when its
+auth backend attached a refusal reason of its own, so Orange is turning the
+sign-in down on purpose. Orange mailboxes are only issued with a French internet
+contract, so we have none to test with, and a customer should be asked to try
+exactly once. When `/api/inboxes/imap` gets exactly that refusal it therefore
+runs every check we would otherwise have to come back for
+(`apps/web/src/lib/email/relay-probe.ts`) and records them on the `app_errors`
+row as `relayProbe` (a one-line summary) and `relayProbeSteps` (with details):
+
+| Step | Login | Answers |
+| --- | --- | --- |
+| `imap_fr` | IMAP through the relay in France | Does a French address get in? |
+| `imap_de` | IMAP through the relay in Germany | Does a non-AWS address elsewhere get in? |
+| `imap_login` | IMAP `LOGIN` instead of SASL PLAIN, only if both above were refused | Is it the login method? |
+| `smtp_direct` | SMTP from the web app, as configured | Is sending refused from here as well? |
+| `smtp_de` | SMTP through the relay in Germany, port 587 | Does sending work from a relay? |
+
+| Outcome | Meaning |
+| --- | --- |
+| `accepted` | The login got in. |
+| `refused` | The server answered the login with a refusal, kept in the step's `detail`. |
+| `blocked` | The server turned the connection away before any login. About the address. |
+| `inconclusive` | The host was reached and the check died before a login was answered. |
+| `unavailable` | The relay could not carry the connection. |
+| `not_configured` | That relay's variable is not set. |
+
+Baselines measured with a made-up address, for comparison: IMAP is
+`NO [AUTHENTICATIONFAILED] Authentication failed.` everywhere, and SMTP is
+`550 5.7.0 ... Mot de passe invalide`, after about eight seconds.
+
+Two facts about the relays that shaped the steps:
+
+- `smtp.orange.fr` greets the French relay's address with
+  `550 Service refused. OFR_99` before any login, on 465 and 587, while it
+  greets AWS and the German relay normally. So the French relay is IMAP only.
+- The German relay's host blocks outbound 465, so `smtp_de` uses 587/STARTTLS
+  whatever the user configured.
+
+The inbox is never connected on an `accepted` step: the edge function would
+still dial Orange directly for every read and send. Routing Orange through a
+relay at runtime is the follow-up, and only worth building once a row shows
+which relay is accepted.
+
+Setup, on top of the SMTP relay above:
+
+- Vercel (production): `MAIL_RELAY_URL` (Germany, same relay as
+  `SMTP_RELAY_URL`) and `MAIL_RELAY_URL_FR` (France).
+- German relay: `ConnectPort 993`, and `^imap\.orange\.fr$` and
+  `^smtp\.orange\.fr$` in the filter file.
+- French relay: tinyproxy as above with `ConnectPort 465/587/993` and the same
+  two filter lines.
+
+Reading the result:
+
+```sql
+select created_at, context->>'relayProbe', context->'relayProbeSteps', context->>'workspaceId'
+from app_errors
+where context->>'authReason' = 'provider_refused_signin'
+order by created_at desc;
+```

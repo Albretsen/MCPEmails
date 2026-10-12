@@ -56,6 +56,11 @@ export type AuthFailureReason =
    * named as an incomplete app password.
    */
   | 'app_password_length'
+  /**
+   * The provider turned the sign-in down with a refusal of its own, which is
+   * not how its server answers a wrong password. See `isProviderRefusal`.
+   */
+  | 'provider_refused_signin'
   /** The server did not recognise the login name (which may not be the address). */
   | 'login_username_required'
   /** Nothing more specific: the credential was simply refused. */
@@ -90,6 +95,39 @@ const APP_PASSWORD_NAMED = /\bapp(lication)?[-\s]?specific\s+password\b|\bapp\s?
  */
 const UNKNOWN_LOGIN = /\b(unknown user|user unknown|no such user|user not found|user does not exist|invalid mailbox name|authentication identity)\b/i;
 
+/** Hosts whose `[ALERT]` refusal is known not to be their wrong-password answer. */
+const PROVIDER_REFUSAL_HOST_SUFFIXES = ['orange.fr'];
+
+/**
+ * Exactly Orange's refusal, and nothing looser. `[ALERT]` on its own means
+ * nothing: Gmail, Zoho and Titan all put ordinary credential errors behind it.
+ */
+const PROVIDER_REFUSAL_DETAIL = /^NO \[ALERT\] Authentication failed\.?$/i;
+
+/**
+ * True when a rejected login is the provider refusing the sign-in rather than
+ * the password.
+ *
+ * `imap.orange.fr` is Dovecot. Its answer to a wrong password, and to an
+ * address that does not exist, is `NO [AUTHENTICATIONFAILED] Authentication
+ * failed.`, measured from AWS, from Hetzner and from a residential line.
+ * `NO [ALERT] Authentication failed.` is a different code path: Dovecot sends
+ * `[ALERT]` only when the auth backend attached a refusal reason of its own
+ * (imap-login/client-authenticate.c, CLIENT_AUTH_RESULT_AUTHFAILED_REASON),
+ * which is how a policy server or a per-account `nologin` speaks. Every Orange
+ * login this app has ever attempted got it, and the customers involved report
+ * the same password working from their own mail client.
+ *
+ * So for this host that exact line is not evidence about the password, and
+ * telling the user to check their password sends them round a loop that cannot
+ * end. Scoped to the one host it was measured on.
+ */
+export function isProviderRefusal(input: { host?: string | null; detail?: string | null }): boolean {
+  const host = String(input.host ?? '').trim().toLowerCase().replace(/\.$/, '');
+  if (!PROVIDER_REFUSAL_HOST_SUFFIXES.some((suffix) => host === suffix || host.endsWith(`.${suffix}`))) return false;
+  return PROVIDER_REFUSAL_DETAIL.test(String(input.detail ?? '').trim());
+}
+
 export interface AuthFailureInput {
   /** Sanitized server rejection text, when the server gave one. */
   detail?: string | null;
@@ -103,6 +141,8 @@ export interface AuthFailureInput {
    * — they already gave us one, and it was wrong.
    */
   usernameProvided?: boolean;
+  /** Result of `isProviderRefusal` for this host and rejection text. */
+  providerRefusal?: boolean;
 }
 
 /**
@@ -116,6 +156,11 @@ export interface AuthFailureInput {
  */
 export function classifyAuthFailure(input: AuthFailureInput): AuthFailureReason {
   const detail = typeof input.detail === 'string' ? input.detail : '';
+
+  // 0. The provider refused the sign-in itself. This is the server speaking
+  //    about this login, and it is not about the credential, so no credential
+  //    explanation below may claim it.
+  if (input.providerRefusal) return 'provider_refused_signin';
 
   // 1. The server said the door is shut. No credential fixes this, so it has to
   //    outrank every credential explanation.
@@ -189,6 +234,7 @@ export function explainAuthFailure(input: {
     policy,
     shape: checkAppPasswordShape(policy, input.secret),
     usernameProvided: input.usernameProvided,
+    providerRefusal: isProviderRefusal({ host: input.host, detail: input.detail }),
   });
   const fields: Record<string, string> = { auth_reason: reason };
   // Only when we actually know the provider. A label guessed from the address
