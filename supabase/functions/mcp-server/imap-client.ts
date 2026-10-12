@@ -27,6 +27,7 @@ import {
   type PreviewPartInfo,
 } from "./text-extract.ts";
 import { connectGuardedTcp } from "./host-guard.ts";
+import { connectThroughRelay, guardRelayTarget, imapRelayFor } from "./smtp-relay.ts";
 import {
   firstPartyContext,
   summaryPreviewItem,
@@ -690,11 +691,26 @@ export class ImapClient {
     // the address it approved so the socket lands there rather than on a name
     // that would be resolved a second time. See host-guard.ts, which is a
     // mirror of apps/web/src/lib/email/host-guard.ts — change one, change both.
-    let conn: Deno.TcpConn | Deno.TlsConn = await connectGuardedTcp({
-      host: cfg.host,
-      port: cfg.port,
-      protocol: "imap",
-    });
+    //
+    // A relay-only host (smtp-relay.ts) is reached through the relay instead,
+    // with no direct fallback: that host refuses sign-ins from our own egress,
+    // and a direct attempt would come back looking like a wrong password. The
+    // guard's policy still runs on the name; the tunnel carries ciphertext, and
+    // the certificate is checked against `cfg.host` below exactly as it is on
+    // the direct path.
+    const relay = imapRelayFor(cfg.host);
+    let conn: Deno.TcpConn | Deno.TlsConn;
+    if (relay) {
+      const target = { host: cfg.host, port: cfg.port };
+      await guardRelayTarget(target, "imap");
+      conn = await connectThroughRelay(relay, target);
+    } else {
+      conn = await connectGuardedTcp({
+        host: cfg.host,
+        port: cfg.port,
+        protocol: "imap",
+      });
+    }
     const tlsFromMs = imapClockMs();
     if (timing) timing.dialMs += tlsFromMs - dialFromMs;
 

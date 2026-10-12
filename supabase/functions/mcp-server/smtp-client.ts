@@ -23,6 +23,7 @@ import {
   noteRelayFailure,
   noteRelaySuccess,
   relayFor,
+  relayOnlyHost,
   RelayUnavailableError,
 } from "./smtp-relay.ts";
 
@@ -152,13 +153,33 @@ export async function sendViaSmtp(cfg: SmtpConfig, msg: SmtpMessage): Promise<vo
 }
 
 /**
+ * The transport a relay-only host is actually reached on.
+ *
+ * The relay's own host blocks outbound 465 (docs/smtp-relay.md), so implicit
+ * TLS can never be carried for a host that may only be reached through it. A
+ * row stored as 465 is therefore submitted on 587 with STARTTLS instead of
+ * being left to time out in the tunnel. Connecting an Orange mailbox stores
+ * 587 to begin with; this covers a row that says otherwise. Every other host,
+ * and every other port, is returned untouched.
+ */
+export function relayOnlyTransport(
+  cfg: SmtpConfig,
+  isRelayOnly: (host: string) => boolean = relayOnlyHost,
+): SmtpConfig {
+  if (cfg.port !== 465 || cfg.security !== "tls") return cfg;
+  if (!isRelayOnly(cfg.host)) return cfg;
+  return { ...cfg, port: 587, security: "starttls" };
+}
+
+/**
  * One connection, one submission attempt.
  *
  * Every failure raised before the server accepts DATA is re-thrown as
  * {@link SmtpNotSentError}; failures after that point pass through unchanged,
  * because from there on we genuinely cannot tell whether the message landed.
  */
-async function submitOnce(cfg: SmtpConfig, msg: SmtpMessage): Promise<void> {
+async function submitOnce(storedCfg: SmtpConfig, msg: SmtpMessage): Promise<void> {
+  const cfg = relayOnlyTransport(storedCfg);
   // Flipped the instant the server answers DATA with 354: the next byte we
   // write is the message itself, and no failure past here is safe to retry.
   let dataAccepted = false;
@@ -616,6 +637,18 @@ async function openRelayedSmtpConn(cfg: SmtpConfig): Promise<Deno.Conn | null> {
   } catch (err) {
     if (!(err instanceof RelayUnavailableError)) throw err;
     noteRelayFailure();
+    // No direct fallback for a relay-only host: the direct dial is the one path
+    // known to be refused there, and its refusal reads as a bad password. The
+    // caller reports this as a submission that was not sent and may be retried.
+    if (relayOnlyHost(cfg.host)) {
+      console.warn("[mcp-server] smtp_relay: unavailable for a relay-only host, not dialling directly", {
+        relay: `${relay.host}:${relay.port}`,
+        host: cfg.host,
+        port: cfg.port,
+        error: err.message,
+      });
+      throw new Error(`Mail relay unavailable for ${cfg.host}: ${err.message}`);
+    }
     console.warn("[mcp-server] smtp_relay: falling back to direct egress", {
       relay: `${relay.host}:${relay.port}`,
       host: cfg.host,

@@ -1,36 +1,34 @@
 import * as net from 'net';
 
 /**
- * lib/email/mail-relay.ts — a second egress for the connect-time IMAP check.
+ * lib/email/mail-relay.ts — a second egress for hosts that refuse ours.
  *
  * ── Why this exists ────────────────────────────────────────────────────────
  *
- * `imap.orange.fr` answers some logins from this app with
- * `NO [ALERT] Authentication failed.`. That is not Dovecot's wrong-password
- * answer, which is `NO [AUTHENTICATIONFAILED] Authentication failed.` and is
- * what the same server gives a made-up address from AWS, from Hetzner and from
- * a residential line. Dovecot only sends `[ALERT]` when its auth backend
- * attached a refusal reason of its own (imap-login/client-authenticate.c), so
- * the mailbox's provider turned the sign-in down on purpose, and the customers
- * it happens to report that the same password works from their own mail client.
+ * Orange (`imap.orange.fr`, `smtp.orange.fr`) refuses sign-ins that come from
+ * this app's own servers. Not the credential: measured 2026-10-12 with one
+ * customer login, the same password got `NO [ALERT] Authentication failed.`
+ * from our AWS egress and was accepted through the relay, on IMAP and on SMTP,
+ * and direct SMTP was turned away at the greeting. A made-up address gets the
+ * ordinary `NO [AUTHENTICATIONFAILED]` everywhere, so it is not a blanket block
+ * either: Orange refuses real accounts from where we connect.
  *
- * What we cannot tell from here is WHAT Orange objects to, because nobody
- * outside France can get an Orange mailbox to test with. So the question is put
- * to the one login that can answer it: when a real sign-in is refused that way,
- * the same check is repeated once from an address that is not this app's, and
- * the outcome is recorded. A relay login that succeeds proves the refusal is
- * about where we connect from; one that is refused the same way proves it is
- * not.
+ * So for those hosts every connection this app opens goes through the relay
+ * instead, and is never attempted directly: a direct attempt is known to be
+ * refused, reads as a wrong password, and counts as a failed sign-in against
+ * the customer's account. The edge function makes the same decision for reads
+ * and sends (supabase/functions/mcp-server/smtp-relay.ts, "relay-only hosts").
+ * The two lists must name the same hosts.
  *
  * ── What the relay is ──────────────────────────────────────────────────────
  *
- * The same plain HTTP CONNECT proxy the edge function already uses for SMTP
- * submission (supabase/functions/mcp-server/smtp-relay.ts, docs/smtp-relay.md).
- * TLS is end to end between this process and the mail host: the relay forwards
- * ciphertext and never sees the mailbox password, and the certificate is still
- * checked against the real hostname by the caller.
+ * The same plain HTTP CONNECT proxy the edge function uses
+ * (docs/smtp-relay.md). TLS is end to end between this process and the mail
+ * host: the relay forwards ciphertext and never sees the mailbox password, and
+ * the certificate is still checked against the real hostname by the caller.
  *
- * This module only opens the tunnel. It knows nothing about IMAP.
+ * This module decides WHICH hosts are relayed and opens the tunnel. It knows
+ * nothing about IMAP or SMTP.
  */
 
 export interface MailRelayConfig {
@@ -58,15 +56,12 @@ export const MAIL_RELAY_HANDSHAKE_TIMEOUT_MS = 5_000;
 const MAX_CONNECT_HEAD_BYTES = 2_048;
 
 /**
- * Read one relay from `name` (`http://user:password@host:port`).
+ * Read the relay from `MAIL_RELAY_URL` (`http://user:password@host:port`).
  * Null when it is unset or unusable, which callers treat as "no relay": the
  * feature is optional and its absence must never fail a connection.
  */
-export function mailRelayConfigFromEnv(
-  env: Record<string, string | undefined> = process.env,
-  name: string = 'MAIL_RELAY_URL'
-): MailRelayConfig | null {
-  const raw = (env[name] ?? '').trim();
+export function mailRelayConfigFromEnv(env: Record<string, string | undefined> = process.env): MailRelayConfig | null {
+  const raw = (env.MAIL_RELAY_URL ?? '').trim();
   if (!raw) return null;
   let url: URL;
   try {
@@ -87,29 +82,42 @@ export function mailRelayConfigFromEnv(
 }
 
 /**
- * Where a relay's address is, which is the whole point of having two: a
- * provider that turns down a German datacenter and accepts a French one is
- * telling us something a single relay cannot.
+ * Hosts reached only through the relay. Mirrors
+ * `DEFAULT_RELAY_ONLY_HOST_SUFFIXES` in the edge function; change one, change
+ * both, or a mailbox will connect here and fail to read there.
  */
-export type MailRelayId = 'fr' | 'de';
+export const RELAY_ONLY_MAIL_HOST_SUFFIXES: readonly string[] = ['orange.fr'];
 
-export interface NamedMailRelay {
-  id: MailRelayId;
-  config: MailRelayConfig;
+/**
+ * The transport a relay-only host is validated and stored on.
+ *
+ * IMAP is the host's ordinary implicit-TLS port. SMTP is 587 with STARTTLS
+ * whatever the user typed, because the relay's own host blocks outbound 465
+ * (docs/smtp-relay.md) and Orange offers both.
+ */
+export const RELAY_ONLY_IMAP_TRANSPORT = { port: 993, security: 'tls' } as const;
+export const RELAY_ONLY_SMTP_TRANSPORT = { port: 587, security: 'starttls' } as const;
+
+/** True for a relay-only host or a subdomain of one. Label-boundary match. */
+export function isRelayOnlyMailHost(host: string | null | undefined): boolean {
+  const target = String(host ?? '').trim().toLowerCase().replace(/\.$/, '');
+  if (!target) return false;
+  return RELAY_ONLY_MAIL_HOST_SUFFIXES.some((suffix) => target === suffix || target.endsWith(`.${suffix}`));
 }
 
 /**
- * Every relay configured in this environment, French first because it is the
- * likeliest to be accepted by a French provider. `MAIL_RELAY_URL` is the
- * original relay (Germany), `MAIL_RELAY_URL_FR` the French one.
+ * The relay to reach `host` through, or null to dial it directly.
+ *
+ * Null for every host that is not relay-only, and also when no relay is
+ * configured in this environment: the feature must never be the reason a
+ * connection cannot be attempted at all.
  */
-export function mailRelaysFromEnv(env: Record<string, string | undefined> = process.env): NamedMailRelay[] {
-  const relays: NamedMailRelay[] = [];
-  const fr = mailRelayConfigFromEnv(env, 'MAIL_RELAY_URL_FR');
-  if (fr) relays.push({ id: 'fr', config: fr });
-  const de = mailRelayConfigFromEnv(env, 'MAIL_RELAY_URL');
-  if (de) relays.push({ id: 'de', config: de });
-  return relays;
+export function relayForMailHost(
+  host: string | null | undefined,
+  env: Record<string, string | undefined> = process.env
+): MailRelayConfig | null {
+  if (!isRelayOnlyMailHost(host)) return null;
+  return mailRelayConfigFromEnv(env);
 }
 
 /** A mail host name is letters, digits, dots and hyphens. Nothing else may reach the request line. */

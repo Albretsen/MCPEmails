@@ -2,9 +2,10 @@ import test from 'node:test';
 import assert from 'node:assert/strict';
 import * as net from 'net';
 import {
+  isRelayOnlyMailHost,
   mailRelayConfigFromEnv,
-  mailRelaysFromEnv,
   openMailRelayTunnel,
+  relayForMailHost,
   MailRelayUnavailableError,
 } from './mail-relay.ts';
 
@@ -119,9 +120,20 @@ test('a target that is not a plain host and port never reaches the request line'
   }
 });
 
-test('relays are named by where they are, French first', () => {
-  const both = mailRelaysFromEnv({ MAIL_RELAY_URL: 'http://203.0.113.2:3128', MAIL_RELAY_URL_FR: 'http://203.0.113.1:3128' });
-  assert.deepEqual(both.map((relay) => [relay.id, relay.config.host]), [['fr', '203.0.113.1'], ['de', '203.0.113.2']]);
-  assert.deepEqual(mailRelaysFromEnv({ MAIL_RELAY_URL: 'http://203.0.113.2:3128' }).map((relay) => relay.id), ['de']);
-  assert.deepEqual(mailRelaysFromEnv({}), []);
+test('only the hosts measured to refuse our address are relay-only', () => {
+  assert.equal(isRelayOnlyMailHost('imap.orange.fr'), true);
+  assert.equal(isRelayOnlyMailHost('SMTP.Orange.FR.'), true);
+  // A lookalike registration is not the host, and nobody else is touched.
+  assert.equal(isRelayOnlyMailHost('imap.notorange.fr'), false);
+  assert.equal(isRelayOnlyMailHost('orange.fr.evil.test'), false);
+  assert.equal(isRelayOnlyMailHost('imap.gmail.com'), false);
+  assert.equal(isRelayOnlyMailHost(null), false);
+});
+
+test('a relay-only host gets the relay, and only when one is configured', () => {
+  const env = { MAIL_RELAY_URL: 'http://203.0.113.2:3128' };
+  assert.equal(relayForMailHost('imap.orange.fr', env)?.host, '203.0.113.2');
+  assert.equal(relayForMailHost('imap.gmail.com', env), null);
+  // No relay in this environment: the host is dialled as it always was.
+  assert.equal(relayForMailHost('imap.orange.fr', {}), null);
 });

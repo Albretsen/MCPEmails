@@ -23,7 +23,9 @@
  * See: Documents/Architecture/imap-smtp-connection-management.md
  */
 
+import type * as net from 'net';
 import * as tls from 'tls';
+import { openMailRelayTunnel, relayForMailHost } from './mail-relay.ts';
 import { decodeModifiedUtf7, encodeModifiedUtf7 } from './utf7.ts';
 import {
   chooseImapPasswordMechanism,
@@ -786,14 +788,31 @@ const TIMEOUT = {
  */
 export async function openImapSession(config: ImapConfig): Promise<ImapSession> {
   // 1. Open TLS socket with timeout
+  //
+  // A relay-only host (mail-relay.ts) refuses sign-ins from this app's own
+  // address, so its TCP leg is a tunnel through the relay and TLS is negotiated
+  // over that. Everything after the socket exists is identical.
+  const relay = relayForMailHost(config.host);
+  let tunnel: net.Socket | null = null;
+  if (relay) {
+    try {
+      tunnel = await openMailRelayTunnel(relay, config.host, config.port);
+    } catch (err) {
+      throw new McpEmailsError(
+        'CONNECTION_TIMEOUT',
+        `Could not reach ${config.host} through the mail relay: ${err instanceof Error ? err.message : String(err)}`
+      );
+    }
+  }
   const socket = await Promise.race([
     new Promise<tls.TLSSocket>((resolve, reject) => {
       const s = tls.connect(
         {
           // The guard-approved address when there is one; the name otherwise.
           // Dialling the address rather than re-resolving the name is what stops
-          // a DNS answer changing between the check and the connect.
-          host: config.pinnedAddress || config.host,
+          // a DNS answer changing between the check and the connect. With a
+          // tunnel the socket is already open and these two are not used.
+          ...(tunnel ? { socket: tunnel } : { host: config.pinnedAddress || config.host }),
           port: config.port,
           // Implicit TLS (no STARTTLS); server must speak TLS from the first byte.
           rejectUnauthorized: true,

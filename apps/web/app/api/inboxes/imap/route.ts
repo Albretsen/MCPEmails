@@ -8,7 +8,12 @@ import { findOtherProviderInbox, otherProviderErrorBody } from '@/lib/inboxes/pr
 import { validateImapCredential } from '@/lib/email/validate-imap';
 import { validateSmtpCredential } from '@/lib/email/validate-smtp';
 import { normalizeSecurity } from '@/lib/email/connection-config';
-import { probeProviderRefusal } from '@/lib/email/relay-probe';
+import {
+  openMailRelayTunnel,
+  relayForMailHost,
+  RELAY_ONLY_IMAP_TRANSPORT,
+  RELAY_ONLY_SMTP_TRANSPORT,
+} from '@/lib/email/mail-relay';
 import { detectTransport, transportPlan } from '@/lib/email/transport-autodetect';
 import { guardMailHost } from '@/lib/email/host-guard';
 import { findConflictingInbox } from '@/lib/email/imap-login-collision';
@@ -194,18 +199,30 @@ export async function POST(request: NextRequest): Promise<NextResponse> {
   //    against one host, alternating 993/TLS and 143/STARTTLS, is what this
   //    replaces; the loop does the same alternation in seconds and stops the
   //    moment a server actually answers, including when it answers "no".
+  //
+  // A relay-only host (mail-relay.ts) is the exception to the alternation. It
+  // refuses sign-ins from this app's own address, so it is validated through
+  // the relay, on the one transport the relay carries, and never dialled
+  // directly: a direct attempt is known to be refused and would count as a
+  // failed sign-in against the customer's account. The host guard above still
+  // ran on the name; the relay is asked for it by name and TLS is end to end.
+  const imapRelay = relayForMailHost(imapHost);
+  const smtpRelay = relayForMailHost(smtpHost);
   const imapDetection = await detectTransport(
-    transportPlan('imap', { port: imapPort, security: imapSecurity }),
+    imapRelay
+      ? [{ ...RELAY_ONLY_IMAP_TRANSPORT, requested: imapPort === RELAY_ONLY_IMAP_TRANSPORT.port && imapSecurity === RELAY_ONLY_IMAP_TRANSPORT.security }]
+      : transportPlan('imap', { port: imapPort, security: imapSecurity }),
     (candidate, timeoutMs) =>
       validateImapCredential({
         host: imapHost,
-        pinnedAddress: imapGuard.address,
+        pinnedAddress: imapRelay ? undefined : imapGuard.address,
         port: candidate.port,
         email,
         username: username || undefined,
         password: appPassword,
         security: candidate.security,
         timeoutMs,
+        tunnel: imapRelay ? () => openMailRelayTunnel(imapRelay, imapHost, candidate.port) : undefined,
       })
   );
   const validation = imapDetection.result;
@@ -226,31 +243,6 @@ export async function POST(request: NextRequest): Promise<NextResponse> {
             host: imapHost,
             secret: appPassword,
             usernameProvided: Boolean(username),
-          })
-        : null;
-    // The provider refused the sign-in itself (see `isProviderRefusal`). Put
-    // every question we would otherwise have to come back for to this one
-    // attempt, from addresses that are not ours, and record the answers: the
-    // provider issues no test mailboxes, so a customer's login is the only one
-    // that can tell us what it objects to. See relay-probe.ts for the steps.
-    //
-    // This is the one place a refused login is repeated, against the rule in
-    // transport-autodetect.ts, and only behind an exact match on one host's
-    // refusal. The inbox is NOT connected on a relay success: every later read
-    // and send would still leave from the address that was refused. The
-    // outcome is diagnostic only.
-    const relayProbe =
-      authFailure?.reason === 'provider_refused_signin' && imapDetection.candidate.security === 'tls'
-        ? await probeProviderRefusal({
-            email,
-            username: username || undefined,
-            password: appPassword,
-            imapHost,
-            imapPort: imapDetection.candidate.port,
-            smtpHost,
-            smtpPort,
-            smtpSecurity,
-            smtpPinnedAddress: smtpGuard.address,
           })
         : null;
     await recordProductFunnelEvent(db, { workspaceId, stage: 'inbox_connection', outcome: 'failure', category: 'generic_imap', errorCategory: validation.code === 'AUTH_FAILED' ? 'auth_failed' : 'validation_failed', phase: validation.phase, connectionType: alreadyConnected ? 'reconnect' : 'first_connect', authReason: authFailure?.reason ?? null });
@@ -307,10 +299,9 @@ export async function POST(request: NextRequest): Promise<NextResponse> {
       // three means every standard transport was exhausted, which is the row
       // that says the host itself is the problem.
       attempts: imapDetection.attempts,
-      // What the same login got from other addresses, when it was asked. An
-      // `imap_*=accepted` means the provider objects to where we connect from.
-      relayProbe: relayProbe?.summary ?? null,
-      relayProbeSteps: relayProbe?.steps ?? null,
+      // True when this host is reached through the relay (mail-relay.ts), so a
+      // refusal here is the relay's address being refused, not ours.
+      viaRelay: Boolean(imapRelay),
       workspaceId,
     });
     return NextResponse.json(body, { status: 422 });
@@ -318,18 +309,26 @@ export async function POST(request: NextRequest): Promise<NextResponse> {
 
   // Authenticate to SMTP without sending a message. This verifies outbound
   // capability while preserving the existing read-only validation semantics.
+  // A relay-only host is checked, and then stored, on 587 with STARTTLS whatever
+  // was submitted: the relay cannot carry 465 (see RELAY_ONLY_SMTP_TRANSPORT).
   const smtpDetection = await detectTransport(
-    transportPlan('smtp', { port: smtpPort, security: smtpSecurity }),
+    smtpRelay
+      ? [{ ...RELAY_ONLY_SMTP_TRANSPORT, requested: smtpPort === RELAY_ONLY_SMTP_TRANSPORT.port && smtpSecurity === RELAY_ONLY_SMTP_TRANSPORT.security }]
+      : transportPlan('smtp', { port: smtpPort, security: smtpSecurity }),
     (candidate, timeoutMs) =>
       validateSmtpCredential({
         host: smtpHost,
-        pinnedAddress: smtpGuard.address,
+        pinnedAddress: smtpRelay ? undefined : smtpGuard.address,
         port: candidate.port,
         email,
         username: username || undefined,
         password: appPassword,
         security: candidate.security,
-        timeoutMs,
+        // This host holds a refused AUTH for about eight seconds before it
+        // answers, so a relayed check gets the full budget rather than a
+        // retry-sized one.
+        timeoutMs: smtpRelay ? Math.max(timeoutMs, 15_000) : timeoutMs,
+        tunnel: smtpRelay ? () => openMailRelayTunnel(smtpRelay, smtpHost, candidate.port) : undefined,
       })
   );
   const smtpValidation = smtpDetection.result;
