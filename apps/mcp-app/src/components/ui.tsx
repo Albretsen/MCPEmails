@@ -61,8 +61,11 @@ export function TextLink(props: {
   title?: string;
   tone?: "danger";
   disabled?: boolean;
+  /** See `Btn`: unavailable without giving up focus. */
+  soft?: boolean;
   btnRef?: Ref<HTMLButtonElement>;
 }) {
+  const off = !!props.disabled;
   return (
     <button
       type="button"
@@ -70,8 +73,11 @@ export function TextLink(props: {
       ref={props.btnRef}
       data-tone={props.tone}
       title={props.title}
-      disabled={props.disabled}
-      onClick={props.onClick}
+      disabled={props.soft ? undefined : off}
+      aria-disabled={props.soft && off ? "true" : undefined}
+      onClick={() => {
+        if (!off) props.onClick();
+      }}
     >
       {props.children}
     </button>

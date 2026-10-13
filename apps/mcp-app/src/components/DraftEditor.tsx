@@ -151,7 +151,12 @@ function attachmentRefusal(d: DraftEditorData): string | null {
 function currentFailure(env: Envelope, failure: DraftFailure | null | undefined): DraftFailure | null {
   if (failure) return failure;
   if (env.state !== "error") return null;
-  return { action: "save", code: String(env.receipt?.error_code ?? "") };
+  // A failure that arrived without the card having asked (a pushed result).
+  return {
+    action: "save",
+    code: String(env.receipt?.error_code ?? ""),
+    headline: env.receipt?.headline ?? null,
+  };
 }
 
 /**
@@ -648,6 +653,9 @@ export function DraftEditor(props: Props) {
   const sent = useRef<{ version: string; edit: EditState } | null>(null);
   /** `conflict`, readable from the teardown saver's closure. */
   const conflictNow = useRef(false);
+  /** `check`, readable from the teardown saver's closure. */
+  const checkNow = useRef(check);
+  checkNow.current = check;
   useEffect(() => {
     // Mount: `edit` was derived from this very version, restored edits and
     // all, so there is nothing to rebase and replacing it would undo a restore.
@@ -686,6 +694,11 @@ export function DraftEditor(props: Props) {
 
   const patch = patchFrom(edit);
   const dirty = Object.keys(patch).length > 0;
+  // Text in an address field that is not a chip yet. Not part of the patch
+  // (it is not an address until it is committed), but it IS unsaved work, and
+  // Save must be pressable for it so that pressing it either commits it or says
+  // why it cannot (`readyToWrite`), instead of doing nothing.
+  const typedPending = FIELDS.some((f) => edit.typed[f].trim().length > 0);
   const patchKey = JSON.stringify(patch);
 
   // The server content and version of the LATEST render, readable from a
@@ -733,12 +746,23 @@ export function DraftEditor(props: Props) {
       // look at first: edits put back from storage over a draft that may have
       // moved, and an edit to a field the server has since changed. They are
       // not lost by waiting; unsaved.ts still holds them for the next mount.
-      if (conflictNow.current || restoredKeys.current.length > 0) {
+      //
+      // Nor while the draft itself is in doubt (`check` other than trusted): a
+      // replay not yet verified, or a write whose answer was lost. The patch is
+      // relative to a copy that may no longer be what the mailbox holds.
+      if (
+        conflictNow.current || restoredKeys.current.length > 0 ||
+        checkNow.current !== "trusted"
+      ) {
         return Promise.resolve(false);
       }
       const p = editorPatch(editVersion.current, now.version, editRef.current, now.server);
       if (Object.keys(p).length === 0) return Promise.resolve(false);
-      return actions.save(p);
+      return Promise.resolve(actions.save(p)).then((ok) => {
+        // Written, so there is nothing left at risk for a reload to restore.
+        if (ok) clearUnsaved(inboxId, lineage.current);
+        return ok;
+      });
     });
     return () => setTeardownSaver(null);
   }, [patchKey, canEdit]);
@@ -818,12 +842,13 @@ export function DraftEditor(props: Props) {
       for (const p of parts) {
         if (ADDRESS.test(p) && !next[field].includes(p)) next[field].push(p);
       }
+      // Only what could NOT be added stays in the input, so the field shows
+      // exactly the text that needs fixing.
+      next.typed[field] = invalid.join(", ");
       if (invalid.length > 0) {
         bad =
           bad ??
           `${invalid[0]} does not look like an email address, so it was not added.`;
-      } else {
-        next.typed[field] = "";
       }
     }
     editRef.current = next;
@@ -1010,6 +1035,23 @@ export function DraftEditor(props: Props) {
   // what will be saved, and this is only how it is presented.
   const split = pinnedSplit(edit.bodyText, sigPin) ?? splitBody(edit.bodyText);
 
+  /** Save: also what "Try again" in a failure notice runs. */
+  const onSave = () => {
+    if (!canEdit || !verified) return;
+    const next = readyToWrite();
+    if (!next) return;
+    const p = patchFrom(next);
+    if (Object.keys(p).length === 0) return;
+    sent.current = { version, edit: next };
+    void actions.save(p).then((ok) => {
+      if (ok) {
+        // Saved on purpose, so they are no longer "put back" edits.
+        restoredKeys.current = [];
+        setRestored(false);
+      } else if (sent.current?.edit === next) sent.current = null;
+    });
+  };
+
   /** Open the signature box, holding the boundary where it is now. */
   const startEditingSig = () => {
     if (split.separator !== null) {
@@ -1044,7 +1086,7 @@ export function DraftEditor(props: Props) {
           ) : null}
           <span class="muted">
             {savedLine}
-            {dirty ? " · Unsaved changes" : ""}
+            {dirty || typedPending ? " · Unsaved changes" : ""}
           </span>
         </div>
       </div>
@@ -1216,12 +1258,20 @@ export function DraftEditor(props: Props) {
       )}
 
       {err ? (
-        <Notice tone="danger">
+        <Notice tone={err.tone}>
           {err.text}
+          {err.retry && canEdit && verified && (dirty || typedPending) && (
+            <>
+              {" "}
+              <TextLink soft disabled={busy !== null} onClick={onSave}>
+                Try again
+              </TextLink>
+            </>
+          )}
           {err.recheck && (
             <>
               {" "}
-              <TextLink disabled={busy !== null} onClick={actions.refresh}>
+              <TextLink soft disabled={busy !== null} onClick={actions.refresh}>
                 Check again
               </TextLink>
             </>
@@ -1244,7 +1294,7 @@ export function DraftEditor(props: Props) {
           <Notice tone="danger">
             Could not confirm this is the latest version of the draft, so saving
             and sending are off for now. Your text is still here.{" "}
-            <TextLink disabled={busy !== null} onClick={actions.refresh}>
+            <TextLink soft disabled={busy !== null} onClick={actions.refresh}>
               Check again
             </TextLink>
           </Notice>
@@ -1343,6 +1393,7 @@ export function DraftEditor(props: Props) {
               </TextLink>
             )}
             <TextLink
+              soft
               disabled={busy !== null}
               title="Re-read this draft from the mailbox"
               onClick={actions.refresh}
@@ -1373,22 +1424,9 @@ export function DraftEditor(props: Props) {
               clean), and a real `disabled` would hand the next Tab to Send. */}
           <Btn
             soft
-            disabled={!canEdit || !dirty || !verified}
+            disabled={!canEdit || !(dirty || typedPending) || !verified}
             busy={saving}
-            onClick={() => {
-              const next = readyToWrite();
-              if (!next) return;
-              const p = patchFrom(next);
-              if (Object.keys(p).length === 0) return;
-              sent.current = { version, edit: next };
-              void actions.save(p).then((ok) => {
-                if (ok) {
-                  // Saved on purpose, so they are no longer "put back" edits.
-                  restoredKeys.current = [];
-                  setRestored(false);
-                } else if (sent.current?.edit === next) sent.current = null;
-              });
-            }}
+            onClick={onSave}
           >
             {saving ? "Saving" : "Save"}
           </Btn>
