@@ -162,7 +162,9 @@ function installDom() {
 }
 
 /** Let Preact flush its effects, and any re-render they schedule. */
-const settle = () => new Promise((r) => setTimeout(r, 20));
+// Longer than Preact's 35ms effect-flush fallback, so "settled" does not depend
+// on where jsdom's 16ms frame clock happens to be (20ms did, under load).
+const settle = () => new Promise((r) => setTimeout(r, 50));
 
 async function main() {
   mkdirSync(dirname(OUT), { recursive: true });
@@ -454,6 +456,14 @@ async function main() {
     typeBody("my local edit");
     await settle();
 
+    // No animation frame until the click has landed. The window ends when the
+    // resync effect flushes, which Preact schedules on the next frame, and
+    // jsdom's frames tick on their own 16ms clock: about one run in three a
+    // frame fell inside the `setTimeout(0)` below, the resync had already
+    // happened, and Send (correctly) went out with the edit. Preact's own
+    // timeout still flushes the resync a little later.
+    const raf = globalThis.requestAnimationFrame;
+    globalThis.requestAnimationFrame = () => 0;
     draw(draftData({ body: { text: "changed on the phone" } }));
     // Same un-settled instant as 3c: the click lands inside the window.
     await new Promise((r) => setTimeout(r, 0));
@@ -462,6 +472,7 @@ async function main() {
     );
     expect("the Send button is there to click", !!send, true);
     send.click();
+    globalThis.requestAnimationFrame = raf;
     await settle();
     expectJson("nothing is saved and nothing is sent", saves, []);
     render(null, root);

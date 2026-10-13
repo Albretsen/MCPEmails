@@ -977,6 +977,38 @@ the page puts them back. Two rules were added by the second review:
   somewhere else ... Use the newer version"), prefixed with "Your unsaved edits from earlier were put
   back." A field changed on the server that the person did not edit simply takes the server's value.
 
+### As built (card): which state wins (QA 2, 2026-10-13)
+
+* **One notice about the person's edits, and only while saving is possible.** "Your unsaved edits were
+  put back" and "saving will replace the newer version" are chosen in one place
+  (`draft-failure.ts#editsNotice`): none when the card is read only or the draft is `unverified` (the
+  notice that says why saving is off already says the text is still here), and a conflict is only
+  claimed against a copy that has been checked.
+* **"Use the newer version" reads first.** It calls `draft_read` and drops the local edits only once
+  that read is on screen. It used to adopt whatever envelope the card held, which on a remount could be
+  the result the card was mounted with.
+* **Send follows the edit.** Off with no recipient in To, Cc or Bcc on screen, or with text in an
+  address field that is not an address. `can_send: false` over a stored draft with no recipients says
+  nothing about the key, so adding one turns Send on; the server still refuses a key without send access.
+* **A draft that has ended is one line.** Discard answered `draft_not_found` (or `draft_already_sent`)
+  ends on a receipt, like a discard that worked. The automatic check of a replayed mount does the same
+  when the server says the line was closed (sent or discarded), and a card that had already ended on a
+  receipt keeps showing it while the replay is checked, going back to an editor only if the read
+  returns a live draft. A check the person asked for keeps the editor (it may hold text to copy) and
+  shows when it was last checked.
+* **An older card folds.** `store.ts#supersededBy`: a `draft_read` answer with a higher `revision` than
+  the card held, `last_saved_by: "agent"`, means a later `draft` call wrote it and mounted its own card.
+  The older card shows "A newer version of this draft is below." with "Edit here anyway". Never while
+  it holds unsaved edits. No host message tells a card about a later call, so this is found on the reads
+  the card already makes (remount, Refresh, a refused save) plus one silent `draft_read` when focus
+  comes back into a card whose last answer is older than 30 s. The person's own saves never count. Not
+  detected: a newer card the person then saved in (last writer is the user), and a host that sends a
+  remounted card no result.
+* **Ending while fullscreen asks for inline.** Any receipt, the folded line and the "no longer in
+  Drafts" line request `inline` once on arrival.
+* **A slow write says so.** After 4 s of a pending save or send the line under the buttons reads
+  "Still saving. Gmail can take a moment." in place of the word count, so nothing moves.
+
 ### As built (card) — the sent message stays on screen
 
 Added 2026-09-17, card side only. No new field, no new tool, no new server read.

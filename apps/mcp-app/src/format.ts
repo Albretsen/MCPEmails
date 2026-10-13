@@ -114,6 +114,17 @@ export function formatClock(iso: string | null | undefined): string {
   }
 }
 
+/** "10:04:31". For a moment that has to be told apart from one seconds earlier. */
+export function formatClockSeconds(ms: number): string {
+  const d = new Date(ms);
+  if (isNaN(d.getTime())) return "";
+  try {
+    return fmt({ timeStyle: "medium" }).format(d);
+  } catch {
+    return d.toISOString().slice(11, 19);
+  }
+}
+
 /** Whitespace-separated tokens. The body is counted, never quoted. */
 export function wordCount(text: string | null | undefined): number {
   if (typeof text !== "string") return 0;
