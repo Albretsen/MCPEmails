@@ -1,9 +1,14 @@
 import { assertEquals } from "jsr:@std/assert@1";
 import { memoryLineageStore } from "./draft-lineage-fake.ts";
 import {
+  cardWriteConflict,
   closeDraftLine,
   type DraftLineageScope,
   lastSaveOf,
+  lineRevision,
+  needsExistenceCheck,
+  parseBaseRevision,
+  preferExistingId,
   recordDraftWrite,
   resolveDraftId,
 } from "./draft-lineage.ts";
@@ -131,4 +136,84 @@ Deno.test("lastSaveOf reports the recorded writer, not the time of the read", as
   // No line: the provider's time if there is one, and nobody is named.
   assertEquals(lastSaveOf(null, "2026-10-13T09:00:00Z"), { at: "2026-10-13T09:00:00.000Z", by: null });
   assertEquals(lastSaveOf(null, null), { at: null, by: null });
+});
+
+// ── Review of 2026-10-13 ────────────────────────────────────────────────────
+
+Deno.test("recordDraftWrite answers with the revision it recorded, and null when it recorded nothing", async () => {
+  const { store } = memoryLineageStore();
+  assertEquals(await recordDraftWrite(store, SCOPE, { previous: null, draftId: "Drafts:1", writtenBy: "agent" }), 1);
+  const line = await resolveDraftId(store, SCOPE, "Drafts:1");
+  assertEquals(await recordDraftWrite(store, SCOPE, { previous: line, draftId: "Drafts:2", writtenBy: "user" }), 2);
+  // An id with no line, rewritten: the old id is seeded as 1.
+  const loose = await resolveDraftId(store, SCOPE, "Drafts:7");
+  assertEquals(await recordDraftWrite(store, SCOPE, { previous: loose, draftId: "Drafts:8", writtenBy: "user" }), 2);
+  const failing = memoryLineageStore({ failing: true }).store;
+  assertEquals(
+    await recordDraftWrite(failing, SCOPE, { previous: null, draftId: "Drafts:1", writtenBy: "agent" }, quiet),
+    null,
+  );
+  assertEquals(await recordDraftWrite(null, SCOPE, { previous: null, draftId: "Drafts:1", writtenBy: "agent" }), null);
+});
+
+Deno.test("a send that left its draft behind reads as sent, with the copy flagged", async () => {
+  const { store } = memoryLineageStore();
+  await recordDraftWrite(store, SCOPE, { previous: null, draftId: "Drafts:1", writtenBy: "agent" });
+  await closeDraftLine(store, SCOPE, await resolveDraftId(store, SCOPE, "Drafts:1"), "sent_kept");
+  const r = await resolveDraftId(store, SCOPE, "Drafts:1");
+  assertEquals([r.closed, r.sentCopyKept, r.redirected], ["sent", true, false]);
+  await closeDraftLine(store, SCOPE, await resolveDraftId(store, SCOPE, "Drafts:1"), "sent");
+  assertEquals((await resolveDraftId(store, SCOPE, "Drafts:1")).sentCopyKept, undefined);
+});
+
+Deno.test("preferExistingId: the mailbox wins where the lineage would name another message", async () => {
+  const { store } = memoryLineageStore();
+  await recordDraftWrite(store, SCOPE, { previous: null, draftId: "Drafts:1", writtenBy: "agent" });
+  await recordDraftWrite(store, SCOPE, {
+    previous: await resolveDraftId(store, SCOPE, "Drafts:1"),
+    draftId: "Drafts:2",
+    writtenBy: "agent",
+  });
+  const stale = await resolveDraftId(store, SCOPE, "Drafts:1");
+  const head = await resolveDraftId(store, SCOPE, "Drafts:2");
+  assertEquals([needsExistenceCheck(stale), needsExistenceCheck(head)], [true, false]);
+  // Gone, as IMAP leaves it after a save: follow the line.
+  assertEquals(preferExistingId(stale, false).draftId, "Drafts:2");
+  // Still there: a reused id, which is its own (unknown) draft.
+  const reused = preferExistingId(stale, true);
+  assertEquals([reused.draftId, reused.known, reused.redirected], ["Drafts:1", false, false]);
+  // The head is the head either way.
+  assertEquals(preferExistingId(head, true), head);
+
+  for (const [how, staysClosed] of [["deleted", false], ["sent", false], ["sent_kept", true]] as const) {
+    const s2 = memoryLineageStore().store;
+    await recordDraftWrite(s2, SCOPE, { previous: null, draftId: "Drafts:9", writtenBy: "agent" });
+    await closeDraftLine(s2, SCOPE, await resolveDraftId(s2, SCOPE, "Drafts:9"), how);
+    const closed = await resolveDraftId(s2, SCOPE, "Drafts:9");
+    assertEquals(preferExistingId(closed, false).closed !== null, true, `${how}, gone`);
+    assertEquals(preferExistingId(closed, true).closed !== null, staysClosed, `${how}, there`);
+  }
+});
+
+Deno.test("cardWriteConflict: an older id, or another revision, is a conflict; an unplaceable id never is", async () => {
+  const { store } = memoryLineageStore();
+  await recordDraftWrite(store, SCOPE, { previous: null, draftId: "Drafts:1", writtenBy: "agent" });
+  await recordDraftWrite(store, SCOPE, {
+    previous: await resolveDraftId(store, SCOPE, "Drafts:1"),
+    draftId: "Drafts:2",
+    writtenBy: "agent",
+  });
+  const stale = await resolveDraftId(store, SCOPE, "Drafts:1");
+  const head = await resolveDraftId(store, SCOPE, "Drafts:2");
+  assertEquals(cardWriteConflict(stale, null), true, "an older id, revision or not");
+  assertEquals(cardWriteConflict(head, 2), false);
+  assertEquals(cardWriteConflict(head, 1), true);
+  assertEquals(cardWriteConflict(head, 0), true, "0 is 'no line when I loaded it'");
+  assertEquals(cardWriteConflict(head, null), false, "no revision given, no revision check");
+  const unknown = await resolveDraftId(store, SCOPE, "Drafts:99");
+  assertEquals(cardWriteConflict(unknown, 5), false);
+  assertEquals(lineRevision(head), 2);
+  assertEquals(lineRevision(unknown), null);
+  assertEquals([parseBaseRevision(undefined), parseBaseRevision(0), parseBaseRevision(3)], [null, 0, 3]);
+  for (const bad of [-1, 1.5, "1", true, {}]) assertEquals(parseBaseRevision(bad), "invalid");
 });

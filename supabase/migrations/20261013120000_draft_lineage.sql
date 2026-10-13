@@ -17,7 +17,7 @@
 -- WHAT IS STORED, AND WHAT IS NOT. Provider draft ids (opaque handles such as
 -- "Drafts:103", a Gmail draft id or a Graph message id), a revision counter,
 -- who wrote last ('agent' | 'user'), when, and whether the line ended in a send
--- or a delete. No subject, recipient, body or hash of one: mail content is not
+-- (and whether the sent draft's copy was left in Drafts) or a delete. No subject, recipient, body or hash of one: mail content is not
 -- stored, and there is no column that could hold it.
 --
 -- TENANCY. Service-role only: RLS on, no policies, and anon / authenticated
@@ -46,7 +46,10 @@ CREATE TABLE IF NOT EXISTS public.draft_lineage (
   written_by    text NOT NULL CHECK (written_by IN ('agent', 'user')),
   written_at    timestamptz NOT NULL DEFAULT now(),
   closed_at     timestamptz,
-  closed_reason text CHECK (closed_reason IS NULL OR closed_reason IN ('sent', 'deleted')),
+  -- 'sent_kept': sent, but the draft copy could not be removed from Drafts
+  -- afterwards (the IMAP post-send delete is best-effort), so the line's last
+  -- id may still name the message that was sent.
+  closed_reason text CHECK (closed_reason IS NULL OR closed_reason IN ('sent', 'sent_kept', 'deleted')),
   created_at    timestamptz NOT NULL DEFAULT now(),
   CONSTRAINT draft_lineage_closed_together
     CHECK ((closed_at IS NULL) = (closed_reason IS NULL)),

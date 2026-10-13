@@ -630,6 +630,8 @@ result always has something to render), and the results below carry an envelope 
   "draft": {
     "draft_id": "Drafts:2",                 // the CURRENT id; on IMAP it changes on every save
     "resolved_from": "Drafts:1",            // present only when the caller asked with an OLDER id of this draft
+    "revision": 2,                          // lineage revision; present only when an open line names the draft.
+                                            // The card sends it back as base_revision (see "Draft lineage")
     "id_is_stable": false,                  // false on IMAP: the card MUST adopt every returned id
     "origin": "create" | "reply" | "update" | "read" | "save",
     "last_saved_at": "2026-09-16T10:04:00Z" | null,   // when the draft was last SAVED; never the time of a read
@@ -673,7 +675,7 @@ degrades to today's payload, exactly as §2a's failure rule.
 | Tool | Arguments | Returns |
 | --- | --- | --- |
 | `draft_read` | `{ inbox_id?, inbox?, draft_id }` | `card: "draft_editor"`, `origin: "read"`; needs `manage:drafts` **and** `read:email` |
-| `draft_editor_save` | `{ inbox_id?, inbox?, draft_id, to?, cc?, bcc?, subject?, body_text? }`, at least one field | `card: "draft_editor"`, `origin: "save"`, `last_saved_by: "user"`, the NEW `draft_id` |
+| `draft_editor_save` | `{ inbox_id?, inbox?, draft_id, base_revision?, to?, cc?, bcc?, subject?, body_text? }`, at least one field | `card: "draft_editor"`, `origin: "save"`, `last_saved_by: "user"`, the NEW `draft_id` and `revision` |
 
 `draft_editor_save` rules, all load-bearing:
 
@@ -690,8 +692,12 @@ degrades to today's payload, exactly as §2a's failure rule.
   and `body.formatting_removed: true`. The card must then stop offering a formatted view, and may say
   why. `signature.rich: true` tells the card in advance that editing the signature lines will do this.
 * **A save that changes nothing writes nothing.** When every field equals what is stored (line
-  endings aside), the stored draft is answered as a save without a provider write, so a retried save
-  never moves an IMAP id twice.
+  endings aside), the stored draft is answered as a save without a provider write.
+* **A save never follows an old id, and never writes over a newer revision (2026-10-13 review).**
+  A save against an OLDER id of the draft, or with a `base_revision` other than the line's current
+  revision, is refused with `error_code: "draft_changed"` and writes nothing. The failed receipt
+  carries `current`: the draft as it is now, as a `card: "draft_editor"` envelope (with
+  `resolved_from` when the id had moved), for the card to offer. See "Draft lineage".
 * **Omitted fields are kept.** Unlike `draft{action:"update"}`, which requires `body`, an omitted
   field means "leave it as stored". The server reads the stored draft first and merges.
 * **Refuses rather than drops attachments.** `imapUpdateDraft` and `gmailUpdateDraft` rebuild the
@@ -702,7 +708,7 @@ degrades to today's payload, exactly as §2a's failure rule.
   `error_code: "invalid_recipients"` and changes nothing. A non-string or blank entry is invalid
   too: nothing is ever dropped silently.
 * Missing ids return `error_code: "draft_not_found"`; the card then offers Refresh. An OLDER id of
-  a draft is not missing: see "Draft lineage".
+  a draft is not missing, but it is not writable either: see "Draft lineage".
 
 Both tools re-verify: the inbox belongs to the calling key's workspace and is in its
 `inbox_ids` allowlist, the workspace is gated in, and the scopes above. A hostile caller can do
@@ -780,13 +786,42 @@ has had, so an older id resolves to the current one. Rows are written when a dra
 replied, updated, saved in the editor, or has its recipients rewritten at send time, and the line
 is closed when the draft is sent or deleted. Ids, a revision, who wrote last and when; no content.
 
-* `draft{action:"update"|"send"|"delete"}`, `draft_read` and `draft_editor_save` accept any id of
-  the line, act on the current one, and return the current id (`draft_id`; the envelope adds
-  `resolved_from` when it differs from the id asked for). `content` is unchanged in shape.
-* A line closed by a send or a delete is never redirected. The id behaves as before
-  (`draft_not_found`), and the card's receipt says which of the two happened.
+* **Reads follow the line; card writes do not (2026-10-13 review).** `draft_read` (the card's
+  Refresh and its re-read after a lost answer) and the MODEL's `draft{action:"update"|"send"|"delete"}`
+  accept any id of the line, act on the current one, and return the current id (`draft_id`; the
+  envelope adds `resolved_from` when it differs from the id asked for). `content` is unchanged in
+  shape. A write that comes FROM THE CARD does not follow: `draft_editor_save`, and
+  `draft{action:"send"}` called with `base_revision`, are refused with `error_code:
+  "draft_changed"` when the id is an older id of the line, or when `base_revision` differs from the
+  line's revision. Nothing is written or sent. The lost-save case still works: the card re-reads
+  with `draft_read` after a lost answer and adopts the current id and revision before it writes
+  again.
+* **`revision` / `base_revision`.** The envelope's `draft.revision` is the line's revision (1 on
+  create, +1 on every write through this server), present only when an open line names the draft.
+  The card sends it back as `base_revision` on every save and send, `0` when it had none (a line
+  that exists by then means something wrote the draft since). It is the lineage counter rather than
+  the content `version`: a write's own `version` is computed from what was sent to the provider,
+  and a provider hands content back normalised (Outlook rewrites the HTML), so comparing versions
+  would refuse ordinary Save-and-send. A draft edited in a mail client outside these tools does not
+  move the revision; that hazard is as before. A lineage read that fails never refuses on revision.
+* **A line closed by a send is never sent or rewritten again.** `draft{action:"send"|"update"}`
+  refuse it with log code / `error_code: "draft_already_sent"`, whoever calls (model, card, or an
+  approved re-run): on IMAP the post-send delete is best-effort, so the sent draft's copy can still
+  be in Drafts under the same id. The close records that case as `closed_reason: "sent_kept"`.
+  `content` for the refusal is a new sentence (`draft_send: draft <id> was already sent. Nothing
+  was sent again.`); in a gated workspace a failed receipt with the same code rides in
+  `structuredContent`. `draft_read` and `draft_editor_save` keep answering a closed line with
+  `draft_not_found` and a receipt that says which of sent / discarded happened.
+* **An id the mailbox has given to another message (UIDVALIDITY reset, a mail client) is that
+  message.** Where the lineage would redirect an id, or call it closed, the server first asks the
+  mailbox whether the id itself still names a message (only on those rare paths). If it does, it is
+  treated as a draft with no line: never redirected to another draft, and never reported "already
+  sent" unless the line is `sent_kept`, whose message IS the copy of what was sent.
+* A send from the card with `base_revision` that is refused as `draft_changed` carries the same
+  failed-receipt shape (no `current`; the card re-reads to load the newer version).
 * An approved held send keeps the id it was queued with and does not follow the line: the reviewer
-  approved that version.
+  approved that version. A held send is queued with the RESOLVED id, so its summary and its
+  post-approval re-run name the current draft rather than the stale id the caller held.
 * Fail soft: a lineage read that fails resolves the id to itself, and a write that fails is logged
   and dropped. The function works without the table (deploy order does not matter).
 * Reads report the last save, not themselves: `last_saved_at` / `last_saved_by` come from the line
@@ -810,7 +845,10 @@ Implemented 2026-09-16. Server side only; the card is `apps/mcp-app/`.
 **Error codes**, all delivered as a `card: "receipt"` envelope with `state: "error"`,
 `outcome: "failed"` and `isError: true` — never a JSON-RPC error: `invalid_arguments`,
 `insufficient_scope`, `inbox_not_found`, `draft_editor_disabled`, `draft_not_found`,
-`invalid_recipients`, `draft_has_attachments`, `provider_error`. The not-found and
+`invalid_recipients`, `draft_has_attachments`, `provider_error`, and since 2026-10-13
+`draft_changed` (`draft_editor_save` only; see "Draft lineage"). `draft{action:"send"|"update"}`
+add `draft_already_sent`, and `draft{action:"send"}` with `base_revision` adds `draft_changed`, as
+`isError` text results that carry the same failed receipt in a gated workspace. The not-found and
 wrong-workspace cases are byte-identical, so neither tool is an existence oracle.
 **Receipt copy is for a person (2026-10-13).** `receipt.headline` / `receipt.detail` are written in
 plain words (no scope, tool or argument names, no protocol jargon); `error_code` is unchanged and

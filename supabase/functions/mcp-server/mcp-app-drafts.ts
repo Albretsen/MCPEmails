@@ -69,7 +69,16 @@ import {
   plainTextBodyToHtml,
   rebuildHtmlKeepingSignature,
 } from "./signature-compose.ts";
-import { type DraftWriter, lastSaveOf, type ResolvedDraft } from "./draft-lineage.ts";
+import {
+  cardWriteConflict,
+  type DraftWriter,
+  lastSaveOf,
+  lineRevision,
+  needsExistenceCheck,
+  parseBaseRevision,
+  preferExistingId,
+  type ResolvedDraft,
+} from "./draft-lineage.ts";
 import { EMAIL_HTML_MAX_LENGTH } from "./signature-sanitizer.ts";
 import { CARD_SCHEMA_VERSION } from "./mcp-app-approvals.ts";
 
@@ -272,13 +281,14 @@ export interface DraftEditorProviderInbox extends DraftEditorInbox {
  */
 export interface DraftLineagePort {
   resolve(inbox: DraftEditorProviderInbox, draftId: string): Promise<ResolvedDraft>;
+  /** Resolves to the revision the draft now has, or null when nothing was recorded. */
   recordWrite(
     inbox: DraftEditorProviderInbox,
     previous: ResolvedDraft,
     draftId: string,
     writtenBy: DraftWriter,
     at: string,
-  ): Promise<void>;
+  ): Promise<number | null | void>;
 }
 
 export interface DraftEditorDeps {
@@ -612,6 +622,12 @@ export function buildDraftEditorEnvelope(input: {
   canSend: boolean;
   canEdit?: boolean;
   editReason?: string | null;
+  /**
+   * The draft's lineage revision (draft-lineage.ts), when an open line names
+   * it. The card sends it back as `base_revision` on a save or a send, and a
+   * draft rewritten since is refused as `draft_changed`. Absent otherwise.
+   */
+  revision?: number | null;
 }): Record<string, unknown> {
   const { draft, inbox } = input;
   const text = clipDraftBody(draft.body_text);
@@ -646,6 +662,9 @@ export function buildDraftEditorEnvelope(input: {
         html: html.value,
         truncated: text.truncated || html.truncated,
       }),
+      ...(typeof input.revision === "number" && input.revision >= 1
+        ? { revision: input.revision }
+        : {}),
       origin: input.origin,
       last_saved_at: draft.last_saved_at,
       last_saved_by: input.lastSavedBy,
@@ -916,6 +935,61 @@ async function resolveLine(
   } catch {
     return unknown;
   }
+}
+
+/**
+ * `resolveLine`, then checked against the mailbox where the lineage answer
+ * could be naming a different message than the id does today (a redirect, or
+ * a closed line): see draft-lineage.ts#preferExistingId. Costs a provider read
+ * on those two rare paths only. A read that fails counts as "not there", which
+ * keeps the lineage answer, the direction that refuses rather than acts.
+ */
+async function resolveSettledLine(
+  deps: DraftEditorDeps,
+  inbox: DraftEditorProviderInbox,
+  draftId: string,
+): Promise<ResolvedDraft> {
+  const line = await resolveLine(deps, inbox, draftId);
+  if (!needsExistenceCheck(line)) return line;
+  let exists = false;
+  try {
+    exists = (await deps.getDraft(inbox, draftId)) !== null;
+  } catch {
+    exists = false;
+  }
+  return preferExistingId(line, exists);
+}
+
+/**
+ * A write from the card against a draft that has moved on since the card
+ * loaded it (draft-lineage.ts#cardWriteConflict). Nothing was written.
+ *
+ * `current` is the draft as it is now, as a draft_editor envelope, when it
+ * could be read: the card shows a conflict notice over the person's unsaved
+ * text and offers to load it. It rides beside the receipt, never in place of
+ * it, so `mergeEnvelope` keeps the editor (and the typed text) on screen.
+ */
+function draftChanged(
+  appUrl: string,
+  current: Record<string, unknown> | null,
+): DraftEditorToolResult {
+  const out = draftFailure(
+    appUrl,
+    "failed",
+    "That draft was changed after this copy of it was loaded.",
+    "Nothing was saved. Read it again with draft_read to get the current version and id.",
+    "draft_changed",
+    "draft_changed",
+    null,
+    {
+      headline: "This draft was changed somewhere else.",
+      detail: "Nothing was saved. Your text is still here. Load the newer version to see what changed.",
+    },
+  );
+  if (current) {
+    (out.result.structuredContent as Record<string, unknown>).current = current;
+  }
+  return out;
 }
 
 // ---------------------------------------------------------------------------
@@ -1337,7 +1411,10 @@ export async function runDraftRead(
   // A reloaded card asks with the id of its first tool result, which on IMAP
   // stopped naming the draft at the first save. The lineage maps it to the
   // current id, and the envelope returns that id for the card to adopt.
-  const line = await resolveLine(deps, gate.inbox, draftId);
+  //
+  // Unless the id itself still names a message: a reused id is that message,
+  // not the line it once belonged to (preferExistingId).
+  const line = await resolveSettledLine(deps, gate.inbox, draftId);
   if (line.closed) return draftClosed(deps.appUrl, line.closed);
 
   let draft: NormalizedDraft | null;
@@ -1389,6 +1466,7 @@ export async function runDraftRead(
     // so a Refresh after the person's own save credited the assistant.
     lastSavedBy: lastSave.by,
     canSend: computeCanSend(caller, draft),
+    revision: lineRevision(line),
   });
   return cardResult(envelope, draftSummaryText("Draft opened for editing.", draft));
 }
@@ -1427,6 +1505,10 @@ export async function runDraftEditorSave(
   if (bodyText !== undefined && (typeof bodyText !== "string" || bodyText.length > MAX_BODY_LENGTH)) {
     return invalidArgs(deps.appUrl, `body_text must be a string of at most ${MAX_BODY_LENGTH} characters.`);
   }
+  const baseRevision = parseBaseRevision(args["base_revision"]);
+  if (baseRevision === "invalid") {
+    return invalidArgs(deps.appUrl, "base_revision must be a non-negative integer.");
+  }
 
   const gate = await gateDraftTool(deps, caller, args, ["manage:drafts"]);
   if (!gate.ok) return gate.failure;
@@ -1464,10 +1546,18 @@ export async function runDraftEditorSave(
   // read first. It is also what supplies the threading headers and the HTML
   // part's existence, both of which the rules below depend on.
   //
-  // The id is resolved through the lineage first, so a save retried after a
-  // lost response (it carries the id from BEFORE the save that did land) acts
-  // on the draft that save produced, instead of failing as not found.
-  const line = await resolveLine(deps, inbox, draftId);
+  // ── A SAVE NEVER FOLLOWS AN OLD ID (review, 2026-10-13) ──────────────────
+  // The id is resolved through the lineage, and that is all it is used for
+  // here: a save against an OLDER id of the draft, or against a revision other
+  // than the one the card loaded (`base_revision`), is refused as
+  // `draft_changed` and writes nothing. Following the line instead put a stale
+  // card's body over a newer revision the assistant had written, which the
+  // person never saw (draft-lineage.ts#cardWriteConflict).
+  //
+  // The lost-save case this used to serve still works, from the other side:
+  // after a lost answer the card re-reads with `draft_read` (which DOES follow
+  // the line) and adopts the current id and revision before it writes again.
+  const line = await resolveSettledLine(deps, inbox, draftId);
   if (line.closed) return draftClosed(deps.appUrl, line.closed);
   const currentId = line.draftId;
 
@@ -1488,7 +1578,30 @@ export async function runDraftEditorSave(
       "provider_error",
     );
   }
-  if (!stored) return draftNotFound(deps.appUrl);
+  if (!stored) return line.redirected ? draftChanged(deps.appUrl, null) : draftNotFound(deps.appUrl);
+
+  if (cardWriteConflict(line, baseRevision)) {
+    // The draft as it is now, for the card to offer. Built exactly as a
+    // `draft_read` of the current id would build it.
+    const lastSave = lastSaveOf(line, stored.last_saved_at);
+    const current: NormalizedDraft = {
+      ...stored,
+      last_saved_at: lastSave.at,
+      ...(line.redirected ? { resolved_from: line.requestedId } : {}),
+    };
+    return draftChanged(
+      deps.appUrl,
+      buildDraftEditorEnvelope({
+        appUrl: deps.appUrl,
+        draft: current,
+        inbox,
+        origin: "read",
+        lastSavedBy: lastSave.by,
+        canSend: computeCanSend(caller, current),
+        revision: lineRevision(line),
+      }),
+    );
+  }
 
   // ── REFUSE RATHER THAN DROP ATTACHMENTS ──────────────────────────────────
   // `imapUpdateDraft` and `gmailUpdateDraft` rebuild the MIME message from the
@@ -1642,11 +1755,8 @@ export async function runDraftEditorSave(
 
   // ── NOTHING CHANGED, NOTHING WRITTEN ─────────────────────────────────────
   // A save whose every field already matches what is stored is answered from
-  // the stored draft. This is what makes a retry safe: the first attempt
-  // landed, its response was lost, the card sends the same patch again, and
-  // the lineage has already pointed that call at the draft the first attempt
-  // wrote. Writing again would be harmless on Gmail and Outlook and would move
-  // the id once more on IMAP for no change at all.
+  // the stored draft. Writing again would be harmless on Gmail and Outlook and
+  // would move the id once more on IMAP for no change at all.
   const sameList = (a: string[], b: string[]) =>
     a.length === b.length && a.every((v, i) => v === b[i]);
   if (
@@ -1654,11 +1764,7 @@ export async function runDraftEditorSave(
     sameList(nextTo, stored.to) && sameList(nextCc, stored.cc) && sameList(nextBcc, stored.bcc)
   ) {
     const lastSave = lastSaveOf(line, stored.last_saved_at);
-    const unchanged: NormalizedDraft = {
-      ...stored,
-      last_saved_at: lastSave.at,
-      ...(line.redirected ? { resolved_from: line.requestedId } : {}),
-    };
+    const unchanged: NormalizedDraft = { ...stored, last_saved_at: lastSave.at };
     return cardResult(
       buildDraftEditorEnvelope({
         appUrl: deps.appUrl,
@@ -1667,6 +1773,7 @@ export async function runDraftEditorSave(
         origin: "save",
         lastSavedBy: lastSave.by,
         canSend: computeCanSend(caller, unchanged),
+        revision: lineRevision(line),
       }),
       draftSummaryText("Draft saved.", unchanged),
     );
@@ -1717,10 +1824,14 @@ export async function runDraftEditorSave(
 
   const savedAt = written.updated_at ?? new Date(nowMs(deps)).toISOString();
   // Awaited, so the line is current before the card can ask again. Fail-soft:
-  // the draft is saved either way.
+  // the draft is saved either way. When nothing was recorded the revision the
+  // card gets is the one the store still holds, so its next save is not
+  // refused for a bump that never happened.
+  let revision: number | null = lineRevision(line);
   if (deps.lineage) {
     try {
-      await deps.lineage.recordWrite(inbox, line, written.draft_id, "user", savedAt);
+      const recorded = await deps.lineage.recordWrite(inbox, line, written.draft_id, "user", savedAt);
+      if (typeof recorded === "number") revision = recorded;
     } catch {
       // Bookkeeping only. See draft-lineage.ts.
     }
@@ -1744,7 +1855,6 @@ export async function runDraftEditorSave(
     signature_rich: htmlCarriesSignatureBlock(nextHtml),
     ...(formattingRemoved ? { formatting_removed: true } : {}),
     last_saved_at: savedAt,
-    ...(line.redirected ? { resolved_from: line.requestedId } : {}),
   };
 
   const envelope = buildDraftEditorEnvelope({
@@ -1756,6 +1866,7 @@ export async function runDraftEditorSave(
     // means it is a hint at the same trust level as `visibility`, not a control.
     lastSavedBy: "user",
     canSend: computeCanSend(caller, saved),
+    revision,
   });
   return cardResult(envelope, draftSummaryText("Draft saved.", saved));
 }
@@ -1899,7 +2010,9 @@ export const DRAFT_EDITOR_TOOL_DEFINITIONS: DraftEditorToolDefinition[] = [
       "carries one if the inbox has one. Nothing is sent. On IMAP the save " +
       "returns a NEW draft_id and the old one stops resolving. A draft that has " +
       "attachments cannot be saved here on IMAP or Gmail, because the save " +
-      "would rebuild the message without them.",
+      "would rebuild the message without them. A save against an older id of " +
+      "the draft, or against a revision other than base_revision, is refused " +
+      "as draft_changed and nothing is written.",
     requiredScope: "manage:drafts",
     inputSchema: {
       type: "object",
@@ -1922,6 +2035,13 @@ export const DRAFT_EDITOR_TOOL_DEFINITIONS: DraftEditorToolDefinition[] = [
             "Replacement plain-text body, written exactly as given. When the draft has an " +
             "HTML part it is regenerated from this text, so both parts of the message say " +
             "the same thing. Omit to keep the stored body.",
+        },
+        base_revision: {
+          type: "integer",
+          minimum: 0,
+          description:
+            "The draft.revision of the copy being edited (0 when it had none). When the " +
+            "draft has been rewritten since, the save is refused as draft_changed.",
         },
       },
       required: ["draft_id"],

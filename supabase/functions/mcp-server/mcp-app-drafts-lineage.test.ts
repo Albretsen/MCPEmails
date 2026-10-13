@@ -63,7 +63,9 @@ function signedDraft(body: string): ProviderDraft {
   };
 }
 
-function mailbox(options: { inbox?: DraftEditorProviderInbox; lineageFails?: boolean } = {}) {
+function mailbox(
+  options: { inbox?: DraftEditorProviderInbox; lineageFails?: boolean; stableIds?: boolean } = {},
+) {
   const inbox = options.inbox ?? INBOX;
   const drafts = new Map<string, ProviderDraft>();
   const { store, rows } = memoryLineageStore({ failing: options.lineageFails });
@@ -81,9 +83,10 @@ function mailbox(options: { inbox?: DraftEditorProviderInbox; lineageFails?: boo
     getDraft: (_inbox, id) => Promise.resolve(drafts.get(id) ?? null),
     updateDraft: (_inbox, id, params) => {
       // imapUpdateDraft: refuse an id that is gone, else append + expunge.
+      // `stableIds`: Gmail and Outlook, which rewrite in place.
       if (!drafts.has(id)) return Promise.reject(new Error("draft_not_found"));
       drafts.delete(id);
-      const newId = `Drafts:${nextUid++}`;
+      const newId = options.stableIds ? id : `Drafts:${nextUid++}`;
       drafts.set(newId, {
         subject: params.subject,
         to: params.to,
@@ -117,12 +120,14 @@ function mailbox(options: { inbox?: DraftEditorProviderInbox; lineageFails?: boo
     }, quiet);
     return id;
   };
-  const close = async (id: string, how: "sent" | "deleted") => {
+  /** A send or a delete. `sent_kept`: sent, and the draft copy stayed in Drafts. */
+  const close = async (id: string, how: "sent" | "sent_kept" | "deleted") => {
     const line = await resolveDraftId(store, scope(inbox), id, quiet);
-    drafts.delete(line.draftId);
+    if (how !== "sent_kept") drafts.delete(line.draftId);
     await closeDraftLine(store, scope(inbox), line, how, undefined, quiet);
   };
-  return { deps, drafts, rows, writes, agentCreates, close };
+  const newId = () => options.stableIds ? `r-${nextUid++}` : `Drafts:${nextUid++}`;
+  return { deps, drafts, rows, writes, agentCreates, close, newId, stable: options.stableIds === true };
 }
 
 const draftOf = (out: DraftEditorToolResult) =>
@@ -151,7 +156,7 @@ Deno.test("a card holding a stale id reads the current draft", async () => {
   assert(!("resolved_from" in draftOf(direct)));
 });
 
-Deno.test("a save retried after a lost response lands on the saved draft, once", async () => {
+Deno.test("a save after a lost response: the card re-reads first, then saves on the current id", async () => {
   const m = mailbox();
   const first = await m.agentCreates(signedDraft("Here they are."));
   const patch = { draft_id: first, subject: "Q3 numbers", cc: ["hello@mcpemails.com"] };
@@ -160,29 +165,189 @@ Deno.test("a save retried after a lost response lands on the saved draft, once",
   const lost = await runDraftEditorSave(m.deps, CALLER, patch);
   const afterFirst = draftOf(lost).draft_id;
 
-  // The card retries with what it has: the OLD id and the same patch.
-  const retry = await runDraftEditorSave(m.deps, CALLER, patch);
-  assertEquals(retry.result.isError, false, "not draft_not_found");
-  assertEquals(draftOf(retry).draft_id, afterFirst, "the draft the first attempt wrote");
-  assertEquals(draftOf(retry).recipients.cc, ["hello@mcpemails.com"]);
-  assertEquals(draftOf(retry).last_saved_by, "user");
+  // Retried blind with the OLD id, it is refused and writes nothing.
+  const blind = await runDraftEditorSave(m.deps, CALLER, patch);
+  assertEquals(receiptOf(blind).error_code, "draft_changed");
+  assertEquals(m.writes.length, 1, "no second write");
 
-  // One draft in the mailbox, written once: no duplicate, no second rewrite.
-  assertEquals([...m.drafts.keys()], [afterFirst]);
-  assertEquals(m.writes.length, 1);
+  // What the card does instead: re-read (which follows the line), adopt.
+  const read = draftOf(await runDraftRead(m.deps, CALLER, { draft_id: first }));
+  assertEquals(read.draft_id, afterFirst);
+  assertEquals(read.recipients.cc, ["hello@mcpemails.com"], "the lost save had landed");
+  assertEquals(read.revision, draftOf(lost).revision, "the same revision the lost answer carried");
+
+  // And the next save, on the adopted id and revision, goes through.
+  const next = await runDraftEditorSave(m.deps, CALLER, {
+    draft_id: read.draft_id,
+    base_revision: read.revision,
+    subject: "Q3 numbers, final",
+  });
+  assertEquals(next.result.isError, false);
+  assertEquals(m.drafts.size, 1, "still one draft");
+  assertEquals(m.drafts.get(draftOf(next).draft_id)!.subject, "Q3 numbers, final");
+  assertEquals(draftOf(next).revision, read.revision + 1);
 });
 
-Deno.test("a retried save that carries a further change is applied to the current draft", async () => {
+// ── A stale card never writes over a newer revision (review, 2026-10-13) ────
+
+/** What `draft{action:"update"}` does on IMAP: a new id, recorded as the agent's. */
+async function agentUpdates(
+  m: ReturnType<typeof mailbox>,
+  id: string,
+  change: Partial<ProviderDraft>,
+): Promise<string> {
+  const line = await m.deps.lineage!.resolve(INBOX, id);
+  const cur = m.drafts.get(line.draftId)!;
+  m.drafts.delete(line.draftId);
+  const next = m.stable ? line.draftId : m.newId();
+  m.drafts.set(next, { ...cur, ...change });
+  await m.deps.lineage!.recordWrite(INBOX, line, next, "agent", new Date().toISOString());
+  return next;
+}
+
+Deno.test("two cards: the stale one's Save is refused as draft_changed, and the newer revision stands", async () => {
+  const m = mailbox();
+  const x = await m.agentCreates(signedDraft("Original body."));
+  // Card A mounts on the create result.
+  const cardA = draftOf(await runDraftRead(m.deps, CALLER, { draft_id: x }));
+  // The model updates the draft: card B shows the new revision under a new id.
+  const y = await agentUpdates(m, x, {
+    to: ["new-recipient@x.com"],
+    bodyText: m.drafts.get(x)!.bodyText!.replace("Original body.", "Agent's corrected body."),
+  });
+  const before = structuredClone(m.drafts.get(y));
+
+  // The person edits card A and presses Save.
+  const out = await runDraftEditorSave(m.deps, CALLER, {
+    draft_id: cardA.draft_id,
+    base_revision: cardA.revision,
+    body_text: cardA.body.text.replace("Original body.", "Original body!"),
+  });
+  assertEquals(out.result.isError, true);
+  assertEquals(receiptOf(out).error_code, "draft_changed");
+  assertEquals(receiptOf(out).headline, "This draft was changed somewhere else.");
+  assertEquals(m.writes.length, 0, "nothing was written");
+  assertEquals(m.drafts.get(y), before, "the model's revision is untouched");
+
+  // The current draft rides along for the card to offer.
+  const current = (out.result.structuredContent as Record<string, any>).current;
+  assertEquals(current.card, "draft_editor");
+  assertEquals(current.draft.draft_id, y);
+  assertEquals(current.draft.resolved_from, x);
+  assertEquals(current.draft.recipients.to, ["new-recipient@x.com"]);
+  assertEquals(current.draft.revision, cardA.revision + 1);
+  // The model's channel says what happened without the body.
+  assert(!out.result.content[0].text.includes("corrected"));
+});
+
+Deno.test("ids that never move (Gmail, Outlook): a revision the draft has moved past is refused", async () => {
+  const m = mailbox({ stableIds: true });
+  const id = await m.agentCreates(signedDraft("Original body."));
+  const cardA = draftOf(await runDraftRead(m.deps, CALLER, { draft_id: id }));
+  assertEquals(cardA.revision, 1);
+  // The model rewrites it in place: same id, next revision.
+  const same = await agentUpdates(m, id, { subject: "Agent's subject" });
+  assertEquals(same, id, "the id did not move");
+
+  const out = await runDraftEditorSave(m.deps, CALLER, {
+    draft_id: id,
+    base_revision: cardA.revision,
+    subject: "Person's subject",
+  });
+  assertEquals(receiptOf(out).error_code, "draft_changed");
+  assertEquals(m.drafts.get(id)!.subject, "Agent's subject");
+  assertEquals((out.result.structuredContent as Record<string, any>).current.draft.revision, 2);
+
+  // Saving against the revision it has now goes through, and moves it on.
+  const ok = await runDraftEditorSave(m.deps, CALLER, { draft_id: id, base_revision: 2, subject: "Person's subject" });
+  assertEquals(ok.result.isError, false);
+  assertEquals(draftOf(ok).revision, 3);
+  assertEquals(draftOf(ok).last_saved_by, "user");
+});
+
+Deno.test("a card's own saves in a row each carry the revision the next one needs", async () => {
+  const m = mailbox();
+  let d = draftOf(await runDraftRead(m.deps, CALLER, { draft_id: await m.agentCreates(signedDraft("One.")) }));
+  for (const subject of ["a", "b", "c"]) {
+    const out = await runDraftEditorSave(m.deps, CALLER, { draft_id: d.draft_id, base_revision: d.revision, subject });
+    assertEquals(out.result.isError, false, subject);
+    d = draftOf(out);
+  }
+  assertEquals(d.revision, 4);
+  assertEquals(m.writes.length, 3);
+});
+
+Deno.test("a draft no line names: base_revision 0 saves; once a line exists, 0 is stale", async () => {
+  const m = mailbox({ stableIds: true });
+  m.drafts.set("r-50", signedDraft("Written in a mail app."));
+  const read = draftOf(await runDraftRead(m.deps, CALLER, { draft_id: "r-50" }));
+  assert(!("revision" in read), "no revision to publish");
+  const first = await runDraftEditorSave(m.deps, CALLER, { draft_id: "r-50", base_revision: 0, subject: "Mine" });
+  assertEquals(first.result.isError, false);
+  assertEquals(draftOf(first).revision, 1);
+  // Another card still holding the pre-line copy.
+  const stale = await runDraftEditorSave(m.deps, CALLER, { draft_id: "r-50", base_revision: 0, subject: "Theirs" });
+  assertEquals(receiptOf(stale).error_code, "draft_changed");
+  assertEquals(m.drafts.get("r-50")!.subject, "Mine");
+});
+
+Deno.test("lineage that cannot be read never refuses a save on revision", async () => {
+  const m = mailbox({ lineageFails: true, stableIds: true });
+  m.drafts.set("r-50", signedDraft("Here they are."));
+  const out = await runDraftEditorSave(m.deps, CALLER, { draft_id: "r-50", base_revision: 7, subject: "Q3" });
+  assertEquals(out.result.isError, false);
+  assert(!("revision" in draftOf(out)), "and claims no revision it could not record");
+});
+
+Deno.test("an invalid base_revision is refused before anything is read", async () => {
   const m = mailbox();
   const first = await m.agentCreates(signedDraft("Here they are."));
-  await runDraftEditorSave(m.deps, CALLER, { draft_id: first, subject: "Q3 numbers" });
-  const again = await runDraftEditorSave(m.deps, CALLER, { draft_id: first, subject: "Q3 numbers, final" });
-  assertEquals(again.result.isError, false);
-  assertEquals(m.drafts.size, 1, "still one draft");
-  assertEquals(m.drafts.get(draftOf(again).draft_id)!.subject, "Q3 numbers, final");
-  // And every id the draft ever had now resolves to it.
-  const read = await runDraftRead(m.deps, CALLER, { draft_id: first });
-  assertEquals(draftOf(read).draft_id, draftOf(again).draft_id);
+  for (const base_revision of [-1, 1.5, "2", true]) {
+    const out = await runDraftEditorSave(m.deps, CALLER, { draft_id: first, base_revision, subject: "s" });
+    assertEquals(receiptOf(out).error_code, "invalid_arguments", String(base_revision));
+  }
+  assertEquals(m.writes.length, 0);
+});
+
+// ── An id the mailbox has given to another message (review finding 5) ──────
+
+Deno.test("an older id that names a message again is that message, never the line's head", async () => {
+  const m = mailbox();
+  const x = await m.agentCreates(signedDraft("Original body."));
+  const y = await agentUpdates(m, x, { subject: "The line's head" });
+  // UIDVALIDITY reset (or a mail client): `x` is a different draft now.
+  m.drafts.set(x, { ...signedDraft("A different draft."), subject: "Reused id" });
+
+  const read = draftOf(await runDraftRead(m.deps, CALLER, { draft_id: x }));
+  assertEquals([read.draft_id, read.subject], [x, "Reused id"]);
+  assert(!("resolved_from" in read) && !("revision" in read));
+
+  const saved = await runDraftEditorSave(m.deps, CALLER, { draft_id: x, base_revision: 0, subject: "Reused, edited" });
+  assertEquals(saved.result.isError, false);
+  assertEquals(m.drafts.get(y)!.subject, "The line's head", "the other draft is untouched");
+  assertEquals(m.drafts.get(draftOf(saved).draft_id)!.subject, "Reused, edited");
+});
+
+Deno.test("a sent draft's id that names a new draft is not 'already sent'; a copy left by the send is", async () => {
+  // The send removed its draft, and the id later names another one.
+  const m = mailbox();
+  const x = await m.agentCreates(signedDraft("Sent one."));
+  await m.close(x, "sent");
+  m.drafts.set(x, { ...signedDraft("A new draft."), subject: "New" });
+  const read = await runDraftRead(m.deps, CALLER, { draft_id: x });
+  assertEquals(read.result.isError, false);
+  assertEquals(draftOf(read).subject, "New");
+
+  // The send could NOT remove its draft: the copy there is what was sent.
+  const k = mailbox();
+  const id = await k.agentCreates(signedDraft("Sent one."));
+  await k.close(id, "sent_kept");
+  assert(k.drafts.has(id), "the copy is still in Drafts");
+  for (const run of [runDraftRead, runDraftEditorSave]) {
+    const out = await run(k.deps, CALLER, { draft_id: id, subject: "again" });
+    assertEquals(receiptOf(out).headline, "This draft was already sent.");
+  }
+  assertEquals(k.writes.length, 0);
 });
 
 Deno.test("another inbox cannot resolve this inbox's ids", async () => {
