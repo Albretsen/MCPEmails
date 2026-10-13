@@ -158,12 +158,38 @@ export function mailError(env: MailEnv, inboxId: string | null, outcome: Executo
       retryAfter: 15,
     });
   }
+  if (outcome.logErrorCode === "transport_not_configured") return partialConnectionError(outcome.result);
   if (outcome.logErrorCode !== "auth_failed") return executorError(outcome.logErrorCode, resultText(outcome.result));
   let provider = inboxId ? env.health?.provider(inboxId, env.apiKey.workspace_id) ?? null : null;
   // The row was never seen by this isolate's health map: the tool layer's own
   // text names the provider ("Unable to access the gmail inbox: ...").
   provider ??= /^Unable to [^:]{1,80} the ([a-z0-9_-]{1,32}) inbox:/.exec(resultText(outcome.result))?.[1] ?? null;
   return new ApiError(409, "reconnect_required", reconnectMessage(provider), { toolCode: "auth_failed" });
+}
+
+/**
+ * A receive-only or send-only inbox asked for the half it does not have (see
+ * mcp-server/connection-access.ts). The tool layer's text is written for an
+ * agent ("do not retry"); the person using the app gets a sentence of their
+ * own. Not `reconnect_required`: nothing is broken, and the app must not offer
+ * a reconnect as the fix for a mailbox that is working as connected.
+ */
+function partialConnectionError(result: unknown): ApiError {
+  // The raw block, not resultText(): that unwraps the JSON to its agent-facing
+  // `message`, and `missing` is the field this needs.
+  const text = (result as ToolResultShape | null)?.content?.find((block) => block?.type === "text")?.text;
+  let missing: unknown = null;
+  try {
+    missing = typeof text === "string" ? (JSON.parse(text) as { missing?: unknown }).missing : null;
+  } catch {
+    // Not the structured body; fall through to the generic sentence.
+  }
+  const message = missing === "imap"
+    ? "This inbox is connected for sending only, so its mail can't be read or organized here."
+    : missing === "smtp"
+    ? "This inbox is connected for receiving only, so it can't send mail."
+    : "This inbox isn't connected for this.";
+  return new ApiError(422, "invalid_request", message, { toolCode: "transport_not_configured" });
 }
 
 export type MailOutcome =

@@ -2782,6 +2782,15 @@ function InboxDetailModal({ inbox, checking, onClose, onReconnect, onCheck, onDi
             <InboxDetailRow label={t('inboxes.detail.authMethod')}>
               {usesOauth ? t('inboxes.detail.authOauth') : t('inboxes.detail.authAppPassword')}
             </InboxDetailRow>
+            {/* Only a partial connection gets the row: "send and receive" is
+                what every other inbox does, and saying so on each would be
+                noise. A send-only or receive-only inbox is the case a user
+                needs told, because half the tools will refuse it. */}
+            {(inbox.connectionMode === 'smtp' || inbox.connectionMode === 'imap') && (
+              <InboxDetailRow label={t('inboxes.detail.accessMode')}>
+                {inbox.connectionMode === 'smtp' ? t('inboxes.detail.accessSendOnly') : t('inboxes.detail.accessReceiveOnly')}
+              </InboxDetailRow>
+            )}
             <InboxDetailRow label={t('inboxes.detail.connectedOn')}>{formatDate(inbox.createdAt)}</InboxDetailRow>
             <InboxDetailRow label={t('inboxes.detail.lastCall')}>
               {inbox.lastCallAt ? formatLastUsed(inbox.lastCallAt, t) : t('inboxes.detail.lastCallNone', { days: historyDays })}

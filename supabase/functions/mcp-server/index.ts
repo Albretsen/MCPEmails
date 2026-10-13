@@ -467,6 +467,14 @@ import {
 } from "./inbox-selector.ts";
 import { unsupportedFeatureMessage } from "./unsupported-feature-remedy.ts";
 import {
+  capabilitiesForAccess,
+  inboxAccess,
+  missingTransportOf,
+  missingTransportPayload,
+  transportBlockingTool,
+  type MissingTransport,
+} from "./connection-access.ts";
+import {
   buildReplayEnvelope,
   idempotencyResultSnapshot,
   noNewEffectPhrase,
@@ -593,6 +601,22 @@ interface ActivityContext {
   inboxId: string | null;
   outlookNoMailbox?: boolean;
   /**
+   * Set when a tool reached for the half of a receive-only or send-only
+   * IMAP/SMTP inbox that the inbox does not have (see connection-access.ts).
+   * Like `outlookNoMailbox`, the dispatcher reads it to replace whatever
+   * credential-failure wording the handler put around the sentinel with the
+   * accurate explanation.
+   */
+  missingTransport?: { kind: MissingTransport; inboxId: string; emailAddress: string };
+  /**
+   * The tool being dispatched, so `resolveInboxArg` can refuse an inbox that
+   * lacks the half of the mailbox this tool needs before the handler does
+   * anything with it. `transportGated` marks that the check has run: it applies
+   * to the call's first resolved inbox, which is the one the tool acts on.
+   */
+  dispatchName?: string;
+  transportGated?: boolean;
+  /**
    * Notes a provider layer raised for the in-flight call (e.g. a Sent copy
    * that could not be saved), attached to the result after dispatch. Absent
    * outside a tools/call, such as a scheduled send, where there is no result
@@ -705,6 +729,32 @@ function rewriteNoMailboxResult(toolResult: unknown): void {
     ?.result;
   if (!result || result.isError !== true || !Array.isArray(result.content)) return;
   result.content = [{ type: "text", text: outlookNoMailboxText() }];
+}
+
+/**
+ * Replace an executor's error result with the receive-only / send-only
+ * explanation, in place. Returns whether it did. Like {@link rewriteNoMailboxResult}, a result that
+ * succeeded is left alone: a best-effort IMAP step that found no IMAP server
+ * does not turn a delivered send into a failure.
+ */
+function rewriteMissingTransportResult(
+  outcome: { result: unknown },
+  missing: NonNullable<ActivityContext["missingTransport"]>,
+): boolean {
+  const result = (outcome as {
+    result?: { isError?: boolean; content?: { type: string; text: string }[]; structuredContent?: unknown };
+  })?.result;
+  if (!result || result.isError !== true || !Array.isArray(result.content)) return false;
+  const payload = missingTransportPayload(
+    missing.kind,
+    { id: missing.inboxId, email_address: missing.emailAddress },
+    `${APP_URL}/dashboard/inboxes`,
+  );
+  result.content = [{ type: "text", text: JSON.stringify(payload) }];
+  // A structured copy written for the original refusal would contradict the
+  // text; this one says the same thing as the text.
+  if (result.structuredContent !== undefined) result.structuredContent = payload;
+  return true;
 }
 
 /**
@@ -6500,6 +6550,15 @@ const TOOL_OUTPUT_SCHEMAS: Record<string, Record<string, unknown>> = {
             display_name: { type: "string" },
             provider: { type: "string" },
             service: { type: ["string", "null"] },
+            access: {
+              type: "string",
+              enum: ["send_only", "receive_only"],
+              description:
+                "Present only when this inbox is connected for one direction. " +
+                "send_only: no IMAP, so it cannot read, search, organize or draft. " +
+                "receive_only: no SMTP, so it cannot send, reply, forward or schedule. " +
+                "Absent means the inbox does both.",
+            },
             capabilities: { type: "object", additionalProperties: true },
             compatibility: { type: "object", additionalProperties: true },
             sender_identities: {
@@ -9459,6 +9518,50 @@ function imapAuthUser(inbox: InboxRow): string {
 }
 
 /**
+ * Can this inbox open an IMAP session? The guard every IMAP path runs before
+ * dialling; on false the caller throws the `imap_auth_failed` sentinel, as it
+ * always has.
+ *
+ * What changed is the case where the answer is false because the inbox was
+ * deliberately connected without IMAP (a send-only inbox). That is recorded on
+ * the request, and the dispatcher then answers with what is actually true,
+ * rather than the handler's "credentials revoked, reconnect" wording, which is
+ * false for that inbox and which no reconnect would fix.
+ */
+function imapConfigured<T extends InboxRow>(
+  inbox: T,
+): inbox is T & { imap_host: string; imap_port: number; imap_password: string } {
+  if (inbox.imap_host && inbox.imap_port && inbox.imap_password) return true;
+  noteMissingTransport(inbox, "imap");
+  return false;
+}
+
+/** The SMTP counterpart of {@link imapConfigured}, for a receive-only inbox. */
+function smtpConfigured<T extends InboxRow>(
+  inbox: T,
+): inbox is T & { smtp_host: string; smtp_port: number; imap_password: string } {
+  if (inbox.smtp_host && inbox.smtp_port && inbox.imap_password) return true;
+  noteMissingTransport(inbox, "smtp");
+  return false;
+}
+
+/**
+ * Record that the in-flight tool needed a half this inbox deliberately lacks.
+ * Only a partial connection is recorded: a row missing both hosts, or missing
+ * its password, is broken, and keeps the credential error it always had.
+ */
+function noteMissingTransport(inbox: InboxRow, kind: MissingTransport): void {
+  if (missingTransportOf(inbox) !== kind) return;
+  const store = activityInboxStore.getStore();
+  // Only the inbox the call acts on. A tool that sweeps several inboxes and
+  // fails on another one for an unrelated reason must not be explained as this.
+  if (store && store.inboxId !== null && store.inboxId !== inbox.id) return;
+  if (store && !store.missingTransport) {
+    store.missingTransport = { kind, inboxId: inbox.id, emailAddress: inbox.email_address };
+  }
+}
+
+/**
  * Does this inbox talk IMAP?
  *
  * Mirrors the `default:` arm every provider switch in this file uses — Gmail
@@ -9497,7 +9600,7 @@ function imapSessionFor(inbox: InboxRow): ImapSession<ImapClient> | null {
 function imapSessionOpener(inbox: InboxRow): () => Promise<ImapClient> {
   let cachedPassword: string | null = null;
   return async () => {
-    if (!inbox.imap_host || !inbox.imap_port || !inbox.imap_password) {
+    if (!imapConfigured(inbox)) {
       throw new Error("imap_auth_failed");
     }
     if (cachedPassword === null) {
@@ -9662,7 +9765,7 @@ async function executeListInboxes(
 
   let query = supabase
     .from("inboxes")
-    .select("id, email_address, display_name, provider, service, status")
+    .select("id, email_address, display_name, provider, service, status, imap_host, smtp_host")
     .eq("workspace_id", apiKey.workspace_id)
     .is("deleted_at", null)
     .eq("status", "active")
@@ -9689,6 +9792,8 @@ async function executeListInboxes(
     display_name: string | null;
     provider: string;
     service: string | null;
+    imap_host: string | null;
+    smtp_host: string | null;
   }
 
   const allRows = (data ?? []) as InboxListRow[];
@@ -9724,17 +9829,22 @@ async function executeListInboxes(
           : "unavailable";
       }
     }
+    const access = inboxAccess(row);
     return {
       inbox_id: row.id,
       email_address: row.email_address,
       display_name: row.display_name ?? row.email_address,
       provider: row.provider,
       service: row.service ?? null,
+      // Only on a partial connection: "send_only" or "receive_only". Every
+      // other inbox does both, and an agent should not have to read a field on
+      // each of them to learn that. See connection-access.ts.
+      ...(access !== "send_and_receive" ? { access } : {}),
       sender_identities: senderIdentities,
       sender_identity_status: senderIdentityStatus,
       ...(includeCapabilities
         ? {
-            capabilities: getProviderCapabilities(row.provider),
+            capabilities: capabilitiesForAccess(getProviderCapabilities(row.provider), access),
             compatibility: getCompatibilityProfile(row.provider),
           }
         : {}),
@@ -9906,6 +10016,26 @@ async function resolveInboxArg(
   if (resolved.ok) {
     const store = activityInboxStore.getStore();
     if (store) store.inboxId = resolved.inbox.id;
+
+    // A receive-only or send-only inbox asked for the half it does not have.
+    // Refused here, at resolution, rather than where the connection would be
+    // opened, because by then a handler may already have acted: queued a held
+    // send for approval, or stored a scheduled send, that could never be
+    // delivered. The dispatcher turns this into the accurate explanation (see
+    // connection-access.ts); "not_found" only ever reaches the handler, which
+    // returns its usual refusal for the dispatcher to replace.
+    if (store?.dispatchName && !store.transportGated) {
+      store.transportGated = true;
+      const blocked = transportBlockingTool(store.dispatchName, resolved.inbox);
+      if (blocked) {
+        store.missingTransport = {
+          kind: blocked,
+          inboxId: resolved.inbox.id,
+          emailAddress: resolved.inbox.email_address,
+        };
+        return { ok: false, reason: "not_found" };
+      }
+    }
 
     // Best-effort, one-time Gmail signature seed (Phase 2). This is the single
     // invocation point for every inbox-bound tool (covers UUID, email-alias,
@@ -10982,7 +11112,7 @@ async function resolveImapAliasMailbox(
     forRead?: boolean;
   } = {},
 ): Promise<string | null> {
-  if (!inbox.imap_host || !inbox.imap_port || !inbox.imap_password) {
+  if (!imapConfigured(inbox)) {
     throw new Error("imap_auth_failed");
   }
   if (alias.aliases[0] === "inbox") return "INBOX";
@@ -11414,7 +11544,7 @@ async function listImapMessages(
    */
   resolvedOn?: ImapSession<ImapClient> | null,
 ): Promise<ListInboxResult> {
-  if (!inbox.imap_host || !inbox.imap_port || !inbox.imap_password) {
+  if (!imapConfigured(inbox)) {
     throw new Error("imap_auth_failed");
   }
   const password = await decryptStoredToken(inbox.imap_password);
@@ -11547,7 +11677,7 @@ async function readImapMessage(
    */
   joinInlineParts = false,
 ): Promise<ReadEmailResult> {
-  if (!inbox.imap_host || !inbox.imap_port || !inbox.imap_password) {
+  if (!imapConfigured(inbox)) {
     throw new Error("imap_auth_failed");
   }
   const { folder, uid } = decodeImapId(messageId);
@@ -11712,7 +11842,7 @@ async function searchImapMessages(
    */
   sharedSession?: ImapSession<ImapClient>,
 ): Promise<SearchEmailsResult> {
-  if (!inbox.imap_host || !inbox.imap_port || !inbox.imap_password) {
+  if (!imapConfigured(inbox)) {
     throw new Error("imap_auth_failed");
   }
 
@@ -11895,7 +12025,7 @@ async function imapSmtpSend(
   mimeMessage: string | Uint8Array,
   recipients: string[],
 ): Promise<void> {
-  if (!inbox.smtp_host || !inbox.smtp_port || !inbox.imap_password) {
+  if (!smtpConfigured(inbox)) {
     throw new Error("imap_auth_failed");
   }
   const password = await decryptStoredToken(inbox.imap_password);
@@ -11926,6 +12056,8 @@ async function imapSmtpSend(
  * Sent.
  */
 async function appendToSentFolder(inbox: InboxRow, mimeMessage: string | Uint8Array): Promise<void> {
+  // Not imapConfigured(): a send-only inbox has no Sent folder to file into,
+  // and that is not a failure of the send that just succeeded.
   if (!inbox.imap_host || !inbox.imap_port || !inbox.imap_password) return;
   let client: ImapClient | null = null;
   let saved = false;
@@ -12026,7 +12158,7 @@ async function replyImapMessage(
   // imap_auth_failed sentinels inside survive the wrapper unchanged.
   const { mime, messageId, recipients, replySubject, origMessageId, uid } =
     await preTransmission("source", async () => {
-      if (!inbox.imap_host || !inbox.imap_port || !inbox.imap_password) {
+      if (!imapConfigured(inbox)) {
         throw new Error("imap_auth_failed");
       }
       // Place the signature into the new reply text BEFORE the original is quoted
@@ -13755,7 +13887,7 @@ async function readOriginalMessage(
 ): Promise<OriginalMessage> {
   switch (inbox.provider) {
     case "imap": {
-      if (!inbox.imap_host || !inbox.imap_port || !inbox.imap_password) {
+      if (!imapConfigured(inbox)) {
         throw new Error("imap_auth_failed");
       }
       const { folder, uid } = decodeImapId(messageId);
@@ -18984,7 +19116,7 @@ function moveProviderSemantics(
  * Throws "imap_auth_failed" on credential rejection.
  */
 async function imapListFolders(inbox: InboxRow): Promise<FolderEntry[]> {
-  if (!inbox.imap_host || !inbox.imap_port || !inbox.imap_password) {
+  if (!imapConfigured(inbox)) {
     throw new Error("imap_auth_failed");
   }
   const password = await decryptStoredToken(inbox.imap_password);
@@ -19571,7 +19703,7 @@ async function imapMailboxListing(
    */
   sharedSession?: ImapSession<ImapClient> | null,
 ): Promise<ImapMailboxInfo[]> {
-  if (!inbox.imap_host || !inbox.imap_port || !inbox.imap_password) {
+  if (!imapConfigured(inbox)) {
     throw new Error("imap_auth_failed");
   }
   const shared = sharedSession ?? null;
@@ -19781,7 +19913,7 @@ async function findFolderByName(
 }
 
 async function imapCreateFolder(inbox: InboxRow, name: string): Promise<{ id: string; name: string }> {
-  if (!inbox.imap_host || !inbox.imap_port || !inbox.imap_password) {
+  if (!imapConfigured(inbox)) {
     throw new Error("imap_auth_failed");
   }
   const password = await decryptStoredToken(inbox.imap_password);
@@ -19932,7 +20064,7 @@ async function outlookCreateFolder(inbox: InboxRow, name: string): Promise<{ id:
 // ── folder_rename helpers ──────────────────────────────────────────────────
 
 async function imapRenameFolder(inbox: InboxRow, folderId: string, newName: string): Promise<void> {
-  if (!inbox.imap_host || !inbox.imap_port || !inbox.imap_password) {
+  if (!imapConfigured(inbox)) {
     throw new Error("imap_auth_failed");
   }
   const password = await decryptStoredToken(inbox.imap_password);
@@ -20034,7 +20166,7 @@ async function outlookRenameFolder(inbox: InboxRow, folderId: string, newName: s
 // ── folder_delete helpers ──────────────────────────────────────────────────
 
 async function imapDeleteFolder(inbox: InboxRow, folderId: string): Promise<void> {
-  if (!inbox.imap_host || !inbox.imap_port || !inbox.imap_password) {
+  if (!imapConfigured(inbox)) {
     throw new Error("imap_auth_failed");
   }
   const password = await decryptStoredToken(inbox.imap_password);
@@ -20558,7 +20690,7 @@ async function imapArchiveEmail(
   inbox: InboxRow,
   messageId: string,
 ): Promise<{ newMessageId?: string; destination: string }> {
-  if (!inbox.imap_host || !inbox.imap_port || !inbox.imap_password) {
+  if (!imapConfigured(inbox)) {
     throw new Error("imap_auth_failed");
   }
   const { folder, uid } = decodeImapId(messageId);
@@ -20931,7 +21063,7 @@ async function imapAddKeyword(
   messageId: string,
   keyword: string,
 ): Promise<void> {
-  if (!inbox.imap_host || !inbox.imap_port || !inbox.imap_password) {
+  if (!imapConfigured(inbox)) {
     throw new Error("imap_auth_failed");
   }
   const { folder, uid } = decodeImapId(messageId);
@@ -21281,7 +21413,7 @@ async function imapMoveEmail(
   messageId: string,
   destinationFolderId: string,
 ): Promise<string | undefined> {
-  if (!inbox.imap_host || !inbox.imap_port || !inbox.imap_password) {
+  if (!imapConfigured(inbox)) {
     throw new Error("imap_auth_failed");
   }
   const { folder, uid } = decodeImapId(messageId);
@@ -21559,7 +21691,7 @@ async function imapCopyEmail(
   messageId: string,
   destinationFolderId: string,
 ): Promise<void> {
-  if (!inbox.imap_host || !inbox.imap_port || !inbox.imap_password) {
+  if (!imapConfigured(inbox)) {
     throw new Error("imap_auth_failed");
   }
   const { folder, uid } = decodeImapId(messageId);
@@ -21768,7 +21900,7 @@ async function imapDeleteEmail(
   messageId: string,
   permanent: boolean,
 ): Promise<void> {
-  if (!inbox.imap_host || !inbox.imap_port || !inbox.imap_password) {
+  if (!imapConfigured(inbox)) {
     throw new Error("imap_auth_failed");
   }
   const { folder, uid } = decodeImapId(messageId);
@@ -22503,7 +22635,7 @@ function imapBulkByFolderGroup(
   opts: BulkRunOptions | undefined,
   apply: (client: ImapClient, group: ImapFolderGroup) => Promise<void>,
 ): Promise<BulkOpResult> {
-  if (!inbox.imap_host || !inbox.imap_port || !inbox.imap_password) {
+  if (!imapConfigured(inbox)) {
     return Promise.resolve({
       succeeded: [],
       failed: messageIds.map((id) => ({ id, error: "imap_auth_failed" })),
@@ -24694,7 +24826,7 @@ async function imapListDrafts(
   inbox: InboxRow,
   limit: number,
 ): Promise<DraftSummary[]> {
-  if (!inbox.imap_host || !inbox.imap_port || !inbox.imap_password) {
+  if (!imapConfigured(inbox)) {
     throw new Error("imap_auth_failed");
   }
   const password = await decryptStoredToken(inbox.imap_password);
@@ -24754,7 +24886,7 @@ async function imapGetDraft(
   inbox: InboxRow,
   draftId: string,
 ): Promise<DraftContent | null> {
-  if (!inbox.imap_host || !inbox.imap_port || !inbox.imap_password) {
+  if (!imapConfigured(inbox)) {
     throw new Error("imap_auth_failed");
   }
   const { folder, uid } = decodeImapId(draftId);
@@ -24806,7 +24938,7 @@ async function imapCreateDraft(
   inbox: InboxRow,
   params: DraftParams,
 ): Promise<DraftCreateResult> {
-  if (!inbox.imap_host || !inbox.imap_port || !inbox.imap_password) {
+  if (!imapConfigured(inbox)) {
     throw new Error("imap_auth_failed");
   }
   const password = await decryptStoredToken(inbox.imap_password);
@@ -24893,7 +25025,7 @@ async function imapUpdateDraft(
   draftId: string,
   params: DraftParams,
 ): Promise<DraftUpdateResult> {
-  if (!inbox.imap_host || !inbox.imap_port || !inbox.imap_password) {
+  if (!imapConfigured(inbox)) {
     throw new Error("imap_auth_failed");
   }
   const password = await decryptStoredToken(inbox.imap_password);
@@ -25062,7 +25194,7 @@ async function imapRewriteDraftRecipients(
   draftId: string,
   override: RecipientOverride,
 ): Promise<string> {
-  if (!inbox.imap_host || !inbox.imap_port || !inbox.imap_password) {
+  if (!imapConfigured(inbox)) {
     throw new Error("imap_auth_failed");
   }
   const password = await decryptStoredToken(inbox.imap_password);
@@ -25126,7 +25258,7 @@ async function imapSendDraft(
   // and sent nothing (see send-stages.ts).
   const { sentMime, recipients, parsed, folder, uid, password } =
     await preTransmission("source", async () => {
-      if (!inbox.imap_host || !inbox.imap_port || !inbox.imap_password) {
+      if (!imapConfigured(inbox)) {
         throw new Error("imap_auth_failed");
       }
       const { folder, uid } = decodeImapId(draftId);
@@ -25239,7 +25371,7 @@ async function imapDeleteDraft(
   inbox: InboxRow,
   draftId: string,
 ): Promise<DraftDeleteResult> {
-  if (!inbox.imap_host || !inbox.imap_port || !inbox.imap_password) {
+  if (!imapConfigured(inbox)) {
     throw new Error("imap_auth_failed");
   }
   const { folder, uid } = decodeImapId(draftId);
@@ -27060,7 +27192,7 @@ async function executeCreateReplyDraft(
     } else {
       const { folder, uid } = decodeImapId(messageId);
       if (!Number.isFinite(uid) || uid <= 0) throw new Error("message_not_found");
-      if (!inbox.imap_host || !inbox.imap_port || !inbox.imap_password) throw new Error("imap_auth_failed");
+      if (!imapConfigured(inbox)) throw new Error("imap_auth_failed");
       const client = await ImapClient.connect({ host: inbox.imap_host, port: inbox.imap_port, email: imapAuthUser(inbox), password: await decryptStoredToken(inbox.imap_password) });
       try {
         await client.selectMailbox(imapMailboxForServerFolder(folder));
@@ -28224,7 +28356,7 @@ async function imapSearchContacts(
   query: string,
   cap: number,
 ): Promise<ContactScan> {
-  if (!inbox.imap_host || !inbox.imap_port || !inbox.imap_password) {
+  if (!imapConfigured(inbox)) {
     throw new Error("imap_auth_failed");
   }
   // Strip characters that would corrupt the quoted IMAP astring (backslash,
@@ -29884,8 +30016,36 @@ interface ExecutorOutcome {
  * NONE of what `handleToolsCall` wraps around it: no scope check, no schema
  * validation, no action cap, no idempotency claim, no activity log, no rate
  * limit. A caller other than `handleToolsCall` owns every one of those.
+ *
+ * The one thing it does own is the receive-only / send-only gate (see
+ * connection-access.ts), because that is about what the inbox can do rather
+ * than about who is asking, and both callers need the same answer: the tool
+ * name is published on the request's activity context, `resolveInboxArg`
+ * refuses an inbox that lacks the half this tool needs, and the refusal the
+ * handler then returns is replaced here with the accurate one. Outside a
+ * tools/call there is no activity context, so one is opened for the call.
  */
 async function dispatchExecutor(
+  dispatchName: string,
+  rawArgs: unknown,
+  apiKey: ApiKeyRow,
+): Promise<ExecutorOutcome | null> {
+  const run = async (ctx: ActivityContext): Promise<ExecutorOutcome | null> => {
+    ctx.dispatchName = dispatchName;
+    const outcome = await runExecutor(dispatchName, rawArgs, apiKey);
+    if (outcome && ctx.missingTransport && rewriteMissingTransportResult(outcome, ctx.missingTransport)) {
+      return { ...outcome, logStatus: "error", logErrorCode: "transport_not_configured", logErrorDetails: null };
+    }
+    return outcome;
+  };
+  const store = activityInboxStore.getStore();
+  return store ? await run(store) : await activityInboxStore.run({ inboxId: null }, () => {
+    const ctx = activityInboxStore.getStore()!;
+    return run(ctx);
+  });
+}
+
+async function runExecutor(
   dispatchName: string,
   rawArgs: unknown,
   apiKey: ApiKeyRow,

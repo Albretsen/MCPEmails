@@ -24,6 +24,7 @@
     "test:connect-translations": "node --test src/lib/connect/translation-parity.test.mjs",
     "test:connect-intent": "node --test src/lib/connect/intent.test.mjs",
     "test:connect-preselect-ui": "node --test --experimental-strip-types --experimental-test-module-mocks --import ./scripts/register-dom-tests.mjs components/dashboard/connect-preselect-ui.test.mjs",
+    "test:connect-mode-ui": "node --test --experimental-strip-types --experimental-test-module-mocks --import ./scripts/register-dom-tests.mjs components/dashboard/connect-mode-ui.test.mjs",
     "test:connect-cta": "node --test --experimental-strip-types --experimental-test-module-mocks --import ./scripts/register-dom-tests.mjs components/marketing/connect-provider-cta.test.mjs",
     "test:business-copy": "node --test --experimental-strip-types --import ./scripts/register-ts-alias.mjs src/lib/personas/business-copy.test.ts",
     "connect:release-status": "node scripts/connect-release-status.mjs",

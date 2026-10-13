@@ -978,8 +978,15 @@ function DashboardInner({ initialRoute = 'overview', user, workspace: serverWork
     // only person who needs the sentence is the one who would otherwise find a
     // different number on the Inboxes page later and have to work out why.
     if (transport) {
+      // A receive-only or send-only connection has one half, and its other
+      // port comes back null; reciting "SMTP null" would be worse than nothing.
+      const hasImapPort = transport.imapPort != null;
+      const hasSmtpPort = transport.smtpPort != null;
+      const adjustedKey = hasImapPort && hasSmtpPort
+        ? 'app.inboxConnectedAdjusted'
+        : hasImapPort ? 'app.inboxConnectedAdjustedImap' : 'app.inboxConnectedAdjustedSmtp';
       toast({
-        message: tr('app.inboxConnectedAdjusted', {
+        message: tr(adjustedKey, {
           label,
           imapPort: String(transport.imapPort),
           imapSecurity: securityLabel(tr, transport.imapSecurity),
