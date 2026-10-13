@@ -17,6 +17,7 @@
 import {
   appOnlyReviewCardToolMeta,
   buildResourceReadResult,
+  isStaleReviewCardUri,
   buildResourcesListResult,
   buildResourceTemplatesListResult,
   BULK_PLAN_CARD_TOOL_NAMES,
@@ -238,6 +239,86 @@ Deno.test("resources/read still answers the pre-fingerprint URI with today's car
     REVIEW_CARD_LEGACY_RESOURCE_URI,
     "echoes the requested uri",
   );
+});
+
+Deno.test("resources/read answers a previous build's fingerprint with today's card", () => {
+  // The production bug of 2026-10-13. Claude's host keeps its tools/list across
+  // a card deploy and ignores list_changed, so it goes on reading the URI of
+  // the build before: f53069d8832a was asked for while 6f24045a029e was live,
+  // and -32002 rendered as "cannot reach MCP Emails" in every chat.
+  for (const staleBuild of ["f53069d8832a", "6f24045a029e", "000000000000", "07359906cb80"]) {
+    // Guard the fixture: if a build ever hashes to one of these the loop would
+    // be testing the canonical path and proving nothing about stale ones.
+    if (staleBuild === REVIEW_CARD_BUILD_ID) continue;
+    const staleUri = `ui://mcpemails/review-card.${staleBuild}.html`;
+    const result = buildResourceReadResult(staleUri);
+
+    assert(result !== null, `stale fingerprint must resolve: ${staleUri}`);
+    assertEquals(result!.contents.length, 1, "contents length");
+    assertEquals(result!.contents[0]["text"], REVIEW_CARD_HTML, "serves the CURRENT bundle");
+    assertEquals(result!.contents[0]["mimeType"], "text/html;profile=mcp-app", "mimeType");
+    assertEquals(result!.contents[0]["_meta"], EXPECTED_UI_META, "content-level _meta.ui");
+    // Echoed, as on the legacy path: the host matches the content against the
+    // request it made, and its cache is keyed by the URI its listing named.
+    assertEquals(result!.contents[0]["uri"], staleUri, "echoes the requested uri");
+    assert(isStaleReviewCardUri(staleUri), "and is reported as stale for the log line");
+  }
+});
+
+Deno.test("a stale fingerprint is tolerated in the fingerprint slot and nowhere else", () => {
+  // The tolerance is for one thing: a build id we did not issue THIS deploy.
+  // Everything else about the URI still has to be exactly ours, or the read
+  // handler becomes "any string containing review-card".
+  const id = "f53069d8832a";
+  for (
+    const uri of [
+      // Not a build id: wrong length, wrong alphabet, wrong case, empty.
+      "ui://mcpemails/review-card.f53069d8832.html",
+      "ui://mcpemails/review-card.f53069d8832a0.html",
+      "ui://mcpemails/review-card.g53069d8832a.html",
+      "ui://mcpemails/review-card.F53069D8832A.html",
+      "ui://mcpemails/review-card..html",
+      `ui://mcpemails/review-card.${"a".repeat(64)}.html`,
+      // A build id, in a URI that is not the card's.
+      `ui://mcpemails/other-card.${id}.html`,
+      `ui://someone-else/review-card.${id}.html`,
+      `https://mcpemails.com/review-card.${id}.html`,
+      `ui://mcpemails/review-card.${id}.htm`,
+      `ui://mcpemails/review-card.${id}.html.js`,
+      `ui://mcpemails/review-card.${id}.${id}.html`,
+      `ui://mcpemails/sub/review-card.${id}.html`,
+      `ui://mcpemails/review-card.${id}/x.html`,
+      `ui://mcpemails/review-card-${id}.html`,
+      // Anchoring: nothing before, nothing after, no second line.
+      `ui://mcpemails/review-card.${id}.html?v=2`,
+      `ui://mcpemails/review-card.${id}.html#x`,
+      `ui://mcpemails/review-card.${id}.html `,
+      ` ui://mcpemails/review-card.${id}.html`,
+      `ui://mcpemails/review-card.${id}.html\n`,
+      `x\nui://mcpemails/review-card.${id}.html`,
+      `UI://mcpemails/review-card.${id}.html`,
+    ]
+  ) {
+    assertEquals(buildResourceReadResult(uri), null, `must not resolve: ${JSON.stringify(uri)}`);
+    assert(!isStaleReviewCardUri(uri), `must not count as stale: ${JSON.stringify(uri)}`);
+  }
+});
+
+Deno.test("a stale fingerprint is served but never advertised", () => {
+  // The read side is tolerant; the advertised side is what busts the host's
+  // cache and stays exact. Both listings name the current build and only it.
+  const listed = buildResourcesListResult().resources.map((entry) => entry["uri"]);
+  assertEquals(listed, [REVIEW_CARD_RESOURCE_URI], "resources/list names the current build only");
+  assertEquals(reviewCardToolMeta().ui.resourceUri, REVIEW_CARD_RESOURCE_URI, "tool _meta");
+  assertEquals(
+    appOnlyReviewCardToolMeta().ui.resourceUri,
+    REVIEW_CARD_RESOURCE_URI,
+    "app-only tool _meta",
+  );
+  // The current and legacy URIs are served, and neither is "stale": the log
+  // line counts clients behind a deploy, not every read.
+  assert(!isStaleReviewCardUri(REVIEW_CARD_RESOURCE_URI), "current uri is not stale");
+  assert(!isStaleReviewCardUri(REVIEW_CARD_LEGACY_RESOURCE_URI), "legacy uri is not stale");
 });
 
 Deno.test("the legacy URI is served but never advertised", () => {
