@@ -5,6 +5,7 @@ import type { SplitBody } from "../format";
 import {
   bodyTextChanged,
   formatBytes,
+  formatClockSeconds,
   formatDateTime,
   formatWhen,
   joinBody,
@@ -12,7 +13,7 @@ import {
   splitBody,
   wordCount,
 } from "../format";
-import { failureNotice, type DraftFailure } from "../draft-failure";
+import { editsNotice, failureNotice, type DraftFailure } from "../draft-failure";
 import { setTeardownSaver, type DraftCheck } from "../store";
 import {
   clearUnsaved,
@@ -53,6 +54,12 @@ export interface DraftActions {
   allowSend?: () => void;
   discard: () => void;
   refresh: () => void;
+  /**
+   * Re-read the draft and resolve true when the mailbox's current copy is now
+   * the one on screen. "Use the newer version" waits on it, so what it loads is
+   * what the mailbox holds and never an older copy this card was mounted with.
+   */
+  loadCurrent?: () => Promise<boolean>;
   /** Turn the card off, for this inbox or for every inbox in the workspace. */
   hide: (scope: "inbox" | "workspace") => void;
   setFullscreen: (on: boolean) => void;
@@ -87,6 +94,12 @@ interface Props {
    * off, whatever a re-read finds, until the person turns it back on.
    */
   sendDoubt?: boolean;
+  /**
+   * The assistant wrote a newer version of this draft after this card last saw
+   * it, so a newer card exists (store.ts#supersededBy). The editor folds to one
+   * line unless it holds unsaved edits.
+   */
+  superseded?: boolean;
   actions: DraftActions;
 }
 
@@ -273,6 +286,15 @@ export const CONFIRM_GUARD_MS = 500;
 
 /** How long the editor waits after a keystroke before stashing unsaved edits. */
 export const UNSAVED_DEBOUNCE_MS = 300;
+
+/** How long a save or send runs before the card says it is still working. */
+export const SLOW_WRITE_MS = 4_000;
+
+/** Who the wait is on, for the still-working hint. */
+function providerName(d: DraftEditorData): string {
+  const p = d.identity?.provider;
+  return p === "gmail" ? "Gmail" : p === "outlook" ? "Outlook" : "Your mail provider";
+}
 
 /** Attachments, collapsed to one muted line. The card cannot edit them. */
 function attachmentLine(d: DraftEditorData, fullscreen: boolean): string | null {
@@ -717,10 +739,15 @@ export function DraftEditor(props: Props) {
   // rendered before the blur and silently save without the address the user
   // just added.
   const editRef = useRef(edit);
+  /** The person chose to edit here although a newer card exists. */
+  const [openAnyway, setOpenAnyway] = useState(false);
   const update = (patch: Partial<EditState>) => {
     const next = { ...editRef.current, ...patch };
     editRef.current = next;
     setEdit(next);
+    // Edited while a newer card exists: it stays an editor from here on,
+    // rather than folding the moment the edit is undone.
+    if (props.superseded) setOpenAnyway(true);
   };
 
   /**
@@ -1010,6 +1037,37 @@ export function DraftEditor(props: Props) {
     setSigPin(null);
   };
 
+  // "Use the newer version" reads the draft again FIRST. `useStored` alone
+  // adopts whatever copy this render holds, and on a remounted card that can
+  // be the result the card was first mounted with: QA (2026-10-13) clicked it
+  // and got the assistant's original draft, the oldest version there was. The
+  // edits are dropped only once a read has come back, in the effect, which
+  // runs after the render (and the resync above) that carries that read.
+  const [takeStored, setTakeStored] = useState(0);
+  const useNewer = () => {
+    const load = actions.loadCurrent;
+    if (!load) return useStored();
+    void load().then((ok) => {
+      if (ok) setTakeStored((n) => n + 1);
+    });
+  };
+  useEffect(() => {
+    if (takeStored > 0) useStored();
+  }, [takeStored]);
+
+  // A save or send that is taking a while says so, in the line under the
+  // buttons that is always there, so nothing moves.
+  const writing = busy === "save" || busy === "send";
+  const [slow, setSlow] = useState(false);
+  useEffect(() => {
+    if (!writing) {
+      setSlow(false);
+      return;
+    }
+    const timer = setTimeout(() => setSlow(true), SLOW_WRITE_MS);
+    return () => clearTimeout(timer);
+  }, [writing]);
+
   /**
    * Turn whatever is still in the address inputs into chips, synchronously,
    * and return the resulting state. Invalid addresses are kept in the input
@@ -1243,7 +1301,23 @@ export function DraftEditor(props: Props) {
   // See store.ts#DraftCheck.
   const verified = check === "trusted";
   const sendDoubt = props.sendDoubt === true;
-  const canSend = d.can_send === true && canEdit && verified && !sendDoubt;
+  // Send follows what is on screen NOW, not what the server last stored: with
+  // every recipient removed it used to stay on until that was saved (QA,
+  // 2026-10-13). `can_send` is "the key may send AND the stored draft has a
+  // recipient", so false over a stored draft with nobody on it says nothing
+  // about the key; the server still refuses a send the key may not make.
+  const storedHasRecipient = FIELDS.some((f) => server[f].length > 0);
+  const keyMaySend = d.can_send === true || !storedHasRecipient;
+  // Text still in an address field: a recipient if it is one, a blocker if not.
+  const pendingBad = FIELDS.find(
+    (f) => edit.typed[f].trim().length > 0 && firstInvalid(edit.typed[f]) !== null,
+  );
+  const hasRecipient = FIELDS.some(
+    (f) => edit[f].length > 0 || splitAddresses(edit.typed[f]).length > 0,
+  );
+  const canSend = keyMaySend && hasRecipient && !pendingBad && canEdit && verified && !sendDoubt;
+  /** The one notice about the person's own edits, if any (draft-failure.ts). */
+  const editsNote = editsNotice({ canEdit, check, restored, conflict });
   const saving = busy === "save";
   const sending = busy === "send";
   const attachLine = attachmentLine(d, fullscreen);
@@ -1317,6 +1391,20 @@ export function DraftEditor(props: Props) {
     // The Edit link (or the row) that was activated is replaced by the box.
     focusNext.current = "d-signature";
   };
+
+  // ---- a newer card exists ---------------------------------------------------
+  //
+  // One line instead of a second full editor over the same draft. Never while
+  // this card holds unsaved work, and never during the frame in which the
+  // editor state has not caught up with the envelope (`editorPatch`), when
+  // `dirty` cannot be believed. "Edit here anyway" is the way back: the
+  // detection is an inference from the draft's history, not a host signal.
+  if (
+    props.superseded === true && !openAnyway && !dirty && !typedPending && !restored &&
+    editVersion.current === version && busy === null
+  ) {
+    return <Superseded fullscreen={fullscreen} actions={actions} onOpen={() => setOpenAnyway(true)} />;
+  }
 
   return (
     <>
@@ -1539,25 +1627,30 @@ export function DraftEditor(props: Props) {
         </p>
       )}
 
-      {restored && !conflict && (
+      {editsNote === "restored" && (
         <Notice tone="warning">
           Your unsaved edits from earlier were put back. They are not saved yet.{" "}
           <TextLink onClick={useStored}>Discard these edits</TextLink>
         </Notice>
       )}
 
-      {conflict && (
+      {editsNote === "conflict" && (
         <Notice tone="warning">
           {restored ? "Your unsaved edits from earlier were put back. " : ""}
           This draft was changed somewhere else. Your unsaved edits are still
           here, and saving will replace the newer version.{" "}
-          <TextLink onClick={useStored}>Use the newer version</TextLink>
+          <TextLink soft disabled={busy !== null} onClick={useNewer}>
+            Use the newer version
+          </TextLink>
         </Notice>
       )}
 
       {err ? (
         <Notice tone={err.tone}>
           {err.text}
+          {failed?.action === "refresh" && failed.at !== undefined && (
+            <> Last checked {formatClockSeconds(failed.at)}.</>
+          )}
           {err.retry && canEdit && verified && (dirty || typedPending) && (
             <>
               {" "}
@@ -1767,7 +1860,13 @@ export function DraftEditor(props: Props) {
                   ? "Sending is off until you have checked whether the last send went out"
                   : !verified
                   ? "Sending is off until this draft has been checked against the mailbox"
-                  : "This draft needs a recipient, and the key needs send access"
+                  : !canEdit
+                  ? "This draft cannot be sent from here"
+                  : pendingBad
+                  ? `Fix or remove the incomplete address in ${FIELD_LABELS[pendingBad]} first`
+                  : !hasRecipient
+                  ? "Add a recipient to send this draft"
+                  : "This connection is not allowed to send"
             }
             onClick={() => {
               const next = readyToWrite();
@@ -1793,11 +1892,38 @@ export function DraftEditor(props: Props) {
         // constant boilerplate the user did not write and can now see is
         // separate, so counting it answers a question nobody asked and makes a
         // three-word note read as thirty.
-        lead={`${wordCount(split.message)} words`}
+        lead={slow
+          ? `${saving ? "Still saving" : "Still working"}. ${providerName(d)} can take a moment.`
+          : `${wordCount(split.message)} words`}
         // Inline, the provider label and the route move into the tooltip.
         // See ProviderLine.
         compactSummary="Saved to Drafts"
       />
     </>
+  );
+}
+
+/**
+ * The whole of an older card once a newer one exists for the same draft. One
+ * line, in the shape of the card's other one-liners, so the frame is never
+ * empty (contract §1). Leaves fullscreen: one line on an empty page is not a
+ * place to be left.
+ */
+function Superseded(props: { fullscreen: boolean; actions: DraftActions; onOpen: () => void }) {
+  useEffect(() => {
+    if (props.fullscreen) props.actions.setFullscreen(false);
+  }, []);
+  return (
+    <div class="hdr">
+      <div class="hdr-l">
+        <span class="dot" data-tone="neutral" aria-hidden="true" />
+        <b>A newer version of this draft is below.</b>
+      </div>
+      <div class="hdr-r">
+        <TextLink onClick={props.onOpen} title="Open the current version of the draft in this card">
+          Edit here anyway
+        </TextLink>
+      </div>
+    </div>
   );
 }

@@ -800,9 +800,13 @@ async function main() {
 
     // Card A reloaded: the same call, so its edit comes back.
     const r = await boot({ storage: s });
+    // The replay is checked and found current. (Unchecked, the one notice is
+    // the one that says saving is off: draft-state.test.mjs, group 2.)
+    r.tools.draft_read = () => ({ structuredContent: gmail({ origin: "read" }), content: [{ type: "text", text: "{}" }] });
     r.deliver(callA);
     await settle();
     r.push(gmail());
+    await settle();
     await settle();
     expect("card A's reload gets its edit back", r.value("d-body"), "Card A's half-typed edit.");
     expect("and says so", /put back/.test(r.text()), true);
