@@ -119,6 +119,18 @@ function toolLabel(tool: string | null | undefined): string {
   return words ? words.charAt(0).toUpperCase() + words.slice(1) : "MCP Emails";
 }
 
+/**
+ * What the person reads after hiding the draft editor card: what happened, and
+ * where to undo it. The dashboard has one switch per inbox (Inboxes, in the
+ * inbox's details) and one for the workspace (Settings), both labelled "Show
+ * the draft editor card" (apps/web/messages/en/dashboard.json).
+ */
+export function hiddenDetail(scope: "inbox" | "workspace"): string {
+  return scope === "workspace"
+    ? 'The card will not appear for any inbox in this workspace. Drafts still work as before. To bring it back, turn on "Show the draft editor card" in the MCP Emails dashboard, under Settings.'
+    : 'The card will not appear for this inbox. Drafts still work as before. To bring it back, turn on "Show the draft editor card" in the MCP Emails dashboard, under Inboxes, in this inbox\'s details.';
+}
+
 export function App(props: { bridge: HostBridge }) {
   const { bridge } = props;
   const [, force] = useState(0);
@@ -915,6 +927,21 @@ export function App(props: { bridge: HostBridge }) {
                 scope,
               });
               announceReceipt(r.env);
+              // The server's detail ends with how the MODEL turns the card back
+              // on ("Call draft_editor_hide again with scope... hidden:false"),
+              // which is no use to the person reading it. The card says where
+              // THEY turn it back on: the dashboard's own switch, named as the
+              // dashboard names it (apps/web messages, "draftEditor.show").
+              const done = r.env;
+              if (
+                done?.card === "receipt" && done.state !== "error" &&
+                done.receipt && done.receipt.outcome !== "failed"
+              ) {
+                setEnvelope({
+                  ...done,
+                  receipt: { ...done.receipt, detail: hiddenDetail(scope) },
+                });
+              }
             },
             setFullscreen,
           }}

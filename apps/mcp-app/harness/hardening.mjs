@@ -984,10 +984,29 @@ async function main() {
       // accepts any earlier id of a draft and answers with the current id, so
       // refusing it would strand every card holding a stale id on "open the
       // dashboard". What still has to match is the mailbox.
+      // Tightened the same day: the server names the id it resolved FROM
+      // (`draft.resolved_from`), so a different id is adopted only when it
+      // says it is the answer to the id that was asked.
       t.expect(
-        "a draft read that answers with a newer id, same inbox, adopts",
-        kind(F.draftEditorImap, F.draftEditorOtherId),
+        "a draft read that answers with a newer id resolved from ours adopts",
+        kind(F.draftEditorImap, {
+          ...F.draftEditorOtherId,
+          draft: { ...F.draftEditorOtherId.draft, resolved_from: F.draftEditorImap.draft.draft_id },
+        }),
         "adopt",
+      );
+      t.expect(
+        "a newer id that does not say it resolved from ours is refused",
+        kind(F.draftEditorImap, F.draftEditorOtherId),
+        "failed",
+      );
+      t.expect(
+        "a newer id resolved from some OTHER id is refused",
+        kind(F.draftEditorImap, {
+          ...F.draftEditorOtherId,
+          draft: { ...F.draftEditorOtherId.draft, resolved_from: "Drafts:999999" },
+        }),
+        "failed",
       );
       t.expect(
         "a draft read from another inbox is still refused",
@@ -995,6 +1014,7 @@ async function main() {
           ...F.draftEditorOtherId,
           draft: {
             ...F.draftEditorOtherId.draft,
+            resolved_from: F.draftEditorImap.draft.draft_id,
             identity: {
               ...F.draftEditorOtherId.draft.identity,
               inbox_id: "00000000-0000-4000-8000-00000000beef",

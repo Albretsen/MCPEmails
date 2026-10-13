@@ -1,6 +1,7 @@
 import type { Envelope, Plan, Provider } from "../contract";
 import {
   bulkVerb,
+  CARD_LANGUAGE,
   bulkVerbProgressive,
   formatDate,
   plural,
@@ -63,7 +64,7 @@ export function BulkPlan(props: Props) {
             aria-hidden="true"
           />
           <b>
-            <span class="count">{count.toLocaleString()}</span>{" "}
+            <span class="count">{count.toLocaleString(CARD_LANGUAGE)}</span>{" "}
             {plural(count, "message", "messages")} to {verb.toLowerCase()}
             {plan.scope?.destination ? ` into ${plan.scope.destination}` : ""}
           </b>
@@ -129,7 +130,7 @@ export function BulkPlan(props: Props) {
         >
           {busy === "execute"
             ? bulkVerbProgressive(plan.action)
-            : `${verb} ${count.toLocaleString()}`}
+            : `${verb} ${count.toLocaleString(CARD_LANGUAGE)}`}
         </Btn>
       </div>
     </>

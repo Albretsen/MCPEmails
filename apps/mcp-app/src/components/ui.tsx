@@ -125,8 +125,8 @@ export function Notice(props: {
  *
  * Was a bordered, filled block with a bulleted caveat list. It is now one muted
  * line, because it is reference information that every card repeats and it was
- * taking the visual weight of a warning. `extra` is the card-specific tail (the
- * draft editor's "saving gives the draft a new id"); caveats are capped inline
+ * taking the visual weight of a warning. `extra` is an optional card-specific
+ * tail (nothing passes one since old draft ids keep working); caveats are capped inline
  * for the same reason the block was capped before, that an inline card must
  * auto-fit without pushing its buttons off a phone screen.
  */
@@ -141,8 +141,9 @@ export function ProviderLine(props: {
    *
    * This line was the longest text on the draft card and the least actionable:
    * "IMAP + SMTP · APPEND to Drafts · Saving rewrites the message, so the draft
-   * gets a new id each time". `APPEND to Drafts` is protocol jargon, and the id
-   * caveat is a fact the reader cannot do anything with. A caller that has a
+   * gets a new id each time". `APPEND to Drafts` was protocol jargon (the
+   * server now says "Saved to your Drafts folder"), and the id caveat is gone
+   * since old ids resolve through the server's draft lineage. A caller that has a
    * human sentence for the same thing passes it here; one that does not passes
    * nothing and gets exactly today's line.
    */
@@ -173,7 +174,7 @@ export function ProviderLine(props: {
     : undefined;
 
   return (
-    <p class="line" title={title}>
+    <p class="line prov" title={title}>
       {shown.join(" · ")}
     </p>
   );
@@ -297,14 +298,39 @@ export function AutoTextarea(props: {
  * The sanitizer returns a live DocumentFragment, which is adopted straight into
  * this node. There is no innerHTML and no dangerouslySetInnerHTML anywhere in
  * this app — nothing is ever serialised back to a string and re-parsed.
+ *
+ * `preview` is the draft editor's read-only formatted view (QA, 2026-10-13):
+ *
+ *   - images are left out rather than drawn as `[image: MCP Emails logo]`. The
+ *     card cannot load them (remote images are tracking pixels and the CSP is
+ *     empty), and a bracketed literal read as text the draft contained.
+ *   - the server's own signature wrapper (`<div class="mcpemails-signature">`,
+ *     signature-compose.ts) is set apart with a gap. The sanitizer strips every
+ *     `class`, so the boundary is found in the source string first and each
+ *     half is sanitized on its own; a half-open tag on either side is simply
+ *     closed or dropped by the parser.
  */
-export function HtmlBody(props: { html: string }) {
+export const SIGNATURE_WRAPPER = '<div class="mcpemails-signature">';
+
+export function HtmlBody(props: { html: string; preview?: boolean }) {
   const ref = useRef<HTMLDivElement>(null);
   useLayoutEffect(() => {
     const node = ref.current;
     if (!node) return;
     node.textContent = "";
-    node.appendChild(sanitizeEmailHtml(props.html).fragment);
-  }, [props.html]);
+    const at = props.preview ? props.html.lastIndexOf(SIGNATURE_WRAPPER) : -1;
+    if (at === -1) {
+      node.appendChild(sanitizeEmailHtml(props.html).fragment);
+    } else {
+      node.appendChild(sanitizeEmailHtml(props.html.slice(0, at)).fragment);
+      const sig = document.createElement("div");
+      sig.className = "html-sig";
+      sig.appendChild(sanitizeEmailHtml(props.html.slice(at)).fragment);
+      node.appendChild(sig);
+    }
+    if (props.preview) {
+      for (const img of Array.from(node.querySelectorAll(".img-placeholder"))) img.remove();
+    }
+  }, [props.html, props.preview]);
   return <div class="body-full body-html" ref={ref} />;
 }

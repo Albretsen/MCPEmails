@@ -6,7 +6,9 @@ import {
   bodyTextChanged,
   formatBytes,
   formatDateTime,
+  formatWhen,
   joinBody,
+  normalizeEol,
   splitBody,
   wordCount,
 } from "../format";
@@ -99,7 +101,14 @@ export function signaturePreview(signature: string): string {
   const rest = lines.length - 1;
   return rest > 0 ? `${lines[0]} + ${rest} more line${rest === 1 ? "" : "s"}` : lines[0];
 }
-const FULLSCREEN_BODY_ROWS = 40;
+/**
+ * Fullscreen lifts the cap altogether. It used to be 40 rows, so a long body
+ * scrolled inside the box while the frame scrolled too: two nested scrollbars,
+ * with Save and Send pushed off the bottom (QA, 2026-10-13). Now the box grows
+ * with its text, the frame is the one thing that scrolls, and the action row
+ * is sticky (styles.css).
+ */
+const FULLSCREEN_BODY_ROWS = 100_000;
 
 /**
  * Deliberately loose. This is a typo catcher in front of a server that does the
@@ -115,6 +124,78 @@ const ADDRESS = /^[^\s@,;<>"]+@[^\s@,;<>".]+(\.[^\s@,;<>".]+)+$/;
 function bareAddress(input: string): string {
   const angled = /<([^>]+)>/.exec(input);
   return (angled ? angled[1] : input).trim();
+}
+
+/** Compare addresses the way a mailbox does: the bare address, any case. */
+export function addressKey(input: string): string {
+  return bareAddress(input).toLowerCase();
+}
+
+/**
+ * Typed text cut at the commas and semicolons that separate addresses, and at
+ * no others: not inside a quoted name (`"Doe, Jane" <jane@x.example>`) and not
+ * inside angle brackets.
+ */
+function topLevelPieces(raw: string): string[] {
+  const pieces: string[] = [];
+  let cur = "";
+  let quoted = false;
+  let angled = false;
+  for (const ch of raw) {
+    if (ch === '"') quoted = !quoted;
+    else if (ch === "<" && !quoted) angled = true;
+    else if (ch === ">" && !quoted) angled = false;
+    if ((ch === "," || ch === ";") && !quoted && !angled) {
+      pieces.push(cur);
+      cur = "";
+      continue;
+    }
+    cur += ch;
+  }
+  pieces.push(cur);
+  return pieces;
+}
+
+/**
+ * The addresses in what was typed, bare, in order.
+ *
+ * A piece with no `@` that is followed by a `Name <address>` piece is the first
+ * half of an unquoted display name with a comma in it, the way people write
+ * `Doe, Jane <jane@x.example>`, and is glued back on. Splitting it used to
+ * raise "Doe does not look like an email address" (QA, 2026-10-13).
+ */
+export function splitAddresses(raw: string): string[] {
+  const pieces = topLevelPieces(raw);
+  const out: string[] = [];
+  let carry = "";
+  for (let i = 0; i < pieces.length; i++) {
+    const piece = carry ? `${carry},${pieces[i]}` : pieces[i];
+    carry = "";
+    const next = pieces[i + 1];
+    if (!piece.includes("@") && piece.trim() && next !== undefined && next.includes("<")) {
+      carry = piece;
+      continue;
+    }
+    out.push(piece);
+  }
+  return out.map(bareAddress).filter(Boolean);
+}
+
+/**
+ * Whether a comma typed at the end of `value` ends an address, as opposed to
+ * being part of a name still being written (`Doe,` on the way to
+ * `Doe, Jane <jane@x.example>`, or a comma inside quotes).
+ */
+export function commaEndsAddress(value: string): boolean {
+  if ((value.match(/"/g) ?? []).length % 2 === 1) return false;
+  if (value.lastIndexOf("<") > value.lastIndexOf(">")) return false;
+  const pieces = topLevelPieces(value);
+  return pieces[pieces.length - 1].includes("@");
+}
+
+/** The first piece of `raw` that is not an address, or null. */
+function firstInvalid(raw: string): string | null {
+  return splitAddresses(raw).find((p) => !ADDRESS.test(p)) ?? null;
 }
 
 function sameList(a: string[], b: string[]): boolean {
@@ -355,8 +436,9 @@ export function draftPatch(edited: EditState, stored: EditState): DraftPatch {
  * because it has to put the result on a wire and a 64 KB body does not fit.
  *
  * Everything volatile is left out for the reason `last_saved_at` is left out of
- * the server's: `last_saved_at`, `origin` and `last_saved_by` describe the
- * RESPONSE, not the draft, and change when nothing has.
+ * the server's: `last_saved_at`, `origin` and `last_saved_by` describe how the
+ * draft was reached (and, before 2026-10-13, when the response was made), not
+ * its content, and can change when the content has not.
  */
 export function draftVersion(d: DraftEditorData): string {
   if (typeof d.version === "string" && d.version.length > 0) return d.version;
@@ -560,7 +642,26 @@ export function DraftEditor(props: Props) {
     setEdit(next);
   };
 
-  const [addrWarning, setAddrWarning] = useState<string | null>(null);
+  /**
+   * A recipient problem, and the field it is about. Drawn directly under that
+   * field (it used to sit below the whole editor, far from the text it was
+   * about), and re-checked as the person types a correction.
+   */
+  const [addrWarning, setAddrWarning] = useState<{ field: Field; text: string } | null>(null);
+  /**
+   * Where focus goes after the next render. Several controls remove themselves
+   * when used ("Cc Bcc", the signature's Edit, a chip's remove button), and a
+   * focused element that leaves the DOM drops focus to the document, so the
+   * next Tab starts over from the top of the frame (QA, 2026-10-13).
+   */
+  const focusNext = useRef<string | (() => HTMLElement | null | undefined) | null>(null);
+  useLayoutEffect(() => {
+    const f = focusNext.current;
+    if (!f) return;
+    focusNext.current = null;
+    const el = typeof f === "string" ? document.getElementById(f) : f();
+    el?.focus();
+  });
   const [showMore, setShowMore] = useState(false);
   const [editingSig, setEditingSig] = useState(false);
   const [sigPin, setSigPin] = useState<SigPin | null>(null);
@@ -615,7 +716,6 @@ export function DraftEditor(props: Props) {
     e.preventDefault();
     closeConfirm();
   };
-  const askedFullscreen = useRef(false);
 
   // The card MUST adopt every id the server returns (§8: on IMAP the id changes
   // on every save). This is where that happens: App replaces the envelope with
@@ -624,11 +724,11 @@ export function DraftEditor(props: Props) {
   // Keyed on the CONTENT version, not on id + last_saved_at + origin. That
   // triple was a proxy for "this is a different version of the draft" and it
   // was false in both directions. Too eager, which is what shipped: every
-  // server path stamps `last_saved_at` with the clock at response time (see
-  // contract.ts), so the key changed on every response and a refresh that
+  // server path stamped `last_saved_at` with the clock at response time (until
+  // 2026-10-13; see contract.ts), so the key changed on every response and a refresh that
   // brought back a byte-identical draft still threw away whatever the user had
-  // typed. And too lax, which is what it would have become the moment
-  // `last_saved_at` started meaning what its name says: two responses agreeing
+  // typed. And too lax, which is what it became the moment `last_saved_at`
+  // started meaning what its name says (it now does): two responses agreeing
   // on the triple while the content had moved would leave `edit` describing the
   // old body, and Save would write it over the new one.
   //
@@ -833,22 +933,28 @@ export function DraftEditor(props: Props) {
       bcc: [...cur.bcc],
       typed: { ...cur.typed },
     };
-    let bad: string | null = null;
+    let bad: { field: Field; text: string } | null = null;
     for (const field of FIELDS) {
       const raw = next.typed[field];
       if (!raw.trim()) continue;
-      const parts = raw.split(/[,;]/).map(bareAddress).filter(Boolean);
+      const parts = splitAddresses(raw);
       const invalid = parts.filter((p) => !ADDRESS.test(p));
+      // Case-insensitive, like the mailbox: `Dana@X.example` next to
+      // `dana@x.example` is the same recipient twice (QA, 2026-10-13).
+      const have = new Set(next[field].map(addressKey));
       for (const p of parts) {
-        if (ADDRESS.test(p) && !next[field].includes(p)) next[field].push(p);
+        if (!ADDRESS.test(p) || have.has(addressKey(p))) continue;
+        have.add(addressKey(p));
+        next[field].push(p);
       }
       // Only what could NOT be added stays in the input, so the field shows
       // exactly the text that needs fixing.
       next.typed[field] = invalid.join(", ");
       if (invalid.length > 0) {
-        bad =
-          bad ??
-          `${invalid[0]} does not look like an email address, so it was not added.`;
+        bad = bad ?? {
+          field,
+          text: `${invalid[0]} does not look like an email address, so it was not added.`,
+        };
       }
     }
     editRef.current = next;
@@ -878,9 +984,10 @@ export function DraftEditor(props: Props) {
     const next = flush();
     const bad = FIELDS.find((f) => next.typed[f].trim().length > 0);
     if (!bad) return next;
-    setAddrWarning(
-      `"${next.typed[bad].trim()}" in ${FIELD_LABELS[bad]} is not a complete email address. Fix it or remove it, then try again. Nothing was saved or sent.`,
-    );
+    setAddrWarning({
+      field: bad,
+      text: `"${next.typed[bad].trim()}" in ${FIELD_LABELS[bad]} is not a complete email address. Fix it or remove it, then try again. Nothing was saved or sent.`,
+    });
     document.getElementById(`d-${bad}`)?.focus();
     return null;
   };
@@ -916,18 +1023,51 @@ export function DraftEditor(props: Props) {
   };
 
   const onKey = (field: Field, e: KeyboardEvent) => {
-    if (e.key !== "Enter" && e.key !== ",") return;
     const el = e.target as HTMLInputElement;
+    // Backspace in an empty field takes the last chip, as in every mail client.
+    if (e.key === "Backspace") {
+      const chips = editRef.current[field];
+      if (el.value === "" && chips.length > 0 && canEdit) {
+        e.preventDefault();
+        removeAt(field, chips.length - 1);
+      }
+      return;
+    }
+    if (e.key !== "Enter" && e.key !== ",") return;
     if (!el.value.trim()) return;
+    // A comma inside a name being typed is just a comma.
+    if (e.key === "," && !commaEndsAddress(el.value)) return;
     e.preventDefault();
     commitField(field, el.value);
   };
 
-  const removeAt = (field: Field, i: number) => {
+  /** Typing in an address field: keep the warning about it current. */
+  const onAddrInput = (field: Field, value: string) => {
+    update({ typed: { ...editRef.current.typed, [field]: value } });
+    setAddrWarning((w) => {
+      if (!w || w.field !== field) return w;
+      const bad = value.trim() ? firstInvalid(value) : null;
+      if (!bad) return null;
+      return { field, text: `${bad} is not a complete email address yet.` };
+    });
+  };
+
+  /**
+   * `refocus`: the chip's own remove button had focus and is about to go, so
+   * focus moves to the neighbouring chip's (the one that slides into its
+   * place, else the one before), else to the field's input.
+   */
+  const removeAt = (field: Field, i: number, refocus = false) => {
     const kept = editRef.current[field].filter((_, n) => n !== i);
     update(
       field === "to" ? { to: kept } : field === "cc" ? { cc: kept } : { bcc: kept },
     );
+    if (refocus) {
+      focusNext.current = () => {
+        const xs = document.querySelectorAll<HTMLElement>(`#d-${field}-box .chip-x`);
+        return xs[Math.min(i, xs.length - 1)] ?? document.getElementById(`d-${field}`);
+      };
+    }
   };
 
   /**
@@ -943,6 +1083,7 @@ export function DraftEditor(props: Props) {
       </label>
       <div
         class="fld"
+        id={`d-${field}-box`}
         onClick={(e) => {
           // The box looks like one field, so clicking the empty part of it must
           // put the caret in the input rather than do nothing.
@@ -959,7 +1100,7 @@ export function DraftEditor(props: Props) {
                 type="button"
                 class="chip-x"
                 aria-label={`Remove ${addr}`}
-                onClick={() => removeAt(field, i)}
+                onClick={() => removeAt(field, i, true)}
               >
                 &#215;
               </button>
@@ -977,14 +1118,9 @@ export function DraftEditor(props: Props) {
           placeholder={edit[field].length === 0 ? `Add ${FIELD_LABELS[field]}` : ""}
           value={edit.typed[field]}
           disabled={!canEdit}
-          onInput={(e) =>
-            update({
-              typed: {
-                ...editRef.current.typed,
-                [field]: (e.target as HTMLInputElement).value,
-              },
-            })
-          }
+          aria-invalid={addrWarning?.field === field ? "true" : undefined}
+          aria-describedby={addrWarning?.field === field ? `d-${field}-warn` : undefined}
+          onInput={(e) => onAddrInput(field, (e.target as HTMLInputElement).value)}
           onKeyDown={(e) => onKey(field, e as unknown as KeyboardEvent)}
           onBlur={(e) => {
             const el = e.target as HTMLInputElement;
@@ -994,6 +1130,18 @@ export function DraftEditor(props: Props) {
       </div>
       {trailing}
     </div>
+  );
+
+  /** A recipient row, with its own warning directly under it. */
+  const recipientBlock = (field: Field, trailing?: ComponentChildren) => (
+    <>
+      {recipientRow(field, trailing)}
+      {addrWarning?.field === field && (
+        <div class="notice fld-note" data-tone="warning" role="status" id={`d-${field}-warn`}>
+          {addrWarning.text}
+        </div>
+      )}
+    </>
   );
 
   const refusal = attachmentRefusal(d);
@@ -1011,29 +1159,45 @@ export function DraftEditor(props: Props) {
   const hiddenFields: Field[] = showMore
     ? []
     : (["cc", "bcc"] as Field[]).filter((f) => edit[f].length === 0);
-  // Contract §5 caveats are server-authored and already say this on IMAP
-  // ("stores a new copy on every save"), so the card only adds its own shorter
-  // version when the provider did not supply one. Two sentences of the same
-  // fact side by side is how the old provider box read.
-  const idNote =
-    d.id_is_stable === false &&
-    !(provider?.caveats ?? []).some((c) => /new id/i.test(c))
-      ? "saving gives the draft a new id"
-      : null;
+  // No "saving gives the draft a new id" note any more. It was the card's own
+  // fallback for when the provider caveats did not say it, and it is no longer
+  // true in the way that mattered: an old id keeps working through the server's
+  // draft lineage, and `provider.caveats` is now empty on IMAP too.
 
+  // A draft on screen is in Drafts, so it HAS been saved, even when nobody
+  // recorded when (`last_saved_at: null` on a read of a draft with no lineage
+  // and no provider date). "Not saved yet" was false there.
+  const savedBy =
+    d.last_saved_by === "user" ? " by you" : d.last_saved_by === "agent" ? " by the assistant" : "";
   const savedLine = d.last_saved_at
-    ? `Saved ${formatDateTime(d.last_saved_at)}${
-        d.last_saved_by === "user"
-          ? " by you"
-          : d.last_saved_by === "agent"
-            ? " by the assistant"
-            : ""
-      }`
-    : "Not saved yet";
+    ? `Saved ${formatWhen(d.last_saved_at)}${savedBy}`
+    : `Saved earlier${savedBy}`;
 
   // Derived, never stored: `edit.bodyText` stays the single source of truth for
   // what will be saved, and this is only how it is presented.
   const split = pinnedSplit(edit.bodyText, sigPin) ?? splitBody(edit.bodyText);
+
+  // ---- the signature's formatting ------------------------------------------
+  //
+  // `signature.rich`: the stored HTML part carries the inbox's formatted
+  // signature (logo, links, a layout table). A body-only edit keeps it; editing
+  // the signature LINES replaces it with plain text, which QA found happening
+  // with no warning (2026-10-13). So the card warns as soon as the signature box
+  // opens, and once the signature differs locally the old formatted preview is
+  // no longer offered: it would show a signature that saving is about to drop.
+  const storedSplit = splitBody(server.bodyText);
+  const sigEdited =
+    storedSplit.signature !== null &&
+    (split.signature === null ||
+      normalizeEol(split.signature) !== normalizeEol(storedSplit.signature));
+  const richSig = d.signature?.rich === true;
+  const formattingAtRisk = richSig && sigEdited;
+  const canPreview = hasHtml && !formattingAtRisk;
+  /** Put the stored signature back, keeping the message as typed. */
+  const undoSignature = () => {
+    if (split.separator === null || storedSplit.signature === null) return;
+    update({ bodyText: joinBody({ ...split, signature: storedSplit.signature }) });
+  };
 
   /** Save: also what "Try again" in a failure notice runs. */
   const onSave = () => {
@@ -1058,6 +1222,8 @@ export function DraftEditor(props: Props) {
       setSigPin({ messageLen: split.message.length, separator: split.separator });
     }
     setEditingSig(true);
+    // The Edit link (or the row) that was activated is replaced by the box.
+    focusNext.current = "d-signature";
   };
 
   return (
@@ -1100,20 +1266,27 @@ export function DraftEditor(props: Props) {
       )}
 
       <div class="tight">
-        {recipientRow(
+        {recipientBlock(
           "to",
           // The Cc/Bcc affordance rides on the To row rather than taking a row
           // of its own: it is one word of chrome for fields most drafts never
           // use. A populated field is always shown, so this only ever offers
           // the ones that are actually empty.
           hiddenFields.length > 0 ? (
-            <TextLink onClick={() => setShowMore(true)}>
+            <TextLink
+              title={`Add ${hiddenFields.map((f) => FIELD_LABELS[f]).join(" or ")} recipients`}
+              onClick={() => {
+                setShowMore(true);
+                // The link goes away; the first field it revealed takes over.
+                focusNext.current = `d-${hiddenFields[0]}`;
+              }}
+            >
               {hiddenFields.map((f) => FIELD_LABELS[f]).join(" ")}
             </TextLink>
           ) : undefined,
         )}
-        {(showMore || edit.cc.length > 0) && recipientRow("cc")}
-        {(showMore || edit.bcc.length > 0) && recipientRow("bcc")}
+        {(showMore || edit.cc.length > 0) && recipientBlock("cc")}
+        {(showMore || edit.bcc.length > 0) && recipientBlock("bcc")}
 
         <div class="row">
           {/* Labelled like the rows above it. It used to be the one unlabelled
@@ -1136,8 +1309,14 @@ export function DraftEditor(props: Props) {
         </div>
       </div>
 
-      {showHtml && hasHtml ? (
-        <HtmlBody html={d.body?.html as string} />
+      {showHtml && canPreview ? (
+        // Read only, and has to look it: it used to be indistinguishable from
+        // the editable box (QA, 2026-10-13). It is also the version AS LAST
+        // SAVED, which is what it shows until the next save.
+        <section class="html-preview" aria-label="Formatted version, read only">
+          <p class="html-preview-lbl">Formatted version, as last saved. Read only.</p>
+          <HtmlBody html={d.body?.html as string} preview />
+        </section>
       ) : (
         <AutoTextarea
           id="d-body"
@@ -1152,16 +1331,10 @@ export function DraftEditor(props: Props) {
             // longer describes is dropped, not carried. See `applyMessageEdit`.
             setSigPin(next.pin);
           }}
-          onFocus={() => {
-            // CONCEPT §7: ask for a real compose surface the first time the
-            // user starts writing, and only the first time, so someone who
-            // went back to inline is not dragged out of it again.
-            if (askedFullscreen.current || fullscreen || !props.canExpand) {
-              return;
-            }
-            askedFullscreen.current = true;
-            actions.setFullscreen(true);
-          }}
+          // No fullscreen on focus. CONCEPT §7 had the card ask for it the
+          // first time the box was focused, and QA (2026-10-13) found that
+          // simply TABBING through the box threw the card into fullscreen.
+          // Expand is one click away and says what it does.
         />
       )}
 
@@ -1172,7 +1345,7 @@ export function DraftEditor(props: Props) {
           editable on request; `joinBody` puts it back verbatim, so what is
           saved is byte-identical to what was stored (contract §8: the card must
           save the text as-is or the signature doubles). */}
-      {!showHtml && split.signature !== null && (
+      {!(showHtml && canPreview) && split.signature !== null && (
         editingSig ? (
           <div class="row">
             <label class="lbl" for="d-signature">
@@ -1189,6 +1362,12 @@ export function DraftEditor(props: Props) {
                   update({ bodyText: joinBody({ ...split, signature: v }) })
                 }
               />
+              {richSig && !sigEdited && (
+                <p class="line">
+                  This signature has formatting, such as a logo or links. Changing
+                  it here saves it as plain text.
+                </p>
+              )}
             </div>
           </div>
         ) : (
@@ -1203,9 +1382,36 @@ export function DraftEditor(props: Props) {
           >
             <span class="lbl">Signature</span>
             <span class="sig-text">{signaturePreview(split.signature)}</span>
-            {canEdit && <TextLink onClick={startEditingSig}>Edit</TextLink>}
+            {canEdit && (
+              <TextLink
+                onClick={startEditingSig}
+                title={
+                  richSig
+                    ? "Changing the signature here saves it as plain text, without its formatting"
+                    : undefined
+                }
+              >
+                Edit
+              </TextLink>
+            )}
           </div>
         )
+      )}
+
+      {formattingAtRisk && (
+        <Notice tone="warning">
+          Saving will replace the signature's formatting (logo, links, layout)
+          with plain text. The message itself keeps its formatting.{" "}
+          {split.separator !== null && (
+            <TextLink onClick={undoSignature}>Undo signature changes</TextLink>
+          )}
+        </Notice>
+      )}
+
+      {d.body?.formatting_removed === true && !hasHtml && (
+        <p class="line">
+          That save removed this draft's formatting, so it is plain text now.
+        </p>
       )}
 
       {d.body?.truncated && (
@@ -1234,7 +1440,6 @@ export function DraftEditor(props: Props) {
         </Notice>
       )}
 
-      {addrWarning && <Notice tone="warning">{addrWarning}</Notice>}
 
       {(check === "pending" || check === "checking") && (
         <p class="line" role="status">
@@ -1317,7 +1522,11 @@ export function DraftEditor(props: Props) {
         // the row is where Send sits once the confirm closes, and "Cancel"
         // used to be there.
         <div class="acts" onKeyDown={(e) => onConfirmKey(e as unknown as KeyboardEvent)}>
-          <span class="line grow">Hide the draft editor card?</span>
+          <span class="line grow">
+            Hide the draft editor card? To bring it back, turn on "Show the
+            draft editor card" in the MCP Emails dashboard, under Settings for
+            every inbox or Inboxes for one.
+          </span>
           <Btn soft variant="quiet" btnRef={safeChoice} onClick={closeConfirm}>
             Cancel
           </Btn>
@@ -1380,7 +1589,7 @@ export function DraftEditor(props: Props) {
               same row. Discard keeps its danger tone and still goes through
               the inline confirm below. */}
           <span class="acts-l">
-            {hasHtml && (
+            {canPreview && (
               <TextLink
                 onClick={() => setShowHtml(!showHtml)}
                 title={
@@ -1469,9 +1678,8 @@ export function DraftEditor(props: Props) {
         // separate, so counting it answers a question nobody asked and makes a
         // three-word note read as thirty.
         lead={`${wordCount(split.message)} words`}
-        extra={idNote}
-        // Inline, the provider label, the route and the new-id caveat all move
-        // into the tooltip. See ProviderLine.
+        // Inline, the provider label and the route move into the tooltip.
+        // See ProviderLine.
         compactSummary="Saved to Drafts"
       />
     </>

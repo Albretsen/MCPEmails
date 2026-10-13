@@ -704,9 +704,14 @@ export function acceptRehydration(
     // check was written against. What still has to hold is the mailbox: the
     // answer must be a draft in the inbox that was asked about. An approval
     // has no lineage and is still compared id for id.
+    //
+    // And the server says so: an answer under a different id names the id it
+    // was asked with in `resolved_from`. One that names neither the asked id
+    // nor resolves from it is about some other draft and is not adopted.
     const same = kind === "draft_editor"
       ? theirs.kind === "draft" &&
-        (mine.scope === null || theirs.scope === null || mine.scope === theirs.scope)
+        (mine.scope === null || theirs.scope === null || mine.scope === theirs.scope) &&
+        (theirs.id === mine.id || next.draft?.resolved_from === mine.id)
       : sameSubject(mine, theirs);
     if (!same) return { kind: "failed" };
     return { kind: "adopt", envelope: next };
@@ -808,11 +813,27 @@ export function clearDraftError(): void {
 /**
  * How old a first-mount result can be before it is treated as a replay.
  *
- * `last_saved_at` is the server's clock at RESPONSE time, and Claude delivers a
- * first mount's result at the end of the assistant's turn (measured 4.5s). 30s
- * covers an ordinary turn. Past it the card re-reads, which costs one
- * `draft_read` and is also right on the merits: a turn that long has usually
- * made more tool calls, and one of them may have changed this draft.
+ * Claude delivers a first mount's result at the end of the assistant's turn
+ * (measured 4.5s). 30s covers an ordinary turn. Past it the card re-reads,
+ * which costs one `draft_read` and is also right on the merits: a turn that
+ * long has usually made more tool calls, and one of them may have changed this
+ * draft.
+ *
+ * ── WHAT THE STAMP MEANS NOW (2026-10-13) ──────────────────────────────────
+ * `last_saved_at` used to be the server's clock at RESPONSE time on every path.
+ * Since draft lineage it is the time of the last real SAVE: a write still
+ * stamps its own time, but a `draft_read` reports when the draft was last
+ * saved (or null). The age test is still SOUND — a response is never older
+ * than the save it reports, so a replay, which arrives more than 30s after its
+ * response, is still always more than 30s past its stamp — but it is no longer
+ * TIGHT: a model's fresh `draft_read` of a draft saved an hour ago also reads
+ * as old. That costs exactly one verifying re-read, never a loop: the re-read
+ * is the card's own answer (`adoptOwnAnswer`), which makes the draft `trusted`
+ * without consulting this test, and every later push is ignored behind it.
+ * structuredContent carries no response timestamp a tighter test could use,
+ * and `restored === "storage"` cannot be the only signal because a second
+ * device, an evicted entry or a host without storage would then trust a stale
+ * replay with Send on. Pinned in harness/draft-polish.test.mjs.
  */
 export const REPLAY_AGE_MS = 30_000;
 
@@ -824,8 +845,8 @@ export const REPLAY_AGE_MS = 30_000;
  *
  *   - `restored === "storage"`: a stub for this very call was already in
  *     storage, so the card has rendered it before. Exact, when storage works.
- *   - the response stamp is not recent by this browser's clock. Covers a host
- *     that keeps no storage. A wrong clock, a missing stamp or an unparseable
+ *   - the save stamp is not recent by this browser's clock. Covers a host
+ *     that keeps no storage (see `REPLAY_AGE_MS` for why a save stamp works). A wrong clock, a missing stamp or an unparseable
  *     one all read as "replay", which is the direction that costs one read
  *     instead of a send from stale text.
  */
