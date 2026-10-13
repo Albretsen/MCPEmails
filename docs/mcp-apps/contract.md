@@ -691,13 +691,18 @@ degrades to today's payload, exactly as §2a's failure rule.
   cannot be kept honestly: no HTML part is written, and the save's envelope carries `body.html: null`
   and `body.formatting_removed: true`. The card must then stop offering a formatted view, and may say
   why. `signature.rich: true` tells the card in advance that editing the signature lines will do this.
+  The signature is found by its `-- ` delimiter line plus its text. A match on the text lines alone
+  (Outlook hands the text part back without the delimiter) counts only when the STORED text part had
+  no delimiter line either; otherwise deleting `-- ` and the signature, then signing off with the same
+  words (a one-line signature such as a first name), put the rich block back (review 2, 2026-10-13).
 * **A save that changes nothing writes nothing.** When every field equals what is stored (line
   endings aside), the stored draft is answered as a save without a provider write.
 * **A save never follows an old id, and never writes over a newer revision (2026-10-13 review).**
   A save against an OLDER id of the draft, or with a `base_revision` other than the line's current
-  revision, is refused with `error_code: "draft_changed"` and writes nothing. The failed receipt
-  carries `current`: the draft as it is now, as a `card: "draft_editor"` envelope (with
-  `resolved_from` when the id had moved), for the card to offer. See "Draft lineage".
+  revision, is refused with `error_code: "draft_changed"` and writes nothing. The check runs twice:
+  before the stored draft is read, and again immediately before the provider write. The failed
+  receipt carries no copy of the draft (until review 2 it carried an unused `current`): the card's
+  "Load the newer version" is a `draft_read`. See "Draft lineage".
 * **Omitted fields are kept.** Unlike `draft{action:"update"}`, which requires `body`, an omitted
   field means "leave it as stored". The server reads the stored draft first and merges.
 * **Refuses rather than drops attachments.** `imapUpdateDraft` and `gmailUpdateDraft` rebuild the
@@ -804,6 +809,34 @@ is closed when the draft is sent or deleted. Ids, a revision, who wrote last and
   and a provider hands content back normalised (Outlook rewrites the HTML), so comparing versions
   would refuse ordinary Save-and-send. A draft edited in a mail client outside these tools does not
   move the revision; that hazard is as before. A lineage read that fails never refuses on revision.
+* **Revisions are computed in the database, atomically (review 2, 2026-10-13).** Every write goes
+  through `public.draft_lineage_record` (same migration): under a per-inbox advisory transaction
+  lock it decides the line, writes `max(revision) + 1`, and returns whether the line had moved since
+  the caller resolved it (`contended`). `UNIQUE (inbox_id, line_id, revision)` backs it; it fits both
+  line shapes (IMAP adds a row per write, Gmail and Outlook move one row's revision up in place).
+  Before, the edge function read the head and wrote head + 1, so two writers that read revision N
+  both wrote N+1 and a card holding N+1 passed its check against content it never saw. A contended
+  record is still written, but its writer is given no revision to vouch for (the save's envelope
+  carries the revision the card loaded, the model's update carries none): the line is past it, so
+  that card's next save or send is refused and it re-reads. Service role only; `anon` and
+  `authenticated` can neither execute it nor touch the table. A database without the function fails
+  soft (nothing recorded), like a database without the table.
+* **The window that remains, stated.** The check and the provider write cannot be one atomic step
+  (the provider is not our database). The card's save checks as late as it can (immediately before
+  the provider write) and every writer's record says whether another write was recorded since its
+  read. What is left: a model update and a card save whose provider writes overlap. The later
+  provider write wins in the mailbox, and the server cannot tell which that was; the record of the
+  second to be recorded is contended, so neither the card nor the model is told a revision that
+  vouches for the mailbox's content, and the card's next action re-reads. The card's write can
+  therefore overwrite a concurrent model update (or the reverse) without either being refused at
+  that moment; nothing is ever SENT on a stale revision. A draft written outside these tools (a mail
+  client) does not move the revision at all.
+* **`base_revision: 0` is "no recorded revision", not "unknown".** A card whose lineage read failed
+  (the envelope then has no `revision`) sends `0`, and once the lineage answers again its next write
+  is refused as `draft_changed` although nothing changed; "Load the newer version" re-reads and the
+  editor carries on. Treating `0` as "do not check" would be the unsafe reading: a draft that had no
+  line when the card loaded it and was then rewritten by the model would pass. The spurious refusal
+  is the accepted cost.
 * **A line closed by a send is never sent or rewritten again.** `draft{action:"send"|"update"}`
   refuse it with log code / `error_code: "draft_already_sent"`, whoever calls (model, card, or an
   approved re-run): on IMAP the post-send delete is best-effort, so the sent draft's copy can still
@@ -818,10 +851,28 @@ is closed when the draft is sent or deleted. Ids, a revision, who wrote last and
   treated as a draft with no line: never redirected to another draft, and never reported "already
   sent" unless the line is `sent_kept`, whose message IS the copy of what was sent.
 * A send from the card with `base_revision` that is refused as `draft_changed` carries the same
-  failed-receipt shape (no `current`; the card re-reads to load the newer version).
-* An approved held send keeps the id it was queued with and does not follow the line: the reviewer
-  approved that version. A held send is queued with the RESOLVED id, so its summary and its
-  post-approval re-run name the current draft rather than the stale id the caller held.
+  failed-receipt shape (the card re-reads to load the newer version).
+* **An approved held send sends the version that was approved, or nothing (review 2).** A held
+  send is queued with the RESOLVED id (so its summary and its re-run name the current draft rather
+  than the stale id the caller held) and ALWAYS with a `base_revision`: the line's revision when it
+  was queued, else the caller's own, else `0`. The post-approval re-run keeps that id (it does not
+  follow the line) and is checked against that revision like a card send, so a draft rewritten
+  after the approval was asked for is refused as `draft_changed` on every provider; before, on Gmail
+  and Outlook, where the id never moves, it sent whatever the draft said at approval time. A model's
+  own send still carries no `base_revision` and may follow the line. The refused re-run marks the
+  scheduled send `error` with an `error_detail` written for the approver ("Not sent. The draft was
+  changed after this send was approved, ... Review the draft and send it again.";
+  `draft-send-plan.ts#approvedSendRefusalDetail`, likewise for `draft_not_found` and
+  `draft_already_sent`), and the caller's idempotency record settles as failed with that code.
+* **A send-time recipient override is a write (review 2).** `draft{action:"send"}` with `to`/`cc`/`bcc`
+  rewrites the stored recipients first and records that in the line every time, also on Gmail and
+  Outlook where the id does not move; it used to record only a moved id, which left the draft at its
+  old revision with new recipients, and a card at that revision could then Send to people it never
+  showed after the model's send was held or failed (`draft-send-plan.ts#applyRecipientOverride`).
+* **An IMAP id the server never confirmed is not recorded.** When an APPEND answers without
+  APPENDUID and the Message-ID search finds nothing, the draft write still returns `<folder>:0`, as it
+  always has. That id names no message and every such write would share it, so it is never written
+  into a line (`draft-lineage.ts#draftIdIsRecordable`): the write stands, the line stays where it was.
 * Fail soft: a lineage read that fails resolves the id to itself, and a write that fails is logged
   and dropped. The function works without the table (deploy order does not matter).
 * Reads report the last save, not themselves: `last_saved_at` / `last_saved_by` come from the line
@@ -848,7 +899,14 @@ Implemented 2026-09-16. Server side only; the card is `apps/mcp-app/`.
 `invalid_recipients`, `draft_has_attachments`, `provider_error`, and since 2026-10-13
 `draft_changed` (`draft_editor_save` only; see "Draft lineage"). `draft{action:"send"|"update"}`
 add `draft_already_sent`, and `draft{action:"send"}` with `base_revision` adds `draft_changed`, as
-`isError` text results that carry the same failed receipt in a gated workspace. The not-found and
+`isError` text results that carry the same failed receipt in a gated workspace.
+Every other `draft{action:"send"|"delete"}` refusal is still a bare `isError` sentence for the model
+(draft not found, sending quota, a mailbox to reconnect, the approval queue unavailable, refused
+before transmission). The card reads that as an answer, not as a lost one
+(`draft-failure.ts#textRefusalCode`, review 2): it says in a person's words that nothing was sent and
+leaves Send on (only "not found" holds the editor until a re-read). A send the server calls
+`delivery_status: "unknown"` / "may or may not have been delivered", and any sentence the card does not
+recognise as one of these, stays a lost answer: re-read, and Send off until the person says so. The not-found and
 wrong-workspace cases are byte-identical, so neither tool is an existence oracle.
 **Receipt copy is for a person (2026-10-13).** `receipt.headline` / `receipt.detail` are written in
 plain words (no scope, tool or argument names, no protocol jargon); `error_code` is unchanged and
@@ -900,6 +958,24 @@ Deviations, all small and all deliberate:
 * **The Outlook `draft{action:"reply"}` path returns today's payload with no envelope.** It creates
   the draft through Graph's `createReply`, so the handler never holds the composed body the envelope
   builder needs. This is the §8 degradation rule firing, not a failure.
+
+### As built (card) — unsaved edits across a reload (review 2, 2026-10-13)
+
+`unsaved.ts` keeps the fields a person changed and has not saved in `sessionStorage`, so a reload of
+the page puts them back. Two rules were added by the second review:
+
+* **Scoped to the card.** An entry is matched on the inbox, any id the editor held for the draft,
+  AND the card's scope: `persist.ts#cardKey`, the identity of the tool call the card was mounted for
+  (`i<id>` from `hostContext.toolInfo`, else a salted hash of the tool name and arguments, which the
+  host re-sends on every mount, a host MUST). A reload of the same cell has the same scope and gets
+  its edits back; a second card on the same draft (on Gmail every card of a draft shares its id)
+  starts from the stored draft. Two calls with byte-identical arguments share a scope, and so does
+  every card under a host that sends neither `toolInfo` nor arguments; that is the behaviour before.
+* **Checked for conflicts.** An entry keeps a fingerprint of each edited field as the server had it
+  when the edit was made. A restored field whose server copy has changed since, at mount or when the
+  verifying re-read arrives, raises the editor's existing conflict notice ("This draft was changed
+  somewhere else ... Use the newer version"), prefixed with "Your unsaved edits from earlier were put
+  back." A field changed on the server that the person did not edit simply takes the server's value.
 
 ### As built (card) — the sent message stays on screen
 
