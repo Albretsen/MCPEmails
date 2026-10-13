@@ -191,7 +191,7 @@ jobs:
       - run: npm ci
       - name: Type check the card
         run: cd apps/mcp-app && npm run typecheck
-      - name: Run card tests (eight suites via harness/verify.mjs)
+      - name: Run card tests (ten suites via harness/verify.mjs)
         run: cd apps/mcp-app && npm test
 
   # The web mail client (apps/client, app.mcpemails.com): a Vite + React SPA.

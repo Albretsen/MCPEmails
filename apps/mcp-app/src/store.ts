@@ -126,6 +126,19 @@ export interface CardStore {
    * resolves, so the re-read asks with it first. Null once a read has settled.
    */
   draftIdHint: string | null;
+  /**
+   * A read found a newer version of this draft that the assistant wrote after
+   * this card last saw it, so a newer card for it exists. See `supersededBy`.
+   * Cleared by this card's own save, which makes it the newest writer again.
+   */
+  draftSuperseded: boolean;
+  /**
+   * The terminal receipt this card had ended on (restored from storage) when a
+   * replayed draft result replaced it. Held until the replay is checked: a
+   * draft that was sent, discarded or hidden here does not come back as an
+   * editor unless the server says it is still a draft. Null otherwise.
+   */
+  priorReceipt: Envelope | null;
   /** Classification of the most recent tool result. See `ResultStatus`. */
   resultStatus: ResultStatus;
   hostContext: HostContext;
@@ -173,6 +186,8 @@ let state: CardStore = {
   envelope: null,
   draftCheck: "trusted",
   draftIdHint: null,
+  draftSuperseded: false,
+  priorReceipt: null,
   resultStatus: "waiting",
   hostContext: {},
   connected: false,
@@ -771,7 +786,42 @@ export function acceptRehydration(
 export function adoptRehydration(envelope: Envelope): void {
   pushAccepted = true;
   ownAnswer = true;
-  setState({ envelope, draftCheck: "trusted", draftIdHint: null });
+  setState({ envelope, draftCheck: "trusted", draftIdHint: null, priorReceipt: null });
+}
+
+/**
+ * How much later than the copy on screen a save has to be before it counts as
+ * a different write, when neither side has a revision to compare. A write
+ * stamps its own response and the lineage stamps its record, a moment apart.
+ */
+export const SUPERSEDE_SLACK_MS = 5_000;
+
+/**
+ * Did the ASSISTANT write this draft after the copy this card holds?
+ *
+ * A card is never told about a later tool call, so this is read off the one
+ * thing it does get: a `draft_read` answer, whose `revision` and
+ * `last_saved_by` come from the server's draft lineage. A read that reports a
+ * higher revision, last written by the assistant, means a later
+ * `draft{action:"update"}` (or reply) wrote it, and that call mounted its own
+ * card further down. The person's own saves never count: they are
+ * `last_saved_by: "user"`, and this card may well be where they were made.
+ *
+ * Without a revision on the held copy (a draft with no line when this card
+ * loaded it) the save times decide instead, with slack.
+ */
+export function supersededBy(
+  held: Envelope["draft"] | null | undefined,
+  next: Envelope["draft"] | null | undefined,
+): boolean {
+  if (!held || !next || next.origin !== "read" || next.last_saved_by !== "agent") return false;
+  const now = typeof next.revision === "number" ? next.revision : 0;
+  if (now < 1) return false;
+  const was = typeof held.revision === "number" ? held.revision : 0;
+  if (was >= 1) return now > was;
+  const a = Date.parse(String(held.last_saved_at ?? ""));
+  const b = Date.parse(String(next.last_saved_at ?? ""));
+  return Number.isFinite(a) && Number.isFinite(b) && b - a > SUPERSEDE_SLACK_MS;
 }
 
 /**
@@ -792,9 +842,19 @@ export function adoptOwnAnswer(next: Envelope): Envelope {
   pushAccepted = true;
   ownAnswer = true;
   const fresh = next.card === "draft_editor" && !!next.draft && !isFailure(next);
+  const held = isLiveEditor(state.envelope) ? state.envelope.draft : null;
   setState({
     envelope: applied,
-    ...(fresh ? { draftCheck: "trusted" as const, draftIdHint: null } : {}),
+    ...(fresh
+      ? {
+        draftCheck: "trusted" as const,
+        draftIdHint: null,
+        priorReceipt: null,
+        draftSuperseded: next.draft?.origin === "save"
+          ? false
+          : state.draftSuperseded || supersededBy(held, next.draft),
+      }
+      : {}),
   });
   return applied;
 }
@@ -1280,7 +1340,10 @@ export function wireResultHandlers(bridge: HostBridge) {
             (!a || !b || a === b)
           ? stub.draft_id
           : null;
-        check = { draftCheck: "pending", draftIdHint: hint };
+        // A card that had ended on a receipt keeps it until the replay has
+        // been checked (App.tsx#readDraft).
+        const prior = isRestoreStub(current) && current?.card === "receipt" ? current : null;
+        check = { draftCheck: "pending", draftIdHint: hint, priorReceipt: prior ?? null };
       }
     }
 

@@ -5,6 +5,7 @@ import type { SplitBody } from "../format";
 import {
   bodyTextChanged,
   formatBytes,
+  formatClockSeconds,
   formatDateTime,
   formatWhen,
   joinBody,
@@ -12,7 +13,7 @@ import {
   splitBody,
   wordCount,
 } from "../format";
-import { failureNotice, type DraftFailure } from "../draft-failure";
+import { editsNotice, failureNotice, type DraftFailure } from "../draft-failure";
 import { setTeardownSaver, type DraftCheck } from "../store";
 import {
   clearUnsaved,
@@ -22,6 +23,7 @@ import {
   type Unsaved,
   type UnsavedField,
 } from "../unsaved";
+import { RecipientField } from "./Recipients";
 import {
   AutoTextarea,
   Btn,
@@ -53,6 +55,12 @@ export interface DraftActions {
   allowSend?: () => void;
   discard: () => void;
   refresh: () => void;
+  /**
+   * Re-read the draft and resolve true when the mailbox's current copy is now
+   * the one on screen. "Use the newer version" waits on it, so what it loads is
+   * what the mailbox holds and never an older copy this card was mounted with.
+   */
+  loadCurrent?: () => Promise<boolean>;
   /** Turn the card off, for this inbox or for every inbox in the workspace. */
   hide: (scope: "inbox" | "workspace") => void;
   setFullscreen: (on: boolean) => void;
@@ -87,6 +95,12 @@ interface Props {
    * off, whatever a re-read finds, until the person turns it back on.
    */
   sendDoubt?: boolean;
+  /**
+   * The assistant wrote a newer version of this draft after this card last saw
+   * it, so a newer card exists (store.ts#supersededBy). The editor folds to one
+   * line unless it holds unsaved edits.
+   */
+  superseded?: boolean;
   actions: DraftActions;
 }
 
@@ -180,15 +194,56 @@ function topLevelPieces(raw: string): string[] {
   return pieces;
 }
 
+/** `"Doe, Jane" <jane@x.example>` -> `Doe, Jane`. Null when there is none. */
+function displayName(piece: string): string | null {
+  const at = piece.indexOf("<");
+  if (at <= 0) return null;
+  const name = piece.slice(0, at).trim().replace(/^"(.*)"$/, "$1").trim();
+  // Outlook writes `dana@x.example <dana@x.example>` when it has no name.
+  return name && addressKey(name) !== addressKey(piece) ? name : null;
+}
+
 /**
- * The addresses in what was typed, bare, in order.
+ * One comma-separated piece cut further at whitespace, when that is safe:
+ * `a@x.example b@x.example` is two addresses (QA, 2026-10-13), and so is
+ * whatever follows a closing `>`. A piece with a name in it is left whole,
+ * because a name has spaces of its own: only a run in which EVERY word is a
+ * plain address is split.
+ */
+function spacePieces(piece: string): string[] {
+  const out: string[] = [];
+  let cur = "";
+  let quoted = false;
+  const push = () => {
+    const words = cur.trim().split(/\s+/);
+    const plain = !/[<"]/.test(cur) && words.length > 1 && words.every((w) => ADDRESS.test(w));
+    out.push(...(plain ? words : [cur]));
+    cur = "";
+  };
+  for (const ch of piece) {
+    cur += ch;
+    if (ch === '"') quoted = !quoted;
+    else if (ch === ">" && !quoted) push();
+  }
+  if (cur.trim() || out.length === 0) push();
+  return out;
+}
+
+/** One typed recipient: the bare address, and the display name it came with. */
+export interface TypedRecipient {
+  address: string;
+  name: string | null;
+}
+
+/**
+ * The recipients in what was typed, in order.
  *
  * A piece with no `@` that is followed by a `Name <address>` piece is the first
  * half of an unquoted display name with a comma in it, the way people write
  * `Doe, Jane <jane@x.example>`, and is glued back on. Splitting it used to
  * raise "Doe does not look like an email address" (QA, 2026-10-13).
  */
-export function splitAddresses(raw: string): string[] {
+export function parseRecipients(raw: string): TypedRecipient[] {
   const pieces = topLevelPieces(raw);
   const out: string[] = [];
   let carry = "";
@@ -200,9 +255,16 @@ export function splitAddresses(raw: string): string[] {
       carry = piece;
       continue;
     }
-    out.push(piece);
+    out.push(...spacePieces(piece));
   }
-  return out.map(bareAddress).filter(Boolean);
+  return out
+    .map((piece) => ({ address: bareAddress(piece), name: displayName(piece) }))
+    .filter((r) => r.address);
+}
+
+/** The addresses in what was typed, bare, in order. See `parseRecipients`. */
+export function splitAddresses(raw: string): string[] {
+  return parseRecipients(raw).map((r) => r.address);
 }
 
 /**
@@ -217,9 +279,44 @@ export function commaEndsAddress(value: string): boolean {
   return pieces[pieces.length - 1].includes("@");
 }
 
+/**
+ * Whether `key`, typed at the end of `value`, finishes an address. Enter always
+ * does. A comma does unless it is part of a name. A space does only after one
+ * complete plain address, so `Dana Smith <dana@x.example>` can still be typed.
+ */
+export function keyEndsAddress(key: string, value: string): boolean {
+  if (!value.trim()) return false;
+  if (key === "Enter") return true;
+  if (key === ",") return commaEndsAddress(value);
+  if (key === " ") return ADDRESS.test(value.trim());
+  return false;
+}
+
 /** The first piece of `raw` that is not an address, or null. */
 function firstInvalid(raw: string): string | null {
   return splitAddresses(raw).find((p) => !ADDRESS.test(p)) ?? null;
+}
+
+/**
+ * What to say about addresses that were typed and are fine but did not land as
+ * typed: ones already in the field, and ones whose display name was left out.
+ * The draft contract carries bare addresses only (contract.md, editor_save), so
+ * a name cannot be kept; saying so beats dropping it without a word.
+ */
+function addressNote(
+  field: Field,
+  dupes: string[],
+  named: string[],
+): { field: Field; text: string } | null {
+  const said: string[] = [];
+  if (dupes.length === 1) said.push(`${dupes[0]} is already in ${FIELD_LABELS[field]}.`);
+  else if (dupes.length > 1) said.push(`${dupes.length} of those are already in ${FIELD_LABELS[field]}.`);
+  if (named.length > 0) {
+    said.push(
+      `${named.length === 1 ? `Added as ${named[0]}.` : "Added."} A draft keeps the address, not the name.`,
+    );
+  }
+  return said.length > 0 ? { field, text: said.join(" ") } : null;
 }
 
 function sameList(a: string[], b: string[]): boolean {
@@ -273,6 +370,21 @@ export const CONFIRM_GUARD_MS = 500;
 
 /** How long the editor waits after a keystroke before stashing unsaved edits. */
 export const UNSAVED_DEBOUNCE_MS = 300;
+
+/** How long a save or send runs before the card says it is still working. */
+export const SLOW_WRITE_MS = 4_000;
+
+/** Who the wait is on, for the still-working hint. */
+function providerName(d: DraftEditorData): string {
+  const p = d.identity?.provider;
+  return p === "gmail" ? "Gmail" : p === "outlook" ? "Outlook" : "Your mail provider";
+}
+
+/** How long a note about a typed address stays under its field. */
+export const ADDR_NOTE_MS = 5000;
+
+/** How long "Copied" and the word after a Refresh stay before reverting. */
+export const FLASH_MS = 2000;
 
 /** Attachments, collapsed to one muted line. The card cannot edit them. */
 function attachmentLine(d: DraftEditorData, fullscreen: boolean): string | null {
@@ -717,10 +829,15 @@ export function DraftEditor(props: Props) {
   // rendered before the blur and silently save without the address the user
   // just added.
   const editRef = useRef(edit);
+  /** The person chose to edit here although a newer card exists. */
+  const [openAnyway, setOpenAnyway] = useState(false);
   const update = (patch: Partial<EditState>) => {
     const next = { ...editRef.current, ...patch };
     editRef.current = next;
     setEdit(next);
+    // Edited while a newer card exists: it stays an editor from here on,
+    // rather than folding the moment the edit is undone.
+    if (props.superseded) setOpenAnyway(true);
   };
 
   /**
@@ -729,6 +846,17 @@ export function DraftEditor(props: Props) {
    * about), and re-checked as the person types a correction.
    */
   const [addrWarning, setAddrWarning] = useState<{ field: Field; text: string } | null>(null);
+  /**
+   * A short word about an address that was typed and is fine: it was already
+   * in the field, or it came with a name the draft cannot keep. Both used to
+   * happen silently (QA, 2026-10-13). Under the field, and gone after a moment.
+   */
+  const [addrNote, setAddrNote] = useState<{ field: Field; text: string } | null>(null);
+  useEffect(() => {
+    if (!addrNote) return;
+    const timer = setTimeout(() => setAddrNote(null), ADDR_NOTE_MS);
+    return () => clearTimeout(timer);
+  }, [addrNote]);
   /**
    * Where focus goes after the next render. Several controls remove themselves
    * when used ("Cc Bcc", the signature's Edit, a chip's remove button), and a
@@ -748,6 +876,16 @@ export function DraftEditor(props: Props) {
   const [sigPin, setSigPin] = useState<SigPin | null>(null);
   const [showHtml, setShowHtml] = useState(false);
   const [copied, setCopied] = useState<null | "done" | "selected">(null);
+  // "Copied" is a receipt, not a state: it goes back to "Copy text" so a second
+  // copy can be seen to work. "Selected" stays, because it is an instruction.
+  useEffect(() => {
+    if (copied !== "done") return;
+    const timer = setTimeout(() => setCopied(null), FLASH_MS);
+    return () => clearTimeout(timer);
+  }, [copied]);
+  /** The signature as it was when its box opened, for Cancel. */
+  const sigBefore = useRef<string | null>(null);
+  const sigEditLink = useRef<HTMLButtonElement>(null);
 
   // ---- inline confirms, and where focus goes around them -------------------
   //
@@ -997,6 +1135,34 @@ export function DraftEditor(props: Props) {
     };
   }, []);
 
+  // ---- a word after a Refresh that worked ----------------------------------
+  //
+  // A re-read that finds nothing new changes nothing on screen, which read as
+  // the link doing nothing (QA, 2026-10-13). So the link itself answers for a
+  // moment, the way it already says "Refreshing": no new line, no layout jump.
+  // A re-read that failed says so in its own notice and gets no word here, and
+  // neither does one the card started itself to check a draft it did not yet
+  // trust: that one ends with its own line going away.
+  const [refreshed, setRefreshed] = useState<null | "same" | "updated">(null);
+  const refreshFrom = useRef<string | null>(null);
+  const refreshOk = !currentFailure(env, props.failure) && check === "trusted";
+  useEffect(() => {
+    if (busy === "refresh") {
+      refreshFrom.current = check === "trusted" ? version : null;
+      setRefreshed(null);
+      return;
+    }
+    const from = refreshFrom.current;
+    refreshFrom.current = null;
+    if (from === null || busy !== null || !refreshOk) return;
+    setRefreshed(from === version ? "same" : "updated");
+  }, [busy]);
+  useEffect(() => {
+    if (!refreshed) return;
+    const timer = setTimeout(() => setRefreshed(null), FLASH_MS);
+    return () => clearTimeout(timer);
+  }, [refreshed]);
+
   /** Drop every local edit and show what the mailbox holds. */
   const useStored = () => {
     const now = live.current;
@@ -1009,6 +1175,37 @@ export function DraftEditor(props: Props) {
     setAddrWarning(null);
     setSigPin(null);
   };
+
+  // "Use the newer version" reads the draft again FIRST. `useStored` alone
+  // adopts whatever copy this render holds, and on a remounted card that can
+  // be the result the card was first mounted with: QA (2026-10-13) clicked it
+  // and got the assistant's original draft, the oldest version there was. The
+  // edits are dropped only once a read has come back, in the effect, which
+  // runs after the render (and the resync above) that carries that read.
+  const [takeStored, setTakeStored] = useState(0);
+  const useNewer = () => {
+    const load = actions.loadCurrent;
+    if (!load) return useStored();
+    void load().then((ok) => {
+      if (ok) setTakeStored((n) => n + 1);
+    });
+  };
+  useEffect(() => {
+    if (takeStored > 0) useStored();
+  }, [takeStored]);
+
+  // A save or send that is taking a while says so, in the line under the
+  // buttons that is always there, so nothing moves.
+  const writing = busy === "save" || busy === "send";
+  const [slow, setSlow] = useState(false);
+  useEffect(() => {
+    if (!writing) {
+      setSlow(false);
+      return;
+    }
+    const timer = setTimeout(() => setSlow(true), SLOW_WRITE_MS);
+    return () => clearTimeout(timer);
+  }, [writing]);
 
   /**
    * Turn whatever is still in the address inputs into chips, synchronously,
@@ -1025,19 +1222,29 @@ export function DraftEditor(props: Props) {
       typed: { ...cur.typed },
     };
     let bad: { field: Field; text: string } | null = null;
+    let note: { field: Field; text: string } | null = null;
     for (const field of FIELDS) {
       const raw = next.typed[field];
       if (!raw.trim()) continue;
-      const parts = splitAddresses(raw);
+      const typed = parseRecipients(raw);
+      const parts = typed.map((r) => r.address);
       const invalid = parts.filter((p) => !ADDRESS.test(p));
       // Case-insensitive, like the mailbox: `Dana@X.example` next to
       // `dana@x.example` is the same recipient twice (QA, 2026-10-13).
       const have = new Set(next[field].map(addressKey));
-      for (const p of parts) {
-        if (!ADDRESS.test(p) || have.has(addressKey(p))) continue;
+      const dupes: string[] = [];
+      const named: string[] = [];
+      for (const { address: p, name } of typed) {
+        if (!ADDRESS.test(p)) continue;
+        if (have.has(addressKey(p))) {
+          dupes.push(p);
+          continue;
+        }
         have.add(addressKey(p));
         next[field].push(p);
+        if (name) named.push(p);
       }
+      note = note ?? addressNote(field, dupes, named);
       // Only what could NOT be added stays in the input, so the field shows
       // exactly the text that needs fixing.
       next.typed[field] = invalid.join(", ");
@@ -1051,6 +1258,7 @@ export function DraftEditor(props: Props) {
     editRef.current = next;
     setEdit(next);
     setAddrWarning(bad);
+    setAddrNote(note);
     return next;
   };
 
@@ -1113,28 +1321,10 @@ export function DraftEditor(props: Props) {
     flush();
   };
 
-  const onKey = (field: Field, e: KeyboardEvent) => {
-    const el = e.target as HTMLInputElement;
-    // Backspace in an empty field takes the last chip, as in every mail client.
-    if (e.key === "Backspace") {
-      const chips = editRef.current[field];
-      if (el.value === "" && chips.length > 0 && canEdit) {
-        e.preventDefault();
-        removeAt(field, chips.length - 1);
-      }
-      return;
-    }
-    if (e.key !== "Enter" && e.key !== ",") return;
-    if (!el.value.trim()) return;
-    // A comma inside a name being typed is just a comma.
-    if (e.key === "," && !commaEndsAddress(el.value)) return;
-    e.preventDefault();
-    commitField(field, el.value);
-  };
-
   /** Typing in an address field: keep the warning about it current. */
   const onAddrInput = (field: Field, value: string) => {
     update({ typed: { ...editRef.current.typed, [field]: value } });
+    setAddrNote(null);
     setAddrWarning((w) => {
       if (!w || w.field !== field) return w;
       const bad = value.trim() ? firstInvalid(value) : null;
@@ -1143,22 +1333,12 @@ export function DraftEditor(props: Props) {
     });
   };
 
-  /**
-   * `refocus`: the chip's own remove button had focus and is about to go, so
-   * focus moves to the neighbouring chip's (the one that slides into its
-   * place, else the one before), else to the field's input.
-   */
-  const removeAt = (field: Field, i: number, refocus = false) => {
+  /** Focus after a removal is the field's own business (Recipients.tsx). */
+  const removeAt = (field: Field, i: number) => {
     const kept = editRef.current[field].filter((_, n) => n !== i);
     update(
       field === "to" ? { to: kept } : field === "cc" ? { cc: kept } : { bcc: kept },
     );
-    if (refocus) {
-      focusNext.current = () => {
-        const xs = document.querySelectorAll<HTMLElement>(`#d-${field}-box .chip-x`);
-        return xs[Math.min(i, xs.length - 1)] ?? document.getElementById(`d-${field}`);
-      };
-    }
   };
 
   /**
@@ -1168,59 +1348,20 @@ export function DraftEditor(props: Props) {
    * the card's height went.
    */
   const recipientRow = (field: Field, trailing?: ComponentChildren) => (
-    <div class="row">
-      <label class="lbl" for={`d-${field}`}>
-        {FIELD_LABELS[field]}
-      </label>
-      <div
-        class="fld"
-        id={`d-${field}-box`}
-        onClick={(e) => {
-          // The box looks like one field, so clicking the empty part of it must
-          // put the caret in the input rather than do nothing.
-          if (e.target === e.currentTarget) {
-            (e.currentTarget as HTMLElement).querySelector("input")?.focus();
-          }
-        }}
-      >
-        {edit[field].map((addr, i) => (
-          <span class="chip" key={`${addr}-${i}`}>
-            <span class="name">{addr}</span>
-            {canEdit && (
-              <button
-                type="button"
-                class="chip-x"
-                aria-label={`Remove ${addr}`}
-                onClick={() => removeAt(field, i, true)}
-              >
-                &#215;
-              </button>
-            )}
-          </span>
-        ))}
-        <input
-          id={`d-${field}`}
-          type="email"
-          autocomplete="off"
-          spellcheck={false}
-          aria-label={`${FIELD_LABELS[field]} recipients`}
-          // "name@example.com" reads as a value that is already there rather
-          // than as an invitation to type one.
-          placeholder={edit[field].length === 0 ? `Add ${FIELD_LABELS[field]}` : ""}
-          value={edit.typed[field]}
-          disabled={!canEdit}
-          aria-invalid={addrWarning?.field === field ? "true" : undefined}
-          aria-describedby={addrWarning?.field === field ? `d-${field}-warn` : undefined}
-          onInput={(e) => onAddrInput(field, (e.target as HTMLInputElement).value)}
-          onKeyDown={(e) => onKey(field, e as unknown as KeyboardEvent)}
-          onBlur={(e) => {
-            const el = e.target as HTMLInputElement;
-            if (el.value.trim()) commitField(field, el.value);
-          }}
-        />
-      </div>
-      {trailing}
-    </div>
+    <RecipientField
+      id={`d-${field}`}
+      label={FIELD_LABELS[field]}
+      items={edit[field]}
+      typed={edit.typed[field]}
+      canEdit={canEdit}
+      invalid={addrWarning?.field === field}
+      describedBy={addrWarning?.field === field ? `d-${field}-warn` : undefined}
+      endsAddress={keyEndsAddress}
+      onType={(v) => onAddrInput(field, v)}
+      onCommit={(v) => commitField(field, v)}
+      onRemove={(i) => removeAt(field, i)}
+      trailing={trailing}
+    />
   );
 
   /** A recipient row, with its own warning directly under it. */
@@ -1230,6 +1371,11 @@ export function DraftEditor(props: Props) {
       {addrWarning?.field === field && (
         <div class="notice fld-note" data-tone="warning" role="status" id={`d-${field}-warn`}>
           {addrWarning.text}
+        </div>
+      )}
+      {addrNote?.field === field && (
+        <div class="line fld-note" role="status" id={`d-${field}-note`}>
+          {addrNote.text}
         </div>
       )}
     </>
@@ -1243,7 +1389,23 @@ export function DraftEditor(props: Props) {
   // See store.ts#DraftCheck.
   const verified = check === "trusted";
   const sendDoubt = props.sendDoubt === true;
-  const canSend = d.can_send === true && canEdit && verified && !sendDoubt;
+  // Send follows what is on screen NOW, not what the server last stored: with
+  // every recipient removed it used to stay on until that was saved (QA,
+  // 2026-10-13). `can_send` is "the key may send AND the stored draft has a
+  // recipient", so false over a stored draft with nobody on it says nothing
+  // about the key; the server still refuses a send the key may not make.
+  const storedHasRecipient = FIELDS.some((f) => server[f].length > 0);
+  const keyMaySend = d.can_send === true || !storedHasRecipient;
+  // Text still in an address field: a recipient if it is one, a blocker if not.
+  const pendingBad = FIELDS.find(
+    (f) => edit.typed[f].trim().length > 0 && firstInvalid(edit.typed[f]) !== null,
+  );
+  const hasRecipient = FIELDS.some(
+    (f) => edit[f].length > 0 || splitAddresses(edit.typed[f]).length > 0,
+  );
+  const canSend = keyMaySend && hasRecipient && !pendingBad && canEdit && verified && !sendDoubt;
+  /** The one notice about the person's own edits, if any (draft-failure.ts). */
+  const editsNote = editsNotice({ canEdit, check, restored, conflict });
   const saving = busy === "save";
   const sending = busy === "send";
   const attachLine = attachmentLine(d, fullscreen);
@@ -1313,13 +1475,47 @@ export function DraftEditor(props: Props) {
     if (split.separator !== null) {
       setSigPin({ messageLen: split.message.length, separator: split.separator });
     }
+    sigBefore.current = split.signature;
     setEditingSig(true);
     // The Edit link (or the row) that was activated is replaced by the box.
     focusNext.current = "d-signature";
   };
 
+  /**
+   * Close the signature box and put the signature back as it was when the box
+   * opened. The message keeps whatever was typed into it meanwhile. Focus
+   * returns to Edit, which is what opened the box.
+   */
+  const cancelSig = () => {
+    if (split.separator !== null && sigBefore.current !== null) {
+      update({ bodyText: joinBody({ ...split, signature: sigBefore.current }) });
+    }
+    setSigPin(null);
+    setEditingSig(false);
+    focusNext.current = () => sigEditLink.current;
+  };
+
+  // ---- a newer card exists ---------------------------------------------------
+  //
+  // One line instead of a second full editor over the same draft. Never while
+  // this card holds unsaved work, and never during the frame in which the
+  // editor state has not caught up with the envelope (`editorPatch`), when
+  // `dirty` cannot be believed. "Edit here anyway" is the way back: the
+  // detection is an inference from the draft's history, not a host signal.
+  if (
+    props.superseded === true && !openAnyway && !dirty && !typedPending && !restored &&
+    editVersion.current === version && busy === null
+  ) {
+    return <Superseded fullscreen={fullscreen} actions={actions} onOpen={() => setOpenAnyway(true)} />;
+  }
+
   return (
     <>
+      {/* Everything above the action row. Inline it is not a box at all
+          (`display: contents`); in fullscreen it is the one thing that scrolls,
+          so the action row sits under it instead of over it (styles.css). Its
+          children are deliberately not indented a level further. */}
+      <div class="ed-main">
       <div class="hdr">
         <div class="hdr-l">
           {/* No status dot here. The other cards use one to carry a state the
@@ -1443,7 +1639,14 @@ export function DraftEditor(props: Props) {
             <label class="lbl" for="d-signature">
               Signature
             </label>
-            <div class="grow">
+            <div
+              class="grow"
+              onKeyDown={(e) => {
+                if (e.key !== "Escape") return;
+                e.preventDefault();
+                cancelSig();
+              }}
+            >
               <AutoTextarea
                 id="d-signature"
                 ariaLabel="Signature"
@@ -1460,6 +1663,11 @@ export function DraftEditor(props: Props) {
                   it here saves it as plain text.
                 </p>
               )}
+              <p class="line sig-acts">
+                <TextLink onClick={cancelSig} title="Close and put the signature back as it was">
+                  Cancel
+                </TextLink>
+              </p>
             </div>
           </div>
         ) : (
@@ -1476,6 +1684,7 @@ export function DraftEditor(props: Props) {
             <span class="sig-text">{signaturePreview(split.signature)}</span>
             {canEdit && (
               <TextLink
+                btnRef={sigEditLink}
                 onClick={startEditingSig}
                 title={
                   richSig
@@ -1539,25 +1748,30 @@ export function DraftEditor(props: Props) {
         </p>
       )}
 
-      {restored && !conflict && (
+      {editsNote === "restored" && (
         <Notice tone="warning">
           Your unsaved edits from earlier were put back. They are not saved yet.{" "}
           <TextLink onClick={useStored}>Discard these edits</TextLink>
         </Notice>
       )}
 
-      {conflict && (
+      {editsNote === "conflict" && (
         <Notice tone="warning">
           {restored ? "Your unsaved edits from earlier were put back. " : ""}
           This draft was changed somewhere else. Your unsaved edits are still
           here, and saving will replace the newer version.{" "}
-          <TextLink onClick={useStored}>Use the newer version</TextLink>
+          <TextLink soft disabled={busy !== null} onClick={useNewer}>
+            Use the newer version
+          </TextLink>
         </Notice>
       )}
 
       {err ? (
         <Notice tone={err.tone}>
           {err.text}
+          {failed?.action === "refresh" && failed.at !== undefined && (
+            <> Last checked {formatClockSeconds(failed.at)}.</>
+          )}
           {err.retry && canEdit && verified && (dirty || typedPending) && (
             <>
               {" "}
@@ -1623,6 +1837,8 @@ export function DraftEditor(props: Props) {
           </TextLink>
         </Notice>
       )}
+
+      </div>
 
       {/* Inline confirm, never a modal: a dialog inside a sandboxed frame is
           clipped by the host's container and fights its z-index. */}
@@ -1721,8 +1937,21 @@ export function DraftEditor(props: Props) {
               title="Re-read this draft from the mailbox"
               onClick={actions.refresh}
             >
-              {busy === "refresh" ? "Refreshing" : "Refresh"}
+              {busy === "refresh"
+                ? "Refreshing"
+                : refreshed === "same"
+                  ? "Up to date"
+                  : refreshed === "updated"
+                    ? "Updated"
+                    : "Refresh"}
             </TextLink>
+            <span class="sr-only" role="status">
+              {refreshed === "same"
+                ? "This draft is up to date."
+                : refreshed === "updated"
+                  ? "Updated from your Drafts folder."
+                  : ""}
+            </span>
             <TextLink
               tone="danger"
               disabled={!canEdit}
@@ -1767,7 +1996,13 @@ export function DraftEditor(props: Props) {
                   ? "Sending is off until you have checked whether the last send went out"
                   : !verified
                   ? "Sending is off until this draft has been checked against the mailbox"
-                  : "This draft needs a recipient, and the key needs send access"
+                  : !canEdit
+                  ? "This draft cannot be sent from here"
+                  : pendingBad
+                  ? `Fix or remove the incomplete address in ${FIELD_LABELS[pendingBad]} first`
+                  : !hasRecipient
+                  ? "Add a recipient to send this draft"
+                  : "This connection is not allowed to send"
             }
             onClick={() => {
               const next = readyToWrite();
@@ -1793,11 +2028,38 @@ export function DraftEditor(props: Props) {
         // constant boilerplate the user did not write and can now see is
         // separate, so counting it answers a question nobody asked and makes a
         // three-word note read as thirty.
-        lead={`${wordCount(split.message)} words`}
+        lead={slow
+          ? `${saving ? "Still saving" : "Still working"}. ${providerName(d)} can take a moment.`
+          : `${wordCount(split.message)} words`}
         // Inline, the provider label and the route move into the tooltip.
         // See ProviderLine.
         compactSummary="Saved to Drafts"
       />
     </>
+  );
+}
+
+/**
+ * The whole of an older card once a newer one exists for the same draft. One
+ * line, in the shape of the card's other one-liners, so the frame is never
+ * empty (contract §1). Leaves fullscreen: one line on an empty page is not a
+ * place to be left.
+ */
+function Superseded(props: { fullscreen: boolean; actions: DraftActions; onOpen: () => void }) {
+  useEffect(() => {
+    if (props.fullscreen) props.actions.setFullscreen(false);
+  }, []);
+  return (
+    <div class="hdr">
+      <div class="hdr-l">
+        <span class="dot" data-tone="neutral" aria-hidden="true" />
+        <b>A newer version of this draft is below.</b>
+      </div>
+      <div class="hdr-r">
+        <TextLink onClick={props.onOpen} title="Open the current version of the draft in this card">
+          Edit here anyway
+        </TextLink>
+      </div>
+    </div>
   );
 }

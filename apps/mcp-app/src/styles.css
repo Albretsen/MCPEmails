@@ -869,3 +869,82 @@ body {
   outline-offset: 1px;
   border-radius: var(--r-sm);
 }
+
+/* A recipient chip that has focus (arrow keys from the input), or that the
+   first Backspace in an empty input has marked for the second one. The same
+   look for both, because both mean "Backspace removes this one". */
+.chip:focus {
+  outline: none;
+}
+
+.chip:focus,
+.chip[data-armed="true"] {
+  border-color: var(--ring);
+  background: var(--bg-2);
+  box-shadow: 0 0 0 1px var(--ring);
+}
+
+/* Actions that follow one another in a notice ("Check again", "Copy text").
+   Two underlined links a single space apart read as one link. */
+.notice .link + .link {
+  margin-left: 10px;
+}
+
+/* Cancel under the open signature box. */
+.sig-acts {
+  margin-top: 4px;
+}
+
+/* ---- draft editor, fullscreen ------------------------------------------- */
+
+/* Everything above the action row (DraftEditor's `.ed-main`). Inline it is no
+   box at all, so the card lays out exactly as if it were not there. */
+.ed-main {
+  display: contents;
+}
+
+/* Fullscreen: the action row used to be `position: sticky` over the one
+   scrolling frame, so it covered whatever was under it: the end of the
+   message, the caret while typing there, the signature row, a focus ring (QA,
+   2026-10-13). Now the card is exactly the frame's height, `.ed-main` is the
+   scroller and the action row is an ordinary row beneath it. Nothing can be
+   under the row, however tall it wraps at a narrow width, and the browser's
+   own "keep the caret in view" stops at the scroller's edge.
+
+   `:has()` scopes this to the draft editor, the one card with an `.ed-main`.
+   A browser without it keeps the sticky row above. */
+.card[data-mode="fullscreen"]:has(> .ed-main) {
+  height: 100vh;
+  height: 100dvh;
+  /* Only if the frame is too short for the footer and `.ed-main`'s floor. */
+  overflow-y: auto;
+}
+
+.card[data-mode="fullscreen"] > .ed-main {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  flex: 1 1 0;
+  min-height: 96px;
+  overflow-y: auto;
+  /* Out to the card's edge, so the scrollbar sits there, and padded so a focus
+     ring on the first or last control is not clipped by the scroller. */
+  margin: 0 -12px;
+  padding: 2px 12px 8px;
+  scroll-padding: 8px 0;
+}
+
+/* Rows keep their height and the scroller scrolls. Without this the message
+   box, a shrinkable flex item, would be squeezed instead. */
+.card[data-mode="fullscreen"] > .ed-main > * {
+  flex-shrink: 0;
+}
+
+.card[data-mode="fullscreen"]:has(> .ed-main) > .prov,
+.card[data-mode="fullscreen"]:has(> .ed-main) > .acts {
+  flex: none;
+}
+
+.card[data-mode="fullscreen"]:has(> .ed-main) > .acts {
+  position: static;
+}

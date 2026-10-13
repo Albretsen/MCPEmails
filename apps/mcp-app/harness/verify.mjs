@@ -72,6 +72,18 @@ const SUITES = [
   // resolved_from, a null last_saved_at — including the replay check against a
   // model's fresh draft_read of an old draft (one verifying read, no loop).
   ["draft polish", "draft-polish.test.mjs"],
+  // The fifth DOM suite: the state bugs of the second QA pass (2026-10-13).
+  // Which copy "Use the newer version" loads, one notice at a time, Send
+  // following the recipients on screen, a draft that is already gone, an older
+  // card folding to one line, leaving fullscreen when a card ends, and what a
+  // reopened chat shows for a discarded or a saved draft.
+  ["draft state", "draft-state.test.mjs"],
+  // The sixth DOM suite: the second QA pass's smaller issues. Addresses a
+  // space apart, a dropped display name and a duplicate both said out loud,
+  // the two-press Backspace, chips on the arrow keys, Cancel in the signature
+  // box, "Copied" and "Up to date" that revert, and the fullscreen action row
+  // as a row of its own rather than an overlay.
+  ["draft UX", "draft-ux.test.mjs"],
 ];
 
 const outcomes = [];

@@ -42,6 +42,11 @@ export interface DraftFailure {
   headline?: string | null;
   /** Set once a re-read after a lost answer has settled what happened. */
   settled?: Settled | null;
+  /**
+   * When the failed call was answered (ms epoch). Shown beside a failed check,
+   * so checking again and getting the same answer still changes the screen.
+   */
+  at?: number;
 }
 
 export interface FailureNotice {
@@ -357,4 +362,31 @@ export function patchLanded(
     }
   }
   return true;
+}
+
+/**
+ * Which notice about the person's own unsaved edits may be shown, if any.
+ *
+ * The one place this is decided, because the two it chooses between both offer
+ * something ("saving will replace the newer version", "Use the newer version",
+ * "Discard these edits") and an offer is only honest while it can be taken up.
+ * QA, 2026-10-13: the amber "saving will replace the newer version" sat under
+ * the red "it cannot be saved or sent from here".
+ *
+ *   - Saving is not possible (read only, or the draft is `unverified`): none.
+ *     The notice that says why saving is off is the one notice, and it already
+ *     says the text is still here.
+ *   - `conflict` is a claim about what the mailbox holds, so it needs a copy
+ *     that has been checked (`trusted`). Against a replay still being checked
+ *     it is only "your edits were put back".
+ */
+export function editsNotice(s: {
+  canEdit: boolean;
+  check: "trusted" | "pending" | "checking" | "unverified";
+  restored: boolean;
+  conflict: boolean;
+}): "conflict" | "restored" | null {
+  if (!s.canEdit || s.check === "unverified") return null;
+  if (s.conflict && s.check === "trusted") return "conflict";
+  return s.restored ? "restored" : null;
 }
