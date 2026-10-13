@@ -237,17 +237,46 @@ function comparableText(text: string): string {
     .join("\n");
 }
 
-/** Where `needle` sits in `hay` as whole lines, searching from the end; -1 when it does not. */
-function lastWholeLineMatch(hay: string, needle: string): number {
+/**
+ * Where `needle` sits in `hay` as whole lines, searching from the end; -1 when
+ * it does not. With `endBy`, only a match that ends at or before that offset
+ * counts.
+ */
+function lastWholeLineMatch(hay: string, needle: string, endBy = hay.length): number {
   let from = hay.length;
   while (from >= 0) {
     const at = hay.lastIndexOf(needle, from);
     if (at === -1) return -1;
     const end = at + needle.length;
-    if (end === hay.length || hay[end] === "\n") return at;
+    if ((end === hay.length || hay[end] === "\n") && end <= endBy) return at;
     from = at - 1;
   }
   return -1;
+}
+
+/**
+ * Where quoted content starts in a body, or the body's length when it has none.
+ *
+ * The lines that open a quoted original: our own reply attribution ("On <date>,
+ * <from> wrote:", index.ts#buildReplyTextBody), a `>` quote line, and the
+ * blocks other mail clients write ("-----Original Message-----", an Outlook
+ * "From:" line followed by "Sent:" or "Date:"). The signature the person's own
+ * text carries sits before all of these, so a match inside the quote is the
+ * quoted message's signature, not this one.
+ */
+function quoteStart(hay: string): number {
+  const patterns = [
+    /\nOn [^\n]{1,300} wrote:[ \t]*(?=\n|$)/,
+    /\n>/,
+    /\n-{2,}[ \t]*Original Message[ \t]*-{2,}/i,
+    /\nFrom: [^\n]+\n(?:Sent|Date): /,
+  ];
+  let start = hay.length;
+  for (const re of patterns) {
+    const m = re.exec(hay);
+    if (m && m.index < start) start = m.index;
+  }
+  return start;
 }
 
 /**
@@ -332,20 +361,28 @@ function splitAtSignature(
   // A leading newline so a body that IS the signature still has a line break
   // in front of its delimiter to match on.
   const hay = `\n${comparableText(text)}`;
-  for (const candidate of signatureCandidates(inbox, storedHtml)) {
-    const sigText = comparableText(candidate.text).trim();
-    if (!sigText) continue;
-    // With the delimiter `applySignature` writes ("-- " loses its space above),
-    // then without it: a provider that hands the text back derived from HTML
-    // (Outlook) has no delimiter line.
-    for (const needle of [`\n--\n${sigText}`, `\n${sigText}`]) {
-      const at = lastWholeLineMatch(hay, needle);
-      if (at === -1) continue;
-      return {
-        before: hay.slice(0, at).replace(/^\n+|\n+$/g, ""),
-        after: hay.slice(at + needle.length).replace(/^\n+/, ""),
-        html: candidate.html,
-      };
+  // The match nearest the quote, but outside it: a reply that quotes a message
+  // carrying the same signature has it twice, and the LAST one is in the quote
+  // (review of 2026-10-13). Only when nothing matches before the quote does a
+  // match inside it count, which is what this did before.
+  const quoted = quoteStart(hay);
+  const candidates = signatureCandidates(inbox, storedHtml);
+  for (const endBy of quoted < hay.length ? [quoted, hay.length] : [hay.length]) {
+    for (const candidate of candidates) {
+      const sigText = comparableText(candidate.text).trim();
+      if (!sigText) continue;
+      // With the delimiter `applySignature` writes ("-- " loses its space
+      // above), then without it: a provider that hands the text back derived
+      // from HTML (Outlook) has no delimiter line.
+      for (const needle of [`\n--\n${sigText}`, `\n${sigText}`]) {
+        const at = lastWholeLineMatch(hay, needle, endBy);
+        if (at === -1) continue;
+        return {
+          before: hay.slice(0, at).replace(/^\n+|\n+$/g, ""),
+          after: hay.slice(at + needle.length).replace(/^\n+/, ""),
+          html: candidate.html,
+        };
+      }
     }
   }
   return null;

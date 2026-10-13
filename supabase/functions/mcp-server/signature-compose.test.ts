@@ -240,3 +240,24 @@ Deno.test("rebuildHtmlKeepingSignature: the draft's own block wins over a signat
   const rebuilt = rebuildHtmlKeepingSignature(signed.textBody.replace("Hi.", "Hello."), changedInbox, signed.htmlBody);
   assertEquals(rebuilt, applySignature({ textBody: "Hello." } as { textBody: string; htmlBody?: string }, RICH_SIG_INBOX).htmlBody);
 });
+
+Deno.test("rebuildHtmlKeepingSignature: a reply quoting the same signature splits at the person's own", () => {
+  const signed = applySignature({ textBody: "Thanks." } as { textBody: string; htmlBody?: string }, RICH_SIG_INBOX);
+  const sigPart = signed.textBody.slice(signed.textBody.indexOf(SIGNATURE_TEXT_DELIMITER));
+  // Quoted the way other clients quote: no ">" prefix, so the quoted
+  // signature lines are whole lines too, and the LAST match is in the quote.
+  for (
+    const quote of [
+      `-----Original Message-----\nFrom: Asgeir\nSent: Monday\n\nEarlier words.\n\n${sigPart}`,
+      `From: Asgeir <a@x.com>\nDate: Monday\n\nEarlier words.\n\n${sigPart}`,
+    ]
+  ) {
+    const stored = `${signed.textBody}\n\n${quote}`;
+    const storedHtml = applySignature({ textBody: "Thanks." } as { textBody: string; htmlBody?: string }, RICH_SIG_INBOX).htmlBody;
+    const rebuilt = rebuildHtmlKeepingSignature(stored.replace("Thanks.", "Thanks a lot."), RICH_SIG_INBOX, storedHtml)!;
+    const block = rebuilt.indexOf(`class="${SIGNATURE_HTML_CLASS}"`);
+    assertEquals(block > rebuilt.indexOf("Thanks a lot."), true);
+    assertEquals(block < rebuilt.indexOf("Earlier words."), true, "the signature block sits before the quote");
+    assertEquals(rebuilt.split(`class="${SIGNATURE_HTML_CLASS}"`).length - 1, 1);
+  }
+});
