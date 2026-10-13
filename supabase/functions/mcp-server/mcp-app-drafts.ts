@@ -63,7 +63,12 @@
 
 import { neutralizeList, neutralizeMaybe, neutralizeText } from "./text-safety.ts";
 import { preferredBodyText } from "./text-extract.ts";
-import { plainTextBodyToHtml } from "./signature-compose.ts";
+import {
+  bodyCarriesSignature,
+  htmlCarriesSignatureBlock,
+  rebuildHtmlKeepingSignature,
+} from "./signature-compose.ts";
+import { type DraftWriter, lastSaveOf, type ResolvedDraft } from "./draft-lineage.ts";
 import { EMAIL_HTML_MAX_LENGTH } from "./signature-sanitizer.ts";
 import { CARD_SCHEMA_VERSION } from "./mcp-app-approvals.ts";
 
@@ -144,8 +149,22 @@ export interface NormalizedDraft {
   in_reply_to: { message_id: string; subject: string | null; from: string | null } | null;
   /** Whether the stored text already carries the inbox signature. */
   signature_embedded: boolean;
-  /** ISO 8601. The provider's own timestamp where it gives one. */
-  last_saved_at: string;
+  /**
+   * True when the HTML part ends in the inbox's formatted signature block, the
+   * thing a signature edit in a plain-text editor would flatten.
+   */
+  signature_rich?: boolean;
+  /**
+   * ISO 8601, or null when it is not known. On a write it is the time of the
+   * write. On a read it is when the draft was last saved (lineage, else the
+   * provider's own timestamp), never the time of the read.
+   */
+  last_saved_at: string | null;
+  /**
+   * The id the caller asked for, when it was an OLDER id of this draft and the
+   * lineage resolved it to `draft_id`. Absent otherwise.
+   */
+  resolved_from?: string;
   /**
    * Threading metadata, carried through a save so a reply stays in its thread.
    * `in_reply_to_header` also drives the envelope's `threaded` flag, which is
@@ -212,6 +231,8 @@ export interface ProviderDraft {
   bodyText?: string | null;
   bodyHtml?: string | null;
   attachments?: DraftAttachmentMeta[];
+  /** The mailbox's own timestamp for the stored draft, ISO 8601, when it has one. */
+  savedAt?: string | null;
 }
 
 /** The parameters `index.ts`'s three update functions take. */
@@ -232,6 +253,25 @@ export interface DraftEditorProviderInbox extends DraftEditorInbox {
   id: string;
   signature_enabled?: boolean | null;
   signature_text?: string | null;
+  signature_html?: string | null;
+}
+
+/**
+ * Draft lineage, bound to the calling key's workspace (draft-lineage.ts).
+ *
+ * Both calls are fail-soft by contract: `resolve` answers "unknown" and
+ * `recordWrite` does nothing when the bookkeeping cannot be read or written.
+ * Neither may reject.
+ */
+export interface DraftLineagePort {
+  resolve(inbox: DraftEditorProviderInbox, draftId: string): Promise<ResolvedDraft>;
+  recordWrite(
+    inbox: DraftEditorProviderInbox,
+    previous: ResolvedDraft,
+    draftId: string,
+    writtenBy: DraftWriter,
+    at: string,
+  ): Promise<void>;
 }
 
 export interface DraftEditorDeps {
@@ -314,6 +354,11 @@ export interface DraftEditorDeps {
     ids: { workspaceId: string; inboxId: string },
     hidden: boolean,
   ): Promise<void>;
+  /**
+   * Stale-id resolution. Optional so a caller without it behaves exactly as
+   * before lineage existed: every id resolves to itself.
+   */
+  lineage?: DraftLineagePort;
   /** Injectable clock, for tests. */
   now?(): number;
 }
@@ -389,30 +434,28 @@ export function normalizeLineEndings(value: string): string {
  *
  * Mirrors `sendProviderBlock`'s naming so a user who sees both cards in one
  * conversation reads the same words for the same account: the label is the
- * transport ("IMAP + SMTP", "Gmail API", "Microsoft Graph") and the route is
- * the concrete call. The routes differ from the send card's on purpose — this
- * block describes how a SAVE lands, not how a send would.
+ * transport ("IMAP + SMTP", "Gmail API", "Microsoft Graph").
  *
- * `caveats` carries the one thing a person editing in the card can be
- * surprised by: on IMAP a save rewrites the message, so the id they had is
- * gone. It is empty for the two API providers, which patch in place.
+ * `route` is read by a person in the card's footer, so it says where the save
+ * lands in their words. It used to name the protocol call ("APPEND to Drafts",
+ * "users.drafts.update", "PATCH /me/messages/{id}"), which is ours to know.
+ *
+ * `caveats` is empty for every provider. The one it carried ("the draft gets a
+ * new id each time", IMAP) described a problem the reader could do nothing
+ * about, and since draft lineage an older id resolves to the current draft, so
+ * it is no longer a problem they can meet. `id_is_stable` still tells the card
+ * to adopt each returned id.
  */
 export function draftProviderBlock(
   provider: string | null | undefined,
 ): { label: string; route: string; caveats: string[] } {
   if (provider === "gmail") {
-    return { label: "Gmail API", route: "users.drafts.update", caveats: [] };
+    return { label: "Gmail API", route: "Saved to your Gmail drafts", caveats: [] };
   }
   if (provider === "outlook") {
-    return { label: "Microsoft Graph", route: "PATCH /me/messages/{id}", caveats: [] };
+    return { label: "Microsoft Graph", route: "Saved to your Outlook drafts", caveats: [] };
   }
-  return {
-    label: "IMAP + SMTP",
-    route: "APPEND to Drafts",
-    caveats: [
-      "Saving rewrites the message, so the draft gets a new id each time.",
-    ],
-  };
+  return { label: "IMAP + SMTP", route: "Saved to your Drafts folder", caveats: [] };
 }
 
 /**
@@ -552,8 +595,12 @@ export function buildDraftEditorEnvelope(input: {
   draft: NormalizedDraft;
   inbox: DraftEditorInbox;
   origin: DraftEditorOrigin;
-  /** "user" only when the last write was `draft_editor_save`. */
-  lastSavedBy: "agent" | "user";
+  /**
+   * Who wrote the stored draft last. "user" when it was `draft_editor_save`,
+   * null when it is not known (a draft with no lineage, or one changed in a
+   * mail client since).
+   */
+  lastSavedBy: "agent" | "user" | null;
   /** The key holds `send:email` AND the draft has at least one recipient. */
   canSend: boolean;
   canEdit?: boolean;
@@ -577,6 +624,12 @@ export function buildDraftEditorEnvelope(input: {
     state: "editing",
     draft: {
       draft_id: draft.draft_id,
+      // Only when the caller held an older id of this draft: the id it asked
+      // for, so it can tell "my draft, under its current id" from an answer
+      // about some other draft.
+      ...(draft.resolved_from && draft.resolved_from !== draft.draft_id
+        ? { resolved_from: draft.resolved_from }
+        : {}),
       id_is_stable: draftIdIsStable(inbox.provider),
       // Which version of the content this is. The card's only faithful answer
       // to "is the text in the box still describing what the server has": see
@@ -619,7 +672,13 @@ export function buildDraftEditorEnvelope(input: {
         size_bytes: entry.size_bytes,
         mime_type: entry.mime_type === null ? null : neutralizeText(entry.mime_type),
       })),
-      signature: { embedded: draft.signature_embedded },
+      // `rich` only when true: the HTML part carries the inbox's formatted
+      // signature, which survives a body edit and is replaced by plain text
+      // when the signature lines themselves are edited.
+      signature: {
+        embedded: draft.signature_embedded,
+        ...(draft.signature_rich === true ? { rich: true } : {}),
+      },
       // Populated on the reply path only. A stored draft carries the RFC
       // `In-Reply-To` header rather than a server message id, and §8 specifies
       // this `message_id` as a server id ("INBOX:42"), so a read returns null
@@ -740,11 +799,15 @@ function draftFailure(
   errorCode: string,
   logErrorCode: string,
   reason: string | null = null,
+  // What the CARD shows, when the sentence above was written for a model
+  // (scope names, tool names, argument names). `content` keeps the model's
+  // wording byte for byte; only the receipt a person reads changes.
+  person: { headline: string; detail: string } | null = null,
 ): DraftEditorToolResult {
   const envelope = draftReceiptEnvelope({
     outcome,
-    headline,
-    detail,
+    headline: person?.headline ?? headline,
+    detail: person?.detail ?? detail,
     affected_count: 0,
     dashboard_url: `${appUrl}/dashboard`,
     error_code: errorCode,
@@ -768,6 +831,11 @@ function invalidArgs(appUrl: string, detail: string): DraftEditorToolResult {
     detail,
     "invalid_arguments",
     "-32602",
+    null,
+    {
+      headline: "That did not go through.",
+      detail: "The draft was not changed. Refresh the draft and try again.",
+    },
   );
 }
 
@@ -789,7 +857,54 @@ function draftNotFound(appUrl: string): DraftEditorToolResult {
     "draft_not_found",
     "draft_not_found",
     "not_found",
+    {
+      headline: "This draft is no longer in your mailbox.",
+      detail: "It was probably sent or deleted, here or in your mail app. Nothing was changed.",
+    },
   );
+}
+
+/**
+ * The draft's line was closed by a send or a delete made through this server.
+ *
+ * Same `draft_not_found` code and the same model-facing text as `draftNotFound`
+ * (the caller's next step is the same), but the person is told which of the two
+ * happened. Not an existence oracle: a line is only ever looked up inside the
+ * caller's own workspace and the inbox the call resolved to.
+ */
+function draftClosed(appUrl: string, how: "sent" | "deleted"): DraftEditorToolResult {
+  const base = draftNotFound(appUrl);
+  const receipt = (base.result.structuredContent as { receipt: DraftReceiptFields }).receipt;
+  receipt.headline = how === "sent" ? "This draft was already sent." : "This draft was discarded.";
+  receipt.detail = how === "sent"
+    ? "Nothing was changed. The message is in your Sent folder."
+    : "It was removed from Drafts and nothing was sent.";
+  return base;
+}
+
+/** `resolve`, or "unknown" when there is no lineage or it misbehaves. */
+async function resolveLine(
+  deps: DraftEditorDeps,
+  inbox: DraftEditorProviderInbox,
+  draftId: string,
+): Promise<ResolvedDraft> {
+  const unknown: ResolvedDraft = {
+    requestedId: draftId,
+    draftId,
+    redirected: false,
+    known: false,
+    lineId: null,
+    revision: 0,
+    writtenBy: null,
+    writtenAt: null,
+    closed: null,
+  };
+  if (!deps.lineage) return unknown;
+  try {
+    return await deps.lineage.resolve(inbox, draftId);
+  } catch {
+    return unknown;
+  }
 }
 
 // ---------------------------------------------------------------------------
@@ -810,6 +925,34 @@ function draftNotFound(appUrl: string): DraftEditorToolResult {
  * positive shows a spurious one. Neither changes a byte of what gets sent,
  * because this module never writes a signature either way.
  */
+/** An ISO timestamp, or null for anything `Date` cannot read. */
+function validIso(value: unknown): string | null {
+  if (typeof value !== "string" || value.length === 0) return null;
+  const ms = Date.parse(value);
+  return Number.isFinite(ms) ? new Date(ms).toISOString() : null;
+}
+
+/**
+ * Whether a body already carries the inbox's signature.
+ *
+ * The stored signature text when there is one; otherwise the text half derived
+ * from the stored HTML, which is what `applySignature` appended. (This used to
+ * look at `signature_text` alone, so an inbox with only an HTML signature
+ * always read as "not embedded".) The plain substring test is kept as well: a
+ * signature that sits mid-line is still a signature the person can see.
+ */
+function signatureEmbeddedIn(
+  bodyText: string | null,
+  inbox: DraftEditorProviderInbox,
+): boolean {
+  if (inbox.signature_enabled !== true || typeof bodyText !== "string") return false;
+  if (bodyCarriesSignature(bodyText, inbox)) return true;
+  const signatureText = typeof inbox.signature_text === "string"
+    ? inbox.signature_text.trim()
+    : "";
+  return signatureText.length > 0 && bodyText.includes(signatureText);
+}
+
 export async function readStoredDraft(
   deps: DraftEditorDeps,
   inbox: DraftEditorProviderInbox,
@@ -819,13 +962,8 @@ export async function readStoredDraft(
   if (!stored) return null;
 
   const bodyText = typeof stored.bodyText === "string" ? stored.bodyText : null;
-  const signatureText = typeof inbox.signature_text === "string"
-    ? inbox.signature_text.trim()
-    : "";
-  const signatureEmbedded = inbox.signature_enabled === true &&
-    signatureText.length > 0 &&
-    typeof bodyText === "string" &&
-    bodyText.includes(signatureText);
+  const bodyHtml = typeof stored.bodyHtml === "string" ? stored.bodyHtml : null;
+  const signatureEmbedded = signatureEmbeddedIn(bodyText, inbox);
 
   return {
     draft_id: draftId,
@@ -834,13 +972,17 @@ export async function readStoredDraft(
     bcc: stringList(stored.bcc),
     subject: typeof stored.subject === "string" ? stored.subject : "",
     body_text: bodyText,
-    body_html: typeof stored.bodyHtml === "string" ? stored.bodyHtml : null,
+    body_html: bodyHtml,
     attachments: Array.isArray(stored.attachments) ? stored.attachments : [],
     // See the note in buildDraftEditorEnvelope: a stored draft carries only the
     // RFC header, which is not a server message id.
     in_reply_to: null,
     signature_embedded: signatureEmbedded,
-    last_saved_at: new Date().toISOString(),
+    signature_rich: htmlCarriesSignatureBlock(bodyHtml),
+    // NOT the time of this read. It used to be, which made every Refresh
+    // announce a save that had not happened. The mailbox's own timestamp when
+    // it gives one; the callers refine it with lineage (`lastSaveOf`).
+    last_saved_at: validIso(stored.savedAt),
     thread_id: stored.threadId,
     in_reply_to_header: stored.inReplyTo,
     references_header: stored.references,
@@ -946,6 +1088,12 @@ async function gateDraftTool(
           "insufficient_scope",
           "scope_denied",
           "viewer_role",
+          {
+            headline: "This connection is not allowed to do that.",
+            detail: scope === "read:email"
+              ? "It does not have permission to read mail. Nothing was changed."
+              : "It does not have permission to change drafts. Nothing was changed.",
+          },
         ),
       };
     }
@@ -963,6 +1111,10 @@ async function gateDraftTool(
         "inbox_not_found",
         "inbox_not_found",
         "wrong_workspace",
+        {
+          headline: "That inbox could not be used.",
+          detail: "It may have been disconnected, or this connection is not allowed to use it. Nothing was changed.",
+        },
       ),
     };
   }
@@ -997,6 +1149,10 @@ async function gateDraftTool(
         "draft_editor_disabled",
         "draft_editor_disabled",
         "wrong_workspace",
+        {
+          headline: "The draft editor is not available for this workspace.",
+          detail: "Nothing was changed. You can still edit this draft in your mail app.",
+        },
       ),
     };
   }
@@ -1028,6 +1184,12 @@ async function gateDraftTool(
         "draft_editor_hidden",
         "draft_editor_hidden",
         "wrong_workspace",
+        {
+          headline: "The draft editor is turned off.",
+          detail: workspace.hidden
+            ? "It is off for this whole workspace, so nothing was changed. You can still edit this draft in your mail app."
+            : "It is off for this inbox, so nothing was changed. You can still edit this draft in your mail app.",
+        },
       ),
     };
   }
@@ -1159,9 +1321,16 @@ export async function runDraftRead(
   });
   if (!gate.ok) return gate.failure;
 
+  // ── ANY ID OF THE DRAFT WILL DO ──────────────────────────────────────────
+  // A reloaded card asks with the id of its first tool result, which on IMAP
+  // stopped naming the draft at the first save. The lineage maps it to the
+  // current id, and the envelope returns that id for the card to adopt.
+  const line = await resolveLine(deps, gate.inbox, draftId);
+  if (line.closed) return draftClosed(deps.appUrl, line.closed);
+
   let draft: NormalizedDraft | null;
   try {
-    draft = await readStoredDraft(deps, gate.inbox, draftId);
+    draft = await readStoredDraft(deps, gate.inbox, line.draftId);
   } catch (error) {
     console.error("[mcp-server] draft_read_failed", {
       inbox_id: gate.inbox.id,
@@ -1177,6 +1346,11 @@ export async function runDraftRead(
     );
   }
   if (!draft) return draftNotFound(deps.appUrl);
+  if (line.redirected) draft.resolved_from = line.requestedId;
+  // A read reports the last SAVE, not itself: when, and by whom, as recorded
+  // by the write that made it. Null where nobody recorded one.
+  const lastSave = lastSaveOf(line, draft.last_saved_at);
+  draft.last_saved_at = lastSave.at;
 
   // No editor: the same object in both channels, the way `jsonOk` builds every
   // other read result. The body belongs in `content` here, because the model is
@@ -1199,8 +1373,9 @@ export async function runDraftRead(
     draft,
     inbox: gate.inbox,
     origin: "read",
-    // A read reports what is stored; it does not claim a person wrote it.
-    lastSavedBy: "agent",
+    // Whoever the lineage says wrote it last. This was a hard-coded "agent",
+    // so a Refresh after the person's own save credited the assistant.
+    lastSavedBy: lastSave.by,
     canSend: computeCanSend(caller, draft),
   });
   return cardResult(envelope, draftSummaryText("Draft opened for editing.", draft));
@@ -1276,9 +1451,17 @@ export async function runDraftEditorSave(
   // omitted field means "leave it as stored", so the stored draft has to be
   // read first. It is also what supplies the threading headers and the HTML
   // part's existence, both of which the rules below depend on.
+  //
+  // The id is resolved through the lineage first, so a save retried after a
+  // lost response (it carries the id from BEFORE the save that did land) acts
+  // on the draft that save produced, instead of failing as not found.
+  const line = await resolveLine(deps, inbox, draftId);
+  if (line.closed) return draftClosed(deps.appUrl, line.closed);
+  const currentId = line.draftId;
+
   let stored: NormalizedDraft | null;
   try {
-    stored = await readStoredDraft(deps, inbox, draftId);
+    stored = await readStoredDraft(deps, inbox, currentId);
   } catch (error) {
     console.error("[mcp-server] draft_editor_save_read_failed", {
       inbox_id: inbox.id,
@@ -1312,6 +1495,13 @@ export async function runDraftEditorSave(
         "so nothing was changed. Edit it in your mail client instead.",
       "draft_has_attachments",
       "draft_has_attachments",
+      null,
+      {
+        headline: "This draft has attachments and cannot be edited here.",
+        detail: stored.attachments.length === 1
+          ? "Saving here would remove its attachment, so nothing was changed. Edit it in your mail app instead."
+          : `Saving here would remove its ${stored.attachments.length} attachments, so nothing was changed. Edit it in your mail app instead.`,
+      },
     );
   }
 
@@ -1399,40 +1589,63 @@ export async function runDraftEditorSave(
   const bodyTextChanged = typeof bodyText === "string" &&
     (stored.body_text === null || stored.body_text === "" ||
       normalizeLineEndings(bodyText) !== normalizeLineEndings(stored.body_text));
+  // ── THE RICH SIGNATURE SURVIVES A BODY EDIT (2026-10-13) ─────────────────
+  // "The stated cost" above was paid on every edit: the regeneration ran over
+  // the WHOLE text, signature included, so fixing one word of the message
+  // turned the inbox's logo, link and table into their text lines and put the
+  // `-- ` delimiter into the HTML as a literal line. Now the text is split at
+  // the signature (`rebuildHtmlKeepingSignature`): the person's words are
+  // escaped exactly as before and the signature is the inbox's stored HTML.
+  //
+  // When the person edited the signature lines themselves there is no stored
+  // HTML that says what they typed, and nothing rich is left to keep, so no
+  // HTML part is written at all. The message goes as text/plain saying exactly
+  // what is in the editor, and `body.html: null` in the envelope is what stops
+  // the card offering a formatted view of a message with no formatting. This
+  // also covers the over-long and the cleared body: no part rather than a stale
+  // or an empty one.
   let nextHtml: string | undefined;
   if (stored.body_html !== null) {
     if (bodyTextChanged) {
-      const regenerated = plainTextBodyToHtml(bodyText as string);
-      // Escaping can multiply the input (every `&'"<>` becomes 5-6 bytes), so
-      // the regenerated part can outgrow what a mail body may reasonably be.
-      // Dropping it is the safe way out: the message goes as text/plain, which
-      // still says exactly what the user typed. Keeping the stale part would not.
-      //
-      // An EMPTY regeneration is dropped for the same reason and not for the
-      // opposite one: a cleared body should leave a message with no HTML part,
-      // not one carrying an empty `text/html`.
-      //
-      // ── WHAT THIS IS NOT ─────────────────────────────────────────────────
-      // It is NOT a fix for malformed MIME, and an earlier version of this
-      // comment claimed it was ("makes the IMAP MIME match what Gmail and
-      // Outlook would already do"). That was wrong: the IMAP builder already
-      // matched. `buildDraftMime` -> `buildMimeMessage` branches on
-      // `const hasHtml = !!params.htmlBody` (mime-build.ts), which is the same
-      // truthiness test as Outlook's `contentType: params.htmlBody ? "html" :
-      // "text"`, so `""` and `undefined` built byte-identical messages —
-      // `Content-Type: text/plain`, no multipart boundary, `parsed.html` null.
-      // Verified against all three builders 2026-09-17.
-      //
-      // Keep it anyway: it is tidier and more honest to say `undefined` when we
-      // mean "no HTML part", and it is defence against a FUTURE builder that
-      // branches on `htmlBody !== undefined` instead of on truthiness. Do not
-      // describe it as a bug fix.
-      nextHtml = regenerated.length === 0 || regenerated.length > EMAIL_HTML_MAX_LENGTH
+      const regenerated = rebuildHtmlKeepingSignature(bodyText as string, inbox);
+      nextHtml = regenerated === null || regenerated.length > EMAIL_HTML_MAX_LENGTH
         ? undefined
         : regenerated;
     } else {
       nextHtml = stored.body_html;
     }
+  }
+
+  // ── NOTHING CHANGED, NOTHING WRITTEN ─────────────────────────────────────
+  // A save whose every field already matches what is stored is answered from
+  // the stored draft. This is what makes a retry safe: the first attempt
+  // landed, its response was lost, the card sends the same patch again, and
+  // the lineage has already pointed that call at the draft the first attempt
+  // wrote. Writing again would be harmless on Gmail and Outlook and would move
+  // the id once more on IMAP for no change at all.
+  const sameList = (a: string[], b: string[]) =>
+    a.length === b.length && a.every((v, i) => v === b[i]);
+  if (
+    !bodyTextChanged && nextSubject === stored.subject &&
+    sameList(nextTo, stored.to) && sameList(nextCc, stored.cc) && sameList(nextBcc, stored.bcc)
+  ) {
+    const lastSave = lastSaveOf(line, stored.last_saved_at);
+    const unchanged: NormalizedDraft = {
+      ...stored,
+      last_saved_at: lastSave.at,
+      ...(line.redirected ? { resolved_from: line.requestedId } : {}),
+    };
+    return cardResult(
+      buildDraftEditorEnvelope({
+        appUrl: deps.appUrl,
+        draft: unchanged,
+        inbox,
+        origin: "save",
+        lastSavedBy: lastSave.by,
+        canSend: computeCanSend(caller, unchanged),
+      }),
+      draftSummaryText("Draft saved.", unchanged),
+    );
   }
 
   // ── NO SIGNATURE IS APPLIED, EVER ────────────────────────────────────────
@@ -1445,7 +1658,7 @@ export async function runDraftEditorSave(
   // through `applySignature`.
   let written: { draft_id: string; updated_at?: string };
   try {
-    written = await deps.updateDraft(inbox, draftId, {
+    written = await deps.updateDraft(inbox, currentId, {
       to: nextTo,
       cc: nextCc,
       bcc: nextBcc,
@@ -1470,7 +1683,23 @@ export async function runDraftEditorSave(
       "The mail provider refused the write, so the stored draft is unchanged.",
       "provider_error",
       "provider_error",
+      null,
+      {
+        headline: "The draft could not be saved.",
+        detail: "Your mail provider did not accept the change, so the draft is as it was. Try again in a moment.",
+      },
     );
+  }
+
+  const savedAt = written.updated_at ?? new Date(nowMs(deps)).toISOString();
+  // Awaited, so the line is current before the card can ask again. Fail-soft:
+  // the draft is saved either way.
+  if (deps.lineage) {
+    try {
+      await deps.lineage.recordWrite(inbox, line, written.draft_id, "user", savedAt);
+    } catch {
+      // Bookkeeping only. See draft-lineage.ts.
+    }
   }
 
   const saved: NormalizedDraft = {
@@ -1485,7 +1714,12 @@ export async function runDraftEditorSave(
     subject: nextSubject,
     body_text: nextText,
     body_html: nextHtml ?? null,
-    last_saved_at: written.updated_at ?? new Date(nowMs(deps)).toISOString(),
+    // Recomputed, not carried over: the person may have removed or rewritten
+    // the signature, and the HTML part may have just lost its formatted one.
+    signature_embedded: signatureEmbeddedIn(nextText, inbox),
+    signature_rich: htmlCarriesSignatureBlock(nextHtml),
+    last_saved_at: savedAt,
+    ...(line.redirected ? { resolved_from: line.requestedId } : {}),
   };
 
   const envelope = buildDraftEditorEnvelope({
@@ -1905,6 +2139,10 @@ export async function runDraftEditorHide(
         "insufficient_role",
         "insufficient_role",
         "viewer_role",
+        {
+          headline: "Only workspace owners and admins can change this for the whole workspace.",
+          detail: "Nothing was changed. You can change it for this inbox only, or ask an owner or admin.",
+        },
       );
     }
   }

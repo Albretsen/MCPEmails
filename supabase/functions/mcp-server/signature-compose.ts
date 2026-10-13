@@ -228,6 +228,105 @@ export function applySignature<T extends { textBody: string; htmlBody?: string }
 }
 
 // ---------------------------------------------------------------------------
+// Editing a signed body as plain text without losing the rich signature
+// ---------------------------------------------------------------------------
+
+/** LF line endings, no trailing blanks on any line: the form two texts are compared in. */
+function comparableText(text: string): string {
+  return text.replace(/\r\n?/g, "\n").split("\n").map((line) => line.replace(/[ \t]+$/, ""))
+    .join("\n");
+}
+
+/** Where `needle` sits in `hay` as whole lines, searching from the end; -1 when it does not. */
+function lastWholeLineMatch(hay: string, needle: string): number {
+  let from = hay.length;
+  while (from >= 0) {
+    const at = hay.lastIndexOf(needle, from);
+    if (at === -1) return -1;
+    const end = at + needle.length;
+    if (end === hay.length || hay[end] === "\n") return at;
+    from = at - 1;
+  }
+  return -1;
+}
+
+/**
+ * True when `text` still carries the inbox's signature text, untouched.
+ *
+ * "Untouched" is modulo line endings and trailing blanks, which a `<textarea>`
+ * changes without the person doing anything, and needs whole lines: a signature
+ * with two characters typed after it is an edited signature.
+ */
+export function bodyCarriesSignature(text: string, inbox: SignatureInbox): boolean {
+  return splitAtSignature(text, inbox) !== null;
+}
+
+function splitAtSignature(
+  text: string,
+  inbox: SignatureInbox,
+): { before: string; after: string; html: string } | null {
+  const sig = composeSignatureBlocks(inbox);
+  if (!sig) return null;
+  const sigText = comparableText(sig.text).trim();
+  if (!sigText) return null;
+  // A leading newline so a body that IS the signature still has a line break
+  // in front of its delimiter to match on.
+  const hay = `\n${comparableText(text)}`;
+  // With the delimiter `applySignature` writes ("-- " loses its space above),
+  // then without it: a provider that hands the text back derived from HTML
+  // (Outlook) has no delimiter line.
+  for (const needle of [`\n--\n${sigText}`, `\n${sigText}`]) {
+    const at = lastWholeLineMatch(hay, needle);
+    if (at === -1) continue;
+    return {
+      before: hay.slice(0, at).replace(/^\n+|\n+$/g, ""),
+      after: hay.slice(at + needle.length).replace(/^\n+/, ""),
+      html: sig.html,
+    };
+  }
+  return null;
+}
+
+/**
+ * The HTML part for a plain-text body a person just edited, keeping the inbox's
+ * rich signature. Null when the body no longer carries that signature.
+ *
+ * The draft editor is a plain-text surface over a message whose HTML part ends
+ * in the inbox's formatted signature (logo, links, a table). Regenerating the
+ * whole HTML part from the edited text turned that signature into its text
+ * lines, with the `-- ` delimiter as a literal line of HTML. Here the text is
+ * split at the signature instead: what the person wrote is escaped by
+ * `plainTextBodyToHtml` as before, and the signature is the STORED signature
+ * HTML in the same wrapper `applySignature` writes, so the result is the
+ * message `applySignature` would have built for the new text. The delimiter is
+ * a plain-text convention and never reaches the HTML.
+ *
+ * Text after the signature (the quoted original of a reply) follows it,
+ * escaped.
+ *
+ * NULL MEANS THERE IS NOTHING RICH LEFT. The person changed the signature text
+ * itself, or the inbox has no signature, so every byte of an HTML part would be
+ * escaped text. The caller then writes no HTML part at all, which is what a
+ * text-only send with no signature has always been, and what lets a client
+ * stop offering a formatted view of a message that has no formatting.
+ */
+export function rebuildHtmlKeepingSignature(
+  text: string,
+  inbox: SignatureInbox,
+): string | null {
+  const split = splitAtSignature(text, inbox);
+  if (!split) return null;
+  const sigHtmlBlock = `\n<div class="${SIGNATURE_HTML_CLASS}">${split.html}</div>`;
+  const tail = split.after ? `\n<br>\n${plainTextBodyToHtml(split.after)}` : "";
+  return `${plainTextBodyToHtml(split.before)}${sigHtmlBlock}${tail}`;
+}
+
+/** True when an HTML part carries our signature wrapper. */
+export function htmlCarriesSignatureBlock(html: string | null | undefined): boolean {
+  return typeof html === "string" && html.includes(`class="${SIGNATURE_HTML_CLASS}"`);
+}
+
+// ---------------------------------------------------------------------------
 // Held sends: who signs, and when
 // ---------------------------------------------------------------------------
 

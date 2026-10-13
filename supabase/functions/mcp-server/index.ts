@@ -473,7 +473,20 @@ import {
 } from "./protocol-version-header.ts";
 import { dropRedundantAction, normalizeArgumentAliases } from "./argument-aliases.ts";
 import {
+  closeDraftLine,
+  type DraftLineageRow,
+  type DraftLineageScope,
+  type DraftLineageStore,
+  type DraftWriter,
+  recordDraftWrite,
+  resolveDraftId,
+  type ResolvedDraft,
+} from "./draft-lineage.ts";
+import { htmlCarriesSignatureBlock } from "./signature-compose.ts";
+import {
   byteStringToBase64url,
+  gmailHeaderValue,
+  invalidRecipientIn,
   type RecipientOverride,
   recipientOverrideFrom,
   rewriteRecipientHeaders,
@@ -24628,6 +24641,13 @@ interface DraftContent {
   bodyText?: string | null;
   bodyHtml?: string | null;
   attachments?: { filename: string; size_bytes: number | null; mime_type: string | null }[];
+  /**
+   * The mailbox's own timestamp for the stored draft, when the read has one:
+   * the message's Date header (IMAP), `internalDate` (Gmail) or
+   * `lastModifiedDateTime` (Outlook). The editor shows it as "saved at"; a read
+   * used to stamp the time of the read instead.
+   */
+  savedAt?: string | null;
 }
 
 
@@ -24663,7 +24683,9 @@ async function imapListDrafts(
       const uids = await client.uidSearch("ALL");
       if (uids.length > 0) {
         const page = uids.slice(-limit).reverse();
-        summaries = await client.fetchSummaries(page);
+        // `includeCc`: the listing reported `cc: []` for every IMAP draft,
+        // whatever the draft held. ENVELOPE carries Cc; it was never read.
+        summaries = await client.fetchSummaries(page, { includeCc: true });
       }
     } catch {
       // No Drafts mailbox on this account (and nothing to create for a list
@@ -24673,7 +24695,7 @@ async function imapListDrafts(
       draft_id: encodeImapId(draftFolder, s.uid),
       subject: decodeEnvelopeSubject(s.envelope.subject || "(no subject)"),
       to: s.envelope.to.map(decodeEnvelopeAddress),
-      cc: [],
+      cc: (s.envelope.cc ?? []).map(decodeEnvelopeAddress),
       created_at: imapDateToIso(s.envelope.date),
     }));
   } catch (err) {
@@ -24732,6 +24754,7 @@ async function imapGetDraft(
         size_bytes: typeof a.size === "number" ? a.size : null,
         mime_type: a.mimeType ?? null,
       })),
+      savedAt: getHeader(h, "date") ?? null,
     };
   } catch (err) {
     if (err instanceof ImapAuthError) throw new Error("imap_auth_failed");
@@ -25251,10 +25274,13 @@ async function gmailListDrafts(
           payload?: { headers?: { name: string; value: string }[] };
           internalDate?: string;
         };
+        // Header names are matched without regard to case. Gmail returns them
+        // as the message spells them, and a draft another client wrote may say
+        // `CC:` or `cc:`, which an exact `"Cc"` match read as no Cc at all.
         const hdr = msgData.payload?.headers ?? [];
-        const subject = hdr.find((h) => h.name === "Subject")?.value ?? "(no subject)";
-        const toRaw = hdr.find((h) => h.name === "To")?.value ?? "";
-        const ccRaw = hdr.find((h) => h.name === "Cc")?.value ?? "";
+        const subject = gmailHeaderValue(hdr, "Subject") ?? "(no subject)";
+        const toRaw = gmailHeaderValue(hdr, "To") ?? "";
+        const ccRaw = gmailHeaderValue(hdr, "Cc") ?? "";
         const internalDate = msgData.internalDate
           ? new Date(parseInt(msgData.internalDate, 10)).toISOString()
           : new Date().toISOString();
@@ -25346,9 +25372,12 @@ async function gmailGetDraftForEditor(
     if (resp.status === 401) throw new Error("gmail_auth_failed");
     return null;
   }
-  const data = (await resp.json()) as { message?: { threadId?: string; raw?: string } };
+  const data = (await resp.json()) as {
+    message?: { threadId?: string; raw?: string; internalDate?: string };
+  };
   const raw = data.message?.raw;
   if (typeof raw !== "string") return null;
+  const internalMs = Number(data.message?.internalDate);
   // `atob` of the base64url form yields a latin1 string — one char per byte —
   // which is exactly what `parseEmail` documents as its input, so per-part
   // charset decoding still happens where it belongs.
@@ -25369,6 +25398,9 @@ async function gmailGetDraftForEditor(
       size_bytes: typeof a.size === "number" ? a.size : null,
       mime_type: a.mimeType ?? null,
     })),
+    savedAt: Number.isFinite(internalMs) && internalMs > 0
+      ? new Date(internalMs).toISOString()
+      : (getHeader(h, "date") ?? null),
   };
 }
 
@@ -25471,8 +25503,12 @@ async function gmailUpdateDraft(
     if (resp.status === 404) throw new Error("draft_not_found");
     throw new Error(`Gmail drafts.update error: ${resp.statusText}`);
   }
+  // The id Gmail answers with, not the one that was passed. They are expected
+  // to be equal; if Gmail ever hands back a different one, that is the id the
+  // draft now has, and the lineage records the move like an IMAP rewrite.
+  const updated = (await resp.json().catch(() => null)) as { id?: unknown } | null;
   return {
-    draft_id: draftId,
+    draft_id: typeof updated?.id === "string" && updated.id ? updated.id : draftId,
     subject: params.subject,
     updated_at: new Date().toISOString(),
   };
@@ -25656,6 +25692,7 @@ async function outlookGetDraftForEditor(
     body?: { contentType?: string; content?: string };
     hasAttachments?: boolean;
     conversationId?: string;
+    lastModifiedDateTime?: string;
     toRecipients?: { emailAddress: { address: string; name?: string } }[];
     ccRecipients?: { emailAddress: { address: string; name?: string } }[];
     bccRecipients?: { emailAddress: { address: string; name?: string } }[];
@@ -25704,6 +25741,7 @@ async function outlookGetDraftForEditor(
     bodyText: isHtml ? stripHtmlToText(content) : content,
     bodyHtml: isHtml ? content : null,
     attachments,
+    savedAt: data.lastModifiedDateTime ?? null,
   };
 }
 
@@ -26285,6 +26323,111 @@ async function allReachableInboxesHideDraftEditor(
   }
 }
 
+// ---------------------------------------------------------------------------
+// Draft lineage (draft-lineage.ts): the `public.draft_lineage` store.
+//
+// Service-role reads and writes, and EVERY statement filters on workspace_id
+// AND inbox_id. The inbox id always comes from `resolveInboxArg`, which has
+// already applied the calling key's workspace and inbox allowlist.
+//
+// Each method throws on a PostgREST error and the functions in
+// draft-lineage.ts catch, log and carry on. That covers a database where the
+// table does not exist yet (this function deployed ahead of
+// 20261013120000_draft_lineage.sql): PostgREST answers with an error, the id
+// resolves to itself, and every draft tool behaves as it did before.
+// ---------------------------------------------------------------------------
+const DRAFT_LINEAGE_COLUMNS =
+  "line_id, draft_id, revision, written_by, written_at, closed_at, closed_reason";
+
+const draftLineageStore: DraftLineageStore = {
+  async find(scope, draftId) {
+    const { data, error } = await supabase
+      .from("draft_lineage")
+      .select(DRAFT_LINEAGE_COLUMNS)
+      .eq("workspace_id", scope.workspaceId)
+      .eq("inbox_id", scope.inboxId)
+      .eq("draft_id", draftId)
+      .maybeSingle();
+    if (error) throw new Error(error.message);
+    return (data as DraftLineageRow | null) ?? null;
+  },
+  async head(scope, lineId) {
+    const { data, error } = await supabase
+      .from("draft_lineage")
+      .select(DRAFT_LINEAGE_COLUMNS)
+      .eq("workspace_id", scope.workspaceId)
+      .eq("inbox_id", scope.inboxId)
+      .eq("line_id", lineId)
+      .order("revision", { ascending: false })
+      .order("written_at", { ascending: false })
+      .limit(1)
+      .maybeSingle();
+    if (error) throw new Error(error.message);
+    return (data as DraftLineageRow | null) ?? null;
+  },
+  async upsert(scope, rows) {
+    if (rows.length === 0) return;
+    const { error } = await supabase
+      .from("draft_lineage")
+      .upsert(
+        rows.map((row) => ({
+          ...row,
+          workspace_id: scope.workspaceId,
+          inbox_id: scope.inboxId,
+          // A reused id starts over as an open row.
+          closed_at: null,
+          closed_reason: null,
+        })),
+        { onConflict: "inbox_id,draft_id" },
+      );
+    if (error) throw new Error(error.message);
+  },
+  async close(scope, lineId, reason, at) {
+    const { error } = await supabase
+      .from("draft_lineage")
+      .update({ closed_at: at, closed_reason: reason })
+      .eq("workspace_id", scope.workspaceId)
+      .eq("inbox_id", scope.inboxId)
+      .eq("line_id", lineId);
+    if (error) throw new Error(error.message);
+  },
+};
+
+/** Null under introspection, where the default client points at nothing. */
+function lineageStore(): DraftLineageStore | null {
+  return INTROSPECTION_ONLY ? null : draftLineageStore;
+}
+
+function lineageScope(apiKey: ApiKeyRow, inboxId: string): DraftLineageScope {
+  return { workspaceId: apiKey.workspace_id, inboxId };
+}
+
+/** Any id of a draft -> its current id. Never throws; unknown resolves to itself. */
+function resolveDraftLine(
+  apiKey: ApiKeyRow,
+  inboxId: string,
+  draftId: string,
+): Promise<ResolvedDraft> {
+  return resolveDraftId(lineageStore(), lineageScope(apiKey, inboxId), draftId);
+}
+
+/** Record a draft write. Never throws. */
+function recordDraftLine(
+  apiKey: ApiKeyRow,
+  inboxId: string,
+  previous: ResolvedDraft | null,
+  draftId: string,
+  writtenBy: DraftWriter,
+  at?: string,
+): Promise<void> {
+  return recordDraftWrite(lineageStore(), lineageScope(apiKey, inboxId), {
+    previous,
+    draftId,
+    writtenBy,
+    at,
+  });
+}
+
 /**
  * Read one draft with its body, per provider.
  *
@@ -26361,6 +26504,11 @@ function draftEditorDepsFor(apiKey: ApiKeyRow): DraftEditorDeps {
     getDraft: getDraftForEditor,
     updateDraft: updateDraftForEditor,
     isValidEmailAddress,
+    lineage: {
+      resolve: (inbox, draftId) => resolveDraftLine(apiKey, inbox.id, draftId),
+      recordWrite: (inbox, previous, draftId, writtenBy, at) =>
+        recordDraftLine(apiKey, inbox.id, previous, draftId, writtenBy, at),
+    },
     setDraftEditorHidden: async (scope, ids, hidden) => {
       // Scoped by workspace on BOTH branches, not just by id. The inbox id
       // already came through `resolveInbox` (which applies the workspace filter
@@ -26459,6 +26607,7 @@ async function draftEditorEnvelopeForWrite(
       attachments: [],
       in_reply_to: input.inReplyTo ?? null,
       signature_embedded: input.signatureEmbedded,
+      signature_rich: htmlCarriesSignatureBlock(input.params.htmlBody),
       last_saved_at: input.lastSavedAt,
       // The headers the write carried. On an update they are the ones read off
       // the existing draft, and they are what makes the envelope say `threaded`
@@ -26642,6 +26791,7 @@ async function executeCreateReplyDraft(
         html: signed.htmlBody,
         text: signed.textBody,
       });
+      await recordDraftLine(apiKey, inbox.id, null, draft.id, "agent");
       return { result: jsonOk({ draft_id: draft.id, subject: draft.subject ?? "(no subject)", to: draft.toRecipients, created_at: draft.createdDateTime ?? new Date().toISOString(), in_reply_to: messageId, threading: "native" }), logStatus: "success", logErrorCode: null };
     }
 
@@ -26724,6 +26874,8 @@ async function executeCreateReplyDraft(
     // on email_compose reply.
     const params: DraftParams = { to, cc: replyExtraAddresses(args["cc"]), bcc: replyExtraAddresses(args["bcc"]), subject, body: buildReplyTextBody(signed.textBody, originalFrom, originalDate, originalBody), htmlBody: signed.htmlBody, threadId, inReplyTo: inReplyTo || undefined, references: references || undefined };
     const created = inbox.provider === "gmail" ? await gmailCreateDraft(inbox, params) : await imapCreateDraft(inbox, params);
+    // Opens the draft's line (draft-lineage.ts). Fail-soft.
+    await recordDraftLine(apiKey, inbox.id, null, created.draft_id, "agent", created.created_at);
     const output: DraftReplyResult = { ...created, in_reply_to: messageId, threading: inbox.provider === "gmail" ? "native" : "standards_based" };
     // MCP Apps (contract §8) — see the note in executeCreateDraft. This is the
     // one path that can populate `draft.in_reply_to`: `messageId` is a SERVER
@@ -26878,13 +27030,18 @@ async function executeCreateDraft(
     string,
     unknown
   >;
-  const cardEnvelope = await draftEditorEnvelopeForWrite(apiKey, inbox, {
-    draftId: draftResult.draft_id,
-    origin: "create",
-    params: draftParams,
-    signatureEmbedded: signed.textBody !== body,
-    lastSavedAt: draftResult.created_at,
-  });
+  // The envelope's reads and the lineage write run together: both are our own
+  // tables, and neither can fail the draft that is already stored.
+  const [cardEnvelope] = await Promise.all([
+    draftEditorEnvelopeForWrite(apiKey, inbox, {
+      draftId: draftResult.draft_id,
+      origin: "create",
+      params: draftParams,
+      signatureEmbedded: signed.textBody !== body,
+      lastSavedAt: draftResult.created_at,
+    }),
+    recordDraftLine(apiKey, inbox.id, null, draftResult.draft_id, "agent", draftResult.created_at),
+  ]);
   return {
     result: draftCardToolResult(createPayload, cardEnvelope),
     logStatus: "success", logErrorCode: null,
@@ -26907,9 +27064,9 @@ async function executeUpdateDraft(
     };
   }
   const args = rawArgs as Record<string, unknown>;
-  const draftId = typeof args["draft_id"] === "string" && args["draft_id"].length > 0
+  const requestedDraftId = typeof args["draft_id"] === "string" && args["draft_id"].length > 0
     ? args["draft_id"] : null;
-  if (!draftId) {
+  if (!requestedDraftId) {
     return {
       result: { content: [{ type: "text", text: "draft_update: draft_id is required and must be a non-empty string." }], isError: true },
       logStatus: "error", logErrorCode: "-32602",
@@ -26976,6 +27133,15 @@ async function executeUpdateDraft(
 
   const caps = getProviderCapabilities(inbox.provider);
   if (!caps.drafts) return unsupportedFeatureError("drafts", inbox.provider);
+
+  // ── ANY ID OF THE DRAFT WILL DO (draft-lineage.ts) ───────────────────────
+  // On IMAP every update and every editor save gives the draft a new id, and a
+  // model holds the one from before. The lineage maps an older id of the same
+  // draft to its current one, so the update lands on the draft instead of
+  // `draft_not_found`. An id with no line, and any lineage failure, resolves
+  // to itself, which is the behaviour before lineage existed.
+  const draftLine = await resolveDraftLine(apiKey, inbox.id, requestedDraftId);
+  const draftId = draftLine.draftId;
 
   // When any of subject/to/cc/bcc was omitted, preserve the draft's existing
   // value rather than blanking it (Gmail/IMAP updates are full-replace; Outlook/
@@ -27067,6 +27233,16 @@ async function executeUpdateDraft(
   // stamped here rather than in the three provider functions: they are told the
   // headers and do not report them back.
   updateResult.threaded = Boolean(inReplyTo || threadId);
+  // The line moves to the id the provider returned. Awaited so the next call
+  // with the old id already resolves; fail-soft, the draft is updated either way.
+  await recordDraftLine(
+    apiKey,
+    inbox.id,
+    draftLine,
+    updateResult.draft_id,
+    "agent",
+    updateResult.updated_at,
+  );
   const updatePayload = buildDraftMutationEnvelope(updateResult) as unknown as Record<
     string,
     unknown
@@ -27133,6 +27309,31 @@ async function executeSendDraft(
   const caps = getProviderCapabilities(inbox.provider);
   if (!caps.drafts) return unsupportedFeatureError("drafts", inbox.provider);
 
+  // ── A recipient that is not an address is refused, not written (2026-10-13)
+  // The override below drops what it cannot read and writes the rest into the
+  // header as given, so a mistyped address was either left off the mail or
+  // stored as a recipient no server accepts. Nothing has been touched yet.
+  const badRecipient = invalidRecipientIn(args, isValidEmailAddress);
+  if (badRecipient) {
+    return {
+      result: {
+        content: [{
+          type: "text",
+          text: `draft_send: invalid email address in ${badRecipient.field}: "${String(badRecipient.entry)}". ` +
+            "Nothing was sent and the draft was not changed.",
+        }],
+        isError: true,
+      },
+      logStatus: "error", logErrorCode: "invalid_recipient",
+    };
+  }
+
+  // Any id of the draft will do: see the note in executeUpdateDraft. A held
+  // send that is approved later re-runs this function with the id it was
+  // queued with, and resolves here to the draft as it stands then.
+  let draftLine = await resolveDraftLine(apiKey, inbox.id, draftId);
+  draftId = draftLine.draftId;
+
   // ── Recipients set at send time (2026-09-23) ─────────────────────────────
   // to / cc / bcc given here replace the draft's stored lists BEFORE anything
   // else looks at the draft, so the recipient preflight, the approval card and
@@ -27146,7 +27347,14 @@ async function executeSendDraft(
   let approvalArgs: Record<string, unknown> = args;
   if (recipientOverride) {
     try {
-      draftId = await rewriteDraftRecipients(inbox, draftId, recipientOverride);
+      const rewrittenId = await rewriteDraftRecipients(inbox, draftId, recipientOverride);
+      // On IMAP the rewrite re-stored the message under a new id. Record it, so
+      // the id the caller holds keeps resolving if this send is then held.
+      if (rewrittenId !== draftId) {
+        await recordDraftLine(apiKey, inbox.id, draftLine, rewrittenId, "agent");
+        draftLine = await resolveDraftLine(apiKey, inbox.id, rewrittenId);
+      }
+      draftId = rewrittenId;
     } catch (err) {
       const message = err instanceof Error ? err.message : String(err);
       if (message === "draft_not_found") {
@@ -27331,16 +27539,21 @@ async function executeSendDraft(
   // payload already carries `sent_at` at the top level (the §8 merge), and the
   // card formats it with the browser's resolved locale. So the sentence says
   // where it went and the card says when.
-  const sentCard = await draftEditorReceiptFor(
-    apiKey,
-    inbox,
-    "sent",
-    `Delivered via ${draftProviderBlock(inbox.provider).label}.`,
-    // A label, not a sentence: it sits beside the sender address in the card's
-    // header, where "Sent." read as a stray full stop. §4's fallback headline
-    // for this outcome has always been the bare word.
-    "Sent",
-  );
+  const [sentCard] = await Promise.all([
+    draftEditorReceiptFor(
+      apiKey,
+      inbox,
+      "sent",
+      `Delivered via ${draftProviderBlock(inbox.provider).label}.`,
+      // A label, not a sentence: it sits beside the sender address in the card's
+      // header, where "Sent." read as a stray full stop. §4's fallback headline
+      // for this outcome has always been the bare word.
+      "Sent",
+    ),
+    // The line ends here: no id of this draft resolves any more, and a card
+    // still holding one is told the draft was sent.
+    closeDraftLine(lineageStore(), lineageScope(apiKey, inbox.id), draftLine, "sent"),
+  ]);
   return {
     result: draftCardToolResult(sendResult as unknown as Record<string, unknown>, sentCard),
     logStatus: "success", logErrorCode: null,
@@ -27363,9 +27576,9 @@ async function executeDeleteDraft(
     };
   }
   const args = rawArgs as Record<string, unknown>;
-  const draftId = typeof args["draft_id"] === "string" && args["draft_id"].length > 0
+  const requestedDraftId = typeof args["draft_id"] === "string" && args["draft_id"].length > 0
     ? args["draft_id"] : null;
-  if (!draftId) {
+  if (!requestedDraftId) {
     return {
       result: { content: [{ type: "text", text: "draft_delete: draft_id is required and must be a non-empty string." }], isError: true },
       logStatus: "error", logErrorCode: "-32602",
@@ -27378,6 +27591,10 @@ async function executeDeleteDraft(
 
   const caps = getProviderCapabilities(inbox.provider);
   if (!caps.drafts) return unsupportedFeatureError("drafts", inbox.provider);
+
+  // Any id of the draft will do: see the note in executeUpdateDraft.
+  const draftLine = await resolveDraftLine(apiKey, inbox.id, requestedDraftId);
+  const draftId = draftLine.draftId;
 
   let deleteResult: DraftDeleteResult;
   try {
@@ -27418,13 +27635,16 @@ async function executeDeleteDraft(
   // MCP Apps (contract §8): a discarded draft flips the card to a receipt, so
   // the editor the person was looking at says what happened to it rather than
   // sitting on a draft that no longer exists.
-  const discardedCard = await draftEditorReceiptFor(
-    apiKey,
-    inbox,
-    "discarded",
-    "The draft was removed from Drafts without being sent.",
-    "Discarded. Nothing was sent.",
-  );
+  const [discardedCard] = await Promise.all([
+    draftEditorReceiptFor(
+      apiKey,
+      inbox,
+      "discarded",
+      "The draft was removed from Drafts without being sent.",
+      "Discarded. Nothing was sent.",
+    ),
+    closeDraftLine(lineageStore(), lineageScope(apiKey, inbox.id), draftLine, "deleted"),
+  ]);
   return {
     result: draftCardToolResult(deleteResult as unknown as Record<string, unknown>, discardedCard),
     logStatus: "success", logErrorCode: null,

@@ -245,6 +245,12 @@ export interface ImapEnvelope {
   messageId: string;
   /** ENVELOPE's in-reply-to field, verbatim; "" when NIL. */
   inReplyTo?: string;
+  /**
+   * ENVELOPE's cc list. Present only when the caller asked for it
+   * (`fetchSummaries(..., { includeCc: true })`), so every other caller's
+   * envelope object has the keys it always had.
+   */
+  cc?: ImapAddress[];
 }
 
 export interface ImapMessageSummary {
@@ -1239,7 +1245,13 @@ export class ImapClient {
    */
   fetchSummaries(
     uids: number[],
-    options: { includePreview?: boolean; maxLiteralBytes?: number; gmailLabels?: boolean } = {},
+    options: {
+      includePreview?: boolean;
+      maxLiteralBytes?: number;
+      gmailLabels?: boolean;
+      /** Also parse ENVELOPE's cc list into `envelope.cc`. No extra FETCH item. */
+      includeCc?: boolean;
+    } = {},
   ): Promise<ImapMessageSummary[]> {
     if (uids.length === 0) return Promise.resolve([]);
     return this.runExclusive(async () => {
@@ -1287,7 +1299,12 @@ export class ImapClient {
   private async fetchSummariesUnlocked(
     verb: "UID FETCH" | "FETCH",
     set: string,
-    options: { includePreview?: boolean; maxLiteralBytes?: number; gmailLabels?: boolean },
+    options: {
+      includePreview?: boolean;
+      maxLiteralBytes?: number;
+      gmailLabels?: boolean;
+      includeCc?: boolean;
+    },
   ): Promise<{ status: "OK" | "NO" | "BAD"; text: string; summaries: ImapMessageSummary[] }> {
     const tag = this.nextTag();
     // `summaryPreviewItem()` is " BODY.PEEK[1]<0.2048>" for every MCP call;
@@ -1309,7 +1326,7 @@ export class ImapClient {
     if (resp.status === "OK") {
       for (const line of resp.untagged) {
         if (!/^\* \d+ FETCH /.test(line)) continue;
-        const parsed = parseFetchLine(line);
+        const parsed = parseFetchLine(line, options.includeCc === true);
         if (parsed) summaries.push(parsed);
       }
     }
@@ -2906,7 +2923,7 @@ async function withTimeout<T>(p: Promise<T>, ms: number): Promise<T> {
 type Token = string | Token[];
 
 /** Parse a single "* N FETCH (...)" line into a summary. */
-function parseFetchLine(line: string): ImapMessageSummary | null {
+function parseFetchLine(line: string, includeCc = false): ImapMessageSummary | null {
   const open = line.indexOf("(");
   if (open === -1) return null;
   const tokens = tokenize(line.slice(open));
@@ -2948,7 +2965,7 @@ function parseFetchLine(line: string): ImapMessageSummary | null {
     } else if (key === "FLAGS" && Array.isArray(attrs[i + 1])) {
       flags = (attrs[i + 1] as Token[]).filter((t): t is string => typeof t === "string");
     } else if (key === "ENVELOPE" && Array.isArray(attrs[i + 1])) {
-      envelope = parseEnvelope(attrs[i + 1] as Token[]);
+      envelope = parseEnvelope(attrs[i + 1] as Token[], includeCc);
     } else if (key === "BODYSTRUCTURE" && Array.isArray(attrs[i + 1])) {
       hasAttachments = bodyStructureHasAttachment(attrs[i + 1] as Token[]);
       structure = attrs[i + 1] as Token[];
@@ -2992,7 +3009,7 @@ function parseFetchLine(line: string): ImapMessageSummary | null {
 // 2026-09-20), and a guessing one beside it is what shipped CSS (2026-10-04).
 
 /** Parse an IMAP ENVELOPE token list into structured fields. */
-function parseEnvelope(env: Token[]): ImapEnvelope {
+function parseEnvelope(env: Token[], includeCc = false): ImapEnvelope {
   const date = asStr(env[0]);
   const subject = asStr(env[1]);
   const from = parseAddressList(env[2]);
@@ -3007,6 +3024,9 @@ function parseEnvelope(env: Token[]): ImapEnvelope {
     messageId: messageId || "",
     // client-api only; an MCP call's envelope object has the keys it always had.
     ...(wantsThreadHeaders() ? { inReplyTo: asStr(env[8]) || "" } : {}),
+    // ENVELOPE is (date subject from sender reply-to to cc bcc in-reply-to
+    // message-id): cc is field 6. Opt-in, see `ImapEnvelope.cc`.
+    ...(includeCc ? { cc: parseAddressList(env[6]) } : {}),
   };
 }
 

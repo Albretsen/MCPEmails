@@ -494,15 +494,22 @@ Deno.test("the provider block names the transport and the save route", () => {
   // conversation reads the same words for the same account. The ROUTES differ
   // on purpose: this block describes how a save lands, not how a send would.
   assertEquals(draftProviderBlock("imap").label, "IMAP + SMTP");
-  assertEquals(draftProviderBlock("imap").route, "APPEND to Drafts");
+  assertEquals(draftProviderBlock("imap").route, "Saved to your Drafts folder");
   assertEquals(draftProviderBlock("gmail").label, "Gmail API");
-  assertEquals(draftProviderBlock("gmail").route, "users.drafts.update");
+  assertEquals(draftProviderBlock("gmail").route, "Saved to your Gmail drafts");
   assertEquals(draftProviderBlock("outlook").label, "Microsoft Graph");
-  assertEquals(draftProviderBlock("outlook").route, "PATCH /me/messages/{id}");
-  // Only IMAP has something a person editing in the card can be surprised by.
+  assertEquals(draftProviderBlock("outlook").route, "Saved to your Outlook drafts");
+  // A person reads the route in the card's footer: no protocol verbs, no API
+  // method names, no paths.
+  for (const provider of ["imap", "gmail", "outlook"]) {
+    const { route } = draftProviderBlock(provider);
+    assert(!/APPEND|PATCH|users\.|\/me\/|\{id\}/.test(route), `jargon in the ${provider} route`);
+  }
+  // Since draft lineage an older id still resolves, so there is nothing left
+  // for a person editing in the card to be warned about.
   assertEquals(draftProviderBlock("gmail").caveats, []);
   assertEquals(draftProviderBlock("outlook").caveats, []);
-  assertEquals(draftProviderBlock("imap").caveats.length, 1);
+  assertEquals(draftProviderBlock("imap").caveats, []);
 });
 
 Deno.test("subjects, recipients and filenames are neutralised; the body is not", () => {
@@ -848,16 +855,31 @@ Deno.test("RULE: omitted fields are kept, unlike draft{action:\"update\"}", asyn
 
   // An explicit empty array still clears, which is the only way to say "remove
   // the Cc" and must not be confused with omission.
-  const { deps: d2, writes: w2 } = fakeDeps();
+  const { deps: d2, writes: w2 } = fakeDeps({
+    stored: {
+      subject: "s",
+      to: ["a@x.com"],
+      cc: ["c@x.com"],
+      bcc: [],
+      bodyText: "b",
+      bodyHtml: null,
+      attachments: [],
+    },
+  });
   await runDraftEditorSave(d2, caller(), { draft_id: "Drafts:2", cc: [] });
   assertEquals(w2[0].params.cc, []);
 });
 
-Deno.test("RULE: a body_text save regenerates the HTML part from the new text", async () => {
+Deno.test("RULE: a body_text save never leaves the pre-edit wording in an HTML part", async () => {
   // The 2026-09-09 approval_update bug, pre-empted: writing the two parts
   // independently left the HTML part carrying the pre-edit wording, most
   // clients render the HTML part, and the recipient read the sentence that had
   // been replaced.
+  //
+  // This inbox's signature is not in the body, so nothing formatted survives
+  // the edit and no HTML part is written: the message is the text the person
+  // typed and nothing else. (With the signature present the HTML part is
+  // rebuilt around it; see the signature tests below.)
   const { deps, writes } = fakeDeps({
     stored: {
       subject: "s",
@@ -869,18 +891,15 @@ Deno.test("RULE: a body_text save regenerates the HTML part from the new text", 
       attachments: [],
     },
   });
-  await runDraftEditorSave(deps, caller(), {
+  const out = await runDraftEditorSave(deps, caller(), {
     draft_id: "Drafts:2",
     body_text: "The new wording.\nSecond line & <tag>.",
   });
-  const html = writes[0].params.htmlBody!;
-  assert(html.includes("The new wording."), "the HTML part must say what the text says");
-  assert(!html.includes("old"), "the pre-edit wording must not survive in the HTML part");
-  // Escaped, not sanitised: body_text becomes markup only by being escaped, so
-  // there is no sanitizer step to get wrong.
-  assert(html.includes("&amp;"), "the text must be escaped into the HTML part");
-  assert(html.includes("&lt;tag&gt;"), "markup in the text must not become markup");
-  assert(html.includes("<br>"), "newlines become <br>");
+  assertEquals(writes[0].params.body, "The new wording.\nSecond line & <tag>.");
+  assertEquals(writes[0].params.htmlBody, undefined, "no part that could say the old wording");
+  // And the envelope says so, which is what stops the card offering a
+  // formatted view of a message that no longer has any formatting.
+  assertEquals((out.result.structuredContent as any).draft.body.html, null);
 });
 
 Deno.test("RULE: a text-only draft gains no HTML part, and an HTML-only edit keeps it", async () => {
@@ -1836,7 +1855,10 @@ Deno.test("a member cannot hide the card for the whole workspace", async () => {
   assertEquals(out.logErrorCode, "insufficient_role");
   assertEquals(hides.length, 0, "nothing written for a member");
   const detail = String((out.result.structuredContent as any).receipt.detail);
-  assert(detail.includes('scope:"inbox"'), "names the thing the member CAN do");
+  assert(detail.includes("for this inbox only"), "names the thing the member CAN do");
+  assert(!detail.includes("scope:"), "in words a person reads, not argument names");
+  // The model still gets the argument it needs, in `content`.
+  assert(out.result.content[0].text.includes('scope:"inbox"'));
 });
 
 Deno.test("a member cannot un-hide it for the whole workspace either", async () => {
@@ -1919,24 +1941,27 @@ Deno.test("a CRLF-only difference preserves the stored HTML part", async () => {
     body_text: "Line one\r\nLine two\r\n",
   });
   assertEquals(out.result.isError, false);
-  assertEquals(writes.length, 1);
-  assertEquals(
-    writes[0].params.htmlBody,
-    RICH_HTML,
-    "a line-ending-only body must not regenerate the HTML part",
-  );
+  // Nothing differs from what is stored, so nothing is written at all: the
+  // HTML part is untouched and, on IMAP, the draft keeps its id.
+  assertEquals(writes.length, 0);
+  const draft = (out.result.structuredContent as any).draft;
+  assertEquals(draft.body.html, RICH_HTML, "a line-ending-only body must not regenerate the HTML part");
+  assertEquals(draft.draft_id, "Drafts:2");
 });
 
 Deno.test("a lone-CR difference is not a body edit either", async () => {
   const { deps, writes } = fakeDeps({ stored: storedWithHtml("Line one\nLine two") });
-  await runDraftEditorSave(deps, caller(), {
+  const out = await runDraftEditorSave(deps, caller(), {
     draft_id: "Drafts:2",
     body_text: "Line one\rLine two",
+    subject: "A new subject",
   });
+  assertEquals(out.result.isError, false);
+  assertEquals(writes.length, 1, "the subject did change");
   assertEquals(writes[0].params.htmlBody, RICH_HTML);
 });
 
-Deno.test("a GENUINE body edit still regenerates the HTML part", async () => {
+Deno.test("a GENUINE body edit never keeps the stored HTML part", async () => {
   // The narrowness is the point. Regenerating on a real edit is contract §6 and
   // §8's deliberate trade — the 2026-09-09 `approval_update` bug, where the
   // recipient read the sentence the reviewer had replaced — and this fix must
@@ -1946,10 +1971,10 @@ Deno.test("a GENUINE body edit still regenerates the HTML part", async () => {
     draft_id: "Drafts:2",
     body_text: "Line one\r\nLine three\r\n",
   });
-  const html = String(writes[0].params.htmlBody);
+  const html = String(writes[0].params.htmlBody ?? "");
   assert(html !== RICH_HTML, "a real edit must own the HTML part");
-  assert(html.includes("Line three"), "the regenerated part says what the user typed");
   assert(!html.includes("Line two"), "and never the wording that was replaced");
+  assertEquals(writes[0].params.body, "Line one\r\nLine three\r\n");
 });
 
 Deno.test("a subject-only save leaves both body parts exactly as stored", async () => {
@@ -2021,8 +2046,8 @@ Deno.test("writing a body into an HTML-only draft owns the HTML part too", async
     draft_id: "Drafts:2",
     body_text: "Replaced entirely.",
   });
-  const html = String(writes[0].params.htmlBody);
-  assert(html.includes("Replaced entirely."), "the HTML says what the user typed");
+  const html = String(writes[0].params.htmlBody ?? "");
+  assertEquals(writes[0].params.body, "Replaced entirely.");
   assert(!html.includes("cid:logo"), "and nothing of the part it replaced");
 });
 
@@ -2463,7 +2488,8 @@ Deno.test("editor on: draft_read still returns the card envelope and a body-free
     draft: { ...stored!, last_saved_at: sc.draft.last_saved_at },
     inbox: IMAP_INBOX,
     origin: "read",
-    lastSavedBy: "agent",
+    // No lineage in this fake, so nobody is named as the last writer.
+    lastSavedBy: null,
     canSend: true,
   });
   assertEquals(sc, expected);
