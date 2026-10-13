@@ -434,7 +434,8 @@ body {
   outline-offset: 1px;
 }
 
-.btn:disabled {
+.btn:disabled,
+.btn[aria-disabled="true"] {
   cursor: not-allowed;
   opacity: 0.45;
 }
@@ -489,7 +490,8 @@ body {
 
 .link[data-tone="danger"] { color: var(--fg-danger); }
 
-.link:disabled {
+.link:disabled,
+.link[aria-disabled="true"] {
   cursor: default;
   opacity: 0.55;
   text-decoration: none;

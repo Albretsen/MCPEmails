@@ -1,28 +1,46 @@
-import type { ComponentChildren } from "preact";
+import type { ComponentChildren, Ref } from "preact";
 import { useLayoutEffect, useRef } from "preact/hooks";
 import type { Provider } from "../contract";
 import { sanitizeEmailHtml } from "../sanitize";
 
 type Variant = "default" | "primary" | "danger" | "quiet";
 
+/**
+ * `soft` is for a button whose availability changes WHILE IT HAS FOCUS.
+ *
+ * The `disabled` attribute takes focus away: the browser drops it to the
+ * document and keeps only a starting point for the next Tab, which lands on
+ * whatever follows. In the draft editor what follows Save is Send, so a save
+ * that went busy (or failed) left the next Tab, and then Enter, on "Save and
+ * send" (QA, 2026-10-13). A soft button keeps the attribute off, says
+ * `aria-disabled` instead and ignores activation, so focus stays where the user
+ * put it for as long as the button exists.
+ */
 export function Btn(props: {
   children: ComponentChildren;
   onClick?: () => void;
   variant?: Variant;
   disabled?: boolean;
   busy?: boolean;
+  soft?: boolean;
   title?: string;
   type?: "button" | "submit";
+  btnRef?: Ref<HTMLButtonElement>;
 }) {
+  const off = !!(props.disabled || props.busy);
   return (
     <button
       class="btn"
+      ref={props.btnRef}
       type={props.type ?? "button"}
       data-variant={props.variant ?? "default"}
-      disabled={props.disabled || props.busy}
+      disabled={props.soft ? undefined : off}
+      aria-disabled={props.soft && off ? "true" : undefined}
       title={props.title}
       aria-busy={props.busy ? "true" : undefined}
-      onClick={props.onClick}
+      onClick={() => {
+        if (!off) props.onClick?.();
+      }}
     >
       {props.children}
     </button>
@@ -43,15 +61,23 @@ export function TextLink(props: {
   title?: string;
   tone?: "danger";
   disabled?: boolean;
+  /** See `Btn`: unavailable without giving up focus. */
+  soft?: boolean;
+  btnRef?: Ref<HTMLButtonElement>;
 }) {
+  const off = !!props.disabled;
   return (
     <button
       type="button"
       class="link"
+      ref={props.btnRef}
       data-tone={props.tone}
       title={props.title}
-      disabled={props.disabled}
-      onClick={props.onClick}
+      disabled={props.soft ? undefined : off}
+      aria-disabled={props.soft && off ? "true" : undefined}
+      onClick={() => {
+        if (!off) props.onClick();
+      }}
     >
       {props.children}
     </button>

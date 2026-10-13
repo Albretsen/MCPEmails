@@ -364,7 +364,15 @@ async function main() {
 
   // ---- 3b. the lax half of defect 1 ----------------------------------------
 
-  group("a draft changed elsewhere resyncs, even when the response looks the same");
+  // CHANGED 2026-10-13. This used to assert that the box was REPLACED by the
+  // newer body, i.e. that the user's unsaved text was thrown away. That was the
+  // price of never writing stale text over a newer draft, and QA showed the
+  // price being paid: the recovery from a failed save is exactly such a read.
+  // The two halves are now separated (`rebaseEdit`): the resync still happens
+  // (untouched fields take the server's copy, and the version moves), the edit
+  // is kept ON SCREEN and flagged, and what is still refused is the part that
+  // was actually dangerous, writing it with nobody watching.
+  group("a draft changed elsewhere resyncs without eating the edit or writing it");
   {
     const { saves, draw } = mountEditor();
     draw(draftData());
@@ -373,13 +381,24 @@ async function main() {
     await settle();
 
     // The response the old key could not tell apart from the previous one:
-    // same draft_id, same last_saved_at, same origin, different body.
-    draw(draftData({ body: { text: "changed on the phone" } }));
+    // same draft_id, same last_saved_at, same origin, different body AND a
+    // different subject, which the user did not touch.
+    draw(draftData({ subject: "Renamed on the phone", body: { text: "changed on the phone" } }));
     await settle();
-    expect("the box shows the newer body", bodyValue(), "changed on the phone");
+    expect("the user's text is still in the box", bodyValue(), "my local edit");
+    expect(
+      "the field they did not touch took the newer copy",
+      document.getElementById("d-subject").value,
+      "Renamed on the phone",
+    );
+    expect(
+      "and the card says the draft moved under them",
+      root.textContent.includes("changed somewhere else"),
+      true,
+    );
     await runTeardownSaver();
     await settle();
-    expectJson("and nothing stale was written", saves, []);
+    expectJson("and nothing stale was written unattended", saves, []);
     render(null, root);
   }
 
@@ -404,7 +423,14 @@ async function main() {
     await runTeardownSaver();
     await settle();
     expectJson("the pre-refresh contents are not written over the new body", saves, []);
-    expect("and the resync still happened", bodyValue(), "changed on the phone");
+    // CHANGED 2026-10-13: the edit is kept on screen rather than replaced (see
+    // 3b). The resync is still what happened, which the conflict notice shows.
+    expect("the edit is still on screen", bodyValue(), "my local edit");
+    expect(
+      "and the resync still happened",
+      root.textContent.includes("changed somewhere else"),
+      true,
+    );
     render(null, root);
   }
 
@@ -415,7 +441,12 @@ async function main() {
   // to go through the same rule or it is a second way out for the same stale
   // patch.
 
-  group("Send during a resync carries no cross-version patch");
+  // CHANGED 2026-10-13. Inside the window Send used to go ahead with NO patch,
+  // sending the stored draft. That was coherent while a resync discarded the
+  // edit a moment later. Now the edit survives the resync, so sending without
+  // it would put on the wire something other than what the user is looking at,
+  // irreversibly. In that one frame the click does nothing at all.
+  group("Send during a resync does nothing");
   {
     const { saves, draw } = mountEditor();
     draw(draftData());
@@ -432,7 +463,7 @@ async function main() {
     expect("the Send button is there to click", !!send, true);
     send.click();
     await settle();
-    expectJson("it sends the stored draft, with no patch", saves, [{ __send: null }]);
+    expectJson("nothing is saved and nothing is sent", saves, []);
     render(null, root);
   }
 
