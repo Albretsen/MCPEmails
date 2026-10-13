@@ -251,7 +251,7 @@
     "usernamePlaceholder": "留空则使用您的邮箱地址",
     "usernameHint": "仅当您的提供商使用与邮箱地址不同的登录用户名时才需要填写。请查看提供商的邮件设置（例如「用户名」或「账户名」）。",
     "advancedToggle": "高级设置",
-    "advancedHint": "安全模式和单独的登录用户名。默认值适用于几乎所有邮箱。",
+    "advancedHint": "连接类型、安全模式和单独的登录用户名。默认值适用于几乎所有邮箱。",
     "imapSectionLabel": "IMAP（接收邮件）",
     "smtpSectionLabel": "SMTP（发送邮件）",
     "hostPasteHint": "您可以连同端口一起粘贴主机地址，例如 imap.example.com:993。",

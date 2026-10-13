@@ -251,7 +251,7 @@
     "usernamePlaceholder": "Leave blank to use your email address",
     "usernameHint": "Only needed if your provider uses a separate login username instead of your email address. Check your provider's mail settings (e.g. \"Username\" or \"Account name\").",
     "advancedToggle": "Advanced settings",
-    "advancedHint": "Security modes and a separate login username. The defaults work for almost every mailbox.",
+    "advancedHint": "Connection type, security modes and a separate login username. The defaults work for almost every mailbox.",
     "imapSectionLabel": "IMAP (receiving mail)",
     "smtpSectionLabel": "SMTP (sending mail)",
     "hostPasteHint": "You can paste the host with its port, like imap.example.com:993.",

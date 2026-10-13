@@ -251,7 +251,7 @@
     "usernamePlaceholder": "La stå tomt for å bruke e-postadressen din",
     "usernameHint": "Trengs bare hvis leverandøren din bruker et eget brukernavn for innlogging i stedet for e-postadressen din. Sjekk e-postinnstillingene til leverandøren din (f.eks. «Brukernavn» eller «Kontonavn»).",
     "advancedToggle": "Avanserte innstillinger",
-    "advancedHint": "Sikkerhetsmodus og et eget brukernavn for innlogging. Standardverdiene virker for nesten alle postkasser.",
+    "advancedHint": "Tilkoblingstype, sikkerhetsmodus og et eget brukernavn for innlogging. Standardverdiene virker for nesten alle postkasser.",
     "imapSectionLabel": "IMAP (mottak av e-post)",
     "smtpSectionLabel": "SMTP (sending av e-post)",
     "hostPasteHint": "Du kan lime inn verten med port, for eksempel imap.example.com:993.",
