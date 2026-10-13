@@ -353,11 +353,15 @@ async function main() {
     await c.done();
   }
 
-  group("R2. Backspace in an empty field removes the last chip");
+  group("R2. Backspace in an empty field removes the last chip, on the second press");
   {
     const c = await editor({ recipients: { to: ["a@x.example", "b@x.example"] } });
     const to = c.root.querySelector("#d-to");
     to.focus();
+    c.key(to, "Backspace");
+    await settle();
+    // The two-step itself is pinned in draft-ux.test.mjs.
+    expectJson("the first press removes nothing", chipsIn(c, "to"), ["a@x.example", "b@x.example"]);
     c.key(to, "Backspace");
     await settle();
     expectJson("the last chip went", chipsIn(c, "to"), ["a@x.example"]);
@@ -442,12 +446,14 @@ async function main() {
     await settle();
     expect("signature Edit: focus is in the signature box", c.active()?.id, "d-signature");
     const x = (addr) => c.root.querySelector(`[aria-label="Remove ${addr}"]`);
+    // Focus lands on the chip, not on its remove button: the buttons are out
+    // of the tab order (draft-ux.test.mjs).
     c.press(x("a@x.example"));
     await settle();
-    expect("removing the first chip focuses the one that took its place", c.active(), x("b@x.example"));
+    expect("removing the first chip focuses the one that took its place", c.active(), x("b@x.example").parentElement);
     c.press(x("c@x.example"));
     await settle();
-    expect("removing the last chip focuses the one before", c.active(), x("b@x.example"));
+    expect("removing the last chip focuses the one before", c.active(), x("b@x.example").parentElement);
     c.press(x("b@x.example"));
     await settle();
     expect("removing the only chip focuses the field", c.active()?.id, "d-to");
@@ -462,6 +468,8 @@ async function main() {
     const fs = css.slice(css.indexOf('.card[data-mode="fullscreen"] {'));
     expect("no 720px column", /\.card\[data-mode="fullscreen"\] \{[^}]*max-width: 720px/.test(css), false);
     expect("a wide cap instead", /\.card\[data-mode="fullscreen"\] \{[^}]*max-width: 1100px/.test(css), true);
+    // Only where `:has()` is missing. The draft editor's own layout, in which
+    // the row is not over the content at all, is pinned in draft-ux.test.mjs.
     expect("the action row is sticky", /\.card\[data-mode="fullscreen"\] > \.acts \{[^}]*position: sticky;[^}]*bottom: 0/.test(fs), true);
     expect("with room for the host's composer, safe-area first", /--fs-room: max\(var\(--safe-bottom\), \d+px\)/.test(css), true);
     const c = await boot();
