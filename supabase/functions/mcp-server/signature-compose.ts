@@ -32,6 +32,7 @@
 // case, which is the one whose output gets stored, reviewed and re-sent.
 // ---------------------------------------------------------------------------
 
+import { restoreSignatureImageUrls } from "./signature-images.ts";
 import { sanitizeSignatureHtmlSafe } from "./signature-sanitizer.ts";
 
 /**
@@ -335,8 +336,15 @@ function signatureCandidates(
   // `applySignature` from sanitised markup, so this is idempotent for every
   // draft this server wrote; for one it did not write, it is the same rule
   // `composeSignatureBlocks` applies to a stored signature.
+  //
+  // An embedded logo is the one thing in such a block the sanitiser would not
+  // pass: the stored draft says `cid:` and the signature policy allows https
+  // images only, so the image would be dropped on the first save in the editor.
+  // It is put back to its URL first; the transport embeds it again.
   const rawBlock = storedSignatureBlockOf(storedHtml);
-  const block = rawBlock === null ? "" : sanitizeSignatureHtmlSafe(rawBlock.trim());
+  const block = rawBlock === null
+    ? ""
+    : sanitizeSignatureHtmlSafe(restoreSignatureImageUrls(rawBlock.trim()));
   const sig = composeSignatureBlocks(inbox);
   if (sig) {
     // The inbox's signature text, matched as the delimiter-plus-text

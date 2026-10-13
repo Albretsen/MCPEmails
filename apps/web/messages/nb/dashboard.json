@@ -226,7 +226,9 @@
         "previewTitle": "Forhåndsvisning",
         "previewReplyQuote": "Man. skrev noen '<noen@eksempel.com>':",
         "previewTooLarge": "Signaturen er for stor til å forhåndsvises.",
-        "imageNote": "Enkelte e-postklienter (f.eks. Gmail) kan skjule bilder til mottakeren klikker «vis bilder». Dette er normalt for signaturer med bilder som ligger på nett."
+        "imageNote": "Enkelte e-postklienter (f.eks. Gmail) kan skjule bilder til mottakeren klikker «vis bilder». Dette er normalt for signaturer med bilder som ligger på nett. Slå på «Bygg inn bilder i meldingen» nedenfor for å sende dem inne i e-posten i stedet.",
+        "embedImages": "Bygg inn bilder i meldingen",
+        "embedImagesHint": "Sender logoen inne i hver e-post i stedet for å laste den fra nettadressen, slik at den vises i utkast og i e-postprogrammer som blokkerer eksterne bilder, som Outlook og Thunderbird. Bilder opptil 512 kB; større bilder forblir lenket."
       }
     },
     "emptyAltLead": "Ikke klar til å koble til en postkasse ennå?",

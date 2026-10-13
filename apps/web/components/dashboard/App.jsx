@@ -747,6 +747,7 @@ function DashboardInner({ initialRoute = 'overview', user, workspace: serverWork
             signatureHtml: sig.signature_html ?? null,
             signatureEnabled: sig.signature_enabled ?? true,
             signatureReplyMode: sig.signature_reply_mode ?? 'first_only',
+            signatureEmbedImages: sig.signature_embed_images ?? x.signatureEmbedImages ?? false,
             signatureSource: sig.signature_source ?? 'manual',
             sendApprovalRequired: data.sendApprovalRequired ?? x.sendApprovalRequired ?? false,
             sendReviewMode: data.sendReviewMode ?? x.sendReviewMode ?? 'off',

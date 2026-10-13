@@ -226,7 +226,9 @@
         "previewTitle": "Aperçu",
         "previewReplyQuote": "Le lun, quelqu'un '<quelquun@exemple.com>' a écrit :",
         "previewTooLarge": "La signature est trop volumineuse pour afficher un aperçu.",
-        "imageNote": "Certains clients de messagerie (p. ex. Gmail) peuvent masquer les images jusqu'à ce que le destinataire clique sur « afficher les images ». C'est normal pour les signatures comportant des images hébergées."
+        "imageNote": "Certains clients de messagerie (p. ex. Gmail) peuvent masquer les images jusqu'à ce que le destinataire clique sur « afficher les images ». C'est normal pour les signatures comportant des images hébergées. Activez « Intégrer les images au message » ci-dessous pour les envoyer dans l'e-mail.",
+        "embedImages": "Intégrer les images au message",
+        "embedImagesHint": "Envoie votre logo à l'intérieur de chaque e-mail au lieu de le charger depuis son adresse web : il s'affiche ainsi dans les brouillons et dans les messageries qui bloquent les images distantes, comme Outlook et Thunderbird. Images jusqu'à 512 Ko ; les plus grandes restent liées."
       }
     },
     "emptyAltLead": "Pas encore prêt à connecter une boîte ?",
