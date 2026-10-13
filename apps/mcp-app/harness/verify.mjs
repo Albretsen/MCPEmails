@@ -60,6 +60,12 @@ const SUITES = [
   // is a property of the rendered tree and of main.tsx's own composition
   // order, and is invisible to a suite that only reads the store.
   ["card render", "card-render.test.mjs"],
+  // The third DOM suite: the draft card QA blockers of 2026-10-13, played
+  // through the real `main.tsx` against a scripted host that answers the
+  // card's own `tools/call` requests — failed and lost actions, a remounted
+  // card's replayed result, unsaved edits across a reload, focus around the
+  // confirms, and recipients that are not addresses yet.
+  ["draft QA", "draft-qa.test.mjs"],
 ];
 
 const outcomes = [];
