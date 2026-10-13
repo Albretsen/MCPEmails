@@ -8573,10 +8573,33 @@ function buildPerOperationTool(legacy: ToolDefinition, action?: ConsolidatedActi
   };
 }
 
-const PER_OPERATION_LISTING: ToolDefinition[] = [];
+/**
+ * Per-operation tools that exist and are callable but are NOT listed.
+ *
+ * The rescan after the per-operation surface shipped (2026-10-13) passed 52 of
+ * 55 tools and flagged these three with the same finding the consolidated
+ * tools had drawn: "This tool appears to execute operations that are not
+ * individually exposed". `automation_enable` takes no selector of any kind, so
+ * the objection is to what the three DO: they set up, change or start a stored
+ * rule whose `rule_action.type` is run later by the triage engine, which is an
+ * operation chosen by an argument and executed generically.
+ *
+ * So an OpenAI client is not shown them (Asgeir's decision, 2026-10-13). It
+ * keeps the reads, disable and delete, all of which passed; rules are created
+ * and switched on from the dashboard or another client. The names still
+ * resolve in `tools/call`, like every other per-operation name.
+ */
+const PER_OPERATION_UNLISTED: ReadonlySet<string> = new Set([
+  "automation_create",
+  "automation_update",
+  "automation_enable",
+]);
+
+/** Every per-operation tool, listed or not, in listing order. */
+const PER_OPERATION_TOOLS: ToolDefinition[] = [];
 for (const tool of TOOL_REGISTRY) {
   if (!isAdvertisedTool(tool.name)) continue;
-  const listedNames = new Set(PER_OPERATION_LISTING.map((listed) => listed.name));
+  const listedNames = new Set(PER_OPERATION_TOOLS.map((listed) => listed.name));
   const spec = CONSOLIDATED_SPECS[tool.name];
   if (spec) {
     // Every action, the unadvertised ones included: `folder`'s 'list' is the
@@ -8585,19 +8608,23 @@ for (const tool of TOOL_REGISTRY) {
       if (listedNames.has(action.legacy)) continue;
       listedNames.add(action.legacy);
       PER_OPERATION_PARENT.set(action.legacy, { tool: tool.name, action });
-      PER_OPERATION_LISTING.push(buildPerOperationTool(LEGACY_BY_NAME.get(action.legacy)!, action));
+      PER_OPERATION_TOOLS.push(buildPerOperationTool(LEGACY_BY_NAME.get(action.legacy)!, action));
     }
   } else if (LEGACY_BY_NAME.has(tool.name)) {
-    if (!listedNames.has(tool.name)) PER_OPERATION_LISTING.push(buildPerOperationTool(tool));
+    if (!listedNames.has(tool.name)) PER_OPERATION_TOOLS.push(buildPerOperationTool(tool));
   } else {
     // The app-only card tools: not operations of anything, listed as they are.
-    PER_OPERATION_LISTING.push(tool);
+    PER_OPERATION_TOOLS.push(tool);
   }
 }
 
+const PER_OPERATION_LISTING: ToolDefinition[] = PER_OPERATION_TOOLS.filter(
+  (tool) => !PER_OPERATION_UNLISTED.has(tool.name),
+);
+
 /** Per-operation tools `tools/call` cannot find in TOOL_REGISTRY, by name. */
 const PER_OPERATION_ONLY_TOOLS = new Map(
-  PER_OPERATION_LISTING
+  PER_OPERATION_TOOLS
     .filter((tool) => !TOOL_REGISTRY.some((registered) => registered.name === tool.name))
     .map((tool) => [tool.name, tool]),
 );
