@@ -44,6 +44,41 @@ export const KINDS = ['added', 'improved', 'fixed', 'changed'];
 export const ENTRIES = [
   /* ── October 2026 ──────────────────────────────────────────── */
   {
+    date: '2026-10-13',
+    kind: 'added',
+    title: 'Receive-only and send-only inboxes',
+    body:
+      'A mailbox with only an IMAP server or only an SMTP server can now connect: pick the connection type under Advanced settings in the IMAP/SMTP form. A tool that needs the other half says what still works on that inbox.',
+  },
+  {
+    date: '2026-10-13',
+    kind: 'changed',
+    title: 'ChatGPT and Codex list one tool per operation',
+    body:
+      'OpenAI clients now see a separate tool for each operation, such as creating a draft or renaming a folder, each with its own safety annotations. Every other client keeps the same tool list as before.',
+  },
+  {
+    date: '2026-10-12',
+    kind: 'improved',
+    title: 'Orange mailboxes connect',
+    body:
+      'orange.fr inboxes now sign in for both reading and sending, with nothing extra to set up.',
+  },
+  {
+    date: '2026-10-09',
+    kind: 'improved',
+    title: '163.com and 126.com mailboxes can read mail',
+    body:
+      'Listing, searching and reading now work on NetEase mailboxes (163.com, 126.com, yeah.net, 188.com) and other Coremail servers.',
+  },
+  {
+    date: '2026-10-09',
+    kind: 'improved',
+    title: 'Room for long sessions in ChatGPT and Notion',
+    body:
+      'Clients that reconnect around every tool call can now run long, busy sessions without being slowed down by connection checks.',
+  },
+  {
     date: '2026-10-08',
     kind: 'fixed',
     title: 'Sent copies land in the real Sent folder on IMAP',
