@@ -48,11 +48,22 @@ const TOOL_INFO = {
  * construction, posts to it, and only accepts messages whose `source` is that
  * same object (the origin check the real sandbox proxy relies on).
  */
-function scriptedHost({ hostContext = {}, deaf = () => false, initializeError = null } = {}) {
+function scriptedHost({
+  hostContext = {},
+  deaf = () => false,
+  initializeError = null,
+  // A host that is SLOW rather than deaf: it hears every `ui/initialize` and
+  // answers this many ms later. With `answerInitializeOnce` it answers only the
+  // first one and ignores the rest, which is the shape a host that treats the
+  // handshake as idempotent has. See (i5).
+  initializeDelayMs = 0,
+  answerInitializeOnce = false,
+} = {}) {
   const listeners = [];
   const sent = [];
   const logs = [];
   const responses = [];
+  let initializeAnswers = 0;
 
   const parent = {
     postMessage(msg) {
@@ -65,20 +76,26 @@ function scriptedHost({ hostContext = {}, deaf = () => false, initializeError = 
         // queued and not refused, it is simply gone, so the fake drops it on
         // the floor exactly as the browser would.
         if (deaf()) return;
-        if (initializeError) {
-          deliver({ jsonrpc: "2.0", id: msg.id, error: initializeError });
-          return;
-        }
-        deliver({
-          jsonrpc: "2.0",
-          id: msg.id,
-          result: {
-            protocolVersion: PROTOCOL_VERSION,
-            hostInfo: HOST_INFO,
-            hostCapabilities: { openLinks: {}, updateModelContext: {} },
-            hostContext: { theme: "light", displayMode: "inline", ...hostContext },
-          },
-        });
+        if (answerInitializeOnce && initializeAnswers > 0) return;
+        initializeAnswers++;
+        const answer = () => {
+          if (initializeError) {
+            deliver({ jsonrpc: "2.0", id: msg.id, error: initializeError });
+            return;
+          }
+          deliver({
+            jsonrpc: "2.0",
+            id: msg.id,
+            result: {
+              protocolVersion: PROTOCOL_VERSION,
+              hostInfo: HOST_INFO,
+              hostCapabilities: { openLinks: {}, updateModelContext: {} },
+              hostContext: { theme: "light", displayMode: "inline", ...hostContext },
+            },
+          });
+        };
+        if (initializeDelayMs > 0) setTimeout(answer, initializeDelayMs);
+        else answer();
       }
     },
   };
@@ -876,6 +893,65 @@ async function main() {
           .connect({ name: "handshake-check", version: "0.0.0" })
           .catch((e) => (error = e));
         t.expect("it failed", error instanceof Error, true);
+        t.expect("exactly one attempt", t.bridge.initializeAttempts, 1);
+      },
+    ),
+  );
+
+  // (i5) A host that is SLOW, not deaf. The retry loop above gave each attempt
+  // its own id and `handle()` dropped any answer whose id was no longer
+  // pending, which is right for a stale duplicate and wrong for the first
+  // honest answer arriving a moment after its 250ms window closed. Two real
+  // hosts fall into this: one that answers every request in turn (it connects
+  // a whole attempt late) and one that treats `ui/initialize` as idempotent and
+  // answers only the first (it NEVER connects, and a card that never connects
+  // renders but never reports a height). The fake below is the second, harsher
+  // one: exactly one answer, 400ms after the first attempt was posted.
+  results.push(
+    await handshake(
+      "an answer that arrives after its own attempt timed out still connects",
+      { initializeDelayMs: 400, answerInitializeOnce: true },
+      async (t) => {
+        const started = Date.now();
+        // Caught rather than awaited bare: without the fix this rejects with
+        // "ui/initialize timed out" at the 10s budget, and an unhandled
+        // rejection would abort the suite instead of reporting one failure.
+        let error = null;
+        await t.bridge
+          .connect({ name: "handshake-check", version: "0.0.0" })
+          .catch((e) => (error = e));
+        t.expect("it did not time out", error, null);
+        t.expect("connected", t.bridge.connected, true);
+        t.expect("host was heard", t.bridge.hostInfo?.name, HOST_INFO.name);
+        // The point of the test: the answer was to attempt 1, and attempt 2 had
+        // already gone out by the time it landed.
+        t.expect("the first attempt had timed out", t.bridge.initializeAttempts > 1, true);
+        t.expect(
+          "the host answered exactly once",
+          t.host.sent.filter((m) => m.method === "ui/initialize").length > 1,
+          true,
+        );
+        // Promptly, not at the 10s budget: before the fix this scenario could
+        // only end by the deadline, and only as a failure.
+        t.expect("and it connected promptly", Date.now() - started < 2_000, true);
+      },
+    ),
+  );
+
+  // (i6) The negative half of (i5): a late answer completes the handshake, it
+  // does not resurrect a handshake that ALREADY failed on an error. A host that
+  // answered with a JSON-RPC error heard us and said no.
+  results.push(
+    await handshake(
+      "a refusal is still a refusal, however the late path is wired",
+      { initializeError: { code: -32600, message: "no apps here" }, answerInitializeOnce: true },
+      async (t) => {
+        let error = null;
+        await t.bridge
+          .connect({ name: "handshake-check", version: "0.0.0" })
+          .catch((e) => (error = e));
+        t.expect("it failed", error instanceof Error, true);
+        t.expect("not connected", t.bridge.connected, false);
         t.expect("exactly one attempt", t.bridge.initializeAttempts, 1);
       },
     ),

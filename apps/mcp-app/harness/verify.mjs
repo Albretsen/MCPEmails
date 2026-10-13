@@ -53,6 +53,13 @@ const SUITES = [
   // esbuild already relies on — see the note above the `card` job in
   // .github/workflows/ci.yml.
   ["draft resync", "draft-sync.test.mjs"],
+  // The second DOM suite, and the second one that could not have been written
+  // without one: it evaluates the REAL `main.tsx` into jsdom and asks what is
+  // on screen in each of the states where there is no draft to draw. Every
+  // defect it pins — a blank frame while loading, a card that never appears —
+  // is a property of the rendered tree and of main.tsx's own composition
+  // order, and is invisible to a suite that only reads the store.
+  ["card render", "card-render.test.mjs"],
 ];
 
 const outcomes = [];

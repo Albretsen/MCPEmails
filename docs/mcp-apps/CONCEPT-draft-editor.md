@@ -480,12 +480,24 @@ It is not running. Which settles three things:
    header plus the message text below carry the result, which they already do in
    full. This does not fix the remount. It stops it being loud.
 
+   **REVERSED 2026-10-12, on both of its premises.** The frame is not frozen —
+   see the correction immediately below, where the same remount handshakes on
+   the first attempt and gets its result in 6 ms — so the spinner is not a lie,
+   it is a loading state that lasts milliseconds. And the shell does not
+   collapse: Claude keeps its "Widget from …" header and an empty container
+   around the frame, so "nothing at all" is the thin sliver the founder
+   complained about rather than an invisible card. The pre-handshake frame now
+   renders the same one-line loading state as every other wait, and nothing in
+   the card renders an empty tree any more. See `contract.md` §1, empty-frame
+   rule.
+
 Not yet known: *why* the frame stops. A host that re-mounts a stored cell into an
 inert context, a lazily attached iframe that never gets a live browsing context,
 or a deliberate policy of not re-running app code for historical results would
 all look identical from inside. It is host-side either way, and the honest v1
 answer is that a re-mounted draft editor collapses to nothing rather than
-pretending.
+pretending. (That answer did not survive the next section either: the frame is
+not inert, and collapsing to nothing is not what the host does with it.)
 
 ### Correction: the re-mounted frame is NOT frozen
 

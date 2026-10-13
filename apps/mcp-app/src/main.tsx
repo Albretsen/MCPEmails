@@ -62,7 +62,24 @@ root.className = "card";
 applyTheme(undefined); // light default until the host tells us otherwise
 render(<App bridge={bridge} />, root);
 
-let stopSizeObserver: (() => void) | null = null;
+// ── Measured from the first paint, not from the handshake ──────────────────
+// This used to start inside the `.then()` below, which meant the host was told
+// the card's height ONLY on the success path. Two states were therefore drawn
+// and never measured: the pre-handshake frame, and — the one that matters —
+// `store.connectError`, the "not shown here" one-liner the card falls back to
+// when the host never answers. That line has existed since 2026-08-25 and
+// could not have been seen by anyone: nothing ever sent a `size-changed` for
+// it, so the host kept the frame at whatever it mounts at, which in Claude is
+// the sliver this branch exists to fix.
+//
+// Starting here costs one `size-changed` notification before `ui/initialize`
+// completes. That is a notification, not a request: a host that is not ready
+// for it drops it exactly as it drops the `ui/initialize` that went out in the
+// same tick, and the ResizeObserver re-measures on the first render after the
+// handshake regardless. So the worst case is one ignored message, and the best
+// case is a card that has told the host its height before the handshake even
+// finishes.
+let stopSizeObserver: (() => void) | null = bridge.observeSize();
 
 bridge
   .connect(APP_INFO)
@@ -72,7 +89,6 @@ bridge
     root.dataset.mode =
       bridge.hostContext.displayMode === "fullscreen" ? "fullscreen" : "inline";
     setState({ connected: true, hostContext: bridge.hostContext });
-    stopSizeObserver = bridge.observeSize();
     // Only now, never at module load: the countdown is for the host being late
     // with a result, not for the host being slow to answer the handshake (that
     // failure has its own timeout and surfaces as `connectError`).
