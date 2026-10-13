@@ -65,7 +65,8 @@ export const PER_OPERATION_REWORDINGS: ReadonlyArray<readonly [string, string]> 
     "reference form is email_compose's, not this tool's",
     "reference form belongs to email_send, email_reply and email_forward, not to this tool",
   ],
-  ["as returned by action 'list' or 'create'", "as returned by automation_list or automation_create"],
+  // Not "or automation_create": that tool is not on this listing.
+  ["as returned by action 'list' or 'create'", "as returned by automation_list"],
   ["paged like email_read action: search", "paged like email_search"],
 ];
 
