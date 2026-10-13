@@ -323,6 +323,7 @@ async function main() {
       "transport", "unreadable", "draft_not_found", "draft_has_attachments", "invalid_recipients",
       "provider_error", "insufficient_scope", "insufficient_role", "inbox_not_found",
       "draft_editor_hidden", "draft_editor_disabled", "invalid_arguments", "", "something_new",
+      "draft_changed", "draft_already_sent", "send_stopped",
     ];
     const bad = [];
     for (const code of codes) {
@@ -401,7 +402,10 @@ async function main() {
     c.tools.draft = () => sentResult();
     c.press(c.btn(/^Send$/));
     await settle();
-    expectJson("and the send uses the CURRENT id", c.calls.at(-1), { name: "draft", args: { action: "send", inbox_id: INBOX, draft_id: "Drafts:103" } });
+    expectJson("and the send uses the CURRENT id, and says which revision it shows", c.calls.at(-1), {
+      name: "draft",
+      args: { action: "send", inbox_id: INBOX, draft_id: "Drafts:103", base_revision: 0 },
+    });
     await c.done();
   }
 
@@ -425,7 +429,7 @@ async function main() {
     await settle();
     expectJson("Try again repeats the save, with the edit", c.calls.at(-1), {
       name: "draft_editor_save",
-      args: { inbox_id: INBOX, draft_id: "Drafts:102", body_text: "My careful edit." },
+      args: { inbox_id: INBOX, draft_id: "Drafts:102", base_revision: 0, body_text: "My careful edit." },
     });
     await c.done();
   }
@@ -488,7 +492,7 @@ async function main() {
     await c.done();
   }
 
-  group("1g. a lost send: re-read, and say the draft is still there");
+  group("1g. a lost send: re-read, say the draft is still there, and keep Send off until confirmed");
   {
     const c = await editor();
     c.tools.draft = () => TRANSPORT;
@@ -498,7 +502,119 @@ async function main() {
     await settle();
     expect("the editor is still there", c.value("d-subject"), "Quarterly numbers");
     expect("it says it does not look sent", /does not look like it was sent/.test(c.text()), true);
+    expect("the re-read made the draft trusted", c.mod.getState().draftCheck, "trusted");
+    expect("but Send stays off: it may have gone out", c.softOff(c.btn(/^Send$/)), true);
+    expect("and the card says why", /could not confirm whether this draft was sent/.test(c.text()), true);
+    const sends = () => c.calls.filter((x) => x.name === "draft").length;
+    c.press(c.btn(/^Send$/));
+    await settle();
+    expect("pressing Send does nothing", sends(), 1);
+    // A Save (or a Refresh) replaces the failure notice; the hold outlives it.
+    c.tools.draft_editor_save = () => draftResult({ origin: "save", subject: "Edited" });
+    c.input("d-subject", "Edited");
+    await settle();
+    c.press(c.btn(/^Save$/));
+    await settle();
+    expect("after a Save, Send is still off", c.softOff(c.btn(/^Send$/)), true);
+    const allow = c.btn(/turn sending back on/);
+    expect("the person can turn it back on", !!allow, true);
+    c.press(allow);
+    await settle();
+    expect("and then Send works", c.softOff(c.btn(/^Send$/)), false);
+    c.tools.draft = () => sentResult();
+    c.press(c.btn(/^Send$/));
+    await settle();
+    expect("one more send, on purpose", sends(), 2);
     await c.done();
+  }
+
+  group("1h. two cards: a stale card's Save is refused as draft_changed; text kept; newer version offered");
+  {
+    // Card A shows revision 1 of Drafts:102. The assistant has since rewritten
+    // it as Drafts:103 (revision 2), with a different recipient.
+    const c = await editor({ revision: 1 });
+    const newer = { draft_id: "Drafts:103", revision: 2, origin: "read", resolved_from: "Drafts:102", recipients: { to: ["new-recipient@x.example"] }, body: { text: "The assistant's corrected body." } };
+    const changed = failedResult("draft_changed", "This draft was changed somewhere else.", "Nothing was saved. Your text is still here. Load the newer version to see what changed.");
+    changed.structuredContent.current = draftEnvelope(newer);
+    c.tools.draft_editor_save = () => changed;
+    c.input("d-body", "Here they are, edited in card A.");
+    await settle();
+    c.press(c.btn(/^Save$/));
+    await settle();
+    expectJson("the save said which revision it was editing", c.calls.at(-1)?.args, {
+      inbox_id: INBOX, draft_id: "Drafts:102", base_revision: 1, body_text: "Here they are, edited in card A.",
+    });
+    expect("the editor is still there", c.mod.getState().envelope?.card, "draft_editor");
+    expect("still on the copy it showed", c.mod.getState().envelope?.draft?.draft_id, "Drafts:102");
+    expect("the typed text is still in the box", c.value("d-body"), "Here they are, edited in card A.");
+    expect("it says the draft changed elsewhere", /changed somewhere else after you opened it/.test(c.text()), true);
+    expectJson("no model wording", forbiddenIn(c.text()), []);
+    expect("Save is off", c.softOff(c.btn(/^Save$/)), true);
+    expect("Send is off", c.softOff(c.btn(/^(Send|Save and send)$/)), true);
+    expect("Copy text is offered", !!c.btn(/^Copy text$/), true);
+    const load = c.btn(/^Load the newer version$/);
+    expect("Load the newer version is offered", !!load, true);
+    c.tools.draft_read = () => draftResult(newer);
+    c.press(load);
+    await settle();
+    expectJson("loading re-reads the draft", [c.calls.at(-1)?.name, c.calls.at(-1)?.args.draft_id], ["draft_read", "Drafts:102"]);
+    expect("the newer id is adopted", c.mod.getState().envelope?.draft?.draft_id, "Drafts:103");
+    expect("with its revision", c.mod.getState().envelope?.draft?.revision, 2);
+    expect("the person's text is still on top", c.value("d-body"), "Here they are, edited in card A.");
+    expect("the newer recipient is on screen", /new-recipient@x\.example/.test(c.text()), true);
+    expect("it says the edits would replace the newer version", /saving will replace the newer version/.test(c.text()), true);
+    expect("Save is on again", c.softOff(c.btn(/^Save$/)), false);
+    c.tools.draft_editor_save = (args) => draftResult({ draft_id: "Drafts:104", revision: 3, origin: "save", recipients: { to: ["new-recipient@x.example"] }, body: { text: args.body_text } });
+    c.press(c.btn(/^Save$/));
+    await settle();
+    expectJson("the next save is on the current id and revision", [c.calls.at(-1)?.args.draft_id, c.calls.at(-1)?.args.base_revision], ["Drafts:103", 2]);
+    await c.done();
+  }
+
+  group("1i. two cards: Save and send from the stale card sends nothing");
+  {
+    const c = await editor({ revision: 1 });
+    c.tools.draft_editor_save = () => failedResult("draft_changed", "This draft was changed somewhere else.", "Nothing was saved.");
+    c.tools.draft = () => sentResult();
+    c.input("d-body", "Edited in card A.");
+    await settle();
+    c.press(c.btn(/^Save and send$/));
+    await settle();
+    expectJson("a save was tried, and no send followed", c.calls.map((x) => x.name), ["draft_editor_save"]);
+    expect("the text is kept", c.value("d-body"), "Edited in card A.");
+    expect("the card says it was not saved", /Not saved\. This draft was changed somewhere else/.test(c.text()), true);
+    await c.done();
+  }
+
+  group("1j. a save answer that followed an older id stops Save and send before the send");
+  {
+    const c = await editor({ revision: 1 });
+    // An older server: the save followed the lineage and says so.
+    c.tools.draft_editor_save = () => draftResult({ draft_id: "Drafts:103", revision: 3, origin: "save", resolved_from: "Drafts:102", body: { text: "Edited." } });
+    c.tools.draft = () => sentResult();
+    c.input("d-body", "Edited.");
+    await settle();
+    c.press(c.btn(/^Save and send$/));
+    await settle();
+    expectJson("saved, and NOT sent", c.calls.map((x) => x.name), ["draft_editor_save"]);
+    expect("the card says why", /it was not sent\. Check it, then send/.test(c.text()), true);
+    await c.done();
+  }
+
+  group("1k. a send refused as draft_changed, or as already sent, stops there");
+  {
+    for (const [code, re] of [["draft_changed", /Not sent\. This draft was changed somewhere else/], ["draft_already_sent", /already sent/]]) {
+      const c = await editor({ revision: 4 });
+      c.tools.draft = () => failedResult(code, "x", "y");
+      c.press(c.btn(/^Send$/));
+      await settle();
+      expectJson(`${code}: the send carried the revision`, c.calls.at(-1)?.args, { action: "send", inbox_id: INBOX, draft_id: "Drafts:102", base_revision: 4 });
+      expect(`${code}: the editor is kept`, c.value("d-subject"), "Quarterly numbers");
+      expect(`${code}: the card says so`, re.test(c.text()), true);
+      expect(`${code}: Send is off`, c.softOff(c.btn(/^Send$/)), true);
+      expect(`${code}: nothing retried`, c.calls.length, 1);
+      await c.done();
+    }
   }
 
   // ── 2. A replayed result is re-read before it is trusted ─────────────────

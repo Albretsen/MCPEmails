@@ -53,6 +53,12 @@ export interface FailureNotice {
   retry: boolean;
   /** Offer "Copy text": the draft cannot be written from here any more. */
   copy: boolean;
+  /**
+   * Offer "Load the newer version": the draft was rewritten after this copy was
+   * loaded (`draft_changed`). Loading re-reads it and keeps the person's
+   * unsaved edits on top (DraftEditor#rebaseEdit), so nothing typed is lost.
+   */
+  load?: boolean;
 }
 
 /** A failure the card could not get an answer for: the server may have acted. */
@@ -90,7 +96,7 @@ export function failureNotice(f: DraftFailure): FailureNotice {
           ? {
             ...base,
             tone: "warning",
-            text: "The connection dropped while sending. The draft is still in Drafts, so it does not look like it was sent. Check your Sent folder before sending again.",
+            text: "The connection dropped while sending. The draft is still in Drafts, so it does not look like it was sent, but we could not confirm it. Check your Sent folder before sending again.",
           }
           : {
             ...base,
@@ -113,6 +119,33 @@ export function failureNotice(f: DraftFailure): FailureNotice {
   }
 
   switch (f.code) {
+    case "draft_changed":
+      // Somebody (the assistant, another card, a second device) wrote the
+      // draft after this copy was loaded. Nothing was written or sent.
+      return {
+        ...base,
+        tone: "warning",
+        copy: true,
+        load: true,
+        text: f.action === "send"
+          ? `Not sent. This draft was changed somewhere else after you opened it, so it was not sent. ${KEEP} Load the newer version and check it before sending.`
+          : `Not saved. This draft was changed somewhere else after you opened it, so saving here would replace that version. ${KEEP} Load the newer version to see what changed; your edits stay on top.`,
+      };
+    case "send_stopped":
+      // The save half of "Save and send" landed on a draft that had moved on
+      // (the server followed an older id). The send was not attempted.
+      return {
+        ...base,
+        tone: "warning",
+        text: "Your changes were saved, but this draft had been changed somewhere else, so it was not sent. Check it, then send.",
+      };
+    case "draft_already_sent":
+      return {
+        ...base,
+        tone: "warning",
+        copy: true,
+        text: `This draft was already sent, so it cannot be saved or sent again from here. ${KEEP}`,
+      };
     case "draft_not_found": {
       // The newer server knows when a draft it cannot find was SENT or
       // DISCARDED (draft lineage) and says so in the headline, under the same

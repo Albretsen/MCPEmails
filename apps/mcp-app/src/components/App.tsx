@@ -140,6 +140,12 @@ export function App(props: { bridge: HostBridge }) {
   // The draft editor's last action failing with no envelope to carry it. A
   // code, never a message: DraftEditor owns the wording (draft-failure.ts).
   const [failure, setFailure] = useState<DraftFailure | null>(null);
+  // A send whose answer was lost (the call threw, or came back unreadable).
+  // It may have gone out, so Send stays off until the person says otherwise,
+  // whatever a re-read finds: a draft still in Drafts after a lost send is
+  // "probably not sent", never "not sent" (review, 2026-10-13: the re-read made
+  // the draft trusted again and Send could deliver it twice).
+  const [sendDoubt, setSendDoubt] = useState(false);
 
   // The store is the single source of truth for the envelope. Keeping a copy in
   // component state looks harmless and is not: the host pushes
@@ -281,9 +287,16 @@ export function App(props: { bridge: HostBridge }) {
       if (isFailure(applied)) {
         const code = String(applied.receipt?.error_code ?? "");
         setFailure({ action, code, headline: applied.receipt?.headline ?? null });
-        // The id on screen names nothing the server can find. Nothing can be
-        // written to it, so stop offering to.
-        if (code === "draft_not_found") setState({ draftCheck: "unverified" });
+        // The id on screen names nothing the server can find, or the copy on
+        // screen is older than the draft (`draft_changed`), or the draft was
+        // already sent. Nothing can be written from it, so stop offering to
+        // until a re-read ("Load the newer version", Check again) settles it.
+        if (
+          code === "draft_not_found" || code === "draft_changed" ||
+          code === "draft_already_sent"
+        ) {
+          setState({ draftCheck: "unverified" });
+        }
       }
       return { env: applied, lost: null };
     } catch {
@@ -841,11 +854,23 @@ export function App(props: { bridge: HostBridge }) {
         inbox_id: d.identity?.inbox_id,
         draft_id: getState().envelope?.draft?.draft_id ?? d.draft_id,
       });
+      // Which revision of the draft the person is looking at, read at call time
+      // like the id. Sent with every save and send so the server refuses a
+      // write against a draft rewritten since (`draft_changed`) instead of
+      // following its lineage to a version this card never showed. 0 when the
+      // server records no revision for this draft.
+      const writeTarget = () => {
+        const rev = getState().envelope?.draft?.revision;
+        return {
+          ...target(),
+          base_revision: typeof rev === "number" && Number.isInteger(rev) && rev >= 0 ? rev : 0,
+        };
+      };
 
       const save = async (patch: DraftPatch): Promise<boolean> => {
         if (Object.keys(patch).length === 0) return true;
         const r = await callDraft("save", "draft_editor_save", {
-          ...target(),
+          ...writeTarget(),
           ...patch,
         });
         // Started, not awaited: the editor drops its record of what it sent
@@ -877,17 +902,20 @@ export function App(props: { bridge: HostBridge }) {
           failure={failure}
           check={store.draftCheck}
           idHint={store.draftIdHint}
+          sendDoubt={sendDoubt}
           actions={{
             save,
+            allowSend: () => setSendDoubt(false),
             send: async (patch) => {
               // Unsaved changes are written first and the send is abandoned if
               // that write fails, so a send never puts the stored draft on the
               // wire when the user is looking at a newer one.
+              if (sendDoubt) return;
               if (patch && Object.keys(patch).length > 0) {
                 const saved = await callDraft(
                   "send",
                   "draft_editor_save",
-                  { ...target(), ...patch },
+                  { ...writeTarget(), ...patch },
                   { failAs: "save" },
                 );
                 if (saved.lost) {
@@ -896,9 +924,19 @@ export function App(props: { bridge: HostBridge }) {
                 }
                 if (!draftStored(saved.env)) return;
                 void bridge.updateModelContext(draftSavedContextLine(saved.env!.draft!));
+                // The save landed on a different id than the one it was sent
+                // with: the server followed the draft's lineage to a version
+                // this card had not shown. The current server refuses that
+                // (`draft_changed`); this is the card's own stop, so a send
+                // never follows a save the person did not see the result of.
+                if (saved.env?.draft?.resolved_from) {
+                  setFailure({ action: "send", code: "send_stopped" });
+                  return;
+                }
               }
-              const sent = await callDraft("send", "draft", { action: "send", ...target() });
+              const sent = await callDraft("send", "draft", { action: "send", ...writeTarget() });
               if (sent.lost) {
+                setSendDoubt(true);
                 void reconcile("send", sent.lost, null);
                 return;
               }

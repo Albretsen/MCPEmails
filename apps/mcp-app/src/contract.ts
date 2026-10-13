@@ -185,6 +185,14 @@ export interface DraftEditorData {
    */
   resolved_from?: string;
   /**
+   * The draft's lineage revision (server: draft-lineage.ts), present only when
+   * the server records one for this draft. Sent back as `base_revision` on
+   * every save and send (0 when absent), so a write against a draft that was
+   * rewritten since this copy was loaded is refused as `draft_changed` instead
+   * of overwriting, or sending, a version the person never saw.
+   */
+  revision?: number;
+  /**
    * When the draft was last SAVED. On a write it is the time of that write; on
    * a read (`draft_read`, Refresh) it is the last real save, never the time of
    * the read, and null when nobody recorded one. (Until 2026-10-13 every path

@@ -38,6 +38,12 @@ export interface DraftActions {
   save: (patch: DraftPatch) => Promise<boolean>;
   /** A non-null patch means save first, and send only if that save worked. */
   send: (patch: DraftPatch | null) => void | Promise<void>;
+  /**
+   * The person checked their Sent folder after a send whose answer was lost and
+   * wants Send back. See `sendDoubt`. Optional so a host of this component that
+   * never loses a send need not provide it.
+   */
+  allowSend?: () => void;
   discard: () => void;
   refresh: () => void;
   /** Turn the card off, for this inbox or for every inbox in the workspace. */
@@ -63,6 +69,11 @@ interface Props {
   check?: DraftCheck;
   /** A newer id this card held for the same draft. See store.ts#draftIdHint. */
   idHint?: string | null;
+  /**
+   * A send from this card lost its answer, so it may have gone out. Send stays
+   * off, whatever a re-read finds, until the person turns it back on.
+   */
+  sendDoubt?: boolean;
   actions: DraftActions;
 }
 
@@ -1151,7 +1162,8 @@ export function DraftEditor(props: Props) {
   // A draft that is not known to be current is neither saved nor sent from.
   // See store.ts#DraftCheck.
   const verified = check === "trusted";
-  const canSend = d.can_send === true && canEdit && verified;
+  const sendDoubt = props.sendDoubt === true;
+  const canSend = d.can_send === true && canEdit && verified && !sendDoubt;
   const saving = busy === "save";
   const sending = busy === "send";
   const attachLine = attachmentLine(d, fullscreen);
@@ -1481,6 +1493,14 @@ export function DraftEditor(props: Props) {
               </TextLink>
             </>
           )}
+          {err.load && (
+            <>
+              {" "}
+              <TextLink soft disabled={busy !== null} onClick={actions.refresh}>
+                Load the newer version
+              </TextLink>
+            </>
+          )}
           {err.copy && (
             <>
               {" "}
@@ -1508,6 +1528,19 @@ export function DraftEditor(props: Props) {
 
       {err && check === "unverified" && failed?.code !== "draft_not_found" && (
         <p class="line">Saving and sending are off until this draft has been checked.</p>
+      )}
+
+      {/* After a send whose answer was lost. Not folded into the failure
+          notice: that one is replaced by the next action's (a Save, a
+          Refresh), and this has to outlive them. */}
+      {sendDoubt && (
+        <Notice tone="warning">
+          We could not confirm whether this draft was sent, so sending is off.
+          Check your Sent folder first.{" "}
+          <TextLink soft disabled={busy !== null} onClick={() => actions.allowSend?.()}>
+            It was not sent, turn sending back on
+          </TextLink>
+        </Notice>
       )}
 
       {/* Inline confirm, never a modal: a dialog inside a sandboxed frame is
@@ -1649,7 +1682,9 @@ export function DraftEditor(props: Props) {
                 ? dirty
                   ? "Saves your changes first, then sends"
                   : "Sends this draft now"
-                : !verified
+                : sendDoubt
+                  ? "Sending is off until you have checked whether the last send went out"
+                  : !verified
                   ? "Sending is off until this draft has been checked against the mailbox"
                   : "This draft needs a recipient, and the key needs send access"
             }
