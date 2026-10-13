@@ -152,12 +152,42 @@ body {
   display: none;
 }
 
+/* Fullscreen (QA, 2026-10-13: "the card stays a narrow column", "two nested
+   scrollbars", "Claude's own prompt box covers the bottom of the card").
+
+   - The width is used. 720px was a reading measure, and on a wide screen it
+     left most of the surface empty around a compose box; 1100px still stops a
+     line from running across an ultra-wide monitor.
+   - ONE scrollbar: the message box grows with its text in fullscreen
+     (DraftEditor's FULLSCREEN_BODY_ROWS) and the frame is the only thing that
+     scrolls.
+   - The action row is sticky at the bottom, so Save and Send stay on screen
+     however long the body is, and it carries the bottom room: the host's
+     safe-area inset when it sends one, and never less than `--fs-room`,
+     because Claude's prompt box overlaps the bottom of a fullscreen frame
+     without reporting an inset. The provider line is moved above it with
+     `order` so nothing hides under the host's composer but empty space. */
 .card[data-mode="fullscreen"] {
+  --fs-room: max(var(--safe-bottom), 72px);
   padding: calc(12px + var(--safe-top)) calc(12px + var(--safe-right))
-    calc(12px + var(--safe-bottom)) calc(12px + var(--safe-left));
-  max-width: 720px;
+    0 calc(12px + var(--safe-left));
+  max-width: 1100px;
   margin: 0 auto;
   min-height: 100vh;
+  min-height: 100dvh;
+}
+
+.card[data-mode="fullscreen"] > .prov { order: 1; }
+
+.card[data-mode="fullscreen"] > .acts {
+  order: 2;
+  position: sticky;
+  bottom: 0;
+  z-index: 1;
+  margin: 0 -12px;
+  padding: 8px 12px calc(8px + var(--fs-room));
+  background: var(--bg);
+  border-top: var(--bw) solid var(--bd);
 }
 
 /* ---- type -------------------------------------------------------------- */
@@ -318,9 +348,15 @@ body {
 }
 
 .body-html { white-space: normal; }
+/* No cell borders. Tables in mail are layout, almost never data: a signature
+   is a logo cell beside a text cell, and ruling it made the preview look like
+   a spreadsheet (QA, 2026-10-13). */
 .body-html table { max-width: 100%; border-collapse: collapse; }
 .body-html td,
-.body-html th { border: var(--bw) solid var(--bd); padding: 3px 5px; }
+.body-html th { border: 0; padding: 0 6px 0 0; vertical-align: top; text-align: left; }
+.body-html p { margin: 0 0 6px; }
+/* The server's signature block, set apart from the message (ui.tsx#HtmlBody). */
+.body-html .html-sig { margin-top: 12px; }
 .body-html a { color: var(--fg-info); }
 .body-html blockquote {
   margin: 6px 0;
@@ -335,6 +371,29 @@ body {
   border-radius: var(--r-sm);
   font-size: var(--fs-xs);
   color: var(--fg-3);
+}
+
+/* The draft editor's formatted preview. Read only, and it has to look it: it
+   used to be the same bordered box as the editable message, so nothing said
+   you could not type in it. A filled surface, no field border, and a label. */
+.html-preview {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  padding: 6px 8px 8px;
+  background: var(--bg-2);
+  border-radius: var(--r-md);
+}
+
+.html-preview-lbl {
+  margin: 0;
+  font-size: var(--fs-xs);
+  color: var(--fg-3);
+}
+
+.html-preview > .body-full {
+  border: 0;
+  padding: 0;
 }
 
 /* ---- chips ------------------------------------------------------------- */
@@ -381,6 +440,9 @@ body {
 .notice[data-tone="danger"] { border-color: var(--bd-danger); color: var(--fg-danger); }
 .notice[data-tone="warning"] { border-color: var(--fg-warning); color: var(--fg-warning); }
 .notice[data-tone="success"] { border-color: var(--fg-success); color: var(--fg-success); }
+
+/* A recipient warning, directly under its field and aligned with it. */
+.fld-note { margin-left: calc(var(--gutter) + 8px); }
 
 /* ---- actions ----------------------------------------------------------- */
 
@@ -434,7 +496,8 @@ body {
   outline-offset: 1px;
 }
 
-.btn:disabled {
+.btn:disabled,
+.btn[aria-disabled="true"] {
   cursor: not-allowed;
   opacity: 0.45;
 }
@@ -489,7 +552,16 @@ body {
 
 .link[data-tone="danger"] { color: var(--fg-danger); }
 
-.link:disabled {
+/* A link riding at the end of a field row ("Cc Bcc" on To). It never wraps
+   inside itself and never shrinks: with three chips in To it used to break
+   onto two lines (QA, 2026-10-13). The field beside it wraps instead. */
+.row > .link {
+  flex: 0 0 auto;
+  white-space: nowrap;
+}
+
+.link:disabled,
+.link[aria-disabled="true"] {
   cursor: default;
   opacity: 0.55;
   text-decoration: none;

@@ -978,9 +978,49 @@ async function main() {
         kind(F.outboundGmail, F.outboundOtherApproval),
         "failed",
       );
+      // CHANGED 2026-10-13, with the server's draft lineage. This used to be
+      // "failed": a `draft_read` answer naming another draft_id was a
+      // mislabelled answer. It is now the DESIGNED one, because `draft_read`
+      // accepts any earlier id of a draft and answers with the current id, so
+      // refusing it would strand every card holding a stale id on "open the
+      // dashboard". What still has to match is the mailbox.
+      // Tightened the same day: the server names the id it resolved FROM
+      // (`draft.resolved_from`), so a different id is adopted only when it
+      // says it is the answer to the id that was asked.
       t.expect(
-        "another draft's read",
+        "a draft read that answers with a newer id resolved from ours adopts",
+        kind(F.draftEditorImap, {
+          ...F.draftEditorOtherId,
+          draft: { ...F.draftEditorOtherId.draft, resolved_from: F.draftEditorImap.draft.draft_id },
+        }),
+        "adopt",
+      );
+      t.expect(
+        "a newer id that does not say it resolved from ours is refused",
         kind(F.draftEditorImap, F.draftEditorOtherId),
+        "failed",
+      );
+      t.expect(
+        "a newer id resolved from some OTHER id is refused",
+        kind(F.draftEditorImap, {
+          ...F.draftEditorOtherId,
+          draft: { ...F.draftEditorOtherId.draft, resolved_from: "Drafts:999999" },
+        }),
+        "failed",
+      );
+      t.expect(
+        "a draft read from another inbox is still refused",
+        kind(F.draftEditorImap, {
+          ...F.draftEditorOtherId,
+          draft: {
+            ...F.draftEditorOtherId.draft,
+            resolved_from: F.draftEditorImap.draft.draft_id,
+            identity: {
+              ...F.draftEditorOtherId.draft.identity,
+              inbox_id: "00000000-0000-4000-8000-00000000beef",
+            },
+          },
+        }),
         "failed",
       );
       // And the same id still goes through, so this is a correlation and not a
@@ -1570,11 +1610,18 @@ async function main() {
         merge(F.draftEditorImap, sent).draft?.draft_id,
         "Drafts:2",
       );
-      t.expect(
-        "a failure does not",
-        merge(F.draftEditorImap, { ...sent, state: "error", receipt: { ...sent.receipt, outcome: "failed" } }).draft,
-        undefined,
-      );
+      // CHANGED 2026-10-13. A failed receipt used to REPLACE the editor (and
+      // so carried nothing). It now leaves the editor in place with the error
+      // around it (mergeEnvelope's rule -1), so what is pinned here is that it
+      // is still an editor and not a sent-message record.
+      const failed = merge(F.draftEditorImap, {
+        ...sent,
+        state: "error",
+        receipt: { ...sent.receipt, outcome: "failed" },
+      });
+      t.expect("a failure keeps the editor", failed.card, "draft_editor");
+      t.expect("as an error around it", failed.state, "error");
+      t.expect("and is not a departure", t.mod.isDepartedReceipt(failed), false);
       t.expect(
         "a restore stub is never the source",
         merge(F.draftEditorClaimingStub, sent).draft,

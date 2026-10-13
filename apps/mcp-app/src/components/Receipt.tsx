@@ -1,4 +1,5 @@
 import type { Receipt as ReceiptData } from "../contract";
+import { CARD_LANGUAGE } from "../format";
 import { TextLink } from "./ui";
 
 type Tone = "success" | "danger" | "warning" | "neutral";
@@ -48,7 +49,7 @@ export function Receipt(props: {
   const detail = [
     r.detail?.trim() || null,
     typeof r.affected_count === "number" && r.affected_count > 1
-      ? `${r.affected_count.toLocaleString()} messages affected.`
+      ? `${r.affected_count.toLocaleString(CARD_LANGUAGE)} messages affected.`
       : null,
     r.outcome === "failed" && r.error_code ? `Error: ${r.error_code}` : null,
   ]

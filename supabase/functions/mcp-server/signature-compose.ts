@@ -228,6 +228,243 @@ export function applySignature<T extends { textBody: string; htmlBody?: string }
 }
 
 // ---------------------------------------------------------------------------
+// Editing a signed body as plain text without losing the rich signature
+// ---------------------------------------------------------------------------
+
+/** LF line endings, no trailing blanks on any line: the form two texts are compared in. */
+function comparableText(text: string): string {
+  return text.replace(/\r\n?/g, "\n").split("\n").map((line) => line.replace(/[ \t]+$/, ""))
+    .join("\n");
+}
+
+/**
+ * Where `needle` sits in `hay` as whole lines, searching from the end; -1 when
+ * it does not. With `endBy`, only a match that ends at or before that offset
+ * counts.
+ */
+function lastWholeLineMatch(hay: string, needle: string, endBy = hay.length): number {
+  let from = hay.length;
+  while (from >= 0) {
+    const at = hay.lastIndexOf(needle, from);
+    if (at === -1) return -1;
+    const end = at + needle.length;
+    if ((end === hay.length || hay[end] === "\n") && end <= endBy) return at;
+    from = at - 1;
+  }
+  return -1;
+}
+
+/**
+ * Where quoted content starts in a body, or the body's length when it has none.
+ *
+ * The lines that open a quoted original: our own reply attribution ("On <date>,
+ * <from> wrote:", index.ts#buildReplyTextBody), a `>` quote line, and the
+ * blocks other mail clients write ("-----Original Message-----", an Outlook
+ * "From:" line followed by "Sent:" or "Date:"). The signature the person's own
+ * text carries sits before all of these, so a match inside the quote is the
+ * quoted message's signature, not this one.
+ */
+function quoteStart(hay: string): number {
+  const patterns = [
+    /\nOn [^\n]{1,300} wrote:[ \t]*(?=\n|$)/,
+    /\n>/,
+    /\n-{2,}[ \t]*Original Message[ \t]*-{2,}/i,
+    /\nFrom: [^\n]+\n(?:Sent|Date): /,
+  ];
+  let start = hay.length;
+  for (const re of patterns) {
+    const m = re.exec(hay);
+    if (m && m.index < start) start = m.index;
+  }
+  return start;
+}
+
+/**
+ * True when `text` still carries the inbox's signature text, untouched (or,
+ * given the draft's HTML part, the signature text of the block it carries).
+ *
+ * "Untouched" is modulo line endings and trailing blanks, which a `<textarea>`
+ * changes without the person doing anything, and needs whole lines: a signature
+ * with two characters typed after it is an edited signature.
+ */
+export function bodyCarriesSignature(
+  text: string,
+  inbox: SignatureInbox,
+  storedHtml?: string | null,
+): boolean {
+  // The text asked about is the stored one here, so it decides whether a
+  // match without the delimiter line may count (see `splitAtSignature`).
+  return splitAtSignature(text, inbox, storedHtml, text) !== null;
+}
+
+/**
+ * The inner markup of the LAST `<div class="mcpemails-signature">` in an HTML
+ * part, or null when there is none or its `div`s do not balance.
+ *
+ * This is the signature exactly as the stored draft carries it, which is not
+ * always the inbox's signature of today: the person may have changed it on the
+ * dashboard after the draft was written.
+ */
+export function storedSignatureBlockOf(html: string | null | undefined): string | null {
+  if (typeof html !== "string") return null;
+  const open = `<div class="${SIGNATURE_HTML_CLASS}">`;
+  const at = html.lastIndexOf(open);
+  if (at === -1) return null;
+  const tag = /<(\/?)div\b[^>]*>/gi;
+  tag.lastIndex = at + open.length;
+  let depth = 1;
+  for (let m = tag.exec(html); m !== null; m = tag.exec(html)) {
+    depth += m[1] ? -1 : 1;
+    if (depth === 0) return html.slice(at + open.length, m.index);
+  }
+  return null;
+}
+
+/** One signature the edited text may still carry: its text half and the HTML to keep for it. */
+interface SignatureCandidate {
+  text: string;
+  html: string;
+}
+
+function signatureCandidates(
+  inbox: SignatureInbox,
+  storedHtml: string | null | undefined,
+): SignatureCandidate[] {
+  const out: SignatureCandidate[] = [];
+  // The draft's own block is re-sanitised before it is reused. It was written by
+  // `applySignature` from sanitised markup, so this is idempotent for every
+  // draft this server wrote; for one it did not write, it is the same rule
+  // `composeSignatureBlocks` applies to a stored signature.
+  const rawBlock = storedSignatureBlockOf(storedHtml);
+  const block = rawBlock === null ? "" : sanitizeSignatureHtmlSafe(rawBlock.trim());
+  const sig = composeSignatureBlocks(inbox);
+  if (sig) {
+    // The inbox's signature text, matched as the delimiter-plus-text
+    // `applySignature` wrote. When the draft has its own block, that block is
+    // what is kept: it is what the draft already showed, byte for byte, even if
+    // the dashboard copy has been restyled since.
+    out.push({ text: sig.text, html: block || sig.html });
+  }
+  if (block) {
+    // The signature has changed on the dashboard since the draft was written,
+    // so the text in the body is the OLD signature's text. The draft's block
+    // still says what it was.
+    const blockText = signatureHtmlToText(block);
+    if (blockText) out.push({ text: blockText, html: block });
+  }
+  return out;
+}
+
+/** True when a text carries the `-- ` signature delimiter as a line of its own. */
+function hasDelimiterLine(text: string): boolean {
+  return /(^|\n)--(\n|$)/.test(comparableText(text));
+}
+
+/**
+ * Where the edited `text` is split into the person's words and the signature,
+ * or null when it no longer carries an untouched signature.
+ *
+ * ── A MATCH WITHOUT THE DELIMITER LINE (review 2 of 2026-10-13) ────────────
+ * `applySignature` writes `-- ` then the signature, and a match on both is the
+ * signature. A match on the signature lines ALONE exists for Outlook, which
+ * hands the text part back derived from the HTML, with no delimiter line. But
+ * for a one-line signature ("Asgeir") the bare match is any line that says the
+ * same thing: a person who deleted `-- \nAsgeir` and signed off "Thanks,\nAsgeir"
+ * got the rich signature block put back into the HTML part. So the bare match
+ * counts only when the draft's STORED text (`storedText`) had no delimiter
+ * line either, which is the Outlook shape; a stored text that had one tells us
+ * that removing it removed the signature. When the stored text is not known,
+ * only a signature of more than one line may match bare: two whole lines
+ * repeated verbatim are the signature, one is just as likely a sign-off.
+ */
+function splitAtSignature(
+  text: string,
+  inbox: SignatureInbox,
+  storedHtml?: string | null,
+  storedText?: string | null,
+): { before: string; after: string; html: string } | null {
+  // A leading newline so a body that IS the signature still has a line break
+  // in front of its delimiter to match on.
+  const hay = `\n${comparableText(text)}`;
+  // The match nearest the quote, but outside it: a reply that quotes a message
+  // carrying the same signature has it twice, and the LAST one is in the quote
+  // (review of 2026-10-13). Only when nothing matches before the quote does a
+  // match inside it count, which is what this did before.
+  const quoted = quoteStart(hay);
+  const candidates = signatureCandidates(inbox, storedHtml);
+  for (const endBy of quoted < hay.length ? [quoted, hay.length] : [hay.length]) {
+    for (const candidate of candidates) {
+      const sigText = comparableText(candidate.text).trim();
+      if (!sigText) continue;
+      // With the delimiter `applySignature` writes ("-- " loses its space
+      // above), then without it: a provider that hands the text back derived
+      // from HTML (Outlook) has no delimiter line.
+      const bareAllowed = typeof storedText === "string"
+        ? !hasDelimiterLine(storedText)
+        : sigText.includes("\n");
+      const needles = bareAllowed ? [`\n--\n${sigText}`, `\n${sigText}`] : [`\n--\n${sigText}`];
+      for (const needle of needles) {
+        const at = lastWholeLineMatch(hay, needle, endBy);
+        if (at === -1) continue;
+        return {
+          before: hay.slice(0, at).replace(/^\n+|\n+$/g, ""),
+          after: hay.slice(at + needle.length).replace(/^\n+/, ""),
+          html: candidate.html,
+        };
+      }
+    }
+  }
+  return null;
+}
+
+/**
+ * The HTML part for a plain-text body a person just edited, keeping the rich
+ * signature. Null when the body no longer carries an untouched signature.
+ *
+ * The draft editor is a plain-text surface over a message whose HTML part ends
+ * in the inbox's formatted signature (logo, links, a table). Regenerating the
+ * whole HTML part from the edited text turned that signature into its text
+ * lines, with the `-- ` delimiter as a literal line of HTML (QA 2026-10-13).
+ * Here the text is split at the signature instead: what the person wrote is
+ * escaped by `plainTextBodyToHtml` as before, and the signature is the draft's
+ * own stored signature block (else the inbox's signature HTML) in the same
+ * wrapper `applySignature` writes, so the result is the message
+ * `applySignature` would have built for the new text. The delimiter is a
+ * plain-text convention and never reaches the HTML.
+ *
+ * `storedHtml` is the draft's current HTML part. It supplies the block to keep,
+ * and it lets a draft whose signature was changed on the dashboard since it was
+ * written keep the signature it has. `storedText` is the draft's current text
+ * part: whether IT had a delimiter line decides whether the edited text may
+ * match the signature without one (`splitAtSignature`).
+ *
+ * Text after the signature (the quoted original of a reply) follows it,
+ * escaped.
+ *
+ * NULL MEANS THE FORMATTING CANNOT BE KEPT. The person edited the signature
+ * lines themselves, so no stored markup says what they typed. The caller decides
+ * what to write instead; the draft editor writes no HTML part at all and tells
+ * the card so (`body.formatting_removed`).
+ */
+export function rebuildHtmlKeepingSignature(
+  text: string,
+  inbox: SignatureInbox,
+  storedHtml?: string | null,
+  storedText?: string | null,
+): string | null {
+  const split = splitAtSignature(text, inbox, storedHtml, storedText);
+  if (!split) return null;
+  const sigHtmlBlock = `\n<div class="${SIGNATURE_HTML_CLASS}">${split.html}</div>`;
+  const tail = split.after ? `\n<br>\n${plainTextBodyToHtml(split.after)}` : "";
+  return `${plainTextBodyToHtml(split.before)}${sigHtmlBlock}${tail}`;
+}
+
+/** True when an HTML part carries our signature wrapper. */
+export function htmlCarriesSignatureBlock(html: string | null | undefined): boolean {
+  return typeof html === "string" && html.includes(`class="${SIGNATURE_HTML_CLASS}"`);
+}
+
+// ---------------------------------------------------------------------------
 // Held sends: who signs, and when
 // ---------------------------------------------------------------------------
 

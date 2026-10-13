@@ -473,7 +473,31 @@ import {
 } from "./protocol-version-header.ts";
 import { dropRedundantAction, normalizeArgumentAliases } from "./argument-aliases.ts";
 import {
+  closeDraftLine,
+  draftIdIsRecordable,
+  draftLineageRecordedFrom,
+  type DraftLineageRow,
+  type DraftLineageScope,
+  type DraftLineageStore,
+  type DraftWriter,
+  lineRevision,
+  needsExistenceCheck,
+  parseBaseRevision,
+  preferExistingId,
+  recordDraftWrite,
+  resolveDraftId,
+  type ResolvedDraft,
+} from "./draft-lineage.ts";
+import {
+  applyRecipientOverride,
+  approvedSendRefusalDetail,
+  planDraftSend,
+} from "./draft-send-plan.ts";
+import { htmlCarriesSignatureBlock } from "./signature-compose.ts";
+import {
   byteStringToBase64url,
+  gmailHeaderValue,
+  invalidRecipientIn,
   type RecipientOverride,
   recipientOverrideFrom,
   rewriteRecipientHeaders,
@@ -5473,6 +5497,12 @@ const LEGACY_TOOLS: ToolDefinition[] = [
           type: "array",
           items: { type: "string", format: "email" },
           description: "Replaces the draft's stored Bcc.",
+        },
+        base_revision: {
+          type: "integer",
+          minimum: 0,
+          description: "Set by the draft editor card: the revision it shows. A draft " +
+            "changed since is refused as draft_changed. Omit it.",
         },
         idempotency_key: IDEMPOTENCY_KEY_PROPERTY,
       },
@@ -24566,6 +24596,13 @@ interface DraftSendResult {
   draft_id: string;
   message_id: string;
   sent_at: string;
+  /**
+   * IMAP only, and NEVER part of the tool result: false when the post-send
+   * delete of the draft failed, so its copy is still in Drafts. The lineage
+   * records that (`sent_kept`) and executeSendDraft strips the field before the
+   * payload is built, so `content` stays byte for byte what it was.
+   */
+  draft_removed?: boolean;
 }
 
 interface DraftDeleteResult {
@@ -24628,6 +24665,13 @@ interface DraftContent {
   bodyText?: string | null;
   bodyHtml?: string | null;
   attachments?: { filename: string; size_bytes: number | null; mime_type: string | null }[];
+  /**
+   * The mailbox's own timestamp for the stored draft, when the read has one:
+   * the message's Date header (IMAP), `internalDate` (Gmail) or
+   * `lastModifiedDateTime` (Outlook). The editor shows it as "saved at"; a read
+   * used to stamp the time of the read instead.
+   */
+  savedAt?: string | null;
 }
 
 
@@ -24663,7 +24707,9 @@ async function imapListDrafts(
       const uids = await client.uidSearch("ALL");
       if (uids.length > 0) {
         const page = uids.slice(-limit).reverse();
-        summaries = await client.fetchSummaries(page);
+        // `includeCc`: the listing reported `cc: []` for every IMAP draft,
+        // whatever the draft held. ENVELOPE carries Cc; it was never read.
+        summaries = await client.fetchSummaries(page, { includeCc: true });
       }
     } catch {
       // No Drafts mailbox on this account (and nothing to create for a list
@@ -24673,7 +24719,7 @@ async function imapListDrafts(
       draft_id: encodeImapId(draftFolder, s.uid),
       subject: decodeEnvelopeSubject(s.envelope.subject || "(no subject)"),
       to: s.envelope.to.map(decodeEnvelopeAddress),
-      cc: [],
+      cc: (s.envelope.cc ?? []).map(decodeEnvelopeAddress),
       created_at: imapDateToIso(s.envelope.date),
     }));
   } catch (err) {
@@ -24732,6 +24778,7 @@ async function imapGetDraft(
         size_bytes: typeof a.size === "number" ? a.size : null,
         mime_type: a.mimeType ?? null,
       })),
+      savedAt: getHeader(h, "date") ?? null,
     };
   } catch (err) {
     if (err instanceof ImapAuthError) throw new Error("imap_auth_failed");
@@ -25132,7 +25179,10 @@ async function imapSendDraft(
   await appendToSentFolder(inbox, sentMime);
 
   // Step 5: Delete the draft (best-effort — failure must not fail the send).
+  // Whether it worked is reported (`draft_removed`), never thrown: a draft
+  // copy left behind under the same id must not be sendable again.
   let client: ImapClient | null = null;
+  let draftRemoved = false;
   try {
     client = await ImapClient.connect({
       host: inbox.imap_host!,
@@ -25146,6 +25196,7 @@ async function imapSendDraft(
     await client.selectMailbox(folder);
     await client.uidStore([uid], ["\\Deleted"], "add");
     await client.uidExpunge([uid]);
+    draftRemoved = true;
   } catch {
     // best-effort
   } finally {
@@ -25157,6 +25208,7 @@ async function imapSendDraft(
     draft_id: draftId,
     message_id: origMsgId || `<${draftId}@mcpemails.com>`,
     sent_at: new Date().toISOString(),
+    draft_removed: draftRemoved,
   };
 }
 
@@ -25251,10 +25303,13 @@ async function gmailListDrafts(
           payload?: { headers?: { name: string; value: string }[] };
           internalDate?: string;
         };
+        // Header names are matched without regard to case. Gmail returns them
+        // as the message spells them, and a draft another client wrote may say
+        // `CC:` or `cc:`, which an exact `"Cc"` match read as no Cc at all.
         const hdr = msgData.payload?.headers ?? [];
-        const subject = hdr.find((h) => h.name === "Subject")?.value ?? "(no subject)";
-        const toRaw = hdr.find((h) => h.name === "To")?.value ?? "";
-        const ccRaw = hdr.find((h) => h.name === "Cc")?.value ?? "";
+        const subject = gmailHeaderValue(hdr, "Subject") ?? "(no subject)";
+        const toRaw = gmailHeaderValue(hdr, "To") ?? "";
+        const ccRaw = gmailHeaderValue(hdr, "Cc") ?? "";
         const internalDate = msgData.internalDate
           ? new Date(parseInt(msgData.internalDate, 10)).toISOString()
           : new Date().toISOString();
@@ -25346,9 +25401,12 @@ async function gmailGetDraftForEditor(
     if (resp.status === 401) throw new Error("gmail_auth_failed");
     return null;
   }
-  const data = (await resp.json()) as { message?: { threadId?: string; raw?: string } };
+  const data = (await resp.json()) as {
+    message?: { threadId?: string; raw?: string; internalDate?: string };
+  };
   const raw = data.message?.raw;
   if (typeof raw !== "string") return null;
+  const internalMs = Number(data.message?.internalDate);
   // `atob` of the base64url form yields a latin1 string — one char per byte —
   // which is exactly what `parseEmail` documents as its input, so per-part
   // charset decoding still happens where it belongs.
@@ -25369,6 +25427,9 @@ async function gmailGetDraftForEditor(
       size_bytes: typeof a.size === "number" ? a.size : null,
       mime_type: a.mimeType ?? null,
     })),
+    savedAt: Number.isFinite(internalMs) && internalMs > 0
+      ? new Date(internalMs).toISOString()
+      : (getHeader(h, "date") ?? null),
   };
 }
 
@@ -25471,8 +25532,12 @@ async function gmailUpdateDraft(
     if (resp.status === 404) throw new Error("draft_not_found");
     throw new Error(`Gmail drafts.update error: ${resp.statusText}`);
   }
+  // The id Gmail answers with, not the one that was passed. They are expected
+  // to be equal; if Gmail ever hands back a different one, that is the id the
+  // draft now has, and the lineage records the move like an IMAP rewrite.
+  const updated = (await resp.json().catch(() => null)) as { id?: unknown } | null;
   return {
-    draft_id: draftId,
+    draft_id: typeof updated?.id === "string" && updated.id ? updated.id : draftId,
     subject: params.subject,
     updated_at: new Date().toISOString(),
   };
@@ -25656,6 +25721,7 @@ async function outlookGetDraftForEditor(
     body?: { contentType?: string; content?: string };
     hasAttachments?: boolean;
     conversationId?: string;
+    lastModifiedDateTime?: string;
     toRecipients?: { emailAddress: { address: string; name?: string } }[];
     ccRecipients?: { emailAddress: { address: string; name?: string } }[];
     bccRecipients?: { emailAddress: { address: string; name?: string } }[];
@@ -25704,6 +25770,7 @@ async function outlookGetDraftForEditor(
     bodyText: isHtml ? stripHtmlToText(content) : content,
     bodyHtml: isHtml ? content : null,
     attachments,
+    savedAt: data.lastModifiedDateTime ?? null,
   };
 }
 
@@ -26285,6 +26352,221 @@ async function allReachableInboxesHideDraftEditor(
   }
 }
 
+// ---------------------------------------------------------------------------
+// Draft lineage (draft-lineage.ts): the `public.draft_lineage` store.
+//
+// Service-role reads and writes, and EVERY statement filters on workspace_id
+// AND inbox_id. The inbox id always comes from `resolveInboxArg`, which has
+// already applied the calling key's workspace and inbox allowlist.
+//
+// Each method throws on a PostgREST error and the functions in
+// draft-lineage.ts catch, log and carry on. That covers a database where the
+// table does not exist yet (this function deployed ahead of
+// 20261013120000_draft_lineage.sql): PostgREST answers with an error, the id
+// resolves to itself, and every draft tool behaves as it did before.
+// ---------------------------------------------------------------------------
+const DRAFT_LINEAGE_COLUMNS =
+  "line_id, draft_id, revision, written_by, written_at, closed_at, closed_reason";
+
+const draftLineageStore: DraftLineageStore = {
+  async find(scope, draftId) {
+    const { data, error } = await supabase
+      .from("draft_lineage")
+      .select(DRAFT_LINEAGE_COLUMNS)
+      .eq("workspace_id", scope.workspaceId)
+      .eq("inbox_id", scope.inboxId)
+      .eq("draft_id", draftId)
+      .maybeSingle();
+    if (error) throw new Error(error.message);
+    return (data as DraftLineageRow | null) ?? null;
+  },
+  async head(scope, lineId) {
+    const { data, error } = await supabase
+      .from("draft_lineage")
+      .select(DRAFT_LINEAGE_COLUMNS)
+      .eq("workspace_id", scope.workspaceId)
+      .eq("inbox_id", scope.inboxId)
+      .eq("line_id", lineId)
+      .order("revision", { ascending: false })
+      .order("written_at", { ascending: false })
+      .limit(1)
+      .maybeSingle();
+    if (error) throw new Error(error.message);
+    return (data as DraftLineageRow | null) ?? null;
+  },
+  // One RPC, so the revision is computed inside the database under a lock
+  // (migration 20261013120000_draft_lineage.sql, `draft_lineage_record`). A
+  // database without the function answers with an error, which
+  // recordDraftWrite catches like any other: the write is not recorded.
+  async record(scope, write) {
+    const { data, error } = await supabase.rpc("draft_lineage_record", {
+      p_workspace_id: scope.workspaceId,
+      p_inbox_id: scope.inboxId,
+      p_draft_id: write.draftId,
+      p_written_by: write.writtenBy,
+      p_line_id: write.lineId,
+      p_expected_revision: write.expectedRevision,
+      p_seed_draft_id: write.seedDraftId,
+      p_adopt: write.adopt,
+      p_written_at: write.writtenAt,
+    });
+    if (error) throw new Error(error.message);
+    return draftLineageRecordedFrom(data);
+  },
+  async close(scope, lineId, reason, at) {
+    const { error } = await supabase
+      .from("draft_lineage")
+      .update({ closed_at: at, closed_reason: reason })
+      .eq("workspace_id", scope.workspaceId)
+      .eq("inbox_id", scope.inboxId)
+      .eq("line_id", lineId);
+    if (error) throw new Error(error.message);
+  },
+};
+
+/** Null under introspection, where the default client points at nothing. */
+function lineageStore(): DraftLineageStore | null {
+  return INTROSPECTION_ONLY ? null : draftLineageStore;
+}
+
+function lineageScope(apiKey: ApiKeyRow, inboxId: string): DraftLineageScope {
+  return { workspaceId: apiKey.workspace_id, inboxId };
+}
+
+/** Any id of a draft -> its current id. Never throws; unknown resolves to itself. */
+function resolveDraftLine(
+  apiKey: ApiKeyRow,
+  inboxId: string,
+  draftId: string,
+): Promise<ResolvedDraft> {
+  return resolveDraftId(lineageStore(), lineageScope(apiKey, inboxId), draftId);
+}
+
+/**
+ * Record a draft write. Never throws. Resolves to the new revision, or null.
+ *
+ * An id the provider did not confirm (IMAP `Drafts:0`, see
+ * draft-lineage.ts#draftIdIsRecordable) is not recorded: the write stands and
+ * the line stays where it was.
+ */
+function recordDraftLine(
+  apiKey: ApiKeyRow,
+  inbox: { id: string; provider?: string | null },
+  previous: ResolvedDraft | null,
+  draftId: string,
+  writtenBy: DraftWriter,
+  at?: string,
+): Promise<number | null> {
+  if (!draftIdIsRecordable(inbox.provider ?? "", draftId)) {
+    console.warn("[mcp-server] draft_lineage_write_skipped", {
+      inbox_id: inbox.id,
+      reason: "unconfirmed_draft_id",
+    });
+    return Promise.resolve(null);
+  }
+  return recordDraftWrite(lineageStore(), lineageScope(apiKey, inbox.id), {
+    previous,
+    draftId,
+    writtenBy,
+    at,
+  });
+}
+
+/**
+ * `resolveDraftLine`, checked against the mailbox where the lineage answer may
+ * name a different message than the id does today (draft-lineage.ts
+ * #preferExistingId): a redirect, or a closed line. Only those two rare paths
+ * pay the extra read. A read that fails counts as "not there", which keeps the
+ * lineage answer.
+ */
+async function resolveSettledDraftLine(
+  apiKey: ApiKeyRow,
+  inbox: InboxRow,
+  draftId: string,
+): Promise<ResolvedDraft> {
+  const line = await resolveDraftLine(apiKey, inbox.id, draftId);
+  if (!needsExistenceCheck(line)) return line;
+  let exists = false;
+  try {
+    exists = (await getDraftForEditor(inbox as unknown as DraftEditorProviderInbox, draftId)) !== null;
+  } catch {
+    exists = false;
+  }
+  return preferExistingId(line, exists);
+}
+
+/** Put the lineage revision on a draft_editor envelope built before it was known. */
+function withDraftRevision(
+  card: Record<string, unknown> | null,
+  revision: number | null,
+): Record<string, unknown> | null {
+  const draft = card?.draft as Record<string, unknown> | undefined;
+  if (draft && typeof revision === "number" && revision >= 1) draft.revision = revision;
+  return card;
+}
+
+/**
+ * A `draft` refusal that changed nothing, for the two codes the lineage adds:
+ *
+ *   draft_already_sent  the draft's line was closed by a send through this
+ *                       server. Retrying would deliver a second copy, even
+ *                       where the sent draft's copy is still in Drafts (the
+ *                       IMAP post-send delete is best-effort).
+ *   draft_changed       a send from the draft editor card against a draft that
+ *                       was rewritten after the card loaded it
+ *                       (draft-lineage.ts#cardWriteConflict).
+ *
+ * `content` is the model's sentence. In a workspace with the editor on, a
+ * failed receipt rides in `structuredContent` too, so the card can say what
+ * happened in a person's words and keep the editor (store.ts#mergeEnvelope).
+ */
+async function draftLineRefusal(
+  apiKey: ApiKeyRow,
+  inbox: InboxRow,
+  code: "draft_already_sent" | "draft_changed",
+  text: string,
+  person: { headline: string; detail: string },
+): Promise<{
+  result: { content: { type: string; text: string }[]; structuredContent?: Record<string, unknown>; isError: true };
+  logStatus: "error";
+  logErrorCode: string;
+}> {
+  let card: Record<string, unknown> | null = null;
+  try {
+    const [enabled, hidden] = await Promise.all([
+      workspaceDraftEditorEnabled(apiKey.workspace_id),
+      readInboxDraftEditorHidden(inbox.id),
+    ]);
+    if (enabled && !hidden) {
+      card = draftReceiptEnvelope({
+        outcome: "failed",
+        headline: person.headline,
+        detail: person.detail,
+        affected_count: 0,
+        dashboard_url: `${APP_URL}/dashboard`,
+        error_code: code,
+      });
+    }
+  } catch {
+    card = null;
+  }
+  return {
+    result: {
+      content: [{ type: "text", text }],
+      ...(card ? { structuredContent: card } : {}),
+      isError: true,
+    },
+    logStatus: "error",
+    logErrorCode: code,
+  };
+}
+
+/** The person's words for a draft that was already sent. */
+const DRAFT_ALREADY_SENT_PERSON = {
+  headline: "This draft was already sent.",
+  detail: "Nothing was sent again. The message is in your Sent folder.",
+};
+
 /**
  * Read one draft with its body, per provider.
  *
@@ -26361,6 +26643,11 @@ function draftEditorDepsFor(apiKey: ApiKeyRow): DraftEditorDeps {
     getDraft: getDraftForEditor,
     updateDraft: updateDraftForEditor,
     isValidEmailAddress,
+    lineage: {
+      resolve: (inbox, draftId) => resolveDraftLine(apiKey, inbox.id, draftId),
+      recordWrite: (inbox, previous, draftId, writtenBy, at) =>
+        recordDraftLine(apiKey, inbox, previous, draftId, writtenBy, at),
+    },
     setDraftEditorHidden: async (scope, ids, hidden) => {
       // Scoped by workspace on BOTH branches, not just by id. The inbox id
       // already came through `resolveInbox` (which applies the workspace filter
@@ -26422,6 +26709,8 @@ async function draftEditorEnvelopeForWrite(
     signatureEmbedded: boolean;
     lastSavedAt: string;
     inReplyTo?: { message_id: string; subject: string | null; from: string | null } | null;
+    /** The lineage revision the write left the draft at, when it was recorded. */
+    revision?: number | null;
   },
 ): Promise<Record<string, unknown> | null> {
   try {
@@ -26459,6 +26748,7 @@ async function draftEditorEnvelopeForWrite(
       attachments: [],
       in_reply_to: input.inReplyTo ?? null,
       signature_embedded: input.signatureEmbedded,
+      signature_rich: htmlCarriesSignatureBlock(input.params.htmlBody),
       last_saved_at: input.lastSavedAt,
       // The headers the write carried. On an update they are the ones read off
       // the existing draft, and they are what makes the envelope say `threaded`
@@ -26476,6 +26766,7 @@ async function draftEditorEnvelopeForWrite(
       // An agent wrote this one. Only `draft_editor_save` says "user".
       lastSavedBy: "agent",
       canSend: apiKey.scopes.includes("send:email") && hasRecipient,
+      revision: input.revision ?? null,
     });
   } catch (error) {
     console.warn("[mcp-server] draft_editor_envelope_failed", {
@@ -26642,6 +26933,7 @@ async function executeCreateReplyDraft(
         html: signed.htmlBody,
         text: signed.textBody,
       });
+      await recordDraftLine(apiKey, inbox, null, draft.id, "agent");
       return { result: jsonOk({ draft_id: draft.id, subject: draft.subject ?? "(no subject)", to: draft.toRecipients, created_at: draft.createdDateTime ?? new Date().toISOString(), in_reply_to: messageId, threading: "native" }), logStatus: "success", logErrorCode: null };
     }
 
@@ -26724,6 +27016,8 @@ async function executeCreateReplyDraft(
     // on email_compose reply.
     const params: DraftParams = { to, cc: replyExtraAddresses(args["cc"]), bcc: replyExtraAddresses(args["bcc"]), subject, body: buildReplyTextBody(signed.textBody, originalFrom, originalDate, originalBody), htmlBody: signed.htmlBody, threadId, inReplyTo: inReplyTo || undefined, references: references || undefined };
     const created = inbox.provider === "gmail" ? await gmailCreateDraft(inbox, params) : await imapCreateDraft(inbox, params);
+    // Opens the draft's line (draft-lineage.ts). Fail-soft.
+    const replyRevision = await recordDraftLine(apiKey, inbox, null, created.draft_id, "agent", created.created_at);
     const output: DraftReplyResult = { ...created, in_reply_to: messageId, threading: inbox.provider === "gmail" ? "native" : "standards_based" };
     // MCP Apps (contract §8) — see the note in executeCreateDraft. This is the
     // one path that can populate `draft.in_reply_to`: `messageId` is a SERVER
@@ -26738,6 +27032,7 @@ async function executeCreateReplyDraft(
       params,
       signatureEmbedded: signed.textBody !== body,
       lastSavedAt: created.created_at,
+      revision: replyRevision,
       inReplyTo: {
         message_id: messageId,
         subject: originalSubjectForCard || null,
@@ -26878,15 +27173,20 @@ async function executeCreateDraft(
     string,
     unknown
   >;
-  const cardEnvelope = await draftEditorEnvelopeForWrite(apiKey, inbox, {
-    draftId: draftResult.draft_id,
-    origin: "create",
-    params: draftParams,
-    signatureEmbedded: signed.textBody !== body,
-    lastSavedAt: draftResult.created_at,
-  });
+  // The envelope's reads and the lineage write run together: both are our own
+  // tables, and neither can fail the draft that is already stored.
+  const [cardEnvelope, createRevision] = await Promise.all([
+    draftEditorEnvelopeForWrite(apiKey, inbox, {
+      draftId: draftResult.draft_id,
+      origin: "create",
+      params: draftParams,
+      signatureEmbedded: signed.textBody !== body,
+      lastSavedAt: draftResult.created_at,
+    }),
+    recordDraftLine(apiKey, inbox, null, draftResult.draft_id, "agent", draftResult.created_at),
+  ]);
   return {
-    result: draftCardToolResult(createPayload, cardEnvelope),
+    result: draftCardToolResult(createPayload, withDraftRevision(cardEnvelope, createRevision)),
     logStatus: "success", logErrorCode: null,
   };
 }
@@ -26907,9 +27207,9 @@ async function executeUpdateDraft(
     };
   }
   const args = rawArgs as Record<string, unknown>;
-  const draftId = typeof args["draft_id"] === "string" && args["draft_id"].length > 0
+  const requestedDraftId = typeof args["draft_id"] === "string" && args["draft_id"].length > 0
     ? args["draft_id"] : null;
-  if (!draftId) {
+  if (!requestedDraftId) {
     return {
       result: { content: [{ type: "text", text: "draft_update: draft_id is required and must be a non-empty string." }], isError: true },
       logStatus: "error", logErrorCode: "-32602",
@@ -26976,6 +27276,34 @@ async function executeUpdateDraft(
 
   const caps = getProviderCapabilities(inbox.provider);
   if (!caps.drafts) return unsupportedFeatureError("drafts", inbox.provider);
+
+  // ── ANY ID OF THE DRAFT WILL DO (draft-lineage.ts) ───────────────────────
+  // On IMAP every update and every editor save gives the draft a new id, and a
+  // model holds the one from before. The lineage maps an older id of the same
+  // draft to its current one, so the update lands on the draft instead of
+  // `draft_not_found`. An id with no line, and any lineage failure, resolves
+  // to itself, which is the behaviour before lineage existed.
+  //
+  // Unless the id itself still names a message (a reused id): preferExistingId.
+  const draftLine = await resolveSettledDraftLine(apiKey, inbox, requestedDraftId);
+  const draftId = draftLine.draftId;
+
+  // A draft this server already sent is not rewritten. Rewriting it would make
+  // a fresh draft out of the sent message's copy (IMAP keeps one when the
+  // post-send delete fails), and the next send would deliver it twice.
+  if (draftLine.closed === "sent") {
+    return await draftLineRefusal(
+      apiKey,
+      inbox,
+      "draft_already_sent",
+      `draft_update: draft ${requestedDraftId} was already sent, so it was not changed. ` +
+        "Nothing was written.",
+      {
+        headline: DRAFT_ALREADY_SENT_PERSON.headline,
+        detail: "It was not changed. The message is in your Sent folder.",
+      },
+    );
+  }
 
   // When any of subject/to/cc/bcc was omitted, preserve the draft's existing
   // value rather than blanking it (Gmail/IMAP updates are full-replace; Outlook/
@@ -27067,6 +27395,16 @@ async function executeUpdateDraft(
   // stamped here rather than in the three provider functions: they are told the
   // headers and do not report them back.
   updateResult.threaded = Boolean(inReplyTo || threadId);
+  // The line moves to the id the provider returned. Awaited so the next call
+  // with the old id already resolves; fail-soft, the draft is updated either way.
+  const updateRevision = await recordDraftLine(
+    apiKey,
+    inbox,
+    draftLine,
+    updateResult.draft_id,
+    "agent",
+    updateResult.updated_at,
+  );
   const updatePayload = buildDraftMutationEnvelope(updateResult) as unknown as Record<
     string,
     unknown
@@ -27077,6 +27415,7 @@ async function executeUpdateDraft(
     params: draftParams,
     signatureEmbedded: signed.textBody !== body,
     lastSavedAt: updateResult.updated_at,
+    revision: updateRevision,
   });
   return {
     result: draftCardToolResult(updatePayload, updateCard),
@@ -27133,6 +27472,94 @@ async function executeSendDraft(
   const caps = getProviderCapabilities(inbox.provider);
   if (!caps.drafts) return unsupportedFeatureError("drafts", inbox.provider);
 
+  // ── A recipient that is not an address is refused, not written (2026-10-13)
+  // The override below drops what it cannot read and writes the rest into the
+  // header as given, so a mistyped address was either left off the mail or
+  // stored as a recipient no server accepts. Nothing has been touched yet.
+  const badRecipient = invalidRecipientIn(args, isValidEmailAddress);
+  if (badRecipient) {
+    return {
+      result: {
+        content: [{
+          type: "text",
+          text: `draft_send: invalid email address in ${badRecipient.field}: "${String(badRecipient.entry)}". ` +
+            "Nothing was sent and the draft was not changed.",
+        }],
+        isError: true,
+      },
+      logStatus: "error", logErrorCode: "invalid_recipient",
+    };
+  }
+
+  // `base_revision` marks a send from the draft editor card: the revision of
+  // the copy the person is looking at. See the card-write rule below.
+  const baseRevision = parseBaseRevision(args["base_revision"]);
+  if (baseRevision === "invalid") {
+    return {
+      result: { content: [{ type: "text", text: "draft_send: base_revision must be a non-negative integer." }], isError: true },
+      logStatus: "error", logErrorCode: "-32602",
+    };
+  }
+
+  // Any id of the draft will do: see the note in executeUpdateDraft.
+  //
+  // EXCEPT for an approved held send. The dispatcher re-runs this function
+  // with the id the approval was queued with, and the reviewer approved that
+  // draft as summarised then. Following the line would send a version written
+  // after the approval was asked for, so an approved send keeps the id it was
+  // given, and it carries the `base_revision` the draft had when it was
+  // queued: a draft rewritten since (on any provider, including Gmail and
+  // Outlook where the id never moves) is refused as draft_changed, and the
+  // approver reads why in the send's error detail
+  // (draft-send-plan.ts#approvedSendRefusalDetail).
+  //
+  // The rules for the id are in draft-send-plan.ts, where they are tested:
+  // the approved send above, a line already closed by a send, a card send
+  // against a draft rewritten since, and the id a held send is queued with.
+  const requestedDraftId = draftId;
+  const plan = planDraftSend({
+    args,
+    line: await resolveSettledDraftLine(apiKey, inbox, draftId),
+    baseRevision,
+    approvalDispatch: apiKey.internalApprovalDispatch === true,
+  });
+
+  // ── NEVER A SECOND COPY ──────────────────────────────────────────────────
+  // On IMAP the post-send delete is best-effort, so the sent draft's copy can
+  // still be in Drafts under the same id, and sending it was a duplicate
+  // (review of 2026-10-13). A reused id whose message is a different draft is
+  // let through by preferExistingId, which knows whether a copy was left.
+  if (plan.kind === "refuse" && plan.code === "draft_already_sent") {
+    return await draftLineRefusal(
+      apiKey,
+      inbox,
+      "draft_already_sent",
+      `draft_send: draft ${requestedDraftId} was already sent` +
+        (plan.sentCopyKept ? ", and its copy is still in the Drafts folder" : "") +
+        ". Nothing was sent again.",
+      DRAFT_ALREADY_SENT_PERSON,
+    );
+  }
+
+  // ── A SEND FROM THE CARD SENDS WHAT THE CARD SHOWED ──────────────────────
+  // A card still showing an older revision would deliver recipients and
+  // wording the person never saw (draft-lineage.ts#cardWriteConflict).
+  if (plan.kind === "refuse") {
+    return await draftLineRefusal(
+      apiKey,
+      inbox,
+      "draft_changed",
+      `draft_send: draft ${requestedDraftId} was changed after the draft editor loaded it. ` +
+        "Nothing was sent.",
+      {
+        headline: "This draft was changed somewhere else.",
+        detail: "Nothing was sent. Your text is still here. Load the newer version and check it before sending.",
+      },
+    );
+  }
+  let draftLine = plan.line;
+  draftId = plan.draftId;
+
   // ── Recipients set at send time (2026-09-23) ─────────────────────────────
   // to / cc / bcc given here replace the draft's stored lists BEFORE anything
   // else looks at the draft, so the recipient preflight, the approval card and
@@ -27142,11 +27569,32 @@ async function executeSendDraft(
   // The approval, if one is required, is queued against the rewritten draft
   // and WITHOUT the override: its later re-run must send that draft, not
   // rewrite a draft id that (on IMAP) no longer exists.
+  //
+  // The rewrite is recorded in the lineage every time, also on Gmail and
+  // Outlook where the id does not move: the recipients changed, so the
+  // revision must, or a card still at the old revision could Send to people it
+  // never showed after this send was held or failed (review 2 of 2026-10-13).
+  // The rules, tested, are in draft-send-plan.ts#applyRecipientOverride.
   const recipientOverride = recipientOverrideFrom(args);
-  let approvalArgs: Record<string, unknown> = args;
+  // The RESOLVED id, not the one the caller held (planDraftSend): the approval
+  // summary reads the draft by this id, and so does the post-approval re-run.
+  // An older id of the draft summarised as blank and then failed as
+  // draft_not_found. It also carries `base_revision`, always, so the re-run
+  // refuses a draft rewritten after the approval was asked for.
+  let approvalArgs: Record<string, unknown> = plan.approvalArgs;
   if (recipientOverride) {
     try {
-      draftId = await rewriteDraftRecipients(inbox, draftId, recipientOverride);
+      const applied = await applyRecipientOverride(
+        { args, draftId, line: draftLine, baseRevision },
+        {
+          rewrite: (id) => rewriteDraftRecipients(inbox, id, recipientOverride),
+          record: (previous, id) => recordDraftLine(apiKey, inbox, previous, id, "agent"),
+          resolve: (id) => resolveDraftLine(apiKey, inbox.id, id),
+        },
+      );
+      draftId = applied.draftId;
+      draftLine = applied.line;
+      approvalArgs = applied.approvalArgs;
     } catch (err) {
       const message = err instanceof Error ? err.message : String(err);
       if (message === "draft_not_found") {
@@ -27172,10 +27620,6 @@ async function executeSendDraft(
         resultExtra: { delivery_status: DELIVERY_STATUS_NOT_SENT },
       });
     }
-    approvalArgs = { ...args, draft_id: draftId };
-    delete approvalArgs["to"];
-    delete approvalArgs["cc"];
-    delete approvalArgs["bcc"];
   }
 
   // ── Pre-flight: a draft with no recipients must not be handed to a provider.
@@ -27331,18 +27775,31 @@ async function executeSendDraft(
   // payload already carries `sent_at` at the top level (the §8 merge), and the
   // card formats it with the browser's resolved locale. So the sentence says
   // where it went and the card says when.
-  const sentCard = await draftEditorReceiptFor(
-    apiKey,
-    inbox,
-    "sent",
-    `Delivered via ${draftProviderBlock(inbox.provider).label}.`,
-    // A label, not a sentence: it sits beside the sender address in the card's
-    // header, where "Sent." read as a stray full stop. §4's fallback headline
-    // for this outcome has always been the bare word.
-    "Sent",
-  );
+  // `draft_removed` is bookkeeping for the lineage, never part of the result.
+  const { draft_removed: draftRemoved, ...sentPayload } = sendResult;
+  const [sentCard] = await Promise.all([
+    draftEditorReceiptFor(
+      apiKey,
+      inbox,
+      "sent",
+      `Delivered via ${draftProviderBlock(inbox.provider).label}.`,
+      // A label, not a sentence: it sits beside the sender address in the card's
+      // header, where "Sent." read as a stray full stop. §4's fallback headline
+      // for this outcome has always been the bare word.
+      "Sent",
+    ),
+    // The line ends here: no id of this draft resolves any more, and a card
+    // still holding one is told the draft was sent. `sent_kept` when the
+    // draft's copy could not be removed, so that copy is never sent again.
+    closeDraftLine(
+      lineageStore(),
+      lineageScope(apiKey, inbox.id),
+      draftLine,
+      draftRemoved === false ? "sent_kept" : "sent",
+    ),
+  ]);
   return {
-    result: draftCardToolResult(sendResult as unknown as Record<string, unknown>, sentCard),
+    result: draftCardToolResult(sentPayload as unknown as Record<string, unknown>, sentCard),
     logStatus: "success", logErrorCode: null,
   };
 }
@@ -27363,9 +27820,9 @@ async function executeDeleteDraft(
     };
   }
   const args = rawArgs as Record<string, unknown>;
-  const draftId = typeof args["draft_id"] === "string" && args["draft_id"].length > 0
+  const requestedDraftId = typeof args["draft_id"] === "string" && args["draft_id"].length > 0
     ? args["draft_id"] : null;
-  if (!draftId) {
+  if (!requestedDraftId) {
     return {
       result: { content: [{ type: "text", text: "draft_delete: draft_id is required and must be a non-empty string." }], isError: true },
       logStatus: "error", logErrorCode: "-32602",
@@ -27378,6 +27835,10 @@ async function executeDeleteDraft(
 
   const caps = getProviderCapabilities(inbox.provider);
   if (!caps.drafts) return unsupportedFeatureError("drafts", inbox.provider);
+
+  // Any id of the draft will do: see the note in executeUpdateDraft.
+  const draftLine = await resolveSettledDraftLine(apiKey, inbox, requestedDraftId);
+  const draftId = draftLine.draftId;
 
   let deleteResult: DraftDeleteResult;
   try {
@@ -27418,13 +27879,16 @@ async function executeDeleteDraft(
   // MCP Apps (contract §8): a discarded draft flips the card to a receipt, so
   // the editor the person was looking at says what happened to it rather than
   // sitting on a draft that no longer exists.
-  const discardedCard = await draftEditorReceiptFor(
-    apiKey,
-    inbox,
-    "discarded",
-    "The draft was removed from Drafts without being sent.",
-    "Discarded. Nothing was sent.",
-  );
+  const [discardedCard] = await Promise.all([
+    draftEditorReceiptFor(
+      apiKey,
+      inbox,
+      "discarded",
+      "The draft was removed from Drafts without being sent.",
+      "Discarded. Nothing was sent.",
+    ),
+    closeDraftLine(lineageStore(), lineageScope(apiKey, inbox.id), draftLine, "deleted"),
+  ]);
   return {
     result: draftCardToolResult(deleteResult as unknown as Record<string, unknown>, discardedCard),
     logStatus: "success", logErrorCode: null,
@@ -30691,7 +31155,12 @@ async function handleScheduledDispatch(
           if (dispatchedResult.logErrorCode === PROVIDER_NOT_SENT_ERROR_CODE) {
             throw new SmtpNotSentError(`approved ${approval.operation} was refused before transmission`, true);
           }
-          throw new Error(`approved ${approval.operation} failed: ${dispatchedResult.logErrorCode ?? "unknown"}`);
+          // A draft send refused because the draft moved on after approval
+          // (or was already sent) says so in the approver's words.
+          throw new Error(
+            approvedSendRefusalDetail(approval.operation, dispatchedResult.logErrorCode) ??
+              `approved ${approval.operation} failed: ${dispatchedResult.logErrorCode ?? "unknown"}`,
+          );
         }
         await db.from("scheduled_sends").update({ status: "sent", sent_at: new Date().toISOString(), updated_at: new Date().toISOString() }).eq("id", row.id);
         dispatched++;

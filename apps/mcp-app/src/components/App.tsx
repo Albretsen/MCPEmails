@@ -1,5 +1,5 @@
 import type { VNode } from "preact";
-import { useEffect, useRef, useState } from "preact/hooks";
+import { useEffect, useMemo, useRef, useState } from "preact/hooks";
 import type { HostBridge } from "../bridge";
 import {
   isSupportedVersion,
@@ -8,14 +8,26 @@ import {
   type Receipt as ReceiptData,
 } from "../contract";
 import { diagnosticsEnabled } from "../diagnostics";
+import {
+  changesDraft,
+  patchLanded,
+  textRefusalCode,
+  type DraftAction,
+  type DraftFailure,
+  type PatchFields,
+  type Settled,
+} from "../draft-failure";
 import { bulkVerb, draftSavedContextLine } from "../format";
-import { isRestoreStub, lastDashboardUrl } from "../persist";
+import { cardKey, isRestoreStub, lastDashboardUrl } from "../persist";
 import {
   acceptRehydration,
+  adoptOwnAnswer,
   adoptRehydration,
+  clearDraftError,
   envelopeFrom,
   getState,
   isDepartedReceipt,
+  isFailure,
   mergeEnvelope,
   rehydrationCall,
   setState,
@@ -92,11 +104,32 @@ function Diagnostics(props: { bridge: HostBridge }) {
   return <p class="diag">{line}</p>;
 }
 
+/** The two ways a draft call can end without an answer that says what happened. */
+type LostCode = "transport" | "unreadable";
+
+/** One call from the draft editor: the applied envelope, or why there is none. */
+interface DraftCall {
+  env: Envelope | null;
+  lost: LostCode | null;
+}
+
 /** `email_compose` -> `Email compose`. Falls back to the product name. */
 function toolLabel(tool: string | null | undefined): string {
   if (!tool) return "MCP Emails";
   const words = tool.replace(/_/g, " ").trim();
   return words ? words.charAt(0).toUpperCase() + words.slice(1) : "MCP Emails";
+}
+
+/**
+ * What the person reads after hiding the draft editor card: what happened, and
+ * where to undo it. The dashboard has one switch per inbox (Inboxes, in the
+ * inbox's details) and one for the workspace (Settings), both labelled "Show
+ * the draft editor card" (apps/web/messages/en/dashboard.json).
+ */
+export function hiddenDetail(scope: "inbox" | "workspace"): string {
+  return scope === "workspace"
+    ? 'The card will not appear for any inbox in this workspace. Drafts still work as before. To bring it back, turn on "Show the draft editor card" in the MCP Emails dashboard, under Settings.'
+    : 'The card will not appear for this inbox. Drafts still work as before. To bring it back, turn on "Show the draft editor card" in the MCP Emails dashboard, under Inboxes, in this inbox\'s details.';
 }
 
 export function App(props: { bridge: HostBridge }) {
@@ -105,6 +138,15 @@ export function App(props: { bridge: HostBridge }) {
   const [busy, setBusy] = useState<string | null>(null);
   const [error, setError] = useState<string | null>(null);
   const [approveOpened, setApproveOpened] = useState(false);
+  // The draft editor's last action failing with no envelope to carry it. A
+  // code, never a message: DraftEditor owns the wording (draft-failure.ts).
+  const [failure, setFailure] = useState<DraftFailure | null>(null);
+  // A send whose answer was lost (the call threw, or came back unreadable).
+  // It may have gone out, so Send stays off until the person says otherwise,
+  // whatever a re-read finds: a draft still in Drafts after a lost send is
+  // "probably not sent", never "not sent" (review, 2026-10-13: the re-read made
+  // the draft trusted again and Send could deliver it twice).
+  const [sendDoubt, setSendDoubt] = useState(false);
 
   // The store is the single source of truth for the envelope. Keeping a copy in
   // component state looks harmless and is not: the host pushes
@@ -129,6 +171,12 @@ export function App(props: { bridge: HostBridge }) {
   useEffect(() => () => unsubscribe.current?.(), []);
 
   const store = getState();
+  // The draft editor's stash scope (unsaved.ts): the identity of the call this
+  // card was mounted for. Recomputed only when the call's identity changes.
+  const draftScope = useMemo(
+    () => cardKey(store.toolInfo, store.toolInput),
+    [store.toolInfo, store.toolInput],
+  );
   const envelope = store.envelope;
   const setEnvelope = (next: Envelope) => setState({ envelope: next });
   const ctx = bridge.hostContext;
@@ -195,26 +243,82 @@ export function App(props: { bridge: HostBridge }) {
    * path needed exactly the same one and having it in only one of the two
    * places was the bug (WS-1b defect B).
    */
+  //
+  // ── AND NO FAILURE DOES, WHATEVER SHAPE IT ARRIVES IN (2026-10-13) ────────
+  // That rule covered one shape of failure out of three, and QA found the
+  // other two the same afternoon:
+  //
+  //   a failed RECEIPT   every draft tool's refusal. Renderable, so it replaced
+  //                      the editor. Now merged around it (mergeEnvelope's
+  //                      rule -1).
+  //   a THROWN call      offline, a host timeout, a JSON-RPC error. It printed
+  //                      the raw `-32603: Failed to fetch`. Now a code.
+  //   an unreadable one  an answer that is not an envelope. Same.
+  //
+  // The second is the dangerous one, because "the call threw" does not mean
+  // "nothing happened": the save QA lost the response to HAD been stored, under
+  // a new id. So a write that ends without an answer leaves the draft
+  // `unverified` (Save and Send off) until a re-read settles what the server
+  // holds. Re-saving blind would be a second write against an id that may
+  // already be retired; `readDraft` below is the recovery, and DraftEditor
+  // keeps the user's edits across it (`rebaseEdit`).
   const callDraft = async (
-    key: string,
+    key: DraftAction,
     tool: string,
     args: Record<string, unknown>,
-  ): Promise<Envelope | null> => {
+    opts: { failAs?: DraftAction; quiet?: boolean } = {},
+  ): Promise<DraftCall> => {
+    // `failAs`: the action the user sees as failed, when it is not the one the
+    // busy state names (the save half of "Save and send" is a save).
+    // `quiet`: a reconciling re-read, which must not wipe the notice of the
+    // failure it is reconciling.
+    const action = opts.failAs ?? key;
+    const lose = (code: LostCode): DraftCall => {
+      setFailure({ action, code });
+      if (changesDraft(action)) setState({ draftCheck: "unverified" });
+      return { env: null, lost: code };
+    };
     setBusy(key);
     setError(null);
+    if (!opts.quiet) {
+      setFailure(null);
+      clearDraftError();
+    }
     try {
       const result = await bridge.callServerTool(tool, args);
       const next = envelopeFrom(result);
       if (!next) {
-        setError("The server sent a response this card could not read.");
-        return null;
+        // A bare `isError` sentence IS an answer: the server refused and did
+        // not act (draft not found, sending quota, a mailbox to reconnect, the
+        // approval queue). Said in a person's words, and Send is left as it
+        // was; only a draft that cannot be found stops the editor offering to
+        // write until a re-read. A send whose delivery the server itself calls
+        // unknown, and an answer that is not even that, stay a lost answer:
+        // the server may have acted (review 2 of 2026-10-13).
+        const refused = tool === "draft" ? textRefusalCode(result) : null;
+        if (refused === null) return lose("unreadable");
+        setFailure({ action, code: refused });
+        if (refused === "draft_not_found") setState({ draftCheck: "unverified" });
+        return { env: null, lost: null };
       }
-      const applied = mergeEnvelope(getState().envelope, next);
-      setEnvelope(applied);
-      return applied;
-    } catch (e) {
-      setError(e instanceof Error ? e.message : String(e));
-      return null;
+      const applied = adoptOwnAnswer(next);
+      if (isFailure(applied)) {
+        const code = String(applied.receipt?.error_code ?? "");
+        setFailure({ action, code, headline: applied.receipt?.headline ?? null });
+        // The id on screen names nothing the server can find, or the copy on
+        // screen is older than the draft (`draft_changed`), or the draft was
+        // already sent. Nothing can be written from it, so stop offering to
+        // until a re-read ("Load the newer version", Check again) settles it.
+        if (
+          code === "draft_not_found" || code === "draft_changed" ||
+          code === "draft_already_sent"
+        ) {
+          setState({ draftCheck: "unverified" });
+        }
+      }
+      return { env: applied, lost: null };
+    } catch {
+      return lose("transport");
     } finally {
       setBusy(null);
     }
@@ -223,6 +327,75 @@ export function App(props: { bridge: HostBridge }) {
   /** A save that actually stored something, as opposed to a refusal. */
   const draftStored = (env: Envelope | null): boolean =>
     !!env && env.card === "draft_editor" && env.state !== "error" && !!env.draft;
+
+  /**
+   * Re-read the draft and reconcile: Refresh, "Check again", the automatic
+   * check of a replayed mount, and the re-read after a lost answer are all
+   * this one function.
+   *
+   * Asks with the newest id the card knows first (`draftIdHint`, read out of
+   * the restore stub) and then with the one on screen. With draft lineage on
+   * the server either resolves to the current draft, and whatever id the
+   * answer carries is adopted; without it the hint is the one that still
+   * exists. A read that brings back a draft makes it `trusted`
+   * (store.ts#adoptOwnAnswer); one that does not, while the draft was in doubt,
+   * leaves it `unverified` with the reason on screen.
+   */
+  const readDraft = async (
+    opts: { quiet?: boolean; failAs?: DraftAction } = {},
+  ): Promise<Envelope | null> => {
+    const s = getState();
+    const d = s.envelope?.draft;
+    if (!d || s.envelope?.card !== "draft_editor") return null;
+    if (s.draftCheck !== "trusted") setState({ draftCheck: "checking" });
+    const ids = [...new Set([s.draftIdHint, d.draft_id])].filter(
+      (id): id is string => !!id,
+    );
+    let applied: Envelope | null = null;
+    for (const id of ids) {
+      const r = await callDraft(
+        "refresh",
+        "draft_read",
+        { inbox_id: d.identity?.inbox_id, draft_id: id },
+        opts,
+      );
+      applied = r.env;
+      if (r.lost) break;
+      const missing = !!applied && isFailure(applied) &&
+        applied.receipt?.error_code === "draft_not_found";
+      if (!missing) break;
+    }
+    if (!draftStored(applied) && getState().draftCheck === "checking") {
+      setState({ draftCheck: "unverified", draftIdHint: null });
+    }
+    return draftStored(applied) ? applied : null;
+  };
+
+  /**
+   * After a write whose answer was LOST (transport error, unreadable answer),
+   * find out what the server actually holds instead of guessing. QA's case: a
+   * save answered `-32603: Failed to fetch` had in fact been stored, under a
+   * new id, and the retry against the old id then failed as not found.
+   *
+   * The re-read is `quiet`, so the notice keeps saying what failed until this
+   * can say how it ended; with draft lineage on the server it finds the draft
+   * under its new id, and DraftEditor keeps the user's text across it either
+   * way (`rebaseEdit`).
+   */
+  const reconcile = async (
+    action: DraftAction,
+    code: LostCode,
+    patch: PatchFields | null,
+  ) => {
+    if (!changesDraft(action)) return;
+    const env = await readDraft({ quiet: true, failAs: action });
+    if (!env?.draft) return;
+    const settled: Settled = action === "save"
+      ? patch && patchLanded(patch, env.draft) ? "landed" : "not_landed"
+      : "still_there";
+    setFailure({ action, code, settled });
+    if (settled === "landed") void bridge.updateModelContext(draftSavedContextLine(env.draft));
+  };
 
   const openDashboard = (path: string | null | undefined) => {
     const url = path ? absoluteUrl(path) : null;
@@ -290,6 +463,27 @@ export function App(props: { bridge: HostBridge }) {
   const [gone, setGone] = useState<string | null>(null);
   const [stubFailed, setStubFailed] = useState(false);
   const refreshed = useRef(false);
+  /** The stub's own re-request is still in flight. See the effect below it. */
+  const stubRead = useRef(false);
+
+  // A re-mounted DRAFT usually gets both halves at once: the stub out of
+  // storage, whose re-request starts here, and a few milliseconds later the
+  // host's replay of the original result, which replaces the stub with a full
+  // (and stale) editor before the re-request has answered. The answer is then
+  // about an editor, not a stub, and the stub rules below are the wrong ones
+  // for it: "gone" would replace the editor with one line. So it is settled as
+  // what it now is, the verification of that replay.
+  const settleOverEditor = (asked: Envelope, result: unknown) => {
+    const next = envelopeFrom(result as Parameters<typeof envelopeFrom>[0]);
+    const decided = acceptRehydration(asked, next);
+    if (decided.kind === "adopt" && decided.envelope.card === "draft_editor") {
+      adoptOwnAnswer(decided.envelope);
+      return;
+    }
+    // The stub's id did not bring the draft back. The replayed id still might.
+    setState({ draftIdHint: null });
+    if (getState().draftCheck !== "trusted") void readDraft();
+  };
   useEffect(() => {
     if (store.restored !== "storage" || refreshed.current) return;
     const env = store.envelope;
@@ -302,9 +496,16 @@ export function App(props: { bridge: HostBridge }) {
     // change what "asked" means.
     const asked = env;
     refreshed.current = true;
+    stubRead.current = true;
+    const overEditor = () => {
+      const now = getState().envelope;
+      return asked.card === "draft_editor" && !!now && !isRestoreStub(now);
+    };
     bridge
       .callServerTool(call.tool, call.args)
       .then((result) => {
+        stubRead.current = false;
+        if (overEditor()) return settleOverEditor(asked, result);
         const decided = acceptRehydration(asked, envelopeFrom(result));
         // `adoptRehydration`, never a bare setState: a server answer about a
         // known id is the moment this card stops being a memory, and the push
@@ -321,11 +522,26 @@ export function App(props: { bridge: HostBridge }) {
         } else setStubFailed(true);
       })
       .catch(() => {
+        stubRead.current = false;
+        if (overEditor()) return settleOverEditor(asked, undefined);
         // Offline, or the host refused the call. There is nothing to show: the
         // stub has no content in it, by design.
         setStubFailed(true);
       });
   }, [store.restored, store.envelope]);
+
+  // ---- a replayed draft is checked before it is trusted ---------------------
+  //
+  // store.ts marks a pushed draft `pending` when it is a replay
+  // (`isReplayedDraft`). This starts the re-read, unless the stub's own is
+  // already on its way, in which case that one settles it. Declared after the
+  // stub effect so that on the commit where both become true the stub's read
+  // has been started first.
+  useEffect(() => {
+    if (store.draftCheck !== "pending") return;
+    if (stubRead.current) setState({ draftCheck: "checking" });
+    else void readDraft();
+  }, [store.draftCheck]);
 
   /** The last https dashboard URL any envelope carried. See persist.ts. */
   const fallbackDashboard = () => {
@@ -656,15 +872,34 @@ export function App(props: { bridge: HostBridge }) {
         inbox_id: d.identity?.inbox_id,
         draft_id: getState().envelope?.draft?.draft_id ?? d.draft_id,
       });
+      // Which revision of the draft the person is looking at, read at call time
+      // like the id. Sent with every save and send so the server refuses a
+      // write against a draft rewritten since (`draft_changed`) instead of
+      // following its lineage to a version this card never showed. 0 when the
+      // server records no revision for this draft.
+      const writeTarget = () => {
+        const rev = getState().envelope?.draft?.revision;
+        return {
+          ...target(),
+          base_revision: typeof rev === "number" && Number.isInteger(rev) && rev >= 0 ? rev : 0,
+        };
+      };
 
       const save = async (patch: DraftPatch): Promise<boolean> => {
         if (Object.keys(patch).length === 0) return true;
-        const next = await callDraft("save", "draft_editor_save", {
-          ...target(),
+        const r = await callDraft("save", "draft_editor_save", {
+          ...writeTarget(),
           ...patch,
         });
-        if (!draftStored(next)) return false;
-        void bridge.updateModelContext(draftSavedContextLine(next!.draft!));
+        // Started, not awaited: the editor drops its record of what it sent
+        // when this resolves false, and the re-read must land after that, or
+        // its old content would be taken for the save's own answer.
+        if (r.lost) {
+          void reconcile("save", r.lost, patch);
+          return false;
+        }
+        if (!draftStored(r.env)) return false;
+        void bridge.updateModelContext(draftSavedContextLine(r.env!.draft!));
         return true;
       };
 
@@ -682,45 +917,82 @@ export function App(props: { bridge: HostBridge }) {
           canExpand={canExpand}
           busy={busy}
           error={error}
+          failure={failure}
+          check={store.draftCheck}
+          idHint={store.draftIdHint}
+          scope={draftScope}
+          sendDoubt={sendDoubt}
           actions={{
             save,
+            allowSend: () => setSendDoubt(false),
             send: async (patch) => {
               // Unsaved changes are written first and the send is abandoned if
               // that write fails, so a send never puts the stored draft on the
               // wire when the user is looking at a newer one.
+              if (sendDoubt) return;
               if (patch && Object.keys(patch).length > 0) {
-                const saved = await callDraft("send", "draft_editor_save", {
-                  ...target(),
-                  ...patch,
-                });
-                if (!draftStored(saved)) return;
-                void bridge.updateModelContext(draftSavedContextLine(saved!.draft!));
+                const saved = await callDraft(
+                  "send",
+                  "draft_editor_save",
+                  { ...writeTarget(), ...patch },
+                  { failAs: "save" },
+                );
+                if (saved.lost) {
+                  void reconcile("save", saved.lost, patch);
+                  return;
+                }
+                if (!draftStored(saved.env)) return;
+                void bridge.updateModelContext(draftSavedContextLine(saved.env!.draft!));
+                // No "the save followed an older id" stop here any more: the
+                // server refuses such a save as `draft_changed` (contract §8),
+                // so a stored save never carries `resolved_from`.
               }
-              announceReceipt(
-                await callDraft("send", "draft", { action: "send", ...target() }),
-              );
+              const sent = await callDraft("send", "draft", { action: "send", ...writeTarget() });
+              if (sent.lost) {
+                setSendDoubt(true);
+                void reconcile("send", sent.lost, null);
+                return;
+              }
+              announceReceipt(sent.env);
             },
             discard: async () => {
-              announceReceipt(
-                await callDraft("discard", "draft", {
-                  action: "delete",
-                  ...target(),
-                }),
-              );
+              const r = await callDraft("discard", "draft", {
+                action: "delete",
+                ...target(),
+              });
+              if (r.lost) {
+                void reconcile("discard", r.lost, null);
+                return;
+              }
+              announceReceipt(r.env);
             },
-            refresh: () => void callDraft("refresh", "draft_read", target()),
+            refresh: () => void readDraft(),
             // The opt-out. `scope` is passed through from the card's confirm
             // row rather than defaulted here, because "hide this" is ambiguous
             // between this mailbox and every mailbox and the two are different
             // wishes. The result is a receipt, so the same announceReceipt path
             // that handles send and discard flips the card to one line.
             hide: async (scope) => {
-              announceReceipt(
-                await callDraft("hide", "draft_editor_hide", {
-                  ...target(),
-                  scope,
-                }),
-              );
+              const r = await callDraft("hide", "draft_editor_hide", {
+                ...target(),
+                scope,
+              });
+              announceReceipt(r.env);
+              // The server's detail ends with how the MODEL turns the card back
+              // on ("Call draft_editor_hide again with scope... hidden:false"),
+              // which is no use to the person reading it. The card says where
+              // THEY turn it back on: the dashboard's own switch, named as the
+              // dashboard names it (apps/web messages, "draftEditor.show").
+              const done = r.env;
+              if (
+                done?.card === "receipt" && done.state !== "error" &&
+                done.receipt && done.receipt.outcome !== "failed"
+              ) {
+                setEnvelope({
+                  ...done,
+                  receipt: { ...done.receipt, detail: hiddenDetail(scope) },
+                });
+              }
             },
             setFullscreen,
           }}
