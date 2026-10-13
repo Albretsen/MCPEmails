@@ -390,6 +390,9 @@ import {
   buildUsageLimitText,
   FREE_ACTION_GRACE_DAYS,
   freeCapUpgradeUrl,
+  type PlanLimitWording,
+  plansInfoUrl,
+  rateLimitPlanSentence,
   USAGE_LIMIT_SUPPORT_EMAIL,
 } from "./usage-limit-message.ts";
 import type { ActionAllowanceRow } from "./action-allowance.ts";
@@ -2387,14 +2390,15 @@ const PLAN_DISPLAY_NAMES: Record<string, string> = {
 function buildQuotaExceededResponse(
   requestId: string | number | null,
   result: PlanQuotaResult,
+  wording: PlanLimitWording = "standard",
 ): Response {
   const planLabel = PLAN_DISPLAY_NAMES[result.plan] ??
     (result.plan.charAt(0).toUpperCase() + result.plan.slice(1));
 
   const humanMessage =
     `Your ${planLabel} plan allows ${result.perMinuteLimit} requests per minute, and that ceiling has been reached. ` +
-    `Please wait ${result.retryAfterSeconds} seconds before retrying. ` +
-    `Usage is unlimited — upgrade for a higher burst ceiling: https://www.mcpemails.com/pricing`;
+    `Please wait ${result.retryAfterSeconds} seconds before retrying.` +
+    rateLimitPlanSentence(wording);
 
   const body: JsonRpcErrorResponse = {
     jsonrpc: "2.0",
@@ -3164,6 +3168,7 @@ interface ActionLimitCheck {
 function usageLimitResult(
   requestId: string | number | null,
   refusal: Extract<BillableActionReservation, { outcome: "refused" }>,
+  wording: PlanLimitWording = "standard",
 ): JsonRpcSuccessResponse {
   const { plan, usedActions, cap, periodEnd } = refusal;
   return {
@@ -3172,7 +3177,7 @@ function usageLimitResult(
     result: {
       content: [{
         type: "text",
-        text: buildUsageLimitText(plan, usedActions, cap, periodEnd, APP_URL),
+        text: buildUsageLimitText(plan, usedActions, cap, periodEnd, APP_URL, wording),
       }],
       isError: true,
       _meta: {
@@ -3191,7 +3196,11 @@ function usageLimitResult(
             ? {
               allowance: cap,
               grace_days: FREE_ACTION_GRACE_DAYS,
-              upgrade_url: freeCapUpgradeUrl(APP_URL),
+              // A directory client is told where the plans are described,
+              // not handed a link labelled as the way to buy one.
+              ...(wording === "directory"
+                ? { plans_url: plansInfoUrl(APP_URL) }
+                : { upgrade_url: freeCapUpgradeUrl(APP_URL) }),
             }
             // Paid: support, not pricing. A client rendering a pricing URL
             // here would offer to sell a bigger allowance, which no paid plan
@@ -3216,12 +3225,22 @@ function mayMeterToolCall(toolName: unknown): boolean {
   return BILLABLE_TOOL_NAMES.has(toolName) || Object.hasOwn(CONSOLIDATED_BY_NAME, toolName);
 }
 
+/**
+ * The wording a plan-limit refusal uses for this key. Only ever called once a
+ * call has ALREADY been refused, so it adds no query to a successful call.
+ * See PlanLimitWording in usage-limit-message.ts.
+ */
+async function planLimitWording(apiKey: ApiKeyRow): Promise<PlanLimitWording> {
+  return (await isOpenAiClientKey(apiKey)) ? "directory" : "standard";
+}
+
 async function actionLimitResponse(
-  workspaceId: string,
+  apiKey: ApiKeyRow,
   toolName: string,
   requestId: string | number | null,
   preloadedAllowance?: Promise<ActionAllowanceRow | null>,
 ): Promise<ActionLimitCheck> {
+  const workspaceId = apiKey.workspace_id;
   // Kill switch, not a feature flag: enforcement is ON unless something says
   // otherwise, so a missing or mistyped variable cannot silently disable the
   // only thing standing between us and an unbounded provider bill.
@@ -3233,7 +3252,10 @@ async function actionLimitResponse(
     case "reserved":
       return { response: null, reservationId: reservation.reservationId };
     case "refused":
-      return { response: usageLimitResult(requestId, reservation), reservationId: null };
+      return {
+        response: usageLimitResult(requestId, reservation, await planLimitWording(apiKey)),
+        reservationId: null,
+      };
   }
 }
 
@@ -30007,7 +30029,7 @@ async function handleToolsCall(
     );
   }
 
-  const actionLimit = await actionLimitResponse(apiKey.workspace_id, dispatchName, id, ctx.allowance);
+  const actionLimit = await actionLimitResponse(apiKey, dispatchName, id, ctx.allowance);
   if (actionLimit.response) {
     // A cap rejection used to return here without writing anything to
     // activity_log, which quietly exempted it from both throttles: the per-key
@@ -32278,7 +32300,7 @@ async function handleMeteredRequest(req: Request): Promise<Response> {
       });
     }
 
-    return buildQuotaExceededResponse(requestId, quotaResult);
+    return buildQuotaExceededResponse(requestId, quotaResult, await planLimitWording(apiKey));
   }
   if ("firstUse" in quotaResult) ctx.firstUse = quotaResult.firstUse;
 
