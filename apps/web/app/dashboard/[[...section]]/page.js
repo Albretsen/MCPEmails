@@ -226,8 +226,12 @@ async function fetchInboxes(supabase, workspaceId, historyDays = USAGE_WINDOW_DA
     status: row.status,
     // Human-readable error shown on errored inboxes; null when healthy.
     lastError: row.last_error ?? null,
-    // True when this inbox uses an IMAP app-password path (not OAuth).
-    hasImap: !!row.imap_host,
+    // True when this inbox uses an IMAP/SMTP app-password path (not OAuth).
+    // A send-only inbox has no IMAP host but is still a password connection,
+    // and must reopen the password form on reconnect, not an OAuth route.
+    hasImap: !!row.imap_host || !!row.smtp_host,
+    // 'both' | 'imap' (receive only) | 'smtp' (send only); null for OAuth.
+    connectionMode: row.imap_host && row.smtp_host ? 'both' : row.imap_host ? 'imap' : row.smtp_host ? 'smtp' : null,
     // IMAP service brand ('generic' for the plain IMAP connector, or
     // 'fastmail'/'icloud'/'yahoo'/'zoho'/'yandex'). Used by the reconnect flow
     // to re-open the SAME connect form this inbox was created with.

@@ -202,10 +202,16 @@ async function cmdProvisionInbox(flags: Record<string, string | string[]>) {
     die(`--service must be one of: ${VALID_SERVICES.join(", ")}`);
   }
 
-  const imapHost = flags["imap-host"] as string;
-  const smtpHost = flags["smtp-host"] as string;
-  if (!imapHost || imapHost === "true") die("--imap-host is required");
-  if (!smtpHost || smtpHost === "true") die("--smtp-host is required");
+  // Either half may be left out: a receive-only inbox has no SMTP server and a
+  // send-only one has no IMAP server. The missing half is stored as NULL, which
+  // is how the MCP server tells "not part of this inbox" from "broken".
+  const hostFlag = (name: string): string | null => {
+    const value = flags[name];
+    return typeof value === "string" && value !== "true" && value.trim() ? value.trim() : null;
+  };
+  const imapHost = hostFlag("imap-host");
+  const smtpHost = hostFlag("smtp-host");
+  if (!imapHost && !smtpHost) die("give --imap-host, --smtp-host, or both");
 
   const imapPort = parseInt((flags["imap-port"] as string) ?? "993", 10);
   const smtpPort = parseInt((flags["smtp-port"] as string) ?? "465", 10);
@@ -232,11 +238,11 @@ async function cmdProvisionInbox(flags: Record<string, string | string[]>) {
         ? flags["display-name"]
         : null,
       imap_host: imapHost,
-      imap_port: imapPort,
+      imap_port: imapHost ? imapPort : null,
       imap_tls: true,
       imap_username: username,
       smtp_host: smtpHost,
-      smtp_port: smtpPort,
+      smtp_port: smtpHost ? smtpPort : null,
       smtp_tls: true,
       imap_password: encrypted,
       oauth_access_token: null,
@@ -401,11 +407,13 @@ Usage: mcpe <command> [flags]
 Commands:
   gen-secrets                              Print a fresh .env to stdout
   provision-inbox --email <addr> \\
-      --imap-host <h> --smtp-host <h> \\
+      [--imap-host <h>] [--smtp-host <h>] \\
       [--imap-port 993] [--smtp-port 465] \\
       [--username <u>] [--service generic] \\
       [--display-name <n>]                 Connect an IMAP/SMTP mailbox
-                                           (password via IMAP_PASSWORD env)
+                                           (password via IMAP_PASSWORD env;
+                                           one host alone makes it receive-
+                                           or send-only)
   create-key [--name <n>] [--scopes a,b] \\
       [--inbox <addr|id> ...] \\
       [--expires-days <n>]                 Mint a scoped MCP API key

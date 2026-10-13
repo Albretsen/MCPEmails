@@ -7,7 +7,7 @@ import { checkInboxLimit, inboxExistsForEmail, inboxLimitErrorBody } from '@/lib
 import { findOtherProviderInbox, otherProviderErrorBody } from '@/lib/inboxes/provider-conflict';
 import { validateImapCredential } from '@/lib/email/validate-imap';
 import { validateSmtpCredential } from '@/lib/email/validate-smtp';
-import { normalizeSecurity } from '@/lib/email/connection-config';
+import { normalizeSecurity, parseConnectionMode, usesImap, usesSmtp, type ConnectionMode } from '@/lib/email/connection-config';
 import {
   openMailRelayTunnel,
   relayForMailHost,
@@ -54,7 +54,14 @@ export const maxDuration = 60;
  * gets persisted (see lib/email/transport-autodetect.ts for the policy, and in
  * particular for why a rejected password is never retried).
  *
- * Body: { email, username?, appPassword, imapHost, imapPort, smtpHost, smtpPort }
+ * Body: { email, username?, appPassword, mode?, imapHost, imapPort, smtpHost, smtpPort }
+ *
+ * `mode` is 'both' (the default), 'imap' or 'smtp'. A receive-only mailbox has
+ * no SMTP server to give, and a send-only one (a transactional sender, a relay
+ * account) has no IMAP server; requiring both locked either out entirely. Only
+ * the halves the mode names are validated, dialled and stored. The other half
+ * is persisted as a NULL host and port, which is how the MCP server and the
+ * health checks tell "not part of this connection" from "broken".
  *
  * `username` is the optional SASL login username for hosts that issue one
  * distinct from the email address (e.g. domeneshop). When blank, the email
@@ -120,6 +127,7 @@ export async function POST(request: NextRequest): Promise<NextResponse> {
   let smtpPort: number;
   let imapSecurity: 'tls' | 'starttls';
   let smtpSecurity: 'tls' | 'starttls';
+  let mode: ConnectionMode | null;
 
   try {
     const body = (await request.json()) as Record<string, unknown>;
@@ -133,8 +141,29 @@ export async function POST(request: NextRequest): Promise<NextResponse> {
     smtpPort = typeof body.smtpPort === 'number' ? body.smtpPort : Number(body.smtpPort);
     imapSecurity = normalizeSecurity(body.imapSecurity);
     smtpSecurity = normalizeSecurity(body.smtpSecurity);
+    mode = parseConnectionMode(body.mode);
   } catch {
     return NextResponse.json({ error: 'Invalid request body.' }, { status: 400 });
+  }
+
+  if (!mode) {
+    return NextResponse.json(
+      { error: "Connection type must be 'both', 'imap' or 'smtp'.", error_code: 'invalid_mode' },
+      { status: 422 },
+    );
+  }
+  const withImap = usesImap(mode);
+  const withSmtp = usesSmtp(mode);
+  // A half the mode leaves out is ignored, not validated: the form may still
+  // be holding values the user typed before switching the connection type, and
+  // none of them are going to be dialled or stored.
+  if (!withImap) {
+    imapHost = '';
+    imapPort = NaN;
+  }
+  if (!withSmtp) {
+    smtpHost = '';
+    smtpPort = NaN;
   }
 
   if (!email || !email.includes('@')) {
@@ -159,7 +188,7 @@ export async function POST(request: NextRequest): Promise<NextResponse> {
   // web host and reported that "the outgoing server never answered", which sent
   // the user to their provider about a server we had not dialled.
   for (const [field, host] of [['IMAP', imapHost], ['SMTP', smtpHost]] as const) {
-    if (isOwnSiteHost(host)) {
+    if (host && isOwnSiteHost(host)) {
       return NextResponse.json(
         {
           error:
@@ -181,16 +210,16 @@ export async function POST(request: NextRequest): Promise<NextResponse> {
   // It runs before the plan check and before any funnel event on purpose: a
   // refused host must cost nothing and leave no trace that could be counted as
   // a real connection attempt.
-  const imapGuard = await guardMailHost(imapHost, { protocol: 'imap', port: imapPort });
-  if (!imapGuard.ok) {
+  const imapGuard = withImap ? await guardMailHost(imapHost, { protocol: 'imap', port: imapPort }) : null;
+  if (imapGuard && !imapGuard.ok) {
     // Same 422 + { error, error_code } contract every other validation failure
     // on this route uses, so the dashboard's existing error handling applies
     // unchanged (an unrecognised code falls back to its generic headline and
     // shows `error` under "What to check").
     return NextResponse.json({ error: imapGuard.message, error_code: imapGuard.code }, { status: 422 });
   }
-  const smtpGuard = await guardMailHost(smtpHost, { protocol: 'smtp', port: smtpPort });
-  if (!smtpGuard.ok) {
+  const smtpGuard = withSmtp ? await guardMailHost(smtpHost, { protocol: 'smtp', port: smtpPort }) : null;
+  if (smtpGuard && !smtpGuard.ok) {
     return NextResponse.json({ error: smtpGuard.message, error_code: smtpGuard.code }, { status: 422 });
   }
 
@@ -231,176 +260,193 @@ export async function POST(request: NextRequest): Promise<NextResponse> {
   // directly: a direct attempt is known to be refused and would count as a
   // failed sign-in against the customer's account. The host guard above still
   // ran on the name; the relay is asked for it by name and TLS is end to end.
-  const imapRelay = relayForMailHost(imapHost);
-  const smtpRelay = relayForMailHost(smtpHost);
-  const imapDetection = await detectTransport(
-    imapRelay
-      ? [{ ...RELAY_ONLY_IMAP_TRANSPORT, requested: imapPort === RELAY_ONLY_IMAP_TRANSPORT.port && imapSecurity === RELAY_ONLY_IMAP_TRANSPORT.security }]
-      : transportPlan('imap', { port: imapPort, security: imapSecurity }),
-    (candidate, timeoutMs) =>
-      validateImapCredential({
-        host: imapHost,
-        pinnedAddress: imapRelay ? undefined : imapGuard.address,
-        port: candidate.port,
-        email,
-        username: username || undefined,
-        password: appPassword,
-        security: candidate.security,
-        timeoutMs,
-        tunnel: imapRelay ? () => openMailRelayTunnel(imapRelay, imapHost, candidate.port) : undefined,
-      })
-  );
-  const validation = imapDetection.result;
-  // Persist what worked, not what was asked for: leaving the user's guess on
-  // the row would send every later sync back to the port that failed.
-  const resolvedImapPort = validation.ok ? imapDetection.candidate.port : imapPort;
-  const resolvedImapSecurity = validation.ok ? imapDetection.candidate.security : imapSecurity;
+  //
+  // Skipped entirely for a send-only connection: there is no IMAP server to
+  // validate, and nothing about one is stored.
+  let resolvedImapPort: number | null = null;
+  let resolvedImapSecurity = imapSecurity;
+  let imapAdjusted = false;
+  if (withImap) {
+    const imapRelay = relayForMailHost(imapHost);
+    const imapDetection = await detectTransport(
+      imapRelay
+        ? [{ ...RELAY_ONLY_IMAP_TRANSPORT, requested: imapPort === RELAY_ONLY_IMAP_TRANSPORT.port && imapSecurity === RELAY_ONLY_IMAP_TRANSPORT.security }]
+        : transportPlan('imap', { port: imapPort, security: imapSecurity }),
+      (candidate, timeoutMs) =>
+        validateImapCredential({
+          host: imapHost,
+          pinnedAddress: imapRelay ? undefined : imapGuard?.address,
+          port: candidate.port,
+          email,
+          username: username || undefined,
+          password: appPassword,
+          security: candidate.security,
+          timeoutMs,
+          tunnel: imapRelay ? () => openMailRelayTunnel(imapRelay, imapHost, candidate.port) : undefined,
+        })
+    );
+    const validation = imapDetection.result;
+    // Persist what worked, not what was asked for: leaving the user's guess on
+    // the row would send every later sync back to the port that failed.
+    resolvedImapPort = validation.ok ? imapDetection.candidate.port : imapPort;
+    resolvedImapSecurity = validation.ok ? imapDetection.candidate.security : imapSecurity;
+    imapAdjusted = imapDetection.adjusted;
 
-  if (!validation.ok) {
-    // Computed BEFORE the funnel row, not after, because the row now carries
-    // the sub-case. `explainAuthFailure` is a pure classification of values
-    // already in hand, so hoisting it changes nothing but the order.
-    const authFailure =
-      validation.code === 'AUTH_FAILED'
-        ? explainAuthFailure({
-            detail: validation.detail,
-            email,
-            host: imapHost,
-            secret: appPassword,
-            usernameProvided: Boolean(username),
-          })
-        : null;
-    await recordProductFunnelEvent(db, { workspaceId, stage: 'inbox_connection', outcome: 'failure', category: 'generic_imap', errorCategory: validation.code === 'AUTH_FAILED' ? 'auth_failed' : 'validation_failed', phase: validation.phase, connectionType: alreadyConnected ? 'reconnect' : 'first_connect', authReason: authFailure?.reason ?? null });
-    // Every validator code is surfaced, not just AUTH_FAILED, and in the same
-    // lower-cased form the SMTP branch below already uses. A timeout or a TLS
-    // failure is the case where the machine-readable code matters most: the fix
-    // is a port or security mode in Advanced settings, and the client opens
-    // that section only when it can tell a transport failure from a credential
-    // one. Sending no code left those failures indistinguishable from a bad
-    // password, which is the one cause Advanced settings cannot fix.
-    const body: Record<string, string> = {
-      error: validation.message,
-      error_code: validation.code.toLowerCase(),
-    };
-    // A rejected login is 72.9% of every connection failure here, and until now
-    // every one of them produced the same "check your password". Which of the
-    // four unrelated situations behind it this actually is decides what the
-    // dashboard tells the user to do next, so the sub-case travels with the
-    // code. Only an enum and the provider's public name cross the wire: the
-    // server's own rejection text stays on this side (see auth-failure.ts).
-    if (authFailure) Object.assign(body, authFailure.fields);
-    // AUTH_FAILED used to be skipped here on the theory that a wrong password
-    // is user-driven noise. That reasoning does not survive contact with the
-    // numbers: auth failures are the single largest bucket of generic IMAP
-    // failures (49 of 101), and skipping them meant the largest failure mode on
-    // the connector we most want to work left no trace at all. A mistyped
-    // password and a host that rejects every login in the same way are only
-    // distinguishable in aggregate, and only if the rows exist.
-    //
-    // Nothing secret is recorded. `detail` is the sanitized server rejection
-    // (see sanitizeAuthDiagnostic: the submitted username, address, password
-    // and the SASL token are stripped before it is stored), and the host/port/
-    // security triple is server configuration the user typed into a form, not
-    // a credential. The email address is deliberately NOT recorded.
-    await captureError(new Error(validation.message), {
-      severity: 'low',
-      route: 'api/inboxes/imap',
-      reason: validation.code,
-      phase: validation.phase,
-      detail: validation.detail ?? null,
-      // Which sub-case the rejection was classified as. This is the field that
-      // makes the fix measurable: "did naming the app-password case reduce
-      // repeat attempts" cannot be answered from a bare AUTH_FAILED count.
-      authReason: authFailure?.reason ?? null,
-      // The host/port/security combination is what distinguishes a genuinely
-      // unreachable server from the port/security mismatch that produced most
-      // of these failures, and it was the field whose absence made the earlier
-      // rows unactionable.
-      imapHost,
-      imapPort,
-      imapSecurity,
-      // How many transports were tried before giving up. A failure at one
-      // attempt is a credential or a name that does not resolve; a failure at
-      // three means every standard transport was exhausted, which is the row
-      // that says the host itself is the problem.
-      attempts: imapDetection.attempts,
-      // True when this host is reached through the relay (mail-relay.ts), so a
-      // refusal here is the relay's address being refused, not ours.
-      viaRelay: Boolean(imapRelay),
-      workspaceId,
-    });
-    return NextResponse.json(body, { status: 422 });
+    if (!validation.ok) {
+      // Computed BEFORE the funnel row, not after, because the row now carries
+      // the sub-case. `explainAuthFailure` is a pure classification of values
+      // already in hand, so hoisting it changes nothing but the order.
+      const authFailure =
+        validation.code === 'AUTH_FAILED'
+          ? explainAuthFailure({
+              detail: validation.detail,
+              email,
+              host: imapHost,
+              secret: appPassword,
+              usernameProvided: Boolean(username),
+            })
+          : null;
+      await recordProductFunnelEvent(db, { workspaceId, stage: 'inbox_connection', outcome: 'failure', category: 'generic_imap', errorCategory: validation.code === 'AUTH_FAILED' ? 'auth_failed' : 'validation_failed', phase: validation.phase, connectionType: alreadyConnected ? 'reconnect' : 'first_connect', authReason: authFailure?.reason ?? null });
+      // Every validator code is surfaced, not just AUTH_FAILED, and in the same
+      // lower-cased form the SMTP branch below already uses. A timeout or a TLS
+      // failure is the case where the machine-readable code matters most: the fix
+      // is a port or security mode in Advanced settings, and the client opens
+      // that section only when it can tell a transport failure from a credential
+      // one. Sending no code left those failures indistinguishable from a bad
+      // password, which is the one cause Advanced settings cannot fix.
+      const body: Record<string, string> = {
+        error: validation.message,
+        error_code: validation.code.toLowerCase(),
+      };
+      // A rejected login is 72.9% of every connection failure here, and until now
+      // every one of them produced the same "check your password". Which of the
+      // four unrelated situations behind it this actually is decides what the
+      // dashboard tells the user to do next, so the sub-case travels with the
+      // code. Only an enum and the provider's public name cross the wire: the
+      // server's own rejection text stays on this side (see auth-failure.ts).
+      if (authFailure) Object.assign(body, authFailure.fields);
+      // AUTH_FAILED used to be skipped here on the theory that a wrong password
+      // is user-driven noise. That reasoning does not survive contact with the
+      // numbers: auth failures are the single largest bucket of generic IMAP
+      // failures (49 of 101), and skipping them meant the largest failure mode on
+      // the connector we most want to work left no trace at all. A mistyped
+      // password and a host that rejects every login in the same way are only
+      // distinguishable in aggregate, and only if the rows exist.
+      //
+      // Nothing secret is recorded. `detail` is the sanitized server rejection
+      // (see sanitizeAuthDiagnostic: the submitted username, address, password
+      // and the SASL token are stripped before it is stored), and the host/port/
+      // security triple is server configuration the user typed into a form, not
+      // a credential. The email address is deliberately NOT recorded.
+      await captureError(new Error(validation.message), {
+        severity: 'low',
+        route: 'api/inboxes/imap',
+        reason: validation.code,
+        phase: validation.phase,
+        detail: validation.detail ?? null,
+        // Which sub-case the rejection was classified as. This is the field that
+        // makes the fix measurable: "did naming the app-password case reduce
+        // repeat attempts" cannot be answered from a bare AUTH_FAILED count.
+        authReason: authFailure?.reason ?? null,
+        // The host/port/security combination is what distinguishes a genuinely
+        // unreachable server from the port/security mismatch that produced most
+        // of these failures, and it was the field whose absence made the earlier
+        // rows unactionable.
+        imapHost,
+        imapPort,
+        imapSecurity,
+        // How many transports were tried before giving up. A failure at one
+        // attempt is a credential or a name that does not resolve; a failure at
+        // three means every standard transport was exhausted, which is the row
+        // that says the host itself is the problem.
+        attempts: imapDetection.attempts,
+        // True when this host is reached through the relay (mail-relay.ts), so a
+        // refusal here is the relay's address being refused, not ours.
+        viaRelay: Boolean(imapRelay),
+        workspaceId,
+      });
+      return NextResponse.json(body, { status: 422 });
+    }
   }
 
-  // Authenticate to SMTP without sending a message. This verifies outbound
-  // capability while preserving the existing read-only validation semantics.
-  // A relay-only host is checked, and then stored, on 587 with STARTTLS whatever
-  // was submitted: the relay cannot carry 465 (see RELAY_ONLY_SMTP_TRANSPORT).
-  const smtpDetection = await detectTransport(
-    smtpRelay
-      ? [{ ...RELAY_ONLY_SMTP_TRANSPORT, requested: smtpPort === RELAY_ONLY_SMTP_TRANSPORT.port && smtpSecurity === RELAY_ONLY_SMTP_TRANSPORT.security }]
-      : transportPlan('smtp', { port: smtpPort, security: smtpSecurity }),
-    (candidate, timeoutMs) =>
-      validateSmtpCredential({
-        host: smtpHost,
-        pinnedAddress: smtpRelay ? undefined : smtpGuard.address,
-        port: candidate.port,
-        email,
-        username: username || undefined,
-        password: appPassword,
-        security: candidate.security,
-        // This host holds a refused AUTH for about eight seconds before it
-        // answers, so a relayed check gets the full budget rather than a
-        // retry-sized one.
-        timeoutMs: smtpRelay ? Math.max(timeoutMs, 15_000) : timeoutMs,
-        tunnel: smtpRelay ? () => openMailRelayTunnel(smtpRelay, smtpHost, candidate.port) : undefined,
-      })
-  );
-  const smtpValidation = smtpDetection.result;
-  const resolvedSmtpPort = smtpValidation.ok ? smtpDetection.candidate.port : smtpPort;
-  const resolvedSmtpSecurity = smtpValidation.ok ? smtpDetection.candidate.security : smtpSecurity;
-  if (!smtpValidation.ok) {
-    // Computed BEFORE the funnel row, not after, because the row now carries
-    // the sub-case. `explainAuthFailure` is a pure classification of values
-    // already in hand, so hoisting it changes nothing but the order.
-    const smtpAuthFailure =
-      smtpValidation.code === 'AUTH_FAILED'
-        ? explainAuthFailure({
-            detail: smtpValidation.detail,
-            email,
-            host: smtpHost,
-            secret: appPassword,
-            usernameProvided: Boolean(username),
-          })
-        : null;
-    await recordProductFunnelEvent(db, { workspaceId, stage: 'inbox_connection', outcome: 'failure', category: 'generic_imap', errorCategory: smtpValidation.code === 'AUTH_FAILED' ? 'auth_failed' : 'validation_failed', phase: `smtp_${smtpValidation.phase}`, connectionType: alreadyConnected ? 'reconnect' : 'first_connect', authReason: smtpAuthFailure?.reason ?? null });
-    // Same treatment on the send half: an IMAP login that worked and an SMTP
-    // login that did not is still a credential story, and the user is owed the
-    // same specific answer rather than a second generic one.
-    // An inbox that authenticates over IMAP but fails on SMTP is a distinct and
-    // more interesting failure than either half alone, and it had no diagnostic
-    // record at all: the funnel counted it, nothing said why.
-    await captureError(new Error(smtpValidation.message), {
-      severity: 'low',
-      route: 'api/inboxes/imap',
-      reason: smtpValidation.code,
-      phase: `smtp_${smtpValidation.phase}`,
-      detail: smtpValidation.detail ?? null,
-      authReason: smtpAuthFailure?.reason ?? null,
-      smtpHost,
-      smtpPort,
-      smtpSecurity,
-      attempts: smtpDetection.attempts,
-      workspaceId,
-    });
-    return NextResponse.json(
-      {
-        error: smtpValidation.message,
-        error_code: smtpValidation.code.toLowerCase(),
-        ...(smtpAuthFailure?.fields ?? {}),
-      },
-      { status: 422 },
+  // Skipped entirely for a receive-only connection.
+  let resolvedSmtpPort: number | null = null;
+  let resolvedSmtpSecurity = smtpSecurity;
+  let smtpAdjusted = false;
+  if (withSmtp) {
+    // Authenticate to SMTP without sending a message. This verifies outbound
+    // capability while preserving the existing read-only validation semantics.
+    // A relay-only host is checked, and then stored, on 587 with STARTTLS whatever
+    // was submitted: the relay cannot carry 465 (see RELAY_ONLY_SMTP_TRANSPORT).
+    const smtpRelay = relayForMailHost(smtpHost);
+    const smtpDetection = await detectTransport(
+      smtpRelay
+        ? [{ ...RELAY_ONLY_SMTP_TRANSPORT, requested: smtpPort === RELAY_ONLY_SMTP_TRANSPORT.port && smtpSecurity === RELAY_ONLY_SMTP_TRANSPORT.security }]
+        : transportPlan('smtp', { port: smtpPort, security: smtpSecurity }),
+      (candidate, timeoutMs) =>
+        validateSmtpCredential({
+          host: smtpHost,
+          pinnedAddress: smtpRelay ? undefined : smtpGuard?.address,
+          port: candidate.port,
+          email,
+          username: username || undefined,
+          password: appPassword,
+          security: candidate.security,
+          // This host holds a refused AUTH for about eight seconds before it
+          // answers, so a relayed check gets the full budget rather than a
+          // retry-sized one.
+          timeoutMs: smtpRelay ? Math.max(timeoutMs, 15_000) : timeoutMs,
+          tunnel: smtpRelay ? () => openMailRelayTunnel(smtpRelay, smtpHost, candidate.port) : undefined,
+        })
     );
+    const smtpValidation = smtpDetection.result;
+    resolvedSmtpPort = smtpValidation.ok ? smtpDetection.candidate.port : smtpPort;
+    resolvedSmtpSecurity = smtpValidation.ok ? smtpDetection.candidate.security : smtpSecurity;
+    smtpAdjusted = smtpDetection.adjusted;
+    if (!smtpValidation.ok) {
+      // Computed BEFORE the funnel row, not after, because the row now carries
+      // the sub-case. `explainAuthFailure` is a pure classification of values
+      // already in hand, so hoisting it changes nothing but the order.
+      const smtpAuthFailure =
+        smtpValidation.code === 'AUTH_FAILED'
+          ? explainAuthFailure({
+              detail: smtpValidation.detail,
+              email,
+              host: smtpHost,
+              secret: appPassword,
+              usernameProvided: Boolean(username),
+            })
+          : null;
+      await recordProductFunnelEvent(db, { workspaceId, stage: 'inbox_connection', outcome: 'failure', category: 'generic_imap', errorCategory: smtpValidation.code === 'AUTH_FAILED' ? 'auth_failed' : 'validation_failed', phase: `smtp_${smtpValidation.phase}`, connectionType: alreadyConnected ? 'reconnect' : 'first_connect', authReason: smtpAuthFailure?.reason ?? null });
+      // Same treatment on the send half: an IMAP login that worked (or, on a
+      // send-only connection, was never attempted) and an SMTP login that did not
+      // is still a credential story, and the user is owed the same specific
+      // answer rather than a second generic one.
+      // An inbox that authenticates over IMAP but fails on SMTP is a distinct and
+      // more interesting failure than either half alone, and it had no diagnostic
+      // record at all: the funnel counted it, nothing said why.
+      await captureError(new Error(smtpValidation.message), {
+        severity: 'low',
+        route: 'api/inboxes/imap',
+        reason: smtpValidation.code,
+        phase: `smtp_${smtpValidation.phase}`,
+        detail: smtpValidation.detail ?? null,
+        authReason: smtpAuthFailure?.reason ?? null,
+        smtpHost,
+        smtpPort,
+        smtpSecurity,
+        attempts: smtpDetection.attempts,
+        workspaceId,
+      });
+      return NextResponse.json(
+        {
+          error: smtpValidation.message,
+          error_code: smtpValidation.code.toLowerCase(),
+          ...(smtpAuthFailure?.fields ?? {}),
+        },
+        { status: 422 },
+      );
+    }
   }
 
   // 6. Defense-in-depth: reject if another active inbox in this workspace
@@ -410,11 +456,15 @@ export async function POST(request: NextRequest): Promise<NextResponse> {
   //    an existing mailbox. Runs AFTER validation (so we only block real
   //    credentials) and BEFORE the upsert. Uses the service-role `db` (created
   //    here, also reused for the upsert) so the read sees every workspace row.
-  const conflict = await findConflictingInbox(db, workspaceId, {
-    host: imapHost,
-    effectiveLogin: username || email,
-    email,
-  });
+  //    A send-only connection has no IMAP server and so no mailbox to collide
+  //    with; the check is about reading someone else's mail.
+  const conflict = withImap
+    ? await findConflictingInbox(db, workspaceId, {
+        host: imapHost,
+        effectiveLogin: username || email,
+        email,
+      })
+    : { conflict: false as const };
   if (conflict.conflict) {
     await recordProductFunnelEvent(db, { workspaceId, stage: 'inbox_connection', outcome: 'failure', category: 'generic_imap', errorCategory: 'conflict' });
     return NextResponse.json(
@@ -443,12 +493,14 @@ export async function POST(request: NextRequest): Promise<NextResponse> {
       provider: 'imap',
       service: 'generic',
       email_address: email,
-      imap_host: imapHost,
+      // NULL host and port for the half this connection does not carry: that
+      // is how every reader of the row tells "not configured" from "broken".
+      imap_host: withImap ? imapHost : null,
       imap_port: resolvedImapPort,
       imap_tls: true,
       imap_security: resolvedImapSecurity,
       imap_username: username || null,
-      smtp_host: smtpHost,
+      smtp_host: withSmtp ? smtpHost : null,
       smtp_port: resolvedSmtpPort,
       smtp_tls: true,
       smtp_security: resolvedSmtpSecurity,
@@ -486,7 +538,8 @@ export async function POST(request: NextRequest): Promise<NextResponse> {
   // the user is still looking at.
   return NextResponse.json({
     success: true,
-    transport_adjusted: imapDetection.adjusted || smtpDetection.adjusted,
+    transport_adjusted: imapAdjusted || smtpAdjusted,
+    mode,
     imap_port: resolvedImapPort,
     imap_security: resolvedImapSecurity,
     smtp_port: resolvedSmtpPort,

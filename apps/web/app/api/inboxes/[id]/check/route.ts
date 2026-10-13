@@ -6,6 +6,9 @@ import { checkOutlookMailbox, OutlookAuthError } from '@/lib/email-providers/out
 import { OUTLOOK_NO_MAILBOX_REASON } from '@/lib/email-providers/outlook-oauth';
 import { openImapSession, McpEmailsError, ImapAuthError } from '@/lib/email/imap';
 import { guardMailHost } from '@/lib/email/host-guard';
+import { validateSmtpCredential } from '@/lib/email/validate-smtp';
+import { legacySecurityForPort } from '@/lib/email/connection-config';
+import { openMailRelayTunnel, relayForMailHost, RELAY_ONLY_SMTP_TRANSPORT } from '@/lib/email/mail-relay';
 import type { Tables } from '@/types/database.types';
 import { createServiceRoleClient } from '@/lib/supabase/service';
 import { recordProductFunnelEvent } from '@/lib/analytics/product-funnel';
@@ -22,6 +25,10 @@ import { recordProductFunnelEvent } from '@/lib/analytics/product-funnel';
  * still accepted server-side.
  *
  * For Fastmail app-password (IMAP) inboxes: open an IMAP session and log out.
+ *
+ * For a send-only (SMTP-only) inbox: authenticate to the SMTP server without
+ * sending anything. There is no IMAP server to log in to, and answering
+ * "Unsupported provider" for a mailbox that works was the old behaviour.
  *
  * Three outcomes:
  *  - healthy  → status set to 'active', last_error cleared, last_sync_at stamped.
@@ -77,6 +84,8 @@ export async function POST(
 
   const isAppPassword =
     !!inbox.imap_host && !!inbox.imap_password && !inbox.oauth_access_token;
+  const isSendOnly =
+    !inbox.imap_host && !!inbox.smtp_host && !!inbox.imap_password && !inbox.oauth_access_token;
 
   try {
     if (isAppPassword) {
@@ -108,6 +117,42 @@ export async function POST(
       });
       await session.logout();
       healthy = true;
+    } else if (isSendOnly) {
+      const smtpHost = inbox.smtp_host!;
+      // A relay-only host refuses this app's own address, so it is checked the
+      // way it was connected: through the relay, on the one transport it
+      // carries (see mail-relay.ts).
+      const relay = relayForMailHost(smtpHost);
+      const smtpPort = relay ? RELAY_ONLY_SMTP_TRANSPORT.port : inbox.smtp_port ?? 465;
+      // Same SSRF guard as the IMAP branch, on the host this branch dials.
+      const guard = await guardMailHost(smtpHost, { protocol: 'smtp', port: smtpPort });
+      if (!guard.ok) {
+        return NextResponse.json({ error: guard.message, error_code: guard.code }, { status: 422 });
+      }
+      const result = await validateSmtpCredential({
+        host: smtpHost,
+        pinnedAddress: relay ? undefined : guard.address,
+        port: smtpPort,
+        email: inbox.email_address,
+        username: inbox.imap_username || undefined,
+        password: decryptToken(inbox.imap_password!),
+        security: relay
+          ? RELAY_ONLY_SMTP_TRANSPORT.security
+          : inbox.smtp_security === 'starttls' || inbox.smtp_security === 'tls'
+            ? inbox.smtp_security
+            : legacySecurityForPort(smtpPort, 'smtp'),
+        timeoutMs: relay ? 15_000 : undefined,
+        tunnel: relay ? () => openMailRelayTunnel(relay, smtpHost, smtpPort) : undefined,
+      });
+      if (result.ok) {
+        healthy = true;
+      } else if (result.code === 'AUTH_FAILED') {
+        healthy = false;
+        reason = `The SMTP server rejected the saved password. ${RECONNECT_HINT}`;
+      } else {
+        // Anything short of a rejected login is inconclusive, as for IMAP.
+        throw new Error(result.message);
+      }
     } else if (inbox.provider === 'gmail') {
       const token = await withFreshGmailToken(inbox);
       healthy = await verifyGmailAccess(token);
