@@ -273,7 +273,7 @@ Deno.test("a body with no https and no cid of ours is not parsed at all", async 
 Deno.test("a slow image host cannot hold a send: one deadline for all images, fetched together", async () => {
   const urls = [0, 1, 2].map((i) => `https://cdn.example.com/${i}.png`);
   const sig = urls.map((u) => `<img src="${u}">`).join("");
-  const timers: number[] = [];
+  const timers: ReturnType<typeof setTimeout>[] = [];
   let inFlight = 0;
   let peak = 0;
   const started = performance.now();

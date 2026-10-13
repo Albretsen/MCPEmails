@@ -316,7 +316,7 @@ export async function embedSignatureImages(
       const urls = wanted.slice(0, SIGNATURE_IMAGE_MAX_COUNT);
       // Together, under one deadline. A fetch that loses the race is not
       // cancelled: it finishes into the fetcher's cache for the next message.
-      let timer: number | undefined;
+      let timer: ReturnType<typeof setTimeout> | undefined;
       const deadline = new Promise<null>((resolve) => {
         timer = setTimeout(() => resolve(null), deps.deadlineMs ?? SIGNATURE_IMAGE_EMBED_DEADLINE_MS);
       });
