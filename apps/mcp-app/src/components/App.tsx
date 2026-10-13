@@ -8,14 +8,18 @@ import {
   type Receipt as ReceiptData,
 } from "../contract";
 import { diagnosticsEnabled } from "../diagnostics";
+import type { DraftAction, DraftFailure } from "../draft-failure";
 import { bulkVerb, draftSavedContextLine } from "../format";
 import { isRestoreStub, lastDashboardUrl } from "../persist";
 import {
   acceptRehydration,
+  adoptOwnAnswer,
   adoptRehydration,
+  clearDraftError,
   envelopeFrom,
   getState,
   isDepartedReceipt,
+  isFailure,
   mergeEnvelope,
   rehydrationCall,
   setState,
@@ -105,6 +109,9 @@ export function App(props: { bridge: HostBridge }) {
   const [busy, setBusy] = useState<string | null>(null);
   const [error, setError] = useState<string | null>(null);
   const [approveOpened, setApproveOpened] = useState(false);
+  // The draft editor's last action failing with no envelope to carry it. A
+  // code, never a message: DraftEditor owns the wording (draft-failure.ts).
+  const [failure, setFailure] = useState<DraftFailure | null>(null);
 
   // The store is the single source of truth for the envelope. Keeping a copy in
   // component state looks harmless and is not: the host pushes
@@ -195,25 +202,51 @@ export function App(props: { bridge: HostBridge }) {
    * path needed exactly the same one and having it in only one of the two
    * places was the bug (WS-1b defect B).
    */
+  //
+  // ── AND NO FAILURE DOES, WHATEVER SHAPE IT ARRIVES IN (2026-10-13) ────────
+  // That rule covered one shape of failure out of three, and QA found the
+  // other two the same afternoon:
+  //
+  //   a failed RECEIPT   every draft tool's refusal. Renderable, so it replaced
+  //                      the editor. Now merged around it (mergeEnvelope's
+  //                      rule -1).
+  //   a THROWN call      offline, a host timeout, a JSON-RPC error. It printed
+  //                      the raw `-32603: Failed to fetch`. Now a code.
+  //   an unreadable one  an answer that is not an envelope. Same.
+  //
+  // The second is the dangerous one, because "the call threw" does not mean
+  // "nothing happened": the save QA lost the response to HAD been stored, under
+  // a new id. So a write that ends without an answer leaves the draft
+  // `unverified` (Save and Send off) until a re-read settles what the server
+  // holds. Re-saving blind would be a second write against an id that may
+  // already be retired; `readDraft` below is the recovery, and DraftEditor
+  // keeps the user's edits across it (`rebaseEdit`).
   const callDraft = async (
-    key: string,
+    key: DraftAction,
     tool: string,
     args: Record<string, unknown>,
   ): Promise<Envelope | null> => {
     setBusy(key);
     setError(null);
+    setFailure(null);
+    clearDraftError();
     try {
       const result = await bridge.callServerTool(tool, args);
       const next = envelopeFrom(result);
       if (!next) {
-        setError("The server sent a response this card could not read.");
+        setFailure({ action: key, code: "unreadable" });
         return null;
       }
-      const applied = mergeEnvelope(getState().envelope, next);
-      setEnvelope(applied);
+      const applied = adoptOwnAnswer(next);
+      // The id on screen names nothing the server can find. Nothing can be
+      // written to it, so stop offering to.
+      if (isFailure(applied) && applied.receipt?.error_code === "draft_not_found") {
+        setState({ draftCheck: "unverified" });
+      }
       return applied;
-    } catch (e) {
-      setError(e instanceof Error ? e.message : String(e));
+    } catch {
+      setFailure({ action: key, code: "transport" });
+      if (key !== "refresh") setState({ draftCheck: "unverified" });
       return null;
     } finally {
       setBusy(null);
@@ -223,6 +256,40 @@ export function App(props: { bridge: HostBridge }) {
   /** A save that actually stored something, as opposed to a refusal. */
   const draftStored = (env: Envelope | null): boolean =>
     !!env && env.card === "draft_editor" && env.state !== "error" && !!env.draft;
+
+  /**
+   * Re-read the draft and reconcile: Refresh, "Check again", and the automatic
+   * check of a replayed mount are all this one function.
+   *
+   * Asks with the newest id the card knows first (`draftIdHint`, read out of
+   * the restore stub) and then with the one on screen. With draft lineage on
+   * the server either resolves to the current draft; without it the hint is
+   * the one that still exists. A read that brings back a draft makes it
+   * `trusted` (store.ts#adoptOwnAnswer); one that does not, while the draft was
+   * in doubt, leaves it `unverified` with the reason on screen.
+   */
+  const readDraft = async () => {
+    const s = getState();
+    const d = s.envelope?.draft;
+    if (!d || s.envelope?.card !== "draft_editor") return;
+    if (s.draftCheck !== "trusted") setState({ draftCheck: "checking" });
+    const ids = [...new Set([s.draftIdHint, d.draft_id])].filter(
+      (id): id is string => !!id,
+    );
+    let applied: Envelope | null = null;
+    for (const id of ids) {
+      applied = await callDraft("refresh", "draft_read", {
+        inbox_id: d.identity?.inbox_id,
+        draft_id: id,
+      });
+      const missing = !!applied && isFailure(applied) &&
+        applied.receipt?.error_code === "draft_not_found";
+      if (!missing) break;
+    }
+    if (!draftStored(applied) && getState().draftCheck === "checking") {
+      setState({ draftCheck: "unverified", draftIdHint: null });
+    }
+  };
 
   const openDashboard = (path: string | null | undefined) => {
     const url = path ? absoluteUrl(path) : null;
@@ -290,6 +357,27 @@ export function App(props: { bridge: HostBridge }) {
   const [gone, setGone] = useState<string | null>(null);
   const [stubFailed, setStubFailed] = useState(false);
   const refreshed = useRef(false);
+  /** The stub's own re-request is still in flight. See the effect below it. */
+  const stubRead = useRef(false);
+
+  // A re-mounted DRAFT usually gets both halves at once: the stub out of
+  // storage, whose re-request starts here, and a few milliseconds later the
+  // host's replay of the original result, which replaces the stub with a full
+  // (and stale) editor before the re-request has answered. The answer is then
+  // about an editor, not a stub, and the stub rules below are the wrong ones
+  // for it: "gone" would replace the editor with one line. So it is settled as
+  // what it now is, the verification of that replay.
+  const settleOverEditor = (asked: Envelope, result: unknown) => {
+    const next = envelopeFrom(result as Parameters<typeof envelopeFrom>[0]);
+    const decided = acceptRehydration(asked, next);
+    if (decided.kind === "adopt" && decided.envelope.card === "draft_editor") {
+      adoptOwnAnswer(decided.envelope);
+      return;
+    }
+    // The stub's id did not bring the draft back. The replayed id still might.
+    setState({ draftIdHint: null });
+    if (getState().draftCheck !== "trusted") void readDraft();
+  };
   useEffect(() => {
     if (store.restored !== "storage" || refreshed.current) return;
     const env = store.envelope;
@@ -302,9 +390,16 @@ export function App(props: { bridge: HostBridge }) {
     // change what "asked" means.
     const asked = env;
     refreshed.current = true;
+    stubRead.current = true;
+    const overEditor = () => {
+      const now = getState().envelope;
+      return asked.card === "draft_editor" && !!now && !isRestoreStub(now);
+    };
     bridge
       .callServerTool(call.tool, call.args)
       .then((result) => {
+        stubRead.current = false;
+        if (overEditor()) return settleOverEditor(asked, result);
         const decided = acceptRehydration(asked, envelopeFrom(result));
         // `adoptRehydration`, never a bare setState: a server answer about a
         // known id is the moment this card stops being a memory, and the push
@@ -321,11 +416,26 @@ export function App(props: { bridge: HostBridge }) {
         } else setStubFailed(true);
       })
       .catch(() => {
+        stubRead.current = false;
+        if (overEditor()) return settleOverEditor(asked, undefined);
         // Offline, or the host refused the call. There is nothing to show: the
         // stub has no content in it, by design.
         setStubFailed(true);
       });
   }, [store.restored, store.envelope]);
+
+  // ---- a replayed draft is checked before it is trusted ---------------------
+  //
+  // store.ts marks a pushed draft `pending` when it is a replay
+  // (`isReplayedDraft`). This starts the re-read, unless the stub's own is
+  // already on its way, in which case that one settles it. Declared after the
+  // stub effect so that on the commit where both become true the stub's read
+  // has been started first.
+  useEffect(() => {
+    if (store.draftCheck !== "pending") return;
+    if (stubRead.current) setState({ draftCheck: "checking" });
+    else void readDraft();
+  }, [store.draftCheck]);
 
   /** The last https dashboard URL any envelope carried. See persist.ts. */
   const fallbackDashboard = () => {
@@ -682,6 +792,9 @@ export function App(props: { bridge: HostBridge }) {
           canExpand={canExpand}
           busy={busy}
           error={error}
+          failure={failure}
+          check={store.draftCheck}
+          idHint={store.draftIdHint}
           actions={{
             save,
             send: async (patch) => {
@@ -708,7 +821,7 @@ export function App(props: { bridge: HostBridge }) {
                 }),
               );
             },
-            refresh: () => void callDraft("refresh", "draft_read", target()),
+            refresh: () => void readDraft(),
             // The opt-out. `scope` is passed through from the card's confirm
             // row rather than defaulted here, because "hide this" is ambiguous
             // between this mailbox and every mailbox and the two are different
