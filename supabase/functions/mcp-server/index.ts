@@ -195,6 +195,7 @@ import {
 import {
   appOnlyReviewCardToolMeta,
   buildResourceReadResult,
+  isStaleReviewCardUri,
   buildResourcesListResult,
   buildResourceTemplatesListResult,
   clientSupportsUiExtension,
@@ -29754,6 +29755,9 @@ function handleResourcesRead(
   console.log("[mcp-server] resources/read", {
     key_id: apiKey.id,
     uri,
+    // A fingerprint from an earlier build, answered with the current bundle.
+    // Counts the clients still holding a pre-deploy tools/list.
+    stale_fingerprint: isStaleReviewCardUri(uri),
     bytes: (result.contents[0]["text"] as string).length,
   });
 
