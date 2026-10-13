@@ -58,13 +58,15 @@ Deno.test("capabilities: receive-only turns off sending", () => {
 });
 
 Deno.test("the refusal never claims a credential problem and says what still works", () => {
-  const url = "https://mcpemails.com/dashboard/inboxes";
-  const sendOnly = missingTransportMessage("imap", "noreply@example.com", url);
-  const receiveOnly = missingTransportMessage("smtp", "archive@example.com", url);
+  // A placeholder rather than a real URL: what matters is that the link the
+  // caller passes is the sentence's closing clause, wherever it points.
+  const link = "DASHBOARD_LINK";
+  const sendOnly = missingTransportMessage("imap", "noreply@example.com", link);
+  const receiveOnly = missingTransportMessage("smtp", "archive@example.com", link);
   for (const text of [sendOnly, receiveOnly]) {
     assert(!/revoked|expired/i.test(text), text);
     assert(text.includes("do not retry"), text);
-    assert(text.includes(url), text);
+    assert(text.endsWith(`dashboard: ${link}`), text);
   }
   assert(sendOnly.includes("sending only") && sendOnly.includes("Sending new mail from it works"));
   assert(receiveOnly.includes("receiving only") && receiveOnly.includes("Reading, searching"));
