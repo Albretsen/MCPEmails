@@ -229,13 +229,12 @@ Deno.test("two cards: the stale one's Save is refused as draft_changed, and the 
   assertEquals(m.writes.length, 0, "nothing was written");
   assertEquals(m.drafts.get(y), before, "the model's revision is untouched");
 
-  // The current draft rides along for the card to offer.
-  const current = (out.result.structuredContent as Record<string, any>).current;
-  assertEquals(current.card, "draft_editor");
-  assertEquals(current.draft.draft_id, y);
-  assertEquals(current.draft.resolved_from, x);
-  assertEquals(current.draft.recipients.to, ["new-recipient@x.com"]);
-  assertEquals(current.draft.revision, cardA.revision + 1);
+  // No copy of the current draft rides along: the card re-reads it.
+  assertEquals("current" in (out.result.structuredContent as Record<string, unknown>), false);
+  const reread = draftOf(await runDraftRead(m.deps, CALLER, { draft_id: cardA.draft_id }));
+  assertEquals([reread.draft_id, reread.resolved_from], [y, x]);
+  assertEquals(reread.recipients.to, ["new-recipient@x.com"]);
+  assertEquals(reread.revision, cardA.revision + 1);
   // The model's channel says what happened without the body.
   assert(!out.result.content[0].text.includes("corrected"));
 });
@@ -256,13 +255,80 @@ Deno.test("ids that never move (Gmail, Outlook): a revision the draft has moved 
   });
   assertEquals(receiptOf(out).error_code, "draft_changed");
   assertEquals(m.drafts.get(id)!.subject, "Agent's subject");
-  assertEquals((out.result.structuredContent as Record<string, any>).current.draft.revision, 2);
+  assertEquals(draftOf(await runDraftRead(m.deps, CALLER, { draft_id: id })).revision, 2);
 
   // Saving against the revision it has now goes through, and moves it on.
   const ok = await runDraftEditorSave(m.deps, CALLER, { draft_id: id, base_revision: 2, subject: "Person's subject" });
   assertEquals(ok.result.isError, false);
   assertEquals(draftOf(ok).revision, 3);
   assertEquals(draftOf(ok).last_saved_by, "user");
+});
+
+Deno.test("review 2: a model write recorded while the card's save reads the draft is caught by the late check", async () => {
+  const m = mailbox({ stableIds: true });
+  const id = await m.agentCreates(signedDraft("Original body."));
+  const card = draftOf(await runDraftRead(m.deps, CALLER, { draft_id: id }));
+  // The model's update lands (and is recorded) while the save is reading the
+  // stored draft, i.e. after the save's first lineage check.
+  const getDraft = m.deps.getDraft;
+  let interleaved = false;
+  m.deps.getDraft = async (inbox, draftId) => {
+    const out = await getDraft(inbox, draftId);
+    if (!interleaved) {
+      interleaved = true;
+      await agentUpdates(m, id, { subject: "Agent's subject" });
+    }
+    return out;
+  };
+  const out = await runDraftEditorSave(m.deps, CALLER, {
+    draft_id: id,
+    base_revision: card.revision,
+    subject: "Person's subject",
+  });
+  assertEquals(receiptOf(out).error_code, "draft_changed");
+  assertEquals(m.drafts.get(id)!.subject, "Agent's subject", "the card did not write over it");
+});
+
+Deno.test("review 2: a model write recorded during the card's provider write leaves the card no revision to send on", async () => {
+  const m = mailbox({ stableIds: true });
+  const id = await m.agentCreates(signedDraft("Original body."));
+  const card = draftOf(await runDraftRead(m.deps, CALLER, { draft_id: id }));
+  // The provider takes the card's write, then the model's; the model records
+  // first. Nothing on the server can order the two provider writes.
+  const updateDraft = m.deps.updateDraft;
+  let interleaved = false;
+  m.deps.updateDraft = async (inbox, draftId, params) => {
+    const out = await updateDraft(inbox, draftId, params);
+    if (!interleaved) {
+      interleaved = true;
+      await agentUpdates(m, id, { subject: "Agent's subject" });
+    }
+    return out;
+  };
+  const saved = await runDraftEditorSave(m.deps, CALLER, {
+    draft_id: id,
+    base_revision: card.revision,
+    subject: "Person's subject",
+  });
+  assertEquals(saved.result.isError, false);
+  const held = draftOf(saved).revision;
+  // The line moved on twice (model, then the card's contended record); the
+  // card is handed the revision it loaded, which the line is past.
+  assertEquals(held, card.revision);
+  const send = await runDraftEditorSave(m.deps, CALLER, { draft_id: id, base_revision: held, subject: "Again" });
+  assertEquals(receiptOf(send).error_code, "draft_changed", "it re-reads before it writes again");
+  const reread = draftOf(await runDraftRead(m.deps, CALLER, { draft_id: id }));
+  assertEquals(reread.subject, "Agent's subject", "what the card re-reads is what the mailbox holds");
+});
+
+Deno.test("review 2: the draft_changed receipt carries no copy of the draft", async () => {
+  const m = mailbox({ stableIds: true });
+  const id = await m.agentCreates(signedDraft("Original body."));
+  await agentUpdates(m, id, { subject: "Agent's subject" });
+  const out = await runDraftEditorSave(m.deps, CALLER, { draft_id: id, base_revision: 1, subject: "x" });
+  assertEquals(receiptOf(out).error_code, "draft_changed");
+  assertEquals(Object.keys(out.result.structuredContent as Record<string, unknown>).includes("current"), false);
+  assert(!JSON.stringify(out.result).includes("Agent's subject"));
 });
 
 Deno.test("a card's own saves in a row each carry the revision the next one needs", async () => {

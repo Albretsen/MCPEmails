@@ -100,7 +100,13 @@ Deno.test("a held send is queued with the resolved id, and an approved one keeps
     approvalDispatch: false,
   });
   assert(held.kind === "proceed");
-  assertEquals(held.approvalArgs, { draft_id: "Drafts:2", inbox_id: "inbox-1", idempotency_key: "k-1" });
+  // With the revision it was queued at, so the re-run refuses a rewrite.
+  assertEquals(held.approvalArgs, {
+    draft_id: "Drafts:2",
+    inbox_id: "inbox-1",
+    idempotency_key: "k-1",
+    base_revision: 2,
+  });
   assertEquals(args.draft_id, "Drafts:1", "the caller's arguments are not mutated");
 
   // The dispatcher re-running an approval queued with Drafts:1 (an old queue,

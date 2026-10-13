@@ -1566,9 +1566,10 @@ Deno.test("the enumeration above covers every refusal site in the module", () =>
   const source = Deno.readTextFileSync(new URL("./mcp-app-drafts.ts", import.meta.url));
   const calls =
     source.match(/(?:return|failure:)\s+(?:draftFailure|invalidArgs|draftNotFound)\(/g) ?? [];
-  // `invalidArgs` and `draftNotFound` each `return draftFailure(` themselves.
-  // They are the funnel, not refusal sites, so they get no scenario of their own.
-  const FUNNEL_INTERNAL_CALLS = 2;
+  // `invalidArgs`, `draftNotFound` and `draftChanged` each `return
+  // draftFailure(` themselves. They are the funnel, not refusal sites, so they
+  // get no scenario of their own.
+  const FUNNEL_INTERNAL_CALLS = 3;
   // `gateDraftTool`'s `draft_editor_hidden` refusal is ONE call site with TWO
   // detail branches (workspace-wide vs this inbox), and both are driven.
   const EXTRA_DETAIL_BRANCHES = 1;

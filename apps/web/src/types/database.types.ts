@@ -4021,6 +4021,24 @@ export type Database = {
       dispatch_inbox_watch: { Args: never; Returns: undefined }
       dispatch_scheduled_sends: { Args: never; Returns: undefined }
       dispatch_triage_rules: { Args: never; Returns: undefined }
+      draft_lineage_record: {
+        Args: {
+          p_adopt?: boolean
+          p_draft_id: string
+          p_expected_revision?: number
+          p_inbox_id: string
+          p_line_id?: string
+          p_seed_draft_id?: string
+          p_workspace_id: string
+          p_written_at?: string
+          p_written_by: string
+        }
+        Returns: {
+          contended: boolean
+          recorded_line_id: string
+          recorded_revision: number
+        }[]
+      }
       effective_workspace_plan: {
         Args: { p_workspace_id: string }
         Returns: {

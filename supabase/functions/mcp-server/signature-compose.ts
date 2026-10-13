@@ -292,7 +292,9 @@ export function bodyCarriesSignature(
   inbox: SignatureInbox,
   storedHtml?: string | null,
 ): boolean {
-  return splitAtSignature(text, inbox, storedHtml) !== null;
+  // The text asked about is the stored one here, so it decides whether a
+  // match without the delimiter line may count (see `splitAtSignature`).
+  return splitAtSignature(text, inbox, storedHtml, text) !== null;
 }
 
 /**
@@ -353,10 +355,33 @@ function signatureCandidates(
   return out;
 }
 
+/** True when a text carries the `-- ` signature delimiter as a line of its own. */
+function hasDelimiterLine(text: string): boolean {
+  return /(^|\n)--(\n|$)/.test(comparableText(text));
+}
+
+/**
+ * Where the edited `text` is split into the person's words and the signature,
+ * or null when it no longer carries an untouched signature.
+ *
+ * ── A MATCH WITHOUT THE DELIMITER LINE (review 2 of 2026-10-13) ────────────
+ * `applySignature` writes `-- ` then the signature, and a match on both is the
+ * signature. A match on the signature lines ALONE exists for Outlook, which
+ * hands the text part back derived from the HTML, with no delimiter line. But
+ * for a one-line signature ("Asgeir") the bare match is any line that says the
+ * same thing: a person who deleted `-- \nAsgeir` and signed off "Thanks,\nAsgeir"
+ * got the rich signature block put back into the HTML part. So the bare match
+ * counts only when the draft's STORED text (`storedText`) had no delimiter
+ * line either, which is the Outlook shape; a stored text that had one tells us
+ * that removing it removed the signature. When the stored text is not known,
+ * only a signature of more than one line may match bare: two whole lines
+ * repeated verbatim are the signature, one is just as likely a sign-off.
+ */
 function splitAtSignature(
   text: string,
   inbox: SignatureInbox,
   storedHtml?: string | null,
+  storedText?: string | null,
 ): { before: string; after: string; html: string } | null {
   // A leading newline so a body that IS the signature still has a line break
   // in front of its delimiter to match on.
@@ -374,7 +399,11 @@ function splitAtSignature(
       // With the delimiter `applySignature` writes ("-- " loses its space
       // above), then without it: a provider that hands the text back derived
       // from HTML (Outlook) has no delimiter line.
-      for (const needle of [`\n--\n${sigText}`, `\n${sigText}`]) {
+      const bareAllowed = typeof storedText === "string"
+        ? !hasDelimiterLine(storedText)
+        : sigText.includes("\n");
+      const needles = bareAllowed ? [`\n--\n${sigText}`, `\n${sigText}`] : [`\n--\n${sigText}`];
+      for (const needle of needles) {
         const at = lastWholeLineMatch(hay, needle, endBy);
         if (at === -1) continue;
         return {
@@ -405,7 +434,9 @@ function splitAtSignature(
  *
  * `storedHtml` is the draft's current HTML part. It supplies the block to keep,
  * and it lets a draft whose signature was changed on the dashboard since it was
- * written keep the signature it has.
+ * written keep the signature it has. `storedText` is the draft's current text
+ * part: whether IT had a delimiter line decides whether the edited text may
+ * match the signature without one (`splitAtSignature`).
  *
  * Text after the signature (the quoted original of a reply) follows it,
  * escaped.
@@ -419,8 +450,9 @@ export function rebuildHtmlKeepingSignature(
   text: string,
   inbox: SignatureInbox,
   storedHtml?: string | null,
+  storedText?: string | null,
 ): string | null {
-  const split = splitAtSignature(text, inbox, storedHtml);
+  const split = splitAtSignature(text, inbox, storedHtml, storedText);
   if (!split) return null;
   const sigHtmlBlock = `\n<div class="${SIGNATURE_HTML_CLASS}">${split.html}</div>`;
   const tail = split.after ? `\n<br>\n${plainTextBodyToHtml(split.after)}` : "";

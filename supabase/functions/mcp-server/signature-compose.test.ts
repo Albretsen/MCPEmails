@@ -261,3 +261,51 @@ Deno.test("rebuildHtmlKeepingSignature: a reply quoting the same signature split
     assertEquals(rebuilt.split(`class="${SIGNATURE_HTML_CLASS}"`).length - 1, 1);
   }
 });
+
+// ---------------------------------------------------------------------------
+// A match without the delimiter line (review 2 of 2026-10-13)
+// ---------------------------------------------------------------------------
+
+const ONE_LINE_RICH: SignatureInbox = {
+  signature_enabled: true,
+  signature_text: "Asgeir",
+  signature_html: '<b>Asgeir</b> <img src="https://mcpemails.com/logo.png" alt="logo">',
+};
+
+Deno.test("one-line signature: deleting it and signing off with the same word does not bring the rich block back", () => {
+  const signed = applySignature({ textBody: "Hi" } as { textBody: string; htmlBody?: string }, ONE_LINE_RICH);
+  assertEquals(signed.textBody, `Hi${SIGNATURE_TEXT_DELIMITER}Asgeir`);
+  // The person removes "-- \nAsgeir" and writes their own sign-off.
+  const edited = "Hi there\n\nThanks,\nAsgeir";
+  // Through the editor's call (stored text known, with a delimiter): no block.
+  assertEquals(rebuildHtmlKeepingSignature(edited, ONE_LINE_RICH, signed.htmlBody, signed.textBody), null);
+  // Stored text unknown: a one-line signature never matches bare either.
+  assertEquals(rebuildHtmlKeepingSignature(edited, ONE_LINE_RICH, signed.htmlBody), null);
+  // Kept with its delimiter, it is the signature as before.
+  const kept = rebuildHtmlKeepingSignature(
+    signed.textBody.replace("Hi", "Hi there"),
+    ONE_LINE_RICH,
+    signed.htmlBody,
+    signed.textBody,
+  );
+  assertEquals(kept, applySignature({ textBody: "Hi there" } as { textBody: string; htmlBody?: string }, ONE_LINE_RICH).htmlBody);
+});
+
+Deno.test("Outlook shape: a stored text with no delimiter line still keeps a one-line signature's block", () => {
+  const signed = applySignature({ textBody: "Hi" } as { textBody: string; htmlBody?: string }, ONE_LINE_RICH);
+  // Graph hands the text part back derived from the HTML: no "-- " line.
+  const storedText = "Hi\n\nAsgeir";
+  const rebuilt = rebuildHtmlKeepingSignature("Hello\n\nAsgeir", ONE_LINE_RICH, signed.htmlBody, storedText);
+  assertEquals(rebuilt !== null && rebuilt.includes(`class="${SIGNATURE_HTML_CLASS}"`), true);
+  assertEquals(rebuilt!.includes("Hello"), true);
+});
+
+Deno.test("a stored text WITH a delimiter never lets a multi-line signature match bare", () => {
+  const signed = applySignature({ textBody: "Hi" } as { textBody: string; htmlBody?: string }, TEXT_SIG_INBOX);
+  // Delimiter removed, signature lines left: the person took the signature
+  // apart, so the formatting is not claimed.
+  const edited = signed.textBody.replace(SIGNATURE_TEXT_DELIMITER, "\n\n");
+  assertEquals(rebuildHtmlKeepingSignature(edited, TEXT_SIG_INBOX, signed.htmlBody, signed.textBody), null);
+  // Stored text unknown: two whole lines repeated verbatim still count.
+  assertEquals(rebuildHtmlKeepingSignature(edited, TEXT_SIG_INBOX, signed.htmlBody) !== null, true);
+});

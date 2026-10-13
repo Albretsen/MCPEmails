@@ -964,16 +964,13 @@ async function resolveSettledLine(
  * A write from the card against a draft that has moved on since the card
  * loaded it (draft-lineage.ts#cardWriteConflict). Nothing was written.
  *
- * `current` is the draft as it is now, as a draft_editor envelope, when it
- * could be read: the card shows a conflict notice over the person's unsaved
- * text and offers to load it. It rides beside the receipt, never in place of
- * it, so `mergeEnvelope` keeps the editor (and the typed text) on screen.
+ * Carries no copy of the current draft (it used to, as `current`, and the card
+ * never read it): the card answers with "Load the newer version", which is a
+ * `draft_read`, and keeps the person's unsaved text on top
+ * (DraftEditor#rebaseEdit). One way to learn the current draft, not two.
  */
-function draftChanged(
-  appUrl: string,
-  current: Record<string, unknown> | null,
-): DraftEditorToolResult {
-  const out = draftFailure(
+function draftChanged(appUrl: string): DraftEditorToolResult {
+  return draftFailure(
     appUrl,
     "failed",
     "That draft was changed after this copy of it was loaded.",
@@ -986,10 +983,6 @@ function draftChanged(
       detail: "Nothing was saved. Your text is still here. Load the newer version to see what changed.",
     },
   );
-  if (current) {
-    (out.result.structuredContent as Record<string, unknown>).current = current;
-  }
-  return out;
 }
 
 // ---------------------------------------------------------------------------
@@ -1578,30 +1571,9 @@ export async function runDraftEditorSave(
       "provider_error",
     );
   }
-  if (!stored) return line.redirected ? draftChanged(deps.appUrl, null) : draftNotFound(deps.appUrl);
+  if (!stored) return line.redirected ? draftChanged(deps.appUrl) : draftNotFound(deps.appUrl);
 
-  if (cardWriteConflict(line, baseRevision)) {
-    // The draft as it is now, for the card to offer. Built exactly as a
-    // `draft_read` of the current id would build it.
-    const lastSave = lastSaveOf(line, stored.last_saved_at);
-    const current: NormalizedDraft = {
-      ...stored,
-      last_saved_at: lastSave.at,
-      ...(line.redirected ? { resolved_from: line.requestedId } : {}),
-    };
-    return draftChanged(
-      deps.appUrl,
-      buildDraftEditorEnvelope({
-        appUrl: deps.appUrl,
-        draft: current,
-        inbox,
-        origin: "read",
-        lastSavedBy: lastSave.by,
-        canSend: computeCanSend(caller, current),
-        revision: lineRevision(line),
-      }),
-    );
-  }
+  if (cardWriteConflict(line, baseRevision)) return draftChanged(deps.appUrl);
 
   // ── REFUSE RATHER THAN DROP ATTACHMENTS ──────────────────────────────────
   // `imapUpdateDraft` and `gmailUpdateDraft` rebuild the MIME message from the
@@ -1741,7 +1713,7 @@ export async function runDraftEditorSave(
   if (stored.body_html !== null) {
     if (bodyTextChanged) {
       const regenerated = htmlCarriesSignatureBlock(stored.body_html)
-        ? rebuildHtmlKeepingSignature(bodyText as string, inbox, stored.body_html)
+        ? rebuildHtmlKeepingSignature(bodyText as string, inbox, stored.body_html, stored.body_text)
         : plainTextBodyToHtml(bodyText as string);
       nextHtml = regenerated === null || regenerated.length === 0 ||
           regenerated.length > EMAIL_HTML_MAX_LENGTH
@@ -1787,6 +1759,23 @@ export async function runDraftEditorSave(
   // stored body verbatim, so it would double it in the delivered mail too. This
   // is why the write below goes straight to the provider function and never
   // through `applySignature`.
+  // ── AND CHECKED AGAIN AS LATE AS POSSIBLE (review 2 of 2026-10-13) ───────
+  // The check above ran against the line as it was before the provider read.
+  // Another writer (the assistant's update, a second card) recorded in the
+  // meantime moves the line's revision, so ask once more immediately before
+  // the write. What remains is the window between this read and the provider
+  // write, and between the provider write and the record below; a write that
+  // lands in it is caught by the record (`contended`), which then gives this
+  // card no revision to vouch for, so its next save or send is refused until
+  // it re-reads. Contract §8, "Draft lineage", says so.
+  if (baseRevision !== null && line.known && line.closed === null) {
+    const latest = await resolveLine(deps, inbox, currentId);
+    if (latest.known && latest.lineId === line.lineId && latest.revision !== line.revision) {
+      return draftChanged(deps.appUrl);
+    }
+    if (latest.known && latest.closed !== null) return draftClosed(deps.appUrl, latest.closed);
+  }
+
   let written: { draft_id: string; updated_at?: string };
   try {
     written = await deps.updateDraft(inbox, currentId, {
@@ -1825,8 +1814,11 @@ export async function runDraftEditorSave(
   const savedAt = written.updated_at ?? new Date(nowMs(deps)).toISOString();
   // Awaited, so the line is current before the card can ask again. Fail-soft:
   // the draft is saved either way. When nothing was recorded the revision the
-  // card gets is the one the store still holds, so its next save is not
-  // refused for a bump that never happened.
+  // card gets is the one it loaded: after a failed write that is still the
+  // line's, so its next save is not refused for a bump that never happened;
+  // after a CONTENDED record (another write was recorded meanwhile) the line is
+  // past it, so the next save or send is refused until the card re-reads,
+  // which is the point (draft-lineage.ts#recordDraftWrite).
   let revision: number | null = lineRevision(line);
   if (deps.lineage) {
     try {

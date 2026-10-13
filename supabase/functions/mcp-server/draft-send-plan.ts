@@ -14,10 +14,22 @@
 //   3. a send from the draft editor card (it carries `base_revision`) against
 //      an older id or a rewritten draft is refused (`draft_changed`).
 //   4. a held send is queued with the RESOLVED id, which is what the approval
-//      summary reads and what the post-approval re-run sends.
+//      summary reads and what the post-approval re-run sends, AND with the
+//      revision the draft had when it was queued (`base_revision`), so the
+//      re-run refuses a draft rewritten after the approval was asked for
+//      (review 2 of 2026-10-13: on Gmail and Outlook the id never moves, so
+//      rule 1 alone sent whatever the draft said at approval time).
+//
+// And, for a send-time recipient override (`applyRecipientOverride`):
+//
+//   5. the rewrite of the stored recipients is recorded in the lineage EVERY
+//      time, also when the id did not move (Gmail, Outlook). A rewrite that was
+//      not recorded left the draft at its old revision with new recipients, so
+//      a card at that revision could Send to people it never showed, after the
+//      model's send was held or failed.
 // ---------------------------------------------------------------------------
 
-import { cardWriteConflict, type ResolvedDraft } from "./draft-lineage.ts";
+import { cardWriteConflict, lineRevision, type ResolvedDraft } from "./draft-lineage.ts";
 
 export type DraftSendPlan =
   | { kind: "refuse"; code: "draft_already_sent"; sentCopyKept: boolean }
@@ -50,8 +62,9 @@ export function planDraftSend(input: {
   if (line.closed === "sent") {
     return { kind: "refuse", code: "draft_already_sent", sentCopyKept: line.sentCopyKept === true };
   }
-  // Rule 3. Only a card send carries `base_revision`; a model's send may follow
-  // the line, which is what it asked for.
+  // Rule 3. A card send carries `base_revision`, and so does the re-run of an
+  // approved send (rule 4); a model's own send does not, and may follow the
+  // line, which is what it asked for.
   if (input.baseRevision !== null && cardWriteConflict(line, input.baseRevision)) {
     return { kind: "refuse", code: "draft_changed" };
   }
@@ -60,6 +73,103 @@ export function planDraftSend(input: {
     kind: "proceed",
     draftId: line.draftId,
     line,
-    approvalArgs: { ...input.args, draft_id: line.draftId },
+    approvalArgs: heldSendArgs(input.args, line.draftId, line, input.baseRevision, false),
   };
+}
+
+/**
+ * What a held `draft{action:"send"}` is queued with: the caller's arguments,
+ * the resolved id, and ALWAYS a `base_revision`.
+ *
+ * The revision is the line's as it is now (`lineRevision`). With no open line
+ * it is the caller's own `base_revision` when it sent one, else 0, which means
+ * "no recorded revision": a line that exists by the time of the re-run means
+ * something wrote the draft after it was queued, and the re-run is refused as
+ * `draft_changed` (draft-lineage.ts#cardWriteConflict). A lineage read that
+ * failed at queue time can therefore refuse an approved send that was fine;
+ * that is the safe direction, and the approver is told why.
+ *
+ * `recipientsApplied`: the send-time `to`/`cc`/`bcc` were written into the
+ * stored draft already, so the re-run must not write them again (on IMAP the
+ * id they would be written to no longer exists).
+ */
+export function heldSendArgs(
+  args: Record<string, unknown>,
+  draftId: string,
+  line: ResolvedDraft,
+  callerBaseRevision: number | null,
+  recipientsApplied: boolean,
+): Record<string, unknown> {
+  const out: Record<string, unknown> = { ...args, draft_id: draftId };
+  if (recipientsApplied) {
+    delete out["to"];
+    delete out["cc"];
+    delete out["bcc"];
+  }
+  out["base_revision"] = lineRevision(line) ?? callerBaseRevision ?? 0;
+  return out;
+}
+
+/** The provider and lineage calls `applyRecipientOverride` needs, injected. */
+export interface RecipientOverrideDeps {
+  /** Write the override into the stored draft. Resolves to the id afterwards; throws as the provider does. */
+  rewrite(draftId: string): Promise<string>;
+  /** Record a write on `previous`'s line (draft-lineage.ts#recordDraftWrite). Never throws. */
+  record(previous: ResolvedDraft, draftId: string): Promise<number | null>;
+  /** Resolve an id (draft-lineage.ts#resolveDraftId). Never throws. */
+  resolve(draftId: string): Promise<ResolvedDraft>;
+}
+
+/**
+ * Rule 5: apply a send-time recipient override BEFORE anything else looks at
+ * the draft, record it, and say what a held send is then queued with.
+ *
+ * Throws whatever `rewrite` throws; nothing is recorded then, because nothing
+ * was written.
+ */
+export async function applyRecipientOverride(
+  input: {
+    args: Record<string, unknown>;
+    draftId: string;
+    line: ResolvedDraft;
+    baseRevision: number | null;
+  },
+  deps: RecipientOverrideDeps,
+): Promise<{ draftId: string; line: ResolvedDraft; approvalArgs: Record<string, unknown> }> {
+  const rewrittenId = await deps.rewrite(input.draftId);
+  // Recorded whether or not the id moved: the recipients changed, so the
+  // revision must, or a card at the old revision would still pass its check.
+  // On IMAP it also keeps the id the caller holds resolving if this send is
+  // then held.
+  await deps.record(input.line, rewrittenId);
+  const line = await deps.resolve(rewrittenId);
+  return {
+    draftId: rewrittenId,
+    line,
+    approvalArgs: heldSendArgs(input.args, rewrittenId, line, input.baseRevision, true),
+  };
+}
+
+/**
+ * The `scheduled_sends.error_detail` an approved send leaves when its re-run
+ * is refused, in words for the person who approved it (the dashboard shows
+ * it). Null for any other code: the caller keeps its generic sentence.
+ */
+export function approvedSendRefusalDetail(
+  operation: string,
+  code: string | null,
+): string | null {
+  if (operation !== "draft_send") return null;
+  switch (code) {
+    case "draft_changed":
+      return "Not sent. The draft was changed after this send was approved, so the approved " +
+        "version no longer exists. Review the draft and send it again.";
+    case "draft_not_found":
+      return "Not sent. The draft was changed or removed after this send was approved. " +
+        "Review the draft and send it again.";
+    case "draft_already_sent":
+      return "Not sent again. This draft had already been sent.";
+    default:
+      return null;
+  }
 }

@@ -51,13 +51,48 @@ export interface DraftLineageRow {
   closed_reason: DraftLineStoredReason | null;
 }
 
-/** A row to insert, or to overwrite where (inbox, draft_id) already exists. */
-export interface DraftLineageWrite {
-  line_id: string;
-  draft_id: string;
+/**
+ * One write to record, as `public.draft_lineage_record` takes it.
+ *
+ *   lineId + expectedRevision  continue that line. The revision is computed by
+ *                              the store, not by the caller: max + 1 inside one
+ *                              locked statement, so two writers can never both
+ *                              get N+1 (review 2 of 2026-10-13).
+ *   seedDraftId                start a new line holding this older id first
+ *                              (a draft made before lineage, or in a mail
+ *                              client, that a write then moved).
+ *   adopt                      the caller found no line for an id that the
+ *                              write did not change. If, by the time the row
+ *                              is written, that id IS the head of an open line
+ *                              (somebody started one meanwhile, or the
+ *                              caller's read failed), continue that line rather
+ *                              than starting a second one that resets the
+ *                              revision to 1.
+ */
+export interface DraftLineageRecord {
+  lineId: string | null;
+  expectedRevision: number | null;
+  draftId: string;
+  seedDraftId: string | null;
+  adopt: boolean;
+  writtenBy: DraftWriter;
+  writtenAt: string;
+}
+
+/**
+ * What the store did with a `DraftLineageRecord`.
+ *
+ * `contended` is true when the line was not where the caller left it: another
+ * write was recorded between the caller's read and this one (the line's head
+ * revision was not `expectedRevision`), the line was closed meanwhile, or an
+ * adopted line was started by somebody else. The row is written either way;
+ * the revision it got does not describe content the caller can vouch for,
+ * because the provider writes may have landed in the other order.
+ */
+export interface DraftLineageRecorded {
+  lineId: string;
   revision: number;
-  written_by: DraftWriter;
-  written_at: string;
+  contended: boolean;
 }
 
 export interface DraftLineageScope {
@@ -65,14 +100,19 @@ export interface DraftLineageScope {
   inboxId: string;
 }
 
-/** The four queries. Each may throw; callers here catch. */
+/** The four operations. Each may throw; callers here catch. */
 export interface DraftLineageStore {
   /** The row for exactly this draft id, or null. */
   find(scope: DraftLineageScope, draftId: string): Promise<DraftLineageRow | null>;
   /** The highest-revision row of a line, or null. */
   head(scope: DraftLineageScope, lineId: string): Promise<DraftLineageRow | null>;
-  /** Insert rows; a row whose (inbox, draft_id) exists is replaced and reopened. */
-  upsert(scope: DraftLineageScope, rows: DraftLineageWrite[]): Promise<void>;
+  /**
+   * Record one write ATOMICALLY: decide the line, compute the next revision
+   * and write the row(s) as one step (`public.draft_lineage_record`, under a
+   * per-inbox advisory lock). A row whose (inbox, draft_id) exists is moved
+   * and reopened.
+   */
+  record(scope: DraftLineageScope, write: DraftLineageRecord): Promise<DraftLineageRecorded>;
   /** Mark every row of a line closed. */
   close(
     scope: DraftLineageScope,
@@ -80,6 +120,26 @@ export interface DraftLineageStore {
     reason: DraftLineStoredReason,
     at: string,
   ): Promise<void>;
+}
+
+/**
+ * The `draft_lineage_record` RPC's answer (PostgREST returns the function's
+ * one row as an array), checked. Throws on anything else, which the callers
+ * here treat like any other store failure.
+ */
+export function draftLineageRecordedFrom(data: unknown): DraftLineageRecorded {
+  const row = Array.isArray(data) ? data[0] : data;
+  if (row && typeof row === "object") {
+    const r = row as Record<string, unknown>;
+    if (
+      typeof r.recorded_line_id === "string" && r.recorded_line_id.length > 0 &&
+      typeof r.recorded_revision === "number" && Number.isInteger(r.recorded_revision) &&
+      r.recorded_revision >= 1 && typeof r.contended === "boolean"
+    ) {
+      return { lineId: r.recorded_line_id, revision: r.recorded_revision, contended: r.contended };
+    }
+  }
+  throw new Error("draft_lineage_record returned no usable row");
 }
 
 /** What a draft action learns about the id it was handed. */
@@ -221,7 +281,7 @@ export function needsExistenceCheck(line: ResolvedDraft): boolean {
  * Record that a draft was written and now has id `draftId`. Never throws.
  *
  * `previous` is what `resolveDraftId` returned for the id the write acted on,
- * or null for a brand-new draft.
+ * resolved BEFORE the provider write, or null for a brand-new draft.
  *
  *   * known, open line   -> the next revision of that line.
  *   * unknown id         -> a new line. When the write changed the id, the old
@@ -231,12 +291,23 @@ export function needsExistenceCheck(line: ResolvedDraft): boolean {
  *   * closed line        -> a new line holding only the new id. The old line
  *                           stays closed.
  *
+ * The revision itself is computed by the store in one locked step
+ * (`DraftLineageStore#record`), never as `previous.revision + 1` here: two
+ * writers that read the same revision both wrote N+1, and a card holding N+1
+ * then passed the `base_revision` check against content it never saw (review 2
+ * of 2026-10-13).
+ *
  * A line id is a fresh UUID rather than the first draft id, so a line can never
  * collide with rows left over from an older one.
  *
- * Returns the revision the draft now has, or null when nothing was recorded
- * (no store, or the write failed). The draft editor envelope carries it as
- * `draft.revision`, and the card sends it back as `base_revision`.
+ * Returns the revision the draft now has, or null when nothing trustworthy can
+ * be said: no store, an id that is not a real id, the write failed, or the
+ * record was CONTENDED (another write was recorded on the line after
+ * `previous` was read). In that last case the row is written, but the provider
+ * writes may have landed in either order, so the caller is not told a revision
+ * it could vouch for: the editor envelope then carries none (or the one the
+ * card already had), the line's head is past it, and the card's next save or
+ * send is refused as `draft_changed` until it re-reads.
  */
 export async function recordDraftWrite(
   store: DraftLineageStore | null | undefined,
@@ -253,42 +324,50 @@ export async function recordDraftWrite(
   const at = input.at ?? new Date().toISOString();
   const previous = input.previous;
   try {
-    const rows: DraftLineageWrite[] = [];
-    if (previous && previous.known && previous.closed === null && previous.lineId) {
-      rows.push({
-        line_id: previous.lineId,
-        draft_id: input.draftId,
-        revision: previous.revision + 1,
-        written_by: input.writtenBy,
-        written_at: at,
+    const continuing = previous !== null && previous.known && previous.closed === null &&
+      previous.lineId !== null;
+    const unknownBefore = previous !== null && !previous.known;
+    const recorded = await store.record(scope, {
+      lineId: continuing ? previous!.lineId : null,
+      expectedRevision: continuing ? previous!.revision : null,
+      draftId: input.draftId,
+      seedDraftId: unknownBefore && previous!.draftId !== input.draftId ? previous!.draftId : null,
+      adopt: unknownBefore && previous!.draftId === input.draftId,
+      writtenBy: input.writtenBy,
+      writtenAt: at,
+    });
+    if (recorded.contended) {
+      log("draft_lineage_write_contended", {
+        inbox_id: scope.inboxId,
+        revision: recorded.revision,
       });
-    } else {
-      const lineId = crypto.randomUUID();
-      const seedOld = previous !== null && !previous.known &&
-        previous.draftId !== input.draftId;
-      if (seedOld) {
-        rows.push({
-          line_id: lineId,
-          draft_id: previous.draftId,
-          revision: 1,
-          written_by: input.writtenBy,
-          written_at: at,
-        });
-      }
-      rows.push({
-        line_id: lineId,
-        draft_id: input.draftId,
-        revision: seedOld ? 2 : 1,
-        written_by: input.writtenBy,
-        written_at: at,
-      });
+      return null;
     }
-    await store.upsert(scope, rows);
-    return rows[rows.length - 1].revision;
+    return recorded.revision;
   } catch (error) {
     log("draft_lineage_write_failed", { inbox_id: scope.inboxId, error: message(error) });
     return null;
   }
+}
+
+/**
+ * True when `draftId` names a message the provider confirmed, so it may go into
+ * the lineage.
+ *
+ * IMAP ids are `<folder>:<uid>`. When the server answers an APPEND without
+ * APPENDUID and the Message-ID search then finds nothing, the write path still
+ * returns `<folder>:0` (that is what the model has always been handed, so it
+ * stays). Uid 0 names no message, and every unconfirmed write would share it:
+ * recorded, it joined unrelated drafts into one line. So it is not recorded
+ * (review 2 of 2026-10-13); the write stands, its line just does not move.
+ * Gmail and Outlook ids are opaque and always confirmed.
+ */
+export function draftIdIsRecordable(provider: string, draftId: string): boolean {
+  if (!draftId) return false;
+  if (provider === "gmail" || provider === "outlook") return true;
+  const at = draftId.lastIndexOf(":");
+  const uid = Number(at === -1 ? draftId : draftId.slice(at + 1));
+  return Number.isInteger(uid) && uid > 0;
 }
 
 /**
@@ -309,14 +388,17 @@ export async function closeDraftLine(
   try {
     let lineId = resolved.known ? resolved.lineId : null;
     if (!lineId) {
-      lineId = crypto.randomUUID();
-      await store.upsert(scope, [{
-        line_id: lineId,
-        draft_id: resolved.draftId,
-        revision: 1,
-        written_by: "agent",
-        written_at: at,
-      }]);
+      // `adopt`: if a line has appeared for this id since it was resolved (or
+      // the resolve failed), close that one rather than leaving it open.
+      lineId = (await store.record(scope, {
+        lineId: null,
+        expectedRevision: null,
+        draftId: resolved.draftId,
+        seedDraftId: null,
+        adopt: true,
+        writtenBy: "agent",
+        writtenAt: at,
+      })).lineId;
     }
     await store.close(scope, lineId, reason, at);
   } catch (error) {
