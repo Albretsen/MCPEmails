@@ -66,6 +66,7 @@ import { preferredBodyText } from "./text-extract.ts";
 import {
   bodyCarriesSignature,
   htmlCarriesSignatureBlock,
+  plainTextBodyToHtml,
   rebuildHtmlKeepingSignature,
 } from "./signature-compose.ts";
 import { type DraftWriter, lastSaveOf, type ResolvedDraft } from "./draft-lineage.ts";
@@ -154,6 +155,12 @@ export interface NormalizedDraft {
    * thing a signature edit in a plain-text editor would flatten.
    */
   signature_rich?: boolean;
+  /**
+   * Set on a save only: the stored draft had an HTML part and this save wrote
+   * none, because its formatting could not be kept (the signature lines were
+   * edited, or the body was cleared or grew past the HTML limit).
+   */
+  formatting_removed?: boolean;
   /**
    * ISO 8601, or null when it is not known. On a write it is the time of the
    * write. On a read it is when the draft was last saved (lineage, else the
@@ -664,6 +671,10 @@ export function buildDraftEditorEnvelope(input: {
         text: text.value,
         html: html.value,
         truncated: text.truncated || html.truncated,
+        // Only on the save that removed the HTML part. `html` is null then too;
+        // this says it was REMOVED, so the card can tell the person why the
+        // formatted view is gone instead of silently dropping the link.
+        ...(draft.formatting_removed === true ? { formatting_removed: true } : {}),
       },
       attachments: draft.attachments.slice(0, MAX_LISTED_ATTACHMENTS).map((entry) => ({
         // The headline case for neutralisation: `invoice<U+202E> fdp.exe`
@@ -944,9 +955,10 @@ function validIso(value: unknown): string | null {
 function signatureEmbeddedIn(
   bodyText: string | null,
   inbox: DraftEditorProviderInbox,
+  bodyHtml: string | null | undefined,
 ): boolean {
   if (inbox.signature_enabled !== true || typeof bodyText !== "string") return false;
-  if (bodyCarriesSignature(bodyText, inbox)) return true;
+  if (bodyCarriesSignature(bodyText, inbox, bodyHtml)) return true;
   const signatureText = typeof inbox.signature_text === "string"
     ? inbox.signature_text.trim()
     : "";
@@ -963,7 +975,7 @@ export async function readStoredDraft(
 
   const bodyText = typeof stored.bodyText === "string" ? stored.bodyText : null;
   const bodyHtml = typeof stored.bodyHtml === "string" ? stored.bodyHtml : null;
-  const signatureEmbedded = signatureEmbeddedIn(bodyText, inbox);
+  const signatureEmbedded = signatureEmbeddedIn(bodyText, inbox, bodyHtml);
 
   return {
     draft_id: draftId,
@@ -1593,24 +1605,36 @@ export async function runDraftEditorSave(
   // "The stated cost" above was paid on every edit: the regeneration ran over
   // the WHOLE text, signature included, so fixing one word of the message
   // turned the inbox's logo, link and table into their text lines and put the
-  // `-- ` delimiter into the HTML as a literal line. Now the text is split at
-  // the signature (`rebuildHtmlKeepingSignature`): the person's words are
-  // escaped exactly as before and the signature is the inbox's stored HTML.
+  // `-- ` delimiter into the HTML as a literal line (QA 2026-10-13). So when the
+  // stored HTML part carries our signature block, the text is split at the
+  // signature (`rebuildHtmlKeepingSignature`): the person's words are escaped
+  // exactly as before and the signature is the block the draft already had.
   //
-  // When the person edited the signature lines themselves there is no stored
-  // HTML that says what they typed, and nothing rich is left to keep, so no
-  // HTML part is written at all. The message goes as text/plain saying exactly
-  // what is in the editor, and `body.html: null` in the envelope is what stops
-  // the card offering a formatted view of a message with no formatting. This
-  // also covers the over-long and the cleared body: no part rather than a stale
-  // or an empty one.
+  // When the person edited the signature lines themselves, no stored markup
+  // says what they typed, so the formatting cannot be kept honestly. No HTML
+  // part is written at all: the message goes as text/plain saying exactly what
+  // is in the editor, with no literal delimiter anywhere, and the envelope says
+  // `body.formatting_removed: true` (with `body.html: null`), which is what
+  // tells the card to stop offering a formatted view and to say why.
+  //
+  // A stored HTML part WITHOUT our signature block keeps the rule above
+  // unchanged: it is regenerated from the whole text. There is no rich
+  // signature in it to lose.
+  //
+  // The over-long and the cleared body also end with no part rather than a
+  // stale or an empty one, and are reported the same way.
   let nextHtml: string | undefined;
+  let formattingRemoved = false;
   if (stored.body_html !== null) {
     if (bodyTextChanged) {
-      const regenerated = rebuildHtmlKeepingSignature(bodyText as string, inbox);
-      nextHtml = regenerated === null || regenerated.length > EMAIL_HTML_MAX_LENGTH
+      const regenerated = htmlCarriesSignatureBlock(stored.body_html)
+        ? rebuildHtmlKeepingSignature(bodyText as string, inbox, stored.body_html)
+        : plainTextBodyToHtml(bodyText as string);
+      nextHtml = regenerated === null || regenerated.length === 0 ||
+          regenerated.length > EMAIL_HTML_MAX_LENGTH
         ? undefined
         : regenerated;
+      formattingRemoved = nextHtml === undefined;
     } else {
       nextHtml = stored.body_html;
     }
@@ -1716,8 +1740,9 @@ export async function runDraftEditorSave(
     body_html: nextHtml ?? null,
     // Recomputed, not carried over: the person may have removed or rewritten
     // the signature, and the HTML part may have just lost its formatted one.
-    signature_embedded: signatureEmbeddedIn(nextText, inbox),
+    signature_embedded: signatureEmbeddedIn(nextText, inbox, nextHtml),
     signature_rich: htmlCarriesSignatureBlock(nextHtml),
+    ...(formattingRemoved ? { formatting_removed: true } : {}),
     last_saved_at: savedAt,
     ...(line.redirected ? { resolved_from: line.requestedId } : {}),
   };

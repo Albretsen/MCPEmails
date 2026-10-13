@@ -23,9 +23,11 @@ import {
   heldSendSnapshot,
   includeSignatureForSend,
   plainTextBodyToHtml,
+  rebuildHtmlKeepingSignature,
   SIGNATURE_HTML_CLASS,
   SIGNATURE_TEXT_DELIMITER,
   type SignatureInbox,
+  storedSignatureBlockOf,
 } from "./signature-compose.ts";
 
 const TEXT_SIG_INBOX: SignatureInbox = {
@@ -200,4 +202,41 @@ Deno.test("only the trusted dispatcher can suppress signing", () => {
   assertEquals(includeSignatureForSend({ include_signature: "false" }, false), undefined);
   assertEquals(includeSignatureForSend({ include_signature: false }, false), false);
   assertEquals(includeSignatureForSend({}, true), false);
+});
+
+// ---------------------------------------------------------------------------
+// Editing a signed body as plain text (draft editor, QA 2026-10-13)
+// ---------------------------------------------------------------------------
+
+Deno.test("storedSignatureBlockOf: the last block, nested divs included, or null", () => {
+  const inner = '<div><b>Asgeir</b></div><div><a href="https://x.com">x</a></div>';
+  const html = `<p>Hi</p>\n<div class="${SIGNATURE_HTML_CLASS}">${inner}</div>\n<br>\n&gt; quoted`;
+  assertEquals(storedSignatureBlockOf(html), inner);
+  assertEquals(storedSignatureBlockOf("<p>no signature here</p>"), null);
+  assertEquals(storedSignatureBlockOf(null), null);
+  // Unbalanced markup is not guessed at.
+  assertEquals(storedSignatureBlockOf(`<div class="${SIGNATURE_HTML_CLASS}"><div>open`), null);
+});
+
+Deno.test("rebuildHtmlKeepingSignature: a body edit is what applySignature builds for the new text", () => {
+  for (const inbox of [TEXT_SIG_INBOX, RICH_SIG_INBOX]) {
+    const before = applySignature({ textBody: "Old words." } as { textBody: string; htmlBody?: string }, inbox);
+    const after = applySignature({ textBody: "New <words> & more." } as { textBody: string; htmlBody?: string }, inbox);
+    const rebuilt = rebuildHtmlKeepingSignature(after.textBody, inbox, before.htmlBody);
+    assertEquals(rebuilt, after.htmlBody);
+    assertEquals(rebuilt!.includes("-- "), false, "the text delimiter never reaches the HTML");
+  }
+});
+
+Deno.test("rebuildHtmlKeepingSignature: an edited signature line cannot be kept", () => {
+  const signed = applySignature({ textBody: "Hi." } as { textBody: string; htmlBody?: string }, RICH_SIG_INBOX);
+  assertEquals(rebuildHtmlKeepingSignature(`${signed.textBody}xx`, RICH_SIG_INBOX, signed.htmlBody), null);
+  assertEquals(rebuildHtmlKeepingSignature(signed.textBody.replace("Asgeir", "Asgeir A."), RICH_SIG_INBOX, signed.htmlBody), null);
+});
+
+Deno.test("rebuildHtmlKeepingSignature: the draft's own block wins over a signature changed since", () => {
+  const signed = applySignature({ textBody: "Hi." } as { textBody: string; htmlBody?: string }, RICH_SIG_INBOX);
+  const changedInbox: SignatureInbox = { signature_enabled: true, signature_text: "Someone else", signature_html: null };
+  const rebuilt = rebuildHtmlKeepingSignature(signed.textBody.replace("Hi.", "Hello."), changedInbox, signed.htmlBody);
+  assertEquals(rebuilt, applySignature({ textBody: "Hello." } as { textBody: string; htmlBody?: string }, RICH_SIG_INBOX).htmlBody);
 });

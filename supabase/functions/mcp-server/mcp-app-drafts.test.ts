@@ -870,16 +870,16 @@ Deno.test("RULE: omitted fields are kept, unlike draft{action:\"update\"}", asyn
   assertEquals(w2[0].params.cc, []);
 });
 
-Deno.test("RULE: a body_text save never leaves the pre-edit wording in an HTML part", async () => {
+Deno.test("RULE: a body_text save regenerates the HTML part from the new text", async () => {
   // The 2026-09-09 approval_update bug, pre-empted: writing the two parts
   // independently left the HTML part carrying the pre-edit wording, most
   // clients render the HTML part, and the recipient read the sentence that had
   // been replaced.
   //
-  // This inbox's signature is not in the body, so nothing formatted survives
-  // the edit and no HTML part is written: the message is the text the person
-  // typed and nothing else. (With the signature present the HTML part is
-  // rebuilt around it; see the signature tests below.)
+  // This HTML part carries no signature block of ours, so the rule is the one
+  // it always was: the whole part is regenerated from the text. (With our
+  // signature block present it is rebuilt around that block instead; see
+  // mcp-app-drafts-lineage.test.ts.)
   const { deps, writes } = fakeDeps({
     stored: {
       subject: "s",
@@ -895,11 +895,16 @@ Deno.test("RULE: a body_text save never leaves the pre-edit wording in an HTML p
     draft_id: "Drafts:2",
     body_text: "The new wording.\nSecond line & <tag>.",
   });
-  assertEquals(writes[0].params.body, "The new wording.\nSecond line & <tag>.");
-  assertEquals(writes[0].params.htmlBody, undefined, "no part that could say the old wording");
-  // And the envelope says so, which is what stops the card offering a
-  // formatted view of a message that no longer has any formatting.
-  assertEquals((out.result.structuredContent as any).draft.body.html, null);
+  const html = writes[0].params.htmlBody!;
+  assert(html.includes("The new wording."), "the HTML part must say what the text says");
+  assert(!html.includes("old"), "the pre-edit wording must not survive in the HTML part");
+  // Escaped, not sanitised: body_text becomes markup only by being escaped, so
+  // there is no sanitizer step to get wrong.
+  assert(html.includes("&amp;"), "the text must be escaped into the HTML part");
+  assert(html.includes("&lt;tag&gt;"), "markup in the text must not become markup");
+  assert(html.includes("<br>"), "newlines become <br>");
+  // Nothing was removed, so the card is not told that anything was.
+  assert(!("formatting_removed" in (out.result.structuredContent as any).draft.body));
 });
 
 Deno.test("RULE: a text-only draft gains no HTML part, and an HTML-only edit keeps it", async () => {
@@ -1961,7 +1966,7 @@ Deno.test("a lone-CR difference is not a body edit either", async () => {
   assertEquals(writes[0].params.htmlBody, RICH_HTML);
 });
 
-Deno.test("a GENUINE body edit never keeps the stored HTML part", async () => {
+Deno.test("a GENUINE body edit still regenerates the HTML part", async () => {
   // The narrowness is the point. Regenerating on a real edit is contract §6 and
   // §8's deliberate trade — the 2026-09-09 `approval_update` bug, where the
   // recipient read the sentence the reviewer had replaced — and this fix must
@@ -1971,10 +1976,10 @@ Deno.test("a GENUINE body edit never keeps the stored HTML part", async () => {
     draft_id: "Drafts:2",
     body_text: "Line one\r\nLine three\r\n",
   });
-  const html = String(writes[0].params.htmlBody ?? "");
+  const html = String(writes[0].params.htmlBody);
   assert(html !== RICH_HTML, "a real edit must own the HTML part");
+  assert(html.includes("Line three"), "the regenerated part says what the user typed");
   assert(!html.includes("Line two"), "and never the wording that was replaced");
-  assertEquals(writes[0].params.body, "Line one\r\nLine three\r\n");
 });
 
 Deno.test("a subject-only save leaves both body parts exactly as stored", async () => {
@@ -2046,8 +2051,8 @@ Deno.test("writing a body into an HTML-only draft owns the HTML part too", async
     draft_id: "Drafts:2",
     body_text: "Replaced entirely.",
   });
-  const html = String(writes[0].params.htmlBody ?? "");
-  assertEquals(writes[0].params.body, "Replaced entirely.");
+  const html = String(writes[0].params.htmlBody);
+  assert(html.includes("Replaced entirely."), "the HTML says what the user typed");
   assert(!html.includes("cid:logo"), "and nothing of the part it replaced");
 });
 

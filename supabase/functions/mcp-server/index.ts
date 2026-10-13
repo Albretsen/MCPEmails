@@ -27328,10 +27328,18 @@ async function executeSendDraft(
     };
   }
 
-  // Any id of the draft will do: see the note in executeUpdateDraft. A held
-  // send that is approved later re-runs this function with the id it was
-  // queued with, and resolves here to the draft as it stands then.
+  // Any id of the draft will do: see the note in executeUpdateDraft.
+  //
+  // EXCEPT for an approved held send. The dispatcher re-runs this function
+  // with the id the approval was queued with, and the reviewer approved that
+  // draft as summarised then. Following the line would send a version written
+  // after the approval was asked for, so an approved send keeps the id it was
+  // given: if that id has since been rewritten (IMAP) it fails as
+  // draft_not_found, which is what it did before lineage existed.
   let draftLine = await resolveDraftLine(apiKey, inbox.id, draftId);
+  if (apiKey.internalApprovalDispatch && draftLine.redirected) {
+    draftLine = { ...draftLine, draftId, redirected: false };
+  }
   draftId = draftLine.draftId;
 
   // ── Recipients set at send time (2026-09-23) ─────────────────────────────

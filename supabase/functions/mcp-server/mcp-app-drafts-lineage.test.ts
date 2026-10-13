@@ -336,10 +336,46 @@ Deno.test("editing the signature text itself leaves no HTML part, and the envelo
   const draft = draftOf(out);
   assertEquals(out.result.isError, false);
   assertEquals(draft.body.html, null, "nothing formatted is left, so no formatted view is offered");
+  assertEquals(draft.body.formatting_removed, true, "and the card is told it was removed");
   // Still "embedded" (the words are in the text), no longer `rich`.
   assertEquals(draft.signature, { embedded: true });
   assertEquals(m.drafts.get(draft.draft_id)!.bodyHtml, null, "no HTML part was written");
   assertEquals(m.drafts.get(draft.draft_id)!.bodyText, `${stored.bodyText}xx`);
+});
+
+Deno.test("a signature restyled on the dashboard since the draft was written is kept as the draft had it", async () => {
+  const m = mailbox();
+  const stored = signedDraft("Here they are.");
+  const first = await m.agentCreates(stored);
+  // The person changes their signature on the dashboard after the draft exists.
+  m.deps.resolveInbox = () =>
+    Promise.resolve({
+      ok: true as const,
+      inbox: {
+        ...INBOX,
+        signature_text: "Asgeir A.\nCEO",
+        signature_html: "<p><i>Asgeir A.</i><br>CEO</p>",
+      },
+    });
+  const out = await runDraftEditorSave(m.deps, CALLER, {
+    draft_id: first,
+    body_text: stored.bodyText!.replace("Here they are.", "Here they are, again."),
+  });
+  const draft = draftOf(out);
+  assert(draft.body.html.includes(RICH_SIGNATURE_HTML), "the draft's own logo, link and table");
+  assert(!draft.body.html.includes("CEO"), "not today's dashboard signature");
+  assert(!draft.body.html.includes("-- "));
+  assert(!("formatting_removed" in draft.body));
+  assertEquals(draft.signature, { embedded: true, rich: true });
+});
+
+Deno.test("clearing a signed body leaves no empty HTML part, and says the formatting went", async () => {
+  const m = mailbox();
+  const first = await m.agentCreates(signedDraft("Here they are."));
+  const draft = draftOf(await runDraftEditorSave(m.deps, CALLER, { draft_id: first, body_text: "" }));
+  assertEquals(draft.body.html, null);
+  assertEquals(draft.body.formatting_removed, true);
+  assertEquals(m.drafts.get(draft.draft_id)!.bodyHtml, null);
 });
 
 Deno.test("a recipients-and-subject save leaves the HTML part exactly as stored", async () => {
@@ -352,6 +388,7 @@ Deno.test("a recipients-and-subject save leaves the HTML part exactly as stored"
     cc: ["hello@mcpemails.com"],
   });
   assertEquals(draftOf(out).body.html, stored.bodyHtml);
+  assert(!("formatting_removed" in draftOf(out).body));
 });
 
 // ── Recipients ──────────────────────────────────────────────────────────────

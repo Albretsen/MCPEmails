@@ -607,8 +607,8 @@ hygiene, not a boundary, and it is worth having and worth not overselling.
 ## 8. `draft_editor` — an unsent draft the user can edit in the card (v1, internal only)
 
 Added 2026-09-16 by the orchestrating session. Background and rationale:
-`CONCEPT-draft-editor.md`. This section is the binding v1 shape; the concept's lineage table,
-conflict rule and launcher are NOT in v1.
+`CONCEPT-draft-editor.md`. This section is the binding v1 shape; the concept's conflict rule and
+launcher are NOT in v1. The lineage table was added 2026-10-13 (see "Draft lineage" below).
 
 ### Gate
 
@@ -629,21 +629,24 @@ result always has something to render), and the results below carry an envelope 
   "dashboard_url": "https://mcpemails.com/dashboard",
   "draft": {
     "draft_id": "Drafts:2",                 // the CURRENT id; on IMAP it changes on every save
+    "resolved_from": "Drafts:1",            // present only when the caller asked with an OLDER id of this draft
     "id_is_stable": false,                  // false on IMAP: the card MUST adopt every returned id
     "origin": "create" | "reply" | "update" | "read" | "save",
-    "last_saved_at": "2026-09-16T10:04:00Z",
-    "last_saved_by": "agent" | "user",      // "user" only when the last write was draft_editor_save
+    "last_saved_at": "2026-09-16T10:04:00Z" | null,   // when the draft was last SAVED; never the time of a read
+    "last_saved_by": "agent" | "user" | null,         // who saved last; null when not known
     "identity": { "inbox_id", "email_address", "display_name", "provider", "service" },   // §2 Identity
     "recipients": { "to": ["a@x"], "cc": [], "bcc": [] },   // full bcc: the author's surface
     "subject": "…",
-    "body": { "text": "…", "html": "…" | null, "truncated": false },   // 64 KB clip as §2
+    "body": { "text": "…", "html": "…" | null, "truncated": false,
+              "formatting_removed": true },   // 64 KB clip as §2; formatting_removed: save only, see below
     "attachments": [ { "filename", "size_bytes", "mime_type" } ],       // display only
-    "signature": { "embedded": true | false },   // whether the stored text already carries it
+    "signature": { "embedded": true | false, "rich": true },   // embedded: the stored text carries it;
+                                            // rich (only when true): the HTML part carries the formatted block
     "in_reply_to": { "message_id": "INBOX:42", "subject": "…", "from": "…" } | null,
     "threaded": true | false,               // answers a message, on EVERY path; see the deviations note
     "can_send": true | false                // key has send:email AND at least one recipient
   },
-  "provider": { "label": "IMAP + SMTP", "route": "APPEND to Drafts", "caveats": [] },   // §5 shape
+  "provider": { "label": "IMAP + SMTP", "route": "Saved to your Drafts folder", "caveats": [] },   // §5 shape, read by a person
   "actor": { "can_edit": true, "reason": null }   // reason: "viewer_role" | "wrong_workspace" | "not_found"
 }
 ```
@@ -678,6 +681,17 @@ degrades to today's payload, exactly as §2a's failure rule.
 * **Never writes the HTML part independently.** When `body_text` is given and the stored draft
   has an HTML part, the HTML part is regenerated from the new text with
   `signature-compose.ts#plainTextBodyToHtml`, the same rule `approval_update` follows.
+  **Except the rich signature (2026-10-13).** When the stored HTML part carries our
+  `mcpemails-signature` block, the text is split at the signature and only the person's words are
+  regenerated; the block the draft already had is kept byte for byte, and the `-- ` delimiter never
+  reaches the HTML (`signature-compose.ts#rebuildHtmlKeepingSignature`). When the signature lines
+  themselves were edited (or the body was cleared, or the HTML would exceed the limit) the formatting
+  cannot be kept honestly: no HTML part is written, and the save's envelope carries `body.html: null`
+  and `body.formatting_removed: true`. The card must then stop offering a formatted view, and may say
+  why. `signature.rich: true` tells the card in advance that editing the signature lines will do this.
+* **A save that changes nothing writes nothing.** When every field equals what is stored (line
+  endings aside), the stored draft is answered as a save without a provider write, so a retried save
+  never moves an IMAP id twice.
 * **Omitted fields are kept.** Unlike `draft{action:"update"}`, which requires `body`, an omitted
   field means "leave it as stored". The server reads the stored draft first and merges.
 * **Refuses rather than drops attachments.** `imapUpdateDraft` and `gmailUpdateDraft` rebuild the
@@ -685,8 +699,10 @@ degrades to today's payload, exactly as §2a's failure rule.
   IMAP or Gmail returns `state: "error"` with `receipt.error_code: "draft_has_attachments"` and
   changes nothing. Outlook (PATCH) may proceed.
 * **Recipients are validated** as `draft` validates them; an invalid address returns
-  `error_code: "invalid_recipients"` and changes nothing.
-* Stale or missing ids return `error_code: "draft_not_found"`; the card then offers Refresh.
+  `error_code: "invalid_recipients"` and changes nothing. A non-string or blank entry is invalid
+  too: nothing is ever dropped silently.
+* Missing ids return `error_code: "draft_not_found"`; the card then offers Refresh. An OLDER id of
+  a draft is not missing: see "Draft lineage".
 
 Both tools re-verify: the inbox belongs to the calling key's workspace and is in its
 `inbox_ids` allowlist, the workspace is gated in, and the scopes above. A hostile caller can do
@@ -757,6 +773,31 @@ On `ui/resource-teardown` a dirty editor calls `draft_editor_save` before replyi
 request. The host is required to wait for that reply (spec: "SHOULD wait for a response before
 tearing down the resource (to prevent data loss)").
 
+### Draft lineage (2026-10-13)
+
+`public.draft_lineage` (migration `20261013120000_draft_lineage.sql`) records every id one draft
+has had, so an older id resolves to the current one. Rows are written when a draft is created,
+replied, updated, saved in the editor, or has its recipients rewritten at send time, and the line
+is closed when the draft is sent or deleted. Ids, a revision, who wrote last and when; no content.
+
+* `draft{action:"update"|"send"|"delete"}`, `draft_read` and `draft_editor_save` accept any id of
+  the line, act on the current one, and return the current id (`draft_id`; the envelope adds
+  `resolved_from` when it differs from the id asked for). `content` is unchanged in shape.
+* A line closed by a send or a delete is never redirected. The id behaves as before
+  (`draft_not_found`), and the card's receipt says which of the two happened.
+* An approved held send keeps the id it was queued with and does not follow the line: the reviewer
+  approved that version.
+* Fail soft: a lineage read that fails resolves the id to itself, and a write that fails is logged
+  and dropped. The function works without the table (deploy order does not matter).
+* Reads report the last save, not themselves: `last_saved_at` / `last_saved_by` come from the line
+  (else the mailbox's own timestamp, with `last_saved_by: null`). A Refresh no longer claims a save.
+* Tenancy: every lookup is filtered by workspace AND the inbox the call resolved to.
+
+**`draft{action:"send"}` refuses an unusable recipient override (2026-10-13).** `to`/`cc`/`bcc` given at
+send time are validated like every other send path (a bare address or `Name <address>`; blanks are
+ignored as before). An entry that is not an address, or not a string, fails with log code
+`invalid_recipient` before anything is rewritten or sent, instead of being dropped or written as given.
+
 ### As built (server)
 
 Implemented 2026-09-16. Server side only; the card is `apps/mcp-app/`.
@@ -771,6 +812,9 @@ Implemented 2026-09-16. Server side only; the card is `apps/mcp-app/`.
 `insufficient_scope`, `inbox_not_found`, `draft_editor_disabled`, `draft_not_found`,
 `invalid_recipients`, `draft_has_attachments`, `provider_error`. The not-found and
 wrong-workspace cases are byte-identical, so neither tool is an existence oracle.
+**Receipt copy is for a person (2026-10-13).** `receipt.headline` / `receipt.detail` are written in
+plain words (no scope, tool or argument names, no protocol jargon); `error_code` is unchanged and
+`content` keeps the model-facing wording byte for byte.
 (`draft_read` produces neither `draft_editor_disabled` nor `draft_editor_hidden`: it answers with
 the plain read above instead. `draft_editor_save` still returns both, and `draft_editor_hide`
 still returns `draft_editor_disabled`.)
