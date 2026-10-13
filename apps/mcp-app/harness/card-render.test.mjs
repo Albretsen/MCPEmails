@@ -45,6 +45,7 @@ import { JSDOM } from "jsdom";
 import { mkdirSync } from "node:fs";
 import { dirname, resolve } from "node:path";
 import { fileURLToPath, pathToFileURL } from "node:url";
+import * as F from "./fixtures.mjs";
 
 const here = dirname(fileURLToPath(import.meta.url));
 const appRoot = resolve(here, "..");
@@ -86,7 +87,12 @@ const after = (ms) => new Promise((r) => setTimeout(r, ms));
  * frame the host has mounted but not painted, which gets no animation frames at
  * all.
  */
-function installDom({ rafRuns = true, answerInitialize = true, initializeError = null } = {}) {
+function installDom({
+  rafRuns = true,
+  answerInitialize = true,
+  initializeError = null,
+  onToolCall = null,
+} = {}) {
   const dom = new JSDOM(
     "<!doctype html><html><body><div id=root></div></body></html>",
     { pretendToBeVisual: true },
@@ -96,8 +102,35 @@ function installDom({ rafRuns = true, answerInitialize = true, initializeError =
   const sent = [];
   const settings = { answerInitialize, initializeError };
 
+  /**
+   * Every `tools/call` the card made, in order. `onToolCall(name, args)` scripts
+   * the server: return `{ result }` or `{ error }` to answer at once, or nothing
+   * to leave the call hanging, which is how "the body has not arrived yet" is
+   * held still long enough to look at. `answer(i, reply)` settles one later.
+   */
+  const calls = [];
+  const answer = (i, reply) =>
+    deliver({ jsonrpc: "2.0", id: calls[i].id, ...reply });
+
   w.postMessage = (message) => {
     sent.push(message);
+    if (message.method === "tools/call") {
+      const call = {
+        id: message.id,
+        name: message.params?.name,
+        args: message.params?.arguments ?? {},
+      };
+      calls.push(call);
+      const reply = onToolCall?.(call.name, call.args);
+      if (reply) deliver({ jsonrpc: "2.0", id: message.id, ...reply });
+      return;
+    }
+    // Every other request the card makes after the handshake gets the empty
+    // result a real host sends, so nothing is left waiting on a 120s timer.
+    if (message.id !== undefined && message.method && message.method !== "ui/initialize") {
+      deliver({ jsonrpc: "2.0", id: message.id, result: {} });
+      return;
+    }
     if (message.method !== "ui/initialize") return;
     if (!settings.answerInitialize) return;
     if (settings.initializeError) {
@@ -150,16 +183,22 @@ function installDom({ rafRuns = true, answerInitialize = true, initializeError =
   globalThis.requestAnimationFrame = rafRuns ? w.requestAnimationFrame.bind(w) : () => 0;
 
   const sizes = () => sent.filter((m) => m.method === "ui/notifications/size-changed");
+  /** The text of every `ui/update-model-context` the card sent, in order. */
+  const contexts = () =>
+    sent
+      .filter((m) => m.method === "ui/update-model-context")
+      .map((m) => m.params?.content?.[0]?.text);
 
-  return { dom, w, sent, sizes, deliver, settings };
+  return { dom, w, sent, sizes, contexts, calls, answer, deliver, settings };
 }
 
-const toolResult = (structuredContent, text) => ({
+const toolResult = (structuredContent, text, meta) => ({
   jsonrpc: "2.0",
   method: "ui/notifications/tool-result",
   params: {
     ...(text ? { content: [{ type: "text", text }] } : {}),
     structuredContent,
+    ...(meta ? { _meta: meta } : {}),
   },
 });
 
@@ -248,6 +287,24 @@ async function main() {
       state: () => mod.getState(),
       text: () => root.textContent.trim(),
       filled: () => root.childElementCount > 0,
+      /** A control by its visible label, or undefined. */
+      button: (label) =>
+        [...root.querySelectorAll("button")].find((b) => b.textContent.trim() === label),
+      /** What a keystroke does: set the value, fire `input`. */
+      type: (id, value) => {
+        const el = globalThis.document.getElementById(id);
+        el.value = value;
+        el.dispatchEvent(new host.w.Event("input", { bubbles: true }));
+      },
+      /**
+       * Can the user write to this draft from here? One test for the three
+       * things a deferred body must never offer: a body box, Save, and Send.
+       */
+      editable: () =>
+        !!globalThis.document.getElementById("d-body") ||
+        [...root.querySelectorAll("button")].some((b) =>
+          /^(Save|Send|Save and send)$/.test(b.textContent.trim()),
+        ),
       /**
        * Stop the card so it cannot outlive its scenario. The watchdog is a 9s
        * timer and the handshake retry loop a 10s one, and a scenario that
@@ -408,6 +465,298 @@ async function main() {
       "the subject is in the box",
       globalThis.document.getElementById("d-subject")?.value,
       "Quarterly numbers",
+    );
+    await c.done();
+  }
+
+
+  // ── 5. A deferred draft body ─────────────────────────────────────────────
+  // Since 2026-10-13 a model-initiated draft write leaves the body out of
+  // `structuredContent` and carries it in the result's `_meta`. Two hosts, two
+  // paths, one rule: the placeholder is never drawn as a body. An editor
+  // mounted on it would hold an empty body under the real draft's version, and
+  // its first Save would write the blank over the draft.
+
+  const REAL_BODY = F.draftReplyBodyMeta.text;
+  // The editor splits the signature out of the box, so the box holds the part
+  // above the separator.
+  const REAL_MESSAGE = REAL_BODY.slice(0, REAL_BODY.lastIndexOf("\n-- \n"));
+  const bodyBox = () => globalThis.document.getElementById("d-body");
+
+  group("a deferred body delivered in _meta renders the editor at once");
+  {
+    const c = await boot();
+    await c.settled();
+    c.deliver(toolResult(F.draftReplyDeferred, "Draft saved.", F.draftReplyResultMeta));
+    await after(80);
+    expect("it rendered", c.state().envelope?.schema_version, F.DEFERRED_V);
+    expect("not the update-the-connector screen", c.text().includes("Update the MCP Emails"), false);
+    expect("the real body is in the box", bodyBox()?.value, REAL_MESSAGE);
+    expect("Save is there", !!c.button("Save"), true);
+    expect("and the card asked the server for nothing", c.calls.length, 0);
+    await c.done();
+  }
+
+  group("without _meta the card shows its loading line and fetches the body");
+  {
+    const c = await boot(); // no onToolCall: the read is left hanging
+    await c.settled();
+    c.deliver(toolResult(F.draftReplyDeferred, "Draft saved."));
+    await after(150);
+    expect("one line", c.text(), "Loading…");
+    expect("the card is not empty", c.filled(), true);
+    expect("no body box, no Save, no Send", c.editable(), false);
+    expect("it asked once", c.calls.length, 1);
+    expect("with draft_read", c.calls[0]?.name, "draft_read");
+    expect("for this draft", c.calls[0]?.args.draft_id, F.draftReplyDeferred.draft.draft_id);
+    expect("in this inbox", c.calls[0]?.args.inbox_id, F.draftReplyDeferred.draft.identity.inbox_id);
+
+    // Still nothing a second later in card time: an unanswered read never
+    // decays into an editor.
+    await after(150);
+    expect("still the loading line", c.text(), "Loading…");
+    expect("still not editable", c.editable(), false);
+
+    c.answer(0, {
+      result: { content: [{ type: "text", text: "Draft Drafts:2." }], structuredContent: F.draftReadInline },
+    });
+    await after(80);
+    expect("then the editor, with the real body", bodyBox()?.value, REAL_MESSAGE);
+    expect("the reply line the read does not carry is still there", c.text().includes("Replying to"), true);
+    expect("nothing reads as unsaved", c.text().includes("unsaved"), false);
+    expect("Save is disabled until the user edits", c.button("Save")?.disabled, true);
+    expect("and it did not ask again", c.calls.length, 1);
+    await c.done();
+  }
+
+  const failedLine = "MCP Emails: open the dashboard to see this.";
+  for (const [name, reply, line] of [
+    ["the read is refused", { error: { code: -32000, message: "host refused" } }, failedLine],
+    [
+      "the read comes back deferred too",
+      { result: { content: [{ type: "text", text: "ok" }], structuredContent: F.draftReplyDeferred } },
+      failedLine,
+    ],
+    [
+      "the read is not an envelope (editor hidden)",
+      { result: { content: [{ type: "text", text: "{}" }], structuredContent: F.draftReadPlain } },
+      failedLine,
+    ],
+    [
+      "the draft is gone",
+      { result: { content: [{ type: "text", text: "gone" }], structuredContent: F.draftReadNotFoundReceipt, isError: true } },
+      "This draft is no longer in Drafts.",
+    ],
+  ]) {
+    group(`a deferred body that cannot be fetched is one line, never an editor: ${name}`);
+    const c = await boot({ onToolCall: (tool) => (tool === "draft_read" ? reply : null) });
+    await c.settled();
+    c.deliver(toolResult(F.draftReplyDeferred, "Draft saved."));
+    await after(150);
+    expect("the card is not empty", c.filled(), true);
+    expect("one line", c.text().replace("Open dashboard", ""), line);
+    expect("with the way out", !!c.button("Open dashboard"), true);
+    expect("no body box, no Save, no Send", c.editable(), false);
+    expect("asked exactly once", c.calls.length, 1);
+    await c.done();
+  }
+
+  // ── 6. What the model is told, through the real App ──────────────────────
+  // model-context.test.mjs pins every sentence. These pin the WIRING: that the
+  // line is chosen from what the server answered, names the id that is live
+  // after a save, and that the last line standing still describes the draft.
+
+  const DIFFERS =
+    "The body now differs from the text the agent last wrote, and draft_read returns the current text.";
+
+  /** A server for the editor: saves bump the IMAP id, sends answer as given. */
+  function draftServer({ send, remove } = {}) {
+    let n = 2;
+    let draft = draftEnvelope.draft;
+    return (tool, args) => {
+      if (tool === "draft_editor_save") {
+        n += 1;
+        draft = {
+          ...draft,
+          draft_id: `Drafts:${n}`,
+          origin: "save",
+          last_saved_by: "user",
+          last_saved_at: `2026-10-13T10:0${n}:00.000Z`,
+          subject: args.subject ?? draft.subject,
+          body: { ...draft.body, text: args.body_text ?? draft.body.text },
+        };
+        return {
+          result: {
+            content: [{ type: "text", text: "Saved." }],
+            structuredContent: { ...draftEnvelope, draft },
+          },
+        };
+      }
+      if (tool === "draft" && args.action === "send") return send(args);
+      if (tool === "draft" && args.action === "delete") return remove(args);
+      return null;
+    };
+  }
+
+  const sentResult = (args) => ({
+    result: {
+      content: [{ type: "text", text: "{}" }],
+      structuredContent: {
+        ...F.draftSendReceiptMerged,
+        draft_id: args.draft_id,
+        sent_at: "2026-10-13T10:09:30.000Z",
+      },
+    },
+  });
+
+  group("save, save again, send: each line stands alone and names the live id");
+  {
+    const c = await boot({ onToolCall: draftServer({ send: sentResult }) });
+    await c.settled();
+    c.deliver(toolResult(draftEnvelope, "Draft Drafts:2."));
+    await after(80);
+
+    c.type("d-body", "Here they are, revised today.");
+    await after(60);
+    c.button("Save").click();
+    await after(80);
+    expect(
+      "a body edit",
+      c.contexts().at(-1),
+      "The user saved edits to a draft in the MCP Emails card at 2026-10-13T10:03:00Z. " +
+        'Its current draft_id is Drafts:3. Subject: "Quarterly numbers". To 1, cc 0, bcc 0. ' +
+        `Body 5 words. ${DIFFERS}`,
+    );
+
+    // A subject-only save REPLACES that line. The body fact has to survive it.
+    c.type("d-subject", "Quarterly numbers, final");
+    await after(60);
+    c.button("Save").click();
+    await after(80);
+    expect("the second save carried no body", "body_text" in c.calls[1].args, false);
+    expect(
+      "and its line still says the body is not the agent's",
+      c.contexts().at(-1),
+      "The user saved edits to a draft in the MCP Emails card at 2026-10-13T10:04:00Z. " +
+        'Its current draft_id is Drafts:4. Subject: "Quarterly numbers, final". To 1, cc 0, bcc 0. ' +
+        `Body 5 words. ${DIFFERS}`,
+    );
+
+    c.button("Send").click();
+    await after(80);
+    expect("the send used the live id", c.calls.at(-1)?.args.draft_id, "Drafts:4");
+    expect(
+      "sent",
+      c.contexts().at(-1),
+      "The user sent draft Drafts:4 from the MCP Emails card at 2026-10-13T10:09:30Z. " +
+        'Subject: "Quarterly numbers, final". To 1, cc 0, bcc 0. ' +
+        "The message has left Drafts, so that draft_id no longer resolves. " +
+        "The user edited the body in the card before sending, so the sent text differs from the text the agent last wrote.",
+    );
+    expect("three lines in all", c.contexts().length, 3);
+    await c.done();
+  }
+
+  group("a save that leaves the body alone does not claim it changed");
+  {
+    const c = await boot({ onToolCall: draftServer({ send: sentResult }) });
+    await c.settled();
+    c.deliver(toolResult(draftEnvelope, "Draft Drafts:2."));
+    await after(80);
+    c.type("d-subject", "Quarterly numbers v2");
+    await after(60);
+    c.button("Save").click();
+    await after(80);
+    expect(
+      "the line",
+      c.contexts().at(-1),
+      "The user saved edits to a draft in the MCP Emails card at 2026-10-13T10:03:00Z. " +
+        'Its current draft_id is Drafts:3. Subject: "Quarterly numbers v2". To 1, cc 0, bcc 0. ' +
+        "Body 3 words. This save did not change the body.",
+    );
+    await c.done();
+  }
+
+  group("a send the server refused is reported as refused, in its words");
+  {
+    const c = await boot({
+      onToolCall: draftServer({
+        send: () => ({
+          result: {
+            isError: true,
+            content: [{ type: "text", text: "Your email account has exceeded its sending quota. Please try again later." }],
+          },
+        }),
+      }),
+    });
+    await c.settled();
+    c.deliver(toolResult(draftEnvelope, "Draft Drafts:2."));
+    await after(80);
+    c.button("Send").click();
+    await after(80);
+    expect(
+      "the line",
+      c.contexts().at(-1),
+      "The user pressed Send on draft Drafts:2 in the MCP Emails card and the send failed. " +
+        'Subject: "Quarterly numbers". To 1, cc 0, bcc 0. ' +
+        'The server reported: "Your email account has exceeded its sending quota. Please try again later.". ' +
+        "Nothing was reported as sent, and the card still holds the draft under that draft_id.",
+    );
+    expect("and the editor is still there", !!bodyBox(), true);
+    await c.done();
+  }
+
+  group("a send that was held for approval is not announced as sent");
+  {
+    const c = await boot({
+      onToolCall: draftServer({
+        send: () => ({
+          result: { content: [{ type: "text", text: "{}" }], structuredContent: F.heldSendMerged },
+        }),
+      }),
+    });
+    await c.settled();
+    c.deliver(toolResult(draftEnvelope, "Draft Drafts:2."));
+    await after(80);
+    c.button("Send").click();
+    await after(80);
+    expect(
+      "the line",
+      c.contexts().at(-1),
+      "The user pressed Send on draft Drafts:2 in the MCP Emails card. " +
+        'Subject: "Quarterly numbers". To 1, cc 0, bcc 0. ' +
+        `The send is held for approval under approval_id ${F.heldSendMerged.approval_id} and nothing has been sent. ` +
+        "The draft is still in Drafts under that draft_id.",
+    );
+    expect("the card moved to the review", c.state().envelope?.card, "outbound_review");
+    await c.done();
+  }
+
+  group("a discard says which draft, and that nothing was sent");
+  {
+    const c = await boot({
+      onToolCall: draftServer({
+        remove: (args) => ({
+          result: {
+            content: [{ type: "text", text: "{}" }],
+            structuredContent: { ...F.draftDeleteReceiptMerged, draft_id: args.draft_id },
+          },
+        }),
+      }),
+    });
+    await c.settled();
+    c.deliver(toolResult(draftEnvelope, "Draft Drafts:2."));
+    await after(80);
+    c.button("Discard").click();
+    await after(60);
+    c.button("Yes, discard").click();
+    await after(80);
+    expect(
+      "the line",
+      c.contexts().at(-1),
+      "The user discarded draft Drafts:2 from the MCP Emails card. " +
+        'Subject: "Quarterly numbers". To 1, cc 0, bcc 0. ' +
+        "Nothing was sent. The draft was deleted from Drafts, so that draft_id no longer resolves.",
     );
     await c.done();
   }

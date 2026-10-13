@@ -1,6 +1,6 @@
 import type { VNode } from "preact";
 import { useEffect, useRef, useState } from "preact/hooks";
-import type { HostBridge } from "../bridge";
+import type { HostBridge, ToolResultParams } from "../bridge";
 import {
   isSupportedVersion,
   SCHEMA_VERSION,
@@ -8,13 +8,30 @@ import {
   type Receipt as ReceiptData,
 } from "../contract";
 import { diagnosticsEnabled } from "../diagnostics";
-import { bulkVerb, draftSavedContextLine } from "../format";
+import { bulkVerb } from "../format";
+import {
+  bulkCancelContextLine,
+  bulkExecuteContextLine,
+  draftActionContextLine,
+  draftCallOutcome,
+  draftSavedContextLine,
+  outboundApproveOpenedContextLine,
+  outboundRejectContextLine,
+  type DraftAction,
+  type DraftCall,
+} from "../model-context";
 import { isRestoreStub, lastDashboardUrl } from "../persist";
 import {
+  acceptDeferredBody,
   acceptRehydration,
+  adoptDeferredBody,
   adoptRehydration,
+  awaitsBodyOf,
+  deferredBodyCall,
+  deferredBodyKey,
   envelopeFrom,
   getState,
+  isBodyDeferred,
   isDepartedReceipt,
   mergeEnvelope,
   rehydrationCall,
@@ -152,11 +169,18 @@ export function App(props: { bridge: HostBridge }) {
       .catch(() => force((n) => n + 1));
   };
 
+  /**
+   * `contextLine` is a FUNCTION OF THE ANSWER, not a string decided before the
+   * call. It used to be the latter, sent whatever came back, so "the user
+   * rejected the queued send" went to the model for a send the server had just
+   * said was already decided elsewhere. Null means there is nothing true to
+   * add. See model-context.ts.
+   */
   const run = async (
     key: string,
     tool: string,
     args: Record<string, unknown>,
-    contextLine?: string,
+    contextLine?: (answer: Envelope | null) => string | null,
   ) => {
     setBusy(key);
     setError(null);
@@ -168,7 +192,8 @@ export function App(props: { bridge: HostBridge }) {
       } else {
         setError("The server sent a response this card could not read.");
       }
-      if (contextLine) void bridge.updateModelContext(contextLine);
+      const line = contextLine?.(next);
+      if (line) void bridge.updateModelContext(line);
     } catch (e) {
       setError(e instanceof Error ? e.message : String(e));
     } finally {
@@ -194,17 +219,28 @@ export function App(props: { bridge: HostBridge }) {
    * That second rule now lives in `store.ts#mergeEnvelope`, because the PUSH
    * path needed exactly the same one and having it in only one of the two
    * places was the bug (WS-1b defect B).
+   *
+   * `tellModel` hands the whole exchange to whoever writes the model-context
+   * line: the envelope as the server sent it, the raw result, and the message
+   * of a call that threw. The line used to be written from the returned
+   * envelope alone, and most of what a send or a discard can answer with is
+   * not an envelope (model-context.ts#draftCallOutcome lists them), so those
+   * outcomes reached the model as silence over a stale sentence.
    */
   const callDraft = async (
     key: string,
     tool: string,
     args: Record<string, unknown>,
+    tellModel?: (call: DraftCall) => void,
   ): Promise<Envelope | null> => {
     setBusy(key);
     setError(null);
+    let result: ToolResultParams | null = null;
+    let next: Envelope | null = null;
+    let thrown: string | null = null;
     try {
-      const result = await bridge.callServerTool(tool, args);
-      const next = envelopeFrom(result);
+      result = await bridge.callServerTool(tool, args);
+      next = envelopeFrom(result);
       if (!next) {
         setError("The server sent a response this card could not read.");
         return null;
@@ -213,10 +249,12 @@ export function App(props: { bridge: HostBridge }) {
       setEnvelope(applied);
       return applied;
     } catch (e) {
-      setError(e instanceof Error ? e.message : String(e));
+      thrown = e instanceof Error ? e.message : String(e);
+      setError(thrown);
       return null;
     } finally {
       setBusy(null);
+      tellModel?.({ envelope: next, result, thrown });
     }
   };
 
@@ -288,6 +326,9 @@ export function App(props: { bridge: HostBridge }) {
   // that would replace a good restored draft with a one-line error — the same
   // event the `.catch()` arm below exists to tolerate, by a different route.
   const [gone, setGone] = useState<string | null>(null);
+  // Model-context bookkeeping for the draft card. See the draft branch below.
+  const bodyEdited = useRef(false);
+  const agentWrote = useRef<string | null>(null);
   const [stubFailed, setStubFailed] = useState(false);
   const refreshed = useRef(false);
   useEffect(() => {
@@ -327,9 +368,56 @@ export function App(props: { bridge: HostBridge }) {
       });
   }, [store.restored, store.envelope]);
 
-  /** The last https dashboard URL any envelope carried. See persist.ts. */
+  // ---- a deferred draft body ----------------------------------------------
+  //
+  // `draft{action:"create"|"reply"|"update"}` leaves the body out of
+  // `structuredContent` and puts it in the result's `_meta`. When the host
+  // forwarded that, store.ts has already filled it in and none of this runs.
+  // When it did not, the envelope on screen has a placeholder where its body
+  // should be, and this effect asks `draft_read` for the real one.
+  //
+  // The shape is the restore recovery's, on purpose: the decisions (which read,
+  // whether the answer may be adopted, which envelope is kept) live in store.ts
+  // where the harness can drive them, and this is the wiring and the copy.
+  //
+  // Asked ONCE PER ENVELOPE, keyed on the draft and its version, so a second
+  // deferred envelope for a different draft gets its own read and a failure is
+  // remembered against the envelope it happened to. While it is in flight, and
+  // after it has failed, the editor is NOT drawn: see the gate in the render
+  // below.
+  const bodyKey = deferredBodyKey(store.envelope);
+  const askedBody = useRef<string | null>(null);
+  const [bodyFailed, setBodyFailed] = useState<string | null>(null);
+  useEffect(() => {
+    if (bodyKey === null || askedBody.current === bodyKey) return;
+    const asked = getState().envelope;
+    const call = deferredBodyCall(asked);
+    if (!asked || !call) return;
+    askedBody.current = bodyKey;
+    bridge
+      .callServerTool(call.tool, call.args)
+      .then((result) => {
+        // The store may have moved on while this was in flight; an answer to a
+        // body nobody is waiting for any more changes nothing, in any arm.
+        if (!awaitsBodyOf(asked)) return;
+        const decided = acceptDeferredBody(asked, envelopeFrom(result));
+        if (decided.kind === "adopt") adoptDeferredBody(asked, decided.envelope);
+        else if (decided.kind === "gone") setGone("This draft is no longer in Drafts.");
+        else setBodyFailed(bodyKey);
+      })
+      .catch(() => {
+        if (awaitsBodyOf(asked)) setBodyFailed(bodyKey);
+      });
+  }, [bodyKey]);
+
+  /**
+   * The envelope's own dashboard URL when there is one on screen, else the last
+   * https one any envelope carried (persist.ts). The stored one is only written
+   * once a cache key exists, which needs `tool-input`, so a card that has an
+   * envelope in hand should not depend on it.
+   */
   const fallbackDashboard = () => {
-    const url = lastDashboardUrl();
+    const url = absoluteUrl(getState().envelope?.dashboard_url) ?? lastDashboardUrl();
     if (!url) return null;
     return (
       <div class="hdr-r">
@@ -527,6 +615,25 @@ export function App(props: { bridge: HostBridge }) {
       );
     }
 
+    // ---- a draft whose body has not arrived ---------------------------------
+    //
+    // The host dropped the result's `_meta`, so the body is being fetched (the
+    // effect above). Until it lands this is the loading line and NOT the
+    // editor, for the same reason a restore stub is never drawn as one: the
+    // placeholder reads as an empty body, the envelope's `version` already
+    // describes the real one, so an editor mounted now would never resync and
+    // its first Save would write the blank over the draft. No Save, no Send, no
+    // textarea exists in this state, which is the only way to be sure of that.
+    //
+    // If the fetch fails it ends on the same one line a failed restore does,
+    // with the dashboard link. The draft itself is fine: it is in Drafts, and
+    // the message above this card says so.
+    if (isBodyDeferred(envelope)) {
+      return bodyFailed === bodyKey
+        ? oneLine(`${toolLabel(store.toolInfo?.tool)}: open the dashboard to see this.`)
+        : <Loading />;
+    }
+
     // ---- variants -----------------------------------------------------------
 
     if (envelope.card === "outbound_review" && envelope.outbound) {
@@ -547,7 +654,7 @@ export function App(props: { bridge: HostBridge }) {
                   "reject",
                   "approval_decide",
                   { approval_id: o.approval_id, decision: "reject" },
-                  `The user rejected the queued send to ${(o.recipients?.to ?? []).length} recipient(s). Nothing was sent.`,
+                  (answer) => outboundRejectContextLine(o, answer),
                 ),
               approve: () => {
                 const url = o.review_url;
@@ -561,9 +668,7 @@ export function App(props: { bridge: HostBridge }) {
                   .openLink(url)
                   .then(() => {
                     setApproveOpened(true);
-                    void bridge.updateModelContext(
-                      "The user opened the approval page in their browser. The send is still pending until they approve it there; an agent cannot approve it.",
-                    );
+                    void bridge.updateModelContext(outboundApproveOpenedContextLine(o));
                   })
                   .catch((e) =>
                     setError(e instanceof Error ? e.message : String(e)),
@@ -611,7 +716,7 @@ export function App(props: { bridge: HostBridge }) {
                 "execute",
                 "bulk_execute",
                 { plan_id: plan.plan_id },
-                `The user confirmed the bulk ${bulkVerb(plan.action).toLowerCase()} of ${plan.match_count} messages.`,
+                (answer) => bulkExecuteContextLine(plan, answer),
               ),
             cancel: () => {
               // Cancelling is purely local: the card stops offering the button
@@ -636,9 +741,7 @@ export function App(props: { bridge: HostBridge }) {
                 state: "rejected",
                 receipt,
               });
-              void bridge.updateModelContext(
-                `The user cancelled the bulk ${bulkVerb(plan.action).toLowerCase()} plan. Nothing was changed.`,
-              );
+              void bridge.updateModelContext(bulkCancelContextLine(plan));
             },
             setFullscreen,
           }}
@@ -657,20 +760,61 @@ export function App(props: { bridge: HostBridge }) {
         draft_id: getState().envelope?.draft?.draft_id ?? d.draft_id,
       });
 
-      const save = async (patch: DraftPatch): Promise<boolean> => {
-        if (Object.keys(patch).length === 0) return true;
-        const next = await callDraft("save", "draft_editor_save", {
-          ...target(),
-          ...patch,
-        });
+      // Has a save from THIS card changed the body since the agent last wrote
+      // it? Kept across saves because each model-context line replaces the last:
+      // a body edit followed by a subject-only save must still say the body is
+      // no longer the agent's. Cleared when an agent-authored envelope arrives
+      // (`origin` create, reply or update), which is the agent writing the body
+      // again. A read does not clear it: `draft_read` cannot know who wrote
+      // what it returns and stamps every answer "agent".
+      const agentKey = `${d.draft_id} ${d.version ?? ""}`;
+      if (
+        (d.origin === "create" || d.origin === "reply" || d.origin === "update") &&
+        agentWrote.current !== agentKey
+      ) {
+        agentWrote.current = agentKey;
+        bodyEdited.current = false;
+      }
+
+      /** One save, and the line for it. Shared by Save and by Save-and-send. */
+      const saveAndTell = async (key: string, patch: DraftPatch): Promise<boolean> => {
+        const next = await callDraft(key, "draft_editor_save", { ...target(), ...patch });
         if (!draftStored(next)) return false;
-        void bridge.updateModelContext(draftSavedContextLine(next!.draft!));
+        if (patch.body_text !== undefined) bodyEdited.current = true;
+        void bridge.updateModelContext(
+          draftSavedContextLine(next!.draft!, { bodyEdited: bodyEdited.current }),
+        );
         return true;
       };
 
-      const announceReceipt = (env: Envelope | null) => {
-        const headline = env?.receipt?.headline?.trim();
-        if (headline) void bridge.updateModelContext(headline);
+      const save = async (patch: DraftPatch): Promise<boolean> => {
+        if (Object.keys(patch).length === 0) return true;
+        return saveAndTell("save", patch);
+      };
+
+      /**
+       * Run one draft action and tell the model what became of it.
+       *
+       * The draft is read BEFORE the call, from the store, so it is the one the
+       * action was aimed at: the live id after any save that ran first, and the
+       * last id the draft had in the two outcomes where it no longer exists.
+       */
+      const act = (
+        action: DraftAction,
+        key: string,
+        tool: string,
+        args: Record<string, unknown>,
+        scope?: "inbox" | "workspace",
+      ) => {
+        const aimedAt = getState().envelope?.draft ?? d;
+        return callDraft(key, tool, { ...target(), ...args }, (call) => {
+          void bridge.updateModelContext(
+            draftActionContextLine(action, aimedAt, draftCallOutcome(action, call), {
+              bodyEdited: bodyEdited.current,
+              scope,
+            }),
+          );
+        });
       };
 
       return (
@@ -689,38 +833,23 @@ export function App(props: { bridge: HostBridge }) {
               // that write fails, so a send never puts the stored draft on the
               // wire when the user is looking at a newer one.
               if (patch && Object.keys(patch).length > 0) {
-                const saved = await callDraft("send", "draft_editor_save", {
-                  ...target(),
-                  ...patch,
-                });
-                if (!draftStored(saved)) return;
-                void bridge.updateModelContext(draftSavedContextLine(saved!.draft!));
+                if (!(await saveAndTell("send", patch))) return;
               }
-              announceReceipt(
-                await callDraft("send", "draft", { action: "send", ...target() }),
-              );
+              await act("send", "send", "draft", { action: "send" });
             },
             discard: async () => {
-              announceReceipt(
-                await callDraft("discard", "draft", {
-                  action: "delete",
-                  ...target(),
-                }),
-              );
+              await act("discard", "discard", "draft", { action: "delete" });
             },
             refresh: () => void callDraft("refresh", "draft_read", target()),
             // The opt-out. `scope` is passed through from the card's confirm
             // row rather than defaulted here, because "hide this" is ambiguous
             // between this mailbox and every mailbox and the two are different
-            // wishes. The result is a receipt, so the same announceReceipt path
-            // that handles send and discard flips the card to one line.
+            // wishes. The result is a receipt, so the card flips to one line
+            // the way it does for send and discard. The server reuses the
+            // outcome word `discarded` for it, which is why the model-context
+            // line is chosen by ACTION: nothing was discarded.
             hide: async (scope) => {
-              announceReceipt(
-                await callDraft("hide", "draft_editor_hide", {
-                  ...target(),
-                  scope,
-                }),
-              );
+              await act("hide", "hide", "draft_editor_hide", { scope }, scope);
             },
             setFullscreen,
           }}

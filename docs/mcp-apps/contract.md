@@ -137,6 +137,12 @@ single object with a discriminator. The card switches on `card`.
 `schema_version` is mandatory. The card refuses to render an unknown version and shows a
 "update your connector" message rather than guessing.
 
+There are two values since 2026-10-13. `review-card-v1` is every envelope in this document
+except one. `review-card-v2` is the §8 `draft_editor` envelope **with a deferred body**, which
+only `draft{action:"create"|"reply"|"update"}` emits. It exists so that a card bundle built
+before the body was deferred hits the refusal above instead of drawing an editable empty body;
+§8 "Deferred body" has the argument. A current card accepts both.
+
 `dashboard_url` is **envelope-level and absolute**, and every envelope carries it. It sits here rather
 than only on the receipt for a specific reason: the unsupported-schema screen is precisely when the card
 cannot read the rest of the envelope, and precisely when it most needs to offer a way out. A
@@ -590,6 +596,8 @@ bulk sample rows never enter it at all.
 | "A send to a@x.com is awaiting approval in the card above." | Decrypted body text and HTML |
 | Post-decision summary via `ui/update-model-context` (outcome, recipient count, subject) | bcc addresses |
 | Bulk plan match count and scope description | The message sample rows |
+| A draft write's payload (`draft_id`, subject, recipients) and one sentence saying a card exists | The draft body the write stored (result `_meta`, §8) |
+| `draft_read`'s plain read, body included, **when the model calls it** | |
 
 The **model-visible** half of the tool result for a gated send is unchanged from before this feature:
 the flat pending-approval payload, which carries only what `queueSendApproval` already puts in
@@ -601,6 +609,19 @@ The envelope added in §2a travels in `structuredContent` only, and `structuredC
 channel. Note the honest caveat that applies to the whole feature: some hosts may show `structuredContent`
 to the model too, and the model can call `approval_review` for the same body regardless. This is context
 hygiene, not a boundary, and it is worth having and worth not overselling.
+
+**The draft editor acts on that caveat rather than only stating it (2026-10-13).** A
+`draft{action:"create"|"reply"|"update"}` result no longer carries the body in `structuredContent`
+at all: it rides in the result's `_meta`, which a host forwards to the view and does not render into
+the conversation (§8 "Deferred body"). The model wrote that body itself one call earlier, and on a
+reply it also quotes a third party, so repeating it bought nothing and cost context on every write.
+
+**And one read is deliberately in the default flow.** `draft_read` puts the draft, body included,
+in `content`. That is not a leak of the rule above, it is the rule's other half: the model is the
+party asking. Once a user can edit a draft in the card, the model's own copy of the text is stale,
+and a model with no way to read the current text overwrites the user's edit on its next update. The
+result is marked `untrusted_content: true` like every other read. The held-send body (§2) is still
+not re-injected by default.
 
 ---
 
@@ -616,7 +637,9 @@ conflict rule and launcher are NOT in v1.
 tool behaves byte-for-byte as before in both channels and carries no `_meta.ui` at
 `tools/list`. When true, `draft` is listed with `reviewCardToolMeta()` unconditionally (a draft
 result always has something to render), and the results below carry an envelope in
-`structuredContent` only. `content` is unchanged on every path. Internal workspaces are those in
+`structuredContent`. The FIRST `content` block is unchanged on every path; a create, reply or
+update result that carries an editor envelope gains a second one (see "Model context" below).
+Internal workspaces are those in
 `public.internal_accounts`; the migration that adds the column sets it true for them.
 
 ### Envelope
@@ -636,7 +659,7 @@ result always has something to render), and the results below carry an envelope 
     "identity": { "inbox_id", "email_address", "display_name", "provider", "service" },   // §2 Identity
     "recipients": { "to": ["a@x"], "cc": [], "bcc": [] },   // full bcc: the author's surface
     "subject": "…",
-    "body": { "text": "…", "html": "…" | null, "truncated": false },   // 64 KB clip as §2
+    "body": { "text": "…", "html": "…" | null, "truncated": false },   // 64 KB clip as §2; see "Deferred body"
     "attachments": [ { "filename", "size_bytes", "mime_type" } ],       // display only
     "signature": { "embedded": true | false },   // whether the stored text already carries it
     "in_reply_to": { "message_id": "INBOX:42", "subject": "…", "from": "…" } | null,
@@ -655,8 +678,9 @@ the card neutralises at the boundary as it does for §2.
 
 | Path | `structuredContent` when gated in | `content` |
 | --- | --- | --- |
-| `draft{action:"create"|"reply"|"update"}` success | today's payload keys **plus** the envelope, merged at top level exactly as §2a (disjoint key sets, asserted by test) | unchanged |
-| `draft_read`, `draft_editor_save` | envelope alone | a short body-free summary line |
+| `draft{action:"create"|"reply"|"update"}` success | today's payload keys **plus** the envelope, merged at top level exactly as §2a (disjoint key sets, asserted by test), **body deferred**, `schema_version: "review-card-v2"` | block 1 unchanged; block 2 is the one-sentence card notice |
+| `draft_read` | envelope alone, body inline, v1 | the plain read below, as JSON (body included) |
+| `draft_editor_save` | envelope alone, body inline, v1 | a short body-free summary line |
 | `draft_read` when NOT gated in, or hidden | no envelope: the plain read below | the same plain read, as JSON |
 | `draft{action:"send"}` not held | today's `{draft_id, message_id, sent_at}` **plus** `card: "receipt"`, `outcome: "sent"` | unchanged |
 | `draft{action:"send"}` held | the §2a held-send shape, unchanged | unchanged |
@@ -665,12 +689,127 @@ the card neutralises at the boundary as it does for §2.
 Building the envelope must never turn a successful draft operation into an error: a failure
 degrades to today's payload, exactly as §2a's failure rule.
 
-### Tools (app-only, `appOnlyReviewCardToolMeta()`, audit-logged, non-billable)
+### Deferred body (2026-10-13)
 
-| Tool | Arguments | Returns |
+On the three model-initiated rows above (`create`, `reply`, `update`) the body is not in
+`structuredContent`. The result looks like this, with everything not shown exactly as in the
+envelope above:
+
+```jsonc
+{
+  "content": [
+    { "type": "text", "text": "{\"untrusted_content\":true,\"draft_id\":\"Drafts:2\",…}" },   // unchanged
+    { "type": "text", "text": "Hosts that render MCP Apps cards show this draft to the user in an editable card, where the user can change it, and draft_read returns the current text." }
+  ],
+  "structuredContent": {
+    "schema_version": "review-card-v2",
+    "card": "draft_editor",
+    "draft": {
+      "version": "1:…",          // computed from the REAL body, as before
+      "body": { "text": null, "html": null, "truncated": false, "deferred": true }
+      // …
+    }
+    // …
+  },
+  "_meta": {
+    "mcpemails/draft_body": { "text": "…", "html": "…" | null, "truncated": false }   // the same clipped values
+  }
+}
+```
+
+| Channel | Carries | Reaches |
 | --- | --- | --- |
-| `draft_read` | `{ inbox_id?, inbox?, draft_id }` | `card: "draft_editor"`, `origin: "read"`; needs `manage:drafts` **and** `read:email` |
-| `draft_editor_save` | `{ inbox_id?, inbox?, draft_id, to?, cc?, bcc?, subject?, body_text? }`, at least one field | `card: "draft_editor"`, `origin: "save"`, `last_saved_by: "user"`, the NEW `draft_id` |
+| `content[0]` | the draft payload JSON, byte for byte as before the card existed | the model |
+| `content[1]` | one sentence of fact: a card exists, the user can edit there, `draft_read` has the current text | the model |
+| `structuredContent` | the envelope with `body.deferred: true` and no body text | the card, and on some hosts the model |
+| `_meta["mcpemails/draft_body"]` | `{ text, html, truncated }`, the 64 KB clip | the card |
+
+Rules, all load-bearing:
+
+* **The card reads `_meta` first.** If the key is absent (a host that drops result `_meta`, or
+  one that replays a stored result without it) it calls `draft_read`, which returns the body
+  inline.
+* **`draft.version` is computed before the split,** from the clipped body the write stored. It is
+  NOT guaranteed to equal the version a later `draft_read` reports for the same untouched draft:
+  that holds only when the provider hands back the body it was given. IMAP and Gmail do for the
+  messages this server builds (base64 parts round-trip the text). Outlook does not: Exchange
+  rewrites the stored HTML and `draft_read` derives the text from it, so the read's version
+  differs from the write's on every HTML draft. The card therefore must not require a match, and
+  does not: on equal versions it grafts the fetched body under the original envelope, and on any
+  mismatch it adopts the `draft_read` answer whole (`store.ts#acceptDeferredBody`).
+* **`deferred: true` and `review-card-v2` always travel together.** Either one without the other
+  is the unsafe pair. Both are set in one function, `draftCardToolResult`, and nowhere else.
+* **`draft_read` and `draft_editor_save` are not deferred** and stay on v1. They are the card's own
+  calls (and, for `draft_read`, the model's deliberate one), and an older bundle understands them.
+* **Receipts are untouched.** Send and delete return `card: "receipt"` on v1 with no `_meta` and no
+  second `content` block.
+
+**Why v2, and why only here.** A card bundle built before this change reads
+`draft.body.text ?? ""` and knows nothing about `deferred` or result `_meta`. Given a deferred
+envelope on v1 it would draw an *editable empty body* over a draft that has one. And an old bundle
+does meet a new result: the host caches the card by URI (§0), the URI arrives through a
+`tools/list` the client read at connect, §0 lists five populations a deploy never re-lists, and
+even a client that IS notified mounts the first post-deploy result from the listing it held when it
+made the call. A stale fingerprinted URI is not re-served either: `resources/read` answers only
+the current fingerprint and the bare legacy URI, so a host renders an old bundle from its cache or
+not at all.
+
+Every bundle ever shipped answers an unknown `schema_version` the same way: `isSupportedVersion`
+is an equality test against `"review-card-v1"`, and a miss renders "Update the MCP Emails
+connector" with the envelope-level `dashboard_url` (§1) before any editor is drawn. So the deferred
+envelope is published under a version old bundles do not know, and the unsafe rendering becomes
+that screen. Bumping the shared constant instead would put that screen over every held send and
+every bulk plan for clients that have not re-listed, for envelopes that did not change.
+
+The cost, stated: a client holding a pre-2026-10-13 bundle sees the update screen in place of the
+editor for model-written drafts until it re-lists. The draft itself is written either way, and
+`draft_read` from that old bundle (its Refresh and restore paths) still works.
+
+**The card must accept both versions.** `apps/mcp-app/src/contract.ts#isSupportedVersion`.
+
+### Tools (audit-logged, non-billable)
+
+| Tool | `_meta.ui.visibility` when gated in | Arguments | Returns |
+| --- | --- | --- | --- |
+| `draft_read` | `["model", "app"]` | `{ inbox_id?, inbox?, draft_id }` | `structuredContent`: `card: "draft_editor"`, `origin: "read"`, body inline, plus top-level `untrusted_content: true`. `content`: the plain read as JSON. Needs `manage:drafts` **and** `read:email` |
+| `draft_editor_save` | `["app"]` | `{ inbox_id?, inbox?, draft_id, to?, cc?, bcc?, subject?, body_text? }`, at least one field | `card: "draft_editor"`, `origin: "save"`, `last_saved_by: "user"`, the NEW `draft_id`, body inline |
+| `draft_editor_hide` | `["model", "app"]` | `{ inbox_id?, inbox?, scope, hidden? }` | `card: "receipt"`, `state: "cancelled"` |
+
+With the gate shut none of the three carries `_meta` (see "As built"), so a host lists them as
+ordinary tools.
+
+**`draft_read` is model-callable while the card is on (2026-10-13, owner's decision).** It was
+`["app"]`. A user who edits a draft in the card changes text the model can no longer see:
+`draft_list` returns no body, the write results return none, and the model's own copy predates the
+edit. So `draft_read` is listed to the model, its description leads with that use, and its
+`content` is the plain read in **both** gate states, byte for byte the same. `structuredContent`
+still differs by state: the editor envelope with the gate open, the plain payload with it shut. It
+keeps `resourceUri`, so a model-initiated read mounts the card with the envelope; the card's own
+calls (restore, Refresh, the deferred-body fallback) are unchanged.
+
+With the gate open that `structuredContent` also carries `untrusted_content: true` at the top
+level, beside the envelope's own keys. It holds a subject, recipients and a body that on a reply
+quote a third party, and some hosts show it to the model, so it is marked like the plain read in
+`content` is. The card's `isEnvelope` ignores extra top-level keys. It is added by `runDraftRead`
+and not by the envelope builder, because a draft write merges its payload's own flag over the
+envelope and the two key sets must stay disjoint.
+
+**`draft_editor_hide` is model-callable too (2026-10-13).** It was `["app"]`, and three statements
+disagreed about it: the card's copy says the card "can be brought back by asking in this chat", the
+server instructions listed it as app-only ("The host drives them, not you"), and the listing kept it
+out of the model's picker. With the card hidden there is no card left to click, so the model
+calling this tool with `hidden:false` is the only way back the copy can mean. It is now
+`["model", "app"]`, it is out of the instructions' APP-ONLY sentence, and its description opens
+with when to call it. Nothing about what it can do changed; the hostile-caller analysis in
+`runDraftEditorHide` already assumed a model calls it. `draft_editor_save` stays `["app"]`.
+
+**A read that fails is not a draft that is gone (2026-10-13).** The Gmail and Outlook editor
+readers returned null for every non-OK status but 401, so a 429 or a 500 came back as
+`draft_not_found` and a model could reasonably recreate a draft that was still there. They now
+return null only for 404 and for a 400 (a draft id of the wrong shape, which on both APIs is how a
+malformed id is refused); anything else throws and is answered `provider_error`, "could not be
+read, nothing was changed". All three callers (`draft_read`, `draft_editor_save`, a body-less
+`draft` update) take that path.
 
 `draft_editor_save` rules, all load-bearing:
 
@@ -678,12 +817,33 @@ degrades to today's payload, exactly as §2a's failure rule.
 * **Never writes the HTML part independently.** When `body_text` is given and the stored draft
   has an HTML part, the HTML part is regenerated from the new text with
   `signature-compose.ts#plainTextBodyToHtml`, the same rule `approval_update` follows.
-* **Omitted fields are kept.** Unlike `draft{action:"update"}`, which requires `body`, an omitted
-  field means "leave it as stored". The server reads the stored draft first and merges.
+* **Omitted fields are kept.** An omitted field means "leave it as stored". The server reads the
+  stored draft first and merges. `draft{action:"update"}` required `body` when this was written;
+  since 2026-10-13 it may omit it, and then runs this same merge (see below).
 * **Refuses rather than drops attachments.** `imapUpdateDraft` and `gmailUpdateDraft` rebuild the
   MIME from parameters and carry no attachment parts. A save on a draft that has attachments on
   IMAP or Gmail returns `state: "error"` with `receipt.error_code: "draft_has_attachments"` and
   changes nothing. Outlook (PATCH) may proceed.
+* **Refuses rather than drops anything else (2026-10-13).** Attachments were one case of several.
+  The parser keeps the first text/plain and the first text/html and has no slot for any other
+  part that is not a named file, so these passed the attachment check and were silently absent
+  from the rebuilt message: a second text part, an inline image with a Content-ID and no filename,
+  a text/calendar alternative, a signature part, an embedded message, a multipart that cannot be
+  split, and `format=flowed` text (whose soft line breaks would be written back as hard ones). A
+  Reply-To that cannot be written back verbatim counts too. Any of them on IMAP or Gmail returns
+  `error_code: "draft_not_rebuildable"`, naming the parts, and changes nothing
+  (`draft-rebuild.ts`). Outlook reports none and may proceed.
+* **What "kept" means.** On IMAP and Gmail the write is a rebuild, so what is kept is the decoded
+  body TEXT, the HTML string, the recipients, the subject, Reply-To, In-Reply-To and References.
+  The rebuilt message has a new Message-ID and Date, From written from the inbox's identity,
+  base64 UTF-8 parts whatever the stored encoding was, and none of the stored message's other
+  headers (X-* fields, priority, a read-receipt request). A draft with no Subject header keeps an
+  empty subject rather than acquiring the readers' "(no subject)" placeholder. No description says
+  the draft is kept "exactly", and `draft-rebuild.test.ts` pins both halves against real MIME.
+* **An empty list clears, on every provider.** `cc: []` removes the Cc. On Outlook it did not until
+  2026-10-13: the PATCH omitted every empty list, Graph kept the stored value, the save reported
+  success, and Send delivered to the address the user had removed. An empty list is now sent as
+  `[]` when the caller supplied that field, and still omitted when it did not.
 * **Recipients are validated** as `draft` validates them; an invalid address returns
   `error_code: "invalid_recipients"` and changes nothing.
 * Stale or missing ids return `error_code: "draft_not_found"`; the card then offers Refresh.
@@ -692,6 +852,35 @@ Both tools re-verify: the inbox belongs to the calling key's workspace and is in
 `inbox_ids` allowlist, the workspace is gated in, and the scopes above. A hostile caller can do
 nothing here that `draft{action:"update"}` and `email_read` could not already do (see
 `CONCEPT-draft-editor.md` §6).
+
+**`draft{action:"update"}` without `body` (2026-10-13).** `update` used to refuse a call with no
+`body`, so every model update was a body overwrite, and after a card edit the body it overwrote
+with was the model's older text. Now:
+
+* `body` omitted: the stored body text is kept. The write goes through
+  `mcp-app-drafts.ts#applyDraftPatch`, the function `draft_editor_save` runs, so the save rules
+  above apply unchanged, including what "kept" means: no signature (so none is doubled), the HTML
+  part, Reply-To and threading headers carried through, an explicit `[]` clearing a list, and on
+  IMAP and Gmail a refusal that changes nothing for a draft with attachments
+  (`draft_has_attachments`) or with any other part the rebuild would drop
+  (`draft_not_rebuildable`).
+* **The envelope needs `read:email`.** A full-body update's envelope is built from the body the
+  caller just supplied. This one is built from the body that was STORED, and `update` needs only
+  `manage:drafts`, and on IMAP a draft id is any `folder:uid`. So a key without `read:email` gets
+  the plain payload and nothing else: no envelope, no `_meta`, no second `content` block. The
+  write is still made. `draft_read` requires `read:email` for the same reason.
+* `threaded` in the payload is computed as the full-body path computes it. In particular it is
+  false on Outlook, where Graph's `conversationId` is set on every message and is not evidence of
+  a reply.
+* At least one of `to`, `cc`, `bcc`, `subject`, `body` must be present. `html_body` without
+  `body` is refused, as is `body: ""`. All three refusals happen before the inbox is resolved.
+* `body` given: the full-body path, unchanged. The body replaces the stored one and the signature
+  is embedded on it (`include_signature: false` to skip).
+* It is the `draft` tool, so it needs no editor gate and works in every workspace. Failures are
+  `draft_update:` text results, not receipts; success is the same
+  `{ draft_id, subject, updated_at, threaded }` payload plus, when gated in, the deferred envelope.
+* Only the per-action `required` list changed (`["draft_id"]`). No advertised type moved, so a
+  client holding the cached schema keeps working.
 
 **`draft_read` without the editor (2026-10-02).** "The workspace is gated in" decides the SHAPE
 of a `draft_read` answer, not whether there is one. When the workspace is not rolled out, or the
@@ -743,13 +932,34 @@ an envelope, as one object in `content` (JSON text) and in `structuredContent`:
 
 ### Model context
 
-After a successful save the card calls `ui/update-model-context` with a complete, body-free
+**What the server tells the model.** A create, reply or update result that carries an editor
+envelope has a second `content` block, one sentence, stating a fact and asking for nothing:
+
+> Hosts that render MCP Apps cards show this draft to the user in an editable card, where the user
+> can change it, and draft_read returns the current text.
+
+No envelope, no block: a workspace that is not gated in, a hidden inbox, the Outlook reply path
+and a failed envelope build all return exactly the one block they always did. Send and delete
+receipts get none either. The `draft` tool description carries the matching sentence, worded so it
+is true with the editor off ("Where the draft editor card is on, …"), and both `draft` and
+`draft_list` point at `draft_read` for a draft's text.
+
+**What the card tells the model.** After a successful save the card calls `ui/update-model-context` with a complete, body-free
 statement of the draft's current state (the spec says each call overwrites the last):
 
-> User edited draft Drafts:3 in the editor at 10:04. Subject: "…". To 1, cc 1, bcc 0. Body 412
-> words. Current draft_id is Drafts:3.
+> The user saved edits to a draft in the MCP Emails card at 2026-10-13T10:04:00Z. Its current
+> draft_id is Drafts:3. Subject: "…". To 1, cc 1, bcc 0. Body 412 words. The body now differs
+> from the text the agent last wrote, and draft_read returns the current text.
 
-After send or discard it sends the receipt headline, as the outbound card does.
+A save that left the body alone ends "This save did not change the body." instead, unless an
+earlier save in the same card changed it.
+
+After send, discard, hide, a held send, or a failure of any of them, it sends a full statement
+of the same kind rather than the receipt headline: each call overwrites the last, so a bare
+"Sent" would have no draft to refer to. Every line names the draft id, the subject and the
+recipient counts, says what happened to the draft, and quotes the server's own words on a
+failure. `apps/mcp-app/src/model-context.ts` is the single definition of the wording, and
+`harness/model-context.test.mjs` pins it.
 
 ### Teardown
 
@@ -763,7 +973,8 @@ Implemented 2026-09-16. Server side only; the card is `apps/mcp-app/`.
 
 **Tools.** `draft_read` and `draft_editor_save`, defined in
 `supabase/functions/mcp-server/mcp-app-drafts.ts`, registered after the `bulk_*` tools with
-`appOnlyReviewCardToolMeta()`, listed unconditionally, absent from `BILLABLE_TOOL_NAMES` and from
+`appOnlyReviewCardToolMeta()` (since 2026-09-16 attached per key at `tools/list` rather than in the
+registry, and since 2026-10-13 `draft_read` gets `["model", "app"]` instead), listed unconditionally, absent from `BILLABLE_TOOL_NAMES` and from
 `IDEMPOTENT_OUTBOUND_OPERATIONS`. Both declare `requiredScope: "manage:drafts"` and no `altScopes`.
 
 **Error codes**, all delivered as a `card: "receipt"` envelope with `state: "error"`,
@@ -818,6 +1029,47 @@ Deviations, all small and all deliberate:
 * **The Outlook `draft{action:"reply"}` path returns today's payload with no envelope.** It creates
   the draft through Graph's `createReply`, so the handler never holds the composed body the envelope
   builder needs. This is the §8 degradation rule firing, not a failure.
+
+### As built (2026-10-13) — the model-facing text around the editor
+
+Server side; the card half is `apps/mcp-app/`. An audit of everything a model reads about the
+draft editor found it described a surface the model could not use: it was never told a card
+existed, could not read a draft back, and could not update one without overwriting the body.
+
+* **Deferred body.** `draftCardToolResult` splits an editor envelope: body to
+  `_meta["mcpemails/draft_body"]`, `structuredContent.draft.body` to the `deferred` marker,
+  `schema_version` to `review-card-v2` (`DEFERRED_BODY_SCHEMA_VERSION`). One function, so the
+  three handlers in `index.ts` did not change shape. `buildDraftEditorEnvelope` still returns the
+  body inline and on v1, which is what `draft_read` and `draft_editor_save` publish.
+* **`draft_read` for the model.** `reviewCardMetaForListing` hands it
+  `modelAndAppReviewCardToolMeta()` (`DRAFT_EDITOR_MODEL_VISIBLE_TOOL_NAMES`). Its `content` is
+  `JSON.stringify(buildPlainDraftRead(...))` in both gate states; the body-free summary line is
+  now `draft_editor_save`'s alone.
+* **Body-optional update.** `applyDraftPatch` is the old body of `runDraftEditorSave`, moved out
+  and returning a `kind` instead of a receipt. `runBodylessDraftUpdate` (same module) is the whole
+  of a body-less update after inbox resolution: the merge, the payload, and the `read:email` and
+  editor-gate decision about the envelope. `executeBodylessDraftUpdate` in `index.ts` only words
+  its failures as `draft_update:` lines. Tested behaviourally with injected providers, and
+  end to end against real MIME in `draft-rebuild.test.ts` (parse, patch, build, parse).
+* **A second `content` block** (`DRAFT_CARD_NOTICE`) on editor-envelope results only.
+* **Wording.** `DRAFT_CARD_OUTPUT_SCHEMA.state` lists `cancelled`, which discard and hide have
+  always emitted. The server instructions name `approval_*` as a held send, `bulk_*` as a bulk
+  plan and `draft_editor_save` as app-only, and list `draft_read` with the reads. The `draft`
+  description says when to use it against `email_compose`. `draft_editor_hide`'s description says
+  when it is for, and the four human-facing strings that spelled out a tool call
+  (`scope:"…"`, `hidden:false`) now say what a person does, which is ask in the chat. The UI
+  resource description names the draft editor.
+
+Not changed, deliberately: `draft_read` stays out of `BILLABLE_TOOL_NAMES`; the full-body update
+still rebuilds an IMAP or Gmail draft from fields with none of the refusals above, as it always
+has (only the partial write refuses), and still writes "(no subject)" when it keeps the subject of
+a draft that has none; and `CONCEPT-draft-editor.md` still records "update requires body" as the
+2026-09-16 observation it was.
+
+Known and left as is: with a host that drops result `_meta`, a key that lacks `read:email` sees
+the card's body-failed line after a successful create, reply or full-body update, because the
+card's fallback `draft_read` is refused with `insufficient_scope`. The draft is written and the
+model's result is unaffected.
 
 ### As built (card) — the sent message stays on screen
 

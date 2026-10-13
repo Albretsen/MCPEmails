@@ -60,6 +60,10 @@ const SUITES = [
   // is a property of the rendered tree and of main.tsx's own composition
   // order, and is invisible to a suite that only reads the store.
   ["card render", "card-render.test.mjs"],
+  // DOM-free, and last only because it is the newest: the exact text of every
+  // sentence the card sends the model, and the decisions behind a deferred
+  // draft body (where it comes from, and which `draft_read` answer is adopted).
+  ["model context", "model-context.test.mjs"],
 ];
 
 const outcomes = [];

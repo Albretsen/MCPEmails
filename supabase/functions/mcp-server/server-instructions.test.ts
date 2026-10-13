@@ -175,3 +175,29 @@ Deno.test("the inbox-selection rule sits in the head of the string", () => {
       "still sees it.",
   );
 });
+
+Deno.test("the APP-ONLY paragraph names each card family for what it is, and draft_read is a read", () => {
+  // 2026-10-13. It read "the `approval_*` and `bulk_*` tools render the in-chat
+  // review card for a held send": wrong about `bulk_*` (a bulk plan, not a
+  // send) and silent about the draft editor's card-only tool.
+  //
+  // `draft_editor_hide` is NOT in it. The card tells a person the card "can be
+  // brought back by asking in this chat", and the model calling that tool is
+  // how; an instruction that said "the host drives it, not you" contradicted
+  // the card and the tool's own description.
+  const appOnly = SERVER_INSTRUCTIONS.split("\n\n").find((p: string) => p.startsWith("APP-ONLY:"));
+  assertEquals(
+    appOnly,
+    "APP-ONLY: `approval_*` (a held send), `bulk_*` (a bulk plan) and " +
+      "`draft_editor_save` back the in-chat cards. The host drives them, not " +
+      "you.",
+  );
+  assert(!SERVER_INSTRUCTIONS.includes("draft_editor_hide"), "hide is the model's to call");
+  // `draft_read` is NOT app-only: the model calls it. It belongs with the reads.
+  assert(!appOnly!.includes("draft_read"));
+  const pairs = SERVER_INSTRUCTIONS.split("\n\n").find((p: string) =>
+    p.startsWith("READ/WRITE PAIRS:")
+  );
+  assert(pairs!.includes("`draft_read` reads one draft in full."), pairs);
+  assert(!SERVER_INSTRUCTIONS.includes("\u2014"), "no em dash");
+});

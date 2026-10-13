@@ -159,7 +159,8 @@ const MCP_APP_RESOURCES: readonly McpAppResource[] = [
     title: "Review card",
     description:
       "Interactive review surface for outbound and bulk mailbox operations: " +
-      "shows exactly what will be sent, deleted, or moved before it happens.",
+      "shows exactly what will be sent, deleted, or moved before it happens. " +
+      "Also the draft editor, where the user reads and edits an unsent draft.",
     html: REVIEW_CARD_HTML,
   },
 ];
@@ -295,7 +296,9 @@ export const DRAFT_EDITOR_CARD_TOOL_NAMES: readonly string[] = [
 ];
 
 /**
- * The draft editor's own three app-only tools, gated by the SAME flag.
+ * The draft editor's own three tools, gated by the SAME flag: one app-only,
+ * and two the model may call too (see
+ * `DRAFT_EDITOR_MODEL_VISIBLE_TOOL_NAMES` below).
  *
  * ── Why they are no longer stamped at module load ──────────────────────────
  * They were pushed into the registry with `appOnlyReviewCardToolMeta()`
@@ -321,12 +324,57 @@ export const DRAFT_EDITOR_CARD_TOOL_NAMES: readonly string[] = [
  * `mcp-app-drafts.ts#gateDraftTool`.
  *
  * Kept apart from `DRAFT_EDITOR_CARD_TOOL_NAMES` because the metadata differs:
- * these carry `visibility: ["app"]` on top of the resource URI, `draft` does
+ * these carry a `visibility` list on top of the resource URI, `draft` does
  * not. Same gate, different shape.
  */
 export const DRAFT_EDITOR_APP_TOOL_NAMES: readonly string[] = [
   "draft_read",
   "draft_editor_save",
+  "draft_editor_hide",
+];
+
+/**
+ * The draft-editor tools the model is meant to call while the card is on.
+ *
+ * ── Why `draft_read` stopped being app-only (2026-10-13, owner's decision) ──
+ * With the gate open it carried `visibility: ["app"]`, so a host that honours
+ * the hint kept it out of the model's picker. That left a model with no way to
+ * learn what a draft says once the user had edited it in the card: `draft_list`
+ * returns no body, the write results return none, and the model's own copy is
+ * the text it wrote BEFORE the edit. Its next `draft{action:"update"}` then put
+ * that older text back over the user's.
+ *
+ * So `draft_read` is listed to both audiences, `["model", "app"]`: the card
+ * still calls it (restore, Refresh, and the fallback when a write's `_meta`
+ * body did not arrive), and the model can call it for the current text. Its
+ * `content` is the plain read in both gate states, which is what makes the
+ * model's call worth making. See `mcp-app-drafts.ts#runDraftRead`.
+ *
+ * Nothing about what it DISCLOSES changed: `visibility` was never a boundary
+ * (Phase 0 Q2, quoted on `reviewCardToolMeta`), the tool has returned the body
+ * to any caller with both scopes since it shipped, and with the gate shut it
+ * was already an ordinary model-visible tool.
+ *
+ * It keeps `resourceUri`, so a model-initiated `draft_read` mounts the card
+ * with the editor envelope in `structuredContent`. That is the intended
+ * rendering, the same one a `draft` write gets.
+ *
+ * ── And `draft_editor_hide`, for consistency with what the card says ───────
+ * It was `["app"]` too, as "the card's own Hide link". But the card's copy
+ * tells a person the card "can be brought back by asking in this chat", and
+ * once the card is hidden there is no card left to click: the only route back
+ * is the model calling this tool with `hidden:false`. An app-only listing made
+ * that sentence false on every host that honours the hint, and the server
+ * instructions said the same wrong thing from the other side ("The host drives
+ * them, not you"). So it is `["model", "app"]`, the instructions no longer
+ * list it as app-only, and its description says when to call it. It is a
+ * display preference, reversible by the same call; the hostile-caller analysis
+ * on `runDraftEditorHide` already assumed a model calls it.
+ *
+ * `draft_editor_save` stays `["app"]`: it writes what a person typed.
+ */
+export const DRAFT_EDITOR_MODEL_VISIBLE_TOOL_NAMES: readonly string[] = [
+  "draft_read",
   "draft_editor_hide",
 ];
 
@@ -377,7 +425,7 @@ export const BULK_PLAN_CARD_TOOL_NAMES: readonly string[] = [
  * already made. Two ways:
  *
  *   * By this function's own definition they ARE card-bearing:
- *     `reviewCardMetaForListing` hands all three `appOnlyReviewCardToolMeta()`
+ *     `reviewCardMetaForListing` hands all three a card `_meta`
  *     whenever the drafts gate is open, so their listing carries a card URI
  *     that a deploy can make stale exactly like `draft`'s. They are also the
  *     tools the card itself calls most — a restoring cell calls `draft_read`
@@ -466,6 +514,24 @@ export function appOnlyReviewCardToolMeta(): {
 }
 
 /**
+ * `_meta` for a card tool the model is also meant to call: the same card, with
+ * `visibility: ["model", "app"]`.
+ *
+ * The list is spelled out rather than omitted. Omitting `visibility` means the
+ * same thing to the reference host (its default is both), but the explicit form
+ * says in the listing itself that the card calls this tool as well, and it is
+ * the shape the owner asked for. `draft_read` and `draft_editor_hide` carry
+ * it; see `DRAFT_EDITOR_MODEL_VISIBLE_TOOL_NAMES`.
+ */
+export function modelAndAppReviewCardToolMeta(): {
+  ui: { resourceUri: string; visibility: string[] };
+} {
+  return {
+    ui: { resourceUri: REVIEW_CARD_RESOURCE_URI, visibility: ["model", "app"] },
+  };
+}
+
+/**
  * The two per-key opt-ins that decide whether a card-bearing tool is listed
  * with `_meta.ui` in one `tools/list` response.
  *
@@ -529,11 +595,16 @@ export function reviewCardMetaForListing(
   if (DRAFT_EDITOR_CARD_TOOL_NAMES.includes(toolName)) {
     return gates.drafts ? reviewCardToolMeta() : undefined;
   }
-  // The app-only three: same gate, plus `visibility: ["app"]`. They are no
-  // longer stamped in the registry, so `undefined` here really does mean "this
-  // listing carries no `_meta` at all" — see DRAFT_EDITOR_APP_TOOL_NAMES.
+  // The draft editor's own three: same gate, plus a `visibility` list. They
+  // are no longer stamped in the registry, so `undefined` here really does mean
+  // "this listing carries no `_meta` at all" — see DRAFT_EDITOR_APP_TOOL_NAMES.
+  // `draft_read` and `draft_editor_hide` are listed to the model as well as
+  // the card; `draft_editor_save` is app-only.
   if (DRAFT_EDITOR_APP_TOOL_NAMES.includes(toolName)) {
-    return gates.drafts ? appOnlyReviewCardToolMeta() : undefined;
+    if (!gates.drafts) return undefined;
+    return DRAFT_EDITOR_MODEL_VISIBLE_TOOL_NAMES.includes(toolName)
+      ? modelAndAppReviewCardToolMeta()
+      : appOnlyReviewCardToolMeta();
   }
   return undefined;
 }

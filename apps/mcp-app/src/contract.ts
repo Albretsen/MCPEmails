@@ -11,6 +11,30 @@
 
 export const SCHEMA_VERSION = "review-card-v1";
 
+/**
+ * The version a DEFERRED-BODY draft envelope is published under (§8, "Deferred
+ * body", 2026-10-13). The server uses it for exactly one shape: a
+ * `draft{action:"create"|"reply"|"update"}` result whose `draft.body` is a
+ * `DeferredBody`. Everything else, including the inline envelopes `draft_read`
+ * and `draft_editor_save` return, is still `SCHEMA_VERSION`.
+ *
+ * It exists for the bundles that came BEFORE this one, not for this one: a card
+ * that knows nothing about `deferred` reads `body.text ?? ""` and would draw an
+ * editable empty body over a draft that has one, and an unknown version is the
+ * one thing every shipped bundle already refuses to render. This bundle reads
+ * both and treats them identically; the body's own `deferred` flag is what it
+ * acts on, never the version string.
+ */
+export const DEFERRED_BODY_SCHEMA_VERSION = "review-card-v2";
+
+/**
+ * The key in a tool RESULT's `_meta` that carries a deferred draft body, as
+ * `{ text, html, truncated }`. Result `_meta` is forwarded to the view and is
+ * not part of what a host shows the model, which is the point of moving the
+ * body there. A host is free to drop it; see `store.ts#resolveDeferredBody`.
+ */
+export const DRAFT_BODY_META_KEY = "mcpemails/draft_body";
+
 export type CardKind =
   | "outbound_review"
   | "bulk_plan"
@@ -46,7 +70,33 @@ export interface Body {
   text: string;
   html?: string | null;
   truncated?: boolean;
+  /** Never true on a real body. The discriminant against `DeferredBody`. */
+  deferred?: false;
 }
+
+/**
+ * A draft body the server deliberately left OUT of `structuredContent`.
+ *
+ * `draft{action:"create"|"reply"|"update"}` are model-initiated, and some hosts
+ * show `structuredContent` to the model, so those results carry this
+ * placeholder and the real body rides in result `_meta[DRAFT_BODY_META_KEY]`.
+ * `truncated` already describes the real body, and so does `draft.version`.
+ *
+ * NOTHING MAY RENDER THIS AS A BODY. `text: null` reads as `""` through every
+ * `?? ""` in the components, and an editor mounted on it holds an empty body
+ * under the real draft's version, so its first Save writes the blank back.
+ * `store.ts` fills it from `_meta` at the boundary when the host delivered it,
+ * and App.tsx fetches it with `draft_read` and shows the loading line until
+ * then (`store.ts#isBodyDeferred`).
+ */
+export interface DeferredBody {
+  text: null;
+  html: null;
+  truncated?: boolean;
+  deferred: true;
+}
+
+export type DraftBody = Body | DeferredBody;
 
 export interface Attachment {
   filename: string;
@@ -158,6 +208,10 @@ export interface DraftEditorData {
    * content. Compared only against another `version`, never parsed, never
    * rendered, never sent back.
    *
+   * On an envelope whose body is deferred it still describes the REAL body,
+   * not the placeholder, which is what lets the card tell whether the body
+   * `draft_read` hands back is the one this envelope was built from.
+   *
    * This is what tells the editor whether the text in the box is still
    * describing what the server has. Optional because an envelope restored from
    * storage may predate the field; `DraftEditor#draftVersion` falls back to the
@@ -177,7 +231,8 @@ export interface DraftEditorData {
   identity: Identity;
   recipients?: DraftRecipients;
   subject?: string;
-  body?: Body;
+  /** May arrive as a `DeferredBody`; no component is handed one. */
+  body?: DraftBody;
   /** Display only: the card cannot add or remove attachments. */
   attachments?: Attachment[];
   signature?: DraftSignature | null;
@@ -304,5 +359,5 @@ export function isEnvelope(value: unknown): value is Envelope {
 }
 
 export function isSupportedVersion(v: string): boolean {
-  return v === SCHEMA_VERSION;
+  return v === SCHEMA_VERSION || v === DEFERRED_BODY_SCHEMA_VERSION;
 }

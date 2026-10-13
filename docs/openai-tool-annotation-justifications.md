@@ -599,10 +599,29 @@ settings — see its block, which is the one place in this file a
 
 **Reasoning.**
 
-- **readOnly true:** it reads one unsent draft and returns it. Where the draft
-  editor card is on, the result is the card envelope and the card shows it;
-  where it is not, the result is a plain payload the model reads. Nothing is
-  written and nothing is sent in either case.
+- **readOnly true:** it reads one unsent draft and returns it. `content` is the
+  same plain read in both states (recipients, subject, `body_text`, attachment
+  names, `untrusted_content: true`), because the model is this tool's primary
+  reader. Where the draft editor card is on, `structuredContent` is the card
+  envelope and the card shows it; where it is not, `structuredContent` is that
+  same plain payload. Nothing is written and nothing is sent in either case.
+- **The card half is marked untrusted too (2026-10-13).** With the card on,
+  `structuredContent` is the editor envelope plus a top-level
+  `untrusted_content: true`, so the draft's subject, recipients and body are
+  flagged in both channels and not only in `content`.
+- **A failed read is reported as a failed read.** The Gmail and Outlook
+  readers answer "not found" only for a 404 or a malformed-id 400. A 429 or a
+  5xx is `provider_error`, "could not be read, nothing was changed", where it
+  used to come back as `draft_not_found`.
+- **The model is meant to call it (2026-10-13).** With the card on it used to
+  be listed `visibility: ["app"]`, and its `content` was a body-free summary
+  line. A model then had no way to read a draft the user had edited in the
+  card: `draft_list` returns no body and neither does any draft write, so the
+  next `draft` update put the model's older text back over the user's. It is
+  now listed `visibility: ["model", "app"]` with the card on (and with no
+  `_meta` at all with it off, as before), and its `content` carries the text.
+  None of the three hints moves: it was already a read that returned the body
+  to any caller holding both scopes, and `visibility` was never a boundary.
 - **destructive false:** it changes nothing at all.
 - **openWorld false:** the draft is inside the connected mailbox. It also
   requires `read:email` on top of `manage:drafts`, because on IMAP and Outlook a
@@ -628,7 +647,8 @@ settings — see its block, which is the one place in this file a
   a plain payload is not an envelope, so the card's restore-recovery path
   cannot re-open an editor from it for an inbox the user switched off.
 - **What the same flags do to `tools/list`.** This tool is LISTED
-  unconditionally; what it loses is `_meta.ui`, on the same `drafts` gate
+  unconditionally; what it loses is `_meta.ui` (resource URI plus
+  `visibility: ["model", "app"]`), on the same `drafts` gate
   `draft` uses — the workspace must be rolled out and not hidden
   (`workspaceDraftEditorEnabled` ANDs those two), and the inboxes the key can
   reach must not ALL be hidden (`allReachableInboxesHideDraftEditor`). In the
@@ -693,6 +713,23 @@ settings — see its block, which is the one place in this file a
   them, while Outlook, whose update is a field PATCH, may proceed.
 - **openWorld false:** the draft stays in the connected mailbox. Sending it
   still goes through `draft`, including its approval hold.
+- **More is refused than attachments (2026-10-13).** On IMAP and Gmail the save
+  rebuilds the message from its text, and the rebuild cannot represent an
+  inline image, a second text part, a calendar alternative, a signature part or
+  `format=flowed` text. Those used to be dropped without a word, because none
+  of them is an "attachment" to the parser. Each is now refused with
+  `draft_not_rebuildable` and nothing is written, exactly as
+  `draft_has_attachments` already worked. This narrows what the tool can
+  overwrite and moves none of the three hints. Also since 2026-10-13: a
+  recipient list supplied as `[]` is cleared on Outlook as it is elsewhere
+  (Graph's PATCH used to keep it), and the stored Reply-To is carried through
+  a rebuild.
+- **`draft` can now do a partial update too (2026-10-13).** The submitted
+  destructiveHint text says this tool overwrites an unsent draft "as draft's
+  own update already does", which stays true. What changed is that
+  `draft{action:"update"}` may omit `body`, and when it does it runs the same
+  merge this tool runs (`applyDraftPatch`): omitted fields kept, no signature,
+  the HTML part carried through, attachments refused on IMAP and Gmail.
 - **When the card is switched off.** The same gate `draft_read` reads, but
   here it refuses, with two codes. Not rolled out is `draft_editor_disabled`;
   switched off by the user, at the WORKSPACE grain or at the grain of the INBOX
@@ -714,6 +751,14 @@ settings — see its block, which is the one place in this file a
   `inboxes.draft_editor_hidden` for one mailbox or
   `workspaces.draft_editor_hidden` for all of them. `scope` is required and has
   no default; `hidden` defaults to true.
+- **The model is meant to call it (2026-10-13).** With the card on it is listed
+  `visibility: ["model", "app"]`; it was `["app"]`. The card tells a person the
+  card "can be brought back by asking in this chat", and once the card is
+  hidden the model calling this tool with `hidden:false` is the only route that
+  sentence can mean, so an app-only listing made the copy false. The server
+  instructions no longer list it among the app-only tools. None of the three
+  hints moves: `visibility` was never a boundary, and every argument below was
+  already written on the assumption that a model calls this.
 - **destructive false:** nothing is lost and nothing is sent. It changes only
   whether the draft editor card is rendered; drafts, sending and every other
   tool behave identically either way, and the result of a draft call is the same

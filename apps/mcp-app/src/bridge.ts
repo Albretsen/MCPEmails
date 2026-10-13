@@ -68,10 +68,21 @@ export interface HostCapabilities {
   [key: string]: unknown;
 }
 
+/**
+ * A `CallToolResult`, which is what both `ui/notifications/tool-result` (as
+ * its params) and a `tools/call` response (as its result) carry.
+ *
+ * `_meta` is the result-level metadata of that same object. This bridge hands
+ * the whole object on untouched on both paths, so whatever the host forwarded
+ * arrives; whether a given host forwards result `_meta` to a view at all is the
+ * host's decision, and nothing here may depend on it being present
+ * (store.ts#resolveDeferredBody is the one reader that wants it).
+ */
 export interface ToolResultParams {
   content?: Array<{ type: string; text?: string; [k: string]: unknown }>;
   structuredContent?: Record<string, unknown>;
   isError?: boolean;
+  _meta?: Record<string, unknown>;
   [key: string]: unknown;
 }
 
