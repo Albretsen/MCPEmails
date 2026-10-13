@@ -2966,6 +2966,12 @@ export function ConnectModal({
                         ref={bindField('imapHost')}
                         className="input"
                         type="text"
+                        // See NOT_A_LOGIN_FIELD. The SMTP host is the text box
+                        // directly above the password, which is where a password
+                        // manager looks for "the username" of this site's login,
+                        // and it was once submitted holding mcpemails.com.
+                        {...NOT_A_LOGIN_FIELD}
+                        name="mcpe-imap-server"
                         placeholder="imap.example.com"
                         required
                         aria-required="true"
@@ -3034,6 +3040,12 @@ export function ConnectModal({
                         ref={bindField('smtpHost')}
                         className="input"
                         type="text"
+                        // See NOT_A_LOGIN_FIELD. The SMTP host is the text box
+                        // directly above the password, which is where a password
+                        // manager looks for "the username" of this site's login,
+                        // and it was once submitted holding mcpemails.com.
+                        {...NOT_A_LOGIN_FIELD}
+                        name="mcpe-smtp-server"
                         placeholder="smtp.example.com"
                         required
                         aria-required="true"

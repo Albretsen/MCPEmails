@@ -60,6 +60,12 @@ export const maxDuration = 60;
  * distinct from the email address (e.g. domeneshop). When blank, the email
  * address is used as the username — the common case.
  */
+/** mcpemails.com or any name under it, on label boundaries. */
+function isOwnSiteHost(host: string): boolean {
+  const target = host.replace(/\.$/, '');
+  return target === 'mcpemails.com' || target.endsWith('.mcpemails.com');
+}
+
 export async function POST(request: NextRequest): Promise<NextResponse> {
   // 1. Authenticate.
   const supabase = await createClient();
@@ -145,6 +151,25 @@ export async function POST(request: NextRequest): Promise<NextResponse> {
   }
   if (!appPassword) {
     return NextResponse.json({ error: 'A password is required.' }, { status: 422 });
+  }
+
+  // Our own domain is never anyone's mail server. It has arrived as an SMTP
+  // host, put there by a browser or password manager filling this site's name
+  // into the form, and the validator then spent every submission port on our
+  // web host and reported that "the outgoing server never answered", which sent
+  // the user to their provider about a server we had not dialled.
+  for (const [field, host] of [['IMAP', imapHost], ['SMTP', smtpHost]] as const) {
+    if (isOwnSiteHost(host)) {
+      return NextResponse.json(
+        {
+          error:
+            `The ${field} server is set to ${host}, which is MCPEmails itself, not your mail server. ` +
+            'A browser or password manager may have filled it in. Enter the server name your email provider gave you.',
+          error_code: 'own_site_host',
+        },
+        { status: 422 },
+      );
+    }
   }
 
   // SSRF guard. This is the only route where the mail host is fully attacker-
