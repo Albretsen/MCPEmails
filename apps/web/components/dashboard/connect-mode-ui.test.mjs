@@ -6,7 +6,8 @@
 // A receive-only mailbox has no SMTP server to give, and a send-only one has no
 // IMAP server. This renders the real ConnectModal and pins that:
 //
-//   - the form opens on "send and receive", with both host rows;
+//   - the form opens on "send and receive", with both host rows, and the
+//     connection type is under Advanced settings, not on the form itself;
 //   - choosing one half hides the other half's host, port and security fields;
 //   - the request carries `mode` and only the half it names, even when the
 //     hidden fields still hold what was typed before the switch;
@@ -35,10 +36,20 @@ const { ToastProvider } = await import('./Toast.jsx');
 const chrome = (await import('../../messages/en/dashboardChrome.json', { with: { type: 'json' } })).default;
 
 /**
- * Mount the modal on the generic card and go to its credentials step.
+ * Mount the modal on the generic card, go to its credentials step and open
+ * Advanced settings, which is where the connection type lives.
  * Returns the view and every request the modal sent to the connect route.
  */
 async function openGenericForm(t) {
+  const opened = await openCredentialsStep(t);
+  const advanced = buttonNamed(opened.view, chrome.connect.advancedToggle);
+  assert.ok(advanced, 'the credentials step should have the Advanced settings toggle');
+  await flush(async () => { advanced.click(); });
+  await waitFor(() => opened.view.container.querySelector('#cm-connection-mode'), { message: 'the connection type' });
+  return opened;
+}
+
+async function openCredentialsStep(t) {
   const requests = [];
   const previousFetch = globalThis.fetch;
   globalThis.fetch = async (url, init = {}) => {
@@ -69,7 +80,7 @@ async function openGenericForm(t) {
   const next = buttonNamed(view, chrome.connect.enterCredentials);
   assert.ok(next, 'step 1 should offer the button that opens the credentials form');
   await flush(async () => { next.click(); });
-  await waitFor(() => view.container.querySelector('#cm-connection-mode'), { message: 'the credentials form' });
+  await waitFor(() => view.container.querySelector('#cm-imap-host'), { message: 'the credentials form' });
   return { view, requests };
 }
 
@@ -102,6 +113,13 @@ async function submit(view) {
   assert.ok(connect, 'the credentials step should have its Connect button');
   await flush(async () => { connect.click(); });
 }
+
+test('the connection type is under Advanced settings, closed by default', async (t) => {
+  const { view } = await openCredentialsStep(t);
+  assert.equal(q(view, 'cm-connection-mode'), null, 'not on the form itself');
+  assert.ok(q(view, 'cm-imap-host'), 'IMAP host shown');
+  assert.ok(q(view, 'cm-smtp-host'), 'SMTP host shown');
+});
 
 test('the form opens on send and receive, with both host rows', async (t) => {
   const { view } = await openGenericForm(t);

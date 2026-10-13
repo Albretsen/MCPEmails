@@ -251,7 +251,7 @@
     "usernamePlaceholder": "Déjalo en blanco para usar tu dirección de correo",
     "usernameHint": "Solo es necesario si tu proveedor usa un nombre de usuario de inicio de sesión distinto de tu dirección de correo. Revisa la configuración de correo de tu proveedor (p. ej. «Usuario» o «Nombre de cuenta»).",
     "advancedToggle": "Configuración avanzada",
-    "advancedHint": "Modos de seguridad y un usuario de inicio de sesión aparte. Los valores predeterminados funcionan en casi todos los buzones.",
+    "advancedHint": "Tipo de conexión, modos de seguridad y un usuario de inicio de sesión aparte. Los valores predeterminados funcionan en casi todos los buzones.",
     "imapSectionLabel": "IMAP (recepción de correo)",
     "smtpSectionLabel": "SMTP (envío de correo)",
     "hostPasteHint": "Puedes pegar el servidor con su puerto, como imap.example.com:993.",

@@ -788,10 +788,14 @@ export function ConnectModal({
     // to submit. The ports are now on the form itself, always visible, so
     // opening the panel for one would open it to point at a field that is not
     // in it. Only the two things still inside can force it open.
+    // A receive-only or send-only inbox opens it too: the connection type is
+    // in the panel, and it is the reason half the form is missing.
+    const partial = reconnect?.connectionMode === 'imap' || reconnect?.connectionMode === 'smtp';
     return (
       imapSecurity !== 'tls' ||
       smtpSecurity !== GENERIC_IMAP_DEFAULTS.smtpSecurity ||
-      Boolean(reconnect?.username)
+      Boolean(reconnect?.username) ||
+      partial
     );
   });
   // Set when a port was lifted out of a host field, so the move is announced
@@ -2974,30 +2978,6 @@ export function ConnectModal({
                   rare: the security modes and the separate login username. */}
               {isGeneric && (
                 <>
-                  {/* Connection type. Most mailboxes are both, and the form
-                      opens that way; a receive-only mailbox has no SMTP server
-                      to give and a send-only one (a transactional sender, a
-                      relay account) has no IMAP server, and requiring both
-                      shut either out. The half left out is hidden, not just
-                      ignored, so nobody is asked for a server they do not have. */}
-                  <div className="field">
-                    <label htmlFor="cm-connection-mode">{tr('connect.connectionModeLabel')}</label>
-                    <select
-                      id="cm-connection-mode"
-                      className="input"
-                      value={connectionMode}
-                      onChange={e => { setPortNote(null); setPortRangeError(null); setConnectionMode(e.target.value); }}
-                      disabled={isReconnect}
-                      aria-describedby="cm-connection-mode-hint"
-                    >
-                      <option value="both">{tr('connect.connectionModeBoth')}</option>
-                      <option value="imap">{tr('connect.connectionModeImap')}</option>
-                      <option value="smtp">{tr('connect.connectionModeSmtp')}</option>
-                    </select>
-                    <span id="cm-connection-mode-hint" style={{ fontFamily: 'var(--font-sans)', fontSize: 12, color: 'var(--fg-3)' }}>
-                      {tr(connectionMode === 'imap' ? 'connect.connectionModeImapHint' : connectionMode === 'smtp' ? 'connect.connectionModeSmtpHint' : 'connect.connectionModeBothHint')}
-                    </span>
-                  </div>
                   {connectionMode !== 'smtp' && (
                     <>
                       <div className="host-port-row">
@@ -3334,8 +3314,8 @@ export function ConnectModal({
 
               {/* ── Advanced settings (generic IMAP only) ──────────────────
                   What is left in here after the ports moved up to the host
-                  rows: the two transport security modes and the optional login
-                  username.
+                  rows: the connection type, the two transport security modes
+                  and the optional login username.
 
                   Closed by default, but opened automatically whenever it holds
                   a value that differs from the default, and whenever a failure
@@ -3387,6 +3367,32 @@ export function ConnectModal({
                       <span style={{ fontFamily: 'var(--font-sans)', fontSize: 12, color: 'var(--fg-3)', lineHeight: 1.5 }}>
                         {tr('connect.advancedHint')}
                       </span>
+
+                      {/* Connection type. Most mailboxes are both, and the form
+                          opens that way, which is why the choice lives in here
+                          and not on the form itself. A receive-only mailbox has
+                          no SMTP server to give and a send-only one (a
+                          transactional sender, a relay account) has no IMAP
+                          server; choosing one hides the other half's host row
+                          above, so nobody is asked for a server they do not have. */}
+                      <div className="field">
+                        <label htmlFor="cm-connection-mode">{tr('connect.connectionModeLabel')}</label>
+                        <select
+                          id="cm-connection-mode"
+                          className="input"
+                          value={connectionMode}
+                          onChange={e => { setPortNote(null); setPortRangeError(null); setConnectionMode(e.target.value); }}
+                          disabled={isReconnect}
+                          aria-describedby="cm-connection-mode-hint"
+                        >
+                          <option value="both">{tr('connect.connectionModeBoth')}</option>
+                          <option value="imap">{tr('connect.connectionModeImap')}</option>
+                          <option value="smtp">{tr('connect.connectionModeSmtp')}</option>
+                        </select>
+                        <span id="cm-connection-mode-hint" style={{ fontFamily: 'var(--font-sans)', fontSize: 12, color: 'var(--fg-3)' }}>
+                          {tr(connectionMode === 'imap' ? 'connect.connectionModeImapHint' : connectionMode === 'smtp' ? 'connect.connectionModeSmtpHint' : 'connect.connectionModeBothHint')}
+                        </span>
+                      </div>
 
                       <div className="field">
                         <label htmlFor="cm-username">{tr('connect.usernameLabel')}</label>

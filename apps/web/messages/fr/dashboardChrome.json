@@ -251,7 +251,7 @@
     "usernamePlaceholder": "Laissez vide pour utiliser votre adresse e-mail",
     "usernameHint": "Nécessaire uniquement si votre fournisseur utilise un nom d'utilisateur de connexion distinct de votre adresse e-mail. Vérifiez les paramètres de messagerie de votre fournisseur (p. ex. « Nom d'utilisateur » ou « Nom du compte »).",
     "advancedToggle": "Paramètres avancés",
-    "advancedHint": "Modes de sécurité et nom d’utilisateur de connexion distinct. Les valeurs par défaut conviennent à presque toutes les boîtes mail.",
+    "advancedHint": "Type de connexion, modes de sécurité et nom d’utilisateur de connexion distinct. Les valeurs par défaut conviennent à presque toutes les boîtes mail.",
     "imapSectionLabel": "IMAP (réception des e-mails)",
     "smtpSectionLabel": "SMTP (envoi des e-mails)",
     "hostPasteHint": "Vous pouvez coller l’hôte avec son port, par exemple imap.example.com:993.",
