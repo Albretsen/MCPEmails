@@ -2213,6 +2213,7 @@ function SignatureEditor({ inbox, onSave, t }) {
 
   const [enabled, setEnabled] = useState(inbox.signatureEnabled ?? true);
   const [replyMode, setReplyMode] = useState(inbox.signatureReplyMode ?? 'first_only');
+  const [embedImages, setEmbedImages] = useState(inbox.signatureEmbedImages ?? false);
   const [reviewMode, setReviewMode] = useState(() => resolveReviewMode(inbox));
   const [saving, setSaving] = useState(false);
   const [sizeError, setSizeError] = useState('');
@@ -2352,6 +2353,7 @@ function SignatureEditor({ inbox, onSave, t }) {
     // eslint-disable-next-line react-hooks/set-state-in-effect
     setEnabled(inbox.signatureEnabled ?? true);
     setReplyMode(inbox.signatureReplyMode ?? 'first_only');
+    setEmbedImages(inbox.signatureEmbedImages ?? false);
     setReviewMode(resolveReviewMode(inbox));
     setSizeError('');
     // A "not saved" notice is about the inbox it happened on.
@@ -2444,6 +2446,12 @@ function SignatureEditor({ inbox, onSave, t }) {
         signature_text: text,
         signature_enabled: enabled,
         signature_reply_mode: replyMode,
+        // Sent only when the box was actually changed, so a save that did
+        // not touch it writes nothing. (Outlook never shows the box: its mail
+        // goes through Microsoft Graph, which has no embedded path yet.)
+        ...(canEmbedImages && embedImages !== (inbox.signatureEmbedImages ?? false)
+          ? { signature_embed_images: embedImages }
+          : {}),
         // Both columns are sent: `send_review_mode` is the new three-way
         // setting, `send_approval_required` is the boolean the edge function
         // still gates on. The API keeps them consistent; remove the boolean
@@ -2466,6 +2474,7 @@ function SignatureEditor({ inbox, onSave, t }) {
   // `saving` alone, so an editor that mounts during that wait is not created
   // read-only.
   const busy = saving || awaitingEditor;
+  const canEmbedImages = inbox.provider !== 'outlook';
 
   return (
     <div style={{ marginBottom: 16 }}>
@@ -2561,6 +2570,24 @@ function SignatureEditor({ inbox, onSave, t }) {
            kind of event: Save was clicked and nothing was sent. */
         <div style={{ ...label, marginTop: 8, color: 'var(--red-500)' }} role="alert">
           Not saved. The signature editor could not be loaded, so nothing was sent. Check your connection and save again.
+        </div>
+      )}
+
+      {canEmbedImages && (
+        <div style={{ marginTop: 10 }}>
+          <label style={{ display: 'inline-flex', alignItems: 'center', gap: 8, cursor: 'pointer', ...label }}>
+            <input
+              type="checkbox"
+              checked={embedImages}
+              onChange={() => setEmbedImages(v => !v)}
+              disabled={busy}
+              style={{ accentColor: 'var(--brand)' }}
+            />
+            {t('inboxes.detail.signature.embedImages')}
+          </label>
+          <div style={{ ...label, marginTop: 4, color: 'var(--fg-3)' }}>
+            {t('inboxes.detail.signature.embedImagesHint')}
+          </div>
         </div>
       )}
 

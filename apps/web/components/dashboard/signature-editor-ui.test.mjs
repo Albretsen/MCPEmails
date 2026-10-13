@@ -621,6 +621,52 @@ test('save: unticking Enabled disables the editor and is saved as false', async 
   assert.equal(patch.body.signature_html, STORED_HTML_AS_EDITED, 'a disabled signature still saves its content');
 });
 
+/** The "Embed images in the message" checkbox, found by its label. */
+function embedImagesBox(view) {
+  const label = [...view.panel().querySelectorAll('label')]
+    .find((el) => el.textContent.includes(COPY.embedImages));
+  return label ? label.querySelector('input[type="checkbox"]') : null;
+}
+
+test('embed images: off by default, and a save that leaves it alone does not send it', async (t) => {
+  const view = await renderInboxes(t, { inboxes: [inbox({ signatureHtml: STORED_HTML, signatureText: STORED_TEXT })] });
+  await view.openReady();
+  const box = embedImagesBox(view);
+  assert.ok(box, 'the checkbox is shown for an IMAP inbox');
+  assert.equal(box.checked, false);
+  assert.ok(view.panel().textContent.includes(COPY.embedImagesHint));
+  const patch = await view.save();
+  assert.equal('signature_embed_images' in patch.body, false);
+});
+
+test('embed images: ticking it is saved as true, unticking a stored true as false', async (t) => {
+  const view = await renderInboxes(t, { inboxes: [inbox({ signatureHtml: STORED_HTML, signatureText: STORED_TEXT })] });
+  await view.openReady();
+  await view.click(embedImagesBox(view));
+  assert.equal(embedImagesBox(view).checked, true);
+  const patch = await view.save();
+  assert.equal(patch.body.signature_embed_images, true);
+
+  const stored = await renderInboxes(t, {
+    inboxes: [inbox({ signatureHtml: STORED_HTML, signatureText: STORED_TEXT, signatureEmbedImages: true })],
+  });
+  await stored.openReady();
+  assert.equal(embedImagesBox(stored).checked, true, 'the stored value is shown');
+  await stored.click(embedImagesBox(stored));
+  const off = await stored.save();
+  assert.equal(off.body.signature_embed_images, false);
+});
+
+test('embed images: not offered on Outlook, and never sent from there', async (t) => {
+  const view = await renderInboxes(t, {
+    inboxes: [inbox({ provider: 'outlook', service: 'outlook', signatureHtml: STORED_HTML, signatureText: STORED_TEXT })],
+  });
+  await view.openReady();
+  assert.equal(embedImagesBox(view), null);
+  const patch = await view.save();
+  assert.equal('signature_embed_images' in patch.body, false);
+});
+
 test('save: the button shows Saving… and is disabled until the request settles', async (t) => {
   let release;
   const gate = new Promise((resolve) => { release = resolve; });

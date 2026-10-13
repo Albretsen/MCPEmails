@@ -2020,6 +2020,7 @@ export type Database = {
           send_approval_required: boolean
           send_review_mode: string
           service: string | null
+          signature_embed_images: boolean
           signature_enabled: boolean
           signature_html: string | null
           signature_reply_mode: string
@@ -2058,6 +2059,7 @@ export type Database = {
           send_approval_required?: boolean
           send_review_mode?: string
           service?: string | null
+          signature_embed_images?: boolean
           signature_enabled?: boolean
           signature_html?: string | null
           signature_reply_mode?: string
@@ -2096,6 +2098,7 @@ export type Database = {
           send_approval_required?: boolean
           send_review_mode?: string
           service?: string | null
+          signature_embed_images?: boolean
           signature_enabled?: boolean
           signature_html?: string | null
           signature_reply_mode?: string

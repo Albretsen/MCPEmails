@@ -169,8 +169,8 @@ async function fetchInboxes(supabase, workspaceId, historyDays = USAGE_WINDOW_DA
         'imap_host', 'imap_port', 'imap_security', 'smtp_host', 'smtp_port', 'smtp_security',
         'imap_username', 'created_at', 'signature_text', 'signature_html', 'signature_enabled',
         'signature_reply_mode', 'signature_source', 'send_approval_required', 'send_review_mode',
-        'draft_editor_hidden'],
-      [...PENDING_INBOX_COLUMNS, 'draft_editor_hidden'],
+        'draft_editor_hidden', 'signature_embed_images'],
+      [...PENDING_INBOX_COLUMNS, 'draft_editor_hidden', 'signature_embed_images'],
       (columns) => supabase
         .from('inboxes')
         .select(columns)
@@ -257,6 +257,7 @@ async function fetchInboxes(supabase, workspaceId, historyDays = USAGE_WINDOW_DA
     signatureHtml: row.signature_html ?? null,
     signatureEnabled: row.signature_enabled ?? true,
     signatureReplyMode: row.signature_reply_mode ?? 'first_only',
+    signatureEmbedImages: row.signature_embed_images ?? false,
     signatureSource: row.signature_source ?? null,
     sendApprovalRequired: row.send_approval_required ?? false,
     // Three-way review mode (off | inline | dashboard). Falls back to the

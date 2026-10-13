@@ -223,7 +223,9 @@
         "previewTitle": "Preview",
         "previewReplyQuote": "On Mon, someone '<someone@example.com>' wrote:",
         "previewTooLarge": "Signature is too large to preview.",
-        "imageNote": "Some email clients (e.g. Gmail) may hide images until the recipient clicks \"display images\". This is normal for signatures with hosted images."
+        "imageNote": "Some email clients (e.g. Gmail) may hide images until the recipient clicks \"display images\". This is normal for signatures with hosted images. Turn on \"Embed images in the message\" below to send them inside the email instead.",
+        "embedImages": "Embed images in the message",
+        "embedImagesHint": "Sends your logo inside each email instead of loading it from its web address, so it shows in drafts and in mail apps that block remote images, such as Outlook and Thunderbird. Images up to 512 KB; larger ones stay linked."
       }
     },
     "emptyAltLead": "Not ready to connect a mailbox yet?",

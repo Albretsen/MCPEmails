@@ -308,6 +308,11 @@ import {
   signatureHtmlToText,
 } from "./signature-compose.ts";
 import {
+  createSignatureImageFetcher,
+  embedSignatureImages,
+  type EmbeddedHtml,
+} from "./signature-images.ts";
+import {
   handleTriageDispatch,
   type TriageAction,
   TRIAGE_ACTION_OPERATIONS,
@@ -11965,6 +11970,7 @@ async function sendImapMessage(
 ): Promise<SendEmailResult> {
   // STAGE "compose" (see send-stages.ts): everything up to the SMTP session.
   // imapSmtpSend below is transmission and answers "unknown"; this does not.
+  const embedded = await withSignatureImages(inbox, params.htmlBody);
   const { messageId, mime, recipients } = preTransmissionSync("compose", () => {
     const messageId = crypto.randomUUID();
     const mime = buildMimeMessage({
@@ -11973,7 +11979,8 @@ async function sendImapMessage(
       cc: params.cc.length ? params.cc : undefined,
       subject: params.subject,
       textBody: params.textBody,
-      htmlBody: params.htmlBody,
+      htmlBody: embedded.html,
+      inlineImages: embedded.inlineImages,
       attachments: params.attachments.map((a) => ({
         filename: a.filename,
         mimeType: a.mime_type,
@@ -12094,6 +12101,7 @@ async function replyImapMessage(
         formatMailbox(a.name, a.email)
       );
 
+      const embedded = await withSignatureImages(inbox, params.htmlBody);
       const mime = buildMimeMessage({
         from: formatMailbox(inbox.display_name, inbox.email_address),
         to: toStrings,
@@ -12105,7 +12113,8 @@ async function replyImapMessage(
           origDateHeader,
           origBodyText,
         ),
-        htmlBody: params.htmlBody,
+        htmlBody: embedded.html,
+        inlineImages: embedded.inlineImages,
         attachments: params.attachments.map((a) => ({
           filename: a.filename,
           mimeType: a.mime_type,
@@ -14966,6 +14975,7 @@ async function sendGmailMessage(
   const { accessToken, messageId, rawBase64url } = await preTransmission("compose", async () => {
     const accessToken = await withFreshGmailToken(inbox);
     const messageId = crypto.randomUUID();
+    const embedded = await withSignatureImages(inbox, params.htmlBody);
 
     const mimeMessage = buildMimeMessage({
       from: formatMailbox(inbox.display_name, inbox.email_address),
@@ -14976,7 +14986,8 @@ async function sendGmailMessage(
       includeBccHeader: true,
       subject: params.subject,
       textBody: params.textBody,
-      htmlBody: params.htmlBody,
+      htmlBody: embedded.html,
+      inlineImages: embedded.inlineImages,
       attachments: params.attachments.map((a) => ({
         filename: a.filename,
         mimeType: a.mime_type,
@@ -15388,6 +15399,7 @@ async function replyGmailMessage(
 
       // ── Step 4: Construct MIME reply with threading headers ───────────────────
       const newMessageId = crypto.randomUUID();
+      const embedded = await withSignatureImages(inbox, params.htmlBody);
       const mimeMessage = buildMimeMessage({
         from: formatMailbox(inbox.display_name, inbox.email_address),
         to: replyAddresses,
@@ -15403,7 +15415,8 @@ async function replyGmailMessage(
           origDateHeader,
           origBodyText,
         ),
-        htmlBody: params.htmlBody,
+        htmlBody: embedded.html,
+        inlineImages: embedded.inlineImages,
         attachments: params.attachments.map((a) => ({
           filename: a.filename,
           mimeType: a.mime_type,
@@ -24799,6 +24812,7 @@ async function imapCreateDraft(
   const password = await decryptStoredToken(inbox.imap_password);
   const messageId = crypto.randomUUID();
   const from = formatMailbox(inbox.display_name, inbox.email_address);
+  const embedded = await withSignatureImages(inbox, params.htmlBody);
 
   const mime = buildDraftMime({
     from,
@@ -24810,7 +24824,8 @@ async function imapCreateDraft(
     includeBccHeader: true,
     subject: params.subject,
     textBody: params.body,
-    htmlBody: params.htmlBody,
+    htmlBody: embedded.html,
+    inlineImages: embedded.inlineImages,
     messageId,
     inReplyTo: params.inReplyTo,
     references: params.references,
@@ -24886,6 +24901,7 @@ async function imapUpdateDraft(
   if (!Number.isFinite(oldUid) || oldUid <= 0) throw new Error("draft_not_found");
   const messageId = crypto.randomUUID();
   const from = formatMailbox(inbox.display_name, inbox.email_address);
+  const embedded = await withSignatureImages(inbox, params.htmlBody);
 
   const mime = buildDraftMime({
     from,
@@ -24897,7 +24913,8 @@ async function imapUpdateDraft(
     includeBccHeader: true,
     subject: params.subject,
     textBody: params.body,
-    htmlBody: params.htmlBody,
+    htmlBody: embedded.html,
+    inlineImages: embedded.inlineImages,
     messageId,
     inReplyTo: params.inReplyTo,
     references: params.references,
@@ -25440,6 +25457,7 @@ async function gmailCreateDraft(
   const token = await withFreshGmailToken(inbox);
   const messageId = crypto.randomUUID();
   const from = formatMailbox(inbox.display_name, inbox.email_address);
+  const embedded = await withSignatureImages(inbox, params.htmlBody);
 
   const mime = buildDraftMime({
     from,
@@ -25456,7 +25474,8 @@ async function gmailCreateDraft(
     includeBccHeader: true,
     subject: params.subject,
     textBody: params.body,
-    htmlBody: params.htmlBody,
+    htmlBody: embedded.html,
+    inlineImages: embedded.inlineImages,
     messageId,
     inReplyTo: params.inReplyTo,
     references: params.references,
@@ -25494,6 +25513,7 @@ async function gmailUpdateDraft(
   const token = await withFreshGmailToken(inbox);
   const messageId = crypto.randomUUID();
   const from = formatMailbox(inbox.display_name, inbox.email_address);
+  const embedded = await withSignatureImages(inbox, params.htmlBody);
 
   const mime = buildDraftMime({
     from,
@@ -25510,7 +25530,8 @@ async function gmailUpdateDraft(
     includeBccHeader: true,
     subject: params.subject,
     textBody: params.body,
-    htmlBody: params.htmlBody,
+    htmlBody: embedded.html,
+    inlineImages: embedded.inlineImages,
     messageId,
     inReplyTo: params.inReplyTo,
     references: params.references,
@@ -26089,6 +26110,62 @@ async function workspaceCardDiagnostics(workspaceId: string): Promise<boolean> {
     });
     return false;
   }
+}
+
+/**
+ * `inboxes.signature_embed_images` for ONE inbox — the per-inbox opt-in that
+ * sends the signature's images inside the message instead of as remote URLs.
+ *
+ * Its own query and NOT a column on `INBOX_SELECT_COLUMNS`, for the deploy
+ * order reason spelled out on that constant. Same shape as
+ * `readInboxDraftEditorHidden`.
+ *
+ * **Fails CLOSED (false = not embedded).** Not embedding is what every message
+ * did before the column existed: the logo stays an https URL. Embedding on an
+ * unreadable preference would change the mail of a mailbox that never asked.
+ */
+async function readSignatureEmbedImages(inboxId: string): Promise<boolean> {
+  if (INTROSPECTION_ONLY) return false;
+  try {
+    const { data, error } = await readFlagWithOneRetry(() =>
+      supabase
+        .from("inboxes")
+        .select("signature_embed_images")
+        .eq("id", inboxId)
+        .maybeSingle()
+    );
+    if (error) {
+      console.warn("[mcp-server] signature_embed_images_flag_query_failed", {
+        inbox_id: inboxId,
+        error: error.message,
+      });
+      return false;
+    }
+    return (data as { signature_embed_images?: unknown } | null)?.signature_embed_images === true;
+  } catch (error) {
+    console.warn("[mcp-server] signature_embed_images_flag_unavailable", {
+      inbox_id: inboxId,
+      error: error instanceof Error ? error.message : String(error),
+    });
+    return false;
+  }
+}
+
+/** One per isolate: it caches the fetched logo between sends. */
+const fetchSignatureImage = createSignatureImageFetcher();
+
+/**
+ * The HTML body a Gmail or IMAP transport should serialize, and the image
+ * parts it references. Called by every function that builds MIME for a message
+ * that can carry the signature, immediately before the build. A no-op (and no
+ * query) for a body without a signature image; never throws. See
+ * signature-images.ts for why it lives at the transport.
+ */
+function withSignatureImages(inbox: InboxRow, htmlBody: string | undefined): Promise<EmbeddedHtml> {
+  return embedSignatureImages(htmlBody, composeSignatureBlocks(inbox)?.html, {
+    enabled: () => readSignatureEmbedImages(inbox.id),
+    fetchImage: fetchSignatureImage,
+  });
 }
 
 /**

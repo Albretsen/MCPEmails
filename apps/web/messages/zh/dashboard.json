@@ -223,7 +223,9 @@
         "previewTitle": "预览",
         "previewReplyQuote": "某人 '<someone@example.com>' 于周一写道：",
         "previewTooLarge": "签名过大，无法预览。",
-        "imageNote": "某些邮件客户端（如 Gmail）可能会隐藏图片，直到收件人点击“显示图片”。对于使用托管图片的签名，这是正常现象。"
+        "imageNote": "某些邮件客户端（如 Gmail）可能会隐藏图片，直到收件人点击“显示图片”。对于使用托管图片的签名，这是正常现象。开启下方的“将图片嵌入邮件”即可把图片放进邮件内发送。",
+        "embedImages": "将图片嵌入邮件",
+        "embedImagesHint": "把徽标直接放进每封邮件，而不是从网址加载，这样在草稿中以及在 Outlook、Thunderbird 等会拦截远程图片的邮件应用中都能显示。图片最大 512 KB，更大的图片仍以链接方式发送。"
       }
     },
     "emptyAltLead": "还不想现在连接邮箱？",

@@ -223,7 +223,9 @@
         "previewTitle": "Vista previa",
         "previewReplyQuote": "El lun, alguien '<alguien@ejemplo.com>' escribió:",
         "previewTooLarge": "La firma es demasiado grande para mostrar la vista previa.",
-        "imageNote": "Algunos clientes de correo (p. ej. Gmail) pueden ocultar las imágenes hasta que el destinatario haga clic en \"mostrar imágenes\". Esto es normal en las firmas con imágenes alojadas."
+        "imageNote": "Algunos clientes de correo (p. ej. Gmail) pueden ocultar las imágenes hasta que el destinatario haga clic en \"mostrar imágenes\". Esto es normal en las firmas con imágenes alojadas. Activa \"Incrustar las imágenes en el mensaje\" más abajo para enviarlas dentro del correo.",
+        "embedImages": "Incrustar las imágenes en el mensaje",
+        "embedImagesHint": "Envía tu logotipo dentro de cada correo en lugar de cargarlo desde su dirección web, para que se vea en los borradores y en las aplicaciones de correo que bloquean las imágenes remotas, como Outlook y Thunderbird. Imágenes de hasta 512 KB; las más grandes siguen enlazadas."
       }
     },
     "emptyAltLead": "¿Todavía no quieres conectar un buzón?",
