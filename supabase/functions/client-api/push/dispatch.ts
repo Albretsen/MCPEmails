@@ -52,6 +52,8 @@ export const BATCH_SIZE = 20;
 export const LEASE_SECONDS = 120;
 /** No new check starts after this much of the pass. Same figure as the triage runner. */
 export const BUDGET_MS = 40_000;
+/** How long a send-only inbox (no IMAP server, nothing to watch) is left before it is looked at again. */
+const SEND_ONLY_RECHECK_MS = 24 * 60 * 60_000;
 /** One mailbox's check (probe, history, list) is abandoned after this long. */
 export const CHECK_TIMEOUT_MS = 20_000;
 /** Checks in flight at once, over all providers. */
@@ -119,6 +121,7 @@ type CheckOutcome =
   | "reset"
   | "new_mail"
   | "skipped_reconnect"
+  | "skipped_send_only"
   | "failed";
 
 interface CheckReport {
@@ -250,6 +253,23 @@ export async function checkWatch(deps: DispatchDeps, watch: LeasedWatch): Promis
   const iso = (ms: number) => new Date(ms).toISOString();
   const report: CheckReport = { outcome: "unchanged", recipients: 0, sent: 0, failed: 0, gone: 0 };
   const release = (result: WatchResult) => deps.store.releaseWatch(watch.inbox_id, watch.lease_id, result).catch(() => {});
+
+  // A send-only IMAP/SMTP inbox has no IMAP server, so no mail ever arrives
+  // to notify about. Probing it would fail on every tick and walk it up the
+  // backoff as if it were broken. It is left alone for a day instead; a
+  // reconnect that adds IMAP is picked up at the next check.
+  if (providerKey(watch.provider) === "imap" && !watch.mail_host) {
+    report.outcome = "skipped_send_only";
+    await release({
+      folders: watch.folders,
+      last_checked_at: watch.last_checked_at,
+      next_check_at: iso(startedAt + SEND_ONLY_RECHECK_MS),
+      failure_count: 0,
+      backoff_until: null,
+      last_error_code: null,
+    });
+    return report;
+  }
 
   // The row already says the mail server refused this mailbox's login a few
   // minutes ago (mail/health.ts): do not dial it again inside that window.

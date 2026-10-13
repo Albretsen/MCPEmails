@@ -677,3 +677,17 @@ Deno.test("no mail content in the log or the store: not a sender, a subject, an 
   // The stored cursor is numbers only.
   assertEquals(Object.keys(r.store.watches[0].folders["inbox"]).sort(), ["fingerprint", "total", "unread"]);
 });
+
+Deno.test("a send-only inbox (no IMAP server) is never probed and never backs off as if broken", async () => {
+  const r = await rig();
+  await r.subscribe();
+  r.store.watch({ inbox_id: INBOX, provider: "imap", mail_host: null });
+  const summary = await pass(r);
+  assertEquals(r.mail.calls.filter((c) => c.inbox_id === INBOX), [], "there is no mailbox to dial");
+  assertEquals([summary.failed, summary.skipped_reconnect], [0, 0]);
+  const row = r.store.watches.find((w) => w.inbox_id === INBOX)!;
+  assertEquals(row.failure_count, 0);
+  assertEquals(row.backoff_until, null);
+  // Left alone for a day, not re-leased on the next tick.
+  assertEquals((await pass(r)).leased, 0);
+});
