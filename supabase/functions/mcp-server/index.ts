@@ -38,6 +38,7 @@ import {
   advertisedInputSchema,
   isAdvertisedTool,
 } from "./advertised-schema.ts";
+import { perOperationWording } from "./per-operation-wording.ts";
 import {
   base64ToUtf8,
   downloadContentBlocks,
@@ -1310,6 +1311,20 @@ const SERVER_INSTRUCTIONS =
   "card for a held send. The host drives them, not you.\n\n" +
   "PROMPTS: prompts/list holds user-invoked triage, follow-up, cleanup and " +
   "scheduled-send routines. They grant no permissions and never run alone.";
+
+/**
+ * The same instructions for a client that is listed one tool per operation
+ * (PER_OPERATION_LISTING). Only the paragraph about how the tools are split
+ * differs: there are no read/write halves on that surface, and message ids do
+ * not come from a tool called `email_read`.
+ */
+const PER_OPERATION_SERVER_INSTRUCTIONS = SERVER_INSTRUCTIONS.replace(
+  /READ\/WRITE PAIRS: [^]*?\n\n/,
+  "ONE TOOL PER OPERATION: each tool does exactly one thing and its name " +
+    "says what (`email_search`, `email_send`, `draft_create`). Ids come from " +
+    "the listing tools: message ids from `email_list` or `email_search`, " +
+    "folder ids from `folder_list`, draft ids from `draft_list`.\n\n",
+);
 
 
 // ---------------------------------------------------------------------------
@@ -3380,21 +3395,27 @@ async function recordClientCapabilities(
  * (recordClientCapabilities) is one.
  *
  * This is the ONE place a `mcp_client_capabilities` row changes behaviour, and
- * only on the scope-denial path: it picks the SHAPE of an insufficient-scope
- * refusal, never whether a call is allowed. The key name and this table are
- * the only per-key client signals that survive to tools/call — the server is
- * stateless, and the User-Agent it sees is the /api/mcp proxy's own (`node`),
- * not the client's.
+ * it never decides whether a call is allowed. It picks two SHAPES: that of an
+ * insufficient-scope refusal, and that of the tool listing (an OpenAI key is
+ * listed one tool per operation; see PER_OPERATION_LISTING). The key name and
+ * this table are the only per-key client signals that survive past
+ * `initialize` — the server is stateless, and the User-Agent it sees is the
+ * /api/mcp proxy's own (`node`), not the client's.
  * Latest `last_seen` wins, which settles the few dashboard keys shared between
  * clients; no OAuth key has been seen from both an OpenAI and another client.
  *
- * Runs only when a call has already been refused, so it adds no query to any
- * successful call. Fails closed to `false`, which is today's 403.
+ * Runs on `tools/list` (once per session), when a call has already been
+ * refused for scope, and when `email_read` or `email_delete` arrives with no
+ * `action`. So it adds no query to any other successful call, and none at all
+ * for a key whose name already answers. Fails closed to `false`, which is the
+ * consolidated listing and today's 403.
  */
 async function isOpenAiClientKey(apiKey: ApiKeyRow): Promise<boolean> {
   // The key's own name first: free, and set by our OAuth issuer from the
   // client's registration (`OAuth: ChatGPT`). See isOpenAiOAuthKeyName.
   if (isOpenAiOAuthKeyName(apiKey.name)) return true;
+  // Introspection mode has no database to ask; see keyReviewCardGates.
+  if (INTROSPECTION_ONLY) return false;
   const apiKeyId = apiKey.id;
   try {
     const { data, error } = await supabase
@@ -3737,8 +3758,13 @@ function isOAuthIssuedKey(apiKey: ApiKeyRow): boolean {
  * about a name we keep callable for clients that cached it (`signature`), not
  * about permission, and unfiltering scopes must not resurrect it.
  */
-function toolsForListing(apiKey: ApiKeyRow): ToolDefinition[] {
-  const advertised = TOOL_REGISTRY.filter((tool) => isAdvertisedTool(tool.name));
+function toolsForListing(apiKey: ApiKeyRow, perOperation = false): ToolDefinition[] {
+  // An OpenAI key is listed one tool per operation instead of the consolidated
+  // tools; everything below applies to either list unchanged. The caller
+  // resolves which (isOpenAiClientKey), so this stays synchronous and pure.
+  const advertised = perOperation
+    ? PER_OPERATION_LISTING
+    : TOOL_REGISTRY.filter((tool) => isAdvertisedTool(tool.name));
   if (isOAuthIssuedKey(apiKey)) return advertised;
   return advertised.filter((tool) => isToolAuthorized(tool, apiKey.scopes));
 }
@@ -7130,8 +7156,24 @@ const TOOL_OUTPUT_SCHEMAS: Record<string, Record<string, unknown>> = {
  * `destructiveHint` follows the same published rule: true when the tool can
  * cause an irreversible outcome, and a message that has left for an external
  * recipient cannot be recalled. That is why every outbound operation here is
- * destructive even though it deletes nothing. Moving, archiving and flagging
- * stay false: they act on ids the caller named and another call undoes them.
+ * destructive even though it deletes nothing.
+ *
+ * Since 2026-10-13 it is also true for every write that is not purely
+ * ADDITIVE. OpenAI's scan flagged `signature_set` ("marked destructiveHint:
+ * false, but its behavior appears to cause material loss or a hard-to-reverse
+ * change"), and the guideline it cites leaves no room for the reading these
+ * values used to rest on: false is for additive writes only, an overwrite
+ * counts as destructive, and "Being able to undo an action does not, by
+ * itself, justify setting destructiveHint to false." So a move, an archive, a
+ * flag change, a rename, an overwrite, a cancellation and an automation's
+ * enable, disable and update are all true, and what stays false is what only
+ * ever adds: a copy, a new folder, a new draft, a new (disabled) rule.
+ *
+ * These per-operation values reach a client only on the per-operation surface
+ * (PER_OPERATION_LISTING) and on the few legacy tools the consolidated surface
+ * lists as they are. A consolidated tool publishes the annotations in its own
+ * spec, and those were NOT re-derived from this table: `email_organize` stays
+ * non-destructive there, for the reason written above its spec.
  *
  * Whoever changes a value here changes what a reviewer is told; keep
  * docs/openai-tool-annotation-justifications.md in step, it is the text
@@ -7183,14 +7225,20 @@ const TOOL_ANNOTATIONS: Record<
   email_forward: { readOnlyHint: false, destructiveHint: true, idempotentHint: false, openWorldHint: true },
   draft_send: { readOnlyHint: false, destructiveHint: true, idempotentHint: false, openWorldHint: true },
   schedule_create: { readOnlyHint: false, destructiveHint: true, idempotentHint: false, openWorldHint: true },
-  // Non-destructive mutations — non-idempotent (each call produces a new effect).
+  // Additive: a new folder, and nothing that existed is changed.
   folder_create: { readOnlyHint: false, destructiveHint: false, idempotentHint: false, openWorldHint: false },
-  folder_rename: { readOnlyHint: false, destructiveHint: false, idempotentHint: false, openWorldHint: false },
-  // Writes the whole signature, so repeating a call lands on the same state.
-  signature_set: { readOnlyHint: false, destructiveHint: false, idempotentHint: true, openWorldHint: false },
-  // Non-destructive mutations — idempotent by default per spec ToolAnnotations.
-  email_move: { readOnlyHint: false, destructiveHint: false, idempotentHint: true, openWorldHint: false },
-  email_move_batch: { readOnlyHint: false, destructiveHint: false, idempotentHint: true, openWorldHint: false },
+  // Replaces the folder's name: the old one is gone, and anything that
+  // addressed the folder by it (a rule, a client-side filter) no longer does.
+  folder_rename: { readOnlyHint: false, destructiveHint: true, idempotentHint: false, openWorldHint: false },
+  // Overwrites the stored signature and sender name; the previous text is not
+  // kept anywhere. This is the tool the 2026-10-13 scan flagged. Writes the
+  // whole signature, so repeating a call lands on the same state.
+  signature_set: { readOnlyHint: false, destructiveHint: true, idempotentHint: true, openWorldHint: false },
+  // A move takes the message OUT of the folder it was in, so it is not
+  // additive, and on Gmail it removes the INBOX label. Idempotent: repeating
+  // it converges on the same place.
+  email_move: { readOnlyHint: false, destructiveHint: true, idempotentHint: true, openWorldHint: false },
+  email_move_batch: { readOnlyHint: false, destructiveHint: true, idempotentHint: true, openWorldHint: false },
   // NOT idempotent on any provider we support: IMAP UID COPY and the Graph
   // /copy endpoint both create a brand new message every time they are called,
   // so a retried copy leaves two copies rather than converging on one.
@@ -7199,22 +7247,33 @@ const TOOL_ANNOTATIONS: Record<
   // Bulk and query-driven, like email_search_and_delete: the convention at the
   // top of this section marks anything that bulk-affects messages destructive.
   email_search_and_move: { readOnlyHint: false, destructiveHint: true, idempotentHint: true, openWorldHint: false },
+  // Additive: each adds one unsent draft and touches nothing else.
   draft_create: { readOnlyHint: false, destructiveHint: false, idempotentHint: true, openWorldHint: false },
   draft_reply: { readOnlyHint: false, destructiveHint: false, idempotentHint: false, openWorldHint: false },
-  draft_update: { readOnlyHint: false, destructiveHint: false, idempotentHint: true, openWorldHint: false },
-  schedule_cancel: { readOnlyHint: false, destructiveHint: false, idempotentHint: true, openWorldHint: false },
-  // Idempotent state toggles.
-  email_archive: { readOnlyHint: false, destructiveHint: false, idempotentHint: true, openWorldHint: false },
-  email_flag: { readOnlyHint: false, destructiveHint: false, idempotentHint: true, openWorldHint: false },
+  // Overwrites the stored draft with the fields passed; the previous body and
+  // recipients are not kept.
+  draft_update: { readOnlyHint: false, destructiveHint: true, idempotentHint: true, openWorldHint: false },
+  // Removes a queued send. The message and its timing are gone, and putting
+  // it back means composing the schedule again.
+  schedule_cancel: { readOnlyHint: false, destructiveHint: true, idempotentHint: true, openWorldHint: false },
+  // Idempotent state changes, and not additive ones: archive is a move out of
+  // the Inbox, and flag overwrites the read or flagged state the message had.
+  email_archive: { readOnlyHint: false, destructiveHint: true, idempotentHint: true, openWorldHint: false },
+  email_flag: { readOnlyHint: false, destructiveHint: true, idempotentHint: true, openWorldHint: false },
   // Automation writes. enable/disable/update converge on a stated end state, so
   // they are idempotent; create makes a new rule every call, so it is not.
   // create and update are the two that can define a `forward` action, which
   // addresses recipients outside the mailbox, hence openWorldHint: true on
   // those two alone.
+  //
+  // create is additive (a new rule, and it is created DISABLED, so nothing
+  // runs because of it). The other three are not: update overwrites the stored
+  // filter and action, enable starts unattended changes to the mailbox, and
+  // disable stops ones the user was relying on.
   automation_create: { readOnlyHint: false, destructiveHint: false, idempotentHint: false, openWorldHint: true },
-  automation_update: { readOnlyHint: false, destructiveHint: false, idempotentHint: true, openWorldHint: true },
-  automation_enable: { readOnlyHint: false, destructiveHint: false, idempotentHint: true, openWorldHint: false },
-  automation_disable: { readOnlyHint: false, destructiveHint: false, idempotentHint: true, openWorldHint: false },
+  automation_update: { readOnlyHint: false, destructiveHint: true, idempotentHint: true, openWorldHint: true },
+  automation_enable: { readOnlyHint: false, destructiveHint: true, idempotentHint: true, openWorldHint: false },
+  automation_disable: { readOnlyHint: false, destructiveHint: true, idempotentHint: true, openWorldHint: false },
   // Destructive tools.
   email_delete: { readOnlyHint: false, destructiveHint: true, idempotentHint: false, openWorldHint: false },
   email_delete_batch: { readOnlyHint: false, destructiveHint: true, idempotentHint: false, openWorldHint: false },
@@ -7900,13 +7959,13 @@ const CONSOLIDATED_SPECS: Record<string, ConsolidatedSpec> = {
     // Both actions are idempotent: 'set' writes the whole signature, so
     // repeating a call lands on the same stored state rather than appending to
     // it. readOnlyHint stays false because 'set' does write.
-    // destructiveHint: false — 'set' replaces one settings field on an inbox,
-    // sends nothing and deletes no mail, and the previous text is restored by
-    // another call with it. openWorldHint: false — the signature is stored
+    // destructiveHint: true since 2026-10-13, with signature_set: 'set'
+    // overwrites the stored signature and the previous text is not kept.
+    // openWorldHint: false — the signature is stored
     // here; applying it to outbound mail is the sending tools' business.
     annotations: {
       readOnlyHint: false,
-      destructiveHint: false,
+      destructiveHint: true,
       idempotentHint: true,
       openWorldHint: false,
     },
@@ -8012,9 +8071,14 @@ const CONSOLIDATED_ENVELOPE_KEYS = [
 function buildConsolidatedOutputSchema(
   spec: ConsolidatedSpec,
 ): Record<string, unknown> {
+  return envelopeOutputSchema(Object.values(spec.actions).map((action) => action.legacy));
+}
+
+/** The envelope over a list of legacy operations; see CONSOLIDATED_ENVELOPE_KEYS. */
+function envelopeOutputSchema(legacyNames: readonly string[]): Record<string, unknown> {
   const properties: Record<string, unknown> = {};
-  for (const action of Object.values(spec.actions)) {
-    const legacyOut = LEGACY_BY_NAME.get(action.legacy)?.outputSchema;
+  for (const legacyName of legacyNames) {
+    const legacyOut = LEGACY_BY_NAME.get(legacyName)?.outputSchema;
     const legacyProps = legacyOut?.properties as Record<string, unknown> | undefined;
     if (!legacyProps) continue;
     for (const key of CONSOLIDATED_ENVELOPE_KEYS) {
@@ -8420,6 +8484,132 @@ for (const definition of BULK_TOOL_DEFINITIONS) {
 for (const definition of DRAFT_EDITOR_TOOL_DEFINITIONS) {
   TOOL_REGISTRY.push({ ...definition });
 }
+
+// ---------------------------------------------------------------------------
+// The per-operation surface: one tool per operation, for OpenAI clients.
+//
+// OpenAI's plugin scan (2026-10-13) flagged every consolidated tool, the
+// read-only ones included: "This tool appears to execute operations that are
+// not individually exposed. Please expose each model-callable operation
+// upfront as a separate tool". Their guideline forbids "operation selection
+// ... with a generic executor", which is what an `action` argument is.
+//
+// So a key that belongs to ChatGPT or Codex (isOpenAiClientKey) is LISTED the
+// legacy per-operation tools instead, which are what the consolidated tools
+// have dispatched to all along: same handlers, same scopes, same names in
+// activity_log and in the usage meter. Every other client keeps the
+// consolidated listing above, byte for byte, because that is the surface that
+// stays under the tool-count threshold where claude.ai defers tools behind a
+// search index.
+//
+// Two lists come out of this:
+//
+//   PER_OPERATION_LISTING     what `tools/list` returns to an OpenAI key.
+//   PER_OPERATION_ONLY_TOOLS  the entries whose name is not in TOOL_REGISTRY,
+//                             which `tools/call` falls back to.
+//
+// The second is callable by ANY client, deliberately: whether a name resolves
+// must not depend on a per-call client lookup, and a name that used to answer
+// "Unknown tool" answering correctly breaks nobody. The consolidated names
+// stay callable by OpenAI clients for the mirror reason, since a connection
+// made before this shipped has them cached.
+//
+// `email_read` and `email_delete` are both a consolidated tool and one of its
+// own operations. Under those two names the listing carries the single-message
+// operation and `tools/call` keeps resolving the consolidated entry; a call
+// with no `action` from an OpenAI key is read as that operation. See
+// PER_OPERATION_SAME_NAME_ACTION.
+// ---------------------------------------------------------------------------
+
+/** The consolidated tool and action behind a per-operation tool, where one exists. */
+const PER_OPERATION_PARENT = new Map<string, { tool: string; action: ConsolidatedAction }>();
+
+/**
+ * Build the listed form of one legacy operation.
+ *
+ * Scopes come from the action table when the operation has one, so the gate a
+ * per-operation call passes is by construction the gate its consolidated
+ * spelling passes. The validated `inputSchema` is the legacy one, untouched;
+ * the listed copy differs from it in wording (per-operation-wording.ts) and in
+ * the two renames that keep a per-operation tool from advertising an argument
+ * called `action` (`flag_action`, `rule_action`: the names the consolidated
+ * tools already publish for the same arguments).
+ */
+function buildPerOperationTool(legacy: ToolDefinition, action?: ConsolidatedAction): ToolDefinition {
+  const renames = action?.renames ?? {};
+  const listed = perOperationWording(legacy.inputSchema) as Record<string, unknown>;
+  const properties = { ...(listed.properties as Record<string, unknown> | undefined) };
+  for (const [legacyKey, exposedKey] of Object.entries(renames)) {
+    if (!(legacyKey in properties)) continue;
+    // Rebuilt rather than assigned, so the renamed key keeps its position.
+    for (const key of Object.keys(properties)) {
+      const value = properties[key];
+      delete properties[key];
+      properties[key === legacyKey ? exposedKey : key] = value;
+    }
+  }
+  const required = Array.isArray(listed.required)
+    ? listed.required.map((key) => renames[key as string] ?? key)
+    : undefined;
+  const { altScopes: _legacyAltScopes, ...rest } = legacy;
+  const altScopes = action ? action.altScopes : legacy.altScopes;
+  return {
+    ...rest,
+    description: perOperationWording(legacy.description) as string,
+    requiredScope: (action?.scope ?? legacy.requiredScope) as ToolDefinition["requiredScope"],
+    ...(altScopes && altScopes.length > 0 ? { altScopes } : {}),
+    listedInputSchema: { ...listed, properties, ...(required ? { required } : {}) },
+    // The same loose envelope a consolidated tool declares, over one
+    // operation. The strict legacy schemas are 13.2k tokens across this
+    // surface (measured 2026-10-13, o200k_base) and nothing validates a
+    // handler's output against them. `notes` is not declared the way
+    // withResultNotesProperty declares it elsewhere: additionalProperties is
+    // true here, so a note can never be an undeclared key, and its description
+    // repeated on 46 tools was 2.5k tokens of the listing.
+    outputSchema: perOperationWording(envelopeOutputSchema([legacy.name])) as Record<
+      string,
+      unknown
+    >,
+  };
+}
+
+const PER_OPERATION_LISTING: ToolDefinition[] = [];
+for (const tool of TOOL_REGISTRY) {
+  if (!isAdvertisedTool(tool.name)) continue;
+  const listedNames = new Set(PER_OPERATION_LISTING.map((listed) => listed.name));
+  const spec = CONSOLIDATED_SPECS[tool.name];
+  if (spec) {
+    // Every action, the unadvertised ones included: `folder`'s 'list' is the
+    // standalone folder_list, which the registry order has already placed.
+    for (const action of Object.values(spec.actions)) {
+      if (listedNames.has(action.legacy)) continue;
+      listedNames.add(action.legacy);
+      PER_OPERATION_PARENT.set(action.legacy, { tool: tool.name, action });
+      PER_OPERATION_LISTING.push(buildPerOperationTool(LEGACY_BY_NAME.get(action.legacy)!, action));
+    }
+  } else if (LEGACY_BY_NAME.has(tool.name)) {
+    if (!listedNames.has(tool.name)) PER_OPERATION_LISTING.push(buildPerOperationTool(tool));
+  } else {
+    // The app-only card tools: not operations of anything, listed as they are.
+    PER_OPERATION_LISTING.push(tool);
+  }
+}
+
+/** Per-operation tools `tools/call` cannot find in TOOL_REGISTRY, by name. */
+const PER_OPERATION_ONLY_TOOLS = new Map(
+  PER_OPERATION_LISTING
+    .filter((tool) => !TOOL_REGISTRY.some((registered) => registered.name === tool.name))
+    .map((tool) => [tool.name, tool]),
+);
+
+/**
+ * The two names that are both a consolidated tool and one of its operations,
+ * with the action a per-operation call under that name means.
+ */
+const PER_OPERATION_SAME_NAME_ACTION: Readonly<Record<string, string>> = {
+  email_read: "read",
+  email_delete: "delete",
+};
 
 // ---------------------------------------------------------------------------
 // MCP input-schema validation
@@ -28630,7 +28820,12 @@ async function handleInitialize(
       name: "mcpemails",
       version: SERVER_VERSION,
     },
-    instructions: SERVER_INSTRUCTIONS,
+    // An OpenAI client is listed one tool per operation, so it is told about
+    // that surface. Decided from this handshake's own clientInfo (the row
+    // recordClientCapabilities just wrote says the same) or the key's name.
+    instructions: isOpenAiClientName(clientInfo?.name) || isOpenAiOAuthKeyName(apiKey.name)
+      ? PER_OPERATION_SERVER_INSTRUCTIONS
+      : SERVER_INSTRUCTIONS,
   };
 
   return {
@@ -28717,8 +28912,15 @@ async function handleToolsList(
   // a tool that was stamped with `_meta` at module load keeps it and is not
   // gated at all. Testing the pure function proves nothing about that;
   // `mcp-app-resources.test.ts` tests this composition instead.
-  const visibleTools = withListingCardMeta(toolsForListing(apiKey), uiGates)
-    .map(serializeToolForList);
+  //
+  // An OpenAI client (ChatGPT, Codex) is listed one tool per operation, which
+  // is what its plugin review requires; see PER_OPERATION_LISTING.
+  const perOperation = await isOpenAiClientKey(apiKey);
+  const visibleTools = withListingCardMeta(
+    toolsForListing(apiKey, perOperation),
+    uiGates,
+    perOperation ? "per_operation" : "consolidated",
+  ).map(serializeToolForList);
 
   console.log("[mcp-server] tools/list", {
     key_id: apiKey.id,
@@ -28726,6 +28928,7 @@ async function handleToolsList(
     // Recorded so a support question ("why can this connection see send?")
     // is answerable from the log without re-deriving the credential's origin.
     scope_filtered: !isOAuthIssuedKey(apiKey),
+    surface: perOperation ? "per_operation" : "consolidated",
     visible_tool_count: visibleTools.length,
     visible_tools: visibleTools.map((t) => t.name).join(","),
   });
@@ -29280,7 +29483,12 @@ async function handleToolsCall(
       : null;
 
   // ── Look up the tool in the registry ─────────────────────────────────────
-  const tool = TOOL_REGISTRY.find((t) => t.name === toolName);
+  // The registry first, so the two names that are both a consolidated tool and
+  // one of its operations (email_read, email_delete) keep resolving to the
+  // consolidated entry; then the per-operation tools that exist only as
+  // operations. See PER_OPERATION_LISTING.
+  const tool = TOOL_REGISTRY.find((t) => t.name === toolName) ??
+    PER_OPERATION_ONLY_TOOLS.get(toolName);
 
   if (!tool) {
     // Unknown tool — log the attempt so operators can see invalid tool names
@@ -29318,7 +29526,8 @@ async function handleToolsCall(
         // that typo'd its way into this error must be told the real name and
         // allowed to retry into the step-up challenge. Telling it the tool does
         // not exist would end the turn instead.
-        available_tools: toolsForListing(apiKey).map((t) => t.name),
+        available_tools: toolsForListing(apiKey, await isOpenAiClientKey(apiKey))
+          .map((t) => t.name),
       },
     );
   }
@@ -29354,7 +29563,9 @@ async function handleToolsCall(
   let clampedArguments: CoercedArgument[] = [];
   if (rawArgs !== null && typeof rawArgs === "object" && !Array.isArray(rawArgs)) {
     const coercedArguments = coerceArgumentTypes(tool.inputSchema, rawArgs, "", {
-      clamp: CLAMPED_TO_MAXIMUM[toolName] ?? [],
+      // A per-operation tool clamps what its consolidated spelling clamps.
+      clamp: CLAMPED_TO_MAXIMUM[toolName] ??
+        CLAMPED_TO_MAXIMUM[PER_OPERATION_PARENT.get(toolName)?.tool ?? ""] ?? [],
     });
     clampedArguments = coercedArguments.filter((entry) => entry.to === "clamped");
     if (coercedArguments.length > 0) {
@@ -29392,10 +29603,27 @@ async function handleToolsCall(
       });
     }
 
+    const selectorless = !("action" in argsObj);
     // A selector-less email_read is answered from its arguments rather than
     // refused; see inferMissingAction for the rules and why only email_read.
     const inferredAction = inferMissingAction(toolName, argsObj);
     if (inferredAction) argsObj["action"] = inferredAction.action;
+
+    // `email_read` and `email_delete` with no `action` from an OpenAI key are
+    // the per-operation tools of those names, whose listed schema has no
+    // selector at all: the single-message read and the single-message delete.
+    // So the action is written onto the arguments like any resolved selector
+    // and the result carries no "called without an action" note, because
+    // nothing was reinterpreted. An email_read whose arguments say something
+    // other than a single read (a session that cached the consolidated tool
+    // and left the selector out) keeps the inference above, note included.
+    // Checked only for those two names and only when the selector is absent,
+    // so no other call pays for the lookup.
+    const sameNameAction = PER_OPERATION_SAME_NAME_ACTION[toolName];
+    const perOperationCall = selectorless && sameNameAction !== undefined &&
+      (inferredAction === null || inferredAction.action === sameNameAction) &&
+      await isOpenAiClientKey(apiKey);
+    if (perOperationCall) argsObj["action"] = sameNameAction;
 
     const rawAction = argsObj["action"];
     const action = typeof rawAction === "string" ? rawAction : null;
@@ -29412,7 +29640,7 @@ async function handleToolsCall(
       (candidate) => allowsLenientArguments(toolName, candidate),
     );
     if (resolution && resolution.kind !== "exact") actionResolution = resolution;
-    if (inferredAction) actionResolution = inferredAction;
+    if (inferredAction && !perOperationCall) actionResolution = inferredAction;
     // The second half of the condition is a backstop, not a duplicate of the
     // first: the canonical and legacy tables are built from `actions` and can
     // only name a real one, but the alias table is written by hand, and a typo
@@ -29557,7 +29785,21 @@ async function handleToolsCall(
     // above: exact-meaning renames in silence, and an `action` dropped only
     // when it restates the tool's own operation. See argument-aliases.ts.
     const standaloneArgs = rawArgs as Record<string, unknown>;
-    const renamed = normalizeArgumentAliases(toolName, standaloneArgs);
+    // A per-operation tool takes the retired names and synonyms of the
+    // consolidated tool it is an operation of, and lists two arguments under
+    // the names that tool publishes for them (`flag_action`, `rule_action`)
+    // while its validated schema still calls both `action`. Either spelling is
+    // accepted; the legacy one wins when both are sent.
+    const parent = PER_OPERATION_ONLY_TOOLS.has(toolName)
+      ? PER_OPERATION_PARENT.get(toolName)
+      : undefined;
+    const renamed = normalizeArgumentAliases(parent?.tool ?? toolName, standaloneArgs);
+    droppedArguments = renamed.filter((alias) => alias.to === null).map((alias) => alias.from);
+    for (const [legacyKey, exposedKey] of Object.entries(parent?.action.renames ?? {})) {
+      if (!(exposedKey in standaloneArgs)) continue;
+      if (!(legacyKey in standaloneArgs)) standaloneArgs[legacyKey] = standaloneArgs[exposedKey];
+      delete standaloneArgs[exposedKey];
+    }
     const droppedAction = dropRedundantAction(toolName, standaloneArgs);
     if (renamed.length > 0 || droppedAction) {
       console.info("[mcp-server] tools/call: normalized_argument_aliases", {
@@ -29689,9 +29931,24 @@ async function handleToolsCall(
     // take it, and naming that action is the difference between a caller that
     // retries at random and one that retries correctly. Paths and keywords are
     // untouched, so the persisted classification below is unaffected.
-    const reportedErrors = extraArguments && selectedAction
+    const validatedErrors = extraArguments && selectedAction
       ? withOwningActions(argumentErrors, extraArguments, selectedAction)
       : argumentErrors;
+    // A per-operation tool is validated under its legacy argument names; say
+    // the name it was listed with (`flag_action`, not `action`).
+    const listedNames = PER_OPERATION_ONLY_TOOLS.has(toolName)
+      ? Object.entries(PER_OPERATION_PARENT.get(toolName)?.action.renames ?? {})
+      : [];
+    const reportedErrors = listedNames.length === 0
+      ? validatedErrors
+      : validatedErrors.map((error) => {
+        let { path, message } = error;
+        for (const [legacyKey, exposedKey] of listedNames) {
+          path = path.split(`arguments.${legacyKey}`).join(`arguments.${exposedKey}`);
+          message = message.split(`arguments.${legacyKey}`).join(`arguments.${exposedKey}`);
+        }
+        return { ...error, path, message };
+      });
     await writeActivityLog({
       workspaceId: apiKey.workspace_id,
       apiKeyId: apiKey.id,
@@ -29992,7 +30249,9 @@ async function handleToolsCall(
       toolResult,
       `${droppedArguments.join(", ")} is no longer supported by ${toolName} and was ` +
         `ignored: this tool only reads. Mark messages read with ` +
-        `email_organize { action: "flag", flag_action: "read", message_ids: [...] }.`,
+        (consolidated
+          ? `email_organize { action: "flag", flag_action: "read", message_ids: [...] }.`
+          : `email_flag { flag_action: "read", message_ids: [...] }.`),
     );
   }
 
@@ -32290,9 +32549,12 @@ export {
   keyReviewCardGates,
   isToolAuthorized,
   loadInboxRowForTriage,
+  PER_OPERATION_SERVER_INSTRUCTIONS,
   SERVER_INSTRUCTIONS,
   SERVER_INSTRUCTIONS_MAX_BYTES,
   TOOL_ANNOTATIONS,
+  PER_OPERATION_LISTING,
+  PER_OPERATION_ONLY_TOOLS,
   TOOL_REGISTRY,
   toolsForListing,
   validateInputSchema,

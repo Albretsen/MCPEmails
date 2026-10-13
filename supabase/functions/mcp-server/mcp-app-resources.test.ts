@@ -909,7 +909,9 @@ Deno.test("every draft-editor tool is card-bearing for the staleness check", () 
   ) {
     assert(isCardBearingToolName(name), `${name} can hold a stale card URI`);
   }
-  for (const name of ["inbox_list", "email_read", "ping", "draft_update", ""]) {
+  // `draft_update` left this list on 2026-10-13: it is a card-bearing tool on
+  // the per-operation listing (PER_OPERATION_CARD_TOOL_NAMES).
+  for (const name of ["inbox_list", "email_read", "ping", "draft_list", "schedule_cancel", ""]) {
     assert(!isCardBearingToolName(name), `${name} cannot`);
   }
 });
