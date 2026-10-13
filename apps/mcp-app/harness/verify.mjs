@@ -66,6 +66,12 @@ const SUITES = [
   // card's replayed result, unsaved edits across a reload, focus around the
   // confirms, and recipients that are not addresses yet.
   ["draft QA", "draft-qa.test.mjs"],
+  // The fourth DOM suite: the QA report's smaller issues (recipients, focus,
+  // fullscreen, copy, the formatted preview) and the card's reading of the
+  // server's new draft fields — formatting_removed, signature.rich,
+  // resolved_from, a null last_saved_at — including the replay check against a
+  // model's fresh draft_read of an old draft (one verifying read, no loop).
+  ["draft polish", "draft-polish.test.mjs"],
 ];
 
 const outcomes = [];
