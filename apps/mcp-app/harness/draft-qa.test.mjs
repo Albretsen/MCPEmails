@@ -294,7 +294,7 @@ async function main() {
       contents:
         'import "./src/main";\n' +
         'export { getState, setState, disarmResultWatchdog, runTeardownSaver, mergeEnvelope, isReplayedDraft, REPLAY_AGE_MS } from "./src/store";\n' +
-        'export { failureNotice, patchLanded } from "./src/draft-failure";\n' +
+        'export { failureNotice, patchLanded, textRefusalCode } from "./src/draft-failure";\n' +
         'export { loadUnsaved, saveUnsaved, clearUnsaved } from "./src/unsaved";\n' +
         // The SAME Preact instance main.tsx rendered with, so a scenario can
         // unmount its card and stop its timers before the next one boots.
@@ -323,7 +323,8 @@ async function main() {
       "transport", "unreadable", "draft_not_found", "draft_has_attachments", "invalid_recipients",
       "provider_error", "insufficient_scope", "insufficient_role", "inbox_not_found",
       "draft_editor_hidden", "draft_editor_disabled", "invalid_arguments", "", "something_new",
-      "draft_changed", "draft_already_sent", "send_stopped",
+      "draft_changed", "draft_already_sent", "quota_exceeded", "auth_failed",
+      "approval_unavailable", "draft_has_no_recipients", "not_sent",
     ];
     const bad = [];
     for (const code of codes) {
@@ -586,18 +587,18 @@ async function main() {
     await c.done();
   }
 
-  group("1j. a save answer that followed an older id stops Save and send before the send");
+  group("1j. Save and send whose save is refused as draft_changed sends nothing");
   {
     const c = await editor({ revision: 1 });
-    // An older server: the save followed the lineage and says so.
-    c.tools.draft_editor_save = () => draftResult({ draft_id: "Drafts:103", revision: 3, origin: "save", resolved_from: "Drafts:102", body: { text: "Edited." } });
+    c.tools.draft_editor_save = () => failedResult("draft_changed", "x", "y");
     c.tools.draft = () => sentResult();
     c.input("d-body", "Edited.");
     await settle();
     c.press(c.btn(/^Save and send$/));
     await settle();
-    expectJson("saved, and NOT sent", c.calls.map((x) => x.name), ["draft_editor_save"]);
-    expect("the card says why", /it was not sent\. Check it, then send/.test(c.text()), true);
+    expectJson("the save was refused, and NOT sent", c.calls.map((x) => x.name), ["draft_editor_save"]);
+    expect("the card says why", /Not saved\. This draft was changed somewhere else/.test(c.text()), true);
+    expect("the edit is still in the box", c.value("d-body"), "Edited.");
     await c.done();
   }
 
@@ -615,6 +616,50 @@ async function main() {
       expect(`${code}: nothing retried`, c.calls.length, 1);
       await c.done();
     }
+  }
+
+  group("1l. a send refused with a bare error sentence says so, and only a lost one keeps Send off");
+  {
+    const cases = [
+      ["Your email account has exceeded its sending quota. Please try again later.", /Not sent\. Your email account has reached its sending limit/, false],
+      ["Unable to access the gmail inbox: its OAuth token has been revoked or expired, so the inbox has been marked 'error'. Ask the user to reconnect it by opening this link in their browser: https://mcpemails.com/x", /Not sent\. This mailbox needs to be reconnected/, false],
+      ["draft_send: unable to create the required approval request. No draft was sent; retry shortly.", /Not sent\. This mailbox asks for approval before sending/, false],
+      ["The mail server refused this message before any of it was transmitted, so nothing was sent: there is no delivery.", /Not sent\. The mail server refused it before anything went out/, false],
+      ["Draft Drafts:102 no longer exists. On this inbox each draft_update rewrites the draft and returns a NEW draft_id.", /could not be found in Drafts/, true],
+    ];
+    for (const [text, re, sendOff] of cases) {
+      const c = await editor();
+      c.tools.draft = () => ({ isError: true, content: [{ type: "text", text }] });
+      c.tools.draft_read = () => draftResult({ origin: "read" });
+      c.press(c.btn(/^Send$/));
+      await settle();
+      await settle();
+      const label = text.slice(0, 24);
+      expect(`${label}: the card says it in a person's words`, re.test(c.text()), true);
+      expect(`${label}: never "the connection dropped"`, /connection dropped|Could not reach the server/.test(c.text()), false);
+      expectJson(`${label}: no model wording`, forbiddenIn(c.text()), []);
+      expect(`${label}: no re-read, the server answered`, c.calls.some((x) => x.name === "draft_read"), false);
+      expect(`${label}: Send ${sendOff ? "waits for a re-read" : "is still on"}`, c.softOff(c.btn(/^Send$/)), sendOff);
+      expect(`${label}: the editor is kept`, c.value("d-subject"), "Quarterly numbers");
+      await c.done();
+    }
+    // A send the server itself calls "may or may not have been delivered" is a
+    // lost answer: re-read, and Send stays off until the person says so.
+    const c = await editor();
+    c.tools.draft = () => ({
+      isError: true,
+      delivery_status: "unknown",
+      content: [{ type: "text", text: "An error occurred while sending the draft via gmail. The message may or may not have been delivered. Do not retry automatically to avoid duplicate delivery." }],
+    });
+    c.tools.draft_read = () => draftResult({ origin: "read" });
+    c.press(c.btn(/^Send$/));
+    await settle();
+    await settle();
+    expect("unknown delivery: re-read", c.calls.at(-1)?.name, "draft_read");
+    expect("unknown delivery: Send stays off", c.softOff(c.btn(/^Send$/)), true);
+    // And on a save, a bare error sentence is never taken as a refusal.
+    expect("textRefusalCode reads only the server's own sentences", c.mod.textRefusalCode({ isError: true, content: [{ type: "text", text: "Error: upstream exploded" }] }), null);
+    await c.done();
   }
 
   // ── 2. A replayed result is re-read before it is trusted ─────────────────
@@ -723,6 +768,130 @@ async function main() {
       false,
     );
     await r.done();
+  }
+
+  group("3b. unsaved edits belong to the card that made them: a second card on the same draft starts clean");
+  {
+    const gmail = (over = {}) => draftEnvelope({ draft_id: "r-77", id_is_stable: true, identity: { inbox_id: INBOX, email_address: "you@example.com", provider: "gmail" }, ...over });
+    const inputFor = (args) => ({ jsonrpc: "2.0", method: "ui/notifications/tool-input", params: { arguments: args } });
+    const callA = inputFor({ action: "create", inbox_id: INBOX, to: ["dana@x.example"], subject: "Quarterly numbers", body: "Here they are." });
+    const callB = inputFor({ action: "update", inbox_id: INBOX, draft_id: "r-77", body: "Here they are." });
+
+    const a = await boot();
+    a.deliver(callA);
+    a.push(gmail());
+    await settle();
+    a.input("d-body", "Card A's half-typed edit.");
+    await settle();
+    a.w.dispatchEvent(new a.w.Event("pagehide"));
+    const s = a.storage();
+    expect("card A's edit is stashed", (s.session.find(([k]) => k === UNSAVED_KEY)?.[1] ?? "").includes("Card A's"), true);
+    a.kill();
+
+    // Card B: same tab, same Gmail draft id, a different tool call.
+    const b = await boot({ storage: s });
+    b.deliver(callB);
+    await settle();
+    b.push(gmail({ origin: "update" }));
+    await settle();
+    expect("card B shows the stored body, not card A's edit", b.value("d-body"), "Here they are.");
+    expect("and says nothing was put back", /put back/.test(b.text()), false);
+    b.kill();
+
+    // Card A reloaded: the same call, so its edit comes back.
+    const r = await boot({ storage: s });
+    r.deliver(callA);
+    await settle();
+    r.push(gmail());
+    await settle();
+    expect("card A's reload gets its edit back", r.value("d-body"), "Card A's half-typed edit.");
+    expect("and says so", /put back/.test(r.text()), true);
+    r.kill();
+  }
+
+  group("3c. restored edits over a draft that changed since: the conflict notice, against the verified copy");
+  {
+    const toolInput = {
+      jsonrpc: "2.0",
+      method: "ui/notifications/tool-input",
+      params: { arguments: { action: "create", inbox_id: INBOX, subject: "Quarterly numbers", body: "Here they are." } },
+    };
+    const original = draftEnvelope({ last_saved_at: new Date(Date.now() - 600_000).toISOString() });
+    const c = await boot();
+    c.tools.draft_read = () => draftResult({ origin: "read" });
+    c.deliver(toolInput);
+    c.push(original);
+    await settle();
+    await settle();
+    c.input("d-subject", "My subject");
+    await settle();
+    c.w.dispatchEvent(new c.w.Event("pagehide"));
+    const s = c.storage();
+    c.kill();
+
+    // Reload: the replayed result is verified, and the verified copy has a
+    // subject somebody else changed meanwhile.
+    const r = await boot({ storage: s });
+    r.tools.draft_read = () => draftResult({ origin: "read", subject: "Changed elsewhere", last_saved_at: new Date().toISOString() });
+    r.deliver(toolInput);
+    await settle();
+    r.push(original);
+    await settle();
+    await settle();
+    expect("the restored edit is kept", r.value("d-subject"), "My subject");
+    expect("the conflict is shown", /This draft was changed somewhere else/.test(r.text()), true);
+    expect("and that the edits were put back", /put back/.test(r.text()), true);
+    const before = r.calls.length;
+    await r.mod.runTeardownSaver();
+    await settle();
+    expect("nothing is written unattended over it", r.calls.length, before);
+    r.kill();
+
+    // The re-read answering AFTER the editor is up with the restored edit:
+    // the edit is rebased onto the verified copy, and the conflict is found
+    // there, not only at boot.
+    const late = await boot({ storage: s });
+    let answer;
+    late.tools.draft_read = () => new Promise((res) => { answer = res; });
+    late.deliver(toolInput);
+    await settle();
+    late.push(original);
+    await settle();
+    expect("late re-read: the edit is up before the answer", late.value("d-subject"), "My subject");
+    expect("late re-read: no conflict yet", /changed somewhere else/.test(late.text()), false);
+    answer(draftResult({ origin: "read", subject: "Changed elsewhere", last_saved_at: new Date().toISOString() }));
+    await settle();
+    await settle();
+    expect("late re-read: the edit is kept", late.value("d-subject"), "My subject");
+    expect("late re-read: the conflict is shown", /This draft was changed somewhere else/.test(late.text()), true);
+    late.kill();
+
+    // The same reload against a verified copy nobody touched: no conflict.
+    const q = await boot({ storage: s });
+    q.tools.draft_read = () => draftResult({ origin: "read", last_saved_at: new Date().toISOString() });
+    q.deliver(toolInput);
+    await settle();
+    q.push(original);
+    await settle();
+    await settle();
+    expect("unchanged copy: the edit is back", q.value("d-subject"), "My subject");
+    expect("unchanged copy: no conflict claimed", /changed somewhere else/.test(q.text()), false);
+    expect("unchanged copy: the put-back notice", /put back/.test(q.text()), true);
+    q.kill();
+
+    // A restore whose verified copy changed a DIFFERENT field than the one
+    // edited is not a conflict either.
+    const o = await boot({ storage: s });
+    o.tools.draft_read = () => draftResult({ origin: "read", body: { text: "Body changed elsewhere." }, last_saved_at: new Date().toISOString() });
+    o.deliver(toolInput);
+    await settle();
+    o.push(original);
+    await settle();
+    await settle();
+    expect("other field changed: the server's body is shown", o.value("d-body"), "Body changed elsewhere.");
+    expect("other field changed: the edit is kept", o.value("d-subject"), "My subject");
+    expect("other field changed: no conflict claimed", /changed somewhere else/.test(o.text()), false);
+    o.kill();
   }
 
   // ── 4. Confirms: focus and Escape ────────────────────────────────────────

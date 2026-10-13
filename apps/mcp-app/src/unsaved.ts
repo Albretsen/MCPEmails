@@ -33,6 +33,27 @@
 // every id the editor has held for it, and a lookup matches on any of them
 // within the same inbox. The id a card mounted with is always the first one in
 // that list, so a replayed mount finds the edits made three saves later.
+//
+// ── And scoped to the CARD (review 2 of 2026-10-13) ─────────────────────────
+// Matching on any id of the draft alone meant a second card on the same draft
+// in the same tab (a Gmail id never moves, so every card of that draft shares
+// it) booted with the FIRST card's edits. So an entry also carries the card's
+// scope: `persist.ts#cardKey`, the identity of the tool call the card was
+// mounted for (`i<id>` from `hostContext.toolInfo`, else a salted hash of the
+// tool name and arguments, which the host re-sends on every mount). It is the
+// same value on a reload of the same cell and a different one for another
+// call, which is exactly the line between "put my edits back" and "these are
+// somebody else's". Two calls with byte-identical arguments still share a
+// scope; so does a host that sends neither `toolInfo` nor the arguments
+// (scope null), which is the behaviour before this.
+//
+// ── And with the copy they were made against ───────────────────────────────
+// Restored edits are relative to a server copy this mount never saw. Each
+// entry keeps a FINGERPRINT (`fingerprint`, not the value) of every edited
+// field as the server had it when the edit was made, so the editor can tell a
+// field the server has since changed (a conflict, shown as one) from one it
+// has not. The edited values themselves are already stored here, so a short
+// hash of the old ones adds nothing a reader of this sink could not see.
 // ---------------------------------------------------------------------------
 
 const KEY = "mcpemails.unsaved.v1";
@@ -42,6 +63,9 @@ const MAX_IDS = 12;
 /** One draft's worth: the server clips a body at 64 KB. */
 const MAX_CHARS = 200_000;
 
+export type UnsavedField = "to" | "cc" | "bcc" | "subject" | "body_text";
+const UNSAVED_FIELDS: UnsavedField[] = ["to", "cc", "bcc", "subject", "body_text"];
+
 export interface Unsaved {
   to?: string[];
   cc?: string[];
@@ -50,14 +74,37 @@ export interface Unsaved {
   body_text?: string;
   /** What was in the address inputs and not yet a chip. */
   typed?: { to?: string; cc?: string; bcc?: string };
+  /**
+   * `fingerprint` of each edited field as the SERVER had it when the edit was
+   * made. Absent for an entry written before this existed.
+   */
+  bases?: Partial<Record<UnsavedField, string>>;
 }
 
 interface Entry {
   t: number;
   /** inbox_id, or "" when the envelope named none. */
   i: string;
+  /** The card's scope (`persist.ts#cardKey`), or null when it had none. */
+  k?: string | null;
   ids: string[];
   p: Unsaved;
+}
+
+/**
+ * A short, stable digest of one field's value (FNV-1a, two seeds). For
+ * comparing two copies in the same tab, never for anything else.
+ */
+export function fingerprint(value: string): string {
+  const pass = (seed: number) => {
+    let h = seed;
+    for (let i = 0; i < value.length; i++) {
+      h ^= value.charCodeAt(i);
+      h = Math.imul(h, 0x01000193) >>> 0;
+    }
+    return h.toString(36);
+  };
+  return `${pass(0x811c9dc5)}${pass(0x01000193)}`;
 }
 
 function area(): Storage | null {
@@ -101,8 +148,13 @@ function write(entries: Entry[]): void {
   }
 }
 
-const matches = (e: Entry, inbox: string, ids: readonly string[]): boolean =>
-  e.i === inbox && e.ids.some((id) => ids.includes(id));
+const matches = (
+  e: Entry,
+  inbox: string,
+  ids: readonly string[],
+  scope: string | null,
+): boolean =>
+  e.i === inbox && (e.k ?? null) === scope && e.ids.some((id) => ids.includes(id));
 
 const strings = (v: unknown): string[] | undefined =>
   Array.isArray(v) && v.every((s) => typeof s === "string") ? (v as string[]) : undefined;
@@ -111,12 +163,19 @@ const strings = (v: unknown): string[] | undefined =>
 export function loadUnsaved(
   inbox: string | null | undefined,
   ids: readonly string[],
+  scope: string | null = null,
 ): Unsaved | null {
-  const hit = read().find((e) => matches(e, inbox ?? "", ids));
+  const hit = read().find((e) => matches(e, inbox ?? "", ids, scope));
   if (!hit) return null;
   const p = hit.p as Record<string, unknown>;
   const typed = (p.typed ?? {}) as Record<string, unknown>;
   const text = (v: unknown) => (typeof v === "string" ? v : undefined);
+  const rawBases = (p.bases ?? {}) as Record<string, unknown>;
+  const bases: Partial<Record<UnsavedField, string>> = {};
+  for (const f of UNSAVED_FIELDS) {
+    const v = text(rawBases[f]);
+    if (v !== undefined) bases[f] = v;
+  }
   return {
     to: strings(p.to),
     cc: strings(p.cc),
@@ -124,6 +183,7 @@ export function loadUnsaved(
     subject: text(p.subject),
     body_text: text(p.body_text),
     typed: { to: text(typed.to), cc: text(typed.cc), bcc: text(typed.bcc) },
+    bases,
   };
 }
 
@@ -131,15 +191,17 @@ export function saveUnsaved(
   inbox: string | null | undefined,
   ids: readonly string[],
   edits: Unsaved,
+  scope: string | null = null,
 ): void {
   if (ids.length === 0) return;
   const key = inbox ?? "";
   const all = read();
-  const old = all.find((e) => matches(e, key, ids));
+  const old = all.find((e) => matches(e, key, ids, scope));
   const merged = [...new Set([...(old?.ids ?? []), ...ids])];
   const entry: Entry = {
     t: Date.now(),
     i: key,
+    k: scope,
     // The FIRST id is the one a replayed mount will ask with, so it is the one
     // that must never be evicted.
     ids: merged.length > MAX_IDS ? [merged[0], ...merged.slice(1 - MAX_IDS)] : merged,
@@ -164,8 +226,9 @@ export function saveUnsaved(
 export function clearUnsaved(
   inbox: string | null | undefined,
   ids: readonly string[],
+  scope: string | null = null,
 ): void {
   const all = read();
-  const kept = all.filter((e) => !matches(e, inbox ?? "", ids));
+  const kept = all.filter((e) => !matches(e, inbox ?? "", ids, scope));
   if (kept.length !== all.length || all.length === 0) write(kept);
 }

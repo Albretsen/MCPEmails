@@ -61,6 +61,52 @@ export interface FailureNotice {
   load?: boolean;
 }
 
+/**
+ * A tool result that is not an envelope but IS an answer: `isError` with the
+ * server's own sentence, the way `draft{action:"send"|"delete"}` refuses for
+ * anything the lineage does not cover (draft not found, sending quota, a
+ * mailbox that needs reconnecting, the approval queue unavailable). Returns
+ * the code the card shows it under, or null when the result says nothing
+ * certain (not an error, no text, a send whose delivery is unknown, or a
+ * sentence that is not one of the server's refusals), which the caller then
+ * treats as a lost answer. Only `draft{action}` answers are read this way: the
+ * draft editor's own tools always answer with an envelope.
+ *
+ * These used to be "unreadable", i.e. a lost answer, and a send refused for
+ * its quota read "the connection dropped while sending" with Send held off
+ * (review 2 of 2026-10-13). An error result is the server saying it did not
+ * act. The one exception is spelled out by the server itself:
+ * `delivery_status: "unknown"` and "may or may not have been delivered" are
+ * kept as a lost answer, because there the message may have gone.
+ *
+ * The sentence is matched only to pick a code; it is never shown (it is
+ * written for the model and names tools and ids).
+ */
+export function textRefusalCode(
+  result: { isError?: unknown; content?: unknown; [k: string]: unknown } | null | undefined,
+): string | null {
+  if (!result || result.isError !== true) return null;
+  const parts = Array.isArray(result.content) ? result.content : [];
+  const text = parts
+    .map((p) => (p && typeof p === "object" && typeof (p as { text?: unknown }).text === "string" ? (p as { text: string }).text : ""))
+    .join(" ")
+    .trim();
+  if (!text) return null;
+  const sc = result.structuredContent as Record<string, unknown> | undefined;
+  const delivery = result.delivery_status ?? sc?.delivery_status;
+  if (delivery === "unknown" || /may or may not have been delivered/i.test(text)) return null;
+  if (/\bnot found\b|no longer exists/i.test(text)) return "draft_not_found";
+  if (/quota/i.test(text)) return "quota_exceeded";
+  if (/reconnect|token has been revoked|oauth/i.test(text)) return "auth_failed";
+  if (/approval request/i.test(text)) return "approval_unavailable";
+  if (/no recipients/i.test(text)) return "draft_has_no_recipients";
+  if (delivery === "not_sent" || /nothing was sent/i.test(text)) return "not_sent";
+  // Anything else is not recognised as one of the server's own refusals. A
+  // host can also report a failed call as a bare error sentence, and then the
+  // server may well have acted: a lost answer, re-read and reconciled.
+  return null;
+}
+
 /** A failure the card could not get an answer for: the server may have acted. */
 export function isLostAnswer(code: string): boolean {
   return code === "transport" || code === "unreadable";
@@ -72,6 +118,20 @@ export function changesDraft(action: DraftAction): boolean {
 }
 
 const KEEP = "Your text is still here.";
+
+/** How a refusal that changed nothing opens, for the action that was refused. */
+function lead(f: DraftFailure): string {
+  switch (f.action) {
+    case "send":
+      return "Not sent.";
+    case "save":
+      return "Not saved.";
+    case "discard":
+      return "Not discarded.";
+    default:
+      return "That did not go through.";
+  }
+}
 
 export function failureNotice(f: DraftFailure): FailureNotice {
   const base = { tone: "danger" as const, recheck: false, retry: false, copy: false };
@@ -131,13 +191,37 @@ export function failureNotice(f: DraftFailure): FailureNotice {
           ? `Not sent. This draft was changed somewhere else after you opened it, so it was not sent. ${KEEP} Load the newer version and check it before sending.`
           : `Not saved. This draft was changed somewhere else after you opened it, so saving here would replace that version. ${KEEP} Load the newer version to see what changed; your edits stay on top.`,
       };
-    case "send_stopped":
-      // The save half of "Save and send" landed on a draft that had moved on
-      // (the server followed an older id). The send was not attempted.
+    // Refusals that arrive as a bare error sentence (`textRefusalCode`). The
+    // server did not act, so these say so and leave Send where it was.
+    case "quota_exceeded":
       return {
         ...base,
         tone: "warning",
-        text: "Your changes were saved, but this draft had been changed somewhere else, so it was not sent. Check it, then send.",
+        text: `${lead(f)} Your email account has reached its sending limit for now. ${KEEP} Try again later.`,
+      };
+    case "auth_failed":
+      return {
+        ...base,
+        copy: true,
+        text: `${lead(f)} This mailbox needs to be reconnected in MCP Emails first. ${KEEP}`,
+      };
+    case "approval_unavailable":
+      return {
+        ...base,
+        tone: "warning",
+        text: `${lead(f)} This mailbox asks for approval before sending, and the approval could not be set up just now. ${KEEP} Try again in a moment.`,
+      };
+    case "draft_has_no_recipients":
+      return {
+        ...base,
+        tone: "warning",
+        text: `${lead(f)} This draft has no recipients. Add someone to send it to.`,
+      };
+    case "not_sent":
+      return {
+        ...base,
+        tone: "warning",
+        text: `${lead(f)} The mail server refused it before anything went out, so trying again is safe. ${KEEP}`,
       };
     case "draft_already_sent":
       return {

@@ -1,5 +1,5 @@
 import type { VNode } from "preact";
-import { useEffect, useRef, useState } from "preact/hooks";
+import { useEffect, useMemo, useRef, useState } from "preact/hooks";
 import type { HostBridge } from "../bridge";
 import {
   isSupportedVersion,
@@ -11,13 +11,14 @@ import { diagnosticsEnabled } from "../diagnostics";
 import {
   changesDraft,
   patchLanded,
+  textRefusalCode,
   type DraftAction,
   type DraftFailure,
   type PatchFields,
   type Settled,
 } from "../draft-failure";
 import { bulkVerb, draftSavedContextLine } from "../format";
-import { isRestoreStub, lastDashboardUrl } from "../persist";
+import { cardKey, isRestoreStub, lastDashboardUrl } from "../persist";
 import {
   acceptRehydration,
   adoptOwnAnswer,
@@ -170,6 +171,12 @@ export function App(props: { bridge: HostBridge }) {
   useEffect(() => () => unsubscribe.current?.(), []);
 
   const store = getState();
+  // The draft editor's stash scope (unsaved.ts): the identity of the call this
+  // card was mounted for. Recomputed only when the call's identity changes.
+  const draftScope = useMemo(
+    () => cardKey(store.toolInfo, store.toolInput),
+    [store.toolInfo, store.toolInput],
+  );
   const envelope = store.envelope;
   const setEnvelope = (next: Envelope) => setState({ envelope: next });
   const ctx = bridge.hostContext;
@@ -280,9 +287,20 @@ export function App(props: { bridge: HostBridge }) {
     try {
       const result = await bridge.callServerTool(tool, args);
       const next = envelopeFrom(result);
-      // An answer that is not an envelope (a bare `isError` text, say) is as
-      // uninformative as no answer: the server may still have acted.
-      if (!next) return lose("unreadable");
+      if (!next) {
+        // A bare `isError` sentence IS an answer: the server refused and did
+        // not act (draft not found, sending quota, a mailbox to reconnect, the
+        // approval queue). Said in a person's words, and Send is left as it
+        // was; only a draft that cannot be found stops the editor offering to
+        // write until a re-read. A send whose delivery the server itself calls
+        // unknown, and an answer that is not even that, stay a lost answer:
+        // the server may have acted (review 2 of 2026-10-13).
+        const refused = tool === "draft" ? textRefusalCode(result) : null;
+        if (refused === null) return lose("unreadable");
+        setFailure({ action, code: refused });
+        if (refused === "draft_not_found") setState({ draftCheck: "unverified" });
+        return { env: null, lost: null };
+      }
       const applied = adoptOwnAnswer(next);
       if (isFailure(applied)) {
         const code = String(applied.receipt?.error_code ?? "");
@@ -902,6 +920,7 @@ export function App(props: { bridge: HostBridge }) {
           failure={failure}
           check={store.draftCheck}
           idHint={store.draftIdHint}
+          scope={draftScope}
           sendDoubt={sendDoubt}
           actions={{
             save,
@@ -924,15 +943,9 @@ export function App(props: { bridge: HostBridge }) {
                 }
                 if (!draftStored(saved.env)) return;
                 void bridge.updateModelContext(draftSavedContextLine(saved.env!.draft!));
-                // The save landed on a different id than the one it was sent
-                // with: the server followed the draft's lineage to a version
-                // this card had not shown. The current server refuses that
-                // (`draft_changed`); this is the card's own stop, so a send
-                // never follows a save the person did not see the result of.
-                if (saved.env?.draft?.resolved_from) {
-                  setFailure({ action: "send", code: "send_stopped" });
-                  return;
-                }
+                // No "the save followed an older id" stop here any more: the
+                // server refuses such a save as `draft_changed` (contract §8),
+                // so a stored save never carries `resolved_from`.
               }
               const sent = await callDraft("send", "draft", { action: "send", ...writeTarget() });
               if (sent.lost) {

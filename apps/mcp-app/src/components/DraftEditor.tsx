@@ -14,7 +14,14 @@ import {
 } from "../format";
 import { failureNotice, type DraftFailure } from "../draft-failure";
 import { setTeardownSaver, type DraftCheck } from "../store";
-import { clearUnsaved, loadUnsaved, saveUnsaved, type Unsaved } from "../unsaved";
+import {
+  clearUnsaved,
+  fingerprint,
+  loadUnsaved,
+  saveUnsaved,
+  type Unsaved,
+  type UnsavedField,
+} from "../unsaved";
 import {
   AutoTextarea,
   Btn,
@@ -69,6 +76,12 @@ interface Props {
   check?: DraftCheck;
   /** A newer id this card held for the same draft. See store.ts#draftIdHint. */
   idHint?: string | null;
+  /**
+   * The identity of the tool call this card was mounted for
+   * (`persist.ts#cardKey`). Unsaved edits are stashed under it, so a reload of
+   * this card gets them back and another card on the same draft does not.
+   */
+  scope?: string | null;
   /**
    * A send from this card lost its answer, so it may have gone out. Send stays
    * off, whatever a re-read finds, until the person turns it back on.
@@ -514,6 +527,25 @@ export function editorPatch(
 type ContentKey = "to" | "cc" | "bcc" | "subject" | "bodyText";
 const CONTENT_KEYS: ContentKey[] = ["to", "cc", "bcc", "subject", "bodyText"];
 
+/** The unsaved.ts name of a field. */
+const STASH_FIELD: Record<ContentKey, UnsavedField> = {
+  to: "to",
+  cc: "cc",
+  bcc: "bcc",
+  subject: "subject",
+  bodyText: "body_text",
+};
+
+/** Fingerprints of a server copy's fields, keyed the way `rebaseEdit` compares them. */
+export type BasePrints = Partial<Record<ContentKey, string>>;
+
+/** One field of a copy, fingerprinted under the same equality `differs` uses. */
+export function fieldPrint(k: ContentKey, state: EditState): string {
+  if (k === "subject") return fingerprint(state.subject);
+  if (k === "bodyText") return fingerprint(normalizeEol(state.bodyText));
+  return fingerprint(JSON.stringify(state[k]));
+}
+
 function differs(k: ContentKey, a: EditState, b: EditState): boolean {
   if (k === "subject") return a.subject !== b.subject;
   // The same rule `draftPatch` uses, so "held" and "dirty" cannot disagree.
@@ -562,6 +594,7 @@ export function rebaseEdit(
   base: EditState,
   server: EditState,
   keep: readonly ContentKey[] = [],
+  keepBases: BasePrints = {},
 ): Rebased {
   const next: EditState = { ...server, typed: cur.typed };
   const held: ContentKey[] = [];
@@ -571,17 +604,38 @@ export function rebaseEdit(
     if (!(forced || differs(k, cur, base)) || !differs(k, cur, server)) continue;
     (next as unknown as Record<string, unknown>)[k] = cur[k];
     held.push(k);
-    if (!forced && differs(k, base, server)) conflicts.push(k);
+    // A restored field is not compared with `base` (this mount never saw the
+    // copy it was made against) but with that copy's fingerprint, kept with
+    // the edit: the server has changed the field since the person typed over
+    // it exactly when the two differ (review 2 of 2026-10-13).
+    if (forced) {
+      const was = keepBases[k];
+      if (was !== undefined && was !== fieldPrint(k, server)) conflicts.push(k);
+    } else if (differs(k, base, server)) {
+      conflicts.push(k);
+    }
   }
   return { next, held, conflicts };
 }
 
-/** Lay stored unsaved edits over a server copy. Returns which fields took. */
+/**
+ * Lay stored unsaved edits over a server copy. Returns which fields took, the
+ * fingerprints of the copy each was made against, and which of them the
+ * server has changed since (`conflicts`), so a restore over a draft that moved
+ * says so the way a live edit does.
+ */
 export function restoreUnsaved(
   server: EditState,
   stored: Unsaved | null,
-): { edit: EditState; keys: ContentKey[]; any: boolean } {
-  if (!stored) return { edit: server, keys: [], any: false };
+): {
+  edit: EditState;
+  keys: ContentKey[];
+  any: boolean;
+  bases: BasePrints;
+  conflicts: ContentKey[];
+} {
+  const none = { edit: server, keys: [], any: false, bases: {}, conflicts: [] };
+  if (!stored) return none;
   const edit: EditState = {
     ...server,
     to: stored.to ?? server.to,
@@ -597,7 +651,14 @@ export function restoreUnsaved(
   };
   const keys = CONTENT_KEYS.filter((k) => differs(k, edit, server));
   const any = keys.length > 0 || FIELDS.some((f) => edit.typed[f].trim().length > 0);
-  return any ? { edit, keys, any } : { edit: server, keys: [], any: false };
+  if (!any) return none;
+  const bases: BasePrints = {};
+  for (const k of keys) {
+    const was = stored.bases?.[STASH_FIELD[k]];
+    if (was !== undefined) bases[k] = was;
+  }
+  const conflicts = keys.filter((k) => bases[k] !== undefined && bases[k] !== fieldPrint(k, server));
+  return { edit, keys, any, bases, conflicts };
 }
 
 export function DraftEditor(props: Props) {
@@ -605,6 +666,9 @@ export function DraftEditor(props: Props) {
   const canEdit = env.actor?.can_edit !== false;
   const inboxId = d.identity?.inbox_id ?? null;
   const check: DraftCheck = props.check ?? "trusted";
+  /** The stash scope (unsaved.ts). Once known it stays: it names this card. */
+  const scope = useRef<string | null>(props.scope ?? null);
+  if (scope.current === null && props.scope) scope.current = props.scope;
 
   // Every id this editor has held for the draft, oldest first. It is the key
   // unsaved edits are stored under (unsaved.ts), and the first entry is the id
@@ -630,7 +694,7 @@ export function DraftEditor(props: Props) {
   if (boot.current === null) {
     boot.current = restoreUnsaved(
       server,
-      canEdit ? loadUnsaved(inboxId, lineage.current) : null,
+      canEdit ? loadUnsaved(inboxId, lineage.current, scope.current) : null,
     );
   }
   const [edit, setEdit] = useState<EditState>(boot.current.edit);
@@ -639,8 +703,14 @@ export function DraftEditor(props: Props) {
   const [restored, setRestored] = useState(boot.current.any);
   /** Restored fields still held. Forced through `rebaseEdit` as the user's. */
   const restoredKeys = useRef<ContentKey[]>(boot.current.keys);
-  /** The server changed a field the user is also editing. See `rebaseEdit`. */
-  const [conflict, setConflict] = useState(false);
+  /** What each restored field was made against. See `rebaseEdit`. */
+  const restoredBases = useRef<BasePrints>(boot.current.bases);
+  /**
+   * The server changed a field the user is also editing. See `rebaseEdit`.
+   * Starts true when restored edits were made against a copy the server has
+   * since changed.
+   */
+  const [conflict, setConflict] = useState(boot.current.conflicts.length > 0);
   // The ref, not the state, is the source of truth for the action handlers.
   // Clicking Save first blurs the address input, and that blur commits a typed
   // address; reading `edit` in the click handler would read whatever was
@@ -763,7 +833,7 @@ export function DraftEditor(props: Props) {
    */
   const sent = useRef<{ version: string; edit: EditState } | null>(null);
   /** `conflict`, readable from the teardown saver's closure. */
-  const conflictNow = useRef(false);
+  const conflictNow = useRef(boot.current.conflicts.length > 0);
   /** `check`, readable from the teardown saver's closure. */
   const checkNow = useRef(check);
   checkNow.current = check;
@@ -776,7 +846,7 @@ export function DraftEditor(props: Props) {
     const base = snap && snap.version === editVersion.current
       ? snap.edit
       : baseState.current;
-    const r = rebaseEdit(editRef.current, base, server, restoredKeys.current);
+    const r = rebaseEdit(editRef.current, base, server, restoredKeys.current, restoredBases.current);
     editVersion.current = version;
     baseState.current = server;
     editRef.current = r.next;
@@ -871,7 +941,7 @@ export function DraftEditor(props: Props) {
       if (Object.keys(p).length === 0) return Promise.resolve(false);
       return Promise.resolve(actions.save(p)).then((ok) => {
         // Written, so there is nothing left at risk for a reload to restore.
-        if (ok) clearUnsaved(inboxId, lineage.current);
+        if (ok) clearUnsaved(inboxId, lineage.current, scope.current);
         return ok;
       });
     });
@@ -896,9 +966,19 @@ export function DraftEditor(props: Props) {
     const cur = editRef.current;
     const p = draftPatch(cur, now.server);
     if (Object.keys(p).length > 0 || FIELDS.some((f) => cur.typed[f].trim())) {
-      saveUnsaved(inboxId, lineage.current, { ...p, typed: cur.typed });
+      // What each edited field was made against: the copy restored edits were
+      // laid over keeps its own (the person's edit predates this mount), every
+      // other field is relative to the server copy on screen.
+      const bases: Partial<Record<UnsavedField, string>> = {};
+      for (const k of CONTENT_KEYS) {
+        if (!(STASH_FIELD[k] in p)) continue;
+        bases[STASH_FIELD[k]] = restoredKeys.current.includes(k) && restoredBases.current[k] !== undefined
+          ? restoredBases.current[k]!
+          : fieldPrint(k, now.server);
+      }
+      saveUnsaved(inboxId, lineage.current, { ...p, typed: cur.typed, bases }, scope.current);
     } else {
-      clearUnsaved(inboxId, lineage.current);
+      clearUnsaved(inboxId, lineage.current, scope.current);
     }
   };
   const stashKey = JSON.stringify([patch, edit.typed, d.draft_id]);
@@ -913,7 +993,7 @@ export function DraftEditor(props: Props) {
     return () => {
       window.removeEventListener("pagehide", flushOut);
       document.removeEventListener("visibilitychange", flushOut);
-      clearUnsaved(inboxId, lineage.current);
+      clearUnsaved(inboxId, lineage.current, scope.current);
     };
   }, []);
 
@@ -1459,15 +1539,16 @@ export function DraftEditor(props: Props) {
         </p>
       )}
 
-      {restored && (
+      {restored && !conflict && (
         <Notice tone="warning">
           Your unsaved edits from earlier were put back. They are not saved yet.{" "}
           <TextLink onClick={useStored}>Discard these edits</TextLink>
         </Notice>
       )}
 
-      {conflict && !restored && (
+      {conflict && (
         <Notice tone="warning">
+          {restored ? "Your unsaved edits from earlier were put back. " : ""}
           This draft was changed somewhere else. Your unsaved edits are still
           here, and saving will replace the newer version.{" "}
           <TextLink onClick={useStored}>Use the newer version</TextLink>
