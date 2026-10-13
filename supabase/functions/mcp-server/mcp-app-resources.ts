@@ -407,6 +407,34 @@ export const BULK_PLAN_CARD_TOOL_NAMES: readonly string[] = [
 ];
 
 /**
+ * The same three gates on the per-operation surface (the listing OpenAI
+ * clients get, PER_OPERATION_LISTING in index.ts), keyed by the operation
+ * rather than by the consolidated tool it belongs to.
+ *
+ * `_meta.ui` is per tool, so one tool per operation lets the card be claimed
+ * only by the operations that can actually return something it renders: the
+ * three sends and a scheduled send (held for approval), the four bulk
+ * operations that plan before they act, and the five draft writes. The
+ * single-message `email_delete` and `email_move`, `schedule_cancel` and every
+ * read carry nothing, where their consolidated parents have to.
+ */
+export const PER_OPERATION_CARD_TOOL_NAMES: Readonly<
+  Record<keyof ReviewCardGates, readonly string[]>
+> = {
+  outbound: ["email_send", "email_reply", "email_forward", "schedule_create"],
+  bulk: [
+    "email_move_batch",
+    "email_delete_batch",
+    "email_search_and_move",
+    "email_search_and_delete",
+  ],
+  drafts: ["draft_create", "draft_reply", "draft_update", "draft_send", "draft_delete"],
+};
+
+/** Which listing a tool is being serialised for. See PER_OPERATION_LISTING. */
+export type ToolSurface = "consolidated" | "per_operation";
+
+/**
  * True when a call to this tool name can mount the review card, under any of
  * the three gates.
  *
@@ -448,7 +476,8 @@ export function isCardBearingToolName(name: string): boolean {
     REVIEW_CARD_TOOL_NAMES.includes(name) ||
     BULK_PLAN_CARD_TOOL_NAMES.includes(name) ||
     DRAFT_EDITOR_CARD_TOOL_NAMES.includes(name) ||
-    DRAFT_EDITOR_APP_TOOL_NAMES.includes(name)
+    DRAFT_EDITOR_APP_TOOL_NAMES.includes(name) ||
+    Object.values(PER_OPERATION_CARD_TOOL_NAMES).some((names) => names.includes(name))
   );
 }
 
@@ -585,7 +614,26 @@ export interface ReviewCardGates {
 export function reviewCardMetaForListing(
   toolName: string,
   gates: ReviewCardGates,
+  surface: ToolSurface = "consolidated",
 ): { ui: { resourceUri: string; visibility?: string[] } } | undefined {
+  if (surface === "per_operation") {
+    // Checked INSTEAD of the consolidated lists, not as well as them:
+    // `email_delete` is on the bulk list above as the consolidated tool, and
+    // on this surface the same name is the single-message delete, which never
+    // plans.
+    for (const gate of ["outbound", "bulk", "drafts"] as const) {
+      if (PER_OPERATION_CARD_TOOL_NAMES[gate].includes(toolName)) {
+        return gates[gate] ? reviewCardToolMeta() : undefined;
+      }
+    }
+    // The draft editor's own three are the same tools on both surfaces, so
+    // they get the same metadata from the same function: `draft_read` and
+    // `draft_editor_hide` model-and-app, `draft_editor_save` app-only. (When
+    // this branch was written all three were app-only, and it said so inline;
+    // a second copy of that rule here is what would have left the model unable
+    // to read a draft back on this surface alone.)
+    return draftEditorOwnToolMeta(toolName, gates);
+  }
   if (REVIEW_CARD_TOOL_NAMES.includes(toolName)) {
     return gates.outbound ? reviewCardToolMeta() : undefined;
   }
@@ -600,13 +648,27 @@ export function reviewCardMetaForListing(
   // "this listing carries no `_meta` at all" — see DRAFT_EDITOR_APP_TOOL_NAMES.
   // `draft_read` and `draft_editor_hide` are listed to the model as well as
   // the card; `draft_editor_save` is app-only.
-  if (DRAFT_EDITOR_APP_TOOL_NAMES.includes(toolName)) {
-    if (!gates.drafts) return undefined;
-    return DRAFT_EDITOR_MODEL_VISIBLE_TOOL_NAMES.includes(toolName)
-      ? modelAndAppReviewCardToolMeta()
-      : appOnlyReviewCardToolMeta();
-  }
-  return undefined;
+  return draftEditorOwnToolMeta(toolName, gates);
+}
+
+/**
+ * The listing `_meta` of the draft editor's own three tools, or `undefined`
+ * for any other name and whenever the drafts gate is shut.
+ *
+ * One function for both surfaces (consolidated and per-operation): these three
+ * are not operations of anything and are listed under the same names with the
+ * same definitions on each, so which of them the model may call cannot differ
+ * by surface.
+ */
+function draftEditorOwnToolMeta(
+  toolName: string,
+  gates: ReviewCardGates,
+): { ui: { resourceUri: string; visibility: string[] } } | undefined {
+  if (!DRAFT_EDITOR_APP_TOOL_NAMES.includes(toolName)) return undefined;
+  if (!gates.drafts) return undefined;
+  return DRAFT_EDITOR_MODEL_VISIBLE_TOOL_NAMES.includes(toolName)
+    ? modelAndAppReviewCardToolMeta()
+    : appOnlyReviewCardToolMeta();
 }
 
 /**
@@ -652,9 +714,10 @@ export function reviewCardMetaForListing(
 export function withListingCardMeta(
   tools: readonly ListedTool[],
   gates: ReviewCardGates,
+  surface: ToolSurface = "consolidated",
 ): ListedTool[] {
   return tools.map((tool) => {
-    const meta = reviewCardMetaForListing(tool.name, gates);
+    const meta = reviewCardMetaForListing(tool.name, gates, surface);
     return meta ? { ...tool, _meta: meta } : tool;
   });
 }

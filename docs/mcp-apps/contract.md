@@ -1060,6 +1060,26 @@ existed, could not read a draft back, and could not update one without overwriti
   (`scope:"…"`, `hidden:false`) now say what a person does, which is ask in the chat. The UI
   resource description names the draft editor.
 
+**On the per-operation surface (OpenAI clients, PR #88, merged the same day).** That listing has
+no `draft` tool: the five draft writes are `draft_create`, `draft_reply`, `draft_update`,
+`draft_send` and `draft_delete`, each carrying `_meta.ui` on the same `drafts` gate
+(`PER_OPERATION_CARD_TOOL_NAMES.drafts`). They are the same handlers, so everything in this
+section holds there unchanged: the deferred body and `review-card-v2`, the second `content` block,
+the `read:email` rule on a body-less update, and `body` being optional on `draft_update`
+(`required: ["draft_id"]`). The editor's own three tools are listed from the same definitions with
+the same visibility on both surfaces (`draftEditorOwnToolMeta`): `draft_read` and
+`draft_editor_hide` `["model", "app"]`, `draft_editor_save` `["app"]`. What differs is prose only.
+The `draft_create`, `draft_update` and `draft_list` descriptions there carry the audit's sentences
+under that surface's names (`email_send` sends now, not `email_compose`; `draft_update`, not "the
+draft tool's 'update'"), through the legacy definitions and `per-operation-wording.ts`, and the
+per-operation instructions say `draft_read` reads one draft in full.
+
+One annotation moved because the two changes met: `draft_editor_hide` is `destructiveHint: true`.
+#88's rule is that false is for purely additive writes and that being reversible does not justify
+it; that rule was not applied to the card-only tools, and this one stopped being card-only.
+`draft_editor_save` is still app-only and still `false` (#88's open question stands), and
+`draft_update` was already `true`, with or without a body.
+
 Not changed, deliberately: `draft_read` stays out of `BILLABLE_TOOL_NAMES`; the full-body update
 still rebuilds an IMAP or Gmail draft from fields with none of the refusals above, as it always
 has (only the partial write refuses), and still writes "(no subject)" when it keeps the subject of

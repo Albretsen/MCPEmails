@@ -1166,7 +1166,7 @@ async function gateDraftTool(
         deps.appUrl,
         "failed",
         "The draft editor is not enabled for this workspace.",
-        "Nothing was changed. Drafts can still be created, updated and sent with the draft tool.",
+        "Nothing was changed. Drafts can still be created, updated and sent with the draft tools.",
         "draft_editor_disabled",
         "draft_editor_disabled",
         "wrong_workspace",
@@ -1203,10 +1203,10 @@ async function gateDraftTool(
         workspace.hidden
           ? "It is off for this whole workspace, so nothing was changed. It can be turned back " +
             "on by asking in this chat to show the draft editor card for the whole workspace. " +
-            "Drafts are unaffected and still work through the draft tool."
+            "Drafts are unaffected and still work through the draft tools."
           : "It is off for this inbox, so nothing was changed. It can be turned back on by " +
             "asking in this chat to show the draft editor card for this inbox. " +
-            "Drafts are unaffected and still work through the draft tool.",
+            "Drafts are unaffected and still work through the draft tools.",
         "draft_editor_hidden",
         "draft_editor_hidden",
         "wrong_workspace",
@@ -2220,8 +2220,22 @@ export const DRAFT_EDITOR_TOOL_DEFINITIONS: DraftEditorToolDefinition[] = [
       // 2026-09-16 the RESPONSE matches too — the tool no longer refuses a
       // repeat while the card is already hidden — so a caller retrying a
       // timed-out call gets the same receipt rather than an error.
+      //
+      // DESTRUCTIVE: TRUE since 2026-10-13, and the paragraph above is why it
+      // was false, not why it should stay so. Two things changed on one day.
+      // OpenAI's scan flagged `signature_set` and the guideline it cites leaves
+      // false for ADDITIVE writes only: an overwrite counts, and "Being able to
+      // undo an action does not, by itself, justify setting destructiveHint to
+      // false" (see TOOL_ANNOTATIONS in index.ts, where `email_flag` and
+      // `signature_set` moved for the same reason). Reversibility is exactly
+      // what this annotation rested on. And this tool became the model's to
+      // call (`visibility: ["model", "app"]`), so it is no longer one of the
+      // card-only tools that rule was not applied to. It overwrites a stored
+      // setting, which is `signature_set`'s shape. `draft_editor_save` is
+      // still app-only and was deliberately left false; see the open question
+      // on it in docs/openai-tool-annotation-justifications.md.
       readOnlyHint: false,
-      destructiveHint: false,
+      destructiveHint: true,
       idempotentHint: true,
       openWorldHint: false,
     },
