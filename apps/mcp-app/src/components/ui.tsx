@@ -1,5 +1,5 @@
 import type { ComponentChildren, Ref } from "preact";
-import { useLayoutEffect, useRef } from "preact/hooks";
+import { useEffect, useLayoutEffect, useRef, useState } from "preact/hooks";
 import type { Provider } from "../contract";
 import { sanitizeEmailHtml } from "../sanitize";
 
@@ -64,6 +64,9 @@ export function TextLink(props: {
   /** See `Btn`: unavailable without giving up focus. */
   soft?: boolean;
   btnRef?: Ref<HTMLButtonElement>;
+  /** A disclosure toggle: whether what it controls is open, and its id. */
+  expanded?: boolean;
+  controls?: string;
 }) {
   const off = !!props.disabled;
   return (
@@ -73,6 +76,8 @@ export function TextLink(props: {
       ref={props.btnRef}
       data-tone={props.tone}
       title={props.title}
+      aria-expanded={props.expanded === undefined ? undefined : props.expanded ? "true" : "false"}
+      aria-controls={props.controls}
       disabled={props.soft ? undefined : off}
       aria-disabled={props.soft && off ? "true" : undefined}
       onClick={() => {
@@ -82,6 +87,57 @@ export function TextLink(props: {
       {props.children}
     </button>
   );
+}
+
+/** How long a one-word answer ("Copied", "Up to date") stays on a link. */
+export const FLASH_MS = 2000;
+
+export type CopyState = null | "done" | "selected";
+
+/**
+ * Put text on the clipboard, or at least select it.
+ *
+ * A sandboxed frame is often denied the async clipboard, so `select` puts the
+ * same text under a selection and `execCommand("copy")` gets one more try;
+ * when that fails too the person is one keystroke from the same result, and
+ * the link says so. "Copied" is a receipt, not a state: it goes back after
+ * `FLASH_MS` so a second copy can be seen to work. "Selected" stays, because
+ * it is an instruction.
+ */
+export function useCopy(): { copied: CopyState; copy: (text: string, select: () => void) => void } {
+  const [copied, setCopied] = useState<CopyState>(null);
+  useEffect(() => {
+    if (copied !== "done") return;
+    const timer = setTimeout(() => setCopied(null), FLASH_MS);
+    return () => clearTimeout(timer);
+  }, [copied]);
+  const copy = (text: string, select: () => void) => {
+    const fallback = () => {
+      select();
+      let ok = false;
+      try {
+        ok = document.execCommand("copy");
+      } catch {
+        /* selected is still better than nothing */
+      }
+      setCopied(ok ? "done" : "selected");
+    };
+    try {
+      navigator.clipboard.writeText(text).then(() => setCopied("done"), fallback);
+    } catch {
+      fallback();
+    }
+  };
+  return { copied, copy };
+}
+
+/** The copy link's words for each state. */
+export function copyLabel(copied: CopyState): string {
+  return copied === "done"
+    ? "Copied"
+    : copied === "selected"
+      ? "Selected. Press Ctrl+C or Cmd+C to copy"
+      : "Copy text";
 }
 
 export function Segmented(props: {

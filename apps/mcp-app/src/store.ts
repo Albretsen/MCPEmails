@@ -482,6 +482,11 @@ function carrySentDraft(current: Envelope | null | undefined, next: Envelope): E
  * neutral headline. The message lives in this tab's memory until the frame goes
  * away, which is exactly as long as the user is looking at it.
  *
+ * (Since 2026-10-14 a send made from the card's own Send button also leaves a
+ * plain-text copy in sessionStorage, for the "Show" link a reopened card
+ * offers. That is App.tsx and ended.ts, not this carry, and it never touches
+ * the localStorage stub.)
+ *
  * "Always" is scoped to what reaches here. The card's own calls (App.tsx
  * #callDraft) reach this function directly, so a send the user pressed always
  * flips the card to its receipt. A PUSHED receipt is filtered first by
