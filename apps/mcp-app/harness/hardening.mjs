@@ -1585,6 +1585,12 @@ async function main() {
       // A deleted draft is not a record of anything: the user asked for it to
       // go away, and pinning a read-only copy of it under "Draft discarded"
       // would be the card arguing with them. One line, as before.
+      //
+      // Since 2026-10-14 that line has a "Show" link for a discard made in the
+      // card itself, so the text can be read or copied again. The copy behind
+      // it is NOT this envelope's `draft`: App.tsx keeps it apart (ended.ts),
+      // folded by default, and only from the card's own Discard. A pushed
+      // discard receipt, as here, still carries nothing.
       t.host.deliver(toolResult(F.draftEditorImap, "Draft Drafts:2."));
       await settle();
       t.host.deliver(

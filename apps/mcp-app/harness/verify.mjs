@@ -84,6 +84,11 @@ const SUITES = [
   // box, "Copied" and "Up to date" that revert, and the fullscreen action row
   // as a row of its own rather than an overlay.
   ["draft UX", "draft-ux.test.mjs"],
+  // The seventh DOM suite: "Show" on the line a sent or discarded draft card
+  // ends on. What it reveals in each ending, after the chat is reopened with
+  // and without a stored copy, that it is never the assistant's original text
+  // when the person's edits went out, and where that copy is (and is not) kept.
+  ["draft ended", "draft-ended.test.mjs"],
 ];
 
 const outcomes = [];

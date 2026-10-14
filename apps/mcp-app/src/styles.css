@@ -259,6 +259,10 @@ body {
 
 .hdr-r > .muted { font-size: var(--fs-sm); color: var(--fg-3); }
 
+/* Two text links side by side in a header ("Open in dashboard" and "Show",
+   "Expand" and "Hide") read as one phrase at the header's 6px gap. */
+.hdr-r > .link + .link { margin-left: 4px; }
+
 .dot {
   display: inline-block;
   width: 6px;

@@ -1047,3 +1047,34 @@ the sentence now says only where it went (`Delivered via IMAP + SMTP.`) and the 
 the time from `sent_at`, which the §8 merge already publishes at the top level of the same
 payload. Its headline is the bare word `Sent` for the same reason: in the card it sits beside
 the sender address, where a full stop read as a stray mark.
+
+### As built (card) — "Show" on the line a draft ends on (2026-10-14)
+
+Card side only. No new field, no new tool, no server storage.
+
+A draft card that ends is one line: "Sent", "Draft discarded.", "This draft was already sent.". The
+line now has a **Show** link on the right (a disclosure button with `aria-expanded`), which opens the
+message read-only in place (`components/SentMessage.tsx`, the same view a send has always opened) and
+**Hide** folds it back. Focus stays on the toggle; Hide in fullscreen also asks for inline.
+
+* **Open on arrival only after the person's own Send** in this card, as before. A discard, and every
+  reopened card, starts folded.
+* **Only a copy the card can stand behind** (`ended.ts#EndedCopy`): the draft it held when its own Send
+  was answered (Send writes unsaved changes first, so that is what went out), or the draft as it was on
+  screen when the person pressed Discard, unsaved changes included and named ("It includes changes that
+  were never saved: the subject."). Discard that finds the draft already gone keeps the same copy and
+  says it is the card's ("What was sent may differ."). Never the tool result the card was mounted with:
+  on a reopened chat that is the assistant's original text.
+* **No copy, no Show.** A send or delete the assistant made (its own card), a draft found sent or deleted
+  elsewhere on reopen, and a reopen in another tab or on another device stay one line with no link.
+* **Kept in `sessionStorage`, not `localStorage`** (`mcpemails.ended.v1`), for the reason `persist.ts`
+  keeps no content and under the rules `unsaved.ts` set: plain text only (no HTML part), scoped to the
+  card (`persist.ts#cardKey`) and its inbox, 24 h TTL, at most 10 entries of 200,000 characters. Leaving
+  a chat and coming back in the same tab, or reloading, keeps it; a new tab does not. The localStorage
+  stub is unchanged, and `storage-audit.mjs` section 4 pins both halves.
+* **Discarded copies offer Copy text** (the shared `ui.tsx#useCopy`, the editor's "Copied" that reverts).
+* **A reopened card holds its receipt until the check settles.** It used to drop to the editor for one
+  render when the check answered "not found" (`unverified`), drawing the assistant's original text for
+  a frame; the receipt is now held for as long as `priorReceipt` is.
+
+Pinned by `apps/mcp-app/harness/draft-ended.test.mjs`.

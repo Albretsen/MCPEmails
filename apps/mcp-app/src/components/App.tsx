@@ -9,6 +9,13 @@ import {
 } from "../contract";
 import { diagnosticsEnabled } from "../diagnostics";
 import {
+  endedFrom,
+  loadEnded,
+  rememberEnded,
+  type EndedCopy,
+  type OnScreen,
+} from "../ended";
+import {
   changesDraft,
   patchLanded,
   textRefusalCode,
@@ -190,6 +197,46 @@ export function App(props: { bridge: HostBridge }) {
   );
   const envelope = store.envelope;
   const setEnvelope = (next: Envelope) => setState({ envelope: next });
+
+  // ---- the message a draft card ended on -----------------------------------
+  //
+  // What "Show" on the ended line opens (SentMessage.tsx). `kept` is the copy
+  // this mount kept at the moment it ended, `fresh` because only a send made
+  // here opens on arrival. `remembered` is the copy an earlier mount of this
+  // same card kept in this tab (ended.ts), which is all a reopened chat has.
+  // Neither is ever the tool result the card was mounted with: on a reopen
+  // that is the assistant's original text, not what was sent or discarded.
+  const [kept, setKept] = useState<{ copy: EndedCopy; fresh: boolean } | null>(null);
+  const mountedInbox =
+    typeof store.toolInput?.inbox_id === "string" ? store.toolInput.inbox_id : null;
+  const remembered = useMemo(
+    () => (envelope?.card === "receipt" || store.priorReceipt ? loadEnded(draftScope, mountedInbox) : null),
+    [draftScope, mountedInbox, envelope?.card, store.priorReceipt],
+  );
+  const keepEnded = (copy: EndedCopy, inbox: string | null | undefined) => {
+    setKept({ copy, fresh: true });
+    rememberEnded(draftScope, inbox ?? mountedInbox, copy);
+  };
+  /** The copy to offer under this receipt, if the card has one it can stand behind. */
+  const endedView = (env: Envelope): { copy: EndedCopy; startOpen: boolean } | null => {
+    const r = env.receipt;
+    if (env.card !== "receipt" || !r || isFailure(env)) return null;
+    if (kept && kept.copy.outcome === r.outcome) {
+      const sent = kept.copy.how === "sent" || kept.copy.how === "scheduled";
+      return { copy: kept.copy, startOpen: kept.fresh && sent };
+    }
+    // A receipt carrying the draft it sent (store.ts#carrySentDraft) that did
+    // not come through this card's own Send: a pushed result for this draft.
+    if (isDepartedReceipt(env) && env.draft) {
+      const how = r.outcome === "scheduled" ? "scheduled" : "sent";
+      return {
+        copy: endedFrom(env.draft, how, how, { sent_at: env.sent_at, provider: env.provider?.label }),
+        startOpen: true,
+      };
+    }
+    if (remembered && remembered.outcome === r.outcome) return { copy: remembered, startOpen: false };
+    return null;
+  };
   const ctx = bridge.hostContext;
   const fullscreen = ctx.displayMode === "fullscreen";
   const canExpand = (ctx.availableDisplayModes ?? ["inline"]).includes(
@@ -413,8 +460,9 @@ export function App(props: { bridge: HostBridge }) {
    * same place a successful discard or send leaves it. `gone` is a draft the
    * server could not find without knowing why.
    */
-  const closeDraft = (how: "sent" | "discarded" | "gone") => {
+  const closeDraft = (how: "sent" | "discarded" | "gone", copy?: EndedCopy) => {
     const env = getState().envelope;
+    if (copy) keepEnded(copy, env?.draft?.identity?.inbox_id);
     const receipt: ReceiptData = how === "sent"
       ? {
         outcome: "sent",
@@ -997,10 +1045,31 @@ export function App(props: { bridge: HostBridge }) {
 
     // A card that had ended on a receipt stays on it while the replayed draft
     // is checked (store.ts#priorReceipt), instead of flashing an editor.
+    //
+    // Not only `pending` and `checking`: a check whose answer is "not found"
+    // passes through `unverified` for one render before readDraft puts the
+    // receipt back, and that render drew the editor over the assistant's
+    // original text for a frame (and threw away an open "Show"). The receipt
+    // is held for as long as `priorReceipt` is, which readDraft always settles.
     if (
       envelope.card === "draft_editor" && store.priorReceipt?.receipt &&
-      (store.draftCheck === "pending" || store.draftCheck === "checking")
+      store.draftCheck !== "trusted"
     ) {
+      const view = endedView(store.priorReceipt);
+      if (view) {
+        return (
+          <SentMessage
+            receipt={store.priorReceipt.receipt}
+            copy={view.copy}
+            startOpen={view.startOpen}
+            fullscreen={fullscreen}
+            canExpand={canExpand}
+            busy={busy}
+            onOpenDashboard={() => openDashboard(store.priorReceipt?.receipt?.dashboard_url)}
+            setFullscreen={setFullscreen}
+          />
+        );
+      }
       return (
         <Receipt
           receipt={store.priorReceipt.receipt}
@@ -1103,8 +1172,25 @@ export function App(props: { bridge: HostBridge }) {
                 return;
               }
               announceReceipt(sent.env);
+              // What went out: the draft the send was made from, which the
+              // save above (if any) has already made the screen's.
+              const done = sent.env;
+              if (done && isDepartedReceipt(done) && done.draft) {
+                const how = done.receipt?.outcome === "scheduled" ? "scheduled" : "sent";
+                keepEnded(
+                  endedFrom(done.draft, how, how, { sent_at: done.sent_at, provider: envelope.provider?.label }),
+                  done.draft.identity?.inbox_id,
+                );
+              }
             },
-            discard: async () => {
+            discard: async (screen?: OnScreen) => {
+              // The copy the person was looking at, taken before the call: the
+              // answer replaces it. Kept only once the draft is known to be gone.
+              const held = getState().envelope?.draft ?? d;
+              const copyOf = (
+                how: "discarded" | "gone" | "sent_elsewhere",
+                outcome: "discarded" | "sent",
+              ) => endedFrom(held, how, outcome, { screen, provider: envelope.provider?.label });
               const r = await callDraft("discard", "draft", {
                 action: "delete",
                 ...target(),
@@ -1119,7 +1205,10 @@ export function App(props: { bridge: HostBridge }) {
               if (r.refused === "draft_not_found" || r.refused === "draft_already_sent") {
                 const how = closedHow(r.headline) ??
                   (r.refused === "draft_already_sent" ? "sent" : "gone");
-                closeDraft(how);
+                closeDraft(
+                  how,
+                  how === "sent" ? copyOf("sent_elsewhere", "sent") : copyOf(how, "discarded"),
+                );
                 void bridge.updateModelContext(
                   how === "sent"
                     ? "The user chose Discard in the card, but the draft had already been sent. Nothing was deleted."
@@ -1128,6 +1217,12 @@ export function App(props: { bridge: HostBridge }) {
                 return;
               }
               announceReceipt(r.env);
+              if (
+                r.env?.card === "receipt" && !isFailure(r.env) &&
+                r.env.receipt?.outcome === "discarded"
+              ) {
+                keepEnded(copyOf("discarded", "discarded"), held.identity?.inbox_id);
+              }
             },
             refresh: () => void readDraft(),
             loadCurrent: () => readDraft().then((env) => !!env),
@@ -1165,26 +1260,27 @@ export function App(props: { bridge: HostBridge }) {
     }
 
     if (envelope.card === "receipt" && envelope.receipt) {
-      // A SEND THAT COMPLETED, still holding the message it sent.
+      // A DRAFT THAT ENDED, still holding the message it had.
       //
-      // `store.ts#carrySentDraft` puts the draft on this receipt, and only for
-      // an outcome that means the message actually left. So this branch is
-      // reached exactly once per card, immediately after the user pressed Send,
-      // and never for a discard, a refusal, or a receipt restored from storage
-      // (which keeps no content at all — persist.ts#redact).
+      // `endedView` decides whether there is a copy the card can stand behind:
+      // the draft its own Send went out with (also on the receipt, through
+      // `store.ts#carrySentDraft`), the text on screen at its own Discard, or
+      // the copy an earlier mount of this card kept in this tab (ended.ts). A
+      // refusal, the assistant's own send, and a receipt restored with nothing
+      // kept get none, and fall through to `Receipt`, which is the normal case
+      // for every other receipt there is.
       //
       // The receipt is still what is true: `SentMessage` takes its headline,
-      // its detail and its dashboard link from it, and the draft is rendered
-      // underneath as a read-only record. Falling through to `Receipt` when
-      // there is no draft is not a fallback so much as the normal case for
-      // every other receipt there is.
-      if (isDepartedReceipt(envelope) && envelope.draft) {
+      // its detail and its dashboard link from it, and the copy is rendered
+      // underneath as a read-only record, folded behind "Show" except right
+      // after a send made here.
+      const view = endedView(envelope);
+      if (view) {
         return (
           <SentMessage
             receipt={envelope.receipt}
-            draft={envelope.draft}
-            provider={envelope.provider}
-            sentAt={envelope.sent_at}
+            copy={view.copy}
+            startOpen={view.startOpen}
             fullscreen={fullscreen}
             canExpand={canExpand}
             busy={busy}

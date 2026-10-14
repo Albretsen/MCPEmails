@@ -1,6 +1,8 @@
 // ---------------------------------------------------------------------------
 // Unsaved edits, kept for the life of the TAB so a page reload does not eat
-// them. The one place in the card that writes message content to web storage.
+// them. One of the two places in the card that write message content to web
+// storage; the other is ended.ts, the copy a sent or discarded card keeps for
+// its "Show" link, which makes the same trade under the same rules.
 //
 // ── Why this is not in persist.ts, and not in localStorage ──────────────────
 // persist.ts keeps a POINTER and never content, and its header says why: the

@@ -24,13 +24,17 @@ import {
   type UnsavedField,
 } from "../unsaved";
 import { RecipientField } from "./Recipients";
+import type { EndedField, OnScreen } from "../ended";
 import {
   AutoTextarea,
   Btn,
+  copyLabel,
+  FLASH_MS,
   HtmlBody,
   Notice,
   ProviderLine,
   TextLink,
+  useCopy,
 } from "./ui";
 
 /** Only the fields the user actually changed are sent (§8: omitted means keep). */
@@ -53,7 +57,11 @@ export interface DraftActions {
    * never loses a send need not provide it.
    */
   allowSend?: () => void;
-  discard: () => void;
+  /**
+   * `onScreen` is the draft as the person sees it, unsaved changes included,
+   * so the line the card ends on can show it again ("Show"). Never sent.
+   */
+  discard: (onScreen?: OnScreen) => void;
   refresh: () => void;
   /**
    * Re-read the draft and resolve true when the mailbox's current copy is now
@@ -384,7 +392,7 @@ function providerName(d: DraftEditorData): string {
 export const ADDR_NOTE_MS = 5000;
 
 /** How long "Copied" and the word after a Refresh stay before reverting. */
-export const FLASH_MS = 2000;
+export { FLASH_MS };
 
 /** Attachments, collapsed to one muted line. The card cannot edit them. */
 function attachmentLine(d: DraftEditorData, fullscreen: boolean): string | null {
@@ -875,14 +883,8 @@ export function DraftEditor(props: Props) {
   const [editingSig, setEditingSig] = useState(false);
   const [sigPin, setSigPin] = useState<SigPin | null>(null);
   const [showHtml, setShowHtml] = useState(false);
-  const [copied, setCopied] = useState<null | "done" | "selected">(null);
-  // "Copied" is a receipt, not a state: it goes back to "Copy text" so a second
-  // copy can be seen to work. "Selected" stays, because it is an instruction.
-  useEffect(() => {
-    if (copied !== "done") return;
-    const timer = setTimeout(() => setCopied(null), FLASH_MS);
-    return () => clearTimeout(timer);
-  }, [copied]);
+  // "Copied" reverts, "Selected" stays (ui.tsx#useCopy).
+  const { copied, copy } = useCopy();
   /** The signature as it was when its box opened, for Cancel. */
   const sigBefore = useRef<string | null>(null);
   const sigEditLink = useRef<HTMLButtonElement>(null);
@@ -1295,25 +1297,35 @@ export function DraftEditor(props: Props) {
   const copyText = () => {
     const cur = editRef.current;
     const text = cur.subject ? `${cur.subject}\n\n${cur.bodyText}` : cur.bodyText;
-    const select = () => {
-      // A sandboxed frame is often denied the async clipboard. Selecting the
-      // message leaves the user one keystroke from the same result.
+    copy(text, () => {
+      // Selecting the message leaves the user one keystroke from the same result.
       const ta = document.getElementById("d-body") as HTMLTextAreaElement | null;
       ta?.focus();
       ta?.select();
-      let ok = false;
-      try {
-        ok = document.execCommand("copy");
-      } catch {
-        /* selected is still better than nothing */
-      }
-      setCopied(ok ? "done" : "selected");
+    });
+  };
+
+  /**
+   * The draft as it is on screen, for the line Discard ends on. Text left in
+   * an address field counts as what the person had, and every field that
+   * differs from the stored copy is named, so the view can say it was never
+   * saved.
+   */
+  const onScreen = (): OnScreen => {
+    const cur = editRef.current;
+    const p = draftPatch(cur, live.current.server);
+    const unsaved: EndedField[] = [];
+    const list = (f: Field) => {
+      const typed = cur.typed[f].trim();
+      if (f in p || typed) unsaved.push(f);
+      return typed ? [...cur[f], typed] : [...cur[f]];
     };
-    try {
-      navigator.clipboard.writeText(text).then(() => setCopied("done"), select);
-    } catch {
-      select();
-    }
+    const to = list("to");
+    const cc = list("cc");
+    const bcc = list("bcc");
+    if ("subject" in p) unsaved.push("subject");
+    if ("body_text" in p) unsaved.push("body");
+    return { to, cc, bcc, subject: cur.subject, body_text: cur.bodyText, unsaved };
   };
 
   const commitField = (field: Field, raw: string) => {
@@ -1799,13 +1811,7 @@ export function DraftEditor(props: Props) {
           {err.copy && (
             <>
               {" "}
-              <TextLink onClick={copyText}>
-                {copied === "done"
-                  ? "Copied"
-                  : copied === "selected"
-                    ? "Selected. Press Ctrl+C or Cmd+C to copy"
-                    : "Copy text"}
-              </TextLink>
+              <TextLink onClick={copyText}>{copyLabel(copied)}</TextLink>
             </>
           )}
         </Notice>
@@ -1897,7 +1903,7 @@ export function DraftEditor(props: Props) {
             busy={busy !== null}
             onClick={() => {
               closeConfirm();
-              actions.discard();
+              actions.discard(onScreen());
             }}
           >
             Yes, discard
