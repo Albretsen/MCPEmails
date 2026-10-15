@@ -63,7 +63,7 @@ jobs:
           esac
       - uses: actions/checkout@v7
       # Pinned to match the db job in ci.yml. Bump both together.
-      - uses: supabase/setup-cli@v1
+      - uses: supabase/setup-cli@v3
         with:
           version: 2.118.0
       - name: Deploy
