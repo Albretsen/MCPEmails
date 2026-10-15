@@ -180,6 +180,19 @@ export interface CardStore {
    * every host forever: it is the counter that would say otherwise.
    */
   uncorrelatedResults: number;
+  /**
+   * `true` when the result this card was MOUNTED for is the model's own
+   * `draft_read` (a pushed draft envelope with `origin: "read"`), false for any
+   * other first result, null before one arrived.
+   *
+   * Only a push can say this: the card's own `draft_read` calls (restore,
+   * Refresh, the deferred-body fallback, the attention check) come back as
+   * answers to its requests, never as the pushed result. A model that reads a
+   * draft back used to get a second full editor under the first, so one draft
+   * piled up as three cards in a thread (QA 2026-10-15); App.tsx draws this
+   * one as a single line instead, with a way to open the editor.
+   */
+  mountedForRead: boolean | null;
 }
 
 let state: CardStore = {
@@ -199,6 +212,7 @@ let state: CardStore = {
   handshakeTick: 0,
   restored: null,
   uncorrelatedResults: 0,
+  mountedForRead: null,
 };
 
 const listeners = new Set<() => void>();
@@ -1545,6 +1559,13 @@ export function wireResultHandlers(bridge: HostBridge) {
       }
     }
 
+    // Decided by the FIRST result accepted, which is the mounting call's.
+    if (!pushAccepted) {
+      check = {
+        ...check,
+        mountedForRead: envelope.card === "draft_editor" && envelope.draft?.origin === "read",
+      };
+    }
     pushAccepted = true;
     setState({ ...timing, ...check, envelope: mergeEnvelope(current, envelope) });
   };

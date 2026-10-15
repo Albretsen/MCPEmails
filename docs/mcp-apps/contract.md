@@ -790,7 +790,8 @@ edit. So `draft_read` is listed to the model, its description leads with that us
 `content` is the plain read in **both** gate states, byte for byte the same. `structuredContent`
 still differs by state: the editor envelope with the gate open, the plain payload with it shut. It
 keeps `resourceUri`, so a model-initiated read mounts the card with the envelope; the card's own
-calls (restore, Refresh, the deferred-body fallback) are unchanged.
+calls (restore, Refresh, the deferred-body fallback) are unchanged. Since 2026-10-15 that mounted
+card is one line with "Open editor" rather than a second full editor (see "Card activity notes").
 
 With the gate open that `structuredContent` also carries `untrusted_content: true` at the top
 level, beside the envelope's own keys. It holds a subject, recipients and a body that on a reply
@@ -988,6 +989,76 @@ recipient counts, says what happened to the draft, and quotes the server's own w
 failure. `apps/mcp-app/src/model-context.ts` is the single definition of the wording, and
 `harness/model-context.test.mjs` pins it.
 
+### Card activity notes (QA 2026-10-15)
+
+**The defect.** In Claude the model never saw the card's `ui/update-model-context` lines. After a
+save in the card Claude reported the old subject and recipients; after a send from the card it
+said "No, I never sent it", and when asked to send it the server refused (`draft_already_sent`).
+Nothing went out twice, but the user was told two contradictory things.
+
+**What was checked about the request.** Method `ui/update-model-context`, params
+`{ content: ContentBlock[], structuredContent? }`, a JSON-RPC request with an id: exactly the
+2026-01-26 specification. What was not: the card sent it only when `ui/initialize` returned
+`hostCapabilities.updateModelContext`, and the published 2026-01-26 `HostCapabilities` interface
+does not list that field at all (only ext-apps' `McpUiHostCapabilities` type does), while the
+reference SDK's `App.updateModelContext` sends without checking. Nothing in this repository ever
+recorded what Claude advertises, so whether the gate was the cause is not known. Since 2026-10-15
+the card sends whether or not the capability is advertised (a host without the method answers
+-32601, which is swallowed), and the internal diagnostics line shows `mctx cap|nocap ok/failed/sent`,
+which answers the question the next time an internal card is looked at in Claude. Even a host
+that accepts it may defer it to the next user message (the spec allows that), so it cannot be the
+only channel.
+
+**The server channel.** Every card action reaches the server as a tool call, and a tool result
+is the one thing every host shows the model. So:
+
+* `draft_editor_save` that WROTE something, and `draft{action:"send"}` with `base_revision` that
+  sent (the card is the only caller that passes it; the dispatcher's re-run of an approved send is
+  excluded by its internal marker), insert a row into `public.draft_card_activity` (migration
+  `20261015220000_draft_card_activity.sql`): draft id, line, revision, action, time, the NAMES of
+  the fields a save changed and recipient COUNTS. No subject, address or body. A discard is not
+  recorded: `draft{action:"delete"}` carries nothing that tells the card's call from the model's.
+* The model's next successful `draft_list`, `draft{action:"create"|"reply"|"update"}` or
+  `draft{action:"send"}` WITHOUT `base_revision` for that inbox claims the unreported rows of the
+  last 24 hours in one `UPDATE … RETURNING` (so each is told once) and carries one server note
+  through `result-notes.ts` (a trailing `content` block and `structuredContent.notes`), e.g.:
+
+  > Since the last draft result for this inbox, the user acted in the MCP Emails draft editor card,
+  > which is not shown to you. At 2026-10-15T11:58:00Z the user saved draft Drafts:7 in the card,
+  > changing the subject and To. Its recipients are now to 2, cc 0, bcc 0. At
+  > 2026-10-15T11:59:30Z the user sent draft Drafts:8 from the card. It is no longer a draft and
+  > that draft_id no longer resolves. draft_read returns a saved draft's current subject,
+  > recipients and text.
+
+  `content[0]` is untouched (the payload JSON is not `structuredContent`'s mirror, so
+  `attachResultNote` leaves it alone); the deferred-body row's `content[1]` notice stays second.
+  Never on a call the card itself makes (`draft_read`, `draft_editor_*`, `draft_delete`, a send
+  with `base_revision`): the host does not show the model those results, so the note would be
+  claimed and never read, and `draft-failure.ts#textRefusalCode` reads every text block of a
+  card's `draft` answer.
+* Fail soft: without the table nothing is recorded or noted and every tool answers as before, so
+  the migration and the function can deploy in either order. Rows older than 7 days are deleted on
+  the next insert for the inbox.
+* `card-activity.ts` holds the rules and the wording; `card-activity.test.ts` pins them, the save
+  and read wiring through `runDraftEditorSave` / `runDraftRead`, and the `index.ts` wiring.
+
+**Tool descriptions.** `draft` (both surfaces' create) and `draft_read` now say that the user can
+save, send or discard a draft in the card without the model being told, and to call `draft_read`
+before stating a draft's current subject, recipients or whether it was sent.
+
+**The sent receipt.** `detail` is `Accepted by the mail server for delivery.`
+(`DRAFT_SENT_RECEIPT_DETAIL`): "Delivered" claimed more than is known (that QA message went to
+spam), and naming the provider repeated the label the card's footer already shows. The card
+rewords a stored `Delivered via ….` the same way (`format.ts#receiptDetail`), for replays.
+
+**A model's `draft_read` mounts one line, not a second editor.** `draft_read` keeps its
+`resourceUri` (the card's own calls to it must keep working, and whether Claude lets an app call
+a tool with no `_meta.ui` is not established). A card whose MOUNTING result is a pushed draft
+envelope with `origin: "read"` (`store.ts#mountedForRead`; the card's own reads come back as
+answers, never as the push) renders `components/DraftReadLine.tsx`: `Draft: <subject>  to <first>
++N` with **Open editor**, which draws the full editor in place. One line, never empty (§1). Pinned
+by `harness/card-render.test.mjs`.
+
 ### Teardown
 
 On `ui/resource-teardown` a dirty editor calls `draft_editor_save` before replying to the
@@ -1055,6 +1126,14 @@ is closed when the draft is sent or deleted. Ids, a revision, who wrote last and
   was sent again.`); in a gated workspace a failed receipt with the same code rides in
   `structuredContent`. `draft_read` and `draft_editor_save` keep answering a closed line with
   `draft_not_found` and a receipt that says which of sent / discarded happened.
+  **Since 2026-10-15 both say who sent it and when** (see "Card activity notes"): the refusal
+  reads `draft_send: draft <id> was already sent by the user from the MCP Emails draft editor card
+  at <ISO instant>. Nothing was sent again.` when the card's send was recorded, `… was already sent
+  at <closed_at>.` when only the lineage knows, and the old sentence when neither does. A
+  `draft_read` / `draft_editor_save` of a line closed by a SEND now has its own `content`
+  (`Draft <id> was already sent [by the user from the MCP Emails draft editor card] at <instant>.
+  It is no longer a draft, so this draft_id no longer resolves. Nothing was changed.`); the code
+  and the card's receipt are unchanged. A line closed by a delete keeps the not-found sentence.
 * **An id the mailbox has given to another message (UIDVALIDITY reset, a mail client) is that
   message.** Where the lineage would redirect an id, or call it closed, the server first asks the
   mailbox whether the id itself still names a message (only on those rare paths). If it does, it is
@@ -1335,7 +1414,8 @@ One server-side change went with it: the send receipt's `detail` no longer embed
 timestamp. It read `Delivered via IMAP + SMTP at 2026-09-17T08:04:11.394Z.` — an ISO string
 inside an English sentence, which is not what §4's own example (`"at 10:04"`) ever asked
 for. The server has no timezone and no locale to render a send time in and the card does, so
-the sentence now says only where it went (`Delivered via IMAP + SMTP.`) and the card formats
+the sentence now says only where it went (`Delivered via IMAP + SMTP.`, since 2026-10-15
+`Accepted by the mail server for delivery.`, see "Card activity notes") and the card formats
 the time from `sent_at`, which the §8 merge already publishes at the top level of the same
 payload. Its headline is the bare word `Sent` for the same reason: in the card it sits beside
 the sender address, where a full stop read as a stray mark.

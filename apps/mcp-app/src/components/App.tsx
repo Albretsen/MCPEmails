@@ -59,6 +59,7 @@ import {
 } from "../store";
 import { BulkPlan } from "./BulkPlan";
 import { DraftEditor, type DraftPatch } from "./DraftEditor";
+import { DraftReadLine } from "./DraftReadLine";
 import { OutboundReview } from "./OutboundReview";
 import { Receipt } from "./Receipt";
 import { SentMessage } from "./SentMessage";
@@ -121,6 +122,12 @@ function Diagnostics(props: { bridge: HostBridge }) {
     // non-zero foreign count would mean it spoke and we dropped it.
     `hs ${props.bridge.initializeAttempts}`,
     `rx ${props.bridge.rxAccepted}/${props.bridge.rxForeign}`,
+    // ui/update-model-context: whether the host advertised it at initialize,
+    // then answered ok / answered with an error / sent. The question QA
+    // 2026-10-15 could not answer about Claude, written down where it shows.
+    `mctx ${props.bridge.hostCapabilities.updateModelContext ? "cap" : "nocap"} ${
+      props.bridge.modelContext.ok
+    }/${props.bridge.modelContext.failed}/${props.bridge.modelContext.sent}`,
     // Expected to be 0 forever. A non-zero count means the host pushed a
     // result belonging to a different call into this card (store.ts).
     ...(s.uncorrelatedResults ? [`xcall ${s.uncorrelatedResults}`] : []),
@@ -203,6 +210,9 @@ export function App(props: { bridge: HostBridge }) {
   // "probably not sent", never "not sent" (review, 2026-10-13: the re-read made
   // the draft trusted again and Send could deliver it twice).
   const [sendDoubt, setSendDoubt] = useState(false);
+  // A card mounted for the model's own `draft_read` is one line until the
+  // person opens the editor (DraftReadLine.tsx, store.ts#mountedForRead).
+  const [readOpened, setReadOpened] = useState(false);
 
   // The store is the single source of truth for the envelope. Keeping a copy in
   // component state looks harmless and is not: the host pushes
@@ -1223,6 +1233,9 @@ export function App(props: { bridge: HostBridge }) {
 
     if (envelope.card === "draft_editor" && envelope.draft) {
       const d = envelope.draft;
+      if (store.mountedForRead === true && !readOpened) {
+        return <DraftReadLine draft={d} onOpen={() => setReadOpened(true)} />;
+      }
       // Read at call time, never closed over: on IMAP every save retires the id
       // and returns a new one, and the next call has to use the live one (§8,
       // `id_is_stable: false`). The store already holds whatever the last
