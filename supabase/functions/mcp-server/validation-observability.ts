@@ -62,3 +62,25 @@ export function invalidArgumentAuditDetails(
     }),
   };
 }
+
+/**
+ * A handler's own argument refusal, after the schema passed: email_search with
+ * no criterion, a date with two readings. These logged -32602 with no details
+ * at all, so on 2026-10-15 the largest -32602 bucket (email_search, 71 calls
+ * across 17 workspaces in ten days) could be counted and never explained.
+ * `reason` is one word from a closed set, never a value.
+ */
+export interface HandlerValidationAuditDetails {
+  phase: "handler_validation";
+  tool: string;
+  reason: HandlerValidationReason;
+}
+
+export type HandlerValidationReason = "no_search_criterion" | "invalid_date";
+
+export function handlerValidationAuditDetails(
+  tool: string,
+  reason: HandlerValidationReason,
+): HandlerValidationAuditDetails {
+  return { phase: "handler_validation", tool, reason };
+}
