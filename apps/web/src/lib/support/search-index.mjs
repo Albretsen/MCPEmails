@@ -61,11 +61,26 @@ const DOCS_SECTIONS = [
   ['rateLimits', 'rate-limits', 'rate limit 429 allowance usage cap'],
 ];
 
+/**
+ * Drop rich-text tags (`<b>`, `<link>`) and every angle bracket in one pass.
+ * A character scan rather than a tag regex: a regex strip can leave a partial
+ * tag behind (`<scr<b>ipt>`), which CodeQL rightly flags, and the hints are
+ * plain text anyway.
+ */
+function stripTags(text) {
+  let out = '';
+  let depth = 0;
+  for (const ch of text) {
+    if (ch === '<') depth += 1;
+    else if (ch === '>') depth = Math.max(0, depth - 1);
+    else if (depth === 0) out += ch;
+  }
+  return out;
+}
+
 /** Plain text, one line, at most `max` characters, cut on a word boundary. */
 export function clip(text, max = HINT_MAX) {
-  const plain = String(text ?? '')
-    .replace(/<[^>]*>/g, '')
-    .replace(/[<>]/g, '')
+  const plain = stripTags(String(text ?? ''))
     .replace(/\s+/g, ' ')
     .trim();
   if (plain.length <= max) return plain;

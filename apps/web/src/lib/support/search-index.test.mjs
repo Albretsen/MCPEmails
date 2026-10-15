@@ -143,3 +143,9 @@ test('the real index finds the obvious things', async () => {
   assert.equal(searchIndex(p, 'yandex imap').some((e) => e.id === 'article:yandex-imap-disabled'), true);
   assert.equal(searchIndex(p, 'cursor')[0].id, 'client:cursor');
 });
+
+test('clip strips rich-text tags and never leaves an angle bracket', () => {
+  assert.equal(clip('Use <b>app</b> passwords'), 'Use app passwords');
+  assert.equal(clip('a <scr<b>ipt>alert(1)</script> b').includes('<'), false);
+  assert.equal(clip('x > y < z').includes('>'), false);
+});
