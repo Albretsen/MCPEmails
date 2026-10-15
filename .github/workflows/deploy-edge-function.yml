@@ -26,6 +26,8 @@ concurrency:
 
 permissions:
   contents: read
+  # Read the "CI passed" check run on the commit before deploying it.
+  checks: read
 
 jobs:
   deploy:
@@ -33,10 +35,37 @@ jobs:
     runs-on: ubuntu-latest
     if: github.ref == 'refs/heads/main'
     steps:
-      - uses: actions/checkout@v4
+      # 2026-10-15: nothing used to check CI before an edge deploy, so a red
+      # main could go live here while Vercel held the web deploy back. Require
+      # the same "CI passed" aggregate Vercel gates on, for this exact commit.
+      # No bypass input on purpose: the emergency path is a local CLI deploy
+      # (supabase functions deploy ... --project-ref ... --no-verify-jwt).
+      - name: Require CI passed on this commit
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          # Latest run wins, so a green rerun clears an earlier failure.
+          state=$(gh api "repos/${{ github.repository }}/commits/${{ github.sha }}/check-runs?check_name=CI%20passed&per_page=100" \
+            --jq '[.check_runs[] | select(.name == "CI passed")]
+                  | sort_by(.started_at) | last
+                  | if . == null then "missing"
+                    elif .status != "completed" then .status
+                    else .conclusion end')
+          echo "CI passed on ${{ github.sha }}: $state"
+          case "$state" in
+            success) ;;
+            missing|queued|in_progress|pending|waiting|requested)
+              echo "::error::CI has not finished on ${{ github.sha }} ($state). Wait for the CI workflow to go green, then rerun this deploy."
+              exit 1 ;;
+            *)
+              echo "::error::CI did not pass on ${{ github.sha }} ($state). Fix main before deploying."
+              exit 1 ;;
+          esac
+      - uses: actions/checkout@v7
+      # Pinned to match the db job in ci.yml. Bump both together.
       - uses: supabase/setup-cli@v3
         with:
-          version: latest
+          version: 2.118.0
       - name: Deploy
         env:
           SUPABASE_ACCESS_TOKEN: ${{ secrets.SUPABASE_ACCESS_TOKEN }}
