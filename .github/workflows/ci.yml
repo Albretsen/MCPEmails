@@ -165,7 +165,7 @@ jobs:
   # tests are what stand between a refactor and a draft being rewritten on save.
   #
   # WHAT RUNS. `npm test` is `npm run verify`, which is harness/verify.mjs, and
-  # that runs ELEVEN independent suites and reports all of them: the scripted host
+  # that runs THIRTEEN independent suites and reports all of them: the scripted host
   # (state-machine.mjs), hardening (hardening.mjs), the storage audit
   # (storage-audit.mjs), the body/signature suite (draft-body.test.mjs), the
   # resync suite (draft-sync.test.mjs, 39 checks), the render suite
@@ -174,7 +174,8 @@ jobs:
   # polish suite (draft-polish.test.mjs: recipient parsing, focus, fullscreen,
   # copy, the formatted preview, the server's new draft fields), plus the draft
   # state, draft UX and draft ended suites (draft-state, draft-ux and
-  # draft-ended .test.mjs). Every suite
+  # draft-ended .test.mjs), the model context suite (model-context.test.mjs) and
+  # the draft send safety suite (draft-send-safety.test.mjs). Every suite
   # bundles `src/` with esbuild and drives the SHIPPED functions, so a green run
   # here means the code that goes into the card is the code that passed. The
   # first four need no browser at all; the rest use jsdom, because what
@@ -185,7 +186,7 @@ jobs:
   #
   # The suite count is load-bearing: verify.mjs prints "N/N suites passed", and
   # it exists because the old `&&` chain let one crashing suite hide the findings
-  # of every suite behind it. If that line ever says fewer than eleven, a suite
+  # of every suite behind it. If that line ever says fewer than thirteen, a suite
   # was dropped rather than fixed.
   #
   # WHY `npm ci` AT THE ROOT. apps/mcp-app is an npm workspace (root
@@ -223,7 +224,7 @@ jobs:
       - run: npm ci
       - name: Type check the card
         run: cd apps/mcp-app && npm run typecheck
-      - name: Run card tests (eleven suites via harness/verify.mjs)
+      - name: Run card tests (thirteen suites via harness/verify.mjs)
         run: cd apps/mcp-app && npm test
       # The card ships through the generated file
       # supabase/functions/mcp-server/ui/review-card.html.ts, not through src.

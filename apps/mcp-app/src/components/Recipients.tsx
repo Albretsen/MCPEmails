@@ -72,6 +72,27 @@ export function RecipientField(props: {
     }
   };
 
+  /**
+   * A key asked to commit what was typed. If text is still in the input once
+   * the caller has dealt with it, it was refused (not an address), and it is
+   * selected so the next thing typed REPLACES it.
+   *
+   * QA (2026-10-15): Enter on "not-an-email" left it in the input with the
+   * caret at its end, so the next address typed was appended to it and blur
+   * then committed the glued `not-an-emailsecond@example.com`, which is a
+   * perfectly valid-looking address nobody meant. The refused text stays on
+   * screen with its warning (the caller's), so it can still be fixed: an arrow
+   * key or a click drops the selection.
+   */
+  const selectRefused = useRef(false);
+  useLayoutEffect(() => {
+    if (!selectRefused.current) return;
+    selectRefused.current = false;
+    const el = input.current;
+    if (!el || !el.value.trim() || document.activeElement !== el) return;
+    el.select();
+  });
+
   useLayoutEffect(() => {
     const f = focusNext.current;
     if (f === null || f.count !== n) return;
@@ -121,6 +142,7 @@ export function RecipientField(props: {
     if (e.key === " " && el.selectionStart !== el.value.length) return;
     if (!props.endsAddress(e.key, el.value)) return;
     e.preventDefault();
+    selectRefused.current = true;
     props.onCommit(el.value);
   };
 

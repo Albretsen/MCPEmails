@@ -1301,6 +1301,27 @@ the page puts them back. Two rules were added by the second review:
 * **A slow write says so.** After 4 s of a pending save or send the line under the buttons reads
   "Still saving. Gmail can take a moment." in place of the word count, so nothing moves.
 
+### As built (card) — send safety (QA 3, 2026-10-15)
+
+* **The footer does not move.** Save and the Send slot are fixed-width (`.btn.slot`) and Send's label no
+  longer depends on whether the draft is edited (it was "Save and send", which grew and pushed Save under
+  the pointer; a click aimed at Save sent a real reply). What Send does with unsaved changes is in its
+  tooltip.
+* **Send has an undo window.** Send starts a 5 s countdown (`DraftEditor.tsx#SEND_UNDO_MS`); the slot
+  reads Undo and the line under the buttons "Sending in N s". No tool is called until it runs out, and
+  then the send is re-validated from the live state. Pressing the slot during the countdown is always
+  Undo, so a double-click or a held Enter cancels instead of sending. An edit, a new version, a busy
+  action, folding, a confirm, a newer card, unmount, `pagehide` and `ui/resource-teardown` all cancel
+  it: the card never sends on its own while going away. Undo, not a confirm step, because a confirm is a
+  second button appearing under the pointer, the shape of the accident.
+* **An older card hears about a newer one.** A card that accepts a fresh pushed draft result sends a
+  hint to other card frames (`draft-signal.ts`: BroadcastChannel and a `storage` event, digests of the
+  ids only, nothing stored). A card holding the same draft, or one in the same inbox, re-reads its draft
+  at once and `supersededBy` decides. Re-reads, saves and replays never send a hint, so it cannot loop.
+  Where frames share no origin, the silent re-check also runs on becoming visible and on scrolling back
+  into view, under the same 30 s age test as focus; nothing is read while hidden. An older card kept
+  open by unsaved edits has Send off until the person edits there or chooses "Edit here anyway".
+
 ### As built (card) — the sent message stays on screen
 
 Added 2026-09-17, card side only. No new field, no new tool, no new server read.

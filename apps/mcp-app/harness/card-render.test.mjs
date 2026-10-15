@@ -238,6 +238,7 @@ async function main() {
       // same module instance main.tsx is writing to.
       contents:
         'import "./src/main";\n' +
+        'export { setSendUndoMs } from "./src/components/DraftEditor";\n' +
         'export { getState, setState, disarmResultWatchdog } from "./src/store";\n',
       resolveDir: appRoot,
       sourcefile: "card-render-entry.ts",
@@ -270,6 +271,10 @@ async function main() {
   async function boot(opts = {}) {
     const host = installDom(opts);
     const mod = await import(`${pathToFileURL(OUT).href}?i=${++instance}`);
+    // Send's undo window (DraftEditor.tsx#SEND_UNDO_MS) is pinned in
+    // draft-send-safety.test.mjs. Here a send goes out on the next tick, so the
+    // scenarios below read as they did before the window existed.
+    mod.setSendUndoMs(0);
     const root = globalThis.document.getElementById("root");
 
     /** Wait until the handshake has settled one way or the other. */
@@ -306,7 +311,7 @@ async function main() {
       editable: () =>
         !!globalThis.document.getElementById("d-body") ||
         [...root.querySelectorAll("button")].some((b) =>
-          /^(Save|Send|Save and send)$/.test(b.textContent.trim()),
+          /^(Save|Send)$/.test(b.textContent.trim()),
         ),
       /**
        * Stop the card so it cannot outlive its scenario. The watchdog is a 9s

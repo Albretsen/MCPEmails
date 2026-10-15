@@ -493,6 +493,19 @@ body {
   white-space: nowrap;
 }
 
+/* The draft editor's Save and Send. A FIXED width, not a min-width: the label
+   in the Send slot changes (Send, Undo, Sending) and a button that resized with
+   it moved Save under the pointer (QA, 2026-10-15: a click aimed at Save landed
+   on what had just become "Save and send"). In em so it scales with the text;
+   7em fits "Sending", the longest label either slot shows, with room to
+   spare for a wider host font. */
+.btn.slot {
+  width: 7em;
+  flex: none;
+  padding: 0 6px;
+  overflow: hidden;
+}
+
 .btn:hover:not(:disabled) { background: var(--bg-2); }
 .btn:active:not(:disabled) { background: var(--bg-3); }
 

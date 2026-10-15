@@ -227,6 +227,10 @@ let instance = 0;
 async function boot(opts = {}) {
   const host = installDom(opts);
   const mod = await import(`${pathToFileURL(OUT).href}?i=${++instance}`);
+  // Send's undo window (DraftEditor.tsx#SEND_UNDO_MS) is pinned in
+  // draft-send-safety.test.mjs. Here a send goes out on the next tick, so the
+  // scenarios below read as they did before the window existed.
+  mod.setSendUndoMs(0);
   const root = globalThis.document.getElementById("root");
   const until = Date.now() + 2000;
   while (Date.now() < until && !mod.getState().connected) await after(5);
@@ -299,6 +303,7 @@ async function main() {
     stdin: {
       contents:
         'import "./src/main";\n' +
+        'export { setSendUndoMs } from "./src/components/DraftEditor";\n' +
         'export { getState, setState, disarmResultWatchdog } from "./src/store";\n' +
         'export { splitAddresses, commaEndsAddress, addressKey } from "./src/components/DraftEditor";\n' +
         'export { hiddenDetail, turnOnUrl } from "./src/components/App";\n' +

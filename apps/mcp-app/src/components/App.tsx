@@ -36,6 +36,7 @@ import {
   type DraftCall as ModelDraftCall,
 } from "../model-context";
 import { cardKey, isRestoreStub, lastDashboardUrl } from "../persist";
+import { onDraftSignal, SIGNAL_GAP_MS, signalTag } from "../draft-signal";
 import {
   acceptDeferredBody,
   acceptRehydration,
@@ -573,12 +574,23 @@ export function App(props: { bridge: HostBridge }) {
   const lastAnswer = useRef(Date.now());
   const busyNow = useRef<string | null>(null);
   busyNow.current = busy;
-  const attentionCheck = async () => {
+  //
+  // `hinted`: another card frame just mounted this draft, or one in the same
+  // inbox (draft-signal.ts). That is a reason to look NOW rather than after
+  // `REPLAY_AGE_MS`, so the age test is skipped; `SIGNAL_GAP_MS` still keeps a
+  // burst of hints (both carriers, several cards) to one read.
+  const lastHinted = useRef(0);
+  const attentionCheck = async (hinted = false) => {
     const s = getState();
     const d = s.envelope?.draft;
     if (!d || s.envelope?.card !== "draft_editor" || isRestoreStub(s.envelope)) return;
     if (s.draftCheck !== "trusted" || s.draftSuperseded || busyNow.current !== null) return;
-    if (Date.now() - lastAnswer.current < REPLAY_AGE_MS) return;
+    if (hinted) {
+      if (Date.now() - lastHinted.current < SIGNAL_GAP_MS) return;
+      lastHinted.current = Date.now();
+    } else if (Date.now() - lastAnswer.current < REPLAY_AGE_MS) {
+      return;
+    }
     lastAnswer.current = Date.now();
     const seq = callSeq.current;
     const asked = d.draft_id;
@@ -602,8 +614,55 @@ export function App(props: { bridge: HostBridge }) {
   onAttention.current = attentionCheck;
   useEffect(() => {
     const onFocus = () => void onAttention.current();
+    // Becoming visible again (the chat's tab came back) is the same moment as
+    // focus for a card nobody has clicked. Hidden is ignored: nothing is read
+    // while the card cannot be seen.
+    const onVisible = () => {
+      if (document.visibilityState === "visible") void onAttention.current();
+    };
     window.addEventListener("focus", onFocus);
-    return () => window.removeEventListener("focus", onFocus);
+    document.addEventListener("visibilitychange", onVisible);
+    // Scrolled back into view: an older card is usually ABOVE the newer one,
+    // and scrolling up to it is how the person comes back to it. One event per
+    // crossing, under the same age test as focus, never a timer.
+    let io: IntersectionObserver | null = null;
+    try {
+      const root = document.getElementById("root");
+      if (root && typeof IntersectionObserver === "function") {
+        io = new IntersectionObserver((entries) => {
+          if (entries.some((e) => e.isIntersecting)) void onAttention.current();
+        });
+        io.observe(root);
+      }
+    } catch {
+      io = null;
+    }
+    // Another card frame mounted this draft (or one in the same inbox).
+    const off = onDraftSignal((sig) => {
+      const st = getState();
+      const d = st.envelope?.draft;
+      if (!d || st.envelope?.card !== "draft_editor") return;
+      const mine = [d.draft_id, d.resolved_from, st.draftIdHint]
+        .map((id) => signalTag(id))
+        .filter((t): t is string => !!t);
+      const sameDraft = sig.ids.some((t) => mine.includes(t));
+      const sameInbox = sig.inbox !== null && sig.inbox === signalTag(d.identity?.inbox_id);
+      if (!sameDraft && !sameInbox) return;
+      // The same draft at a revision this card already holds is nothing new.
+      if (
+        sameDraft && typeof sig.revision === "number" && typeof d.revision === "number" &&
+        sig.revision <= d.revision
+      ) {
+        return;
+      }
+      void onAttention.current(true);
+    });
+    return () => {
+      window.removeEventListener("focus", onFocus);
+      document.removeEventListener("visibilitychange", onVisible);
+      io?.disconnect();
+      off();
+    };
   }, []);
 
   /**

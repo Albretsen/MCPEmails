@@ -26,11 +26,16 @@ export function Btn(props: {
   title?: string;
   type?: "button" | "submit";
   btnRef?: Ref<HTMLButtonElement>;
+  /**
+   * A fixed slot in an action row (`.btn.slot` in styles.css): same width
+   * whatever its label says, so the buttons beside it never move.
+   */
+  slot?: boolean;
 }) {
   const off = !!(props.disabled || props.busy);
   return (
     <button
-      class="btn"
+      class={props.slot ? "btn slot" : "btn"}
       ref={props.btnRef}
       type={props.type ?? "button"}
       data-variant={props.variant ?? "default"}

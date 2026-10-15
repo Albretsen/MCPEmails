@@ -23,6 +23,7 @@ import {
   stripStubMarker,
 } from "./persist";
 import { neutralizeDeep, neutralizeText } from "./sanitize";
+import { announceDraft } from "./draft-signal";
 
 /**
  * What the last tool result was, which is NOT the same question as "did it
@@ -287,6 +288,35 @@ export async function runTeardownSaver(): Promise<void> {
     await fn();
   } catch {
     /* nothing left to tell the user: the card is being torn down */
+  }
+}
+
+// ---------------------------------------------------------------------------
+// A send still inside its undo window at teardown
+//
+// DraftEditor holds Send for a few seconds with Undo in its place
+// (`SEND_UNDO_MS`). A frame torn down inside that window CANCELS the send, it
+// never hurries it: a send nobody is left to see, from a card that is going
+// away, is exactly the accident the window exists to prevent. The unmount
+// clears the timer too; this slot is for the host's `ui/resource-teardown`,
+// which can arrive before anything unmounts. One slot, like the saver above.
+// ---------------------------------------------------------------------------
+
+let pendingSendCancel: (() => void) | null = null;
+
+/** Register (or clear, with `null`) how to cancel a send that is counting down. */
+export function setPendingSendCancel(fn: (() => void) | null) {
+  pendingSendCancel = fn;
+}
+
+/** Cancel a send that is counting down, if there is one. Never throws. */
+export function cancelPendingSend(): void {
+  const fn = pendingSendCancel;
+  pendingSendCancel = null;
+  try {
+    fn?.();
+  } catch {
+    /* the card is going away either way */
   }
 }
 
@@ -1547,6 +1577,17 @@ export function wireResultHandlers(bridge: HostBridge) {
 
     pushAccepted = true;
     setState({ ...timing, ...check, envelope: mergeEnvelope(current, envelope) });
+    // A FRESH draft result is a tool call the assistant just made, so any
+    // older card for the same draft may now be out of date. Tell them; each
+    // re-reads its own draft and decides (draft-signal.ts). A replay is not
+    // fresh (`check` set it pending) and says nothing, which, with re-reads
+    // never announcing, is what keeps this from looping.
+    if (
+      envelope.card === "draft_editor" && envelope.draft && !isFailure(envelope) &&
+      check.draftCheck === undefined
+    ) {
+      announceDraft(envelope.draft);
+    }
   };
 
   bridge.onToolCancelled = (_params: ToolCancelledParams) => {
