@@ -297,8 +297,9 @@ Feature‑dependent:
 Schema and Row‑Level Security policies live in [`supabase/migrations/`](supabase/migrations/). Core tables: `workspaces`, `workspace_members`, `inboxes` (encrypted credentials, soft‑deleted), `api_keys` (hashed, scoped, inbox‑restricted), `oauth_clients`, `scheduled_sends`, `workspace_invites`, and a month‑partitioned `activity_log`.
 
 ```bash
-# Apply migrations to the linked project
-npx supabase db push
+# Apply one migration to the linked project, then record it in the history
+npx supabase db query --linked -f supabase/migrations/<file>.sql
+npx supabase migration repair --status applied <version> --linked
 
 # Regenerate TypeScript types from the live schema
 npm run gen:types
