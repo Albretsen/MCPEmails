@@ -11,6 +11,10 @@ const PUBLIC_MCP_ENDPOINT = Deno.env.get("SYSTEM_NOTIFY_MCP_ENDPOINT") ?? "https
 const SEND_FROM_INBOX_EMAIL = "bjellanda@gmail.com";
 // Where the notification is delivered TO.
 const NOTIFY_TO_EMAIL = "bjellanda@gmail.com";
+
+// Signup emails are disabled indefinitely at the owner's request. Remove the
+// entry to turn them back on.
+const MUTED_EVENT_TYPES = new Set(["user.signup"]);
 const REQUEST_TIMEOUT_MS = 30_000;
 const UUID_RE = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
 
@@ -529,6 +533,13 @@ Deno.serve(async (request) => {
   const markProcessed = async (status: "sent" | "failed", error: string | null) => {
     await supabase.from("system_events").update({ status, error, processed_at: new Date().toISOString() }).eq("id", eventId);
   };
+
+  // Event types whose email is switched off. The system_events row is still
+  // written (growth analytics read it); only the notification is skipped.
+  if (MUTED_EVENT_TYPES.has(eventType)) {
+    await markProcessed("failed", "muted");
+    return json(200, { event_id: eventId, status: "muted" });
+  }
 
   try {
     const template = await buildTemplate(eventType, payload, supabase);
