@@ -22,10 +22,24 @@ import {
   guardRelayTarget,
   noteRelayFailure,
   noteRelaySuccess,
+  type RelayConfig,
   relayFor,
+  relayForFallback,
   relayOnlyHost,
+  relayConfigured,
+  relayRouteFor,
   RelayUnavailableError,
 } from "./smtp-relay.ts";
+import {
+  isOriginRefusalText,
+  learnRelayHost,
+  noteRelayFallbackFailed,
+  recordRelayUse,
+  refreshLearnedRelayHosts,
+  relayFallbackCoolingDown,
+  relayReason,
+  type RelayRoute,
+} from "./relay-registry.ts";
 
 export class SmtpAuthError extends Error {
   constructor(message: string) {
@@ -137,19 +151,84 @@ export async function sendViaSmtp(cfg: SmtpConfig, msg: SmtpMessage): Promise<vo
     throw new Error("SMTP send: no recipients");
   }
 
+  // So a host the web app learned a minute ago is relayed here too.
+  if (relayConfigured()) await refreshLearnedRelayHosts();
+
+  let lastErr: unknown;
   for (let attempt = 1; attempt <= SMTP_SUBMIT_ATTEMPTS; attempt++) {
+    // The second attempt goes through the relay when the first one failed in a
+    // way a different egress address can fix (see shouldRetrySmtpThroughRelay).
+    // Otherwise it is the plain fresh-connection retry it always was.
+    const viaFallback = attempt > 1 && shouldRetrySmtpThroughRelay(cfg.host, lastErr);
     try {
-      await submitOnce(cfg, msg);
+      await submitOnce(cfg, msg, viaFallback ? "fallback" : "auto");
+      if (viaFallback) learnRelayHost(cfg.host, "smtp", relayReason(lastErr));
       return;
     } catch (err) {
+      if (viaFallback) {
+        noteRelayFallbackFailed(cfg.host, "smtp");
+        // The relay could not help and nothing was sent either way. The direct
+        // attempt's error is the one that describes this mailbox, so it is the
+        // one reported. A refusal the relayed attempt got further than that
+        // (a real wrong password) is reported as itself.
+        if (err instanceof SmtpNotSentError && lastErr !== undefined) throw lastErr;
+      }
+      lastErr = err;
       // Anything else (an auth failure, or a failure after the message bytes
       // went out) is either deterministic or indeterminate. Neither may be
-      // retried here. The last attempt rethrows for the same reason.
+      // retried here. The last attempt rethrows for the same reason. The one
+      // exception is an auth refusal whose own words blame our address, which
+      // earns the relay retry and nothing else.
       const last = attempt === SMTP_SUBMIT_ATTEMPTS;
-      if (last || !(err instanceof SmtpNotSentError) || !err.retryable) throw err;
+      const retryable = (err instanceof SmtpNotSentError && err.retryable) ||
+        (err instanceof SmtpAuthError && shouldRetrySmtpThroughRelay(cfg.host, err));
+      if (last || !retryable) throw err;
       await new Promise((resolve) => setTimeout(resolve, SMTP_RETRY_DELAY_MS));
     }
   }
+}
+
+/**
+ * Should a failed submission be tried once more through the relay?
+ *
+ * Only for a host that is not relayed already (otherwise the failure came
+ * through the relay and a second trip changes nothing), only while the relay is
+ * up, never for a host whose relay retry failed in the last few minutes, and
+ * only for failures a different egress address can fix:
+ *
+ *   - nothing was sent and the server never got as far as judging the
+ *     envelope: a connect that did not open, a greeting that turned us away;
+ *   - an envelope or AUTH refusal whose own words blame where we connect from
+ *     (relay-registry.ts, isOriginRefusalText). A recipient that does not exist
+ *     or a wrong password is the same from any address, so those are left alone.
+ *
+ * A certificate the host cannot present correctly is its own problem and is
+ * never retried: the tunnel would reach the same certificate.
+ */
+export function shouldRetrySmtpThroughRelay(host: string, err: unknown): boolean {
+  if (!relayForFallback()) return false;
+  if (relayRouteFor(host, "smtp") !== null) return false;
+  if (relayFallbackCoolingDown(host, "smtp")) return false;
+  const text = err instanceof Error ? err.message : String(err ?? "");
+  if (/certificate|UnknownIssuer|NotValidForName|InvalidCertificate/i.test(text)) return false;
+  if (err instanceof SmtpAuthError) return isOriginRefusalText(text);
+  if (!(err instanceof SmtpNotSentError) || !err.retryable) return false;
+  // The server judged the envelope. Only its own words can say it was about us.
+  if (/\b(RCPT TO|MAIL FROM)\b/.test(text)) return isOriginRefusalText(text);
+  return true;
+}
+
+/**
+ * The transport a host reached through the relay is submitted on.
+ *
+ * The relay's own host blocks outbound 465 (docs/smtp-relay.md), so a row
+ * stored as 465 is submitted on 587 with STARTTLS instead. Used for learned
+ * hosts and the one-off retry; see {@link relayOnlyTransport} for the
+ * relay-only list, which has always had the same rule.
+ */
+export function relayedTransport(cfg: SmtpConfig): SmtpConfig {
+  if (cfg.port !== 465 || cfg.security !== "tls") return cfg;
+  return { ...cfg, port: 587, security: "starttls" };
 }
 
 /**
@@ -178,19 +257,27 @@ export function relayOnlyTransport(
  * {@link SmtpNotSentError}; failures after that point pass through unchanged,
  * because from there on we genuinely cannot tell whether the message landed.
  */
-async function submitOnce(storedCfg: SmtpConfig, msg: SmtpMessage): Promise<void> {
-  const cfg = relayOnlyTransport(storedCfg);
+async function submitOnce(
+  storedCfg: SmtpConfig,
+  msg: SmtpMessage,
+  mode: SmtpConnectMode = "auto",
+): Promise<void> {
   // Flipped the instant the server answers DATA with 354: the next byte we
   // write is the message itself, and no failure past here is safe to retry.
   let dataAccepted = false;
+  const startedMs = Date.now();
 
-  let conn: Deno.Conn;
+  let opened: OpenedSmtpConn;
   try {
-    conn = await connectWithTimeout(cfg);
+    opened = await connectWithTimeout(relayOnlyTransport(storedCfg), mode);
   } catch (err) {
     // Not one byte of the message existed on the wire.
     throw new SmtpNotSentError(errorText(err), true);
   }
+  let conn = opened.conn;
+  // The transport actually spoken: a relayed 465 row is submitted on 587.
+  const cfg = opened.cfg;
+  const relayedRoute = opened.route;
 
   const session = new SmtpSession(conn);
   try {
@@ -246,7 +333,20 @@ async function submitOnce(storedCfg: SmtpConfig, msg: SmtpMessage): Promise<void
     await session.expect(250);
 
     await session.commandRaw("QUIT");
+    if (relayedRoute) {
+      recordRelayUse({ protocol: "smtp", host: cfg.host, route: relayedRoute, outcome: "ok", ms: Date.now() - startedMs });
+    }
   } catch (err) {
+    if (relayedRoute) {
+      recordRelayUse({
+        protocol: "smtp",
+        host: cfg.host,
+        route: relayedRoute,
+        outcome: "host_refused",
+        ms: Date.now() - startedMs,
+        detail: relayReason(err),
+      });
+    }
     if (err instanceof SmtpAuthError || err instanceof SmtpNotSentError) throw err;
     // Already classified, or past the point of no return.
     if (dataAccepted) throw err;
@@ -585,24 +685,39 @@ class SmtpSession {
  * See host-guard.ts, a mirror of apps/web/src/lib/email/host-guard.ts. A change
  * to either must be made to the other.
  */
-async function openGuardedSmtpConn(cfg: SmtpConfig): Promise<Deno.Conn> {
-  const relayed = await openRelayedSmtpConn(cfg);
+async function openGuardedSmtpConn(cfg: SmtpConfig, mode: SmtpConnectMode): Promise<OpenedSmtpConn> {
+  const relayed = mode === "fallback" ? await openFallbackSmtpConn(cfg) : await openRelayedSmtpConn(cfg);
   if (relayed) return relayed;
 
   const tcp = await connectGuardedTcp({ host: cfg.host, port: cfg.port, protocol: "smtp" });
-  return await upgradeImplicitTls(tcp, cfg);
+  return { conn: await upgradeImplicitTls(tcp, cfg), cfg, route: null };
+}
+
+/**
+ * "auto" relays exactly the hosts the lists and the registry name; "fallback"
+ * is the one retry through the relay after a direct attempt failed (see
+ * shouldRetrySmtpThroughRelay), and never dials directly.
+ */
+type SmtpConnectMode = "auto" | "fallback";
+
+/** An open submission socket, the transport it speaks, and how it was reached. */
+interface OpenedSmtpConn {
+  conn: Deno.Conn;
+  cfg: SmtpConfig;
+  /** Null for a direct dial. */
+  route: RelayRoute | null;
 }
 
 /**
  * The relayed half of {@link openGuardedSmtpConn}, or null to dial directly.
  *
  * Null is the answer for almost every send: no relay configured, this host not
- * on its list, the relay suspended after an earlier failure, or the relay
- * having just failed here. That last case is the fallback the operator asked
- * for, and it is safe for one reason worth stating plainly: everything this
- * function does happens before SMTP DATA, so a connection that dies here has
- * transmitted nothing and cannot be duplicated by the direct attempt that
- * follows.
+ * on its list and not learned, the relay suspended after an earlier failure, or
+ * the relay having just failed here. That last case is the fallback the
+ * operator asked for, and it is safe for one reason worth stating plainly:
+ * everything this function does happens before SMTP DATA, so a connection that
+ * dies here has transmitted nothing and cannot be duplicated by the direct
+ * attempt that follows.
  *
  * The TLS handshake is deliberately inside the fallback. A tunnel that opens
  * and then cannot complete a handshake is a broken relay like any other, and
@@ -612,31 +727,30 @@ async function openGuardedSmtpConn(cfg: SmtpConfig): Promise<Deno.Conn> {
  * guard refusing the host: those verdicts are about the destination, and the
  * direct dial would reach exactly the same one, slower.
  */
-async function openRelayedSmtpConn(cfg: SmtpConfig): Promise<Deno.Conn | null> {
-  const relay = relayFor(cfg.host);
+async function openRelayedSmtpConn(storedCfg: SmtpConfig): Promise<OpenedSmtpConn | null> {
+  const relay = relayFor(storedCfg.host);
   if (!relay) return null;
-
-  const target = { host: cfg.host, port: cfg.port };
-  await guardRelayTarget(target);
+  const route = relayRouteFor(storedCfg.host, "smtp") ?? "listed";
+  // A learned host is submitted on a transport the relay can carry. A listed
+  // one keeps its row as it always has (a relay-only row was already rewritten
+  // by relayOnlyTransport), so this change cannot move an existing inbox.
+  const cfg = route === "learned" ? relayedTransport(storedCfg) : storedCfg;
+  const startedMs = Date.now();
 
   try {
-    const tunnel = await connectThroughRelay(relay, target);
-    let conn: Deno.Conn;
-    try {
-      conn = await upgradeImplicitTls(tunnel, cfg);
-    } catch (err) {
-      throw new RelayUnavailableError(`TLS handshake through relay failed: ${errorText(err)}`);
-    }
-    noteRelaySuccess();
-    console.log("[mcp-server] smtp_relay: connected", {
-      relay: `${relay.host}:${relay.port}`,
-      host: cfg.host,
-      port: cfg.port,
-    });
-    return conn;
+    const conn = await tunnelSmtp(relay, cfg);
+    return { conn, cfg, route };
   } catch (err) {
     if (!(err instanceof RelayUnavailableError)) throw err;
     noteRelayFailure();
+    recordRelayUse({
+      protocol: "smtp",
+      host: cfg.host,
+      route,
+      outcome: "relay_down",
+      ms: Date.now() - startedMs,
+      detail: err.message,
+    });
     // No direct fallback for a relay-only host: the direct dial is the one path
     // known to be refused there, and its refusal reads as a bad password. The
     // caller reports this as a submission that was not sent and may be retried.
@@ -657,6 +771,55 @@ async function openRelayedSmtpConn(cfg: SmtpConfig): Promise<Deno.Conn | null> {
     });
     return null;
   }
+}
+
+/**
+ * The one relayed retry after a direct attempt failed. A relay that cannot
+ * carry it is reported as it is, never answered with a direct dial: the direct
+ * dial is what just failed.
+ */
+async function openFallbackSmtpConn(storedCfg: SmtpConfig): Promise<OpenedSmtpConn> {
+  const relay = relayForFallback();
+  if (!relay) throw new RelayUnavailableError("relay not configured or suspended");
+  const cfg = relayedTransport(storedCfg);
+  const startedMs = Date.now();
+  try {
+    const conn = await tunnelSmtp(relay, cfg);
+    return { conn, cfg, route: "fallback" };
+  } catch (err) {
+    if (err instanceof RelayUnavailableError) {
+      noteRelayFailure();
+      recordRelayUse({
+        protocol: "smtp",
+        host: cfg.host,
+        route: "fallback",
+        outcome: "relay_down",
+        ms: Date.now() - startedMs,
+        detail: err.message,
+      });
+    }
+    throw err;
+  }
+}
+
+/** Guard, tunnel and (for implicit TLS) handshake. Relay failures are RelayUnavailableError. */
+async function tunnelSmtp(relay: RelayConfig, cfg: SmtpConfig): Promise<Deno.Conn> {
+  const target = { host: cfg.host, port: cfg.port };
+  await guardRelayTarget(target);
+  const tunnel = await connectThroughRelay(relay, target);
+  let conn: Deno.Conn;
+  try {
+    conn = await upgradeImplicitTls(tunnel, cfg);
+  } catch (err) {
+    throw new RelayUnavailableError(`TLS handshake through relay failed: ${errorText(err)}`);
+  }
+  noteRelaySuccess();
+  console.log("[mcp-server] smtp_relay: connected", {
+    relay: `${relay.host}:${relay.port}`,
+    host: cfg.host,
+    port: cfg.port,
+  });
+  return conn;
 }
 
 /**
@@ -702,8 +865,8 @@ async function upgradeImplicitTls(tcp: Deno.TcpConn, cfg: SmtpConfig): Promise<D
  * own handshake timeout is a small fraction of it, which is what leaves the
  * fallback something to work with.
  */
-async function connectWithTimeout(cfg: SmtpConfig): Promise<Deno.Conn> {
-  const connectPromise = openGuardedSmtpConn(cfg);
+async function connectWithTimeout(cfg: SmtpConfig, mode: SmtpConnectMode): Promise<OpenedSmtpConn> {
+  const connectPromise = openGuardedSmtpConn(cfg, mode);
   let timer: ReturnType<typeof setTimeout> | undefined;
   const timeout = new Promise<never>((_, reject) => {
     timer = setTimeout(
@@ -720,7 +883,7 @@ async function connectWithTimeout(cfg: SmtpConfig): Promise<Deno.Conn> {
     return await Promise.race([connectPromise, timeout]);
   } catch (err) {
     // If the connect resolves after the timeout rejected, don't leak the socket.
-    connectPromise.then((c) => c.close()).catch(() => {});
+    connectPromise.then((c) => c.conn.close()).catch(() => {});
     throw err;
   } finally {
     if (timer !== undefined) clearTimeout(timer);

@@ -93,6 +93,7 @@ import {
   GrowthSection,
   MilestoneSection,
   MoneySection,
+  RelaySection,
   StickinessSection,
   TablesSection,
   TopSection,
@@ -154,6 +155,7 @@ const BANDS = [
   { id: 'stickiness', title: 'Stickiness', question: 'who stays' },
   { id: 'uptime', title: 'Uptime', question: 'is it working' },
   { id: 'accounts', title: 'Accounts', question: 'who they actually are' },
+  { id: 'relay', title: 'Relay', question: 'which hosts need it, and is it up' },
 ] as const;
 
 /** Holds a cell open while its band loads, so the grid never jumps. */
@@ -307,6 +309,20 @@ export default async function GrowthBoardPage({
           <Band id="accounts" title="Accounts" question="who they actually are" />
           <Suspense fallback={<Skeleton span={12} />}>
             <TablesSection days={days} />
+          </Suspense>
+
+          <Band id="relay" title="Relay" question="which hosts need it, and is it up" />
+          <Suspense
+            fallback={
+              <>
+                <Skeleton span={4} />
+                <Skeleton span={4} />
+                <Skeleton span={4} />
+                <Skeleton span={12} tall={2} />
+              </>
+            }
+          >
+            <RelaySection days={days} />
           </Suspense>
         </div>
 

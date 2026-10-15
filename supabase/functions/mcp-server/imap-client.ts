@@ -26,8 +26,28 @@ import {
   cleanPreviewFromBodyPart,
   type PreviewPartInfo,
 } from "./text-extract.ts";
-import { connectGuardedTcp } from "./host-guard.ts";
-import { connectThroughRelay, guardRelayTarget, imapRelayFor } from "./smtp-relay.ts";
+import { connectGuardedTcp, MailHostBlockedError } from "./host-guard.ts";
+import {
+  connectThroughRelay,
+  guardRelayTarget,
+  imapRelayFor,
+  noteRelayFailure,
+  relayForFallback,
+  relayOnlyHost,
+  relayConfigured,
+  relayRouteFor,
+  RelayUnavailableError,
+} from "./smtp-relay.ts";
+import {
+  isOriginRefusalText,
+  learnRelayHost,
+  noteRelayFallbackFailed,
+  recordRelayUse,
+  refreshLearnedRelayHosts,
+  relayFallbackCoolingDown,
+  relayReason,
+  type RelayRoute,
+} from "./relay-registry.ts";
 import {
   firstPartyContext,
   summaryPreviewItem,
@@ -70,6 +90,34 @@ export class ImapConnectionLimitError extends Error {
     super(message);
     this.name = "ImapConnectionLimitError";
   }
+}
+
+/**
+ * Should a failed IMAP connect be tried once more through the relay?
+ *
+ * Only for a host that is not relayed already, only while the relay is up,
+ * never for a host whose relay retry failed in the last few minutes, and only
+ * for failures a different egress address can fix: a socket that did not open
+ * or a server that went quiet (timeouts), a greeting that turned us away, and a
+ * login refusal whose own words blame where we connect from (Orange's
+ * `[ALERT] Authentication failed.`; relay-registry.ts, isOriginRefusalText).
+ *
+ * Never for a plain wrong password (it would add a failed sign-in against the
+ * customer's account and end the same way), a connection limit (the account's
+ * own sessions, not our address), the SSRF guard refusing the host, or a
+ * certificate the host cannot present correctly.
+ */
+export function shouldRetryImapThroughRelay(host: string, err: unknown): boolean {
+  if (!relayForFallback()) return false;
+  if (relayRouteFor(host, "imap") !== null) return false;
+  if (relayFallbackCoolingDown(host, "imap")) return false;
+  if (err instanceof ImapConnectionLimitError || err instanceof MailHostBlockedError) return false;
+  const text = err instanceof Error ? err.message : String(err ?? "");
+  if (/certificate|UnknownIssuer|NotValidForName|InvalidCertificate/i.test(text)) return false;
+  if (err instanceof ImapAuthError) return isOriginRefusalText(text);
+  // A name that does not resolve fails identically from anywhere.
+  if (/failed to lookup|dns error|name or service not known|no such host|NXDOMAIN/i.test(text)) return false;
+  return true;
 }
 
 /**
@@ -640,11 +688,13 @@ export class ImapClient {
   ): Promise<ImapClient> {
     const maxRetries = 3;
     let lastErr: unknown;
+    // So a host the web app learned a minute ago is read through the relay here too.
+    if (relayConfigured()) await refreshLearnedRelayHosts();
 
     for (let attempt = 1; attempt <= maxRetries; attempt++) {
       try {
         if (timing) timing.connectAttempts += 1;
-        const client = await ImapClient.connectOnce(cfg, timing);
+        const client = await ImapClient.connectOnceWithRelayFallback(cfg, timing);
         if (timing) timing.connects += 1;
         return client;
       } catch (err) {
@@ -677,6 +727,38 @@ export class ImapClient {
   }
 
   /**
+   * {@link connectOnce}, retried ONCE through the relay when the direct attempt
+   * failed in a way a different egress address can fix
+   * (see {@link shouldRetryImapThroughRelay}). When the relayed attempt works
+   * the host is learned (relay-registry.ts) and every later connection goes
+   * through the relay first. When it does not, the DIRECT error is what the
+   * caller sees: it is the one that describes this mailbox.
+   */
+  private static async connectOnceWithRelayFallback(
+    cfg: ImapConnectConfig,
+    timing: ImapCallTimings | null,
+  ): Promise<ImapClient> {
+    try {
+      return await ImapClient.connectOnce(cfg, timing, "auto");
+    } catch (err) {
+      if (!shouldRetryImapThroughRelay(cfg.host, err)) throw err;
+      try {
+        const client = await ImapClient.connectOnce(cfg, timing, "fallback");
+        learnRelayHost(cfg.host, "imap", relayReason(err));
+        return client;
+      } catch (relayErr) {
+        noteRelayFallbackFailed(cfg.host, "imap");
+        console.warn("[mcp-server] relay_fallback: imap retry through the relay failed", {
+          host: cfg.host,
+          direct: relayReason(err),
+          relayed: relayReason(relayErr),
+        });
+        throw err;
+      }
+    }
+  }
+
+  /**
    * One connect attempt: open a TLS connection, read the greeting, and
    * authenticate with the password mechanism the server's capabilities allow
    * (SASL PLAIN unless they rule it out; see chooseImapPasswordMechanism).
@@ -684,39 +766,97 @@ export class ImapClient {
    * Throws {@link ImapConnectionLimitError} when the greeting or AUTH response
    * signals a transient connection/rate limit (retryable), and
    * {@link ImapAuthError} on genuine authentication failure (not retryable).
+   *
+   * `mode` "fallback" is the one retry through the relay; see
+   * {@link connectOnceWithRelayFallback}.
    */
   private static async connectOnce(
     cfg: ImapConnectConfig,
     timing: ImapCallTimings | null = null,
+    mode: "auto" | "fallback" = "auto",
   ): Promise<ImapClient> {
     const dialFromMs = imapClockMs();
-    // SSRF guard. The host on this row was public when the mailbox was
-    // connected, but nothing stops its A record being repointed into a private
-    // range afterwards, and this line is where that would be cashed in. The
-    // guard resolves the name, refuses every non-public answer, and hands back
-    // the address it approved so the socket lands there rather than on a name
-    // that would be resolved a second time. See host-guard.ts, which is a
-    // mirror of apps/web/src/lib/email/host-guard.ts — change one, change both.
-    //
-    // A relay-only host (smtp-relay.ts) is reached through the relay instead,
-    // with no direct fallback: that host refuses sign-ins from our own egress,
-    // and a direct attempt would come back looking like a wrong password. The
-    // guard's policy still runs on the name; the tunnel carries ciphertext, and
-    // the certificate is checked against `cfg.host` below exactly as it is on
-    // the direct path.
-    const relay = imapRelayFor(cfg.host);
-    let conn: Deno.TcpConn | Deno.TlsConn;
-    if (relay) {
-      const target = { host: cfg.host, port: cfg.port };
-      await guardRelayTarget(target, "imap");
-      conn = await connectThroughRelay(relay, target);
-    } else {
-      conn = await connectGuardedTcp({
-        host: cfg.host,
-        port: cfg.port,
+    const startedMs = Date.now();
+    const { conn, route } = await ImapClient.openTransport(cfg, mode);
+    if (route === null) return await ImapClient.establish(conn, cfg, timing, dialFromMs);
+    try {
+      const client = await ImapClient.establish(conn, cfg, timing, dialFromMs);
+      recordRelayUse({ protocol: "imap", host: cfg.host, route, outcome: "ok", ms: Date.now() - startedMs });
+      return client;
+    } catch (err) {
+      recordRelayUse({
         protocol: "imap",
+        host: cfg.host,
+        route,
+        outcome: "host_refused",
+        ms: Date.now() - startedMs,
+        detail: relayReason(err),
       });
+      throw err;
     }
+  }
+
+  /**
+   * The socket a session is opened on, and whether the relay carries it.
+   *
+   * SSRF guard. The host on this row was public when the mailbox was
+   * connected, but nothing stops its A record being repointed into a private
+   * range afterwards, and this line is where that would be cashed in. The
+   * guard resolves the name, refuses every non-public answer, and hands back
+   * the address it approved so the socket lands there rather than on a name
+   * that would be resolved a second time. See host-guard.ts, which is a
+   * mirror of apps/web/src/lib/email/host-guard.ts — change one, change both.
+   *
+   * A relay-only host (smtp-relay.ts) is reached through the relay instead,
+   * with no direct fallback: that host refuses sign-ins from our own egress,
+   * and a direct attempt would come back looking like a wrong password. A host
+   * the relay registry LEARNED is relayed too, but a relay that cannot carry it
+   * falls back to the direct dial, which is no worse than before it was
+   * learned. In "fallback" mode the relay is the whole point and a relay
+   * failure is reported as it is. The guard's policy still runs on the name on
+   * every path; the tunnel carries ciphertext, and the certificate is checked
+   * against `cfg.host` exactly as it is on the direct path.
+   */
+  private static async openTransport(
+    cfg: ImapConnectConfig,
+    mode: "auto" | "fallback",
+  ): Promise<{ conn: Deno.TcpConn; route: RelayRoute | null }> {
+    const target = { host: cfg.host, port: cfg.port };
+    const relay = mode === "fallback" ? relayForFallback() : imapRelayFor(cfg.host);
+    if (mode === "fallback" && !relay) throw new RelayUnavailableError("relay not configured or suspended");
+    if (relay) {
+      const route: RelayRoute = mode === "fallback" ? "fallback" : relayRouteFor(cfg.host, "imap") ?? "listed";
+      await guardRelayTarget(target, "imap");
+      const startedMs = Date.now();
+      try {
+        return { conn: await connectThroughRelay(relay, target), route };
+      } catch (err) {
+        if (!(err instanceof RelayUnavailableError)) throw err;
+        noteRelayFailure();
+        recordRelayUse({
+          protocol: "imap",
+          host: cfg.host,
+          route,
+          outcome: "relay_down",
+          ms: Date.now() - startedMs,
+          detail: err.message,
+        });
+        if (mode === "fallback" || relayOnlyHost(cfg.host)) throw err;
+        console.warn("[mcp-server] relay: imap falling back to direct egress", { host: cfg.host, error: err.message });
+      }
+    }
+    const conn = await connectGuardedTcp({ host: cfg.host, port: cfg.port, protocol: "imap" });
+    return { conn, route: null };
+  }
+
+  /** Everything after the socket: TLS, greeting, STARTTLS, login, ID. */
+  private static async establish(
+    socket: Deno.TcpConn,
+    cfg: ImapConnectConfig,
+    timing: ImapCallTimings | null,
+    dialFromMs: number,
+  ): Promise<ImapClient> {
+    let conn: Deno.TcpConn | Deno.TlsConn = socket;
     const tlsFromMs = imapClockMs();
     if (timing) timing.dialMs += tlsFromMs - dialFromMs;
 

@@ -8,7 +8,8 @@ import { openImapSession, McpEmailsError, ImapAuthError } from '@/lib/email/imap
 import { guardMailHost } from '@/lib/email/host-guard';
 import { validateSmtpCredential } from '@/lib/email/validate-smtp';
 import { legacySecurityForPort } from '@/lib/email/connection-config';
-import { openMailRelayTunnel, relayForMailHost, RELAY_ONLY_SMTP_TRANSPORT } from '@/lib/email/mail-relay';
+import { mailRelayConfigFromEnv, openMailRelayTunnel } from '@/lib/email/mail-relay';
+import { RELAYED_TRANSPORTS, refreshLearnedRelayHosts, relayRouteForHost } from '@/lib/email/relay-fallback';
 import type { Tables } from '@/types/database.types';
 import { createServiceRoleClient } from '@/lib/supabase/service';
 import { recordProductFunnelEvent } from '@/lib/analytics/product-funnel';
@@ -87,6 +88,13 @@ export async function POST(
   const isSendOnly =
     !inbox.imap_host && !!inbox.smtp_host && !!inbox.imap_password && !inbox.oauth_access_token;
 
+  // Hosts the relay registry learned are checked through the relay, like the
+  // relay-only list (relay-fallback.ts). Best-effort and bounded: a failed
+  // read leaves the previous list in place.
+  if ((isAppPassword || isSendOnly) && mailRelayConfigFromEnv()) {
+    await refreshLearnedRelayHosts(createServiceRoleClient());
+  }
+
   try {
     if (isAppPassword) {
       // SSRF guard on a STORED host. The row was written by a request body, and
@@ -119,11 +127,11 @@ export async function POST(
       healthy = true;
     } else if (isSendOnly) {
       const smtpHost = inbox.smtp_host!;
-      // A relay-only host refuses this app's own address, so it is checked the
-      // way it was connected: through the relay, on the one transport it
-      // carries (see mail-relay.ts).
-      const relay = relayForMailHost(smtpHost);
-      const smtpPort = relay ? RELAY_ONLY_SMTP_TRANSPORT.port : inbox.smtp_port ?? 465;
+      // A host that refuses this app's own address (relay-only, or learned by
+      // the relay registry) is checked the way it was connected: through the
+      // relay, on the one transport it carries (see relay-fallback.ts).
+      const relay = relayRouteForHost(smtpHost, 'smtp') ? mailRelayConfigFromEnv() : null;
+      const smtpPort = relay ? RELAYED_TRANSPORTS.smtp.port : inbox.smtp_port ?? 465;
       // Same SSRF guard as the IMAP branch, on the host this branch dials.
       const guard = await guardMailHost(smtpHost, { protocol: 'smtp', port: smtpPort });
       if (!guard.ok) {
@@ -137,7 +145,7 @@ export async function POST(
         username: inbox.imap_username || undefined,
         password: decryptToken(inbox.imap_password!),
         security: relay
-          ? RELAY_ONLY_SMTP_TRANSPORT.security
+          ? RELAYED_TRANSPORTS.smtp.security
           : inbox.smtp_security === 'starttls' || inbox.smtp_security === 'tls'
             ? inbox.smtp_security
             : legacySecurityForPort(smtpPort, 'smtp'),

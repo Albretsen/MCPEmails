@@ -57,6 +57,8 @@ import type {
   GrowthUserSignupDayRow,
   GrowthUsageCapOverviewRow,
   GrowthUsageCapWorkspaceRow,
+  GrowthMailRelayHostRow,
+  GrowthMailRelayDayRow,
 } from '@/lib/analytics/growth-types';
 import { PLANS, resolvePlanLimits } from '@/lib/stripe/plans';
 import { internalAccountMatchers } from '@/lib/analytics/internal-accounts';
@@ -80,6 +82,7 @@ export const GROWTH_TAGS = {
   accounts: 'growth:accounts',
   revenue: 'growth:revenue',
   usageCap: 'growth:usage-cap',
+  relay: 'growth:relay',
 } as const;
 
 /**
@@ -542,4 +545,17 @@ export async function fetchUsageCapWorkspaces(): Promise<GrowthResult<GrowthUsag
     p_internal_emails: internal.emails,
     p_internal_domains: internal.domains,
   });
+}
+
+/**
+ * Every host the mail relay carried connections for over the window, and every
+ * host the relay registry has learned. See supabase/migrations/*_mail_relay_registry.sql.
+ */
+export async function fetchMailRelayHosts(days: number): Promise<GrowthResult<GrowthMailRelayHostRow[]>> {
+  return rpcRows<GrowthMailRelayHostRow>('growth_mail_relay_hosts', GROWTH_TAGS.relay, { p_days: clampDays(days) });
+}
+
+/** Relayed connections per day over the window, by outcome. */
+export async function fetchMailRelayDaily(days: number): Promise<GrowthResult<GrowthMailRelayDayRow[]>> {
+  return rpcRows<GrowthMailRelayDayRow>('growth_mail_relay_daily', GROWTH_TAGS.relay, { p_days: clampDays(days) });
 }

@@ -497,3 +497,39 @@ export type GrowthUsageCapWorkspaceRow = {
   emails_queued: string | null;
   paused_rules: number;
 };
+
+/**
+ * One host the mail relay carried connections for, or one the relay registry
+ * learned, over the window. `growth_mail_relay_hosts(p_days)`.
+ *
+ * Host names only: no address, credential or account. `last_failure` is the
+ * refusal text the runtime recorded, already free of credentials.
+ */
+export type GrowthMailRelayHostRow = {
+  host: string;
+  protocol: 'imap' | 'smtp';
+  /** In mail_relay_hosts and not expired. */
+  learned: boolean;
+  learned_source: 'auto' | 'manual' | null;
+  first_learned_at: string | null;
+  /** When an auto-learned host is next tried directly again. */
+  learned_expires_at: string | null;
+  /** Comma-separated: listed, learned, fallback. Null when nothing was carried. */
+  routes: string | null;
+  connections: number;
+  ok: number;
+  relay_down: number;
+  host_refused: number;
+  avg_ms: number | null;
+  last_at: string | null;
+  last_failure_at: string | null;
+  last_failure: string | null;
+};
+
+/** Relayed connections per UTC day, zero-filled. `growth_mail_relay_daily(p_days)`. */
+export type GrowthMailRelayDayRow = {
+  day: string;
+  ok: number;
+  relay_down: number;
+  host_refused: number;
+};
