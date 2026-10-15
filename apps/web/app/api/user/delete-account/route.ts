@@ -2,6 +2,8 @@ import { NextRequest, NextResponse } from 'next/server';
 import { createClient } from '@/lib/supabase/server';
 import { createServiceRoleClient } from '@/lib/supabase/service';
 import { selectAllRows } from '@/lib/supabase/paginate';
+import { stripe } from '@/lib/stripe/client';
+import { cancelSubscriptionsForDeletedAccount } from '@/lib/stripe/cancel-on-account-delete';
 
 /**
  * DELETE /api/user/delete-account
@@ -14,6 +16,9 @@ import { selectAllRows } from '@/lib/supabase/paginate';
  *   1. Authenticate the requesting user via Supabase session cookie.
  *   2. Validate the request body: confirmEmail must exactly match the user's email.
  *   3. Look up ALL workspaces the user owns.
+ *   3b. Cancel the user's Stripe subscriptions immediately. If Stripe fails,
+ *      stop here: nothing is torn down and the account stays usable, rather
+ *      than leaving a subscription charging an account that no longer exists.
  *   4. For each owned workspace: revoke API keys + OAuth refresh chains,
  *      disconnect inboxes and null their encrypted credentials, drop pending
  *      invites, and soft-delete the workspace.
@@ -95,10 +100,11 @@ export async function DELETE(request: NextRequest): Promise<NextResponse> {
   const service = createServiceRoleClient();
   const { data: ownedWorkspaces, error: workspaceError } = await selectAllRows<{
     id: string;
+    stripe_customer_id: string | null;
   }>((from, to) =>
     service
       .from('workspaces')
-      .select('id')
+      .select('id, stripe_customer_id')
       .eq('owner_id', user.id)
       .is('deleted_at', null)
       // Total order: OFFSET paging over an unordered read may repeat or skip
@@ -118,6 +124,44 @@ export async function DELETE(request: NextRequest): Promise<NextResponse> {
 
   const ownedIds = ownedWorkspaces.map((w) => w.id);
   const now = new Date().toISOString();
+
+  // 3b. Stop billing BEFORE anything is torn down. The subscription lives in
+  //     Stripe and nothing else (no trigger, no edge function, not the webhook)
+  //     cancels it when an account goes away. The customer is user-level
+  //     (user_billing); the legacy per-workspace column is read too, because
+  //     the webhook still writes it and a customer found only there would
+  //     otherwise keep charging.
+  const { data: billing, error: billingError } = await service
+    .from('user_billing')
+    .select('stripe_customer_id')
+    .eq('user_id', user.id)
+    .maybeSingle();
+
+  if (billingError) {
+    console.error('[delete-account] billing lookup failed:', billingError.message);
+    return NextResponse.json(
+      { error: 'Could not check your subscription, so your account was not deleted. Please try again.' },
+      { status: 500 },
+    );
+  }
+
+  const customerIds = [
+    billing?.stripe_customer_id,
+    ...ownedWorkspaces.map((w) => w.stripe_customer_id),
+  ].filter((id): id is string => typeof id === 'string' && id.length > 0);
+
+  try {
+    await cancelSubscriptionsForDeletedAccount(stripe, customerIds);
+  } catch (err) {
+    console.error(
+      '[delete-account] subscription cancel failed:',
+      err instanceof Error ? err.message : String(err),
+    );
+    return NextResponse.json(
+      { error: 'Could not cancel your subscription, so your account was not deleted. Please try again or contact support.' },
+      { status: 502 },
+    );
+  }
 
   // 4. Tear down every owned workspace: revoke keys + refresh chains, disconnect
   //    inboxes AND wipe their encrypted credentials, drop pending invites, then
