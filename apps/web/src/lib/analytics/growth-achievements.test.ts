@@ -399,7 +399,8 @@ test('every recorded id is a rung that exists, and every day is a real ISO day',
     assert.match(unlock.day, /^20\d\d-[01]\d-[0-3]\d$/, `${id} has a malformed day`);
     assert.equal(unlock.day, new Date(`${unlock.day}T00:00:00Z`).toISOString().slice(0, 10));
     assert.ok(unlock.note.trim().length > 0, `${id} records a day with no evidence`);
-    assert.ok(unlock.day <= '2026-09-17', `${id} is dated in the future`);
+    // The day the record was last extended. Bump it with the next batch.
+    assert.ok(unlock.day <= '2026-10-15', `${id} is dated in the future`);
   }
 });
 
