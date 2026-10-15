@@ -71,10 +71,13 @@ export function parseSchema(sql: string): SelfHostSchema {
 }
 
 /** `const NAME = "a" + "b";` and `export const NAME = ["a", "b"] as const;` */
+// String concatenation is matched as `"…"` then `+ "…"` repeats, never as an
+// optional `+` between two `\s*`: that form lets whitespace split two ways and
+// backtracks exponentially (CodeQL js/redos).
 function stringConstants(sources: Map<string, string>): Map<string, string> {
   const constants = new Map<string, string>();
   for (const source of sources.values()) {
-    for (const m of source.matchAll(/^(?:export )?const ([A-Z][A-Z0-9_]*) =\s*((?:"[^"]*"\s*\+?\s*)+);/gm)) {
+    for (const m of source.matchAll(/^(?:export )?const ([A-Z][A-Z0-9_]*) =\s*("[^"]*"(?:\s*\+\s*"[^"]*")*);/gm)) {
       constants.set(m[1], [...m[2].matchAll(/"([^"]*)"/g)].map((s) => s[1]).join(""));
     }
     for (const m of source.matchAll(/^(?:export )?const ([A-Z][A-Z0-9_]*) = \[([^\]]*)\](?: as const)?;/gm)) {
@@ -105,7 +108,7 @@ function evaluateProjection(arg: string, constants: Map<string, string>): string
     return base === undefined ? null : [...extra, base].join(", ");
   }
   if (/^[A-Z][A-Z0-9_]*$/.test(first)) return constants.get(first) ?? null;
-  if (/^(?:"[^"]*"\s*\+?\s*)+$/.test(first)) {
+  if (/^"[^"]*"(?:\s*\+\s*"[^"]*")*$/.test(first)) {
     return [...first.matchAll(/"([^"]*)"/g)].map((m) => m[1]).join("");
   }
   return null;
