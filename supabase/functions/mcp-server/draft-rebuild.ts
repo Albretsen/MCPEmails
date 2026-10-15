@@ -38,6 +38,7 @@
 // ---------------------------------------------------------------------------
 
 import { type MimeLeaf, mimeLeafParts } from "./mime.ts";
+import { urlFromSignatureCid } from "./signature-images.ts";
 
 /**
  * The parts of a stored message that a rebuild from fields would drop or
@@ -62,6 +63,12 @@ export function draftRebuildBlockersOf(leaves: readonly MimeLeaf[]): string[] {
       if (sawHtml) blockers.push("a second text/html part");
       sawHtml = true;
     } else if (leaf.mediaType.startsWith("image/")) {
+      // Our own embedded signature image (signature-images.ts) survives a
+      // rebuild: the transport recognises its `cid:` in the HTML and attaches
+      // the image again, or turns the reference back into its https URL. So
+      // it is no blocker, or every save of a draft written with
+      // `signature_embed_images` on would be refused.
+      if (leaf.contentId && urlFromSignatureCid(leaf.contentId) !== null) continue;
       blockers.push(`an inline ${leaf.mediaType} part`);
     } else {
       blockers.push(`a ${leaf.mediaType} part`);

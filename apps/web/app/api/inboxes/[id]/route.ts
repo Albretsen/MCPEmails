@@ -324,6 +324,19 @@ export async function PATCH(
     update.signature_reply_mode = mode;
   }
 
+  // Send the signature's images inside the message (multipart/related, cid:)
+  // instead of as remote https URLs. Read by the MCP edge function at send and
+  // draft time; see supabase/functions/mcp-server/signature-images.ts.
+  if ('signature_embed_images' in input) {
+    if (typeof input.signature_embed_images !== 'boolean') {
+      return NextResponse.json(
+        { error: 'signature_embed_images must be a boolean.' },
+        { status: 400 }
+      );
+    }
+    update.signature_embed_images = input.signature_embed_images;
+  }
+
   // Sender display name. The MCP edge function writes `display_name` verbatim
   // into the From header (`"<display_name>" <address>`) for every provider, so
   // the value is normalised here as a header boundary: control characters
@@ -462,9 +475,13 @@ export async function PATCH(
       // eslint-disable-next-line @typescript-eslint/no-explicit-any
       selectTolerantly<any>(
         ['signature_text', 'signature_html', 'signature_enabled', 'signature_reply_mode',
+          'signature_embed_images',
           'signature_source', 'signature_updated_at', 'send_approval_required', 'send_review_mode',
           'display_name'],
-        PENDING_INBOX_COLUMNS,
+        // Only the READ-BACK tolerates a missing `signature_embed_images`. The
+        // write does not: a patch that carries it fails loudly rather than
+        // answering 200 for a preference that was never stored.
+        [...PENDING_INBOX_COLUMNS, 'signature_embed_images'],
         (columns) =>
           // eslint-disable-next-line @typescript-eslint/no-explicit-any
           (service as any)

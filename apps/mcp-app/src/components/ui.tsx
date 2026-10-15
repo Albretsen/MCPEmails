@@ -1,28 +1,46 @@
-import type { ComponentChildren } from "preact";
-import { useLayoutEffect, useRef } from "preact/hooks";
+import type { ComponentChildren, Ref } from "preact";
+import { useEffect, useLayoutEffect, useRef, useState } from "preact/hooks";
 import type { Provider } from "../contract";
 import { sanitizeEmailHtml } from "../sanitize";
 
 type Variant = "default" | "primary" | "danger" | "quiet";
 
+/**
+ * `soft` is for a button whose availability changes WHILE IT HAS FOCUS.
+ *
+ * The `disabled` attribute takes focus away: the browser drops it to the
+ * document and keeps only a starting point for the next Tab, which lands on
+ * whatever follows. In the draft editor what follows Save is Send, so a save
+ * that went busy (or failed) left the next Tab, and then Enter, on "Save and
+ * send" (QA, 2026-10-13). A soft button keeps the attribute off, says
+ * `aria-disabled` instead and ignores activation, so focus stays where the user
+ * put it for as long as the button exists.
+ */
 export function Btn(props: {
   children: ComponentChildren;
   onClick?: () => void;
   variant?: Variant;
   disabled?: boolean;
   busy?: boolean;
+  soft?: boolean;
   title?: string;
   type?: "button" | "submit";
+  btnRef?: Ref<HTMLButtonElement>;
 }) {
+  const off = !!(props.disabled || props.busy);
   return (
     <button
       class="btn"
+      ref={props.btnRef}
       type={props.type ?? "button"}
       data-variant={props.variant ?? "default"}
-      disabled={props.disabled || props.busy}
+      disabled={props.soft ? undefined : off}
+      aria-disabled={props.soft && off ? "true" : undefined}
       title={props.title}
       aria-busy={props.busy ? "true" : undefined}
-      onClick={props.onClick}
+      onClick={() => {
+        if (!off) props.onClick?.();
+      }}
     >
       {props.children}
     </button>
@@ -43,19 +61,83 @@ export function TextLink(props: {
   title?: string;
   tone?: "danger";
   disabled?: boolean;
+  /** See `Btn`: unavailable without giving up focus. */
+  soft?: boolean;
+  btnRef?: Ref<HTMLButtonElement>;
+  /** A disclosure toggle: whether what it controls is open, and its id. */
+  expanded?: boolean;
+  controls?: string;
 }) {
+  const off = !!props.disabled;
   return (
     <button
       type="button"
       class="link"
+      ref={props.btnRef}
       data-tone={props.tone}
       title={props.title}
-      disabled={props.disabled}
-      onClick={props.onClick}
+      aria-expanded={props.expanded === undefined ? undefined : props.expanded ? "true" : "false"}
+      aria-controls={props.controls}
+      disabled={props.soft ? undefined : off}
+      aria-disabled={props.soft && off ? "true" : undefined}
+      onClick={() => {
+        if (!off) props.onClick();
+      }}
     >
       {props.children}
     </button>
   );
+}
+
+/** How long a one-word answer ("Copied", "Up to date") stays on a link. */
+export const FLASH_MS = 2000;
+
+export type CopyState = null | "done" | "selected";
+
+/**
+ * Put text on the clipboard, or at least select it.
+ *
+ * A sandboxed frame is often denied the async clipboard, so `select` puts the
+ * same text under a selection and `execCommand("copy")` gets one more try;
+ * when that fails too the person is one keystroke from the same result, and
+ * the link says so. "Copied" is a receipt, not a state: it goes back after
+ * `FLASH_MS` so a second copy can be seen to work. "Selected" stays, because
+ * it is an instruction.
+ */
+export function useCopy(): { copied: CopyState; copy: (text: string, select: () => void) => void } {
+  const [copied, setCopied] = useState<CopyState>(null);
+  useEffect(() => {
+    if (copied !== "done") return;
+    const timer = setTimeout(() => setCopied(null), FLASH_MS);
+    return () => clearTimeout(timer);
+  }, [copied]);
+  const copy = (text: string, select: () => void) => {
+    const fallback = () => {
+      select();
+      let ok = false;
+      try {
+        ok = document.execCommand("copy");
+      } catch {
+        /* selected is still better than nothing */
+      }
+      setCopied(ok ? "done" : "selected");
+    };
+    try {
+      navigator.clipboard.writeText(text).then(() => setCopied("done"), fallback);
+    } catch {
+      fallback();
+    }
+  };
+  return { copied, copy };
+}
+
+/** The copy link's words for each state. */
+export function copyLabel(copied: CopyState): string {
+  return copied === "done"
+    ? "Copied"
+    : copied === "selected"
+      ? "Selected. Press Ctrl+C or Cmd+C to copy"
+      : "Copy text";
 }
 
 export function Segmented(props: {
@@ -99,8 +181,8 @@ export function Notice(props: {
  *
  * Was a bordered, filled block with a bulleted caveat list. It is now one muted
  * line, because it is reference information that every card repeats and it was
- * taking the visual weight of a warning. `extra` is the card-specific tail (the
- * draft editor's "saving gives the draft a new id"); caveats are capped inline
+ * taking the visual weight of a warning. `extra` is an optional card-specific
+ * tail (nothing passes one since old draft ids keep working); caveats are capped inline
  * for the same reason the block was capped before, that an inline card must
  * auto-fit without pushing its buttons off a phone screen.
  */
@@ -115,8 +197,9 @@ export function ProviderLine(props: {
    *
    * This line was the longest text on the draft card and the least actionable:
    * "IMAP + SMTP · APPEND to Drafts · Saving rewrites the message, so the draft
-   * gets a new id each time". `APPEND to Drafts` is protocol jargon, and the id
-   * caveat is a fact the reader cannot do anything with. A caller that has a
+   * gets a new id each time". `APPEND to Drafts` was protocol jargon (the
+   * server now says "Saved to your Drafts folder"), and the id caveat is gone
+   * since old ids resolve through the server's draft lineage. A caller that has a
    * human sentence for the same thing passes it here; one that does not passes
    * nothing and gets exactly today's line.
    */
@@ -147,7 +230,7 @@ export function ProviderLine(props: {
     : undefined;
 
   return (
-    <p class="line" title={title}>
+    <p class="line prov" title={title}>
       {shown.join(" · ")}
     </p>
   );
@@ -271,14 +354,39 @@ export function AutoTextarea(props: {
  * The sanitizer returns a live DocumentFragment, which is adopted straight into
  * this node. There is no innerHTML and no dangerouslySetInnerHTML anywhere in
  * this app — nothing is ever serialised back to a string and re-parsed.
+ *
+ * `preview` is the draft editor's read-only formatted view (QA, 2026-10-13):
+ *
+ *   - images are left out rather than drawn as `[image: MCP Emails logo]`. The
+ *     card cannot load them (remote images are tracking pixels and the CSP is
+ *     empty), and a bracketed literal read as text the draft contained.
+ *   - the server's own signature wrapper (`<div class="mcpemails-signature">`,
+ *     signature-compose.ts) is set apart with a gap. The sanitizer strips every
+ *     `class`, so the boundary is found in the source string first and each
+ *     half is sanitized on its own; a half-open tag on either side is simply
+ *     closed or dropped by the parser.
  */
-export function HtmlBody(props: { html: string }) {
+export const SIGNATURE_WRAPPER = '<div class="mcpemails-signature">';
+
+export function HtmlBody(props: { html: string; preview?: boolean }) {
   const ref = useRef<HTMLDivElement>(null);
   useLayoutEffect(() => {
     const node = ref.current;
     if (!node) return;
     node.textContent = "";
-    node.appendChild(sanitizeEmailHtml(props.html).fragment);
-  }, [props.html]);
+    const at = props.preview ? props.html.lastIndexOf(SIGNATURE_WRAPPER) : -1;
+    if (at === -1) {
+      node.appendChild(sanitizeEmailHtml(props.html).fragment);
+    } else {
+      node.appendChild(sanitizeEmailHtml(props.html.slice(0, at)).fragment);
+      const sig = document.createElement("div");
+      sig.className = "html-sig";
+      sig.appendChild(sanitizeEmailHtml(props.html.slice(at)).fragment);
+      node.appendChild(sig);
+    }
+    if (props.preview) {
+      for (const img of Array.from(node.querySelectorAll(".img-placeholder"))) img.remove();
+    }
+  }, [props.html, props.preview]);
   return <div class="body-full body-html" ref={ref} />;
 }

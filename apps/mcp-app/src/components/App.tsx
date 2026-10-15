@@ -1,5 +1,5 @@
 import type { VNode } from "preact";
-import { useEffect, useRef, useState } from "preact/hooks";
+import { useEffect, useMemo, useRef, useState } from "preact/hooks";
 import type { HostBridge, ToolResultParams } from "../bridge";
 import {
   isSupportedVersion,
@@ -8,6 +8,22 @@ import {
   type Receipt as ReceiptData,
 } from "../contract";
 import { diagnosticsEnabled } from "../diagnostics";
+import {
+  endedFrom,
+  loadEnded,
+  rememberEnded,
+  type EndedCopy,
+  type OnScreen,
+} from "../ended";
+import {
+  changesDraft,
+  patchLanded,
+  textRefusalCode,
+  type DraftAction,
+  type DraftFailure,
+  type PatchFields,
+  type Settled,
+} from "../draft-failure";
 import { bulkVerb } from "../format";
 import {
   bulkCancelContextLine,
@@ -17,24 +33,27 @@ import {
   draftSavedContextLine,
   outboundApproveOpenedContextLine,
   outboundRejectContextLine,
-  type DraftAction,
-  type DraftCall,
+  type DraftCall as ModelDraftCall,
 } from "../model-context";
-import { isRestoreStub, lastDashboardUrl } from "../persist";
+import { cardKey, isRestoreStub, lastDashboardUrl } from "../persist";
 import {
   acceptDeferredBody,
   acceptRehydration,
   adoptDeferredBody,
+  adoptOwnAnswer,
   adoptRehydration,
   awaitsBodyOf,
+  clearDraftError,
   deferredBodyCall,
   deferredBodyKey,
   envelopeFrom,
   getState,
   isBodyDeferred,
   isDepartedReceipt,
+  isFailure,
   mergeEnvelope,
   rehydrationCall,
+  REPLAY_AGE_MS,
   setState,
   subscribe,
 } from "../store";
@@ -109,11 +128,49 @@ function Diagnostics(props: { bridge: HostBridge }) {
   return <p class="diag">{line}</p>;
 }
 
+/** The two ways a draft call can end without an answer that says what happened. */
+type LostCode = "transport" | "unreadable";
+
+/** One call from the draft editor: the applied envelope, or why there is none. */
+interface DraftCall {
+  env: Envelope | null;
+  lost: LostCode | null;
+  /** The code the server refused with, when it answered and did not act. */
+  refused?: string | null;
+  /** That refusal's headline. Only ever matched, never shown. */
+  headline?: string | null;
+  /**
+   * The exchange as it happened, for the model-context line
+   * (model-context.ts#draftCallOutcome): the envelope BEFORE it was merged,
+   * the raw result for the answers that are not an envelope, and the message
+   * of a call that threw.
+   */
+  call: ModelDraftCall;
+}
+
+/** Which way a draft the server cannot find is known to have ended, if it says. */
+function closedHow(headline: string | null | undefined): "sent" | "discarded" | null {
+  const h = String(headline ?? "");
+  return /already sent/i.test(h) ? "sent" : /discarded/i.test(h) ? "discarded" : null;
+}
+
 /** `email_compose` -> `Email compose`. Falls back to the product name. */
 function toolLabel(tool: string | null | undefined): string {
   if (!tool) return "MCP Emails";
   const words = tool.replace(/_/g, " ").trim();
   return words ? words.charAt(0).toUpperCase() + words.slice(1) : "MCP Emails";
+}
+
+/**
+ * What the person reads after hiding the draft editor card: what happened, and
+ * where to undo it. The dashboard has one switch per inbox (Inboxes, in the
+ * inbox's details) and one for the workspace (Settings), both labelled "Show
+ * the draft editor card" (apps/web/messages/en/dashboard.json).
+ */
+export function hiddenDetail(scope: "inbox" | "workspace"): string {
+  return scope === "workspace"
+    ? 'The card will not appear for any inbox in this workspace. Drafts still work as before. To bring it back, turn on "Show the draft editor card" in the MCP Emails dashboard, under Settings.'
+    : 'The card will not appear for this inbox. Drafts still work as before. To bring it back, turn on "Show the draft editor card" in the MCP Emails dashboard, under Inboxes, in this inbox\'s details.';
 }
 
 export function App(props: { bridge: HostBridge }) {
@@ -122,6 +179,15 @@ export function App(props: { bridge: HostBridge }) {
   const [busy, setBusy] = useState<string | null>(null);
   const [error, setError] = useState<string | null>(null);
   const [approveOpened, setApproveOpened] = useState(false);
+  // The draft editor's last action failing with no envelope to carry it. A
+  // code, never a message: DraftEditor owns the wording (draft-failure.ts).
+  const [failure, setFailure] = useState<DraftFailure | null>(null);
+  // A send whose answer was lost (the call threw, or came back unreadable).
+  // It may have gone out, so Send stays off until the person says otherwise,
+  // whatever a re-read finds: a draft still in Drafts after a lost send is
+  // "probably not sent", never "not sent" (review, 2026-10-13: the re-read made
+  // the draft trusted again and Send could deliver it twice).
+  const [sendDoubt, setSendDoubt] = useState(false);
 
   // The store is the single source of truth for the envelope. Keeping a copy in
   // component state looks harmless and is not: the host pushes
@@ -146,8 +212,54 @@ export function App(props: { bridge: HostBridge }) {
   useEffect(() => () => unsubscribe.current?.(), []);
 
   const store = getState();
+  // The draft editor's stash scope (unsaved.ts): the identity of the call this
+  // card was mounted for. Recomputed only when the call's identity changes.
+  const draftScope = useMemo(
+    () => cardKey(store.toolInfo, store.toolInput),
+    [store.toolInfo, store.toolInput],
+  );
   const envelope = store.envelope;
   const setEnvelope = (next: Envelope) => setState({ envelope: next });
+
+  // ---- the message a draft card ended on -----------------------------------
+  //
+  // What "Show" on the ended line opens (SentMessage.tsx). `kept` is the copy
+  // this mount kept at the moment it ended, `fresh` because only a send made
+  // here opens on arrival. `remembered` is the copy an earlier mount of this
+  // same card kept in this tab (ended.ts), which is all a reopened chat has.
+  // Neither is ever the tool result the card was mounted with: on a reopen
+  // that is the assistant's original text, not what was sent or discarded.
+  const [kept, setKept] = useState<{ copy: EndedCopy; fresh: boolean } | null>(null);
+  const mountedInbox =
+    typeof store.toolInput?.inbox_id === "string" ? store.toolInput.inbox_id : null;
+  const remembered = useMemo(
+    () => (envelope?.card === "receipt" || store.priorReceipt ? loadEnded(draftScope, mountedInbox) : null),
+    [draftScope, mountedInbox, envelope?.card, store.priorReceipt],
+  );
+  const keepEnded = (copy: EndedCopy, inbox: string | null | undefined) => {
+    setKept({ copy, fresh: true });
+    rememberEnded(draftScope, inbox ?? mountedInbox, copy);
+  };
+  /** The copy to offer under this receipt, if the card has one it can stand behind. */
+  const endedView = (env: Envelope): { copy: EndedCopy; startOpen: boolean } | null => {
+    const r = env.receipt;
+    if (env.card !== "receipt" || !r || isFailure(env)) return null;
+    if (kept && kept.copy.outcome === r.outcome) {
+      const sent = kept.copy.how === "sent" || kept.copy.how === "scheduled";
+      return { copy: kept.copy, startOpen: kept.fresh && sent };
+    }
+    // A receipt carrying the draft it sent (store.ts#carrySentDraft) that did
+    // not come through this card's own Send: a pushed result for this draft.
+    if (isDepartedReceipt(env) && env.draft) {
+      const how = r.outcome === "scheduled" ? "scheduled" : "sent";
+      return {
+        copy: endedFrom(env.draft, how, how, { sent_at: env.sent_at, provider: env.provider?.label }),
+        startOpen: true,
+      };
+    }
+    if (remembered && remembered.outcome === r.outcome) return { copy: remembered, startOpen: false };
+    return null;
+  };
   const ctx = bridge.hostContext;
   const fullscreen = ctx.displayMode === "fullscreen";
   const canExpand = (ctx.availableDisplayModes ?? ["inline"]).includes(
@@ -227,40 +339,295 @@ export function App(props: { bridge: HostBridge }) {
    * not an envelope (model-context.ts#draftCallOutcome lists them), so those
    * outcomes reached the model as silence over a stale sentence.
    */
+  //
+  // ── AND NO FAILURE DOES, WHATEVER SHAPE IT ARRIVES IN (2026-10-13) ────────
+  // That rule covered one shape of failure out of three, and QA found the
+  // other two the same afternoon:
+  //
+  //   a failed RECEIPT   every draft tool's refusal. Renderable, so it replaced
+  //                      the editor. Now merged around it (mergeEnvelope's
+  //                      rule -1).
+  //   a THROWN call      offline, a host timeout, a JSON-RPC error. It printed
+  //                      the raw `-32603: Failed to fetch`. Now a code.
+  //   an unreadable one  an answer that is not an envelope. Same.
+  //
+  // The second is the dangerous one, because "the call threw" does not mean
+  // "nothing happened": the save QA lost the response to HAD been stored, under
+  // a new id. So a write that ends without an answer leaves the draft
+  // `unverified` (Save and Send off) until a re-read settles what the server
+  // holds. Re-saving blind would be a second write against an id that may
+  // already be retired; `readDraft` below is the recovery, and DraftEditor
+  // keeps the user's edits across it (`rebaseEdit`).
   const callDraft = async (
-    key: string,
+    key: DraftAction,
     tool: string,
     args: Record<string, unknown>,
-    tellModel?: (call: DraftCall) => void,
-  ): Promise<Envelope | null> => {
+    opts: { failAs?: DraftAction; quiet?: boolean } = {},
+  ): Promise<DraftCall> => {
+    // `failAs`: the action the user sees as failed, when it is not the one the
+    // busy state names (the save half of "Save and send" is a save).
+    // `quiet`: a reconciling re-read, which must not wipe the notice of the
+    // failure it is reconciling.
+    const action = opts.failAs ?? key;
+    let result: ToolResultParams | null = null;
+    let raw: Envelope | null = null;
+    let thrown: string | null = null;
+    const told = (r: Omit<DraftCall, "call">): DraftCall => ({
+      ...r,
+      call: { envelope: raw, result, thrown },
+    });
+    callSeq.current += 1;
+    const lose = (code: LostCode): DraftCall => {
+      setFailure({ action, code, at: Date.now() });
+      if (changesDraft(action)) setState({ draftCheck: "unverified" });
+      return told({ env: null, lost: code });
+    };
     setBusy(key);
     setError(null);
-    let result: ToolResultParams | null = null;
-    let next: Envelope | null = null;
-    let thrown: string | null = null;
+    if (!opts.quiet) {
+      setFailure(null);
+      clearDraftError();
+    }
     try {
       result = await bridge.callServerTool(tool, args);
-      next = envelopeFrom(result);
+      const next = envelopeFrom(result);
+      raw = next;
+      lastAnswer.current = Date.now();
       if (!next) {
-        setError("The server sent a response this card could not read.");
-        return null;
+        // A bare `isError` sentence IS an answer: the server refused and did
+        // not act (draft not found, sending quota, a mailbox to reconnect, the
+        // approval queue). Said in a person's words, and Send is left as it
+        // was; only a draft that cannot be found stops the editor offering to
+        // write until a re-read. A send whose delivery the server itself calls
+        // unknown, and an answer that is not even that, stay a lost answer:
+        // the server may have acted (review 2 of 2026-10-13).
+        const refused = tool === "draft" ? textRefusalCode(result) : null;
+        if (refused === null) return lose("unreadable");
+        setFailure({ action, code: refused, at: Date.now() });
+        if (refused === "draft_not_found") setState({ draftCheck: "unverified" });
+        return told({ env: null, lost: null, refused });
       }
-      const applied = mergeEnvelope(getState().envelope, next);
-      setEnvelope(applied);
-      return applied;
+      const applied = adoptOwnAnswer(next);
+      if (isFailure(applied)) {
+        const code = String(applied.receipt?.error_code ?? "");
+        setFailure({ action, code, headline: applied.receipt?.headline ?? null, at: Date.now() });
+        // The id on screen names nothing the server can find, or the copy on
+        // screen is older than the draft (`draft_changed`), or the draft was
+        // already sent. Nothing can be written from it, so stop offering to
+        // until a re-read ("Load the newer version", Check again) settles it.
+        if (
+          code === "draft_not_found" || code === "draft_changed" ||
+          code === "draft_already_sent"
+        ) {
+          setState({ draftCheck: "unverified" });
+        }
+        return told({ env: applied, lost: null, refused: code, headline: applied.receipt?.headline ?? null });
+      }
+      return told({ env: applied, lost: null });
     } catch (e) {
       thrown = e instanceof Error ? e.message : String(e);
-      setError(thrown);
-      return null;
+      return lose("transport");
     } finally {
       setBusy(null);
-      tellModel?.({ envelope: next, result, thrown });
     }
   };
 
   /** A save that actually stored something, as opposed to a refusal. */
   const draftStored = (env: Envelope | null): boolean =>
     !!env && env.card === "draft_editor" && env.state !== "error" && !!env.draft;
+
+  /**
+   * Re-read the draft and reconcile: Refresh, "Check again", the automatic
+   * check of a replayed mount, and the re-read after a lost answer are all
+   * this one function.
+   *
+   * Asks with the newest id the card knows first (`draftIdHint`, read out of
+   * the restore stub) and then with the one on screen. With draft lineage on
+   * the server either resolves to the current draft, and whatever id the
+   * answer carries is adopted; without it the hint is the one that still
+   * exists. A read that brings back a draft makes it `trusted`
+   * (store.ts#adoptOwnAnswer); one that does not, while the draft was in doubt,
+   * leaves it `unverified` with the reason on screen.
+   */
+  //
+  // `auto`: the check of a replayed mount, which nobody asked for and which
+  // runs before the person has touched the card. Only there may the answer
+  // close the card: a draft the server says was sent or discarded becomes that
+  // one-line receipt instead of an editor over text that no longer exists, and
+  // a card that had already ended on a receipt (`priorReceipt`) goes back to it
+  // unless the read brings a live draft. A check the person asked for keeps the
+  // editor, because by then it may hold text they want to copy.
+  const readDraft = async (
+    opts: { quiet?: boolean; failAs?: DraftAction; auto?: boolean } = {},
+  ): Promise<Envelope | null> => {
+    const s = getState();
+    const d = s.envelope?.draft;
+    if (!d || s.envelope?.card !== "draft_editor") return null;
+    if (s.draftCheck !== "trusted") setState({ draftCheck: "checking" });
+    const ids = [...new Set([s.draftIdHint, d.draft_id])].filter(
+      (id): id is string => !!id,
+    );
+    let applied: Envelope | null = null;
+    let headline: string | null = null;
+    for (const id of ids) {
+      const r = await callDraft(
+        "refresh",
+        "draft_read",
+        { inbox_id: d.identity?.inbox_id, draft_id: id },
+        opts,
+      );
+      applied = r.env;
+      headline = r.refused === "draft_not_found" ? r.headline ?? null : null;
+      if (r.lost) break;
+      const missing = !!applied && isFailure(applied) &&
+        applied.receipt?.error_code === "draft_not_found";
+      if (!missing) break;
+    }
+    if (!draftStored(applied) && opts.auto) {
+      const prior = getState().priorReceipt;
+      const how = closedHow(headline);
+      if (prior) {
+        setFailure(null);
+        setState({ envelope: prior, priorReceipt: null, draftCheck: "trusted", draftIdHint: null });
+        return null;
+      }
+      if (how) {
+        closeDraft(how);
+        return null;
+      }
+    }
+    if (!draftStored(applied) && getState().draftCheck === "checking") {
+      setState({ draftCheck: "unverified", draftIdHint: null });
+    }
+    return draftStored(applied) ? applied : null;
+  };
+
+  /**
+   * End the card on a one-line receipt for a draft that no longer exists: the
+   * same place a successful discard or send leaves it. `gone` is a draft the
+   * server could not find without knowing why.
+   */
+  const closeDraft = (how: "sent" | "discarded" | "gone", copy?: EndedCopy) => {
+    const env = getState().envelope;
+    if (copy) keepEnded(copy, env?.draft?.identity?.inbox_id);
+    const receipt: ReceiptData = how === "sent"
+      ? {
+        outcome: "sent",
+        headline: "This draft was already sent.",
+        detail: "It is in your Sent folder.",
+        affected_count: 0,
+        dashboard_url: null,
+      }
+      : {
+        outcome: "discarded",
+        headline: how === "discarded"
+          ? "This draft was discarded."
+          : "This draft is no longer in Drafts.",
+        detail: how === "discarded"
+          ? "It was removed from Drafts and nothing was sent."
+          : "It was probably sent or deleted already. Nothing else was changed.",
+        affected_count: 0,
+        dashboard_url: null,
+      };
+    setFailure(null);
+    setState({
+      envelope: {
+        schema_version: env?.schema_version ?? SCHEMA_VERSION,
+        card: "receipt",
+        state: how === "sent" ? "sent" : "rejected",
+        dashboard_url: env?.dashboard_url,
+        receipt,
+      },
+      draftCheck: "trusted",
+      draftIdHint: null,
+      priorReceipt: null,
+      draftSuperseded: false,
+    });
+  };
+
+  // ---- noticing a newer version when the person comes back to the card ------
+  //
+  // Nothing tells a mounted card that a later tool call rewrote its draft, so
+  // an older card would sit there as a live editor over old text. When focus
+  // comes into the frame and the last answer from the server is not recent, the
+  // draft is read once more, silently: no busy state, no notice on failure. A
+  // read that brings the draft back is adopted like any Refresh (unsaved edits
+  // stay on top), and store.ts#supersededBy decides whether a newer card
+  // exists. Dropped if the person started anything meanwhile.
+  const callSeq = useRef(0);
+  const lastAnswer = useRef(Date.now());
+  const busyNow = useRef<string | null>(null);
+  busyNow.current = busy;
+  const attentionCheck = async () => {
+    const s = getState();
+    const d = s.envelope?.draft;
+    if (!d || s.envelope?.card !== "draft_editor" || isRestoreStub(s.envelope)) return;
+    if (s.draftCheck !== "trusted" || s.draftSuperseded || busyNow.current !== null) return;
+    if (Date.now() - lastAnswer.current < REPLAY_AGE_MS) return;
+    lastAnswer.current = Date.now();
+    const seq = callSeq.current;
+    const asked = d.draft_id;
+    try {
+      const next = envelopeFrom(
+        await bridge.callServerTool("draft_read", {
+          inbox_id: d.identity?.inbox_id,
+          draft_id: asked,
+        }),
+      );
+      if (seq !== callSeq.current || busyNow.current !== null) return;
+      if (!draftStored(next) || isFailure(next)) return;
+      const got = next!.draft!;
+      if (got.draft_id !== asked && got.resolved_from !== asked) return;
+      adoptOwnAnswer(next!);
+    } catch {
+      /* a check nobody asked for: the next action will say what is wrong */
+    }
+  };
+  const onAttention = useRef(attentionCheck);
+  onAttention.current = attentionCheck;
+  useEffect(() => {
+    const onFocus = () => void onAttention.current();
+    window.addEventListener("focus", onFocus);
+    return () => window.removeEventListener("focus", onFocus);
+  }, []);
+
+  /**
+   * After a write whose answer was LOST (transport error, unreadable answer),
+   * find out what the server actually holds instead of guessing. QA's case: a
+   * save answered `-32603: Failed to fetch` had in fact been stored, under a
+   * new id, and the retry against the old id then failed as not found.
+   *
+   * The re-read is `quiet`, so the notice keeps saying what failed until this
+   * can say how it ended; with draft lineage on the server it finds the draft
+   * under its new id, and DraftEditor keeps the user's text across it either
+   * way (`rebaseEdit`).
+   */
+  const reconcile = async (
+    action: DraftAction,
+    code: LostCode,
+    patch: PatchFields | null,
+  ) => {
+    if (!changesDraft(action)) return;
+    const env = await readDraft({ quiet: true, failAs: action });
+    if (!env?.draft) return;
+    const settled: Settled = action === "save"
+      ? patch && patchLanded(patch, env.draft) ? "landed" : "not_landed"
+      : "still_there";
+    setFailure({ action, code, settled });
+    if (settled === "landed") tellSaved(env.draft, patch);
+  };
+
+  /**
+   * The model-context line for a save that stored. `bodyEdited` is sticky
+   * until the agent writes the draft again (see the draft branch below), so a
+   * subject-only save after a body edit still says the body is not the agent's.
+   */
+  const tellSaved = (draft: NonNullable<Envelope["draft"]>, patch: PatchFields | null) => {
+    if (patch?.body_text !== undefined) bodyEdited.current = true;
+    void bridge.updateModelContext(
+      draftSavedContextLine(draft, { bodyEdited: bodyEdited.current }),
+    );
+  };
 
   const openDashboard = (path: string | null | undefined) => {
     const url = path ? absoluteUrl(path) : null;
@@ -330,7 +697,36 @@ export function App(props: { bridge: HostBridge }) {
   const bodyEdited = useRef(false);
   const agentWrote = useRef<string | null>(null);
   const [stubFailed, setStubFailed] = useState(false);
+
+  // A card that has ended (sent, discarded, hidden, decided, gone) is one line.
+  // In fullscreen that is one line on an empty page, so it asks for inline
+  // again. Once, on arrival: the sent message can still be expanded afterwards.
+  const ended = !!gone || (envelope?.card === "receipt" && !!envelope.receipt);
+  useEffect(() => {
+    if (ended && fullscreen) setFullscreen(false);
+  }, [ended]);
   const refreshed = useRef(false);
+  /** The stub's own re-request is still in flight. See the effect below it. */
+  const stubRead = useRef(false);
+
+  // A re-mounted DRAFT usually gets both halves at once: the stub out of
+  // storage, whose re-request starts here, and a few milliseconds later the
+  // host's replay of the original result, which replaces the stub with a full
+  // (and stale) editor before the re-request has answered. The answer is then
+  // about an editor, not a stub, and the stub rules below are the wrong ones
+  // for it: "gone" would replace the editor with one line. So it is settled as
+  // what it now is, the verification of that replay.
+  const settleOverEditor = (asked: Envelope, result: unknown) => {
+    const next = envelopeFrom(result as Parameters<typeof envelopeFrom>[0]);
+    const decided = acceptRehydration(asked, next);
+    if (decided.kind === "adopt" && decided.envelope.card === "draft_editor") {
+      adoptOwnAnswer(decided.envelope);
+      return;
+    }
+    // The stub's id did not bring the draft back. The replayed id still might.
+    setState({ draftIdHint: null });
+    if (getState().draftCheck !== "trusted") void readDraft({ auto: true });
+  };
   useEffect(() => {
     if (store.restored !== "storage" || refreshed.current) return;
     const env = store.envelope;
@@ -343,9 +739,16 @@ export function App(props: { bridge: HostBridge }) {
     // change what "asked" means.
     const asked = env;
     refreshed.current = true;
+    stubRead.current = true;
+    const overEditor = () => {
+      const now = getState().envelope;
+      return asked.card === "draft_editor" && !!now && !isRestoreStub(now);
+    };
     bridge
       .callServerTool(call.tool, call.args)
       .then((result) => {
+        stubRead.current = false;
+        if (overEditor()) return settleOverEditor(asked, result);
         const decided = acceptRehydration(asked, envelopeFrom(result));
         // `adoptRehydration`, never a bare setState: a server answer about a
         // known id is the moment this card stops being a memory, and the push
@@ -362,6 +765,8 @@ export function App(props: { bridge: HostBridge }) {
         } else setStubFailed(true);
       })
       .catch(() => {
+        stubRead.current = false;
+        if (overEditor()) return settleOverEditor(asked, undefined);
         // Offline, or the host refused the call. There is nothing to show: the
         // stub has no content in it, by design.
         setStubFailed(true);
@@ -390,6 +795,11 @@ export function App(props: { bridge: HostBridge }) {
   const [bodyFailed, setBodyFailed] = useState<string | null>(null);
   useEffect(() => {
     if (bodyKey === null || askedBody.current === bodyKey) return;
+    // A REPLAYED draft is re-read anyway (the check below, merged from main),
+    // and that `draft_read` brings the body inline. Asking twice would double
+    // every remount of a model-written draft card, so this read waits for that
+    // one and only runs if it ended without a draft on screen.
+    if (store.draftCheck === "pending" || store.draftCheck === "checking") return;
     const asked = getState().envelope;
     const call = deferredBodyCall(asked);
     if (!asked || !call) return;
@@ -408,7 +818,20 @@ export function App(props: { bridge: HostBridge }) {
       .catch(() => {
         if (awaitsBodyOf(asked)) setBodyFailed(bodyKey);
       });
-  }, [bodyKey]);
+  }, [bodyKey, store.draftCheck]);
+
+  // ---- a replayed draft is checked before it is trusted ---------------------
+  //
+  // store.ts marks a pushed draft `pending` when it is a replay
+  // (`isReplayedDraft`). This starts the re-read, unless the stub's own is
+  // already on its way, in which case that one settles it. Declared after the
+  // stub effect so that on the commit where both become true the stub's read
+  // has been started first.
+  useEffect(() => {
+    if (store.draftCheck !== "pending") return;
+    if (stubRead.current) setState({ draftCheck: "checking" });
+    else void readDraft({ auto: true });
+  }, [store.draftCheck]);
 
   /**
    * The envelope's own dashboard URL when there is one on screen, else the last
@@ -749,6 +1172,42 @@ export function App(props: { bridge: HostBridge }) {
       );
     }
 
+    // A card that had ended on a receipt stays on it while the replayed draft
+    // is checked (store.ts#priorReceipt), instead of flashing an editor.
+    //
+    // Not only `pending` and `checking`: a check whose answer is "not found"
+    // passes through `unverified` for one render before readDraft puts the
+    // receipt back, and that render drew the editor over the assistant's
+    // original text for a frame (and threw away an open "Show"). The receipt
+    // is held for as long as `priorReceipt` is, which readDraft always settles.
+    if (
+      envelope.card === "draft_editor" && store.priorReceipt?.receipt &&
+      store.draftCheck !== "trusted"
+    ) {
+      const view = endedView(store.priorReceipt);
+      if (view) {
+        return (
+          <SentMessage
+            receipt={store.priorReceipt.receipt}
+            copy={view.copy}
+            startOpen={view.startOpen}
+            fullscreen={fullscreen}
+            canExpand={canExpand}
+            busy={busy}
+            onOpenDashboard={() => openDashboard(store.priorReceipt?.receipt?.dashboard_url)}
+            setFullscreen={setFullscreen}
+          />
+        );
+      }
+      return (
+        <Receipt
+          receipt={store.priorReceipt.receipt}
+          busy={busy}
+          onOpenDashboard={() => openDashboard(store.priorReceipt?.receipt?.dashboard_url)}
+        />
+      );
+    }
+
     if (envelope.card === "draft_editor" && envelope.draft) {
       const d = envelope.draft;
       // Read at call time, never closed over: on IMAP every save retires the id
@@ -759,6 +1218,18 @@ export function App(props: { bridge: HostBridge }) {
         inbox_id: d.identity?.inbox_id,
         draft_id: getState().envelope?.draft?.draft_id ?? d.draft_id,
       });
+      // Which revision of the draft the person is looking at, read at call time
+      // like the id. Sent with every save and send so the server refuses a
+      // write against a draft rewritten since (`draft_changed`) instead of
+      // following its lineage to a version this card never showed. 0 when the
+      // server records no revision for this draft.
+      const writeTarget = () => {
+        const rev = getState().envelope?.draft?.revision;
+        return {
+          ...target(),
+          base_revision: typeof rev === "number" && Number.isInteger(rev) && rev >= 0 ? rev : 0,
+        };
+      };
 
       // Has a save from THIS card changed the body since the agent last wrote
       // it? Kept across saves because each model-context line replaces the last:
@@ -776,45 +1247,43 @@ export function App(props: { bridge: HostBridge }) {
         bodyEdited.current = false;
       }
 
-      /** One save, and the line for it. Shared by Save and by Save-and-send. */
-      const saveAndTell = async (key: string, patch: DraftPatch): Promise<boolean> => {
-        const next = await callDraft(key, "draft_editor_save", { ...target(), ...patch });
-        if (!draftStored(next)) return false;
-        if (patch.body_text !== undefined) bodyEdited.current = true;
-        void bridge.updateModelContext(
-          draftSavedContextLine(next!.draft!, { bodyEdited: bodyEdited.current }),
-        );
+      const save = async (patch: DraftPatch): Promise<boolean> => {
+        if (Object.keys(patch).length === 0) return true;
+        const r = await callDraft("save", "draft_editor_save", {
+          ...writeTarget(),
+          ...patch,
+        });
+        // Started, not awaited: the editor drops its record of what it sent
+        // when this resolves false, and the re-read must land after that, or
+        // its old content would be taken for the save's own answer.
+        if (r.lost) {
+          void reconcile("save", r.lost, patch);
+          return false;
+        }
+        if (!draftStored(r.env)) return false;
+        tellSaved(r.env!.draft!, patch);
         return true;
       };
 
-      const save = async (patch: DraftPatch): Promise<boolean> => {
-        if (Object.keys(patch).length === 0) return true;
-        return saveAndTell("save", patch);
-      };
-
       /**
-       * Run one draft action and tell the model what became of it.
-       *
-       * The draft is read BEFORE the call, from the store, so it is the one the
-       * action was aimed at: the live id after any save that ran first, and the
-       * last id the draft had in the two outcomes where it no longer exists.
+       * Tell the model what became of one draft action, from what the server
+       * actually answered (model-context.ts#draftCallOutcome). `aimedAt` is the
+       * draft as it was when the button was pressed, after any save that ran
+       * first: the live id for every outcome in which the draft still exists,
+       * and the last id it had in the two in which it does not.
        */
-      const act = (
-        action: DraftAction,
-        key: string,
-        tool: string,
-        args: Record<string, unknown>,
+      const tellAction = (
+        action: "send" | "discard" | "hide",
+        aimedAt: typeof d,
+        r: DraftCall,
         scope?: "inbox" | "workspace",
       ) => {
-        const aimedAt = getState().envelope?.draft ?? d;
-        return callDraft(key, tool, { ...target(), ...args }, (call) => {
-          void bridge.updateModelContext(
-            draftActionContextLine(action, aimedAt, draftCallOutcome(action, call), {
-              bodyEdited: bodyEdited.current,
-              scope,
-            }),
-          );
-        });
+        void bridge.updateModelContext(
+          draftActionContextLine(action, aimedAt, draftCallOutcome(action, r.call), {
+            bodyEdited: bodyEdited.current,
+            scope,
+          }),
+        );
       };
 
       return (
@@ -826,21 +1295,104 @@ export function App(props: { bridge: HostBridge }) {
           canExpand={canExpand}
           busy={busy}
           error={error}
+          failure={failure}
+          check={store.draftCheck}
+          idHint={store.draftIdHint}
+          scope={draftScope}
+          sendDoubt={sendDoubt}
+          superseded={store.draftSuperseded}
           actions={{
             save,
+            allowSend: () => setSendDoubt(false),
             send: async (patch) => {
               // Unsaved changes are written first and the send is abandoned if
               // that write fails, so a send never puts the stored draft on the
               // wire when the user is looking at a newer one.
+              if (sendDoubt) return;
               if (patch && Object.keys(patch).length > 0) {
-                if (!(await saveAndTell("send", patch))) return;
+                const saved = await callDraft(
+                  "send",
+                  "draft_editor_save",
+                  { ...writeTarget(), ...patch },
+                  { failAs: "save" },
+                );
+                if (saved.lost) {
+                  void reconcile("save", saved.lost, patch);
+                  return;
+                }
+                if (!draftStored(saved.env)) return;
+                tellSaved(saved.env!.draft!, patch);
+                // No "the save followed an older id" stop here any more: the
+                // server refuses such a save as `draft_changed` (contract §8),
+                // so a stored save never carries `resolved_from`.
               }
-              await act("send", "send", "draft", { action: "send" });
+              const aimedAt = getState().envelope?.draft ?? d;
+              const sent = await callDraft("send", "draft", { action: "send", ...writeTarget() });
+              // Said for a lost answer too: "the card does not know whether it
+              // was sent" is true, and silence would leave the last line (a
+              // save) standing as if nothing had been pressed.
+              tellAction("send", aimedAt, sent);
+              if (sent.lost) {
+                setSendDoubt(true);
+                void reconcile("send", sent.lost, null);
+                return;
+              }
+              // What went out: the draft the send was made from, which the
+              // save above (if any) has already made the screen's.
+              const done = sent.env;
+              if (done && isDepartedReceipt(done) && done.draft) {
+                const how = done.receipt?.outcome === "scheduled" ? "scheduled" : "sent";
+                keepEnded(
+                  endedFrom(done.draft, how, how, { sent_at: done.sent_at, provider: envelope.provider?.label }),
+                  done.draft.identity?.inbox_id,
+                );
+              }
             },
-            discard: async () => {
-              await act("discard", "discard", "draft", { action: "delete" });
+            discard: async (screen?: OnScreen) => {
+              // The copy the person was looking at, taken before the call: the
+              // answer replaces it. Kept only once the draft is known to be gone.
+              const held = getState().envelope?.draft ?? d;
+              const copyOf = (
+                how: "discarded" | "gone" | "sent_elsewhere",
+                outcome: "discarded" | "sent",
+              ) => endedFrom(held, how, outcome, { screen, provider: envelope.provider?.label });
+              const r = await callDraft("discard", "draft", {
+                action: "delete",
+                ...target(),
+              });
+              if (r.lost) {
+                tellAction("discard", held, r);
+                void reconcile("discard", r.lost, null);
+                return;
+              }
+              // Already gone is where Discard was going. It used to leave the
+              // same "could not be found" notice on screen, so the click
+              // looked like it did nothing (QA, 2026-10-13).
+              if (r.refused === "draft_not_found" || r.refused === "draft_already_sent") {
+                const how = closedHow(r.headline) ??
+                  (r.refused === "draft_already_sent" ? "sent" : "gone");
+                closeDraft(
+                  how,
+                  how === "sent" ? copyOf("sent_elsewhere", "sent") : copyOf(how, "discarded"),
+                );
+                const id = held.draft_id || "unknown";
+                void bridge.updateModelContext(
+                  how === "sent"
+                    ? `The user pressed Discard on draft ${id} in the MCP Emails card, but that draft had already been sent. Nothing was deleted, and that draft_id no longer resolves.`
+                    : `The user pressed Discard on draft ${id} in the MCP Emails card. It was already gone from Drafts, so that draft_id no longer resolves.`,
+                );
+                return;
+              }
+              tellAction("discard", held, r);
+              if (
+                r.env?.card === "receipt" && !isFailure(r.env) &&
+                r.env.receipt?.outcome === "discarded"
+              ) {
+                keepEnded(copyOf("discarded", "discarded"), held.identity?.inbox_id);
+              }
             },
-            refresh: () => void callDraft("refresh", "draft_read", target()),
+            refresh: () => void readDraft(),
+            loadCurrent: () => readDraft().then((env) => !!env),
             // The opt-out. `scope` is passed through from the card's confirm
             // row rather than defaulted here, because "hide this" is ambiguous
             // between this mailbox and every mailbox and the two are different
@@ -849,7 +1401,27 @@ export function App(props: { bridge: HostBridge }) {
             // outcome word `discarded` for it, which is why the model-context
             // line is chosen by ACTION: nothing was discarded.
             hide: async (scope) => {
-              await act("hide", "hide", "draft_editor_hide", { scope }, scope);
+              const aimedAt = getState().envelope?.draft ?? d;
+              const r = await callDraft("hide", "draft_editor_hide", {
+                ...target(),
+                scope,
+              });
+              tellAction("hide", aimedAt, r, scope);
+              // The server's detail ends with how the MODEL turns the card back
+              // on ("Call draft_editor_hide again with scope... hidden:false"),
+              // which is no use to the person reading it. The card says where
+              // THEY turn it back on: the dashboard's own switch, named as the
+              // dashboard names it (apps/web messages, "draftEditor.show").
+              const done = r.env;
+              if (
+                done?.card === "receipt" && done.state !== "error" &&
+                done.receipt && done.receipt.outcome !== "failed"
+              ) {
+                setEnvelope({
+                  ...done,
+                  receipt: { ...done.receipt, detail: hiddenDetail(scope) },
+                });
+              }
             },
             setFullscreen,
           }}
@@ -858,26 +1430,27 @@ export function App(props: { bridge: HostBridge }) {
     }
 
     if (envelope.card === "receipt" && envelope.receipt) {
-      // A SEND THAT COMPLETED, still holding the message it sent.
+      // A DRAFT THAT ENDED, still holding the message it had.
       //
-      // `store.ts#carrySentDraft` puts the draft on this receipt, and only for
-      // an outcome that means the message actually left. So this branch is
-      // reached exactly once per card, immediately after the user pressed Send,
-      // and never for a discard, a refusal, or a receipt restored from storage
-      // (which keeps no content at all — persist.ts#redact).
+      // `endedView` decides whether there is a copy the card can stand behind:
+      // the draft its own Send went out with (also on the receipt, through
+      // `store.ts#carrySentDraft`), the text on screen at its own Discard, or
+      // the copy an earlier mount of this card kept in this tab (ended.ts). A
+      // refusal, the assistant's own send, and a receipt restored with nothing
+      // kept get none, and fall through to `Receipt`, which is the normal case
+      // for every other receipt there is.
       //
       // The receipt is still what is true: `SentMessage` takes its headline,
-      // its detail and its dashboard link from it, and the draft is rendered
-      // underneath as a read-only record. Falling through to `Receipt` when
-      // there is no draft is not a fallback so much as the normal case for
-      // every other receipt there is.
-      if (isDepartedReceipt(envelope) && envelope.draft) {
+      // its detail and its dashboard link from it, and the copy is rendered
+      // underneath as a read-only record, folded behind "Show" except right
+      // after a send made here.
+      const view = endedView(envelope);
+      if (view) {
         return (
           <SentMessage
             receipt={envelope.receipt}
-            draft={envelope.draft}
-            provider={envelope.provider}
-            sentAt={envelope.sent_at}
+            copy={view.copy}
+            startOpen={view.startOpen}
             fullscreen={fullscreen}
             canExpand={canExpand}
             busy={busy}

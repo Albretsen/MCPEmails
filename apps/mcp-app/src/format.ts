@@ -1,16 +1,43 @@
 // ---------------------------------------------------------------------------
 // Formatting helpers.
 //
-// Phase-0 Q6: the reference host provides neither `locale` nor `timeZone`, so
-// nothing here may assume them. Dates are formatted with the browser's own
-// resolved locale/zone, with `hostContext.locale` used only when the host
-// actually sent one.
+// ── DATES ARE IN THE CARD'S LANGUAGE, NOT THE BROWSER'S ─────────────────────
+// Every word on this card is English, so a date has to be English too. Phase-0
+// Q6 said to format with the browser's resolved locale (or `hostContext.locale`
+// when the host sends one), and that is how QA (2026-10-13) got "13. okt. 2026,
+// 14:02" in the middle of an English sentence on a Norwegian machine. The
+// LANGUAGE is now always `en`; the person's own locale is consulted only for
+// the one convention that is about them rather than about the language, the
+// clock (24-hour on a Norwegian machine, 12-hour on an American one). Should
+// the card's text ever be localised, `CARD_LANGUAGE` is the one thing to change.
 // ---------------------------------------------------------------------------
 
+/** The language every string on the card is written in. */
+export const CARD_LANGUAGE = "en";
+
+/** The person's locale (host first, else the browser's). Clock style only. */
 let locale: string | undefined;
+let hourCycle: "h12" | "h23" | undefined;
 
 export function setLocale(l: string | undefined) {
   locale = typeof l === "string" && l.length > 1 ? l : undefined;
+  hourCycle = undefined;
+  try {
+    const hc = new Intl.DateTimeFormat(locale, { hour: "numeric" }).resolvedOptions().hourCycle;
+    hourCycle = hc === "h11" || hc === "h12" ? "h12" : hc ? "h23" : undefined;
+  } catch {
+    hourCycle = undefined;
+  }
+}
+setLocale(undefined);
+
+function fmt(options: Intl.DateTimeFormatOptions): Intl.DateTimeFormat {
+  const withClock = options.timeStyle || options.hour ? { ...options, hourCycle } : options;
+  try {
+    return new Intl.DateTimeFormat(CARD_LANGUAGE, withClock);
+  } catch {
+    return new Intl.DateTimeFormat(CARD_LANGUAGE, options);
+  }
 }
 
 function parse(iso: string | null | undefined): Date | null {
@@ -23,9 +50,30 @@ export function formatDateTime(iso: string | null | undefined): string {
   const d = parse(iso);
   if (!d) return "";
   try {
-    return new Intl.DateTimeFormat(locale, {
-      dateStyle: "medium",
-      timeStyle: "short",
+    return fmt({ dateStyle: "medium", timeStyle: "short" }).format(d);
+  } catch {
+    return d.toISOString().replace("T", " ").slice(0, 16);
+  }
+}
+
+/**
+ * When something was saved, as short as it can be while still unambiguous:
+ * "14:02" today, "Oct 9, 14:02" this year, "Oct 9, 2025, 14:02" before that.
+ */
+export function formatWhen(iso: string | null | undefined, now = new Date()): string {
+  const d = parse(iso);
+  if (!d) return "";
+  try {
+    const sameYear = d.getFullYear() === now.getFullYear();
+    if (sameYear && d.getMonth() === now.getMonth() && d.getDate() === now.getDate()) {
+      return fmt({ hour: "numeric", minute: "2-digit" }).format(d);
+    }
+    return fmt({
+      month: "short",
+      day: "numeric",
+      ...(sameYear ? {} : { year: "numeric" }),
+      hour: "numeric",
+      minute: "2-digit",
     }).format(d);
   } catch {
     return d.toISOString().replace("T", " ").slice(0, 16);
@@ -36,7 +84,7 @@ export function formatDate(iso: string | null | undefined): string {
   const d = parse(iso);
   if (!d) return "";
   try {
-    return new Intl.DateTimeFormat(locale, { dateStyle: "medium" }).format(d);
+    return fmt({ dateStyle: "medium" }).format(d);
   } catch {
     return d.toISOString().slice(0, 10);
   }
@@ -53,6 +101,17 @@ export function relativeExpiry(iso: string | null | undefined): string {
   const hours = Math.round(min / 60);
   if (hours < 48) return `expires in ${hours}h`;
   return `expires ${formatDate(iso)}`;
+}
+
+/** "10:04:31". For a moment that has to be told apart from one seconds earlier. */
+export function formatClockSeconds(ms: number): string {
+  const d = new Date(ms);
+  if (isNaN(d.getTime())) return "";
+  try {
+    return fmt({ timeStyle: "medium" }).format(d);
+  } catch {
+    return d.toISOString().slice(11, 19);
+  }
 }
 
 /** Whitespace-separated tokens. The body is counted, never quoted. */

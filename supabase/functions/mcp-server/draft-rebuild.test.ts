@@ -26,9 +26,11 @@ import {
   carriableReplyTo,
   draftReadStatusMeansMissing,
   draftRebuildBlockers,
+  draftRebuildBlockersOf,
   outlookRecipientPatch,
 } from "./draft-rebuild.ts";
 import { getHeader, mimeLeafParts, parseEmail } from "./mime.ts";
+import { signatureImageCid } from "./signature-images.ts";
 import {
   applyDraftPatch,
   type DraftEditorProviderInbox,
@@ -375,7 +377,7 @@ Deno.test("mimeLeafParts agrees with parseEmail on what an attachment is, and se
   const leaves = mimeLeafParts(bytes(INLINE_IMAGE));
   assertEquals(leaves, [
     { mediaType: "text/html", attachment: false, flowed: false },
-    { mediaType: "image/png", attachment: false, flowed: false },
+    { mediaType: "image/png", attachment: false, flowed: false, contentId: "logo@x" },
   ]);
   assertEquals(
     mimeLeafParts(bytes(NAMED_ATTACHMENT)).map((l) => [l.mediaType, l.attachment]),
@@ -462,4 +464,20 @@ Deno.test("both editor readers route every non-OK status through that one decisi
     assertEquals(branch.match(/return null/g)?.length, 1, `${name}: exactly one null, the guarded one`);
     assert(/throw /.test(branch.slice(branch.indexOf("return null"))), `${name} must throw otherwise`);
   }
+});
+
+Deno.test("our own embedded signature image is no rebuild blocker; anyone else's inline image is", () => {
+  // signature-images.ts writes the logo as an inline part under a Content-ID
+  // it can reverse, and the transport re-attaches it from the `cid:` on every
+  // rebuild. Refusing on it would refuse every save of such a draft.
+  const ours = signatureImageCid("https://cdn.example.com/logo.png");
+  const leaf = (contentId: string) => ({ mediaType: "image/png", attachment: false, flowed: false, contentId });
+  const html = { mediaType: "text/html", attachment: false, flowed: false };
+  assertEquals(draftRebuildBlockersOf([html, leaf(ours)]), []);
+  assertEquals(draftRebuildBlockersOf([html, leaf("logo@x")]), ["an inline image/png part"]);
+  assertEquals(
+    draftRebuildBlockersOf([html, { mediaType: "image/png", attachment: false, flowed: false }]),
+    ["an inline image/png part"],
+    "no Content-ID at all",
+  );
 });

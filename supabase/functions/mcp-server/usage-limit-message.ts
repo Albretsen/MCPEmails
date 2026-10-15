@@ -89,6 +89,35 @@ export function freeCapUpgradeUrl(appOrigin: string): string {
 }
 
 /**
+ * Which wording a plan-limit message uses.
+ *
+ * `directory` is for clients that reach us through OpenAI's plugin directory
+ * (ChatGPT, Codex). Its plugin guidelines let a plugin explain that a plan
+ * limit was reached and link to an informational page describing the plans,
+ * and forbid displaying subscription plans, quoting their prices or promoting
+ * an upgrade. So that wording names no plan to buy and no price, and its one
+ * link is the plain pricing page rather than the tagged upgrade door.
+ * Everyone else keeps `standard`, which is unchanged.
+ */
+export type PlanLimitWording = "standard" | "directory";
+
+/** The informational page that describes the plans, with no funnel tag. */
+export function plansInfoUrl(appOrigin: string): string {
+  return `${appOrigin}/pricing`;
+}
+
+/**
+ * The sentence a per-minute rate-limit refusal ends on. `standard` points at
+ * the plan with a higher ceiling; `directory` says nothing about plans at all,
+ * because waiting is the whole remedy and the rest would be an upsell.
+ */
+export function rateLimitPlanSentence(wording: PlanLimitWording): string {
+  return wording === "directory"
+    ? ""
+    : " Usage is unlimited — upgrade for a higher burst ceiling: https://www.mcpemails.com/pricing";
+}
+
+/**
  * Builds the refusal text.
  *
  * Every choice here is load-bearing, because the first reader is a language
@@ -134,6 +163,7 @@ export function buildUsageLimitText(
   cap: number,
   resetAt: string,
   appOrigin: string,
+  wording: PlanLimitWording = "standard",
 ): string {
   const planLabel = PLAN_DISPLAY_NAMES[plan] ?? plan;
   // Date only, in ISO order. An LLM relaying "2026-10-01" to a person will
@@ -149,7 +179,9 @@ export function buildUsageLimitText(
       `so retrying will not help: this is a plan limit, not a temporary failure. ` +
       `The ${planLabel} plan includes ${total} email actions per calendar month; the first ${FREE_ACTION_GRACE_DAYS} days ` +
       `after signup are not counted. inbox_list and the dashboard keep working. ` +
-      `The Personal plan removes the monthly cap for ${FREE_CAP_UPGRADE_PRICE} at ${freeCapUpgradeUrl(appOrigin)}. ` +
+      (wording === "directory"
+        ? `The plans and what each includes are described at ${plansInfoUrl(appOrigin)}. `
+        : `The Personal plan removes the monthly cap for ${FREE_CAP_UPGRADE_PRICE} at ${freeCapUpgradeUrl(appOrigin)}. `) +
       `The current count is at ${appOrigin}/dashboard/usage.`;
   }
 

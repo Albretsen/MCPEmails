@@ -1,6 +1,42 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
-import { legacySecurityForPort, normalizeSecurity, safeDiagnosticPhase, sanitizeAuthDiagnostic, yandexLoginUsername } from './connection-config.ts';
+import {
+  connectionModeOf,
+  legacySecurityForPort,
+  normalizeSecurity,
+  parseConnectionMode,
+  safeDiagnosticPhase,
+  sanitizeAuthDiagnostic,
+  usesImap,
+  usesSmtp,
+  yandexLoginUsername,
+} from './connection-config.ts';
+
+test('connection mode defaults to both and refuses anything it does not know', () => {
+  assert.equal(parseConnectionMode(undefined), 'both');
+  assert.equal(parseConnectionMode(null), 'both');
+  assert.equal(parseConnectionMode(''), 'both');
+  assert.equal(parseConnectionMode('both'), 'both');
+  assert.equal(parseConnectionMode('imap'), 'imap');
+  assert.equal(parseConnectionMode('smtp'), 'smtp');
+  // A typo must not be read as a mode that drops half the mailbox.
+  assert.equal(parseConnectionMode('IMAP'), null);
+  assert.equal(parseConnectionMode('send'), null);
+  assert.equal(parseConnectionMode(1), null);
+});
+
+test('each mode names the halves it carries', () => {
+  assert.deepEqual([usesImap('both'), usesSmtp('both')], [true, true]);
+  assert.deepEqual([usesImap('imap'), usesSmtp('imap')], [true, false]);
+  assert.deepEqual([usesImap('smtp'), usesSmtp('smtp')], [false, true]);
+});
+
+test('a stored row reads back as the mode it was connected in', () => {
+  assert.equal(connectionModeOf({ imap_host: 'imap.example.com', smtp_host: 'smtp.example.com' }), 'both');
+  assert.equal(connectionModeOf({ imap_host: 'imap.example.com', smtp_host: null }), 'imap');
+  assert.equal(connectionModeOf({ imap_host: null, smtp_host: 'smtp.example.com' }), 'smtp');
+  assert.equal(connectionModeOf({ imap_host: null, smtp_host: null }), null);
+});
 
 test('Yandex login normalization distinguishes personal and Business accounts', () => {
   assert.equal(yandexLoginUsername('alice@yandex.com', 'personal'), 'alice');

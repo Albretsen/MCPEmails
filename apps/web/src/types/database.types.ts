@@ -1733,6 +1733,70 @@ export type Database = {
           },
         ]
       }
+      draft_lineage: {
+        Row: {
+          closed_at: string | null
+          closed_reason: string | null
+          created_at: string
+          draft_id: string
+          id: string
+          inbox_id: string
+          line_id: string
+          revision: number
+          workspace_id: string
+          written_at: string
+          written_by: string
+        }
+        Insert: {
+          closed_at?: string | null
+          closed_reason?: string | null
+          created_at?: string
+          draft_id: string
+          id?: string
+          inbox_id: string
+          line_id: string
+          revision: number
+          workspace_id: string
+          written_at?: string
+          written_by: string
+        }
+        Update: {
+          closed_at?: string | null
+          closed_reason?: string | null
+          created_at?: string
+          draft_id?: string
+          id?: string
+          inbox_id?: string
+          line_id?: string
+          revision?: number
+          workspace_id?: string
+          written_at?: string
+          written_by?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "draft_lineage_inbox_id_fkey"
+            columns: ["inbox_id"]
+            isOneToOne: false
+            referencedRelation: "inboxes"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "draft_lineage_workspace_id_fkey"
+            columns: ["workspace_id"]
+            isOneToOne: false
+            referencedRelation: "billing_funnel_by_workspace"
+            referencedColumns: ["workspace_id"]
+          },
+          {
+            foreignKeyName: "draft_lineage_workspace_id_fkey"
+            columns: ["workspace_id"]
+            isOneToOne: false
+            referencedRelation: "workspaces"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       experiment_assignments: {
         Row: {
           experiment_key: string
@@ -1956,6 +2020,7 @@ export type Database = {
           send_approval_required: boolean
           send_review_mode: string
           service: string | null
+          signature_embed_images: boolean
           signature_enabled: boolean
           signature_html: string | null
           signature_reply_mode: string
@@ -1994,6 +2059,7 @@ export type Database = {
           send_approval_required?: boolean
           send_review_mode?: string
           service?: string | null
+          signature_embed_images?: boolean
           signature_enabled?: boolean
           signature_html?: string | null
           signature_reply_mode?: string
@@ -2032,6 +2098,7 @@ export type Database = {
           send_approval_required?: boolean
           send_review_mode?: string
           service?: string | null
+          signature_embed_images?: boolean
           signature_enabled?: boolean
           signature_html?: string | null
           signature_reply_mode?: string
@@ -3957,6 +4024,24 @@ export type Database = {
       dispatch_inbox_watch: { Args: never; Returns: undefined }
       dispatch_scheduled_sends: { Args: never; Returns: undefined }
       dispatch_triage_rules: { Args: never; Returns: undefined }
+      draft_lineage_record: {
+        Args: {
+          p_adopt?: boolean
+          p_draft_id: string
+          p_expected_revision?: number
+          p_inbox_id: string
+          p_line_id?: string
+          p_seed_draft_id?: string
+          p_workspace_id: string
+          p_written_at?: string
+          p_written_by: string
+        }
+        Returns: {
+          contended: boolean
+          recorded_line_id: string
+          recorded_revision: number
+        }[]
+      }
       effective_workspace_plan: {
         Args: { p_workspace_id: string }
         Returns: {

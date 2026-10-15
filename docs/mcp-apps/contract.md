@@ -628,8 +628,8 @@ not re-injected by default.
 ## 8. `draft_editor` — an unsent draft the user can edit in the card (v1, internal only)
 
 Added 2026-09-16 by the orchestrating session. Background and rationale:
-`CONCEPT-draft-editor.md`. This section is the binding v1 shape; the concept's lineage table,
-conflict rule and launcher are NOT in v1.
+`CONCEPT-draft-editor.md`. This section is the binding v1 shape; the concept's conflict rule and
+launcher are NOT in v1. The lineage table was added 2026-10-13 (see "Draft lineage" below).
 
 ### Gate
 
@@ -652,21 +652,26 @@ Internal workspaces are those in
   "dashboard_url": "https://mcpemails.com/dashboard",
   "draft": {
     "draft_id": "Drafts:2",                 // the CURRENT id; on IMAP it changes on every save
+    "resolved_from": "Drafts:1",            // present only when the caller asked with an OLDER id of this draft
+    "revision": 2,                          // lineage revision; present only when an open line names the draft.
+                                            // The card sends it back as base_revision (see "Draft lineage")
     "id_is_stable": false,                  // false on IMAP: the card MUST adopt every returned id
     "origin": "create" | "reply" | "update" | "read" | "save",
-    "last_saved_at": "2026-09-16T10:04:00Z",
-    "last_saved_by": "agent" | "user",      // "user" only when the last write was draft_editor_save
+    "last_saved_at": "2026-09-16T10:04:00Z" | null,   // when the draft was last SAVED; never the time of a read
+    "last_saved_by": "agent" | "user" | null,         // who saved last; null when not known
     "identity": { "inbox_id", "email_address", "display_name", "provider", "service" },   // §2 Identity
     "recipients": { "to": ["a@x"], "cc": [], "bcc": [] },   // full bcc: the author's surface
     "subject": "…",
-    "body": { "text": "…", "html": "…" | null, "truncated": false },   // 64 KB clip as §2; see "Deferred body"
+    "body": { "text": "…", "html": "…" | null, "truncated": false,
+              "formatting_removed": true },   // 64 KB clip as §2; formatting_removed: save only; see "Deferred body"
     "attachments": [ { "filename", "size_bytes", "mime_type" } ],       // display only
-    "signature": { "embedded": true | false },   // whether the stored text already carries it
+    "signature": { "embedded": true | false, "rich": true },   // embedded: the stored text carries it;
+                                            // rich (only when true): the HTML part carries the formatted block
     "in_reply_to": { "message_id": "INBOX:42", "subject": "…", "from": "…" } | null,
     "threaded": true | false,               // answers a message, on EVERY path; see the deviations note
     "can_send": true | false                // key has send:email AND at least one recipient
   },
-  "provider": { "label": "IMAP + SMTP", "route": "APPEND to Drafts", "caveats": [] },   // §5 shape
+  "provider": { "label": "IMAP + SMTP", "route": "Saved to your Drafts folder", "caveats": [] },   // §5 shape, read by a person
   "actor": { "can_edit": true, "reason": null }   // reason: "viewer_role" | "wrong_workspace" | "not_found"
 }
 ```
@@ -772,7 +777,7 @@ editor for model-written drafts until it re-lists. The draft itself is written e
 | Tool | `_meta.ui.visibility` when gated in | Arguments | Returns |
 | --- | --- | --- | --- |
 | `draft_read` | `["model", "app"]` | `{ inbox_id?, inbox?, draft_id }` | `structuredContent`: `card: "draft_editor"`, `origin: "read"`, body inline, plus top-level `untrusted_content: true`. `content`: the plain read as JSON. Needs `manage:drafts` **and** `read:email` |
-| `draft_editor_save` | `["app"]` | `{ inbox_id?, inbox?, draft_id, to?, cc?, bcc?, subject?, body_text? }`, at least one field | `card: "draft_editor"`, `origin: "save"`, `last_saved_by: "user"`, the NEW `draft_id`, body inline |
+| `draft_editor_save` | `["app"]` | `{ inbox_id?, inbox?, draft_id, base_revision?, to?, cc?, bcc?, subject?, body_text? }`, at least one field | `card: "draft_editor"`, `origin: "save"`, `last_saved_by: "user"`, the NEW `draft_id` and `revision`, body inline |
 | `draft_editor_hide` | `["model", "app"]` | `{ inbox_id?, inbox?, scope, hidden? }` | `card: "receipt"`, `state: "cancelled"` |
 
 With the gate shut none of the three carries `_meta` (see "As built"), so a host lists them as
@@ -817,6 +822,26 @@ read, nothing was changed". All three callers (`draft_read`, `draft_editor_save`
 * **Never writes the HTML part independently.** When `body_text` is given and the stored draft
   has an HTML part, the HTML part is regenerated from the new text with
   `signature-compose.ts#plainTextBodyToHtml`, the same rule `approval_update` follows.
+  **Except the rich signature (2026-10-13).** When the stored HTML part carries our
+  `mcpemails-signature` block, the text is split at the signature and only the person's words are
+  regenerated; the block the draft already had is kept byte for byte, and the `-- ` delimiter never
+  reaches the HTML (`signature-compose.ts#rebuildHtmlKeepingSignature`). When the signature lines
+  themselves were edited (or the body was cleared, or the HTML would exceed the limit) the formatting
+  cannot be kept honestly: no HTML part is written, and the save's envelope carries `body.html: null`
+  and `body.formatting_removed: true`. The card must then stop offering a formatted view, and may say
+  why. `signature.rich: true` tells the card in advance that editing the signature lines will do this.
+  The signature is found by its `-- ` delimiter line plus its text. A match on the text lines alone
+  (Outlook hands the text part back without the delimiter) counts only when the STORED text part had
+  no delimiter line either; otherwise deleting `-- ` and the signature, then signing off with the same
+  words (a one-line signature such as a first name), put the rich block back (review 2, 2026-10-13).
+* **A save that changes nothing writes nothing.** When every field equals what is stored (line
+  endings aside), the stored draft is answered as a save without a provider write.
+* **A save never follows an old id, and never writes over a newer revision (2026-10-13 review).**
+  A save against an OLDER id of the draft, or with a `base_revision` other than the line's current
+  revision, is refused with `error_code: "draft_changed"` and writes nothing. The check runs twice:
+  before the stored draft is read, and again immediately before the provider write. The failed
+  receipt carries no copy of the draft (until review 2 it carried an unused `current`): the card's
+  "Load the newer version" is a `draft_read`. See "Draft lineage".
 * **Omitted fields are kept.** An omitted field means "leave it as stored". The server reads the
   stored draft first and merges. `draft{action:"update"}` required `body` when this was written;
   since 2026-10-13 it may omit it, and then runs this same merge (see below).
@@ -845,8 +870,10 @@ read, nothing was changed". All three callers (`draft_read`, `draft_editor_save`
   success, and Send delivered to the address the user had removed. An empty list is now sent as
   `[]` when the caller supplied that field, and still omitted when it did not.
 * **Recipients are validated** as `draft` validates them; an invalid address returns
-  `error_code: "invalid_recipients"` and changes nothing.
-* Stale or missing ids return `error_code: "draft_not_found"`; the card then offers Refresh.
+  `error_code: "invalid_recipients"` and changes nothing. A non-string or blank entry is invalid
+  too: nothing is ever dropped silently.
+* Missing ids return `error_code: "draft_not_found"`; the card then offers Refresh. An OLDER id of
+  a draft is not missing, but it is not writable either: see "Draft lineage".
 
 Both tools re-verify: the inbox belongs to the calling key's workspace and is in its
 `inbox_ids` allowlist, the workspace is gated in, and the scopes above. A hostile caller can do
@@ -967,6 +994,106 @@ On `ui/resource-teardown` a dirty editor calls `draft_editor_save` before replyi
 request. The host is required to wait for that reply (spec: "SHOULD wait for a response before
 tearing down the resource (to prevent data loss)").
 
+### Draft lineage (2026-10-13)
+
+`public.draft_lineage` (migration `20261013120000_draft_lineage.sql`) records every id one draft
+has had, so an older id resolves to the current one. Rows are written when a draft is created,
+replied, updated, saved in the editor, or has its recipients rewritten at send time, and the line
+is closed when the draft is sent or deleted. Ids, a revision, who wrote last and when; no content.
+
+* **Reads follow the line; card writes do not (2026-10-13 review).** `draft_read` (the card's
+  Refresh and its re-read after a lost answer) and the MODEL's `draft{action:"update"|"send"|"delete"}`
+  accept any id of the line, act on the current one, and return the current id (`draft_id`; the
+  envelope adds `resolved_from` when it differs from the id asked for). `content` is unchanged in
+  shape. A write that comes FROM THE CARD does not follow: `draft_editor_save`, and
+  `draft{action:"send"}` called with `base_revision`, are refused with `error_code:
+  "draft_changed"` when the id is an older id of the line, or when `base_revision` differs from the
+  line's revision. Nothing is written or sent. The lost-save case still works: the card re-reads
+  with `draft_read` after a lost answer and adopts the current id and revision before it writes
+  again.
+* **`revision` / `base_revision`.** The envelope's `draft.revision` is the line's revision (1 on
+  create, +1 on every write through this server), present only when an open line names the draft.
+  The card sends it back as `base_revision` on every save and send, `0` when it had none (a line
+  that exists by then means something wrote the draft since). It is the lineage counter rather than
+  the content `version`: a write's own `version` is computed from what was sent to the provider,
+  and a provider hands content back normalised (Outlook rewrites the HTML), so comparing versions
+  would refuse ordinary Save-and-send. A draft edited in a mail client outside these tools does not
+  move the revision; that hazard is as before. A lineage read that fails never refuses on revision.
+* **Revisions are computed in the database, atomically (review 2, 2026-10-13).** Every write goes
+  through `public.draft_lineage_record` (same migration): under a per-inbox advisory transaction
+  lock it decides the line, writes `max(revision) + 1`, and returns whether the line had moved since
+  the caller resolved it (`contended`). `UNIQUE (inbox_id, line_id, revision)` backs it; it fits both
+  line shapes (IMAP adds a row per write, Gmail and Outlook move one row's revision up in place).
+  Before, the edge function read the head and wrote head + 1, so two writers that read revision N
+  both wrote N+1 and a card holding N+1 passed its check against content it never saw. A contended
+  record is still written, but its writer is given no revision to vouch for (the save's envelope
+  carries the revision the card loaded, the model's update carries none): the line is past it, so
+  that card's next save or send is refused and it re-reads. Service role only; `anon` and
+  `authenticated` can neither execute it nor touch the table. A database without the function fails
+  soft (nothing recorded), like a database without the table.
+* **The window that remains, stated.** The check and the provider write cannot be one atomic step
+  (the provider is not our database). The card's save checks as late as it can (immediately before
+  the provider write) and every writer's record says whether another write was recorded since its
+  read. What is left: a model update and a card save whose provider writes overlap. The later
+  provider write wins in the mailbox, and the server cannot tell which that was; the record of the
+  second to be recorded is contended, so neither the card nor the model is told a revision that
+  vouches for the mailbox's content, and the card's next action re-reads. The card's write can
+  therefore overwrite a concurrent model update (or the reverse) without either being refused at
+  that moment; nothing is ever SENT on a stale revision. A draft written outside these tools (a mail
+  client) does not move the revision at all.
+* **`base_revision: 0` is "no recorded revision", not "unknown".** A card whose lineage read failed
+  (the envelope then has no `revision`) sends `0`, and once the lineage answers again its next write
+  is refused as `draft_changed` although nothing changed; "Load the newer version" re-reads and the
+  editor carries on. Treating `0` as "do not check" would be the unsafe reading: a draft that had no
+  line when the card loaded it and was then rewritten by the model would pass. The spurious refusal
+  is the accepted cost.
+* **A line closed by a send is never sent or rewritten again.** `draft{action:"send"|"update"}`
+  refuse it with log code / `error_code: "draft_already_sent"`, whoever calls (model, card, or an
+  approved re-run): on IMAP the post-send delete is best-effort, so the sent draft's copy can still
+  be in Drafts under the same id. The close records that case as `closed_reason: "sent_kept"`.
+  `content` for the refusal is a new sentence (`draft_send: draft <id> was already sent. Nothing
+  was sent again.`); in a gated workspace a failed receipt with the same code rides in
+  `structuredContent`. `draft_read` and `draft_editor_save` keep answering a closed line with
+  `draft_not_found` and a receipt that says which of sent / discarded happened.
+* **An id the mailbox has given to another message (UIDVALIDITY reset, a mail client) is that
+  message.** Where the lineage would redirect an id, or call it closed, the server first asks the
+  mailbox whether the id itself still names a message (only on those rare paths). If it does, it is
+  treated as a draft with no line: never redirected to another draft, and never reported "already
+  sent" unless the line is `sent_kept`, whose message IS the copy of what was sent.
+* A send from the card with `base_revision` that is refused as `draft_changed` carries the same
+  failed-receipt shape (the card re-reads to load the newer version).
+* **An approved held send sends the version that was approved, or nothing (review 2).** A held
+  send is queued with the RESOLVED id (so its summary and its re-run name the current draft rather
+  than the stale id the caller held) and ALWAYS with a `base_revision`: the line's revision when it
+  was queued, else the caller's own, else `0`. The post-approval re-run keeps that id (it does not
+  follow the line) and is checked against that revision like a card send, so a draft rewritten
+  after the approval was asked for is refused as `draft_changed` on every provider; before, on Gmail
+  and Outlook, where the id never moves, it sent whatever the draft said at approval time. A model's
+  own send still carries no `base_revision` and may follow the line. The refused re-run marks the
+  scheduled send `error` with an `error_detail` written for the approver ("Not sent. The draft was
+  changed after this send was approved, ... Review the draft and send it again.";
+  `draft-send-plan.ts#approvedSendRefusalDetail`, likewise for `draft_not_found` and
+  `draft_already_sent`), and the caller's idempotency record settles as failed with that code.
+* **A send-time recipient override is a write (review 2).** `draft{action:"send"}` with `to`/`cc`/`bcc`
+  rewrites the stored recipients first and records that in the line every time, also on Gmail and
+  Outlook where the id does not move; it used to record only a moved id, which left the draft at its
+  old revision with new recipients, and a card at that revision could then Send to people it never
+  showed after the model's send was held or failed (`draft-send-plan.ts#applyRecipientOverride`).
+* **An IMAP id the server never confirmed is not recorded.** When an APPEND answers without
+  APPENDUID and the Message-ID search finds nothing, the draft write still returns `<folder>:0`, as it
+  always has. That id names no message and every such write would share it, so it is never written
+  into a line (`draft-lineage.ts#draftIdIsRecordable`): the write stands, the line stays where it was.
+* Fail soft: a lineage read that fails resolves the id to itself, and a write that fails is logged
+  and dropped. The function works without the table (deploy order does not matter).
+* Reads report the last save, not themselves: `last_saved_at` / `last_saved_by` come from the line
+  (else the mailbox's own timestamp, with `last_saved_by: null`). A Refresh no longer claims a save.
+* Tenancy: every lookup is filtered by workspace AND the inbox the call resolved to.
+
+**`draft{action:"send"}` refuses an unusable recipient override (2026-10-13).** `to`/`cc`/`bcc` given at
+send time are validated like every other send path (a bare address or `Name <address>`; blanks are
+ignored as before). An entry that is not an address, or not a string, fails with log code
+`invalid_recipient` before anything is rewritten or sent, instead of being dropped or written as given.
+
 ### As built (server)
 
 Implemented 2026-09-16. Server side only; the card is `apps/mcp-app/`.
@@ -980,8 +1107,21 @@ registry, and since 2026-10-13 `draft_read` gets `["model", "app"]` instead), li
 **Error codes**, all delivered as a `card: "receipt"` envelope with `state: "error"`,
 `outcome: "failed"` and `isError: true` — never a JSON-RPC error: `invalid_arguments`,
 `insufficient_scope`, `inbox_not_found`, `draft_editor_disabled`, `draft_not_found`,
-`invalid_recipients`, `draft_has_attachments`, `provider_error`. The not-found and
+`invalid_recipients`, `draft_has_attachments`, `provider_error`, and since 2026-10-13
+`draft_changed` (`draft_editor_save` only; see "Draft lineage"). `draft{action:"send"|"update"}`
+add `draft_already_sent`, and `draft{action:"send"}` with `base_revision` adds `draft_changed`, as
+`isError` text results that carry the same failed receipt in a gated workspace.
+Every other `draft{action:"send"|"delete"}` refusal is still a bare `isError` sentence for the model
+(draft not found, sending quota, a mailbox to reconnect, the approval queue unavailable, refused
+before transmission). The card reads that as an answer, not as a lost one
+(`draft-failure.ts#textRefusalCode`, review 2): it says in a person's words that nothing was sent and
+leaves Send on (only "not found" holds the editor until a re-read). A send the server calls
+`delivery_status: "unknown"` / "may or may not have been delivered", and any sentence the card does not
+recognise as one of these, stays a lost answer: re-read, and Send off until the person says so. The not-found and
 wrong-workspace cases are byte-identical, so neither tool is an existence oracle.
+**Receipt copy is for a person (2026-10-13).** `receipt.headline` / `receipt.detail` are written in
+plain words (no scope, tool or argument names, no protocol jargon); `error_code` is unchanged and
+`content` keeps the model-facing wording byte for byte.
 (`draft_read` produces neither `draft_editor_disabled` nor `draft_editor_hidden`: it answers with
 the plain read above instead. `draft_editor_save` still returns both, and `draft_editor_hide`
 still returns `draft_editor_disabled`.)
@@ -1086,10 +1226,80 @@ has (only the partial write refuses), and still writes "(no subject)" when it ke
 a draft that has none; and `CONCEPT-draft-editor.md` still records "update requires body" as the
 2026-09-16 observation it was.
 
+**Merged with main on 2026-10-15** (draft lineage, the rich signature, embedded signature images,
+the card's QA passes). Three things that meeting decided:
+
+* **The partial write keeps main's rules and adds this section's.** `applyDraftPatch` is main's
+  `draft_editor_save` merge (the rich-signature rebuild, `formatting_removed`, the no-op save that
+  writes nothing) plus the refusals above. Lineage stays with the callers: the editor's
+  `draft_changed` checks run inside it as hooks, in the places main put them, and a body-less
+  `draft` update resolves the line in `index.ts` like the full-body one and records its write as
+  the agent's, so the card's next save is checked against the new revision.
+* **Our own embedded signature images are not a rebuild blocker.** An inline image whose
+  Content-ID is one of ours (`signature-images.ts#urlFromSignatureCid`) is re-attached by the
+  transport from its `cid:`, or turned back into its https URL. Without this exemption every save
+  of a draft written with `signature_embed_images` on would have been refused.
+* **The hide and hidden-editor texts keep the exact call for the model.** Main gives the person a
+  separate copy (`draftFailure`'s person text, and `App.tsx#hiddenDetail` in the card), so the
+  "ask in this chat" rewrite of the model-facing strings was not carried.
+
+On the card, a replayed deferred envelope is read once: main's replay check re-reads it with
+`draft_read`, which brings the body inline, and the deferred fetch waits for that read.
+
 Known and left as is: with a host that drops result `_meta`, a key that lacks `read:email` sees
 the card's body-failed line after a successful create, reply or full-body update, because the
 card's fallback `draft_read` is refused with `insufficient_scope`. The draft is written and the
 model's result is unaffected.
+
+### As built (card) — unsaved edits across a reload (review 2, 2026-10-13)
+
+`unsaved.ts` keeps the fields a person changed and has not saved in `sessionStorage`, so a reload of
+the page puts them back. Two rules were added by the second review:
+
+* **Scoped to the card.** An entry is matched on the inbox, any id the editor held for the draft,
+  AND the card's scope: `persist.ts#cardKey`, the identity of the tool call the card was mounted for
+  (`i<id>` from `hostContext.toolInfo`, else a salted hash of the tool name and arguments, which the
+  host re-sends on every mount, a host MUST). A reload of the same cell has the same scope and gets
+  its edits back; a second card on the same draft (on Gmail every card of a draft shares its id)
+  starts from the stored draft. Two calls with byte-identical arguments share a scope, and so does
+  every card under a host that sends neither `toolInfo` nor arguments; that is the behaviour before.
+* **Checked for conflicts.** An entry keeps a fingerprint of each edited field as the server had it
+  when the edit was made. A restored field whose server copy has changed since, at mount or when the
+  verifying re-read arrives, raises the editor's existing conflict notice ("This draft was changed
+  somewhere else ... Use the newer version"), prefixed with "Your unsaved edits from earlier were put
+  back." A field changed on the server that the person did not edit simply takes the server's value.
+
+### As built (card): which state wins (QA 2, 2026-10-13)
+
+* **One notice about the person's edits, and only while saving is possible.** "Your unsaved edits were
+  put back" and "saving will replace the newer version" are chosen in one place
+  (`draft-failure.ts#editsNotice`): none when the card is read only or the draft is `unverified` (the
+  notice that says why saving is off already says the text is still here), and a conflict is only
+  claimed against a copy that has been checked.
+* **"Use the newer version" reads first.** It calls `draft_read` and drops the local edits only once
+  that read is on screen. It used to adopt whatever envelope the card held, which on a remount could be
+  the result the card was mounted with.
+* **Send follows the edit.** Off with no recipient in To, Cc or Bcc on screen, or with text in an
+  address field that is not an address. `can_send: false` over a stored draft with no recipients says
+  nothing about the key, so adding one turns Send on; the server still refuses a key without send access.
+* **A draft that has ended is one line.** Discard answered `draft_not_found` (or `draft_already_sent`)
+  ends on a receipt, like a discard that worked. The automatic check of a replayed mount does the same
+  when the server says the line was closed (sent or discarded), and a card that had already ended on a
+  receipt keeps showing it while the replay is checked, going back to an editor only if the read
+  returns a live draft. A check the person asked for keeps the editor (it may hold text to copy) and
+  shows when it was last checked.
+* **An older card folds.** `store.ts#supersededBy`: a `draft_read` answer with a higher `revision` than
+  the card held, `last_saved_by: "agent"`, means a later `draft` call wrote it and mounted its own card.
+  The older card shows "A newer version of this draft is below." with "Edit here anyway". Never while
+  it holds unsaved edits. No host message tells a card about a later call, so this is found on the reads
+  the card already makes (remount, Refresh, a refused save) plus one silent `draft_read` when focus
+  comes back into a card whose last answer is older than 30 s. The person's own saves never count. Not
+  detected: a newer card the person then saved in (last writer is the user), and a host that sends a
+  remounted card no result.
+* **Ending while fullscreen asks for inline.** Any receipt, the folded line and the "no longer in
+  Drafts" line request `inline` once on arrival.
+* **A slow write says so.** After 4 s of a pending save or send the line under the buttons reads
+  "Still saving. Gmail can take a moment." in place of the word count, so nothing moves.
 
 ### As built (card) — the sent message stays on screen
 
@@ -1129,3 +1339,34 @@ the sentence now says only where it went (`Delivered via IMAP + SMTP.`) and the 
 the time from `sent_at`, which the §8 merge already publishes at the top level of the same
 payload. Its headline is the bare word `Sent` for the same reason: in the card it sits beside
 the sender address, where a full stop read as a stray mark.
+
+### As built (card) — "Show" on the line a draft ends on (2026-10-14)
+
+Card side only. No new field, no new tool, no server storage.
+
+A draft card that ends is one line: "Sent", "Draft discarded.", "This draft was already sent.". The
+line now has a **Show** link on the right (a disclosure button with `aria-expanded`), which opens the
+message read-only in place (`components/SentMessage.tsx`, the same view a send has always opened) and
+**Hide** folds it back. Focus stays on the toggle; Hide in fullscreen also asks for inline.
+
+* **Open on arrival only after the person's own Send** in this card, as before. A discard, and every
+  reopened card, starts folded.
+* **Only a copy the card can stand behind** (`ended.ts#EndedCopy`): the draft it held when its own Send
+  was answered (Send writes unsaved changes first, so that is what went out), or the draft as it was on
+  screen when the person pressed Discard, unsaved changes included and named ("It includes changes that
+  were never saved: the subject."). Discard that finds the draft already gone keeps the same copy and
+  says it is the card's ("What was sent may differ."). Never the tool result the card was mounted with:
+  on a reopened chat that is the assistant's original text.
+* **No copy, no Show.** A send or delete the assistant made (its own card), a draft found sent or deleted
+  elsewhere on reopen, and a reopen in another tab or on another device stay one line with no link.
+* **Kept in `sessionStorage`, not `localStorage`** (`mcpemails.ended.v1`), for the reason `persist.ts`
+  keeps no content and under the rules `unsaved.ts` set: plain text only (no HTML part), scoped to the
+  card (`persist.ts#cardKey`) and its inbox, 24 h TTL, at most 10 entries of 200,000 characters. Leaving
+  a chat and coming back in the same tab, or reloading, keeps it; a new tab does not. The localStorage
+  stub is unchanged, and `storage-audit.mjs` section 4 pins both halves.
+* **Discarded copies offer Copy text** (the shared `ui.tsx#useCopy`, the editor's "Copied" that reverts).
+* **A reopened card holds its receipt until the check settles.** It used to drop to the editor for one
+  render when the check answered "not found" (`unverified`), drawing the assistant's original text for
+  a frame; the receipt is now held for as long as `priorReceipt` is.
+
+Pinned by `apps/mcp-app/harness/draft-ended.test.mjs`.

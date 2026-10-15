@@ -12,6 +12,14 @@ portal scans, so it is what this file documents. Every other client is still
 listed the consolidated tools (`email_organize`, `draft`, ...), which are not
 described here.
 
+**Three automation tools are not on that listing.** The rescan of 2026-10-13
+passed 52 of the 55 per-operation tools and flagged `automation_create`,
+`automation_update` and `automation_enable` with the same "executes operations
+that are not individually exposed" finding. They set up, change or start a
+stored rule whose action is run later by the server, so they are withheld from
+OpenAI clients (`PER_OPERATION_UNLISTED`) and have no block below. The reads,
+`automation_disable` and `automation_delete` passed and are listed.
+
 **The portal no longer asks for these strings.** Since the move to ZIP upload
 the listing comes from the plugin package and the annotations are judged by
 the scan alone. The submitted text below is kept, and still tested, because it
@@ -105,9 +113,9 @@ Rules applied throughout:
   action does not, by itself, justify setting destructiveHint to false." So it
   is true for mail destroyed or delivered, and also for a move, an archive, a
   flag change, a rename, an overwrite, a cancellation, and an automation's
-  update, enable and disable. It is false on exactly six writes, which only
-  ever add: `email_copy`, `email_copy_batch`, `folder_create`, `draft_create`,
-  `draft_reply` and `automation_create`. `per-operation-surface.test.ts` pins
+  disable. It is false on exactly five listed writes, which only ever add:
+  `email_copy`, `email_copy_batch`, `folder_create`, `draft_create` and
+  `draft_reply`. `per-operation-surface.test.ts` pins
   that list.
 - **openWorldHint true** only where the tool can reach a party outside the one
   connected mailbox.
@@ -634,49 +642,6 @@ settings — see its block, which is the one place in this file a
 - **readOnlyHint:** It dry-runs a filter and reports what it matches right now. It applies nothing, sends nothing and claims no message in the deduplication ledger.
 - **destructiveHint:** Nothing here changes a rule or a mailbox, so a later real run is unaffected.
 - **openWorldHint:** The preview searches the connected mailbox and nothing else.
-
-## automation_create (readOnly: false, destructive: false, openWorld: true)
-
-**Submitted text.**
-
-- **readOnlyHint:** It writes: it creates an unattended triage rule.
-- **destructiveHint:** Purely additive. It adds one rule, and the rule is created DISABLED, so nothing runs because of this call. No existing rule and no mail is changed.
-- **openWorldHint:** The rule's action can be a forward to addresses outside the mailbox. Such a forward is always held for human approval, but that is a safeguard on delivery, not confinement to the account.
-
-**Reasoning.**
-
-- **destructive false:** the one automation write that stays false. Creating
-  adds a rule and nothing else, and a rule is created DISABLED: enabling is
-  always a separate, explicit call, and that call (`automation_enable`) is the
-  one flagged destructive.
-
-## automation_update (readOnly: false, destructive: true, openWorld: true)
-
-**Submitted text.**
-
-- **readOnlyHint:** It changes an automation rule's name, filter, action, cadence or per-run cap.
-- **destructiveHint:** It overwrites the stored rule, and the previous filter and action are not kept. An enabled rule then acts on new terms with no human in the loop. Rules may never delete mail, and each run is capped.
-- **openWorldHint:** The new action can be a forward to addresses outside the mailbox. Such a forward is always held for human approval, but that is a safeguard on delivery, not confinement to the account.
-
-**Reasoning.**
-
-- **destructive true:** changed from false on 2026-10-13: an overwrite of the
-  stored rule.
-
-## automation_enable (readOnly: false, destructive: true, openWorld: false)
-
-**Submitted text.**
-
-- **readOnlyHint:** It turns an automation rule on.
-- **destructiveHint:** It starts unattended changes to the mailbox on a schedule, with no human in the loop, which is not additive. Rules may never delete mail, and each run is capped (default 25, max 200).
-- **openWorldHint:** It flips a flag on one of this workspace's own rules. Any forward the rule later makes is held for human approval.
-
-**Reasoning.**
-
-- **destructive true:** changed from false on 2026-10-13. Enabling is the call
-  after which the mailbox changes without anyone watching. The closed set of
-  rule actions (move, label, mark_read, forward, draft_reply) and the per-run
-  cap bound what it can do; they do not make it additive.
 
 ## automation_disable (readOnly: false, destructive: true, openWorld: false)
 

@@ -201,6 +201,8 @@ export interface MimeLeaf {
   attachment: boolean;
   /** `format=flowed` on a text part (RFC 3676): its line breaks are not literal. */
   flowed: boolean;
+  /** The part's Content-ID without angle brackets, when it has one. */
+  contentId?: string;
 }
 
 /** Every leaf part of a raw message (a byte string), in document order. */
@@ -233,10 +235,12 @@ function collectLeaves(headers: Map<string, string[]>, body: string, out: MimeLe
     }
     return;
   }
+  const contentId = (getHeader(headers, "content-id") ?? "").trim().replace(/^<|>$/g, "");
   out.push({
     mediaType: ct.mediaType,
     attachment,
     flowed: (ct.params["format"] ?? "").toLowerCase() === "flowed",
+    ...(contentId ? { contentId } : {}),
   });
 }
 

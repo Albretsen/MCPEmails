@@ -118,7 +118,7 @@ async function main() {
   mkdirSync(dirname(OUT), { recursive: true });
   await build({
     stdin: {
-      contents: 'export * from "./src/store";\nexport * from "./src/persist";\n',
+      contents: 'export * from "./src/store";\nexport * from "./src/persist";\nexport * from "./src/ended";\n',
       resolveDir: appRoot, sourcefile: "audit-entry.ts", loader: "ts",
     },
     bundle: true, format: "esm", platform: "neutral", target: "es2022", outfile: OUT,
@@ -246,6 +246,68 @@ async function main() {
         pinBad.push(`source scan: ${f.slice(appRoot.length + 1)} byte ${at} is 0x${hex}`);
       }
     }
+  }
+
+  // ------------------------------------------------------------------------
+  // (4) THE ENDED COPY, AND WHERE IT IS ALLOWED TO GO (2026-10-14)
+  //
+  // "Show" on a sent or discarded card's line needs the message after the chat
+  // is reopened, and that is CONTENT: subject, recipients, body. It is the
+  // second deliberate exception to "no content in web storage", made the way
+  // unsaved.ts made the first (ended.ts says why): sessionStorage only, never
+  // localStorage, plain text only, a fixed set of keys. So this section does
+  // not ask "is every string explainable" — the body is not, by design — it
+  // asks the three things that must stay true about the exception:
+  //
+  //   - it writes NOTHING to localStorage, so section (1) above still holds
+  //     for the durable store with the feature in place;
+  //   - it writes one sessionStorage key and the stored shape has no field
+  //     beyond the documented ones (an HTML part above all);
+  //   - it holds nothing without a card scope, and nothing for a body over
+  //     its bound.
+  // ------------------------------------------------------------------------
+  {
+    const ENTRY_KEYS = new Set(["t", "k", "i", "c"]);
+    const COPY_KEYS = new Set([
+      "how", "outcome", "at", "sent_at", "from", "to", "cc", "bcc", "subject",
+      "body_text", "truncated", "attachments", "attachment_count", "provider", "unsaved",
+    ]);
+    const pin = (label, ok) => {
+      pinned++;
+      if (!ok) pinBad.push(`ended copy: ${label}`);
+    };
+    for (const [name, env] of Object.entries(F)) {
+      if (!env || typeof env !== "object" || env.card !== "draft_editor" || !env.draft) continue;
+      const local = fakeStorage();
+      const session = fakeStorage();
+      globalThis.localStorage = local;
+      globalThis.sessionStorage = session;
+      const mod = await import(`${pathToFileURL(OUT).href}?e=${++i}`);
+      const d = env.draft;
+      const html = { ...d, body: { ...(d.body ?? {}), html: "<p data-audit=\"html-part\">formatted</p>" } };
+      for (const [how, outcome] of [["sent", "sent"], ["discarded", "discarded"]]) {
+        mod.rememberEnded("i7", d.identity?.inbox_id, mod.endedFrom(html, how, outcome, { provider: "IMAP + SMTP" }));
+      }
+      pin(`${name}: nothing in localStorage`, local.entries().length === 0);
+      const keys = session.entries().map(([k]) => k);
+      pin(`${name}: one sessionStorage key`, keys.length === 1 && keys[0] === "mcpemails.ended.v1");
+      const raw = session.entries()[0]?.[1] ?? "[]";
+      pin(`${name}: no HTML part`, !raw.includes("html-part") && !raw.includes("body_html"));
+      let entries = [];
+      try { entries = JSON.parse(raw); } catch { pin(`${name}: JSON`, false); }
+      pin(`${name}: one entry per card`, Array.isArray(entries) && entries.length === 1);
+      for (const e of entries) {
+        pin(`${name}: entry keys`, Object.keys(e).every((k) => ENTRY_KEYS.has(k)));
+        pin(`${name}: copy keys`, Object.keys(e.c ?? {}).every((k) => COPY_KEYS.has(k)));
+        pin(`${name}: the later end wins`, e.c?.outcome === "discarded");
+      }
+      // No scope, no entry; an oversized body, no entry and no stale one.
+      mod.rememberEnded(null, d.identity?.inbox_id, mod.endedFrom(d, "sent", "sent"));
+      pin(`${name}: no scope writes nothing new`, JSON.parse(session.getItem("mcpemails.ended.v1")).length === 1);
+      mod.rememberEnded("i7", d.identity?.inbox_id, mod.endedFrom({ ...d, body: { text: "x".repeat(250_000) } }, "sent", "sent"));
+      pin(`${name}: an oversized copy is dropped, old one too`, session.getItem("mcpemails.ended.v1") === null);
+    }
+    delete globalThis.sessionStorage;
   }
 
   console.log(`storage audit: ${checked - bad.length}/${checked} stored strings explainable`);

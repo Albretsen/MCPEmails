@@ -169,8 +169,8 @@ async function fetchInboxes(supabase, workspaceId, historyDays = USAGE_WINDOW_DA
         'imap_host', 'imap_port', 'imap_security', 'smtp_host', 'smtp_port', 'smtp_security',
         'imap_username', 'created_at', 'signature_text', 'signature_html', 'signature_enabled',
         'signature_reply_mode', 'signature_source', 'send_approval_required', 'send_review_mode',
-        'draft_editor_hidden'],
-      [...PENDING_INBOX_COLUMNS, 'draft_editor_hidden'],
+        'draft_editor_hidden', 'signature_embed_images'],
+      [...PENDING_INBOX_COLUMNS, 'draft_editor_hidden', 'signature_embed_images'],
       (columns) => supabase
         .from('inboxes')
         .select(columns)
@@ -226,8 +226,12 @@ async function fetchInboxes(supabase, workspaceId, historyDays = USAGE_WINDOW_DA
     status: row.status,
     // Human-readable error shown on errored inboxes; null when healthy.
     lastError: row.last_error ?? null,
-    // True when this inbox uses an IMAP app-password path (not OAuth).
-    hasImap: !!row.imap_host,
+    // True when this inbox uses an IMAP/SMTP app-password path (not OAuth).
+    // A send-only inbox has no IMAP host but is still a password connection,
+    // and must reopen the password form on reconnect, not an OAuth route.
+    hasImap: !!row.imap_host || !!row.smtp_host,
+    // 'both' | 'imap' (receive only) | 'smtp' (send only); null for OAuth.
+    connectionMode: row.imap_host && row.smtp_host ? 'both' : row.imap_host ? 'imap' : row.smtp_host ? 'smtp' : null,
     // IMAP service brand ('generic' for the plain IMAP connector, or
     // 'fastmail'/'icloud'/'yahoo'/'zoho'/'yandex'). Used by the reconnect flow
     // to re-open the SAME connect form this inbox was created with.
@@ -257,6 +261,7 @@ async function fetchInboxes(supabase, workspaceId, historyDays = USAGE_WINDOW_DA
     signatureHtml: row.signature_html ?? null,
     signatureEnabled: row.signature_enabled ?? true,
     signatureReplyMode: row.signature_reply_mode ?? 'first_only',
+    signatureEmbedImages: row.signature_embed_images ?? false,
     signatureSource: row.signature_source ?? null,
     sendApprovalRequired: row.send_approval_required ?? false,
     // Three-way review mode (off | inline | dashboard). Falls back to the

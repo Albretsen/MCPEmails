@@ -72,6 +72,12 @@ export interface Body {
   truncated?: boolean;
   /** Never true on a real body. The discriminant against `DeferredBody`. */
   deferred?: false;
+  /**
+   * Draft editor only, and only on the SAVE that removed the HTML part (`html`
+   * is null then too). The card says so in one line rather than silently
+   * dropping "Show formatting".
+   */
+  formatting_removed?: boolean;
 }
 
 /**
@@ -94,6 +100,8 @@ export interface DeferredBody {
   html: null;
   truncated?: boolean;
   deferred: true;
+  /** Never on a deferred body: only a save sets it, and a save is not deferred. */
+  formatting_removed?: undefined;
 }
 
 export type DraftBody = Body | DeferredBody;
@@ -180,6 +188,12 @@ export interface DraftRecipients {
 export interface DraftSignature {
   /** Whether the stored text already carries the signature. Display only. */
   embedded: boolean;
+  /**
+   * Present (true) only when the HTML part carries the inbox's formatted
+   * signature. Editing the signature LINES replaces it with plain text; a
+   * body-only edit keeps it. The card warns before that happens.
+   */
+  rich?: boolean;
 }
 
 /**
@@ -220,13 +234,29 @@ export interface DraftEditorData {
   version?: string;
   origin?: "create" | "reply" | "update" | "read" | "save";
   /**
-   * NOT a modification time. Every server path stamps this with the clock at
-   * RESPONSE time, so two reads of an untouched draft differ in it. Render it,
-   * do not reason with it — `version` is the field that says whether anything
-   * changed.
+   * The id the card ASKED with, present only when it was an older id of this
+   * draft that the server's draft lineage resolved to `draft_id`. The card
+   * adopts `draft_id` silently; this only confirms the answer is about the
+   * draft it asked for (store.ts#acceptRehydration).
+   */
+  resolved_from?: string;
+  /**
+   * The draft's lineage revision (server: draft-lineage.ts), present only when
+   * the server records one for this draft. Sent back as `base_revision` on
+   * every save and send (0 when absent), so a write against a draft that was
+   * rewritten since this copy was loaded is refused as `draft_changed` instead
+   * of overwriting, or sending, a version the person never saw.
+   */
+  revision?: number;
+  /**
+   * When the draft was last SAVED. On a write it is the time of that write; on
+   * a read (`draft_read`, Refresh) it is the last real save, never the time of
+   * the read, and null when nobody recorded one. (Until 2026-10-13 every path
+   * stamped the response time.) Still not a version: `version` says whether
+   * anything changed. store.ts#isReplayedDraft reads its age for one purpose.
    */
   last_saved_at?: string | null;
-  /** "user" only when the last write was `draft_editor_save`. */
+  /** "user" only when the last write was `draft_editor_save`; null when not known. */
   last_saved_by?: "agent" | "user" | null;
   identity: Identity;
   recipients?: DraftRecipients;

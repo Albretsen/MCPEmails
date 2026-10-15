@@ -272,3 +272,20 @@ Deno.test("GET /session: every inbox carries status and status_reason, and no ma
   assertEquals((seam as unknown as { calls: unknown[] }).calls.length, calls);
   await pool.closeAll();
 });
+
+// ── a partial connection is not a broken one ────────────────────────────────
+
+Deno.test("send-only inbox: listing mail says it is send-only, never 'reconnect', and dials nothing", async () => {
+  const pool = new FakeDialPool(working);
+  const app = await realApp({ pool });
+  const inbox = await imapInbox({ imap_host: null, imap_port: null });
+  const { value } = await harness.runTool(inbox, noHandler, () => app.mail("list", { folder: "inbox" }));
+  assertEquals(
+    [value.status, value.body.error.code, value.body.error.tool_code],
+    [422, "invalid_request", "transport_not_configured"],
+  );
+  assert(/sending only/.test(value.body.error.message), value.body.error.message);
+  assertEquals(pool.connects, 0, "there is no IMAP server to dial");
+  assertEquals(app.store.loginMarks, [], "nothing is recorded against the row");
+  await pool.closeAll();
+});

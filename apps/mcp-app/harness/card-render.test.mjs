@@ -213,7 +213,10 @@ const draftEnvelope = {
     draft_id: "Drafts:2",
     id_is_stable: false,
     origin: "create",
-    last_saved_at: "2026-10-12T10:00:00.000Z",
+    // Fresh, so a delivered copy is a live result and not a replay: the card
+    // re-reads a draft older than REPLAY_AGE_MS before trusting it (store.ts
+    // #isReplayedDraft, merged from main), which these groups do not script.
+    last_saved_at: new Date().toISOString(),
     last_saved_by: "agent",
     identity: { inbox_id: "ib-1", email_address: "you@example.com", provider: "imap" },
     recipients: { to: ["dana@x.example"], cc: [], bcc: [] },
@@ -482,12 +485,19 @@ async function main() {
   // above the separator.
   const REAL_MESSAGE = REAL_BODY.slice(0, REAL_BODY.lastIndexOf("\n-- \n"));
   const bodyBox = () => globalThis.document.getElementById("d-body");
+  // A live result, not a replay: an envelope older than REPLAY_AGE_MS is
+  // re-read by the card's replay check (merged from main), which has its own
+  // group below.
+  const deferredNow = () => ({
+    ...F.draftReplyDeferred,
+    draft: { ...F.draftReplyDeferred.draft, last_saved_at: new Date().toISOString() },
+  });
 
   group("a deferred body delivered in _meta renders the editor at once");
   {
     const c = await boot();
     await c.settled();
-    c.deliver(toolResult(F.draftReplyDeferred, "Draft saved.", F.draftReplyResultMeta));
+    c.deliver(toolResult(deferredNow(), "Draft saved.", F.draftReplyResultMeta));
     await after(80);
     expect("it rendered", c.state().envelope?.schema_version, F.DEFERRED_V);
     expect("not the update-the-connector screen", c.text().includes("Update the MCP Emails"), false);
@@ -501,7 +511,7 @@ async function main() {
   {
     const c = await boot(); // no onToolCall: the read is left hanging
     await c.settled();
-    c.deliver(toolResult(F.draftReplyDeferred, "Draft saved."));
+    c.deliver(toolResult(deferredNow(), "Draft saved."));
     await after(150);
     expect("one line", c.text(), "Loading…");
     expect("the card is not empty", c.filled(), true);
@@ -524,7 +534,8 @@ async function main() {
     expect("then the editor, with the real body", bodyBox()?.value, REAL_MESSAGE);
     expect("the reply line the read does not carry is still there", c.text().includes("Replying to"), true);
     expect("nothing reads as unsaved", c.text().includes("unsaved"), false);
-    expect("Save is disabled until the user edits", c.button("Save")?.disabled, true);
+    // `soft` since main's QA pass: off is aria-disabled, so Tab order holds.
+    expect("Save is disabled until the user edits", c.button("Save")?.getAttribute("aria-disabled"), "true");
     expect("and it did not ask again", c.calls.length, 1);
     await c.done();
   }
@@ -551,13 +562,33 @@ async function main() {
     group(`a deferred body that cannot be fetched is one line, never an editor: ${name}`);
     const c = await boot({ onToolCall: (tool) => (tool === "draft_read" ? reply : null) });
     await c.settled();
-    c.deliver(toolResult(F.draftReplyDeferred, "Draft saved."));
+    c.deliver(toolResult(deferredNow(), "Draft saved."));
     await after(150);
     expect("the card is not empty", c.filled(), true);
     expect("one line", c.text().replace("Open dashboard", ""), line);
     expect("with the way out", !!c.button("Open dashboard"), true);
     expect("no body box, no Save, no Send", c.editable(), false);
     expect("asked exactly once", c.calls.length, 1);
+    await c.done();
+  }
+
+  group("a REPLAYED deferred envelope is read once, by the replay check, and gets its body");
+  {
+    // F.draftReplyDeferred's last_saved_at is days old, so this is what a
+    // reopened chat delivers. main's replay check re-reads it; the deferred
+    // fetch must not ask a second time for the same draft.
+    const c = await boot({
+      onToolCall: (tool) =>
+        tool === "draft_read"
+          ? { result: { content: [{ type: "text", text: "Draft Drafts:2." }], structuredContent: F.draftReadInline } }
+          : null,
+    });
+    await c.settled();
+    c.deliver(toolResult(F.draftReplyDeferred, "Draft saved."));
+    await after(200);
+    expect("one read", c.calls.length, 1);
+    expect("with draft_read", c.calls[0]?.name, "draft_read");
+    expect("the editor, with the real body", bodyBox()?.value, REAL_MESSAGE);
     await c.done();
   }
 

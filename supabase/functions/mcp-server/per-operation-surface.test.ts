@@ -182,9 +182,8 @@ Deno.test("an OpenAI key is listed exactly one tool per operation", async () => 
       "automation_get",
       "automation_runs",
       "automation_preview",
-      "automation_create",
-      "automation_update",
-      "automation_enable",
+      // No automation_create, automation_update or automation_enable: the
+      // rescan flagged all three. See PER_OPERATION_UNLISTED.
       "automation_disable",
       "automation_delete",
       "contact_search",
@@ -267,8 +266,6 @@ Deno.test("the two arguments that were called `action` are listed under their co
     (properties("email_flag").flag_action as { enum: string[] }).enum,
     ["read", "unread", "flag", "unflag"],
   );
-  assert("rule_action" in properties("automation_create"));
-  assert("rule_action" in properties("automation_update"));
 });
 
 Deno.test("every per-operation tool is a complete descriptor", () => {
@@ -311,7 +308,6 @@ Deno.test("destructiveHint is false only on writes that purely add", () => {
     "folder_create",
     "draft_create",
     "draft_reply",
-    "automation_create",
   ];
   const nonDestructiveWrites = listedMailTools()
     .filter((tool) => (tool.annotations as Record<string, unknown>).readOnlyHint === false)
@@ -402,8 +398,10 @@ Deno.test("the per-operation instructions name only tools on that listing, withi
 Deno.test("a per-operation tool passes the scope gate of the action it is", () => {
   for (const [toolName, spec] of Object.entries(CONSOLIDATED_SPECS)) {
     for (const action of Object.values(spec.actions)) {
-      const tool = PER_OPERATION_LISTING.find((candidate) => candidate.name === action.legacy);
-      assert(tool, `${toolName}'s ${action.legacy} is not on the per-operation listing`);
+      // The unlisted three are still callable, so their gate is checked too.
+      const tool = PER_OPERATION_LISTING.find((candidate) => candidate.name === action.legacy) ??
+        PER_OPERATION_ONLY_TOOLS.get(action.legacy);
+      assert(tool, `${toolName}'s ${action.legacy} is not a per-operation tool`);
       assertEquals(tool!.requiredScope, action.scope, `${action.legacy} requiredScope`);
       assertEquals(tool!.altScopes ?? [], action.altScopes ?? [], `${action.legacy} altScopes`);
     }
@@ -455,7 +453,20 @@ Deno.test("email_flag takes flag_action, and says so when it is wrong", async ()
   assert(!refusalText(legacySpelling).includes("action is"), refusalText(legacySpelling));
 });
 
-Deno.test("automation_create reports rule_action, the name it lists", async () => {
+Deno.test("the automation writes the scan flagged are unlisted, and still callable", async () => {
+  const listed = listedMailTools();
+  for (const name of ["automation_create", "automation_update", "automation_enable"]) {
+    assert(!listed.some((tool) => tool.name === name), `${name} is listed to OpenAI clients`);
+    for (const [path, text] of strings(listed, "tools")) {
+      assert(!text.includes(name), `${path} points at ${name}, which is not listed`);
+    }
+    // Refused for scope rather than as an unknown tool.
+    const response = await call(chatGpt(["read:email"]), name, { automation_id: "a" });
+    assertEquals(response.error?.code, -32004, name);
+  }
+});
+
+Deno.test("automation_create reports rule_action, not the legacy name", async () => {
   const response = await call(chatGpt(), "automation_create", { name: "x" });
   assert(refusalText(response).includes("arguments.rule_action is required"), refusalText(response));
 });

@@ -195,6 +195,7 @@ import {
 import {
   appOnlyReviewCardToolMeta,
   buildResourceReadResult,
+  isStaleReviewCardUri,
   buildResourcesListResult,
   buildResourceTemplatesListResult,
   clientSupportsUiExtension,
@@ -317,6 +318,11 @@ import {
   signatureHtmlToText,
 } from "./signature-compose.ts";
 import {
+  createSignatureImageFetcher,
+  embedSignatureImages,
+  type EmbeddedHtml,
+} from "./signature-images.ts";
+import {
   handleTriageDispatch,
   type TriageAction,
   TRIAGE_ACTION_OPERATIONS,
@@ -399,6 +405,9 @@ import {
   buildUsageLimitText,
   FREE_ACTION_GRACE_DAYS,
   freeCapUpgradeUrl,
+  type PlanLimitWording,
+  plansInfoUrl,
+  rateLimitPlanSentence,
   USAGE_LIMIT_SUPPORT_EMAIL,
 } from "./usage-limit-message.ts";
 import type { ActionAllowanceRow } from "./action-allowance.ts";
@@ -468,6 +477,14 @@ import {
 } from "./inbox-selector.ts";
 import { unsupportedFeatureMessage } from "./unsupported-feature-remedy.ts";
 import {
+  capabilitiesForAccess,
+  inboxAccess,
+  missingTransportOf,
+  missingTransportPayload,
+  transportBlockingTool,
+  type MissingTransport,
+} from "./connection-access.ts";
+import {
   buildReplayEnvelope,
   idempotencyResultSnapshot,
   noNewEffectPhrase,
@@ -479,7 +496,31 @@ import {
 } from "./protocol-version-header.ts";
 import { dropRedundantAction, normalizeArgumentAliases } from "./argument-aliases.ts";
 import {
+  closeDraftLine,
+  draftIdIsRecordable,
+  draftLineageRecordedFrom,
+  type DraftLineageRow,
+  type DraftLineageScope,
+  type DraftLineageStore,
+  type DraftWriter,
+  lineRevision,
+  needsExistenceCheck,
+  parseBaseRevision,
+  preferExistingId,
+  recordDraftWrite,
+  resolveDraftId,
+  type ResolvedDraft,
+} from "./draft-lineage.ts";
+import {
+  applyRecipientOverride,
+  approvedSendRefusalDetail,
+  planDraftSend,
+} from "./draft-send-plan.ts";
+import { htmlCarriesSignatureBlock } from "./signature-compose.ts";
+import {
   byteStringToBase64url,
+  gmailHeaderValue,
+  invalidRecipientIn,
   type RecipientOverride,
   recipientOverrideFrom,
   rewriteRecipientHeaders,
@@ -569,6 +610,22 @@ const supabase = createClient(supabaseUrl, supabaseServiceKey, {
 interface ActivityContext {
   inboxId: string | null;
   outlookNoMailbox?: boolean;
+  /**
+   * Set when a tool reached for the half of a receive-only or send-only
+   * IMAP/SMTP inbox that the inbox does not have (see connection-access.ts).
+   * Like `outlookNoMailbox`, the dispatcher reads it to replace whatever
+   * credential-failure wording the handler put around the sentinel with the
+   * accurate explanation.
+   */
+  missingTransport?: { kind: MissingTransport; inboxId: string; emailAddress: string };
+  /**
+   * The tool being dispatched, so `resolveInboxArg` can refuse an inbox that
+   * lacks the half of the mailbox this tool needs before the handler does
+   * anything with it. `transportGated` marks that the check has run: it applies
+   * to the call's first resolved inbox, which is the one the tool acts on.
+   */
+  dispatchName?: string;
+  transportGated?: boolean;
   /**
    * Notes a provider layer raised for the in-flight call (e.g. a Sent copy
    * that could not be saved), attached to the result after dispatch. Absent
@@ -682,6 +739,32 @@ function rewriteNoMailboxResult(toolResult: unknown): void {
     ?.result;
   if (!result || result.isError !== true || !Array.isArray(result.content)) return;
   result.content = [{ type: "text", text: outlookNoMailboxText() }];
+}
+
+/**
+ * Replace an executor's error result with the receive-only / send-only
+ * explanation, in place. Returns whether it did. Like {@link rewriteNoMailboxResult}, a result that
+ * succeeded is left alone: a best-effort IMAP step that found no IMAP server
+ * does not turn a delivered send into a failure.
+ */
+function rewriteMissingTransportResult(
+  outcome: { result: unknown },
+  missing: NonNullable<ActivityContext["missingTransport"]>,
+): boolean {
+  const result = (outcome as {
+    result?: { isError?: boolean; content?: { type: string; text: string }[]; structuredContent?: unknown };
+  })?.result;
+  if (!result || result.isError !== true || !Array.isArray(result.content)) return false;
+  const payload = missingTransportPayload(
+    missing.kind,
+    { id: missing.inboxId, email_address: missing.emailAddress },
+    `${APP_URL}/dashboard/inboxes`,
+  );
+  result.content = [{ type: "text", text: JSON.stringify(payload) }];
+  // A structured copy written for the original refusal would contradict the
+  // text; this one says the same thing as the text.
+  if (result.structuredContent !== undefined) result.structuredContent = payload;
+  return true;
 }
 
 /**
@@ -2398,14 +2481,15 @@ const PLAN_DISPLAY_NAMES: Record<string, string> = {
 function buildQuotaExceededResponse(
   requestId: string | number | null,
   result: PlanQuotaResult,
+  wording: PlanLimitWording = "standard",
 ): Response {
   const planLabel = PLAN_DISPLAY_NAMES[result.plan] ??
     (result.plan.charAt(0).toUpperCase() + result.plan.slice(1));
 
   const humanMessage =
     `Your ${planLabel} plan allows ${result.perMinuteLimit} requests per minute, and that ceiling has been reached. ` +
-    `Please wait ${result.retryAfterSeconds} seconds before retrying. ` +
-    `Usage is unlimited — upgrade for a higher burst ceiling: https://www.mcpemails.com/pricing`;
+    `Please wait ${result.retryAfterSeconds} seconds before retrying.` +
+    rateLimitPlanSentence(wording);
 
   const body: JsonRpcErrorResponse = {
     jsonrpc: "2.0",
@@ -3175,6 +3259,7 @@ interface ActionLimitCheck {
 function usageLimitResult(
   requestId: string | number | null,
   refusal: Extract<BillableActionReservation, { outcome: "refused" }>,
+  wording: PlanLimitWording = "standard",
 ): JsonRpcSuccessResponse {
   const { plan, usedActions, cap, periodEnd } = refusal;
   return {
@@ -3183,7 +3268,7 @@ function usageLimitResult(
     result: {
       content: [{
         type: "text",
-        text: buildUsageLimitText(plan, usedActions, cap, periodEnd, APP_URL),
+        text: buildUsageLimitText(plan, usedActions, cap, periodEnd, APP_URL, wording),
       }],
       isError: true,
       _meta: {
@@ -3202,7 +3287,11 @@ function usageLimitResult(
             ? {
               allowance: cap,
               grace_days: FREE_ACTION_GRACE_DAYS,
-              upgrade_url: freeCapUpgradeUrl(APP_URL),
+              // A directory client is told where the plans are described,
+              // not handed a link labelled as the way to buy one.
+              ...(wording === "directory"
+                ? { plans_url: plansInfoUrl(APP_URL) }
+                : { upgrade_url: freeCapUpgradeUrl(APP_URL) }),
             }
             // Paid: support, not pricing. A client rendering a pricing URL
             // here would offer to sell a bigger allowance, which no paid plan
@@ -3227,12 +3316,22 @@ function mayMeterToolCall(toolName: unknown): boolean {
   return BILLABLE_TOOL_NAMES.has(toolName) || Object.hasOwn(CONSOLIDATED_BY_NAME, toolName);
 }
 
+/**
+ * The wording a plan-limit refusal uses for this key. Only ever called once a
+ * call has ALREADY been refused, so it adds no query to a successful call.
+ * See PlanLimitWording in usage-limit-message.ts.
+ */
+async function planLimitWording(apiKey: ApiKeyRow): Promise<PlanLimitWording> {
+  return (await isOpenAiClientKey(apiKey)) ? "directory" : "standard";
+}
+
 async function actionLimitResponse(
-  workspaceId: string,
+  apiKey: ApiKeyRow,
   toolName: string,
   requestId: string | number | null,
   preloadedAllowance?: Promise<ActionAllowanceRow | null>,
 ): Promise<ActionLimitCheck> {
+  const workspaceId = apiKey.workspace_id;
   // Kill switch, not a feature flag: enforcement is ON unless something says
   // otherwise, so a missing or mistyped variable cannot silently disable the
   // only thing standing between us and an unbounded provider bill.
@@ -3244,7 +3343,10 @@ async function actionLimitResponse(
     case "reserved":
       return { response: null, reservationId: reservation.reservationId };
     case "refused":
-      return { response: usageLimitResult(requestId, reservation), reservationId: null };
+      return {
+        response: usageLimitResult(requestId, reservation, await planLimitWording(apiKey)),
+        reservationId: null,
+      };
   }
 }
 
@@ -5480,6 +5582,12 @@ const LEGACY_TOOLS: ToolDefinition[] = [
           items: { type: "string", format: "email" },
           description: "Replaces the draft's stored Bcc.",
         },
+        base_revision: {
+          type: "integer",
+          minimum: 0,
+          description: "Set by the draft editor card: the revision it shows. A draft " +
+            "changed since is refused as draft_changed. Omit it.",
+        },
         idempotency_key: IDEMPOTENCY_KEY_PROPERTY,
       },
       required: ["draft_id"],
@@ -6471,6 +6579,15 @@ const TOOL_OUTPUT_SCHEMAS: Record<string, Record<string, unknown>> = {
             display_name: { type: "string" },
             provider: { type: "string" },
             service: { type: ["string", "null"] },
+            access: {
+              type: "string",
+              enum: ["send_only", "receive_only"],
+              description:
+                "Present only when this inbox is connected for one direction. " +
+                "send_only: no IMAP, so it cannot read, search, organize or draft. " +
+                "receive_only: no SMTP, so it cannot send, reply, forward or schedule. " +
+                "Absent means the inbox does both.",
+            },
             capabilities: { type: "object", additionalProperties: true },
             compatibility: { type: "object", additionalProperties: true },
             sender_identities: {
@@ -8614,10 +8731,33 @@ function buildPerOperationTool(legacy: ToolDefinition, action?: ConsolidatedActi
   };
 }
 
-const PER_OPERATION_LISTING: ToolDefinition[] = [];
+/**
+ * Per-operation tools that exist and are callable but are NOT listed.
+ *
+ * The rescan after the per-operation surface shipped (2026-10-13) passed 52 of
+ * 55 tools and flagged these three with the same finding the consolidated
+ * tools had drawn: "This tool appears to execute operations that are not
+ * individually exposed". `automation_enable` takes no selector of any kind, so
+ * the objection is to what the three DO: they set up, change or start a stored
+ * rule whose `rule_action.type` is run later by the triage engine, which is an
+ * operation chosen by an argument and executed generically.
+ *
+ * So an OpenAI client is not shown them (Asgeir's decision, 2026-10-13). It
+ * keeps the reads, disable and delete, all of which passed; rules are created
+ * and switched on from the dashboard or another client. The names still
+ * resolve in `tools/call`, like every other per-operation name.
+ */
+const PER_OPERATION_UNLISTED: ReadonlySet<string> = new Set([
+  "automation_create",
+  "automation_update",
+  "automation_enable",
+]);
+
+/** Every per-operation tool, listed or not, in listing order. */
+const PER_OPERATION_TOOLS: ToolDefinition[] = [];
 for (const tool of TOOL_REGISTRY) {
   if (!isAdvertisedTool(tool.name)) continue;
-  const listedNames = new Set(PER_OPERATION_LISTING.map((listed) => listed.name));
+  const listedNames = new Set(PER_OPERATION_TOOLS.map((listed) => listed.name));
   const spec = CONSOLIDATED_SPECS[tool.name];
   if (spec) {
     // Every action, the unadvertised ones included: `folder`'s 'list' is the
@@ -8626,10 +8766,10 @@ for (const tool of TOOL_REGISTRY) {
       if (listedNames.has(action.legacy)) continue;
       listedNames.add(action.legacy);
       PER_OPERATION_PARENT.set(action.legacy, { tool: tool.name, action });
-      PER_OPERATION_LISTING.push(buildPerOperationTool(LEGACY_BY_NAME.get(action.legacy)!, action));
+      PER_OPERATION_TOOLS.push(buildPerOperationTool(LEGACY_BY_NAME.get(action.legacy)!, action));
     }
   } else if (LEGACY_BY_NAME.has(tool.name)) {
-    if (!listedNames.has(tool.name)) PER_OPERATION_LISTING.push(buildPerOperationTool(tool));
+    if (!listedNames.has(tool.name)) PER_OPERATION_TOOLS.push(buildPerOperationTool(tool));
   } else {
     // The card's own tools: not operations of anything, listed as they are
     // apart from their prose. Two of them are the model's to call since
@@ -8639,16 +8779,20 @@ for (const tool of TOOL_REGISTRY) {
     // same rewording every other listed description does. Nothing else about
     // the entry changes, and a description with no such phrase comes back
     // identical.
-    PER_OPERATION_LISTING.push({
+    PER_OPERATION_TOOLS.push({
       ...tool,
       description: perOperationWording(tool.description) as string,
     });
   }
 }
 
+const PER_OPERATION_LISTING: ToolDefinition[] = PER_OPERATION_TOOLS.filter(
+  (tool) => !PER_OPERATION_UNLISTED.has(tool.name),
+);
+
 /** Per-operation tools `tools/call` cannot find in TOOL_REGISTRY, by name. */
 const PER_OPERATION_ONLY_TOOLS = new Map(
-  PER_OPERATION_LISTING
+  PER_OPERATION_TOOLS
     .filter((tool) => !TOOL_REGISTRY.some((registered) => registered.name === tool.name))
     .map((tool) => [tool.name, tool]),
 );
@@ -9426,6 +9570,50 @@ function imapAuthUser(inbox: InboxRow): string {
 }
 
 /**
+ * Can this inbox open an IMAP session? The guard every IMAP path runs before
+ * dialling; on false the caller throws the `imap_auth_failed` sentinel, as it
+ * always has.
+ *
+ * What changed is the case where the answer is false because the inbox was
+ * deliberately connected without IMAP (a send-only inbox). That is recorded on
+ * the request, and the dispatcher then answers with what is actually true,
+ * rather than the handler's "credentials revoked, reconnect" wording, which is
+ * false for that inbox and which no reconnect would fix.
+ */
+function imapConfigured<T extends InboxRow>(
+  inbox: T,
+): inbox is T & { imap_host: string; imap_port: number; imap_password: string } {
+  if (inbox.imap_host && inbox.imap_port && inbox.imap_password) return true;
+  noteMissingTransport(inbox, "imap");
+  return false;
+}
+
+/** The SMTP counterpart of {@link imapConfigured}, for a receive-only inbox. */
+function smtpConfigured<T extends InboxRow>(
+  inbox: T,
+): inbox is T & { smtp_host: string; smtp_port: number; imap_password: string } {
+  if (inbox.smtp_host && inbox.smtp_port && inbox.imap_password) return true;
+  noteMissingTransport(inbox, "smtp");
+  return false;
+}
+
+/**
+ * Record that the in-flight tool needed a half this inbox deliberately lacks.
+ * Only a partial connection is recorded: a row missing both hosts, or missing
+ * its password, is broken, and keeps the credential error it always had.
+ */
+function noteMissingTransport(inbox: InboxRow, kind: MissingTransport): void {
+  if (missingTransportOf(inbox) !== kind) return;
+  const store = activityInboxStore.getStore();
+  // Only the inbox the call acts on. A tool that sweeps several inboxes and
+  // fails on another one for an unrelated reason must not be explained as this.
+  if (store && store.inboxId !== null && store.inboxId !== inbox.id) return;
+  if (store && !store.missingTransport) {
+    store.missingTransport = { kind, inboxId: inbox.id, emailAddress: inbox.email_address };
+  }
+}
+
+/**
  * Does this inbox talk IMAP?
  *
  * Mirrors the `default:` arm every provider switch in this file uses — Gmail
@@ -9464,7 +9652,7 @@ function imapSessionFor(inbox: InboxRow): ImapSession<ImapClient> | null {
 function imapSessionOpener(inbox: InboxRow): () => Promise<ImapClient> {
   let cachedPassword: string | null = null;
   return async () => {
-    if (!inbox.imap_host || !inbox.imap_port || !inbox.imap_password) {
+    if (!imapConfigured(inbox)) {
       throw new Error("imap_auth_failed");
     }
     if (cachedPassword === null) {
@@ -9629,7 +9817,7 @@ async function executeListInboxes(
 
   let query = supabase
     .from("inboxes")
-    .select("id, email_address, display_name, provider, service, status")
+    .select("id, email_address, display_name, provider, service, status, imap_host, smtp_host")
     .eq("workspace_id", apiKey.workspace_id)
     .is("deleted_at", null)
     .eq("status", "active")
@@ -9656,6 +9844,8 @@ async function executeListInboxes(
     display_name: string | null;
     provider: string;
     service: string | null;
+    imap_host: string | null;
+    smtp_host: string | null;
   }
 
   const allRows = (data ?? []) as InboxListRow[];
@@ -9691,17 +9881,22 @@ async function executeListInboxes(
           : "unavailable";
       }
     }
+    const access = inboxAccess(row);
     return {
       inbox_id: row.id,
       email_address: row.email_address,
       display_name: row.display_name ?? row.email_address,
       provider: row.provider,
       service: row.service ?? null,
+      // Only on a partial connection: "send_only" or "receive_only". Every
+      // other inbox does both, and an agent should not have to read a field on
+      // each of them to learn that. See connection-access.ts.
+      ...(access !== "send_and_receive" ? { access } : {}),
       sender_identities: senderIdentities,
       sender_identity_status: senderIdentityStatus,
       ...(includeCapabilities
         ? {
-            capabilities: getProviderCapabilities(row.provider),
+            capabilities: capabilitiesForAccess(getProviderCapabilities(row.provider), access),
             compatibility: getCompatibilityProfile(row.provider),
           }
         : {}),
@@ -9873,6 +10068,26 @@ async function resolveInboxArg(
   if (resolved.ok) {
     const store = activityInboxStore.getStore();
     if (store) store.inboxId = resolved.inbox.id;
+
+    // A receive-only or send-only inbox asked for the half it does not have.
+    // Refused here, at resolution, rather than where the connection would be
+    // opened, because by then a handler may already have acted: queued a held
+    // send for approval, or stored a scheduled send, that could never be
+    // delivered. The dispatcher turns this into the accurate explanation (see
+    // connection-access.ts); "not_found" only ever reaches the handler, which
+    // returns its usual refusal for the dispatcher to replace.
+    if (store?.dispatchName && !store.transportGated) {
+      store.transportGated = true;
+      const blocked = transportBlockingTool(store.dispatchName, resolved.inbox);
+      if (blocked) {
+        store.missingTransport = {
+          kind: blocked,
+          inboxId: resolved.inbox.id,
+          emailAddress: resolved.inbox.email_address,
+        };
+        return { ok: false, reason: "not_found" };
+      }
+    }
 
     // Best-effort, one-time Gmail signature seed (Phase 2). This is the single
     // invocation point for every inbox-bound tool (covers UUID, email-alias,
@@ -10949,7 +11164,7 @@ async function resolveImapAliasMailbox(
     forRead?: boolean;
   } = {},
 ): Promise<string | null> {
-  if (!inbox.imap_host || !inbox.imap_port || !inbox.imap_password) {
+  if (!imapConfigured(inbox)) {
     throw new Error("imap_auth_failed");
   }
   if (alias.aliases[0] === "inbox") return "INBOX";
@@ -11381,7 +11596,7 @@ async function listImapMessages(
    */
   resolvedOn?: ImapSession<ImapClient> | null,
 ): Promise<ListInboxResult> {
-  if (!inbox.imap_host || !inbox.imap_port || !inbox.imap_password) {
+  if (!imapConfigured(inbox)) {
     throw new Error("imap_auth_failed");
   }
   const password = await decryptStoredToken(inbox.imap_password);
@@ -11514,7 +11729,7 @@ async function readImapMessage(
    */
   joinInlineParts = false,
 ): Promise<ReadEmailResult> {
-  if (!inbox.imap_host || !inbox.imap_port || !inbox.imap_password) {
+  if (!imapConfigured(inbox)) {
     throw new Error("imap_auth_failed");
   }
   const { folder, uid } = decodeImapId(messageId);
@@ -11679,7 +11894,7 @@ async function searchImapMessages(
    */
   sharedSession?: ImapSession<ImapClient>,
 ): Promise<SearchEmailsResult> {
-  if (!inbox.imap_host || !inbox.imap_port || !inbox.imap_password) {
+  if (!imapConfigured(inbox)) {
     throw new Error("imap_auth_failed");
   }
 
@@ -11862,7 +12077,7 @@ async function imapSmtpSend(
   mimeMessage: string | Uint8Array,
   recipients: string[],
 ): Promise<void> {
-  if (!inbox.smtp_host || !inbox.smtp_port || !inbox.imap_password) {
+  if (!smtpConfigured(inbox)) {
     throw new Error("imap_auth_failed");
   }
   const password = await decryptStoredToken(inbox.imap_password);
@@ -11893,6 +12108,8 @@ async function imapSmtpSend(
  * Sent.
  */
 async function appendToSentFolder(inbox: InboxRow, mimeMessage: string | Uint8Array): Promise<void> {
+  // Not imapConfigured(): a send-only inbox has no Sent folder to file into,
+  // and that is not a failure of the send that just succeeded.
   if (!inbox.imap_host || !inbox.imap_port || !inbox.imap_password) return;
   let client: ImapClient | null = null;
   let saved = false;
@@ -11937,6 +12154,7 @@ async function sendImapMessage(
 ): Promise<SendEmailResult> {
   // STAGE "compose" (see send-stages.ts): everything up to the SMTP session.
   // imapSmtpSend below is transmission and answers "unknown"; this does not.
+  const embedded = await withSignatureImages(inbox, params.htmlBody);
   const { messageId, mime, recipients } = preTransmissionSync("compose", () => {
     const messageId = crypto.randomUUID();
     const mime = buildMimeMessage({
@@ -11945,7 +12163,8 @@ async function sendImapMessage(
       cc: params.cc.length ? params.cc : undefined,
       subject: params.subject,
       textBody: params.textBody,
-      htmlBody: params.htmlBody,
+      htmlBody: embedded.html,
+      inlineImages: embedded.inlineImages,
       attachments: params.attachments.map((a) => ({
         filename: a.filename,
         mimeType: a.mime_type,
@@ -11991,7 +12210,7 @@ async function replyImapMessage(
   // imap_auth_failed sentinels inside survive the wrapper unchanged.
   const { mime, messageId, recipients, replySubject, origMessageId, uid } =
     await preTransmission("source", async () => {
-      if (!inbox.imap_host || !inbox.imap_port || !inbox.imap_password) {
+      if (!imapConfigured(inbox)) {
         throw new Error("imap_auth_failed");
       }
       // Place the signature into the new reply text BEFORE the original is quoted
@@ -12066,6 +12285,7 @@ async function replyImapMessage(
         formatMailbox(a.name, a.email)
       );
 
+      const embedded = await withSignatureImages(inbox, params.htmlBody);
       const mime = buildMimeMessage({
         from: formatMailbox(inbox.display_name, inbox.email_address),
         to: toStrings,
@@ -12077,7 +12297,8 @@ async function replyImapMessage(
           origDateHeader,
           origBodyText,
         ),
-        htmlBody: params.htmlBody,
+        htmlBody: embedded.html,
+        inlineImages: embedded.inlineImages,
         attachments: params.attachments.map((a) => ({
           filename: a.filename,
           mimeType: a.mime_type,
@@ -13718,7 +13939,7 @@ async function readOriginalMessage(
 ): Promise<OriginalMessage> {
   switch (inbox.provider) {
     case "imap": {
-      if (!inbox.imap_host || !inbox.imap_port || !inbox.imap_password) {
+      if (!imapConfigured(inbox)) {
         throw new Error("imap_auth_failed");
       }
       const { folder, uid } = decodeImapId(messageId);
@@ -14938,6 +15159,7 @@ async function sendGmailMessage(
   const { accessToken, messageId, rawBase64url } = await preTransmission("compose", async () => {
     const accessToken = await withFreshGmailToken(inbox);
     const messageId = crypto.randomUUID();
+    const embedded = await withSignatureImages(inbox, params.htmlBody);
 
     const mimeMessage = buildMimeMessage({
       from: formatMailbox(inbox.display_name, inbox.email_address),
@@ -14948,7 +15170,8 @@ async function sendGmailMessage(
       includeBccHeader: true,
       subject: params.subject,
       textBody: params.textBody,
-      htmlBody: params.htmlBody,
+      htmlBody: embedded.html,
+      inlineImages: embedded.inlineImages,
       attachments: params.attachments.map((a) => ({
         filename: a.filename,
         mimeType: a.mime_type,
@@ -15360,6 +15583,7 @@ async function replyGmailMessage(
 
       // ── Step 4: Construct MIME reply with threading headers ───────────────────
       const newMessageId = crypto.randomUUID();
+      const embedded = await withSignatureImages(inbox, params.htmlBody);
       const mimeMessage = buildMimeMessage({
         from: formatMailbox(inbox.display_name, inbox.email_address),
         to: replyAddresses,
@@ -15375,7 +15599,8 @@ async function replyGmailMessage(
           origDateHeader,
           origBodyText,
         ),
-        htmlBody: params.htmlBody,
+        htmlBody: embedded.html,
+        inlineImages: embedded.inlineImages,
         attachments: params.attachments.map((a) => ({
           filename: a.filename,
           mimeType: a.mime_type,
@@ -18943,7 +19168,7 @@ function moveProviderSemantics(
  * Throws "imap_auth_failed" on credential rejection.
  */
 async function imapListFolders(inbox: InboxRow): Promise<FolderEntry[]> {
-  if (!inbox.imap_host || !inbox.imap_port || !inbox.imap_password) {
+  if (!imapConfigured(inbox)) {
     throw new Error("imap_auth_failed");
   }
   const password = await decryptStoredToken(inbox.imap_password);
@@ -19530,7 +19755,7 @@ async function imapMailboxListing(
    */
   sharedSession?: ImapSession<ImapClient> | null,
 ): Promise<ImapMailboxInfo[]> {
-  if (!inbox.imap_host || !inbox.imap_port || !inbox.imap_password) {
+  if (!imapConfigured(inbox)) {
     throw new Error("imap_auth_failed");
   }
   const shared = sharedSession ?? null;
@@ -19740,7 +19965,7 @@ async function findFolderByName(
 }
 
 async function imapCreateFolder(inbox: InboxRow, name: string): Promise<{ id: string; name: string }> {
-  if (!inbox.imap_host || !inbox.imap_port || !inbox.imap_password) {
+  if (!imapConfigured(inbox)) {
     throw new Error("imap_auth_failed");
   }
   const password = await decryptStoredToken(inbox.imap_password);
@@ -19891,7 +20116,7 @@ async function outlookCreateFolder(inbox: InboxRow, name: string): Promise<{ id:
 // ── folder_rename helpers ──────────────────────────────────────────────────
 
 async function imapRenameFolder(inbox: InboxRow, folderId: string, newName: string): Promise<void> {
-  if (!inbox.imap_host || !inbox.imap_port || !inbox.imap_password) {
+  if (!imapConfigured(inbox)) {
     throw new Error("imap_auth_failed");
   }
   const password = await decryptStoredToken(inbox.imap_password);
@@ -19993,7 +20218,7 @@ async function outlookRenameFolder(inbox: InboxRow, folderId: string, newName: s
 // ── folder_delete helpers ──────────────────────────────────────────────────
 
 async function imapDeleteFolder(inbox: InboxRow, folderId: string): Promise<void> {
-  if (!inbox.imap_host || !inbox.imap_port || !inbox.imap_password) {
+  if (!imapConfigured(inbox)) {
     throw new Error("imap_auth_failed");
   }
   const password = await decryptStoredToken(inbox.imap_password);
@@ -20517,7 +20742,7 @@ async function imapArchiveEmail(
   inbox: InboxRow,
   messageId: string,
 ): Promise<{ newMessageId?: string; destination: string }> {
-  if (!inbox.imap_host || !inbox.imap_port || !inbox.imap_password) {
+  if (!imapConfigured(inbox)) {
     throw new Error("imap_auth_failed");
   }
   const { folder, uid } = decodeImapId(messageId);
@@ -20890,7 +21115,7 @@ async function imapAddKeyword(
   messageId: string,
   keyword: string,
 ): Promise<void> {
-  if (!inbox.imap_host || !inbox.imap_port || !inbox.imap_password) {
+  if (!imapConfigured(inbox)) {
     throw new Error("imap_auth_failed");
   }
   const { folder, uid } = decodeImapId(messageId);
@@ -21240,7 +21465,7 @@ async function imapMoveEmail(
   messageId: string,
   destinationFolderId: string,
 ): Promise<string | undefined> {
-  if (!inbox.imap_host || !inbox.imap_port || !inbox.imap_password) {
+  if (!imapConfigured(inbox)) {
     throw new Error("imap_auth_failed");
   }
   const { folder, uid } = decodeImapId(messageId);
@@ -21518,7 +21743,7 @@ async function imapCopyEmail(
   messageId: string,
   destinationFolderId: string,
 ): Promise<void> {
-  if (!inbox.imap_host || !inbox.imap_port || !inbox.imap_password) {
+  if (!imapConfigured(inbox)) {
     throw new Error("imap_auth_failed");
   }
   const { folder, uid } = decodeImapId(messageId);
@@ -21727,7 +21952,7 @@ async function imapDeleteEmail(
   messageId: string,
   permanent: boolean,
 ): Promise<void> {
-  if (!inbox.imap_host || !inbox.imap_port || !inbox.imap_password) {
+  if (!imapConfigured(inbox)) {
     throw new Error("imap_auth_failed");
   }
   const { folder, uid } = decodeImapId(messageId);
@@ -22462,7 +22687,7 @@ function imapBulkByFolderGroup(
   opts: BulkRunOptions | undefined,
   apply: (client: ImapClient, group: ImapFolderGroup) => Promise<void>,
 ): Promise<BulkOpResult> {
-  if (!inbox.imap_host || !inbox.imap_port || !inbox.imap_password) {
+  if (!imapConfigured(inbox)) {
     return Promise.resolve({
       succeeded: [],
       failed: messageIds.map((id) => ({ id, error: "imap_auth_failed" })),
@@ -24568,6 +24793,13 @@ interface DraftSendResult {
   draft_id: string;
   message_id: string;
   sent_at: string;
+  /**
+   * IMAP only, and NEVER part of the tool result: false when the post-send
+   * delete of the draft failed, so its copy is still in Drafts. The lineage
+   * records that (`sent_kept`) and executeSendDraft strips the field before the
+   * payload is built, so `content` stays byte for byte what it was.
+   */
+  draft_removed?: boolean;
 }
 
 interface DraftDeleteResult {
@@ -24655,6 +24887,13 @@ interface DraftContent {
   subjectAbsent?: boolean;
   replyTo?: string;
   rebuildBlockers?: string[];
+  /**
+   * The mailbox's own timestamp for the stored draft, when the read has one:
+   * the message's Date header (IMAP), `internalDate` (Gmail) or
+   * `lastModifiedDateTime` (Outlook). The editor shows it as "saved at"; a read
+   * used to stamp the time of the read instead.
+   */
+  savedAt?: string | null;
 }
 
 /**
@@ -24694,6 +24933,8 @@ function draftContentFromRaw(raw: string, threadId?: string): DraftContent {
       mime_type: a.mimeType ?? null,
     })),
     subjectAbsent: rawSubject === null,
+    // The Date header. Gmail's reader prefers `internalDate` and overrides it.
+    savedAt: getHeader(h, "date") ?? null,
     ...(typeof replyTo === "string" ? { replyTo } : {}),
     rebuildBlockers,
   };
@@ -24705,7 +24946,14 @@ function draftContentFromRaw(raw: string, threadId?: string): DraftContent {
  * One function for both providers, so what a rebuild writes is stated once.
  * Exported for draft-rebuild.test.ts.
  */
-function draftMimeFor(from: string, params: DraftParams, messageId: string): string {
+function draftMimeFor(
+  from: string,
+  params: DraftParams,
+  messageId: string,
+  // The transports pass `withSignatureImages(...)`'s answer; with none, the
+  // HTML goes as given with no inline parts.
+  embedded: EmbeddedHtml = { html: params.htmlBody, inlineImages: [] },
+): string {
   return buildDraftMime({
     from,
     to: params.to,
@@ -24719,7 +24967,10 @@ function draftMimeFor(from: string, params: DraftParams, messageId: string): str
     includeBccHeader: true,
     subject: params.subject,
     textBody: params.body,
-    htmlBody: params.htmlBody,
+    // The HTML with our signature images as `cid:` and the parts they name
+    // (signature-images.ts), or the HTML unchanged with none.
+    htmlBody: embedded.html,
+    inlineImages: embedded.inlineImages,
     messageId,
     replyTo: params.replyTo,
     inReplyTo: params.inReplyTo,
@@ -24734,7 +24985,7 @@ async function imapListDrafts(
   inbox: InboxRow,
   limit: number,
 ): Promise<DraftSummary[]> {
-  if (!inbox.imap_host || !inbox.imap_port || !inbox.imap_password) {
+  if (!imapConfigured(inbox)) {
     throw new Error("imap_auth_failed");
   }
   const password = await decryptStoredToken(inbox.imap_password);
@@ -24760,7 +25011,9 @@ async function imapListDrafts(
       const uids = await client.uidSearch("ALL");
       if (uids.length > 0) {
         const page = uids.slice(-limit).reverse();
-        summaries = await client.fetchSummaries(page);
+        // `includeCc`: the listing reported `cc: []` for every IMAP draft,
+        // whatever the draft held. ENVELOPE carries Cc; it was never read.
+        summaries = await client.fetchSummaries(page, { includeCc: true });
       }
     } catch {
       // No Drafts mailbox on this account (and nothing to create for a list
@@ -24770,7 +25023,7 @@ async function imapListDrafts(
       draft_id: encodeImapId(draftFolder, s.uid),
       subject: decodeEnvelopeSubject(s.envelope.subject || "(no subject)"),
       to: s.envelope.to.map(decodeEnvelopeAddress),
-      cc: [],
+      cc: (s.envelope.cc ?? []).map(decodeEnvelopeAddress),
       created_at: imapDateToIso(s.envelope.date),
     }));
   } catch (err) {
@@ -24792,7 +25045,7 @@ async function imapGetDraft(
   inbox: InboxRow,
   draftId: string,
 ): Promise<DraftContent | null> {
-  if (!inbox.imap_host || !inbox.imap_port || !inbox.imap_password) {
+  if (!imapConfigured(inbox)) {
     throw new Error("imap_auth_failed");
   }
   const { folder, uid } = decodeImapId(draftId);
@@ -24824,12 +25077,13 @@ async function imapCreateDraft(
   inbox: InboxRow,
   params: DraftParams,
 ): Promise<DraftCreateResult> {
-  if (!inbox.imap_host || !inbox.imap_port || !inbox.imap_password) {
+  if (!imapConfigured(inbox)) {
     throw new Error("imap_auth_failed");
   }
   const password = await decryptStoredToken(inbox.imap_password);
   const messageId = crypto.randomUUID();
   const from = formatMailbox(inbox.display_name, inbox.email_address);
+  const embedded = await withSignatureImages(inbox, params.htmlBody);
 
   const mime = buildDraftMime({
     from,
@@ -24841,7 +25095,8 @@ async function imapCreateDraft(
     includeBccHeader: true,
     subject: params.subject,
     textBody: params.body,
-    htmlBody: params.htmlBody,
+    htmlBody: embedded.html,
+    inlineImages: embedded.inlineImages,
     messageId,
     inReplyTo: params.inReplyTo,
     references: params.references,
@@ -24909,7 +25164,7 @@ async function imapUpdateDraft(
   draftId: string,
   params: DraftParams,
 ): Promise<DraftUpdateResult> {
-  if (!inbox.imap_host || !inbox.imap_port || !inbox.imap_password) {
+  if (!imapConfigured(inbox)) {
     throw new Error("imap_auth_failed");
   }
   const password = await decryptStoredToken(inbox.imap_password);
@@ -24917,8 +25172,9 @@ async function imapUpdateDraft(
   if (!Number.isFinite(oldUid) || oldUid <= 0) throw new Error("draft_not_found");
   const messageId = crypto.randomUUID();
   const from = formatMailbox(inbox.display_name, inbox.email_address);
+  const embedded = await withSignatureImages(inbox, params.htmlBody);
 
-  const mime = draftMimeFor(from, params, messageId);
+  const mime = draftMimeFor(from, params, messageId, embedded);
 
   let client: ImapClient | null = null;
   try {
@@ -25062,7 +25318,7 @@ async function imapRewriteDraftRecipients(
   draftId: string,
   override: RecipientOverride,
 ): Promise<string> {
-  if (!inbox.imap_host || !inbox.imap_port || !inbox.imap_password) {
+  if (!imapConfigured(inbox)) {
     throw new Error("imap_auth_failed");
   }
   const password = await decryptStoredToken(inbox.imap_password);
@@ -25126,7 +25382,7 @@ async function imapSendDraft(
   // and sent nothing (see send-stages.ts).
   const { sentMime, recipients, parsed, folder, uid, password } =
     await preTransmission("source", async () => {
-      if (!inbox.imap_host || !inbox.imap_port || !inbox.imap_password) {
+      if (!imapConfigured(inbox)) {
         throw new Error("imap_auth_failed");
       }
       const { folder, uid } = decodeImapId(draftId);
@@ -25196,7 +25452,10 @@ async function imapSendDraft(
   await appendToSentFolder(inbox, sentMime);
 
   // Step 5: Delete the draft (best-effort — failure must not fail the send).
+  // Whether it worked is reported (`draft_removed`), never thrown: a draft
+  // copy left behind under the same id must not be sendable again.
   let client: ImapClient | null = null;
+  let draftRemoved = false;
   try {
     client = await ImapClient.connect({
       host: inbox.imap_host!,
@@ -25210,6 +25469,7 @@ async function imapSendDraft(
     await client.selectMailbox(folder);
     await client.uidStore([uid], ["\\Deleted"], "add");
     await client.uidExpunge([uid]);
+    draftRemoved = true;
   } catch {
     // best-effort
   } finally {
@@ -25221,6 +25481,7 @@ async function imapSendDraft(
     draft_id: draftId,
     message_id: origMsgId || `<${draftId}@mcpemails.com>`,
     sent_at: new Date().toISOString(),
+    draft_removed: draftRemoved,
   };
 }
 
@@ -25234,7 +25495,7 @@ async function imapDeleteDraft(
   inbox: InboxRow,
   draftId: string,
 ): Promise<DraftDeleteResult> {
-  if (!inbox.imap_host || !inbox.imap_port || !inbox.imap_password) {
+  if (!imapConfigured(inbox)) {
     throw new Error("imap_auth_failed");
   }
   const { folder, uid } = decodeImapId(draftId);
@@ -25315,10 +25576,13 @@ async function gmailListDrafts(
           payload?: { headers?: { name: string; value: string }[] };
           internalDate?: string;
         };
+        // Header names are matched without regard to case. Gmail returns them
+        // as the message spells them, and a draft another client wrote may say
+        // `CC:` or `cc:`, which an exact `"Cc"` match read as no Cc at all.
         const hdr = msgData.payload?.headers ?? [];
-        const subject = hdr.find((h) => h.name === "Subject")?.value ?? "(no subject)";
-        const toRaw = hdr.find((h) => h.name === "To")?.value ?? "";
-        const ccRaw = hdr.find((h) => h.name === "Cc")?.value ?? "";
+        const subject = gmailHeaderValue(hdr, "Subject") ?? "(no subject)";
+        const toRaw = gmailHeaderValue(hdr, "To") ?? "";
+        const ccRaw = gmailHeaderValue(hdr, "Cc") ?? "";
         const internalDate = msgData.internalDate
           ? new Date(parseInt(msgData.internalDate, 10)).toISOString()
           : new Date().toISOString();
@@ -25418,13 +25682,22 @@ async function gmailGetDraftForEditor(
     if (draftReadStatusMeansMissing(resp.status)) return null;
     throw new Error(`Gmail drafts.get error: ${resp.status} ${resp.statusText}`.trim());
   }
-  const data = (await resp.json()) as { message?: { threadId?: string; raw?: string } };
+  const data = (await resp.json()) as {
+    message?: { threadId?: string; raw?: string; internalDate?: string };
+  };
   const raw = data.message?.raw;
   if (typeof raw !== "string") return null;
+  const internalMs = Number(data.message?.internalDate);
   // `atob` of the base64url form yields a latin1 string — one char per byte —
   // which is exactly what `parseEmail` documents as its input, so per-part
   // charset decoding still happens where it belongs.
-  return draftContentFromRaw(atob(base64urlToBase64(raw)), data.message?.threadId);
+  const content = draftContentFromRaw(atob(base64urlToBase64(raw)), data.message?.threadId);
+  return {
+    ...content,
+    savedAt: Number.isFinite(internalMs) && internalMs > 0
+      ? new Date(internalMs).toISOString()
+      : (content.savedAt ?? null),
+  };
 }
 
 async function gmailCreateDraft(
@@ -25434,6 +25707,7 @@ async function gmailCreateDraft(
   const token = await withFreshGmailToken(inbox);
   const messageId = crypto.randomUUID();
   const from = formatMailbox(inbox.display_name, inbox.email_address);
+  const embedded = await withSignatureImages(inbox, params.htmlBody);
 
   const mime = buildDraftMime({
     from,
@@ -25450,7 +25724,8 @@ async function gmailCreateDraft(
     includeBccHeader: true,
     subject: params.subject,
     textBody: params.body,
-    htmlBody: params.htmlBody,
+    htmlBody: embedded.html,
+    inlineImages: embedded.inlineImages,
     messageId,
     inReplyTo: params.inReplyTo,
     references: params.references,
@@ -25488,8 +25763,9 @@ async function gmailUpdateDraft(
   const token = await withFreshGmailToken(inbox);
   const messageId = crypto.randomUUID();
   const from = formatMailbox(inbox.display_name, inbox.email_address);
+  const embedded = await withSignatureImages(inbox, params.htmlBody);
 
-  const mime = draftMimeFor(from, params, messageId);
+  const mime = draftMimeFor(from, params, messageId, embedded);
 
   const resp = await fetch(
     `https://gmail.googleapis.com/gmail/v1/users/me/drafts/${encodeURIComponent(draftId)}`,
@@ -25507,8 +25783,12 @@ async function gmailUpdateDraft(
     if (resp.status === 404) throw new Error("draft_not_found");
     throw new Error(`Gmail drafts.update error: ${resp.statusText}`);
   }
+  // The id Gmail answers with, not the one that was passed. They are expected
+  // to be equal; if Gmail ever hands back a different one, that is the id the
+  // draft now has, and the lineage records the move like an IMAP rewrite.
+  const updated = (await resp.json().catch(() => null)) as { id?: unknown } | null;
   return {
-    draft_id: draftId,
+    draft_id: typeof updated?.id === "string" && updated.id ? updated.id : draftId,
     subject: params.subject,
     updated_at: new Date().toISOString(),
   };
@@ -25699,6 +25979,7 @@ async function outlookGetDraftForEditor(
     body?: { contentType?: string; content?: string };
     hasAttachments?: boolean;
     conversationId?: string;
+    lastModifiedDateTime?: string;
     toRecipients?: { emailAddress: { address: string; name?: string } }[];
     ccRecipients?: { emailAddress: { address: string; name?: string } }[];
     bccRecipients?: { emailAddress: { address: string; name?: string } }[];
@@ -25750,6 +26031,7 @@ async function outlookGetDraftForEditor(
     bodyText: isHtml ? stripHtmlToText(content) : content,
     bodyHtml: isHtml ? content : null,
     attachments,
+    savedAt: data.lastModifiedDateTime ?? null,
   };
 }
 
@@ -26073,6 +26355,62 @@ async function workspaceCardDiagnostics(workspaceId: string): Promise<boolean> {
 }
 
 /**
+ * `inboxes.signature_embed_images` for ONE inbox — the per-inbox opt-in that
+ * sends the signature's images inside the message instead of as remote URLs.
+ *
+ * Its own query and NOT a column on `INBOX_SELECT_COLUMNS`, for the deploy
+ * order reason spelled out on that constant. Same shape as
+ * `readInboxDraftEditorHidden`.
+ *
+ * **Fails CLOSED (false = not embedded).** Not embedding is what every message
+ * did before the column existed: the logo stays an https URL. Embedding on an
+ * unreadable preference would change the mail of a mailbox that never asked.
+ */
+async function readSignatureEmbedImages(inboxId: string): Promise<boolean> {
+  if (INTROSPECTION_ONLY) return false;
+  try {
+    const { data, error } = await readFlagWithOneRetry(() =>
+      supabase
+        .from("inboxes")
+        .select("signature_embed_images")
+        .eq("id", inboxId)
+        .maybeSingle()
+    );
+    if (error) {
+      console.warn("[mcp-server] signature_embed_images_flag_query_failed", {
+        inbox_id: inboxId,
+        error: error.message,
+      });
+      return false;
+    }
+    return (data as { signature_embed_images?: unknown } | null)?.signature_embed_images === true;
+  } catch (error) {
+    console.warn("[mcp-server] signature_embed_images_flag_unavailable", {
+      inbox_id: inboxId,
+      error: error instanceof Error ? error.message : String(error),
+    });
+    return false;
+  }
+}
+
+/** One per isolate: it caches the fetched logo between sends. */
+const fetchSignatureImage = createSignatureImageFetcher();
+
+/**
+ * The HTML body a Gmail or IMAP transport should serialize, and the image
+ * parts it references. Called by every function that builds MIME for a message
+ * that can carry the signature, immediately before the build. A no-op (and no
+ * query) for a body without a signature image; never throws. See
+ * signature-images.ts for why it lives at the transport.
+ */
+function withSignatureImages(inbox: InboxRow, htmlBody: string | undefined): Promise<EmbeddedHtml> {
+  return embedSignatureImages(htmlBody, composeSignatureBlocks(inbox)?.html, {
+    enabled: () => readSignatureEmbedImages(inbox.id),
+    fetchImage: fetchSignatureImage,
+  });
+}
+
+/**
  * `inboxes.draft_editor_hidden` for ONE inbox — the per-inbox opt-out.
  *
  * Its own query, deliberately, and NOT a column on `INBOX_SELECT_COLUMNS`:
@@ -26333,6 +26671,221 @@ async function allReachableInboxesHideDraftEditor(
   }
 }
 
+// ---------------------------------------------------------------------------
+// Draft lineage (draft-lineage.ts): the `public.draft_lineage` store.
+//
+// Service-role reads and writes, and EVERY statement filters on workspace_id
+// AND inbox_id. The inbox id always comes from `resolveInboxArg`, which has
+// already applied the calling key's workspace and inbox allowlist.
+//
+// Each method throws on a PostgREST error and the functions in
+// draft-lineage.ts catch, log and carry on. That covers a database where the
+// table does not exist yet (this function deployed ahead of
+// 20261013120000_draft_lineage.sql): PostgREST answers with an error, the id
+// resolves to itself, and every draft tool behaves as it did before.
+// ---------------------------------------------------------------------------
+const DRAFT_LINEAGE_COLUMNS =
+  "line_id, draft_id, revision, written_by, written_at, closed_at, closed_reason";
+
+const draftLineageStore: DraftLineageStore = {
+  async find(scope, draftId) {
+    const { data, error } = await supabase
+      .from("draft_lineage")
+      .select(DRAFT_LINEAGE_COLUMNS)
+      .eq("workspace_id", scope.workspaceId)
+      .eq("inbox_id", scope.inboxId)
+      .eq("draft_id", draftId)
+      .maybeSingle();
+    if (error) throw new Error(error.message);
+    return (data as DraftLineageRow | null) ?? null;
+  },
+  async head(scope, lineId) {
+    const { data, error } = await supabase
+      .from("draft_lineage")
+      .select(DRAFT_LINEAGE_COLUMNS)
+      .eq("workspace_id", scope.workspaceId)
+      .eq("inbox_id", scope.inboxId)
+      .eq("line_id", lineId)
+      .order("revision", { ascending: false })
+      .order("written_at", { ascending: false })
+      .limit(1)
+      .maybeSingle();
+    if (error) throw new Error(error.message);
+    return (data as DraftLineageRow | null) ?? null;
+  },
+  // One RPC, so the revision is computed inside the database under a lock
+  // (migration 20261013120000_draft_lineage.sql, `draft_lineage_record`). A
+  // database without the function answers with an error, which
+  // recordDraftWrite catches like any other: the write is not recorded.
+  async record(scope, write) {
+    const { data, error } = await supabase.rpc("draft_lineage_record", {
+      p_workspace_id: scope.workspaceId,
+      p_inbox_id: scope.inboxId,
+      p_draft_id: write.draftId,
+      p_written_by: write.writtenBy,
+      p_line_id: write.lineId,
+      p_expected_revision: write.expectedRevision,
+      p_seed_draft_id: write.seedDraftId,
+      p_adopt: write.adopt,
+      p_written_at: write.writtenAt,
+    });
+    if (error) throw new Error(error.message);
+    return draftLineageRecordedFrom(data);
+  },
+  async close(scope, lineId, reason, at) {
+    const { error } = await supabase
+      .from("draft_lineage")
+      .update({ closed_at: at, closed_reason: reason })
+      .eq("workspace_id", scope.workspaceId)
+      .eq("inbox_id", scope.inboxId)
+      .eq("line_id", lineId);
+    if (error) throw new Error(error.message);
+  },
+};
+
+/** Null under introspection, where the default client points at nothing. */
+function lineageStore(): DraftLineageStore | null {
+  return INTROSPECTION_ONLY ? null : draftLineageStore;
+}
+
+function lineageScope(apiKey: ApiKeyRow, inboxId: string): DraftLineageScope {
+  return { workspaceId: apiKey.workspace_id, inboxId };
+}
+
+/** Any id of a draft -> its current id. Never throws; unknown resolves to itself. */
+function resolveDraftLine(
+  apiKey: ApiKeyRow,
+  inboxId: string,
+  draftId: string,
+): Promise<ResolvedDraft> {
+  return resolveDraftId(lineageStore(), lineageScope(apiKey, inboxId), draftId);
+}
+
+/**
+ * Record a draft write. Never throws. Resolves to the new revision, or null.
+ *
+ * An id the provider did not confirm (IMAP `Drafts:0`, see
+ * draft-lineage.ts#draftIdIsRecordable) is not recorded: the write stands and
+ * the line stays where it was.
+ */
+function recordDraftLine(
+  apiKey: ApiKeyRow,
+  inbox: { id: string; provider?: string | null },
+  previous: ResolvedDraft | null,
+  draftId: string,
+  writtenBy: DraftWriter,
+  at?: string,
+): Promise<number | null> {
+  if (!draftIdIsRecordable(inbox.provider ?? "", draftId)) {
+    console.warn("[mcp-server] draft_lineage_write_skipped", {
+      inbox_id: inbox.id,
+      reason: "unconfirmed_draft_id",
+    });
+    return Promise.resolve(null);
+  }
+  return recordDraftWrite(lineageStore(), lineageScope(apiKey, inbox.id), {
+    previous,
+    draftId,
+    writtenBy,
+    at,
+  });
+}
+
+/**
+ * `resolveDraftLine`, checked against the mailbox where the lineage answer may
+ * name a different message than the id does today (draft-lineage.ts
+ * #preferExistingId): a redirect, or a closed line. Only those two rare paths
+ * pay the extra read. A read that fails counts as "not there", which keeps the
+ * lineage answer.
+ */
+async function resolveSettledDraftLine(
+  apiKey: ApiKeyRow,
+  inbox: InboxRow,
+  draftId: string,
+): Promise<ResolvedDraft> {
+  const line = await resolveDraftLine(apiKey, inbox.id, draftId);
+  if (!needsExistenceCheck(line)) return line;
+  let exists = false;
+  try {
+    exists = (await getDraftForEditor(inbox as unknown as DraftEditorProviderInbox, draftId)) !== null;
+  } catch {
+    exists = false;
+  }
+  return preferExistingId(line, exists);
+}
+
+/** Put the lineage revision on a draft_editor envelope built before it was known. */
+function withDraftRevision(
+  card: Record<string, unknown> | null,
+  revision: number | null,
+): Record<string, unknown> | null {
+  const draft = card?.draft as Record<string, unknown> | undefined;
+  if (draft && typeof revision === "number" && revision >= 1) draft.revision = revision;
+  return card;
+}
+
+/**
+ * A `draft` refusal that changed nothing, for the two codes the lineage adds:
+ *
+ *   draft_already_sent  the draft's line was closed by a send through this
+ *                       server. Retrying would deliver a second copy, even
+ *                       where the sent draft's copy is still in Drafts (the
+ *                       IMAP post-send delete is best-effort).
+ *   draft_changed       a send from the draft editor card against a draft that
+ *                       was rewritten after the card loaded it
+ *                       (draft-lineage.ts#cardWriteConflict).
+ *
+ * `content` is the model's sentence. In a workspace with the editor on, a
+ * failed receipt rides in `structuredContent` too, so the card can say what
+ * happened in a person's words and keep the editor (store.ts#mergeEnvelope).
+ */
+async function draftLineRefusal(
+  apiKey: ApiKeyRow,
+  inbox: InboxRow,
+  code: "draft_already_sent" | "draft_changed",
+  text: string,
+  person: { headline: string; detail: string },
+): Promise<{
+  result: { content: { type: string; text: string }[]; structuredContent?: Record<string, unknown>; isError: true };
+  logStatus: "error";
+  logErrorCode: string;
+}> {
+  let card: Record<string, unknown> | null = null;
+  try {
+    const [enabled, hidden] = await Promise.all([
+      workspaceDraftEditorEnabled(apiKey.workspace_id),
+      readInboxDraftEditorHidden(inbox.id),
+    ]);
+    if (enabled && !hidden) {
+      card = draftReceiptEnvelope({
+        outcome: "failed",
+        headline: person.headline,
+        detail: person.detail,
+        affected_count: 0,
+        dashboard_url: `${APP_URL}/dashboard`,
+        error_code: code,
+      });
+    }
+  } catch {
+    card = null;
+  }
+  return {
+    result: {
+      content: [{ type: "text", text }],
+      ...(card ? { structuredContent: card } : {}),
+      isError: true,
+    },
+    logStatus: "error",
+    logErrorCode: code,
+  };
+}
+
+/** The person's words for a draft that was already sent. */
+const DRAFT_ALREADY_SENT_PERSON = {
+  headline: "This draft was already sent.",
+  detail: "Nothing was sent again. The message is in your Sent folder.",
+};
+
 /**
  * Read one draft with its body, per provider.
  *
@@ -26409,6 +26962,11 @@ function draftEditorDepsFor(apiKey: ApiKeyRow): DraftEditorDeps {
     getDraft: getDraftForEditor,
     updateDraft: updateDraftForEditor,
     isValidEmailAddress,
+    lineage: {
+      resolve: (inbox, draftId) => resolveDraftLine(apiKey, inbox.id, draftId),
+      recordWrite: (inbox, previous, draftId, writtenBy, at) =>
+        recordDraftLine(apiKey, inbox, previous, draftId, writtenBy, at),
+    },
     setDraftEditorHidden: async (scope, ids, hidden) => {
       // Scoped by workspace on BOTH branches, not just by id. The inbox id
       // already came through `resolveInbox` (which applies the workspace filter
@@ -26474,6 +27032,8 @@ async function draftEditorEnvelopeForWrite(
     signatureEmbedded: boolean;
     lastSavedAt: string;
     inReplyTo?: { message_id: string; subject: string | null; from: string | null } | null;
+    /** The lineage revision the write left the draft at, when it was recorded. */
+    revision?: number | null;
   },
 ): Promise<Record<string, unknown> | null> {
   try {
@@ -26514,6 +27074,7 @@ async function draftEditorEnvelopeForWrite(
       attachments: [],
       in_reply_to: input.inReplyTo ?? null,
       signature_embedded: input.signatureEmbedded,
+      signature_rich: htmlCarriesSignatureBlock(input.params.htmlBody),
       last_saved_at: input.lastSavedAt,
       // The headers the write carried. On an update they are the ones read off
       // the existing draft, and they are what makes the envelope say `threaded`
@@ -26531,6 +27092,7 @@ async function draftEditorEnvelopeForWrite(
       // An agent wrote this one. Only `draft_editor_save` says "user".
       lastSavedBy: "agent",
       canSend: apiKey.scopes.includes("send:email") && hasRecipient,
+      revision: input.revision ?? null,
     });
   } catch (error) {
     console.warn("[mcp-server] draft_editor_envelope_failed", {
@@ -26697,6 +27259,7 @@ async function executeCreateReplyDraft(
         html: signed.htmlBody,
         text: signed.textBody,
       });
+      await recordDraftLine(apiKey, inbox, null, draft.id, "agent");
       return { result: jsonOk({ draft_id: draft.id, subject: draft.subject ?? "(no subject)", to: draft.toRecipients, created_at: draft.createdDateTime ?? new Date().toISOString(), in_reply_to: messageId, threading: "native" }), logStatus: "success", logErrorCode: null };
     }
 
@@ -26746,7 +27309,7 @@ async function executeCreateReplyDraft(
     } else {
       const { folder, uid } = decodeImapId(messageId);
       if (!Number.isFinite(uid) || uid <= 0) throw new Error("message_not_found");
-      if (!inbox.imap_host || !inbox.imap_port || !inbox.imap_password) throw new Error("imap_auth_failed");
+      if (!imapConfigured(inbox)) throw new Error("imap_auth_failed");
       const client = await ImapClient.connect({ host: inbox.imap_host, port: inbox.imap_port, email: imapAuthUser(inbox), password: await decryptStoredToken(inbox.imap_password) });
       try {
         await client.selectMailbox(imapMailboxForServerFolder(folder));
@@ -26779,6 +27342,8 @@ async function executeCreateReplyDraft(
     // on email_compose reply.
     const params: DraftParams = { to, cc: replyExtraAddresses(args["cc"]), bcc: replyExtraAddresses(args["bcc"]), subject, body: buildReplyTextBody(signed.textBody, originalFrom, originalDate, originalBody), htmlBody: signed.htmlBody, threadId, inReplyTo: inReplyTo || undefined, references: references || undefined };
     const created = inbox.provider === "gmail" ? await gmailCreateDraft(inbox, params) : await imapCreateDraft(inbox, params);
+    // Opens the draft's line (draft-lineage.ts). Fail-soft.
+    const replyRevision = await recordDraftLine(apiKey, inbox, null, created.draft_id, "agent", created.created_at);
     const output: DraftReplyResult = { ...created, in_reply_to: messageId, threading: inbox.provider === "gmail" ? "native" : "standards_based" };
     // MCP Apps (contract §8) — see the note in executeCreateDraft. This is the
     // one path that can populate `draft.in_reply_to`: `messageId` is a SERVER
@@ -26793,6 +27358,7 @@ async function executeCreateReplyDraft(
       params,
       signatureEmbedded: signed.textBody !== body,
       lastSavedAt: created.created_at,
+      revision: replyRevision,
       inReplyTo: {
         message_id: messageId,
         subject: originalSubjectForCard || null,
@@ -26935,15 +27501,20 @@ async function executeCreateDraft(
     string,
     unknown
   >;
-  const cardEnvelope = await draftEditorEnvelopeForWrite(apiKey, inbox, {
-    draftId: draftResult.draft_id,
-    origin: "create",
-    params: draftParams,
-    signatureEmbedded: signed.textBody !== body,
-    lastSavedAt: draftResult.created_at,
-  });
+  // The envelope's reads and the lineage write run together: both are our own
+  // tables, and neither can fail the draft that is already stored.
+  const [cardEnvelope, createRevision] = await Promise.all([
+    draftEditorEnvelopeForWrite(apiKey, inbox, {
+      draftId: draftResult.draft_id,
+      origin: "create",
+      params: draftParams,
+      signatureEmbedded: signed.textBody !== body,
+      lastSavedAt: draftResult.created_at,
+    }),
+    recordDraftLine(apiKey, inbox, null, draftResult.draft_id, "agent", draftResult.created_at),
+  ]);
   return {
-    result: draftCardToolResult(createPayload, cardEnvelope),
+    result: draftCardToolResult(createPayload, withDraftRevision(cardEnvelope, createRevision)),
     logStatus: "success", logErrorCode: null,
   };
 }
@@ -26964,9 +27535,9 @@ async function executeUpdateDraft(
     };
   }
   const args = rawArgs as Record<string, unknown>;
-  const draftId = typeof args["draft_id"] === "string" && args["draft_id"].length > 0
+  const requestedDraftId = typeof args["draft_id"] === "string" && args["draft_id"].length > 0
     ? args["draft_id"] : null;
-  if (!draftId) {
+  if (!requestedDraftId) {
     return {
       result: { content: [{ type: "text", text: "draft_update: draft_id is required and must be a non-empty string." }], isError: true },
       logStatus: "error", logErrorCode: "-32602",
@@ -27070,13 +27641,41 @@ async function executeUpdateDraft(
   const caps = getProviderCapabilities(inbox.provider);
   if (!caps.drafts) return unsupportedFeatureError("drafts", inbox.provider);
 
+  // ── ANY ID OF THE DRAFT WILL DO (draft-lineage.ts) ───────────────────────
+  // On IMAP every update and every editor save gives the draft a new id, and a
+  // model holds the one from before. The lineage maps an older id of the same
+  // draft to its current one, so the update lands on the draft instead of
+  // `draft_not_found`. An id with no line, and any lineage failure, resolves
+  // to itself, which is the behaviour before lineage existed.
+  //
+  // Unless the id itself still names a message (a reused id): preferExistingId.
+  const draftLine = await resolveSettledDraftLine(apiKey, inbox, requestedDraftId);
+  const draftId = draftLine.draftId;
+
+  // A draft this server already sent is not rewritten. Rewriting it would make
+  // a fresh draft out of the sent message's copy (IMAP keeps one when the
+  // post-send delete fails), and the next send would deliver it twice.
+  if (draftLine.closed === "sent") {
+    return await draftLineRefusal(
+      apiKey,
+      inbox,
+      "draft_already_sent",
+      `draft_update: draft ${requestedDraftId} was already sent, so it was not changed. ` +
+        "Nothing was written.",
+      {
+        headline: DRAFT_ALREADY_SENT_PERSON.headline,
+        detail: "It was not changed. The message is in your Sent folder.",
+      },
+    );
+  }
+
   if (body === null) {
     return await executeBodylessDraftUpdate(apiKey, inbox, draftId, {
       ...(toProvided ? { to } : {}),
       ...(ccProvided ? { cc } : {}),
       ...(bccProvided ? { bcc } : {}),
       ...(subject !== null ? { subject } : {}),
-    });
+    }, draftLine);
   }
 
   // When any of subject/to/cc/bcc was omitted, preserve the draft's existing
@@ -27174,6 +27773,16 @@ async function executeUpdateDraft(
   // stamped here rather than in the three provider functions: they are told the
   // headers and do not report them back.
   updateResult.threaded = Boolean(inReplyTo || threadId);
+  // The line moves to the id the provider returned. Awaited so the next call
+  // with the old id already resolves; fail-soft, the draft is updated either way.
+  const updateRevision = await recordDraftLine(
+    apiKey,
+    inbox,
+    draftLine,
+    updateResult.draft_id,
+    "agent",
+    updateResult.updated_at,
+  );
   const updatePayload = buildDraftMutationEnvelope(updateResult) as unknown as Record<
     string,
     unknown
@@ -27184,6 +27793,7 @@ async function executeUpdateDraft(
     params: draftParams,
     signatureEmbedded: signed.textBody !== body,
     lastSavedAt: updateResult.updated_at,
+    revision: updateRevision,
   });
   return {
     result: draftCardToolResult(updatePayload, updateCard),
@@ -27212,6 +27822,7 @@ async function executeBodylessDraftUpdate(
   inbox: InboxRow,
   draftId: string,
   patch: DraftPatch,
+  line: ResolvedDraft,
 ): Promise<{
   result: { content: { type: string; text: string }[]; isError?: boolean };
   logStatus: "success" | "error";
@@ -27224,6 +27835,7 @@ async function executeBodylessDraftUpdate(
     inbox as unknown as DraftEditorProviderInbox,
     draftId,
     patch,
+    line,
   );
   if (outcome.ok) {
     return { result: outcome.result, logStatus: "success", logErrorCode: null };
@@ -27327,6 +27939,94 @@ async function executeSendDraft(
   const caps = getProviderCapabilities(inbox.provider);
   if (!caps.drafts) return unsupportedFeatureError("drafts", inbox.provider);
 
+  // ── A recipient that is not an address is refused, not written (2026-10-13)
+  // The override below drops what it cannot read and writes the rest into the
+  // header as given, so a mistyped address was either left off the mail or
+  // stored as a recipient no server accepts. Nothing has been touched yet.
+  const badRecipient = invalidRecipientIn(args, isValidEmailAddress);
+  if (badRecipient) {
+    return {
+      result: {
+        content: [{
+          type: "text",
+          text: `draft_send: invalid email address in ${badRecipient.field}: "${String(badRecipient.entry)}". ` +
+            "Nothing was sent and the draft was not changed.",
+        }],
+        isError: true,
+      },
+      logStatus: "error", logErrorCode: "invalid_recipient",
+    };
+  }
+
+  // `base_revision` marks a send from the draft editor card: the revision of
+  // the copy the person is looking at. See the card-write rule below.
+  const baseRevision = parseBaseRevision(args["base_revision"]);
+  if (baseRevision === "invalid") {
+    return {
+      result: { content: [{ type: "text", text: "draft_send: base_revision must be a non-negative integer." }], isError: true },
+      logStatus: "error", logErrorCode: "-32602",
+    };
+  }
+
+  // Any id of the draft will do: see the note in executeUpdateDraft.
+  //
+  // EXCEPT for an approved held send. The dispatcher re-runs this function
+  // with the id the approval was queued with, and the reviewer approved that
+  // draft as summarised then. Following the line would send a version written
+  // after the approval was asked for, so an approved send keeps the id it was
+  // given, and it carries the `base_revision` the draft had when it was
+  // queued: a draft rewritten since (on any provider, including Gmail and
+  // Outlook where the id never moves) is refused as draft_changed, and the
+  // approver reads why in the send's error detail
+  // (draft-send-plan.ts#approvedSendRefusalDetail).
+  //
+  // The rules for the id are in draft-send-plan.ts, where they are tested:
+  // the approved send above, a line already closed by a send, a card send
+  // against a draft rewritten since, and the id a held send is queued with.
+  const requestedDraftId = draftId;
+  const plan = planDraftSend({
+    args,
+    line: await resolveSettledDraftLine(apiKey, inbox, draftId),
+    baseRevision,
+    approvalDispatch: apiKey.internalApprovalDispatch === true,
+  });
+
+  // ── NEVER A SECOND COPY ──────────────────────────────────────────────────
+  // On IMAP the post-send delete is best-effort, so the sent draft's copy can
+  // still be in Drafts under the same id, and sending it was a duplicate
+  // (review of 2026-10-13). A reused id whose message is a different draft is
+  // let through by preferExistingId, which knows whether a copy was left.
+  if (plan.kind === "refuse" && plan.code === "draft_already_sent") {
+    return await draftLineRefusal(
+      apiKey,
+      inbox,
+      "draft_already_sent",
+      `draft_send: draft ${requestedDraftId} was already sent` +
+        (plan.sentCopyKept ? ", and its copy is still in the Drafts folder" : "") +
+        ". Nothing was sent again.",
+      DRAFT_ALREADY_SENT_PERSON,
+    );
+  }
+
+  // ── A SEND FROM THE CARD SENDS WHAT THE CARD SHOWED ──────────────────────
+  // A card still showing an older revision would deliver recipients and
+  // wording the person never saw (draft-lineage.ts#cardWriteConflict).
+  if (plan.kind === "refuse") {
+    return await draftLineRefusal(
+      apiKey,
+      inbox,
+      "draft_changed",
+      `draft_send: draft ${requestedDraftId} was changed after the draft editor loaded it. ` +
+        "Nothing was sent.",
+      {
+        headline: "This draft was changed somewhere else.",
+        detail: "Nothing was sent. Your text is still here. Load the newer version and check it before sending.",
+      },
+    );
+  }
+  let draftLine = plan.line;
+  draftId = plan.draftId;
+
   // ── Recipients set at send time (2026-09-23) ─────────────────────────────
   // to / cc / bcc given here replace the draft's stored lists BEFORE anything
   // else looks at the draft, so the recipient preflight, the approval card and
@@ -27336,11 +28036,32 @@ async function executeSendDraft(
   // The approval, if one is required, is queued against the rewritten draft
   // and WITHOUT the override: its later re-run must send that draft, not
   // rewrite a draft id that (on IMAP) no longer exists.
+  //
+  // The rewrite is recorded in the lineage every time, also on Gmail and
+  // Outlook where the id does not move: the recipients changed, so the
+  // revision must, or a card still at the old revision could Send to people it
+  // never showed after this send was held or failed (review 2 of 2026-10-13).
+  // The rules, tested, are in draft-send-plan.ts#applyRecipientOverride.
   const recipientOverride = recipientOverrideFrom(args);
-  let approvalArgs: Record<string, unknown> = args;
+  // The RESOLVED id, not the one the caller held (planDraftSend): the approval
+  // summary reads the draft by this id, and so does the post-approval re-run.
+  // An older id of the draft summarised as blank and then failed as
+  // draft_not_found. It also carries `base_revision`, always, so the re-run
+  // refuses a draft rewritten after the approval was asked for.
+  let approvalArgs: Record<string, unknown> = plan.approvalArgs;
   if (recipientOverride) {
     try {
-      draftId = await rewriteDraftRecipients(inbox, draftId, recipientOverride);
+      const applied = await applyRecipientOverride(
+        { args, draftId, line: draftLine, baseRevision },
+        {
+          rewrite: (id) => rewriteDraftRecipients(inbox, id, recipientOverride),
+          record: (previous, id) => recordDraftLine(apiKey, inbox, previous, id, "agent"),
+          resolve: (id) => resolveDraftLine(apiKey, inbox.id, id),
+        },
+      );
+      draftId = applied.draftId;
+      draftLine = applied.line;
+      approvalArgs = applied.approvalArgs;
     } catch (err) {
       const message = err instanceof Error ? err.message : String(err);
       if (message === "draft_not_found") {
@@ -27366,10 +28087,6 @@ async function executeSendDraft(
         resultExtra: { delivery_status: DELIVERY_STATUS_NOT_SENT },
       });
     }
-    approvalArgs = { ...args, draft_id: draftId };
-    delete approvalArgs["to"];
-    delete approvalArgs["cc"];
-    delete approvalArgs["bcc"];
   }
 
   // ── Pre-flight: a draft with no recipients must not be handed to a provider.
@@ -27525,18 +28242,31 @@ async function executeSendDraft(
   // payload already carries `sent_at` at the top level (the §8 merge), and the
   // card formats it with the browser's resolved locale. So the sentence says
   // where it went and the card says when.
-  const sentCard = await draftEditorReceiptFor(
-    apiKey,
-    inbox,
-    "sent",
-    `Delivered via ${draftProviderBlock(inbox.provider).label}.`,
-    // A label, not a sentence: it sits beside the sender address in the card's
-    // header, where "Sent." read as a stray full stop. §4's fallback headline
-    // for this outcome has always been the bare word.
-    "Sent",
-  );
+  // `draft_removed` is bookkeeping for the lineage, never part of the result.
+  const { draft_removed: draftRemoved, ...sentPayload } = sendResult;
+  const [sentCard] = await Promise.all([
+    draftEditorReceiptFor(
+      apiKey,
+      inbox,
+      "sent",
+      `Delivered via ${draftProviderBlock(inbox.provider).label}.`,
+      // A label, not a sentence: it sits beside the sender address in the card's
+      // header, where "Sent." read as a stray full stop. §4's fallback headline
+      // for this outcome has always been the bare word.
+      "Sent",
+    ),
+    // The line ends here: no id of this draft resolves any more, and a card
+    // still holding one is told the draft was sent. `sent_kept` when the
+    // draft's copy could not be removed, so that copy is never sent again.
+    closeDraftLine(
+      lineageStore(),
+      lineageScope(apiKey, inbox.id),
+      draftLine,
+      draftRemoved === false ? "sent_kept" : "sent",
+    ),
+  ]);
   return {
-    result: draftCardToolResult(sendResult as unknown as Record<string, unknown>, sentCard),
+    result: draftCardToolResult(sentPayload as unknown as Record<string, unknown>, sentCard),
     logStatus: "success", logErrorCode: null,
   };
 }
@@ -27557,9 +28287,9 @@ async function executeDeleteDraft(
     };
   }
   const args = rawArgs as Record<string, unknown>;
-  const draftId = typeof args["draft_id"] === "string" && args["draft_id"].length > 0
+  const requestedDraftId = typeof args["draft_id"] === "string" && args["draft_id"].length > 0
     ? args["draft_id"] : null;
-  if (!draftId) {
+  if (!requestedDraftId) {
     return {
       result: { content: [{ type: "text", text: "draft_delete: draft_id is required and must be a non-empty string." }], isError: true },
       logStatus: "error", logErrorCode: "-32602",
@@ -27572,6 +28302,10 @@ async function executeDeleteDraft(
 
   const caps = getProviderCapabilities(inbox.provider);
   if (!caps.drafts) return unsupportedFeatureError("drafts", inbox.provider);
+
+  // Any id of the draft will do: see the note in executeUpdateDraft.
+  const draftLine = await resolveSettledDraftLine(apiKey, inbox, requestedDraftId);
+  const draftId = draftLine.draftId;
 
   let deleteResult: DraftDeleteResult;
   try {
@@ -27612,13 +28346,16 @@ async function executeDeleteDraft(
   // MCP Apps (contract §8): a discarded draft flips the card to a receipt, so
   // the editor the person was looking at says what happened to it rather than
   // sitting on a draft that no longer exists.
-  const discardedCard = await draftEditorReceiptFor(
-    apiKey,
-    inbox,
-    "discarded",
-    "The draft was removed from Drafts without being sent.",
-    "Discarded. Nothing was sent.",
-  );
+  const [discardedCard] = await Promise.all([
+    draftEditorReceiptFor(
+      apiKey,
+      inbox,
+      "discarded",
+      "The draft was removed from Drafts without being sent.",
+      "Discarded. Nothing was sent.",
+    ),
+    closeDraftLine(lineageStore(), lineageScope(apiKey, inbox.id), draftLine, "deleted"),
+  ]);
   return {
     result: draftCardToolResult(deleteResult as unknown as Record<string, unknown>, discardedCard),
     logStatus: "success", logErrorCode: null,
@@ -27877,7 +28614,7 @@ async function imapSearchContacts(
   query: string,
   cap: number,
 ): Promise<ContactScan> {
-  if (!inbox.imap_host || !inbox.imap_port || !inbox.imap_password) {
+  if (!imapConfigured(inbox)) {
     throw new Error("imap_auth_failed");
   }
   // Strip characters that would corrupt the quoted IMAP astring (backslash,
@@ -29275,6 +30012,9 @@ function handleResourcesRead(
   console.log("[mcp-server] resources/read", {
     key_id: apiKey.id,
     uri,
+    // A fingerprint from an earlier build, answered with the current bundle.
+    // Counts the clients still holding a pre-deploy tools/list.
+    stale_fingerprint: isStaleReviewCardUri(uri),
     bytes: (result.contents[0]["text"] as string).length,
   });
 
@@ -29537,8 +30277,36 @@ interface ExecutorOutcome {
  * NONE of what `handleToolsCall` wraps around it: no scope check, no schema
  * validation, no action cap, no idempotency claim, no activity log, no rate
  * limit. A caller other than `handleToolsCall` owns every one of those.
+ *
+ * The one thing it does own is the receive-only / send-only gate (see
+ * connection-access.ts), because that is about what the inbox can do rather
+ * than about who is asking, and both callers need the same answer: the tool
+ * name is published on the request's activity context, `resolveInboxArg`
+ * refuses an inbox that lacks the half this tool needs, and the refusal the
+ * handler then returns is replaced here with the accurate one. Outside a
+ * tools/call there is no activity context, so one is opened for the call.
  */
 async function dispatchExecutor(
+  dispatchName: string,
+  rawArgs: unknown,
+  apiKey: ApiKeyRow,
+): Promise<ExecutorOutcome | null> {
+  const run = async (ctx: ActivityContext): Promise<ExecutorOutcome | null> => {
+    ctx.dispatchName = dispatchName;
+    const outcome = await runExecutor(dispatchName, rawArgs, apiKey);
+    if (outcome && ctx.missingTransport && rewriteMissingTransportResult(outcome, ctx.missingTransport)) {
+      return { ...outcome, logStatus: "error", logErrorCode: "transport_not_configured", logErrorDetails: null };
+    }
+    return outcome;
+  };
+  const store = activityInboxStore.getStore();
+  return store ? await run(store) : await activityInboxStore.run({ inboxId: null }, () => {
+    const ctx = activityInboxStore.getStore()!;
+    return run(ctx);
+  });
+}
+
+async function runExecutor(
   dispatchName: string,
   rawArgs: unknown,
   apiKey: ApiKeyRow,
@@ -30223,7 +30991,7 @@ async function handleToolsCall(
     );
   }
 
-  const actionLimit = await actionLimitResponse(apiKey.workspace_id, dispatchName, id, ctx.allowance);
+  const actionLimit = await actionLimitResponse(apiKey, dispatchName, id, ctx.allowance);
   if (actionLimit.response) {
     // A cap rejection used to return here without writing anything to
     // activity_log, which quietly exempted it from both throttles: the per-key
@@ -30885,7 +31653,12 @@ async function handleScheduledDispatch(
           if (dispatchedResult.logErrorCode === PROVIDER_NOT_SENT_ERROR_CODE) {
             throw new SmtpNotSentError(`approved ${approval.operation} was refused before transmission`, true);
           }
-          throw new Error(`approved ${approval.operation} failed: ${dispatchedResult.logErrorCode ?? "unknown"}`);
+          // A draft send refused because the draft moved on after approval
+          // (or was already sent) says so in the approver's words.
+          throw new Error(
+            approvedSendRefusalDetail(approval.operation, dispatchedResult.logErrorCode) ??
+              `approved ${approval.operation} failed: ${dispatchedResult.logErrorCode ?? "unknown"}`,
+          );
         }
         await db.from("scheduled_sends").update({ status: "sent", sent_at: new Date().toISOString(), updated_at: new Date().toISOString() }).eq("id", row.id);
         dispatched++;
@@ -32494,7 +33267,7 @@ async function handleMeteredRequest(req: Request): Promise<Response> {
       });
     }
 
-    return buildQuotaExceededResponse(requestId, quotaResult);
+    return buildQuotaExceededResponse(requestId, quotaResult, await planLimitWording(apiKey));
   }
   if ("firstUse" in quotaResult) ctx.firstUse = quotaResult.firstUse;
 

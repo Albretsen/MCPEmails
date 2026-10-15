@@ -263,6 +263,44 @@ function fetchReply(uid: number, envelope: string, rest = ""): (command: Scripte
 
 const lit = (octets: string) => `{${octets.length}}${CRLF}${octets}`;
 
+Deno.test("ENVELOPE: cc is parsed when asked for, and only then (draft_list reported cc: [])", async () => {
+  // QA 2026-10-13: a draft whose Cc was hello@mcpemails.com listed as `cc: []`.
+  // The IMAP listing hard-coded the empty list; ENVELOPE field 6 was never read.
+  const envelope = "(" + [
+    '"Tue, 13 Oct 2026 10:00:00 +0000"',
+    '"Quarterly numbers"',
+    '((NIL NIL "asgeir" "mcpemails.com"))',
+    "NIL",
+    "NIL",
+    '((NIL NIL "a" "x.com"))',
+    '(("MCP Emails" NIL "hello" "mcpemails.com")(NIL NIL "second" "x.com"))',
+    "NIL",
+    "NIL",
+    '"<m9@mcpemails.com>"',
+  ].join(" ") + ")";
+
+  const asked = client(fetchReply(9, envelope));
+  await asked.imap.selectMailbox("Drafts");
+  const [withCc] = await asked.imap.fetchSummaries([9], { includePreview: false, includeCc: true });
+  assertEquals(withCc.envelope.cc, [
+    { name: "MCP Emails", email: "hello@mcpemails.com" },
+    { name: "", email: "second@x.com" },
+  ]);
+  assertEquals(withCc.envelope.to, [{ name: "", email: "a@x.com" }]);
+
+  // Every other caller's envelope keeps exactly the keys it had.
+  const plain = client(fetchReply(9, envelope));
+  await plain.imap.selectMailbox("Drafts");
+  const [without] = await plain.imap.fetchSummaries([9], { includePreview: false });
+  assert(!("cc" in without.envelope));
+
+  // A draft with no Cc is an empty list, not a missing key.
+  const none = client(fetchReply(9, envelope.replace(/\(\("MCP Emails".*?\)\) NIL NIL/, "NIL NIL NIL")));
+  await none.imap.selectMailbox("Drafts");
+  const [empty] = await none.imap.fetchSummaries([9], { includePreview: false, includeCc: true });
+  assertEquals(empty.envelope.cc, []);
+});
+
 Deno.test("ENVELOPE: quoted strings with escapes, NIL, literals and nested address lists parse, at every read size", async () => {
   const subject = "Faktura – Ødegård’s café €5 😀";
   const envelope = "(" + [
