@@ -86,6 +86,7 @@
 import { NextRequest, NextResponse, after } from 'next/server';
 import type Stripe from 'stripe';
 import { stripe } from '@/lib/stripe/client';
+import { isAccountDeletionCancellation } from '@/lib/stripe/cancel-on-account-delete';
 import { createServiceRoleClient } from '@/lib/supabase/service';
 import {
   getPlanByStripePriceId,
@@ -857,7 +858,13 @@ async function handleSubscriptionDeleted(
     // dead card run out. Those customers passed through no scheduled-cancel
     // state, so before this they received neither the question nor a win-back,
     // and churn from a dead card is precisely the churn a win-back is for.
-    await maybeQueueCancellationOnDelete(subscription, customerId);
+    //
+    // Except when the customer deleted their account: delete-account cancels
+    // the subscription itself, and asking someone who just deleted everything
+    // why they left, then trying to win them back, is mail they did not want.
+    if (!isAccountDeletionCancellation(subscription)) {
+      await maybeQueueCancellationOnDelete(subscription, customerId);
+    }
   }
 }
 
