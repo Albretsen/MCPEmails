@@ -320,3 +320,30 @@ Deno.test("Gmail draft_reply puts the file on the reply, threaded", async () => 
   assert((stored.headers.get("in-reply-to") ?? [])[0]?.includes("orig1@example.com"));
   assertEquals(value.result.structuredContent.attachments, [{ filename: "Angebot.pdf", size_bytes: 9 }]);
 });
+
+// ── Size (found live 2026-10-15) ────────────────────────────────────────────
+// Every inline file above ~3 MB used to come back as a JSON-RPC internal error:
+// the base64 validator's regular expression overflowed the stack.
+
+Deno.test("a 9 MB inline file is stored; 10.6 MB is refused in words, not as an internal error", async () => {
+  const inbox = await inboxRow("gmail");
+  const nine = btoa(String.fromCharCode(...new Uint8Array(3).fill(7))).repeat(3 * 1024 * 1024); // 9 MB decoded
+  const { value, world } = await runTool(inbox, () => json({ id: "d1", message: { id: "m1" } }), () =>
+    executeCreateDraft({
+      subject: "Big",
+      body: "y",
+      attachments: [{ filename: "big.bin", mime_type: "application/octet-stream", data: nine }],
+    }, API_KEY) as Promise<Outcome>);
+  assertEquals(value.logStatus, "success", JSON.stringify(value.result).slice(0, 300));
+  assertEquals(storedGmailMessage(world.calls[0]).attachments[0].content.length, 9 * 1024 * 1024);
+
+  const tooBig = "QUJD".repeat(3_550_000);
+  const refused = await runTool(inbox, () => json({}, 500), () =>
+    executeCreateDraft({
+      subject: "Too big",
+      body: "y",
+      attachments: [{ filename: "big.bin", mime_type: "application/octet-stream", data: tooBig }],
+    }, API_KEY) as Promise<Outcome>);
+  assertEquals(refused.value.logErrorCode, "attachment_too_large");
+  assertEquals(refused.world.calls.length, 0);
+});

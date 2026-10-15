@@ -154,7 +154,7 @@ export function parseUploadedFiles(tool: string, raw: unknown): UploadedFilesPar
       return {
         ok: false,
         code: "-32602",
-        message: `${tool}: files[${i}].download_url must be an https URL.`,
+        message: `${tool}: files[${i}].download_url must be an https URL on the standard port, with no user name or password.`,
       };
     }
     const fileId = typeof entry["file_id"] === "string" ? entry["file_id"].trim() : "";
