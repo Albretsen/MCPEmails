@@ -419,5 +419,9 @@
     "unavailableBody": "No pudimos iniciar la aprobación. Vuelve a intentarlo dentro de unos minutos.",
     "closeHint": "¿Preguntas? Escribe a hello@mcpemails.com.",
     "openApp": "Abrir MCP Emails"
+  },
+  "help": {
+    "loading": "Cargando la ayuda…",
+    "loadError": "No se pudo cargar la ayuda. Recarga la página o escribe a support@mcpemails.com."
   }
 }

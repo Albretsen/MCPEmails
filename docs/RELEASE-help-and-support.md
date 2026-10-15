@@ -51,10 +51,20 @@ session. Everyone else gets 404.
    - `app/api/support/preview/route.ts` and its test: delete them.
    - `app/api/support/visibility/route.ts`: delete it, since nothing will
      call it any more.
+   - `app/api/support/help-data/route.ts` (the dashboard help section's
+     data): drop the 404 branches. GET answers 200, other methods 405.
    - `app/dashboard/[[...section]]/page.js`, `components/dashboard/App.jsx`,
      `Sidebar.jsx`, `ConnectModal.jsx`: delete the `supportVisible` prop and
      render the sidebar item and the "Still stuck? Contact support" link
      unconditionally.
+   - The dashboard help section (`/dashboard/help`):
+     - `app/dashboard/[[...section]]/page.js`: drop the
+       `initialRoute === 'help' && !supportVisible` 404;
+     - `components/dashboard/App.jsx`: render `HelpSection` on
+       `route === "help"` without `supportVisible &&`, and drop the
+       help-to-overview fallback in the popstate listener;
+     - `components/dashboard/routes.js` and `HelpSection.jsx`: delete the
+       marker comments; `help` stays in `DASHBOARD_SECTIONS`.
    - `components/support/SupportHelpLink.jsx`: make it a plain link (keep
      `label`, `href` and `LinkComponent`). Delete the cookie check, the
      sessionStorage cache and the fetch. Its users are `app/error.js`,
@@ -63,8 +73,8 @@ session. Everyone else gets 404.
    - Tests:
      - delete `release-gate.test.ts` and the hidden or 404 cases in
        `app/api/support/*/route.test.ts`, `sidebar-help-link.test.mjs`,
-       `connect-support-link-ui.test.mjs` and `support-help-link-ui.test.mjs`;
-       keep the visible cases;
+       `connect-support-link-ui.test.mjs`, `support-help-link-ui.test.mjs` and
+       `app/api/support/help-data/route.test.ts`; keep the visible cases;
      - remove deleted files from the `test:support*` scripts in
        `apps/web/package.json`.
 3. **Sitemap.** In `apps/web/app/sitemap.ts`, add this to `MARKETING_PAGES`

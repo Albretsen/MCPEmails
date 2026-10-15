@@ -9,6 +9,7 @@ import { Sidebar, Topbar } from './Sidebar';
 import { sectionToPath, pathSegmentToSection } from './routes';
 import { OverviewPage, InboxesPage, KeysPage, UsagePage, SettingsPage, SecurityPage, MembersPage, WorkflowsPage, ApprovalsPage, AutomationsPage, planDisplayName, PLAN_LADDER } from './Pages';
 import { ConnectModal } from './ConnectModal';
+import { HelpSection } from './HelpSection';
 import { CheckoutSuccessPanel } from './CheckoutSuccessPanel';
 import { CheckoutCancelFeedback } from './CheckoutCancelFeedback';
 import { AdminConsentLinkDialog } from './AdminConsentLinkDialog';
@@ -166,6 +167,10 @@ function DashboardInner({ initialRoute = 'overview', user, workspace: serverWork
     } catch { /* SSR / unsupported history: state still updates */ }
   };
 
+  // Bumped to remount the help section when the connect modal sends someone
+  // there with a new topic, so it refetches with the new form seed.
+  const [helpKey, setHelpKey] = useState(0);
+
   // Fetch the signature editor once the dashboard has gone idle.
   //
   // The editor and its sanitiser (TipTap, ProseMirror, DOMPurify) are no longer
@@ -193,11 +198,12 @@ function DashboardInner({ initialRoute = 'overview', user, workspace: serverWork
     const onPopState = () => {
       const segment = window.location.pathname.replace(/^\/dashboard\/?/, '').split('/')[0];
       const resolved = pathSegmentToSection(segment);
-      setRouteState(resolved ?? 'overview');
+      // SUPPORT_RELEASE_GATE: the help section does not exist for hidden users.
+      setRouteState(resolved === 'help' && !supportVisible ? 'overview' : (resolved ?? 'overview'));
     };
     window.addEventListener('popstate', onPopState);
     return () => window.removeEventListener('popstate', onPopState);
-  }, []);
+  }, [supportVisible]);
   // Make workspace stateful so that a rename (PATCH /api/workspaces/[id])
   // is immediately reflected in the sidebar name + breadcrumb without a page reload.
   const [editedWorkspace, setWorkspace] = useState(serverWorkspace ?? null);
@@ -281,6 +287,21 @@ function DashboardInner({ initialRoute = 'overview', user, workspace: serverWork
   // When set, the ConnectModal opens in reconnect mode for this existing inbox
   // (identity pre-filled and locked; only the password is re-entered).
   const [reconnectInbox, setReconnectInbox] = useState(null);
+
+  // "Still stuck? Contact support" in the connect modal: close the modal and
+  // open the help section in place, keeping the modal's query (topic,
+  // provider, code) and the #contact anchor in the URL for the section to read.
+  const openHelpFromConnect = (href) => {
+    setShowConnect(false);
+    setReconnectInbox(null);
+    setConnectPreselect(null);
+    setSidebarOpen(false);
+    try {
+      window.history.pushState({ route: 'help' }, '', href);
+    } catch { /* the section still opens; it just has no seed */ }
+    setHelpKey((k) => k + 1);
+    setRouteState('help');
+  };
   const [showCommand, setShowCommand] = useState(false);
   // { planId, interval } while the post-checkout confirmation panel is open.
   const [checkoutSuccess, setCheckoutSuccess] = useState(null);
@@ -1197,6 +1218,8 @@ function DashboardInner({ initialRoute = 'overview', user, workspace: serverWork
         {route === "automations" && <AutomationsPage userRole={userRole} inboxes={inboxes} keys={keys} />}
         {route === "settings" && <SettingsPage user={user} workspace={workspace} workspaces={workspaces} userRole={userRole} stripePrices={stripePrices} upgradeIntent={upgradeIntent} planLimits={planLimits} actionAllowance={actionAllowance} inboxCount={inboxes.length} grandfathered={inboxesGrandfathered} businessShaped={businessShaped} onWorkspaceUpdate={setWorkspace} />}
         {route === "security" && <SecurityPage auditLog={auditLog} />}
+        {/* SUPPORT_RELEASE_GATE: at release drop `supportVisible &&`. */}
+        {route === "help" && supportVisible && <HelpSection key={helpKey} onNavigateSection={setRoute} />}
       </div>
 
       {/* atInboxLimit is false whenever maxInboxes is null, which is how every
@@ -1221,6 +1244,7 @@ function DashboardInner({ initialRoute = 'overview', user, workspace: serverWork
           businessShaped={businessShaped}
           onAdminConsentLink={() => setShowAdminLink(true)}
           supportVisible={supportVisible} // SUPPORT_RELEASE_GATE
+          onContactSupport={openHelpFromConnect}
         />
       )}
 

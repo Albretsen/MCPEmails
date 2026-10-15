@@ -419,5 +419,9 @@
     "unavailableBody": "Impossible de lancer l'approbation. Réessayez dans quelques minutes.",
     "closeHint": "Des questions ? Écrivez à hello@mcpemails.com.",
     "openApp": "Ouvrir MCP Emails"
+  },
+  "help": {
+    "loading": "Chargement de l’aide…",
+    "loadError": "Impossible de charger l’aide. Rechargez la page ou écrivez à support@mcpemails.com."
   }
 }

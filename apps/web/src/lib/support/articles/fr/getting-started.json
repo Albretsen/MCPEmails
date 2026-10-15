@@ -1,0 +1,287 @@
+{
+  "area": "getting-started",
+  "title": "Premiers pas",
+  "articles": [
+    {
+      "id": "what-is-mcp-emails",
+      "title": "Ce que fait MCP Emails",
+      "summary": "Il relie vos boîtes mail à des assistants IA comme Claude, ChatGPT et Cursor via une seule URL.",
+      "keywords": "qu’est-ce que mcp emails mcpemails présentation fonctionnement serveur mcp assistant ia agent stockage confidentialité what is mcp server ai assistant",
+      "body": [
+        "Les e-mails sont récupérés en direct à chaque demande et ne sont pas stockés. Seul le mot de passe ou le jeton d’accès de votre boîte est conservé, chiffré."
+      ],
+      "links": [
+        {
+          "label": "Documentation",
+          "href": "/docs"
+        },
+        {
+          "label": "Sécurité",
+          "href": "/security"
+        }
+      ]
+    },
+    {
+      "id": "first-steps",
+      "title": "Bien démarrer",
+      "summary": "Connectez une boîte, puis ajoutez l’URL du serveur MCP à votre assistant IA.",
+      "keywords": "commencer démarrer configuration premiers pas inscription créer un compte prise en main démarrage rapide nouveau get started setup",
+      "steps": [
+        "Dans Aperçu, choisissez Connecter la boîte sur la carte Commencer.",
+        "Copiez l’URL du serveur MCP depuis la même carte.",
+        "Sous Choisissez votre client, sélectionnez votre assistant et suivez ses étapes.",
+        "Demandez à votre assistant : Résume mes e-mails non lus d’aujourd’hui."
+      ],
+      "links": [
+        {
+          "label": "Aperçu du tableau de bord",
+          "href": "/dashboard"
+        },
+        {
+          "label": "Guides de configuration des clients",
+          "href": "/docs/clients"
+        }
+      ]
+    },
+    {
+      "id": "choose-connection-method",
+      "title": "Choisir comment connecter votre boîte",
+      "summary": "Outlook se connecte avec Microsoft, Gmail et quelques autres avec un mot de passe d’application, le reste en IMAP.",
+      "keywords": "connecter boîte fournisseur choisir option mot de passe d’application imap smtp outlook gmail icloud yahoo zoho yandex fastmail quelle méthode limite app password",
+      "steps": [
+        "Outlook.com ou Microsoft 365 : choisissez Outlook et connectez-vous avec Microsoft.",
+        "Gmail, iCloud, Yahoo, Zoho, Yandex ou Fastmail : choisissez sa carte et collez un mot de passe d’application.",
+        "Toute autre boîte ou votre propre domaine : choisissez IMAP / SMTP."
+      ],
+      "body": [
+        "Free connecte une boîte et Personal en connecte trois. Pro et Team n’ont pas de limite de boîtes."
+      ],
+      "links": [
+        {
+          "label": "Aide sur les mots de passe d’application",
+          "href": "/help#article-app-password-required"
+        },
+        {
+          "label": "Guides par fournisseur",
+          "href": "/connect"
+        }
+      ]
+    },
+    {
+      "id": "connect-gmail",
+      "title": "Connecter Gmail",
+      "summary": "Collez un mot de passe d’application Google, ou connectez-vous plutôt avec Google.",
+      "keywords": "gmail google connecter mot de passe d’application validation en deux étapes connexion google oauth avertissement application non validée paramètres avancés non sécurisé app password 2-step verification",
+      "steps": [
+        "Activez la validation en deux étapes dans votre compte Google.",
+        "Créez un mot de passe d’application sur myaccount.google.com/apppasswords.",
+        "Choisissez Connecter la boîte, puis Gmail, et collez le mot de passe d’application.",
+        "Ou ouvrez Vous préférez vous connecter avec Google ? et choisissez Se connecter avec Google.",
+        "Sur l’écran d’avertissement de Google, choisissez Advanced, puis Go to mcpemails.com (unsafe)."
+      ],
+      "links": [
+        {
+          "label": "Guide Gmail",
+          "href": "/connect/gmail"
+        },
+        {
+          "label": "Guide Google Workspace",
+          "href": "/connect/google-workspace"
+        }
+      ]
+    },
+    {
+      "id": "connect-outlook-microsoft-365",
+      "title": "Connecter Outlook ou Microsoft 365",
+      "summary": "Connectez-vous avec Microsoft. Un compte pro ou scolaire peut nécessiter une approbation unique de votre admin.",
+      "keywords": "outlook hotmail live msn microsoft 365 office 365 exchange compte professionnel scolaire se connecter avec microsoft approbation administrateur consentement admin informatique",
+      "steps": [
+        "Choisissez Connecter la boîte, puis Outlook, puis Se connecter avec Microsoft.",
+        "Si votre organisation exige une approbation, choisissez Obtenir le lien d'approbation pour votre administrateur.",
+        "Envoyez le lien à votre administrateur informatique. Il reste valable 7 jours.",
+        "Une fois l’approbation donnée, choisissez de nouveau Se connecter avec Microsoft."
+      ],
+      "body": [
+        "Votre administrateur n’a pas besoin d’un compte MCP Emails. Les comptes Microsoft ne peuvent pas se connecter avec un mot de passe en IMAP."
+      ],
+      "links": [
+        {
+          "label": "Guide Outlook.com",
+          "href": "/connect/outlook"
+        },
+        {
+          "label": "Guide Microsoft 365",
+          "href": "/connect/office365"
+        }
+      ]
+    },
+    {
+      "id": "connect-imap-mailbox",
+      "title": "Connecter n’importe quelle boîte en IMAP",
+      "summary": "Choisissez IMAP / SMTP et saisissez votre adresse, les noms des serveurs et le mot de passe de la boîte.",
+      "keywords": "imap smtp domaine personnalisé propre domaine hébergement cpanel plesk boîte professionnelle paramètres serveur hôte port ssl tls starttls réception uniquement envoi uniquement",
+      "steps": [
+        "Choisissez Connecter la boîte, puis IMAP / SMTP.",
+        "Saisissez votre adresse e-mail. Pour les fournisseurs connus, les réglages du serveur se remplissent seuls.",
+        "Sinon, saisissez l’hôte IMAP et l’hôte SMTP indiqués par votre fournisseur.",
+        "Saisissez le mot de passe de la boîte, ou un mot de passe d’application si la validation en deux étapes est active.",
+        "Choisissez Connecter la boîte. La vérification peut prendre jusqu’à une minute."
+      ],
+      "body": [
+        "Paramètres avancés contient le type de connexion (Envoi et réception, Réception uniquement, Envoi uniquement), les modes de sécurité et un nom d’utilisateur distinct."
+      ],
+      "links": [
+        {
+          "label": "Guide IMAP",
+          "href": "/connect/imap"
+        },
+        {
+          "label": "Mot de passe refusé ?",
+          "href": "/help#article-imap-password-rejected"
+        }
+      ]
+    },
+    {
+      "id": "reconnect-inbox",
+      "title": "Reconnecter une boîte qui a perdu l’accès",
+      "summary": "Dans Boîtes, choisissez Reconnecter à côté de la boîte qui affiche Erreur.",
+      "keywords": "reconnecter boîte accès perdu erreur statut cassée expirée mot de passe changé révoqué ne fonctionne plus reconnect",
+      "steps": [
+        "Ouvrez Boîtes et repérez la boîte au statut Erreur.",
+        "Choisissez Reconnecter.",
+        "Pour une boîte avec mot de passe d’application, collez un nouveau mot de passe d’application."
+      ],
+      "links": [
+        {
+          "label": "Boîtes du tableau de bord",
+          "href": "/dashboard/inboxes"
+        },
+        {
+          "label": "Aide sur les mots de passe d’application",
+          "href": "/help#article-app-password-required"
+        }
+      ]
+    },
+    {
+      "id": "connect-claude",
+      "title": "Connecter Claude",
+      "summary": "Ajoutez https://mcpemails.com/api/mcp comme connecteur personnalisé dans claude.ai ou Claude Desktop.",
+      "keywords": "claude claude.ai claude desktop anthropic connecteur personnalisé ajouter un connecteur oauth configuration custom connector",
+      "steps": [
+        "Dans Claude, ouvrez Customize, puis Connectors.",
+        "Choisissez Add, puis Add custom connector.",
+        "Collez https://mcpemails.com/api/mcp comme URL, puis choisissez Add.",
+        "Choisissez Connect et connectez-vous avec votre compte MCP Emails."
+      ],
+      "links": [
+        {
+          "label": "Guide Claude",
+          "href": "/docs/claude"
+        },
+        {
+          "label": "Guide Claude Code",
+          "href": "/docs/claude-code"
+        }
+      ]
+    },
+    {
+      "id": "connect-chatgpt",
+      "title": "Connecter ChatGPT",
+      "summary": "Ajoutez https://mcpemails.com/api/mcp comme connecteur personnalisé dans ChatGPT, puis connectez-vous.",
+      "keywords": "chatgpt openai mode développeur connecteur plugin applications serveur mcp personnalisé oauth configuration developer mode custom connector",
+      "steps": [
+        "Suivez le guide ChatGPT pour ajouter un connecteur personnalisé. ChatGPT renomme souvent ses menus.",
+        "Utilisez https://mcpemails.com/api/mcp comme URL du serveur et OAuth pour vous connecter.",
+        "Autorisez MCP Emails et choisissez les boîtes qu’il peut utiliser."
+      ],
+      "body": [
+        "Cela fonctionne sur chatgpt.com avec Plus, Pro, Business, Enterprise et Edu. Les comptes Free et Go ne peuvent pas ajouter de connecteurs personnalisés."
+      ],
+      "links": [
+        {
+          "label": "Guide ChatGPT",
+          "href": "/docs/chatgpt"
+        },
+        {
+          "label": "L’assistant ne voit aucun e-mail ?",
+          "href": "/help#article-assistant-sees-nothing"
+        }
+      ]
+    },
+    {
+      "id": "connect-cursor",
+      "title": "Connecter Cursor",
+      "summary": "Ajoutez l’URL du serveur au fichier mcp.json de Cursor, puis connectez-vous quand Cursor le demande.",
+      "keywords": "cursor éditeur ide mcp.json mcpServers url oauth agent de code configuration",
+      "steps": [
+        "Modifiez ~/.cursor/mcp.json (tous les projets) ou .cursor/mcp.json (un seul projet).",
+        "Sous mcpServers, ajoutez un serveur avec url défini sur https://mcpemails.com/api/mcp.",
+        "Quand Cursor vous le demande, connectez-vous avec votre compte MCP Emails."
+      ],
+      "links": [
+        {
+          "label": "Guide Cursor",
+          "href": "/docs/cursor"
+        }
+      ]
+    },
+    {
+      "id": "connect-other-clients",
+      "title": "Connecter un autre client IA",
+      "summary": "Tous les clients utilisent https://mcpemails.com/api/mcp. La plupart passent par OAuth, quelques-uns par une clé API.",
+      "keywords": "vs code vscode copilot windsurf cascade gemini cli zed raycast warp cline jetbrains claude code curl autres clients client mcp configuration clé api api key",
+      "steps": [
+        "Claude Code, VS Code, Windsurf, Gemini CLI, Zed, Raycast, Warp : collez l’URL et autorisez.",
+        "Cline et JetBrains AI Assistant : ajoutez une clé API dans un en-tête Authorization: Bearer."
+      ],
+      "links": [
+        {
+          "label": "Tous les guides clients",
+          "href": "/docs/clients"
+        }
+      ]
+    },
+    {
+      "id": "choose-assistant-permissions",
+      "title": "Limiter ce que votre assistant peut faire",
+      "summary": "Choisissez un niveau d’accès et des boîtes en autorisant. Modifiez-les ensuite avec Modifier l'accès.",
+      "keywords": "autorisations portées niveau d’accès lecture seule standard accès complet personnalisé autoriser consentement boîtes restreindre limiter modifier l’accès permissions scopes edit access",
+      "steps": [
+        "Sur l’écran d’autorisation, choisissez Lecture seule, Standard, Accès complet ou Personnalisé.",
+        "Choisissez Toutes les boîtes, ou Boîtes spécifiques et cochez celles qu’il peut utiliser.",
+        "Nommez la connexion, puis choisissez Autoriser l'accès.",
+        "Pour changer plus tard, ouvrez Clés API et choisissez Modifier l'accès sur cette ligne."
+      ],
+      "body": [
+        "Lecture seule ne peut rien envoyer, modifier ni supprimer. Accès complet ajoute les dossiers, la planification et la suppression."
+      ],
+      "links": [
+        {
+          "label": "Clés API du tableau de bord",
+          "href": "/dashboard/keys"
+        }
+      ]
+    },
+    {
+      "id": "api-keys-and-revoking",
+      "title": "Créer une clé API ou révoquer un accès",
+      "summary": "Gérez les clés API et les assistants connectés sous Clés API dans le tableau de bord.",
+      "keywords": "clé api jeton bearer connexion oauth créer une clé nouvelle clé révoquer déconnecter retirer l’accès portées en-tête authorization api key revoke",
+      "steps": [
+        "Choisissez Nouvelle clé, saisissez un Nom de la clé, cochez ses Autorisations et choisissez Créer la clé.",
+        "Copiez la clé tout de suite. Elle ne s’affiche qu’une fois.",
+        "Envoyez-la uniquement dans un en-tête Authorization: Bearer, jamais dans une URL.",
+        "Pour couper l’accès d’une clé ou d’un assistant, choisissez Révoquer sur sa ligne."
+      ],
+      "body": [
+        "Retirer un connecteur dans Claude ne le révoque pas ici. Révoquez-le sur cette page."
+      ],
+      "links": [
+        {
+          "label": "Clés API du tableau de bord",
+          "href": "/dashboard/keys"
+        }
+      ]
+    }
+  ]
+}

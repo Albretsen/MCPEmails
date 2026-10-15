@@ -6,7 +6,7 @@
   "hero": {
     "eyebrow": "Aide",
     "title": "Comment pouvons-nous vous aider ?",
-    "lead": "Cherchez dans les guides, lisez les solutions courtes aux problèmes les plus fréquents, ou écrivez-nous ci-dessous."
+    "lead": "Cherchez dans les guides, ouvrez un sujet ci-dessous, ou écrivez-nous."
   },
   "search": {
     "label": "Rechercher dans l’aide",
@@ -18,7 +18,7 @@
       "client": "Client",
       "docs": "Docs",
       "faq": "Question",
-      "article": "Solution"
+      "article": "Article"
     }
   },
   "hints": {
@@ -49,14 +49,14 @@
     {
       "id": "imap-password-rejected",
       "title": "Le serveur de messagerie refuse mon mot de passe",
-      "summary": "Sur votre propre domaine ou chez un hébergeur, un mot de passe refusé est presque toujours le mauvais mot de passe ou le mauvais identifiant.",
-      "keywords": "imap smtp mot de passe refusé incorrect connexion identifiant cpanel plesk hébergement domaine",
+      "summary": "Presque toujours un mauvais mot de passe ou identifiant. Utilisez celui de la boîte elle-même.",
+      "keywords": "imap smtp mot de passe refusé incorrect connexion identifiant nom d’utilisateur cpanel plesk hébergement propre domaine échec d’authentification password rejected",
       "steps": [
-        "Utilisez le mot de passe de la boîte elle-même. L’identifiant de votre compte d’hébergement ou du panneau de contrôle est un autre mot de passe, même pour la même adresse.",
-        "Utilisez l’adresse e-mail complète comme identifiant. Si vous avez saisi un nom d’utilisateur distinct, videz ce champ, sauf si votre hébergeur vous en a fourni un.",
-        "Si la double authentification est activée sur la boîte, il lui faut un mot de passe d’application à la place du mot de passe de la boîte.",
-        "Mot de passe oublié ? Réinitialisez-le là où votre hébergeur liste vos adresses. Dans cPanel, c’est Comptes de messagerie, puis Gérer. Dans Plesk, c’est Comptes de messagerie.",
-        "Vérifiez le nom du serveur dans les réglages de votre fournisseur. Nos guides par fournisseur indiquent des serveurs IMAP et SMTP vérifiés."
+        "Utilisez le mot de passe de la boîte, pas celui de votre hébergement ou du panneau de contrôle.",
+        "Utilisez l’adresse e-mail complète comme identifiant.",
+        "Si la boîte a la double authentification, utilisez un mot de passe d’application.",
+        "Réinitialisez le mot de passe là où votre hébergeur liste les comptes e-mail (cPanel : Email Accounts).",
+        "Vérifiez les noms des serveurs dans nos guides par fournisseur."
       ],
       "links": [
         { "label": "Guide IMAP générique", "href": "/connect/imap" },
@@ -66,14 +66,14 @@
     {
       "id": "app-password-required",
       "title": "Mot de passe d’application requis (Yahoo, iCloud, Gmail, Zoho)",
-      "summary": "Ces fournisseurs n’acceptent pas votre mot de passe habituel depuis une application de messagerie. Créez un mot de passe d’application et collez-le à la place.",
-      "keywords": "mot de passe d’application spécifique yahoo icloud apple gmail google zoho validation en deux étapes app password",
+      "summary": "Ces fournisseurs refusent ici votre mot de passe habituel. Créez un mot de passe d’application et collez-le.",
+      "keywords": "mot de passe d’application spécifique yahoo icloud apple gmail google zoho validation en deux étapes app password app-specific 2-step verification",
       "steps": [
-        "Yahoo : ouvrez Sécurité du compte, puis Générer un mot de passe d’application. Il fait 16 lettres minuscules, sans espaces.",
-        "iCloud : connectez-vous sur account.apple.com, ouvrez Connexion et sécurité, puis Mots de passe pour application. Il fait 16 lettres minuscules, en quatre groupes.",
-        "Gmail : activez la validation en deux étapes, puis créez-en un sur myaccount.google.com/apppasswords. Un administrateur Google Workspace peut les désactiver pour tout le domaine. Gmail peut aussi se connecter via la connexion Google.",
-        "Zoho : créez un mot de passe spécifique à une application dans Compte Zoho, sous Sécurité, et activez l’accès IMAP dans les réglages de Zoho Mail. Il est désactivé par défaut.",
-        "Collez le mot de passe d’application tel qu’il s’affiche. Les espaces sont ignorés."
+        "Yahoo : Account Security, puis Generate app password.",
+        "iCloud : account.apple.com, Sign-In and Security, puis App-Specific Passwords.",
+        "Gmail : activez la validation en deux étapes, puis allez sur myaccount.google.com/apppasswords.",
+        "Zoho : créez un mot de passe spécifique à une application et activez IMAP dans les réglages de Zoho Mail.",
+        "Collez-le tel qu’il s’affiche. Les espaces sont ignorés."
       ],
       "links": [
         { "label": "Guide Yahoo Mail", "href": "/connect/yahoo" },
@@ -85,12 +85,13 @@
     {
       "id": "yandex-imap-disabled",
       "title": "Yandex : l’accès IMAP est désactivé",
-      "summary": "Yandex refuse toute application de messagerie tant que l’accès IMAP n’est pas activé, et le refus ressemble exactement à un mauvais mot de passe.",
-      "keywords": "yandex imap désactivé mot de passe d’application clients de messagerie yandex 360",
+      "summary": "Yandex refuse les applications de messagerie tant qu’IMAP n’est pas activé. On dirait un mauvais mot de passe.",
+      "keywords": "yandex imap désactivé mot de passe d’application clients de messagerie yandex 360 app password",
       "steps": [
-        "Dans Yandex Mail, ouvrez Réglages, puis Clients de messagerie. Activez l’accès IMAP, ainsi que les mots de passe d’application et les jetons OAuth. Les deux sont nécessaires.",
-        "Sur id.yandex.com, ouvrez Sécurité, puis Mots de passe d’application, et créez-en un de type Mail. Yandex ne l’affiche qu’une fois.",
-        "Connectez-vous avec votre adresse Yandex complète et ce mot de passe d’application. Le mot de passe du compte ne fonctionne jamais ici, même sans double authentification."
+        "Dans Yandex Mail, ouvrez Settings, puis Mail clients.",
+        "Activez l’accès IMAP, ainsi que les mots de passe d’application et les jetons OAuth.",
+        "Sur id.yandex.com, créez un mot de passe d’application de type Mail.",
+        "Connectez-vous avec votre adresse complète et ce mot de passe d’application."
       ],
       "links": [
         { "label": "Guide Yandex Mail", "href": "/connect/yandex" }
@@ -99,14 +100,14 @@
     {
       "id": "assistant-sees-nothing",
       "title": "Connecté, mais l’assistant ne voit aucun e-mail",
-      "summary": "La boîte est connectée, mais votre assistant dit qu’il n’a pas d’outils de messagerie ou ne trouve rien.",
-      "keywords": "aucun outil rien vide connecteur ne marche pas claude chatgpt cursor mode développeur portée inbox_list",
+      "summary": "En général, la boîte est en erreur, la conversation précède le connecteur, ou une autorisation est désactivée.",
+      "keywords": "aucun outil rien vide connecteur ne marche pas claude chatgpt cursor mode développeur portée autorisations inbox_list developer mode scope",
       "steps": [
-        "Ouvrez Boîtes dans le tableau de bord et vérifiez que la boîte apparaît sans erreur. Si elle en affiche une, reconnectez-la.",
-        "Ouvrez une nouvelle conversation après avoir ajouté le connecteur. Dans ChatGPT, choisissez aussi Mode développeur et l’application mcpemails dans le menu + de chaque nouvelle conversation.",
-        "Autorisez le connecteur avec le même compte mcpemails que celui qui détient la boîte.",
-        "Votre assistant ne voit que les outils autorisés pour le connecteur ou la clé d’API. Si vous avez laissé une portée décochée, retirez le connecteur et ajoutez-le de nouveau.",
-        "Demandez d’abord à l’assistant de lister vos boîtes. Les e-mails sont récupérés quand l’assistant les demande, rien n’arrive tout seul."
+        "Dans Boîtes, vérifiez que la boîte affiche Connectée. Sinon, reconnectez-la.",
+        "Ouvrez une nouvelle conversation après avoir ajouté le connecteur.",
+        "Connectez-vous au connecteur avec le compte qui détient la boîte.",
+        "Dans Clés API, choisissez Modifier l'accès et vérifiez ses autorisations et ses boîtes.",
+        "Demandez d’abord à l’assistant de lister vos boîtes."
       ],
       "links": [
         { "label": "Guides des clients", "href": "/docs/clients" },
@@ -116,14 +117,13 @@
     {
       "id": "usage-limit-reached",
       "title": "Limite d’utilisation atteinte",
-      "summary": "Un espace Free dispose de 150 actions e-mail par mois civil. Une fois épuisées, les actions sont refusées jusqu’au 1er du mois suivant (UTC).",
-      "keywords": "limite d’utilisation quota plafond 150 actions gratuit free refusé réinitialisation",
+      "summary": "Free inclut 150 actions e-mail par mois. Ensuite, les actions attendent le 1er du mois (UTC).",
+      "keywords": "limite d’utilisation quota plafond 150 actions formule gratuite free refusé réinitialisation usage limit",
       "steps": [
-        "Consultez le nombre d’actions utilisées dans Usage, dans le tableau de bord.",
-        "Lister vos boîtes et tout ce que vous faites dans le tableau de bord ne compte jamais, et rien n’est compté pendant les 7 premiers jours après l’inscription.",
-        "Réessayer ne sert à rien. Le quota se réinitialise le 1er du mois suivant (UTC), et les automatisations en pause reprennent seules.",
-        "Personal, Pro et Team n’ont pas de plafond mensuel, dans la limite d’un usage raisonnable.",
-        "Les espaces créés avant le 2026-09-12 ne sont pas décomptés. Si vous voyez la limite sur l’un d’eux, écrivez-nous."
+        "Voyez ce que vous avez utilisé dans Usage.",
+        "Lister les boîtes et les actions du tableau de bord ne comptent jamais. Vos 7 premiers jours sont gratuits.",
+        "Réessayer n’aide pas. Les automatisations en pause reprennent le 1er.",
+        "Personal, Pro et Team n’ont pas de plafond mensuel, dans la limite d’un usage raisonnable."
       ],
       "links": [
         { "label": "Questions sur les tarifs", "href": "/pricing#faq" },
@@ -133,13 +133,13 @@
     {
       "id": "change-or-cancel-plan",
       "title": "Changer ou résilier votre formule",
-      "summary": "Passez à une formule supérieure ou inférieure, ou résiliez à tout moment depuis Paramètres dans le tableau de bord.",
-      "keywords": "formule plan changer résilier annuler abonnement facturation facture remboursement stripe portail paiement carte",
+      "summary": "Changez ou résiliez à tout moment dans Paramètres, sous Facturation et formule.",
+      "keywords": "formule plan changer passer à une formule supérieure inférieure résilier annuler abonnement facturation facture remboursement stripe portail paiement carte upgrade downgrade cancel",
       "steps": [
-        "Ouvrez Paramètres dans le tableau de bord. La section facturation montre votre formule et celles vers lesquelles vous pouvez passer.",
-        "Pour résilier, changer de carte ou télécharger vos factures, ouvrez le portail de facturation depuis cette même section. Il est géré par Stripe.",
-        "La résiliation arrête le prochain renouvellement. Vous gardez ce que vous avez payé jusqu’à la fin de la période en cours, puis passez à Free avec une boîte connectée.",
-        "Si le premier prélèvement d’un nouvel abonnement ne correspond pas à ce que vous attendiez, écrivez-nous sous 14 jours et nous le remboursons entièrement. Les périodes partielles ne sont pas remboursées."
+        "Ouvrez Paramètres, puis Facturation et formule.",
+        "Choisissez Gérer la facturation pour résilier, changer de carte ou obtenir vos factures.",
+        "La résiliation arrête le renouvellement. Vous gardez votre formule jusqu’à la fin de la période.",
+        "Premier prélèvement inattendu ? Écrivez-nous sous 14 jours pour un remboursement complet."
       ],
       "links": [
         { "label": "Paramètres du tableau de bord", "href": "/dashboard/settings" },
@@ -149,13 +149,14 @@
     {
       "id": "disconnect-or-delete",
       "title": "Déconnecter une boîte ou supprimer votre compte",
-      "summary": "Retirez une boîte, un espace de travail ou tout le compte depuis le tableau de bord.",
-      "keywords": "déconnecter retirer boîte supprimer compte espace de travail fermer zone de danger",
+      "summary": "Retirez une boîte, un espace de travail ou tout votre compte depuis le tableau de bord.",
+      "keywords": "déconnecter retirer boîte supprimer compte espace de travail fermer zone de danger disconnect delete account",
       "steps": [
-        "Pour déconnecter une boîte, ouvrez Boîtes dans le tableau de bord, sélectionnez-la et choisissez Déconnecter. Son mot de passe ou jeton enregistré est effacé.",
-        "Pour fermer un espace de travail, ouvrez Paramètres, puis Zone de danger, et choisissez Supprimer l'espace de travail. Votre compte et vos autres espaces restent.",
-        "Pour tout supprimer, ouvrez Paramètres, puis Zone de danger, et choisissez Supprimer le compte. Vous confirmez en saisissant votre adresse e-mail, et c’est irréversible.",
-        "Supprimer le compte résilie immédiatement une formule payante, sans remboursement du reste de la période. Pour profiter du temps déjà payé, résiliez d’abord dans le portail de facturation et supprimez le compte à la fin de la période."
+        "Boîte : dans Boîtes, choisissez Déconnecter sur sa ligne. Son identifiant enregistré est effacé.",
+        "Espace de travail : dans Paramètres, sous Espace de travail, choisissez Supprimer l'espace de travail.",
+        "Compte : dans Paramètres, sous Zone de danger, choisissez Supprimer le compte. C’est irréversible.",
+        "Supprimer le compte résilie immédiatement une formule payante, sans remboursement.",
+        "Pour profiter du temps payé, résiliez d’abord et supprimez plus tard."
       ],
       "links": [
         { "label": "Boîtes du tableau de bord", "href": "/dashboard/inboxes" },
@@ -166,7 +167,8 @@
   "contact": {
     "heading": "Écrivez-nous",
     "lead": "Une personne lit chaque message et répond par e-mail.",
-    "emailAlt": "Vous préférez l’e-mail ? Écrivez à {email}."
+    "emailLine": "Écrivez-nous à {email}, ou envoyez un message ici.",
+    "openForm": "Écrire un message"
   },
   "categories": {
     "connect": "Connecter une boîte",

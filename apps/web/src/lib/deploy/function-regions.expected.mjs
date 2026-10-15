@@ -203,6 +203,7 @@ export const ROUTES = [
   ['app/api/stripe/checkout/start/route.ts', 'arn1', '~7', 'Stripe API x1-3'],
   ['app/api/stripe/portal/route.ts', 'arn1', '6', 'Stripe API x1-2'],
   ['app/api/stripe/webhook/route.ts', 'arn1', '7+', 'Stripe API, Resend; caller is Stripe (US)'],
+  ['app/api/support/help-data/route.ts', 'arn1', '2 (session, context)', '-'],
   ['app/api/support/preview/route.ts', 'arn1', '1 (session)', '-'],
   ['app/api/support/tickets/route.ts', 'arn1', '4-8', 'Resend x2'],
   ['app/api/support/visibility/route.ts', 'arn1', '1 (session)', '-'],

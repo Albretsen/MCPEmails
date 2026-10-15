@@ -1,0 +1,226 @@
+{
+  "area": "safety-automation",
+  "title": "Seguridad y automatización",
+  "articles": [
+    {
+      "id": "turn-on-send-review",
+      "title": "Revisar los correos antes de enviarlos",
+      "summary": "Activa la revisión en una bandeja para que cada envío preparado espere tu aprobación.",
+      "keywords": "revisión de envíos aprobación retener aprobar antes de enviar tarjeta de revisión solo en el panel enviar de inmediato seguridad send review approval",
+      "steps": [
+        "En Bandejas de entrada, elige View details en la bandeja.",
+        "Abre Signature & sending.",
+        "Elige Tarjeta de revisión en la conversación, o Revisar solo en el panel.",
+        "Elige Guardar firma. Esto también guarda el ajuste de revisión."
+      ],
+      "body": [
+        "En los dos modos de revisión no se entrega nada hasta que un propietario o administrador del espacio lo aprueba en un navegador con sesión iniciada. Enviar de inmediato desactiva la revisión."
+      ],
+      "links": [
+        {
+          "label": "Bandejas de entrada",
+          "href": "/dashboard/inboxes"
+        }
+      ]
+    },
+    {
+      "id": "approve-held-send",
+      "title": "Aprobar o rechazar un envío retenido",
+      "summary": "Los envíos retenidos esperan en Aprobaciones. Un propietario o administrador los aprueba o rechaza ahí.",
+      "keywords": "aprobaciones pendiente envío aprobar rechazar correo retenido en espera revisión caducado 24 horas propietario administrador approvals",
+      "steps": [
+        "Ve a Aprobaciones.",
+        "Elige Review & approve y luego Approve & queue para enviarlo.",
+        "O elige Rechazar y luego Reject request. No se envía nada."
+      ],
+      "body": [
+        "Una solicitud que nadie decide en 24 horas caduca y nunca se envía. Si aún la quieres, pide a tu asistente que la prepare de nuevo."
+      ],
+      "links": [
+        {
+          "label": "Aprobaciones",
+          "href": "/dashboard/approvals"
+        }
+      ]
+    },
+    {
+      "id": "use-workflow-prompts",
+      "title": "Ejecutar un flujo de trabajo listo",
+      "summary": "Copia una rutina de Flujos de trabajo en tu asistente, como Morning inbox triage.",
+      "keywords": "flujos de trabajo prompts rutinas plantillas triaje matinal seguimiento decisiones limpiar copiar prompt workflows",
+      "steps": [
+        "Ve a Flujos de trabajo.",
+        "Elige Copy prompt en una rutina.",
+        "Pégala en tu asistente de IA y rellena lo que esté entre corchetes."
+      ],
+      "body": [
+        "Los clientes compatibles con prompts MCP también pueden listar estas rutinas directamente. Los prompts nunca añaden permisos: los permisos de tu conexión siguen controlando cada acción."
+      ],
+      "links": [
+        {
+          "label": "Flujos de trabajo",
+          "href": "/dashboard/workflows"
+        }
+      ]
+    },
+    {
+      "id": "stop-bulk-run",
+      "title": "Detener una operación masiva en curso",
+      "summary": "Flujos de trabajo muestra los movimientos y marcados masivos en curso. Stop detiene lo que aún no ha empezado.",
+      "keywords": "operación masiva detener cancelar parar large-work controls progreso mover en bloque marcar bulk",
+      "steps": [
+        "Ve a Flujos de trabajo y baja hasta Large-work controls.",
+        "Elige Stop en la fila en curso."
+      ],
+      "body": [
+        "Stop no deshace los mensajes que ya se cambiaron."
+      ],
+      "links": [
+        {
+          "label": "Flujos de trabajo",
+          "href": "/dashboard/workflows"
+        }
+      ]
+    },
+    {
+      "id": "create-automation",
+      "title": "Crear una automatización",
+      "summary": "Una automatización ejecuta una búsqueda guardada con un horario y aplica una acción fija a los resultados.",
+      "keywords": "automatización regla programación filtro ordenar triaje de bandeja desatendido nueva automatización previsualizar coincidencias automation",
+      "steps": [
+        "Ve a Automatizaciones y elige Nueva automatización.",
+        "Elige la bandeja, la clave de API, con qué frecuencia se ejecuta y los mensajes por ejecución.",
+        "Define el filtro en Qué mensajes y elige Previsualizar coincidencias.",
+        "Elige la acción en Qué hacer y luego Crear automatización.",
+        "Ponla en Activa en la columna Estado. Las automatizaciones nuevas empiezan desactivadas."
+      ],
+      "body": [
+        "Solo los propietarios y administradores del espacio pueden crear o cambiar automatizaciones. Tu asistente también puede crear una si su clave tiene el permiso manage:automations."
+      ],
+      "links": [
+        {
+          "label": "Automatizaciones",
+          "href": "/dashboard/automations"
+        }
+      ]
+    },
+    {
+      "id": "automation-safety",
+      "title": "Qué puede y qué no puede hacer una automatización",
+      "summary": "Las automatizaciones mueven, etiquetan, marcan como leído, reenvían o redactan respuestas. Nunca eliminan correo.",
+      "keywords": "automatización seguridad eliminar reenviar aprobación borrador respuesta plantilla alcance límites se ejecuta como clave de api",
+      "steps": [
+        "Los reenvíos siempre esperan en Aprobaciones hasta que una persona los aprueba.",
+        "Redactar una respuesta solo guarda un borrador. No se envía nada.",
+        "Cada ejecución toca como máximo los mensajes por ejecución que definiste (de 1 a 200).",
+        "Actúa como su clave de API. Revocar la clave la detiene."
+      ],
+      "links": [
+        {
+          "label": "Modelo de seguridad de las automatizaciones",
+          "href": "/docs#automation-safety"
+        }
+      ]
+    },
+    {
+      "id": "automation-run-log",
+      "title": "Ver qué hizo una automatización",
+      "summary": "El registro de ejecuciones muestra cada ejecución y qué pasó con cada mensaje.",
+      "keywords": "registro de ejecuciones historial automatización mensajes aplicado fallido omitido esperando aprobación run log",
+      "steps": [
+        "Ve a Automatizaciones y elige Registro en la automatización.",
+        "Elige Mensajes en una ejecución para ver cada mensaje y su resultado."
+      ],
+      "body": [
+        "Eliminar una automatización conserva su registro de ejecuciones."
+      ],
+      "links": [
+        {
+          "label": "Automatizaciones",
+          "href": "/dashboard/automations"
+        }
+      ]
+    },
+    {
+      "id": "automation-switched-off",
+      "title": "Una automatización se desactivó sola",
+      "summary": "Tras 5 ejecuciones fallidas seguidas, una automatización se desactiva. Corrige la causa y vuelve a activarla.",
+      "keywords": "automatización falla fallida desactivada apagada fallos repetidos error reconectar clave revocada",
+      "steps": [
+        "Ve a Automatizaciones y lee el motivo que aparece en la fila.",
+        "Corrígelo, por ejemplo reconecta la bandeja o usa una clave de API activa.",
+        "Vuelve a ponerla en Activa en la columna Estado."
+      ],
+      "links": [
+        {
+          "label": "Automatizaciones",
+          "href": "/dashboard/automations"
+        }
+      ]
+    },
+    {
+      "id": "read-usage-page",
+      "title": "Entender la página Uso",
+      "summary": "Uso muestra llamadas por día, por herramienta y por bandeja, y la cuota mensual de un espacio Free.",
+      "keywords": "uso analítica llamadas por día por herramienta por bandeja historial cuota contador panel usage",
+      "body": [
+        "El historial cubre 30 días en Free y Personal, 90 en Pro y 365 en Team. Un espacio Free también ve cuántas de sus 150 acciones de correo mensuales lleva usadas y cuándo se reinicia el contador."
+      ],
+      "links": [
+        {
+          "label": "Uso",
+          "href": "/dashboard/usage"
+        },
+        {
+          "label": "Límite de uso alcanzado",
+          "href": "/help#article-usage-limit-reached"
+        }
+      ]
+    },
+    {
+      "id": "rate-limited",
+      "title": "Mi asistente tiene un límite de peticiones",
+      "summary": "Demasiadas peticiones en poco tiempo. Espera los segundos que indica el error y reintenta.",
+      "keywords": "límite de tasa 429 demasiadas peticiones retry_after por minuto ráfaga limitado ir más despacio rate limit",
+      "body": [
+        "Cada clave de API permite 100 peticiones por minuto, 1.000 por hora y 10.000 por día. Cada espacio de trabajo tiene además un tope por minuto: Free 60, Personal 120, Pro 300, Team 1.000."
+      ],
+      "links": [
+        {
+          "label": "Límites de tasa",
+          "href": "/docs#rate-limits"
+        }
+      ]
+    },
+    {
+      "id": "usage-notification-emails",
+      "title": "Correos sobre tu uso",
+      "summary": "En Free, el propietario del espacio recibe un correo al 80% y al 100% de la cuota mensual.",
+      "keywords": "notificación correo uso aviso 80 por ciento límite alcanzado automatización en pausa alerta",
+      "body": [
+        "Cuando se agota la cuota, las automatizaciones se pausan y recibes un correo con la fecha en que se reanudan. Los planes de pago no tienen tope mensual, así que estos correos no se aplican."
+      ],
+      "links": [
+        {
+          "label": "Límite de uso alcanzado",
+          "href": "/help#article-usage-limit-reached"
+        }
+      ]
+    },
+    {
+      "id": "new-mail-alerts",
+      "title": "Hacer que tu asistente reaccione al correo nuevo",
+      "summary": "MCP Emails no tiene avisos push. Pide a tu asistente que mire el correo no leído, o usa una automatización.",
+      "keywords": "notificaciones correo nuevo push webhook alerta disparador sondeo correo entrante tiempo real",
+      "body": [
+        "Un correo entrante nunca inicia por sí solo una llamada al asistente. Haz que tu asistente revise el correo no leído de forma periódica, o deja que una automatización lo ordene."
+      ],
+      "links": [
+        {
+          "label": "Automatizaciones",
+          "href": "/dashboard/automations"
+        }
+      ]
+    }
+  ]
+}

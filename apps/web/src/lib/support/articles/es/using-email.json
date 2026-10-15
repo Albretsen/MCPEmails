@@ -1,0 +1,251 @@
+{
+  "area": "using-email",
+  "title": "Usar el correo con tu asistente",
+  "articles": [
+    {
+      "id": "read-and-search-email",
+      "title": "Leer y buscar tu correo",
+      "summary": "Pídelo con tus palabras, por remitente, asunto o fecha. Leer nunca cambia tu buzón.",
+      "keywords": "leer buscar encontrar listar no leídos mensajes bandeja resumir de asunto fecha adjunto marcado destacado carpeta read search",
+      "steps": [
+        "Pregunta qué hay de nuevo, por ejemplo: \"Muéstrame mi correo no leído de hoy.\"",
+        "Describe un mensaje por remitente, destinatario, palabras del asunto, fechas o adjuntos.",
+        "Pide a tu asistente que siga leyendo cuando un correo largo se corte antes de tiempo.",
+        "Nombra una carpeta, como Enviados o Archivo, para leer el correo de ahí.",
+        "Pídele que marque mensajes como leídos. Leerlos no lo hace por sí solo."
+      ],
+      "links": [
+        {
+          "label": "Referencia de herramientas",
+          "href": "/docs#tools"
+        }
+      ]
+    },
+    {
+      "id": "search-misses-messages",
+      "title": "Encontrar mensajes que una búsqueda no encontró",
+      "summary": "Nombra la carpeta, usa palabras completas y en Outlook busca palabras y filtros por separado.",
+      "keywords": "búsqueda falta no encontrado carpeta archivo enviados imap gmail outlook palabra completa papelera spam correo no deseado filtro",
+      "steps": [
+        "En buzones IMAP, nombra tu carpeta de archivo o de enviados. Solo se busca en la bandeja de entrada.",
+        "En Gmail y Outlook, nombra la Papelera para buscar en ella. Gmail también omite el Spam.",
+        "En Gmail y Outlook, usa palabras completas para el asunto. Las palabras a medias no encuentran nada.",
+        "En Outlook, pide palabras y filtros como no leídos o fechas en búsquedas separadas.",
+        "En buzones IMAP, el filtro \"tiene un adjunto\" se ignora."
+      ],
+      "links": [
+        {
+          "label": "Compatibilidad por proveedor",
+          "href": "/docs/providers"
+        }
+      ]
+    },
+    {
+      "id": "send-new-email",
+      "title": "Enviar un correo nuevo",
+      "summary": "Di a quién escribir y qué decir. Un correo enviado no se puede recuperar.",
+      "keywords": "enviar escribir redactar correo nuevo destinatario para cc cco bcc responder a contacto dirección encontrar a alguien aprobación send",
+      "steps": [
+        "Pide, por ejemplo: \"Escribe a ola@example.com y pregúntale si le va bien el jueves a las 10.\"",
+        "Pregunta \"¿Cuál es la dirección de correo de Anna?\" para encontrarla en tu correo reciente.",
+        "Añade Cc, Cco o una dirección de respuesta. Hasta 50 destinatarios por campo.",
+        "Pide un borrador en su lugar cuando quieras revisarlo antes.",
+        "Si la aprobación de envíos está activada, un propietario o administrador debe aprobarlo en Aprobaciones."
+      ],
+      "links": [
+        {
+          "label": "Aprobaciones",
+          "href": "/dashboard/approvals"
+        }
+      ]
+    },
+    {
+      "id": "reply-and-forward",
+      "title": "Responder o reenviar un correo",
+      "summary": "Las respuestas siguen en la conversación. Los reenvíos llegan tal como se envió el original, con adjuntos.",
+      "keywords": "responder responder a todos contestar reenviar rv fwd hilo conversación adjuntos nota eml reply forward",
+      "steps": [
+        "Pide, por ejemplo: \"Responde a Ola y dile que el jueves me va bien.\"",
+        "Di \"responder a todos\" para incluir a todos. Si no, solo lo recibe el remitente.",
+        "Para reenviar, indica el mensaje y los nuevos destinatarios, y una nota si quieres.",
+        "Pide que se quiten los adjuntos o que se reenvíe el original como adjunto.",
+        "Reenvía hasta 50 mensajes a las mismas personas en una sola petición."
+      ],
+      "links": []
+    },
+    {
+      "id": "save-as-draft",
+      "title": "Guardar un correo como borrador",
+      "summary": "Pide un borrador para revisar un correo antes. Se guarda en la carpeta Borradores de tu buzón.",
+      "keywords": "borrador guardar sin enviar revisar después editar actualizar borrador de respuesta carpeta borradores draft",
+      "steps": [
+        "Pide, por ejemplo: \"Redacta una respuesta a Ola, pero no la envíes.\"",
+        "Si quieres, ábrelo desde la carpeta Borradores en tu app de correo habitual.",
+        "Pide a tu asistente que cambie el texto, el asunto o los destinatarios, o que añada archivos.",
+        "Pídele que envíe el borrador cuando esté listo. El envío no se puede deshacer.",
+        "Pídele que liste tus borradores o que elimine uno."
+      ],
+      "links": [
+        {
+          "label": "Editar borradores en el chat",
+          "href": "/help#article-draft-editor-card"
+        }
+      ]
+    },
+    {
+      "id": "draft-editor-card",
+      "title": "Editar y enviar un borrador en el chat",
+      "summary": "Si tu cliente de IA lo admite, un borrador preparado aparece como una tarjeta que puedes editar y enviar.",
+      "keywords": "editor de borradores tarjeta en el chat editar enviar deshacer descartar guardar ocultar desactivar mostrar draft editor card",
+      "body": [
+        "Oculta la tarjeta para un buzón en Bandejas de entrada, View details, o para todo el espacio de trabajo en Ajustes, Tarjeta del editor de borradores."
+      ],
+      "steps": [
+        "Edita los destinatarios, el asunto o el texto en la tarjeta y guarda. Guardar no envía nada.",
+        "Elige Send. Pulsa Undo en unos segundos para conservar el borrador.",
+        "Usa el icono de la papelera para descartar el borrador en tu proveedor.",
+        "En buzones de Gmail e IMAP, pide a tu asistente que edite los borradores con adjuntos.",
+        "Para ocultar las tarjetas, abre More options y elige Turn off draft cards…"
+      ],
+      "links": [
+        {
+          "label": "Bandejas de entrada",
+          "href": "/dashboard/inboxes"
+        },
+        {
+          "label": "Ajustes",
+          "href": "/dashboard/settings"
+        }
+      ]
+    },
+    {
+      "id": "email-attachments",
+      "title": "Enviar, leer y guardar adjuntos",
+      "summary": "Adjunta hasta 20 archivos (10 MB en total), lee el texto de un archivo o descarga archivos de hasta 25 MB.",
+      "keywords": "adjunto adjuntar archivo pdf csv descargar extraer leer tamaño límite 10 MB 25 MB eml original attachment",
+      "steps": [
+        "Pide a tu asistente que adjunte un archivo a un correo o borrador.",
+        "Nombra un archivo que ya esté en tu buzón para reenviarlo sin volver a subirlo.",
+        "Pídele que lea el texto de un archivo: texto plano, CSV, HTML, JSON o PDF con capa de texto.",
+        "Las imágenes escaneadas y los PDF escaneados no se leen.",
+        "Pide el original de un correo para obtener el mensaje completo como archivo .eml."
+      ],
+      "links": []
+    },
+    {
+      "id": "organize-email",
+      "title": "Mover, archivar y marcar mensajes",
+      "summary": "Mueve, copia, archiva, marca o destaca mensajes y gestiona carpetas. Casi todo se puede deshacer.",
+      "keywords": "mover archivar carpeta etiqueta marcar destacar estrella leído no leído copiar organizar ordenar crear renombrar eliminar carpeta etiquetas de gmail en bloque labels",
+      "body": [
+        "Gmail usa etiquetas: mover un mensaje le añade la etiqueta y lo saca de la bandeja de entrada."
+      ],
+      "steps": [
+        "Pide, por ejemplo: \"Mueve los recibos de esta semana a la carpeta Recibos.\"",
+        "Pide archivar, marcar o desmarcar mensajes, o marcarlos como leídos o no leídos.",
+        "Pide mover todo lo que coincida con una búsqueda, hasta 500 mensajes por petición.",
+        "Pide crear, renombrar o eliminar carpetas. Eliminar una carpeta no se puede deshacer.",
+        "Copiar funciona en todas partes salvo en Gmail conectado iniciando sesión con Google."
+      ],
+      "links": [
+        {
+          "label": "Compatibilidad por proveedor",
+          "href": "/docs/providers"
+        }
+      ]
+    },
+    {
+      "id": "delete-email",
+      "title": "Eliminar correo",
+      "summary": "El correo eliminado va a la Papelera. Una eliminación permanente se salta la Papelera y no se puede deshacer.",
+      "keywords": "eliminar borrar quitar papelera permanente definitivo expunge en bloque limpiar delete trash",
+      "steps": [
+        "Pide eliminar un mensaje, una lista de mensajes o todo lo que coincida con una búsqueda.",
+        "Se eliminan hasta 500 mensajes por petición.",
+        "Pide una eliminación permanente solo cuando de verdad la quieras.",
+        "Gmail conectado iniciando sesión con Google solo admite la Papelera.",
+        "Asegúrate de que tu conector o clave de API tiene el permiso de eliminar."
+      ],
+      "links": [
+        {
+          "label": "Claves de API",
+          "href": "/dashboard/keys"
+        }
+      ]
+    },
+    {
+      "id": "schedule-email",
+      "title": "Programar un correo para más tarde",
+      "summary": "Indica una hora futura y su zona horaria. La entrega puede retrasarse hasta un minuto.",
+      "keywords": "programar enviar más tarde retrasar envío futuro cola cancelar programado mañana por la mañana zona horaria schedule",
+      "steps": [
+        "Pide, por ejemplo: \"Envía esto a Ola mañana a las 09:00, hora de Oslo.\"",
+        "Pregunta \"¿Qué correos hay programados?\" para ver lo que está en cola.",
+        "Pide cancelar uno antes de que empiece a enviarse.",
+        "Dale los archivos directamente. Aquí no se pueden reutilizar archivos de otros correos.",
+        "Si la aprobación de envíos está activada, primero espera en Aprobaciones."
+      ],
+      "links": [
+        {
+          "label": "Aprobaciones",
+          "href": "/dashboard/approvals"
+        }
+      ]
+    },
+    {
+      "id": "signature-and-sender-name",
+      "title": "Configurar tu firma y nombre de remitente",
+      "summary": "Cada bandeja tiene su propia firma y nombre de remitente. Configúralos en Bandejas de entrada o pídeselo a tu asistente.",
+      "keywords": "firma despedida pie logo imagen nombre del remitente nombre para mostrar nombre de envío responder reenviar html signature sender name",
+      "steps": [
+        "En Bandejas de entrada, elige View details en el buzón y abre Signature & sending.",
+        "Rellena Nombre del remitente y elige Guardar nombre.",
+        "En Firma de correo, usa Texto enriquecido o Código HTML y elige Guardar firma.",
+        "En En respuestas y reenvíos, elige Añadir siempre, Solo en la primera respuesta o No añadir nunca.",
+        "Activa Incrustar las imágenes en el mensaje si tu logo no se ve."
+      ],
+      "links": [
+        {
+          "label": "Bandejas de entrada",
+          "href": "/dashboard/inboxes"
+        }
+      ]
+    },
+    {
+      "id": "multiple-inboxes",
+      "title": "Trabajar con más de una bandeja",
+      "summary": "Di qué dirección usar. Pregunta \"¿Qué bandejas tengo?\" para verlas todas.",
+      "keywords": "varias bandejas múltiples buzones cuentas qué bandeja dirección de envío cambiar enviar como alias send as",
+      "steps": [
+        "Nombra la dirección, por ejemplo: \"Responde desde sales@ al último correo de Anna.\"",
+        "En Gmail, pide enviar desde una dirección Send As que Gmail haya verificado.",
+        "¿Falta una bandeja? Revisa el Acceso a bandejas de esa clave en Claves de API.",
+        "Free conecta un buzón, Personal tres, y Pro y Team todos los que quieras."
+      ],
+      "links": [
+        {
+          "label": "Claves de API",
+          "href": "/dashboard/keys"
+        },
+        {
+          "label": "Precios",
+          "href": "/pricing"
+        }
+      ]
+    },
+    {
+      "id": "built-in-email-routines",
+      "title": "Usar las rutinas de correo integradas",
+      "summary": "Algunos clientes de IA muestran rutinas listas de MCP Emails. Solo se ejecutan cuando tú las inicias.",
+      "keywords": "rutinas prompts triaje seguimiento resumen matinal decisiones limpiar borradores de respuesta envíos programados routines",
+      "steps": [
+        "Busca en el menú de prompts o comandos de tu cliente de IA. No todos los clientes las muestran.",
+        "Morning inbox triage ordena el correo no leído reciente sin cambiar nada.",
+        "Follow-up radar encuentra conversaciones en las que debes una respuesta.",
+        "Prepare reply drafts escribe borradores para que los revises.",
+        "Clean up safely propone un plan antes de cambiar nada."
+      ],
+      "links": []
+    }
+  ]
+}

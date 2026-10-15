@@ -1,13 +1,15 @@
 // ---------------------------------------------------------------------------
 // ConnectModal: "Still stuck? Contact support" under a failed connect.
 //
-// Run with: npm run test:support-entry-points
+// Run with: npm run test:support-ui
 //
-// v1 of /help is internal-only, so the line appears only when the dashboard
+// Help & support is internal-only, so the line appears only when the dashboard
 // hands the modal `supportVisible` (SUPPORT_RELEASE_GATE). When it does, the
-// link carries the selected provider and the route's `error_code` so /help can
-// preselect the form: `/help?topic=connect&provider=<slug>&code=<code>#contact`,
-// each value URL-encoded and an empty one left out.
+// link opens the dashboard's own help section with the selected provider and
+// the route's `error_code` so the form arrives filled in:
+// `/dashboard/help?topic=connect&provider=<slug>&code=<code>#contact`, each
+// value URL-encoded and an empty one left out. A plain click hands that href
+// to `onContactSupport` (App switches sections without a reload).
 //
 // The real modal is rendered with the real English messages; only `fetch` is
 // replaced, to answer the connect route with a failure.
@@ -38,7 +40,7 @@ const STILL_STUCK = chrome.connect.errorContactSupport;
  * Mount the modal on the generic card at its credentials step. `reply` is what
  * the connect route answers with.
  */
-async function openForm(t, { supportVisible, reply }) {
+async function openForm(t, { supportVisible, reply, onContactSupport }) {
   const requests = [];
   const previousFetch = globalThis.fetch;
   globalThis.fetch = async (url, init = {}) => {
@@ -62,6 +64,7 @@ async function openForm(t, { supportVisible, reply }) {
     onAdminConsentLink: () => {},
   };
   if (supportVisible !== undefined) props.supportVisible = supportVisible;
+  if (onContactSupport) props.onContactSupport = onContactSupport;
   const view = await mount(createElement(AppLocaleProvider, null, createElement(ToastProvider, null,
     createElement(ConnectModal, props))));
   t.after(async () => {
@@ -115,8 +118,25 @@ test('supportVisible + a route failure: the link carries provider and code', asy
   await fillAndSubmit(view);
   await waitFor(() => requests.length === 1, { message: 'the connect request' });
   const link = await waitFor(() => linkNamed(view, STILL_STUCK), { message: 'the contact link' });
-  assert.equal(link.getAttribute('href'), '/help?topic=connect&provider=generic&code=auth_failed#contact');
+  assert.equal(link.getAttribute('href'), '/dashboard/help?topic=connect&provider=generic&code=auth_failed#contact');
   assert.equal(q(view, 'cm-form-error').parentElement.contains(link), true, 'it sits in the error area');
+});
+
+test('a plain click hands the in-app href to onContactSupport, with no navigation', async (t) => {
+  const opened = [];
+  const { view, requests } = await openForm(t, { supportVisible: true, reply: AUTH_FAILED, onContactSupport: (h) => opened.push(h) });
+  await fillAndSubmit(view);
+  await waitFor(() => requests.length === 1, { message: 'the connect request' });
+  const link = await waitFor(() => linkNamed(view, STILL_STUCK), { message: 'the contact link' });
+  // dispatchEvent rather than .click(): its return value says whether the
+  // default (the navigation) was cancelled, which the modal's own listeners
+  // would otherwise hide by stopping propagation.
+  let notCancelled = null;
+  await flush(() => {
+    notCancelled = link.dispatchEvent(new window.MouseEvent('click', { bubbles: true, cancelable: true, button: 0 }));
+  });
+  assert.equal(opened.join(','), '/dashboard/help?topic=connect&provider=generic&code=auth_failed#contact');
+  assert.equal(notCancelled, false, 'the navigation was cancelled');
 });
 
 test('the code is URL-encoded', async (t) => {
@@ -125,7 +145,7 @@ test('the code is URL-encoded', async (t) => {
   await fillAndSubmit(view);
   await waitFor(() => requests.length === 1, { message: 'the connect request' });
   const link = await waitFor(() => linkNamed(view, STILL_STUCK), { message: 'the contact link' });
-  assert.equal(link.getAttribute('href'), '/help?topic=connect&provider=generic&code=odd%20code%26x%3D1#contact');
+  assert.equal(link.getAttribute('href'), '/dashboard/help?topic=connect&provider=generic&code=odd%20code%26x%3D1#contact');
 });
 
 test('not visible: the same failure shows no contact link', async (t) => {
@@ -154,14 +174,14 @@ test('a client-side validation error after a route failure drops the old code', 
   await type(q(view, 'cm-imap-host'), '');
   await submitOnly(view);
   await waitFor(
-    () => linkNamed(view, STILL_STUCK)?.getAttribute('href') === '/help?topic=connect&provider=generic#contact',
+    () => linkNamed(view, STILL_STUCK)?.getAttribute('href') === '/dashboard/help?topic=connect&provider=generic#contact',
     { message: 'the link without the stale code' },
   );
   assert.equal(requests.length, 1, 'the second submit never reached the route');
 });
 
 test('supportContactHref omits empty values and encodes the rest', () => {
-  assert.equal(supportContactHref('', null), '/help?topic=connect#contact');
-  assert.equal(supportContactHref('yahoo', ''), '/help?topic=connect&provider=yahoo#contact');
-  assert.equal(supportContactHref('a b', 'c/d'), '/help?topic=connect&provider=a%20b&code=c%2Fd#contact');
+  assert.equal(supportContactHref('', null), '/dashboard/help?topic=connect#contact');
+  assert.equal(supportContactHref('yahoo', ''), '/dashboard/help?topic=connect&provider=yahoo#contact');
+  assert.equal(supportContactHref('a b', 'c/d'), '/dashboard/help?topic=connect&provider=a%20b&code=c%2Fd#contact');
 });

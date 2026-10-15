@@ -1,0 +1,251 @@
+{
+  "area": "using-email",
+  "title": "Bruke e-post med assistenten",
+  "articles": [
+    {
+      "id": "read-and-search-email",
+      "title": "Les og søk i e-posten din",
+      "summary": "Spør med vanlige ord, etter avsender, emne eller dato. Lesing endrer aldri postkassen.",
+      "keywords": "les søk finn list uleste meldinger innboks oppsummer fra emne dato vedlegg flagget stjernemerket mappe e-post",
+      "steps": [
+        "Spør hva som er nytt, for eksempel: \"Vis den uleste e-posten min fra i dag.\"",
+        "Beskriv en melding med avsender, mottaker, ord i emnet, datoer eller vedlegg.",
+        "Be assistenten lese videre når en lang e-post stopper for tidlig.",
+        "Nevn en mappe, som Sendt eller Arkiv, for å lese e-post der.",
+        "Be den markere meldinger som lest. Lesing alene gjør aldri det."
+      ],
+      "links": [
+        {
+          "label": "Verktøyoversikt",
+          "href": "/docs#tools"
+        }
+      ]
+    },
+    {
+      "id": "search-misses-messages",
+      "title": "Finn meldinger et søk gikk glipp av",
+      "summary": "Nevn mappen, bruk hele ord, og søk etter ord og filtre hver for seg på Outlook.",
+      "keywords": "søk mangler ikke funnet finner ikke mappe arkiv sendt imap gmail outlook hele ord papirkurv søppelpost spam filter",
+      "steps": [
+        "På IMAP-postkasser nevner du arkiv- eller sendtmappen. Bare innboksen blir søkt i.",
+        "På Gmail og Outlook nevner du papirkurven for å søke i den. Gmail hopper også over Spam.",
+        "På Gmail og Outlook bruker du hele ord for emnet. Deler av ord gir ingen treff.",
+        "På Outlook ber du om ord og filtre som ulest eller datoer i separate søk.",
+        "På IMAP-postkasser ignoreres filteret \"har vedlegg\"."
+      ],
+      "links": [
+        {
+          "label": "Kompatibilitet per leverandør",
+          "href": "/docs/providers"
+        }
+      ]
+    },
+    {
+      "id": "send-new-email",
+      "title": "Send en ny e-post",
+      "summary": "Si hvem du skriver til og hva du vil si. En sendt e-post kan ikke trekkes tilbake.",
+      "keywords": "send skriv ny e-post mottaker til kopi blindkopi cc bcc svar-til kontakt adresse finn noen godkjenning",
+      "steps": [
+        "Spør for eksempel: \"Send e-post til ola@example.com og spør om torsdag kl. 10 passer.\"",
+        "Spør \"Hva er e-postadressen til Anna?\" for å finne den i nylig e-post.",
+        "Legg til kopi, blindkopi eller en svar-til-adresse. Opptil 50 mottakere per felt.",
+        "Be om et utkast i stedet når du vil sjekke det først.",
+        "Er godkjenning før sending på, må en eier eller administrator godkjenne under Godkjenninger."
+      ],
+      "links": [
+        {
+          "label": "Godkjenninger",
+          "href": "/dashboard/approvals"
+        }
+      ]
+    },
+    {
+      "id": "reply-and-forward",
+      "title": "Svar på eller videresend en e-post",
+      "summary": "Svar havner i samme samtale. Videresendinger kommer frem slik originalen ble sendt, med vedlegg.",
+      "keywords": "svar svar alle besvar videresend fwd tråd samtale vedlegg notat eml",
+      "steps": [
+        "Spør for eksempel: \"Svar Ola og si at torsdag passer.\"",
+        "Si \"svar alle\" for å ta med alle. Ellers får bare avsenderen svaret.",
+        "For å videresende nevner du meldingen og de nye mottakerne, og eventuelt et notat.",
+        "Be om å utelate vedleggene, eller å videresende originalen som vedlegg.",
+        "Videresend opptil 50 meldinger til de samme mottakerne i én forespørsel."
+      ],
+      "links": []
+    },
+    {
+      "id": "save-as-draft",
+      "title": "Lagre en e-post som utkast",
+      "summary": "Be om et utkast for å sjekke en e-post først. Det lagres i Utkast-mappen i postkassen.",
+      "keywords": "utkast lagre usendt gå gjennom senere rediger oppdater svarutkast utkast-mappe draft",
+      "steps": [
+        "Spør for eksempel: \"Skriv et utkast til svar til Ola, men ikke send det.\"",
+        "Åpne det fra Utkast-mappen i den vanlige e-postappen din, om du vil.",
+        "Be assistenten endre teksten, emnet eller mottakerne, eller legge til filer.",
+        "Be den sende utkastet når det er klart. Sending kan ikke angres.",
+        "Be den liste utkastene dine eller slette ett."
+      ],
+      "links": [
+        {
+          "label": "Rediger utkast i chatten",
+          "href": "/help#article-draft-editor-card"
+        }
+      ]
+    },
+    {
+      "id": "draft-editor-card",
+      "title": "Rediger og send et utkast i chatten",
+      "summary": "Der AI-klienten viser det, dukker et ferdig utkast opp som et kort du kan redigere og sende.",
+      "keywords": "utkastredigering kort i chatten rediger send angre forkast lagre kort skjul slå av vis draft card",
+      "body": [
+        "Skjul kortet for én postkasse i Innbokser, View details, eller for hele arbeidsområdet i Innstillinger, Kort for utkastredigering."
+      ],
+      "steps": [
+        "Rediger mottakerne, emnet eller teksten i kortet, og lagre. Lagring sender ingenting.",
+        "Velg Send. Trykk Undo innen noen sekunder for å beholde utkastet.",
+        "Bruk søppelbøtteikonet for å forkaste utkastet hos leverandøren.",
+        "På Gmail- og IMAP-postkasser ber du assistenten redigere utkast med vedlegg.",
+        "For å skjule kort, åpne More options og velg Turn off draft cards…"
+      ],
+      "links": [
+        {
+          "label": "Innbokser",
+          "href": "/dashboard/inboxes"
+        },
+        {
+          "label": "Innstillinger",
+          "href": "/dashboard/settings"
+        }
+      ]
+    },
+    {
+      "id": "email-attachments",
+      "title": "Send, les og lagre vedlegg",
+      "summary": "Legg ved opptil 20 filer (10 MB totalt), les teksten i en fil, eller last ned filer opptil 25 MB.",
+      "keywords": "vedlegg legg ved fil pdf csv last ned hent ut les størrelse grense 10 MB 25 MB eml original attachment",
+      "steps": [
+        "Be assistenten legge ved en fil i en e-post eller et utkast.",
+        "Nevn en fil som allerede ligger i postkassen for å sende den videre uten å laste den opp på nytt.",
+        "Be den lese teksten i en fil: ren tekst, CSV, HTML, JSON eller PDF-er med tekstlag.",
+        "Skannede bilder og skannede PDF-er blir ikke lest.",
+        "Be om originalen til en e-post for å få hele meldingen som en .eml-fil."
+      ],
+      "links": []
+    },
+    {
+      "id": "organize-email",
+      "title": "Flytt, arkiver og flagg meldinger",
+      "summary": "Flytt, kopier, arkiver, flagg eller marker meldinger, og administrer mapper. Det meste kan angres.",
+      "keywords": "flytt arkiver mappe etikett flagg stjerne marker lest ulest kopier organiser sorter opprett gi nytt navn slett mappe gmail etiketter labels masse",
+      "body": [
+        "Gmail bruker etiketter: en flytting legger til etiketten og tar meldingen ut av innboksen."
+      ],
+      "steps": [
+        "Spør for eksempel: \"Flytt ukens kvitteringer til mappen Kvitteringer.\"",
+        "Be om å arkivere, flagge eller fjerne flagg på meldinger, eller markere dem som lest eller ulest.",
+        "Be om å flytte alt et søk finner, opptil 500 meldinger per forespørsel.",
+        "Be om å opprette, gi nytt navn til eller slette mapper. Sletting av en mappe kan ikke angres.",
+        "Kopiering virker overalt unntatt Gmail koblet til ved å logge inn med Google."
+      ],
+      "links": [
+        {
+          "label": "Kompatibilitet per leverandør",
+          "href": "/docs/providers"
+        }
+      ]
+    },
+    {
+      "id": "delete-email",
+      "title": "Slett e-post",
+      "summary": "Slettet e-post havner i papirkurven. En permanent sletting hopper over papirkurven og kan ikke angres.",
+      "keywords": "slett fjern papirkurv søppel permanent slett for godt expunge masse rydd opp",
+      "steps": [
+        "Be om å slette en melding, en liste med meldinger eller alt et søk finner.",
+        "Opptil 500 meldinger slettes per forespørsel.",
+        "Be bare om permanent sletting når du mener det.",
+        "Gmail koblet til ved å logge inn med Google støtter bare papirkurv.",
+        "Sjekk at tilkoblingen eller API-nøkkelen har tillatelse til å slette."
+      ],
+      "links": [
+        {
+          "label": "API-nøkler",
+          "href": "/dashboard/keys"
+        }
+      ]
+    },
+    {
+      "id": "schedule-email",
+      "title": "Planlegg en e-post til senere",
+      "summary": "Oppgi et tidspunkt frem i tid og tidssonen. Levering kan komme opptil ett minutt for sent.",
+      "keywords": "planlegg send senere utsett tidsstyrt fremtid kø avbryt planlagt i morgen tidlig tidssone",
+      "steps": [
+        "Spør for eksempel: \"Send dette til Ola i morgen kl. 09:00 norsk tid.\"",
+        "Spør \"Hvilke e-poster er planlagt?\" for å se hva som står i kø.",
+        "Be om å avbryte en før den begynner å sendes.",
+        "Gi den filene direkte. Filer fra andre e-poster kan ikke gjenbrukes her.",
+        "Er godkjenning før sending på, venter den først under Godkjenninger."
+      ],
+      "links": [
+        {
+          "label": "Godkjenninger",
+          "href": "/dashboard/approvals"
+        }
+      ]
+    },
+    {
+      "id": "signature-and-sender-name",
+      "title": "Angi signatur og avsendernavn",
+      "summary": "Hver innboks har egen signatur og eget avsendernavn. Angi dem i Innbokser eller spør assistenten.",
+      "keywords": "signatur hilsen bunntekst logo bilde avsendernavn visningsnavn fra-navn svar videresend html signature",
+      "steps": [
+        "I Innbokser velger du View details på postkassen, og åpner Signature & sending.",
+        "Fyll inn Avsendernavn og velg Lagre navn.",
+        "Under E-postsignatur bruker du Riktekst eller HTML-kilde, og velger Lagre signatur.",
+        "Under På svar og videresendinger velger du Legg alltid til, Bare første svar eller Aldri legg til.",
+        "Slå på Bygg inn bilder i meldingen hvis logoen din ikke vises."
+      ],
+      "links": [
+        {
+          "label": "Innbokser",
+          "href": "/dashboard/inboxes"
+        }
+      ]
+    },
+    {
+      "id": "multiple-inboxes",
+      "title": "Jobb med mer enn én innboks",
+      "summary": "Si hvilken adresse som skal brukes. Spør \"Hvilke innbokser har jeg?\" for å se alle.",
+      "keywords": "flere innbokser flere postkasser kontoer hvilken innboks fra-adresse bytt send som alias send as",
+      "steps": [
+        "Nevn adressen, for eksempel: \"Svar fra salg@ på den siste e-posten fra Anna.\"",
+        "På Gmail kan du be om å sende fra en Send As-adresse Gmail har bekreftet.",
+        "Mangler en innboks? Sjekk Innbokstilgang for den nøkkelen under API-nøkler.",
+        "Free kobler til én postkasse, Personal tre, og Pro og Team alle postkasser."
+      ],
+      "links": [
+        {
+          "label": "API-nøkler",
+          "href": "/dashboard/keys"
+        },
+        {
+          "label": "Priser",
+          "href": "/pricing"
+        }
+      ]
+    },
+    {
+      "id": "built-in-email-routines",
+      "title": "Bruk de innebygde e-postrutinene",
+      "summary": "Noen AI-klienter viser ferdige MCP Emails-rutiner. De kjører bare når du starter dem.",
+      "keywords": "rutiner prompter triage oppfølging morgenoversikt beslutninger rydd opp svarutkast planlagte sendinger",
+      "steps": [
+        "Se i prompt- eller kommandomenyen i AI-klienten. Ikke alle klienter viser dem.",
+        "Morning inbox triage rangerer nylig ulest e-post uten å endre noe.",
+        "Follow-up radar finner samtaler der noen venter på svar.",
+        "Prepare reply drafts skriver utkast du kan gå gjennom.",
+        "Clean up safely foreslår en plan før noe endres."
+      ],
+      "links": []
+    }
+  ]
+}

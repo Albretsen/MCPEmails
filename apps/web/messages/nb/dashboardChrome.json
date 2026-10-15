@@ -419,5 +419,9 @@
     "unavailableBody": "Vi kunne ikke starte godkjenningen. Prøv igjen om noen minutter.",
     "closeHint": "Spørsmål? Skriv til hello@mcpemails.com.",
     "openApp": "Åpne MCP Emails"
+  },
+  "help": {
+    "loading": "Laster hjelp…",
+    "loadError": "Kunne ikke laste hjelp. Last inn siden på nytt eller send e-post til support@mcpemails.com."
   }
 }

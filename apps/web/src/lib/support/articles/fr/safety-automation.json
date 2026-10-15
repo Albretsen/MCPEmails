@@ -1,0 +1,226 @@
+{
+  "area": "safety-automation",
+  "title": "Sécurité et automatisation",
+  "articles": [
+    {
+      "id": "turn-on-send-review",
+      "title": "Relire les e-mails avant leur envoi",
+      "summary": "Activez la revue avant envoi sur une boîte pour que chaque envoi préparé attende votre approbation.",
+      "keywords": "revue envoi approbation retenir approuver avant d’envoyer carte de revue tableau de bord uniquement envoyer immédiatement sécurité send review approval",
+      "steps": [
+        "Dans Boîtes, choisissez View details sur la boîte.",
+        "Ouvrez Signature & sending.",
+        "Choisissez Carte de revue dans la conversation, ou Revue uniquement dans le tableau de bord.",
+        "Choisissez Enregistrer la signature. Cela enregistre aussi le réglage de revue."
+      ],
+      "body": [
+        "Dans les deux modes de revue, rien n’est envoyé tant qu’un propriétaire ou un administrateur de l’espace de travail ne l’a pas approuvé dans un navigateur connecté. Envoyer immédiatement désactive la revue."
+      ],
+      "links": [
+        {
+          "label": "Boîtes",
+          "href": "/dashboard/inboxes"
+        }
+      ]
+    },
+    {
+      "id": "approve-held-send",
+      "title": "Approuver ou rejeter un envoi en attente",
+      "summary": "Les envois retenus attendent dans Approbations. Un propriétaire ou un administrateur les y approuve ou rejette.",
+      "keywords": "approbations en attente envoi approuver rejeter e-mail retenu revue expiré 24 heures propriétaire administrateur approvals",
+      "steps": [
+        "Allez dans Approbations.",
+        "Sélectionnez Review & approve, puis Approve & queue pour l’envoyer.",
+        "Ou sélectionnez Reject, puis Reject request. Rien n’est envoyé."
+      ],
+      "body": [
+        "Une demande sans décision dans les 24 heures expire et n’est jamais envoyée. Demandez à votre assistant de la préparer de nouveau si vous la voulez toujours."
+      ],
+      "links": [
+        {
+          "label": "Approbations",
+          "href": "/dashboard/approvals"
+        }
+      ]
+    },
+    {
+      "id": "use-workflow-prompts",
+      "title": "Lancer un workflow prêt à l’emploi",
+      "summary": "Copiez une routine depuis Workflows dans votre assistant, comme Morning inbox triage.",
+      "keywords": "workflows prompts routines modèles tri du matin suivi relance suivi des décisions nettoyage copier le prompt copy prompt",
+      "steps": [
+        "Allez dans Workflows.",
+        "Sélectionnez Copy prompt sur une routine.",
+        "Collez-la dans votre assistant IA et complétez les crochets éventuels."
+      ],
+      "body": [
+        "Les clients qui prennent en charge les prompts MCP peuvent aussi lister ces routines directement. Les prompts n’ajoutent jamais d’autorisations : les portées de votre connexion contrôlent toujours chaque action."
+      ],
+      "links": [
+        {
+          "label": "Workflows",
+          "href": "/dashboard/workflows"
+        }
+      ]
+    },
+    {
+      "id": "stop-bulk-run",
+      "title": "Arrêter une opération en masse en cours",
+      "summary": "Workflows liste les déplacements et marquages en masse en cours. Stop arrête ce qui n’a pas encore commencé.",
+      "keywords": "opération en masse arrêter annuler large-work controls progression déplacement en masse marquage bulk stop",
+      "steps": [
+        "Allez dans Workflows et faites défiler jusqu’à Large-work controls.",
+        "Sélectionnez Stop sur la ligne en cours."
+      ],
+      "body": [
+        "Stop n’annule pas les messages déjà modifiés."
+      ],
+      "links": [
+        {
+          "label": "Workflows",
+          "href": "/dashboard/workflows"
+        }
+      ]
+    },
+    {
+      "id": "create-automation",
+      "title": "Créer une automatisation",
+      "summary": "Une automatisation lance une recherche enregistrée à intervalle régulier et applique une action fixe aux résultats.",
+      "keywords": "automatisation règle planification filtre trier boîte de réception tri sans surveillance nouvelle automatisation prévisualiser automation rule",
+      "steps": [
+        "Allez dans Automatisations et sélectionnez Nouvelle automatisation.",
+        "Choisissez la boîte, la clé API, la fréquence et le nombre de messages par exécution.",
+        "Réglez le filtre sous Quels messages, puis sélectionnez Prévisualiser.",
+        "Choisissez l’action sous Que faire et sélectionnez Créer l'automatisation.",
+        "Passez-la sur Active dans la colonne État. Les nouvelles automatisations démarrent inactives."
+      ],
+      "body": [
+        "Seuls les propriétaires et administrateurs de l’espace de travail peuvent créer ou modifier des automatisations. Votre assistant peut aussi en créer une si sa clé a la portée manage:automations."
+      ],
+      "links": [
+        {
+          "label": "Automatisations",
+          "href": "/dashboard/automations"
+        }
+      ]
+    },
+    {
+      "id": "automation-safety",
+      "title": "Ce qu’une automatisation peut et ne peut pas faire",
+      "summary": "Une automatisation déplace, étiquette, marque comme lu, transfère ou prépare une réponse. Elle ne supprime jamais.",
+      "keywords": "automatisation sécurité supprimer transférer approbation brouillon réponse modèle rayon d’impact limites agit comme clé api automation safety",
+      "steps": [
+        "Les transferts attendent toujours dans Approbations jusqu’à ce qu’une personne les approuve.",
+        "Préparer une réponse enregistre seulement un brouillon. Rien n’est envoyé.",
+        "Chaque exécution touche au plus le nombre de messages par exécution que vous avez fixé (1 à 200).",
+        "Elle agit avec sa clé API. Révoquer la clé l’arrête."
+      ],
+      "links": [
+        {
+          "label": "Modèle de sécurité des automatisations",
+          "href": "/docs#automation-safety"
+        }
+      ]
+    },
+    {
+      "id": "automation-run-log",
+      "title": "Voir ce qu’une automatisation a fait",
+      "summary": "Le journal d’exécution montre chaque exécution et ce qui est arrivé à chaque message.",
+      "keywords": "journal d’exécution historique automatisation messages appliqué échoué ignoré en attente d’approbation run log",
+      "steps": [
+        "Allez dans Automatisations et sélectionnez Journal sur l’automatisation.",
+        "Sélectionnez Messages sur une exécution pour voir chaque message et son résultat."
+      ],
+      "body": [
+        "Supprimer une automatisation conserve son journal d’exécution."
+      ],
+      "links": [
+        {
+          "label": "Automatisations",
+          "href": "/dashboard/automations"
+        }
+      ]
+    },
+    {
+      "id": "automation-switched-off",
+      "title": "Une automatisation s’est désactivée toute seule",
+      "summary": "Après 5 exécutions échouées d’affilée, une automatisation se désactive. Corrigez la cause, puis réactivez-la.",
+      "keywords": "automatisation échoue échec désactivée arrêtée échecs répétés erreur reconnecter clé révoquée automation disabled",
+      "steps": [
+        "Allez dans Automatisations et lisez la raison affichée sur la ligne.",
+        "Corrigez-la, par exemple en reconnectant la boîte ou en choisissant une clé API valide.",
+        "Repassez-la sur Active dans la colonne État."
+      ],
+      "links": [
+        {
+          "label": "Automatisations",
+          "href": "/dashboard/automations"
+        }
+      ]
+    },
+    {
+      "id": "read-usage-page",
+      "title": "Lire la page Usage",
+      "summary": "Usage montre les appels d’outils par jour, par outil et par boîte, plus le quota mensuel d’un espace Free.",
+      "keywords": "usage utilisation analytique appels par jour par outil par boîte historique quota compteur tableau de bord",
+      "body": [
+        "L’historique couvre 30 jours sur Free et Personal, 90 sur Pro et 365 sur Team. Un espace Free voit aussi combien de ses 150 actions e-mail mensuelles sont utilisées et quand le compteur se réinitialise."
+      ],
+      "links": [
+        {
+          "label": "Usage",
+          "href": "/dashboard/usage"
+        },
+        {
+          "label": "Limite d’utilisation atteinte",
+          "href": "/help#article-usage-limit-reached"
+        }
+      ]
+    },
+    {
+      "id": "rate-limited",
+      "title": "Mon assistant est limité en débit",
+      "summary": "Trop de requêtes en peu de temps. Attendez le nombre de secondes indiqué par l’erreur, puis réessayez.",
+      "keywords": "limite de débit 429 trop de requêtes retry_after par minute rafale ralenti bridé rate limit too many requests",
+      "body": [
+        "Chaque clé API autorise 100 requêtes par minute, 1 000 par heure et 10 000 par jour. Chaque espace de travail a aussi un plafond par minute : Free 60, Personal 120, Pro 300, Team 1 000."
+      ],
+      "links": [
+        {
+          "label": "Limites de débit",
+          "href": "/docs#rate-limits"
+        }
+      ]
+    },
+    {
+      "id": "usage-notification-emails",
+      "title": "E-mails sur votre utilisation",
+      "summary": "Sur Free, le propriétaire de l’espace reçoit un e-mail à 80 % et 100 % du quota mensuel.",
+      "keywords": "notification e-mail utilisation avertissement 80 pour cent limite atteinte automatisation en pause alerte quota",
+      "body": [
+        "Quand le quota est épuisé, les automatisations se mettent en pause et vous recevez un e-mail indiquant la date de reprise. Les formules payantes n’ont pas de plafond mensuel, ces e-mails ne les concernent donc pas."
+      ],
+      "links": [
+        {
+          "label": "Limite d’utilisation atteinte",
+          "href": "/help#article-usage-limit-reached"
+        }
+      ]
+    },
+    {
+      "id": "new-mail-alerts",
+      "title": "Faire réagir votre assistant aux nouveaux e-mails",
+      "summary": "MCP Emails n’envoie pas d’alertes push. Faites vérifier les non lus par votre assistant, ou utilisez une automatisation.",
+      "keywords": "notifications nouveaux e-mails push webhook alerte déclencheur interrogation e-mail entrant temps réel",
+      "body": [
+        "Un e-mail entrant ne déclenche jamais seul un appel de l’assistant. Faites vérifier les non lus par votre assistant à intervalle régulier, ou laissez une automatisation les trier."
+      ],
+      "links": [
+        {
+          "label": "Automatisations",
+          "href": "/dashboard/automations"
+        }
+      ]
+    }
+  ]
+}
