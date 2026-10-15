@@ -14,7 +14,7 @@ import type {
   ToolCancelledParams,
   ToolResultParams,
 } from "./bridge";
-import { isEnvelope, type Envelope } from "./contract";
+import { DRAFT_BODY_META_KEY, isEnvelope, type Envelope } from "./contract";
 import {
   cardKey,
   isRestoreStub,
@@ -339,8 +339,13 @@ export function classifyResult(result: ToolResultParams | undefined): Classified
   // can no longer clear. Applied to BOTH channels and on the single path every
   // envelope takes — the pushed notification and the card's own tool calls both
   // land here — so there is no second place to forget it.
+  //
+  // `admit` is those two steps plus the third thing that belongs at this
+  // boundary for the same reason: a deferred draft body is filled in from the
+  // result's own `_meta` here, so that on a host which delivers it nothing
+  // downstream ever sees the placeholder.
   if (isEnvelope(sc)) {
-    return { envelope: stripStubMarker(neutralizeDeep(sc as Envelope)), status: "envelope" };
+    return { envelope: admit(sc as Envelope, result), status: "envelope" };
   }
   if (claimsToBeOurs(sc)) return { envelope: null, status: "malformed" };
 
@@ -349,7 +354,7 @@ export function classifyResult(result: ToolResultParams | undefined): Classified
     try {
       const parsed: unknown = JSON.parse(text);
       if (isEnvelope(parsed)) {
-        return { envelope: stripStubMarker(neutralizeDeep(parsed)), status: "envelope" };
+        return { envelope: admit(parsed, result), status: "envelope" };
       }
       if (claimsToBeOurs(parsed)) return { envelope: null, status: "malformed" };
     } catch {
@@ -360,6 +365,190 @@ export function classifyResult(result: ToolResultParams | undefined): Classified
   // Not our payload. The tool did whatever it does, the host is showing its
   // own text result, and this card has nothing to say about it.
   return { envelope: null, status: "foreign" };
+}
+
+/** Everything an envelope goes through on its way in. See `classifyResult`. */
+function admit(env: Envelope, result: ToolResultParams): Envelope {
+  return resolveDeferredBody(stripStubMarker(neutralizeDeep(env)), result);
+}
+
+// ---------------------------------------------------------------------------
+// A deferred draft body (contract §8, 2026-10-13)
+//
+// `draft{action:"create"|"reply"|"update"}` no longer puts the body in
+// `structuredContent`: `draft.body` arrives as `{ text: null, html: null,
+// truncated, deferred: true }` and the real one rides in the tool RESULT's
+// `_meta["mcpemails/draft_body"]`. There are two ways the card gets it, tried
+// in this order:
+//
+//   1. FROM THE RESULT ITSELF. Both ways a result reaches this file hand over
+//      the whole `CallToolResult` (bridge.ts passes the notification's params
+//      and the `tools/call` response through untouched), so if the host
+//      forwarded `_meta` it is right here and `resolveDeferredBody` fills the
+//      body in before anything else sees the envelope.
+//   2. BY ASKING. A host may drop result `_meta` on the way to a view, and the
+//      card cannot find out in advance whether this one does. The envelope then
+//      stays deferred, App.tsx shows the loading line, and its effect calls
+//      `draft_read` (`deferredBodyCall`), which returns the body inline.
+//
+// The one rule both serve: A DEFERRED BODY IS NEVER RENDERED AS A BODY.
+// `text: null` reads as an empty string through every `?? ""` in the
+// components, and an editor mounted on it would hold an empty body under the
+// real draft's `version` — so nothing would ever resync it, Save would light up
+// on the first keystroke, and that save would write the blank over the draft.
+// ---------------------------------------------------------------------------
+
+/** Is this a draft envelope whose body the card does not have yet? */
+export function isBodyDeferred(env: Envelope | null | undefined): boolean {
+  return !!env && env.card === "draft_editor" && env.draft?.body?.deferred === true;
+}
+
+/**
+ * Fill a deferred body from the result's `_meta`, when the host delivered it.
+ *
+ * Returns the envelope unchanged when there is nothing usable there, which is
+ * the signal for path 2 above; a malformed value is treated exactly like an
+ * absent one rather than guessed at. `text` and `html` may each be null (an
+ * HTML-only draft has no text part), so "usable" means the key is an object
+ * that says what the body is, not that the body is non-empty.
+ *
+ * Neutralised like every other string that crosses this boundary. The inline
+ * body always was, because it sits inside the envelope `neutralizeDeep` walks;
+ * this one arrives beside the envelope and would otherwise be the only body
+ * the card shows without that pass.
+ */
+function resolveDeferredBody(env: Envelope, result: ToolResultParams): Envelope {
+  if (!isBodyDeferred(env) || !env.draft) return env;
+  const meta = result._meta;
+  const raw =
+    meta && typeof meta === "object" && !Array.isArray(meta)
+      ? (meta as Record<string, unknown>)[DRAFT_BODY_META_KEY]
+      : undefined;
+  if (!raw || typeof raw !== "object" || Array.isArray(raw)) return env;
+  const b = raw as Record<string, unknown>;
+  if (!("text" in b)) return env;
+  if (typeof b.text !== "string" && b.text !== null) return env;
+  if (typeof b.html !== "string" && b.html !== null && b.html !== undefined) return env;
+  return {
+    ...env,
+    draft: {
+      ...env.draft,
+      body: neutralizeDeep({
+        text: b.text ?? "",
+        html: b.html ?? null,
+        truncated:
+          typeof b.truncated === "boolean" ? b.truncated : env.draft.body?.truncated === true,
+      }),
+    },
+  };
+}
+
+/** The read that returns a deferred body. Null when there is nothing to ask. */
+export function deferredBodyCall(env: Envelope | null | undefined): RehydrationCall | null {
+  if (!env || !isBodyDeferred(env) || !env.draft?.draft_id) return null;
+  return {
+    tool: "draft_read",
+    args: {
+      inbox_id: env.draft.identity?.inbox_id,
+      draft_id: env.draft.draft_id,
+    },
+  };
+}
+
+/**
+ * Names one deferred envelope, so App.tsx asks for each body exactly once and
+ * a failure is remembered against the envelope it happened to, not against
+ * whichever one is on screen later. Local to the frame, never stored or sent.
+ */
+export function deferredBodyKey(env: Envelope | null | undefined): string | null {
+  if (!env || !isBodyDeferred(env) || !env.draft) return null;
+  return JSON.stringify([
+    env.draft.identity?.inbox_id ?? null,
+    env.draft.draft_id,
+    env.draft.version ?? null,
+  ]);
+}
+
+/**
+ * Validate the `draft_read` answer to a deferred body.
+ *
+ * `acceptRehydration` first, unchanged, because this is the same event as a
+ * restored stub being re-requested: a server answer about one specific id,
+ * arriving into a card that is showing a placeholder for it. Same shape rule,
+ * same identity rule, same `gone` for a draft that has since left Drafts, same
+ * short list of receipts that mean the editor must stop.
+ *
+ * Two things are added, both about the body:
+ *
+ *  - AN ANSWER THAT IS ITSELF DEFERRED IS A FAILURE. `draft_read` returns the
+ *    body inline by contract. If it ever does not, adopting the answer would
+ *    put the card straight back where it started and ask again, forever.
+ *  - WHICH ENVELOPE IS KEPT. When the answer's `version` equals the one the
+ *    deferred envelope carried, the two describe the same content, and only the
+ *    body is taken: the original envelope is the richer one (`in_reply_to` is
+ *    populated on a reply and null on every read, and `origin` says who wrote
+ *    it). When they differ, or either is missing, the draft has changed since
+ *    the envelope was built, and the answer is adopted whole: a body grafted
+ *    under a version that does not describe it is exactly the mismatch the
+ *    editor's resync rule cannot see.
+ */
+export function acceptDeferredBody(
+  asked: Envelope | null | undefined,
+  next: Envelope | null,
+): Rehydration {
+  const decided = acceptRehydration(asked, next);
+  if (decided.kind !== "adopt" || decided.envelope.card !== "draft_editor") return decided;
+  const answer = decided.envelope;
+  if (isBodyDeferred(answer) || !asked?.draft || !answer.draft) return { kind: "failed" };
+  const mine = asked.draft.version;
+  if (typeof mine === "string" && mine.length > 0 && answer.draft.version === mine) {
+    return {
+      kind: "adopt",
+      envelope: { ...asked, draft: { ...asked.draft, body: answer.draft.body } },
+    };
+  }
+  return decided;
+}
+
+/**
+ * Is the card still waiting for the body of exactly this envelope?
+ *
+ * The answer to a `draft_read` lands a round trip after it was asked, and the
+ * store may have moved on: a pushed result may have replaced the envelope, or
+ * resolved it. An answer to a question nobody is asking any more is dropped.
+ */
+export function awaitsBodyOf(asked: Envelope | null | undefined): boolean {
+  const key = deferredBodyKey(asked);
+  return key !== null && key === deferredBodyKey(state.envelope);
+}
+
+/** Put a fetched body on screen, if it is still the one being waited for. */
+export function adoptDeferredBody(asked: Envelope, envelope: Envelope): boolean {
+  if (!awaitsBodyOf(asked)) return false;
+  setState({ envelope });
+  return true;
+}
+
+/**
+ * A deferred envelope that describes the content the card ALREADY HAS keeps the
+ * body it has.
+ *
+ * Same draft, same mailbox, same `version`: by the server's own definition that
+ * is the same content, so the body on screen is the body the placeholder stands
+ * for. Without this, a host that drops `_meta` and delivers the same result
+ * twice would take a mounted editor down to its loading line and back, and the
+ * remount would discard whatever the user had typed in between.
+ */
+function keepKnownBody(current: Envelope | null | undefined, next: Envelope): Envelope {
+  if (!isBodyDeferred(next) || !next.draft) return next;
+  if (!current || current.card !== "draft_editor" || !current.draft?.body) return next;
+  if (isRestoreStub(current) || isBodyDeferred(current)) return next;
+  const version = next.draft.version;
+  if (typeof version !== "string" || !version || current.draft.version !== version) return next;
+  const mine = envelopeSubject(current);
+  const theirs = envelopeSubject(next);
+  if (!mine || !theirs || !sameSubject(mine, theirs)) return next;
+  return { ...next, draft: { ...next.draft, body: current.draft.body } };
 }
 
 /** Convenience wrapper for callers that only need the envelope. */
@@ -430,6 +619,9 @@ function isLiveEditor(env: Envelope | null | undefined): env is Envelope {
 function carrySentDraft(current: Envelope | null | undefined, next: Envelope): Envelope {
   if (!current || current.card !== "draft_editor" || !current.draft) return next;
   if (isRestoreStub(current)) return next;
+  // Nor from an editor whose body never arrived: the copy would render as a
+  // sent message with nothing in it.
+  if (isBodyDeferred(current)) return next;
   if (!isDepartedReceipt(next) || next.draft) return next;
   return { ...next, draft: current.draft };
 }
@@ -498,8 +690,9 @@ function carrySentDraft(current: Envelope | null | undefined, next: Envelope): E
  */
 export function mergeEnvelope(
   current: Envelope | null | undefined,
-  next: Envelope,
+  incoming: Envelope,
 ): Envelope {
+  const next = keepKnownBody(current, incoming);
   // ── RULE -1: A FAILURE NEVER TAKES THE EDITOR AWAY ────────────────────────
   // "Anything renderable replaces" was written when the only receipt that
   // could follow a draft was a send completing. It is not: every draft tool

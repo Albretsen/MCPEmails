@@ -175,6 +175,76 @@ function parsePart(
 }
 
 // ---------------------------------------------------------------------------
+// The leaves of a message, for a caller that is about to REBUILD it
+// (2026-10-13).
+//
+// `parseEmail` answers "what does this message say": the first text/plain, the
+// first text/html, and the parts that look like files. Everything else it
+// meets it drops without a trace, which is right for reading and wrong for a
+// caller that will write the message back from those three fields. A draft
+// update on IMAP or Gmail is exactly that caller: a second text part, an inline
+// image with a Content-ID and no filename, a text/calendar alternative or a
+// signature part is simply absent from the rebuilt message, and the tool
+// reports success.
+//
+// So this walks the same tree with the same splitting and the same attachment
+// rule, and reports every leaf it finds, including the ones `parseEmail` has no
+// slot for. It decodes nothing and is cheap. The decision about which leaves a
+// rebuild can carry is the caller's (draft-rebuild.ts), not this parser's.
+// ---------------------------------------------------------------------------
+
+/** One leaf part of a message, as far as a rebuild needs to know it. */
+export interface MimeLeaf {
+  /** Lowercased media type. A multipart that cannot be split is reported as itself. */
+  mediaType: string;
+  /** The rule `parseEmail` uses: a disposition, a `name` or a `filename`. */
+  attachment: boolean;
+  /** `format=flowed` on a text part (RFC 3676): its line breaks are not literal. */
+  flowed: boolean;
+  /** The part's Content-ID without angle brackets, when it has one. */
+  contentId?: string;
+}
+
+/** Every leaf part of a raw message (a byte string), in document order. */
+export function mimeLeafParts(raw: string): MimeLeaf[] {
+  const { headerBlock, body } = splitHeadersBody(raw);
+  const leaves: MimeLeaf[] = [];
+  collectLeaves(parseHeaders(headerBlock), body, leaves);
+  return leaves;
+}
+
+function collectLeaves(headers: Map<string, string[]>, body: string, out: MimeLeaf[]): void {
+  const ct = parseContentType(getHeader(headers, "content-type"));
+  const disposition = getHeader(headers, "content-disposition") ?? "";
+  // Kept identical to `parsePart`, on purpose: the two must agree on what an
+  // attachment is, or a part could be counted by neither.
+  const attachment = /attachment/i.test(disposition) ||
+    (!!ct.params["name"] || /filename=/i.test(disposition));
+
+  if (ct.mediaType.startsWith("multipart/")) {
+    const boundary = ct.params["boundary"];
+    // `parsePart` returns here and the whole subtree is lost. Reported as one
+    // opaque leaf so a caller sees that there was something.
+    if (!boundary) {
+      out.push({ mediaType: ct.mediaType, attachment: false, flowed: false });
+      return;
+    }
+    for (const sub of splitMultipart(body, boundary)) {
+      const { headerBlock, body: subBody } = splitHeadersBody(sub);
+      collectLeaves(parseHeaders(headerBlock), subBody, out);
+    }
+    return;
+  }
+  const contentId = (getHeader(headers, "content-id") ?? "").trim().replace(/^<|>$/g, "");
+  out.push({
+    mediaType: ct.mediaType,
+    attachment,
+    flowed: (ct.params["format"] ?? "").toLowerCase() === "flowed",
+    ...(contentId ? { contentId } : {}),
+  });
+}
+
+// ---------------------------------------------------------------------------
 // The displayed body: what `email_read` and client-api's read return
 // (2026-10-04; first built for client-api alone, behind a first-party flag).
 //

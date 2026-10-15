@@ -89,6 +89,10 @@ const SUITES = [
   // and without a stored copy, that it is never the assistant's original text
   // when the person's edits went out, and where that copy is (and is not) kept.
   ["draft ended", "draft-ended.test.mjs"],
+  // DOM-free, and last only because it was merged last: the exact text of every
+  // sentence the card sends the model, and the decisions behind a deferred
+  // draft body (where it comes from, and which `draft_read` answer is adopted).
+  ["model context", "model-context.test.mjs"],
 ];
 
 const outcomes = [];

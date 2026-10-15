@@ -23,6 +23,7 @@ import {
   BULK_PLAN_CARD_TOOL_NAMES,
   clientSupportsUiExtension,
   DRAFT_EDITOR_APP_TOOL_NAMES,
+  DRAFT_EDITOR_MODEL_VISIBLE_TOOL_NAMES,
   DRAFT_EDITOR_CARD_TOOL_NAMES,
   MCP_APP_MIME_TYPE,
   mcpAppUiMeta,
@@ -35,6 +36,7 @@ import {
   isCardBearingToolName,
   serializeToolForList,
   withListingCardMeta,
+  modelAndAppReviewCardToolMeta,
 } from "./mcp-app-resources.ts";
 import { REVIEW_CARD_BUILD_ID, REVIEW_CARD_HTML } from "./ui/review-card.html.ts";
 import { createHash } from "node:crypto";
@@ -113,6 +115,12 @@ Deno.test("resources/list returns the single review card with listing-level _met
   assert(
     typeof entry["description"] === "string" && (entry["description"] as string).length > 0,
     "description present",
+  );
+  // The one card serves three surfaces; the description named two until
+  // 2026-10-13 and left the draft editor out.
+  assert(
+    /draft editor, where the user reads and edits an unsent draft/.test(entry["description"] as string),
+    "the resource description names the draft editor",
   );
 
   // The listing must never carry the document body — resources/read does that.
@@ -535,7 +543,7 @@ Deno.test("a card-bearing tool gets the exact nested _meta.ui.resourceUri when g
   assert(!serialized.includes("visibility"), "mail tools must not restrict visibility");
 });
 
-Deno.test("the draft editor's app-only tools are gated by the SAME flag", () => {
+Deno.test("the draft editor's own tools are gated by the SAME flag, and draft_read is model-visible", () => {
   // The WS-2 fix. `draft_read` / `draft_editor_save` / `draft_editor_hide` were
   // stamped with appOnlyReviewCardToolMeta() in the registry unconditionally,
   // on the argument that an app-only tool always returns an envelope. That is
@@ -551,14 +559,44 @@ Deno.test("the draft editor's app-only tools are gated by the SAME flag", () => 
       undefined,
       `${name} must not be opened by either inbox opt-in`,
     );
-    // Gated in, they carry `visibility: ["app"]` on top of the resource URI —
-    // the difference from `draft`, which is model-callable and must not.
+    // Gated in, they carry a `visibility` list on top of the resource URI —
+    // the difference from `draft`, which carries none.
+    //
+    // 2026-10-13: `draft_read` and `draft_editor_hide` are `["model", "app"]`.
+    // The first was app-only with the card on, which left a model with no way
+    // to read a draft the user had edited in the card. The second was app-only
+    // while the card's own copy says it "can be brought back by asking in this
+    // chat": with the card hidden, the model calling this tool is the only way
+    // back. `draft_editor_save` stays `["app"]`.
     assertEquals(
       reviewCardMetaForListing(name, { outbound: false, bulk: false, drafts: true }),
-      { ui: { resourceUri: REVIEW_CARD_RESOURCE_URI, visibility: ["app"] } },
+      {
+        ui: {
+          resourceUri: REVIEW_CARD_RESOURCE_URI,
+          visibility: name === "draft_editor_save" ? ["app"] : ["model", "app"],
+        },
+      },
       `${name} is opened by the draft-editor flag alone`,
     );
   }
+  // Exactly two model-visible tools, both among the three.
+  assertEquals(
+    [...DRAFT_EDITOR_MODEL_VISIBLE_TOOL_NAMES],
+    ["draft_read", "draft_editor_hide"],
+    "the model-visible draft-editor tools",
+  );
+  for (const name of DRAFT_EDITOR_MODEL_VISIBLE_TOOL_NAMES) {
+    assert(DRAFT_EDITOR_APP_TOOL_NAMES.includes(name), `${name} is one of the gated three`);
+  }
+  assert(
+    !DRAFT_EDITOR_MODEL_VISIBLE_TOOL_NAMES.includes("draft_editor_save"),
+    "draft_editor_save writes what a person typed and stays app-only",
+  );
+  assertEquals(
+    modelAndAppReviewCardToolMeta(),
+    { ui: { resourceUri: REVIEW_CARD_RESOURCE_URI, visibility: ["model", "app"] } },
+    "the model-and-app metadata shape",
+  );
   // They are NOT the same list as the model-facing `draft`: same gate,
   // different metadata shape.
   for (const name of DRAFT_EDITOR_APP_TOOL_NAMES) {
@@ -960,16 +998,31 @@ Deno.test("the drafts gate opens all four draft-editor tools, and nothing else",
     assert(!carried.includes(name), `${name} must stay shut behind its own gate`);
   }
 
-  // And the shapes: the app-only three add `visibility: ["app"]`; `draft` does
-  // not, because it is model-callable.
+  // And the shapes: `draft_editor_save` adds `visibility: ["app"]`,
+  // `draft_read` and `draft_editor_hide` add `["model", "app"]`, and `draft`
+  // carries no list at all.
   const byName = new Map(
     withListingCardMeta(TOOL_REGISTRY, { outbound: false, bulk: false, drafts: true })
       .map((tool) => [tool.name, tool] as const),
   );
   for (const name of DRAFT_EDITOR_APP_TOOL_NAMES) {
-    assertEquals(byName.get(name)?._meta, appOnlyReviewCardToolMeta(), name);
+    assertEquals(
+      byName.get(name)?._meta,
+      name === "draft_editor_save" ? appOnlyReviewCardToolMeta() : modelAndAppReviewCardToolMeta(),
+      name,
+    );
   }
   assertEquals(byName.get("draft")?._meta, reviewCardToolMeta(), "draft is model-callable");
+
+  // With the gate shut `draft_read` carries no `_meta` at all, which a host
+  // reads as an ordinary model-visible tool: model-callable in BOTH states.
+  const shut = new Map(
+    withListingCardMeta(TOOL_REGISTRY, { outbound: true, bulk: true, drafts: false })
+      .map((tool) => [tool.name, tool] as const),
+  );
+  for (const name of DRAFT_EDITOR_APP_TOOL_NAMES) {
+    assertEquals(shut.get(name)?._meta, undefined, `${name} carries no _meta with the gate shut`);
+  }
 });
 
 Deno.test("every draft-editor tool is card-bearing for the staleness check", () => {

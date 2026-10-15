@@ -62,6 +62,7 @@ Deno.env.set("MCP_SERVER_NO_LISTEN", "1");
 const {
   CONSOLIDATED_ARGUMENT_INDEX,
   CONSOLIDATED_SPECS,
+  dispatchExecutor,
   PER_OPERATION_LISTING,
   TOOL_ANNOTATIONS,
   TOOL_REGISTRY,
@@ -964,7 +965,11 @@ Deno.test("draft_read is advertised as a read of one draft, read-only, with its 
     _meta?: unknown;
   };
   assertEquals(listed.title, "Read one draft in full");
-  assert(listed.description.startsWith("Read one unsent draft in full"), listed.description);
+  // It leads with when to use it: the model is the primary reader (2026-10-13).
+  assert(
+    listed.description.startsWith("Get the current text of one unsent draft"),
+    listed.description,
+  );
   // Clients cache the tool set at connect, so neither of these may move.
   assertEquals(listed.inputSchema.required, ["draft_id"]);
   assertEquals(
@@ -979,4 +984,171 @@ Deno.test("draft_read is advertised as a read of one draft, read-only, with its 
   // The registry entry carries no `_meta`: the card metadata is attached per
   // key at `tools/list`, and only when the drafts gate is open.
   assertEquals(listed._meta, undefined);
+});
+
+// ═══════════════════════════════════════════════════════════════════════════
+// draft{action:"update"} without `body`, and the text that describes it
+// (2026-10-13)
+//
+// `update` required `body`, so a model asked to change a subject or a recipient
+// had to re-send a body, and the only one it held was its own from before the
+// user edited the draft in the card. `body` is optional now: omitted, the
+// stored body text is kept through the editor's own merge
+// (`mcp-app-drafts.ts#runBodylessDraftUpdate`, tested there and, against real
+// MIME, in draft-rebuild.test.ts). These pin the surface:
+// the schema accepts the call, the three refusals that need no mailbox, and
+// every string that used to say otherwise.
+// ═══════════════════════════════════════════════════════════════════════════
+
+const DRAFT_SCOPES = ["read:email", "send:email", "manage:drafts"];
+
+function draftKey() {
+  return {
+    id: crypto.randomUUID(),
+    workspace_id: crypto.randomUUID(),
+    name: "Drafts",
+    key_prefix: "mcpe_abc",
+    key_hash: "",
+    scopes: DRAFT_SCOPES,
+    inbox_ids: null,
+    expires_at: null,
+    last_used_at: null,
+    deleted_at: null,
+    created_at: new Date().toISOString(),
+  };
+}
+
+async function updateRefusal(args: Record<string, unknown>): Promise<string> {
+  // deno-lint-ignore no-explicit-any
+  const outcome: any = await dispatchExecutor("draft_update", args, draftKey() as any);
+  assertEquals(outcome.result.isError, true, JSON.stringify(args));
+  assertEquals(outcome.logErrorCode, "-32602", JSON.stringify(args));
+  return outcome.result.content[0].text as string;
+}
+
+Deno.test("draft update: the validator accepts a call with no body, and the type of body did not move", () => {
+  const draft = registryEntry("draft");
+  const schema = draft.inputSchema as Record<string, unknown>;
+  for (
+    const args of [
+      { action: "update", draft_id: "Drafts:2", subject: "New subject" },
+      { action: "update", draft_id: "Drafts:2", to: ["a@example.com"] },
+      { action: "update", draft_id: "Drafts:2", cc: [] },
+      // The full-body form, which is every call a cached client already makes.
+      { action: "update", draft_id: "Drafts:2", body: "Hello." },
+      { action: "update", draft_id: "Drafts:2", subject: "S", body: "Hello.", html_body: "<p>Hello.</p>" },
+    ]
+  ) {
+    assertEquals(validateInputSchema(schema, args, "arguments"), [], JSON.stringify(args));
+  }
+  // Only a per-action `required` entry was loosened. No advertised TYPE
+  // changed: body is still a string, and a non-string body is still refused.
+  const listed = serializeToolForList(draft) as {
+    inputSchema: { required?: string[]; properties: Record<string, { type?: string }> };
+  };
+  assertEquals(listed.inputSchema.properties.body.type, "string");
+  assertEquals(listed.inputSchema.required, ["action"]);
+  // update with nothing but a draft_id passes the SCHEMA (no single field is
+  // required); the handler is what refuses an empty patch, tested below.
+  assertEquals(
+    validateInputSchema(schema, { action: "update", draft_id: "Drafts:2" }, "arguments"),
+    [],
+  );
+  assert(
+    validateInputSchema(schema, { action: "update", subject: "S" }, "arguments").length > 0,
+    "update still requires draft_id",
+  );
+  assert(
+    validateInputSchema(schema, { action: "update", draft_id: "Drafts:2", body: 7 }, "arguments")
+      .length > 0,
+    "a non-string body must still fail validation",
+  );
+  // create and reply still require theirs.
+  assert(
+    validateInputSchema(schema, { action: "create", subject: "S" }, "arguments").length > 0,
+    "create still requires body",
+  );
+  assert(
+    validateInputSchema(schema, { action: "reply", message_id: "INBOX:1" }, "arguments").length > 0,
+    "reply still requires body",
+  );
+});
+
+Deno.test("draft update: an empty patch, a lone html_body and an empty body are refused before any mailbox I/O", async () => {
+  // Every one of these returns before the inbox is resolved, which is why they
+  // can run here with no database: nothing is read and nothing is written.
+  assertEquals(
+    await updateRefusal({ draft_id: "Drafts:2" }),
+    "draft_update: none of to, cc, bcc, subject or body was given, so there is nothing to " +
+      "change. An omitted field is kept as stored.",
+  );
+  // include_signature and idempotency_key change nothing on their own either.
+  assert(
+    (await updateRefusal({ draft_id: "Drafts:2", include_signature: false })).startsWith(
+      "draft_update: none of to, cc, bcc, subject or body was given",
+    ),
+  );
+  assertEquals(
+    await updateRefusal({ draft_id: "Drafts:2", html_body: "<p>x</p>" }),
+    "draft_update: html_body was given without body. The HTML part is only written together " +
+      "with body; nothing was changed.",
+  );
+  // `""` is not "omitted". It was always refused, and reading it as "keep"
+  // would turn an attempt to clear a body into a success that did nothing.
+  assertEquals(
+    await updateRefusal({ draft_id: "Drafts:2", subject: "S", body: "" }),
+    "draft_update: body must be a non-empty string when given. Without body the stored body " +
+      "is kept.",
+  );
+  // And the pre-existing refusals are where they were.
+  assertEquals(
+    await updateRefusal({ subject: "S" }),
+    "draft_update: draft_id is required and must be a non-empty string.",
+  );
+});
+
+Deno.test("draft: the description, the update hint and draft_list say what is true now", () => {
+  const draft = serializeToolForList(registryEntry("draft")) as {
+    description: string;
+    inputSchema: { properties: Record<string, { description?: string }> };
+  };
+  const action = draft.inputSchema.properties.action.description ?? "";
+  // The per-action required list no longer names body for update...
+  assert(!/update: body/.test(action), action);
+  // ...and still names it for the two actions that do require it.
+  assert(/create = a new draft, subject and body required/.test(action), action);
+  assert(/Required: reply: body\./.test(action), action);
+  assert(
+    /update = change only the fields you pass on draft_id, keeping every omitted one \(body included\); send = /
+      .test(action),
+    action,
+  );
+
+  const description = draft.description;
+  // When to use it, against email_compose, the way `schedule` does it.
+  assert(
+    /Use this when the user wants to review or edit a message before it goes out; email_compose sends now\./
+      .test(description),
+    description,
+  );
+  // "kept", not "kept exactly": on IMAP and Gmail the message is rebuilt and
+  // only the decoded text is guaranteed. See draft-rebuild.ts.
+  assert(/'update' replaces only the fields passed: omit body and the stored body text is kept\./.test(description));
+  assert(!/exactly/.test(description), "no description promises an exact copy");
+  assert(/The signature is embedded on create and on an update that passes body/.test(description));
+  // The card sentence is true with the editor off as well as on.
+  assert(
+    /Where the draft editor card is on, hosts that render MCP Apps cards show the draft to the user in an editable card, where the user can change it\./
+      .test(description),
+    description,
+  );
+  assert(/draft_read returns a draft's current text; draft_list lists the drafts that exist with their draft_id and no body\.$/.test(description));
+
+  const list = registryEntry("draft_list").description;
+  assert(/and no body: draft_read returns one draft's text\./.test(list), list);
+  assert(/Use the returned draft_id with draft_read or the draft tool/.test(list), list);
+
+  for (const text of [description, action, list]) {
+    assert(!text.includes("\u2014"), `em dash in model-facing text: ${text}`);
+  }
 });

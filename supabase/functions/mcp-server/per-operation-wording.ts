@@ -57,8 +57,14 @@ export const PER_OPERATION_REWORDINGS: ReadonlyArray<readonly [string, string]> 
     "as the 'folder' argument for email_list, and as source/destination for email_move",
   ],
   [
-    "with the draft tool (action 'update', 'send' or 'delete')",
-    "with draft_update, draft_send or draft_delete",
+    "with draft_read or the draft tool (action 'update', 'send' or 'delete')",
+    "with draft_read, draft_update, draft_send or draft_delete",
+  ],
+  // draft_editor_save, one of the card's own tools: listed on both surfaces
+  // from one definition, and its description compares itself to the update.
+  [
+    "unlike the draft tool's 'update' when it is given a body",
+    "unlike draft_update when it is given a body",
   ],
   ["Use the schedule tool (action 'cancel') with the returned `id`", "Use schedule_cancel with the returned `id`"],
   [

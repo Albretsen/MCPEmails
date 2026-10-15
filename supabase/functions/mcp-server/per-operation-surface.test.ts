@@ -26,11 +26,22 @@
 
 import { assert, assertEquals } from "jsr:@std/assert@1";
 import {
+  appOnlyReviewCardToolMeta,
+  DRAFT_EDITOR_MODEL_VISIBLE_TOOL_NAMES,
+  modelAndAppReviewCardToolMeta,
   PER_OPERATION_CARD_TOOL_NAMES,
   reviewCardToolMeta,
   serializeToolForList,
   withListingCardMeta,
 } from "./mcp-app-resources.ts";
+import {
+  DEFERRED_BODY_SCHEMA_VERSION,
+  DRAFT_BODY_META_KEY,
+  DRAFT_CARD_NOTICE,
+  type DraftEditorProviderInbox,
+  type ProviderDraft,
+  runBodylessDraftUpdate,
+} from "./mcp-app-drafts.ts";
 import { PER_OPERATION_REWORDINGS } from "./per-operation-wording.ts";
 
 // See the note in tool-surface.test.ts: the environment is arranged before the
@@ -80,8 +91,16 @@ function oauthToken(scopes: string[], name: string) {
 const chatGpt = (scopes: string[] = ALL_SCOPES) => oauthToken(scopes, "OAuth: ChatGPT");
 const claude = (scopes: string[] = ALL_SCOPES) => oauthToken(scopes, "OAuth: Claude");
 
-/** The card's own tools, which a host drives and a model never calls. */
-const APP_ONLY = /^(approval_|bulk_|draft_read$|draft_editor_)/;
+/**
+ * The card's own tools, which a host drives and a model never calls.
+ *
+ * `draft_read` and `draft_editor_hide` left this pattern on 2026-10-13: both
+ * are listed to the model now (`visibility: ["model", "app"]`), so everything
+ * this file holds a model-callable tool to applies to them too, the wording
+ * rule and the additive-only annotation rule included. `draft_editor_save` is
+ * still the card's alone.
+ */
+const APP_ONLY = /^(approval_|bulk_|draft_editor_save$)/;
 
 /** The per-operation tools a model can call, as they go out on the wire. */
 function listedMailTools(): Array<Record<string, unknown>> {
@@ -345,7 +364,11 @@ Deno.test("no listed text points at a consolidated tool or an action selector", 
 Deno.test("every rewording still matches the text it was written for", () => {
   // A phrase reworded at its source would otherwise leave a dead entry here
   // and the old sentence back on the wire under a slightly different spelling.
-  const listed = strings(listedMailTools(), "tools").map(([, text]) => text);
+  // Over the WHOLE listing, the card's own tools included: one rewording is
+  // for `draft_editor_save`, which no model calls and which still must not
+  // describe itself against a tool this surface does not list.
+  const listed = strings(PER_OPERATION_LISTING.map(serializeToolForList), "tools")
+    .map(([, text]) => text);
   for (const [from, to] of PER_OPERATION_REWORDINGS) {
     assert(listed.some((text) => text.includes(to)), `nothing listed carries: "${to}"`);
     assert(!listed.some((text) => text.includes(from)), `still listed: "${from}"`);
@@ -482,8 +505,11 @@ Deno.test("a per-operation tool refuses an argument it does not list", async () 
 
 Deno.test("with every gate open, only operations that can fill the card claim it", () => {
   const open = { outbound: true, bulk: true, drafts: true };
+  // The draft editor's own two model-callable tools carry the card as well,
+  // with a visibility list; they are held by the test after this one.
   const claiming = withListingCardMeta(PER_OPERATION_LISTING, open, "per_operation")
     .filter((tool) => !APP_ONLY.test(tool.name))
+    .filter((tool) => !DRAFT_EDITOR_MODEL_VISIBLE_TOOL_NAMES.includes(tool.name))
     .filter((tool) => tool._meta !== undefined);
   for (const tool of claiming) assertEquals(tool._meta, reviewCardToolMeta(), tool.name);
   assertEquals(
@@ -506,5 +532,228 @@ Deno.test("every card-claiming operation is one the listing actually has", () =>
   const listed = new Set(PER_OPERATION_LISTING.map((tool) => tool.name));
   for (const name of Object.values(PER_OPERATION_CARD_TOOL_NAMES).flat()) {
     assert(listed.has(name), `${name} is not on the per-operation listing`);
+  }
+});
+
+// ═══════════════════════════════════════════════════════════════════════════
+// 7. The draft editor on this surface (2026-10-13, merged with the audit of
+//    the model-facing text around the draft card)
+//
+// The two changes landed the same day and met here. The audit made `draft_read`
+// and `draft_editor_hide` the model's to call, made `update` accept a call with
+// no body, and moved the draft body out of `structuredContent`; this surface
+// lists the draft writes as five tools of their own and words them from the
+// legacy definitions. So each of the audit's fixes has to hold under the
+// per-operation names as well, and nothing here may name a tool only the
+// consolidated listing has.
+// ═══════════════════════════════════════════════════════════════════════════
+
+const listedByName = () =>
+  new Map(PER_OPERATION_LISTING.map((tool) => [tool.name, serializeToolForList(tool)]));
+
+Deno.test("the draft editor's own tools get the same visibility on this surface as on the other", () => {
+  const open = { outbound: false, bulk: false, drafts: true };
+  const perOperation = new Map(
+    withListingCardMeta(PER_OPERATION_LISTING, open, "per_operation").map((t) => [t.name, t._meta]),
+  );
+  const consolidated = new Map(
+    withListingCardMeta(TOOL_REGISTRY, open, "consolidated").map((t) => [t.name, t._meta]),
+  );
+  // The model reads a draft back and hides or shows the card; only the card saves.
+  assertEquals(perOperation.get("draft_read"), modelAndAppReviewCardToolMeta());
+  assertEquals(perOperation.get("draft_editor_hide"), modelAndAppReviewCardToolMeta());
+  assertEquals(perOperation.get("draft_editor_save"), appOnlyReviewCardToolMeta());
+  for (const name of ["draft_read", "draft_editor_save", "draft_editor_hide"]) {
+    assertEquals(perOperation.get(name), consolidated.get(name), `${name} differs by surface`);
+  }
+  // Gate shut: no `_meta` at all, so a host lists all three as ordinary tools.
+  const shut = { outbound: true, bulk: true, drafts: false };
+  for (const tool of withListingCardMeta(PER_OPERATION_LISTING, shut, "per_operation")) {
+    if (tool.name.startsWith("draft_")) assertEquals(tool._meta, undefined, tool.name);
+  }
+});
+
+Deno.test("draft_update is listed with body optional, and says what an update without one does", () => {
+  const update = listedByName().get("draft_update")!;
+  const schema = update.inputSchema as {
+    required: string[];
+    properties: Record<string, { type?: string; description?: string }>;
+  };
+  assertEquals(schema.required, ["draft_id"]);
+  assertEquals(schema.properties.body.type, "string", "the type did not move, only `required`");
+  assertEquals(
+    schema.properties.body.description,
+    "Updated plain-text body. Omit to keep the stored body text.",
+  );
+  const description = update.description as string;
+  assert(
+    description.startsWith(
+      "Change an existing draft. Each supplied field overwrites the stored one; an omitted " +
+        "field, body included, keeps its stored value. Pass at least one of to, cc, bcc, " +
+        "subject or body. Omit body to change a subject or recipients without overwriting " +
+        "text the user edited; draft_read returns the current text. The signature is " +
+        "embedded only when body is passed. Without body, on IMAP and Gmail a draft with " +
+        "attachments, inline images or other extra parts is refused and left unchanged. ",
+    ),
+    description,
+  );
+  assert(!/exactly/.test(description), "no description promises an exact copy");
+  // It overwrites stored fields with or without a body, so the additive-only
+  // rule keeps it destructive in both forms.
+  assertEquals((update.annotations as Record<string, unknown>).destructiveHint, true);
+});
+
+Deno.test("a body-less draft_update passes validation under the per-operation name and is refused only when empty", async () => {
+  // Stopped by the handler's own empty-patch check, which runs after
+  // validation and before the inbox is resolved: proof the schema let a call
+  // with no body through.
+  const empty = await call(chatGpt(), "draft_update", { draft_id: "Drafts:2" });
+  assertEquals(empty.result?.isError, true);
+  assertEquals(
+    refusalText(empty),
+    "draft_update: none of to, cc, bcc, subject or body was given, so there is nothing to " +
+      "change. An omitted field is kept as stored.",
+  );
+  const htmlOnly = await call(chatGpt(), "draft_update", { draft_id: "Drafts:2", html_body: "<p>x</p>" });
+  assert(refusalText(htmlOnly).startsWith("draft_update: html_body was given without body."), refusalText(htmlOnly));
+  // And the scope gate is the action's: manage:drafts, not send:email.
+  const denied = await call(chatGpt(["read:email"]), "draft_update", { draft_id: "d", subject: "s" });
+  assertEquals(denied.error?.code, -32004);
+  assertEquals(denied.error?.data?.required_scopes, ["manage:drafts"]);
+});
+
+Deno.test("the draft tools point at tools this surface lists, and say a card may hold newer text", () => {
+  const tools = listedByName();
+  const names = new Set(tools.keys());
+  const consolidatedNames = new Set(TOOL_REGISTRY.map((tool: { name: string }) => tool.name));
+  const create = tools.get("draft_create")!.description as string;
+  // When to use it, against the tool that sends now ON THIS SURFACE.
+  assert(
+    create.includes(
+      "Use this when the user wants to review or edit a message before it goes out; email_send sends now.",
+    ),
+    create,
+  );
+  assert(
+    create.includes(
+      "Where the draft editor card is on, hosts that render MCP Apps cards show the draft to the " +
+        "user in an editable card, where the user can change it; draft_read returns a draft's current text.",
+    ),
+    create,
+  );
+  const list = tools.get("draft_list")!.description as string;
+  assert(list.includes("and no body: draft_read returns one draft's text."), list);
+  assert(list.includes("with draft_read, draft_update, draft_send or draft_delete"), list);
+  const save = tools.get("draft_editor_save")!.description as string;
+  assert(save.includes("unlike draft_update when it is given a body"), save);
+
+  // No draft-related description names a tool only the consolidated listing
+  // has. `email_compose` and `the draft tool` are what the same sentences say
+  // there; section 4 holds the model-callable tools to this and this adds the
+  // one that is app-only.
+  for (const name of [...names].filter((n) => n.startsWith("draft_"))) {
+    for (const [path, text] of strings(tools.get(name), name)) {
+      assert(!/email_compose|the draft tool|draft tool's|\(action /.test(text), `${path}: ${text}`);
+      // Any token that IS a tool name on the consolidated listing has to be
+      // one on this listing too. Field names and card kinds are not tools on
+      // either, so they are never mistaken for one.
+      for (const match of text.matchAll(/\b[a-z]+(?:_[a-z]+)+\b/g)) {
+        if (!consolidatedNames.has(match[0])) continue;
+        assert(names.has(match[0]), `${path} names ${match[0]}, which this surface does not list`);
+      }
+    }
+  }
+  // The second content block a draft write carries is not per-surface text,
+  // so the one tool it names has to exist on both.
+  assert(DRAFT_CARD_NOTICE.includes("draft_read") && names.has("draft_read"));
+  assert(TOOL_REGISTRY.some((tool: { name: string }) => tool.name === "draft_read"));
+});
+
+Deno.test("draft_read and draft_editor_hide follow the annotation rules every model-callable tool here does", () => {
+  const tools = listedByName();
+  const read = tools.get("draft_read")!.annotations as Record<string, unknown>;
+  assertEquals(read.readOnlyHint, true);
+  assertEquals(read.destructiveHint, false);
+  // An overwrite of a stored setting, and model-callable: destructive under
+  // the additive-only rule, like signature_set. Being reversible by the same
+  // call is not an argument for false.
+  const hide = tools.get("draft_editor_hide")!.annotations as Record<string, unknown>;
+  assertEquals(hide.readOnlyHint, false);
+  assertEquals(hide.destructiveHint, true);
+  // Still app-only, and deliberately left false: see the open question on it
+  // in docs/openai-tool-annotation-justifications.md.
+  const save = tools.get("draft_editor_save")!.annotations as Record<string, unknown>;
+  assertEquals(save.destructiveHint, false);
+});
+
+Deno.test("the per-operation instructions keep the audit's two corrections", () => {
+  assert(PER_OPERATION_SERVER_INSTRUCTIONS.includes("`draft_read` reads one draft in full."));
+  const appOnly = PER_OPERATION_SERVER_INSTRUCTIONS.split("\n\n").find((p: string) =>
+    p.startsWith("APP-ONLY:")
+  );
+  assertEquals(
+    appOnly,
+    "APP-ONLY: `approval_*` (a held send), `bulk_*` (a bulk plan) and " +
+      "`draft_editor_save` back the in-chat cards. The host drives them, not " +
+      "you.",
+  );
+  assert(!PER_OPERATION_SERVER_INSTRUCTIONS.includes("draft_editor_hide"));
+});
+
+Deno.test("a draft write's result is the same on this surface: deferred body, v2, card notice, read:email", async () => {
+  // `draft_update` here and `draft{action:"update"}` there are one handler, so
+  // the result shape cannot differ; what CAN be driven without a mailbox is
+  // the function that handler returns through for a body-less update, with the
+  // scopes a per-operation key would hold.
+  const inbox: DraftEditorProviderInbox = {
+    id: "8f1f2a3c-0000-4000-8000-000000000001",
+    email_address: "you@example.com",
+    display_name: "Asgeir",
+    provider: "gmail",
+    service: null,
+  };
+  const stored: ProviderDraft = {
+    subject: "Plan",
+    to: ["a@example.com"],
+    cc: [],
+    bcc: [],
+    bodyText: "STORED-BODY",
+    bodyHtml: null,
+    attachments: [],
+  };
+  const deps = {
+    appUrl: "https://mcpemails.com",
+    workspaceGate: () => Promise.resolve({ rolledOut: true, hidden: false }),
+    inboxHidden: () => Promise.resolve(false),
+    getDraft: () => Promise.resolve(stored),
+    updateDraft: (_inbox: unknown, draftId: string) => Promise.resolve({ draft_id: draftId }),
+  };
+  const withRead = await runBodylessDraftUpdate(
+    deps,
+    { workspace_id: "w", scopes: ["manage:drafts", "read:email"] },
+    inbox,
+    "r-1",
+    { subject: "New" },
+  );
+  assert(withRead.ok);
+  if (withRead.ok) {
+    const sc = withRead.result.structuredContent as Record<string, any>;
+    assertEquals(sc.schema_version, DEFERRED_BODY_SCHEMA_VERSION);
+    assertEquals(sc.draft.body, { text: null, html: null, truncated: false, deferred: true });
+    assertEquals((withRead.result._meta as Record<string, any>)[DRAFT_BODY_META_KEY].text, "STORED-BODY");
+    assertEquals(withRead.result.content.map((block) => block.text)[1], DRAFT_CARD_NOTICE);
+  }
+  const withoutRead = await runBodylessDraftUpdate(
+    deps,
+    { workspace_id: "w", scopes: ["manage:drafts"] },
+    inbox,
+    "r-1",
+    { subject: "New" },
+  );
+  assert(withoutRead.ok);
+  if (withoutRead.ok) {
+    assert(!JSON.stringify(withoutRead.result).includes("STORED-BODY"));
+    assertEquals("_meta" in withoutRead.result, false);
+    assertEquals(withoutRead.result.content.length, 1);
   }
 });

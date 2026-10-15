@@ -495,6 +495,18 @@ settings — see its block, which is the one place in this file a
   as `signature_set`, which the scan flagged: an overwrite of stored text whose
   previous value is not kept. On IMAP the update is a replace of the stored
   message, and the draft_id changes with it.
+- **`body` is optional since 2026-10-13, and that does not move the hint.** An
+  update that omits `body` keeps the stored body text and overwrites only the
+  recipients or subject it names, through the same merge `draft_editor_save`
+  runs (`applyDraftPatch`): no signature is applied, the HTML part, Reply-To and
+  threading headers are carried through, and a recipient list passed as `[]` is
+  cleared. It is still an overwrite of stored fields, so it is still `true`
+  under the additive-only rule; the submitted text ("the fields passed") covers
+  both forms. On IMAP and Gmail, where the write rebuilds the message, a
+  body-less update of a draft with attachments, inline images or other extra
+  parts is refused and changes nothing (`draft_has_attachments`,
+  `draft_not_rebuildable`). The result's card envelope carries the STORED body,
+  so it is attached only for a key that also holds `read:email`.
 
 ## draft_send (readOnly: false, destructive: true, openWorld: true)
 
@@ -802,10 +814,29 @@ settings — see its block, which is the one place in this file a
 
 **Reasoning.**
 
-- **readOnly true:** it reads one unsent draft and returns it. Where the draft
-  editor card is on, the result is the card envelope and the card shows it;
-  where it is not, the result is a plain payload the model reads. Nothing is
-  written and nothing is sent in either case.
+- **readOnly true:** it reads one unsent draft and returns it. `content` is the
+  same plain read in both states (recipients, subject, `body_text`, attachment
+  names, `untrusted_content: true`), because the model is this tool's primary
+  reader. Where the draft editor card is on, `structuredContent` is the card
+  envelope and the card shows it; where it is not, `structuredContent` is that
+  same plain payload. Nothing is written and nothing is sent in either case.
+- **The card half is marked untrusted too (2026-10-13).** With the card on,
+  `structuredContent` is the editor envelope plus a top-level
+  `untrusted_content: true`, so the draft's subject, recipients and body are
+  flagged in both channels and not only in `content`.
+- **A failed read is reported as a failed read.** The Gmail and Outlook
+  readers answer "not found" only for a 404 or a malformed-id 400. A 429 or a
+  5xx is `provider_error`, "could not be read, nothing was changed", where it
+  used to come back as `draft_not_found`.
+- **The model is meant to call it (2026-10-13).** With the card on it used to
+  be listed `visibility: ["app"]`, and its `content` was a body-free summary
+  line. A model then had no way to read a draft the user had edited in the
+  card: `draft_list` returns no body and neither does any draft write, so the
+  next `draft` update put the model's older text back over the user's. It is
+  now listed `visibility: ["model", "app"]` with the card on (and with no
+  `_meta` at all with it off, as before), and its `content` carries the text.
+  None of the three hints moves: it was already a read that returned the body
+  to any caller holding both scopes, and `visibility` was never a boundary.
 - **destructive false:** it changes nothing at all.
 - **openWorld false:** the draft is inside the connected mailbox. It also
   requires `read:email` on top of `manage:drafts`, because on IMAP and Outlook a
@@ -831,7 +862,8 @@ settings — see its block, which is the one place in this file a
   a plain payload is not an envelope, so the card's restore-recovery path
   cannot re-open an editor from it for an inbox the user switched off.
 - **What the same flags do to `tools/list`.** This tool is LISTED
-  unconditionally; what it loses is `_meta.ui`, on the same `drafts` gate
+  unconditionally; what it loses is `_meta.ui` (resource URI plus
+  `visibility: ["model", "app"]`), on the same `drafts` gate
   the five draft writes use (`draft_create`, `draft_reply`, `draft_update`,
   `draft_send`, `draft_delete`) — the workspace must be rolled out and not hidden
   (`workspaceDraftEditorEnabled` ANDs those two), and the inboxes the key can
@@ -902,6 +934,23 @@ settings — see its block, which is the one place in this file a
   them, while Outlook, whose update is a field PATCH, may proceed.
 - **openWorld false:** the draft stays in the connected mailbox. Sending it
   still goes through `draft_send`, including its approval hold.
+- **More is refused than attachments (2026-10-13).** On IMAP and Gmail the save
+  rebuilds the message from its text, and the rebuild cannot represent an
+  inline image, a second text part, a calendar alternative, a signature part or
+  `format=flowed` text. Those used to be dropped without a word, because none
+  of them is an "attachment" to the parser. Each is now refused with
+  `draft_not_rebuildable` and nothing is written, exactly as
+  `draft_has_attachments` already worked. This narrows what the tool can
+  overwrite and moves none of the three hints. Also since 2026-10-13: a
+  recipient list supplied as `[]` is cleared on Outlook as it is elsewhere
+  (Graph's PATCH used to keep it), and the stored Reply-To is carried through
+  a rebuild.
+- **`draft_update` can now do a partial update too (2026-10-13).** It may omit
+  `body`, and when it does it runs the same merge this tool runs
+  (`applyDraftPatch`): omitted fields kept, no signature, the HTML part carried
+  through, and the same two refusals on IMAP and Gmail. The two tools still
+  differ in who writes: this one records `last_saved_by: "user"` and is listed
+  app-only, `draft_update` is the model's and is `destructiveHint: true`.
 - **When the card is switched off.** The same gate `draft_read` reads, but
   here it refuses, with two codes. Not rolled out is `draft_editor_disabled`;
   switched off by the user, at the WORKSPACE grain or at the grain of the INBOX
@@ -909,12 +958,12 @@ settings — see its block, which is the one place in this file a
   the stored draft is read, so nothing is read and nothing is written. The
   per-inbox flag did not refuse this tool until 2026-09-16.
 
-## draft_editor_hide (readOnly: false, destructive: false, openWorld: false)
+## draft_editor_hide (readOnly: false, destructive: true, openWorld: false)
 
 **Submitted text.**
 
 - **readOnlyHint:** It writes a display preference: inboxes.draft_editor_hidden for one mailbox, or workspaces.draft_editor_hidden for all of them.
-- **destructiveHint:** Nothing is lost and nothing is sent; it only decides whether the draft editor card renders. Drafts and every other tool behave identically, and hidden:false sets it back at either scope.
+- **destructiveHint:** It overwrites a stored display preference: whether the draft editor card renders. No mail or draft is changed and nothing is sent; hidden:false sets it back at either scope.
 - **openWorldHint:** It writes one column in the caller's own workspace. The inbox is resolved through the same gate every other draft tool uses, so it can only address a mailbox this key may already use.
 
 **Reasoning.**
@@ -923,12 +972,30 @@ settings — see its block, which is the one place in this file a
   `inboxes.draft_editor_hidden` for one mailbox or
   `workspaces.draft_editor_hidden` for all of them. `scope` is required and has
   no default; `hidden` defaults to true.
-- **destructive false:** nothing is lost and nothing is sent. It changes only
-  whether the draft editor card is rendered; drafts, sending and every other
-  tool behave identically either way, and the result of a draft call is the same
-  text it has always been.
-- **How it is reversed, precisely — and this is the `destructiveHint: false`
-  argument, nothing else.** The same call with `hidden: false` restores the
+- **The model is meant to call it (2026-10-13).** With the card on it is listed
+  `visibility: ["model", "app"]`; it was `["app"]`. The card tells a person the
+  card "can be brought back by asking in this chat", and once the card is
+  hidden the model calling this tool with `hidden:false` is the only route that
+  sentence can mean, so an app-only listing made the copy false. The server
+  instructions no longer list it among the app-only tools. None of the three
+  hints moves: `visibility` was never a boundary, and every argument below was
+  already written on the assumption that a model calls this.
+- **destructive true:** changed from false on 2026-10-13, for two reasons that
+  arrived the same day. The additive-only rule the scan applied to
+  `signature_set` leaves false for writes that only add, counts an overwrite as
+  destructive, and says being able to undo an action does not justify false;
+  this tool overwrites a stored setting and its `false` rested on exactly that
+  reversibility. And it became model-callable, so it is no longer one of the
+  card-only tools that rule was left unapplied to (compare the open question on
+  `draft_editor_save`, which is still app-only and still `false`). What the
+  write touches is unchanged: nothing is lost from the mailbox and nothing is
+  sent. It changes only whether the draft editor card is rendered; drafts,
+  sending and every other tool behave identically either way, and the result of
+  a draft call is the same text it has always been.
+- **How it is reversed, precisely. This was the whole `destructiveHint: false`
+  argument; it no longer carries the annotation and is kept because the
+  submitted text still states it ("hidden:false sets it back at either
+  scope").** The same call with `hidden: false` restores the
   card, at BOTH scopes, because this tool is the only one that passes
   `allowWhileHidden: true` to the shared gate, and it passes it
   UNCONDITIONALLY, in both directions. So the tool that writes the opt-out
@@ -963,8 +1030,8 @@ settings — see its block, which is the one place in this file a
   this block for which branch that is on.
 - **Why idempotent — a SEPARATE property, argued separately.** Conflating
   reversibility with idempotence is how an annotation gets written that the
-  spec does not support, so: reversibility says another call can undo this, and
-  is the `destructiveHint: false` argument above. `idempotentHint: true` is the
+  spec does not support, so: reversibility says another call can undo this (the
+  paragraph above, which used to be the `destructiveHint: false` argument). `idempotentHint: true` is the
   MCP spec's narrower claim that repeating THIS call with THESE arguments has no
   ADDITIONAL EFFECT ON THE ENVIRONMENT. It holds because the write is an
   assignment and not an increment or an append: `setDraftEditorHidden(scope,
@@ -1036,10 +1103,12 @@ settings — see its block, which is the one place in this file a
 > `app/api/inboxes/[id]/route.ts` and the generated `src/types/database.types.ts`.
 > The control is real and merged-pending, not shipped-here.
 >
-> **What this changes for the annotation: nothing.** `destructiveHint: false`
-> rests on the reversal, and since 2026-09-16 the tool reverses itself at both
-> scopes without help. That was already enough before the dashboard existed and
-> is still the argument; the dashboard is a second route, and the submitted text
+> **What this changes for the annotation: nothing.** (Written while the hint
+> was `false` and rested on the reversal. It is `true` since 2026-10-13, for the
+> reasons in the block above; the dashboard has no bearing on that either.)
+> Since 2026-09-16 the tool reverses itself at both
+> scopes without help. That was already enough before the dashboard existed;
+> the dashboard is a second route, and the submitted text
 > deliberately does not mention it. A reviewer cannot see our dashboard, and a
 > justification that leans on a screen they cannot check is weaker than one that
 > describes the tool in front of them, not stronger.
