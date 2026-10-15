@@ -44,6 +44,34 @@ export const KINDS = ['added', 'improved', 'fixed', 'changed'];
 export const ENTRIES = [
   /* ── October 2026 ──────────────────────────────────────────── */
   {
+    date: '2026-10-15',
+    kind: 'fixed',
+    title: 'Self-hosted servers find their inboxes',
+    body:
+      'A self-hosted install answered "No inbox matches" on every tool except inbox_list, and could not read stored IMAP credentials. The bundled database schema is back in step with the server, and existing installs upgrade in place with make migrate, keeping their inboxes and keys.',
+  },
+  {
+    date: '2026-10-13',
+    kind: 'added',
+    title: 'Signature images embedded in the message',
+    body:
+      'A new option in the signature editor embeds your signature\'s images in each message, so logos show in Thunderbird, Outlook and other clients that block remote images. Works on Gmail and IMAP inboxes; it is off unless you turn it on.',
+  },
+  {
+    date: '2026-10-13',
+    kind: 'fixed',
+    title: 'Inline cards in Claude keep working after an update',
+    body:
+      'After we shipped a new version, Claude could show "can\'t reach MCP Emails" where a card belonged until the connector was refreshed. Cards now load from the current version whatever Claude has cached.',
+  },
+  {
+    date: '2026-10-13',
+    kind: 'fixed',
+    title: 'Clearer error for a mistaken mail server',
+    body:
+      'Browser autofill no longer fills the IMAP or SMTP server fields, and entering mcpemails.com as a mail server now says so directly instead of reporting that your provider never answered.',
+  },
+  {
     date: '2026-10-13',
     kind: 'added',
     title: 'Receive-only and send-only inboxes',
