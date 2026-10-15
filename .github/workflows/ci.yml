@@ -340,6 +340,20 @@ jobs:
         run: supabase db start
       - name: RLS and schema tests (pgTAP)
         run: supabase test db
+      # `make migrate` re-runs the self-host schema on an existing database, so
+      # it must apply cleanly twice. Which tables, RPCs and columns it has is
+      # checked by mcp-server/self-host-schema.test.ts in the deno job.
+      - name: Self-host schema applies to a fresh database, then re-applies
+        run: |
+          docker run -d --name selfhost-db -e POSTGRES_PASSWORD=ci postgres:16-alpine
+          # -h 127.0.0.1: the image's init server listens on the socket only,
+          # so this waits for the real server instead of racing its restart.
+          until docker exec selfhost-db psql -h 127.0.0.1 -U postgres -c 'select 1' >/dev/null 2>&1; do sleep 1; done
+          for run in first second; do
+            docker exec -i -e PGOPTIONS=--client-min-messages=warning selfhost-db \
+              psql -q -v ON_ERROR_STOP=1 -h 127.0.0.1 -U postgres < self-host/db/00-schema.sql
+            echo "applied ($run run)"
+          done
       - uses: actions/setup-node@v7
         with:
           node-version-file: .nvmrc
