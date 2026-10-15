@@ -1040,6 +1040,10 @@ const SENTINEL_EXEMPT = new Set([
 const SQL_ALLOWED = new Set([
   "supabase/migrations/20260916160000_card_build_notified.sql",
   "supabase/migrations/20260916180000_card_build_notified_comment.sql",
+  // Declares the column (ADD COLUMN IF NOT EXISTS ... text, no default) so the
+  // api_keys lookup works on a self-hosted install. It never writes a value;
+  // the server does, through the constant. Issue #82.
+  "self-host/db/00-schema.sql",
 ]);
 
 /**

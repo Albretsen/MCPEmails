@@ -14,7 +14,7 @@
 COMPOSE ?= docker compose
 DENO_IMG ?= denoland/deno:2.1.4
 
-.PHONY: help setup up down logs ps restart build provision key keys inboxes revoke dispatch psql destroy
+.PHONY: help setup up down logs ps restart build provision key keys inboxes revoke dispatch migrate psql destroy
 
 help:
 	@grep -E '^[a-zA-Z_-]+:.*?## .*$$' $(MAKEFILE_LIST) | awk 'BEGIN{FS=":.*?## "}{printf "  \033[36m%-20s\033[0m %s\n", $$1, $$2}'
@@ -87,6 +87,10 @@ dispatch: ## Manually flush due scheduled sends once
 	@DISPATCH_SECRET=$$(grep '^DISPATCH_SECRET=' .env | cut -d= -f2); \
 	$(COMPOSE) run --rm --no-deps --entrypoint sh dispatcher -c \
 	  "curl -fsS -X POST -H 'X-Dispatch-Secret: $$DISPATCH_SECRET' http://mcp-server:8000/dispatch"
+
+migrate: ## Upgrade an existing database to the current schema (safe to re-run)
+	$(COMPOSE) exec -T -e PGOPTIONS=--client-min-messages=warning db psql -q -v ON_ERROR_STOP=1 -U postgres -d postgres < db/00-schema.sql
+	@echo "✓ schema up to date"
 
 psql: ## Open a psql shell on the database
 	$(COMPOSE) exec db psql -U postgres -d postgres
