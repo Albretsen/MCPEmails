@@ -21,7 +21,7 @@ Get started free
 Legal
 Privacy Policy
 We built MCPEmails with privacy as a first principle. The email content your agent reads is never stored on our servers; it passes through to your agent and disappears. The one exception is a message you schedule to send later, which we hold only until it is delivered. This policy explains what we do collect, and why.
-Last updated: September 29, 2026 · Effective: May 25, 2026
+Last updated: October 15, 2026 · Effective: May 25, 2026
 1. Who We Are
 The MCPEmails service at
 mcpemails.com
@@ -35,7 +35,7 @@ privacy@mcpemails.com
 .
 2. Data We Collect
 2.1 Account data
-When you create an account we collect your email address and a hashed password (we never store plaintext passwords). You may optionally provide a display name. This data is required to create and maintain your account. If you tick the box on the signup form asking for product tips and offers by email, we also record that you did, when, and which wording you saw.
+When you create an account we collect your email address and a hashed password (we never store plaintext passwords). You may optionally provide a display name. This data is required to create and maintain your account. If you tick the box on the signup form asking for product tips and offers by email, we also record that you did, when, and which wording you saw. When you sign up, we also record whether you used a phone, a tablet, or a computer, worked out from your browser's request headers. We store only that one word, never your browser's user-agent string or any device identifier, and use it only to understand where signups come from.
 2.2 Workspace and configuration data
 We store the workspace name you choose, and the configuration of each connected inbox (provider type, email address, OAuth status, and connection timestamp). We do
 not

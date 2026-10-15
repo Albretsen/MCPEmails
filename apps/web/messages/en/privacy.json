@@ -19,7 +19,7 @@
   "dataWeCollect": {
     "title": "2. Data We Collect",
     "accountTitle": "2.1 Account data",
-    "accountP": "When you create an account we collect your email address and a hashed password (we never store plaintext passwords). You may optionally provide a display name. This data is required to create and maintain your account. If you tick the box on the signup form asking for product tips and offers by email, we also record that you did, when, and which wording you saw.",
+    "accountP": "When you create an account we collect your email address and a hashed password (we never store plaintext passwords). You may optionally provide a display name. This data is required to create and maintain your account. If you tick the box on the signup form asking for product tips and offers by email, we also record that you did, when, and which wording you saw. When you sign up, we also record whether you used a phone, a tablet, or a computer, worked out from your browser's request headers. We store only that one word, never your browser's user-agent string or any device identifier, and use it only to understand where signups come from.",
     "workspaceTitle": "2.2 Workspace and configuration data",
     "workspaceP": "We store the workspace name you choose, and the configuration of each connected inbox (provider type, email address, OAuth status, and connection timestamp). We do <b>not</b> store OAuth access tokens or app passwords in plaintext. They are encrypted with AES-256-GCM before being written to the database, and the encryption key is stored in a separate secrets vault.",
     "apiKeysTitle": "2.3 API keys",

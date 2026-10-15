@@ -78,6 +78,7 @@
     "test:app-locale": "node --test --experimental-strip-types --experimental-test-module-mocks --import ./scripts/register-dom-tests.mjs components/i18n/app-locale-provider.test.mjs",
     "test:sidebar-signout": "node --test --experimental-strip-types --experimental-test-module-mocks --import ./scripts/register-dom-tests.mjs components/dashboard/sidebar-signout.test.mjs",
     "test:pricing-ui": "node --test --experimental-strip-types --experimental-test-module-mocks --import ./scripts/register-dom-tests.mjs components/marketing/pricing-client-ui.test.mjs",
+    "test:acquisition-device": "node --test --experimental-strip-types --experimental-test-module-mocks --import ./scripts/register-ts-alias.mjs src/lib/acquisition-device.test.mjs src/lib/acquisition-device-stamp.test.ts app/auth/callback/route.device.test.ts",
     "bundle:budget": "node scripts/bundle-budget.mjs"
   },
   "dependencies": {
