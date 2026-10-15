@@ -3107,6 +3107,75 @@ export type Database = {
         }
         Relationships: []
       }
+      support_tickets: {
+        Row: {
+          category: string
+          confirmation_sent_at: string | null
+          context: Json
+          created_at: string
+          email: string
+          id: string
+          ip_hash: string | null
+          message: string
+          notified_at: string | null
+          ref: string
+          source: string
+          status: string
+          subject: string
+          user_id: string | null
+          workspace_id: string | null
+        }
+        Insert: {
+          category: string
+          confirmation_sent_at?: string | null
+          context?: Json
+          created_at?: string
+          email: string
+          id?: string
+          ip_hash?: string | null
+          message: string
+          notified_at?: string | null
+          ref?: string
+          source: string
+          status?: string
+          subject: string
+          user_id?: string | null
+          workspace_id?: string | null
+        }
+        Update: {
+          category?: string
+          confirmation_sent_at?: string | null
+          context?: Json
+          created_at?: string
+          email?: string
+          id?: string
+          ip_hash?: string | null
+          message?: string
+          notified_at?: string | null
+          ref?: string
+          source?: string
+          status?: string
+          subject?: string
+          user_id?: string | null
+          workspace_id?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "support_tickets_workspace_id_fkey"
+            columns: ["workspace_id"]
+            isOneToOne: false
+            referencedRelation: "billing_funnel_by_workspace"
+            referencedColumns: ["workspace_id"]
+          },
+          {
+            foreignKeyName: "support_tickets_workspace_id_fkey"
+            columns: ["workspace_id"]
+            isOneToOne: false
+            referencedRelation: "workspaces"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       synthetic_monitor_incidents: {
         Row: {
           consecutive_failures: number

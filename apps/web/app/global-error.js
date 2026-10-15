@@ -18,6 +18,7 @@ import '../styles/marketing.css';
 // This screen replaces the root layout, so it brings the webfonts itself too.
 import './fonts';
 import { THEME_BOOTSTRAP_SCRIPT } from '../src/lib/theme-bootstrap';
+import { SupportHelpLink } from '../components/support/SupportHelpLink';
 
 export default function GlobalError({ reset }) {
   return (
@@ -133,6 +134,11 @@ export default function GlobalError({ reset }) {
               >
                 Go to homepage
               </a>
+              {/* SUPPORT_RELEASE_GATE: a plain link to /help at release. English label,
+                  like the rest of this page. */}
+              <SupportHelpLink
+                style={{ display: 'block', marginTop: 14, textAlign: 'center', color: 'var(--fg-3)', fontFamily: 'var(--font-sans)', fontSize: 13 }}
+              />
             </div>
           </div>
         </div>
