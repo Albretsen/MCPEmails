@@ -232,9 +232,14 @@ jobs:
       # here and fail if anything under ui/ differs or appears. Checked
       # 2026-10-15: the build is byte-identical across runs, on a clean tree and
       # on Node 22 and 24, so a diff here means the file is stale, not that the
-      # build is flaky. If it ever fails on an unchanged tree, suspect a
-      # platform difference in the native bundlers (rolldown, lightningcss,
-      # esbuild) before the source.
+      # build is flaky. The first CI run DID differ, and the cause was the
+      # install, not the platform: vite 8 minifies with esbuild, an optional
+      # peer that apps/mcp-app never declared, so npm 10 installed esbuild
+      # 0.28.2 next to vite while npm 11 (Node 24, this runner) skipped it and
+      # vite fell back to the root 0.25.12. One minifier choice changed and so
+      # did the build id. esbuild is now a declared devDependency, so every
+      # install minifies with the same version. If this fails on an unchanged
+      # tree again, compare `npm ls esbuild -w apps/mcp-app` here and locally.
       - name: Check the generated card matches src
         run: |
           cd apps/mcp-app && npm run build && cd ../..
