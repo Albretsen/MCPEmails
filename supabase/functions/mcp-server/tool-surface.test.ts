@@ -1079,13 +1079,13 @@ Deno.test("draft update: an empty patch, a lone html_body and an empty body are 
   // can run here with no database: nothing is read and nothing is written.
   assertEquals(
     await updateRefusal({ draft_id: "Drafts:2" }),
-    "draft_update: none of to, cc, bcc, subject or body was given, so there is nothing to " +
+    "draft_update: none of to, cc, bcc, subject, body or attachments was given, so there is nothing to " +
       "change. An omitted field is kept as stored.",
   );
   // include_signature and idempotency_key change nothing on their own either.
   assert(
     (await updateRefusal({ draft_id: "Drafts:2", include_signature: false })).startsWith(
-      "draft_update: none of to, cc, bcc, subject or body was given",
+      "draft_update: none of to, cc, bcc, subject, body or attachments was given",
     ),
   );
   assertEquals(

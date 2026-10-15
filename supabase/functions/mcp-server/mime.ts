@@ -20,6 +20,12 @@ export interface MimeAttachment {
   size: number;
   /** Decoded binary content. */
   content: Uint8Array;
+  /**
+   * The part's Content-ID without angle brackets, when it has one. A named
+   * part the HTML shows through `cid:` is an inline image, not a file, and a
+   * draft rebuild must not turn it into one (draft-attachments.ts).
+   */
+  contentId?: string;
 }
 
 export interface ParsedEmail {
@@ -153,11 +159,13 @@ function parsePart(
   const bytes = decodeContent(body, cte);
 
   if (isAttachment) {
+    const contentId = (getHeader(headers, "content-id") ?? "").trim().replace(/^<|>$/g, "");
     out.attachments.push({
       filename: attachmentFilename(ct, disposition),
       mimeType: ct.mediaType,
       size: bytes.length,
       content: bytes,
+      ...(contentId ? { contentId } : {}),
     });
     return;
   }

@@ -341,19 +341,6 @@ function fromAddress(d: DraftEditorData): string {
 }
 
 /**
- * The provider-level reason a save will be refused while attachments are
- * present. §8: `imapUpdateDraft` and `gmailUpdateDraft` rebuild the MIME from
- * parameters, so the server refuses rather than silently dropping the parts.
- * Outlook is a PATCH and may proceed, so it gets no warning.
- */
-function attachmentRefusal(d: DraftEditorData): string | null {
-  if ((d.attachments?.length ?? 0) === 0) return null;
-  const provider = d.identity?.provider;
-  if (provider !== "imap" && provider !== "gmail") return null;
-  return "Saving is refused while this draft has attachments, because saving rebuilds the message and would drop them. Edit it in your mail client instead.";
-}
-
-/**
  * The failure to show, if any. The latest action's own failure first, because
  * it is the more recent fact; otherwise whatever the server last refused.
  * Mapped to the card's own sentences either way (draft-failure.ts).
@@ -1442,7 +1429,6 @@ export function DraftEditor(props: Props) {
     </>
   );
 
-  const refusal = attachmentRefusal(d);
   const failed = currentFailure(env, props.failure);
   const err = failed ? failureNotice(failed) : null;
   const hasHtml = !!d.body?.html;
@@ -1899,7 +1885,6 @@ export function DraftEditor(props: Props) {
 
       {attachLine && <p class="line">{attachLine}</p>}
 
-      {refusal && <Notice tone="warning">{refusal}</Notice>}
 
       {d.signature?.embedded === false && (
         <p class="line">

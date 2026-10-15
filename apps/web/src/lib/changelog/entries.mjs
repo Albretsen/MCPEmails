@@ -45,6 +45,13 @@ export const ENTRIES = [
   /* ── October 2026 ──────────────────────────────────────────── */
   {
     date: '2026-10-15',
+    kind: 'added',
+    title: 'Attachments on drafts',
+    body:
+      'Drafts can now carry files: new ones you give your assistant (including files shared in ChatGPT), or attachments copied from an email already in the inbox. Editing a draft keeps the files it already has, where an edit on Gmail or IMAP used to drop them.',
+  },
+  {
+    date: '2026-10-15',
     kind: 'fixed',
     title: 'Mail hosts that turn away cloud servers now connect',
     body:
