@@ -14,8 +14,11 @@
 //   F. focus: no fullscreen from tabbing through the body; focus survives
 //      "Cc Bcc", the signature's Edit and chip removal.
 //   L. fullscreen layout (the stylesheet: jsdom does not lay out).
-//   C. copy: English dates on a Norwegian locale, the Hide confirm and receipt
-//      naming the dashboard switch, no "new id" note, "Saved earlier".
+//   C. copy: English dates on a Norwegian locale, the turn-off confirm and
+//      receipt naming the dashboard switch, no "new id" note, "Saved earlier".
+//   D. Hide folds this card only and Show brings it back as it was; turning
+//      cards off is behind the header's "⋯" menu; dashboard links only to a
+//      page about the receipt.
 //   H. the formatted preview: labelled read only, no `[image: ...]`, the
 //      signature set apart.
 //   S. server fields: body.formatting_removed, signature.rich, last_saved_at
@@ -298,7 +301,8 @@ async function main() {
         'import "./src/main";\n' +
         'export { getState, setState, disarmResultWatchdog } from "./src/store";\n' +
         'export { splitAddresses, commaEndsAddress, addressKey } from "./src/components/DraftEditor";\n' +
-        'export { hiddenDetail } from "./src/components/App";\n' +
+        'export { hiddenDetail, turnOnUrl } from "./src/components/App";\n' +
+        'export { dashboardLinkLabel } from "./src/components/Receipt";\n' +
         'export { setLocale, formatDateTime, formatWhen } from "./src/format";\n' +
         'export { render } from "preact";\n',
       resolveDir: appRoot,
@@ -504,13 +508,19 @@ async function main() {
     await c.done();
   }
 
-  group("C2. the Hide confirm and receipt say how to turn the card back on");
+  group("C2. the turn-off confirm and receipt say how to turn the card back on");
   {
     const c = await editor();
-    c.press(c.btn(/^Hide$/));
+    expect("the bottom row has no Hide any more", !!c.root.querySelector(".acts .link") && [...c.root.querySelectorAll(".acts .link")].some((l) => l.textContent.trim() === "Hide"), false);
+    c.press(c.btn(/^⋯$/));
     await settle();
-    expect("the confirm names the dashboard switch", /Show the\s+draft editor card/.test(c.text()), true);
+    expect("the menu opens", !!c.root.querySelector('[role="menu"]'), true);
+    expect("focus is on its item", c.active()?.textContent, "Turn off draft cards…");
+    c.press(c.btn(/^Turn off draft cards…$/));
+    await settle();
+    expect("the confirm names the dashboard switch", /Show the draft editor\s+card/.test(c.text()), true);
     expect("and where it is", /MCP Emails dashboard/.test(c.text()), true);
+    expectJson("nothing was called yet", c.calls, []);
     c.tools.draft_editor_hide = (args) => ({
       content: [{ type: "text", text: "Draft editor card hidden." }],
       structuredContent: {
@@ -530,11 +540,64 @@ async function main() {
     });
     c.press(c.btn(/^This inbox$/));
     await settle();
-    expect("the receipt is shown", /Draft editor hidden/.test(c.text()), true);
+    expect("the receipt is shown", /Draft cards turned off\./.test(c.text()), true);
     expect("without the model's instruction", /draft_editor_hide|hidden:false/.test(c.text()), false);
     expect("with the person's way back", /Show the draft editor card/.test(c.text()), true);
     expect("for one inbox: under Inboxes", /under Inboxes/.test(c.text()), true);
+    expect("a link to the switch", !!c.btn(/^Turn cards back on$/), true);
+    expect("no generic dashboard link", !!c.btn(/^Open in dashboard$/), false);
     expect("for all: under Settings", /under Settings/.test(c.mod.hiddenDetail("workspace")), true);
+    expect("inbox switch URL", c.mod.turnOnUrl("inbox", "https://mcpemails.com/dashboard"), "https://mcpemails.com/dashboard/inboxes");
+    expect("workspace switch URL", c.mod.turnOnUrl("workspace", "https://mcpemails.com/dashboard"), "https://mcpemails.com/dashboard/settings");
+    expect("never from a non-https base", c.mod.turnOnUrl("inbox", "javascript:alert(1)"), null);
+    await c.done();
+  }
+
+  group("D1. Hide folds this card only, and Show brings it back with the edits");
+  {
+    const c = await editor();
+    c.input("d-body", "Typed but not saved.");
+    await settle();
+    c.press(c.btn(/^Hide$/));
+    await settle();
+    expectJson("nothing was called", c.calls.filter((x) => x.name !== "draft_editor_save"), []);
+    expect("folded: no editor", c.root.querySelector("#d-body"), null);
+    expect("folded: the subject is on the line", c.text().includes("Quarterly numbers"), true);
+    expect("folded: says there are unsaved changes", /Unsaved changes/.test(c.text()), true);
+    expect("focus is on Show", c.active()?.textContent, "Show");
+    c.press(c.btn(/^Show$/));
+    await settle();
+    expect("Show brings the editor back", !!c.root.querySelector("#d-body"), true);
+    expect("with the unsaved text", c.value("d-body")?.startsWith("Typed but not saved."), true);
+    expect("focus is on Hide", c.active()?.textContent, "Hide");
+    await c.done();
+  }
+
+  group("D2. the menu closes on Escape and returns focus to its button");
+  {
+    const c = await editor();
+    c.press(c.btn(/^⋯$/));
+    await settle();
+    c.key(c.active(), "Escape");
+    await settle();
+    expect("closed", c.root.querySelector('[role="menu"]'), null);
+    expect("focus on ⋯", c.active()?.textContent.trim(), "⋯");
+    c.press(c.btn(/^Hide$/));
+    await settle();
+    expect("the folded card still has the menu", !!c.btn(/^⋯$/), true);
+    await c.done();
+  }
+
+  group("D3. dashboard links only to a page about the receipt");
+  {
+    const c = await boot();
+    const m = c.mod;
+    expect("bare dashboard: no link", m.dashboardLinkLabel("https://mcpemails.com/dashboard"), null);
+    expect("bare dashboard with a slash: no link", m.dashboardLinkLabel("https://mcpemails.com/dashboard/"), null);
+    expect("approvals: open it", m.dashboardLinkLabel("https://mcpemails.com/dashboard/approvals"), "Open in dashboard");
+    expect("settings: the way back", m.dashboardLinkLabel("https://mcpemails.com/dashboard/settings"), "Turn cards back on");
+    expect("inboxes: the way back", m.dashboardLinkLabel("https://mcpemails.com/dashboard/inboxes"), "Turn cards back on");
+    expect("nothing: no link", m.dashboardLinkLabel(null), null);
     await c.done();
   }
 

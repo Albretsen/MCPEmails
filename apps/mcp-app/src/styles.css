@@ -22,8 +22,9 @@
    - every structural colour / type / radius comes from a host style variable
      with a literal fallback. Phase-0 Q6: a host "can provide any subset".
    - literal colours appear only in the token block below, once per theme.
-   - no dropdowns / menus / popovers anywhere (clipped by the container,
-     conflicts with host z-index).
+   - no positioned dropdowns / popovers anywhere (clipped by the container,
+     conflicts with host z-index). The draft card's "⋯" menu is an in-flow
+     panel under the header for exactly this reason.
    - inline card: auto-fit height, no nested vertical scrolling.
    - visible focus rings, WCAG AA contrast, container queries not fixed widths.
 --------------------------------------------------------------------------- */
@@ -570,6 +571,40 @@ body {
   opacity: 0.55;
   text-decoration: none;
 }
+
+/* ---- the draft card's "⋯" menu ------------------------------------------
+
+   An in-flow panel under the header, never a popover: a sandboxed frame clips
+   whatever is positioned past its own height. The button is a text link with
+   no underline, sized to a real hit target. */
+.menu-btn {
+  text-decoration: none;
+  font-size: 15px;
+  line-height: 1;
+  padding: 2px 4px;
+  border-radius: var(--r-sm);
+  letter-spacing: 1px;
+}
+.menu-btn[aria-expanded="true"] { color: var(--fg); background: var(--bg-2); }
+
+.menu {
+  display: flex;
+  justify-content: flex-end;
+}
+
+.menu-item {
+  appearance: none;
+  font: inherit;
+  font-size: var(--fs-sm);
+  color: var(--fg);
+  background: var(--bg-2);
+  border: 1px solid var(--bd-2);
+  border-radius: var(--r-sm);
+  padding: 4px 10px;
+  cursor: pointer;
+}
+.menu-item:hover { background: var(--bg-3); }
+.menu-item:focus-visible { outline: 2px solid var(--ring); outline-offset: 2px; }
 
 /* ---- signature ---------------------------------------------------------- */
 

@@ -906,14 +906,15 @@ export function DraftEditor(props: Props) {
   //      confirm closes, for the pointer's version of the same accident.
   //
   // Nothing in this component ever calls focus() on Send.
-  const [confirm, setConfirmState] = useState<null | "discard" | "hide">(null);
-  const confirmNow = useRef<null | "discard" | "hide">(null);
-  const returnTo = useRef<null | "discard" | "hide">(null);
+  const [confirm, setConfirmState] = useState<null | "discard" | "off">(null);
+  const confirmNow = useRef<null | "discard" | "off">(null);
+  const returnTo = useRef<null | "discard" | "off">(null);
   const guardUntil = useRef(0);
   const discardLink = useRef<HTMLButtonElement>(null);
-  const hideLink = useRef<HTMLButtonElement>(null);
+  /** The header's "⋯" button. Turning cards off is reached through it. */
+  const menuButton = useRef<HTMLButtonElement>(null);
   const safeChoice = useRef<HTMLButtonElement>(null);
-  const openConfirm = (which: "discard" | "hide") => {
+  const openConfirm = (which: "discard" | "off") => {
     confirmNow.current = which;
     setConfirmState(which);
   };
@@ -928,7 +929,7 @@ export function DraftEditor(props: Props) {
     if (confirm) {
       safeChoice.current?.focus();
     } else if (returnTo.current) {
-      (returnTo.current === "discard" ? discardLink : hideLink).current?.focus();
+      (returnTo.current === "discard" ? discardLink : menuButton).current?.focus();
       returnTo.current = null;
     }
   }, [confirm]);
@@ -937,6 +938,54 @@ export function DraftEditor(props: Props) {
     e.preventDefault();
     closeConfirm();
   };
+
+  // ---- Hide and Show, and the "⋯" menu ---------------------------------------
+  //
+  // Hide folds THIS card to its header line and nothing else: no server call,
+  // no preference, the draft and any unsaved edits stay exactly where they
+  // were (the editor's state lives in this component, which stays mounted),
+  // and Show puts it back. Until 2026-10-15 Hide was the permanent opt-out,
+  // which is not what anyone clicking "Hide" on one card means. Turning the
+  // card off for good now sits behind the header's "⋯" menu, one deliberate
+  // step further away, with its own confirm (`confirm === "off"`).
+  const [folded, setFolded] = useState(false);
+  const toggleLink = useRef<HTMLButtonElement>(null);
+  const refocusToggle = useRef(false);
+  useLayoutEffect(() => {
+    if (!refocusToggle.current) return;
+    refocusToggle.current = false;
+    toggleLink.current?.focus();
+  }, [folded]);
+  const toggleFold = () => {
+    refocusToggle.current = true;
+    // One line on an empty fullscreen page is not a place to be left.
+    if (!folded && fullscreen) actions.setFullscreen(false);
+    setFolded(!folded);
+  };
+
+  // The menu is a short in-flow panel under the header, never a popover: a
+  // sandboxed frame clips anything positioned outside its own height, and an
+  // inline card is only as tall as its content.
+  const [menuOpen, setMenuOpen] = useState(false);
+  const menuItem = useRef<HTMLButtonElement>(null);
+  const menuWrap = useRef<HTMLDivElement>(null);
+  const closeMenu = (refocus: boolean) => {
+    setMenuOpen(false);
+    if (refocus) menuButton.current?.focus();
+  };
+  useLayoutEffect(() => {
+    if (menuOpen) menuItem.current?.focus();
+  }, [menuOpen]);
+  useEffect(() => {
+    if (!menuOpen) return;
+    const away = (e: Event) => {
+      const t = e.target as Node | null;
+      if (t && (menuWrap.current?.contains(t) || menuButton.current?.contains(t))) return;
+      setMenuOpen(false);
+    };
+    document.addEventListener("pointerdown", away);
+    return () => document.removeEventListener("pointerdown", away);
+  }, [menuOpen]);
 
   // The card MUST adopt every id the server returns (§8: on IMAP the id changes
   // on every save). This is where that happens: App replaces the envelope with
@@ -1521,6 +1570,117 @@ export function DraftEditor(props: Props) {
     return <Superseded fullscreen={fullscreen} actions={actions} onOpen={() => setOpenAnyway(true)} />;
   }
 
+  const foldLink = (
+    <TextLink
+      btnRef={toggleLink}
+      expanded={!folded}
+      title={folded ? "Show the draft again" : "Fold this card to one line. Nothing is changed."}
+      onClick={toggleFold}
+    >
+      {folded ? "Show" : "Hide"}
+    </TextLink>
+  );
+
+  const menuToggle = (
+    <button
+      type="button"
+      class="link menu-btn"
+      ref={menuButton}
+      aria-label="More options"
+      title="More options"
+      aria-haspopup="menu"
+      aria-expanded={menuOpen ? "true" : "false"}
+      onClick={() => (menuOpen ? closeMenu(false) : setMenuOpen(true))}
+    >
+      ⋯
+    </button>
+  );
+
+  // The menu, or the turn-off confirm it leads to, directly under the header
+  // in both the open and the folded card. The confirm is offered at two
+  // grains because the card cannot guess which one is meant: one mailbox is
+  // "this account is noisy", all of them is "I do not want this feature".
+  const menuPanel = confirm === "off" ? (
+    // The choice that changes nothing comes FIRST and takes focus.
+    <div class="acts menu-confirm" onKeyDown={(e) => onConfirmKey(e as unknown as KeyboardEvent)}>
+      <span class="line grow">
+        Turn off draft cards? Drafts keep working, the assistant just describes
+        them in text. To turn the cards back on, use "Show the draft editor
+        card" in the MCP Emails dashboard.
+      </span>
+      <Btn soft variant="quiet" btnRef={safeChoice} onClick={closeConfirm}>
+        Cancel
+      </Btn>
+      <Btn
+        soft
+        busy={busy !== null}
+        title="Only for this mailbox"
+        onClick={() => {
+          closeConfirm();
+          actions.hide("inbox");
+        }}
+      >
+        This inbox
+      </Btn>
+      <Btn
+        soft
+        busy={busy !== null}
+        title="Every mailbox in this workspace"
+        onClick={() => {
+          closeConfirm();
+          actions.hide("workspace");
+        }}
+      >
+        All inboxes
+      </Btn>
+    </div>
+  ) : menuOpen ? (
+    <div
+      class="menu"
+      role="menu"
+      aria-label="More options"
+      ref={menuWrap}
+      onKeyDown={(e) => {
+        if (e.key !== "Escape" && e.key !== "Tab") return;
+        if (e.key === "Escape") e.preventDefault();
+        closeMenu(e.key === "Escape");
+      }}
+    >
+      <button
+        type="button"
+        role="menuitem"
+        class="menu-item"
+        ref={menuItem}
+        onClick={() => {
+          setMenuOpen(false);
+          openConfirm("off");
+        }}
+      >
+        Turn off draft cards…
+      </button>
+    </div>
+  ) : null;
+
+  // ---- folded: one line, Show brings the editor back as it was ---------------
+  if (folded) {
+    return (
+      <>
+        <div class="hdr">
+          <div class="hdr-l">
+            <b>Draft</b>
+            <span class="muted">{edit.subject.trim() || "No subject"}</span>
+          </div>
+          <div class="hdr-r">
+            {(dirty || typedPending) && <span class="muted">Unsaved changes</span>}
+            {foldLink}
+            {menuToggle}
+          </div>
+        </div>
+        {menuPanel}
+      </>
+    );
+  }
+
   return (
     <>
       {/* Everything above the action row. Inline it is not a box at all
@@ -1554,8 +1714,11 @@ export function DraftEditor(props: Props) {
             {savedLine}
             {dirty || typedPending ? " · Unsaved changes" : ""}
           </span>
+          {foldLink}
+          {menuToggle}
         </div>
       </div>
+      {menuPanel}
 
       {d.in_reply_to && (
         <p class="line">
@@ -1848,48 +2011,7 @@ export function DraftEditor(props: Props) {
 
       {/* Inline confirm, never a modal: a dialog inside a sandboxed frame is
           clipped by the host's container and fights its z-index. */}
-      {/* Hiding is offered at two grains because the card cannot guess which
-          one is meant: one mailbox is "this account is noisy", all of them is
-          "I do not want this feature". Inline, never a modal, for the same
-          reason the discard confirm is inline: a dialog inside a sandboxed
-          frame is clipped by the host's container and fights its z-index. */}
-      {confirm === "hide" ? (
-        // The choice that changes nothing comes FIRST and takes focus. Last in
-        // the row is where Send sits once the confirm closes, and "Cancel"
-        // used to be there.
-        <div class="acts" onKeyDown={(e) => onConfirmKey(e as unknown as KeyboardEvent)}>
-          <span class="line grow">
-            Hide the draft editor card? To bring it back, turn on "Show the
-            draft editor card" in the MCP Emails dashboard, under Settings for
-            every inbox or Inboxes for one.
-          </span>
-          <Btn soft variant="quiet" btnRef={safeChoice} onClick={closeConfirm}>
-            Cancel
-          </Btn>
-          <Btn
-            soft
-            busy={busy !== null}
-            title="Only for this mailbox"
-            onClick={() => {
-              closeConfirm();
-              actions.hide("inbox");
-            }}
-          >
-            This inbox
-          </Btn>
-          <Btn
-            soft
-            busy={busy !== null}
-            title="Every mailbox in this workspace"
-            onClick={() => {
-              closeConfirm();
-              actions.hide("workspace");
-            }}
-          >
-            All inboxes
-          </Btn>
-        </div>
-      ) : confirm === "discard" ? (
+      {confirm === "discard" ? (
         <div class="acts" onKeyDown={(e) => onConfirmKey(e as unknown as KeyboardEvent)}>
           <span class="line grow">
             Discard this draft? It is deleted at your provider.
@@ -1966,16 +2088,6 @@ export function DraftEditor(props: Props) {
               onClick={() => openConfirm("discard")}
             >
               Discard
-            </TextLink>
-            {/* The opt-out sits where the annoyance is. A preference page is
-                the authoritative control and exists too, but nobody goes
-                looking for one to turn off a card they have just met. */}
-            <TextLink
-              title="Stop showing this card. Drafts keep working exactly as they do now."
-              btnRef={hideLink}
-              onClick={() => openConfirm("hide")}
-            >
-              Hide
             </TextLink>
           </span>
           {/* Both `soft`: they change availability while focused (busy, then

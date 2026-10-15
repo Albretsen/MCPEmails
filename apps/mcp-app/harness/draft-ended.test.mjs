@@ -360,6 +360,7 @@ async function main() {
     await settle();
     expect("the editor is gone", c.isEditor(), false);
     expect("the message is on screen", /Here they are\./.test(c.text()), true);
+    expect("no dashboard link: the dashboard has no view of it", !!c.btn(/dashboard/i), false);
     const hide = toggleOf(c);
     expect("the toggle says Hide", hide?.textContent, "Hide");
     expect("and is expanded", hide?.getAttribute("aria-expanded"), "true");

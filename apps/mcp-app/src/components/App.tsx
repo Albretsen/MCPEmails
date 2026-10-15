@@ -162,7 +162,22 @@ function toolLabel(tool: string | null | undefined): string {
 }
 
 /**
- * What the person reads after hiding the draft editor card: what happened, and
+ * Where the switch that turns the card back on lives: Settings for the whole
+ * workspace, Inboxes for one mailbox. Built on the origin of the server's own
+ * dashboard URL (see `absoluteUrl`), never a hardcoded one.
+ */
+export function turnOnUrl(scope: "inbox" | "workspace", dashboardUrl: string | null | undefined): string | null {
+  const base = absoluteUrl(dashboardUrl);
+  if (!base) return null;
+  try {
+    return `${new URL(base).origin}/dashboard/${scope === "workspace" ? "settings" : "inboxes"}`;
+  } catch {
+    return null;
+  }
+}
+
+/**
+ * What the person reads after turning draft cards off: what happened, and
  * where to undo it. The dashboard has one switch per inbox (Inboxes, in the
  * inbox's details) and one for the workspace (Settings), both labelled "Show
  * the draft editor card" (apps/web/messages/en/dashboard.json).
@@ -1193,8 +1208,6 @@ export function App(props: { bridge: HostBridge }) {
             startOpen={view.startOpen}
             fullscreen={fullscreen}
             canExpand={canExpand}
-            busy={busy}
-            onOpenDashboard={() => openDashboard(store.priorReceipt?.receipt?.dashboard_url)}
             setFullscreen={setFullscreen}
           />
         );
@@ -1419,7 +1432,12 @@ export function App(props: { bridge: HostBridge }) {
               ) {
                 setEnvelope({
                   ...done,
-                  receipt: { ...done.receipt, detail: hiddenDetail(scope) },
+                  receipt: {
+                    ...done.receipt,
+                    headline: "Draft cards turned off.",
+                    detail: hiddenDetail(scope),
+                    dashboard_url: turnOnUrl(scope, done.receipt.dashboard_url ?? done.dashboard_url),
+                  },
                 });
               }
             },
@@ -1453,10 +1471,6 @@ export function App(props: { bridge: HostBridge }) {
             startOpen={view.startOpen}
             fullscreen={fullscreen}
             canExpand={canExpand}
-            busy={busy}
-            onOpenDashboard={() =>
-              openDashboard(envelope.receipt?.dashboard_url ?? envelope.dashboard_url)
-            }
             setFullscreen={setFullscreen}
           />
         );
