@@ -272,12 +272,17 @@ function ownerPhrase(owners: string[]): string {
  *
  * Errors this review says nothing about are returned untouched, so a `not`
  * rule from anywhere else keeps its own wording.
+ *
+ * `remedies` (argument-remedies.ts) adds, per property, the fact that answers
+ * what the caller was trying to do, ahead of the owning actions: "to belongs
+ * to 'send'" alone sent every reply that carried a `to` out as a new message.
  */
 export function withOwningActions<T extends SchemaErrorLike>(
   errors: readonly T[],
   review: ExtraArgumentReview,
   action: string,
   rootPath = "arguments",
+  remedies: Readonly<Record<string, string>> = {},
 ): T[] {
   if (review.misplaced.length === 0) return [...errors];
   const byPath = new Map<string, MisplacedArgument>();
@@ -286,10 +291,12 @@ export function withOwningActions<T extends SchemaErrorLike>(
     if (error.keyword !== "not") return error;
     const entry = byPath.get(error.path);
     if (!entry || entry.owners.length === 0) return error;
+    const remedy = remedies[entry.property];
     return {
       ...error,
       message:
-        `is not an argument of action '${action}'; it belongs to ` +
+        `is not an argument of action '${action}'` +
+        (remedy ? `: ${remedy}. It belongs to ` : "; it belongs to ") +
         ownerPhrase(entry.owners),
     };
   });
