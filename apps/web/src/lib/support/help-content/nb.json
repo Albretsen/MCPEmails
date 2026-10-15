@@ -155,7 +155,7 @@
         "For å koble fra én postkasse, åpne Innbokser i dashbordet, velg den og velg Koble fra. Det lagrede passordet eller tokenet fjernes.",
         "For å avslutte et arbeidsområde, åpne Innstillinger, så Faresone, og velg Slett arbeidsområde. Kontoen din og andre arbeidsområder blir værende.",
         "For å slette alt, åpne Innstillinger, så Faresone, og velg Slett konto. Du bekrefter ved å skrive inn e-postadressen din, og det kan ikke angres.",
-        "Å slette kontoen sier ikke opp en betalt plan. Si den opp i faktureringsportalen først."
+        "Når du sletter kontoen, sies en betalt plan opp med en gang, uten refusjon for resten av perioden. Vil du beholde tiden du har betalt for, sier du opp i faktureringsportalen først og sletter kontoen når perioden er over."
       ],
       "links": [
         { "label": "Innbokser i dashbordet", "href": "/dashboard/inboxes" },

@@ -155,7 +155,7 @@
         "To disconnect one mailbox, open Inboxes in the dashboard, select it and choose Disconnect. Its stored password or token is removed.",
         "To close a workspace, open Settings, then Danger zone, and choose Delete workspace. Your account and other workspaces stay.",
         "To delete everything, open Settings, then Danger zone, and choose Delete account. You confirm by typing your email address, and it cannot be undone.",
-        "Deleting the account does not cancel a paid plan. Cancel it in the billing portal first."
+        "Deleting the account cancels a paid plan at once, with no refund for the rest of the period. To keep the time you have paid for, cancel in the billing portal first and delete the account when the period ends."
       ],
       "links": [
         { "label": "Dashboard inboxes", "href": "/dashboard/inboxes" },

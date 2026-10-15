@@ -155,7 +155,7 @@
         "Para desconectar un buzón, abre Bandejas de entrada en el panel, selecciónalo y elige Desconectar. Se borra su contraseña o token guardado.",
         "Para cerrar un espacio de trabajo, abre Ajustes, luego Zona de peligro, y elige Eliminar espacio de trabajo. Tu cuenta y tus otros espacios se mantienen.",
         "Para eliminarlo todo, abre Ajustes, luego Zona de peligro, y elige Eliminar cuenta. Lo confirmas escribiendo tu dirección de correo y no se puede deshacer.",
-        "Eliminar la cuenta no cancela un plan de pago. Cancélalo antes en el portal de facturación."
+        "Eliminar la cuenta cancela al momento un plan de pago, sin reembolso por el resto del periodo. Para conservar el tiempo que ya pagaste, cancélalo primero en el portal de facturación y elimina la cuenta cuando termine el periodo."
       ],
       "links": [
         { "label": "Bandejas del panel", "href": "/dashboard/inboxes" },

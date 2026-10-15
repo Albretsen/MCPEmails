@@ -155,7 +155,7 @@
         "Pour déconnecter une boîte, ouvrez Boîtes dans le tableau de bord, sélectionnez-la et choisissez Déconnecter. Son mot de passe ou jeton enregistré est effacé.",
         "Pour fermer un espace de travail, ouvrez Paramètres, puis Zone de danger, et choisissez Supprimer l'espace de travail. Votre compte et vos autres espaces restent.",
         "Pour tout supprimer, ouvrez Paramètres, puis Zone de danger, et choisissez Supprimer le compte. Vous confirmez en saisissant votre adresse e-mail, et c’est irréversible.",
-        "Supprimer le compte ne résilie pas une formule payante. Résiliez-la d’abord dans le portail de facturation."
+        "Supprimer le compte résilie immédiatement une formule payante, sans remboursement du reste de la période. Pour profiter du temps déjà payé, résiliez d’abord dans le portail de facturation et supprimez le compte à la fin de la période."
       ],
       "links": [
         { "label": "Boîtes du tableau de bord", "href": "/dashboard/inboxes" },
