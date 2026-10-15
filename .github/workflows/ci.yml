@@ -31,7 +31,19 @@ concurrency:
 #     failed with `schema "cron" does not exist`.
 # The migration half is BACK as the `db` job (2026-09-26): the current CLI's
 # Postgres image ships pg_cron, all migrations apply cleanly, and the RLS suite
-# was repaired. Lint is still out.
+# was repaired.
+#
+# Lint is BACK as the `lint` job (2026-10-15). The flat config in
+# apps/web/eslint.config.mjs now loads and runs, and `npm run lint` (plain
+# `eslint . --max-warnings 0`, not `next lint`) was verified clean: 0 errors
+# and 0 warnings over 685 files. Because the bar is zero warnings, any new
+# warning fails the build rather than piling up unread.
+#
+# TIMEOUTS (2026-10-15). Every job sets timeout-minutes. The GitHub default is
+# 360 minutes, and production waits on `ci-passed`, so one hung step (a stuck
+# `npm ci`, a database that never comes up) would hold every deploy for six
+# hours. The limits are generous against normal runtimes: 15 for db, 5 for
+# audit and ci-passed, 10 for everything else.
 #
 # NOTE (2026-08-30): the Dependency Audit job below was added as finding F-05 of
 # the Google ADA-CASA pre-submission audit. The gap it closes: with no audit
@@ -82,6 +94,7 @@ jobs:
   audit:
     name: Dependency Audit
     runs-on: ubuntu-latest
+    timeout-minutes: 5
     steps:
       - uses: actions/checkout@v7
       - uses: actions/setup-node@v7
@@ -105,6 +118,7 @@ jobs:
   typecheck:
     name: Type Check
     runs-on: ubuntu-latest
+    timeout-minutes: 10
     steps:
       - uses: actions/checkout@v7
       - uses: actions/setup-node@v7
@@ -115,9 +129,24 @@ jobs:
       - name: Run TypeScript type check
         run: cd apps/web && npx tsc --noEmit
 
+  lint:
+    name: Lint
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    steps:
+      - uses: actions/checkout@v7
+      - uses: actions/setup-node@v7
+        with:
+          node-version-file: .nvmrc
+          cache: 'npm'
+      - run: npm ci
+      - name: Run ESLint (zero warnings allowed)
+        run: cd apps/web && npm run lint
+
   test:
     name: Unit Tests
     runs-on: ubuntu-latest
+    timeout-minutes: 10
     steps:
       - uses: actions/checkout@v7
       - uses: actions/setup-node@v7
@@ -136,17 +165,19 @@ jobs:
   # tests are what stand between a refactor and a draft being rewritten on save.
   #
   # WHAT RUNS. `npm test` is `npm run verify`, which is harness/verify.mjs, and
-  # that runs EIGHT independent suites and reports all of them: the scripted host
+  # that runs ELEVEN independent suites and reports all of them: the scripted host
   # (state-machine.mjs), hardening (hardening.mjs), the storage audit
   # (storage-audit.mjs), the body/signature suite (draft-body.test.mjs), the
   # resync suite (draft-sync.test.mjs, 39 checks), the render suite
   # (card-render.test.mjs, 27 checks), the draft QA suite (draft-qa.test.mjs:
   # failed actions, remounts, unsaved edits, focus, recipients) and the draft
   # polish suite (draft-polish.test.mjs: recipient parsing, focus, fullscreen,
-  # copy, the formatted preview, the server's new draft fields). Every suite
+  # copy, the formatted preview, the server's new draft fields), plus the draft
+  # state, draft UX and draft ended suites (draft-state, draft-ux and
+  # draft-ended .test.mjs). Every suite
   # bundles `src/` with esbuild and drives the SHIPPED functions, so a green run
   # here means the code that goes into the card is the code that passed. The
-  # first four need no browser at all; the last four use jsdom, because what
+  # first four need no browser at all; the rest use jsdom, because what
   # they pin only exists in a mounted component — a teardown landing between a
   # new envelope and the effect that would disarm the saver, and a card that
   # renders nothing and so reports a zero height to the host. The render suite evaluates the real `main.tsx`, so it
@@ -154,7 +185,7 @@ jobs:
   #
   # The suite count is load-bearing: verify.mjs prints "N/N suites passed", and
   # it exists because the old `&&` chain let one crashing suite hide the findings
-  # of every suite behind it. If that line ever says fewer than eight, a suite
+  # of every suite behind it. If that line ever says fewer than eleven, a suite
   # was dropped rather than fixed.
   #
   # WHY `npm ci` AT THE ROOT. apps/mcp-app is an npm workspace (root
@@ -182,6 +213,7 @@ jobs:
   card:
     name: Draft Card Tests
     runs-on: ubuntu-latest
+    timeout-minutes: 10
     steps:
       - uses: actions/checkout@v7
       - uses: actions/setup-node@v7
@@ -191,8 +223,27 @@ jobs:
       - run: npm ci
       - name: Type check the card
         run: cd apps/mcp-app && npm run typecheck
-      - name: Run card tests (ten suites via harness/verify.mjs)
+      - name: Run card tests (eleven suites via harness/verify.mjs)
         run: cd apps/mcp-app && npm test
+      # The card ships through the generated file
+      # supabase/functions/mcp-server/ui/review-card.html.ts, not through src.
+      # The tests above build their own bundles from src, so a change to src
+      # without a regenerate would pass CI and ship the old card. Rebuild it
+      # here and fail if anything under ui/ differs or appears. Checked
+      # 2026-10-15: the build is byte-identical across runs, on a clean tree and
+      # on Node 22 and 24, so a diff here means the file is stale, not that the
+      # build is flaky. If it ever fails on an unchanged tree, suspect a
+      # platform difference in the native bundlers (rolldown, lightningcss,
+      # esbuild) before the source.
+      - name: Check the generated card matches src
+        run: |
+          cd apps/mcp-app && npm run build && cd ../..
+          UI=supabase/functions/mcp-server/ui
+          if [ -n "$(git status --porcelain -- "$UI")" ]; then
+            git status --porcelain -- "$UI"
+            echo "::error file=$UI/review-card.html.ts::Generated card is out of date. Run cd apps/mcp-app && npm run build and commit the result."
+            exit 1
+          fi
 
   # The web mail client (apps/client, app.mcpemails.com): a Vite + React SPA.
   # Same shape as the `card` job above and for the same reason: apps/client is
@@ -203,6 +254,7 @@ jobs:
   client:
     name: Web Client (typecheck, tests, build)
     runs-on: ubuntu-latest
+    timeout-minutes: 10
     steps:
       - uses: actions/checkout@v7
       - uses: actions/setup-node@v7
@@ -225,6 +277,7 @@ jobs:
   deno:
     name: Edge Function Tests
     runs-on: ubuntu-latest
+    timeout-minutes: 10
     steps:
       - uses: actions/checkout@v7
       - uses: denoland/setup-deno@v2
@@ -281,10 +334,23 @@ jobs:
         env:
           HOST_GUARD_SKIP_NETWORK_TESTS: '1'
         run: deno test --node-modules-dir=none --allow-read --allow-env --allow-run=git supabase/functions/client-api/
+      # The remaining functions with no other coverage (2026-10-15). Until now
+      # nothing type-checked them, including system-notify, which carries the
+      # email-mute logic (MUTED_EVENT_TYPES) and had no check at all. The first run of this step found a real error in
+      # gmail-token-refresh (TS2769 on crypto.subtle.importKey), fixed in the
+      # same change. Same flag as above, for the same reason.
+      - name: Type check the other edge functions
+        run: >-
+          deno check --node-modules-dir=none
+          supabase/functions/system-notify/index.ts
+          supabase/functions/gmail-token-refresh/index.ts
+          supabase/functions/outlook-token-refresh/index.ts
+          supabase/functions/synthetic-monitor/index.ts
 
   build:
     name: Build Check
     runs-on: ubuntu-latest
+    timeout-minutes: 10
     env:
       NEXT_PUBLIC_SUPABASE_URL: https://placeholder.supabase.co
       NEXT_PUBLIC_SUPABASE_ANON_KEY: placeholder-anon-key
@@ -327,6 +393,7 @@ jobs:
   db:
     name: Database (migrations + RLS)
     runs-on: ubuntu-latest
+    timeout-minutes: 15
     steps:
       - uses: actions/checkout@v7
       # PINNED, not `latest`. The generator's output changes between releases
@@ -365,8 +432,9 @@ jobs:
   ci-passed:
     name: CI passed
     if: always()
-    needs: [audit, typecheck, test, card, client, deno, build, db]
+    needs: [audit, typecheck, lint, test, card, client, deno, build, db]
     runs-on: ubuntu-latest
+    timeout-minutes: 5
     steps:
       - name: Every job succeeded
         env:
