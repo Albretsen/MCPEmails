@@ -14,8 +14,8 @@ import { copyLabel, Fields, HtmlBody, Notice, TextLink, useCopy } from "./ui";
  * at the exact moment they most wanted to check it, and the only remaining copy
  * was in a Sent folder this card cannot open. Users said so, repeatedly.
  *
- * So the receipt is still the truth — the headline, the tone and the dashboard
- * link all come from it — and the message is kept underneath it, read-only.
+ * So the receipt is still the truth — the headline and the tone come from it —
+ * and the message is kept underneath it, read-only.
  * `store.ts#carrySentDraft` is what puts the draft on the receipt envelope; this
  * component is what draws it.
  *
@@ -36,7 +36,13 @@ import { copyLabel, Fields, HtmlBody, Notice, TextLink, useCopy } from "./ui";
  * button that can never work reads as a bug, and the draft is genuinely gone at
  * the provider, so there is nothing an input could write to. Static text, the
  * same label gutter as every other card so it still reads as one product, and
- * no buttons at all beyond the ones that only look (expand, dashboard, copy).
+ * no buttons at all beyond the ones that only look (expand, copy).
+ *
+ * ── No dashboard link (2026-10-15) ──────────────────────────────────────────
+ * "Open in dashboard" used to sit here. It opened the dashboard's home page,
+ * which has no view of a draft or a sent message, while the label promised
+ * this message. The receipt's `dashboard_url` is still read by `Receipt`,
+ * which only links to a page that is about the receipt (Receipt.tsx).
  *
  * ── How much of it ──────────────────────────────────────────────────────────
  * Inline, the body is clamped to three lines (`.preview`, the same clamp the
@@ -52,8 +58,6 @@ export interface SentMessageProps {
   startOpen: boolean;
   fullscreen: boolean;
   canExpand: boolean;
-  busy: string | null;
-  onOpenDashboard: () => void;
   setFullscreen: (on: boolean) => void;
 }
 
@@ -193,9 +197,6 @@ export function SentMessage(props: SentMessageProps) {
             <b>{headline}</b>
           </div>
           <div class="hdr-r">
-            {r.dashboard_url && (
-              <TextLink onClick={props.onOpenDashboard}>Open in dashboard</TextLink>
-            )}
             {toggleLink}
           </div>
         </div>
@@ -233,10 +234,9 @@ export function SentMessage(props: SentMessageProps) {
   );
 
   /**
-   * The footer of both layouts: where the message went, and the way to the
-   * copy that outlives this card. The dashboard link is the ONLY thing here
-   * that is not a fact already on screen — the draft is gone at the provider,
-   * so there is nothing left to refresh, save, or discard.
+   * The footer of both layouts: where the message went. Nothing here acts:
+   * the draft is gone at the provider, so there is nothing left to refresh,
+   * save, or discard.
    */
   const footer = (
     <>
@@ -256,17 +256,6 @@ export function SentMessage(props: SentMessageProps) {
         {[`${wordCount(splitBody(bodyText).message)} words`, c.provider]
           .filter((s): s is string => !!s)
           .join(" · ")}
-        {r.dashboard_url && (
-          <>
-            {" · "}
-            <TextLink
-              disabled={props.busy === "dashboard"}
-              onClick={props.onOpenDashboard}
-            >
-              Open in dashboard
-            </TextLink>
-          </>
-        )}
       </p>
     </>
   );

@@ -931,12 +931,14 @@ async function main() {
     expect("Escape cancels the confirm", !!c.btn(/^Yes, discard$/), false);
     expect("and returns focus to Discard", c.active(), c.btn(/^Discard$/));
 
-    c.press(c.btn(/^Hide$/));
+    c.press(c.btn(/^⋯$/));
     await settle();
-    expect("Hide: focus starts on Cancel", c.active(), c.btn(/^Cancel$/));
+    c.press(c.btn(/^Turn off draft cards…$/));
+    await settle();
+    expect("Turn off: focus starts on Cancel", c.active(), c.btn(/^Cancel$/));
     c.key(c.active(), "Escape");
     await settle();
-    expect("Hide: Escape returns focus to Hide", c.active(), c.btn(/^Hide$/));
+    expect("Turn off: Escape returns focus to the menu button", c.active(), c.btn(/^⋯$/));
     expectJson("nothing was called", c.calls, []);
     await c.done();
   }

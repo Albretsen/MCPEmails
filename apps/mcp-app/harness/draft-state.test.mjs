@@ -661,12 +661,24 @@ async function main() {
     h.goFullscreen();
     await settle();
     h.tools.draft_editor_hide = () => receiptResult("executed", "The draft editor is hidden for this inbox.", "executed");
-    h.press(h.btn(/^Hide$/));
+    h.press(h.btn(/^⋯$/));
+    await settle();
+    h.press(h.btn(/^Turn off draft cards…$/));
     await settle();
     h.press(h.btn(/^This inbox$/));
     await settle();
     expectJson("hidden: inline was requested", h.modeRequests(), ["inline"]);
     await h.done();
+
+    // Folding the card (Hide, not turning it off) leaves fullscreen too.
+    const f = await editor();
+    f.goFullscreen();
+    await settle();
+    f.press(f.btn(/^Hide$/));
+    await settle();
+    expectJson("folded: inline was requested", f.modeRequests(), ["inline"]);
+    expectJson("folded: nothing was called", f.calls, []);
+    await f.done();
 
     // Superseded while fullscreen.
     const p = await editor({ revision: 1 });
