@@ -11,7 +11,7 @@
  */
 
 import type { GrowthMailRelayHostRow } from '@/lib/analytics/growth-types';
-import { describeRoutes, type RelayHealth } from '@/lib/analytics/mail-relay-health';
+import { relayStatus, type RelayHealth } from '@/lib/analytics/mail-relay-health';
 import { agoLabel } from '@/lib/analytics/growth-records';
 import { formatCount, formatPercent } from '../../charts';
 import { BigNumber, Tile } from '../../kiosk/primitives';
@@ -61,12 +61,13 @@ export function RelayWorkingTile({ health, days }: { health: RelayHealth; days: 
 
 export function RelayHostsTile({ health }: { health: RelayHealth }) {
   return (
-    <Tile label="Hosts" aside="relayed or learned">
+    <Tile label="Hosts" aside="that used the relay">
       <BigNumber
         value={health.hosts}
         caption={
           <>
-            <strong>{formatCount(health.learnedHosts)}</strong> learned automatically, the rest hand-listed
+            <strong>{formatCount(health.learnedHosts)}</strong> learned, {formatCount(health.listedHosts)} hand-listed,{' '}
+            {formatCount(health.retriedOnlyHosts)} with single calls retried
           </>
         }
       />
@@ -76,7 +77,7 @@ export function RelayHostsTile({ health }: { health: RelayHealth }) {
 
 export function RelayHostTable({ rows }: { rows: GrowthMailRelayHostRow[] }) {
   return (
-    <Tile label="Relayed hosts" aside={`${formatCount(rows.length)} host and protocol pairs`}>
+    <Tile label="Relayed hosts" aside={rows.length === 1 ? '1 host' : `${formatCount(rows.length)} host and protocol rows`}>
       {rows.length === 0 ? (
         <p className="bd-empty">No host has used the relay in this window</p>
       ) : (
@@ -86,7 +87,7 @@ export function RelayHostTable({ rows }: { rows: GrowthMailRelayHostRow[] }) {
               <tr>
                 <th scope="col">Host</th>
                 <th scope="col">Protocol</th>
-                <th scope="col">Why relayed</th>
+                <th scope="col">Status</th>
                 <th scope="col">Connections</th>
                 <th scope="col">Worked</th>
                 <th scope="col">Relay down</th>
@@ -101,18 +102,7 @@ export function RelayHostTable({ rows }: { rows: GrowthMailRelayHostRow[] }) {
                 <tr key={`${row.host}:${row.protocol}`}>
                   <th scope="row" className="bd-cell-text">{row.host}</th>
                   <td className="bd-cell-text">{row.protocol.toUpperCase()}</td>
-                  <td className="bd-cell-text">
-                    {[
-                      describeRoutes(row.routes),
-                      row.learned
-                        ? row.learned_source === 'manual'
-                          ? 'in registry (manual)'
-                          : `learned${row.learned_expires_at ? `, rechecked ${row.learned_expires_at.slice(0, 10)}` : ''}`
-                        : null,
-                    ]
-                      .filter(Boolean)
-                      .join('; ')}
-                  </td>
+                  <td className="bd-cell-text">{relayStatus(row)}</td>
                   <td>{formatCount(Number(row.connections))}</td>
                   <td>{formatCount(Number(row.ok))}</td>
                   <td>{formatCount(Number(row.relay_down))}</td>
@@ -131,7 +121,9 @@ export function RelayHostTable({ rows }: { rows: GrowthMailRelayHostRow[] }) {
       <p className="bd-note">
         Relay down is the relay failing to carry a connection, which is ours to fix. Host refused is the mail host
         saying no through a working tunnel, usually a wrong password. A learned host goes through the relay for 30
-        days, then is tried directly again and re-learned if it still needs it.
+        days, then is tried directly again. A host is learned only after the relay rescued it twice, 5 or more
+        minutes apart, and never while it has 5 or more direct successes in a week; until then each failed call
+        still gets its own relay retry.
       </p>
     </Tile>
   );

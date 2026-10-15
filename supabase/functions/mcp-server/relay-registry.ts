@@ -14,9 +14,13 @@
  *   1. A direct connection that fails in a way a different egress address can
  *      fix (see {@link isOriginRefusalText} and the callers' own checks) is
  *      tried ONCE more through the relay.
- *   2. If that works, the host is remembered in `mail_relay_hosts`, so every
- *      later connection goes through the relay first, in this runtime and in
- *      the web app, without a deploy.
+ *   2. If that works, the database decides whether to remember the host in
+ *      `mail_relay_hosts` (learn_mail_relay_host, migration 20261015200000):
+ *      only at a second rescue at least 5 minutes after the first, and never
+ *      for a host with 5 or more direct successes in the last 7 days. Once
+ *      learned, every later connection goes through the relay first, in this
+ *      runtime and in the web app, without a deploy. A host that is not
+ *      learned loses nothing: each failed call still gets its own retry.
  *   3. A learned entry is honoured for {@link LEARNED_RELAY_MAX_AGE_DAYS}. After
  *      that the next connection is tried directly again, and the host is
  *      re-learned if it still needs the relay. That is the re-check: a host
@@ -161,12 +165,12 @@ export function isLearnedRelayHost(host: string, protocol: RelayProtocol): boole
 }
 
 /**
- * Ask the store to remember that `host` needs the relay.
+ * Report one relay rescue of `host`, which may make the store learn it.
  *
- * Takes effect in this isolate only once the store accepts it, and everywhere
- * else once their lists refresh. The store can refuse: a host that has been
- * working directly is not moved onto the relay because one retry through it
- * happened to work (learn_mail_relay_host in the migration). Fire and forget.
+ * Takes effect in this isolate only once the store says the host is learned,
+ * and everywhere else once their lists refresh. Usually it says no: one rescue
+ * only makes a candidate, and a host that works directly is never learned
+ * (learn_mail_relay_host, migration 20261015200000). Fire and forget.
  */
 export function learnRelayHost(host: string, protocol: RelayProtocol, reason: string): void {
   const target = normalizeMailHost(host);

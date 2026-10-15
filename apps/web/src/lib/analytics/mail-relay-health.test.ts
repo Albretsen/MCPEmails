@@ -1,6 +1,6 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
-import { describeRoutes, relayHealth } from './mail-relay-health.ts';
+import { relayHealth, relayStatus } from './mail-relay-health.ts';
 import type { GrowthMailRelayDayRow, GrowthMailRelayHostRow } from './growth-types.ts';
 
 const day = (ok: number, relay_down = 0, host_refused = 0): GrowthMailRelayDayRow => ({
@@ -17,6 +17,9 @@ const host = (name: string, learned: boolean): GrowthMailRelayHostRow => ({
   learned_source: learned ? 'auto' : null,
   first_learned_at: null,
   learned_expires_at: null,
+  candidate_rescues: null,
+  candidate_refused: null,
+  candidate_direct_successes: null,
   routes: 'listed',
   connections: 1,
   ok: 1,
@@ -66,7 +69,35 @@ test('bigints arriving as strings are counted, and hosts are counted once across
   assert.equal(health.learnedHosts, 1);
 });
 
-test('routes read as words', () => {
-  assert.equal(describeRoutes('fallback,learned'), 'retry after direct failed, learned');
-  assert.equal(describeRoutes(null), '');
+test('one status per host, in a fixed order', () => {
+  const base = host('x.example', false);
+  assert.equal(relayStatus({ ...base, routes: 'listed' }), 'Hand-listed in code');
+  assert.equal(
+    relayStatus({
+      ...base,
+      routes: 'fallback,learned',
+      learned: true,
+      learned_source: 'auto',
+      first_learned_at: '2026-10-15T11:47:09Z',
+      learned_expires_at: '2026-11-14T11:47:09Z',
+    }),
+    'Learned since 15 Oct, tried directly again 14 Nov'
+  );
+  assert.equal(relayStatus({ ...base, routes: null, learned: true, learned_source: 'manual' }), 'Added to the registry by hand');
+  // The IONOS case: rescued once, refused because it works directly.
+  assert.equal(
+    relayStatus({ ...base, routes: 'fallback', candidate_rescues: 1, candidate_refused: true, candidate_direct_successes: 82 }),
+    'Not learned: works directly (82 direct successes in 7 days)'
+  );
+  assert.equal(relayStatus({ ...base, routes: 'fallback', candidate_rescues: 1, candidate_refused: false }), 'Candidate: rescued 1 of 2 times needed');
+  assert.equal(relayStatus({ ...base, routes: 'fallback' }), 'Single calls retried through the relay');
+});
+
+test('the hosts tile counts each kind once', () => {
+  const health = relayHealth([day(1)], [
+    host('smtp.domeneshop.no', false),
+    { ...host('smtp.telstra.com', true), routes: 'learned' },
+    { ...host('exchange.ionos.eu', false), routes: 'fallback', protocol: 'imap' },
+  ]);
+  assert.deepEqual([health.hosts, health.listedHosts, health.learnedHosts, health.retriedOnlyHosts], [3, 1, 1, 1]);
 });

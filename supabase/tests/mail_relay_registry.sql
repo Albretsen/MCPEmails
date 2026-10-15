@@ -3,9 +3,10 @@
 -- ============================================================
 -- Covers migration 20261015180000_mail_relay_registry:
 --   - service-role only: a browser session can neither read nor call it
---   - learn_mail_relay_host: learns a host that is not working directly,
---     REFUSES one that is (the gate that keeps a big provider off the relay
---     after one lucky retry), and refreshes a known host without the gate
+--   - learn_mail_relay_host (as replaced by 20261015200000): never learns a
+--     host with 5+ direct successes in 7 days, however many failures it has;
+--     learns only at a second rescue 5+ minutes after the first; re-learning
+--     after expiry ignores the calls made through the relay
 --   - record_mail_relay_use: one counter row per hour and key, incremented
 --   - the two /admin/growth readers
 --
@@ -14,7 +15,7 @@
 
 BEGIN;
 
-SELECT plan(17);
+SELECT plan(21);
 
 SELECT public.ensure_activity_log_partitions(1);
 
@@ -48,6 +49,7 @@ FROM generate_series(1, 2);
 -- ------------------------------------------------------------
 SELECT ok((SELECT relrowsecurity FROM pg_class WHERE oid = 'public.mail_relay_hosts'::regclass), 'mail_relay_hosts has RLS');
 SELECT ok((SELECT relrowsecurity FROM pg_class WHERE oid = 'public.mail_relay_stats'::regclass), 'mail_relay_stats has RLS');
+SELECT ok((SELECT relrowsecurity FROM pg_class WHERE oid = 'public.mail_relay_candidates'::regclass), 'mail_relay_candidates has RLS');
 SELECT ok(NOT has_table_privilege('authenticated', 'public.mail_relay_hosts', 'SELECT'), 'a browser session cannot read learned hosts');
 SELECT ok(NOT has_table_privilege('anon', 'public.mail_relay_stats', 'SELECT'), 'nor the relay counters');
 SELECT ok(
@@ -58,44 +60,64 @@ SELECT ok(
   'nor read the board rows');
 
 -- ------------------------------------------------------------
--- 2. The learning gate
+-- 2. The learning rule (20261015200000_mail_relay_learning_gate)
 -- ------------------------------------------------------------
+-- Rule 1: 5+ direct successes in 7 days is never learned, whatever the
+-- failures. The busy host has 30 successes and 2 failures; the IONOS case
+-- (82 successes, 172 failures from wrong passwords) is the same verdict.
 SELECT is(
-  public.learn_mail_relay_host('imap.busy-test.invalid', 'imap', 'one network blip', 'edge'),
+  public.learn_mail_relay_host('imap.busy-test.invalid', 'imap', 'unexpected end of file', 'edge'),
   false,
-  'a host with 30 direct successes and 2 failures this week is NOT learned');
+  'a host that works directly is NOT learned');
+SELECT ok(
+  (SELECT refused AND direct_successes = 30 FROM public.mail_relay_candidates WHERE host = 'imap.busy-test.invalid'),
+  'it is recorded as refused, with the successes that refused it');
+INSERT INTO public.activity_log (workspace_id, inbox_id, tool_name, status, error_code)
+SELECT 'ef000000-0000-0000-0000-00000000000f', 'e0000000-0000-0000-0000-0000000000f1', 'email_read', 'error', 'auth_failed'
+FROM generate_series(1, 200);
 SELECT is(
-  (SELECT count(*)::int FROM public.mail_relay_hosts WHERE host = 'imap.busy-test.invalid'),
-  0,
-  'and nothing was written for it');
+  public.learn_mail_relay_host('imap.busy-test.invalid', 'imap', 'unexpected end of file', 'edge'),
+  false,
+  'failures never outweigh successes: 200 wrong-password failures change nothing');
 
+-- Rule 2: two rescues, 5+ minutes apart.
 SELECT is(
   public.learn_mail_relay_host('SMTP.Telstra-Test.invalid', 'smtp', 'SMTP connect timeout', 'web'),
+  false,
+  'one rescue makes a candidate, not a learned host');
+SELECT is(
+  public.learn_mail_relay_host('smtp.telstra-test.invalid', 'smtp', 'SMTP connect timeout', 'edge'),
+  false,
+  'a second rescue moments later is the same moment, not more evidence');
+UPDATE public.mail_relay_candidates SET first_rescue_at = now() - interval '6 minutes'
+ WHERE host = 'smtp.telstra-test.invalid';
+SELECT is(
+  public.learn_mail_relay_host('smtp.telstra-test.invalid', 'smtp', 'SMTP connect timeout', 'edge'),
   true,
-  'a host with no direct successes is learned');
+  'a rescue 5+ minutes after the first learns the host');
 SELECT is(
   (SELECT host || ' ' || protocol || ' ' || source || ' ' || learned_by FROM public.mail_relay_hosts),
-  'smtp.telstra-test.invalid smtp auto web',
+  'smtp.telstra-test.invalid smtp auto edge',
   'lower-cased, per protocol, auto, with who learned it');
+SELECT is(
+  (SELECT count(*)::int FROM public.mail_relay_candidates WHERE host = 'smtp.telstra-test.invalid'),
+  0,
+  'and the candidate row is gone');
 
+-- Re-learning after expiry counts only successes since it expired: the calls
+-- made through the relay meanwhile are not direct successes.
+INSERT INTO public.mail_relay_hosts (host, protocol, source, learned_by, first_learned_at, last_learned_at)
+VALUES ('imap.blocked-test.invalid', 'imap', 'auto', 'edge', now() - interval '40 days', now() - interval '31 days');
+INSERT INTO public.activity_log (workspace_id, inbox_id, tool_name, status, created_at)
+SELECT 'ef000000-0000-0000-0000-00000000000f', 'e0000000-0000-0000-0000-0000000000f2', 'email_read', 'success', now() - interval '2 days'
+FROM generate_series(1, 40);
 SELECT is(
   public.learn_mail_relay_host('imap.blocked-test.invalid', 'imap', 'NO [ALERT] Authentication failed.', 'edge'),
-  true,
-  'a host whose inboxes never got through is learned');
-
--- A known host is refreshed without the gate: its successes went through the relay.
-INSERT INTO public.activity_log (workspace_id, inbox_id, tool_name, status)
-SELECT 'ef000000-0000-0000-0000-00000000000f', 'e0000000-0000-0000-0000-0000000000f2', 'email_read', 'success'
-FROM generate_series(1, 40);
-UPDATE public.mail_relay_hosts SET last_learned_at = now() - interval '40 days' WHERE host = 'imap.blocked-test.invalid';
-SELECT is(
-  public.learn_mail_relay_host('imap.blocked-test.invalid', 'imap', 'still refused', 'edge'),
-  true,
-  'an expired host is re-learned despite its relayed successes');
+  false,
+  'an expired host starts again as a candidate');
 SELECT ok(
-  (SELECT times_learned = 2 AND last_learned_at > now() - interval '1 minute'
-     FROM public.mail_relay_hosts WHERE host = 'imap.blocked-test.invalid'),
-  're-learning bumps the count and the clock');
+  (SELECT NOT refused AND direct_successes = 0 FROM public.mail_relay_candidates WHERE host = 'imap.blocked-test.invalid'),
+  'its relayed successes before expiry are not held against it');
 
 -- ------------------------------------------------------------
 -- 3. Counters and readers
