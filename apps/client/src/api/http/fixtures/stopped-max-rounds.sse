@@ -1,0 +1,14 @@
+data: {"type":"run_started","run_id":"run_t"}
+
+data: {"type":"status","text":"Working"}
+
+data: {"type":"tool_call","message_id":"run_t_m1","call":{"id":"run_t_c1","tool":"email_read","action":"list","human":"Checking your inbox","keys":[],"folder":{"role":"inbox"},"meta":"","state":"running"}}
+
+data: {"type":"status","text":"Checking your inbox"}
+
+data: {"type":"tool_call","message_id":"run_t_m1","call":{"id":"run_t_c1","tool":"email_read","action":"list","human":"Checking your inbox","keys":[],"folder":{"role":"inbox"},"meta":"6 emails","state":"done"}}
+
+data: {"type":"text_delta","message_id":"run_t_m2","delta":"I stopped here because this request needed too many steps. Ask me to continue if you want the rest.","done":true}
+
+data: {"type":"done","conversation":{"v":1,"summary":"","turns":[{"u":"Go through everything","a":"I stopped here because this request needed too many steps. Ask me to continue if you want the rest.","calls":[{"h":"Checking your inbox","k":[]}],"refs":[]}]},"usage":{"input_tokens":1000,"output_tokens":50,"cost_micro_usd":975,"model":"gpt-5.4-mini","rounds":1},"stopped":"max_rounds"}
+

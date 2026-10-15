@@ -75,6 +75,24 @@ export async function flush(fn = () => {}) {
   await act(async () => { await fn(); });
 }
 
+/**
+ * Polls `predicate` inside `act` until it returns something truthy, and returns
+ * that value. For work that finishes on a later task than the event that
+ * started it: a network reply, a timer, a module that is still being imported.
+ * Throws naming `message` when the deadline passes, so a thing that never
+ * happens is a named failure and not a hang.
+ */
+export async function waitFor(predicate, { timeout = 4000, interval = 5, message = 'condition' } = {}) {
+  const deadline = Date.now() + timeout;
+  for (;;) {
+    let value;
+    await flush(() => { value = predicate(); });
+    if (value) return value;
+    if (Date.now() > deadline) throw new Error(`waitFor: timed out waiting for ${message}`);
+    await flush(() => new Promise((resolve) => setTimeout(resolve, interval)));
+  }
+}
+
 /** Clicks a checkbox the way a person does, through React's synthetic event. */
 export async function toggle(input) {
   await flush(async () => {

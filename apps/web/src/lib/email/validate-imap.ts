@@ -65,6 +65,13 @@ export interface ImapCredential {
    * a host from a request MUST set it.
    */
   pinnedAddress?: string;
+  /**
+   * Opens the TCP leg somewhere other than a direct dial: an already-connected
+   * tunnel to `host:port` (see mail-relay.ts). Implicit TLS only. TLS is still
+   * negotiated here, against `host`, so whatever carries the tunnel sees
+   * ciphertext and certificate validation is unchanged.
+   */
+  tunnel?: () => Promise<net.Socket>;
 }
 
 /**
@@ -409,7 +416,13 @@ export async function validateImapCredential(cred: ImapCredential): Promise<Imap
       let greeting: string | null = null;
       if (security === 'tls') {
         phase = 'tls';
-        socket = await connectTls(dialHost, cred.port, cred.host, (value) => { activeSocket = value; });
+        if (cred.tunnel) {
+          const plain = await cred.tunnel();
+          activeSocket = plain;
+          socket = await upgradeTls(cred.host, plain, (value) => { activeSocket = value; });
+        } else {
+          socket = await connectTls(dialHost, cred.port, cred.host, (value) => { activeSocket = value; });
+        }
         phase = 'greeting';
         greeting = await readLine(socket);
         if (!greeting.startsWith('* OK')) {

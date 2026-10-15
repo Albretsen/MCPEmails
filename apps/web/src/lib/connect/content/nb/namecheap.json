@@ -12,18 +12,23 @@
     "status": "active"
   },
   "meta": {
-    "title": "Koble Namecheap Private Email til Claude og MCP",
-    "description": "Koble Namecheap Private Email til Claude og enhver MCP-klient via IMAP på mail.privateemail.com:993. Bruker postkassepassordet, aldri Namecheap-innloggingen."
+    "title": "Namecheap MCP-server: koble e-posten til Claude",
+    "description": "MCP-server for Namecheap-e-post. Koble flere bedriftspostkasser (post@, salg@) til Claude og ChatGPT over IMAP på mail.privateemail.com:993."
   },
   "hero": {
     "eyebrow": "Namecheap Private Email + AI",
-    "titleLine1": "Koble Namecheap Private Email til Claude,",
-    "titleLine2": "og Cursor, ChatGPT, enhver MCP-klient",
-    "lead": "Gi AI-agenten din en ekte Namecheap Private Email-innboks på minutter. Les, søk, send, svar, planlegg og organiser e-post med IMAP og postkassepassordet ditt, og bruk samme innboks i alle MCP-klienter, ikke bare én.",
-    "meta0": "1 innboks gratis, for alltid",
+    "titleLine1": "MCP-server for Namecheap-e-post:",
+    "titleLine2": "alle firmaets postkasser, i Claude og ChatGPT",
+    "lead": "Har du post@, salg@, support@ og faktura@ på eget domene hos Namecheap? Koble hver postkasse til ett arbeidsområde, så jobber AI-agenten din i alle sammen. Les, søk, send, svar, planlegg og organiser e-post med IMAP og postkassepassordet ditt, og bruk de samme postkassene i alle MCP-klienter, ikke bare én.",
+    "meta0": "Første postkasse gratis, planer for resten",
     "meta1": "Postkassepassordet ditt, ingen OAuth-oppsett",
     "meta2": "E-post hentes direkte, lagres aldri",
-    "answer": "Claude når ikke Namecheap Private Email på egen hånd. mcpemails er en hostet MCP-server som kobler til via IMAP med postkassepassordet ditt, slik at Claude, Cursor eller enhver MCP-klient kan lese, søke, sende og organisere den e-posten. Oppsettet tar et par minutter, og én innboks er gratis."
+    "answer": "Claude når ikke Namecheap Private Email på egen hånd. mcpemails er en hostet MCP-server som kobler til via IMAP med postkassepassordet ditt, slik at Claude, Cursor eller enhver MCP-klient kan lese, søke, sende og organisere den e-posten. Oppsettet tar et par minutter. Hver firmaadresse, som post@ eller salg@, kobles til som sin egen postkasse: én postkasse er gratis, Personal kobler til tre og Pro alle postkassene du har."
+  },
+  "persona": {
+    "intro": "Flere bedriftspostkasser hos Namecheap?",
+    "label": "Se hva hver plan kobler til",
+    "href": "/pricing"
   },
   "method": {
     "title": "Slik kobler Namecheap Private Email seg til: IMAP og postkassepassordet ditt",
@@ -97,7 +102,7 @@
     }
   ],
   "ctaBand": {
-    "title": "Gi AI-en din en Namecheap Private Email-innboks",
-    "sub": "Koble til Namecheap Private Email på minutter. Én innboks gratis for alltid, uten kort."
+    "title": "Samle alle Namecheap Private Email-postkassene på én agent",
+    "sub": "Koble til den første Namecheap Private Email-postkassen gratis, uten kort. Personal kobler til tre, Pro alle postkassene du har."
   }
 }

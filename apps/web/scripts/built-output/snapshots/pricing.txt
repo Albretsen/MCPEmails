@@ -1,0 +1,232 @@
+AI Email MCP Server Pricing: Free, Personal, Pro and Team Plans · mcpemails
+[meta description] Free connects one inbox. Personal connects three for $9 a month. Pro connects every mailbox your business runs for $15. Team adds members, roles and SSO.
+[meta og:title] AI Email MCP Server Pricing: Free, Personal, Pro and Team Plans · mcpemails
+[meta og:description] Free connects one inbox. Personal connects three for $9 a month. Pro connects every mailbox your business runs for $15. Team adds members, roles and SSO.
+[meta og:locale] en_US
+[meta twitter:title] AI Email MCP Server Pricing: Free, Personal, Pro and Team Plans · mcpemails
+[meta twitter:description] Free connects one inbox. Personal connects three for $9 a month. Pro connects every mailbox your business runs for $15. Team adds members, roles and SSO.
+[alt] mcpemails
+[alt] mcpemails
+[aria-label] Primary navigation
+Features
+How it works
+Pricing
+Compare
+Docs
+Self-host
+Blog
+Sign in
+Get started free
+[aria-label] Open navigation menu
+Pricing
+One inbox, free.
+Three inboxes, $86.40 a year.
+Connect a mailbox once and your agent can read, search, organise, draft, schedule and send. Free covers one inbox. Personal covers three for $9 a month. Pro covers every mailbox you or your business runs, on one login. Team adds people, roles, and a separate workspace per client.
+Monthly
+Annual
+Save ~20%
+Free
+$0
+/forever
+Connect one inbox and give your agent a real mailbox.
+1 connected inbox
+150 email actions a month, first 7 days uncounted
+Read, search, organise, draft, schedule and send
+Send review and approval hold
+Usage analytics
+Gmail, Outlook, iCloud, Fastmail and any IMAP
+Unlimited API keys
+Community support
+Start free
+Personal
+$7.20
+/month
+Billed $86.40/year
+Three mailboxes for one person or one small business: work, personal, or your first company addresses.
+Everything in Free
+3 connected inboxes
+No monthly action cap
+2x higher burst rate limit
+Email support
+Get Personal
+Pro
+$12
+/month
+Billed $144/year
+Every mailbox your business runs, on one agent: finance, sales, support, info, and your own.
+Everything in Personal
+Unlimited connected inboxes
+5x higher burst rate limit
+Longer analytics history
+Get Pro
+Team
+$63
+/month
+Billed $756/year
+Shared inboxes for a team, with a separate workspace per client or business.
+Everything in Pro
+Unlimited members with roles
+A separate workspace per client or business
+SSO (SAML / OIDC) and audit log
+Longest analytics history
+Priority support
+Get Team
+All plans include: email fetched live, never stored · credentials encrypted at rest · EU & US hosting
+One person running several company mailboxes? That is Pro, not Team.
+See how every work mailbox runs on one agent
+.
+Need something custom?
+Contact us
+.
+Full comparison
+Everything side by side.
+Feature
+Free
+Personal
+Pro
+Team
+What you get
+Connected inboxes
+1 inbox
+3 inboxes
+Unlimited, company mailboxes included
+Unlimited
+Email actions per month
+150 / month, first 7 days uncounted
+No monthly cap, fair use
+No monthly cap, fair use
+No monthly cap, fair use
+API keys
+Unlimited
+Unlimited
+Unlimited
+Unlimited
+Seats
+1 seat
+1 seat
+1 seat
+Unlimited
+Burst rate limit
+60 / min
+120 / min
+300 / min
+1,000 / min
+Send review and approval hold
+Email providers
+Gmail (app password or Sign in with Google)
+Outlook / Microsoft 365 (Sign in with Microsoft)
+Fastmail (app password)
+iCloud, Yahoo, Zoho, Yandex (app password)
+Any IMAP / SMTP mailbox
+MCP tools
+inbox_list
+email_read
+email_organize
+email_compose
+folder
+draft
+schedule
+contact_search
+Analytics & security
+Usage analytics dashboard
+Team roles & workspaces
+–
+–
+–
+SSO (SAML / OIDC)
+–
+–
+–
+Audit log
+–
+–
+–
+Analytics history
+30 days
+30 days
+90 days
+1 year
+Privacy & security
+Email fetched live, never stored
+Credentials encrypted at rest
+Support
+Community forum
+Email support
+–
+Priority support
+–
+–
+–
+FAQ
+Common questions.
+What do I get on the free plan?
+What does Personal add over Free?
+What counts as an email action?
+What happens when I reach 150 email actions?
+Is my email content stored anywhere?
+What's the difference between Personal, Pro and Team?
+We are a company with several mailboxes. Which plan do we need?
+What if I need a fourth inbox?
+Can I change or cancel my plan?
+How does the annual discount work?
+What email providers are supported?
+Is there a refund policy?
+Can I self-host it instead of paying?
+Ready to give your agent an inbox?
+Start on Free: one inbox, no card required. Personal takes you to three mailboxes for $9 a month, and Pro covers every mailbox your business runs for $15.
+Get started free
+Read the docs
+[alt] mcpemails
+A hosted MCP server that gives AI agents read and send access to your inbox, without ever storing the email it reads.
+Contact
+hello@mcpemails.com
+[aria-label] Copy Contact
+Copy
+MCP endpoint
+https://mcpemails.com/api/mcp
+[aria-label] Copy MCP endpoint
+Copy
+[aria-label] Language
+English
+Norsk
+Español
+Français
+中文
+Product
+Features
+How it works
+Pricing
+Docs
+Self-hosting
+For founders
+For business
+Resources
+Tool reference
+Quickstart
+OAuth connection
+Provider support
+MCP client setup
+Blog
+Changelog
+Connect
+All email providers
+Connect any IMAP inbox
+Connect Gmail
+Connect Outlook
+Connect Fastmail
+Connect iCloud
+Connect Yahoo
+Connect Zoho
+Connect Yandex
+vs native connectors
+Best email MCP servers
+Company
+About
+Security
+Status
+Privacy
+Terms
+© 2026 mcpemails.
+Email fetched live, never stored · Credentials encrypted at rest
+MCPEmails is a service of Albretsen Consulting (enkeltpersonforetak), organisation number 926 646 753, Håsteins gate 9, 5160 Laksevåg, Norway.
+[json-ld] {"@context":"https://schema.org","@graph":[{"@type":"WebPage","@id":"https://mcpemails.com/pricing","url":"https://mcpemails.com/pricing","name":"AI Email MCP Server Pricing: Free, Personal, Pro and Team Plans","description":"Free connects one inbox. Personal connects three for $9 a month. Pro connects every mailbox your business runs for $15. Team adds members, roles and SSO.","inLanguage":"en","isPartOf":{"@id":"https://mcpemails.com/#website"},"breadcrumb":{"@id":"https://mcpemails.com/pricing#breadcrumb"}},{"@type":"BreadcrumbList","@id":"https://mcpemails.com/pricing#breadcrumb","itemListElement":[{"@type":"ListItem","position":1,"name":"mcpemails","item":"https://mcpemails.com"},{"@type":"ListItem","position":2,"name":"AI Email MCP Server Pricing: Free, Personal, Pro and Team Plans"}]},{"@type":"Product","@id":"https://mcpemails.com/pricing#plans","name":"mcpemails","description":"Free connects one inbox. Personal connects three for $9 a month. Pro connects every mailbox your business runs for $15. Team adds members, roles and SSO.","url":"https://mcpemails.com/pricing","image":["https://mcpemails.com/opengraph-image"],"brand":{"@type":"Organization","@id":"https://mcpemails.com/#organization","name":"mcpemails","url":"https://mcpemails.com"},"offers":[{"@type":"Offer","name":"Free","description":"Connect one inbox and give your agent a real mailbox.","url":"https://mcpemails.com/pricing","price":"0","priceCurrency":"USD","availability":"https://schema.org/InStock","priceSpecification":{"@type":"UnitPriceSpecification","price":"0","priceCurrency":"USD","unitText":"MONTH","billingDuration":1,"billingIncrement":1}},{"@type":"Offer","name":"Personal","description":"Three mailboxes for one person or one small business: work, personal, or your first company addresses.","url":"https://mcpemails.com/pricing","price":"9","priceCurrency":"USD","availability":"https://schema.org/InStock","priceSpecification":{"@type":"UnitPriceSpecification","price":"9","priceCurrency":"USD","unitText":"MONTH","billingDuration":1,"billingIncrement":1}},{"@type":"Offer","name":"Pro","description":"Every mailbox your business runs, on one agent: finance, sales, support, info, and your own.","url":"https://mcpemails.com/pricing","price":"15","priceCurrency":"USD","availability":"https://schema.org/InStock","priceSpecification":{"@type":"UnitPriceSpecification","price":"15","priceCurrency":"USD","unitText":"MONTH","billingDuration":1,"billingIncrement":1}},{"@type":"Offer","name":"Team","description":"Shared inboxes for a team, with a separate workspace per client or business.","url":"https://mcpemails.com/pricing","price":"79","priceCurrency":"USD","availability":"https://schema.org/InStock","priceSpecification":{"@type":"UnitPriceSpecification","price":"79","priceCurrency":"USD","unitText":"MONTH","billingDuration":1,"billingIncrement":1}}]}]}

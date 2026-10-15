@@ -30,14 +30,12 @@
 
 import { assert, assertEquals } from "https://deno.land/std@0.224.0/assert/mod.ts";
 
-import { isAdvertisedTool } from "./advertised-schema.ts";
-
 // See the note in tool-surface.test.ts: index.ts builds its registry at module
 // load and reads env while doing it, so the environment is arranged before the
 // dynamic import runs.
 Deno.env.set("MCP_INTROSPECTION_ONLY", "1");
 Deno.env.set("MCP_SERVER_NO_LISTEN", "1");
-const { TOOL_REGISTRY } = await import("./index.ts");
+const { PER_OPERATION_LISTING } = await import("./index.ts");
 
 /**
  * The portal's per-field limit.
@@ -58,10 +56,13 @@ const DOC_PATH = new URL(
 const HINTS = ["readOnlyHint", "destructiveHint", "openWorldHint"] as const;
 type Hint = typeof HINTS[number];
 
+/**
+ * The tools the doc covers: the per-operation listing, which since 2026-10-13
+ * is what an OpenAI client (and so the portal's scan) is shown. The
+ * consolidated listing other clients get is not documented there.
+ */
 function advertisedToolNames(): string[] {
-  return TOOL_REGISTRY
-    .filter((tool) => isAdvertisedTool(tool.name))
-    .map((tool) => tool.name);
+  return PER_OPERATION_LISTING.map((tool) => tool.name);
 }
 
 /**
@@ -167,8 +168,7 @@ Deno.test("a submitted string never contradicts its own heading by claiming read
   // as functionally read-only in the justification doesn't make the tool
   // read-only". A write tool whose submitted text says "read-only" or "it is a
   // read" is that failure, verbatim, in the field the reviewer reads.
-  const writers = TOOL_REGISTRY
-    .filter((tool) => isAdvertisedTool(tool.name))
+  const writers = PER_OPERATION_LISTING
     .filter((tool) => tool.annotations?.readOnlyHint !== true)
     .map((tool) => tool.name);
   for (const name of writers) {

@@ -98,8 +98,47 @@ export interface ToolInfoSummary {
  */
 export type ResultArrival = "none" | "ontime" | "late";
 
+/**
+ * Whether the draft on screen is known to be the draft the server has.
+ *
+ *   trusted    — it came from the server just now: a first mount's own result,
+ *                or the answer to a call this card made.
+ *   pending    — it is a REPLAY (see `isReplayedDraft`) and nothing has checked
+ *                it yet. App.tsx reads this and starts the re-read.
+ *   checking   — that re-read is in flight.
+ *   unverified — the re-read did not settle it, or a write the card started
+ *                ended without an answer, so what the server holds is unknown.
+ *
+ * Save and Send are offered in `trusted` only. That is the whole point of the
+ * field: a re-mounted card is handed the ORIGINAL tool result, and sending from
+ * it sends whatever the draft said before every edit since.
+ */
+export type DraftCheck = "trusted" | "pending" | "checking" | "unverified";
+
 export interface CardStore {
   envelope: Envelope | null;
+  /** See `DraftCheck`. Meaningful only while a draft editor is on screen. */
+  draftCheck: DraftCheck;
+  /**
+   * A draft id NEWER than the one in a replayed envelope: the id this card last
+   * held, read back out of its restore stub at the moment the replay replaced
+   * it. On a server without draft lineage it is the only id that still
+   * resolves, so the re-read asks with it first. Null once a read has settled.
+   */
+  draftIdHint: string | null;
+  /**
+   * A read found a newer version of this draft that the assistant wrote after
+   * this card last saw it, so a newer card for it exists. See `supersededBy`.
+   * Cleared by this card's own save, which makes it the newest writer again.
+   */
+  draftSuperseded: boolean;
+  /**
+   * The terminal receipt this card had ended on (restored from storage) when a
+   * replayed draft result replaced it. Held until the replay is checked: a
+   * draft that was sent, discarded or hidden here does not come back as an
+   * editor unless the server says it is still a draft. Null otherwise.
+   */
+  priorReceipt: Envelope | null;
   /** Classification of the most recent tool result. See `ResultStatus`. */
   resultStatus: ResultStatus;
   hostContext: HostContext;
@@ -145,6 +184,10 @@ export interface CardStore {
 
 let state: CardStore = {
   envelope: null,
+  draftCheck: "trusted",
+  draftIdHint: null,
+  draftSuperseded: false,
+  priorReceipt: null,
   resultStatus: "waiting",
   hostContext: {},
   connected: false,
@@ -367,6 +410,22 @@ export function isDepartedReceipt(env: Envelope | null | undefined): boolean {
   return env.receipt.outcome === "sent" || env.receipt.outcome === "scheduled";
 }
 
+/**
+ * Does this envelope report that something FAILED?
+ *
+ * §4 says the envelope state and the receipt outcome describe the same
+ * condition from two levels; either one saying so is enough, for the same
+ * reason `isDepartedReceipt` requires both to agree before calling it a send.
+ */
+export function isFailure(env: Envelope | null | undefined): boolean {
+  return !!env && (env.state === "error" || env.receipt?.outcome === "failed");
+}
+
+/** A draft editor with real content in it, as opposed to a restore stub. */
+function isLiveEditor(env: Envelope | null | undefined): env is Envelope {
+  return !!env && env.card === "draft_editor" && !!env.draft && !isRestoreStub(env);
+}
+
 /** Rule 0 above: keep the sent message on screen under its receipt. */
 function carrySentDraft(current: Envelope | null | undefined, next: Envelope): Envelope {
   if (!current || current.card !== "draft_editor" || !current.draft) return next;
@@ -423,6 +482,11 @@ function carrySentDraft(current: Envelope | null | undefined, next: Envelope): E
  * neutral headline. The message lives in this tab's memory until the frame goes
  * away, which is exactly as long as the user is looking at it.
  *
+ * (Since 2026-10-14 a send made from the card's own Send button also leaves a
+ * plain-text copy in sessionStorage, for the "Show" link a reopened card
+ * offers. That is App.tsx and ended.ts, not this carry, and it never touches
+ * the localStorage stub.)
+ *
  * "Always" is scoped to what reaches here. The card's own calls (App.tsx
  * #callDraft) reach this function directly, so a send the user pressed always
  * flips the card to its receipt. A PUSHED receipt is filtered first by
@@ -436,6 +500,23 @@ export function mergeEnvelope(
   current: Envelope | null | undefined,
   next: Envelope,
 ): Envelope {
+  // ── RULE -1: A FAILURE NEVER TAKES THE EDITOR AWAY ────────────────────────
+  // "Anything renderable replaces" was written when the only receipt that
+  // could follow a draft was a send completing. It is not: every draft tool
+  // answers a refusal with `card: "receipt"`, `outcome: "failed"`
+  // (mcp-app-drafts.ts#draftFailure), which is renderable, so a stale id on
+  // Save replaced a screen of the user's typing with "That draft could not be
+  // found." and no way back (QA, 2026-10-13). Rule 1 below already had the
+  // right idea and could not reach this case, because it keys on the card kind
+  // being the SAME and a failure arrives as a different one.
+  //
+  // So a failed receipt over a live editor becomes what rule 1 produces: the
+  // editor, with `state: "error"` and the receipt around it, which DraftEditor
+  // renders as a notice. Only an outcome that ends the draft (sent, scheduled,
+  // discarded, a held send) replaces the editor.
+  if (isLiveEditor(current) && next.card === "receipt" && isFailure(next)) {
+    return { ...current, state: "error", receipt: next.receipt };
+  }
   if (isRenderable(next) || !current) {
     return carrySentDraft(current, next);
   }
@@ -636,7 +717,23 @@ export function acceptRehydration(
     // receipt's missing scope.
     const mine = envelopeSubject(asked);
     const theirs = envelopeSubject(next);
-    if (!mine || !theirs || !sameSubject(mine, theirs)) return { kind: "failed" };
+    if (!mine || !theirs) return { kind: "failed" };
+    // DRAFT LINEAGE (2026-10-13). `draft_read` now accepts any EARLIER id of a
+    // draft and answers with the current one, so on this path a different
+    // `draft_id` is the designed answer rather than the mislabelled one this
+    // check was written against. What still has to hold is the mailbox: the
+    // answer must be a draft in the inbox that was asked about. An approval
+    // has no lineage and is still compared id for id.
+    //
+    // And the server says so: an answer under a different id names the id it
+    // was asked with in `resolved_from`. One that names neither the asked id
+    // nor resolves from it is about some other draft and is not adopted.
+    const same = kind === "draft_editor"
+      ? theirs.kind === "draft" &&
+        (mine.scope === null || theirs.scope === null || mine.scope === theirs.scope) &&
+        (theirs.id === mine.id || next.draft?.resolved_from === mine.id)
+      : sameSubject(mine, theirs);
+    if (!same) return { kind: "failed" };
     return { kind: "adopt", envelope: next };
   }
 
@@ -693,7 +790,139 @@ export function acceptRehydration(
  */
 export function adoptRehydration(envelope: Envelope): void {
   pushAccepted = true;
-  setState({ envelope });
+  ownAnswer = true;
+  setState({ envelope, draftCheck: "trusted", draftIdHint: null, priorReceipt: null });
+}
+
+/**
+ * How much later than the copy on screen a save has to be before it counts as
+ * a different write, when neither side has a revision to compare. A write
+ * stamps its own response and the lineage stamps its record, a moment apart.
+ */
+export const SUPERSEDE_SLACK_MS = 5_000;
+
+/**
+ * Did the ASSISTANT write this draft after the copy this card holds?
+ *
+ * A card is never told about a later tool call, so this is read off the one
+ * thing it does get: a `draft_read` answer, whose `revision` and
+ * `last_saved_by` come from the server's draft lineage. A read that reports a
+ * higher revision, last written by the assistant, means a later
+ * `draft{action:"update"}` (or reply) wrote it, and that call mounted its own
+ * card further down. The person's own saves never count: they are
+ * `last_saved_by: "user"`, and this card may well be where they were made.
+ *
+ * Without a revision on the held copy (a draft with no line when this card
+ * loaded it) the save times decide instead, with slack.
+ */
+export function supersededBy(
+  held: Envelope["draft"] | null | undefined,
+  next: Envelope["draft"] | null | undefined,
+): boolean {
+  if (!held || !next || next.origin !== "read" || next.last_saved_by !== "agent") return false;
+  const now = typeof next.revision === "number" ? next.revision : 0;
+  if (now < 1) return false;
+  const was = typeof held.revision === "number" ? held.revision : 0;
+  if (was >= 1) return now > was;
+  const a = Date.parse(String(held.last_saved_at ?? ""));
+  const b = Date.parse(String(next.last_saved_at ?? ""));
+  return Number.isFinite(a) && Number.isFinite(b) && b - a > SUPERSEDE_SLACK_MS;
+}
+
+/**
+ * Apply the answer to a call THIS CARD made from its draft editor.
+ *
+ * The one door for App.tsx#callDraft, for the reason `adoptRehydration` is the
+ * one door for a re-request: both are the moment the card knows more than the
+ * host does. From here on a pushed draft envelope can only be the mounting
+ * call's result arriving late, which is older than what is on screen by
+ * construction, so `wireResultHandlers` stops letting one replace it.
+ *
+ * A successful draft envelope is also what makes the draft `trusted` again. A
+ * failure leaves `draftCheck` alone: it says nothing about what the server
+ * holds, and the caller knows which failures mean "unknown".
+ */
+export function adoptOwnAnswer(next: Envelope): Envelope {
+  const applied = mergeEnvelope(state.envelope, next);
+  pushAccepted = true;
+  ownAnswer = true;
+  const fresh = next.card === "draft_editor" && !!next.draft && !isFailure(next);
+  const held = isLiveEditor(state.envelope) ? state.envelope.draft : null;
+  setState({
+    envelope: applied,
+    ...(fresh
+      ? {
+        draftCheck: "trusted" as const,
+        draftIdHint: null,
+        priorReceipt: null,
+        draftSuperseded: next.draft?.origin === "save"
+          ? false
+          : state.draftSuperseded || supersededBy(held, next.draft),
+      }
+      : {}),
+  });
+  return applied;
+}
+
+/**
+ * Take a previous failure's notice off the editor before the next call starts,
+ * so a retry is not read under the error it is retrying.
+ */
+export function clearDraftError(): void {
+  const env = state.envelope;
+  if (!isLiveEditor(env) || env.state !== "error") return;
+  const { receipt: _old, ...rest } = env;
+  setState({ envelope: { ...rest, state: "editing" } });
+}
+
+/**
+ * How old a first-mount result can be before it is treated as a replay.
+ *
+ * Claude delivers a first mount's result at the end of the assistant's turn
+ * (measured 4.5s). 30s covers an ordinary turn. Past it the card re-reads,
+ * which costs one `draft_read` and is also right on the merits: a turn that
+ * long has usually made more tool calls, and one of them may have changed this
+ * draft.
+ *
+ * ── WHAT THE STAMP MEANS NOW (2026-10-13) ──────────────────────────────────
+ * `last_saved_at` used to be the server's clock at RESPONSE time on every path.
+ * Since draft lineage it is the time of the last real SAVE: a write still
+ * stamps its own time, but a `draft_read` reports when the draft was last
+ * saved (or null). The age test is still SOUND — a response is never older
+ * than the save it reports, so a replay, which arrives more than 30s after its
+ * response, is still always more than 30s past its stamp — but it is no longer
+ * TIGHT: a model's fresh `draft_read` of a draft saved an hour ago also reads
+ * as old. That costs exactly one verifying re-read, never a loop: the re-read
+ * is the card's own answer (`adoptOwnAnswer`), which makes the draft `trusted`
+ * without consulting this test, and every later push is ignored behind it.
+ * structuredContent carries no response timestamp a tighter test could use,
+ * and `restored === "storage"` cannot be the only signal because a second
+ * device, an evicted entry or a host without storage would then trust a stale
+ * replay with Send on. Pinned in harness/draft-polish.test.mjs.
+ */
+export const REPLAY_AGE_MS = 30_000;
+
+/**
+ * Is this pushed draft a REPLAY of an old result rather than a fresh one?
+ *
+ * The host hands a re-mounted view the original tool result with nothing to
+ * mark it as old, so this is inferred from the only two things the card has:
+ *
+ *   - `restored === "storage"`: a stub for this very call was already in
+ *     storage, so the card has rendered it before. Exact, when storage works.
+ *   - the save stamp is not recent by this browser's clock. Covers a host
+ *     that keeps no storage (see `REPLAY_AGE_MS` for why a save stamp works). A wrong clock, a missing stamp or an unparseable
+ *     one all read as "replay", which is the direction that costs one read
+ *     instead of a send from stale text.
+ */
+export function isReplayedDraft(
+  env: Envelope,
+  restored: CardStore["restored"],
+  now = Date.now(),
+): boolean {
+  if (restored === "storage") return true;
+  const at = Date.parse(String(env.draft?.last_saved_at ?? ""));
+  return !Number.isFinite(at) || Math.abs(now - at) > REPLAY_AGE_MS;
 }
 
 /**
@@ -999,6 +1228,9 @@ export function toolInfoFrom(ctx: HostContext | undefined): ToolInfoSummary | nu
  */
 let pushAccepted = false;
 
+/** Has an answer to one of the card's OWN calls been adopted? See `adoptOwnAnswer`. */
+let ownAnswer = false;
+
 export function wireResultHandlers(bridge: HostBridge) {
   // The host MUST send tool-input with the full arguments after ui/initialize,
   // including to a view that mounts long after the call finished — which makes
@@ -1089,8 +1321,39 @@ export function wireResultHandlers(bridge: HostBridge) {
       }
     }
 
+    // ── A PUSHED DRAFT IS THE MOUNTING CALL'S RESULT, AND MAY BE OLD ────────
+    let check: Partial<CardStore> = {};
+    if (envelope.card === "draft_editor" && envelope.draft) {
+      // The card has already asked the server itself (a re-request, a save, a
+      // refresh). The push is the original result arriving after that, so it is
+      // older than what is on screen and must not replace it. With a stable id
+      // (Gmail, Outlook) it passes the correlation above, and used to resync
+      // the editor back to the draft as first created.
+      if (ownAnswer && isLiveEditor(current)) {
+        setState(timing);
+        return;
+      }
+      if (!pushAccepted && isReplayedDraft(envelope, getState().restored)) {
+        // The stub this replay is about to replace remembers the LAST id the
+        // card held, which after an IMAP save is not the replayed one.
+        const stub = isRestoreStub(current) && current?.card === "draft_editor"
+          ? current.draft
+          : undefined;
+        const a = stub?.identity?.inbox_id;
+        const b = envelope.draft.identity?.inbox_id;
+        const hint = stub?.draft_id && stub.draft_id !== envelope.draft.draft_id &&
+            (!a || !b || a === b)
+          ? stub.draft_id
+          : null;
+        // A card that had ended on a receipt keeps it until the replay has
+        // been checked (App.tsx#readDraft).
+        const prior = isRestoreStub(current) && current?.card === "receipt" ? current : null;
+        check = { draftCheck: "pending", draftIdHint: hint, priorReceipt: prior ?? null };
+      }
+    }
+
     pushAccepted = true;
-    setState({ ...timing, envelope: mergeEnvelope(current, envelope) });
+    setState({ ...timing, ...check, envelope: mergeEnvelope(current, envelope) });
   };
 
   bridge.onToolCancelled = (_params: ToolCancelledParams) => {

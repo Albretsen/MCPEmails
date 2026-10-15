@@ -13,7 +13,7 @@
  * boundary for it, the way HOST_SOURCES is for referrers.
  *
  * The same words are pinned by workspaces_acquisition_device_check in
- * supabase/migrations/20261002100000_acquisition_device.sql. The drift test in
+ * supabase/migrations/20261015100000_acquisition_device.sql. The drift test in
  * acquisition-device.test.mjs reads that migration and compares the two lists.
  */
 export const DEVICES = new Set(['mobile', 'tablet', 'desktop']);

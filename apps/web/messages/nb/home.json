@@ -1,7 +1,7 @@
 {
   "meta": {
-    "title": "Koble Gmail, Outlook, iCloud og IMAP til Claude",
-    "description": "Gi Claude, Cursor eller enhver MCP-klient ekte tilgang til innboksen: les, send, søk og organiser e-post i Gmail, Outlook, Fastmail, iCloud og IMAP. Gratis."
+    "title": "MCP-server for e-post: Gmail, Outlook og IMAP",
+    "description": "Vertsbasert MCP-server for e-post til Claude, ChatGPT og Cursor. Koble til Gmail, Outlook eller IMAP, flere postkasser samtidig. E-post hentes direkte, lagres aldri."
   },
   "nav": {
     "features": "Funksjoner",
@@ -15,6 +15,7 @@
     "selfHost": "Selvhosting"
   },
   "hero": {
+    "eyebrow": "Vertsbasert MCP-server for e-post",
     "titleLine1": "Gi AI-agenten",
     "titleLine2": "din en",
     "titleAccent": "innboks.",
@@ -44,6 +45,14 @@
   },
   "trusted": {
     "label": "Fungerer med alle MCP-kompatible agenter og klienter"
+  },
+  "whatIs": {
+    "title": "Hva er en MCP-server for e-post?",
+    "p1": "En MCP-server for e-post (email MCP server) er broen mellom en AI-assistent og en ekte postkasse. Den snakker Model Context Protocol, slik at Claude, ChatGPT, Cursor eller en annen MCP-klient kan lese, søke, skrive utkast og sende e-post gjennom ett endepunkt, uten en egen integrasjon for hver app.",
+    "p2": "MCP Emails er en vertsbasert en. Den fungerer med Gmail, Outlook og Microsoft 365, iCloud, Fastmail og alle postkasser som støtter IMAP, og én agent kan jobbe i flere postkasser samtidig. E-posten hentes direkte fra leverandøren din ved hvert kall og lagres aldri på serverne våre.",
+    "linkImap": "Sett opp MCP-serveren for IMAP",
+    "linkBusiness": "E-post-MCP for firmaets postkasser",
+    "linkProviders": "Alle støttede e-postleverandører"
   },
   "features": {
     "eyebrow": "Prinsipper",
@@ -202,6 +211,18 @@
     "title": "Svar på det du lurer på",
     "sub": "Alt du trenger å vite før du kobler til den første innboksen din.",
     "items": [
+      {
+        "q": "Er MCP Emails en MCP-server for IMAP?",
+        "a": "Ja. I tillegg til innlogging med Gmail og Outlook finnes det en generisk IMAP- og SMTP-kobling, så alle postkasser med IMAP-tilgang fungerer: ditt eget domene, et webhotell eller en lokal nettleverandør. Du legger inn serveropplysningene og et app-passord én gang, og agenten leser over IMAP og sender gjennom din egen SMTP-server."
+      },
+      {
+        "q": "Kan én agent jobbe i flere postkasser samtidig?",
+        "a": "Ja. Koble hver postkasse til samme konto, så når agenten alle sammen gjennom ett endepunkt. Den kan liste opp de tilkoblede innboksene, velge riktig innboks for hver forespørsel og veksle mellom for eksempel en supportadresse og en privat adresse i samme samtale. Hvor mange innbokser du kan koble til, avhenger av planen din."
+      },
+      {
+        "q": "Hvordan legger jeg til e-post-MCP som connector i Claude eller ChatGPT?",
+        "a": "Legg til en egendefinert connector i innstillingene til klienten, lim inn https://mcpemails.com/api/mcp som server-URL og godkjenn innloggingen. Klienter som støtter OAuth trenger ingen API-nøkkel. Den samme URL-en fungerer i Cursor, VS Code og andre MCP-klienter."
+      },
       {
         "q": "Bruker dere analyseverktøy?",
         "a": "Vi bruker personvernvennlig, informasjonskapsel-fri produktanalyse for å forstå nettstedet og oppsettet. Vi samler aldri inn e-postinnhold, adresser, API-nøkler, OAuth-tokener eller MCP-forespørselsdata."

@@ -1,0 +1,22 @@
+data: {"type":"run_started","run_id":"run_t"}
+
+data: {"type":"status","text":"Working"}
+
+data: {"type":"tool_call","message_id":"run_t_m1","call":{"id":"run_t_c1","tool":"draft","action":"edit","human":"Editing the draft","meta":"editing below","state":"running","keys":["inbox-a:m1"]}}
+
+data: {"type":"status","text":"Editing the draft"}
+
+data: {"type":"draft_stream","phase":"editing","kind":"reply","reply_to":"inbox-a:m1","fields":{"inbox_id":"inbox-a","to":"maya@lumenworks.example","subject":"Re: Q4 renewal terms","cc":""},"call_id":"run_t_c1","message_id":"run_t_m1","segments":[{"k":"keep","t":"Hi Maya,\n\nWe "},{"k":"del","t":"will "},{"k":"keep","t":"keep "},{"k":"del","t":"the "},{"k":"keep","t":"40 seats.\n\n"},{"k":"del","t":"Best,\n"},{"k":"keep","t":"Ada"}]}
+
+data: {"type":"draft_stream","phase":"editing","kind":"reply","reply_to":"inbox-a:m1","fields":{"inbox_id":"inbox-a","to":"maya@lumenworks.example","subject":"Re: Q4 renewal terms","cc":""},"call_id":"run_t_c1","message_id":"run_t_m1","body":"Hi Maya,\n\nWe keep 40 seats.\n\nAda","done":true}
+
+data: {"type":"tool_call","message_id":"run_t_m1","call":{"id":"run_t_c1","tool":"draft","action":"edit","human":"Editing the draft","meta":"under the email","state":"done","keys":["inbox-a:m1"]}}
+
+data: {"type":"text_delta","message_id":"run_t_m2","delta":"Short"}
+
+data: {"type":"text_delta","message_id":"run_t_m2","delta":"ened."}
+
+data: {"type":"text_delta","message_id":"run_t_m2","delta":"","done":true}
+
+data: {"type":"done","conversation":{"v":1,"summary":"","turns":[{"u":"Make it shorter","a":"Shortened.","calls":[{"h":"Editing the draft","k":["inbox-a:m1"]}],"refs":[{"k":"inbox-a:m1","l":"attached email"}]}]},"usage":{"input_tokens":2000,"output_tokens":100,"cost_micro_usd":1950,"model":"gpt-5.4-mini","rounds":2}}
+

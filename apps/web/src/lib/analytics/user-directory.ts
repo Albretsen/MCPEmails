@@ -17,8 +17,9 @@
  * its `db-max-rows` ceiling with no error and no marker, which is exactly the
  * failure mode a directory page must not have: a silently short list looks
  * like a smaller customer base. So the RPC returns `total_rows` computed before
- * its own LIMIT, `readAll` asks for a range wider than the cap, and the page
- * prints a warning whenever what arrived is shorter than what exists.
+ * its own LIMIT, `readAll` reads a page at a time so no single request exceeds
+ * the cap, and the page prints a warning whenever what arrived is shorter than
+ * what exists.
  */
 
 import { createServiceRoleClient } from '@/lib/supabase/service';
@@ -175,20 +176,33 @@ type RpcArgs = Record<string, number | string | null>;
 /**
  * One RPC read, with the PostgREST row ceiling defeated explicitly.
  *
- * `.range()` widens the request past the default page; without it a response
- * longer than the ceiling comes back quietly truncated. The function NAME is
- * checked against the generated schema; only the argument object is not,
- * because one helper dispatches several functions -- same convention as
- * growth-queries.ts.
+ * THE CEILING IS A SERVER SETTING AND `.range()` CANNOT RAISE IT. A range wider
+ * than max-rows (1000 on this project) is answered with the first 1000 rows and
+ * no error, which is how the directory lost its five oldest signups the day the
+ * 1001st person arrived. So the read is taken a page at a time, each page no
+ * wider than the ceiling, until a short page says there is nothing left. The
+ * functions read here all end in a fixed ORDER BY, which is what makes
+ * consecutive ranges line up. The function NAME is checked against the
+ * generated schema; only the argument object is not, because one helper
+ * dispatches several functions -- same convention as growth-queries.ts.
  */
 type RpcName = keyof Database['public']['Functions'];
 
+const POSTGREST_PAGE = 1000;
+
 async function readAll<T>(fn: RpcName, args: RpcArgs, max: number): Promise<T[]> {
   const service = createServiceRoleClient();
-  const { data, error } = await service.rpc(fn, args as never).range(0, Math.max(max - 1, 0));
-  if (error) throw new Error(error.message);
-  if (data === null || data === undefined) return [];
-  return (Array.isArray(data) ? data : [data]) as T[];
+  const rows: T[] = [];
+  while (rows.length < max) {
+    const size = Math.min(POSTGREST_PAGE, max - rows.length);
+    const { data, error } = await service.rpc(fn, args as never).range(rows.length, rows.length + size - 1);
+    if (error) throw new Error(error.message);
+    if (data === null || data === undefined) break;
+    const page = (Array.isArray(data) ? data : [data]) as T[];
+    rows.push(...page);
+    if (page.length < size) break;
+  }
+  return rows;
 }
 
 function cachedRpc<T>(fn: RpcName, args: RpcArgs, max: number): Promise<GrowthResult<T[]>> {

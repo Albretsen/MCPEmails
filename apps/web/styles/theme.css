@@ -71,6 +71,17 @@ html[data-theme="dark"],
    shows logo-wordmark-dark.svg (fg-1 text, cobalt-300 mark). */
 html:not([data-theme="dark"]) .logo-dark,
 html[data-theme="dark"] .logo-light { display: none; }
+/* The wordmark SVGs have a viewBox and no size of their own, and are sized by
+   height alone. Their <img> tags carry width="280" height="48" so the browser
+   knows the aspect ratio before the file arrives and reserves the box (without
+   it the logo is 0 px wide until it loads, and the nav jumps sideways when it
+   does). `width: auto` is what keeps those attributes a ratio hint only: a bare
+   width attribute would otherwise set the CSS width to 280px and squash the
+   logo. `aspect-ratio` repeats the ratio for a wordmark <img> without the
+   attributes. Rendered size is unchanged: height from the rule that sets it,
+   width from the ratio. */
+img.logo-light,
+img.logo-dark { width: auto; aspect-ratio: auto 280 / 48; }
 
 /* Make sticky nav opaque in dark */
 html[data-theme="dark"] .nav { background: rgba(19,25,50,0.88); border-bottom-color: var(--border-1); }

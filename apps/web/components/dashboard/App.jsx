@@ -1,6 +1,6 @@
 'use client';
 
-import { useState, useEffect, useCallback } from 'react';
+import { useState, useEffect, useCallback, useRef } from 'react';
 import { useTranslations } from 'next-intl';
 import { useRouter, useSearchParams } from 'next/navigation';
 import { useTweaks, TweakSection, TweakRadio, TweakToggle, TweaksPanel } from '../tweaks-panel';
@@ -10,12 +10,20 @@ import { sectionToPath, pathSegmentToSection } from './routes';
 import { OverviewPage, InboxesPage, KeysPage, UsagePage, SettingsPage, SecurityPage, MembersPage, WorkflowsPage, ApprovalsPage, AutomationsPage, planDisplayName, PLAN_LADDER } from './Pages';
 import { ConnectModal } from './ConnectModal';
 import { CheckoutSuccessPanel } from './CheckoutSuccessPanel';
+import { CheckoutCancelFeedback } from './CheckoutCancelFeedback';
 import { AdminConsentLinkDialog } from './AdminConsentLinkDialog';
 import { CommandPalette } from './CommandPalette';
 import { ToastProvider, useToast } from './Toast';
+import { warmSignatureEditor } from './signature-editor-loader.mjs';
 import { trackProductEvent } from '@/lib/analytics.mjs';
 import { parseUpgradeIntent } from '@/lib/billing/upgrade-intent.mjs';
 import { isBusinessShapedWorkspace } from '@/lib/segment/consumer-domains.mjs';
+import {
+  connectIntentStorage,
+  takeConnectIntent,
+  withoutConnectIntent,
+} from '@/lib/connect/intent-carry.mjs';
+import { findMailHostPreset } from '@/lib/email-providers/host-presets';
 
 /* App.jsx: dashboard root. Owns state, route, modals.
    firstrun param auto-opens the connect modal.
@@ -158,6 +166,28 @@ function DashboardInner({ initialRoute = 'overview', user, workspace: serverWork
     } catch { /* SSR / unsupported history: state still updates */ }
   };
 
+  // Fetch the signature editor once the dashboard has gone idle.
+  //
+  // The editor and its sanitiser (TipTap, ProseMirror, DOMPurify) are no longer
+  // in the page's own JavaScript; they load on demand (see
+  // signature-editor-loader.mjs). On demand alone would mean the first inbox
+  // modal opened after a page load waits on the network. Asking for them here,
+  // as soon as the browser has nothing better to do, means that in ordinary use
+  // they are already in memory before anyone can reach an inbox row, and
+  // opening the modal and saving behave exactly as when they were bundled. The
+  // page still becomes interactive without them, which is the saving.
+  //
+  // `timeout` caps how long a busy page can put it off. Safari has no
+  // requestIdleCallback, so there a short timer stands in.
+  useEffect(() => {
+    if (typeof window.requestIdleCallback === 'function') {
+      const handle = window.requestIdleCallback(() => warmSignatureEditor(), { timeout: 2000 });
+      return () => window.cancelIdleCallback(handle);
+    }
+    const timer = setTimeout(() => warmSignatureEditor(), 200);
+    return () => clearTimeout(timer);
+  }, []);
+
   // Keep the active section in sync with browser back/forward navigation.
   useEffect(() => {
     const onPopState = () => {
@@ -239,6 +269,13 @@ function DashboardInner({ initialRoute = 'overview', user, workspace: serverWork
     if (syncedFrom.invites !== serverPendingInvites) setPendingInvites(serverPendingInvites ?? []);
   }
   const [showConnect, setShowConnect] = useState(false);
+  // The provider a /connect/<slug> landing page sent this person for, resolved
+  // into what the ConnectModal preselects. Set at most once per page load (see
+  // the first-run effect below) and dropped when the modal closes, so every
+  // later opening of the modal is the ordinary one.
+  const [connectPreselect, setConnectPreselect] = useState(null);
+  // undefined = not looked at yet, null = nothing (or already spent).
+  const connectIntentSlug = useRef(undefined);
   // The shareable Microsoft 365 admin-consent link (AdminConsentLinkDialog).
   const [showAdminLink, setShowAdminLink] = useState(false);
   // When set, the ConnectModal opens in reconnect mode for this existing inbox
@@ -247,6 +284,9 @@ function DashboardInner({ initialRoute = 'overview', user, workspace: serverWork
   const [showCommand, setShowCommand] = useState(false);
   // { planId, interval } while the post-checkout confirmation panel is open.
   const [checkoutSuccess, setCheckoutSuccess] = useState(null);
+  // The "what stopped you?" card shown on return from a cancelled checkout.
+  const [checkoutCancelled, setCheckoutCancelled] = useState(false);
+  const dismissCheckoutCancelled = useCallback(() => setCheckoutCancelled(false), []);
   const [onboardingClient, setOnboardingClient] = useState(returnedOnboardingClient);
   const [guideResumeKey, setGuideResumeKey] = useState(0);
 
@@ -313,12 +353,69 @@ function DashboardInner({ initialRoute = 'overview', user, workspace: serverWork
     // eslint-disable-next-line
   }, []);
 
-  // Auto-open Connect modal on first run, with a brief welcome delay
+  // Auto-open Connect modal on first run, with a brief welcome delay.
+  //
+  // A visitor who came from a provider landing page ("Connect IONOS free")
+  // carries that provider here as `?provider=<slug>` and/or in browser storage
+  // (lib/connect/intent-carry.mjs). For them the modal opens with that provider
+  // preselected, on a first run and on an ordinary sign-in alike. For everyone
+  // else `slug` is null and this is the same timer it has always been.
   useEffect(() => {
-    if (firstrun) {
-      const id = setTimeout(() => setShowConnect(true), 400);
-      return () => clearTimeout(id);
+    if (connectIntentSlug.current === undefined) {
+      // Read it and spend it in the same breath: the stored record is removed
+      // and the parameter leaves the address bar before anything is shown, so
+      // a reload, a dismissal or a finished connection never sees it again.
+      // The ref (not the storage) is what a development double-run of this
+      // effect reads the second time.
+      let slug = null;
+      try {
+        slug = takeConnectIntent({ search: window.location.search, storage: connectIntentStorage() });
+        const stripped = withoutConnectIntent(window.location.href);
+        if (stripped !== window.location.href) window.history.replaceState({}, '', stripped);
+      } catch { /* a hint is never worth an error */ }
+      connectIntentSlug.current = slug;
     }
+    const slug = connectIntentSlug.current;
+
+    if (!slug) {
+      if (firstrun) {
+        const id = setTimeout(() => setShowConnect(true), 400);
+        return () => clearTimeout(id);
+      }
+      return;
+    }
+
+    // The registry is 80 KB, so it is loaded only for someone who arrived with
+    // a hint, and the modal waits for it: ConnectModal reads `preselect` once,
+    // when it mounts. The first-run welcome delay is kept alongside.
+    let cancelled = false;
+    const welcome = new Promise(resolve => setTimeout(resolve, firstrun ? 400 : 0));
+    const resolved = import('@/lib/connect/intent.mjs')
+      .then(({ resolveConnectIntent, connectPreselectFor }) =>
+        connectPreselectFor(resolveConnectIntent(slug), findMailHostPreset))
+      // Failing to load a hint must leave the dashboard exactly as it was.
+      .catch(() => null);
+    Promise.all([resolved, welcome]).then(([preselect]) => {
+      if (cancelled) return;
+      connectIntentSlug.current = null;
+      // An unknown, unreleased or unsupported provider resolves to null. So
+      // does nothing at all: a first run still gets its modal, and an ordinary
+      // sign-in gets the dashboard and no modal.
+      // At the inbox cap the modal IS the upgrade panel, and a hint never opens
+      // a paywall on its own.
+      const atCap = planLimits != null && planLimits.maxInboxes != null
+        && (serverInboxes?.length ?? 0) >= planLimits.maxInboxes;
+      if (preselect && !atCap) {
+        setConnectPreselect(preselect);
+        setShowConnect(true);
+      } else if (firstrun) {
+        setShowConnect(true);
+      }
+    });
+    return () => { cancelled = true; };
+    // Runs once per `firstrun`; the plan and inbox props it reads are the ones
+    // the page loaded with, which is the moment the question is about.
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [firstrun]);
 
   // Handle ?connected=<provider> and ?error=<code> params injected by OAuth callbacks.
@@ -467,8 +564,10 @@ function DashboardInner({ initialRoute = 'overview', user, workspace: serverWork
   // have both finished, it lands diagonally opposite everything the buyer is
   // reading, and this effect then strips the params, so after those four
   // seconds nothing in the product acknowledges the payment at all. Success
-  // now opens a persistent panel instead; a cancelled checkout is still just a
-  // toast, because nothing happened and nothing needs acknowledging.
+  // now opens a persistent panel instead. A cancelled checkout needs no
+  // acknowledgement, but it is the one moment to learn why someone who wanted
+  // to pay did not, so it opens a small, ignorable feedback card where the
+  // toast used to be (CheckoutCancelFeedback).
   useEffect(() => {
     const checkoutParam = readQuery(searchParams, 'checkout');
     if (!checkoutParam) return;
@@ -500,7 +599,9 @@ function DashboardInner({ initialRoute = 'overview', user, workspace: serverWork
         });
       }
     } else if (checkoutParam === 'cancelled') {
-      toast({ message: tr('app.checkoutCancelled'), variant: 'info' });
+      // One-shot signal from the return URL, client only: same reasoning as
+      // the success panel above.
+      setCheckoutCancelled(true);
     }
     // Clean up the query params from the URL without a reload, so a refresh
     // does not replay the confirmation.
@@ -646,6 +747,7 @@ function DashboardInner({ initialRoute = 'overview', user, workspace: serverWork
             signatureHtml: sig.signature_html ?? null,
             signatureEnabled: sig.signature_enabled ?? true,
             signatureReplyMode: sig.signature_reply_mode ?? 'first_only',
+            signatureEmbedImages: sig.signature_embed_images ?? x.signatureEmbedImages ?? false,
             signatureSource: sig.signature_source ?? 'manual',
             sendApprovalRequired: data.sendApprovalRequired ?? x.sendApprovalRequired ?? false,
             sendReviewMode: data.sendReviewMode ?? x.sendReviewMode ?? 'off',
@@ -864,6 +966,7 @@ function DashboardInner({ initialRoute = 'overview', user, workspace: serverWork
     });
     setReconnectInbox(null);
     setShowConnect(false);
+    setConnectPreselect(null);
     // Say which settings the mailbox is actually on, when they are not the ones
     // the user submitted. All three connect routes autodetect the transport and
     // store what worked, and they have always reported it back; nothing read
@@ -875,8 +978,15 @@ function DashboardInner({ initialRoute = 'overview', user, workspace: serverWork
     // only person who needs the sentence is the one who would otherwise find a
     // different number on the Inboxes page later and have to work out why.
     if (transport) {
+      // A receive-only or send-only connection has one half, and its other
+      // port comes back null; reciting "SMTP null" would be worse than nothing.
+      const hasImapPort = transport.imapPort != null;
+      const hasSmtpPort = transport.smtpPort != null;
+      const adjustedKey = hasImapPort && hasSmtpPort
+        ? 'app.inboxConnectedAdjusted'
+        : hasImapPort ? 'app.inboxConnectedAdjustedImap' : 'app.inboxConnectedAdjustedSmtp';
       toast({
-        message: tr('app.inboxConnectedAdjusted', {
+        message: tr(adjustedKey, {
           label,
           imapPort: String(transport.imapPort),
           imapSecurity: securityLabel(tr, transport.imapSecurity),
@@ -1099,8 +1209,9 @@ function DashboardInner({ initialRoute = 'overview', user, workspace: serverWork
       {showConnect && (
         <ConnectModal
           reconnect={reconnectInbox}
-          onClose={() => { setShowConnect(false); setReconnectInbox(null); }}
+          onClose={() => { setShowConnect(false); setReconnectInbox(null); setConnectPreselect(null); }}
           onConnect={onConnect}
+          preselect={reconnectInbox == null ? connectPreselect : null}
           atInboxLimit={reconnectInbox == null && planLimits != null && planLimits.maxInboxes != null && inboxes.length >= planLimits.maxInboxes}
           planName={planDisplayName(workspace?.plan)}
           inboxCount={inboxes.length}
@@ -1133,6 +1244,8 @@ function DashboardInner({ initialRoute = 'overview', user, workspace: serverWork
           onDismiss={() => setCheckoutSuccess(null)}
         />
       )}
+
+      {checkoutCancelled && <CheckoutCancelFeedback onDismiss={dismissCheckoutCancelled} />}
 
       <CommandPalette
         open={showCommand}

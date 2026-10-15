@@ -52,6 +52,7 @@ import { TextStyle } from '@tiptap/extension-text-style';
 import { Color } from '@tiptap/extension-color';
 import {
   forwardRef,
+  useEffect,
   useImperativeHandle,
   useRef,
   useState,
@@ -164,7 +165,7 @@ const ToolbarButton = ({ active, onClick, disabled, title, children }) => (
 );
 
 const SignatureRichEditor = forwardRef(function SignatureRichEditor(
-  { inboxId, initialHtml, initialText, disabled = false, onChange },
+  { inboxId, initialHtml, initialText, disabled = false, onChange, onReady },
   ref,
 ) {
   const t = useTranslations('dashboard');
@@ -236,9 +237,27 @@ const SignatureRichEditor = forwardRef(function SignatureRichEditor(
         if (mode === 'html') return htmlToText(htmlSource).trim() === '';
         return editor ? editor.isEmpty : true;
       },
+      /**
+       * Whether getHTML()/getText() describe the real content yet. In rich
+       * mode they return '' until TipTap has created its editor, and a save
+       * that read that '' would wipe the stored signature. Source mode reads
+       * the textarea state and is ready from the first render.
+       */
+      isReady() {
+        return mode === 'html' || Boolean(editor);
+      },
     }),
     [editor, mode, htmlSource],
   );
+
+  // Tells the parent the handle above is ready to be read. This component is
+  // loaded on demand now, so "the editor exists" is no longer true from the
+  // moment its parent renders, and a Save clicked early has to wait for this.
+  // Runs after the imperative handle is attached (layout effects come first).
+  const ready = mode === 'html' || Boolean(editor);
+  useEffect(() => {
+    if (ready && onReady) onReady();
+  }, [ready]); // eslint-disable-line react-hooks/exhaustive-deps
 
   /** Rich → HTML source: seed the textarea from the editor's current markup. */
   const switchToHtmlMode = () => {

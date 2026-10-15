@@ -87,8 +87,20 @@ jobs:
       - uses: actions/setup-node@v7
         with:
           node-version-file: .nvmrc
-      - name: npm audit (fails on high or critical)
-        run: npm audit --audit-level=high
+      # DATED EXCEPTIONS (2026-10-03). `npm audit --audit-level=high` became
+      # scripts/audit-with-exceptions.mjs: the same audit of the same whole
+      # lockfile, failing on the same severities, except that one named
+      # advisory may be let through until a date written beside it. It exists
+      # for an advisory with no patched release (the first was braces,
+      # GHSA-vfj7-8cjw-p6xm), which otherwise holds every production deploy for
+      # as long as upstream takes. An exception expires by itself and the job
+      # goes red again; the rules for adding one are at the top of the script.
+      # This is NOT `--omit=dev` by another name: every other advisory, dev or
+      # prod, still fails.
+      - name: audit script self-test
+        run: node --test scripts/audit-with-exceptions.test.mjs
+      - name: npm audit (fails on high or critical, dated exceptions only)
+        run: node scripts/audit-with-exceptions.mjs
 
   typecheck:
     name: Type Check
@@ -124,21 +136,26 @@ jobs:
   # tests are what stand between a refactor and a draft being rewritten on save.
   #
   # WHAT RUNS. `npm test` is `npm run verify`, which is harness/verify.mjs, and
-  # that runs FIVE independent suites and reports all of them: the scripted host
+  # that runs EIGHT independent suites and reports all of them: the scripted host
   # (state-machine.mjs), hardening (hardening.mjs), the storage audit
-  # (storage-audit.mjs), the body/signature suite (draft-body.test.mjs) and the
-  # resync suite (draft-sync.test.mjs, 36 checks). Every suite bundles `src/`
-  # with esbuild and drives the SHIPPED functions, so a green run here means the
-  # code that goes into the card is the code that passed. The first four need no
-  # browser at all; the fifth mounts the real editor in jsdom, because the defect
-  # it pins — a teardown landing between a new envelope and the effect that would
-  # disarm the saver — only exists in a mounted component. Runtime is a couple of
-  # seconds.
+  # (storage-audit.mjs), the body/signature suite (draft-body.test.mjs), the
+  # resync suite (draft-sync.test.mjs, 39 checks), the render suite
+  # (card-render.test.mjs, 27 checks), the draft QA suite (draft-qa.test.mjs:
+  # failed actions, remounts, unsaved edits, focus, recipients) and the draft
+  # polish suite (draft-polish.test.mjs: recipient parsing, focus, fullscreen,
+  # copy, the formatted preview, the server's new draft fields). Every suite
+  # bundles `src/` with esbuild and drives the SHIPPED functions, so a green run
+  # here means the code that goes into the card is the code that passed. The
+  # first four need no browser at all; the last four use jsdom, because what
+  # they pin only exists in a mounted component — a teardown landing between a
+  # new envelope and the effect that would disarm the saver, and a card that
+  # renders nothing and so reports a zero height to the host. The render suite evaluates the real `main.tsx`, so it
+  # also covers that module's composition order. Runtime is a couple of seconds.
   #
   # The suite count is load-bearing: verify.mjs prints "N/N suites passed", and
   # it exists because the old `&&` chain let one crashing suite hide the findings
-  # of every suite behind it. If that line ever says fewer than five, a suite was
-  # dropped rather than fixed.
+  # of every suite behind it. If that line ever says fewer than eight, a suite
+  # was dropped rather than fixed.
   #
   # WHY `npm ci` AT THE ROOT. apps/mcp-app is an npm workspace (root
   # package.json "workspaces": ["apps/*"]) with no lockfile of its own, exactly
@@ -174,8 +191,27 @@ jobs:
       - run: npm ci
       - name: Type check the card
         run: cd apps/mcp-app && npm run typecheck
-      - name: Run card tests (five suites via harness/verify.mjs)
+      - name: Run card tests (ten suites via harness/verify.mjs)
         run: cd apps/mcp-app && npm test
+
+  # The web mail client (apps/client, app.mcpemails.com): a Vite + React SPA.
+  # Same shape as the `card` job above and for the same reason: apps/client is
+  # an npm workspace with no lockfile of its own, so the root `npm ci` is what
+  # installs it. One step, three checks, in the order they fail fastest: the
+  # type check, the vitest suite (pure logic plus jsdom: router, stores, layout
+  # maths, the keyboard matcher, the palette ranker), then the production build.
+  client:
+    name: Web Client (typecheck, tests, build)
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v7
+      - uses: actions/setup-node@v7
+        with:
+          node-version-file: .nvmrc
+          cache: 'npm'
+      - run: npm ci
+      - name: Type check, test and build the client
+        run: cd apps/client && npm run typecheck && npm test && npm run build
 
   # The edge function is a separate runtime with a separate test suite, and
   # until now nothing ran it. That mattered more than it looked: the MCP server
@@ -234,6 +270,17 @@ jobs:
         env:
           HOST_GUARD_SKIP_NETWORK_TESTS: '1'
         run: deno test --node-modules-dir=none --allow-read --allow-env --allow-run=git supabase/functions/mcp-server/
+      # client-api (the web mail client's function) imports the tool layer
+      # above in-process, so it is checked and tested in the same job, with the
+      # same flags and for the same reasons. No --allow-net here either: its
+      # IMAP tests run on the scripted fake server and its JWT tests on
+      # locally generated keys, so a test that reaches for a socket fails.
+      - name: Type check client-api
+        run: deno check --node-modules-dir=none supabase/functions/client-api/index.ts
+      - name: Run client-api tests
+        env:
+          HOST_GUARD_SKIP_NETWORK_TESTS: '1'
+        run: deno test --node-modules-dir=none --allow-read --allow-env --allow-run=git supabase/functions/client-api/
 
   build:
     name: Build Check
@@ -286,7 +333,7 @@ jobs:
       # (2.118 started typing NOT NULL jsonb as NonNullable<Json>), so a
       # floating version turns this job red on days nobody changed anything.
       # Bump on purpose, and fix what the new generator finds in the same PR.
-      - uses: supabase/setup-cli@v1
+      - uses: supabase/setup-cli@v3
         with:
           version: 2.118.0
       - name: Apply every migration to a fresh database
@@ -318,7 +365,7 @@ jobs:
   ci-passed:
     name: CI passed
     if: always()
-    needs: [audit, typecheck, test, card, deno, build, db]
+    needs: [audit, typecheck, test, card, client, deno, build, db]
     runs-on: ubuntu-latest
     steps:
       - name: Every job succeeded

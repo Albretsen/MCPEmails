@@ -3,6 +3,7 @@
   "title": "Every {provider} mailbox your company runs, on one agent",
   "body": "If your company runs more than one address on {provider}, such as info@, sales@ and invoices@, connect each one to the same mcpemails workspace. Your AI client then reaches all of them through the one MCP URL, in Claude, ChatGPT, Cursor or any other MCP client. Every tool call names the mailbox it acts on, each mailbox keeps its own sender name and signature, and a reply goes out through the mailbox it belongs to.",
   "plans": "Free connects one mailbox, Personal three, and Pro every mailbox you run, on one login.",
+  "pricingLink": "Compare plans and how many mailboxes each connects",
   "link": "How one person runs every company mailbox from one agent",
   "faqQ": "Can I connect several {provider} mailboxes to the same AI agent?",
   "faqA": "Yes. Connect each {provider} address to one mcpemails workspace and your AI client reaches all of them through the same MCP URL. Every tool call names the mailbox it acts on, so a reply to a message in sales@ goes out from sales@. Free connects one mailbox, Personal three, and Pro every mailbox you run."

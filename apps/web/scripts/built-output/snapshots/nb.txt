@@ -1,0 +1,409 @@
+Koble Gmail, Outlook, iCloud og IMAP til Claude · mcpemails
+[meta description] Gi Claude, Cursor eller enhver MCP-klient ekte tilgang til innboksen: les, send, søk og organiser e-post i Gmail, Outlook, Fastmail, iCloud og IMAP. Gratis.
+[meta og:title] Koble Gmail, Outlook, iCloud og IMAP til Claude
+[meta og:description] Gi Claude, Cursor eller enhver MCP-klient ekte tilgang til innboksen: les, send, søk og organiser e-post i Gmail, Outlook, Fastmail, iCloud og IMAP. Gratis.
+[meta og:locale] nb_NO
+[meta og:locale:alternate] en_US
+[meta og:locale:alternate] es_ES
+[meta og:locale:alternate] fr_FR
+[meta og:locale:alternate] zh_CN
+[meta twitter:title] Koble Gmail, Outlook, iCloud og IMAP til Claude
+[meta twitter:description] Gi Claude, Cursor eller enhver MCP-klient ekte tilgang til innboksen: les, send, søk og organiser e-post i Gmail, Outlook, Fastmail, iCloud og IMAP. Gratis.
+[alt] mcpemails
+[alt] mcpemails
+[aria-label] Primary navigation
+Funksjoner
+Slik fungerer det
+Priser
+Sammenlign
+Dokumentasjon
+Selvhosting
+Blogg
+Logg inn
+Kom i gang gratis
+[aria-label] Open navigation menu
+Gi AI-agenten
+din en
+innboks.
+Koble til Gmail, Outlook, iCloud, Fastmail eller en hvilken som helst IMAP-innboks én gang. Lim inn én MCP-endepunkt-URL i Claude, Cursor, VS Code, ChatGPT, Windsurf, n8n, Make eller en hvilken som helst MCP-klient. OAuth-klienter kobler til med ett klikk, uten oppsett av API-nøkkel. Agenten din leser, søker og sender e-post i sanntid, og e-posten den leser lagres aldri.
+Koble til innboksen din
+Les dokumentasjonen
+1 innboks gratis, for alltid
+Ingen kort kreves
+E-post hentes i sanntid
+Tar du deg av post@, salg@ og faktura@ for et firma?
+Alle jobbpostkassene dine på én agent
+.
+Slik flyter et kall
+t+0ms → t+312ms
+AI-agent
+Claude · Cursor · VS Code · ChatGPT · enhver MCP-klient
+MCP
+mcpemails
+/api/mcp-endepunkt
+IMAP
+Din leverandør
+Gmail · Outlook · iCloud · IMAP
+live · t+12ms
+inbox_list()
+→
+agenten kaller
+inbox_list
+()
+·
+returnerer innboks-ID-er, ingen kopiering fra dashbordet
+→
+agenten kaller
+email_read
+(action=
+"list"
+· inbox_id=
+"3f7a…"
+)
+·
+mcpemails henter via Gmail API (token rotert)
+←
+20 meldinger returnert ·
+ingenting lagret
+mcpemails (røret)
+sanntidsforespørsel
+dine data, din leverandør
+[aria-label] Utvalgt kundeomtale
+[aria-label] Vurdert til 5 av 5
+“Being able to connect all our emails into one MCP was a game changer.”
+TV
+Torstein Vikse
+Founder,
+Vikse Development AS
+[title] Omtalt på Google
+Omtalt på Google
+Fungerer med alle MCP-kompatible agenter og klienter
+Claude
+ChatGPT
+Cursor
+VS Code
+Cline
+Windsurf
+Gemini CLI
+Zed
+JetBrains
+Raycast
+Warp
+curl / API
+Claude
+ChatGPT
+Cursor
+VS Code
+Cline
+Windsurf
+Gemini CLI
+Zed
+JetBrains
+Raycast
+Warp
+curl / API
+Claude
+ChatGPT
+Cursor
+VS Code
+Cline
+Windsurf
+Gemini CLI
+Zed
+JetBrains
+Raycast
+Warp
+curl / API
+Claude
+ChatGPT
+Cursor
+VS Code
+Cline
+Windsurf
+Gemini CLI
+Zed
+JetBrains
+Raycast
+Warp
+curl / API
+Claude
+ChatGPT
+Cursor
+VS Code
+Cline
+Windsurf
+Gemini CLI
+Zed
+JetBrains
+Raycast
+Warp
+curl / API
+Claude
+ChatGPT
+Cursor
+VS Code
+Cline
+Windsurf
+Gemini CLI
+Zed
+JetBrains
+Raycast
+Warp
+curl / API
+Prinsipper
+Seks ting vi tror på
+om e-post og agenter.
+Beslutningene som formet produktet. Hvis noen av dem slutter å være sanne, er det en feil verdt å melde.
+01
+Omfang
+Sytten fokuserte verktøy. Det essensielle, dekket.
+Verktøy dekker det daglige arbeidet:
+inbox_list
+,
+email_read
+(list, read, search) og
+email_compose
+(send, reply), pluss fokuserte verktøy for organisering, sletting, mapper, utkast, planlegging, kontakter, signaturer og automatiseringer som går uten tilsyn. Lim inn MCP-endepunkt-URL-en i claude.ai, Claude Desktop, Cursor eller en hvilken som helst MCP-kompatibel agent.
+02
+Lagring
+E-post hentes i sanntid. Lagres aldri.
+Hvert verktøykall treffer leverandøren din i sanntid: Gmail API, Microsoft Graph eller IMAP. Meldingsinnhold, emner og vedlegg går til agenten og forkastes umiddelbart. Vi lagrer én ting per innboks, et kryptert token eller app-passord, slik at vi kan gjøre neste kall. Det eneste unntaket er en melding du planlegger å sende senere: vi oppbevarer den frem til sendetidspunktet, og beholder deretter en oppføring for historikken din.
+03
+Sending
+Sending går gjennom leverandøren din.
+Når agenten din kaller
+email_compose
+(for å sende eller svare), sendes meldingen via Gmail API, Microsoft Graph eller din egen SMTP-server. Domenets omdømme og leveringsdyktighet forblir helt i dine hender. Vi videresender aldri e-post fra vårt eget domene.
+04
+Leverandører
+Gmail, Outlook, iCloud, Fastmail og alle IMAP-innbokser.
+App-passord eller Google-innlogging (OAuth 2.0) for Gmail; Microsoft-innlogging (OAuth 2.0) for Outlook / Microsoft 365 (en jobb- eller skolekonto kan trenge at IT-administratoren godkjenner appen én gang); app-spesifikke passord for Fastmail, iCloud, Yahoo, Zoho og Yandex; en generisk IMAP-/SMTP-kobling for alt annet. Koble til flere innbokser, merk dem etter bruksområde (work-gmail, ops-fastmail, support-imap), og begrens hver API-nøkkel til innboksene du vil at agenten skal nå. Team og byråer kan administrere alle klientinnbokser i ett delt arbeidsområde med roller og revisjonslogg.
+05
+Tilgang
+OAuth 2.0 for agenter. Ett klikk for å trekke tilbake.
+Vi er standard MCP (streamable-http) med OAuth 2.1, DCR og PKCE, uten leverandørlåsing. Fungerer med Claude, Cursor, VS Code, ChatGPT, Windsurf, n8n, Make, LibreChat, OpenWebUI og enhver MCP-kompatibel klient. OAuth-klienter kobler til automatisk via authorization code + PKCE; en begrenset API-nøkkel dekker klienter uten OAuth og skriptet tilgang. Trekk tilbake enhver tilkobling fra dashbordet med ett klikk.
+06
+Sikkerhet
+Legitimasjon krypteres ved lagring.
+OAuth-tokens og app-passord krypteres med AES-256-GCM før de skrives til databasen. Dekryptering skjer kun inne i en isolert Edge Function ved kalltidspunktet. Krypteringsnøkkelen lagres som en miljøhemmelighet, atskilt fra databasen.
+Produktforhåndsvisning
+Se hele MCP-driften din med ett blikk.
+Et sanntidsdashbord for hver tilkoblet innboks, API-nøkkel og verktøykall, så du alltid vet hva agentene dine gjør.
+app.mcpemails.com/dashboard
+mcpemails
+Overview
+Inboxes
+4
+API keys
+3
+Usage
+J
+jordan
+Pro plan
+Overview
+Real-time view of your connected inboxes and MCP traffic.
+Inboxes connected
+4
+MCP calls (30d)
+12,484
+Avg. response
+214ms
+Plan
+Team
+Recent activity
+email_read()
+· work-gmail
+just now
+email_compose()
+· work-gmail
+12s ago
+email_organize()
+· ops-fastmail
+1m ago
+email_read()
+· support-imap
+3m ago
+Slik fungerer det
+Du er brukeren. Vi er røret.
+Tre steg fra registrering til at agenten din leser og sender e-post.
+01
+Koble til innboksen din
+Logg inn og klikk
+Koble til innboks
+. Velg Gmail, Outlook, iCloud, Fastmail eller en hvilken som helst IMAP-innboks, og fullfør deretter OAuth eller lim inn et app-passord. Legitimasjon krypteres; e-posten agenten din leser lagres aldri.
+02
+Lim inn URL-en: OAuth eller API-nøkkel
+For en MCP-klient som støtter OAuth 2.0 (claude.ai, Claude Desktop, Cursor og andre), lim inn
+https://mcpemails.com/api/mcp
+, klikk Koble til, og autoriser. Ingen nøkkel nødvendig. For klienter uten OAuth (Cline, JetBrains, egne skript), generer en begrenset API-nøkkel i dashbordet i stedet.
+03
+Agenten din jobber i innboksen
+Agenten kaller verktøy som
+email_read()
+eller
+email_compose()
+. MCPEmails henter i sanntid fra leverandøren din og returnerer resultatet. Ingenting mellomlagres mellom kall.
+inbox_list()
+Oppdag alle tilkoblede innbokser og ID-ene deres. Kall dette først, ingen kopiering av UUID fra dashbordet.
+email_read()
+Les e-post: list opp nylige sammendrag, hent en hel melding etter ID, batch-les opptil 50, eller kjør et leverandøruavhengig søk, alt via action-argumentet.
+email_organize()
+Organiser e-post: flytt, kopier, slett, flagg eller arkiver, én om gangen, i bulk eller rett fra et søk.
+email_compose()
+Skriv: send en ny melding, svar i tråden eller videresend. Sendes gjennom Gmail API, Microsoft Graph eller SMTP: ditt domene, din leveringsdyktighet.
+folder()
+Administrer mapper (etiketter på Gmail): opprett, gi nytt navn eller slett, og bruk dem som flyttemål. folder_list leser dem som allerede finnes.
+draft()
+Utkast: opprett, oppdater og send utkast lagret i leverandørens Drafts-mappe. draft_list leser dem som er lagret.
+schedule()
+Planlegg en melding for et fremtidig tidspunkt, og avbryt den før den går ut. schedule_list viser hva som står i kø.
+contact_search()
+Finn personer etter navn eller e-post med en sanntidsskanning av nylig matchende e-post. Ingenting lagres.
+Ekte forespørsler
+Bare spør.
+Den leser, skriver og rydder.
+Ingen dashbord å lære seg. Fortell AI-assistenten din hva du vil ha, på helt vanlig språk, så bruker den mcpemails til å få det gjort.
+>_
+Go through sales@ and info@ and list every enquiry from this week nobody has answered
+inbox_list()
+email_read()
+7 open enquiries across both inboxes, oldest first. Two have waited since Monday.
+>_
+Unsubscribe me from every newsletter I haven’t opened in 3 months
+email_read()
+email_organize()
+Archived 14 newsletters you haven’t touched since April.
+>_
+Forward this month’s invoices from invoices@ to our accountant
+email_read()
+email_compose()
+Forwarded 9 invoices from invoices@, PDFs attached.
+>_
+Move every receipt from this month into a Receipts folder
+email_organize()
+Moved 23 receipts into Receipts/2026.
+>_
+Send this at 8am Monday, not now
+schedule()
+Scheduled for Mon 8:00 AM. Nothing goes out before then.
+>_
+What did the doctor’s office say about my appointment?
+email_read()
+Confirmed for Thursday at 2:15 PM.
+“Jeg ville at agentene mine skulle jobbe i innboksen min, men alle alternativer betydde å gi en tredjepart en kopi av e-posten min. Så jeg bygde røret jeg skulle ønske fantes: koble til én gang, innboksen din hentes i sanntid og lagres aldri, og du kan kutte av enhver agent med ett klikk. Det er produktet jeg stoler på med min egen innboks.”
+Asgeir Albretsen
+· grunnlegger, mcpemails
+Priser
+Prisen følger innboksene. Ingen måling på betalte planer.
+Gratis kobler til én innboks med 150 e-posthandlinger i måneden. Personal kobler til tre. Pro kobler til alle postkassene firmaet ditt har. Team legger til folk, roller og et eget arbeidsområde per kunde.
+Gratis
+$0
+/for alltid
+Koble til én innboks og gi agenten din en ekte postkasse.
+1 tilkoblet innboks
+Les, søk, organiser, skriv, planlegg og send
+Godkjenning før sending
+Bruksanalyse
+Gmail, Outlook, iCloud, Fastmail og alle IMAP
+Ubegrenset antall API-nøkler
+Fellesskapsstøtte
+Start gratis
+Personal
+$9
+/måned
+Tre postkasser for én person eller et lite firma: jobb, privat eller firmaets første adresser.
+Alt i Free
+3 tilkoblede innbokser
+2x høyere burst-grense
+E-poststøtte
+Velg Personal
+Pro
+$15
+/måned
+Alle postkassene firmaet ditt har, i én agent: økonomi, salg, support, post@ og din egen.
+Alt i Personal
+Ubegrenset antall tilkoblede innbokser
+5x høyere burst-grense
+Lengre analysehistorikk
+Velg Pro
+Team
+$79
+/måned
+Delte innbokser for et team, med et eget arbeidsområde per kunde eller virksomhet.
+Alt i Pro
+Ubegrenset antall medlemmer med roller
+Et eget arbeidsområde per kunde eller virksomhet
+SSO (SAML / OIDC) og revisjonslogg
+Lengst analysehistorikk
+Prioritert støtte
+Velg Team
+Alle planer: e-posten agenten din leser hentes i sanntid og lagres aldri. OAuth-tokens krypteres ved lagring. Trenger du noe tilpasset?
+Kontakt oss
+.
+Se full funksjonssammenligning →
+Tar du deg av postkassene til et firma?
+Se hvordan én person kobler til alle sammen
+.
+FAQ
+Svar på det du lurer på
+Alt du trenger å vite før du kobler til den første innboksen din.
+Bruker dere analyseverktøy?
+Hvilke AI-klienter fungerer det med?
+Hvilke e-postleverandører kan jeg koble til?
+Lagres e-posten min noe sted?
+Er det virkelig gratis?
+Hva kan AI-en faktisk gjøre med innboksen min?
+Hvordan kobler jeg til en innboks?
+Kan jeg selvhoste den?
+[alt] mcpemails
+En vertsbasert MCP-server som gir AI-agenter tilgang til å lese og sende fra innboksen din, uten å noen gang lagre e-posten den leser.
+Kontakt
+hello@mcpemails.com
+[aria-label] Kopier Kontakt
+Kopier
+MCP-endepunkt
+https://mcpemails.com/api/mcp
+[aria-label] Kopier MCP-endepunkt
+Kopier
+[aria-label] Språk
+English
+Norsk
+Español
+Français
+中文
+Produkt
+Funksjoner
+Slik fungerer det
+Priser
+Dokumentasjon
+Selvhosting
+For gründere
+For bedrifter
+Ressurser
+Verktøyreferanse
+Hurtigstart
+OAuth-tilkobling
+Leverandørstøtte
+Blog
+Changelog
+Koble til
+Alle e-postleverandører
+Koble til enhver IMAP-innboks
+Koble til Gmail
+Koble til Outlook
+Koble til Fastmail
+Koble til iCloud
+Koble til Yahoo
+Koble til Zoho
+Koble til Yandex
+vs innebygde koblinger
+Selskap
+Om
+Sikkerhet
+Status
+Personvern
+Vilkår
+© 2026 mcpemails.
+E-post hentes i sanntid, lagres aldri · Legitimasjon kryptert ved lagring
+MCPEmails er en tjeneste fra Albretsen Consulting (enkeltpersonforetak), organisasjonsnummer 926 646 753, Håsteins gate 9, 5160 Laksevåg, Norge.
+[json-ld] {"@context":"https://schema.org","@graph":[{"@type":"Organization","@id":"https://mcpemails.com/#organization","name":"mcpemails","url":"https://mcpemails.com","logo":"https://mcpemails.com/favicon.svg"},{"@type":"WebSite","@id":"https://mcpemails.com/#website","name":"mcpemails","url":"https://mcpemails.com","inLanguage":"nb","publisher":{"@id":"https://mcpemails.com/#organization"}},{"@type":"SoftwareApplication","name":"mcpemails","url":"https://mcpemails.com/nb","description":"Gi Claude, Cursor eller enhver MCP-klient ekte tilgang til innboksen: les, send, søk og organiser e-post i Gmail, Outlook, Fastmail, iCloud og IMAP. Gratis.","applicationCategory":"BusinessApplication","applicationSubCategory":"Email","operatingSystem":"Web","publisher":{"@id":"https://mcpemails.com/#organization"},"brand":{"@id":"https://mcpemails.com/#organization"},"featureList":["Human approval before AI-sent email is dispatched","Transient attachment text extraction","User-invoked MCP workflow prompts","Idempotency keys for safe outbound email retries","Provider compatibility profiles","Original email export as .eml (message/rfc822)","Verified Gmail send-as aliases","Threaded reply drafts","Outlook / Microsoft 365 via Microsoft Graph"],"offers":[{"@type":"Offer","name":"Free","description":"Connect one inbox and give your agent a real mailbox.","url":"https://mcpemails.com/nb/pricing","price":"0","priceCurrency":"USD","availability":"https://schema.org/InStock","priceSpecification":{"@type":"UnitPriceSpecification","price":"0","priceCurrency":"USD","unitText":"MONTH","billingDuration":1,"billingIncrement":1}},{"@type":"Offer","name":"Personal","description":"Three mailboxes for one person or one small business: work, personal, or your first company addresses.","url":"https://mcpemails.com/nb/pricing","price":"9","priceCurrency":"USD","availability":"https://schema.org/InStock","priceSpecification":{"@type":"UnitPriceSpecification","price":"9","priceCurrency":"USD","unitText":"MONTH","billingDuration":1,"billingIncrement":1}},{"@type":"Offer","name":"Pro","description":"Every mailbox your business runs, on one agent: finance, sales, support, info, and your own.","url":"https://mcpemails.com/nb/pricing","price":"15","priceCurrency":"USD","availability":"https://schema.org/InStock","priceSpecification":{"@type":"UnitPriceSpecification","price":"15","priceCurrency":"USD","unitText":"MONTH","billingDuration":1,"billingIncrement":1}},{"@type":"Offer","name":"Team","description":"Shared inboxes for a team, with a separate workspace per client or business.","url":"https://mcpemails.com/nb/pricing","price":"79","priceCurrency":"USD","availability":"https://schema.org/InStock","priceSpecification":{"@type":"UnitPriceSpecification","price":"79","priceCurrency":"USD","unitText":"MONTH","billingDuration":1,"billingIncrement":1}}],"aggregateRating":{"@type":"AggregateRating","ratingValue":"5","reviewCount":1,"bestRating":"5","worstRating":"1"},"review":[{"@type":"Review","reviewBody":"Being able to connect all our emails into one MCP was a game changer.","datePublished":"2026-09-13","author":{"@type":"Person","name":"Torstein Vikse","url":"https://vikse.dev/","worksFor":{"@type":"Organization","name":"Vikse Development AS"}},"reviewRating":{"@type":"Rating","ratingValue":"5","bestRating":"5","worstRating":"1"},"publisher":{"@type":"Organization","name":"Google"},"url":"https://www.google.com/maps/reviews/data=!4m8!14m7!1m6!2m5!1sCi9DQUlRQUNvZENodHljRjlvT2s5RGNWbEllazFaYUZOblNWQnBVM1puVFZZNFNtYxAB!2m1!1s0x0:0x40013a8d36c2b552!3m1!1s2@1:CAIQACodChtycF9oOk9DcVlIek1ZaFNnSVBpU3ZnTVY4Smc%7C%7C?hl=en-US"}]}]}

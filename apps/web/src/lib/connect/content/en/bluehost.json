@@ -12,18 +12,23 @@
     "status": "active"
   },
   "meta": {
-    "title": "Bluehost Email to Claude: cPanel and Titan IMAP Setup",
-    "description": "Bluehost sells three different email products. Find out which one you have, then connect it to Claude over IMAP on port 993. One inbox free, forever, no card."
+    "title": "Bluehost MCP Server: Connect Email to Claude",
+    "description": "MCP server for Bluehost mail. Connect several company mailboxes on your domain (info@, sales@) to Claude and ChatGPT over IMAP on port 993."
   },
   "hero": {
     "eyebrow": "Bluehost + AI",
-    "titleLine1": "Connect Bluehost email to Claude,",
-    "titleLine2": "Cursor, ChatGPT, any MCP client",
-    "lead": "Give your AI agent a real Bluehost mailbox. Read, search, send, reply, schedule and organize mail over IMAP, whether the mailbox is a cPanel Email account or a Professional Email box.",
-    "answer": "Claude cannot reach a Bluehost mailbox on its own. mcpemails is a hosted MCP server that connects it over plain IMAP on port 993, so Claude, Cursor or any MCP client can read, search, send and organize that mail. The first thing to establish is which of Bluehost's three email products you have, because cPanel Email answers on a host built from your own domain while Professional Email answers on Titan's servers, and the two sets of settings are not interchangeable. Either way you authenticate with the password set on the mailbox, never your Bluehost portal password, and one inbox is free.",
-    "meta0": "1 inbox free, forever",
+    "titleLine1": "MCP server for Bluehost mail:",
+    "titleLine2": "every company mailbox, in Claude and ChatGPT",
+    "lead": "Running info@, sales@, support@ and invoices@ on your own domain at Bluehost? Connect each mailbox to one workspace and your AI agent works across all of them. Read, search, send, reply, schedule and organize mail over IMAP, whether the mailbox is a cPanel Email account or a Professional Email box.",
+    "answer": "Claude cannot reach a Bluehost mailbox on its own. mcpemails is a hosted MCP server that connects it over plain IMAP on port 993, so Claude, Cursor or any MCP client can read, search, send and organize that mail. The first thing to establish is which of Bluehost's three email products you have, because cPanel Email answers on a host built from your own domain while Professional Email answers on Titan's servers, and the two sets of settings are not interchangeable. Either way you authenticate with the password set on the mailbox, never your Bluehost portal password. Each company address, such as info@ or sales@, connects as its own mailbox: one mailbox is free, Personal connects three and Pro every mailbox you run.",
+    "meta0": "First mailbox free, plans for the rest",
     "meta1": "Mailbox password, not portal login",
     "meta2": "Email fetched live, never stored"
+  },
+  "persona": {
+    "intro": "Several company mailboxes at Bluehost?",
+    "label": "See what each plan connects",
+    "href": "/pricing"
   },
   "method": {
     "title": "How Bluehost mail connects: first work out which product you have",
@@ -88,7 +93,7 @@
     }
   ],
   "ctaBand": {
-    "title": "Give your AI a Bluehost inbox",
-    "sub": "Connect a Bluehost mailbox in minutes. One inbox free forever, no card required."
+    "title": "Put every Bluehost mailbox on one agent",
+    "sub": "Connect your first Bluehost mailbox free, no card required. Personal connects three, Pro every mailbox you run."
   }
 }

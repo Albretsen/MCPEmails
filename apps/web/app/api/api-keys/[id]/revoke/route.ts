@@ -68,7 +68,8 @@ export async function PATCH(
     .update({ deleted_at: new Date().toISOString() })
     .eq('id', keyId)
     .eq('workspace_id', workspaceId)
-    .is('deleted_at', null);
+    .is('deleted_at', null)
+    .is('kind', null);
 
   if (updateError) {
     console.error('[revoke-api-key] Failed to revoke key:', updateError.message);

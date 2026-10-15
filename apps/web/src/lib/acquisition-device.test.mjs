@@ -156,7 +156,7 @@ test('sanitizedDevice keeps the three words and drops everything else', () => {
 // CHECK, and the write is then lost for every signup of that class.
 test('the stored words match the CHECK constraint in the migration, member by member', () => {
   const sql = readFileSync(
-    fileURLToPath(new URL('../../../../supabase/migrations/20261002100000_acquisition_device.sql', import.meta.url)),
+    fileURLToPath(new URL('../../../../supabase/migrations/20261015100000_acquisition_device.sql', import.meta.url)),
     'utf8',
   );
   const list = sql.match(/acquisition_device IN \(([^)]+)\)/);

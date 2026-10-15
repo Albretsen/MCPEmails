@@ -124,6 +124,7 @@ CREATE TABLE public.inboxes (
                             CHECK (signature_reply_mode IN ('always', 'first_only', 'never')),
   signature_source        text CHECK (signature_source IS NULL OR signature_source IN ('manual', 'gmail_import')),
   signature_updated_at    timestamptz,
+  signature_embed_images  boolean NOT NULL DEFAULT false,   -- send signature images inline (cid:) instead of as https URLs
   -- Connection state
   status                  text NOT NULL DEFAULT 'pending',  -- 'pending' | 'active' | 'error' | 'revoked'
   last_sync_at            timestamptz,

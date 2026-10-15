@@ -1,0 +1,28 @@
+data: {"type":"run_started","run_id":"run_t"}
+
+data: {"type":"status","text":"Working"}
+
+data: {"type":"tool_call","message_id":"run_t_m1","call":{"id":"run_t_c1","tool":"email_read","action":"read","human":"Reading an email","keys":["inbox-a:m6"],"meta":"","state":"running"}}
+
+data: {"type":"status","text":"Reading an email"}
+
+data: {"type":"mail_effect","effect":{"kind":"read","keys":["inbox-a:m6"],"call_id":"run_t_c1"}}
+
+data: {"type":"tool_call","message_id":"run_t_m1","call":{"id":"run_t_c1","tool":"email_read","action":"read","human":"Reading Tomas Lind's email","keys":["inbox-a:m6"],"meta":"","state":"done"}}
+
+data: {"type":"tool_call","message_id":"run_t_m2","call":{"id":"run_t_c2","tool":"email_organize","action":"archive","human":"Archiving Tomas Lind's email","keys":["inbox-a:m6"],"folder":{"role":"archive"},"meta":"","state":"running"}}
+
+data: {"type":"status","text":"Archiving Tomas Lind's email"}
+
+data: {"type":"mail_effect","effect":{"kind":"moved","keys":["inbox-a:m6"],"new_keys":["inbox-a:m6-in-archive"],"from":{"inbox_id":"inbox-a","folder_id":"INBOX"},"to":{"role":"archive"},"call_id":"run_t_c2"}}
+
+data: {"type":"tool_call","message_id":"run_t_m2","call":{"id":"run_t_c2","tool":"email_organize","action":"archive","human":"Archiving Tomas Lind's email","keys":["inbox-a:m6"],"folder":{"role":"archive"},"meta":"","state":"done"}}
+
+data: {"type":"text_delta","message_id":"run_t_m3","delta":"Archi"}
+
+data: {"type":"text_delta","message_id":"run_t_m3","delta":"ved."}
+
+data: {"type":"text_delta","message_id":"run_t_m3","delta":"","done":true}
+
+data: {"type":"done","conversation":{"v":1,"summary":"","turns":[{"u":"Archive this","a":"Archived.","calls":[{"h":"Reading Tomas Lind's email","k":["inbox-a:m6"]},{"h":"Archiving Tomas Lind's email","k":["inbox-a:m6"]}],"refs":[{"k":"inbox-a:m6","l":"attached email"}]}]},"usage":{"input_tokens":2000,"output_tokens":100,"cost_micro_usd":1950,"model":"gpt-5.4-mini","rounds":2},"summary":{"text":"Archived 1 email","undoable":true}}
+

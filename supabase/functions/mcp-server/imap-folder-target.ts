@@ -142,19 +142,22 @@ export const IMAP_ALIAS_SPECIAL_USE: Record<string, string> = {
  * word the matcher knew.
  *
  * English: the names Outlook/Exchange, Apple Mail, Thunderbird and the common
- * webmail suites create. Localized: German and French only, and only the names
- * that can mean nothing but the role. A mailbox called "Papierkorb" is the
- * trash; nobody files project mail there. Other languages are left out on
- * purpose rather than guessed at: a wrong entry here is a wrong DESTINATION for
- * a move or a soft delete, and the flag already covers every server that sets
- * it, in any language.
+ * webmail suites create. Localized: German, French and Simplified Chinese
+ * only, and only the names that can mean nothing but the role. A mailbox called
+ * "Papierkorb" is the trash; nobody files project mail there. Chinese is here
+ * because QQ Mail (and the other Tencent/NetEase hosts) do not advertise
+ * SPECIAL-USE at all and name their roles 已发送, 草稿箱, 已删除 and 垃圾邮件,
+ * so without these the flag tier has nothing to match on those accounts. Other
+ * languages are left out on purpose rather than guessed at: a wrong entry here
+ * is a wrong DESTINATION for a move or a soft delete, and the flag already
+ * covers every server that sets it, in any language.
  */
 export const IMAP_ALIAS_ALTERNATE_NAMES: Record<string, readonly string[]> = {
-  sent: ["Sent Items", "Sent Messages", "Sent Mail", "Gesendet", "Envoyés"],
-  drafts: ["Draft", "Entwürfe", "Brouillons"],
-  trash: ["Deleted Items", "Deleted Messages", "Bin", "Papierkorb", "Corbeille"],
+  sent: ["Sent Items", "Sent Messages", "Sent Mail", "Gesendet", "Envoyés", "已发送"],
+  drafts: ["Draft", "Entwürfe", "Brouillons", "草稿箱"],
+  trash: ["Deleted Items", "Deleted Messages", "Bin", "Papierkorb", "Corbeille", "已删除"],
   archive: ["Archives"],
-  spam: ["Spam", "Bulk", "Junk E-mail", "Junk Email", "Bulk Mail"],
+  spam: ["Spam", "Bulk", "Junk E-mail", "Junk Email", "Bulk Mail", "垃圾邮件"],
 };
 
 /** SPECIAL-USE flag of the mailbox that holds every message (Gmail's All Mail). */

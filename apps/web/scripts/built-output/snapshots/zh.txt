@@ -1,0 +1,409 @@
+将 Gmail、Outlook、iCloud 与 IMAP 连接到 Claude · mcpemails
+[meta description] 让 Claude、Cursor 或任何 MCP 客户端真正访问你的收件箱：读取、发送、搜索并整理 Gmail、Outlook、Fastmail、iCloud 和 IMAP 邮件。免费，不存储任何邮件。
+[meta og:title] 将 Gmail、Outlook、iCloud 与 IMAP 连接到 Claude
+[meta og:description] 让 Claude、Cursor 或任何 MCP 客户端真正访问你的收件箱：读取、发送、搜索并整理 Gmail、Outlook、Fastmail、iCloud 和 IMAP 邮件。免费，不存储任何邮件。
+[meta og:locale] zh_CN
+[meta og:locale:alternate] en_US
+[meta og:locale:alternate] nb_NO
+[meta og:locale:alternate] es_ES
+[meta og:locale:alternate] fr_FR
+[meta twitter:title] 将 Gmail、Outlook、iCloud 与 IMAP 连接到 Claude
+[meta twitter:description] 让 Claude、Cursor 或任何 MCP 客户端真正访问你的收件箱：读取、发送、搜索并整理 Gmail、Outlook、Fastmail、iCloud 和 IMAP 邮件。免费，不存储任何邮件。
+[alt] mcpemails
+[alt] mcpemails
+[aria-label] Primary navigation
+功能
+工作原理
+价格
+对比
+文档
+自托管
+博客
+登录
+免费开始使用
+[aria-label] Open navigation menu
+为你的 AI
+智能体配备一个
+收件箱。
+一次性连接 Gmail、Outlook、iCloud、Fastmail 或任何 IMAP 收件箱。把一个 MCP 端点 URL 粘贴到 Claude、Cursor、VS Code、ChatGPT、Windsurf、n8n、Make 或任何 MCP 客户端中。OAuth 客户端只需一键即可连接，无需配置 API 密钥。你的智能体实时阅读、搜索和发送邮件，而它所读取的邮件从不被存储。
+连接你的收件箱
+阅读文档
+1 个收件箱永久免费
+无需信用卡
+邮件实时获取
+在为公司管理 info@、sales@ 和 invoices@？
+把所有工作邮箱放进同一个智能体
+。
+一次调用的流程
+t+0ms → t+312ms
+AI 智能体
+Claude · Cursor · VS Code · ChatGPT · 任何 MCP 客户端
+MCP
+mcpemails
+/api/mcp 端点
+IMAP
+你的服务商
+Gmail · Outlook · iCloud · IMAP
+live · t+12ms
+inbox_list()
+→
+智能体调用
+inbox_list
+()
+·
+返回收件箱 ID，无需在仪表盘里复制粘贴
+→
+智能体调用
+email_read
+(action=
+"list"
+· inbox_id=
+"3f7a…"
+)
+·
+mcpemails 通过 Gmail API 获取（令牌已轮换）
+←
+返回 20 封邮件 ·
+不存储任何内容
+mcpemails（管道）
+实时请求
+你的数据，你的服务商
+[aria-label] 精选用户评价
+[aria-label] 评分 5 分（满分 5 分）
+“Being able to connect all our emails into one MCP was a game changer.”
+TV
+Torstein Vikse
+Founder,
+Vikse Development AS
+[title] 发表于 Google
+发表于 Google
+适用于所有兼容 MCP 的智能体和客户端
+Claude
+ChatGPT
+Cursor
+VS Code
+Cline
+Windsurf
+Gemini CLI
+Zed
+JetBrains
+Raycast
+Warp
+curl / API
+Claude
+ChatGPT
+Cursor
+VS Code
+Cline
+Windsurf
+Gemini CLI
+Zed
+JetBrains
+Raycast
+Warp
+curl / API
+Claude
+ChatGPT
+Cursor
+VS Code
+Cline
+Windsurf
+Gemini CLI
+Zed
+JetBrains
+Raycast
+Warp
+curl / API
+Claude
+ChatGPT
+Cursor
+VS Code
+Cline
+Windsurf
+Gemini CLI
+Zed
+JetBrains
+Raycast
+Warp
+curl / API
+Claude
+ChatGPT
+Cursor
+VS Code
+Cline
+Windsurf
+Gemini CLI
+Zed
+JetBrains
+Raycast
+Warp
+curl / API
+Claude
+ChatGPT
+Cursor
+VS Code
+Cline
+Windsurf
+Gemini CLI
+Zed
+JetBrains
+Raycast
+Warp
+curl / API
+原则
+关于邮件与智能体，
+我们坚信的六件事。
+这些决定塑造了产品。如果其中任何一条不再成立，那就是一个值得提交的 bug。
+01
+范围
+十七个专注工具，覆盖日常所需。
+工具覆盖日常工作：
+inbox_list
+、
+email_read
+（list、read、search）和
+email_compose
+（send、reply）。另有专门用于整理、删除、文件夹、草稿、定时发送、联系人、签名和无人值守自动化规则的工具。把 MCP 端点 URL 粘贴到 claude.ai、Claude Desktop、Cursor 或任何兼容 MCP 的智能体中。
+02
+存储
+邮件实时获取，从不存储。
+每一次工具调用都会实时访问你的服务商：Gmail API、Microsoft Graph 或 IMAP。邮件正文、主题和附件会发送给智能体，并随即被丢弃。我们每个收件箱只持久化一样东西，即一个加密的令牌或应用专用密码，以便进行下一次调用。唯一的例外是你安排在稍后发送的邮件：我们会保留它直到发送时间，然后为你的历史记录留存一份记录。
+03
+发送
+发送通过你自己的服务商进行。
+当你的智能体调用
+email_compose
+（发送或回复）时，邮件会通过 Gmail API、Microsoft Graph 或你自己的 SMTP 服务器发出。你的域名声誉和送达率完全掌握在你自己手中。我们绝不从我们自己的域名转发邮件。
+04
+服务商
+Gmail、Outlook、iCloud、Fastmail 及任何 IMAP 收件箱。
+Gmail 使用应用密码或 Google 登录（OAuth 2.0）；Outlook / Microsoft 365 使用 Microsoft 登录（OAuth 2.0；工作或学校账户可能需要其 IT 管理员先一次性批准该应用）；Fastmail、iCloud、Yahoo、Zoho 和 Yandex 使用应用专用密码；其余一切则通过通用 IMAP / SMTP 连接器。连接多个收件箱，按用途为它们打标签（work-gmail、ops-fastmail、support-imap），并将每个 API 密钥的权限范围限定到你希望该智能体访问的收件箱。团队和代理机构可以在一个共享工作区中管理所有客户的收件箱，并配有角色和审计日志。
+05
+访问
+为智能体提供 OAuth 2.0，一键撤销。
+我们采用标准 MCP（streamable-http），支持 OAuth 2.1、DCR 和 PKCE，不锁定任何厂商。可与 Claude、Cursor、VS Code、ChatGPT、Windsurf、n8n、Make、LibreChat、OpenWebUI 以及任何兼容 MCP 的客户端配合使用。OAuth 客户端通过授权码 + PKCE 自动连接；一个限定范围的 API 密钥则覆盖不支持 OAuth 的客户端和脚本化访问。你可以在仪表盘里一键撤销任何连接。
+06
+安全
+凭据在静态时加密。
+OAuth 令牌和应用密码在写入数据库前会经过 AES-256-GCM 加密。解密只在调用时于一个隔离的 Edge Function 内部进行。加密密钥作为环境密钥存储，与数据库分离。
+产品预览
+一目了然地查看你的全部 MCP 运行情况。
+为每个已连接的收件箱、API 密钥和工具调用提供实时仪表板，让你随时掌握智能体的动向。
+app.mcpemails.com/dashboard
+mcpemails
+Overview
+Inboxes
+4
+API keys
+3
+Usage
+J
+jordan
+Pro plan
+Overview
+Real-time view of your connected inboxes and MCP traffic.
+Inboxes connected
+4
+MCP calls (30d)
+12,484
+Avg. response
+214ms
+Plan
+Team
+Recent activity
+email_read()
+· work-gmail
+just now
+email_compose()
+· work-gmail
+12s ago
+email_organize()
+· ops-fastmail
+1m ago
+email_read()
+· support-imap
+3m ago
+工作原理
+你是用户。我们是管道。
+从注册到你的智能体开始阅读和发送邮件，只需三步。
+01
+连接你的收件箱
+登录并点击
+连接收件箱
+。选择 Gmail、Outlook、iCloud、Fastmail 或任何 IMAP 收件箱，然后完成 OAuth 或粘贴一个应用密码。凭据会被加密；你的智能体所读取的邮件从不被存储。
+02
+粘贴 URL：OAuth 或 API 密钥
+对于支持 OAuth 2.0 的 MCP 客户端（claude.ai、Claude Desktop、Cursor 等），粘贴
+https://mcpemails.com/api/mcp
+，点击连接并授权。无需密钥。对于不支持 OAuth 的客户端（Cline、JetBrains、自定义脚本），改为在仪表盘里生成一个限定范围的 API 密钥。
+03
+你的智能体处理收件箱
+智能体调用诸如
+email_read()
+或
+email_compose()
+之类的工具。MCPEmails 从你的服务商实时获取并返回结果。两次调用之间不会缓存任何内容。
+inbox_list()
+发现所有已连接的收件箱及其 ID。先调用此工具，无需从仪表盘复制粘贴 UUID。
+email_read()
+读取邮件：列出最近摘要、按 ID 获取完整邮件、批量读取至多 50 封，或运行与服务商无关的搜索，全部通过 action 参数。
+email_organize()
+整理邮件：移动、复制、删除、标记或归档，逐封、批量，或直接从搜索结果操作。
+email_compose()
+撰写：发送新邮件、在会话内回复或转发。经由 Gmail API、Microsoft Graph 或 SMTP 发出：你的域名，你的送达率。
+folder()
+管理文件夹（在 Gmail 上为标签）：创建、重命名或删除，并将其用作移动目标。folder_list 读取已存在的文件夹。
+draft()
+草稿：创建、更新并发送存储在服务商 Drafts 文件夹中的草稿。draft_list 读取已保存的草稿。
+schedule()
+将邮件安排在未来某个时间发送，并在发出前取消。schedule_list 显示队列中的内容。
+contact_search()
+通过对最近匹配邮件的实时扫描按姓名或邮箱查找联系人。不存储任何内容。
+真实的提示词
+开口就行。
+它会读、会写、会归档。
+无需学习任何仪表板。用日常语言告诉你的 AI 助手你想做什么，它就会通过 mcpemails 完成。
+>_
+Go through sales@ and info@ and list every enquiry from this week nobody has answered
+inbox_list()
+email_read()
+7 open enquiries across both inboxes, oldest first. Two have waited since Monday.
+>_
+Unsubscribe me from every newsletter I haven’t opened in 3 months
+email_read()
+email_organize()
+Archived 14 newsletters you haven’t touched since April.
+>_
+Forward this month’s invoices from invoices@ to our accountant
+email_read()
+email_compose()
+Forwarded 9 invoices from invoices@, PDFs attached.
+>_
+Move every receipt from this month into a Receipts folder
+email_organize()
+Moved 23 receipts into Receipts/2026.
+>_
+Send this at 8am Monday, not now
+schedule()
+Scheduled for Mon 8:00 AM. Nothing goes out before then.
+>_
+What did the doctor’s office say about my appointment?
+email_read()
+Confirmed for Thursday at 2:15 PM.
+“我希望我的智能体能处理我的收件箱，但每一个方案都意味着把我的邮件副本交给第三方。于是我打造了一直渴望存在的那条管道：连接一次，你的收件箱实时获取且从不存储，并且你可以一键切断任何智能体。这就是我敢用自己收件箱去信任的产品。”
+Asgeir Albretsen
+· 创始人，mcpemails
+价格
+按收件箱定价。付费版不计用量。
+免费版连接 1 个收件箱，每月含 150 次邮件操作。Personal 连接 3 个。Pro 连接你公司运营的每一个邮箱。Team 再加上成员、角色，以及每个客户一个独立工作区。
+免费
+$0
+/永久
+连接一个收件箱，给你的智能体一个真正的邮箱。
+1 个已连接收件箱
+读取、搜索、整理、起草、定时和发送
+发送前审批
+使用分析
+Gmail、Outlook、iCloud、Fastmail 及任何 IMAP
+无限量 API 密钥
+社区支持
+免费开始
+Personal
+$9
+/月
+三个邮箱，适合一个人或一家小公司：工作、私人，或公司最初的几个地址。
+包含 Free 的全部功能
+3 个已连接收件箱
+突发速率上限提升 2 倍
+邮件支持
+获取 Personal
+Pro
+$15
+/月
+公司运营的每一个邮箱，都归入同一个智能体：财务、销售、客服、info，还有你自己的。
+包含 Personal 的全部功能
+无限量连接收件箱
+突发速率上限提升 5 倍
+更长的分析历史
+获取 Pro
+Team
+$79
+/月
+面向团队的共享收件箱，每个客户或业务一个独立工作区。
+包含 Pro 的全部功能
+无限量成员与角色
+每个客户或业务一个独立工作区
+SSO（SAML / OIDC）和审计日志
+最长的分析历史
+优先支持
+获取 Team
+所有套餐：你的智能体所读取的邮件实时获取且从不存储。OAuth 令牌静态加密。需要定制方案？
+联系我们
+。
+查看完整功能对比 →
+在管理一家公司的邮箱？
+看看一个人如何把它们全部连接起来
+。
+FAQ
+常见问题，逐一解答
+连接第一个收件箱前，你需要了解的一切。
+你们使用分析工具吗？
+它支持哪些 AI 客户端？
+我可以连接哪些邮箱服务商？
+我的邮件会被存储在任何地方吗？
+真的免费吗？
+AI 实际上能用我的收件箱做什么？
+我该如何连接收件箱？
+我可以自托管吗？
+[alt] mcpemails
+一个托管的 MCP 服务器，让 AI 智能体能够读取并发送你收件箱中的邮件，且从不存储它所读取的邮件。
+联系
+hello@mcpemails.com
+[aria-label] 复制联系
+复制
+MCP 端点
+https://mcpemails.com/api/mcp
+[aria-label] 复制MCP 端点
+复制
+[aria-label] 语言
+English
+Norsk
+Español
+Français
+中文
+产品
+功能
+工作原理
+价格
+文档
+自托管
+面向创始人
+面向企业
+资源
+工具参考
+快速开始
+OAuth 连接
+服务商支持
+Blog
+Changelog
+连接
+全部邮箱服务商
+连接任意 IMAP 邮箱
+连接 Gmail
+连接 Outlook
+连接 Fastmail
+连接 iCloud
+连接 Yahoo
+连接 Zoho
+连接 Yandex
+对比原生连接器
+公司
+关于
+安全
+服务状态
+隐私
+条款
+© 2026 mcpemails.
+邮件实时获取，从不存储 · 凭据静态加密
+MCPEmails 由 Albretsen Consulting（enkeltpersonforetak，挪威独资企业）运营，组织机构号 926 646 753，地址：Håsteins gate 9, 5160 Laksevåg, 挪威。
+[json-ld] {"@context":"https://schema.org","@graph":[{"@type":"Organization","@id":"https://mcpemails.com/#organization","name":"mcpemails","url":"https://mcpemails.com","logo":"https://mcpemails.com/favicon.svg"},{"@type":"WebSite","@id":"https://mcpemails.com/#website","name":"mcpemails","url":"https://mcpemails.com","inLanguage":"zh","publisher":{"@id":"https://mcpemails.com/#organization"}},{"@type":"SoftwareApplication","name":"mcpemails","url":"https://mcpemails.com/zh","description":"让 Claude、Cursor 或任何 MCP 客户端真正访问你的收件箱：读取、发送、搜索并整理 Gmail、Outlook、Fastmail、iCloud 和 IMAP 邮件。免费，不存储任何邮件。","applicationCategory":"BusinessApplication","applicationSubCategory":"Email","operatingSystem":"Web","publisher":{"@id":"https://mcpemails.com/#organization"},"brand":{"@id":"https://mcpemails.com/#organization"},"featureList":["Human approval before AI-sent email is dispatched","Transient attachment text extraction","User-invoked MCP workflow prompts","Idempotency keys for safe outbound email retries","Provider compatibility profiles","Original email export as .eml (message/rfc822)","Verified Gmail send-as aliases","Threaded reply drafts","Outlook / Microsoft 365 via Microsoft Graph"],"offers":[{"@type":"Offer","name":"Free","description":"Connect one inbox and give your agent a real mailbox.","url":"https://mcpemails.com/zh/pricing","price":"0","priceCurrency":"USD","availability":"https://schema.org/InStock","priceSpecification":{"@type":"UnitPriceSpecification","price":"0","priceCurrency":"USD","unitText":"MONTH","billingDuration":1,"billingIncrement":1}},{"@type":"Offer","name":"Personal","description":"Three mailboxes for one person or one small business: work, personal, or your first company addresses.","url":"https://mcpemails.com/zh/pricing","price":"9","priceCurrency":"USD","availability":"https://schema.org/InStock","priceSpecification":{"@type":"UnitPriceSpecification","price":"9","priceCurrency":"USD","unitText":"MONTH","billingDuration":1,"billingIncrement":1}},{"@type":"Offer","name":"Pro","description":"Every mailbox your business runs, on one agent: finance, sales, support, info, and your own.","url":"https://mcpemails.com/zh/pricing","price":"15","priceCurrency":"USD","availability":"https://schema.org/InStock","priceSpecification":{"@type":"UnitPriceSpecification","price":"15","priceCurrency":"USD","unitText":"MONTH","billingDuration":1,"billingIncrement":1}},{"@type":"Offer","name":"Team","description":"Shared inboxes for a team, with a separate workspace per client or business.","url":"https://mcpemails.com/zh/pricing","price":"79","priceCurrency":"USD","availability":"https://schema.org/InStock","priceSpecification":{"@type":"UnitPriceSpecification","price":"79","priceCurrency":"USD","unitText":"MONTH","billingDuration":1,"billingIncrement":1}}],"aggregateRating":{"@type":"AggregateRating","ratingValue":"5","reviewCount":1,"bestRating":"5","worstRating":"1"},"review":[{"@type":"Review","reviewBody":"Being able to connect all our emails into one MCP was a game changer.","datePublished":"2026-09-13","author":{"@type":"Person","name":"Torstein Vikse","url":"https://vikse.dev/","worksFor":{"@type":"Organization","name":"Vikse Development AS"}},"reviewRating":{"@type":"Rating","ratingValue":"5","bestRating":"5","worstRating":"1"},"publisher":{"@type":"Organization","name":"Google"},"url":"https://www.google.com/maps/reviews/data=!4m8!14m7!1m6!2m5!1sCi9DQUlRQUNvZENodHljRjlvT2s5RGNWbEllazFaYUZOblNWQnBVM1puVFZZNFNtYxAB!2m1!1s0x0:0x40013a8d36c2b552!3m1!1s2@1:CAIQACodChtycF9oOk9DcVlIek1ZaFNnSVBpU3ZnTVY4Smc%7C%7C?hl=en-US"}]}]}

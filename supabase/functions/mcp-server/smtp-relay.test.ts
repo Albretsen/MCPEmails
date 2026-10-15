@@ -26,7 +26,9 @@ import {
   parseConnectStatus,
   parseRelayConfig,
   type RelayConfig,
+  imapRelayFor,
   relayFor,
+  relayOnlyHost,
   relaySuspended,
   RELAY_SUSPEND_MS,
   RelayUnavailableError,
@@ -120,7 +122,12 @@ Deno.test("SMTP_RELAY_HOSTS replaces the default list", () => {
     SMTP_RELAY_URL: "http://relay.example.net:3128",
     SMTP_RELAY_HOSTS: "domeneshop.no, .example.coop ,MAIL.TEST",
   });
-  assertEquals(config!.hostSuffixes.join("|"), "domeneshop.no|example.coop|mail.test", "trimmed and normalised");
+  // The relay-only hosts ride along: see "a relay-only host is relayed for SMTP".
+  assertEquals(
+    config!.hostSuffixes.join("|"),
+    "domeneshop.no|example.coop|mail.test|orange.fr",
+    "trimmed and normalised",
+  );
 });
 
 // ---------------------------------------------------------------------------
@@ -158,6 +165,7 @@ const RELAY: RelayConfig = {
   port: 3128,
   authorization: "Basic abc",
   hostSuffixes: ["domeneshop.no"],
+  relayOnlyHostSuffixes: [],
 };
 
 const TARGET = { host: "smtp.domeneshop.no", port: 465 };
@@ -355,5 +363,56 @@ Deno.test("a suspended relay routes directly until the window lapses", () => {
       "relay.example.net",
       "picked up again without a deploy",
     );
+  });
+});
+
+// ---------------------------------------------------------------------------
+// Relay-only hosts: read through the relay too, and never dialled directly
+// ---------------------------------------------------------------------------
+
+Deno.test("a relay-only host is relayed for SMTP whatever SMTP_RELAY_HOSTS says", () => {
+  const config = parseRelayConfig({
+    SMTP_RELAY_URL: "http://relay.example.net:3128",
+    SMTP_RELAY_HOSTS: "domeneshop.no",
+  });
+  assert(config !== null, "should parse");
+  assertEquals(config!.relayOnlyHostSuffixes.join(","), "orange.fr", "the measured default");
+  assertEquals(config!.hostSuffixes.join(","), "domeneshop.no,orange.fr", "added to the submission list");
+
+  const custom = parseRelayConfig({
+    SMTP_RELAY_URL: "http://relay.example.net:3128",
+    MAIL_RELAY_ONLY_HOSTS: "Example.COOP",
+  });
+  assertEquals(custom!.relayOnlyHostSuffixes.join(","), "example.coop", "the list can be replaced");
+});
+
+Deno.test("only a relay-only host is read through the relay", () => {
+  withRelayEnv("http://user:pw@relay.example.net:3128", null, () => {
+    assertEquals(imapRelayFor("imap.orange.fr")?.host, "relay.example.net", "Orange IMAP is relayed");
+    assertEquals(relayOnlyHost("smtp.orange.fr"), true, "and so is its submission host");
+    // Domeneshop refuses our submissions, not our reads.
+    assertEquals(imapRelayFor("imap.domeneshop.no"), null, "a submission-only host is read directly");
+    assertEquals(relayOnlyHost("smtp.domeneshop.no"), false, "and keeps its direct fallback");
+    assertEquals(imapRelayFor("imap.notorange.fr"), null, "a lookalike registration is not the host");
+    assertEquals(imapRelayFor("imap.gmail.com"), null, "everyone else is untouched");
+  });
+});
+
+Deno.test("with no relay configured nothing is relay-only", () => {
+  withRelayEnv(null, null, () => {
+    assertEquals(imapRelayFor("imap.orange.fr"), null, "dialled as it always was");
+    assertEquals(relayOnlyHost("imap.orange.fr"), false, "nothing to be only about");
+  });
+});
+
+Deno.test("the breaker never skips a relay-only host", () => {
+  withRelayEnv("http://user:pw@relay.example.net:3128", null, () => {
+    const now = 7_000_000;
+    noteRelayFailure(now);
+    // The direct dial is the one path known to be refused for this host, so a
+    // failed relay is retried rather than routed around.
+    assertEquals(relayFor("smtp.orange.fr", now + 1)?.host, "relay.example.net", "still relayed while suspended");
+    assertEquals(imapRelayFor("imap.orange.fr")?.host, "relay.example.net", "IMAP too");
+    assertEquals(relayFor("smtp.domeneshop.no", now + 1), null, "an ordinary relayed host still falls back");
   });
 });

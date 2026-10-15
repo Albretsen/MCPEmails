@@ -43,6 +43,56 @@ export function recipientOverrideFrom(args: Record<string, unknown>): RecipientO
   return Object.keys(override).length > 0 ? override : null;
 }
 
+/**
+ * The first entry of a draft-send recipient override that cannot be used, or
+ * null when every entry can.
+ *
+ * `recipientOverrideFrom` drops what it cannot read (a non-string, a blank) and
+ * writes everything else into the header as given, so a mistyped address was
+ * either left off the mail without a word or stored as a recipient no server
+ * will accept. A send is the last place to find that out, so the call is
+ * refused instead and nothing is rewritten.
+ *
+ * An entry may be a bare address or `Name <address>`; the address part is what
+ * is validated, with the validator every other send path uses. A blank string
+ * is not a mistyped address and stays ignored, as before.
+ */
+export function invalidRecipientIn(
+  args: Record<string, unknown>,
+  isValidEmailAddress: (address: string) => boolean,
+): { field: "to" | "cc" | "bcc"; entry: unknown } | null {
+  for (const field of ["to", "cc", "bcc"] as const) {
+    const value = args[field];
+    if (!Array.isArray(value)) continue;
+    for (const entry of value) {
+      if (typeof entry !== "string") return { field, entry };
+      const trimmed = entry.trim();
+      if (trimmed === "") continue;
+      const angle = trimmed.match(/<([^>]*)>\s*$/);
+      if (!isValidEmailAddress(angle ? angle[1] : trimmed)) return { field, entry };
+    }
+  }
+  return null;
+}
+
+/**
+ * One header's value from a Gmail `payload.headers` list, or null.
+ *
+ * Case-insensitive on purpose. Gmail returns header names as the message
+ * spells them, and RFC 5322 names are case-insensitive, so `CC:` written by
+ * another mail client is the same field as the `Cc:` this server writes.
+ */
+export function gmailHeaderValue(
+  headers: readonly { name: string; value: string }[] | null | undefined,
+  name: string,
+): string | null {
+  const wanted = name.toLowerCase();
+  const found = (headers ?? []).find((h) =>
+    typeof h?.name === "string" && h.name.toLowerCase() === wanted
+  );
+  return typeof found?.value === "string" ? found.value : null;
+}
+
 const HEADER_NAMES: Record<keyof RecipientOverride, string> = { to: "To", cc: "Cc", bcc: "Bcc" };
 
 /** Longest header line written before folding (RFC 5322 recommends 78, requires under 998). */

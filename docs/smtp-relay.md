@@ -192,3 +192,61 @@ Only on evidence, meaning a logged rejection that names our sending address.
 Append the registrable domain to `SMTP_RELAY_HOSTS`, add it to the relay's own
 allowlist, and set the secret. No code change and no deploy: the function reads
 the secret per isolate.
+
+## Relay-only hosts: Orange (IMAP and SMTP, no direct fallback)
+
+Domeneshop refuses our submissions. Orange refuses our **sign-ins**, for reading
+as well as sending, and that needs more than the SMTP relay above.
+
+**What was measured (2026-10-12).** `imap.orange.fr` answered every login from
+our servers with `NO [ALERT] Authentication failed.`, which is not its
+wrong-password answer: a made-up address gets `NO [AUTHENTICATIONFAILED] ...`
+from AWS, from the relay and from a residential line, and Dovecot sends
+`[ALERT]` only when its auth backend attached a refusal reason of its own.
+Orange only issues mailboxes with a French internet contract, so the question
+was put to one customer login, repeated from several addresses in a single
+attempt:
+
+| Login | From | Result |
+| --- | --- | --- |
+| IMAP | our web app (AWS) | `NO [ALERT] Authentication failed.` |
+| IMAP | a relay in France | accepted |
+| IMAP | this relay (Germany) | accepted |
+| SMTP | our web app (AWS) | greeting `550 Service refused, please try later. OFR105_103` |
+| SMTP, 587 | this relay (Germany) | accepted |
+
+Same password throughout. Orange refuses real accounts from where we connect.
+
+**What the code does about it.** `orange.fr` is a *relay-only* host, in both
+runtimes, and the two lists must name the same hosts:
+
+- Edge function: `DEFAULT_RELAY_ONLY_HOST_SUFFIXES` in `smtp-relay.ts`
+  (override with the `MAIL_RELAY_ONLY_HOSTS` secret). IMAP for these hosts goes
+  through the relay (`imap-client.ts#connectOnce`), they are always on the SMTP
+  relay list whatever `SMTP_RELAY_HOSTS` says, and a row stored as 465 is
+  submitted on 587 with STARTTLS.
+- Web app: `RELAY_ONLY_MAIL_HOST_SUFFIXES` in
+  `apps/web/src/lib/email/mail-relay.ts`, read from `MAIL_RELAY_URL` on Vercel.
+  The connect form validates these hosts through the relay and stores SMTP as
+  587/STARTTLS; the inbox health check opens its session the same way.
+
+**No direct fallback, and the breaker does not skip them.** For every other
+relayed host a broken relay degrades to a direct dial. Here the direct dial is
+the one path known to be refused, and its refusal reads as a wrong password: it
+would tell the user to reconnect a mailbox that is fine and count a failed
+sign-in against their account. A relay that cannot carry the connection is an
+ordinary transient failure for these hosts.
+
+**Relay setup for a relay-only host**, on top of the above: `ConnectPort 993`,
+and both the IMAP and the SMTP host in the filter file
+(`^imap\.orange\.fr$`, `^smtp\.orange\.fr$`).
+
+**Baselines worth knowing when reading logs.** Orange's wrong-password answers
+are `NO [AUTHENTICATIONFAILED] Authentication failed.` on IMAP and
+`550 5.7.0 ... Mot de passe invalide` on SMTP, the latter after about eight
+seconds. An `[ALERT]` through the relay would mean the relay's own address has
+started being refused, and no code change fixes that.
+
+A second relay in France was stood up for the measurement. It is not used:
+Orange's SMTP greets that address with `550 Service refused. OFR_99`, and the
+German relay is accepted for both protocols.

@@ -1,0 +1,146 @@
+Self-Host an Open-Source Email MCP Server · mcpemails
+[meta description] Run the open-source mcpemails server for IMAP and SMTP on your own infrastructure. Keep your encryption key, fetch email live, and never store mailbox content.
+[meta og:title] Self-Host an Open-Source Email MCP Server · mcpemails
+[meta og:description] Run the open-source mcpemails server for IMAP and SMTP on your own infrastructure. Keep your encryption key, fetch email live, and never store mailbox content.
+[meta og:locale] en_US
+[meta twitter:title] Self-Host an Open-Source Email MCP Server · mcpemails
+[meta twitter:description] Run the open-source mcpemails server for IMAP and SMTP on your own infrastructure. Keep your encryption key, fetch email live, and never store mailbox content.
+[alt] mcpemails
+[alt] mcpemails
+[aria-label] Primary navigation
+Features
+How it works
+Pricing
+Compare
+Docs
+Self-host
+Blog
+Sign in
+Get started free
+[aria-label] Open navigation menu
+Open source, AGPL-3.0
+Run MCP Emails yourself.
+The same MCP server that powers mcpemails.com, on your own machine, against your own database. Your mailbox credentials never leave infrastructure you control. They are encrypted with a key only you hold and decrypted only in your container, at the moment a tool call needs them.
+The whole thing in one command
+git clone https://github.com/Albretsen/MCPEmails
+cd MCPEmails/self-host
+make setup && make up
+Four small containers (Postgres, PostgREST, nginx, the Deno server). No account, no keys held by us, no telemetry. It runs
+supabase/functions/mcp-server
+unmodified: the exact code behind the hosted product.
+Read the self-host guide
+View the source
+Your inbox never leaves your box.
+Connect Fastmail, iCloud, Yahoo, Zoho, Yandex, or any IMAP/SMTP mailbox with an app password. Email is fetched live and never stored. Credentials are encrypted at rest with AES-256-GCM using a key you generate and keep. There is nothing to phone home to.
+Self-host vs hosted
+The full MCP server and all 23 tools are in both. Self-hosting trades managed convenience for total control.
+Self-host
+Hosted
+Price
+Free, you run it
+Free, $9, $15, or $79
+The MCP server and all 23 tools
+Yes
+Yes
+IMAP / SMTP inboxes (app password)
+Yes
+Yes
+Email fetched live, never stored
+Yes
+Yes
+Credentials encrypted at rest
+Yes, your key
+Yes
+Gmail / Outlook sign-in (OAuth)
+Not included
+Gmail: yes; Outlook: yes (work accounts may need IT admin approval)
+Web dashboard (connect, keys, activity)
+CLI instead
+Yes
+Scheduled-send dispatcher
+Bring your own cron
+Managed
+Automatic updates, backups, uptime
+You
+Managed
+Team workspaces, roles, SSO, audit log
+Not included
+Team plan
+Support
+Community and GitHub
+Email and priority
+Setup
+About 5 minutes
+About 2 minutes
+Giving an AI your inbox, safely
+The concern is legitimate. Here is how the design bounds it, self-hosted or not.
+Least-privilege by design.
+Every API key is scoped: grant read only, or send without delete. Destructive actions require an explicit delete scope.
+Prompt injection is bounded, not hand-waved.
+A hostile email can try to instruct the agent. Per-key scopes cap the blast radius: a key that cannot send cannot be tricked into sending.
+Credentials are encrypted at rest
+with AES-256-GCM. When you self-host, the encryption key is yours and no one else's.
+Verify, don't trust.
+The code is public under AGPL-3.0, and the hosted version runs it unmodified. Read it, then decide.
+Self-hosting is a real commitment.
+You run the IMAP/SMTP configuration, updates, and security yourself, and support is community-only. Gmail and Outlook sign-in (OAuth) and the web dashboard stay on the hosted product. These features need OAuth secrets and a session layer a single-operator install does not; for Outlook you would also need your own Microsoft Entra app registration. If you would rather not run infrastructure, the hosted plan is two minutes and free to start.
+Use the hosted version
+·
+AGPL-3.0
+Run it yourself, or let us run it.
+Same server either way. Your call on who holds the keys.
+Read the self-host guide
+Use the hosted version
+[alt] mcpemails
+A hosted MCP server that gives AI agents read and send access to your inbox, without ever storing the email it reads.
+Contact
+hello@mcpemails.com
+[aria-label] Copy Contact
+Copy
+MCP endpoint
+https://mcpemails.com/api/mcp
+[aria-label] Copy MCP endpoint
+Copy
+[aria-label] Language
+English
+Norsk
+Español
+Français
+中文
+Product
+Features
+How it works
+Pricing
+Docs
+Self-hosting
+For founders
+For business
+Resources
+Tool reference
+Quickstart
+OAuth connection
+Provider support
+MCP client setup
+Blog
+Changelog
+Connect
+All email providers
+Connect any IMAP inbox
+Connect Gmail
+Connect Outlook
+Connect Fastmail
+Connect iCloud
+Connect Yahoo
+Connect Zoho
+Connect Yandex
+vs native connectors
+Best email MCP servers
+Company
+About
+Security
+Status
+Privacy
+Terms
+© 2026 mcpemails.
+Email fetched live, never stored · Credentials encrypted at rest
+MCPEmails is a service of Albretsen Consulting (enkeltpersonforetak), organisation number 926 646 753, Håsteins gate 9, 5160 Laksevåg, Norway.

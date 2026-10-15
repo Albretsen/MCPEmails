@@ -1,0 +1,290 @@
+Connect Claude to Your Email with MCP (Gmail, Outlook, iCloud & IMAP) · mcpemails
+[meta description] A practical guide to connecting Claude to Gmail, Outlook and Microsoft 365, iCloud, Fastmail, Yahoo, Zoho, or any IMAP inbox over MCP. No code, and no email stored.
+[meta og:title] Connect Claude to Your Email with MCP (Gmail, Outlook, iCloud & IMAP) · mcpemails
+[meta og:description] A practical guide to connecting Claude to Gmail, Outlook and Microsoft 365, iCloud, Fastmail, Yahoo, Zoho, or any IMAP inbox over MCP. No code, and no email stored.
+[meta og:locale] en_US
+[meta twitter:title] Connect Claude to Your Email with MCP (Gmail, Outlook, iCloud & IMAP) · mcpemails
+[meta twitter:description] A practical guide to connecting Claude to Gmail, Outlook and Microsoft 365, iCloud, Fastmail, Yahoo, Zoho, or any IMAP inbox over MCP. No code, and no email stored.
+[alt] mcpemails
+[alt] mcpemails
+[aria-label] Primary navigation
+Features
+How it works
+Pricing
+Compare
+Docs
+Self-host
+Blog
+Sign in
+Get started free
+[aria-label] Open navigation menu
+[aria-label] Breadcrumb
+Home
+/
+Blog
+/
+Connect Claude to Your Email with MCP (Gmail, Outlook, iCloud & IMAP)
+Claude
+MCP
+Email
+Tutorial
+Connect Claude to Your Email with MCP (Gmail, Outlook, iCloud & IMAP)
+A practical guide to connecting Claude to Gmail, Outlook and Microsoft 365, iCloud, Fastmail, Yahoo, Zoho, or any IMAP inbox over MCP. No code, and no email stored.
+[alt] Asgeir Albretsen
+Asgeir Albretsen
+Founder & Engineer, MCPEmails
+July 28, 2026
+·
+7 min read
+[alt] Connect Claude to Gmail, Outlook, iCloud, Fastmail, Yahoo, Zoho, and IMAP email with MCP Emails
+[aria-label] On this page
+On this page
+What you need
+Step 1: Connect your inbox to MCP Emails
+Gmail and Google Workspace
+iCloud Mail
+Fastmail
+Outlook and Microsoft 365
+Yahoo, Zoho, Yandex, and custom IMAP
+Step 2: Add MCP Emails to Claude
+Step 3: Give Claude a safe first task
+What Claude can do after it is connected
+Troubleshooting connection and Claude setup
+Is it safe to connect Claude to email?
+FAQ
+Next step
+Claude can read, search, organize, and send your email, but it needs an MCP server to reach a real inbox. MCP Emails is that bridge: connect an inbox once, add one secure endpoint to Claude, and Claude gets a consistent set of email tools across Gmail, Outlook and Microsoft 365, iCloud, Fastmail, Yahoo, Zoho, and other IMAP providers.
+There is no code to write, no SDK to install, and no API key when you connect through Claude's OAuth flow. Email is fetched live from your provider for each request and is not stored by MCP Emails.
+Jump to your provider:
+Gmail
+·
+iCloud
+·
+Fastmail
+·
+Outlook
+·
+Yahoo, Zoho, Yandex, or custom IMAP
+What you need
+A
+Claude plan or app that supports custom connectors
+.
+A free
+MCP Emails
+account:
+create one here
+.
+One email inbox. Outlook connects with Sign in with Microsoft. Gmail, iCloud, Fastmail, Yahoo, Zoho, and most other providers use an app-specific password, and Gmail also offers Sign in with Google.
+Step 1: Connect your inbox to MCP Emails
+In the MCP Emails dashboard, open
+Inboxes → Connect Inbox
+, then choose your provider.
+Gmail and Google Workspace
+Choose
+Gmail
+, create a Google app password (your Google account needs 2-Step Verification for that), and paste it in with your Gmail address. You can pick Sign in with Google instead. Either way, your normal Google password is never shared with MCP Emails. Follow the
+Gmail-specific walkthrough
+if a Workspace administrator controls app access.
+iCloud Mail
+Create an app-specific password in your Apple Account, choose
+iCloud
+, and enter that password, not your normal Apple Account password. The
+iCloud and IMAP walkthrough
+includes the exact provider steps.
+Fastmail
+Create an app password with Mail access in Fastmail, choose
+Fastmail
+, and paste it into MCP Emails. Keep the generated password until the connection test succeeds.
+Outlook and Microsoft 365
+Outlook connects with Sign in with Microsoft, not an app password: choose
+Outlook
+, click
+Connect with Microsoft
+, and approve. Personal Outlook.com, Hotmail, Live and MSN accounts connect straight away. Work or school Microsoft 365 accounts may need an IT admin to approve the app once for the whole organisation first; the dashboard gives you a link to send them. The
+Outlook and Microsoft 365 guide
+has the details.
+Yahoo, Zoho, Yandex, and custom IMAP
+Create an app password, choose
+IMAP
+, and enter the address and password. Common settings are detected automatically; custom domains may need the IMAP/SMTP host, port, and security mode supplied by the provider.
+You can connect more than one inbox. Claude discovers them with
+inbox_list
+, so you do not have to paste mailbox IDs into a prompt.
+Need provider-by-provider help? See the
+two-minute multi-provider setup guide
+, the dedicated
+Gmail guide
+, or the
+iCloud, Fastmail, and IMAP guide
+.
+Step 2: Add MCP Emails to Claude
+In claude.ai or Claude Desktop:
+Open
+Settings → Connectors
+.
+Choose
+Add custom connector
+.
+Paste this URL:
+https://mcpemails.com/api/mcp
+Select
+Connect
+, sign in to MCP Emails, and approve the scopes you want:
+read:email
+,
+send:email
+, or both.
+That is the entire Claude setup. OAuth limits the connection to the scopes you approve, and you can revoke it from MCP Emails whenever you want. If you use a client without OAuth support, use a scoped API key instead;
+OAuth vs. API keys
+explains that path.
+Step 3: Give Claude a safe first task
+Start with a read-only request:
+Summarize my three newest unread emails and flag anything that needs a reply today.
+Claude first finds the connected inbox, then lists and reads the relevant messages. Once that works, try:
+“Find the invoice from Stripe from last month and tell me the amount.”
+“Draft a reply to the latest message from Alex, but do not send it.”
+“Show me newsletters from this week that I can archive.”
+“What did I agree to in my thread with Acme?”
+For repeatable routines, use the
+inbox triage playbook
+or
+ways to let Claude manage your inbox
+.
+What Claude can do after it is connected
+MCP Emails gives Claude focused email tools rather than a password or raw IMAP connection:
+Read and search:
+email_read
+lists messages, reads full messages, and searches mail. Gmail searches also support Gmail operators such as
+from:
+and
+is:unread
+.
+Send, reply, and forward:
+email_compose
+sends through your own provider and address.
+Organize:
+email_organize
+moves, labels, flags, and archives messages.
+Work with drafts, folders, schedules, and contacts:
+draft
+,
+folder
+,
+schedule
+, and
+contact_search
+cover the rest of a practical email workflow.
+MCP Emails is poll-based: Claude checks for new mail when you ask it to, rather than receiving a push event the instant an email arrives.
+Troubleshooting connection and Claude setup
+The provider rejects the password:
+use a provider-generated app password, not the password you use to sign in on the web. Regenerate it after enabling two-factor authentication if required.
+A custom IMAP connection times out:
+confirm the provider's IMAP/SMTP host, port, and TLS mode. Port 993 normally uses implicit TLS; port 143 normally uses STARTTLS.
+Claude connects but cannot see email:
+first verify the inbox is active in MCP Emails, then reconnect Claude and approve
+read:email
+. Ask Claude to call
+inbox_list
+before reading messages.
+Claude can read but not send:
+reconnect with
+send:email
+, and verify the provider connection supports SMTP or provider-native sending.
+Still blocked? Use the
+provider matrix
+to check capabilities, then
+open the setup guide
+and test one read-only request before enabling sending.
+Is it safe to connect Claude to email?
+Yes, provided you give the connection only the access it needs and keep a person involved for outgoing actions.
+Email is not stored.
+MCP Emails retrieves message content live for each call and discards it after delivery. The encrypted credential needed to reconnect to your provider is the only inbox data retained.
+Your provider keeps control of authentication.
+Outlook, and Gmail's Sign in with Google option, use OAuth, so MCP Emails never receives your password. For Gmail's app password and other IMAP providers, use a revocable app-specific password rather than your normal password.
+Scopes are explicit.
+Grant read-only access if Claude should never send. Add send access only when you need it, and revoke either access path at any time.
+Treat every email body as untrusted input. Ask Claude to draft before it sends, review external-facing messages, and do not let instructions inside an email override your intent. The
+email-access safety guide
+explains the threat model in more detail.
+FAQ
+Can Claude connect to Gmail, Outlook, or iCloud?
+Gmail connects with a Google app password or Sign in with Google, Outlook connects with Sign in with Microsoft, and iCloud connects through an app-specific password. A work or school Microsoft 365 account may need an IT admin to approve the app once first. MCP Emails also supports Fastmail and generic IMAP, which covers services such as Yahoo and Zoho.
+Do I need an API key?
+No, not for Claude's OAuth connector flow. Paste the endpoint URL and sign in. API keys are for MCP clients that do not have built-in OAuth.
+Can Claude send email?
+Yes, if you grant
+send:email
+. Start with read-only access or ask Claude to draft replies first if you want a review step.
+Does MCP Emails store my inbox?
+No. Messages are read live from your provider and discarded. MCP Emails stores only the encrypted connection credential required to make those live requests.
+Next step
+Start free
+, connect your inbox, add
+https://mcpemails.com/api/mcp
+to Claude, and ask it to summarize your unread email. For the complete MCP tool reference and provider capabilities, visit the
+documentation
+.
+[alt] Asgeir Albretsen
+Written by
+Asgeir Albretsen
+Asgeir builds MCPEmails — the bridge that lets AI agents read, search, and send real email over the Model Context Protocol. He writes about agents, email infrastructure, and developer experience.
+← Back to all posts
+Give your agent an inbox
+Connect Gmail, Outlook, Fastmail, or any IMAP account to your AI agent in minutes.
+Get started free
+Read the docs
+[alt] mcpemails
+A hosted MCP server that gives AI agents read and send access to your inbox, without ever storing the email it reads.
+Contact
+hello@mcpemails.com
+[aria-label] Copy Contact
+Copy
+MCP endpoint
+https://mcpemails.com/api/mcp
+[aria-label] Copy MCP endpoint
+Copy
+[aria-label] Language
+English
+Norsk
+Español
+Français
+中文
+Product
+Features
+How it works
+Pricing
+Docs
+Self-hosting
+For founders
+For business
+Resources
+Tool reference
+Quickstart
+OAuth connection
+Provider support
+MCP client setup
+Blog
+Changelog
+Connect
+All email providers
+Connect any IMAP inbox
+Connect Gmail
+Connect Outlook
+Connect Fastmail
+Connect iCloud
+Connect Yahoo
+Connect Zoho
+Connect Yandex
+vs native connectors
+Best email MCP servers
+Company
+About
+Security
+Status
+Privacy
+Terms
+© 2026 mcpemails.
+Email fetched live, never stored · Credentials encrypted at rest
+MCPEmails is a service of Albretsen Consulting (enkeltpersonforetak), organisation number 926 646 753, Håsteins gate 9, 5160 Laksevåg, Norway.
+[json-ld] {"@context":"https://schema.org","@type":"BlogPosting","headline":"Connect Claude to Your Email with MCP (Gmail, Outlook, iCloud & IMAP)","description":"A practical guide to connecting Claude to Gmail, Outlook and Microsoft 365, iCloud, Fastmail, Yahoo, Zoho, or any IMAP inbox over MCP. No code, and no email stored.","image":["https://mcpemails.com/blog/cover-connect-email-to-ai-agent-under-2-minutes.svg"],"inLanguage":"en","datePublished":"2026-07-28T09:00:00.000Z","dateModified":"2026-09-26T09:00:00.000Z","url":"https://mcpemails.com/blog/connect-claude-to-email","mainEntityOfPage":{"@type":"WebPage","@id":"https://mcpemails.com/blog/connect-claude-to-email"},"keywords":"Claude, MCP, Email, Tutorial","wordCount":1288,"author":{"@type":"Person","name":"Asgeir Albretsen","description":"Asgeir builds MCPEmails — the bridge that lets AI agents read, search, and send real email over the Model Context Protocol. He writes about agents, email infrastructure, and developer experience.","url":"https://mcpemails.com/blog"},"publisher":{"@type":"Organization","name":"mcpemails","url":"https://mcpemails.com","logo":{"@type":"ImageObject","url":"https://mcpemails.com/logo-mark.svg"}}}
+[json-ld] {"@context":"https://schema.org","@type":"BreadcrumbList","itemListElement":[{"@type":"ListItem","position":1,"name":"Home","item":"https://mcpemails.com/"},{"@type":"ListItem","position":2,"name":"Blog","item":"https://mcpemails.com/blog"},{"@type":"ListItem","position":3,"name":"Connect Claude to Your Email with MCP (Gmail, Outlook, iCloud & IMAP)","item":"https://mcpemails.com/blog/connect-claude-to-email"}]}

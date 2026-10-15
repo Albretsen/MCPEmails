@@ -15,6 +15,8 @@
 import '../styles/theme.css';
 import '../styles/colors_and_type.css';
 import '../styles/marketing.css';
+// This screen replaces the root layout, so it brings the webfonts itself too.
+import './fonts';
 import { THEME_BOOTSTRAP_SCRIPT } from '../src/lib/theme-bootstrap';
 
 export default function GlobalError({ reset }) {
@@ -37,7 +39,7 @@ export default function GlobalError({ reset }) {
           <div className="auth-wrap">
             {/* Brand */}
             <div className="auth-brand">
-              <img className="logo-light" src="/logo-wordmark.svg" alt="mcpemails" /><img className="logo-dark" src="/logo-wordmark-dark.svg" alt="mcpemails" />
+              <img className="logo-light" src="/logo-wordmark.svg" width="280" height="48" alt="mcpemails" /><img className="logo-dark" src="/logo-wordmark-dark.svg" width="280" height="48" alt="mcpemails" />
             </div>
 
             {/* Card */}

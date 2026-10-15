@@ -1,0 +1,462 @@
+AI Email Agent Guides, MCP Tutorials & Security · mcpemails
+[meta description] Practical guides to connecting email with Claude and MCP clients, securing AI agent access, and using Gmail, Outlook, IMAP, and email workflows safely.
+[meta og:title] AI Email Agent Guides, MCP Tutorials & Security · mcpemails
+[meta og:description] Practical guides to connecting email with Claude and MCP clients, securing AI agent access, and using Gmail, Outlook, IMAP, and email workflows safely.
+[meta og:locale] en_US
+[meta twitter:title] AI Email Agent Guides, MCP Tutorials & Security · mcpemails
+[meta twitter:description] Practical guides to connecting email with Claude and MCP clients, securing AI agent access, and using Gmail, Outlook, IMAP, and email workflows safely.
+[alt] mcpemails
+[alt] mcpemails
+[aria-label] Primary navigation
+Features
+How it works
+Pricing
+Compare
+Docs
+Self-host
+Blog
+Sign in
+Get started free
+[aria-label] Open navigation menu
+The MCPEmails blog
+Notes on agents, email & MCP
+Guides, deep-dives, and field notes on connecting Gmail, Outlook, Fastmail, and any IMAP inbox to Claude, Cursor, and MCP-compatible clients.
+[aria-label] Filter posts by topic
+All
+31
+MCP
+Tutorial
+AI agents
+Email
+Claude
+Security
+IMAP
+Gmail
+Workflows
+Email automation
+Inbox triage
+Multiple inboxes
+Outlook
+ChatGPT
+Privacy
+Comparison
+AI email safety
+Human approval
+AI workflows
+Prompts
+Workflow
+Business email
+Google Workspace
+Agencies
+Teams
+Email attachments
+PDF extraction
+Email reliability
+Idempotency
+Gmail labels
+IMAP folders
+Email providers
+Codex
+Automations
+Feature
+Productivity
+Inbox Zero
+iCloud
+Fastmail
+OAuth
+Cursor
+[alt] Human approval for AI agent email sends — MCP Emails
+AI email safety
+Human approval
+Human Approval for AI Agent Email Sends: How to Stay in Control
+Let an AI agent prepare useful email work while a workspace owner or admin makes the final call to send. A practical guide to human approval for AI email.
+[alt] Asgeir Albretsen
+Asgeir Albretsen
+·
+Aug 2, 2026
+·
+4 min
+[alt] Reusable AI agent inbox workflow prompts — MCP Emails
+AI workflows
+Inbox triage
+Reusable AI Agent Email Workflows: Inbox Triage Prompts That Stay Useful
+Start reliable inbox triage, follow-up, cleanup, and draft-review routines with MCP Emails workflow prompts—without building a separate tool for every email habit.
+[alt] Asgeir Albretsen
+Asgeir Albretsen
+·
+Aug 2, 2026
+·
+4 min
+[alt] One AI agent connected to work, personal, and side-business email accounts with MCP Emails
+Multiple inboxes
+Email
+How to Manage Multiple Email Accounts With One AI Agent
+Run work, personal, and side-business mailboxes through one AI agent: how it discovers inboxes, how to scope a request, sender names that stay correct, and per-inbox send review.
+[alt] Asgeir Albretsen
+Asgeir Albretsen
+·
+Sep 15, 2026
+·
+8 min
+[alt] Connect a business email on your own domain to an AI agent with MCP Emails
+Business email
+IMAP
+Connect a Custom-Domain Business Email to Your AI Agent (IMAP Setup)
+Setup guide for you@yourcompany.com: find out who really runs your mail, connect Google Workspace, Zoho, Fastmail, Migadu, Titan, Rackspace, IONOS or cPanel, and fix the From name before your agent replies.
+[alt] Asgeir Albretsen
+Asgeir Albretsen
+·
+Sep 15, 2026
+·
+9 min
+[alt] One AI agent working across separate client mailboxes with scoped access, MCP Emails
+Agencies
+Teams
+AI Email Access for Agencies: One Agent Across Every Client Mailbox
+How an agency or freelancer gives an AI agent access to several client mailboxes without mixing clients up: a workspace per client, scoped keys, read-only first, and an approval hold on every send.
+[alt] Asgeir Albretsen
+Asgeir Albretsen
+·
+Sep 15, 2026
+·
+8 min
+[alt] AI agent extracting text from an email attachment — MCP Emails
+Email attachments
+AI agents
+How AI Agents Can Read Email Attachments Without Storing Them
+Use MCP Emails to extract text from PDF, CSV, JSON, HTML, and text email attachments so an AI agent can summarize what matters without keeping the file.
+[alt] Asgeir Albretsen
+Asgeir Albretsen
+·
+Aug 2, 2026
+·
+3 min
+[alt] Preventing duplicate AI agent email sends — MCP Emails
+Email reliability
+AI agents
+How to Prevent Duplicate Email Sends From AI Agents
+Retries happen. Learn how MCP Emails idempotency keys help prevent duplicate sends, replies, forwards, draft sends, and scheduled emails from AI agents.
+[alt] Asgeir Albretsen
+Asgeir Albretsen
+·
+Aug 2, 2026
+·
+3 min
+[alt] Gmail labels and IMAP folders for AI agents — MCP Emails
+Gmail labels
+IMAP folders
+Gmail Labels vs. IMAP Folders for AI Agents: What Changes and What Does Not
+Understand the difference between Gmail labels and IMAP folders when connecting an AI agent to email—and how MCP Emails keeps common inbox workflows consistent across providers.
+[alt] Asgeir Albretsen
+Asgeir Albretsen
+·
+Aug 2, 2026
+·
+4 min
+[alt] Connect your email to an AI agent in under 2 minutes — Gmail, Outlook, iCloud, Fastmail, and IMAP over MCP
+Tutorial
+Gmail
+How to Connect Your Email to an AI Agent in Under 2 Minutes (Gmail, Outlook, iCloud, Fastmail & IMAP)
+Connect your email to an AI agent in under 2 minutes. Step-by-step setup for Gmail, Outlook, iCloud, Fastmail, and any IMAP inbox over MCP: no email ever stored.
+[alt] Asgeir Albretsen
+Asgeir Albretsen
+·
+May 8, 2026
+·
+7 min
+[alt] Connect Claude to Gmail, Outlook, iCloud, Fastmail, Yahoo, Zoho, and IMAP email with MCP Emails
+Claude
+MCP
+Connect Claude to Your Email with MCP (Gmail, Outlook, iCloud & IMAP)
+A practical guide to connecting Claude to Gmail, Outlook and Microsoft 365, iCloud, Fastmail, Yahoo, Zoho, or any IMAP inbox over MCP. No code, and no email stored.
+[alt] Asgeir Albretsen
+Asgeir Albretsen
+·
+Jul 28, 2026
+·
+7 min
+[alt] Connect ChatGPT and OpenAI Codex to Gmail, Outlook, iCloud, Fastmail and IMAP email with MCP Emails
+ChatGPT
+Codex
+Connect ChatGPT to Your Email with MCP (Gmail, Outlook, iCloud and IMAP)
+Step by step: connect Gmail, Outlook, iCloud, Fastmail or any IMAP inbox to ChatGPT with a custom MCP connector, and to OpenAI Codex with a scoped key. No email stored.
+[alt] Asgeir Albretsen
+Asgeir Albretsen
+·
+Sep 15, 2026
+·
+9 min
+[alt] Claude connected to an IMAP and SMTP mailbox through MCPEmails
+Claude
+IMAP
+Claude IMAP Connector: Connect Any IMAP Inbox to Claude
+Set up a Claude IMAP connector for any mailbox with IMAP/SMTP settings, app passwords, TLS ports, security guidance, limitations, and troubleshooting.
+[alt] Asgeir Albretsen
+Asgeir Albretsen
+·
+Aug 5, 2026
+·
+8 min
+[alt] Unattended email triage rules in MCP Emails: a stored search plus one fixed action on a schedule
+Automations
+Inbox triage
+Automated Email Triage Rules That Run Without a Model in the Loop
+How MCP Emails automations work: a stored search plus one fixed action, on a cadence, with no model interpreting your mail. Preview, create, enable, read the run log.
+[alt] Asgeir Albretsen
+Asgeir Albretsen
+·
+Sep 15, 2026
+·
+8 min
+[alt] How to connect Gmail to Claude in two minutes over MCP: a Google app password, one endpoint URL, no email stored
+Tutorial
+Gmail
+How to Connect Gmail to Claude (in 2 Minutes, No Code)
+Connect Gmail to Claude over MCP in about two minutes: a Google app password (or Sign in with Google), one endpoint URL, no API key, no code. Claude reads, searches and sends your mail live, and your email is never stored.
+[alt] Asgeir Albretsen
+Asgeir Albretsen
+·
+Jun 23, 2026
+·
+7 min
+[alt] Email signatures for Claude — set a per-inbox signature once and Claude signs every message it sends, on every provider
+Feature
+Email
+Email Signatures for Claude: Auto-Signed, Every Time
+Set a signature once per inbox, and Claude signs every email it sends automatically, on Gmail, Outlook, Fastmail, iCloud, and any IMAP account.
+[alt] Asgeir Albretsen
+Asgeir Albretsen
+·
+Jun 23, 2026
+·
+5 min
+[alt] Reach inbox zero with AI — Claude triages, archives, and drafts replies across your real inbox over MCP
+Productivity
+Claude
+How to Reach Inbox Zero with AI (Using Claude and Your Real Inbox)
+Reach inbox zero with AI: let Claude triage, archive, label, and draft replies across your real Gmail, Outlook or IMAP inbox over MCP. A repeatable routine, the exact prompts, and why nothing is stored.
+[alt] Asgeir Albretsen
+Asgeir Albretsen
+·
+Jun 23, 2026
+·
+5 min
+[alt] How to give your AI agent access to email over MCP — MCPEmails
+MCP
+AI agents
+How to Give Your AI Agent Access to Email (The Complete 2026 Guide)
+Give your AI agent read and send access to a real inbox over MCP — Gmail, Outlook, iCloud, Fastmail, or IMAP. How it works, the tools, security, and setup.
+[alt] Asgeir Albretsen
+Asgeir Albretsen
+·
+Jun 2, 2026
+·
+8 min
+[alt] Is it safe to give an AI agent email access — risks and safeguards explained — MCP Emails
+Security
+Privacy
+Is It Safe to Give an AI Agent Access to Your Email? What to Know
+Is it safe to give an AI agent email access? The honest answer: it depends on the architecture. Here are the real risks and the checklist that makes it safe.
+[alt] Asgeir Albretsen
+Asgeir Albretsen
+·
+Jun 7, 2026
+·
+6 min
+[alt] Hosted versus self-hosted Gmail MCP server comparison — MCP Emails
+Comparison
+Gmail
+Hosted vs. Self-Hosted Gmail MCP Server: Pros, Cons, and Costs
+Hosted vs. self-hosted Gmail MCP server, compared honestly: free DIY repos give you full control but you own OAuth, encryption, and uptime. A hosted server costs minutes.
+[alt] Asgeir Albretsen
+Asgeir Albretsen
+·
+May 28, 2026
+·
+8 min
+[alt] Give your AI agent an inbox — MCPEmails
+MCP
+AI agents
+Give your AI agent an inbox: a practical guide to email over MCP
+Why connecting email to your AI agent is harder than it looks — and how the Model Context Protocol makes Gmail, Outlook, and IMAP a single, secure endpoint your agent can actually use.
+[alt] Asgeir Albretsen
+Asgeir Albretsen
+·
+Jun 1, 2026
+·
+3 min
+[alt] Connect iCloud, Fastmail, and any IMAP inbox to Claude over MCP
+iCloud
+Fastmail
+How to Connect iCloud, Fastmail, or Any IMAP Inbox to Claude
+Connect iCloud, Fastmail, or any IMAP inbox to Claude with an app-specific password. Step-by-step setup, the MCP endpoint, and what IMAP does that Gmail won’t.
+[alt] Asgeir Albretsen
+Asgeir Albretsen
+·
+May 13, 2026
+·
+7 min
+[alt] Connecting Outlook and Microsoft 365 to an AI agent over MCP
+Outlook
+Tutorial
+Connecting Outlook and Microsoft 365 to Your AI Agent via MCP
+Connect Outlook.com or Microsoft 365 to your AI agent over MCP. Sign in with Microsoft, no app password, Microsoft Graph underneath. Work accounts may need IT admin approval once.
+[alt] Asgeir Albretsen
+Asgeir Albretsen
+·
+May 18, 2026
+·
+7 min
+[alt] Email fetched live and discarded versus a second copy stored in a vendor database
+Security
+Privacy
+Why 'Email Never Stored' Matters When Connecting AI to Your Inbox
+Email never stored means MCP Emails fetches your mail live and discards it, keeping only an encrypted token. See why that beats tools that copy your whole inbox.
+[alt] Asgeir Albretsen
+Asgeir Albretsen
+·
+Jun 22, 2026
+·
+6 min
+[alt] OAuth versus API keys for connecting AI agents to email — MCPEmails
+OAuth
+Security
+OAuth vs. API Keys for AI Email Access: Which Should You Use?
+OAuth vs. API keys for AI email access: use OAuth for claude.ai, Claude Desktop, and Cursor; use a scoped API key for Cline, JetBrains, and scripts.
+[alt] Asgeir Albretsen
+Asgeir Albretsen
+·
+Jun 12, 2026
+·
+6 min
+[alt] Setting up email access for AI coding agents in Cursor, Cline, and VS Code over MCP
+Cursor
+Tutorial
+Setting Up Email for AI Agents in Cursor, Cline, and VS Code
+Give your coding agent email access in Cursor, Cline, and VS Code. Cursor uses OAuth; Cline and custom clients use a scoped API key over MCP. Full setup.
+[alt] Asgeir Albretsen
+Asgeir Albretsen
+·
+May 23, 2026
+·
+7 min
+[alt] The best ways to let Claude manage your inbox in 2026 — MCPEmails
+Claude
+Workflows
+The Best Ways to Let Claude Manage Your Inbox in 2026
+A frank roundup of the best ways to let Claude manage your inbox in 2026: native integrations, DIY MCP servers, copy-paste, browser extensions, and hosted MCP.
+[alt] Asgeir Albretsen
+Asgeir Albretsen
+·
+Apr 28, 2026
+·
+7 min
+[alt] What is an MCP email server — a plain-English explanation from MCPEmails
+MCP
+AI agents
+What Is an MCP Email Server? A Plain-English Explanation
+An MCP email server is a tool that lets an AI agent read and send email through clean verbs instead of raw IMAP and passwords. Here is what that means.
+[alt] Asgeir Albretsen
+Asgeir Albretsen
+·
+Jun 17, 2026
+·
+7 min
+[alt] AI agent triaging and summarizing an inbox over MCP — MCP Emails
+Workflows
+Claude
+How to Get Your AI Agent to Triage and Summarize Your Inbox
+A practical how-to for AI agent inbox triage: copy-paste prompts that list unread mail, read what matters, summarize and prioritize, and poll on a schedule.
+[alt] Asgeir Albretsen
+Asgeir Albretsen
+·
+Apr 23, 2026
+·
+7 min
+[alt] Seven things your AI agent can do with inbox access over MCP — MCPEmails
+Workflows
+AI agents
+7 Things Your AI Agent Can Do Once It Has Inbox Access
+Seven concrete things an AI agent can do with inbox access: triage unread mail, summarize threads, draft replies, find attachments, chase follow-ups, and route mail.
+[alt] Asgeir Albretsen
+Asgeir Albretsen
+·
+Apr 18, 2026
+·
+7 min
+[alt] Building an email auto-responder with an MCP-connected agent — MCPEmails
+Workflows
+Tutorial
+Building an Email Auto-Responder With an MCP-Connected Agent
+Build an email auto-responder with an MCP-connected AI agent: poll for unread mail, draft, and reply safely with scopes, rate limits, and guardrails.
+[alt] Asgeir Albretsen
+Asgeir Albretsen
+·
+May 3, 2026
+·
+7 min
+[alt] Several work and personal email accounts connected to Claude and ChatGPT through one MCP connector
+Multiple inboxes
+Claude
+Multiple Email Accounts in Claude and ChatGPT: Every Mailbox, One Connector
+How to put several email accounts into Claude and ChatGPT at once, including company mailboxes on IONOS, Zoho, Namecheap, Google Workspace or your own server, with one MCP connector that works in both.
+[alt] Asgeir Albretsen
+Asgeir Albretsen
+·
+Sep 29, 2026
+·
+7 min
+[alt] mcpemails
+A hosted MCP server that gives AI agents read and send access to your inbox, without ever storing the email it reads.
+Contact
+hello@mcpemails.com
+[aria-label] Copy Contact
+Copy
+MCP endpoint
+https://mcpemails.com/api/mcp
+[aria-label] Copy MCP endpoint
+Copy
+[aria-label] Language
+English
+Norsk
+Español
+Français
+中文
+Product
+Features
+How it works
+Pricing
+Docs
+Self-hosting
+For founders
+For business
+Resources
+Tool reference
+Quickstart
+OAuth connection
+Provider support
+MCP client setup
+Blog
+Changelog
+Connect
+All email providers
+Connect any IMAP inbox
+Connect Gmail
+Connect Outlook
+Connect Fastmail
+Connect iCloud
+Connect Yahoo
+Connect Zoho
+Connect Yandex
+vs native connectors
+Best email MCP servers
+Company
+About
+Security
+Status
+Privacy
+Terms
+© 2026 mcpemails.
+Email fetched live, never stored · Credentials encrypted at rest
+MCPEmails is a service of Albretsen Consulting (enkeltpersonforetak), organisation number 926 646 753, Håsteins gate 9, 5160 Laksevåg, Norway.
+[json-ld] {"@context":"https://schema.org","@type":"Blog","name":"mcpemails Blog","description":"Practical guides to connecting email with Claude and MCP clients, securing AI agent access, and using Gmail, Outlook, IMAP, and email workflows safely.","url":"https://mcpemails.com/blog","inLanguage":"en","publisher":{"@type":"Organization","name":"mcpemails","url":"https://mcpemails.com","logo":{"@type":"ImageObject","url":"https://mcpemails.com/logo-mark.svg"}},"blogPost":[{"@type":"BlogPosting","headline":"Human Approval for AI Agent Email Sends: How to Stay in Control","description":"Let an AI agent prepare useful email work while a workspace owner or admin makes the final call to send. A practical guide to human approval for AI email.","datePublished":"2026-08-02T09:00:00.000Z","url":"https://mcpemails.com/blog/approve-ai-agent-email-sends","inLanguage":"en","author":{"@type":"Person","name":"Asgeir Albretsen"}},{"@type":"BlogPosting","headline":"Reusable AI Agent Email Workflows: Inbox Triage Prompts That Stay Useful","description":"Start reliable inbox triage, follow-up, cleanup, and draft-review routines with MCP Emails workflow prompts—without building a separate tool for every email habit.","datePublished":"2026-08-02T09:10:00.000Z","url":"https://mcpemails.com/blog/ai-agent-email-workflows-and-prompts","inLanguage":"en","author":{"@type":"Person","name":"Asgeir Albretsen"}},{"@type":"BlogPosting","headline":"How to Manage Multiple Email Accounts With One AI Agent","description":"Run work, personal, and side-business mailboxes through one AI agent: how it discovers inboxes, how to scope a request, sender names that stay correct, and per-inbox send review.","datePublished":"2026-09-15T09:00:00.000Z","url":"https://mcpemails.com/blog/manage-multiple-email-accounts-with-ai","inLanguage":"en","author":{"@type":"Person","name":"Asgeir Albretsen"}},{"@type":"BlogPosting","headline":"Connect a Custom-Domain Business Email to Your AI Agent (IMAP Setup)","description":"Setup guide for you@yourcompany.com: find out who really runs your mail, connect Google Workspace, Zoho, Fastmail, Migadu, Titan, Rackspace, IONOS or cPanel, and fix the From name before your agent replies.","datePublished":"2026-09-15T09:00:00.000Z","url":"https://mcpemails.com/blog/connect-business-email-custom-domain-to-ai-agent","inLanguage":"en","author":{"@type":"Person","name":"Asgeir Albretsen"}},{"@type":"BlogPosting","headline":"AI Email Access for Agencies: One Agent Across Every Client Mailbox","description":"How an agency or freelancer gives an AI agent access to several client mailboxes without mixing clients up: a workspace per client, scoped keys, read-only first, and an approval hold on every send.","datePublished":"2026-09-15T09:00:00.000Z","url":"https://mcpemails.com/blog/ai-email-for-agencies-and-client-work","inLanguage":"en","author":{"@type":"Person","name":"Asgeir Albretsen"}},{"@type":"BlogPosting","headline":"How AI Agents Can Read Email Attachments Without Storing Them","description":"Use MCP Emails to extract text from PDF, CSV, JSON, HTML, and text email attachments so an AI agent can summarize what matters without keeping the file.","datePublished":"2026-08-02T09:05:00.000Z","url":"https://mcpemails.com/blog/extract-email-attachments-for-ai","inLanguage":"en","author":{"@type":"Person","name":"Asgeir Albretsen"}},{"@type":"BlogPosting","headline":"How to Prevent Duplicate Email Sends From AI Agents","description":"Retries happen. Learn how MCP Emails idempotency keys help prevent duplicate sends, replies, forwards, draft sends, and scheduled emails from AI agents.","datePublished":"2026-08-02T09:15:00.000Z","url":"https://mcpemails.com/blog/prevent-duplicate-ai-agent-email-sends","inLanguage":"en","author":{"@type":"Person","name":"Asgeir Albretsen"}},{"@type":"BlogPosting","headline":"Gmail Labels vs. IMAP Folders for AI Agents: What Changes and What Does Not","description":"Understand the difference between Gmail labels and IMAP folders when connecting an AI agent to email—and how MCP Emails keeps common inbox workflows consistent across providers.","datePublished":"2026-08-02T09:20:00.000Z","url":"https://mcpemails.com/blog/gmail-labels-vs-imap-folders-ai-agents","inLanguage":"en","author":{"@type":"Person","name":"Asgeir Albretsen"}},{"@type":"BlogPosting","headline":"How to Connect Your Email to an AI Agent in Under 2 Minutes (Gmail, Outlook, iCloud, Fastmail & IMAP)","description":"Connect your email to an AI agent in under 2 minutes. Step-by-step setup for Gmail, Outlook, iCloud, Fastmail, and any IMAP inbox over MCP: no email ever stored.","datePublished":"2026-05-08T09:00:00.000Z","url":"https://mcpemails.com/blog/connect-email-to-ai-agent-under-2-minutes","inLanguage":"en","author":{"@type":"Person","name":"Asgeir Albretsen"}},{"@type":"BlogPosting","headline":"Connect Claude to Your Email with MCP (Gmail, Outlook, iCloud & IMAP)","description":"A practical guide to connecting Claude to Gmail, Outlook and Microsoft 365, iCloud, Fastmail, Yahoo, Zoho, or any IMAP inbox over MCP. No code, and no email stored.","datePublished":"2026-07-28T09:00:00.000Z","url":"https://mcpemails.com/blog/connect-claude-to-email","inLanguage":"en","author":{"@type":"Person","name":"Asgeir Albretsen"}},{"@type":"BlogPosting","headline":"Connect ChatGPT to Your Email with MCP (Gmail, Outlook, iCloud and IMAP)","description":"Step by step: connect Gmail, Outlook, iCloud, Fastmail or any IMAP inbox to ChatGPT with a custom MCP connector, and to OpenAI Codex with a scoped key. No email stored.","datePublished":"2026-09-15T09:00:00.000Z","url":"https://mcpemails.com/blog/connect-chatgpt-to-email","inLanguage":"en","author":{"@type":"Person","name":"Asgeir Albretsen"}},{"@type":"BlogPosting","headline":"Claude IMAP Connector: Connect Any IMAP Inbox to Claude","description":"Set up a Claude IMAP connector for any mailbox with IMAP/SMTP settings, app passwords, TLS ports, security guidance, limitations, and troubleshooting.","datePublished":"2026-08-05T09:00:00.000Z","url":"https://mcpemails.com/blog/claude-imap-connector","inLanguage":"en","author":{"@type":"Person","name":"Asgeir Albretsen"}},{"@type":"BlogPosting","headline":"Automated Email Triage Rules That Run Without a Model in the Loop","description":"How MCP Emails automations work: a stored search plus one fixed action, on a cadence, with no model interpreting your mail. Preview, create, enable, read the run log.","datePublished":"2026-09-15T09:00:00.000Z","url":"https://mcpemails.com/blog/automated-email-triage-rules","inLanguage":"en","author":{"@type":"Person","name":"Asgeir Albretsen"}},{"@type":"BlogPosting","headline":"How to Connect Gmail to Claude (in 2 Minutes, No Code)","description":"Connect Gmail to Claude over MCP in about two minutes: a Google app password (or Sign in with Google), one endpoint URL, no API key, no code. Claude reads, searches and sends your mail live, and your email is never stored.","datePublished":"2026-06-23T09:00:00.000Z","url":"https://mcpemails.com/blog/connect-gmail-to-claude","inLanguage":"en","author":{"@type":"Person","name":"Asgeir Albretsen"}},{"@type":"BlogPosting","headline":"Email Signatures for Claude: Auto-Signed, Every Time","description":"Set a signature once per inbox, and Claude signs every email it sends automatically, on Gmail, Outlook, Fastmail, iCloud, and any IMAP account.","datePublished":"2026-06-23T12:00:00.000Z","url":"https://mcpemails.com/blog/email-signatures-for-claude","inLanguage":"en","author":{"@type":"Person","name":"Asgeir Albretsen"}},{"@type":"BlogPosting","headline":"How to Reach Inbox Zero with AI (Using Claude and Your Real Inbox)","description":"Reach inbox zero with AI: let Claude triage, archive, label, and draft replies across your real Gmail, Outlook or IMAP inbox over MCP. A repeatable routine, the exact prompts, and why nothing is stored.","datePublished":"2026-06-23T13:00:00.000Z","url":"https://mcpemails.com/blog/inbox-zero-with-ai-claude","inLanguage":"en","author":{"@type":"Person","name":"Asgeir Albretsen"}},{"@type":"BlogPosting","headline":"How to Give Your AI Agent Access to Email (The Complete 2026 Guide)","description":"Give your AI agent read and send access to a real inbox over MCP — Gmail, Outlook, iCloud, Fastmail, or IMAP. How it works, the tools, security, and setup.","datePublished":"2026-06-02T09:00:00.000Z","url":"https://mcpemails.com/blog/how-to-give-your-ai-agent-email-access","inLanguage":"en","author":{"@type":"Person","name":"Asgeir Albretsen"}},{"@type":"BlogPosting","headline":"Is It Safe to Give an AI Agent Access to Your Email? What to Know","description":"Is it safe to give an AI agent email access? The honest answer: it depends on the architecture. Here are the real risks and the checklist that makes it safe.","datePublished":"2026-06-07T09:00:00.000Z","url":"https://mcpemails.com/blog/is-it-safe-to-give-ai-agent-email-access","inLanguage":"en","author":{"@type":"Person","name":"Asgeir Albretsen"}},{"@type":"BlogPosting","headline":"Hosted vs. Self-Hosted Gmail MCP Server: Pros, Cons, and Costs","description":"Hosted vs. self-hosted Gmail MCP server, compared honestly: free DIY repos give you full control but you own OAuth, encryption, and uptime. A hosted server costs minutes.","datePublished":"2026-05-28T09:00:00.000Z","url":"https://mcpemails.com/blog/hosted-vs-self-hosted-gmail-mcp-server","inLanguage":"en","author":{"@type":"Person","name":"Asgeir Albretsen"}},{"@type":"BlogPosting","headline":"Give your AI agent an inbox: a practical guide to email over MCP","description":"Why connecting email to your AI agent is harder than it looks — and how the Model Context Protocol makes Gmail, Outlook, and IMAP a single, secure endpoint your agent can actually use.","datePublished":"2026-06-01T09:00:00.000Z","url":"https://mcpemails.com/blog/give-your-ai-agent-an-inbox","inLanguage":"en","author":{"@type":"Person","name":"Asgeir Albretsen"}},{"@type":"BlogPosting","headline":"How to Connect iCloud, Fastmail, or Any IMAP Inbox to Claude","description":"Connect iCloud, Fastmail, or any IMAP inbox to Claude with an app-specific password. Step-by-step setup, the MCP endpoint, and what IMAP does that Gmail won’t.","datePublished":"2026-05-13T09:00:00.000Z","url":"https://mcpemails.com/blog/connect-icloud-fastmail-imap-to-claude","inLanguage":"en","author":{"@type":"Person","name":"Asgeir Albretsen"}},{"@type":"BlogPosting","headline":"Connecting Outlook and Microsoft 365 to Your AI Agent via MCP","description":"Connect Outlook.com or Microsoft 365 to your AI agent over MCP. Sign in with Microsoft, no app password, Microsoft Graph underneath. Work accounts may need IT admin approval once.","datePublished":"2026-05-18T09:00:00.000Z","url":"https://mcpemails.com/blog/connect-outlook-microsoft-365-ai-agent-mcp","inLanguage":"en","author":{"@type":"Person","name":"Asgeir Albretsen"}},{"@type":"BlogPosting","headline":"Why 'Email Never Stored' Matters When Connecting AI to Your Inbox","description":"Email never stored means MCP Emails fetches your mail live and discards it, keeping only an encrypted token. See why that beats tools that copy your whole inbox.","datePublished":"2026-06-22T09:00:00.000Z","url":"https://mcpemails.com/blog/why-email-never-stored-matters","inLanguage":"en","author":{"@type":"Person","name":"Asgeir Albretsen"}},{"@type":"BlogPosting","headline":"OAuth vs. API Keys for AI Email Access: Which Should You Use?","description":"OAuth vs. API keys for AI email access: use OAuth for claude.ai, Claude Desktop, and Cursor; use a scoped API key for Cline, JetBrains, and scripts.","datePublished":"2026-06-12T09:00:00.000Z","url":"https://mcpemails.com/blog/oauth-vs-api-keys-ai-email-access","inLanguage":"en","author":{"@type":"Person","name":"Asgeir Albretsen"}},{"@type":"BlogPosting","headline":"Setting Up Email for AI Agents in Cursor, Cline, and VS Code","description":"Give your coding agent email access in Cursor, Cline, and VS Code. Cursor uses OAuth; Cline and custom clients use a scoped API key over MCP. Full setup.","datePublished":"2026-05-23T09:00:00.000Z","url":"https://mcpemails.com/blog/email-for-ai-agents-cursor-cline-vscode","inLanguage":"en","author":{"@type":"Person","name":"Asgeir Albretsen"}},{"@type":"BlogPosting","headline":"The Best Ways to Let Claude Manage Your Inbox in 2026","description":"A frank roundup of the best ways to let Claude manage your inbox in 2026: native integrations, DIY MCP servers, copy-paste, browser extensions, and hosted MCP.","datePublished":"2026-04-28T09:00:00.000Z","url":"https://mcpemails.com/blog/best-ways-to-let-claude-manage-your-inbox","inLanguage":"en","author":{"@type":"Person","name":"Asgeir Albretsen"}},{"@type":"BlogPosting","headline":"What Is an MCP Email Server? A Plain-English Explanation","description":"An MCP email server is a tool that lets an AI agent read and send email through clean verbs instead of raw IMAP and passwords. Here is what that means.","datePublished":"2026-06-17T09:00:00.000Z","url":"https://mcpemails.com/blog/what-is-an-mcp-email-server","inLanguage":"en","author":{"@type":"Person","name":"Asgeir Albretsen"}},{"@type":"BlogPosting","headline":"How to Get Your AI Agent to Triage and Summarize Your Inbox","description":"A practical how-to for AI agent inbox triage: copy-paste prompts that list unread mail, read what matters, summarize and prioritize, and poll on a schedule.","datePublished":"2026-04-23T09:00:00.000Z","url":"https://mcpemails.com/blog/ai-agent-triage-summarize-inbox","inLanguage":"en","author":{"@type":"Person","name":"Asgeir Albretsen"}},{"@type":"BlogPosting","headline":"7 Things Your AI Agent Can Do Once It Has Inbox Access","description":"Seven concrete things an AI agent can do with inbox access: triage unread mail, summarize threads, draft replies, find attachments, chase follow-ups, and route mail.","datePublished":"2026-04-18T09:00:00.000Z","url":"https://mcpemails.com/blog/7-things-ai-agent-can-do-with-inbox-access","inLanguage":"en","author":{"@type":"Person","name":"Asgeir Albretsen"}},{"@type":"BlogPosting","headline":"Building an Email Auto-Responder With an MCP-Connected Agent","description":"Build an email auto-responder with an MCP-connected AI agent: poll for unread mail, draft, and reply safely with scopes, rate limits, and guardrails.","datePublished":"2026-05-03T09:00:00.000Z","url":"https://mcpemails.com/blog/build-email-auto-responder-mcp-agent","inLanguage":"en","author":{"@type":"Person","name":"Asgeir Albretsen"}},{"@type":"BlogPosting","headline":"Multiple Email Accounts in Claude and ChatGPT: Every Mailbox, One Connector","description":"How to put several email accounts into Claude and ChatGPT at once, including company mailboxes on IONOS, Zoho, Namecheap, Google Workspace or your own server, with one MCP connector that works in both.","datePublished":"2026-09-29T09:00:00.000Z","url":"https://mcpemails.com/blog/multiple-email-accounts-in-claude-and-chatgpt","inLanguage":"en","author":{"@type":"Person","name":"Asgeir Albretsen"}}]}

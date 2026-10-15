@@ -12,18 +12,23 @@
     "status": "active"
   },
   "meta": {
-    "title": "Correo de Bluehost a Claude: IMAP de cPanel y Titan",
-    "description": "Bluehost vende tres productos de correo distintos. Averigua cuál tienes y conéctalo a Claude por IMAP en el puerto 993. Una bandeja gratis, para siempre, sin tarjeta."
+    "title": "Servidor MCP de Bluehost para Claude y ChatGPT",
+    "description": "Servidor MCP para el correo de Bluehost. Conecta varios buzones de empresa de tu dominio (info@, ventas@) a Claude y ChatGPT por IMAP en el puerto 993."
   },
   "hero": {
     "eyebrow": "Bluehost + IA",
-    "titleLine1": "Conecta el correo de Bluehost a Claude,",
-    "titleLine2": "Cursor, ChatGPT y cualquier cliente MCP",
-    "lead": "Dale a tu agente de IA un buzón real de Bluehost. Lee, busca, envía, responde, programa y organiza correo por IMAP, tanto si el buzón es una cuenta de cPanel Email como si es de Professional Email.",
-    "answer": "Claude no puede acceder por sí solo a un buzón de Bluehost. mcpemails es un servidor MCP alojado que lo conecta por IMAP estándar en el puerto 993, para que Claude, Cursor o cualquier cliente MCP pueda leer, buscar, enviar y organizar ese correo. Lo primero es averiguar cuál de los tres productos de correo de Bluehost tienes, porque cPanel Email responde en un servidor construido a partir de tu propio dominio mientras que Professional Email responde en los servidores de Titan, y los dos juegos de ajustes no son intercambiables. En ambos casos te autenticas con la contraseña definida en el buzón, nunca con la de tu portal de Bluehost, y una bandeja es gratis.",
-    "meta0": "1 bandeja gratis, para siempre",
+    "titleLine1": "Servidor MCP para el correo de Bluehost:",
+    "titleLine2": "todos los buzones de tu empresa, en Claude y ChatGPT",
+    "lead": "¿Llevas info@, ventas@, soporte@ y facturas@ en tu propio dominio en Bluehost? Conecta cada buzón al mismo espacio de trabajo y tu agente de IA trabaja en todos ellos. Lee, busca, envía, responde, programa y organiza correo por IMAP, tanto si el buzón es una cuenta de cPanel Email como si es de Professional Email.",
+    "answer": "Claude no puede acceder por sí solo a un buzón de Bluehost. mcpemails es un servidor MCP alojado que lo conecta por IMAP estándar en el puerto 993, para que Claude, Cursor o cualquier cliente MCP pueda leer, buscar, enviar y organizar ese correo. Lo primero es averiguar cuál de los tres productos de correo de Bluehost tienes, porque cPanel Email responde en un servidor construido a partir de tu propio dominio mientras que Professional Email responde en los servidores de Titan, y los dos juegos de ajustes no son intercambiables. En ambos casos te autenticas con la contraseña definida en el buzón, nunca con la de tu portal de Bluehost. Cada dirección de la empresa, como info@ o ventas@, se conecta como un buzón propio: un buzón es gratis, Personal conecta tres y Pro todos los que llevas.",
+    "meta0": "Primer buzón gratis, planes para el resto",
     "meta1": "Contraseña del buzón, no el acceso al portal",
     "meta2": "El correo se obtiene en vivo, nunca se almacena"
+  },
+  "persona": {
+    "intro": "¿Varios buzones de empresa en Bluehost?",
+    "label": "Mira qué conecta cada plan",
+    "href": "/pricing"
   },
   "method": {
     "title": "Cómo se conecta el correo de Bluehost: primero averigua qué producto tienes",
@@ -88,7 +93,7 @@
     }
   ],
   "ctaBand": {
-    "title": "Dale a tu IA una bandeja de Bluehost",
-    "sub": "Conecta un buzón de Bluehost en minutos. Una bandeja gratis para siempre, sin tarjeta."
+    "title": "Todos tus buzones de Bluehost en un solo agente",
+    "sub": "Conecta tu primer buzón de Bluehost gratis, sin tarjeta. Personal conecta tres y Pro todos los que llevas."
   }
 }

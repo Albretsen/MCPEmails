@@ -1,5 +1,5 @@
 -- ============================================================
--- Signup device class (20261002100000_acquisition_device.sql)
+-- Signup device class (20261015100000_acquisition_device.sql)
 -- ============================================================
 -- Proves:
 --   1. A workspace made by the real signup trigger starts with no device, even

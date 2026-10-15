@@ -1,0 +1,904 @@
+.root {
+  flex: 1;
+  min-height: 0;
+  min-width: 0;
+  display: flex;
+  flex-direction: column;
+}
+
+/* ---------- header ---------- */
+.head {
+  flex: none;
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  height: 52px;
+  padding: 0 10px 0 14px;
+  border-bottom: 1px solid var(--border-1);
+  background: var(--bg-surface);
+}
+.headLogo {
+  flex: none;
+}
+.headText {
+  flex: 1;
+  min-width: 0;
+  display: flex;
+  flex-direction: column;
+}
+.title {
+  margin: 0;
+  font-size: 14px;
+  font-weight: 600;
+  line-height: 1.3;
+  color: var(--fg-1);
+}
+.sub {
+  font-size: 12px;
+  line-height: 1.3;
+  color: var(--fg-3);
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+.subBusy {
+  color: var(--cobalt-700);
+}
+.subHeld {
+  color: var(--amber-700);
+}
+.head .headBig {
+  width: 44px;
+  height: 44px;
+  margin-right: -8px;
+  border-radius: 8px;
+  color: var(--fg-2);
+}
+
+/* ---------- transcript ---------- */
+.chat {
+  flex: 1;
+  min-height: 0;
+  overflow-y: auto;
+  overscroll-behavior: contain;
+  display: flex;
+  flex-direction: column;
+  gap: 14px;
+  padding: 16px 14px;
+  background: var(--ink-25);
+}
+.chat:focus-visible {
+  outline-offset: -2px;
+}
+.intro {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  padding-top: 4px;
+}
+.introTitle {
+  font-size: 15px;
+  font-weight: 600;
+  color: var(--fg-1);
+}
+.introText {
+  font-size: 13.5px;
+  line-height: 1.55;
+  color: var(--fg-2);
+  text-wrap: pretty;
+}
+.textButton {
+  flex: none;
+  align-self: flex-start;
+  padding: 0 2px;
+  border: none;
+  background: transparent;
+  font-size: 12px;
+  color: var(--fg-3);
+  text-decoration: underline;
+  text-underline-offset: 3px;
+  white-space: nowrap;
+  cursor: pointer;
+}
+.textButton:hover {
+  color: var(--fg-1);
+}
+
+.msg {
+  flex: none;
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  animation: mc-in 200ms var(--ease-out);
+}
+.user {
+  align-self: flex-end;
+  max-width: 85%;
+  min-width: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 7px;
+  padding: 9px 13px;
+  border-radius: 12px 12px 4px 12px;
+  background: var(--ink-100);
+  color: var(--fg-1);
+  font-size: 13.5px;
+  line-height: 1.5;
+}
+.userText {
+  white-space: pre-wrap;
+  overflow-wrap: anywhere;
+}
+.sentChip {
+  align-self: flex-start;
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  max-width: 100%;
+  min-width: 0;
+  height: 24px;
+  padding: 0 8px 0 3px;
+  border: 1px solid var(--cobalt-200);
+  border-radius: 6px;
+  background: #fff;
+  font-size: 12px;
+  font-weight: 500;
+  color: var(--cobalt-800);
+  cursor: pointer;
+}
+.sentChip:hover {
+  border-color: var(--cobalt-400);
+}
+.sentChipIcon {
+  flex: none;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 16px;
+  height: 16px;
+  border-radius: 5px;
+  background: var(--brand);
+  color: #fff;
+}
+.sentChipLabel {
+  min-width: 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.asst {
+  display: flex;
+  align-items: flex-start;
+  gap: 10px;
+}
+.mark {
+  flex: none;
+  width: 22px;
+  height: 22px;
+}
+.asstBody {
+  flex: 1;
+  min-width: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+.text {
+  font-size: 14px;
+  line-height: 1.6;
+  color: var(--fg-1);
+  white-space: pre-wrap;
+  text-wrap: pretty;
+  overflow-wrap: anywhere;
+}
+.cursor {
+  display: inline-block;
+  width: 7px;
+  height: 15px;
+  margin-left: 2px;
+  border-radius: 1px;
+  vertical-align: -2px;
+  background: var(--cobalt-500);
+}
+
+/* ---------- tool-call steps ---------- */
+.stepRow {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  min-width: 0;
+  max-width: 100%;
+}
+.stepRow .textButton {
+  align-self: center;
+}
+/* The single collapsed step. */
+.step {
+  flex: 1;
+  min-width: 0;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  height: 30px;
+  padding: 0 10px;
+  border: 1px solid var(--border-1);
+  border-radius: 8px;
+  background: #fff;
+  text-align: left;
+  cursor: default;
+  transition:
+    background 200ms var(--ease-out),
+    border-color 200ms var(--ease-out);
+}
+.stepList {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  max-width: 100%;
+}
+.calls {
+  overflow: hidden;
+  border: 1px solid var(--border-1);
+  border-radius: 10px;
+  background: var(--bg-surface);
+}
+/* One entry of the expanded list. */
+.callRow {
+  display: flex;
+  align-items: center;
+  gap: 9px;
+  width: 100%;
+  min-width: 0;
+  margin-top: -1px;
+  padding: 7px 10px;
+  border: none;
+  border-top: 1px solid var(--border-1);
+  background: transparent;
+  text-align: left;
+  cursor: default;
+  transition: background 200ms var(--ease-out);
+}
+.linkable {
+  cursor: pointer;
+}
+.stepState {
+  flex: none;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 14px;
+  height: 14px;
+}
+.stepLabel {
+  flex: 0 1 auto;
+  min-width: 0;
+  font-size: 12.5px;
+  color: var(--fg-2);
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+.linkable .stepLabel {
+  text-decoration: underline;
+  text-decoration-color: var(--border-2);
+  text-underline-offset: 3px;
+}
+.stepMeta {
+  flex: 0 100 auto;
+  min-width: 0;
+  font: 11px var(--font-mono);
+  color: var(--fg-3);
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+.stepActive {
+  background: var(--cobalt-50);
+}
+.step.stepActive {
+  border-color: var(--cobalt-200);
+}
+.stepActive .stepLabel {
+  color: var(--cobalt-700);
+}
+.stepWaiting {
+  background: var(--amber-100);
+}
+.step.stepWaiting {
+  border-color: var(--amber-500);
+}
+.stepLit {
+  background: var(--cobalt-100);
+}
+/* The step a list row points at. Reduced motion keeps only the highlight. */
+.stepFlash {
+  animation: stepFlash 1600ms var(--ease-out);
+}
+@keyframes stepFlash {
+  0%,
+  35% {
+    box-shadow: 0 0 0 2px var(--cobalt-300);
+  }
+  100% {
+    box-shadow: 0 0 0 2px transparent;
+  }
+}
+.done {
+  color: var(--mint-600);
+}
+.waiting {
+  color: var(--amber-700);
+}
+.held {
+  color: var(--cobalt-700);
+}
+.cancelled {
+  color: var(--fg-3);
+}
+
+/* ---------- cards and chips ---------- */
+.stack {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  max-width: 100%;
+}
+.card {
+  display: flex;
+  align-items: flex-start;
+  gap: 12px;
+  padding: 12px 14px;
+  border: 1px solid var(--border-1);
+  border-radius: 12px;
+  background: var(--bg-surface);
+  animation: mc-in 200ms var(--ease-out);
+}
+.cardIcon {
+  flex: none;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 32px;
+  height: 32px;
+  border: 1px solid var(--border-1);
+  border-radius: 8px;
+  background: var(--ink-50);
+  color: var(--fg-2);
+}
+.cardBody {
+  flex: 1;
+  min-width: 0;
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  gap: 8px;
+}
+.cardTitle {
+  font-size: 14px;
+  font-weight: 600;
+  color: var(--fg-1);
+}
+.cardSub {
+  font-size: 12.5px;
+  line-height: 1.45;
+  color: var(--fg-3);
+  text-wrap: pretty;
+}
+.cardBody .cardButton {
+  height: 30px;
+  max-width: 100%;
+  padding: 0 12px;
+  font-size: 13px;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+.cardDone {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  font-size: 12.5px;
+  color: var(--fg-3);
+}
+
+.stack .chip + .chip {
+  margin-top: -2px;
+}
+.chip {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  min-width: 0;
+  padding: 9px 12px;
+  border: 1px solid var(--border-1);
+  border-radius: 8px;
+  background: #fff;
+  text-align: left;
+  cursor: pointer;
+}
+.chip:hover {
+  border-color: var(--border-2);
+}
+.chipIcon {
+  flex: none;
+  color: var(--fg-3);
+}
+.chipText {
+  flex: 1;
+  min-width: 0;
+  display: flex;
+  flex-direction: column;
+}
+.chipLabel,
+.chipSub {
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+.chipLabel {
+  font-size: 13px;
+  font-weight: 500;
+  color: var(--fg-1);
+}
+.chipSub {
+  font-size: 12.5px;
+  color: var(--fg-3);
+}
+
+/* ---------- "new below" pill ---------- */
+.pillSlot {
+  position: relative;
+  flex: none;
+  height: 0;
+  z-index: 4;
+}
+.pill {
+  position: absolute;
+  bottom: 10px;
+  left: 50%;
+  transform: translateX(-50%);
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  height: 30px;
+  padding: 0 12px;
+  border: 1px solid var(--cobalt-200);
+  border-radius: 999px;
+  background: #fff;
+  box-shadow: var(--shadow-2);
+  font-size: 12.5px;
+  font-weight: 500;
+  color: var(--cobalt-700);
+  white-space: nowrap;
+  cursor: pointer;
+}
+
+/* ---------- composer ---------- */
+.composer {
+  flex: none;
+  min-width: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  padding: 10px 14px 14px;
+  border-top: 1px solid var(--border-1);
+  background: var(--bg-surface);
+}
+.compact {
+  padding: 8px 12px 10px;
+  box-shadow: 0 -2px 8px rgba(11, 16, 32, 0.05);
+}
+.compactBusy {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  min-width: 0;
+  font-size: 12.5px;
+  color: var(--fg-2);
+}
+.compactStatus {
+  flex: 1;
+  min-width: 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+.compactStop {
+  position: relative;
+  flex: none;
+  height: 24px;
+  padding: 0 8px;
+  border: 1px solid var(--border-1);
+  border-radius: 6px;
+  background: #fff;
+  font-size: 12px;
+  font-weight: 500;
+  color: var(--fg-1);
+  cursor: pointer;
+}
+/* 44 px touch target around the small Stop button. */
+.compactStop::after {
+  content: "";
+  position: absolute;
+  inset: -10px -8px;
+}
+
+.suggRow {
+  display: flex;
+  flex-wrap: nowrap;
+  align-items: center;
+  gap: 6px;
+  min-width: 0;
+  overflow: hidden;
+}
+.suggLabel {
+  flex: none;
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
+  margin-right: 2px;
+  font-size: 11.5px;
+  color: var(--fg-3);
+}
+.sugg {
+  flex: none;
+  height: 26px;
+  max-width: 100%;
+  padding: 0 10px;
+  border: 1px solid var(--cobalt-100);
+  border-radius: 999px;
+  background: var(--cobalt-50);
+  font-size: 12.5px;
+  color: var(--cobalt-800);
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  cursor: pointer;
+}
+/* Only the first may shrink: the rest were measured to fit. */
+.suggLabel + .sugg {
+  flex: 0 1 auto;
+  min-width: 0;
+}
+.sugg:hover {
+  border-color: var(--cobalt-300);
+}
+.stdRow {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+}
+.std {
+  display: inline-flex;
+  align-items: center;
+  gap: 7px;
+  height: 32px;
+  padding: 0 12px;
+  border: 1px solid var(--border-2);
+  border-radius: 8px;
+  background: #fff;
+  box-shadow: var(--shadow-1);
+  font-size: 13px;
+  font-weight: 500;
+  color: var(--fg-1);
+  cursor: pointer;
+  transition:
+    border-color 120ms var(--ease-out),
+    background 120ms var(--ease-out);
+}
+.std:hover:not(:disabled) {
+  border-color: var(--cobalt-300);
+  background: var(--cobalt-50);
+}
+.std:disabled {
+  opacity: 0.5;
+  cursor: default;
+}
+.stdIcon {
+  color: var(--brand);
+}
+
+.box {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  min-width: 0;
+  padding: 6px;
+  border: 1px solid var(--cobalt-200);
+  border-radius: 10px;
+  background: #fff;
+}
+.box:focus-within {
+  border-color: var(--border-focus);
+  box-shadow: var(--shadow-focus);
+}
+.chipLine {
+  display: flex;
+  min-width: 0;
+}
+.ctx {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  max-width: 100%;
+  min-width: 0;
+  min-height: 28px;
+  padding: 0 2px 0 4px;
+  border: 1px solid var(--cobalt-200);
+  border-radius: 7px;
+  background: var(--cobalt-50);
+  font-size: 12.5px;
+  font-weight: 500;
+  color: var(--cobalt-800);
+  cursor: default;
+}
+.ctx:hover {
+  border-color: var(--cobalt-400);
+}
+.ctxIcon {
+  flex: none;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 18px;
+  height: 18px;
+  border-radius: 5px;
+  background: var(--brand);
+  color: #fff;
+}
+.ctxLabel {
+  min-width: 0;
+  padding: 3px 0;
+  line-height: 1.35;
+  display: -webkit-box;
+  -webkit-box-orient: vertical;
+  -webkit-line-clamp: 2;
+  line-clamp: 2;
+  overflow: hidden;
+  overflow-wrap: anywhere;
+}
+.ctxRemove {
+  position: relative;
+  flex: none;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 22px;
+  height: 22px;
+  border: none;
+  border-radius: 5px;
+  background: transparent;
+  color: var(--cobalt-700);
+  cursor: pointer;
+}
+.ctxRemove:hover {
+  background: var(--cobalt-100);
+}
+.ctxAdd {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  max-width: 100%;
+  height: 28px;
+  padding: 0 9px 0 7px;
+  border: 1px dashed var(--border-2);
+  border-radius: 7px;
+  background: #fff;
+  font-size: 12.5px;
+  color: var(--fg-2);
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  cursor: pointer;
+}
+.ctxAdd:hover {
+  border-color: var(--cobalt-300);
+  color: var(--cobalt-700);
+}
+/* "The whole conversation": on. */
+.ctxAdd[aria-pressed="true"] {
+  border-style: solid;
+  border-color: var(--cobalt-200);
+  background: var(--cobalt-50);
+  color: var(--cobalt-800);
+}
+.inputRow {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding-left: 4px;
+}
+.input {
+  flex: 1;
+  min-width: 0;
+  padding: 4px 0;
+  border: none;
+  resize: none;
+  overflow: hidden;
+  background: transparent;
+  font-size: 13.5px;
+  line-height: 1.5;
+  color: var(--fg-1);
+}
+/* A long placeholder stays on one line instead of wrapping out of view. */
+.input:placeholder-shown {
+  white-space: nowrap;
+  text-overflow: ellipsis;
+}
+.expand {
+  flex: none;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 44px;
+  height: 44px;
+  margin: -7px 0;
+  border: none;
+  border-radius: 7px;
+  background: transparent;
+  color: var(--fg-2);
+  cursor: pointer;
+}
+.send {
+  position: relative;
+  flex: none;
+  align-self: flex-end;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 30px;
+  height: 30px;
+  border: none;
+  border-radius: 7px;
+  background: var(--brand);
+  color: #fff;
+  cursor: pointer;
+}
+.send:hover {
+  background: var(--brand-hover);
+}
+.send[aria-disabled="true"] {
+  opacity: 0.45;
+  cursor: default;
+}
+.stop,
+.stop:hover {
+  background: var(--ink-900);
+}
+
+/* Phone: no zoom on focus (16 px), and finger-sized targets. */
+.phone .input {
+  font-size: 16px;
+}
+.phone .send::after,
+.phone .ctxRemove::after {
+  content: "";
+  position: absolute;
+  inset: -7px;
+}
+.phone .ctxRemove::after {
+  inset: -11px;
+}
+.phone .sugg {
+  height: 36px;
+}
+.phone .std {
+  height: 44px;
+}
+
+/* ---------- "assistant wants to send" notice ---------- */
+.push {
+  position: absolute;
+  top: calc(16px + env(safe-area-inset-top));
+  right: calc(16px + env(safe-area-inset-right));
+  z-index: 60;
+  width: 340px;
+  max-width: calc(100% - 32px);
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  padding: 12px;
+  border: 1px solid var(--border-1);
+  border-radius: 14px;
+  background: var(--bg-surface);
+  box-shadow: var(--shadow-4);
+  animation: mc-in 200ms var(--ease-out);
+}
+.pushPhone {
+  top: calc(10px + env(safe-area-inset-top));
+  left: calc(10px + env(safe-area-inset-left));
+  right: calc(10px + env(safe-area-inset-right));
+  width: auto;
+  max-width: none;
+  border-radius: 18px;
+}
+.pushTop {
+  display: flex;
+  align-items: flex-start;
+  gap: 10px;
+}
+.pushIcon {
+  flex: none;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 34px;
+  height: 34px;
+  border: 1px solid var(--border-1);
+  border-radius: 8px;
+  background: #fff;
+}
+.pushBody {
+  flex: 1;
+  min-width: 0;
+}
+.pushHead {
+  display: flex;
+  gap: 8px;
+  font-size: 13px;
+  font-weight: 600;
+  color: var(--fg-1);
+}
+.pushTitle {
+  flex: 1;
+  min-width: 0;
+  margin: 0;
+  font: inherit;
+}
+.pushWhen {
+  flex: none;
+  font-size: 12px;
+  font-weight: 400;
+  color: var(--fg-3);
+}
+.pushText {
+  margin: 0;
+  font-size: 12.5px;
+  line-height: 1.4;
+  color: var(--fg-2);
+  display: -webkit-box;
+  -webkit-box-orient: vertical;
+  -webkit-line-clamp: 3;
+  line-clamp: 3;
+  overflow: hidden;
+  overflow-wrap: anywhere;
+}
+.pushActions {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 6px;
+}
+.pushButton {
+  height: 34px;
+  border: none;
+  border-radius: 9px;
+  background: var(--ink-100);
+  font-size: 13px;
+  font-weight: 500;
+  color: var(--fg-1);
+  cursor: pointer;
+}
+.pushButton:hover {
+  background: var(--ink-200);
+}
+.pushApprove {
+  background: var(--brand);
+  color: #fff;
+}
+.pushApprove:hover {
+  background: var(--brand-hover);
+}
+.pushPhone .pushButton {
+  height: 44px;
+}
+
+/* The month's allowance is used up. Quiet, in place, with the reset date. */
+.exhausted {
+  padding: 8px 10px;
+  border-radius: 8px;
+  background: var(--amber-100);
+  color: var(--amber-700);
+  font-size: 12.5px;
+  line-height: 1.45;
+  text-wrap: pretty;
+}

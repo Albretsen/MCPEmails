@@ -62,6 +62,7 @@ Deno.env.set("MCP_SERVER_NO_LISTEN", "1");
 const {
   CONSOLIDATED_ARGUMENT_INDEX,
   CONSOLIDATED_SPECS,
+  PER_OPERATION_LISTING,
   TOOL_ANNOTATIONS,
   TOOL_REGISTRY,
   validateInputSchema,
@@ -285,7 +286,9 @@ Deno.test("the sweep carries the destructive flag email_organize gave up", () =>
 
 Deno.test("the tools split out of a mixed one keep the right write annotations", () => {
   assertEquals(registryEntry("signature_set").annotations?.readOnlyHint, false);
-  assertEquals(registryEntry("signature_set").annotations?.destructiveHint, false);
+  // True since 2026-10-13: it overwrites the stored signature, and OpenAI's
+  // scan reads an overwrite as destructive whether or not it can be redone.
+  assertEquals(registryEntry("signature_set").annotations?.destructiveHint, true);
   // folder deletes a label off every message carrying it, and draft discards an
   // unsent draft. Both were already flagged destructive and must stay so: the
   // client reads the annotation, not the prose.
@@ -414,7 +417,9 @@ Deno.test("the submitted justifications describe the annotations the server ship
     import.meta.url,
   );
   const justified = justificationValues(await Deno.readTextFile(path));
-  for (const tool of advertisedTools()) {
+  // The per-operation listing, since 2026-10-13: it is what an OpenAI client,
+  // and so the portal's scan, is shown. See PER_OPERATION_LISTING.
+  for (const tool of PER_OPERATION_LISTING) {
     const claimed = justified[tool.name];
     assert(
       claimed,
@@ -433,8 +438,8 @@ Deno.test("the submitted justifications describe the annotations the server ship
   }
   assertEquals(
     Object.keys(justified).length,
-    advertisedTools().length,
-    "the justification file documents a tool that tools/list does not advertise",
+    PER_OPERATION_LISTING.length,
+    "the justification file documents a tool the per-operation listing does not have",
   );
 });
 

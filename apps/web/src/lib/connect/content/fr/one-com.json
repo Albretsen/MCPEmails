@@ -12,18 +12,23 @@
     "status": "active"
   },
   "meta": {
-    "title": "Connecter l'e-mail one.com à Claude et aux clients MCP",
-    "description": "Connectez une boîte one.com à Claude, Cursor et tout client MCP en IMAP sur imap.one.com:993. Le courrier sortant passe par send.one.com, pas smtp.one.com."
+    "title": "Serveur MCP one.com pour Claude et ChatGPT",
+    "description": "Serveur MCP pour la messagerie one.com. Connectez plusieurs boîtes de votre entreprise (info@, ventes@) à Claude et ChatGPT en IMAP sur imap.one.com:993."
   },
   "hero": {
     "eyebrow": "E-mail one.com + IA",
-    "titleLine1": "Connectez l'e-mail one.com à Claude,",
-    "titleLine2": "Cursor, ChatGPT, tout client MCP",
-    "lead": "Offrez à votre agent IA une vraie boîte one.com. Lisez, recherchez, envoyez, répondez, planifiez et organisez le courrier en IMAP avec le mot de passe défini à la création de l'adresse.",
-    "answer": "Claude ne peut pas atteindre une boîte one.com tout seul. mcpemails est un serveur MCP hébergé qui s'y connecte en IMAP sur imap.one.com, port 993, et envoie via send.one.com, port 465, en s'authentifiant avec votre adresse e-mail complète et le mot de passe défini pour ce compte dans le Control Panel de one.com. Claude, Cursor ou tout client MCP peut alors lire, rechercher, envoyer et organiser le courrier. Il n'y a pas de mot de passe d'application à générer. Une boîte est gratuite, pour toujours.",
-    "meta0": "1 boîte gratuite, pour toujours",
+    "titleLine1": "Serveur MCP pour la messagerie one.com :",
+    "titleLine2": "toutes les boîtes de votre entreprise, dans Claude et ChatGPT",
+    "lead": "Vous gérez info@, ventes@, support@ et factures@ sur votre propre domaine chez one.com ? Connectez chaque boîte au même espace de travail et votre agent IA travaille dans toutes. Lisez, recherchez, envoyez, répondez, planifiez et organisez le courrier en IMAP avec le mot de passe défini à la création de l'adresse.",
+    "answer": "Claude ne peut pas atteindre une boîte one.com tout seul. mcpemails est un serveur MCP hébergé qui s'y connecte en IMAP sur imap.one.com, port 993, et envoie via send.one.com, port 465, en s'authentifiant avec votre adresse e-mail complète et le mot de passe défini pour ce compte dans le Control Panel de one.com. Claude, Cursor ou tout client MCP peut alors lire, rechercher, envoyer et organiser le courrier. Il n'y a pas de mot de passe d'application à générer. Chaque adresse de l'entreprise, comme info@ ou ventes@, se connecte comme une boîte à part : une boîte est gratuite, Personal en connecte trois et Pro toutes celles que vous gérez.",
+    "meta0": "Première boîte gratuite, offres pour les autres",
     "meta1": "Mot de passe du compte e-mail, défini dans le Control Panel",
     "meta2": "E-mails récupérés en direct, jamais stockés"
+  },
+  "persona": {
+    "intro": "Plusieurs boîtes d'entreprise chez one.com ?",
+    "label": "Voyez ce que chaque offre connecte",
+    "href": "/pricing"
   },
   "method": {
     "title": "Comment one.com se connecte : IMAP en entrée, send.one.com en sortie",
@@ -89,8 +94,8 @@
     }
   ],
   "ctaBand": {
-    "title": "Offrez une boîte one.com à votre IA",
-    "sub": "Connectez une boîte one.com en quelques minutes. Une boîte gratuite pour toujours, sans carte bancaire."
+    "title": "Toutes vos boîtes one.com sur un seul agent",
+    "sub": "Connectez votre première boîte one.com gratuitement, sans carte bancaire. Personal en connecte trois, Pro toutes celles que vous gérez."
   },
   "seeAlso": {
     "intro": "Une boîte Microsoft 365 achetée via one.com ?",

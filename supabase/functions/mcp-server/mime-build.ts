@@ -191,6 +191,21 @@ export interface MimeMessageParams {
     /** Standard base64-encoded binary data */
     data: string;
   }>;
+  /**
+   * Images the HTML body shows through `cid:` references (a signature logo,
+   * see signature-images.ts). They ride in a multipart/related around the HTML
+   * part. Each is written with a Content-ID and NO filename, deliberately: our
+   * own readers (mime.ts, the Gmail part walk) list a part as an attachment
+   * when it has a name, and an embedded logo is not one. Ignored without an
+   * `htmlBody`, because nothing could reference them.
+   */
+  inlineImages?: Array<{
+    /** Content-ID without angle brackets. */
+    cid: string;
+    mimeType: string;
+    /** Standard base64-encoded binary data */
+    data: string;
+  }>;
   replyTo?: string;
   /** Pre-generated UUID (without angle brackets) used as Message-ID */
   messageId: string;
@@ -207,6 +222,47 @@ export interface MimeMessageParams {
 }
 
 /**
+ * Write the HTML alternative: the text/html part alone, or, when the body
+ * shows inline images, a multipart/related holding it and them.
+ *
+ * The related sits INSIDE the alternative (alternative[plain, related[html,
+ * images]]), which is the shape Thunderbird, Outlook and Gmail write and the
+ * one every client resolves `cid:` against.
+ */
+function pushHtmlPart(lines: string[], params: MimeMessageParams): void {
+  const images = params.inlineImages ?? [];
+  if (images.length === 0) {
+    lines.push(`Content-Type: text/html; charset=UTF-8`);
+    lines.push(`Content-Transfer-Encoding: base64`);
+    lines.push("");
+    lines.push(encodeTextAsBase64Lines(params.htmlBody!));
+    return;
+  }
+  const relBoundary = `mcpe_rel_${crypto.randomUUID().replace(/-/g, "")}`;
+  lines.push(`Content-Type: multipart/related; type="text/html"; boundary="${relBoundary}"`);
+  lines.push("");
+  lines.push(`--${relBoundary}`);
+  lines.push(`Content-Type: text/html; charset=UTF-8`);
+  lines.push(`Content-Transfer-Encoding: base64`);
+  lines.push("");
+  lines.push(encodeTextAsBase64Lines(params.htmlBody!));
+  for (const image of images) {
+    lines.push("");
+    lines.push(`--${relBoundary}`);
+    // Both values pass through encodeMimeHeaderValue for the same reason an
+    // attachment's do: no CR/LF may reach a header line.
+    lines.push(`Content-Type: ${encodeMimeHeaderValue(image.mimeType)}`);
+    lines.push(`Content-Transfer-Encoding: base64`);
+    lines.push(`Content-ID: <${encodeMimeHeaderValue(image.cid).replace(/[<>\s]/g, "")}>`);
+    lines.push(`Content-Disposition: inline`);
+    lines.push("");
+    lines.push(chunkBase64(image.data));
+  }
+  lines.push("");
+  lines.push(`--${relBoundary}--`);
+}
+
+/**
  * Build an RFC 5322 / MIME message string from the given parameters.
  *
  * Structure selection:
@@ -215,6 +271,8 @@ export interface MimeMessageParams {
  *   - Text only + attachments               → multipart/mixed
  *   - Text + HTML + attachments             → multipart/mixed with nested
  *                                             multipart/alternative
+ *   - `inlineImages` with an HTML body      → the text/html part becomes a
+ *                                             multipart/related (see pushHtmlPart)
  *
  * Body content is base64-encoded (Content-Transfer-Encoding: base64) for
  * reliable UTF-8 transport. Attachment data passes through as-is — the caller
@@ -269,10 +327,7 @@ export function buildMimeMessage(params: MimeMessageParams): string {
     lines.push(encodeTextAsBase64Lines(params.textBody));
     lines.push("");
     lines.push(`--${boundary}`);
-    lines.push(`Content-Type: text/html; charset=UTF-8`);
-    lines.push(`Content-Transfer-Encoding: base64`);
-    lines.push("");
-    lines.push(encodeTextAsBase64Lines(params.htmlBody!));
+    pushHtmlPart(lines, params);
     lines.push("");
     lines.push(`--${boundary}--`);
   } else {
@@ -295,10 +350,7 @@ export function buildMimeMessage(params: MimeMessageParams): string {
       lines.push(encodeTextAsBase64Lines(params.textBody));
       lines.push("");
       lines.push(`--${altBoundary}`);
-      lines.push(`Content-Type: text/html; charset=UTF-8`);
-      lines.push(`Content-Transfer-Encoding: base64`);
-      lines.push("");
-      lines.push(encodeTextAsBase64Lines(params.htmlBody!));
+      pushHtmlPart(lines, params);
       lines.push("");
       lines.push(`--${altBoundary}--`);
     } else {
@@ -377,6 +429,31 @@ export function buildDraftMime(params: MimeMessageParams): string {
  * envelope. The BCC addresses are read from the stored MIME for RCPT TO and
  * then this strips the header from the transmitted body.
  */
+/**
+ * The octets `draft_send` transmits (and files in Sent) for a stored IMAP
+ * draft: the draft as it is in the mailbox, minus its Bcc header.
+ *
+ * `rawMime` is a byte string, one character per octet, as the IMAP reader
+ * returns it. It goes back to bytes octet for octet. Sending the string
+ * itself made the SMTP and APPEND writers UTF-8-encode it, so a draft another
+ * mail client saved with 8bit content ("Ødegård" as C3 98 ...) went out with
+ * every one of those octets doubled (C3 83 C2 98 ...): mojibake for the
+ * recipient, and a body that no longer matched its declared charset.
+ *
+ * A string holding anything that is not an octet cannot have come from the
+ * reader; it is encoded as text, which is what happened to every draft before.
+ */
+export function draftSendBytes(rawMime: string): Uint8Array {
+  const stripped = stripBccHeader(rawMime);
+  const bytes = new Uint8Array(stripped.length);
+  for (let i = 0; i < stripped.length; i++) {
+    const code = stripped.charCodeAt(i);
+    if (code > 0xff) return new TextEncoder().encode(stripped);
+    bytes[i] = code;
+  }
+  return bytes;
+}
+
 export function stripBccHeader(rawMime: string): string {
   // Split header block from body on the first blank line (CRLF or LF).
   const sep = rawMime.search(/\r?\n\r?\n/);

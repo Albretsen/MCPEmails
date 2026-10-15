@@ -21,6 +21,8 @@ import {
   freeCapUpgradeUrl,
   PLAN_DISPLAY_NAMES,
   USAGE_LIMIT_SUPPORT_EMAIL,
+  plansInfoUrl,
+  rateLimitPlanSentence,
 } from "./usage-limit-message.ts";
 
 function assert(condition: boolean, message: string): void {
@@ -151,6 +153,48 @@ Deno.test("Free carries the upgrade URL with its funnel tag and the price", () =
   assertIncludes(text, "Personal plan removes the monthly cap", "the true remedy is named as a fact");
   assert(FREE_CAP_UPGRADE_PATH.includes("from=usage_cap"), "the funnel tag tells this door apart");
   assert(freeCapUpgradeUrl("https://x.test") === "https://x.test/pricing?from=usage_cap", "helper builds the same URL");
+});
+
+// ---------------------------------------------------------------------------
+// Directory wording: OpenAI's plugin guidelines allow explaining a plan limit
+// and linking to an informational plans page, and forbid quoting prices or
+// promoting an upgrade. ChatGPT and Codex clients get this wording.
+// ---------------------------------------------------------------------------
+
+Deno.test("directory wording explains the Free limit without a price, a plan to buy or an upgrade pitch", () => {
+  const text = buildUsageLimitText("free", FREE_ALLOWANCE, FREE_ALLOWANCE, RESET, ORIGIN, "directory");
+  // The facts the person needs are all still there.
+  assertIncludes(text, "Monthly allowance reached", "the limit is still named");
+  assertIncludes(text, "retrying will not help", "the retry loop is still stopped");
+  assertIncludes(text, "inbox_list and the dashboard keep working", "what keeps working is still said");
+  assertIncludes(text, `${ORIGIN}/dashboard/usage`, "the meter link is kept");
+  assertIncludes(text, `${plansInfoUrl(ORIGIN)}.`, "one informational link to the plans page");
+  assert(plansInfoUrl("https://x.test") === "https://x.test/pricing", "the plans link carries no funnel tag");
+  for (const phrase of [FREE_CAP_UPGRADE_PRICE, "$", "per month", "upgrade", "Personal", "removes the monthly cap", "from=usage_cap"]) {
+    assert(!text.toLowerCase().includes(phrase.toLowerCase()), `directory wording must not contain "${phrase}"`);
+  }
+});
+
+Deno.test("directory wording leaves the paid fair-use text exactly as it is", () => {
+  for (const plan of ["personal", "solo", "pro"]) {
+    assert(
+      buildUsageLimitText(plan, 10, 10, RESET, ORIGIN, "directory") === buildUsageLimitText(plan, 10, 10, RESET, ORIGIN),
+      `${plan}: nothing is sold there, so there is nothing to neutralise`,
+    );
+  }
+});
+
+Deno.test("standard wording is the default and is unchanged", () => {
+  assert(
+    buildUsageLimitText("free", FREE_ALLOWANCE, FREE_ALLOWANCE, RESET, ORIGIN, "standard") ===
+      buildUsageLimitText("free", FREE_ALLOWANCE, FREE_ALLOWANCE, RESET, ORIGIN),
+    "omitting the argument means standard",
+  );
+});
+
+Deno.test("the rate-limit refusal drops its plan sentence for directory clients only", () => {
+  assert(rateLimitPlanSentence("directory") === "", "waiting is the whole remedy");
+  assertIncludes(rateLimitPlanSentence("standard"), "https://www.mcpemails.com/pricing", "standard keeps its link");
 });
 
 // ---------------------------------------------------------------------------

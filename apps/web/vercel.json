@@ -1,0 +1,26 @@
+{
+  "$schema": "https://openapi.vercel.sh/vercel.json",
+  "functions": {
+    "app/api/mcp/route.ts": { "regions": ["iad1"] },
+    "app/api/automations/preview/route.ts": { "regions": ["iad1"] },
+    "app/api/inboxes/imap/route.ts": { "regions": ["iad1"] },
+    "app/api/inboxes/app-password/route.ts": { "regions": ["iad1"] },
+    "app/api/inboxes/fastmail-app-password/route.ts": { "regions": ["iad1"] },
+    "app/api/inboxes/[id]/check/route.ts": { "regions": ["iad1"] },
+    "app/api/inboxes/[id]/route.ts": { "regions": ["iad1"] },
+    "app/auth/gmail/callback/route.ts": { "regions": ["iad1"] },
+    "app/auth/outlook/callback/route.ts": { "regions": ["iad1"] },
+    "app/auth/outlook/admin-consent/route.ts": { "regions": ["iad1"] },
+    "app/.well-known/**": { "regions": ["iad1"] },
+    "app/api/**": { "regions": ["arn1"] },
+    "app/admin/**": { "regions": ["arn1"] },
+    "app/auth/**": { "regions": ["arn1"] },
+    "app/dashboard/**": { "regions": ["arn1"] },
+    "app/authorize/**": { "regions": ["arn1"] },
+    "app/approvals/**": { "regions": ["arn1"] },
+    "app/invite/**": { "regions": ["arn1"] },
+    "app/signup/**": { "regions": ["arn1"] },
+    "app/(auth)/**": { "regions": ["arn1"] },
+    "app/**": { "regions": ["iad1"] }
+  }
+}

@@ -1,0 +1,195 @@
+AI Email Agent Security: OAuth, Encryption & Privacy · mcpemails
+[meta description] Learn how mcpemails protects AI email access: live retrieval instead of email storage, encrypted credentials, scoped and revocable permissions, prompt-injection safeguards, and open-source code.
+[meta og:title] AI Email Agent Security: OAuth, Encryption & Privacy · mcpemails
+[meta og:description] Learn how mcpemails protects AI email access: live retrieval instead of email storage, encrypted credentials, scoped and revocable permissions, prompt-injection safeguards, and open-source code.
+[meta og:locale] en_US
+[meta twitter:title] AI Email Agent Security: OAuth, Encryption & Privacy · mcpemails
+[meta twitter:description] Learn how mcpemails protects AI email access: live retrieval instead of email storage, encrypted credentials, scoped and revocable permissions, prompt-injection safeguards, and open-source code.
+[alt] mcpemails
+[alt] mcpemails
+[aria-label] Primary navigation
+Features
+How it works
+Pricing
+Compare
+Docs
+Self-host
+Blog
+Sign in
+Get started free
+[aria-label] Open navigation menu
+Security & trust
+You shouldn't have to take my word for it
+MCPEmails connects an AI agent to your inbox, so it has to earn real trust. This is the honest version: what the service touches, what it keeps, what it can never do, and how you can verify all of it yourself.
+1. The short version
+If you read nothing else on this page:
+Your email is fetched live on each request and dropped the moment the response is sent. We keep no copy of any message body, subject, attachment, or contact.
+We store exactly one sensitive thing per inbox: an access token or app password, encrypted with AES-256-GCM, so we can make the next call you ask for.
+We never train any AI model on your email, and we never send your email to a model of our own choosing. Your agent is the only thing that reads it, under your control.
+Access is limited by the credential you configure: API keys can be restricted to selected inboxes or allowed to reach all workspace inboxes. You can revoke provider access at any time from Google, Microsoft, or your provider's settings.
+The code that runs the service is public. You can read it, audit it, or self-host the whole thing.
+2. What we access vs. what we store
+The gap between access and storage is the whole design. In the moment, the agent can read a lot, live. Almost none of it is ever written down.
+Data
+Accessed
+Stored
+Email bodies, subjects, attachments
+Live, only when your agent makes a read or search call
+Never written to disk, cache, or logs
+Contacts / address book
+Scanned live from recent mail when asked
+Never. There is no stored address book
+OAuth token or app password
+Decrypted only inside an isolated function at call time
+Yes, encrypted at rest with AES-256-GCM; key held separately
+API keys you create
+Compared as a hash on every request
+Only a SHA-256 hash; the raw key is shown once and is never recoverable
+Messages you schedule for later
+Held until the send time, then dispatched
+Yes, encrypted at rest until sent, then kept as your history
+Tool-call activity (metadata)
+Recorded for your own audit log
+Tool name, inbox, timestamp, and status only. No email content
+The one deliberate exception is a message you ask the agent to schedule for later. We have to hold it until the send time, so we store it encrypted in the meantime, then keep a record afterwards for your history.
+3. You don't have to trust me, you can check
+"A random person vibe-coded this" is a fair worry for any hosted tool that touches your email. The right answer is not a bigger promise. It is removing the need to take me at my word.
+Read the code.
+The server that runs MCPEmails is public on GitHub. You can see exactly what it keeps (an encrypted token) and what it doesn't (your mail).
+Self-host it.
+If you would rather not use the hosted service at all, you can run the same code on your own infrastructure with your own keys: a one-command Docker stack lives in
+self-host/
+.
+Use a scoped, revocable connection.
+You connect with OAuth or an app password that grants only mail access, and you can revoke it in one click from your provider, with no involvement from me.
+Watch what it does.
+Every tool call your agent makes is recorded in an activity log you can read, so you can see precisely what was accessed and when.
+github.com/Albretsen/MCPEmails
+And if a native connector already covers your provider and does what you need, use it. This exists for the providers and multi-inbox combinations they don't cover.
+Run it yourself, trust no one (including us)
+MCP Emails is open source under AGPL-3.0, and the hosted service runs the exact same MCP server you can self-host. That means "email is fetched live and never stored" is something you can verify by running it and watching the network, not something you have to take on faith.
+Self-hosting is IMAP/SMTP-first: connect any mailbox with an app password, and your credentials are encrypted under a key only you hold. One command brings the whole stack up on your own machine.
+Read the self-hosting guide
+·
+AGPL-3.0
+4. The real risk: prompt injection
+The honest threat here is not me reading your mail. It is a hostile email trying to hijack the agent: instructions hidden inside a message that try to make your AI forward, delete, or leak something. This is a real, unsolved problem for every email agent. I won't claim it's solved. I can show how it's contained:
+Inbox access is configurable.
+API keys can be restricted to selected inboxes, or deliberately allowed to reach all inboxes in a workspace. A restricted key cannot reach an inbox it was not granted.
+Destructive actions are separated and flagged.
+Sending and deleting are their own tools with separate scopes; deletion requires
+confirm: true
+. Whether a client presents a user confirmation is controlled by that client's policy.
+Least privilege.
+Connections request mail read and compose access, not account-wide control. Even a fully compromised token is bounded by the scope you granted.
+Rate limited.
+Every key is rate limited, so a runaway or hijacked agent cannot fan out thousands of actions unnoticed.
+Not solved. Contained: irreversible actions are gated, and API-key scopes and inbox restrictions can reduce the blast radius.
+5. How your credentials are protected
+Your tokens are the only sensitive thing we hold, so they get the strongest protection we can give them:
+All data in transit is encrypted using TLS 1.2 or higher. Connections that do not support TLS are rejected.
+OAuth tokens and IMAP credentials are encrypted at rest using AES-256-GCM. The encryption key is held separately from the encrypted data and is never co-located with it.
+API keys are hashed with SHA-256 before storage. The raw key cannot be recovered from the hash.
+Database access is protected by Row-Level Security policies that stop one workspace from reaching another's data, even if a query is written wrong.
+Administrative access to production infrastructure requires multi-factor authentication and is logged.
+6. Google, Microsoft and provider verification
+Gmail access uses Google's restricted scopes, the tier Google scrutinises most closely.
+MCPEmails' use and transfer of information received from Google APIs to any other app adheres to the
+Google API Services User Data Policy
+, including the Limited Use requirements.
+Outlook and Microsoft 365 access goes through Microsoft Graph, from an app whose publisher is verified by Microsoft, and asks only for a named set of permissions shown on Microsoft's consent screen: Mail.ReadWrite, Mail.Send, offline_access, openid, profile and email. For Fastmail, iCloud, Yahoo, Zoho, Yandex, and other IMAP providers, you connect with a provider-issued app password that you can revoke at any time, with no broad OAuth scopes for us to over-request.
+7. Subprocessors
+We keep the list of companies that touch any data short, and each is bound by a data processing agreement. Note what is absent: no AI provider is on this list. MCPEmails does not send your email to any model of its own. Your agent does that, under your control and its provider's data policy.
+Provider
+Purpose
+Location
+Supabase
+Database, auth, edge functions
+EU (Stockholm, Sweden)
+Vercel
+Website and dashboard hosting
+Global edge, nearest region to user
+Stripe
+Payment processing (billing only, no email data)
+US; PCI-DSS certified
+8. Reporting a vulnerability
+If you find a security issue, please report it. I would much rather hear it from you than read about it later.
+Email
+security@mcpemails.com
+with details and steps to reproduce.
+A machine-readable contact is published at
+/.well-known/security.txt
+.
+I aim to acknowledge reports within 24 hours and to fix confirmed critical issues within 72 hours.
+Safe harbour.
+If you make a good-faith effort to follow this policy, do not access or modify other users' data, and give me a reasonable chance to fix the issue before disclosing it, I will not pursue or support legal action against you for your research.
+Who runs this
+One person: me. I'm Asgeir Albretsen, operating as Albretsen Consulting, a Norwegian sole proprietorship (enkeltpersonforetak), organisation number 926 646 753, based in Bergen, Norway. The commits are mine too, under
+github.com/Albretsen
+, so the name on this page and the name on the code are the same one. There is more detail on the
+about page
+, and the full legal identification is in the
+terms
+.
+Everything resting on one person is a real risk, and the answer is not a promise that I will always be here. MCPEmails is public under AGPL-3.0 and the hosted service runs that same code, so if I stop, or you simply stop trusting me, you can clone the repository and run it on your own infrastructure with your own keys.
+The self-hosting guide
+is the whole procedure. I would rather be a named person you can reach and can leave than an anonymous vendor you can only trust.
+Support and security mail does not go through a queue. It comes to me, and I answer every message myself.
+Questions about any of this?
+Ask me anything. I'm Asgeir Albretsen, and I answer every message myself.
+Email security@
+Read the privacy policy
+[alt] mcpemails
+A hosted MCP server that gives AI agents read and send access to your inbox, without ever storing the email it reads.
+Contact
+hello@mcpemails.com
+[aria-label] Copy Contact
+Copy
+MCP endpoint
+https://mcpemails.com/api/mcp
+[aria-label] Copy MCP endpoint
+Copy
+[aria-label] Language
+English
+Norsk
+Español
+Français
+中文
+Product
+Features
+How it works
+Pricing
+Docs
+Self-hosting
+For founders
+For business
+Resources
+Tool reference
+Quickstart
+OAuth connection
+Provider support
+MCP client setup
+Blog
+Changelog
+Connect
+All email providers
+Connect any IMAP inbox
+Connect Gmail
+Connect Outlook
+Connect Fastmail
+Connect iCloud
+Connect Yahoo
+Connect Zoho
+Connect Yandex
+vs native connectors
+Best email MCP servers
+Company
+About
+Security
+Status
+Privacy
+Terms
+© 2026 mcpemails.
+Email fetched live, never stored · Credentials encrypted at rest
+MCPEmails is a service of Albretsen Consulting (enkeltpersonforetak), organisation number 926 646 753, Håsteins gate 9, 5160 Laksevåg, Norway.
+[json-ld] {"@context":"https://schema.org","@graph":[{"@type":"WebPage","@id":"https://mcpemails.com/security","url":"https://mcpemails.com/security","name":"AI Email Agent Security: OAuth, Encryption & Privacy","description":"Learn how mcpemails protects AI email access: live retrieval instead of email storage, encrypted credentials, scoped and revocable permissions, prompt-injection safeguards, and open-source code.","inLanguage":"en","isPartOf":{"@id":"https://mcpemails.com/#website"},"breadcrumb":{"@id":"https://mcpemails.com/security#breadcrumb"}},{"@type":"BreadcrumbList","@id":"https://mcpemails.com/security#breadcrumb","itemListElement":[{"@type":"ListItem","position":1,"name":"mcpemails","item":"https://mcpemails.com"},{"@type":"ListItem","position":2,"name":"AI Email Agent Security: OAuth, Encryption & Privacy"}]}]}

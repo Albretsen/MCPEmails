@@ -13,18 +13,23 @@
     "status": "active"
   },
   "meta": {
-    "title": "Koble IONOS til Claude, Cursor og MCP-klienter",
-    "description": "Koble IONOS-e-post til Claude, Cursor og enhver MCP-klient over IMAP på imap.ionos.com:993. Hver adresse har sitt eget passord, atskilt fra IONOS-innloggingen."
+    "title": "IONOS MCP-server: koble e-posten til Claude",
+    "description": "MCP-server for IONOS-e-post. Koble flere bedriftspostkasser på domenet ditt (post@, salg@) til Claude og ChatGPT over IMAP på imap.ionos.com:993."
   },
   "hero": {
     "eyebrow": "IONOS + AI",
-    "titleLine1": "Koble IONOS til Claude,",
-    "titleLine2": "og Cursor, ChatGPT og enhver MCP-klient",
-    "lead": "Gi AI-agenten din en ekte IONOS-innboks på få minutter. Les, søk, send, svar, planlegg og organiser e-post med IMAP og postkassepassordet ditt, og bruk den samme innboksen i alle MCP-klienter, ikke bare én.",
-    "meta0": "1 innboks gratis, for alltid",
+    "titleLine1": "MCP-server for IONOS-e-post:",
+    "titleLine2": "alle firmaets postkasser, i Claude og ChatGPT",
+    "lead": "Har du post@, salg@, support@ og faktura@ på eget domene hos IONOS? Koble hver postkasse til ett arbeidsområde, så jobber AI-agenten din i alle sammen. Les, søk, send, svar, planlegg og organiser e-post med IMAP og postkassepassordet ditt, og bruk de samme postkassene i alle MCP-klienter, ikke bare én.",
+    "meta0": "Første postkasse gratis, planer for resten",
     "meta1": "Postkassepassordet ditt, uten OAuth-oppsett",
     "meta2": "E-post hentes direkte, lagres aldri",
-    "answer": "Claude kan ikke nå IONOS på egen hånd. mcpemails er en driftet MCP-server som kobler til over IMAP med postkassepassordet ditt, slik at Claude, Cursor eller enhver MCP-klient kan lese, søke i, sende og organisere den e-posten. Oppsettet tar et par minutter, og én innboks er gratis."
+    "answer": "Claude kan ikke nå IONOS på egen hånd. mcpemails er en driftet MCP-server som kobler til over IMAP med postkassepassordet ditt, slik at Claude, Cursor eller enhver MCP-klient kan lese, søke i, sende og organisere den e-posten. Oppsettet tar et par minutter. Hver firmaadresse, som post@ eller salg@, kobles til som sin egen postkasse: én postkasse er gratis, Personal kobler til tre og Pro alle postkassene du har."
+  },
+  "persona": {
+    "intro": "Flere bedriftspostkasser hos IONOS?",
+    "label": "Se hva hver plan kobler til",
+    "href": "/pricing"
   },
   "method": {
     "title": "Slik kobles IONOS til: IMAP og postkassepassordet ditt",
@@ -97,8 +102,8 @@
     }
   ],
   "ctaBand": {
-    "title": "Gi AI-en din en IONOS-innboks",
-    "sub": "Koble til IONOS på få minutter. Én innboks gratis for alltid, uten kort."
+    "title": "Samle alle IONOS-postkassene på én agent",
+    "sub": "Koble til den første IONOS-postkassen gratis, uten kort. Personal kobler til tre, Pro alle postkassene du har."
   },
   "seeAlso": {
     "intro": "Microsoft 365-postkasse fra IONOS?",

@@ -1,0 +1,270 @@
+Terms of Service · mcpemails
+[meta description] The terms governing your use of MCPEmails: acceptable use, liability, account termination, and governing law.
+[meta og:title] Terms of Service · mcpemails
+[meta og:description] The terms governing your use of MCPEmails: acceptable use, liability, account termination, and governing law.
+[meta og:locale] en_US
+[meta twitter:title] Terms of Service · mcpemails
+[meta twitter:description] The terms governing your use of MCPEmails: acceptable use, liability, account termination, and governing law.
+[alt] mcpemails
+[alt] mcpemails
+[aria-label] Primary navigation
+Features
+How it works
+Pricing
+Compare
+Docs
+Self-host
+Blog
+Sign in
+Get started free
+[aria-label] Open navigation menu
+Legal
+Terms of Service
+These terms govern your access to and use of MCPEmails. By creating an account or using the service you agree to be bound by them. Please read them carefully.
+Last updated: September 26, 2026 · Effective: May 25, 2026
+1. Agreement to These Terms
+These Terms of Service ("Terms") constitute a legally binding agreement between you ("you" or "User") and Albretsen Consulting, a Norwegian sole proprietorship (enkeltpersonforetak) with organisation number
+926 646 753
+, owned and operated by Asgeir Albretsen and trading as "MCPEmails" ("MCPEmails", "we", "us", or "our"). They govern your access to and use of the MCPEmails service, including the website at
+mcpemails.com
+, the dashboard, the Model Context Protocol (MCP) API endpoint, and all related software and documentation (collectively, the "Service"). Your contract is with Albretsen Consulting; "MCPEmails" is a trading name, not a separate legal entity.
+Service provider identification: Albretsen Consulting, organisation number 926 646 753, entered in Enhetsregisteret (the Norwegian Central Coordinating Register for Legal Entities, operated by Brønnøysundregistrene). Registered address: Håsteins gate 9, 5160 Laksevåg, Norway. Albretsen Consulting is not currently registered in the Norwegian VAT register (Merverdiavgiftsregisteret). Legal enquiries:
+legal@mcpemails.com
+.
+By creating an account, accepting these Terms, or using any part of the Service, you confirm that you are at least 16 years of age (or the minimum age of digital consent in your jurisdiction, if higher), that you have the legal capacity to enter into a binding agreement, and that you agree to be bound by these Terms and our
+Privacy Policy
+, which is incorporated into these Terms by reference.
+If you are accepting these Terms on behalf of a company or other legal entity, you represent and warrant that you have the authority to bind that entity, in which case "you" refers to that entity.
+If you do not agree to these Terms, do not create an account or use the Service.
+2. Description of Service
+MCPEmails provides a software-as-a-service platform that allows you to connect email accounts (Gmail, Microsoft Outlook / Microsoft 365, Fastmail, and compatible IMAP accounts) and expose those accounts to AI agents via the Model Context Protocol (MCP). The Service includes:
+A web dashboard for managing connected email accounts, API keys, and usage monitoring.
+An MCP-compliant HTTP endpoint that AI agents authenticate against using API keys you generate.
+OAuth integration with supported email providers to obtain and manage delegated access to your mailboxes.
+A usage and audit log showing which tools your agents have called and when.
+MCPEmails acts as a protocol bridge. We do not store the email content your agent reads on our servers; we retrieve it live from your email provider at the moment an agent requests it and return it in the same HTTP response. The exception is a message you schedule to send later, which we store only until it is delivered. See our
+Privacy Policy
+for a full description of what data we do and do not retain.
+Email content is delivered only to the MCP client or AI agent that you have connected and choose to use. Once content reaches that client, it is governed by that client's or AI provider's own privacy policy and terms, which you are responsible for reviewing. MCPEmails does not select an AI provider on your behalf and retains no copy of your email content.
+We reserve the right to modify, suspend, or discontinue any part of the Service at any time. Where practicable we will give at least 30 days' notice of material changes to paid users.
+3. Account Registration and Security
+3.1 Registration
+You must register for an account to use most features of the Service. You agree to provide accurate, current, and complete information during registration and to keep that information up to date. Accounts registered with false, inaccurate, or misleading information may be suspended or terminated without notice.
+3.2 One account per person
+Each account is for the use of one individual or one legal entity. You may not share login credentials with other people or create multiple accounts to circumvent plan limits or other restrictions.
+3.3 Account security
+You are responsible for maintaining the security of your account credentials, including your password and any API keys you generate. You must notify us immediately at
+legal@mcpemails.com
+if you suspect unauthorised access to your account. MCPEmails is not liable for any loss or damage arising from your failure to maintain the security of your credentials.
+3.4 API keys
+API keys you generate grant access to the MCP endpoint on your behalf. You are solely responsible for all actions taken using keys you have generated, including actions taken by AI agents to which you have provided those keys. Treat API keys as secrets. Revoke any key that you suspect has been compromised.
+4. Acceptable Use
+4.1 Permitted use
+You may use the Service for any lawful purpose that is consistent with these Terms. Typical permitted uses include connecting your own email accounts, generating API keys for AI agents you operate, and building applications or workflows for yourself or your organisation.
+4.2 Prohibited conduct
+You must not use the Service, directly or indirectly, for any of the following:
+Unauthorised access.
+Connecting email accounts that you do not own or are not authorised to access on behalf of the account holder.
+Spam and bulk messaging.
+Sending unsolicited commercial email, bulk email, or any message that violates the CAN-SPAM Act, CASL, the EU's ePrivacy Directive, or equivalent laws in your jurisdiction.
+Phishing and fraud.
+Sending messages that impersonate another person or organisation, or that are designed to deceive recipients into revealing credentials, financial details, or other sensitive information.
+Malware distribution.
+Sending email containing malicious code, ransomware, spyware, or any other software designed to damage or gain unauthorised access to a recipient's device or data.
+Harassment and abuse.
+Using the Service to threaten, harass, intimidate, stalk, or harm any individual.
+Illegal content.
+Transmitting, storing, or accessing content that is illegal under applicable law, including content that infringes intellectual property rights, violates privacy laws, or constitutes child sexual abuse material (CSAM).
+Circumvention.
+Attempting to circumvent authentication, rate limits, access controls, or any other security measure of the Service or of any third-party service (including email providers).
+Reverse engineering.
+Attempting to decompile, disassemble, reverse-engineer, or otherwise derive the source code of the Service.
+Interference.
+Introducing viruses, denial-of-service attacks, or any other code or action that interferes with the operation of the Service or its infrastructure.
+Reselling without permission.
+Reselling or sublicensing access to the Service to third parties without our prior written consent.
+Automated scraping.
+Using the Service to scrape or harvest email data at scale for purposes other than your own legitimate agent-driven workflow.
+4.3 Responsibility for agents
+You are responsible for the actions of any AI agent or automated system that accesses the Service using an API key you have generated. This includes actions that the agent takes autonomously. You must ensure that agents operating under your API keys comply with these Terms and with applicable law.
+4.4 Compliance with email provider terms
+You must comply with the terms of service and API policies of any email provider whose account you connect to MCPEmails (including Google, Microsoft, and Fastmail). MCPEmails is not responsible for any suspension or restriction of your email account by a third-party provider.
+4.5 Enforcement
+We reserve the right to investigate suspected violations of these rules. If we determine, in our sole discretion, that you have violated this section, we may suspend or terminate your account, remove or disable access to specific API keys or connected inboxes, and report violations to law enforcement authorities where required by law or where we deem it appropriate to protect others.
+5. Plans, Fees, and Payment
+5.1 Free plan
+The Free plan is provided at no charge and is subject to the usage limits described on our
+Pricing page
+. We reserve the right to change or discontinue the Free plan with 30 days' notice.
+5.2 Paid plans
+Paid plans are billed monthly or annually in advance. By subscribing to a paid plan you authorise us to charge the payment method on file at the start of each billing period. All fees are exclusive of applicable taxes, which will be added where required by law.
+5.3 Upgrades and downgrades
+You may upgrade your plan at any time; the new rate takes effect immediately and is prorated for the remainder of the current billing period. Downgrading takes effect at the start of the next billing period. Features that exceed the new plan's limits will be disabled at the downgrade date.
+5.4 Refunds
+Cancel any time, keep what you have paid for.
+Cancelling stops the next renewal, and your paid plan stays active until the end of the period you have already paid for. We do not refund partial periods and we do not pro-rate an unused part of a monthly or annual term.
+14-day refund on a first charge.
+If the first charge on a new subscription is not what you expected, contact us at
+legal@mcpemails.com
+within 14 days of that charge and we will refund it in full. That single 14-day window is also how we honour the statutory right of withdrawal available to consumers in the EU and the UK, so you never have to work out which one applies to you. Nothing in this section limits any non-waivable right you have under applicable consumer protection law.
+5.5 Late payment and suspension
+If a payment fails, we will retry the charge and notify you by email. If payment remains outstanding after 7 days, we may suspend access to paid features until the balance is settled. If payment remains outstanding after 30 days, we may terminate the account in accordance with Section 8.
+5.6 Price changes
+We may change pricing for paid plans with at least 30 days' written notice to your registered email address. Price changes will not apply until your next renewal date.
+5.7 Fair use and service limits
+To protect platform stability and ensure fair access for all customers, the Service applies a per-minute request rate limit to every plan (a “fair-use limit”), as described on our
+Pricing page
+. We may also apply reasonable technical measures to prevent abuse, automated scraping, or usage that materially degrades the Service for others.
+The number of connected inboxes included with each plan is published on our Pricing page. Every workspace is additionally subject to a fair-use ceiling on automated activity and to Section 4 (Acceptable Use). That ceiling exists to stop a runaway or abusive agent, is set far above ordinary use, and is not a purchasable allowance. We may change fair-use thresholds on a going-forward basis; any material change will be communicated before it takes effect for your workspace.
+6. Intellectual Property
+6.1 MCPEmails IP
+All intellectual property rights in the Service, including the software, designs, logos, trademarks, and documentation, are owned by MCPEmails or its licensors. Nothing in these Terms grants you any right, title, or interest in MCPEmails intellectual property except the limited licence to use the Service as described in these Terms.
+6.2 Your data and content
+You retain all rights to your email content and account data. By using the Service you grant MCPEmails a limited, non-exclusive, royalty-free licence to process and transmit your data solely as necessary to provide the Service. We do not acquire ownership of your data, and we will never use your email content for purposes other than fulfilling your agent's tool call.
+6.3 Feedback
+If you provide us with feedback, suggestions, or ideas about the Service, you grant us an unrestricted, perpetual, irrevocable, royalty-free licence to use and incorporate that feedback into the Service without compensation or attribution to you.
+7. Disclaimers and Limitation of Liability
+7.1 Service provided "as is"
+The Service is provided "as is" and "as available" without warranties of any kind, either express or implied, including (but not limited to) implied warranties of merchantability, fitness for a particular purpose, non-infringement, and uninterrupted or error-free operation. We do not warrant that the Service will meet your requirements, that email delivery will be reliable or complete, or that defects will be corrected.
+7.2 Third-party services
+The Service integrates with third-party email providers (Google Gmail, Microsoft Outlook / Microsoft 365, Fastmail, IMAP servers). We are not responsible for the availability, reliability, or performance of those services, for changes to their APIs or OAuth policies, or for any loss of email access resulting from a third-party provider's actions.
+7.3 AI agent actions
+MCPEmails is a protocol bridge. We transmit instructions from AI agents to your email providers and return results. We are not responsible for the content of emails sent, forwarded, or replied to by AI agents acting under your API keys, nor for any consequences of autonomous agent actions including accidental email deletion, misdirected messages, or data leakage resulting from agent logic errors.
+7.4 Limitation of liability
+To the maximum extent permitted by applicable law, in no event will MCPEmails, its directors, employees, agents, or suppliers be liable for any indirect, incidental, special, consequential, punitive, or exemplary damages, including loss of profits, loss of data, loss of goodwill, or business interruption, arising out of or in connection with your use of or inability to use the Service, even if MCPEmails has been advised of the possibility of such damages.
+To the maximum extent permitted by applicable law, MCPEmails's total aggregate liability to you for all claims arising out of or relating to these Terms or the Service, whether in contract, tort (including negligence), statute, or otherwise, is limited to the greater of: (a) the amount you paid to MCPEmails in the 12 months preceding the event giving rise to the claim; or (b) USD 100.
+Some jurisdictions do not allow the exclusion or limitation of certain damages. In those jurisdictions, the limitations above apply to the fullest extent permitted by law.
+7.5 Indemnification
+You agree to indemnify, defend, and hold harmless MCPEmails and its officers, directors, employees, and agents from and against any claims, liabilities, damages, losses, costs, and expenses (including reasonable legal fees) arising out of or relating to: (a) your use of the Service in violation of these Terms or applicable law; (b) any email you or your agents send using the Service; (c) your breach of any third-party rights, including intellectual property rights or privacy rights; or (d) any dispute between you and a third party (including your email recipients).
+8. Account Termination
+8.1 Termination by you
+You may close your account at any time by navigating to
+Dashboard → Settings → Delete Account
+and following the confirmation steps. Account deletion is permanent. All connected inbox configurations, API keys, and audit logs associated with your workspace will be deleted within 30 days of the deletion request.
+If you are on a paid plan, closing your account stops future billing but does not entitle you to a refund of any amounts already charged, except as described in Section 5.4.
+8.2 Termination by MCPEmails for cause
+We may suspend or terminate your account immediately, without prior notice or liability, if:
+You violate Section 4 (Acceptable Use) or any other material provision of these Terms.
+We are required to do so by law, court order, or regulatory authority.
+Your use of the Service poses a risk to the security, integrity, or availability of the Service or to other users.
+You provide false, inaccurate, or fraudulent information during registration or at any subsequent time.
+Payment for a paid plan remains outstanding for more than 30 days after the due date.
+Where termination for cause results in the deletion of your account, we will not provide a refund for any unused portion of a paid subscription.
+8.3 Termination by MCPEmails for convenience
+We may terminate your account for any reason not covered by Section 8.2 by providing at least 30 days' written notice to your registered email address. In the event of such termination, we will provide a prorated refund for any unused portion of a prepaid annual subscription.
+8.4 Suspension
+In lieu of immediate termination we may, at our discretion, temporarily suspend your access to the Service while we investigate a suspected violation. We will attempt to provide notice of suspension unless doing so would prejudice an ongoing investigation or is prohibited by law.
+8.5 Effect of termination
+Upon termination of your account for any reason:
+Your right to access and use the Service immediately ceases.
+All API keys associated with your account are immediately revoked.
+OAuth token grants issued to MCPEmails by your email provider are revoked where the provider supports it; otherwise stored tokens are deleted and you can remove the app in your provider account. Your email provider may take up to 24 hours to reflect a revocation.
+Your data will be deleted in accordance with our retention schedule described in the Privacy Policy.
+The following provisions survive termination: Section 6 (Intellectual Property), Section 7 (Disclaimers and Limitation of Liability), Section 8.5 (Effect of Termination), Section 9 (Governing Law and Disputes), and any other provisions that by their nature should survive.
+9. Governing Law and Dispute Resolution
+9.1 Governing law
+These Terms and any dispute arising out of or in connection with them or the Service shall be governed by and construed in accordance with the laws of
+Norway
+, without regard to its conflict-of-law provisions. The United Nations Convention on Contracts for the International Sale of Goods does not apply.
+9.2 Jurisdiction
+Any legal action or proceeding relating to these Terms or the Service shall be brought exclusively in the courts of
+Bergen, Norway
+. You consent to the personal jurisdiction of those courts and waive any objection to venue.
+9.3 Consumer rights (EEA/UK)
+Nothing in these Terms affects any statutory rights you may have as a consumer under the laws of your country of residence that cannot be excluded or limited by contract. If you are a consumer resident in the European Union, you may also submit a complaint through the EU Online Dispute Resolution platform at
+ec.europa.eu/consumers/odr
+.
+9.4 Informal resolution
+Before initiating any formal legal proceedings, we encourage you to contact us at
+legal@mcpemails.com
+so that we can attempt to resolve the dispute informally. We will respond within 14 business days and work in good faith toward a resolution.
+9.5 Class action waiver
+To the extent permitted by applicable law, you agree that any dispute resolution proceedings shall be conducted on an individual basis only. You waive any right to bring or participate in a class, collective, or representative action against MCPEmails.
+10. General Provisions
+10.1 Entire agreement
+These Terms, together with the Privacy Policy and any supplemental terms applicable to specific features or plans, constitute the entire agreement between you and MCPEmails relating to the Service and supersede all prior agreements, representations, and understandings.
+10.2 Amendments
+We may update these Terms from time to time. When we make material changes we will update the "Last updated" date at the top of this page and send an email notification to your registered address at least 14 days before the changes take effect. Your continued use of the Service after the effective date constitutes your acceptance of the revised Terms. If you disagree with a material change you may close your account before the effective date.
+10.3 Severability
+If any provision of these Terms is found to be invalid, illegal, or unenforceable by a court of competent jurisdiction, that provision shall be modified to the minimum extent necessary to make it enforceable, and the remaining provisions shall continue in full force and effect.
+10.4 Waiver
+Our failure to enforce any right or provision of these Terms shall not constitute a waiver of that right or provision. Any waiver must be in writing and signed by an authorised representative of MCPEmails.
+10.5 Assignment
+You may not assign or transfer these Terms or any rights or obligations under them without our prior written consent. We may assign these Terms to an affiliate or in connection with a merger, acquisition, or sale of assets, provided that the assignee assumes all obligations under these Terms.
+10.6 Force majeure
+MCPEmails is not liable for any delay or failure to perform its obligations under these Terms where such delay or failure results from circumstances beyond our reasonable control, including natural disasters, government actions, internet infrastructure failures, or third-party service outages.
+10.7 Notices
+Notices from MCPEmails to you will be sent to the email address registered on your account. Notices from you to MCPEmails should be sent to
+legal@mcpemails.com
+. Notices are deemed received 24 hours after being sent, unless the sender receives a delivery failure notification.
+10.8 No partnership
+Nothing in these Terms creates a partnership, joint venture, agency, franchise, or employment relationship between you and MCPEmails.
+11. Contact Us
+If you have questions about these Terms or need to get in touch about them:
+Legal enquiries
+legal@mcpemails.com
+Privacy questions
+privacy@mcpemails.com
+Security reports
+security@mcpemails.com
+Postal address
+Albretsen Consulting (organisation number 926 646 753), Håsteins gate 9, 5160 Laksevåg, Norway
+Response time
+We respond to all legal enquiries within 14 business days
+Questions about these Terms?
+Reach out about anything in these Terms and we will respond within 14 business days.
+Contact us about these Terms
+Read our Privacy Policy
+[alt] mcpemails
+A hosted MCP server that gives AI agents read and send access to your inbox, without ever storing the email it reads.
+Contact
+hello@mcpemails.com
+[aria-label] Copy Contact
+Copy
+MCP endpoint
+https://mcpemails.com/api/mcp
+[aria-label] Copy MCP endpoint
+Copy
+[aria-label] Language
+English
+Norsk
+Español
+Français
+中文
+Product
+Features
+How it works
+Pricing
+Docs
+Self-hosting
+For founders
+For business
+Resources
+Tool reference
+Quickstart
+OAuth connection
+Provider support
+MCP client setup
+Blog
+Changelog
+Connect
+All email providers
+Connect any IMAP inbox
+Connect Gmail
+Connect Outlook
+Connect Fastmail
+Connect iCloud
+Connect Yahoo
+Connect Zoho
+Connect Yandex
+vs native connectors
+Best email MCP servers
+Company
+About
+Security
+Status
+Privacy
+Terms
+© 2026 mcpemails.
+Email fetched live, never stored · Credentials encrypted at rest
+MCPEmails is a service of Albretsen Consulting (enkeltpersonforetak), organisation number 926 646 753, Håsteins gate 9, 5160 Laksevåg, Norway.

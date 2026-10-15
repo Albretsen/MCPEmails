@@ -11,18 +11,23 @@
     "status": "active"
   },
   "meta": {
-    "title": "Koble Hetzner-e-post til Claude og MCP-klienter",
-    "description": "Koble en Hetzner Web Hosting-postkasse til Claude, Cursor og enhver MCP-klient over IMAP på mail.your-server.de:993. Én innboks gratis, for alltid, uten kort."
+    "title": "Hetzner MCP-server: koble e-posten til Claude",
+    "description": "MCP-server for Hetzner Web Hosting-e-post. Koble flere bedriftspostkasser (post@, salg@) til Claude og ChatGPT over IMAP på mail.your-server.de:993."
   },
   "hero": {
     "eyebrow": "Hetzner-e-post + AI",
-    "titleLine1": "Koble Hetzner-postkassen din",
-    "titleLine2": "til Claude, Cursor og enhver MCP-klient",
-    "lead": "Gi AI-agenten din en ekte Hetzner-innboks. Les, søk, send, svar, planlegg og organiser e-post over IMAP på mail.your-server.de, med postkassepassordet du satte i konsoleH.",
-    "answer": "Claude kan ikke nå en Hetzner-postkasse på egen hånd. mcpemails er en driftet MCP-server som kobler til e-post på Hetzner Web Hosting over IMAP på mail.your-server.de, port 993, og autentiserer med hele e-postadressen din og postkassepassordet du satte da du opprettet kontoen i konsoleH, slik at Claude, Cursor eller enhver MCP-klient kan lese, søke i, sende og organisere e-posten. Vertsnavnet er bokstavelig talt mail.your-server.de for alle kunder, ikke en variant av ditt eget domene. Én innboks er gratis, for alltid.",
-    "meta0": "1 innboks gratis, for alltid",
+    "titleLine1": "MCP-server for Hetzner-e-post:",
+    "titleLine2": "alle firmaets postkasser, i Claude og ChatGPT",
+    "lead": "Har du post@, salg@, support@ og faktura@ på eget domene hos Hetzner? Koble hver postkasse til ett arbeidsområde, så jobber AI-agenten din i alle sammen. Les, søk, send, svar, planlegg og organiser e-post over IMAP på mail.your-server.de, med postkassepassordet du satte i konsoleH.",
+    "answer": "Claude kan ikke nå en Hetzner-postkasse på egen hånd. mcpemails er en driftet MCP-server som kobler til e-post på Hetzner Web Hosting over IMAP på mail.your-server.de, port 993, og autentiserer med hele e-postadressen din og postkassepassordet du satte da du opprettet kontoen i konsoleH, slik at Claude, Cursor eller enhver MCP-klient kan lese, søke i, sende og organisere e-posten. Vertsnavnet er bokstavelig talt mail.your-server.de for alle kunder, ikke en variant av ditt eget domene. Hver firmaadresse, som post@ eller salg@, kobles til som sin egen postkasse: én postkasse er gratis, Personal kobler til tre og Pro alle postkassene du har.",
+    "meta0": "Første postkasse gratis, planer for resten",
     "meta1": "Postkassepassord satt i konsoleH",
     "meta2": "E-post hentes direkte, lagres aldri"
+  },
+  "persona": {
+    "intro": "Flere bedriftspostkasser hos Hetzner?",
+    "label": "Se hva hver plan kobler til",
+    "href": "/pricing"
   },
   "method": {
     "title": "Slik kobles Hetzner-e-post til: IMAP på mail.your-server.de",
@@ -87,7 +92,7 @@
     }
   ],
   "ctaBand": {
-    "title": "Gi AI-en din en Hetzner-innboks",
-    "sub": "Koble til Hetzner-postkassen din på få minutter. Én innboks gratis for alltid, uten kort."
+    "title": "Samle alle Hetzner-postkassene på én agent",
+    "sub": "Koble til den første Hetzner-postkassen gratis, uten kort. Personal kobler til tre, Pro alle postkassene du har."
   }
 }

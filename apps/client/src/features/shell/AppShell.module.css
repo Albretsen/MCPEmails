@@ -1,0 +1,598 @@
+.shell {
+  /* Fixed, not in flow: the document itself never scrolls, so iOS has nothing
+     to rubber-band and the app cannot be dragged out of place. */
+  position: fixed;
+  left: 0;
+  right: 0;
+  /* --vvt / --vvh follow the visual viewport on phones (the iOS keyboard
+     scrolls the layout viewport instead of resizing it); 0 / 100dvh elsewhere. */
+  top: var(--vvt, 0px);
+  height: var(--vvh, 100dvh);
+  display: flex;
+  flex-direction: row;
+  min-height: 0;
+  overflow: hidden;
+  overscroll-behavior: none;
+  background: var(--bg-page);
+  padding-left: env(safe-area-inset-left);
+  padding-right: env(safe-area-inset-right);
+}
+.shell[data-dragging] {
+  cursor: col-resize;
+  user-select: none;
+}
+/* While a splitter is dragged, panes must not eat pointer events or animate. */
+.shell[data-dragging] .pane {
+  pointer-events: none;
+}
+
+.pane {
+  min-width: 0;
+  min-height: 0;
+  display: flex;
+  flex-direction: column;
+  background: var(--bg-surface);
+}
+/* Panes are focus targets for F6. The ring is the standard focus colour, drawn
+   inside the pane so the neighbouring pane does not clip it. */
+.pane:focus-visible {
+  outline: 2px solid var(--border-focus);
+  outline-offset: -2px;
+}
+
+/* Whatever scrolls inside a pane must not chain its overscroll to the page. */
+.pane :where([role="listbox"], [data-scroller]) {
+  overscroll-behavior: contain;
+}
+
+.sidebar {
+  flex: none;
+  width: var(--side-w);
+  border-right: 1px solid var(--border-1);
+  overflow-y: auto;
+  overscroll-behavior: contain;
+}
+
+.list {
+  flex: none;
+  width: var(--list-w);
+  position: relative;
+  border-right: 1px solid var(--border-1);
+}
+
+.main {
+  flex: 1;
+  position: relative;
+  overflow: hidden;
+}
+
+.panel {
+  flex: none;
+  width: var(--panel-w);
+  border-left: 1px solid var(--border-1);
+}
+
+.strip {
+  flex: none;
+  width: 48px;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 10px;
+  padding-top: 10px;
+  border-left: 1px solid var(--border-1);
+  background: var(--bg-surface);
+}
+.stripButton {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 36px;
+  height: 36px;
+  border-radius: 8px;
+  border: 1px solid var(--cobalt-200);
+  background: var(--cobalt-50);
+  cursor: pointer;
+}
+.stripButton:hover {
+  border-color: var(--cobalt-300);
+}
+
+/* ---------- splitters ----------
+   .splitter is the pointer target: 12 px, starting ON the pane edge and
+   reaching into the pane to its right, so it never lies over the scrollbar of
+   the pane to its left. The 6 px line (::before) is only the visual; it is
+   centred on the edge and lets pointer events through. */
+.splitterSlot {
+  position: relative;
+  flex: none;
+  width: 0;
+  z-index: 6;
+}
+.splitter {
+  position: absolute;
+  top: 0;
+  bottom: 0;
+  left: -1px;
+  width: 12px;
+  cursor: col-resize;
+  background: transparent;
+  touch-action: none;
+}
+.splitter::before {
+  content: "";
+  position: absolute;
+  top: 0;
+  bottom: 0;
+  left: -2px;
+  width: 6px;
+  background: transparent;
+  pointer-events: none;
+  transition: background var(--dur-1) var(--ease-out);
+}
+.splitter:hover::before {
+  background: var(--cobalt-300);
+}
+.splitter:focus-visible {
+  outline: none;
+}
+.splitter:focus-visible::before {
+  background: var(--border-focus);
+}
+.splitterDragging::before,
+.splitterDragging:hover::before {
+  background: var(--brand);
+}
+@media (pointer: coarse) {
+  .splitter {
+    width: 24px;
+  }
+}
+
+/* ---------- phone ----------
+   A grid, so the list and the reader can share one cell: the list stays
+   mounted underneath (see AppShell.tsx) and keeps its scroll position. */
+.phone {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr);
+  grid-template-rows: minmax(0, 1fr) auto auto;
+}
+.phone .list,
+.phone .main {
+  grid-area: 1 / 1;
+  width: auto;
+  border-right: none;
+  /* Top bars clear the notch / status bar. */
+  padding-top: env(safe-area-inset-top);
+}
+.phone .notice {
+  grid-area: 2 / 1;
+}
+.phone .panel {
+  grid-area: 3 / 1;
+  width: auto;
+  border-left: none;
+  /* The dock (and the FAB / toast anchored above it) clears the home indicator. */
+  padding-bottom: env(safe-area-inset-bottom);
+}
+/* The toast: anchored to the shell on desktop; on phone to the bottom edge of
+   row 1, i.e. just above the notice and the dock. */
+.toastSlot {
+  display: contents;
+}
+.phone .toastSlot {
+  display: block;
+  grid-area: 1 / 1;
+  align-self: end;
+  position: relative;
+  height: 0;
+  z-index: 70;
+  pointer-events: none;
+  /* On the list: above the compose button, which a wide toast would cover. */
+  margin-bottom: 68px;
+}
+/* In the reader, clear its action row instead. */
+.phone .toastSlotReader {
+  margin-bottom: 56px;
+}
+.phone .panelFull {
+  /* An absolutely positioned grid item is contained by its grid AREA, so it
+     has to span every row or `inset: 0` resolves against the dock row only. */
+  grid-area: 1 / 1 / -1 / -1;
+  position: absolute;
+  inset: 0;
+  z-index: 20;
+  padding-top: env(safe-area-inset-top);
+  animation: chatGrow 220ms var(--ease-out) both;
+}
+.phone .panelShrinking {
+  animation: chatShrink 170ms var(--ease-out) both;
+}
+/* The list under the reader: laid out and scrolled as before, just not shown. */
+.paneHidden {
+  visibility: hidden;
+  pointer-events: none;
+}
+
+.skipLink {
+  position: absolute;
+  left: 8px;
+  top: -48px;
+  z-index: 100;
+  padding: 8px 12px;
+  border-radius: 8px;
+  background: var(--ink-900);
+  color: #fff;
+  font-size: 13px;
+}
+.skipLink:hover {
+  color: #fff;
+}
+.skipLink:focus {
+  top: calc(8px + env(safe-area-inset-top));
+}
+.skipLink:focus-visible {
+  outline: 2px solid var(--border-focus);
+  outline-offset: 2px;
+}
+
+/* ---------- offline pill ---------- */
+.offlineHost {
+  position: absolute;
+  left: 0;
+  right: 0;
+  top: calc(8px + env(safe-area-inset-top));
+  z-index: 65;
+  display: flex;
+  justify-content: center;
+  pointer-events: none;
+}
+.offline {
+  padding: 3px 10px;
+  border-radius: 999px;
+  background: var(--ink-800);
+  color: #fff;
+  font-size: 12px;
+  line-height: 1.5;
+  box-shadow: var(--shadow-2);
+}
+
+/* ---------- "g…" pending sequence ---------- */
+.keyHint {
+  position: absolute;
+  left: calc(16px + env(safe-area-inset-left));
+  bottom: calc(16px + env(safe-area-inset-bottom));
+  z-index: 65;
+  min-width: 34px;
+  padding: 4px 9px;
+  border-radius: 8px;
+  background: var(--ink-900);
+  color: #fff;
+  font: 12px var(--font-mono);
+  text-align: center;
+  box-shadow: var(--shadow-3);
+  pointer-events: none;
+}
+
+/* ---------- install / notifications card (in the layout, never floating) ---------- */
+.notice {
+  flex: none;
+  border-top: 1px solid var(--border-1);
+  background: var(--cobalt-50);
+}
+.noticeRow {
+  display: flex;
+  align-items: center;
+  min-height: 44px;
+}
+.noticeToggle {
+  flex: 1;
+  min-width: 0;
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  min-height: 44px;
+  padding: 0 4px 0 14px;
+  border: none;
+  background: transparent;
+  text-align: left;
+  color: var(--fg-1);
+  cursor: pointer;
+}
+.noticeIcon {
+  flex: none;
+  display: flex;
+  color: var(--cobalt-600);
+}
+.noticeTitle {
+  min-width: 0;
+  font-size: 13px;
+  font-weight: 600;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+.noticeChevron {
+  flex: none;
+  color: var(--fg-3);
+}
+.noticeChevronOpen {
+  transform: rotate(180deg);
+}
+.noticeClose {
+  flex: none;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 44px;
+  height: 44px;
+  padding: 0;
+  border: none;
+  border-radius: 8px;
+  background: transparent;
+  color: var(--fg-2);
+  cursor: pointer;
+}
+.noticeClose:hover {
+  color: var(--fg-1);
+}
+.noticeDetails {
+  padding: 0 14px 12px 39px;
+}
+.noticeBody {
+  margin: 0;
+  font-size: 12.5px;
+  line-height: 1.45;
+  color: var(--fg-2);
+}
+.noticeGlyph {
+  display: inline-block;
+  vertical-align: -2px;
+}
+.noticeActions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
+  margin-top: 8px;
+}
+
+/* ---------- shortcut help dialog (?) ---------- */
+.scrim {
+  position: fixed;
+  inset: 0;
+  z-index: 80;
+  background: rgba(11, 16, 32, 0.28);
+}
+.dialog {
+  position: fixed;
+  left: 50%;
+  top: 50%;
+  z-index: 81;
+  translate: -50% -50%;
+  width: min(680px, calc(100vw - 32px));
+  max-height: min(720px, calc(100dvh - 48px - env(safe-area-inset-top) - env(safe-area-inset-bottom)));
+  display: flex;
+  flex-direction: column;
+  background: var(--bg-surface);
+  border: 1px solid var(--border-1);
+  border-radius: 12px;
+  box-shadow: var(--shadow-4);
+}
+.dialogHead {
+  flex: none;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  padding: 12px 10px 12px 18px;
+  border-bottom: 1px solid var(--border-1);
+}
+.dialogTitle {
+  margin: 0;
+  font-size: 14px;
+  font-weight: 600;
+  color: var(--fg-1);
+}
+.dialogBody {
+  flex: 1;
+  min-height: 0;
+  padding: 12px 18px 6px;
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) minmax(0, 1fr);
+  gap: 0 32px;
+  align-content: start;
+}
+.helpGroup {
+  margin-bottom: 14px;
+}
+.helpGroupTitle {
+  margin: 0 0 4px;
+  font-size: 11px;
+  font-weight: 500;
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+  color: var(--fg-3);
+}
+.helpList {
+  margin: 0;
+  padding: 0;
+}
+.helpRow {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 16px;
+  min-height: 28px;
+  font-size: 13px;
+  color: var(--fg-2);
+}
+.helpRow dt {
+  min-width: 0;
+}
+.helpRow dd {
+  flex: none;
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  margin: 0;
+}
+.helpRowOff {
+  opacity: 0.45;
+}
+.helpKeys {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+}
+.helpOr {
+  font-size: 11px;
+  color: var(--fg-4);
+}
+.dialogFoot {
+  flex: none;
+  padding: 10px 18px 14px;
+  border-top: 1px solid var(--border-1);
+}
+.switchRow {
+  display: inline-flex;
+  align-items: center;
+  gap: 10px;
+  min-height: 28px;
+  font-size: 13px;
+  font-weight: 500;
+  color: var(--fg-1);
+  cursor: pointer;
+}
+.switch {
+  appearance: none;
+  flex: none;
+  position: relative;
+  width: 32px;
+  height: 18px;
+  margin: 0;
+  border-radius: 999px;
+  /* 3:1 against the surface in both states. */
+  background: var(--ink-500);
+  cursor: pointer;
+  transition: background var(--dur-1) var(--ease-out);
+}
+.switch::before {
+  content: "";
+  position: absolute;
+  top: 2px;
+  left: 2px;
+  width: 14px;
+  height: 14px;
+  border-radius: 999px;
+  background: #fff;
+  box-shadow: var(--shadow-1);
+  transition: transform var(--dur-1) var(--ease-out);
+}
+.switch:checked {
+  background: var(--brand);
+}
+.switch:checked::before {
+  transform: translateX(14px);
+}
+/* base.css removes the outline from inputs (text fields draw their own). */
+.switch.switch:focus-visible {
+  outline: 2px solid var(--border-focus);
+  outline-offset: 2px;
+}
+/* ---------- notification settings (account menu) ---------- */
+.settingsBody {
+  flex: 1;
+  min-height: 0;
+  overflow-y: auto;
+  padding: 14px 18px 6px;
+}
+.settingsGroup {
+  margin: 0 0 16px;
+  padding: 0;
+  border: 0;
+  min-width: 0;
+}
+.settingsGroup legend {
+  padding: 0;
+}
+.settingsRow {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 16px;
+  min-height: 32px;
+  font-size: 13px;
+  color: var(--fg-1);
+}
+label.settingsRow {
+  cursor: pointer;
+}
+.settingsLabel {
+  min-width: 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+.settingsChoice {
+  display: flex;
+  align-items: flex-start;
+  gap: 10px;
+  padding: 5px 0;
+  font-size: 13px;
+  color: var(--fg-1);
+  cursor: pointer;
+}
+.settingsChoice input {
+  flex: none;
+  margin: 3px 0 0;
+  accent-color: var(--brand);
+}
+.settingsHint {
+  display: block;
+  font-size: 12px;
+  font-weight: 400;
+  color: var(--fg-3);
+}
+.settingsTimes {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 6px 14px;
+  padding: 2px 0 4px;
+  font-size: 13px;
+  color: var(--fg-2);
+}
+.settingsTimes input {
+  font: inherit;
+  color: var(--fg-1);
+  padding: 3px 6px;
+  border: 1px solid var(--border-1);
+  border-radius: 6px;
+  background: var(--bg-surface);
+}
+.settingsTimes .settingsHint {
+  flex-basis: 100%;
+}
+@media (pointer: coarse) {
+  .settingsRow {
+    min-height: 44px;
+  }
+  .settingsChoice {
+    padding: 10px 0;
+  }
+}
+.dialogNote {
+  margin: 4px 0 0;
+  font-size: 12px;
+  color: var(--fg-3);
+}
+@media (max-width: 600px) {
+  .dialogBody {
+    grid-template-columns: minmax(0, 1fr);
+  }
+}
+@media (pointer: coarse) {
+  .switchRow {
+    min-height: 44px;
+  }
+}

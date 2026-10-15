@@ -3,6 +3,7 @@
   "title": "Todos los buzones de {provider} de tu empresa, en un solo agente",
   "body": "Si tu empresa tiene más de una dirección en {provider}, como info@, ventas@ y facturas@, conecta cada una al mismo espacio de trabajo de mcpemails. Tu cliente de IA las alcanza todas a través de la misma URL de MCP, en Claude, ChatGPT, Cursor o cualquier otro cliente MCP. Cada llamada a una herramienta indica el buzón sobre el que actúa, cada buzón conserva su propio nombre de remitente y su firma, y una respuesta sale por el buzón al que pertenece.",
   "plans": "El plan gratuito conecta un buzón, Personal tres y Pro todos los buzones que llevas, con un solo inicio de sesión.",
+  "pricingLink": "Compara los planes y cuántos buzones conecta cada uno",
   "link": "Cómo una sola persona lleva todos los buzones de la empresa desde un agente",
   "faqQ": "¿Puedo conectar varios buzones de {provider} al mismo agente de IA?",
   "faqA": "Sí. Conecta cada dirección de {provider} a un espacio de trabajo de mcpemails y tu cliente de IA las alcanza todas a través de la misma URL de MCP. Cada llamada a una herramienta indica el buzón sobre el que actúa, así que la respuesta a un mensaje de ventas@ sale desde ventas@. El plan gratuito conecta un buzón, Personal tres y Pro todos los que llevas."

@@ -10,7 +10,7 @@
 
 BEGIN;
 
-SELECT plan(15);
+SELECT plan(21);
 
 -- ----------------------------------------------------------------
 -- Assertion helper: checks relrowsecurity flag in pg_class
@@ -182,6 +182,79 @@ SELECT ok(
     AND    c.relkind = 'r'
   ),
   'oauth_auth_codes table has RLS enabled'
+);
+
+-- Web client assistant meter (20261004100300).
+SELECT ok(
+  (
+    SELECT c.relrowsecurity
+    FROM   pg_class c
+    JOIN   pg_namespace n ON n.oid = c.relnamespace
+    WHERE  n.nspname = 'public'
+    AND    c.relname = 'assistant_usage'
+    AND    c.relkind = 'r'
+  ),
+  'assistant_usage table has RLS enabled'
+);
+
+SELECT ok(
+  (
+    SELECT c.relrowsecurity
+    FROM   pg_class c
+    JOIN   pg_namespace n ON n.oid = c.relnamespace
+    WHERE  n.nspname = 'public'
+    AND    c.relname = 'assistant_usage_reservations'
+    AND    c.relkind = 'r'
+  ),
+  'assistant_usage_reservations table has RLS enabled'
+);
+
+SELECT ok(
+  (
+    SELECT c.relrowsecurity
+    FROM   pg_class c
+    JOIN   pg_namespace n ON n.oid = c.relnamespace
+    WHERE  n.nspname = 'public'
+    AND    c.relname = 'push_subscriptions'
+    AND    c.relkind = 'r'
+  ),
+  'push_subscriptions table has RLS enabled'
+);
+
+SELECT ok(
+  (
+    SELECT c.relrowsecurity
+    FROM   pg_class c
+    JOIN   pg_namespace n ON n.oid = c.relnamespace
+    WHERE  n.nspname = 'public'
+    AND    c.relname = 'push_preferences'
+    AND    c.relkind = 'r'
+  ),
+  'push_preferences table has RLS enabled'
+);
+
+SELECT ok(
+  (
+    SELECT c.relrowsecurity
+    FROM   pg_class c
+    JOIN   pg_namespace n ON n.oid = c.relnamespace
+    WHERE  n.nspname = 'public'
+    AND    c.relname = 'inbox_watch_state'
+    AND    c.relkind = 'r'
+  ),
+  'inbox_watch_state table has RLS enabled'
+);
+
+SELECT ok(
+  (
+    SELECT c.relrowsecurity
+    FROM   pg_class c
+    JOIN   pg_namespace n ON n.oid = c.relnamespace
+    WHERE  n.nspname = 'public'
+    AND    c.relname = 'draft_lineage'
+    AND    c.relkind = 'r'
+  ),
+  'draft_lineage table has RLS enabled'
 );
 
 -- ----------------------------------------------------------------

@@ -159,8 +159,12 @@ Notes:
 | --- | --- | --- | --- | --- | --- | --- |
 | **Gmail / Google Workspace** | App password (IMAP/SMTP) by default, or OAuth 2.0 (Sign in with Google) | ✅ | ✅ | Labels | Trash only | ✅ |
 | **Fastmail** | App password (IMAP/SMTP) | ✅ | ✅ | ✅ | ✅ | ✅ |
-| **iCloud, Yahoo, Zoho, Yandex** | App password (IMAP/SMTP) | ✅ | ✅ | ✅ | ✅ | ✅ |
-| **Any IMAP/SMTP mailbox** | App password | ✅ | ✅ | ✅ | ✅ | ✅ |
+| **iCloud, Yahoo, AOL, GMX, Zoho, Yandex** | App password (IMAP/SMTP) | ✅ | ✅ | ✅ | ✅ | ✅ |
+| **IONOS, STRATO, One.com, OVHcloud, Namecheap Private Email, Hostinger, Infomaniak, Hetzner** | Mailbox password (IMAP/SMTP) | ✅ | ✅ | ✅ | ✅ | ✅ |
+| **cPanel, Plesk, SiteGround, Bluehost and other shared hosts** | Mailbox password (IMAP/SMTP) | ✅ | ✅ | ✅ | ✅ | ✅ |
+| **Any other IMAP/SMTP mailbox** | App password or mailbox password | ✅ | ✅ | ✅ | ✅ | ✅ |
+
+> Mail on your own domain at a web host connects like any IMAP mailbox, and one workspace can hold several of them (info@, sales@, support@). Per-host settings and known pitfalls for 100 providers are at [mcpemails.com/connect](https://mcpemails.com/connect).
 | **Outlook / Microsoft 365** | OAuth 2.0 (Microsoft Graph) | ✅ | ✅ | ✅ (nested) | ✅ | ✅ |
 
 > Outlook uses Microsoft Graph with "Sign in with Microsoft", not IMAP. Personal Microsoft accounts (outlook.com, hotmail.com, live.com, msn.com) connect directly. On work or school Microsoft 365 tenants, Microsoft's default consent policy stops employees approving mail permissions themselves, so an IT admin approves the app once for the organisation; the dashboard gives the user a shareable approval link to send them (`/auth/outlook/admin-consent`), and the admin needs no MCP Emails account. A Microsoft account with no Exchange Online mailbox is refused, with a pointer to IMAP. The label tools are Gmail-only (Outlook uses folders), except that an automation's label action applies an Outlook category; and Graph cannot combine a text search with the unread, attachment, flagged or date filters.

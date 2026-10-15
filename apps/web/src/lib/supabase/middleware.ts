@@ -2,6 +2,7 @@ import { createServerClient } from '@supabase/ssr';
 import { NextResponse, type NextRequest } from 'next/server';
 
 import type { Database } from '@/types/database.types';
+import { CONNECT_INTENT_PARAM, withConnectIntent } from '@/lib/connect/intent-carry.mjs';
 
 /**
  * Refreshes the Supabase session on every request and enforces route-level
@@ -73,7 +74,16 @@ export async function updateSession(request: NextRequest): Promise<NextResponse>
     const destination =
       isSafeRedirect
         ? new URL(redirectParam, request.nextUrl.origin).toString()
-        : new URL('/dashboard', request.nextUrl.origin).toString();
+        : new URL(
+            // A signed-in visitor who pressed "Connect IONOS free" on a provider
+            // page is bounced from /signup?provider=ionos to here. Keep the
+            // hint on the way (shape-checked; the dashboard validates it).
+            withConnectIntent(
+              '/dashboard',
+              request.nextUrl.searchParams.get(CONNECT_INTENT_PARAM),
+            ),
+            request.nextUrl.origin,
+          ).toString();
     return NextResponse.redirect(destination);
   }
 

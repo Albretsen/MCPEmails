@@ -13,18 +13,23 @@
     "status": "active"
   },
   "meta": {
-    "title": "Koble OVH til Claude, Cursor og MCP-klienter",
-    "description": "Koble OVHcloud MX Plan-e-post til Claude og enhver MCP-klient via IMAP på ssl0.ovh.net:993. Email Pro og Hosted Exchange bruker egne vertsnavn per server."
+    "title": "OVH MCP-server: koble e-posten til Claude",
+    "description": "MCP-server for OVHcloud MX Plan-e-post. Koble flere bedriftspostkasser på domenet ditt (post@, salg@) til Claude og ChatGPT over IMAP på ssl0.ovh.net:993."
   },
   "hero": {
     "eyebrow": "OVH + AI",
-    "titleLine1": "Koble OVH til Claude,",
-    "titleLine2": "og Cursor, ChatGPT, enhver MCP-klient",
-    "lead": "Gi AI-agenten din en ekte OVH-innboks på minutter. Les, søk, send, svar, planlegg og organiser e-post med IMAP og postkassepassordet ditt, og bruk samme innboks i alle MCP-klienter, ikke bare én.",
-    "meta0": "1 innboks gratis, for alltid",
+    "titleLine1": "MCP-server for OVH-e-post:",
+    "titleLine2": "alle firmaets postkasser, i Claude og ChatGPT",
+    "lead": "Har du post@, salg@, support@ og faktura@ på eget domene hos OVH? Koble hver postkasse til ett arbeidsområde, så jobber AI-agenten din i alle sammen. Les, søk, send, svar, planlegg og organiser e-post med IMAP og postkassepassordet ditt, og bruk de samme postkassene i alle MCP-klienter, ikke bare én.",
+    "meta0": "Første postkasse gratis, planer for resten",
     "meta1": "Postkassepassordet ditt, ingen OAuth-oppsett",
     "meta2": "E-post hentes direkte, lagres aldri",
-    "answer": "Claude når ikke OVH på egen hånd. mcpemails er en hostet MCP-server som kobler til via IMAP med postkassepassordet ditt, slik at Claude, Cursor eller enhver MCP-klient kan lese, søke, sende og organisere den e-posten. Oppsettet tar et par minutter, og én innboks er gratis."
+    "answer": "Claude når ikke OVH på egen hånd. mcpemails er en hostet MCP-server som kobler til via IMAP med postkassepassordet ditt, slik at Claude, Cursor eller enhver MCP-klient kan lese, søke, sende og organisere den e-posten. Oppsettet tar et par minutter. Hver firmaadresse, som post@ eller salg@, kobles til som sin egen postkasse: én postkasse er gratis, Personal kobler til tre og Pro alle postkassene du har."
+  },
+  "persona": {
+    "intro": "Flere bedriftspostkasser hos OVH?",
+    "label": "Se hva hver plan kobler til",
+    "href": "/pricing"
   },
   "method": {
     "title": "Slik kobler OVH seg til: IMAP og postkassepassordet ditt",
@@ -98,8 +103,8 @@
     }
   ],
   "ctaBand": {
-    "title": "Gi AI-en din en OVH-innboks",
-    "sub": "Koble til OVH på minutter. Én innboks gratis for alltid, uten kort."
+    "title": "Samle alle OVH-postkassene på én agent",
+    "sub": "Koble til den første OVH-postkassen gratis, uten kort. Personal kobler til tre, Pro alle postkassene du har."
   },
   "seeAlso": {
     "intro": "Microsoft 365-postkasse fra OVHcloud?",

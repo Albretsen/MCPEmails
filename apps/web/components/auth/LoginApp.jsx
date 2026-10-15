@@ -6,10 +6,15 @@ import { createClient } from '@/lib/supabase/client';
 import { readAcquisitionContext } from '../analytics/AcquisitionCapture';
 import { appendAcquisitionParams } from '@/lib/acquisition-context.mjs';
 import { rememberOAuthConsent } from '@/lib/marketing-consent.mjs';
+import {
+  connectIntentStorage,
+  rememberConnectIntent,
+  withConnectIntent,
+} from '@/lib/connect/intent-carry.mjs';
 import { MIcon, MBtn } from '../MarketingPrimitives';
 import { ThemeBtn, Spinner, GoogleIcon, GitHubIcon, SocialButton, OrDivider } from './AuthShared';
 
-export function LoginApp({ redirectTo = null }) {
+export function LoginApp({ redirectTo = null, connectProvider = null }) {
   const t = useTranslations('auth');
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
@@ -25,6 +30,13 @@ export function LoginApp({ redirectTo = null }) {
   // page left behind for an abandoned Google/GitHub attempt.
   useEffect(() => { rememberOAuthConsent(false); }, []);
 
+  // Someone who pressed "Connect IONOS free" on a provider page and then chose
+  // to sign in instead (`/login?provider=ionos`). Same hint, same handling as
+  // SignupApp: carried in the destination URL, remembered for the magic link.
+  useEffect(() => {
+    if (connectProvider) rememberConnectIntent(connectIntentStorage(), connectProvider);
+  }, [connectProvider]);
+
   function getSafeRedirect() {
     const redirect = redirectTo;
     return redirect && redirect.startsWith('/') && !redirect.startsWith('//') && !redirect.startsWith('/\\')
@@ -34,7 +46,10 @@ export function LoginApp({ redirectTo = null }) {
 
   function signupHref() {
     const redirect = getSafeRedirect();
-    return redirect ? `/signup?redirect=${encodeURIComponent(redirect)}` : '/signup';
+    return withConnectIntent(
+      redirect ? `/signup?redirect=${encodeURIComponent(redirect)}` : '/signup',
+      connectProvider,
+    );
   }
 
   function buildOAuthUrl(provider) {
@@ -48,6 +63,11 @@ export function LoginApp({ redirectTo = null }) {
     appendAcquisitionParams(url.searchParams, readAcquisitionContext());
     if (redirect && redirect.startsWith('/')) {
       url.searchParams.set('next', redirect);
+    } else if (connectProvider) {
+      // No `next` means the callback lands on /dashboard, so this is the same
+      // destination with the connect hint on it. Without a hint nothing is
+      // set, exactly as before.
+      url.searchParams.set('next', withConnectIntent('/dashboard', connectProvider));
     }
     return url.toString();
   }
@@ -62,7 +82,7 @@ export function LoginApp({ redirectTo = null }) {
   }
 
   function getRedirectDestination() {
-    return getSafeRedirect() ?? '/dashboard';
+    return getSafeRedirect() ?? withConnectIntent('/dashboard', connectProvider);
   }
 
   function handleGoogleSignIn() {
@@ -195,8 +215,8 @@ export function LoginApp({ redirectTo = null }) {
         </a>
 
         <div className="auth-brand">
-          <img className="logo-light" src="/logo-wordmark.svg" alt="mcpemails" />
-          <img className="logo-dark" src="/logo-wordmark-dark.svg" alt="mcpemails" />
+          <img className="logo-light" src="/logo-wordmark.svg" width="280" height="48" alt="mcpemails" />
+          <img className="logo-dark" src="/logo-wordmark-dark.svg" width="280" height="48" alt="mcpemails" />
         </div>
 
         {/* ── Full-page loading (password submit or magic link sending) ──── */}

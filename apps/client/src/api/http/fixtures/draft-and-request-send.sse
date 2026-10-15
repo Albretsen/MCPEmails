@@ -1,0 +1,42 @@
+data: {"type":"run_started","run_id":"run_t"}
+
+data: {"type":"status","text":"Working"}
+
+data: {"type":"tool_call","message_id":"run_t_m1","call":{"id":"run_t_c1","tool":"email_read","action":"read","human":"Reading an email","keys":["inbox-a:m1"],"meta":"","state":"running"}}
+
+data: {"type":"status","text":"Reading an email"}
+
+data: {"type":"mail_effect","effect":{"kind":"read","keys":["inbox-a:m1"],"call_id":"run_t_c1"}}
+
+data: {"type":"tool_call","message_id":"run_t_m1","call":{"id":"run_t_c1","tool":"email_read","action":"read","human":"Reading Maya Chen's email","keys":["inbox-a:m1"],"meta":"","state":"done"}}
+
+data: {"type":"tool_call","message_id":"run_t_m2","call":{"id":"run_t_c2","tool":"draft","action":"write","human":"Writing a draft","meta":"","state":"running","keys":[]}}
+
+data: {"type":"status","text":"Writing a draft"}
+
+data: {"type":"tool_call","message_id":"run_t_m2","call":{"id":"run_t_c2","tool":"draft","action":"write","human":"Writing a reply to Maya Chen","meta":"below","state":"running","keys":["inbox-a:m1"]}}
+
+data: {"type":"status","text":"Writing a reply to Maya Chen"}
+
+data: {"type":"draft_stream","phase":"writing","kind":"reply","reply_to":"inbox-a:m1","fields":{"inbox_id":"inbox-a","to":"maya@lumenworks.example","subject":"Re: Q4 renewal terms","cc":"tomas@northwind.example"},"call_id":"run_t_c2","message_id":"run_t_m2","body_delta":""}
+
+data: {"type":"draft_stream","phase":"writing","kind":"reply","reply_to":"inbox-a:m1","fields":{"inbox_id":"inbox-a","to":"maya@lumenworks.example","subject":"Re: Q4 renewal terms","cc":"tomas@northwind.example"},"call_id":"run_t_c2","message_id":"run_t_m2","body_delta":"Hi Maya,\n\nWe will"}
+
+data: {"type":"draft_stream","phase":"writing","kind":"reply","reply_to":"inbox-a:m1","fields":{"inbox_id":"inbox-a","to":"maya@lumenworks.example","subject":"Re: Q4 renewal terms","cc":"tomas@northwind.example"},"call_id":"run_t_c2","message_id":"run_t_m2","body_delta":" keep the 40 seats.\n\n"}
+
+data: {"type":"draft_stream","phase":"writing","kind":"reply","reply_to":"inbox-a:m1","fields":{"inbox_id":"inbox-a","to":"maya@lumenworks.example","subject":"Re: Q4 renewal terms","cc":"tomas@northwind.example"},"call_id":"run_t_c2","message_id":"run_t_m2","body_delta":"Best,\nAda"}
+
+data: {"type":"draft_stream","phase":"writing","kind":"reply","reply_to":"inbox-a:m1","fields":{"inbox_id":"inbox-a","to":"maya@lumenworks.example","subject":"Re: Q4 renewal terms","cc":"tomas@northwind.example"},"call_id":"run_t_c2","message_id":"run_t_m2","body":"Hi Maya,\n\nWe will keep the 40 seats.\n\nBest,\nAda","done":true}
+
+data: {"type":"tool_call","message_id":"run_t_m2","call":{"id":"run_t_c2","tool":"draft","action":"write","human":"Writing a reply to Maya Chen","meta":"under the email","state":"done","keys":["inbox-a:m1"]}}
+
+data: {"type":"tool_call","message_id":"run_t_m3","call":{"id":"run_t_c3","tool":"email_compose","action":"send","human":"Send to maya@lumenworks.example","meta":"needs approval","state":"waiting","keys":["inbox-a:m1"]}}
+
+data: {"type":"approval_required","approval_id":"run_t_ap1","call_id":"run_t_c3","draft":{"inbox_id":"inbox-a","to":"maya@lumenworks.example","subject":"Re: Q4 renewal terms","body":"Hi Maya,\n\nWe will keep the 40 seats.\n\nBest,\nAda","kind":"reply","cc":"tomas@northwind.example","reply_to":"inbox-a:m1"},"external":true}
+
+data: {"type":"status","text":"Waiting for your approval"}
+
+data: {"type":"text_delta","message_id":"run_t_m4","delta":"The draft is ready for your approval. Nothing is sent until you approve it.","done":true}
+
+data: {"type":"done","conversation":{"v":1,"summary":"","turns":[{"u":"Reply that we keep 40 seats and send it","a":"The draft is ready for your approval. Nothing is sent until you approve it.","calls":[{"h":"Reading Maya Chen's email","k":["inbox-a:m1"]},{"h":"Writing a reply to Maya Chen","k":["inbox-a:m1"]},{"h":"Send to maya@lumenworks.example","k":["inbox-a:m1"]}],"refs":[{"k":"inbox-a:m1","l":"Maya Chen · Q4 renewal terms"}]}]},"usage":{"input_tokens":2000,"output_tokens":100,"cost_micro_usd":1950,"model":"gpt-5.4-mini","rounds":2}}
+

@@ -4,7 +4,7 @@
     "secondary": "Lire la documentation"
   },
   "settings": {
-    "title": "Les réglages IMAP et SMTP exacts de {provider}",
+    "title": "Les réglages IMAP et SMTP exacts {elide, select, yes {d''{provider}} other {de {provider}}}",
     "sub": "Copiez-les dans le formulaire de connexion. mcpemails les préremplit quand il le peut et réessaie l'autre transport standard si le premier ne répond pas.",
     "colHost": "Serveur",
     "colPort": "Port",
@@ -58,7 +58,7 @@
     "title": "Ce qui pose vraiment problème avec {provider}"
   },
   "limits": {
-    "title": "Limites connues de {provider}"
+    "title": "Limites connues {elide, select, yes {d''{provider}} other {de {provider}}}"
   },
   "faq": {
     "eyebrow": "FAQ",

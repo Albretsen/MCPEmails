@@ -12,18 +12,23 @@
     "status": "active"
   },
   "meta": {
-    "title": "Koble Infomaniak Mail til Claude og MCP-klienter",
-    "description": "Koble Infomaniak Mail til Claude, Cursor og enhver MCP-klient over IMAP på mail.infomaniak.com:993. Krever et enhetspassord, ikke kontopassordet ditt."
+    "title": "Infomaniak MCP-server: koble e-posten til Claude",
+    "description": "MCP-server for Infomaniak-e-post. Koble flere bedriftspostkasser på domenet ditt (post@, salg@) til Claude og ChatGPT over IMAP på mail.infomaniak.com:993."
   },
   "hero": {
     "eyebrow": "Infomaniak Mail + AI",
-    "titleLine1": "Koble Infomaniak Mail til Claude,",
-    "titleLine2": "Cursor, ChatGPT og enhver MCP-klient",
-    "lead": "Gi AI-agenten din en ekte Infomaniak-innboks. Les, søk, send, svar, planlegg og organiser e-post over IMAP med et enhetspassord generert for den adressen.",
-    "answer": "Claude kan ikke nå Infomaniak Mail på egen hånd. mcpemails er en driftet MCP-server som kobler til over IMAP på mail.infomaniak.com på port 993, og autentiserer med et enhetspassord generert for den e-postadressen, ikke med passordet til Infomaniak-kontoen din, slik at Claude, Cursor eller enhver MCP-klient kan lese, søke i, sende og organisere e-posten. Infomaniak godtar ikke kontopassordet over IMAP i det hele tatt, og de separate applikasjonspassordene deres er noe annet som ikke fungerer her. Én innboks er gratis, for alltid.",
-    "meta0": "1 innboks gratis, for alltid",
+    "titleLine1": "MCP-server for Infomaniak-e-post:",
+    "titleLine2": "alle firmaets postkasser, i Claude og ChatGPT",
+    "lead": "Har du post@, salg@, support@ og faktura@ på eget domene hos Infomaniak? Koble hver postkasse til ett arbeidsområde, så jobber AI-agenten din i alle sammen. Les, søk, send, svar, planlegg og organiser e-post over IMAP med et enhetspassord generert for den adressen.",
+    "answer": "Claude kan ikke nå Infomaniak Mail på egen hånd. mcpemails er en driftet MCP-server som kobler til over IMAP på mail.infomaniak.com på port 993, og autentiserer med et enhetspassord generert for den e-postadressen, ikke med passordet til Infomaniak-kontoen din, slik at Claude, Cursor eller enhver MCP-klient kan lese, søke i, sende og organisere e-posten. Infomaniak godtar ikke kontopassordet over IMAP i det hele tatt, og de separate applikasjonspassordene deres er noe annet som ikke fungerer her. Hver firmaadresse, som post@ eller salg@, kobles til som sin egen postkasse: én postkasse er gratis, Personal kobler til tre og Pro alle postkassene du har.",
+    "meta0": "Første postkasse gratis, planer for resten",
     "meta1": "Enhetspassord, ikke kontopassordet",
     "meta2": "E-post hentes direkte, lagres aldri"
+  },
+  "persona": {
+    "intro": "Flere bedriftspostkasser hos Infomaniak?",
+    "label": "Se hva hver plan kobler til",
+    "href": "/pricing"
   },
   "method": {
     "title": "Slik kobles Infomaniak til: IMAP og et enhetspassord",
@@ -92,7 +97,7 @@
     }
   ],
   "ctaBand": {
-    "title": "Gi AI-en din en Infomaniak-innboks",
-    "sub": "Koble til Infomaniak Mail på få minutter. Én innboks gratis for alltid, uten kort."
+    "title": "Samle alle Infomaniak-postkassene på én agent",
+    "sub": "Koble til den første Infomaniak-postkassen gratis, uten kort. Personal kobler til tre, Pro alle postkassene du har."
   }
 }

@@ -1,0 +1,96 @@
+{
+  "tolerance": 0.005,
+  "routes": {
+    "dashboard": {
+      "ceiling": {
+        "raw": 1561458,
+        "gzip": 442896,
+        "brotli": 358887
+      },
+      "absent": [
+        "tiptap",
+        "dompurify"
+      ]
+    },
+    "login": {
+      "ceiling": {
+        "raw": 1212426,
+        "gzip": 358086,
+        "brotli": 290264
+      },
+      "absent": []
+    },
+    "signup": {
+      "ceiling": {
+        "raw": 1214781,
+        "gzip": 359422,
+        "brotli": 291398
+      },
+      "absent": []
+    },
+    "forgot-password": {
+      "ceiling": {
+        "raw": 1204663,
+        "gzip": 355748,
+        "brotli": 288286
+      },
+      "absent": []
+    },
+    "reset-password": {
+      "ceiling": {
+        "raw": 1205610,
+        "gzip": 355745,
+        "brotli": 288287
+      },
+      "absent": []
+    },
+    "authorize": {
+      "ceiling": {
+        "raw": 971493,
+        "gzip": 294597,
+        "brotli": 237070
+      },
+      "absent": []
+    },
+    "approvals": {
+      "ceiling": {
+        "raw": 977608,
+        "gzip": 299014,
+        "brotli": 240942
+      },
+      "absent": []
+    },
+    "invite": {
+      "ceiling": {
+        "raw": 939578,
+        "gzip": 286336,
+        "brotli": 229825
+      },
+      "absent": []
+    },
+    "pricing": {
+      "ceiling": {
+        "raw": 858182,
+        "gzip": 248337,
+        "brotli": 212207
+      },
+      "absent": []
+    },
+    "home": {
+      "ceiling": {
+        "raw": 604119,
+        "gzip": 182488,
+        "brotli": 156851
+      },
+      "absent": []
+    },
+    "docs": {
+      "ceiling": {
+        "raw": 632420,
+        "gzip": 185940,
+        "brotli": 159823
+      },
+      "absent": []
+    }
+  }
+}

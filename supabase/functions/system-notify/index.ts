@@ -1,5 +1,6 @@
 import "jsr:@supabase/functions-js/edge-runtime.d.ts";
 import { createClient, SupabaseClient } from "npm:@supabase/supabase-js@2";
+import { type CheckoutFeedbackContext, renderCheckoutFeedbackEmail } from "./checkout-feedback.ts";
 
 const PUBLIC_MCP_ENDPOINT = Deno.env.get("SYSTEM_NOTIFY_MCP_ENDPOINT") ?? "https://mcpemails.com/api/mcp";
 // The connected/authenticated inbox we send FROM (must be a real inbox_list entry with credentials).
@@ -10,6 +11,10 @@ const PUBLIC_MCP_ENDPOINT = Deno.env.get("SYSTEM_NOTIFY_MCP_ENDPOINT") ?? "https
 const SEND_FROM_INBOX_EMAIL = "bjellanda@gmail.com";
 // Where the notification is delivered TO.
 const NOTIFY_TO_EMAIL = "bjellanda@gmail.com";
+
+// Signup emails are disabled indefinitely at the owner's request. Remove the
+// entry to turn them back on.
+const MUTED_EVENT_TYPES = new Set(["user.signup"]);
 const REQUEST_TIMEOUT_MS = 30_000;
 const UUID_RE = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
 
@@ -105,53 +110,47 @@ async function fetchGrowthStats(supabase: SupabaseClient): Promise<GrowthStats> 
   return { totalUsers, last24h, last7d, recentWorkspaces, recentWorkspacesConnected };
 }
 
-// Everything the automation.auto_disabled email needs beyond the event payload
-// itself. Same guarded style as fetchGrowthStats: any single lookup may come
-// back null, and the email renders "unknown" rather than failing to send. The
-// owner's email address is read HERE, at send time, and deliberately never
-// written into system_events.payload, which the migration reserves for
-// structured metadata only.
-type AutomationContext = {
-  ownerEmail: string | null;
-  workspaceName: string | null;
-  rulesEnabled: number | null;
-  rulesAutoDisabled: number | null;
-};
-
-async function fetchAutomationContext(
+// Everything the checkout.feedback email says. The event payload carries ids
+// and the fixed reason only; what the user typed and who they are live in their
+// own tables and are read HERE, at send time, never in the payload. Every lookup is guarded
+// on its own, so one failed query costs one "unknown" line, not the email.
+async function fetchCheckoutFeedbackContext(
   supabase: SupabaseClient,
+  feedbackId: string,
   workspaceId: string,
-): Promise<AutomationContext> {
-  const out: AutomationContext = {
+  payloadReason: string | null,
+): Promise<CheckoutFeedbackContext> {
+  const out: CheckoutFeedbackContext = {
+    feedbackId,
+    reason: payloadReason,
+    detail: null,
+    target: null,
+    answeredAt: null,
     ownerEmail: null,
+    workspaceId,
     workspaceName: null,
-    rulesEnabled: null,
-    rulesAutoDisabled: null,
+    plan: null,
+    signedUpAt: null,
+    emailSegment: null,
+    acquisitionSource: null,
+    marketingOptIn: null,
+    inboxCount: null,
+    inboxProviders: [],
+    clients: [],
+    actionsTotal: null,
+    lastActionAt: null,
+    inboxGateHits: null,
+    checkoutStarts: null,
+    lastCheckoutStartedAt: null,
+    earlierAnswers: null,
   };
-  if (!UUID_RE.test(workspaceId)) return out;
+  if (!UUID_RE.test(feedbackId) || !UUID_RE.test(workspaceId)) return out;
 
-  try {
-    const { data } = await supabase
-      .from("workspaces")
-      .select("display_name, owner_id")
-      .eq("id", workspaceId)
-      .maybeSingle();
-    if (data) {
-      out.workspaceName = typeof data.display_name === "string" ? data.display_name : null;
-      if (typeof data.owner_id === "string") {
-        const { data: owner } = await supabase
-          .from("users")
-          .select("email")
-          .eq("id", data.owner_id)
-          .maybeSingle();
-        if (owner && typeof owner.email === "string") out.ownerEmail = owner.email;
-      }
-    }
-  } catch { /* best-effort: the alert is worth sending without it */ }
-
-  // Exact head counts, never data.length: a row-returning select silently
-  // truncates at 1000, so counting fetched rows would understate a workspace
-  // with a lot of rules. Same trap fetchGrowthStats documents.
+  const guarded = async (step: () => Promise<void>) => {
+    try {
+      await step();
+    } catch { /* best-effort: the answer is worth sending without this line */ }
+  };
   const count = async (query: PromiseLike<{ count: number | null; error: unknown }>) => {
     try {
       const { count: value, error } = await query;
@@ -160,46 +159,112 @@ async function fetchAutomationContext(
       return null;
     }
   };
-  const [enabled, autoDisabled] = await Promise.all([
+
+  await guarded(async () => {
+    const { data } = await supabase
+      .from("checkout_cancel_feedback")
+      .select("reason, detail, target, created_at")
+      .eq("id", feedbackId)
+      .maybeSingle();
+    if (!data) return;
+    if (typeof data.reason === "string") out.reason = data.reason;
+    out.detail = typeof data.detail === "string" ? data.detail : null;
+    out.target = typeof data.target === "string" ? data.target : null;
+    out.answeredAt = typeof data.created_at === "string" ? data.created_at : null;
+  });
+
+  await guarded(async () => {
+    const { data } = await supabase
+      .from("workspaces")
+      .select("display_name, owner_id, plan, acquisition_source, acquisition_email_segment")
+      .eq("id", workspaceId)
+      .maybeSingle();
+    if (!data) return;
+    out.workspaceName = typeof data.display_name === "string" ? data.display_name : null;
+    out.plan = typeof data.plan === "string" ? data.plan : null;
+    out.acquisitionSource = typeof data.acquisition_source === "string" ? data.acquisition_source : null;
+    out.emailSegment = typeof data.acquisition_email_segment === "string" ? data.acquisition_email_segment : null;
+    if (typeof data.owner_id !== "string") return;
+    const { data: owner } = await supabase
+      .from("users")
+      .select("email, created_at, marketing_consent_at, unsubscribed_at")
+      .eq("id", data.owner_id)
+      .maybeSingle();
+    if (!owner) return;
+    out.ownerEmail = typeof owner.email === "string" ? owner.email : null;
+    out.signedUpAt = typeof owner.created_at === "string" ? owner.created_at : null;
+    out.marketingOptIn = owner.marketing_consent_at !== null && owner.unsubscribed_at === null;
+  });
+
+  await guarded(async () => {
+    const { data } = await supabase
+      .from("inboxes")
+      .select("provider")
+      .eq("workspace_id", workspaceId)
+      .is("deleted_at", null)
+      .limit(50);
+    if (!data) return;
+    out.inboxCount = data.length;
+    out.inboxProviders = [...new Set(data.map((row) => row.provider).filter((p): p is string => typeof p === "string"))];
+  });
+
+  await guarded(async () => {
+    const { data } = await supabase
+      .from("mcp_client_capabilities")
+      .select("client_name")
+      .eq("workspace_id", workspaceId)
+      .limit(200);
+    if (!data) return;
+    out.clients = [...new Set(data.map((row) => row.client_name).filter((c): c is string => typeof c === "string"))];
+  });
+
+  await guarded(async () => {
+    const { data } = await supabase
+      .from("action_usage")
+      .select("occurred_at")
+      .eq("workspace_id", workspaceId)
+      .order("occurred_at", { ascending: false })
+      .limit(1)
+      .maybeSingle();
+    out.lastActionAt = data && typeof data.occurred_at === "string" ? data.occurred_at : null;
+  });
+
+  await guarded(async () => {
+    const { data } = await supabase
+      .from("product_funnel_events")
+      .select("occurred_at")
+      .eq("workspace_id", workspaceId)
+      .eq("stage", "checkout_started")
+      .eq("outcome", "success")
+      .order("occurred_at", { ascending: false })
+      .limit(1)
+      .maybeSingle();
+    out.lastCheckoutStartedAt = data && typeof data.occurred_at === "string" ? data.occurred_at : null;
+  });
+
+  // Exact head counts, never data.length: same db-max-rows trap fetchGrowthStats
+  // documents.
+  const [actionsTotal, inboxGateHits, checkoutStarts, answers] = await Promise.all([
+    count(supabase.from("action_usage").select("*", { count: "exact", head: true }).eq("workspace_id", workspaceId)),
     count(
-      supabase.from("triage_rules").select("*", { count: "exact", head: true })
-        .eq("workspace_id", workspaceId).eq("enabled", true).is("deleted_at", null),
+      supabase.from("product_funnel_events").select("*", { count: "exact", head: true })
+        .eq("workspace_id", workspaceId).eq("stage", "paywall_reached").eq("connection_type", "first_connect"),
     ),
     count(
-      supabase.from("triage_rules").select("*", { count: "exact", head: true })
-        .eq("workspace_id", workspaceId).eq("enabled", false).is("deleted_at", null)
-        .not("disabled_reason", "is", null),
+      supabase.from("product_funnel_events").select("*", { count: "exact", head: true })
+        .eq("workspace_id", workspaceId).eq("stage", "checkout_started").eq("outcome", "success"),
     ),
+    count(supabase.from("checkout_cancel_feedback").select("*", { count: "exact", head: true }).eq("workspace_id", workspaceId)),
   ]);
-  out.rulesEnabled = enabled;
-  out.rulesAutoDisabled = autoDisabled;
+  out.actionsTotal = actionsTotal;
+  out.inboxGateHits = inboxGateHits;
+  out.checkoutStarts = checkoutStarts;
+  // The count includes the answer this email is about.
+  out.earlierAnswers = answers === null ? null : Math.max(0, answers - 1);
   return out;
 }
 
-// What each automation failure code means for the person who has to act on it.
-// Kept short and specific: the point of this alert is that somebody reads it
-// once and knows whether to reconnect a client, fix a mailbox, or look at us.
-const AUTOMATION_ERROR_GUIDANCE: Record<string, string> = {
-  api_key_expired:
-    "The OAuth connection behind the rule is gone (disconnected, or the refresh chain aged out). "
-    + "The user has to reconnect MCP Emails in their MCP client and switch the rule back on. "
-    + "NOTE: a merely stale access token no longer produces this - the runner follows key rotation.",
-  api_key_unavailable: "The key was revoked or deleted. The rule cannot run until it is pointed at a live key.",
-  scope_denied: "The key no longer holds the scope the rule's action needs.",
-  inbox_not_permitted: "The key's inbox allowlist no longer includes the rule's inbox.",
-  inbox_unavailable: "The inbox the rule targets is gone.",
-  search_failed: "The mailbox search failed repeatedly. Likely a provider or credential problem on that inbox.",
-  folder_unresolved: "The destination folder could not be resolved on the provider.",
-  destination_folder_not_found:
-    "The destination folder is missing from the mailbox: every move the rule attempted was refused "
-    + "and nothing was moved. The user has to create the folder (or point the rule at one that exists) "
-    + "and switch the rule back on.",
-  invalid_filter: "The stored filter no longer validates. This is ours, not the user's.",
-  invalid_action: "The stored action no longer validates. This is ours, not the user's.",
-};
-
-// Only "user.signup" is wired up for now; new event types just need a new
-// entry here -- an event_type with no matching entry is a no-op, not a
+// New event types just need a new entry here -- an event_type with no matching entry is a no-op, not a
 // transport failure (see the unmatched-template branch below). buildTemplate
 // is async and receives the service-role supabase client so entries can pull
 // live stats at send-time instead of trusting the trigger's payload.
@@ -268,44 +333,18 @@ async function buildTemplate(eventType: string, payload: Record<string, unknown>
     return { subject, body };
   }
 
-  if (eventType === "automation.auto_disabled") {
-    // An automation switched itself off after repeated failures. This is the
-    // alert that did not exist when one customer's rules failed 134 times over
-    // four days with nobody told, so it is written to be read once and acted on.
-    const ruleId = typeof payload.rule_id === "string" ? payload.rule_id : "unknown";
+  // automation.auto_disabled deliberately has no template: the rule still
+  // records disabled_reason and the system_events row is still written, but
+  // the operator email was noise (one per rule, so a dead mailbox with 48
+  // rules sent 48 of them) and nobody acted on it.
+  if (eventType === "checkout.feedback") {
+    // Someone answered the "what held you back?" card after abandoning a
+    // Stripe checkout. Wording lives in ./checkout-feedback.ts, which is pure
+    // so it can be tested without this runtime.
+    const feedbackId = typeof payload.feedback_id === "string" ? payload.feedback_id : "";
     const workspaceId = typeof payload.workspace_id === "string" ? payload.workspace_id : "";
-    const inboxId = typeof payload.inbox_id === "string" ? payload.inbox_id : "unknown";
-    const ruleName = typeof payload.rule_name === "string" && payload.rule_name ? payload.rule_name : "(unnamed)";
-    const errorCode = typeof payload.error_code === "string" ? payload.error_code : "unknown";
-    const failures = typeof payload.consecutive_failures === "number" ? payload.consecutive_failures : null;
-    const context = await fetchAutomationContext(supabase, workspaceId);
-
-    const who = context.ownerEmail ?? context.workspaceName ?? workspaceId ?? "unknown workspace";
-    const subject = `Automation switched itself off: ${who}`;
-    const body = [
-      `An automation stopped itself after ${failures === null ? "repeated" : failures} consecutive failed runs.`,
-      "",
-      "WHO",
-      `owner: ${context.ownerEmail ?? "unknown"}`,
-      `workspace: ${context.workspaceName ?? "unknown"} (${workspaceId || "unknown"})`,
-      "",
-      "WHAT STOPPED",
-      `rule: ${ruleName}`,
-      `rule_id: ${ruleId}`,
-      `inbox_id: ${inboxId}`,
-      `error_code: ${errorCode}`,
-      "",
-      "WHAT IT MEANS",
-      AUTOMATION_ERROR_GUIDANCE[errorCode] ?? "No specific guidance for this code. Read the rule's run log.",
-      "",
-      "REST OF THE WORKSPACE",
-      `automations still switched on: ${context.rulesEnabled === null ? "unknown" : context.rulesEnabled}`,
-      `automations already switched off by failures: ${context.rulesAutoDisabled === null ? "unknown" : context.rulesAutoDisabled}`,
-      "",
-      `disabled at: ${new Date().toISOString()}`,
-    ].join("\n");
-
-    return { subject, body };
+    const reason = typeof payload.reason === "string" ? payload.reason : null;
+    return renderCheckoutFeedbackEmail(await fetchCheckoutFeedbackContext(supabase, feedbackId, workspaceId, reason));
   }
   return null;
 }
@@ -494,6 +533,13 @@ Deno.serve(async (request) => {
   const markProcessed = async (status: "sent" | "failed", error: string | null) => {
     await supabase.from("system_events").update({ status, error, processed_at: new Date().toISOString() }).eq("id", eventId);
   };
+
+  // Event types whose email is switched off. The system_events row is still
+  // written (growth analytics read it); only the notification is skipped.
+  if (MUTED_EVENT_TYPES.has(eventType)) {
+    await markProcessed("failed", "muted");
+    return json(200, { event_id: eventId, status: "muted" });
+  }
 
   try {
     const template = await buildTemplate(eventType, payload, supabase);

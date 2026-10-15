@@ -99,6 +99,15 @@ const INITIALIZE_TIMEOUT_MS = 10_000;
 const REQUEST_TIMEOUT_MS = 120_000;
 
 /**
+ * The floor under `observeSize`'s animation frame. Long enough that a painted
+ * frame always measures from rAF (one frame at 60Hz is ~17ms, and a host that
+ * is mid-layout gets a couple of them), short enough that an UNPAINTED frame
+ * reports its height before the user could read the gap as a card that failed
+ * to load. See observeSize().
+ */
+const SIZE_FALLBACK_MS = 50;
+
+/**
  * How long `ui/resource-teardown` waits for an async teardown handler before
  * replying anyway.
  *
@@ -167,6 +176,10 @@ export class HostBridge {
 
   private nextId = 1;
   private pending = new Map<number, Pending>();
+  /** Ids of `ui/initialize` attempts that timed out. See connect(). */
+  private abandonedInitialize = new Set<number>();
+  /** Completes the handshake from a late answer to one of those attempts. */
+  private lateInitialize: ((result: unknown) => void) | null = null;
   private target: Window = window.parent;
   private listening = false;
 
@@ -206,7 +219,17 @@ export class HostBridge {
     // Response to one of our requests.
     if (id !== undefined && (("result" in msg) || ("error" in msg))) {
       const p = this.pending.get(id);
-      if (!p) return;
+      if (!p) {
+        // A late answer to an `ui/initialize` attempt we had already given up
+        // on. It is still the host's answer to the handshake; see connect().
+        if (this.abandonedInitialize.has(id) && this.lateInitialize && "result" in msg) {
+          const settle = this.lateInitialize;
+          this.lateInitialize = null;
+          this.abandonedInitialize.clear();
+          settle(msg.result);
+        }
+        return;
+      }
       this.pending.delete(id);
       if ("error" in msg) {
         const e = (msg.error ?? {}) as Json;
@@ -313,12 +336,14 @@ export class HostBridge {
     method: string,
     params: Json,
     timeoutMs = REQUEST_TIMEOUT_MS,
+    onTimeout?: (id: number) => void,
   ): Promise<T> {
     this.listen();
     const id = this.nextId++;
     return new Promise<T>((resolve, reject) => {
       const timer = setTimeout(() => {
         this.pending.delete(id);
+        onTimeout?.(id);
         reject(new Error(`${method} timed out`));
       }, timeoutMs);
       this.pending.set(id, {
@@ -381,6 +406,26 @@ export class HostBridge {
     // is no longer pending, so a host that answers two of them is harmless. The
     // total budget is unchanged at INITIALIZE_TIMEOUT_MS, so a host that is
     // genuinely absent fails in exactly the same time it did before.
+    //
+    // ── A late answer still counts ──────────────────────────────────────────
+    // "ignores responses whose id is no longer pending" used to apply to the
+    // handshake too, which was wrong for a SLOW host as opposed to a deaf one:
+    // an answer to attempt 1 that took longer than its 250ms window was thrown
+    // away, and the card went on waiting for an answer to a later attempt. A
+    // host that answers each request in turn then connects one whole attempt
+    // late, and a host that answers `ui/initialize` only once never connects
+    // at all, leaving a card that renders but never reports its height. So an
+    // attempt that times out is remembered, and the first answer to ANY of
+    // them completes the handshake.
+    type InitializeResult = {
+      protocolVersion?: string;
+      hostInfo?: Json;
+      hostCapabilities?: HostCapabilities;
+      hostContext?: HostContext;
+    };
+    const late = new Promise<InitializeResult>((resolve) => {
+      this.lateInitialize = (result) => resolve(result as InitializeResult);
+    });
     const deadline = Date.now() + INITIALIZE_TIMEOUT_MS;
     let attemptMs = 250;
     let lastError: unknown;
@@ -395,12 +440,18 @@ export class HostBridge {
       this.initializeAttempts++;
       this.onInitializeAttempt?.();
       try {
-        const answered = await this.request<{
-          protocolVersion?: string;
-          hostInfo?: Json;
-          hostCapabilities?: HostCapabilities;
-          hostContext?: HostContext;
-        }>("ui/initialize", params, Math.min(attemptMs, remaining));
+        const attempt = this.request<InitializeResult>(
+          "ui/initialize",
+          params,
+          Math.min(attemptMs, remaining),
+          (id) => this.abandonedInitialize.add(id),
+        );
+        // If `late` wins the race this attempt is left to time out on its own,
+        // and that rejection must not surface as an unhandled one.
+        attempt.catch(() => undefined);
+        const answered = await Promise.race([attempt, late]);
+        this.lateInitialize = null;
+        this.abandonedInitialize.clear();
         return this.applyInitializeResult(answered);
       } catch (e) {
         // Only a timeout is worth another attempt. An actual JSON-RPC error
@@ -515,7 +566,21 @@ export class HostBridge {
     const measure = () => {
       if (scheduled) return;
       scheduled = true;
-      requestAnimationFrame(() => {
+      // rAF FIRST, A TIMER AS THE FLOOR. The measurement wants a frame: it
+      // writes `height: max-content` onto <html>, reads the box, and puts the
+      // old value back, which is only meaningful once the browser has done
+      // layout. But a document the host has not painted — a frame mounted
+      // off-screen, or any frame in a backgrounded tab — gets no animation
+      // frames at all, and with rAF as the only scheduler this whole function
+      // then does nothing: `scheduled` stays true, so every later
+      // ResizeObserver callback returns early too, and the card never tells the
+      // host a height for as long as it stays unpainted. That is one of the
+      // ways a card "never appears". Timers do run in that state, so one is
+      // armed alongside the frame and whichever arrives first wins.
+      let taken = false;
+      const take = () => {
+        if (taken) return;
+        taken = true;
         scheduled = false;
         const html = document.documentElement;
         const prev = html.style.height;
@@ -528,7 +593,9 @@ export class HostBridge {
           lastH = height;
           this.sendSizeChanged(width, height);
         }
-      });
+      };
+      requestAnimationFrame(take);
+      setTimeout(take, SIZE_FALLBACK_MS);
     };
 
     measure();

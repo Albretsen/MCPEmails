@@ -1,0 +1,445 @@
+Email provider compatibility for AI agents (Gmail, Outlook, iCloud, Yahoo, Zoho) · mcpemails
+[meta description] Which email providers work with an AI agent over MCP, and what it takes to connect each one: OAuth or app-specific password, IMAP and SMTP hosts and ports, TLS or STARTTLS, what commonly breaks, and what the agent can do once connected. Gmail, Fastmail, iCloud Mail, Yahoo Mail, Zoho Mail, Yandex Mail, Outlook / Microsoft 365 and generic IMAP.
+[meta og:title] Email provider compatibility for AI agents (Gmail, Outlook, iCloud, Yahoo, Zoho) · mcpemails
+[meta og:description] Which email providers work with an AI agent over MCP, and what it takes to connect each one: OAuth or app-specific password, IMAP and SMTP hosts and ports, TLS or STARTTLS, what commonly breaks, and what the agent can do once connected. Gmail, Fastmail, iCloud Mail, Yahoo Mail, Zoho Mail, Yandex Mail, Outlook / Microsoft 365 and generic IMAP.
+[meta og:locale] en_US
+[meta twitter:title] Email provider compatibility for AI agents (Gmail, Outlook, iCloud, Yahoo, Zoho) · mcpemails
+[meta twitter:description] Which email providers work with an AI agent over MCP, and what it takes to connect each one: OAuth or app-specific password, IMAP and SMTP hosts and ports, TLS or STARTTLS, what commonly breaks, and what the agent can do once connected. Gmail, Fastmail, iCloud Mail, Yahoo Mail, Zoho Mail, Yandex Mail, Outlook / Microsoft 365 and generic IMAP.
+[alt] mcpemails
+[alt] mcpemails
+[aria-label] Primary navigation
+Features
+How it works
+Pricing
+Compare
+Docs
+Self-host
+Blog
+Sign in
+Get started free
+[aria-label] Open navigation menu
+Compatibility matrix
+Email provider compatibility for AI agents
+What an AI agent can actually do with each email provider, and what it takes to connect one. Gmail, Fastmail, iCloud Mail, Yahoo Mail, Zoho Mail, Yandex Mail, Outlook / Microsoft 365 and any generic IMAP inbox. Every row is checked against the connectors that run in production.
+[title] Hosts, ports, sign-in methods and failure modes re-checked against the live connectors on this date.
+Last verified:
+30 August 2026
+Connect an inbox
+Back to docs
+How each provider connects
+Sign-in method, mail hosts and transport security, and the failure that actually costs people their afternoon. Pick a provider for the step-by-step setup.
+Provider
+Sign-in
+IMAP (incoming)
+SMTP (outgoing)
+What commonly breaks
+Gmail (IMAP)
+App-specific password
+imap.gmail.com
+993 · TLS
+smtp.gmail.com
+465 · TLS
+The app password option does not exist on the Google account until 2-Step Verification is on, and it disappears again for everyone in a Workspace whose administrator switches app passwords off for the domain. Google shows the password in four blocks; the spaces are display only and are stripped before the login is sent.
+Gmail (API)
+Google OAuth
+Provider API, no IMAP
+Provider API, no IMAP
+Nothing at the transport layer: this row talks to gmail.googleapis.com rather than IMAP. What breaks is consent. The app is not verified by Google, so the sign-in screen carries a warning you have to click past, and Google lets an unverified app be granted consent by at most 100 accounts in its whole lifetime, a counter that cannot be reset. That ceiling is why the app password above is the default way in. The limits afterwards are semantic: labels instead of folders, no native copy, and no permanent expunge.
+Fastmail
+App-specific password
+imap.fastmail.com
+993 · TLS
+smtp.fastmail.com
+465 · TLS
+The ordinary account password is refused outright. Fastmail issues a 16-character app password, and submitting the login password instead is the most common single cause of a failed connection.
+iCloud Mail
+App-specific password
+imap.mail.me.com
+993 · TLS
+smtp.mail.me.com
+587 · STARTTLS
+Two-factor authentication has to be on before Apple will generate an app-specific password. Apple displays that password as four hyphenated blocks; the hyphens are display only and are stripped before the login is sent.
+Yahoo Mail
+App-specific password
+imap.mail.yahoo.com
+993 · TLS
+smtp.mail.yahoo.com
+465 · TLS
+Yahoo accepts at most 5 simultaneous connections. Its rejection text, “Incorrect username or password”, names both halves on purpose and will not tell you which one was wrong.
+Zoho Mail
+App-specific password
+imap.zoho.com
+993 · TLS
+smtp.zoho.com
+465 · TLS
+IMAP access ships switched off and has to be enabled first. Zoho also runs six regional data centres, and paid custom-domain mailboxes live on imappro/smtppro rather than imap/smtp, so the right host depends on both region and account type.
+Yandex Mail
+App-specific password
+imap.yandex.com
+993 · TLS
+smtp.yandex.com
+465 · TLS
+Yandex does not implement RFC 4959 SASL-IR, so the inline login form comes back as a command syntax error rather than a credential error. Both “IMAP” and “App passwords and OAuth tokens” have to be switched on, and Yandex 360 custom-domain accounts may sign in with a login name that is not the address.
+Microsoft 365 / Outlook
+Microsoft OAuth
+Provider API, no IMAP
+Provider API, no IMAP
+Personal Microsoft accounts (outlook.com, hotmail.com, live.com, msn.com) connect directly. Work and school accounts are different: Microsoft’s default consent policy stops employees from approving mail permissions themselves, so the dashboard gives you a shareable approval link to send to your IT admin, who approves the app once for the whole organisation and does not need an MCP Emails account; after that everyone connects normally. A Microsoft account with no Exchange Online mailbox is refused, with a hint to connect the address over IMAP instead. Microsoft may temporarily block sending from a brand-new outlook.com account that sends in bursts, as part of its own anti-abuse checks.
+Generic IMAP
+Mailbox password
+Your host’s settings
+993 / 143 · TLS / STARTTLS
+Your host’s settings
+465 / 587 · TLS / STARTTLS
+A port and a security mode that disagree. Choosing STARTTLS while the port stays 993 opens a plaintext socket to a TLS-only listener, and the connection just times out. Failed transports are now retried automatically on the other standard combination.
+Gmail, two ways in:
+a Google mailbox connects either with an app password over
+imap.gmail.com
+, which is the default, or by signing in with Google, which uses the Gmail API instead of IMAP. Both are offered in the connect window and both keep working. The choice decides what the agent can do afterwards, so the capability table below has a column for each:
+Gmail (IMAP)
+for the app password and
+Gmail (API)
+for Google sign-in.
+Transport autodetect:
+a connection that never established a session is retried on the other standard transport (IMAP
+993
+/TLS and
+143
+/STARTTLS; SMTP
+465
+/TLS,
+587
+/STARTTLS and
+25
+). A rejected password is never retried, because re-sending it counts against the provider’s own lockout.
+Login mechanism:
+most servers take
+AUTH PLAIN
+in a single round trip. Servers that advertise only GSSAPI, NTLM and LOGIN, with Microsoft Exchange the common case, answer it with
+504 5.7.4
+, and the client falls back to
+AUTH LOGIN
+on its own.
+Other hosts:
+IONOS, Hostinger, OVH, OVH Hosted Exchange, DreamHost, Titan Email, Namecheap Private Email, Migadu, InMotion Hosting, OpenSRS, GMX and mail.com are recognised from the address or the mail host you type, and their hosts, ports and transport security are filled in for you.
+What the agent can do once connected
+The operations an MCP client can perform per provider: read, search, send, reply, forward, move, flag, folders, drafts, scheduled send and attachments.
+[aria-label] Supported
+Supported
+[aria-label] Not supported
+Not supported
+Gmail (IMAP), Fastmail, iCloud, Yahoo, Zoho, Yandex, and Generic IMAP
+all connect over the same IMAP/SMTP transport (Gmail, Fastmail and iCloud use an app-specific password) and share an identical feature set, including IMAP search syntax. The columns are shown separately for clarity.
+Gmail (API)
+is the one Gmail column that is not IMAP: the same mailbox, reached through Google sign-in and the Gmail API instead.
+Outlook
+is not IMAP either: it connects by signing in with Microsoft and works through Microsoft Graph.
+Compatibility profiles
+Every inbox reports a versioned profile to an MCP agent:
+exact
+means the normalized operation keeps its meaning,
+different
+means the provider uses documented alternative semantics, and
+unavailable
+means MCP Emails will not silently weaken the request. Profiles describe connector behavior without inspecting or storing mail.
+Feature
+Gmail (IMAP)
+Gmail (API)
+Outlook
+Fastmail
+iCloud
+Yahoo
+Zoho
+Yandex
+Generic IMAP
+Core
+Download original (.eml)
+[aria-label] Supported
+[aria-label] Supported
+[aria-label] Supported
+[aria-label] Supported
+[aria-label] Supported
+[aria-label] Supported
+[aria-label] Supported
+[aria-label] Supported
+[aria-label] Supported
+Read email
+[aria-label] Supported
+[aria-label] Supported
+[aria-label] Supported
+[aria-label] Supported
+[aria-label] Supported
+[aria-label] Supported
+[aria-label] Supported
+[aria-label] Supported
+[aria-label] Supported
+Search
+[aria-label] Supported
+[aria-label] Supported
+[aria-label] Supported
+[aria-label] Supported
+[aria-label] Supported
+[aria-label] Supported
+[aria-label] Supported
+[aria-label] Supported
+[aria-label] Supported
+Send email
+[aria-label] Supported
+[aria-label] Supported
+[aria-label] Supported
+[aria-label] Supported
+[aria-label] Supported
+[aria-label] Supported
+[aria-label] Supported
+[aria-label] Supported
+[aria-label] Supported
+Reply
+[aria-label] Supported
+[aria-label] Supported
+[aria-label] Supported
+[aria-label] Supported
+[aria-label] Supported
+[aria-label] Supported
+[aria-label] Supported
+[aria-label] Supported
+[aria-label] Supported
+Forward
+[aria-label] Supported
+[aria-label] Supported
+[aria-label] Supported
+[aria-label] Supported
+[aria-label] Supported
+[aria-label] Supported
+[aria-label] Supported
+[aria-label] Supported
+[aria-label] Supported
+Flags & state
+Read/unread + starred flags
+[aria-label] Supported
+[aria-label] Supported
+[aria-label] Supported
+[aria-label] Supported
+[aria-label] Supported
+[aria-label] Supported
+[aria-label] Supported
+[aria-label] Supported
+[aria-label] Supported
+Folders & labels
+Folders
+[aria-label] Supported
+[aria-label] Not supported
+[aria-label] Supported
+[aria-label] Supported
+[aria-label] Supported
+[aria-label] Supported
+[aria-label] Supported
+[aria-label] Supported
+[aria-label] Supported
+Labels / tags
+[aria-label] Not supported
+[aria-label] Supported
+[aria-label] Not supported
+[aria-label] Not supported
+[aria-label] Not supported
+[aria-label] Not supported
+[aria-label] Not supported
+[aria-label] Not supported
+[aria-label] Not supported
+Move
+[aria-label] Supported
+[aria-label] Supported
+[aria-label] Supported
+[aria-label] Supported
+[aria-label] Supported
+[aria-label] Supported
+[aria-label] Supported
+[aria-label] Supported
+[aria-label] Supported
+Copy
+[aria-label] Supported
+[aria-label] Not supported
+[aria-label] Supported
+[aria-label] Supported
+[aria-label] Supported
+[aria-label] Supported
+[aria-label] Supported
+[aria-label] Supported
+[aria-label] Supported
+Delete
+Delete / trash
+[aria-label] Supported
+[aria-label] Supported
+[aria-label] Supported
+[aria-label] Supported
+[aria-label] Supported
+[aria-label] Supported
+[aria-label] Supported
+[aria-label] Supported
+[aria-label] Supported
+Permanent delete (expunge)
+[aria-label] Supported
+[aria-label] Not supported
+[aria-label] Supported
+[aria-label] Supported
+[aria-label] Supported
+[aria-label] Supported
+[aria-label] Supported
+[aria-label] Supported
+[aria-label] Supported
+Drafts
+Drafts (create / edit / send)
+[aria-label] Supported
+[aria-label] Supported
+[aria-label] Supported
+[aria-label] Supported
+[aria-label] Supported
+[aria-label] Supported
+[aria-label] Supported
+[aria-label] Supported
+[aria-label] Supported
+Contacts
+Contact search (live scan)
+[aria-label] Supported
+[aria-label] Supported
+[aria-label] Supported
+[aria-label] Supported
+[aria-label] Supported
+[aria-label] Supported
+[aria-label] Supported
+[aria-label] Supported
+[aria-label] Supported
+Scheduling
+Scheduled send
+[aria-label] Supported
+[aria-label] Supported
+[aria-label] Supported
+[aria-label] Supported
+[aria-label] Supported
+[aria-label] Supported
+[aria-label] Supported
+[aria-label] Supported
+[aria-label] Supported
+Signatures
+Signatures (auto-applied on send)
+[aria-label] Supported
+[aria-label] Supported
+[aria-label] Supported
+[aria-label] Supported
+[aria-label] Supported
+[aria-label] Supported
+[aria-label] Supported
+[aria-label] Supported
+[aria-label] Supported
+Search
+Search syntax
+IMAP
+Gmail
+KQL
+IMAP
+IMAP
+IMAP
+IMAP
+IMAP
+IMAP
+Gmail folders vs labels:
+Gmail uses a flat label system rather than hierarchical folders. "Move" is implemented as label add/remove. Native copy is not available via the Gmail REST API. These Gmail rows describe the Gmail API connector: a Gmail mailbox connected with an app password over IMAP follows the IMAP columns instead, copy included.
+Outlook (Microsoft Graph):
+search uses KQL. A text criterion (from, to, cc, subject, body, text or query) cannot be combined with the unread, has_attachment, flagged or date filters: when both are sent, those filters are not applied and the result says which were dropped, while a tool that acts on every match refuses the combination instead. Outlook has folders, not labels, so the label tools are Gmail-only; an automation's label action applies an Outlook category. Attachments: up to 10 MB per message when sending, and up to 25 MB when downloading an attachment or forwarding an original.
+Permanent delete:
+the Gmail API moves a deleted message to Trash and does not expose permanent expunge. Microsoft Graph does: permanent: true on an Outlook inbox uses its permanentDelete, which skips Deleted Items. Every IMAP inbox (Gmail on an app password, Fastmail, iCloud, Yahoo, Zoho, Yandex, Generic) supports both trash and hard expunge.
+Contact search (live scan):
+All providers support
+contact_search
+, which finds matching correspondents with a live, header-only scan of a recent window of your matching mail. There is no contacts table: nothing is stored between calls, and counts reflect only matched messages in the scanned window.
+Scheduling:
+Supported for all providers via a server-side
+scheduled_sends
+queue. Use the
+schedule
+tool's
+create
+,
+list
+, and
+cancel
+actions. Delivery uses each provider's existing send path, so no provider-native scheduling API is required.
+Signatures:
+A per-inbox signature is appended server-side on every send, reply, forward, draft, and scheduled message. This works on
+all
+providers. Signatures support rich HTML formatting (bold, italic, headings, lists, colors, alignment, links) and a hosted logo/image; set them in the dashboard rich editor or via the
+signature
+MCP tool (which accepts
+signature_html
+). Images are referenced as hosted https URLs and render across every provider, though some clients (e.g. Gmail) may hide them until the recipient clicks "display images", which is normal for any hosted-image signature. Use
+signature_reply_mode
+to control whether the signature appears on replies and forwards. Per call, pass
+include_signature: false
+on
+email_compose
+or
+draft
+to skip it. The same inbox panel in the dashboard also has a Sender name field, the display name recipients see next to the address on everything the inbox sends.
+Forwarding:
+On every provider a forward relays the original message byte for byte: its HTML, inline images, attachments and MIME structure arrive exactly as they were sent, under your note and the usual forwarded-message header. Originals up to 25 MB.
+as_attachment
+sends the whole original as a .eml part instead, and
+include_attachments: false
+leaves attached files behind.
+Ready to connect your inbox?
+Free plan: one connected inbox, forever, no card required.
+Get started free
+Read the docs
+[alt] mcpemails
+A hosted MCP server that gives AI agents read and send access to your inbox, without ever storing the email it reads.
+Contact
+hello@mcpemails.com
+[aria-label] Copy Contact
+Copy
+MCP endpoint
+https://mcpemails.com/api/mcp
+[aria-label] Copy MCP endpoint
+Copy
+[aria-label] Language
+English
+Norsk
+Español
+Français
+中文
+Product
+Features
+How it works
+Pricing
+Docs
+Self-hosting
+For founders
+For business
+Resources
+Tool reference
+Quickstart
+OAuth connection
+Provider support
+MCP client setup
+Blog
+Changelog
+Connect
+All email providers
+Connect any IMAP inbox
+Connect Gmail
+Connect Outlook
+Connect Fastmail
+Connect iCloud
+Connect Yahoo
+Connect Zoho
+Connect Yandex
+vs native connectors
+Best email MCP servers
+Company
+About
+Security
+Status
+Privacy
+Terms
+© 2026 mcpemails.
+Email fetched live, never stored · Credentials encrypted at rest
+MCPEmails is a service of Albretsen Consulting (enkeltpersonforetak), organisation number 926 646 753, Håsteins gate 9, 5160 Laksevåg, Norway.
+[json-ld] {"@context":"https://schema.org","@graph":[{"@type":"WebPage","@id":"https://mcpemails.com/docs/providers","url":"https://mcpemails.com/docs/providers","name":"Email provider compatibility for AI agents (Gmail, Outlook, iCloud, Yahoo, Zoho)","description":"Which email providers work with an AI agent over MCP, and what it takes to connect each one: OAuth or app-specific password, IMAP and SMTP hosts and ports, TLS or STARTTLS, what commonly breaks, and what the agent can do once connected. Gmail, Fastmail, iCloud Mail, Yahoo Mail, Zoho Mail, Yandex Mail, Outlook / Microsoft 365 and generic IMAP.","inLanguage":"en","isPartOf":{"@id":"https://mcpemails.com/#website"},"breadcrumb":{"@id":"https://mcpemails.com/docs/providers#breadcrumb"}},{"@type":"BreadcrumbList","@id":"https://mcpemails.com/docs/providers#breadcrumb","itemListElement":[{"@type":"ListItem","position":1,"name":"mcpemails","item":"https://mcpemails.com"},{"@type":"ListItem","position":2,"name":"Email provider compatibility for AI agents (Gmail, Outlook, iCloud, Yahoo, Zoho)"}]}]}

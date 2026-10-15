@@ -11,18 +11,23 @@
     "status": "active"
   },
   "meta": {
-    "title": "Connect cPanel to Claude, Cursor & MCP Clients",
-    "description": "Connect a cPanel mailbox to Claude, Cursor and any MCP client over IMAP. Read your real host from Email Accounts, Connect Devices, Mail Client Manual Settings."
+    "title": "cPanel MCP Server: Connect cPanel Mail to Claude",
+    "description": "MCP server for cPanel mail. Connect several company mailboxes on your domain (info@, sales@) to Claude and ChatGPT over IMAP, on any cPanel host."
   },
   "hero": {
     "eyebrow": "cPanel + AI",
-    "titleLine1": "Connect cPanel to Claude,",
-    "titleLine2": "and Cursor, ChatGPT, any MCP client",
-    "lead": "Give your AI agent a real cPanel inbox in minutes. Read, search, send, reply, schedule and organize mail with IMAP and your mailbox password, and use the same inbox in every MCP client, not just one.",
-    "meta0": "1 inbox free, forever",
+    "titleLine1": "MCP server for cPanel mail:",
+    "titleLine2": "every company mailbox, in Claude and ChatGPT",
+    "lead": "Running info@, sales@, support@ and invoices@ on your own domain on a cPanel host? Connect each mailbox to one workspace and your AI agent works across all of them. Read, search, send, reply, schedule and organize mail with IMAP and your mailbox password, and use the same mailboxes in every MCP client, not just one.",
+    "meta0": "First mailbox free, plans for the rest",
     "meta1": "Your mailbox password, no OAuth setup",
     "meta2": "Email fetched live, never stored",
-    "answer": "Claude cannot reach cPanel on its own. mcpemails is a hosted MCP server that connects it over IMAP using your mailbox password, so Claude, Cursor or any MCP client can read, search, send and organize that mail. Setup takes a couple of minutes and one inbox is free."
+    "answer": "Claude cannot reach cPanel on its own. mcpemails is a hosted MCP server that connects it over IMAP using your mailbox password, so Claude, Cursor or any MCP client can read, search, send and organize that mail. Setup takes a couple of minutes. Each company address, such as info@ or sales@, connects as its own mailbox: one mailbox is free, Personal connects three and Pro every mailbox you run."
+  },
+  "persona": {
+    "intro": "Several company mailboxes on a cPanel host?",
+    "label": "See what each plan connects",
+    "href": "/pricing"
   },
   "method": {
     "title": "How cPanel connects: IMAP and your mailbox password",
@@ -96,7 +101,7 @@
     }
   ],
   "ctaBand": {
-    "title": "Give your AI a cPanel inbox",
-    "sub": "Connect cPanel in minutes. One inbox free forever, no card required."
+    "title": "Put every cPanel mailbox on one agent",
+    "sub": "Connect your first cPanel mailbox free, no card required. Personal connects three, Pro every mailbox you run."
   }
 }

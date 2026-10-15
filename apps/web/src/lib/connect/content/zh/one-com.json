@@ -12,18 +12,23 @@
     "status": "active"
   },
   "meta": {
-    "title": "将 one.com 邮箱连接到 Claude 与 MCP 客户端",
-    "description": "通过 IMAP（imap.one.com:993）将 one.com 邮箱连接到 Claude、Cursor 及任意 MCP 客户端。发信使用 send.one.com，而不是 smtp.one.com。"
+    "title": "one.com MCP 服务器：将公司邮箱连接到 Claude",
+    "description": "面向 one.com 邮箱的 MCP 服务器。通过 IMAP（imap.one.com:993）将你域名下的多个公司邮箱（info@、sales@）连接到 Claude 和 ChatGPT。"
   },
   "hero": {
     "eyebrow": "one.com 邮箱 + AI",
-    "titleLine1": "将 one.com 邮箱连接到 Claude，",
-    "titleLine2": "Cursor、ChatGPT、任意 MCP 客户端",
-    "lead": "为你的 AI 代理接入一个真正的 one.com 收件箱。用创建地址时设置的密码，通过 IMAP 读取、搜索、发送、回复、定时与整理邮件。",
-    "answer": "Claude 无法自行连接 one.com 邮箱。mcpemails 是一个托管 MCP 服务器，通过 IMAP 连接 imap.one.com 的 993 端口，并通过 send.one.com 的 465 端口发信，使用你的完整邮箱地址和在 one.com Control Panel 中为该账户设置的密码认证。之后 Claude、Cursor 或任意 MCP 客户端都能读取、搜索、发送并整理邮件。无需生成应用密码。一个收件箱永久免费。",
-    "meta0": "1 个收件箱永久免费",
+    "titleLine1": "面向 one.com 邮箱的 MCP 服务器：",
+    "titleLine2": "在 Claude 和 ChatGPT 中使用公司的每一个邮箱",
+    "lead": "在 one.com 用自己的域名开设了 info@、sales@、support@ 和 invoices@？把每个邮箱都连接到同一个工作区，你的 AI 代理就能处理所有邮箱。用创建地址时设置的密码，通过 IMAP 读取、搜索、发送、回复、定时与整理邮件。",
+    "answer": "Claude 无法自行连接 one.com 邮箱。mcpemails 是一个托管 MCP 服务器，通过 IMAP 连接 imap.one.com 的 993 端口，并通过 send.one.com 的 465 端口发信，使用你的完整邮箱地址和在 one.com Control Panel 中为该账户设置的密码认证。之后 Claude、Cursor 或任意 MCP 客户端都能读取、搜索、发送并整理邮件。无需生成应用密码。公司的每个地址（如 info@ 或 sales@）都作为独立邮箱连接：一个邮箱免费，Personal 连接三个，Pro 连接你管理的所有邮箱。",
+    "meta0": "第一个邮箱免费，其余按套餐连接",
     "meta1": "使用 Control Panel 中设置的邮箱账户密码",
     "meta2": "邮件实时获取，绝不存储"
+  },
+  "persona": {
+    "intro": "在 one.com 有好几个公司邮箱？",
+    "label": "看看每个套餐能连接多少个邮箱",
+    "href": "/pricing"
   },
   "method": {
     "title": "one.com 如何连接：IMAP 收信，send.one.com 发信",
@@ -89,8 +94,8 @@
     }
   ],
   "ctaBand": {
-    "title": "给你的 AI 一个 one.com 收件箱",
-    "sub": "几分钟即可连接 one.com 邮箱。一个收件箱永久免费，无需信用卡。"
+    "title": "把所有 one.com 邮箱交给同一个代理",
+    "sub": "免费连接第一个 one.com 邮箱，无需信用卡。Personal 连接三个，Pro 连接你管理的所有邮箱。"
   },
   "seeAlso": {
     "intro": "通过 one.com 购买的 Microsoft 365 邮箱？",

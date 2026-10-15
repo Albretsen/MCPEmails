@@ -209,7 +209,9 @@ Deno.test("every search handler owns the session it aborts, and closes it", () =
   for (const name of SEARCH_HANDLERS) {
     const body = functionSource(name);
     assertStringIncludes(body, "const session = imapSessionFor(inbox);", name);
-    assertStringIncludes(body, "if (session) await session.close();", name);
+    // email_search answers a read, so it does not wait for the goodbye
+    // (release); the two tools that move or delete mail still do (close).
+    assert(/if \(session\) await session\.(?:close|release)\(\);/.test(body), name);
     assert(
       body.indexOf("} finally {") > body.indexOf("const session = imapSessionFor(inbox);"),
       `${name} must close its session from a finally that covers every return`,

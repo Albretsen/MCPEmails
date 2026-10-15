@@ -39,7 +39,7 @@ export function Nav({ onSignIn, onGetStarted, user }) {
   return (
     <header className="nav">
       <div className="container nav-row">
-        <Link className="brand" href="/" onClick={closeMenu}><img className="logo-light" src="/logo-wordmark.svg" alt="mcpemails" /><img className="logo-dark" src="/logo-wordmark-dark.svg" alt="mcpemails" /></Link>
+        <Link className="brand" href="/" onClick={closeMenu}><img className="logo-light" src="/logo-wordmark.svg" width="280" height="48" alt="mcpemails" /><img className="logo-dark" src="/logo-wordmark-dark.svg" width="280" height="48" alt="mcpemails" /></Link>
         <nav className="nav-links" aria-label="Primary navigation">
           <Link href="/#features">{t('nav.features')}</Link>
           <Link href="/#how">{t('nav.how')}</Link>
@@ -113,7 +113,13 @@ export function HeroTextBlock({ onGetStarted }) {
   const t = useTranslations('home');
   return (
     <div>
+      {/* The kicker is part of the H1 on purpose: it is the one place the page
+          names its own category ("email MCP server") in a heading. The
+          headline below it is unchanged, so the first screen still reads the
+          way it converted. The trailing space keeps the two apart in the
+          text a crawler or screen reader gets. */}
       <h1 className="h1" style={{ marginTop: 0 }}>
+        <span className="h1-kicker">{t('hero.eyebrow')}</span>{' '}
         {t('hero.titleLine1')} <br/>{t('hero.titleLine2')} <span className="accent">{t('hero.titleAccent')}</span>
       </h1>
       <p className="lead">{t('hero.lead')}</p>
@@ -387,6 +393,39 @@ export function Trusted() {
             <MarqueeItem key={i} name={c.name} logo={c.logo} color={c.color} />
           ))}
         </div>
+      </div>
+    </section>
+  );
+}
+
+/* ============== WHAT IS AN EMAIL MCP SERVER ============== */
+/**
+ * The direct answer to the query the page is found for. Two short paragraphs
+ * and three crawlable links, in server-rendered text: until this block the
+ * phrase "email MCP server" appeared in the body only as a footer link label.
+ *
+ * It sits after the client marquee and so below the hero, the proof bar and the
+ * demo-video slot, at the same depth in both arms of the homepage experiment.
+ */
+export function WhatIs() {
+  const t = useTranslations('home');
+  // /best-email-mcp-servers is English only and 404s elsewhere, same as the
+  // footer link to it.
+  const isEnglish = useLocale() === 'en';
+  return (
+    <section className="whatis" id="email-mcp-server">
+      <div className="container">
+        <h2>{t('whatIs.title')}</h2>
+        <p>{t('whatIs.p1')}</p>
+        <p>{t('whatIs.p2')}</p>
+        <p className="whatis-links">
+          <Link href="/connect/imap">{t('whatIs.linkImap')}</Link>
+          <Link href="/for/business">{t('whatIs.linkBusiness')}</Link>
+          <Link href="/connect">{t('whatIs.linkProviders')}</Link>
+          {isEnglish && (
+            <Link href="/best-email-mcp-servers">Best email MCP servers compared</Link>
+          )}
+        </p>
       </div>
     </section>
   );
@@ -1171,7 +1210,10 @@ function FaqItem({ q, a }) {
           <MIcon name="arrow" size={14} color="var(--fg-3)" />
         </span>
       </button>
-      {open && <div className="faq-a">{a}</div>}
+      {/* Always in the DOM, hidden until opened: the answers are emitted as
+          FAQPage JSON-LD, and markup may only describe text the page actually
+          serves. Rendering on click left them out of the HTML entirely. */}
+      <div className="faq-a" hidden={!open}>{a}</div>
     </div>
   );
 }
@@ -1308,7 +1350,7 @@ export function Footer() {
       <div className="container">
         <div className="footer-grid">
           <div className="brand-cell">
-            <img src="/logo-mark-dark.svg" alt="mcpemails" />
+            <img src="/logo-mark-dark.svg" width="48" height="48" alt="mcpemails" />
             <p>{t('footer.tagline')}</p>
             <div className="footer-contact">
               <FooterCopy icon="mail" label={t('footer.contactLabel')} value={FOOTER_CONTACT_EMAIL} href={`mailto:${FOOTER_CONTACT_EMAIL}`} />

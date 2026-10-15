@@ -13,18 +13,23 @@
     "status": "active"
   },
   "meta": {
-    "title": "Connecter IONOS à Claude, Cursor et aux clients MCP",
-    "description": "Connectez votre e-mail IONOS à Claude, Cursor et tout client MCP en IMAP via imap.ionos.com:993. Chaque adresse a son mot de passe, distinct du login IONOS."
+    "title": "Serveur MCP IONOS pour Claude et ChatGPT",
+    "description": "Serveur MCP pour la messagerie IONOS. Connectez plusieurs boîtes de votre entreprise (info@, ventes@) à Claude et ChatGPT en IMAP sur imap.ionos.com:993."
   },
   "hero": {
     "eyebrow": "IONOS + IA",
-    "titleLine1": "Connectez IONOS à Claude,",
-    "titleLine2": "à Cursor, ChatGPT, tout client MCP",
-    "lead": "Donnez à votre agent IA une vraie boîte IONOS en quelques minutes. Lisez, recherchez, envoyez, répondez, planifiez et organisez vos e-mails en IMAP avec le mot de passe de votre boîte mail, et utilisez la même boîte dans tous vos clients MCP, pas un seul.",
-    "meta0": "1 boîte gratuite, pour toujours",
+    "titleLine1": "Serveur MCP pour la messagerie IONOS :",
+    "titleLine2": "toutes les boîtes de votre entreprise, dans Claude et ChatGPT",
+    "lead": "Vous gérez info@, ventes@, support@ et factures@ sur votre propre domaine chez IONOS ? Connectez chaque boîte au même espace de travail et votre agent IA travaille dans toutes. Lisez, recherchez, envoyez, répondez, planifiez et organisez vos e-mails en IMAP avec le mot de passe de votre boîte mail, et utilisez les mêmes boîtes dans tous vos clients MCP, pas un seul.",
+    "meta0": "Première boîte gratuite, offres pour les autres",
     "meta1": "Le mot de passe de votre boîte mail, sans configuration OAuth",
     "meta2": "E-mails récupérés en direct, jamais stockés",
-    "answer": "Claude ne peut pas accéder seul à IONOS. mcpemails est un serveur MCP hébergé qui s'y connecte en IMAP avec le mot de passe de votre boîte mail, pour que Claude, Cursor ou tout client MCP puisse lire, rechercher, envoyer et organiser ce courrier. La configuration prend quelques minutes et une boîte est gratuite."
+    "answer": "Claude ne peut pas accéder seul à IONOS. mcpemails est un serveur MCP hébergé qui s'y connecte en IMAP avec le mot de passe de votre boîte mail, pour que Claude, Cursor ou tout client MCP puisse lire, rechercher, envoyer et organiser ce courrier. La configuration prend quelques minutes. Chaque adresse de l'entreprise, comme info@ ou ventes@, se connecte comme une boîte à part : une boîte est gratuite, Personal en connecte trois et Pro toutes celles que vous gérez."
+  },
+  "persona": {
+    "intro": "Plusieurs boîtes d'entreprise chez IONOS ?",
+    "label": "Voyez ce que chaque offre connecte",
+    "href": "/pricing"
   },
   "method": {
     "title": "Comment IONOS se connecte : IMAP et le mot de passe de votre boîte mail",
@@ -97,8 +102,8 @@
     }
   ],
   "ctaBand": {
-    "title": "Donnez à votre IA une boîte IONOS",
-    "sub": "Connectez IONOS en quelques minutes. 1 boîte gratuite, pour toujours, sans carte bancaire."
+    "title": "Toutes vos boîtes IONOS sur un seul agent",
+    "sub": "Connectez votre première boîte IONOS gratuitement, sans carte bancaire. Personal en connecte trois, Pro toutes celles que vous gérez."
   },
   "seeAlso": {
     "intro": "Une boîte Microsoft 365 achetée via IONOS ?",

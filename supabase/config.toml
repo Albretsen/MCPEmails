@@ -116,6 +116,13 @@ verify_jwt = false
 [functions.synthetic-monitor]
 verify_jwt = false
 
+# The web mail client's function verifies the Supabase access token itself
+# (client-api/auth.ts: JWKS or the project secret, plus audience, role and
+# workspace membership). The gateway check is off so a CORS preflight, which
+# carries no Authorization header, reaches the function's OPTIONS handler.
+[functions.client-api]
+verify_jwt = false
+
 # Cron-only. pg_cron posts without a Supabase JWT, so the gateway check is off
 # and the function authenticates the X-Dispatch-Secret header itself.
 [functions.outlook-token-refresh]

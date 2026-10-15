@@ -12,18 +12,23 @@
     "status": "active"
   },
   "meta": {
-    "title": "Bluehost-e-post til Claude: IMAP-oppsett for cPanel og Titan",
-    "description": "Bluehost selger tre ulike e-postprodukter. Finn ut hvilket du har, og koble det til Claude over IMAP på port 993. Én innboks gratis for alltid, uten kort."
+    "title": "Bluehost MCP-server: koble e-posten til Claude",
+    "description": "MCP-server for Bluehost-e-post. Koble flere bedriftspostkasser på domenet ditt (post@, salg@) til Claude og ChatGPT over IMAP på port 993."
   },
   "hero": {
     "eyebrow": "Bluehost + AI",
-    "titleLine1": "Koble Bluehost-e-post til Claude,",
-    "titleLine2": "Cursor, ChatGPT og enhver MCP-klient",
-    "lead": "Gi AI-agenten din en ekte Bluehost-postkasse. Les, søk, send, svar, planlegg og organiser e-post over IMAP, enten postkassen er en cPanel Email-konto eller en Professional Email-postkasse.",
-    "answer": "Claude kan ikke nå en Bluehost-postkasse på egen hånd. mcpemails er en hostet MCP-server som kobler den til over vanlig IMAP på port 993, slik at Claude, Cursor eller enhver MCP-klient kan lese, søke i, sende og organisere den e-posten. Det første du må finne ut, er hvilket av Bluehosts tre e-postprodukter du har, fordi cPanel Email svarer på en vert bygget fra ditt eget domene, mens Professional Email svarer på Titans servere, og de to settene med innstillinger kan ikke byttes om. Uansett autentiserer du med passordet som er satt på postkassen, aldri med passordet til Bluehost-portalen, og én innboks er gratis.",
-    "meta0": "1 innboks gratis, for alltid",
+    "titleLine1": "MCP-server for Bluehost-e-post:",
+    "titleLine2": "alle firmaets postkasser, i Claude og ChatGPT",
+    "lead": "Har du post@, salg@, support@ og faktura@ på eget domene hos Bluehost? Koble hver postkasse til ett arbeidsområde, så jobber AI-agenten din i alle sammen. Les, søk, send, svar, planlegg og organiser e-post over IMAP, enten postkassen er en cPanel Email-konto eller en Professional Email-postkasse.",
+    "answer": "Claude kan ikke nå en Bluehost-postkasse på egen hånd. mcpemails er en hostet MCP-server som kobler den til over vanlig IMAP på port 993, slik at Claude, Cursor eller enhver MCP-klient kan lese, søke i, sende og organisere den e-posten. Det første du må finne ut, er hvilket av Bluehosts tre e-postprodukter du har, fordi cPanel Email svarer på en vert bygget fra ditt eget domene, mens Professional Email svarer på Titans servere, og de to settene med innstillinger kan ikke byttes om. Uansett autentiserer du med passordet som er satt på postkassen, aldri med passordet til Bluehost-portalen. Hver firmaadresse, som post@ eller salg@, kobles til som sin egen postkasse: én postkasse er gratis, Personal kobler til tre og Pro alle postkassene du har.",
+    "meta0": "Første postkasse gratis, planer for resten",
     "meta1": "Postkassepassord, ikke portalpålogging",
     "meta2": "E-post hentes direkte, lagres aldri"
+  },
+  "persona": {
+    "intro": "Flere bedriftspostkasser hos Bluehost?",
+    "label": "Se hva hver plan kobler til",
+    "href": "/pricing"
   },
   "method": {
     "title": "Slik kobles Bluehost-e-post til: finn først ut hvilket produkt du har",
@@ -88,7 +93,7 @@
     }
   ],
   "ctaBand": {
-    "title": "Gi AI-en din en Bluehost-innboks",
-    "sub": "Koble til en Bluehost-postkasse på få minutter. Én innboks gratis for alltid, uten kort."
+    "title": "Samle alle Bluehost-postkassene på én agent",
+    "sub": "Koble til den første Bluehost-postkassen gratis, uten kort. Personal kobler til tre, Pro alle postkassene du har."
   }
 }

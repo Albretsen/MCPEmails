@@ -1,0 +1,231 @@
+/* Signed-out and "not available yet" screens. Full page, centred, scrollable
+   on small screens (the body itself never scrolls in this app). */
+
+.page {
+  height: 100%;
+  overflow-y: auto;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  padding: max(24px, env(safe-area-inset-top)) 16px max(24px, env(safe-area-inset-bottom));
+  background: var(--bg-page);
+}
+.center {
+  margin: auto 0;
+  width: 100%;
+  max-width: 380px;
+  display: flex;
+  flex-direction: column;
+  align-items: stretch;
+  gap: 20px;
+}
+.brand {
+  display: flex;
+  justify-content: center;
+}
+.wordmark {
+  display: block;
+  height: 28px;
+}
+.card {
+  display: flex;
+  flex-direction: column;
+  gap: 14px;
+  padding: 24px;
+  background: var(--bg-surface);
+  border: 1px solid var(--border-1);
+  border-radius: var(--r-12);
+  box-shadow: var(--shadow-2);
+}
+.title {
+  margin: 0;
+  font-size: var(--fs-20);
+  font-weight: 600;
+  line-height: var(--lh-snug);
+  letter-spacing: var(--tracking-snug);
+  color: var(--fg-1);
+}
+.lead {
+  margin: -6px 0 0;
+  font-size: var(--fs-14);
+  color: var(--fg-3);
+  text-wrap: pretty;
+}
+
+.form {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+.field {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+.labelRow {
+  display: flex;
+  justify-content: space-between;
+  align-items: baseline;
+  gap: 8px;
+}
+.label {
+  font-size: var(--fs-13);
+  font-weight: 500;
+  color: var(--fg-2);
+}
+.hintLink {
+  font-size: var(--fs-13);
+}
+.input {
+  width: 100%;
+  height: 40px;
+  padding: 0 12px;
+  border: 1px solid var(--border-2);
+  border-radius: var(--r-8);
+  background: var(--bg-surface);
+  color: var(--fg-1);
+  /* 16 px: iOS zooms the page into any focused field smaller than that. */
+  font-size: 16px;
+  transition:
+    border-color var(--dur-1) var(--ease-out),
+    box-shadow var(--dur-1) var(--ease-out);
+}
+.input::placeholder {
+  color: var(--fg-4);
+}
+.input:focus {
+  outline: none;
+  border-color: var(--border-focus);
+  box-shadow: var(--shadow-focus);
+}
+.input[aria-invalid="true"] {
+  border-color: var(--red-500);
+}
+
+.wide {
+  width: 100%;
+  height: 40px;
+  font-size: var(--fs-14);
+}
+
+/* The message line always takes its two lines of space, so an error or a
+   "check your email" never moves the buttons under the pointer. */
+.message {
+  min-height: 40px;
+  margin: 0;
+  font-size: var(--fs-13);
+  line-height: 20px;
+  text-wrap: pretty;
+}
+.error {
+  color: var(--red-700);
+}
+.ok {
+  color: var(--mint-700);
+}
+
+.divider {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  font-size: var(--fs-12);
+  color: var(--fg-3);
+}
+.divider::before,
+.divider::after {
+  content: "";
+  flex: 1;
+  height: 1px;
+  background: var(--border-1);
+}
+.providers {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+.providerIcon {
+  flex: none;
+  width: 16px;
+  height: 16px;
+}
+
+.foot {
+  margin: 0;
+  text-align: center;
+  font-size: var(--fs-13);
+  color: var(--fg-3);
+}
+
+/* ---------- notices ---------- */
+.noticeIcon {
+  align-self: flex-start;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 40px;
+  height: 40px;
+  border-radius: 10px;
+  background: var(--brand-soft);
+  color: var(--cobalt-700);
+}
+.noticeText {
+  margin: 0;
+  font-size: var(--fs-14);
+  color: var(--fg-2);
+  text-wrap: pretty;
+}
+.actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+  margin-top: 4px;
+}
+.linkButton {
+  flex: none;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  height: 36px;
+  padding: 0 14px;
+  border-radius: var(--r-8);
+  background: var(--brand);
+  color: var(--fg-on-brand);
+  font-size: 13.5px;
+  font-weight: 500;
+}
+.linkButton:hover {
+  background: var(--brand-hover);
+  color: var(--fg-on-brand);
+  text-decoration: none;
+}
+.workspaces {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  margin: 4px 0 0;
+  padding: 12px 0 0;
+  border-top: 1px solid var(--border-1);
+  list-style: none;
+}
+.workspacesLabel {
+  font-size: var(--fs-12);
+  color: var(--fg-3);
+}
+.account {
+  margin: 0;
+  text-align: center;
+  font-size: var(--fs-13);
+  color: var(--fg-3);
+  overflow-wrap: anywhere;
+}
+
+/* The frame shown while the stored session is checked. No spinner: this is
+   local and normally over within a frame or two. */
+.splash {
+  height: 100%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: var(--bg-page);
+}

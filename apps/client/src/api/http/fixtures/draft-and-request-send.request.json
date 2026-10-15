@@ -1,0 +1,14 @@
+{
+  "text": "Reply that we keep 40 seats and send it",
+  "context": {
+    "keys": [
+      {
+        "inbox_id": "inbox-a",
+        "message_id": "m1",
+        "folder": "INBOX"
+      }
+    ],
+    "timezone": "Europe/Oslo"
+  },
+  "conversation": null
+}

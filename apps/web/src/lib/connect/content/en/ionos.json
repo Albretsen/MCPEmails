@@ -13,18 +13,23 @@
     "status": "active"
   },
   "meta": {
-    "title": "Connect IONOS to Claude, Cursor & MCP Clients",
-    "description": "Connect IONOS email to Claude, Cursor and any MCP client over IMAP at imap.ionos.com:993. Every address has its own password, separate from your IONOS login."
+    "title": "IONOS MCP Server: Connect IONOS Mail to Claude",
+    "description": "MCP server for IONOS mail. Connect several company mailboxes on your domain (info@, sales@) to Claude and ChatGPT over IMAP at imap.ionos.com:993."
   },
   "hero": {
     "eyebrow": "IONOS + AI",
-    "titleLine1": "Connect IONOS to Claude,",
-    "titleLine2": "and Cursor, ChatGPT, any MCP client",
-    "lead": "Give your AI agent a real IONOS inbox in minutes. Read, search, send, reply, schedule and organize mail with IMAP and your mailbox password, and use the same inbox in every MCP client, not just one.",
-    "meta0": "1 inbox free, forever",
+    "titleLine1": "MCP server for IONOS mail:",
+    "titleLine2": "every company mailbox, in Claude and ChatGPT",
+    "lead": "Running info@, sales@, support@ and invoices@ on your own domain at IONOS? Connect each mailbox to one workspace and your AI agent works across all of them. Read, search, send, reply, schedule and organize mail with IMAP and your mailbox password, and use the same mailboxes in every MCP client, not just one.",
+    "meta0": "First mailbox free, plans for the rest",
     "meta1": "Your mailbox password, no OAuth setup",
     "meta2": "Email fetched live, never stored",
-    "answer": "Claude cannot reach IONOS on its own. mcpemails is a hosted MCP server that connects it over IMAP using your mailbox password, so Claude, Cursor or any MCP client can read, search, send and organize that mail. Setup takes a couple of minutes and one inbox is free."
+    "answer": "Claude cannot reach IONOS on its own. mcpemails is a hosted MCP server that connects it over IMAP using your mailbox password, so Claude, Cursor or any MCP client can read, search, send and organize that mail. Setup takes a couple of minutes. Each company address, such as info@ or sales@, connects as its own mailbox: one mailbox is free, Personal connects three and Pro every mailbox you run."
+  },
+  "persona": {
+    "intro": "Several company mailboxes at IONOS?",
+    "label": "See what each plan connects",
+    "href": "/pricing"
   },
   "method": {
     "title": "How IONOS connects: IMAP and your mailbox password",
@@ -97,8 +102,8 @@
     }
   ],
   "ctaBand": {
-    "title": "Give your AI an IONOS inbox",
-    "sub": "Connect IONOS in minutes. One inbox free forever, no card required."
+    "title": "Put every IONOS mailbox on one agent",
+    "sub": "Connect your first IONOS mailbox free, no card required. Personal connects three, Pro every mailbox you run."
   },
   "seeAlso": {
     "intro": "Microsoft 365 mailbox from IONOS?",

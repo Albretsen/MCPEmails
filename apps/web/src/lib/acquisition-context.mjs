@@ -118,6 +118,23 @@ export function landingFromPath(pathname) {
   return 'other';
 }
 
+/**
+ * Public marketing pages with no slug of their own. Until 2026-10-04 the last
+ * five and `/for/<slug>` were stored as `/other`, so nobody could tell whether
+ * the persona and comparison pages produced customers.
+ *
+ * The same shapes are pinned twice more, in the CHECK constraint on
+ * workspaces.acquisition_landing_path and in the signup trigger's own regex,
+ * both in supabase/migrations/20261005113000_attribute_business_landing_pages.sql.
+ * A path this file emits that the database has not been taught makes the
+ * trigger NULL it (password signups) or fails the whole attribution UPDATE
+ * (Google and GitHub signups). The drift tests compare the three copies.
+ */
+const STATIC_LANDING_PATHS = Object.freeze([
+  '/blog', '/pricing', '/security', '/self-hosting', '/native-connectors-vs-mcp',
+  '/connect', '/about', '/changelog', '/best-email-mcp-servers', '/email-mcp-servers-compared',
+]);
+
 /** Keep only public route shape; never persist query strings, fragments, or auth paths. */
 export function safeLandingPath(pathname) {
   const { path } = localeAndPath(pathname);
@@ -125,7 +142,9 @@ export function safeLandingPath(pathname) {
   if (/^\/blog\/[a-z0-9-]+\/?$/.test(path)) return path.replace(/\/$/, '');
   if (/^\/connect\/[a-z0-9-]+\/?$/.test(path)) return path.replace(/\/$/, '');
   if (/^\/docs(?:\/[a-z0-9-]+)*\/?$/.test(path)) return path.replace(/\/$/, '');
-  if (['/blog', '/pricing', '/security', '/self-hosting', '/native-connectors-vs-mcp'].includes(path)) return path;
+  if (/^\/for\/[a-z0-9-]+\/?$/.test(path)) return path.replace(/\/$/, '');
+  const bare = path.replace(/\/$/, '');
+  if (STATIC_LANDING_PATHS.includes(bare)) return bare;
   return '/other';
 }
 

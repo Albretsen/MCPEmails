@@ -425,6 +425,7 @@ export async function assertWorkspaceResources(
     .select('id, scopes, inbox_ids, deleted_at')
     .eq('id', apiKeyId)
     .eq('workspace_id', workspaceId)
+    .is('kind', null)
     .maybeSingle();
   if (!key || key.deleted_at) return { error: 'That API key is not available in this workspace.', status: 400 };
 

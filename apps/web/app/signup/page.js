@@ -2,6 +2,7 @@ import '../../styles/theme.css';
 import '../../styles/marketing.css';
 import '../../styles/dashboard.css';
 import { SignupApp } from '../../components/auth/SignupApp';
+import { CONNECT_INTENT_PARAM, connectIntentSlugShape } from '@/lib/connect/intent-carry.mjs';
 
 export const metadata = {
   title: 'Create your account · mcpemails',
@@ -27,5 +28,9 @@ export default async function SignupPage({ searchParams }) {
       ? redirect
       : null;
 
-  return <SignupApp redirectTo={safeRedirect} />;
+  // The provider a /connect/<slug> page sent this visitor for. Only its shape
+  // is checked here; the dashboard validates it against the registry.
+  const connectProvider = connectIntentSlugShape(params?.[CONNECT_INTENT_PARAM]);
+
+  return <SignupApp redirectTo={safeRedirect} connectProvider={connectProvider} />;
 }

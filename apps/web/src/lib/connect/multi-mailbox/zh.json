@@ -3,6 +3,7 @@
   "title": "公司在 {provider} 上的每一个邮箱，都在同一个智能体上",
   "body": "如果你的公司在 {provider} 上有不止一个地址，例如 info@、sales@ 和 invoices@，请把每个地址都连接到同一个 mcpemails 工作区。这样你的 AI 客户端就能通过同一个 MCP URL 访问所有邮箱，无论是在 Claude、ChatGPT、Cursor 还是其他 MCP 客户端中。每次工具调用都会指明它操作的邮箱，每个邮箱保留自己的发件人名称和签名，回复从该邮件所属的邮箱发出。",
   "plans": "免费版连接一个邮箱，Personal 连接三个，Pro 连接你管理的所有邮箱，只需一个登录。",
+  "pricingLink": "比较各套餐可连接的邮箱数量",
   "link": "看看一个人如何在同一个智能体中管理公司的所有邮箱",
   "faqQ": "我可以把多个 {provider} 邮箱连接到同一个 AI 智能体吗？",
   "faqA": "可以。把每个 {provider} 地址连接到同一个 mcpemails 工作区，你的 AI 客户端就能通过同一个 MCP URL 访问所有邮箱。每次工具调用都会指明它操作的邮箱，所以对 sales@ 中邮件的回复会从 sales@ 发出。免费版连接一个邮箱，Personal 连接三个，Pro 连接你管理的所有邮箱。"

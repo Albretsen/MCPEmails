@@ -1,0 +1,26 @@
+data: {"type":"run_started","run_id":"run_t"}
+
+data: {"type":"status","text":"Working"}
+
+data: {"type":"tool_call","message_id":"run_t_m1","call":{"id":"run_t_c1","tool":"email_read","action":"list","human":"Checking your inbox","keys":[],"folder":{"role":"inbox"},"meta":"","state":"running"}}
+
+data: {"type":"status","text":"Checking your inbox"}
+
+data: {"type":"tool_call","message_id":"run_t_m1","call":{"id":"run_t_c1","tool":"email_read","action":"list","human":"Checking your inbox","keys":[],"folder":{"role":"inbox"},"meta":"6 emails","state":"done"}}
+
+data: {"type":"tool_call","message_id":"run_t_m2","call":{"id":"run_t_c2","tool":"email_organize","action":"archive","human":"Archiving The Tidewater Letter's email","keys":["inbox-a:m4"],"folder":{"role":"archive"},"meta":"","state":"running"}}
+
+data: {"type":"status","text":"Archiving The Tidewater Letter's email"}
+
+data: {"type":"mail_effect","effect":{"kind":"moved","keys":["inbox-a:m4"],"new_keys":["inbox-a:m4-in-archive"],"from":{"inbox_id":"inbox-a","folder_id":"INBOX"},"to":{"role":"archive"},"call_id":"run_t_c2"}}
+
+data: {"type":"tool_call","message_id":"run_t_m2","call":{"id":"run_t_c2","tool":"email_organize","action":"archive","human":"Archiving The Tidewater Letter's email","keys":["inbox-a:m4"],"folder":{"role":"archive"},"meta":"","state":"done"}}
+
+data: {"type":"text_delta","message_id":"run_t_m3","delta":"The rest of your inbox "}
+
+data: {"type":"text_delta","message_id":"run_t_m3","delta":"","done":true}
+
+data: {"type":"error","message":"The assistant could not finish. Try again.","code":"provider_error","retryable":true}
+
+data: {"type":"done","conversation":{"v":1,"summary":"","turns":[{"u":"Archive the newsletter and summarise the rest","a":"The rest of your inbox ","calls":[{"h":"Checking your inbox","k":[]},{"h":"Archiving The Tidewater Letter's email","k":["inbox-a:m4"]}],"refs":[]}]},"usage":{"input_tokens":4805,"output_tokens":106,"cost_micro_usd":4081,"model":"gpt-5.4-mini","rounds":3},"summary":{"text":"Archived 1 email","undoable":true}}
+

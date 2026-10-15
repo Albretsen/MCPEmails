@@ -1,0 +1,388 @@
+.root {
+  display: flex;
+  flex-direction: column;
+  min-height: 100%;
+  padding: 16px 12px;
+}
+.rail {
+  padding: 16px 10px;
+}
+
+.brand {
+  flex: none;
+  display: flex;
+  align-items: center;
+  min-height: 30px;
+  padding: 4px 6px 16px;
+  box-sizing: content-box;
+}
+.rail .brand {
+  justify-content: center;
+  padding-left: 0;
+  padding-right: 0;
+}
+.wordmark {
+  display: block;
+  height: 26px;
+}
+
+.compose {
+  flex: none;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  height: 36px;
+  padding: 0 12px;
+  border: none;
+  border-radius: 8px;
+  background: var(--brand);
+  color: #fff;
+  font-size: 13.5px;
+  font-weight: 500;
+  cursor: pointer;
+  transition: background var(--dur-1) var(--ease-out);
+}
+.compose:hover {
+  background: var(--brand-hover);
+}
+.compose:active {
+  background: var(--brand-press);
+}
+.compose:focus-visible {
+  outline-offset: 2px;
+}
+/* Read-only workspace member. */
+.compose:disabled {
+  background: var(--ink-100);
+  color: var(--fg-3);
+  cursor: default;
+}
+.composeLabel {
+  flex: 1;
+  text-align: left;
+}
+
+.heading {
+  flex: none;
+  margin: 0;
+  padding: 18px 10px 6px;
+  font-size: 11px;
+  font-weight: 500;
+  line-height: 1.5;
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+  color: var(--fg-3);
+}
+.railGap {
+  flex: none;
+  height: 14px;
+}
+.railRule {
+  flex: none;
+  height: 1px;
+  margin: 12px 6px;
+  background: var(--border-1);
+}
+
+.group {
+  flex: none;
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+
+.item {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  width: 100%;
+  min-height: 32px;
+  padding: 4px 10px;
+  border: none;
+  border-radius: 6px;
+  background: transparent;
+  color: var(--fg-2);
+  font-size: 13.5px;
+  font-weight: 500;
+  line-height: 1.5;
+  text-align: left;
+  cursor: pointer;
+  user-select: none;
+  transition:
+    background var(--dur-1) var(--ease-out),
+    box-shadow var(--dur-2) var(--ease-out);
+}
+.item:hover {
+  background: var(--ink-50);
+}
+.item:focus-visible {
+  outline-offset: -2px;
+}
+.rail .item {
+  justify-content: center;
+  padding: 6px 0;
+}
+.active,
+.active:hover {
+  background: var(--cobalt-50);
+  color: var(--cobalt-700);
+}
+/* The assistant (or a send) just changed this folder's count. Clears after 2.4 s. */
+.bumped {
+  box-shadow: inset 0 0 0 1px var(--cobalt-200);
+}
+.connect {
+  min-height: 32px;
+  padding-top: 0;
+  padding-bottom: 0;
+  color: var(--fg-3);
+  font-size: 13px;
+  font-weight: 400;
+}
+.connect:hover {
+  color: var(--fg-1);
+}
+.skeletonItem {
+  cursor: default;
+}
+.skeletonItem:hover {
+  background: transparent;
+}
+
+.itemIcon {
+  flex: none;
+  display: flex;
+  justify-content: center;
+  width: 16px;
+}
+.itemText {
+  flex: 1;
+  min-width: 0;
+  display: flex;
+  flex-direction: column;
+}
+.itemLabel {
+  flex: 1;
+  min-width: 0;
+}
+.itemName,
+.itemAddr,
+.itemLabel {
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+.itemAddr {
+  font-size: 11.5px;
+  font-weight: 400;
+  color: var(--fg-3);
+}
+
+/* Connected and syncing. */
+.liveDot {
+  width: 8px;
+  height: 8px;
+  border-radius: 999px;
+  background: var(--mint-500);
+  box-shadow: 0 0 0 2px rgba(31, 203, 139, 0.18);
+  animation: mc-pulse 2s ease-in-out infinite;
+}
+.warnDot {
+  background: var(--amber-500);
+  box-shadow: 0 0 0 2px rgba(240, 165, 62, 0.2);
+  animation: none;
+}
+
+.count {
+  flex: none;
+  padding: 1px 6px;
+  border-radius: 999px;
+  background: var(--ink-100);
+  color: var(--fg-3);
+  font: 11px var(--font-mono);
+}
+.active .count,
+.bumped .count {
+  background: rgba(37, 71, 229, 0.12);
+  color: var(--cobalt-700);
+}
+.bump {
+  flex: none;
+  font: 500 10.5px var(--font-mono);
+  color: var(--cobalt-700);
+}
+
+/* ---------- footer ---------- */
+.foot {
+  flex: none;
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  margin-top: auto;
+  padding: 12px 4px 0;
+  border-top: 1px solid var(--border-1);
+}
+.allowanceRow {
+  display: flex;
+  justify-content: space-between;
+  gap: 8px;
+  padding: 0 6px;
+  font-size: 12px;
+  color: var(--fg-3);
+  white-space: nowrap;
+}
+.allowanceValue {
+  font-family: var(--font-mono);
+  color: var(--fg-2);
+}
+.meter {
+  height: 4px;
+  margin: 0 6px;
+  border-radius: 999px;
+  background: var(--ink-100);
+  overflow: hidden;
+}
+.meterFill {
+  height: 100%;
+  background: var(--cobalt-500);
+  transform-origin: left;
+  transition: transform var(--dur-2) var(--ease-out);
+}
+/* 80% or more of the month's allowance is gone. */
+.meterWarn {
+  background: var(--amber-500);
+}
+
+/* "Read-only": shown once, for a workspace member who may not change mail. */
+.readOnly {
+  align-self: flex-start;
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
+  margin: 0 6px;
+  padding: 2px 8px;
+  border: 1px solid var(--border-1);
+  border-radius: 999px;
+  color: var(--fg-2);
+  font-size: 11.5px;
+  line-height: 1.5;
+  white-space: nowrap;
+  cursor: default;
+}
+.rail .readOnly {
+  align-self: center;
+  margin: 0;
+  padding: 5px;
+}
+
+.userRow {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 0 2px 0 6px;
+}
+.rail .userRow {
+  flex-direction: column;
+  padding: 0 0 4px;
+}
+.userText {
+  flex: 1;
+  min-width: 0;
+}
+.userName {
+  font-size: 13px;
+  font-weight: 600;
+  color: var(--fg-1);
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+.userPlan {
+  font-size: 11.5px;
+  color: var(--fg-3);
+}
+
+/* ---------- a mailbox needs reconnecting ---------- */
+.reconnect {
+  flex: none;
+  margin: 8px 4px 0;
+  padding: 8px 10px;
+  border-radius: 8px;
+  background: var(--amber-100);
+  color: var(--amber-700);
+  font-size: 12px;
+  line-height: 1.4;
+  overflow-wrap: anywhere;
+}
+.reconnect a {
+  color: inherit;
+  font-weight: 600;
+  text-decoration: underline;
+}
+
+/* ---------- account menu (HTTP mode) ---------- */
+.account {
+  position: relative;
+  flex: 1;
+  min-width: 0;
+}
+.rail .account {
+  flex: none;
+}
+.accountButton {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  width: 100%;
+  min-height: 40px;
+  padding: 4px 6px;
+  margin-left: -6px;
+  border: none;
+  border-radius: 8px;
+  background: transparent;
+  text-align: left;
+  cursor: pointer;
+  transition: background var(--dur-1) var(--ease-out);
+}
+.rail .accountButton {
+  width: auto;
+  margin-left: 0;
+  justify-content: center;
+}
+.accountButton:hover,
+.accountOpen {
+  background: var(--ink-100);
+}
+.accountButton .userText {
+  display: flex;
+  flex-direction: column;
+}
+.accountButton .userPlan {
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+.accountChevron {
+  flex: none;
+  color: var(--fg-3);
+}
+.accountMenu {
+  left: -6px;
+  bottom: calc(100% + 6px);
+  width: max(100%, 232px);
+}
+.accountHead {
+  padding: 6px 8px;
+  min-width: 0;
+}
+.accountEmail {
+  font-size: 12px;
+  color: var(--fg-3);
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}

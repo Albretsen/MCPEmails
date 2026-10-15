@@ -53,6 +53,42 @@ const SUITES = [
   // esbuild already relies on — see the note above the `card` job in
   // .github/workflows/ci.yml.
   ["draft resync", "draft-sync.test.mjs"],
+  // The second DOM suite, and the second one that could not have been written
+  // without one: it evaluates the REAL `main.tsx` into jsdom and asks what is
+  // on screen in each of the states where there is no draft to draw. Every
+  // defect it pins — a blank frame while loading, a card that never appears —
+  // is a property of the rendered tree and of main.tsx's own composition
+  // order, and is invisible to a suite that only reads the store.
+  ["card render", "card-render.test.mjs"],
+  // The third DOM suite: the draft card QA blockers of 2026-10-13, played
+  // through the real `main.tsx` against a scripted host that answers the
+  // card's own `tools/call` requests — failed and lost actions, a remounted
+  // card's replayed result, unsaved edits across a reload, focus around the
+  // confirms, and recipients that are not addresses yet.
+  ["draft QA", "draft-qa.test.mjs"],
+  // The fourth DOM suite: the QA report's smaller issues (recipients, focus,
+  // fullscreen, copy, the formatted preview) and the card's reading of the
+  // server's new draft fields — formatting_removed, signature.rich,
+  // resolved_from, a null last_saved_at — including the replay check against a
+  // model's fresh draft_read of an old draft (one verifying read, no loop).
+  ["draft polish", "draft-polish.test.mjs"],
+  // The fifth DOM suite: the state bugs of the second QA pass (2026-10-13).
+  // Which copy "Use the newer version" loads, one notice at a time, Send
+  // following the recipients on screen, a draft that is already gone, an older
+  // card folding to one line, leaving fullscreen when a card ends, and what a
+  // reopened chat shows for a discarded or a saved draft.
+  ["draft state", "draft-state.test.mjs"],
+  // The sixth DOM suite: the second QA pass's smaller issues. Addresses a
+  // space apart, a dropped display name and a duplicate both said out loud,
+  // the two-press Backspace, chips on the arrow keys, Cancel in the signature
+  // box, "Copied" and "Up to date" that revert, and the fullscreen action row
+  // as a row of its own rather than an overlay.
+  ["draft UX", "draft-ux.test.mjs"],
+  // The seventh DOM suite: "Show" on the line a sent or discarded draft card
+  // ends on. What it reveals in each ending, after the chat is reopened with
+  // and without a stored copy, that it is never the assistant's original text
+  // when the person's edits went out, and where that copy is (and is not) kept.
+  ["draft ended", "draft-ended.test.mjs"],
 ];
 
 const outcomes = [];

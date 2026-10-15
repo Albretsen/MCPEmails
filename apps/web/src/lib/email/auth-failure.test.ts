@@ -1,6 +1,6 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
-import { classifyAuthFailure, explainAuthFailure } from './auth-failure.ts';
+import { classifyAuthFailure, explainAuthFailure, isProviderRefusal } from './auth-failure.ts';
 import { sanitizeAuthDiagnostic } from './connection-config.ts';
 import {
   appPasswordPolicyFor,
@@ -199,4 +199,34 @@ test('real provider rejections survive sanitisation and still classify', () => {
   // And the sanitizer must not have left the credential behind for us to leak.
   assert.ok(!appleDetail.includes('Sommer2024!'));
   assert.ok(!appleDetail.includes('someone@icloud.com'));
+});
+
+test("Orange's own refusal is not read as a rejected password", () => {
+  // What every Orange login from this app has been answered with. Dovecot sends
+  // [ALERT] only when the auth backend attached a reason of its own.
+  const refusal = 'NO [ALERT] Authentication failed.';
+  assert.equal(isProviderRefusal({ host: 'imap.orange.fr', detail: refusal }), true);
+  const explained = explainAuthFailure({
+    detail: refusal,
+    email: 'nom@orange.fr',
+    host: 'imap.orange.fr',
+    secret: 'abcde-fghij-klmno-pqrst',
+  });
+  assert.equal(explained.reason, 'provider_refused_signin');
+  assert.deepEqual(explained.fields, { auth_reason: 'provider_refused_signin' });
+});
+
+test('the refusal is matched exactly, on the one host it was measured on', () => {
+  // The same server's answer to a wrong password, or to an unknown address.
+  assert.equal(isProviderRefusal({ host: 'imap.orange.fr', detail: 'NO [AUTHENTICATIONFAILED] Authentication failed.' }), false);
+  // [ALERT] alone means nothing: other providers put credential errors behind it.
+  assert.equal(isProviderRefusal({ host: 'imap.gmail.com', detail: 'NO [ALERT] Authentication failed.' }), false);
+  assert.equal(isProviderRefusal({ host: 'imap.orange.fr', detail: 'NO [ALERT] Invalid credentials (Failure)' }), false);
+  // A lookalike name is not the host.
+  assert.equal(isProviderRefusal({ host: 'imap.notorange.fr', detail: 'NO [ALERT] Authentication failed.' }), false);
+  assert.equal(isProviderRefusal({ host: null, detail: null }), false);
+  assert.equal(
+    explainAuthFailure({ detail: 'NO [AUTHENTICATIONFAILED] Authentication failed.', email: 'nom@orange.fr', host: 'imap.orange.fr', secret: 'x' }).reason,
+    'password_rejected'
+  );
 });

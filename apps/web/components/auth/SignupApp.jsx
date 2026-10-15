@@ -7,10 +7,15 @@ import { createClient } from '@/lib/supabase/client';
 import { readAcquisitionContext } from '../analytics/AcquisitionCapture';
 import { appendAcquisitionParams } from '@/lib/acquisition-context.mjs';
 import { rememberOAuthConsent, signupConsentMetadata } from '@/lib/marketing-consent.mjs';
+import {
+  connectIntentStorage,
+  rememberConnectIntent,
+  withConnectIntent,
+} from '@/lib/connect/intent-carry.mjs';
 import { MIcon, MBtn } from '../MarketingPrimitives';
 import { ThemeBtn, Spinner, GoogleIcon, GitHubIcon, SocialButton, OrDivider } from './AuthShared';
 
-export function SignupApp({ redirectTo = null }) {
+export function SignupApp({ redirectTo = null, connectProvider = null }) {
   const t = useTranslations('auth');
   const SIGNUP_LOADING_MESSAGES = [
     t('signup.loading1'),
@@ -36,6 +41,15 @@ export function SignupApp({ redirectTo = null }) {
   // A tick left over from an abandoned Google/GitHub attempt must not ride
   // along with whatever this visit does, so start every visit from no cookie.
   useEffect(() => { rememberOAuthConsent(false); }, []);
+
+  // The provider this visitor came for, from a /connect/<slug> page's button
+  // (`/signup?provider=ionos`). It is carried on in the destination URL below,
+  // and also remembered here for the routes that cannot carry a URL: an email
+  // confirmation link, an invite redirect, a detour through /login. A UI hint
+  // only: it is not attribution and is never sent with the signup.
+  useEffect(() => {
+    if (connectProvider) rememberConnectIntent(connectIntentStorage(), connectProvider);
+  }, [connectProvider]);
 
   useEffect(() => {
     if (step !== 'submitting') {
@@ -82,12 +96,14 @@ export function SignupApp({ redirectTo = null }) {
   // invite/`?redirect=` target if present; otherwise drop them into the
   // first-run connect flow (`firstrun=1` auto-opens the Connect Inbox modal).
   function getRedirectDestination() {
-    return getSafeRedirect() ?? '/dashboard?firstrun=1';
+    return getSafeRedirect() ?? withConnectIntent('/dashboard?firstrun=1', connectProvider);
   }
 
   function buildOAuthUrl(provider) {
     const url = new URL(`/auth/${provider}`, window.location.origin);
-    const redirect = getSafeRedirect() ?? '/dashboard?firstrun=1';
+    // The connect hint, unlike attribution, belongs INSIDE `next`: the
+    // dashboard is the thing that reads it, and the callback has no use for it.
+    const redirect = getSafeRedirect() ?? withConnectIntent('/dashboard?firstrun=1', connectProvider);
     const destination = new URL(redirect, window.location.origin);
     destination.searchParams.set('signup_method', provider);
     const acquisition = readAcquisitionContext();
@@ -242,8 +258,8 @@ export function SignupApp({ redirectTo = null }) {
         </a>
 
         <div className="auth-brand">
-          <img className="logo-light" src="/logo-wordmark.svg" alt="mcpemails" />
-          <img className="logo-dark" src="/logo-wordmark-dark.svg" alt="mcpemails" />
+          <img className="logo-light" src="/logo-wordmark.svg" width="280" height="48" alt="mcpemails" />
+          <img className="logo-dark" src="/logo-wordmark-dark.svg" width="280" height="48" alt="mcpemails" />
         </div>
 
         {/* ── Form ──────────────────────────────────────────────────── */}
@@ -300,7 +316,7 @@ export function SignupApp({ redirectTo = null }) {
               </p>
             </form>
             <div className="auth-footer">
-              {t('signup.haveAccountPrefix')}<a href={getSafeRedirect() ? `/login?redirect=${encodeURIComponent(getSafeRedirect())}` : '/login'}>{t('signup.signIn')}</a>
+              {t('signup.haveAccountPrefix')}<a href={withConnectIntent(getSafeRedirect() ? `/login?redirect=${encodeURIComponent(getSafeRedirect())}` : '/login', connectProvider)}>{t('signup.signIn')}</a>
             </div>
           </div>
         )}

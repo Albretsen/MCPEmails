@@ -3,6 +3,7 @@
   "title": "Alle {provider}-postkassene firmaet ditt har, på én agent",
   "body": "Hvis firmaet ditt har mer enn én adresse hos {provider}, for eksempel post@, salg@ og faktura@, kobler du hver av dem til det samme mcpemails-arbeidsområdet. AI-klienten din når da alle sammen gjennom den samme MCP-URL-en, i Claude, ChatGPT, Cursor eller en annen MCP-klient. Hvert verktøykall sier hvilken postkasse det gjelder, hver postkasse beholder sitt eget avsendernavn og sin egen signatur, og et svar sendes fra postkassen det hører til.",
   "plans": "Gratis kobler til én postkasse, Personal tre og Pro alle postkassene du har, med én innlogging.",
+  "pricingLink": "Sammenlign planene og hvor mange postkasser hver kobler til",
   "link": "Slik jobber én person med alle firmaets postkasser fra én agent",
   "faqQ": "Kan jeg koble flere {provider}-postkasser til den samme AI-agenten?",
   "faqA": "Ja. Koble hver {provider}-adresse til ett mcpemails-arbeidsområde, så når AI-klienten din alle sammen gjennom den samme MCP-URL-en. Hvert verktøykall sier hvilken postkasse det gjelder, så et svar på en melding i salg@ sendes fra salg@. Gratis kobler til én postkasse, Personal tre og Pro alle du har."

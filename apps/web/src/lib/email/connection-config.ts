@@ -4,6 +4,46 @@ export function normalizeSecurity(value: unknown, fallback: MailSecurity = 'tls'
   return value === 'starttls' || value === 'tls' ? value : fallback;
 }
 
+/**
+ * Which halves of a generic IMAP/SMTP mailbox a connection carries.
+ *
+ *   'both' — read over IMAP and send over SMTP (the default, and the only
+ *            shape that existed before this field did)
+ *   'imap' — receive only: read, search and organize, but never send
+ *   'smtp' — send only: deliver mail, but there is no mailbox to read
+ *
+ * A half that is not part of the connection is stored as NULL host and port,
+ * which is how every reader of the row tells the two apart.
+ */
+export type ConnectionMode = 'both' | 'imap' | 'smtp';
+
+/**
+ * The connection mode a request asked for. Absent means 'both', so every
+ * client that predates the field keeps meaning what it always meant; anything
+ * else unrecognised is null, so a typo is refused rather than silently read as
+ * a mode that drops half the mailbox.
+ */
+export function parseConnectionMode(value: unknown): ConnectionMode | null {
+  if (value === undefined || value === null || value === '') return 'both';
+  return value === 'both' || value === 'imap' || value === 'smtp' ? value : null;
+}
+
+export function usesImap(mode: ConnectionMode): boolean {
+  return mode !== 'smtp';
+}
+
+export function usesSmtp(mode: ConnectionMode): boolean {
+  return mode !== 'imap';
+}
+
+/** The mode a stored inbox row is in, read off which hosts it carries. */
+export function connectionModeOf(row: { imap_host?: string | null; smtp_host?: string | null }): ConnectionMode | null {
+  if (row.imap_host && row.smtp_host) return 'both';
+  if (row.imap_host) return 'imap';
+  if (row.smtp_host) return 'smtp';
+  return null;
+}
+
 export function legacySecurityForPort(port: number, protocol: 'imap' | 'smtp'): MailSecurity {
   if (protocol === 'imap') return port === 143 ? 'starttls' : 'tls';
   return port === 587 ? 'starttls' : 'tls';

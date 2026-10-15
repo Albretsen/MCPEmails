@@ -59,9 +59,14 @@ export default async function HomePage({
   const showDemoVideo = demoVideo.variantId === HOMEPAGE_DEMO_VIDEO.variants.video;
 
   const t = await getTranslations({ locale, namespace: 'home.meta' });
+  // The visible FAQ (components/marketing/Sections.jsx, Faq) reads this same
+  // array, which is what keeps the FAQPage node and the page in step.
+  const tFaq = await getTranslations({ locale, namespace: 'home.faq' });
+  const faqItems = tFaq.raw('items');
   const jsonLd = homeJsonLd(locale, {
     name: t('title'),
     description: t('description'),
+    faq: Array.isArray(faqItems) ? faqItems : [],
   });
 
   return (

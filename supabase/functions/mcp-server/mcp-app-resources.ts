@@ -76,6 +76,50 @@ export const REVIEW_CARD_RESOURCE_URI =
 export const REVIEW_CARD_LEGACY_RESOURCE_URI = "ui://mcpemails/review-card.html";
 
 /**
+ * The shape of every fingerprinted card URI this server has ever advertised:
+ * the canonical one above with ANY build id in the fingerprint slot.
+ *
+ * ── Why a read accepts a fingerprint that is not ours ──────────────────────
+ * Fingerprinting assumed the client re-reads `tools/list` after a card deploy.
+ * Claude's host does not: it keeps the listing it has, ignores
+ * `notifications/tools/list_changed`, and goes on asking `resources/read` for
+ * the PREVIOUS build's URI, in new chats too. Measured 2026-10-13: the client
+ * asked for `review-card.f53069d8832a.html` while the server was on
+ * `6f24045a029e`, got `-32002`, and showed "cannot reach MCP Emails" where the
+ * card belongs, until the tool list was refreshed by hand. Every card deploy
+ * did this to every connected client.
+ *
+ * So the READ side is tolerant and the ADVERTISED side is not. This is the
+ * legacy URI's argument again (see REVIEW_CARD_LEGACY_RESOURCE_URI): the only
+ * two answers to a stale URI are today's card or a broken cell, and there is
+ * exactly one bundle on this server to give.
+ *
+ * It costs the cache busting nothing. That works by the advertised URI being
+ * one the host has never read, which is still true: a client that refreshes
+ * its listing gets the new fingerprint and must fetch it. What a client that
+ * does NOT refresh may keep is its cached copy of the old bundle, which is
+ * where it already was before this, and envelope skew between an old card and
+ * a new server is what `schema_version` is for.
+ *
+ * Anchored, and the hash is exactly what `REVIEW_CARD_BUILD_ID` is pinned to
+ * be (12 lowercase hex), so nothing but a build id fits the slot: no query, no
+ * path, no second extension, no other resource name.
+ */
+const REVIEW_CARD_FINGERPRINTED_URI_PATTERN =
+  /^ui:\/\/mcpemails\/review-card\.[0-9a-f]{12}\.html$/;
+
+/**
+ * True when `uri` is a well-formed card URI carrying another build's
+ * fingerprint. False for the current URI, the legacy one and anything else.
+ *
+ * Exported for the `resources/read` log line only, so a stale read is
+ * countable after a deploy. `buildResourceReadResult` is what serves it.
+ */
+export function isStaleReviewCardUri(uri: string): boolean {
+  return uri !== REVIEW_CARD_RESOURCE_URI && REVIEW_CARD_FINGERPRINTED_URI_PATTERN.test(uri);
+}
+
+/**
  * The `resources` capability object declared in the `initialize` result.
  *
  * Phase 0 Q5 makes this a hard blocker rather than a nicety: the host's
@@ -188,8 +232,10 @@ export function buildResourcesListResult(): {
 }
 
 /**
- * `resources/read` result for `uri`, or `null` when the URI is not in the
- * catalogue (the caller turns that into a JSON-RPC error, never a throw).
+ * `resources/read` result for `uri`, or `null` when the URI names nothing we
+ * serve (the caller turns that into a JSON-RPC error, never a throw). Three
+ * URIs resolve, all to the one current bundle: the catalogue's, the legacy
+ * bare name, and the catalogue's with another build's fingerprint.
  *
  * Phase 0 Q7.6: `contents` must contain *exactly one* item — the reference
  * host throws `Unexpected contents count` on zero or two, which surfaces to
@@ -203,7 +249,12 @@ export function buildResourceReadResult(
     // still asks for the bare name; answer it with today's card rather than a
     // "resource not found" that renders as a broken cell. See
     // REVIEW_CARD_LEGACY_RESOURCE_URI.
-    (uri === REVIEW_CARD_LEGACY_RESOURCE_URI ? MCP_APP_RESOURCES[0] : undefined);
+    // The same answer for a fingerprint from an earlier build: a client that
+    // kept its `tools/list` across a card deploy asks for the URI that listing
+    // named. See REVIEW_CARD_FINGERPRINTED_URI_PATTERN.
+    (uri === REVIEW_CARD_LEGACY_RESOURCE_URI || isStaleReviewCardUri(uri)
+      ? MCP_APP_RESOURCES[0]
+      : undefined);
   if (!resource) return null;
 
   return {
@@ -211,7 +262,9 @@ export function buildResourceReadResult(
       // Echo the URI that was ASKED for, not the catalogue's. A host matches the
       // content it gets back against the request it made and against its own
       // cache key; handing it a URI it did not ask for is how a legacy read
-      // turns into an unrenderable cell.
+      // turns into an unrenderable cell. A stale fingerprint is echoed too, for
+      // the same reason: the host keys its cache by the URI its listing named,
+      // and that listing is the one thing we know it has not replaced.
       uri,
       name: resource.name,
       title: resource.title,
@@ -359,6 +412,34 @@ export const BULK_PLAN_CARD_TOOL_NAMES: readonly string[] = [
 ];
 
 /**
+ * The same three gates on the per-operation surface (the listing OpenAI
+ * clients get, PER_OPERATION_LISTING in index.ts), keyed by the operation
+ * rather than by the consolidated tool it belongs to.
+ *
+ * `_meta.ui` is per tool, so one tool per operation lets the card be claimed
+ * only by the operations that can actually return something it renders: the
+ * three sends and a scheduled send (held for approval), the four bulk
+ * operations that plan before they act, and the five draft writes. The
+ * single-message `email_delete` and `email_move`, `schedule_cancel` and every
+ * read carry nothing, where their consolidated parents have to.
+ */
+export const PER_OPERATION_CARD_TOOL_NAMES: Readonly<
+  Record<keyof ReviewCardGates, readonly string[]>
+> = {
+  outbound: ["email_send", "email_reply", "email_forward", "schedule_create"],
+  bulk: [
+    "email_move_batch",
+    "email_delete_batch",
+    "email_search_and_move",
+    "email_search_and_delete",
+  ],
+  drafts: ["draft_create", "draft_reply", "draft_update", "draft_send", "draft_delete"],
+};
+
+/** Which listing a tool is being serialised for. See PER_OPERATION_LISTING. */
+export type ToolSurface = "consolidated" | "per_operation";
+
+/**
  * True when a call to this tool name can mount the review card, under any of
  * the three gates.
  *
@@ -400,7 +481,8 @@ export function isCardBearingToolName(name: string): boolean {
     REVIEW_CARD_TOOL_NAMES.includes(name) ||
     BULK_PLAN_CARD_TOOL_NAMES.includes(name) ||
     DRAFT_EDITOR_CARD_TOOL_NAMES.includes(name) ||
-    DRAFT_EDITOR_APP_TOOL_NAMES.includes(name)
+    DRAFT_EDITOR_APP_TOOL_NAMES.includes(name) ||
+    Object.values(PER_OPERATION_CARD_TOOL_NAMES).some((names) => names.includes(name))
   );
 }
 
@@ -519,7 +601,23 @@ export interface ReviewCardGates {
 export function reviewCardMetaForListing(
   toolName: string,
   gates: ReviewCardGates,
+  surface: ToolSurface = "consolidated",
 ): { ui: { resourceUri: string; visibility?: string[] } } | undefined {
+  if (surface === "per_operation") {
+    // Checked INSTEAD of the consolidated lists, not as well as them:
+    // `email_delete` is on the bulk list above as the consolidated tool, and
+    // on this surface the same name is the single-message delete, which never
+    // plans.
+    for (const gate of ["outbound", "bulk", "drafts"] as const) {
+      if (PER_OPERATION_CARD_TOOL_NAMES[gate].includes(toolName)) {
+        return gates[gate] ? reviewCardToolMeta() : undefined;
+      }
+    }
+    if (DRAFT_EDITOR_APP_TOOL_NAMES.includes(toolName)) {
+      return gates.drafts ? appOnlyReviewCardToolMeta() : undefined;
+    }
+    return undefined;
+  }
   if (REVIEW_CARD_TOOL_NAMES.includes(toolName)) {
     return gates.outbound ? reviewCardToolMeta() : undefined;
   }
@@ -581,9 +679,10 @@ export function reviewCardMetaForListing(
 export function withListingCardMeta(
   tools: readonly ListedTool[],
   gates: ReviewCardGates,
+  surface: ToolSurface = "consolidated",
 ): ListedTool[] {
   return tools.map((tool) => {
-    const meta = reviewCardMetaForListing(tool.name, gates);
+    const meta = reviewCardMetaForListing(tool.name, gates, surface);
     return meta ? { ...tool, _meta: meta } : tool;
   });
 }

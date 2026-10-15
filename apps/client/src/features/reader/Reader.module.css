@@ -1,0 +1,520 @@
+.root {
+  flex: 1;
+  min-height: 0;
+  display: flex;
+  flex-direction: column;
+}
+
+/* ---------- Toolbar ---------- */
+.bar {
+  position: relative;
+  flex: none;
+  display: flex;
+  align-items: center;
+  gap: 2px;
+  height: 52px;
+  padding: 0 12px;
+  border-bottom: 1px solid var(--border-1);
+  color: var(--fg-2);
+}
+/* Phone: the actions sit under the email, in the thumb zone. One row. */
+.actions {
+  justify-content: space-between;
+  gap: 0;
+  padding: 0 6px;
+  border-top: 1px solid var(--border-1);
+  border-bottom: none;
+}
+.back {
+  display: inline-flex;
+  align-items: center;
+  gap: 2px;
+  min-width: 44px;
+  height: 44px;
+  margin-right: auto;
+  padding: 0 8px 0 2px;
+  border: none;
+  border-radius: 6px;
+  background: transparent;
+  color: var(--brand);
+  font-size: 14px;
+  font-weight: 500;
+  cursor: pointer;
+}
+.bar .barButton {
+  height: 32px;
+  padding: 0 10px;
+  gap: 6px;
+  border-color: transparent;
+  border-radius: 6px;
+  color: inherit;
+  font-size: 13px;
+}
+.bar .tool {
+  color: inherit;
+}
+.phone .bar .tool {
+  width: 44px;
+  height: 44px;
+}
+.divider {
+  width: 1px;
+  height: 18px;
+  margin: 0 6px;
+  background: var(--border-1);
+}
+.position {
+  margin-left: auto;
+  font: 11.5px var(--font-mono);
+  color: var(--fg-3);
+  white-space: nowrap;
+}
+.moveMenu {
+  top: 46px;
+  right: 12px;
+  width: 200px;
+}
+.actions .moveMenu {
+  top: auto;
+  bottom: 50px;
+}
+
+/* ---------- Scroller ---------- */
+.body {
+  flex: 1;
+  min-height: 0;
+  position: relative;
+  overflow-y: auto;
+  overscroll-behavior: contain;
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+  padding: 26px 32px 24px;
+}
+.phone .body {
+  padding: 18px 14px 20px;
+}
+/* Flex children must not be squeezed: the pane scrolls instead. */
+.body > * {
+  flex: none;
+}
+
+/* ---------- Header ---------- */
+.titleRow {
+  display: flex;
+  align-items: flex-start;
+  gap: 12px;
+}
+.subject {
+  flex: 1;
+  min-width: 0;
+  margin: 0;
+  font-size: 22px;
+  font-weight: 600;
+  line-height: 1.25;
+  letter-spacing: -0.02em;
+  color: var(--fg-1);
+  text-wrap: pretty;
+  overflow-wrap: anywhere;
+}
+.inChat {
+  flex: none;
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  height: 26px;
+  margin-top: 1px;
+  padding: 0 9px 0 4px;
+  border: 1px solid var(--cobalt-200);
+  border-radius: 7px;
+  background: var(--cobalt-50);
+  font-size: 12px;
+  font-weight: 500;
+  color: var(--cobalt-800);
+  white-space: nowrap;
+}
+.inChatIcon {
+  flex: none;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 18px;
+  height: 18px;
+  border-radius: 5px;
+  background: var(--brand);
+  color: var(--fg-on-brand);
+}
+
+.sender {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  min-width: 0;
+}
+.senderText {
+  flex: 1;
+  min-width: 0;
+}
+.senderName {
+  font-size: 14px;
+  font-weight: 600;
+  color: var(--fg-1);
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+.senderAddr {
+  font-weight: 400;
+  color: var(--fg-3);
+}
+.senderMetaRow {
+  display: flex;
+  align-items: center;
+  gap: 2px;
+  min-width: 0;
+}
+.senderMeta {
+  min-width: 0;
+  font-size: 12.5px;
+  color: var(--fg-3);
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+.detailsToggle {
+  position: relative;
+  flex: none;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 18px;
+  height: 18px;
+  padding: 0;
+  border: none;
+  border-radius: 4px;
+  background: transparent;
+  color: var(--fg-3);
+  cursor: pointer;
+}
+.detailsToggle:hover {
+  background: var(--ink-100);
+  color: var(--fg-1);
+}
+/* A 44 px hit area on touch without growing the line. */
+@media (pointer: coarse) {
+  .detailsToggle::after {
+    content: "";
+    position: absolute;
+    inset: -13px;
+  }
+}
+.chevron {
+  transition: transform var(--dur-1) var(--ease-out);
+}
+.chevronOpen {
+  transform: rotate(180deg);
+}
+.time {
+  flex: none;
+  font: 12px var(--font-mono);
+  color: var(--fg-3);
+}
+
+.details {
+  display: grid;
+  grid-template-columns: max-content minmax(0, 1fr);
+  gap: 4px 12px;
+  margin: -4px 0 0;
+  padding: 10px 12px;
+  border-radius: 8px;
+  background: var(--ink-50);
+  font-size: 12.5px;
+  line-height: 1.5;
+}
+.details dt {
+  color: var(--fg-3);
+}
+.details dd {
+  margin: 0;
+  color: var(--fg-2);
+  overflow-wrap: anywhere;
+}
+
+/* ---------- Body card ---------- */
+/* ---------- Thread ---------- */
+.threadCount {
+  flex: none;
+  margin-top: 6px;
+  font: 12px var(--font-mono);
+  color: var(--fg-3);
+}
+.thread {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+.msg {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+  border: 1px solid var(--border-1);
+  border-radius: 10px;
+  /* Long threads: messages far off screen skip layout and paint. */
+  content-visibility: auto;
+  contain-intrinsic-size: auto 58px;
+}
+.msgOpen {
+  padding-bottom: 14px;
+  contain-intrinsic-size: auto 320px;
+}
+/* The message Reply, Reply all and Forward act on. */
+.msgFocused {
+  border-color: var(--cobalt-300);
+}
+.msgHead {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  width: 100%;
+  min-height: 56px;
+  padding: 8px 14px;
+  border: none;
+  border-radius: 10px;
+  background: transparent;
+  color: var(--fg-2);
+  font: inherit;
+  text-align: left;
+  cursor: pointer;
+}
+.msgHead:hover {
+  background: var(--ink-50);
+}
+.msgHead:focus-visible {
+  outline: 2px solid var(--border-focus);
+  outline-offset: -2px;
+}
+.msgText {
+  flex: 1;
+  min-width: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 1px;
+}
+.msgWho {
+  font-size: 13.5px;
+  font-weight: 500;
+  color: var(--fg-1);
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+.msgUnread .msgWho {
+  font-weight: 700;
+}
+.msgLine {
+  font-size: 12.5px;
+  color: var(--fg-3);
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+.msgTime {
+  flex: none;
+  font: 12px var(--font-mono);
+  color: var(--fg-3);
+}
+.msgBody {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+  padding: 0 14px;
+}
+/* Inside a thread the message is the card: its body needs no second frame. */
+.msgBody .card {
+  padding: 4px 2px 0;
+  border: none;
+  border-radius: 0;
+  content-visibility: visible;
+}
+.msgBody .cardLinked {
+  box-shadow: none;
+}
+.threadNote {
+  margin: 0;
+  font-size: 12.5px;
+  color: var(--fg-3);
+}
+/* "Retry" at the end of the note: a text button, as quiet as the note. */
+.threadRetry {
+  margin-left: 8px;
+  padding: 0;
+  border: none;
+  background: none;
+  color: inherit;
+  font: inherit;
+  font-weight: 600;
+  text-decoration: underline;
+  cursor: pointer;
+}
+.threadRetry:disabled {
+  opacity: 0.6;
+  cursor: default;
+}
+
+.card {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+  padding: 20px 22px;
+  border: 1px solid var(--border-1);
+  border-radius: 10px;
+  font-size: 14.5px;
+  line-height: 1.65;
+  color: var(--fg-2);
+  /* Long threads: cards far off screen skip layout and paint. */
+  content-visibility: auto;
+  contain-intrinsic-size: auto 240px;
+  transition:
+    border-color var(--dur-1) var(--ease-out),
+    box-shadow var(--dur-1) var(--ease-out);
+}
+.phone .card {
+  padding: 16px;
+}
+.cardLinked {
+  border-color: var(--cobalt-300);
+  box-shadow: var(--shadow-focus);
+}
+.card p {
+  margin: 0;
+  white-space: pre-wrap;
+  text-wrap: pretty;
+  overflow-wrap: anywhere;
+}
+.card .preview {
+  color: var(--fg-3);
+}
+/* Reserve the body's space while it loads; the skeleton fades in late. */
+.bodyPending {
+  min-height: 96px;
+}
+.frame {
+  display: block;
+  width: 100%;
+  border: none;
+  background: transparent;
+  color-scheme: light;
+}
+
+/* ---------- Attachments ---------- */
+.attachments {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+.attachments li {
+  min-width: 0;
+  max-width: 100%;
+}
+.attachment {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  max-width: 100%;
+  height: 34px;
+  padding: 0 10px;
+  border: 1px solid var(--border-1);
+  border-radius: 8px;
+  background: var(--bg-surface);
+  font-size: 12.5px;
+  color: var(--fg-1);
+  cursor: pointer;
+  transition:
+    background var(--dur-1) var(--ease-out),
+    border-color var(--dur-1) var(--ease-out);
+}
+.attachment:hover {
+  border-color: var(--border-2);
+  background: var(--ink-50);
+}
+.phone .attachment {
+  height: 44px;
+}
+.attachmentIcon {
+  flex: none;
+  display: inline-flex;
+  color: var(--fg-3);
+}
+.attachmentName {
+  min-width: 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+.attachmentSize {
+  flex: none;
+  font: 11.5px var(--font-mono);
+  color: var(--fg-3);
+}
+
+/* ---------- Sandbox note ---------- */
+.safety {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  min-height: 18px;
+  font-size: 12px;
+  color: var(--fg-3);
+}
+.safetyIcon {
+  flex: none;
+}
+.showImages {
+  position: relative;
+  padding: 0;
+  border: none;
+  background: transparent;
+  font-size: 12px;
+  font-weight: 500;
+  color: var(--brand);
+  text-decoration: underline;
+  text-underline-offset: 3px;
+  cursor: pointer;
+}
+.showImages:hover {
+  color: var(--brand-hover);
+}
+@media (pointer: coarse) {
+  .showImages::after {
+    content: "";
+    position: absolute;
+    inset: -14px -8px;
+  }
+}
+
+/* ---------- Empty ---------- */
+.none {
+  flex: 1;
+  font-size: 13.5px;
+}
+.noneHint {
+  display: block;
+  max-width: 260px;
+  margin: 8px auto 0;
+  font-size: 12.5px;
+  text-wrap: pretty;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .chevron,
+  .card,
+  .attachment {
+    transition: none;
+  }
+}

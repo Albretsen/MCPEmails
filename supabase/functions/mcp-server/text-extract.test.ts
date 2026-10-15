@@ -14,13 +14,31 @@
 // ---------------------------------------------------------------------------
 
 import {
+  cleanPreviewFromBodyPart,
   decodeHtmlEntities,
   normalizePreview,
-  normalizeSnippetPreview,
   preferredBodyText,
-  previewFromBodyPartSource,
   stripHtmlToText,
 } from "./text-extract.ts";
+
+// Until 2026-10-04 the IMAP preview had two generators and the fixtures below
+// were written against the guessing one (`previewFromBodyPartSource`,
+// `normalizeSnippetPreview`). There is one now. The fixtures and every expected
+// value are unchanged; only the function they go through is.
+
+/** A fixture as it comes off the socket: its UTF-8 octets, one character each. */
+function wire(text: string): string {
+  let out = "";
+  for (const byte of new TextEncoder().encode(text)) out += String.fromCharCode(byte);
+  return out;
+}
+
+/** An HTML part's snippet, as BODYSTRUCTURE would describe it. */
+const htmlSnippetPreview = (source: string): string =>
+  cleanPreviewFromBodyPart(wire(source), { type: "text", subtype: "html", charset: "utf-8", encoding: "8bit" });
+
+/** Part one is a nested multipart, or nothing described it: no part info. */
+const undescribedPartPreview = (source: string): string => cleanPreviewFromBodyPart(wire(source), null);
 
 function assert(condition: boolean, message: string): void {
   if (!condition) throw new Error(message);
@@ -166,12 +184,12 @@ Deno.test("bodies still lose zero-width padding", () => {
 Deno.test("snippet previews strip tags before decoding", () => {
   // Tags first, or a decoded < could become one.
   assertEquals(
-    normalizeSnippetPreview("<div>Hi &amp; welcome</div>"),
+    htmlSnippetPreview("<div>Hi &amp; welcome</div>"),
     "Hi & welcome",
     "tags out, entity decoded",
   );
   assertEquals(
-    normalizeSnippetPreview("<p>a</p>&lt;script&gt;"),
+    htmlSnippetPreview("<p>a</p>&lt;script&gt;"),
     "a <script>",
     "a decoded angle bracket stays text",
   );
@@ -183,7 +201,7 @@ Deno.test("snippet previews clean padding before the cap", () => {
   // nothing, so the preview was empty rather than merely wasteful.
   const snippet = "<div>" + "‌".repeat(500) + "Invoice 8842 is ready.</div>";
   assertEquals(
-    normalizeSnippetPreview(snippet),
+    htmlSnippetPreview(snippet),
     "Invoice 8842 is ready.",
     "the sentence must survive the cap",
   );
@@ -193,7 +211,7 @@ Deno.test("a snippet truncated mid-tag does not leak the tag fragment", () => {
   // IMAP returns a partial body, so the snippet can stop inside a tag. <[^>]+>
   // needs a closing > and cannot match that.
   assertEquals(
-    normalizeSnippetPreview("<p>Review them below:</p><table class"),
+    htmlSnippetPreview("<p>Review them below:</p><table class"),
     "Review them below:",
     "the dangling fragment must go",
   );
@@ -202,7 +220,7 @@ Deno.test("a snippet truncated mid-tag does not leak the tag fragment", () => {
   // <[^>]+> cannot tell prose from markup. It predates this module and fixing
   // it needs a real parser, which a 200-character triage line does not justify.
   assertEquals(
-    normalizeSnippetPreview("<div>Total: 4 < 5 items</div>"),
+    htmlSnippetPreview("<div>Total: 4 < 5 items</div>"),
     "Total: 4",
     "documents the bare-< limitation rather than pretending it is handled",
   );
@@ -311,7 +329,7 @@ function assertNoMimeLeak(preview: string): void {
 }
 
 Deno.test("a multipart/alternative fetched as part one previews as its text", () => {
-  const preview = previewFromBodyPartSource(
+  const preview = undescribedPartPreview(
     nestedAlternative(F3_TEXT, "<p>F3 attachment fixture.</p>"),
   );
   assertEquals(preview, F3_TEXT, "the decoded text/plain part, and nothing else");
@@ -324,7 +342,7 @@ Deno.test("the 2KB cut through a base64 part does not spill the alphabet", () =>
   // back as if it were prose.
   const long = `${F3_TEXT} ` + "Body line for the truncation fixture. ".repeat(60);
   const truncated = nestedAlternative(long, "<p>ignored</p>").slice(0, 2048);
-  const preview = previewFromBodyPartSource(truncated);
+  const preview = undescribedPartPreview(truncated);
   assert(preview.startsWith(F3_TEXT), `lost the start of the body: ${preview}`);
   assertNoMimeLeak(preview);
 });
@@ -342,7 +360,7 @@ Deno.test("the descent is not depth-limited", () => {
     "",
     "--mcpe_rel_1111--",
   ].join("\r\n");
-  const preview = previewFromBodyPartSource(source);
+  const preview = undescribedPartPreview(source);
   assertEquals(preview, F3_TEXT, "two levels of nesting is still the same answer");
   assertNoMimeLeak(preview);
 });
@@ -353,7 +371,7 @@ Deno.test("an HTML-only nested part falls back to the stripped HTML", () => {
     ...part("text/html; charset=UTF-8", b64Lines("<p>Invoice&nbsp;42 is ready.</p>")),
     `--${ALT_BOUNDARY}--`,
   ].join("\r\n");
-  const preview = previewFromBodyPartSource(source);
+  const preview = undescribedPartPreview(source);
   assertEquals(preview, "Invoice 42 is ready.", "the HTML part, converted to text");
   assertNoMimeLeak(preview);
 });
@@ -368,7 +386,7 @@ Deno.test("the HTML fallback does not spend the preview budget on link targets",
     `--${ALT_BOUNDARY}--`,
   ].join("\r\n");
   assertEquals(
-    previewFromBodyPartSource(source),
+    undescribedPartPreview(source),
     "Your invoice is ready.",
     "the text, without the target",
   );
@@ -385,12 +403,12 @@ Deno.test("a nested part carrying no text at all previews as empty, not as bytes
     "",
     `--${ALT_BOUNDARY}--`,
   ].join("\r\n");
-  assertEquals(previewFromBodyPartSource(source), "", "no text in, nothing out");
+  assertEquals(undescribedPartPreview(source), "", "no text in, nothing out");
 });
 
 Deno.test("a leaf base64 text part still previews (the case that always worked)", () => {
   assertEquals(
-    previewFromBodyPartSource(b64Lines(F3_TEXT)),
+    undescribedPartPreview(b64Lines(F3_TEXT)),
     F3_TEXT,
     "the leaf path this fix must not regress",
   );
@@ -398,7 +416,7 @@ Deno.test("a leaf base64 text part still previews (the case that always worked)"
 
 Deno.test("a leaf quoted-printable part still decodes", () => {
   assertEquals(
-    previewFromBodyPartSource("Karin p=C3=A5 Teknikkdeler sendte deg en=\r\n faktura."),
+    undescribedPartPreview("Karin p=C3=A5 Teknikkdeler sendte deg en=\r\n faktura."),
     "Karin på Teknikkdeler sendte deg en faktura.",
     "soft line break joined, =XX decoded",
   );
@@ -408,7 +426,7 @@ Deno.test("a plain body whose line starts with -- is not mistaken for a multipar
   // The signature separator is RFC 3676's, not a boundary. The guard is that a
   // delimiter must be followed by something shaped like a MIME header field.
   const body = "Thanks, that works for me.\r\n\r\n-- \r\nKarin\r\nTeknikkdeler AS";
-  const preview = previewFromBodyPartSource(body);
+  const preview = undescribedPartPreview(body);
   assert(preview.startsWith("Thanks, that works for me."), `body mangled: ${preview}`);
   assert(preview.includes("Karin"), `signature dropped: ${preview}`);
 });

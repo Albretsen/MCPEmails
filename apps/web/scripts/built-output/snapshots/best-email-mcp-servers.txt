@@ -1,0 +1,284 @@
+Best email MCP servers in 2026 · mcpemails
+[meta description] The six ways to give an AI agent a real mailbox in 2026, ranked. Pricing, mailbox coverage, OAuth scopes and data residency for mcpemails, MailMCP, Composio, the open-source servers and the built-in connectors.
+[meta og:title] Best email MCP servers in 2026 · mcpemails
+[meta og:description] The six ways to give an AI agent a real mailbox in 2026, ranked. Pricing, mailbox coverage, OAuth scopes and data residency for mcpemails, MailMCP, Composio, the open-source servers and the built-in connectors.
+[meta og:locale] en_US
+[meta twitter:title] Best email MCP servers in 2026 · mcpemails
+[meta twitter:description] The six ways to give an AI agent a real mailbox in 2026, ranked. Pricing, mailbox coverage, OAuth scopes and data residency for mcpemails, MailMCP, Composio, the open-source servers and the built-in connectors.
+[alt] mcpemails
+[alt] mcpemails
+[aria-label] Primary navigation
+Features
+How it works
+Pricing
+Compare
+Docs
+Self-host
+Blog
+Sign in
+Get started free
+[aria-label] Open navigation menu
+Ranked, sourced, dated
+The best email MCP
+servers in 2026
+Six ways to give Claude, ChatGPT or Cursor a real mailbox, ranked: two hosted servers, an agent tool platform, two you run yourself, and the built-in connectors.
+Connect an inbox
+See the ranking
+Third-party figures read on 8 September 2026
+Every claim links to its source
+Each entry lists its weaknesses
+The short version
+Best overall
+mcpemails
+, several mailboxes behind one MCP URL, scoped OAuth, an approval hold before anything sends.
+Best for EU compliance
+MailMCP
+, France-only hosting on an ISO 27001 certified provider, plus calendar and contacts.
+Best for multi-tool agents
+Composio
+, email is one of 1,500+ toolkits behind a single gateway.
+Best to self-host
+Wh1isper/mcp-email-server
+, local, multi-account, no hosted party involved.
+Best if you use one AI app
+Built-in connectors
+, nothing to run, but it only works inside that vendor.
+The 6 best email MCP servers, ranked
+Every entry lists what it is bad at, including the first one.
+How we ranked them
+Five criteria, weighted in this order: mailboxes and providers reached, what it does with your credentials and your mail, what it costs as mailboxes are added, whether you can move off it, and setup effort. We build the first entry and the weighting is ours, so disagree with it if you like. Every third-party figure was read at its source on 8 September 2026 and linked at the foot of the page; where a public page did not answer, we say so rather than guess.
+1
+Number 1:
+mcpemails
+Editor's pick
+The only one of these that puts several mailboxes behind a single MCP URL, authorises the connection with scoped OAuth rather than a mailbox credential, and can hold outbound mail for a human before it sends.
+Price.
+Free: 1 inbox, 150 email actions a month with the first 7 days uncounted, no daily cap. Paid from $9 a month for 3 inboxes ($86.40 a year) with no monthly action cap. Pro is $15 a month for as many inboxes as you own.
+Outlook and Microsoft 365 over Microsoft Graph with Sign in with Microsoft; Gmail with a Google app password or Google sign-in; Fastmail, iCloud, Yahoo, Zoho, Yandex and any IMAP mailbox with an app password. Several at once, one URL.
+OAuth 2.1 with dynamic client registration, S256 PKCE and 9 scopes: a connection without the send scope cannot be talked into sending, by you or by a hostile email.
+An approval hold per inbox, on every plan including free, and no message content stored.
+No ISO 27001 certificate of our own. You pick an EU or US region at signup, but if procurement wants a certificate, MailMCP has one and we do not.
+No calendar, and no stored address book: contacts are scanned live out of recent mail.
+For one or two mailboxes on an annual plan, MailMCP is cheaper.
+Best for.
+Anyone with more than one mailbox, or who wants to bound what an agent may do with it.
+Connect an inbox free
+2
+Number 2:
+MailMCP
+A hosted MCP email server run from Paris, with a CalDAV calendar and a CardDAV address book in the same server. The strongest EU compliance story here.
+Price.
+Free: 1 mailbox, 5 MCP calls a day. Then EUR 7.99 per mailbox per month, or EUR 35.88 per mailbox for a year.
+France-only hosting on an ISO 27001 certified provider, and a stated position that data never leaves the EU.
+Calendar and contacts alongside mail, which nothing else here offers.
+Any IMAP and SMTP mailbox, over OAuth2 with PKCE. No email content stored.
+Billed per mailbox, so three mailboxes cost three times one.
+The free tier is 5 MCP calls a day, which one triage run will exhaust.
+Hosted only. No self-host path if you want off.
+Best for.
+Teams where EU-only hosting is non-negotiable, and anyone with one mailbox who wants the smallest annual bill.
+Visit MailMCP
+3
+Number 3:
+Composio
+Not really an email server: an agent tool platform with 1,500+ toolkits and a managed MCP gateway, of which email is a handful. The right answer to a different question.
+Price.
+Free: 100,000 tool calls and 50,000 trigger events a month, 3 team members. Pro is $29 a month including $29 of usage credit, then $0.0003 a tool call.
+One gateway and one auth layer for Gmail, Outlook, Salesforce, Linear, Slack, GitHub and 1,500+ more.
+Gmail and Outlook through their own APIs with OAuth, not IMAP.
+By far the most generous free tier here, if tool calls are your unit.
+We found no generic IMAP toolkit in the catalogue we read, so a mailbox at a small host or a company Exchange server is not obviously covered.
+Storage and data residency are not stated on the pages we read.
+Best for.
+Agents where email is one tool among many and you are already building on an SDK.
+Visit Composio
+4
+Number 4:
+Wh1isper/mcp-email-server
+A tidy, actively maintained local server: multi-account IMAP and SMTP, installed with uvx, configured through a local UI. Zero vendor.
+Price.
+Free and BSD-3-Clause. You pay for the machine it runs on.
+Multi-account, on Windows, macOS and Linux, with no hosted party in the path.
+Actively maintained, and the simpler of the two open-source options to get running.
+Your credentials and your mail never leave your machine.
+Single user, single machine. A second device means setting it up again.
+Long-lived mailbox credentials in a config file, with no scopes and no approval step before a send.
+Best for.
+One person, one machine, managing their own credentials. Often still listed under its old path, ai-zerolab/mcp-email-server.
+Visit Wh1isper/mcp-email-server
+5
+Number 5:
+codefuturist/email-mcp
+The largest local feature surface of anything here: 47 tools, 7 prompts and 6 resources, plus scheduling, an IDLE watcher with rule-based triage, and calendar extraction from messages.
+Price.
+Free and LGPL-3.0, on npm as @codefuturist/email-mcp.
+Does more out of the box than any other self-hosted option, including rule-based triage on new mail.
+Experimental OAuth2 for Gmail and Microsoft 365, not just app passwords.
+Extracts calendar invitations out of messages.
+Attachment downloads capped at 5 MB, the tightest limit here.
+The feature surface is the configuration burden. Expect to spend time on it.
+Best for.
+Self-hosters who want everything and will read the README to get it.
+Visit codefuturist/email-mcp
+6
+Number 6:
+Built-in Claude and ChatGPT connectors
+Worth being accurate about, because other comparison pages are not: since 18 August 2026 Claude's Gmail connector sends, replies and forwards on paid plans, with an approval prompt by default. It is no longer draft-only.
+Price.
+Included with a paid plan from that vendor.
+Nothing to install, configure or pay for separately.
+Sends, replies and forwards, with an approval prompt in front of it.
+It only works inside that one vendor's app. Your setup does not move to Cursor, to an SDK agent, or to the next model you try.
+Coverage is the provider list that vendor chose, not every mailbox you own.
+Best for.
+People with one AI app and one mainstream mailbox, who expect that to stay true.
+Claude's Gmail connector
+Native connectors vs MCP, in full
+Side by side
+Two hosted services, an agent tool platform, and running it yourself.
+Capability
+mcpemails
+MailMCP
+Composio
+Self-hosted
+Billed per
+Workspace. Inboxes included in the tier.
+Mailbox.
+Tool call and trigger event.
+Nothing. Your own machine.
+Free tier
+1 inbox, 150 email actions a month, first 7 days uncounted, no daily cap.
+1 mailbox, 5 MCP calls a day.
+100,000 tool calls a month.
+Unlimited.
+Cheapest paid
+$9/mo for 3 inboxes, or $86.40/yr.
+EUR 7.99/mailbox/mo, EUR 35.88/yr.
+$29/mo, includes $29 of credit.
+No licence fee.
+Any IMAP or SMTP mailbox
+Gmail and Outlook via their APIs. No generic IMAP toolkit found.
+Several mailboxes, one MCP URL
+Per-mailbox billing.
+Local config, one machine.
+MCP connection authorised by
+OAuth 2.1, DCR, S256 PKCE, 9 scopes.
+OAuth2 with PKCE.
+Platform-managed OAuth gateway.
+Nothing. Runs as your user.
+Approval hold before sending
+Per inbox, on every plan.
+Not stated
+Not stated
+No.
+Message content stored
+No. Scheduled sends only, encrypted.
+No, per their privacy policy.
+Not stated
+On your own disk.
+Residency and certification
+EU or US, picked at signup. No ISO 27001.
+France only, ISO 27001 certified host.
+Not stated
+Wherever you put it.
+Calendar and contacts
+Live contact lookup. No calendar.
+CalDAV and CardDAV.
+Google Calendar, and 1,500+ tools.
+Varies by project.
+Run the same code yourself
+Yes. AGPL-3.0, Docker Compose.
+Hosted only.
+Hosted only.
+That is the whole proposition.
+"Not stated" means the pages we read on 8 September 2026 did not answer that question, not that the capability is missing. Tool counts are absent on purpose: every server groups its tools differently, so a bigger number is not a better server.
+Before you pick one
+Including the answers that do not flatter us.
+Which email MCP server is best?
+mcpemails, for most people: several mailboxes behind one MCP URL, a scoped OAuth connection instead of a shared mailbox credential, an approval hold before an agent can send, and an AGPL-3.0 self-host path if you want off. Pick MailMCP if EU-only hosting under an ISO 27001 certified provider is a hard requirement, Composio if email is one of many tools your agent needs, and Wh1isper/mcp-email-server if you want no hosted party at all.
+MailMCP is cheaper. Why would I pay more?
+For one or two mailboxes on an annual plan they are, and we say so above rather than hiding it. They bill per mailbox, we bill per workspace: three mailboxes there is three times EUR 35.88, ours is $86.40 a year for three or $144 for as many as you own. If you will only ever want one mailbox, buy theirs.
+Do I hand over my email password?
+For Outlook, no: you sign in with Microsoft and we hold a revocable OAuth token. Gmail connects with a Google app password by default, or with Google sign-in if you prefer, and everywhere else you create a provider-issued app password, revocable at your provider without involving us. Either credential is encrypted at rest with AES-256-GCM, and your AI client never sees it: the MCP connection is its own OAuth 2.1 authorisation with its own scopes.
+Can an agent send email without me seeing it first?
+Only if you let it. Any inbox can require human approval before outbound mail is dispatched, so an agent prompt-injected by a hostile message still cannot get mail out of your account. Scopes are the second layer: a connection without the send scope cannot send, whatever a message tells the model.
+Is my mail stored anywhere?
+No. Messages are fetched live on each call and dropped once the response is sent, with no copy of any body, subject, attachment or contact. The exception is a message you schedule, which has to be held until its send time and is encrypted while it waits. MailMCP states the same no-storage position, so this is not a point of difference between us.
+Sources
+Each page below was read on 8 September 2026.
+MailMCP pricing and plan limits:
+https://mailmcp.io/pricing
+MailMCP features, protocol and attachment limits:
+https://mailmcp.io/features
+MailMCP privacy policy, storage and hosting:
+https://mailmcp.io/legal/privacy
+Composio pricing, limits and plan features:
+https://composio.dev/pricing
+Composio toolkit catalogue:
+https://composio.dev/toolkits
+Wh1isper/mcp-email-server:
+https://github.com/Wh1isper/mcp-email-server
+codefuturist/email-mcp:
+https://github.com/codefuturist/email-mcp
+Claude Gmail connector capabilities:
+https://claude.com/connectors/gmail
+Our own OAuth authorisation server metadata:
+https://mcpemails.com/.well-known/oauth-authorization-server
+Try it against whatever you are comparing it to
+One inbox free, no card. If one of the alternatives above fits you better, use that instead.
+Connect an inbox
+Read the docs
+[alt] mcpemails
+A hosted MCP server that gives AI agents read and send access to your inbox, without ever storing the email it reads.
+Contact
+hello@mcpemails.com
+[aria-label] Copy Contact
+Copy
+MCP endpoint
+https://mcpemails.com/api/mcp
+[aria-label] Copy MCP endpoint
+Copy
+[aria-label] Language
+English
+Norsk
+Español
+Français
+中文
+Product
+Features
+How it works
+Pricing
+Docs
+Self-hosting
+For founders
+For business
+Resources
+Tool reference
+Quickstart
+OAuth connection
+Provider support
+MCP client setup
+Blog
+Changelog
+Connect
+All email providers
+Connect any IMAP inbox
+Connect Gmail
+Connect Outlook
+Connect Fastmail
+Connect iCloud
+Connect Yahoo
+Connect Zoho
+Connect Yandex
+vs native connectors
+Best email MCP servers
+Company
+About
+Security
+Status
+Privacy
+Terms
+© 2026 mcpemails.
+Email fetched live, never stored · Credentials encrypted at rest
+MCPEmails is a service of Albretsen Consulting (enkeltpersonforetak), organisation number 926 646 753, Håsteins gate 9, 5160 Laksevåg, Norway.
+[json-ld] {"@context":"https://schema.org","@graph":[{"@type":"WebPage","@id":"https://mcpemails.com/best-email-mcp-servers","url":"https://mcpemails.com/best-email-mcp-servers","name":"Best email MCP servers in 2026","description":"The six ways to give an AI agent a real mailbox in 2026, ranked. Pricing, mailbox coverage, OAuth scopes and data residency for mcpemails, MailMCP, Composio, the open-source servers and the built-in connectors.","inLanguage":"en","isPartOf":{"@id":"https://mcpemails.com/#website"},"breadcrumb":{"@id":"https://mcpemails.com/best-email-mcp-servers#breadcrumb"}},{"@type":"BreadcrumbList","@id":"https://mcpemails.com/best-email-mcp-servers#breadcrumb","itemListElement":[{"@type":"ListItem","position":1,"name":"mcpemails","item":"https://mcpemails.com"},{"@type":"ListItem","position":2,"name":"Best email MCP servers in 2026"}]},{"@type":"ItemList","@id":"https://mcpemails.com/best-email-mcp-servers#ranking","name":"Best email MCP servers in 2026","description":"The six ways to give an AI agent a real mailbox in 2026, ranked. Pricing, mailbox coverage, OAuth scopes and data residency for mcpemails, MailMCP, Composio, the open-source servers and the built-in connectors.","itemListOrder":"https://schema.org/ItemListOrderDescending","numberOfItems":6,"itemListElement":[{"@type":"ListItem","position":1,"name":"mcpemails","description":"The only one of these that puts several mailboxes behind a single MCP URL, authorises the connection with scoped OAuth rather than a mailbox credential, and can hold outbound mail for a human before it sends.","url":"https://mcpemails.com/best-email-mcp-servers"},{"@type":"ListItem","position":2,"name":"MailMCP","description":"A hosted MCP email server run from Paris, with a CalDAV calendar and a CardDAV address book in the same server. The strongest EU compliance story here.","url":"https://mailmcp.io/"},{"@type":"ListItem","position":3,"name":"Composio","description":"Not really an email server: an agent tool platform with 1,500+ toolkits and a managed MCP gateway, of which email is a handful. The right answer to a different question.","url":"https://composio.dev/"},{"@type":"ListItem","position":4,"name":"Wh1isper/mcp-email-server","description":"A tidy, actively maintained local server: multi-account IMAP and SMTP, installed with uvx, configured through a local UI. Zero vendor.","url":"https://github.com/Wh1isper/mcp-email-server"},{"@type":"ListItem","position":5,"name":"codefuturist/email-mcp","description":"The largest local feature surface of anything here: 47 tools, 7 prompts and 6 resources, plus scheduling, an IDLE watcher with rule-based triage, and calendar extraction from messages.","url":"https://github.com/codefuturist/email-mcp"},{"@type":"ListItem","position":6,"name":"Built-in Claude and ChatGPT connectors","description":"Worth being accurate about, because other comparison pages are not: since 18 August 2026 Claude's Gmail connector sends, replies and forwards on paid plans, with an approval prompt by default. It is no longer draft-only.","url":"https://claude.com/connectors/gmail"}]},{"@type":"FAQPage","@id":"https://mcpemails.com/best-email-mcp-servers#faq","mainEntity":[{"@type":"Question","name":"Which email MCP server is best?","acceptedAnswer":{"@type":"Answer","text":"mcpemails, for most people: several mailboxes behind one MCP URL, a scoped OAuth connection instead of a shared mailbox credential, an approval hold before an agent can send, and an AGPL-3.0 self-host path if you want off. Pick MailMCP if EU-only hosting under an ISO 27001 certified provider is a hard requirement, Composio if email is one of many tools your agent needs, and Wh1isper/mcp-email-server if you want no hosted party at all."}},{"@type":"Question","name":"MailMCP is cheaper. Why would I pay more?","acceptedAnswer":{"@type":"Answer","text":"For one or two mailboxes on an annual plan they are, and we say so above rather than hiding it. They bill per mailbox, we bill per workspace: three mailboxes there is three times EUR 35.88, ours is $86.40 a year for three or $144 for as many as you own. If you will only ever want one mailbox, buy theirs."}},{"@type":"Question","name":"Do I hand over my email password?","acceptedAnswer":{"@type":"Answer","text":"For Outlook, no: you sign in with Microsoft and we hold a revocable OAuth token. Gmail connects with a Google app password by default, or with Google sign-in if you prefer, and everywhere else you create a provider-issued app password, revocable at your provider without involving us. Either credential is encrypted at rest with AES-256-GCM, and your AI client never sees it: the MCP connection is its own OAuth 2.1 authorisation with its own scopes."}},{"@type":"Question","name":"Can an agent send email without me seeing it first?","acceptedAnswer":{"@type":"Answer","text":"Only if you let it. Any inbox can require human approval before outbound mail is dispatched, so an agent prompt-injected by a hostile message still cannot get mail out of your account. Scopes are the second layer: a connection without the send scope cannot send, whatever a message tells the model."}},{"@type":"Question","name":"Is my mail stored anywhere?","acceptedAnswer":{"@type":"Answer","text":"No. Messages are fetched live on each call and dropped once the response is sent, with no copy of any body, subject, attachment or contact. The exception is a message you schedule, which has to be held until its send time and is encrypted while it waits. MailMCP states the same no-storage position, so this is not a point of difference between us."}}]},{"@type":"WebPage","@id":"https://mcpemails.com/best-email-mcp-servers#sources","url":"https://mcpemails.com/best-email-mcp-servers#sources","name":"Sources","isPartOf":{"@id":"https://mcpemails.com/#website"},"citation":[{"@type":"CreativeWork","name":"MailMCP pricing and plan limits","url":"https://mailmcp.io/pricing"},{"@type":"CreativeWork","name":"MailMCP features, protocol and attachment limits","url":"https://mailmcp.io/features"},{"@type":"CreativeWork","name":"MailMCP privacy policy, storage and hosting","url":"https://mailmcp.io/legal/privacy"},{"@type":"CreativeWork","name":"Composio pricing, limits and plan features","url":"https://composio.dev/pricing"},{"@type":"CreativeWork","name":"Composio toolkit catalogue","url":"https://composio.dev/toolkits"},{"@type":"CreativeWork","name":"Wh1isper/mcp-email-server","url":"https://github.com/Wh1isper/mcp-email-server"},{"@type":"CreativeWork","name":"codefuturist/email-mcp","url":"https://github.com/codefuturist/email-mcp"},{"@type":"CreativeWork","name":"Claude Gmail connector capabilities","url":"https://claude.com/connectors/gmail"},{"@type":"CreativeWork","name":"Our own OAuth authorisation server metadata","url":"https://mcpemails.com/.well-known/oauth-authorization-server"}]}]}

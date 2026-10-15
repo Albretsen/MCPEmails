@@ -1,0 +1,48 @@
+data: {"type":"run_started","run_id":"run_t"}
+
+data: {"type":"status","text":"Working"}
+
+data: {"type":"tool_call","message_id":"run_t_m1","call":{"id":"run_t_c1","tool":"email_read","action":"read","human":"Reading an email","keys":["inbox-a:m1"],"meta":"","state":"running"}}
+
+data: {"type":"status","text":"Reading an email"}
+
+data: {"type":"mail_effect","effect":{"kind":"read","keys":["inbox-a:m1"],"call_id":"run_t_c1"}}
+
+data: {"type":"tool_call","message_id":"run_t_m1","call":{"id":"run_t_c1","tool":"email_read","action":"read","human":"Reading Maya Chen's email","keys":["inbox-a:m1"],"meta":"","state":"done"}}
+
+data: {"type":"text_delta","message_id":"run_t_m2","delta":"Maya "}
+
+data: {"type":"text_delta","message_id":"run_t_m2","delta":"Chen "}
+
+data: {"type":"text_delta","message_id":"run_t_m2","delta":"needs"}
+
+data: {"type":"text_delta","message_id":"run_t_m2","delta":" you "}
+
+data: {"type":"text_delta","message_id":"run_t_m2","delta":"to co"}
+
+data: {"type":"text_delta","message_id":"run_t_m2","delta":"nfirm"}
+
+data: {"type":"text_delta","message_id":"run_t_m2","delta":" by F"}
+
+data: {"type":"text_delta","message_id":"run_t_m2","delta":"riday"}
+
+data: {"type":"text_delta","message_id":"run_t_m2","delta":" whet"}
+
+data: {"type":"text_delta","message_id":"run_t_m2","delta":"her t"}
+
+data: {"type":"text_delta","message_id":"run_t_m2","delta":"o kee"}
+
+data: {"type":"text_delta","message_id":"run_t_m2","delta":"p 40 "}
+
+data: {"type":"text_delta","message_id":"run_t_m2","delta":"seats"}
+
+data: {"type":"text_delta","message_id":"run_t_m2","delta":" or d"}
+
+data: {"type":"text_delta","message_id":"run_t_m2","delta":"rop t"}
+
+data: {"type":"text_delta","message_id":"run_t_m2","delta":"o 30."}
+
+data: {"type":"text_delta","message_id":"run_t_m2","delta":"","done":true}
+
+data: {"type":"done","conversation":{"v":1,"summary":"","turns":[{"u":"What does Maya need from me?","a":"Maya Chen needs you to confirm by Friday whether to keep 40 seats or drop to 30.","calls":[{"h":"Reading Maya Chen's email","k":["inbox-a:m1"]}],"refs":[{"k":"inbox-a:m1","l":"Maya Chen · Q4 renewal terms"}]}]},"usage":{"input_tokens":1000,"output_tokens":50,"cost_micro_usd":975,"model":"gpt-5.4-mini","rounds":1}}
+
