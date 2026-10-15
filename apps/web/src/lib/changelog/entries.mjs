@@ -46,6 +46,13 @@ export const ENTRIES = [
   {
     date: '2026-10-15',
     kind: 'fixed',
+    title: 'Mail hosts that turn away cloud servers now connect',
+    body:
+      'A few mail providers refuse connections from cloud servers, so connecting or sending from them timed out or was refused even with the right password. MCP Emails now retries those connections through a separate route and remembers which providers need it.',
+  },
+  {
+    date: '2026-10-15',
+    kind: 'fixed',
     title: 'Self-hosted servers find their inboxes',
     body:
       'A self-hosted install answered "No inbox matches" on every tool except inbox_list, and could not read stored IMAP credentials. The bundled database schema is back in step with the server, and existing installs upgrade in place with make migrate, keeping their inboxes and keys.',
