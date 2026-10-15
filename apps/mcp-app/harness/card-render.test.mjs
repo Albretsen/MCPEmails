@@ -238,6 +238,7 @@ async function main() {
       // same module instance main.tsx is writing to.
       contents:
         'import "./src/main";\n' +
+        'export { setSendUndoMs } from "./src/components/DraftEditor";\n' +
         'export { getState, setState, disarmResultWatchdog } from "./src/store";\n',
       resolveDir: appRoot,
       sourcefile: "card-render-entry.ts",
@@ -270,6 +271,10 @@ async function main() {
   async function boot(opts = {}) {
     const host = installDom(opts);
     const mod = await import(`${pathToFileURL(OUT).href}?i=${++instance}`);
+    // Send's undo window (DraftEditor.tsx#SEND_UNDO_MS) is pinned in
+    // draft-send-safety.test.mjs. Here a send goes out on the next tick, so the
+    // scenarios below read as they did before the window existed.
+    mod.setSendUndoMs(0);
     const root = globalThis.document.getElementById("root");
 
     /** Wait until the handshake has settled one way or the other. */
@@ -306,7 +311,7 @@ async function main() {
       editable: () =>
         !!globalThis.document.getElementById("d-body") ||
         [...root.querySelectorAll("button")].some((b) =>
-          /^(Save|Send|Save and send)$/.test(b.textContent.trim()),
+          /^(Save|Send)$/.test(b.textContent.trim()),
         ),
       /**
        * Stop the card so it cannot outlive its scenario. The watchdog is a 9s
@@ -472,6 +477,51 @@ async function main() {
     await c.done();
   }
 
+
+  // ── 4b. The model's own draft_read (QA 2026-10-15) ────────────────────────
+  // draft_read carries the card resource, so the host mounts a card under the
+  // model's read too. It used to be a second full editor for the same draft,
+  // and one draft piled up as three cards in a thread.
+
+  group("a card mounted for the model's draft_read is one line, and opens the editor on request");
+  {
+    const read = {
+      ...draftEnvelope,
+      untrusted_content: true,
+      draft: {
+        ...draftEnvelope.draft,
+        origin: "read",
+        recipients: { to: ["dana@northwind.example", "lee@northwind.example"], cc: [], bcc: [] },
+      },
+    };
+    const c = await boot();
+    await c.settled();
+    c.deliver(toolResult(read, "{\"draft_id\":\"Drafts:2\"}"));
+    await settle();
+    expect("the card is not empty", c.filled(), true);
+    expect("no editor", !!globalThis.document.getElementById("d-subject"), false);
+    expect("one header", c.root.querySelectorAll(".hdr").length, 1);
+    expect("it names the draft", c.text().includes("Draft: Quarterly numbers"), true);
+    expect("and who it is to", c.text().includes("to dana@northwind.example +1"), true);
+    const open = [...c.root.querySelectorAll("button")].find((b) => b.textContent === "Open editor");
+    expect("with a way to open the editor", !!open, true);
+    open?.click();
+    await settle();
+    expect("which opens the full editor here", globalThis.document.getElementById("d-subject")?.value, "Quarterly numbers");
+    await c.done();
+  }
+
+  group("an editor mounted for a write is still an editor at once, and the card's own reads change nothing");
+  {
+    const c = await boot();
+    await c.settled();
+    c.deliver(toolResult(draftEnvelope, "Draft Drafts:2."));
+    await settle();
+    expect("the editor", globalThis.document.getElementById("d-subject")?.value, "Quarterly numbers");
+    expect("not the read line", c.text().includes("Open editor"), false);
+    expect("mounted for a write", c.state().mountedForRead, false);
+    await c.done();
+  }
 
   // ── 5. A deferred draft body ─────────────────────────────────────────────
   // Since 2026-10-13 a model-initiated draft write leaves the body out of

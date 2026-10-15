@@ -89,6 +89,12 @@ const SUITES = [
   // and without a stored copy, that it is never the assistant's original text
   // when the person's edits went out, and where that copy is (and is not) kept.
   ["draft ended", "draft-ended.test.mjs"],
+  // The eighth DOM suite: the send-safety QA report of 2026-10-15. A footer
+  // that never moves under the pointer, Send's undo window (nothing is called
+  // before it runs out; Undo, a double-click, an edit, unmount and teardown all
+  // cancel), Enter on a recipient that is not an address, and an older card
+  // that folds when a newer one mounts, without being touched.
+  ["draft send safety", "draft-send-safety.test.mjs"],
   // DOM-free, and last only because it was merged last: the exact text of every
   // sentence the card sends the model, and the decisions behind a deferred
   // draft body (where it comes from, and which `draft_read` answer is adopted).

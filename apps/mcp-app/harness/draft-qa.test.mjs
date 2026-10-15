@@ -226,6 +226,10 @@ let instance = 0;
 async function boot(opts = {}) {
   const host = installDom(opts);
   const mod = await import(`${pathToFileURL(OUT).href}?i=${++instance}`);
+  // Send's undo window (DraftEditor.tsx#SEND_UNDO_MS) is pinned in
+  // draft-send-safety.test.mjs. Here a send goes out on the next tick, so the
+  // scenarios below read as they did before the window existed.
+  mod.setSendUndoMs(0);
   const root = globalThis.document.getElementById("root");
   const until = Date.now() + 2000;
   while (Date.now() < until && !mod.getState().connected) await after(5);
@@ -293,6 +297,7 @@ async function main() {
     stdin: {
       contents:
         'import "./src/main";\n' +
+        'export { setSendUndoMs } from "./src/components/DraftEditor";\n' +
         'export { getState, setState, disarmResultWatchdog, runTeardownSaver, mergeEnvelope, isReplayedDraft, REPLAY_AGE_MS } from "./src/store";\n' +
         'export { failureNotice, patchLanded, textRefusalCode } from "./src/draft-failure";\n' +
         'export { loadUnsaved, saveUnsaved, clearUnsaved } from "./src/unsaved";\n' +
@@ -375,7 +380,7 @@ async function main() {
     expect("Check again is offered", !!c.btn(/^Check again$/), true);
     expect("Copy text is offered", !!c.btn(/^Copy text$/), true);
     expect("Save is off: the id names nothing", c.softOff(c.btn(/^Save$/)), true);
-    expect("Send is off", c.softOff(c.btn(/^(Send|Save and send)$/)), true);
+    expect("Send is off", c.softOff(c.btn(/^Send$/)), true);
     await c.done();
   }
 
@@ -449,7 +454,7 @@ async function main() {
     expect("the draft is in doubt", c.mod.getState().draftCheck, "unverified");
     expect("it says it is not clear", /not clear whether your changes were saved/.test(c.text()), true);
     expect("Save is off", c.softOff(c.btn(/^Save$/)), true);
-    expect("Send is off", c.softOff(c.btn(/^(Send|Save and send)$/)), true);
+    expect("Send is off", c.softOff(c.btn(/^Send$/)), true);
     expect("Check again is offered", !!c.btn(/^Check again$/), true);
     expectJson("no raw transport wording", forbiddenIn(c.text()), []);
     // Teardown must not write blind either.
@@ -551,7 +556,7 @@ async function main() {
     expect("it says the draft changed elsewhere", /changed somewhere else after you opened it/.test(c.text()), true);
     expectJson("no model wording", forbiddenIn(c.text()), []);
     expect("Save is off", c.softOff(c.btn(/^Save$/)), true);
-    expect("Send is off", c.softOff(c.btn(/^(Send|Save and send)$/)), true);
+    expect("Send is off", c.softOff(c.btn(/^Send$/)), true);
     expect("Copy text is offered", !!c.btn(/^Copy text$/), true);
     const load = c.btn(/^Load the newer version$/);
     expect("Load the newer version is offered", !!load, true);
@@ -579,7 +584,7 @@ async function main() {
     c.tools.draft = () => sentResult();
     c.input("d-body", "Edited in card A.");
     await settle();
-    c.press(c.btn(/^Save and send$/));
+    c.press(c.btn(/^Send$/));
     await settle();
     expectJson("a save was tried, and no send followed", c.calls.map((x) => x.name), ["draft_editor_save"]);
     expect("the text is kept", c.value("d-body"), "Edited in card A.");
@@ -594,7 +599,7 @@ async function main() {
     c.tools.draft = () => sentResult();
     c.input("d-body", "Edited.");
     await settle();
-    c.press(c.btn(/^Save and send$/));
+    c.press(c.btn(/^Send$/));
     await settle();
     expectJson("the save was refused, and NOT sent", c.calls.map((x) => x.name), ["draft_editor_save"]);
     expect("the card says why", /Not saved\. This draft was changed somewhere else/.test(c.text()), true);
@@ -672,7 +677,7 @@ async function main() {
     c.push(draftEnvelope({ last_saved_at: "2026-10-13T11:59:00.000Z" }));
     await settle();
     expect("a re-read was asked for", c.calls.at(-1)?.name, "draft_read");
-    expect("Send is off while unchecked", c.softOff(c.btn(/^(Send|Save and send)$/)), true);
+    expect("Send is off while unchecked", c.softOff(c.btn(/^Send$/)), true);
     expect("and the card says it is checking", /Checking for a newer version/.test(c.text()), true);
     answer(draftResult({ draft_id: "Drafts:110", subject: "Renamed since", origin: "read" }));
     await settle();
@@ -690,7 +695,7 @@ async function main() {
     await settle();
     await settle();
     expect("unverified", c.mod.getState().draftCheck, "unverified");
-    expect("Send is off", c.softOff(c.btn(/^(Send|Save and send)$/)), true);
+    expect("Send is off", c.softOff(c.btn(/^Send$/)), true);
     expect("Check again is offered", !!c.btn(/^Check again$/), true);
     await c.done();
   }
@@ -919,7 +924,7 @@ async function main() {
     expect("focus is back on Discard", c.active(), c.btn(/^Discard$/));
     expect("not on Send", /send/i.test(c.active()?.textContent ?? ""), false);
     // The second half of a double click lands where No was.
-    c.btn(/^(Send|Save and send)$/).click();
+    c.btn(/^Send$/).click();
     c.btn(/^Save$/).click();
     await settle();
     expectJson("a click right after closing sends and saves nothing", c.calls, []);
@@ -982,7 +987,7 @@ async function main() {
     expect("the text is still in the field", c.value("d-to"), "a@b");
     expect("the card says what is wrong", /"a@b" in To is not a complete email address/.test(c.text()), true);
     expect("focus is on the field", c.active()?.id, "d-to");
-    c.press(c.btn(/^(Send|Save and send)$/));
+    c.press(c.btn(/^Send$/));
     await settle();
     expectJson("nothing was sent either", c.calls, []);
 

@@ -474,6 +474,39 @@ body {
   min-width: 0;
 }
 
+/* The draft editor's footer: links on the left, Save and Send on the right.
+   It does NOT wrap. The links change width with their state ("Refresh",
+   "Refreshing", "Up to date"; "Show formatting", "Edit plain text"), and with
+   `.acts`'s wrap that moved the wrap point: at 420px Save slid into Send's old
+   place and Send dropped to a row of its own (verifier, 2026-10-15). Now Save
+   and Send are one group (`.acts-r`) that never wraps, never shrinks and sits
+   at the top right of the row; the links take whatever width is left and wrap
+   among themselves, so only the row's height can change, below the buttons. */
+.acts.ed-acts {
+  flex-wrap: nowrap;
+  align-items: flex-start;
+}
+/* Fullscreen pins this row to the BOTTOM of the frame, so a row that grows
+   grows upward: there the buttons hold the bottom edge instead of the top. */
+.card[data-mode="fullscreen"] > .acts.ed-acts {
+  align-items: flex-end;
+}
+.ed-acts > .acts-l {
+  flex: 1 1 0;
+  min-height: 28px;
+  row-gap: 2px;
+}
+.ed-acts > .acts-l > .link {
+  text-align: left;
+  overflow-wrap: anywhere;
+}
+.acts-r {
+  display: flex;
+  gap: 6px;
+  flex: none;
+  margin-left: auto;
+}
+
 .btn {
   appearance: none;
   font: inherit;
@@ -491,6 +524,19 @@ body {
   justify-content: center;
   gap: 4px;
   white-space: nowrap;
+}
+
+/* The draft editor's Save and Send. A FIXED width, not a min-width: the label
+   in the Send slot changes (Send, Undo, Sending) and a button that resized with
+   it moved Save under the pointer (QA, 2026-10-15: a click aimed at Save landed
+   on what had just become "Save and send"). In em so it scales with the text;
+   7em fits "Sending", the longest label either slot shows, with room to
+   spare for a wider host font. */
+.btn.slot {
+  width: 7em;
+  flex: none;
+  padding: 0 6px;
+  overflow: hidden;
 }
 
 .btn:hover:not(:disabled) { background: var(--bg-2); }

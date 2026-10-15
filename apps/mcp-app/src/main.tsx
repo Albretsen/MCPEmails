@@ -7,6 +7,7 @@ import {
   armResultWatchdog,
   disarmResultWatchdog,
   getState,
+  cancelPendingSend,
   runTeardownSaver,
   setState,
   toolInfoFrom,
@@ -51,6 +52,10 @@ bridge.onTeardown = async () => {
   // its reply until this resolves, which is the only moment a half-typed draft
   // can still be written. The bridge caps the wait at TEARDOWN_TIMEOUT_MS, so a
   // save that hangs cannot hold the host's frame open.
+  //
+  // A send still counting down is cancelled FIRST, before anything else gets a
+  // chance to run: teardown never sends (store.ts#cancelPendingSend).
+  cancelPendingSend();
   await runTeardownSaver();
   disarmResultWatchdog();
   setState({ connected: false });

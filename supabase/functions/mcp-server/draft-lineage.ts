@@ -164,6 +164,8 @@ export interface ResolvedDraft {
    * `preferExistingId`.
    */
   sentCopyKept?: boolean;
+  /** When the line was closed, for a closed line whose store reported it. */
+  closedAt?: string | null;
 }
 
 type Logger = (event: string, details: Record<string, unknown>) => void;
@@ -228,6 +230,7 @@ export async function resolveDraftId(
       writtenAt: head.written_at,
       closed,
       ...(stored === "sent_kept" ? { sentCopyKept: true } : {}),
+      ...(closed && head.closed_at ? { closedAt: head.closed_at } : {}),
     };
   } catch (error) {
     log("draft_lineage_resolve_failed", { inbox_id: scope.inboxId, error: message(error) });

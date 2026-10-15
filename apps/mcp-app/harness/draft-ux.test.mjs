@@ -637,6 +637,9 @@ async function main() {
     c.push(draftEnvelope({ origin: "read", last_saved_at: null, last_saved_by: null }));
     await settle();
     await settle();
+    // Mounted for the model's read: one line until opened (DraftReadLine.tsx).
+    c.press(c.btn(/^Open editor$/));
+    await settle();
     expect("the check ran", c.calls.filter((x) => x.name === "draft_read").length, 1);
     expect("and the link reads Refresh", !!c.btn(/^Refresh$/), true);
     expect("no Up to date", /Up to date/.test(c.text()), false);

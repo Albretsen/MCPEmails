@@ -227,6 +227,10 @@ let instance = 0;
 async function boot(opts = {}) {
   const host = installDom(opts);
   const mod = await import(`${pathToFileURL(OUT).href}?i=${++instance}`);
+  // Send's undo window (DraftEditor.tsx#SEND_UNDO_MS) is pinned in
+  // draft-send-safety.test.mjs. Here a send goes out on the next tick, so the
+  // scenarios below read as they did before the window existed.
+  mod.setSendUndoMs(0);
   const root = globalThis.document.getElementById("root");
   const until = Date.now() + 2000;
   while (Date.now() < until && !mod.getState().connected) await after(5);
@@ -299,6 +303,7 @@ async function main() {
     stdin: {
       contents:
         'import "./src/main";\n' +
+        'export { setSendUndoMs } from "./src/components/DraftEditor";\n' +
         'export { getState, setState, disarmResultWatchdog } from "./src/store";\n' +
         'export { splitAddresses, commaEndsAddress, addressKey } from "./src/components/DraftEditor";\n' +
         'export { hiddenDetail, turnOnUrl } from "./src/components/App";\n' +
@@ -606,6 +611,9 @@ async function main() {
     const c = await editor({ id_is_stable: false, last_saved_at: null, last_saved_by: null, origin: "read" });
     c.tools.draft_read = () => draftResult({ origin: "read", last_saved_at: null, last_saved_by: null });
     await settle();
+    // Mounted for the model's read: one line until opened (DraftReadLine.tsx).
+    c.press(c.btn(/^Open editor$/));
+    await settle();
     const titles = [...c.root.querySelectorAll("[title]")].map((e) => e.getAttribute("title")).join(" ");
     expect("no new-id text on screen", /new id/i.test(c.text()), false);
     expect("nor in a tooltip", /new id/i.test(titles), false);
@@ -696,6 +704,10 @@ async function main() {
     c.push(draftEnvelope({ origin: "read", last_saved_at: old, last_saved_by: "user" }));
     await settle();
     await settle();
+    // A card mounted for the model's read is one line until it is opened
+    // (QA 2026-10-15, DraftReadLine.tsx). The replay check runs regardless.
+    c.press(c.btn(/^Open editor$/));
+    await settle();
     expect("exactly one draft_read", c.calls.filter((x) => x.name === "draft_read").length, 1);
     expect("trusted after it", c.mod.getState().draftCheck, "trusted");
     expect("Send is on", c.softOff(c.btn(/^Send$/)), false);
@@ -722,6 +734,9 @@ async function main() {
     c.push(draftEnvelope({ origin: "read", last_saved_at: null, last_saved_by: null }));
     await settle();
     await settle();
+    // Mounted for the model's read: one line until opened (DraftReadLine.tsx).
+    c.press(c.btn(/^Open editor$/));
+    await settle();
     expect("exactly one draft_read", c.calls.filter((x) => x.name === "draft_read").length, 1);
     expect("Send is on", c.softOff(c.btn(/^Send$/)), false);
     expect("'Saved earlier'", /Saved earlier/.test(c.text()), true);
@@ -736,6 +751,9 @@ async function main() {
     c.tools.draft_read = () => draftResult({ draft_id: "Drafts:150", resolved_from: "Drafts:102", origin: "read", last_saved_at: null });
     c.push(draftEnvelope({ origin: "read", last_saved_at: null }));
     await settle();
+    await settle();
+    // Mounted for the model's read: one line until opened (DraftReadLine.tsx).
+    c.press(c.btn(/^Open editor$/));
     await settle();
     expect("the current id is adopted", c.mod.getState().envelope?.draft?.draft_id, "Drafts:150");
     expect("trusted", c.mod.getState().draftCheck, "trusted");

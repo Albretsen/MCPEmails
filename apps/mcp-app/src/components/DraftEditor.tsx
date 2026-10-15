@@ -14,7 +14,7 @@ import {
   wordCount,
 } from "../format";
 import { editsNotice, failureNotice, type DraftFailure } from "../draft-failure";
-import { setTeardownSaver, type DraftCheck } from "../store";
+import { setPendingSendCancel, setTeardownSaver, type DraftCheck } from "../store";
 import {
   clearUnsaved,
   fingerprint,
@@ -368,6 +368,34 @@ export const UNSAVED_DEBOUNCE_MS = 300;
 
 /** How long a save or send runs before the card says it is still working. */
 export const SLOW_WRITE_MS = 4_000;
+
+/**
+ * How long Send waits before it sends, with Undo where Send was.
+ *
+ * QA (2026-10-15): the right-hand button read "Send" on a clean draft and grew
+ * into "Save and send" the moment the draft was edited, which pushed Save to
+ * the left, so a click aimed at Save landed on "Save and send" and a real reply
+ * went to a third party. The footer no longer moves (`.btn.slot`), and a send
+ * is no longer one click away from being irreversible: Send starts this
+ * countdown, the call is made only when it runs out, and Undo stops it with the
+ * draft untouched.
+ *
+ * Undo rather than a confirm step, because a confirm is a second button that
+ * appears under the pointer, which is the shape of the accident being fixed:
+ * the second half of a double-click (or a held Enter) lands on it. Undo puts
+ * the SAFE choice under the pointer instead, so the same accident cancels.
+ * The card's other irreversible action, Discard, keeps its inline confirm,
+ * whose safe choice is likewise the one under the pointer (`CONFIRM_GUARD_MS`).
+ */
+export const SEND_UNDO_MS = 5_000;
+let sendUndoMs = SEND_UNDO_MS;
+/**
+ * Harness only: the undo window, shortened so the suites that send do not each
+ * wait five real seconds. Nothing in the card calls it.
+ */
+export function setSendUndoMs(ms: number): void {
+  sendUndoMs = ms;
+}
 
 /** Who the wait is on, for the still-working hint. */
 function providerName(d: DraftEditorData): string {
@@ -1450,11 +1478,143 @@ export function DraftEditor(props: Props) {
   const hasRecipient = FIELDS.some(
     (f) => edit[f].length > 0 || splitAddresses(edit.typed[f]).length > 0,
   );
-  const canSend = keyMaySend && hasRecipient && !pendingBad && canEdit && verified && !sendDoubt;
+  // A newer card exists for this draft and this one is still open only because
+  // it holds unsaved edits (it folds otherwise, see `Superseded`). Sending from
+  // the older card is off until the person chooses to work here, by editing or
+  // by "Edit here anyway". The server refuses a stale send anyway; this is so
+  // the older card does not LOOK sendable (QA, 2026-10-15).
+  const staleHere = props.superseded === true && !openAnyway;
+  const canSend =
+    keyMaySend && hasRecipient && !pendingBad && canEdit && verified && !sendDoubt && !staleHere;
   /** The one notice about the person's own edits, if any (draft-failure.ts). */
   const editsNote = editsNotice({ canEdit, check, restored, conflict });
   const saving = busy === "save";
   const sending = busy === "send";
+
+  // ---- Send waits, with Undo in its place ------------------------------------
+  //
+  // See `SEND_UNDO_MS`. The rules, each pinned in draft-send-safety.test.mjs:
+  //
+  //   - Pressing the Send slot while a send is counting down is Undo, whatever
+  //     the button looked like when the press began. The handler asks the ref,
+  //     not the render, so the second click of a double-click that arrives
+  //     before the re-render still cancels and never sends early.
+  //   - The send is re-validated when the countdown runs out, from the live
+  //     state, the way a click would be.
+  //   - Anything that changes what would be sent, or takes the Undo button off
+  //     the screen, cancels it: an edit, a new version of the draft, Send
+  //     turning off, a busy action, folding the card, opening a confirm, a
+  //     newer card. The card then says it was not sent.
+  //   - Unmount, `pagehide` and the host's teardown cancel it. A card going
+  //     away never sends on its own: the safe ending is a draft still in
+  //     Drafts, and the person can press Send again.
+  const [pendingSend, setPendingSend] = useState<{ until: number } | null>(null);
+  const pendingNow = useRef(false);
+  const sendTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
+  /** What the editor held when the countdown began, once rendered. */
+  const armedKey = useRef<string | null>(null);
+  const [, setTick] = useState(0);
+  /** A word after a send that was stopped. Under the buttons, then gone. */
+  const [sendNote, setSendNote] = useState<string | null>(null);
+  const dropTimer = () => {
+    if (sendTimer.current !== null) clearTimeout(sendTimer.current);
+    sendTimer.current = null;
+    pendingNow.current = false;
+    armedKey.current = null;
+    setPendingSendCancel(null);
+  };
+  const cancelSend = (note: string) => {
+    if (!pendingNow.current) return;
+    dropTimer();
+    setPendingSend(null);
+    setSendNote(note);
+  };
+  /** The last render's send, for the timer. See `SEND_UNDO_MS`. */
+  const fireSend = useRef<() => void>(() => {});
+  /** What would go out, as of this render. See the cancel effect below. */
+  const sendKey = JSON.stringify([stashKey, version]);
+  fireSend.current = () => {
+    if (!pendingNow.current) return;
+    // The draft changed since the countdown began. The effect below cancels
+    // for that, but it runs a frame AFTER the render that carries the edit,
+    // while this closure is already the new one: a countdown that ran out
+    // inside that frame used to save and send text nobody had looked at
+    // (verifier, 2026-10-15: an edit 2-16 ms before expiry went out). Checked
+    // here too, from the same render's key, so no frame is left open.
+    const changed = armedKey.current !== null && armedKey.current !== sendKey;
+    dropTimer();
+    setPendingSend(null);
+    if (changed) {
+      setSendNote("Not sent, because the draft changed. Press Send again to send it.");
+      return;
+    }
+    if (!canSend || busy !== null || folded || confirm !== null) {
+      setSendNote("Not sent. The draft is unchanged.");
+      return;
+    }
+    const next = readyToWrite();
+    if (!next) return;
+    const p = patchFrom(next);
+    sent.current = { version, edit: next };
+    void Promise.resolve(
+      actions.send(Object.keys(p).length > 0 ? p : null),
+    ).finally(() => {
+      if (sent.current?.edit === next) sent.current = null;
+    });
+  };
+  const onSendSlot = () => {
+    if (pendingNow.current) {
+      cancelSend("Not sent. The draft is unchanged.");
+      return;
+    }
+    if (!canSend) return;
+    // Validated now, so a bad address is reported at the click rather than
+    // five seconds later, and again when the countdown ends.
+    if (!readyToWrite()) return;
+    pendingNow.current = true;
+    armedKey.current = null;
+    setSendNote(null);
+    setPendingSend({ until: Date.now() + sendUndoMs });
+    sendTimer.current = setTimeout(() => {
+      sendTimer.current = null;
+      fireSend.current();
+    }, sendUndoMs);
+    setPendingSendCancel(() => cancelSend("Not sent. The draft is unchanged."));
+  };
+  // Anything that would change what goes out, or hide Undo, stops the send.
+  useEffect(() => {
+    if (!pendingSend || !pendingNow.current) return;
+    // The first render of the countdown carries whatever the press committed
+    // (a typed address that became a chip), so that is the state to hold.
+    if (armedKey.current === null) armedKey.current = sendKey;
+    if (armedKey.current !== sendKey) {
+      cancelSend("Not sent, because the draft changed. Press Send again to send it.");
+    } else if (!canSend || busy !== null || folded || confirm !== null) {
+      cancelSend("Not sent. The draft is unchanged.");
+    }
+  });
+  // The seconds left, redrawn only while a countdown is on screen.
+  useEffect(() => {
+    if (!pendingSend) return;
+    const t = setInterval(() => setTick((n) => n + 1), 250);
+    return () => clearInterval(t);
+  }, [pendingSend]);
+  useEffect(() => {
+    if (!sendNote) return;
+    const t = setTimeout(() => setSendNote(null), ADDR_NOTE_MS);
+    return () => clearTimeout(t);
+  }, [sendNote]);
+  // Going away cancels: unmount (the timer must not outlive the editor) and
+  // `pagehide` (a reload or a closed chat). Never a send nobody sees.
+  useEffect(() => {
+    const away = () => cancelSend("Not sent. The draft is unchanged.");
+    window.addEventListener("pagehide", away);
+    return () => {
+      window.removeEventListener("pagehide", away);
+      dropTimer();
+    };
+  }, []);
+  const sendLeft = pendingSend ? Math.max(1, Math.ceil((pendingSend.until - Date.now()) / 1000)) : 0;
   const attachLine = attachmentLine(d, fullscreen);
   // Which of Cc / Bcc are neither populated nor already revealed.
   const hiddenFields: Field[] = showMore
@@ -1502,7 +1662,7 @@ export function DraftEditor(props: Props) {
 
   /** Save: also what "Try again" in a failure notice runs. */
   const onSave = () => {
-    if (!canEdit || !verified) return;
+    if (!canEdit || !verified || pendingNow.current) return;
     const next = readyToWrite();
     if (!next) return;
     const p = patchFrom(next);
@@ -1982,6 +2142,13 @@ export function DraftEditor(props: Props) {
       {/* After a send whose answer was lost. Not folded into the failure
           notice: that one is replaced by the next action's (a Save, a
           Refresh), and this has to outlive them. */}
+      {staleHere && (
+        <p class="line" role="status">
+          A newer version of this draft is below. Sending from this card is off
+          until you edit here.
+        </p>
+      )}
+
       {sendDoubt && (
         <Notice tone="warning">
           We could not confirm whether this draft was sent, so sending is off.
@@ -2017,7 +2184,7 @@ export function DraftEditor(props: Props) {
           </Btn>
         </div>
       ) : (
-        <div class="acts">
+        <div class="acts ed-acts">
           {/* ── Two weights, not four ──────────────────────────────────────
               This row used to be Discard · Refresh · Save · Send as four
               equal buttons. Three problems: a destructive action and a
@@ -2075,28 +2242,46 @@ export function DraftEditor(props: Props) {
               Discard
             </TextLink>
           </span>
+          {/* One group, `.acts-r`, that never wraps or splits: see `.ed-acts` in
+              styles.css. */}
+          <span class="acts-r">
           {/* Both `soft`: they change availability while focused (busy, then
-              clean), and a real `disabled` would hand the next Tab to Send. */}
+              clean), and a real `disabled` would hand the next Tab to Send.
+
+              Both `slot`: a fixed width, and a label that does not depend on
+              whether the draft is edited. This was "Send" on a clean draft and
+              the wider "Save and send" on an edited one, which moved Save to
+              the left under a pointer that was on its way to it (QA,
+              2026-10-15). What Send does with unsaved changes (saves them
+              first) is in its tooltip. The order never changes either: Save,
+              then the Send slot, which holds Undo while a send counts down. */}
           <Btn
             soft
-            disabled={!canEdit || !(dirty || typedPending) || !verified}
+            slot
+            disabled={!canEdit || !(dirty || typedPending) || !verified || pendingSend !== null}
             busy={saving}
+            title={pendingSend ? "Undo the send first to keep editing and save" : undefined}
             onClick={onSave}
           >
             {saving ? "Saving" : "Save"}
           </Btn>
           <Btn
             soft
-            variant="primary"
-            disabled={!canSend}
+            slot
+            variant={pendingSend ? "default" : "primary"}
+            disabled={pendingSend ? false : !canSend}
             busy={sending}
             title={
-              canSend
+              pendingSend
+                ? "Stop this send. The draft stays in Drafts, unchanged."
+                : canSend
                 ? dirty
-                  ? "Saves your changes first, then sends"
-                  : "Sends this draft now"
+                  ? "Saves your changes first, then sends after a few seconds you can undo"
+                  : "Sends this draft after a few seconds you can undo"
                 : sendDoubt
                   ? "Sending is off until you have checked whether the last send went out"
+                  : staleHere
+                  ? "A newer version of this draft is below. Edit here to send from this card."
                   : !verified
                   ? "Sending is off until this draft has been checked against the mailbox"
                   : !canEdit
@@ -2107,20 +2292,16 @@ export function DraftEditor(props: Props) {
                   ? "Add a recipient to send this draft"
                   : "This connection is not allowed to send"
             }
-            onClick={() => {
-              const next = readyToWrite();
-              if (!next) return;
-              const p = patchFrom(next);
-              sent.current = { version, edit: next };
-              void Promise.resolve(
-                actions.send(Object.keys(p).length > 0 ? p : null),
-              ).finally(() => {
-                if (sent.current?.edit === next) sent.current = null;
-              });
-            }}
+            onClick={onSendSlot}
           >
-            {sending ? "Sending" : dirty ? "Save and send" : "Send"}
+            {pendingSend ? "Undo" : sending ? "Sending" : "Send"}
           </Btn>
+          <span class="sr-only" role="status">
+            {pendingSend
+              ? "Sending in a few seconds. Press Undo to keep it as a draft."
+              : sendNote ?? ""}
+          </span>
+          </span>
         </div>
       )}
 
@@ -2131,9 +2312,11 @@ export function DraftEditor(props: Props) {
         // constant boilerplate the user did not write and can now see is
         // separate, so counting it answers a question nobody asked and makes a
         // three-word note read as thirty.
-        lead={slow
+        lead={pendingSend
+          ? `Sending in ${sendLeft} s · Undo keeps it as a draft`
+          : slow
           ? `${saving ? "Still saving" : "Still working"}. ${providerName(d)} can take a moment.`
-          : `${wordCount(split.message)} words`}
+          : sendNote ?? `${wordCount(split.message)} words`}
         // Inline, the provider label and the route move into the tooltip.
         // See ProviderLine.
         compactSummary="Saved to Drafts"
