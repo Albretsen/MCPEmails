@@ -56,6 +56,7 @@ import {
 } from "./first-party.ts";
 import { decodeModifiedUtf7, encodeModifiedUtf7 } from "./utf7.ts";
 import { parseCopyUid } from "./imap-copyuid.ts";
+import { mcpPooledConnect } from "./mcp-imap-pool.ts";
 import { IMAP_CLIENT_ID, imapServerWantsId } from "./imap-id.ts";
 import {
   chooseImapPasswordMechanism,
@@ -664,7 +665,10 @@ export class ImapClient {
     // connection it already holds. The store is never opened for an MCP
     // request, so there this is one undefined read and the dial below runs
     // exactly as it always has.
-    const pooled = firstPartyContext.getStore()?.imapConnect;
+    //
+    // MCP tool calls have their own warm pool (mcp-imap-pool.ts), consulted
+    // only when the first-party hook is absent. Outside a tool call it is null.
+    const pooled = firstPartyContext.getStore()?.imapConnect ?? mcpPooledConnect();
     if (pooled) return await pooled(cfg, () => ImapClient.dial(cfg));
     return await ImapClient.dial(cfg);
   }

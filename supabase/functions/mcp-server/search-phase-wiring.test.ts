@@ -258,12 +258,18 @@ Deno.test("include_folders means the same thing in all three tools", () => {
     functionSource("resolveIncludeFolders"),
     // `forRead` since 2026-10-02: a search scope may use the read-only role
     // fallbacks (archive on Gmail over IMAP is All Mail). See resolveFolderId.
-    "{ strict: true, session, forRead: true }",
+    // `imapMailboxes` since 2026-10-15: one LIST for the whole list, not one
+    // per entry. Strictness is unchanged.
+    "{ strict: true, session, forRead: true, imapMailboxes }",
   );
   for (const name of SEARCH_HANDLERS) {
     assertStringIncludes(
       functionSource(name),
-      "if (err instanceof FolderTargetError) return folderTargetErrorResult(err);",
+      // email_search resolves inside its timeout race since 2026-10-15, so the
+      // folder error reaches it wrapped, as `cause` (search-latency-20261015.test.ts).
+      name === "executeSearchEmails"
+        ? "if (cause instanceof FolderTargetError) return folderTargetErrorResult(cause);"
+        : "if (err instanceof FolderTargetError) return folderTargetErrorResult(err);",
       `${name} must render an unmatched folder as folder_not_found`,
     );
   }
