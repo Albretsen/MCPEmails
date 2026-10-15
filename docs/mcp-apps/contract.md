@@ -1013,22 +1013,31 @@ only channel.
 is the one thing every host shows the model. So:
 
 * `draft_editor_save` that WROTE something, and `draft{action:"send"}` with `base_revision` that
-  sent (the card is the only caller that passes it; the dispatcher's re-run of an approved send is
-  excluded by its internal marker), insert a row into `public.draft_card_activity` (migration
-  `20261015220000_draft_card_activity.sql`): draft id, line, revision, action, time, the NAMES of
-  the fields a save changed and recipient COUNTS. No subject, address or body. A discard is not
-  recorded: `draft{action:"delete"}` carries nothing that tells the card's call from the model's.
+  sent (the card's path; the dispatcher's re-run of an approved send and the web client are
+  excluded), insert a row into `public.draft_card_activity` (migration
+  `20261015220000_draft_card_activity.sql`): the API key the call came in on, draft id, line,
+  revision, action, time, the NAMES of the fields a save changed and recipient COUNTS. No subject,
+  address or body. A discard is not recorded: `draft{action:"delete"}` carries nothing that tells
+  the card's call from the model's.
+* **Per key.** Only a call on the SAME API key claims a row. A save in Claude's card is not news
+  to another client (ChatGPT, a script) on another key that touches the inbox first.
+* **On the MCP path only.** The claim runs in `handleToolsCall` after dispatch, not in
+  `dispatchExecutor`: client-api runs the same executors for the web client, where the rows would
+  be claimed and the note never attached. client-api never calls `handleToolsCall`, so the web
+  client never claims (pinned in `card-activity.test.ts`); no first-party marker is read, which
+  keeps client-api's `mcp-neutral` count of those reads unchanged. Rows the web client's key
+  records are never claimed and expire after 7 days.
 * The model's next successful `draft_list`, `draft{action:"create"|"reply"|"update"}` or
-  `draft{action:"send"}` WITHOUT `base_revision` for that inbox claims the unreported rows of the
-  last 24 hours in one `UPDATE … RETURNING` (so each is told once) and carries one server note
-  through `result-notes.ts` (a trailing `content` block and `structuredContent.notes`), e.g.:
+  `draft{action:"send"}` WITHOUT `base_revision` for that key and inbox claims the unreported rows
+  of the last 24 hours in one `UPDATE … RETURNING` (so each is told once) and carries one server
+  note through `result-notes.ts` (a trailing `content` block and `structuredContent.notes`), e.g.:
 
-  > Since the last draft result for this inbox, the user acted in the MCP Emails draft editor card,
-  > which is not shown to you. At 2026-10-15T11:58:00Z the user saved draft Drafts:7 in the card,
-  > changing the subject and To. Its recipients are now to 2, cc 0, bcc 0. At
-  > 2026-10-15T11:59:30Z the user sent draft Drafts:8 from the card. It is no longer a draft and
-  > that draft_id no longer resolves. draft_read returns a saved draft's current subject,
-  > recipients and text.
+  > Since the last draft result for this inbox, the MCP Emails draft editor (the card in which the
+  > user can edit, save and send a draft) recorded these changes, which may not appear in this
+  > conversation. At 2026-10-15T11:58:00Z draft Drafts:7 was saved, changing the subject and To.
+  > Its recipients are now to 2, cc 0, bcc 0. At 2026-10-15T11:59:30Z draft Drafts:8 was sent. It
+  > is no longer a draft and that draft_id no longer resolves. draft_read returns a saved draft's
+  > current subject, recipients and text.
 
   `content[0]` is untouched (the payload JSON is not `structuredContent`'s mirror, so
   `attachResultNote` leaves it alone); the deferred-body row's `content[1]` notice stays second.
@@ -1036,11 +1045,20 @@ is the one thing every host shows the model. So:
   with `base_revision`): the host does not show the model those results, so the note would be
   claimed and never read, and `draft-failure.ts#textRefusalCode` reads every text block of a
   card's `draft` answer.
+* **It never says a person did it.** `base_revision` is in the model-visible `draft` schema, and
+  `draft_editor_save`'s `["app"]` visibility is a host hint. A card's call arrives through the host
+  with the same credentials and JSON-RPC shape as a model's, so no request carries a signal the
+  model cannot forge, and narrowing the advertised schema to make one is not allowed. The note
+  therefore says what was recorded ("was saved", "was sent", "the draft editor recorded") and never
+  "the user did". That is true whoever called, and it is enough to stop "I never sent it".
 * Fail soft: without the table nothing is recorded or noted and every tool answers as before, so
-  the migration and the function can deploy in either order. Rows older than 7 days are deleted on
-  the next insert for the inbox.
-* `card-activity.ts` holds the rules and the wording; `card-activity.test.ts` pins them, the save
-  and read wiring through `runDraftEditorSave` / `runDraftRead`, and the `index.ts` wiring.
+  the migration and the function can deploy in either order. Every insert also deletes rows older
+  than 7 days in EVERY workspace; because that runs on every insert, the backlog it meets is only
+  what expired since the previous one.
+* `card-activity.ts` holds the rules, the wording and the PostgREST store
+  (`postgrestCardActivityStore`); `card-activity.test.ts` pins them, the store's filters against a
+  recording client, the save and read wiring through `runDraftEditorSave` / `runDraftRead`, and
+  the `index.ts` wiring. `supabase/tests/draft_card_activity.sql` pins the table.
 
 **Tool descriptions.** `draft` (both surfaces' create) and `draft_read` now say that the user can
 save, send or discard a draft in the card without the model being told, and to call `draft_read`
@@ -1126,13 +1144,11 @@ is closed when the draft is sent or deleted. Ids, a revision, who wrote last and
   was sent again.`); in a gated workspace a failed receipt with the same code rides in
   `structuredContent`. `draft_read` and `draft_editor_save` keep answering a closed line with
   `draft_not_found` and a receipt that says which of sent / discarded happened.
-  **Since 2026-10-15 both say who sent it and when** (see "Card activity notes"): the refusal
-  reads `draft_send: draft <id> was already sent by the user from the MCP Emails draft editor card
-  at <ISO instant>. Nothing was sent again.` when the card's send was recorded, `… was already sent
-  at <closed_at>.` when only the lineage knows, and the old sentence when neither does. A
-  `draft_read` / `draft_editor_save` of a line closed by a SEND now has its own `content`
-  (`Draft <id> was already sent [by the user from the MCP Emails draft editor card] at <instant>.
-  It is no longer a draft, so this draft_id no longer resolves. Nothing was changed.`); the code
+  **Since 2026-10-15 both say when it was sent, never who** (see "Card activity notes"): the
+  refusal reads `draft_send: draft <id> was already sent at <closed_at>. Nothing was sent again.`
+  (the old sentence when the lineage has no time). A `draft_read` / `draft_editor_save` of a line
+  closed by a SEND now has its own `content` (`Draft <id> was already sent at <closed_at>. It is no
+  longer a draft, so this draft_id no longer resolves. Nothing was changed.`); the code
   and the card's receipt are unchanged. A line closed by a delete keeps the not-found sentence.
 * **An id the mailbox has given to another message (UIDVALIDITY reset, a mail client) is that
   message.** Where the lineage would redirect an id, or call it closed, the server first asks the
