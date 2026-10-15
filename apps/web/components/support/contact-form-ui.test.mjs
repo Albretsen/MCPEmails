@@ -23,7 +23,7 @@ const { default: en } = await import('../../src/lib/support/help-content/en.json
 const CONTEXT = {
   workspace_id: 'ws-0001',
   plan: 'free',
-  mailboxes: [{ provider: 'imap', service: 'yahoo', host: 'imap.mail.yahoo.com', status: 'error', last_error_code: 'auth_failed' }],
+  mailboxes: [{ provider: 'imap', service: 'yahoo', host: 'imap-host-fixture', status: 'error', last_error_code: 'auth_failed' }],
   from: 'connect-modal',
   provider: 'yahoo',
   code: 'auth_failed',
@@ -95,7 +95,7 @@ test('signed in: no email field, the address read-only, and the attach disclosur
   const text = details.textContent;
   assert.equal(text.includes(en.attach.summary), true);
   assert.equal(text.includes('ws-0001'), true);
-  assert.equal(text.includes('imap.mail.yahoo.com'), true);
+  assert.equal(text.includes('imap-host-fixture'), true);
   assert.equal(text.includes('auth_failed'), true);
   assert.equal(text.includes(en.attach.never), true);
 });

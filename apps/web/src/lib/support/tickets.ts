@@ -145,7 +145,7 @@ export function createSupabaseTicketStore(service: SupabaseClient<Database>): Ti
     async insert(row) {
       const { data, error } = await service
         .from('support_tickets')
-        .insert({ ...row, context: row.context as unknown as Json })
+        .insert({ ...row, context: row.context as unknown as NonNullable<Json> })
         .select('id, ref')
         .single();
       if (error || !data) {

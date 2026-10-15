@@ -65,6 +65,7 @@ const DOCS_SECTIONS = [
 export function clip(text, max = HINT_MAX) {
   const plain = String(text ?? '')
     .replace(/<[^>]*>/g, '')
+    .replace(/[<>]/g, '')
     .replace(/\s+/g, ' ')
     .trim();
   if (plain.length <= max) return plain;
