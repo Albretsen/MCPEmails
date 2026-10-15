@@ -3797,6 +3797,7 @@ export type Database = {
       }
       workspaces: {
         Row: {
+          acquisition_device: string | null
           acquisition_email_segment: string | null
           acquisition_landing: string | null
           acquisition_landing_path: string | null
@@ -3843,6 +3844,7 @@ export type Database = {
           web_client_enabled: boolean
         }
         Insert: {
+          acquisition_device?: string | null
           acquisition_email_segment?: string | null
           acquisition_landing?: string | null
           acquisition_landing_path?: string | null
@@ -3889,6 +3891,7 @@ export type Database = {
           web_client_enabled?: boolean
         }
         Update: {
+          acquisition_device?: string | null
           acquisition_email_segment?: string | null
           acquisition_landing?: string | null
           acquisition_landing_path?: string | null

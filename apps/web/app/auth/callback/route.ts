@@ -2,6 +2,8 @@ import { NextResponse } from 'next/server';
 import { createClient } from '@/lib/supabase/server';
 import { createServiceRoleClient } from '@/lib/supabase/service';
 import { acquisitionFromParams, isNewAccountSignup } from '@/lib/acquisition-context.mjs';
+import { deviceClassFromHeaders } from '@/lib/acquisition-device.mjs';
+import { stampAcquisitionDevice } from '@/lib/acquisition-device-stamp';
 import {
   clearConsentCookieString,
   consentVersionFromCookieHeader,
@@ -106,6 +108,18 @@ export async function GET(request: Request) {
         })
         .eq('owner_id', user.id)
         .is('acquisition_source', null);
+
+      // Phone, tablet or desktop, from the headers of THIS request: the
+      // provider redirected the user's own browser here, so it is the one
+      // request in an OAuth signup that carries the real User-Agent (the
+      // session is created server-side, and auth.sessions records `node`).
+      // Only the class is kept. A statement of its own, so the attribution
+      // write above cannot fail on this column before its migration is
+      // applied. It filters on its own NULL and never throws.
+      await stampAcquisitionDevice(supabase, {
+        ownerId: user.id,
+        device: deviceClassFromHeaders(request.headers),
+      });
     }
   }
 
