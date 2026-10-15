@@ -22,6 +22,7 @@ IMPORTANT: a push to `main` is a production deploy of the web app. Vercel promot
 
 - Other sessions work in this repo at the same time. Never switch branches or `git checkout -b` in the main checkout; work in a git worktree. Stage explicit paths only, and never commit or deploy files you did not change.
 - Before redoing work, check git and open PRs: another session may already have done it.
+- `gh auth switch --user Albretsen` is always available. When a `gh` command (merging, auto-merge, workflow dispatch) is refused for permissions, switch to that account and retry rather than stopping.
 - Decide whether something shipped by grepping the content of `origin/main`, never by commit ancestry.
 - "Done" means merged, deployed to every surface the change touches (web, edge functions, migrations), and checked in production. Say which surfaces you deployed.
 - Never run `vercel --prod` from a worktree: the CLI walks up to the main checkout's `.vercel` link and uploads that tree, including other sessions' uncommitted files. Pushing to `main` is the web deploy.
