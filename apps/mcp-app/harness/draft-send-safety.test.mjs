@@ -273,9 +273,9 @@ async function boot(opts = {}) {
       el.dispatchEvent(new host.w.KeyboardEvent("keydown", { key, bubbles: true, cancelable: true })),
     active: () => globalThis.document.activeElement,
     /** The two real buttons of the action row, in order. */
-    footer: () => [...root.querySelectorAll(".acts > .btn")],
+    footer: () => [...root.querySelectorAll(".ed-acts > .acts-r > .btn")],
     /** The Send slot: Send, or Undo while a send counts down. */
-    slot: () => root.querySelectorAll(".acts > .btn")[1] ?? null,
+    slot: () => root.querySelectorAll(".ed-acts > .acts-r > .btn")[1] ?? null,
     /** The line under the buttons. */
     lead: () => root.querySelector(".line.prov")?.textContent ?? "",
     /** Every send-shaped call: a save or a send of the draft. */
@@ -337,7 +337,7 @@ async function main() {
         'import "./src/main";\n' +
         'export { getState, setState, disarmResultWatchdog, REPLAY_AGE_MS } from "./src/store";\n' +
         'export { SEND_UNDO_MS, setSendUndoMs } from "./src/components/DraftEditor";\n' +
-        'export { SIGNAL_CHANNEL, SIGNAL_KEY, signalTag } from "./src/draft-signal";\n' +
+        'export { SIGNAL_CHANNEL, SIGNAL_KEY, SIGNAL_GAP_MS, signalTag } from "./src/draft-signal";\n' +
         'export { render } from "preact";\n',
       resolveDir: appRoot,
       sourcefile: "draft-send-safety-entry.ts",
@@ -419,6 +419,18 @@ async function main() {
     expect("a .btn.slot rule exists", rule.length > 0, true);
     expect("with a width", /(^|[\s;])width\s*:/.test(rule), true);
     expect("that does not flex", /flex\s*:\s*none/.test(rule), true);
+    // The row itself: Save and Send are one group that never wraps or shrinks,
+    // and the row never wraps it away from the links (footer-geometry.mjs
+    // measures this in real Chrome; jsdom has no layout).
+    const row = /\.acts\.ed-acts\s*\{([^}]*)\}/.exec(css)?.[1] ?? "";
+    const group = /\.acts-r\s*\{([^}]*)\}/.exec(css)?.[1] ?? "";
+    expect("the footer row does not wrap", /flex-wrap\s*:\s*nowrap/.test(row), true);
+    expect("the buttons stay at the top of the row", /align-items\s*:\s*flex-start/.test(row), true);
+    expect("Save and Send are one group that does not flex", /flex\s*:\s*none/.test(group), true);
+    const c = await card();
+    const [save, send] = c.footer();
+    expect("in the DOM, too: one parent for both", !!save && save.parentElement === send?.parentElement && save.parentElement.classList.contains("acts-r"), true);
+    await c.done();
   }
 
   // ── 2. Send waits, with Undo in its place ────────────────────────────────
@@ -515,6 +527,62 @@ async function main() {
     expectJson("nothing was called", c.calls, []);
     expect("the card says why", /draft changed/.test(c.lead()), true);
     expect("the edit is kept", c.value("d-body"), "Wait, one more line.");
+    await c.done();
+  }
+
+  group("2d'. Try again in a failure notice saves nothing during a countdown");
+  {
+    // Save itself is off while a send counts down; the failure notice's
+    // "Try again" is the other way into onSave, and has to be refused too.
+    const c = await card();
+    c.tools.draft_editor_save = () => failedResult("provider_error", "That draft could not be saved.", "Try again shortly.");
+    c.input("d-body", "Edited.");
+    await settle();
+    c.press(c.btn(/^Save$/));
+    await settle();
+    await settle();
+    const retry = c.btn(/^Try again$/);
+    expect("the failed save offers Try again", !!retry, true);
+    const before = c.writes().length;
+    c.tools.draft = () => sentResult();
+    c.press(c.slot());
+    await settle();
+    if (retry) c.press(c.btn(/^Try again$/) ?? retry);
+    await settle();
+    expect("Try again during the countdown writes nothing", c.writes().length, before);
+    c.press(c.slot()); // Undo
+    await settle();
+    await c.done();
+  }
+
+  group("2e'. an edit in the last frame before expiry is not sent");
+  {
+    // The cancel effect runs a frame after the render that carries an edit.
+    // Animation frames are held back here, so that frame is wide open (hooks
+    // fall back to a 100 ms timer), and the edit lands 2 ms before expiry:
+    // only a check made when the countdown runs out can stop it.
+    const c = await card();
+    c.tools.draft_editor_save = (args) => draftResult({ draft_id: "Drafts:103", origin: "save", last_saved_by: "user", body: { text: args.body_text } });
+    c.tools.draft = () => sentResult();
+    const pressedAt = Date.now();
+    c.press(c.slot());
+    await settle();
+    await after(120); // the countdown's first render has been armed
+    const raf = globalThis.requestAnimationFrame;
+    globalThis.requestAnimationFrame = () => 0;
+    try {
+      await new Promise((r) => setTimeout(() => {
+        c.input("d-body", "Typed in the last moment.");
+        r();
+      }, Math.max(0, pressedAt + UNDO - 3 - Date.now())));
+      await pastUndo();
+    } finally {
+      globalThis.requestAnimationFrame = raf;
+    }
+    await settle();
+    expectJson("no save and no send", c.writes(), []);
+    expect("the card says why", /draft changed/.test(c.lead()), true);
+    expect("the edit is kept", c.value("d-body"), "Typed in the last moment.");
     await c.done();
   }
 
@@ -674,6 +742,28 @@ async function main() {
     await settle();
     expect("not a hint: no read", c.calls.length, 0);
     expect("still the editor", c.isEditor(), true);
+    await c.done();
+  }
+
+  group("4c'. a burst of hints is one read (SIGNAL_GAP_MS)");
+  {
+    const c = await card({ revision: 1 });
+    // The read finds nothing newer, so the card stays live and could read again.
+    c.tools.draft_read = () => draftResult({ origin: "read", revision: 1 });
+    const hint = () => storageHint(c, { ids: [c.mod.signalTag("Drafts:102")], inbox: c.mod.signalTag(INBOX), revision: 2 });
+    hint();
+    await settle();
+    hint();
+    await settle();
+    hint();
+    await settle();
+    expect("three hints in a row: one read", c.calls.length, 1);
+    expect("still the editor", c.isEditor(), true);
+    await later(c.mod.SIGNAL_GAP_MS + 500, async () => {
+      hint();
+      await settle();
+    });
+    expect("a hint after the gap reads again", c.calls.length, 2);
     await c.done();
   }
 

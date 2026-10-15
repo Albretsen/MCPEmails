@@ -474,6 +474,39 @@ body {
   min-width: 0;
 }
 
+/* The draft editor's footer: links on the left, Save and Send on the right.
+   It does NOT wrap. The links change width with their state ("Refresh",
+   "Refreshing", "Up to date"; "Show formatting", "Edit plain text"), and with
+   `.acts`'s wrap that moved the wrap point: at 420px Save slid into Send's old
+   place and Send dropped to a row of its own (verifier, 2026-10-15). Now Save
+   and Send are one group (`.acts-r`) that never wraps, never shrinks and sits
+   at the top right of the row; the links take whatever width is left and wrap
+   among themselves, so only the row's height can change, below the buttons. */
+.acts.ed-acts {
+  flex-wrap: nowrap;
+  align-items: flex-start;
+}
+/* Fullscreen pins this row to the BOTTOM of the frame, so a row that grows
+   grows upward: there the buttons hold the bottom edge instead of the top. */
+.card[data-mode="fullscreen"] > .acts.ed-acts {
+  align-items: flex-end;
+}
+.ed-acts > .acts-l {
+  flex: 1 1 0;
+  min-height: 28px;
+  row-gap: 2px;
+}
+.ed-acts > .acts-l > .link {
+  text-align: left;
+  overflow-wrap: anywhere;
+}
+.acts-r {
+  display: flex;
+  gap: 6px;
+  flex: none;
+  margin-left: auto;
+}
+
 .btn {
   appearance: none;
   font: inherit;

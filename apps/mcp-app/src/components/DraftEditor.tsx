@@ -1545,10 +1545,23 @@ export function DraftEditor(props: Props) {
   };
   /** The last render's send, for the timer. See `SEND_UNDO_MS`. */
   const fireSend = useRef<() => void>(() => {});
+  /** What would go out, as of this render. See the cancel effect below. */
+  const sendKey = JSON.stringify([stashKey, version]);
   fireSend.current = () => {
     if (!pendingNow.current) return;
+    // The draft changed since the countdown began. The effect below cancels
+    // for that, but it runs a frame AFTER the render that carries the edit,
+    // while this closure is already the new one: a countdown that ran out
+    // inside that frame used to save and send text nobody had looked at
+    // (verifier, 2026-10-15: an edit 2-16 ms before expiry went out). Checked
+    // here too, from the same render's key, so no frame is left open.
+    const changed = armedKey.current !== null && armedKey.current !== sendKey;
     dropTimer();
     setPendingSend(null);
+    if (changed) {
+      setSendNote("Not sent, because the draft changed. Press Send again to send it.");
+      return;
+    }
     if (!canSend || busy !== null || folded || confirm !== null) {
       setSendNote("Not sent. The draft is unchanged.");
       return;
@@ -1583,7 +1596,6 @@ export function DraftEditor(props: Props) {
     setPendingSendCancel(() => cancelSend("Not sent. The draft is unchanged."));
   };
   // Anything that would change what goes out, or hide Undo, stops the send.
-  const sendKey = JSON.stringify([stashKey, version]);
   useEffect(() => {
     if (!pendingSend || !pendingNow.current) return;
     // The first render of the countdown carries whatever the press committed
@@ -2187,7 +2199,7 @@ export function DraftEditor(props: Props) {
           </Btn>
         </div>
       ) : (
-        <div class="acts">
+        <div class="acts ed-acts">
           {/* ── Two weights, not four ──────────────────────────────────────
               This row used to be Discard · Refresh · Save · Send as four
               equal buttons. Three problems: a destructive action and a
@@ -2245,6 +2257,9 @@ export function DraftEditor(props: Props) {
               Discard
             </TextLink>
           </span>
+          {/* One group, `.acts-r`, that never wraps or splits: see `.ed-acts` in
+              styles.css. */}
+          <span class="acts-r">
           {/* Both `soft`: they change availability while focused (busy, then
               clean), and a real `disabled` would hand the next Tab to Send.
 
@@ -2300,6 +2315,7 @@ export function DraftEditor(props: Props) {
             {pendingSend
               ? "Sending in a few seconds. Press Undo to keep it as a draft."
               : sendNote ?? ""}
+          </span>
           </span>
         </div>
       )}

@@ -1385,7 +1385,10 @@ the page puts them back. Two rules were added by the second review:
 * **The footer does not move.** Save and the Send slot are fixed-width (`.btn.slot`) and Send's label no
   longer depends on whether the draft is edited (it was "Save and send", which grew and pushed Save under
   the pointer; a click aimed at Save sent a real reply). What Send does with unsaved changes is in its
-  tooltip.
+  tooltip. They are one group (`.acts-r`) in a row that never wraps (`.ed-acts`): the left links wrap
+  among themselves, and the buttons hold the row's top edge inline and its bottom edge in fullscreen.
+  `apps/mcp-app/harness/footer-geometry.mjs` measures this in real Chrome (not in `verify.mjs`: CI has
+  no Chrome).
 * **Send has an undo window.** Send starts a 5 s countdown (`DraftEditor.tsx#SEND_UNDO_MS`); the slot
   reads Undo and the line under the buttons "Sending in N s". No tool is called until it runs out, and
   then the send is re-validated from the live state. Pressing the slot during the countdown is always
