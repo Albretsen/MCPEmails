@@ -1443,6 +1443,18 @@ const USER_VISIBLE_OUTCOMES: OutcomeCase[] = [
     args: { draft_id: "Drafts:2", subject: "x" },
   },
   {
+    at: "save: refuses when the stored files plus the new ones are too large to rebuild",
+    tool: "draft_editor_save",
+    expect: "attachment_too_large",
+    options: {
+      stored: {
+        ...WITH_ATTACHMENT,
+        carried: { count: 1, bytes: 26 * 1024 * 1024, inlineImages: 0, encode: () => [] },
+      },
+    },
+    args: { draft_id: "Drafts:2", subject: "x" },
+  },
+  {
     at: "save: refuses rather than dropping parts that are not attachments",
     tool: "draft_editor_save",
     expect: "draft_not_rebuildable",

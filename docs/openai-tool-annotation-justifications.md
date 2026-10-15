@@ -481,6 +481,17 @@ settings — see its block, which is the one place in this file a
 - **destructiveHint:** Purely additive. It adds one draft and leaves the message it answers untouched. Nothing is sent.
 - **openWorldHint:** The draft is stored in the connected mailbox and is not transmitted to anyone.
 
+**Files on drafts (2026-10-15).** `draft_create`, `draft_reply` and
+`draft_update` take `attachments` (inline base64, or a file already in the
+inbox by `source_message_id`) and, on this per-operation listing only, `files`,
+declared through `_meta["openai/fileParams"]` in the exact four-property shape
+the scan requires. A `files` entry is downloaded by the server from the
+short-lived `download_url` ChatGPT supplies, through the same SSRF guard as
+signature images, and stored on the draft. None of the three hints moves:
+the download only reads a file the user shared in the conversation, and the
+draft is still stored in the user's own mailbox and transmitted to nobody, so
+openWorld stays false. `draft_update` ADDS files and keeps the stored ones.
+
 ## draft_update (readOnly: false, destructive: true, openWorld: false)
 
 **Submitted text.**

@@ -460,7 +460,8 @@ export const heldSendLegacy = {
 // Two providers, because the two halves of the feature only show up one per
 // provider: IMAP has `id_is_stable: false`, so the card has to adopt a new
 // draft_id on every save or its next call 404s, and Gmail is where a draft with
-// attachments demonstrates the save refusal. Hostile strings throughout for the
+// attachments shows its file line (a save keeps them since 2026-10-15; the
+// refusal fixture below is the rare case where it cannot). Hostile strings throughout for the
 // same reason as everything else in this file: a draft subject and the reply
 // metadata come from whoever wrote the message being answered.
 // ---------------------------------------------------------------------------

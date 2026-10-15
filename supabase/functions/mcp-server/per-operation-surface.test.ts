@@ -511,7 +511,9 @@ Deno.test("with every gate open, only operations that can fill the card claim it
     .filter((tool) => !APP_ONLY.test(tool.name))
     .filter((tool) => !DRAFT_EDITOR_MODEL_VISIBLE_TOOL_NAMES.includes(tool.name))
     .filter((tool) => tool._meta !== undefined);
-  for (const tool of claiming) assertEquals(tool._meta, reviewCardToolMeta(), tool.name);
+  for (const tool of claiming) {
+    assertEquals(tool._meta, { ...fileParamsMeta(tool.name), ...reviewCardToolMeta() }, tool.name);
+  }
   assertEquals(
     claiming.map((tool) => tool.name).sort(),
     Object.values(PER_OPERATION_CARD_TOOL_NAMES).flat().sort(),
@@ -524,7 +526,8 @@ Deno.test("with every gate shut, no per-operation mail tool carries card metadat
   const shut = { outbound: false, bulk: false, drafts: false };
   for (const tool of withListingCardMeta(PER_OPERATION_LISTING, shut, "per_operation")) {
     if (APP_ONLY.test(tool.name)) continue;
-    assertEquals(tool._meta, undefined, tool.name);
+    // The draft writes still say which argument takes a ChatGPT file.
+    assertEquals(tool._meta, FILE_PARAM_TOOL_NAMES.includes(tool.name) ? fileParamsMeta(tool.name) : undefined, tool.name);
   }
 });
 
@@ -548,6 +551,12 @@ Deno.test("every card-claiming operation is one the listing actually has", () =>
 // consolidated listing has.
 // ═══════════════════════════════════════════════════════════════════════════
 
+/** The draft writes that take ChatGPT files (draft-attachments.ts). */
+const FILE_PARAM_TOOL_NAMES = ["draft_create", "draft_reply", "draft_update"];
+function fileParamsMeta(name: string): Record<string, unknown> {
+  return FILE_PARAM_TOOL_NAMES.includes(name) ? { "openai/fileParams": ["files"] } : {};
+}
+
 const listedByName = () =>
   new Map(PER_OPERATION_LISTING.map((tool) => [tool.name, serializeToolForList(tool)]));
 
@@ -569,7 +578,9 @@ Deno.test("the draft editor's own tools get the same visibility on this surface 
   // Gate shut: no `_meta` at all, so a host lists all three as ordinary tools.
   const shut = { outbound: true, bulk: true, drafts: false };
   for (const tool of withListingCardMeta(PER_OPERATION_LISTING, shut, "per_operation")) {
-    if (tool.name.startsWith("draft_")) assertEquals(tool._meta, undefined, tool.name);
+    if (tool.name.startsWith("draft_")) {
+      assertEquals(tool._meta, FILE_PARAM_TOOL_NAMES.includes(tool.name) ? fileParamsMeta(tool.name) : undefined, tool.name);
+    }
   }
 });
 
@@ -590,10 +601,11 @@ Deno.test("draft_update is listed with body optional, and says what an update wi
     description.startsWith(
       "Change an existing draft. Each supplied field overwrites the stored one; an omitted " +
         "field, body included, keeps its stored value. Pass at least one of to, cc, bcc, " +
-        "subject or body. Omit body to change a subject or recipients without overwriting " +
+        "subject, body or attachments. Omit body to change a subject or recipients without overwriting " +
         "text the user edited; draft_read returns the current text. The signature is " +
-        "embedded only when body is passed. Without body, on IMAP and Gmail a draft with " +
-        "attachments, inline images or other extra parts is refused and left unchanged. ",
+        "embedded only when body is passed. attachments ADDS files; the draft's existing " +
+        "attachments are kept. Without body, on IMAP and Gmail a draft with inline images " +
+        "or other extra parts is refused and left unchanged. ",
     ),
     description,
   );
@@ -611,7 +623,7 @@ Deno.test("a body-less draft_update passes validation under the per-operation na
   assertEquals(empty.result?.isError, true);
   assertEquals(
     refusalText(empty),
-    "draft_update: none of to, cc, bcc, subject or body was given, so there is nothing to " +
+    "draft_update: none of to, cc, bcc, subject, body or attachments was given, so there is nothing to " +
       "change. An omitted field is kept as stored.",
   );
   const htmlOnly = await call(chatGpt(), "draft_update", { draft_id: "Drafts:2", html_body: "<p>x</p>" });
@@ -755,5 +767,57 @@ Deno.test("a draft write's result is the same on this surface: deferred body, v2
     assert(!JSON.stringify(withoutRead.result).includes("STORED-BODY"));
     assertEquals("_meta" in withoutRead.result, false);
     assertEquals(withoutRead.result.content.length, 1);
+  }
+});
+
+// ═══════════════════════════════════════════════════════════════════════════
+// 8. Files on a draft (2026-10-15, draft-attachments.ts)
+//
+// `attachments` is listed on both surfaces. `files` (ChatGPT uploads) is listed
+// only here, with `_meta["openai/fileParams"]` naming it, and in the exact
+// shape OpenAI's scan accepts; the consolidated `draft` validates it but does
+// not list it.
+// ═══════════════════════════════════════════════════════════════════════════
+
+Deno.test("the per-operation draft writes list attachments and files, and name files as a file param", () => {
+  const listed = listedByName();
+  for (const name of FILE_PARAM_TOOL_NAMES) {
+    const tool = listed.get(name)!;
+    const props = (tool.inputSchema as { properties: Record<string, Record<string, unknown>> }).properties;
+    assert("attachments" in props, `${name} lists attachments`);
+    assertEquals(props.files.type, "array", name);
+    assertEquals(props.files.items, {
+      type: "object",
+      properties: {
+        download_url: { type: "string", description: "Temporary download URL ChatGPT provides." },
+        file_id: { type: "string", description: "ChatGPT file id." },
+        mime_type: { type: "string", description: "MIME type, when known." },
+        file_name: { type: "string", description: "Filename the recipient sees." },
+      },
+      required: ["download_url", "file_id"],
+      additionalProperties: false,
+    }, name);
+    assertEquals(tool._meta, { "openai/fileParams": ["files"] }, name);
+  }
+  // Nothing else on this surface claims a file param.
+  for (const tool of PER_OPERATION_LISTING) {
+    if (FILE_PARAM_TOOL_NAMES.includes(tool.name)) continue;
+    assert(!("openai/fileParams" in (tool._meta ?? {})), tool.name);
+  }
+});
+
+Deno.test("the consolidated draft tool lists attachments but not files, and still accepts files", () => {
+  const draft = TOOL_REGISTRY.find((tool) => tool.name === "draft")!;
+  const listed = serializeToolForList(draft).inputSchema as { properties: Record<string, unknown> };
+  assert("attachments" in listed.properties);
+  assert(!("files" in listed.properties), "files is not shown to non-OpenAI clients");
+  // Validation is the full schema: a call carrying it reaches the handler,
+  // which refuses it for a non-OpenAI key in its own words.
+  const full = draft.inputSchema as { properties: Record<string, unknown> };
+  assert("files" in full.properties);
+  // No other consolidated tool lists it either.
+  for (const tool of TOOL_REGISTRY) {
+    const props = (serializeToolForList(tool).inputSchema as { properties?: Record<string, unknown> }).properties ?? {};
+    assert(!("files" in props), tool.name);
   }
 });

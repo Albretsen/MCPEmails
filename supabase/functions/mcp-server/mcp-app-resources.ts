@@ -771,7 +771,10 @@ export function withListingCardMeta(
 ): ListedTool[] {
   return tools.map((tool) => {
     const meta = reviewCardMetaForListing(tool.name, gates, surface);
-    return meta ? { ...tool, _meta: meta } : tool;
+    // Merged, not replaced: a per-operation draft tool already carries
+    // `openai/fileParams` (draft-attachments.ts), and the card's `ui` must not
+    // erase it. Every other tool's own `_meta` is absent, so nothing changes.
+    return meta ? { ...tool, _meta: { ...(tool._meta ?? {}), ...meta } } : tool;
   });
 }
 

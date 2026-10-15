@@ -263,10 +263,18 @@ export function failureNotice(f: DraftFailure): FailureNotice {
         text: `This draft could not be found in Drafts. It may have been sent, deleted or saved again somewhere else, so it cannot be saved or sent from here right now. ${KEEP}`,
       };
     }
+    // Rare since 2026-10-15: a save now keeps the draft's attachments. This
+    // is what is left of the refusal, for a stored draft the server could not
+    // read the files of.
     case "draft_has_attachments":
       return {
         ...base,
         text: "Not saved. This draft has attachments, and saving here would rebuild the message without them. Nothing was changed.",
+      };
+    case "attachment_too_large":
+      return {
+        ...base,
+        text: "Not saved. This draft's attachments are too large to save it from here. Nothing was changed. Edit it in your mail app instead.",
       };
     case "invalid_recipients":
       return {

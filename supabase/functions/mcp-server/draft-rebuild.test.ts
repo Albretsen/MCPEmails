@@ -29,7 +29,7 @@ import {
   draftRebuildBlockersOf,
   outlookRecipientPatch,
 } from "./draft-rebuild.ts";
-import { getHeader, mimeLeafParts, parseEmail } from "./mime.ts";
+import { decodeEncodedWords, getHeader, mimeLeafParts, parseEmail } from "./mime.ts";
 import { signatureImageCid } from "./signature-images.ts";
 import {
   applyDraftPatch,
@@ -344,16 +344,53 @@ Deno.test("refused, byte for byte unchanged: every stored shape the rebuild woul
   }
 });
 
-Deno.test("a named attachment keeps its own, older refusal", async () => {
+Deno.test("a named attachment is carried through the rebuild, bytes unchanged (2026-10-15)", async () => {
   const raw = bytes(NAMED_ATTACHMENT);
   assertEquals(draftRebuildBlockers(raw), [], "attachments are not listed as blockers");
   const box = mailbox(raw);
-  assertEquals(await box.patch({ subject: "x" }), {
-    ok: false,
-    kind: "has_attachments",
-    attachmentCount: 1,
+  const out = await box.patch({ subject: "x" });
+  assert(out.ok && out.written, JSON.stringify(out));
+  const after = parseEmail(box.raw());
+  assertEquals(after.attachments.length, 1);
+  assertEquals(after.attachments[0].filename, "q3.pdf");
+  assertEquals(after.attachments[0].mimeType, "application/pdf");
+  assertEquals(new TextDecoder().decode(after.attachments[0].content), "%PDF-1.4\n");
+  assertEquals(decodeEncodedWords(getHeader(after.headers, "subject") ?? ""), "x");
+  assertEquals(after.text, parseEmail(raw).text, "the body text is kept");
+});
+
+Deno.test("files added by a partial write join the carried ones, in order", async () => {
+  const box = mailbox(bytes(NAMED_ATTACHMENT));
+  const out = await box.patch({
+    addAttachments: [{ filename: "price list.xlsx", mime_type: "application/vnd.ms-excel", data: "AAEC" }],
   });
-  assertEquals(box.raw(), raw);
+  assert(out.ok && out.written, "adding a file alone is a change");
+  assertEquals(out.saved.attachments.map((a) => a.filename), ["q3.pdf", "price list.xlsx"]);
+  const after = parseEmail(box.raw());
+  assertEquals(after.attachments.map((a) => a.filename), ["q3.pdf", "price list.xlsx"]);
+  assertEquals(Array.from(after.attachments[1].content), [0, 1, 2]);
+});
+
+Deno.test("a named part the HTML shows through cid: is an inline image, refused, never turned into a file", async () => {
+  const raw = bytes(withParts("multipart/related", "rel1", [
+    lines("Content-Type: text/html; charset=UTF-8", "", '<p>Logo <img src="cid:pic@x"></p>'),
+    lines(
+      'Content-Type: image/png; name="logo.png"',
+      "Content-Transfer-Encoding: base64",
+      "Content-ID: <pic@x>",
+      'Content-Disposition: inline; filename="logo.png"',
+      "",
+      "iVBORw0KGgo=",
+    ),
+  ]));
+  const read = draftContentFromRaw(raw, undefined);
+  assertEquals(read.carried?.count, 0);
+  assertEquals(read.carried?.inlineImages, 1);
+  assert(read.rebuildBlockers?.includes("an inline image"), String(read.rebuildBlockers));
+  const box = mailbox(raw);
+  const out = await box.patch({ subject: "x" });
+  assert(!out.ok && out.kind === "not_rebuildable");
+  assertEquals(box.raw(), raw, "untouched");
 });
 
 Deno.test("a Reply-To that cannot be written back verbatim is a refusal, not a silent drop", async () => {

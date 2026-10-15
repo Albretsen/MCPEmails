@@ -92,6 +92,12 @@ import {
 import { EMAIL_HTML_MAX_LENGTH } from "./signature-sanitizer.ts";
 import { CARD_SCHEMA_VERSION } from "./mcp-app-approvals.ts";
 import { buildDraftMutationEnvelope } from "./untrusted-envelope.ts";
+import { decodedBase64ByteLength } from "./attachment-validation.ts";
+import {
+  type CarriedAttachments,
+  DRAFT_REBUILD_MAX_BYTES,
+  type OutgoingAttachment,
+} from "./draft-attachments.ts";
 import { type CardActivityEvent, type CardSavedField, closedBySendText } from "./card-activity.ts";
 
 // ---------------------------------------------------------------------------
@@ -286,6 +292,12 @@ export interface NormalizedDraft {
    * refuses on it. Never part of an envelope and never in `draft.version`.
    */
   rebuild_blockers?: string[];
+  /**
+   * The stored files a rebuild keeps, with their bytes on demand (IMAP and
+   * Gmail readers only). Like `rebuild_blockers`, read by `applyDraftPatch`
+   * alone and never part of an envelope.
+   */
+  carried?: CarriedAttachments;
 }
 
 /** The identity block (contract §2's `identity`, reused verbatim by §8). */
@@ -362,6 +374,8 @@ export interface ProviderDraft {
    * field PATCH and rebuilds nothing.
    */
   rebuildBlockers?: string[];
+  /** The files a rebuild keeps (draft-attachments.ts). IMAP and Gmail readers only. */
+  carried?: CarriedAttachments;
   /** The mailbox's own timestamp for the stored draft, ISO 8601, when it has one. */
   savedAt?: string | null;
 }
@@ -385,6 +399,11 @@ export interface ProviderDraftParams {
    * clears) when it is named here. See draft-rebuild.ts#outlookRecipientPatch.
    */
   explicitRecipients?: { to?: boolean; cc?: boolean; bcc?: boolean };
+  /**
+   * IMAP and Gmail: every file the rebuilt message has (carried, then added).
+   * Outlook: only the files to add; its PATCH keeps the stored ones.
+   */
+  attachments?: OutgoingAttachment[];
 }
 
 /** An inbox row, as far as this module cares. */
@@ -1287,6 +1306,7 @@ export async function readStoredDraft(
     references_header: stored.references,
     reply_to_header: stored.replyTo,
     rebuild_blockers: Array.isArray(stored.rebuildBlockers) ? stored.rebuildBlockers : [],
+    ...(stored.carried ? { carried: stored.carried } : {}),
   };
 }
 
@@ -1740,6 +1760,11 @@ export interface DraftPatch {
   bcc?: string[];
   subject?: string;
   bodyText?: string;
+  /**
+   * Files to ADD, already resolved to bytes. The stored ones are kept. Only a
+   * body-less `draft{action:"update"}` passes this; the editor card adds none.
+   */
+  addAttachments?: OutgoingAttachment[];
 }
 
 export type DraftPatchResult =
@@ -1751,6 +1776,8 @@ export type DraftPatchResult =
   | { ok: true; saved: NormalizedDraft; written: boolean }
   | { ok: false; kind: "not_found" }
   | { ok: false; kind: "has_attachments"; attachmentCount: number }
+  /** Stored plus added files exceed what a rebuild may hold. */
+  | { ok: false; kind: "attachments_too_large"; bytes: number; maxBytes: number }
   /** The stored message has parts a rebuild would drop. `parts` are labels. */
   | { ok: false; kind: "not_rebuildable"; parts: string[] }
   /** A caller's hook stopped the write. The caller knows why. */
@@ -1838,16 +1865,31 @@ export async function applyDraftPatch(
   if (!stored) return { ok: false, kind: "not_found" };
   if (hooks.vetoAfterRead?.()) return { ok: false, kind: "vetoed" };
 
-  // ── REFUSE RATHER THAN DROP ATTACHMENTS ──────────────────────────────────
+  // ── CARRY THE FILES, OR REFUSE RATHER THAN DROP THEM ─────────────────────
   // `imapUpdateDraft` and `gmailUpdateDraft` rebuild the MIME message from the
-  // parameters they are given, and those parameters carry no attachment parts.
-  // So a save on a draft with attachments would silently delete them — the user
-  // would see a successful save, and the file would be gone from a message they
-  // had not sent yet. There is no way to preserve them from here, so the tool
-  // refuses and changes nothing. Outlook's update is a PATCH of named fields
-  // and leaves attachments alone, so it may proceed.
-  if (stored.attachments.length > 0 && inbox.provider !== "outlook") {
-    return { ok: false, kind: "has_attachments", attachmentCount: stored.attachments.length };
+  // parameters they are given. Until 2026-10-15 those parameters carried no
+  // attachment parts, so a save on a draft with files would have deleted them,
+  // and this refused. The raw readers now hand over the files a rebuild keeps
+  // (`carried`, draft-attachments.ts), and they go into the new message with
+  // their own names, types and bytes. A reader that did not supply them is
+  // still refused, as is a total past what a rebuild may hold. A named part the
+  // HTML shows inline is not a file and is not carried; the readers list it as
+  // a rebuild blocker, refused just below. Outlook's update is a PATCH of named
+  // fields and leaves attachments alone, so it may proceed.
+  const rebuilds = inbox.provider !== "outlook";
+  const added = patch.addAttachments ?? [];
+  let carriedFiles: OutgoingAttachment[] = [];
+  if (rebuilds && (stored.attachments.length > 0 || added.length > 0)) {
+    const carried = stored.carried;
+    if (stored.attachments.length > 0 && !carried) {
+      return { ok: false, kind: "has_attachments", attachmentCount: stored.attachments.length };
+    }
+    const addedBytes = added.reduce((total, a) => total + (decodedBase64ByteLength(a.data) ?? 0), 0);
+    const total = (carried?.bytes ?? 0) + addedBytes;
+    if (total > DRAFT_REBUILD_MAX_BYTES) {
+      return { ok: false, kind: "attachments_too_large", bytes: total, maxBytes: DRAFT_REBUILD_MAX_BYTES };
+    }
+    carriedFiles = carried ? carried.encode() : [];
   }
 
   // ── AND REFUSE RATHER THAN DROP ANYTHING ELSE (2026-10-13) ───────────────
@@ -1999,7 +2041,7 @@ export async function applyDraftPatch(
   const sameList = (a: string[], b: string[]) =>
     a.length === b.length && a.every((v, i) => v === b[i]);
   if (
-    !bodyTextChanged && nextSubject === stored.subject &&
+    !bodyTextChanged && nextSubject === stored.subject && added.length === 0 &&
     sameList(nextTo, stored.to) && sameList(nextCc, stored.cc) && sameList(nextBcc, stored.bcc)
   ) {
     return { ok: true, saved: stored, written: false };
@@ -2045,6 +2087,11 @@ export async function applyDraftPatch(
         cc: patch.cc !== undefined,
         bcc: patch.bcc !== undefined,
       },
+      // Rebuilds get every file the message keeps; Outlook only the new ones.
+      ...(() => {
+        const files = rebuilds ? [...carriedFiles, ...added] : added;
+        return files.length > 0 ? { attachments: files } : {};
+      })(),
     });
   } catch (error) {
     const message = error instanceof Error ? error.message : String(error);
@@ -2064,6 +2111,14 @@ export async function applyDraftPatch(
     subject: nextSubject,
     body_text: nextText,
     body_html: nextHtml ?? null,
+    attachments: [
+      ...stored.attachments,
+      ...added.map((a) => ({
+        filename: a.filename,
+        size_bytes: decodedBase64ByteLength(a.data),
+        mime_type: a.mime_type,
+      })),
+    ],
     // Recomputed, not carried over: the person may have removed or rewritten
     // the signature, and the HTML part may have just lost its formatted one.
     signature_embedded: signatureEmbeddedIn(nextText, inbox, nextHtml),
@@ -2192,6 +2247,13 @@ export async function runBodylessDraftUpdate(
     subject: saved.subject,
     updated_at: saved.last_saved_at,
     threaded: hasHeader || hasThread,
+    // When this update added files: every file the draft now has, as the
+    // full-body update reports it. Names and sizes, never bytes.
+    ...((patch.addAttachments?.length ?? 0) > 0
+      ? {
+        attachments: saved.attachments.map((a) => ({ filename: a.filename, size_bytes: a.size_bytes })),
+      }
+      : {}),
   }) as unknown as Record<string, unknown>;
 
   let envelope: Record<string, unknown> | null = null;
@@ -2370,6 +2432,17 @@ export async function runDraftEditorSave(
             ? "Saving here would remove its attachment, so nothing was changed. Edit it in your mail app instead."
             : `Saving here would remove its ${n} attachments, so nothing was changed. Edit it in your mail app instead.`,
         },
+      );
+    }
+    if (patched.kind === "attachments_too_large") {
+      return draftFailure(
+        deps.appUrl,
+        "failed",
+        "This draft's attachments are too large to edit here.",
+        "Saving rebuilds the message with all of its attachments, and they are " +
+          "over the limit for that, so nothing was changed. Edit it in your mail client instead.",
+        "attachment_too_large",
+        "attachment_too_large",
       );
     }
     if (patched.kind === "not_rebuildable") {
