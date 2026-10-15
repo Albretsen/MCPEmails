@@ -519,11 +519,10 @@ import {
 } from "./draft-send-plan.ts";
 import {
   alreadySentText,
-  type CardActivityRow,
   type CardActivityScope,
   type CardActivityStore,
-  cardSendOf,
   noteCarrier,
+  postgrestCardActivityStore,
   recordCardActivity,
   takeCardActivityNote,
 } from "./card-activity.ts";
@@ -26811,103 +26810,22 @@ function lineageScope(apiKey: ApiKeyRow, inboxId: string): DraftLineageScope {
 }
 
 // ---------------------------------------------------------------------------
-// Card activity (card-activity.ts): the `public.draft_card_activity` store.
-//
-// Same rules as the lineage store above: service role, every statement filters
-// on workspace_id AND inbox_id, each method throws on a PostgREST error and
-// card-activity.ts catches. A database without the table (this function
-// deployed ahead of 20261015220000_draft_card_activity.sql) records nothing and
-// notes nothing.
+// Card activity (card-activity.ts): the `public.draft_card_activity` store,
+// built in card-activity.ts#postgrestCardActivityStore so its filters
+// (workspace, inbox AND key) are tested against the real query construction.
+// A database without the table (this function deployed ahead of
+// 20261015220000_draft_card_activity.sql) records nothing and notes nothing.
 // ---------------------------------------------------------------------------
-const CARD_ACTIVITY_COLUMNS =
-  "id, draft_id, line_id, action, occurred_at, revision, fields, to_count, cc_count, bcc_count";
-
-/** Rows older than this are deleted on the next insert for the inbox. */
-const CARD_ACTIVITY_RETENTION_MS = 7 * 24 * 60 * 60 * 1000;
-
-function cardActivityRowFrom(r: Record<string, unknown>): CardActivityRow {
-  const n = (v: unknown) => (typeof v === "number" ? v : null);
-  return {
-    id: String(r.id),
-    draftId: String(r.draft_id),
-    lineId: typeof r.line_id === "string" ? r.line_id : null,
-    action: r.action === "sent" ? "sent" : "saved",
-    occurredAt: String(r.occurred_at),
-    revision: n(r.revision),
-    fields: Array.isArray(r.fields)
-      ? (r.fields as unknown[]).filter((f): f is CardActivityRow["fields"][number] =>
-        f === "to" || f === "cc" || f === "bcc" || f === "subject" || f === "body"
-      )
-      : [],
-    toCount: n(r.to_count),
-    ccCount: n(r.cc_count),
-    bccCount: n(r.bcc_count),
-  };
-}
-
-const draftCardActivityStore: CardActivityStore = {
-  async insert(scope, event) {
-    const { error } = await supabase.from("draft_card_activity").insert({
-      workspace_id: scope.workspaceId,
-      inbox_id: scope.inboxId,
-      draft_id: event.draftId,
-      line_id: event.lineId,
-      action: event.action,
-      occurred_at: event.occurredAt,
-      revision: event.revision,
-      fields: event.fields,
-      to_count: event.toCount,
-      cc_count: event.ccCount,
-      bcc_count: event.bccCount,
-    });
-    if (error) throw new Error(error.message);
-    // Retention, best effort: nothing older than a week is kept for the inbox.
-    const cutoff = new Date(Date.now() - CARD_ACTIVITY_RETENTION_MS).toISOString();
-    await supabase
-      .from("draft_card_activity")
-      .delete()
-      .eq("workspace_id", scope.workspaceId)
-      .eq("inbox_id", scope.inboxId)
-      .lt("occurred_at", cutoff);
-  },
-  // ONE update that marks and returns, so two concurrent claims never both
-  // report the same action.
-  async claim(scope, since, at) {
-    const { data, error } = await supabase
-      .from("draft_card_activity")
-      .update({ reported_at: at })
-      .eq("workspace_id", scope.workspaceId)
-      .eq("inbox_id", scope.inboxId)
-      .is("reported_at", null)
-      .gte("occurred_at", since)
-      .select(CARD_ACTIVITY_COLUMNS);
-    if (error) throw new Error(error.message);
-    return ((data ?? []) as Record<string, unknown>[]).map(cardActivityRowFrom);
-  },
-  async lastSent(scope, target) {
-    let query = supabase
-      .from("draft_card_activity")
-      .select(CARD_ACTIVITY_COLUMNS)
-      .eq("workspace_id", scope.workspaceId)
-      .eq("inbox_id", scope.inboxId)
-      .eq("action", "sent");
-    query = target.lineId ? query.eq("line_id", target.lineId) : query.eq("draft_id", target.draftId);
-    const { data, error } = await query
-      .order("occurred_at", { ascending: false })
-      .limit(1)
-      .maybeSingle();
-    if (error) throw new Error(error.message);
-    return data ? cardActivityRowFrom(data as Record<string, unknown>) : null;
-  },
-};
+const draftCardActivityStore: CardActivityStore = postgrestCardActivityStore(supabase);
 
 /** Null under introspection, where the default client points at nothing. */
 function cardActivityStore(): CardActivityStore | null {
   return INTROSPECTION_ONLY ? null : draftCardActivityStore;
 }
 
+/** The KEY is part of the scope: a note goes to the client whose card acted. */
 function cardActivityScope(apiKey: ApiKeyRow, inboxId: string): CardActivityScope {
-  return { workspaceId: apiKey.workspace_id, inboxId };
+  return { workspaceId: apiKey.workspace_id, inboxId, apiKeyId: apiKey.id };
 }
 
 /** Any id of a draft -> its current id. Never throws; unknown resolves to itself. */
@@ -27126,10 +27044,11 @@ function draftEditorDepsFor(apiKey: ApiKeyRow): DraftEditorDeps {
         recordDraftLine(apiKey, inbox, previous, draftId, writtenBy, at),
     },
     cardActivity: {
+      // Recorded against the calling key. The web client's key (client-api)
+      // never makes an MCP call, so nothing it records is ever claimed; the
+      // rows expire after 7 days (card-activity.ts, "Which results carry it").
       record: (inbox, event) =>
         recordCardActivity(cardActivityStore(), cardActivityScope(apiKey, inbox.id), event),
-      lastSent: (inbox, target) =>
-        cardSendOf(cardActivityStore(), cardActivityScope(apiKey, inbox.id), target),
     },
     setDraftEditorHidden: async (scope, ids, hidden) => {
       // Scoped by workspace on BOTH branches, not just by id. The inbox id
@@ -28162,14 +28081,11 @@ async function executeSendDraft(
   // (review of 2026-10-13). A reused id whose message is a different draft is
   // let through by preferExistingId, which knows whether a copy was left.
   //
-  // The sentence says WHO sent it and WHEN, as far as the server recorded it
-  // (QA 2026-10-15): a model that had not sent it, told only "was already
-  // sent", went on telling the user it never sent the email.
+  // The sentence says WHEN (QA 2026-10-15): a model that had not sent it, told
+  // only "was already sent", went on telling the user it never sent the email.
+  // Never WHO: no signal on a request tells the card's send from a model's
+  // (card-activity.ts).
   if (plan.kind === "refuse" && plan.code === "draft_already_sent") {
-    const cardSend = await cardSendOf(cardActivityStore(), cardActivityScope(apiKey, inbox.id), {
-      lineId: settledLine.lineId,
-      draftId,
-    });
     return await draftLineRefusal(
       apiKey,
       inbox,
@@ -28177,7 +28093,6 @@ async function executeSendDraft(
       alreadySentText({
         requestedId: requestedDraftId,
         sentCopyKept: plan.sentCopyKept,
-        cardSentAt: cardSend?.occurredAt ?? null,
         closedAt: settledLine.closedAt ?? null,
       }),
       DRAFT_ALREADY_SENT_PERSON,
@@ -28446,9 +28361,9 @@ async function executeSendDraft(
       draftLine,
       draftRemoved === false ? "sent_kept" : "sent",
     ),
-    // A send from the card (it alone passes base_revision; an approved re-run
-    // is excluded) is recorded for the model's next draft result, because the
-    // card's own model-context line may never reach the model.
+    // A send through the draft editor's path (base_revision; an approved re-run
+    // is excluded) is recorded for the next draft result on this key, because the card's own model-context line may never reach the
+    // model. Recorded as "was sent", never as who sent it (card-activity.ts).
     baseRevision !== null && apiKey.internalApprovalDispatch !== true
       ? recordCardActivity(cardActivityStore(), cardActivityScope(apiKey, inbox.id), {
         draftId: sendResult.draft_id || draftId,
@@ -30495,17 +30410,6 @@ async function dispatchExecutor(
     if (outcome && ctx.missingTransport && rewriteMissingTransportResult(outcome, ctx.missingTransport)) {
       return { ...outcome, logStatus: "error", logErrorCode: "transport_not_configured", logErrorDetails: null };
     }
-    // What the person did in the draft editor card since the last draft result
-    // for this inbox (card-activity.ts). The model's own successful draft calls
-    // only; claimed once, so it is said once. Attached with the other result
-    // notes after dispatch.
-    if (
-      outcome && (outcome.result as { isError?: unknown } | null)?.isError !== true && ctx.inboxId &&
-      noteCarrier(dispatchName, rawArgs, { approvalDispatch: apiKey.internalApprovalDispatch === true })
-    ) {
-      const note = await takeCardActivityNote(cardActivityStore(), cardActivityScope(apiKey, ctx.inboxId));
-      if (note) noteForResult(note);
-    }
     return outcome;
   };
   const store = activityInboxStore.getStore();
@@ -31365,6 +31269,22 @@ async function handleToolsCall(
     await activityInboxStore.run(logCtx, async () => {
     // ── Dispatch to the implemented tool handler ───────────────────────────
     const outcome = await dispatchExecutor(dispatchName, rawArgs, apiKey);
+    // What the draft editor recorded since the last draft result on this key
+    // and inbox (card-activity.ts). HERE, on the MCP tools/call path, and not
+    // in dispatchExecutor: client-api runs the same executors for the web
+    // client (client-api/mail/run.ts), which would claim the rows and never
+    // attach the note (attachResultNotes runs below, on this path only). The
+    // web client never reaches this function, so being here IS the "not the
+    // web client" check; no first-party marker is read (client-api's
+    // mcp-neutral test counts those). Successful model draft calls only;
+    // claimed once, so it is said once.
+    if (
+      outcome && (outcome.result as { isError?: unknown } | null)?.isError !== true && logCtx.inboxId &&
+      noteCarrier(dispatchName, rawArgs, { approvalDispatch: apiKey.internalApprovalDispatch === true })
+    ) {
+      const note = await takeCardActivityNote(cardActivityStore(), cardActivityScope(apiKey, logCtx.inboxId));
+      if (note) noteForResult(note);
+    }
     if (outcome) {
       logStatus = outcome.logStatus;
       logErrorCode = outcome.logErrorCode;

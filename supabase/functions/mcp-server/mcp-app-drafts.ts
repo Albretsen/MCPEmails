@@ -92,12 +92,7 @@ import {
 import { EMAIL_HTML_MAX_LENGTH } from "./signature-sanitizer.ts";
 import { CARD_SCHEMA_VERSION } from "./mcp-app-approvals.ts";
 import { buildDraftMutationEnvelope } from "./untrusted-envelope.ts";
-import {
-  type CardActivityEvent,
-  type CardActivityRow,
-  type CardSavedField,
-  closedBySendText,
-} from "./card-activity.ts";
+import { type CardActivityEvent, type CardSavedField, closedBySendText } from "./card-activity.ts";
 
 // ---------------------------------------------------------------------------
 // Constants
@@ -419,13 +414,9 @@ export interface DraftLineagePort {
   ): Promise<number | null | void>;
 }
 
-/** card-activity.ts, bound to the calling key. Both never throw. */
+/** card-activity.ts, bound to the calling key. Never throws. */
 export interface DraftCardActivityPort {
   record(inbox: DraftEditorProviderInbox, event: CardActivityEvent): Promise<void>;
-  lastSent(
-    inbox: DraftEditorProviderInbox,
-    target: { lineId: string | null; draftId: string },
-  ): Promise<CardActivityRow | null>;
 }
 
 export interface DraftEditorDeps {
@@ -1118,33 +1109,21 @@ function draftClosed(
 }
 
 /**
- * `draftClosed` for a line, with the model's sentence saying who sent it and
- * when, as far as the server recorded it. Never throws.
+ * `draftClosed` for a line, with the model's sentence saying it was sent and
+ * when (the lineage's close). Never who: see card-activity.ts.
  */
-async function draftClosedFor(
+function draftClosedFor(
   deps: DraftEditorDeps,
-  inbox: DraftEditorProviderInbox,
+  _inbox: DraftEditorProviderInbox,
   line: ResolvedDraft,
 ): Promise<DraftEditorToolResult> {
   const how = line.closed === "sent" ? "sent" : "deleted";
-  if (how !== "sent") return draftClosed(deps.appUrl, how);
-  let card: CardActivityRow | null = null;
-  try {
-    card = deps.cardActivity
-      ? await deps.cardActivity.lastSent(inbox, { lineId: line.lineId, draftId: line.draftId })
-      : null;
-  } catch {
-    card = null;
-  }
-  return draftClosed(
+  if (how !== "sent") return Promise.resolve(draftClosed(deps.appUrl, how));
+  return Promise.resolve(draftClosed(
     deps.appUrl,
     how,
-    closedBySendText({
-      draftId: line.requestedId,
-      cardSentAt: card?.occurredAt ?? null,
-      closedAt: line.closedAt ?? null,
-    }),
-  );
+    closedBySendText({ draftId: line.requestedId, closedAt: line.closedAt ?? null }),
+  ));
 }
 
 /** `resolve`, or "unknown" when there is no lineage or it misbehaves. */
