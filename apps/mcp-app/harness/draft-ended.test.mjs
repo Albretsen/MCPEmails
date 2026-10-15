@@ -289,7 +289,7 @@ async function later(ms, fn) {
 
 
 /** `draft{action:"send"}` as the server answers it: today's payload plus the receipt (§8). */
-const sendAnswer = (args = {}) => ({
+const sendAnswer = (args = {}, detail = "Accepted by the mail server for delivery.") => ({
   content: [{ type: "text", text: "Sent." }],
   structuredContent: {
     draft_id: args.draft_id ?? "Drafts:102",
@@ -299,7 +299,7 @@ const sendAnswer = (args = {}) => ({
     card: "receipt",
     state: "sent",
     dashboard_url: "https://mcpemails.com/dashboard",
-    receipt: { outcome: "sent", headline: "Sent", detail: "Delivered via IMAP + SMTP.", affected_count: 1, dashboard_url: null },
+    receipt: { outcome: "sent", headline: "Sent", detail, affected_count: 1, dashboard_url: null },
   },
 });
 
@@ -366,6 +366,11 @@ async function main() {
     expect("the editor is gone", c.isEditor(), false);
     expect("the message is on screen", /Here they are\./.test(c.text()), true);
     expect("no dashboard link: the dashboard has no view of it", !!c.btn(/dashboard/i), false);
+    // QA 2026-10-15: "Delivered" claimed more than is known, and the provider
+    // label was on the receipt twice.
+    expect("accepted, not delivered", /Accepted by the mail server for delivery\./.test(c.text()), true);
+    expect("never 'Delivered'", /Delivered/.test(c.text()), false);
+    expect("no provider label in the detail", /IMAP \+ SMTP/.test(c.text()), false);
     const hide = toggleOf(c);
     expect("the toggle says Hide", hide?.textContent, "Hide");
     expect("and is expanded", hide?.getAttribute("aria-expanded"), "true");
@@ -589,8 +594,47 @@ async function main() {
     c.deliver({ jsonrpc: "2.0", method: "ui/notifications/tool-result", params: sendAnswer() });
     await settle();
     expect("one line", /^Sent/.test(c.text()), true);
-    expect("with the detail", /Delivered via IMAP \+ SMTP\./.test(c.text()), true);
+    expect("with the detail", /Accepted by the mail server for delivery\./.test(c.text()), true);
     expect("no Show", toggleOf(c), null);
+    await c.done();
+  }
+
+  // ── 7b. "Delivered" said more than anyone knows (QA 2026-10-15) ─────────────
+
+  group("7b. a receipt stored before 2026-10-15 is reworded: accepted, not delivered, no provider");
+  {
+    for (const old of ["Delivered via IMAP + SMTP.", "Delivered via IMAP + SMTP at 2026-09-17T08:04:11.394Z."]) {
+      const c = await boot();
+      c.deliver({
+        jsonrpc: "2.0",
+        method: "ui/notifications/tool-input",
+        params: { arguments: { action: "send", inbox_id: INBOX, draft_id: "Drafts:102" } },
+      });
+      c.deliver({ jsonrpc: "2.0", method: "ui/notifications/tool-result", params: sendAnswer({}, old) });
+      await settle();
+      expect(`"${old}" -> accepted`, /Accepted by the mail server for delivery\./.test(c.text()), true);
+      expect(`"${old}" -> never "Delivered"`, /Delivered/.test(c.text()), false);
+      expect(`"${old}" -> no provider in the detail`, /IMAP \+ SMTP/.test(c.text()), false);
+      await c.done();
+    }
+  }
+
+  group("7c. the open sent message names the provider once, in its footer");
+  {
+    const c = await boot();
+    c.deliver(TOOL_INPUT);
+    c.push({
+      ...draftEnvelope(),
+      provider: { label: "IMAP + SMTP", route: "Saved to your Drafts folder", caveats: [] },
+    });
+    await settle();
+    // The answer an un-updated server gives, so both halves are exercised.
+    c.tools.draft = (args) => sendAnswer(args, "Delivered via IMAP + SMTP.");
+    c.press(c.btn(/^Send$/));
+    await settle();
+    expect("the message is open", /Here they are\./.test(c.text()), true);
+    expect("IMAP + SMTP exactly once", (c.text().match(/IMAP \+ SMTP/g) ?? []).length, 1);
+    expect("accepted, not delivered", /Accepted by the mail server for delivery\./.test(c.text()), true);
     await c.done();
   }
 

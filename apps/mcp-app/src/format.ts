@@ -347,3 +347,28 @@ export function joinBody(parts: SplitBody): string {
   if (parts.separator === null || parts.signature === null) return parts.message;
   return parts.message + parts.separator + parts.signature;
 }
+
+/**
+ * What the server's sent receipt says since QA on 2026-10-15
+ * (`mcp-app-drafts.ts#DRAFT_SENT_RECEIPT_DETAIL`).
+ */
+export const SENT_DETAIL = "Accepted by the mail server for delivery.";
+
+/**
+ * A receipt's detail as the card shows it.
+ *
+ * Until QA on 2026-10-15 the server's sent receipt read "Delivered via IMAP +
+ * SMTP.", which said more than anyone knows (the mail server accepted the
+ * message, and in that run it landed in the recipient's spam folder) and named
+ * the provider a second time beside the footer that already shows it. The
+ * server now says `SENT_DETAIL`. A result stored before that change is still
+ * replayed into reopened chats, so the old sentence (with or without the ISO
+ * time it carried before 2026-09-17) is reworded here too. Anything else
+ * passes through unchanged.
+ */
+export function receiptDetail(detail: string | null | undefined): string | null {
+  const d = typeof detail === "string" ? detail.trim() : "";
+  if (!d) return null;
+  if (/^Delivered via .{1,160}\.$/.test(d)) return SENT_DETAIL;
+  return d;
+}

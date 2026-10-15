@@ -620,6 +620,56 @@ async function main() {
     expect("a resolved one still is", m.mergeEnvelope(resolved, sent).draft?.body?.text, REAL);
   }
 
+  // ════════════════════════════════════════════════════════════════════════
+  // (C) The request itself (QA 2026-10-15)
+  // ════════════════════════════════════════════════════════════════════════
+
+  group("update-model-context goes out in the spec's shape whether or not the host advertises it");
+  {
+    // The published 2026-01-26 spec's HostCapabilities has no updateModelContext
+    // field, and the reference SDK sends without checking. A card that waited
+    // for the capability said nothing to such a host.
+    for (const caps of [{}, { updateModelContext: {} }]) {
+      const listeners = [];
+      const posted = [];
+      const parent = {
+        postMessage(msg) {
+          posted.push(msg);
+          const reply = (body) =>
+            queueMicrotask(() => {
+              for (const fn of listeners) fn({ source: parent, data: { jsonrpc: "2.0", id: msg.id, ...body } });
+            });
+          if (msg.method === "ui/initialize") {
+            reply({ result: { protocolVersion: "2026-01-26", hostInfo: { name: "h", version: "1" }, hostCapabilities: caps, hostContext: {} } });
+          } else if (msg.method === "ui/update-model-context") {
+            reply(caps.updateModelContext ? { result: {} } : { error: { code: -32601, message: "Method not found" } });
+          }
+        },
+      };
+      globalThis.window = {
+        parent,
+        addEventListener: (type, fn) => type === "message" && listeners.push(fn),
+        removeEventListener() {},
+      };
+      const mod = await import(`${pathToFileURL(OUT).href}?i=${++instance}`);
+      const bridge = new mod.HostBridge();
+      await bridge.connect({ name: "mctx-check", version: "0.0.0" });
+      const answer = await bridge.updateModelContext("The user saved edits.");
+      const req = posted.find((p) => p.method === "ui/update-model-context");
+      const label = caps.updateModelContext ? "advertised" : "not advertised";
+      expect(`${label}: sent`, !!req, true);
+      expect(
+        `${label}: params are { content: [text] } and nothing else`,
+        JSON.stringify(req?.params),
+        JSON.stringify({ content: [{ type: "text", text: "The user saved edits." }] }),
+      );
+      expect(`${label}: a JSON-RPC request, with an id`, typeof req?.id, "number");
+      expect(`${label}: counted`, JSON.stringify(bridge.modelContext),
+        JSON.stringify(caps.updateModelContext ? { sent: 1, ok: 1, failed: 0 } : { sent: 1, ok: 0, failed: 1 }));
+      expect(`${label}: a refusal never throws`, caps.updateModelContext ? true : answer === null, true);
+    }
+  }
+
   // ---- report ---------------------------------------------------------------
 
   let failed = 0;

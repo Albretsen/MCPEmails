@@ -1,7 +1,7 @@
 import { useLayoutEffect, useRef, useState } from "preact/hooks";
 import type { Receipt as ReceiptData } from "../contract";
 import type { EndedCopy, EndedField } from "../ended";
-import { formatBytes, formatDateTime, splitBody, wordCount } from "../format";
+import { formatBytes, formatDateTime, receiptDetail, splitBody, wordCount } from "../format";
 import { copyLabel, Fields, HtmlBody, Notice, TextLink, useCopy } from "./ui";
 
 /**
@@ -171,7 +171,7 @@ export function SentMessage(props: SentMessageProps) {
   const when = departed ? formatDateTime(c.sent_at) : "";
   const recipients = recipientSummary(c);
   const attachments = attachmentLine(c, fullscreen);
-  const detail = r.detail?.trim() || null;
+  const detail = receiptDetail(r.detail);
   const label = copyLabelLine(c);
 
   const toggleLink = (

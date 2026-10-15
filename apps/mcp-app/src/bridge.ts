@@ -525,12 +525,48 @@ export class HostBridge {
     return !r?.isError;
   }
 
+  /**
+   * What became of the `ui/update-model-context` requests this frame sent.
+   * INTERNAL v1 ONLY, read by the diagnostics line, which is the only way to
+   * learn from a real host whether it accepts them (QA 2026-10-15).
+   */
+  modelContext = { sent: 0, ok: 0, failed: 0 };
+
+  /**
+   * Tell the host what the card did, for the model's future turns.
+   *
+   * ── SENT WHETHER OR NOT THE HOST ADVERTISES IT (QA 2026-10-15) ────────────
+   * This used to return early unless `hostCapabilities.updateModelContext` was
+   * set. The capability is in ext-apps' `McpUiHostCapabilities` type, but the
+   * published 2026-01-26 specification's `HostCapabilities` does not list it at
+   * all, and the reference SDK's `App.updateModelContext` sends the request
+   * without checking. So a host that implements the method and follows the
+   * published spec never advertises it, and this card stayed silent to it. In
+   * Claude the model never heard about a save or a send from the card, and
+   * nothing here could say whether the gate was why: nobody had recorded what
+   * Claude advertises.
+   *
+   * Sending to a host that does not implement it costs one error reply
+   * (-32601), swallowed here. The request shape is the spec's exactly:
+   * `{ content: ContentBlock[], structuredContent? }`. The server says the same
+   * facts in the model's next draft result regardless (card-activity.ts), so
+   * this is the fast path, not the only one.
+   */
   updateModelContext(text: string, structured?: Json): Promise<unknown> {
-    if (!this.hostCapabilities.updateModelContext) return Promise.resolve(null);
+    this.modelContext.sent++;
     return this.request("ui/update-model-context", {
       content: [{ type: "text", text }],
       ...(structured ? { structuredContent: structured } : {}),
-    }).catch(() => null);
+    }).then(
+      (r) => {
+        this.modelContext.ok++;
+        return r;
+      },
+      () => {
+        this.modelContext.failed++;
+        return null;
+      },
+    );
   }
 
   sendSizeChanged(width: number, height: number) {
