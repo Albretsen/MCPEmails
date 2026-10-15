@@ -568,14 +568,12 @@ function ClientGuideModal({ client, mcpUrl, onClose, onGoToKeys, inbox = null })
  * connect an inbox, then connect an MCP client (the URL is highlighted and a
  * per-client guide opens on click).
  */
-function GettingStartedGuide({ inboxes, inboxCount, callsThisMonth, mcpUrl, onConnect, onGoToKeys, initialClient = null, onClientSelected, businessShaped = false, atInboxLimit = false }) {
+function GettingStartedGuide({ inboxes, inboxCount, callsThisMonth, mcpUrl, onConnect, onGoToKeys, initialClient = null, onClientSelected }) {
   const t = useTranslations('dashboard');
   const [activeClient, setActiveClient] = useState(() => MCP_CLIENTS.find(c => (c.k === 'api' ? 'curl' : c.k) === initialClient) ?? null);
-  // Business-domain workspaces with one mailbox get an optional row asking
-  // for the rest (see lib/onboarding/multi-inbox-prompt). Null for everyone
-  // else, which renders exactly the guide they had before.
-  const multiInbox = multiInboxPromptVariant({ businessShaped, inboxCount, atInboxLimit });
-  useMultiInboxPromptBeacon(multiInbox !== null);
+  // The second-work-mailbox invitation used to be the last row of this guide.
+  // It is not here any more: see MultiInboxInvite, below, for where it went
+  // and why. This guide is the two numbered steps and nothing else.
 
   const step1Done = inboxCount > 0;
   const step2Done = callsThisMonth > 0;
@@ -614,7 +612,7 @@ function GettingStartedGuide({ inboxes, inboxCount, callsThisMonth, mcpUrl, onCo
           </div>
           {!step1Done ? (
             <div style={{ flexShrink: 0 }}>
-              <Btn variant="primary" size="sm" icon="plus" onClick={onConnect}>{t('guide.connectInbox')}</Btn>
+              <Btn variant="primary" size="sm" icon="plus" onClick={() => onConnect('guide')}>{t('guide.connectInbox')}</Btn>
             </div>
           ) : null}
         </div>
@@ -666,36 +664,6 @@ function GettingStartedGuide({ inboxes, inboxCount, callsThisMonth, mcpUrl, onCo
             </div>
           </div>
         </div>
-        {/* Optional: the company's other mailboxes. After the two numbered
-            steps on purpose, so wiring up a client stays the next thing to
-            do; see lib/onboarding/multi-inbox-prompt for who sees it. */}
-        {multiInbox && (
-          <div data-multi-inbox-prompt={multiInbox} style={{
-            display: 'flex', alignItems: 'center', flexWrap: 'wrap', gap: 14, padding: '14px 16px',
-            background: 'var(--bg-page)', borderRadius: 10, border: '1px dashed var(--border-2, var(--border-1))',
-          }}>
-            <Icon name="plus" size={16} color="var(--brand)" />
-            <div style={{ flex: '1 1 260px', minWidth: 0 }}>
-              <div style={{ display: 'flex', alignItems: 'center', gap: 8, fontFamily: 'var(--font-sans)', fontSize: 13.5, fontWeight: 600, color: 'var(--fg-1)' }}>
-                {t('guide.multiInboxTitle')}
-                <Badge tone="neutral">{t('guide.multiInboxOptional')}</Badge>
-              </div>
-              <div style={{ fontFamily: 'var(--font-sans)', fontSize: 12.5, color: 'var(--fg-3)', marginTop: 2, lineHeight: 1.5 }}>
-                {t(multiInbox === 'upgrade' ? 'guide.multiInboxDescUpgrade' : 'guide.multiInboxDesc')}
-              </div>
-            </div>
-            <div style={{ flexShrink: 0 }}>
-              <Btn
-                variant="secondary"
-                size="sm"
-                icon="plus"
-                onClick={() => { sendMultiInboxPromptBeacon('clicked'); onConnect(); }}
-              >
-                {t('guide.multiInboxCta')}
-              </Btn>
-            </div>
-          </div>
-        )}
       </div>
 
       {activeClient ? (
@@ -731,15 +699,133 @@ function sendMultiInboxPromptBeacon(action) {
   }
 }
 
-/** Records `shown` once per mount of the guide while the prompt is on screen. */
-function useMultiInboxPromptBeacon(visible) {
+/**
+ * Records `shown` once per mount, and only once the invitation has actually
+ * been on screen.
+ *
+ * It used to fire from a bare mount effect, when the invitation was the last
+ * row of the getting-started guide, far below the fold. So "shown" was booked
+ * for 43 workspaces, 33 of them within 30 seconds of their first connect (the
+ * dashboard routes to the Overview right after one), and none of them clicked:
+ * the row measured page loads, not eyes. Now it waits for an
+ * IntersectionObserver to report at least half of the element inside the
+ * viewport. Where there is no IntersectionObserver the mount is the best
+ * signal there is, so it falls back to the old behaviour.
+ *
+ * The server still keeps one `started` row per workspace, however many mounts
+ * and placements report.
+ */
+function useMultiInboxSeenBeacon(ref) {
   const sent = useRef(false);
   useEffect(() => {
-    if (!visible || sent.current) return;
-    sent.current = true;
-    const id = setTimeout(() => sendMultiInboxPromptBeacon('shown'), 0);
-    return () => clearTimeout(id);
-  }, [visible]);
+    if (sent.current) return undefined;
+    const node = ref.current;
+    let timer = null;
+    const report = () => {
+      if (sent.current) return;
+      sent.current = true;
+      // Deferred past paint, like the paywall beacon.
+      timer = setTimeout(() => sendMultiInboxPromptBeacon('shown'), 0);
+    };
+    if (!node || typeof IntersectionObserver !== 'function') {
+      report();
+      return () => clearTimeout(timer);
+    }
+    const observer = new IntersectionObserver((entries) => {
+      if (!entries.some(entry => entry.isIntersecting)) return;
+      observer.disconnect();
+      report();
+    }, { threshold: 0.5 });
+    observer.observe(node);
+    // The timer is deliberately not cleared here: once the element has been
+    // seen, leaving the page a moment later does not make it unseen.
+    return () => observer.disconnect();
+  }, [ref]);
+}
+
+/**
+ * The second-work-mailbox invitation. Who sees it and in which of its two
+ * variants is decided by lib/onboarding/multi-inbox-prompt (business-shaped
+ * workspace, exactly one mailbox); callers render this only for a non-null
+ * variant, so a consumer workspace never mounts it.
+ *
+ * WHERE, AND WHY IT MOVED (2026-10-04). It was the last row of the
+ * getting-started guide: under the stat grid, both numbered steps, the URL
+ * field and a twelve-tile client grid, and gone for good at the first tool
+ * call because the guide is. 43 workspaces were "shown" it and none clicked.
+ * Meanwhile the people who did want a second mailbox pressed the header's
+ * "Connect inbox" or went to the Inboxes page. So it now sits in those two
+ * places and does not depend on the guide:
+ *
+ *   placement 'overview'  one compact line directly under the Overview header,
+ *                         beside the action it is about.
+ *   placement 'inboxes'   a row under the mailbox list, where the second
+ *                         mailbox would go.
+ *
+ * Each page renders exactly one, and the guide no longer renders any, so two
+ * copies can never share a screen.
+ *
+ * WHAT IT MUST STAY. Optional and quiet: neutral colours, an "Optional" badge,
+ * a small secondary button, no number, never the page's primary action, and it
+ * never opens anything by itself. An earlier Overview presented the upgrade as
+ * the next step and pulled people to a paywall seconds after their first
+ * connect. The 'upgrade' variant says in words that a second mailbox is on a
+ * paid plan before the button is pressed, because at the cap the button opens
+ * the connect modal on its paywall panel. Rendering this fires no
+ * `paywall_reached`: that stage counts the panel, and only the modal shows it.
+ *
+ * `onConnect` receives the entry point, so the modal's own funnel rows say
+ * which of the two placements was pressed.
+ */
+function MultiInboxInvite({ variant, placement, onConnect }) {
+  const t = useTranslations('dashboard');
+  const ref = useRef(null);
+  useMultiInboxSeenBeacon(ref);
+  const compact = placement === 'overview';
+  const upgrade = variant === 'upgrade';
+  const desc = compact
+    ? t(upgrade ? 'guide.multiInboxCompactUpgrade' : 'guide.multiInboxCompact')
+    : t(upgrade ? 'guide.multiInboxDescUpgrade' : 'guide.multiInboxDesc');
+  return (
+    <div
+      ref={ref}
+      data-multi-inbox-prompt={variant}
+      data-multi-inbox-placement={placement}
+      style={{
+        display: 'flex', alignItems: 'center', flexWrap: 'wrap',
+        gap: compact ? 10 : 14,
+        padding: compact ? '8px 12px' : '14px 16px',
+        marginTop: compact ? 0 : 12,
+        marginBottom: compact ? 12 : 0,
+        background: 'var(--bg-surface)', borderRadius: 10,
+        border: '1px dashed var(--border-2, var(--border-1))',
+      }}
+    >
+      <Icon name="plus" size={compact ? 14 : 16} color="var(--fg-3)" />
+      <div style={{ flex: '1 1 260px', minWidth: 0 }}>
+        <div style={{ display: 'flex', alignItems: 'center', flexWrap: 'wrap', gap: 8, fontFamily: 'var(--font-sans)', fontSize: compact ? 13 : 13.5, fontWeight: 600, color: 'var(--fg-1)' }}>
+          {t('guide.multiInboxTitle')}
+          <Badge tone="neutral">{t('guide.multiInboxOptional')}</Badge>
+        </div>
+        <div style={{ fontFamily: 'var(--font-sans)', fontSize: compact ? 12 : 12.5, color: 'var(--fg-3)', marginTop: 2, lineHeight: 1.5 }}>
+          {desc}
+        </div>
+      </div>
+      <div style={{ flexShrink: 0 }}>
+        <Btn
+          variant="secondary"
+          size="sm"
+          icon="plus"
+          onClick={() => {
+            sendMultiInboxPromptBeacon('clicked');
+            onConnect(compact ? 'multi_inbox_overview' : 'multi_inbox_inboxes');
+          }}
+        >
+          {t('guide.multiInboxCta')}
+        </Btn>
+      </div>
+    </div>
+  );
 }
 
 /** Step indicator dot: number, or a mint check when done. */
@@ -823,17 +909,25 @@ export function OverviewPage({ inboxes, apiKeys = [], activity, stats, usageData
   const atInboxLimit =
     planLimits?.maxInboxes != null && inboxCount >= planLimits.maxInboxes;
 
+  // Business-shaped workspace with exactly one mailbox: the optional
+  // invitation to add the others (see MultiInboxInvite). Null for everyone
+  // else, who get exactly the page they had. It does not depend on
+  // `showGuide`, so it is still here after the first tool call.
+  const multiInbox = multiInboxPromptVariant({ businessShaped, inboxCount, atInboxLimit });
+
   return (
     <div className="page">
       <PageHeader
         title={t('overview.title')}
         sub={t('overview.sub')}
         action={
-          <Btn variant={atInboxLimit ? "secondary" : "primary"} icon="plus" onClick={onConnect}>
+          <Btn variant={atInboxLimit ? "secondary" : "primary"} icon="plus" onClick={() => onConnect('header')}>
             {t('overview.connectInbox')}
           </Btn>
         }
       />
+
+      {multiInbox && <MultiInboxInvite variant={multiInbox} placement="overview" onConnect={onConnect} />}
 
       <div className="stat-grid">
         <div className="stat">
@@ -953,8 +1047,6 @@ export function OverviewPage({ inboxes, apiKeys = [], activity, stats, usageData
           onGoToKeys={onGoToKeys}
           initialClient={onboardingClient}
           onClientSelected={onClientSelected}
-          businessShaped={businessShaped}
-          atInboxLimit={atInboxLimit}
         />
       ) : (
         <div className="overview-grid" style={{ marginTop: 16 }}>
@@ -1321,10 +1413,14 @@ export function InboxesPage({ inboxes, planLimits, stripePrices = null, business
   // two competing primary buttons where one of them silently means "buy" is
   // how a connect button becomes a bait-and-switch.
   const connectAction = (
-    <Btn variant={atInboxLimit ? "secondary" : "primary"} icon="plus" onClick={onConnect}>
+    <Btn variant={atInboxLimit ? "secondary" : "primary"} icon="plus" onClick={() => onConnect('inboxes_page')}>
       {t('inboxes.connectInbox')}
     </Btn>
   );
+  // Same rule and same component as the Overview: a business-shaped workspace
+  // with exactly one mailbox is invited, under the list, to add the others.
+  // Counted off the live `inboxes` array, like the cap above.
+  const multiInbox = multiInboxPromptVariant({ businessShaped, inboxCount: inboxes.length, atInboxLimit });
 
   return (
     <div className="page">
@@ -1711,7 +1807,7 @@ export function InboxesPage({ inboxes, planLimits, stripePrices = null, business
             <h3>{t('inboxes.emptyTitle')}</h3>
             <p>{t('inboxes.emptyDesc')}</p>
             <div style={{ marginTop: 8 }}>
-              <Btn variant="primary" icon="plus" onClick={onConnect}>{t('inboxes.connectInbox')}</Btn>
+              <Btn variant="primary" icon="plus" onClick={() => onConnect('inboxes_page')}>{t('inboxes.connectInbox')}</Btn>
             </div>
             {/* Closing the connect modal landed the user here, where the only
                 control reopened the modal they had just backed out of. Anyone
@@ -1750,6 +1846,8 @@ export function InboxesPage({ inboxes, planLimits, stripePrices = null, business
           </div>
         )}
       </div>
+
+      {multiInbox && <MultiInboxInvite variant={multiInbox} placement="inboxes" onConnect={onConnect} />}
 
       {/* Inbox detail / diagnostics modal */}
       {detailInboxLive && (

@@ -85,6 +85,11 @@ async function renderInboxes(t, { inboxes = [inbox()], respond } = {}) {
     let body = null;
     if (typeof init.body === 'string') body = JSON.parse(init.body);
     const request = { url: String(url), method: init.method ?? 'GET', body, raw: init.body };
+    // Analytics beacons are not what this suite counts. The fixture is a
+    // business-domain workspace with one mailbox, so the Inboxes page shows the
+    // second-mailbox invitation, and with no IntersectionObserver in this DOM
+    // its `shown` beacon fires on mount (covered in inbox-cap-offer-ui.test.mjs).
+    if (request.url.startsWith('/api/analytics/')) return { ok: true, status: 204, json: async () => ({}) };
     requests.push(request);
     if (respond) return respond(request);
     return {

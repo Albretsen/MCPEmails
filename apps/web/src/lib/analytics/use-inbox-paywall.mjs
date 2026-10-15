@@ -2,6 +2,7 @@
 
 import { useEffect, useRef } from 'react';
 import { createInboxPaywallReporter } from './inbox-paywall.mjs';
+import { parseConnectEntryPoint } from './connect-entry-point.mjs';
 
 /**
  * Fire-and-forget beacon recording that the inbox-cap upgrade panel was shown.
@@ -12,8 +13,10 @@ import { createInboxPaywallReporter } from './inbox-paywall.mjs';
  * `usePricingView`: a POST to a small authenticated endpoint that resolves the
  * workspace itself, rather than a second analytics mechanism.
  *
- * The endpoint takes no body at all, so nothing about the mailbox the user was
- * trying to connect can leak into the funnel. `keepalive` lets the request
+ * The body is one optional word, `entry_point`: which control opened the
+ * modal, from the closed list in connect-entry-point.mjs, which the endpoint
+ * checks again. Nothing about the mailbox the user was trying to connect is
+ * sent, so none of it can leak into the funnel. `keepalive` lets the request
  * survive the navigation to Stripe when someone reads the panel and clicks
  * upgrade immediately.
  *
@@ -21,8 +24,14 @@ import { createInboxPaywallReporter } from './inbox-paywall.mjs';
  * @param {boolean} state.isReconnect
  * @param {boolean} state.atInboxLimit
  * @param {boolean} state.serverLimitReached
+ * @param {string|null} [state.entryPoint] - Which control opened the modal.
  */
-export function useInboxPaywallView({ isReconnect, atInboxLimit, serverLimitReached }) {
+export function useInboxPaywallView({ isReconnect, atInboxLimit, serverLimitReached, entryPoint = null }) {
+  // Read at send time through a ref: the entry point belongs to the modal-open
+  // and must never be a reason for the effect below to run again.
+  const entry = useRef(entryPoint);
+  useEffect(() => { entry.current = entryPoint; }, [entryPoint]);
+
   // One reporter per mount. The modal is conditionally rendered, so a mount is
   // exactly one modal-open and the dedupe guard resets when it should.
   const reporter = useRef(null);
@@ -35,7 +44,14 @@ export function useInboxPaywallView({ isReconnect, atInboxLimit, serverLimitReac
     // about measuring it may compete with rendering it.
     const id = setTimeout(() => {
       if (cancelled) return;
-      fetch('/api/analytics/paywall', { method: 'POST', keepalive: true }).catch(() => {
+      const entryPointValue = parseConnectEntryPoint(entry.current);
+      fetch('/api/analytics/paywall', {
+        method: 'POST',
+        keepalive: true,
+        ...(entryPointValue
+          ? { headers: { 'content-type': 'application/json' }, body: JSON.stringify({ entry_point: entryPointValue }) }
+          : {}),
+      }).catch(() => {
         // Analytics is never worth a console error in a user's browser.
       });
     }, 0);

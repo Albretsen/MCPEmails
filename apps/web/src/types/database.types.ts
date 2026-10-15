@@ -2731,6 +2731,7 @@ export type Database = {
           auth_reason: string | null
           category: string
           connection_type: string | null
+          entry_point: string | null
           error_category: string | null
           id: number
           occurred_at: string
@@ -2743,6 +2744,7 @@ export type Database = {
           auth_reason?: string | null
           category: string
           connection_type?: string | null
+          entry_point?: string | null
           error_category?: string | null
           id?: never
           occurred_at?: string
@@ -2755,6 +2757,7 @@ export type Database = {
           auth_reason?: string | null
           category?: string
           connection_type?: string | null
+          entry_point?: string | null
           error_category?: string | null
           id?: never
           occurred_at?: string
