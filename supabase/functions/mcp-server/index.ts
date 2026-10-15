@@ -468,7 +468,9 @@ import {
   type WorkBudget,
 } from "./bulk-budget.ts";
 import { ImapSession, releaseImapClient } from "./imap-session.ts";
-import { ImapCallTimings, imapTimingStore } from "./imap-timing.ts";
+import { ImapCallTimings, imapClockMs, imapTimingStore } from "./imap-timing.ts";
+import { hasTimeForNextFolder, imapSearchStoppedEarlyNote } from "./imap-search-budget.ts";
+import { mcpImapPoolStore } from "./mcp-imap-pool.ts";
 import {
   groupImapIdsByFolder,
   type ImapFolderGroup,
@@ -12104,6 +12106,15 @@ async function searchImapMessages(
    * account may hold at once (see imap-session.ts).
    */
   sharedSession?: ImapSession<ImapClient>,
+  /**
+   * The caller's deadline, on the {@link imapClockMs} clock. When given, a
+   * multi-folder search stops between folders once the next one would not fit,
+   * and returns the folders it covered with a note naming the rest, instead of
+   * running into the caller's timer and returning nothing. Only email_search
+   * passes it: search_and_move and search_and_delete act on the result set, and
+   * a partial set is not one they may act on.
+   */
+  deadlineAtMs?: number,
 ): Promise<SearchEmailsResult> {
   if (!imapConfigured(inbox)) {
     throw new Error("imap_auth_failed");
@@ -12172,7 +12183,17 @@ async function searchImapMessages(
 
     let total = 0;
     const candidates: Array<{ folder: string; summary: ImapMessageSummary }> = [];
-    for (const folder of searchFolders) {
+    const folderTimesMs: number[] = [];
+    let skippedFolders: string[] = [];
+    for (const [index, folder] of searchFolders.entries()) {
+      if (
+        deadlineAtMs !== undefined &&
+        !hasTimeForNextFolder(deadlineAtMs - imapClockMs(), folderTimesMs)
+      ) {
+        skippedFolders = searchFolders.slice(index);
+        break;
+      }
+      const folderStartedMs = imapClockMs();
       await session.select(folder);
       const allUids = await client.uidSearch(criteria);
       total += allUids.length;
@@ -12187,7 +12208,9 @@ async function searchImapMessages(
         includePreview: singlePass && needPreview,
       });
       for (const summary of summaries) candidates.push({ folder, summary });
+      folderTimesMs.push(imapClockMs() - folderStartedMs);
     }
+    const searchedFolders = searchFolders.slice(0, searchFolders.length - skippedFolders.length);
 
     // Sort by envelope date descending; messages with an unparseable/absent date
     // sort last, tie-broken by UID descending (newest arrival first).
@@ -12262,6 +12285,9 @@ async function searchImapMessages(
       has_more: offset + limit < total,
       next_offset: offset + limit,
       query_normalized: criteria,
+      ...(skippedFolders.length > 0
+        ? { notes: [imapSearchStoppedEarlyNote(searchedFolders, skippedFolders)] }
+        : {}),
     };
   } catch (err) {
     if (err instanceof ImapAuthError) throw new Error("imap_auth_failed");
@@ -19082,27 +19108,6 @@ async function executeSearchEmails(
 
   let searchResult: SearchEmailsResult;
   try {
-    // ── Folder addressing ───────────────────────────────────────────────────
-    // `include_folders` takes folder NAMES and carried the same hazard as
-    // email_list's `folder`: a name Gmail does not recognise as a label id was
-    // forwarded verbatim and came back as "Invalid label". Resolve each entry
-    // through the shared seam so a name, an id and an alias all work, and so an
-    // entry that matches nothing fails as a permanent, named error.
-    let resolvedFolders: string[];
-    try {
-      resolvedFolders = await resolveIncludeFolders(inbox, includeFolders, session);
-    } catch (err) {
-      if (err instanceof FolderTargetError) return folderTargetErrorResult(err);
-      const message = err instanceof Error ? err.message : String(err);
-      if (
-        message === "gmail_auth_failed" || message === "outlook_auth_failed" ||
-        message === "fastmail_auth_failed" || message === "imap_auth_failed"
-      ) {
-        return authFailedResult(inbox.provider, inbox.id, "access");
-      }
-      throw err;
-    }
-
     // ── Provider dispatch with 30-second timeout ────────────────────────────
     // The provider call is built as a thunk rather than started here, because
     // `raceSearchWithTimeout` is what starts it and what owns the deadline: it
@@ -19110,29 +19115,35 @@ async function executeSearchEmails(
     // the IMAP socket before delivering the rejection rather than walking away
     // from a live command. See bulk-budget.ts for the production measurements
     // that make a plain `Promise.race` the wrong primitive here.
-    let startSearch: () => Promise<SearchEmailsResult>;
+    //
+    // The IMAP search also gets the deadline itself, so a multi-folder search
+    // can stop between folders and say which ones it did not reach, instead of
+    // running into the timer and returning nothing. See imap-search-budget.ts.
+    const deadlineAtMs = imapClockMs() + SEARCH_TIMEOUT_MS;
+    let runSearch: (folders: string[]) => Promise<SearchEmailsResult>;
     switch (inbox.provider) {
       case "gmail":
-        startSearch = () =>
-          searchGmailMessages(inbox, search, limit, offset, resolvedFolders);
+        runSearch = (folders) =>
+          searchGmailMessages(inbox, search, limit, offset, folders);
         break;
       case "outlook":
-        startSearch = () =>
-          searchOutlookMessages(inbox, search, limit, offset, resolvedFolders);
+        runSearch = (folders) =>
+          searchOutlookMessages(inbox, search, limit, offset, folders);
         break;
       case "imap":
         // needPreview is true here and only here: email_search DECLARES
         // `preview` in its response schema and an agent reads it to decide what
         // to open, so this is the one caller that must pay for the body prefix.
-        startSearch = () =>
+        runSearch = (folders) =>
           searchImapMessages(
             inbox,
             search,
             limit,
             offset,
-            resolvedFolders,
+            folders,
             true,
             session ?? undefined,
+            deadlineAtMs,
           );
         break;
       default:
@@ -19151,6 +19162,28 @@ async function executeSearchEmails(
         };
     }
 
+    // ── Folder addressing, inside the deadline ──────────────────────────────
+    // `include_folders` takes folder NAMES and carried the same hazard as
+    // email_list's `folder`: a name Gmail does not recognise as a label id was
+    // forwarded verbatim and came back as "Invalid label". Resolve each entry
+    // through the shared seam so a name, an id and an alias all work, and so an
+    // entry that matches nothing fails as a permanent, named error.
+    //
+    // It runs INSIDE the race (2026-10-15). It used to run before it, so its
+    // LISTs and, on IMAP, the connect were on nobody's clock: 412 successful
+    // searches and 132 timeouts in one week took longer than 35 seconds. A
+    // resolution failure is wrapped so the catch below can answer it exactly as
+    // it was answered before it moved.
+    const startSearch = async (): Promise<SearchEmailsResult> => {
+      let resolvedFolders: string[];
+      try {
+        resolvedFolders = await resolveIncludeFolders(inbox, includeFolders, session);
+      } catch (err) {
+        throw new IncludeFoldersFailure(err);
+      }
+      return await runSearch(resolvedFolders);
+    };
+
     try {
       searchResult = await raceSearchWithTimeout(
         startSearch,
@@ -19160,6 +19193,21 @@ async function executeSearchEmails(
         session ? () => session.abort() : null,
       );
     } catch (err) {
+      // A folder-resolution failure, answered as it was before resolution moved
+      // inside the race: a named folder error, an auth failure, or a rethrow.
+      if (err instanceof IncludeFoldersFailure) {
+        const cause = err.cause;
+        if (cause instanceof FolderTargetError) return folderTargetErrorResult(cause);
+        const causeMessage = cause instanceof Error ? cause.message : String(cause);
+        if (
+          causeMessage === "gmail_auth_failed" || causeMessage === "outlook_auth_failed" ||
+          causeMessage === "fastmail_auth_failed" || causeMessage === "imap_auth_failed"
+        ) {
+          return authFailedResult(inbox.provider, inbox.id, "access");
+        }
+        throw cause;
+      }
+
       const message = err instanceof Error ? err.message : String(err);
 
       // Timeout
@@ -19646,6 +19694,16 @@ async function resolveFolderId(
      * so no destination resolve may ever pass this.
      */
     forRead?: boolean;
+    /**
+     * IMAP only: a LIST the caller already holds, used instead of issuing one.
+     *
+     * `resolveIncludeFolders` resolves several entries in a row and used to LIST
+     * once per entry, serially: on a 5-to-10-folder search that was 2.4s of the
+     * call on average (function logs, 2026-10-15), every LIST returning the
+     * same layout. Only ever passed by a read-only, strict resolve, which cannot
+     * create a mailbox, so the listing cannot go stale between entries.
+     */
+    imapMailboxes?: ImapMailboxInfo[];
   } = {},
 ): Promise<string> {
   const trimmed = nameOrId.trim();
@@ -19682,7 +19740,7 @@ async function resolveFolderId(
   // On IMAP the SPECIAL-USE flags come back in the same reply as the names, so
   // the role step below reuses `imapMailboxes` rather than asking again.
   const imapMailboxes = isImapProvider(inbox)
-    ? await imapMailboxListing(inbox, opts.session)
+    ? opts.imapMailboxes ?? await imapMailboxListing(inbox, opts.session)
     : null;
   const folders = imapMailboxes
     ? imapFolderReferences(imapMailboxes)
@@ -19873,6 +19931,15 @@ function destinationFolderArg(args: Record<string, unknown>): string {
  * A blank entry scopes nothing and is skipped rather than rejected, matching
  * what email_search has always done with one.
  */
+/**
+ * A failure while resolving `include_folders`, carried out of email_search's
+ * timeout race so the handler answers it as it did when resolution ran before
+ * the race: a named folder error, an auth failure, or the original error.
+ */
+class IncludeFoldersFailure {
+  constructor(readonly cause: unknown) {}
+}
+
 async function resolveIncludeFolders(
   inbox: InboxRow,
   includeFolders: string[],
@@ -19880,10 +19947,19 @@ async function resolveIncludeFolders(
   session: ImapSession<ImapClient> | null,
 ): Promise<string[]> {
   const resolved: string[] = [];
+  // IMAP: ONE LIST for the whole list of entries, taken on the first entry that
+  // needs it ("inbox" never does). See resolveFolderId's `imapMailboxes`.
+  let imapMailboxes: ImapMailboxInfo[] | undefined;
   for (const [index, f] of includeFolders.entries()) {
     if (!f.trim()) continue;
+    if (
+      imapMailboxes === undefined && isImapProvider(inbox) &&
+      lookupCanonicalAlias(f.trim())?.aliases[0] !== "inbox"
+    ) {
+      imapMailboxes = await imapMailboxListing(inbox, session);
+    }
     // `forRead`: include_folders only ever scopes a SEARCH, in all three tools.
-    const id = await resolveFolderId(inbox, f, { strict: true, session, forRead: true })
+    const id = await resolveFolderId(inbox, f, { strict: true, session, forRead: true, imapMailboxes })
       .catch((err) => {
         // Say WHERE in the list it failed. Position and length, never the entry.
         if (err instanceof FolderTargetError && err.details) {
@@ -31694,7 +31770,13 @@ async function handleToolsCall(
   try {
     await activityInboxStore.run(logCtx, async () => {
     // ── Dispatch to the implemented tool handler ───────────────────────────
-    const outcome = await dispatchExecutor(dispatchName, rawArgs, apiKey);
+    // Inside the MCP IMAP pool's scope, so this call may take a warm
+    // connection the previous call on this inbox left behind. See
+    // mcp-imap-pool.ts; nothing else about the call changes.
+    const outcome = await mcpImapPoolStore.run(
+      { workspaceId: apiKey.workspace_id, flow: {} },
+      () => dispatchExecutor(dispatchName, rawArgs, apiKey),
+    );
     // What the draft editor recorded since the last draft result on this key
     // and inbox (card-activity.ts). HERE, on the MCP tools/call path, and not
     // in dispatchExecutor: client-api runs the same executors for the web
