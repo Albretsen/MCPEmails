@@ -345,7 +345,7 @@ $$;
 --                    usage_limit_events, workspace_usage_exemptions,
 --                    user_usage_entitlements, user_billing
 --   send review      send_approvals, outbound_idempotency
---   drafts           draft_lineage
+--   drafts           draft_lineage, draft_card_activity
 --   bulk operations  bulk_plans, bulk_runs
 --   automations      triage_rules, triage_runs, triage_run_items,
 --                    triage_seen_messages
@@ -672,6 +672,41 @@ CREATE TABLE IF NOT EXISTS public.draft_lineage (
     CONSTRAINT draft_lineage_workspace_id_fkey FOREIGN KEY (workspace_id) REFERENCES public.workspaces(id) ON DELETE CASCADE
 );
 CREATE INDEX IF NOT EXISTS draft_lineage_workspace_idx ON public.draft_lineage (workspace_id);
+
+-- Draft card activity (hosted migration 20261015220000). Saves and sends made
+-- through the draft editor, for the next draft result on the same API key. No
+-- mail content.
+CREATE TABLE IF NOT EXISTS public.draft_card_activity (
+    id uuid DEFAULT gen_random_uuid() NOT NULL,
+    workspace_id uuid NOT NULL,
+    inbox_id uuid NOT NULL,
+    api_key_id uuid NOT NULL,
+    draft_id text NOT NULL,
+    line_id uuid,
+    action text NOT NULL,
+    occurred_at timestamp with time zone NOT NULL,
+    revision integer,
+    fields text[] DEFAULT '{}'::text[] NOT NULL,
+    to_count smallint,
+    cc_count smallint,
+    bcc_count smallint,
+    reported_at timestamp with time zone,
+    created_at timestamp with time zone DEFAULT now() NOT NULL,
+    CONSTRAINT draft_card_activity_action_check CHECK ((action = ANY (ARRAY['saved'::text, 'sent'::text]))),
+    CONSTRAINT draft_card_activity_draft_id_check CHECK (((char_length(draft_id) >= 1) AND (char_length(draft_id) <= 1024))),
+    CONSTRAINT draft_card_activity_fields_check CHECK ((fields <@ ARRAY['to'::text, 'cc'::text, 'bcc'::text, 'subject'::text, 'body'::text])),
+    CONSTRAINT draft_card_activity_revision_check CHECK (((revision IS NULL) OR (revision >= 0))),
+    CONSTRAINT draft_card_activity_to_count_check CHECK (((to_count IS NULL) OR (to_count >= 0))),
+    CONSTRAINT draft_card_activity_cc_count_check CHECK (((cc_count IS NULL) OR (cc_count >= 0))),
+    CONSTRAINT draft_card_activity_bcc_count_check CHECK (((bcc_count IS NULL) OR (bcc_count >= 0))),
+    CONSTRAINT draft_card_activity_pkey PRIMARY KEY (id),
+    CONSTRAINT draft_card_activity_inbox_id_fkey FOREIGN KEY (inbox_id) REFERENCES public.inboxes(id) ON DELETE CASCADE,
+    CONSTRAINT draft_card_activity_api_key_id_fkey FOREIGN KEY (api_key_id) REFERENCES public.api_keys(id) ON DELETE CASCADE,
+    CONSTRAINT draft_card_activity_workspace_id_fkey FOREIGN KEY (workspace_id) REFERENCES public.workspaces(id) ON DELETE CASCADE
+);
+CREATE INDEX IF NOT EXISTS draft_card_activity_unreported_idx ON public.draft_card_activity (api_key_id, inbox_id, occurred_at) WHERE reported_at IS NULL;
+CREATE INDEX IF NOT EXISTS draft_card_activity_occurred_idx ON public.draft_card_activity (occurred_at);
+CREATE INDEX IF NOT EXISTS draft_card_activity_workspace_idx ON public.draft_card_activity (workspace_id);
 
 -- Mail relay registry (hosted migration 20261015180000). Read and written only
 -- when the server has a relay configured (SMTP_RELAY_URL), which a self-hosted
