@@ -1,5 +1,7 @@
 'use client';
 
+import { SupportHelpLink } from '../components/support/SupportHelpLink';
+
 /**
  * app/error.js
  *
@@ -166,6 +168,11 @@ export default function ErrorPage({ reset }) {
           >
             Back to homepage
           </a>
+          {/* SUPPORT_RELEASE_GATE: a plain link to /help at release. English label,
+              like the rest of this page. */}
+          <SupportHelpLink
+            style={{ display: 'block', marginTop: 14, textAlign: 'center', color: 'var(--fg-3)', fontFamily: 'var(--font-sans)', fontSize: 13 }}
+          />
         </div>
       </div>
     </div>

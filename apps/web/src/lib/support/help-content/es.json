@@ -1,0 +1,227 @@
+{
+  "meta": {
+    "title": "Ayuda y soporte",
+    "description": "Respuestas a las dudas más comunes sobre conexión, clientes y facturación, y un formulario para escribir a quienes hacen MCP Emails."
+  },
+  "hero": {
+    "eyebrow": "Ayuda",
+    "title": "¿En qué podemos ayudarte?",
+    "lead": "Busca en las guías, lee las soluciones breves a los problemas que más vemos o escríbenos abajo."
+  },
+  "search": {
+    "label": "Buscar en la ayuda",
+    "placeholder": "Busca proveedores, clientes, documentación y preguntas",
+    "empty": "Sin resultados.",
+    "emptyLink": "Escríbenos abajo",
+    "kinds": {
+      "provider": "Proveedor",
+      "client": "Cliente",
+      "docs": "Docs",
+      "faq": "Pregunta",
+      "article": "Solución"
+    }
+  },
+  "hints": {
+    "provider": "{category} · {domain}",
+    "providerNoDomain": "{category}",
+    "clientOauth": "Guía de configuración · OAuth, sin clave de API",
+    "clientKey": "Guía de configuración · clave de API con permisos",
+    "docs": "Documentación",
+    "docsProviders": "Ajustes y compatibilidad de cada proveedor",
+    "docsClients": "Guías de configuración para cada cliente MCP",
+    "faq": "Preguntas sobre precios"
+  },
+  "providerCategories": {
+    "generic": "Cualquier buzón IMAP",
+    "consumer": "Webmail",
+    "privacy": "Correo centrado en la privacidad",
+    "business": "Correo de empresa",
+    "hosting": "Hosting con correo",
+    "cpanel": "cPanel y hosting compartido",
+    "selfhost": "Servidor de correo propio",
+    "isp": "Proveedor de internet",
+    "regional": "Correo regional",
+    "blocked": "Limitado o no compatible"
+  },
+  "articlesHeading": "Soluciones habituales",
+  "articlesLead": "Los problemas por los que más nos escriben y lo que los resuelve.",
+  "articles": [
+    {
+      "id": "imap-password-rejected",
+      "title": "El servidor de correo rechaza mi contraseña",
+      "summary": "En un dominio propio o en el correo de un hosting, una contraseña rechazada casi siempre es la contraseña equivocada o el usuario equivocado.",
+      "keywords": "imap smtp contraseña rechazada incorrecta acceso usuario cpanel plesk hosting dominio propio",
+      "steps": [
+        "Usa la contraseña del propio buzón. El acceso a tu cuenta de hosting o al panel de control es otra contraseña, aunque sea la misma dirección.",
+        "Usa la dirección de correo completa como usuario. Si escribiste un usuario aparte, vacía ese campo salvo que tu proveedor te haya dado uno.",
+        "Si el buzón tiene activada la autenticación en dos pasos, necesita una contraseña de aplicación en lugar de la contraseña del buzón.",
+        "¿No sabes la contraseña? Restablécela donde tu proveedor muestra tus direcciones de correo. En cPanel es Cuentas de correo y luego Administrar. En Plesk es Cuentas de correo.",
+        "Comprueba el nombre del servidor con los ajustes de tu proveedor. Nuestras guías de proveedores indican servidores IMAP y SMTP verificados."
+      ],
+      "links": [
+        { "label": "Guía de IMAP genérico", "href": "/connect/imap" },
+        { "label": "Compatibilidad por proveedor", "href": "/docs/providers" }
+      ]
+    },
+    {
+      "id": "app-password-required",
+      "title": "Hace falta una contraseña de aplicación (Yahoo, iCloud, Gmail, Zoho)",
+      "summary": "Estos proveedores no aceptan tu contraseña normal desde una app de correo. Crea una contraseña de aplicación y pégala en su lugar.",
+      "keywords": "contraseña de aplicación específica yahoo icloud apple gmail google zoho verificación en dos pasos app password",
+      "steps": [
+        "Yahoo: abre Seguridad de la cuenta y luego Generar contraseña de aplicación. Son 16 letras minúsculas sin espacios.",
+        "iCloud: entra en account.apple.com, abre Inicio de sesión y seguridad y luego Contraseñas específicas para apps. Son 16 letras minúsculas en cuatro grupos.",
+        "Gmail: activa la verificación en dos pasos y crea una en myaccount.google.com/apppasswords. Un administrador de Google Workspace puede desactivarlas en todo el dominio. Gmail también puede conectarse iniciando sesión con Google.",
+        "Zoho: crea una contraseña específica de aplicación en Cuenta de Zoho, dentro de Seguridad, y activa el acceso IMAP en los ajustes de Zoho Mail. Viene desactivado.",
+        "Pega la contraseña de aplicación tal como se muestra. Los espacios se ignoran."
+      ],
+      "links": [
+        { "label": "Guía de Yahoo Mail", "href": "/connect/yahoo" },
+        { "label": "Guía de iCloud Mail", "href": "/connect/icloud" },
+        { "label": "Guía de Gmail", "href": "/connect/gmail" },
+        { "label": "Guía de Zoho Mail", "href": "/connect/zoho" }
+      ]
+    },
+    {
+      "id": "yandex-imap-disabled",
+      "title": "Yandex: el acceso IMAP está desactivado",
+      "summary": "Yandex rechaza cualquier app de correo hasta que el acceso IMAP está activado, y el rechazo parece exactamente una contraseña incorrecta.",
+      "keywords": "yandex imap desactivado contraseña de aplicación clientes de correo yandex 360",
+      "steps": [
+        "En Yandex Mail, abre Ajustes y luego Clientes de correo. Activa el acceso IMAP y activa las contraseñas de aplicación y los tokens OAuth. Hacen falta los dos.",
+        "En id.yandex.com, abre Seguridad, luego Contraseñas de aplicación, y crea una de tipo Correo. Yandex la muestra una sola vez.",
+        "Conecta con tu dirección completa de Yandex y esa contraseña de aplicación. La contraseña de tu cuenta nunca funciona aquí, ni siquiera sin autenticación en dos pasos."
+      ],
+      "links": [
+        { "label": "Guía de Yandex Mail", "href": "/connect/yandex" }
+      ]
+    },
+    {
+      "id": "assistant-sees-nothing",
+      "title": "Conectado, pero el asistente no ve ningún correo",
+      "summary": "El buzón está conectado, pero tu asistente dice que no tiene herramientas de correo o no encuentra nada.",
+      "keywords": "sin herramientas nada vacío conector no funciona claude chatgpt cursor modo desarrollador permisos inbox_list",
+      "steps": [
+        "Abre Bandejas de entrada en el panel y comprueba que el buzón aparece sin errores. Si muestra uno, vuelve a conectarlo.",
+        "Empieza un chat nuevo después de añadir el conector. En ChatGPT, elige además Modo desarrollador y la app de mcpemails en el menú + de cada chat nuevo.",
+        "Autoriza el conector con la misma cuenta de mcpemails que tiene el buzón.",
+        "Tu asistente solo ve las herramientas para las que tiene permiso el conector o la clave de API. Si dejaste un permiso sin marcar, quita el conector y vuelve a añadirlo.",
+        "Pide al asistente que liste primero tus bandejas. El correo se obtiene cuando el asistente lo pide, así que nada llega por sí solo."
+      ],
+      "links": [
+        { "label": "Guías de clientes", "href": "/docs/clients" },
+        { "label": "Códigos de error", "href": "/docs#errors" }
+      ]
+    },
+    {
+      "id": "usage-limit-reached",
+      "title": "Límite de uso alcanzado",
+      "summary": "Un espacio de trabajo Free tiene 150 acciones de correo por mes natural. Cuando se agotan, se rechazan hasta el día 1 del mes siguiente (UTC).",
+      "keywords": "límite de uso cuota tope 150 acciones plan gratuito free rechazado reinicio",
+      "steps": [
+        "Mira cuántas acciones has usado en Uso, dentro del panel.",
+        "Listar tus bandejas y todo lo que haces en el panel nunca cuenta, y no se cuenta nada en los primeros 7 días tras el registro.",
+        "Reintentar no sirve. El límite se reinicia el día 1 del mes siguiente (UTC) y las automatizaciones en pausa se reanudan solas.",
+        "Personal, Pro y Team no tienen límite mensual, sujeto a un uso justo.",
+        "Los espacios creados antes del 2026-09-12 no se miden. Si ves el límite en uno de ellos, escríbenos."
+      ],
+      "links": [
+        { "label": "Preguntas sobre precios", "href": "/pricing#faq" },
+        { "label": "Límites de tasa", "href": "/docs#rate-limits" }
+      ]
+    },
+    {
+      "id": "change-or-cancel-plan",
+      "title": "Cambiar o cancelar tu plan",
+      "summary": "Mejora, baja de plan o cancela cuando quieras desde Ajustes en el panel.",
+      "keywords": "plan mejorar bajar cancelar suscripción facturación factura reembolso stripe portal pago tarjeta",
+      "steps": [
+        "Abre Ajustes en el panel. La sección de facturación muestra tu plan y los demás a los que puedes cambiar.",
+        "Para cancelar, cambiar la tarjeta o descargar facturas, abre el portal de facturación desde esa misma sección. Lo gestiona Stripe.",
+        "Cancelar detiene la siguiente renovación. Conservas lo que pagaste hasta el final del periodo actual y luego pasas a Free con una bandeja conectada.",
+        "Si el primer cobro de una suscripción nueva no era lo que esperabas, escríbenos en un plazo de 14 días y te lo devolvemos entero. Los periodos parciales no se reembolsan."
+      ],
+      "links": [
+        { "label": "Ajustes del panel", "href": "/dashboard/settings" },
+        { "label": "Planes y precios", "href": "/pricing" }
+      ]
+    },
+    {
+      "id": "disconnect-or-delete",
+      "title": "Desconectar un buzón o eliminar tu cuenta",
+      "summary": "Quita un buzón, un espacio de trabajo o toda la cuenta desde el panel.",
+      "keywords": "desconectar quitar bandeja buzón eliminar cuenta espacio de trabajo cerrar zona de peligro",
+      "steps": [
+        "Para desconectar un buzón, abre Bandejas de entrada en el panel, selecciónalo y elige Desconectar. Se borra su contraseña o token guardado.",
+        "Para cerrar un espacio de trabajo, abre Ajustes, luego Zona de peligro, y elige Eliminar espacio de trabajo. Tu cuenta y tus otros espacios se mantienen.",
+        "Para eliminarlo todo, abre Ajustes, luego Zona de peligro, y elige Eliminar cuenta. Lo confirmas escribiendo tu dirección de correo y no se puede deshacer.",
+        "Eliminar la cuenta cancela al momento un plan de pago, sin reembolso por el resto del periodo. Para conservar el tiempo que ya pagaste, cancélalo primero en el portal de facturación y elimina la cuenta cuando termine el periodo."
+      ],
+      "links": [
+        { "label": "Bandejas del panel", "href": "/dashboard/inboxes" },
+        { "label": "Ajustes del panel", "href": "/dashboard/settings" }
+      ]
+    }
+  ],
+  "contact": {
+    "heading": "Escríbenos",
+    "lead": "Una persona lee cada mensaje y responde por correo.",
+    "emailAlt": "¿Prefieres el correo? Escribe a {email}."
+  },
+  "categories": {
+    "connect": "Conectar un buzón",
+    "client": "Configurar un cliente de IA",
+    "billing": "Facturación y planes",
+    "bug": "Algo no funciona",
+    "feature": "Petición de función",
+    "other": "Otra cosa"
+  },
+  "form": {
+    "category": "Tema",
+    "subject": "Asunto",
+    "message": "Mensaje",
+    "email": "Tu correo",
+    "emailSignedIn": "Responderemos a",
+    "submit": "Enviar mensaje",
+    "sending": "Enviando…",
+    "subjectConnect": "Problemas al conectar {provider}",
+    "aboutProvider": "Sobre: {provider}"
+  },
+  "attach": {
+    "summary": "Qué adjuntamos a tu mensaje",
+    "intro": "Para poder ayudarte sin ir y venir con preguntas, esto se envía con tu mensaje:",
+    "workspace": "Espacio de trabajo",
+    "plan": "Plan",
+    "mailboxes": "Buzones",
+    "noMailboxes": "Ningún buzón conectado",
+    "lastError": "último error: {code}",
+    "from": "Abierto desde",
+    "provider": "Proveedor",
+    "code": "Código de error",
+    "never": "Nunca se adjuntan contraseñas, tokens ni el contenido de tu correo."
+  },
+  "errors": {
+    "invalid_json": "Algo falló al enviar el formulario. Recarga la página e inténtalo de nuevo.",
+    "invalid_email": "Escribe una dirección de correo válida para que podamos responderte.",
+    "invalid_category": "Elige un tema.",
+    "subject_required": "Añade un asunto.",
+    "subject_too_long": "El asunto es demasiado largo. Que no pase de 150 caracteres.",
+    "message_required": "Escribe un mensaje.",
+    "message_too_long": "El mensaje es demasiado largo. Que no pase de 5.000 caracteres.",
+    "invalid_form_token": "Esta página lleva demasiado tiempo abierta. Recárgala y vuelve a enviar.",
+    "rate_limited": "Demasiados mensajes en poco tiempo. Espera un rato o escribe a support@mcpemails.com.",
+    "server_error": "No pudimos guardar tu mensaje. Inténtalo de nuevo o escribe a support@mcpemails.com.",
+    "not_found": "El formulario de contacto no está disponible ahora. Escribe a support@mcpemails.com.",
+    "network": "No pudimos conectar. Revisa tu conexión e inténtalo de nuevo.",
+    "unknown": "Algo salió mal. Inténtalo de nuevo o escribe a support@mcpemails.com."
+  },
+  "success": {
+    "withRef": "Gracias, hemos recibido tu mensaje. Tu referencia es {ref}. Te responderemos por correo.",
+    "noRef": "Gracias, hemos recibido tu mensaje. Te responderemos por correo."
+  },
+  "preview": {
+    "link": "Probar el formulario sin sesión",
+    "note": "Guarda una cookie de vista previa en este navegador. Cierra sesión y vuelve a abrir esta página.",
+    "clear": "Dejar de previsualizar el formulario sin sesión"
+  }
+}

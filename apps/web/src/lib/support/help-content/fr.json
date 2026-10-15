@@ -1,0 +1,227 @@
+{
+  "meta": {
+    "title": "Aide et support",
+    "description": "Les réponses aux questions les plus fréquentes sur la connexion, les clients et la facturation, et un formulaire pour joindre l’équipe de MCP Emails."
+  },
+  "hero": {
+    "eyebrow": "Aide",
+    "title": "Comment pouvons-nous vous aider ?",
+    "lead": "Cherchez dans les guides, lisez les solutions courtes aux problèmes les plus fréquents, ou écrivez-nous ci-dessous."
+  },
+  "search": {
+    "label": "Rechercher dans l’aide",
+    "placeholder": "Fournisseurs, clients, documentation et questions",
+    "empty": "Aucun résultat.",
+    "emptyLink": "Écrivez-nous ci-dessous",
+    "kinds": {
+      "provider": "Fournisseur",
+      "client": "Client",
+      "docs": "Docs",
+      "faq": "Question",
+      "article": "Solution"
+    }
+  },
+  "hints": {
+    "provider": "{category} · {domain}",
+    "providerNoDomain": "{category}",
+    "clientOauth": "Guide de configuration · connexion OAuth, sans clé d’API",
+    "clientKey": "Guide de configuration · clé d’API à portée limitée",
+    "docs": "Documentation",
+    "docsProviders": "Réglages et compatibilité de chaque fournisseur",
+    "docsClients": "Guides de configuration pour chaque client MCP",
+    "faq": "Questions sur les tarifs"
+  },
+  "providerCategories": {
+    "generic": "Toute boîte IMAP",
+    "consumer": "Webmail",
+    "privacy": "Messagerie axée sur la confidentialité",
+    "business": "Messagerie professionnelle",
+    "hosting": "Hébergeur avec messagerie",
+    "cpanel": "cPanel et hébergement mutualisé",
+    "selfhost": "Serveur de messagerie auto-hébergé",
+    "isp": "Fournisseur d’accès",
+    "regional": "Messagerie régionale",
+    "blocked": "Limité ou non pris en charge"
+  },
+  "articlesHeading": "Solutions courantes",
+  "articlesLead": "Les problèmes pour lesquels on nous écrit le plus, et ce qui les règle.",
+  "articles": [
+    {
+      "id": "imap-password-rejected",
+      "title": "Le serveur de messagerie refuse mon mot de passe",
+      "summary": "Sur votre propre domaine ou chez un hébergeur, un mot de passe refusé est presque toujours le mauvais mot de passe ou le mauvais identifiant.",
+      "keywords": "imap smtp mot de passe refusé incorrect connexion identifiant cpanel plesk hébergement domaine",
+      "steps": [
+        "Utilisez le mot de passe de la boîte elle-même. L’identifiant de votre compte d’hébergement ou du panneau de contrôle est un autre mot de passe, même pour la même adresse.",
+        "Utilisez l’adresse e-mail complète comme identifiant. Si vous avez saisi un nom d’utilisateur distinct, videz ce champ, sauf si votre hébergeur vous en a fourni un.",
+        "Si la double authentification est activée sur la boîte, il lui faut un mot de passe d’application à la place du mot de passe de la boîte.",
+        "Mot de passe oublié ? Réinitialisez-le là où votre hébergeur liste vos adresses. Dans cPanel, c’est Comptes de messagerie, puis Gérer. Dans Plesk, c’est Comptes de messagerie.",
+        "Vérifiez le nom du serveur dans les réglages de votre fournisseur. Nos guides par fournisseur indiquent des serveurs IMAP et SMTP vérifiés."
+      ],
+      "links": [
+        { "label": "Guide IMAP générique", "href": "/connect/imap" },
+        { "label": "Compatibilité par fournisseur", "href": "/docs/providers" }
+      ]
+    },
+    {
+      "id": "app-password-required",
+      "title": "Mot de passe d’application requis (Yahoo, iCloud, Gmail, Zoho)",
+      "summary": "Ces fournisseurs n’acceptent pas votre mot de passe habituel depuis une application de messagerie. Créez un mot de passe d’application et collez-le à la place.",
+      "keywords": "mot de passe d’application spécifique yahoo icloud apple gmail google zoho validation en deux étapes app password",
+      "steps": [
+        "Yahoo : ouvrez Sécurité du compte, puis Générer un mot de passe d’application. Il fait 16 lettres minuscules, sans espaces.",
+        "iCloud : connectez-vous sur account.apple.com, ouvrez Connexion et sécurité, puis Mots de passe pour application. Il fait 16 lettres minuscules, en quatre groupes.",
+        "Gmail : activez la validation en deux étapes, puis créez-en un sur myaccount.google.com/apppasswords. Un administrateur Google Workspace peut les désactiver pour tout le domaine. Gmail peut aussi se connecter via la connexion Google.",
+        "Zoho : créez un mot de passe spécifique à une application dans Compte Zoho, sous Sécurité, et activez l’accès IMAP dans les réglages de Zoho Mail. Il est désactivé par défaut.",
+        "Collez le mot de passe d’application tel qu’il s’affiche. Les espaces sont ignorés."
+      ],
+      "links": [
+        { "label": "Guide Yahoo Mail", "href": "/connect/yahoo" },
+        { "label": "Guide iCloud Mail", "href": "/connect/icloud" },
+        { "label": "Guide Gmail", "href": "/connect/gmail" },
+        { "label": "Guide Zoho Mail", "href": "/connect/zoho" }
+      ]
+    },
+    {
+      "id": "yandex-imap-disabled",
+      "title": "Yandex : l’accès IMAP est désactivé",
+      "summary": "Yandex refuse toute application de messagerie tant que l’accès IMAP n’est pas activé, et le refus ressemble exactement à un mauvais mot de passe.",
+      "keywords": "yandex imap désactivé mot de passe d’application clients de messagerie yandex 360",
+      "steps": [
+        "Dans Yandex Mail, ouvrez Réglages, puis Clients de messagerie. Activez l’accès IMAP, ainsi que les mots de passe d’application et les jetons OAuth. Les deux sont nécessaires.",
+        "Sur id.yandex.com, ouvrez Sécurité, puis Mots de passe d’application, et créez-en un de type Mail. Yandex ne l’affiche qu’une fois.",
+        "Connectez-vous avec votre adresse Yandex complète et ce mot de passe d’application. Le mot de passe du compte ne fonctionne jamais ici, même sans double authentification."
+      ],
+      "links": [
+        { "label": "Guide Yandex Mail", "href": "/connect/yandex" }
+      ]
+    },
+    {
+      "id": "assistant-sees-nothing",
+      "title": "Connecté, mais l’assistant ne voit aucun e-mail",
+      "summary": "La boîte est connectée, mais votre assistant dit qu’il n’a pas d’outils de messagerie ou ne trouve rien.",
+      "keywords": "aucun outil rien vide connecteur ne marche pas claude chatgpt cursor mode développeur portée inbox_list",
+      "steps": [
+        "Ouvrez Boîtes dans le tableau de bord et vérifiez que la boîte apparaît sans erreur. Si elle en affiche une, reconnectez-la.",
+        "Ouvrez une nouvelle conversation après avoir ajouté le connecteur. Dans ChatGPT, choisissez aussi Mode développeur et l’application mcpemails dans le menu + de chaque nouvelle conversation.",
+        "Autorisez le connecteur avec le même compte mcpemails que celui qui détient la boîte.",
+        "Votre assistant ne voit que les outils autorisés pour le connecteur ou la clé d’API. Si vous avez laissé une portée décochée, retirez le connecteur et ajoutez-le de nouveau.",
+        "Demandez d’abord à l’assistant de lister vos boîtes. Les e-mails sont récupérés quand l’assistant les demande, rien n’arrive tout seul."
+      ],
+      "links": [
+        { "label": "Guides des clients", "href": "/docs/clients" },
+        { "label": "Codes d’erreur", "href": "/docs#errors" }
+      ]
+    },
+    {
+      "id": "usage-limit-reached",
+      "title": "Limite d’utilisation atteinte",
+      "summary": "Un espace Free dispose de 150 actions e-mail par mois civil. Une fois épuisées, les actions sont refusées jusqu’au 1er du mois suivant (UTC).",
+      "keywords": "limite d’utilisation quota plafond 150 actions gratuit free refusé réinitialisation",
+      "steps": [
+        "Consultez le nombre d’actions utilisées dans Usage, dans le tableau de bord.",
+        "Lister vos boîtes et tout ce que vous faites dans le tableau de bord ne compte jamais, et rien n’est compté pendant les 7 premiers jours après l’inscription.",
+        "Réessayer ne sert à rien. Le quota se réinitialise le 1er du mois suivant (UTC), et les automatisations en pause reprennent seules.",
+        "Personal, Pro et Team n’ont pas de plafond mensuel, dans la limite d’un usage raisonnable.",
+        "Les espaces créés avant le 2026-09-12 ne sont pas décomptés. Si vous voyez la limite sur l’un d’eux, écrivez-nous."
+      ],
+      "links": [
+        { "label": "Questions sur les tarifs", "href": "/pricing#faq" },
+        { "label": "Limites de débit", "href": "/docs#rate-limits" }
+      ]
+    },
+    {
+      "id": "change-or-cancel-plan",
+      "title": "Changer ou résilier votre formule",
+      "summary": "Passez à une formule supérieure ou inférieure, ou résiliez à tout moment depuis Paramètres dans le tableau de bord.",
+      "keywords": "formule plan changer résilier annuler abonnement facturation facture remboursement stripe portail paiement carte",
+      "steps": [
+        "Ouvrez Paramètres dans le tableau de bord. La section facturation montre votre formule et celles vers lesquelles vous pouvez passer.",
+        "Pour résilier, changer de carte ou télécharger vos factures, ouvrez le portail de facturation depuis cette même section. Il est géré par Stripe.",
+        "La résiliation arrête le prochain renouvellement. Vous gardez ce que vous avez payé jusqu’à la fin de la période en cours, puis passez à Free avec une boîte connectée.",
+        "Si le premier prélèvement d’un nouvel abonnement ne correspond pas à ce que vous attendiez, écrivez-nous sous 14 jours et nous le remboursons entièrement. Les périodes partielles ne sont pas remboursées."
+      ],
+      "links": [
+        { "label": "Paramètres du tableau de bord", "href": "/dashboard/settings" },
+        { "label": "Formules et tarifs", "href": "/pricing" }
+      ]
+    },
+    {
+      "id": "disconnect-or-delete",
+      "title": "Déconnecter une boîte ou supprimer votre compte",
+      "summary": "Retirez une boîte, un espace de travail ou tout le compte depuis le tableau de bord.",
+      "keywords": "déconnecter retirer boîte supprimer compte espace de travail fermer zone de danger",
+      "steps": [
+        "Pour déconnecter une boîte, ouvrez Boîtes dans le tableau de bord, sélectionnez-la et choisissez Déconnecter. Son mot de passe ou jeton enregistré est effacé.",
+        "Pour fermer un espace de travail, ouvrez Paramètres, puis Zone de danger, et choisissez Supprimer l'espace de travail. Votre compte et vos autres espaces restent.",
+        "Pour tout supprimer, ouvrez Paramètres, puis Zone de danger, et choisissez Supprimer le compte. Vous confirmez en saisissant votre adresse e-mail, et c’est irréversible.",
+        "Supprimer le compte résilie immédiatement une formule payante, sans remboursement du reste de la période. Pour profiter du temps déjà payé, résiliez d’abord dans le portail de facturation et supprimez le compte à la fin de la période."
+      ],
+      "links": [
+        { "label": "Boîtes du tableau de bord", "href": "/dashboard/inboxes" },
+        { "label": "Paramètres du tableau de bord", "href": "/dashboard/settings" }
+      ]
+    }
+  ],
+  "contact": {
+    "heading": "Écrivez-nous",
+    "lead": "Une personne lit chaque message et répond par e-mail.",
+    "emailAlt": "Vous préférez l’e-mail ? Écrivez à {email}."
+  },
+  "categories": {
+    "connect": "Connecter une boîte",
+    "client": "Configurer un client IA",
+    "billing": "Facturation et formules",
+    "bug": "Quelque chose ne marche pas",
+    "feature": "Demande de fonctionnalité",
+    "other": "Autre chose"
+  },
+  "form": {
+    "category": "Sujet",
+    "subject": "Objet",
+    "message": "Message",
+    "email": "Votre e-mail",
+    "emailSignedIn": "Nous répondrons à",
+    "submit": "Envoyer le message",
+    "sending": "Envoi…",
+    "subjectConnect": "Problème de connexion avec {provider}",
+    "aboutProvider": "Concerne : {provider}"
+  },
+  "attach": {
+    "summary": "Ce que nous joignons à votre message",
+    "intro": "Pour vous aider sans multiplier les allers-retours, ceci est envoyé avec votre message :",
+    "workspace": "Espace de travail",
+    "plan": "Formule",
+    "mailboxes": "Boîtes",
+    "noMailboxes": "Aucune boîte connectée",
+    "lastError": "dernière erreur : {code}",
+    "from": "Ouvert depuis",
+    "provider": "Fournisseur",
+    "code": "Code d’erreur",
+    "never": "Jamais joints : mots de passe, jetons ou contenu de vos e-mails."
+  },
+  "errors": {
+    "invalid_json": "L’envoi du formulaire a échoué. Rechargez la page et réessayez.",
+    "invalid_email": "Saisissez une adresse e-mail valide pour que nous puissions répondre.",
+    "invalid_category": "Choisissez un sujet.",
+    "subject_required": "Ajoutez un objet.",
+    "subject_too_long": "L’objet est trop long. Restez sous 150 caractères.",
+    "message_required": "Écrivez un message.",
+    "message_too_long": "Le message est trop long. Restez sous 5 000 caractères.",
+    "invalid_form_token": "Cette page est ouverte depuis trop longtemps. Rechargez-la et renvoyez.",
+    "rate_limited": "Trop de messages en peu de temps. Patientez un peu, ou écrivez à support@mcpemails.com.",
+    "server_error": "Nous n’avons pas pu enregistrer votre message. Réessayez, ou écrivez à support@mcpemails.com.",
+    "not_found": "Le formulaire de contact n’est pas disponible pour le moment. Écrivez à support@mcpemails.com.",
+    "network": "Impossible de nous joindre. Vérifiez votre connexion et réessayez.",
+    "unknown": "Une erreur est survenue. Réessayez, ou écrivez à support@mcpemails.com."
+  },
+  "success": {
+    "withRef": "Merci, nous avons bien reçu votre message. Votre référence est {ref}. Nous répondons par e-mail.",
+    "noRef": "Merci, nous avons bien reçu votre message. Nous répondons par e-mail."
+  },
+  "preview": {
+    "link": "Tester le formulaire déconnecté",
+    "note": "Enregistre un cookie d’aperçu dans ce navigateur. Déconnectez-vous, puis rouvrez cette page.",
+    "clear": "Arrêter l’aperçu du formulaire déconnecté"
+  }
+}

@@ -1,0 +1,227 @@
+{
+  "meta": {
+    "title": "Hjelp og support",
+    "description": "Svar på de vanligste spørsmålene om tilkobling, klienter og fakturering, og et skjema for å nå dem som lager MCP Emails."
+  },
+  "hero": {
+    "eyebrow": "Hjelp",
+    "title": "Hva kan vi hjelpe med?",
+    "lead": "Søk i veiledningene, les de korte løsningene på problemene vi ser oftest, eller skriv til oss nedenfor."
+  },
+  "search": {
+    "label": "Søk i hjelp",
+    "placeholder": "Søk i leverandører, klienter, dokumentasjon og spørsmål",
+    "empty": "Ingen treff.",
+    "emptyLink": "Skriv til oss nedenfor",
+    "kinds": {
+      "provider": "Leverandør",
+      "client": "Klient",
+      "docs": "Dokumentasjon",
+      "faq": "Spørsmål",
+      "article": "Løsning"
+    }
+  },
+  "hints": {
+    "provider": "{category} · {domain}",
+    "providerNoDomain": "{category}",
+    "clientOauth": "Oppsettsveiledning · OAuth-innlogging, ingen API-nøkkel",
+    "clientKey": "Oppsettsveiledning · API-nøkkel med tilganger",
+    "docs": "Dokumentasjon",
+    "docsProviders": "Innstillinger og støtte for hver leverandør",
+    "docsClients": "Oppsettsveiledninger for hver MCP-klient",
+    "faq": "Spørsmål om priser"
+  },
+  "providerCategories": {
+    "generic": "Hvilken som helst IMAP-postkasse",
+    "consumer": "Webmail",
+    "privacy": "Personvernfokusert e-post",
+    "business": "Bedrifts-e-post",
+    "hosting": "Webhotell med e-post",
+    "cpanel": "cPanel og delt hosting",
+    "selfhost": "Egen e-postserver",
+    "isp": "Internettleverandør",
+    "regional": "Regional e-post",
+    "blocked": "Begrenset eller ikke støttet"
+  },
+  "articlesHeading": "Vanlige løsninger",
+  "articlesLead": "Problemene folk oftest skriver til oss om, og hva som løser dem.",
+  "articles": [
+    {
+      "id": "imap-password-rejected",
+      "title": "E-postserveren avviser passordet mitt",
+      "summary": "På eget domene eller e-post hos et webhotell er et avvist passord nesten alltid feil passord eller feil brukernavn.",
+      "keywords": "imap smtp passord avvist feil innlogging brukernavn cpanel plesk webhotell eget domene",
+      "steps": [
+        "Bruk passordet til selve postkassen. Innloggingen til hostingkontoen eller kontrollpanelet er et annet passord, selv når det er samme adresse.",
+        "Bruk hele e-postadressen som brukernavn. Har du skrevet inn et eget brukernavn, tøm feltet, med mindre leverandøren har gitt deg et.",
+        "Er tofaktorautentisering slått på for postkassen, trenger den et app-passord i stedet for postkassepassordet.",
+        "Usikker på passordet? Tilbakestill det der leverandøren viser e-postadressene dine. I cPanel er det E-postkontoer, så Administrer. I Plesk er det E-postkontoer.",
+        "Sjekk servernavnet mot leverandørens egne innstillinger. Leverandørveiledningene våre viser verifiserte IMAP- og SMTP-servere."
+      ],
+      "links": [
+        { "label": "Veiledning for generisk IMAP", "href": "/connect/imap" },
+        { "label": "Kompatibilitet per leverandør", "href": "/docs/providers" }
+      ]
+    },
+    {
+      "id": "app-password-required",
+      "title": "App-passord kreves (Yahoo, iCloud, Gmail, Zoho)",
+      "summary": "Disse leverandørene godtar ikke det vanlige passordet ditt fra en e-postapp. Lag et app-passord og lim inn det i stedet.",
+      "keywords": "app-passord app-spesifikt applikasjonsspesifikt yahoo icloud apple gmail google zoho totrinnsbekreftelse",
+      "steps": [
+        "Yahoo: åpne Kontosikkerhet, så Generer app-passord. Det er 16 små bokstaver uten mellomrom.",
+        "iCloud: logg inn på account.apple.com, åpne Pålogging og sikkerhet, så App-spesifikke passord. Det er 16 små bokstaver, vist i fire grupper.",
+        "Gmail: slå på totrinnsbekreftelse, og lag så ett på myaccount.google.com/apppasswords. En Google Workspace-administrator kan slå av app-passord for hele domenet. Gmail kan også kobles til ved å logge inn med Google.",
+        "Zoho: lag et applikasjonsspesifikt passord i Zoho-kontoen under Sikkerhet, og slå på IMAP-tilgang i innstillingene til Zoho Mail. Den er av som standard.",
+        "Lim inn app-passordet slik det vises. Mellomrom ignoreres."
+      ],
+      "links": [
+        { "label": "Veiledning for Yahoo Mail", "href": "/connect/yahoo" },
+        { "label": "Veiledning for iCloud Mail", "href": "/connect/icloud" },
+        { "label": "Veiledning for Gmail", "href": "/connect/gmail" },
+        { "label": "Veiledning for Zoho Mail", "href": "/connect/zoho" }
+      ]
+    },
+    {
+      "id": "yandex-imap-disabled",
+      "title": "Yandex: IMAP-tilgang er slått av",
+      "summary": "Yandex avviser alle e-postapper til IMAP-tilgang er slått på, og avvisningen ser nøyaktig ut som feil passord.",
+      "keywords": "yandex imap av slått av app-passord e-postklienter yandex 360",
+      "steps": [
+        "I Yandex Mail åpner du Innstillinger, så E-postklienter. Slå på IMAP-tilgang, og slå på app-passord og OAuth-tokener. Begge trengs.",
+        "På id.yandex.com åpner du Sikkerhet, så App-passord, og lager ett av typen E-post. Yandex viser det bare én gang.",
+        "Koble til med hele Yandex-adressen din og det app-passordet. Kontopassordet virker aldri her, heller ikke uten tofaktorautentisering."
+      ],
+      "links": [
+        { "label": "Veiledning for Yandex Mail", "href": "/connect/yandex" }
+      ]
+    },
+    {
+      "id": "assistant-sees-nothing",
+      "title": "Tilkoblet, men assistenten ser ingen e-post",
+      "summary": "Postkassen er koblet til, men assistenten sier at den ikke har e-postverktøy eller ikke finner noe.",
+      "keywords": "ingen verktøy ingenting tom connector virker ikke claude chatgpt cursor utviklermodus tilgang inbox_list",
+      "steps": [
+        "Åpne Innbokser i dashbordet og sjekk at postkassen står oppført uten feil. Viser den en feil, koble den til på nytt.",
+        "Start en ny chat etter at du har lagt til connectoren. I ChatGPT må du også velge Utviklermodus og mcpemails-appen fra +-menyen i hver nye chat.",
+        "Godkjenn connectoren med den samme mcpemails-kontoen som har postkassen.",
+        "Assistenten ser bare verktøyene connectoren eller API-nøkkelen har tilgang til. Lot du en tilgang stå uten hake, fjern connectoren og legg den til på nytt.",
+        "Be assistenten liste innboksene dine først. E-post hentes når assistenten ber om den, så ingenting kommer av seg selv."
+      ],
+      "links": [
+        { "label": "Oppsett for klienter", "href": "/docs/clients" },
+        { "label": "Feilkoder", "href": "/docs#errors" }
+      ]
+    },
+    {
+      "id": "usage-limit-reached",
+      "title": "Bruksgrensen er nådd",
+      "summary": "Et Free-arbeidsområde har 150 e-posthandlinger per kalendermåned. Når de er brukt opp, avvises e-posthandlinger til den 1. i neste måned (UTC).",
+      "keywords": "bruksgrense kvote tak 150 handlinger gratis free avvist nullstilles",
+      "steps": [
+        "Se hvor mange handlinger du har brukt under Bruk i dashbordet.",
+        "Å liste innboksene dine og alt du gjør i dashbordet telles aldri, og ingenting telles de første 7 dagene etter registrering.",
+        "Å prøve på nytt hjelper ikke. Kvoten nullstilles den 1. i neste måned (UTC), og pausede automatiseringer fortsetter av seg selv.",
+        "Personal, Pro og Team har ingen månedlig grense, innenfor rimelig bruk.",
+        "Arbeidsområder opprettet før 2026-09-12 måles ikke. Ser du grensen på et slikt, skriv til oss."
+      ],
+      "links": [
+        { "label": "Spørsmål om priser", "href": "/pricing#faq" },
+        { "label": "Hastighetsgrenser", "href": "/docs#rate-limits" }
+      ]
+    },
+    {
+      "id": "change-or-cancel-plan",
+      "title": "Endre eller si opp planen",
+      "summary": "Oppgrader, nedgrader eller si opp når som helst fra Innstillinger i dashbordet.",
+      "keywords": "plan oppgrader nedgrader si opp abonnement fakturering faktura refusjon stripe portal betaling kort",
+      "steps": [
+        "Åpne Innstillinger i dashbordet. Faktureringsdelen viser planen din og de andre du kan bytte til.",
+        "For å si opp, bytte kort eller laste ned fakturaer, åpne faktureringsportalen fra samme del. Den drives av Stripe.",
+        "Oppsigelse stopper neste fornyelse. Du beholder det du har betalt for ut inneværende periode, og går så over til Free med én tilkoblet innboks.",
+        "Var den første belastningen på et nytt abonnement ikke som forventet, skriv til oss innen 14 dager, så refunderer vi hele beløpet. Delperioder refunderes ikke."
+      ],
+      "links": [
+        { "label": "Innstillinger i dashbordet", "href": "/dashboard/settings" },
+        { "label": "Planer og priser", "href": "/pricing" }
+      ]
+    },
+    {
+      "id": "disconnect-or-delete",
+      "title": "Koble fra en postkasse eller slett kontoen",
+      "summary": "Fjern én postkasse, ett arbeidsområde eller hele kontoen fra dashbordet.",
+      "keywords": "koble fra fjern innboks postkasse slett konto arbeidsområde avslutt faresone",
+      "steps": [
+        "For å koble fra én postkasse, åpne Innbokser i dashbordet, velg den og velg Koble fra. Det lagrede passordet eller tokenet fjernes.",
+        "For å avslutte et arbeidsområde, åpne Innstillinger, så Faresone, og velg Slett arbeidsområde. Kontoen din og andre arbeidsområder blir værende.",
+        "For å slette alt, åpne Innstillinger, så Faresone, og velg Slett konto. Du bekrefter ved å skrive inn e-postadressen din, og det kan ikke angres.",
+        "Når du sletter kontoen, sies en betalt plan opp med en gang, uten refusjon for resten av perioden. Vil du beholde tiden du har betalt for, sier du opp i faktureringsportalen først og sletter kontoen når perioden er over."
+      ],
+      "links": [
+        { "label": "Innbokser i dashbordet", "href": "/dashboard/inboxes" },
+        { "label": "Innstillinger i dashbordet", "href": "/dashboard/settings" }
+      ]
+    }
+  ],
+  "contact": {
+    "heading": "Skriv til oss",
+    "lead": "Et menneske leser hver melding og svarer på e-post.",
+    "emailAlt": "Foretrekker du e-post? Skriv til {email}."
+  },
+  "categories": {
+    "connect": "Koble til en postkasse",
+    "client": "Sette opp en AI-klient",
+    "billing": "Fakturering og planer",
+    "bug": "Noe er i stykker",
+    "feature": "Ønske om funksjon",
+    "other": "Noe annet"
+  },
+  "form": {
+    "category": "Tema",
+    "subject": "Emne",
+    "message": "Melding",
+    "email": "E-postadressen din",
+    "emailSignedIn": "Vi svarer til",
+    "submit": "Send melding",
+    "sending": "Sender…",
+    "subjectConnect": "Problemer med å koble til {provider}",
+    "aboutProvider": "Gjelder: {provider}"
+  },
+  "attach": {
+    "summary": "Hva vi legger ved meldingen din",
+    "intro": "Så vi kan hjelpe uten mange spørsmål frem og tilbake, sendes dette med meldingen din:",
+    "workspace": "Arbeidsområde",
+    "plan": "Plan",
+    "mailboxes": "Postkasser",
+    "noMailboxes": "Ingen postkasser tilkoblet",
+    "lastError": "siste feil: {code}",
+    "from": "Åpnet fra",
+    "provider": "Leverandør",
+    "code": "Feilkode",
+    "never": "Legges aldri ved: passord, tokener eller innholdet i e-posten din."
+  },
+  "errors": {
+    "invalid_json": "Noe gikk galt da skjemaet ble sendt. Last inn siden på nytt og prøv igjen.",
+    "invalid_email": "Skriv inn en gyldig e-postadresse så vi kan svare.",
+    "invalid_category": "Velg et tema.",
+    "subject_required": "Legg til et emne.",
+    "subject_too_long": "Emnet er for langt. Hold det under 150 tegn.",
+    "message_required": "Skriv en melding.",
+    "message_too_long": "Meldingen er for lang. Hold den under 5 000 tegn.",
+    "invalid_form_token": "Siden har vært åpen for lenge. Last den inn på nytt og send igjen.",
+    "rate_limited": "For mange meldinger på kort tid. Vent litt, eller skriv til support@mcpemails.com.",
+    "server_error": "Vi kunne ikke lagre meldingen din. Prøv igjen, eller skriv til support@mcpemails.com.",
+    "not_found": "Kontaktskjemaet er ikke tilgjengelig akkurat nå. Skriv til support@mcpemails.com.",
+    "network": "Fikk ikke kontakt med oss. Sjekk tilkoblingen og prøv igjen.",
+    "unknown": "Noe gikk galt. Prøv igjen, eller skriv til support@mcpemails.com."
+  },
+  "success": {
+    "withRef": "Takk, vi har fått meldingen din. Referansen din er {ref}. Vi svarer på e-post.",
+    "noRef": "Takk, vi har fått meldingen din. Vi svarer på e-post."
+  },
+  "preview": {
+    "link": "Test skjemaet som utlogget",
+    "note": "Setter en forhåndsvisningscookie i denne nettleseren. Logg ut, og åpne denne siden igjen.",
+    "clear": "Avslutt forhåndsvisning av utlogget skjema"
+  }
+}

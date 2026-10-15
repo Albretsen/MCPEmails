@@ -190,6 +190,22 @@ const ERROR_HEADLINE_KEYS = {
 const SESSION_EXPIRED_CODE = 'session_expired';
 
 /**
+ * The "Still stuck? Contact support" target for a failed connect.
+ *
+ * /help reads `topic`, `provider` and `code` to preselect the contact form and
+ * `#contact` scrolls to it. Each value is URL-encoded, and an empty one is left
+ * out rather than sent as `provider=`, so /help never has to tell "unknown"
+ * from "blank". The path has no locale prefix: the caller renders it through
+ * the locale-aware Link, which adds /nb, /es, ... from the app's own locale.
+ */
+export function supportContactHref(provider, code) {
+  const params = [['topic', 'connect'], ['provider', provider], ['code', code]]
+    .filter(([, v]) => typeof v === 'string' && v.trim() !== '')
+    .map(([k, v]) => `${k}=${encodeURIComponent(v.trim())}`);
+  return `/help?${params.join('&')}#contact`;
+}
+
+/**
  * The app's ordinary "sign in and come back here" link.
  *
  * `/login?redirect=<path>` is what the dashboard's own server-side guard, the
@@ -571,6 +587,7 @@ export function ConnectModal({
   businessShaped = false,
   onAdminConsentLink = null,
   preselect = null,
+  supportVisible = false, // SUPPORT_RELEASE_GATE
 }) {
   const tr = useTranslations('dashboardChrome');
   // The toast lives in ToastProvider, above this modal in App.jsx, so it
@@ -761,6 +778,13 @@ export function ConnectModal({
    * exactly one rejection.
    */
   const [sessionExpired, setSessionExpired] = useState(false);
+  /**
+   * The route's failure code for the error on screen right now, for the
+   * "Contact support" link. Like `sessionExpired` (and unlike `lastFailure`,
+   * which outlives one rejection on purpose) it is cleared by `showError`, so a
+   * client-side validation message never carries an older route's code.
+   */
+  const [shownFailureCode, setShownFailureCode] = useState(null);
   // The exact secret we have already warned about the shape of.
   //
   // The shape rule is evidence, not a gate. It is right often enough to be
@@ -1282,6 +1306,7 @@ export function ConnectModal({
     // failure, which may be a hostname.
     setAuthReason(null);
     setSessionExpired(false);
+    setShownFailureCode(null);
   };
 
   /**
@@ -1661,6 +1686,7 @@ export function ConnectModal({
       shapeWarnedFor.current = appPassword;
       const shapeReason = shape.problem === 'account_password' ? 'account_password_used' : 'app_password_length';
       setAuthReason(shapeReason);
+      setShownFailureCode(null); // a client-side warning, no route code
       setFormError(tr(AUTH_REASON_HEADLINE_KEYS[shapeReason], { provider: appPasswordProvider }));
       // The objection is about one field and one value, so say which. Focus is
       // deliberately NOT stolen here: the whole point of this warning is that
@@ -1754,6 +1780,7 @@ export function ConnectModal({
         setLastFailure({ code, count });
         setAuthReason(reason);
         setSessionExpired(code === SESSION_EXPIRED_CODE);
+        setShownFailureCode(code);
         setFormError(headline);
         // A rejected credential is about the password box; a login name the
         // server did not recognise is about the username box. Every other code
@@ -3645,6 +3672,16 @@ export function ConnectModal({
                         </div>
                       )}
                     </>
+                  )}
+
+                  {/* SUPPORT_RELEASE_GATE: at release drop the condition and the prop. */}
+                  {supportVisible && (
+                    <Link
+                      href={supportContactHref(provider, shownFailureCode)}
+                      style={{ color: 'var(--red-700)', fontSize: 12.5, width: 'fit-content' }}
+                    >
+                      {tr('connect.errorContactSupport')}
+                    </Link>
                   )}
                 </div>
               )}

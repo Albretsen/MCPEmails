@@ -134,7 +134,7 @@ export function DashboardApp(props) {
  * DashboardInner: holds all dashboard state and routing logic.
  * Calls useToast() for user-facing feedback on all mutating actions.
  */
-function DashboardInner({ initialRoute = 'overview', user, workspace: serverWorkspace, workspaces = [], activeWorkspaceId, canCreateWorkspace = false, mcpUrl, userRole, planLimits, actionAllowance = null, inboxesGrandfathered = false, stripePrices, overviewStats, activityFeed, inboxes: serverInboxes, apiKeys: serverApiKeys, usageData, auditLog, members: serverMembers, pendingInvites: serverPendingInvites, firstToolEvent = null }) {
+function DashboardInner({ initialRoute = 'overview', user, workspace: serverWorkspace, workspaces = [], activeWorkspaceId, canCreateWorkspace = false, mcpUrl, userRole, planLimits, actionAllowance = null, inboxesGrandfathered = false, stripePrices, overviewStats, activityFeed, inboxes: serverInboxes, apiKeys: serverApiKeys, usageData, auditLog, members: serverMembers, pendingInvites: serverPendingInvites, firstToolEvent = null, supportVisible = false /* SUPPORT_RELEASE_GATE */ }) {
   const searchParams = useSearchParams();
   const router = useRouter();
   const tr = useTranslations('dashboardChrome');
@@ -1176,6 +1176,7 @@ function DashboardInner({ initialRoute = 'overview', user, workspace: serverWork
         workspaces={workspaces}
         activeWorkspaceId={activeWorkspaceId}
         canCreateWorkspace={canCreateWorkspace}
+        supportVisible={supportVisible} // SUPPORT_RELEASE_GATE
         isOpen={sidebarOpen}
         onClose={() => setSidebarOpen(false)}
       />
@@ -1219,6 +1220,7 @@ function DashboardInner({ initialRoute = 'overview', user, workspace: serverWork
           stripePrices={stripePrices}
           businessShaped={businessShaped}
           onAdminConsentLink={() => setShowAdminLink(true)}
+          supportVisible={supportVisible} // SUPPORT_RELEASE_GATE
         />
       )}
 

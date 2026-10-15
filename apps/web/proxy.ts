@@ -51,6 +51,10 @@ const MARKETING_PATHS = new Set([
   '/email-mcp-servers-compared',
   '/for/founders',
   '/for/business',
+  // Help & support. The route itself 404s anyone the release gate does not
+  // admit, so listing it here exposes nothing; without it /help never reaches
+  // the [locale] route and 404s even for staff. Stays at release.
+  '/help',
 ]);
 
 function isLocalizedRoute(pathname: string): boolean {

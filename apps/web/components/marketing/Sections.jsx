@@ -11,6 +11,7 @@ import {
 import { pricingUpgradeHref } from '@/lib/billing/upgrade-intent.mjs';
 import { PLANS as CATALOGUE } from '@/lib/stripe/plans';
 import { formatPriceCents } from '@/lib/stripe/annual-offer';
+import { SupportHelpLink } from '../support/SupportHelpLink';
 
 // Rich-text tag handlers shared across sections (inline code + bold).
 const RICH = {
@@ -1407,6 +1408,8 @@ export function Footer() {
             <Link href="/about">{t('footer.linkAbout')}</Link>
             <Link href="/security">{t('footer.linkSecurity')}</Link>
             <Link href="/status">{t('footer.linkStatus')}</Link>
+            {/* SUPPORT_RELEASE_GATE: becomes a plain <Link href="/help"> at release. */}
+            <SupportHelpLink label={t('footer.linkHelp')} LinkComponent={Link} />
             <Link href="/privacy">{t('footer.linkPrivacy')}</Link>
             <Link href="/terms">{t('footer.linkTerms')}</Link>
           </div>

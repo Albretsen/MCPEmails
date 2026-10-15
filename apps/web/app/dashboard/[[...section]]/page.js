@@ -16,6 +16,7 @@ import { retentionDays } from '../../../src/lib/analytics/retention';
 import { calendarMonthWindow } from '../../../src/lib/usage/billing-window';
 import { fetchWorkspaceActionAllowance } from '../../../src/lib/usage/allowance';
 import { fetchStripePrices } from '../../../src/lib/stripe/getPrices';
+import { supportVisibleTo } from '@/lib/support/release-gate';
 import '../../../styles/dashboard.css';
 import '../../../styles/theme.css';
 
@@ -748,6 +749,9 @@ export default async function DashboardPage({ params }) {
   const displayName = userRecord?.display_name ?? user.user_metadata?.full_name ?? '';
   const email = userRecord?.email ?? user.email ?? '';
   const initials = computeInitials(displayName || null, email);
+  // Help & support entry points (sidebar item, connect-error contact line).
+  // Internal-only in v1; at release this becomes `true` and the prop goes away.
+  const supportVisible = supportVisibleTo(email || null); // SUPPORT_RELEASE_GATE
   const workspaceSlug = workspace?.slug ?? 'workspace';
   const compedScale = effectiveWorkspacePlan?.comped_scale ?? false;
   // The 2026-08-19 repricing grandfather: every user who existed before inboxes
@@ -892,6 +896,7 @@ export default async function DashboardPage({ params }) {
       auditLog={auditLog}
       members={members}
       pendingInvites={pendingInvites}
+      supportVisible={supportVisible} // SUPPORT_RELEASE_GATE
       firstToolEvent={workspace?.analytics_first_tool_name && !workspace?.analytics_first_tool_reported_at ? { tool_name: workspace.analytics_first_tool_name, provider: workspace.analytics_first_tool_provider ?? 'unknown', client: workspace.analytics_first_tool_client ?? 'unknown', activation_path: workspace.analytics_first_tool_path ?? 'api_key' } : null}
     />
   );
