@@ -33,6 +33,10 @@ export interface RelayHealth {
   perDay: number[];
   hosts: number;
   learnedHosts: number;
+  /** Hosts on the hand-kept list in code (route "listed"). */
+  listedHosts: number;
+  /** Hosts neither listed nor learned: only individual calls were retried. */
+  retriedOnlyHosts: number;
 }
 
 /**
@@ -69,6 +73,10 @@ export function relayHealth(days: GrowthMailRelayDayRow[], hosts: GrowthMailRela
     perDay: days.map(total),
     hosts: new Set(hosts.map((row) => row.host)).size,
     learnedHosts: new Set(hosts.filter((row) => row.learned).map((row) => row.host)).size,
+    listedHosts: new Set(hosts.filter((row) => hasRoute(row, 'listed')).map((row) => row.host)).size,
+    retriedOnlyHosts: new Set(
+      hosts.filter((row) => !row.learned && !hasRoute(row, 'listed')).map((row) => row.host)
+    ).size,
   };
 }
 
@@ -78,16 +86,36 @@ function num(value: unknown): number {
   return Number.isFinite(n) ? n : 0;
 }
 
-/** "listed, learned" for the routes column, in plain words. */
-export function describeRoutes(routes: string | null | undefined): string {
-  if (!routes) return '';
-  const words: Record<string, string> = {
-    listed: 'hand-listed',
-    learned: 'learned',
-    fallback: 'retry after direct failed',
-  };
-  return routes
-    .split(',')
-    .map((route) => words[route.trim()] ?? route.trim())
-    .join(', ');
+function hasRoute(row: Pick<GrowthMailRelayHostRow, 'routes'>, route: string): boolean {
+  return (row.routes ?? '').split(',').some((value) => value.trim() === route);
+}
+
+/**
+ * One line saying why a host goes through the relay, for the hosts table.
+ *
+ * Exactly one state per host, in this order: hand-listed in code, learned
+ * (with when it is next tried directly), refused learning because it works
+ * directly, a candidate one rescue short, or only individual calls retried.
+ */
+export function relayStatus(row: GrowthMailRelayHostRow): string {
+  if (hasRoute(row, 'listed')) return 'Hand-listed in code';
+  if (row.learned) {
+    if (row.learned_source === 'manual') return 'Added to the registry by hand';
+    const since = row.first_learned_at ? `since ${shortDate(row.first_learned_at)}` : '';
+    const until = row.learned_expires_at ? `, tried directly again ${shortDate(row.learned_expires_at)}` : '';
+    return `Learned ${since}${until}`.replace(/\s+,/, ',').trim();
+  }
+  if (row.candidate_refused) {
+    const n = row.candidate_direct_successes;
+    return `Not learned: works directly${n === null ? '' : ` (${n} direct successes in 7 days)`}`;
+  }
+  if (row.candidate_rescues) return `Candidate: rescued ${row.candidate_rescues} of 2 times needed`;
+  return 'Single calls retried through the relay';
+}
+
+/** 2026-11-14 -> 14 Nov. */
+function shortDate(iso: string): string {
+  const date = new Date(iso);
+  if (Number.isNaN(date.getTime())) return iso.slice(0, 10);
+  return `${date.getUTCDate()} ${date.toLocaleString('en-GB', { month: 'short', timeZone: 'UTC' })}`;
 }

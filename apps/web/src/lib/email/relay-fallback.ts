@@ -12,9 +12,11 @@
  *
  * So the connect form now does what an operator would: when the direct attempt
  * fails in a way a different egress address can fix, it tries once more
- * through the relay. When that works the mailbox is connected, and the host is
- * remembered in `mail_relay_hosts` so the edge function reads and sends through
- * the relay too (supabase/functions/mcp-server/relay-registry.ts is the other
+ * through the relay. When that works the mailbox is connected, and the rescue
+ * is reported to the database, which learns the host into `mail_relay_hosts`
+ * at a second rescue 5+ minutes after the first and never while it has 5+
+ * direct successes in a week (migration 20261015200000). A learned host is
+ * read and sent through the relay by the edge function too (supabase/functions/mcp-server/relay-registry.ts is the other
  * half, and the two copies of {@link isOriginRefusalText} must agree).
  *
  * ── What earns a relay retry ───────────────────────────────────────────────
@@ -183,9 +185,9 @@ export function relayRouteForHost(host: string, protocol: RelayProtocol): Exclud
 }
 
 /**
- * Remember that `host` needs the relay. Resolves true when the database
- * accepted it; it refuses a host that has been working directly, so one lucky
- * retry cannot move a big provider onto the relay (see the migration).
+ * Report one relay rescue of `host`. Resolves true only when the database
+ * learned the host: one rescue makes a candidate, and a host with 5+ direct
+ * successes in a week is never learned (migration 20261015200000).
  */
 export async function learnRelayHost(
   db: AnyClient,

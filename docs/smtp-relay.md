@@ -215,14 +215,22 @@ now the floor:
    the edge function (IMAP and SMTP) go through the relay first. A learned host
    whose relay is down falls back to a direct dial; only the relay-only list
    has no fallback. A relayed 465 row is submitted on 587 with STARTTLS.
-3. **The gate.** The database refuses to learn a host that has been working
-   directly (20 or more successful calls in 7 days and more successes than
-   failures), so a lucky retry after a network blip cannot move Yahoo or
-   iCloud onto the relay. Checked against production on 2026-10-15: Yahoo,
-   AOL, iCloud and Gmail SMTP refused; Telstra SMTP accepted.
+3. **The learning rule** (migration `20261015200000`, after a false positive
+   on 2026-10-15). One rescue only makes a host a *candidate*
+   (`mail_relay_candidates`). It is learned at a second rescue at least 5
+   minutes after the first, within 7 days, and never while it has 5 or more
+   direct successful calls for that protocol in the last 7 days, however many
+   failures it has. Failures prove nothing about our address: the first
+   version compared successes with failures, and `exchange.ionos.eu` (82
+   direct successes, 172 failures from two inboxes with wrong passwords) was
+   learned after one dropped connection. Measured: Orange and Telstra
+   submission 0, Domeneshop submission about 2 a week before it was relayed,
+   Yahoo 29,023. A host that is never learned loses nothing: each failed call
+   still gets its own relay retry.
 4. **Re-check.** A learned row is honoured for 30 days from `last_learned_at`.
-   After that the next connection is direct again and the host is re-learned
-   (without the gate) if it still needs the relay.
+   After that connections are direct again and the host is re-learned by the
+   same rule if it still needs the relay; only successes since it expired
+   count, so the calls it made through the relay are not held against it.
 
 Every relayed connection is counted in `mail_relay_stats` (hourly, per runtime,
 protocol, host, route `listed`/`learned`/`fallback` and outcome

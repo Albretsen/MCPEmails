@@ -2189,6 +2189,42 @@ export type Database = {
           },
         ]
       }
+      mail_relay_candidates: {
+        Row: {
+          direct_successes: number
+          first_rescue_at: string
+          host: string
+          last_reason: string | null
+          last_rescue_at: string
+          last_runtime: string | null
+          protocol: string
+          refused: boolean
+          rescues: number
+        }
+        Insert: {
+          direct_successes?: number
+          first_rescue_at?: string
+          host: string
+          last_reason?: string | null
+          last_rescue_at?: string
+          last_runtime?: string | null
+          protocol: string
+          refused?: boolean
+          rescues?: number
+        }
+        Update: {
+          direct_successes?: number
+          first_rescue_at?: string
+          host?: string
+          last_reason?: string | null
+          last_rescue_at?: string
+          last_runtime?: string | null
+          protocol?: string
+          refused?: boolean
+          rescues?: number
+        }
+        Relationships: []
+      }
       mail_relay_hosts: {
         Row: {
           first_learned_at: string
@@ -4364,6 +4400,9 @@ export type Database = {
         Args: { p_days: number }
         Returns: {
           avg_ms: number
+          candidate_direct_successes: number
+          candidate_refused: boolean
+          candidate_rescues: number
           connections: number
           first_learned_at: string
           host: string

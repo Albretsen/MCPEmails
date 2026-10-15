@@ -703,6 +703,19 @@ CREATE TABLE IF NOT EXISTS public.mail_relay_stats (
   PRIMARY KEY (hour, runtime, protocol, host, route, outcome)
 );
 
+CREATE TABLE IF NOT EXISTS public.mail_relay_candidates (
+  host text NOT NULL,
+  protocol text NOT NULL CHECK (protocol IN ('imap', 'smtp')),
+  rescues integer NOT NULL DEFAULT 1,
+  first_rescue_at timestamptz NOT NULL DEFAULT now(),
+  last_rescue_at timestamptz NOT NULL DEFAULT now(),
+  last_reason text,
+  last_runtime text CHECK (last_runtime IS NULL OR last_runtime IN ('web', 'edge')),
+  direct_successes integer NOT NULL DEFAULT 0,
+  refused boolean NOT NULL DEFAULT false,
+  PRIMARY KEY (host, protocol)
+);
+
 CREATE TABLE IF NOT EXISTS public.bulk_plans (
     id uuid DEFAULT gen_random_uuid() NOT NULL,
     workspace_id uuid NOT NULL,
@@ -1171,26 +1184,36 @@ SECURITY INVOKER
 SET search_path = ''
 AS $fn$
 DECLARE
+  c_max_direct_successes constant integer := 5;
+  c_rescues_needed constant integer := 2;
+  c_min_spread constant interval := interval '5 minutes';
+  c_window constant interval := interval '7 days';
+  c_learned_for constant interval := interval '30 days';
+
   v_host text := lower(trim(p_host));
+  v_known public.mail_relay_hosts%ROWTYPE;
+  v_since timestamptz := now() - c_window;
   v_ok bigint;
-  v_failed bigint;
+  v_candidate public.mail_relay_candidates%ROWTYPE;
 BEGIN
-  IF EXISTS (SELECT 1 FROM public.mail_relay_hosts WHERE host = v_host AND protocol = p_protocol) THEN
-    UPDATE public.mail_relay_hosts
-       SET last_learned_at = now(),
-           times_learned = times_learned + 1,
-           reason = COALESCE(left(p_reason, 300), reason),
-           learned_by = p_runtime
-     WHERE host = v_host AND protocol = p_protocol;
+  SELECT * INTO v_known FROM public.mail_relay_hosts WHERE host = v_host AND protocol = p_protocol;
+
+  -- Still relayed (manual, or learned and not expired): nothing to decide.
+  IF FOUND AND (v_known.source = 'manual' OR v_known.last_learned_at > now() - c_learned_for) THEN
     RETURN true;
   END IF;
 
-  SELECT count(*) FILTER (WHERE a.status = 'success'),
-         count(*) FILTER (WHERE a.status <> 'success')
-    INTO v_ok, v_failed
+  -- Calls made while an earlier learning was in force went through the relay.
+  IF FOUND THEN
+    v_since := GREATEST(v_since, v_known.last_learned_at + c_learned_for);
+  END IF;
+
+  SELECT count(*)
+    INTO v_ok
     FROM public.activity_log a
     JOIN public.inboxes i ON i.id = a.inbox_id
-   WHERE a.created_at > now() - interval '7 days'
+   WHERE a.created_at > v_since
+     AND a.status = 'success'
      AND CASE
            WHEN p_protocol = 'smtp' THEN
              lower(i.smtp_host) = v_host
@@ -1200,7 +1223,35 @@ BEGIN
              AND a.tool_name NOT IN ('email_send', 'email_reply', 'email_forward', 'draft_send', 'email_compose')
          END;
 
-  IF v_ok >= 20 AND v_ok > v_failed THEN
+  -- Rule 1: a host that works directly is never learned.
+  IF v_ok >= c_max_direct_successes THEN
+    INSERT INTO public.mail_relay_candidates AS c
+      (host, protocol, rescues, last_reason, last_runtime, direct_successes, refused)
+    VALUES (v_host, p_protocol, 1, left(p_reason, 300), p_runtime, v_ok, true)
+    ON CONFLICT (host, protocol) DO UPDATE SET
+      last_rescue_at = now(),
+      last_reason = EXCLUDED.last_reason,
+      last_runtime = EXCLUDED.last_runtime,
+      direct_successes = EXCLUDED.direct_successes,
+      refused = true;
+    RETURN false;
+  END IF;
+
+  -- Rule 2: count this rescue. Evidence older than the window starts over.
+  INSERT INTO public.mail_relay_candidates AS c
+    (host, protocol, rescues, last_reason, last_runtime, direct_successes, refused)
+  VALUES (v_host, p_protocol, 1, left(p_reason, 300), p_runtime, v_ok, false)
+  ON CONFLICT (host, protocol) DO UPDATE SET
+    rescues = CASE WHEN c.first_rescue_at < now() - c_window THEN 1 ELSE c.rescues + 1 END,
+    first_rescue_at = CASE WHEN c.first_rescue_at < now() - c_window THEN now() ELSE c.first_rescue_at END,
+    last_rescue_at = now(),
+    last_reason = EXCLUDED.last_reason,
+    last_runtime = EXCLUDED.last_runtime,
+    direct_successes = EXCLUDED.direct_successes,
+    refused = false
+  RETURNING * INTO v_candidate;
+
+  IF v_candidate.rescues < c_rescues_needed OR v_candidate.last_rescue_at - v_candidate.first_rescue_at < c_min_spread THEN
     RETURN false;
   END IF;
 
@@ -1208,7 +1259,10 @@ BEGIN
   VALUES (v_host, p_protocol, 'auto', left(p_reason, 300), p_runtime)
   ON CONFLICT (host, protocol) DO UPDATE SET
     last_learned_at = now(),
-    times_learned = public.mail_relay_hosts.times_learned + 1;
+    times_learned = public.mail_relay_hosts.times_learned + 1,
+    reason = EXCLUDED.reason,
+    learned_by = EXCLUDED.learned_by;
+  DELETE FROM public.mail_relay_candidates WHERE host = v_host AND protocol = p_protocol;
   RETURN true;
 END;
 $fn$;

@@ -514,6 +514,12 @@ export type GrowthMailRelayHostRow = {
   first_learned_at: string | null;
   /** When an auto-learned host is next tried directly again. */
   learned_expires_at: string | null;
+  /** Relay rescues counted toward learning (2 needed, 5+ minutes apart). Null when not a candidate. */
+  candidate_rescues: number | null;
+  /** True when the host was refused learning because it works directly. */
+  candidate_refused: boolean | null;
+  /** Direct successful calls in the last 7 days, as counted at the last rescue. */
+  candidate_direct_successes: number | null;
   /** Comma-separated: listed, learned, fallback. Null when nothing was carried. */
   routes: string | null;
   connections: number;
