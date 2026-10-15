@@ -55,6 +55,7 @@
  */
 
 import { guardMailHostCached, isAllowedAddress, MailHostBlockedError, normalizeMailHost } from "./host-guard.ts";
+import { isLearnedRelayHost, type RelayProtocol, type RelayRoute } from "./relay-registry.ts";
 
 /** The relay could not carry this connection. The caller should dial directly. */
 export class RelayUnavailableError extends Error {
@@ -430,17 +431,51 @@ export function resetRelayStateForTests(): void {
 /**
  * The relay to use for this SMTP host, or null to dial it directly.
  *
- * Null covers every ordinary case: relaying not configured, this host not on
- * the list, or the relay currently suspended after a failure.
+ * Null covers every ordinary case: relaying not configured, this host neither
+ * on the list nor learned (relay-registry.ts), or the relay currently
+ * suspended after a failure.
  */
 export function relayFor(host: string, now: number = Date.now()): RelayConfig | null {
   const config = currentConfig();
   if (!config) return null;
-  if (!shouldRelayHost(host, config.hostSuffixes)) return null;
+  if (relayRouteFor(host, "smtp") === null) return null;
   // The breaker exists so a dead relay is skipped in favour of the direct dial.
   // A relay-only host has no direct dial to fall back to, so it is never
   // skipped: the relay is tried every time.
   if (relaySuspended(now) && !shouldRelayHost(host, config.relayOnlyHostSuffixes)) return null;
+  return config;
+}
+
+/**
+ * Why `host` is relayed for `protocol`, or null when it is not.
+ *
+ * "listed" is the hand-kept list (SMTP_RELAY_HOSTS for submission, the
+ * relay-only list for both); "learned" is a host the relay registry learned
+ * after a direct attempt failed and a relayed one worked. Ignores the breaker:
+ * this answers what the host needs, not whether the relay is up right now.
+ */
+export function relayRouteFor(host: string, protocol: RelayProtocol): Exclude<RelayRoute, "fallback"> | null {
+  const config = currentConfig();
+  if (!config) return null;
+  const listed = protocol === "smtp" ? config.hostSuffixes : config.relayOnlyHostSuffixes;
+  if (shouldRelayHost(host, listed)) return "listed";
+  if (isLearnedRelayHost(host, protocol)) return "learned";
+  return null;
+}
+
+/** True when a relay is configured at all. Nothing relay-related runs without one. */
+export function relayConfigured(): boolean {
+  return currentConfig() !== null;
+}
+
+/**
+ * The relay for a one-off retry of a host that is on no list, or null when
+ * there is nothing to retry through: relaying not configured, or the relay
+ * suspended after it failed a moment ago.
+ */
+export function relayForFallback(now: number = Date.now()): RelayConfig | null {
+  const config = currentConfig();
+  if (!config || relaySuspended(now)) return null;
   return config;
 }
 
@@ -459,14 +494,15 @@ export function relayOnlyHost(host: string): boolean {
 /**
  * The relay for an IMAP host, or null to dial it directly.
  *
- * Only relay-only hosts are ever read through the relay; see
- * {@link DEFAULT_RELAY_ONLY_HOST_SUFFIXES}. Never suspended, for the reason
- * given on {@link relayFor}.
+ * Relay-only hosts (see {@link DEFAULT_RELAY_ONLY_HOST_SUFFIXES}) and hosts the
+ * registry learned need the relay for reading. Never suspended: a relay-only
+ * host has nothing to fall back to, and for a learned host the caller does the
+ * falling back itself.
  */
 export function imapRelayFor(host: string): RelayConfig | null {
   const config = currentConfig();
   if (!config) return null;
-  return shouldRelayHost(host, config.relayOnlyHostSuffixes) ? config : null;
+  return relayRouteFor(host, "imap") === null ? null : config;
 }
 
 /**

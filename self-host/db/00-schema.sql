@@ -673,6 +673,36 @@ CREATE TABLE IF NOT EXISTS public.draft_lineage (
 );
 CREATE INDEX IF NOT EXISTS draft_lineage_workspace_idx ON public.draft_lineage (workspace_id);
 
+-- Mail relay registry (hosted migration 20261015180000). Read and written only
+-- when the server has a relay configured (SMTP_RELAY_URL), which a self-hosted
+-- install normally does not; created so the calls are valid if one is added.
+CREATE TABLE IF NOT EXISTS public.mail_relay_hosts (
+  host text NOT NULL,
+  protocol text NOT NULL CHECK (protocol IN ('imap', 'smtp')),
+  source text NOT NULL DEFAULT 'auto' CHECK (source IN ('auto', 'manual')),
+  reason text,
+  learned_by text CHECK (learned_by IS NULL OR learned_by IN ('web', 'edge')),
+  first_learned_at timestamptz NOT NULL DEFAULT now(),
+  last_learned_at timestamptz NOT NULL DEFAULT now(),
+  times_learned integer NOT NULL DEFAULT 1,
+  PRIMARY KEY (host, protocol),
+  CONSTRAINT mail_relay_hosts_host_shape CHECK (host ~ '^[a-z0-9]([a-z0-9.-]{0,251}[a-z0-9])?$')
+);
+
+CREATE TABLE IF NOT EXISTS public.mail_relay_stats (
+  hour timestamptz NOT NULL,
+  runtime text NOT NULL CHECK (runtime IN ('web', 'edge')),
+  protocol text NOT NULL CHECK (protocol IN ('imap', 'smtp')),
+  host text NOT NULL,
+  route text NOT NULL CHECK (route IN ('listed', 'learned', 'fallback')),
+  outcome text NOT NULL CHECK (outcome IN ('ok', 'relay_down', 'host_refused')),
+  count integer NOT NULL DEFAULT 0,
+  total_ms bigint NOT NULL DEFAULT 0,
+  last_detail text,
+  last_at timestamptz NOT NULL DEFAULT now(),
+  PRIMARY KEY (hour, runtime, protocol, host, route, outcome)
+);
+
 CREATE TABLE IF NOT EXISTS public.bulk_plans (
     id uuid DEFAULT gen_random_uuid() NOT NULL,
     workspace_id uuid NOT NULL,
@@ -1095,6 +1125,93 @@ BEGIN
   RETURN v_funnel_rows > 0;
 END;
 $$;
+
+CREATE OR REPLACE FUNCTION public.record_mail_relay_use(
+  p_runtime text,
+  p_protocol text,
+  p_host text,
+  p_route text,
+  p_outcome text,
+  p_ms integer,
+  p_detail text DEFAULT NULL
+) RETURNS void
+LANGUAGE plpgsql
+SECURITY INVOKER
+SET search_path = ''
+AS $fn$
+BEGIN
+  INSERT INTO public.mail_relay_stats AS s
+    (hour, runtime, protocol, host, route, outcome, count, total_ms, last_detail, last_at)
+  VALUES (
+    date_trunc('hour', now()), p_runtime, p_protocol, lower(p_host), p_route, p_outcome,
+    1, GREATEST(COALESCE(p_ms, 0), 0), left(p_detail, 300), now()
+  )
+  ON CONFLICT (hour, runtime, protocol, host, route, outcome) DO UPDATE SET
+    count = s.count + 1,
+    total_ms = s.total_ms + GREATEST(COALESCE(p_ms, 0), 0),
+    last_detail = COALESCE(left(EXCLUDED.last_detail, 300), s.last_detail),
+    last_at = now();
+
+  -- Self-trimming, about once in two hundred writes. Cheap: the table holds a
+  -- handful of rows per relayed host per hour.
+  IF random() < 0.005 THEN
+    DELETE FROM public.mail_relay_stats WHERE last_at < now() - interval '120 days';
+  END IF;
+END;
+$fn$;
+
+CREATE OR REPLACE FUNCTION public.learn_mail_relay_host(
+  p_host text,
+  p_protocol text,
+  p_reason text,
+  p_runtime text
+) RETURNS boolean
+LANGUAGE plpgsql
+SECURITY INVOKER
+SET search_path = ''
+AS $fn$
+DECLARE
+  v_host text := lower(trim(p_host));
+  v_ok bigint;
+  v_failed bigint;
+BEGIN
+  IF EXISTS (SELECT 1 FROM public.mail_relay_hosts WHERE host = v_host AND protocol = p_protocol) THEN
+    UPDATE public.mail_relay_hosts
+       SET last_learned_at = now(),
+           times_learned = times_learned + 1,
+           reason = COALESCE(left(p_reason, 300), reason),
+           learned_by = p_runtime
+     WHERE host = v_host AND protocol = p_protocol;
+    RETURN true;
+  END IF;
+
+  SELECT count(*) FILTER (WHERE a.status = 'success'),
+         count(*) FILTER (WHERE a.status <> 'success')
+    INTO v_ok, v_failed
+    FROM public.activity_log a
+    JOIN public.inboxes i ON i.id = a.inbox_id
+   WHERE a.created_at > now() - interval '7 days'
+     AND CASE
+           WHEN p_protocol = 'smtp' THEN
+             lower(i.smtp_host) = v_host
+             AND a.tool_name IN ('email_send', 'email_reply', 'email_forward', 'draft_send', 'email_compose')
+           ELSE
+             lower(i.imap_host) = v_host
+             AND a.tool_name NOT IN ('email_send', 'email_reply', 'email_forward', 'draft_send', 'email_compose')
+         END;
+
+  IF v_ok >= 20 AND v_ok > v_failed THEN
+    RETURN false;
+  END IF;
+
+  INSERT INTO public.mail_relay_hosts (host, protocol, source, reason, learned_by)
+  VALUES (v_host, p_protocol, 'auto', left(p_reason, 300), p_runtime)
+  ON CONFLICT (host, protocol) DO UPDATE SET
+    last_learned_at = now(),
+    times_learned = public.mail_relay_hosts.times_learned + 1;
+  RETURN true;
+END;
+$fn$;
 
 CREATE OR REPLACE FUNCTION public.draft_lineage_record(p_workspace_id uuid, p_inbox_id uuid, p_draft_id text, p_written_by text, p_line_id uuid DEFAULT NULL::uuid, p_expected_revision integer DEFAULT NULL::integer, p_seed_draft_id text DEFAULT NULL::text, p_adopt boolean DEFAULT false, p_written_at timestamp with time zone DEFAULT NULL::timestamp with time zone) RETURNS TABLE(recorded_line_id uuid, recorded_revision integer, contended boolean)
     LANGUAGE plpgsql

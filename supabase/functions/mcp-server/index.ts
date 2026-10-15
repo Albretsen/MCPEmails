@@ -517,6 +517,7 @@ import {
   planDraftSend,
 } from "./draft-send-plan.ts";
 import { htmlCarriesSignatureBlock } from "./signature-compose.ts";
+import { configureRelayRegistry } from "./relay-registry.ts";
 import {
   byteStringToBase64url,
   gmailHeaderValue,
@@ -582,6 +583,47 @@ const supabase = createClient(supabaseUrl, supabaseServiceKey, {
     },
   },
 });
+
+// The relay registry (relay-registry.ts): hosts that learned to need the mail
+// relay, and a count of every connection it carried for /admin/growth. All
+// three calls are best-effort; a failure is logged by the registry and never
+// reaches a tool call. Off in introspection-only mode, where there is no
+// database to talk to.
+if (!INTROSPECTION_ONLY) {
+  configureRelayRegistry({
+    async loadLearned(maxAgeDays) {
+      const since = new Date(Date.now() - maxAgeDays * 86_400_000).toISOString();
+      const { data, error } = await supabase
+        .from("mail_relay_hosts")
+        .select("host, protocol")
+        .or(`source.eq.manual,last_learned_at.gt.${since}`);
+      if (error) throw new Error(error.message);
+      return (data ?? []) as Array<{ host: string; protocol: "imap" | "smtp" }>;
+    },
+    async learn(host, protocol, reason) {
+      const { data, error } = await supabase.rpc("learn_mail_relay_host", {
+        p_host: host,
+        p_protocol: protocol,
+        p_reason: reason,
+        p_runtime: "edge",
+      });
+      if (error) throw new Error(error.message);
+      return data === true;
+    },
+    async record(event) {
+      const { error } = await supabase.rpc("record_mail_relay_use", {
+        p_runtime: "edge",
+        p_protocol: event.protocol,
+        p_host: event.host,
+        p_route: event.route,
+        p_outcome: event.outcome,
+        p_ms: event.ms,
+        p_detail: event.detail ?? null,
+      });
+      if (error) throw new Error(error.message);
+    },
+  });
+}
 
 // ---------------------------------------------------------------------------
 // Activity-log inbox capture

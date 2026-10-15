@@ -188,10 +188,62 @@ Both are `query_logs` on source `function_logs`. Counting `provider_not_sent` in
 
 ## Adding another provider
 
-Only on evidence, meaning a logged rejection that names our sending address.
-Append the registrable domain to `SMTP_RELAY_HOSTS`, add it to the relay's own
-allowlist, and set the secret. No code change and no deploy: the function reads
-the secret per isolate.
+Usually nothing to do: since 2026-10-15 hosts are learned (next section). The
+hand-kept list is for a host known in advance. Append the registrable domain to
+`SMTP_RELAY_HOSTS` and set the secret. No code change and no deploy: the
+function reads the secret per isolate.
+
+## Learned hosts: the relay retry and `mail_relay_hosts`
+
+A 2026-10-15 sweep of the connect logs found hosts refusing our AWS egress that
+nobody reported (Telstra's submission port timed out 15 times for two
+workspaces; both settled for a receive-only mailbox). So the hand-kept list is
+now the floor:
+
+1. **One relayed retry.** A direct connection that fails in a way a different
+   address can fix is tried once more through the relay: a connect that never
+   opened or went quiet, a greeting that turned us away, an SMTP rejection
+   before DATA, or a login/envelope refusal whose own text blames where we
+   connect from (`isOriginRefusalText`, two copies that a test keeps equal:
+   `supabase/functions/mcp-server/relay-registry.ts` and
+   `apps/web/src/lib/email/relay-fallback.ts`). Never a plain wrong password,
+   a certificate problem or a name that does not resolve. Nothing can be sent
+   twice: every retry happens before SMTP DATA. A host whose retry also failed
+   is left alone for 10 minutes per isolate.
+2. **Learning.** When the retry works, `learn_mail_relay_host` records the
+   host per protocol, and from then on the connect form, the health check and
+   the edge function (IMAP and SMTP) go through the relay first. A learned host
+   whose relay is down falls back to a direct dial; only the relay-only list
+   has no fallback. A relayed 465 row is submitted on 587 with STARTTLS.
+3. **The gate.** The database refuses to learn a host that has been working
+   directly (20 or more successful calls in 7 days and more successes than
+   failures), so a lucky retry after a network blip cannot move Yahoo or
+   iCloud onto the relay. Checked against production on 2026-10-15: Yahoo,
+   AOL, iCloud and Gmail SMTP refused; Telstra SMTP accepted.
+4. **Re-check.** A learned row is honoured for 30 days from `last_learned_at`.
+   After that the next connection is direct again and the host is re-learned
+   (without the gate) if it still needs the relay.
+
+Every relayed connection is counted in `mail_relay_stats` (hourly, per runtime,
+protocol, host, route `listed`/`learned`/`fallback` and outcome
+`ok`/`relay_down`/`host_refused`). The **Relay** band at the foot of
+`/admin/growth` reads it: up or down, how many relayed connections worked, and
+every host with its last failure. `relay_down` is ours; `host_refused` is the
+mail host saying no through a working tunnel, usually a wrong password.
+
+To relay a host by hand without waiting for a failure, insert a row with
+`source = 'manual'` (never expires):
+
+```sql
+insert into mail_relay_hosts (host, protocol, source, reason)
+values ('smtp.example.net', 'smtp', 'manual', 'why');
+```
+
+**Relay filter since 2026-10-15.** Learned hosts can be any mail host, so the
+tinyproxy filter on the relay allows any DNS name with an alphabetic TLD (no IP
+literal, no `localhost`) on `ConnectPort` 143, 465, 587 and 993 only, and
+`MaxClients` is 100. Nothing on the relay box listens on those ports. The
+previous host-by-host filter is in `/etc/tinyproxy/filter.bak-*`.
 
 ## Relay-only hosts: Orange (IMAP and SMTP, no direct fallback)
 

@@ -25,7 +25,8 @@
 
 import type * as net from 'net';
 import * as tls from 'tls';
-import { openMailRelayTunnel, relayForMailHost } from './mail-relay.ts';
+import { mailRelayConfigFromEnv, openMailRelayTunnel, relayForMailHost } from './mail-relay.ts';
+import { relayRouteForHost } from './relay-fallback.ts';
 import { decodeModifiedUtf7, encodeModifiedUtf7 } from './utf7.ts';
 import {
   chooseImapPasswordMechanism,
@@ -791,14 +792,20 @@ export async function openImapSession(config: ImapConfig): Promise<ImapSession> 
   //
   // A relay-only host (mail-relay.ts) refuses sign-ins from this app's own
   // address, so its TCP leg is a tunnel through the relay and TLS is negotiated
-  // over that. Everything after the socket exists is identical.
-  const relay = relayForMailHost(config.host);
+  // over that. Everything after the socket exists is identical. A host the
+  // relay registry learned (relay-fallback.ts; the caller refreshes the list)
+  // is tunnelled too, but falls back to a direct dial when the relay cannot
+  // carry it, which is no worse than before it was learned.
+  const relayOnly = relayForMailHost(config.host);
+  const relay = relayOnly ?? (relayRouteForHost(config.host, 'imap') === 'learned' ? mailRelayConfigFromEnv() : null);
   let tunnel: net.Socket | null = null;
   if (relay) {
     try {
       tunnel = await openMailRelayTunnel(relay, config.host, config.port);
     } catch (err) {
-      throw new McpEmailsError(
+      if (!relayOnly) {
+        console.warn('[imap] relay unavailable for a learned host, dialling directly:', err instanceof Error ? err.message : String(err));
+      } else throw new McpEmailsError(
         'CONNECTION_TIMEOUT',
         `Could not reach ${config.host} through the mail relay: ${err instanceof Error ? err.message : String(err)}`
       );

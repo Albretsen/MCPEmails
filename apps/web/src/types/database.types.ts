@@ -2189,6 +2189,78 @@ export type Database = {
           },
         ]
       }
+      mail_relay_hosts: {
+        Row: {
+          first_learned_at: string
+          host: string
+          last_learned_at: string
+          learned_by: string | null
+          protocol: string
+          reason: string | null
+          source: string
+          times_learned: number
+        }
+        Insert: {
+          first_learned_at?: string
+          host: string
+          last_learned_at?: string
+          learned_by?: string | null
+          protocol: string
+          reason?: string | null
+          source?: string
+          times_learned?: number
+        }
+        Update: {
+          first_learned_at?: string
+          host?: string
+          last_learned_at?: string
+          learned_by?: string | null
+          protocol?: string
+          reason?: string | null
+          source?: string
+          times_learned?: number
+        }
+        Relationships: []
+      }
+      mail_relay_stats: {
+        Row: {
+          count: number
+          host: string
+          hour: string
+          last_at: string
+          last_detail: string | null
+          outcome: string
+          protocol: string
+          route: string
+          runtime: string
+          total_ms: number
+        }
+        Insert: {
+          count?: number
+          host: string
+          hour: string
+          last_at?: string
+          last_detail?: string | null
+          outcome: string
+          protocol: string
+          route: string
+          runtime: string
+          total_ms?: number
+        }
+        Update: {
+          count?: number
+          host?: string
+          hour?: string
+          last_at?: string
+          last_detail?: string | null
+          outcome?: string
+          protocol?: string
+          route?: string
+          runtime?: string
+          total_ms?: number
+        }
+        Relationships: []
+      }
       mcp_client_capabilities: {
         Row: {
           api_key_id: string
@@ -4279,6 +4351,35 @@ export type Database = {
           value_activated: number
         }[]
       }
+      growth_mail_relay_daily: {
+        Args: { p_days: number }
+        Returns: {
+          day: string
+          host_refused: number
+          ok: number
+          relay_down: number
+        }[]
+      }
+      growth_mail_relay_hosts: {
+        Args: { p_days: number }
+        Returns: {
+          avg_ms: number
+          connections: number
+          first_learned_at: string
+          host: string
+          host_refused: number
+          last_at: string
+          last_failure: string
+          last_failure_at: string
+          learned: boolean
+          learned_expires_at: string
+          learned_source: string
+          ok: number
+          protocol: string
+          relay_down: number
+          routes: string
+        }[]
+      }
       growth_oauth_abandonment: {
         Args: never
         Returns: {
@@ -4625,6 +4726,15 @@ export type Database = {
         Args: { controlled_failure?: boolean; mode: string }
         Returns: undefined
       }
+      learn_mail_relay_host: {
+        Args: {
+          p_host: string
+          p_protocol: string
+          p_reason: string
+          p_runtime: string
+        }
+        Returns: boolean
+      }
       lease_inbox_watches: {
         Args: { p_lease_seconds?: number; p_limit?: number }
         Returns: {
@@ -4665,6 +4775,18 @@ export type Database = {
       rate_limit_check: {
         Args: { p_key: string; p_max_count: number; p_window_ms: number }
         Returns: boolean
+      }
+      record_mail_relay_use: {
+        Args: {
+          p_detail?: string
+          p_host: string
+          p_ms: number
+          p_outcome: string
+          p_protocol: string
+          p_route: string
+          p_runtime: string
+        }
+        Returns: undefined
       }
       record_push_results: {
         Args: { p_failed: string[]; p_gone: string[]; p_sent: string[] }

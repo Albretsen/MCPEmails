@@ -103,7 +103,7 @@ export const ROUTE_MAX_DURATIONS = {
   'app/api/automations/preview/route.ts': 90,
   'app/api/inboxes/app-password/route.ts': 60,
   'app/api/inboxes/fastmail-app-password/route.ts': 60,
-  'app/api/inboxes/imap/route.ts': 60,
+  'app/api/inboxes/imap/route.ts': 90, // relay retry after direct detection (relay-fallback.ts)
   'app/api/internal/billing-lifecycle/dispatch/route.ts': 60,
   'app/api/internal/paywall-followup/dispatch/route.ts': 60,
   'app/api/mcp/route.ts': 300,

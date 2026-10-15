@@ -49,6 +49,8 @@ import {
   fetchUsageCapOverview,
   fetchUsageCapWorkspaces,
   fetchUserSignupDays,
+  fetchMailRelayDaily,
+  fetchMailRelayHosts,
   gmailCapProjection,
   type GrowthResult,
 } from '@/lib/analytics/growth-queries';
@@ -108,6 +110,8 @@ import { CalendarHeat } from './CalendarHeat';
 import { ChannelQuality, Rail, StatStrip, Verdict, type RailRow } from './board/panels';
 import { Milestones } from './board/milestones';
 import { Tables } from './Tables';
+import { RelayHostTable, RelayHostsTile, RelayStatusTile, RelayWorkingTile } from './board/relay';
+import { relayHealth } from '@/lib/analytics/mail-relay-health';
 
 /** Ninety is a ceiling, not a taste: activity_log is purged past 90 days. */
 const DAILY_DAYS = 90;
@@ -1239,4 +1243,40 @@ function cohortRows(cells: { cohort_week: string; cohort_size: number; week_inde
       // came back" for a week that has not happened.
       values: Array.from({ length: row.values.length }, (_, index) => row.values[index] ?? null),
     }));
+}
+
+
+/* ================================================== the mail relay */
+
+/**
+ * Which hosts go through the mail relay, and whether it works. Low priority,
+ * so it is the last band on the page. See components/admin/growth/board/relay.tsx.
+ */
+export async function RelaySection({ days }: { days: number }) {
+  const [daily, hosts] = await Promise.all([fetchMailRelayDaily(days), fetchMailRelayHosts(days)]);
+  if (!daily.ok || !hosts.ok) {
+    const message = !daily.ok ? daily.error : !hosts.ok ? hosts.error : '';
+    return (
+      <Cell span={12}>
+        <TileError label="Mail relay" message={message} />
+      </Cell>
+    );
+  }
+  const health = relayHealth(daily.data, hosts.data);
+  return (
+    <>
+      <Cell span={4}>
+        <RelayStatusTile health={health} days={days} />
+      </Cell>
+      <Cell span={4}>
+        <RelayWorkingTile health={health} days={days} />
+      </Cell>
+      <Cell span={4}>
+        <RelayHostsTile health={health} />
+      </Cell>
+      <Cell span={12}>
+        <RelayHostTable rows={hosts.data} />
+      </Cell>
+    </>
+  );
 }
