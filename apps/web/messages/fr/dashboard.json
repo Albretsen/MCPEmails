@@ -252,6 +252,7 @@
     "accessCount": "{count, plural, one {# boîte} other {# boîtes}}",
     "editAccess": "Modifier l'accès",
     "revoke": "Révoquer",
+    "notYours": "Seul son créateur ou un administrateur peut modifier cette clé.",
     "emptyTitle": "Aucune clé API pour l'instant",
     "emptyDesc": "Créez une clé pour connecter Claude Desktop ou tout client MCP à vos boîtes.",
     "never": "Jamais",
@@ -310,7 +311,9 @@
       "errInboxRequired": "Sélectionnez au moins une boîte, ou choisissez toutes les boîtes.",
       "errSaveFailed": "Échec de la mise à jour de l'accès. Veuillez réessayer.",
       "saving": "Enregistrement…",
-      "save": "Enregistrer les modifications"
+      "save": "Enregistrer les modifications",
+      "viewerCapNote": "Cette clé appartient à un observateur : elle ne peut avoir que des autorisations de lecture.",
+      "noWidenNote": "Le créateur de cette clé ne fait plus partie de l'espace de travail. Vous pouvez retirer des autorisations, mais pas en ajouter au-delà de la lecture."
     },
     "revealModal": {
       "title": "Copiez votre clé API",
