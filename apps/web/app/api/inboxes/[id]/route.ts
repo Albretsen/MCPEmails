@@ -31,13 +31,15 @@ type InboxUpdate = Database['public']['Tables']['inboxes']['Update'];
  *  2. Fetch the inbox via the RLS-scoped client. The inboxes SELECT policy
  *     guarantees the row is in a workspace the user belongs to and is not
  *     already soft-deleted, so a returned row is proof of authorization.
- *  3. Best-effort revoke the OAuth grant with the email provider. Failures
- *     are logged but never block local cleanup.
+ *     Then the role check: viewers may not disconnect.
+ *  3. Best-effort revoke the OAuth grant with the email provider (tokens read
+ *     with the service-role client). Failures are logged but never block
+ *     local cleanup.
  *  4. Clear all credential columns, set status = 'revoked', and soft-delete
  *     (deleted_at = now()) in a single update.
  *  5. Write a token_revoked event to auth_logs.
  *
- * Steps 4 and 5 use the service-role client. They cannot run under the user's
+ * Steps 3 to 5 use the service-role client. They cannot run under the user's
  * RLS context: setting deleted_at moves the row out of the inboxes SELECT
  * policy (deleted_at IS NULL), which Postgres rejects as "new row violates
  * row-level security policy"; and auth_logs has no INSERT policy for
@@ -98,12 +100,12 @@ export async function DELETE(
 
   // 2. Fetch the inbox via the RLS-scoped client. The SELECT policy enforces
   //    that the row belongs to one of the user's workspaces and is not already
-  //    deleted, so a returned row authorizes the disconnect. Encrypted
-  //    credential columns are read here only to revoke the provider grant; they
-  //    are NEVER logged.
+  //    deleted, so a returned row authorizes the disconnect. Non-secret
+  //    columns only: authenticated cannot read the encrypted credentials
+  //    (20261016160200); step 3 reads them with the service-role client.
   const { data: inbox, error: fetchError } = await supabase
     .from('inboxes')
-    .select('id, workspace_id, provider, oauth_access_token, oauth_refresh_token, imap_host')
+    .select('id, workspace_id, provider, imap_host')
     .eq('id', inboxId)
     .is('deleted_at', null)
     .single();
@@ -130,12 +132,26 @@ export async function DELETE(
     );
   }
 
+  const service = createServiceRoleClient();
+
   // 3. Best-effort provider revocation for OAuth inboxes. App-password inboxes
   //    (imap_host set, no OAuth token) have nothing to revoke. Prefer the
   //    refresh token so the whole grant is revoked, not just one access token.
-  if (!inbox.imap_host && (inbox.oauth_refresh_token || inbox.oauth_access_token)) {
+  //    The encrypted tokens are read here, after the role check, through the
+  //    service-role client scoped to the authorized id AND workspace. They are
+  //    NEVER logged.
+  const { data: tokens } = inbox.imap_host
+    ? { data: null }
+    : await service
+        .from('inboxes')
+        .select('oauth_access_token, oauth_refresh_token')
+        .eq('id', inboxId)
+        .eq('workspace_id', workspaceId)
+        .is('deleted_at', null)
+        .maybeSingle();
+  if (tokens && (tokens.oauth_refresh_token || tokens.oauth_access_token)) {
     try {
-      const encrypted = inbox.oauth_refresh_token ?? inbox.oauth_access_token;
+      const encrypted = tokens.oauth_refresh_token ?? tokens.oauth_access_token;
       const token = decryptToken(encrypted as string);
 
       if (inbox.provider === 'gmail') {
@@ -153,7 +169,6 @@ export async function DELETE(
     }
   }
 
-  const service = createServiceRoleClient();
   const now = new Date().toISOString();
 
   // 4. Clear credentials, mark revoked, and soft-delete in one update.
@@ -415,18 +430,27 @@ export async function PATCH(
 
   // 2. Fetch the inbox via the RLS-scoped client. A returned row authorizes the
   //    edit (the SELECT policy enforces workspace membership + not deleted).
-  const { data: inbox, error: fetchError } = await supabase
-    .from('inboxes')
-    .select('id, workspace_id')
-    .eq('id', inboxId)
-    .is('deleted_at', null)
-    .single();
+  //    The current review setting is read too, so a body that merely restates
+  //    it (the signature form sends the whole form) is not treated as a change
+  //    to the owner/admin-only review gate below.
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  const { data: inbox, error: fetchError } = await selectTolerantly<any>(
+    ['id', 'workspace_id', 'send_approval_required', 'send_review_mode'],
+    PENDING_INBOX_COLUMNS,
+    (columns) =>
+      supabase
+        .from('inboxes')
+        .select(columns)
+        .eq('id', inboxId)
+        .is('deleted_at', null)
+        .single(),
+  );
 
   if (fetchError || !inbox) {
     return NextResponse.json({ error: 'Inbox not found.' }, { status: 404 });
   }
 
-  const workspaceId = inbox.workspace_id;
+  const workspaceId: string = inbox.workspace_id;
 
   // 2b. Role gate. Two levels, because this handler writes two very different
   //     kinds of setting through one body:
@@ -447,7 +471,25 @@ export async function PATCH(
       { status: 403 },
     );
   }
-  const touchesReviewGate = 'send_review_mode' in input || 'send_approval_required' in input;
+  //
+  //     "Touches" means CHANGES. The dashboard's signature form sends the
+  //     review fields with every save, so keying this on the mere presence of
+  //     the keys refused every signature save by a member. A value equal to the
+  //     stored one is dropped from the update and does not need owner/admin.
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  const reviewUpdate = update as any;
+  if ('send_review_mode' in reviewUpdate || 'send_approval_required' in reviewUpdate) {
+    const storedApproval = inbox.send_approval_required === true;
+    const storedMode =
+      inbox.send_review_mode === 'off' || inbox.send_review_mode === 'inline' || inbox.send_review_mode === 'dashboard'
+        ? inbox.send_review_mode
+        : storedApproval ? 'dashboard' : 'off';
+    if (reviewUpdate.send_review_mode === storedMode && reviewUpdate.send_approval_required === storedApproval) {
+      delete reviewUpdate.send_review_mode;
+      delete reviewUpdate.send_approval_required;
+    }
+  }
+  const touchesReviewGate = 'send_review_mode' in reviewUpdate || 'send_approval_required' in reviewUpdate;
   if (touchesReviewGate && !canManageWorkspace(callerRole)) {
     return NextResponse.json(
       insufficientRoleBody('Only workspace owners and admins can change the send review setting.'),

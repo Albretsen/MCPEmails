@@ -163,6 +163,7 @@
     "statusError": "Error",
     "reconnect": "Reconectar",
     "checkConnection": "Comprobar conexión",
+    "viewerActionsNote": "Los lectores del espacio de trabajo pueden ver este buzón, pero no comprobarlo, reconectarlo, desconectarlo ni editarlo.",
     "disconnectInbox": "Desconectar bandeja",
     "emptyTitle": "Ningún buzón conectado",
     "emptyDesc": "Conecta cualquier buzón IMAP, Gmail u Outlook para dar acceso a tus agentes.",
@@ -769,7 +770,8 @@
       "inlineHint": "Aparece una tarjeta en la conversación con exactamente lo que se enviará. Puedes rechazarlo ahí; aprobar abre una página que requiere sesión iniciada.",
       "dashboard": "Revisar solo en el panel",
       "dashboardHint": "Sin tarjeta en la conversación. Se informa al asistente de que el envío está esperando y tú decides aquí.",
-      "guarantee": "En ambos modos de revisión el correo se prepara pero no se entrega. La aprobación solo ocurre en una sesión de navegador iniciada por un propietario o administrador del espacio, algo que el asistente no tiene. La tarjeta de revisión es una comodidad, no un límite de permisos."
+      "guarantee": "En ambos modos de revisión el correo se prepara pero no se entrega. La aprobación solo ocurre en una sesión de navegador iniciada por un propietario o administrador del espacio, algo que el asistente no tiene. La tarjeta de revisión es una comodidad, no un límite de permisos.",
+      "ownerAdminOnly": "Solo los propietarios y administradores del espacio de trabajo pueden cambiar el ajuste de revisión."
     },
     "panel": {
       "decidedTitle": "Decididos recientemente",
