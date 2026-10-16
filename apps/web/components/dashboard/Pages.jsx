@@ -453,7 +453,7 @@ const MCP_CLIENTS = [
  * and links to the client's official guide. For non-OAuth clients it surfaces
  * a shortcut to create an API key.
  */
-function ClientGuideModal({ client, mcpUrl, onClose, onGoToKeys, inbox = null }) {
+function ClientGuideModal({ client, mcpUrl, onClose, onGoToKeys, inbox = null, canCheckConnection = true }) {
   const t = useTranslations('dashboard');
   const steps = client.stepKeys.map((k) => t(k));
   const config = client.config ? client.config(mcpUrl) : null;
@@ -532,7 +532,9 @@ function ClientGuideModal({ client, mcpUrl, onClose, onGoToKeys, inbox = null })
               </button>
             </div>
           ) : null}
-          {inbox?.id ? (
+          {/* A viewer cannot run the check (POST /api/inboxes/[id]/check
+              answers 403, lib/workspace/roles.ts), so the row is not offered. */}
+          {inbox?.id && canCheckConnection ? (
             <div style={{ display: 'flex', alignItems: 'center', gap: 10, padding: '10px 12px', background: 'var(--bg-sunken)', border: '1px solid var(--border-1)', borderRadius: 8 }}>
               <Icon name={verified ? 'check' : 'refresh'} size={15} color={verified ? 'var(--mint-600)' : 'var(--brand)'} />
               <span style={{ flex: 1, fontFamily: 'var(--font-sans)', fontSize: 12.5, color: 'var(--fg-2)' }}>
@@ -568,7 +570,7 @@ function ClientGuideModal({ client, mcpUrl, onClose, onGoToKeys, inbox = null })
  * connect an inbox, then connect an MCP client (the URL is highlighted and a
  * per-client guide opens on click).
  */
-function GettingStartedGuide({ inboxes, inboxCount, callsThisMonth, mcpUrl, onConnect, onGoToKeys, initialClient = null, onClientSelected, businessShaped = false, atInboxLimit = false }) {
+function GettingStartedGuide({ inboxes, inboxCount, callsThisMonth, mcpUrl, onConnect, onGoToKeys, initialClient = null, onClientSelected, businessShaped = false, atInboxLimit = false, canCheckConnection = true }) {
   const t = useTranslations('dashboard');
   const [activeClient, setActiveClient] = useState(() => MCP_CLIENTS.find(c => (c.k === 'api' ? 'curl' : c.k) === initialClient) ?? null);
   // Business-domain workspaces with one mailbox get an optional row asking
@@ -705,6 +707,7 @@ function GettingStartedGuide({ inboxes, inboxCount, callsThisMonth, mcpUrl, onCo
           onClose={() => setActiveClient(null)}
           onGoToKeys={onGoToKeys}
           inbox={inboxes?.[0] ?? null}
+          canCheckConnection={canCheckConnection}
         />
       ) : null}
     </div>
@@ -760,7 +763,7 @@ function StepDot({ num, done }) {
 }
 
 /* ---------------- Overview ---------------- */
-export function OverviewPage({ inboxes, apiKeys = [], activity, stats, usageData, planLimits, actionAllowance = null, plan: _plan = 'free', mcpUrl, memberCount = 0, onConnect, onGoToKeys, onGoToMembers, onboardingClient = null, onClientSelected, businessShaped = false }) {
+export function OverviewPage({ inboxes, apiKeys = [], activity, stats, usageData, planLimits, actionAllowance = null, plan: _plan = 'free', mcpUrl, memberCount = 0, onConnect, onGoToKeys, onGoToMembers, onboardingClient = null, onClientSelected, businessShaped = false, userRole }) {
   const t = useTranslations('dashboard');
   // Counted off the same live arrays the sidebar counts, never off the server
   // stats snapshot. `stats.inboxCount` was a separate server-side query taken
@@ -946,6 +949,7 @@ export function OverviewPage({ inboxes, apiKeys = [], activity, stats, usageData
       {showGuide ? (
         <GettingStartedGuide
           inboxes={inboxes}
+          canCheckConnection={userRole !== 'viewer'}
           inboxCount={inboxCount}
           callsThisMonth={callsThisMonth}
           mcpUrl={mcpUrl}
@@ -1280,8 +1284,14 @@ export function InboxesPage({ inboxes, planLimits, stripePrices = null, business
     ? (inboxes.find(ib => ib.id === detailInbox.id) ?? detailInbox)
     : null;
 
+  // Viewers are read-only: POST /api/inboxes/[id]/check answers 403 for them
+  // (lib/workspace/roles.ts), so the button is shown disabled with the reason
+  // instead of failing on click.
+  const canCheck = userRole !== 'viewer';
+  const checkTitle = canCheck ? t('inboxes.checkConnection') : t('inboxes.checkConnectionViewerNote');
+
   const handleCheck = async (inbox) => {
-    if (checkingId) return;
+    if (checkingId || !canCheck) return;
     setCheckingId(inbox.id);
     try {
       await onCheck(inbox);
@@ -1636,9 +1646,9 @@ export function InboxesPage({ inboxes, planLimits, stripePrices = null, business
                         size="sm"
                         icon="refresh"
                         className={checkingId === ib.id ? "is-checking" : ""}
-                        disabled={checkingId === ib.id}
+                        disabled={!canCheck || checkingId === ib.id}
                         aria-label={t('inboxes.checkConnection')}
-                        title={t('inboxes.checkConnection')}
+                        title={checkTitle}
                         onClick={() => handleCheck(ib)}
                       >
                         {""}
@@ -1696,7 +1706,7 @@ export function InboxesPage({ inboxes, planLimits, stripePrices = null, business
                     {canReconnect ? (
                       <Btn variant="secondary" size="sm" icon="refresh" onClick={() => onReconnect(ib)}>{t('inboxes.reconnect')}</Btn>
                     ) : (
-                      <Btn variant="ghost" size="sm" icon="refresh" className={checkingId === ib.id ? 'is-checking' : ''} disabled={checkingId === ib.id} onClick={() => handleCheck(ib)}>{t('inboxes.checkConnection')}</Btn>
+                      <Btn variant="ghost" size="sm" icon="refresh" className={checkingId === ib.id ? 'is-checking' : ''} disabled={!canCheck || checkingId === ib.id} title={checkTitle} onClick={() => handleCheck(ib)}>{t('inboxes.checkConnection')}</Btn>
                     )}
                     <Btn variant="ghost" size="sm" icon="trash" aria-label={t('inboxes.disconnectInbox')} onClick={() => handleDisconnectRequest(ib)}>{t('inboxes.detail.disconnect')}</Btn>
                   </div>
@@ -2857,6 +2867,11 @@ function InboxDetailModal({ inbox, checking, onClose, onReconnect, onCheck, onDi
             </details>
           )}
 
+          {!canManageInbox ? (
+            <p style={{ margin: 0, fontSize: 12, color: 'var(--fg-3)', textAlign: 'right' }}>
+              {t('inboxes.checkConnectionViewerNote')}
+            </p>
+          ) : null}
           <div style={{ display: 'flex', gap: 8, justifyContent: 'flex-end', flexWrap: 'wrap' }}>
             <Btn variant="ghost" icon="trash" onClick={() => onDisconnect(inbox)}>
               {t('inboxes.detail.disconnect')}
@@ -2864,7 +2879,8 @@ function InboxDetailModal({ inbox, checking, onClose, onReconnect, onCheck, onDi
             <Btn
               variant="secondary"
               icon="refresh"
-              disabled={checking}
+              disabled={checking || !canManageInbox}
+              title={canManageInbox ? undefined : t('inboxes.checkConnectionViewerNote')}
               onClick={() => onCheck(inbox)}
             >
               {t('inboxes.checkConnection')}

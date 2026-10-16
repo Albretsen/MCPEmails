@@ -28,6 +28,11 @@ import {
 import type { Tables } from '@/types/database.types';
 import { createServiceRoleClient } from '@/lib/supabase/service';
 import { recordProductFunnelEvent } from '@/lib/analytics/product-funnel';
+import {
+  canManageInboxes,
+  fetchWorkspaceRole,
+  insufficientRoleBody,
+} from '@/lib/workspace/roles';
 
 /**
  * POST /api/inboxes/[id]/check
@@ -77,22 +82,52 @@ export async function POST(
     return NextResponse.json({ error: 'Unauthorized.' }, { status: 401 });
   }
 
-  // 2. Fetch the inbox (including credentials, which never leave this handler).
-  //    RLS on inboxes restricts SELECT to workspaces the user is a member of
-  //    (and to non-deleted rows), so this both authorizes and scopes the read,
-  //    correct even when the user belongs to multiple workspaces.
-  const { data: inbox, error: fetchError } = await supabase
+  // 2. Authorize through the RLS-scoped client. The inboxes SELECT policy only
+  //    returns rows in the caller's workspaces that are not soft-deleted, so a
+  //    returned row proves membership, and it is correct even when the user
+  //    belongs to several workspaces. Only non-secret columns: authenticated
+  //    cannot read the encrypted credentials at all (20261016160200).
+  const { data: visible, error: fetchError } = await supabase
     .from('inboxes')
-    .select('*')
+    .select('id, workspace_id')
     .eq('id', inboxId)
     .is('deleted_at', null)
-    .single<Tables<'inboxes'>>();
+    .single();
 
-  if (fetchError || !inbox) {
+  if (fetchError || !visible) {
     return NextResponse.json({ error: 'Inbox not found.' }, { status: 404 });
   }
 
-  const workspaceId = inbox.workspace_id;
+  const workspaceId = visible.workspace_id;
+
+  // 3. Membership is not permission. This handler decrypts the stored
+  //    credentials, dials the stored host and rewrites the inbox's status for
+  //    everyone in the workspace. It sits with connect / disconnect on the
+  //    operator side of the line (lib/workspace/roles.ts); viewers are read
+  //    only, and the dashboard disables the button for them.
+  const callerRole = await fetchWorkspaceRole(supabase, workspaceId, user.id);
+  if (!canManageInboxes(callerRole)) {
+    return NextResponse.json(
+      insufficientRoleBody('Workspace viewers cannot run a connection check.'),
+      { status: 403 },
+    );
+  }
+
+  // 3b. The full row, credentials included, through the service-role client,
+  //     scoped to the id AND the workspace step 2 authorized. The credentials
+  //     never leave this handler.
+  const service = createServiceRoleClient();
+  const { data: inbox, error: rowError } = await service
+    .from('inboxes')
+    .select('*')
+    .eq('id', inboxId)
+    .eq('workspace_id', workspaceId)
+    .is('deleted_at', null)
+    .single<Tables<'inboxes'>>();
+
+  if (rowError || !inbox) {
+    return NextResponse.json({ error: 'Inbox not found.' }, { status: 404 });
+  }
 
   // 4. Run the credential check. `healthy` is null while inconclusive.
   let healthy: boolean | null = null;
@@ -107,7 +142,7 @@ export async function POST(
   // relay-only list (relay-fallback.ts). Best-effort and bounded
   // (RELAY_REGISTRY_TIMEOUT_MS): a failed read leaves the previous list in place.
   if ((isAppPassword || isSendOnly) && mailRelayConfigFromEnv()) {
-    await refreshLearnedRelayHosts(createServiceRoleClient());
+    await refreshLearnedRelayHosts(service);
   }
 
   try {
@@ -203,7 +238,6 @@ export async function POST(
             }).reason
           : null;
       if (!result.ok && fallbackRelay && !isIP(smtpHost) && shouldTryRelayAfter(result, authReason)) {
-        const service = createServiceRoleClient();
         const startedMs = Date.now();
         const retried = await viaRelay(fallbackRelay);
         await recordRelayUse(service, {
@@ -294,14 +328,15 @@ export async function POST(
 
   const now = new Date().toISOString();
 
+  // The status writes go through the service-role client: authenticated has no
+  // UPDATE on inboxes (20261016160200). Scoped to id AND workspace_id.
   if (healthy) {
-    await supabase
+    await service
       .from('inboxes')
       .update({ status: 'active', last_error: null, last_sync_at: now, updated_at: now })
       .eq('id', inboxId)
       .eq('workspace_id', workspaceId);
 
-    const service = createServiceRoleClient();
     const { data: claimed } = await service.from('workspaces').update({ onboarding_connection_verified_at: now }).eq('id', workspaceId).is('onboarding_connection_verified_at', null).select('id');
     const category = (inbox.provider === 'imap' ? 'generic_imap' : inbox.provider) as Parameters<typeof recordProductFunnelEvent>[1]['category'];
     if (claimed?.length) await recordProductFunnelEvent(service, { workspaceId, stage: 'connection_verified', outcome: 'success', category });
@@ -317,7 +352,7 @@ export async function POST(
   // Definitive failure: ensure the row reflects the errored state. (OAuth
   // refresh-token failures are already persisted by the provider helper; this
   // also covers live-ping rejections and IMAP auth failures.)
-  await supabase
+  await service
     .from('inboxes')
     .update({ status: 'error', last_error: reason, updated_at: now })
     .eq('id', inboxId)

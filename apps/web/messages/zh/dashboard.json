@@ -163,6 +163,7 @@
     "statusError": "错误",
     "reconnect": "重新连接",
     "checkConnection": "检查连接",
+    "checkConnectionViewerNote": "工作区查看者无法检查连接。",
     "disconnectInbox": "断开收件箱",
     "emptyTitle": "尚未连接邮箱",
     "emptyDesc": "连接任意 IMAP 邮箱、Gmail 或 Outlook，即可让你的智能体访问。",

@@ -163,6 +163,7 @@
     "statusError": "Erreur",
     "reconnect": "Reconnecter",
     "checkConnection": "Vérifier la connexion",
+    "checkConnectionViewerNote": "Les lecteurs de l’espace de travail ne peuvent pas vérifier la connexion.",
     "disconnectInbox": "Déconnecter la boîte",
     "emptyTitle": "Aucune boîte connectée",
     "emptyDesc": "Connectez n’importe quelle boîte IMAP, Gmail ou Outlook pour donner accès à vos agents.",
