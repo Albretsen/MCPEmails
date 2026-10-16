@@ -31,7 +31,9 @@ import {
   connectThroughRelay,
   guardRelayTarget,
   imapRelayFor,
+  isIpLiteralHost,
   noteRelayFailure,
+  relayFailureIsRelayDown,
   relayForFallback,
   relayOnlyHost,
   relayConfigured,
@@ -111,13 +113,33 @@ export function shouldRetryImapThroughRelay(host: string, err: unknown): boolean
   if (!relayForFallback()) return false;
   if (relayRouteFor(host, "imap") !== null) return false;
   if (relayFallbackCoolingDown(host, "imap")) return false;
+  // The relay's filter refuses IP literals, so the retry could only fail.
+  if (isIpLiteralHost(host)) return false;
   if (err instanceof ImapConnectionLimitError || err instanceof MailHostBlockedError) return false;
   const text = err instanceof Error ? err.message : String(err ?? "");
   if (/certificate|UnknownIssuer|NotValidForName|InvalidCertificate/i.test(text)) return false;
   if (err instanceof ImapAuthError) return isOriginRefusalText(text);
+  // After the password went out, a server that hangs up (exchange.ionos.eu
+  // drops the connection on a wrong password, 2026-10-15) has answered on the
+  // credential, and a retry would be a second failed sign-in against the
+  // account. A server that merely went quiet has not answered at all, so a
+  // read timeout stays retryable.
+  if (failedAfterPassword(err)) return /IMAP read timeout/.test(text);
   // A name that does not resolve fails identically from anywhere.
   if (/failed to lookup|dns error|name or service not known|no such host|NXDOMAIN/i.test(text)) return false;
   return true;
+}
+
+/** Connect failures that happened after the password exchange began. */
+const afterPassword = new WeakSet<object>();
+
+export function markAfterPassword(err: unknown): void {
+  if (typeof err === "object" && err !== null) afterPassword.add(err);
+}
+
+/** True when `err` came from a connect attempt whose password had already gone out. */
+export function failedAfterPassword(err: unknown): boolean {
+  return typeof err === "object" && err !== null && afterPassword.has(err);
 }
 
 /**
@@ -357,6 +379,13 @@ const CRLF = "\r\n";
 const COMMAND_TIMEOUT_MS = 15_000;
 
 /**
+ * Budget for the direct TCP connect alone. A healthy mail host answers a SYN in
+ * well under a second from AWS; ten seconds leaves room for a slow one and
+ * still leaves the relay retry time inside the tool call. See dialDirect.
+ */
+export const IMAP_TCP_CONNECT_TIMEOUT_MS = 10_000;
+
+/**
  * How many STATUS commands go out in one write when a folder listing asks for
  * its counts (see {@link ImapClient.mailboxStatusPipelined}).
  *
@@ -537,6 +566,12 @@ export class ImapClient {
    * a tagged completion that can never arrive; the flag lets it give up instead.
    */
   private eofReached = false;
+  /**
+   * Set once the password exchange has started on this connection. A failure
+   * after that may be the server's verdict on the credential, so it is not
+   * retried through the relay (see shouldRetryImapThroughRelay).
+   */
+  passwordSent = false;
   /**
    * Set by {@link destroy}. Distinct from `eofReached` (which means the peer
    * hung up) because the two want different words in the error a caller sees,
@@ -838,12 +873,14 @@ export class ImapClient {
         return { conn: await connectThroughRelay(relay, target), route };
       } catch (err) {
         if (!(err instanceof RelayUnavailableError)) throw err;
-        noteRelayFailure();
+        // A relay that refused this one target is healthy; see RelayTargetRefusedError.
+        const relayDown = relayFailureIsRelayDown(err);
+        if (relayDown) noteRelayFailure();
         recordRelayUse({
           protocol: "imap",
           host: cfg.host,
           route,
-          outcome: "relay_down",
+          outcome: relayDown ? "relay_down" : "host_refused",
           ms: Date.now() - startedMs,
           detail: err.message,
         });
@@ -851,8 +888,40 @@ export class ImapClient {
         console.warn("[mcp-server] relay: imap falling back to direct egress", { host: cfg.host, error: err.message });
       }
     }
-    const conn = await connectGuardedTcp({ host: cfg.host, port: cfg.port, protocol: "imap" });
+    const conn = await ImapClient.dialDirect(cfg);
     return { conn, route: null };
+  }
+
+  /**
+   * The direct TCP dial, bounded by {@link IMAP_TCP_CONNECT_TIMEOUT_MS}.
+   *
+   * Deno.connect waits for the operating system's own connect timeout, around
+   * two minutes, and a host that drops our packets would hold the tool call
+   * that long before the relay retry even started. SMTP has bounded its dial
+   * the same way all along (SMTP_TIMEOUT_MS in smtp-client.ts).
+   */
+  private static async dialDirect(cfg: ImapConnectConfig): Promise<Deno.TcpConn> {
+    const dial = connectGuardedTcp({ host: cfg.host, port: cfg.port, protocol: "imap" });
+    let timer: ReturnType<typeof setTimeout> | undefined;
+    const timeout = new Promise<never>((_, reject) => {
+      timer = setTimeout(
+        () => reject(new Error(`IMAP connect to ${cfg.host}:${cfg.port} timed out after ${IMAP_TCP_CONNECT_TIMEOUT_MS}ms`)),
+        IMAP_TCP_CONNECT_TIMEOUT_MS,
+      );
+    });
+    try {
+      return await Promise.race([dial, timeout]);
+    } catch (err) {
+      // A connect that lands after the timeout still owns a socket.
+      dial.then((conn) => {
+        try {
+          conn.close();
+        } catch { /* already closed */ }
+      }).catch(() => {});
+      throw err;
+    } finally {
+      if (timer !== undefined) clearTimeout(timer);
+    }
   }
 
   /** Everything after the socket: TLS, greeting, STARTTLS, login, ID. */
@@ -898,7 +967,27 @@ export class ImapClient {
     if (timing) timing.tlsMs += authFromMs - tlsFromMs;
 
     const client = new ImapClient(conn);
+    try {
+      return await ImapClient.greetAndLogin(client, conn, cfg, timing, authFromMs);
+    } catch (err) {
+      // Whatever failed, this socket is finished. Closing it matters most for a
+      // read that timed out: left open, the stalled session keeps one of the
+      // account's connection slots (Yahoo allows 5) while the relay retry opens
+      // another.
+      client.close();
+      if (client.passwordSent) markAfterPassword(err);
+      throw err;
+    }
+  }
 
+  /** The talking half of {@link establish}: greeting, STARTTLS, login, ID. */
+  private static async greetAndLogin(
+    client: ImapClient,
+    conn: Deno.TcpConn | Deno.TlsConn,
+    cfg: ImapConnectConfig,
+    timing: ImapCallTimings | null,
+    authFromMs: number,
+  ): Promise<ImapClient> {
     // Server greeting: expect "* OK ...". A "* BYE" (or any non-OK greeting)
     // carrying a connection-limit marker means the account is over its cap —
     // retryable. Other non-OK greetings are a protocol error.
@@ -1030,6 +1119,8 @@ export class ImapClient {
     username: string,
     password: string,
   ): Promise<{ resp: { status: "OK" | "NO" | "BAD"; text: string }; sent: string }> {
+    // From here on the server may already be judging the credential.
+    this.passwordSent = true;
     if (mechanism === "LOGIN") {
       // RFC 3501 LOGIN: quoted strings, or synchronizing literals for anything
       // that is not printable ASCII. The line carries the password; it is never

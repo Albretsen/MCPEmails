@@ -15,7 +15,7 @@
 
 BEGIN;
 
-SELECT plan(21);
+SELECT plan(25);
 
 SELECT public.ensure_activity_log_partitions(1);
 
@@ -147,6 +147,44 @@ SELECT is(
   (SELECT count(*)::int || ' ' || sum(ok) || ' ' || sum(relay_down) FROM public.growth_mail_relay_daily(7)),
   '7 2 1',
   'the daily series is zero-filled and adds up');
+
+-- ------------------------------------------------------------
+-- 4. Rescued calls are not direct successes (20261016100000)
+-- ------------------------------------------------------------
+-- A host that refuses our address, used by one active person: every one of
+-- its 12 successful reads went through the relay fallback, and 10 signature
+-- reads never opened IMAP at all. None of that says the host works directly.
+INSERT INTO public.inboxes (id, workspace_id, provider, email_address, status, imap_host, smtp_host)
+VALUES ('e0000000-0000-0000-0000-0000000000f3', 'ef000000-0000-0000-0000-00000000000f', 'imap',
+        'rescued@relay-test.invalid', 'active', 'imap.rescued-test.invalid', NULL);
+INSERT INTO public.activity_log (workspace_id, inbox_id, tool_name, status)
+SELECT 'ef000000-0000-0000-0000-00000000000f', 'e0000000-0000-0000-0000-0000000000f3', 'email_read', 'success'
+FROM generate_series(1, 12);
+INSERT INTO public.activity_log (workspace_id, inbox_id, tool_name, status)
+SELECT 'ef000000-0000-0000-0000-00000000000f', 'e0000000-0000-0000-0000-0000000000f3', 'signature_get', 'success'
+FROM generate_series(1, 10);
+INSERT INTO public.mail_relay_stats (hour, runtime, protocol, host, route, outcome, count, total_ms, last_at)
+VALUES (date_trunc('hour', now()), 'edge', 'imap', 'imap.rescued-test.invalid', 'fallback', 'ok', 12, 12000, now());
+
+SELECT is(
+  public.learn_mail_relay_host('imap.rescued-test.invalid', 'imap', 'Connection timed out (os error 110)', 'edge'),
+  false,
+  'a first rescue still only makes a candidate');
+SELECT ok(
+  (SELECT NOT refused AND direct_successes = 0 FROM public.mail_relay_candidates WHERE host = 'imap.rescued-test.invalid'),
+  'relayed successes and non-IMAP tools are not counted as direct successes');
+UPDATE public.mail_relay_candidates SET first_rescue_at = now() - interval '6 minutes'
+ WHERE host = 'imap.rescued-test.invalid';
+SELECT is(
+  public.learn_mail_relay_host('imap.rescued-test.invalid', 'imap', 'Connection timed out (os error 110)', 'edge'),
+  true,
+  'so the second rescue learns it');
+
+-- A refused host keeps counting its rescues (the busy host was rescued twice above).
+SELECT is(
+  (SELECT rescues FROM public.mail_relay_candidates WHERE host = 'imap.busy-test.invalid'),
+  2,
+  'a refused candidate counts every rescue');
 
 SELECT * FROM finish();
 ROLLBACK;

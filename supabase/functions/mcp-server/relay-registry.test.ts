@@ -24,9 +24,23 @@ import {
   refreshLearnedRelayHosts,
   resetRelayRegistryForTests,
 } from "./relay-registry.ts";
-import { relayRouteFor, resetRelayStateForTests } from "./smtp-relay.ts";
+import {
+  connectThroughRelay,
+  isIpLiteralHost,
+  relayFailureIsRelayDown,
+  relayRouteFor,
+  RelayTargetRefusedError,
+  RelayUnavailableError,
+  resetRelayStateForTests,
+} from "./smtp-relay.ts";
 import { relayedTransport, shouldRetrySmtpThroughRelay, SmtpAuthError, SmtpNotSentError } from "./smtp-client.ts";
-import { ImapAuthError, ImapConnectionLimitError, shouldRetryImapThroughRelay } from "./imap-client.ts";
+import {
+  failedAfterPassword,
+  ImapAuthError,
+  ImapConnectionLimitError,
+  markAfterPassword,
+  shouldRetryImapThroughRelay,
+} from "./imap-client.ts";
 
 async function withRelay<T>(body: () => Promise<T> | T): Promise<T> {
   const previous = { url: Deno.env.get("SMTP_RELAY_URL"), hosts: Deno.env.get("SMTP_RELAY_HOSTS") };
@@ -228,4 +242,78 @@ Deno.test("imap: what earns the relay retry", async () => {
     assert(!shouldRetryImapThroughRelay(host, new Error("invalid peer certificate: UnknownIssuer")), "a certificate problem");
     assert(!shouldRetryImapThroughRelay("imap.orange.fr", new Error("IMAP response timeout")), "already relayed");
   });
+});
+
+Deno.test("imap: nothing after the password went out is retried, except a server that went quiet", async () => {
+  await withRelay(() => {
+    const host = "exchange.ionos.eu";
+    assert(shouldRetryImapThroughRelay(host, new Error("unexpected end of file")), "before the password, a hang-up may be about our address");
+    const hungUpAfter = new Error("unexpected end of file");
+    markAfterPassword(hungUpAfter);
+    assert(failedAfterPassword(hungUpAfter));
+    assert(
+      !shouldRetryImapThroughRelay(host, hungUpAfter),
+      "after it, a hang-up is the server's answer to the password: a retry is a second failed sign-in",
+    );
+    const resetAfter = new Error("Connection reset by peer (os error 104)");
+    markAfterPassword(resetAfter);
+    assert(!shouldRetryImapThroughRelay(host, resetAfter), "nor a reset");
+    const quietAfter = new Error("IMAP read timeout");
+    markAfterPassword(quietAfter);
+    assert(shouldRetryImapThroughRelay("imap.gmail.com", quietAfter), "a server that never answered has judged nothing");
+    const alertAfter = new ImapAuthError("IMAP authentication failed: NO [ALERT] Authentication failed.");
+    markAfterPassword(alertAfter);
+    assert(shouldRetryImapThroughRelay("imap.example.net", alertAfter), "a refusal that blames our address still earns it");
+  });
+});
+
+Deno.test("an IP-literal host never gets the relay retry: the relay's filter refuses it", async () => {
+  await withRelay(() => {
+    assert(isIpLiteralHost("203.0.113.9"));
+    assert(isIpLiteralHost("[2001:db8::1]"));
+    assert(isIpLiteralHost("2001:db8::1"));
+    assert(!isIpLiteralHost("mail.example.com"));
+    assert(!isIpLiteralHost("1.example"));
+    assert(!shouldRetryImapThroughRelay("203.0.113.9", new Error("IMAP read timeout")));
+    assert(!shouldRetrySmtpThroughRelay("203.0.113.9", new SmtpNotSentError("SMTP connect timeout", true)));
+  });
+});
+
+Deno.test("a relay that refuses one target is not a relay that is down", () => {
+  assert(relayFailureIsRelayDown(new RelayUnavailableError("relay unreachable")));
+  assert(!relayFailureIsRelayDown(new RelayTargetRefusedError("relay will not carry 10.0.0.1:993: 403 Filtered")));
+  assert(new RelayTargetRefusedError("x") instanceof RelayUnavailableError, "callers that only know the parent still catch it");
+  assert(!relayFailureIsRelayDown(new Error("something else")));
+});
+
+Deno.test("a 403 from CONNECT is a refused target, a 502 is a relay that cannot carry it", async () => {
+  const relay = { host: "relay.test", port: 3128, authorization: null, hostSuffixes: [], relayOnlyHostSuffixes: [] };
+  const cannedRelay = (reply: string) => ({
+    connect: () => {
+      const bytes = new TextEncoder().encode(reply);
+      let offset = 0;
+      return Promise.resolve({
+        remoteAddr: { transport: "tcp", hostname: "91.98.23.184", port: 3128 },
+        write: (b: Uint8Array) => Promise.resolve(b.length),
+        read: (into: Uint8Array) => {
+          if (offset >= bytes.length) return Promise.resolve(null);
+          into[0] = bytes[offset++];
+          return Promise.resolve(1);
+        },
+        close: () => {},
+      } as unknown as Deno.TcpConn);
+    },
+  });
+  const refused = await connectThroughRelay(
+    relay,
+    { host: "10.0.0.1", port: 993 },
+    cannedRelay("HTTP/1.0 403 Filtered\r\n\r\n"),
+  ).catch((err) => err);
+  assert(refused instanceof RelayTargetRefusedError, String(refused));
+  const down = await connectThroughRelay(
+    relay,
+    { host: "imap.example.com", port: 993 },
+    cannedRelay("HTTP/1.0 502 Bad Gateway\r\n\r\n"),
+  ).catch((err) => err);
+  assert(down instanceof RelayUnavailableError && !(down instanceof RelayTargetRefusedError), String(down));
 });

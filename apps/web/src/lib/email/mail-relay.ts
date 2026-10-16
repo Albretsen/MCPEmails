@@ -46,6 +46,19 @@ export class MailRelayUnavailableError extends Error {
   }
 }
 
+/**
+ * The relay is up and answered, but its policy will not carry this target
+ * (tinyproxy's filter answers 403 for an IP literal, localhost or a port it
+ * does not allow). A mirror of RelayTargetRefusedError on the edge: it says
+ * nothing about the relay's health and is not counted as the relay being down.
+ */
+export class MailRelayTargetRefusedError extends MailRelayUnavailableError {
+  constructor(message: string) {
+    super(message);
+    this.name = 'MailRelayTargetRefusedError';
+  }
+}
+
 /** Squid's default, and what the existing relay listens on. */
 const DEFAULT_RELAY_PORT = 3128;
 
@@ -147,12 +160,12 @@ export function openMailRelayTunnel(
     const socket = net.connect({ host: config.host, port: config.port });
     let head = Buffer.alloc(0);
     let settled = false;
-    const fail = (message: string) => {
+    const fail = (message: string, targetRefused = false) => {
       if (settled) return;
       settled = true;
       clearTimeout(timer);
       socket.destroy();
-      reject(new MailRelayUnavailableError(message));
+      reject(targetRefused ? new MailRelayTargetRefusedError(message) : new MailRelayUnavailableError(message));
     };
     const timer = setTimeout(() => fail('Relay handshake timed out.'), timeoutMs);
 
@@ -176,7 +189,7 @@ export function openMailRelayTunnel(
       const status = /^HTTP\/1\.[01] (\d{3})/.exec(head.subarray(0, end).toString('latin1'));
       if (!status || status[1] !== '200') {
         // The status code only: a proxy's error page is not ours to repeat.
-        fail(`Relay refused the tunnel (${status ? status[1] : 'malformed response'}).`);
+        fail(`Relay refused the tunnel (${status ? status[1] : 'malformed response'}).`, status?.[1] === '403');
         return;
       }
       settled = true;

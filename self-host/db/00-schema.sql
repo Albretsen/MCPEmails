@@ -1224,10 +1224,13 @@ DECLARE
   c_min_spread constant interval := interval '5 minutes';
   c_window constant interval := interval '7 days';
   c_learned_for constant interval := interval '30 days';
+  c_send_tools constant text[] := ARRAY['email_send', 'email_reply', 'email_forward', 'draft_send', 'email_compose'];
 
   v_host text := lower(trim(p_host));
   v_known public.mail_relay_hosts%ROWTYPE;
   v_since timestamptz := now() - c_window;
+  v_calls bigint;
+  v_rescued bigint;
   v_ok bigint;
   v_candidate public.mail_relay_candidates%ROWTYPE;
 BEGIN
@@ -1244,7 +1247,7 @@ BEGIN
   END IF;
 
   SELECT count(*)
-    INTO v_ok
+    INTO v_calls
     FROM public.activity_log a
     JOIN public.inboxes i ON i.id = a.inbox_id
    WHERE a.created_at > v_since
@@ -1252,11 +1255,27 @@ BEGIN
      AND CASE
            WHEN p_protocol = 'smtp' THEN
              lower(i.smtp_host) = v_host
-             AND a.tool_name IN ('email_send', 'email_reply', 'email_forward', 'draft_send', 'email_compose')
+             AND a.tool_name = ANY (c_send_tools)
            ELSE
              lower(i.imap_host) = v_host
-             AND a.tool_name NOT IN ('email_send', 'email_reply', 'email_forward', 'draft_send', 'email_compose')
+             AND NOT (a.tool_name = ANY (c_send_tools))
+             AND a.tool_name NOT LIKE 'signature\_%'
+             AND a.tool_name NOT LIKE 'schedule\_%'
+             AND a.tool_name NOT LIKE 'automation\_%'
+             AND a.tool_name <> 'contact_search'
          END;
+
+  -- Successes the relay carried are not evidence that the host works directly.
+  SELECT COALESCE(sum(s.count), 0)
+    INTO v_rescued
+    FROM public.mail_relay_stats s
+   WHERE s.host = v_host
+     AND s.protocol = p_protocol
+     AND s.route = 'fallback'
+     AND s.outcome = 'ok'
+     AND s.hour >= date_trunc('hour', v_since);
+
+  v_ok := GREATEST(v_calls - v_rescued, 0);
 
   -- Rule 1: a host that works directly is never learned.
   IF v_ok >= c_max_direct_successes THEN
@@ -1264,6 +1283,8 @@ BEGIN
       (host, protocol, rescues, last_reason, last_runtime, direct_successes, refused)
     VALUES (v_host, p_protocol, 1, left(p_reason, 300), p_runtime, v_ok, true)
     ON CONFLICT (host, protocol) DO UPDATE SET
+      rescues = CASE WHEN c.first_rescue_at < now() - c_window THEN 1 ELSE c.rescues + 1 END,
+      first_rescue_at = CASE WHEN c.first_rescue_at < now() - c_window THEN now() ELSE c.first_rescue_at END,
       last_rescue_at = now(),
       last_reason = EXCLUDED.last_reason,
       last_runtime = EXCLUDED.last_runtime,

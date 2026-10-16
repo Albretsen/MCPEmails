@@ -103,15 +103,26 @@ const MAX_DETAIL_CHARS = 200;
 
 let store: RelayRegistryStore | null = null;
 const learned: Record<RelayProtocol, Set<string>> = { imap: new Set(), smtp: new Set() };
+/** Hosts the store accepted while a list read was in flight. See refreshLearnedRelayHosts. */
+const learnedDuringLoad: Record<RelayProtocol, Set<string>> = { imap: new Set(), smtp: new Set() };
 let loadedAt = 0;
 let loading: Promise<void> | null = null;
 const fallbackFailedUntil = new Map<string, number>();
 
-/** Called once by index.ts. Null switches learning and recording off. */
-export function configureRelayRegistry(next: RelayRegistryStore | null): void {
+/**
+ * Called once by index.ts. Null switches learning and recording off.
+ *
+ * `prefetch` starts the first read of the learned list now, at isolate start.
+ * Supabase runs nearly one isolate per call (PR #121), so a read that waited
+ * for the first connect put a database round trip in front of almost every
+ * mailbox connection. The connect still awaits it, but by then it has usually
+ * finished. index.ts passes it only when a relay is configured.
+ */
+export function configureRelayRegistry(next: RelayRegistryStore | null, options: { prefetch?: boolean } = {}): void {
   store = next;
   loadedAt = 0;
   loading = null;
+  if (next && options.prefetch) void refreshLearnedRelayHosts();
 }
 
 /** Test-only: forget everything this isolate has learned or counted. */
@@ -119,6 +130,8 @@ export function resetRelayRegistryForTests(): void {
   store = null;
   learned.imap.clear();
   learned.smtp.clear();
+  learnedDuringLoad.imap.clear();
+  learnedDuringLoad.smtp.clear();
   loadedAt = 0;
   loading = null;
   fallbackFailedUntil.clear();
@@ -138,11 +151,18 @@ export async function refreshLearnedRelayHosts(now: number = Date.now()): Promis
   if (now - loadedAt < LEARNED_RELAY_REFRESH_MS) return;
   if (!loading) {
     const source = store;
+    learnedDuringLoad.imap.clear();
+    learnedDuringLoad.smtp.clear();
     loading = (async () => {
       try {
         const rows = await withTimeout(source.loadLearned(LEARNED_RELAY_MAX_AGE_DAYS), LEARNED_RELAY_LOAD_TIMEOUT_MS);
-        learned.imap.clear();
-        learned.smtp.clear();
+        // A read begun for a store that has since been replaced answers for that store.
+        if (store !== source) return;
+        // A host learned here while the read was in flight may be missing from
+        // its answer; it must not be forgotten when the list is replaced.
+        for (const protocol of ["imap", "smtp"] as const) {
+          learned[protocol] = new Set(learnedDuringLoad[protocol]);
+        }
         for (const row of rows) {
           const host = normalizeMailHost(row.host);
           if (host && (row.protocol === "imap" || row.protocol === "smtp")) learned[row.protocol].add(host);
@@ -150,8 +170,10 @@ export async function refreshLearnedRelayHosts(now: number = Date.now()): Promis
       } catch (err) {
         console.warn("[mcp-server] relay_registry: could not load learned hosts", { error: errorText(err) });
       } finally {
-        loadedAt = Date.now();
-        loading = null;
+        if (store === source) {
+          loadedAt = Date.now();
+          loading = null;
+        }
       }
     })();
   }
@@ -179,7 +201,10 @@ export function learnRelayHost(host: string, protocol: RelayProtocol, reason: st
   if (!source) return;
   inBackground("learn", async () => {
     const accepted = await source.learn(target, protocol, clip(reason) ?? "");
-    if (accepted) learned[protocol].add(target);
+    if (accepted) {
+      learned[protocol].add(target);
+      if (loading) learnedDuringLoad[protocol].add(target);
+    }
     console.log("[mcp-server] relay_registry: learn", { host: target, protocol, accepted, reason: clip(reason) });
   });
 }
