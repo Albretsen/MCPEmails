@@ -48,6 +48,8 @@ const world = {
   db: {} as Record<string, Row[]>,
   /** Every write either client attempted: `${client}:${op}:${table}`. */
   writes: [] as string[],
+  /** The active-workspace cookie the browser sends (forgeable). */
+  cookieWs: WS,
 };
 
 function seed() {
@@ -198,7 +200,7 @@ function fakeClient(kind: 'user' | 'service') {
 nodeMock.module('@/lib/supabase/server', { namedExports: { createClient: async () => fakeClient('user') } });
 nodeMock.module('@/lib/supabase/service', { namedExports: { createServiceRoleClient: () => fakeClient('service') } });
 nodeMock.module('next/headers', {
-  namedExports: { cookies: async () => ({ get: (name: string) => (name === 'mcpe_active_ws' ? { value: WS } : undefined) }) },
+  namedExports: { cookies: async () => ({ get: (name: string) => (name === 'mcpe_active_ws' ? { value: world.cookieWs } : undefined) }) },
 });
 nodeMock.module('next/server', {
   namedExports: {
@@ -232,6 +234,7 @@ beforeEach(() => {
   world.keyLimit = { atLimit: false, plan: 'free', currentCount: 0, maxApiKeys: null };
   world.keyLimitCalls = [];
   world.writes = [];
+  world.cookieWs = WS;
 });
 
 const as = (id: string) => { world.user = { id }; };
@@ -552,4 +555,43 @@ test('edit: body validation still answers 400 before any lookup', async () => {
   assert.equal((await edit('k-member', { scopes: ['read:email'], inboxIds: [] })).status, 400);
   assert.equal((await edit('k-member', { scopes: ['nope'] })).status, 400);
   assert.deepEqual(world.writes, []);
+});
+
+// ===========================================================================
+// Verifier (u03): adversarial cases
+// ===========================================================================
+
+test('verify: a forged active-workspace cookie cannot reach another workspace\'s key', async () => {
+  as(MEMBER);
+  world.cookieWs = OTHER_WS; // not a member there: resolves back to WS
+  assert.equal((await revoke('k-outsider')).status, 200, 'unknown in WS: the usual no-op');
+  assert.equal(keyRow('k-outsider').deleted_at, null);
+  assert.equal((await edit('k-outsider', { scopes: ['read:email', 'send:email'], inboxIds: null })).status, 404);
+  assert.deepEqual(keyRow('k-outsider').scopes, ['read:email']);
+  assert.deepEqual(world.writes, []);
+});
+
+test('verify: a member demoted to viewer cannot re-widen their own key', async () => {
+  world.db.workspace_members.find((m) => m.user_id === MEMBER)!.role = 'viewer';
+  as(MEMBER);
+  const res = await edit('k-member', { scopes: ['read:email', 'send:email'], inboxIds: null });
+  assert.equal(res.status, 403);
+  assert.deepEqual(keyRow('k-member').scopes, ['read:email']);
+});
+
+test('verify: a removed member can neither revoke nor edit the key they created', async () => {
+  world.db.workspace_members = world.db.workspace_members.filter((m) => m.user_id !== MEMBER);
+  as(MEMBER);
+  assert.equal((await revoke('k-member')).status, 403);
+  assert.equal((await edit('k-member', { scopes: ['read:email', 'delete:email'], inboxIds: null })).status, 403);
+  assert.equal(keyRow('k-member').deleted_at, null);
+  assert.deepEqual(keyRow('k-member').scopes, ['read:email']);
+  assert.deepEqual(world.writes, []);
+});
+
+test('verify: an admin cannot launder a send scope onto a creatorless legacy key', async () => {
+  as(ADMIN);
+  const res = await edit('k-legacy', { scopes: ['read:email', 'send:email'], inboxIds: null });
+  assert.equal(res.status, 403);
+  assert.deepEqual(keyRow('k-legacy').scopes, ['read:email']);
 });
