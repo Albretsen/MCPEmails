@@ -562,3 +562,78 @@ test('image: a real JPEG declared as image/png is stored as what it is', async (
   assert.equal(world.uploads[0].contentType, 'image/jpeg');
   assert.ok(world.uploads[0].key.endsWith('.jpg'));
 });
+
+// ── Verifier: the "unchanged" comparison cannot be turned into a change ─────
+// A member must never be able to weaken (or alter) the review gate, whatever
+// the body's types or the stored row's legacy / inconsistent shape.
+
+const noReviewWrite = () =>
+  inboxCalls('service').filter((c) => c.op === 'update').length === 0;
+
+for (const [label, body] of [
+  ['string "false" for the boolean', { send_approval_required: 'false' }],
+  ['number 0 for the boolean', { send_approval_required: 0 }],
+  ['null for the boolean', { send_approval_required: null }],
+  ['null mode', { send_review_mode: null }],
+  ['unknown mode', { send_review_mode: 'OFF' }],
+  ['mode as array', { send_review_mode: ['off'] }],
+] as const) {
+  test(`verify PATCH: a member sending ${label} is rejected and nothing is written`, async () => {
+    reset({ role: 'member' });
+    const res = await patch({ ...SIGNATURE, ...body });
+    assert.ok(res.status === 400 || res.status === 403, `got ${res.status}`);
+    assert.ok(noReviewWrite(), 'no update was written');
+  });
+}
+
+test('verify PATCH: a member sending only send_review_mode=off (stored dashboard) is refused', async () => {
+  reset({ role: 'member', row: { ...appPasswordRow(), send_review_mode: 'dashboard', send_approval_required: true } });
+  const res = await patch({ send_review_mode: 'off' });
+  assert.equal(res.status, 403);
+  assert.ok(noReviewWrite());
+});
+
+test('verify PATCH: a member sending inline over stored dashboard is refused', async () => {
+  reset({ role: 'member', row: { ...appPasswordRow(), send_review_mode: 'dashboard', send_approval_required: true } });
+  const res = await patch({ ...SIGNATURE, send_review_mode: 'inline', send_approval_required: true });
+  assert.equal(res.status, 403);
+  assert.ok(noReviewWrite());
+});
+
+test('verify PATCH: an inconsistent stored row (mode off, boolean true) cannot be "restated" by a member', async () => {
+  reset({ role: 'member', row: { ...appPasswordRow(), send_review_mode: 'off', send_approval_required: true } });
+  const res = await patch({ ...SIGNATURE, send_review_mode: 'off', send_approval_required: false });
+  assert.equal(res.status, 403, 'the derived boolean differs from the stored one, so it is a change');
+  assert.ok(noReviewWrite());
+});
+
+test('verify PATCH: an inconsistent stored row (mode dashboard, boolean false) cannot be "restated" by a member', async () => {
+  reset({ role: 'member', row: { ...appPasswordRow(), send_review_mode: 'dashboard', send_approval_required: false } });
+  const res = await patch({ ...SIGNATURE, send_review_mode: 'dashboard', send_approval_required: true });
+  assert.equal(res.status, 403);
+  assert.ok(noReviewWrite());
+});
+
+test('verify PATCH: legacy row (mode null, boolean false): member restating off is a no-op, turning review on is refused', async () => {
+  reset({ role: 'member', row: { ...appPasswordRow(), send_review_mode: null, send_approval_required: false } });
+  const ok = await patch({ ...SIGNATURE, send_review_mode: 'off', send_approval_required: false });
+  assert.equal(ok.status, 200);
+  const payload = inboxCalls('service').find((c) => c.op === 'update')!.payload as Record<string, unknown>;
+  assert.ok(!('send_review_mode' in payload) && !('send_approval_required' in payload));
+
+  reset({ role: 'member', row: { ...appPasswordRow(), send_review_mode: null, send_approval_required: false } });
+  const refused = await patch({ ...SIGNATURE, send_review_mode: 'dashboard' });
+  assert.equal(refused.status, 403);
+  assert.ok(noReviewWrite());
+});
+
+for (const role of ['owner', 'admin']) {
+  test(`verify PATCH: ${role} can still change the mode on an inconsistent legacy row and both columns are written`, async () => {
+    reset({ role, row: { ...appPasswordRow(), send_review_mode: null, send_approval_required: true } });
+    const res = await patch({ send_review_mode: 'inline' });
+    assert.equal(res.status, 200);
+    const payload = inboxCalls('service').find((c) => c.op === 'update')!.payload as Record<string, unknown>;
+    assert.equal(payload.send_review_mode, 'inline');
+    assert.equal(payload.send_approval_required, true);
+  });
+}
