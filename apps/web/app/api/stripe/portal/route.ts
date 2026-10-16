@@ -227,6 +227,14 @@ export async function POST(_request: NextRequest): Promise<NextResponse> {
  * Read with the service role so the owner filter, not RLS membership, decides
  * which rows count, and so a workspace the user has since deleted still counts
  * as theirs for a customer created in the workspace-scoped era.
+ *
+ * Self-heal (as step 5a does for the user_billing id): a candidate that Stripe
+ * no longer has (resource_missing), that is deleted, or that provably belongs
+ * to someone else (planted or foreign) is nulled on the caller's own live
+ * workspaces that carry it, so the next portal click does not repeat the
+ * Stripe call. A customer with no ownership proof either way ('no_proof') is
+ * left in place: it may be the user's own hand-made customer under another
+ * email, which support can still recover.
  */
 async function verifiedWorkspaceCustomerId(user: {
   id: string;
@@ -253,16 +261,38 @@ async function verifiedWorkspaceCustomerId(user: {
     ),
   ];
 
+  const workspaceIdsCarrying = (candidate: string) =>
+    owned.filter((w) => !w.deleted_at && w.stripe_customer_id === candidate).map((w) => w.id);
+
+  /** Null `candidate` on the caller's own live workspaces that carry it. */
+  const clearCandidate = async (candidate: string, reason: string) => {
+    try {
+      const { error: clearError } = await service
+        .from('workspaces')
+        .update({ stripe_customer_id: null })
+        .in('id', workspaceIdsCarrying(candidate))
+        .eq('owner_id', user.id)
+        .eq('stripe_customer_id', candidate);
+      if (clearError) throw new Error(clearError.message);
+      console.error('[portal] nulled workspace stripe_customer_id for user', user.id, `(${reason})`);
+    } catch (healErr) {
+      console.error('[portal] workspace self-heal failed:', healErr);
+    }
+  };
+
   for (const candidate of candidates) {
     let customer;
     try {
       customer = await stripe.customers.retrieve(candidate);
     } catch (err) {
-      // A dead or wrong-mode id is simply not a usable fallback.
-      console.error(
-        '[portal] fallback customer lookup failed:',
-        err instanceof Error ? err.message : String(err),
-      );
+      const message = err instanceof Error ? err.message : String(err);
+      const code = (err as Record<string, unknown>)?.code;
+      console.error('[portal] fallback customer lookup failed:', message);
+      // Only a definite "no such customer" is healed. A network blip or a
+      // Stripe outage must never erase a paying user's id.
+      if (code === 'resource_missing' || message.toLowerCase().includes('no such customer')) {
+        await clearCandidate(candidate, 'resource_missing');
+      }
       continue;
     }
     const verdict = verifyPortalCustomerOwnership(
@@ -277,6 +307,7 @@ async function verifiedWorkspaceCustomerId(user: {
     );
     if (verdict.owned) return candidate;
     console.error('[portal] refused workspace customer fallback for user', user.id, `(${verdict.reason})`);
+    if (verdict.reason !== 'no_proof') await clearCandidate(candidate, verdict.reason);
   }
   return null;
 }

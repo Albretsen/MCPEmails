@@ -36,6 +36,9 @@ let customers: Record<string, Customer>;
 let portalSessions: string[];
 let customerLookups: string[];
 let upserts: Row[];
+let updates: Row[];
+/** When set, customers.retrieve throws this instead of looking the id up. */
+let stripeOutage: Error | null;
 
 function reset() {
   caller = { id: CALLER, email: 'caller@example.test', email_confirmed_at: '2026-06-01T00:00:00Z' };
@@ -52,6 +55,8 @@ function reset() {
   portalSessions = [];
   customerLookups = [];
   upserts = [];
+  updates = [];
+  stripeOutage = null;
 }
 reset();
 
@@ -62,6 +67,7 @@ function fakeDb() {
     from(table: string) {
       const filters: Array<(r: Row) => boolean> = [];
       const rows = () => (tables[table] ?? []).filter((r) => filters.every((f) => f(r)));
+      let patch: Row | null = null;
       const builder: Record<string, unknown> = {};
       builder.select = () => builder;
       builder.order = () => builder;
@@ -69,11 +75,20 @@ function fakeDb() {
       builder.eq = (col: string, v: unknown) => { filters.push((r) => r[col] === v); return builder; };
       builder.is = (col: string, v: unknown) => { filters.push((r) => (r[col] ?? null) === v); return builder; };
       builder.not = (col: string, _op: string, v: unknown) => { filters.push((r) => (r[col] ?? null) !== v); return builder; };
+      builder.in = (col: string, vs: unknown[]) => { filters.push((r) => vs.includes(r[col])); return builder; };
       builder.maybeSingle = async () => ({ data: rows()[0] ?? null, error: null });
       builder.single = async () => ({ data: rows()[0] ?? null, error: null });
       builder.upsert = (values: Row) => { upserts.push({ table, ...values }); return builder; };
-      builder.update = () => builder;
-      builder.then = (resolve: (v: unknown) => unknown) => resolve({ data: rows(), error: null });
+      builder.update = (values: Row) => { patch = values; return builder; };
+      builder.then = (resolve: (v: unknown) => unknown) => {
+        if (patch) {
+          const hit = rows();
+          for (const r of hit) Object.assign(r, patch);
+          updates.push({ table, ...patch, ids: hit.map((r) => r.id) });
+          return resolve({ data: null, error: null });
+        }
+        return resolve({ data: rows(), error: null });
+      };
       return builder;
     },
   };
@@ -94,6 +109,7 @@ nodeMock.module('@/lib/stripe/client', {
       customers: {
         retrieve: async (id: string) => {
           customerLookups.push(id);
+          if (stripeOutage) throw stripeOutage;
           const found = customers[id];
           if (!found) throw Object.assign(new Error(`No such customer: '${id}'`), { code: 'resource_missing' });
           return found;
@@ -253,4 +269,89 @@ test('no session is still a 401', async () => {
   reset();
   caller = null;
   assert.equal((await openPortal()).status, 401);
+});
+
+// ── Self-heal of the workspace fallback ──────────────────────────────────────
+
+const wsCustomer = (id: string) => tables.workspaces.find((w) => w.id === id)?.stripe_customer_id;
+
+test('a workspace id Stripe no longer has is nulled, so the next click makes no Stripe call', async () => {
+  reset();
+  ownWorkspace('cus_gone');
+  assert.equal((await openPortal()).status, 422);
+  assert.equal(wsCustomer('ws-caller'), null);
+  assert.deepEqual(updates, [{ table: 'workspaces', stripe_customer_id: null, ids: ['ws-caller'] }]);
+
+  customerLookups = [];
+  assert.equal((await openPortal()).status, 422);
+  assert.deepEqual(customerLookups, []);
+});
+
+test('a deleted Stripe customer is nulled on the workspace', async () => {
+  reset();
+  customers.cus_caller = { id: 'cus_caller', deleted: true };
+  ownWorkspace('cus_caller');
+  assert.equal((await openPortal()).status, 422);
+  assert.equal(wsCustomer('ws-caller'), null);
+});
+
+test("a planted id that belongs to another user (or another user's workspace) is nulled, and the victim's row is untouched", async () => {
+  for (const planted of ['cus_victim', 'cus_old_victim']) {
+    reset();
+    customers.cus_old_victim = { id: 'cus_old_victim', metadata: { workspace_id: 'ws-victim' } };
+    ownWorkspace(planted);
+    assert.equal((await openPortal()).status, 422, planted);
+    assert.equal(wsCustomer('ws-caller'), null, planted);
+    assert.equal(wsCustomer('ws-victim'), 'cus_victim', planted);
+    assert.deepEqual(portalSessions, [], planted);
+  }
+});
+
+test('the heal touches only the caller\'s own live workspaces carrying that id', async () => {
+  reset();
+  ownWorkspace('cus_gone');
+  tables.workspaces.push(
+    { id: 'ws-caller-old', owner_id: CALLER, stripe_customer_id: 'cus_gone', deleted_at: '2026-07-01', created_at: '2026-04-01' },
+    { id: 'ws-caller-2', owner_id: CALLER, stripe_customer_id: 'cus_gone', deleted_at: null, created_at: '2026-05-05' },
+    { id: 'ws-stranger', owner_id: 'user-stranger', stripe_customer_id: 'cus_gone', deleted_at: null, created_at: '2026-05-06' },
+  );
+  await openPortal();
+  assert.equal(wsCustomer('ws-caller'), null);
+  assert.equal(wsCustomer('ws-caller-2'), null);
+  assert.equal(wsCustomer('ws-caller-old'), 'cus_gone');
+  assert.equal(wsCustomer('ws-stranger'), 'cus_gone');
+  assert.equal(wsCustomer('ws-victim'), 'cus_victim');
+});
+
+test('a Stripe outage, an unproven hand-made customer, or a verified customer is never nulled', async () => {
+  reset();
+  ownWorkspace('cus_caller');
+  stripeOutage = Object.assign(new Error('An error occurred with our connection to Stripe.'), { code: 'api_connection_error' });
+  assert.equal((await openPortal()).status, 422);
+  assert.equal(wsCustomer('ws-caller'), 'cus_caller');
+  assert.deepEqual(updates, []);
+
+  reset();
+  customers.cus_manual = { id: 'cus_manual', email: 'someone-else@example.test', metadata: {} };
+  ownWorkspace('cus_manual');
+  assert.equal((await openPortal()).status, 422);
+  assert.equal(wsCustomer('ws-caller'), 'cus_manual');
+  assert.deepEqual(updates, []);
+
+  reset();
+  ownWorkspace('cus_caller');
+  assert.equal((await openPortal()).status, 200);
+  assert.equal(wsCustomer('ws-caller'), 'cus_caller');
+  assert.deepEqual(updates, []);
+});
+
+test('a dead first candidate is healed and a valid second one still opens the portal', async () => {
+  reset();
+  ownWorkspace('cus_gone');
+  tables.workspaces.push({ id: 'ws-caller-2', owner_id: CALLER, stripe_customer_id: 'cus_caller', deleted_at: null, created_at: '2026-05-03' });
+  const { status } = await openPortal();
+  assert.equal(status, 200);
+  assert.deepEqual(portalSessions, ['cus_caller']);
+  assert.equal(wsCustomer('ws-caller'), null);
+  assert.equal(wsCustomer('ws-caller-2'), 'cus_caller');
 });
