@@ -187,9 +187,17 @@ import {
   buildDraftMime,
   buildMimeMessage,
   formatMailbox,
+  headerText,
   mimeMessageToBase64url,
   draftSendBytes,
 } from "./mime-build.ts";
+import {
+  formatMailboxDisplay,
+  parseAddressHeader,
+  parseAddressList as parseDisplayAddressList,
+  parseMailbox,
+  parseMailboxHeader,
+} from "./address-header.ts";
 import {
   consolidatedSecurityScopes,
   isOpenAiClientName,
@@ -10998,50 +11006,36 @@ interface ListInboxResult {
 }
 
 /**
- * Parses an RFC 5322 address header ("Name <email>" or "bare@email.com")
- * into an EmailAddressEntry.
+ * Parses ONE mailbox that is already display text ("Name <email>" or a bare
+ * address) into an EmailAddressEntry. Quote-aware; never RFC 2047-decodes.
+ * For a RAW header read from a message use parseAddressHeader instead.
  */
 function parseEmailAddress(header: string): EmailAddressEntry {
-  const trimmed = header.trim();
-  const angleMatch = trimmed.match(/^(.*?)\s*<([^>]+)>\s*$/);
-  if (angleMatch) {
-    const name = angleMatch[1].replace(/^["']|["']$/g, "").trim();
-    return { name, email: angleMatch[2].trim() };
-  }
-  return { name: "", email: trimmed };
+  return parseMailbox(header ?? "", "none");
 }
 
 /**
- * Parses a comma-separated RFC 5322 address list, respecting display names
- * that contain commas inside quoted strings.
+ * Parses a comma-separated address list that is already display text (Gmail's
+ * decoded header values, model-supplied lists). Commas inside quoted strings,
+ * comments and angle-addrs do not split. Never RFC 2047-decodes: for a RAW
+ * header use parseAddressHeader, which parses the structure first and decodes
+ * only the names. `parseAddressList(decodeEncodedWords(raw))` is the bug that
+ * let an encoded display name add recipients or inject SMTP commands; do not
+ * write it again.
  */
 function parseAddressList(header: string): EmailAddressEntry[] {
-  if (!header.trim()) return [];
-  const results: EmailAddressEntry[] = [];
-  let depth = 0;
-  let current = "";
-  for (const ch of header) {
-    if (ch === "<") depth++;
-    else if (ch === ">") depth--;
-    if (ch === "," && depth === 0) {
-      if (current.trim()) results.push(parseEmailAddress(current));
-      current = "";
-    } else {
-      current += ch;
-    }
-  }
-  if (current.trim()) results.push(parseEmailAddress(current));
-  return results;
+  return parseDisplayAddressList(header ?? "", "none");
 }
 
 /**
- * Render an EmailAddressEntry back into an RFC 5322 address string suitable for
- * a DraftParams recipient array ("Name <email>" or bare "email"). Each entry is
- * one array element, so a display name containing commas is safe — the draft
- * builders parse per-element with parseEmailAddress, not parseAddressList.
+ * Render an EmailAddressEntry back into a display address string for a
+ * DraftParams recipient array ("Name <email>" or bare "email"). A name holding
+ * a special (a comma, a quote, `<`) is quoted, so the element parses back to
+ * exactly one mailbox. Non-ASCII stays readable here; mime-build.ts encodes
+ * every name when it writes the header.
  */
 function formatAddressEntry(a: EmailAddressEntry): string {
-  return a.name ? `${a.name} <${a.email}>` : a.email;
+  return formatMailboxDisplay(a);
 }
 
 /**
@@ -11968,11 +11962,11 @@ async function readImapMessage(
     const h = parsed.headers;
 
     const subject = decodeEncodedWords(getHeader(h, "subject") ?? "(no subject)");
-    const from = parseEmailAddress(decodeEncodedWords(getHeader(h, "from") ?? ""));
-    const to = parseAddressList(decodeEncodedWords(getHeader(h, "to") ?? ""));
-    const cc = parseAddressList(decodeEncodedWords(getHeader(h, "cc") ?? ""));
-    const bcc = parseAddressList(decodeEncodedWords(getHeader(h, "bcc") ?? ""));
-    const replyToList = parseAddressList(decodeEncodedWords(getHeader(h, "reply-to") ?? ""));
+    const from = parseMailboxHeader(getHeader(h, "from"));
+    const to = parseAddressHeader(getHeader(h, "to"));
+    const cc = parseAddressHeader(getHeader(h, "cc"));
+    const bcc = parseAddressHeader(getHeader(h, "bcc"));
+    const replyToList = parseAddressHeader(getHeader(h, "reply-to"));
     const inReplyToHeader = getHeader(h, "in-reply-to");
     const referencesHeader = getHeader(h, "references") ?? "";
 
@@ -12491,9 +12485,9 @@ async function replyImapMessage(
       const origDateHeader = getHeader(h, "date") ?? "";
       const origBodyText = original.text ?? (original.html ? stripHtmlToText(original.html) : "");
 
-      const fromAddrs = parseAddressList(decodeEncodedWords(getHeader(h, "from") ?? ""));
-      const toAddrs = parseAddressList(decodeEncodedWords(getHeader(h, "to") ?? ""));
-      const ccAddrs = parseAddressList(decodeEncodedWords(getHeader(h, "cc") ?? ""));
+      const fromAddrs = parseAddressHeader(getHeader(h, "from"));
+      const toAddrs = parseAddressHeader(getHeader(h, "to"));
+      const ccAddrs = parseAddressHeader(getHeader(h, "cc"));
 
       // Recipient selection (including the self-addressed fallback) lives in
       // recipient-rules.ts so this path, the Gmail/Outlook reply paths, draft_reply
@@ -15213,6 +15207,44 @@ async function executeReadEmails(
  *
  * Does not make DNS lookups or MX checks — structural validation only.
  */
+/**
+ * A stored draft names an envelope recipient that is not an email address.
+ * Raised by imapSendDraft before anything is transmitted; `message` is the
+ * sentinel draft_send dispatches on, `address` the offending entry with its
+ * control characters made visible-safe for the result text.
+ */
+class DraftInvalidRecipientError extends Error {
+  readonly address: string;
+  constructor(address: string) {
+    super("draft_has_invalid_recipient");
+    this.name = "DraftInvalidRecipientError";
+    // deno-lint-ignore no-control-regex
+    this.address = address.replace(/[\x00-\x1F\x7F]/g, " ").slice(0, 200);
+  }
+}
+
+/**
+ * The SMTP envelope (RCPT TO list) of a stored IMAP draft: To + Cc + Bcc,
+ * parsed structure-first from the RAW headers (parseAddressHeader), never
+ * decoded and re-split.
+ *
+ * Every address must pass isValidEmailAddress (2026-10-16). These strings
+ * become `RCPT TO:<...>` lines, and a stored draft is not trusted input:
+ * another client, or a rebuilt reply to hostile mail, may have put anything in
+ * its headers. A bad one throws DraftInvalidRecipientError, before any byte
+ * goes to SMTP.
+ */
+function draftEnvelopeRecipients(headers: Map<string, string[]>): string[] {
+  const recipients = [
+    ...parseAddressHeader(getHeader(headers, "to")),
+    ...parseAddressHeader(getHeader(headers, "cc")),
+    ...parseAddressHeader(getHeader(headers, "bcc")),
+  ].map((a) => a.email.trim()).filter(Boolean);
+  const bad = recipients.find((r) => !isValidEmailAddress(r));
+  if (bad !== undefined) throw new DraftInvalidRecipientError(bad);
+  return recipients;
+}
+
 function isValidEmailAddress(email: string): boolean {
   const trimmed = (email ?? "").trim();
   if (!trimmed || trimmed.length > 320) return false;
@@ -25241,12 +25273,14 @@ function draftContentFromRaw(raw: string, threadId?: string): DraftContent {
   if (carried.inlineImages > 0) rebuildBlockers.push("an inline image");
   return {
     subject: decodeEncodedWords(rawSubject ?? "(no subject)"),
-    to: parseAddressList(decodeEncodedWords(getHeader(h, "to") ?? "")).map(formatAddressEntry),
-    cc: parseAddressList(decodeEncodedWords(getHeader(h, "cc") ?? "")).map(formatAddressEntry),
-    bcc: parseAddressList(decodeEncodedWords(getHeader(h, "bcc") ?? "")).map(formatAddressEntry),
+    to: parseAddressHeader(getHeader(h, "to")).map(formatAddressEntry),
+    cc: parseAddressHeader(getHeader(h, "cc")).map(formatAddressEntry),
+    bcc: parseAddressHeader(getHeader(h, "bcc")).map(formatAddressEntry),
     ...(threadId ? { threadId } : {}),
-    inReplyTo: decodeEncodedWords(getHeader(h, "in-reply-to") ?? "") || undefined,
-    references: decodeEncodedWords(getHeader(h, "references") ?? "") || undefined,
+    // msg-id lists are NOT text: never RFC 2047-decode them. A decoded
+    // "=?UTF-8?B?DQpCY2M6...?=" was a CRLF + Bcc header on the next rebuild.
+    inReplyTo: getHeader(h, "in-reply-to") || undefined,
+    references: getHeader(h, "references") || undefined,
     // Free on IMAP: the whole message was already fetched and parsed to get the
     // headers above. Callers that only wanted the headers (executeUpdateDraft's
     // full-body merge) ignore everything from here down.
@@ -25754,12 +25788,7 @@ async function imapSendDraft(
       // Step 2: Parse recipients from headers.
       const parsed = parseEmail(rawMime);
       const h = parsed.headers;
-      const toAddrs = parseAddressList(decodeEncodedWords(getHeader(h, "to") ?? ""));
-      const ccAddrs = parseAddressList(decodeEncodedWords(getHeader(h, "cc") ?? ""));
-      const bccAddrs = parseAddressList(decodeEncodedWords(getHeader(h, "bcc") ?? ""));
-      const recipients = [...toAddrs, ...ccAddrs, ...bccAddrs]
-        .map((a) => a.email)
-        .filter(Boolean);
+      const recipients = draftEnvelopeRecipients(h);
 
       // Same gate as the Gmail/Outlook pre-flight in executeSendDraft, applied here
       // because this path already holds the draft's own MIME. Nothing has been
@@ -25812,7 +25841,7 @@ async function imapSendDraft(
     if (client) await client.logout().catch(() => {});
   }
 
-  const origMsgId = decodeEncodedWords(getHeader(parsed.headers, "message-id") ?? "");
+  const origMsgId = headerText(getHeader(parsed.headers, "message-id") ?? "");
   return {
     draft_id: draftId,
     message_id: origMsgId || `<${draftId}@mcpemails.com>`,
@@ -27808,9 +27837,9 @@ async function executeCreateReplyDraft(
         const parsed = parseEmail(source.raw);
         const headers = parsed.headers;
         const resolvedReply = computeReplyRecipients({
-          from: parseAddressList(decodeEncodedWords(getHeader(headers, "from") ?? "")),
-          to: parseAddressList(decodeEncodedWords(getHeader(headers, "to") ?? "")),
-          cc: parseAddressList(decodeEncodedWords(getHeader(headers, "cc") ?? "")),
+          from: parseAddressHeader(getHeader(headers, "from")),
+          to: parseAddressHeader(getHeader(headers, "to")),
+          cc: parseAddressHeader(getHeader(headers, "cc")),
           ownAddresses: inboxOwnAddresses(inbox),
           replyAll,
         });
@@ -28756,6 +28785,25 @@ async function executeSendDraft(
       return {
         result: { content: [{ type: "text", text: draftNoRecipientsMessage(draftId) }], isError: true },
         logStatus: "error", logErrorCode: "draft_has_no_recipients",
+      };
+    }
+    if (message === "draft_has_invalid_recipient") {
+      // preTransmission re-classes the error and keeps the original as `cause`.
+      const source = err instanceof DraftInvalidRecipientError
+        ? err
+        : (err as { cause?: unknown })?.cause;
+      const address = source instanceof DraftInvalidRecipientError ? source.address : "";
+      return {
+        result: {
+          content: [{
+            type: "text",
+            text: `draft_send: the draft has a recipient that is not a valid email address${address ? ` ("${address}")` : ""}. ` +
+              "Nothing was sent and the draft was not changed. Correct its recipients with draft update, or pass to/cc/bcc on this send.",
+          }],
+          isError: true,
+          delivery_status: DELIVERY_STATUS_NOT_SENT,
+        } as ToolErrorResult["result"],
+        logStatus: "error", logErrorCode: "invalid_recipient",
       };
     }
     const isAuth = message === "gmail_auth_failed" || message === "outlook_auth_failed" ||
@@ -34224,6 +34272,10 @@ export { executeCreateDraft, executeCreateReplyDraft, executeUpdateDraft };
 // the test can go raw MIME -> parse -> partial write -> build -> parse over the
 // real functions rather than over a fake of `updateDraft`.
 export { draftContentFromRaw, draftMimeFor };
+
+// For mime-injection.test.ts: the envelope an IMAP draft_send derives from the
+// stored draft, and the display formatter draft_reply writes recipients with.
+export { draftEnvelopeRecipients, formatAddressEntry };
 
 // Exported for read-joined-body.test.ts only: the single-message read, run
 // against the same fakes, so the forwarded-message fix is pinned on the tool
