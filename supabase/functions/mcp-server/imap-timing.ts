@@ -82,12 +82,6 @@ export class ImapCallTimings {
    * is written, and a field that is sometimes there is worse than none.
    */
   logoutsDeferred = 0;
-  /**
-   * Connections taken warm from the MCP pool (mcp-imap-pool.ts) instead of
-   * dialled. Such a call makes no connect attempt, so this is also what keeps
-   * its mailbox phases on the log line.
-   */
-  pooledReuses = 0;
   readonly #phaseMs = new Map<ImapPhase, number>();
 
   /** Charge one command's wall time, and the bytes it read, to a phase. */
@@ -108,7 +102,7 @@ export class ImapCallTimings {
    * dispatch), so those lines stay exactly as they were.
    */
   logFields(): Record<string, number> | null {
-    if (this.connectAttempts === 0 && this.pooledReuses === 0) return null;
+    if (this.connectAttempts === 0) return null;
     const fields: Record<string, number> = {
       imap_connects: this.connects,
       connect_attempts: this.connectAttempts,
@@ -121,7 +115,6 @@ export class ImapCallTimings {
       search_uid_count: this.searchUidCount,
       fetch_bytes: this.fetchBytes,
       logout_deferred: this.logoutsDeferred,
-      imap_pool_reuses: this.pooledReuses,
     };
     for (const phase of PHASES) fields[`${phase}_ms`] = Math.round(this.phaseMs(phase));
     return fields;

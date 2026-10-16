@@ -105,7 +105,6 @@ Deno.test("the log fields are numbers under fixed names, and carry no mailbox da
     "fetch_ms",
     "imap_commands",
     "imap_connects",
-    "imap_pool_reuses",
     "list_ms",
     "logout_deferred",
     "logout_ms",

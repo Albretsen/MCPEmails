@@ -470,7 +470,6 @@ import {
 import { ImapSession, releaseImapClient } from "./imap-session.ts";
 import { ImapCallTimings, imapClockMs, imapTimingStore } from "./imap-timing.ts";
 import { hasTimeForNextFolder, imapSearchStoppedEarlyNote } from "./imap-search-budget.ts";
-import { mcpImapPoolStore } from "./mcp-imap-pool.ts";
 import {
   groupImapIdsByFolder,
   type ImapFolderGroup,
@@ -31770,13 +31769,7 @@ async function handleToolsCall(
   try {
     await activityInboxStore.run(logCtx, async () => {
     // ── Dispatch to the implemented tool handler ───────────────────────────
-    // Inside the MCP IMAP pool's scope, so this call may take a warm
-    // connection the previous call on this inbox left behind. See
-    // mcp-imap-pool.ts; nothing else about the call changes.
-    const outcome = await mcpImapPoolStore.run(
-      { workspaceId: apiKey.workspace_id, flow: {} },
-      () => dispatchExecutor(dispatchName, rawArgs, apiKey),
-    );
+    const outcome = await dispatchExecutor(dispatchName, rawArgs, apiKey);
     // What the draft editor recorded since the last draft result on this key
     // and inbox (card-activity.ts). HERE, on the MCP tools/call path, and not
     // in dispatchExecutor: client-api runs the same executors for the web

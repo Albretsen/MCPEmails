@@ -56,7 +56,6 @@ import {
 } from "./first-party.ts";
 import { decodeModifiedUtf7, encodeModifiedUtf7 } from "./utf7.ts";
 import { parseCopyUid } from "./imap-copyuid.ts";
-import { mcpPooledConnect } from "./mcp-imap-pool.ts";
 import { IMAP_CLIENT_ID, imapServerWantsId } from "./imap-id.ts";
 import {
   chooseImapPasswordMechanism,
@@ -666,9 +665,12 @@ export class ImapClient {
     // request, so there this is one undefined read and the dial below runs
     // exactly as it always has.
     //
-    // MCP tool calls have their own warm pool (mcp-imap-pool.ts), consulted
-    // only when the first-party hook is absent. Outside a tool call it is null.
-    const pooled = firstPartyContext.getStore()?.imapConnect ?? mcpPooledConnect();
+    // There is deliberately no MCP pool here. One shipped 2026-10-15 (PR #116)
+    // and came out: Supabase ran nearly every call in its own isolate, so 5.8%
+    // of calls reused a connection while every idle one held a slot against
+    // Yahoo's 5-connection cap, and one workspace hit 25 connection_limit
+    // errors in two minutes.
+    const pooled = firstPartyContext.getStore()?.imapConnect;
     if (pooled) return await pooled(cfg, () => ImapClient.dial(cfg));
     return await ImapClient.dial(cfg);
   }
