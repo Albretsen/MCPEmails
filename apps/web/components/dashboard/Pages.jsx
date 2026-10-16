@@ -11,6 +11,8 @@ import { CLIENT_LOGOS } from './clientLogos';
 import { useToast } from './Toast';
 import { loadSignatureEditor, peekSignatureEditor, warmSignatureEditor } from './signature-editor-loader.mjs';
 import { normalizeSenderName } from '@/lib/inboxes/sender-name';
+import { canChangeApiKey, keyScopeCap } from '@/lib/api-keys/key-authority';
+import { VIEWER_SCOPES } from '@/lib/api-keys/scopes';
 import {
   hiddenFromShown,
   inboxDraftEditorControl,
@@ -3244,8 +3246,15 @@ function CreateKeyModal({ onCreate, onCancel, existingNames = [] }) {
  * On save it calls onSave(apiKey.id, { scopes, inboxIds }). onSave throws on
  * failure so the error can be shown inline; on success the modal closes.
  */
-function EditConnectionModal({ apiKey, inboxes, onSave, onClose }) {
+function EditConnectionModal({ apiKey, inboxes, onSave, onClose, scopeCap = 'none' }) {
   const t = useTranslations('dashboard');
+  // A scope the key's holder may not be given is shown but cannot be ticked
+  // (it can always be unticked). 'viewer': only the read-only allow-list.
+  // 'no_widen': nothing beyond it that the key does not already have.
+  const heldScopes = apiKey.scopes ?? [];
+  const scopeLocked = (value) => scopeCap !== 'none'
+    && !VIEWER_SCOPES.has(value)
+    && (scopeCap === 'viewer' || !heldScopes.includes(value));
   const [selectedScopes, setSelectedScopes] = useState(apiKey.scopes ?? []);
   // inboxIds === null means "all inboxes". Otherwise it's an explicit allowlist.
   const [allInboxes, setAllInboxes] = useState(apiKey.inboxIds == null);
@@ -3348,9 +3357,18 @@ function EditConnectionModal({ apiKey, inboxes, onSave, onClose }) {
               }}>
                 {t('apiKeys.editModal.permissions')}
               </div>
+              {scopeCap !== 'none' && (
+                <div data-testid="scope-cap-note" style={{
+                  fontFamily: 'var(--font-sans)', fontSize: 12, color: 'var(--fg-3)',
+                  marginBottom: 8, lineHeight: 1.5,
+                }}>
+                  {t(scopeCap === 'viewer' ? 'apiKeys.editModal.viewerCapNote' : 'apiKeys.editModal.noWidenNote')}
+                </div>
+              )}
               <div style={{ display: 'flex', flexDirection: 'column', gap: 6 }}>
                 {SCOPE_OPTIONS.map(opt => {
                   const checked = selectedScopes.includes(opt.value);
+                  const locked = !checked && scopeLocked(opt.value);
                   return (
                     <label
                       key={opt.value}
@@ -3360,16 +3378,16 @@ function EditConnectionModal({ apiKey, inboxes, onSave, onClose }) {
                         border: `1px solid ${checked ? 'var(--border-focus)' : 'var(--border-1)'}`,
                         borderRadius: 8,
                         background: checked ? 'var(--brand-soft)' : 'var(--bg-surface)',
-                        cursor: submitting ? 'not-allowed' : 'pointer',
+                        cursor: submitting || locked ? 'not-allowed' : 'pointer',
                         transition: 'border-color 120ms, background 120ms',
-                        opacity: submitting ? 0.7 : 1,
+                        opacity: submitting ? 0.7 : locked ? 0.5 : 1,
                       }}
                     >
                       <input
                         type="checkbox"
                         checked={checked}
-                        onChange={() => !submitting && toggleScope(opt.value)}
-                        disabled={submitting}
+                        onChange={() => !submitting && !locked && toggleScope(opt.value)}
+                        disabled={submitting || locked}
                         style={{ marginTop: 1, accentColor: 'var(--brand)', flexShrink: 0 }}
                       />
                       <div>
@@ -3838,8 +3856,24 @@ function RevokeDialog({ apiKey, revoking, onConfirm, onCancel }) {
 }
 
 /* ---------------- API Keys ---------------- */
-export function KeysPage({ keys, inboxes = [], mcpUrl, onCreate, onKeyCreated, onRevoke, onUpdate }) {
+export function KeysPage({ keys, inboxes = [], mcpUrl, onCreate, onKeyCreated, onRevoke, onUpdate, userRole, currentUserId, members = [] }) {
   const t = useTranslations('dashboard');
+  // Edit and Revoke are offered only on keys this person may change: any key
+  // for an owner/admin, otherwise only their own. Same rule the two routes
+  // enforce (lib/api-keys/key-authority.ts), so nobody is shown a button that
+  // can only answer 403. When the role is not known (older callers), keep the
+  // buttons and let the server decide, as before.
+  const mayChange = (k) => (userRole == null
+    ? true
+    : canChangeApiKey({ callerRole: userRole, callerId: currentUserId ?? '', keyCreatorId: k.createdBy }));
+  // The scope cap follows the key's HOLDER: a viewer's key stays read-only
+  // whoever edits it. A creator who is not in the member list (left, or not
+  // loaded) may keep but not widen.
+  const capFor = (k) => {
+    if (k.createdBy && k.createdBy === currentUserId && userRole) return keyScopeCap(userRole);
+    const holder = members.find(m => m.userId === k.createdBy);
+    return keyScopeCap(holder?.role ?? null);
+  };
   const [copiedId, setCopiedId] = useState(null);
   // The key object pending revoke confirmation, or null.
   const [confirmKey, setConfirmKey] = useState(null);
@@ -3972,12 +4006,18 @@ export function KeysPage({ keys, inboxes = [], mcpUrl, onCreate, onKeyCreated, o
                     </div>
                   </td>
                   <td className="right">
-                    <div style={{ display: "flex", gap: 6, justifyContent: "flex-end" }}>
-                      {onUpdate && (
-                        <Btn variant="secondary" size="sm" icon="settings" onClick={() => setEditKey(k)}>{t('apiKeys.editAccess')}</Btn>
-                      )}
-                      <Btn variant="danger" size="sm" onClick={() => handleRevokeRequest(k)}>{t('apiKeys.revoke')}</Btn>
-                    </div>
+                    {mayChange(k) ? (
+                      <div style={{ display: "flex", gap: 6, justifyContent: "flex-end" }}>
+                        {onUpdate && (
+                          <Btn variant="secondary" size="sm" icon="settings" onClick={() => setEditKey(k)}>{t('apiKeys.editAccess')}</Btn>
+                        )}
+                        <Btn variant="danger" size="sm" onClick={() => handleRevokeRequest(k)}>{t('apiKeys.revoke')}</Btn>
+                      </div>
+                    ) : (
+                      <span data-testid="key-not-yours" style={{ fontFamily: "var(--font-sans)", fontSize: 12, color: "var(--fg-3)" }}>
+                        {t('apiKeys.notYours')}
+                      </span>
+                    )}
                   </td>
                 </tr>
               ))}
@@ -4065,6 +4105,7 @@ export function KeysPage({ keys, inboxes = [], mcpUrl, onCreate, onKeyCreated, o
       {editKey && (
         <EditConnectionModal
           apiKey={editKey}
+          scopeCap={userRole == null ? 'none' : capFor(editKey)}
           inboxes={inboxes}
           onSave={onUpdate}
           onClose={() => setEditKey(null)}

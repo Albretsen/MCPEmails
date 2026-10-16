@@ -252,6 +252,7 @@
     "accessCount": "{count, plural, other {# 个收件箱}}",
     "editAccess": "编辑访问权限",
     "revoke": "撤销",
+    "notYours": "只有此密钥的创建者或管理员可以更改它。",
     "emptyTitle": "尚无 API 密钥",
     "emptyDesc": "创建密钥以将 Claude Desktop 或任意 MCP 客户端连接到你的收件箱。",
     "never": "从未",
@@ -310,7 +311,9 @@
       "errInboxRequired": "请至少选择一个收件箱，或选择所有收件箱。",
       "errSaveFailed": "更新访问权限失败。请重试。",
       "saving": "正在保存…",
-      "save": "保存更改"
+      "save": "保存更改",
+      "viewerCapNote": "此密钥属于查看者，因此只能拥有只读权限。",
+      "noWidenNote": "此密钥的创建者已不在该工作区。你可以移除权限，但不能添加只读以外的新权限。"
     },
     "revealModal": {
       "title": "复制你的 API 密钥",

@@ -252,6 +252,7 @@
     "accessCount": "{count, plural, one {# innboks} other {# innbokser}}",
     "editAccess": "Rediger tilgang",
     "revoke": "Opphev",
+    "notYours": "Bare den som opprettet nøkkelen, eller en administrator, kan endre den.",
     "emptyTitle": "Ingen API-nøkler ennå",
     "emptyDesc": "Opprett en nøkkel for å koble Claude Desktop eller en hvilken som helst MCP-klient til innboksene dine.",
     "never": "Aldri",
@@ -310,7 +311,9 @@
       "errInboxRequired": "Velg minst én innboks, eller velg alle innbokser.",
       "errSaveFailed": "Kunne ikke oppdatere tilgangen. Prøv igjen.",
       "saving": "Lagrer…",
-      "save": "Lagre endringer"
+      "save": "Lagre endringer",
+      "viewerCapNote": "Denne nøkkelen tilhører en leser, så den kan bare ha lesetilganger.",
+      "noWidenNote": "Den som opprettet nøkkelen, er ikke lenger med i arbeidsområdet. Du kan fjerne tilganger, men ikke legge til nye utover lesetilgang."
     },
     "revealModal": {
       "title": "Kopier API-nøkkelen din",

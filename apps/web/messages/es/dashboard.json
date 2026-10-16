@@ -252,6 +252,7 @@
     "accessCount": "{count, plural, one {# bandeja} other {# bandejas}}",
     "editAccess": "Editar acceso",
     "revoke": "Revocar",
+    "notYours": "Solo quien creó esta clave o un administrador puede cambiarla.",
     "emptyTitle": "Aún no hay claves de API",
     "emptyDesc": "Crea una clave para conectar Claude Desktop o cualquier cliente MCP a tus bandejas.",
     "never": "Nunca",
@@ -310,7 +311,9 @@
       "errInboxRequired": "Selecciona al menos una bandeja o elige todas las bandejas.",
       "errSaveFailed": "No se pudo actualizar el acceso. Inténtalo de nuevo.",
       "saving": "Guardando…",
-      "save": "Guardar cambios"
+      "save": "Guardar cambios",
+      "viewerCapNote": "Esta clave pertenece a un lector, así que solo puede tener permisos de lectura.",
+      "noWidenNote": "Quien creó esta clave ya no está en el espacio de trabajo. Puedes quitar permisos, pero no añadir otros que no sean de lectura."
     },
     "revealModal": {
       "title": "Copia tu clave de API",

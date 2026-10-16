@@ -24,7 +24,7 @@ import { VALID_SCOPES, VIEWER_SCOPES, isValidScope, type Scope } from '@/lib/api
  *   4. Generate a cryptographically secure key (256 bits of CSPRNG entropy).
  *      Format: mcpe_<64 hex chars> (total 69 chars).
  *   5. Hash the raw key with SHA-256. Only the hash is stored in the database.
- *   6. Insert the api_keys row.
+ *   6. Insert the api_keys row (service role, after every check passed).
  *   7. Return the row data plus rawKey in the 201 response.
  *      rawKey is included ONCE and cannot be retrieved again.
  *
@@ -197,7 +197,15 @@ export async function POST(request: NextRequest): Promise<NextResponse> {
   const { rawKey, keyHash, keyPrefix } = generateApiKey();
 
   // 6. Insert into database: only keyHash and keyPrefix are persisted, never rawKey.
-  const { data: row, error: insertError } = await supabase
+  //    Through the SERVICE-ROLE client, and only here, after every check above
+  //    (scope vocabulary, viewer allow-list, rate limit, plan cap, unique name)
+  //    has passed. Members have no INSERT grant on api_keys any more
+  //    (migration 20261016160300): a direct PostgREST insert let a viewer mint
+  //    a send-capable key with a key_hash of their choosing, skipping all of
+  //    those checks. workspace_id and created_by come from the authenticated
+  //    session and the membership row read above, never from the body.
+  const service = createServiceRoleClient();
+  const { data: row, error: insertError } = await service
     .from('api_keys')
     .insert({
       workspace_id: workspaceId,
@@ -215,7 +223,7 @@ export async function POST(request: NextRequest): Promise<NextResponse> {
     console.error('[create-api-key] Insert failed:', insertError?.message);
     return NextResponse.json({ error: 'Failed to create API key.' }, { status: 500 });
   }
-  await recordProductFunnelEvent(createServiceRoleClient(), { workspaceId, stage: 'credential_created', outcome: 'success', category: 'api_key' });
+  await recordProductFunnelEvent(service, { workspaceId, stage: 'credential_created', outcome: 'success', category: 'api_key' });
 
   // 7. Return the row data plus rawKey ONCE.
   //    The frontend must display this to the user immediately and never request it again.

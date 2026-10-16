@@ -252,6 +252,7 @@
     "accessCount": "{count, plural, one {# inbox} other {# inboxes}}",
     "editAccess": "Edit access",
     "revoke": "Revoke",
+    "notYours": "Only its creator or an admin can change this key.",
     "emptyTitle": "No API keys yet",
     "emptyDesc": "Create a key to connect Claude Desktop or any MCP client to your inboxes.",
     "never": "Never",
@@ -310,7 +311,9 @@
       "errInboxRequired": "Select at least one inbox, or choose all inboxes.",
       "errSaveFailed": "Failed to update access. Please try again.",
       "saving": "Saving…",
-      "save": "Save changes"
+      "save": "Save changes",
+      "viewerCapNote": "This key belongs to a viewer, so it can only have read-only permissions.",
+      "noWidenNote": "This key's creator is no longer in the workspace. You can remove permissions, but not add new ones beyond read-only."
     },
     "revealModal": {
       "title": "Copy your API key",

@@ -125,15 +125,18 @@ SELECT is_empty(
   '[inboxes] Charlie cannot UPDATE Dave''s inbox (0 rows affected)'
 );
 
--- 1d. Charlie cannot update Dave's API key
-SELECT is_empty(
+-- 1d. Charlie cannot update Dave's API key. Since 20261016160300 browser
+-- sessions hold no UPDATE grant on api_keys at all, so this is a permission
+-- error rather than a zero-row update.
+SELECT throws_ok(
   $$
     UPDATE public.api_keys
     SET    name = 'hacked'
     WHERE  id = 'dd222222-0000-0000-0000-000000000002'
-    RETURNING id
   $$,
-  '[api_keys] Charlie cannot UPDATE Dave''s key (0 rows affected)'
+  '42501',
+  NULL,
+  '[api_keys] Charlie cannot UPDATE Dave''s key'
 );
 
 -- 1e. Charlie cannot update Dave's workspace. Since
