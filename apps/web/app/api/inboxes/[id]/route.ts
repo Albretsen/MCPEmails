@@ -430,18 +430,27 @@ export async function PATCH(
 
   // 2. Fetch the inbox via the RLS-scoped client. A returned row authorizes the
   //    edit (the SELECT policy enforces workspace membership + not deleted).
-  const { data: inbox, error: fetchError } = await supabase
-    .from('inboxes')
-    .select('id, workspace_id')
-    .eq('id', inboxId)
-    .is('deleted_at', null)
-    .single();
+  //    The current review setting is read too, so a body that merely restates
+  //    it (the signature form sends the whole form) is not treated as a change
+  //    to the owner/admin-only review gate below.
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  const { data: inbox, error: fetchError } = await selectTolerantly<any>(
+    ['id', 'workspace_id', 'send_approval_required', 'send_review_mode'],
+    PENDING_INBOX_COLUMNS,
+    (columns) =>
+      supabase
+        .from('inboxes')
+        .select(columns)
+        .eq('id', inboxId)
+        .is('deleted_at', null)
+        .single(),
+  );
 
   if (fetchError || !inbox) {
     return NextResponse.json({ error: 'Inbox not found.' }, { status: 404 });
   }
 
-  const workspaceId = inbox.workspace_id;
+  const workspaceId: string = inbox.workspace_id;
 
   // 2b. Role gate. Two levels, because this handler writes two very different
   //     kinds of setting through one body:
@@ -462,7 +471,25 @@ export async function PATCH(
       { status: 403 },
     );
   }
-  const touchesReviewGate = 'send_review_mode' in input || 'send_approval_required' in input;
+  //
+  //     "Touches" means CHANGES. The dashboard's signature form sends the
+  //     review fields with every save, so keying this on the mere presence of
+  //     the keys refused every signature save by a member. A value equal to the
+  //     stored one is dropped from the update and does not need owner/admin.
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  const reviewUpdate = update as any;
+  if ('send_review_mode' in reviewUpdate || 'send_approval_required' in reviewUpdate) {
+    const storedApproval = inbox.send_approval_required === true;
+    const storedMode =
+      inbox.send_review_mode === 'off' || inbox.send_review_mode === 'inline' || inbox.send_review_mode === 'dashboard'
+        ? inbox.send_review_mode
+        : storedApproval ? 'dashboard' : 'off';
+    if (reviewUpdate.send_review_mode === storedMode && reviewUpdate.send_approval_required === storedApproval) {
+      delete reviewUpdate.send_review_mode;
+      delete reviewUpdate.send_approval_required;
+    }
+  }
+  const touchesReviewGate = 'send_review_mode' in reviewUpdate || 'send_approval_required' in reviewUpdate;
   if (touchesReviewGate && !canManageWorkspace(callerRole)) {
     return NextResponse.json(
       insufficientRoleBody('Only workspace owners and admins can change the send review setting.'),

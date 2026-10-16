@@ -56,6 +56,7 @@ interface World {
   fetches: string[];
   /** What the stubbed Gmail probe answers. */
   gmailOk: boolean;
+  uploads: Array<{ key: string; contentType: string }>;
 }
 
 let world: World;
@@ -77,6 +78,8 @@ function appPasswordRow(): Record<string, unknown> {
     status: 'error',
     last_error: 'old',
     deleted_at: null,
+    send_review_mode: 'dashboard',
+    send_approval_required: true,
   };
 }
 
@@ -101,6 +104,7 @@ function reset(overrides: Partial<World> = {}): void {
     imapLogins: [],
     fetches: [],
     gmailOk: true,
+    uploads: [],
     ...overrides,
   };
 }
@@ -131,6 +135,9 @@ function resolve(call: Call): { data: unknown; error: unknown } {
   if (call.table === 'inboxes' && call.client === 'user') {
     // authenticated has no INSERT/UPDATE/DELETE on inboxes any more.
     return { data: null, error: { code: '42501', message: 'permission denied for table inboxes' } };
+  }
+  if (call.table === 'inboxes' && call.op === 'update' && world.row) {
+    return { data: { ...world.row, ...(call.payload as Record<string, unknown>) }, error: null };
   }
   if (call.table === 'workspaces' && call.op === 'update') return { data: [], error: null };
   return { data: null, error: null };
@@ -174,6 +181,15 @@ function client(kind: 'user' | 'service') {
     },
     auth: {
       getUser: async () => ({ data: { user: USER }, error: null }),
+    },
+    storage: {
+      from: () => ({
+        upload: async (key: string, _bytes: Uint8Array, opts: { contentType: string }) => {
+          world.uploads.push({ key, contentType: opts.contentType });
+          return { error: null };
+        },
+        getPublicUrl: (key: string) => ({ data: { publicUrl: `https://storage.test/${key}` } }),
+      }),
     },
   };
 }
@@ -243,6 +259,7 @@ nodeMock.module('@/lib/email/relay-fallback', {
     shouldTryRelayAfter: () => false,
   },
 });
+nodeMock.module('@/lib/rate-limit', { namedExports: { checkRateLimit: async () => false } });
 nodeMock.module('@/lib/analytics/product-funnel', {
   namedExports: { recordProductFunnelEvent: async () => {} },
 });
@@ -258,6 +275,8 @@ test.after(() => {
 
 const checkRoute = await import('./[id]/check/route.ts');
 const inboxRoute = await import('./[id]/route.ts');
+const imageRoute = await import('./[id]/signature/image/route.ts');
+const { sniffImageType } = await import('@/lib/inboxes/image-sniff');
 
 const params = { params: Promise.resolve({ id: INBOX }) };
 const post = () =>
@@ -401,4 +420,145 @@ test('disconnect: an app-password inbox has nothing to revoke and reads no token
   assert.equal(world.fetches.length, 0);
   assert.ok(inboxCalls('service').some((c) => c.op === 'update'));
   assertUserClientNeverTouchesSecretsOrWrites();
+});
+
+// ── PATCH /api/inboxes/[id]: the review gate is touched only by a CHANGE ────
+//
+// The signature form used to send send_review_mode / send_approval_required
+// with every save, and PATCH treated their mere presence as touching the
+// owner/admin-only review gate, so a member could not save a signature.
+
+const patch = (body: unknown) =>
+  inboxRoute.PATCH(
+    new Request(`https://mcpemails.test/api/inboxes/${INBOX}`, {
+      method: 'PATCH',
+      headers: { 'content-type': 'application/json' },
+      body: JSON.stringify(body),
+    }) as never,
+    params,
+  );
+
+const SIGNATURE = { signature_text: 'Regards', signature_enabled: true, signature_reply_mode: 'always' };
+
+test('PATCH: a member saves a signature that restates the stored review mode', async () => {
+  reset({ role: 'member' });
+  const res = await patch({ ...SIGNATURE, send_review_mode: 'dashboard', send_approval_required: true });
+  assert.equal(res.status, 200);
+  const write = inboxCalls('service').find((c) => c.op === 'update');
+  assert.ok(write);
+  assertScopedToAuthorizedInbox(write);
+  const payload = write.payload as Record<string, unknown>;
+  assert.equal(payload.signature_text, 'Regards');
+  assert.ok(!('send_review_mode' in payload), 'an unchanged review mode is not written');
+  assert.ok(!('send_approval_required' in payload));
+  assertUserClientNeverTouchesSecretsOrWrites();
+});
+
+test('PATCH: a member saves a signature without review fields', async () => {
+  reset({ role: 'member' });
+  const res = await patch(SIGNATURE);
+  assert.equal(res.status, 200);
+});
+
+test('PATCH: a member who CHANGES the review mode is refused, and nothing is written', async () => {
+  reset({ role: 'member' });
+  const res = await patch({ ...SIGNATURE, send_review_mode: 'off', send_approval_required: false });
+  assert.equal(res.status, 403);
+  assert.equal((await res.json()).error_code, 'insufficient_role');
+  assert.equal(inboxCalls('service').filter((c) => c.op === 'update').length, 0);
+});
+
+test('PATCH: a member flipping only the legacy boolean is refused', async () => {
+  reset({ role: 'member' });
+  const res = await patch({ send_approval_required: false });
+  assert.equal(res.status, 403);
+});
+
+test('PATCH: a legacy row (no mode) restated through its boolean is not a change', async () => {
+  reset({ role: 'member', row: { ...appPasswordRow(), send_review_mode: null, send_approval_required: true } });
+  const res = await patch({ ...SIGNATURE, send_review_mode: 'dashboard', send_approval_required: true });
+  assert.equal(res.status, 200);
+});
+
+for (const role of ['owner', 'admin']) {
+  test(`PATCH: ${role} changes the review mode`, async () => {
+    reset({ role });
+    const res = await patch({ send_review_mode: 'off', send_approval_required: false });
+    assert.equal(res.status, 200);
+    const payload = inboxCalls('service').find((c) => c.op === 'update')!.payload as Record<string, unknown>;
+    assert.equal(payload.send_review_mode, 'off');
+    assert.equal(payload.send_approval_required, false);
+  });
+}
+
+test('PATCH: a viewer is refused even a signature-only save', async () => {
+  reset({ role: 'viewer' });
+  const res = await patch(SIGNATURE);
+  assert.equal(res.status, 403);
+  assert.equal(inboxCalls('service').filter((c) => c.op === 'update').length, 0);
+});
+
+// ── POST /api/inboxes/[id]/signature/image ─────────────────────────────────
+
+const PNG = new Uint8Array([0x89, 0x50, 0x4e, 0x47, 0x0d, 0x0a, 0x1a, 0x0a, 0, 0, 0, 13]);
+const JPEG = new Uint8Array([0xff, 0xd8, 0xff, 0xe0, 0, 16]);
+const GIF = new TextEncoder().encode('GIF89a......');
+const WEBP = new Uint8Array([0x52, 0x49, 0x46, 0x46, 4, 0, 0, 0, 0x57, 0x45, 0x42, 0x50, 0x56, 0x50]);
+const SVG = new TextEncoder().encode('<svg xmlns="http://www.w3.org/2000/svg" onload="alert(1)"/>');
+const HTML = new TextEncoder().encode('<!doctype html><script>alert(1)</script>');
+
+const upload = (bytes: Uint8Array, type: string, name = 'logo.png') => {
+  const form = new FormData();
+  form.append('file', new File([bytes as Uint8Array<ArrayBuffer>], name, { type }));
+  return imageRoute.POST(
+    new Request(`https://mcpemails.test/api/inboxes/${INBOX}/signature/image`, { method: 'POST', body: form }) as never,
+    params,
+  );
+};
+
+test('image: sniffImageType recognises the four raster formats by their bytes and nothing else', () => {
+  assert.deepEqual(sniffImageType(PNG), { contentType: 'image/png', ext: 'png' });
+  assert.deepEqual(sniffImageType(JPEG), { contentType: 'image/jpeg', ext: 'jpg' });
+  assert.deepEqual(sniffImageType(GIF), { contentType: 'image/gif', ext: 'gif' });
+  assert.deepEqual(sniffImageType(WEBP), { contentType: 'image/webp', ext: 'webp' });
+  assert.equal(sniffImageType(SVG), null);
+  assert.equal(sniffImageType(HTML), null);
+  assert.equal(sniffImageType(new Uint8Array([])), null);
+  assert.equal(sniffImageType(new Uint8Array([0x89, 0x50])), null, 'a truncated header is not a PNG');
+});
+
+test('image: a viewer gets 403 and nothing is uploaded', async () => {
+  reset({ role: 'viewer' });
+  const res = await upload(PNG, 'image/png');
+  assert.equal(res.status, 403);
+  assert.equal((await res.json()).error_code, 'insufficient_role');
+  assert.equal(world.uploads.length, 0);
+});
+
+for (const role of ['owner', 'admin', 'member']) {
+  test(`image: ${role} uploads a PNG; stored with the sniffed type, under the authorized workspace`, async () => {
+    reset({ role });
+    const res = await upload(PNG, 'image/png');
+    assert.equal(res.status, 201);
+    assert.equal(world.uploads.length, 1);
+    assert.equal(world.uploads[0].contentType, 'image/png');
+    assert.ok(world.uploads[0].key.startsWith(`${WS}/${INBOX}/`) && world.uploads[0].key.endsWith('.png'));
+  });
+}
+
+test('image: an SVG or HTML file declared as image/png is refused', async () => {
+  for (const bytes of [SVG, HTML]) {
+    reset({ role: 'member' });
+    const res = await upload(bytes, 'image/png');
+    assert.equal(res.status, 400);
+    assert.equal(world.uploads.length, 0);
+  }
+});
+
+test('image: a real JPEG declared as image/png is stored as what it is', async () => {
+  reset({ role: 'member' });
+  const res = await upload(JPEG, 'image/png');
+  assert.equal(res.status, 201);
+  assert.equal(world.uploads[0].contentType, 'image/jpeg');
+  assert.ok(world.uploads[0].key.endsWith('.jpg'));
 });

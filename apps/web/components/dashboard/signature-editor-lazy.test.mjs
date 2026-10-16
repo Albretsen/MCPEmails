@@ -274,8 +274,6 @@ test('early save: nothing is sent until the editor is ready, then the STORED sig
     signature_text: STORED_TEXT,
     signature_enabled: true,
     signature_reply_mode: 'always',
-    send_review_mode: 'off',
-    send_approval_required: false,
   });
   assert.deepEqual(view.unhandled, []);
 });

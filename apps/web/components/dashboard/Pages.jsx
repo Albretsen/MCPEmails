@@ -1784,6 +1784,8 @@ export function InboxesPage({ inboxes, planLimits, stripePrices = null, business
           draftEditorRolledOut={draftEditorRolledOut}
           draftEditorWorkspaceHidden={draftEditorWorkspaceHidden}
           canManageInbox={userRole !== 'viewer'}
+          // The review gate is owner/admin-only (lib/workspace/roles.ts).
+          canManageReview={userRole !== 'viewer' && userRole !== 'member'}
           historyDays={historyDays}
         />
       )}
@@ -2094,7 +2096,7 @@ export function resolveReviewMode(inbox) {
  * here, is that nothing is delivered until a signed-in owner or admin approves
  * it in the browser, which holds in both `inline` and `dashboard`.
  */
-function ReviewModeSelector({ value, onChange, disabled }) {
+function ReviewModeSelector({ value, onChange, disabled, lockedNote = null }) {
   const t = useTranslations('dashboard');
   return (
     <div className="review-mode">
@@ -2117,6 +2119,7 @@ function ReviewModeSelector({ value, onChange, disabled }) {
           </span>
         </label>
       ))}
+      {lockedNote ? <p className="review-mode-note">{lockedNote}</p> : null}
       <p className="review-mode-note">{t('approvals.mode.guarantee')}</p>
     </div>
   );
@@ -2130,7 +2133,7 @@ function ReviewModeSelector({ value, onChange, disabled }) {
    it. Normalisation (control chars and angle brackets stripped, whitespace
    collapsed, 100-char cap) is shared with the PATCH route so the preview and
    the stored value never disagree. */
-function SenderNameEditor({ inbox, onSave, t }) {
+function SenderNameEditor({ inbox, onSave, t, readOnly = false }) {
   const [value, setValue] = useState(inbox.displayName ?? '');
   const [saving, setSaving] = useState(false);
 
@@ -2149,7 +2152,7 @@ function SenderNameEditor({ inbox, onSave, t }) {
   const inputId = `sender-name-${inbox.id}`;
 
   const handleSave = async () => {
-    if (saving || !dirty) return;
+    if (saving || !dirty || readOnly) return;
     setSaving(true);
     try {
       await onSave(inbox.id, nextName);
@@ -2191,13 +2194,13 @@ function SenderNameEditor({ inbox, onSave, t }) {
               handleSave();
             }
           }}
-          disabled={saving}
+          disabled={saving || readOnly}
           style={{ flex: 1, minWidth: 0, height: 32, padding: '0 10px' }}
         />
         <Btn
           variant="primary"
           size="sm"
-          disabled={!dirty || saving}
+          disabled={!dirty || saving || readOnly}
           onClick={handleSave}
         >
           {saving ? t('inboxes.detail.senderName.saving') : t('inboxes.detail.senderName.save')}
@@ -2226,7 +2229,13 @@ function SenderNameEditor({ inbox, onSave, t }) {
   );
 }
 
-function SignatureEditor({ inbox, onSave, t }) {
+/**
+ * `readOnly`: a viewer. Every control is disabled and nothing is saved (the
+ * PATCH and image routes refuse a viewer). `canManageReview`: owner/admin. The
+ * review gate is theirs alone, so for a member the selector is disabled with
+ * the reason, and the save only sends the review fields when they changed.
+ */
+function SignatureEditor({ inbox, onSave, t, readOnly = false, canManageReview = true }) {
   const wasImported = inbox.signatureSource === 'gmail_import';
 
   const [enabled, setEnabled] = useState(inbox.signatureEnabled ?? true);
@@ -2406,7 +2415,7 @@ function SignatureEditor({ inbox, onSave, t }) {
   }, [inbox.id, editorModule]); // eslint-disable-line react-hooks/exhaustive-deps
 
   const handleSave = async () => {
-    if (saving || awaitingEditor) return;
+    if (saving || awaitingEditor || readOnly) return;
     setSizeError('');
     setSaveBlocked(false);
 
@@ -2470,12 +2479,15 @@ function SignatureEditor({ inbox, onSave, t }) {
         ...(canEmbedImages && embedImages !== (inbox.signatureEmbedImages ?? false)
           ? { signature_embed_images: embedImages }
           : {}),
-        // Both columns are sent: `send_review_mode` is the new three-way
-        // setting, `send_approval_required` is the boolean the edge function
-        // still gates on. The API keeps them consistent; remove the boolean
-        // once the server reads the mode directly.
-        send_review_mode: reviewMode,
-        send_approval_required: reviewMode !== 'off',
+        // Sent only when the selection changed: the review gate is
+        // owner/admin-only, and a member saving a signature must not be
+        // refused for restating it. Both columns go together:
+        // `send_review_mode` is the three-way setting, `send_approval_required`
+        // the boolean the edge function still gates on. The API keeps them
+        // consistent; remove the boolean once the server reads the mode.
+        ...(reviewMode !== resolveReviewMode(inbox)
+          ? { send_review_mode: reviewMode, send_approval_required: reviewMode !== 'off' }
+          : {}),
       });
     } catch {
       // App.jsx already showed an error toast; keep the form as-is for retry.
@@ -2492,6 +2504,8 @@ function SignatureEditor({ inbox, onSave, t }) {
   // `saving` alone, so an editor that mounts during that wait is not created
   // read-only.
   const busy = saving || awaitingEditor;
+  // Every control below is also off for a viewer.
+  const locked = busy || readOnly;
   const canEmbedImages = inbox.provider !== 'outlook';
 
   return (
@@ -2505,14 +2519,19 @@ function SignatureEditor({ inbox, onSave, t }) {
             type="checkbox"
             checked={enabled}
             onChange={() => setEnabled(v => !v)}
-            disabled={busy}
+            disabled={locked}
             style={{ accentColor: 'var(--brand)' }}
           />
           {t('inboxes.detail.signature.enabled')}
         </label>
       </div>
 
-      <ReviewModeSelector value={reviewMode} onChange={setReviewMode} disabled={busy} />
+      <ReviewModeSelector
+        value={reviewMode}
+        onChange={setReviewMode}
+        disabled={locked || !canManageReview}
+        lockedNote={!readOnly && !canManageReview ? t('approvals.mode.ownerAdminOnly') : null}
+      />
 
       {wasImported && (
         <div style={{ ...label, marginBottom: 8, color: 'var(--fg-2)' }}>
@@ -2530,7 +2549,7 @@ function SignatureEditor({ inbox, onSave, t }) {
             initialText={
               inbox.signatureText ?? (wasImported ? htmlToPlainSeed(inbox.signatureHtml) : '')
             }
-            disabled={saving || !enabled}
+            disabled={saving || !enabled || readOnly}
             onChange={syncPreview}
             onReady={() => handleEditorReady(inbox.id)}
           />
@@ -2598,7 +2617,7 @@ function SignatureEditor({ inbox, onSave, t }) {
               type="checkbox"
               checked={embedImages}
               onChange={() => setEmbedImages(v => !v)}
-              disabled={busy}
+              disabled={locked}
               style={{ accentColor: 'var(--brand)' }}
             />
             {t('inboxes.detail.signature.embedImages')}
@@ -2619,7 +2638,7 @@ function SignatureEditor({ inbox, onSave, t }) {
           className="input"
           value={replyMode}
           onChange={e => setReplyMode(e.target.value)}
-          disabled={busy}
+          disabled={locked}
           style={{ height: 32, padding: '0 28px 0 8px', flex: '0 0 auto', width: 'auto' }}
         >
           <option value="always">{t('inboxes.detail.signature.replyModeAlways')}</option>
@@ -2630,7 +2649,7 @@ function SignatureEditor({ inbox, onSave, t }) {
         <Btn
           variant="primary"
           size="sm"
-          disabled={busy}
+          disabled={locked}
           onClick={handleSave}
         >
           {busy ? t('inboxes.detail.signature.saving') : t('inboxes.detail.signature.save')}
@@ -2743,7 +2762,7 @@ const InboxDetailRow = ({ label, children }) => (
   </div>
 );
 
-function InboxDetailModal({ inbox, checking, onClose, onReconnect, onCheck, onDisconnect, onSaveSignature, onSaveSenderName, onSaveDraftEditorHidden, draftEditorRolledOut = false, draftEditorWorkspaceHidden = false, canManageInbox = true, historyDays = 30 }) {
+function InboxDetailModal({ inbox, checking, onClose, onReconnect, onCheck, onDisconnect, onSaveSignature, onSaveSenderName, onSaveDraftEditorHidden, draftEditorRolledOut = false, draftEditorWorkspaceHidden = false, canManageInbox = true, canManageReview = true, historyDays = 30 }) {
   const t = useTranslations('dashboard');
   if (!inbox) return null;
 
@@ -2870,8 +2889,11 @@ function InboxDetailModal({ inbox, checking, onClose, onReconnect, onCheck, onDi
                 <span>{t(`approvals.mode.${resolveReviewMode(inbox)}`)}</span>
               </summary>
               <p>Set the sender name and signature, and choose where a prepared send waits for a human decision.</p>
-              {onSaveSenderName && <SenderNameEditor inbox={inbox} onSave={onSaveSenderName} t={t} />}
-              <SignatureEditor inbox={inbox} onSave={onSaveSignature} t={t} />
+              {!canManageInbox ? (
+                <p className="review-mode-note" role="note">{t('inboxes.viewerActionsNote')}</p>
+              ) : null}
+              {onSaveSenderName && <SenderNameEditor inbox={inbox} onSave={onSaveSenderName} t={t} readOnly={!canManageInbox} />}
+              <SignatureEditor inbox={inbox} onSave={onSaveSignature} t={t} readOnly={!canManageInbox} canManageReview={canManageInbox && canManageReview} />
             </details>
           )}
 

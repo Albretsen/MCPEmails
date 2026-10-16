@@ -163,7 +163,7 @@
     "statusError": "Error",
     "reconnect": "Reconnect",
     "checkConnection": "Check connection",
-    "viewerActionsNote": "Workspace viewers cannot check, reconnect or disconnect an inbox.",
+    "viewerActionsNote": "Workspace viewers can see this inbox but cannot check, reconnect, disconnect or edit it.",
     "disconnectInbox": "Disconnect inbox",
     "emptyTitle": "No inboxes connected",
     "emptyDesc": "Connect any IMAP mailbox, Gmail, or Outlook to give your agents access.",
@@ -767,7 +767,8 @@
       "inlineHint": "A card appears in the AI conversation showing exactly what will be sent. You can reject it there; approving opens a page you have to be signed in to use.",
       "dashboard": "Review in the dashboard only",
       "dashboardHint": "No card in the conversation. The assistant is told the send is waiting, and you decide here.",
-      "guarantee": "In both review modes the email is prepared but not delivered. Approving happens only in a signed-in browser session held by a workspace owner or admin, which the assistant does not have. The review card is a convenience, not a permission boundary."
+      "guarantee": "In both review modes the email is prepared but not delivered. Approving happens only in a signed-in browser session held by a workspace owner or admin, which the assistant does not have. The review card is a convenience, not a permission boundary.",
+      "ownerAdminOnly": "Only workspace owners and admins can change the review setting."
     },
     "panel": {
       "decidedTitle": "Recently decided",

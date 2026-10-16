@@ -163,7 +163,7 @@
     "statusError": "Erreur",
     "reconnect": "Reconnecter",
     "checkConnection": "Vérifier la connexion",
-    "viewerActionsNote": "Les lecteurs de l’espace de travail ne peuvent pas vérifier, reconnecter ni déconnecter une boîte.",
+    "viewerActionsNote": "Les lecteurs de l’espace de travail peuvent voir cette boîte, mais pas la vérifier, la reconnecter, la déconnecter ni la modifier.",
     "disconnectInbox": "Déconnecter la boîte",
     "emptyTitle": "Aucune boîte connectée",
     "emptyDesc": "Connectez n’importe quelle boîte IMAP, Gmail ou Outlook pour donner accès à vos agents.",
@@ -767,7 +767,8 @@
       "inlineHint": "Une carte apparaît dans la conversation et montre exactement ce qui sera envoyé. Vous pouvez rejeter depuis la carte ; approuver ouvre une page qui exige d'être connecté.",
       "dashboard": "Revue uniquement dans le tableau de bord",
       "dashboardHint": "Aucune carte dans la conversation. L'assistant est informé que l'envoi attend, et vous décidez ici.",
-      "guarantee": "Dans les deux modes de revue, l'e-mail est préparé mais pas remis. L'approbation n'a lieu que dans une session de navigateur connectée d'un propriétaire ou d'un administrateur de l'espace, ce dont l'assistant ne dispose pas. La carte de revue est un confort, pas une frontière de permissions."
+      "guarantee": "Dans les deux modes de revue, l'e-mail est préparé mais pas remis. L'approbation n'a lieu que dans une session de navigateur connectée d'un propriétaire ou d'un administrateur de l'espace, ce dont l'assistant ne dispose pas. La carte de revue est un confort, pas une frontière de permissions.",
+      "ownerAdminOnly": "Seuls les propriétaires et administrateurs de l’espace de travail peuvent modifier le réglage de revue."
     },
     "panel": {
       "decidedTitle": "Décidés récemment",
