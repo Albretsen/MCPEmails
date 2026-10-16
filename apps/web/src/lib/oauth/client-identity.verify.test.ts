@@ -191,3 +191,54 @@ for (const uri of ['https://claude.ai/api/mcp/auth_callback', 'https://chatgpt.c
     assert.equal(id.impersonates, null);
   });
 }
+
+// Round 3 (after d81d9e55): the embedded-web-URL rule.
+for (const uri of [
+  'vscode://vscode.github-authentication/did-authenticate?windowid=1&nonce=4e8a2f9c1d',
+  'vscode-insiders://vscode.github-authentication/did-authenticate?windowId=12&nonce=abc%2Fdef',
+  'raycast://oauth?package_name=mcp%20emails',
+  'cursor://anysphere.cursor-mcp/oauth/callback',
+  'claude://claude.ai/mcp-auth/callback',
+  'http://localhost:6274/oauth/callback?next=https://x.example',
+]) {
+  test(`no false positive on a native or loopback redirect: ${uri}`, async () => {
+    assert.equal(isSafeRedirectScheme(uri), true);
+    assert.equal(await isValidRedirectUri(uri), true);
+    assert.equal(dcr('X', uri).verification, 'local');
+  });
+}
+
+for (const uri of [
+  'cursor:%2568ttps%253A%252F%252Fa.example',
+  'cursor:redirect?u=https:\\\\a.example',
+  'cursor:x?u=ｈｔｔｐｓ://a.example',
+  'cursor:x?u=ht%09tps://a.example',
+  'cursor:x?u=https:%5C%5Ca.example',
+  'zed:x?u=http%3a%2f%2fa.example',
+  'MS-EXCEL:ofv|u|https://a.example',
+]) {
+  test(`embedded web URL refused: ${JSON.stringify(uri)}`, async () => {
+    assert.equal(isSafeRedirectScheme(uri), false);
+    assert.equal(await isValidRedirectUri(uri), false);
+  });
+}
+
+test('the embedded-URL scan stays linear on long inputs', () => {
+  for (const body of ['%25'.repeat(300_000), 'a'.repeat(1_000_000), 'https:/'.repeat(140_000), '%'.repeat(1_000_000)]) {
+    const started = performance.now();
+    isSafeRedirectScheme(`cursor://x/${body}`);
+    assert.ok(performance.now() - started < 1000, `took ${performance.now() - started}ms`);
+  }
+});
+
+// AuthorizeApp re-runs isSafeRedirectScheme on redirect_to, which by then
+// carries the client's own `state`. A native client whose state contains a URL
+// (percent-encoded by searchParams) is refused at Allow, after a code was
+// minted. Remove `todo` once AuthorizeApp checks the registered redirect_uri
+// (or the scheme/hand-off rule only) instead of the full redirect_to.
+test('a URL inside the client state does not break Allow for a native client', { todo: 'BLOCKING in u09 round 3' }, () => {
+  const redirectTo = new URL('cursor://anysphere.cursor-retrieval/oauth/user-mcpemails/callback');
+  redirectTo.searchParams.set('code', 'abc');
+  redirectTo.searchParams.set('state', 'https://example.com/return');
+  assert.equal(isSafeRedirectScheme(redirectTo.toString()), true);
+});
