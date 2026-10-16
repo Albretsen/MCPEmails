@@ -58,6 +58,7 @@ import {
 } from "./first-party.ts";
 import { decodeModifiedUtf7, encodeModifiedUtf7 } from "./utf7.ts";
 import { parseCopyUid } from "./imap-copyuid.ts";
+import { imapSelectCommand } from "./imap-read-only.ts";
 import { IMAP_CLIENT_ID, imapServerWantsId } from "./imap-id.ts";
 import {
   chooseImapPasswordMechanism,
@@ -1208,14 +1209,29 @@ export class ImapClient {
    * Also captures the untagged `* OK [PERMANENTFLAGS (...)]` response code,
    * which is the ONLY way to learn whether this mailbox accepts custom keywords
    * before trying to set one. See {@link permanentFlags}.
+   *
+   * Sent as EXAMINE (the same mailbox, opened read-only) inside a request from
+   * a read-only key; see imap-read-only.ts. The reply has the same shape.
    */
   selectMailbox(mailbox: string): Promise<void> {
     return this.runExclusive(async () => {
       const tag = this.nextTag();
       this.lastPermanentFlags = null;
       this.lastExists = null;
-      await this.write(`${tag} SELECT ${quoteMailbox(mailbox)}${CRLF}`);
-      const resp = await this.readTagged(tag);
+      const command = imapSelectCommand();
+      await this.write(`${tag} ${command} ${quoteMailbox(mailbox)}${CRLF}`);
+      let resp = await this.readTagged(tag);
+      // EXAMINE is mandatory in RFC 3501, but a server that answers it BAD
+      // ("unknown command") must not cost a read-only key its reads: open the
+      // mailbox the way it always was. Reads still fetch with BODY.PEEK, so
+      // unread state is kept either way. NO is a real answer about the
+      // mailbox and is classified below exactly as SELECT's would be.
+      if (command === "EXAMINE" && resp.status === "BAD") {
+        console.warn("[imap] EXAMINE refused BAD, falling back to SELECT", { text: resp.text.slice(0, 120) });
+        const retryTag = this.nextTag();
+        await this.write(`${retryTag} SELECT ${quoteMailbox(mailbox)}${CRLF}`);
+        resp = await this.readTagged(retryTag);
+      }
       if (resp.status !== "OK") {
         const failure = classifySelectFailure(mailbox, resp.status, resp.text);
         if (failure.kind === "not_found") {
