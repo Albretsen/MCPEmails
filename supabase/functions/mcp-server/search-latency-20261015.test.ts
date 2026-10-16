@@ -13,30 +13,23 @@
 //      the folders it covered, with a note naming the rest, instead of running
 //      into the timer. search_and_move / search_and_delete never do: they act
 //      on the result set and a partial one is not theirs to act on.
-//   4. MCP tool calls take a warm IMAP connection from a pool configured to
-//      change no answer and add no wait (mcp-imap-pool.ts).
+//   4. (Removed.) An MCP IMAP connection pool shipped with these and was taken
+//      out the same night: nearly one isolate per call meant 5.8% reuse, and
+//      idle pooled connections tripped Yahoo's 5-connection cap. The last test
+//      below pins that it stays out.
 //
 // The handlers live in index.ts, which calls `Deno.serve` at load and exports
 // nothing, so their wiring is pinned by source scan, as search-phase-wiring.ts
-// does. The budget rule and the pool are run for real.
+// does. The budget rule is run for real.
 // ---------------------------------------------------------------------------
 
-import { assert, assertEquals, assertNotStrictEquals, assertStrictEquals, assertStringIncludes } from "jsr:@std/assert@1";
-import { FakeImapServer, fakeTextMessage } from "./imap-fake-server.ts";
-import type { ImapClient } from "./imap-client.ts";
+import { assert, assertEquals, assertStringIncludes } from "jsr:@std/assert@1";
 import {
   hasTimeForNextFolder,
   IMAP_FOLDER_ESTIMATE_PADDING,
   IMAP_SEARCH_FINISH_RESERVE_MS,
   imapSearchStoppedEarlyNote,
 } from "./imap-search-budget.ts";
-import {
-  MCP_IMAP_POOL_OPTIONS,
-  mcpImapPoolStore,
-  mcpPooledConnect,
-  resetMcpImapPoolForTests,
-} from "./mcp-imap-pool.ts";
-import { ImapCallTimings, imapTimingStore } from "./imap-timing.ts";
 
 const INDEX_SOURCE = await Deno.readTextFile(new URL("./index.ts", import.meta.url));
 const CLIENT_SOURCE = await Deno.readTextFile(new URL("./imap-client.ts", import.meta.url));
@@ -139,150 +132,13 @@ Deno.test("only email_search hands the IMAP search a deadline", () => {
 });
 
 // ---------------------------------------------------------------------------
-// 4. The MCP connection pool.
+// 4. No MCP connection pool.
 // ---------------------------------------------------------------------------
 
-function server(): FakeImapServer {
-  return new FakeImapServer({
-    mailboxes: [
-      { name: "INBOX", messages: [fakeTextMessage(1), fakeTextMessage(2, { seen: true })] },
-      { name: "Archive", messages: [fakeTextMessage(7)] },
-    ],
-  });
-}
-
-const CFG = { host: "imap.example.test", port: 993, email: "a@example.test", password: "pw" };
-
-function counter() {
-  const servers: FakeImapServer[] = [];
-  return {
-    servers,
-    dial: () => {
-      const s = server();
-      servers.push(s);
-      return Promise.resolve(s.client());
-    },
-  };
-}
-
-function call<T>(workspaceId: string, fn: () => Promise<T>): Promise<T> {
-  return mcpImapPoolStore.run({ workspaceId, flow: {} }, fn);
-}
-
-async function connectInCall(workspaceId: string, d: ReturnType<typeof counter>, cfg = CFG): Promise<ImapClient> {
-  return await call(workspaceId, async () => {
-    const hook = mcpPooledConnect();
-    assert(hook, "inside a tool call the hook is on");
-    return await hook(cfg, d.dial);
-  });
-}
-
-Deno.test("pool: no hook outside an MCP tool call", () => {
-  assertStrictEquals(mcpPooledConnect(), null);
-});
-
-Deno.test("pool: the settings that keep answers and waits as they were", () => {
-  assertEquals(MCP_IMAP_POOL_OPTIONS.waitMs, 0);
-  assertEquals(MCP_IMAP_POOL_OPTIONS.listTtlMs, 0);
-  assertEquals(MCP_IMAP_POOL_OPTIONS.authBackoffMs, 0);
-  assert(MCP_IMAP_POOL_OPTIONS.maxLeaseMs >= 10 * 60_000, "no running call is presumed leaked");
-});
-
-Deno.test("pool: the next call on the same inbox reuses the connection, without a dial", async () => {
-  await resetMcpImapPoolForTests();
-  const d = counter();
-  const first = await connectInCall("ws1", d);
-  await first.selectMailbox("INBOX");
-  await first.logout();
-  const timings = new ImapCallTimings();
-  const second = await imapTimingStore.run(timings, () => connectInCall("ws1", d));
-  assertEquals(d.servers.length, 1, "one dial for two calls");
-  assertEquals(timings.pooledReuses, 1);
-  assert(timings.logFields() !== null, "a reused call still writes its mailbox phases");
-  await second.logout();
-  await resetMcpImapPoolForTests();
-});
-
-Deno.test("pool: a call never waits for another call's connection", async () => {
-  await resetMcpImapPoolForTests();
-  const d = counter();
-  const held = await connectInCall("ws1", d);
-  const started = performance.now();
-  const second = await connectInCall("ws1", d);
-  assert(performance.now() - started < 1_000, "the second call dialled at once");
-  assertEquals(d.servers.length, 2);
-  assertNotStrictEquals(second, held);
-  await second.logout();
-  await held.logout();
-  await resetMcpImapPoolForTests();
-});
-
-Deno.test("pool: past every slot it dials as before, never refuses", async () => {
-  await resetMcpImapPoolForTests();
-  const d = counter();
-  const held: ImapClient[] = [];
-  for (let i = 0; i < MCP_IMAP_POOL_OPTIONS.maxPerKey + 2; i++) held.push(await connectInCall("ws1", d));
-  assertEquals(d.servers.length, MCP_IMAP_POOL_OPTIONS.maxPerKey + 2);
-  for (const c of held) await c.logout();
-  await resetMcpImapPoolForTests();
-});
-
-Deno.test("pool: two workspaces never share a connection", async () => {
-  await resetMcpImapPoolForTests();
-  const d = counter();
-  const a = await connectInCall("ws1", d);
-  await a.logout();
-  const b = await connectInCall("ws2", d);
-  assertEquals(d.servers.length, 2);
-  await b.logout();
-  await resetMcpImapPoolForTests();
-});
-
-Deno.test("pool: folder lists always come from the server", async () => {
-  await resetMcpImapPoolForTests();
-  const d = counter();
-  const a = await connectInCall("ws1", d);
-  await a.listMailboxes();
-  await a.logout();
-  const b = await connectInCall("ws1", d);
-  await b.listMailboxes();
-  await b.logout();
-  assertEquals(d.servers.length, 1);
-  const lists = d.servers[0].commands.filter((c) => /\bLIST\b/i.test(c));
-  assertEquals(lists.length, 2, "the second LIST went to the server");
-  await resetMcpImapPoolForTests();
-});
-
-Deno.test("pool: a failed command drops the connection rather than reusing it", async () => {
-  await resetMcpImapPoolForTests();
-  const d = counter();
-  const a = await connectInCall("ws1", d);
-  await a.selectMailbox("NoSuchMailbox").catch(() => {});
-  await a.logout();
-  const b = await connectInCall("ws1", d);
-  assertEquals(d.servers.length, 2, "a fresh connection after a failure");
-  await b.logout();
-  await resetMcpImapPoolForTests();
-});
-
-Deno.test("pool: MCP_IMAP_POOL=off dials per call, exactly as before", async () => {
-  Deno.env.set("MCP_IMAP_POOL", "off");
-  try {
-    await call("ws1", () => Promise.resolve(assertStrictEquals(mcpPooledConnect(), null)));
-  } finally {
-    Deno.env.delete("MCP_IMAP_POOL");
+Deno.test("no MCP pool: ImapClient.connect only ever takes client-api's hook", () => {
+  assertStringIncludes(CLIENT_SOURCE, "const pooled = firstPartyContext.getStore()?.imapConnect;");
+  for (const source of [CLIENT_SOURCE, INDEX_SOURCE]) {
+    assert(!source.includes("mcp-imap-pool"), "the MCP pool module must not come back");
+    assert(!source.includes("mcpImapPoolStore"), "no pool scope around the MCP executor");
   }
-});
-
-Deno.test("wiring: ImapClient.connect asks the MCP pool only when there is no first-party hook", () => {
-  assertStringIncludes(CLIENT_SOURCE, "firstPartyContext.getStore()?.imapConnect ?? mcpPooledConnect()");
-});
-
-Deno.test("wiring: the pool scope is opened around the MCP executor, per call and per workspace", () => {
-  assertStringIncludes(
-    INDEX_SOURCE,
-    "mcpImapPoolStore.run(\n      { workspaceId: apiKey.workspace_id, flow: {} },\n      () => dispatchExecutor(dispatchName, rawArgs, apiKey),",
-  );
-  // And nowhere else: automations and client-api dial as before.
-  assertEquals(INDEX_SOURCE.split("mcpImapPoolStore.run(").length - 1, 1);
 });
