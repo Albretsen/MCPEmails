@@ -136,15 +136,19 @@ SELECT is_empty(
   '[api_keys] Charlie cannot UPDATE Dave''s key (0 rows affected)'
 );
 
--- 1e. Charlie cannot update Dave's workspace
-SELECT is_empty(
+-- 1e. Charlie cannot update Dave's workspace. Since
+-- 20261016160100_workspaces_server_owned_writes.sql user sessions hold no
+-- UPDATE privilege on workspaces at all, so the statement is refused outright
+-- (it used to match 0 rows under the owner-only policy).
+SELECT throws_ok(
   $$
     UPDATE public.workspaces
     SET    display_name = 'hacked'
     WHERE  id = 'dd000000-0000-0000-0000-000000000002'
-    RETURNING id
   $$,
-  '[workspaces] Charlie cannot UPDATE Dave''s workspace (0 rows affected)'
+  '42501',
+  NULL,
+  '[workspaces] Charlie cannot UPDATE Dave''s workspace (permission denied)'
 );
 
 -- 1f. Charlie cannot create a workspace claiming a different owner
