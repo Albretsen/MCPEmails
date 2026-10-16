@@ -97,7 +97,7 @@ const PRESET_ICONS = { readOnly: 'eye', standard: 'zap', full: 'shield' };
 
 // ─── Preset cards (radiogroup) ───────────────────────────────────────────────
 
-function PresetCards({ presets, mode, recommendedMode, onSelect }) {
+function PresetCards({ presets, mode, recommendedMode, onSelect, roleLimited = false }) {
   const t = useTranslations('auth');
 
   // Keyboard: arrow keys move selection between enabled (offered) presets,
@@ -127,7 +127,7 @@ function PresetCards({ presets, mode, recommendedMode, onSelect }) {
             aria-disabled={disabled}
             tabIndex={disabled ? -1 : (selected || (mode === 'custom' && p.id === presets.find((x) => x.available)?.id) ? 0 : -1)}
             className={'az-preset' + (selected ? ' is-selected' : '') + (disabled ? ' is-disabled' : '')}
-            title={disabled ? t('authorize.presetNotOffered') : undefined}
+            title={disabled ? t(roleLimited ? 'authorize.presetViewerUnavailable' : 'authorize.presetNotOffered') : undefined}
             onClick={() => { if (!disabled) onSelect(p.id); }}
             onKeyDown={(e) => {
               if (disabled) return;
@@ -346,6 +346,10 @@ function DoneScreen({ client, grantCount, totalInboxes, allInboxes }) {
  *                     (identifyStepUpLimitedClient in lib/oauth/consent-presets.ts,
  *                     computed by page.js from the validated client_id and
  *                     redirect_uri). Opens the screen on the widest preset.
+ *  - roleLimited    boolean: the caller is a viewer in this workspace, so page.js
+ *                     has already cut `requestedScopes` down to the read-only
+ *                     allow-list. Shows a one-line note saying why the wider
+ *                     levels are unavailable.
  *  - identityScopes  string[]: `openid` and/or `email` if the client asked for
  *                     them. They are NOT permissions in this screen's sense —
  *                     they grant no mailbox access, only the account email at
@@ -369,6 +373,7 @@ export function AuthorizeApp({
   requestedScopes,
   clientRequestedScopes = [],
   clientCannotStepUp = false,
+  roleLimited = false,
   identityScopes = [],
   inboxes,
   redirectUri,
@@ -637,7 +642,18 @@ export function AuthorizeApp({
                     </div>
 
                     {/* Preset cards (radiogroup) */}
-                    <PresetCards presets={presets} mode={mode} recommendedMode={defaultAccess.recommendedMode} onSelect={selectPreset} />
+                    <PresetCards presets={presets} mode={mode} recommendedMode={defaultAccess.recommendedMode} onSelect={selectPreset} roleLimited={roleLimited} />
+
+                    {roleLimited && (
+                      <div className="az-role-note" role="note" style={{
+                        fontFamily: 'var(--font-sans)', fontSize: 12, color: 'var(--fg-3)',
+                        lineHeight: 1.5, margin: '8px 0 4px',
+                      }}>
+                        {t('authorize.viewerScopeNote', {
+                          workspace: workspaceName || t('authorize.workspaceFallback'),
+                        })}
+                      </div>
+                    )}
 
                     {/* Customize affordance + granular per-scope toggles */}
                     <button
@@ -672,7 +688,7 @@ export function AuthorizeApp({
                     fontFamily: 'var(--font-sans)', fontSize: 13, color: 'var(--fg-3)',
                     padding: '12px 0', marginBottom: 8,
                   }}>
-                    {t('authorize.noScopes')}
+                    {roleLimited ? t('authorize.viewerNoScopes') : t('authorize.noScopes')}
                   </div>
                 )}
 

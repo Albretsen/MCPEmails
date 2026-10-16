@@ -22,6 +22,8 @@ import { cancelSubscriptionsForDeletedAccount } from '@/lib/stripe/cancel-on-acc
  *   4. For each owned workspace: revoke API keys + OAuth refresh chains,
  *      disconnect inboxes and null their encrypted credentials, drop pending
  *      invites, and soft-delete the workspace.
+ *   4b. In EVERY workspace (owned or not): revoke the user's own API keys and
+ *      OAuth refresh chains and delete their pending authorization codes.
  *   5. Remove the user's membership rows everywhere (owned + invited).
  *   6. Ban the auth user via the service-role admin API (~100-year ban_duration)
  *      so the credentials can no longer be used to log in.
@@ -199,6 +201,38 @@ export async function DELETE(request: NextRequest): Promise<NextResponse> {
     const failed = results.find((r) => r.error);
     if (failed?.error) {
       console.error('[delete-account] teardown failed:', failed.error.message);
+      return NextResponse.json(
+        { error: 'Failed to delete account data. Please try again.' },
+        { status: 500 },
+      );
+    }
+  }
+
+  // 4b. Revoke the user's OWN credentials in every workspace, owned or not.
+  //     Step 4 covers owned workspaces only; in a team workspace the user was
+  //     merely a member of, dropping the membership row in step 5 would leave
+  //     every key they minted there, and every OAuth chain that can mint more,
+  //     fully live: the MCP server authenticates on the key alone, and the auth
+  //     ban below blocks Supabase logins, not mcpe_ bearer keys. Scoped by the
+  //     user's id rather than a workspace list, so it also reaches a workspace
+  //     whose membership row is already gone. Must run BEFORE step 5, so a
+  //     failure leaves an over-revoked member, never an ex-member with live keys.
+  {
+    const ownCredentialSteps = [
+      service.from('api_keys')
+        .update({ deleted_at: now, updated_at: now })
+        .eq('created_by', user.id).is('deleted_at', null),
+      service.from('oauth_refresh_tokens')
+        .update({ revoked_at: now })
+        .eq('user_id', user.id).is('revoked_at', null),
+      service.from('oauth_auth_codes')
+        .delete()
+        .eq('user_id', user.id),
+    ];
+    const ownResults = await Promise.all(ownCredentialSteps);
+    const ownFailed = ownResults.find((r) => r.error);
+    if (ownFailed?.error) {
+      console.error('[delete-account] credential revocation failed:', ownFailed.error.message);
       return NextResponse.json(
         { error: 'Failed to delete account data. Please try again.' },
         { status: 500 },
