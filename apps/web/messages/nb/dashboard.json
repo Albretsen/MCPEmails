@@ -163,7 +163,7 @@
     "statusError": "Feil",
     "reconnect": "Koble til på nytt",
     "checkConnection": "Sjekk tilkobling",
-    "checkConnectionViewerNote": "Lesere i arbeidsområdet kan ikke sjekke tilkoblingen.",
+    "viewerActionsNote": "Lesere i arbeidsområdet kan ikke sjekke, koble til på nytt eller koble fra en innboks.",
     "disconnectInbox": "Koble fra innboks",
     "emptyTitle": "Ingen postkasser tilkoblet",
     "emptyDesc": "Koble til en hvilken som helst IMAP-postkasse, Gmail eller Outlook for å gi agentene dine tilgang.",

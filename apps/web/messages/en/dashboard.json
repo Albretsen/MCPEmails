@@ -163,7 +163,7 @@
     "statusError": "Error",
     "reconnect": "Reconnect",
     "checkConnection": "Check connection",
-    "checkConnectionViewerNote": "Workspace viewers cannot run a connection check.",
+    "viewerActionsNote": "Workspace viewers cannot check, reconnect or disconnect an inbox.",
     "disconnectInbox": "Disconnect inbox",
     "emptyTitle": "No inboxes connected",
     "emptyDesc": "Connect any IMAP mailbox, Gmail, or Outlook to give your agents access.",

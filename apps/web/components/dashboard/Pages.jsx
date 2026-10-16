@@ -1284,14 +1284,17 @@ export function InboxesPage({ inboxes, planLimits, stripePrices = null, business
     ? (inboxes.find(ib => ib.id === detailInbox.id) ?? detailInbox)
     : null;
 
-  // Viewers are read-only: POST /api/inboxes/[id]/check answers 403 for them
-  // (lib/workspace/roles.ts), so the button is shown disabled with the reason
-  // instead of failing on click.
-  const canCheck = userRole !== 'viewer';
-  const checkTitle = canCheck ? t('inboxes.checkConnection') : t('inboxes.checkConnectionViewerNote');
+  // Viewers are read-only: checking, reconnecting and disconnecting an inbox
+  // are operator actions the server refuses them (403 from /check and DELETE
+  // /api/inboxes/[id], insufficient_role from the connect routes and OAuth
+  // callbacks; lib/workspace/roles.ts). The buttons are shown disabled with
+  // the reason instead of failing on click.
+  const canManage = userRole !== 'viewer';
+  const viewerNote = t('inboxes.viewerActionsNote');
+  const checkTitle = canManage ? t('inboxes.checkConnection') : viewerNote;
 
   const handleCheck = async (inbox) => {
-    if (checkingId || !canCheck) return;
+    if (checkingId || !canManage) return;
     setCheckingId(inbox.id);
     try {
       await onCheck(inbox);
@@ -1301,6 +1304,7 @@ export function InboxesPage({ inboxes, planLimits, stripePrices = null, business
   };
 
   const handleDisconnectRequest = (inbox) => {
+    if (!canManage) return;
     setConfirmInbox(inbox);
   };
 
@@ -1636,6 +1640,8 @@ export function InboxesPage({ inboxes, planLimits, stripePrices = null, business
                         variant="secondary"
                         size="sm"
                         icon="refresh"
+                        disabled={!canManage}
+                        title={canManage ? undefined : viewerNote}
                         onClick={() => onReconnect(ib)}
                       >
                         {t('inboxes.reconnect')}
@@ -1646,7 +1652,7 @@ export function InboxesPage({ inboxes, planLimits, stripePrices = null, business
                         size="sm"
                         icon="refresh"
                         className={checkingId === ib.id ? "is-checking" : ""}
-                        disabled={!canCheck || checkingId === ib.id}
+                        disabled={!canManage || checkingId === ib.id}
                         aria-label={t('inboxes.checkConnection')}
                         title={checkTitle}
                         onClick={() => handleCheck(ib)}
@@ -1659,6 +1665,8 @@ export function InboxesPage({ inboxes, planLimits, stripePrices = null, business
                       size="sm"
                       icon="trash"
                       aria-label={t('inboxes.disconnectInbox')}
+                      disabled={!canManage}
+                      title={canManage ? undefined : viewerNote}
                       onClick={() => handleDisconnectRequest(ib)}
                     >
                       {""}
@@ -1704,11 +1712,11 @@ export function InboxesPage({ inboxes, planLimits, stripePrices = null, business
                   <div className="inbox-mobile-actions" onClick={e => e.stopPropagation()}>
                     <Btn variant="secondary" size="sm" onClick={() => setDetailInbox(ib)}>View details</Btn>
                     {canReconnect ? (
-                      <Btn variant="secondary" size="sm" icon="refresh" onClick={() => onReconnect(ib)}>{t('inboxes.reconnect')}</Btn>
+                      <Btn variant="secondary" size="sm" icon="refresh" disabled={!canManage} title={canManage ? undefined : viewerNote} onClick={() => onReconnect(ib)}>{t('inboxes.reconnect')}</Btn>
                     ) : (
-                      <Btn variant="ghost" size="sm" icon="refresh" className={checkingId === ib.id ? 'is-checking' : ''} disabled={!canCheck || checkingId === ib.id} title={checkTitle} onClick={() => handleCheck(ib)}>{t('inboxes.checkConnection')}</Btn>
+                      <Btn variant="ghost" size="sm" icon="refresh" className={checkingId === ib.id ? 'is-checking' : ''} disabled={!canManage || checkingId === ib.id} title={checkTitle} onClick={() => handleCheck(ib)}>{t('inboxes.checkConnection')}</Btn>
                     )}
-                    <Btn variant="ghost" size="sm" icon="trash" aria-label={t('inboxes.disconnectInbox')} onClick={() => handleDisconnectRequest(ib)}>{t('inboxes.detail.disconnect')}</Btn>
+                    <Btn variant="ghost" size="sm" icon="trash" aria-label={t('inboxes.disconnectInbox')} disabled={!canManage} title={canManage ? undefined : viewerNote} onClick={() => handleDisconnectRequest(ib)}>{t('inboxes.detail.disconnect')}</Btn>
                   </div>
                 </article>
               );
@@ -2869,23 +2877,35 @@ function InboxDetailModal({ inbox, checking, onClose, onReconnect, onCheck, onDi
 
           {!canManageInbox ? (
             <p style={{ margin: 0, fontSize: 12, color: 'var(--fg-3)', textAlign: 'right' }}>
-              {t('inboxes.checkConnectionViewerNote')}
+              {t('inboxes.viewerActionsNote')}
             </p>
           ) : null}
           <div style={{ display: 'flex', gap: 8, justifyContent: 'flex-end', flexWrap: 'wrap' }}>
-            <Btn variant="ghost" icon="trash" onClick={() => onDisconnect(inbox)}>
+            <Btn
+              variant="ghost"
+              icon="trash"
+              disabled={!canManageInbox}
+              title={canManageInbox ? undefined : t('inboxes.viewerActionsNote')}
+              onClick={() => onDisconnect(inbox)}
+            >
               {t('inboxes.detail.disconnect')}
             </Btn>
             <Btn
               variant="secondary"
               icon="refresh"
               disabled={checking || !canManageInbox}
-              title={canManageInbox ? undefined : t('inboxes.checkConnectionViewerNote')}
+              title={canManageInbox ? undefined : t('inboxes.viewerActionsNote')}
               onClick={() => onCheck(inbox)}
             >
               {t('inboxes.checkConnection')}
             </Btn>
-            <Btn variant="primary" icon="refresh" onClick={() => onReconnect(inbox)}>
+            <Btn
+              variant="primary"
+              icon="refresh"
+              disabled={!canManageInbox}
+              title={canManageInbox ? undefined : t('inboxes.viewerActionsNote')}
+              onClick={() => onReconnect(inbox)}
+            >
               {t('inboxes.reconnect')}
             </Btn>
           </div>
