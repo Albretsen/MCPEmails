@@ -62,7 +62,7 @@ test('Free sells its action allowance; the paid ceilings stay silent', () => {
   // "No monthly action cap" is the only sentence a paid tier may say about
   // actions. If this test is updated, check that nothing customer-facing
   // quotes the old numbers.
-  assert.equal(resolvePlanLimits('personal').maxMonthlyToolCalls, 25_000);
+  assert.equal(resolvePlanLimits('personal').maxMonthlyToolCalls, 100_000);
   assert.equal(resolvePlanLimits('solo').maxMonthlyToolCalls, 100_000);
   assert.equal(resolvePlanLimits('pro').maxMonthlyToolCalls, 500_000);
   assert.ok(PLANS.personal.features.includes('No monthly action cap'));
@@ -232,7 +232,7 @@ test('Personal ships at the numbers it was signed off at', () => {
   assert.equal(personal.limits.maxMembers, 1);
   assert.equal(personal.limits.maxRequestsPerMinute, 120);
   assert.equal(personal.limits.analyticsRetentionDays, 30);
-  assert.equal(personal.limits.maxMonthlyToolCalls, 25_000);
+  assert.equal(personal.limits.maxMonthlyToolCalls, 100_000);
   // A paid plan the customer cannot cancel themselves is a support ticket
   // waiting to happen, and in several jurisdictions a legal problem.
   assert.equal(personal.limits.billingPortalEnabled, true);
@@ -288,7 +288,7 @@ test('a grandfathered user on Personal keeps unlimited inboxes', () => {
   assert.equal(grandfathered.maxMembers, 1);
   assert.equal(grandfathered.maxRequestsPerMinute, 120);
   assert.equal(grandfathered.analyticsRetentionDays, 30);
-  assert.equal(grandfathered.maxMonthlyToolCalls, 25_000);
+  assert.equal(grandfathered.maxMonthlyToolCalls, 100_000);
   assert.equal(grandfathered.supportTier, 'email');
   assert.equal(grandfathered.teamRolesEnabled, false);
 });

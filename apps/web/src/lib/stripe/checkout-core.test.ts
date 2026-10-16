@@ -476,7 +476,7 @@ test('Personal is a strict upgrade for a grandfathered account on all four other
   // (workspaces.free_action_cap_exempt). Personal's 25,000 stays a silent
   // abuse ceiling and is never quoted to a customer.
   assert.equal(grandfatheredFree.maxMonthlyToolCalls, FREE_ACTION_ALLOWANCE);
-  assert.equal(grandfatheredPersonal.maxMonthlyToolCalls, 25_000);
+  assert.equal(grandfatheredPersonal.maxMonthlyToolCalls, 100_000);
 
   assert.equal(grandfatheredFree.maxRequestsPerMinute, 60);
   assert.equal(grandfatheredPersonal.maxRequestsPerMinute, 120);

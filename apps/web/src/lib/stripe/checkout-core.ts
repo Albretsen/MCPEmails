@@ -522,7 +522,7 @@ export async function runCheckout(input: {
   //      column unconditionally rather than gating it on the plan. So a buyer
   //      resolves to Personal's limits with maxInboxes still Infinity.
   //   3. Personal therefore ADDS four things they do not have: the monthly
-  //      action ceiling goes 5,000 to 25,000, the burst rate 60/min to 120/min,
+  //      action ceiling goes 5,000 to 100,000, the burst rate 60/min to 120/min,
   //      `billingPortalEnabled` false to true, and support community to email.
   //
   // Nothing is given up in exchange, because the one thing the grant provides
