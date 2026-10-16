@@ -110,3 +110,84 @@ for (const uri of HANDOFF) {
     assert.equal(await isValidRedirectUri(uri), false, 'refused at registration');
   });
 }
+
+// Round 2 (after e55ba5b3): more hand-off spellings. Each must be refused at
+// registration AND by the scheme rule the authorize page and POST apply.
+const HANDOFF_VARIANTS = [
+  'X-SAFARI-HTTPS://attacker.example/cb',
+  'x-safari-https:attacker.example/cb',
+  'Microsoft-Edge:https://attacker.example/cb',
+  'microsoft-edge-https://attacker.example/cb',
+  'cursor:https://attacker.example/cb',
+  'cursor:HTTPS://attacker.example/cb',
+  'cursor:ht\ttps://attacker.example/cb',
+  'cursor: https://attacker.example/cb',
+  'claude:https://attacker.example/cb',
+  'vscode:https://attacker.example/cb',
+  'opera-https://attacker.example/cb',
+  'opera-http://attacker.example/cb',
+  'edge:https://attacker.example/cb',
+  'ms-edge:https://attacker.example/cb',
+  'intent:#Intent;scheme=https;package=com.android.chrome;S.browser_fallback_url=https%3A%2F%2Fattacker.example;end',
+  'INTENT://attacker.example#Intent;end',
+  'googlechrome-x-callback://x-callback-url/open/?url=https%3A%2F%2Fattacker.example',
+  'firefox://open-url?url=https://attacker.example',
+  'brave://open-url?url=https://attacker.example',
+  'WEB+foo:x',
+];
+for (const uri of HANDOFF_VARIANTS) {
+  test(`hand-off variant refused: ${JSON.stringify(uri)}`, async () => {
+    assert.equal(isSafeRedirectScheme(uri), false);
+    assert.equal(await isValidRedirectUri(uri), false);
+    const id = dcr('Claude', uri);
+    assert.equal(id.verification, 'unverified');
+    assert.notEqual(id.impersonates, null);
+  });
+}
+
+// Schemes that are still accepted (not on any list) must never look local or
+// trusted, and a vendor name on them must raise the alert.
+for (const uri of [
+  'ms-edge://attacker.example/cb',
+  'org-chromium://attacker.example/cb',
+  'ms-word:ofe|u|https://attacker.example/x',
+  'itms-services://?action=download-manifest&url=https://attacker.example/m',
+  'focus://open-url?url=https://attacker.example',
+  'cursor://https://attacker.example/cb',
+  'cursor:%68ttps://attacker.example/cb',
+]) {
+  test(`unlisted or wrapped scheme stays unverified for a vendor name: ${JSON.stringify(uri)}`, () => {
+    const id = dcr('Claude', uri);
+    assert.equal(id.verification, 'unverified');
+    assert.notEqual(id.impersonates, null);
+    assert.notEqual(id.displayName, 'Claude');
+  });
+}
+
+// Documented OAuth clients (src/lib/clients/clients.mjs) on their native
+// schemes stay "On this device" with their own name and no alert.
+for (const [name, uri] of [
+  ['Windsurf', 'windsurf://codeium.windsurf/oauth'],
+  ['Zed', 'zed://oauth/callback'],
+  ['Raycast', 'raycast://oauth?package_name=Extension'],
+  ['Warp', 'warp://mcp/oauth2callback'],
+  ['Kiro', 'kiro://kiro.kiroAgent/authenticate-success'],
+  ['Cline', 'vscode://saoudrizwan.claude-dev/mcp-auth/callback'],
+] as const) {
+  test(`documented native client stays local: ${name}`, async () => {
+    assert.equal(await isValidRedirectUri(uri), true);
+    const id = dcr(name, uri);
+    assert.equal(id.verification, 'local');
+    assert.equal(id.impersonates, null);
+    assert.equal(id.displayName, name);
+  });
+}
+
+// Claude and ChatGPT may put the user's connector name in client_name.
+for (const uri of ['https://claude.ai/api/mcp/auth_callback', 'https://chatgpt.com/connector_platform_oauth_redirect']) {
+  test(`"MCP Emails" as client_name on a vendor host is verified, no alert: ${uri}`, () => {
+    const id = dcr('MCP Emails', uri);
+    assert.equal(id.verification, 'verified');
+    assert.equal(id.impersonates, null);
+  });
+}
