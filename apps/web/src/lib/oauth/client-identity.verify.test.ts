@@ -6,10 +6,10 @@
 // 1. The real redirect URIs legitimate MCP clients register must never be
 //    shown as Unverified or carry an impersonation warning.
 // 2. Bypass attempts on the identity rule. The browser-handoff scheme cases
-//    are marked `todo`: they FAIL against the current fix (a scheme such as
+//    were marked `todo` because they FAILED against the first fix (a scheme such as
 //    microsoft-edge: or x-safari-https: opens a web page in a browser, so the
 //    code reaches a remote host while the screen says "On this device").
-//    Remove `todo` once the fix handles them.
+//    The `todo` markers were removed once the fix handled them.
 // Only reserved example domains are used for attacker hosts.
 // ---------------------------------------------------------------------------
 import assert from 'node:assert/strict';
@@ -102,9 +102,11 @@ const HANDOFF = [
   'intent://attacker.example/cb#Intent;scheme=https;end',
 ];
 for (const uri of HANDOFF) {
-  test(`browser-handoff scheme is not "on this device": ${uri}`, { todo: 'BLOCKING in u09 verification' }, () => {
+  test(`browser-handoff scheme is not "on this device": ${uri}`, async () => {
     const id = dcr('Claude', uri);
     assert.notEqual(id.verification, 'local');
     assert.notEqual(id.impersonates, null);
+    assert.equal(isSafeRedirectScheme(uri), false, 'refused outright as a redirect scheme');
+    assert.equal(await isValidRedirectUri(uri), false, 'refused at registration');
   });
 }

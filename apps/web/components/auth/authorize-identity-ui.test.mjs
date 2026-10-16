@@ -63,7 +63,7 @@ function propsFor({ clientId, clientName, clientByline = '', isCimd = false, red
     identity: {
       verification: identity.verification,
       selfReportedName: identity.selfReportedName,
-      destinationKind: identity.destination.kind,
+      destinationKind: identity.destinationKind,
       destinationLabel: identity.destinationLabel,
       impersonates: identity.impersonates,
     },
@@ -136,7 +136,7 @@ test('LEGIT: Claude on claude.ai keeps its name, shows claude.ai as Verified, no
   assert.equal(q(container, 'az-destination-badge').textContent, 'Verified');
   assert.equal(q(container, 'az-impersonation'), null);
   assert.equal(q(container, 'az-unverified'), null);
-  assert.equal(q(container, 'az-self-reported'), null);
+  assert.match(q(container, 'az-self-reported').textContent, /“Claude” is a self-reported name\. The destination above is verified\./);
 });
 
 test('LEGIT: ChatGPT on chatgpt.com keeps its name and is Verified', async (t) => {
@@ -211,4 +211,29 @@ test('Allow refuses a javascript: redirect_to from the server and shows an error
   await waitFor(() => container.textContent.includes('Authorization failed'), { message: 'error step' });
   assert.ok(container.textContent.includes("This app's redirect address is not allowed"));
   assert.equal(window.location.href, before);
+});
+
+test('THE BYPASS: a browser hand-off scheme reads as the web host, unverified, with the impersonation alert', async (t) => {
+  const { container } = await render(t, propsFor({
+    clientId: 'dyn_0123456789abcdef01234567',
+    clientName: 'Claude',
+    redirectUri: 'microsoft-edge:https://attacker.example/cb',
+  }));
+  assert.equal(container.querySelector('h1').textContent, 'Authorize attacker.example (microsoft-edge:)?');
+  assert.equal(q(container, 'az-destination-host').textContent, 'attacker.example (microsoft-edge:)');
+  assert.equal(q(container, 'az-destination-badge').textContent, 'Unverified');
+  assert.ok(!container.textContent.includes('On this device'));
+  assert.ok(!container.textContent.includes('stays on this device'));
+  assert.ok(q(container, 'az-impersonation'));
+});
+
+test('an unknown custom scheme shows the scheme itself, unverified, not "the app that opens" copy', async (t) => {
+  const { container } = await render(t, propsFor({
+    clientId: 'dyn_0123456789abcdef01234567',
+    clientName: 'My Tool',
+    redirectUri: 'com.example.app:/oauth2redirect',
+  }));
+  assert.equal(q(container, 'az-destination-host').textContent, 'com.example.app:');
+  assert.equal(q(container, 'az-destination-badge').textContent, 'Unverified');
+  assert.match(q(container, 'az-self-reported').textContent, /Calls itself My Tool/);
 });

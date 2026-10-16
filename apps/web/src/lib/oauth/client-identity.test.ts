@@ -123,7 +123,11 @@ test('describeRedirectDestination classifies web, loopback and app redirects', (
   assert.deepEqual(describeRedirectDestination('http://127.0.0.1:33418/'), { kind: 'loopback', host: '127.0.0.1:33418' });
   assert.deepEqual(describeRedirectDestination('http://localhost:6274/cb'), { kind: 'loopback', host: 'localhost:6274' });
   assert.deepEqual(describeRedirectDestination('http://[::1]:9/cb'), { kind: 'loopback', host: '[::1]:9' });
-  assert.deepEqual(describeRedirectDestination('cursor://anysphere.cursor-mcp/oauth/callback'), { kind: 'app', scheme: 'cursor' });
+  assert.deepEqual(describeRedirectDestination('cursor://anysphere.cursor-mcp/oauth/callback'), { kind: 'app', scheme: 'cursor', native: true, webHost: null });
+  assert.deepEqual(describeRedirectDestination('myapp://callback'), { kind: 'app', scheme: 'myapp', native: false, webHost: null });
+  assert.deepEqual(describeRedirectDestination('microsoft-edge:https://attacker.example/cb'), { kind: 'app', scheme: 'microsoft-edge', native: false, webHost: 'attacker.example' });
+  assert.deepEqual(describeRedirectDestination('x-safari-https://attacker.example/cb'), { kind: 'app', scheme: 'x-safari-https', native: false, webHost: 'attacker.example' });
+  assert.deepEqual(describeRedirectDestination('cursor:https://attacker.example/cb'), { kind: 'app', scheme: 'cursor', native: false, webHost: 'attacker.example' }, 'an allow-listed scheme wrapping a web URL is not native');
   assert.deepEqual(describeRedirectDestination('nope'), { kind: 'invalid' });
 });
 
@@ -160,7 +164,8 @@ test('LEGIT: Claude via DCR on claude.ai keeps its name and is verified', () => 
     const id = describeClientIdentity({ clientId: DYN, clientName: 'Claude', clientByline: 'https://claude.ai', isCimd: false, redirectUri });
     assert.equal(id.verification, 'verified', redirectUri);
     assert.equal(id.displayName, 'Claude');
-    assert.equal(id.selfReportedName, null);
+    assert.equal(id.selfReportedName, 'Claude', 'still labelled as self-reported');
+    assert.equal(id.byline, '');
     assert.equal(id.impersonates, null);
     assert.equal(id.destinationVendor, 'anthropic');
   }
@@ -195,11 +200,71 @@ test('LEGIT: loopback clients (Claude Code, Codex, VS Code) keep their name and 
   }
 });
 
-test('a vendor name sent to another vendor host is still flagged', () => {
-  const id = describeClientIdentity({ clientId: DYN, clientName: 'ChatGPT', isCimd: false, redirectUri: 'https://claude.ai/api/mcp/auth_callback' });
-  assert.equal(id.impersonates, 'ChatGPT (OpenAI)');
-  assert.equal(id.displayName, 'claude.ai');
+test('on a known vendor HOST no impersonation alert is raised: the code goes to that vendor anyway', () => {
+  // ChatGPT and Claude put the user's own connector name in client_name.
+  for (const [clientName, redirectUri] of [
+    ['MCP Emails', 'https://chatgpt.com/connector/oauth/abc_123'],
+    ['MCP Emails', 'https://claude.ai/api/mcp/auth_callback'],
+    ['ChatGPT', 'https://claude.ai/api/mcp/auth_callback'],
+  ]) {
+    const id = describeClientIdentity({ clientId: DYN, clientName, isCimd: false, redirectUri });
+    assert.equal(id.impersonates, null, `${clientName} -> ${redirectUri}`);
+    assert.equal(id.verification, 'verified');
+    assert.equal(id.displayName, clientName);
+    assert.equal(id.selfReportedName, clientName);
+  }
+});
+
+test('THE BYPASS: browser hand-off schemes are refused and never read as "on this device"', async () => {
+  for (const uri of [
+    'microsoft-edge:https://attacker.example/cb',
+    'microsoft-edge-https://attacker.example/cb',
+    'x-safari-https://attacker.example/cb',
+    'x-safari-http://attacker.example/cb',
+    'googlechrome://attacker.example/cb',
+    'googlechromes://attacker.example/cb',
+    'firefox://open-url?url=https://attacker.example/cb',
+    'opera-https://attacker.example/cb',
+    'brave://open-url?url=https://attacker.example/cb',
+    'intent://attacker.example/cb#Intent;scheme=https;end',
+    'web+mcp:https://attacker.example/cb',
+    'anything:https://attacker.example/cb',
+    'cursor:https://attacker.example/cb',
+  ]) {
+    assert.equal(isSafeRedirectScheme(uri), false, uri);
+    assert.equal(await isValidRedirectUri(uri), false, uri);
+    const id = describeClientIdentity({ clientId: DYN, clientName: 'Claude', isCimd: false, redirectUri: uri });
+    assert.equal(id.verification, 'unverified', uri);
+    assert.equal(id.destinationKind, 'other', uri);
+    assert.equal(id.impersonates, 'Claude (Anthropic)', uri);
+    assert.equal(id.selfReportedName, 'Claude', uri);
+    assert.notEqual(id.displayName, 'Claude', uri);
+  }
+  const edge = describeClientIdentity({ clientId: DYN, clientName: 'Claude', isCimd: false, redirectUri: 'microsoft-edge:https://attacker.example/cb' });
+  assert.equal(edge.destinationLabel, 'attacker.example (microsoft-edge:)', 'the real web host is what the screen prints');
+});
+
+test('an unknown custom scheme is unverified with the scheme as the destination', () => {
+  const id = describeClientIdentity({ clientId: DYN, clientName: 'My Tool', isCimd: false, redirectUri: 'com.example.app:/oauth2redirect' });
   assert.equal(id.verification, 'unverified');
+  assert.equal(id.destinationKind, 'other');
+  assert.equal(id.destinationLabel, 'com.example.app:');
+  assert.equal(id.displayName, 'com.example.app:');
+  assert.equal(id.selfReportedName, 'My Tool');
+  assert.equal(id.impersonates, null);
+});
+
+test('a vendor name on another vendor\'s app scheme or an unknown scheme is flagged', () => {
+  const onCursor = describeClientIdentity({ clientId: DYN, clientName: 'Claude', isCimd: false, redirectUri: 'cursor://x/cb' });
+  assert.equal(onCursor.impersonates, 'Claude (Anthropic)');
+  assert.equal(onCursor.verification, 'unverified');
+  const onUnknown = describeClientIdentity({ clientId: DYN, clientName: 'ChatGPT', isCimd: false, redirectUri: 'myapp://cb' });
+  assert.equal(onUnknown.impersonates, 'ChatGPT (OpenAI)');
+  const own = describeClientIdentity({ clientId: DYN, clientName: 'Claude Desktop', isCimd: false, redirectUri: 'claude://oauth/callback' });
+  assert.equal(own.impersonates, null);
+  assert.equal(own.verification, 'local');
+  const windsurf = describeClientIdentity({ clientId: DYN, clientName: 'Windsurf', isCimd: false, redirectUri: 'windsurf://codeium.windsurf/oauth' });
+  assert.equal(windsurf.verification, 'local');
 });
 
 test('seeded rows (not dyn_, not a URL) keep their own name and byline', () => {

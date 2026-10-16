@@ -57,7 +57,50 @@ export const BLOCKED_REDIRECT_SCHEMES: ReadonlySet<string> = new Set([
 ]);
 
 /**
- * True when `uri` parses as a URL whose scheme is not on the block-list.
+ * Scheme prefixes that hand the rest of the URI to a WEB BROWSER, so a code
+ * "for an app on this device" is in fact delivered to a remote web host
+ * (added 2026-10-16 after verification of the first fix):
+ *
+ *   microsoft-edge:https://attacker.example/cb   Edge on Windows/iOS
+ *   x-safari-https://attacker.example/cb         Safari on iOS
+ *   googlechromes://attacker.example/cb          Chrome on iOS
+ *   intent://attacker.example/cb#Intent;scheme=https;end   Android
+ *   firefox://open-url?url=..., opera-https://..., brave://open-url?...
+ *   web+foo:...                                  registerProtocolHandler, i.e. a website
+ *
+ * Matched as a prefix of the lower-cased scheme (without the colon), so the
+ * -http / -https / -focus variants are covered.
+ */
+const BROWSER_HANDOFF_PREFIXES: readonly string[] = [
+  'microsoft-edge', 'msedge', 'x-safari-', 'googlechrome', 'firefox', 'fennec', 'opera', 'brave',
+  'vivaldi', 'duckduckgo', 'ddgquicklink', 'yandexbrowser', 'samsunginternet', 'sbrowser', 'ucbrowser',
+  'intent', 'web+',
+];
+
+/** True when `scheme` (lower-case, no colon) hands its URL to a web browser. */
+export function isBrowserHandoffScheme(scheme: string): boolean {
+  const s = scheme.toLowerCase();
+  return BROWSER_HANDOFF_PREFIXES.some((p) => s.startsWith(p));
+}
+
+/**
+ * True when what follows `scheme:` is itself an http(s) URL, as in
+ * `anything:https://attacker.example/cb`. Whatever app handles such a scheme
+ * is being asked to open a web page, which is a remote destination.
+ */
+function wrapsWebUrl(url: URL): boolean {
+  const rest = url.href.slice(url.protocol.length).trim();
+  try {
+    const inner = new URL(rest);
+    return inner.protocol === 'http:' || inner.protocol === 'https:';
+  } catch {
+    return false;
+  }
+}
+
+/**
+ * True when `uri` parses as a URL whose scheme is neither on the block-list nor
+ * a browser hand-off scheme, and (for a custom scheme) does not wrap a web URL.
  *
  * This is ONLY the scheme rule. It says nothing about which hosts are allowed
  * (isValidRedirectUri in redirect-uri.ts adds the https/loopback and SSRF
@@ -71,5 +114,10 @@ export function isSafeRedirectScheme(uri: unknown): boolean {
   } catch {
     return false;
   }
-  return !BLOCKED_REDIRECT_SCHEMES.has(url.protocol.toLowerCase());
+  const protocol = url.protocol.toLowerCase();
+  if (BLOCKED_REDIRECT_SCHEMES.has(protocol)) return false;
+  if (protocol === 'http:' || protocol === 'https:') return true;
+  if (isBrowserHandoffScheme(protocol.slice(0, -1))) return false;
+  if (wrapsWebUrl(url)) return false;
+  return true;
 }

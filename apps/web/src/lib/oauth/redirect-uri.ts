@@ -1,5 +1,5 @@
 import dns from 'node:dns/promises';
-import { BLOCKED_REDIRECT_SCHEMES } from '@/lib/oauth/redirect-scheme';
+import { isSafeRedirectScheme } from '@/lib/oauth/redirect-scheme';
 
 // DNS result cache: hostname → { addresses, cachedAt }
 const dnsCache = new Map<string, { addresses: string[]; cachedAt: number }>();
@@ -51,7 +51,9 @@ async function resolveHostname(hostname: string): Promise<string[]> {
  *
  * Rules:
  * - The browser's own pseudo-schemes (javascript:, data:, vbscript:, file:,
- *   blob:, about:, ...) are always rejected; see redirect-scheme.ts.
+ *   blob:, about:, ...) and schemes that hand the URL to a web browser
+ *   (microsoft-edge:, x-safari-https:, intent:, web+...:, or any scheme that
+ *   wraps an http(s) URL) are always rejected; see redirect-scheme.ts.
  * - Other custom protocol schemes (claude://, cursor://, vscode://, etc.) are
  *   allowed for native apps; they cannot resolve to private network addresses
  *   via HTTP.
@@ -73,8 +75,9 @@ export async function isValidRedirectUri(uri: string): Promise<boolean> {
   // Wildcard hostnames are never valid
   if (hostname.includes('*')) return false;
 
-  // Script-running and browser-internal schemes are never a redirect target.
-  if (BLOCKED_REDIRECT_SCHEMES.has(protocol.toLowerCase())) return false;
+  // Script-running, browser-internal and browser hand-off schemes are never a
+  // redirect target (redirect-scheme.ts).
+  if (!isSafeRedirectScheme(uri)) return false;
 
   // Remaining custom protocol schemes (non-http/https) are for native apps
   if (protocol !== 'http:' && protocol !== 'https:') return true;

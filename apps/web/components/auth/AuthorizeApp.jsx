@@ -390,6 +390,12 @@ function DestinationPanel({ identity }) {
         </div>
       )}
 
+      {identity.selfReportedName && identity.verification === 'verified' && (
+        <div data-testid="az-self-reported" style={{ fontSize: 12, color: 'var(--fg-3)', marginTop: 6, lineHeight: 1.5 }}>
+          {t('authorize.verifiedSelfReported', { name: identity.selfReportedName })}
+        </div>
+      )}
+
       {identity.selfReportedName && identity.verification === 'local' && (
         <div data-testid="az-self-reported" style={{ fontSize: 12, color: 'var(--fg-3)', marginTop: 6, lineHeight: 1.5 }}>
           {t('authorize.localNote', { name: identity.selfReportedName })}

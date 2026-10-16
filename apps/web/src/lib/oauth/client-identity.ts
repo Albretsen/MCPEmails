@@ -20,20 +20,32 @@
 //                               cursor-v1, ...): its name and byline are ours.
 //                 'verified'    the code goes to an https host that belongs to
 //                               a known vendor (claude.ai, chatgpt.com, ...).
-//                 'local'       the code stays on the user's device (loopback
-//                               or a native-app scheme). A remote attacker
-//                               cannot receive it, so this is not phishable
-//                               from a link, but the name is still unverified.
-//                 'unverified'  any other https host. The heading becomes the
-//                               HOST and the self-asserted name is shown only
-//                               as a labelled, secondary "calls itself" line.
+//                               The name keeps the heading but is labelled as
+//                               self-reported (vendors put the user's own
+//                               connector name there).
+//                 'local'       the code stays on the user's device: a
+//                               loopback port, or one of the KNOWN native-app
+//                               schemes (NATIVE_APP_SCHEMES: claude, cursor,
+//                               vscode, windsurf, ...). A remote attacker
+//                               cannot receive it from a link.
+//                 'unverified'  any other https host, and any other custom
+//                               scheme. The heading becomes the DESTINATION
+//                               and the self-asserted name is shown only as a
+//                               labelled, secondary "calls itself" line. A
+//                               custom scheme is not proof of a local app:
+//                               microsoft-edge:https://h/, x-safari-https://h/
+//                               and intent:// open a web page in a browser
+//                               (those are refused outright in
+//                               redirect-scheme.ts; this is the backstop).
 //   impersonates  the self-asserted name uses a known vendor's name (Claude,
 //                 ChatGPT, Cursor, MCP Emails, ...) while the code goes to a
-//                 web host that is NOT that vendor's. The screen warns
-//                 explicitly. Registration is not refused for it: a host this
-//                 list has not met yet must degrade to a warning, never to a
-//                 broken connector, because DCR is how Claude, ChatGPT and
-//                 Cursor connect.
+//                 web host or app scheme that is NOT that vendor's. Not raised
+//                 when the destination is a known vendor HOST (the code goes
+//                 to that vendor regardless) or a loopback port. The screen
+//                 warns explicitly. Registration is not refused for it: a host
+//                 this list has not met yet must degrade to a warning, never
+//                 to a broken connector, because DCR is how Claude, ChatGPT
+//                 and Cursor connect.
 //
 // The legitimate main paths therefore look like this:
 //   Claude (claude.ai DCR)          "Claude", Verified · claude.ai
@@ -46,6 +58,8 @@
 // that). Pure: no node: imports, so the rule is unit testable and the same
 // object can be handed to the client component.
 // ---------------------------------------------------------------------------
+
+import { isBrowserHandoffScheme, isSafeRedirectScheme } from '@/lib/oauth/redirect-scheme';
 
 export type VendorId = 'anthropic' | 'openai' | 'cursor' | 'vscode' | 'mcpemails';
 
@@ -159,17 +173,56 @@ export function vendorLabel(id: VendorId | null): string | null {
   return id ? VENDOR_BY_ID.get(id)?.label ?? null : null;
 }
 
+/**
+ * Native-app schemes of clients people actually connect, and the vendor each
+ * belongs to (null: a known app that is not one of the impersonation-checked
+ * vendors). ONLY these count as "an app on this device". Any other custom
+ * scheme is unverified: a scheme is just a string the registrant picks, and
+ * some (microsoft-edge:, x-safari-https:, intent:, web+...:) open a web page
+ * in a browser, which delivers the code to a remote host. Those are refused
+ * outright by redirect-scheme.ts; this list is the positive half of the rule.
+ */
+const NATIVE_APP_SCHEMES: ReadonlyMap<string, VendorId | null> = new Map<string, VendorId | null>([
+  ['claude', 'anthropic'],
+  ['cursor', 'cursor'],
+  ['vscode', 'vscode'],
+  ['vscode-insiders', 'vscode'],
+  ['vscodium', null],
+  ['windsurf', null],
+  ['zed', null],
+  ['kiro', null],
+  ['raycast', null],
+  ['warp', null],
+]);
+
 export type RedirectDestination =
   /** An https (or, for a seeded row, http) host on the network. */
   | { kind: 'web'; host: string; hostname: string }
   /** A loopback listener on the user's own machine. */
   | { kind: 'loopback'; host: string }
-  /** A native-app custom scheme handled on the user's device. */
-  | { kind: 'app'; scheme: string }
+  /**
+   * A custom scheme. `native` only for NATIVE_APP_SCHEMES. `webHost` is the
+   * remote host a browser hand-off scheme would open, when one can be read.
+   */
+  | { kind: 'app'; scheme: string; native: boolean; webHost: string | null }
   | { kind: 'invalid' };
 
 function isLoopbackHostname(hostname: string): boolean {
   return hostname === 'localhost' || hostname === '[::1]' || /^127\.\d{1,3}\.\d{1,3}\.\d{1,3}$/.test(hostname);
+}
+
+/** The web host a browser hand-off URI points at ("microsoft-edge:https://h/", "x-safari-https://h/"). */
+function embeddedWebHost(url: URL): string | null {
+  const rest = url.href.slice(url.protocol.length).trim();
+  for (const candidate of [rest, `https:${rest}`]) {
+    try {
+      const inner = new URL(candidate);
+      if ((inner.protocol === 'http:' || inner.protocol === 'https:') && inner.hostname) return inner.host;
+    } catch {
+      // not this shape
+    }
+  }
+  return null;
 }
 
 /** Classify a redirect_uri by where a browser delivering the code would go. */
@@ -186,8 +239,18 @@ export function describeRedirectDestination(redirectUri: string | null | undefin
     if (url.hostname === '') return { kind: 'invalid' };
     return { kind: 'web', host: url.host, hostname: url.hostname };
   }
-  return { kind: 'app', scheme: url.protocol.slice(0, -1).toLowerCase() };
+  const scheme = url.protocol.slice(0, -1).toLowerCase();
+  // A hand-off scheme, or any scheme wrapping an http(s) URL, is a web page.
+  const handsOff = isBrowserHandoffScheme(scheme) || !isSafeRedirectScheme(redirectUri);
+  return {
+    kind: 'app',
+    scheme,
+    native: !handsOff && NATIVE_APP_SCHEMES.has(scheme),
+    webHost: handsOff ? embeddedWebHost(url) : null,
+  };
 }
+
+export type DestinationKind = 'web' | 'loopback' | 'app' | 'other';
 
 export type ClientVerification = 'registered' | 'verified' | 'local' | 'unverified';
 
@@ -203,6 +266,11 @@ export interface ClientIdentity {
   /** The byline to print, or '' when the byline is self-asserted. */
   byline: string;
   destination: RedirectDestination;
+  /**
+   * For the screen: 'app' only for a known native-app scheme; 'other' for any
+   * other custom scheme (including browser hand-offs) or an unparseable URI.
+   */
+  destinationKind: DestinationKind;
   /** What to print after "Access will be sent to:". */
   destinationLabel: string;
   /** The vendor that owns the destination (web host or app scheme), or null. */
@@ -239,75 +307,64 @@ export function describeClientIdentity({
     destination.kind === 'web' || destination.kind === 'loopback'
       ? destination.host
       : destination.kind === 'app'
-        ? `${destination.scheme}://`
+        ? destination.native
+          ? `${destination.scheme}://`
+          : destination.webHost
+            ? `${destination.webHost} (${destination.scheme}:)`
+            : `${destination.scheme}:`
         : '';
   const destinationVendor =
     destination.kind === 'web'
       ? vendorForHost(destination.hostname)
-      : destination.kind === 'app'
-        ? VENDORS.find((v) => v.schemes.has(destination.scheme))?.id ?? null
+      : destination.kind === 'app' && destination.native
+        ? NATIVE_APP_SCHEMES.get(destination.scheme) ?? null
         : null;
+  const destinationKind: DestinationKind =
+    destination.kind === 'app' ? (destination.native ? 'app' : 'other') : destination.kind === 'invalid' ? 'other' : destination.kind;
 
   const name = typeof clientName === 'string' && clientName.trim() ? clientName.trim() : clientId;
+  const base = { byline: '', destination, destinationKind, destinationLabel, destinationVendor };
 
   // A row in oauth_clients that is neither dyn_ nor a URL was put there by a
   // migration we wrote. Its name and byline are ours, not a registrant's.
   if (!isCimd && !isDynamicClientId(clientId)) {
-    return {
-      verification: 'registered',
-      displayName: name,
-      selfReportedName: null,
-      byline: clientByline ?? '',
-      destination,
-      destinationLabel,
-      destinationVendor,
-      impersonates: null,
-    };
+    return { ...base, verification: 'registered', displayName: name, selfReportedName: null, byline: clientByline ?? '', impersonates: null };
   }
 
   const nameVendor = isCimd ? null : vendorForName(name);
+  // A CIMD name is already the client_id host (cimd.ts); nothing self-reported.
+  const reported = isCimd ? null : name;
 
-  if (destination.kind === 'web') {
-    // The name claims a vendor the destination does not belong to.
-    const impersonates = nameVendor && nameVendor !== destinationVendor ? vendorLabel(nameVendor) : null;
-    if (destinationVendor && !impersonates) {
-      return {
-        verification: 'verified',
-        displayName: name,
-        selfReportedName: null,
-        byline: '',
-        destination,
-        destinationLabel,
-        destinationVendor,
-        impersonates: null,
-      };
-    }
-    return {
-      verification: 'unverified',
-      // The host is DNS-backed and checkable; the name is free text. (A CIMD
-      // name already IS the client_id host, which cimd.ts made same-origin
-      // with this redirect.)
-      displayName: isCimd ? name : destination.host,
-      selfReportedName: isCimd || name === destination.host ? null : name,
-      byline: '',
-      destination,
-      destinationLabel,
-      destinationVendor,
-      impersonates,
-    };
+  // A known vendor's own https host, or one of the known native-app schemes.
+  // On a vendor HOST the code goes to that vendor whatever the name says:
+  // Claude and ChatGPT put the user's own connector name ("MCP Emails") in
+  // client_name, so no impersonation alert there. The name keeps the heading
+  // and is labelled as self-reported.
+  if (destination.kind === 'web' && destinationVendor) {
+    return { ...base, verification: 'verified', displayName: name, selfReportedName: reported, impersonates: null };
   }
 
-  // Loopback or a native-app scheme: the code never leaves the user's device,
-  // so the self-asserted name stays the heading (Claude Code, Cursor, Codex,
-  // VS Code all look as they did), labelled as reported by the app.
+  // Loopback: the code stays on this machine, and the CLIs that use it (Claude
+  // Code, Codex, Gemini CLI, VS Code) all name themselves. Not phishable from
+  // a link, so the name stays the heading and no alert is raised.
+  if (destination.kind === 'loopback') {
+    return { ...base, verification: 'local', displayName: name, selfReportedName: reported, impersonates: null };
+  }
+
+  // A known native app, with a name that does not claim ANOTHER vendor.
+  const impersonates = nameVendor && nameVendor !== destinationVendor ? vendorLabel(nameVendor) : null;
+  if (destination.kind === 'app' && destination.native && !impersonates) {
+    return { ...base, verification: 'local', displayName: name, selfReportedName: reported, impersonates: null };
+  }
+
+  // Everything else: an unknown web host, an unknown or hand-off scheme, or a
+  // vendor's name on someone else's destination. The heading is the
+  // destination, the name is a labelled secondary line.
   return {
-    verification: destination.kind === 'invalid' ? 'unverified' : 'local',
-    displayName: name,
-    selfReportedName: isCimd ? null : name,
-    byline: '',
-    destination,
-    destinationLabel,
-    destinationVendor,
-    impersonates: null,
+    ...base,
+    verification: 'unverified',
+    displayName: isCimd ? name : destinationLabel || name,
+    selfReportedName: reported && reported !== destinationLabel ? reported : null,
+    impersonates,
   };
 }

@@ -360,7 +360,7 @@ export default async function AuthorizePage({ searchParams }) {
       identity={{
         verification:       identity.verification,
         selfReportedName:   identity.selfReportedName,
-        destinationKind:    identity.destination.kind,
+        destinationKind:    identity.destinationKind,
         destinationLabel:   identity.destinationLabel,
         impersonates:       identity.impersonates,
       }}

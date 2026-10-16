@@ -73,6 +73,11 @@ for (const uri of [
   'file:///etc/passwd',
   'blob:https://mcpemails.com/0b7c2a1e',
   'about:blank',
+  'microsoft-edge:https://attacker.example/cb',
+  'x-safari-https://attacker.example/cb',
+  'googlechromes://attacker.example/cb',
+  'intent://attacker.example/cb#Intent;scheme=https;end',
+  'web+mcp:https://attacker.example/cb',
 ]) {
   test(`refuses redirect_uri ${JSON.stringify(uri)} and stores nothing`, async () => {
     const res = await register({ client_name: 'x', redirect_uris: ['https://app.example/cb', uri] });
@@ -105,6 +110,8 @@ test('LEGIT: ChatGPT on chatgpt.com, Cursor on cursor://, VS Code on loopback al
     ['Cursor', 'cursor://anysphere.cursor-mcp/oauth/callback'],
     ['Visual Studio Code', 'http://127.0.0.1:33418/'],
     ['Claude Code', 'http://localhost:54212/callback'],
+    ['Windsurf', 'windsurf://codeium.windsurf/oauth'],
+    ['Visual Studio Code - Insiders', 'vscode-insiders://vscode.github-authentication/did-authenticate'],
   ]) {
     const res = await register({ client_name, redirect_uris: [uri] });
     assert.equal(res.status, 201, `${client_name} ${uri}`);
