@@ -355,3 +355,39 @@ test('a dead first candidate is healed and a valid second one still opens the po
   assert.equal(wsCustomer('ws-caller'), null);
   assert.equal(wsCustomer('ws-caller-2'), 'cus_caller');
 });
+
+// ── test(verify): independent checks of the self-heal delta ──────────────────
+test('[verify] rate limits, Stripe 5xx, code-less socket errors and metadata-less customers never null a paying id', async () => {
+  const transient: Error[] = [
+    Object.assign(new Error('Too many requests'), { code: 'rate_limit', type: 'StripeRateLimitError', statusCode: 429 }),
+    Object.assign(new Error('Something went wrong on our end'), { type: 'StripeAPIError', statusCode: 500 }),
+    new Error('socket hang up'),
+    Object.assign(new Error('Request timed out'), { code: 'ETIMEDOUT' }),
+  ];
+  for (const err of transient) {
+    reset();
+    ownWorkspace('cus_caller');
+    stripeOutage = err;
+    assert.equal((await openPortal()).status, 422, err.message);
+    assert.equal(wsCustomer('ws-caller'), 'cus_caller', err.message);
+    assert.deepEqual(updates, [], err.message);
+  }
+  // No metadata, email matches but is unconfirmed: unproven, kept.
+  reset();
+  caller!.email_confirmed_at = null;
+  customers.cus_legacy = { id: 'cus_legacy', email: 'caller@example.test' };
+  ownWorkspace('cus_legacy');
+  assert.equal((await openPortal()).status, 422);
+  assert.equal(wsCustomer('ws-caller'), 'cus_legacy');
+  assert.deepEqual(updates, []);
+});
+
+test('[verify] a failing heal write never blocks the response', async () => {
+  reset();
+  ownWorkspace('cus_gone');
+  tables.workspaces.push({ id: 'ws-caller-2', owner_id: CALLER, stripe_customer_id: 'cus_caller', deleted_at: null, created_at: '2026-05-03' });
+  updates = { push() { throw new Error('db down'); } } as unknown as Row[];
+  const { status } = await openPortal();
+  assert.equal(status, 200);
+  assert.deepEqual(portalSessions, ['cus_caller']);
+});
