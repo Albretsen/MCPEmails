@@ -466,7 +466,6 @@ export function gmailFull(m: FakeGmailMessage): Record<string, unknown> {
   };
 }
 
-/** A `messages.get?format=metadata` body. */
 /**
  * A `messages.get?format=raw` body: the message as RFC 822 (headers, then the
  * text part), base64url-encoded, as Gmail returns it. Header values are the
@@ -485,6 +484,7 @@ export function gmailRaw(m: FakeGmailMessage): Record<string, unknown> {
   };
 }
 
+/** A `messages.get?format=metadata` body. */
 export function gmailMeta(m: FakeGmailMessage): Record<string, unknown> {
   return {
     id: m.id,
