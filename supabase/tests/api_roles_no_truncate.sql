@@ -9,6 +9,8 @@
 --     does not regain them, while it still gets the ordinary default grants;
 --   - service_role still holds TRUNCATE (and REFERENCES, TRIGGER) on every
 --     public table;
+--   - on PG17+, the same holds for MAINTAIN (skipped on older servers, where
+--     the privilege does not exist);
 --   - the data privileges other migrations manage are untouched (spot checks).
 --
 -- Run with: supabase test db
@@ -16,7 +18,7 @@
 
 BEGIN;
 
-SELECT plan(14);
+SELECT plan(17);
 
 -- ------------------------------------------------------------
 -- 1. Catalog sweep over every existing public relation
@@ -48,6 +50,27 @@ SELECT ok(
     WHERE relnamespace = 'public'::regnamespace AND relkind IN ('r', 'p')) > 50,
   'the sweep covers the real schema (sanity: >50 public tables)'
 );
+
+-- MAINTAIN only exists on PG17+. The probe query is passed as text so it is
+-- never parsed on older servers; there the assertion is skipped.
+SELECT CASE WHEN current_setting('server_version_num')::int >= 170000 THEN
+  is_empty(
+    $q$ SELECT c.oid::regclass::text, r.role FROM pg_class c
+         CROSS JOIN (VALUES ('anon'), ('authenticated')) AS r(role)
+        WHERE c.relnamespace = 'public'::regnamespace
+          AND c.relkind IN ('r', 'p', 'v', 'm', 'f')
+          AND has_table_privilege(r.role, c.oid, 'MAINTAIN') $q$,
+    'no public relation grants MAINTAIN to anon or authenticated')
+ELSE skip('MAINTAIN does not exist before PG17', 1) END;
+
+SELECT CASE WHEN current_setting('server_version_num')::int >= 170000 THEN
+  is_empty(
+    $q$ SELECT c.oid::regclass::text FROM pg_class c
+        WHERE c.relnamespace = 'public'::regnamespace
+          AND c.relkind IN ('r', 'p')
+          AND NOT has_table_privilege('service_role', c.oid, 'MAINTAIN') $q$,
+    'service_role still holds MAINTAIN on every public table')
+ELSE skip('MAINTAIN does not exist before PG17', 1) END;
 
 -- ------------------------------------------------------------
 -- 2. service_role keeps its privileges everywhere
@@ -92,6 +115,12 @@ SELECT ok(NOT has_table_privilege('anon', 'public._u_no_truncate_probe', 'REFERE
 SELECT ok(NOT has_table_privilege('anon', 'public._u_no_truncate_probe', 'TRIGGER')
       AND NOT has_table_privilege('authenticated', 'public._u_no_truncate_probe', 'TRIGGER'),
   'new table: no TRIGGER for anon/authenticated');
+SELECT CASE WHEN current_setting('server_version_num')::int >= 170000 THEN
+  is_empty(
+    $q$ SELECT r.role FROM (VALUES ('anon'), ('authenticated')) AS r(role)
+        WHERE has_table_privilege(r.role, 'public._u_no_truncate_probe', 'MAINTAIN') $q$,
+    'new table: no MAINTAIN for anon/authenticated')
+ELSE skip('MAINTAIN does not exist before PG17', 1) END;
 SELECT ok(has_table_privilege('service_role', 'public._u_no_truncate_probe', 'TRUNCATE'),
   'new table: service_role still gets TRUNCATE by default');
 SELECT ok(has_table_privilege('authenticated', 'public._u_no_truncate_probe', 'SELECT'),

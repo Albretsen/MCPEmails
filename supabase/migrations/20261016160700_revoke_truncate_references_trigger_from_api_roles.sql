@@ -44,3 +44,25 @@ BEGIN
   END IF;
 END
 $$;
+
+-- 4. PG17's MAINTAIN privilege (VACUUM FULL, CLUSTER, REINDEX, REFRESH
+--    MATERIALIZED VIEW, LOCK TABLE: heavy locks, a denial-of-service lever).
+--    MAINTAIN is a syntax error before PG17 (config.toml still says
+--    major_version = 15), so it is guarded by server version. service_role is
+--    untouched here too.
+DO $$
+BEGIN
+  IF current_setting('server_version_num')::int >= 170000 THEN
+    EXECUTE 'REVOKE MAINTAIN ON ALL TABLES IN SCHEMA public FROM anon, authenticated, PUBLIC';
+    EXECUTE 'ALTER DEFAULT PRIVILEGES FOR ROLE postgres IN SCHEMA public '
+         || 'REVOKE MAINTAIN ON TABLES FROM anon, authenticated';
+    IF EXISTS (SELECT 1 FROM pg_roles WHERE rolname = 'supabase_admin')
+       AND pg_has_role(current_user, 'supabase_admin', 'USAGE') THEN
+      EXECUTE 'ALTER DEFAULT PRIVILEGES FOR ROLE supabase_admin IN SCHEMA public '
+           || 'REVOKE MAINTAIN ON TABLES FROM anon, authenticated';
+    END IF;
+  ELSE
+    RAISE NOTICE 'skipping MAINTAIN revoke: server version % predates PG17', current_setting('server_version');
+  END IF;
+END
+$$;
