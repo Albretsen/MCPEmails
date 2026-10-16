@@ -59,6 +59,8 @@ function review(overrides = {}) {
     canDecide: true,
     recipientsResolvedAtSend: false,
     revision: 1,
+    reply_to: [],
+    approvable: true,
     ...overrides,
   };
 }
@@ -151,6 +153,22 @@ function panel() {
     createElement(ToastProvider, null, createElement(ApprovalsPanel, { userRole: 'owner' })));
 }
 
+/** What GET /api/approvals/[id] answers for the dialog. */
+function details(overrides = {}) {
+  return {
+    id: ID,
+    status: 'pending',
+    revision: 1,
+    to: ['colleague@example.com'],
+    cc: [],
+    subject: 'Notes',
+    bcc: ['drop@evil.example'],
+    bcc_count: 1,
+    approvable: true,
+    ...overrides,
+  };
+}
+
 function pendingItem(overrides = {}) {
   return {
     id: ID,
@@ -160,44 +178,84 @@ function pendingItem(overrides = {}) {
     status: 'pending',
     created_at: '2026-10-16T10:00:00.000Z',
     revision: 1,
-    bcc: ['drop@evil.example'],
     inboxes: { email_address: 'me@example.com', display_name: null },
     ...overrides,
   };
 }
 
-test('dashboard dialog: shows the Bcc addresses and a link to the full review, and sends the revision', async (t) => {
-  const calls = stubFetch(t, (url, init) =>
-    (init.method ?? 'GET') === 'GET'
-      ? { body: { approvals: [pendingItem({ revision: 3 })], decided: [] } }
-      : { body: { success: true } });
+
+const isList = (url, init) => url === '/api/approvals' && (init.method ?? 'GET') === 'GET';
+const isDetails = (url) => url === `/api/approvals/${ID}`;
+
+async function openDialog(t, respond, label = 'Review & approve') {
+  const calls = stubFetch(t, respond);
   const view = await mount(panel());
   t.after(() => view.unmount());
-  await waitFor(() => button(view.container, 'Review & approve'), { message: 'the queue row' });
-  await click(button(view.container, 'Review & approve'));
+  await waitFor(() => button(view.container, label), { message: 'the queue row' });
+  await click(button(view.container, label));
   const dialog = await waitFor(() => view.container.querySelector('[role="dialog"]'), { message: 'the dialog' });
-  assert.match(dialog.textContent, /drop@evil\.example/);
+  return { calls, view, dialog };
+}
+
+test('dashboard: the queue loads no Bcc; the dialog fetches this one approval and shows its addresses', async (t) => {
+  const { calls, dialog } = await openDialog(t, (url, init) =>
+    isList(url, init) ? { body: { approvals: [pendingItem({ revision: 3 })], decided: [] } }
+      : isDetails(url) ? { body: details({ revision: 4 }) }
+      : { body: { success: true } });
+  await waitFor(() => /drop@evil\.example/.test(dialog.textContent), { message: 'the Bcc addresses' });
+  assert.ok(calls.some((c) => isDetails(c.url)), 'details fetched on open');
   const link = [...dialog.querySelectorAll('a')].find((a) => a.getAttribute('href') === `/approvals/${ID}`);
   assert.ok(link, 'links to the full review');
 
   await click(button(dialog, 'Approve & queue'));
   await waitFor(() => calls.some((c) => c.method === 'PATCH'), { message: 'the PATCH' });
-  assert.deepEqual(calls.find((c) => c.method === 'PATCH').body, { id: ID, decision: 'approve', revision: 3 });
+  // The revision of the details shown, not the (older) queue row's.
+  assert.deepEqual(calls.find((c) => c.method === 'PATCH').body, { id: ID, decision: 'approve', revision: 4 });
 });
 
-test('dashboard dialog: a changed request reloads, stays open on the current version, and says so', async (t) => {
-  let gets = 0;
+test('dashboard: Approve waits for the details, and stays off if they cannot be loaded; Reject does not wait', async (t) => {
+  const { dialog } = await openDialog(t, (url, init) =>
+    isList(url, init) ? { body: { approvals: [pendingItem()], decided: [] } }
+      : isDetails(url) ? { status: 500, body: { error: 'boom' } }
+      : { body: { success: true } });
+  await waitFor(() => dialog.textContent.includes(dashboard.approvals.panel.detailsFailed), { message: 'the failure notice' });
+  const confirm = [...dialog.querySelectorAll('.modal-foot button')].at(-1);
+  assert.equal(confirm.disabled, true, 'no approve without the details');
+});
+
+test('dashboard: reject is available even when the details fail to load', async (t) => {
+  const { calls, dialog } = await openDialog(t, (url, init) =>
+    isList(url, init) ? { body: { approvals: [pendingItem()], decided: [] } }
+      : isDetails(url) ? { status: 500, body: {} }
+      : { body: { success: true } }, 'Reject');
+  await waitFor(() => dialog.textContent.includes(dashboard.approvals.panel.detailsFailed), { message: 'the failure notice' });
+  const reject = button(dialog, 'Reject request');
+  assert.equal(reject.disabled, false);
+  await click(reject);
+  await waitFor(() => calls.some((c) => c.method === 'PATCH'), { message: 'the PATCH' });
+  assert.deepEqual(calls.find((c) => c.method === 'PATCH').body, { id: ID, decision: 'reject', revision: null });
+});
+
+test('dashboard: a legacy draft send cannot be approved from the dialog, and says why', async (t) => {
+  const { dialog } = await openDialog(t, (url, init) =>
+    isList(url, init) ? { body: { approvals: [pendingItem({ operation: 'draft_send' })], decided: [] } }
+      : isDetails(url) ? { body: details({ approvable: false }) }
+      : { body: { success: true } });
+  await waitFor(() => dialog.textContent.includes(dashboard.approvals.review.bodyStoredWithProvider), { message: 'the explanation' });
+  assert.equal(button(dialog, 'Approve & queue').disabled, true);
+});
+
+test('dashboard: a changed request reloads, stays open on the current version, and says so', async (t) => {
   let patches = 0;
-  const calls = stubFetch(t, (url, init) => {
-    if ((init.method ?? 'GET') === 'GET') {
-      gets++;
+  let detailReads = 0;
+  const { calls, view } = await openDialog(t, (url, init) => {
+    if (isList(url, init)) return { body: { approvals: [pendingItem()], decided: [] } };
+    if (isDetails(url)) {
+      detailReads++;
       return {
-        body: {
-          approvals: [gets === 1
-            ? pendingItem()
-            : pendingItem({ revision: 2, bcc: ['drop@evil.example', 'second@evil.example'], summary: { to: ['colleague@example.com'], bcc_count: 2, subject: 'Edited' } })],
-          decided: [],
-        },
+        body: detailReads === 1
+          ? details()
+          : details({ revision: 2, bcc: ['drop@evil.example', 'second@evil.example'], bcc_count: 2, subject: 'Edited' }),
       };
     }
     patches++;
@@ -205,22 +263,42 @@ test('dashboard dialog: a changed request reloads, stays open on the current ver
       ? { status: 409, body: { code: 'changed', error: 'This request changed after you opened it.' } }
       : { body: { success: true } };
   });
-  const view = await mount(panel());
-  t.after(() => view.unmount());
-  await waitFor(() => button(view.container, 'Review & approve'), { message: 'the queue row' });
-  await click(button(view.container, 'Review & approve'));
-  let dialog = await waitFor(() => view.container.querySelector('[role="dialog"]'), { message: 'the dialog' });
+  let dialog = await waitFor(() => {
+    const d = view.container.querySelector('[role="dialog"]');
+    return d && !button(d, 'Approve & queue')?.disabled ? d : null;
+  }, { message: 'details loaded' });
   await click(button(dialog, 'Approve & queue'));
 
   dialog = await waitFor(() => {
     const d = view.container.querySelector('[role="dialog"]');
-    return d && d.textContent.includes(dashboard.approvals.panel.changedNotice) ? d : null;
-  }, { message: 'the changed notice in the dialog' });
-  assert.match(dialog.textContent, /second@evil\.example/, 'the current Bcc list');
+    return d && d.textContent.includes(dashboard.approvals.panel.changedNotice) && /second@evil\.example/.test(d.textContent) ? d : null;
+  }, { message: 'the changed notice with the current details' });
   assert.match(dialog.textContent, /Edited/, 'the current subject');
 
   await click(button(dialog, 'Approve & queue'));
   await waitFor(() => patches === 2, { message: 'the second PATCH' });
   const last = calls.filter((c) => c.method === 'PATCH').at(-1);
   assert.deepEqual(last.body, { id: ID, decision: 'approve', revision: 2 });
+});
+
+test('review page: a legacy draft send offers Reject only, with the reason shown', async (t) => {
+  const view = await mount(page({
+    review: review({
+      operation: 'draft_send',
+      approvable: false,
+      body: { text: null, html: null, truncated: false, unavailable: 'stored_with_provider' },
+    }),
+    csrfToken: 'tok-1',
+  }));
+  t.after(() => view.unmount());
+  assert.ok(view.container.textContent.includes(dashboard.approvals.review.bodyStoredWithProvider));
+  assert.equal(button(view.container, dashboard.approvals.review.approve).disabled, true);
+  assert.equal(button(view.container, dashboard.approvals.review.reject).disabled, false);
+});
+
+test('review page: a Reply-To is shown', async (t) => {
+  const view = await mount(page({ review: review({ reply_to: ['desk@example.com'] }), csrfToken: 'tok-1' }));
+  t.after(() => view.unmount());
+  assert.ok(view.container.textContent.includes(dashboard.approvals.review.replyTo));
+  assert.match(view.container.textContent, /desk@example\.com/);
 });

@@ -677,6 +677,7 @@
       "to": "To",
       "cc": "Cc",
       "bcc": "Bcc",
+      "replyTo": "Reply-To",
       "subject": "Subject",
       "attachments": "Attachments",
       "operation": "Type",
@@ -783,7 +784,9 @@
       "statusCancelled": "Cancelled",
       "changedNotice": "This request changed after you opened it. Nothing was sent. The current version is shown below; check it before you confirm.",
       "changedGone": "This request changed and is no longer waiting for a decision. Nothing was sent.",
-      "openReview": "Open the full review, including the message text"
+      "openReview": "Open the full review, including the message text",
+      "detailsFailed": "Could not load this request's details. Nothing was sent. You can still reject it, or close this and try again.",
+      "loadingDetails": "Loading…"
     }
   },
   "automations": {

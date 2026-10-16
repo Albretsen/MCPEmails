@@ -61,7 +61,7 @@ export function ApprovalsPanel({ userRole }) {
     return () => window.clearTimeout(timer);
   }, [load]);
 
-  const decide = async () => {
+  const decide = async (details) => {
     if (!decisionItem || submitting) return;
     setSubmitting(true);
     try {
@@ -73,7 +73,7 @@ export function ApprovalsPanel({ userRole }) {
         body: JSON.stringify({
           id: decisionItem.item.id,
           decision: decisionItem.decision,
-          revision: decisionItem.item.revision ?? null,
+          revision: details?.revision ?? null,
         }),
       });
       const payload = await response.json().catch(() => ({}));
@@ -98,7 +98,13 @@ export function ApprovalsPanel({ userRole }) {
         const fresh = await load();
         const current = fresh?.find((item) => item.id === decisionItem.item.id) ?? null;
         if (current) {
-          setDecisionItem({ item: current, decision: decisionItem.decision, changed: true });
+          // A new `nonce` remounts the dialog, which reloads its details.
+          setDecisionItem({
+            item: current,
+            decision: decisionItem.decision,
+            changed: true,
+            nonce: (decisionItem.nonce ?? 0) + 1,
+          });
         } else {
           setDecisionItem(null);
           toast({ message: t('approvals.panel.changedGone'), variant: 'error' });
@@ -184,7 +190,7 @@ export function ApprovalsPanel({ userRole }) {
 
       {!loading && decided.length ? <DecidedTable rows={decided} t={t} /> : null}
 
-      {decisionItem ? <DecisionDialog item={decisionItem.item} decision={decisionItem.decision} changed={decisionItem.changed === true} submitting={submitting} onCancel={() => !submitting && setDecisionItem(null)} onConfirm={decide} t={t} /> : null}
+      {decisionItem ? <DecisionDialog key={`${decisionItem.item.id}:${decisionItem.nonce ?? 0}`} item={decisionItem.item} decision={decisionItem.decision} changed={decisionItem.changed === true} submitting={submitting} onCancel={() => !submitting && setDecisionItem(null)} onConfirm={decide} t={t} /> : null}
     </div>
   );
 }
@@ -275,10 +281,45 @@ function ApprovalListSkeleton() {
   );
 }
 
+/**
+ * The decision dialog. On open it loads this one approval's details
+ * (`GET /api/approvals/[id]`): the current recipients and subject, the Bcc
+ * addresses, the `revision` the decision carries, and whether it can be
+ * approved at all. The queue itself decrypts nothing. Approve waits for those
+ * details; Reject never does, since rejecting is safe whatever the request
+ * says.
+ */
 function DecisionDialog({ item, decision, changed, submitting, onCancel, onConfirm, t }) {
   const approving = decision === 'approve';
-  const bcc = Array.isArray(item.bcc) ? item.bcc.filter(Boolean) : [];
-  const bccCount = Math.max(typeof item.summary?.bcc_count === 'number' ? item.summary.bcc_count : 0, bcc.length);
+  const [details, setDetails] = useState(null);
+  const [detailsFailed, setDetailsFailed] = useState(false);
+
+  useEffect(() => {
+    let live = true;
+    fetch(`/api/approvals/${item.id}`, { cache: 'no-store' })
+      .then(async (response) => {
+        const payload = await response.json().catch(() => null);
+        if (!live) return;
+        if (!response.ok || !payload) setDetailsFailed(true);
+        else setDetails(payload);
+      })
+      .catch(() => { if (live) setDetailsFailed(true); });
+    return () => { live = false; };
+  }, [item.id]);
+
+  const bcc = Array.isArray(details?.bcc) ? details.bcc.filter(Boolean) : [];
+  const bccCount = Math.max(
+    typeof details?.bcc_count === 'number' ? details.bcc_count
+      : typeof item.summary?.bcc_count === 'number' ? item.summary.bcc_count : 0,
+    bcc.length,
+  );
+  const recipients = details
+    ? (details.to?.length ? details.to.join(', ') : 'No recipient supplied')
+    : recipientLabel(item);
+  const subject = details ? details.subject : item.summary?.subject;
+  const notApprovable = details?.approvable === false;
+  const confirmDisabled = submitting || (approving && (!details || notApprovable));
+
   return (
     <div className="scrim" onClick={onCancel}>
       <div className="modal" role="dialog" aria-modal="true" aria-labelledby="approval-decision-title" onClick={(event) => event.stopPropagation()} style={{ width: 460 }}>
@@ -297,9 +338,19 @@ function DecisionDialog({ item, decision, changed, submitting, onCancel, onConfi
               {t('approvals.panel.changedNotice')}
             </div>
           ) : null}
+          {detailsFailed ? (
+            <div className="alert alert-error" role="alert" style={{ marginBottom: 12 }}>
+              {t('approvals.panel.detailsFailed')}
+            </div>
+          ) : null}
+          {approving && notApprovable ? (
+            <div className="alert" role="status" style={{ marginBottom: 12 }}>
+              {t('approvals.review.bodyStoredWithProvider')}
+            </div>
+          ) : null}
           <dl style={{ margin: 0, display: 'grid', gap: 10 }}>
             <div><dt className="sub">Inbox</dt><dd style={{ margin: '2px 0 0' }}>{approvalLabel(item)}</dd></div>
-            <div><dt className="sub">Recipients</dt><dd style={{ margin: '2px 0 0', overflowWrap: 'anywhere' }}>{recipientLabel(item)}</dd></div>
+            <div><dt className="sub">Recipients</dt><dd style={{ margin: '2px 0 0', overflowWrap: 'anywhere' }}>{recipients}</dd></div>
             {bccCount > 0 ? (
               <div>
                 <dt className="sub">{t('approvals.review.bcc')}</dt>
@@ -308,7 +359,7 @@ function DecisionDialog({ item, decision, changed, submitting, onCancel, onConfi
                 </dd>
               </div>
             ) : null}
-            <div><dt className="sub">Subject</dt><dd style={{ margin: '2px 0 0' }}>{item.summary?.subject || '(no subject)'}</dd></div>
+            <div><dt className="sub">Subject</dt><dd style={{ margin: '2px 0 0' }}>{subject || '(no subject)'}</dd></div>
           </dl>
           <p className="sub" style={{ margin: '12px 0 0' }}>
             <Link href={`/approvals/${item.id}`}>{t('approvals.panel.openReview')}</Link>
@@ -316,7 +367,9 @@ function DecisionDialog({ item, decision, changed, submitting, onCancel, onConfi
         </div>
         <div className="modal-foot">
           <Btn variant="secondary" onClick={onCancel} disabled={submitting}>Cancel</Btn>
-          <Btn variant={approving ? 'primary' : 'danger'} onClick={onConfirm} disabled={submitting}>{submitting ? 'Saving…' : approving ? 'Approve & queue' : 'Reject request'}</Btn>
+          <Btn variant={approving ? 'primary' : 'danger'} onClick={() => onConfirm(details)} disabled={confirmDisabled}>
+            {submitting ? 'Saving…' : approving && !details && !detailsFailed ? t('approvals.panel.loadingDetails') : approving ? 'Approve & queue' : 'Reject request'}
+          </Btn>
         </div>
       </div>
     </div>

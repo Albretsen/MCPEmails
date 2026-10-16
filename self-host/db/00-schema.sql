@@ -625,6 +625,37 @@ CREATE TABLE IF NOT EXISTS public.send_approvals (
 CREATE INDEX IF NOT EXISTS send_approvals_pending_expiry_idx ON public.send_approvals (expires_at) WHERE (status = 'pending'::text);
 CREATE INDEX IF NOT EXISTS send_approvals_workspace_pending_idx ON public.send_approvals (workspace_id, created_at DESC) WHERE (status = 'pending'::text);
 
+-- What a reviewer was shown (supabase/migrations/20261016160600). Bumped by the
+-- trigger on every payload/summary/send_at change; approving requires the
+-- revision the reviewer rendered.
+ALTER TABLE public.send_approvals
+  ADD COLUMN IF NOT EXISTS revision integer NOT NULL DEFAULT 1;
+ALTER TABLE public.send_approvals DROP CONSTRAINT IF EXISTS send_approvals_revision_check;
+ALTER TABLE public.send_approvals ADD CONSTRAINT send_approvals_revision_check CHECK (revision >= 1);
+CREATE OR REPLACE FUNCTION public.send_approvals_bump_revision()
+RETURNS trigger
+LANGUAGE plpgsql
+SET search_path = ''
+AS $$
+BEGIN
+  IF NEW.payload IS DISTINCT FROM OLD.payload
+     OR NEW.summary IS DISTINCT FROM OLD.summary
+     OR NEW.send_at IS DISTINCT FROM OLD.send_at
+     OR NEW.operation IS DISTINCT FROM OLD.operation
+     OR NEW.inbox_id IS DISTINCT FROM OLD.inbox_id THEN
+    NEW.revision := OLD.revision + 1;
+  ELSE
+    NEW.revision := OLD.revision;
+  END IF;
+  RETURN NEW;
+END;
+$$;
+DROP TRIGGER IF EXISTS send_approvals_bump_revision ON public.send_approvals;
+CREATE TRIGGER send_approvals_bump_revision
+  BEFORE UPDATE ON public.send_approvals
+  FOR EACH ROW
+  EXECUTE FUNCTION public.send_approvals_bump_revision();
+
 CREATE TABLE IF NOT EXISTS public.outbound_idempotency (
     id uuid DEFAULT gen_random_uuid() NOT NULL,
     api_key_id uuid NOT NULL,

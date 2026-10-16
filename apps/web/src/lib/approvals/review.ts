@@ -1,6 +1,8 @@
-import { decryptToken } from '@/lib/crypto';
 import { neutralizeList, neutralizeNullable, neutralizeText } from '@/lib/textSafety';
 import { canDecide, isExpired } from './decide';
+import { bccFromPayload, draftSnapshotFrom, isUnsendableLegacyDraft, readPayload } from './payload';
+
+export { reviewerBccFor } from './payload';
 
 /* eslint-disable @typescript-eslint/no-explicit-any */
 
@@ -125,6 +127,17 @@ export interface ApprovalReviewModel {
    * with the decision, and an approve of any other version is refused.
    */
   revision: number | null;
+  /**
+   * Where replies to this message go, when it names somewhere other than the
+   * sender. Empty for `viewer` (who sees no message content).
+   */
+  reply_to: string[];
+  /**
+   * False for a draft send queued before the server recorded a copy of the
+   * draft: it can never be sent (see payload.ts#isUnsendableLegacyDraft), so
+   * Approve is disabled while Reject stays available.
+   */
+  approvable: boolean;
   subject: string;
   attachment_count: number;
   /** A forward that relays the original's own attachments (none are arguments). */
@@ -185,49 +198,6 @@ function clip(value: unknown): { value: string | null; truncated: boolean } {
   const buf = Buffer.from(value, 'utf8').subarray(0, BODY_CLIP_BYTES);
   // Drop a trailing partial UTF-8 sequence rather than emitting U+FFFD.
   return { value: buf.toString('utf8').replace(/�$/, ''), truncated: true };
-}
-
-/**
- * Decrypts the stored snapshot. Returns null if the row is not decryptable —
- * never throws into the page render.
- */
-function readPayload(approval: any): Record<string, unknown> | null {
-  const payload = approval?.payload;
-  if (!payload) return null;
-  if (approval.payload_encrypted === false) {
-    return typeof payload === 'object' ? (payload as Record<string, unknown>) : null;
-  }
-  const ciphertext = (payload as any)?.data;
-  if (typeof ciphertext !== 'string') return null;
-  try {
-    const parsed = JSON.parse(decryptToken(ciphertext));
-    return parsed && typeof parsed === 'object' ? parsed : null;
-  } catch (error) {
-    console.error('[approvals] Failed to decrypt approval payload:', (error as Error)?.message);
-    return null;
-  }
-}
-
-/** The `draft_snapshot` a held draft send carries, or null. */
-function draftSnapshotFrom(payload: Record<string, unknown> | null): Record<string, any> | null {
-  const raw = payload?.draft_snapshot;
-  return raw && typeof raw === 'object' && !Array.isArray(raw) ? (raw as Record<string, any>) : null;
-}
-
-function bccFromPayload(operation: unknown, payload: Record<string, unknown> | null): string[] {
-  const source = operation === 'draft_send' ? draftSnapshotFrom(payload)?.bcc : payload?.bcc;
-  return neutralizeList(source).filter(Boolean);
-}
-
-/**
- * The Bcc addresses a reviewer with `role` may see on an approval row (as
- * selected with `payload` and `payload_encrypted`). Empty for `viewer`, and
- * empty when the payload cannot be read: the count is still shown from the
- * summary, so a hidden recipient is never presented as none.
- */
-export function reviewerBccFor(approval: any, role: string | null | undefined): string[] {
-  if (!role || role === 'viewer') return [];
-  return bccFromPayload(approval?.operation, readPayload(approval));
 }
 
 function draftAttachmentsFrom(snapshot: Record<string, any> | null): ReviewAttachment[] {
@@ -367,6 +337,18 @@ export async function loadApprovalForReview(
       ? (summary.attachment_count as number)
       : attachments.length;
   const bcc = role === 'viewer' ? [] : bccFromPayload(approval.operation, payload);
+  const replyTo = role === 'viewer'
+    ? []
+    : neutralizeList(
+        draftSnapshot
+          ? draftSnapshot.reply_to
+          : typeof payload?.reply_to === 'string'
+            ? [payload.reply_to]
+            : payload?.reply_to,
+      ).filter(Boolean);
+  // Decided from the payload itself, not from the role-dependent body above,
+  // so a viewer's read-only page and an admin's page agree on it.
+  const approvable = !isUnsendableLegacyDraft(approval, payload ?? readPayload(approval));
   const summaryBccCount = typeof summary.bcc_count === 'number' ? (summary.bcc_count as number) : 0;
 
   return {
@@ -396,6 +378,8 @@ export async function loadApprovalForReview(
       bcc_count: Math.max(summaryBccCount, bcc.length),
     },
     revision: typeof approval.revision === 'number' ? approval.revision : null,
+    reply_to: replyTo,
+    approvable,
     subject,
     attachment_count: attachmentCount,
     forward_carries_original: summary.forward_carries_original === true,

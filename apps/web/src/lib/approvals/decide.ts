@@ -1,4 +1,5 @@
 import { PENDING_APPROVAL_COLUMNS, runTolerantly } from './columns';
+import { isUnsendableLegacyDraft } from './payload';
 
 /* eslint-disable @typescript-eslint/no-explicit-any */
 
@@ -41,6 +42,7 @@ export type DecisionFailureCode =
   | 'not_pending'
   | 'expired'
   | 'changed'
+  | 'not_sendable'
   | 'queue_failed'
   | 'write_failed';
 
@@ -149,6 +151,17 @@ export async function decideApproval({
     // as stale, never as "any version".
     if (revision === null || approval.revision !== revision) {
       return { ok: false, code: 'changed', status: 409, error: CHANGED_ERROR };
+    }
+    // The dispatcher would refuse it anyway; approving it would only queue a
+    // send that fails. Both UIs disable Approve for it; this is the backstop.
+    if (isUnsendableLegacyDraft(approval)) {
+      return {
+        ok: false,
+        code: 'not_sendable',
+        status: 409,
+        error:
+          'This draft send was prepared before a copy of the draft was recorded, so it cannot be sent. Reject it and send the draft again.',
+      };
     }
     // Atomic claim: only one caller can move pending → approved, and only for
     // the revision it rendered. An edit landing between the read above and

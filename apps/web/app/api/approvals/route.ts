@@ -4,7 +4,6 @@ import { createServiceRoleClient } from '@/lib/supabase/service';
 import { resolveActiveWorkspaceId } from '@/lib/workspace/active';
 import { isJsonRequest, isSameOrigin } from '@/lib/http/same-origin';
 import { canDecide, decideApproval, parseRenderedRevision } from '@/lib/approvals/decide';
-import { reviewerBccFor } from '@/lib/approvals/review';
 import { PENDING_APPROVAL_COLUMNS, selectTolerantly } from '@/lib/approvals/columns';
 
 async function context() {
@@ -22,18 +21,14 @@ export async function GET() {
   const c = await context();
   if (!c) return NextResponse.json({ error: 'Unauthorized.' }, { status: 401 });
   const { data, error } = await c.db.from('send_approvals')
-    .select('id, inbox_id, operation, summary, send_at, status, created_at, revision, payload, payload_encrypted, inboxes(email_address, display_name)')
+    .select('id, inbox_id, operation, summary, send_at, status, created_at, revision, inboxes(email_address, display_name)')
     .eq('workspace_id', c.workspaceId).eq('status', 'pending').order('created_at', { ascending: false }).limit(100);
   if (error) return NextResponse.json({ error: 'Failed to load approvals.' }, { status: 500 });
 
-  // The payload is read here only to list Bcc addresses for the decision
-  // dialog, and never leaves this function: a hidden recipient must be visible
-  // to whoever approves (F-04-05), and is withheld from `viewer`, which also
-  // never sees the message text (see review.ts).
-  const approvals = (data ?? []).map((row: Record<string, unknown>) => {
-    const { payload: _payload, payload_encrypted: _encrypted, ...rest } = row;
-    return { ...rest, bcc: reviewerBccFor(row, c.role) };
-  });
+  // No payload here: the queue lists summaries only, and nothing is
+  // decrypted for it. The decision dialog loads one approval's Bcc addresses
+  // when it opens (GET /api/approvals/[id]).
+  const approvals = data ?? [];
 
   // Recently decided sends, so the panel can show WHERE each decision was made
   // (`decided_via`: the review card in Claude vs. this dashboard). A failure

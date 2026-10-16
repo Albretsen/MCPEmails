@@ -26,9 +26,14 @@
 //
 // The digest is over content, not over the provider's own modified-time: a
 // mail client that re-saves an untouched draft (Outlook does) must not make
-// every approved send fail. For Gmail and IMAP, whose readers parse the raw
-// message, the files' bytes are digested too; Outlook's reader reports names,
-// sizes and types only.
+// every approved send fail. It covers who the message is from and where
+// replies go (From, Reply-To) and how it threads (In-Reply-To, References), so
+// a Reply-To swapped to the agent's own address after approval is caught too.
+// Nothing a provider regenerates on its own (Date, Message-ID, MIME
+// boundaries, header order or folding) is in it, and attachments are sorted,
+// so an untouched draft digests the same on every re-read. For Gmail and IMAP,
+// whose readers parse the raw message, the files' bytes are digested too;
+// Outlook's reader reports names, sizes and types only.
 // ---------------------------------------------------------------------------
 
 /** What a reader of one stored draft returns (index.ts#DraftContent, the fields used here). */
@@ -38,6 +43,11 @@ export interface DraftReadForSnapshot {
   to: string[];
   cc: string[];
   bcc: string[];
+  /** From and Reply-To as parsed addresses. Absent when the reader has none. */
+  headerFrom?: string[];
+  headerReplyTo?: string[];
+  inReplyTo?: string;
+  references?: string;
   bodyText?: string | null;
   bodyHtml?: string | null;
   attachments?: { filename: string; size_bytes: number | null; mime_type: string | null }[];
@@ -51,6 +61,8 @@ export interface ApprovedDraftSnapshot {
   to: string[];
   cc: string[];
   bcc: string[];
+  /** Where replies go, when the draft names somewhere other than the sender. */
+  reply_to: string[];
   subject: string;
   body_text: string | null;
   body_html: string | null;
@@ -86,6 +98,7 @@ export function draftSnapshotOf(draft: DraftReadForSnapshot): ApprovedDraftSnaps
     to: strings(draft.to),
     cc: strings(draft.cc),
     bcc: strings(draft.bcc),
+    reply_to: strings(draft.headerReplyTo),
     subject: draft.subjectAbsent ? "" : (draft.subject ?? ""),
     body_text: text.value,
     body_html: html.value,
@@ -110,22 +123,46 @@ async function sha256Hex(input: string): Promise<string> {
 export async function draftDigest(draft: DraftReadForSnapshot): Promise<string> {
   let fileBytes: string[] = [];
   if (draft.carried) {
-    fileBytes = await Promise.all(
+    fileBytes = (await Promise.all(
       draft.carried.encode().map(async (f) => `${f.filename}\u0000${f.mime_type}\u0000${await sha256Hex(f.data)}`),
-    );
+    )).sort();
   }
   const canonical = JSON.stringify([
-    "draft-digest-v1",
+    "draft-digest-v2",
     strings(draft.to),
     strings(draft.cc),
     strings(draft.bcc),
+    strings(draft.headerFrom),
+    strings(draft.headerReplyTo),
+    idList(draft.inReplyTo),
+    idList(draft.references),
     draft.subjectAbsent ? null : (draft.subject ?? ""),
     draft.bodyText ?? "",
     draft.bodyHtml ?? "",
-    (draft.attachments ?? []).map((a) => [a.filename ?? null, a.size_bytes ?? null, a.mime_type ?? null]),
+    sortedAttachments(draft.attachments),
     fileBytes,
   ]);
   return await sha256Hex(canonical);
+}
+
+/** A Message-ID list as its ids, so header folding cannot change the digest. */
+function idList(value: string | undefined): string {
+  return typeof value === "string" ? value.split(/\s+/).filter(Boolean).join(" ") : "";
+}
+
+/**
+ * Attachments in a fixed order (name, size, type): a provider is free to list
+ * the same files in another order on the next read.
+ */
+function sortedAttachments(list: DraftReadForSnapshot["attachments"]): [string | null, number | null, string | null][] {
+  const rows = (list ?? []).map((a): [string | null, number | null, string | null] => [
+    a.filename ?? null,
+    a.size_bytes ?? null,
+    a.mime_type ?? null,
+  ]);
+  const key = (r: [string | null, number | null, string | null]) =>
+    `${r[0] ?? ""}\u0000${String(r[1] ?? -1).padStart(16, "0")}\u0000${r[2] ?? ""}`;
+  return rows.sort((a, b) => (key(a) < key(b) ? -1 : key(a) > key(b) ? 1 : 0));
 }
 
 export type ApprovedDraftCheck = "match" | "changed" | "unverified";
@@ -170,6 +207,7 @@ export function approvedDraftSnapshotFrom(
     to: strings(s.to),
     cc: strings(s.cc),
     bcc: strings(s.bcc),
+    reply_to: strings(s.reply_to),
     subject: typeof s.subject === "string" ? s.subject : "",
     body_text: typeof s.body_text === "string" ? s.body_text : null,
     body_html: typeof s.body_html === "string" ? s.body_html : null,
@@ -194,6 +232,9 @@ export function approvedDraftSnapshotFrom(
 export const APPROVED_DRAFT_CHANGED_DETAIL =
   "Not sent. The draft was changed after this send was approved, so it no longer says what was " +
   "approved. Review the draft and send it again.";
+export const APPROVED_DRAFT_UNREADABLE_DETAIL =
+  "Not sent yet. The draft could not be read to check it against the approved version, so " +
+  "nothing was sent. It is retried automatically for a while; if it keeps failing, send the draft again.";
 export const APPROVED_DRAFT_UNVERIFIED_DETAIL =
   "Not sent. This send was approved without a recorded copy of the draft, so it could not be " +
   "checked against what was approved. Review the draft and send it again.";

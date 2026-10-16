@@ -32,6 +32,7 @@
 import { cardWriteConflict, lineRevision, type ResolvedDraft } from "./draft-lineage.ts";
 import {
   APPROVED_DRAFT_CHANGED_DETAIL,
+  APPROVED_DRAFT_UNREADABLE_DETAIL,
   APPROVED_DRAFT_UNVERIFIED_DETAIL,
 } from "./draft-send-snapshot.ts";
 
@@ -183,6 +184,8 @@ export function approvedSendRefusalDetail(
       return APPROVED_DRAFT_CHANGED_DETAIL;
     case "approved_draft_unverified":
       return APPROVED_DRAFT_UNVERIFIED_DETAIL;
+    case "approved_draft_unreadable":
+      return APPROVED_DRAFT_UNREADABLE_DETAIL;
     default:
       return null;
   }

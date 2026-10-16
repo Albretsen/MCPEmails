@@ -243,6 +243,12 @@ export function ApprovalReview({ review, csrfToken }) {
               </Row>
             ) : null}
 
+            {review.reply_to?.length ? (
+              <Row label={t('approvals.review.replyTo')}>
+                <span className="review-strong review-wrapany">{review.reply_to.join(', ')}</span>
+              </Row>
+            ) : null}
+
             <Row label={t('approvals.review.subject')}>
               {review.subject ? (
                 <span className="review-strong review-wrapany">{review.subject}</span>
@@ -361,10 +367,12 @@ export function ApprovalReview({ review, csrfToken }) {
               >
                 {submitting === 'reject' ? t('approvals.review.working') : t('approvals.review.reject')}
               </Btn>
+              {/* A legacy draft send can never be sent (the message section says
+                  why), so only Reject is offered for it. */}
               <Btn
                 variant="primary"
                 icon="check"
-                disabled={submitting !== null || awaitingFresh}
+                disabled={submitting !== null || awaitingFresh || review.approvable === false}
                 onClick={() => decide('approve')}
               >
                 {submitting === 'approve' ? t('approvals.review.working') : t('approvals.review.approve')}

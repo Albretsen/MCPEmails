@@ -25,7 +25,11 @@
 
 import { assert, assertEquals } from "jsr:@std/assert@1";
 import * as harness from "./provider-call-harness.ts";
-import { APPROVED_DRAFT_CHANGED_DETAIL, APPROVED_DRAFT_UNVERIFIED_DETAIL } from "./draft-send-snapshot.ts";
+import {
+  APPROVED_DRAFT_CHANGED_DETAIL,
+  APPROVED_DRAFT_UNREADABLE_DETAIL,
+  APPROVED_DRAFT_UNVERIFIED_DETAIL,
+} from "./draft-send-snapshot.ts";
 
 // The harness has already imported index.ts against its fake network; this is
 // the same module instance.
@@ -39,6 +43,10 @@ const SEND_ID = "bbbbbbbb-bbbb-4bbb-8bbb-bbbbbbbbbbbb";
 
 interface FakeDraft {
   to: string;
+  from?: string;
+  replyTo?: string;
+  inReplyTo?: string;
+  references?: string;
   bcc?: string;
   subject: string;
   text: string;
@@ -46,8 +54,11 @@ interface FakeDraft {
 
 function rawMime(d: FakeDraft): string {
   return [
-    "From: Harness Owner <owner@gmail-harness.example>",
+    `From: ${d.from ?? "Harness Owner <owner@gmail-harness.example>"}`,
     `To: ${d.to}`,
+    ...(d.replyTo ? [`Reply-To: ${d.replyTo}`] : []),
+    ...(d.inReplyTo ? [`In-Reply-To: ${d.inReplyTo}`] : []),
+    ...(d.references ? [`References: ${d.references}`] : []),
     ...(d.bcc ? [`Bcc: ${d.bcc}`] : []),
     `Subject: ${d.subject}`,
     "Date: Thu, 15 Oct 2026 10:00:00 +0000",
@@ -170,7 +181,11 @@ function recordingClient(tables: Record<string, Row[]>) {
 
 /** Run the dispatcher over one approved approval whose payload is `payload` (encrypted as stored). */
 async function dispatchApproved(draft: FakeDraft, storedPayload: Row) {
-  const inbox = await approvalInbox();
+  const { handler, sends } = gmail(draft);
+  return { sends, ...(await dispatchWith(await approvalInbox(), handler, storedPayload)) };
+}
+
+async function dispatchWith(inbox: Row, handler: harness.ProviderHandler, storedPayload: Row) {
   const tables: Record<string, Row[]> = {
     scheduled_sends: [{
       id: SEND_ID,
@@ -178,8 +193,9 @@ async function dispatchApproved(draft: FakeDraft, storedPayload: Row) {
       status: "pending",
       payload: { approval_id: APPROVAL_ID },
       payload_encrypted: false,
-      send_at: "2020-01-01T00:00:00.000Z",
-      updated_at: "2020-01-01T00:00:00.000Z",
+      // Due a moment ago, so a retryable refusal is inside the defer window.
+      send_at: new Date(Date.now() - 1000).toISOString(),
+      updated_at: new Date(Date.now() - 1000).toISOString(),
       sent_at: null,
       error_detail: null,
     }],
@@ -198,13 +214,12 @@ async function dispatchApproved(draft: FakeDraft, storedPayload: Row) {
     api_keys: [{ ...harness.API_KEY, deleted_at: null }],
     inboxes: [{ ...inbox, deleted_at: null }],
   };
-  const { handler, sends } = gmail(draft);
   await harness.runTool(inbox, handler, async () => {
     // deno-lint-ignore no-explicit-any
     const response = await server.handleScheduledDispatch(recordingClient(tables) as any);
     await response.body?.cancel();
   });
-  return { sends, scheduled: tables.scheduled_sends[0] };
+  return { scheduled: tables.scheduled_sends[0] };
 }
 
 const ORIGINAL: FakeDraft = {
@@ -272,4 +287,171 @@ Deno.test("a draft send on an inbox without approval is sent at once, with no ex
   assertEquals(sends.length, 1);
   assert(!world.db.some((c) => c.target === "send_approvals"), "no approval involved");
   assert(!world.calls.some((c) => c.url.includes("format=raw")), "the snapshot read happens only for a held send");
+});
+
+// ---------------------------------------------------------------------------
+// Follow-ups (verification of 2026-10-16): Reply-To / From / threading are in
+// the digest; an Outlook attachment list that will not load is held, not
+// failed as "changed"; attachment order is not a change.
+// ---------------------------------------------------------------------------
+
+Deno.test("a Reply-To, From or threading header changed after approval is not sent", async () => {
+  const queued: FakeDraft = {
+    ...ORIGINAL,
+    inReplyTo: "<orig-1@example.com>",
+    references: "<root@example.com> <orig-1@example.com>",
+  };
+  const { row, payload } = await holdDraftSend(queued);
+  assertEquals((payload.draft_snapshot as Row).reply_to, [], "no Reply-To recorded");
+  for (
+    const rewritten of [
+      { ...queued, replyTo: "drop@evil.example" },
+      { ...queued, from: "Someone Else <else@example.com>" },
+      { ...queued, inReplyTo: "<other@example.com>" },
+      { ...queued, references: "<root@example.com>" },
+    ]
+  ) {
+    const { sends, scheduled } = await dispatchApproved(rewritten, row.payload as Row);
+    assertEquals(sends.length, 0, `nothing sent for ${JSON.stringify(rewritten)}`);
+    assertEquals(scheduled.error_detail, APPROVED_DRAFT_CHANGED_DETAIL);
+  }
+  // The same draft with its References folded differently is not a change.
+  const refolded = { ...queued, references: "<root@example.com>\r\n <orig-1@example.com>" };
+  const { sends } = await dispatchApproved(refolded, row.payload as Row);
+  assertEquals(sends.length, 1, "refolded References is the same draft");
+});
+
+Deno.test("a Reply-To present when the send was held is recorded for the reviewer", async () => {
+  const { payload } = await holdDraftSend({ ...ORIGINAL, replyTo: "Desk <desk@example.com>" });
+  assertEquals((payload.draft_snapshot as Row).reply_to, ["Desk <desk@example.com>"]);
+});
+
+const OUTLOOK_ID = "AAMkFollowup4242";
+
+interface GraphState {
+  replyTo?: string;
+  attachments: { name: string; size: number; contentType: string }[];
+  /** Attachment-list requests that answer 500 (not retried by graphFetch itself) before one succeeds. */
+  failAttachmentLists: number;
+  reverseOrderOnRead?: number;
+}
+
+function graph(state: GraphState) {
+  const sends: string[] = [];
+  let attachmentReads = 0;
+  const handler: harness.ProviderHandler = (call) => {
+    const url = new URL(call.url);
+    const base = `/v1.0/me/messages/${OUTLOOK_ID}`;
+    if (url.pathname === base && call.method === "GET") {
+      return harness.json({
+        id: OUTLOOK_ID,
+        subject: "Q3 notes",
+        body: { contentType: "text", content: "See you Thursday." },
+        hasAttachments: state.attachments.length > 0,
+        conversationId: "conv-1",
+        lastModifiedDateTime: "2026-10-15T10:00:00Z",
+        toRecipients: [{ emailAddress: { address: "partner@example.com", name: "Partner" } }],
+        ccRecipients: [],
+        bccRecipients: [],
+        from: { emailAddress: { address: "owner@outlook-harness.example", name: "Harness Owner" } },
+        replyTo: state.replyTo ? [{ emailAddress: { address: state.replyTo } }] : [],
+      });
+    }
+    if (url.pathname === `${base}/attachments` && call.method === "GET") {
+      attachmentReads++;
+      if (state.failAttachmentLists > 0) {
+        state.failAttachmentLists--;
+        return harness.json({ error: { code: "InternalServerError" } }, 500);
+      }
+      const list = attachmentReads === state.reverseOrderOnRead ? [...state.attachments].reverse() : state.attachments;
+      return harness.json({ value: list });
+    }
+    if (url.pathname === `${base}/send` && call.method === "POST") {
+      sends.push(call.url);
+      return new Response(null, { status: 202 });
+    }
+    return harness.json({ error: { code: "ErrorItemNotFound" } }, 404);
+  };
+  return { handler, sends };
+}
+
+const TWO_FILES = [
+  { name: "b.pdf", size: 10, contentType: "application/pdf" },
+  { name: "a.pdf", size: 20, contentType: "application/pdf" },
+];
+
+async function holdOutlook(state: GraphState) {
+  const inbox = await harness.inboxRow("outlook", { send_approval_required: true });
+  const { handler } = graph(state);
+  const { value, world } = await harness.runTool(inbox, handler, () =>
+    server.dispatchExecutor("draft_send", { inbox_id: harness.INBOX_ID, draft_id: OUTLOOK_ID }, harness.API_KEY));
+  const insert = world.db.find((c) => c.method === "POST" && c.target === "send_approvals");
+  return { value, insert: insert ? insert.body as Row : null };
+}
+
+async function dispatchOutlook(state: GraphState, storedPayload: Row) {
+  const inbox = await harness.inboxRow("outlook", { send_approval_required: true });
+  const { handler, sends } = graph(state);
+  return { sends, ...(await dispatchWith(inbox, handler, storedPayload)) };
+}
+
+Deno.test("Outlook: attachments listed in another order on the re-read are the same draft", async () => {
+  const { insert } = await holdOutlook({ attachments: TWO_FILES, failAttachmentLists: 0 });
+  assert(insert);
+  const { sends, scheduled } = await dispatchOutlook(
+    { attachments: TWO_FILES, failAttachmentLists: 0, reverseOrderOnRead: 1 },
+    insert.payload as Row,
+  );
+  assertEquals(sends.length, 1);
+  assertEquals(scheduled.status, "sent");
+});
+
+Deno.test("Outlook: one failed attachment-list read is retried and the approved send goes out", async () => {
+  const { insert } = await holdOutlook({ attachments: TWO_FILES, failAttachmentLists: 1 });
+  assert(insert, "the retry let the queue record the files");
+  const recorded = ((await decryptStored(String((insert.payload as Row).data))).draft_snapshot as Row).attachments as Row[];
+  assertEquals(recorded.length, 2, "both files recorded, not an empty list");
+  const { sends, scheduled } = await dispatchOutlook({ attachments: TWO_FILES, failAttachmentLists: 1 }, insert.payload as Row);
+  assertEquals(sends.length, 1);
+  assertEquals(scheduled.status, "sent");
+});
+
+Deno.test("Outlook: an attachment list that will not load at queue time refuses to queue, nothing recorded as empty", async () => {
+  const { value, insert } = await holdOutlook({ attachments: TWO_FILES, failAttachmentLists: 2 });
+  assertEquals(insert, null, "no approval of a draft read without its files");
+  assert((value as { result?: { isError?: boolean } } | null)?.result?.isError === true);
+});
+
+Deno.test("Outlook: an attachment list that will not load at dispatch holds the send for a retry, it is not 'changed'", async () => {
+  const { insert } = await holdOutlook({ attachments: TWO_FILES, failAttachmentLists: 0 });
+  assert(insert);
+  const { sends, scheduled } = await dispatchOutlook({ attachments: TWO_FILES, failAttachmentLists: 2 }, insert.payload as Row);
+  assertEquals(sends.length, 0, "nothing sent");
+  assertEquals(scheduled.status, "pending", "back on the queue for the next tick");
+  assertEquals(scheduled.error_detail, `deferred, nothing was sent: ${APPROVED_DRAFT_UNREADABLE_DETAIL}`);
+});
+
+Deno.test("Outlook: a Reply-To added after approval is not sent", async () => {
+  const { insert } = await holdOutlook({ attachments: [], failAttachmentLists: 0 });
+  assert(insert);
+  const { sends, scheduled } = await dispatchOutlook(
+    { attachments: [], failAttachmentLists: 0, replyTo: "drop@evil.example" },
+    insert.payload as Row,
+  );
+  assertEquals(sends.length, 0);
+  assertEquals(scheduled.error_detail, APPROVED_DRAFT_CHANGED_DETAIL);
+});
+
+Deno.test("IMAP: the approved send checks the digest on the exact bytes it is about to send", async () => {
+  // No fake IMAP+SMTP pair covers imapSendDraft end to end, so this pins the
+  // wiring; the check itself is the tested checkApprovedDraft + draftDigest.
+  const src = await Deno.readTextFile(new URL("./index.ts", import.meta.url));
+  const send = src.slice(src.indexOf("async function imapSendDraft("), src.indexOf("async function imapDeleteDraft("));
+  const fetched = send.indexOf("rawMime = msg.raw;");
+  const verified = send.indexOf("if (verify) await verify(rawMime);");
+  const smtp = send.indexOf("await imapSmtpSend(inbox, sentMime, recipients);");
+  assert(fetched > 0 && verified > fetched && smtp > verified, "verify runs on the fetched bytes, before SMTP");
+  const caller = src.slice(src.indexOf("async function executeSendDraft("), src.indexOf("async function executeDeleteDraft("));
+  assert(caller.includes("await draftDigest(draftContentFromRaw(rawMime))"), "the same digest over the same bytes");
+  assert(caller.includes('if (message === "approved_draft_changed" || message === "approved_draft_unverified")'));
 });

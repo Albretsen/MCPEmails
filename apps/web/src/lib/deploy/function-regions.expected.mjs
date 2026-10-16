@@ -173,6 +173,7 @@ export const ROUTES = [
   ['app/api/api-keys/[id]/route.ts', 'arn1', '5', '-'],
   ['app/api/api-keys/route.ts', 'arn1', '8-9', '-'],
   ['app/api/approvals/[id]/decide/route.ts', 'arn1', '3', '-'],
+  ['app/api/approvals/[id]/route.ts', 'arn1', '2', '-'],
   ['app/api/approvals/route.ts', 'arn1', '4', '-'],
   ['app/api/automations/[id]/route.ts', 'arn1', '5', '-'],
   ['app/api/automations/[id]/runs/route.ts', 'arn1', '6', '-'],

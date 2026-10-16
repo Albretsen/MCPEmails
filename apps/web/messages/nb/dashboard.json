@@ -677,6 +677,7 @@
       "to": "Til",
       "cc": "Kopi",
       "bcc": "Blindkopi",
+      "replyTo": "Svar til",
       "subject": "Emne",
       "attachments": "Vedlegg",
       "operation": "Type",
@@ -783,7 +784,9 @@
       "statusCancelled": "Avbrutt",
       "changedNotice": "Denne forespørselen ble endret etter at du åpnet den. Ingenting ble sendt. Den gjeldende versjonen vises nedenfor; sjekk den før du bekrefter.",
       "changedGone": "Denne forespørselen ble endret og venter ikke lenger på en avgjørelse. Ingenting ble sendt.",
-      "openReview": "Åpne hele gjennomgangen, med meldingsteksten"
+      "openReview": "Åpne hele gjennomgangen, med meldingsteksten",
+      "detailsFailed": "Kunne ikke laste inn detaljene for denne forespørselen. Ingenting ble sendt. Du kan fortsatt avvise den, eller lukke dette og prøve igjen.",
+      "loadingDetails": "Laster inn…"
     }
   },
   "automations": {

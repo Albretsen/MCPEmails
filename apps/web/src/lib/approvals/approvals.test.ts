@@ -296,3 +296,59 @@ test('reviewerBccFor: addresses for deciding roles, nothing for viewer or an unr
   assert.deepEqual(reviewerBccFor(approval(), 'viewer'), []);
   assert.deepEqual(reviewerBccFor(approval({ payload: { v: 1, data: 'garbage' } }), 'owner'), []);
 });
+
+// ---------------------------------------------------------------------------
+// Follow-ups: a legacy draft send can be rejected but not approved; Reply-To
+// ---------------------------------------------------------------------------
+
+function legacyDraft(overrides: Row = {}): Row {
+  return approval({
+    operation: 'draft_send',
+    payload: { v: 1, data: encryptToken(JSON.stringify({ draft_id: 'g1', base_revision: 0 })) },
+    ...overrides,
+  });
+}
+
+test('a legacy draft send (no recorded copy) is refused as not_sendable, and can still be rejected', async () => {
+  const fake = db(legacyDraft());
+  const outcome = await decide(fake, 'approve', 1);
+  assert.equal(!outcome.ok && outcome.code, 'not_sendable');
+  assert.equal(fake.tables.send_approvals[0].status, 'pending');
+  assert.equal(fake.tables.scheduled_sends.length, 0);
+  assert.deepEqual(await decide(fake, 'reject', null), { ok: true, decision: 'reject' });
+});
+
+test('the review model says a legacy draft send is not approvable, for every role', async () => {
+  for (const role of ['owner', 'viewer']) {
+    const review = await loadApprovalForReview(db(legacyDraft(), role), ID, USER);
+    if (review === 'not_found') throw new Error('not found');
+    assert.equal(review.approvable, false, role);
+  }
+  const fresh = await loadApprovalForReview(db(), ID, USER);
+  if (fresh === 'not_found') throw new Error('not found');
+  assert.equal(fresh.approvable, true);
+});
+
+test('Reply-To is on the review model (from the draft snapshot or the send arguments), not for viewer', async () => {
+  const draft = approval({
+    operation: 'draft_send',
+    payload: {
+      v: 1,
+      data: encryptToken(JSON.stringify({
+        draft_id: 'g1',
+        draft_snapshot: { v: 1, to: ['a@example.com'], cc: [], bcc: [], reply_to: ['desk@example.com'], subject: 's', body_text: 'b', body_html: null, attachments: [] },
+        draft_digest: 'f'.repeat(64),
+      })),
+    },
+  });
+  const owner = await loadApprovalForReview(db(draft), ID, USER);
+  if (owner === 'not_found') throw new Error('not found');
+  assert.deepEqual(owner.reply_to, ['desk@example.com']);
+  const send = approval({ payload: { v: 1, data: encryptToken(JSON.stringify({ to: ['a@example.com'], reply_to: 'other@example.com', body: 'x' })) } });
+  const sent = await loadApprovalForReview(db(send), ID, USER);
+  if (sent === 'not_found') throw new Error('not found');
+  assert.deepEqual(sent.reply_to, ['other@example.com']);
+  const viewer = await loadApprovalForReview(db(draft, 'viewer'), ID, USER);
+  if (viewer === 'not_found') throw new Error('not found');
+  assert.deepEqual(viewer.reply_to, []);
+});

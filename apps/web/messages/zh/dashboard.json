@@ -677,6 +677,7 @@
       "to": "收件人",
       "cc": "抄送",
       "bcc": "密送",
+      "replyTo": "回复至",
       "subject": "主题",
       "attachments": "附件",
       "operation": "类型",
@@ -783,7 +784,9 @@
       "statusCancelled": "已取消",
       "changedNotice": "此请求在你打开后已被更改。未发送任何内容。下方显示的是当前版本，请核对后再确认。",
       "changedGone": "此请求已被更改，不再等待决定。未发送任何内容。",
-      "openReview": "打开完整审阅页面（含邮件正文）"
+      "openReview": "打开完整审阅页面（含邮件正文）",
+      "detailsFailed": "无法加载此请求的详细信息。未发送任何内容。你仍可以拒绝它，或关闭后重试。",
+      "loadingDetails": "正在加载…"
     }
   },
   "automations": {

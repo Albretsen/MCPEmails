@@ -25227,6 +25227,14 @@ interface DraftContent {
    */
   subjectAbsent?: boolean;
   replyTo?: string;
+  /**
+   * From and Reply-To as parsed address lists, whatever their form. Read only
+   * by the held draft send's digest (draft-send-snapshot.ts), so a Reply-To
+   * swapped after approval is caught; `replyTo` above is the rebuild's own,
+   * narrower field.
+   */
+  headerFrom?: string[];
+  headerReplyTo?: string[];
   rebuildBlockers?: string[];
   /**
    * The files a rebuild keeps, with their bytes encoded on demand. Set by the
@@ -25270,6 +25278,8 @@ function draftContentFromRaw(raw: string, threadId?: string): DraftContent {
     to: parseAddressList(decodeEncodedWords(getHeader(h, "to") ?? "")).map(formatAddressEntry),
     cc: parseAddressList(decodeEncodedWords(getHeader(h, "cc") ?? "")).map(formatAddressEntry),
     bcc: parseAddressList(decodeEncodedWords(getHeader(h, "bcc") ?? "")).map(formatAddressEntry),
+    headerFrom: parseAddressList(decodeEncodedWords(getHeader(h, "from") ?? "")).map(formatAddressEntry),
+    headerReplyTo: parseAddressList(decodeEncodedWords(getHeader(h, "reply-to") ?? "")).map(formatAddressEntry),
     ...(threadId ? { threadId } : {}),
     inReplyTo: decodeEncodedWords(getHeader(h, "in-reply-to") ?? "") || undefined,
     references: decodeEncodedWords(getHeader(h, "references") ?? "") || undefined,
@@ -25737,6 +25747,11 @@ async function imapRewriteDraftRecipients(
 async function imapSendDraft(
   inbox: InboxRow,
   draftId: string,
+  /**
+   * An approved held send's check (draft-send-snapshot.ts), run on the exact
+   * message fetched below, before anything is transmitted. Throws to refuse.
+   */
+  verify?: (rawMime: string) => Promise<void>,
 ): Promise<DraftSendResult> {
   // Steps 1-3 are pre-transmission: fetch the draft's MIME, parse its
   // recipients, strip the Bcc header. imapSmtpSend below is the first byte on
@@ -25776,6 +25791,7 @@ async function imapSendDraft(
       }
 
       if (!rawMime) throw new Error("draft_not_found");
+      if (verify) await verify(rawMime);
 
       // Step 2: Parse recipients from headers.
       const parsed = parseEmail(rawMime);
@@ -26318,12 +26334,23 @@ async function outlookGetDraft(
 async function outlookGetDraftForEditor(
   inbox: InboxRow,
   draftId: string,
+  /**
+   * `forApproval`: the read a held draft send records and an approved send
+   * checks (draft-send-snapshot.ts). It also asks for From and Reply-To, and
+   * an attachment list it cannot read is retried once and then THROWN rather
+   * than reported as "no attachments": a list that failed on one read and not
+   * the other would otherwise make an untouched draft look changed. The
+   * editor's own read is unchanged.
+   */
+  opts: { forApproval?: boolean } = {},
 ): Promise<DraftContent | null> {
+  const forApproval = opts.forApproval === true;
   const token = await withFreshOutlookToken(inbox);
   const resp = await graphFetch(
     token,
     `/me/messages/${encodeURIComponent(draftId)}` +
-      `?$select=subject,body,toRecipients,ccRecipients,bccRecipients,hasAttachments,conversationId,lastModifiedDateTime`,
+      `?$select=subject,body,toRecipients,ccRecipients,bccRecipients,hasAttachments,conversationId,lastModifiedDateTime` +
+      (forApproval ? ",from,replyTo" : ""),
     { headers: {} },
   );
   if (!resp.ok) {
@@ -26346,6 +26373,8 @@ async function outlookGetDraftForEditor(
     toRecipients?: { emailAddress: { address: string; name?: string } }[];
     ccRecipients?: { emailAddress: { address: string; name?: string } }[];
     bccRecipients?: { emailAddress: { address: string; name?: string } }[];
+    from?: { emailAddress: { address: string; name?: string } } | null;
+    replyTo?: { emailAddress: { address: string; name?: string } }[];
   };
   const map = (arr?: { emailAddress: { address: string; name?: string } }[]) =>
     (arr ?? []).map((r) =>
@@ -26357,28 +26386,44 @@ async function outlookGetDraftForEditor(
 
   let attachments: { filename: string; size_bytes: number | null; mime_type: string | null }[] = [];
   if (data.hasAttachments === true) {
-    try {
+    const readList = async () => {
       const attResp = await graphFetch(
         token,
         `/me/messages/${encodeURIComponent(draftId)}` +
           `/attachments?$select=name,size,contentType`,
         { headers: {} },
       );
-      if (attResp.ok) {
-        const attData = (await attResp.json()) as {
-          value?: { name?: string; size?: number; contentType?: string }[];
-        };
-        attachments = (attData.value ?? []).map((a) => ({
-          filename: typeof a.name === "string" ? a.name : "attachment",
-          size_bytes: typeof a.size === "number" ? a.size : null,
-          mime_type: typeof a.contentType === "string" ? a.contentType : null,
-        }));
+      if (!attResp.ok) {
+        await attResp.body?.cancel().catch(() => {});
+        throw new Error(`Outlook attachment list error: ${attResp.status}`);
       }
-    } catch {
-      // Non-fatal, and it fails in the safe direction: the draft still opens,
-      // and the only thing lost is the filename list under the body. Outlook is
-      // the one provider whose save preserves attachments anyway (PATCH touches
-      // named fields only), so this list is display, not a guard.
+      const attData = (await attResp.json()) as {
+        value?: { name?: string; size?: number; contentType?: string }[];
+      };
+      return (attData.value ?? []).map((a) => ({
+        filename: typeof a.name === "string" ? a.name : "attachment",
+        size_bytes: typeof a.size === "number" ? a.size : null,
+        mime_type: typeof a.contentType === "string" ? a.contentType : null,
+      }));
+    };
+    try {
+      attachments = await readList();
+    } catch (err) {
+      // For the editor this is non-fatal, and it fails in the safe direction:
+      // the draft still opens, and the only thing lost is the filename list
+      // under the body. Outlook is the one provider whose save preserves
+      // attachments anyway (PATCH touches named fields only), so this list is
+      // display, not a guard. For an approval it IS a guard (see
+      // `forApproval`): once more, then give up loudly.
+      if (forApproval) {
+        try {
+          attachments = await readList();
+        } catch {
+          throw new Error(
+            `outlook_attachment_list_unreadable: ${err instanceof Error ? err.message : String(err)}`,
+          );
+        }
+      }
     }
   }
 
@@ -26390,6 +26435,9 @@ async function outlookGetDraftForEditor(
     to: map(data.toRecipients),
     cc: map(data.ccRecipients),
     bcc: map(data.bccRecipients),
+    ...(forApproval
+      ? { headerFrom: data.from ? map([data.from]) : [], headerReplyTo: map(data.replyTo) }
+      : {}),
     threadId: data.conversationId,
     bodyText: isHtml ? stripHtmlToText(content) : content,
     bodyHtml: isHtml ? content : null,
@@ -28492,7 +28540,7 @@ async function readDraftForApproval(
     case "gmail":
       return await gmailGetDraftForEditor(inbox, draftId);
     case "outlook":
-      return await outlookGetDraftForEditor(inbox, draftId);
+      return await outlookGetDraftForEditor(inbox, draftId, { forApproval: true });
     default:
       return await imapGetDraft(inbox, draftId);
   }
@@ -28770,7 +28818,7 @@ async function executeSendDraft(
   // (Bcc and body included) and a digest of the whole draft. The approved
   // re-run below sends only if the draft still has that digest. A read that
   // fails is a refusal to queue, never an approval of content nobody saw.
-  const draftReadFailure = (err: unknown, phase: "queue" | "approved") => {
+  const draftReadFailure = (err: unknown) => {
     const message = err instanceof Error ? err.message : String(err);
     if (message === "gmail_auth_failed" || message === "outlook_auth_failed" || message === "imap_auth_failed") {
       return authFailedResult(inbox.provider, inbox.id, "access");
@@ -28782,10 +28830,8 @@ async function executeSendDraft(
       error: err,
       boundary: "ledger",
       fallbackCode: PROVIDER_NOT_SENT_ERROR_CODE,
-      text: phase === "queue"
-        ? `draft_send: could not read draft ${draftId} to record what is being approved. Nothing was sent; retry shortly.`
-        : `draft_send: could not read draft ${draftId} to check it against the approved version. Nothing was sent.`,
-      logContext: { phase: phase === "queue" ? "approval_snapshot" : "approval_check" },
+      text: `draft_send: could not read draft ${draftId} to record what is being approved. Nothing was sent; retry shortly.`,
+      logContext: { phase: "approval_snapshot" },
       resultExtra: { delivery_status: DELIVERY_STATUS_NOT_SENT },
     });
   };
@@ -28799,7 +28845,24 @@ async function executeSendDraft(
     try {
       current = await readDraftForApproval(inbox, draftId);
     } catch (err) {
-      return draftReadFailure(err, "approved");
+      const message = err instanceof Error ? err.message : String(err);
+      if (message === "gmail_auth_failed" || message === "outlook_auth_failed" || message === "imap_auth_failed") {
+        return authFailedResult(inbox.provider, inbox.id, "access");
+      }
+      // Not "changed": nothing is known to have changed, the read failed. The
+      // dispatcher holds the send and tries again (approvedSendRefusalDetail).
+      console.warn("[mcp-server] approved_draft_read_failed", { inbox_id: inbox.id, error: message });
+      return {
+        result: {
+          content: [{
+            type: "text",
+            text: `draft_send: could not read draft ${draftId} to check it against the approved version. Nothing was sent.`,
+          }],
+          isError: true,
+        },
+        logStatus: "error",
+        logErrorCode: "approved_draft_unreadable",
+      };
     }
     if (!current) return draftGone();
     const verdict = checkApprovedDraft(approved?.draftDigest, await draftDigest(current));
@@ -28826,7 +28889,7 @@ async function executeSendDraft(
     try {
       read = await readDraftForApproval(inbox, draftId);
     } catch (err) {
-      return draftReadFailure(err, "queue");
+      return draftReadFailure(err);
     }
     if (!read) return draftGone();
     approvalRecord = {
@@ -28864,7 +28927,26 @@ async function executeSendDraft(
     switch (inbox.provider) {
       case "gmail":    sendResult = await gmailSendDraft(inbox, draftId);    break;
       case "outlook":  sendResult = await outlookSendDraft(inbox, draftId);  break;
-      default:         sendResult = await imapSendDraft(inbox, draftId);     break;
+      // IMAP sends the message it fetched itself, so an approved send checks
+      // the digest on THOSE bytes, closing the gap between the check above
+      // and the send. Gmail and Outlook send the draft the provider holds;
+      // there the window is the few milliseconds between the read above and
+      // drafts.send / messages/{id}/send, which neither API can make atomic.
+      default:
+        sendResult = await imapSendDraft(
+          inbox,
+          draftId,
+          apiKey.internalApprovalDispatch === true
+            ? async (rawMime) => {
+              const verdict = checkApprovedDraft(
+                approved?.draftDigest,
+                await draftDigest(draftContentFromRaw(rawMime)),
+              );
+              if (verdict !== "match") throw new Error(`approved_draft_${verdict}`);
+            }
+            : undefined,
+        );
+        break;
     }
   } catch (err) {
     const message = err instanceof Error ? err.message : String(err);
@@ -28878,6 +28960,16 @@ async function executeSendDraft(
       return {
         result: { content: [{ type: "text", text: draftNoRecipientsMessage(draftId) }], isError: true },
         logStatus: "error", logErrorCode: "draft_has_no_recipients",
+      };
+    }
+    // The IMAP send's own check on the bytes it was about to send (above).
+    if (message === "approved_draft_changed" || message === "approved_draft_unverified") {
+      return {
+        result: {
+          content: [{ type: "text", text: `draft_send: draft ${draftId} no longer matches the approved version. Nothing was sent.` }],
+          isError: true,
+        },
+        logStatus: "error", logErrorCode: message,
       };
     }
     const isAuth = message === "gmail_auth_failed" || message === "outlook_auth_failed" ||
@@ -32410,6 +32502,16 @@ async function handleScheduledDispatch(
           // nothing was transmitted, so a retry is free of consequence.
           if (dispatchedResult.logErrorCode === PROVIDER_NOT_SENT_ERROR_CODE) {
             throw new SmtpNotSentError(`approved ${approval.operation} was refused before transmission`, true);
+          }
+          // The draft could not be read to check it against what was approved:
+          // nothing was sent and nothing is known to have changed, so the send
+          // is held and retried rather than failed as "changed".
+          if (dispatchedResult.logErrorCode === "approved_draft_unreadable") {
+            throw new SmtpNotSentError(
+              approvedSendRefusalDetail(approval.operation, dispatchedResult.logErrorCode) ??
+                "the draft could not be read",
+              true,
+            );
           }
           // A draft send refused because the draft moved on after approval
           // (or was already sent) says so in the approver's words.

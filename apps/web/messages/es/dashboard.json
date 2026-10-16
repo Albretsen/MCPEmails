@@ -677,6 +677,7 @@
       "to": "Para",
       "cc": "Cc",
       "bcc": "Cco",
+      "replyTo": "Responder a",
       "subject": "Asunto",
       "attachments": "Adjuntos",
       "operation": "Tipo",
@@ -783,7 +784,9 @@
       "statusCancelled": "Cancelado",
       "changedNotice": "Esta solicitud cambió después de que la abrieras. No se envió nada. Abajo se muestra la versión actual; revísala antes de confirmar.",
       "changedGone": "Esta solicitud cambió y ya no está esperando una decisión. No se envió nada.",
-      "openReview": "Abrir la revisión completa, con el texto del mensaje"
+      "openReview": "Abrir la revisión completa, con el texto del mensaje",
+      "detailsFailed": "No se pudieron cargar los detalles de esta solicitud. No se envió nada. Puedes rechazarla igualmente, o cerrar esto e intentarlo de nuevo.",
+      "loadingDetails": "Cargando…"
     }
   },
   "automations": {

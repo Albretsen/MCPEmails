@@ -145,3 +145,41 @@ Deno.test("index.ts records the snapshot at queue time and checks it before an a
   assert(src.includes("await executeSendDraft(draftArgs, internalKey, { draftDigest: digest })"));
   assert(!/approved\s*=\s*\{[^}]*args\[/.test(send), "the digest is never read from the arguments");
 });
+
+Deno.test("From, Reply-To and threading headers are in the digest; their folding and file order are not", async () => {
+  const threaded = draft({
+    headerFrom: ["Owner <owner@example.com>"],
+    headerReplyTo: [],
+    inReplyTo: "<a@example.com>",
+    references: "<root@example.com> <a@example.com>",
+    attachments: [
+      { filename: "b.pdf", size_bytes: 10, mime_type: "application/pdf" },
+      { filename: "a.pdf", size_bytes: 20, mime_type: "application/pdf" },
+    ],
+  });
+  const base = await draftDigest(threaded);
+  for (
+    const edit of [
+      { headerReplyTo: ["drop@evil.example"] },
+      { headerFrom: ["Else <else@example.com>"] },
+      { inReplyTo: "<b@example.com>" },
+      { references: "<root@example.com>" },
+    ]
+  ) {
+    assert(await draftDigest({ ...threaded, ...edit }) !== base, `not caught: ${JSON.stringify(edit)}`);
+  }
+  assertEquals(await draftDigest({ ...threaded, references: "<root@example.com>\r\n\t<a@example.com>" }), base);
+  assertEquals(
+    await draftDigest({ ...threaded, attachments: [...threaded.attachments!].reverse() }),
+    base,
+    "listing order is not a change",
+  );
+  const files = (order: string[]) => ({
+    encode: () => order.map((data) => ({ filename: "f", mime_type: "text/plain", data })),
+  });
+  assertEquals(
+    await draftDigest({ ...threaded, carried: files(["AAAA", "BBBB"]) }),
+    await draftDigest({ ...threaded, carried: files(["BBBB", "AAAA"]) }),
+  );
+  assertEquals(draftSnapshotOf({ ...threaded, headerReplyTo: ["Desk <desk@example.com>"] }).reply_to, ["Desk <desk@example.com>"]);
+});
