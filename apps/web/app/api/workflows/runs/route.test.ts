@@ -211,3 +211,39 @@ test('a member stopping a run that already finished still gets 409', async () =>
   const res = await PATCH(patch());
   assert.equal(res.status, 409);
 });
+
+// ── Verifier: adversarial bodies ─────────────────────────────────────────────
+
+test('verify: a viewer cannot smuggle a workspace or role through the body', async () => {
+  reset({ role: 'viewer' });
+  const res = await PATCH(patch({ id: RUN_ID, workspace_id: 'ws-other', workspaceId: 'ws-other', role: 'owner' }));
+  assert.equal(res.status, 403);
+  assert.deepEqual(world.roleFilters, { workspace_id: WORKSPACE_ID, user_id: USER.id });
+  assert.deepEqual(serviceWrites(), []);
+});
+
+test('verify: a member cannot redirect the cancel to another workspace through the body', async () => {
+  reset({ role: 'member' });
+  const res = await PATCH(patch({ id: RUN_ID, workspace_id: 'ws-other' }));
+  assert.equal(res.status, 200);
+  assert.equal(world.updates.length, 1);
+  assert.equal(world.updates[0].filters.workspace_id, WORKSPACE_ID);
+});
+
+test('verify: a non-string id (array/object) is 400 with no role read or write', async () => {
+  for (const id of [[RUN_ID], { eq: RUN_ID }, 42]) {
+    reset({ role: 'owner' });
+    const res = await PATCH(patch({ id }));
+    assert.equal(res.status, 400);
+    assert.deepEqual(serviceWrites(), []);
+  }
+});
+
+test('verify: a role with different casing or whitespace is refused', async () => {
+  for (const role of ['Owner', ' member', 'MEMBER', 'admin ']) {
+    reset({ role });
+    const res = await PATCH(patch());
+    assert.equal(res.status, 403, `role ${JSON.stringify(role)} must be refused`);
+    assert.deepEqual(serviceWrites(), []);
+  }
+});
