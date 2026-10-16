@@ -988,5 +988,11 @@
       "confirm": "Supprimer l'automatisation",
       "deleting": "Suppression…"
     }
+  },
+  "workflows": {
+    "bulkRuns": {
+      "viewerNotice": "Vous pouvez suivre ici les traitements volumineux, mais seul un propriétaire, un administrateur ou un membre de l'espace peut les arrêter.",
+      "stopViewerTitle": "Les observateurs ne peuvent pas arrêter un traitement"
+    }
   }
 }

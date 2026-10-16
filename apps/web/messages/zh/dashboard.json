@@ -988,5 +988,11 @@
       "confirm": "删除自动化",
       "deleting": "正在删除…"
     }
+  },
+  "workflows": {
+    "bulkRuns": {
+      "viewerNotice": "你可以在这里查看大批量任务的进度，但只有工作区的所有者、管理员或成员才能停止任务。",
+      "stopViewerTitle": "查看者无法停止任务"
+    }
   }
 }

@@ -988,5 +988,11 @@
       "confirm": "Eliminar automatización",
       "deleting": "Eliminando…"
     }
+  },
+  "workflows": {
+    "bulkRuns": {
+      "viewerNotice": "Puedes seguir aquí los trabajos grandes, pero solo un propietario, administrador o miembro del espacio puede detenerlos.",
+      "stopViewerTitle": "Los lectores no pueden detener trabajos"
+    }
   }
 }

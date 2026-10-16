@@ -13,6 +13,7 @@ import { loadSignatureEditor, peekSignatureEditor, warmSignatureEditor } from '.
 import { normalizeSenderName } from '@/lib/inboxes/sender-name';
 import { canChangeApiKey, keyScopeCap } from '@/lib/api-keys/key-authority';
 import { VIEWER_SCOPES } from '@/lib/api-keys/scopes';
+import { canOperateWorkspace } from '@/lib/workspace/roles';
 import {
   hiddenFromShown,
   inboxDraftEditorControl,
@@ -1182,7 +1183,7 @@ const WORKFLOW_CARDS = [
   { title: 'Review scheduled sends', prompt: 'Review my pending scheduled sends. Highlight anything stale, ambiguous, or unusually broad. Do not create or cancel anything.', scope: 'Scheduled sends' },
 ];
 
-export function WorkflowsPage({ mcpUrl }) {
+export function WorkflowsPage({ mcpUrl, userRole }) {
   const { toast } = useToast();
   const [copied, setCopied] = useState('');
   const copy = async (title, prompt) => {
@@ -1208,7 +1209,7 @@ export function WorkflowsPage({ mcpUrl }) {
           </article>
         ))}
       </div>
-      <BulkRunsPanel />
+      <BulkRunsPanel userRole={userRole} />
     </main>
   );
 }
@@ -4119,7 +4120,13 @@ export function KeysPage({ keys, inboxes = [], mcpUrl, onCreate, onKeyCreated, o
 
 // Kept separate from the customer-facing workflow library above. Bulk-run
 // controls need their own route/API wiring before they can replace it.
-function BulkRunsPanel() {
+//
+// Stop is an operator action (owner/admin/member). Viewers are read-only, and
+// PATCH /api/workflows/runs refuses them with a 403, so for a viewer the button
+// is shown disabled with the reason beside it instead of failing on click.
+function BulkRunsPanel({ userRole }) {
+  const t = useTranslations('dashboard');
+  const canStop = canOperateWorkspace(userRole);
   const [runs, setRuns] = useState([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState('');
@@ -4158,12 +4165,13 @@ function BulkRunsPanel() {
     <h2 style={{ margin: '0 0 6px', fontSize: 18 }}>Large-work controls</h2>
     <p style={{ color: 'var(--fg-2)', margin: '0 0 14px' }}>See bulk inbox work as it happens. Stop prevents work that has not started; it does not undo messages already changed.</p>
     {error && <div className="alert alert-error" role="alert">{error}</div>}
+    {!canStop && <div className="alert" role="status" data-testid="bulk-runs-viewer-notice" style={{ marginBottom: 12 }}>{t('workflows.bulkRuns.viewerNotice')}</div>}
     <div className="card" style={{ overflowX: 'auto' }}>
       {loading ? <p style={{ color: 'var(--fg-3)' }}>Loading runs…</p> : runs.length === 0 ? <div className="empty-state"><Icon name="activity" size={24} /><h3>No large-work runs yet</h3><p>Bulk move and flag actions will appear here while they run.</p></div> :
         <table className="data-table"><thead><tr><th>Action</th><th>Inbox</th><th>Progress</th><th>Status</th><th>Started</th><th /></tr></thead><tbody>{runs.map((run) => {
           const active = run.status === 'running' || run.status === 'cancelling';
           const label = run.operation.replaceAll('_', ' ');
-          return <tr key={run.id}><td style={{ textTransform: 'capitalize' }}>{label}</td><td>{run.inbox}</td><td>{run.processed} / {run.total} processed · {run.succeeded} changed{run.failed ? ` · ${run.failed} failed` : ''}</td><td><Badge tone={run.status === 'completed' ? 'live' : run.status === 'cancelled_partial' ? 'warning' : active ? 'neutral' : 'danger'}>{run.status.replaceAll('_', ' ')}</Badge></td><td>{new Date(run.createdAt).toLocaleString()}</td><td className="right">{active && <Btn variant="secondary" size="sm" disabled={run.status === 'cancelling' || cancelling === run.id} onClick={() => cancel(run.id)}>{run.status === 'cancelling' ? 'Stopping…' : 'Stop'}</Btn>}</td></tr>;
+          return <tr key={run.id}><td style={{ textTransform: 'capitalize' }}>{label}</td><td>{run.inbox}</td><td>{run.processed} / {run.total} processed · {run.succeeded} changed{run.failed ? ` · ${run.failed} failed` : ''}</td><td><Badge tone={run.status === 'completed' ? 'live' : run.status === 'cancelled_partial' ? 'warning' : active ? 'neutral' : 'danger'}>{run.status.replaceAll('_', ' ')}</Badge></td><td>{new Date(run.createdAt).toLocaleString()}</td><td className="right">{active && <Btn variant="secondary" size="sm" disabled={!canStop || run.status === 'cancelling' || cancelling === run.id} title={canStop ? undefined : t('workflows.bulkRuns.stopViewerTitle')} onClick={canStop ? () => cancel(run.id) : undefined}>{run.status === 'cancelling' ? 'Stopping…' : 'Stop'}</Btn>}</td></tr>;
         })}</tbody></table>}
     </div>
   </section>;
