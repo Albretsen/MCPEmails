@@ -191,3 +191,94 @@ Deno.test("parseSchema reads CREATE TABLE columns and ADD COLUMN upgrades", () =
   assertEquals([...parsed.tables.get("t")!].sort(), ["added", "id", "other"]);
   assertEquals([...parsed.functions], ["f"]);
 });
+
+// ---------------------------------------------------------------------------
+// Columns the server FILTERS on or UPDATES, not only the ones it selects.
+//
+// Added 2026-10-16 with send_approvals.dispatch_scheduled_send_id (migration
+// 20261016160400): the dispatcher only ever filters on it (`.is(…, null)`) and
+// writes it (`.update({ … })`), never names it in a projection, so the select
+// check above could not see it. On a self-host install without the column,
+// PostgREST rejects the claim and every approved send stalls. This walks each
+// `.from("t")` chain and checks the first string argument of every filter call
+// and the TOP-LEVEL keys of every `.update({ … })` object literal.
+// ---------------------------------------------------------------------------
+
+const FILTER_METHODS = new Set([
+  "eq", "neq", "is", "lt", "lte", "gt", "gte", "in", "not", "like", "ilike", "contains",
+]);
+
+/** Each `.method(arg)` call chained (across whitespace and line comments) after `start`. */
+export function chainedCalls(source: string, start: number): Array<{ method: string; arg: string }> {
+  const calls: Array<{ method: string; arg: string }> = [];
+  let i = start;
+  for (;;) {
+    const head = /^\s*(?:\/\/[^\n]*\n\s*)*\.(\w+)\(/.exec(source.slice(i, i + 4000));
+    if (!head) return calls;
+    const open = i + head[0].length - 1;
+    const arg = callArgument(source, open);
+    if (arg === null) return calls;
+    calls.push({ method: head[1], arg });
+    i = open + arg.length + 2;
+  }
+}
+
+/** Top-level keys of an object literal argument, or null if it is not a plain literal. */
+export function topLevelKeys(arg: string): string[] | null {
+  const body = /^\s*\{([\s\S]*)\}\s*$/.exec(arg)?.[1];
+  if (body === undefined || body.includes("...")) return null;
+  const keys: string[] = [];
+  let depth = 0;
+  let quote: string | null = null;
+  let segment = "";
+  const flush = () => {
+    const key = /^\s*([a-z_][a-z0-9_]*)\s*:/.exec(segment)?.[1];
+    if (key) keys.push(key);
+    segment = "";
+  };
+  for (const ch of body) {
+    if (quote) {
+      if (ch === quote) quote = null;
+    } else if (ch === '"' || ch === "'" || ch === "`") quote = ch;
+    else if ("([{".includes(ch)) depth++;
+    else if (")]}".includes(ch)) depth--;
+    else if (ch === "," && depth === 0) {
+      flush();
+      continue;
+    }
+    if (depth === 0 || segment.length < 200) segment += ch;
+  }
+  flush();
+  return keys;
+}
+
+Deno.test("self-host schema has every column the server filters on or updates", () => {
+  const missing = new Set<string>();
+  let checked = 0;
+  for (const [file, source] of sources) {
+    for (const m of source.matchAll(/\.from\("([a-z_]+)"\)/g)) {
+      const columns = schema.tables.get(m[1]);
+      for (const { method, arg } of chainedCalls(source, m.index! + m[0].length)) {
+        const names = FILTER_METHODS.has(method)
+          ? [/^\s*"([a-z_][a-z0-9_]*)"/.exec(arg)?.[1]].filter((c): c is string => !!c)
+          : method === "update"
+          ? topLevelKeys(arg) ?? []
+          : [];
+        for (const column of names) {
+          checked++;
+          if (!columns?.has(column)) missing.add(`${m[1]}.${column} (${file} .${method})`);
+        }
+      }
+    }
+  }
+  assertEquals([...missing].sort(), [], "add these columns to self-host/db/00-schema.sql");
+  assert(checked > 200, `expected to check well over 200 filtered/updated columns, checked ${checked}`);
+});
+
+Deno.test("chainedCalls and topLevelKeys read a filter chain and only top-level update keys", () => {
+  const src = `.from("t")\n  .update({ a: 1, payload: { v: 1, data: x }, b: f(1, 2) })\n  // note\n  .eq("c", 1).is("d", null);`;
+  const calls = chainedCalls(src, src.indexOf(")") + 1);
+  assertEquals(calls.map((c) => c.method), ["update", "eq", "is"]);
+  assertEquals(topLevelKeys(calls[0].arg), ["a", "payload", "b"]);
+  assertEquals(topLevelKeys("{ ...patch, a: 1 }"), null);
+});

@@ -1,0 +1,195 @@
+-- ============================================================
+-- MCPEmails — scheduled_sends: service-role-only writes, tenant-bound rows,
+-- single-use approval dispatch
+-- 20261016160400_scheduled_sends_writer_lockdown
+-- ============================================================
+--
+-- THE HOLE. `scheduled_sends_insert_members` (20260603000001) let any signed-in
+-- user INSERT a row over PostgREST checking only `workspace_id`. The pg_cron
+-- dispatcher then sent that row with the service role: it resolved the inbox by
+-- id alone (so a row in the caller's own workspace could name ANOTHER tenant's
+-- inbox), passed plaintext payloads straight through, and for a
+-- `{ approval_id }` marker re-ran an approved send by approval id alone, as many
+-- times as there were rows pointing at it.
+--
+-- Every legitimate writer is service-role code:
+--   * mcp-server executeScheduleSend   (schedule_create; encrypted payload)
+--   * apps/web lib/approvals/decide.ts (the plaintext `{ approval_id }` marker,
+--                                       written once per approve decision)
+--   * the dispatcher and schedule_cancel (status/error_detail/sent_at updates)
+-- No browser (user-scoped) client writes this table, so:
+--
+--   1. INSERT is revoked from anon/authenticated and the insert policy dropped.
+--   2. UPDATE from a user client is narrowed to cancelling a pending row:
+--      column-level grant on (status, updated_at) only, WITH CHECK
+--      status = 'cancelled', and only for owner/admin/member (viewers are
+--      read-only; lib/workspace/roles.ts).
+--   3. A trigger guarantees, for EVERY writer including service role, that
+--      inbox_id belongs to workspace_id, that a plaintext payload is only ever
+--      an approval marker, and that the marker names an approved approval of the
+--      same workspace and inbox.
+--   4. send_approvals.dispatch_scheduled_send_id binds an approval to the ONE
+--      scheduled_sends row allowed to dispatch it. The dispatcher claims it
+--      atomically (null -> row id); a second row is refused, and a retry of the
+--      same row (deferred after a provable non-send) still passes.
+--
+-- DEPLOY ORDER: apply this migration BEFORE deploying the mcp-server version
+-- that reads dispatch_scheduled_send_id. If the function goes first, approved
+-- sends are held (deferred back to 'pending', nothing sent) until it lands.
+--
+-- Idempotent: safe to re-run.
+-- ============================================================
+
+-- ── 1. No user-client INSERT ─────────────────────────────────────────────────
+
+DROP POLICY IF EXISTS "scheduled_sends_insert_members" ON public.scheduled_sends;
+REVOKE INSERT ON public.scheduled_sends FROM anon, authenticated;
+
+-- DELETE was never permitted by policy; make the grant say so too.
+REVOKE DELETE, TRUNCATE ON public.scheduled_sends FROM anon, authenticated;
+
+-- ── 2. User-client UPDATE: cancel only, operators only ───────────────────────
+
+-- Workspaces where the caller may change content (owner/admin/member). Mirrors
+-- canOperateWorkspace() in apps/web/src/lib/workspace/roles.ts.
+CREATE OR REPLACE FUNCTION public.scheduled_sends_operator_workspace_ids()
+RETURNS uuid[]
+LANGUAGE sql
+STABLE
+SECURITY DEFINER
+SET search_path = public
+AS $$
+  SELECT ARRAY(
+    SELECT workspace_id
+    FROM   public.workspace_members
+    WHERE  user_id = auth.uid()
+      AND  role IN ('owner', 'admin', 'member')
+  );
+$$;
+
+REVOKE EXECUTE ON FUNCTION public.scheduled_sends_operator_workspace_ids() FROM PUBLIC, anon;
+GRANT  EXECUTE ON FUNCTION public.scheduled_sends_operator_workspace_ids() TO authenticated;
+
+REVOKE UPDATE ON public.scheduled_sends FROM anon, authenticated;
+GRANT  UPDATE (status, updated_at) ON public.scheduled_sends TO authenticated;
+
+DROP POLICY IF EXISTS "scheduled_sends_cancel_members" ON public.scheduled_sends;
+CREATE POLICY "scheduled_sends_cancel_members"
+  ON public.scheduled_sends FOR UPDATE
+  TO authenticated
+  USING (
+    workspace_id = ANY(public.scheduled_sends_operator_workspace_ids())
+    AND status = 'pending'
+  )
+  WITH CHECK (
+    workspace_id = ANY(public.scheduled_sends_operator_workspace_ids())
+    AND status = 'cancelled'
+  );
+
+-- ── 3. Approval binding column (needed by the trigger's marker check) ────────
+
+ALTER TABLE public.send_approvals
+  ADD COLUMN IF NOT EXISTS dispatch_scheduled_send_id uuid
+    REFERENCES public.scheduled_sends(id) ON DELETE SET NULL;
+
+COMMENT ON COLUMN public.send_approvals.dispatch_scheduled_send_id IS
+  'The single scheduled_sends row allowed to dispatch this approval. Claimed '
+  'atomically by the mcp-server dispatcher (null -> row id); any other row '
+  'pointing at the same approval is refused, which makes an approval single-use.';
+
+-- Backfill: bind every already-approved approval to the marker row the approve
+-- decision wrote (decide.ts inserts it immediately after the claim, so it is the
+-- marker whose created_at is closest to decided_at). This closes replay for
+-- approvals decided before this migration as well.
+UPDATE public.send_approvals sa
+SET    dispatch_scheduled_send_id = m.id
+FROM (
+  SELECT DISTINCT ON (a.id) a.id AS approval_id, s.id
+  FROM   public.send_approvals a
+  JOIN   public.scheduled_sends s
+    ON   s.payload_encrypted = false
+   AND   jsonb_typeof(s.payload) = 'object'
+   AND   s.payload ->> 'approval_id' = a.id::text
+   AND   s.workspace_id = a.workspace_id
+   AND   s.inbox_id = a.inbox_id
+  WHERE  a.status = 'approved'
+    AND  a.dispatch_scheduled_send_id IS NULL
+  ORDER  BY a.id,
+            abs(extract(epoch FROM (s.created_at - coalesce(a.decided_at, s.created_at)))),
+            s.created_at
+) m
+WHERE  sa.id = m.approval_id
+  AND  sa.dispatch_scheduled_send_id IS NULL;
+
+-- ── 4. Row integrity trigger (every writer, service role included) ──────────
+
+CREATE OR REPLACE FUNCTION public.scheduled_sends_enforce_integrity()
+RETURNS trigger
+LANGUAGE plpgsql
+SECURITY DEFINER
+SET search_path = public
+AS $$
+DECLARE
+  v_approval text;
+BEGIN
+  IF NOT EXISTS (
+    SELECT 1 FROM public.inboxes i
+    WHERE  i.id = NEW.inbox_id
+      AND  i.workspace_id = NEW.workspace_id
+  ) THEN
+    RAISE EXCEPTION 'scheduled_sends: inbox % does not belong to workspace %',
+      NEW.inbox_id, NEW.workspace_id
+      USING ERRCODE = '23514';
+  END IF;
+
+  IF NOT NEW.payload_encrypted THEN
+    -- The only plaintext row the product writes is the approval marker
+    -- { "approval_id": "<uuid>" } (no email content). Anything else must be
+    -- encrypted.
+    -- Nested rather than one OR chain: jsonb_object_keys() raises on a
+    -- non-object, and SQL does not promise short-circuit evaluation.
+    v_approval := NULL;
+    IF jsonb_typeof(NEW.payload) = 'object' THEN
+      IF (SELECT count(*) FROM jsonb_object_keys(NEW.payload)) = 1 THEN
+        v_approval := NEW.payload ->> 'approval_id';
+      END IF;
+    END IF;
+    IF v_approval IS NULL
+       OR v_approval !~* '^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$' THEN
+      RAISE EXCEPTION 'scheduled_sends: a plaintext payload must be an approval marker'
+        USING ERRCODE = '23514';
+    END IF;
+    IF NOT EXISTS (
+      SELECT 1 FROM public.send_approvals a
+      WHERE  a.id = v_approval::uuid
+        AND  a.workspace_id = NEW.workspace_id
+        AND  a.inbox_id = NEW.inbox_id
+        AND  (TG_OP = 'UPDATE' OR a.status = 'approved')
+    ) THEN
+      RAISE EXCEPTION 'scheduled_sends: approval % is not an approved request of this workspace and inbox',
+        v_approval
+        USING ERRCODE = '23514';
+    END IF;
+  END IF;
+
+  RETURN NEW;
+END;
+$$;
+
+REVOKE EXECUTE ON FUNCTION public.scheduled_sends_enforce_integrity() FROM PUBLIC, anon, authenticated;
+
+-- Fires on INSERT and on any change to the columns it guards. Status-only
+-- updates (dispatcher, cancel) do not fire it, so legacy rows already in the
+-- table are never blocked from reaching a terminal state.
+DROP TRIGGER IF EXISTS scheduled_sends_enforce_integrity ON public.scheduled_sends;
+CREATE TRIGGER scheduled_sends_enforce_integrity
+  BEFORE INSERT OR UPDATE OF workspace_id, inbox_id, payload, payload_encrypted
+  ON public.scheduled_sends
+  FOR EACH ROW
+  EXECUTE FUNCTION public.scheduled_sends_enforce_integrity();
+
+COMMENT ON TABLE public.scheduled_sends IS
+  'Queue of emails scheduled for future delivery. Written only by service-role '
+  'code (schedule_create, the approve decision, the dispatcher); a user client '
+  'may only cancel a pending row. Consumed by the mcp-server /dispatch route, '
+  'called by pg_cron every minute.';

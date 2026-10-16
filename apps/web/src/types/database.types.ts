@@ -2989,6 +2989,7 @@ export type Database = {
           decided_by_api_key_id: string | null
           decided_via: string | null
           decision_note: string | null
+          dispatch_scheduled_send_id: string | null
           expires_at: string | null
           id: string
           inbox_id: string
@@ -3008,6 +3009,7 @@ export type Database = {
           decided_by_api_key_id?: string | null
           decided_via?: string | null
           decision_note?: string | null
+          dispatch_scheduled_send_id?: string | null
           expires_at?: string | null
           id?: string
           inbox_id: string
@@ -3027,6 +3029,7 @@ export type Database = {
           decided_by_api_key_id?: string | null
           decided_via?: string | null
           decision_note?: string | null
+          dispatch_scheduled_send_id?: string | null
           expires_at?: string | null
           id?: string
           inbox_id?: string
