@@ -3,7 +3,7 @@ import { createClient } from '@/lib/supabase/server';
 import { createServiceRoleClient } from '@/lib/supabase/service';
 import { validateCsrfToken } from '@/lib/oauth/csrf';
 import { isJsonRequest, isSameOrigin } from '@/lib/http/same-origin';
-import { canDecide, decideApproval } from '@/lib/approvals/decide';
+import { canDecide, decideApproval, parseRenderedRevision } from '@/lib/approvals/decide';
 
 /**
  * Decision endpoint for the authenticated review page (/approvals/[id]).
@@ -42,6 +42,9 @@ export async function POST(
   const body = await request.json().catch(() => null);
   const decision = body?.decision;
   const csrfToken = body?.csrf_token;
+  // The version of the request the page rendered. An approve of any other
+  // version is refused as `changed` (see decideApproval).
+  const revision = parseRenderedRevision(body?.revision);
 
   if (decision !== 'approve' && decision !== 'reject') {
     return NextResponse.json({ error: 'A decision is required.' }, { status: 400 });
@@ -93,6 +96,7 @@ export async function POST(
     userId: user.id,
     decision,
     via: 'review_page',
+    revision,
   });
 
   if (!outcome.ok) {

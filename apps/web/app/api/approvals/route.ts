@@ -3,7 +3,7 @@ import { createClient } from '@/lib/supabase/server';
 import { createServiceRoleClient } from '@/lib/supabase/service';
 import { resolveActiveWorkspaceId } from '@/lib/workspace/active';
 import { isJsonRequest, isSameOrigin } from '@/lib/http/same-origin';
-import { canDecide, decideApproval } from '@/lib/approvals/decide';
+import { canDecide, decideApproval, parseRenderedRevision } from '@/lib/approvals/decide';
 import { PENDING_APPROVAL_COLUMNS, selectTolerantly } from '@/lib/approvals/columns';
 
 async function context() {
@@ -21,9 +21,14 @@ export async function GET() {
   const c = await context();
   if (!c) return NextResponse.json({ error: 'Unauthorized.' }, { status: 401 });
   const { data, error } = await c.db.from('send_approvals')
-    .select('id, inbox_id, operation, summary, send_at, status, created_at, inboxes(email_address, display_name)')
+    .select('id, inbox_id, operation, summary, send_at, status, created_at, revision, inboxes(email_address, display_name)')
     .eq('workspace_id', c.workspaceId).eq('status', 'pending').order('created_at', { ascending: false }).limit(100);
   if (error) return NextResponse.json({ error: 'Failed to load approvals.' }, { status: 500 });
+
+  // No payload here: the queue lists summaries only, and nothing is
+  // decrypted for it. The decision dialog loads one approval's Bcc addresses
+  // when it opens (GET /api/approvals/[id]).
+  const approvals = data ?? [];
 
   // Recently decided sends, so the panel can show WHERE each decision was made
   // (`decided_via`: the review card in Claude vs. this dashboard). A failure
@@ -37,7 +42,7 @@ export async function GET() {
       .order('decided_at', { ascending: false, nullsFirst: false }).limit(20),
   );
 
-  return NextResponse.json({ approvals: data ?? [], decided: decided ?? [] });
+  return NextResponse.json({ approvals, decided: decided ?? [] });
 }
 
 /**
@@ -58,6 +63,8 @@ export async function PATCH(request: NextRequest) {
   if (!canDecide(c.role)) return NextResponse.json({ error: 'Only workspace owners and admins can decide sends.' }, { status: 403 });
   const body = await request.json().catch(() => null);
   const id = body?.id; const decision = body?.decision;
+  // The version of the request the dialog showed; see decideApproval.
+  const revision = parseRenderedRevision(body?.revision);
   if (typeof id !== 'string' || !['approve', 'reject'].includes(decision)) return NextResponse.json({ error: 'An approval id and decision are required.' }, { status: 400 });
 
   const outcome = await decideApproval({
@@ -67,6 +74,7 @@ export async function PATCH(request: NextRequest) {
     userId: c.user.id,
     decision,
     via: 'dashboard',
+    revision,
   });
   if (!outcome.ok) return NextResponse.json({ error: outcome.error, code: outcome.code }, { status: outcome.status });
   return NextResponse.json({ success: true });

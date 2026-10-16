@@ -325,14 +325,36 @@ Deno.test("a draft with no line is queued at 0: a write after queueing refuses t
   assertEquals(rewritten, { kind: "refuse", code: "draft_changed" });
 });
 
-Deno.test("heldSendArgs: the caller's own base_revision is kept when no line answers", () => {
+Deno.test("heldSendArgs: the caller's own base_revision is NEVER kept; the server derives it", () => {
+  // Security review 2026-10-16 (F-04-03): a caller-chosen revision for a draft
+  // no line names let the agent pre-pick the revision its own later edit would
+  // produce, and the approved re-run then sent the rewritten draft.
   const unknown: ResolvedDraft = { requestedId: "g1", draftId: "g1", redirected: false, known: false, lineId: null, revision: 0, writtenBy: null, writtenAt: null, closed: null };
-  assertEquals(heldSendArgs({ draft_id: "g1", base_revision: 4 }, "g1", unknown, 4, false).base_revision, 4);
-  assertEquals(heldSendArgs({ draft_id: "g1" }, "g1", unknown, null, false).base_revision, 0);
+  assertEquals(heldSendArgs({ draft_id: "g1", base_revision: 4 }, "g1", unknown, false).base_revision, 0);
+  assertEquals(heldSendArgs({ draft_id: "g1", base_revision: 1 }, "g1", unknown, false).base_revision, 0);
+  assertEquals(heldSendArgs({ draft_id: "g1" }, "g1", unknown, false).base_revision, 0);
   const args = { draft_id: "g1", to: ["a@x.com"], bcc: ["b@x.com"] };
-  const out = heldSendArgs(args, "g2", unknown, null, true);
+  const out = heldSendArgs(args, "g2", unknown, true);
   assertEquals(out, { draft_id: "g2", base_revision: 0 });
   assertEquals(args.to, ["a@x.com"], "the caller's arguments are not mutated");
+});
+
+Deno.test("bypass F-04-03: a pre-chosen base_revision on a lineage-less draft no longer survives an edit after queueing", async () => {
+  // A Gmail draft written in the mail client: no line names it.
+  const { store } = memoryLineageStore();
+  const args = { action: "send", draft_id: "g9", base_revision: 1 };
+  const queued = planDraftSend({ args, line: await resolveDraftId(store, S, "g9", quiet), baseRevision: 1, approvalDispatch: false });
+  assert(queued.kind === "proceed");
+  assertEquals(queued.approvalArgs.base_revision, 0, "the server's revision, not the caller's 1");
+  // The agent rewrites the draft after queueing: the update adopts it into a new line at revision 1.
+  await recordDraftWrite(store, S, { previous: await resolveDraftId(store, S, "g9", quiet), draftId: "g9", writtenBy: "agent" }, quiet);
+  const rerun = planDraftSend({
+    args: queued.approvalArgs,
+    line: await resolveDraftId(store, S, "g9", quiet),
+    baseRevision: queued.approvalArgs.base_revision as number,
+    approvalDispatch: true,
+  });
+  assertEquals(rerun, { kind: "refuse", code: "draft_changed" });
 });
 
 Deno.test("approvedSendRefusalDetail: only draft sends, only the lineage codes", () => {
