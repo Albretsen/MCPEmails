@@ -166,6 +166,7 @@ function recordingClient(tables: Record<string, Row[]>) {
 }
 
 interface GraphDraft {
+  attachmentsFail?: boolean;
   to: string;
   bcc?: string;
   subject: string;
@@ -193,6 +194,7 @@ function graph(draft: GraphDraft) {
       });
     }
     if (url.pathname === `${base}/attachments` && call.method === "GET") {
+      if (draft.attachmentsFail) return harness.json({ error: { code: "ServiceUnavailable" } }, 503);
       return harness.json({ value: draft.attachments });
     }
     if (url.pathname === `${base}/send` && call.method === "POST") {
@@ -219,7 +221,7 @@ async function holdOutlook(draft: GraphDraft, args: Row = {}) {
   return { row, payload: await decryptStored(String((row.payload as Row).data)) };
 }
 
-async function dispatchOutlook(draft: GraphDraft, storedPayload: Row) {
+async function dispatchOutlook(draft: GraphDraft, storedPayload: Row, sendAt = "2020-01-01T00:00:00.000Z") {
   const inbox = await harness.inboxRow("outlook", { send_approval_required: true });
   const tables: Record<string, Row[]> = {
     scheduled_sends: [{
@@ -228,7 +230,7 @@ async function dispatchOutlook(draft: GraphDraft, storedPayload: Row) {
       status: "pending",
       payload: { approval_id: APPROVAL_ID },
       payload_encrypted: false,
-      send_at: "2020-01-01T00:00:00.000Z",
+      send_at: sendAt,
       updated_at: "2020-01-01T00:00:00.000Z",
       sent_at: null,
       error_detail: null,
@@ -295,4 +297,40 @@ Deno.test("verify: a caller cannot supply the digest or snapshot a held send rec
   assert(String((payload.draft_snapshot as Row).body_html).includes("See you Thursday."), "the server's own read");
   const { sends } = await dispatchOutlook(evil, row.payload as Row);
   assertEquals(sends.length, 0, "the rewritten draft is not sent");
+});
+
+// ── Delta ce1eb3dd: digest v2 and the unreadable-draft hold ────────────────
+
+Deno.test("verify v2: genuinely different drafts never collide (Reply-To, file bytes moved between names, In-Reply-To)", async () => {
+  const base = { to: ["a@example.com"], cc: [], bcc: [], subject: "s", bodyText: "b", bodyHtml: null };
+  const files = (pairs: [string, string][]) => ({
+    encode: () => pairs.map(([filename, data]) => ({ filename, mime_type: "text/plain", data })),
+  });
+  const att = [
+    { filename: "a.txt", size_bytes: 4, mime_type: "text/plain" },
+    { filename: "b.txt", size_bytes: 4, mime_type: "text/plain" },
+  ];
+  const d = (extra: Record<string, unknown>) => draftDigest({ ...base, attachments: att, ...extra });
+  const original = await d({ carried: files([["a.txt", "QUFBQQ=="], ["b.txt", "QkJCQg=="]]) });
+  // Same files in the other order: the same draft.
+  assertEquals(await d({ carried: files([["b.txt", "QkJCQg=="], ["a.txt", "QUFBQQ=="]]), attachments: [...att].reverse() }), original);
+  // Bytes moved between the two names: a different draft.
+  assertNotEquals(await d({ carried: files([["a.txt", "QkJCQg=="], ["b.txt", "QUFBQQ=="]]) }), original);
+  assertNotEquals(await d({ carried: files([["a.txt", "QUFBQQ=="], ["b.txt", "QkJCQg=="]]), headerReplyTo: ["drop@evil.example"] }), original);
+  assertNotEquals(await d({ carried: files([["a.txt", "QUFBQQ=="], ["b.txt", "QkJCQg=="]]), inReplyTo: "<x@example.com>" }), original);
+  // A References list folded differently is the same list; a different list is not.
+  const r1 = await d({ references: "<a@x> <b@x>" });
+  assertEquals(await d({ references: "<a@x>\r\n <b@x>" }), r1);
+  assertNotEquals(await d({ references: "<a@x> <c@x>" }), r1);
+});
+
+Deno.test("verify v2: an Outlook draft unreadable at dispatch is held inside the window and failed after it, never sent", async () => {
+  const { row } = await holdOutlook(OUTLOOK_DRAFT);
+  const unreadable = { ...OUTLOOK_DRAFT, attachmentsFail: true };
+  const fresh = await dispatchOutlook(unreadable, row.payload as Row, new Date().toISOString());
+  assertEquals(fresh.sends.length, 0);
+  assertEquals(fresh.scheduled.status, "pending", "held for a retry inside the defer window");
+  const stale = await dispatchOutlook(unreadable, row.payload as Row, "2020-01-01T00:00:00.000Z");
+  assertEquals(stale.sends.length, 0);
+  assertEquals(stale.scheduled.status, "error", "the hold is bounded: past the window it fails for real");
 });
