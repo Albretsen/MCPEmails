@@ -245,3 +245,48 @@ test('a URL inside the client state does not break Allow for a native client', (
   redirectTo.searchParams.set('state', 'https://example.com/return');
   assert.equal(isRedirectToForRegisteredUri(redirectTo.toString(), registered), true);
 });
+
+// Round 4 (after 943d22bb): isRedirectToForRegisteredUri, which AuthorizeApp
+// runs on Allow. redirect_to comes from our own POST, which only adds `code`
+// and `state` with searchParams.set, so the question is only whether a
+// changed DESTINATION could pass. Spellings that normalise to the same
+// scheme, host and path (case, :443, a resolved "..", backslashes) and a
+// fragment (never sent anywhere) may pass; every real destination change
+// must not.
+{
+  const reg = 'https://claude.ai/api/mcp/auth_callback';
+  const compose = (r: string, state?: string) => {
+    const u = new URL(r);
+    u.searchParams.set('code', 'C');
+    if (state) u.searchParams.set('state', state);
+    return u.toString();
+  };
+  for (const [name, to, registered] of [
+    ['https with URL state', compose(reg, 'https://example.com/r'), reg],
+    ['loopback', compose('http://127.0.0.1:33418/'), 'http://127.0.0.1:33418/'],
+    ['registered query kept', compose('raycast://oauth?package_name=mcp%20emails'), 'raycast://oauth?package_name=mcp%20emails'],
+    ['native with URL state', compose('cursor://anysphere.cursor-mcp/oauth/callback', 'https://example.com/r'), 'cursor://anysphere.cursor-mcp/oauth/callback'],
+  ] as const) {
+    test(`Allow accepts the server's own composition: ${name}`, () => {
+      assert.equal(isRedirectToForRegisteredUri(to, registered), true);
+    });
+  }
+  for (const [name, to, registered] of [
+    ['userinfo added', 'https://evil@claude.ai/api/mcp/auth_callback?code=C', reg],
+    ['port added', 'https://claude.ai:8443/api/mcp/auth_callback?code=C', reg],
+    ['path escapes via ..', 'https://claude.ai/api/mcp/auth_callback/../../evil?code=C', reg],
+    ['%2F in path', 'https://claude.ai/api%2Fmcp/auth_callback?code=C', reg],
+    ['trailing-dot host', 'https://claude.ai./api/mcp/auth_callback?code=C', reg],
+    ['other host', 'https://attacker.example/api/mcp/auth_callback?code=C', reg],
+    ['https to http', 'http://claude.ai/api/mcp/auth_callback?code=C', reg],
+    ['native other host', 'cursor://attacker.example/cb?code=C', 'cursor://a/cb'],
+    ['native opaque wraps web', 'cursor:https://attacker.example?code=C', 'cursor:x'],
+    ['registered is a hand-off', compose('microsoft-edge:https://attacker.example/cb'), 'microsoft-edge:https://attacker.example/cb'],
+    ['javascript redirect_to', 'javascript:alert(1)//?code=C', 'cursor://a/cb'],
+    ['no registered uri', compose(reg), ''],
+  ] as const) {
+    test(`Allow refuses a changed destination: ${name}`, () => {
+      assert.equal(isRedirectToForRegisteredUri(to, registered), false);
+    });
+  }
+}
