@@ -102,8 +102,11 @@ test('THE ATTACK: "Claude · anthropic.com" redirecting to an attacker host read
   }));
   const h1 = container.querySelector('h1').textContent;
   assert.equal(h1, 'Authorize claude-connect.example?');
-  assert.ok(!container.querySelector('.who').textContent.includes('anthropic.com'), 'self-asserted byline is not shown');
-  assert.ok(!container.querySelector('.who').textContent.includes('Claude'), 'self-asserted name is not the requesting party');
+  // A pattern, not a substring test: this asserts the byline text is absent
+  // (any case), it never validates a URL.
+  const who = container.querySelector('.who').textContent;
+  assert.doesNotMatch(who, /anthropic\.com/i, 'self-asserted byline is not shown');
+  assert.doesNotMatch(who, /Claude/, 'self-asserted name is not the requesting party');
   assert.equal(q(container, 'az-destination-host').textContent, 'claude-connect.example');
   assert.equal(q(container, 'az-destination-badge').textContent, 'Unverified');
   assert.match(q(container, 'az-self-reported').textContent, /Calls itself Claude\. This name is self-reported/);
