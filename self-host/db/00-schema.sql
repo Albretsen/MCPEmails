@@ -942,7 +942,7 @@ DECLARE
   -- Silent abuse ceilings for paid plans. NOT a pricing lever; mirrors
   -- SHADOW_ACTION_CAPS in supabase/functions/mcp-server/index.ts and
   -- maxMonthlyToolCalls in plans.ts. Never named in customer-facing copy.
-  c_cap_personal    constant integer  := 25000;
+  c_cap_personal    constant integer  := 100000;
   c_cap_solo        constant integer  := 100000;
   c_cap_pro         constant integer  := 500000;
   c_cap_other       constant integer  := 5000;

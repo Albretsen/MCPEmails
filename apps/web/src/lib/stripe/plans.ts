@@ -275,7 +275,7 @@ export const PLANS: Record<PlanId, Plan> = {
     limits: {
       maxInboxes: 3,
       maxDailyBurstCalls: Infinity,
-      maxMonthlyToolCalls: 25_000,
+      maxMonthlyToolCalls: 100_000,
       maxApiKeys: Infinity,
       maxMembers: 1,
       billingPortalEnabled: true,
