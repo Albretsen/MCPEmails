@@ -8,8 +8,23 @@ import { openImapSession, McpEmailsError, ImapAuthError } from '@/lib/email/imap
 import { guardMailHost } from '@/lib/email/host-guard';
 import { validateSmtpCredential } from '@/lib/email/validate-smtp';
 import { legacySecurityForPort } from '@/lib/email/connection-config';
-import { mailRelayConfigFromEnv, openMailRelayTunnel } from '@/lib/email/mail-relay';
-import { RELAYED_TRANSPORTS, refreshLearnedRelayHosts, relayRouteForHost } from '@/lib/email/relay-fallback';
+import {
+  mailRelayConfigFromEnv,
+  MailRelayTargetRefusedError,
+  MailRelayUnavailableError,
+  openMailRelayTunnel,
+} from '@/lib/email/mail-relay';
+import { explainAuthFailure } from '@/lib/email/auth-failure';
+import { isIP } from 'net';
+import {
+  describeDirectFailure,
+  learnRelayHost,
+  RELAYED_TRANSPORTS,
+  recordRelayUse,
+  refreshLearnedRelayHosts,
+  relayRouteForHost,
+  shouldTryRelayAfter,
+} from '@/lib/email/relay-fallback';
 import type { Tables } from '@/types/database.types';
 import { createServiceRoleClient } from '@/lib/supabase/service';
 import { recordProductFunnelEvent } from '@/lib/analytics/product-funnel';
@@ -89,8 +104,8 @@ export async function POST(
     !inbox.imap_host && !!inbox.smtp_host && !!inbox.imap_password && !inbox.oauth_access_token;
 
   // Hosts the relay registry learned are checked through the relay, like the
-  // relay-only list (relay-fallback.ts). Best-effort and bounded: a failed
-  // read leaves the previous list in place.
+  // relay-only list (relay-fallback.ts). Best-effort and bounded
+  // (RELAY_REGISTRY_TIMEOUT_MS): a failed read leaves the previous list in place.
   if ((isAppPassword || isSendOnly) && mailRelayConfigFromEnv()) {
     await refreshLearnedRelayHosts(createServiceRoleClient());
   }
@@ -137,21 +152,76 @@ export async function POST(
       if (!guard.ok) {
         return NextResponse.json({ error: guard.message, error_code: guard.code }, { status: 422 });
       }
-      const result = await validateSmtpCredential({
-        host: smtpHost,
-        pinnedAddress: relay ? undefined : guard.address,
-        port: smtpPort,
-        email: inbox.email_address,
-        username: inbox.imap_username || undefined,
-        password: decryptToken(inbox.imap_password!),
-        security: relay
-          ? RELAYED_TRANSPORTS.smtp.security
-          : inbox.smtp_security === 'starttls' || inbox.smtp_security === 'tls'
-            ? inbox.smtp_security
-            : legacySecurityForPort(smtpPort, 'smtp'),
-        timeoutMs: relay ? 15_000 : undefined,
-        tunnel: relay ? () => openMailRelayTunnel(relay, smtpHost, smtpPort) : undefined,
-      });
+      const password = decryptToken(inbox.imap_password!);
+      let relayDown = false;
+      const viaRelay = (config: NonNullable<ReturnType<typeof mailRelayConfigFromEnv>>) =>
+        validateSmtpCredential({
+          host: smtpHost,
+          port: RELAYED_TRANSPORTS.smtp.port,
+          email: inbox.email_address,
+          username: inbox.imap_username || undefined,
+          password,
+          security: RELAYED_TRANSPORTS.smtp.security,
+          timeoutMs: 15_000,
+          tunnel: async () => {
+            try {
+              return await openMailRelayTunnel(config, smtpHost, RELAYED_TRANSPORTS.smtp.port);
+            } catch (err) {
+              if (err instanceof MailRelayUnavailableError && !(err instanceof MailRelayTargetRefusedError)) {
+                relayDown = true;
+              }
+              throw err;
+            }
+          },
+        });
+      let result = relay
+        ? await viaRelay(relay)
+        : await validateSmtpCredential({
+            host: smtpHost,
+            pinnedAddress: guard.address,
+            port: smtpPort,
+            email: inbox.email_address,
+            username: inbox.imap_username || undefined,
+            password,
+            security:
+              inbox.smtp_security === 'starttls' || inbox.smtp_security === 'tls'
+                ? inbox.smtp_security
+                : legacySecurityForPort(smtpPort, 'smtp'),
+          });
+      // The same one relay retry the connect form gives (relay-fallback.ts): a
+      // host that refuses this app's address, such as Telenor's "threshold
+      // limitation", would otherwise read as a rejected password here.
+      const fallbackRelay = relay ? null : mailRelayConfigFromEnv();
+      const authReason =
+        !result.ok && result.code === 'AUTH_FAILED'
+          ? explainAuthFailure({
+              detail: result.detail,
+              email: inbox.email_address,
+              host: smtpHost,
+              secret: password,
+              usernameProvided: Boolean(inbox.imap_username),
+            }).reason
+          : null;
+      if (!result.ok && fallbackRelay && !isIP(smtpHost) && shouldTryRelayAfter(result, authReason)) {
+        const service = createServiceRoleClient();
+        const startedMs = Date.now();
+        const retried = await viaRelay(fallbackRelay);
+        await recordRelayUse(service, {
+          protocol: 'smtp',
+          host: smtpHost,
+          route: 'fallback',
+          outcome: retried.ok ? 'ok' : relayDown ? 'relay_down' : 'host_refused',
+          ms: Date.now() - startedMs,
+          detail: retried.ok ? null : describeDirectFailure(retried),
+        });
+        if (retried.ok) {
+          await learnRelayHost(service, smtpHost, 'smtp', describeDirectFailure(result));
+          result = retried;
+        } else if (!relayDown && retried.code === 'AUTH_FAILED') {
+          // The relayed attempt reached the server and it judged the password.
+          result = retried;
+        }
+      }
       if (result.ok) {
         healthy = true;
       } else if (result.code === 'AUTH_FAILED') {

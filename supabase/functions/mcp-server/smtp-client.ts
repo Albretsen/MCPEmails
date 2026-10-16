@@ -20,8 +20,10 @@ import { connectGuardedTcp } from "./host-guard.ts";
 import {
   connectThroughRelay,
   guardRelayTarget,
+  isIpLiteralHost,
   noteRelayFailure,
   noteRelaySuccess,
+  relayFailureIsRelayDown,
   type RelayConfig,
   relayFor,
   relayForFallback,
@@ -209,6 +211,8 @@ export function shouldRetrySmtpThroughRelay(host: string, err: unknown): boolean
   if (!relayForFallback()) return false;
   if (relayRouteFor(host, "smtp") !== null) return false;
   if (relayFallbackCoolingDown(host, "smtp")) return false;
+  // The relay's filter refuses IP literals, so the retry could only fail.
+  if (isIpLiteralHost(host)) return false;
   const text = err instanceof Error ? err.message : String(err ?? "");
   if (/certificate|UnknownIssuer|NotValidForName|InvalidCertificate/i.test(text)) return false;
   if (err instanceof SmtpAuthError) return isOriginRefusalText(text);
@@ -742,12 +746,14 @@ async function openRelayedSmtpConn(storedCfg: SmtpConfig): Promise<OpenedSmtpCon
     return { conn, cfg, route };
   } catch (err) {
     if (!(err instanceof RelayUnavailableError)) throw err;
-    noteRelayFailure();
+    // A relay that refused this one target is healthy; see RelayTargetRefusedError.
+    const relayDown = relayFailureIsRelayDown(err);
+    if (relayDown) noteRelayFailure();
     recordRelayUse({
       protocol: "smtp",
       host: cfg.host,
       route,
-      outcome: "relay_down",
+      outcome: relayDown ? "relay_down" : "host_refused",
       ms: Date.now() - startedMs,
       detail: err.message,
     });
@@ -788,12 +794,13 @@ async function openFallbackSmtpConn(storedCfg: SmtpConfig): Promise<OpenedSmtpCo
     return { conn, cfg, route: "fallback" };
   } catch (err) {
     if (err instanceof RelayUnavailableError) {
-      noteRelayFailure();
+      const relayDown = relayFailureIsRelayDown(err);
+      if (relayDown) noteRelayFailure();
       recordRelayUse({
         protocol: "smtp",
         host: cfg.host,
         route: "fallback",
-        outcome: "relay_down",
+        outcome: relayDown ? "relay_down" : "host_refused",
         ms: Date.now() - startedMs,
         detail: err.message,
       });

@@ -54,7 +54,14 @@
  * would only reach the address that is blocked in the first place.
  */
 
-import { guardMailHostCached, isAllowedAddress, MailHostBlockedError, normalizeMailHost } from "./host-guard.ts";
+import {
+  guardMailHostCached,
+  isAllowedAddress,
+  MailHostBlockedError,
+  normalizeMailHost,
+  parseIpv6,
+  parseLooseIpv4,
+} from "./host-guard.ts";
 import { isLearnedRelayHost, type RelayProtocol, type RelayRoute } from "./relay-registry.ts";
 
 /** The relay could not carry this connection. The caller should dial directly. */
@@ -63,6 +70,35 @@ export class RelayUnavailableError extends Error {
     super(message);
     this.name = "RelayUnavailableError";
   }
+}
+
+/**
+ * The relay is up and answered, but its own policy will not carry this target
+ * (tinyproxy's filter answers `403` for an IP literal, localhost or a port it
+ * does not allow; docs/smtp-relay.md). Says nothing about the relay's health,
+ * so it must not trip the breaker or count as `relay_down`: one inbox with an
+ * odd host would otherwise switch the relay off for every host in the isolate.
+ */
+export class RelayTargetRefusedError extends RelayUnavailableError {
+  constructor(message: string) {
+    super(message);
+    this.name = "RelayTargetRefusedError";
+  }
+}
+
+/** True when a relay failure means the relay itself is unwell. See {@link RelayTargetRefusedError}. */
+export function relayFailureIsRelayDown(err: unknown): boolean {
+  return err instanceof RelayUnavailableError && !(err instanceof RelayTargetRefusedError);
+}
+
+/**
+ * True when `host` is an IP address rather than a name. The relay's filter
+ * refuses those (docs/smtp-relay.md), so a fallback for one could only fail.
+ */
+export function isIpLiteralHost(host: string): boolean {
+  const target = normalizeMailHost(host).replace(/^\[|\]$/g, "");
+  if (!target) return false;
+  return parseLooseIpv4(target) !== null || (target.includes(":") && parseIpv6(target) !== null);
 }
 
 export interface RelayConfig {
@@ -336,6 +372,11 @@ export async function connectThroughRelay(
     const status = parseConnectStatus(head);
     if (status === null) {
       throw new RelayUnavailableError(`relay ${relay.host} did not answer CONNECT with an HTTP status line`);
+    }
+    if (status.code === 403) {
+      throw new RelayTargetRefusedError(
+        `relay ${relay.host} will not carry ${target.host}:${target.port}: ${status.code} ${status.reason}`,
+      );
     }
     if (status.code < 200 || status.code > 299) {
       throw new RelayUnavailableError(

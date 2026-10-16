@@ -550,6 +550,7 @@ import {
 } from "./card-activity.ts";
 import { htmlCarriesSignatureBlock } from "./signature-compose.ts";
 import { configureRelayRegistry } from "./relay-registry.ts";
+import { relayConfigured } from "./smtp-relay.ts";
 import {
   byteStringToBase64url,
   gmailHeaderValue,
@@ -654,7 +655,7 @@ if (!INTROSPECTION_ONLY) {
       });
       if (error) throw new Error(error.message);
     },
-  });
+  }, { prefetch: relayConfigured() });
 }
 
 // ---------------------------------------------------------------------------

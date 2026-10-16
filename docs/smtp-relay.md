@@ -210,6 +210,17 @@ now the floor:
    a certificate problem or a name that does not resolve. Nothing can be sent
    twice: every retry happens before SMTP DATA. A host whose retry also failed
    is left alone for 10 minutes per isolate.
+   - **After the password went out** (edge IMAP, since 2026-10-16) only a read
+     timeout earns the retry. A server that hangs up or resets after LOGIN has
+     answered on the credential (`exchange.ionos.eu` does this on a wrong
+     password), and a retry would be a second failed sign-in. The connect form
+     already worked this way.
+   - **An IP-literal host** never gets the retry: the filter below refuses it.
+   - **A `403` from the relay** is the filter refusing that one target, not the
+     relay being down. It neither trips the per-isolate breaker nor counts as
+     `relay_down`; it is counted as `host_refused`.
+   - The direct IMAP TCP connect is capped at 10 s (it used to wait for the
+     OS timeout, about 2 minutes, before the retry could start).
 2. **Learning.** When the retry works, `learn_mail_relay_host` records the
    host per protocol, and from then on the connect form, the health check and
    the edge function (IMAP and SMTP) go through the relay first. A learned host
@@ -227,6 +238,12 @@ now the floor:
    submission 0, Domeneshop submission about 2 a week before it was relayed,
    Yahoo 29,023. A host that is never learned loses nothing: each failed call
    still gets its own relay retry.
+   Since migration `20261016100000`, "direct" means direct: successful calls
+   the fallback carried (`mail_relay_stats`, route `fallback`, outcome `ok`)
+   are subtracted, and IMAP counts only tools that open IMAP (not signature,
+   schedule, automation or contact tools). Before that, a blocked host used by
+   one active person was refused within minutes of its first rescue, because
+   its rescued calls looked like direct ones.
 4. **Re-check.** A learned row is honoured for 30 days from `last_learned_at`.
    After that connections are direct again and the host is re-learned by the
    same rule if it still needs the relay; only successes since it expired
@@ -252,6 +269,19 @@ tinyproxy filter on the relay allows any DNS name with an alphabetic TLD (no IP
 literal, no `localhost`) on `ConnectPort` 143, 465, 587 and 993 only, and
 `MaxClients` is 100. Nothing on the relay box listens on those ports. The
 previous host-by-host filter is in `/etc/tinyproxy/filter.bak-*`.
+
+**Egress guard since 2026-10-16.** tinyproxy resolves the CONNECT name itself,
+so a name that resolves, or is rebound, to the box or a private network would
+pass the filter. ufw's `before.rules` / `before6.rules` therefore reject NEW
+connections from the `tinyproxy` user to `127.0.0.0/8` (except the resolver on
+127.0.0.53/54 port 53), the box's own address, `0/8`, `10/8`, `100.64/10`,
+`169.254/16`, `172.16/12`, `192.168/16`, and on IPv6 `::1`, `::ffff:0:0/96`,
+`fc00::/7` and `fe80::/10`. Only that user is affected. The rules sit above
+ufw's loopback ACCEPT and must stay there. Restricting them to NEW matters: the
+first version without it also rejected tinyproxy's replies to a client on the
+box itself. Check with `iptables -L ufw-before-output -v -n`; a CONNECT to
+`localtest.me:993` (resolves to loopback) should bump the `127.0.0.0/8` counter.
+Backups: `/etc/ufw/before*.rules.bak-20261016075058`.
 
 ## Relay-only hosts: Orange (IMAP and SMTP, no direct fallback)
 
