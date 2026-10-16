@@ -26,12 +26,13 @@ test('the root layout sends no messages: a route outside app/[locale] gets only 
   }
 });
 
-// Pages that are handed a namespace they do not read, and why. Both sit under
+// Pages that are handed a namespace they do not read, and why. All sit under
 // app/[locale]/docs/layout.js, which has to cover the docs index; a narrower
 // layout nested under it would not stop that layout's messages being sent.
 const KNOWN_SURPLUS = {
   'app/[locale]/docs/[client]/page.js': ['docs'],
   'app/[locale]/docs/clients/page.js': ['docs'],
+  'app/[locale]/docs/read-only-access/page.js': ['docs'],
 };
 
 test('every marketing page is handed exactly the namespaces its client code reads, plus the two shared ones', () => {

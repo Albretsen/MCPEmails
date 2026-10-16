@@ -1375,6 +1375,7 @@ export function Footer() {
             <Link href="/docs#quickstart">{t('footer.linkQuickstart')}</Link>
             <Link href="/docs#oauth">{t('footer.linkOauth')}</Link>
             <Link href="/docs/providers">{t('footer.linkProviders')}</Link>
+            <Link href="/docs/read-only-access">{t('footer.linkReadOnly')}</Link>
             {isEnglish && <Link href="/docs/clients">MCP client setup</Link>}
             <Link href="/blog">Blog</Link>
             <Link href="/changelog">Changelog</Link>

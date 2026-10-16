@@ -1471,6 +1471,13 @@ a.footer-copy-value:hover { color: #fff; text-decoration: none; }
   width: 7px; height: 7px; border-radius: 99px;
   background: var(--mint-600); flex: none;
 }
+/* /docs/read-only-access: plain readable bullets. */
+.read-only-list {
+  font-family: var(--font-sans); font-size: 16px; line-height: 1.65;
+  color: var(--fg-2); margin: 12px 0 0; padding-left: 20px;
+}
+.read-only-list li { margin: 0 0 10px; }
+.read-only-list a { color: var(--fg-1); }
 .providers-h2 {
   font-family: var(--font-sans); font-size: clamp(22px, 3vw, 28px);
   line-height: 1.2; letter-spacing: -0.02em; font-weight: 600;

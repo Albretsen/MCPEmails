@@ -37,6 +37,7 @@ const MARKETING_PAGES: {
   // one whose value depends on being re-verified, hence the higher priority
   // and the visible last-verified date on the page itself.
   { path: '/docs/providers', lastModified: '2026-08-30', changeFrequency: 'monthly', priority: 0.8 },
+  { path: '/docs/read-only-access', lastModified: '2026-10-16', changeFrequency: 'monthly', priority: 0.7 },
   { path: '/native-connectors-vs-mcp', lastModified: '2026-08-27', changeFrequency: 'monthly', priority: 0.7 },
   { path: '/self-hosting', lastModified: '2026-08-27', changeFrequency: 'monthly', priority: 0.7 },
   { path: '/security', lastModified: '2026-08-27', changeFrequency: 'monthly', priority: 0.6 },
