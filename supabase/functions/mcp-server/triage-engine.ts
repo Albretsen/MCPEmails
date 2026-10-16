@@ -2508,6 +2508,52 @@ function rebindToCaller(
   return { ok: true, patch: { api_key_id: deps.caller.id } };
 }
 
+/**
+ * Why `update` cannot use a rule's own inbox, worded for the actual cause.
+ *
+ * The rule was loaded through loadAutomation, which already applied the
+ * caller's inbox allow-list, so the inbox is one this key may know about and
+ * reading its status discloses nothing new. The visibility check is repeated
+ * anyway so this can never become the place an out-of-list inbox is described.
+ * The resolver only accepts an active, non-deleted inbox, so the common cause
+ * for an owner key is a disconnected or removed mailbox, and saying "not
+ * available to this key" there sends the user looking at key settings instead.
+ */
+async function unresolvedRuleInbox(
+  deps: AutomationDeps,
+  // deno-lint-ignore no-explicit-any
+  rule: any,
+): Promise<TriageToolResult> {
+  if (!automationVisibleToCaller(deps.caller, rule.inbox_id) || typeof rule.inbox_id !== "string") {
+    return toolErr("automation update: no automation with that id in this workspace.", "not_found");
+  }
+  const { data } = await deps.db
+    .from("inboxes")
+    .select("status, deleted_at")
+    .eq("id", rule.inbox_id)
+    .eq("workspace_id", deps.caller.workspace_id)
+    .maybeSingle();
+  if (!data || data.deleted_at) {
+    return toolErr(
+      "automation update: this automation's inbox has been removed from the workspace, so the " +
+        "rule can no longer run. Delete the automation (action 'delete'). Nothing was changed.",
+      "inbox_removed",
+    );
+  }
+  if (data.status !== "active") {
+    return toolErr(
+      "automation update: this automation's inbox is disconnected. Reconnect it in the " +
+        "dashboard, or disable or delete the automation. Nothing was changed.",
+      "inbox_disconnected",
+    );
+  }
+  return toolErr(
+    "automation update: this automation's inbox could not be opened right now. Try again in a " +
+      "moment. Nothing was changed.",
+    "inbox_not_found",
+  );
+}
+
 /** The one-line disclosure that a rule now runs as the calling key. */
 const REBOUND_NOTE =
   "This automation was set up with a different API key; it now runs as this key, " +
@@ -2647,12 +2693,7 @@ export async function runAutomationTool(
       // which both skipped the provider-specific filter checks and let the
       // write go ahead against an inbox the key could not touch.
       const resolved = await deps.resolveInbox({ inbox_id: rule.inbox_id });
-      if (!resolved.ok) {
-        return toolErr(
-          `automation update: this automation's inbox is not available to this key (${resolved.message}). Nothing was changed.`,
-          "inbox_not_found",
-        );
-      }
+      if (!resolved.ok) return await unresolvedRuleInbox(deps, rule);
       const provider = resolved.inbox.provider;
       const body = validateAutomationBody(args, provider, true);
       if (!body.ok) return toolErr(`automation update: ${body.error}`, "-32602");

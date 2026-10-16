@@ -337,20 +337,41 @@ Deno.test("disable/delete without an inbox selector still apply the allow-list",
 // update refuses when the rule's own inbox will not resolve for the caller
 // ---------------------------------------------------------------------------
 
-Deno.test("update refuses when the rule's inbox cannot be resolved, instead of writing with provider=null", async () => {
+for (const [label, inboxRow, code, phrase] of [
+  ["disconnected", { status: "error", deleted_at: null }, "inbox_disconnected", "disconnected"],
+  ["revoked", { status: "revoked", deleted_at: null }, "inbox_disconnected", "disconnected"],
+  ["removed", { status: "active", deleted_at: "2026-10-10T00:00:00Z" }, "inbox_removed", "removed"],
+] as const) {
+  Deno.test(`update on a rule whose inbox is ${label} says so, and writes nothing`, async () => {
+    const tables = seedRules();
+    tables.inboxes = [{ id: INBOX_Y, workspace_id: WS, ...inboxRow }];
+    const writes: Write[] = [];
+    const deps = depsFor(callerFor(KEY_OWNER, null), tables, writes);
+    // The real resolver only accepts active, non-deleted inboxes.
+    deps.resolveInbox = () => Promise.resolve({ ok: false, message: "no inbox matches the given inbox_id/inbox." });
+
+    const result = await runAutomationTool("update", { automation_id: RULE_ON_Y, name: "renamed" }, deps);
+
+    assertEquals(result.result.isError, true, "refused");
+    assertEquals(result.logErrorCode, code, `coded ${code}`);
+    const text = (result.result.content[0] as any).text as string;
+    assert(text.includes(phrase), `the message says the inbox is ${phrase}`);
+    assert(!text.includes("not available to this key"), "and does not blame the key");
+    assertEquals(writes.length, 0, "nothing written");
+    assertEquals(rule(tables, RULE_ON_Y).name, "Personal newsletters", "name unchanged");
+  });
+}
+
+Deno.test("an inactive inbox outside the allow-list is still just 'not found'", async () => {
   const tables = seedRules();
+  tables.inboxes = [{ id: INBOX_Y, workspace_id: WS, status: "error", deleted_at: null }];
   const writes: Write[] = [];
-  const deps = depsFor(callerFor(KEY_OWNER, null), tables, writes);
-  // The inbox exists in the rule but no longer resolves (disconnected, or the
-  // resolver refuses it for any other reason).
-  deps.resolveInbox = () => Promise.resolve({ ok: false, message: "no inbox matches the given inbox_id/inbox." });
-
+  const deps = depsFor(callerFor(KEY_RESTRICTED, [INBOX_X]), tables, writes);
   const result = await runAutomationTool("update", { automation_id: RULE_ON_Y, name: "renamed" }, deps);
-
-  assertEquals(result.result.isError, true, "refused");
-  assertEquals(result.logErrorCode, "inbox_not_found", "as an unavailable inbox");
+  assertEquals(result.logErrorCode, "not_found", "no hint that the inbox exists or is disconnected");
+  const text = (result.result.content[0] as any).text as string;
+  assert(!text.includes("disconnected"), "nothing about its state");
   assertEquals(writes.length, 0, "nothing written");
-  assertEquals(rule(tables, RULE_ON_Y).name, "Personal newsletters", "name unchanged");
 });
 
 // ---------------------------------------------------------------------------
