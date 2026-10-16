@@ -390,7 +390,12 @@ Deno.test("queue (end to end): status, folders and list sent together on a cold 
   const { value } = await harness.runTool(await imapInbox(), none, () =>
     Promise.all([call("status", { folders: ["inbox", "sent", "trash"] }), call("folders", {}), call("list", { folder: "inbox", limit: 10 })]));
   assertEquals(value.map((r) => r.status), [200, 200, 200], JSON.stringify(value.map((r) => r.body)));
-  assertEquals(answered[0], "list");
+  // Scheduling, not completion order: the interactive listing must be served
+  // ahead of the background status poll it jumped (and the FETCH-before-STATUS
+  // check below pins the wire order). Which promise RESOLVES first is not the
+  // property: list parses messages after handing the connection back, so on a
+  // slow runner a cheap background folders call can settle a few ms earlier.
+  assert(answered.indexOf("list") < answered.indexOf("status"), `list answered after the status poll: ${answered.join(",")}`);
   assertEquals(pool.servers.length, 1, "one connection for all three");
   const commands = pool.servers[0].commands.map((c) => c.split(" ")[0]);
   assert(commands.indexOf("FETCH") < commands.lastIndexOf("STATUS"), `the listing ran before the poll finished: ${commands.join(",")}`);
