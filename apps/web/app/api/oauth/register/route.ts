@@ -2,6 +2,7 @@ import { NextRequest } from 'next/server';
 import crypto from 'node:crypto';
 import { createServiceRoleClient } from '@/lib/supabase/service';
 import { isValidRedirectUri } from '@/lib/oauth/redirect-uri';
+import { describeClientIdentity } from '@/lib/oauth/client-identity';
 import { checkRateLimit } from '@/lib/rate-limit';
 import type { Json } from '@/types/database.types';
 
@@ -16,7 +17,16 @@ import type { Json } from '@/types/database.types';
  *
  * Security controls:
  * - IP rate limiting: 10 registrations / IP / hour
- * - SSRF: all redirect_uris validated via isValidRedirectUri
+ * - SSRF: all redirect_uris validated via isValidRedirectUri, which also
+ *   refuses javascript:, data:, vbscript:, file:, blob:, about: and similar
+ * - Self-asserted identity: client_name and client_uri are stored as given but
+ *   are NOT trusted. The consent screen shows the redirect_uri host as the
+ *   party receiving access and labels the name as self-reported unless the
+ *   host belongs to a known vendor (lib/oauth/client-identity.ts). A name
+ *   that imitates a known vendor (Claude, ChatGPT, Cursor, MCP Emails, ...)
+ *   while redirecting elsewhere is warned about on that screen and flagged in
+ *   the audit log below. It is deliberately not refused here: a vendor host
+ *   missing from the list must degrade to a warning, not a broken connector.
  * - User consent gate: every scope is opt-in/confirmable on the consent screen
  * - Audit log: every registration recorded with IP + submitted metadata
  * - deactivated_at: malicious clients can be deactivated without losing audit trail
@@ -115,7 +125,7 @@ export async function POST(req: NextRequest): Promise<Response> {
       return Response.json(
         {
           error: 'invalid_redirect_uri',
-          error_description: `Redirect URI is not allowed. Use HTTPS or a custom scheme; private IP ranges are blocked.`,
+          error_description: `Redirect URI is not allowed. Use HTTPS, a loopback http URI or a native-app scheme; private IP ranges and javascript:, data:, file: and similar schemes are blocked.`,
         },
         { status: 400, headers: CORS_HEADERS }
       );
@@ -147,10 +157,21 @@ export async function POST(req: NextRequest): Promise<Response> {
     );
   }
 
+  // Which known vendor the name imitates while a redirect goes to a web host
+  // that vendor does not own, if any. Recorded so impersonation attempts can
+  // be found and deactivated; the consent screen warns about it on its own.
+  const impersonates =
+    redirectUris
+      .map((uri) =>
+        describeClientIdentity({ clientId, clientName, isCimd: false, redirectUri: uri }).impersonates,
+      )
+      .find((v): v is string => v !== null) ?? null;
+
   const logMeta: Json = {
     client_id:     clientId,
     client_name:   clientName,
     redirect_uris: redirectUris,
+    ...(impersonates ? { name_imitates_vendor: impersonates } : {}),
   };
   void service.from('auth_logs').insert({
     event_type: 'oauth_client_registered',

@@ -31,8 +31,15 @@ let user: { id: string; created_at: string } | null = null;
 let updates: Array<Record<string, unknown>> = [];
 /** Simulates production before the migration: the column does not exist. */
 let deviceColumnExists = true;
+/** Which client each `.update()` went through. */
+let writers: Array<'user' | 'service'> = [];
 
-function fakeClient() {
+/**
+ * `role: 'user'` behaves like the user's own session after
+ * 20261016160100_workspaces_server_owned_writes.sql: it holds no UPDATE
+ * privilege on public.workspaces, so every write is refused with 42501.
+ */
+function fakeClient(role: 'user' | 'service') {
   return {
     auth: {
       exchangeCodeForSession: async () => ({ error: null }),
@@ -46,6 +53,7 @@ function fakeClient() {
       builder.update = (values: Record<string, unknown>) => {
         patch = values;
         updates.push(values);
+        writers.push(role);
         return builder;
       };
       builder.eq = (col: string, value: unknown) => {
@@ -57,6 +65,9 @@ function fakeClient() {
         return builder;
       };
       builder.then = (resolve: (v: unknown) => unknown) => {
+        if (role === 'user') {
+          return resolve({ error: { code: '42501', message: 'permission denied for table workspaces' } });
+        }
         if ('acquisition_device' in patch && !deviceColumnExists) {
           return resolve({ error: { message: 'column "acquisition_device" does not exist' } });
         }
@@ -71,10 +82,10 @@ function fakeClient() {
 }
 
 nodeMock.module('@/lib/supabase/server', {
-  namedExports: { createClient: async () => fakeClient() },
+  namedExports: { createClient: async () => fakeClient('user') },
 });
 nodeMock.module('@/lib/supabase/service', {
-  namedExports: { createServiceRoleClient: () => fakeClient() },
+  namedExports: { createServiceRoleClient: () => fakeClient('service') },
 });
 nodeMock.module('next/server', {
   namedExports: {
@@ -98,6 +109,7 @@ function reset(opts: { createdAt?: string; device?: string | null; source?: stri
     { id: 'ws-other', owner_id: 'user-2', acquisition_source: null, acquisition_device: null },
   ];
   updates = [];
+  writers = [];
   deviceColumnExists = true;
 }
 
@@ -123,6 +135,19 @@ test('a Google or GitHub signup from a phone is stamped mobile, once, with the w
   assert.equal(JSON.stringify(updates).includes('Mozilla'), false);
   // Somebody else's workspace is untouched.
   assert.equal(workspaces[1].acquisition_device, null);
+});
+
+test('both signup stamps go through the service role, never the user session', async () => {
+  // The user's session has no write privilege on workspaces any more. If a
+  // stamp regressed to the user client it would be refused and the columns
+  // would stay NULL, which this test would catch.
+  reset();
+  await callback({ 'user-agent': IPHONE });
+  assert.equal(writers.length, 2);
+  assert.deepEqual(writers, ['service', 'service']);
+  assert.equal(workspaces[0].acquisition_source, 'direct');
+  assert.equal(workspaces[0].acquisition_device, 'mobile');
+  assert.equal(workspaces[1].acquisition_source, null);
 });
 
 test('the browser headers decide: client hint, tablet and desktop', async () => {

@@ -222,12 +222,17 @@ function inboxRow(overrides: Row = {}): Row {
 function scheduledSendRow(overrides: Row = {}): Row {
   return {
     id: SEND,
+    workspace_id: WORKSPACE,
     inbox_id: INBOX,
     status: "pending",
     // Plaintext legacy payload: `resolveScheduledPayload` passes it straight
-    // through, so no encryption key is needed and nothing is mocked.
+    // through, so no encryption key is needed and nothing is mocked. Created
+    // before payload encryption shipped (2026-06-23), which is the only age at
+    // which the dispatcher still accepts a plaintext message payload; see
+    // scheduled-send-tenancy.test.ts for the refusal of a newer one.
     payload: { to: ["someone-else@example.com"], subject: "hi", body: "there" },
     payload_encrypted: false,
+    created_at: "2020-01-01T00:00:00.000Z",
     send_at: "2020-01-01T00:00:00.000Z",
     sent_at: null,
     error_detail: null,

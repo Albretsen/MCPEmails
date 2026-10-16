@@ -1047,7 +1047,9 @@ function DashboardInner({ initialRoute = 'overview', user, workspace: serverWork
    * Adds the new key row (without rawKey) to local state and shows a toast.
    */
   const onKeyCreated = (keyRow) => {
-    setKeys(xs => [keyRow, ...xs]);
+    // The creator is the person who just made it; the POST response does not
+    // carry it, and the Keys page needs it to offer Edit/Revoke on this row.
+    setKeys(xs => [{ createdBy: user?.id ?? null, ...keyRow }, ...xs]);
     toast({
       message: tr('app.apiKeyCreated'),
       variant: 'success',
@@ -1187,12 +1189,12 @@ function DashboardInner({ initialRoute = 'overview', user, workspace: serverWork
           <FirstRunBanner onConnect={() => setShowConnect(true)} />
         )}
 
-        {route === "overview" && <OverviewPage key={guideResumeKey} inboxes={inboxes} apiKeys={keys} activity={activityFeed ?? SEED_ACTIVITY} stats={overviewStats} usageData={usageData} planLimits={planLimits} actionAllowance={actionAllowance} plan={workspace?.plan ?? 'free'} mcpUrl={mcpUrl} memberCount={members.length} onConnect={() => setShowConnect(true)} onGoToKeys={() => setRoute("keys")} onGoToMembers={() => setRoute("members")} onboardingClient={onboardingClient} onClientSelected={selectOnboardingClient} businessShaped={businessShaped} />}
+        {route === "overview" && <OverviewPage key={guideResumeKey} userRole={userRole} inboxes={inboxes} apiKeys={keys} activity={activityFeed ?? SEED_ACTIVITY} stats={overviewStats} usageData={usageData} planLimits={planLimits} actionAllowance={actionAllowance} plan={workspace?.plan ?? 'free'} mcpUrl={mcpUrl} memberCount={members.length} onConnect={() => setShowConnect(true)} onGoToKeys={() => setRoute("keys")} onGoToMembers={() => setRoute("members")} onboardingClient={onboardingClient} onClientSelected={selectOnboardingClient} businessShaped={businessShaped} />}
         {route === "inboxes"  && <InboxesPage  inboxes={inboxes} planLimits={planLimits} stripePrices={stripePrices} businessShaped={businessShaped} onConnect={() => setShowConnect(true)} onRemove={onRemoveInbox} onReconnect={onReconnectInbox} onCheck={onCheckInbox} onSaveSignature={onSaveSignature} onSaveSenderName={onSaveSenderName} onSaveDraftEditorHidden={onSaveDraftEditorHidden} draftEditorRolledOut={workspace?.draftEditorEnabled === true} draftEditorWorkspaceHidden={workspace?.draftEditorHidden === true} userRole={userRole} onGoToKeys={() => setRoute("keys")} />}
-        {route === "keys"     && <KeysPage     keys={keys} inboxes={inboxes} mcpUrl={mcpUrl} onCreate={onCreateKey} onKeyCreated={onKeyCreated} onRevoke={onRevokeKey} onUpdate={onUpdateKey} />}
+        {route === "keys"     && <KeysPage     keys={keys} inboxes={inboxes} mcpUrl={mcpUrl} onCreate={onCreateKey} onKeyCreated={onKeyCreated} onRevoke={onRevokeKey} onUpdate={onUpdateKey} userRole={userRole} currentUserId={user?.id} members={members} />}
         {route === "members"  && <MembersPage  members={members} pendingInvites={pendingInvites} planLimits={planLimits} userRole={userRole} currentUserId={user?.id} workspaceName={workspace?.displayName ?? workspace?.display_name ?? workspace?.slug ?? ''} onInvite={onInviteMember} onCancelInvite={onCancelInvite} onResendInvite={onResendInvite} onRemove={onRemoveMember} onChangeRole={onChangeRole} onLeave={onLeaveWorkspace} />}
         {route === "usage"    && <UsagePage usageData={usageData} planLimits={planLimits} actionAllowance={actionAllowance} stripePrices={stripePrices} onConnect={() => setShowConnect(true)} onGoToKeys={() => setRoute("keys")} />}
-        {route === "workflows" && <WorkflowsPage mcpUrl={mcpUrl} />}
+        {route === "workflows" && <WorkflowsPage mcpUrl={mcpUrl} userRole={userRole} />}
         {route === "approvals" && <ApprovalsPage userRole={userRole} />}
         {route === "automations" && <AutomationsPage userRole={userRole} inboxes={inboxes} keys={keys} />}
         {route === "settings" && <SettingsPage user={user} workspace={workspace} workspaces={workspaces} userRole={userRole} stripePrices={stripePrices} upgradeIntent={upgradeIntent} planLimits={planLimits} actionAllowance={actionAllowance} inboxCount={inboxes.length} grandfathered={inboxesGrandfathered} businessShaped={businessShaped} onWorkspaceUpdate={setWorkspace} />}

@@ -2,6 +2,8 @@ import { NextRequest, NextResponse } from 'next/server';
 import { createClient } from '@/lib/supabase/server';
 import { createServiceRoleClient } from '@/lib/supabase/service';
 import { resolveActiveWorkspaceId } from '@/lib/workspace/active';
+import { canManageWorkspace, fetchWorkspaceRole, insufficientRoleBody } from '@/lib/workspace/roles';
+import { canChangeApiKey } from '@/lib/api-keys/key-authority';
 
 /**
  * PATCH /api/api-keys/[id]/revoke
@@ -12,7 +14,10 @@ import { resolveActiveWorkspaceId } from '@/lib/workspace/active';
  *
  * Steps:
  *   1. Authenticate the requesting user.
- *   2. Resolve their workspace via workspace_members.
+ *   2. Resolve their workspace and their role in it via workspace_members.
+ *   2b. Authorize: owner/admin may revoke any key; anyone else only a key they
+ *       created (see lib/api-keys/key-authority.ts). Membership alone used to
+ *       be enough, which let a viewer revoke the owner's keys and connections.
  *   3. Set deleted_at on the key row, only if it belongs to this workspace
  *      and is not already deleted (idempotent guard).
  *   4. Return 200 { revoked: true } on success.
@@ -55,21 +60,60 @@ export async function PATCH(
     return NextResponse.json({ error: 'Workspace not found.' }, { status: 403 });
   }
 
+  const callerRole = await fetchWorkspaceRole(supabase, workspaceId, user.id);
+  if (!callerRole) {
+    return NextResponse.json({ error: 'Workspace not found.' }, { status: 403 });
+  }
+
+  const service = createServiceRoleClient();
+
+  // 2b. Read the key's creator so the authorization decision is about THIS key.
+  //     Deliberately NOT filtered on deleted_at: revoking an already-revoked
+  //     key must still reach step 4, so a retry after a half-failed revoke
+  //     (key soft-deleted, refresh chain not) finishes the job. A key id that
+  //     does not exist in this workspace answers 200, as it always has.
+  const { data: key, error: readError } = await service
+    .from('api_keys')
+    .select('id, created_by')
+    .eq('id', keyId)
+    .eq('workspace_id', workspaceId)
+    .is('kind', null)
+    .maybeSingle();
+
+  if (readError) {
+    console.error('[revoke-api-key] Failed to read key:', readError.message);
+    return NextResponse.json({ error: 'Failed to revoke API key.' }, { status: 500 });
+  }
+  if (!key) {
+    return NextResponse.json({ revoked: true });
+  }
+
+  if (!canChangeApiKey({ callerRole, callerId: user.id, keyCreatorId: key.created_by })) {
+    return NextResponse.json(
+      insufficientRoleBody('Only the person who created this key, or a workspace owner or admin, can revoke it.'),
+      { status: 403 },
+    );
+  }
+
   // 3. Soft-delete the key row using the service role.
   //    Setting deleted_at moves the row out of the api_keys SELECT policy
-  //    (deleted_at IS NULL), which Postgres rejects under the user's RLS context
-  //    as "new row violates row-level security policy". Authorization is already
-  //    established above (workspace membership), and the write is scoped to the
-  //    key id AND workspace_id. The .is('deleted_at', null) guard keeps it
-  //    idempotent: revoking an already-revoked key is a no-op (still 200).
-  const service = createServiceRoleClient();
-  const { error: updateError } = await service
+  //    (deleted_at IS NULL), and members have no write grant on api_keys at
+  //    all (20261016160300). Authorization is established above (role, or
+  //    being the key's creator), and the write is scoped to the key id AND
+  //    workspace_id. When the caller is not a manager it is also pinned to
+  //    created_by, so the decision above cannot be raced. The
+  //    .is('deleted_at', null) guard keeps it idempotent.
+  let revoke = service
     .from('api_keys')
     .update({ deleted_at: new Date().toISOString() })
     .eq('id', keyId)
     .eq('workspace_id', workspaceId)
     .is('deleted_at', null)
     .is('kind', null);
+  if (!canManageWorkspace(callerRole)) {
+    revoke = revoke.eq('created_by', user.id);
+  }
+  const { error: updateError } = await revoke;
 
   if (updateError) {
     console.error('[revoke-api-key] Failed to revoke key:', updateError.message);

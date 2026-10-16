@@ -7,7 +7,9 @@
 // space before an on*= handler, a leading space or an HTML entity inside a
 // javascript: URL, style-based schemes) and that module is now an allow-list
 // tokenizer. Layer 1 here is kept as-is deliberately — it is a cheap
-// pre-filter, NOT the security boundary; layer 2 below is. Do not treat the
+// pre-filter, NOT the security boundary; layer 2 below is. (Its regexes were
+// replaced by linear scanners with identical output on 2026-10-16; see the
+// layer-1 comment below.) Do not treat the
 // regexes as sufficient on their own if you ever reuse them elsewhere.
 //
 // That module is dependency-free *by design*: its DOMPurify-based sibling drags
@@ -74,6 +76,26 @@ export function neutralizeDeep<T>(value: T, depth = 0): T {
 }
 
 // ---- layer 1: ported deny-list pre-pass -----------------------------------
+//
+// Until 2026-10-16 this was a chain of global regexes:
+//
+//   /<!--[\s\S]*?-->/g                                   -> ""
+//   per BLOCK_TAG:  /<tag[\s\S]*?<\/tag>/gi, /<tag[^>]*\/>/gi, /<tag[^>]*>/gi
+//   /\s+on[a-z]+\s*=\s*(?:"[^"]*"|'[^']*'|[^\s>]+)/gi    (event handlers)
+//   /\s+(?:href|src)\s*=\s*(?:"javascript:[^"]*"|'javascript:[^']*'|javascript:[^\s>]+)/gi
+//   /<(input|button|textarea|select)[^>]*(?:\/?>|>[\s\S]*?<\/\1>)/gi
+//
+// Every one of them is quadratic on someone else's mail: an opener with no
+// closer rescans to the end of the input from every opener, and `\s+` retries
+// from every position of a whitespace run. 64K spaces took 3.9 s, 64 KB of
+// `<svg` 1.7 s, inside the card, on every render.
+//
+// The scanners below produce EXACTLY what those regexes produced (same
+// matches, same left-to-right non-overlapping replacement), in linear time.
+// harness/sanitize.test.mjs keeps the regex chain verbatim as an oracle and
+// fuzzes the two against each other. Regex facts relied on: `/i` without `/u`
+// folds ASCII letters only (so `asciiLower` keeps offsets and is the same
+// comparison), and `\s` is the ECMAScript whitespace set (`isJsSpace`).
 
 const BLOCK_TAGS = [
   "script",
@@ -90,38 +112,235 @@ const BLOCK_TAGS = [
   "math",
 ];
 
-function stripOnce(html: string): string {
-  let result = html;
+const FORM_TAGS = ["input", "button", "textarea", "select"];
 
+/** Lower-case A-Z only. Same length as the input, so offsets carry over. */
+function asciiLower(value: string): string {
+  return value.replace(/[A-Z]+/g, (run) => run.toLowerCase());
+}
+
+/** Exactly the characters JS `\s` matches. */
+function isJsSpace(code: number): boolean {
+  return code === 0x20 || (code >= 0x09 && code <= 0x0d) || code === 0xa0 ||
+    code === 0x1680 || (code >= 0x2000 && code <= 0x200a) || code === 0x2028 ||
+    code === 0x2029 || code === 0x202f || code === 0x205f || code === 0x3000 ||
+    code === 0xfeff;
+}
+
+function isAsciiLetter(code: number): boolean {
+  return (code >= 0x41 && code <= 0x5a) || (code >= 0x61 && code <= 0x7a);
+}
+
+/** Splice out the sorted, non-overlapping [start, end) ranges. */
+function removeRanges(value: string, ranges: number[]): string {
+  if (ranges.length === 0) return value;
+  const parts: string[] = [];
+  let pos = 0;
+  for (let r = 0; r < ranges.length; r += 2) {
+    parts.push(value.slice(pos, ranges[r]));
+    pos = ranges[r + 1];
+  }
+  parts.push(value.slice(pos));
+  return parts.join("");
+}
+
+/** `/<!--[\s\S]*?-->/g` -> "". No `-->` left means no later comment closes either. */
+function removeComments(value: string): string {
+  const ranges: number[] = [];
+  let open = value.indexOf("<!--");
+  while (open !== -1) {
+    const close = value.indexOf("-->", open + 4);
+    if (close === -1) break;
+    ranges.push(open, close + 3);
+    open = value.indexOf("<!--", close + 3);
+  }
+  return removeRanges(value, ranges);
+}
+
+/** `<tag[\s\S]*?<\/tag>` (gi): opener to the FIRST `</tag>` after it. */
+function removeBlocks(value: string, lower: string, tag: string): string {
+  const opener = `<${tag}`;
+  const closer = `</${tag}>`;
+  const ranges: number[] = [];
+  let open = lower.indexOf(opener);
+  while (open !== -1) {
+    const close = lower.indexOf(closer, open + opener.length);
+    if (close === -1) break;
+    ranges.push(open, close + closer.length);
+    open = lower.indexOf(opener, close + closer.length);
+  }
+  return removeRanges(value, ranges);
+}
+
+/**
+ * `<tag[^>]*>` (gi), or with `selfClosingOnly` `<tag[^>]*\/>` (gi): from the
+ * opener to the first `>` after it (which must follow a `/` for the
+ * self-closing form, past the opener itself). No `>` left: nothing later can
+ * match either.
+ */
+function removeOpeningTags(
+  value: string,
+  lower: string,
+  tags: string[],
+  selfClosingOnly: boolean,
+): string {
+  const ranges: number[] = [];
+  let gt = -1;
+  let pos = 0;
+  for (;;) {
+    // The leftmost opener of any listed tag at or after `pos` (all start with
+    // "<" and none is a prefix of another, so at most one matches per offset).
+    let open = -1;
+    let length = 0;
+    for (let lt = lower.indexOf("<", pos); lt !== -1; lt = lower.indexOf("<", lt + 1)) {
+      for (const tag of tags) {
+        if (lower.startsWith(tag, lt + 1)) {
+          open = lt;
+          length = tag.length + 1;
+          break;
+        }
+      }
+      if (open !== -1) break;
+    }
+    if (open === -1) break;
+    const after = open + length;
+    if (gt < after) gt = value.indexOf(">", after);
+    if (gt === -1) break;
+    if (selfClosingOnly && !(gt - 1 >= after && value.charCodeAt(gt - 1) === 0x2f /* / */)) {
+      pos = open + 1;
+      continue;
+    }
+    ranges.push(open, gt + 1);
+    pos = gt + 1;
+  }
+  return removeRanges(value, ranges);
+}
+
+/**
+ * Where an attribute value ends, for `(?:"[^"]*"|'[^']*'|[^\s>]+)` starting at
+ * `k`, or -1. A quote with no partner falls through to the bare form, which
+ * takes the quote itself as its first character, exactly as the alternation
+ * did.
+ */
+function attributeValueEnd(value: string, k: number, lastDouble: number, lastSingle: number): number {
+  const code = value.charCodeAt(k);
+  if (code === 0x22 /* " */ && lastDouble > k) return value.indexOf('"', k + 1) + 1;
+  if (code === 0x27 /* ' */ && lastSingle > k) return value.indexOf("'", k + 1) + 1;
+  let e = k;
+  while (e < value.length) {
+    const c = value.charCodeAt(e);
+    if (isJsSpace(c) || c === 0x3e /* > */) break;
+    e += 1;
+  }
+  return e > k ? e : -1;
+}
+
+/** Past `\s*=\s*` at `k`, or -1 when there is no `=`, or nothing after it. */
+function afterEquals(value: string, k: number): number {
+  const n = value.length;
+  while (k < n && isJsSpace(value.charCodeAt(k))) k += 1;
+  if (value.charCodeAt(k) !== 0x3d /* = */) return -1;
+  k += 1;
+  while (k < n && isJsSpace(value.charCodeAt(k))) k += 1;
+  return k < n ? k : -1;
+}
+
+/**
+ * The two attribute rules, both of the shape `\s+NAME\s*=\s*VALUE` (gi).
+ *
+ * `\s+` is greedy and NAME never starts with whitespace, so a match can only
+ * begin at the first character of a whitespace run and must use the whole run;
+ * if the run's tail does not match, no position inside the run does. So each
+ * maximal run is tried once, from its start.
+ *
+ *   handlers:   NAME = on[a-z]+         VALUE = "[^"]*" | '[^']*' | [^\s>]+
+ *   javascript: NAME = href|src         VALUE = "javascript:[^"]*" | 'javascript:[^']*' | javascript:[^\s>]+
+ */
+function removeAttributes(value: string, lower: string, javascriptOnly: boolean): string {
+  const n = value.length;
+  const lastDouble = value.lastIndexOf('"');
+  const lastSingle = value.lastIndexOf("'");
+  const ranges: number[] = [];
+  let i = 0;
+  while (i < n) {
+    if (!isJsSpace(value.charCodeAt(i))) {
+      i += 1;
+      continue;
+    }
+    const start = i;
+    while (i < n && isJsSpace(value.charCodeAt(i))) i += 1;
+    // `i` is the tail: the first character after the run.
+    let k = -1;
+    if (!javascriptOnly) {
+      if (lower.startsWith("on", i) && isAsciiLetter(value.charCodeAt(i + 2))) {
+        let e = i + 3;
+        while (e < n && isAsciiLetter(value.charCodeAt(e))) e += 1;
+        k = afterEquals(value, e);
+      }
+    } else if (lower.startsWith("href", i)) {
+      k = afterEquals(value, i + 4);
+    } else if (lower.startsWith("src", i)) {
+      k = afterEquals(value, i + 3);
+    }
+    if (k === -1) continue;
+
+    let end = -1;
+    if (!javascriptOnly) {
+      end = attributeValueEnd(value, k, lastDouble, lastSingle);
+    } else {
+      const quote = value.charCodeAt(k);
+      if ((quote === 0x22 || quote === 0x27) && lower.startsWith("javascript:", k + 1)) {
+        // No partner quote at all: skip the search, so a run of unclosed
+        // candidates cannot each scan to the end.
+        const last = quote === 0x22 ? lastDouble : lastSingle;
+        if (last >= k + 12) end = value.indexOf(value[k], k + 12) + 1;
+      } else if (lower.startsWith("javascript:", k)) {
+        let e = k + 11;
+        while (e < n) {
+          const c = value.charCodeAt(e);
+          if (isJsSpace(c) || c === 0x3e /* > */) break;
+          e += 1;
+        }
+        if (e > k + 11) end = e;
+      }
+    }
+    if (end === -1) continue;
+    ranges.push(start, end);
+    i = end;
+  }
+  return removeRanges(value, ranges);
+}
+
+function stripOnce(html: string): string {
   // HTML comments (also kills conditional-comment payloads).
-  result = result.replace(/<!--[\s\S]*?-->/g, "");
+  let result = removeComments(html);
 
   for (const tag of BLOCK_TAGS) {
-    result = result.replace(new RegExp(`<${tag}[\\s\\S]*?</${tag}>`, "gi"), "");
-    result = result.replace(new RegExp(`<${tag}[^>]*/>`, "gi"), "");
-    result = result.replace(new RegExp(`<${tag}[^>]*>`, "gi"), "");
+    if (asciiLower(result).indexOf(`<${tag}`) === -1) continue;
+    result = removeBlocks(result, asciiLower(result), tag);
+    result = removeOpeningTags(result, asciiLower(result), [tag], true);
+    result = removeOpeningTags(result, asciiLower(result), [tag], false);
   }
 
   // Event-handler attributes: onclick="...", onload='...', onerror=x
-  result = result.replace(/\s+on[a-z]+\s*=\s*(?:"[^"]*"|'[^']*'|[^\s>]+)/gi, "");
+  result = removeAttributes(result, asciiLower(result), false);
 
   // javascript: in href/src, any quoting.
-  result = result.replace(
-    /\s+(?:href|src)\s*=\s*(?:"javascript:[^"]*"|'javascript:[^']*'|javascript:[^\s>]+)/gi,
-    "",
-  );
+  result = removeAttributes(result, asciiLower(result), true);
 
-  // Interactive form elements.
-  result = result.replace(
-    /<(input|button|textarea|select)[^>]*(?:\/?>|>[\s\S]*?<\/\1>)/gi,
-    "",
-  );
+  // Interactive form elements. The old rule was
+  // `<(input|button|textarea|select)[^>]*(?:\/?>|>[\s\S]*?<\/\1>)`, whose first
+  // branch always matches at the first `>`: it removes the opening tag only.
+  result = removeOpeningTags(result, asciiLower(result), FORM_TAGS, false);
 
   return result;
 }
 
-/** Run the deny-list to a fixpoint so nested evasions (`<scr<script>ipt>`) die. */
-function denyListPass(dirty: string): string {
+/**
+ * Run the deny-list to a fixpoint so nested evasions (`<scr<script>ipt>`) die.
+ * Exported for harness/sanitize.test.mjs only.
+ */
+export function denyListPass(dirty: string): string {
   let clean = dirty;
   for (let i = 0; i < 10; i++) {
     const next = stripOnce(clean);

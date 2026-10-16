@@ -625,6 +625,104 @@ CREATE TABLE IF NOT EXISTS public.send_approvals (
 CREATE INDEX IF NOT EXISTS send_approvals_pending_expiry_idx ON public.send_approvals (expires_at) WHERE (status = 'pending'::text);
 CREATE INDEX IF NOT EXISTS send_approvals_workspace_pending_idx ON public.send_approvals (workspace_id, created_at DESC) WHERE (status = 'pending'::text);
 
+-- Single-use approval dispatch (hosted migration 20261016160400). The
+-- dispatcher binds an approval to the one scheduled_sends row allowed to send
+-- it, and refuses (defers) every approved send while this column is missing.
+ALTER TABLE public.send_approvals
+  ADD COLUMN IF NOT EXISTS dispatch_scheduled_send_id uuid REFERENCES public.scheduled_sends(id) ON DELETE SET NULL;
+
+-- scheduled_sends row integrity (hosted migration 20261016160400), for every
+-- writer: the inbox belongs to the row's workspace, and a plaintext payload is
+-- only ever an approval marker naming an approved approval of the same
+-- workspace and inbox. The hosted grant/RLS half of that migration has no
+-- counterpart here: anon/authenticated hold no table privileges in this schema
+-- and the server talks to it as service_role.
+CREATE OR REPLACE FUNCTION public.scheduled_sends_enforce_integrity()
+RETURNS trigger
+LANGUAGE plpgsql
+SECURITY DEFINER
+SET search_path = public
+AS $$
+DECLARE
+  v_approval text;
+BEGIN
+  IF NOT EXISTS (
+    SELECT 1 FROM public.inboxes i
+    WHERE  i.id = NEW.inbox_id
+      AND  i.workspace_id = NEW.workspace_id
+  ) THEN
+    RAISE EXCEPTION 'scheduled_sends: inbox % does not belong to workspace %',
+      NEW.inbox_id, NEW.workspace_id
+      USING ERRCODE = '23514';
+  END IF;
+
+  IF NOT NEW.payload_encrypted THEN
+    v_approval := NULL;
+    IF jsonb_typeof(NEW.payload) = 'object' THEN
+      IF (SELECT count(*) FROM jsonb_object_keys(NEW.payload)) = 1 THEN
+        v_approval := NEW.payload ->> 'approval_id';
+      END IF;
+    END IF;
+    IF v_approval IS NULL
+       OR v_approval !~* '^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$' THEN
+      RAISE EXCEPTION 'scheduled_sends: a plaintext payload must be an approval marker'
+        USING ERRCODE = '23514';
+    END IF;
+    IF NOT EXISTS (
+      SELECT 1 FROM public.send_approvals a
+      WHERE  a.id = v_approval::uuid
+        AND  a.workspace_id = NEW.workspace_id
+        AND  a.inbox_id = NEW.inbox_id
+        AND  (TG_OP = 'UPDATE' OR a.status = 'approved')
+    ) THEN
+      RAISE EXCEPTION 'scheduled_sends: approval % is not an approved request of this workspace and inbox',
+        v_approval
+        USING ERRCODE = '23514';
+    END IF;
+  END IF;
+
+  RETURN NEW;
+END;
+$$;
+
+DROP TRIGGER IF EXISTS scheduled_sends_enforce_integrity ON public.scheduled_sends;
+CREATE TRIGGER scheduled_sends_enforce_integrity
+  BEFORE INSERT OR UPDATE OF workspace_id, inbox_id, payload, payload_encrypted
+  ON public.scheduled_sends
+  FOR EACH ROW
+  EXECUTE FUNCTION public.scheduled_sends_enforce_integrity();
+
+-- What a reviewer was shown (supabase/migrations/20261016160600). Bumped by the
+-- trigger on every payload/summary/send_at change; approving requires the
+-- revision the reviewer rendered.
+ALTER TABLE public.send_approvals
+  ADD COLUMN IF NOT EXISTS revision integer NOT NULL DEFAULT 1;
+ALTER TABLE public.send_approvals DROP CONSTRAINT IF EXISTS send_approvals_revision_check;
+ALTER TABLE public.send_approvals ADD CONSTRAINT send_approvals_revision_check CHECK (revision >= 1);
+CREATE OR REPLACE FUNCTION public.send_approvals_bump_revision()
+RETURNS trigger
+LANGUAGE plpgsql
+SET search_path = ''
+AS $$
+BEGIN
+  IF NEW.payload IS DISTINCT FROM OLD.payload
+     OR NEW.summary IS DISTINCT FROM OLD.summary
+     OR NEW.send_at IS DISTINCT FROM OLD.send_at
+     OR NEW.operation IS DISTINCT FROM OLD.operation
+     OR NEW.inbox_id IS DISTINCT FROM OLD.inbox_id THEN
+    NEW.revision := OLD.revision + 1;
+  ELSE
+    NEW.revision := OLD.revision;
+  END IF;
+  RETURN NEW;
+END;
+$$;
+DROP TRIGGER IF EXISTS send_approvals_bump_revision ON public.send_approvals;
+CREATE TRIGGER send_approvals_bump_revision
+  BEFORE UPDATE ON public.send_approvals
+  FOR EACH ROW
+  EXECUTE FUNCTION public.send_approvals_bump_revision();
+
 CREATE TABLE IF NOT EXISTS public.outbound_idempotency (
     id uuid DEFAULT gen_random_uuid() NOT NULL,
     api_key_id uuid NOT NULL,

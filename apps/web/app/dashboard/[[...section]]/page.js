@@ -296,6 +296,7 @@ async function fetchInboxes(supabase, workspaceId, historyDays = USAGE_WINDOW_DA
  *   name: string,
  *   keyPrefix: string,
  *   scopes: string[],
+ *   createdBy: string | null,
  *   createdAt: string,
  *   lastUsedAt: string | null,
  *   expiresAt: string | null,
@@ -304,7 +305,7 @@ async function fetchInboxes(supabase, workspaceId, historyDays = USAGE_WINDOW_DA
 async function fetchApiKeys(supabase, workspaceId) {
   const { data, error } = await supabase
     .from('api_keys')
-    .select('id, name, key_prefix, scopes, inbox_ids, created_at, last_used_at, expires_at')
+    .select('id, name, key_prefix, scopes, inbox_ids, created_by, created_at, last_used_at, expires_at')
     .eq('workspace_id', workspaceId)
     .is('deleted_at', null)
     .order('created_at', { ascending: false });
@@ -321,6 +322,10 @@ async function fetchApiKeys(supabase, workspaceId) {
     scopes: row.scopes ?? [],
     // null = all inboxes (including any connected later); array = explicit allowlist.
     inboxIds: row.inbox_ids ?? null,
+    // Who holds the key. The Keys page offers Edit/Revoke only on keys the
+    // viewer may change (their own, or any key for an owner/admin), matching
+    // the authorization in /api/api-keys/[id] and /revoke.
+    createdBy: row.created_by ?? null,
     createdAt: row.created_at,
     lastUsedAt: row.last_used_at ?? null,
     expiresAt: row.expires_at ?? null,

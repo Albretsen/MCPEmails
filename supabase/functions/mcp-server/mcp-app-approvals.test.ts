@@ -147,7 +147,19 @@ class FakeQuery {
       this.filters.every(([column, value]) => row[column] === value)
     );
     if (this.op === "update") {
-      for (const row of matched) Object.assign(row, this.patch);
+      for (const row of matched) {
+        const before = JSON.stringify([row.payload, row.summary, row.send_at]);
+        const { revision: _ignored, ...patch } = this.patch;
+        Object.assign(row, patch);
+        // Mirrors the trigger in migration 20261016160600: a change to what a
+        // reviewer is shown bumps the revision; nothing else moves it.
+        if (
+          this.table === "send_approvals" && typeof row.revision === "number" &&
+          JSON.stringify([row.payload, row.summary, row.send_at]) !== before
+        ) {
+          row.revision += 1;
+        }
+      }
     }
     return Promise.resolve({
       data: this.single ? (matched[0] ?? null) : matched,
@@ -216,6 +228,7 @@ function pendingApproval(overrides: Row = {}): Row {
     decided_at: null,
     decided_via: null,
     decided_by_api_key_id: null,
+    revision: 1,
     ...overrides,
   };
 }
@@ -739,11 +752,10 @@ Deno.test("a held send does not put the body in model context (contract §7)", a
   assert(text.includes("pending_approval"), "the status a scripted client reads");
 });
 
-Deno.test("draft_send hands the card no body at all", async () => {
-  // Not a judgement call about disclosure: a draft's content lives with the
-  // provider, so the snapshot holds a draft_id and nothing to show. Pinned so a
-  // future change that starts snapshotting draft bodies has to come back and
-  // think about contract §7 rather than inheriting a pass.
+Deno.test("draft_send without a recorded snapshot hands the card no body at all", async () => {
+  // An approval queued before the snapshot existed holds a draft_id and
+  // nothing to show. A stray `body` key on the payload is NOT a snapshot and
+  // must not be rendered as one.
   const store = freshStore({
     operation: "draft_send",
     payload: {
@@ -764,6 +776,41 @@ Deno.test("draft_send hands the card no body at all", async () => {
     !JSON.stringify(envelope).includes("SENTINEL-BODY-TEXT"),
     "nothing from the snapshot body leaks into the envelope",
   );
+});
+
+Deno.test("F-04-04: a draft_send card shows the body the server recorded, Bcc as a count only", async () => {
+  const store = freshStore({
+    operation: "draft_send",
+    payload: {
+      v: 1,
+      data: CIPHER_PREFIX + JSON.stringify({
+        draft_id: "r-99",
+        base_revision: 0,
+        draft_snapshot: {
+          v: 1,
+          to: ["partner@example.com"],
+          cc: [],
+          bcc: ["drop@evil.example"],
+          subject: "Q3 notes",
+          body_text: "Harvested: SENTINEL-DRAFT-BODY",
+          body_html: "<p>SENTINEL-DRAFT-HTML</p>",
+          body_truncated: false,
+          attachments: [{ filename: "notes.pdf", size_bytes: 2048, mime_type: "application/pdf" }],
+        },
+        draft_digest: "a".repeat(64),
+      }),
+    },
+    summary: { to: ["partner@example.com"], cc: [], bcc_count: 1, subject: "Q3 notes", attachment_count: 0 },
+  });
+  const envelope = await buildHeldSendEnvelope(makeDeps(store), caller, store.send_approvals[0]);
+  const outbound = (envelope as Row).outbound as Row;
+  assertEquals(outbound.body.text, "Harvested: SENTINEL-DRAFT-BODY", "the approver reads the draft's body");
+  assertEquals(outbound.body.html, "<p>SENTINEL-DRAFT-HTML</p>", "and its HTML");
+  assertEquals(outbound.attachments, [{ filename: "notes.pdf", size_bytes: 2048, mime_type: "application/pdf" }], "files");
+  assertEquals(outbound.recipients.bcc_count, 1, "bcc counted");
+  assertEquals(outbound.signature.will_append, false, "a draft is sent as stored");
+  assert(!JSON.stringify(envelope).includes("drop@evil.example"), "the model/card channel keeps Bcc count-only");
+  assert(!JSON.stringify(envelope).includes("a".repeat(64)), "the digest is not published");
 });
 
 Deno.test("an envelope that cannot be built degrades to exactly the old payload", async () => {
@@ -1606,4 +1653,84 @@ Deno.test("a held forward says it carries the original's attachments, and a snap
   // A body-only edit recomputes from the snapshot; the flag must survive it.
   const recomputed = summaryFromSnapshot({ to: ["x@y"], message_id: "INBOX:1", body: "edited" }, carried);
   assertEquals(recomputed.forward_carries_original, true, "the flag survives a snapshot recompute");
+});
+
+// ---------------------------------------------------------------------------
+// Security review 2026-10-16: the approval is bound to what the human reviewed
+// ---------------------------------------------------------------------------
+
+const OTHER_KEY = "88888888-8888-4888-8888-888888888888";
+const otherCaller: ApprovalCaller = { id: OTHER_KEY, workspace_id: WORKSPACE, name: "ChatGPT", inbox_ids: null };
+
+Deno.test("F-04-02: approval_update by a key that did not queue the send is refused and changes nothing", async () => {
+  const store = freshStore();
+  const before = JSON.stringify(store.send_approvals[0]);
+  const result = await runApprovalUpdate(makeDeps(store), otherCaller, {
+    approval_id: APPROVAL_ID,
+    body_text: "exfiltrated",
+  });
+  assertEquals(result.result.isError, true, "refused");
+  assertEquals(result.logErrorCode, "approval_not_requester", "log code");
+  assertEquals(envelopeOf(result).receipt.error_code, "not_requester", "receipt code");
+  assertEquals(JSON.stringify(store.send_approvals[0]), before, "row untouched");
+});
+
+Deno.test("F-04-02: approval_schedule by a key that did not queue the send is refused", async () => {
+  const store = freshStore();
+  const result = await runApprovalSchedule(makeDeps(store), otherCaller, {
+    approval_id: APPROVAL_ID,
+    send_at: new Date(NOW + 3600_000).toISOString(),
+  });
+  assertEquals(result.logErrorCode, "approval_not_requester", "refused");
+  assertEquals(store.send_approvals[0].send_at, null, "send_at untouched");
+  assertEquals(store.send_approvals[0].revision, 1, "revision untouched");
+});
+
+Deno.test("an approval whose key was deleted (api_key_id null) cannot be edited by anyone", async () => {
+  const store = freshStore({ api_key_id: null });
+  const result = await runApprovalUpdate(makeDeps(store), caller, { approval_id: APPROVAL_ID, body_text: "x" });
+  assertEquals(result.logErrorCode, "approval_not_requester", "refused");
+});
+
+Deno.test("another key may still review and reject an approval it did not queue", async () => {
+  const store = freshStore();
+  const reviewed = await runApprovalReview(makeDeps(store), otherCaller, { approval_id: APPROVAL_ID });
+  assertEquals(reviewed.result.isError, false, "review allowed");
+  const rejected = await runApprovalDecide(makeDeps(store), otherCaller, {
+    approval_id: APPROVAL_ID,
+    decision: "reject",
+  });
+  assertEquals(rejected.result.isError, false, "reject allowed");
+  assertEquals(store.send_approvals[0].status, "rejected", "rejected");
+});
+
+Deno.test("the requesting key's edit and reschedule still work, and each bumps the revision", async () => {
+  const store = freshStore();
+  const edited = await runApprovalUpdate(makeDeps(store), caller, { approval_id: APPROVAL_ID, body_text: "New words" });
+  assertEquals(edited.result.isError, false, "edit allowed");
+  assertEquals(store.send_approvals[0].revision, 2, "edit bumped the revision");
+  const scheduled = await runApprovalSchedule(makeDeps(store), caller, {
+    approval_id: APPROVAL_ID,
+    send_at: new Date(NOW + 3600_000).toISOString(),
+  });
+  assertEquals(scheduled.result.isError, false, "schedule allowed");
+  assertEquals(store.send_approvals[0].revision, 3, "schedule bumped the revision");
+});
+
+Deno.test("an edit built on a revision that moved underneath it writes nothing", async () => {
+  const store = freshStore();
+  const deps = makeDeps(store, {
+    // Another edit lands between this call's read and its write.
+    beforeWrite: (table, op) => {
+      if (table === "send_approvals" && op === "update" && store.send_approvals[0].revision === 1) {
+        store.send_approvals[0].revision = 2;
+        store.send_approvals[0].summary = { ...store.send_approvals[0].summary, subject: "Someone else's" };
+      }
+    },
+  });
+  const result = await runApprovalUpdate(deps, caller, { approval_id: APPROVAL_ID, body_text: "Mine" });
+  assertEquals(result.result.isError, true, "refused");
+  assertEquals(result.logErrorCode, "approval_changed", "said why");
+  assertEquals(store.send_approvals[0].summary.subject, "Someone else's", "the other edit stands");
+  assert(!String(store.send_approvals[0].payload.data).includes("Mine"), "this edit was not written");
 });

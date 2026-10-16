@@ -86,12 +86,12 @@ const B = {
 const SAVE_OF_A = {
   signature_html: '<p>Alpha</p>', signature_text: 'Alpha',
   signature_enabled: true, signature_reply_mode: 'always',
-  send_review_mode: 'off', send_approval_required: false,
+  // The review fields are sent only when the selection changed, and neither
+  // inbox's was changed here (see SignatureEditor in Pages.jsx).
 };
 const SAVE_OF_B = {
   signature_html: '<p>Bravo</p>', signature_text: 'Bravo',
   signature_enabled: false, signature_reply_mode: 'never',
-  send_review_mode: 'dashboard', send_approval_required: true,
 };
 
 function inbox(fields) {

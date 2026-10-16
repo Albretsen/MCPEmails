@@ -152,6 +152,9 @@ export async function sendViaSmtp(cfg: SmtpConfig, msg: SmtpMessage): Promise<vo
   if (msg.recipients.length === 0) {
     throw new Error("SMTP send: no recipients");
   }
+  // Before any connection: an address that could break its command line is
+  // refused here, deterministically and with nothing written to a socket.
+  assertEnvelopeSafe(msg);
 
   // So a host the web app learned a minute ago is relayed here too.
   if (relayConfigured()) await refreshLearnedRelayHosts();
@@ -187,6 +190,32 @@ export async function sendViaSmtp(cfg: SmtpConfig, msg: SmtpMessage): Promise<vo
       if (last || !retryable) throw err;
       await new Promise((resolve) => setTimeout(resolve, SMTP_RETRY_DELAY_MS));
     }
+  }
+}
+
+/**
+ * Refuse an envelope whose MAIL FROM or RCPT TO address could break out of its
+ * SMTP command line (2026-10-16).
+ *
+ * The addresses are interpolated into `MAIL FROM:<...>` / `RCPT TO:<...>`, so a
+ * CR or LF in one is a second SMTP command in the user's authenticated session
+ * (an extra RCPT, a whole extra DATA), and `<`, `>` or whitespace rewrite the
+ * command's own syntax. No real address holds any of them. Thrown as a
+ * non-retryable {@link SmtpNotSentError}: nothing was sent, and trying again
+ * cannot help.
+ */
+export function assertEnvelopeSafe(msg: Pick<SmtpMessage, "from" | "recipients">): void {
+  const bad = [msg.from, ...msg.recipients].find((address) =>
+    // deno-lint-ignore no-control-regex
+    typeof address !== "string" || address.length === 0 || /[\x00-\x20\x7F<>]/.test(address)
+  );
+  if (bad !== undefined) {
+    // deno-lint-ignore no-control-regex
+    const shown = String(bad).replace(/[\x00-\x1F\x7F]/g, "?").slice(0, 200);
+    throw new SmtpNotSentError(
+      `SMTP envelope refused: "${shown}" is not a valid email address (it contains whitespace, a control character or an angle bracket). Nothing was sent.`,
+      false,
+    );
   }
 }
 
@@ -266,6 +295,9 @@ async function submitOnce(
   msg: SmtpMessage,
   mode: SmtpConnectMode = "auto",
 ): Promise<void> {
+  // Checked again at the line that writes the envelope (defence in depth: a
+  // future caller of submitOnce must not be able to skip it).
+  assertEnvelopeSafe(msg);
   // Flipped the instant the server answers DATA with 354: the next byte we
   // write is the message itself, and no failure past here is safe to retry.
   let dataAccepted = false;
@@ -609,6 +641,10 @@ class SmtpSession {
 
   /** Send a command and return the parsed reply without asserting. */
   async commandRaw(line: string): Promise<SmtpReply> {
+    // One command is one line. A CR or LF inside it would be a second command.
+    if (/[\r\n]/.test(line)) {
+      throw new Error(`SMTP: refused to write a command containing a line break ("${line.split(" ")[0]}")`);
+    }
     await writeAllBytes(this.conn, this.encoder.encode(line + "\r\n"));
     return this.readReply();
   }

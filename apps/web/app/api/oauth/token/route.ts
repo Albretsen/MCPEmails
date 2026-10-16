@@ -8,6 +8,7 @@ import { oauthError } from '@/lib/oauth/errors';
 import { resourceMatchesGrant, validateResourceIndicator } from '@/lib/oauth/resource';
 import { looksLikeUrlClientId, parseCimdClientId } from '@/lib/oauth/cimd';
 import { checkRateLimit } from '@/lib/rate-limit';
+import { checkGrantForMember, scopesAllowedForRole } from '@/lib/oauth/grant-role';
 import type { Json } from '@/types/database.types';
 
 /**
@@ -105,6 +106,42 @@ async function logEvent(
     });
   } catch {
     // Non-fatal; never let logging break the token response.
+  }
+}
+
+// ── Ending a chain whose grantee lost access ─────────────────────────────────
+
+/**
+ * Revoke the presented refresh row and, when the chain hangs off an api_keys
+ * row, that key and every live row of its chain: the same two halves
+ * /api/oauth/revoke and the dashboard revoke button end. Best effort; the
+ * caller refuses the grant whatever happens here.
+ */
+async function endChain(
+  service: ReturnType<typeof createServiceRoleClient>,
+  refreshRowId: string,
+  apiKeyId: string | null,
+): Promise<void> {
+  const stamp = new Date().toISOString();
+  // Each write is attempted even if an earlier one failed, and every failure
+  // is logged by name: a half-ended chain must be visible in the logs, since
+  // the dormant-grant sweep or a later refresh is what finishes it.
+  const steps: Array<[string, () => PromiseLike<{ error: { message: string } | null }>]> = [
+    ['refresh_row', () => service.from('oauth_refresh_tokens').update({ revoked_at: stamp }).eq('id', refreshRowId).is('revoked_at', null)],
+  ];
+  if (apiKeyId) {
+    steps.push(
+      ['api_key', () => service.from('api_keys').update({ deleted_at: stamp }).eq('id', apiKeyId).is('deleted_at', null)],
+      ['chain', () => service.from('oauth_refresh_tokens').update({ revoked_at: stamp }).eq('api_key_id', apiKeyId).is('revoked_at', null)],
+    );
+  }
+  for (const [name, run] of steps) {
+    try {
+      const { error } = await run();
+      if (error) console.error('oauth_refresh_end_chain_error', name, error.message);
+    } catch (err) {
+      console.error('oauth_refresh_end_chain_error', name, err instanceof Error ? err.message : String(err));
+    }
   }
 }
 
@@ -231,15 +268,54 @@ export async function POST(req: NextRequest): Promise<Response> {
       return oauthError('invalid_grant', 'PKCE code_verifier does not match the code_challenge.');
     }
 
-    // Single-use: hard-delete before issuing token (prevents replay even if insert fails)
-    const { error: deleteErr } = await service
+    // Membership + role, re-checked NOW rather than trusted from consent time.
+    // A code lives a few minutes, and in that window the user can be removed
+    // from the workspace or demoted to viewer; removal deletes pending codes,
+    // but this is the check that does not depend on that sweep having run.
+    //
+    // Run BEFORE the code is consumed, so a transient lookup failure leaves the
+    // code redeemable and the client can retry without sending the user back
+    // through consent. A definite refusal consumes the code first, so it can
+    // never be retried.
+    const codeGrant = await checkGrantForMember(service, {
+      workspaceId: authCode.workspace_id,
+      userId:      authCode.user_id,
+      scopes:      authCode.scopes,
+    });
+    if (!codeGrant.ok) {
+      if (codeGrant.reason === 'lookup_failed') {
+        console.error('oauth_token_membership_lookup_error', codeGrant.message);
+        return oauthError('server_error', 'Failed to validate the authorization. Try again.', 500);
+      }
+      const { error: refusedDeleteErr } = await service.from('oauth_auth_codes').delete().eq('id', authCode.id);
+      if (refusedDeleteErr) console.error('oauth_token_code_delete_error', refusedDeleteErr.message);
+      void logEvent(req, 'oauth_token_refused_membership', {
+        client_id:    lookupClientId,
+        workspace_id: authCode.workspace_id,
+        reason:       codeGrant.reason,
+        grant:        'authorization_code',
+      });
+      return oauthError('invalid_grant', codeGrant.message);
+    }
+    const grantedScopes = codeGrant.scopes;
+
+    // Single-use: hard-delete before issuing token (prevents replay even if
+    // insert fails). Atomic consume: only the request whose DELETE actually
+    // removed the row may continue, so two concurrent redemptions of the same
+    // code cannot both mint a key now that the check above sits between the
+    // lookup and the delete.
+    const { data: consumed, error: deleteErr } = await service
       .from('oauth_auth_codes')
       .delete()
-      .eq('id', authCode.id);
+      .eq('id', authCode.id)
+      .select('id');
 
     if (deleteErr) {
       console.error('oauth_token_code_delete_error', deleteErr.message);
       return oauthError('server_error', 'Failed to consume authorization code. Restart the flow.');
+    }
+    if (!consumed || consumed.length === 0) {
+      return oauthError('invalid_grant', 'Authorization code is invalid or has expired.');
     }
 
     // Issue 1-hour access token. This single api_keys row is the durable
@@ -262,7 +338,7 @@ export async function POST(req: NextRequest): Promise<Response> {
         name:         keyName,
         key_prefix:   keyPrefix,
         key_hash:     keyHash,
-        scopes:       authCode.scopes,
+        scopes:       grantedScopes,
         inbox_ids:    authCode.inbox_ids ?? null,
         expires_at:   accessExpiresAt,
       })
@@ -287,7 +363,7 @@ export async function POST(req: NextRequest): Promise<Response> {
       workspace_id: authCode.workspace_id,
       user_id:      authCode.user_id,
       client_name:  authCode.client_name,
-      scopes:       authCode.scopes,
+      scopes:       grantedScopes,
       inbox_ids:    authCode.inbox_ids ?? null,
       expires_at:   refreshExpiresAt,
       api_key_id:   keyRow.id,
@@ -299,7 +375,7 @@ export async function POST(req: NextRequest): Promise<Response> {
     void logEvent(req, 'oauth_token_issued', {
       client_id:  lookupClientId,
       key_prefix: keyPrefix,
-      scopes:     authCode.scopes,
+      scopes:     grantedScopes,
       workspace_id: authCode.workspace_id,
       resource:   boundResource,
     });
@@ -310,7 +386,7 @@ export async function POST(req: NextRequest): Promise<Response> {
         token_type:    'bearer',
         expires_in:    3600,
         refresh_token: refreshToken,
-        scope:         authCode.scopes.join(' '),
+        scope:         grantedScopes.join(' '),
       },
       { headers: { ...CORS_HEADERS, 'Cache-Control': 'no-store', Pragma: 'no-cache' } }
     );
@@ -349,6 +425,34 @@ export async function POST(req: NextRequest): Promise<Response> {
     }
     const boundResource = requestedResource ?? rt.resource;
 
+    // Membership + role, re-checked on every rotation. The chain was issued to
+    // rt.user_id as a member of rt.workspace_id; if that is no longer true the
+    // chain is dead, even for a legacy chain with no api_keys row behind it
+    // (which would otherwise mint a brand-new key below). A demoted member's
+    // chain is narrowed to what their role allows now, or ended if that leaves
+    // no permission at all.
+    const refreshGrant = await checkGrantForMember(service, {
+      workspaceId: rt.workspace_id,
+      userId:      rt.user_id,
+      scopes:      rt.scopes,
+    });
+    if (!refreshGrant.ok) {
+      if (refreshGrant.reason === 'lookup_failed') {
+        // Transient: leave the chain alone so the client can simply retry.
+        console.error('oauth_refresh_membership_lookup_error', refreshGrant.message);
+        return oauthError('server_error', 'Failed to validate refresh token. Try again.', 500);
+      }
+      await endChain(service, rt.id, rt.api_key_id);
+      void logEvent(req, 'oauth_token_refused_membership', {
+        client_id:    lookupClientId,
+        workspace_id: rt.workspace_id,
+        reason:       refreshGrant.reason,
+        grant:        'refresh_token',
+      });
+      return oauthError('invalid_grant', refreshGrant.message);
+    }
+    const grantedScopes = refreshGrant.scopes;
+
     // Crash-safe rotation: we mint the new pair and persist the new refresh
     // token FIRST, then rotate the access token in place, and only revoke the
     // old refresh token last. If any earlier step fails, the old refresh token
@@ -371,7 +475,7 @@ export async function POST(req: NextRequest): Promise<Response> {
         workspace_id: rt.workspace_id,
         user_id:      rt.user_id,
         client_name:  rt.client_name,
-        scopes:       rt.scopes,
+        scopes:       grantedScopes,
         inbox_ids:    rt.inbox_ids ?? null,
         expires_at:   newRefreshExpiresAt,
         api_key_id:   rt.api_key_id,
@@ -390,9 +494,25 @@ export async function POST(req: NextRequest): Promise<Response> {
     // The deleted_at guard means a connection revoked from the dashboard can
     // NOT be silently resurrected here.
     if (rt.api_key_id) {
+      // When the role narrowed the chain, the key it rotates is narrowed the
+      // same way, from the KEY's own scopes (which may already be narrower than
+      // the chain's, if they were edited on the API keys page), so this can
+      // only ever remove scopes from the key, never add one.
+      const rotation: { key_hash: string; key_prefix: string; expires_at: string; scopes?: string[] } = {
+        key_hash: keyHash, key_prefix: keyPrefix, expires_at: accessExpiresAt,
+      };
+      if (refreshGrant.narrowed) {
+        const { data: currentKey } = await service
+          .from('api_keys')
+          .select('scopes')
+          .eq('id', rt.api_key_id)
+          .maybeSingle();
+        rotation.scopes = scopesAllowedForRole(refreshGrant.role, currentKey?.scopes ?? grantedScopes);
+      }
+
       const { data: rotated, error: rotateErr } = await service
         .from('api_keys')
-        .update({ key_hash: keyHash, key_prefix: keyPrefix, expires_at: accessExpiresAt })
+        .update(rotation)
         .eq('id', rt.api_key_id)
         .is('deleted_at', null)
         .select('id');
@@ -422,7 +542,7 @@ export async function POST(req: NextRequest): Promise<Response> {
           name:         legacyKeyName,
           key_prefix:   keyPrefix,
           key_hash:     keyHash,
-          scopes:       rt.scopes,
+          scopes:       grantedScopes,
           inbox_ids:    rt.inbox_ids ?? null,
           expires_at:   accessExpiresAt,
         })
@@ -453,7 +573,7 @@ export async function POST(req: NextRequest): Promise<Response> {
     void logEvent(req, 'oauth_token_refreshed', {
       client_id:  lookupClientId,
       key_prefix: keyPrefix,
-      scopes:     rt.scopes,
+      scopes:     grantedScopes,
       workspace_id: rt.workspace_id,
       resource:   boundResource,
     });
@@ -464,7 +584,7 @@ export async function POST(req: NextRequest): Promise<Response> {
         token_type:    'bearer',
         expires_in:    3600,
         refresh_token: newRefreshToken,
-        scope:         rt.scopes.join(' '),
+        scope:         grantedScopes.join(' '),
       },
       { headers: { ...CORS_HEADERS, 'Cache-Control': 'no-store', Pragma: 'no-cache' } }
     );

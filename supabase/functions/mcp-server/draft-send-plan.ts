@@ -30,6 +30,11 @@
 // ---------------------------------------------------------------------------
 
 import { cardWriteConflict, lineRevision, type ResolvedDraft } from "./draft-lineage.ts";
+import {
+  APPROVED_DRAFT_CHANGED_DETAIL,
+  APPROVED_DRAFT_UNREADABLE_DETAIL,
+  APPROVED_DRAFT_UNVERIFIED_DETAIL,
+} from "./draft-send-snapshot.ts";
 
 export type DraftSendPlan =
   | { kind: "refuse"; code: "draft_already_sent"; sentCopyKept: boolean }
@@ -73,21 +78,28 @@ export function planDraftSend(input: {
     kind: "proceed",
     draftId: line.draftId,
     line,
-    approvalArgs: heldSendArgs(input.args, line.draftId, line, input.baseRevision, false),
+    approvalArgs: heldSendArgs(input.args, line.draftId, line, false),
   };
 }
 
 /**
  * What a held `draft{action:"send"}` is queued with: the caller's arguments,
- * the resolved id, and ALWAYS a `base_revision`.
+ * the resolved id, and ALWAYS a `base_revision` the SERVER chose.
  *
- * The revision is the line's as it is now (`lineRevision`). With no open line
- * it is the caller's own `base_revision` when it sent one, else 0, which means
- * "no recorded revision": a line that exists by the time of the re-run means
- * something wrote the draft after it was queued, and the re-run is refused as
- * `draft_changed` (draft-lineage.ts#cardWriteConflict). A lineage read that
- * failed at queue time can therefore refuse an approved send that was fine;
- * that is the safe direction, and the approver is told why.
+ * The revision is the line's as it is now (`lineRevision`), or 0 ("no recorded
+ * revision") when no open line names the draft: a line that exists by the time
+ * of the re-run means something wrote the draft after it was queued, and the
+ * re-run is refused as `draft_changed` (draft-lineage.ts#cardWriteConflict). A
+ * lineage read that failed at queue time can therefore refuse an approved send
+ * that was fine; that is the safe direction, and the approver is told why.
+ *
+ * NEVER the caller's own `base_revision` (security review 2026-10-16, F-04-03).
+ * For a draft no line names (a Gmail or Outlook draft written in the mail
+ * client) the caller could pass `base_revision: 1`, rewrite the draft (which
+ * adopts it into a new line at revision 1), and the re-run's check compared 1
+ * to 1 and sent the rewritten draft. The caller's value is checked against the
+ * line (planDraftSend, rule 3) and then dropped. The approval's content digest
+ * (draft-send-snapshot.ts) is the second, provider-independent check.
  *
  * `recipientsApplied`: the send-time `to`/`cc`/`bcc` were written into the
  * stored draft already, so the re-run must not write them again (on IMAP the
@@ -97,7 +109,6 @@ export function heldSendArgs(
   args: Record<string, unknown>,
   draftId: string,
   line: ResolvedDraft,
-  callerBaseRevision: number | null,
   recipientsApplied: boolean,
 ): Record<string, unknown> {
   const out: Record<string, unknown> = { ...args, draft_id: draftId };
@@ -106,7 +117,7 @@ export function heldSendArgs(
     delete out["cc"];
     delete out["bcc"];
   }
-  out["base_revision"] = lineRevision(line) ?? callerBaseRevision ?? 0;
+  out["base_revision"] = lineRevision(line) ?? 0;
   return out;
 }
 
@@ -146,7 +157,7 @@ export async function applyRecipientOverride(
   return {
     draftId: rewrittenId,
     line,
-    approvalArgs: heldSendArgs(input.args, rewrittenId, line, input.baseRevision, true),
+    approvalArgs: heldSendArgs(input.args, rewrittenId, line, true),
   };
 }
 
@@ -169,6 +180,12 @@ export function approvedSendRefusalDetail(
         "Review the draft and send it again.";
     case "draft_already_sent":
       return "Not sent again. This draft had already been sent.";
+    case "approved_draft_changed":
+      return APPROVED_DRAFT_CHANGED_DETAIL;
+    case "approved_draft_unverified":
+      return APPROVED_DRAFT_UNVERIFIED_DETAIL;
+    case "approved_draft_unreadable":
+      return APPROVED_DRAFT_UNREADABLE_DETAIL;
     default:
       return null;
   }

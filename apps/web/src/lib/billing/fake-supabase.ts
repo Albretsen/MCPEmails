@@ -27,7 +27,7 @@ import type { SupabaseClient } from '@supabase/supabase-js';
 import type { Database } from '@/types/database.types';
 
 type Row = Record<string, unknown>;
-type Filter = { op: 'eq' | 'is' | 'in' | 'like'; column: string; value: unknown };
+type Filter = { op: 'eq' | 'is' | 'in' | 'like' | 'gt' | 'notIs'; column: string; value: unknown };
 
 /** Mirrors the unique index in 20260902130000_billing_lifecycle_emails.sql. */
 const CONFLICT_COLUMNS = ['stripe_customer_id', 'template', 'scope_key'];
@@ -42,6 +42,10 @@ function matches(row: Row, filters: Filter[]): boolean {
         return f.value === null ? actual === null || actual === undefined : actual === f.value;
       case 'in':
         return Array.isArray(f.value) && f.value.includes(actual);
+      case 'gt':
+        return actual != null && String(actual) > String(f.value);
+      case 'notIs':
+        return f.value === null ? actual !== null && actual !== undefined : actual !== f.value;
       case 'like': {
         const pattern = String(f.value).replace(/%/g, '');
         return typeof actual === 'string' && actual.startsWith(pattern);
@@ -53,7 +57,7 @@ function matches(row: Row, filters: Filter[]): boolean {
 }
 
 interface Pending {
-  kind: 'select' | 'update' | 'upsert';
+  kind: 'select' | 'update' | 'upsert' | 'insert' | 'delete';
   table: string;
   filters: Filter[];
   patch?: Row;
@@ -89,6 +93,16 @@ class Query implements PromiseLike<{ data: Row[] | null; error: { message: strin
     this.pending.filters.push({ op: 'like', column, value });
     return this;
   }
+  gt(column: string, value: unknown): this {
+    this.pending.filters.push({ op: 'gt', column, value });
+    return this;
+  }
+  /** Only the `.not(column, 'is', value)` shape. */
+  not(column: string, operator: string, value: unknown): this {
+    if (operator !== 'is') throw new Error(`FakeSupabase: .not(_, '${operator}', _) is not implemented`);
+    this.pending.filters.push({ op: 'notIs', column, value });
+    return this;
+  }
   limit(n: number): this {
     this.pending.limit = n;
     return this;
@@ -100,7 +114,13 @@ class Query implements PromiseLike<{ data: Row[] | null; error: { message: strin
   private run(): { data: Row[] | null; error: { message: string; code?: string } | null } {
     const failure = this.store.failNext.get(this.pending.table);
     if (failure) {
-      this.store.failNext.delete(this.pending.table);
+      const left = (this.store.failCounts.get(this.pending.table) ?? 1) - 1;
+      if (left > 0) {
+        this.store.failCounts.set(this.pending.table, left);
+      } else {
+        this.store.failNext.delete(this.pending.table);
+        this.store.failCounts.delete(this.pending.table);
+      }
       return { data: null, error: failure };
     }
 
@@ -122,11 +142,27 @@ class Query implements PromiseLike<{ data: Row[] | null; error: { message: strin
       return { data: out, error: null };
     }
 
+    if (this.pending.kind === 'insert') {
+      const out: Row[] = [];
+      for (const candidate of this.pending.inserted ?? []) {
+        const row: Row = { id: this.store.nextId++, ...candidate };
+        table.push(row);
+        out.push(row);
+      }
+      return { data: out, error: null };
+    }
+
     let hits = table.filter((row) => matches(row, this.pending.filters));
     if (this.pending.limit != null) hits = hits.slice(0, this.pending.limit);
 
     if (this.pending.kind === 'update') {
       for (const row of hits) Object.assign(row, this.pending.patch);
+    }
+    if (this.pending.kind === 'delete') {
+      const gone = new Set(hits);
+      const kept = table.filter((row) => !gone.has(row));
+      table.length = 0;
+      table.push(...kept);
     }
     return { data: hits, error: null };
   }
@@ -143,6 +179,16 @@ class Query implements PromiseLike<{ data: Row[] | null; error: { message: strin
   async maybeSingle(): Promise<{ data: Row | null; error: { message: string; code?: string } | null }> {
     const { data, error } = this.run();
     return { data: data?.[0] ?? null, error };
+  }
+
+  /** PostgREST `.single()`: exactly one row, else an error. */
+  async single(): Promise<{ data: Row | null; error: { message: string; code?: string } | null }> {
+    const { data, error } = this.run();
+    if (error) return { data: null, error };
+    if (!data || data.length !== 1) {
+      return { data: null, error: { message: `expected 1 row, got ${data?.length ?? 0}`, code: 'PGRST116' } };
+    }
+    return { data: data[0], error: null };
   }
 }
 
@@ -165,9 +211,17 @@ export class FakeSupabase {
     this.table(name).push(...rows.map((r) => ({ id: this.nextId++, ...r })));
   }
 
+  readonly failCounts = new Map<string, number>();
+
   /** Make the next query against `table` return this error, once. */
   failOnce(table: string, error: { message: string; code?: string }): void {
+    this.failTimes(table, error, 1);
+  }
+
+  /** Make the next `count` queries against `table` return this error. */
+  failTimes(table: string, error: { message: string; code?: string }, count: number): void {
     this.failNext.set(table, error);
+    this.failCounts.set(table, count);
   }
 
   from(table: string) {
@@ -175,6 +229,9 @@ export class FakeSupabase {
       select: (columns?: string) =>
         new Query(this, { kind: 'select', table, filters: [] }).select(columns),
       update: (patch: Row) => new Query(this, { kind: 'update', table, filters: [], patch }),
+      insert: (rows: Row | Row[]) =>
+        new Query(this, { kind: 'insert', table, filters: [], inserted: Array.isArray(rows) ? rows : [rows] }),
+      delete: () => new Query(this, { kind: 'delete', table, filters: [] }),
       upsert: (rows: Row | Row[], _options?: unknown) =>
         new Query(this, {
           kind: 'upsert',

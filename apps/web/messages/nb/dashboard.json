@@ -163,6 +163,7 @@
     "statusError": "Feil",
     "reconnect": "Koble til på nytt",
     "checkConnection": "Sjekk tilkobling",
+    "viewerActionsNote": "Lesere i arbeidsområdet kan se denne innboksen, men ikke sjekke, koble til på nytt, koble fra eller redigere den.",
     "disconnectInbox": "Koble fra innboks",
     "emptyTitle": "Ingen postkasser tilkoblet",
     "emptyDesc": "Koble til en hvilken som helst IMAP-postkasse, Gmail eller Outlook for å gi agentene dine tilgang.",
@@ -252,6 +253,7 @@
     "accessCount": "{count, plural, one {# innboks} other {# innbokser}}",
     "editAccess": "Rediger tilgang",
     "revoke": "Opphev",
+    "notYours": "Bare den som opprettet nøkkelen, eller en administrator, kan endre den.",
     "emptyTitle": "Ingen API-nøkler ennå",
     "emptyDesc": "Opprett en nøkkel for å koble Claude Desktop eller en hvilken som helst MCP-klient til innboksene dine.",
     "never": "Aldri",
@@ -310,7 +312,9 @@
       "errInboxRequired": "Velg minst én innboks, eller velg alle innbokser.",
       "errSaveFailed": "Kunne ikke oppdatere tilgangen. Prøv igjen.",
       "saving": "Lagrer…",
-      "save": "Lagre endringer"
+      "save": "Lagre endringer",
+      "viewerCapNote": "Denne nøkkelen tilhører en leser, så den kan bare ha lesetilganger.",
+      "noWidenNote": "Den som opprettet nøkkelen, er ikke lenger med i arbeidsområdet. Du kan fjerne tilganger, men ikke legge til nye utover lesetilgang."
     },
     "revealModal": {
       "title": "Kopier API-nøkkelen din",
@@ -677,6 +681,7 @@
       "to": "Til",
       "cc": "Kopi",
       "bcc": "Blindkopi",
+      "replyTo": "Svar til",
       "subject": "Emne",
       "attachments": "Vedlegg",
       "operation": "Type",
@@ -692,11 +697,12 @@
       "attachmentsFromOriginal": "Den opprinnelige meldingens vedlegg, slik de ble sendt",
       "recipientsAtSend": "Denne siden klarte ikke å lese mottakerne fra den opprinnelige meldingen. De hentes når den sendes, så les gjennom meldingsteksten før du godkjenner.",
       "bccCount": "{count, plural, one {# skjult mottaker} other {# skjulte mottakere}}",
+      "bccHint": "Skjult for de andre mottakerne. Sjekk hver adresse før du godkjenner.",
       "attachmentCount": "{count, plural, one {# fil} other {# filer}}",
       "bodyTitle": "Melding",
       "bodyTruncated": "Denne meldingen er lengre enn 64 KB og er avkortet her. Åpne den i dashbordet for å lese alt.",
       "bodyWithheldRole": "Meldingsteksten vises til eiere, administratorer og medlemmer av arbeidsområdet. Din rolle kan bare se leveringsdetaljene.",
-      "bodyStoredWithProvider": "Denne forespørselen sender et utkast som er lagret hos e-postleverandøren din, så teksten er ikke en del av forespørselen. Åpne utkastet i e-postappen din før du bestemmer deg.",
+      "bodyStoredWithProvider": "Denne forespørselen ble laget før MCP Emails tok vare på en kopi av utkastet, så teksten kan ikke vises her, og den blir ikke sendt selv om du godkjenner den. Avvis den og be assistenten sende utkastet på nytt.",
       "bodyDecryptFailed": "Den lagrede meldingen kunne ikke dekrypteres og kan derfor ikke vises. Avvis denne forespørselen og be assistenten forberede den på nytt.",
       "bodyAbsent": "Denne forespørselen har ingen meldingstekst.",
       "bodyHtmlShow": "Vis HTML-kilde",
@@ -744,7 +750,10 @@
         "expiredTitle": "Denne forespørselen utløp",
         "expiredBody": "Den ble ikke avgjort i tide, så den blir ikke sendt. Be assistenten forberede den på nytt hvis du fortsatt vil sende den.",
         "decidedElsewhereTitle": "Allerede avgjort",
-        "decidedElsewhereBody": "Noen andre, eller en annen fane, avgjorde denne utsendingen mens denne siden var åpen. Ingenting ble endret nå. Åpne dashbordet for å se utfallet."
+        "decidedElsewhereBody": "Noen andre, eller en annen fane, avgjorde denne utsendingen mens denne siden var åpen. Ingenting ble endret nå. Åpne dashbordet for å se utfallet.",
+        "changedTitle": "Denne forespørselen ble endret etter at du åpnet den",
+        "changedBody": "Ingenting ble sendt. Den gjeldende versjonen vises nedenfor. Gå gjennom den på nytt før du bestemmer deg.",
+        "changedLoading": "Ingenting ble sendt. Laster inn den gjeldende versjonen…"
       },
       "done": {
         "approvedTitle": "Godkjent. E-posten er på vei.",
@@ -766,7 +775,8 @@
       "inlineHint": "Et kort vises i KI-samtalen med nøyaktig hva som blir sendt. Du kan avvise der; godkjenning åpner en side du må være innlogget for å bruke.",
       "dashboard": "Gjennomgang bare i dashbordet",
       "dashboardHint": "Ingen kort i samtalen. Assistenten får beskjed om at utsendingen venter, og du bestemmer her.",
-      "guarantee": "I begge gjennomgangsmodusene forberedes e-posten uten å bli levert. Godkjenning skjer bare i en innlogget nettleserøkt hos en eier eller administrator av arbeidsområdet, noe assistenten ikke har. Gjennomgangskortet er en bekvemmelighet, ikke en tilgangsgrense."
+      "guarantee": "I begge gjennomgangsmodusene forberedes e-posten uten å bli levert. Godkjenning skjer bare i en innlogget nettleserøkt hos en eier eller administrator av arbeidsområdet, noe assistenten ikke har. Gjennomgangskortet er en bekvemmelighet, ikke en tilgangsgrense.",
+      "ownerAdminOnly": "Bare eiere og administratorer i arbeidsområdet kan endre gjennomgangsinnstillingen."
     },
     "panel": {
       "decidedTitle": "Nylig avgjort",
@@ -776,7 +786,12 @@
       "statusApproved": "Godkjent",
       "statusRejected": "Avvist",
       "statusExpired": "Utløpt",
-      "statusCancelled": "Avbrutt"
+      "statusCancelled": "Avbrutt",
+      "changedNotice": "Denne forespørselen ble endret etter at du åpnet den. Ingenting ble sendt. Den gjeldende versjonen vises nedenfor; sjekk den før du bekrefter.",
+      "changedGone": "Denne forespørselen ble endret og venter ikke lenger på en avgjørelse. Ingenting ble sendt.",
+      "openReview": "Åpne hele gjennomgangen, med meldingsteksten",
+      "detailsFailed": "Kunne ikke laste inn detaljene for denne forespørselen. Ingenting ble sendt. Du kan fortsatt avvise den, eller lukke dette og prøve igjen.",
+      "loadingDetails": "Laster inn…"
     }
   },
   "automations": {
@@ -984,6 +999,12 @@
       "cancel": "Avbryt",
       "confirm": "Slett automatisering",
       "deleting": "Sletter…"
+    }
+  },
+  "workflows": {
+    "bulkRuns": {
+      "viewerNotice": "Du kan følge store jobber her, men bare en eier, administrator eller et medlem i arbeidsområdet kan stoppe dem.",
+      "stopViewerTitle": "Lesere kan ikke stoppe jobber"
     }
   }
 }

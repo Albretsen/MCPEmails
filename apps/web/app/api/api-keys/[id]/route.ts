@@ -3,6 +3,8 @@ import { createClient } from '@/lib/supabase/server';
 import { createServiceRoleClient } from '@/lib/supabase/service';
 import { resolveActiveWorkspaceId } from '@/lib/workspace/active';
 import { VALID_SCOPES, VIEWER_SCOPES, isValidScope, type Scope } from '@/lib/api-keys/scopes';
+import { insufficientRoleBody } from '@/lib/workspace/roles';
+import { canChangeApiKey, keyScopeCap, scopeBeyondCap } from '@/lib/api-keys/key-authority';
 
 /**
  * PATCH /api/api-keys/[id]
@@ -23,6 +25,10 @@ import { VALID_SCOPES, VIEWER_SCOPES, isValidScope, type Scope } from '@/lib/api
  *   1. Authenticate the requesting user.
  *   2. Validate scopes (and the viewer-role restriction).
  *   3. Resolve the active workspace and the caller's role.
+ *   3b. Load the key and authorize: owner/admin may edit any key, anyone else
+ *       only a key they created. Then apply the viewer scope cap by the KEY
+ *       CREATOR's current role, not only the editor's: an admin must not be
+ *       able to hand a viewer's key `send:email` either.
  *   4. Validate inboxIds belong to this workspace (when an explicit list is given).
  *   5. Update the api_keys row (service role, scoped to id + workspace_id, not deleted).
  *   6. Sync any linked oauth_refresh_tokens rows so the change is durable across
@@ -153,6 +159,65 @@ export async function PATCH(
 
   const service = createServiceRoleClient();
 
+  // 3b. Load the key being edited. Same filters as the write below, so a
+  //     revoked or hidden (web_client) key is a 404 here exactly as it was.
+  const { data: key, error: keyError } = await service
+    .from('api_keys')
+    .select('id, created_by, scopes')
+    .eq('id', keyId)
+    .eq('workspace_id', workspaceId)
+    .is('deleted_at', null)
+    .is('kind', null)
+    .maybeSingle();
+
+  if (keyError) {
+    console.error('[update-api-key] Key lookup failed:', keyError.message);
+    return NextResponse.json({ error: 'Failed to update API key.' }, { status: 500 });
+  }
+  if (!key) {
+    return NextResponse.json({ error: 'API key not found.' }, { status: 404 });
+  }
+
+  if (!canChangeApiKey({ callerRole: member.role, callerId: user.id, keyCreatorId: key.created_by })) {
+    return NextResponse.json(
+      insufficientRoleBody('Only the person who created this key, or a workspace owner or admin, can change its access.'),
+      { status: 403 },
+    );
+  }
+
+  // The cap follows the person who HOLDS the key. When the editor is the
+  // creator that is the role already read above; otherwise read the creator's
+  // role in this workspace (service role, pinned to this workspace and user:
+  // the caller is already established as owner/admin here). A creator who is
+  // no longer a member gives an unknown role, which may keep but not widen.
+  let creatorRole: string | null = member.role;
+  if (key.created_by !== user.id) {
+    creatorRole = null;
+    if (key.created_by) {
+      const { data: creator, error: creatorError } = await service
+        .from('workspace_members')
+        .select('role')
+        .eq('workspace_id', workspaceId)
+        .eq('user_id', key.created_by)
+        .maybeSingle();
+      if (creatorError) {
+        console.error('[update-api-key] Creator role lookup failed:', creatorError.message);
+        return NextResponse.json({ error: 'Failed to update API key.' }, { status: 500 });
+      }
+      creatorRole = creator?.role ?? null;
+    }
+  }
+
+  const beyondCap = scopeBeyondCap(keyScopeCap(creatorRole), sanitizedScopes, key.scopes);
+  if (beyondCap) {
+    return NextResponse.json(
+      insufficientRoleBody(
+        `This key belongs to a workspace viewer, so it cannot have the '${beyondCap}' scope. Allowed scopes: ${[...VIEWER_SCOPES].join(', ')}.`,
+      ),
+      { status: 403 },
+    );
+  }
+
   // 4. When an explicit inbox allowlist is given, verify every id belongs to
   //    this workspace and is not deleted. This prevents granting access to
   //    inboxes outside the workspace by injecting arbitrary UUIDs.
@@ -181,13 +246,17 @@ export async function PATCH(
 
   // 5. Update the key. Scoped to id + workspace_id; the deleted_at guard means a
   //    revoked connection cannot be silently re-activated by editing it.
-  const { data: updated, error: updateError } = await service
+  //    created_by is pinned to what was authorized above, so the decision
+  //    cannot be raced by the row changing hands in between.
+  let update = service
     .from('api_keys')
     .update({ scopes: sanitizedScopes, inbox_ids: sanitizedInboxIds })
     .eq('id', keyId)
     .eq('workspace_id', workspaceId)
     .is('deleted_at', null)
-    .is('kind', null)
+    .is('kind', null);
+  update = key.created_by ? update.eq('created_by', key.created_by) : update.is('created_by', null);
+  const { data: updated, error: updateError } = await update
     .select('id, name, key_prefix, scopes, inbox_ids, created_at, last_used_at, expires_at');
 
   if (updateError) {

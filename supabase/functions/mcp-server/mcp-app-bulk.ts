@@ -172,6 +172,18 @@ export const PLANNABLE_ACTIONS = [
 
 export type BulkAction = typeof PLANNABLE_ACTIONS[number];
 
+/**
+ * The scope a key must hold to RUN a plan with this action.
+ *
+ * The same scopes the preview tools require to create one: delete:email for a
+ * delete (permanent or not), manage:folders for a move. bulk_execute's
+ * tool-level gate admits either scope, because a plan_id alone does not say
+ * which kind of plan it is; this is the check that does.
+ */
+export function scopeForBulkAction(action: BulkAction): "delete:email" | "manage:folders" {
+  return isDeleteAction(action) ? "delete:email" : "manage:folders";
+}
+
 /** The consolidated tool an action belongs to (contract §3 `operation`). */
 export function operationForAction(action: BulkAction): "email_delete" | "email_organize" {
   return action === "delete_batch" || action === "search_and_delete"
@@ -261,6 +273,12 @@ export interface BulkCaller {
   name: string;
   /** Non-null = this key may only touch these inboxes. */
   inbox_ids: string[] | null;
+  /**
+   * The key's scopes. Read by bulk_execute, whose tool-level gate admits
+   * EITHER delete:email or manage:folders (a plan may be a delete or a move),
+   * so the scope the plan's own action needs is checked against the row.
+   */
+  scopes: string[];
 }
 
 /** The result shape every `index.ts` tool handler returns. */
@@ -1065,6 +1083,38 @@ export async function runBulkExecute(
   const loaded = await loadPendingPlan(deps, caller, args["plan_id"]);
   if (!loaded.ok) return loaded.failure;
   const row = loaded.row;
+
+  // ── The plan's own scope ─────────────────────────────────────────────────
+  // The tool gate admits delete:email OR manage:folders, so without this a
+  // move-only key could run a (permanent) delete plan another key prepared.
+  // Checked BEFORE the claim and before the scope is decrypted, so a refused
+  // caller changes nothing: the plan stays pending for a key that may run it.
+  // An action this module does not recognise is refused too (fail closed).
+  const planAction = row.action as BulkAction;
+  const requiredScope = (PLANNABLE_ACTIONS as readonly string[]).includes(planAction)
+    ? scopeForBulkAction(planAction)
+    : null;
+  if (!requiredScope || !caller.scopes.includes(requiredScope)) {
+    const isDelete = requiredScope === "delete:email";
+    return failureResult(
+      "error",
+      {
+        outcome: "failed",
+        headline: "This API key cannot run this plan.",
+        detail:
+          (requiredScope
+            ? `It ${isDelete ? "deletes" : "moves"} mail, which needs the '${requiredScope}' scope, and this key does not hold it. `
+            : "Its action is not one this server can run. ") +
+          "Nothing was changed.",
+        affected_count: 0,
+        dashboard_url: dashboardUrl(deps),
+        error_code: "scope_denied",
+      },
+      "viewer_role",
+      "scope_denied",
+      row.id,
+    );
+  }
 
   const scope = await readScope(deps, row);
   if (!scope) {

@@ -11,6 +11,9 @@ import { CLIENT_LOGOS } from './clientLogos';
 import { useToast } from './Toast';
 import { loadSignatureEditor, peekSignatureEditor, warmSignatureEditor } from './signature-editor-loader.mjs';
 import { normalizeSenderName } from '@/lib/inboxes/sender-name';
+import { canChangeApiKey, keyScopeCap } from '@/lib/api-keys/key-authority';
+import { VIEWER_SCOPES } from '@/lib/api-keys/scopes';
+import { canOperateWorkspace } from '@/lib/workspace/roles';
 import {
   hiddenFromShown,
   inboxDraftEditorControl,
@@ -453,7 +456,7 @@ const MCP_CLIENTS = [
  * and links to the client's official guide. For non-OAuth clients it surfaces
  * a shortcut to create an API key.
  */
-function ClientGuideModal({ client, mcpUrl, onClose, onGoToKeys, inbox = null }) {
+function ClientGuideModal({ client, mcpUrl, onClose, onGoToKeys, inbox = null, canCheckConnection = true }) {
   const t = useTranslations('dashboard');
   const steps = client.stepKeys.map((k) => t(k));
   const config = client.config ? client.config(mcpUrl) : null;
@@ -532,7 +535,9 @@ function ClientGuideModal({ client, mcpUrl, onClose, onGoToKeys, inbox = null })
               </button>
             </div>
           ) : null}
-          {inbox?.id ? (
+          {/* A viewer cannot run the check (POST /api/inboxes/[id]/check
+              answers 403, lib/workspace/roles.ts), so the row is not offered. */}
+          {inbox?.id && canCheckConnection ? (
             <div style={{ display: 'flex', alignItems: 'center', gap: 10, padding: '10px 12px', background: 'var(--bg-sunken)', border: '1px solid var(--border-1)', borderRadius: 8 }}>
               <Icon name={verified ? 'check' : 'refresh'} size={15} color={verified ? 'var(--mint-600)' : 'var(--brand)'} />
               <span style={{ flex: 1, fontFamily: 'var(--font-sans)', fontSize: 12.5, color: 'var(--fg-2)' }}>
@@ -568,7 +573,7 @@ function ClientGuideModal({ client, mcpUrl, onClose, onGoToKeys, inbox = null })
  * connect an inbox, then connect an MCP client (the URL is highlighted and a
  * per-client guide opens on click).
  */
-function GettingStartedGuide({ inboxes, inboxCount, callsThisMonth, mcpUrl, onConnect, onGoToKeys, initialClient = null, onClientSelected, businessShaped = false, atInboxLimit = false }) {
+function GettingStartedGuide({ inboxes, inboxCount, callsThisMonth, mcpUrl, onConnect, onGoToKeys, initialClient = null, onClientSelected, businessShaped = false, atInboxLimit = false, canCheckConnection = true }) {
   const t = useTranslations('dashboard');
   const [activeClient, setActiveClient] = useState(() => MCP_CLIENTS.find(c => (c.k === 'api' ? 'curl' : c.k) === initialClient) ?? null);
   // Business-domain workspaces with one mailbox get an optional row asking
@@ -705,6 +710,7 @@ function GettingStartedGuide({ inboxes, inboxCount, callsThisMonth, mcpUrl, onCo
           onClose={() => setActiveClient(null)}
           onGoToKeys={onGoToKeys}
           inbox={inboxes?.[0] ?? null}
+          canCheckConnection={canCheckConnection}
         />
       ) : null}
     </div>
@@ -760,7 +766,7 @@ function StepDot({ num, done }) {
 }
 
 /* ---------------- Overview ---------------- */
-export function OverviewPage({ inboxes, apiKeys = [], activity, stats, usageData, planLimits, actionAllowance = null, plan: _plan = 'free', mcpUrl, memberCount = 0, onConnect, onGoToKeys, onGoToMembers, onboardingClient = null, onClientSelected, businessShaped = false }) {
+export function OverviewPage({ inboxes, apiKeys = [], activity, stats, usageData, planLimits, actionAllowance = null, plan: _plan = 'free', mcpUrl, memberCount = 0, onConnect, onGoToKeys, onGoToMembers, onboardingClient = null, onClientSelected, businessShaped = false, userRole }) {
   const t = useTranslations('dashboard');
   // Counted off the same live arrays the sidebar counts, never off the server
   // stats snapshot. `stats.inboxCount` was a separate server-side query taken
@@ -946,6 +952,7 @@ export function OverviewPage({ inboxes, apiKeys = [], activity, stats, usageData
       {showGuide ? (
         <GettingStartedGuide
           inboxes={inboxes}
+          canCheckConnection={userRole !== 'viewer'}
           inboxCount={inboxCount}
           callsThisMonth={callsThisMonth}
           mcpUrl={mcpUrl}
@@ -1180,7 +1187,7 @@ const WORKFLOW_CARDS = [
   { title: 'Review scheduled sends', prompt: 'Review my pending scheduled sends. Highlight anything stale, ambiguous, or unusually broad. Do not create or cancel anything.', scope: 'Scheduled sends' },
 ];
 
-export function WorkflowsPage({ mcpUrl }) {
+export function WorkflowsPage({ mcpUrl, userRole }) {
   const { toast } = useToast();
   const [copied, setCopied] = useState('');
   const copy = async (title, prompt) => {
@@ -1206,7 +1213,7 @@ export function WorkflowsPage({ mcpUrl }) {
           </article>
         ))}
       </div>
-      <BulkRunsPanel />
+      <BulkRunsPanel userRole={userRole} />
     </main>
   );
 }
@@ -1280,8 +1287,17 @@ export function InboxesPage({ inboxes, planLimits, stripePrices = null, business
     ? (inboxes.find(ib => ib.id === detailInbox.id) ?? detailInbox)
     : null;
 
+  // Viewers are read-only: checking, reconnecting and disconnecting an inbox
+  // are operator actions the server refuses them (403 from /check and DELETE
+  // /api/inboxes/[id], insufficient_role from the connect routes and OAuth
+  // callbacks; lib/workspace/roles.ts). The buttons are shown disabled with
+  // the reason instead of failing on click.
+  const canManage = userRole !== 'viewer';
+  const viewerNote = t('inboxes.viewerActionsNote');
+  const checkTitle = canManage ? t('inboxes.checkConnection') : viewerNote;
+
   const handleCheck = async (inbox) => {
-    if (checkingId) return;
+    if (checkingId || !canManage) return;
     setCheckingId(inbox.id);
     try {
       await onCheck(inbox);
@@ -1291,6 +1307,7 @@ export function InboxesPage({ inboxes, planLimits, stripePrices = null, business
   };
 
   const handleDisconnectRequest = (inbox) => {
+    if (!canManage) return;
     setConfirmInbox(inbox);
   };
 
@@ -1626,6 +1643,8 @@ export function InboxesPage({ inboxes, planLimits, stripePrices = null, business
                         variant="secondary"
                         size="sm"
                         icon="refresh"
+                        disabled={!canManage}
+                        title={canManage ? undefined : viewerNote}
                         onClick={() => onReconnect(ib)}
                       >
                         {t('inboxes.reconnect')}
@@ -1636,9 +1655,9 @@ export function InboxesPage({ inboxes, planLimits, stripePrices = null, business
                         size="sm"
                         icon="refresh"
                         className={checkingId === ib.id ? "is-checking" : ""}
-                        disabled={checkingId === ib.id}
+                        disabled={!canManage || checkingId === ib.id}
                         aria-label={t('inboxes.checkConnection')}
-                        title={t('inboxes.checkConnection')}
+                        title={checkTitle}
                         onClick={() => handleCheck(ib)}
                       >
                         {""}
@@ -1649,6 +1668,8 @@ export function InboxesPage({ inboxes, planLimits, stripePrices = null, business
                       size="sm"
                       icon="trash"
                       aria-label={t('inboxes.disconnectInbox')}
+                      disabled={!canManage}
+                      title={canManage ? undefined : viewerNote}
                       onClick={() => handleDisconnectRequest(ib)}
                     >
                       {""}
@@ -1694,11 +1715,11 @@ export function InboxesPage({ inboxes, planLimits, stripePrices = null, business
                   <div className="inbox-mobile-actions" onClick={e => e.stopPropagation()}>
                     <Btn variant="secondary" size="sm" onClick={() => setDetailInbox(ib)}>View details</Btn>
                     {canReconnect ? (
-                      <Btn variant="secondary" size="sm" icon="refresh" onClick={() => onReconnect(ib)}>{t('inboxes.reconnect')}</Btn>
+                      <Btn variant="secondary" size="sm" icon="refresh" disabled={!canManage} title={canManage ? undefined : viewerNote} onClick={() => onReconnect(ib)}>{t('inboxes.reconnect')}</Btn>
                     ) : (
-                      <Btn variant="ghost" size="sm" icon="refresh" className={checkingId === ib.id ? 'is-checking' : ''} disabled={checkingId === ib.id} onClick={() => handleCheck(ib)}>{t('inboxes.checkConnection')}</Btn>
+                      <Btn variant="ghost" size="sm" icon="refresh" className={checkingId === ib.id ? 'is-checking' : ''} disabled={!canManage || checkingId === ib.id} title={checkTitle} onClick={() => handleCheck(ib)}>{t('inboxes.checkConnection')}</Btn>
                     )}
-                    <Btn variant="ghost" size="sm" icon="trash" aria-label={t('inboxes.disconnectInbox')} onClick={() => handleDisconnectRequest(ib)}>{t('inboxes.detail.disconnect')}</Btn>
+                    <Btn variant="ghost" size="sm" icon="trash" aria-label={t('inboxes.disconnectInbox')} disabled={!canManage} title={canManage ? undefined : viewerNote} onClick={() => handleDisconnectRequest(ib)}>{t('inboxes.detail.disconnect')}</Btn>
                   </div>
                 </article>
               );
@@ -1766,6 +1787,8 @@ export function InboxesPage({ inboxes, planLimits, stripePrices = null, business
           draftEditorRolledOut={draftEditorRolledOut}
           draftEditorWorkspaceHidden={draftEditorWorkspaceHidden}
           canManageInbox={userRole !== 'viewer'}
+          // The review gate is owner/admin-only (lib/workspace/roles.ts).
+          canManageReview={userRole !== 'viewer' && userRole !== 'member'}
           historyDays={historyDays}
         />
       )}
@@ -2076,7 +2099,7 @@ export function resolveReviewMode(inbox) {
  * here, is that nothing is delivered until a signed-in owner or admin approves
  * it in the browser, which holds in both `inline` and `dashboard`.
  */
-function ReviewModeSelector({ value, onChange, disabled }) {
+function ReviewModeSelector({ value, onChange, disabled, lockedNote = null }) {
   const t = useTranslations('dashboard');
   return (
     <div className="review-mode">
@@ -2099,6 +2122,7 @@ function ReviewModeSelector({ value, onChange, disabled }) {
           </span>
         </label>
       ))}
+      {lockedNote ? <p className="review-mode-note">{lockedNote}</p> : null}
       <p className="review-mode-note">{t('approvals.mode.guarantee')}</p>
     </div>
   );
@@ -2112,7 +2136,7 @@ function ReviewModeSelector({ value, onChange, disabled }) {
    it. Normalisation (control chars and angle brackets stripped, whitespace
    collapsed, 100-char cap) is shared with the PATCH route so the preview and
    the stored value never disagree. */
-function SenderNameEditor({ inbox, onSave, t }) {
+function SenderNameEditor({ inbox, onSave, t, readOnly = false }) {
   const [value, setValue] = useState(inbox.displayName ?? '');
   const [saving, setSaving] = useState(false);
 
@@ -2131,7 +2155,7 @@ function SenderNameEditor({ inbox, onSave, t }) {
   const inputId = `sender-name-${inbox.id}`;
 
   const handleSave = async () => {
-    if (saving || !dirty) return;
+    if (saving || !dirty || readOnly) return;
     setSaving(true);
     try {
       await onSave(inbox.id, nextName);
@@ -2173,13 +2197,13 @@ function SenderNameEditor({ inbox, onSave, t }) {
               handleSave();
             }
           }}
-          disabled={saving}
+          disabled={saving || readOnly}
           style={{ flex: 1, minWidth: 0, height: 32, padding: '0 10px' }}
         />
         <Btn
           variant="primary"
           size="sm"
-          disabled={!dirty || saving}
+          disabled={!dirty || saving || readOnly}
           onClick={handleSave}
         >
           {saving ? t('inboxes.detail.senderName.saving') : t('inboxes.detail.senderName.save')}
@@ -2208,7 +2232,13 @@ function SenderNameEditor({ inbox, onSave, t }) {
   );
 }
 
-function SignatureEditor({ inbox, onSave, t }) {
+/**
+ * `readOnly`: a viewer. Every control is disabled and nothing is saved (the
+ * PATCH and image routes refuse a viewer). `canManageReview`: owner/admin. The
+ * review gate is theirs alone, so for a member the selector is disabled with
+ * the reason, and the save only sends the review fields when they changed.
+ */
+function SignatureEditor({ inbox, onSave, t, readOnly = false, canManageReview = true }) {
   const wasImported = inbox.signatureSource === 'gmail_import';
 
   const [enabled, setEnabled] = useState(inbox.signatureEnabled ?? true);
@@ -2388,7 +2418,7 @@ function SignatureEditor({ inbox, onSave, t }) {
   }, [inbox.id, editorModule]); // eslint-disable-line react-hooks/exhaustive-deps
 
   const handleSave = async () => {
-    if (saving || awaitingEditor) return;
+    if (saving || awaitingEditor || readOnly) return;
     setSizeError('');
     setSaveBlocked(false);
 
@@ -2452,12 +2482,15 @@ function SignatureEditor({ inbox, onSave, t }) {
         ...(canEmbedImages && embedImages !== (inbox.signatureEmbedImages ?? false)
           ? { signature_embed_images: embedImages }
           : {}),
-        // Both columns are sent: `send_review_mode` is the new three-way
-        // setting, `send_approval_required` is the boolean the edge function
-        // still gates on. The API keeps them consistent; remove the boolean
-        // once the server reads the mode directly.
-        send_review_mode: reviewMode,
-        send_approval_required: reviewMode !== 'off',
+        // Sent only when the selection changed: the review gate is
+        // owner/admin-only, and a member saving a signature must not be
+        // refused for restating it. Both columns go together:
+        // `send_review_mode` is the three-way setting, `send_approval_required`
+        // the boolean the edge function still gates on. The API keeps them
+        // consistent; remove the boolean once the server reads the mode.
+        ...(reviewMode !== resolveReviewMode(inbox)
+          ? { send_review_mode: reviewMode, send_approval_required: reviewMode !== 'off' }
+          : {}),
       });
     } catch {
       // App.jsx already showed an error toast; keep the form as-is for retry.
@@ -2474,6 +2507,8 @@ function SignatureEditor({ inbox, onSave, t }) {
   // `saving` alone, so an editor that mounts during that wait is not created
   // read-only.
   const busy = saving || awaitingEditor;
+  // Every control below is also off for a viewer.
+  const locked = busy || readOnly;
   const canEmbedImages = inbox.provider !== 'outlook';
 
   return (
@@ -2487,14 +2522,19 @@ function SignatureEditor({ inbox, onSave, t }) {
             type="checkbox"
             checked={enabled}
             onChange={() => setEnabled(v => !v)}
-            disabled={busy}
+            disabled={locked}
             style={{ accentColor: 'var(--brand)' }}
           />
           {t('inboxes.detail.signature.enabled')}
         </label>
       </div>
 
-      <ReviewModeSelector value={reviewMode} onChange={setReviewMode} disabled={busy} />
+      <ReviewModeSelector
+        value={reviewMode}
+        onChange={setReviewMode}
+        disabled={locked || !canManageReview}
+        lockedNote={!readOnly && !canManageReview ? t('approvals.mode.ownerAdminOnly') : null}
+      />
 
       {wasImported && (
         <div style={{ ...label, marginBottom: 8, color: 'var(--fg-2)' }}>
@@ -2512,7 +2552,7 @@ function SignatureEditor({ inbox, onSave, t }) {
             initialText={
               inbox.signatureText ?? (wasImported ? htmlToPlainSeed(inbox.signatureHtml) : '')
             }
-            disabled={saving || !enabled}
+            disabled={saving || !enabled || readOnly}
             onChange={syncPreview}
             onReady={() => handleEditorReady(inbox.id)}
           />
@@ -2580,7 +2620,7 @@ function SignatureEditor({ inbox, onSave, t }) {
               type="checkbox"
               checked={embedImages}
               onChange={() => setEmbedImages(v => !v)}
-              disabled={busy}
+              disabled={locked}
               style={{ accentColor: 'var(--brand)' }}
             />
             {t('inboxes.detail.signature.embedImages')}
@@ -2601,7 +2641,7 @@ function SignatureEditor({ inbox, onSave, t }) {
           className="input"
           value={replyMode}
           onChange={e => setReplyMode(e.target.value)}
-          disabled={busy}
+          disabled={locked}
           style={{ height: 32, padding: '0 28px 0 8px', flex: '0 0 auto', width: 'auto' }}
         >
           <option value="always">{t('inboxes.detail.signature.replyModeAlways')}</option>
@@ -2612,7 +2652,7 @@ function SignatureEditor({ inbox, onSave, t }) {
         <Btn
           variant="primary"
           size="sm"
-          disabled={busy}
+          disabled={locked}
           onClick={handleSave}
         >
           {busy ? t('inboxes.detail.signature.saving') : t('inboxes.detail.signature.save')}
@@ -2725,7 +2765,7 @@ const InboxDetailRow = ({ label, children }) => (
   </div>
 );
 
-function InboxDetailModal({ inbox, checking, onClose, onReconnect, onCheck, onDisconnect, onSaveSignature, onSaveSenderName, onSaveDraftEditorHidden, draftEditorRolledOut = false, draftEditorWorkspaceHidden = false, canManageInbox = true, historyDays = 30 }) {
+function InboxDetailModal({ inbox, checking, onClose, onReconnect, onCheck, onDisconnect, onSaveSignature, onSaveSenderName, onSaveDraftEditorHidden, draftEditorRolledOut = false, draftEditorWorkspaceHidden = false, canManageInbox = true, canManageReview = true, historyDays = 30 }) {
   const t = useTranslations('dashboard');
   if (!inbox) return null;
 
@@ -2852,24 +2892,45 @@ function InboxDetailModal({ inbox, checking, onClose, onReconnect, onCheck, onDi
                 <span>{t(`approvals.mode.${resolveReviewMode(inbox)}`)}</span>
               </summary>
               <p>Set the sender name and signature, and choose where a prepared send waits for a human decision.</p>
-              {onSaveSenderName && <SenderNameEditor inbox={inbox} onSave={onSaveSenderName} t={t} />}
-              <SignatureEditor inbox={inbox} onSave={onSaveSignature} t={t} />
+              {!canManageInbox ? (
+                <p className="review-mode-note" role="note">{t('inboxes.viewerActionsNote')}</p>
+              ) : null}
+              {onSaveSenderName && <SenderNameEditor inbox={inbox} onSave={onSaveSenderName} t={t} readOnly={!canManageInbox} />}
+              <SignatureEditor inbox={inbox} onSave={onSaveSignature} t={t} readOnly={!canManageInbox} canManageReview={canManageInbox && canManageReview} />
             </details>
           )}
 
+          {!canManageInbox ? (
+            <p style={{ margin: 0, fontSize: 12, color: 'var(--fg-3)', textAlign: 'right' }}>
+              {t('inboxes.viewerActionsNote')}
+            </p>
+          ) : null}
           <div style={{ display: 'flex', gap: 8, justifyContent: 'flex-end', flexWrap: 'wrap' }}>
-            <Btn variant="ghost" icon="trash" onClick={() => onDisconnect(inbox)}>
+            <Btn
+              variant="ghost"
+              icon="trash"
+              disabled={!canManageInbox}
+              title={canManageInbox ? undefined : t('inboxes.viewerActionsNote')}
+              onClick={() => onDisconnect(inbox)}
+            >
               {t('inboxes.detail.disconnect')}
             </Btn>
             <Btn
               variant="secondary"
               icon="refresh"
-              disabled={checking}
+              disabled={checking || !canManageInbox}
+              title={canManageInbox ? undefined : t('inboxes.viewerActionsNote')}
               onClick={() => onCheck(inbox)}
             >
               {t('inboxes.checkConnection')}
             </Btn>
-            <Btn variant="primary" icon="refresh" onClick={() => onReconnect(inbox)}>
+            <Btn
+              variant="primary"
+              icon="refresh"
+              disabled={!canManageInbox}
+              title={canManageInbox ? undefined : t('inboxes.viewerActionsNote')}
+              onClick={() => onReconnect(inbox)}
+            >
               {t('inboxes.reconnect')}
             </Btn>
           </div>
@@ -3244,8 +3305,15 @@ function CreateKeyModal({ onCreate, onCancel, existingNames = [] }) {
  * On save it calls onSave(apiKey.id, { scopes, inboxIds }). onSave throws on
  * failure so the error can be shown inline; on success the modal closes.
  */
-function EditConnectionModal({ apiKey, inboxes, onSave, onClose }) {
+function EditConnectionModal({ apiKey, inboxes, onSave, onClose, scopeCap = 'none' }) {
   const t = useTranslations('dashboard');
+  // A scope the key's holder may not be given is shown but cannot be ticked
+  // (it can always be unticked). 'viewer': only the read-only allow-list.
+  // 'no_widen': nothing beyond it that the key does not already have.
+  const heldScopes = apiKey.scopes ?? [];
+  const scopeLocked = (value) => scopeCap !== 'none'
+    && !VIEWER_SCOPES.has(value)
+    && (scopeCap === 'viewer' || !heldScopes.includes(value));
   const [selectedScopes, setSelectedScopes] = useState(apiKey.scopes ?? []);
   // inboxIds === null means "all inboxes". Otherwise it's an explicit allowlist.
   const [allInboxes, setAllInboxes] = useState(apiKey.inboxIds == null);
@@ -3348,9 +3416,18 @@ function EditConnectionModal({ apiKey, inboxes, onSave, onClose }) {
               }}>
                 {t('apiKeys.editModal.permissions')}
               </div>
+              {scopeCap !== 'none' && (
+                <div data-testid="scope-cap-note" style={{
+                  fontFamily: 'var(--font-sans)', fontSize: 12, color: 'var(--fg-3)',
+                  marginBottom: 8, lineHeight: 1.5,
+                }}>
+                  {t(scopeCap === 'viewer' ? 'apiKeys.editModal.viewerCapNote' : 'apiKeys.editModal.noWidenNote')}
+                </div>
+              )}
               <div style={{ display: 'flex', flexDirection: 'column', gap: 6 }}>
                 {SCOPE_OPTIONS.map(opt => {
                   const checked = selectedScopes.includes(opt.value);
+                  const locked = !checked && scopeLocked(opt.value);
                   return (
                     <label
                       key={opt.value}
@@ -3360,16 +3437,16 @@ function EditConnectionModal({ apiKey, inboxes, onSave, onClose }) {
                         border: `1px solid ${checked ? 'var(--border-focus)' : 'var(--border-1)'}`,
                         borderRadius: 8,
                         background: checked ? 'var(--brand-soft)' : 'var(--bg-surface)',
-                        cursor: submitting ? 'not-allowed' : 'pointer',
+                        cursor: submitting || locked ? 'not-allowed' : 'pointer',
                         transition: 'border-color 120ms, background 120ms',
-                        opacity: submitting ? 0.7 : 1,
+                        opacity: submitting ? 0.7 : locked ? 0.5 : 1,
                       }}
                     >
                       <input
                         type="checkbox"
                         checked={checked}
-                        onChange={() => !submitting && toggleScope(opt.value)}
-                        disabled={submitting}
+                        onChange={() => !submitting && !locked && toggleScope(opt.value)}
+                        disabled={submitting || locked}
                         style={{ marginTop: 1, accentColor: 'var(--brand)', flexShrink: 0 }}
                       />
                       <div>
@@ -3838,8 +3915,24 @@ function RevokeDialog({ apiKey, revoking, onConfirm, onCancel }) {
 }
 
 /* ---------------- API Keys ---------------- */
-export function KeysPage({ keys, inboxes = [], mcpUrl, onCreate, onKeyCreated, onRevoke, onUpdate }) {
+export function KeysPage({ keys, inboxes = [], mcpUrl, onCreate, onKeyCreated, onRevoke, onUpdate, userRole, currentUserId, members = [] }) {
   const t = useTranslations('dashboard');
+  // Edit and Revoke are offered only on keys this person may change: any key
+  // for an owner/admin, otherwise only their own. Same rule the two routes
+  // enforce (lib/api-keys/key-authority.ts), so nobody is shown a button that
+  // can only answer 403. When the role is not known (older callers), keep the
+  // buttons and let the server decide, as before.
+  const mayChange = (k) => (userRole == null
+    ? true
+    : canChangeApiKey({ callerRole: userRole, callerId: currentUserId ?? '', keyCreatorId: k.createdBy }));
+  // The scope cap follows the key's HOLDER: a viewer's key stays read-only
+  // whoever edits it. A creator who is not in the member list (left, or not
+  // loaded) may keep but not widen.
+  const capFor = (k) => {
+    if (k.createdBy && k.createdBy === currentUserId && userRole) return keyScopeCap(userRole);
+    const holder = members.find(m => m.userId === k.createdBy);
+    return keyScopeCap(holder?.role ?? null);
+  };
   const [copiedId, setCopiedId] = useState(null);
   // The key object pending revoke confirmation, or null.
   const [confirmKey, setConfirmKey] = useState(null);
@@ -3972,12 +4065,18 @@ export function KeysPage({ keys, inboxes = [], mcpUrl, onCreate, onKeyCreated, o
                     </div>
                   </td>
                   <td className="right">
-                    <div style={{ display: "flex", gap: 6, justifyContent: "flex-end" }}>
-                      {onUpdate && (
-                        <Btn variant="secondary" size="sm" icon="settings" onClick={() => setEditKey(k)}>{t('apiKeys.editAccess')}</Btn>
-                      )}
-                      <Btn variant="danger" size="sm" onClick={() => handleRevokeRequest(k)}>{t('apiKeys.revoke')}</Btn>
-                    </div>
+                    {mayChange(k) ? (
+                      <div style={{ display: "flex", gap: 6, justifyContent: "flex-end" }}>
+                        {onUpdate && (
+                          <Btn variant="secondary" size="sm" icon="settings" onClick={() => setEditKey(k)}>{t('apiKeys.editAccess')}</Btn>
+                        )}
+                        <Btn variant="danger" size="sm" onClick={() => handleRevokeRequest(k)}>{t('apiKeys.revoke')}</Btn>
+                      </div>
+                    ) : (
+                      <span data-testid="key-not-yours" style={{ fontFamily: "var(--font-sans)", fontSize: 12, color: "var(--fg-3)" }}>
+                        {t('apiKeys.notYours')}
+                      </span>
+                    )}
                   </td>
                 </tr>
               ))}
@@ -4065,6 +4164,7 @@ export function KeysPage({ keys, inboxes = [], mcpUrl, onCreate, onKeyCreated, o
       {editKey && (
         <EditConnectionModal
           apiKey={editKey}
+          scopeCap={userRole == null ? 'none' : capFor(editKey)}
           inboxes={inboxes}
           onSave={onUpdate}
           onClose={() => setEditKey(null)}
@@ -4078,7 +4178,13 @@ export function KeysPage({ keys, inboxes = [], mcpUrl, onCreate, onKeyCreated, o
 
 // Kept separate from the customer-facing workflow library above. Bulk-run
 // controls need their own route/API wiring before they can replace it.
-function BulkRunsPanel() {
+//
+// Stop is an operator action (owner/admin/member). Viewers are read-only, and
+// PATCH /api/workflows/runs refuses them with a 403, so for a viewer the button
+// is shown disabled with the reason beside it instead of failing on click.
+function BulkRunsPanel({ userRole }) {
+  const t = useTranslations('dashboard');
+  const canStop = canOperateWorkspace(userRole);
   const [runs, setRuns] = useState([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState('');
@@ -4117,12 +4223,13 @@ function BulkRunsPanel() {
     <h2 style={{ margin: '0 0 6px', fontSize: 18 }}>Large-work controls</h2>
     <p style={{ color: 'var(--fg-2)', margin: '0 0 14px' }}>See bulk inbox work as it happens. Stop prevents work that has not started; it does not undo messages already changed.</p>
     {error && <div className="alert alert-error" role="alert">{error}</div>}
+    {!canStop && <div className="alert" role="status" data-testid="bulk-runs-viewer-notice" style={{ marginBottom: 12 }}>{t('workflows.bulkRuns.viewerNotice')}</div>}
     <div className="card" style={{ overflowX: 'auto' }}>
       {loading ? <p style={{ color: 'var(--fg-3)' }}>Loading runs…</p> : runs.length === 0 ? <div className="empty-state"><Icon name="activity" size={24} /><h3>No large-work runs yet</h3><p>Bulk move and flag actions will appear here while they run.</p></div> :
         <table className="data-table"><thead><tr><th>Action</th><th>Inbox</th><th>Progress</th><th>Status</th><th>Started</th><th /></tr></thead><tbody>{runs.map((run) => {
           const active = run.status === 'running' || run.status === 'cancelling';
           const label = run.operation.replaceAll('_', ' ');
-          return <tr key={run.id}><td style={{ textTransform: 'capitalize' }}>{label}</td><td>{run.inbox}</td><td>{run.processed} / {run.total} processed · {run.succeeded} changed{run.failed ? ` · ${run.failed} failed` : ''}</td><td><Badge tone={run.status === 'completed' ? 'live' : run.status === 'cancelled_partial' ? 'warning' : active ? 'neutral' : 'danger'}>{run.status.replaceAll('_', ' ')}</Badge></td><td>{new Date(run.createdAt).toLocaleString()}</td><td className="right">{active && <Btn variant="secondary" size="sm" disabled={run.status === 'cancelling' || cancelling === run.id} onClick={() => cancel(run.id)}>{run.status === 'cancelling' ? 'Stopping…' : 'Stop'}</Btn>}</td></tr>;
+          return <tr key={run.id}><td style={{ textTransform: 'capitalize' }}>{label}</td><td>{run.inbox}</td><td>{run.processed} / {run.total} processed · {run.succeeded} changed{run.failed ? ` · ${run.failed} failed` : ''}</td><td><Badge tone={run.status === 'completed' ? 'live' : run.status === 'cancelled_partial' ? 'warning' : active ? 'neutral' : 'danger'}>{run.status.replaceAll('_', ' ')}</Badge></td><td>{new Date(run.createdAt).toLocaleString()}</td><td className="right">{active && <Btn variant="secondary" size="sm" disabled={!canStop || run.status === 'cancelling' || cancelling === run.id} title={canStop ? undefined : t('workflows.bulkRuns.stopViewerTitle')} onClick={canStop ? () => cancel(run.id) : undefined}>{run.status === 'cancelling' ? 'Stopping…' : 'Stop'}</Btn>}</td></tr>;
         })}</tbody></table>}
     </div>
   </section>;
