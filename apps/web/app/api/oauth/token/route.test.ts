@@ -265,3 +265,110 @@ test('a transient membership lookup failure leaves the chain alone for a retry',
   assert.equal(liveChains()[0].refresh_hash, sha256hex(REFRESH));
   assert.equal(liveKeys().length, 1);
 });
+
+// ── Independent verification (adversarial + legitimate-flow pins) ───────────
+
+test('verify: membership in ANOTHER workspace does not keep a chain alive in this one', async () => {
+  db = new FakeSupabase();
+  db.seed('oauth_clients', [{ client_id: CLIENT, deactivated_at: null }]);
+  db.seed('workspace_members', [{ workspace_id: 'ws-own', user_id: USER, role: 'owner' }]);
+  seedChain(['read:email', 'send:email']);
+  const res = await refresh();
+  assert.equal(res.status, 400);
+  assert.equal((await res.json() as { error: string }).error, 'invalid_grant');
+  assert.equal(liveKeys().length, 0);
+  assert.equal(liveChains().length, 0);
+});
+
+test('verify: membership in ANOTHER workspace does not redeem a code for this one', async () => {
+  db = new FakeSupabase();
+  db.seed('oauth_clients', [{ client_id: CLIENT, deactivated_at: null }]);
+  db.seed('workspace_members', [{ workspace_id: 'ws-own', user_id: USER, role: 'owner' }]);
+  seedCode(['read:email']);
+  const res = await redeem();
+  assert.equal(res.status, 400);
+  assert.equal(db.table('api_keys').length, 0);
+});
+
+test('verify: owner/admin/member refresh keeps identity scopes openid+email exactly', async () => {
+  for (const role of ['owner', 'admin', 'member']) {
+    seedBase(role);
+    const scopes = ['read:email', 'send:email', 'manage:automations', 'openid', 'email'];
+    const keyId = seedChain(scopes);
+    const res = await refresh();
+    assert.equal(res.status, 200, role);
+    const body = await res.json() as { scope: string };
+    assert.equal(body.scope, scopes.join(' '), role);
+    assert.deepEqual(liveKeys()[0].scopes, scopes, role);
+    assert.equal(liveKeys()[0].id, keyId, role);
+    assert.deepEqual(liveChains()[0].scopes, scopes, role);
+  }
+});
+
+test('verify: a viewer already inside the allow-list is not narrowed and keeps identity scopes', async () => {
+  seedBase('viewer');
+  const scopes = ['read:email', 'search:email', 'openid', 'email'];
+  seedChain(scopes, { keyScopes: ['read:email', 'openid'] });
+  const res = await refresh();
+  assert.equal(res.status, 200);
+  assert.equal((await res.json() as { scope: string }).scope, scopes.join(' '));
+  assert.deepEqual(liveChains()[0].scopes, scopes);
+  assert.deepEqual(liveKeys()[0].scopes, ['read:email', 'openid'], 'key scopes are not rewritten when nothing narrowed');
+});
+
+test('verify: after a transient membership failure, the SAME refresh token succeeds on retry', async () => {
+  const keyId = seedChain(['read:email', 'send:email']);
+  db.failOnce('workspace_members', { message: 'connection reset' });
+  assert.equal((await refresh()).status, 500);
+  const res = await refresh();
+  assert.equal(res.status, 200);
+  const body = await res.json() as { access_token: string; refresh_token: string };
+  assert.equal(liveKeys().length, 1);
+  assert.equal(liveKeys()[0].id, keyId);
+  assert.equal(liveKeys()[0].key_hash, hashApiKey(body.access_token));
+  assert.equal(liveChains().length, 1);
+  assert.equal(liveChains()[0].refresh_hash, sha256hex(body.refresh_token));
+});
+
+test('verify: a transient membership failure on code redemption is a 500 that mints nothing', async () => {
+  seedCode(['read:email', 'send:email']);
+  db.failOnce('workspace_members', { message: 'connection reset' });
+  const res = await redeem();
+  assert.equal(res.status, 500);
+  assert.equal(db.table('api_keys').length, 0);
+  assert.equal(db.table('oauth_refresh_tokens').length, 0);
+});
+
+test('verify: ending a removed member\'s chain leaves a colleague\'s key and chain alone', async () => {
+  db = new FakeSupabase();
+  db.seed('oauth_clients', [{ client_id: CLIENT, deactivated_at: null }]);
+  db.seed('workspace_members', [{ workspace_id: WS, user_id: 'colleague', role: 'member' }]);
+  db.seed('api_keys', [{
+    workspace_id: WS, created_by: 'colleague', name: 'OAuth: Other', key_prefix: 'mcpe_col',
+    key_hash: 'h', scopes: ['read:email'], inbox_ids: null, expires_at: FUTURE, deleted_at: null,
+  }]);
+  const colleagueKey = db.table('api_keys').at(-1)!.id;
+  db.seed('oauth_refresh_tokens', [{
+    refresh_hash: 'colleague-hash', client_id: CLIENT, workspace_id: WS, user_id: 'colleague',
+    client_name: 'Other', scopes: ['read:email'], inbox_ids: null, expires_at: FAR_FUTURE,
+    api_key_id: colleagueKey, resource: null, revoked_at: null,
+  }]);
+  seedChain(['read:email', 'send:email']);
+  const res = await refresh();
+  assert.equal(res.status, 400);
+  assert.deepEqual(liveKeys().map((k: Row) => k.id), [colleagueKey]);
+  assert.deepEqual(liveChains().map((c: Row) => c.refresh_hash), ['colleague-hash']);
+});
+
+test('verify: owner can refresh repeatedly with each rotated token', async () => {
+  const keyId = seedChain(['read:email', 'send:email']);
+  let token = REFRESH;
+  for (let i = 0; i < 3; i++) {
+    const res = await POST(post({ grant_type: 'refresh_token', client_id: CLIENT, refresh_token: token }));
+    assert.equal(res.status, 200, `rotation ${i}`);
+    token = (await res.json() as { refresh_token: string }).refresh_token;
+  }
+  assert.equal(liveKeys().length, 1);
+  assert.equal(liveKeys()[0].id, keyId);
+  assert.equal(liveChains().length, 1);
+});

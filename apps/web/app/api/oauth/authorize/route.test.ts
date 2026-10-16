@@ -144,3 +144,29 @@ test('a role lookup error is a 500, never a silent full grant', async () => {
   assert.equal(res.status, 500);
   assert.equal(db.table('oauth_auth_codes').length, 0);
 });
+
+// ── Independent verification ────────────────────────────────────────────────
+
+test('verify: the role is read for the ACTIVE workspace, not the caller\'s best role elsewhere', async () => {
+  reset('viewer');
+  db.seed('workspace_members', [{ workspace_id: 'ws-own', user_id: USER.id, role: 'owner' }]);
+  const res = await POST(consent(['read:email', 'send:email']));
+  assert.equal(res.status, 200);
+  assert.deepEqual(codeScopes(), [['read:email']]);
+  assert.equal(db.table('oauth_auth_codes')[0].workspace_id, WS);
+});
+
+test('verify: owner in the active workspace keeps full scopes even if a viewer elsewhere', async () => {
+  reset('owner');
+  db.seed('workspace_members', [{ workspace_id: 'ws-other', user_id: USER.id, role: 'viewer' }]);
+  const res = await POST(consent(['read:email', 'send:email', 'manage:automations']));
+  assert.equal(res.status, 200);
+  assert.deepEqual(codeScopes(), [['read:email', 'send:email', 'manage:automations']]);
+});
+
+test('verify: a viewer cannot smuggle write or identity scopes through the scopes array', async () => {
+  reset('viewer');
+  const res = await POST(consent(['openid', 'email', 'send:email', 'SEND:EMAIL', ' send:email'], { identity_scopes: ['openid', 'send:email'] }));
+  assert.equal(res.status, 403);
+  assert.equal(db.table('oauth_auth_codes').length, 0);
+});
