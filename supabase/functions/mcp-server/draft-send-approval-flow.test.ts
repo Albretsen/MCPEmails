@@ -189,6 +189,9 @@ async function dispatchWith(inbox: Row, handler: harness.ProviderHandler, stored
   const tables: Record<string, Row[]> = {
     scheduled_sends: [{
       id: SEND_ID,
+      // The dispatcher resolves the inbox, approval and key inside the row's
+      // own workspace (u04), so the row carries it as the real table does.
+      workspace_id: harness.WORKSPACE,
       inbox_id: harness.INBOX_ID,
       status: "pending",
       payload: { approval_id: APPROVAL_ID },
@@ -210,6 +213,9 @@ async function dispatchWith(inbox: Row, handler: harness.ProviderHandler, stored
       status: "approved",
       expires_at: new Date(Date.now() + 3_600_000).toISOString(),
       decided_at: new Date().toISOString(),
+      // Single-use claim column (migration 20261016160400): unclaimed until
+      // this row's dispatch binds it.
+      dispatch_scheduled_send_id: null,
     }],
     api_keys: [{ ...harness.API_KEY, deleted_at: null }],
     inboxes: [{ ...inbox, deleted_at: null }],
@@ -219,6 +225,14 @@ async function dispatchWith(inbox: Row, handler: harness.ProviderHandler, stored
     const response = await server.handleScheduledDispatch(recordingClient(tables) as any);
     await response.body?.cancel();
   });
+  // Every outcome these tests assert must come from the approved re-run, not
+  // from an earlier tenancy or single-use gate refusing the row: the claim is
+  // written just before the re-run, so it proves the row got that far.
+  assertEquals(tables.send_approvals[0].dispatch_scheduled_send_id, SEND_ID, "the approval was claimed by this row");
+  assert(
+    !/not found|unavailable|already dispatched|Refused/.test(String(tables.scheduled_sends[0].error_detail ?? "")),
+    `refused before the re-run: ${tables.scheduled_sends[0].error_detail}`,
+  );
   return { scheduled: tables.scheduled_sends[0] };
 }
 

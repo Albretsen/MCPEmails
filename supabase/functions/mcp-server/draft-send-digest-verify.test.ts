@@ -221,11 +221,20 @@ async function holdOutlook(draft: GraphDraft, args: Row = {}) {
   return { row, payload: await decryptStored(String((row.payload as Row).data)) };
 }
 
-async function dispatchOutlook(draft: GraphDraft, storedPayload: Row, sendAt = "2020-01-01T00:00:00.000Z") {
+async function dispatchOutlook(
+  draft: GraphDraft,
+  storedPayload: Row,
+  sendAt = "2020-01-01T00:00:00.000Z",
+  /** Re-run the dispatcher over the tables a previous tick left behind. */
+  previous?: Record<string, Row[]>,
+) {
   const inbox = await harness.inboxRow("outlook", { send_approval_required: true });
-  const tables: Record<string, Row[]> = {
+  const tables: Record<string, Row[]> = previous ?? {
     scheduled_sends: [{
       id: SEND_ID,
+      // The dispatcher resolves the inbox, approval and key inside the row's
+      // own workspace (u04), so the row carries it as the real table does.
+      workspace_id: harness.WORKSPACE,
       inbox_id: harness.INBOX_ID,
       status: "pending",
       payload: { approval_id: APPROVAL_ID },
@@ -246,6 +255,9 @@ async function dispatchOutlook(draft: GraphDraft, storedPayload: Row, sendAt = "
       status: "approved",
       expires_at: new Date(Date.now() + 3_600_000).toISOString(),
       decided_at: new Date().toISOString(),
+      // Single-use claim column (migration 20261016160400): unclaimed until
+      // this row's dispatch binds it.
+      dispatch_scheduled_send_id: null,
     }],
     api_keys: [{ ...harness.API_KEY, deleted_at: null }],
     inboxes: [{ ...inbox, deleted_at: null }],
@@ -256,7 +268,15 @@ async function dispatchOutlook(draft: GraphDraft, storedPayload: Row, sendAt = "
     const response = await server.handleScheduledDispatch(recordingClient(tables) as any);
     await response.body?.cancel();
   });
-  return { sends, scheduled: tables.scheduled_sends[0] };
+  // Every outcome these tests assert must come from the approved re-run, not
+  // from an earlier tenancy or single-use gate refusing the row: the claim is
+  // written just before the re-run, so it proves the row got that far.
+  assertEquals(tables.send_approvals[0].dispatch_scheduled_send_id, SEND_ID, "the approval was claimed by this row");
+  assert(
+    !/not found|unavailable|already dispatched|Refused/.test(String(tables.scheduled_sends[0].error_detail ?? "")),
+    `refused before the re-run: ${tables.scheduled_sends[0].error_detail}`,
+  );
+  return { sends, scheduled: tables.scheduled_sends[0], tables };
 }
 
 const OUTLOOK_DRAFT: GraphDraft = {
@@ -333,4 +353,19 @@ Deno.test("verify v2: an Outlook draft unreadable at dispatch is held inside the
   const stale = await dispatchOutlook(unreadable, row.payload as Row, "2020-01-01T00:00:00.000Z");
   assertEquals(stale.sends.length, 0);
   assertEquals(stale.scheduled.status, "error", "the hold is bounded: past the window it fails for real");
+});
+
+Deno.test("verify v2: a draft held as unreadable keeps its single-use claim and the same row sends it once on the next tick", async () => {
+  // u04 x u06: the unreadable hold defers the row back to 'pending' with the
+  // approval already bound to it. The retry must pass the single-use gate (same
+  // row), re-check the digest, and send exactly once.
+  const { row } = await holdOutlook(OUTLOOK_DRAFT);
+  const first = await dispatchOutlook({ ...OUTLOOK_DRAFT, attachmentsFail: true }, row.payload as Row, new Date().toISOString());
+  assertEquals(first.sends.length, 0);
+  assertEquals(first.scheduled.status, "pending");
+  const second = await dispatchOutlook(OUTLOOK_DRAFT, row.payload as Row, undefined, first.tables);
+  assertEquals(second.sends.length, 1, "sent once on the retry");
+  assertEquals(second.scheduled.status, "sent");
+  const third = await dispatchOutlook(OUTLOOK_DRAFT, row.payload as Row, undefined, second.tables);
+  assertEquals(third.sends.length, 0, "a sent row is not picked up again");
 });

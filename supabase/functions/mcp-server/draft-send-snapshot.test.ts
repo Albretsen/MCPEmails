@@ -141,8 +141,20 @@ Deno.test("index.ts records the snapshot at queue time and checks it before an a
   assert(record < queue, "the snapshot is recorded before the approval is queued");
   assert(send.includes("if (apiKey.internalApprovalDispatch === true) {"), "the check is keyed on the dispatcher's marker");
   // The digest reaches the re-run from the approval row, never as an argument.
-  assert(src.includes("const { args: draftArgs, digest } = splitApprovedDraftPayload(original);"));
-  assert(src.includes("await executeSendDraft(draftArgs, internalKey, { draftDigest: digest })"));
+  // The dispatcher re-runs approved operations through its injectable deps
+  // (scheduled-send tenancy fix); production uses DEFAULT_SCHEDULED_DISPATCH_DEPS,
+  // so the split and the digest-carrying call must live in that default, and
+  // the dispatcher must default to it and call it.
+  const depsStart = src.indexOf("const DEFAULT_SCHEDULED_DISPATCH_DEPS: ScheduledDispatchDeps = {");
+  const deps = src.slice(depsStart, src.indexOf("async function handleScheduledDispatch(", depsStart));
+  assert(depsStart > 0 && deps.length > 0, "the default dispatch deps are present");
+  const draftBranch = deps.slice(deps.indexOf('if (operation === "draft_send") {'));
+  assert(draftBranch.length > 0, "the default re-run has a draft_send branch");
+  assert(draftBranch.includes("const { args: draftArgs, digest } = splitApprovedDraftPayload(original);"));
+  assert(draftBranch.includes("return executeSendDraft(draftArgs, internalKey, { draftDigest: digest });"));
+  const dispatcher = src.slice(src.indexOf("async function handleScheduledDispatch("));
+  assert(dispatcher.includes("deps: ScheduledDispatchDeps = DEFAULT_SCHEDULED_DISPATCH_DEPS,"), "production dispatch uses the default deps");
+  assert(dispatcher.includes("await deps.runApprovedOperation("), "the approved re-run goes through deps");
   assert(!/approved\s*=\s*\{[^}]*args\[/.test(send), "the digest is never read from the arguments");
 });
 
