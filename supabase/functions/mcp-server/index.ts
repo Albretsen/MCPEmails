@@ -191,6 +191,7 @@ import {
   mimeMessageToBase64url,
   draftSendBytes,
 } from "./mime-build.ts";
+import { rawHeaderBlockFromGmailJson } from "./gmail-raw-headers.ts";
 import {
   formatMailboxDisplay,
   parseAddressHeader,
@@ -11039,6 +11040,53 @@ function formatAddressEntry(a: EmailAddressEntry): string {
 }
 
 /**
+ * The From / To / Cc of a Gmail message for REPLY-ALL recipient selection,
+ * parsed structure-first from the RAW header block (2026-10-16).
+ *
+ * Gmail's metadata header values are already RFC 2047-decoded, so splitting
+ * them into recipients lets an encoded display name such as "x@evil.com,"
+ * become a second mailbox. A plain reply is safe on the decoded values (From
+ * is parsed as ONE mailbox), but reply-all splits To and Cc, so it reads the
+ * raw headers instead: only the start of a `format=raw` response is streamed
+ * (gmail-raw-headers.ts), however large the message. Fails closed: when the
+ * raw headers cannot be read, reply-all is refused rather than computed from
+ * the decoded values.
+ */
+async function gmailReplyAllAddresses(
+  accessToken: string,
+  messageId: string,
+): Promise<{ from: EmailAddressEntry[]; to: EmailAddressEntry[]; cc: EmailAddressEntry[] }> {
+  const unavailable = () =>
+    new TargetUnresolvedError(
+      "reply_all: could not read the original message's address headers from Gmail, so the " +
+        "reply-all recipients were not computed. Nothing was sent or created. Retry, or reply " +
+        "without reply_all.",
+    );
+  let response: Response;
+  try {
+    response = await fetch(
+      `https://gmail.googleapis.com/gmail/v1/users/me/messages/${encodeURIComponent(messageId)}?format=raw`,
+      { headers: { Authorization: `Bearer ${accessToken}` } },
+    );
+  } catch {
+    throw unavailable();
+  }
+  if (!response.ok || !response.body) {
+    await response.body?.cancel().catch(() => {});
+    if (response.status === 401) throw new Error("gmail_auth_failed");
+    throw unavailable();
+  }
+  const block = await rawHeaderBlockFromGmailJson(response.body);
+  if (block === null) throw unavailable();
+  const headers = parseEmail(`${block}\r\n\r\n`).headers;
+  return {
+    from: parseAddressHeader(getHeader(headers, "from")),
+    to: parseAddressHeader(getHeader(headers, "to")),
+    cc: parseAddressHeader(getHeader(headers, "cc")),
+  };
+}
+
+/**
  * Every address that IS this inbox, for reply-recipient filtering.
  *
  * A reply must not be addressed back to the account itself on a multi-party
@@ -15830,10 +15878,18 @@ async function replyGmailMessage(
         // client-api: the human's own To list, used as given.
         replyAddresses = params.to;
       } else {
+        // Reply-all splits To/Cc, which Gmail hands over decoded: take those
+        // from the raw headers (gmailReplyAllAddresses). A plain reply uses the
+        // decoded From as ONE mailbox, which a decoded comma cannot split.
+        const structural = params.replyAll
+          ? await gmailReplyAllAddresses(accessToken, originalMessageId)
+          : null;
         const resolvedReply = computeReplyRecipients({
-          from: [parseEmailAddress(hdrs["from"] ?? "")],
-          to: parseAddressList(hdrs["to"] ?? ""),
-          cc: parseAddressList(hdrs["cc"] ?? ""),
+          from: structural?.from.length ? structural.from : [parseEmailAddress(hdrs["from"] ?? "")],
+          // Without reply_all these only matter for a message with no From
+          // (the first participant is the fallback), exactly as before.
+          to: structural ? structural.to : parseAddressList(hdrs["to"] ?? ""),
+          cc: structural ? structural.cc : parseAddressList(hdrs["cc"] ?? ""),
           ownAddresses: inboxOwnAddresses(inbox),
           replyAll: params.replyAll,
         });
@@ -27808,10 +27864,13 @@ async function executeCreateReplyDraft(
       const original = await response.json() as GmailMessageMeta & { threadId?: string };
       const headers: Record<string, string> = {};
       for (const h of original.payload?.headers ?? []) headers[h.name.toLowerCase()] = h.value;
+      // As on email_reply: reply-all reads To/Cc from the raw headers, since
+      // Gmail's values are decoded and a decoded comma would split a mailbox.
+      const structural = replyAll ? await gmailReplyAllAddresses(token, messageId) : null;
       const resolvedReply = computeReplyRecipients({
-        from: [parseEmailAddress(headers.from ?? "")],
-        to: parseAddressList(headers.to ?? ""),
-        cc: parseAddressList(headers.cc ?? ""),
+        from: structural?.from.length ? structural.from : [parseEmailAddress(headers.from ?? "")],
+        to: structural ? structural.to : parseAddressList(headers.to ?? ""),
+        cc: structural ? structural.cc : parseAddressList(headers.cc ?? ""),
         ownAddresses: inboxOwnAddresses(inbox),
         replyAll,
       });

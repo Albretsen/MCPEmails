@@ -255,7 +255,10 @@ Deno.test("quotes and backslashes inside a quoted-string are escaped", () => {
 });
 
 Deno.test("a bare name can never look like an encoded-word", () => {
-  assertEquals(encodeMimeDisplayName("=?UTF-8?B?x?="), '"=?UTF-8?B?x?="');
+  // Encoded rather than quoted (2026-10-16): readers decode encoded-words in
+  // quoted strings too, so a quoted literal lost a layer on every re-read.
+  // `=?UTF-8?B?x?=` as UTF-8 base64 is "PT9VVEYtOD9CP3g/PQ==".
+  assertEquals(encodeMimeDisplayName("=?UTF-8?B?x?="), "=?UTF-8?B?PT9VVEYtOD9CP3g/PQ==?=");
 });
 
 Deno.test("non-ASCII becomes one RFC 2047 encoded-word", () => {

@@ -88,7 +88,8 @@ const ENCODED_WORD_MAX_BYTES = 45;
  *
  *   * plain atoms ("Acme Support")            -> bare, unchanged
  *   * ASCII with specials ("Bot (Prod)")     -> quoted-string, `"` and `\` escaped
- *   * anything non-ASCII ("Åsgeir Bjelland") -> RFC 2047 encoded-word(s), each
+ *   * anything non-ASCII ("Åsgeir Bjelland"), or any name containing "=?"
+ *                                             -> RFC 2047 encoded-word(s), each
  *     at most 75 characters, never split inside a UTF-8 sequence
  *
  * Control characters (CR/LF included) are collapsed to a space first, so a
@@ -99,9 +100,16 @@ export function encodeMimeDisplayName(name: string): string {
   // deno-lint-ignore no-control-regex
   const sanitized = name.replace(/[\x00-\x1F\x7F]+/g, " ").trim();
   if (sanitized.length === 0) return "";
+  // A name that itself looks like an encoded-word ("=?UTF-8?B?...?=" as
+  // literal text, e.g. the once-decoded name of a hostile sender) is ENCODED,
+  // not quoted (2026-10-16). Readers decode encoded-words inside quoted
+  // strings too (mailers write them, clients decode them, and so does
+  // address-header.ts for headers it reads), so a quoted literal lost one
+  // layer of encoding on every draft_read / draft_update. Encoded, it decodes
+  // back to exactly this literal, however often the draft is re-read.
   // deno-lint-ignore no-control-regex
-  if (/^[\x00-\x7F]*$/.test(sanitized)) {
-    if (BARE_PHRASE_RE.test(sanitized) && !sanitized.includes("=?")) return sanitized;
+  if (/^[\x00-\x7F]*$/.test(sanitized) && !sanitized.includes("=?")) {
+    if (BARE_PHRASE_RE.test(sanitized)) return sanitized;
     return `"${sanitized.replace(/["\\]/g, (c) => `\\${c}`)}"`;
   }
   const words: string[] = [];

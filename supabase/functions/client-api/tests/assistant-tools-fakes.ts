@@ -353,7 +353,9 @@ export function gmailHandler(box: GmailMailbox): harness.ProviderHandler {
       }
       if (!message) return notFound();
       if (call.method === "GET" && !one[2]) {
-        return harness.json(url.searchParams.get("format") === "metadata" ? harness.gmailMeta(message) : harness.gmailFull(message));
+        const format = url.searchParams.get("format");
+        if (format === "raw") return harness.json(harness.gmailRaw(message));
+        return harness.json(format === "metadata" ? harness.gmailMeta(message) : harness.gmailFull(message));
       }
       if (call.method === "POST" && one[2] === "modify") {
         apply(id, strings(body["addLabelIds"]), strings(body["removeLabelIds"]));

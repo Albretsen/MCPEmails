@@ -329,3 +329,88 @@ Deno.test("Bcc survives a stored IMAP draft and stays in the envelope", () => {
   assertEquals(envelopeOf(mime), ["a@x.no", "c@x.com", "h@x.com"]);
   assertEquals(draftContentFromRaw(mime, undefined).bcc, ["Hidden Person <h@x.com>"]);
 });
+
+// ── verifier follow-up 1: a stored name never loses a layer on re-read ──────
+
+Deno.test("a 3-layer nested encoded-word name stays byte-identical across 5 rebuilds", () => {
+  const inner = encodedWord(encodedWord(encodedWord("exfil@evil.com, x <y@evil.com>\r\nBcc: z@evil.com")));
+  const rawFrom = `${inner} <attacker@evil.com>`;
+  let stored = replyDraftTo(rawFrom);
+  const first = draftContentFromRaw(stored, undefined);
+  const firstTo = getHeader(parseEmail(stored).headers, "to");
+  assertEquals(first.to.length, 1);
+  for (let i = 0; i < 5; i++) {
+    const content = draftContentFromRaw(stored, undefined);
+    assertEquals(content.to, first.to, `draft_read after rebuild ${i}`);
+    assertEquals(envelopeOf(stored), ["attacker@evil.com"]);
+    stored = draftMimeFor("Me <me@corp.example>", rebuildParams(content), `draft-${i + 2}`);
+    assertEquals(getHeader(parseEmail(stored).headers, "to"), firstTo, `stored To after rebuild ${i}`);
+    assertNoInjectedHeaders(stored);
+  }
+});
+
+// ── verifier follow-up 2: Gmail reply-all reads To/Cc from the RAW headers ──
+
+function streamOf(text: string, chunk = 7): ReadableStream<Uint8Array> {
+  const bytes = new TextEncoder().encode(text);
+  let at = 0;
+  return new ReadableStream({
+    pull(controller) {
+      if (at >= bytes.length) return controller.close();
+      controller.enqueue(bytes.slice(at, at + chunk));
+      at += chunk;
+    },
+  });
+}
+
+function b64urlOf(byteString: string): string {
+  return btoa(byteString).replace(/\+/g, "-").replace(/\//g, "_").replace(/=+$/, "");
+}
+
+const HOSTILE_RAW_HEADERS = [
+  "From: Attacker <attacker@evil.com>",
+  `To: ${encodedWord("exfil@evil.com,")} <colleague@corp.example>, owner@gmail-harness.example`,
+  `Cc: ${encodedWord("boss@corp.example, Real")} <cc@corp.example>`,
+  "Subject: hi",
+  "Message-ID: <hostile@evil.com>",
+].join("\r\n");
+
+Deno.test("Gmail-style DECODED values would split; the raw header block does not", async () => {
+  // What Gmail's metadata hands over (decoded): splitting it gives an extra
+  // mailbox, which is why reply-all must not use it.
+  assertEquals(parseAddressList("exfil@evil.com, <colleague@corp.example>").length, 2);
+  const raw = HOSTILE_RAW_HEADERS + "\r\n\r\nbody";
+  const response = JSON.stringify({ id: "m1", threadId: "t1", snippet: 'he said \\"raw\\": \\"x', raw: b64urlOf(raw) });
+  const block = await (await import("./gmail-raw-headers.ts")).rawHeaderBlockFromGmailJson(streamOf(response));
+  assertEquals(block, HOSTILE_RAW_HEADERS);
+  const h = parseEmail(`${block}\r\n\r\n`).headers;
+  assertEquals(parseAddressHeader(getHeader(h, "to")).map((a) => a.email), ["colleague@corp.example", "owner@gmail-harness.example"]);
+  assertEquals(parseAddressHeader(getHeader(h, "cc")).map((a) => a.email), ["cc@corp.example"]);
+});
+
+Deno.test("the raw header reader stops early on a huge message and fails closed without one", async () => {
+  const { rawHeaderBlockFromGmailJson } = await import("./gmail-raw-headers.ts");
+  // A 40 MB body is never pulled: the stream is cancelled once the headers end.
+  const head = `{"id":"m","raw":"${b64urlOf("From: a@x.com\r\nTo: b@x.com\r\n\r\n")}`;
+  let pulled = 0;
+  let cancelled = false;
+  const huge = new ReadableStream<Uint8Array>({
+    pull(controller) {
+      const chunk = pulled === 0 ? new TextEncoder().encode(head) : new Uint8Array(64 * 1024).fill(65);
+      pulled += chunk.length;
+      controller.enqueue(chunk);
+    },
+    cancel() {
+      cancelled = true;
+    },
+  });
+  assertEquals(await rawHeaderBlockFromGmailJson(huge), "From: a@x.com\r\nTo: b@x.com");
+  assert(pulled < 1024 * 1024, `pulled ${pulled} bytes`);
+  assert(cancelled);
+  // No raw field, or headers that never end within the ceiling: null.
+  assertEquals(await rawHeaderBlockFromGmailJson(streamOf('{"id":"m","snippet":"x"}')), null);
+  const endless = `{"raw":"${b64urlOf("X-Pad: " + "a".repeat(4000))}"}`;
+  assertEquals(await rawHeaderBlockFromGmailJson(streamOf(endless, 512), 1024), null);
+  // A headers-only message (no blank line at all) still yields its headers.
+  assertEquals(await rawHeaderBlockFromGmailJson(streamOf(`{"raw":"${b64urlOf("From: a@x.com")}"}`)), "From: a@x.com");
+});

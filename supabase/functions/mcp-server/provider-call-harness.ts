@@ -467,6 +467,24 @@ export function gmailFull(m: FakeGmailMessage): Record<string, unknown> {
 }
 
 /** A `messages.get?format=metadata` body. */
+/**
+ * A `messages.get?format=raw` body: the message as RFC 822 (headers, then the
+ * text part), base64url-encoded, as Gmail returns it. Header values are the
+ * fixture's, which a raw message holds undecoded.
+ */
+export function gmailRaw(m: FakeGmailMessage): Record<string, unknown> {
+  const headers = gmailHeaders(m).map((h) => `${h.name}: ${h.value}`);
+  const raw = [...headers, "MIME-Version: 1.0", "Content-Type: text/plain; charset=UTF-8", "", m.text ?? ""].join("\r\n");
+  return {
+    id: m.id,
+    threadId: m.threadId ?? `thread-${m.id}`,
+    labelIds: m.labelIds ?? ["INBOX"],
+    snippet: m.snippet ?? "",
+    raw: b64url(raw),
+    internalDate: m.internalDate ?? "1767225600000",
+  };
+}
+
 export function gmailMeta(m: FakeGmailMessage): Record<string, unknown> {
   return {
     id: m.id,
