@@ -540,6 +540,15 @@ import {
   planDraftSend,
 } from "./draft-send-plan.ts";
 import {
+  approvedDraftSnapshotFrom,
+  checkApprovedDraft,
+  DRAFT_DIGEST_KEY,
+  DRAFT_SNAPSHOT_KEY,
+  draftDigest,
+  draftSnapshotOf,
+  splitApprovedDraftPayload,
+} from "./draft-send-snapshot.ts";
+import {
   alreadySentText,
   type CardActivityScope,
   type CardActivityStore,
@@ -17600,11 +17609,10 @@ async function readDraftForSummary(
  * approval row exists). Every failure degrades to `{}`, i.e. exactly today's
  * blank summary.
  *
- * KNOWN IMPRECISION, stated rather than hidden: for `draft_send` the draft is
- * mutable, so what is resolved here is the draft as of queue time and the
- * dispatcher sends the draft as of approval time. The approve page already
- * tells the reviewer the content lives with the provider. Queue-time truth is
- * far better than a blank line, but it is not a guarantee.
+ * `draft_send`: the draft is mutable, so executeSendDraft stores a snapshot of
+ * it (draft-send-snapshot.ts) and a digest, and the approved send re-reads the
+ * draft and goes out only if it still matches. The summary is read from that
+ * snapshot; the provider read below is only for a payload without one.
  */
 async function resolveApprovalSummaryFields(
   inbox: InboxRow,
@@ -17664,6 +17672,18 @@ async function resolveApprovalSummaryFields(
     }
 
     if (operation === "draft_send") {
+      // The snapshot executeSendDraft read moments ago, so the summary, the
+      // review page, the card and the dispatch-time digest all describe ONE
+      // read of the draft, not two that could differ.
+      const snapshot = approvedDraftSnapshotFrom(payload);
+      if (snapshot) {
+        return {
+          to: snapshot.to,
+          cc: snapshot.cc,
+          bcc_count: snapshot.bcc.length,
+          subject: snapshot.subject,
+        };
+      }
       const draftId = typeof payload.draft_id === "string" ? payload.draft_id : "";
       if (!draftId) return {};
       const draft = await readDraftForSummary(inbox, draftId);
@@ -17690,6 +17710,15 @@ async function resolveApprovalSummaryFields(
 /** Store an immutable, encrypted delivery request when an inbox has opted into
  * human approval. This is deliberately server-side: an MCP client or API key
  * cannot approve, disable, or otherwise bypass the gate. */
+/** True when `queueSendApproval` will hold this caller's send for a human. */
+function sendWillBeHeld(inbox: InboxRow, apiKey: ApiKeyRow): boolean {
+  if (!inbox.send_approval_required || apiKey.internalApprovalDispatch) return false;
+  // The web mail client's human sender (see ApiKeyRow.firstPartyHuman): the
+  // person pressing Send is the approver this gate exists to wait for.
+  if (apiKey.firstPartyHuman === true) return false;
+  return true;
+}
+
 async function queueSendApproval(
   inbox: InboxRow,
   apiKey: ApiKeyRow,
@@ -17697,10 +17726,7 @@ async function queueSendApproval(
   sendAt?: string,
   operation = "email_send",
 ): Promise<QueuedApproval | null> {
-  if (!inbox.send_approval_required || apiKey.internalApprovalDispatch) return null;
-  // The web mail client's human sender (see ApiKeyRow.firstPartyHuman): the
-  // person pressing Send is the approver this gate exists to wait for.
-  if (apiKey.firstPartyHuman === true) return null;
+  if (!sendWillBeHeld(inbox, apiKey)) return null;
   const ciphertext = await encryptForStorage(JSON.stringify(payload));
   // Resolved before the insert, never after: the summary is what a reviewer
   // sees, so a row must not exist in a state where it is blank. It is also the
@@ -28452,9 +28478,35 @@ async function executeBodylessDraftUpdate(
   });
 }
 
+/**
+ * The full read of one draft a held send records and an approved send checks
+ * (draft-send-snapshot.ts): body and attachment metadata included, which the
+ * header-only `readDraftForSummary` does not carry. The editor's readers, so
+ * what the reviewer is shown is what the draft editor would show.
+ */
+async function readDraftForApproval(
+  inbox: InboxRow,
+  draftId: string,
+): Promise<DraftContent | null> {
+  switch (inbox.provider) {
+    case "gmail":
+      return await gmailGetDraftForEditor(inbox, draftId);
+    case "outlook":
+      return await outlookGetDraftForEditor(inbox, draftId);
+    default:
+      return await imapGetDraft(inbox, draftId);
+  }
+}
+
 async function executeSendDraft(
   rawArgs: unknown,
   apiKey: ApiKeyRow,
+  /**
+   * Set only by the scheduled-send dispatcher re-running an APPROVED send: the
+   * digest of the draft the reviewer approved, from the approval row. Never
+   * read from the tool arguments.
+   */
+  approved?: { draftDigest: string | null },
 ): Promise<{
   result: { content: { type: string; text: string }[]; isError?: boolean };
   logStatus: "success" | "error";
@@ -28713,6 +28765,76 @@ async function executeSendDraft(
     }
   }
 
+  // ── WHAT IS APPROVED IS WHAT IS SENT (security review 2026-10-16) ───────
+  // A held send records the draft as it is now: a snapshot the reviewer reads
+  // (Bcc and body included) and a digest of the whole draft. The approved
+  // re-run below sends only if the draft still has that digest. A read that
+  // fails is a refusal to queue, never an approval of content nobody saw.
+  const draftReadFailure = (err: unknown, phase: "queue" | "approved") => {
+    const message = err instanceof Error ? err.message : String(err);
+    if (message === "gmail_auth_failed" || message === "outlook_auth_failed" || message === "imap_auth_failed") {
+      return authFailedResult(inbox.provider, inbox.id, "access");
+    }
+    return providerFailure({
+      tool: "draft_send",
+      provider: inbox.provider,
+      inboxId: inbox.id,
+      error: err,
+      boundary: "ledger",
+      fallbackCode: PROVIDER_NOT_SENT_ERROR_CODE,
+      text: phase === "queue"
+        ? `draft_send: could not read draft ${draftId} to record what is being approved. Nothing was sent; retry shortly.`
+        : `draft_send: could not read draft ${draftId} to check it against the approved version. Nothing was sent.`,
+      logContext: { phase: phase === "queue" ? "approval_snapshot" : "approval_check" },
+      resultExtra: { delivery_status: DELIVERY_STATUS_NOT_SENT },
+    });
+  };
+  const draftGone = () => ({
+    result: { content: [{ type: "text", text: draftNotFoundMessage(inbox.provider, draftId!, "send") }], isError: true },
+    logStatus: "error" as const, logErrorCode: "draft_not_found",
+  });
+
+  if (apiKey.internalApprovalDispatch === true) {
+    let current: DraftContent | null;
+    try {
+      current = await readDraftForApproval(inbox, draftId);
+    } catch (err) {
+      return draftReadFailure(err, "approved");
+    }
+    if (!current) return draftGone();
+    const verdict = checkApprovedDraft(approved?.draftDigest, await draftDigest(current));
+    if (verdict !== "match") {
+      return {
+        result: {
+          content: [{
+            type: "text",
+            text: verdict === "changed"
+              ? `draft_send: draft ${draftId} was changed after this send was approved. Nothing was sent.`
+              : `draft_send: this approval carries no recorded copy of draft ${draftId}, so it cannot be checked. Nothing was sent.`,
+          }],
+          isError: true,
+        },
+        logStatus: "error",
+        logErrorCode: verdict === "changed" ? "approved_draft_changed" : "approved_draft_unverified",
+      };
+    }
+  }
+
+  let approvalRecord: Record<string, unknown> = {};
+  if (sendWillBeHeld(inbox, apiKey)) {
+    let read: DraftContent | null;
+    try {
+      read = await readDraftForApproval(inbox, draftId);
+    } catch (err) {
+      return draftReadFailure(err, "queue");
+    }
+    if (!read) return draftGone();
+    approvalRecord = {
+      [DRAFT_SNAPSHOT_KEY]: draftSnapshotOf(read),
+      [DRAFT_DIGEST_KEY]: await draftDigest(read),
+    };
+  }
+
   // A provider draft is mutable, so queue the send operation itself and do
   // not invoke the provider's draft-send endpoint until dashboard approval.
   // The dispatcher uses its internal-only marker to execute this same request
@@ -28721,7 +28843,7 @@ async function executeSendDraft(
     const approval = await queueSendApproval(
       inbox,
       apiKey,
-      { ...approvalArgs, inbox_id: inbox.id },
+      { ...approvalArgs, inbox_id: inbox.id, ...approvalRecord },
       undefined,
       "draft_send",
     );
@@ -32264,7 +32386,12 @@ async function handleScheduledDispatch(
         let dispatchedResult: { logStatus: "success" | "error"; logErrorCode: string | null };
         if (approval.operation === "email_reply") dispatchedResult = await executeReplyToEmail(original, internalKey);
         else if (approval.operation === "email_forward") dispatchedResult = await executeForwardEmail(original, internalKey);
-        else if (approval.operation === "draft_send") dispatchedResult = await executeSendDraft(original, internalKey);
+        else if (approval.operation === "draft_send") {
+          // The snapshot and digest ride on the approval, not as arguments:
+          // the re-run gets the digest to check and never sees the snapshot.
+          const { args: draftArgs, digest } = splitApprovedDraftPayload(original);
+          dispatchedResult = await executeSendDraft(draftArgs, internalKey, { draftDigest: digest });
+        }
         else if (approval.operation === "schedule_create") dispatchedResult = await executeScheduleSend(original, internalKey);
         else dispatchedResult = await executeSendEmail(original, internalKey);
         // The caller's idempotency record remains pending until this trusted

@@ -692,11 +692,12 @@
       "attachmentsFromOriginal": "原始邮件的附件，按原样发送",
       "recipientsAtSend": "本页无法从原邮件中读取收件人。收件人将在发送时解析，请在批准前先查看邮件正文。",
       "bccCount": "{count} 个隐藏收件人",
+      "bccHint": "其他收件人看不到这些地址。批准前请逐一核对。",
       "attachmentCount": "{count} 个文件",
       "bodyTitle": "正文",
       "bodyTruncated": "这封邮件超过 64 KB，此处已截断。请在控制台中查看完整内容。",
       "bodyWithheldRole": "邮件正文仅向工作区的所有者、管理员和成员显示。你的角色只能查看投递信息。",
-      "bodyStoredWithProvider": "此请求发送的是保存在邮件服务商处的草稿，因此正文不包含在请求中。决定前请在邮件应用中打开该草稿。",
+      "bodyStoredWithProvider": "此请求是在 MCP Emails 保存草稿副本之前创建的，因此这里无法显示其正文，即使批准也不会发送。请拒绝它，并让你的助手重新发送该草稿。",
       "bodyDecryptFailed": "无法解密已存储的邮件，因此无法显示。请拒绝此请求，并让助手重新起草。",
       "bodyAbsent": "此请求没有邮件正文。",
       "bodyHtmlShow": "显示 HTML 源码",
@@ -744,7 +745,10 @@
         "expiredTitle": "此请求已过期",
         "expiredBody": "未能及时处理，因此不会发送。如果仍需发送，请让助手重新起草。",
         "decidedElsewhereTitle": "已被处理",
-        "decidedElsewhereBody": "在本页打开期间，其他人或另一个标签页已处理了此次发送。刚才的操作未改变任何内容。请打开控制台查看结果。"
+        "decidedElsewhereBody": "在本页打开期间，其他人或另一个标签页已处理了此次发送。刚才的操作未改变任何内容。请打开控制台查看结果。",
+        "changedTitle": "此请求在你打开后已被更改",
+        "changedBody": "未发送任何内容。下方显示的是当前版本，请重新审阅后再做决定。",
+        "changedLoading": "未发送任何内容。正在加载当前版本…"
       },
       "done": {
         "approvedTitle": "已批准，邮件正在发送。",
@@ -776,7 +780,10 @@
       "statusApproved": "已批准",
       "statusRejected": "已拒绝",
       "statusExpired": "已过期",
-      "statusCancelled": "已取消"
+      "statusCancelled": "已取消",
+      "changedNotice": "此请求在你打开后已被更改。未发送任何内容。下方显示的是当前版本，请核对后再确认。",
+      "changedGone": "此请求已被更改，不再等待决定。未发送任何内容。",
+      "openReview": "打开完整审阅页面（含邮件正文）"
     }
   },
   "automations": {

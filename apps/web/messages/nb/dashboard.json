@@ -692,11 +692,12 @@
       "attachmentsFromOriginal": "Den opprinnelige meldingens vedlegg, slik de ble sendt",
       "recipientsAtSend": "Denne siden klarte ikke å lese mottakerne fra den opprinnelige meldingen. De hentes når den sendes, så les gjennom meldingsteksten før du godkjenner.",
       "bccCount": "{count, plural, one {# skjult mottaker} other {# skjulte mottakere}}",
+      "bccHint": "Skjult for de andre mottakerne. Sjekk hver adresse før du godkjenner.",
       "attachmentCount": "{count, plural, one {# fil} other {# filer}}",
       "bodyTitle": "Melding",
       "bodyTruncated": "Denne meldingen er lengre enn 64 KB og er avkortet her. Åpne den i dashbordet for å lese alt.",
       "bodyWithheldRole": "Meldingsteksten vises til eiere, administratorer og medlemmer av arbeidsområdet. Din rolle kan bare se leveringsdetaljene.",
-      "bodyStoredWithProvider": "Denne forespørselen sender et utkast som er lagret hos e-postleverandøren din, så teksten er ikke en del av forespørselen. Åpne utkastet i e-postappen din før du bestemmer deg.",
+      "bodyStoredWithProvider": "Denne forespørselen ble laget før MCP Emails tok vare på en kopi av utkastet, så teksten kan ikke vises her, og den blir ikke sendt selv om du godkjenner den. Avvis den og be assistenten sende utkastet på nytt.",
       "bodyDecryptFailed": "Den lagrede meldingen kunne ikke dekrypteres og kan derfor ikke vises. Avvis denne forespørselen og be assistenten forberede den på nytt.",
       "bodyAbsent": "Denne forespørselen har ingen meldingstekst.",
       "bodyHtmlShow": "Vis HTML-kilde",
@@ -744,7 +745,10 @@
         "expiredTitle": "Denne forespørselen utløp",
         "expiredBody": "Den ble ikke avgjort i tide, så den blir ikke sendt. Be assistenten forberede den på nytt hvis du fortsatt vil sende den.",
         "decidedElsewhereTitle": "Allerede avgjort",
-        "decidedElsewhereBody": "Noen andre, eller en annen fane, avgjorde denne utsendingen mens denne siden var åpen. Ingenting ble endret nå. Åpne dashbordet for å se utfallet."
+        "decidedElsewhereBody": "Noen andre, eller en annen fane, avgjorde denne utsendingen mens denne siden var åpen. Ingenting ble endret nå. Åpne dashbordet for å se utfallet.",
+        "changedTitle": "Denne forespørselen ble endret etter at du åpnet den",
+        "changedBody": "Ingenting ble sendt. Den gjeldende versjonen vises nedenfor. Gå gjennom den på nytt før du bestemmer deg.",
+        "changedLoading": "Ingenting ble sendt. Laster inn den gjeldende versjonen…"
       },
       "done": {
         "approvedTitle": "Godkjent. E-posten er på vei.",
@@ -776,7 +780,10 @@
       "statusApproved": "Godkjent",
       "statusRejected": "Avvist",
       "statusExpired": "Utløpt",
-      "statusCancelled": "Avbrutt"
+      "statusCancelled": "Avbrutt",
+      "changedNotice": "Denne forespørselen ble endret etter at du åpnet den. Ingenting ble sendt. Den gjeldende versjonen vises nedenfor; sjekk den før du bekrefter.",
+      "changedGone": "Denne forespørselen ble endret og venter ikke lenger på en avgjørelse. Ingenting ble sendt.",
+      "openReview": "Åpne hele gjennomgangen, med meldingsteksten"
     }
   },
   "automations": {

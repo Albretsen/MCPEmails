@@ -692,11 +692,12 @@
       "attachmentsFromOriginal": "The original message's attachments, as sent",
       "recipientsAtSend": "This page could not read the recipients from the original message. They will be resolved when it is sent, so check the message text before approving.",
       "bccCount": "{count, plural, one {# hidden recipient} other {# hidden recipients}}",
+      "bccHint": "Hidden from the other recipients. Check every address before approving.",
       "attachmentCount": "{count, plural, one {# file} other {# files}}",
       "bodyTitle": "Message",
       "bodyTruncated": "This message is longer than 64 KB and has been clipped here. Open it in the dashboard to read all of it.",
       "bodyWithheldRole": "The message text is shown to workspace owners, admins and members. Your role can review the delivery details only.",
-      "bodyStoredWithProvider": "This request sends a draft that is stored with your email provider, so the text is not part of the request. Open the draft in your mail app to read it before deciding.",
+      "bodyStoredWithProvider": "This request was prepared before MCP Emails recorded a copy of the draft, so its text cannot be shown here, and an approved send of it will not go out. Reject it and ask your assistant to send the draft again.",
       "bodyDecryptFailed": "The stored message could not be decrypted, so it cannot be shown. Reject this request and ask your assistant to prepare it again.",
       "bodyAbsent": "This request has no message text.",
       "bodyHtmlShow": "Show HTML source",
@@ -744,7 +745,10 @@
         "expiredTitle": "This request expired",
         "expiredBody": "It was not decided in time, so it will not be sent. Ask your assistant to prepare it again if you still want it.",
         "decidedElsewhereTitle": "Already decided",
-        "decidedElsewhereBody": "Someone else, or another tab, decided this send while this page was open. Nothing changed just now. Open the dashboard to see the outcome."
+        "decidedElsewhereBody": "Someone else, or another tab, decided this send while this page was open. Nothing changed just now. Open the dashboard to see the outcome.",
+        "changedTitle": "This request changed after you opened it",
+        "changedBody": "Nothing was sent. The current version is shown below. Review it again before you decide.",
+        "changedLoading": "Nothing was sent. Loading the current version…"
       },
       "done": {
         "approvedTitle": "Approved. This email is on its way.",
@@ -776,7 +780,10 @@
       "statusApproved": "Approved",
       "statusRejected": "Rejected",
       "statusExpired": "Expired",
-      "statusCancelled": "Cancelled"
+      "statusCancelled": "Cancelled",
+      "changedNotice": "This request changed after you opened it. Nothing was sent. The current version is shown below; check it before you confirm.",
+      "changedGone": "This request changed and is no longer waiting for a decision. Nothing was sent.",
+      "openReview": "Open the full review, including the message text"
     }
   },
   "automations": {

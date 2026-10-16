@@ -692,11 +692,12 @@
       "attachmentsFromOriginal": "Los adjuntos del mensaje original, tal como se enviaron",
       "recipientsAtSend": "Esta página no pudo leer los destinatarios del mensaje original. Se resolverán en el momento del envío, así que revisa el texto del mensaje antes de aprobar.",
       "bccCount": "{count, plural, one {# destinatario oculto} other {# destinatarios ocultos}}",
+      "bccHint": "Oculto para los demás destinatarios. Revisa cada dirección antes de aprobar.",
       "attachmentCount": "{count, plural, one {# archivo} other {# archivos}}",
       "bodyTitle": "Mensaje",
       "bodyTruncated": "Este mensaje supera los 64 KB y se ha recortado aquí. Ábrelo en el panel para leerlo completo.",
       "bodyWithheldRole": "El texto del mensaje se muestra a propietarios, administradores y miembros del espacio. Tu rol solo puede revisar los datos de entrega.",
-      "bodyStoredWithProvider": "Esta solicitud envía un borrador guardado en tu proveedor de correo, así que el texto no forma parte de la solicitud. Abre el borrador en tu aplicación de correo antes de decidir.",
+      "bodyStoredWithProvider": "Esta solicitud se preparó antes de que MCP Emails guardara una copia del borrador, así que su texto no se puede mostrar aquí y, si se aprueba, no se enviará. Recházala y pide a tu asistente que vuelva a enviar el borrador.",
       "bodyDecryptFailed": "No se ha podido descifrar el mensaje guardado, así que no puede mostrarse. Rechaza esta solicitud y pide al asistente que la prepare de nuevo.",
       "bodyAbsent": "Esta solicitud no tiene texto de mensaje.",
       "bodyHtmlShow": "Ver el código HTML",
@@ -744,7 +745,10 @@
         "expiredTitle": "Esta solicitud caducó",
         "expiredBody": "No se decidió a tiempo, así que no se enviará. Pide al asistente que la prepare de nuevo si todavía la quieres.",
         "decidedElsewhereTitle": "Ya decidido",
-        "decidedElsewhereBody": "Otra persona, u otra pestaña, decidió este envío mientras esta página estaba abierta. Ahora no ha cambiado nada. Abre el panel para ver el resultado."
+        "decidedElsewhereBody": "Otra persona, u otra pestaña, decidió este envío mientras esta página estaba abierta. Ahora no ha cambiado nada. Abre el panel para ver el resultado.",
+        "changedTitle": "Esta solicitud cambió después de que la abrieras",
+        "changedBody": "No se envió nada. Abajo se muestra la versión actual. Revísala de nuevo antes de decidir.",
+        "changedLoading": "No se envió nada. Cargando la versión actual…"
       },
       "done": {
         "approvedTitle": "Aprobado. Este correo va en camino.",
@@ -776,7 +780,10 @@
       "statusApproved": "Aprobado",
       "statusRejected": "Rechazado",
       "statusExpired": "Caducado",
-      "statusCancelled": "Cancelado"
+      "statusCancelled": "Cancelado",
+      "changedNotice": "Esta solicitud cambió después de que la abrieras. No se envió nada. Abajo se muestra la versión actual; revísala antes de confirmar.",
+      "changedGone": "Esta solicitud cambió y ya no está esperando una decisión. No se envió nada.",
+      "openReview": "Abrir la revisión completa, con el texto del mensaje"
     }
   },
   "automations": {

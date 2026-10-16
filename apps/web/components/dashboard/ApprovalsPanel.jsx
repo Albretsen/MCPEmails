@@ -19,6 +19,9 @@ function requestErrorMessage(error) {
   return error instanceof Error && error.message ? error.message : 'Could not load approvals.';
 }
 
+/** A decision the server refused because the request changed after it was shown. */
+class ChangedError extends Error {}
+
 /**
  * Pending email send decisions. The page intentionally only shows the small
  * review summary supplied by the API, never an email body or attachment.
@@ -40,11 +43,14 @@ export function ApprovalsPanel({ userRole }) {
       const response = await fetch('/api/approvals', { cache: 'no-store' });
       const payload = await response.json().catch(() => ({}));
       if (!response.ok) throw new Error(payload.error || 'Could not load approvals.');
-      setItems(Array.isArray(payload.approvals) ? payload.approvals : []);
+      const pending = Array.isArray(payload.approvals) ? payload.approvals : [];
+      setItems(pending);
       setDecided(Array.isArray(payload.decided) ? payload.decided : []);
       setError('');
+      return pending;
     } catch (loadError) {
       setError(requestErrorMessage(loadError));
+      return null;
     } finally {
       setLoading(false);
     }
@@ -62,9 +68,16 @@ export function ApprovalsPanel({ userRole }) {
       const response = await fetch('/api/approvals', {
         method: 'PATCH',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ id: decisionItem.item.id, decision: decisionItem.decision }),
+        // The revision this dialog shows. An approve of any other version is
+        // refused as `changed` (src/lib/approvals/decide.ts).
+        body: JSON.stringify({
+          id: decisionItem.item.id,
+          decision: decisionItem.decision,
+          revision: decisionItem.item.revision ?? null,
+        }),
       });
       const payload = await response.json().catch(() => ({}));
+      if (!response.ok && payload.code === 'changed') throw new ChangedError(payload.error);
       if (!response.ok) throw new Error(payload.error || 'Could not record this decision.');
       setItems(current => current.filter(item => item.id !== decisionItem.item.id));
       // Refresh so the row reappears under "Recently decided" with its
@@ -78,6 +91,20 @@ export function ApprovalsPanel({ userRole }) {
       });
       setDecisionItem(null);
     } catch (decisionError) {
+      if (decisionError instanceof ChangedError) {
+        // Not a failure to retry blindly: the request now says something else.
+        // Reload it and keep the dialog open on the CURRENT version, so the
+        // person confirms what will actually be sent.
+        const fresh = await load();
+        const current = fresh?.find((item) => item.id === decisionItem.item.id) ?? null;
+        if (current) {
+          setDecisionItem({ item: current, decision: decisionItem.decision, changed: true });
+        } else {
+          setDecisionItem(null);
+          toast({ message: t('approvals.panel.changedGone'), variant: 'error' });
+        }
+        return;
+      }
       const message = requestErrorMessage(decisionError);
       toast({ message, variant: 'error' });
       setError(message);
@@ -157,7 +184,7 @@ export function ApprovalsPanel({ userRole }) {
 
       {!loading && decided.length ? <DecidedTable rows={decided} t={t} /> : null}
 
-      {decisionItem ? <DecisionDialog item={decisionItem.item} decision={decisionItem.decision} submitting={submitting} onCancel={() => !submitting && setDecisionItem(null)} onConfirm={decide} /> : null}
+      {decisionItem ? <DecisionDialog item={decisionItem.item} decision={decisionItem.decision} changed={decisionItem.changed === true} submitting={submitting} onCancel={() => !submitting && setDecisionItem(null)} onConfirm={decide} t={t} /> : null}
     </div>
   );
 }
@@ -248,8 +275,10 @@ function ApprovalListSkeleton() {
   );
 }
 
-function DecisionDialog({ item, decision, submitting, onCancel, onConfirm }) {
+function DecisionDialog({ item, decision, changed, submitting, onCancel, onConfirm, t }) {
   const approving = decision === 'approve';
+  const bcc = Array.isArray(item.bcc) ? item.bcc.filter(Boolean) : [];
+  const bccCount = Math.max(typeof item.summary?.bcc_count === 'number' ? item.summary.bcc_count : 0, bcc.length);
   return (
     <div className="scrim" onClick={onCancel}>
       <div className="modal" role="dialog" aria-modal="true" aria-labelledby="approval-decision-title" onClick={(event) => event.stopPropagation()} style={{ width: 460 }}>
@@ -263,11 +292,27 @@ function DecisionDialog({ item, decision, submitting, onCancel, onConfirm }) {
           </div>
         </div>
         <div className="modal-body">
+          {changed ? (
+            <div className="alert" role="alert" style={{ marginBottom: 12 }}>
+              {t('approvals.panel.changedNotice')}
+            </div>
+          ) : null}
           <dl style={{ margin: 0, display: 'grid', gap: 10 }}>
             <div><dt className="sub">Inbox</dt><dd style={{ margin: '2px 0 0' }}>{approvalLabel(item)}</dd></div>
             <div><dt className="sub">Recipients</dt><dd style={{ margin: '2px 0 0', overflowWrap: 'anywhere' }}>{recipientLabel(item)}</dd></div>
+            {bccCount > 0 ? (
+              <div>
+                <dt className="sub">{t('approvals.review.bcc')}</dt>
+                <dd style={{ margin: '2px 0 0', overflowWrap: 'anywhere' }}>
+                  {bcc.length ? bcc.join(', ') : t('approvals.review.bccCount', { count: bccCount })}
+                </dd>
+              </div>
+            ) : null}
             <div><dt className="sub">Subject</dt><dd style={{ margin: '2px 0 0' }}>{item.summary?.subject || '(no subject)'}</dd></div>
           </dl>
+          <p className="sub" style={{ margin: '12px 0 0' }}>
+            <Link href={`/approvals/${item.id}`}>{t('approvals.panel.openReview')}</Link>
+          </p>
         </div>
         <div className="modal-foot">
           <Btn variant="secondary" onClick={onCancel} disabled={submitting}>Cancel</Btn>

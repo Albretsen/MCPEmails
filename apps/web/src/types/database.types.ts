@@ -2995,6 +2995,7 @@ export type Database = {
           operation: string
           payload: Json
           payload_encrypted: boolean
+          revision: number
           send_at: string | null
           status: string
           summary: Json
@@ -3014,6 +3015,7 @@ export type Database = {
           operation: string
           payload: Json
           payload_encrypted?: boolean
+          revision?: number
           send_at?: string | null
           status?: string
           summary?: Json
@@ -3033,6 +3035,7 @@ export type Database = {
           operation?: string
           payload?: Json
           payload_encrypted?: boolean
+          revision?: number
           send_at?: string | null
           status?: string
           summary?: Json

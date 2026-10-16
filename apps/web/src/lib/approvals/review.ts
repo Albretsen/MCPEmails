@@ -35,6 +35,19 @@ import { canDecide, isExpired } from './decide';
  *     a real privilege escalation.
  *  5. The page is `force-dynamic`, `noindex`, and served `no-store`.
  *
+ * BCC — shown in full here (security review 2026-10-16, F-04-05), under the
+ * same role rule as the body. A count alone let a hidden exfiltration
+ * recipient be approved blind. The MCP channel (the card, and the model) still
+ * gets a count only; this page and the dashboard dialog are the signed-in
+ * surfaces where a send is approved, so this is where the addresses belong.
+ *
+ * DRAFT SENDS — a held `draft_send` now carries the server's own read of the
+ * draft (`draft_snapshot`, supabase/functions/mcp-server/draft-send-snapshot.ts),
+ * and the approved send goes out only while the draft still matches it. So
+ * the body IS shown for a draft send too. Only an approval queued before the
+ * snapshot existed still reads "stored with your provider" (and its approved
+ * send is refused).
+ *
  * BIDI / CONTROL CHARACTERS — see `@/lib/textSafety`.
  *
  * Every short field this page renders as a fact (recipients, subject,
@@ -102,7 +115,16 @@ export interface ApprovalReviewModel {
   expires_at: string | null;
   send_at: string | null;
   identity: ReviewIdentity;
-  recipients: { to: string[]; cc: string[]; bcc_count: number };
+  /**
+   * `bcc` lists the addresses for owner/admin/member and is empty for
+   * `viewer`, who sees the count only.
+   */
+  recipients: { to: string[]; cc: string[]; bcc: string[]; bcc_count: number };
+  /**
+   * The version of the request this model was built from. The page submits it
+   * with the decision, and an approve of any other version is refused.
+   */
+  revision: number | null;
   subject: string;
   attachment_count: number;
   /** A forward that relays the original's own attachments (none are arguments). */
@@ -186,6 +208,38 @@ function readPayload(approval: any): Record<string, unknown> | null {
   }
 }
 
+/** The `draft_snapshot` a held draft send carries, or null. */
+function draftSnapshotFrom(payload: Record<string, unknown> | null): Record<string, any> | null {
+  const raw = payload?.draft_snapshot;
+  return raw && typeof raw === 'object' && !Array.isArray(raw) ? (raw as Record<string, any>) : null;
+}
+
+function bccFromPayload(operation: unknown, payload: Record<string, unknown> | null): string[] {
+  const source = operation === 'draft_send' ? draftSnapshotFrom(payload)?.bcc : payload?.bcc;
+  return neutralizeList(source).filter(Boolean);
+}
+
+/**
+ * The Bcc addresses a reviewer with `role` may see on an approval row (as
+ * selected with `payload` and `payload_encrypted`). Empty for `viewer`, and
+ * empty when the payload cannot be read: the count is still shown from the
+ * summary, so a hidden recipient is never presented as none.
+ */
+export function reviewerBccFor(approval: any, role: string | null | undefined): string[] {
+  if (!role || role === 'viewer') return [];
+  return bccFromPayload(approval?.operation, readPayload(approval));
+}
+
+function draftAttachmentsFrom(snapshot: Record<string, any> | null): ReviewAttachment[] {
+  const raw = snapshot?.attachments;
+  if (!Array.isArray(raw)) return [];
+  return raw.slice(0, 25).map((entry: any) => ({
+    filename: typeof entry?.filename === 'string' ? neutralizeText(entry.filename) : 'attachment',
+    mime_type: typeof entry?.mime_type === 'string' ? neutralizeText(entry.mime_type) : null,
+    size_bytes: typeof entry?.size_bytes === 'number' ? entry.size_bytes : null,
+  }));
+}
+
 function attachmentsFrom(payload: Record<string, unknown> | null): ReviewAttachment[] {
   const raw = payload?.attachments;
   if (!Array.isArray(raw)) return [];
@@ -262,29 +316,32 @@ export async function loadApprovalForReview(
     decidedByLabel = neutralizeNullable(decider?.display_name || decider?.email || null);
   }
 
-  // `draft_send` stores only a draft id; the message itself lives with the
-  // provider and is never copied into the approval.
-  const contentLivesWithProvider = approval.operation === 'draft_send';
+  // `draft_send` is a draft that lives with the provider. Since 2026-10-16 the
+  // server records a snapshot of it when the send is held; an older approval
+  // has none, and only then is there nothing to show.
+  const isDraftSend = approval.operation === 'draft_send';
 
   let body: ReviewBody = { text: null, html: null, truncated: false, unavailable: 'absent' };
   if (role === 'viewer') {
     body = { text: null, html: null, truncated: false, unavailable: 'withheld_role' };
-  } else if (contentLivesWithProvider) {
-    body = { text: null, html: null, truncated: false, unavailable: 'stored_with_provider' };
   }
 
   let payload: Record<string, unknown> | null = null;
+  let draftSnapshot: Record<string, any> | null = null;
   if (role !== 'viewer') {
     payload = readPayload(approval);
+    draftSnapshot = isDraftSend ? draftSnapshotFrom(payload) : null;
     if (!payload && approval.payload) {
       body = { text: null, html: null, truncated: false, unavailable: 'decrypt_failed' };
-    } else if (payload && !contentLivesWithProvider) {
-      const text = clip(payload.body);
-      const html = clip(payload.html_body);
+    } else if (isDraftSend && !draftSnapshot) {
+      body = { text: null, html: null, truncated: false, unavailable: 'stored_with_provider' };
+    } else if (payload) {
+      const text = clip(draftSnapshot ? draftSnapshot.body_text : payload.body);
+      const html = clip(draftSnapshot ? draftSnapshot.body_html : payload.html_body);
       body = {
         text: text.value,
         html: html.value,
-        truncated: text.truncated || html.truncated,
+        truncated: text.truncated || html.truncated || draftSnapshot?.body_truncated === true,
         unavailable: text.value || html.value ? null : 'absent',
       };
     }
@@ -302,11 +359,15 @@ export async function loadApprovalForReview(
       '',
   );
 
-  const attachments = attachmentsFrom(payload);
-  const attachmentCount =
-    typeof summary.attachment_count === 'number'
+  const attachments = draftSnapshot ? draftAttachmentsFrom(draftSnapshot) : attachmentsFrom(payload);
+  // A draft's files are not arguments, so the summary counts none of them.
+  const attachmentCount = draftSnapshot
+    ? attachments.length
+    : typeof summary.attachment_count === 'number'
       ? (summary.attachment_count as number)
       : attachments.length;
+  const bcc = role === 'viewer' ? [] : bccFromPayload(approval.operation, payload);
+  const summaryBccCount = typeof summary.bcc_count === 'number' ? (summary.bcc_count as number) : 0;
 
   return {
     id: approval.id,
@@ -329,8 +390,12 @@ export async function loadApprovalForReview(
     recipients: {
       to,
       cc,
-      bcc_count: typeof summary.bcc_count === 'number' ? (summary.bcc_count as number) : 0,
+      bcc,
+      // Never fewer than the addresses listed: a payload whose Bcc outgrew the
+      // summary is shown as what will actually be sent.
+      bcc_count: Math.max(summaryBccCount, bcc.length),
     },
+    revision: typeof approval.revision === 'number' ? approval.revision : null,
     subject,
     attachment_count: attachmentCount,
     forward_carries_original: summary.forward_carries_original === true,

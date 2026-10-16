@@ -692,11 +692,12 @@
       "attachmentsFromOriginal": "Les pièces jointes du message d'origine, telles qu'envoyées",
       "recipientsAtSend": "Cette page n’a pas pu lire les destinataires du message d’origine. Ils seront résolus au moment de l’envoi : vérifiez le texte du message avant d’approuver.",
       "bccCount": "{count, plural, one {# destinataire masqué} other {# destinataires masqués}}",
+      "bccHint": "Masqué pour les autres destinataires. Vérifiez chaque adresse avant d’approuver.",
       "attachmentCount": "{count, plural, one {# fichier} other {# fichiers}}",
       "bodyTitle": "Message",
       "bodyTruncated": "Ce message dépasse 64 Ko et a été tronqué ici. Ouvrez-le dans le tableau de bord pour tout lire.",
       "bodyWithheldRole": "Le texte du message est visible par les propriétaires, administrateurs et membres de l'espace. Votre rôle ne peut consulter que les détails de remise.",
-      "bodyStoredWithProvider": "Cette demande envoie un brouillon stocké chez votre fournisseur de messagerie ; son texte ne fait donc pas partie de la demande. Ouvrez le brouillon dans votre application de messagerie avant de décider.",
+      "bodyStoredWithProvider": "Cette demande a été préparée avant que MCP Emails n’enregistre une copie du brouillon : son texte ne peut pas être affiché ici et, même approuvée, elle ne sera pas envoyée. Rejetez-la et demandez à votre assistant de renvoyer le brouillon.",
       "bodyDecryptFailed": "Le message stocké n'a pas pu être déchiffré et ne peut donc pas être affiché. Rejetez cette demande et demandez à votre assistant de la refaire.",
       "bodyAbsent": "Cette demande ne contient aucun texte de message.",
       "bodyHtmlShow": "Afficher la source HTML",
@@ -744,7 +745,10 @@
         "expiredTitle": "Cette demande a expiré",
         "expiredBody": "Elle n'a pas été traitée à temps et ne sera pas envoyée. Demandez à votre assistant de la refaire si vous le souhaitez toujours.",
         "decidedElsewhereTitle": "Déjà traité",
-        "decidedElsewhereBody": "Quelqu'un d'autre, ou un autre onglet, a traité cet envoi pendant que cette page était ouverte. Rien n'a changé à l'instant. Ouvrez le tableau de bord pour voir le résultat."
+        "decidedElsewhereBody": "Quelqu'un d'autre, ou un autre onglet, a traité cet envoi pendant que cette page était ouverte. Rien n'a changé à l'instant. Ouvrez le tableau de bord pour voir le résultat.",
+        "changedTitle": "Cette demande a changé depuis que vous l’avez ouverte",
+        "changedBody": "Rien n’a été envoyé. La version actuelle est affichée ci-dessous. Relisez-la avant de décider.",
+        "changedLoading": "Rien n’a été envoyé. Chargement de la version actuelle…"
       },
       "done": {
         "approvedTitle": "Approuvé. Cet e-mail est en route.",
@@ -776,7 +780,10 @@
       "statusApproved": "Approuvé",
       "statusRejected": "Rejeté",
       "statusExpired": "Expiré",
-      "statusCancelled": "Annulé"
+      "statusCancelled": "Annulé",
+      "changedNotice": "Cette demande a changé depuis que vous l’avez ouverte. Rien n’a été envoyé. La version actuelle est affichée ci-dessous ; vérifiez-la avant de confirmer.",
+      "changedGone": "Cette demande a changé et n’attend plus de décision. Rien n’a été envoyé.",
+      "openReview": "Ouvrir la vérification complète, avec le texte du message"
     }
   },
   "automations": {
