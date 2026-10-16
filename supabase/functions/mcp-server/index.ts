@@ -23946,6 +23946,7 @@ function bulkCallerFor(apiKey: ApiKeyRow) {
     workspace_id: apiKey.workspace_id,
     name: apiKey.name,
     inbox_ids: apiKey.inbox_ids,
+    scopes: apiKey.scopes,
   };
 }
 
