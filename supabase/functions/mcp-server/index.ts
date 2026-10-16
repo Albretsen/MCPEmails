@@ -477,6 +477,7 @@ import {
   type WorkBudget,
 } from "./bulk-budget.ts";
 import { ImapSession, releaseImapClient } from "./imap-session.ts";
+import { isReadOnlyScopeSet, runWithImapReadOnly } from "./imap-read-only.ts";
 import { ImapCallTimings, imapClockMs, imapTimingStore } from "./imap-timing.ts";
 import { hasTimeForNextFolder, imapSearchStoppedEarlyNote } from "./imap-search-budget.ts";
 import {
@@ -32092,7 +32093,13 @@ async function handleToolsCall(
   try {
     await activityInboxStore.run(logCtx, async () => {
     // ── Dispatch to the implemented tool handler ───────────────────────────
-    const outcome = await dispatchExecutor(dispatchName, rawArgs, apiKey);
+    // A read-only key opens IMAP mailboxes with EXAMINE, so the mail server
+    // itself refuses a write. Every other key runs exactly as before. Here and
+    // not in dispatchExecutor, which client-api also runs. See imap-read-only.ts.
+    const outcome = await runWithImapReadOnly(
+      isReadOnlyScopeSet(apiKey.scopes),
+      () => dispatchExecutor(dispatchName, rawArgs, apiKey),
+    );
     // What the draft editor recorded since the last draft result on this key
     // and inbox (card-activity.ts). HERE, on the MCP tools/call path, and not
     // in dispatchExecutor: client-api runs the same executors for the web

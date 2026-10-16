@@ -343,7 +343,7 @@ export class FakeImapServer {
   /** Octets of a client literal still to arrive, or -1 when none is expected. */
   #literalLeft = -1;
   #wake: (() => void) | null = null;
-  #selected: { mailbox: FakeMailbox; uids: number[] } | null = null;
+  #selected: { mailbox: FakeMailbox; uids: number[]; readOnly?: boolean } | null = null;
   #heldLogoutTag: string | null = null;
   /** The parameter list of the last ID command, once one has arrived. */
   idReceived: string | null = null;
@@ -587,6 +587,7 @@ export class FakeImapServer {
     if (store) {
       const selected = this.#selected;
       if (!selected) return `${tag} BAD No mailbox selected${CRLF}`;
+      if (selected.readOnly) return `${tag} NO [READ-ONLY] Mailbox is read-only${CRLF}`;
       const largest = selected.uids[selected.uids.length - 1] ?? 0;
       const flags = store[3].split(/\s+/).filter(Boolean);
       for (const uid of parseSet(store[1], largest)) {
@@ -607,6 +608,7 @@ export class FakeImapServer {
     if (move) {
       const selected = this.#selected;
       if (!selected) return `${tag} BAD No mailbox selected${CRLF}`;
+      if (selected.readOnly) return `${tag} NO [READ-ONLY] Mailbox is read-only${CRLF}`;
       const target = this.#mailbox(decodeModifiedUtf7(takeArgument(move[2]).value));
       if (!target) return `${tag} NO [TRYCREATE] Mailbox does not exist${CRLF}`;
       const largest = selected.uids[selected.uids.length - 1] ?? 0;
@@ -642,25 +644,32 @@ export class FakeImapServer {
       return `* ID ("name" "fake")${CRLF}` + ok("ID completed");
     }
 
-    if (verb === "SELECT" && this.#options.requireId && this.idReceived === null) {
+    // EXAMINE (RFC 3501 6.3.2) is SELECT opened read-only, which is what a
+    // read-only key sends (imap-read-only.ts). Answered the way real servers
+    // answer it: empty PERMANENTFLAGS, [READ-ONLY], and every later STORE or
+    // MOVE on the mailbox refused.
+    if ((verb === "SELECT" || verb === "EXAMINE") && this.#options.requireId && this.idReceived === null) {
       this.#selected = null;
-      return `${tag} NO SELECT Unsafe Login. Please contact kefu@188.com for help${CRLF}`;
+      return `${tag} NO ${verb} Unsafe Login. Please contact kefu@188.com for help${CRLF}`;
     }
 
-    if (verb === "SELECT") {
-      const name = decodeModifiedUtf7(takeArgument(command.slice(6)).value);
+    if (verb === "SELECT" || verb === "EXAMINE") {
+      const readOnly = verb === "EXAMINE";
+      const name = decodeModifiedUtf7(takeArgument(command.slice(verb.length)).value);
       const box = this.#mailbox(name);
       if (!box) {
         this.#selected = null;
         return `${tag} NO [NONEXISTENT] Unknown Mailbox${CRLF}`;
       }
-      this.#selected = { mailbox: box, uids: box.messages.map((m) => m.uid).sort((a, b) => a - b) };
+      this.#selected = { mailbox: box, uids: box.messages.map((m) => m.uid).sort((a, b) => a - b), readOnly };
       return `* FLAGS (\\Answered \\Flagged \\Deleted \\Seen \\Draft)${CRLF}` +
         (this.#options.omitExists ? "" : `* ${this.#selected.uids.length} EXISTS${CRLF}`) +
         `* 0 RECENT${CRLF}` +
         `* OK [UIDVALIDITY 1] UIDs valid${CRLF}` +
-        `* OK [PERMANENTFLAGS (\\Answered \\Flagged \\Deleted \\Seen \\Draft \\*)] Limited${CRLF}` +
-        ok("[READ-WRITE] SELECT completed");
+        (readOnly
+          ? `* OK [PERMANENTFLAGS ()] No permanent flags permitted${CRLF}` + ok("[READ-ONLY] EXAMINE completed")
+          : `* OK [PERMANENTFLAGS (\\Answered \\Flagged \\Deleted \\Seen \\Draft \\*)] Limited${CRLF}` +
+            ok("[READ-WRITE] SELECT completed"));
     }
 
     if (verb === "LIST") {
