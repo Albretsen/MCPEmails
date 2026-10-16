@@ -179,7 +179,7 @@ export function tidyPreview(text: string): string {
 // same replacements, same left-to-right, non-overlapping semantics as
 // `String.replace` with a /g regex), but find every closer with one forward
 // `indexOf` and never rescan a region. The legacy regex chain is kept verbatim
-// in text-extract.test.ts as an oracle and the two are fuzzed against each
+// in text-extract-linear.test.ts as an oracle and the two are fuzzed against each
 // other, and text-extract.golden.json holds the old output on realistic mail.
 //
 // Two regex facts the scanners depend on:

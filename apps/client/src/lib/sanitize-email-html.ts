@@ -86,6 +86,19 @@ const STYLE_PROPS = new Set([
 const STYLE_VALUE_DENY = /url\s*\(|expression|javascript:|@import|behavior|-moz-binding|[\\<>]|var\s*\(|image-set|attr\s*\(/i;
 const DISPLAY_OK = /^(block|inline|inline-block|table|table-row|table-cell|list-item|none)$/i;
 
+/**
+ * `value.replace(/\s*!important$/i, "")` without the regex. The regex retries
+ * `\s*` from every position of a whitespace run that is not followed by
+ * `!important`, which is quadratic: one 4 KB style value took ~20 ms, and a body
+ * has one per element. Same result: the trailing `!important` (ASCII case-
+ * insensitive) goes, and so does the whitespace run before it (`trimEnd` strips
+ * exactly the characters `\s` matches).
+ */
+export function stripTrailingImportant(value: string): string {
+  if (value.length < 10 || !/^!important$/i.test(value.slice(-10))) return value;
+  return value.slice(0, -10).trimEnd();
+}
+
 /** Filters a `style` attribute down to a harmless subset. Returns "" when nothing survives. */
 export function sanitizeStyle(raw: string): string {
   if (raw.length > 4096) return "";
@@ -94,7 +107,7 @@ export function sanitizeStyle(raw: string): string {
     const i = decl.indexOf(":");
     if (i < 0) continue;
     const prop = decl.slice(0, i).trim().toLowerCase();
-    const value = neutralizeText(decl.slice(i + 1)).trim().replace(/\s*!important$/i, "");
+    const value = stripTrailingImportant(neutralizeText(decl.slice(i + 1)).trim());
     if (!STYLE_PROPS.has(prop) || !value || value.length > 200) continue;
     if (STYLE_VALUE_DENY.test(value) || value.includes("/*")) continue;
     if (prop === "display" && !DISPLAY_OK.test(value)) continue;

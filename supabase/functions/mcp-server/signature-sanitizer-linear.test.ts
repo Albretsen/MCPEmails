@@ -77,6 +77,9 @@ Deno.test("dropped elements still close case-insensitively", () => {
   assertStringIncludes(sanitizeEmailHtml("<p>a<svg><<<<</svg>b</p>"), "b");
 });
 
+// 5 MB inputs, 5 s budget: each case takes ~50-350 ms on a dev Mac, and the old
+// code took minutes, so the margin survives a CI runner several times slower.
+const BUDGET_MS = 5000;
 const MB5 = 5 * 1024 * 1024;
 const fill = (unit: string) => unit.repeat(Math.ceil(MB5 / unit.length)).slice(0, MB5);
 
@@ -94,14 +97,36 @@ const ADVERSARIAL: Array<[string, string]> = [
 ];
 
 for (const [name, html] of ADVERSARIAL) {
-  Deno.test(`adversarial: ${name} sanitizes well under 1 s`, () => {
+  Deno.test(`adversarial: ${name} sanitizes inside the budget`, () => {
     let started = performance.now();
     sanitizeEmailHtml(html);
     let elapsed = performance.now() - started;
-    assert(elapsed < 1000, `email: ${name} took ${elapsed.toFixed(0)} ms`);
+    assert(elapsed < BUDGET_MS, `email: ${name} took ${elapsed.toFixed(0)} ms`);
     started = performance.now();
     sanitizeSignatureHtmlSafe(html);
     elapsed = performance.now() - started;
-    assert(elapsed < 1000, `signature: ${name} took ${elapsed.toFixed(0)} ms`);
+    assert(elapsed < BUDGET_MS, `signature: ${name} took ${elapsed.toFixed(0)} ms`);
   });
 }
+
+Deno.test("CSS functions: allow-list decisions are unchanged", () => {
+  const style = (css: string) => sanitizeSignatureHtmlSafe(`<span style="${css}">x</span>`);
+  assertStringIncludes(style("color: rgb(1, 2, 3)"), "color: rgb(1, 2, 3)");
+  assertStringIncludes(style("color: RGBA (1, 2, 3, 0.5)"), "color: RGBA (1, 2, 3, 0.5)");
+  assertStringIncludes(style("width: calc(100% - 2px)"), "width: calc(100% - 2px)");
+  assertStringIncludes(style("font-family: Helvetica Neue, sans-serif"), "Helvetica Neue");
+  assertEquals(style("color: var(--x)").includes("var"), false);
+  assertEquals(style("color: expression (alert(1))").includes("expression"), false);
+  assertEquals(style("width: rgb(1) min-content(2)").includes("width"), false);
+});
+
+Deno.test("CSS functions: long name runs are linear", () => {
+  // The old `/([a-zA-Z-]+)\s*\(/g` retried from every letter: 100 KB took 6.7 s.
+  for (const css of ["color: " + "a".repeat(100 * 1024), "color: " + "a-".repeat(50 * 1024) + "(1)", "color: " + "ab ".repeat(30 * 1024)]) {
+    const started = performance.now();
+    sanitizeSignatureHtmlSafe(`<span style="${css}">x</span>`);
+    sanitizeEmailHtml(`<span style="${css}">x</span>`);
+    const elapsed = performance.now() - started;
+    assert(elapsed < BUDGET_MS, `css ${css.slice(0, 20)}: ${elapsed.toFixed(0)} ms`);
+  }
+});

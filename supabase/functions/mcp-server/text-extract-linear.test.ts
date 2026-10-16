@@ -16,7 +16,8 @@
 //      tens of thousands of random markup soups built to hit every edge
 //      (unterminated openers, `<>`, quoted `>` inside href, `\s` beyond ASCII,
 //      non-ASCII case folding). Any difference fails.
-//   3. Adversarial: 5 MB of each pathological shape completes well under 1 s.
+//   3. Adversarial: 5 MB of each pathological shape completes in well under 5 s
+//      (~50-350 ms locally; the old code took minutes on 40 KB of one shape).
 //
 // Run: deno test --allow-read supabase/functions/mcp-server/text-extract-linear.test.ts
 // ---------------------------------------------------------------------------
@@ -203,6 +204,9 @@ Deno.test("oracle: anchor-heavy soups match the old regex chain exactly", () => 
 // 3. Adversarial input is linear
 // ---------------------------------------------------------------------------
 
+// 5 MB inputs, 5 s budget: each case takes ~50-350 ms on a dev Mac, and the old
+// code took minutes, so the margin survives a CI runner several times slower.
+const BUDGET_MS = 5000;
 const MB5 = 5 * 1024 * 1024;
 const fill = (unit: string, size = MB5) => unit.repeat(Math.ceil(size / unit.length)).slice(0, size);
 
@@ -225,12 +229,12 @@ const ADVERSARIAL: Array<[string, string]> = [
 ];
 
 for (const [name, html] of ADVERSARIAL) {
-  Deno.test(`adversarial: ${name} completes well under 1 s`, () => {
+  Deno.test(`adversarial: ${name} completes inside the budget`, () => {
     for (const keepLinks of [false, true]) {
       const started = performance.now();
       stripHtmlToText(html, { keepLinks });
       const elapsed = performance.now() - started;
-      assert(elapsed < 1000, `${name} (keepLinks ${keepLinks}) took ${elapsed.toFixed(0)} ms`);
+      assert(elapsed < BUDGET_MS, `${name} (keepLinks ${keepLinks}) took ${elapsed.toFixed(0)} ms`);
     }
   });
 }

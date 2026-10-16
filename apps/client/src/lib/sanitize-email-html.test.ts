@@ -6,6 +6,7 @@ import {
   buildEmailSrcdoc,
   sanitizeEmailHtml,
   sanitizeStyle,
+  stripTrailingImportant,
 } from "./sanitize-email-html";
 
 const clean = (html: string) => sanitizeEmailHtml(html).html;
@@ -120,6 +121,38 @@ describe("sanitizeStyle", () => {
     expect(sanitizeStyle("font-family: a\\62 c")).toBe("");
     expect(sanitizeStyle("display: flex; display: none")).toBe("display: none");
     expect(sanitizeStyle("color: red /* x */")).toBe("");
+  });
+});
+
+describe("sanitizeStyle !important handling", () => {
+  // The pre-2026-10-16 rule, kept as the oracle.
+  const legacy = (value: string) => value.replace(/\s*!important$/i, "");
+  it("strips a trailing !important exactly as the old regex did", () => {
+    expect(sanitizeStyle("color: red !important")).toBe("color: red");
+    expect(sanitizeStyle("color: red!IMPORTANT")).toBe("color: red");
+    expect(sanitizeStyle("color: red \u00a0\t !Important")).toBe("color: red");
+    expect(sanitizeStyle("color: red !important; font-weight: bold")).toBe("color: red; font-weight: bold");
+    expect(sanitizeStyle("color: !important")).toBe("");
+    expect(sanitizeStyle("color: red !importantx")).toBe("color: red !importantx");
+  });
+  it("matches the old regex on random values", () => {
+    const pieces = [" ", "\t", "\u00a0", "\u3000", "!", "important", "IMPORTANT", "!important", "red", "x", "İ", "K"];
+    let seed = 12345;
+    const rnd = () => ((seed = (Math.imul(seed, 1103515245) + 12345) >>> 0) / 4294967296);
+    for (let round = 0; round < 5000; round++) {
+      let value = "";
+      const count = 1 + Math.floor(rnd() * 8);
+      for (let i = 0; i < count; i++) value += pieces[Math.floor(rnd() * pieces.length)];
+      expect(stripTrailingImportant(value)).toBe(legacy(value));
+      expect(stripTrailingImportant(value.trim())).toBe(legacy(value.trim()));
+    }
+  });
+  it("is linear on long whitespace runs", () => {
+    const value = "color: a" + " ".repeat(4000) + "b";
+    const started = performance.now();
+    for (let i = 0; i < 200; i++) sanitizeStyle(value);
+    // The old regex took ~20 ms per call here, 4 s for 200.
+    expect(performance.now() - started).toBeLessThan(1000);
   });
 });
 

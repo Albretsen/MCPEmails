@@ -185,8 +185,28 @@ const ALLOWED_CSS_FUNCTIONS = new Set(["rgb", "rgba", "hsl", "hsla", "calc"]);
  */
 const SAFE_STYLE_VALUE = /^[a-zA-Z0-9\s#%.,()/'"+!_-]*$/;
 
-/** Matches `name(` so every CSS function can be checked against the allow-list. */
-const CSS_FUNCTION = /([a-zA-Z-]+)\s*\(/g;
+/**
+ * Every `name(` in a declaration value, so each CSS function can be checked
+ * against the allow-list: a maximal run of `[a-zA-Z-]` (CSS_NAME_RUN) followed
+ * by `\s*\(` (CSS_CALL_OPEN, tested once at the run's end).
+ *
+ * This was one regex, `/([a-zA-Z-]+)\s*\(/g`, which finds the same names but
+ * retries from every letter of a run that is NOT followed by `(`: 100 KB of
+ * letters took 6.7 s. Each run is now tried once.
+ */
+const CSS_NAME_RUN = /[a-zA-Z-]+/g;
+const CSS_CALL_OPEN = /\s*\(/y;
+
+function cssFunctionsAllowed(value) {
+  CSS_NAME_RUN.lastIndex = 0;
+  for (let run = CSS_NAME_RUN.exec(value); run; run = CSS_NAME_RUN.exec(value)) {
+    CSS_CALL_OPEN.lastIndex = run.index + run[0].length;
+    if (CSS_CALL_OPEN.test(value) && !ALLOWED_CSS_FUNCTIONS.has(run[0].toLowerCase())) {
+      return false;
+    }
+  }
+  return true;
+}
 
 /**
  * An entity reference this module did not decode. Any URL or style value still
@@ -399,17 +419,7 @@ export function sanitizeStyleAttribute(style, allowedProps = ALLOWED_STYLE_PROPS
     if (!allowedProps.has(prop)) continue;
     if (!SAFE_STYLE_VALUE.test(value)) continue;
 
-    let functionsOk = true;
-    CSS_FUNCTION.lastIndex = 0;
-    let match = CSS_FUNCTION.exec(value);
-    while (match) {
-      if (!ALLOWED_CSS_FUNCTIONS.has(match[1].toLowerCase())) {
-        functionsOk = false;
-        break;
-      }
-      match = CSS_FUNCTION.exec(value);
-    }
-    if (!functionsOk) continue;
+    if (!cssFunctionsAllowed(value)) continue;
 
     kept.push(`${prop}: ${value}`);
   }

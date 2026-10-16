@@ -99,6 +99,9 @@ const SUITES = [
   // sentence the card sends the model, and the decisions behind a deferred
   // draft body (where it comes from, and which `draft_read` answer is adopted).
   ["model context", "model-context.test.mjs"],
+  // DOM-free: the layer-1 deny-list in src/sanitize.ts against its old regex
+  // chain (kept verbatim as an oracle), plus 512 KB timing on hostile shapes.
+  ["sanitize layer 1", "sanitize.test.mjs"],
 ];
 
 const outcomes = [];

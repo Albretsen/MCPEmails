@@ -340,6 +340,9 @@ test('email output past the cap is identical however much input follows', () => 
   assert.equal(sanitizeEmailServer(html.slice(0, Math.floor(2.5 * EMAIL_HTML_MAX_LENGTH))), out);
 });
 
+// 5 MB inputs, 5 s budget: each case takes ~50-350 ms on a dev Mac, and the old
+// code took minutes, so the margin survives a CI runner several times slower.
+const BUDGET_MS = 5000;
 const MB5 = 5 * 1024 * 1024;
 const fill = (unit) => unit.repeat(Math.ceil(MB5 / unit.length)).slice(0, MB5);
 
@@ -350,12 +353,31 @@ for (const [name, html] of [
   ['<svg> then 5 MB of <', '<svg>' + fill('<')],
   ['5 MB of <a<a', fill('<a<a')],
 ]) {
-  test(`adversarial: ${name} sanitizes well under 1 s`, () => {
+  test(`adversarial: ${name} sanitizes inside the budget`, () => {
     let started = performance.now();
     sanitizeEmailServer(html);
-    assert.ok(performance.now() - started < 1000, `email: ${name}`);
+    assert.ok(performance.now() - started < BUDGET_MS, `email: ${name}`);
     started = performance.now();
     signatureOrEmpty(html);
-    assert.ok(performance.now() - started < 1000, `signature: ${name}`);
+    assert.ok(performance.now() - started < BUDGET_MS, `signature: ${name}`);
   });
 }
+
+test('CSS functions: allow-list decisions are unchanged', () => {
+  const style = (css) => signatureOrEmpty(`<span style="${css}">x</span>`);
+  assert.ok(style('color: rgb(1, 2, 3)').includes('color: rgb(1, 2, 3)'));
+  assert.ok(style('color: RGBA (1, 2, 3, 0.5)').includes('color: RGBA (1, 2, 3, 0.5)'));
+  assert.ok(style('width: calc(100% - 2px)').includes('width: calc(100% - 2px)'));
+  assert.ok(style('font-family: Helvetica Neue, sans-serif').includes('Helvetica Neue'));
+  assert.equal(style('color: var(--x)').includes('var'), false);
+  assert.equal(style('color: expression (alert(1))').includes('expression'), false);
+  assert.equal(style('width: rgb(1) min-content(2)').includes('width'), false);
+});
+
+test('CSS functions: long name runs are linear', () => {
+  for (const css of ['color: ' + 'a'.repeat(100 * 1024), 'color: ' + 'a-'.repeat(50 * 1024) + '(1)', 'color: ' + 'ab '.repeat(30 * 1024)]) {
+    const started = performance.now();
+    signatureOrEmpty(`<span style="${css}">x</span>`);
+    assert.ok(performance.now() - started < BUDGET_MS, `css ${css.slice(0, 20)}`);
+  }
+});
