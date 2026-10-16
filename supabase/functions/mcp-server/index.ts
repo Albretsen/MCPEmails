@@ -32080,8 +32080,16 @@ async function resolveScheduledPayload(row: {
  * 20261016160400 any signed-in user could INSERT rows over PostgREST), so the
  * dispatcher refuses it instead of sending it. The trigger added by that
  * migration refuses such rows at write time as well.
+ *
+ * Why 06-25 and not the migration's date: the encryption commit landed
+ * 2026-06-23 13:32 +0200 and the edge function was deployed after that, so the
+ * old code kept writing legitimate plaintext rows for part of 06-23 (and
+ * possibly into 06-24). Two days of slack keeps every one of those sendable.
+ * The slack costs nothing: with INSERT revoked from anon/authenticated
+ * (20261016160400) nobody outside service-role code can create a row at all,
+ * and created_at defaults to now(), so no new row can ever fall before it.
  */
-const PLAINTEXT_SCHEDULED_PAYLOAD_CUTOFF_MS = Date.parse("2026-06-23T00:00:00Z");
+const PLAINTEXT_SCHEDULED_PAYLOAD_CUTOFF_MS = Date.parse("2026-06-25T00:00:00Z");
 
 const UUID_SHAPE = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
 
@@ -32103,6 +32111,18 @@ function scheduledApprovalMarkerId(row: {
   const id = (p as Record<string, unknown>)["approval_id"];
   if (keys.length !== 1 || typeof id !== "string" || !UUID_SHAPE.test(id)) return null;
   return id;
+}
+
+/**
+ * Nothing was sent and the row must wait for an operator fix (today: the
+ * 20261016160400 migration). Always deferred back to 'pending', with no time
+ * limit, because failing it would destroy a send a human approved.
+ */
+class ScheduledDispatchHeld extends Error {
+  constructor(message: string) {
+    super(message);
+    this.name = "ScheduledDispatchHeld";
+  }
 }
 
 /** Outcome of re-running an approved operation, as the execute* handlers report it. */
@@ -32388,10 +32408,19 @@ async function handleScheduledDispatch(
         // what lets a provable non-send (deferred back to 'pending' below) be
         // retried on the next tick.
         if (!("dispatch_scheduled_send_id" in approval)) {
-          // Column absent: the 20261016160400 migration has not been applied.
-          // Fail closed rather than dispatch without the replay guard.
-          throw new Error(
-            "approved request cannot be dispatched: send_approvals.dispatch_scheduled_send_id is missing (apply migration 20261016160400)",
+          // Column absent: this function was deployed before migration
+          // 20261016160400 (or a self-host schema predates it). Never dispatch
+          // without the replay guard, but never DESTROY an approved send over
+          // deploy order either: nothing has been sent, so defer the row back
+          // to 'pending' and let the next tick try again once the column
+          // exists. Held rows are deferred WITHOUT the 15-minute window: a
+          // migration applied hours after the deploy must still find them.
+          console.error("[dispatch] scheduled_send_approval_binding_column_missing", {
+            scheduled_send_id: row.id,
+            approval_id: approval.id,
+          });
+          throw new ScheduledDispatchHeld(
+            "approved request held: send_approvals.dispatch_scheduled_send_id is missing (apply migration 20261016160400)",
           );
         }
         const replayRefusal =
@@ -32530,7 +32559,10 @@ async function handleScheduledDispatch(
       const dueMs = row.send_at ? Date.parse(row.send_at as string) : Number.NaN;
       const withinDeferWindow = Number.isFinite(dueMs) &&
         Date.now() - dueMs < SCHEDULED_SEND_DEFER_WINDOW_MS;
-      if (err instanceof SmtpNotSentError && err.retryable && withinDeferWindow) {
+      if (
+        err instanceof ScheduledDispatchHeld ||
+        (err instanceof SmtpNotSentError && err.retryable && withinDeferWindow)
+      ) {
         console.warn(`[dispatch] scheduled_send ${row.id} deferred (nothing sent):`, detail);
         await db
           .from("scheduled_sends")

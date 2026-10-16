@@ -38,7 +38,8 @@
 --      same row (deferred after a provable non-send) still passes.
 --
 -- DEPLOY ORDER: apply this migration BEFORE deploying the mcp-server version
--- that reads dispatch_scheduled_send_id, or approved sends fail closed.
+-- that reads dispatch_scheduled_send_id. If the function goes first, approved
+-- sends are held (deferred back to 'pending', nothing sent) until it lands.
 --
 -- Idempotent: safe to re-run.
 -- ============================================================

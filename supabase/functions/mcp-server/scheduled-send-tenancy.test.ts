@@ -393,6 +393,22 @@ Deno.test("a marker with extra fields is not a marker, and is refused", async ()
   assertStringIncludes(String(sendRow(h.tables, SEND_A).error_detail), "unencrypted message payload");
 });
 
+Deno.test("the plaintext cutoff sits after the encryption deploy (2026-06-25T00:00Z)", async () => {
+  // The encryption commit landed 2026-06-23 13:32 +0200 and deployed after,
+  // so plaintext rows written on 06-23/06-24 are legitimate legacy rows.
+  const legacy = harness({
+    scheduled_sends: [marker(SEND_A, { payload: MESSAGE, created_at: "2026-06-24T23:59:59.000Z" })],
+    inboxes: [inbox(INBOX_VICTIM, WS_VICTIM)],
+  });
+  assertEquals((await legacy.run()).dispatched, 1);
+  const after = harness({
+    scheduled_sends: [marker(SEND_A, { payload: MESSAGE, created_at: "2026-06-25T00:00:00.000Z" })],
+    inboxes: [inbox(INBOX_VICTIM, WS_VICTIM)],
+  });
+  assertEquals((await after.run()).errored, 1);
+  assertEquals(after.calls.sent.length, 0);
+});
+
 Deno.test("a legacy plaintext row from before payload encryption still sends", async () => {
   const h = harness({
     scheduled_sends: [marker(SEND_A, { payload: MESSAGE, created_at: "2026-06-01T00:00:00.000Z" })],
@@ -506,18 +522,36 @@ Deno.test("re-running the dispatcher after an approved send does not send it aga
   assertEquals(sendRow(tables, SEND_B).status, "error");
 });
 
-Deno.test("a database without the binding column fails closed", async () => {
+Deno.test("a database without the binding column holds the approved send instead of destroying it", async () => {
+  // The function deployed before migration 20261016160400. It must not
+  // dispatch without the replay guard, and it must not fail a send a human
+  // approved either: the row goes back to 'pending' and waits for the column,
+  // even when it is long past the usual 15-minute defer window.
   const approval = await approvalRow();
   delete approval.dispatch_scheduled_send_id;
-  const h = harness({
-    scheduled_sends: [marker(SEND_A)],
+  const tables = {
+    scheduled_sends: [marker(SEND_A, { send_at: "2026-01-01T00:00:00.000Z" })],
     inboxes: [inbox(INBOX_VICTIM, WS_VICTIM)],
     send_approvals: [approval],
     api_keys: [apiKey(KEY_VICTIM, WS_VICTIM)],
-  });
-  await h.run();
+  };
+  const h = harness(tables);
+  const first = await h.run();
+  assertEquals(first.deferred, 1);
+  assertEquals(first.errored, 0);
   assertEquals(h.calls.approved.length, 0);
-  assertStringIncludes(String(sendRow(h.tables, SEND_A).error_detail), "20261016160400");
+  const row = sendRow(tables, SEND_A);
+  assertEquals(row.status, "pending");
+  assertStringIncludes(String(row.error_detail), "deferred, nothing was sent");
+  assertStringIncludes(String(row.error_detail), "20261016160400");
+
+  // The migration lands: the column appears, and the same row now sends once.
+  approval.dispatch_scheduled_send_id = null;
+  const second = await h.run();
+  assertEquals(second.dispatched, 1);
+  assertEquals(h.calls.approved.length, 1);
+  assertEquals(row.status, "sent");
+  assertEquals(approval.dispatch_scheduled_send_id, SEND_A);
 });
 
 // ═══════════════════════════════════════════════════════════════════════════
