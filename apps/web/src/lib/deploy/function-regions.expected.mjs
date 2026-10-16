@@ -136,6 +136,7 @@ export const ROUTES = [
   ['app/[locale]/docs/clients/page.js', 'iad1', '0', '-'],
   ['app/[locale]/docs/page.js', 'iad1', '0', '-'],
   ['app/[locale]/docs/providers/page.js', 'iad1', '0', '-'],
+  ['app/[locale]/docs/read-only-access/page.js', 'iad1', '0', '-'],
   ['app/[locale]/email-mcp-servers-compared/page.js', 'iad1', '0', '-'],
   ['app/[locale]/for/business/page.js', 'iad1', '0', '-'],
   ['app/[locale]/for/founders/page.js', 'iad1', '0', '-'],
