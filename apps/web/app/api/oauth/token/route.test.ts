@@ -462,3 +462,22 @@ test('endChain logs a failed revoke by name, still refuses, and still ends the r
   );
   assert.equal(liveChains().length, 0, 'the refresh rows are still revoked');
 });
+
+test('verify: two truly concurrent redemptions of one code mint exactly one key', async () => {
+  seedCode(['read:email', 'send:email']);
+  const results = await Promise.all([redeem(), redeem(), redeem()]);
+  const statuses = results.map((r) => r.status).sort();
+  assert.deepEqual(statuses, [200, 400, 400]);
+  assert.equal(db.table('api_keys').length, 1);
+  assert.equal(db.table('oauth_refresh_tokens').length, 1);
+  assert.equal(db.table('oauth_auth_codes').length, 0);
+});
+
+test('verify: a code refused for non-membership stays refused after the user is re-added', async () => {
+  seedBase(null);
+  seedCode(['read:email']);
+  assert.equal((await redeem()).status, 400);
+  db.seed('workspace_members', [{ workspace_id: WS, user_id: USER, role: 'owner' }]);
+  assert.equal((await redeem()).status, 400);
+  assert.equal(db.table('api_keys').length, 0);
+});
