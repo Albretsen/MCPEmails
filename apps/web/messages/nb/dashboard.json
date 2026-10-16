@@ -985,5 +985,11 @@
       "confirm": "Slett automatisering",
       "deleting": "Sletter…"
     }
+  },
+  "workflows": {
+    "bulkRuns": {
+      "viewerNotice": "Du kan følge store jobber her, men bare en eier, administrator eller et medlem i arbeidsområdet kan stoppe dem.",
+      "stopViewerTitle": "Lesere kan ikke stoppe jobber"
+    }
   }
 }

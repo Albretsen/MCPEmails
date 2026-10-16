@@ -985,5 +985,11 @@
       "confirm": "Delete automation",
       "deleting": "Deleting…"
     }
+  },
+  "workflows": {
+    "bulkRuns": {
+      "viewerNotice": "You can watch large-work runs here, but only a workspace owner, admin or member can stop one.",
+      "stopViewerTitle": "Viewers cannot stop runs"
+    }
   }
 }
