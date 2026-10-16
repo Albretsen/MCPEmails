@@ -66,6 +66,7 @@ type Row = Record<string, unknown>;
 function seedBase(role: string | null): void {
   db = new FakeSupabase();
   db.seed('oauth_clients', [{ client_id: CLIENT, deactivated_at: null }]);
+  db.seed('workspaces', [{ id: WS, deleted_at: null }]);
   if (role) db.seed('workspace_members', [{ workspace_id: WS, user_id: USER, role }]);
 }
 
@@ -256,9 +257,9 @@ test('demoted to viewer: a write-only chain is refused and ended', async () => {
   assert.equal(liveChains().length, 0);
 });
 
-test('a transient membership lookup failure leaves the chain alone for a retry', async () => {
+test('a membership lookup that fails twice in a row leaves the chain alone for a retry', async () => {
   seedChain(['read:email']);
-  db.failOnce('workspace_members', { message: 'connection reset' });
+  db.failTimes('workspace_members', { message: 'connection reset' }, 2);
   const res = await refresh();
   assert.equal(res.status, 500);
   assert.equal(liveChains().length, 1);
@@ -318,7 +319,8 @@ test('verify: a viewer already inside the allow-list is not narrowed and keeps i
 
 test('verify: after a transient membership failure, the SAME refresh token succeeds on retry', async () => {
   const keyId = seedChain(['read:email', 'send:email']);
-  db.failOnce('workspace_members', { message: 'connection reset' });
+  // Two failures: one more than the built-in retry absorbs.
+  db.failTimes('workspace_members', { message: 'connection reset' }, 2);
   assert.equal((await refresh()).status, 500);
   const res = await refresh();
   assert.equal(res.status, 200);
@@ -332,11 +334,12 @@ test('verify: after a transient membership failure, the SAME refresh token succe
 
 test('verify: a transient membership failure on code redemption is a 500 that mints nothing', async () => {
   seedCode(['read:email', 'send:email']);
-  db.failOnce('workspace_members', { message: 'connection reset' });
+  db.failTimes('workspace_members', { message: 'connection reset' }, 2);
   const res = await redeem();
   assert.equal(res.status, 500);
   assert.equal(db.table('api_keys').length, 0);
   assert.equal(db.table('oauth_refresh_tokens').length, 0);
+  assert.equal(db.table('oauth_auth_codes').length, 1, 'follow-up 2: the code is NOT consumed by a transient failure');
 });
 
 test('verify: ending a removed member\'s chain leaves a colleague\'s key and chain alone', async () => {
@@ -371,4 +374,91 @@ test('verify: owner can refresh repeatedly with each rotated token', async () =>
   assert.equal(liveKeys().length, 1);
   assert.equal(liveKeys()[0].id, keyId);
   assert.equal(liveChains().length, 1);
+});
+
+// ── Follow-ups: retry, check-before-consume, soft-deleted workspace, endChain errors ──
+
+test('a single membership-lookup blip is absorbed: refresh succeeds first time', async () => {
+  const keyId = seedChain(['read:email', 'send:email']);
+  db.failOnce('workspace_members', { message: 'connection reset' });
+  const res = await refresh();
+  assert.equal(res.status, 200);
+  assert.equal(liveKeys()[0].id, keyId);
+  assert.equal(liveChains().length, 1);
+});
+
+test('a single workspace-lookup blip is absorbed on code redemption', async () => {
+  seedCode(['read:email']);
+  db.failOnce('workspaces', { message: 'connection reset' });
+  const res = await redeem();
+  assert.equal(res.status, 200);
+  assert.equal(liveKeys().length, 1);
+});
+
+test('after a transient failure, the SAME code redeems on retry (no new consent needed), exactly once', async () => {
+  seedCode(['read:email', 'send:email']);
+  db.failTimes('workspace_members', { message: 'connection reset' }, 2);
+  assert.equal((await redeem()).status, 500);
+  const res = await redeem();
+  assert.equal(res.status, 200);
+  assert.equal(liveKeys().length, 1);
+  assert.equal(db.table('oauth_auth_codes').length, 0);
+  const replay = await redeem();
+  assert.equal(replay.status, 400, 'still single-use');
+  assert.equal(db.table('api_keys').length, 1);
+});
+
+test('a code consumed concurrently between the check and the delete mints nothing', async () => {
+  seedCode(['read:email']);
+  const realFrom = db.from.bind(db);
+  (db as unknown as { from: (t: string) => unknown }).from = (t: string) => {
+    const q = realFrom(t);
+    if (t !== 'oauth_auth_codes') return q;
+    return {
+      ...q,
+      delete: () => {
+        db.table('oauth_auth_codes').length = 0; // the other request won the race
+        return realFrom(t).delete();
+      },
+    };
+  };
+  const res = await redeem();
+  assert.equal(res.status, 400);
+  assert.equal((await res.json() as { error: string }).error, 'invalid_grant');
+  assert.equal(db.table('api_keys').length, 0);
+  assert.equal(db.table('oauth_refresh_tokens').length, 0);
+});
+
+test('soft-deleted workspace: code redemption is refused and the code is consumed', async () => {
+  db.table('workspaces')[0].deleted_at = new Date().toISOString();
+  seedCode(['read:email']);
+  const res = await redeem();
+  assert.equal(res.status, 400);
+  assert.equal((await res.json() as { error: string }).error, 'invalid_grant');
+  assert.equal(db.table('api_keys').length, 0);
+  assert.equal(db.table('oauth_auth_codes').length, 0);
+});
+
+test('soft-deleted workspace: refresh is refused and the chain and key end', async () => {
+  seedChain(['read:email', 'send:email']);
+  db.table('workspaces')[0].deleted_at = new Date().toISOString();
+  const res = await refresh();
+  assert.equal(res.status, 400);
+  assert.equal(liveKeys().length, 0);
+  assert.equal(liveChains().length, 0);
+});
+
+test('endChain logs a failed revoke by name, still refuses, and still ends the rest', async (t) => {
+  seedBase(null);
+  seedChain(['read:email', 'send:email']);
+  db.failOnce('api_keys', { message: 'disk full' });
+  const logged: unknown[][] = [];
+  t.mock.method(console, 'error', (...args: unknown[]) => { logged.push(args); });
+  const res = await refresh();
+  assert.equal(res.status, 400);
+  assert.ok(
+    logged.some((a) => a[0] === 'oauth_refresh_end_chain_error' && a[1] === 'api_key' && a[2] === 'disk full'),
+    JSON.stringify(logged),
+  );
+  assert.equal(liveChains().length, 0, 'the refresh rows are still revoked');
 });

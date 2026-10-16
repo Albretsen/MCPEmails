@@ -66,6 +66,7 @@ test('exceedsViewerToolScopes ignores identity scopes and flags any write scope'
 
 function db(role: string | null) {
   const fake = new FakeSupabase();
+  fake.seed('workspaces', [{ id: WS, deleted_at: null }]);
   if (role) fake.seed('workspace_members', [{ workspace_id: WS, user_id: USER, role }]);
   // A membership of the same user in ANOTHER workspace must not count.
   fake.seed('workspace_members', [{ workspace_id: 'ws-other', user_id: USER, role: 'owner' }]);
@@ -96,8 +97,35 @@ test('checkGrantForMember: a non-member is refused, membership elsewhere does no
 
 test('checkGrantForMember: a lookup error is reported as such, not as non-membership', async () => {
   const fake = db('owner');
-  fake.failOnce('workspace_members', { message: 'connection reset' });
+  fake.failTimes('workspace_members', { message: 'connection reset' }, 2);
   const r = await checkGrantForMember(asClient(fake), { workspaceId: WS, userId: USER, scopes: ['read:email'] });
   assert.equal(r.ok, false);
   assert.equal(!r.ok && r.reason, 'lookup_failed');
+});
+
+test('checkGrantForMember: one transient error on each read is retried and succeeds', async () => {
+  const fake = db('owner');
+  fake.failOnce('workspace_members', { message: 'blip' });
+  fake.failOnce('workspaces', { message: 'blip' });
+  const r = await checkGrantForMember(asClient(fake), { workspaceId: WS, userId: USER, scopes: ['read:email'] });
+  assert.equal(r.ok, true);
+});
+
+test('checkGrantForMember: a workspace read failing twice is lookup_failed', async () => {
+  const fake = db('owner');
+  fake.failTimes('workspaces', { message: 'down' }, 2);
+  const r = await checkGrantForMember(asClient(fake), { workspaceId: WS, userId: USER, scopes: ['read:email'] });
+  assert.equal(!r.ok && r.reason, 'lookup_failed');
+});
+
+test('checkGrantForMember: a soft-deleted or missing workspace is refused even for its owner', async () => {
+  const deleted = db('owner');
+  deleted.table('workspaces')[0].deleted_at = '2026-10-16T00:00:00.000Z';
+  const r1 = await checkGrantForMember(asClient(deleted), { workspaceId: WS, userId: USER, scopes: ['read:email'] });
+  assert.equal(!r1.ok && r1.reason, 'workspace_deleted');
+
+  const missing = db('owner');
+  missing.tables.set('workspaces', []);
+  const r2 = await checkGrantForMember(asClient(missing), { workspaceId: WS, userId: USER, scopes: ['read:email'] });
+  assert.equal(!r2.ok && r2.reason, 'workspace_deleted');
 });

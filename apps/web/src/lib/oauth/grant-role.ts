@@ -108,34 +108,84 @@ export type GrantCheck =
     }
   | {
       ok: false;
-      reason: 'not_member' | 'no_allowed_scopes' | 'lookup_failed';
+      reason: 'not_member' | 'workspace_deleted' | 'no_allowed_scopes' | 'lookup_failed';
       message: string;
     };
+
+interface LookupResult<T> {
+  value: T;
+  error: { message: string } | null;
+}
+
+/**
+ * Run a read, and run it ONE more time if it errors (or throws). A single
+ * database blip must not fail a legitimate member's refresh: the client would
+ * surface that as a broken connection. Twice in a row is reported as a lookup
+ * failure, which the token endpoint answers with server_error without touching
+ * the grant, so the client can still retry later.
+ */
+async function withOneRetry<T>(read: () => Promise<LookupResult<T>>, empty: T): Promise<LookupResult<T>> {
+  let last: LookupResult<T> = { value: empty, error: null };
+  for (let attempt = 0; attempt < 2; attempt++) {
+    try {
+      last = await read();
+    } catch (err) {
+      last = { value: empty, error: { message: err instanceof Error ? err.message : String(err) } };
+    }
+    if (!last.error) return last;
+  }
+  return last;
+}
 
 /**
  * Decide whether a grant for (workspaceId, userId) with `scopes` may be issued
  * or rotated right now, and with which scopes. Used by /api/oauth/token on
  * both grants; never throws.
+ *
+ * Refused when the user is no longer a member, when the workspace itself is
+ * soft-deleted (or gone), and when the role leaves no tool scope. Each read is
+ * retried once on a transient error.
  */
 export async function checkGrantForMember(
   db: SupabaseClient<Database>,
   args: { workspaceId: string; userId: string; scopes: readonly string[] },
 ): Promise<GrantCheck> {
-  let lookup: RoleLookup;
-  try {
-    lookup = await lookupWorkspaceRole(db, args.workspaceId, args.userId);
-  } catch (err) {
-    lookup = { role: null, error: { message: err instanceof Error ? err.message : String(err) } };
-  }
+  const membership = await withOneRetry(async () => {
+    const r = await lookupWorkspaceRole(db, args.workspaceId, args.userId);
+    return { value: r.role, error: r.error };
+  }, null as string | null);
 
-  if (lookup.error) {
-    return { ok: false, reason: 'lookup_failed', message: lookup.error.message };
+  if (membership.error) {
+    return { ok: false, reason: 'lookup_failed', message: membership.error.message };
   }
+  const lookup = { role: membership.value };
   if (!lookup.role) {
     return {
       ok: false,
       reason: 'not_member',
       message: 'The user who authorized this connection is no longer a member of the workspace.',
+    };
+  }
+
+  // A soft-deleted workspace keeps its membership rows, so membership alone
+  // does not prove the workspace still exists. A missing row is refused too.
+  const workspace = await withOneRetry(async () => {
+    const { data, error } = await db
+      .from('workspaces')
+      .select('id, deleted_at')
+      .eq('id', args.workspaceId)
+      .maybeSingle();
+    return { value: (data as { deleted_at: string | null } | null) ?? null, error };
+  }, null as { deleted_at: string | null } | null);
+
+  if (workspace.error) {
+    return { ok: false, reason: 'lookup_failed', message: workspace.error.message };
+  }
+  if (!workspace.value || workspace.value.deleted_at) {
+    return {
+      ok: false,
+      reason: 'workspace_deleted',
+      message: 'The workspace this connection belongs to has been deleted.',
     };
   }
 

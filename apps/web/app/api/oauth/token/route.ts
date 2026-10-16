@@ -123,14 +123,25 @@ async function endChain(
   apiKeyId: string | null,
 ): Promise<void> {
   const stamp = new Date().toISOString();
-  try {
-    await service.from('oauth_refresh_tokens').update({ revoked_at: stamp }).eq('id', refreshRowId).is('revoked_at', null);
-    if (apiKeyId) {
-      await service.from('api_keys').update({ deleted_at: stamp }).eq('id', apiKeyId).is('deleted_at', null);
-      await service.from('oauth_refresh_tokens').update({ revoked_at: stamp }).eq('api_key_id', apiKeyId).is('revoked_at', null);
+  // Each write is attempted even if an earlier one failed, and every failure
+  // is logged by name: a half-ended chain must be visible in the logs, since
+  // the dormant-grant sweep or a later refresh is what finishes it.
+  const steps: Array<[string, () => PromiseLike<{ error: { message: string } | null }>]> = [
+    ['refresh_row', () => service.from('oauth_refresh_tokens').update({ revoked_at: stamp }).eq('id', refreshRowId).is('revoked_at', null)],
+  ];
+  if (apiKeyId) {
+    steps.push(
+      ['api_key', () => service.from('api_keys').update({ deleted_at: stamp }).eq('id', apiKeyId).is('deleted_at', null)],
+      ['chain', () => service.from('oauth_refresh_tokens').update({ revoked_at: stamp }).eq('api_key_id', apiKeyId).is('revoked_at', null)],
+    );
+  }
+  for (const [name, run] of steps) {
+    try {
+      const { error } = await run();
+      if (error) console.error('oauth_refresh_end_chain_error', name, error.message);
+    } catch (err) {
+      console.error('oauth_refresh_end_chain_error', name, err instanceof Error ? err.message : String(err));
     }
-  } catch (err) {
-    console.error('oauth_refresh_end_chain_error', err instanceof Error ? err.message : String(err));
   }
 }
 
@@ -257,22 +268,15 @@ export async function POST(req: NextRequest): Promise<Response> {
       return oauthError('invalid_grant', 'PKCE code_verifier does not match the code_challenge.');
     }
 
-    // Single-use: hard-delete before issuing token (prevents replay even if insert fails)
-    const { error: deleteErr } = await service
-      .from('oauth_auth_codes')
-      .delete()
-      .eq('id', authCode.id);
-
-    if (deleteErr) {
-      console.error('oauth_token_code_delete_error', deleteErr.message);
-      return oauthError('server_error', 'Failed to consume authorization code. Restart the flow.');
-    }
-
     // Membership + role, re-checked NOW rather than trusted from consent time.
     // A code lives a few minutes, and in that window the user can be removed
     // from the workspace or demoted to viewer; removal deletes pending codes,
     // but this is the check that does not depend on that sweep having run.
-    // The code is already consumed above, so a refused code cannot be retried.
+    //
+    // Run BEFORE the code is consumed, so a transient lookup failure leaves the
+    // code redeemable and the client can retry without sending the user back
+    // through consent. A definite refusal consumes the code first, so it can
+    // never be retried.
     const codeGrant = await checkGrantForMember(service, {
       workspaceId: authCode.workspace_id,
       userId:      authCode.user_id,
@@ -281,8 +285,10 @@ export async function POST(req: NextRequest): Promise<Response> {
     if (!codeGrant.ok) {
       if (codeGrant.reason === 'lookup_failed') {
         console.error('oauth_token_membership_lookup_error', codeGrant.message);
-        return oauthError('server_error', 'Failed to validate the authorization. Restart the flow.', 500);
+        return oauthError('server_error', 'Failed to validate the authorization. Try again.', 500);
       }
+      const { error: refusedDeleteErr } = await service.from('oauth_auth_codes').delete().eq('id', authCode.id);
+      if (refusedDeleteErr) console.error('oauth_token_code_delete_error', refusedDeleteErr.message);
       void logEvent(req, 'oauth_token_refused_membership', {
         client_id:    lookupClientId,
         workspace_id: authCode.workspace_id,
@@ -292,6 +298,25 @@ export async function POST(req: NextRequest): Promise<Response> {
       return oauthError('invalid_grant', codeGrant.message);
     }
     const grantedScopes = codeGrant.scopes;
+
+    // Single-use: hard-delete before issuing token (prevents replay even if
+    // insert fails). Atomic consume: only the request whose DELETE actually
+    // removed the row may continue, so two concurrent redemptions of the same
+    // code cannot both mint a key now that the check above sits between the
+    // lookup and the delete.
+    const { data: consumed, error: deleteErr } = await service
+      .from('oauth_auth_codes')
+      .delete()
+      .eq('id', authCode.id)
+      .select('id');
+
+    if (deleteErr) {
+      console.error('oauth_token_code_delete_error', deleteErr.message);
+      return oauthError('server_error', 'Failed to consume authorization code. Restart the flow.');
+    }
+    if (!consumed || consumed.length === 0) {
+      return oauthError('invalid_grant', 'Authorization code is invalid or has expired.');
+    }
 
     // Issue 1-hour access token. This single api_keys row is the durable
     // identity of the connection: every later refresh rotates it in place

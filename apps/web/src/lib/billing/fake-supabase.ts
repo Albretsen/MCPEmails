@@ -114,7 +114,13 @@ class Query implements PromiseLike<{ data: Row[] | null; error: { message: strin
   private run(): { data: Row[] | null; error: { message: string; code?: string } | null } {
     const failure = this.store.failNext.get(this.pending.table);
     if (failure) {
-      this.store.failNext.delete(this.pending.table);
+      const left = (this.store.failCounts.get(this.pending.table) ?? 1) - 1;
+      if (left > 0) {
+        this.store.failCounts.set(this.pending.table, left);
+      } else {
+        this.store.failNext.delete(this.pending.table);
+        this.store.failCounts.delete(this.pending.table);
+      }
       return { data: null, error: failure };
     }
 
@@ -205,9 +211,17 @@ export class FakeSupabase {
     this.table(name).push(...rows.map((r) => ({ id: this.nextId++, ...r })));
   }
 
+  readonly failCounts = new Map<string, number>();
+
   /** Make the next query against `table` return this error, once. */
   failOnce(table: string, error: { message: string; code?: string }): void {
+    this.failTimes(table, error, 1);
+  }
+
+  /** Make the next `count` queries against `table` return this error. */
+  failTimes(table: string, error: { message: string; code?: string }, count: number): void {
     this.failNext.set(table, error);
+    this.failCounts.set(table, count);
   }
 
   from(table: string) {
