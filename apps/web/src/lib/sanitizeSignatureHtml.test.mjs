@@ -22,8 +22,13 @@ import test from 'node:test';
 import { sanitizeSignatureHtml } from './sanitizeSignatureHtml.js';
 import {
   sanitizeSignatureHtml as sanitizeServer,
+  sanitizeEmailHtml as sanitizeEmailServer,
+  EMAIL_HTML_MAX_LENGTH,
   SIGNATURE_HTML_MAX_LENGTH,
 } from './sanitizeSignatureHtmlServer.js';
+import { readFileSync } from 'node:fs';
+import { EMAIL_HTML_CORPUS } from './email-html-corpus.mjs';
+import { ALL_PAYLOADS as GOLDEN_PAYLOADS } from './sanitizer-payloads.mjs';
 
 // ---------------------------------------------------------------------------
 // Shared expectations
@@ -287,3 +292,70 @@ test('oversize output throws rather than storing truncated markup', () => {
   const fine = `<p>${'a'.repeat(SIGNATURE_HTML_MAX_LENGTH - 100)}</p>`;
   assert.equal(sanitizeServer(fine).length, SIGNATURE_HTML_MAX_LENGTH - 93);
 });
+
+// ---------------------------------------------------------------------------
+// Linear time, same bytes (2026-10-16).
+//
+// Every dropped element used to lower-case the WHOLE source again, so a body of
+// `<svg></svg>` repeated cost O(elements x length). The goldens below were
+// captured from the code before that change; the Deno twin is held to the same
+// file in supabase/functions/mcp-server/signature-sanitizer-linear.test.ts.
+// ---------------------------------------------------------------------------
+
+const GOLDEN = JSON.parse(
+  readFileSync(new URL('./email-html-corpus.golden.json', import.meta.url), 'utf8'),
+);
+const GOLDEN_INPUTS = [
+  ...EMAIL_HTML_CORPUS,
+  ...GOLDEN_PAYLOADS.map(([name, html], i) => [`payload ${i}: ${name}`, html]),
+];
+
+function signatureOrEmpty(html) {
+  try {
+    return sanitizeServer(html);
+  } catch {
+    return '';
+  }
+}
+
+test('golden: realistic mail and payloads sanitize byte-for-byte as before', () => {
+  assert.equal(GOLDEN_INPUTS.length, Object.keys(GOLDEN).length);
+  for (const [name, html] of GOLDEN_INPUTS) {
+    assert.equal(sanitizeEmailServer(html), GOLDEN[name].email, `email: ${name}`);
+    assert.equal(signatureOrEmpty(html), GOLDEN[name].signature, `signature: ${name}`);
+  }
+});
+
+test('U+0130 before a dropped element no longer shifts the end-tag search', () => {
+  assert.equal(sanitizeEmailServer('İstanbul<style>a{}</style>after'), 'İstanbulafter');
+  assert.equal(sanitizeEmailServer('İ<svg><g></g></svg>after'), 'İafter');
+  assert.equal(sanitizeServer('İ<title>t</title><b>x</b>'), 'İ<b>x</b>');
+});
+
+test('email output past the cap is identical however much input follows', () => {
+  const unit = '<p>Row <b>bold</b> &amp; text</p><style>.x{}</style><svg><g/></svg>';
+  const html = unit.repeat(Math.ceil((3 * EMAIL_HTML_MAX_LENGTH) / unit.length));
+  const out = sanitizeEmailServer(html);
+  assert.ok(out.length <= EMAIL_HTML_MAX_LENGTH + 1);
+  assert.equal(sanitizeEmailServer(html.slice(0, Math.floor(2.5 * EMAIL_HTML_MAX_LENGTH))), out);
+});
+
+const MB5 = 5 * 1024 * 1024;
+const fill = (unit) => unit.repeat(Math.ceil(MB5 / unit.length)).slice(0, MB5);
+
+for (const [name, html] of [
+  ['5 MB of <svg></svg>', fill('<svg></svg>')],
+  ['5 MB of <style></style>', fill('<style></style>')],
+  ['5 MB of <audio></audio>', fill('<audio></audio>')],
+  ['<svg> then 5 MB of <', '<svg>' + fill('<')],
+  ['5 MB of <a<a', fill('<a<a')],
+]) {
+  test(`adversarial: ${name} sanitizes well under 1 s`, () => {
+    let started = performance.now();
+    sanitizeEmailServer(html);
+    assert.ok(performance.now() - started < 1000, `email: ${name}`);
+    started = performance.now();
+    signatureOrEmpty(html);
+    assert.ok(performance.now() - started < 1000, `signature: ${name}`);
+  });
+}

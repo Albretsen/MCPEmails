@@ -165,6 +165,163 @@ export function tidyPreview(text: string): string {
   return tidy.slice(0, cut);
 }
 
+// ---------------------------------------------------------------------------
+// stripHtmlToText, in linear time.
+//
+// Until 2026-10-16 this was a chain of global lazy regexes (`<!--[\s\S]*?-->`,
+// `<style\b[\s\S]*?<\/style\s*>`, the anchor rule, `<[^>]+>`) run over the
+// whole body of someone else's email. Each of them, given an opener with no
+// closer, scans to the end of the input from EVERY opener: 5 MB of `<!--`,
+// `<a href=x>` or `<` cost hundreds of billions of steps, and one such message
+// failed every email_read, reply and forward that touched it.
+//
+// The scanners below reproduce each of those regexes EXACTLY (same matches,
+// same replacements, same left-to-right, non-overlapping semantics as
+// `String.replace` with a /g regex), but find every closer with one forward
+// `indexOf` and never rescan a region. The legacy regex chain is kept verbatim
+// in text-extract.test.ts as an oracle and the two are fuzzed against each
+// other, and text-extract.golden.json holds the old output on realistic mail.
+//
+// Two regex facts the scanners depend on:
+//   - `/i` without `/u` folds ASCII letters only, so the ASCII-only lower-casing
+//     in `asciiLower` (which also keeps every offset) is the same comparison.
+//   - `\s` is the ECMAScript WhiteSpace + LineTerminator set (`isJsSpace`), not
+//     the HTML one, and `\b` is ASCII `[A-Za-z0-9_]` (`isAsciiWordChar`).
+// ---------------------------------------------------------------------------
+
+/** Lower-case A-Z only. Same length as the input, so offsets carry over. */
+function asciiLower(value: string): string {
+  return value.replace(/[A-Z]+/g, (run) => run.toLowerCase());
+}
+
+/** Exactly the characters JS `\s` matches. */
+function isJsSpace(code: number): boolean {
+  return code === 0x20 || (code >= 0x09 && code <= 0x0d) || code === 0xa0 ||
+    code === 0x1680 || (code >= 0x2000 && code <= 0x200a) || code === 0x2028 ||
+    code === 0x2029 || code === 0x202f || code === 0x205f || code === 0x3000 ||
+    code === 0xfeff;
+}
+
+/** Exactly the characters `\b` treats as word characters (no `/u`). */
+function isAsciiWordChar(code: number): boolean {
+  return (code >= 0x30 && code <= 0x39) || (code >= 0x41 && code <= 0x5a) ||
+    (code >= 0x61 && code <= 0x7a) || code === 0x5f;
+}
+
+/**
+ * `value.replace(/<!--[\s\S]*?-->/g, " ")`. A comment with no `-->` after it
+ * stays, and so does every later one: there is no `-->` left to close them.
+ */
+function replaceComments(value: string): string {
+  let open = value.indexOf("<!--");
+  if (open === -1) return value;
+  const parts: string[] = [];
+  let pos = 0;
+  while (open !== -1) {
+    const close = value.indexOf("-->", open + 4);
+    if (close === -1) break;
+    parts.push(value.slice(pos, open), " ");
+    pos = close + 3;
+    open = value.indexOf("<!--", pos);
+  }
+  parts.push(value.slice(pos));
+  return parts.join("");
+}
+
+/**
+ * Start offsets and end offsets (just past `>`) of every `</name\s*>` in
+ * `lower`, in order. One forward pass: each whitespace run is read once.
+ */
+function closingTags(lower: string, name: string): { starts: number[]; ends: number[] } {
+  const needle = `</${name}`;
+  const starts: number[] = [];
+  const ends: number[] = [];
+  let at = lower.indexOf(needle);
+  while (at !== -1) {
+    let k = at + needle.length;
+    while (k < lower.length && isJsSpace(lower.charCodeAt(k))) k += 1;
+    if (lower.charCodeAt(k) === 0x3e /* > */) {
+      starts.push(at);
+      ends.push(k + 1);
+      // Nothing between `at` and `k` can start another `</name`.
+      at = lower.indexOf(needle, k + 1);
+    } else {
+      at = lower.indexOf(needle, at + 1);
+    }
+  }
+  return { starts, ends };
+}
+
+/** Index of the first entry of the sorted `list` that is >= `from`, or list.length. */
+function firstAtOrAfter(list: ArrayLike<number>, from: number): number {
+  let lo = 0;
+  let hi = list.length;
+  while (lo < hi) {
+    const mid = (lo + hi) >>> 1;
+    if (list[mid] < from) lo = mid + 1;
+    else hi = mid;
+  }
+  return lo;
+}
+
+/**
+ * `value.replace(/<name\b[\s\S]*?<\/name\s*>/gi, "")` for `style` and
+ * `script`: an element and its content, up to the FIRST closer. An opener with
+ * no closer after it is left alone (the tag strip removes just the tag later),
+ * exactly as the regex left it.
+ */
+function removeElementBlocks(value: string, name: string): string {
+  const lower = asciiLower(value);
+  const opener = `<${name}`;
+  let open = lower.indexOf(opener);
+  if (open === -1) return value;
+  const closers = closingTags(lower, name);
+  const parts: string[] = [];
+  let pos = 0;
+  let next = 0;
+  while (open !== -1) {
+    const after = open + opener.length;
+    if (after < value.length && isAsciiWordChar(value.charCodeAt(after))) {
+      open = lower.indexOf(opener, open + 1);
+      continue;
+    }
+    while (next < closers.starts.length && closers.starts[next] < after) next += 1;
+    // No closer left: no later opener can close either.
+    if (next === closers.starts.length) break;
+    parts.push(value.slice(pos, open));
+    pos = closers.ends[next];
+    open = lower.indexOf(opener, pos);
+  }
+  if (pos === 0) return value;
+  parts.push(value.slice(pos));
+  return parts.join("");
+}
+
+/**
+ * `value.replace(/<[^>]+>/g, replacement)`: from a `<` to the next `>`, as long
+ * as at least one character sits between them (`<>` is text). A `<` with no
+ * `>` after it is text, and so is every later one.
+ */
+function replaceTags(value: string, replacement: string): string {
+  let lt = value.indexOf("<");
+  if (lt === -1) return value;
+  const parts: string[] = [];
+  let pos = 0;
+  while (lt !== -1) {
+    const gt = value.indexOf(">", lt + 1);
+    if (gt === -1) break;
+    if (gt === lt + 1) {
+      lt = value.indexOf("<", gt);
+      continue;
+    }
+    parts.push(value.slice(pos, lt), replacement);
+    pos = gt + 1;
+    lt = value.indexOf("<", pos);
+  }
+  parts.push(value.slice(pos));
+  return parts.join("");
+}
+
 /**
  * `<a href="U">T</a>` to `T (U)`, run before the tag strip so the target
  * survives at all.
@@ -176,26 +333,144 @@ export function tidyPreview(text: string): string {
  * rather than angle brackets because the tag strip that runs next would eat
  * anything between `<` and `>`.
  */
-const ANCHOR_WITH_HREF =
-  /<a\b[^>]*?\shref\s*=\s*(?:"([^"]*)"|'([^']*)'|([^\s"'>]+))[^>]*>([\s\S]*?)<\/a\s*>/gi;
-
 function inlineAnchorTarget(
-  _match: string,
   doubleQuoted: string | undefined,
   singleQuoted: string | undefined,
   unquoted: string | undefined,
   inner: string,
 ): string {
   const url = (doubleQuoted ?? singleQuoted ?? unquoted ?? "").trim();
-  const shown = inner.replace(/<[^>]+>/g, " ").replace(/\s+/g, " ").trim();
+  const shown = replaceTags(inner, " ").replace(/\s+/g, " ").trim();
   if (!shown) return " ";
   if (!url || /^(?:#|javascript:|data:)/i.test(url)) return inner;
-  const bare = url
+  let bare = url
     .replace(/^mailto:/i, "")
-    .replace(/^[a-z][a-z0-9+.-]*:\/\//i, "")
-    .replace(/\/+$/, "");
+    .replace(/^[a-z][a-z0-9+.-]*:\/\//i, "");
+  // `.replace(/\/+$/, "")`, without the regex: `\/+$` backtracks through every
+  // run of slashes that is not at the end, which is quadratic on a long one.
+  let end = bare.length;
+  while (end > 0 && bare.charCodeAt(end - 1) === 0x2f /* / */) end -= 1;
+  bare = bare.slice(0, end);
   if (!bare || shown.toLowerCase().includes(bare.toLowerCase())) return inner;
   return `${inner} (${url})`;
+}
+
+/** One `\shref\s*=\s*value[^>]*>` that has a `</a\s*>` somewhere after it. */
+interface HrefCandidate {
+  /** Offset of the `\s` before `href`. */
+  at: number;
+  doubleQuoted?: string;
+  singleQuoted?: string;
+  unquoted?: string;
+  /** Just past the `>` that ends the opening tag. */
+  innerStart: number;
+  innerEnd: number;
+  /** Just past the closer's `>`. */
+  end: number;
+}
+
+/**
+ * `value.replace(ANCHOR_WITH_HREF, inlineAnchorTarget)` with the regex the
+ * old code used:
+ *
+ *   /<a\b[^>]*?\shref\s*=\s*(?:"([^"]*)"|'([^']*)'|([^\s"'>]+))[^>]*>([\s\S]*?)<\/a\s*>/gi
+ *
+ * How the regex resolves a match at an opener `<a` at `i`: the lazy `[^>]*?`
+ * tries each `\shref` position `p` in order, from `i + 2` up to (not past) the
+ * first `>` after `i + 2`. Whether `p` then succeeds, and what it captures,
+ * depends on `p` alone: its value (quoted: to the next same quote, which may
+ * cross a `>`; unquoted: the longest run of `[^\s"'>]`), the first `>` after
+ * the value, and the first `</a\s*>` after that. So every candidate is
+ * resolved ONCE up front, the successful ones are kept in order, and each
+ * opener takes the first successful candidate in its window.
+ */
+function inlineAnchors(value: string): string {
+  const lower = asciiLower(value);
+  if (lower.indexOf("<a") === -1) return value;
+  const n = value.length;
+
+  const closers = closingTags(lower, "a");
+  if (closers.starts.length === 0) return value;
+
+  const gts: number[] = [];
+  for (let at = value.indexOf(">"); at !== -1; at = value.indexOf(">", at + 1)) gts.push(at);
+
+  // Every `\shref\s*=\s*value[^>]*>` followed somewhere by `</a\s*>`.
+  const candidates: HrefCandidate[] = [];
+  for (let h = lower.indexOf("href", 1); h !== -1; h = lower.indexOf("href", h + 1)) {
+    const at = h - 1;
+    if (!isJsSpace(value.charCodeAt(at))) continue;
+    let k = h + 4;
+    while (k < n && isJsSpace(value.charCodeAt(k))) k += 1;
+    if (value.charCodeAt(k) !== 0x3d /* = */) continue;
+    k += 1;
+    while (k < n && isJsSpace(value.charCodeAt(k))) k += 1;
+    if (k >= n) continue;
+    const quote = value[k];
+    let valueEnd: number;
+    const candidate: HrefCandidate = { at, innerStart: 0, innerEnd: 0, end: 0 };
+    if (quote === '"' || quote === "'") {
+      const close = value.indexOf(quote, k + 1);
+      if (close === -1) continue;
+      const captured = value.slice(k + 1, close);
+      if (quote === '"') candidate.doubleQuoted = captured;
+      else candidate.singleQuoted = captured;
+      valueEnd = close + 1;
+    } else {
+      let e = k;
+      while (e < n) {
+        const c = value.charCodeAt(e);
+        if (isJsSpace(c) || c === 0x22 || c === 0x27 || c === 0x3e) break;
+        e += 1;
+      }
+      if (e === k) continue;
+      candidate.unquoted = value.slice(k, e);
+      valueEnd = e;
+    }
+    const g = firstAtOrAfter(gts, valueEnd);
+    if (g === gts.length) continue;
+    const c = firstAtOrAfter(closers.starts, gts[g] + 1);
+    if (c === closers.starts.length) continue;
+    candidate.innerStart = gts[g] + 1;
+    candidate.innerEnd = closers.starts[c];
+    candidate.end = closers.ends[c];
+    candidates.push(candidate);
+  }
+  if (candidates.length === 0) return value;
+
+  const parts: string[] = [];
+  let pos = 0;
+  let next = 0;
+  let open = lower.indexOf("<a");
+  while (open !== -1) {
+    if (open + 2 < n && isAsciiWordChar(value.charCodeAt(open + 2))) {
+      open = lower.indexOf("<a", open + 1);
+      continue;
+    }
+    while (next < candidates.length && candidates[next].at < open + 2) next += 1;
+    if (next === candidates.length) break;
+    const g = firstAtOrAfter(gts, open + 2);
+    const limit = g === gts.length ? n : gts[g];
+    const hit = candidates[next];
+    if (hit.at >= limit) {
+      open = lower.indexOf("<a", open + 1);
+      continue;
+    }
+    parts.push(
+      value.slice(pos, open),
+      inlineAnchorTarget(
+        hit.doubleQuoted,
+        hit.singleQuoted,
+        hit.unquoted,
+        value.slice(hit.innerStart, hit.innerEnd),
+      ),
+    );
+    pos = hit.end;
+    open = lower.indexOf("<a", pos);
+  }
+  if (pos === 0) return value;
+  parts.push(value.slice(pos));
+  return parts.join("");
 }
 
 /**
@@ -213,27 +488,30 @@ function inlineAnchorTarget(
  *
  * Bodies keep their bidi marks: `stripZeroWidthText`, not the full class, or we
  * would silently corrupt Hebrew, Arabic, Persian and Urdu prose.
+ *
+ * Linear in the input, whatever the input (see the block comment above): no
+ * step rescans what an earlier opener already scanned. No size cap, because
+ * none is needed for time and any cap would cut real long mail.
  */
 export function stripHtmlToText(
   html: string,
   options?: { keepLinks?: boolean },
 ): string {
-  let out = html
-    // Comments first. The generic tag strip below cannot remove a comment that
-    // contains a `>`, and Office conditional comments and media queries both
-    // do. Lazy, so a downlevel-revealed `<!--[if !mso]><!-->` only loses its
-    // marker and keeps the content that follows it.
-    .replace(/<!--[\s\S]*?-->/g, " ")
-    .replace(/<style\b[\s\S]*?<\/style\s*>/gi, "")
-    .replace(/<script\b[\s\S]*?<\/script\s*>/gi, "");
-  if (options?.keepLinks) out = out.replace(ANCHOR_WITH_HREF, inlineAnchorTarget);
+  // Comments first. The generic tag strip below cannot remove a comment that
+  // contains a `>`, and Office conditional comments and media queries both
+  // do. Lazy, so a downlevel-revealed `<!--[if !mso]><!-->` only loses its
+  // marker and keeps the content that follows it.
+  let out = removeElementBlocks(removeElementBlocks(replaceComments(html), "style"), "script");
+  if (options?.keepLinks) out = inlineAnchors(out);
   return stripZeroWidthText(
     decodeHtmlEntities(
-      out
-        .replace(/<br\s*\/?>/gi, "\n")
-        .replace(/<\/p>/gi, "\n\n")
-        .replace(/<\/div>/gi, "\n")
-        .replace(/<[^>]+>/g, ""),
+      replaceTags(
+        out
+          .replace(/<br\s*\/?>/gi, "\n")
+          .replace(/<\/p>/gi, "\n\n")
+          .replace(/<\/div>/gi, "\n"),
+        "",
+      ),
     ),
   )
     // CRLF first, or none of the rules below see a line boundary at all. A

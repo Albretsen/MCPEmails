@@ -1,0 +1,370 @@
+{
+ "newsletter: table layout, MSO comments, preheader padding": {
+  "plain": "The Weekly Digest\n\nFive things worth reading this week ͏ ͏ ͏ ͏ ͏ ͏ ͏ ͏ ͏ ͏ ͏ ͏ ͏ ͏ ͏ ͏ ͏ ͏ ͏ ͏ ͏ ͏ ͏ ͏ ͏ ͏ ͏ ͏ ͏ ͏ ͏ ͏ ͏ ͏ ͏ ͏ ͏ ͏ ͏ ͏\n\nView in browser\n\nThis week’s top stories\n1. Why the ocean is getting louder — a 6 minute read.\n\n2. Ten tools we actually use – reader picks.\n\n3. Visit news.example.com/events for this month's meetups.\n\nSwipe for more &rarr;\n\nPrice: €12.00 · £10 · © 2026 Example Media™\n\nYou are receiving this because you subscribed.\n\nUnsubscribe | Preferences\n\nExample Media, 1 Harbour St, Springfield",
+  "links": "The Weekly Digest\n\nFive things worth reading this week ͏ ͏ ͏ ͏ ͏ ͏ ͏ ͏ ͏ ͏ ͏ ͏ ͏ ͏ ͏ ͏ ͏ ͏ ͏ ͏ ͏ ͏ ͏ ͏ ͏ ͏ ͏ ͏ ͏ ͏ ͏ ͏ ͏ ͏ ͏ ͏ ͏ ͏ ͏ ͏\n\nView in browser (https://news.example.com/view?id=abc123&utm_source=email)\n\nThis week’s top stories\n1. Why the ocean is getting louder (https://news.example.com/a/1?utm_campaign=wk42) — a 6 minute read.\n\n2. Ten tools we actually use (https://news.example.com/a/2) – reader picks.\n\n3. Visit news.example.com/events for this month's meetups.\n\nSwipe for more &rarr;\n\nPrice: €12.00 · £10 · © 2026 Example Media™\n\nYou are receiving this because you subscribed.\n\nUnsubscribe (https://news.example.com/unsubscribe?u=xyz) | Preferences (https://news.example.com/prefs)\n\nExample Media, 1 Harbour St, Springfield"
+ },
+ "Outlook desktop: Word-generated HTML with o:p and mso styles": {
+  "plain": "Hi Sam,\n\nPlease find the Q3 numbers attached. The summary is on our finance page.\n\nRevenue grew 12% – mostly in the \"Enterprise\" segment.\n\nKind regards,\n\nAlex Rivera\n\nFinance Lead | +1 555 0100 | alex@example.org",
+  "links": "Hi Sam,\n\nPlease find the Q3 numbers attached. The summary is on our finance page (https://intranet.example.org/finance/q3).\n\nRevenue grew 12% – mostly in the \"Enterprise\" segment.\n\nKind regards,\n\nAlex Rivera\n\nFinance Lead | +1 555 0100 | alex@example.org"
+ },
+ "Gmail reply with quoted original": {
+  "plain": "Sounds good, Thursday at 3pm works for me.\n\nI'll book the room.\n\nOn Tue, Oct 14, 2026 at 9:12 AM Jordan Lee <jordan@example.net> wrote:\n\nHi,\n\nCan we move the review to Thursday? The deck is here: https://docs.example.net/d/1AbC/edit?usp=sharing\n\nThanks,\nJordan",
+  "links": "Sounds good, Thursday at 3pm works for me.\n\nI'll book the room.\n\nOn Tue, Oct 14, 2026 at 9:12 AM Jordan Lee <jordan@example.net> wrote:\n\nHi,\n\nCan we move the review to Thursday? The deck is here: https://docs.example.net/d/1AbC/edit?usp=sharing\n\nThanks,\nJordan"
+ },
+ "Outlook web reply with divRplyFwdMsg header": {
+  "plain": "Approved — go ahead with the order.\n\nFrom: Pat Morgan <pat@example.com>\n\nSent: Wednesday, October 15, 2026 4:01 PM\n\nTo: Chris Doe <chris@example.com>\n\nSubject: PO 4471 for approval\n\nHi Chris,\n\nPO 4471 (12 &times; monitors, total $3,480.00) needs your approval. Details: https://erp.example.com/po/4471\n\nThanks\nPat",
+  "links": "Approved — go ahead with the order.\n\nFrom: Pat Morgan <pat@example.com>\n\nSent: Wednesday, October 15, 2026 4:01 PM\n\nTo: Chris Doe <chris@example.com>\n\nSubject: PO 4471 for approval\n\nHi Chris,\n\nPO 4471 (12 &times; monitors, total $3,480.00) needs your approval. Details: https://erp.example.com/po/4471\n\nThanks\nPat"
+ },
+ "Japanese newsletter (CJK) with full-width punctuation": {
+  "plain": "いつもご利用いただき、誠にありがとうございます。\n\n秋の新商品のご案内です。\n詳しくはこちらをご覧ください。\n\n　・送料無料キャンペーン：10月31日まで\n\n　・ポイント２倍デー：毎週金曜日\n\n※本メールは送信専用です。ご返信いただいてもお答えできません。\n\n配信停止はこちら",
+  "links": "いつもご利用いただき、誠にありがとうございます。\n\n秋の新商品のご案内です。\n詳しくはこちら (https://shop.example.jp/autumn?utm=mail)をご覧ください。\n\n　・送料無料キャンペーン：10月31日まで\n\n　・ポイント２倍デー：毎週金曜日\n\n※本メールは送信専用です。ご返信いただいてもお答えできません。\n\n配信停止はこちら (https://shop.example.jp/unsubscribe)"
+ },
+ "Chinese and Korean transactional notice": {
+  "plain": "您好，您的订单 #20261016-88 已发货。\n\n快递单号：SF1234567890 （顺丰速运）\n\n查看物流\n\n안녕하세요, 주문하신 상품이 발송되었습니다.\n\n배송 조회: track.example.kr/SF1234567890",
+  "links": "您好，您的订单 #20261016-88 已发货。\n\n快递单号：SF1234567890 （顺丰速运）\n\n查看物流 (https://track.example.cn/?no=SF1234567890)\n\n안녕하세요, 주문하신 상품이 발송되었습니다.\n\n배송 조회: track.example.kr/SF1234567890"
+ },
+ "Hebrew and Arabic RTL with bidi marks": {
+  "plain": "‏שלום רב,‎\n\nהפגישה נקבעה ליום חמישי בשעה 10:00.\n\nمرحبا، تم تأكيد طلبك رقم ٤٥٦.\n\nלפרטים נוספים",
+  "links": "‏שלום רב,‎\n\nהפגישה נקבעה ליום חמישי בשעה 10:00.\n\nمرحبا، تم تأكيد طلبك رقم ٤٥٦.\n\nלפרטים נוספים (https://example.co.il/meet)"
+ },
+ "OTP / verification code email": {
+  "plain": "Verify your email\nYour verification code is:\n\n482 913\n\nThis code expires in 10 minutes. If you didn’t request it, you can ignore this email.\n\n© 2026 Example Inc. • Privacy",
+  "links": "Verify your email\nYour verification code is:\n\n482 913\n\nThis code expires in 10 minutes. If you didn’t request it, you can ignore this email.\n\n© 2026 Example Inc. • Privacy (https://example.com/privacy)"
+ },
+ "receipt with entities, numeric refs and uppercase tags": {
+  "plain": "ItemPrice\nCoffee beans 1 kg€24,90\nShipping€4,90\n\nTotal€29,80\n\nQuestions? Reply to this email or visit our help centre.\n\nOrder ref: A&B-7731 <keep this> &unknownentity; &#xD800; &#55357;",
+  "links": "ItemPrice\nCoffee beans 1 kg€24,90\nShipping€4,90\n\nTotal€29,80\n\nQuestions? Reply to this email or visit our help centre (https://help.example.de/orders).\n\nOrder ref: A&B-7731 <keep this> &unknownentity; &#xD800; &#55357;"
+ },
+ "marketing email with script, noscript, svg and iframe": {
+  "plain": "star Flash sale: 40% off everything!\n\nShop now &raquo;\n\nDo nothing and back to top and data link\n\nYour client does not support video.\n\nhidden template\n\nUse code FALL40 at checkout.",
+  "links": "star Flash sale: 40% off everything!\n\nShop now (https://deals.example.com/sale) &raquo;\n\nDo nothing and back to top and data link\n\nYour client does not support video.\n\nhidden template\n\nUse code FALL40 at checkout."
+ },
+ "ticketing system: CRLF table cells and empty text part shape": {
+  "plain": "Ticket #58210 has been updated by Support.\n\nWe have reset your password link. Please follow this link to view the conversation.\n\n[ZX9-ABCDE-1]",
+  "links": "Ticket #58210 has been updated by Support.\n\nWe have reset your password link. Please follow this link (https://support.example.io/hc/requests/58210) to view the conversation.\n\n[ZX9-ABCDE-1]"
+ },
+ "Apple Mail forward with blockquote type=cite": {
+  "plain": "FYI, see below.\nBegin forwarded message:\nFrom: Taylor <taylor@example.org>\n\nSubject: Flight change\n\nYour flight EX 123 now departs at 07:45 instead of 07:15.\nManage booking: air.example.org/manage",
+  "links": "FYI, see below.\nBegin forwarded message:\nFrom: Taylor <taylor@example.org>\n\nSubject: Flight change\n\nYour flight EX 123 now departs at 07:45 instead of 07:15.\nManage booking: air.example.org/manage (https://air.example.org/manage?pnr=XY12AB)"
+ },
+ "links: quoting styles, spacing, nested markup and duplicates": {
+  "plain": "Read the user guide.\n\nSingle: Start\n\nUnquoted: Profile\n\nShown already: example.com/docs\n\nMail: help@example.com or write to us\n\nEmpty:\n\nNo href: anchor plain\n\nData attr first: real link\n\nBroken closer: boldafter\n\nTel: call us",
+  "links": "Read the user guide (https://example.com/Guide).\n\nSingle: Start (https://example.com/s?a=1&b=2)\n\nUnquoted: Profile (https://example.com/u/)\n\nShown already: example.com/docs\n\nMail: help@example.com or write to us (mailto:help@example.com?subject=Hi)\n\nEmpty:\n\nNo href: anchor plain\n\nData attr first: real link (https://example.com/real)\n\nBroken closer: bold (https://example.com/b)after\n\nTel: call us (tel:+15550100)"
+ },
+ "plain-text-ish HTML with pre and long lines": {
+  "plain": "Build #4182 FAILED\n\nstep 3/7: npm test\n> 2 failing tests\n> src/lib/foo.test.ts:41 expected 3, got 4\n\nSee https://ci.example.dev/builds/4182 for logs.",
+  "links": "Build #4182 FAILED\n\nstep 3/7: npm test\n> 2 failing tests\n> src/lib/foo.test.ts:41 expected 3, got 4\n\nSee https://ci.example.dev/builds/4182 for logs."
+ },
+ "calendar invitation HTML": {
+  "plain": "Design syncWhen\nThursday Oct 16, 2026 ⋅ 3pm – 3:30pm (Central European Time - Oslo)\n\nJoining info\nmeet.example.com/abc-defg-hij\n\nGuests\na@example.com - organizer\nb@example.com\n\nYes | No | Maybe",
+  "links": "Design syncWhen\nThursday Oct 16, 2026 ⋅ 3pm – 3:30pm (Central European Time - Oslo)\n\nJoining info\nmeet.example.com/abc-defg-hij\n\nGuests\na@example.com - organizer\nb@example.com\n\nYes (https://calendar.example.com/event?action=RESPOND&rst=1) | No (https://calendar.example.com/event?action=RESPOND&rst=2) | Maybe (https://calendar.example.com/event?action=RESPOND&rst=3)"
+ },
+ "quirks: stray brackets, comment forms and mixed-case style": {
+  "plain": "If a c then a ? c.\n\nMath: 3 <> 4, xz, <> empty\n\nAfter styles.\n\nnot a script\nnot a style\nSmart quotes: “hi” ‘there’ … 20°C\n\nZero width: abcd &shy;soft\n\nline\nbreak\nagain\ndone",
+  "links": "If a c then a ? c.\n\nMath: 3 <> 4, xz, <> empty\n\nAfter styles.\n\nnot a script\nnot a style\nSmart quotes: “hi” ‘there’ … 20°C\n\nZero width: abcd &shy;soft\n\nline\nbreak\nagain\ndone"
+ },
+ "signature-style snippet": {
+  "plain": "Robin Park\nHead of Ops · Example Co\nexample.com · +47 123 45 678",
+  "links": "Robin Park\nHead of Ops · Example Co\nexample.com · +47 123 45 678 (tel:+4712345678)"
+ },
+ "payload 0: handler after a quote": {
+  "plain": "",
+  "links": ""
+ },
+ "payload 1: leading space in scheme": {
+  "plain": "click",
+  "links": "click"
+ },
+ "payload 2: entity-encoded scheme": {
+  "plain": "click",
+  "links": "click (javascript:alert(1))"
+ },
+ "payload 3: style-based scheme": {
+  "plain": "x",
+  "links": "x"
+ },
+ "payload 4: strip-and-rescan splice": {
+  "plain": "<scr",
+  "links": "<scr"
+ },
+ "payload 5: unquoted external src": {
+  "plain": "",
+  "links": ""
+ },
+ "payload 6: srcset second channel": {
+  "plain": "",
+  "links": ""
+ },
+ "payload 7: double-quoted https": {
+  "plain": "",
+  "links": ""
+ },
+ "payload 8: single-quoted https": {
+  "plain": "",
+  "links": ""
+ },
+ "payload 9: unquoted https": {
+  "plain": "",
+  "links": ""
+ },
+ "payload 10: unquoted http": {
+  "plain": "",
+  "links": ""
+ },
+ "payload 11: uppercase attribute": {
+  "plain": "",
+  "links": ""
+ },
+ "payload 12: whitespace around equals": {
+  "plain": "",
+  "links": ""
+ },
+ "payload 13: protocol-relative": {
+  "plain": "",
+  "links": ""
+ },
+ "payload 14: ftp": {
+  "plain": "",
+  "links": ""
+ },
+ "payload 15: tab inside the scheme": {
+  "plain": "",
+  "links": ""
+ },
+ "payload 16: entity-encoded scheme": {
+  "plain": "",
+  "links": ""
+ },
+ "payload 17: srcset instead of src": {
+  "plain": "",
+  "links": ""
+ },
+ "payload 18: slash-separated attribute": {
+  "plain": "",
+  "links": ""
+ },
+ "payload 19: svg data URI": {
+  "plain": "",
+  "links": ""
+ },
+ "payload 20: background attribute": {
+  "plain": "x",
+  "links": "x"
+ },
+ "payload 21: onclick double-quoted": {
+  "plain": "x",
+  "links": "x"
+ },
+ "payload 22: onclick uppercase": {
+  "plain": "x",
+  "links": "x"
+ },
+ "payload 23: onclick spaced equals": {
+  "plain": "x",
+  "links": "x"
+ },
+ "payload 24: handler after newline": {
+  "plain": "x",
+  "links": "x"
+ },
+ "payload 25: img onerror": {
+  "plain": "",
+  "links": ""
+ },
+ "payload 26: body onload": {
+  "plain": "x",
+  "links": "x"
+ },
+ "payload 27: script then text": {
+  "plain": "after",
+  "links": "after"
+ },
+ "payload 28: style then text": {
+  "plain": "after",
+  "links": "after"
+ },
+ "payload 29: iframe": {
+  "plain": "after",
+  "links": "after"
+ },
+ "payload 30: object": {
+  "plain": "after",
+  "links": "after"
+ },
+ "payload 31: form with input": {
+  "plain": "after",
+  "links": "after"
+ },
+ "payload 32: svg with script": {
+  "plain": "after",
+  "links": "after"
+ },
+ "payload 33: noscript wrapper": {
+  "plain": "after",
+  "links": "after"
+ },
+ "payload 34: textarea smuggling": {
+  "plain": "after",
+  "links": "after"
+ },
+ "payload 35: title smuggling": {
+  "plain": "after",
+  "links": "after"
+ },
+ "payload 36: conditional comment": {
+  "plain": "a b",
+  "links": "a b"
+ },
+ "payload 37: doctype": {
+  "plain": "x",
+  "links": "x"
+ },
+ "payload 38: processing instruction": {
+  "plain": "x",
+  "links": "x"
+ },
+ "payload 39: data: html href": {
+  "plain": "x",
+  "links": "x"
+ },
+ "payload 40: vbscript href": {
+  "plain": "x",
+  "links": "x (vbscript:msgbox(1))"
+ },
+ "payload 41: file href": {
+  "plain": "x",
+  "links": "x (file:///etc/passwd)"
+ },
+ "payload 42: mixed-case javascript": {
+  "plain": "x",
+  "links": "x"
+ },
+ "payload 43: NUL inside scheme": {
+  "plain": "x",
+  "links": "x (java\u0000script:alert(1))"
+ },
+ "payload 44: decimal entity scheme": {
+  "plain": "x",
+  "links": "x (javascript:alert(1))"
+ },
+ "payload 45: unterminated quote": {
+  "plain": "hello",
+  "links": "hello"
+ },
+ "payload 46: marquee unwrap": {
+  "plain": "scrolling text",
+  "links": "scrolling text"
+ },
+ "payload 47: unclosed nesting": {
+  "plain": "onetwothree",
+  "links": "onetwothree"
+ },
+ "payload 48: stray lt": {
+  "plain": "5 3",
+  "links": "5 3"
+ },
+ "payload 49: unknown entity": {
+  "plain": "&zzz;",
+  "links": "&zzz;"
+ },
+ "payload 50: named entity": {
+  "plain": "caf&eacute;",
+  "links": "caf&eacute;"
+ },
+ "payload 51: escaped amp": {
+  "plain": "A&B",
+  "links": "A&B"
+ },
+ "payload 52: style class id data": {
+  "plain": "text",
+  "links": "text"
+ },
+ "payload 53: orphan end tag": {
+  "plain": "text",
+  "links": "text"
+ },
+ "payload 54: bare lt": {
+  "plain": "<",
+  "links": "<"
+ },
+ "payload 55: empty": {
+  "plain": "",
+  "links": ""
+ },
+ "payload 56: safe link": {
+  "plain": "link",
+  "links": "link (https://example.com/x?a=1&b=2)"
+ },
+ "payload 57: mailto": {
+  "plain": "m",
+  "links": "m (mailto:a@b.com)"
+ },
+ "payload 58: cid image": {
+  "plain": "",
+  "links": ""
+ },
+ "payload 59: https logo": {
+  "plain": "",
+  "links": ""
+ },
+ "payload 60: http logo": {
+  "plain": "",
+  "links": ""
+ },
+ "payload 61: data png": {
+  "plain": "",
+  "links": ""
+ },
+ "payload 62: real mail": {
+  "plain": "Hi Asgeir,\n\nSee the report.\n\nQ342Previous message",
+  "links": "Hi Asgeir,\n\nSee the report (https://example.com/report).\n\nQ342Previous message"
+ },
+ "payload 63: unquoted attrs everywhere": {
+  "plain": "",
+  "links": ""
+ },
+ "payload 64: unclosed td then new tr": {
+  "plain": "AB",
+  "links": "AB"
+ },
+ "payload 65: unclosed td then new td": {
+  "plain": "AB",
+  "links": "AB"
+ },
+ "payload 66: unclosed p run": {
+  "plain": "onetwothree",
+  "links": "onetwothree"
+ },
+ "payload 67: href to a bare fragment": {
+  "plain": "pub-1354741235649835",
+  "links": "pub-1354741235649835"
+ },
+ "payload 68: tracking pixel, unquoted": {
+  "plain": "",
+  "links": ""
+ },
+ "payload 69: 1x1 hidden pixel": {
+  "plain": "",
+  "links": ""
+ },
+ "payload 70: xml doctype + xmlns": {
+  "plain": "thi",
+  "links": "thi"
+ },
+ "payload 71: mso conditional comment": {
+  "plain": "shown",
+  "links": "shown"
+ },
+ "payload 72: nbsp and emoji": {
+  "plain": "Kykkeli ki, Asgeir! 🐓",
+  "links": "Kykkeli ki, Asgeir! 🐓"
+ },
+ "payload 73: preheader hidden text": {
+  "plain": "hidden preheader",
+  "links": "hidden preheader"
+ },
+ "payload 74: table width percent": {
+  "plain": "x",
+  "links": "x"
+ }
+}
