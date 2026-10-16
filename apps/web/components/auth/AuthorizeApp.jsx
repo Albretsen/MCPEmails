@@ -7,6 +7,7 @@ import { MIcon } from '../MarketingPrimitives';
 import { Icon, Btn, ProviderLogo } from '../Primitives';
 import { trackProductEvent, scopeProfile } from '@/lib/analytics.mjs';
 import { resolveDefaultAccess, resolvePresets } from '@/lib/oauth/consent-presets';
+import { isSafeRedirectScheme } from '@/lib/oauth/redirect-scheme';
 
 // ─── Theme toggle ─────────────────────────────────────────────────────────────
 
@@ -325,6 +326,89 @@ function DoneScreen({ client, grantCount, totalInboxes, allInboxes }) {
   );
 }
 
+// ─── Where the code goes ─────────────────────────────────────────────────────
+//
+// The redirect_uri decides who receives the authorization code, so it is shown
+// on every consent, above the permissions. For an anonymously registered (DCR)
+// client the name is the registrant's own free text: the heading becomes the
+// destination host unless that host belongs to a known vendor, and the name is
+// shown only here, labelled as self-reported. The decision is made server-side
+// in lib/oauth/client-identity.ts; this only renders it.
+
+const DESTINATION_BADGE = {
+  registered: { key: 'badgeVerified',   icon: 'shield', fg: 'var(--mint-700, #0B7E55)',  bg: 'var(--mint-50, #E4FBF1)' },
+  verified:   { key: 'badgeVerified',   icon: 'shield', fg: 'var(--mint-700, #0B7E55)',  bg: 'var(--mint-50, #E4FBF1)' },
+  local:      { key: 'badgeLocal',      icon: 'key',    fg: 'var(--fg-2)',               bg: 'var(--ink-25)' },
+  unverified: { key: 'badgeUnverified', icon: 'eye',    fg: 'var(--amber-700, #9A6311)', bg: 'var(--amber-100, #FCEFD2)' },
+};
+
+function DestinationPanel({ identity }) {
+  const t = useTranslations('auth');
+  const badge = DESTINATION_BADGE[identity.verification] ?? DESTINATION_BADGE.unverified;
+  const label = identity.destinationLabel;
+  const where =
+    identity.destinationKind === 'app'
+      ? t('authorize.destinationApp', { scheme: label })
+      : identity.destinationKind === 'loopback'
+        ? t('authorize.destinationLoopback', { host: label })
+        : label;
+  const warn = identity.impersonates || identity.verification === 'unverified';
+
+  return (
+    <div
+      data-testid="az-destination"
+      data-verification={identity.verification}
+      style={{
+        marginBottom: 16, padding: '10px 12px', borderRadius: 8,
+        border: '1px solid ' + (identity.impersonates ? 'var(--red-500, #E5484D)' : warn ? 'var(--amber-500, #F0A53E)' : 'var(--border-1)'),
+        background: 'var(--bg-surface)',
+        fontFamily: 'var(--font-sans)',
+      }}
+    >
+      <div style={{ display: 'flex', alignItems: 'center', gap: 8, flexWrap: 'wrap' }}>
+        <span style={{ fontSize: 13, color: 'var(--fg-2)' }}>{t('authorize.destinationLabel')}</span>
+        <strong data-testid="az-destination-host" style={{ fontSize: 14, color: 'var(--fg-1)', wordBreak: 'break-all' }}>{where}</strong>
+        <span
+          data-testid="az-destination-badge"
+          style={{
+            display: 'inline-flex', alignItems: 'center', gap: 4, marginLeft: 'auto',
+            padding: '2px 8px', borderRadius: 999, fontSize: 11, fontWeight: 600,
+            color: badge.fg, background: badge.bg, whiteSpace: 'nowrap',
+          }}
+        >
+          <Icon name={badge.icon} size={12} color="currentColor" />
+          {t(`authorize.${badge.key}`)}
+        </span>
+      </div>
+
+      {identity.selfReportedName && identity.verification === 'unverified' && (
+        <div data-testid="az-self-reported" style={{ fontSize: 12, color: 'var(--fg-3)', marginTop: 6, lineHeight: 1.5 }}>
+          {t.rich('authorize.selfReportedName', {
+            name: identity.selfReportedName,
+            strong: (c) => <strong>{c}</strong>,
+          })}
+        </div>
+      )}
+
+      {identity.selfReportedName && identity.verification === 'local' && (
+        <div data-testid="az-self-reported" style={{ fontSize: 12, color: 'var(--fg-3)', marginTop: 6, lineHeight: 1.5 }}>
+          {t('authorize.localNote', { name: identity.selfReportedName })}
+        </div>
+      )}
+
+      {identity.impersonates ? (
+        <div role="alert" data-testid="az-impersonation" style={{ fontSize: 12, color: 'var(--red-700, #A11D22)', marginTop: 6, lineHeight: 1.5 }}>
+          {t('authorize.impersonationWarning', { vendor: identity.impersonates, host: label })}
+        </div>
+      ) : identity.verification === 'unverified' ? (
+        <div data-testid="az-unverified" style={{ fontSize: 12, color: 'var(--amber-700, #9A6311)', marginTop: 6, lineHeight: 1.5 }}>
+          {t('authorize.unverifiedWarning', { host: label })}
+        </div>
+      ) : null}
+    </div>
+  );
+}
+
 // ─── AuthorizeApp (main export) ───────────────────────────────────────────────
 
 /**
@@ -332,6 +416,12 @@ function DoneScreen({ client, grantCount, totalInboxes, allInboxes }) {
  *
  * Props (all provided by the server component in page.js):
  *  - client         { client_id, client_name, client_byline, logo_url, is_first_party }
+ *                     client_name is the DISPLAY name decided by
+ *                     lib/oauth/client-identity.ts (the destination host for an
+ *                     unverified client), never a raw self-asserted name.
+ *  - identity       { verification, selfReportedName, destinationKind,
+ *                     destinationLabel, impersonates } | null: where the code
+ *                     goes and whether that is verified (DestinationPanel).
  *  - workspaceName  string: the user's workspace display name
  *  - requestedScopes  Array<{ scope, icon, title, desc, required }>: the MENU,
  *                     i.e. every scope this client is permitted to be granted
@@ -365,6 +455,7 @@ function DoneScreen({ client, grantCount, totalInboxes, allInboxes }) {
  */
 export function AuthorizeApp({
   client,
+  identity = null,
   workspaceName,
   requestedScopes,
   clientRequestedScopes = [],
@@ -520,6 +611,12 @@ export function AuthorizeApp({
         scope_profile: scopeProfile(selectedScopes.map((scope) => scope.scope)),
       });
       if (redirect_to) {
+        // The server already refuses these, but the navigation runs on our own
+        // origin, so a javascript:/data:/file: target is never followed from
+        // here either. See lib/oauth/redirect-scheme.ts.
+        if (!isSafeRedirectScheme(redirect_to)) {
+          throw new Error(t('authorize.unsafeRedirect'));
+        }
         window.location.href = redirect_to;
       } else {
         // Endpoint not yet implemented (task 15.2): show the done screen
@@ -538,7 +635,7 @@ export function AuthorizeApp({
   };
 
   const handleDeny = () => {
-    if (redirectUri) {
+    if (redirectUri && isSafeRedirectScheme(redirectUri)) {
       const url = new URL(redirectUri);
       url.searchParams.set('error', 'access_denied');
       url.searchParams.set('error_description', 'The user denied access.');
@@ -589,6 +686,9 @@ export function AuthorizeApp({
                     strong: (c) => <strong>{c}</strong>,
                   })}
                 </div>
+
+                {/* Where the authorization code will be sent */}
+                {identity && <DestinationPanel identity={identity} />}
 
                 {/* Client ID badge */}
                 <div style={{

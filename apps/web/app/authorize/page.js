@@ -4,6 +4,8 @@ import { createClient } from '@/lib/supabase/server';
 import { issueCsrfToken } from '@/lib/oauth/csrf';
 import { storeStateNonce } from '@/lib/oauth/state';
 import { isValidRedirectUri } from '@/lib/oauth/redirect-uri';
+import { isSafeRedirectScheme } from '@/lib/oauth/redirect-scheme';
+import { describeClientIdentity } from '@/lib/oauth/client-identity';
 import { validateResourceIndicator } from '@/lib/oauth/resource';
 import { looksLikeUrlClientId, redirectUriAllowed, resolveCimdClient } from '@/lib/oauth/cimd';
 import { identifyStepUpLimitedClient } from '@/lib/oauth/consent-presets';
@@ -176,6 +178,14 @@ export default async function AuthorizePage({ searchParams }) {
     }
   }
 
+  // Never a script-running or browser-internal scheme (javascript:, data:,
+  // file:, ...), whatever the client registered. The consent component assigns
+  // this URI to window.location on Allow and on Deny, on our own origin. Rows
+  // registered before this check existed are caught here too.
+  if (!isSafeRedirectScheme(resolvedRedirectUri)) {
+    return <ErrorPage title="Invalid redirect_uri" message="The redirect_uri uses a URL scheme that is not allowed for an OAuth redirect." />;
+  }
+
   if (isCimd) {
     // Same origin as the client_id URL, or a loopback URI compared with the
     // PORT IGNORED (RFC 8252 §7.3). A plain `includes` would be wrong in both
@@ -320,6 +330,19 @@ export default async function AuthorizePage({ searchParams }) {
     redirectUri: resolvedRedirectUri,
   }) !== null;
 
+  // Who the screen says is asking, keyed on the VALIDATED redirect_uri: the
+  // code goes to that host, so that host is what the user must see. A DCR
+  // client's client_name and client_uri are self-asserted by an anonymous
+  // registrant and never become the identity on their own. The rule:
+  // lib/oauth/client-identity.ts.
+  const identity = describeClientIdentity({
+    clientId:     oauthClient.client_id,
+    clientName:   oauthClient.client_name,
+    clientByline: oauthClient.client_byline,
+    isCimd,
+    redirectUri:  resolvedRedirectUri,
+  });
+
   const scopesWithMeta = offeredScopes.map((scope) => ({
     scope,
     ...(SCOPE_META[scope] ?? { icon: 'key', title: scope, desc: '', required: false, destructive: false }),
@@ -329,10 +352,17 @@ export default async function AuthorizePage({ searchParams }) {
     <AuthorizeApp
       client={{
         client_id:      oauthClient.client_id,
-        client_name:    oauthClient.client_name,
-        client_byline:  oauthClient.client_byline,
+        client_name:    identity.displayName,
+        client_byline:  identity.byline,
         logo_url:       oauthClient.logo_url,
         is_first_party: oauthClient.is_first_party,
+      }}
+      identity={{
+        verification:       identity.verification,
+        selfReportedName:   identity.selfReportedName,
+        destinationKind:    identity.destination.kind,
+        destinationLabel:   identity.destinationLabel,
+        impersonates:       identity.impersonates,
       }}
       workspaceName={workspace?.display_name ?? ''}
       requestedScopes={scopesWithMeta}

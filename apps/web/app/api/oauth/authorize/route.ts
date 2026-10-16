@@ -6,6 +6,7 @@ import { validateCsrfToken } from '@/lib/oauth/csrf';
 import { consumeStateNonce } from '@/lib/oauth/state';
 import { validateResourceIndicator } from '@/lib/oauth/resource';
 import { looksLikeUrlClientId, redirectUriAllowed, resolveCimdClient } from '@/lib/oauth/cimd';
+import { isSafeRedirectScheme } from '@/lib/oauth/redirect-scheme';
 import { resolveActiveWorkspaceId } from '@/lib/workspace/active';
 import { IDENTITY_SCOPES } from '@/lib/oauth/metadata';
 
@@ -227,6 +228,14 @@ export async function POST(request: NextRequest): Promise<NextResponse> {
 
   if (!redirectOk) {
     return NextResponse.json({ error: 'redirect_uri does not match registered URIs.' }, { status: 400 });
+  }
+
+  // Before any code is minted: never hand back a javascript:, data:, file:, ...
+  // redirect_to, even for a row that was registered before register/route.ts
+  // refused those schemes. The consent component navigates to redirect_to on
+  // our own origin. See lib/oauth/redirect-scheme.ts.
+  if (!isSafeRedirectScheme(redirect_uri)) {
+    return NextResponse.json({ error: 'redirect_uri uses a URL scheme that is not allowed.' }, { status: 400 });
   }
 
   const approvedScopes = requestedScopes.filter((s) => oauthClient.scopes_allowed.includes(s));
