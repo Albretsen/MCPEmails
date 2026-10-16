@@ -382,3 +382,87 @@ Deno.test("verify: an unrestricted owner key still sees and edits every rule wit
     "no re-bind notice for the owner's own rule",
   );
 });
+
+// ---------------------------------------------------------------------------
+// Delta 8e474b4c: update names a disconnected / removed inbox
+// ---------------------------------------------------------------------------
+
+function trackingDeps(
+  caller: AutomationCaller,
+  tables: Record<string, any[]>,
+  writes: any[],
+  read: string[],
+) {
+  const d = deps(caller, tables, writes, []);
+  const inner = d.db as any;
+  (d as any).db = {
+    from(t: string) {
+      read.push(t);
+      return inner.from(t);
+    },
+  };
+  d.resolveInbox = () =>
+    Promise.resolve({
+      ok: false as const,
+      message: "no inbox matches the given inbox_id/inbox.",
+    });
+  return d;
+}
+
+Deno.test("verify(delta): out-of-list rule never triggers an inboxes read, whatever that inbox's state", async () => {
+  for (
+    const state of [{ status: "error", deleted_at: null }, {
+      status: "active",
+      deleted_at: "2026-10-01T00:00:00Z",
+    }]
+  ) {
+    const tables = seed();
+    tables.inboxes = [{ id: INBOX_Y, workspace_id: WS, ...state }];
+    const read: string[] = [];
+    const res = await runAutomationTool(
+      "update",
+      { automation_id: RULE_Y, name: "x" },
+      trackingDeps(RESTRICTED_FULL, tables, [], read),
+    );
+    assertEquals(res.logErrorCode, "not_found", "plain not_found");
+    assert(!read.includes("inboxes"), "the inbox row is never consulted");
+  }
+});
+
+Deno.test("verify(delta): restricted key, rule on its own disconnected inbox, gets inbox_disconnected and no write", async () => {
+  const tables = seed();
+  tables.inboxes = [{
+    id: INBOX_X,
+    workspace_id: WS,
+    status: "error",
+    deleted_at: null,
+  }];
+  const writes: any[] = [];
+  const res = await runAutomationTool(
+    "update",
+    { automation_id: RULE_X_DRAFT, name: "x" },
+    trackingDeps(RESTRICTED_FULL, tables, writes, []),
+  );
+  assertEquals(res.logErrorCode, "inbox_disconnected", "names the cause");
+  assertEquals(writes.length, 0, "no write");
+});
+
+Deno.test("verify(delta): an inbox row in ANOTHER workspace is never described (reads as removed)", async () => {
+  const tables = seed();
+  tables.inboxes = [{
+    id: INBOX_X,
+    workspace_id: "other-ws",
+    status: "error",
+    deleted_at: null,
+  }];
+  const res = await runAutomationTool(
+    "update",
+    { automation_id: RULE_X_DRAFT, name: "x" },
+    trackingDeps(RESTRICTED_FULL, tables, [], []),
+  );
+  assertEquals(
+    res.logErrorCode,
+    "inbox_removed",
+    "workspace-scoped read: foreign row looks absent",
+  );
+});
