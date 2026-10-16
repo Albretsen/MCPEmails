@@ -287,3 +287,63 @@ test('CIMD keeps the client_id host as its name; verified on a vendor host, unve
   assert.equal(other.selfReportedName, null, 'a CIMD name is already the host, nothing self-reported to show');
   assert.equal(other.impersonates, null);
 });
+
+// ── Web URLs smuggled inside a custom scheme (round 3) ──────────────────────
+
+const SMUGGLED = [
+  'cursor://https://attacker.example/cb',
+  'cursor:%68ttps://attacker.example/cb',
+  'cursor:redirect?u=https://attacker.example/cb',
+  'cursor://anysphere.cursor-mcp/oauth/callback?next=https%3A%2F%2Fattacker.example',
+  'cursor://x/cb?u=%2568ttps%253A%252F%252Fattacker.example',
+  'vscode://ext/cb?u=https:\\\\attacker.example',
+  'claude://oauth/callback#https://attacker.example',
+  'windsurf://cb?u=ｈttps://attacker.example',
+  'myapp://open?url=http://attacker.example',
+  'ms-word:ofe|u|https://attacker.example/doc.docx',
+  'ms-word:ofv|u|attacker.example',
+  'ms-excel:ofe|u|https://attacker.example/x.xlsx',
+  'ms-powerpoint:ofe|u|https://attacker.example/x.pptx',
+  'ms-visio:ofe|u|x',
+  'ms-access:x',
+  'ms-project:x',
+  'ms-publisher:x',
+  'ms-spd:x',
+  'ms-infopath:x',
+  'itms-services://?action=download-manifest&url=https://attacker.example/m.plist',
+];
+
+test('a custom scheme carrying an http(s) URL anywhere, encoded or not, and the Office ms-* handlers are refused', async () => {
+  for (const uri of SMUGGLED) {
+    assert.equal(isSafeRedirectScheme(uri), false, uri);
+    assert.equal(await isValidRedirectUri(uri), false, uri);
+    const id = describeClientIdentity({ clientId: DYN, clientName: 'Cursor', isCimd: false, redirectUri: uri });
+    assert.notEqual(id.verification, 'local', uri);
+  }
+});
+
+const DOCUMENTED_NATIVE = [
+  ['Claude Desktop', 'claude://oauth/callback'],
+  ['Cursor', 'cursor://anysphere.cursor-retrieval/oauth/user-mcpemails/callback'],
+  ['Cursor', 'cursor://anysphere.cursor-mcp/oauth/callback'],
+  ['Cursor', 'cursor://mcp/callback'],
+  ['Cline', 'vscode://saoudrizwan.claude-dev/mcp-auth/callback'],
+  ['Visual Studio Code', 'vscode://vscode.github-authentication/did-authenticate?windowid=1&nonce=abc'],
+  ['Visual Studio Code - Insiders', 'vscode-insiders://vscode.github-authentication/did-authenticate'],
+  ['Windsurf', 'windsurf://codeium.windsurf/oauth'],
+  ['Zed', 'zed://oauth/callback'],
+  ['Raycast', 'raycast://oauth?package_name=Extension'],
+  ['Warp', 'warp://mcp/oauth2callback'],
+  ['Kiro', 'kiro://kiro.kiroAgent/authenticate-success'],
+];
+
+test('every documented native redirect (query params included) still registers and reads "On this device"', async () => {
+  for (const [clientName, uri] of DOCUMENTED_NATIVE) {
+    assert.equal(isSafeRedirectScheme(uri), true, uri);
+    assert.equal(await isValidRedirectUri(uri), true, uri);
+    const id = describeClientIdentity({ clientId: DYN, clientName, isCimd: false, redirectUri: uri });
+    assert.equal(id.verification, 'local', uri);
+    assert.equal(id.destinationKind, 'app', uri);
+    assert.equal(id.displayName, clientName, uri);
+  }
+});

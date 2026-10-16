@@ -78,6 +78,11 @@ for (const uri of [
   'googlechromes://attacker.example/cb',
   'intent://attacker.example/cb#Intent;scheme=https;end',
   'web+mcp:https://attacker.example/cb',
+  'cursor://https://attacker.example/cb',
+  'cursor:%68ttps://attacker.example/cb',
+  'cursor:redirect?u=https://attacker.example/cb',
+  'ms-word:ofe|u|https://attacker.example/doc.docx',
+  'itms-services://?action=download-manifest&url=https://attacker.example/m.plist',
 ]) {
   test(`refuses redirect_uri ${JSON.stringify(uri)} and stores nothing`, async () => {
     const res = await register({ client_name: 'x', redirect_uris: ['https://app.example/cb', uri] });
@@ -112,6 +117,11 @@ test('LEGIT: ChatGPT on chatgpt.com, Cursor on cursor://, VS Code on loopback al
     ['Claude Code', 'http://localhost:54212/callback'],
     ['Windsurf', 'windsurf://codeium.windsurf/oauth'],
     ['Visual Studio Code - Insiders', 'vscode-insiders://vscode.github-authentication/did-authenticate'],
+    ['Cline', 'vscode://saoudrizwan.claude-dev/mcp-auth/callback'],
+    ['Raycast', 'raycast://oauth?package_name=Extension'],
+    ['Warp', 'warp://mcp/oauth2callback'],
+    ['Kiro', 'kiro://kiro.kiroAgent/authenticate-success'],
+    ['Zed', 'zed://oauth/callback'],
   ]) {
     const res = await register({ client_name, redirect_uris: [uri] });
     assert.equal(res.status, 201, `${client_name} ${uri}`);

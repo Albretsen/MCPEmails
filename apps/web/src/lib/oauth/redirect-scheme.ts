@@ -54,6 +54,19 @@ export const BLOCKED_REDIRECT_SCHEMES: ReadonlySet<string> = new Set([
   'brave:',
   'resource:',
   'moz-icon:',
+  // Microsoft Office URI handlers: `ms-word:ofe|u|https://h` opens a web
+  // document, and none of them is an OAuth client.
+  'ms-word:',
+  'ms-excel:',
+  'ms-powerpoint:',
+  'ms-visio:',
+  'ms-access:',
+  'ms-project:',
+  'ms-publisher:',
+  'ms-spd:',
+  'ms-infopath:',
+  // iOS enterprise app install: fetches a manifest from a web URL.
+  'itms-services:',
 ]);
 
 /**
@@ -83,24 +96,61 @@ export function isBrowserHandoffScheme(scheme: string): boolean {
   return BROWSER_HANDOFF_PREFIXES.some((p) => s.startsWith(p));
 }
 
+/** An http(s) URL start, tolerant of the slash/backslash spellings a browser accepts. */
+const EMBEDDED_WEB_URL = /https?:[\/\\]{2}/i;
+
 /**
- * True when what follows `scheme:` is itself an http(s) URL, as in
- * `anything:https://attacker.example/cb`. Whatever app handles such a scheme
- * is being asked to open a web page, which is a remote destination.
+ * Up to this many rounds of percent-decoding. Each round can only shorten the
+ * string, and real native redirects need none, so a small bound is enough to
+ * unwrap `%2568ttps` (double-encoded) and still terminate on anything.
  */
-function wrapsWebUrl(url: URL): boolean {
-  const rest = url.href.slice(url.protocol.length).trim();
-  try {
-    const inner = new URL(rest);
-    return inner.protocol === 'http:' || inner.protocol === 'https:';
-  } catch {
-    return false;
+const MAX_DECODE_ROUNDS = 4;
+
+const DROPPED_CHARS = /[\u0000-\u0020\u007f]/g;
+
+function remainderCarriesWebUrl(start: string): boolean {
+  let rest = start.normalize('NFKC').replace(DROPPED_CHARS, '');
+  for (let round = 0; round <= MAX_DECODE_ROUNDS; round++) {
+    if (EMBEDDED_WEB_URL.test(rest)) return true;
+    let decoded: string;
+    try {
+      decoded = decodeURIComponent(rest);
+    } catch {
+      // Malformed escapes elsewhere: decode what can be decoded, byte by byte.
+      decoded = rest.replace(/%([0-9a-f]{2})/gi, (_, h: string) => String.fromCharCode(parseInt(h, 16)));
+    }
+    decoded = decoded.normalize('NFKC').replace(DROPPED_CHARS, '');
+    if (decoded === rest) return false;
+    rest = decoded;
   }
+  return EMBEDDED_WEB_URL.test(rest);
+}
+
+/**
+ * True when anything after `scheme:` contains an http(s):// URL, plainly or
+ * percent-encoded (once or nested), anywhere: right after the colon
+ * (`anything:https://h`, `cursor://https://h`), in a path, a query value
+ * (`cursor:redirect?u=https://h`, `itms-services://?action=...&url=https://h`)
+ * or a handler argument (`ms-word:ofe|u|https://h`). Whatever app handles such
+ * a URI is being handed a web address it may open, which delivers the code to
+ * a remote host. Applies to EVERY custom scheme, allow-listed native ones
+ * included; no legitimate native-app redirect carries a web URL.
+ */
+function containsWebUrl(uri: string, url: URL): boolean {
+  // Both the raw string (after the first colon, with the characters a URL
+  // parser drops removed) and the parser's own serialisation are checked, so
+  // neither an encoding the parser adds nor one it removes hides the URL.
+  const raw = uri.replace(DROPPED_CHARS, '');
+  return (
+    remainderCarriesWebUrl(raw.slice(raw.indexOf(':') + 1)) ||
+    remainderCarriesWebUrl(url.href.slice(url.protocol.length))
+  );
 }
 
 /**
  * True when `uri` parses as a URL whose scheme is neither on the block-list nor
- * a browser hand-off scheme, and (for a custom scheme) does not wrap a web URL.
+ * a browser hand-off scheme, and (for a custom scheme) carries no http(s) URL
+ * anywhere in its remainder, encoded or not.
  *
  * This is ONLY the scheme rule. It says nothing about which hosts are allowed
  * (isValidRedirectUri in redirect-uri.ts adds the https/loopback and SSRF
@@ -118,6 +168,6 @@ export function isSafeRedirectScheme(uri: unknown): boolean {
   if (BLOCKED_REDIRECT_SCHEMES.has(protocol)) return false;
   if (protocol === 'http:' || protocol === 'https:') return true;
   if (isBrowserHandoffScheme(protocol.slice(0, -1))) return false;
-  if (wrapsWebUrl(url)) return false;
+  if (containsWebUrl(uri, url)) return false;
   return true;
 }
