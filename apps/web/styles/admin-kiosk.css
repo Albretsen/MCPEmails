@@ -960,3 +960,17 @@
   opacity: 0.7;
 }
 .kiosk-col.is-partial .kiosk-col-bar b { color: var(--fg-4); }
+
+/* ---------- Signups per day (strip tile) ---------- */
+
+/* Fourteen columns in a tile three of twelve wide: narrower gaps than the
+   weekly chart, and the plot takes the BigNumber's slack like a spark does. */
+.kiosk-days { flex: 1 1 0; min-height: 0; margin-top: clamp(4px, 0.8dvh, 10px); gap: clamp(1px, 0.25vw, 5px); }
+.kiosk-days .kiosk-col-bar { max-width: none; }
+/* A projected column: dashed hollow to the projection, the real count filled
+   from the floor inside it. Used by today's column and the current week's. */
+.kiosk-col-bar.is-projected { display: flex; align-items: flex-end; }
+.kiosk-day-sofar { display: block; width: 100%; border-radius: 2px 2px 0 0; }
+.kiosk-col .kiosk-col-bar.is-projected b { white-space: nowrap; color: var(--fg-2); }
+.kiosk-col .kiosk-col-bar.is-projected b em { font-style: normal; color: var(--fg-4); }
+.kiosk-days .kiosk-col.is-partial .kiosk-col-label { color: var(--fg-2); font-weight: 650; }

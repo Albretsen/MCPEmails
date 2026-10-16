@@ -42,9 +42,9 @@ import {
   fetchGmailCapSummary,
   fetchLifecycleCounts,
   fetchPeopleCounts,
-  fetchProviderMix,
   fetchRetentionCurve,
   fetchRevenueCounts,
+  fetchSignupPace,
   fetchUpgradePressure,
   fetchUsageVolume,
   fetchUserSignupDays,
@@ -54,6 +54,7 @@ import { GMAIL_OAUTH_USER_CAP } from '@/lib/analytics/growth-types';
 import type {
   GmailCapSummaryRow,
   GrowthPeopleCountsRow,
+  GrowthSignupPaceRow,
   GrowthUserSignupDayRow,
 } from '@/lib/analytics/growth-types';
 import {
@@ -70,6 +71,7 @@ import { NO_DATA, formatCount, formatMoney, formatPercent, ratio } from '../char
 import {
   BarList,
   BigNumber,
+  DailyColumns,
   EventList,
   FactRow,
   FunnelSteps,
@@ -89,13 +91,15 @@ import {
   KIOSK_WINDOW_DAYS,
   medianOf,
   milestoneSteps,
+  PACE_HISTORY_DAYS,
   prettyChannel,
-  prettyProvider,
+  projectToday,
+  projectWeek,
   returningWorkspaces,
+  signupDayColumns,
   signupWeeks,
   stageOf,
   sum,
-  sumBy,
   trend,
   type KioskViewId,
 } from './shared';
@@ -180,7 +184,7 @@ async function PulseBoard({ days }: { days: number }) {
 
   const [
     people, signups, daily, lifecycle, counts, funnel, bands,
-    gmail, providers, usage, recurring, checkout, cash,
+    gmail, pace, usage, recurring, checkout, cash,
   ] = await Promise.all([
     fetchPeopleCounts(peopleDays(days)),
     fetchUserSignupDays(DAILY_DAYS),
@@ -190,7 +194,7 @@ async function PulseBoard({ days }: { days: number }) {
     fetchActivationFunnel(FUNNEL_DAYS),
     fetchEngagementBands(activity),
     fetchGmailCapSummary(),
-    fetchProviderMix(),
+    fetchSignupPace(PACE_HISTORY_DAYS + 1),
     fetchUsageVolume(activity),
     fetchRecurringRevenue(days),
     fetchCheckoutFunnel(),
@@ -223,7 +227,7 @@ async function PulseBoard({ days }: { days: number }) {
 
       {/* ---- Row 3: the two panels worth standing still for ---- */}
 
-      <SignupsChartTile signups={signups} span={7} />
+      <SignupsChartTile signups={signups} pace={pace} span={7} />
 
       {funnel.ok ? (
         <Tile label="Road to a paying customer" aside="workspaces, not people" span={5} detail="activation">
@@ -258,7 +262,7 @@ async function PulseBoard({ days }: { days: number }) {
 
       <WorkDoneTile volume={volume} ok={usage.ok} days={activity} />
 
-      <ProvidersTile providers={providers} />
+      <SignupsPerDayTile pace={pace} />
     </>
   );
 }
@@ -452,11 +456,11 @@ async function MoneyBoard({ days }: { days: number }) {
  */
 async function GrowthBoard({ days }: { days: number }) {
 
-  const [people, signups, channels, providers, clients, gmail, funnel] = await Promise.all([
+  const [people, signups, channels, pace, clients, gmail, funnel] = await Promise.all([
     fetchPeopleCounts(peopleDays(days)),
     fetchUserSignupDays(DAILY_DAYS),
     fetchAcquisitionChannels(days),
-    fetchProviderMix(),
+    fetchSignupPace(PACE_HISTORY_DAYS + 1),
     fetchClientMix(),
     fetchGmailCapSummary(),
     fetchActivationFunnel(FUNNEL_DAYS),
@@ -497,7 +501,7 @@ async function GrowthBoard({ days }: { days: number }) {
 
       <ActiveUsersTile people={head} error={peopleError} days={days} />
 
-      <SignupsChartTile signups={signups} span={7} />
+      <SignupsChartTile signups={signups} pace={pace} span={7} />
 
       {/* ATTRIBUTION ONLY EXISTS FROM 2026-08-05 and lands null on a share of
           signups, so "Unknown" is a real row rather than a dropped one: the
@@ -526,7 +530,7 @@ async function GrowthBoard({ days }: { days: number }) {
 
       {/* ---- strip ---- */}
 
-      <ProvidersTile providers={providers} />
+      <SignupsPerDayTile pace={pace} />
 
       {clients.ok ? (
         <Tile label="MCP client on first success" aside="all time" span={3} className="kiosk-strip" detail="clients">
@@ -580,13 +584,13 @@ async function GrowthBoard({ days }: { days: number }) {
 async function StickinessBoard({ days }: { days: number }) {
   const activity = activityDays(days);
 
-  const [people, lifecycle, bands, retention, usage, providers] = await Promise.all([
+  const [people, lifecycle, bands, retention, usage, pace] = await Promise.all([
     fetchPeopleCounts(peopleDays(days)),
     fetchLifecycleCounts(),
     fetchEngagementBands(activity),
     fetchRetentionCurve(8),
     fetchUsageVolume(activity),
-    fetchProviderMix(),
+    fetchSignupPace(PACE_HISTORY_DAYS + 1),
   ]);
 
   const head = people.ok ? people.data : null;
@@ -705,7 +709,7 @@ async function StickinessBoard({ days }: { days: number }) {
 
       <WorkDoneTile volume={usage.ok ? usage.data : null} ok={usage.ok} days={activity} />
 
-      <ProvidersTile providers={providers} />
+      <SignupsPerDayTile pace={pace} />
     </>
   );
 }
@@ -730,12 +734,12 @@ async function StickinessBoard({ days }: { days: number }) {
 async function UptimeBoard({ days }: { days: number }) {
   const activity = activityDays(days);
 
-  const [daily, errors, incidents, usage, providers] = await Promise.all([
+  const [daily, errors, incidents, usage, pace] = await Promise.all([
     fetchDailyMetrics(activity),
     fetchErrorBreakdown(activity),
     fetchRecentIncidents(8),
     fetchUsageVolume(activity),
-    fetchProviderMix(),
+    fetchSignupPace(PACE_HISTORY_DAYS + 1),
   ]);
 
   const rows = daily.ok ? daily.data : [];
@@ -890,7 +894,7 @@ async function UptimeBoard({ days }: { days: number }) {
         <TileError label="Quietest day" message={daily.error} span={3} className="kiosk-strip" />
       )}
 
-      <ProvidersTile providers={providers} />
+      <SignupsPerDayTile pace={pace} />
     </>
   );
 }
@@ -1237,21 +1241,37 @@ function CashTile({ cash }: { cash: { ok: boolean; data?: CashCollected; error?:
   );
 }
 
-/** The eight calendar weeks chart, shared by Pulse and Growth. */
+type PaceResult = { ok: boolean; data?: GrowthSignupPaceRow[]; error?: string };
+
+/**
+ * The eight calendar weeks chart, shared by Pulse and Growth.
+ *
+ * The current week's signup bar carries a projection (see `projectWeek`), so
+ * the short "so far" bar every Monday stops reading as a collapse. Activations
+ * are left unprojected: they lag signups by days and a projection of them
+ * would be a guess about a guess. A failed pace read just drops the projection.
+ */
 function SignupsChartTile({
   signups,
+  pace,
   span,
 }: {
   signups: { ok: boolean; data?: GrowthUserSignupDayRow[]; error?: string };
+  pace: PaceResult;
   span: number;
 }) {
   if (!signups.ok || !signups.data) {
     return <TileError label="Signups and activations" message={signups.error ?? 'unavailable'} span={span} />;
   }
+  const paceRows = pace.ok ? pace.data ?? [] : [];
+  const week = projectWeek(paceRows, projectToday(paceRows));
+  const buckets = signupWeeks(signups.data).map((bucket) =>
+    bucket.partial && week !== null ? { ...bucket, projected: [week] } : bucket,
+  );
   return (
     <Tile label="Signups and activations" aside={`${CHART_WEEKS} calendar weeks`} span={span} detail="signups">
       <GroupedColumns
-        buckets={signupWeeks(signups.data)}
+        buckets={buckets}
         series={[
           { name: 'Signed up', color: 'var(--kiosk-accent)' },
           { name: 'Reached a mailbox', color: 'var(--kiosk-good)' },
@@ -1291,30 +1311,38 @@ function WorkDoneTile({
   );
 }
 
-/** Connected inboxes by provider, in the supporting strip of four views. */
-function ProvidersTile({
-  providers,
-}: {
-  providers: { ok: boolean; data?: { provider: string; inboxes: number }[]; error?: string };
-}) {
-  if (!providers.ok || !providers.data) {
-    return <TileError label="Connected inboxes" message={providers.error ?? 'unavailable'} span={3} className="kiosk-strip" />;
+/**
+ * SIGNUPS PER DAY, with today projected. It took the strip slot from
+ * "Connected inboxes" on 2026-10-16, on all four views that had it.
+ *
+ * The headline is today's REAL count, because that is the only fact; the
+ * projection is the caption and the dashed column, never the big number. The
+ * badge compares the projection with an ordinary recent day (the 7 day mean),
+ * so it answers "is today a good day" rather than "is today over yet". Days are
+ * UTC, like every other day on the board, so today ends at 01:00 or 02:00 Oslo.
+ */
+function SignupsPerDayTile({ pace }: { pace: PaceResult }) {
+  if (!pace.ok || !pace.data) {
+    return <TileError label="Signups per day" message={pace.error ?? 'unavailable'} span={3} className="kiosk-strip" />;
   }
+  const today = projectToday(pace.data);
   return (
-    <Tile
-      label="Connected inboxes"
-      aside={`${sumBy(providers.data, (row) => row.inboxes)} live`}
-      span={3}
-      className="kiosk-strip"
-      detail="providers"
-    >
-      <BarList
-        rows={providers.data
-          .slice()
-          .sort((a, b) => b.inboxes - a.inboxes)
-          .slice(0, 5)
-          .map((row) => ({ name: prettyProvider(row.provider), count: row.inboxes }))}
-        emptyLabel="No inboxes connected"
+    <Tile label="Signups per day" aside="UTC, 14d" span={3} className="kiosk-strip" detail="signups">
+      <BigNumber
+        value={today.soFar}
+        suffix="today"
+        trend={today.projected !== null && today.baseline ? trend(today.projected, today.baseline, 'up') : null}
+        caption={
+          today.projected === null ? (
+            'Too little history to project today'
+          ) : (
+            <>
+              Projected <strong>{formatCount(today.projected)}</strong> ({today.low}–{today.high}),
+              usually <strong>{formatCount(today.usualByNow ?? 0)}</strong> by now
+            </>
+          )
+        }
+        plot={<DailyColumns columns={signupDayColumns(pace.data, today.projected)} />}
       />
     </Tile>
   );

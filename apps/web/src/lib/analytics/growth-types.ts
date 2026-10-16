@@ -397,6 +397,18 @@ export type GrowthUserSignupDayRow = {
 };
 
 /**
+ * One UTC day of external signups for the kiosk's today projection. The last
+ * row is today, so far. `by_now` counts the day's signups that arrived before
+ * the UTC time of day at `as_of`; see growth_signup_pace in the migration.
+ */
+export type GrowthSignupPaceRow = {
+  day: string;
+  new_users: number;
+  by_now: number;
+  as_of: string;
+};
+
+/**
  * The Free action allowance, one row of counts.
  * `growth_usage_cap_overview(p_window_days, p_internal_emails, p_internal_domains)`.
  *

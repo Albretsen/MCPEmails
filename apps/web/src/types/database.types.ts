@@ -4756,6 +4756,19 @@ export type Database = {
           workspace_name: string
         }[]
       }
+      growth_signup_pace: {
+        Args: {
+          p_days?: number
+          p_internal_domains?: string[]
+          p_internal_emails?: string[]
+        }
+        Returns: {
+          as_of: string
+          by_now: number
+          day: string
+          new_users: number
+        }[]
+      }
       growth_user_signup_days: {
         Args: {
           p_days?: number

@@ -54,6 +54,7 @@ import type {
   GrowthInboxBandRow,
   GrowthChannelRow,
   GrowthPeopleCountsRow,
+  GrowthSignupPaceRow,
   GrowthUserSignupDayRow,
   GrowthUsageCapOverviewRow,
   GrowthUsageCapWorkspaceRow,
@@ -501,6 +502,22 @@ export async function fetchUserSignupDays(days: number): Promise<GrowthResult<Gr
   const internal = internalAccountMatchers();
   return rpcRows<GrowthUserSignupDayRow>('growth_user_signup_days', GROWTH_TAGS.daily, {
     p_days: clampDays(days),
+    p_internal_emails: internal.emails,
+    p_internal_domains: internal.domains,
+  });
+}
+
+/**
+ * Daily external signups with an intraday split, for projecting today.
+ *
+ * Cached like everything else here, which is safe because each result carries
+ * its own `as_of`: the projection reads the time of day from the row, not from
+ * the clock at render, so a ten minute old cache entry is still self-consistent.
+ */
+export async function fetchSignupPace(days: number): Promise<GrowthResult<GrowthSignupPaceRow[]>> {
+  const internal = internalAccountMatchers();
+  return rpcRows<GrowthSignupPaceRow>('growth_signup_pace', GROWTH_TAGS.daily, {
+    p_days: clampInt(days, 1, 120),
     p_internal_emails: internal.emails,
     p_internal_domains: internal.domains,
   });
