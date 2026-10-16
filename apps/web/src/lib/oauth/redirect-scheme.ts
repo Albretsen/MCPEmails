@@ -96,15 +96,19 @@ export function isBrowserHandoffScheme(scheme: string): boolean {
   return BROWSER_HANDOFF_PREFIXES.some((p) => s.startsWith(p));
 }
 
-/** An http(s) URL start, tolerant of the slash/backslash spellings a browser accepts. */
-const EMBEDDED_WEB_URL = /https?:[\/\\]{2}/i;
+/**
+ * An http(s) URL start, tolerant of the slash/backslash spellings a browser
+ * accepts, including a single slash (`https:/h`, which the WHATWG parser
+ * repairs to `https://h` for a special scheme).
+ */
+const EMBEDDED_WEB_URL = /https?:[\/\\]+/i;
 
 /**
- * Up to this many rounds of percent-decoding. Each round can only shorten the
- * string, and real native redirects need none, so a small bound is enough to
- * unwrap `%2568ttps` (double-encoded) and still terminate on anything.
+ * Percent-decoding runs to a fixed point, bounded at this many rounds. Each
+ * round is linear and can only shorten the string, so the bound keeps the
+ * whole scan linear while unwrapping any realistic nesting (`%2568ttps` is two).
  */
-const MAX_DECODE_ROUNDS = 4;
+const MAX_DECODE_ROUNDS = 10;
 
 const DROPPED_CHARS = /[\u0000-\u0020\u007f]/g;
 
@@ -170,4 +174,34 @@ export function isSafeRedirectScheme(uri: unknown): boolean {
   if (isBrowserHandoffScheme(protocol.slice(0, -1))) return false;
   if (containsWebUrl(uri, url)) return false;
   return true;
+}
+
+/**
+ * True when `redirectTo` (what POST /api/oauth/authorize answered) is the
+ * client's REGISTERED `registeredUri` with only a query added: same scheme,
+ * credentials, host and path. The registered URI gets the full
+ * isSafeRedirectScheme check; the composed one does NOT, on purpose: the
+ * server appended `code` and the client's own `state`, and a state that holds
+ * a URL (`state=https%3A%2F%2Fexample.com%2Freturn`) would otherwise trip the
+ * embedded-web-URL scan after a code was already minted. The server only ever
+ * adds query parameters, so anything else (another scheme, host or path) is
+ * refused.
+ */
+export function isRedirectToForRegisteredUri(redirectTo: unknown, registeredUri: unknown): boolean {
+  if (typeof redirectTo !== 'string' || !isSafeRedirectScheme(registeredUri)) return false;
+  let to: URL;
+  let registered: URL;
+  try {
+    to = new URL(redirectTo);
+    registered = new URL(registeredUri as string);
+  } catch {
+    return false;
+  }
+  return (
+    to.protocol === registered.protocol &&
+    to.username === registered.username &&
+    to.password === registered.password &&
+    to.host === registered.host &&
+    to.pathname === registered.pathname
+  );
 }

@@ -237,3 +237,31 @@ test('an unknown custom scheme shows the scheme itself, unverified, not "the app
   assert.equal(q(container, 'az-destination-badge').textContent, 'Unverified');
   assert.match(q(container, 'az-self-reported').textContent, /Calls itself My Tool/);
 });
+
+test('Allow follows a native redirect_to whose state holds a URL (no false "not allowed")', async (t) => {
+  const registered = 'cursor://anysphere.cursor-mcp/oauth/callback';
+  const to = new URL(registered);
+  to.searchParams.set('code', 'c0de');
+  to.searchParams.set('state', 'https://example.com/return');
+  const realFetch = globalThis.fetch;
+  globalThis.fetch = async () => new Response(JSON.stringify({ redirect_to: to.toString() }), { status: 200, headers: { 'content-type': 'application/json' } });
+  t.after(() => { globalThis.fetch = realFetch; });
+  const props = propsFor({ clientId: 'dyn_0123456789abcdef01234567', clientName: 'Cursor', redirectUri: registered });
+  props.oauthState = 'https://example.com/return';
+  const { container } = await render(t, props);
+  await flush(() => button(container, 'Allow access').click());
+  // Navigation is not implemented in jsdom; what matters is that the screen
+  // went to "granting" and never to the error step.
+  await waitFor(() => container.textContent.includes('Issuing token for Cursor'), { message: 'granting step' });
+  await flush(() => new Promise((r) => setTimeout(r, 20)));
+  assert.ok(!container.textContent.includes('Authorization failed'));
+});
+
+test('Allow refuses a redirect_to on another host than the registered redirect', async (t) => {
+  const realFetch = globalThis.fetch;
+  globalThis.fetch = async () => new Response(JSON.stringify({ redirect_to: 'cursor://evil.example/cb?code=c' }), { status: 200, headers: { 'content-type': 'application/json' } });
+  t.after(() => { globalThis.fetch = realFetch; });
+  const { container } = await render(t, propsFor({ clientId: 'dyn_0123456789abcdef01234567', clientName: 'Cursor', redirectUri: 'cursor://anysphere.cursor-mcp/oauth/callback' }));
+  await flush(() => button(container, 'Allow access').click());
+  await waitFor(() => container.textContent.includes('Authorization failed'), { message: 'error step' });
+});

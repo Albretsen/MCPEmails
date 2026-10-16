@@ -16,7 +16,7 @@ import assert from 'node:assert/strict';
 import test from 'node:test';
 
 import { describeClientIdentity } from '@/lib/oauth/client-identity';
-import { isSafeRedirectScheme } from '@/lib/oauth/redirect-scheme';
+import { isRedirectToForRegisteredUri, isSafeRedirectScheme } from '@/lib/oauth/redirect-scheme';
 import { isValidRedirectUri } from '@/lib/oauth/redirect-uri';
 
 const dcr = (clientName: string, redirectUri: string) =>
@@ -231,14 +231,17 @@ test('the embedded-URL scan stays linear on long inputs', () => {
   }
 });
 
-// AuthorizeApp re-runs isSafeRedirectScheme on redirect_to, which by then
-// carries the client's own `state`. A native client whose state contains a URL
-// (percent-encoded by searchParams) is refused at Allow, after a code was
-// minted. Remove `todo` once AuthorizeApp checks the registered redirect_uri
-// (or the scheme/hand-off rule only) instead of the full redirect_to.
-test('a URL inside the client state does not break Allow for a native client', { todo: 'BLOCKING in u09 round 3' }, () => {
-  const redirectTo = new URL('cursor://anysphere.cursor-retrieval/oauth/user-mcpemails/callback');
+// AuthorizeApp used to re-run isSafeRedirectScheme on redirect_to, which by
+// then carries the client's own `state`. A native client whose state contains
+// a URL (percent-encoded by searchParams) was refused at Allow, after a code
+// was minted. Fixed: AuthorizeApp now runs the full check on the REGISTERED
+// redirect_uri and only requires redirect_to to be that URI plus a query
+// (isRedirectToForRegisteredUri). The `todo` marker was removed with the fix;
+// the assertion now targets the check AuthorizeApp actually runs.
+test('a URL inside the client state does not break Allow for a native client', () => {
+  const registered = 'cursor://anysphere.cursor-retrieval/oauth/user-mcpemails/callback';
+  const redirectTo = new URL(registered);
   redirectTo.searchParams.set('code', 'abc');
   redirectTo.searchParams.set('state', 'https://example.com/return');
-  assert.equal(isSafeRedirectScheme(redirectTo.toString()), true);
+  assert.equal(isRedirectToForRegisteredUri(redirectTo.toString(), registered), true);
 });

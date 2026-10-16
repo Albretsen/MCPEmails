@@ -232,7 +232,9 @@ export async function POST(request: NextRequest): Promise<NextResponse> {
 
   // Before any code is minted: never hand back a javascript:, data:, file:, ...
   // redirect_to, even for a row that was registered before register/route.ts
-  // refused those schemes. The consent component navigates to redirect_to on
+  // refused those schemes. Checked on the REGISTERED redirect_uri, never on
+  // the composed redirect_to below: that carries the client's own `state`,
+  // which may legitimately hold a URL. The consent component navigates to redirect_to on
   // our own origin. See lib/oauth/redirect-scheme.ts.
   if (!isSafeRedirectScheme(redirect_uri)) {
     return NextResponse.json({ error: 'redirect_uri uses a URL scheme that is not allowed.' }, { status: 400 });

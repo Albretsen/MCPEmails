@@ -132,3 +132,12 @@ test('an unregistered redirect is still refused', async () => {
   assert.equal(res.status, 400);
   assert.equal(inserts.oauth_auth_codes, undefined);
 });
+
+test('LEGIT: a state that holds a URL is echoed and the code still issued (native and https)', async () => {
+  for (const redirect_uri of ['cursor://anysphere.cursor-mcp/oauth/callback', 'https://claude.ai/api/mcp/auth_callback']) {
+    const res = await consent({ redirect_uri, state: 'https://example.com/return?x=1' });
+    assert.equal(res.status, 200, redirect_uri);
+    const { redirect_to } = await res.json();
+    assert.equal(new URL(redirect_to).searchParams.get('state'), 'https://example.com/return?x=1');
+  }
+});

@@ -7,7 +7,7 @@ import { MIcon } from '../MarketingPrimitives';
 import { Icon, Btn, ProviderLogo } from '../Primitives';
 import { trackProductEvent, scopeProfile } from '@/lib/analytics.mjs';
 import { resolveDefaultAccess, resolvePresets } from '@/lib/oauth/consent-presets';
-import { isSafeRedirectScheme } from '@/lib/oauth/redirect-scheme';
+import { isRedirectToForRegisteredUri, isSafeRedirectScheme } from '@/lib/oauth/redirect-scheme';
 
 // ─── Theme toggle ─────────────────────────────────────────────────────────────
 
@@ -619,8 +619,12 @@ export function AuthorizeApp({
       if (redirect_to) {
         // The server already refuses these, but the navigation runs on our own
         // origin, so a javascript:/data:/file: target is never followed from
-        // here either. See lib/oauth/redirect-scheme.ts.
-        if (!isSafeRedirectScheme(redirect_to)) {
+        // here either. The full scheme check runs on the REGISTERED
+        // redirectUri (server-validated); redirect_to must be that URI with
+        // only the server's query added. Not the full scan on redirect_to: the
+        // client's own `state` is in its query and may hold a URL. See
+        // lib/oauth/redirect-scheme.ts.
+        if (!isRedirectToForRegisteredUri(redirect_to, redirectUri)) {
           throw new Error(t('authorize.unsafeRedirect'));
         }
         window.location.href = redirect_to;

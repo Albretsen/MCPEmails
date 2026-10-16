@@ -15,7 +15,7 @@
 import assert from 'node:assert/strict';
 import test from 'node:test';
 
-import { BLOCKED_REDIRECT_SCHEMES, isSafeRedirectScheme } from '@/lib/oauth/redirect-scheme';
+import { BLOCKED_REDIRECT_SCHEMES, isRedirectToForRegisteredUri, isSafeRedirectScheme } from '@/lib/oauth/redirect-scheme';
 import { isValidRedirectUri } from '@/lib/oauth/redirect-uri';
 import {
   describeClientIdentity,
@@ -346,4 +346,60 @@ test('every documented native redirect (query params included) still registers a
     assert.equal(id.destinationKind, 'app', uri);
     assert.equal(id.displayName, clientName, uri);
   }
+});
+
+// ── Round 4: state at Allow, single-slash, decode depth ────────────────────
+
+function composed(registered: string, state: string): string {
+  const u = new URL(registered);
+  u.searchParams.set('code', 'c0de');
+  u.searchParams.set('state', state);
+  return u.toString();
+}
+
+test('Allow: a state holding a URL does not make a native or loopback redirect_to unsafe', () => {
+  for (const registered of [
+    'cursor://anysphere.cursor-retrieval/oauth/user-mcpemails/callback',
+    'claude://oauth/callback',
+    'vscode://saoudrizwan.claude-dev/mcp-auth/callback',
+    'vscode://vscode.github-authentication/did-authenticate?windowid=1&nonce=abc',
+    'raycast://oauth?package_name=Extension',
+    'http://127.0.0.1:33418',
+    'https://claude.ai/api/mcp/auth_callback',
+  ]) {
+    for (const state of ['https://example.com/return', 'http:/x.example', 'javascript:alert(1)', '%68ttps://x.example']) {
+      assert.equal(isRedirectToForRegisteredUri(composed(registered, state), registered), true, `${registered} state=${state}`);
+    }
+  }
+});
+
+test('Allow: redirect_to must be the registered URI; another scheme, host or path, or an unsafe registered URI, is refused', () => {
+  const reg = 'cursor://anysphere.cursor-mcp/oauth/callback';
+  for (const to of [
+    'javascript:alert(1)//?code=c',
+    'cursor://evil.example/oauth/callback?code=c',
+    'cursor://anysphere.cursor-mcp/other?code=c',
+    'vscode://anysphere.cursor-mcp/oauth/callback?code=c',
+    'https://attacker.example/?code=c',
+    'not a url',
+  ]) {
+    assert.equal(isRedirectToForRegisteredUri(to, reg), false, to);
+  }
+  assert.equal(isRedirectToForRegisteredUri('javascript:alert(1)?code=c', 'javascript:alert(1)'), false);
+  assert.equal(isRedirectToForRegisteredUri('cursor:%68ttps://h?code=c', 'cursor:%68ttps://h'), false);
+  assert.equal(isRedirectToForRegisteredUri(null, reg), false);
+});
+
+test('a single-slash embedded web URL is refused like a double-slash one', async () => {
+  for (const uri of ['cursor:https:/attacker.example', 'cursor://x/cb?u=https:/attacker.example', 'claude://cb?u=http:\\attacker.example', 'zed:x?u=https%3A%2Fattacker.example']) {
+    assert.equal(isSafeRedirectScheme(uri), false, uri);
+    assert.equal(await isValidRedirectUri(uri), false, uri);
+  }
+});
+
+test('percent-decoding runs to a fixed point well past two rounds', () => {
+  // https:// encoded six times over.
+  let enc = 'https://attacker.example';
+  for (let i = 0; i < 6; i++) enc = encodeURIComponent(enc);
+  assert.equal(isSafeRedirectScheme(`cursor://x/cb?u=${enc}`), false);
 });
