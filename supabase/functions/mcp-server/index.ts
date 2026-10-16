@@ -32073,16 +32073,104 @@ async function resolveScheduledPayload(row: {
 }
 
 /**
+ * Plaintext (payload_encrypted=false) rows that are NOT approval markers were
+ * last written before payload encryption shipped (migration
+ * 20260623000000_scheduled_sends_payload_encrypted). A plaintext message
+ * payload created after this instant was not written by this product (until
+ * 20261016160400 any signed-in user could INSERT rows over PostgREST), so the
+ * dispatcher refuses it instead of sending it. The trigger added by that
+ * migration refuses such rows at write time as well.
+ */
+const PLAINTEXT_SCHEDULED_PAYLOAD_CUTOFF_MS = Date.parse("2026-06-23T00:00:00Z");
+
+const UUID_SHAPE = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
+
+/**
+ * The approval id carried by a scheduled_sends approval MARKER, or null.
+ *
+ * The marker is the one plaintext row the product writes
+ * (apps/web/src/lib/approvals/decide.ts): exactly `{ approval_id: <uuid> }`,
+ * unencrypted, with no email content. Anything else is not a marker.
+ */
+function scheduledApprovalMarkerId(row: {
+  payload: unknown;
+  payload_encrypted?: boolean | null;
+}): string | null {
+  if (row.payload_encrypted) return null;
+  const p = row.payload;
+  if (!p || typeof p !== "object" || Array.isArray(p)) return null;
+  const keys = Object.keys(p as Record<string, unknown>);
+  const id = (p as Record<string, unknown>)["approval_id"];
+  if (keys.length !== 1 || typeof id !== "string" || !UUID_SHAPE.test(id)) return null;
+  return id;
+}
+
+/** Outcome of re-running an approved operation, as the execute* handlers report it. */
+type ApprovedDispatchOutcome = { logStatus: "success" | "error"; logErrorCode: string | null };
+
+/**
+ * The side effects the dispatcher performs outside `db`. A parameter so the
+ * dispatcher's gates can be tested end to end without a provider or the
+ * module client; production uses the defaults below.
+ */
+interface ScheduledDispatchDeps {
+  runApprovedOperation(
+    operation: string,
+    original: Record<string, unknown>,
+    internalKey: ApiKeyRow,
+  ): Promise<ApprovedDispatchOutcome>;
+  completeApprovedIdempotency(
+    approvalId: string,
+    logStatus: "success" | "error",
+    logErrorCode: string | null,
+  ): Promise<void>;
+  sendViaProvider(inbox: InboxRow, params: SendEmailParams): Promise<SendEmailResult>;
+}
+
+const DEFAULT_SCHEDULED_DISPATCH_DEPS: ScheduledDispatchDeps = {
+  runApprovedOperation(operation, original, internalKey) {
+    if (operation === "email_reply") return executeReplyToEmail(original, internalKey);
+    if (operation === "email_forward") return executeForwardEmail(original, internalKey);
+    if (operation === "draft_send") return executeSendDraft(original, internalKey);
+    if (operation === "schedule_create") return executeScheduleSend(original, internalKey);
+    return executeSendEmail(original, internalKey);
+  },
+  completeApprovedIdempotency: completeApprovedOutboundIdempotency,
+  sendViaProvider(inbox, params) {
+    switch (inbox.provider) {
+      case "gmail":
+        return sendGmailMessage(inbox, params);
+      case "outlook":
+        return sendOutlookMessage(inbox, params);
+      case "imap":
+        return sendImapMessage(inbox, params);
+      default:
+        throw new Error(
+          `Provider '${inbox.provider}' is not supported by the scheduled-send dispatcher.`,
+        );
+    }
+  },
+};
+
+/**
  * The scheduled-send dispatcher: pg_cron every minute, over every workspace.
  *
  * `db` is a parameter for one reason: so a test can drive this whole loop
  * against a recording client and assert what the inbox gate below ACTUALLY
  * asks the database for, and what this function then writes back on to the
  * `scheduled_sends` row. See scheduled-send-reachability.test.ts. Production
- * passes nothing and gets the module client, exactly as before.
+ * passes nothing and gets the module client, exactly as before. `deps` is the
+ * same idea for the provider send and the approved-operation re-run
+ * (scheduled-send-tenancy.test.ts).
+ *
+ * TENANCY. Every row is resolved inside its OWN workspace: the inbox, the
+ * approval and the originating key must all carry `row.workspace_id` (and the
+ * approval `row.inbox_id`). A row naming another tenant's inbox or approval is
+ * failed, never sent.
  */
 async function handleScheduledDispatch(
   db: InboxQueryClient = supabase,
+  deps: ScheduledDispatchDeps = DEFAULT_SCHEDULED_DISPATCH_DEPS,
 ): Promise<Response> {
   const now = new Date().toISOString();
 
@@ -32112,7 +32200,9 @@ async function handleScheduledDispatch(
     .from("scheduled_sends")
     // send_at comes back so a provable non-send can be deferred within a
     // bounded window rather than failed outright (see the catch below).
-    .select("id, inbox_id, payload, payload_encrypted, send_at")
+    // workspace_id: every lookup below is scoped to the row's own workspace.
+    // created_at: dates a plaintext payload (PLAINTEXT_SCHEDULED_PAYLOAD_CUTOFF_MS).
+    .select("id, workspace_id, inbox_id, payload, payload_encrypted, send_at, created_at")
     .eq("status", "pending")
     .lte("send_at", now)
     .order("send_at", { ascending: true })
@@ -32195,6 +32285,10 @@ async function handleScheduledDispatch(
         // column is not decisive.
         .select(reachableInboxSelect(...INBOX_SELECT_COLUMNS.split(",")))
         .eq("id", row.inbox_id)
+        // The row's own workspace, never just the id: a row whose inbox_id
+        // names another tenant's mailbox must not resolve it. (Until
+        // 2026-10-16 any signed-in user could insert such a row.)
+        .eq("workspace_id", row.workspace_id)
         // The soft-delete half stays in SQL, as on every other inboxes read,
         // so a soft-deleted row never arrives however the projection later
         // drifts.
@@ -32228,20 +32322,48 @@ async function handleScheduledDispatch(
       }
       const inbox = inboxData as unknown as InboxRow;
 
+      // ── Plaintext payloads: approval markers only ──────────────────────
+      // The product writes exactly one plaintext shape, the approval marker.
+      // A plaintext MESSAGE payload is only legitimate on a legacy row from
+      // before payload encryption; anything newer was not written by us.
+      const approvalId = scheduledApprovalMarkerId(row);
+      if (!row.payload_encrypted && approvalId === null) {
+        const createdMs = row.created_at ? Date.parse(row.created_at as string) : Number.NaN;
+        if (!(Number.isFinite(createdMs) && createdMs < PLAINTEXT_SCHEDULED_PAYLOAD_CUTOFF_MS)) {
+          console.error("[dispatch] scheduled_send_plaintext_refused", {
+            scheduled_send_id: row.id,
+            workspace_id: row.workspace_id,
+          });
+          throw new Error(
+            "Refused: this scheduled send carries an unencrypted message payload, " +
+              "which MCP Emails never writes. Nothing was sent.",
+          );
+        }
+      }
+
       // ── Build SendEmailParams from stored payload ───────────────────────
       // Dual-mode: decrypts encrypted rows, passes legacy plaintext through.
-      const payload = await resolveScheduledPayload(row);
+      // An approval marker needs no payload beyond its id.
+      const payload = approvalId === null ? await resolveScheduledPayload(row) : {};
       // Approved requests retain their original operation (reply, forward,
       // draft send, direct send, or schedule). Re-run it only inside this
       // trusted dispatcher; the internal marker cannot be supplied by MCP.
-      if (typeof payload["approval_id"] === "string") {
+      if (approvalId !== null) {
         // `select("*")` so the expiry re-check below works against a database
         // where the Phase 2 migration has not been applied yet (the columns are
         // simply absent, and the check degrades to a no-op).
+        //
+        // Scoped to the row's workspace AND inbox: a marker naming another
+        // tenant's approval, or an approval for a different mailbox, resolves
+        // nothing.
         const { data: approval, error: approvalErr } = await db
           .from("send_approvals")
           .select("*")
-          .eq("id", payload["approval_id"]).eq("status", "approved").maybeSingle();
+          .eq("id", approvalId)
+          .eq("workspace_id", row.workspace_id)
+          .eq("inbox_id", row.inbox_id)
+          .eq("status", "approved")
+          .maybeSingle();
         if (approvalErr || !approval || !approval.api_key_id) throw new Error("approved request not found");
         // An approval that ran out of time while still pending must never turn
         // into a delivery, even if something managed to mark it approved. The
@@ -32255,23 +32377,75 @@ async function handleScheduledDispatch(
         if (approvalLapsedBeforeDecision(approval, Date.now())) {
           throw new Error("approved request expired before it was decided");
         }
+
+        // ── Single use: bind the approval to THIS row ─────────────────────
+        // An approval stays 'approved' after it is sent (that is what the
+        // dashboard history shows), so status alone cannot stop a second row
+        // pointing at it from sending it again. `dispatch_scheduled_send_id`
+        // names the one row allowed to dispatch it. The claim is a
+        // conditional null -> row.id update, so of two rows racing for the
+        // same approval exactly one wins. The SAME row passes again, which is
+        // what lets a provable non-send (deferred back to 'pending' below) be
+        // retried on the next tick.
+        if (!("dispatch_scheduled_send_id" in approval)) {
+          // Column absent: the 20261016160400 migration has not been applied.
+          // Fail closed rather than dispatch without the replay guard.
+          throw new Error(
+            "approved request cannot be dispatched: send_approvals.dispatch_scheduled_send_id is missing (apply migration 20261016160400)",
+          );
+        }
+        const replayRefusal =
+          "This approval was already dispatched by another scheduled send. An approval sends once; nothing was sent.";
+        if (approval.dispatch_scheduled_send_id !== row.id) {
+          if (approval.dispatch_scheduled_send_id != null) {
+            console.error("[dispatch] scheduled_send_approval_replay_refused", {
+              scheduled_send_id: row.id,
+              approval_id: approval.id,
+            });
+            throw new Error(replayRefusal);
+          }
+          const { data: bound, error: bindErr } = await db
+            .from("send_approvals")
+            .update({ dispatch_scheduled_send_id: row.id })
+            .eq("id", approval.id)
+            .eq("workspace_id", row.workspace_id)
+            .eq("inbox_id", row.inbox_id)
+            .eq("status", "approved")
+            .is("dispatch_scheduled_send_id", null)
+            .select("id");
+          if (bindErr) {
+            // Nothing has been sent yet, so a database blip defers the row
+            // within the usual window instead of losing an approved send.
+            throw new SmtpNotSentError(`could not claim the approved request: ${bindErr.message}`, true);
+          }
+          if (!bound || bound.length === 0) {
+            console.error("[dispatch] scheduled_send_approval_replay_refused", {
+              scheduled_send_id: row.id,
+              approval_id: approval.id,
+            });
+            throw new Error(replayRefusal);
+          }
+        }
+
         const { data: key, error: keyErr } = await db.from("api_keys")
           .select("id, workspace_id, created_by, name, key_prefix, key_hash, scopes, inbox_ids, expires_at, last_used_at, deleted_at, created_at, card_build_notified")
-          .eq("id", approval.api_key_id).is("deleted_at", null).single();
+          .eq("id", approval.api_key_id)
+          .eq("workspace_id", row.workspace_id)
+          .is("deleted_at", null)
+          .single();
         if (keyErr || !key) throw new Error("originating API key is unavailable");
         const original = await resolveScheduledPayload(approval);
         const internalKey = { ...(key as ApiKeyRow), internalApprovalDispatch: true };
-        let dispatchedResult: { logStatus: "success" | "error"; logErrorCode: string | null };
-        if (approval.operation === "email_reply") dispatchedResult = await executeReplyToEmail(original, internalKey);
-        else if (approval.operation === "email_forward") dispatchedResult = await executeForwardEmail(original, internalKey);
-        else if (approval.operation === "draft_send") dispatchedResult = await executeSendDraft(original, internalKey);
-        else if (approval.operation === "schedule_create") dispatchedResult = await executeScheduleSend(original, internalKey);
-        else dispatchedResult = await executeSendEmail(original, internalKey);
+        const dispatchedResult = await deps.runApprovedOperation(
+          String(approval.operation),
+          original,
+          internalKey,
+        );
         // The caller's idempotency record remains pending until this trusted
         // dispatcher has reached a terminal outcome. This makes replays after
         // approval accurately report delivery/failure instead of a stale
         // approval state.
-        await completeApprovedOutboundIdempotency(
+        await deps.completeApprovedIdempotency(
           approval.id,
           dispatchedResult.logStatus,
           dispatchedResult.logErrorCode,
@@ -32326,22 +32500,7 @@ async function handleScheduledDispatch(
       applySignature(sendParams, inbox);
 
       // ── Per-provider send (mirrors executeSendEmail dispatch) ──────────
-      let sendResult: SendEmailResult;
-      switch (inbox.provider) {
-        case "gmail":
-          sendResult = await sendGmailMessage(inbox, sendParams);
-          break;
-        case "outlook":
-          sendResult = await sendOutlookMessage(inbox, sendParams);
-          break;
-        case "imap":
-          sendResult = await sendImapMessage(inbox, sendParams);
-          break;
-        default:
-          throw new Error(
-            `Provider '${inbox.provider}' is not supported by the scheduled-send dispatcher.`,
-          );
-      }
+      const sendResult: SendEmailResult = await deps.sendViaProvider(inbox, sendParams);
 
       // ── Mark sent ──────────────────────────────────────────────────────
       await db
