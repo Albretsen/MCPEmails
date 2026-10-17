@@ -1,0 +1,287 @@
+{
+  "area": "getting-started",
+  "title": "Getting started",
+  "articles": [
+    {
+      "id": "what-is-mcp-emails",
+      "title": "What MCP Emails does",
+      "summary": "It connects your mailboxes to AI assistants like Claude, ChatGPT and Cursor through one URL.",
+      "keywords": "what is mcp emails mcpemails about overview how it works mcp server ai assistant agent stored privacy",
+      "body": [
+        "Mail is fetched live for each request and not stored. Only your encrypted mailbox password or access token is kept."
+      ],
+      "links": [
+        {
+          "label": "Documentation",
+          "href": "/docs"
+        },
+        {
+          "label": "Security",
+          "href": "/security"
+        }
+      ]
+    },
+    {
+      "id": "first-steps",
+      "title": "Get set up",
+      "summary": "Connect a mailbox, then add the MCP server URL to your AI assistant.",
+      "keywords": "get started setup first steps sign up create account onboarding quick start begin new",
+      "steps": [
+        "In Overview, choose Connect inbox on the Get started card.",
+        "Copy the MCP server URL from the same card.",
+        "Under Choose your client, pick your assistant and follow its steps.",
+        "Ask your assistant: Summarize my unread email from today."
+      ],
+      "links": [
+        {
+          "label": "Dashboard overview",
+          "href": "/dashboard"
+        },
+        {
+          "label": "Client setup guides",
+          "href": "/docs/clients"
+        }
+      ]
+    },
+    {
+      "id": "choose-connection-method",
+      "title": "Pick how to connect your mailbox",
+      "summary": "Outlook signs in with Microsoft, Gmail and a few others use an app password, the rest use IMAP.",
+      "keywords": "connect inbox mailbox provider choose option app password imap smtp outlook gmail icloud yahoo zoho yandex fastmail which method limit",
+      "steps": [
+        "Outlook.com or Microsoft 365: choose Outlook and sign in with Microsoft.",
+        "Gmail, iCloud, Yahoo, Zoho, Yandex or Fastmail: choose its card and paste an app password.",
+        "Any other mailbox or your own domain: choose IMAP / SMTP."
+      ],
+      "body": [
+        "Free connects one mailbox and Personal connects three. Pro and Team have no inbox limit."
+      ],
+      "links": [
+        {
+          "label": "App password help",
+          "href": "/help#article-app-password-required"
+        },
+        {
+          "label": "Provider guides",
+          "href": "/connect"
+        }
+      ]
+    },
+    {
+      "id": "connect-gmail",
+      "title": "Connect Gmail",
+      "summary": "Paste a Google app password, or sign in with Google instead.",
+      "keywords": "gmail google connect app password 2-step verification google sign-in oauth unverified app warning advanced unsafe",
+      "steps": [
+        "Turn on 2-Step Verification in your Google account.",
+        "Create an app password at myaccount.google.com/apppasswords.",
+        "Choose Connect inbox, then Gmail, and paste the app password.",
+        "Or open Prefer to sign in with Google? and choose Connect with Google.",
+        "On Google's warning screen, choose Advanced, then Go to mcpemails.com (unsafe)."
+      ],
+      "links": [
+        {
+          "label": "Gmail guide",
+          "href": "/connect/gmail"
+        },
+        {
+          "label": "Google Workspace guide",
+          "href": "/connect/google-workspace"
+        }
+      ]
+    },
+    {
+      "id": "connect-outlook-microsoft-365",
+      "title": "Connect Outlook or Microsoft 365",
+      "summary": "Sign in with Microsoft. Work or school accounts may need your IT admin to approve once.",
+      "keywords": "outlook hotmail live msn microsoft 365 office 365 exchange work school connect with microsoft admin approval consent it admin",
+      "steps": [
+        "Choose Connect inbox, then Outlook, then Connect with Microsoft.",
+        "If your organisation needs admin approval, choose Get the approval link for your admin.",
+        "Send the link to your IT admin. It works for 7 days.",
+        "After they approve, choose Connect with Microsoft again."
+      ],
+      "body": [
+        "Your admin does not need an MCP Emails account. Microsoft accounts cannot connect with a password over IMAP."
+      ],
+      "links": [
+        {
+          "label": "Outlook.com guide",
+          "href": "/connect/outlook"
+        },
+        {
+          "label": "Microsoft 365 guide",
+          "href": "/connect/office365"
+        }
+      ]
+    },
+    {
+      "id": "connect-imap-mailbox",
+      "title": "Connect any mailbox with IMAP",
+      "summary": "Choose IMAP / SMTP and enter your address, server names and mailbox password.",
+      "keywords": "imap smtp custom domain own domain hosting cpanel plesk work mailbox server settings host port ssl tls starttls receive only send only",
+      "steps": [
+        "Choose Connect inbox, then IMAP / SMTP.",
+        "Enter your email address. Known providers fill in the server settings.",
+        "Otherwise enter the IMAP host and SMTP host from your provider.",
+        "Enter the mailbox password, or an app password if two-step verification is on.",
+        "Choose Connect inbox. Checking can take up to a minute."
+      ],
+      "body": [
+        "Advanced settings holds the connection type (Send and receive, Receive only, Send only), security modes and a separate username."
+      ],
+      "links": [
+        {
+          "label": "IMAP guide",
+          "href": "/connect/imap"
+        },
+        {
+          "label": "Password rejected?",
+          "href": "/help#article-imap-password-rejected"
+        }
+      ]
+    },
+    {
+      "id": "reconnect-inbox",
+      "title": "Reconnect a mailbox that lost access",
+      "summary": "In Inboxes, choose Reconnect next to the mailbox showing Error.",
+      "keywords": "reconnect inbox lost access error status broken expired password changed revoked mailbox not working",
+      "steps": [
+        "Open Inboxes and find the mailbox with status Error.",
+        "Choose Reconnect.",
+        "For an app password mailbox, paste a new app password."
+      ],
+      "links": [
+        {
+          "label": "Dashboard inboxes",
+          "href": "/dashboard/inboxes"
+        },
+        {
+          "label": "App password help",
+          "href": "/help#article-app-password-required"
+        }
+      ]
+    },
+    {
+      "id": "connect-claude",
+      "title": "Connect Claude",
+      "summary": "Add https://mcpemails.com/api/mcp as a custom connector in claude.ai or Claude Desktop.",
+      "keywords": "claude claude.ai claude desktop anthropic custom connector add connector oauth setup",
+      "steps": [
+        "In Claude, open Customize, then Connectors.",
+        "Choose Add, then Add custom connector.",
+        "Paste https://mcpemails.com/api/mcp as the URL, then choose Add.",
+        "Choose Connect and sign in with your MCP Emails account."
+      ],
+      "links": [
+        {
+          "label": "Claude guide",
+          "href": "/docs/claude"
+        },
+        {
+          "label": "Claude Code guide",
+          "href": "/docs/claude-code"
+        }
+      ]
+    },
+    {
+      "id": "connect-chatgpt",
+      "title": "Connect ChatGPT",
+      "summary": "Add https://mcpemails.com/api/mcp as a custom connector in ChatGPT, then sign in.",
+      "keywords": "chatgpt openai developer mode connector plugin apps custom mcp server oauth setup",
+      "steps": [
+        "Follow the ChatGPT guide to add a custom connector. ChatGPT renames its menus often.",
+        "Use https://mcpemails.com/api/mcp as the server URL and OAuth to sign in.",
+        "Authorize MCP Emails and pick which inboxes it may use."
+      ],
+      "body": [
+        "This works on chatgpt.com with Plus, Pro, Business, Enterprise and Edu. Free and Go accounts cannot add custom connectors."
+      ],
+      "links": [
+        {
+          "label": "ChatGPT guide",
+          "href": "/docs/chatgpt"
+        },
+        {
+          "label": "Assistant sees no mail?",
+          "href": "/help#article-assistant-sees-nothing"
+        }
+      ]
+    },
+    {
+      "id": "connect-cursor",
+      "title": "Connect Cursor",
+      "summary": "Add the server URL to Cursor's mcp.json, then sign in when Cursor asks.",
+      "keywords": "cursor editor ide mcp.json mcpServers url oauth coding agent setup",
+      "steps": [
+        "Edit ~/.cursor/mcp.json (all projects) or .cursor/mcp.json (one project).",
+        "Under mcpServers, add a server with url set to https://mcpemails.com/api/mcp.",
+        "When Cursor prompts you, sign in with your MCP Emails account."
+      ],
+      "links": [
+        {
+          "label": "Cursor guide",
+          "href": "/docs/cursor"
+        }
+      ]
+    },
+    {
+      "id": "connect-other-clients",
+      "title": "Connect another AI client",
+      "summary": "Every client uses https://mcpemails.com/api/mcp. Most sign in with OAuth, a few need an API key.",
+      "keywords": "vs code vscode copilot windsurf cascade gemini cli zed raycast warp cline jetbrains claude code curl other clients mcp client setup",
+      "steps": [
+        "Claude Code, VS Code, Windsurf, Gemini CLI, Zed, Raycast, Warp: paste the URL and authorize.",
+        "Cline and JetBrains AI Assistant: add an API key as an Authorization: Bearer header."
+      ],
+      "links": [
+        {
+          "label": "All client guides",
+          "href": "/docs/clients"
+        }
+      ]
+    },
+    {
+      "id": "choose-assistant-permissions",
+      "title": "Limit what your assistant can do",
+      "summary": "Pick an access level and inboxes when you authorize. Change them later with Edit access.",
+      "keywords": "permissions scopes access level read-only standard full access custom authorize consent allow access inboxes restrict limit edit access",
+      "steps": [
+        "On the Authorize screen, pick Read-only, Standard, Full access or Custom.",
+        "Choose All inboxes, or Specific inboxes and tick the ones it may use.",
+        "Name the connection, then choose Allow access.",
+        "To change it later, open API keys and choose Edit access on that row."
+      ],
+      "body": [
+        "Read-only cannot send, change or delete anything. Full access adds folders, scheduling and deleting."
+      ],
+      "links": [
+        {
+          "label": "Dashboard API keys",
+          "href": "/dashboard/keys"
+        }
+      ]
+    },
+    {
+      "id": "api-keys-and-revoking",
+      "title": "Create an API key or revoke access",
+      "summary": "Manage API keys and connected assistants under API keys in the dashboard.",
+      "keywords": "api key bearer token oauth connection create key new key revoke disconnect remove access scopes header authorization",
+      "steps": [
+        "Choose New key, enter a Key name, tick its Permissions, and choose Create key.",
+        "Copy the key now. It is shown only once.",
+        "Send it only in an Authorization: Bearer header, never in a URL.",
+        "To end access for a key or an assistant, choose Revoke on its row."
+      ],
+      "body": [
+        "Removing a connector inside Claude does not revoke it here. Revoke it on this page."
+      ],
+      "links": [
+        {
+          "label": "Dashboard API keys",
+          "href": "/dashboard/keys"
+        }
+      ]
+    }
+  ]
+}

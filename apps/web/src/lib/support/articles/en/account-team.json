@@ -1,0 +1,273 @@
+{
+  "area": "account-team",
+  "title": "Account, team and billing",
+  "articles": [
+    {
+      "id": "switch-workspace",
+      "title": "Switch or rename a workspace",
+      "summary": "Each workspace has its own inboxes, API keys and members. Switch at the top of the sidebar.",
+      "keywords": "workspace switch change rename name sidebar menu workspaces client business",
+      "steps": [
+        "Click the workspace name at the top of the sidebar.",
+        "Pick another workspace under Workspaces.",
+        "To rename it, open Settings and edit Workspace name, then Save changes.",
+        "Only the owner or an admin can rename a workspace."
+      ],
+      "links": [
+        {
+          "label": "Settings",
+          "href": "/dashboard/settings"
+        }
+      ]
+    },
+    {
+      "id": "create-workspace",
+      "title": "Create another workspace",
+      "summary": "Extra workspaces are a Team feature. A new workspace inherits your plan.",
+      "keywords": "new workspace create add second client business team plan multiple workspaces",
+      "steps": [
+        "Click the workspace name at the top of the sidebar.",
+        "Choose New workspace.",
+        "Enter a Workspace name and choose Create workspace."
+      ],
+      "body": [
+        "Your plan belongs to your account, so every workspace you own shares it. On other plans, New workspace links to the plans instead."
+      ],
+      "links": [
+        {
+          "label": "Plans and pricing",
+          "href": "/pricing"
+        }
+      ]
+    },
+    {
+      "id": "invite-member",
+      "title": "Invite someone to your workspace",
+      "summary": "Owners and admins invite people from Members. Inviting needs the Team plan.",
+      "keywords": "invite member colleague collaborator team add user seat email resend cancel invite",
+      "steps": [
+        "Open Members.",
+        "Under Invite a collaborator, enter their email address and pick a role.",
+        "Choose Send invite. The accept link is valid for 7 days.",
+        "If the email did not arrive, choose Resend on the pending invite.",
+        "To withdraw it, choose Cancel invite."
+      ],
+      "links": [
+        {
+          "label": "Members",
+          "href": "/dashboard/members"
+        }
+      ]
+    },
+    {
+      "id": "accept-invite",
+      "title": "Accept a workspace invite",
+      "summary": "Open the link in the invite email and sign in with the address the invite was sent to.",
+      "keywords": "accept invite join workspace invitation link expired different email wrong account",
+      "steps": [
+        "Open the accept link in the invite email within 7 days.",
+        "Sign in or sign up with the exact address the invite was sent to.",
+        "Link expired? Ask an owner or admin to choose Resend. Older links then stop working."
+      ]
+    },
+    {
+      "id": "member-roles",
+      "title": "What each member role can do",
+      "summary": "Owner, Admin, Member and Viewer. Viewers can only read.",
+      "keywords": "role roles permissions owner admin member viewer read only access rights",
+      "steps": [
+        "Owner: full control, including billing, deleting the workspace and changing roles.",
+        "Admin: invites and removes members and renames the workspace.",
+        "Member: connects mailboxes, edits signatures, creates API keys and runs automations.",
+        "Viewer: read only. Their API keys can only use read tools."
+      ],
+      "links": [
+        {
+          "label": "Members",
+          "href": "/dashboard/members"
+        }
+      ]
+    },
+    {
+      "id": "manage-members",
+      "title": "Change a role, remove a member or leave",
+      "summary": "Changes take effect at once. Removed or departing members lose their API keys for the workspace.",
+      "keywords": "change role remove member kick leave workspace revoke access promote demote",
+      "steps": [
+        "In Members, the owner changes roles in the Role column.",
+        "Remove someone with the button on their row, then confirm Remove member.",
+        "Admins can remove members and viewers, but not other admins.",
+        "To leave a workspace you were invited to, choose Leave workspace.",
+        "The owner cannot leave. Delete the workspace in Settings instead."
+      ],
+      "links": [
+        {
+          "label": "Members",
+          "href": "/dashboard/members"
+        },
+        {
+          "label": "Delete a workspace",
+          "href": "/help#article-disconnect-or-delete"
+        }
+      ]
+    },
+    {
+      "id": "profile-email-language",
+      "title": "Change your name, email or language",
+      "summary": "Edit your profile and dashboard language in Settings, under Account.",
+      "keywords": "profile display name email address change language locale norsk settings account",
+      "steps": [
+        "Open Settings.",
+        "Edit Display name and choose Save changes.",
+        "Choose Change email and enter the new address.",
+        "Click the confirmation link sent to the new address to finish.",
+        "Pick a language under Language."
+      ],
+      "links": [
+        {
+          "label": "Settings",
+          "href": "/dashboard/settings"
+        }
+      ]
+    },
+    {
+      "id": "password-and-sign-in",
+      "title": "Change or reset your password",
+      "summary": "Change it in Settings, or reset it from Forgot password? on the sign-in page.",
+      "keywords": "password change reset forgot sign in login magic link google github",
+      "steps": [
+        "In Settings, fill in Current password and New password, then Update password.",
+        "Use at least 8 characters.",
+        "Forgot it? Choose Forgot password? on the sign-in page. The link lasts 60 minutes.",
+        "You can also sign in with Google, GitHub or a magic link."
+      ],
+      "links": [
+        {
+          "label": "Settings",
+          "href": "/dashboard/settings"
+        }
+      ]
+    },
+    {
+      "id": "active-sessions",
+      "title": "Sign out your other devices",
+      "summary": "Security lists every device signed in to your account. You stay signed in on this one.",
+      "keywords": "sessions devices sign out log out other devices browsers security stolen laptop",
+      "steps": [
+        "Open Security.",
+        "Check the list under Active sessions.",
+        "Choose the sign-out button there to end every session except this one."
+      ],
+      "links": [
+        {
+          "label": "Security",
+          "href": "/dashboard/security"
+        }
+      ]
+    },
+    {
+      "id": "audit-log",
+      "title": "See which tool calls ran",
+      "summary": "The audit log on Security lists every MCP tool call, with its inbox, API key and status.",
+      "keywords": "audit log activity history tool calls who what when api key security trail",
+      "steps": [
+        "Open Security.",
+        "Scroll to Audit log.",
+        "Each row shows the tool, inbox, API key, status, timestamp and duration."
+      ],
+      "body": [
+        "The log never records email subjects, bodies or recipients."
+      ],
+      "links": [
+        {
+          "label": "Security",
+          "href": "/dashboard/security"
+        }
+      ]
+    },
+    {
+      "id": "choose-a-plan",
+      "title": "Choose the right plan",
+      "summary": "Count the people who sign in first, then the mailboxes.",
+      "keywords": "plan plans free personal pro team compare which plan inboxes seats upgrade price",
+      "steps": [
+        "Free: one inbox and 150 email actions a month.",
+        "Personal: up to 3 inboxes and no monthly action cap.",
+        "Pro: unlimited inboxes for one person.",
+        "Team: more than one login, with roles and a workspace per client.",
+        "See Pricing for prices and the full comparison."
+      ],
+      "links": [
+        {
+          "label": "Plans and pricing",
+          "href": "/pricing"
+        }
+      ]
+    },
+    {
+      "id": "change-plan-or-interval",
+      "title": "What a plan or billing change costs",
+      "summary": "You see the exact charge and confirm it before anything changes.",
+      "keywords": "upgrade downgrade switch plan annual monthly yearly interval proration credit charge payment not completed declined invoice",
+      "steps": [
+        "In Settings, under Billing & plan, pick Monthly or Annual, then the plan's Get button.",
+        "New subscribers pay on Stripe. Existing subscribers see the charge first, then confirm.",
+        "A plan change is prorated. Your renewal date stays the same.",
+        "Switching monthly and annual credits unused time. Your billing period restarts that day.",
+        "Payment not completed? Your plan is unchanged. Choose Pay invoice to finish."
+      ],
+      "links": [
+        {
+          "label": "Settings",
+          "href": "/dashboard/settings"
+        },
+        {
+          "label": "Cancel or get a refund",
+          "href": "/help#article-change-or-cancel-plan"
+        }
+      ]
+    },
+    {
+      "id": "data-and-privacy",
+      "title": "What we store about your email",
+      "summary": "Email content is never stored, except messages you schedule. Mailbox passwords are encrypted.",
+      "keywords": "privacy data stored storage encryption encrypted gdpr eu training credentials password token delete export",
+      "steps": [
+        "Mail your assistant reads or sends now is fetched live and never stored.",
+        "A scheduled message is stored until it is sent, then kept as history.",
+        "Mailbox passwords and tokens are encrypted with AES-256-GCM.",
+        "Account data is stored in the EU. Your email never trains AI models.",
+        "To request a copy of your data, write to us."
+      ],
+      "links": [
+        {
+          "label": "Privacy policy",
+          "href": "/privacy"
+        },
+        {
+          "label": "Security",
+          "href": "/security"
+        },
+        {
+          "label": "Contact support",
+          "href": "/help#contact"
+        }
+      ]
+    },
+    {
+      "id": "self-hosting",
+      "title": "Host MCP Emails yourself",
+      "summary": "It is open source (AGPL-3.0) and runs with docker-compose, for IMAP and SMTP mailboxes.",
+      "keywords": "self host self-host open source agpl docker docker-compose own server on premise",
+      "body": [
+        "Your credentials are encrypted under a key only you hold. Gmail and Outlook sign-in and the dashboard stay on the hosted service."
+      ],
+      "links": [
+        {
+          "label": "Self-hosting guide",
+          "href": "/self-hosting"
+        }
+      ]
+    }
+  ]
+}

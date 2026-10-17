@@ -6,8 +6,12 @@ import { prepareIndex, searchIndex } from '@/lib/support/search-filter.mjs';
 /**
  * Search box over the compact /help index (src/lib/support/search-index.mjs).
  * The index arrives as a prop; filtering happens in the browser.
+ *
+ * `onSelect(entry, event)` runs on a plain click of a result. When it returns
+ * true it has handled the result (the help center opens an article in place),
+ * so the default navigation is cancelled and the box is cleared.
  */
-export default function HelpSearch({ index, copy }) {
+export default function HelpSearch({ index, copy, onSelect }) {
   const [query, setQuery] = useState('');
   const prepared = useMemo(() => prepareIndex(index), [index]);
   const results = useMemo(() => searchIndex(prepared, query), [prepared, query]);
@@ -29,7 +33,17 @@ export default function HelpSearch({ index, copy }) {
         <ul className="help-results" aria-live="polite">
           {results.map((r) => (
             <li key={r.id}>
-              <a href={r.href} className="help-result">
+              <a
+                href={r.href}
+                className="help-result"
+                onClick={(e) => {
+                  if (!onSelect || e.metaKey || e.ctrlKey || e.shiftKey || e.altKey || e.button !== 0) return;
+                  if (onSelect(r, e)) {
+                    e.preventDefault();
+                    setQuery('');
+                  }
+                }}
+              >
                 <span className="help-result-kind">{copy.kinds?.[r.kind] ?? r.kind}</span>
                 <span className="help-result-title">{r.title}</span>
                 {r.hint ? <span className="help-result-hint">{r.hint}</span> : null}

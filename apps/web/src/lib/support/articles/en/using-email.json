@@ -1,0 +1,251 @@
+{
+  "area": "using-email",
+  "title": "Using email with your assistant",
+  "articles": [
+    {
+      "id": "read-and-search-email",
+      "title": "Read and search your email",
+      "summary": "Ask in plain words, by sender, subject or date. Reading never changes your mailbox.",
+      "keywords": "read search find list unread messages inbox summarize from subject date attachment flagged starred folder",
+      "steps": [
+        "Ask for what is new, for example: \"Show my unread email from today.\"",
+        "Describe a message by sender, recipient, subject words, dates or attachments.",
+        "Ask your assistant to keep reading when a long email stops early.",
+        "Name a folder, such as Sent or Archive, to read mail there.",
+        "Ask it to mark messages as read. Reading alone never does."
+      ],
+      "links": [
+        {
+          "label": "Tool reference",
+          "href": "/docs#tools"
+        }
+      ]
+    },
+    {
+      "id": "search-misses-messages",
+      "title": "Find messages a search missed",
+      "summary": "Name the folder, use whole words, and on Outlook search words and filters separately.",
+      "keywords": "search missing not found folder archive sent imap gmail outlook whole word trash spam filter",
+      "steps": [
+        "On IMAP mailboxes, name your archive or sent folder. Only the Inbox is searched.",
+        "On Gmail and Outlook, name Trash to search it. Gmail also skips Spam.",
+        "On Gmail and Outlook, use whole words for the subject. Part words find nothing.",
+        "On Outlook, ask for words and filters like unread or dates in separate searches.",
+        "On IMAP mailboxes, the \"has an attachment\" filter is ignored."
+      ],
+      "links": [
+        {
+          "label": "Provider compatibility",
+          "href": "/docs/providers"
+        }
+      ]
+    },
+    {
+      "id": "send-new-email",
+      "title": "Send a new email",
+      "summary": "Say who to write to and what to say. A sent email cannot be taken back.",
+      "keywords": "send write compose new email recipient to cc bcc reply-to contact address find someone approval",
+      "steps": [
+        "Ask, for example: \"Email ola@example.com and ask if Thursday at 10 works.\"",
+        "Ask \"What is Anna's email address?\" to find it in your recent mail.",
+        "Add Cc, Bcc or a reply-to address. Up to 50 recipients per field.",
+        "Ask for a draft instead when you want to check it first.",
+        "If send approval is on, an owner or admin must approve it under Approvals."
+      ],
+      "links": [
+        {
+          "label": "Approvals",
+          "href": "/dashboard/approvals"
+        }
+      ]
+    },
+    {
+      "id": "reply-and-forward",
+      "title": "Reply to or forward an email",
+      "summary": "Replies stay in the conversation. Forwards arrive as the original was sent, attachments included.",
+      "keywords": "reply reply all respond answer forward fwd thread conversation attachments note eml",
+      "steps": [
+        "Ask, for example: \"Reply to Ola and say Thursday works.\"",
+        "Say \"reply all\" to include everyone. Otherwise only the sender gets it.",
+        "To forward, name the message and the new recipients, plus an optional note.",
+        "Ask to leave the attachments out, or to forward the original as an attachment.",
+        "Forward up to 50 messages to the same people in one request."
+      ],
+      "links": []
+    },
+    {
+      "id": "save-as-draft",
+      "title": "Save an email as a draft",
+      "summary": "Ask for a draft to check an email first. It is saved in your mailbox's Drafts folder.",
+      "keywords": "draft save unsent review later edit update reply draft drafts folder",
+      "steps": [
+        "Ask, for example: \"Draft a reply to Ola, but do not send it.\"",
+        "Open it from the Drafts folder in your usual mail app, if you like.",
+        "Ask your assistant to change the text, subject or recipients, or to add files.",
+        "Ask it to send the draft when it is ready. Sending cannot be undone.",
+        "Ask it to list your drafts or delete one."
+      ],
+      "links": [
+        {
+          "label": "Edit drafts in the chat",
+          "href": "/help#article-draft-editor-card"
+        }
+      ]
+    },
+    {
+      "id": "draft-editor-card",
+      "title": "Edit and send a draft in the chat",
+      "summary": "Where your AI client shows it, a prepared draft appears as a card you can edit and send.",
+      "keywords": "draft editor card in-chat edit send undo discard save card hide turn off show",
+      "body": [
+        "Hide the card for one mailbox in Inboxes, View details, or for the whole workspace in Settings, Draft editor card."
+      ],
+      "steps": [
+        "Edit the recipients, subject or text in the card, then save. Saving sends nothing.",
+        "Choose Send. Press Undo within a few seconds to keep the draft.",
+        "Use the trash icon to discard the draft at your provider.",
+        "On Gmail and IMAP mailboxes, ask your assistant to edit drafts with attachments.",
+        "To hide cards, open More options and choose Turn off draft cards…"
+      ],
+      "links": [
+        {
+          "label": "Inboxes",
+          "href": "/dashboard/inboxes"
+        },
+        {
+          "label": "Settings",
+          "href": "/dashboard/settings"
+        }
+      ]
+    },
+    {
+      "id": "email-attachments",
+      "title": "Send, read and save attachments",
+      "summary": "Attach up to 20 files (10 MB in total), read a file's text, or download files up to 25 MB.",
+      "keywords": "attachment attach file pdf csv download extract read size limit 10 MB 25 MB eml original",
+      "steps": [
+        "Ask your assistant to attach a file to an email or draft.",
+        "Name a file already in your mailbox to send it on without uploading it again.",
+        "Ask it to read a file's text: plain text, CSV, HTML, JSON or text-layer PDFs.",
+        "Scanned images and scanned PDFs are not read.",
+        "Ask for an email's original to get the whole message as an .eml file."
+      ],
+      "links": []
+    },
+    {
+      "id": "organize-email",
+      "title": "Move, archive and flag messages",
+      "summary": "Move, copy, archive, flag or mark messages, and manage folders. Most of it can be undone.",
+      "keywords": "move archive folder label flag star mark read unread copy organize sort create rename delete folder gmail labels bulk",
+      "body": [
+        "Gmail uses labels: a move adds the label and takes the message out of the Inbox."
+      ],
+      "steps": [
+        "Ask, for example: \"Move this week's receipts to the Receipts folder.\"",
+        "Ask to archive, flag or unflag messages, or mark them read or unread.",
+        "Ask to move everything a search matches, up to 500 messages per request.",
+        "Ask to create, rename or delete folders. Deleting a folder cannot be undone.",
+        "Copy works everywhere except Gmail connected by signing in with Google."
+      ],
+      "links": [
+        {
+          "label": "Provider compatibility",
+          "href": "/docs/providers"
+        }
+      ]
+    },
+    {
+      "id": "delete-email",
+      "title": "Delete email",
+      "summary": "Deleted mail goes to Trash. A permanent delete skips Trash and cannot be undone.",
+      "keywords": "delete remove trash bin permanent erase expunge bulk clean up",
+      "steps": [
+        "Ask to delete a message, a list of messages, or everything a search matches.",
+        "Up to 500 messages are deleted per request.",
+        "Ask for a permanent delete only when you mean it.",
+        "Gmail connected by signing in with Google supports Trash only.",
+        "Make sure your connector or API key has the delete permission."
+      ],
+      "links": [
+        {
+          "label": "API keys",
+          "href": "/dashboard/keys"
+        }
+      ]
+    },
+    {
+      "id": "schedule-email",
+      "title": "Schedule an email for later",
+      "summary": "Name a future time and its time zone. Delivery can be up to a minute late.",
+      "keywords": "schedule send later delay timed future queue cancel scheduled tomorrow morning time zone",
+      "steps": [
+        "Ask, for example: \"Send this to Ola tomorrow at 09:00 Oslo time.\"",
+        "Ask \"What emails are scheduled?\" to see what is queued.",
+        "Ask to cancel one before it starts sending.",
+        "Give it the files directly. Files from other emails cannot be reused here.",
+        "If send approval is on, it waits under Approvals first."
+      ],
+      "links": [
+        {
+          "label": "Approvals",
+          "href": "/dashboard/approvals"
+        }
+      ]
+    },
+    {
+      "id": "signature-and-sender-name",
+      "title": "Set your signature and sender name",
+      "summary": "Each inbox has its own signature and sender name. Set them in Inboxes or ask your assistant.",
+      "keywords": "signature sign-off footer logo image sender name display name from name reply forward html",
+      "steps": [
+        "In Inboxes, choose View details on the mailbox, then open Signature & sending.",
+        "Fill in Sender name and choose Save name.",
+        "Under Email signature, use Rich text or HTML source, then choose Save signature.",
+        "Under On replies & forwards, choose Always add, First reply only or Never add.",
+        "Turn on Embed images in the message if your logo does not show."
+      ],
+      "links": [
+        {
+          "label": "Inboxes",
+          "href": "/dashboard/inboxes"
+        }
+      ]
+    },
+    {
+      "id": "multiple-inboxes",
+      "title": "Work with more than one inbox",
+      "summary": "Say which address to use. Ask \"Which inboxes do I have?\" to see them all.",
+      "keywords": "multiple inboxes several mailboxes accounts which inbox from address switch send as alias",
+      "steps": [
+        "Name the address, for example: \"Reply from sales@ to Anna's last email.\"",
+        "On Gmail, ask to send from a Send As address Gmail has verified.",
+        "Missing an inbox? Check that key's Inbox access under API keys.",
+        "Free connects one mailbox, Personal three, and Pro and Team every mailbox."
+      ],
+      "links": [
+        {
+          "label": "API keys",
+          "href": "/dashboard/keys"
+        },
+        {
+          "label": "Pricing",
+          "href": "/pricing"
+        }
+      ]
+    },
+    {
+      "id": "built-in-email-routines",
+      "title": "Use the built-in email routines",
+      "summary": "Some AI clients list ready-made MCP Emails routines. They run only when you start them.",
+      "keywords": "routines prompts triage follow-up morning brief decisions clean up reply drafts scheduled sends",
+      "steps": [
+        "Look in your AI client's prompt or command menu. Not every client shows them.",
+        "Morning inbox triage ranks recent unread mail without changing anything.",
+        "Follow-up radar finds conversations where a reply is owed.",
+        "Prepare reply drafts writes drafts for you to review.",
+        "Clean up safely proposes a plan before changing anything."
+      ],
+      "links": []
+    }
+  ]
+}

@@ -1,0 +1,287 @@
+{
+  "area": "getting-started",
+  "title": "Primeros pasos",
+  "articles": [
+    {
+      "id": "what-is-mcp-emails",
+      "title": "Qué hace MCP Emails",
+      "summary": "Conecta tus buzones a asistentes de IA como Claude, ChatGPT y Cursor con una sola URL.",
+      "keywords": "qué es mcp emails mcpemails acerca de resumen cómo funciona servidor mcp asistente ia agente almacenado privacidad what is mcp server ai assistant",
+      "body": [
+        "El correo se obtiene en directo en cada petición y no se guarda. Solo se conserva cifrada la contraseña o el token de acceso de tu buzón."
+      ],
+      "links": [
+        {
+          "label": "Documentación",
+          "href": "/docs"
+        },
+        {
+          "label": "Seguridad",
+          "href": "/security"
+        }
+      ]
+    },
+    {
+      "id": "first-steps",
+      "title": "Configúralo",
+      "summary": "Conecta un buzón y añade la URL del servidor MCP a tu asistente de IA.",
+      "keywords": "empezar configuración primeros pasos registrarse crear cuenta alta inicio rápido comenzar nuevo get started setup",
+      "steps": [
+        "En Resumen, elige Conectar bandeja en la tarjeta Empieza.",
+        "Copia la URL del servidor MCP desde esa misma tarjeta.",
+        "En Elige tu cliente, elige tu asistente y sigue sus pasos.",
+        "Pregunta a tu asistente: Resume mi correo no leído de hoy."
+      ],
+      "links": [
+        {
+          "label": "Resumen del panel",
+          "href": "/dashboard"
+        },
+        {
+          "label": "Guías de configuración de clientes",
+          "href": "/docs/clients"
+        }
+      ]
+    },
+    {
+      "id": "choose-connection-method",
+      "title": "Elige cómo conectar tu buzón",
+      "summary": "Outlook inicia sesión con Microsoft, Gmail y algunos más usan contraseña de aplicación, el resto IMAP.",
+      "keywords": "conectar bandeja buzón proveedor elegir opción contraseña de aplicación imap smtp outlook gmail icloud yahoo zoho yandex fastmail qué método límite app password",
+      "steps": [
+        "Outlook.com o Microsoft 365: elige Outlook e inicia sesión con Microsoft.",
+        "Gmail, iCloud, Yahoo, Zoho, Yandex o Fastmail: elige su tarjeta y pega una contraseña de aplicación.",
+        "Cualquier otro buzón o tu propio dominio: elige IMAP / SMTP."
+      ],
+      "body": [
+        "Free conecta un buzón y Personal conecta tres. Pro y Team no tienen límite de bandejas."
+      ],
+      "links": [
+        {
+          "label": "Ayuda con contraseñas de aplicación",
+          "href": "/help#article-app-password-required"
+        },
+        {
+          "label": "Guías de proveedores",
+          "href": "/connect"
+        }
+      ]
+    },
+    {
+      "id": "connect-gmail",
+      "title": "Conectar Gmail",
+      "summary": "Pega una contraseña de aplicación de Google, o inicia sesión con Google.",
+      "keywords": "gmail google conectar contraseña de aplicación verificación en dos pasos inicio de sesión con google oauth aviso app no verificada avanzado no seguro app password",
+      "steps": [
+        "Activa la verificación en dos pasos en tu cuenta de Google.",
+        "Crea una contraseña de aplicación en myaccount.google.com/apppasswords.",
+        "Elige Conectar bandeja, luego Gmail, y pega la contraseña de aplicación.",
+        "O abre ¿Prefieres iniciar sesión con Google? y elige Conectar con Google.",
+        "En la pantalla de aviso de Google, elige Advanced y luego Go to mcpemails.com (unsafe)."
+      ],
+      "links": [
+        {
+          "label": "Guía de Gmail",
+          "href": "/connect/gmail"
+        },
+        {
+          "label": "Guía de Google Workspace",
+          "href": "/connect/google-workspace"
+        }
+      ]
+    },
+    {
+      "id": "connect-outlook-microsoft-365",
+      "title": "Conectar Outlook o Microsoft 365",
+      "summary": "Inicia sesión con Microsoft. Las cuentas de trabajo o escuela pueden necesitar una aprobación única de TI.",
+      "keywords": "outlook hotmail live msn microsoft 365 office 365 exchange trabajo escuela conectar con microsoft aprobación del administrador consentimiento administrador de ti admin approval",
+      "steps": [
+        "Elige Conectar bandeja, luego Outlook y luego Conectar con Microsoft.",
+        "Si tu organización exige aprobación, elige Obtener el enlace de aprobación para tu administrador.",
+        "Envía el enlace a tu administrador de TI. Funciona durante 7 días.",
+        "Cuando lo apruebe, elige Conectar con Microsoft de nuevo."
+      ],
+      "body": [
+        "Tu administrador no necesita una cuenta de MCP Emails. Las cuentas de Microsoft no pueden conectarse con contraseña por IMAP."
+      ],
+      "links": [
+        {
+          "label": "Guía de Outlook.com",
+          "href": "/connect/outlook"
+        },
+        {
+          "label": "Guía de Microsoft 365",
+          "href": "/connect/office365"
+        }
+      ]
+    },
+    {
+      "id": "connect-imap-mailbox",
+      "title": "Conectar cualquier buzón con IMAP",
+      "summary": "Elige IMAP / SMTP e introduce tu dirección, los servidores y la contraseña del buzón.",
+      "keywords": "imap smtp dominio propio personalizado hosting cpanel plesk buzón de trabajo configuración del servidor host puerto ssl tls starttls solo recibir solo enviar",
+      "steps": [
+        "Elige Conectar bandeja y luego IMAP / SMTP.",
+        "Introduce tu dirección de correo. Con los proveedores conocidos, los servidores se rellenan solos.",
+        "Si no, introduce el servidor IMAP y el servidor SMTP que te da tu proveedor.",
+        "Introduce la contraseña del buzón, o una contraseña de aplicación si usas verificación en dos pasos.",
+        "Elige Conectar bandeja de entrada. La comprobación puede tardar hasta un minuto."
+      ],
+      "body": [
+        "Configuración avanzada contiene el tipo de conexión (Enviar y recibir, Solo recibir, Solo enviar), los modos de seguridad y un usuario aparte."
+      ],
+      "links": [
+        {
+          "label": "Guía de IMAP",
+          "href": "/connect/imap"
+        },
+        {
+          "label": "¿Contraseña rechazada?",
+          "href": "/help#article-imap-password-rejected"
+        }
+      ]
+    },
+    {
+      "id": "reconnect-inbox",
+      "title": "Reconectar un buzón que perdió el acceso",
+      "summary": "En Bandejas de entrada, elige Reconectar junto al buzón que muestra Error.",
+      "keywords": "reconectar bandeja acceso perdido error estado roto caducado contraseña cambiada revocado buzón no funciona reconnect",
+      "steps": [
+        "Abre Bandejas de entrada y busca el buzón con estado Error.",
+        "Elige Reconectar.",
+        "Si el buzón usa contraseña de aplicación, pega una nueva."
+      ],
+      "links": [
+        {
+          "label": "Bandejas del panel",
+          "href": "/dashboard/inboxes"
+        },
+        {
+          "label": "Ayuda con contraseñas de aplicación",
+          "href": "/help#article-app-password-required"
+        }
+      ]
+    },
+    {
+      "id": "connect-claude",
+      "title": "Conectar Claude",
+      "summary": "Añade https://mcpemails.com/api/mcp como conector personalizado en claude.ai o Claude Desktop.",
+      "keywords": "claude claude.ai claude desktop anthropic conector personalizado añadir conector oauth configuración custom connector",
+      "steps": [
+        "En Claude, abre Customize y luego Connectors.",
+        "Elige Add y luego Add custom connector.",
+        "Pega https://mcpemails.com/api/mcp como URL y elige Add.",
+        "Elige Connect e inicia sesión con tu cuenta de MCP Emails."
+      ],
+      "links": [
+        {
+          "label": "Guía de Claude",
+          "href": "/docs/claude"
+        },
+        {
+          "label": "Guía de Claude Code",
+          "href": "/docs/claude-code"
+        }
+      ]
+    },
+    {
+      "id": "connect-chatgpt",
+      "title": "Conectar ChatGPT",
+      "summary": "Añade https://mcpemails.com/api/mcp como conector personalizado en ChatGPT e inicia sesión.",
+      "keywords": "chatgpt openai modo desarrollador conector plugin apps servidor mcp personalizado oauth configuración developer mode",
+      "steps": [
+        "Sigue la guía de ChatGPT para añadir un conector personalizado. ChatGPT cambia a menudo el nombre de sus menús.",
+        "Usa https://mcpemails.com/api/mcp como URL del servidor y OAuth para iniciar sesión.",
+        "Autoriza MCP Emails y elige qué bandejas puede usar."
+      ],
+      "body": [
+        "Funciona en chatgpt.com con Plus, Pro, Business, Enterprise y Edu. Las cuentas Free y Go no pueden añadir conectores personalizados."
+      ],
+      "links": [
+        {
+          "label": "Guía de ChatGPT",
+          "href": "/docs/chatgpt"
+        },
+        {
+          "label": "¿El asistente no ve el correo?",
+          "href": "/help#article-assistant-sees-nothing"
+        }
+      ]
+    },
+    {
+      "id": "connect-cursor",
+      "title": "Conectar Cursor",
+      "summary": "Añade la URL del servidor al mcp.json de Cursor e inicia sesión cuando Cursor te lo pida.",
+      "keywords": "cursor editor ide mcp.json mcpServers url oauth agente de código configuración",
+      "steps": [
+        "Edita ~/.cursor/mcp.json (todos los proyectos) o .cursor/mcp.json (un proyecto).",
+        "En mcpServers, añade un servidor con url igual a https://mcpemails.com/api/mcp.",
+        "Cuando Cursor te lo pida, inicia sesión con tu cuenta de MCP Emails."
+      ],
+      "links": [
+        {
+          "label": "Guía de Cursor",
+          "href": "/docs/cursor"
+        }
+      ]
+    },
+    {
+      "id": "connect-other-clients",
+      "title": "Conectar otro cliente de IA",
+      "summary": "Todos los clientes usan https://mcpemails.com/api/mcp. La mayoría usa OAuth, algunos una clave de API.",
+      "keywords": "vs code vscode copilot windsurf cascade gemini cli zed raycast warp cline jetbrains claude code curl otros clientes cliente mcp configuración api key",
+      "steps": [
+        "Claude Code, VS Code, Windsurf, Gemini CLI, Zed, Raycast, Warp: pega la URL y autoriza.",
+        "Cline y JetBrains AI Assistant: añade una clave de API como cabecera Authorization: Bearer."
+      ],
+      "links": [
+        {
+          "label": "Todas las guías de clientes",
+          "href": "/docs/clients"
+        }
+      ]
+    },
+    {
+      "id": "choose-assistant-permissions",
+      "title": "Limita lo que puede hacer tu asistente",
+      "summary": "Elige un nivel de acceso y las bandejas al autorizar. Cámbialos después con Editar acceso.",
+      "keywords": "permisos alcances nivel de acceso solo lectura estándar acceso completo personalizado autorizar consentimiento permitir acceso bandejas restringir limitar editar acceso scopes",
+      "steps": [
+        "En la pantalla de autorización, elige Solo lectura, Estándar, Acceso completo o Personalizado.",
+        "Elige Todas las bandejas, o Bandejas específicas y marca las que puede usar.",
+        "Pon nombre a la conexión y elige Permitir acceso.",
+        "Para cambiarlo después, abre Claves de API y elige Editar acceso en esa fila."
+      ],
+      "body": [
+        "Solo lectura no puede enviar, cambiar ni eliminar nada. Acceso completo añade carpetas, programación y eliminación."
+      ],
+      "links": [
+        {
+          "label": "Claves de API del panel",
+          "href": "/dashboard/keys"
+        }
+      ]
+    },
+    {
+      "id": "api-keys-and-revoking",
+      "title": "Crear una clave de API o revocar el acceso",
+      "summary": "Gestiona las claves de API y los asistentes conectados en Claves de API, dentro del panel.",
+      "keywords": "clave de api token bearer conexión oauth crear clave nueva clave revocar desconectar quitar acceso permisos cabecera authorization api key",
+      "steps": [
+        "Elige Nueva clave, escribe un Nombre de la clave, marca sus Permisos y elige Crear clave.",
+        "Copia la clave ahora. Solo se muestra una vez.",
+        "Envíala solo en una cabecera Authorization: Bearer, nunca en una URL.",
+        "Para quitar el acceso a una clave o a un asistente, elige Revocar en su fila."
+      ],
+      "body": [
+        "Quitar un conector dentro de Claude no lo revoca aquí. Revócalo en esta página."
+      ],
+      "links": [
+        {
+          "label": "Claves de API del panel",
+          "href": "/dashboard/keys"
+        }
+      ]
+    }
+  ]
+}

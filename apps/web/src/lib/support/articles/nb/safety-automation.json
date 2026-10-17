@@ -1,0 +1,226 @@
+{
+  "area": "safety-automation",
+  "title": "Sikkerhet og automatisering",
+  "articles": [
+    {
+      "id": "turn-on-send-review",
+      "title": "Gå gjennom e-post før den sendes",
+      "summary": "Slå på Gjennomgang før sending for en innboks, så venter hver forberedt sending på godkjenningen din.",
+      "keywords": "gjennomgang godkjenning før sending hold igjen godkjenn gjennomgangskort bare i dashbordet send umiddelbart sikkerhet send review",
+      "steps": [
+        "I Innbokser velger du View details på innboksen.",
+        "Åpne Signature & sending.",
+        "Velg Gjennomgangskort i samtalen, eller Gjennomgang bare i dashbordet.",
+        "Velg Lagre signatur. Det lagrer også gjennomgangsinnstillingen."
+      ],
+      "body": [
+        "I begge gjennomgangsmodusene leveres ingenting før en eier eller administrator av arbeidsområdet godkjenner i en innlogget nettleser. Send umiddelbart slår gjennomgang av."
+      ],
+      "links": [
+        {
+          "label": "Innbokser",
+          "href": "/dashboard/inboxes"
+        }
+      ]
+    },
+    {
+      "id": "approve-held-send",
+      "title": "Godkjenn eller avvis en tilbakeholdt sending",
+      "summary": "Tilbakeholdte sendinger venter under Godkjenninger. En eier eller administrator godkjenner eller avviser dem der.",
+      "keywords": "godkjenninger ventende sending godkjenn avvis tilbakeholdt e-post venter gjennomgang utløpt 24 timer eier administrator approvals",
+      "steps": [
+        "Gå til Godkjenninger.",
+        "Velg Review & approve, så Approve & queue for å sende den.",
+        "Eller velg Reject, så Reject request. Ingenting sendes."
+      ],
+      "body": [
+        "En forespørsel ingen tar stilling til innen 24 timer, utløper og sendes aldri. Be assistenten forberede den på nytt hvis du fortsatt vil sende den."
+      ],
+      "links": [
+        {
+          "label": "Godkjenninger",
+          "href": "/dashboard/approvals"
+        }
+      ]
+    },
+    {
+      "id": "use-workflow-prompts",
+      "title": "Kjør en ferdig arbeidsflyt",
+      "summary": "Kopier en rutine fra Arbeidsflyter inn i assistenten, for eksempel Morning inbox triage.",
+      "keywords": "arbeidsflyter prompter rutiner maler morgentriage oppfølging beslutningslogg rydd opp kopier prompt workflows",
+      "steps": [
+        "Gå til Arbeidsflyter.",
+        "Velg Copy prompt på en rutine.",
+        "Lim den inn i AI-assistenten og fyll ut eventuelle hakeparenteser."
+      ],
+      "body": [
+        "Klienter som støtter MCP-prompter, kan også liste disse rutinene direkte. Prompter gir aldri flere tillatelser: tilkoblingens tilganger styrer fortsatt hver handling."
+      ],
+      "links": [
+        {
+          "label": "Arbeidsflyter",
+          "href": "/dashboard/workflows"
+        }
+      ]
+    },
+    {
+      "id": "stop-bulk-run",
+      "title": "Stopp en massekjøring som pågår",
+      "summary": "Arbeidsflyter viser pågående masseflyttinger og -flagging. Stop stanser arbeid som ikke har startet ennå.",
+      "keywords": "massekjøring stopp avbryt large-work controls fremdrift masseflytting flagg bulk",
+      "steps": [
+        "Gå til Arbeidsflyter og bla ned til Large-work controls.",
+        "Velg Stop på raden som kjører."
+      ],
+      "body": [
+        "Stop angrer ikke meldinger som allerede er endret."
+      ],
+      "links": [
+        {
+          "label": "Arbeidsflyter",
+          "href": "/dashboard/workflows"
+        }
+      ]
+    },
+    {
+      "id": "create-automation",
+      "title": "Opprett en automatisering",
+      "summary": "En automatisering kjører et lagret søk etter en tidsplan og gjør én fast handling på treffene.",
+      "keywords": "automatisering regel tidsplan filter sorter innboks triage uten tilsyn ny automatisering forhåndsvis treff automation",
+      "steps": [
+        "Gå til Automatiseringer og velg Ny automatisering.",
+        "Velg Innboks, API-nøkkel, Hvor ofte og Meldinger per kjøring.",
+        "Sett filteret under Hvilke meldinger, og velg Forhåndsvis treff.",
+        "Velg handlingen under Hva som skal skje, og velg Opprett automatisering.",
+        "Slå den På i Status-kolonnen. Nye automatiseringer starter avslått."
+      ],
+      "body": [
+        "Bare eiere og administratorer av arbeidsområdet kan opprette eller endre automatiseringer. Assistenten kan også opprette en hvis nøkkelen har tilgangen manage:automations."
+      ],
+      "links": [
+        {
+          "label": "Automatiseringer",
+          "href": "/dashboard/automations"
+        }
+      ]
+    },
+    {
+      "id": "automation-safety",
+      "title": "Hva en automatisering kan og ikke kan gjøre",
+      "summary": "Automatiseringer flytter, merker, markerer som lest, videresender eller skriver svarutkast. De sletter aldri e-post.",
+      "keywords": "automatisering sikkerhet slett videresend godkjenning utkast svar mal omfang grenser kjører som api-nøkkel",
+      "steps": [
+        "Videresendinger venter alltid under Godkjenninger til et menneske godkjenner dem.",
+        "Lag et svarutkast lagrer bare et utkast. Ingenting sendes.",
+        "Hver kjøring berører høyst antallet Meldinger per kjøring du har valgt (1 til 200).",
+        "Den handler som API-nøkkelen sin. Opphever du nøkkelen, stopper den."
+      ],
+      "links": [
+        {
+          "label": "Sikkerhetsmodell for automatiseringer",
+          "href": "/docs#automation-safety"
+        }
+      ]
+    },
+    {
+      "id": "automation-run-log",
+      "title": "Se hva en automatisering gjorde",
+      "summary": "Kjøreloggen viser hver kjøring og hva som skjedde med hver melding.",
+      "keywords": "kjørelogg historikk automatisering meldinger utført feilet hoppet over venter på godkjenning run log",
+      "steps": [
+        "Gå til Automatiseringer og velg Kjørelogg på automatiseringen.",
+        "Velg Meldinger på en kjøring for å se hver melding og utfallet."
+      ],
+      "body": [
+        "Sletter du en automatisering, beholdes kjøreloggen."
+      ],
+      "links": [
+        {
+          "label": "Automatiseringer",
+          "href": "/dashboard/automations"
+        }
+      ]
+    },
+    {
+      "id": "automation-switched-off",
+      "title": "En automatisering slo seg av",
+      "summary": "Etter 5 mislykkede kjøringer på rad slår en automatisering seg av. Fiks årsaken, og slå den på.",
+      "keywords": "automatisering feiler mislykket deaktivert slått av gjentatte feil koble til på nytt nøkkel opphevet",
+      "steps": [
+        "Gå til Automatiseringer og les årsaken som vises på raden.",
+        "Fiks den, for eksempel ved å koble til innboksen på nytt eller bruke en gyldig API-nøkkel.",
+        "Slå den På igjen i Status-kolonnen."
+      ],
+      "links": [
+        {
+          "label": "Automatiseringer",
+          "href": "/dashboard/automations"
+        }
+      ]
+    },
+    {
+      "id": "read-usage-page",
+      "title": "Les Bruk-siden",
+      "summary": "Bruk viser verktøykall per dag, per verktøy og per innboks, og månedskvoten til et Free-arbeidsområde.",
+      "keywords": "bruk forbruk statistikk kall per dag per verktøy per innboks historikk kvote måler dashbord usage",
+      "body": [
+        "Historikken dekker 30 dager på Free og Personal, 90 på Pro og 365 på Team. Et Free-arbeidsområde ser også hvor mange av de 150 månedlige e-posthandlingene som er brukt, og når tellingen nullstilles."
+      ],
+      "links": [
+        {
+          "label": "Bruk",
+          "href": "/dashboard/usage"
+        },
+        {
+          "label": "Bruksgrensen er nådd",
+          "href": "/help#article-usage-limit-reached"
+        }
+      ]
+    },
+    {
+      "id": "rate-limited",
+      "title": "Assistenten min blir begrenset",
+      "summary": "For mange forespørsler på kort tid. Vent så mange sekunder som feilen oppgir, og prøv igjen.",
+      "keywords": "hastighetsgrense rate limit 429 too many requests for mange forespørsler retry_after per minutt burst strupet senk farten",
+      "body": [
+        "Hver API-nøkkel tillater 100 forespørsler i minuttet, 1 000 i timen og 10 000 i døgnet. Hvert arbeidsområde har også et tak per minutt: Free 60, Personal 120, Pro 300, Team 1 000."
+      ],
+      "links": [
+        {
+          "label": "Hastighetsgrenser",
+          "href": "/docs#rate-limits"
+        }
+      ]
+    },
+    {
+      "id": "usage-notification-emails",
+      "title": "E-post om bruken din",
+      "summary": "På Free får eieren av arbeidsområdet en e-post ved 80 % og 100 % av månedskvoten.",
+      "keywords": "varsel e-post bruk advarsel 80 prosent grense nådd automatisering pauset varsling",
+      "body": [
+        "Når kvoten er brukt opp, settes automatiseringer på pause, og du får en e-post med datoen de fortsetter. Betalte planer har ingen månedlig grense, så disse e-postene gjelder ikke."
+      ],
+      "links": [
+        {
+          "label": "Bruksgrensen er nådd",
+          "href": "/help#article-usage-limit-reached"
+        }
+      ]
+    },
+    {
+      "id": "new-mail-alerts",
+      "title": "Få assistenten til å reagere på ny e-post",
+      "summary": "MCP Emails har ingen push-varsler. Be assistenten sjekke ulest e-post, eller bruk en automatisering.",
+      "keywords": "varsler ny e-post push webhook varsel utløser poll innkommende e-post sanntid notifications",
+      "body": [
+        "En innkommende e-post starter aldri et kall til assistenten av seg selv. La assistenten sjekke ulest e-post etter en tidsplan, eller la en automatisering sortere den."
+      ],
+      "links": [
+        {
+          "label": "Automatiseringer",
+          "href": "/dashboard/automations"
+        }
+      ]
+    }
+  ]
+}

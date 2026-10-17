@@ -419,5 +419,9 @@
     "unavailableBody": "我们无法启动批准流程。请几分钟后重试。",
     "closeHint": "有疑问？请发邮件至 hello@mcpemails.com。",
     "openApp": "打开 MCP Emails"
+  },
+  "help": {
+    "loading": "正在加载帮助…",
+    "loadError": "无法加载帮助。请刷新页面，或发送邮件至 support@mcpemails.com。"
   }
 }

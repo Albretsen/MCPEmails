@@ -1,0 +1,273 @@
+{
+  "area": "account-team",
+  "title": "Konto, team og fakturering",
+  "articles": [
+    {
+      "id": "switch-workspace",
+      "title": "Bytt eller gi nytt navn til et arbeidsområde",
+      "summary": "Hvert arbeidsområde har egne innbokser, API-nøkler og medlemmer. Bytt øverst i sidepanelet.",
+      "keywords": "arbeidsområde bytt endre gi nytt navn navn sidepanel meny arbeidsområder kunde bedrift workspace",
+      "steps": [
+        "Klikk navnet på arbeidsområdet øverst i sidepanelet.",
+        "Velg et annet arbeidsområde under Arbeidsområder.",
+        "For å gi det nytt navn, åpne Innstillinger og endre Navn på arbeidsområde, så Lagre endringer.",
+        "Bare eieren eller en administrator kan gi et arbeidsområde nytt navn."
+      ],
+      "links": [
+        {
+          "label": "Innstillinger",
+          "href": "/dashboard/settings"
+        }
+      ]
+    },
+    {
+      "id": "create-workspace",
+      "title": "Opprett et nytt arbeidsområde",
+      "summary": "Flere arbeidsområder er en Team-funksjon. Et nytt arbeidsområde arver planen din.",
+      "keywords": "nytt arbeidsområde opprett legg til andre kunde bedrift team-plan flere arbeidsområder workspace",
+      "steps": [
+        "Klikk navnet på arbeidsområdet øverst i sidepanelet.",
+        "Velg Nytt arbeidsområde.",
+        "Skriv inn et Navn på arbeidsområde og velg Opprett arbeidsområde."
+      ],
+      "body": [
+        "Planen hører til kontoen din, så alle arbeidsområder du eier, deler den. På andre planer lenker Nytt arbeidsområde til planene i stedet."
+      ],
+      "links": [
+        {
+          "label": "Planer og priser",
+          "href": "/pricing"
+        }
+      ]
+    },
+    {
+      "id": "invite-member",
+      "title": "Inviter noen til arbeidsområdet ditt",
+      "summary": "Eiere og administratorer inviterer folk fra Medlemmer. Invitasjoner krever Team-planen.",
+      "keywords": "inviter medlem kollega samarbeidspartner team legg til bruker plass e-post send på nytt avbryt invitasjon",
+      "steps": [
+        "Åpne Medlemmer.",
+        "Under Inviter en samarbeidspartner skriver du inn e-postadressen deres og velger en rolle.",
+        "Velg Send invitasjon. Godtakelseslenken gjelder i 7 dager.",
+        "Kom ikke e-posten frem, velg Send på nytt på den ventende invitasjonen.",
+        "For å trekke den tilbake, velg Avbryt invitasjon."
+      ],
+      "links": [
+        {
+          "label": "Medlemmer",
+          "href": "/dashboard/members"
+        }
+      ]
+    },
+    {
+      "id": "accept-invite",
+      "title": "Godta en invitasjon til et arbeidsområde",
+      "summary": "Åpne lenken i invitasjonen og logg inn med adressen invitasjonen ble sendt til.",
+      "keywords": "godta invitasjon bli med arbeidsområde invitasjonslenke utløpt annen e-post feil konto",
+      "steps": [
+        "Åpne godtakelseslenken i invitasjonen innen 7 dager.",
+        "Logg inn eller registrer deg med nøyaktig den adressen invitasjonen ble sendt til.",
+        "Utløpt lenke? Be en eier eller administrator velge Send på nytt. Eldre lenker slutter da å virke."
+      ]
+    },
+    {
+      "id": "member-roles",
+      "title": "Hva hver medlemsrolle kan gjøre",
+      "summary": "Eier, Administrator, Medlem og Leser. Lesere kan bare lese.",
+      "keywords": "rolle roller tillatelser eier administrator medlem leser skrivebeskyttet tilgang rettigheter",
+      "steps": [
+        "Eier: full kontroll, inkludert fakturering, sletting av arbeidsområdet og endring av roller.",
+        "Administrator: inviterer og fjerner medlemmer og gir arbeidsområdet nytt navn.",
+        "Medlem: kobler til postkasser, redigerer signaturer, lager API-nøkler og kjører automatiseringer.",
+        "Leser: bare lesetilgang. API-nøklene deres kan bare bruke leseverktøy."
+      ],
+      "links": [
+        {
+          "label": "Medlemmer",
+          "href": "/dashboard/members"
+        }
+      ]
+    },
+    {
+      "id": "manage-members",
+      "title": "Endre en rolle, fjern et medlem eller forlat",
+      "summary": "Endringer gjelder med en gang. Fjernede eller avgåtte medlemmer mister API-nøklene sine for arbeidsområdet.",
+      "keywords": "endre rolle fjern medlem kast ut forlat arbeidsområde opphev tilgang forfrem degrader",
+      "steps": [
+        "I Medlemmer endrer eieren roller i Rolle-kolonnen.",
+        "Fjern noen med knappen på raden deres, og bekreft med Fjern medlem.",
+        "Administratorer kan fjerne medlemmer og lesere, men ikke andre administratorer.",
+        "For å forlate et arbeidsområde du ble invitert til, velg Forlat arbeidsområdet.",
+        "Eieren kan ikke forlate. Slett arbeidsområdet i Innstillinger i stedet."
+      ],
+      "links": [
+        {
+          "label": "Medlemmer",
+          "href": "/dashboard/members"
+        },
+        {
+          "label": "Slett et arbeidsområde",
+          "href": "/help#article-disconnect-or-delete"
+        }
+      ]
+    },
+    {
+      "id": "profile-email-language",
+      "title": "Endre navn, e-post eller språk",
+      "summary": "Endre profilen og språket i dashbordet i Innstillinger, under Konto.",
+      "keywords": "profil visningsnavn e-postadresse endre språk norsk engelsk innstillinger konto",
+      "steps": [
+        "Åpne Innstillinger.",
+        "Endre Visningsnavn og velg Lagre endringer.",
+        "Velg Endre e-post og skriv inn den nye adressen.",
+        "Klikk bekreftelseslenken som sendes til den nye adressen for å fullføre.",
+        "Velg et språk under Språk."
+      ],
+      "links": [
+        {
+          "label": "Innstillinger",
+          "href": "/dashboard/settings"
+        }
+      ]
+    },
+    {
+      "id": "password-and-sign-in",
+      "title": "Endre eller tilbakestill passordet",
+      "summary": "Endre det i Innstillinger, eller tilbakestill det med Glemt passord? på innloggingssiden.",
+      "keywords": "passord endre tilbakestill glemt logg inn innlogging magisk lenke google github",
+      "steps": [
+        "I Innstillinger fyller du inn Nåværende passord og Nytt passord, og velger Oppdater passord.",
+        "Bruk minst 8 tegn.",
+        "Glemt det? Velg Glemt passord? på innloggingssiden. Lenken varer i 60 minutter.",
+        "Du kan også logge inn med Google, GitHub eller en magisk lenke."
+      ],
+      "links": [
+        {
+          "label": "Innstillinger",
+          "href": "/dashboard/settings"
+        }
+      ]
+    },
+    {
+      "id": "active-sessions",
+      "title": "Logg ut de andre enhetene dine",
+      "summary": "Sikkerhet viser alle enheter som er logget inn på kontoen din. Du forblir logget inn på denne.",
+      "keywords": "økter enheter logg ut andre enheter nettlesere sikkerhet stjålet pc",
+      "steps": [
+        "Åpne Sikkerhet.",
+        "Sjekk listen under Aktive økter.",
+        "Velg utloggingsknappen der for å avslutte alle økter unntatt denne."
+      ],
+      "links": [
+        {
+          "label": "Sikkerhet",
+          "href": "/dashboard/security"
+        }
+      ]
+    },
+    {
+      "id": "audit-log",
+      "title": "Se hvilke verktøykall som ble kjørt",
+      "summary": "Revisjonsloggen under Sikkerhet viser hvert MCP-verktøykall, med innboks, API-nøkkel og status.",
+      "keywords": "revisjonslogg aktivitet historikk verktøykall hvem hva når api-nøkkel sikkerhet spor audit log",
+      "steps": [
+        "Åpne Sikkerhet.",
+        "Bla ned til Revisjonslogg.",
+        "Hver rad viser verktøy, innboks, API-nøkkel, status, tidspunkt og varighet."
+      ],
+      "body": [
+        "Loggen lagrer aldri emner, innhold eller mottakere fra e-post."
+      ],
+      "links": [
+        {
+          "label": "Sikkerhet",
+          "href": "/dashboard/security"
+        }
+      ]
+    },
+    {
+      "id": "choose-a-plan",
+      "title": "Velg riktig plan",
+      "summary": "Tell først hvor mange som skal logge inn, så postkassene.",
+      "keywords": "plan planer free personal pro team sammenlign hvilken plan innbokser brukere oppgrader pris abonnement",
+      "steps": [
+        "Free: én innboks og 150 e-posthandlinger i måneden.",
+        "Personal: opptil 3 innbokser og ingen månedlig grense for handlinger.",
+        "Pro: ubegrenset antall innbokser for én person.",
+        "Team: mer enn én innlogging, med roller og et arbeidsområde per kunde.",
+        "Se Priser for priser og full sammenligning."
+      ],
+      "links": [
+        {
+          "label": "Planer og priser",
+          "href": "/pricing"
+        }
+      ]
+    },
+    {
+      "id": "change-plan-or-interval",
+      "title": "Hva en plan- eller faktureringsendring koster",
+      "summary": "Du ser nøyaktig beløp og bekrefter det før noe endres.",
+      "keywords": "oppgrader nedgrader bytt plan årlig månedlig intervall forholdsmessig kreditt belastning betaling ikke fullført avvist faktura",
+      "steps": [
+        "I Innstillinger, under Fakturering og abonnement, velger du Månedlig eller Årlig, og så Velg-knappen for planen.",
+        "Nye abonnenter betaler hos Stripe. Eksisterende abonnenter ser beløpet først, og bekrefter så.",
+        "En planendring beregnes forholdsmessig. Fornyelsesdatoen forblir den samme.",
+        "Bytte mellom månedlig og årlig krediterer ubrukt tid. Faktureringsperioden starter på nytt den dagen.",
+        "Betalingen ikke fullført? Planen er uendret. Velg Betal faktura for å fullføre."
+      ],
+      "links": [
+        {
+          "label": "Innstillinger",
+          "href": "/dashboard/settings"
+        },
+        {
+          "label": "Si opp eller få refusjon",
+          "href": "/help#article-change-or-cancel-plan"
+        }
+      ]
+    },
+    {
+      "id": "data-and-privacy",
+      "title": "Hva vi lagrer om e-posten din",
+      "summary": "E-postinnhold lagres aldri, bortsett fra meldinger du planlegger. Postkassepassord er kryptert.",
+      "keywords": "personvern data lagret lagring kryptering kryptert gdpr eu trening opplæring påloggingsdata passord token slett eksport",
+      "steps": [
+        "E-post assistenten leser eller sender nå, hentes direkte og lagres aldri.",
+        "En planlagt melding lagres til den er sendt, og beholdes så som historikk.",
+        "Postkassepassord og tokener krypteres med AES-256-GCM.",
+        "Kontodata lagres i EU. E-posten din brukes aldri til å trene AI-modeller.",
+        "For å be om en kopi av dataene dine, skriv til oss."
+      ],
+      "links": [
+        {
+          "label": "Personvernerklæring",
+          "href": "/privacy"
+        },
+        {
+          "label": "Sikkerhet",
+          "href": "/security"
+        },
+        {
+          "label": "Kontakt support",
+          "href": "/help#contact"
+        }
+      ]
+    },
+    {
+      "id": "self-hosting",
+      "title": "Kjør MCP Emails selv",
+      "summary": "Det er åpen kildekode (AGPL-3.0) og kjører med docker-compose, for IMAP- og SMTP-postkasser.",
+      "keywords": "selvhosting selv hoste self-host åpen kildekode open source agpl docker docker-compose egen server lokalt",
+      "body": [
+        "Påloggingsdataene dine krypteres med en nøkkel bare du har. Gmail- og Outlook-innlogging og dashbordet blir værende på den hostede tjenesten."
+      ],
+      "links": [
+        {
+          "label": "Veiledning for selvhosting",
+          "href": "/self-hosting"
+        }
+      ]
+    }
+  ]
+}

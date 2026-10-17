@@ -3,48 +3,91 @@
 //
 // Run with: npm run test:support-help
 //
-// The index is serialised into the page, so it has a byte budget: 40 KB for
-// English. Measured at 26 KB on 2026-10-15 (100 released providers, 13
-// clients, 10 docs entries, 13 FAQ items, 7 articles); the other locales run
-// 1-2 KB heavier. The budget leaves room for the held provider wave and a few
-// dozen more entries, and trips long before anyone ships provider guide copy
-// in it by accident, which would add hundreds of KB.
+// The index is serialised into the page (and, in the dashboard, into the
+// help-data response), so it has byte budgets, checked per part:
+//  - everything but the articles: 40 KB. Measured at 24 KB on 2026-10-15 (100
+//    released providers, 13 clients, 10 docs entries, 13 FAQ items); room for
+//    the held provider wave, and it trips long before anyone ships provider
+//    guide copy in it by accident, which would add hundreds of KB.
+//  - articles: 400 bytes per entry on average. Measured at about 320 with 59
+//    articles (help center v2). Hints are clipped to 80 characters and terms to
+//    160, so only an article set that keeps growing moves this total.
+//  - the whole index: 64 KB. Measured at 43 KB for English with 59 articles;
+//    this is the number that matters to a reader on a slow connection, and it
+//    leaves room for roughly 50 more articles before anyone has to look again.
 // ---------------------------------------------------------------------------
 
 import test from 'node:test';
 import assert from 'node:assert/strict';
 
-import { getSearchIndex, HINT_MAX, clip } from './search-index.mjs';
+import { getSearchIndex, HINT_MAX, TERMS_MAX, clip, clipTerms } from './search-index.mjs';
 import { prepareIndex, searchIndex, normalize, MAX_RESULTS } from './search-filter.mjs';
 import { getHelpContent, HELP_LOCALES } from './help-content.mjs';
+import { getHelpArticles, flattenArticles } from './articles.mjs';
 import { releasedProviders } from '../connect/release.mjs';
 import { CLIENTS } from '../clients/clients.mjs';
 
-const BUDGET_BYTES = 40 * 1024;
+const BUDGET_BYTES = 64 * 1024;
+const NON_ARTICLE_BUDGET_BYTES = 40 * 1024;
+const ARTICLE_AVG_BYTES = 400;
 
-const indexFor = async (locale) => getSearchIndex(locale, await getHelpContent(locale));
+async function articlesFor(locale, help) {
+  return flattenArticles((await getHelpArticles(locale, { help })).categories);
+}
+
+const indexFor = async (locale, { inApp = false } = {}) => {
+  const help = await getHelpContent(locale);
+  return getSearchIndex(locale, help, { articles: await articlesFor(locale, help), inApp });
+};
 const countKind = (index, kind) => index.filter((e) => e.kind === kind).length;
+const bytes = (x) => Buffer.byteLength(JSON.stringify(x));
 
-test('the English index stays under its byte budget', async () => {
-  const bytes = Buffer.byteLength(JSON.stringify(await indexFor('en')));
-  assert.equal(bytes < BUDGET_BYTES, true, `index is ${bytes} bytes`);
-});
-
-test('every locale stays under the same budget', async () => {
+test('every locale stays under each byte budget', async () => {
   for (const locale of HELP_LOCALES) {
-    const bytes = Buffer.byteLength(JSON.stringify(await indexFor(locale)));
-    assert.equal(bytes < BUDGET_BYTES, true, `${locale} index is ${bytes} bytes`);
+    const index = await indexFor(locale);
+    const articles = index.filter((e) => e.kind === 'article');
+    const rest = index.filter((e) => e.kind !== 'article');
+    assert.equal(bytes(index) < BUDGET_BYTES, true, `${locale} index is ${bytes(index)} bytes`);
+    assert.equal(bytes(rest) < NON_ARTICLE_BUDGET_BYTES, true, `${locale} non-article part is ${bytes(rest)} bytes`);
+    const avg = bytes(articles) / Math.max(1, articles.length);
+    assert.equal(avg <= ARTICLE_AVG_BYTES, true, `${locale} articles average ${Math.round(avg)} bytes`);
   }
 });
 
-test('it holds every released provider, 13 clients, the 7 articles, docs and FAQ', async () => {
+test('it holds every released provider, 13 clients, every article, docs and FAQ', async () => {
+  const help = await getHelpContent('en');
   const index = await indexFor('en');
   assert.equal(countKind(index, 'provider'), releasedProviders().length);
   assert.equal(countKind(index, 'client'), 13);
   assert.equal(CLIENTS.length, 13);
-  assert.equal(countKind(index, 'article'), 7);
+  const articles = await articlesFor('en', help);
+  assert.equal(articles.length >= 7, true);
+  assert.equal(countKind(index, 'article'), articles.length);
   assert.equal(countKind(index, 'docs'), 10);
   assert.equal(countKind(index, 'faq') > 0, true);
+});
+
+test('without an article list it falls back to the troubleshooting set', async () => {
+  const help = await getHelpContent('en');
+  const index = await getSearchIndex('en', help);
+  assert.equal(countKind(index, 'article'), help.articles.length);
+});
+
+test('in the app, articles link to the in-page anchor; elsewhere to /help', async () => {
+  const page = await indexFor('nb');
+  const app = await indexFor('nb', { inApp: true });
+  const pick = (ix) => ix.find((e) => e.id === 'article:yandex-imap-disabled').href;
+  assert.equal(pick(page), '/nb/help#article-yandex-imap-disabled');
+  assert.equal(pick(app), '#article-yandex-imap-disabled');
+  assert.equal(app.find((e) => e.id === 'provider:yahoo').href, '/nb/connect/yahoo', 'other kinds unchanged');
+});
+
+test('clipTerms cuts on a word boundary with no ellipsis', () => {
+  const long = 'alpha '.repeat(60);
+  const out = clipTerms(long);
+  assert.equal(out.length <= TERMS_MAX, true);
+  assert.equal(out.endsWith('alpha'), true);
+  assert.equal(clipTerms('short terms'), 'short terms');
 });
 
 test('no unreleased provider is linked', async () => {
@@ -64,6 +107,7 @@ test('entries are compact: short hints, unique ids, the full shape', async () =>
     assert.equal(e.hint.length <= HINT_MAX, true, `${e.id} hint is ${e.hint.length} chars`);
     assert.equal(typeof e.terms, 'string');
     assert.equal(e.href.startsWith('/'), true, e.id);
+    assert.equal(e.terms.length <= TERMS_MAX || e.kind !== 'article', true, e.id);
     assert.equal(e.hint.includes('<'), false, e.id);
     assert.equal(ids.has(e.id), false, `duplicate ${e.id}`);
     ids.add(e.id);

@@ -1,0 +1,251 @@
+{
+  "area": "using-email",
+  "title": "让助手处理邮件",
+  "articles": [
+    {
+      "id": "read-and-search-email",
+      "title": "阅读和搜索邮件",
+      "summary": "用日常语言按发件人、主题或日期提问。阅读永远不会改动你的邮箱。",
+      "keywords": "阅读 搜索 查找 列出 未读 邮件 收件箱 总结 发件人 主题 日期 附件 已标记 星标 文件夹 read search",
+      "steps": [
+        "问问有什么新邮件，例如：“显示我今天的未读邮件。”",
+        "按发件人、收件人、主题关键词、日期或附件描述一封邮件。",
+        "长邮件没读完就停下时，让助手继续读。",
+        "说出文件夹名称，比如“已发送”或“归档”，即可读取其中的邮件。",
+        "让它把邮件标为已读。仅仅阅读不会改变已读状态。"
+      ],
+      "links": [
+        {
+          "label": "工具参考",
+          "href": "/docs#tools"
+        }
+      ]
+    },
+    {
+      "id": "search-misses-messages",
+      "title": "找到搜索漏掉的邮件",
+      "summary": "说明文件夹，使用完整词语；在 Outlook 上把关键词和筛选条件分开搜索。",
+      "keywords": "搜索 找不到 漏掉 文件夹 归档 已发送 垃圾箱 垃圾邮件 完整词语 筛选 imap gmail outlook trash spam",
+      "steps": [
+        "在 IMAP 邮箱上，请说明归档或已发送文件夹。默认只搜索收件箱。",
+        "在 Gmail 和 Outlook 上，要搜索垃圾箱请说明 Trash。Gmail 还会跳过 Spam。",
+        "在 Gmail 和 Outlook 上，主题请用完整词语。部分词语什么也搜不到。",
+        "在 Outlook 上，请把关键词与未读、日期等筛选条件分成两次搜索。",
+        "在 IMAP 邮箱上，“有附件”筛选条件会被忽略。"
+      ],
+      "links": [
+        {
+          "label": "服务商兼容性",
+          "href": "/docs/providers"
+        }
+      ]
+    },
+    {
+      "id": "send-new-email",
+      "title": "发送新邮件",
+      "summary": "说明写给谁、写什么。邮件发出后无法撤回。",
+      "keywords": "发送 写信 撰写 新邮件 收件人 抄送 密送 cc bcc 回复地址 reply-to 联系人 地址 查找 审批",
+      "steps": [
+        "例如可以说：“给 ola@example.com 发邮件，问问周四 10 点是否方便。”",
+        "问“Anna 的邮箱地址是什么？”，从你最近的邮件中找到它。",
+        "添加抄送、密送或回复地址。每个字段最多 50 个收件人。",
+        "如果想先检查一下，请让它先写草稿。",
+        "如果开启了发送审批，所有者或管理员必须在“审批”中批准。"
+      ],
+      "links": [
+        {
+          "label": "审批",
+          "href": "/dashboard/approvals"
+        }
+      ]
+    },
+    {
+      "id": "reply-and-forward",
+      "title": "回复或转发邮件",
+      "summary": "回复会留在原会话中。转发会按原样送达，包括附件。",
+      "keywords": "回复 回复全部 答复 转发 fwd 会话 线程 附件 附言 eml reply forward",
+      "steps": [
+        "例如可以说：“回复 Ola，说周四可以。”",
+        "说“回复全部”即可包括所有人，否则只回复发件人。",
+        "转发时，说明是哪封邮件和新的收件人，还可以加一段附言。",
+        "可以要求不带附件，或把原邮件作为附件转发。",
+        "一次请求最多可以把 50 封邮件转发给同一批人。"
+      ],
+      "links": []
+    },
+    {
+      "id": "save-as-draft",
+      "title": "把邮件存为草稿",
+      "summary": "想先检查邮件时，就让助手写草稿。草稿保存在邮箱的“草稿”文件夹中。",
+      "keywords": "草稿 保存 未发送 稍后检查 编辑 更新 回复草稿 草稿箱 drafts",
+      "steps": [
+        "例如可以说：“给 Ola 写一封回复草稿，但先别发。”",
+        "如果愿意，也可以在你平常用的邮件应用里打开“草稿”文件夹查看。",
+        "让助手修改正文、主题或收件人，或添加文件。",
+        "准备好后让它发送草稿。发送无法撤销。",
+        "让它列出你的草稿，或删除其中一封。"
+      ],
+      "links": [
+        {
+          "label": "在对话中编辑草稿",
+          "href": "/help#article-draft-editor-card"
+        }
+      ]
+    },
+    {
+      "id": "draft-editor-card",
+      "title": "在对话中编辑和发送草稿",
+      "summary": "在支持的 AI 客户端中，准备好的草稿会显示为可编辑、可发送的卡片。",
+      "keywords": "草稿编辑卡片 卡片 对话中 编辑 发送 撤销 丢弃 保存 隐藏 关闭 显示 draft card undo",
+      "body": [
+        "可在“收件箱”的 View details 中为单个邮箱隐藏卡片，或在“设置”的“草稿编辑卡片”中为整个工作区隐藏。"
+      ],
+      "steps": [
+        "在卡片中修改收件人、主题或正文，然后保存。保存不会发送任何内容。",
+        "点击 Send。几秒内点击 Undo 可以保留草稿。",
+        "点击垃圾桶图标，可在邮件服务商处丢弃草稿。",
+        "在 Gmail 和 IMAP 邮箱上，带附件的草稿请让助手来编辑。",
+        "要隐藏卡片，请打开 More options，选择 Turn off draft cards…"
+      ],
+      "links": [
+        {
+          "label": "收件箱",
+          "href": "/dashboard/inboxes"
+        },
+        {
+          "label": "设置",
+          "href": "/dashboard/settings"
+        }
+      ]
+    },
+    {
+      "id": "email-attachments",
+      "title": "发送、读取和保存附件",
+      "summary": "最多附加 20 个文件（共 10 MB），可读取文件文字，或下载最大 25 MB 的文件。",
+      "keywords": "附件 添加附件 文件 pdf csv 下载 提取 读取 大小限制 10 MB 25 MB eml 原始邮件 attachment",
+      "steps": [
+        "让助手把文件附加到邮件或草稿中。",
+        "说出邮箱中已有的文件，即可直接转发，无需重新上传。",
+        "让它读取文件中的文字：纯文本、CSV、HTML、JSON 或带文字层的 PDF。",
+        "扫描图片和扫描版 PDF 无法读取。",
+        "索取邮件原文，即可获得整封邮件的 .eml 文件。"
+      ],
+      "links": []
+    },
+    {
+      "id": "organize-email",
+      "title": "移动、归档和标记邮件",
+      "summary": "移动、复制、归档、标记邮件，或管理文件夹。大部分操作可以撤销。",
+      "keywords": "移动 归档 文件夹 标签 标记 星标 已读 未读 复制 整理 分类 创建 重命名 删除文件夹 gmail 标签 批量 labels",
+      "body": [
+        "Gmail 使用标签：移动会添加该标签，并把邮件移出收件箱。"
+      ],
+      "steps": [
+        "例如可以说：“把本周的收据移到 Receipts 文件夹。”",
+        "可以要求归档、标记或取消标记邮件，或标为已读、未读。",
+        "可以要求移动搜索匹配到的全部邮件，每次请求最多 500 封。",
+        "可以要求创建、重命名或删除文件夹。删除文件夹无法撤销。",
+        "复制在所有邮箱上都可用，用 Google 账号登录连接的 Gmail 除外。"
+      ],
+      "links": [
+        {
+          "label": "服务商兼容性",
+          "href": "/docs/providers"
+        }
+      ]
+    },
+    {
+      "id": "delete-email",
+      "title": "删除邮件",
+      "summary": "删除的邮件会进入垃圾箱。永久删除会跳过垃圾箱，且无法撤销。",
+      "keywords": "删除 移除 垃圾箱 回收站 永久删除 清除 expunge 批量 清理 delete trash",
+      "steps": [
+        "可以要求删除一封邮件、一组邮件，或搜索匹配到的全部邮件。",
+        "每次请求最多删除 500 封邮件。",
+        "只有在确定时才要求永久删除。",
+        "用 Google 账号登录连接的 Gmail 只支持移入垃圾箱。",
+        "请确认你的连接器或 API 密钥拥有删除权限。"
+      ],
+      "links": [
+        {
+          "label": "API 密钥",
+          "href": "/dashboard/keys"
+        }
+      ]
+    },
+    {
+      "id": "schedule-email",
+      "title": "定时发送邮件",
+      "summary": "说明将来的时间和时区。送达可能最多晚一分钟。",
+      "keywords": "定时 稍后发送 延迟 预定 将来 队列 取消定时 明天早上 时区 schedule send later",
+      "steps": [
+        "例如可以说：“明天奥斯陆时间 09:00 把这个发给 Ola。”",
+        "问“有哪些定时邮件？”即可查看队列。",
+        "在开始发送前，可以要求取消某一封。",
+        "请直接提供文件。这里不能复用其他邮件中的文件。",
+        "如果开启了发送审批，它会先在“审批”中等待。"
+      ],
+      "links": [
+        {
+          "label": "审批",
+          "href": "/dashboard/approvals"
+        }
+      ]
+    },
+    {
+      "id": "signature-and-sender-name",
+      "title": "设置签名和发件人名称",
+      "summary": "每个收件箱都有自己的签名和发件人名称。在“收件箱”中设置，或让助手设置。",
+      "keywords": "签名 落款 页脚 logo 图片 发件人名称 显示名称 发件人 回复 转发 html signature sender name",
+      "steps": [
+        "在“收件箱”中，点击该邮箱的 View details，然后打开 Signature & sending。",
+        "填写“发件人名称”，然后点击“保存名称”。",
+        "在“邮件签名”下，使用“富文本”或“HTML 源代码”，然后点击“保存签名”。",
+        "在“回复和转发时”下，选择“始终添加”“仅首次回复”或“从不添加”。",
+        "如果你的 logo 显示不出来，请开启“将图片嵌入邮件”。"
+      ],
+      "links": [
+        {
+          "label": "收件箱",
+          "href": "/dashboard/inboxes"
+        }
+      ]
+    },
+    {
+      "id": "multiple-inboxes",
+      "title": "使用多个收件箱",
+      "summary": "说明要用哪个地址。问“我有哪些收件箱？”即可查看全部。",
+      "keywords": "多个收件箱 多个邮箱 账户 哪个收件箱 发件地址 切换 代发 send as 别名 alias",
+      "steps": [
+        "说出地址，例如：“用 sales@ 回复 Anna 的最后一封邮件。”",
+        "在 Gmail 上，可以要求用 Gmail 已验证的 Send As 地址发送。",
+        "少了某个收件箱？请在“API 密钥”中检查该密钥的“收件箱访问”。",
+        "Free 可连接一个邮箱，Personal 三个，Pro 和 Team 不限。"
+      ],
+      "links": [
+        {
+          "label": "API 密钥",
+          "href": "/dashboard/keys"
+        },
+        {
+          "label": "价格",
+          "href": "/pricing"
+        }
+      ]
+    },
+    {
+      "id": "built-in-email-routines",
+      "title": "使用内置邮件流程",
+      "summary": "部分 AI 客户端会列出现成的 MCP Emails 流程。只有你启动时才会运行。",
+      "keywords": "流程 提示词 prompts 分类整理 跟进 晨间简报 决策 清理 回复草稿 定时发送 routines triage",
+      "steps": [
+        "在 AI 客户端的提示词或命令菜单中查找。并非所有客户端都会显示。",
+        "Morning inbox triage 会对最近的未读邮件排序，不做任何改动。",
+        "Follow-up radar 会找出你欠回复的会话。",
+        "Prepare reply drafts 会写好草稿供你检查。",
+        "Clean up safely 会在改动任何内容之前先提出方案。"
+      ],
+      "links": []
+    }
+  ]
+}
