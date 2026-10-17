@@ -1036,7 +1036,7 @@ DECLARE
   -- number a customer reads on /pricing must be the number that blocks them,
   -- and that number is this one.
   c_free_cap        constant integer  := 150;
-  c_grace           constant interval := interval '7 days';
+  c_grace           constant interval := interval '3 days';
   -- Silent abuse ceilings for paid plans. NOT a pricing lever; mirrors
   -- SHADOW_ACTION_CAPS in supabase/functions/mcp-server/index.ts and
   -- maxMonthlyToolCalls in plans.ts. Never named in customer-facing copy.

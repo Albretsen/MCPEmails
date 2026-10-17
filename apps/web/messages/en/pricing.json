@@ -27,7 +27,7 @@
       "cta": "Start free",
       "features": [
         "1 connected inbox",
-        "150 email actions a month, first 7 days uncounted",
+        "150 email actions a month, first 3 days uncounted",
         "Read, search, organise, draft, schedule and send",
         "Send review and approval hold",
         "Usage analytics",
@@ -141,7 +141,7 @@
     "values": {
       "unlimited": "Unlimited",
       "unlimitedCompany": "Unlimited, company mailboxes included",
-      "actionsFree": "150 / month, first 7 days uncounted",
+      "actionsFree": "150 / month, first 3 days uncounted",
       "actionsPaid": "No monthly cap, fair use",
       "oneInbox": "1 inbox",
       "threeInboxes": "3 inboxes",
@@ -161,7 +161,7 @@
     "items": [
       {
         "q": "What do I get on the free plan?",
-        "a": "One connected inbox, forever, with no card, and 150 email actions a calendar month. Your first 7 days after signup are not counted, so you can wire up your agent and try everything before the meter starts. Your agent gets every MCP tool we ship against that mailbox: read, search, organise, label, draft, schedule and send, plus the per-inbox send review and approval hold. When you want a second or third mailbox, or no monthly cap on actions, that is Personal, at $9 a month."
+        "a": "One connected inbox, forever, with no card, and 150 email actions a calendar month. Your first 3 days after signup are not counted, so you can wire up your agent and try everything before the meter starts. Your agent gets every MCP tool we ship against that mailbox: read, search, organise, label, draft, schedule and send, plus the per-inbox send review and approval hold. When you want a second or third mailbox, or no monthly cap on actions, that is Personal, at $9 a month."
       },
       {
         "q": "What does Personal add over Free?",

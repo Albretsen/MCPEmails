@@ -70,7 +70,7 @@
  * THE ACTION CAP IS BACK, AS ONE BAND. Four panels of it were cut on
  * 2026-09-07 because the cap was a silent abuse ceiling nobody could reach
  * and they reported a structural zero. Since 2026-09-12 Free is 150 email
- * actions a month with the first 7 days uncounted (docs/PLAN-free-action-cap-150.md),
+ * actions a month with the first 3 days uncounted (docs/PLAN-free-action-cap-150.md),
  * which makes it a paywall with a funnel, two emails and an automation pause
  * behind it, and that is what the "Usage cap" band measures. Connected
  * inboxes remain the other value metric and keep their own tiles.

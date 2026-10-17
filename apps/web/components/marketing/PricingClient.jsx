@@ -16,7 +16,7 @@ import { formatAmountCents, formatPriceCents } from '@/lib/stripe/annual-offer';
 // The value metric is CONNECTED INBOXES. Free is one inbox, Personal is three
 // for one person, Pro is every inbox you own, Team adds people. Since
 // 2026-09-12 Free also carries a public allowance of 150 email actions a
-// calendar month (first 7 days uncounted), stated in the table and the FAQ;
+// calendar month (first 3 days uncounted), stated in the table and the FAQ;
 // paid tiers have no monthly cap and their fair-use ceilings stay silent
 // (see src/lib/stripe/plans.ts, FREE_ACTION_ALLOWANCE / FREE_ACTION_GRACE_DAYS).
 //

@@ -195,7 +195,7 @@ export default async function UsageCapPage({
         <div>
           <h1>Usage cap</h1>
           <p className="bd-head-sub">
-            Free workspaces at half their 150 email actions or more this UTC month. The first 7 days after signup are
+            Free workspaces at half their 150 email actions or more this UTC month. The first 3 days after signup are
             not counted, and every workspace from before 2026-09-12 is exempt for good, so none of those appear here.
           </p>
         </div>

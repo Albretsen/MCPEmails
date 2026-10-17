@@ -120,7 +120,7 @@
       "keywords": "limite d’utilisation quota plafond 150 actions gratuit free refusé réinitialisation",
       "steps": [
         "Consultez le nombre d’actions utilisées dans Usage, dans le tableau de bord.",
-        "Lister vos boîtes et tout ce que vous faites dans le tableau de bord ne compte jamais, et rien n’est compté pendant les 7 premiers jours après l’inscription.",
+        "Lister vos boîtes et tout ce que vous faites dans le tableau de bord ne compte jamais, et rien n’est compté pendant les 3 premiers jours après l’inscription.",
         "Réessayer ne sert à rien. Le quota se réinitialise le 1er du mois suivant (UTC), et les automatisations en pause reprennent seules.",
         "Personal, Pro et Team n’ont pas de plafond mensuel, dans la limite d’un usage raisonnable.",
         "Les espaces créés avant le 2026-09-12 ne sont pas décomptés. Si vous voyez la limite sur l’un d’eux, écrivez-nous."

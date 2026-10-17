@@ -30,7 +30,7 @@ $0
 /forever
 Connect one inbox and give your agent a real mailbox.
 1 connected inbox
-150 email actions a month, first 7 days uncounted
+150 email actions a month, first 3 days uncounted
 Read, search, organise, draft, schedule and send
 Send review and approval hold
 Usage analytics
@@ -92,7 +92,7 @@ Connected inboxes
 Unlimited, company mailboxes included
 Unlimited
 Email actions per month
-150 / month, first 7 days uncounted
+150 / month, first 3 days uncounted
 No monthly cap, fair use
 No monthly cap, fair use
 No monthly cap, fair use

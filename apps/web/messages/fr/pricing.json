@@ -27,7 +27,7 @@
       "cta": "Commencer gratuitement",
       "features": [
         "1 boîte connectée",
-        "150 actions e-mail par mois, les 7 premiers jours non comptés",
+        "150 actions e-mail par mois, les 3 premiers jours non comptés",
         "Lire, chercher, organiser, rédiger, programmer et envoyer",
         "Validation avant envoi",
         "Analytique d'usage",
@@ -141,7 +141,7 @@
     "values": {
       "unlimited": "Illimité",
       "unlimitedCompany": "Illimité, boîtes d'entreprise comprises",
-      "actionsFree": "150 / mois, 7 premiers jours non comptés",
+      "actionsFree": "150 / mois, 3 premiers jours non comptés",
       "actionsPaid": "Aucun plafond mensuel, usage équitable",
       "oneInbox": "1 boîte",
       "threeInboxes": "3 boîtes",
@@ -161,7 +161,7 @@
     "items": [
       {
         "q": "Que comprend la formule gratuite ?",
-        "a": "Une boîte connectée, pour toujours, sans carte bancaire, et 150 actions e-mail par mois civil. Les 7 premiers jours après l'inscription ne sont pas comptés : vous pouvez brancher votre agent et tout essayer avant que le compteur ne démarre. Votre agent dispose de tous les outils MCP que nous publions sur cette boîte : lire, chercher, organiser, étiqueter, rédiger, programmer et envoyer, ainsi que la validation avant envoi, réglable par boîte. Dès que vous voulez une deuxième ou une troisième boîte, ou plus aucun plafond mensuel d'actions, c'est Personal, à 9 $ par mois."
+        "a": "Une boîte connectée, pour toujours, sans carte bancaire, et 150 actions e-mail par mois civil. Les 3 premiers jours après l'inscription ne sont pas comptés : vous pouvez brancher votre agent et tout essayer avant que le compteur ne démarre. Votre agent dispose de tous les outils MCP que nous publions sur cette boîte : lire, chercher, organiser, étiqueter, rédiger, programmer et envoyer, ainsi que la validation avant envoi, réglable par boîte. Dès que vous voulez une deuxième ou une troisième boîte, ou plus aucun plafond mensuel d'actions, c'est Personal, à 9 $ par mois."
       },
       {
         "q": "Qu'apporte Personal par rapport à Free ?",

@@ -47,10 +47,11 @@ test('Free sells its action allowance; the paid ceilings stay silent', () => {
   // Free's allowance is public (2026-09-12): the pricing page, the dashboard
   // and the docs all quote it, and the MCP edge function refuses at exactly
   // this number. The constants are mirrored from the SQL function
-  // workspace_action_allowance (c_free_cap = 150, c_grace = 7 days); if either
+  // workspace_action_allowance (c_free_cap = 150) and free_action_grace_ends_at
+  // (3 days for new workspaces); if either
   // moves here, the migration and the pricing copy move with it.
   assert.equal(FREE_ACTION_ALLOWANCE, 150);
-  assert.equal(FREE_ACTION_GRACE_DAYS, 7);
+  assert.equal(FREE_ACTION_GRACE_DAYS, 3);
   assert.equal(resolvePlanLimits('free').maxMonthlyToolCalls, FREE_ACTION_ALLOWANCE);
   assert.ok(
     PLANS.free.features.includes(FREE_ALLOWANCE_FEATURE),
@@ -95,7 +96,7 @@ test('no feature list promises an analytics retention window', () => {
   // `pricing.plans.*.features` message arrays are two renderings of one
   // promise and must not diverge again.
   //
-  // The Free allowance line ("first 7 days uncounted") is the one exception:
+  // The Free allowance line ("first 3 days uncounted") is the one exception:
   // it is a metering rule, not a retention window, and it is built from the
   // same constant the enforcing SQL mirrors, so it cannot drift on its own.
   for (const plan of Object.values(PLANS)) {

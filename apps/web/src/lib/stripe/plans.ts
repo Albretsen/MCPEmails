@@ -157,15 +157,16 @@ export interface PlanLimits {
 // The Free action allowance, for copy.
 //
 // The SQL function `workspace_action_allowance` (migration
-// 20260912200000_free_action_cap_150) holds the enforced values as
-// c_free_cap and c_grace. These two are the copy-side mirror: every sentence
+// 20260912200000_free_action_cap_150) holds the enforced cap as c_free_cap,
+// and free_action_grace_ends_at() (20261017160000) the grace: 3 days for
+// workspaces created from 2026-10-17 16:00 UTC, 7 before. These two are the copy-side mirror: every sentence
 // that quotes the allowance derives from them, and plans-copy-parity.test.ts
 // checks that the pricing page's translated copy agrees. Change all three
 // together or the number a customer reads stops being the number that blocks
 // them.
 // ---------------------------------------------------------------------------
 export const FREE_ACTION_ALLOWANCE = 150;
-export const FREE_ACTION_GRACE_DAYS = 7;
+export const FREE_ACTION_GRACE_DAYS = 3;
 
 // ---------------------------------------------------------------------------
 // Plan definition

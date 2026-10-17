@@ -135,7 +135,7 @@ Deno.test("Free states the number exactly as passed, with no thousands noise", (
 Deno.test("Free says the first seven days were not counted", () => {
   const text = buildUsageLimitText("free", FREE_ALLOWANCE, FREE_ALLOWANCE, RESET, ORIGIN);
   assertIncludes(text, `first ${FREE_ACTION_GRACE_DAYS} days after signup are not counted`, "the grace sentence");
-  assert(FREE_ACTION_GRACE_DAYS === 7, "the grace constant mirrors c_grace in workspace_action_allowance()");
+  assert(FREE_ACTION_GRACE_DAYS === 3, "the grace constant mirrors free_action_grace_ends_at() for new workspaces");
 });
 
 Deno.test("Free says what keeps working", () => {

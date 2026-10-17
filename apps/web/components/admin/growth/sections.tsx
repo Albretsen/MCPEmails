@@ -569,7 +569,7 @@ export async function MoneySection({ days }: { days: number }) {
 const WALL_ROWS = 5;
 
 /**
- * The Free action allowance: 150 email actions a month, first 7 days
+ * The Free action allowance: 150 email actions a month, first 3 days
  * uncounted, every workspace from before 2026-09-12 exempt for good.
  *
  * WHAT THIS BAND ANSWERS, in the order the tiles sit: how many workspaces
