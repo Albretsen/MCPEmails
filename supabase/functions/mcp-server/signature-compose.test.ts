@@ -27,6 +27,7 @@ import {
   SIGNATURE_HTML_CLASS,
   SIGNATURE_TEXT_DELIMITER,
   type SignatureInbox,
+  signatureOutcome,
   storedSignatureBlockOf,
 } from "./signature-compose.ts";
 
@@ -308,4 +309,50 @@ Deno.test("a stored text WITH a delimiter never lets a multi-line signature matc
   assertEquals(rebuildHtmlKeepingSignature(edited, TEXT_SIG_INBOX, signed.htmlBody, signed.textBody), null);
   // Stored text unknown: two whole lines repeated verbatim still count.
   assertEquals(rebuildHtmlKeepingSignature(edited, TEXT_SIG_INBOX, signed.htmlBody) !== null, true);
+});
+
+// ---------------------------------------------------------------------------
+// What a write result says about the signature (2026-10-17 re-test: Claude told
+// users "your signature was added" on inboxes that had none)
+// ---------------------------------------------------------------------------
+
+Deno.test("signatureOutcome reports what applySignature did, for every case", () => {
+  const cases: [SignatureInbox, boolean | undefined, string][] = [
+    [TEXT_SIG_INBOX, undefined, "appended"],
+    [RICH_SIG_INBOX, true, "appended"],
+    [TEXT_SIG_INBOX, false, "skipped"],
+    // signature_get's answer on both inboxes in the re-test: enabled, nothing stored.
+    [{ signature_enabled: true, signature_text: null, signature_html: null }, undefined, "none_configured"],
+    // The dashboard editor's untouched field: a non-empty string that is no signature.
+    [{ signature_enabled: true, signature_text: "", signature_html: "<p></p>" }, undefined, "none_configured"],
+    [{ ...TEXT_SIG_INBOX, signature_enabled: false }, undefined, "disabled"],
+    [{ signature_enabled: false, signature_text: null, signature_html: null }, false, "skipped"],
+  ];
+  for (const [inbox, include, expected] of cases) {
+    const outcome = signatureOutcome(inbox, { include_signature: include });
+    assertEquals(outcome, expected, JSON.stringify([inbox, include]));
+    // And it agrees with what applySignature actually does to a body.
+    const signed = applySignature({ textBody: "Hi." } as { textBody: string; htmlBody?: string }, inbox, {
+      include_signature: include,
+    });
+    assertEquals(signed.textBody !== "Hi.", outcome === "appended", `${expected}: body matches`);
+  }
+});
+
+Deno.test("draft and send results carry the signature outcome", () => {
+  // index.ts cannot be imported by a test; pin that each write that signs a
+  // new body reports it.
+  const source = Deno.readTextFileSync(new URL("./index.ts", import.meta.url));
+  for (const marker of [
+    "draftResult.signature = signatureOutcome(inbox, { include_signature: includeSignature });",
+    "updateResult.signature = signatureOutcome(inbox, { include_signature: includeSignature });",
+    "sendResult.signature = signatureOutcome(senderInbox, { include_signature: includeSignature });",
+  ]) {
+    assertEquals(source.split(marker).length, 2, marker);
+  }
+  // draft_reply: the Outlook branch and the Gmail/IMAP branch.
+  assertEquals(
+    source.split("signature: signatureOutcome(inbox, { include_signature: includeSignature })").length - 1,
+    2,
+  );
 });
