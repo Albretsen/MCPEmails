@@ -290,3 +290,126 @@ test('a URL inside the client state does not break Allow for a native client', (
     });
   }
 }
+
+// ── u13 verification: Google and xAI Grok vendors (2026-10-17) ──────────────
+// Independent bypass attempts on the new exact-host vendors and the new
+// whole-name impersonation rule. Attacker hosts are reserved example domains.
+
+test('u13: no Google/Grok look-alike host is Verified, and no alert is suppressed', () => {
+  const LOOKALIKES = [
+    'https://oauth-redirect.googleusercontent.com./cb', // trailing dot
+    'https://oauth-redirect.googleusercontent.com@evil.example/cb', // userinfo
+    'https://oauth-redirect.googleusercontent.com%2eevil.example/cb', // %2e in host
+    'https://oauth-redirect.googleusercontent.com.evil.example/cb',
+    'https://evil.googleusercontent.com/cb',
+    'https://googleusercontent.com/cb',
+    'https://oauth-redirect-evil.googleusercontent.com/cb',
+    'https://оauth-redirect.googleusercontent.com/cb', // Cyrillic o -> punycode
+    'https://grok.com./cb',
+    'https://grok.com.evil.example/cb',
+    'https://xgrok.com/cb',
+    'https://www.grok.com/cb',
+    'https://x.com/cb',
+    'https://grоk.com/cb', // Cyrillic o
+    'https://evil.example\\@grok.com/cb',
+    'https://evil.example#@grok.com',
+    'https://evil.example/https://grok.com',
+    'https://[::ffff:7f00:1]/cb',
+    'grok://grok.com/cb',
+    'grokbot://cb',
+    'googleusercontent://oauth-redirect.googleusercontent.com/cb',
+  ];
+  for (const uri of LOOKALIKES) {
+    for (const name of ['Google', 'Grok']) {
+      const id = dcr(name, uri);
+      assert.notEqual(id.verification, 'verified', `${name} -> ${uri}`);
+      assert.notEqual(id.displayName, name, `${name} -> ${uri} must not be the heading`);
+      assert.ok(id.impersonates, `${name} -> ${uri} must raise the alert`);
+    }
+  }
+});
+
+test('u13: an invalid-punycode Google host does not parse, so it can never be registered or Verified', async () => {
+  const uri = 'https://xn--oauth-redirect.googleusercontent.com/cb';
+  assert.equal(dcr('Google', uri).verification, 'unverified');
+  assert.equal(await isValidRedirectUri(uri), false);
+});
+
+test('u13: only URL forms that a browser itself sends to the real host are Verified', () => {
+  const SAME_HOST = [
+    'https://OAUTH-REDIRECT.GOOGLEUSERCONTENT.COM/cb',
+    'HTTPS://oauth-redirect-test.googleusercontent.com/cb',
+    'https://user@oauth-redirect-sandbox.googleusercontent.com/cb',
+    'https://oauth-redirect%2Egoogleusercontent.com/cb',
+    'https://GROK.COM/cb',
+    'https://grok%2Ecom/cb',
+    'https://ｇｒｏｋ.com/cb', // full-width, IDNA-maps to grok.com
+    'https://grok.com\\.evil.example/cb', // backslash is a path separator in https
+  ];
+  for (const uri of SAME_HOST) {
+    const id = dcr('Google', uri);
+    const browserHost = new URL(uri).hostname;
+    assert.equal(id.verification, 'verified', uri);
+    assert.ok(['grok.com', 'oauth-redirect.googleusercontent.com', 'oauth-redirect-test.googleusercontent.com', 'oauth-redirect-sandbox.googleusercontent.com'].includes(browserHost), uri);
+    assert.equal(id.destinationLabel.split(':')[0], browserHost, uri);
+  }
+});
+
+test('u13: whole-name evasions of Google/Gemini/Grok/xAI still raise the alert', () => {
+  for (const name of [
+    'Google.', 'Google ®', 'Googlе', 'Goo​gle', 'Goo‍gle', 'Goo­gle', 'Goog1e',
+    'Gооgle', 'ɢoogle'.replace('ɢ', 'G'), 'GEMINI', 'Gemini.', 'Grоk', 'X-AI', 'x ai', 'Grok xAI',
+  ]) {
+    const id = dcr(name, 'https://attacker.example/cb');
+    assert.equal(id.verification, 'unverified', name);
+    assert.equal(id.displayName, 'attacker.example', name);
+    assert.ok(id.impersonates, `${JSON.stringify(name)} must raise the alert`);
+  }
+});
+
+test('u13: names the whole-name rule lets through still never become the heading or Verified', () => {
+  // Accepted false negatives: the heading is the attacker host with the amber
+  // Unverified badge; only the red alert is missing.
+  for (const name of ['Google™', 'Google Inc', 'Google LLC', 'Gemini AI', 'Grok 3', 'Grok AI', 'xAI Grok Assistant', 'Sign in with Google']) {
+    const id = dcr(name, 'https://attacker.example/cb');
+    assert.equal(id.verification, 'unverified', name);
+    assert.equal(id.displayName, 'attacker.example', name);
+    assert.equal(id.selfReportedName, name, name);
+  }
+});
+
+test('u13: honest third-party names carrying Google/Gmail/Gemini/grok are not called impersonators', () => {
+  for (const name of ['Google Sheets MCP', 'Gmail via Zapier', 'Gmail', 'Grokking Mail', 'Gemini CLI helper', 'Google Drive Sync', 'Grok Mail Helper']) {
+    const id = dcr(name, 'https://tool.example/cb');
+    assert.equal(id.verification, 'unverified', name);
+    assert.equal(id.impersonates, null, name);
+  }
+  // Gemini CLI on loopback stays local, no alert.
+  const cli = dcr('Gemini CLI', 'http://127.0.0.1:7777/oauth/callback');
+  assert.equal(cli.verification, 'local');
+  assert.equal(cli.impersonates, null);
+});
+
+test('u13: "Cursor" on grokbot:// keeps the impersonation alert, and grokbot is not a native app', () => {
+  const id = dcr('Cursor', 'grokbot://oauth/callback');
+  assert.equal(id.verification, 'unverified');
+  assert.equal(id.destinationKind, 'other');
+  assert.equal(id.impersonates, 'Cursor');
+});
+
+test('u13: the new vendors do not change the Claude/ChatGPT/Cursor/VS Code matrix', () => {
+  const expect: Array<[string, string, string, string | null]> = [
+    ['Claude', 'https://claude.ai/api/mcp/auth_callback', 'verified', null],
+    ['ChatGPT', 'https://chatgpt.com/connector_platform_oauth_redirect', 'verified', null],
+    ['Cursor', 'cursor://anysphere.cursor-mcp/oauth/callback', 'local', null],
+    ['Visual Studio Code', 'http://127.0.0.1:33418/', 'local', null],
+    ['Claude', 'https://attacker.example/cb', 'unverified', 'Claude (Anthropic)'],
+    ['Cursor', 'https://attacker.example/cb', 'unverified', 'Cursor'],
+    ['Claude', `https://oauth-redirect.googleusercontent.com/cb`, 'verified', null],
+  ];
+  for (const [name, uri, verification, imp] of expect) {
+    const id = dcr(name, uri);
+    assert.equal(id.verification, verification, `${name} -> ${uri}`);
+    assert.equal(id.impersonates, imp, `${name} -> ${uri}`);
+  }
+});
