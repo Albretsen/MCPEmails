@@ -897,7 +897,9 @@ Deno.test("RULE: a body_text save regenerates the HTML part from the new text", 
       cc: [],
       bcc: [],
       bodyText: "The old wording.",
-      bodyHtml: "<p>The <b>old</b> wording.</p>",
+      // Paragraphs only: nothing a regeneration loses. A formatted part is
+      // edited in place or dropped instead; see section 11 below.
+      bodyHtml: "<p>The old wording.</p>",
       attachments: [],
     },
   });
@@ -1449,7 +1451,7 @@ const USER_VISIBLE_OUTCOMES: OutcomeCase[] = [
     options: {
       stored: {
         ...WITH_ATTACHMENT,
-        carried: { count: 1, bytes: 26 * 1024 * 1024, inlineImages: 0, encode: () => [] },
+        carried: { count: 1, bytes: 26 * 1024 * 1024, inlineImages: 0, sizes: [26 * 1024 * 1024], encode: () => [] },
       },
     },
     args: { draft_id: "Drafts:2", subject: "x" },
@@ -1471,6 +1473,19 @@ const USER_VISIBLE_OUTCOMES: OutcomeCase[] = [
       },
     },
     args: { draft_id: "Drafts:2", subject: "x" },
+  },
+  {
+    at: "save: add_attachments or remove_attachments malformed",
+    tool: "draft_editor_save",
+    expect: "invalid_arguments",
+    args: { draft_id: "Drafts:2", remove_attachments: [{ index: -1, filename: "q3.pdf" }] },
+  },
+  {
+    at: "save: Outlook cannot remove a file through a save",
+    tool: "draft_editor_save",
+    expect: "attachment_remove_unsupported",
+    options: { inbox: OUTLOOK_INBOX, stored: WITH_ATTACHMENT },
+    args: { draft_id: "Drafts:2", remove_attachments: [{ index: 0, filename: "q3.pdf", size_bytes: 12 }] },
   },
   {
     at: "save: the write said the draft is gone",
@@ -2026,10 +2041,12 @@ Deno.test("a GENUINE body edit still regenerates the HTML part", async () => {
     draft_id: "Drafts:2",
     body_text: "Line one\r\nLine three\r\n",
   });
-  const html = String(writes[0].params.htmlBody);
-  assert(html !== RICH_HTML, "a real edit must own the HTML part");
-  assert(html.includes("Line three"), "the regenerated part says what the user typed");
-  assert(!html.includes("Line two"), "and never the wording that was replaced");
+  // RICH_HTML carries an image and does not say what the text says, so the
+  // edit cannot be made inside it and it is not regenerated either: it is
+  // dropped, and the card is told (section 11). Either way the stale wording
+  // never survives in an HTML part.
+  assertEquals(writes[0].params.htmlBody, undefined, "a real edit must own the HTML part");
+  assertEquals(writes[0].params.body, "Line one\r\nLine three\r\n");
 });
 
 Deno.test("a subject-only save leaves both body parts exactly as stored", async () => {
@@ -2101,9 +2118,10 @@ Deno.test("writing a body into an HTML-only draft owns the HTML part too", async
     draft_id: "Drafts:2",
     body_text: "Replaced entirely.",
   });
-  const html = String(writes[0].params.htmlBody);
-  assert(html.includes("Replaced entirely."), "the HTML says what the user typed");
-  assert(!html.includes("cid:logo"), "and nothing of the part it replaced");
+  // The stored part is formatted (an image), so it is dropped, never kept
+  // saying the old words and never regenerated to pass for the original.
+  assertEquals(writes[0].params.htmlBody, undefined, "nothing of the part it replaced");
+  assertEquals(writes[0].params.body, "Replaced entirely.");
 });
 
 Deno.test("an omitted body_text still leaves an HTML-only draft untouched", async () => {
@@ -3270,4 +3288,187 @@ Deno.test("describeParts bounds and neutralises what it puts in a sentence", () 
   const hostile = describeParts(["a text/x-\u202Eevil".padEnd(200, "x") + " part"]);
   assert(!hostile.includes("\u202E"));
   assert(hostile.length <= 60);
+});
+
+// ═══════════════════════════════════════════════════════════════════════════
+// 11. A formatted body and a plain-text edit (QA, 2026-10-17)
+//
+// One typed word in the card turned a draft's heading, bold text, bullets and
+// link into plain text, and nothing said so: the regenerated part was still an
+// HTML part, so `formatting_removed` stayed unset. Now the edit is made inside
+// the stored HTML when it can be placed with certainty, and otherwise a
+// formatted part is dropped and the envelope says `formatting_removed: true`.
+// ═══════════════════════════════════════════════════════════════════════════
+
+const FORMATTED_HTML =
+  "<h2>Launch plan</h2>\n<p>We ship on <b>Friday</b> after the review.</p>\n" +
+  '<ul>\n  <li>Fix the footer</li>\n  <li>Update the docs</li>\n</ul>\n' +
+  '<p>Details are <a href="https://example.com/plan">in the plan</a>.</p>';
+const FORMATTED_TEXT =
+  "Launch plan\n\nWe ship on Friday after the review.\n\n- Fix the footer\n- Update the docs\n\nDetails are in the plan (https://example.com/plan).";
+
+function storedFormatted(): ProviderDraft {
+  return {
+    subject: "Launch",
+    to: ["a@x.com"],
+    cc: [],
+    bcc: [],
+    bodyText: FORMATTED_TEXT,
+    bodyHtml: FORMATTED_HTML,
+    attachments: [],
+  };
+}
+
+Deno.test("formatted body: one typed word is made inside the HTML, keeping every tag", async () => {
+  const { deps, writes } = fakeDeps({ stored: storedFormatted() });
+  const out = await runDraftEditorSave(deps, caller(), {
+    draft_id: "Drafts:2",
+    body_text: FORMATTED_TEXT.replace("after the review", "right after the review"),
+  });
+  assertEquals(out.result.isError, false);
+  assertEquals(
+    writes[0].params.htmlBody,
+    FORMATTED_HTML.replace("after the review", "right after the review"),
+  );
+  const body = (out.result.structuredContent as any).draft.body;
+  assertEquals(body.html, writes[0].params.htmlBody);
+  assert(!("formatting_removed" in body), "nothing was removed, so nothing is reported");
+});
+
+Deno.test("formatted body: a list item and the heading edited in one save keep their tags", async () => {
+  const { deps, writes } = fakeDeps({ stored: storedFormatted() });
+  await runDraftEditorSave(deps, caller(), {
+    draft_id: "Drafts:2",
+    body_text: FORMATTED_TEXT.replace("Launch plan", "Launch plan, v2").replace(
+      "- Update the docs",
+      "- Update the docs & <notes>",
+    ),
+  });
+  assertEquals(
+    writes[0].params.htmlBody,
+    FORMATTED_HTML.replace("Launch plan", "Launch plan, v2").replace(
+      "<li>Update the docs</li>",
+      "<li>Update the docs &amp; &lt;notes&gt;</li>",
+    ),
+  );
+});
+
+Deno.test("formatted body: an edit that cannot be placed drops the HTML part and SAYS so", async () => {
+  // A new paragraph: the text has more lines than the HTML can be told about.
+  const { deps, writes } = fakeDeps({ stored: storedFormatted() });
+  const out = await runDraftEditorSave(deps, caller(), {
+    draft_id: "Drafts:2",
+    body_text: FORMATTED_TEXT + "\n\nOne more thing.",
+  });
+  assertEquals(writes[0].params.htmlBody, undefined, "no generated part passing for the original");
+  const body = (out.result.structuredContent as any).draft.body;
+  assertEquals(body.html, null);
+  assertEquals(body.formatting_removed, true);
+});
+
+Deno.test("formatted body: link words are never edited under their old address", async () => {
+  const { deps, writes } = fakeDeps({ stored: storedFormatted() });
+  const out = await runDraftEditorSave(deps, caller(), {
+    draft_id: "Drafts:2",
+    body_text: FORMATTED_TEXT.replace("in the plan (", "in the new plan ("),
+  });
+  assertEquals(writes[0].params.htmlBody, undefined);
+  assertEquals((out.result.structuredContent as any).draft.body.formatting_removed, true);
+});
+
+Deno.test("plain HTML (text with line breaks) is still regenerated, and nothing is reported", async () => {
+  const { deps, writes } = fakeDeps({
+    stored: { ...storedFormatted(), bodyText: "Hi,\nsee you.", bodyHtml: "Hi,<br>\nsee you." },
+  });
+  const out = await runDraftEditorSave(deps, caller(), {
+    draft_id: "Drafts:2",
+    body_text: "Hi,\nsee you then.\nBye.",
+  });
+  assertEquals(writes[0].params.htmlBody, "Hi,<br>\nsee you then.<br>\nBye.");
+  assert(!("formatting_removed" in (out.result.structuredContent as any).draft.body));
+});
+
+// ═══════════════════════════════════════════════════════════════════════════
+// 12. // The editor card adds and removes files (2026-10-17)
+// ═══════════════════════════════════════════════════════════════════════════
+
+/** A stored draft with two files the rebuild carries, as the IMAP reader hands it over. */
+function twoFiles(): ProviderDraft {
+  const files = [
+    { filename: "q3.pdf", mime_type: "application/pdf", data: "JVBERi0xLjQK" },
+    { filename: "notes.txt", mime_type: "text/plain", data: "aGk=" },
+  ];
+  return {
+    ...WITH_ATTACHMENT,
+    attachments: [
+      { filename: "q3.pdf", mime_type: "application/pdf", size_bytes: 9 },
+      { filename: "notes.txt", mime_type: "text/plain", size_bytes: 2 },
+    ],
+    carried: {
+      count: 2,
+      bytes: 11,
+      inlineImages: 0,
+      sizes: [9, 2],
+      encode: (skip) => files.filter((_, i) => !skip?.has(i)),
+    },
+  };
+}
+
+Deno.test("draft_editor_save remove_attachments writes the other files and lists only them", async () => {
+  const { deps, writes } = fakeDeps({ stored: twoFiles() });
+  const out = await runDraftEditorSave(deps, caller(), {
+    draft_id: "Drafts:2",
+    remove_attachments: [{ index: 0, filename: "q3.pdf", size_bytes: 9 }],
+  });
+  assertEquals(out.result.isError, false, JSON.stringify(out.result.structuredContent));
+  assertEquals(writes.length, 1);
+  assertEquals(writes[0].params.attachments, [{ filename: "notes.txt", mime_type: "text/plain", data: "aGk=" }]);
+  const draft = (out.result.structuredContent as { draft: { attachments: { filename: string }[] } }).draft;
+  assertEquals(draft.attachments.map((a) => a.filename), ["notes.txt"]);
+});
+
+Deno.test("draft_editor_save add_attachments keeps the stored files and adds the new one", async () => {
+  const { deps, writes } = fakeDeps({ stored: twoFiles() });
+  const out = await runDraftEditorSave(deps, caller(), {
+    draft_id: "Drafts:2",
+    add_attachments: [{ filename: "a.csv", mime_type: "text/csv", data: "YTtiCg==" }],
+  });
+  assertEquals(out.result.isError, false);
+  assertEquals(writes[0].params.attachments?.map((a) => a.filename), ["q3.pdf", "notes.txt", "a.csv"]);
+});
+
+Deno.test("draft_editor_save refuses a removal that names another file, and writes nothing", async () => {
+  const { deps, writes } = fakeDeps({ stored: twoFiles() });
+  const out = await runDraftEditorSave(deps, caller(), {
+    draft_id: "Drafts:2",
+    subject: "x",
+    remove_attachments: [{ index: 0, filename: "notes.txt", size_bytes: 2 }],
+  });
+  assertEquals(failureCode(out), "draft_changed");
+  assertEquals(writes.length, 0);
+});
+
+Deno.test("draft_editor_save refuses malformed file arguments before reading anything", async () => {
+  for (const args of [
+    { add_attachments: [{ filename: "a.txt", mime_type: "text/plain", data: "not base64!" }] },
+    { add_attachments: [{ source_message_id: "INBOX:1", attachment_index: 0 }] },
+    { add_attachments: "a.txt" },
+    { remove_attachments: [{ index: 0 }] },
+    { remove_attachments: [{ index: 0, filename: "q3.pdf" }, { index: 0, filename: "q3.pdf" }] },
+    { remove_attachments: [{ index: 0.5, filename: "q3.pdf" }] },
+    { remove_attachments: [{ index: 0, filename: "q3.pdf", size_bytes: "9" }] },
+  ]) {
+    const { deps, writes, reads } = fakeDeps({ stored: twoFiles() });
+    const out = await runDraftEditorSave(deps, caller(), { draft_id: "Drafts:2", ...args });
+    assertEquals(failureCode(out), "invalid_arguments", JSON.stringify(args));
+    assertEquals([writes.length, reads.length], [0, 0], JSON.stringify(args));
+  }
+});
+
+Deno.test("draft_editor_save advertises the two file arguments without loosening the others", () => {
+  const save = DRAFT_EDITOR_TOOL_DEFINITIONS.find((t) => t.name === "draft_editor_save")!;
+  const props = (save.inputSchema as { properties: Record<string, { type?: unknown }> }).properties;
+  assertEquals(props.add_attachments.type, "array");
+  assertEquals(props.remove_attachments.type, "array");
+  assertEquals(props.to.type, "array");
 });

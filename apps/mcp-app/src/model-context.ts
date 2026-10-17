@@ -88,6 +88,72 @@ const idOf = (d: DraftFacts): string => d.draft_id || "unknown";
 const BODY_DIFFERS =
   "The body now differs from the text the agent last wrote, and draft_read returns the current text.";
 
+// ---- the request ------------------------------------------------------------
+
+/**
+ * The params of one `ui/update-model-context` request, for what the host
+ * advertised as `hostCapabilities.updateModelContext`.
+ *
+ * ── What the spec and the reference SDK say (checked 2026-10-17) ───────────
+ * ext-apps 2026-01-26 and the current draft, and the v2.0.3 SDK, whose wire
+ * protocol is unchanged from 1.x:
+ *   * params are `{ content?: ContentBlock[], structuredContent? }`;
+ *   * "Each request overwrites the previous context sent by the View", per
+ *     View: Claude's docs say each widget instance pushes its own, so another
+ *     card in the same chat does not overwrite this one's;
+ *   * the host "MAY defer sending the context to the model until the next user
+ *     message" and "SHOULD only send the last update". So nothing reaches the
+ *     model at the moment of a save: it arrives with the user's next message;
+ *   * an EMPTY update clears the context (the reference host treats no
+ *     content and no structuredContent as "clear"). Never send one;
+ *   * the capability's value is `SupportedContentBlockModalities`
+ *     (`text`, `image`, `audio`, `resource`, `resourceLink`,
+ *     `structuredContent`), and a host may refuse a block it did not list
+ *     (-32000 "Invalid content format");
+ *   * the maintainers' guidance (ext-apps#380) is that a host gives the model
+ *     `content` and falls back to `structuredContent` only when `content` is
+ *     empty, and that an app passing `structuredContent` also passes a text
+ *     version in `content`.
+ *
+ * So: the text always goes as one `text` block, the shape every example in the
+ * SDK uses. `structuredContent` is added only when the host LISTED it, because
+ * a host that reads only structured data is the one case where text alone
+ * would not reach the model, and a host that did not list it may refuse it.
+ *
+ * ── What is NOT known ────────────────────────────────────────────────────────
+ * How Claude turns an accepted update into model input is not documented. QA
+ * 2026-10-17 saw Claude answer `ui/update-model-context` with success and then
+ * say on the next turn that the card tells it nothing. That sentence closely
+ * paraphrases the `draft` tool's own description of the time ("without you
+ * being told"), so it is not proof the line was missing, and the description
+ * no longer says that. The diagnostics line now shows which modalities the
+ * host listed and the last error, which is what the next live check needs.
+ */
+export function modelContextParams(
+  text: string,
+  advertised: unknown,
+): { content: Array<{ type: "text"; text: string }>; structuredContent?: Record<string, unknown> } {
+  const listed =
+    advertised && typeof advertised === "object" && !Array.isArray(advertised)
+      ? Object.keys(advertised as Record<string, unknown>)
+      : [];
+  return {
+    content: [{ type: "text", text }],
+    ...(listed.includes("structuredContent")
+      ? { structuredContent: { source: "MCP Emails draft card", context: text } }
+      : {}),
+  };
+}
+
+/**
+ * `cap[text,structuredContent]`, `cap[]` or `nocap`, for the diagnostics line:
+ * what the host said it accepts, which is the first fact a live check needs.
+ */
+export function modelContextCapability(advertised: unknown): string {
+  if (!advertised || typeof advertised !== "object" || Array.isArray(advertised)) return "nocap";
+  return `cap[${Object.keys(advertised as Record<string, unknown>).join(",")}]`;
+}
+
 // ---- the draft card --------------------------------------------------------
 
 /**
@@ -220,7 +286,7 @@ export function draftCallOutcome(action: DraftAction, call: DraftCall): DraftCal
 
 const PRESSED: Record<DraftAction, string> = {
   send: "pressed Send on",
-  discard: "pressed Discard on",
+  discard: "pressed Delete draft on",
   hide: "asked to hide the draft editor card while viewing",
 };
 
@@ -285,7 +351,7 @@ export function draftActionContextLine(
       }
       if (action === "discard") {
         return (
-          `The user pressed Discard on draft ${id} in the MCP Emails card and the delete failed. ${shape} ${said} ` +
+          `The user pressed Delete draft on draft ${id} in the MCP Emails card and the delete failed. ${shape} ${said} ` +
           `The card still holds the draft under that draft_id.${body}`
         );
       }

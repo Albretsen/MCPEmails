@@ -408,9 +408,8 @@ export const DRAFT_EDITOR_APP_TOOL_NAMES: readonly string[] = [
  * to any caller with both scopes since it shipped, and with the gate shut it
  * was already an ordinary model-visible tool.
  *
- * It keeps `resourceUri`, so a model-initiated `draft_read` mounts the card
- * with the editor envelope in `structuredContent`. That is the intended
- * rendering, the same one a `draft` write gets.
+ * It no longer keeps `resourceUri` (2026-10-17, see
+ * `DRAFT_EDITOR_UNMOUNTED_TOOL_NAMES` below): a model's read draws no card.
  *
  * ── And `draft_editor_hide`, for consistency with what the card says ───────
  * It was `["app"]` too, as "the card's own Hide link". But the card's copy
@@ -429,6 +428,42 @@ export const DRAFT_EDITOR_APP_TOOL_NAMES: readonly string[] = [
 export const DRAFT_EDITOR_MODEL_VISIBLE_TOOL_NAMES: readonly string[] = [
   "draft_read",
   "draft_editor_hide",
+];
+
+/**
+ * The draft-editor tools listed WITHOUT the card's `resourceUri`, so a host
+ * never mounts a card under their results. Only `draft_read`.
+ *
+ * ── Why (live review in claude.ai, 2026-10-17) ─────────────────────────────
+ * A model rewriting a draft calls `draft_read` first (its description tells it
+ * to), then `draft{action:"update"}`. With `resourceUri` on both, every
+ * revision drew TWO cards: the read's one-liner ("Draft: <subject> to <addr>
+ * · Open editor", DraftReadLine.tsx) and the editor under the write. The read
+ * is for the model; the person already has the editor the write mounts, so the
+ * one-liner was noise, and its "Open editor" was a second way into a second
+ * live editor for one draft, which is the very thing the one-liner had been
+ * introduced to stop.
+ *
+ * So the listing keeps `visibility: ["model", "app"]` and drops the URI. Per
+ * the MCP Apps spec a host mounts UI only for a tool with a `resourceUri`, and
+ * an app may call any tool of its own server whose visibility includes "app"
+ * (Phase 0 Q2: the reference host's proxy does not check either). The card's
+ * own `draft_read` calls (restore, Refresh, the deferred-body fallback,
+ * attention checks) are app calls, which never mount anything, so they are
+ * unchanged.
+ *
+ * ── Is the "Open editor" one-liner still needed? ─────────────────────────────
+ * Decided no as a default. The case it served, "the original card is gone or
+ * far above", is served by the model calling `draft{action:"update"}`, which
+ * mounts a full editor under the newest turn. DraftReadLine.tsx stays in the
+ * card for one reason: a host still holding a listing from before this change
+ * mounts the card for `draft_read` until it re-reads `tools/list`, and the
+ * one-liner is the right rendering there. If a real need appears (a person
+ * asking to "show me the draft" with no write to make), bring it back as an
+ * explicit tool argument, not by re-adding the URI to every read.
+ */
+export const DRAFT_EDITOR_UNMOUNTED_TOOL_NAMES: readonly string[] = [
+  "draft_read",
 ];
 
 /**
@@ -602,8 +637,8 @@ export function appOnlyReviewCardToolMeta(): {
  * The list is spelled out rather than omitted. Omitting `visibility` means the
  * same thing to the reference host (its default is both), but the explicit form
  * says in the listing itself that the card calls this tool as well, and it is
- * the shape the owner asked for. `draft_read` and `draft_editor_hide` carry
- * it; see `DRAFT_EDITOR_MODEL_VISIBLE_TOOL_NAMES`.
+ * the shape the owner asked for. `draft_editor_hide` carries it; `draft_read`
+ * carries the same list without the URI (`modelAndAppUnmountedToolMeta`).
  */
 export function modelAndAppReviewCardToolMeta(): {
   ui: { resourceUri: string; visibility: string[] };
@@ -611,6 +646,17 @@ export function modelAndAppReviewCardToolMeta(): {
   return {
     ui: { resourceUri: REVIEW_CARD_RESOURCE_URI, visibility: ["model", "app"] },
   };
+}
+
+/**
+ * `_meta` for a tool the card calls and the model calls, whose results must
+ * NOT mount the card: `visibility` only, no `resourceUri`. `draft_read`; see
+ * `DRAFT_EDITOR_UNMOUNTED_TOOL_NAMES`.
+ */
+export function modelAndAppUnmountedToolMeta(): {
+  ui: { visibility: string[] };
+} {
+  return { ui: { visibility: ["model", "app"] } };
 }
 
 /**
@@ -668,7 +714,7 @@ export function reviewCardMetaForListing(
   toolName: string,
   gates: ReviewCardGates,
   surface: ToolSurface = "consolidated",
-): { ui: { resourceUri: string; visibility?: string[] } } | undefined {
+): { ui: { resourceUri?: string; visibility?: string[] } } | undefined {
   if (surface === "per_operation") {
     // Checked INSTEAD of the consolidated lists, not as well as them:
     // `email_delete` is on the bulk list above as the consolidated tool, and
@@ -716,9 +762,10 @@ export function reviewCardMetaForListing(
 function draftEditorOwnToolMeta(
   toolName: string,
   gates: ReviewCardGates,
-): { ui: { resourceUri: string; visibility: string[] } } | undefined {
+): { ui: { resourceUri?: string; visibility: string[] } } | undefined {
   if (!DRAFT_EDITOR_APP_TOOL_NAMES.includes(toolName)) return undefined;
   if (!gates.drafts) return undefined;
+  if (DRAFT_EDITOR_UNMOUNTED_TOOL_NAMES.includes(toolName)) return modelAndAppUnmountedToolMeta();
   return DRAFT_EDITOR_MODEL_VISIBLE_TOOL_NAMES.includes(toolName)
     ? modelAndAppReviewCardToolMeta()
     : appOnlyReviewCardToolMeta();

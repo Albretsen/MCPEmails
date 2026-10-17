@@ -569,7 +569,8 @@ Deno.test("the draft editor's own tools get the same visibility on this surface 
     withListingCardMeta(TOOL_REGISTRY, open, "consolidated").map((t) => [t.name, t._meta]),
   );
   // The model reads a draft back and hides or shows the card; only the card saves.
-  assertEquals(perOperation.get("draft_read"), modelAndAppReviewCardToolMeta());
+  // `draft_read` mounts no card on either surface (2026-10-17).
+  assertEquals(perOperation.get("draft_read"), { ui: { visibility: ["model", "app"] } });
   assertEquals(perOperation.get("draft_editor_hide"), modelAndAppReviewCardToolMeta());
   assertEquals(perOperation.get("draft_editor_save"), appOnlyReviewCardToolMeta());
   for (const name of ["draft_read", "draft_editor_save", "draft_editor_hide"]) {

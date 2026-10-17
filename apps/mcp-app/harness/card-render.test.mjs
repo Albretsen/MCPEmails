@@ -828,9 +828,9 @@ async function main() {
     await c.settled();
     c.deliver(toolResult(draftEnvelope, "Draft Drafts:2."));
     await after(80);
-    c.button("Discard").click();
+    c.button("Delete draft").click();
     await after(60);
-    c.button("Yes, discard").click();
+    c.button("Yes, delete").click();
     await after(80);
     expect(
       "the line",

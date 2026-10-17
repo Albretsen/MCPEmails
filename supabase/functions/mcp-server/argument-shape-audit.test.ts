@@ -481,3 +481,36 @@ Deno.test("the published schemas carry the new arguments", () => {
   }
   assert(accepts("schedule", "cancel").includes("inbox"), "schedule cancel");
 });
+
+// ── 2026-10-17: draft create without a subject ──────────────────────────────
+//
+// "Draft this, I'll fill in the subject later" was refused with
+// "arguments.subject is required", while the draft card saves and sends a
+// draft with an empty subject. Subject is now optional on create, and an empty
+// string means the same as leaving it out. Deliberately NOT loosened: the TYPE
+// (still a string), `maxLength`, and every other tool's subject (email_send
+// still needs one; draft_reply takes none).
+
+Deno.test("draft create accepts no subject, and an empty one, on both surfaces' schemas", async () => {
+  await assertAccepted("draft", { action: "create", body: "b" }, "consolidated, subject omitted");
+  await assertAccepted("draft", { action: "create", subject: "", body: "b" }, "consolidated, subject empty");
+  // Body is still required.
+  const noBody = await failures("draft", { action: "create", subject: "s" });
+  assert(noBody.includes("arguments.body required"), noBody.join("; "));
+  // A subject that is not a string is still refused.
+  const wrongType = await failures("draft", { action: "create", subject: 7, body: "b" });
+  assert(wrongType.some((f) => f.startsWith("arguments.subject ")), wrongType.join("; "));
+
+  // The per-operation listing (OpenAI) lists `draft_create` as its own tool.
+  // deno-lint-ignore no-explicit-any
+  const listing = (await import("./index.ts")).PER_OPERATION_LISTING as any[];
+  const create = listing.find((t) => t.name === "draft_create");
+  assert(create, "draft_create is on the per-operation listing");
+  assertEquals(create.inputSchema.required, ["body"], "draft_create requires body only");
+  assertEquals(create.inputSchema.properties.subject.type, "string", "subject is still a string");
+  assert(typeof create.inputSchema.properties.subject.maxLength === "number", "maxLength kept");
+  await assertAccepted("draft_create", { body: "b" }, "per-operation, subject omitted");
+  // email_send keeps its required subject.
+  const send = await failures("email_compose", { action: "send", to: ["a@example.com"], body: "b" });
+  assert(send.includes("arguments.subject required"), send.join("; "));
+});

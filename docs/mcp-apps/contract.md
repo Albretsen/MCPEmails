@@ -663,10 +663,15 @@ Internal workspaces are those in
     "recipients": { "to": ["a@x"], "cc": [], "bcc": [] },   // full bcc: the author's surface
     "subject": "…",
     "body": { "text": "…", "html": "…" | null, "truncated": false,
-              "formatting_removed": true },   // 64 KB clip as §2; formatting_removed: save only; see "Deferred body"
+              "formatting_removed": true,   // 64 KB clip as §2; formatting_removed: save only; see "Deferred body"
+              "quoted": { "line": 7 } },    // only when text ends in a reply's quoted original: the line
+                                            // (0-based, counted in \n) it starts on. text is still the whole
+                                            // body. 2026-10-17, additive; see "Quoted original" below
     "attachments": [ { "filename", "size_bytes", "mime_type" } ],       // display only
-    "signature": { "embedded": true | false, "rich": true },   // embedded: the stored text carries it;
-                                            // rich (only when true): the HTML part carries the formatted block
+    "signature": { "embedded": true | false, "rich": true,   // embedded: the stored text carries it;
+                   "first_line": "…" },     // rich (only when true): the HTML part carries the formatted block;
+                                            // first_line: only when embedded is false AND the inbox has a
+                                            // signature, its first line (the card names it; no line otherwise)
     "in_reply_to": { "message_id": "INBOX:42", "subject": "…", "from": "…" } | null,
     "threaded": true | false,               // answers a message, on EVERY path; see the deviations note
     "can_send": true | false                // key has send:email AND at least one recipient
@@ -691,8 +696,34 @@ the card neutralises at the boundary as it does for §2.
 | `draft{action:"send"}` held | the §2a held-send shape, unchanged | unchanged |
 | `draft{action:"delete"}` | today's `{draft_id, deleted}` **plus** `card: "receipt"`, `outcome: "discarded"` | unchanged |
 
+`draft_read` is listed with `_meta.ui.visibility: ["model", "app"]` and **no** `resourceUri`
+(2026-10-17), so a model's read mounts no card: it drew a second, one-line card above every
+revision. The card's own `draft_read` calls are app calls and unaffected. See
+`mcp-app-resources.ts#DRAFT_EDITOR_UNMOUNTED_TOOL_NAMES`.
+
 Building the envelope must never turn a successful draft operation into an error: a failure
 degrades to today's payload, exactly as §2a's failure rule.
+
+### Quoted original (2026-10-17)
+
+A reply's text part ends in the original it answers (`On <date>, <name> wrote:` and `>` lines,
+Outlook's `From:`/`Sent:`/`Subject:` block, `-----Original Message-----`). The card used to split
+the body at the LAST `-- ` line, so that quote was shown, counted and edited as the signature.
+`body.quoted.line` (mcp-server/quoted-reply.ts#quotedTextLine) tells the card where it starts.
+Detection is conservative: an attribution counts only when `>` lines follow it to the end, a bare
+`>` block only when it runs to the end, so inline answers are never made read only.
+
+* The card shows the quote as a read-only, collapsed section and edits only the text above it.
+  Every save sends that text followed by the quote exactly as it arrived, so `body_text` still
+  carries the whole body and the save protocol is unchanged.
+* On a save whose quote is unchanged (line endings aside), when the stored HTML part has a client
+  quote block (`gmail_quote`, `<blockquote type="cite">`, `divRplyFwdMsg`, ...), only the part
+  above it is regenerated and the stored quote markup follows byte for byte
+  (mcp-app-drafts.ts#htmlKeepingQuote). Otherwise the existing regeneration rule applies unchanged.
+* In lines, not characters: the card strips invisible characters from every string at its
+  boundary, which moves offsets but never removes a `\n`. On a deferred body, `quoted` rides in
+  `_meta` with the body, never on the placeholder.
+* A card that predates the field ignores it and edits the quote as part of the text, as before.
 
 ### Deferred body (2026-10-13)
 
@@ -777,7 +808,7 @@ editor for model-written drafts until it re-lists. The draft itself is written e
 | Tool | `_meta.ui.visibility` when gated in | Arguments | Returns |
 | --- | --- | --- | --- |
 | `draft_read` | `["model", "app"]` | `{ inbox_id?, inbox?, draft_id }` | `structuredContent`: `card: "draft_editor"`, `origin: "read"`, body inline, plus top-level `untrusted_content: true`. `content`: the plain read as JSON. Needs `manage:drafts` **and** `read:email` |
-| `draft_editor_save` | `["app"]` | `{ inbox_id?, inbox?, draft_id, base_revision?, to?, cc?, bcc?, subject?, body_text? }`, at least one field | `card: "draft_editor"`, `origin: "save"`, `last_saved_by: "user"`, the NEW `draft_id` and `revision`, body inline |
+| `draft_editor_save` | `["app"]` | `{ inbox_id?, inbox?, draft_id, base_revision?, to?, cc?, bcc?, subject?, body_text?, add_attachments?, remove_attachments? }`, at least one field | `card: "draft_editor"`, `origin: "save"`, `last_saved_by: "user"`, the NEW `draft_id` and `revision`, body inline |
 | `draft_editor_hide` | `["model", "app"]` | `{ inbox_id?, inbox?, scope, hidden? }` | `card: "receipt"`, `state: "cancelled"` |
 
 With the gate shut none of the three carries `_meta` (see "As built"), so a host lists them as
@@ -849,7 +880,16 @@ read, nothing was changed". All three callers (`draft_read`, `draft_editor_save`
 * **Refuses rather than drops attachments.** `imapUpdateDraft` and `gmailUpdateDraft` rebuild the
   MIME from parameters and carry no attachment parts. A save on a draft that has attachments on
   IMAP or Gmail returns `state: "error"` with `receipt.error_code: "draft_has_attachments"` and
-  changes nothing. Outlook (PATCH) may proceed.
+  changes nothing. Outlook (PATCH) may proceed. Since 2026-10-15 the rebuild carries the stored
+  files instead, and `draft_has_attachments` is left for a reader that could not supply them.
+* **Files are added and removed by the card (2026-10-17).** `add_attachments` takes inline files
+  `{ filename, mime_type, data }` (base64, 10 MB in all per save, the same parser as every other
+  tool's `attachments`). `remove_attachments` takes `{ index, filename, size_bytes }` per stored
+  file, `index` being its position in `draft.attachments`. The server checks that the stored file
+  at that position is the one named; when it is not, the save is refused as `draft_changed` and
+  nothing is written. Every file not named is carried byte for byte. Outlook's PATCH cannot remove
+  a file: a removal there is refused as `attachment_remove_unsupported` (the card does not offer
+  it), while adding works.
 * **Refuses rather than drops anything else (2026-10-13).** Attachments were one case of several.
   The parser keeps the first text/plain and the first text/html and has no slot for any other
   part that is not a named file, so these passed the attachment check and were silently absent
@@ -1004,8 +1044,14 @@ does not list that field at all (only ext-apps' `McpUiHostCapabilities` type doe
 reference SDK's `App.updateModelContext` sends without checking. Nothing in this repository ever
 recorded what Claude advertises, so whether the gate was the cause is not known. Since 2026-10-15
 the card sends whether or not the capability is advertised (a host without the method answers
--32601, which is swallowed), and the internal diagnostics line shows `mctx cap|nocap ok/failed/sent`,
-which answers the question the next time an internal card is looked at in Claude. Even a host
+-32601, which is swallowed), and the internal diagnostics line shows
+`mctx cap[<modalities>]|nocap ok/failed/sent [err <code: message>]`, re-rendered whenever a reply
+lands (2026-10-17: it used to wait for the next keystroke). The request is always one `text`
+block; `structuredContent` (the same text) is added only when the host lists `structuredContent`
+among the capability's modalities (`model-context.ts#modelContextParams`). How Claude turns an
+accepted update into model input is not documented; the 2026-10-17 report that the model "is not
+told" closely paraphrased the `draft` tool description of the time, which now says the card
+reports actions when the host passes them on. Even a host
 that accepts it may defer it to the next user message (the spec allows that), so it cannot be the
 only channel.
 
@@ -1027,17 +1073,23 @@ is the one thing every host shows the model. So:
   client never claims (pinned in `card-activity.test.ts`); no first-party marker is read, which
   keeps client-api's `mcp-neutral` count of those reads unchanged. Rows the web client's key
   records are never claimed and expire after 7 days.
-* The model's next successful `draft_list`, `draft{action:"create"|"reply"|"update"}` or
-  `draft{action:"send"}` WITHOUT `base_revision` for that key and inbox claims the unreported rows
-  of the last 24 hours in one `UPDATE … RETURNING` (so each is told once) and carries one server
-  note through `result-notes.ts` (a trailing `content` block and `structuredContent.notes`), e.g.:
+* **Per draft (2026-10-17).** A key is not a conversation: Claude uses one key for every chat,
+  so a note about "the inbox" reached an unrelated chat, by raw id, about drafts it had never
+  seen. Only a model call that NAMES a draft carries a note: a successful
+  `draft{action:"update"}`, or `draft{action:"send"}` WITHOUT `base_revision`. `draft_list`,
+  `create` and `reply` carry none. The named id is resolved through `draft_lineage`, and only
+  that line's unreported rows of the last 24 hours (matched by `line_id`, or by any id the call
+  knows for the draft) are claimed, with `UPDATE … RETURNING` (so each is told once). Other
+  drafts' rows stay unclaimed for a call that concerns them, or expire. The note goes through
+  `result-notes.ts` (a trailing `content` block and `structuredContent.notes`), collapses every
+  id of the line into "this draft", names no id, and quotes the subject the current result
+  already carries, e.g.:
 
-  > Since the last draft result for this inbox, the MCP Emails draft editor (the card in which the
-  > user can edit, save and send a draft) recorded these changes, which may not appear in this
-  > conversation. At 2026-10-15T11:58:00Z draft Drafts:7 was saved, changing the subject and To.
-  > Its recipients are now to 2, cc 0, bcc 0. At 2026-10-15T11:59:30Z draft Drafts:8 was sent. It
-  > is no longer a draft and that draft_id no longer resolves. draft_read returns a saved draft's
-  > current subject, recipients and text.
+  > Before this call, the MCP Emails draft editor (the card in which the user can edit, save and
+  > send a draft) recorded changes to this draft ("Q3 numbers") that may not appear in this
+  > conversation. It was saved there 2 times, last at 2026-10-15T11:59:30Z, changing the
+  > subject, To and Cc. After that save it had To 1, Cc 2, Bcc 0. draft_read returns its current
+  > subject, recipients and text.
 
   `content[0]` is untouched (the payload JSON is not `structuredContent`'s mirror, so
   `attachResultNote` leaves it alone); the deferred-body row's `content[1]` notice stays second.
@@ -1203,7 +1255,8 @@ registry, and since 2026-10-13 `draft_read` gets `["model", "app"]` instead), li
 `outcome: "failed"` and `isError: true` — never a JSON-RPC error: `invalid_arguments`,
 `insufficient_scope`, `inbox_not_found`, `draft_editor_disabled`, `draft_not_found`,
 `invalid_recipients`, `draft_has_attachments`, `provider_error`, and since 2026-10-13
-`draft_changed` (`draft_editor_save` only; see "Draft lineage"). `draft{action:"send"|"update"}`
+`draft_changed` (`draft_editor_save` only; see "Draft lineage"), and since 2026-10-17
+`attachment_remove_unsupported` (`draft_editor_save` on Outlook). `draft{action:"send"|"update"}`
 add `draft_already_sent`, and `draft{action:"send"}` with `base_revision` adds `draft_changed`, as
 `isError` text results that carry the same failed receipt in a gated workspace.
 Every other `draft{action:"send"|"delete"}` refusal is still a bare `isError` sentence for the model
