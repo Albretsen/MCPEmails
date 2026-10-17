@@ -635,9 +635,9 @@ async function main() {
     d.tools.draft = () => sentResult();
     d.press(d.slot());
     await settle();
-    d.press(d.btn(/^Discard$/));
+    d.press(d.btn(/^Delete draft$/));
     await settle();
-    d.press(d.btn(/^No$/));
+    d.press(d.btn(/^Keep draft$/));
     await settle();
     expect("Discard confirm: the countdown is over", d.slot()?.textContent.trim(), "Send");
     await pastUndo();

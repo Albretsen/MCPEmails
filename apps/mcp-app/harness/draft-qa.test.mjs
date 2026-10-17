@@ -910,18 +910,18 @@ async function main() {
     const c = await editor();
     c.input("d-body", "edited");
     await settle();
-    const discard = c.btn(/^Discard$/);
+    const discard = c.btn(/^Delete draft$/);
     c.press(discard);
     await settle();
-    const no = c.btn(/^No$/);
-    const yes = c.btn(/^Yes, discard$/);
+    const no = c.btn(/^Keep draft$/);
+    const yes = c.btn(/^Yes, delete$/);
     expect("focus starts on the safe choice", c.active(), no);
     const row = [...no.parentElement.querySelectorAll("button")];
     expect("No comes before Yes, so it is not where Send sits", row.indexOf(no) < row.indexOf(yes), true);
     expect("Yes is not the first stop", row[0] === yes, false);
     c.press(no);
     await settle();
-    expect("focus is back on Discard", c.active(), c.btn(/^Discard$/));
+    expect("focus is back on Discard", c.active(), c.btn(/^Delete draft$/));
     expect("not on Send", /send/i.test(c.active()?.textContent ?? ""), false);
     // The second half of a double click lands where No was.
     c.btn(/^Send$/).click();
@@ -929,12 +929,12 @@ async function main() {
     await settle();
     expectJson("a click right after closing sends and saves nothing", c.calls, []);
 
-    c.press(c.btn(/^Discard$/));
+    c.press(c.btn(/^Delete draft$/));
     await settle();
     c.key(c.active(), "Escape");
     await settle();
-    expect("Escape cancels the confirm", !!c.btn(/^Yes, discard$/), false);
-    expect("and returns focus to Discard", c.active(), c.btn(/^Discard$/));
+    expect("Escape cancels the confirm", !!c.btn(/^Yes, delete$/), false);
+    expect("and returns focus to Discard", c.active(), c.btn(/^Delete draft$/));
 
     c.press(c.btn(/^⋯$/));
     await settle();

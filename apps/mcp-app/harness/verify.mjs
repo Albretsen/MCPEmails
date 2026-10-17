@@ -95,6 +95,12 @@ const SUITES = [
   // cancel), Enter on a recipient that is not an address, and an older card
   // that folds when a newer one mounts, without being touched.
   ["draft send safety", "draft-send-safety.test.mjs"],
+  // The ninth DOM suite: the layout review of 2026-10-17 in claude.ai. Nothing
+  // moves under the pointer (header status, the ⋯ overlay, the delete confirm
+  // on the left), one status said one way, Send off during a save, "Delete
+  // draft" vs "Undo my edits", the empty-subject question, narrow widths.
+  // footer-geometry.mjs measures the same promises in real Chrome.
+  ["draft layout", "draft-layout.test.mjs"],
   // DOM-free, and last only because it was merged last: the exact text of every
   // sentence the card sends the model, and the decisions behind a deferred
   // draft body (where it comes from, and which `draft_read` answer is adopted).

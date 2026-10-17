@@ -1463,8 +1463,8 @@ export function App(props: { bridge: HostBridge }) {
                 const id = held.draft_id || "unknown";
                 void bridge.updateModelContext(
                   how === "sent"
-                    ? `The user pressed Discard on draft ${id} in the MCP Emails card, but that draft had already been sent. Nothing was deleted, and that draft_id no longer resolves.`
-                    : `The user pressed Discard on draft ${id} in the MCP Emails card. It was already gone from Drafts, so that draft_id no longer resolves.`,
+                    ? `The user pressed Delete draft on draft ${id} in the MCP Emails card, but that draft had already been sent. Nothing was deleted, and that draft_id no longer resolves.`
+                    : `The user pressed Delete draft on draft ${id} in the MCP Emails card. It was already gone from Drafts, so that draft_id no longer resolves.`,
                 );
                 return;
               }

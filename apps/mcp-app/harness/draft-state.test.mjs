@@ -479,9 +479,9 @@ async function main() {
       await settle();
       expect(`${label}: the not-found notice is up`, /could not be found in Drafts/.test(c.text()), true);
       c.tools.draft = answer;
-      c.press(c.btn(/^Discard$/));
+      c.press(c.btn(/^Delete draft$/));
       await settle();
-      c.press(c.btn(/^Yes, discard$/));
+      c.press(c.btn(/^Yes, delete$/));
       await settle();
       expect(`${label}: the editor is gone`, c.isEditor(), false);
       expect(`${label}: one line says how it ended`, re.test(c.text()), true);
@@ -643,9 +643,9 @@ async function main() {
     await settle();
     expect("the card is fullscreen", c.root.getAttribute("data-mode"), "fullscreen");
     c.tools.draft = () => discardedResult();
-    c.press(c.btn(/^Discard$/));
+    c.press(c.btn(/^Delete draft$/));
     await settle();
-    c.press(c.btn(/^Yes, discard$/));
+    c.press(c.btn(/^Yes, delete$/));
     await settle();
     await settle();
     expect("discarded: one line", c.isEditor(), false);
@@ -712,9 +712,9 @@ async function main() {
   {
     const c = await editor();
     c.tools.draft = () => discardedResult();
-    c.press(c.btn(/^Discard$/));
+    c.press(c.btn(/^Delete draft$/));
     await settle();
-    c.press(c.btn(/^Yes, discard$/));
+    c.press(c.btn(/^Yes, delete$/));
     await settle();
     const s = c.storage();
     c.kill();

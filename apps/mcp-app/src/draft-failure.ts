@@ -377,7 +377,7 @@ export function patchLanded(
  *
  * The one place this is decided, because the two it chooses between both offer
  * something ("saving will replace the newer version", "Use the newer version",
- * "Discard these edits") and an offer is only honest while it can be taken up.
+ * "Undo my edits") and an offer is only honest while it can be taken up.
  * QA, 2026-10-13: the amber "saving will replace the newer version" sat under
  * the red "it cannot be saved or sent from here".
  *
