@@ -21,6 +21,13 @@ import { TextLink } from "./ui";
  *
  * One line, never an empty tree (contract §1): the host draws its widget
  * header over this frame whatever it contains.
+ *
+ * ── Now a fallback only (2026-10-17) ────────────────────────────────────────
+ * `draft_read` is listed without the card's resource URI, so a host that has
+ * read the current `tools/list` mounts nothing for a model's read (each
+ * revision showed this line AND the write's editor). This stays for a host
+ * still holding the older listing. See
+ * mcp-app-resources.ts#DRAFT_EDITOR_UNMOUNTED_TOOL_NAMES.
  */
 export function DraftReadLine(props: { draft: DraftEditorData; onOpen: () => void }) {
   const d = props.draft;

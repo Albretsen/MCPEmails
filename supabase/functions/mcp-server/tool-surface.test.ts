@@ -1116,7 +1116,10 @@ Deno.test("draft: the description, the update hint and draft_list say what is tr
   // The per-action required list no longer names body for update...
   assert(!/update: body/.test(action), action);
   // ...and still names it for the two actions that do require it.
-  assert(/create = a new draft, subject and body required/.test(action), action);
+  // Subject left create's required list on 2026-10-17 (the card saves a
+  // draft with an empty subject); the hint says so.
+  assert(/create = a new draft; body required, subject optional/.test(action), action);
+  assert(!/subject and body required|create: subject/.test(action), action);
   assert(/Required: reply: body\./.test(action), action);
   assert(
     /update = change only the fields you pass on draft_id, keeping every omitted one \(body included\); send = /
