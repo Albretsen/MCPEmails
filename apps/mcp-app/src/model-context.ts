@@ -120,14 +120,25 @@ const BODY_DIFFERS =
  * a host that reads only structured data is the one case where text alone
  * would not reach the model, and a host that did not list it may refuse it.
  *
- * ── What is NOT known ────────────────────────────────────────────────────────
- * How Claude turns an accepted update into model input is not documented. QA
- * 2026-10-17 saw Claude answer `ui/update-model-context` with success and then
- * say on the next turn that the card tells it nothing. That sentence closely
- * paraphrases the `draft` tool's own description of the time ("without you
- * being told"), so it is not proof the line was missing, and the description
- * no longer says that. The diagnostics line now shows which modalities the
- * host listed and the last error, which is what the next live check needs.
+ * ── What Claude does with it (re-test 2026-10-17) ──────────────────────────
+ * Compared against the spec (specification/draft/apps.mdx) and the SDK's
+ * `App.updateModelContext` (src/app.ts, no capability check, method
+ * "ui/update-model-context", params passed through): the method name, the
+ * params shape and the timing here match, and with Claude advertising
+ * `cap[text,image]` the one `text` block is a modality it listed. Claude
+ * answered all three updates with success (diagnostics `3/0/3`), yet on the
+ * NEXT user turn, asked without tools what the subject was now and what had
+ * changed in the card, it said nothing about edits, saves or sends had reached
+ * it. So claude.ai accepts the request and does not, as of that date, put it
+ * in front of the model on the next turn (the spec's SHOULD), and nothing on
+ * the card's side can change that. How Claude handles it is not documented.
+ * The card still sends it (a host that follows the spec gets it, and Claude
+ * may start to), but nothing may depend on it: the server tells the model the
+ * same facts in the next draft result for that draft, including a model's
+ * `draft_read` (supabase/functions/mcp-server/card-activity.ts), and the
+ * draft tool descriptions send a model to `draft_read` before it states a
+ * draft's current state. `ui/message` would reach the model but posts into
+ * the chat as the user, so it is not used for this.
  */
 export function modelContextParams(
   text: string,
