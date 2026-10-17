@@ -22,9 +22,11 @@
    - every structural colour / type / radius comes from a host style variable
      with a literal fallback. Phase-0 Q6: a host "can provide any subset".
    - literal colours appear only in the token block below, once per theme.
-   - no positioned dropdowns / popovers anywhere (clipped by the container,
-     conflicts with host z-index). The draft card's "⋯" menu is an in-flow
-     panel under the header for exactly this reason.
+   - no positioned dropdowns / popovers that can reach past the frame
+     (clipped by the container, conflicts with host z-index). The ONE overlay
+     is the draft card's "⋯" menu (`.pop`), which opens downward from the
+     header of an open editor, a card always taller than the menu; a folded
+     card draws the same panel in flow instead (`.pop.inflow`).
    - inline card: auto-fit height, no nested vertical scrolling.
    - visible focus rings, WCAG AA contrast, container queries not fixed widths.
 --------------------------------------------------------------------------- */
@@ -260,6 +262,32 @@ body {
 
 .hdr-r > .muted { font-size: var(--fs-sm); color: var(--fg-3); }
 
+/* The draft editor's header: "Draft", the From address and the status on the
+   left, the controls (Expand, Hide, ⋯) on the right. It does NOT wrap: a
+   wrapping header moved the controls to a second line whenever the status
+   grew, and the status used to sit BETWEEN the controls, so Expand slid
+   sideways each time "Unsaved changes" came and went (live QA, 2026-10-17).
+   Now the left side shrinks (the address, then the status past its cap, both
+   with an ellipsis) and the right side never moves. */
+.hdr.ed-hdr { flex-wrap: nowrap; }
+.ed-hdr > .hdr-l { overflow: hidden; }
+/* "Draft" never shrinks: with the card's `overflow-wrap: anywhere` a squeezed
+   word breaks into two lines and the header doubles in height. */
+.ed-hdr > .hdr-l > b { flex: none; }
+.ed-hdr > .hdr-l > .hdr-from { flex: 0 10 auto; min-width: 2em; }
+/* The status keeps its words ahead of the address, up to a cap. */
+.hdr-status {
+  flex: 0 0 auto;
+  max-width: 55%;
+  min-width: 0;
+  font-size: var(--fs-sm);
+  color: var(--fg-3);
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+.hdr-status[data-unsaved="true"] { color: var(--fg-2); }
+
 /* Two text links side by side in a header ("Open in dashboard" and "Show",
    "Expand" and "Hide") read as one phrase at the header's 6px gap. */
 .hdr-r > .link + .link { margin-left: 4px; }
@@ -475,8 +503,9 @@ body {
 }
 
 /* The draft editor's footer: links on the left, Save and Send on the right.
-   It does NOT wrap. The links change width with their state ("Refresh",
-   "Refreshing", "Up to date"; "Show formatting", "Edit plain text"), and with
+   It does NOT wrap. The links used to change width with their state
+   ("Refresh", "Refreshing", "Up to date"; "Show formatting", "Edit plain
+   text"; Refresh is now always "Refresh"), and with
    `.acts`'s wrap that moved the wrap point: at 420px Save slid into Send's old
    place and Send dropped to a row of its own (verifier, 2026-10-15). Now Save
    and Send are one group (`.acts-r`) that never wraps, never shrinks and sits
@@ -506,6 +535,23 @@ body {
   flex: none;
   margin-left: auto;
 }
+
+/* The delete confirm, in the left links' place: real buttons, "Keep draft"
+   first, where the "Delete draft" link was. The danger answer is a bordered
+   button here, not the text-only danger style, so it reads as a button. */
+.ed-acts > .acts-confirm { gap: 6px; flex-wrap: nowrap; }
+.acts-confirm > .btn[data-variant="danger"],
+.pop-btns > .btn[data-variant="danger"] {
+  border-color: var(--bd-danger);
+  padding: 0 10px;
+}
+.acts-confirm > .btn[data-variant="danger"]:hover:not(:disabled),
+.pop-btns > .btn[data-variant="danger"]:hover:not(:disabled) {
+  background: var(--bg-2);
+  text-decoration: none;
+}
+
+
 
 .btn {
   appearance: none;
@@ -620,9 +666,8 @@ body {
 
 /* ---- the draft card's "⋯" menu ------------------------------------------
 
-   An in-flow panel under the header, never a popover: a sandboxed frame clips
-   whatever is positioned past its own height. The button is a text link with
-   no underline, sized to a real hit target. */
+   An overlay under the button (`.pop`, below), in flow only on a folded card.
+   The button is a text link with no underline, sized to a real hit target. */
 .menu-btn {
   text-decoration: none;
   font-size: 15px;
@@ -633,9 +678,52 @@ body {
 }
 .menu-btn[aria-expanded="true"] { color: var(--fg); background: var(--bg-2); }
 
-.menu {
+/* The overlay, anchored under "⋯" and right-aligned to it. It covers the
+   fields under the header instead of pushing them down (live QA, 2026-10-17:
+   opening it moved To and Subject under the pointer). It is opaque and
+   bordered because it sits over content; no shadow, since a literal colour
+   would be needed for one. `max-height` keeps it inside the frame. */
+.menu-anchor {
+  position: relative;
+  display: inline-flex;
+  align-items: baseline;
+}
+.pop {
+  position: absolute;
+  top: calc(100% + 4px);
+  right: 0;
+  z-index: 3;
+  width: max-content;
+  min-width: 11em;
+  max-width: min(320px, calc(100vw - 24px));
+  max-height: calc(100vh - 48px);
+  overflow-y: auto;
+  background: var(--bg);
+  border: var(--bw) solid var(--bd-2);
+  border-radius: var(--r-md);
+  padding: 4px;
+  text-align: left;
+}
+/* The folded card is one line tall, so there the panel is in flow. */
+.pop.inflow {
+  position: static;
+  align-self: flex-end;
+}
+.pop-menu {
   display: flex;
-  justify-content: flex-end;
+  flex-direction: column;
+  gap: 2px;
+}
+.pop-confirm {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  padding: 4px;
+}
+.pop-btns {
+  display: flex;
+  gap: 6px;
+  flex-wrap: wrap;
 }
 
 .menu-item {
@@ -643,14 +731,33 @@ body {
   font: inherit;
   font-size: var(--fs-sm);
   color: var(--fg);
-  background: var(--bg-2);
-  border: 1px solid var(--bd-2);
+  background: transparent;
+  border: 0;
   border-radius: var(--r-sm);
-  padding: 4px 10px;
+  padding: 5px 10px;
+  text-align: left;
+  width: 100%;
   cursor: pointer;
+  white-space: nowrap;
 }
-.menu-item:hover { background: var(--bg-3); }
-.menu-item:focus-visible { outline: 2px solid var(--ring); outline-offset: 2px; }
+.menu-item:hover { background: var(--bg-2); }
+.menu-item:focus-visible { outline: 2px solid var(--ring); outline-offset: -2px; }
+.menu-item[data-tone="danger"] { color: var(--fg-danger); }
+.menu-item[aria-disabled="true"] { opacity: 0.55; cursor: default; }
+/* Shown only at narrow widths: see the container query above `.ed-links`. */
+.pop-menu > .menu-item.narrow-only { display: none; }
+
+/* Narrow (a 300-460px frame): the left links wrapped unevenly, "Delete"
+   alone on a second line under the others (live QA, 2026-10-17). Below the
+   width at which all three fit beside Save and Send they move into the "⋯"
+   menu (`.menu-item.narrow-only`), so the row is Save and Send alone. Placed
+   after the rule that hides `.narrow-only`, so it wins. The width is the
+   card's content box: the three links (~230px) + Save and Send (2 x 7em) +
+   gaps, checked in Chrome by footer-geometry.mjs. */
+@container card (max-width: 439px) {
+  .ed-acts > .ed-links { display: none; }
+  .pop-menu > .menu-item.narrow-only { display: block; }
+}
 
 /* ---- signature ---------------------------------------------------------- */
 
@@ -789,6 +896,15 @@ body {
 .card[data-mode="fullscreen"] .textarea {
   flex: 1 1 auto;
   min-height: 8lh;
+}
+
+/* "No subject. Send anyway?", inside the Subject row so the row keeps its
+   height and Send stays where the first press was. */
+.subj-warn {
+  flex: 0 0 auto;
+  white-space: nowrap;
+  font-size: var(--fs-sm);
+  color: var(--fg-warning);
 }
 
 .subj {

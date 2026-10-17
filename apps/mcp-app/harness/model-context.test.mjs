@@ -264,7 +264,7 @@ async function main() {
     expect(
       "a failed discard",
       act("discard", failed(null), { bodyEdited: true }),
-      `The user pressed Discard on draft Drafts:3 in the MCP Emails card and the delete failed. ${SHAPE} ${said} ` +
+      `The user pressed Delete draft on draft Drafts:3 in the MCP Emails card and the delete failed. ${SHAPE} ${said} ` +
         `The card still holds the draft under that draft_id. ${DIFFERS}`,
     );
     expect(
@@ -283,7 +283,7 @@ async function main() {
     expect(
       "nor a discard",
       act("discard", { kind: "no_answer", why: "-32000: host refused" }),
-      "The user pressed Discard on draft Drafts:3 in the MCP Emails card and the card got no usable answer " +
+      "The user pressed Delete draft on draft Drafts:3 in the MCP Emails card and the card got no usable answer " +
         `("-32000: host refused"). ${SHAPE} The card does not know whether the draft was deleted.`,
     );
     const noisy = act("send", { kind: "failed", said: `a\n"b"\n${"z".repeat(900)}`, delivery: null });

@@ -286,7 +286,7 @@ export function draftCallOutcome(action: DraftAction, call: DraftCall): DraftCal
 
 const PRESSED: Record<DraftAction, string> = {
   send: "pressed Send on",
-  discard: "pressed Discard on",
+  discard: "pressed Delete draft on",
   hide: "asked to hide the draft editor card while viewing",
 };
 
@@ -351,7 +351,7 @@ export function draftActionContextLine(
       }
       if (action === "discard") {
         return (
-          `The user pressed Discard on draft ${id} in the MCP Emails card and the delete failed. ${shape} ${said} ` +
+          `The user pressed Delete draft on draft ${id} in the MCP Emails card and the delete failed. ${shape} ${said} ` +
           `The card still holds the draft under that draft_id.${body}`
         );
       }

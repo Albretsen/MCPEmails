@@ -104,6 +104,12 @@ const SUITES = [
   // 2026-10-17). The Signature row is the signature, the quote is a read-only
   // section of its own, and every save hands the quote back byte for byte.
   ["draft quote", "draft-quote.test.mjs"],
+  // The eleventh DOM suite: the layout review of 2026-10-17 in claude.ai. Nothing
+  // moves under the pointer (header status, the ⋯ overlay, the delete confirm
+  // on the left), one status said one way, Send off during a save, "Delete
+  // draft" vs "Undo my edits", the empty-subject question, narrow widths.
+  // footer-geometry.mjs measures the same promises in real Chrome.
+  ["draft layout", "draft-layout.test.mjs"],
   // DOM-free, and last only because it was merged last: the exact text of every
   // sentence the card sends the model, and the decisions behind a deferred
   // draft body (where it comes from, and which `draft_read` answer is adopted).

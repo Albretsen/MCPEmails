@@ -335,9 +335,9 @@ async function main() {
 
   /** Discard from the editor, through the inline confirm. */
   async function discard(c) {
-    c.press(c.btn(/^Discard$/));
+    c.press(c.btn(/^Delete draft$/));
     await settle();
-    c.press(c.btn(/^Yes, discard$/));
+    c.press(c.btn(/^Yes, delete$/));
     await settle();
   }
 
