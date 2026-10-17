@@ -1550,23 +1550,27 @@ export function DraftEditor(props: Props) {
     flush();
   };
 
-  /** Typing in an address field: keep the warning about it current. */
+  /**
+   * Typing in an address field. A warning about the field goes while it is
+   * being corrected and comes back, if still due, on the next commit (comma,
+   * semicolon, Enter, blur, Save): "ex is not a complete email address yet"
+   * under a half-typed word was a warning about typing (live re-test,
+   * 2026-10-17). The note about the address just added stays until real text
+   * is typed: the space people type after a comma used to erase "X is already
+   * in To." the moment it appeared, so the address vanished without a word.
+   */
   const onAddrInput = (field: Field, value: string) => {
     update({ typed: { ...editRef.current.typed, [field]: value } });
-    setAddrNote(null);
-    setAddrWarning((w) => {
-      if (!w || w.field !== field) return w;
-      const bad = value.trim() ? firstInvalid(value) : null;
-      if (!bad) return null;
-      return { field, text: `${bad} is not a complete email address yet.` };
-    });
+    if (value.trim()) setAddrNote(null);
+    setAddrWarning((w) => (w && w.field === field ? null : w));
   };
 
   /**
    * The people the recipient fields suggest (contacts.ts says why these and
    * not the server's `contact_search`): the person this draft answers, its
-   * recipients as stored, addresses removed in this card, and the sender.
-   * Never one already on the draft, in any field.
+   * recipients as stored, and addresses removed in this card. Never one
+   * already on the draft, in any field, and never the address the draft is
+   * sent from (live re-test, 2026-10-17: it offered the sender's own inbox).
    */
   const removedHere = useRef<string[]>([]);
   const knownNow = useRef<() => ContactSuggestion[]>(() => []);
@@ -1577,10 +1581,8 @@ export function DraftEditor(props: Props) {
       ...FIELDS.flatMap((f) => server[f]),
       ...removedHere.current,
     ];
+    if (d.identity?.email_address) onDraft.add(addressKey(d.identity.email_address));
     const list = raw.map(parseNamedAddress).filter((s): s is ContactSuggestion => s !== null);
-    if (d.identity?.email_address) {
-      list.push({ address: d.identity.email_address, name: d.identity.display_name ?? null });
-    }
     return list.filter((s) => !onDraft.has(addressKey(s.address)));
   };
   const suggest = useRef<ContactSource>(localContactSource(() => knownNow.current()));
