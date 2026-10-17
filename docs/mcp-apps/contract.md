@@ -663,10 +663,15 @@ Internal workspaces are those in
     "recipients": { "to": ["a@x"], "cc": [], "bcc": [] },   // full bcc: the author's surface
     "subject": "…",
     "body": { "text": "…", "html": "…" | null, "truncated": false,
-              "formatting_removed": true },   // 64 KB clip as §2; formatting_removed: save only; see "Deferred body"
+              "formatting_removed": true,   // 64 KB clip as §2; formatting_removed: save only; see "Deferred body"
+              "quoted": { "line": 7 } },    // only when text ends in a reply's quoted original: the line
+                                            // (0-based, counted in \n) it starts on. text is still the whole
+                                            // body. 2026-10-17, additive; see "Quoted original" below
     "attachments": [ { "filename", "size_bytes", "mime_type" } ],       // display only
-    "signature": { "embedded": true | false, "rich": true },   // embedded: the stored text carries it;
-                                            // rich (only when true): the HTML part carries the formatted block
+    "signature": { "embedded": true | false, "rich": true,   // embedded: the stored text carries it;
+                   "first_line": "…" },     // rich (only when true): the HTML part carries the formatted block;
+                                            // first_line: only when embedded is false AND the inbox has a
+                                            // signature, its first line (the card names it; no line otherwise)
     "in_reply_to": { "message_id": "INBOX:42", "subject": "…", "from": "…" } | null,
     "threaded": true | false,               // answers a message, on EVERY path; see the deviations note
     "can_send": true | false                // key has send:email AND at least one recipient
@@ -698,6 +703,27 @@ revision. The card's own `draft_read` calls are app calls and unaffected. See
 
 Building the envelope must never turn a successful draft operation into an error: a failure
 degrades to today's payload, exactly as §2a's failure rule.
+
+### Quoted original (2026-10-17)
+
+A reply's text part ends in the original it answers (`On <date>, <name> wrote:` and `>` lines,
+Outlook's `From:`/`Sent:`/`Subject:` block, `-----Original Message-----`). The card used to split
+the body at the LAST `-- ` line, so that quote was shown, counted and edited as the signature.
+`body.quoted.line` (mcp-server/quoted-reply.ts#quotedTextLine) tells the card where it starts.
+Detection is conservative: an attribution counts only when `>` lines follow it to the end, a bare
+`>` block only when it runs to the end, so inline answers are never made read only.
+
+* The card shows the quote as a read-only, collapsed section and edits only the text above it.
+  Every save sends that text followed by the quote exactly as it arrived, so `body_text` still
+  carries the whole body and the save protocol is unchanged.
+* On a save whose quote is unchanged (line endings aside), when the stored HTML part has a client
+  quote block (`gmail_quote`, `<blockquote type="cite">`, `divRplyFwdMsg`, ...), only the part
+  above it is regenerated and the stored quote markup follows byte for byte
+  (mcp-app-drafts.ts#htmlKeepingQuote). Otherwise the existing regeneration rule applies unchanged.
+* In lines, not characters: the card strips invisible characters from every string at its
+  boundary, which moves offsets but never removes a `\n`. On a deferred body, `quoted` rides in
+  `_meta` with the body, never on the placeholder.
+* A card that predates the field ignores it and edits the quote as part of the text, as before.
 
 ### Deferred body (2026-10-13)
 

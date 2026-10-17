@@ -100,6 +100,10 @@ const SUITES = [
   // it into plain text and its undo, the notice after one, and focus kept in
   // the frame when switching between the formatted view and the box.
   ["draft formatting", "draft-formatting.test.mjs"],
+  // The tenth DOM suite: a reply's quoted original (release review,
+  // 2026-10-17). The Signature row is the signature, the quote is a read-only
+  // section of its own, and every save hands the quote back byte for byte.
+  ["draft quote", "draft-quote.test.mjs"],
   // DOM-free, and last only because it was merged last: the exact text of every
   // sentence the card sends the model, and the decisions behind a deferred
   // draft body (where it comes from, and which `draft_read` answer is adopted).

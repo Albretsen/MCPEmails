@@ -81,6 +81,19 @@ export interface Body {
    * original (mcp-server/html-text-merge.ts).
    */
   formatting_removed?: boolean;
+  /**
+   * Draft editor only (2026-10-17), and only when `text` ends in the quoted
+   * original of a reply ("On <date>, <name> wrote:" and `>` lines, Outlook's
+   * header block, ...): the line it starts on, counted in `\n` from 0.
+   * Server-detected (mcp-server/quoted-reply.ts). In lines rather than
+   * characters because `neutralizeText` removes characters but never a `\n`.
+   *
+   * Additive: `text` is still the WHOLE body, quote included, so a card that
+   * ignores this edits the quote as part of the text, as it always did. This
+   * card shows the quote read-only and saves it back verbatim
+   * (format.ts#splitQuote).
+   */
+  quoted?: { line: number } | null;
 }
 
 /**
@@ -105,6 +118,8 @@ export interface DeferredBody {
   deferred: true;
   /** Never on a deferred body: only a save sets it, and a save is not deferred. */
   formatting_removed?: undefined;
+  /** Rides in `_meta` with the real body, never on the placeholder. */
+  quoted?: undefined;
 }
 
 export type DraftBody = Body | DeferredBody;
@@ -197,6 +212,12 @@ export interface DraftSignature {
    * body-only edit keeps it. The card warns before that happens.
    */
   rich?: boolean;
+  /**
+   * The first line of the INBOX's signature, present only when the draft does
+   * not carry it (`embedded: false`) and the inbox has one. The card names it in
+   * its "not in this draft" line, and shows no such line without it.
+   */
+  first_line?: string | null;
 }
 
 /**

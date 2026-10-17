@@ -673,6 +673,24 @@ body {
   white-space: nowrap;
 }
 
+/* The quoted original of a reply, expanded: read only, in the dimmed
+   material of the signature row above it, and visibly not a text box. Bounded
+   inline so a long thread does not push Save off the card; fullscreen lets it
+   run, like the body. */
+.quote-text {
+  margin: 0;
+  padding: 6px 8px;
+  background: var(--bg-2);
+  border-radius: var(--r-md);
+  color: var(--fg-3);
+  font-size: var(--fs-sm);
+  white-space: pre-wrap;
+  overflow-wrap: anywhere;
+  max-height: 240px;
+  overflow-y: auto;
+}
+.card[data-mode="fullscreen"] .quote-text { max-height: none; }
+
 /* ---- segmented control (fullscreen panel switcher only) ---------------- */
 
 .segmented {
