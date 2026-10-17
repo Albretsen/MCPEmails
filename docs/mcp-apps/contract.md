@@ -1004,8 +1004,14 @@ does not list that field at all (only ext-apps' `McpUiHostCapabilities` type doe
 reference SDK's `App.updateModelContext` sends without checking. Nothing in this repository ever
 recorded what Claude advertises, so whether the gate was the cause is not known. Since 2026-10-15
 the card sends whether or not the capability is advertised (a host without the method answers
--32601, which is swallowed), and the internal diagnostics line shows `mctx cap|nocap ok/failed/sent`,
-which answers the question the next time an internal card is looked at in Claude. Even a host
+-32601, which is swallowed), and the internal diagnostics line shows
+`mctx cap[<modalities>]|nocap ok/failed/sent [err <code: message>]`, re-rendered whenever a reply
+lands (2026-10-17: it used to wait for the next keystroke). The request is always one `text`
+block; `structuredContent` (the same text) is added only when the host lists `structuredContent`
+among the capability's modalities (`model-context.ts#modelContextParams`). How Claude turns an
+accepted update into model input is not documented; the 2026-10-17 report that the model "is not
+told" closely paraphrased the `draft` tool description of the time, which now says the card
+reports actions when the host passes them on. Even a host
 that accepts it may defer it to the next user message (the spec allows that), so it cannot be the
 only channel.
 
@@ -1027,17 +1033,23 @@ is the one thing every host shows the model. So:
   client never claims (pinned in `card-activity.test.ts`); no first-party marker is read, which
   keeps client-api's `mcp-neutral` count of those reads unchanged. Rows the web client's key
   records are never claimed and expire after 7 days.
-* The model's next successful `draft_list`, `draft{action:"create"|"reply"|"update"}` or
-  `draft{action:"send"}` WITHOUT `base_revision` for that key and inbox claims the unreported rows
-  of the last 24 hours in one `UPDATE … RETURNING` (so each is told once) and carries one server
-  note through `result-notes.ts` (a trailing `content` block and `structuredContent.notes`), e.g.:
+* **Per draft (2026-10-17).** A key is not a conversation: Claude uses one key for every chat,
+  so a note about "the inbox" reached an unrelated chat, by raw id, about drafts it had never
+  seen. Only a model call that NAMES a draft carries a note: a successful
+  `draft{action:"update"}`, or `draft{action:"send"}` WITHOUT `base_revision`. `draft_list`,
+  `create` and `reply` carry none. The named id is resolved through `draft_lineage`, and only
+  that line's unreported rows of the last 24 hours (matched by `line_id`, or by any id the call
+  knows for the draft) are claimed, with `UPDATE … RETURNING` (so each is told once). Other
+  drafts' rows stay unclaimed for a call that concerns them, or expire. The note goes through
+  `result-notes.ts` (a trailing `content` block and `structuredContent.notes`), collapses every
+  id of the line into "this draft", names no id, and quotes the subject the current result
+  already carries, e.g.:
 
-  > Since the last draft result for this inbox, the MCP Emails draft editor (the card in which the
-  > user can edit, save and send a draft) recorded these changes, which may not appear in this
-  > conversation. At 2026-10-15T11:58:00Z draft Drafts:7 was saved, changing the subject and To.
-  > Its recipients are now to 2, cc 0, bcc 0. At 2026-10-15T11:59:30Z draft Drafts:8 was sent. It
-  > is no longer a draft and that draft_id no longer resolves. draft_read returns a saved draft's
-  > current subject, recipients and text.
+  > Before this call, the MCP Emails draft editor (the card in which the user can edit, save and
+  > send a draft) recorded changes to this draft ("Q3 numbers") that may not appear in this
+  > conversation. It was saved there 2 times, last at 2026-10-15T11:59:30Z, changing the
+  > subject, To and Cc. After that save it had To 1, Cc 2, Bcc 0. draft_read returns its current
+  > subject, recipients and text.
 
   `content[0]` is untouched (the payload JSON is not `structuredContent`'s mirror, so
   `attachResultNote` leaves it alone); the deferred-body row's `content[1]` notice stays second.

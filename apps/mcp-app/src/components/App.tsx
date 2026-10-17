@@ -31,6 +31,7 @@ import {
   draftActionContextLine,
   draftCallOutcome,
   draftSavedContextLine,
+  modelContextCapability,
   outboundApproveOpenedContextLine,
   outboundRejectContextLine,
   type DraftCall as ModelDraftCall,
@@ -102,6 +103,11 @@ function absoluteUrl(url: string | null | undefined): string | null {
  * the answer is known.
  */
 function Diagnostics(props: { bridge: HostBridge }) {
+  // The model-context counters live on the bridge, not in the store, so a
+  // reply landing re-rendered nothing: QA 2026-10-17 read 0/0/0 right after a
+  // save. Subscribe to them directly.
+  const [, bump] = useState(0);
+  useEffect(() => props.bridge.onModelContextChange(() => bump((n) => n + 1)), [props.bridge]);
   const s = getState();
   const h = props.bridge.hostInfo ?? {};
   const line = [
@@ -126,9 +132,14 @@ function Diagnostics(props: { bridge: HostBridge }) {
     // ui/update-model-context: whether the host advertised it at initialize,
     // then answered ok / answered with an error / sent. The question QA
     // 2026-10-15 could not answer about Claude, written down where it shows.
-    `mctx ${props.bridge.hostCapabilities.updateModelContext ? "cap" : "nocap"} ${
+    // The capability is shown with the modalities it listed (QA 2026-10-17:
+    // "cap" alone could not say whether Claude takes text or only structured
+    // content), and the last refusal's code when there was one.
+    `mctx ${modelContextCapability(props.bridge.hostCapabilities.updateModelContext)} ${
       props.bridge.modelContext.ok
-    }/${props.bridge.modelContext.failed}/${props.bridge.modelContext.sent}`,
+    }/${props.bridge.modelContext.failed}/${props.bridge.modelContext.sent}${
+      props.bridge.modelContextLastError ? ` err ${props.bridge.modelContextLastError.slice(0, 40)}` : ""
+    }`,
     // Expected to be 0 forever. A non-zero count means the host pushed a
     // result belonging to a different call into this card (store.ts).
     ...(s.uncorrelatedResults ? [`xcall ${s.uncorrelatedResults}`] : []),

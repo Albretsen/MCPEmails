@@ -670,6 +670,66 @@ async function main() {
     }
   }
 
+  group("the request follows the modalities the host listed (QA 2026-10-17)");
+  {
+    const line = "The user saved edits.";
+    const text = { content: [{ type: "text", text: line }] };
+    for (const [label, caps] of [["not advertised", undefined], ["advertised as {}", {}], ["text only", { text: {} }], ["junk", "yes"]]) {
+      expect(`${label}: one text block, nothing else`, JSON.stringify(m.modelContextParams(line, caps)), JSON.stringify(text));
+    }
+    expect(
+      "structuredContent listed: the same text rides along as structured data",
+      JSON.stringify(m.modelContextParams(line, { text: {}, structuredContent: {} })),
+      JSON.stringify({ ...text, structuredContent: { source: "MCP Emails draft card", context: line } }),
+    );
+    expect(
+      "never an empty update, which a host reads as 'clear the context'",
+      m.modelContextParams(line, { image: {} }).content[0].text,
+      line,
+    );
+    expect("diag: not advertised", m.modelContextCapability(undefined), "nocap");
+    expect("diag: advertised with nothing listed", m.modelContextCapability({}), "cap[]");
+    expect("diag: the modalities, in the host's order", m.modelContextCapability({ text: {}, structuredContent: {} }), "cap[text,structuredContent]");
+  }
+
+  group("the bridge says when its model-context counters move, and keeps the last refusal");
+  {
+    const listeners = [];
+    const parent = {
+      postMessage(msg) {
+        const reply = (body) =>
+          queueMicrotask(() => {
+            for (const fn of listeners) fn({ source: parent, data: { jsonrpc: "2.0", id: msg.id, ...body } });
+          });
+        if (msg.method === "ui/initialize") {
+          reply({ result: { protocolVersion: "2026-01-26", hostInfo: { name: "h", version: "1" }, hostCapabilities: {}, hostContext: {} } });
+        } else if (msg.method === "ui/update-model-context") {
+          reply({ error: { code: -32000, message: "Invalid content format" } });
+        }
+      },
+    };
+    globalThis.window = {
+      parent,
+      addEventListener: (type, fn) => type === "message" && listeners.push(fn),
+      removeEventListener() {},
+    };
+    const mod = await import(`${pathToFileURL(OUT).href}?i=${++instance}`);
+    const bridge = new mod.HostBridge();
+    await bridge.connect({ name: "mctx-listen", version: "0.0.0" });
+    const seen = [];
+    const off = bridge.onModelContextChange(() => seen.push(JSON.stringify(bridge.modelContext)));
+    await bridge.updateModelContext("x");
+    expect(
+      "told on send and again on the reply",
+      JSON.stringify(seen),
+      JSON.stringify([JSON.stringify({ sent: 1, ok: 0, failed: 0 }), JSON.stringify({ sent: 1, ok: 0, failed: 1 })]),
+    );
+    expect("the refusal is kept for the diagnostics line", bridge.modelContextLastError, "-32000: Invalid content format");
+    off();
+    await bridge.updateModelContext("y");
+    expect("an unsubscribed listener hears nothing more", seen.length, 2);
+  }
+
   // ---- report ---------------------------------------------------------------
 
   let failed = 0;
