@@ -124,6 +124,8 @@ import {
   resolveOutlookArchiveFolderId,
   OUTLOOK_NO_MAILBOX_MESSAGE,
   outlookAccessTokenForGraph,
+  graphRecipientName,
+  graphDraftAttachmentList,
 } from "./outlook-graph.ts";
 import {
   FolderOperationError,
@@ -329,6 +331,8 @@ import {
   heldSendSnapshot,
   includeSignatureForSend,
   signatureHtmlToText,
+  signatureOutcome,
+  type SignatureOutcome,
 } from "./signature-compose.ts";
 import {
   createSignatureImageFetcher,
@@ -4165,8 +4169,8 @@ const INCLUDE_SIGNATURE_PROPERTY = {
   type: "boolean",
   default: true,
   description:
-    "Append the inbox's configured signature. Set false for a terse reply or " +
-    "your own sign-off.",
+    "Append the inbox's signature, if it has one. Set false for a terse " +
+    "reply or your own sign-off.",
 } as const;
 
 /**
@@ -7906,7 +7910,7 @@ const CONSOLIDATED_SPECS: Record<string, ConsolidatedSpec> = {
   email_compose: {
     title: "Compose Email",
     description:
-      "Send new mail, reply, or forward from one inbox. The inbox's signature " +
+      "Send new mail, reply, or forward from one inbox. Any inbox signature " +
       "is appended automatically, above the quoted text on a reply and above " +
       "the relayed original on a forward; pass include_signature: false to " +
       "suppress it. " +
@@ -8016,7 +8020,7 @@ const CONSOLIDATED_SPECS: Record<string, ConsolidatedSpec> = {
       "body text is kept. " +
       "'create', 'reply' and 'update' take attachments as email_compose does; " +
       "'update' adds them and keeps the draft's existing files. " +
-      "The signature is embedded on create and on an update that passes body " +
+      "Any inbox signature is embedded on create and on an update that passes body " +
       "(include_signature: false to skip) and 'send' transmits the stored " +
       "body as-is, so it is " +
       "never doubled. 'reply' also needs read:email, 'send' needs send:email, " +
@@ -15451,6 +15455,8 @@ interface SendEmailResult {
   subject: string;
   /** Always "sent" on success. */
   status: "sent";
+  /** email_send only: whether the inbox signature went into the body. */
+  signature?: SignatureOutcome;
 }
 
 interface SendEmailParams {
@@ -18398,6 +18404,11 @@ async function executeSendEmail(
   }
 
   // ── Success ───────────────────────────────────────────────────────────────
+  // Not on an approval re-dispatch: that body was signed when it was held, and
+  // `includeSignature` is false there for that reason, not the caller's.
+  if (!apiKey.internalApprovalDispatch) {
+    sendResult.signature = signatureOutcome(senderInbox, { include_signature: includeSignature });
+  }
   return {
     result: { ...jsonOk(sendResult as unknown as Record<string, unknown>), isError: false },
     logStatus: "success",
@@ -25205,6 +25216,8 @@ interface DraftCreateResult {
   created_at: string;
   /** The files stored on the draft, when it has any. Names and sizes only. */
   attachments?: { filename: string; size_bytes: number | null }[];
+  /** Whether the inbox signature went into the body (signature-compose.ts). */
+  signature?: SignatureOutcome;
 }
 
 interface DraftReplyResult extends DraftCreateResult {
@@ -25218,6 +25231,8 @@ interface DraftUpdateResult {
   updated_at: string;
   /** Every file the draft has after the update, when it has any (see executeUpdateDraft). */
   attachments?: { filename: string; size_bytes: number | null }[];
+  /** Whether the inbox signature went into the new body (signature-compose.ts). */
+  signature?: SignatureOutcome;
   /**
    * Whether the rewritten draft still answers a message. Set by
    * executeUpdateDraft from the headers it read off the existing draft and
@@ -26357,11 +26372,11 @@ async function outlookListDrafts(
     draft_id: m.id,
     subject: m.subject ?? "(no subject)",
     to: (m.toRecipients ?? []).map((r) => ({
-      name: r.emailAddress.name ?? "",
+      name: graphRecipientName(r.emailAddress),
       email: r.emailAddress.address,
     })),
     cc: (m.ccRecipients ?? []).map((r) => ({
-      name: r.emailAddress.name ?? "",
+      name: graphRecipientName(r.emailAddress),
       email: r.emailAddress.address,
     })),
     created_at: m.createdDateTime ?? new Date().toISOString(),
@@ -26398,7 +26413,7 @@ async function outlookGetDraft(
   };
   const map = (arr?: { emailAddress: { address: string; name?: string } }[]) =>
     (arr ?? []).map((r) =>
-      formatAddressEntry({ name: r.emailAddress.name ?? "", email: r.emailAddress.address }));
+      formatAddressEntry({ name: graphRecipientName(r.emailAddress), email: r.emailAddress.address }));
   return {
     subject: data.subject ?? "(no subject)",
     to: map(data.toRecipients),
@@ -26474,7 +26489,7 @@ async function outlookGetDraftForEditor(
   };
   const map = (arr?: { emailAddress: { address: string; name?: string } }[]) =>
     (arr ?? []).map((r) =>
-      formatAddressEntry({ name: r.emailAddress.name ?? "", email: r.emailAddress.address })
+      formatAddressEntry({ name: graphRecipientName(r.emailAddress), email: r.emailAddress.address })
     );
 
   const isHtml = (data.body?.contentType ?? "").toLowerCase() === "html";
@@ -26482,26 +26497,8 @@ async function outlookGetDraftForEditor(
 
   let attachments: { filename: string; size_bytes: number | null; mime_type: string | null }[] = [];
   if (data.hasAttachments === true) {
-    const readList = async () => {
-      const attResp = await graphFetch(
-        token,
-        `/me/messages/${encodeURIComponent(draftId)}` +
-          `/attachments?$select=name,size,contentType`,
-        { headers: {} },
-      );
-      if (!attResp.ok) {
-        await attResp.body?.cancel().catch(() => {});
-        throw new Error(`Outlook attachment list error: ${attResp.status}`);
-      }
-      const attData = (await attResp.json()) as {
-        value?: { name?: string; size?: number; contentType?: string }[];
-      };
-      return (attData.value ?? []).map((a) => ({
-        filename: typeof a.name === "string" ? a.name : "attachment",
-        size_bytes: typeof a.size === "number" ? a.size : null,
-        mime_type: typeof a.contentType === "string" ? a.contentType : null,
-      }));
-    };
+    // Real file sizes, not Graph's item sizes (see graphDraftAttachmentList).
+    const readList = () => graphDraftAttachmentList(token, draftId);
     try {
       attachments = await readList();
     } catch (err) {
@@ -27920,7 +27917,7 @@ async function executeCreateReplyDraft(
         ...(replyAttachments.length > 0 ? { attachments: replyAttachments } : {}),
       });
       await recordDraftLine(apiKey, inbox, null, draft.id, "agent");
-      return { result: jsonOk({ draft_id: draft.id, subject: draft.subject ?? "(no subject)", to: draft.toRecipients, created_at: draft.createdDateTime ?? new Date().toISOString(), in_reply_to: messageId, threading: "native", ...replyAttachmentEcho }), logStatus: "success", logErrorCode: null };
+      return { result: jsonOk({ draft_id: draft.id, subject: draft.subject ?? "(no subject)", to: draft.toRecipients, created_at: draft.createdDateTime ?? new Date().toISOString(), in_reply_to: messageId, threading: "native", ...replyAttachmentEcho, signature: signatureOutcome(inbox, { include_signature: includeSignature }) }), logStatus: "success", logErrorCode: null };
     }
 
     let subject = "";
@@ -28007,7 +28004,7 @@ async function executeCreateReplyDraft(
     const created = inbox.provider === "gmail" ? await gmailCreateDraft(inbox, params) : await imapCreateDraft(inbox, params);
     // Opens the draft's line (draft-lineage.ts). Fail-soft.
     const replyRevision = await recordDraftLine(apiKey, inbox, null, created.draft_id, "agent", created.created_at);
-    const output: DraftReplyResult = { ...created, in_reply_to: messageId, threading: inbox.provider === "gmail" ? "native" : "standards_based", ...replyAttachmentEcho };
+    const output: DraftReplyResult = { ...created, in_reply_to: messageId, threading: inbox.provider === "gmail" ? "native" : "standards_based", ...replyAttachmentEcho, signature: signatureOutcome(inbox, { include_signature: includeSignature }) };
     // MCP Apps (contract §8) — see the note in executeCreateDraft. This is the
     // one path that can populate `draft.in_reply_to`: `messageId` is a SERVER
     // message id the caller just used, so the card can offer to open it. A
@@ -28166,6 +28163,7 @@ async function executeCreateDraft(
   if (newFiles.attachments.length > 0) {
     draftResult.attachments = attachmentSummaryOf(newFiles.attachments);
   }
+  draftResult.signature = signatureOutcome(inbox, { include_signature: includeSignature });
 
   // MCP Apps (contract §8): in a gated workspace the card envelope is merged
   // over today's payload in `structuredContent`, with the body moved out to
@@ -28507,6 +28505,7 @@ async function executeUpdateDraft(
   if (rebuilds ? storedAttachments.length > 0 : newFiles.attachments.length > 0) {
     updateResult.attachments = attachmentSummaryOf(storedAttachments);
   }
+  updateResult.signature = signatureOutcome(inbox, { include_signature: includeSignature });
   // The line moves to the id the provider returned. Awaited so the next call
   // with the old id already resolves; fail-soft, the draft is updated either way.
   const updateRevision = await recordDraftLine(
