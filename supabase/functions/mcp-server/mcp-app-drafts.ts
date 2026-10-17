@@ -1586,11 +1586,15 @@ function computeCanSend(
  */
 function draftSummaryText(lead: string, draft: NormalizedDraft): string {
   const words = draft.body_text ? draft.body_text.trim().split(/\s+/).filter(Boolean).length : 0;
-  return `${lead} Draft ${draft.draft_id}. ` +
+  // The id is a labelled handle at the end, not part of a sentence: written
+  // into the prose ("Draft [Gmail]/Drafts:9019.") the model repeated it to
+  // the user as if it were the draft's name.
+  return `${lead} ` +
     `To ${draft.to.length}, cc ${draft.cc.length}, bcc ${draft.bcc.length}. ` +
     `Subject: ${neutralizeText(draft.subject) || "(none)"}. ` +
     `Body ${words} words, ${draft.attachments.length} attachment(s). ` +
-    `The body is shown in the draft editor and is not repeated here.`;
+    `The body is shown in the draft editor and is not repeated here. ` +
+    `draft_id: ${JSON.stringify(draft.draft_id)}`;
 }
 
 function cardResult(

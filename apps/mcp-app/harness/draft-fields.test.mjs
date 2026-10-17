@@ -12,7 +12,10 @@
 //   R. rows and chips do not move under the pointer: an emptied Cc row stays
 //      until the card loses focus; a chip removed with the pointer leaves a
 //      spacer of its size until the pointer leaves the field.
-//   D. a duplicate across fields (any case) is refused and named.
+//   D. a duplicate across fields (any case) is refused and named; the note
+//      outlives a typed space; no "not complete yet" while typing.
+//   L. a long list folds to one row and "+N more"; the Cc Bcc link inside
+//      the To box.
 //   S. a comma, semicolon or space commits as it arrives, with or without a
 //      key event; a pasted list becomes one chip per address.
 //   C. suggestions: the combobox, its keys, what it suggests and what it
@@ -440,6 +443,110 @@ async function main() {
     await c.done();
   }
 
+  group("D3. the note outlives the space typed after the comma (live re-test)");
+  {
+    const c = await editor({ recipients: { to: ["asgeir@x.example"] } });
+    c.press(c.btn(/^Cc Bcc$/));
+    await settle();
+    const cc = c.root.querySelector("#d-cc");
+    c.input("d-cc", "ASGEIR@X.example");
+    c.key(cc, ",");
+    await settle();
+    expect("the note is shown", note(c, "cc"), "ASGEIR@X.example is already in To.");
+    c.input("d-cc", " ");
+    await settle();
+    expect("a space keeps it", note(c, "cc"), "ASGEIR@X.example is already in To.");
+    c.input("d-cc", " s");
+    await settle();
+    expect("real typing takes it away", note(c, "cc"), null);
+    c.input("d-cc", "Dana Smith <dana@x.example>; ");
+    await settle();
+    expect("the dropped name is said", note(c, "cc"), "Added as dana@x.example. A draft keeps the address, not the name.");
+    c.input("d-cc", "  ");
+    await settle();
+    expect("and outlives spaces too", note(c, "cc"), "Added as dana@x.example. A draft keeps the address, not the name.");
+    await after(c.mod.ADDR_NOTE_MS + 100);
+    expect("until its time is up", note(c, "cc"), null);
+    await c.done();
+  }
+
+  group("D4. no incompleteness warning while typing; it comes back on commit (live re-test)");
+  {
+    const c = await editor({ recipients: { to: [] } });
+    const to = c.root.querySelector("#d-to");
+    c.input("d-to", "bj");
+    c.key(to, "Enter");
+    await settle();
+    expect("Enter on bj warns", /bj does not look like an email address/.test(warn(c, "to") ?? ""), true);
+    c.input("d-to", "ex");
+    await settle();
+    expect("typing ex: no warning", warn(c, "to"), null);
+    expect("and nothing says 'yet'", /not a complete email address yet/.test(c.text()), false);
+    expect("the field is not marked invalid mid-typing", to.getAttribute("aria-invalid"), null);
+    c.key(to, "Enter");
+    await settle();
+    expect("Enter warns again", /ex does not look like an email address/.test(warn(c, "to") ?? ""), true);
+    c.input("d-to", "ex@x.examp");
+    to.dispatchEvent(new c.w.FocusEvent("blur"));
+    await settle();
+    expect("blur commits a whole address", chipsIn(c, "to").at(-1), "ex@x.examp");
+    expect("and the warning goes", warn(c, "to"), null);
+    await c.done();
+  }
+
+  // ── L. Layout of the recipient rows ───────────────────────────────────────
+
+  group("L1. a long list folds to its first row and a +N more button");
+  {
+    const c = await boot();
+    // jsdom has no layout: chips sit four to a row, by their place in the box.
+    Object.defineProperty(c.w.HTMLElement.prototype, "offsetTop", {
+      configurable: true,
+      get() {
+        const p = this.parentElement;
+        if (!p || !p.classList.contains("fld")) return 0;
+        const flow = [...p.children].filter((el) => el.matches(".chip, .chip-ghost, .more-chip"));
+        const i = flow.indexOf(this);
+        return i < 0 ? 0 : Math.floor(i / 4) * 24;
+      },
+    });
+    const many = Array.from({ length: 14 }, (_, i) => `p${i}@x.example`);
+    c.push(draftEnvelope({ recipients: { to: many } }));
+    await settle();
+    const more = () => c.root.querySelector("#d-to-box .more-chip");
+    expect("three chips on the first row", chipsIn(c, "to").length, 3);
+    expect("and the button with the rest", more()?.textContent, "+11 more");
+    expect("which says what it does", more()?.getAttribute("aria-label"), "Show 11 more To recipients");
+    expect("not a Tab stop of its own", more()?.getAttribute("tabindex"), "-1");
+    more().click();
+    await settle();
+    expect("a click shows them all", chipsIn(c, "to").length, 14);
+    expect("and puts the caret in the field", c.active()?.id, "d-to");
+    c.w.dispatchEvent(new c.w.Event("blur"));
+    await settle();
+    expect("the frame losing focus folds it again", chipsIn(c, "to").length, 3);
+    c.root.querySelector("#d-to").dispatchEvent(new c.w.FocusEvent("focusin", { bubbles: true }));
+    await settle();
+    expect("focus in the field opens it", chipsIn(c, "to").length, 14);
+    c.w.dispatchEvent(new c.w.Event("blur"));
+    await settle();
+    c.input("d-to", "half");
+    await settle();
+    expect("text in the field (and its warning) keeps it open", chipsIn(c, "to").length, 14);
+    await c.done();
+    delete c.w.HTMLElement.prototype.offsetTop;
+  }
+
+  group("L2. the To row's link sits inside the box; the input can share a chip row");
+  {
+    const c = await editor({ recipients: { to: ["a@x.example"] } });
+    const link = c.root.querySelector("#d-to-box > .link");
+    expect("Cc Bcc is inside the To box", link?.textContent, "Cc Bcc");
+    expect("nothing after the box in the row", c.root.querySelector("#d-to-box").nextElementSibling, null);
+    expect("the input's minimum is small", /\.fld > input \{[^}]*min-width: 3em/.test(css), true);
+    await c.done();
+  }
+
   // ── S. Separators and paste ───────────────────────────────────────────────
 
   group("S1. a comma, semicolon or space commits as it arrives, key event or not");
@@ -545,12 +652,13 @@ async function main() {
     expect("open", to.getAttribute("aria-expanded"), "true");
     expect("the list is shown", list().hidden, false);
     expect("the first is active", to.getAttribute("aria-activedescendant"), "d-to-suggest-0");
+    expect("and marked selected", options()[0].getAttribute("aria-selected"), "true");
     c.key(to, "ArrowDown");
     await settle();
-    expect("Down past the last goes back to the text", to.hasAttribute("aria-activedescendant"), false);
+    expect("Down with one suggestion keeps it (never back to the text)", to.getAttribute("aria-activedescendant"), "d-to-suggest-0");
     c.key(to, "ArrowUp");
     await settle();
-    expect("Up comes back to the last", to.getAttribute("aria-activedescendant"), "d-to-suggest-0");
+    expect("so does Up", to.getAttribute("aria-activedescendant"), "d-to-suggest-0");
     c.key(to, "Escape");
     await settle();
     expect("Escape closes", to.getAttribute("aria-expanded"), "false");
@@ -587,6 +695,69 @@ async function main() {
     c.input("d-to", "");
     await waitSugs();
     expect("cleared before the answer: nothing opens", c.root.querySelector("#d-to").getAttribute("aria-expanded"), "false");
+    await c.done();
+  }
+
+  group("C5. Down then Enter on a partial picks a suggestion, never the partial (live re-test)");
+  {
+    const c = await editor({
+      recipients: { to: [], cc: [] },
+      in_reply_to: { message_id: "INBOX:1", subject: "Hi", from: "bj@x.example", date: null },
+    });
+    const to = c.root.querySelector("#d-to");
+    c.input("d-to", "bj");
+    await waitSugs();
+    c.key(to, "ArrowDown");
+    await settle();
+    c.key(to, "Enter");
+    await settle();
+    expectJson("the suggestion is the chip", chipsIn(c, "to"), ["bj@x.example"]);
+    expect("no warning about bj", warn(c, "to"), null);
+    await c.done();
+  }
+
+  group("C6. several suggestions: Down and Up go round them only");
+  {
+    const c = await editor({ recipients: { to: ["sam@x.example", "sal@x.example", "lee@x.example"] } });
+    c.press(xFor(c, "Remove sam@x.example"));
+    await settle();
+    c.press(xFor(c, "Remove sal@x.example"));
+    await settle();
+    const to = c.root.querySelector("#d-to");
+    c.input("d-to", "sa");
+    await waitSugs();
+    const ad = () => to.getAttribute("aria-activedescendant");
+    expect("two suggestions, the first active", ad(), "d-to-suggest-0");
+    c.key(to, "ArrowDown");
+    await settle();
+    expect("Down: the second", ad(), "d-to-suggest-1");
+    const sel = () => [...c.root.querySelectorAll("#d-to-suggest [role=option]")].map((o) => o.getAttribute("aria-selected"));
+    expectJson("aria-selected follows", sel(), ["false", "true"]);
+    c.key(to, "ArrowDown");
+    await settle();
+    expect("Down from the last: the first", ad(), "d-to-suggest-0");
+    c.key(to, "ArrowUp");
+    await settle();
+    expect("Up from the first: the last", ad(), "d-to-suggest-1");
+    c.key(to, "Tab");
+    await settle();
+    expect("Tab closes", to.getAttribute("aria-expanded"), "false");
+    expect("the highlight is the inverse pair", /\.suggest > li\[aria-selected="true"\] \{[^}]*background: var\(--accent\)/.test(css), true);
+    expect("the list floats over the rows below", /\.suggest \{[^}]*position: absolute/.test(css), true);
+    await c.done();
+  }
+
+  group("C7. the address the draft is sent from is never suggested");
+  {
+    const c = await editor({
+      recipients: { to: [], cc: ["you@example.com"] },
+      in_reply_to: { message_id: "INBOX:1", subject: "Hi", from: "You <you@example.com>", date: null },
+    });
+    c.press(xFor(c, "Remove you@example.com"));
+    await settle();
+    c.input("d-to", "yo");
+    await waitSugs();
+    expect("nothing suggested", c.root.querySelectorAll("#d-to-suggest [role=option]").length, 0);
     await c.done();
   }
 

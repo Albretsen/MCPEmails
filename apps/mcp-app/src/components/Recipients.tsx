@@ -66,6 +66,21 @@ interface Ghost {
  * the input is an ARIA combobox, Up and Down move through them, Enter or a
  * click picks one, Escape closes them. Where they come from is contacts.ts.
  *
+ * Up and Down stay among the suggestions (live re-test, 2026-10-17). They used
+ * to pass through "the text itself" between the last and the first, so with
+ * one suggestion the natural Down deselected it and Enter then committed the
+ * partial "bj" as an address. Enter on a partial (no complete address typed)
+ * with the list open takes the highlighted suggestion, else the first. The
+ * list floats over the rows under the field (`.suggest`), like the "⋯" menu,
+ * rather than pushing the card down.
+ *
+ * A long list folds to one row (live re-test, 2026-10-17). Fourteen recipients
+ * made To four rows tall. Until the field is first used, it shows the chips
+ * that fit on its first row and a "+N more" button; focus in the field, a
+ * press in it or the button opens it, and it folds again only when the frame
+ * loses focus, so it never folds under the pointer. Text in the input (and so
+ * any warning about it) keeps it open.
+ *
  * What is in the list, and what typed text becomes, is the caller's business:
  * this component owns focus, the mark and the announcements, nothing else.
  */
@@ -118,6 +133,48 @@ export function RecipientField(props: {
     expectCount.current = n;
   }, [n]);
 
+  // ---- a long list folded to its first row (see the header) -----------------
+  /** The field has been used since the frame last had focus. */
+  const [opened, setOpened] = useState(false);
+  useEffect(() => {
+    const fold = () => setOpened(false);
+    window.addEventListener("blur", fold);
+    return () => window.removeEventListener("blur", fold);
+  }, []);
+  const [width, setWidth] = useState(0);
+  useEffect(() => {
+    const el = box.current;
+    if (!el || typeof ResizeObserver === "undefined") return;
+    const ro = new ResizeObserver(() => setWidth(Math.round(el.clientWidth)));
+    ro.observe(el);
+    return () => ro.disconnect();
+  }, []);
+  const fold = canEdit && !opened && n > 1 && !props.typed.trim() && !props.invalid;
+  /** How many chips fit on the first row, for this list at this width. */
+  const foldKey = `${width}|${items.join(",")}|${ghosts.length}`;
+  const [fit, setFit] = useState<{ key: string; n: number } | null>(null);
+  const shown = fold && fit?.key === foldKey ? fit.n : n;
+  const more = useRef<HTMLButtonElement>(null);
+  useLayoutEffect(() => {
+    if (!fold) return;
+    const chips = box.current?.querySelectorAll<HTMLElement>(".chip");
+    if (!chips || chips.length === 0) return;
+    const top = chips[0].offsetTop;
+    if (fit?.key !== foldKey) {
+      // Every chip is drawn: count the first row's, leaving room for the button.
+      let first = 0;
+      while (first < chips.length && chips[first].offsetTop <= top + 2) first++;
+      setFit({ key: foldKey, n: first >= n ? n : Math.max(1, first - 1) });
+    } else if (shown < n && shown > 1) {
+      // The button and a "Cc Bcc" link must be on that row too.
+      const tail = [more.current, box.current?.querySelector<HTMLElement>(":scope > .link")];
+      if (tail.some((el) => el && el.offsetTop > top + 2)) setFit({ key: foldKey, n: shown - 1 });
+    }
+  });
+  const unfold = () => {
+    if (!opened) setOpened(true);
+  };
+
   // ---- suggestions -----------------------------------------------------------
   const [sugs, setSugs] = useState<ContactSuggestion[]>([]);
   const [active, setActive] = useState(-1);
@@ -138,6 +195,8 @@ export function RecipientField(props: {
   }, []);
   /** The piece being typed: what follows the last comma or semicolon. */
   const lastPiece = (value: string) => value.split(/[,;]/).pop()!.trim();
+  /** Whether a piece already reads as a whole address. */
+  const whole = (q: string) => /@[^@\s]+\.[^@\s]+$/.test(q);
   const askFor = (value: string) => {
     const q = lastPiece(value);
     const source = props.suggest;
@@ -156,7 +215,7 @@ export function RecipientField(props: {
           setSugs(shown);
           // Enter takes the first suggestion, unless what is typed is already
           // a whole address: then Enter keeps meaning "this one".
-          setActive(shown.length > 0 && !/@[^@\s]+\.[^@\s]+$/.test(q) ? 0 : -1);
+          setActive(shown.length > 0 && !whole(q) ? 0 : -1);
         },
         () => {
           if (mine === ask.current) closeSugs();
@@ -251,11 +310,9 @@ export function RecipientField(props: {
       if (e.key === "ArrowDown" || e.key === "ArrowUp") {
         e.preventDefault();
         const step = e.key === "ArrowDown" ? 1 : -1;
-        // -1 is the text itself, between the last suggestion and the first.
-        setActive((a) => {
-          const next = a + step;
-          return next >= sugs.length ? -1 : next < -1 ? sugs.length - 1 : next;
-        });
+        // Round the suggestions only, never back to "none" (see the header).
+        const count = sugs.length;
+        setActive((a) => (a < 0 ? (step > 0 ? 0 : count - 1) : (a + step + count) % count));
         return;
       }
       if (e.key === "Escape") {
@@ -264,10 +321,15 @@ export function RecipientField(props: {
         closeSugs();
         return;
       }
-      if (e.key === "Enter" && active >= 0 && active < sugs.length) {
-        e.preventDefault();
-        pick(sugs[active]);
-        return;
+      if (e.key === "Enter") {
+        // A whole address typed with nothing highlighted is "this one"; a
+        // partial one is never committed over an open list.
+        const i = active >= 0 && active < sugs.length ? active : whole(lastPiece(el.value)) ? -1 : 0;
+        if (i >= 0) {
+          e.preventDefault();
+          pick(sugs[i]);
+          return;
+        }
       }
       if (e.key === "Tab") closeSugs();
     }
@@ -389,14 +451,17 @@ export function RecipientField(props: {
         class="fld"
         id={`${id}-box`}
         ref={box}
+        data-folded={shown < n ? "true" : undefined}
         onPointerLeave={dropGhosts}
+        onFocusIn={unfold}
+        onPointerDown={unfold}
         onClick={(e) => {
           // The box looks like one field, so clicking the empty part of it must
           // put the caret in the input rather than do nothing.
           if (e.target === e.currentTarget) input.current?.focus();
         }}
       >
-        {items.map((addr, i) => [
+        {items.slice(0, shown).map((addr, i) => [
           ...ghosts.filter((g) => g.before === i).map(ghostAt),
           <span
             class="chip"
@@ -425,6 +490,25 @@ export function RecipientField(props: {
           </span>,
         ])}
         {ghosts.filter((g) => g.before >= n).map(ghostAt)}
+        {shown < n && (
+          <button
+            type="button"
+            class="more-chip"
+            ref={more}
+            // Not a Tab stop: the input is the field's one, and focusing it
+            // opens the field anyway.
+            tabIndex={-1}
+            aria-label={`Show ${n - shown} more ${label} recipients`}
+            onPointerDown={(e) => e.stopPropagation()}
+            onMouseDown={(e) => e.preventDefault()}
+            onClick={() => {
+              setOpened(true);
+              input.current?.focus();
+            }}
+          >
+            +{n - shown} more
+          </button>
+        )}
         <input
           id={id}
           ref={input}
@@ -472,10 +556,11 @@ export function RecipientField(props: {
         <span class="sr-only" role="status">
           {said}
         </span>
+        {props.trailing}
         {props.suggest && (
-          // Inside the field's box, on a line of its own under the chips: in the
-          // flow, never a popover, because a sandboxed frame clips whatever is
-          // positioned outside its own height (the "⋯" menu's rule).
+          // Anchored to the field's box and floating over the rows under it,
+          // like the "⋯" menu: a recipient field always has the subject and
+          // the message below it, which are taller than the list.
           <ul class="suggest" id={listId} role="listbox" aria-label={`Suggestions for ${label}`} hidden={!open}>
             {sugs.map((s, i) => (
               <li
@@ -501,7 +586,6 @@ export function RecipientField(props: {
           </ul>
         )}
       </div>
-      {props.trailing}
     </div>
   );
 }

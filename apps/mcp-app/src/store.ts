@@ -687,6 +687,29 @@ function isLiveEditor(env: Envelope | null | undefined): env is Envelope {
   return !!env && env.card === "draft_editor" && !!env.draft && !isRestoreStub(env);
 }
 
+/**
+ * A read or save of the same reply draft keeps the "Replying to" context the
+ * card already has (live re-test, 2026-10-17).
+ *
+ * The server knows the original as a server message id on the reply path only,
+ * so every `draft_read` and `draft_editor_save` answers `in_reply_to: null`
+ * with `threaded: true`. Adopting that took the "Replying to Dana · <subject>"
+ * line away on the first Save (and on the read a reloaded card makes), and the
+ * card jumped up by a line. The draft still answers the same message, so the
+ * held context stays until an answer says the draft no longer answers one.
+ */
+function keepReplyContext(current: Envelope | null | undefined, next: Envelope): Envelope {
+  const held = current?.card === "draft_editor" ? current.draft?.in_reply_to : null;
+  const n = next.card === "draft_editor" ? next.draft : null;
+  if (!held || !n || n.in_reply_to || n.threaded !== true) return next;
+  const was = current!.draft!;
+  if (was.identity?.inbox_id !== n.identity?.inbox_id) return next;
+  const same = n.draft_id === was.draft_id ||
+    (!!n.resolved_from && (n.resolved_from === was.draft_id || n.resolved_from === was.resolved_from)) ||
+    n.origin === "save";
+  return same ? { ...next, draft: { ...n, in_reply_to: held } } : next;
+}
+
 /** Rule 0 above: keep the sent message on screen under its receipt. */
 function carrySentDraft(current: Envelope | null | undefined, next: Envelope): Envelope {
   if (!current || current.card !== "draft_editor" || !current.draft) return next;
@@ -764,7 +787,7 @@ export function mergeEnvelope(
   current: Envelope | null | undefined,
   incoming: Envelope,
 ): Envelope {
-  const next = keepKnownBody(current, incoming);
+  const next = keepReplyContext(current, keepKnownBody(current, incoming));
   // ── RULE -1: A FAILURE NEVER TAKES THE EDITOR AWAY ────────────────────────
   // "Anything renderable replaces" was written when the only receipt that
   // could follow a draft was a send completing. It is not: every draft tool

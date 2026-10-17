@@ -437,7 +437,9 @@ async function main() {
     const c = await editor({ recipients: { to: ["a@x.example", "b@x.example", "c@x.example"] } });
     const to = c.root.querySelector("#d-to");
     const box = c.root.querySelector("#d-to-box");
-    const tabbable = [...box.querySelectorAll("button, input, [tabindex]")].filter((el) => el.getAttribute("tabindex") !== "-1");
+    // The "Cc Bcc" link sits inside the To box (2026-10-17) and is a control of
+    // its own, not a recipient: it is left out here.
+    const tabbable = [...box.querySelectorAll("button, input, [tabindex]")].filter((el) => el.getAttribute("tabindex") !== "-1" && !el.matches(".link"));
     expectJson("the input is the only Tab stop in the box", tabbable.map((el) => el.id), ["d-to"]);
     expectJson("every remove button is out of the tab order", [...box.querySelectorAll(".chip-x")].map((b) => b.getAttribute("tabindex")), ["-1", "-1", "-1"]);
     expectJson("and still named for a screen reader", [...box.querySelectorAll(".chip-x")].map((b) => b.getAttribute("aria-label")), ["Remove a@x.example", "Remove b@x.example", "Remove c@x.example"]);
