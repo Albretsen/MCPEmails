@@ -2134,7 +2134,11 @@ export async function graphDraftAttachmentList(
   };
   let rows = await read("?$select=name,size,contentType");
   const total = rows.reduce((sum, a) => sum + (typeof a.size === "number" ? a.size : 0), 0);
-  if (rows.length > 0 && total <= GRAPH_DRAFT_EXACT_SIZE_MAX_BYTES) rows = await read("");
+  // The second read only sharpens sizes; if it fails, Graph's sizes from the
+  // first read are still a usable list, so the card does not fail over it.
+  if (rows.length > 0 && total <= GRAPH_DRAFT_EXACT_SIZE_MAX_BYTES) {
+    rows = await read("").catch(() => rows);
+  }
   return rows.map((a) => ({
     filename: typeof a.name === "string" ? a.name : "attachment",
     size_bytes: typeof a.contentBytes === "string"

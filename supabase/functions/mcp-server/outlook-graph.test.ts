@@ -748,14 +748,15 @@ Deno.test("a large draft attachment list is never downloaded to measure it", asy
   assertEquals(list[0].size_bytes, GRAPH_DRAFT_EXACT_SIZE_MAX_BYTES + 1);
 });
 
-Deno.test("a failed draft attachment read throws, on either request", async () => {
+Deno.test("a failed first attachment read throws; a failed size read keeps Graph's sizes", async () => {
   await withFetch([() => json(500, {})], async () => {
     await assertRejects(() => graphDraftAttachmentList("tok", "d1"), Error, "Outlook attachment list error: 500");
   });
   await withFetch(
     [() => json(200, { value: [{ name: "a.txt", size: 150 }] }), () => json(400, {})],
     async () => {
-      await assertRejects(() => graphDraftAttachmentList("tok", "d1"), Error, "Outlook attachment list error: 400");
+      const list = await graphDraftAttachmentList("tok", "d1");
+      assertEquals(list, [{ filename: "a.txt", size_bytes: 150, mime_type: null }]);
     },
   );
 });
