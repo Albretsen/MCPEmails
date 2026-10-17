@@ -10,6 +10,7 @@ import {
   formatWhen,
   joinBody,
   normalizeEol,
+  quoteBody,
   quotePreview,
   repeatsSignOff,
   splitBody,
@@ -1856,9 +1857,19 @@ export function DraftEditor(props: Props) {
   // byte and no box can reach it. When the text in the editor does not end in
   // that tail (unsaved edits from before this existed), there is no tail and
   // the editor behaves exactly as it did.
+  //
+  // Every quote this editor has been handed is remembered too (live re-test,
+  // 2026-10-17): a folded card's kept edits sit over the NEWER version Claude
+  // wrote, whose quote may differ by a byte or be missing, and then the edits
+  // no longer ended in "the server's" quote, so the whole quote fell back into
+  // the Signature row. The edits still end in the quote they were made over.
   const serverQuote = splitQuote(server.bodyText, d.body?.quoted);
+  const heldQuotes = useRef<string[]>([]);
+  if (serverQuote && !heldQuotes.current.includes(serverQuote.quote)) {
+    heldQuotes.current = [serverQuote.quote, ...heldQuotes.current].slice(0, 4);
+  }
   const quoteTail =
-    serverQuote && edit.bodyText.endsWith(serverQuote.quote) ? serverQuote.quote : "";
+    [serverQuote?.quote, ...heldQuotes.current].find((q) => !!q && edit.bodyText.endsWith(q)) ?? "";
   const headText = quoteTail
     ? edit.bodyText.slice(0, edit.bodyText.length - quoteTail.length)
     : edit.bodyText;
@@ -1877,7 +1888,13 @@ export function DraftEditor(props: Props) {
   // with no warning (2026-10-13). So the card warns as soon as the signature box
   // opens, and once the signature differs locally the old formatted preview is
   // no longer offered: it would show a signature that saving is about to drop.
-  const storedSplit = splitBody(serverQuote ? serverQuote.head : server.bodyText);
+  const storedSplit = splitBody(
+    serverQuote
+      ? serverQuote.head
+      : quoteTail && server.bodyText.endsWith(quoteTail)
+      ? server.bodyText.slice(0, server.bodyText.length - quoteTail.length)
+      : server.bodyText,
+  );
   const sigEdited =
     storedSplit.signature !== null &&
     (split.signature === null ||
@@ -2581,7 +2598,7 @@ export function DraftEditor(props: Props) {
           </div>
           {showQuote && (
             <div id="d-quoted" class="quote-text" role="region" aria-label="Quoted message, read only">
-              {quoteTail.replace(/^(?:[ \t]*\r?\n)+/, "")}
+              {quoteBody(quoteTail)}
             </div>
           )}
         </>
