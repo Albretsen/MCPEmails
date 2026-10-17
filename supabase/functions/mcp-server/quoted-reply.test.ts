@@ -230,7 +230,12 @@ Deno.test("save: editing the message keeps the quoted HTML byte for byte", async
   assert(out.ok);
   assertEquals(writes[0].body, edited, "the text part is what the card sent");
   assert(writes[0].body.endsWith(split.quote), "text quote byte for byte");
-  assertEquals(writes[0].htmlBody, `Sure, Friday at 3 works.\n${GMAIL_QUOTE_HTML}`);
+  // A one-line edit is made inside the stored HTML (html-text-merge.ts), which
+  // keeps the head's own markup too; either way the quote must survive whole.
+  assertEquals(
+    writes[0].htmlBody,
+    `<div dir="ltr">Sure, Friday at 3 works.</div><br>${GMAIL_QUOTE_HTML}`,
+  );
   assert(writes[0].htmlBody!.endsWith(GMAIL_QUOTE_HTML), "html quote byte for byte");
 });
 

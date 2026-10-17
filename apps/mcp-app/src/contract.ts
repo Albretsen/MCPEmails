@@ -287,7 +287,10 @@ export interface DraftEditorData {
   subject?: string;
   /** May arrive as a `DeferredBody`; no component is handed one. */
   body?: DraftBody;
-  /** Display only: the card cannot add or remove attachments. */
+  /**
+   * Metadata only, never bytes. The card adds and removes files through
+   * `draft_editor_save` (`add_attachments`, `remove_attachments`; attachments.ts).
+   */
   attachments?: Attachment[];
   signature?: DraftSignature | null;
   in_reply_to?: InReplyTo | null;

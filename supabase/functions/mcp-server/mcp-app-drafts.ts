@@ -97,6 +97,7 @@ import { htmlHasFormatting, mergeTextEditIntoHtml } from "./html-text-merge.ts";
 import { CARD_SCHEMA_VERSION } from "./mcp-app-approvals.ts";
 import { buildDraftMutationEnvelope } from "./untrusted-envelope.ts";
 import { decodedBase64ByteLength } from "./attachment-validation.ts";
+import { parseAttachmentInputs } from "./attachment-reference.ts";
 import {
   type CarriedAttachments,
   DRAFT_REBUILD_MAX_BYTES,
@@ -1798,10 +1799,28 @@ export interface DraftPatch {
   subject?: string;
   bodyText?: string;
   /**
-   * Files to ADD, already resolved to bytes. The stored ones are kept. Only a
-   * body-less `draft{action:"update"}` passes this; the editor card adds none.
+   * Files to ADD, already resolved to bytes. The stored ones are kept. A
+   * body-less `draft{action:"update"}` passes this, and since 2026-10-17 so
+   * does the editor card's "Attach file" (`draft_editor_save`'s
+   * `add_attachments`).
    */
   addAttachments?: OutgoingAttachment[];
+  /**
+   * Stored files to REMOVE, by their position in the stored draft's attachment
+   * list (the order the card was shown). Each names the file it means, and a
+   * position whose file no longer matches is refused as `attachments_changed`
+   * rather than removing whatever moved into that place. Every file not named
+   * here is carried byte for byte. The editor card's remove, 2026-10-17.
+   */
+  removeAttachments?: AttachmentRef[];
+}
+
+/** One stored file, as the card names it for removal. */
+export interface AttachmentRef {
+  index: number;
+  filename: string;
+  /** Null when the card was shown no size. Compared only when both are known. */
+  size_bytes: number | null;
 }
 
 export type DraftPatchResult =
@@ -1813,6 +1832,10 @@ export type DraftPatchResult =
   | { ok: true; saved: NormalizedDraft; written: boolean }
   | { ok: false; kind: "not_found" }
   | { ok: false; kind: "has_attachments"; attachmentCount: number }
+  /** A file named for removal is not the stored file at that position. */
+  | { ok: false; kind: "attachments_changed" }
+  /** Outlook: its PATCH cannot remove a file, and nothing was changed. */
+  | { ok: false; kind: "remove_unsupported" }
   /** Stored plus added files exceed what a rebuild may hold. */
   | { ok: false; kind: "attachments_too_large"; bytes: number; maxBytes: number }
   /** The stored message has parts a rebuild would drop. `parts` are labels. */
@@ -1915,18 +1938,58 @@ export async function applyDraftPatch(
   // fields and leaves attachments alone, so it may proceed.
   const rebuilds = inbox.provider !== "outlook";
   const added = patch.addAttachments ?? [];
+
+  // ── REMOVING A FILE (the editor card, 2026-10-17) ────────────────────────
+  // By position, checked against the name (and the size, when both sides know
+  // it) of the stored file there: a draft rewritten since the card loaded it
+  // may hold a different file in that place, and removing THAT would delete a
+  // file nobody chose. Refused as a whole, before anything is written.
+  //
+  // Only a rebuild can leave a file out. Outlook's PATCH keeps every stored
+  // attachment and removing one is a separate Graph call this path does not
+  // make, so it is refused there rather than reported as done.
+  const removeRefs = patch.removeAttachments ?? [];
+  const removed = new Set<number>();
+  for (const ref of removeRefs) {
+    const at = stored.attachments[ref.index];
+    if (
+      !at || at.filename !== ref.filename ||
+      (typeof at.size_bytes === "number" && typeof ref.size_bytes === "number" &&
+        at.size_bytes !== ref.size_bytes)
+    ) {
+      return { ok: false, kind: "attachments_changed" };
+    }
+    removed.add(ref.index);
+  }
+  if (removed.size > 0 && !rebuilds) return { ok: false, kind: "remove_unsupported" };
+
   let carriedFiles: OutgoingAttachment[] = [];
   if (rebuilds && (stored.attachments.length > 0 || added.length > 0)) {
     const carried = stored.carried;
     if (stored.attachments.length > 0 && !carried) {
       return { ok: false, kind: "has_attachments", attachmentCount: stored.attachments.length };
     }
+    // The positions the card names are positions in `stored.attachments`, and
+    // `carried` lists the same files in the same order whenever a rebuild is
+    // allowed at all: the only parts it leaves out are inline images, and a
+    // stored draft with one is refused below as `not_rebuildable`. Should the
+    // two ever disagree, removing by position would remove the wrong file, so
+    // that is refused too.
+    if (removed.size > 0 && carried && carried.count !== stored.attachments.length) {
+      const blockers = stored.rebuild_blockers ?? [];
+      return blockers.length > 0
+        ? { ok: false, kind: "not_rebuildable", parts: blockers }
+        : { ok: false, kind: "attachments_changed" };
+    }
     const addedBytes = added.reduce((total, a) => total + (decodedBase64ByteLength(a.data) ?? 0), 0);
-    const total = (carried?.bytes ?? 0) + addedBytes;
+    const removedBytes = carried
+      ? carried.sizes.reduce((total, size, i) => total + (removed.has(i) ? size : 0), 0)
+      : 0;
+    const total = (carried?.bytes ?? 0) - removedBytes + addedBytes;
     if (total > DRAFT_REBUILD_MAX_BYTES) {
       return { ok: false, kind: "attachments_too_large", bytes: total, maxBytes: DRAFT_REBUILD_MAX_BYTES };
     }
-    carriedFiles = carried ? carried.encode() : [];
+    carriedFiles = carried ? carried.encode(removed) : [];
   }
 
   // ── AND REFUSE RATHER THAN DROP ANYTHING ELSE (2026-10-13) ───────────────
@@ -2120,7 +2183,7 @@ export async function applyDraftPatch(
   const sameList = (a: string[], b: string[]) =>
     a.length === b.length && a.every((v, i) => v === b[i]);
   if (
-    !bodyTextChanged && nextSubject === stored.subject && added.length === 0 &&
+    !bodyTextChanged && nextSubject === stored.subject && added.length === 0 && removed.size === 0 &&
     sameList(nextTo, stored.to) && sameList(nextCc, stored.cc) && sameList(nextBcc, stored.bcc)
   ) {
     return { ok: true, saved: stored, written: false };
@@ -2191,7 +2254,7 @@ export async function applyDraftPatch(
     body_text: nextText,
     body_html: nextHtml ?? null,
     attachments: [
-      ...stored.attachments,
+      ...stored.attachments.filter((_, i) => !removed.has(i)),
       ...added.map((a) => ({
         filename: a.filename,
         size_bytes: decodedBase64ByteLength(a.data),
@@ -2291,7 +2354,10 @@ export type BodylessDraftUpdateOutcome =
       _meta?: Record<string, unknown>;
     };
   }
-  | Exclude<DraftPatchResult, { ok: true } | { kind: "vetoed" }>;
+  | Exclude<
+    DraftPatchResult,
+    { ok: true } | { kind: "vetoed" } | { kind: "attachments_changed" } | { kind: "remove_unsupported" }
+  >;
 
 /**
  * The whole of a body-less `draft{action:"update"}` after the inbox has been
@@ -2349,7 +2415,13 @@ export async function runBodylessDraftUpdate(
   const patched = await applyDraftPatch(deps, inbox, draftId, patch);
   if (!patched.ok) {
     // No hook is passed, so nothing can veto; narrowed for the type only.
-    return patched.kind === "vetoed" ? { ok: false, kind: "not_found" } : patched;
+    if (patched.kind === "vetoed") return { ok: false, kind: "not_found" };
+    // Nor is a removal ever passed (only the editor card removes files), so
+    // these two cannot happen here either; narrowed the same way.
+    if (patched.kind === "attachments_changed" || patched.kind === "remove_unsupported") {
+      return { ok: false, kind: "write_failed", error: new Error(patched.kind) };
+    }
+    return patched;
   }
   const saved = patched.saved;
   let revision: number | null = line ? lineRevision(line) : null;
@@ -2425,6 +2497,80 @@ export async function runBodylessDraftUpdate(
 // draft_editor_save
 // ---------------------------------------------------------------------------
 
+/**
+ * At most this much, decoded, may be added to a draft in one editor save: the
+ * same 10 MB every other tool takes inline (index.ts SEND_MAX_ATTACHMENT_BYTES).
+ * The card holds itself to less (apps/mcp-app/src/attachments.ts), because
+ * its upload travels through the host's own message channel first.
+ */
+export const EDITOR_ADD_MAX_BYTES = 10 * 1024 * 1024;
+/** At most this many files added, or removed, in one editor save. */
+export const EDITOR_ATTACHMENT_MAX_ITEMS = 20;
+
+/**
+ * `add_attachments` and `remove_attachments`, checked before anything is read.
+ *
+ * Adding takes the inline shape only, `{ filename, mime_type, data }`, through
+ * the same parser as every other tool's `attachments` (attachment-reference.ts:
+ * canonical base64, measured without decoding, a linear scan rather than the
+ * regex that overflowed from 3 MB). A reference to a file in the inbox is
+ * refused: the card never makes one, and resolving it needs a provider
+ * connection this module does not have.
+ */
+export function parseEditorAttachmentArgs(
+  args: Record<string, unknown>,
+):
+  | { ok: true; add: OutgoingAttachment[]; remove: AttachmentRef[] }
+  | { ok: false; message: string } {
+  const parsed = parseAttachmentInputs("draft_editor_save", args["add_attachments"], {
+    maxItems: EDITOR_ATTACHMENT_MAX_ITEMS,
+    maxInlineBytes: EDITOR_ADD_MAX_BYTES,
+  });
+  if (!parsed.ok) {
+    return { ok: false, message: parsed.message.replace("attachments", "add_attachments") };
+  }
+  const add: OutgoingAttachment[] = [];
+  for (const spec of parsed.specs) {
+    if (spec.kind !== "inline") {
+      return { ok: false, message: "add_attachments takes inline files only: { filename, mime_type, data }." };
+    }
+    add.push({ ...spec.attachment });
+  }
+  const rawRemove = args["remove_attachments"];
+  const remove: AttachmentRef[] = [];
+  if (rawRemove !== undefined) {
+    if (!Array.isArray(rawRemove) || rawRemove.length > EDITOR_ATTACHMENT_MAX_ITEMS) {
+      return {
+        ok: false,
+        message: `remove_attachments must be an array of at most ${EDITOR_ATTACHMENT_MAX_ITEMS} items.`,
+      };
+    }
+    const seen = new Set<number>();
+    for (const entry of rawRemove) {
+      const e = entry as Record<string, unknown> | null;
+      const index = e?.["index"];
+      const filename = e?.["filename"];
+      const size = e?.["size_bytes"] ?? null;
+      if (
+        typeof e !== "object" || e === null || Array.isArray(e) ||
+        typeof index !== "number" || !Number.isInteger(index) || index < 0 || seen.has(index) ||
+        typeof filename !== "string" ||
+        (size !== null && (typeof size !== "number" || !Number.isInteger(size) || size < 0))
+      ) {
+        return {
+          ok: false,
+          message:
+            "Each remove_attachments entry is { index, filename, size_bytes } naming one stored " +
+            "file by its position, once.",
+        };
+      }
+      seen.add(index);
+      remove.push({ index, filename, size_bytes: size as number | null });
+    }
+  }
+  return { ok: true, add, remove };
+}
+
 export async function runDraftEditorSave(
   deps: DraftEditorDeps,
   caller: DraftEditorCaller,
@@ -2441,12 +2587,16 @@ export async function runDraftEditorSave(
   const toGiven = Array.isArray(args["to"]);
   const ccGiven = Array.isArray(args["cc"]);
   const bccGiven = Array.isArray(args["bcc"]);
+  const files = parseEditorAttachmentArgs(args);
+  if (!files.ok) return invalidArgs(deps.appUrl, files.message);
   if (
-    subject === undefined && bodyText === undefined && !toGiven && !ccGiven && !bccGiven
+    subject === undefined && bodyText === undefined && !toGiven && !ccGiven && !bccGiven &&
+    files.add.length === 0 && files.remove.length === 0
   ) {
     return invalidArgs(
       deps.appUrl,
-      "Pass at least one of to, cc, bcc, subject or body_text. An omitted field is left as stored.",
+      "Pass at least one of to, cc, bcc, subject, body_text, add_attachments or remove_attachments. " +
+        "An omitted field is left as stored.",
     );
   }
   if (subject !== undefined && (typeof subject !== "string" || subject.length > MAX_SUBJECT_LENGTH)) {
@@ -2520,6 +2670,8 @@ export async function runDraftEditorSave(
     ...(bccGiven ? { bcc: stringList(args["bcc"]) } : {}),
     ...(typeof subject === "string" ? { subject } : {}),
     ...(typeof bodyText === "string" ? { bodyText } : {}),
+    ...(files.add.length > 0 ? { addAttachments: files.add } : {}),
+    ...(files.remove.length > 0 ? { removeAttachments: files.remove } : {}),
   }, {
     vetoAfterRead: () => {
       if (!cardWriteConflict(line, baseRevision)) return false;
@@ -2561,6 +2713,27 @@ export async function runDraftEditorSave(
           detail: n === 1
             ? "Saving here would remove its attachment, so nothing was changed. Edit it in your mail app instead."
             : `Saving here would remove its ${n} attachments, so nothing was changed. Edit it in your mail app instead.`,
+        },
+      );
+    }
+    if (patched.kind === "attachments_changed") {
+      // The file named for removal is not the one stored at that place any
+      // more: the draft was rewritten since the card loaded it.
+      return draftChanged(deps.appUrl);
+    }
+    if (patched.kind === "remove_unsupported") {
+      return draftFailure(
+        deps.appUrl,
+        "failed",
+        "Attachments cannot be removed from this draft here.",
+        "This mailbox does not let a save remove an attachment, so nothing was changed. " +
+          "Remove it in the mail client instead.",
+        "attachment_remove_unsupported",
+        "attachment_remove_unsupported",
+        null,
+        {
+          headline: "This attachment cannot be removed here.",
+          detail: "Nothing was changed. Remove it in your mail app instead.",
         },
       );
     }
@@ -2889,6 +3062,39 @@ export const DRAFT_EDITOR_TOOL_DEFINITIONS: DraftEditorToolDefinition[] = [
           description:
             "The draft.revision of the copy being edited (0 when it had none). When the " +
             "draft has been rewritten since, the save is refused as draft_changed.",
+        },
+        add_attachments: {
+          type: "array",
+          maxItems: EDITOR_ATTACHMENT_MAX_ITEMS,
+          description: "Files to add, base64. The stored files are kept. 10 MB in all per save.",
+          items: {
+            type: "object",
+            properties: {
+              filename: { type: "string" },
+              mime_type: { type: "string" },
+              data: { type: "string", description: "Standard base64." },
+            },
+            required: ["filename", "mime_type", "data"],
+            additionalProperties: false,
+          },
+        },
+        remove_attachments: {
+          type: "array",
+          maxItems: EDITOR_ATTACHMENT_MAX_ITEMS,
+          description:
+            "Stored files to remove, by position in draft.attachments, each naming the file it " +
+            "means. Every other file is kept byte for byte. Refused as draft_changed when the " +
+            "file at that position is another one, and on Outlook, where a save cannot remove one.",
+          items: {
+            type: "object",
+            properties: {
+              index: { type: "integer", minimum: 0 },
+              filename: { type: "string" },
+              size_bytes: { type: ["integer", "null"], minimum: 0 },
+            },
+            required: ["index", "filename"],
+            additionalProperties: false,
+          },
         },
       },
       required: ["draft_id"],

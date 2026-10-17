@@ -4,7 +4,6 @@ import type { DraftEditorData, Envelope, Provider } from "../contract";
 import type { SplitBody } from "../format";
 import {
   bodyTextChanged,
-  formatBytes,
   formatClockSeconds,
   formatDateTime,
   firstLine,
@@ -35,6 +34,24 @@ import {
   mergeTextEditIntoHtml,
 } from "../../../../supabase/functions/mcp-server/html-text-merge";
 import { quotedHtmlStart } from "../../../../supabase/functions/mcp-server/quoted-reply";
+import { AttachmentList } from "./Attachments";
+import {
+  CARD_UPLOAD_MAX_BYTES,
+  type FileEdits,
+  fileEditsPatch,
+  hasFileEdits,
+  humanSize,
+  NO_FILE_EDITS,
+  readAsBase64,
+  rebaseFileEdits,
+  type RemovedFile,
+} from "../attachments";
+import {
+  type ContactSource,
+  type ContactSuggestion,
+  localContactSource,
+  parseNamedAddress,
+} from "../contacts";
 import type { EndedField, OnScreen } from "../ended";
 import {
   AutoTextarea,
@@ -54,6 +71,9 @@ export interface DraftPatch {
   bcc?: string[];
   subject?: string;
   body_text?: string;
+  /** Files to add and stored files to remove (attachments.ts). Only on Save and Send. */
+  add_attachments?: { filename: string; mime_type: string; data: string }[];
+  remove_attachments?: Omit<RemovedFile, "id">[];
 }
 
 export interface DraftActions {
@@ -307,13 +327,14 @@ export function commaEndsAddress(value: string): boolean {
 
 /**
  * Whether `key`, typed at the end of `value`, finishes an address. Enter always
- * does. A comma does unless it is part of a name. A space does only after one
- * complete plain address, so `Dana Smith <dana@x.example>` can still be typed.
+ * does. A comma or a semicolon does unless it is part of a name (a semicolon
+ * only split on Enter until 2026-10-17). A space does only after one complete
+ * plain address, so `Dana Smith <dana@x.example>` can still be typed.
  */
 export function keyEndsAddress(key: string, value: string): boolean {
   if (!value.trim()) return false;
   if (key === "Enter") return true;
-  if (key === ",") return commaEndsAddress(value);
+  if (key === "," || key === ";") return commaEndsAddress(value);
   if (key === " ") return ADDRESS.test(value.trim());
   return false;
 }
@@ -331,12 +352,17 @@ function firstInvalid(raw: string): string | null {
  */
 function addressNote(
   field: Field,
-  dupes: string[],
+  dupes: { address: string; in: Field }[],
   named: string[],
 ): { field: Field; text: string } | null {
   const said: string[] = [];
-  if (dupes.length === 1) said.push(`${dupes[0]} is already in ${FIELD_LABELS[field]}.`);
-  else if (dupes.length > 1) said.push(`${dupes.length} of those are already in ${FIELD_LABELS[field]}.`);
+  const where = new Set(dupes.map((d) => d.in));
+  // One field named when they are all in one; "on this draft" when they are not.
+  const place = where.size === 1 ? FIELD_LABELS[dupes[0].in] : null;
+  if (dupes.length === 1) said.push(`${dupes[0].address} is already in ${place}.`);
+  else if (dupes.length > 1) {
+    said.push(`${dupes.length} of those are already ${place ? `in ${place}` : "on this draft"}.`);
+  }
   if (named.length > 0) {
     said.push(
       `${named.length === 1 ? `Added as ${named[0]}.` : "Added."} A draft keeps the address, not the name.`,
@@ -433,20 +459,6 @@ export { FLASH_MS };
 
 /** How long the status line says what a Refresh found. */
 export const REFRESH_NOTE_MS = 4_000;
-
-/** Attachments, collapsed to one muted line. The card cannot edit them. */
-function attachmentLine(d: DraftEditorData, fullscreen: boolean): string | null {
-  const all = d.attachments ?? [];
-  if (all.length === 0) return null;
-  const shown = all.slice(0, fullscreen ? 8 : 3);
-  const names = shown
-    .map((a) => `${a.filename || "(unnamed)"} ${formatBytes(a.size_bytes)}`)
-    .join(", ");
-  const rest = all.length - shown.length;
-  return `${all.length} attachment${all.length === 1 ? "" : "s"}: ${names}${
-    rest > 0 ? `, +${rest} more` : ""
-  }`;
-}
 
 /** Where the signature box has pinned the boundary. See `pinnedSplit`. */
 interface SigPin {
@@ -926,6 +938,40 @@ export function DraftEditor(props: Props) {
     el?.focus();
   });
   const [showMore, setShowMore] = useState(false);
+  /**
+   * Cc and Bcc rows that stay on screen although they are empty, because the
+   * person just removed their last chip.
+   *
+   * QA (2026-10-17): a populated Cc row is shown, an empty one is not, so
+   * removing the last Cc chip took the row away at once. Everything under it
+   * moved up about 18px, the pointer was then over the To chip's remove
+   * button, and the next click took the main recipient off. A row the person
+   * is working in is never taken away under them: it stays until the card
+   * loses focus (the window's blur: the person went back to the chat).
+   */
+  const [keepRows, setKeepRows] = useState<Field[]>([]);
+  /**
+   * Files attached or removed and not saved yet (attachments.ts). Kept apart
+   * from `edit` on purpose: they are not stashed for a reload and not written
+   * by the teardown save, and a file's base64 has no business in `patchKey`,
+   * which is serialised on every render.
+   */
+  const [files, setFilesState] = useState<FileEdits>(NO_FILE_EDITS);
+  const filesRef = useRef(files);
+  const setFiles = (next: FileEdits) => {
+    filesRef.current = next;
+    setFilesState(next);
+  };
+  /** A sentence about the last file picked, when it could not be attached. */
+  const [fileNote, setFileNote] = useState<string | null>(null);
+  useEffect(() => {
+    const away = () => {
+      setShowMore(false);
+      setKeepRows([]);
+    };
+    window.addEventListener("blur", away);
+    return () => window.removeEventListener("blur", away);
+  }, []);
   const [editingSig, setEditingSig] = useState(false);
   const [sigPin, setSigPin] = useState<SigPin | null>(null);
   /** Whether the quoted original of a reply is expanded. Read only either way. */
@@ -1146,6 +1192,9 @@ export function DraftEditor(props: Props) {
     conflictNow.current = r.conflicts.length > 0;
     if (!FIELDS.some((f) => r.next.typed[f].trim())) setAddrWarning(null);
     closeConfirm();
+    // A removal names a file by its place in the list, and the list may have
+    // moved: follow each file to its new place, or drop it when it is gone.
+    setFiles(rebaseFileEdits(filesRef.current, d.attachments ?? []));
     // A boundary pinned into the old body may describe nothing in the new one.
     // Dropped rather than re-validated.
     setSigPin(null);
@@ -1161,7 +1210,8 @@ export function DraftEditor(props: Props) {
     editorPatch(editVersion.current, version, e, server);
 
   const patch = patchFrom(edit);
-  const dirty = Object.keys(patch).length > 0;
+  const filesDirty = hasFileEdits(files);
+  const dirty = Object.keys(patch).length > 0 || filesDirty;
   // Text in an address field that is not a chip yet. Not part of the patch
   // (it is not an address until it is committed), but it IS unsaved work, and
   // Save must be pressable for it so that pressing it either commits it or says
@@ -1174,8 +1224,8 @@ export function DraftEditor(props: Props) {
   // purpose: the teardown saver below is the one thing in the card that fires
   // at a moment nothing else controls, and it has to see the current envelope,
   // not the one that was current when it was armed.
-  const live = useRef({ version, server });
-  live.current = { version, server };
+  const live = useRef({ version, server, attachments: d.attachments ?? [] });
+  live.current = { version, server, attachments: d.attachments ?? [] };
 
   // Unsaved work at teardown. The host sends `ui/resource-teardown` before the
   // frame goes away and waits for the reply, so this is the last moment a
@@ -1387,24 +1437,29 @@ export function DraftEditor(props: Props) {
     };
     let bad: { field: Field; text: string } | null = null;
     let note: { field: Field; text: string } | null = null;
+    // Every address on the draft and the field it is in. Case-insensitive, like
+    // the mailbox: `Dana@X.example` next to `dana@x.example` is the same
+    // recipient twice (QA, 2026-10-13). And across the fields: To and Cc both
+    // holding one person sent them the mail twice, and nothing said so (QA,
+    // 2026-10-17). The one already there stays; the new one is not added.
+    const have = new Map<string, Field>();
+    for (const f of FIELDS) for (const a of next[f]) if (!have.has(addressKey(a))) have.set(addressKey(a), f);
     for (const field of FIELDS) {
       const raw = next.typed[field];
       if (!raw.trim()) continue;
       const typed = parseRecipients(raw);
       const parts = typed.map((r) => r.address);
       const invalid = parts.filter((p) => !ADDRESS.test(p));
-      // Case-insensitive, like the mailbox: `Dana@X.example` next to
-      // `dana@x.example` is the same recipient twice (QA, 2026-10-13).
-      const have = new Set(next[field].map(addressKey));
-      const dupes: string[] = [];
+      const dupes: { address: string; in: Field }[] = [];
       const named: string[] = [];
       for (const { address: p, name } of typed) {
         if (!ADDRESS.test(p)) continue;
-        if (have.has(addressKey(p))) {
-          dupes.push(p);
+        const already = have.get(addressKey(p));
+        if (already) {
+          dupes.push({ address: p, in: already });
           continue;
         }
-        have.add(addressKey(p));
+        have.set(addressKey(p), field);
         next[field].push(p);
         if (name) named.push(p);
       }
@@ -1507,9 +1562,35 @@ export function DraftEditor(props: Props) {
     });
   };
 
+  /**
+   * The people the recipient fields suggest (contacts.ts says why these and
+   * not the server's `contact_search`): the person this draft answers, its
+   * recipients as stored, addresses removed in this card, and the sender.
+   * Never one already on the draft, in any field.
+   */
+  const removedHere = useRef<string[]>([]);
+  const knownNow = useRef<() => ContactSuggestion[]>(() => []);
+  knownNow.current = () => {
+    const onDraft = new Set(FIELDS.flatMap((f) => editRef.current[f].map(addressKey)));
+    const raw = [
+      d.in_reply_to?.from,
+      ...FIELDS.flatMap((f) => server[f]),
+      ...removedHere.current,
+    ];
+    const list = raw.map(parseNamedAddress).filter((s): s is ContactSuggestion => s !== null);
+    if (d.identity?.email_address) {
+      list.push({ address: d.identity.email_address, name: d.identity.display_name ?? null });
+    }
+    return list.filter((s) => !onDraft.has(addressKey(s.address)));
+  };
+  const suggest = useRef<ContactSource>(localContactSource(() => knownNow.current()));
+
   /** Focus after a removal is the field's own business (Recipients.tsx). */
   const removeAt = (field: Field, i: number) => {
     const kept = editRef.current[field].filter((_, n) => n !== i);
+    if (field !== "to" && !keepRows.includes(field)) setKeepRows([...keepRows, field]);
+    const gone = editRef.current[field][i];
+    if (gone && !removedHere.current.includes(gone)) removedHere.current.push(gone);
     update(
       field === "to" ? { to: kept } : field === "cc" ? { cc: kept } : { bcc: kept },
     );
@@ -1534,6 +1615,7 @@ export function DraftEditor(props: Props) {
       onType={(v) => onAddrInput(field, v)}
       onCommit={(v) => commitField(field, v)}
       onRemove={(i) => removeAt(field, i)}
+      suggest={canEdit ? suggest.current : undefined}
       trailing={trailing}
     />
   );
@@ -1634,7 +1716,12 @@ export function DraftEditor(props: Props) {
   /** The last render's send, for the timer. See `SEND_UNDO_MS`. */
   const fireSend = useRef<() => void>(() => {});
   /** What would go out, as of this render. See the cancel effect below. */
-  const sendKey = JSON.stringify([stashKey, version]);
+  const sendKey = JSON.stringify([
+    stashKey,
+    version,
+    files.removed.map((r) => r.index),
+    files.added.map((f) => f.id),
+  ]);
   fireSend.current = () => {
     if (!pendingNow.current) return;
     // The draft changed since the countdown began. The effect below cancels
@@ -1656,7 +1743,7 @@ export function DraftEditor(props: Props) {
     }
     const next = readyToWrite();
     if (!next) return;
-    const p = patchFrom(next);
+    const p = { ...patchFrom(next), ...fileEditsPatch(filesRef.current) };
     sent.current = { version, edit: next };
     void Promise.resolve(
       actions.send(Object.keys(p).length > 0 ? p : null),
@@ -1735,11 +1822,11 @@ export function DraftEditor(props: Props) {
     };
   }, []);
   const sendLeft = pendingSend ? Math.max(1, Math.ceil((pendingSend.until - Date.now()) / 1000)) : 0;
-  const attachLine = attachmentLine(d, fullscreen);
-  // Which of Cc / Bcc are neither populated nor already revealed.
-  const hiddenFields: Field[] = showMore
-    ? []
-    : (["cc", "bcc"] as Field[]).filter((f) => edit[f].length === 0);
+  // Which of Cc / Bcc are on screen: populated, being typed in, revealed by
+  // the link, or kept after their last chip went (`keepRows`).
+  const rowShown = (f: Field) =>
+    showMore || edit[f].length > 0 || edit.typed[f].length > 0 || keepRows.includes(f);
+  const hiddenFields: Field[] = (["cc", "bcc"] as Field[]).filter((f) => !rowShown(f));
   // No "saving gives the draft a new id" note any more. It was the card's own
   // fallback for when the provider caveats did not say it, and it is no longer
   // true in the way that mattered: an old id keeps working through the server's
@@ -1837,16 +1924,97 @@ export function DraftEditor(props: Props) {
     update({ bodyText: withQuote(joinBody({ ...split, signature: storedSplit.signature })) });
   };
 
+  // ---- files ---------------------------------------------------------------
+  const fileSeq = useRef(0);
+  const removeFile = (index: number) => {
+    const a = (d.attachments ?? [])[index];
+    const cur = filesRef.current;
+    if (!a || cur.removed.some((r) => r.index === index)) return;
+    setFiles({
+      ...cur,
+      removed: [...cur.removed, {
+        id: `r${++fileSeq.current}`,
+        index,
+        filename: a.filename,
+        size_bytes: typeof a.size_bytes === "number" ? a.size_bytes : null,
+      }],
+    });
+  };
+  const keepFile = (index: number) => {
+    const cur = filesRef.current;
+    setFiles({ ...cur, removed: cur.removed.filter((r) => r.index !== index) });
+  };
+  const dropAdded = (id: string) => {
+    const cur = filesRef.current;
+    setFiles({ ...cur, added: cur.added.filter((f) => f.id !== id) });
+  };
+  /**
+   * Files from the picker. Held to `CARD_UPLOAD_MAX_BYTES` across everything
+   * added and not saved yet; a file over it is named and left out, the rest
+   * are attached.
+   */
+  const pickFiles = async (picked: File[]) => {
+    setFileNote(null);
+    let used = filesRef.current.added.reduce((total, f) => total + f.size_bytes, 0);
+    const added: FileEdits["added"] = [];
+    const tooBig: string[] = [];
+    const unread: string[] = [];
+    for (const file of picked) {
+      if (used + file.size > CARD_UPLOAD_MAX_BYTES) {
+        tooBig.push(file.name);
+        continue;
+      }
+      try {
+        const data = await readAsBase64(file);
+        added.push({
+          id: `a${++fileSeq.current}`,
+          filename: file.name || "attachment",
+          mime_type: file.type || "application/octet-stream",
+          size_bytes: file.size,
+          data,
+        });
+        used += file.size;
+      } catch {
+        unread.push(file.name);
+      }
+    }
+    if (added.length > 0) {
+      const cur = filesRef.current;
+      setFiles({ ...cur, added: [...cur.added, ...added] });
+    }
+    const said: string[] = [];
+    if (tooBig.length > 0) {
+      said.push(
+        `${tooBig.length === 1 ? tooBig[0] : `${tooBig.length} files`} not attached: ` +
+          `files added here can be up to ${humanSize(CARD_UPLOAD_MAX_BYTES)} in all. Attach larger files in your mail app.`,
+      );
+    }
+    if (unread.length > 0) {
+      said.push(`${unread.length === 1 ? unread[0] : `${unread.length} files`} could not be read, so not attached.`);
+    }
+    setFileNote(said.length > 0 ? said.join(" ") : null);
+  };
+
   /** Save: also what "Try again" in a failure notice runs. */
   const onSave = () => {
     if (!canEdit || !verified || pendingNow.current || confirmNow.current !== null) return;
     const next = readyToWrite();
     if (!next) return;
-    const p = patchFrom(next);
+    const sentFiles = filesRef.current;
+    const p = { ...patchFrom(next), ...fileEditsPatch(sentFiles) };
     if (Object.keys(p).length === 0) return;
     sent.current = { version, edit: next };
     void actions.save(p).then((ok) => {
       if (ok) {
+        // The file changes this save carried are on the draft now, so they
+        // stop being edits. By id, not by name: a draft can hold two files
+        // with one name, and the one left must not inherit the removal.
+        const went = new Set([...sentFiles.added, ...sentFiles.removed].map((f) => f.id));
+        const cur = filesRef.current;
+        setFiles({
+          removed: cur.removed.filter((r) => !went.has(r.id)),
+          added: cur.added.filter((f) => !went.has(f.id)),
+        });
         // Saved on purpose, so they are no longer "put back" edits.
         restoredKeys.current = [];
         setRestored(false);
@@ -2226,8 +2394,8 @@ export function DraftEditor(props: Props) {
             </TextLink>
           ) : undefined,
         )}
-        {(showMore || edit.cc.length > 0) && recipientBlock("cc")}
-        {(showMore || edit.bcc.length > 0) && recipientBlock("bcc")}
+        {rowShown("cc") && recipientBlock("cc")}
+        {rowShown("bcc") && recipientBlock("bcc")}
 
         <div class="row">
           {/* Labelled like the rows above it. It used to be the one unlabelled
@@ -2444,7 +2612,17 @@ export function DraftEditor(props: Props) {
         </Notice>
       )}
 
-      {attachLine && <p class="line">{attachLine}</p>}
+      <AttachmentList
+        items={d.attachments ?? []}
+        edits={files}
+        canEdit={canEdit}
+        canRemove={d.identity?.provider !== "outlook"}
+        onRemove={removeFile}
+        onKeep={keepFile}
+        onDropAdded={dropAdded}
+        onPick={(picked) => void pickFiles(picked)}
+        note={fileNote}
+      />
 
 
       {/* Only when the inbox HAS a signature (the server names its first line)
