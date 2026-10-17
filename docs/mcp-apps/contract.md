@@ -691,6 +691,11 @@ the card neutralises at the boundary as it does for §2.
 | `draft{action:"send"}` held | the §2a held-send shape, unchanged | unchanged |
 | `draft{action:"delete"}` | today's `{draft_id, deleted}` **plus** `card: "receipt"`, `outcome: "discarded"` | unchanged |
 
+`draft_read` is listed with `_meta.ui.visibility: ["model", "app"]` and **no** `resourceUri`
+(2026-10-17), so a model's read mounts no card: it drew a second, one-line card above every
+revision. The card's own `draft_read` calls are app calls and unaffected. See
+`mcp-app-resources.ts#DRAFT_EDITOR_UNMOUNTED_TOOL_NAMES`.
+
 Building the envelope must never turn a successful draft operation into an error: a failure
 degrades to today's payload, exactly as §2a's failure rule.
 

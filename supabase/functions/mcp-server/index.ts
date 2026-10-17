@@ -5474,7 +5474,7 @@ const LEGACY_TOOLS: ToolDefinition[] = [
       "Use this when the user wants to review or edit a message before it goes out; " +
       "email_send sends now. " +
       "Returns a draft_id that can be used with draft_update or draft_send. " +
-      "At minimum, subject and body are required; to/cc/bcc are optional (drafts may be incomplete). " +
+      "Only body is required; subject and to/cc/bcc are optional (drafts may be incomplete). " +
       "attachments puts files on the draft: inline base64, or a file already in this inbox by " +
       "source_message_id. " +
       "Where the draft editor card is on, hosts that render MCP Apps cards show the draft " +
@@ -5510,11 +5510,16 @@ const LEGACY_TOOLS: ToolDefinition[] = [
         },
         subject: {
           type: "string",
-          minLength: 1,
           // A draft is a message waiting to be sent, so it is held to the same
           // header-line limit as a send. See email_send / subject-header.ts.
+          //
+          // Optional, and `minLength` dropped, on 2026-10-17: the draft card
+          // saves and sends a draft with an empty subject, so refusing one here
+          // made "I'll fill in the subject later" fail on the model's side
+          // only. Both changes accept strictly more calls and change no
+          // advertised TYPE; `email_send` keeps its `minLength`.
           maxLength: SUBJECT_MAX_CHARS,
-          description: "Draft subject line.",
+          description: "Draft subject line. Omit to leave it empty for now.",
         },
         body: {
           type: "string",
@@ -5529,7 +5534,7 @@ const LEGACY_TOOLS: ToolDefinition[] = [
         include_signature: INCLUDE_SIGNATURE_PROPERTY,
         idempotency_key: IDEMPOTENCY_KEY_PROPERTY,
       },
-      required: ["subject", "body"],
+      required: ["body"],
       additionalProperties: false,
     },
   },
@@ -8056,7 +8061,7 @@ const CONSOLIDATED_SPECS: Record<string, ConsolidatedSpec> = {
       create: {
         legacy: "draft_create",
         scope: "manage:drafts",
-        hint: "a new draft, subject and body required",
+        hint: "a new draft; body required, subject optional",
       },
       reply: {
         legacy: "draft_reply",
@@ -8790,7 +8795,9 @@ for (const definition of BULK_TOOL_DEFINITIONS) {
 // and `draft_editor_hide` carry `["model", "app"]` since 2026-10-13: the model
 // is meant to call the first to read back a draft the user edited in the card,
 // and the second when the user asks in the chat to hide or show the card. See
-// `mcp-app-resources.ts#DRAFT_EDITOR_MODEL_VISIBLE_TOOL_NAMES`.
+// `mcp-app-resources.ts#DRAFT_EDITOR_MODEL_VISIBLE_TOOL_NAMES`. Since
+// 2026-10-17 `draft_read`'s list comes without the card's `resourceUri`, so a
+// model's read mounts no card (`DRAFT_EDITOR_UNMOUNTED_TOOL_NAMES`).
 // They are absent from
 // BILLABLE_TOOL_NAMES — they act on one
 // unsent draft that the billable draft tools already charged for, and metering
@@ -28050,23 +28057,29 @@ async function executeCreateDraft(
 }> {
   if (typeof rawArgs !== "object" || rawArgs === null || Array.isArray(rawArgs)) {
     return {
-      result: { content: [{ type: "text", text: "draft_create: arguments must be an object with inbox_id, subject, and body." }], isError: true },
+      result: { content: [{ type: "text", text: "draft_create: arguments must be an object with body (and optionally subject and recipients)." }], isError: true },
       logStatus: "error", logErrorCode: "-32602",
     };
   }
   const args = rawArgs as Record<string, unknown>;
-  // A draft is a message waiting to be sent, so its subject is held to the same
-  // encoded header-line limit as a send: catching it here means the model finds
-  // out while it can still edit the draft, not at draft.send. See
-  // subject-header.ts.
-  const draftSubjectError = subjectHeaderLineError("draft_create", args["subject"]);
+  // `subject` is OPTIONAL on create since 2026-10-17: omitted or blank stores a
+  // draft with an empty subject, which the draft card already lets a person
+  // save and send. "Draft this, I'll fill in the subject later" used to fail
+  // with "arguments.subject is required". (`draft_reply` takes no subject: it
+  // derives "Re: ..." from the original.)
+  //
+  // A subject that IS given is held to the same encoded header-line limit as a
+  // send: catching it here means the model finds out while it can still edit
+  // the draft, not at draft.send. See subject-header.ts.
+  const subjectGiven = typeof args["subject"] === "string" && args["subject"].trim().length > 0;
+  const draftSubjectError = subjectGiven ? subjectHeaderLineError("draft_create", args["subject"]) : null;
   if (draftSubjectError !== null) {
     return {
       result: { content: [{ type: "text", text: draftSubjectError }], isError: true },
       logStatus: "error", logErrorCode: "-32602",
     };
   }
-  const subject = args["subject"] as string;
+  const subject = subjectGiven ? (args["subject"] as string) : "";
   const body = typeof args["body"] === "string" && args["body"].length > 0
     ? args["body"] : null;
   if (!body) {
