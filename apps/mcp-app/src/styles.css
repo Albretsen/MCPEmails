@@ -23,10 +23,12 @@
      with a literal fallback. Phase-0 Q6: a host "can provide any subset".
    - literal colours appear only in the token block below, once per theme.
    - no positioned dropdowns / popovers that can reach past the frame
-     (clipped by the container, conflicts with host z-index). The ONE overlay
-     is the draft card's "⋯" menu (`.pop`), which opens downward from the
-     header of an open editor, a card always taller than the menu; a folded
-     card draws the same panel in flow instead (`.pop.inflow`).
+     (clipped by the container, conflicts with host z-index). The overlays
+     are the draft card's "⋯" menu (`.pop`), which opens downward from the
+     header of an open editor, a card always taller than the menu (a folded
+     card draws the same panel in flow instead, `.pop.inflow`), and the
+     recipient suggestions (`.suggest`), which open downward over the
+     subject and message under the field.
    - inline card: auto-fit height, no nested vertical scrolling.
    - visible focus rings, WCAG AA contrast, container queries not fixed widths.
 --------------------------------------------------------------------------- */
@@ -651,8 +653,12 @@ body {
 
 /* A link riding at the end of a field row ("Cc Bcc" on To). It never wraps
    inside itself and never shrinks: with three chips in To it used to break
-   onto two lines (QA, 2026-10-13). The field beside it wraps instead. */
-.row > .link {
+   onto two lines (QA, 2026-10-13). The field beside it wraps instead.
+   On a recipient row it sits INSIDE the field's box, at its right end, so the
+   To box is as wide as the Cc and Bcc boxes under it (live re-test,
+   2026-10-17: the link beside it made To the narrow one). */
+.row > .link,
+.fld > .link {
   flex: 0 0 auto;
   white-space: nowrap;
 }
@@ -848,17 +854,22 @@ body {
   border: var(--bw) solid var(--bd);
   border-radius: var(--r-md);
   cursor: text;
+  /* The suggestions' anchor. */
+  position: relative;
 }
+.fld > .link { margin-left: auto; }
 
 .fld:focus-within {
   border-color: var(--ring);
   outline: 1px solid var(--ring);
 }
 
-/* The input inside .fld carries no chrome of its own. */
+/* The input inside .fld carries no chrome of its own. It shares the last
+   chip row while there is a little room (live re-test, 2026-10-17: at 360px
+   one chip and an 80px minimum left an empty second line), and grows. */
 .fld > input {
-  flex: 1 1 80px;
-  min-width: 80px;
+  flex: 1 1 3em;
+  min-width: 3em;
   font: inherit;
   font-size: var(--fs);
   border: 0;
@@ -1091,18 +1102,48 @@ body {
   visibility: hidden;
 }
 
-/* Recipient suggestions: a line of their own inside the field's box, in the
-   flow, never a popover (a sandboxed frame clips anything outside its own
-   height). */
-.suggest {
-  flex: 1 0 100%;
+/* A folded list (Recipients.tsx): the input takes what is left of the first
+   row, however little, so the field stays one row tall. */
+.fld[data-folded="true"] > input {
+  flex: 1 1 0;
   min-width: 0;
-  margin: 2px 0 0;
+}
+.more-chip {
+  flex: none;
+  appearance: none;
+  padding: 0 6px;
+  border: var(--bw) solid var(--bd);
+  border-radius: var(--r-sm);
+  background: none;
+  font: inherit;
+  font-size: var(--fs-sm);
+  line-height: 18px;
+  color: var(--fg-2);
+  cursor: pointer;
+}
+.more-chip:hover { color: var(--fg); }
+.more-chip:focus-visible { outline: 2px solid var(--ring); outline-offset: 1px; }
+
+/* Recipient suggestions: an overlay under the field's box, over the rows below
+   it, like the "⋯" menu (live re-test, 2026-10-17: in the flow, they pushed
+   the whole card down). Opaque and bordered because it sits over content;
+   `max-height` keeps it inside the frame. */
+.suggest {
+  position: absolute;
+  top: calc(100% + 2px);
+  left: calc(-1 * var(--bw));
+  right: calc(-1 * var(--bw));
+  z-index: 3;
+  max-height: calc(100vh - 48px);
+  overflow-y: auto;
+  margin: 0;
   padding: 2px;
   list-style: none;
-  border: var(--bw) solid var(--bd);
+  background: var(--bg);
+  border: var(--bw) solid var(--bd-2);
   border-radius: var(--r-md);
   font-size: var(--fs-sm);
+  cursor: default;
 }
 .suggest[hidden] { display: none; }
 .suggest > li {
@@ -1113,7 +1154,14 @@ body {
   text-overflow: ellipsis;
   white-space: nowrap;
 }
-.suggest > li[aria-selected="true"] { background: var(--bg-2); }
+/* The highlighted one in the host's inverse pair, like the primary button:
+   `--bg-2` was barely lighter than the card in dark (live re-test,
+   2026-10-17). */
+.suggest > li[aria-selected="true"] {
+  background: var(--accent);
+  color: var(--accent-fg);
+}
+.suggest > li[aria-selected="true"] .muted { color: inherit; }
 
 /* The draft's files (Attachments.tsx): chips like the recipients', wrapping. */
 .att-list {

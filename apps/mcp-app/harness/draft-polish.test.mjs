@@ -412,10 +412,15 @@ async function main() {
     expect("directly under the To row", warn?.previousElementSibling?.contains(to), true);
     expect("the field points at it", to.getAttribute("aria-describedby"), "d-to-warn");
     expect("and is marked invalid", to.getAttribute("aria-invalid"), "true");
+    // No warning while the correction is being typed (live re-test,
+    // 2026-10-17); the next commit says what is still wrong.
     c.input("d-to", "a@b.");
     await settle();
-    expect("still invalid: the warning names the current text", /a@b\. is not a complete/.test(c.text()), true);
+    expect("typing: no warning about half-typed text", !!c.root.querySelector("#d-to-warn"), false);
     expect("not the old text", /a@b does not look/.test(c.text()), false);
+    c.key(to, "Enter");
+    await settle();
+    expect("Enter: the warning names the current text", /a@b\. does not look/.test(c.text()), true);
     c.input("d-to", "a@b.example");
     await settle();
     expect("valid: the warning is gone", !!c.root.querySelector("#d-to-warn"), false);
@@ -425,8 +430,9 @@ async function main() {
 
   group("R5. the Cc Bcc link never wraps");
   {
-    expect("a link in a field row does not wrap", /\.row > \.link \{[^}]*white-space: nowrap/.test(css), true);
-    expect("and does not shrink", /\.row > \.link \{[^}]*flex: 0 0 auto/.test(css), true);
+    // Inside the To box since the live re-test of 2026-10-17 (`.fld > .link`).
+    expect("a link in a field row does not wrap", /\.row > \.link,\s*\.fld > \.link \{[^}]*white-space: nowrap/.test(css), true);
+    expect("and does not shrink", /\.row > \.link,\s*\.fld > \.link \{[^}]*flex: 0 0 auto/.test(css), true);
   }
 
   // ── F. Focus ──────────────────────────────────────────────────────────────
