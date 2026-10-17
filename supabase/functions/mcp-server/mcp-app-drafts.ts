@@ -75,10 +75,13 @@ import { neutralizeList, neutralizeMaybe, neutralizeText } from "./text-safety.t
 import { preferredBodyText } from "./text-extract.ts";
 import {
   bodyCarriesSignature,
+  composeSignatureBlocks,
   htmlCarriesSignatureBlock,
   plainTextBodyToHtml,
   rebuildHtmlKeepingSignature,
+  type SignatureInbox,
 } from "./signature-compose.ts";
+import { comparableQuote, quotedHtmlStart, quotedTextLine, splitQuotedText } from "./quoted-reply.ts";
 import {
   cardWriteConflict,
   type DraftWriter,
@@ -764,7 +767,12 @@ export function draftContentVersion(
 export function buildDraftEditorEnvelope(input: {
   appUrl: string;
   draft: NormalizedDraft;
-  inbox: DraftEditorInbox;
+  /**
+   * The signature columns are optional: when present they let the envelope
+   * name the inbox's signature for a draft that does not carry it
+   * (`signature.first_line`). Every caller passes the full inbox row.
+   */
+  inbox: DraftEditorInbox & SignatureInbox;
   origin: DraftEditorOrigin;
   /**
    * Who wrote the stored draft last. "user" when it was `draft_editor_save`,
@@ -786,6 +794,10 @@ export function buildDraftEditorEnvelope(input: {
   const { draft, inbox } = input;
   const text = clipDraftBody(draft.body_text);
   const html = clipDraftBody(draft.body_html);
+  // Where the quoted original of a reply starts in the text the card is given
+  // (the CLIPPED text, so the line is one the card can find). quoted-reply.ts.
+  const quotedLine = quotedTextLine(text.value);
+  const signatureFirstLine = draft.signature_embedded ? null : inboxSignatureFirstLine(inbox);
 
   return {
     schema_version: CARD_SCHEMA_VERSION,
@@ -848,6 +860,9 @@ export function buildDraftEditorEnvelope(input: {
         // this says it was REMOVED, so the card can tell the person why the
         // formatted view is gone instead of silently dropping the link.
         ...(draft.formatting_removed === true ? { formatting_removed: true } : {}),
+        // Only when the text has one. Additive: a card that predates it reads
+        // the quote as part of the text, which is what it always did.
+        ...(quotedLine >= 0 ? { quoted: { line: quotedLine } } : {}),
       },
       attachments: draft.attachments.slice(0, MAX_LISTED_ATTACHMENTS).map((entry) => ({
         // The headline case for neutralisation: `invoice<U+202E> fdp.exe`
@@ -862,6 +877,10 @@ export function buildDraftEditorEnvelope(input: {
       signature: {
         embedded: draft.signature_embedded,
         ...(draft.signature_rich === true ? { rich: true } : {}),
+        // Only when the draft does NOT carry the signature and the inbox has
+        // one: the card names it in its "not in this draft" line, and shows no
+        // such line at all for an inbox without a signature.
+        ...(signatureFirstLine ? { first_line: signatureFirstLine } : {}),
       },
       // Populated on the reply path only. A stored draft carries the RFC
       // `In-Reply-To` header rather than a server message id, and §8 specifies
@@ -893,6 +912,21 @@ export function buildDraftEditorEnvelope(input: {
       reason: input.editReason ?? null,
     },
   };
+}
+
+/**
+ * The first line of the inbox's signature, for the card's "your signature is
+ * not in this draft" line. Null when the inbox has no signature turned on.
+ * Neutralised and bounded like every other short string a person scans.
+ */
+function inboxSignatureFirstLine(inbox: SignatureInbox): string | null {
+  if (inbox.signature_enabled !== true) return null;
+  const sig = composeSignatureBlocks(inbox);
+  if (!sig) return null;
+  const first = sig.text.split(/\r\n|\n|\r/).map((l) => l.trim()).find((l) => l.length > 0);
+  if (!first) return null;
+  const safe = neutralizeText(first);
+  return safe.length > 80 ? `${safe.slice(0, 79)}…` : safe;
 }
 
 /**
@@ -1010,6 +1044,8 @@ export function draftCardToolResult(
         text: typeof body["text"] === "string" ? body["text"] : null,
         html: typeof body["html"] === "string" ? body["html"] : null,
         truncated,
+        // Rides with the body it describes, never on the placeholder.
+        ...(body["quoted"] && typeof body["quoted"] === "object" ? { quoted: body["quoted"] } : {}),
       },
     },
   };
@@ -2016,13 +2052,25 @@ export async function applyDraftPatch(
   //
   // The over-long and the cleared body also end with no part rather than a
   // stale or an empty one, and are reported the same way.
+  //
+  // ── AND SO DOES THE QUOTED ORIGINAL (2026-10-17) ─────────────────────────
+  // A reply's HTML part may end in the original as the mail client quoted it
+  // (Gmail's `gmail_quote`, Apple's `<blockquote type="cite">`, Outlook's
+  // header block). Regenerating from the text turned that into escaped `> `
+  // lines. The card never edits the quote (it is a read-only section there),
+  // so when the text's quote is the stored one, line endings aside, only the
+  // part above it is regenerated, by the rules above, and the stored quote
+  // markup follows it byte for byte (`htmlKeepingQuote`). A quote that did
+  // change, or HTML with no recognisable quote block, takes the rules above
+  // over the whole text, unchanged.
   let nextHtml: string | undefined;
   let formattingRemoved = false;
   if (stored.body_html !== null) {
     if (bodyTextChanged) {
-      const regenerated = htmlCarriesSignatureBlock(stored.body_html)
-        ? rebuildHtmlKeepingSignature(bodyText as string, inbox, stored.body_html, stored.body_text)
-        : plainTextBodyToHtml(bodyText as string);
+      const kept = htmlKeepingQuote(bodyText as string, stored.body_text, stored.body_html);
+      const regenerated = kept
+        ? regenerateHtml(kept.head, inbox, kept.storedHtmlHead, kept.storedTextHead, kept.quoteHtml)
+        : regenerateHtml(bodyText as string, inbox, stored.body_html, stored.body_text, "");
       nextHtml = regenerated === null || regenerated.length === 0 ||
           regenerated.length > EMAIL_HTML_MAX_LENGTH
         ? undefined
@@ -2128,6 +2176,57 @@ export async function applyDraftPatch(
   };
 
   return { ok: true, saved, written: true };
+}
+
+/**
+ * The HTML part for an edited text, by the rules in `applyDraftPatch`: the
+ * stored signature block kept when the HTML carries one, otherwise the text
+ * escaped. `quoteHtml` (the stored quote markup, or "") follows verbatim. Null
+ * when the formatting cannot be kept.
+ */
+function regenerateHtml(
+  text: string,
+  inbox: DraftEditorProviderInbox,
+  storedHtml: string,
+  storedText: string | null,
+  quoteHtml: string,
+): string | null {
+  const head = htmlCarriesSignatureBlock(storedHtml)
+    ? rebuildHtmlKeepingSignature(text, inbox, storedHtml, storedText)
+    : plainTextBodyToHtml(text);
+  if (head === null) return null;
+  return quoteHtml ? `${head}\n${quoteHtml}` : head;
+}
+
+/**
+ * The pieces `applyDraftPatch` needs to keep a reply's quoted HTML through a
+ * body edit, or null when it cannot: the edited text and the stored text must
+ * both have a quoted original, the two quotes must be the same text (line
+ * endings and trailing blanks aside), and the stored HTML must have a quote
+ * block of its own (quoted-reply.ts#quotedHtmlStart).
+ *
+ * `head` is the edited text above its quote; `storedHtmlHead` and
+ * `storedTextHead` are the stored parts above theirs, so a signature block
+ * inside the quote (someone quoting a message signed by this server) is never
+ * mistaken for the draft's own.
+ */
+export function htmlKeepingQuote(
+  text: string,
+  storedText: string | null,
+  storedHtml: string,
+): { head: string; storedTextHead: string; storedHtmlHead: string; quoteHtml: string } | null {
+  const edited = splitQuotedText(text);
+  const stored = splitQuotedText(storedText);
+  if (!edited || !stored) return null;
+  if (comparableQuote(edited.quote) !== comparableQuote(stored.quote)) return null;
+  const at = quotedHtmlStart(storedHtml);
+  if (at < 0) return null;
+  return {
+    head: edited.head,
+    storedTextHead: stored.head,
+    storedHtmlHead: storedHtml.slice(0, at),
+    quoteHtml: storedHtml.slice(at),
+  };
 }
 
 /**

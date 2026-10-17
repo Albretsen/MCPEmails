@@ -482,6 +482,11 @@ function resolveDeferredBody(env: Envelope, result: ToolResultParams): Envelope 
         html: b.html ?? null,
         truncated:
           typeof b.truncated === "boolean" ? b.truncated : env.draft.body?.truncated === true,
+        // Where the reply's quoted original starts (contract.ts#Body.quoted).
+        // Shape-checked again where it is used (format.ts#splitQuote).
+        ...(b.quoted && typeof b.quoted === "object" && !Array.isArray(b.quoted)
+          ? { quoted: b.quoted as { line: number } }
+          : {}),
       }),
     },
   };

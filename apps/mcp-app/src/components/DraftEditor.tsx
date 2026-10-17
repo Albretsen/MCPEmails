@@ -7,10 +7,14 @@ import {
   formatBytes,
   formatClockSeconds,
   formatDateTime,
+  firstLine,
   formatWhen,
   joinBody,
   normalizeEol,
+  quotePreview,
+  repeatsSignOff,
   splitBody,
+  splitQuote,
   wordCount,
 } from "../format";
 import { editsNotice, failureNotice, type DraftFailure } from "../draft-failure";
@@ -897,6 +901,8 @@ export function DraftEditor(props: Props) {
   const [showMore, setShowMore] = useState(false);
   const [editingSig, setEditingSig] = useState(false);
   const [sigPin, setSigPin] = useState<SigPin | null>(null);
+  /** Whether the quoted original of a reply is expanded. Read only either way. */
+  const [showQuote, setShowQuote] = useState(false);
   const [showHtml, setShowHtml] = useState(false);
   // "Copied" reverts, "Selected" stays (ui.tsx#useCopy).
   const { copied, copy } = useCopy();
@@ -1634,9 +1640,33 @@ export function DraftEditor(props: Props) {
     ? `Saved ${formatWhen(d.last_saved_at)}${savedBy}`
     : `Saved earlier${savedBy}`;
 
+  // ---- the quoted original of a reply (2026-10-17) -------------------------
+  //
+  // A reply's text ends in the original it answers ("On <date>, <name>
+  // wrote:" and `>` lines). `splitBody` takes the LAST `-- ` line, so that
+  // quote used to land in the signature: the row read "Asgeir Albretsen + 17
+  // more lines" and its Edit box held the whole thread, one keystroke from
+  // being mangled. The server now says where the quote starts
+  // (`body.quoted`), and it is shown read only, below the signature.
+  //
+  // `quoteTail` is the SERVER's quote, bytes as stored. Everything the editor
+  // edits is the text above it (`headText`), and every write joins the edited
+  // head back onto the tail unchanged, so a save hands the quote back byte for
+  // byte and no box can reach it. When the text in the editor does not end in
+  // that tail (unsaved edits from before this existed), there is no tail and
+  // the editor behaves exactly as it did.
+  const serverQuote = splitQuote(server.bodyText, d.body?.quoted);
+  const quoteTail =
+    serverQuote && edit.bodyText.endsWith(serverQuote.quote) ? serverQuote.quote : "";
+  const headText = quoteTail
+    ? edit.bodyText.slice(0, edit.bodyText.length - quoteTail.length)
+    : edit.bodyText;
+  /** The full body text for an edited head: the head, then the quote as stored. */
+  const withQuote = (head: string) => head + quoteTail;
+
   // Derived, never stored: `edit.bodyText` stays the single source of truth for
   // what will be saved, and this is only how it is presented.
-  const split = pinnedSplit(edit.bodyText, sigPin) ?? splitBody(edit.bodyText);
+  const split = pinnedSplit(headText, sigPin) ?? splitBody(headText);
 
   // ---- the signature's formatting ------------------------------------------
   //
@@ -1646,7 +1676,7 @@ export function DraftEditor(props: Props) {
   // with no warning (2026-10-13). So the card warns as soon as the signature box
   // opens, and once the signature differs locally the old formatted preview is
   // no longer offered: it would show a signature that saving is about to drop.
-  const storedSplit = splitBody(server.bodyText);
+  const storedSplit = splitBody(serverQuote ? serverQuote.head : server.bodyText);
   const sigEdited =
     storedSplit.signature !== null &&
     (split.signature === null ||
@@ -1657,7 +1687,7 @@ export function DraftEditor(props: Props) {
   /** Put the stored signature back, keeping the message as typed. */
   const undoSignature = () => {
     if (split.separator === null || storedSplit.signature === null) return;
-    update({ bodyText: joinBody({ ...split, signature: storedSplit.signature }) });
+    update({ bodyText: withQuote(joinBody({ ...split, signature: storedSplit.signature })) });
   };
 
   /** Save: also what "Try again" in a failure notice runs. */
@@ -1695,7 +1725,7 @@ export function DraftEditor(props: Props) {
    */
   const cancelSig = () => {
     if (split.separator !== null && sigBefore.current !== null) {
-      update({ bodyText: joinBody({ ...split, signature: sigBefore.current }) });
+      update({ bodyText: withQuote(joinBody({ ...split, signature: sigBefore.current })) });
     }
     setSigPin(null);
     setEditingSig(false);
@@ -1930,12 +1960,12 @@ export function DraftEditor(props: Props) {
         <AutoTextarea
           id="d-body"
           ariaLabel="Message"
-          value={split.signature === null ? edit.bodyText : split.message}
+          value={split.signature === null ? headText : split.message}
           disabled={!canEdit}
           maxRows={fullscreen ? FULLSCREEN_BODY_ROWS : INLINE_BODY_ROWS}
           onInput={(v) => {
             const next = applyMessageEdit(split, sigPin, v);
-            update({ bodyText: next.bodyText });
+            update({ bodyText: withQuote(next.bodyText) });
             // Assigned rather than guarded on `sigPin`: a pin the split no
             // longer describes is dropped, not carried. See `applyMessageEdit`.
             setSigPin(next.pin);
@@ -1975,7 +2005,7 @@ export function DraftEditor(props: Props) {
                 disabled={!canEdit}
                 maxRows={fullscreen ? FULLSCREEN_BODY_ROWS : SIGNATURE_ROWS}
                 onInput={(v) =>
-                  update({ bodyText: joinBody({ ...split, signature: v }) })
+                  update({ bodyText: withQuote(joinBody({ ...split, signature: v })) })
                 }
               />
               {richSig && !sigEdited && (
@@ -2020,6 +2050,50 @@ export function DraftEditor(props: Props) {
         )
       )}
 
+      {/* A sign-off over a signature that starts with the same name sends the
+          name twice ("Best regards,\nAsgeir" then "-- \nAsgeir Albretsen").
+          Said, not fixed: it may be exactly what the person wants. */}
+      {!(showHtml && canPreview) &&
+        split.signature !== null &&
+        repeatsSignOff(split.message, firstLine(split.signature)) && (
+          <p class="line">Your message already ends with a sign-off.</p>
+        )}
+
+      {/* The quoted original of a reply: its own section, read only, collapsed
+          to its attribution line. Never in either box, so neither can change
+          it; `withQuote` puts it back verbatim on every write. */}
+      {!(showHtml && canPreview) && quoteTail && (
+        <>
+          <div
+            class="row sig quote-row"
+            title="The message you are replying to. It is kept as it is."
+            onClick={(e) => {
+              // The link toggles on its own; a click on it bubbles here too.
+              if ((e.target as HTMLElement).closest("button")) return;
+              setShowQuote((v) => !v);
+            }}
+          >
+            <span class="lbl">Quoted</span>
+            <span class="sig-text">{quotePreview(quoteTail)}</span>
+            <TextLink
+              onClick={() => setShowQuote((v) => !v)}
+              expanded={showQuote}
+              controls="d-quoted"
+              title={showQuote ? "Hide the quoted message" : "Show the quoted message"}
+            >
+              {/* Not bare "Show"/"Hide": the header has a Hide of its own,
+                  which folds the whole card. */}
+              {showQuote ? "Hide quote" : "Show quote"}
+            </TextLink>
+          </div>
+          {showQuote && (
+            <div id="d-quoted" class="quote-text" role="region" aria-label="Quoted message, read only">
+              {quoteTail.replace(/^(?:[ \t]*\r?\n)+/, "")}
+            </div>
+          )}
+        </>
+      )}
+
       {formattingAtRisk && (
         <Notice tone="warning">
           Saving will replace the signature's formatting (logo, links, layout)
@@ -2046,12 +2120,21 @@ export function DraftEditor(props: Props) {
       {attachLine && <p class="line">{attachLine}</p>}
 
 
-      {d.signature?.embedded === false && (
-        <p class="line">
-          Your signature is not part of this text. It is added when the draft is
-          sent.
-        </p>
-      )}
+      {/* Only when the inbox HAS a signature (the server names its first line)
+          and the text shows none. It used to say "It is added when the draft is
+          sent", on every draft without one, including inboxes with no signature
+          at all, and that is not what a send does: `draft{action:"send"}`
+          sends the stored body as it is and never adds a signature
+          (index.ts#executeSendDraft). */}
+      {d.signature?.embedded === false &&
+        split.signature === null &&
+        typeof d.signature.first_line === "string" &&
+        d.signature.first_line.trim() && (
+          <p class="line">
+            Your signature ({d.signature.first_line.trim()}) is not in this draft, and
+            sending does not add it.
+          </p>
+        )}
 
       {env.actor?.can_edit === false && (
         <Notice tone="warning">
