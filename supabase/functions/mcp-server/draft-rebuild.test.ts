@@ -279,7 +279,11 @@ Deno.test("round trip: a body edit through the same path replaces both parts and
   assert(out.ok);
   const after = parseEmail(box.raw());
   assertEquals(after.text, "Ny tekst.\n");
-  assert(after.html !== BODY_HTML && after.html!.includes("Ny tekst."), "HTML regenerated from the text");
+  // The stored HTML part has formatting (bold), and a whole new body cannot be
+  // placed inside it, so it is dropped rather than regenerated: a generated
+  // part would pass for the original (html-text-merge.ts, 2026-10-17).
+  assertEquals(after.html, null, "the formatted HTML part is not kept with old wording");
+  assert(out.saved.formatting_removed === true, "and the save says so");
   assertEquals(getHeader(after.headers, "reply-to"), "Salg <salg@example.com>");
   assertEquals(draftContentFromRaw(box.raw(), undefined).subject, "Re: Tilbud på levering");
 });

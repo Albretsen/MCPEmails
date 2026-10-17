@@ -90,6 +90,7 @@ import {
   type ResolvedDraft,
 } from "./draft-lineage.ts";
 import { EMAIL_HTML_MAX_LENGTH } from "./signature-sanitizer.ts";
+import { htmlHasFormatting, mergeTextEditIntoHtml } from "./html-text-merge.ts";
 import { CARD_SCHEMA_VERSION } from "./mcp-app-approvals.ts";
 import { buildDraftMutationEnvelope } from "./untrusted-envelope.ts";
 import { decodedBase64ByteLength } from "./attachment-validation.ts";
@@ -2016,9 +2017,29 @@ export async function applyDraftPatch(
   //
   // The over-long and the cleared body also end with no part rather than a
   // stale or an empty one, and are reported the same way.
+  //
+  // ── AND A FORMATTED BODY IS EDITED IN PLACE, OR SAID TO BE LOST (2026-10-17)
+  // A stored HTML part with formatting of its own (a heading, a list, a link)
+  // was regenerated like any other: one typed word and Save turned it into
+  // text with line breaks, the result was still an HTML part, so
+  // `formatting_removed` stayed unset and the card said nothing (QA,
+  // 2026-10-17). Now, first, the edit is made inside the stored HTML when every
+  // changed line can be placed there with certainty (html-text-merge.ts), which
+  // keeps every tag. When it cannot, formatted HTML is not regenerated at all:
+  // a generated part would pass for the original in "Show formatting" and in
+  // the recipient's client. It is dropped and reported like the signature case
+  // above. The card runs the same two functions to warn before the save.
   let nextHtml: string | undefined;
   let formattingRemoved = false;
-  if (stored.body_html !== null) {
+  const merged = stored.body_html !== null && bodyTextChanged
+    ? mergeTextEditIntoHtml(stored.body_html, stored.body_text, bodyText as string)
+    : null;
+  if (merged !== null && merged.length <= EMAIL_HTML_MAX_LENGTH) {
+    nextHtml = merged;
+  } else if (stored.body_html !== null && bodyTextChanged && htmlHasFormatting(stored.body_html)) {
+    nextHtml = undefined;
+    formattingRemoved = true;
+  } else if (stored.body_html !== null) {
     if (bodyTextChanged) {
       const regenerated = htmlCarriesSignatureBlock(stored.body_html)
         ? rebuildHtmlKeepingSignature(bodyText as string, inbox, stored.body_html, stored.body_text)
@@ -2748,8 +2769,10 @@ export const DRAFT_EDITOR_TOOL_DEFINITIONS: DraftEditorToolDefinition[] = [
           maxLength: MAX_BODY_LENGTH,
           description:
             "Replacement plain-text body, written exactly as given. When the draft has an " +
-            "HTML part it is regenerated from this text, so both parts of the message say " +
-            "the same thing. Omit to keep the stored body.",
+            "HTML part, the edit is made inside it when it can be placed exactly; otherwise " +
+            "a formatted HTML part is dropped (body.formatting_removed) and a plain one is " +
+            "regenerated, so both parts of the message say the same thing. Omit to keep " +
+            "the stored body.",
         },
         base_revision: {
           type: "integer",

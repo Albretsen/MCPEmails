@@ -75,7 +75,10 @@ export interface Body {
   /**
    * Draft editor only, and only on the SAVE that removed the HTML part (`html`
    * is null then too). The card says so in one line rather than silently
-   * dropping "Show formatting".
+   * dropping "Show formatting". Since 2026-10-17 the server also sets it when a
+   * body edit could not be made inside a formatted HTML part (a heading, a
+   * list, a link): that part is dropped, never regenerated to pass for the
+   * original (mcp-server/html-text-merge.ts).
    */
   formatting_removed?: boolean;
 }

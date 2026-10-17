@@ -24,6 +24,12 @@ import {
   type UnsavedField,
 } from "../unsaved";
 import { RecipientField } from "./Recipients";
+// Shared with the server, which runs the same two functions on save, so the
+// warning below and what the save does cannot disagree. Pure, no imports.
+import {
+  htmlHasFormatting,
+  mergeTextEditIntoHtml,
+} from "../../../../supabase/functions/mcp-server/html-text-merge";
 import type { EndedField, OnScreen } from "../ended";
 import {
   AutoTextarea,
@@ -917,6 +923,8 @@ export function DraftEditor(props: Props) {
   /** The signature as it was when its box opened, for Cancel. */
   const sigBefore = useRef<string | null>(null);
   const sigEditLink = useRef<HTMLButtonElement>(null);
+  /** "Show formatting" / "Edit plain text": where focus goes on entering the preview. */
+  const formatToggle = useRef<HTMLButtonElement>(null);
 
   // ---- inline confirms, and where focus goes around them -------------------
   //
@@ -1677,8 +1685,36 @@ export function DraftEditor(props: Props) {
     (split.signature === null ||
       normalizeEol(split.signature) !== normalizeEol(storedSplit.signature));
   const richSig = d.signature?.rich === true;
-  const formattingAtRisk = richSig && sigEdited;
-  const canPreview = hasHtml && !formattingAtRisk;
+  // ---- the message's own formatting (QA, 2026-10-17) -----------------------
+  //
+  // A draft whose HTML part has a heading, bold text, a list or a link lost all
+  // of it on the first saved word, with no warning before and no notice after.
+  // The server now makes a plain-text edit inside the stored HTML when it can
+  // place it exactly, and otherwise drops the formatted part and says so
+  // (`body.formatting_removed`). This asks the same question of the same
+  // stored text and HTML, so the warning shows exactly when saving would turn
+  // the message into plain text. Not over a clipped body: its own warning says
+  // more than this one could.
+  const bodyFormattingAtRisk =
+    hasHtml &&
+    d.body?.truncated !== true &&
+    bodyTextChanged(edit.bodyText, server.bodyText) &&
+    htmlHasFormatting(d.body?.html) &&
+    mergeTextEditIntoHtml(d.body?.html, server.bodyText, edit.bodyText) === null;
+  // The signature's own warning says the message keeps its formatting, which
+  // is not true while the one above is showing.
+  const formattingAtRisk = richSig && sigEdited && !bodyFormattingAtRisk;
+  // Neither preview is offered while either is at risk: it would show
+  // formatting that saving is about to drop.
+  const canPreview = hasHtml && !formattingAtRisk && !bodyFormattingAtRisk;
+  /** Put the stored message back, which keeps its formatting. */
+  const keepFormatting = () => {
+    update({ bodyText: server.bodyText });
+    setSigPin(null);
+    setEditingSig(false);
+    // The link that ran this leaves with its notice.
+    focusNext.current = "d-body";
+  };
   /** Put the stored signature back, keeping the message as typed. */
   const undoSignature = () => {
     if (split.separator === null || storedSplit.signature === null) return;
@@ -1995,6 +2031,16 @@ export function DraftEditor(props: Props) {
         />
       )}
 
+      {bodyFormattingAtRisk && (
+        <Notice tone="warning">
+          This message has formatting, such as headings, lists or links. Saving
+          this edit turns the whole message into plain text.{" "}
+          <TextLink onClick={keepFormatting} title="Undo your changes to the message">
+            Keep the formatting
+          </TextLink>
+        </Notice>
+      )}
+
       {/* The signature, split out of the body box but still the same bytes.
           For a fourteen-word message the stored signature was four of eight
           lines, so the box was mostly boilerplate and the message was the
@@ -2078,7 +2124,9 @@ export function DraftEditor(props: Props) {
         </Notice>
       )}
 
-      {d.body?.formatting_removed === true && !hasHtml && (
+      {/* Not gated on the HTML being gone: the flag is the server saying it
+          removed formatting, and that is worth saying whatever else is true. */}
+      {d.body?.formatting_removed === true && (
         <p class="line">
           That save removed this draft's formatting, so it is plain text now.
         </p>
@@ -2250,7 +2298,16 @@ export function DraftEditor(props: Props) {
           <span class="acts-l">
             {canPreview && (
               <TextLink
-                onClick={() => setShowHtml(!showHtml)}
+                btnRef={formatToggle}
+                onClick={() => {
+                  // Focus is moved on purpose both ways. The box or the preview
+                  // that had it is replaced, and focus that falls out of the
+                  // frame sends the next keystrokes to the host's composer (QA,
+                  // 2026-10-17). Into the box to edit; onto this toggle, which
+                  // stays put, when showing the preview.
+                  focusNext.current = showHtml ? "d-body" : () => formatToggle.current;
+                  setShowHtml(!showHtml);
+                }}
                 title={
                   showHtml
                     ? "Edit the plain-text version"
