@@ -14,7 +14,7 @@ import {
   wordCount,
 } from "../format";
 import { editsNotice, failureNotice, type DraftFailure } from "../draft-failure";
-import { setPendingSendCancel, setTeardownSaver, type DraftCheck } from "../store";
+import { setPendingSendCancel, setTeardownSaver, type DraftCheck, type SupersededAt } from "../store";
 import {
   clearUnsaved,
   fingerprint,
@@ -69,6 +69,11 @@ export interface DraftActions {
    * what the mailbox holds and never an older copy this card was mounted with.
    */
   loadCurrent?: () => Promise<boolean>;
+  /**
+   * "Open here" on a folded card: re-read the draft, make this card the
+   * current one and fold every other card for it (App.tsx#takeOver).
+   */
+  takeOver?: () => Promise<boolean>;
   /** Turn the card off, for this inbox or for every inbox in the workspace. */
   hide: (scope: "inbox" | "workspace") => void;
   setFullscreen: (on: boolean) => void;
@@ -104,11 +109,14 @@ interface Props {
    */
   sendDoubt?: boolean;
   /**
-   * The assistant wrote a newer version of this draft after this card last saw
-   * it, so a newer card exists (store.ts#supersededBy). The editor folds to one
-   * line unless it holds unsaved edits.
+   * Another card is the current one for this draft: the assistant wrote a
+   * newer version (store.ts#supersededBy, or a hint from the newer card), or
+   * another card took it over (a Save or "Open here" there). The editor folds
+   * to one line and never offers Send; unsaved edits stay here behind "Show".
    */
   superseded?: boolean;
+  /** Where the current card is, for the folded line. See store.ts. */
+  supersededAt?: SupersededAt;
   actions: DraftActions;
 }
 
@@ -852,15 +860,21 @@ export function DraftEditor(props: Props) {
   // rendered before the blur and silently save without the address the user
   // just added.
   const editRef = useRef(edit);
-  /** The person chose to edit here although a newer card exists. */
+  /**
+   * The person pressed "Show" on a folded card to see the unsaved edits it
+   * keeps. Shown is not current: Send stays off until a Save here makes this
+   * card the current one (2026-10-17; editing used to be enough, and then two
+   * cards offered Send). Reset whenever the card stops being superseded, so a
+   * later newer card folds it again.
+   */
   const [openAnyway, setOpenAnyway] = useState(false);
+  useEffect(() => {
+    if (!props.superseded && busy === null) setOpenAnyway(false);
+  }, [props.superseded, busy]);
   const update = (patch: Partial<EditState>) => {
     const next = { ...editRef.current, ...patch };
     editRef.current = next;
     setEdit(next);
-    // Edited while a newer card exists: it stays an editor from here on,
-    // rather than folding the moment the edit is undone.
-    if (props.superseded) setOpenAnyway(true);
   };
 
   /**
@@ -1260,6 +1274,16 @@ export function DraftEditor(props: Props) {
     if (takeStored > 0) useStored();
   }, [takeStored]);
 
+  // A re-read the person starts from an editor holding unsaved edits ("Load
+  // the newer version" after a refused save, Refresh, Check again) does not
+  // fold the card out from under them if it finds a newer card: they are
+  // working here. It stays open with Send off until a Save here
+  // (`openAnyway`; reset by the effect above if nothing newer turned up).
+  const refreshHere = () => {
+    if (dirty || typedPending || restored) setOpenAnyway(true);
+    actions.refresh();
+  };
+
   // A save or send that is taking a while says so, in the line under the
   // buttons that is always there, so nothing moves.
   const writing = busy === "save" || busy === "send";
@@ -1478,12 +1502,13 @@ export function DraftEditor(props: Props) {
   const hasRecipient = FIELDS.some(
     (f) => edit[f].length > 0 || splitAddresses(edit.typed[f]).length > 0,
   );
-  // A newer card exists for this draft and this one is still open only because
-  // it holds unsaved edits (it folds otherwise, see `Superseded`). Sending from
-  // the older card is off until the person chooses to work here, by editing or
-  // by "Edit here anyway". The server refuses a stale send anyway; this is so
-  // the older card does not LOOK sendable (QA, 2026-10-15).
-  const staleHere = props.superseded === true && !openAnyway;
+  // Another card is current for this draft and this one is open only because
+  // the person pressed "Show" to see the edits it keeps (it folds otherwise,
+  // see `Superseded`). Never Send from here until a Save makes this card the
+  // current one: two cards offering Send for one draft was the live review's
+  // finding (2026-10-17). The server refuses a stale send anyway; this is so
+  // the card does not LOOK sendable.
+  const staleHere = props.superseded === true;
   const canSend =
     keyMaySend && hasRecipient && !pendingBad && canEdit && verified && !sendDoubt && !staleHere;
   /** The one notice about the person's own edits, if any (draft-failure.ts). */
@@ -1702,18 +1727,41 @@ export function DraftEditor(props: Props) {
     focusNext.current = () => sigEditLink.current;
   };
 
-  // ---- a newer card exists ---------------------------------------------------
+  // ---- another card is current ---------------------------------------------
   //
-  // One line instead of a second full editor over the same draft. Never while
-  // this card holds unsaved work, and never during the frame in which the
-  // editor state has not caught up with the envelope (`editorPatch`), when
-  // `dirty` cannot be believed. "Edit here anyway" is the way back: the
-  // detection is an inference from the draft's history, not a host signal.
+  // One line instead of a second live editor over the same draft, with or
+  // without unsaved work here (2026-10-17: a card holding edits used to stay
+  // open, take in the newer body under them without a word, and offer Send
+  // again as soon as it was saved, next to the newer card's Send). Unsaved
+  // edits are KEPT, and the line says so: "Show" opens them, and a Save here
+  // makes this card the current one. "Open here" on a clean card takes the
+  // draft over at once. Never during the frame in which the editor state has
+  // not caught up with the envelope (`editorPatch`), when `dirty` cannot be
+  // believed.
   if (
-    props.superseded === true && !openAnyway && !dirty && !typedPending && !restored &&
-    editVersion.current === version && busy === null
+    props.superseded === true && !openAnyway && editVersion.current === version && busy === null
   ) {
-    return <Superseded fullscreen={fullscreen} actions={actions} onOpen={() => setOpenAnyway(true)} />;
+    const kept = dirty || typedPending || restored;
+    return (
+      <Superseded
+        fullscreen={fullscreen}
+        actions={actions}
+        at={props.supersededAt}
+        kept={kept}
+        onOpen={() => {
+          if (kept || !actions.takeOver) {
+            setOpenAnyway(true);
+            // A card folded by a claim has not read the draft since: lay the
+            // kept edits over what the mailbox holds now, so a Save here is
+            // not refused as made against an older copy. (A card folded by a
+            // newer revision read it when it folded, App.tsx#attentionCheck.)
+            if (props.supersededAt?.why === "taken") void actions.loadCurrent?.();
+          } else {
+            void actions.takeOver();
+          }
+        }}
+      />
+    );
   }
 
   const foldLink = (
@@ -2103,7 +2151,7 @@ export function DraftEditor(props: Props) {
           {err.recheck && (
             <>
               {" "}
-              <TextLink soft disabled={busy !== null} onClick={actions.refresh}>
+              <TextLink soft disabled={busy !== null} onClick={refreshHere}>
                 Check again
               </TextLink>
             </>
@@ -2111,7 +2159,7 @@ export function DraftEditor(props: Props) {
           {err.load && (
             <>
               {" "}
-              <TextLink soft disabled={busy !== null} onClick={actions.refresh}>
+              <TextLink soft disabled={busy !== null} onClick={refreshHere}>
                 Load the newer version
               </TextLink>
             </>
@@ -2128,7 +2176,7 @@ export function DraftEditor(props: Props) {
           <Notice tone="danger">
             Could not confirm this is the latest version of the draft, so saving
             and sending are off for now. Your text is still here.{" "}
-            <TextLink soft disabled={busy !== null} onClick={actions.refresh}>
+            <TextLink soft disabled={busy !== null} onClick={refreshHere}>
               Check again
             </TextLink>
           </Notice>
@@ -2144,8 +2192,9 @@ export function DraftEditor(props: Props) {
           Refresh), and this has to outlive them. */}
       {staleHere && (
         <p class="line" role="status">
-          A newer version of this draft is below. Sending from this card is off
-          until you edit here.
+          {elsewhereText(props.supersededAt)}. Your unsaved edits are shown on
+          top of the current version. Save here to make this card the current
+          one.
         </p>
       )}
 
@@ -2215,7 +2264,7 @@ export function DraftEditor(props: Props) {
               soft
               disabled={busy !== null}
               title="Re-read this draft from the mailbox"
-              onClick={actions.refresh}
+              onClick={refreshHere}
             >
               {busy === "refresh"
                 ? "Refreshing"
@@ -2281,7 +2330,7 @@ export function DraftEditor(props: Props) {
                 : sendDoubt
                   ? "Sending is off until you have checked whether the last send went out"
                   : staleHere
-                  ? "A newer version of this draft is below. Edit here to send from this card."
+                  ? "Another card is the current one for this draft. Save here first to send from this card."
                   : !verified
                   ? "Sending is off until this draft has been checked against the mailbox"
                   : !canEdit
@@ -2331,7 +2380,22 @@ export function DraftEditor(props: Props) {
  * empty (contract §1). Leaves fullscreen: one line on an empty page is not a
  * place to be left.
  */
-function Superseded(props: { fullscreen: boolean; actions: DraftActions; onOpen: () => void }) {
+/** Where the current card for this draft is, as a short phrase. */
+function elsewhereText(at: SupersededAt | undefined): string {
+  if (!at || at.why === "newer") return "Newer version below";
+  if (at.where === "above") return "Now edited in the card above";
+  if (at.where === "below") return "Now edited in the card below";
+  return "Now edited in another card";
+}
+
+function Superseded(props: {
+  fullscreen: boolean;
+  actions: DraftActions;
+  at?: SupersededAt;
+  /** This card holds unsaved edits, kept behind "Show". */
+  kept: boolean;
+  onOpen: () => void;
+}) {
   useEffect(() => {
     if (props.fullscreen) props.actions.setFullscreen(false);
   }, []);
@@ -2339,12 +2403,19 @@ function Superseded(props: { fullscreen: boolean; actions: DraftActions; onOpen:
     <div class="hdr">
       <div class="hdr-l">
         <span class="dot" data-tone="neutral" aria-hidden="true" />
-        <b>A newer version of this draft is below.</b>
+        <b>{elsewhereText(props.at)}</b>
+        {props.kept && <span class="muted">Your unsaved edits are kept here</span>}
       </div>
       <div class="hdr-r">
-        <TextLink onClick={props.onOpen} title="Open the current version of the draft in this card">
-          Edit here anyway
-        </TextLink>
+        {props.kept ? (
+          <TextLink onClick={props.onOpen} title="Show the unsaved edits this card keeps">
+            Show
+          </TextLink>
+        ) : (
+          <TextLink onClick={props.onOpen} title="Make this card the current one for the draft">
+            Open here
+          </TextLink>
+        )}
       </div>
     </div>
   );
