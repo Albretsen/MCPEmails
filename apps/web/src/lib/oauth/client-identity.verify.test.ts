@@ -341,10 +341,18 @@ test('u13: no Google/Grok look-alike host is Verified, and no alert is suppresse
   }
 });
 
-test('u13: an invalid-punycode Google host does not parse, so it can never be registered or Verified', async () => {
-  const uri = 'https://xn--oauth-redirect.googleusercontent.com/cb';
-  assert.equal(dcr('Google', uri).verification, 'unverified');
-  assert.equal(await isValidRedirectUri(uri), false);
+test('u13: an invalid-punycode Google host is never Verified, whether or not this Node version parses it', () => {
+  // Node 22's URL parser refuses this host; Node 24 (CI, .nvmrc) accepts it, and
+  // registration may then accept it too. Either way it is not one of Google's
+  // exact hosts, so it must stay Unverified with the Google alert.
+  for (const uri of [
+    'https://xn--oauth-redirect.googleusercontent.com/cb',
+    'https://xn--oauth-redirect.googleusercontent.com/r/user_bound_custom-mcp-111522063632794171720-mcpemails_com',
+  ]) {
+    const id = dcr('Google', uri);
+    assert.equal(id.verification, 'unverified', uri);
+    assert.notEqual(id.destinationVendor ?? null, 'google', uri);
+  }
 });
 
 test('u13: only URL forms that a browser itself sends to the real host are Verified', () => {
