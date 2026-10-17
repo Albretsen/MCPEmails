@@ -717,3 +717,40 @@ test('whole-name rule ignores filler: "Google Inc", "Gemini AI", "Grok 3", "Goog
   assert.equal(cli.verification, 'local');
   assert.equal(cli.impersonates, null);
 });
+
+test('a raw redirect URI with whitespace or control characters is never a vendor\'s (URL parsing would repair it)', () => {
+  const PIN = '/r/user_bound_custom-mcp-123-mcpemails_com';
+  for (const host of GOOGLE_HOSTS) {
+    for (const uri of [
+      `https://${host}/x/.\t./r/user_bound_custom-mcp-123-mcpemails_com`,
+      `https://${host}/x/.\n./r/user_bound_custom-mcp-123-mcpemails_com`,
+      `https://${host}/\t./r/user_bound_custom-mcp-123-mcpemails_com`,
+      `https://${host}${PIN}\t`,
+      `https://${host}${PIN}\n`,
+      `https://${host}${PIN}\r\n`,
+      `https://${host}${PIN} `,
+      ` https://${host}${PIN}`,
+      `\thttps://${host}${PIN}`,
+      `https://${host}${PIN}\u0000`,
+      `https://${host}${PIN}\u007f`,
+      `https://${host}${PIN}\u001b`,
+      `https://${host}/r/user_bound_custom-mcp-1\t23-mcpemails_com`,
+      `https://oauth-redirect\t.googleusercontent.com${PIN}`.replace('oauth-redirect', host.split('.')[0]),
+      `https://${host}${PIN}\u00a0`,
+      `https://${host}${PIN}\u2028`,
+    ]) {
+      assert.equal(vendorForWebRedirect(uri), null, JSON.stringify(uri));
+      const id = describeClientIdentity({ clientId: DYN, clientName: 'Claude', isCimd: false, redirectUri: uri });
+      assert.notEqual(id.verification, 'verified', JSON.stringify(uri));
+      assert.equal(id.destinationVendor, null, JSON.stringify(uri));
+    }
+    // The clean form still verifies.
+    assert.equal(vendorForWebRedirect(`https://${host}${PIN}`), 'google');
+  }
+  // Host-only vendors get the same rule; clean forms are unchanged.
+  for (const uri of ['https://grok.com/cb\t', 'https://claude.ai/api/mcp/auth_callback\n', ' https://chatgpt.com/cb']) {
+    assert.equal(vendorForWebRedirect(uri), null, JSON.stringify(uri));
+  }
+  assert.equal(vendorForWebRedirect('https://grok.com/cb'), 'xai');
+  assert.equal(vendorForWebRedirect('https://claude.ai/api/mcp/auth_callback'), 'anthropic');
+});

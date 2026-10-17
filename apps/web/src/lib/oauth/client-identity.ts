@@ -265,6 +265,10 @@ export function vendorForHost(hostname: string): VendorId | null {
  * path with no query or fragment.
  */
 export function vendorForWebRedirect(redirectUri: string): VendorId | null {
+  // URL parsing silently strips tabs, newlines and leading/trailing spaces
+  // (so "/x/.\t./r/<pin>" became a clean pinned path). A URI that needs that
+  // repair is never a vendor's.
+  if (typeof redirectUri !== 'string' || /[\s\x00-\x1f\x7f]/.test(redirectUri)) return null;
   let url: URL;
   try {
     url = new URL(redirectUri);
