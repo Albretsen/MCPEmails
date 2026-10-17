@@ -25,7 +25,9 @@
 // Extended after the live claude.ai QA of 2026-10-17 (`layoutChecks`), at
 // every width, inline:
 //   - the header's controls (Expand, Hide, ⋯) do not move when the status
-//     text beside them changes, and the header stays one line;
+//     text beside them changes, the From address gives way before the
+//     status, the status is never clipped, and (narrow: on a line of its
+//     own) the header's height does not change with it;
 //   - opening the ⋯ menu, and the turn-off confirm it leads to, moves none of
 //     To, Subject, the message, Save or Send (it is an overlay);
 //   - the delete confirm puts "Keep draft" under the point that pressed
@@ -49,7 +51,7 @@ import { fileURLToPath } from "node:url";
 
 const here = dirname(fileURLToPath(import.meta.url));
 const appRoot = resolve(here, "..");
-const WIDTHS = [280, 320, 360, 400, 420, 480, 600];
+const WIDTHS = [280, 300, 320, 360, 400, 420, 480, 600];
 const HOST_PORT = Number(process.env.GEOMETRY_HOST_PORT ?? 3019);
 const CDP_PORT = Number(process.env.GEOMETRY_CDP_PORT ?? 9339);
 const CHROME =
@@ -318,9 +320,24 @@ window.__g = {
       status.textContent = text;
       same("header controls with status " + JSON.stringify(text), ctl, this.controls());
     }
-    status.textContent = was;
+    // The address gives way before the status (re-test, 2026-10-17: "Saved
+    // 15:15 by you" was cut to "Saved 15:15 …" at 300px). Narrow (a card
+    // under 380px of content) the status always has a line of its own, so the
+    // header is the same height whatever it says; wider, the everyday
+    // statuses fit on the one line. Never clipped either way.
     const hdr = d.querySelector(".ed-hdr");
-    if (hdr.getBoundingClientRect().height > 24) bad.push("header wraps: " + Math.round(hdr.getBoundingClientRect().height) + "px tall");
+    const draftTop = hdr.querySelector(".hdr-l > b").getBoundingClientRect().top;
+    const narrow = d.querySelector(".card").clientWidth - 24 < 380;
+    const heights = new Set();
+    for (const text of ["Saved 15:15 by you", "Unsaved changes", "Saving…", "Saved 3:43 PM by the assistant", "Saved Oct 9, 3:43 PM by the assistant"]) {
+      status.textContent = text;
+      const below = status.getBoundingClientRect().top > draftTop + 4;
+      heights.add(Math.round(hdr.getBoundingClientRect().height));
+      if (status.scrollWidth > status.clientWidth + 1) bad.push("status clipped: " + JSON.stringify(text));
+      if (narrow !== below) bad.push("status " + (below ? "under" : "beside") + " Draft: " + JSON.stringify(text));
+    }
+    if (heights.size > 1) bad.push("header height changes with the status: " + JSON.stringify([...heights]));
+    status.textContent = was;
 
     // 2. The menu and the turn-off confirm cover the fields, never push them.
     const rows = this.fields();
