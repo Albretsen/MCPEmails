@@ -45,6 +45,27 @@ export const ENTRIES = [
   /* ── October 2026 ──────────────────────────────────────────── */
   {
     date: '2026-10-15',
+    kind: 'improved',
+    title: 'Faster searches across several folders',
+    body:
+      'Searching many IMAP folders at once is quicker, and a search that runs short of time now returns what it found so far and names the folders it skipped, where it used to time out with nothing.',
+  },
+  {
+    date: '2026-10-15',
+    kind: 'fixed',
+    title: 'Large inline attachments',
+    body:
+      'Files over about 3 MB passed inline to a draft or a send now go through up to the 10 MB limit, where they used to fail with an internal error.',
+  },
+  {
+    date: '2026-10-15',
+    kind: 'improved',
+    title: 'Clearer hints when a tool gets the wrong argument',
+    body:
+      'When an assistant passes an argument a tool does not take, the error now names the tool that does, so ChatGPT and other clients recover on the next call.',
+  },
+  {
+    date: '2026-10-15',
     kind: 'added',
     title: 'Attachments on drafts',
     body:
