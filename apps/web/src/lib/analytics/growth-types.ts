@@ -413,7 +413,7 @@ export type GrowthSignupPaceRow = {
  * `growth_usage_cap_overview(p_window_days, p_internal_emails, p_internal_domains)`.
  *
  * The state counts are a snapshot of now, bucketed by the SAME rules as
- * `workspace_action_allowance()` (150 per UTC month, first 7 days uncounted,
+ * `workspace_action_allowance()` (150 per UTC month, first 3 days uncounted,
  * exempt for every workspace that existed at launch) written set-based in
  * migration 20260912210000. Everything else is over the window. Internal
  * accounts are excluded in SQL, so these never include our own traffic.
@@ -427,7 +427,7 @@ export type GrowthSignupPaceRow = {
  * ones included.
  */
 export type GrowthUsageCapOverviewRow = {
-  /** Non-exempt Free, inside the first 7 days: nothing is counted yet. */
+  /** Non-exempt Free, inside the first 3 days: nothing is counted yet. */
   in_grace: number;
   /** Counting, under 50% of the allowance. */
   under_half: number;

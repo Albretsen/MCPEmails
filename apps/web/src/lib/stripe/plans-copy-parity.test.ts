@@ -8,8 +8,9 @@ import { FREE_ACTION_ALLOWANCE, FREE_ACTION_GRACE_DAYS, PLANS } from './plans.ts
 
 /**
  * The Free action allowance is quoted in three places that cannot import each
- * other: the SQL function that enforces it (c_free_cap / c_grace in
- * supabase/migrations/20260912200000_free_action_cap_150.sql), plans.ts (the
+ * other: the SQL function that enforces it (c_free_cap in
+ * supabase/migrations/20260912200000_free_action_cap_150.sql, the grace in
+ * free_action_grace_ends_at(), 20261017160000), plans.ts (the
  * constants and the Free feature list), and the translated pricing page copy.
  * This file pins the last two to each other. The first is pinned by
  * scripts/verify-action-allowance.sql, run by hand before the edge deploy.

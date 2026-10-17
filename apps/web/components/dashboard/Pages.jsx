@@ -2957,7 +2957,7 @@ function formatDate(iso) {
  * The same short absolute date as formatDate, but read in UTC.
  *
  * Every boundary of the action allowance is a UTC instant: the counting window
- * ends at UTC month start, and the grace week ends seven days after the
+ * ends at UTC month start, and the grace period ends three days after the
  * workspace row was created. formatDate renders in the viewer's own zone, which
  * anywhere west of Greenwich turns a reset at 2026-10-01T00:00:00Z into
  * "30 Sep", a day before it is true, on the one surface whose whole job is to
@@ -4245,7 +4245,7 @@ function BulkRunsPanel({ userRole }) {
  * ceiling) was not something a customer could buy their way out of. It is
  * back since 2026-09-12 for exactly one case, a metered Free workspace,
  * because that number is now public, sold, and the one the MCP edge function
- * refuses at: 150 email actions a month after a 7-day grace week
+ * refuses at: 150 email actions a month after a 3-day grace period
  * (docs/PLAN-free-action-cap-150.md). From 80% the strip is joined by a
  * banner that names the plan that removes the cap, carrying the offer to
  * checkout and to /pricing the same way the inbox-cap notice does. Paid plans

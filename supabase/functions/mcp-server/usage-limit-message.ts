@@ -71,11 +71,11 @@ export const USAGE_LIMIT_SUPPORT_EMAIL = "hello@mcpemails.com";
 
 /**
  * Days after signup during which a Free workspace's actions are not counted.
- * Mirrors `c_grace` in `workspace_action_allowance()` (migration
- * 20260912200000) and `FREE_ACTION_GRACE_DAYS` in plans.ts. Copy only: the
+ * Mirrors `free_action_grace_ends_at()` (migration 20261017160000;
+ * workspaces created before 2026-10-17 16:00 UTC keep 7 days) and `FREE_ACTION_GRACE_DAYS` in plans.ts. Copy only: the
  * SQL function is what actually decides.
  */
-export const FREE_ACTION_GRACE_DAYS = 7;
+export const FREE_ACTION_GRACE_DAYS = 3;
 
 /** Monthly price of the plan that removes the Free cap, as printed on /pricing. */
 export const FREE_CAP_UPGRADE_PRICE = "$9 per month";

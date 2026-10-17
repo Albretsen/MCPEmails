@@ -123,7 +123,7 @@ No. Codex es una superficie de terminal, así que usa una clave de API limitada 
 No. Cada mensaje se obtiene en tiempo real de tu proveedor para la petición que lo pidió y después se descarta. Solo se conserva la credencial cifrada del proveedor. [Por qué importa no almacenar correo](/blog/why-email-never-stored-matters) explica el razonamiento.
 
 **¿Cuánto cuesta?**
-El plan gratuito incluye un buzón conectado y 150 acciones de correo facturables por mes natural UTC, con los primeros 7 días sin contar. Ese límite mensual se aplica a los espacios de trabajo creados a partir del 2026-09-13; los creados antes están exentos. Los planes de pago añaden buzones y quitan el límite: consulta [precios](/pricing).
+El plan gratuito incluye un buzón conectado y 150 acciones de correo facturables por mes natural UTC, con los primeros 3 días sin contar. Ese límite mensual se aplica a los espacios de trabajo creados a partir del 2026-09-13; los creados antes están exentos. Los planes de pago añaden buzones y quitan el límite: consulta [precios](/pricing).
 
 ## Siguiente paso
 

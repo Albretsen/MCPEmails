@@ -27,7 +27,7 @@
       "cta": "Start gratis",
       "features": [
         "1 tilkoblet innboks",
-        "150 e-posthandlinger i måneden, de første 7 dagene telles ikke",
+        "150 e-posthandlinger i måneden, de første 3 dagene telles ikke",
         "Les, søk, organiser, skriv, planlegg og send",
         "Godkjenning før sending",
         "Bruksanalyse",
@@ -141,7 +141,7 @@
     "values": {
       "unlimited": "Ubegrenset",
       "unlimitedCompany": "Ubegrenset, også firmaets postkasser",
-      "actionsFree": "150 / måned, de første 7 dagene telles ikke",
+      "actionsFree": "150 / måned, de første 3 dagene telles ikke",
       "actionsPaid": "Ingen månedlig grense, rimelig bruk",
       "oneInbox": "1 innboks",
       "threeInboxes": "3 innbokser",
@@ -161,7 +161,7 @@
     "items": [
       {
         "q": "Hva får jeg på gratisplanen?",
-        "a": "Én tilkoblet innboks, for alltid, uten kort, og 150 e-posthandlinger per kalendermåned. De første 7 dagene etter registrering telles ikke, så du kan koble opp agenten og prøve alt før telleren starter. Agenten din får alle MCP-verktøyene vi leverer mot den postkassen: lese, søke, organisere, merke, skrive, planlegge og sende, i tillegg til godkjenning før sending per innboks. Når du vil ha postkasse nummer to eller tre, eller slippe den månedlige handlingsgrensen, er det Personal, til $9 i måneden."
+        "a": "Én tilkoblet innboks, for alltid, uten kort, og 150 e-posthandlinger per kalendermåned. De første 3 dagene etter registrering telles ikke, så du kan koble opp agenten og prøve alt før telleren starter. Agenten din får alle MCP-verktøyene vi leverer mot den postkassen: lese, søke, organisere, merke, skrive, planlegge og sende, i tillegg til godkjenning før sending per innboks. Når du vil ha postkasse nummer to eller tre, eller slippe den månedlige handlingsgrensen, er det Personal, til $9 i måneden."
       },
       {
         "q": "Hva gir Personal utover Free?",

@@ -4,7 +4,7 @@
  * The billing period an action allowance is measured over is defined ONCE, in
  * the SQL function `workspace_action_allowance(uuid)` (migration
  * 20260912200000_free_action_cap_150). It knows the Stripe cycle, the calendar
- * month fallback, the Free 7-day grace and the per-workspace exemption, and the
+ * month fallback, the Free 3-day grace and the per-workspace exemption, and the
  * MCP edge function, /api/usage and the dashboard all read its row (see
  * src/lib/usage/allowance.ts). The web-side copy of those rules that used to
  * live here is gone: it was the third definition of the same window, and the

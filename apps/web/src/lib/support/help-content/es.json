@@ -120,7 +120,7 @@
       "keywords": "límite de uso cuota tope 150 acciones plan gratuito free rechazado reinicio",
       "steps": [
         "Mira cuántas acciones has usado en Uso, dentro del panel.",
-        "Listar tus bandejas y todo lo que haces en el panel nunca cuenta, y no se cuenta nada en los primeros 7 días tras el registro.",
+        "Listar tus bandejas y todo lo que haces en el panel nunca cuenta, y no se cuenta nada en los primeros 3 días tras el registro.",
         "Reintentar no sirve. El límite se reinicia el día 1 del mes siguiente (UTC) y las automatizaciones en pausa se reanudan solas.",
         "Personal, Pro y Team no tienen límite mensual, sujeto a un uso justo.",
         "Los espacios creados antes del 2026-09-12 no se miden. Si ves el límite en uno de ellos, escríbenos."

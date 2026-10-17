@@ -95,7 +95,7 @@ Pricing
 Pick the plan by counting mailboxes
 Free, Personal and Pro are all one login. What changes is how many mailboxes that login can connect.
 Free: one mailbox
-Start with the busiest address. 150 email actions a month, the first 7 days uncounted, no card required.
+Start with the busiest address. 150 email actions a month, the first 3 days uncounted, no card required.
 Personal, $9 a month: up to three
 For a company with two or three addresses. No monthly action cap, a higher burst rate limit and email support.
 Pro, $15 a month: four or more

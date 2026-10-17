@@ -27,7 +27,7 @@
       "cta": "Empieza gratis",
       "features": [
         "1 bandeja conectada",
-        "150 acciones de correo al mes, los primeros 7 días no cuentan",
+        "150 acciones de correo al mes, los primeros 3 días no cuentan",
         "Leer, buscar, organizar, redactar, programar y enviar",
         "Aprobación antes de enviar",
         "Analíticas de uso",
@@ -141,7 +141,7 @@
     "values": {
       "unlimited": "Ilimitado",
       "unlimitedCompany": "Ilimitado, buzones de empresa incluidos",
-      "actionsFree": "150 / mes, los primeros 7 días no cuentan",
+      "actionsFree": "150 / mes, los primeros 3 días no cuentan",
       "actionsPaid": "Sin tope mensual, uso justo",
       "oneInbox": "1 bandeja",
       "threeInboxes": "3 bandejas",
@@ -161,7 +161,7 @@
     "items": [
       {
         "q": "¿Qué incluye el plan gratuito?",
-        "a": "Una bandeja conectada, para siempre y sin tarjeta, con 150 acciones de correo por mes natural. Los primeros 7 días tras registrarte no cuentan, así que puedes conectar tu agente y probarlo todo antes de que empiece el contador. Tu agente dispone de todas las herramientas MCP que publicamos sobre ese buzón: leer, buscar, organizar, etiquetar, redactar, programar y enviar, además de la aprobación antes de enviar, configurable por bandeja. Cuando quieras un segundo o un tercer buzón, o quitar el tope mensual de acciones, eso es Personal, por $9 al mes."
+        "a": "Una bandeja conectada, para siempre y sin tarjeta, con 150 acciones de correo por mes natural. Los primeros 3 días tras registrarte no cuentan, así que puedes conectar tu agente y probarlo todo antes de que empiece el contador. Tu agente dispone de todas las herramientas MCP que publicamos sobre ese buzón: leer, buscar, organizar, etiquetar, redactar, programar y enviar, además de la aprobación antes de enviar, configurable por bandeja. Cuando quieras un segundo o un tercer buzón, o quitar el tope mensual de acciones, eso es Personal, por $9 al mes."
       },
       {
         "q": "¿Qué añade Personal sobre Free?",

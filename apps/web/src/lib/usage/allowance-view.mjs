@@ -13,7 +13,7 @@
  *             drawn), or no allowance at all (the RPC failed, or an unknown
  *             plan). A plain call count, exactly the tile that was there
  *             before the allowance existed.
- *   grace     a metered Free workspace in its first 7 days. Actions are not
+ *   grace     a metered Free workspace in its first 3 days. Actions are not
  *             counted yet, and the tile says until when.
  *   counting  a metered Free workspace past its grace week: used of cap, a
  *             bar, amber from 80%, red at 100%.

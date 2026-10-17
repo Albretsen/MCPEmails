@@ -120,7 +120,7 @@
       "keywords": "usage limit allowance cap 150 actions free plan refused reset quota",
       "steps": [
         "See how many actions you have used under Usage in the dashboard.",
-        "Listing your inboxes and anything you do in the dashboard are never counted, and nothing is counted in your first 7 days after signup.",
+        "Listing your inboxes and anything you do in the dashboard are never counted, and nothing is counted in your first 3 days after signup.",
         "Retrying does not help. The allowance resets on the 1st of the next month (UTC), and paused automations resume on their own.",
         "Personal, Pro and Team have no monthly cap, subject to fair use.",
         "Workspaces created before 2026-09-12 are not metered. If you see the limit on one of those, write to us."

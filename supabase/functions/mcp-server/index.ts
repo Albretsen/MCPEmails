@@ -3112,7 +3112,7 @@ async function writeActionUsage(
 // One SQL function, `workspace_action_allowance(p_workspace_id)` (migration
 // 20260912200000, docs/PLAN-free-action-cap-150.md), decides everything: the
 // plan, whether the workspace is exempt (early member, comped owner, support
-// exemption), the cap, the counting window, the 7-day grace on Free, used and
+// exemption), the cap, the counting window, the 3-day grace on Free, used and
 // remaining. This section READS that row and acts on it; it derives nothing
 // of its own. The window used to be computed here too, and in
 // billing-window.ts, and in /api/usage, and the three disagreed; that is why
@@ -3120,7 +3120,7 @@ async function writeActionUsage(
 //
 // What the function encodes, for the reader who does not open the migration:
 // Free workspaces created after 2026-09-12 get 150 billable actions per UTC
-// calendar month, nothing in their first 7 days counted. Every workspace that
+// calendar month, nothing in their first 3 days counted. Every workspace that
 // existed before that date is an early member and is never metered. Paid plans
 // keep silent abuse ceilings (25k / 100k / 500k per Stripe period, `c_cap_*`
 // in the function, `maxMonthlyToolCalls` in plans.ts) that are NOT a pricing
