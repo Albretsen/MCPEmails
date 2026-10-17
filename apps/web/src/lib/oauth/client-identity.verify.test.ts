@@ -295,8 +295,20 @@ test('a URL inside the client state does not break Allow for a native client', (
 // Independent bypass attempts on the new exact-host vendors and the new
 // whole-name impersonation rule. Attacker hosts are reserved example domains.
 
+const U13_PIN = '/r/user_bound_custom-mcp-111522063632794171720-mcpemails_com';
+
 test('u13: no Google/Grok look-alike host is Verified, and no alert is suppressed', () => {
+  // Google look-alikes carry the PINNED path, so only the host is wrong.
   const LOOKALIKES = [
+    `https://oauth-redirect.googleusercontent.com.${U13_PIN}`,
+    `https://oauth-redirect.googleusercontent.com@evil.example${U13_PIN}`,
+    `https://oauth-redirect.googleusercontent.com%2eevil.example${U13_PIN}`,
+    `https://oauth-redirect.googleusercontent.com.evil.example${U13_PIN}`,
+    `https://evil.googleusercontent.com${U13_PIN}`,
+    `https://googleusercontent.com${U13_PIN}`,
+    `https://oauth-redirect-evil.googleusercontent.com${U13_PIN}`,
+    `https://\u043Eauth-redirect.googleusercontent.com${U13_PIN}`,
+    `https://evil.example${U13_PIN}`,
     'https://oauth-redirect.googleusercontent.com./cb', // trailing dot
     'https://oauth-redirect.googleusercontent.com@evil.example/cb', // userinfo
     'https://oauth-redirect.googleusercontent.com%2eevil.example/cb', // %2e in host
@@ -355,8 +367,49 @@ test('u13: only URL forms that a browser itself sends to the real host are Verif
   }
 });
 
+test('u13: the Google pinned path cannot be imitated (case, encoding, trailing chars, unicode digits, params, dot segments)', () => {
+  const H = 'https://oauth-redirect.googleusercontent.com';
+  const BAD = [
+    `${H}/cb`, `${H}/r/evil-project`, `${H}/r/user_bound_custom-mcp-1-evil_com`,
+    `${H}/R${U13_PIN.slice(2)}`, `${H}${U13_PIN.toUpperCase()}`,
+    `${H}${U13_PIN}//`, `${H}/${U13_PIN}`, `${H}${U13_PIN}?`, `${H}${U13_PIN}#`, `${H}${U13_PIN}?x=1`, `${H}${U13_PIN}#x`,
+    `${H}${U13_PIN};x`, `${H}${U13_PIN}%2F`, `${H}${U13_PIN}%20`, `${H}${U13_PIN}%00`, `${H}${U13_PIN}%23`, `${H}${U13_PIN}x`, `${H}${U13_PIN}.evil`,
+    `${H}${U13_PIN.replace('_bound', '%5Fbound')}`, `${H}${U13_PIN.replace('_bound', '%255Fbound')}`,
+    `${H}${U13_PIN.replace('/r/', '/r%2F')}`, `${H}${U13_PIN.replace('111', '\u0661\u0661\u0661')}`, `${H}${U13_PIN.replace('111', '\uFF11\uFF11\uFF11')}`,
+    `${H}${U13_PIN.replace('-mcp-1', '-mcp--1')}`, `${H}${U13_PIN.replace(/\d+/, '')}`,
+    `${H}/x/..${U13_PIN}`, `${H}/x/%2e%2e${U13_PIN}`, `${H}/x/.%2E${U13_PIN}`, `${H}\\${U13_PIN.slice(1)}`,
+    `${H}/r/user_bound_custom-mcp-1-mcpemails_com/../evil`, `${H}/r/user_bound_custom-mcp-1-mcpemails_com/r/evil`,
+  ];
+  for (const uri of BAD) {
+    const id = dcr('Google', uri);
+    assert.equal(id.verification, 'unverified', uri);
+    assert.notEqual(id.displayName, 'Google', uri);
+    assert.equal(id.impersonates, 'Google', uri);
+  }
+});
+
+test('u13: legitimate Gemini redirects (r and a, all three hosts, optional trailing slash) are Verified', () => {
+  for (const host of ['oauth-redirect', 'oauth-redirect-test', 'oauth-redirect-sandbox']) {
+    for (const seg of ['r', 'a']) {
+      for (const tail of ['', '/']) {
+        const uri = `https://${host}.googleusercontent.com/${seg}/user_bound_custom-mcp-111522063632794171720-mcpemails_com${tail}`;
+        for (const name of ['Google', 'MCP Emails']) {
+          const id = dcr(name, uri);
+          assert.equal(id.verification, 'verified', `${name} -> ${uri}`);
+          assert.equal(id.displayName, name, uri);
+          assert.equal(id.impersonates, null, uri);
+          assert.equal(id.destinationVendor, 'google', uri);
+        }
+      }
+    }
+  }
+});
+
 test('u13: whole-name evasions of Google/Gemini/Grok/xAI still raise the alert', () => {
   for (const name of [
+    'Google\u2122', 'Google(TM)', 'Google Inc', 'Google Inc.', 'Google LLC', 'Google Ltd.', 'Gemini AI', 'Gemini Official',
+    'Grok 3', 'Grok AI', 'Grok\u2122 3', 'Grok \u0663', 'xAI Grok Assistant', 'xAI Inc', 'Google\u200D Inc', 'G00gle Inc',
+    '\uFF27\uFF2F\uFF2F\uFF27\uFF2C\uFF25\u3000\uFF29\uFF2E\uFF23',
     'Google.', 'Google ®', 'Googlе', 'Goo​gle', 'Goo‍gle', 'Goo­gle', 'Goog1e',
     'Gооgle', 'ɢoogle'.replace('ɢ', 'G'), 'GEMINI', 'Gemini.', 'Grоk', 'X-AI', 'x ai', 'Grok xAI',
   ]) {
@@ -368,9 +421,10 @@ test('u13: whole-name evasions of Google/Gemini/Grok/xAI still raise the alert',
 });
 
 test('u13: names the whole-name rule lets through still never become the heading or Verified', () => {
-  // Accepted false negatives: the heading is the attacker host with the amber
+  // Accepted false negatives after filler stripping (glued filler, or a
+  // longer phrase): the heading is the attacker host with the amber
   // Unverified badge; only the red alert is missing.
-  for (const name of ['Google™', 'Google Inc', 'Google LLC', 'Gemini AI', 'Grok 3', 'Grok AI', 'xAI Grok Assistant', 'Sign in with Google']) {
+  for (const name of ['GoogleTM', 'GoogleInc', 'GrokAI', 'Sign in with Google', 'Google Account', 'Google Login']) {
     const id = dcr(name, 'https://attacker.example/cb');
     assert.equal(id.verification, 'unverified', name);
     assert.equal(id.displayName, 'attacker.example', name);
@@ -379,7 +433,12 @@ test('u13: names the whole-name rule lets through still never become the heading
 });
 
 test('u13: honest third-party names carrying Google/Gmail/Gemini/grok are not called impersonators', () => {
-  for (const name of ['Google Sheets MCP', 'Gmail via Zapier', 'Gmail', 'Grokking Mail', 'Gemini CLI helper', 'Google Drive Sync', 'Grok Mail Helper']) {
+  for (const name of [
+    'Google Sheets MCP', 'Gmail via Zapier', 'Gmail', 'Grokking Mail', 'Gemini CLI helper', 'Google Drive Sync', 'Grok Mail Helper',
+    // Filler stripping must not turn filler-only or filler-plus-generic names into a vendor.
+    'AI Mail App', 'Official Gmail Backup Tool', 'Inc Mail', 'App 2', 'AI', 'Inc', 'App', 'TM', 'Official App', 'Mail AI',
+    'Official MCP App', 'Ltd Mail Co', 'My App 2000', 'Gmail App', 'Gmail Official', 'Gemini 2.5 Pro', 'Grok 4 Heavy', 'Google AI Studio', 'Appgoogle',
+  ]) {
     const id = dcr(name, 'https://tool.example/cb');
     assert.equal(id.verification, 'unverified', name);
     assert.equal(id.impersonates, null, name);
