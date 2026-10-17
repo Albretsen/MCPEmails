@@ -403,3 +403,171 @@ test('percent-decoding runs to a fixed point well past two rounds', () => {
   for (let i = 0; i < 6; i++) enc = encodeURIComponent(enc);
   assert.equal(isSafeRedirectScheme(`cursor://x/cb?u=${enc}`), false);
 });
+
+// ── Google and xAI Grok as verified vendors (2026-10-17) ────────────────────
+// Production registrations: "Google" on three oauth-redirect*.googleusercontent
+// .com hosts, "Grok" on grok.com. Both showed as Unverified before.
+
+const GOOGLE_HOSTS = [
+  'oauth-redirect.googleusercontent.com',
+  'oauth-redirect-test.googleusercontent.com',
+  'oauth-redirect-sandbox.googleusercontent.com',
+];
+
+test('LEGIT: Google via DCR on each oauth-redirect*.googleusercontent.com host is verified, heading "Google", no alert', () => {
+  for (const host of GOOGLE_HOSTS) {
+    const id = describeClientIdentity({ clientId: DYN, clientName: 'Google', isCimd: false, redirectUri: `https://${host}/callback` });
+    assert.equal(id.verification, 'verified', host);
+    assert.equal(id.displayName, 'Google', host);
+    assert.equal(id.selfReportedName, 'Google', host);
+    assert.equal(id.destinationLabel, host);
+    assert.equal(id.destinationVendor, 'google', host);
+    assert.equal(id.destinationKind, 'web', host);
+    assert.equal(id.impersonates, null, host);
+    assert.equal(vendorForHost(host), 'google', host);
+    assert.equal(vendorForHost(host.toUpperCase()), 'google', 'hostnames compare case-insensitively');
+  }
+});
+
+test('LEGIT: Grok via DCR on grok.com is verified, heading "Grok", no alert', () => {
+  const id = describeClientIdentity({ clientId: DYN, clientName: 'Grok', isCimd: false, redirectUri: 'https://grok.com/oauth/callback' });
+  assert.equal(id.verification, 'verified');
+  assert.equal(id.displayName, 'Grok');
+  assert.equal(id.destinationLabel, 'grok.com');
+  assert.equal(id.destinationVendor, 'xai');
+  assert.equal(id.impersonates, null);
+  assert.equal(vendorForHost('grok.com'), 'xai');
+});
+
+test('a user-chosen connector name on a Google or Grok host is still verified with no alert', () => {
+  for (const redirectUri of [`https://${GOOGLE_HOSTS[0]}/cb`, 'https://grok.com/cb']) {
+    for (const clientName of ['MCP Emails', 'Claude', 'Grok', 'Google']) {
+      const id = describeClientIdentity({ clientId: DYN, clientName, isCimd: false, redirectUri });
+      assert.equal(id.verification, 'verified', `${clientName} -> ${redirectUri}`);
+      assert.equal(id.impersonates, null, `${clientName} -> ${redirectUri}`);
+    }
+  }
+});
+
+test('THE ATTACK: "Google", "Gemini", "Grok" or "xAI" on a non-vendor host is unverified with an impersonation alert', () => {
+  const cases: Array<[string, string]> = [
+    ['Google', 'Google'],
+    ['Gemini', 'Google'],
+    ['Google Gemini', 'Google'],
+    ['GOOGLE', 'Google'],
+    ['G o o g l e', 'Google'],
+    ['G00gle', 'Google'],
+    ['Gооgle', 'Google'], // Cyrillic о
+    ['Ｇｏｏｇｌｅ', 'Google'],
+    ['Grok', 'Grok (xAI)'],
+    ['xAI', 'Grok (xAI)'],
+    ['x.ai', 'Grok (xAI)'],
+    ['xAI Grok', 'Grok (xAI)'],
+    ['Grok-xAI', 'Grok (xAI)'],
+  ];
+  for (const [clientName, label] of cases) {
+    const id = describeClientIdentity({ clientId: DYN, clientName, isCimd: false, redirectUri: 'https://attacker.example/cb' });
+    assert.equal(id.verification, 'unverified', clientName);
+    assert.equal(id.displayName, 'attacker.example', clientName);
+    assert.equal(id.selfReportedName, clientName, clientName);
+    assert.equal(id.impersonates, label, clientName);
+  }
+  // On an unknown app scheme too.
+  const onScheme = describeClientIdentity({ clientId: DYN, clientName: 'Grok', isCimd: false, redirectUri: 'grokbot://oauth/callback' });
+  assert.equal(onScheme.verification, 'unverified');
+  assert.equal(onScheme.impersonates, 'Grok (xAI)');
+});
+
+test('third-party tools that merely mention Google, Gmail, Gemini or grok are unverified but never called impersonators', () => {
+  for (const [clientName, redirectUri] of [
+    ['Google Sheets MCP', 'https://sheets-mcp.example/oauth/callback'],
+    ['Gmail via Zapier', 'https://zapier.example/oauth/cb'],
+    ['Gmail', 'https://gmail-tool.example/cb'],
+    ['Gemini Mail Assistant', 'https://assistant.example/cb'],
+    ['Grokking Mail', 'https://grokking.example/cb'],
+    ['My Google Workspace Bot', 'https://bot.example/cb'],
+    ['Googler tools', 'https://tools.example/cb'],
+  ]) {
+    const id = describeClientIdentity({ clientId: DYN, clientName, isCimd: false, redirectUri });
+    assert.equal(id.verification, 'unverified', clientName);
+    assert.equal(id.displayName, new URL(redirectUri).host, clientName);
+    assert.equal(id.selfReportedName, clientName, clientName);
+    assert.equal(id.impersonates, null, clientName);
+    assert.equal(vendorForName(clientName), null, clientName);
+  }
+});
+
+test('vendorForName: Google and xAI only as the whole name', () => {
+  for (const name of ['Google', 'Gemini', 'Google Gemini', 'google-gemini']) assert.equal(vendorForName(name), 'google', name);
+  for (const name of ['Grok', 'xAI', 'XAI', 'xAI Grok']) assert.equal(vendorForName(name), 'xai', name);
+  for (const name of ['Google Sheets MCP', 'Gmail', 'Gemini CLI MCP Client', 'Grokking', 'Grok 4 mail', 'Maxai', 'Exaile']) {
+    assert.equal(vendorForName(name), null, name);
+  }
+});
+
+test('Google and Grok look-alike hosts (suffix, prefix, embedded) are not verified', () => {
+  for (const host of [
+    'evil.googleusercontent.com',
+    'lh3.googleusercontent.com',
+    'googleusercontent.com',
+    'oauth-redirect.googleusercontent.com.evil.example',
+    'oauth-redirect.googleusercontent.co',
+    'xoauth-redirect.googleusercontent.com',
+    'oauth-redirect-evil.googleusercontent.com',
+    'grok.com.evil.example',
+    'xgrok.com',
+    'www.grok.com',
+    'evil.grok.com',
+    'x.com',
+    'twitter.com',
+  ]) {
+    assert.equal(vendorForHost(host), null, host);
+    const id = describeClientIdentity({ clientId: DYN, clientName: host.includes('grok') ? 'Grok' : 'Google', isCimd: false, redirectUri: `https://${host}/cb` });
+    assert.equal(id.verification, 'unverified', host);
+    assert.equal(id.displayName, host, host);
+    assert.notEqual(id.impersonates, null, host);
+  }
+  // A Google host in the path, userinfo or query does not count either.
+  for (const uri of [
+    'https://attacker.example/oauth-redirect.googleusercontent.com/cb',
+    'https://oauth-redirect.googleusercontent.com@attacker.example/cb',
+    'https://attacker.example/cb?h=grok.com',
+  ]) {
+    const id = describeClientIdentity({ clientId: DYN, clientName: 'Google', isCimd: false, redirectUri: uri });
+    assert.equal(id.verification, 'unverified', uri);
+    assert.equal(id.displayName, 'attacker.example', uri);
+    assert.equal(id.impersonates, 'Google', uri);
+  }
+});
+
+test('"Cursor" on the grokbot:// scheme keeps its impersonation alert (production registrations, 2026-10-17)', () => {
+  const id = describeClientIdentity({ clientId: DYN, clientName: 'Cursor', isCimd: false, redirectUri: 'grokbot://oauth/callback' });
+  assert.equal(id.verification, 'unverified');
+  assert.equal(id.destinationKind, 'other');
+  assert.equal(id.destinationLabel, 'grokbot:');
+  assert.equal(id.displayName, 'grokbot:');
+  assert.equal(id.selfReportedName, 'Cursor');
+  assert.equal(id.impersonates, 'Cursor');
+  assert.deepEqual(describeRedirectDestination('grokbot://oauth/callback'), { kind: 'app', scheme: 'grokbot', native: false, webHost: null });
+});
+
+test('the existing Claude / ChatGPT / Cursor / VS Code matrix is unchanged by the new vendors', () => {
+  const matrix: Array<[string, string, string, string | null]> = [
+    ['Claude', 'https://claude.ai/api/mcp/auth_callback', 'verified', null],
+    ['ChatGPT', 'https://chatgpt.com/connector/oauth/x', 'verified', null],
+    ['Cursor', 'cursor://anysphere.cursor-mcp/oauth/callback', 'local', null],
+    ['Visual Studio Code', 'https://vscode.dev/redirect', 'verified', null],
+    ['Visual Studio Code', 'vscode://vscode.github-authentication/did-authenticate', 'local', null],
+    ['Claude', 'https://attacker.example/cb', 'unverified', 'Claude (Anthropic)'],
+    ['ChatGPT', 'https://attacker.example/cb', 'unverified', 'ChatGPT (OpenAI)'],
+    ['Cursor', 'https://attacker.example/cb', 'unverified', 'Cursor'],
+    ['VS Code', 'https://attacker.example/cb', 'unverified', 'Visual Studio Code'],
+    ['Claude', `https://${GOOGLE_HOSTS[0]}/cb`, 'verified', null],
+    ['Claude', 'cursor://x/cb', 'unverified', 'Claude (Anthropic)'],
+  ];
+  for (const [clientName, redirectUri, verification, impersonates] of matrix) {
+    const id = describeClientIdentity({ clientId: DYN, clientName, isCimd: false, redirectUri });
+    assert.equal(id.verification, verification, `${clientName} -> ${redirectUri}`);
+    assert.equal(id.impersonates, impersonates, `${clientName} -> ${redirectUri}`);
+  }
+});

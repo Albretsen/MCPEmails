@@ -38,7 +38,8 @@
 //                               (those are refused outright in
 //                               redirect-scheme.ts; this is the backstop).
 //   impersonates  the self-asserted name uses a known vendor's name (Claude,
-//                 ChatGPT, Cursor, MCP Emails, ...) while the code goes to a
+//                 ChatGPT, Cursor, MCP Emails, ...; Google and Grok only as the
+//                 whole name) while the code goes to a
 //                 web host or app scheme that is NOT that vendor's. Not raised
 //                 when the destination is a known vendor HOST (the code goes
 //                 to that vendor regardless) or a loopback port. The screen
@@ -51,17 +52,22 @@
 //   Claude (claude.ai DCR)          "Claude", Verified · claude.ai
 //   ChatGPT (chatgpt.com DCR/CIMD)  "ChatGPT", Verified · chatgpt.com
 //   Cursor (cursor:// DCR)          "Cursor", On this device · cursor://
+//   Google (Gemini, DCR)            "Google", Verified · oauth-redirect.googleusercontent.com
+//                                   (also oauth-redirect-test. and -sandbox.)
+//   Grok (grok.com DCR)             "Grok", Verified · grok.com
 //   Claude Code / Codex / VS Code   name, On this device · 127.0.0.1:port
 //
 // Hosts are compared EXACTLY against URL.hostname, never by substring or
 // suffix (see OPENAI_HOSTS in consent-presets.ts for the incident that taught
-// that). Pure: no node: imports, so the rule is unit testable and the same
+// that). This matters most for Google: anyone can serve content from SOME
+// googleusercontent.com subdomain, so only the three oauth-redirect* hosts
+// Google's connector actually registers are trusted, never the suffix. Pure: no node: imports, so the rule is unit testable and the same
 // object can be handed to the client component.
 // ---------------------------------------------------------------------------
 
 import { isBrowserHandoffScheme, isSafeRedirectScheme } from '@/lib/oauth/redirect-scheme';
 
-export type VendorId = 'anthropic' | 'openai' | 'cursor' | 'vscode' | 'mcpemails';
+export type VendorId = 'anthropic' | 'openai' | 'cursor' | 'vscode' | 'mcpemails' | 'google' | 'xai';
 
 interface Vendor {
   id: VendorId;
@@ -71,6 +77,13 @@ interface Vendor {
   substrings: readonly string[];
   /** Matched only as the start of a word: common English words ("cursor"). */
   words: readonly string[];
+  /**
+   * Matched only when the WHOLE name is made of these words ("Google",
+   * "Google Gemini", "G o o g l e"), never when they are part of a longer
+   * name ("Google Sheets MCP", "Gmail via Zapier"). For vendors whose name
+   * third-party products legitimately carry.
+   */
+  names?: readonly string[];
   /** Exact https hostnames that vendor receives codes on. */
   hosts: ReadonlySet<string>;
   /** Native-app schemes that vendor registers (without the colon). */
@@ -121,6 +134,42 @@ const VENDORS: readonly Vendor[] = [
     hosts: new Set(['mcpemails.com', 'www.mcpemails.com']),
     schemes: new Set(),
   },
+  // Google and xAI only match a name that IS the vendor's name. Countless
+  // third-party tools carry "Google"/"Gmail"/"Gemini" in their name ("Google
+  // Sheets MCP", "Gmail via Zapier") and "grok" is an English word ("Grokking
+  // Mail"), so substring or word-start matching (as for claude/cursor) would
+  // paint honest connectors red. A client calling itself exactly "Google",
+  // "Gemini", "Grok" or "xAI" on a destination those vendors do not own is
+  // the impersonation that matters, and is flagged. "Gmail" alone is not
+  // flagged: Google's connector registers as "Google", and "Gmail" is the
+  // generic name of many Gmail connectors. Any other host is still Unverified
+  // with the host as heading; this only decides the red alert.
+  {
+    id: 'google',
+    label: 'Google',
+    substrings: [],
+    words: [],
+    names: ['google', 'gemini'],
+    // Exact hosts seen on Google's DCR registrations (2026-10-17). Never the
+    // googleusercontent.com suffix: other subdomains serve arbitrary content.
+    hosts: new Set([
+      'oauth-redirect.googleusercontent.com',
+      'oauth-redirect-test.googleusercontent.com',
+      'oauth-redirect-sandbox.googleusercontent.com',
+    ]),
+    schemes: new Set(),
+  },
+  {
+    id: 'xai',
+    label: 'Grok (xAI)',
+    substrings: [],
+    words: [],
+    names: ['grok', 'xai'],
+    // Only grok.com is observed. No www./x.com/twitter.com: no evidence they
+    // receive codes. The grokbot: scheme is not in NATIVE_APP_SCHEMES either.
+    hosts: new Set(['grok.com']),
+    schemes: new Set(),
+  },
 ];
 
 const VENDOR_BY_ID = new Map(VENDORS.map((v) => [v.id, v]));
@@ -158,6 +207,8 @@ export function vendorForName(name: string | null | undefined): VendorId | null 
   for (const vendor of VENDORS) {
     if (vendor.substrings.some((s) => squashed.includes(s))) return vendor.id;
     if (vendor.words.some((w) => tokens.some((t) => t.startsWith(w)) || squashed === w)) return vendor.id;
+    const names = vendor.names;
+    if (names && (names.includes(squashed) || (tokens.length > 0 && tokens.every((t) => names.includes(t))))) return vendor.id;
   }
   return null;
 }
