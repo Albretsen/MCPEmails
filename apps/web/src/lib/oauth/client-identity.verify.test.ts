@@ -337,10 +337,10 @@ test('u13: an invalid-punycode Google host does not parse, so it can never be re
 
 test('u13: only URL forms that a browser itself sends to the real host are Verified', () => {
   const SAME_HOST = [
-    'https://OAUTH-REDIRECT.GOOGLEUSERCONTENT.COM/cb',
-    'HTTPS://oauth-redirect-test.googleusercontent.com/cb',
-    'https://user@oauth-redirect-sandbox.googleusercontent.com/cb',
-    'https://oauth-redirect%2Egoogleusercontent.com/cb',
+    'https://OAUTH-REDIRECT.GOOGLEUSERCONTENT.COM/r/user_bound_custom-mcp-111522063632794171720-mcpemails_com',
+    'HTTPS://oauth-redirect-test.googleusercontent.com/r/user_bound_custom-mcp-111522063632794171720-mcpemails_com',
+    'https://user@oauth-redirect-sandbox.googleusercontent.com/r/user_bound_custom-mcp-111522063632794171720-mcpemails_com',
+    'https://oauth-redirect%2Egoogleusercontent.com/r/user_bound_custom-mcp-111522063632794171720-mcpemails_com',
     'https://GROK.COM/cb',
     'https://grok%2Ecom/cb',
     'https://ｇｒｏｋ.com/cb', // full-width, IDNA-maps to grok.com
@@ -405,7 +405,9 @@ test('u13: the new vendors do not change the Claude/ChatGPT/Cursor/VS Code matri
     ['Visual Studio Code', 'http://127.0.0.1:33418/', 'local', null],
     ['Claude', 'https://attacker.example/cb', 'unverified', 'Claude (Anthropic)'],
     ['Cursor', 'https://attacker.example/cb', 'unverified', 'Cursor'],
-    ['Claude', `https://oauth-redirect.googleusercontent.com/cb`, 'verified', null],
+    ['Claude', `https://oauth-redirect.googleusercontent.com/r/user_bound_custom-mcp-111522063632794171720-mcpemails_com`, 'verified', null],
+    // Not the pinned path: Google's shared redirect, another project's code.
+    ['Claude', `https://oauth-redirect.googleusercontent.com/cb`, 'unverified', 'Claude (Anthropic)'],
   ];
   for (const [name, uri, verification, imp] of expect) {
     const id = dcr(name, uri);

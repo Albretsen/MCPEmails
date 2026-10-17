@@ -22,6 +22,7 @@ import {
   describeRedirectDestination,
   vendorForHost,
   vendorForName,
+  vendorForWebRedirect,
 } from '@/lib/oauth/client-identity';
 
 // ── Scheme block-list ───────────────────────────────────────────────────────
@@ -408,6 +409,9 @@ test('percent-decoding runs to a fixed point well past two rounds', () => {
 // Production registrations: "Google" on three oauth-redirect*.googleusercontent
 // .com hosts, "Grok" on grok.com. Both showed as Unverified before.
 
+// The pinned path every real Google registration uses (2026-10-17).
+const GOOGLE_PATH = '/r/user_bound_custom-mcp-111522063632794171720-mcpemails_com';
+
 const GOOGLE_HOSTS = [
   'oauth-redirect.googleusercontent.com',
   'oauth-redirect-test.googleusercontent.com',
@@ -416,7 +420,7 @@ const GOOGLE_HOSTS = [
 
 test('LEGIT: Google via DCR on each oauth-redirect*.googleusercontent.com host is verified, heading "Google", no alert', () => {
   for (const host of GOOGLE_HOSTS) {
-    const id = describeClientIdentity({ clientId: DYN, clientName: 'Google', isCimd: false, redirectUri: `https://${host}/callback` });
+    const id = describeClientIdentity({ clientId: DYN, clientName: 'Google', isCimd: false, redirectUri: `https://${host}${GOOGLE_PATH}` });
     assert.equal(id.verification, 'verified', host);
     assert.equal(id.displayName, 'Google', host);
     assert.equal(id.selfReportedName, 'Google', host);
@@ -440,7 +444,7 @@ test('LEGIT: Grok via DCR on grok.com is verified, heading "Grok", no alert', ()
 });
 
 test('a user-chosen connector name on a Google or Grok host is still verified with no alert', () => {
-  for (const redirectUri of [`https://${GOOGLE_HOSTS[0]}/cb`, 'https://grok.com/cb']) {
+  for (const redirectUri of [`https://${GOOGLE_HOSTS[0]}${GOOGLE_PATH}`, 'https://grok.com/cb']) {
     for (const clientName of ['MCP Emails', 'Claude', 'Grok', 'Google']) {
       const id = describeClientIdentity({ clientId: DYN, clientName, isCimd: false, redirectUri });
       assert.equal(id.verification, 'verified', `${clientName} -> ${redirectUri}`);
@@ -529,7 +533,7 @@ test('Google and Grok look-alike hosts (suffix, prefix, embedded) are not verifi
   }
   // A Google host in the path, userinfo or query does not count either.
   for (const uri of [
-    'https://attacker.example/oauth-redirect.googleusercontent.com/cb',
+    `https://attacker.example/oauth-redirect.googleusercontent.com${GOOGLE_PATH}`,
     'https://oauth-redirect.googleusercontent.com@attacker.example/cb',
     'https://attacker.example/cb?h=grok.com',
   ]) {
@@ -562,7 +566,8 @@ test('the existing Claude / ChatGPT / Cursor / VS Code matrix is unchanged by th
     ['ChatGPT', 'https://attacker.example/cb', 'unverified', 'ChatGPT (OpenAI)'],
     ['Cursor', 'https://attacker.example/cb', 'unverified', 'Cursor'],
     ['VS Code', 'https://attacker.example/cb', 'unverified', 'Visual Studio Code'],
-    ['Claude', `https://${GOOGLE_HOSTS[0]}/cb`, 'verified', null],
+    ['Claude', `https://${GOOGLE_HOSTS[0]}${GOOGLE_PATH}`, 'verified', null],
+    ['Claude', `https://${GOOGLE_HOSTS[0]}/cb`, 'unverified', 'Claude (Anthropic)'],
     ['Claude', 'cursor://x/cb', 'unverified', 'Claude (Anthropic)'],
   ];
   for (const [clientName, redirectUri, verification, impersonates] of matrix) {
@@ -570,4 +575,145 @@ test('the existing Claude / ChatGPT / Cursor / VS Code matrix is unchanged by th
     assert.equal(id.verification, verification, `${clientName} -> ${redirectUri}`);
     assert.equal(id.impersonates, impersonates, `${clientName} -> ${redirectUri}`);
   }
+});
+
+// ── Google's shared redirect host: only the pinned MCP Emails path ──────────
+// oauth-redirect*.googleusercontent.com is Google's SHARED account-linking
+// redirect: /r/<project-id> delivers the code to ANY Google developer
+// project's fulfillment. Only /{r|a}/user_bound_custom-mcp-<digits>-
+// mcpemails_com (underscores are impossible in Google Cloud project ids) is
+// Google's connector for us.
+
+test('LEGIT: every pinned Google path (r and a, all three hosts, optional trailing slash) is Verified', () => {
+  for (const host of GOOGLE_HOSTS) {
+    for (const path of [
+      '/r/user_bound_custom-mcp-111522063632794171720-mcpemails_com',
+      '/a/user_bound_custom-mcp-111522063632794171720-mcpemails_com',
+      '/r/user_bound_custom-mcp-1-mcpemails_com/',
+      '/a/user_bound_custom-mcp-42-mcpemails_com/',
+    ]) {
+      const uri = `https://${host}${path}`;
+      assert.equal(vendorForWebRedirect(uri), 'google', uri);
+      const id = describeClientIdentity({ clientId: DYN, clientName: 'Google', isCimd: false, redirectUri: uri });
+      assert.equal(id.verification, 'verified', uri);
+      assert.equal(id.displayName, 'Google', uri);
+      assert.equal(id.destinationVendor, 'google', uri);
+      assert.equal(id.impersonates, null, uri);
+    }
+  }
+});
+
+const UNPINNED_GOOGLE_PATHS = [
+  '/r/my-project',
+  '/r/my-project-123',
+  '/cb',
+  '/',
+  '',
+  '/r/user_bound_custom-mcp-123-evil_com',
+  '/r/user_bound_custom-mcp-abc-mcpemails_com',
+  '/r/user_bound_custom-mcp--mcpemails_com',
+  '/r/user_bound_custom-mcp-123-mcpemails_comx',
+  '/r/user_bound_custom-mcp-123-mcpemails_com/extra',
+  '/r/user_bound_custom-mcp-123-mcpemails_com//',
+  '/r/user_bound_custom-mcp-123-mcpemails%5Fcom',
+  '/r/user%5Fbound_custom-mcp-123-mcpemails_com',
+  '/r%2Fuser_bound_custom-mcp-123-mcpemails_com',
+  '/r/user_bound_custom-mcp-123-mcpemails_com%2F',
+  '/r/user_bound_custom-mcp-123-mcpemails_com%00',
+  '//r/user_bound_custom-mcp-123-mcpemails_com',
+  '/r//user_bound_custom-mcp-123-mcpemails_com',
+  '/R/user_bound_custom-mcp-123-mcpemails_com',
+  '/x/user_bound_custom-mcp-123-mcpemails_com',
+  '/ra/user_bound_custom-mcp-123-mcpemails_com',
+  '/r/USER_BOUND_CUSTOM-MCP-123-MCPEMAILS_COM',
+  '/r/user_bound_custom-mcp-١٢٣-mcpemails_com',
+  '/prefix/r/user_bound_custom-mcp-123-mcpemails_com',
+  '/r/my-project/../user_bound_custom-mcp-123-mcpemails_com',
+  '/x/../r/user_bound_custom-mcp-123-mcpemails_com',
+  '/x/%2e%2e/r/user_bound_custom-mcp-123-mcpemails_com',
+  '/./r/user_bound_custom-mcp-123-mcpemails_com',
+  '\\r\\user_bound_custom-mcp-123-mcpemails_com',
+  '/r/user_bound_custom-mcp-123-mcpemails_com?x=1',
+  '/r/user_bound_custom-mcp-123-mcpemails_com?',
+  '/r/user_bound_custom-mcp-123-mcpemails_com#frag',
+  '/r/user_bound_custom-mcp-123-mcpemails_com#',
+  '/r/my-project?u=/r/user_bound_custom-mcp-123-mcpemails_com',
+  '/r/my-project#/r/user_bound_custom-mcp-123-mcpemails_com',
+];
+
+test('THE SHARED-HOST ATTACK: any other path on a Google redirect host is Unverified, host as heading, alert applies', () => {
+  for (const host of GOOGLE_HOSTS) {
+    for (const path of UNPINNED_GOOGLE_PATHS) {
+      const uri = `https://${host}${path}`;
+      assert.equal(vendorForWebRedirect(uri), null, uri);
+      assert.equal(vendorForHost(host), 'google', 'the host itself is still known');
+      for (const [clientName, alert] of [
+        ['Claude', 'Claude (Anthropic)'],
+        ['MCP Emails', 'MCP Emails'],
+        ['ChatGPT', 'ChatGPT (OpenAI)'],
+        ['Google', 'Google'],
+        ['Gemini', 'Google'],
+        ['My Home Action', null],
+      ] as Array<[string, string | null]>) {
+        const id = describeClientIdentity({ clientId: DYN, clientName, isCimd: false, redirectUri: uri });
+        assert.equal(id.verification, 'unverified', `${clientName} -> ${uri}`);
+        assert.equal(id.destinationVendor, null, `${clientName} -> ${uri}`);
+        assert.equal(id.displayName, host, `${clientName} -> ${uri}: the host is the heading`);
+        assert.equal(id.selfReportedName, clientName, `${clientName} -> ${uri}`);
+        assert.equal(id.impersonates, alert, `${clientName} -> ${uri}`);
+      }
+    }
+  }
+});
+
+test('the pinned path does not help on any other host, and Grok stays host-only', () => {
+  for (const uri of [
+    'https://attacker.example/r/user_bound_custom-mcp-123-mcpemails_com',
+    'https://evil.googleusercontent.com/r/user_bound_custom-mcp-123-mcpemails_com',
+    'https://oauth-redirect.googleusercontent.com.evil.example/r/user_bound_custom-mcp-123-mcpemails_com',
+    'http://oauth-redirect.googleusercontent.co/r/user_bound_custom-mcp-123-mcpemails_com',
+  ]) {
+    assert.equal(vendorForWebRedirect(uri), null, uri);
+    assert.equal(describeClientIdentity({ clientId: DYN, clientName: 'Google', isCimd: false, redirectUri: uri }).impersonates, 'Google', uri);
+  }
+  for (const uri of ['https://grok.com/connectors-oauth-exchange-code/', 'https://grok.com/anything?x=1', 'https://grok.com']) {
+    assert.equal(vendorForWebRedirect(uri), 'xai', uri);
+    assert.equal(describeClientIdentity({ clientId: DYN, clientName: 'Grok', isCimd: false, redirectUri: uri }).verification, 'verified', uri);
+  }
+  // Other vendors are host-only, unchanged.
+  assert.equal(vendorForWebRedirect('https://claude.ai/api/mcp/auth_callback?x=1'), 'anthropic');
+  assert.equal(vendorForWebRedirect('https://chatgpt.com/'), 'openai');
+  assert.equal(vendorForWebRedirect('not a url'), null);
+  assert.equal(vendorForWebRedirect('cursor://x/cb'), null);
+});
+
+test('whole-name rule ignores filler: "Google Inc", "Gemini AI", "Grok 3", "Google™" are flagged off-vendor', () => {
+  for (const [name, label] of [
+    ['Google Inc', 'Google'],
+    ['Google, Inc.', 'Google'],
+    ['Google LLC', 'Google'],
+    ['Google Ltd', 'Google'],
+    ['Google™', 'Google'],
+    ['Google®', 'Google'],
+    ['Official Google App', 'Google'],
+    ['Google Assistant', 'Google'],
+    ['Gemini AI', 'Google'],
+    ['Gemini 2.5', 'Google'],
+    ['Grok 3', 'Grok (xAI)'],
+    ['Grok AI', 'Grok (xAI)'],
+    ['xAI Grok Assistant', 'Grok (xAI)'],
+    ['x ai', 'Grok (xAI)'],
+  ] as Array<[string, string]>) {
+    assert.equal(vendorForName(name) !== null, true, name);
+    const id = describeClientIdentity({ clientId: DYN, clientName: name, isCimd: false, redirectUri: 'https://attacker.example/cb' });
+    assert.equal(id.verification, 'unverified', name);
+    assert.equal(id.impersonates, label, name);
+  }
+  // Filler alone, or filler around an honest word, is nothing.
+  for (const name of ['AI App', 'Official App 2', 'Mail Assistant AI', 'Sign in with Google', 'Gemini CLI MCP Client', 'Google Sheets MCP', 'Gmail via Zapier', 'Grokking Mail', 'Grok Mail Helper']) {
+    assert.equal(vendorForName(name), null, name);
+  }
+  const cli = describeClientIdentity({ clientId: DYN, clientName: 'Gemini CLI MCP Client', isCimd: false, redirectUri: 'http://localhost:7777/oauth/callback' });
+  assert.equal(cli.verification, 'local');
+  assert.equal(cli.impersonates, null);
 });

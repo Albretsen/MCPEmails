@@ -53,7 +53,9 @@
 //   ChatGPT (chatgpt.com DCR/CIMD)  "ChatGPT", Verified · chatgpt.com
 //   Cursor (cursor:// DCR)          "Cursor", On this device · cursor://
 //   Google (Gemini, DCR)            "Google", Verified · oauth-redirect.googleusercontent.com
-//                                   (also oauth-redirect-test. and -sandbox.)
+//                                   (also oauth-redirect-test. and -sandbox.),
+//                                   ONLY on the pinned /{r|a}/user_bound_custom-
+//                                   mcp-<digits>-mcpemails_com path (see VENDORS)
 //   Grok (grok.com DCR)             "Grok", Verified · grok.com
 //   Claude Code / Codex / VS Code   name, On this device · 127.0.0.1:port
 //
@@ -86,6 +88,12 @@ interface Vendor {
   names?: readonly string[];
   /** Exact https hostnames that vendor receives codes on. */
   hosts: ReadonlySet<string>;
+  /**
+   * For a host the vendor SHARES with third parties: the URL.pathname must
+   * match this (anchored) and the URI must carry no query or fragment, or the
+   * destination is not this vendor's. Omitted: the host alone decides.
+   */
+  paths?: RegExp;
   /** Native-app schemes that vendor registers (without the colon). */
   schemes: ReadonlySet<string>;
 }
@@ -157,6 +165,14 @@ const VENDORS: readonly Vendor[] = [
       'oauth-redirect-test.googleusercontent.com',
       'oauth-redirect-sandbox.googleusercontent.com',
     ]),
+    // These hosts are Google's SHARED account-linking redirect: any Google
+    // developer project (a Google Home action, ...) gets /r/<project-id> on
+    // them, and that project's own fulfillment receives the code. So the host
+    // alone proves nothing. Every real registration has exactly
+    // /{r|a}/user_bound_custom-mcp-<digits>-mcpemails_com, and Google Cloud
+    // project ids cannot contain "_", so no third-party project can produce
+    // it. pathname keeps percent-encoding, so %5F, %2F or "//" never match.
+    paths: /^\/(r|a)\/user_bound_custom-mcp-\d+-mcpemails_com\/?$/,
     schemes: new Set(),
   },
   {
@@ -173,6 +189,9 @@ const VENDORS: readonly Vendor[] = [
 ];
 
 const VENDOR_BY_ID = new Map(VENDORS.map((v) => [v.id, v]));
+
+/** Tokens ignored by the whole-name (`names`) rule; bare numbers are too. */
+const NAME_FILLER: ReadonlySet<string> = new Set(['inc', 'llc', 'ltd', 'ai', 'tm', 'official', 'assistant', 'app']);
 
 /**
  * Look-alike characters folded to the Latin letter they imitate, after NFKC
@@ -201,23 +220,69 @@ function foldName(name: string): string {
  */
 export function vendorForName(name: string | null | undefined): VendorId | null {
   if (typeof name !== 'string' || name.trim() === '') return null;
-  const folded = foldName(name);
+  // NFKC turns "™" into "TM" glued to the word ("googletm"); make the marks
+  // separators first so they fall out as filler or punctuation.
+  const unmarked = name.replace(/[™℠®©]/gu, ' ');
+  const folded = foldName(unmarked);
   const squashed = folded.replace(/[^a-z0-9]/g, '');
   const tokens = folded.split(/[^a-z0-9]+/).filter(Boolean);
+  // For the whole-name rule only: corporate and product filler that does not
+  // make a name less of a vendor's ("Google Inc", "Gemini AI", "Grok 3").
+  // Bare numbers are dropped BEFORE folding, which reads 3 as e and 1 as l.
+  const core = unmarked
+    .normalize('NFKC')
+    .split(/[^\p{L}\p{N}]+/u)
+    .filter((t) => t !== '' && !/^\p{N}+$/u.test(t))
+    .map((t) => foldName(t).replace(/[^a-z0-9]/g, ''))
+    .filter((t) => t !== '' && !NAME_FILLER.has(t));
   for (const vendor of VENDORS) {
     if (vendor.substrings.some((s) => squashed.includes(s))) return vendor.id;
     if (vendor.words.some((w) => tokens.some((t) => t.startsWith(w)) || squashed === w)) return vendor.id;
     const names = vendor.names;
-    if (names && (names.includes(squashed) || (tokens.length > 0 && tokens.every((t) => names.includes(t))))) return vendor.id;
+    if (
+      names &&
+      (names.includes(squashed) || names.includes(core.join('')) || (core.length > 0 && core.every((t) => names.includes(t))))
+    ) {
+      return vendor.id;
+    }
   }
   return null;
 }
 
-/** The vendor that owns this exact https hostname, or null. */
+/**
+ * The vendor that owns this exact https hostname, or null. For a vendor with
+ * `paths` this is NOT proof the code goes to it; use vendorForWebRedirect.
+ */
 export function vendorForHost(hostname: string): VendorId | null {
   const h = hostname.toLowerCase();
   for (const vendor of VENDORS) if (vendor.hosts.has(h)) return vendor.id;
   return null;
+}
+
+/**
+ * The vendor that receives a code sent to this http(s) redirect URI, or null:
+ * the exact host, and for a vendor on a shared host (`paths`) also the pinned
+ * path with no query or fragment.
+ */
+export function vendorForWebRedirect(redirectUri: string): VendorId | null {
+  let url: URL;
+  try {
+    url = new URL(redirectUri);
+  } catch {
+    return null;
+  }
+  if (url.protocol !== 'https:' && url.protocol !== 'http:') return null;
+  const id = vendorForHost(url.hostname);
+  if (!id) return null;
+  const paths = VENDOR_BY_ID.get(id)?.paths;
+  if (!paths) return id;
+  // url.search/url.hash are '' for both "no ?" and a bare "?"; check the raw
+  // string too so "...mcpemails_com?" or "#" is not accepted either.
+  if (url.search !== '' || url.hash !== '' || /[?#]/.test(redirectUri)) return null;
+  // URL resolves "/x/../r/...", "%2e%2e" and "\\" into a clean pathname; the
+  // pinned path must be what was registered, not what it normalises to.
+  if (/\\|\/(\.|%2e){1,2}(\/|$)/i.test(redirectUri)) return null;
+  return paths.test(url.pathname) ? id : null;
 }
 
 export function vendorLabel(id: VendorId | null): string | null {
@@ -366,7 +431,7 @@ export function describeClientIdentity({
         : '';
   const destinationVendor =
     destination.kind === 'web'
-      ? vendorForHost(destination.hostname)
+      ? vendorForWebRedirect(redirectUri)
       : destination.kind === 'app' && destination.native
         ? NATIVE_APP_SCHEMES.get(destination.scheme) ?? null
         : null;
