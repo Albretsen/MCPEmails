@@ -2306,7 +2306,7 @@ export function DraftEditor(props: Props) {
         <div class="hdr ed-hdr">
           <div class="hdr-l">
             <b>Draft</b>
-            <span class="muted hdr-from">{edit.subject.trim() || "No subject"}</span>
+            <span class="muted hdr-from" dir="auto">{edit.subject.trim() || "No subject"}</span>
             {unsaved && <span class="hdr-status">Unsaved changes</span>}
           </div>
           <div class="hdr-r">
@@ -2370,7 +2370,15 @@ export function DraftEditor(props: Props) {
         <p class="line">
           Replying to {d.in_reply_to.from || "an earlier message"}
           {d.in_reply_to.subject ? ` · ${d.in_reply_to.subject}` : ""}
-          {d.in_reply_to.date ? ` · ${formatDateTime(d.in_reply_to.date)}` : ""}
+          {/* The date in one piece: at 360px it broke as "Sep" / "15, 2026". */}
+          {d.in_reply_to.date ? (
+            <>
+              {" · "}
+              <span class="nowrap">{formatDateTime(d.in_reply_to.date)}</span>
+            </>
+          ) : (
+            ""
+          )}
         </p>
       )}
 
@@ -2407,6 +2415,7 @@ export function DraftEditor(props: Props) {
           <input
             id="d-subject"
             class="subj grow"
+            dir="auto"
             aria-label="Subject"
             placeholder="No subject"
             value={edit.subject}
@@ -2525,7 +2534,7 @@ export function DraftEditor(props: Props) {
             onClick={() => canEdit && startEditingSig()}
           >
             <span class="lbl">Signature</span>
-            <span class="sig-text">{signaturePreview(split.signature)}</span>
+            <span class="sig-text" dir="auto">{signaturePreview(split.signature)}</span>
             {canEdit && (
               <TextLink
                 btnRef={sigEditLink}
@@ -2567,7 +2576,7 @@ export function DraftEditor(props: Props) {
             }}
           >
             <span class="lbl">Quoted</span>
-            <span class="sig-text">{quotePreview(quoteTail)}</span>
+            <span class="sig-text" dir="auto">{quotePreview(quoteTail)}</span>
             <TextLink
               onClick={() => setShowQuote((v) => !v)}
               expanded={showQuote}
@@ -2580,7 +2589,7 @@ export function DraftEditor(props: Props) {
             </TextLink>
           </div>
           {showQuote && (
-            <div id="d-quoted" class="quote-text" role="region" aria-label="Quoted message, read only">
+            <div id="d-quoted" class="quote-text" dir="auto" role="region" aria-label="Quoted message, read only">
               {quoteTail.replace(/^(?:[ \t]*\r?\n)+/, "")}
             </div>
           )}

@@ -223,6 +223,7 @@ body {
 }
 
 .tiny { font-size: var(--fs-xs); color: var(--fg-3); margin: 0; }
+.nowrap { white-space: nowrap; }
 
 /* ---- header ------------------------------------------------------------ */
 
@@ -267,26 +268,40 @@ body {
    wrapping header moved the controls to a second line whenever the status
    grew, and the status used to sit BETWEEN the controls, so Expand slid
    sideways each time "Unsaved changes" came and went (live QA, 2026-10-17).
-   Now the left side shrinks (the address, then the status past its cap, both
-   with an ellipsis) and the right side never moves. */
+   Now only the left side gives (below) and the right side never moves. */
 .hdr.ed-hdr { flex-wrap: nowrap; }
 .ed-hdr > .hdr-l { overflow: hidden; }
 /* "Draft" never shrinks: with the card's `overflow-wrap: anywhere` a squeezed
    word breaks into two lines and the header doubles in height. */
 .ed-hdr > .hdr-l > b { flex: none; }
-.ed-hdr > .hdr-l > .hdr-from { flex: 0 10 auto; min-width: 2em; }
-/* The status keeps its words ahead of the address, up to a cap. */
+/* The address gives way first, down to nothing, and the status keeps its words
+   ("Saved 15:15 by you" was cut to "Saved 15:15 …" while half the address
+   still showed, live re-test 2026-10-17). A zero basis takes the address out
+   of the sum, so it only fills what the status leaves, never past its own
+   width; when even "Draft" and the status do not fit, the status wraps to a
+   line of its own under them rather than lose its end. The controls are a
+   separate box on the first line and do not move either way. */
+.ed-hdr > .hdr-l { flex-wrap: wrap; row-gap: 0; }
+.ed-hdr > .hdr-l > .hdr-from { flex: 1 1 0; min-width: 0; max-width: max-content; }
 .hdr-status {
-  flex: 0 0 auto;
-  max-width: 55%;
+  flex: 0 1 auto;
   min-width: 0;
   font-size: var(--fs-sm);
   color: var(--fg-3);
-  overflow: hidden;
-  text-overflow: ellipsis;
-  white-space: nowrap;
 }
 .hdr-status[data-unsaved="true"] { color: var(--fg-2); }
+/* Narrow: the status always takes a line of its own, the full width of the
+   card, under "Draft", the address and the controls. Always, not only when it
+   is too long: "Saved 3:43 PM by the assistant" did not fit at 360px and
+   "Unsaved changes" did, so the first keystroke shrank the header and moved
+   the message box under the caret. `display: contents` lets the status go
+   under the controls too. The folded line is left alone. */
+@container card (max-width: 379px) {
+  .ed-main > .hdr.ed-hdr { flex-wrap: wrap; column-gap: 6px; row-gap: 0; }
+  .ed-main > .ed-hdr > .hdr-l { display: contents; }
+  .ed-main > .ed-hdr > .hdr-r { margin-left: auto; }
+  .ed-main > .ed-hdr .hdr-status { order: 1; flex-basis: 100%; }
+}
 
 /* Two text links side by side in a header ("Open in dashboard" and "Show",
    "Expand" and "Hide") read as one phrase at the header's 6px gap. */
@@ -386,7 +401,7 @@ body {
    a spreadsheet (QA, 2026-10-13). */
 .body-html table { max-width: 100%; border-collapse: collapse; }
 .body-html td,
-.body-html th { border: 0; padding: 0 6px 0 0; vertical-align: top; text-align: left; }
+.body-html th { border: 0; padding: 0 6px 0 0; vertical-align: top; text-align: start; }
 .body-html p { margin: 0 0 6px; }
 /* The server's signature block, set apart from the message (ui.tsx#HtmlBody). */
 .body-html .html-sig { margin-top: 12px; }
@@ -427,6 +442,13 @@ body {
 .html-preview > .body-full {
   border: 0;
   padding: 0;
+}
+
+/* Each paragraph of the formatted view picks its own direction, as the lines
+   of the message box do (`.textarea`). */
+.html-preview .body-html,
+.html-preview .body-html :is(p, div, li, blockquote, td, th, h1, h2, h3, h4, h5, h6) {
+  unicode-bidi: plaintext;
 }
 
 /* ---- chips ------------------------------------------------------------- */
@@ -793,6 +815,7 @@ body {
   font-size: var(--fs-sm);
   white-space: pre-wrap;
   overflow-wrap: anywhere;
+  unicode-bidi: plaintext;
   max-height: 240px;
   overflow-y: auto;
 }
@@ -881,9 +904,14 @@ body {
   border-radius: var(--r-md);
 }
 
+/* Per LINE direction: `dir="auto"` on a textarea reads the first strong
+   character of the whole box, so a Norwegian first line left every Arabic line
+   under it left-aligned with its full stop on the wrong side (live re-test,
+   2026-10-17). `plaintext` gives each line its own direction and alignment. */
 .textarea {
   line-height: var(--lh);
   resize: none;
+  unicode-bidi: plaintext;
   display: block;
   overflow: hidden;
 }
