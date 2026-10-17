@@ -474,3 +474,36 @@ test('u13: the new vendors do not change the Claude/ChatGPT/Cursor/VS Code matri
     assert.equal(id.impersonates, imp, `${name} -> ${uri}`);
   }
 });
+
+test('u13 round 3: whitespace/control chars in a vendor redirect are never Verified; clean URIs and non-web kinds unchanged', () => {
+  const CLEAN: Array<[string, string]> = [
+    ['Claude', 'https://claude.ai/api/mcp/auth_callback'],
+    ['ChatGPT', 'https://chatgpt.com/connector_platform_oauth_redirect'],
+    ['MCP Emails', 'https://mcpemails.com/cb'],
+    ['Google', `https://oauth-redirect.googleusercontent.com${U13_PIN}`],
+    ['Google', `https://oauth-redirect-sandbox.googleusercontent.com/a/user_bound_custom-mcp-1-mcpemails_com/`],
+    ['Grok', 'https://grok.com/oauth/callback'],
+  ];
+  const MUTATIONS = [
+    (u: string) => `${u}\t`, (u: string) => `${u}\n`, (u: string) => ` ${u}`, (u: string) => `${u} `, (u: string) => `${u}\r\n`,
+    (u: string) => u.replace('https://', 'https://\t'), (u: string) => `${u}\x7f`, (u: string) => `${u}\x00`, (u: string) => `${u} `,
+    (u: string) => u.replace(/\/([^/]*)$/, '/.\t./$1'),
+  ];
+  for (const [name, uri] of CLEAN) {
+    const clean = dcr(name, uri);
+    assert.equal(clean.verification, 'verified', uri);
+    assert.equal(clean.impersonates, null, uri);
+    for (const m of MUTATIONS) {
+      const bad = m(uri);
+      const id = dcr(name, bad);
+      assert.notEqual(id.verification, 'verified', JSON.stringify(bad));
+      assert.notEqual(id.displayName, name === 'MCP Emails' ? '\u0000never' : name, JSON.stringify(bad));
+      // The name claims the vendor whose host it was, so the alert must fire.
+      if (name !== 'MCP Emails') assert.ok(id.impersonates, `alert for ${JSON.stringify(bad)}`);
+    }
+  }
+  // Loopback and native schemes do not go through vendorForWebRedirect.
+  assert.equal(dcr('Visual Studio Code', 'http://127.0.0.1:33418/').verification, 'local');
+  assert.equal(dcr('Cursor', 'cursor://anysphere.cursor-mcp/oauth/callback').verification, 'local');
+  assert.equal(dcr('Claude Code', 'http://localhost:5555/callback').verification, 'local');
+});
