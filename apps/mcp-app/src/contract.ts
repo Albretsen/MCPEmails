@@ -294,6 +294,11 @@ export interface DraftEditorData {
   attachments?: Attachment[];
   signature?: DraftSignature | null;
   in_reply_to?: InReplyTo | null;
+  /**
+   * The draft answers a message (its In-Reply-To header survived), whatever
+   * `in_reply_to` says: that is null on every read and save. store.ts#keepReplyContext.
+   */
+  threaded?: boolean;
   /** Key has send:email AND the draft has at least one recipient. */
   can_send?: boolean;
 }

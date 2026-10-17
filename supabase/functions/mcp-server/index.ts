@@ -328,8 +328,10 @@ import {
   composeSignatureBlocks,
   heldSendSnapshot,
   includeSignatureForSend,
+  plainTextBodyToHtml,
   signatureHtmlToText,
 } from "./signature-compose.ts";
+import { bodyKeepingQuote } from "./quoted-reply.ts";
 import {
   createSignatureImageFetcher,
   embedSignatureImages,
@@ -8013,7 +8015,8 @@ const CONSOLIDATED_SPECS: Record<string, ConsolidatedSpec> = {
       "email_compose sends now. On IMAP a " +
       "draft_id changes on every update, so always use the most recent one. " +
       "'update' replaces only the fields passed: omit body and the stored " +
-      "body text is kept. " +
+      "body text is kept. A new body keeps a reply's quoted original " +
+      "(quote_kept) unless it includes one. " +
       "'create', 'reply' and 'update' take attachments as email_compose does; " +
       "'update' adds them and keeps the draft's existing files. " +
       "The signature is embedded on create and on an update that passes body " +
@@ -25225,6 +25228,11 @@ interface DraftUpdateResult {
    * tell from the result that a reply survived an update as a reply.
    */
   threaded?: boolean;
+  /**
+   * True when the new body left out the reply's quoted original and the stored
+   * one was kept under it (quoted-reply.ts#bodyKeepingQuote). Absent otherwise.
+   */
+  quote_kept?: boolean;
 }
 
 interface DraftSendResult {
@@ -28393,15 +28401,25 @@ async function executeUpdateDraft(
   // delete the user's files. A draft that is not found still falls through to
   // the provider's own draft_not_found, as before.
   let carried: CarriedAttachments | undefined;
+  // The stored text and HTML, so a new body keeps a reply's quoted original
+  // (quoted-reply.ts#bodyKeepingQuote, live re-test 2026-10-17). Outlook is
+  // read with its body for this; its `threadId` (Graph's conversationId, which
+  // every message has) is not evidence of a reply and is left out, as before.
+  let storedBody: { text?: string | null; html?: string | null } | null = null;
   const rebuilds = inbox.provider !== "outlook";
   try {
     let existing: DraftContent | null;
     switch (inbox.provider) {
       case "gmail":    existing = await gmailGetDraftForEditor(inbox, draftId);    break;
-      case "outlook":  existing = await outlookGetDraft(inbox, draftId);  break;
+      case "outlook": {
+        const read = await outlookGetDraftForEditor(inbox, draftId);
+        existing = read ? { ...read, threadId: undefined } : null;
+        break;
+      }
       default:         existing = await imapGetDraft(inbox, draftId);     break;
     }
     if (existing) {
+      storedBody = { text: existing.bodyText, html: existing.bodyHtml };
       carried = existing.carried;
       if (!subjectProvided) effectiveSubject = existing.subject;
       if (!toProvided) effectiveTo = existing.to;
@@ -28447,11 +28465,16 @@ async function executeUpdateDraft(
   // so we sign the new body just like draft_create (single source:
   // applySignature). A body-less update returned above and signs nothing. draft_send sends the stored body as-is and never re-appends
   // (see executeSendDraft). include_signature: false suppresses it.
+  //
+  // A reply's quoted original is kept when the new body leaves it out, and the
+  // signature goes above it, not under (quoted-reply.ts#bodyKeepingQuote).
   const includeSignature = args["include_signature"] === false ? false : undefined;
-  const signed = applySignature(
-    { textBody: body, htmlBody },
-    inbox,
-    { include_signature: includeSignature },
+  const signed = bodyKeepingQuote(
+    body,
+    htmlBody,
+    storedBody,
+    (p) => applySignature(p, inbox, { include_signature: includeSignature }),
+    plainTextBodyToHtml,
   );
 
   const draftParams: DraftParams = {
@@ -28502,6 +28525,7 @@ async function executeUpdateDraft(
   // stamped here rather than in the three provider functions: they are told the
   // headers and do not report them back.
   updateResult.threaded = Boolean(inReplyTo || threadId);
+  if (signed.quoteKept) updateResult.quote_kept = true;
   // On IMAP and Gmail the full list the message now has; on Outlook only what
   // this call added, since the stored files were not read there.
   if (rebuilds ? storedAttachments.length > 0 : newFiles.attachments.length > 0) {
@@ -28525,7 +28549,7 @@ async function executeUpdateDraft(
     draftId: updateResult.draft_id,
     origin: "update",
     params: draftParams,
-    signatureEmbedded: signed.textBody !== body,
+    signatureEmbedded: signed.signed,
     lastSavedAt: updateResult.updated_at,
     revision: updateRevision,
   });
