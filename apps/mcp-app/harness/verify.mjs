@@ -95,6 +95,12 @@ const SUITES = [
   // cancel), Enter on a recipient that is not an address, and an older card
   // that folds when a newer one mounts, without being touched.
   ["draft send safety", "draft-send-safety.test.mjs"],
+  // The ninth DOM suite: the recipient fields and files of the 2026-10-17
+  // live review. Rows and chips that stay put under the pointer, duplicates
+  // across fields, separators and pasted lists, suggestions (and the server
+  // adapter that is not wired), and files as chips that can be removed and
+  // attached.
+  ["draft fields", "draft-fields.test.mjs"],
   // DOM-free, and last only because it was merged last: the exact text of every
   // sentence the card sends the model, and the decisions behind a deferred
   // draft body (where it comes from, and which `draft_read` answer is adopted).

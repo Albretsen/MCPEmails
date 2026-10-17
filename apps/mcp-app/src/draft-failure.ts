@@ -338,6 +338,8 @@ export interface PatchFields {
   bcc?: string[];
   subject?: string;
   body_text?: string;
+  add_attachments?: { filename: string }[];
+  remove_attachments?: { index: number; filename: string; size_bytes: number | null }[];
 }
 
 /**
@@ -359,7 +361,23 @@ export function patchLanded(
   const keys = (["to", "cc", "bcc", "subject", "body_text"] as const).filter(
     (k) => patch[k] !== undefined,
   );
-  if (keys.length === 0) return false;
+  const added = patch.add_attachments ?? [];
+  const removed = patch.remove_attachments ?? [];
+  if (keys.length === 0 && added.length === 0 && removed.length === 0) return false;
+  // Files (2026-10-17). An added file landed when a file of that name is on
+  // the draft; a removal, when the draft no longer holds that file at that
+  // place. Answering "landed" wrongly would drop an edit, so a removal whose
+  // place now holds the same name and size is read as NOT landed.
+  const files = draft.attachments ?? [];
+  if (added.some((a) => !files.some((f) => f.filename === a.filename))) return false;
+  if (
+    removed.some((r) => {
+      const at = files[r.index];
+      return !!at && at.filename === r.filename && (r.size_bytes === null || at.size_bytes === r.size_bytes);
+    })
+  ) {
+    return false;
+  }
   for (const k of keys) {
     if (k === "subject") {
       if ((draft.subject ?? "") !== patch.subject) return false;

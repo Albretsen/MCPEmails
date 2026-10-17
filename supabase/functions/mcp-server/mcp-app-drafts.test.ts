@@ -1449,7 +1449,7 @@ const USER_VISIBLE_OUTCOMES: OutcomeCase[] = [
     options: {
       stored: {
         ...WITH_ATTACHMENT,
-        carried: { count: 1, bytes: 26 * 1024 * 1024, inlineImages: 0, encode: () => [] },
+        carried: { count: 1, bytes: 26 * 1024 * 1024, inlineImages: 0, sizes: [26 * 1024 * 1024], encode: () => [] },
       },
     },
     args: { draft_id: "Drafts:2", subject: "x" },
@@ -1471,6 +1471,19 @@ const USER_VISIBLE_OUTCOMES: OutcomeCase[] = [
       },
     },
     args: { draft_id: "Drafts:2", subject: "x" },
+  },
+  {
+    at: "save: add_attachments or remove_attachments malformed",
+    tool: "draft_editor_save",
+    expect: "invalid_arguments",
+    args: { draft_id: "Drafts:2", remove_attachments: [{ index: -1, filename: "q3.pdf" }] },
+  },
+  {
+    at: "save: Outlook cannot remove a file through a save",
+    tool: "draft_editor_save",
+    expect: "attachment_remove_unsupported",
+    options: { inbox: OUTLOOK_INBOX, stored: WITH_ATTACHMENT },
+    args: { draft_id: "Drafts:2", remove_attachments: [{ index: 0, filename: "q3.pdf", size_bytes: 12 }] },
   },
   {
     at: "save: the write said the draft is gone",
@@ -3270,4 +3283,89 @@ Deno.test("describeParts bounds and neutralises what it puts in a sentence", () 
   const hostile = describeParts(["a text/x-\u202Eevil".padEnd(200, "x") + " part"]);
   assert(!hostile.includes("\u202E"));
   assert(hostile.length <= 60);
+});
+
+// ═══════════════════════════════════════════════════════════════════════════
+// The editor card adds and removes files (2026-10-17)
+// ═══════════════════════════════════════════════════════════════════════════
+
+/** A stored draft with two files the rebuild carries, as the IMAP reader hands it over. */
+function twoFiles(): ProviderDraft {
+  const files = [
+    { filename: "q3.pdf", mime_type: "application/pdf", data: "JVBERi0xLjQK" },
+    { filename: "notes.txt", mime_type: "text/plain", data: "aGk=" },
+  ];
+  return {
+    ...WITH_ATTACHMENT,
+    attachments: [
+      { filename: "q3.pdf", mime_type: "application/pdf", size_bytes: 9 },
+      { filename: "notes.txt", mime_type: "text/plain", size_bytes: 2 },
+    ],
+    carried: {
+      count: 2,
+      bytes: 11,
+      inlineImages: 0,
+      sizes: [9, 2],
+      encode: (skip) => files.filter((_, i) => !skip?.has(i)),
+    },
+  };
+}
+
+Deno.test("draft_editor_save remove_attachments writes the other files and lists only them", async () => {
+  const { deps, writes } = fakeDeps({ stored: twoFiles() });
+  const out = await runDraftEditorSave(deps, caller(), {
+    draft_id: "Drafts:2",
+    remove_attachments: [{ index: 0, filename: "q3.pdf", size_bytes: 9 }],
+  });
+  assertEquals(out.result.isError, false, JSON.stringify(out.result.structuredContent));
+  assertEquals(writes.length, 1);
+  assertEquals(writes[0].params.attachments, [{ filename: "notes.txt", mime_type: "text/plain", data: "aGk=" }]);
+  const draft = (out.result.structuredContent as { draft: { attachments: { filename: string }[] } }).draft;
+  assertEquals(draft.attachments.map((a) => a.filename), ["notes.txt"]);
+});
+
+Deno.test("draft_editor_save add_attachments keeps the stored files and adds the new one", async () => {
+  const { deps, writes } = fakeDeps({ stored: twoFiles() });
+  const out = await runDraftEditorSave(deps, caller(), {
+    draft_id: "Drafts:2",
+    add_attachments: [{ filename: "a.csv", mime_type: "text/csv", data: "YTtiCg==" }],
+  });
+  assertEquals(out.result.isError, false);
+  assertEquals(writes[0].params.attachments?.map((a) => a.filename), ["q3.pdf", "notes.txt", "a.csv"]);
+});
+
+Deno.test("draft_editor_save refuses a removal that names another file, and writes nothing", async () => {
+  const { deps, writes } = fakeDeps({ stored: twoFiles() });
+  const out = await runDraftEditorSave(deps, caller(), {
+    draft_id: "Drafts:2",
+    subject: "x",
+    remove_attachments: [{ index: 0, filename: "notes.txt", size_bytes: 2 }],
+  });
+  assertEquals(failureCode(out), "draft_changed");
+  assertEquals(writes.length, 0);
+});
+
+Deno.test("draft_editor_save refuses malformed file arguments before reading anything", async () => {
+  for (const args of [
+    { add_attachments: [{ filename: "a.txt", mime_type: "text/plain", data: "not base64!" }] },
+    { add_attachments: [{ source_message_id: "INBOX:1", attachment_index: 0 }] },
+    { add_attachments: "a.txt" },
+    { remove_attachments: [{ index: 0 }] },
+    { remove_attachments: [{ index: 0, filename: "q3.pdf" }, { index: 0, filename: "q3.pdf" }] },
+    { remove_attachments: [{ index: 0.5, filename: "q3.pdf" }] },
+    { remove_attachments: [{ index: 0, filename: "q3.pdf", size_bytes: "9" }] },
+  ]) {
+    const { deps, writes, reads } = fakeDeps({ stored: twoFiles() });
+    const out = await runDraftEditorSave(deps, caller(), { draft_id: "Drafts:2", ...args });
+    assertEquals(failureCode(out), "invalid_arguments", JSON.stringify(args));
+    assertEquals([writes.length, reads.length], [0, 0], JSON.stringify(args));
+  }
+});
+
+Deno.test("draft_editor_save advertises the two file arguments without loosening the others", () => {
+  const save = DRAFT_EDITOR_TOOL_DEFINITIONS.find((t) => t.name === "draft_editor_save")!;
+  const props = (save.inputSchema as { properties: Record<string, { type?: unknown }> }).properties;
+  assertEquals(props.add_attachments.type, "array");
+  assertEquals(props.remove_attachments.type, "array");
+  assertEquals(props.to.type, "array");
 });

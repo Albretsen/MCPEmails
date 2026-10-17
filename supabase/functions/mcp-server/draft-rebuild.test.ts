@@ -371,6 +371,80 @@ Deno.test("files added by a partial write join the carried ones, in order", asyn
   assertEquals(Array.from(after.attachments[1].content), [0, 1, 2]);
 });
 
+// ── The editor card removes a file (2026-10-17) ────────────────────────────
+
+/** Three files: a PDF, a binary blob with every byte value, and a CSV. */
+const ALL_BYTES = Uint8Array.from({ length: 256 }, (_, i) => i);
+const THREE_FILES = withParts("multipart/mixed", "att3", [
+  PLAIN_PART,
+  lines(
+    'Content-Type: application/pdf; name="q3.pdf"',
+    "Content-Transfer-Encoding: base64",
+    'Content-Disposition: attachment; filename="q3.pdf"',
+    "",
+    "JVBERi0xLjQK",
+  ),
+  lines(
+    'Content-Type: application/octet-stream; name="blob.bin"',
+    "Content-Transfer-Encoding: base64",
+    'Content-Disposition: attachment; filename="blob.bin"',
+    "",
+    btoa(String.fromCharCode(...ALL_BYTES)),
+  ),
+  lines(
+    'Content-Type: text/csv; name="prices.csv"',
+    "Content-Transfer-Encoding: base64",
+    'Content-Disposition: attachment; filename="prices.csv"',
+    "",
+    btoa("a;b\r\n1;2\r\n"),
+  ),
+]);
+
+Deno.test("removing one file keeps every other one byte for byte, in order", async () => {
+  const box = mailbox(bytes(THREE_FILES));
+  const out = await box.patch({ removeAttachments: [{ index: 0, filename: "q3.pdf", size_bytes: 9 }] });
+  assert(out.ok && out.written, JSON.stringify(out));
+  assertEquals(out.saved.attachments.map((a) => a.filename), ["blob.bin", "prices.csv"]);
+  const after = parseEmail(box.raw());
+  assertEquals(after.attachments.map((a) => a.filename), ["blob.bin", "prices.csv"]);
+  assertEquals(Array.from(after.attachments[0].content), Array.from(ALL_BYTES), "every byte value survives");
+  assertEquals(new TextDecoder().decode(after.attachments[1].content), "a;b\r\n1;2\r\n");
+  assertEquals(after.text, parseEmail(bytes(THREE_FILES)).text, "the body text is kept");
+});
+
+Deno.test("removing the last file leaves a message with none, and the text intact", async () => {
+  const box = mailbox(bytes(NAMED_ATTACHMENT));
+  const out = await box.patch({ removeAttachments: [{ index: 0, filename: "q3.pdf", size_bytes: null }] });
+  assert(out.ok && out.written, JSON.stringify(out));
+  assertEquals(out.saved.attachments, []);
+  const after = parseEmail(box.raw());
+  assertEquals(after.attachments, []);
+  assertEquals(after.text, parseEmail(bytes(NAMED_ATTACHMENT)).text);
+});
+
+Deno.test("a removal and an addition in one save", async () => {
+  const box = mailbox(bytes(THREE_FILES));
+  const out = await box.patch({
+    removeAttachments: [{ index: 1, filename: "blob.bin", size_bytes: 256 }],
+    addAttachments: [{ filename: "notes.txt", mime_type: "text/plain", data: btoa("hi") }],
+  });
+  assert(out.ok && out.written, JSON.stringify(out));
+  assertEquals(parseEmail(box.raw()).attachments.map((a) => a.filename), ["q3.pdf", "prices.csv", "notes.txt"]);
+});
+
+Deno.test("a removal naming another file than the one at that position changes nothing", async () => {
+  for (const ref of [
+    { index: 0, filename: "blob.bin", size_bytes: 256 },
+    { index: 0, filename: "q3.pdf", size_bytes: 10 },
+    { index: 3, filename: "q3.pdf", size_bytes: null },
+  ]) {
+    const box = mailbox(bytes(THREE_FILES));
+    const out = await box.patch({ subject: "also this", removeAttachments: [ref] });
+    assertEquals(out, { ok: false, kind: "attachments_changed" }, JSON.stringify(ref));
+    assertEquals(box.writes(), 0, "nothing written");
+  }
+});
+
 Deno.test("a named part the HTML shows through cid: is an inline image, refused, never turned into a file", async () => {
   const raw = bytes(withParts("multipart/related", "rel1", [
     lines("Content-Type: text/html; charset=UTF-8", "", '<p>Logo <img src="cid:pic@x"></p>'),

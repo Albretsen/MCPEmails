@@ -777,7 +777,7 @@ editor for model-written drafts until it re-lists. The draft itself is written e
 | Tool | `_meta.ui.visibility` when gated in | Arguments | Returns |
 | --- | --- | --- | --- |
 | `draft_read` | `["model", "app"]` | `{ inbox_id?, inbox?, draft_id }` | `structuredContent`: `card: "draft_editor"`, `origin: "read"`, body inline, plus top-level `untrusted_content: true`. `content`: the plain read as JSON. Needs `manage:drafts` **and** `read:email` |
-| `draft_editor_save` | `["app"]` | `{ inbox_id?, inbox?, draft_id, base_revision?, to?, cc?, bcc?, subject?, body_text? }`, at least one field | `card: "draft_editor"`, `origin: "save"`, `last_saved_by: "user"`, the NEW `draft_id` and `revision`, body inline |
+| `draft_editor_save` | `["app"]` | `{ inbox_id?, inbox?, draft_id, base_revision?, to?, cc?, bcc?, subject?, body_text?, add_attachments?, remove_attachments? }`, at least one field | `card: "draft_editor"`, `origin: "save"`, `last_saved_by: "user"`, the NEW `draft_id` and `revision`, body inline |
 | `draft_editor_hide` | `["model", "app"]` | `{ inbox_id?, inbox?, scope, hidden? }` | `card: "receipt"`, `state: "cancelled"` |
 
 With the gate shut none of the three carries `_meta` (see "As built"), so a host lists them as
@@ -849,7 +849,16 @@ read, nothing was changed". All three callers (`draft_read`, `draft_editor_save`
 * **Refuses rather than drops attachments.** `imapUpdateDraft` and `gmailUpdateDraft` rebuild the
   MIME from parameters and carry no attachment parts. A save on a draft that has attachments on
   IMAP or Gmail returns `state: "error"` with `receipt.error_code: "draft_has_attachments"` and
-  changes nothing. Outlook (PATCH) may proceed.
+  changes nothing. Outlook (PATCH) may proceed. Since 2026-10-15 the rebuild carries the stored
+  files instead, and `draft_has_attachments` is left for a reader that could not supply them.
+* **Files are added and removed by the card (2026-10-17).** `add_attachments` takes inline files
+  `{ filename, mime_type, data }` (base64, 10 MB in all per save, the same parser as every other
+  tool's `attachments`). `remove_attachments` takes `{ index, filename, size_bytes }` per stored
+  file, `index` being its position in `draft.attachments`. The server checks that the stored file
+  at that position is the one named; when it is not, the save is refused as `draft_changed` and
+  nothing is written. Every file not named is carried byte for byte. Outlook's PATCH cannot remove
+  a file: a removal there is refused as `attachment_remove_unsupported` (the card does not offer
+  it), while adding works.
 * **Refuses rather than drops anything else (2026-10-13).** Attachments were one case of several.
   The parser keeps the first text/plain and the first text/html and has no slot for any other
   part that is not a named file, so these passed the attachment check and were silently absent
@@ -1203,7 +1212,8 @@ registry, and since 2026-10-13 `draft_read` gets `["model", "app"]` instead), li
 `outcome: "failed"` and `isError: true` — never a JSON-RPC error: `invalid_arguments`,
 `insufficient_scope`, `inbox_not_found`, `draft_editor_disabled`, `draft_not_found`,
 `invalid_recipients`, `draft_has_attachments`, `provider_error`, and since 2026-10-13
-`draft_changed` (`draft_editor_save` only; see "Draft lineage"). `draft{action:"send"|"update"}`
+`draft_changed` (`draft_editor_save` only; see "Draft lineage"), and since 2026-10-17
+`attachment_remove_unsupported` (`draft_editor_save` on Outlook). `draft{action:"send"|"update"}`
 add `draft_already_sent`, and `draft{action:"send"}` with `base_revision` adds `draft_changed`, as
 `isError` text results that carry the same failed receipt in a gated workspace.
 Every other `draft{action:"send"|"delete"}` refusal is still a bare `isError` sentence for the model

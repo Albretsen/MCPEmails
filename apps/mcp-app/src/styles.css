@@ -949,6 +949,53 @@ body {
 
 .chip-x:hover { color: var(--fg); }
 
+/* Where a chip removed with the pointer stood, until the pointer leaves the
+   field (Recipients.tsx). Its own size, so nothing after it moves. */
+.chip-ghost {
+  flex: none;
+  display: inline-block;
+  visibility: hidden;
+}
+
+/* Recipient suggestions: a line of their own inside the field's box, in the
+   flow, never a popover (a sandboxed frame clips anything outside its own
+   height). */
+.suggest {
+  flex: 1 0 100%;
+  min-width: 0;
+  margin: 2px 0 0;
+  padding: 2px;
+  list-style: none;
+  border: var(--bw) solid var(--bd);
+  border-radius: var(--r-md);
+  font-size: var(--fs-sm);
+}
+.suggest[hidden] { display: none; }
+.suggest > li {
+  padding: 2px 6px;
+  border-radius: var(--r-sm);
+  cursor: pointer;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+.suggest > li[aria-selected="true"] { background: var(--bg-2); }
+
+/* The draft's files (Attachments.tsx): chips like the recipients', wrapping. */
+.att-list {
+  flex: 1 1 auto;
+  min-width: 0;
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 4px;
+}
+.chip.att > .att-size { color: var(--fg-3); white-space: nowrap; }
+.chip.att[data-removed="true"] > .name,
+.chip.att[data-removed="true"] > .att-size { text-decoration: line-through; color: var(--fg-3); }
+.chip.att[data-new="true"] { border-style: dashed; }
+.chip-x.att-undo { font-size: var(--fs-sm); text-decoration: underline; margin-right: 0; }
+
 .chip-x:focus-visible {
   outline: 2px solid var(--ring);
   outline-offset: 1px;
