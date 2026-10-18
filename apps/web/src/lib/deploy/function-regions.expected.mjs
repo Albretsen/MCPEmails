@@ -183,6 +183,7 @@ export const ROUTES = [
   ['app/api/email/unsubscribe/route.ts', 'arn1', '3', '-'],
   ['app/api/inboxes/[id]/check/route.ts', 'iad1', '5', 'IMAP login to the mail host, or Gmail API / Microsoft Graph'],
   ['app/api/inboxes/[id]/route.ts', 'iad1', '8', 'Google / Microsoft token revoke on delete'],
+  ['app/api/inboxes/[id]/send-as/route.ts', 'arn1', '4-8', 'Resend (one verification mail on add / resend)'],
   ['app/api/inboxes/[id]/signature/image/route.ts', 'arn1', '4', '-'],
   ['app/api/inboxes/app-password/route.ts', 'iad1', '~12', 'IMAP + SMTP login probes to the mail host'],
   ['app/api/inboxes/autodiscover/route.ts', 'arn1', '2', 'DNS SRV/MX + autoconfig fetch to the mailbox domain'],

@@ -1004,6 +1004,28 @@ CREATE TABLE IF NOT EXISTS public.triage_seen_messages (
     CONSTRAINT triage_seen_messages_rule_id_fkey FOREIGN KEY (rule_id) REFERENCES public.triage_rules(id) ON DELETE CASCADE
 );
 
+-- Send As addresses for IMAP inboxes (hosted: 20261018120000). The server only
+-- reads rows with verified_at set. Self-host has no dashboard to verify one, so
+-- an operator inserts the row by hand with verified_at = now(), and only for an
+-- address the inbox's SMTP login is allowed to send from.
+CREATE TABLE IF NOT EXISTS public.inbox_sender_aliases (
+  id               uuid PRIMARY KEY DEFAULT gen_random_uuid(),
+  inbox_id         uuid NOT NULL REFERENCES public.inboxes(id) ON DELETE CASCADE,
+  workspace_id     uuid NOT NULL REFERENCES public.workspaces(id) ON DELETE CASCADE,
+  email_address    text NOT NULL,
+  display_name     text,
+  verified_at      timestamptz,
+  code_hash        text,
+  code_expires_at  timestamptz,
+  code_attempts    integer NOT NULL DEFAULT 0,
+  code_sent_at     timestamptz,
+  created_by       uuid REFERENCES public.users(id) ON DELETE SET NULL,
+  created_at       timestamptz NOT NULL DEFAULT now(),
+  updated_at       timestamptz NOT NULL DEFAULT now()
+);
+CREATE UNIQUE INDEX IF NOT EXISTS inbox_sender_aliases_inbox_address_key
+  ON public.inbox_sender_aliases (inbox_id, lower(email_address));
+
 
 CREATE OR REPLACE TRIGGER billing_email_sends_updated_at
   BEFORE UPDATE ON public.billing_email_sends

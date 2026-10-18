@@ -77,6 +77,50 @@ export class SmtpNotSentError extends Error {
   }
 }
 
+/**
+ * The server refused the From address itself: this login may not send as it.
+ *
+ * Raised for a Send As alias the provider does not recognise for the account,
+ * for example iCloud refusing an address that is not an alias of the Apple ID,
+ * or Exchange's SendAsDenied. Not sent, and not retryable: every attempt from
+ * this address fails the same way until the user changes the provider's alias
+ * settings or sends from another address.
+ *
+ * Covers two points in the exchange. A refused MAIL FROM is before DATA, so
+ * nothing was transmitted. A 5xx answer to the end of DATA is a permanent
+ * refusal of the message (RFC 5321 4.2.5), so it was not accepted for delivery
+ * either; iCloud and Exchange check the From header there, after the body.
+ * Only replies whose wording names sender ownership are classified this way
+ * (see isSenderOwnershipRefusal), so IP and reputation blocks keep their
+ * existing handling.
+ */
+export class SmtpSenderRefusedError extends SmtpNotSentError {
+  constructor(message: string) {
+    super(message, false);
+    this.name = "SmtpSenderRefusedError";
+  }
+}
+
+const SENDER_OWNERSHIP_RE = new RegExp(
+  [
+    String.raw`not (?:one of )?your (?:own )?address`,
+    String.raw`not owned by`,
+    String.raw`send ?as ?denied`,
+    String.raw`not (?:allowed|authori[sz]ed|permitted) to send (?:as|from|on behalf)`,
+    String.raw`sender address (?:is )?(?:not allowed|not owned|does not belong|not authori[sz]ed)`,
+    String.raw`from address (?:is )?(?:not (?:allowed|owned|authori[sz]ed|verified|permitted)|does not belong)`,
+    String.raw`(?:from|sender) (?:address )?(?:does not|doesn't) match`,
+    String.raw`does not match (?:the )?(?:authenticated|login|logged[- ]in)`,
+    String.raw`\b5\.7\.60\b`,
+  ].join("|"),
+  "i",
+);
+
+/** True for a 5xx reply that blames the From address's ownership. */
+export function isSenderOwnershipRefusal(reply: Pick<SmtpReply, "code" | "text">): boolean {
+  return reply.code >= 500 && reply.code < 600 && SENDER_OWNERSHIP_RE.test(reply.text);
+}
+
 export type SmtpSecurity = "tls" | "starttls";
 
 export interface SmtpConfig {
@@ -351,7 +395,14 @@ async function submitOnce(
     // original with `Content-Transfer-Encoding: 8bit` parts is exactly that;
     // everything our own builder writes is base64 and stays 7-bit.
     const eightBit = messageHasEightBit(msg.rawMessage) && advertises8BitMime(capabilities.lines);
-    await session.command(`MAIL FROM:<${msg.from}>${eightBit ? " BODY=8BITMIME" : ""}`, 250);
+    const mailFromLine = `MAIL FROM:<${msg.from}>${eightBit ? " BODY=8BITMIME" : ""}`;
+    const mailFrom = await session.commandRaw(mailFromLine);
+    if (mailFrom.code !== 250) {
+      if (isSenderOwnershipRefusal(mailFrom)) {
+        throw new SmtpSenderRefusedError(`SMTP MAIL FROM <${msg.from}> refused: ${mailFrom.code} ${mailFrom.text}`);
+      }
+      throw new Error(`SMTP: "MAIL" expected 250, got ${mailFrom.code} ${mailFrom.text}`);
+    }
     for (const rcpt of msg.recipients) {
       // 250 = accepted, 251 = forwarded.
       const r = await session.commandRaw(`RCPT TO:<${rcpt}>`);
@@ -366,7 +417,13 @@ async function submitOnce(
     await session.command("DATA", 354);
     dataAccepted = true;
     await session.writeData(msg.rawMessage);
-    await session.expect(250);
+    const accepted = await session.readReplyRaw();
+    if (accepted.code !== 250) {
+      if (isSenderOwnershipRefusal(accepted)) {
+        throw new SmtpSenderRefusedError(`SMTP message from <${msg.from}> refused: ${accepted.code} ${accepted.text}`);
+      }
+      throw new Error(`SMTP: expected 250, got ${accepted.code} ${accepted.text}`);
+    }
 
     await session.commandRaw("QUIT");
     if (relayedRoute) {
@@ -656,6 +713,11 @@ class SmtpSession {
       throw new Error(`SMTP: expected ${expected}, got ${reply.code} ${reply.text}`);
     }
     return reply;
+  }
+
+  /** Read a reply (no command) without asserting the code. */
+  async readReplyRaw(): Promise<SmtpReply> {
+    return await this.readReply();
   }
 
   /** Write the DATA payload with dot-stuffing and the terminating <CRLF>.<CRLF>. */

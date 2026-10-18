@@ -206,6 +206,38 @@
         "saving": "Enregistrement…",
         "tooLong": "Le nom d’expéditeur est trop long (max 100 caractères)."
       },
+      "sendAs": {
+        "title": "Adresses d'envoi",
+        "help": "Envoyez depuis une autre adresse qui arrive dans cette boîte, comme un alias iCloud. Nous lui envoyons un code pour confirmer qu'elle est à vous. Votre fournisseur de messagerie doit aussi autoriser l'envoi depuis cette adresse.",
+        "placeholder": "alias@exemple.fr",
+        "add": "Ajouter l'adresse",
+        "adding": "Envoi du code…",
+        "loading": "Chargement…",
+        "verified": "Vérifiée",
+        "pending": "Code envoyé",
+        "unverified": "Non vérifiée",
+        "codePlaceholder": "Code à 6 chiffres",
+        "codeLabel": "Code de vérification pour {address}",
+        "verify": "Vérifier",
+        "resend": "Renvoyer le code",
+        "remove": "Retirer",
+        "errors": {
+          "invalid_address": "Saisissez une adresse e-mail valide.",
+          "own_address": "C'est l'adresse de cette boîte.",
+          "connected_inbox": "Cette adresse est connectée comme boîte à part entière. Envoyez depuis cette boîte.",
+          "already_verified": "Cette adresse est déjà vérifiée.",
+          "too_many_aliases": "Cette boîte ne peut pas recevoir plus d'adresses. Retirez-en une d'abord.",
+          "rate_limited": "Trop de codes envoyés. Réessayez plus tard.",
+          "cooldown": "Attendez une minute avant de demander un autre code.",
+          "code_expired": "Ce code a expiré. Demandez-en un nouveau.",
+          "too_many_attempts": "Trop de codes erronés. Demandez-en un nouveau.",
+          "wrong_code": "Ce code est incorrect.",
+          "invalid_code": "Saisissez le code à 6 chiffres.",
+          "mail_failed": "Nous n'avons pas pu envoyer le code. Réessayez.",
+          "unsupported_provider": "L'envoi depuis une autre adresse n'est pas disponible pour cette boîte.",
+          "generic": "Une erreur s'est produite. Réessayez."
+        }
+      },
       "signature": {
         "title": "Signature e-mail",
         "enabled": "Activée",

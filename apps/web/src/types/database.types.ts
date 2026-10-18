@@ -1995,6 +1995,83 @@ export type Database = {
           },
         ]
       }
+      inbox_sender_aliases: {
+        Row: {
+          code_attempts: number
+          code_expires_at: string | null
+          code_hash: string | null
+          code_sent_at: string | null
+          created_at: string
+          created_by: string | null
+          display_name: string | null
+          email_address: string
+          id: string
+          inbox_id: string
+          updated_at: string
+          verified_at: string | null
+          workspace_id: string
+        }
+        Insert: {
+          code_attempts?: number
+          code_expires_at?: string | null
+          code_hash?: string | null
+          code_sent_at?: string | null
+          created_at?: string
+          created_by?: string | null
+          display_name?: string | null
+          email_address: string
+          id?: string
+          inbox_id: string
+          updated_at?: string
+          verified_at?: string | null
+          workspace_id: string
+        }
+        Update: {
+          code_attempts?: number
+          code_expires_at?: string | null
+          code_hash?: string | null
+          code_sent_at?: string | null
+          created_at?: string
+          created_by?: string | null
+          display_name?: string | null
+          email_address?: string
+          id?: string
+          inbox_id?: string
+          updated_at?: string
+          verified_at?: string | null
+          workspace_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "inbox_sender_aliases_created_by_fkey"
+            columns: ["created_by"]
+            isOneToOne: false
+            referencedRelation: "users"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "inbox_sender_aliases_inbox_id_fkey"
+            columns: ["inbox_id"]
+            isOneToOne: false
+            referencedRelation: "inboxes"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "inbox_sender_aliases_workspace_id_fkey"
+            columns: ["workspace_id"]
+            isOneToOne: false
+            referencedRelation: "billing_funnel_by_workspace"
+            referencedColumns: ["workspace_id"]
+          },
+          {
+            foreignKeyName: "inbox_sender_aliases_workspace_id_fkey"
+            columns: ["workspace_id"]
+            isOneToOne: false
+            referencedRelation: "workspaces"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       inboxes: {
         Row: {
           bulk_review_mode: string
