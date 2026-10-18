@@ -21,7 +21,7 @@
     "accountTitle": "2.1 Données de compte",
     "accountP": "Lorsque vous créez un compte, nous collectons votre adresse e-mail et un mot de passe haché (nous ne stockons jamais de mots de passe en clair). Vous pouvez éventuellement fournir un nom d'affichage. Ces données sont nécessaires pour créer et gérer votre compte. Si vous cochez la case du formulaire d'inscription pour recevoir par e-mail des conseils sur le produit et des offres, nous enregistrons également que vous l'avez fait, à quel moment, et le texte que vous avez vu. Lors de votre inscription, nous enregistrons aussi si vous avez utilisé un téléphone, une tablette ou un ordinateur, d'après les en-têtes de la requête de votre navigateur. Nous ne conservons que cette catégorie, jamais la chaîne user-agent de votre navigateur ni aucun identifiant d'appareil, et nous l'utilisons uniquement pour comprendre d'où viennent les inscriptions.",
     "workspaceTitle": "2.2 Données d'espace de travail et de configuration",
-    "workspaceP": "Nous stockons le nom d'espace de travail que vous choisissez, ainsi que la configuration de chaque boîte de réception connectée (type de fournisseur, adresse e-mail, statut OAuth et horodatage de connexion). Nous ne stockons <b>pas</b> les jetons d'accès OAuth ni les mots de passe d'application en clair. Ils sont chiffrés avec AES-256-GCM avant d'être écrits dans la base de données, et la clé de chiffrement est conservée dans un coffre-fort de secrets distinct.",
+    "workspaceP": "Nous stockons le nom d'espace de travail que vous choisissez, ainsi que la configuration de chaque boîte de réception connectée (type de fournisseur, adresse e-mail, statut OAuth et horodatage de connexion). Nous ne stockons <b>pas</b> les jetons d'accès OAuth ni les mots de passe d'application en clair. Ils sont chiffrés avec AES-256-GCM avant d'être écrits dans la base de données, et la clé de chiffrement est conservée comme secret serveur dans notre environnement applicatif, jamais dans la base de données.",
     "apiKeysTitle": "2.3 Clés d'API",
     "apiKeysP": "Nous stockons un hachage SHA-256 de chaque clé d'API que vous créez, ainsi que le nom de la clé, ses portées, son horodatage de création et son horodatage de dernière utilisation. La valeur brute de la clé vous est affichée une seule fois, au moment de sa création, et n'est jamais stockée sous une forme récupérable.",
     "logsTitle": "2.4 Journaux d'utilisation et d'audit",
@@ -149,11 +149,11 @@
     "thData": "Données traitées",
     "thLocation": "Localisation",
     "supabasePurpose": "Base de données, authentification, fonctions edge",
-    "supabaseData": "Données de compte, configuration d'espace de travail, journaux d'audit",
-    "supabaseLocation": "UE (Stockholm, Suède)",
-    "vercelPurpose": "Hébergement web, CDN",
-    "vercelData": "Métadonnées des requêtes HTTP ; aucun contenu d'e-mail",
-    "vercelLocation": "Edge mondial (région la plus proche de l'utilisateur)",
+    "supabaseData": "Données de compte, configuration d'espace de travail, journaux d'audit ; le contenu des e-mails transite en direct et n'est stocké que dans les cas décrits à la section 2.5",
+    "supabaseLocation": "Données stockées dans l'UE (Stockholm, Suède). Les fonctions edge s'exécutent aux États-Unis (Est) et traitent les e-mails en direct",
+    "vercelPurpose": "Hébergement web, CDN, point de terminaison MCP",
+    "vercelData": "Métadonnées des requêtes HTTP ; les requêtes et réponses MCP, y compris le contenu des e-mails, transitent sans être stockées",
+    "vercelLocation": "CDN mondial ; fonctions serveur aux États-Unis (Est) et dans l'UE (Stockholm, Suède)",
     "stripeProvider": "(plans payants uniquement)",
     "stripePurpose": "Traitement des paiements",
     "stripeData": "E-mail de facturation, données de carte de paiement (stockées par Stripe, pas par nous)",
@@ -171,7 +171,7 @@
     "title": "6. Transferts internationaux de données",
     "p1": "MCPEmails est exploité depuis la Norvège, qui est soumise au cadre de protection des données de l'Espace économique européen (EEE). Si vous accédez au service depuis l'extérieur de l'EEE, vos données peuvent être transférées et traitées dans des pays situés au sein de l'EEE.",
     "p2": "Nos sous-traitants d'infrastructure (Supabase, Vercel) opèrent dans le cadre de clauses contractuelles types (CCT) approuvées par la Commission européenne pour les transferts de données vers des pays tiers. Pour Stripe, le traitement est couvert par leur certification au titre du cadre de protection des données UE-États-Unis (EU-US Data Privacy Framework).",
-    "p3": "Notre base de données, qui contient les données de compte et de configuration, est hébergée dans l'UE (Stockholm, Suède) pour tous les clients. Aucun forfait ni réglage ne la déplace vers une autre région."
+    "p3": "Notre base de données, qui contient les données de compte et de configuration, est hébergée dans l'UE (Stockholm, Suède) pour tous les clients. Aucun forfait ni réglage ne la déplace vers une autre région. Les serveurs qui traitent les requêtes de votre agent ne sont pas tous dans l'UE : les fonctions edge qui se connectent à votre boîte aux lettres s'exécutent aux États-Unis (côte Est), tout comme la partie de notre site qui relaie ces requêtes. Le contenu des e-mails y transite en direct, pour répondre à la requête, et n'y est pas stocké. Les identifiants chiffrés sont déchiffrés dans ce même environnement américain le temps de la requête."
   },
   "yourRights": {
     "title": "7. Vos droits",
@@ -214,7 +214,7 @@
     "intro": "Nous prenons la sécurité de vos données au sérieux et mettons en œuvre des mesures techniques et organisationnelles appropriées, notamment :",
     "measures": [
       "Toutes les données en transit sont chiffrées à l'aide de TLS 1.2 ou supérieur. Les connexions ne prenant pas en charge TLS sont rejetées.",
-      "Les jetons OAuth et les identifiants IMAP sont chiffrés au repos à l'aide d'AES-256-GCM. La clé de chiffrement est conservée dans une instance Supabase Vault distincte et n'est jamais colocalisée avec les données chiffrées.",
+      "Les jetons OAuth et les identifiants IMAP sont chiffrés au repos à l'aide d'AES-256-GCM. La clé de chiffrement est conservée comme secret serveur dans notre environnement applicatif, séparément de la base de données, et n'est jamais stockée avec les données chiffrées.",
       "Les clés d'API sont hachées avec SHA-256 avant stockage. La clé brute ne peut pas être récupérée à partir du hachage.",
       "L'accès à la base de données est protégé par des politiques de sécurité au niveau des lignes (RLS) qui empêchent un espace de travail d'accéder aux données d'un autre, même en cas d'erreur de logique de requête.",
       "L'accès administratif à l'infrastructure de production nécessite une authentification multifacteur et est journalisé."

@@ -86,7 +86,7 @@
     "intro": "Vos jetons sont la seule chose sensible que nous détenons, ils bénéficient donc de la protection la plus forte que nous puissions leur offrir :",
     "measures": [
       "Toutes les données en transit sont chiffrées avec TLS 1.2 ou supérieur. Les connexions qui ne prennent pas en charge TLS sont rejetées.",
-      "Les jetons OAuth et les identifiants IMAP sont chiffrés au repos avec AES-256-GCM. La clé de chiffrement est conservée séparément des données chiffrées et n'est jamais située au même endroit qu'elles.",
+      "Les jetons OAuth et les identifiants IMAP sont chiffrés au repos avec AES-256-GCM. La clé de chiffrement est conservée comme secret serveur, séparément de la base de données, et n'est jamais stockée avec les données chiffrées.",
       "Les clés d'API sont hachées avec SHA-256 avant le stockage. La clé brute ne peut pas être récupérée à partir du hachage.",
       "L'accès à la base de données est protégé par des politiques de Row-Level Security qui empêchent un espace de travail d'atteindre les données d'un autre, même si une requête est mal écrite.",
       "L'accès administratif à l'infrastructure de production nécessite une authentification multifacteur et est journalisé."
@@ -108,12 +108,12 @@
       {
         "provider": "Supabase",
         "purpose": "Base de données, authentification, fonctions edge",
-        "location": "UE (Stockholm, Suède)"
+        "location": "Données stockées dans l'UE (Stockholm, Suède) ; e-mails traités en direct aux États-Unis (Est)"
       },
       {
         "provider": "Vercel",
-        "purpose": "Hébergement du site web et du tableau de bord",
-        "location": "Edge mondial, région la plus proche de l'utilisateur"
+        "purpose": "Hébergement du site web, du tableau de bord et du point de terminaison MCP",
+        "location": "CDN mondial ; serveurs aux États-Unis (Est) et dans l'UE (Stockholm)"
       },
       {
         "provider": "Stripe",

@@ -21,7 +21,7 @@
     "accountTitle": "2.1 Datos de cuenta",
     "accountP": "Cuando creas una cuenta recopilamos tu dirección de correo y una contraseña con hash (nunca almacenamos contraseñas en texto plano). Opcionalmente puedes proporcionar un nombre para mostrar. Estos datos son necesarios para crear y mantener tu cuenta. Si marcas la casilla del formulario de registro para recibir consejos sobre el producto y ofertas por correo, también registramos que lo hiciste, cuándo y qué texto viste. Al registrarte, también registramos si usaste un teléfono, una tableta o un ordenador, según las cabeceras de la solicitud de tu navegador. Solo guardamos esa categoría, nunca la cadena de agente de usuario del navegador ni ningún identificador del dispositivo, y la usamos únicamente para entender de dónde vienen los registros.",
     "workspaceTitle": "2.2 Datos de espacio de trabajo y configuración",
-    "workspaceP": "Almacenamos el nombre del espacio de trabajo que elijas y la configuración de cada bandeja conectada (tipo de proveedor, dirección de correo, estado de OAuth y marca de tiempo de conexión). <b>No</b> almacenamos tokens de acceso de OAuth ni contraseñas de aplicación en texto plano. Se cifran con AES-256-GCM antes de escribirse en la base de datos, y la clave de cifrado se guarda en un almacén de secretos separado.",
+    "workspaceP": "Almacenamos el nombre del espacio de trabajo que elijas y la configuración de cada bandeja conectada (tipo de proveedor, dirección de correo, estado de OAuth y marca de tiempo de conexión). <b>No</b> almacenamos tokens de acceso de OAuth ni contraseñas de aplicación en texto plano. Se cifran con AES-256-GCM antes de escribirse en la base de datos, y la clave de cifrado se guarda como secreto del servidor en nuestro entorno de aplicación, nunca en la base de datos.",
     "apiKeysTitle": "2.3 Claves de API",
     "apiKeysP": "Almacenamos un hash SHA-256 de cada clave de API que creas, junto con el nombre de la clave, sus alcances, la marca de tiempo de creación y la del último uso. El valor en bruto de la clave se te muestra exactamente una vez en el momento de la creación y nunca se almacena de forma recuperable.",
     "logsTitle": "2.4 Registros de uso y auditoría",
@@ -149,11 +149,11 @@
     "thData": "Datos tratados",
     "thLocation": "Ubicación",
     "supabasePurpose": "Base de datos, autenticación, edge functions",
-    "supabaseData": "Datos de cuenta, configuración del espacio de trabajo, registros de auditoría",
-    "supabaseLocation": "UE (Estocolmo, Suecia)",
-    "vercelPurpose": "Alojamiento web, CDN",
-    "vercelData": "Metadatos de peticiones HTTP; sin contenido de correo",
-    "vercelLocation": "Edge global (región más cercana al usuario)",
+    "supabaseData": "Datos de cuenta, configuración del espacio de trabajo, registros de auditoría; el contenido de correo pasa en directo y solo se almacena como describe la sección 2.5",
+    "supabaseLocation": "Datos almacenados en la UE (Estocolmo, Suecia). Las edge functions se ejecutan en EE. UU. (Este) y procesan el correo en directo",
+    "vercelPurpose": "Alojamiento web, CDN, endpoint MCP",
+    "vercelData": "Metadatos de peticiones HTTP; las peticiones y respuestas MCP, incluido el contenido de correo, pasan en tránsito y no se almacenan",
+    "vercelLocation": "CDN global; funciones de servidor en EE. UU. (Este) y en la UE (Estocolmo, Suecia)",
     "stripeProvider": "(solo planes de pago)",
     "stripePurpose": "Procesamiento de pagos",
     "stripeData": "Correo de facturación, datos de tarjeta de pago (almacenados por Stripe, no por nosotros)",
@@ -171,7 +171,7 @@
     "title": "6. Transferencias internacionales de datos",
     "p1": "MCPEmails se opera desde Noruega, que está sujeta al marco de protección de datos del Espacio Económico Europeo (EEE). Si accedes al servicio desde fuera del EEE, tus datos pueden transferirse y tratarse en países dentro del EEE.",
     "p2": "Nuestros subencargados de infraestructura (Supabase, Vercel) operan bajo Cláusulas Contractuales Tipo (CCT) aprobadas por la Comisión Europea para transferencias de datos a terceros países. Para Stripe, el tratamiento está cubierto por su certificación del Marco de Privacidad de Datos UE-EE. UU.",
-    "p3": "Nuestra base de datos, que contiene los datos de cuenta y configuración, está alojada en la UE (Estocolmo, Suecia) para todos los clientes. Ningún plan ni ajuste la traslada a otra región."
+    "p3": "Nuestra base de datos, que contiene los datos de cuenta y configuración, está alojada en la UE (Estocolmo, Suecia) para todos los clientes. Ningún plan ni ajuste la traslada a otra región. No todos los servidores que atienden las peticiones de tu agente están en la UE: las edge functions que se conectan a tu buzón se ejecutan en Estados Unidos (Este de EE. UU.), igual que la parte de nuestro sitio web que reenvía esas peticiones. El contenido del correo pasa por ellos en directo para responder a la petición y no se almacena allí. Las credenciales cifradas se descifran en ese mismo entorno de EE. UU. mientras dura la petición."
   },
   "yourRights": {
     "title": "7. Tus derechos",
@@ -214,7 +214,7 @@
     "intro": "Nos tomamos en serio la seguridad de tus datos e implementamos medidas técnicas y organizativas adecuadas, entre ellas:",
     "measures": [
       "Todos los datos en tránsito se cifran usando TLS 1.2 o superior. Las conexiones que no admiten TLS se rechazan.",
-      "Los tokens de OAuth y las credenciales IMAP se cifran en reposo usando AES-256-GCM. La clave de cifrado se guarda en una instancia separada de Supabase Vault y nunca se ubica junto a los datos cifrados.",
+      "Los tokens de OAuth y las credenciales IMAP se cifran en reposo usando AES-256-GCM. La clave de cifrado se guarda como secreto del servidor en nuestro entorno de aplicación, separada de la base de datos, y nunca se almacena junto a los datos cifrados.",
       "Las claves de API se procesan con hash SHA-256 antes de almacenarse. La clave en bruto no puede recuperarse a partir del hash.",
       "El acceso a la base de datos está protegido por políticas de Seguridad a Nivel de Fila (RLS) que impiden que un espacio de trabajo acceda a los datos de otro, incluso en caso de un error de lógica de consulta.",
       "El acceso administrativo a la infraestructura de producción requiere autenticación multifactor y queda registrado."
