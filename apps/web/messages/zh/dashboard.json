@@ -206,6 +206,38 @@
         "saving": "保存中…",
         "tooLong": "发件人名称过长（最多 100 个字符）。"
       },
+      "sendAs": {
+        "title": "发件地址",
+        "help": "使用另一个投递到此邮箱的地址发信，例如 iCloud 别名。我们会向该地址发送验证码，确认它属于你。你的邮件服务商也必须允许用它发信。",
+        "placeholder": "alias@example.com",
+        "add": "添加地址",
+        "adding": "正在发送验证码…",
+        "loading": "加载中…",
+        "verified": "已验证",
+        "pending": "验证码已发送",
+        "unverified": "未验证",
+        "codePlaceholder": "6 位验证码",
+        "codeLabel": "{address} 的验证码",
+        "verify": "验证",
+        "resend": "重新发送验证码",
+        "remove": "移除",
+        "errors": {
+          "invalid_address": "请输入有效的邮箱地址。",
+          "own_address": "这是此邮箱自己的地址。",
+          "connected_inbox": "该地址已作为独立邮箱连接，请直接从那个邮箱发信。",
+          "already_verified": "该地址已验证。",
+          "too_many_aliases": "此邮箱无法再添加地址，请先移除一个。",
+          "rate_limited": "发送的验证码过多，请稍后再试。",
+          "cooldown": "请等待一分钟再发送新的验证码。",
+          "code_expired": "验证码已过期，请重新发送。",
+          "too_many_attempts": "错误次数过多，请重新发送验证码。",
+          "wrong_code": "验证码不正确。",
+          "invalid_code": "请输入 6 位验证码。",
+          "mail_failed": "验证码发送失败，请重试。",
+          "unsupported_provider": "此邮箱不支持使用其他地址发信。",
+          "generic": "出现问题，请重试。"
+        }
+      },
       "signature": {
         "title": "邮件签名",
         "enabled": "已启用",

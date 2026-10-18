@@ -206,6 +206,38 @@
         "saving": "Guardando…",
         "tooLong": "El nombre del remitente es demasiado largo (máx. 100 caracteres)."
       },
+      "sendAs": {
+        "title": "Direcciones de envío",
+        "help": "Envía desde otra dirección que llega a este buzón, como un alias de iCloud. Le enviamos un código para confirmar que es tuya. Tu proveedor de correo también debe permitir enviar desde ella.",
+        "placeholder": "alias@ejemplo.com",
+        "add": "Añadir dirección",
+        "adding": "Enviando código…",
+        "loading": "Cargando…",
+        "verified": "Verificada",
+        "pending": "Código enviado",
+        "unverified": "Sin verificar",
+        "codePlaceholder": "Código de 6 dígitos",
+        "codeLabel": "Código de verificación para {address}",
+        "verify": "Verificar",
+        "resend": "Reenviar código",
+        "remove": "Quitar",
+        "errors": {
+          "invalid_address": "Introduce una dirección de correo válida.",
+          "own_address": "Esa es la dirección de este buzón.",
+          "connected_inbox": "Esa dirección está conectada como buzón propio. Envía desde ese buzón.",
+          "already_verified": "Esa dirección ya está verificada.",
+          "too_many_aliases": "Este buzón no admite más direcciones. Quita una primero.",
+          "rate_limited": "Se han enviado demasiados códigos. Inténtalo más tarde.",
+          "cooldown": "Espera un minuto antes de pedir otro código.",
+          "code_expired": "El código ha caducado. Pide uno nuevo.",
+          "too_many_attempts": "Demasiados códigos incorrectos. Pide uno nuevo.",
+          "wrong_code": "El código no es correcto.",
+          "invalid_code": "Introduce el código de 6 dígitos.",
+          "mail_failed": "No pudimos enviar el código. Inténtalo de nuevo.",
+          "unsupported_provider": "El envío con otra dirección no está disponible para este buzón.",
+          "generic": "Algo salió mal. Inténtalo de nuevo."
+        }
+      },
       "signature": {
         "title": "Firma de correo",
         "enabled": "Activada",

@@ -2233,6 +2233,163 @@ function SenderNameEditor({ inbox, onSave, t, readOnly = false }) {
 }
 
 /**
+ * Send As addresses for an IMAP inbox: another From address that delivers to
+ * this mailbox (an iCloud alias, say). Adding one emails a code to that
+ * address; it can be used only once the code is entered here. The rules and
+ * limits live in lib/inboxes/send-as.ts; this only drives
+ * /api/inboxes/[id]/send-as. `readOnly`: a viewer sees the list, nothing else.
+ */
+const SEND_AS_ERRORS = new Set([
+  'invalid_address', 'own_address', 'connected_inbox', 'already_verified', 'too_many_aliases',
+  'rate_limited', 'cooldown', 'code_expired', 'too_many_attempts', 'wrong_code', 'invalid_code',
+  'mail_failed', 'unsupported_provider',
+]);
+
+export function SendAsEditor({ inbox, t, readOnly = false }) {
+  const [aliases, setAliases] = useState(null);
+  const [address, setAddress] = useState('');
+  const [codes, setCodes] = useState({});
+  const [busy, setBusy] = useState(null);
+  const [error, setError] = useState(null);
+  const endpoint = `/api/inboxes/${encodeURIComponent(inbox.id)}/send-as`;
+
+  useEffect(() => {
+    let live = true;
+    // eslint-disable-next-line react-hooks/set-state-in-effect
+    setAliases(null);
+    setError(null);
+    fetch(endpoint)
+      .then(res => (res.ok ? res.json() : Promise.reject(new Error('load'))))
+      .then(body => { if (live) setAliases(Array.isArray(body.aliases) ? body.aliases : []); })
+      .catch(() => { if (live) { setAliases([]); setError('generic'); } });
+    return () => { live = false; };
+  }, [endpoint]);
+
+  const call = async (key, init, url = endpoint) => {
+    setBusy(key);
+    setError(null);
+    try {
+      const res = await fetch(url, init);
+      const body = await res.json().catch(() => ({}));
+      if (!res.ok) {
+        setError(SEND_AS_ERRORS.has(body.error) ? body.error : 'generic');
+        return null;
+      }
+      return body;
+    } catch {
+      setError('generic');
+      return null;
+    } finally {
+      setBusy(null);
+    }
+  };
+
+  const upsert = alias => setAliases(list => {
+    const current = list ?? [];
+    return current.some(a => a.id === alias.id)
+      ? current.map(a => (a.id === alias.id ? alias : a))
+      : [...current, alias];
+  });
+
+  const post = payload => ({ method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(payload) });
+
+  const handleAdd = async () => {
+    if (readOnly || busy || !address.trim()) return;
+    const body = await call('add', post({ action: 'add', email_address: address.trim() }));
+    if (body?.alias) { upsert(body.alias); setAddress(''); }
+  };
+  const handleVerify = async alias => {
+    const body = await call(`verify:${alias.id}`, post({ action: 'verify', alias_id: alias.id, code: codes[alias.id] ?? '' }));
+    if (body?.alias) { upsert(body.alias); setCodes(c => ({ ...c, [alias.id]: '' })); }
+  };
+  const handleResend = async alias => {
+    const body = await call(`resend:${alias.id}`, post({ action: 'resend', alias_id: alias.id }));
+    if (body?.alias) upsert(body.alias);
+  };
+  const handleRemove = async alias => {
+    const body = await call(`remove:${alias.id}`, { method: 'DELETE' }, `${endpoint}?alias_id=${encodeURIComponent(alias.id)}`);
+    if (body) setAliases(list => (list ?? []).filter(a => a.id !== alias.id));
+  };
+
+  const label = { fontFamily: 'var(--font-sans)', fontSize: 12.5, color: 'var(--fg-2)' };
+  const inputId = `send-as-${inbox.id}`;
+
+  return (
+    <div style={{ marginBottom: 16 }} data-send-as>
+      <label htmlFor={inputId} style={{ display: 'block', margin: '0 0 2px', fontFamily: 'var(--font-sans)', fontSize: 13.5, fontWeight: 600, color: 'var(--fg-1)' }}>
+        {t('inboxes.detail.sendAs.title')}
+      </label>
+      <div style={{ ...label, marginBottom: 8 }}>{t('inboxes.detail.sendAs.help')}</div>
+
+      {aliases === null ? (
+        <div style={label}>{t('inboxes.detail.sendAs.loading')}</div>
+      ) : aliases.map(alias => (
+        <div key={alias.id} data-alias={alias.email_address} style={{ padding: '6px 0', borderBottom: '1px solid var(--border-1)' }}>
+          <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
+            <span style={{ flex: 1, minWidth: 0, fontFamily: 'var(--font-mono)', fontSize: 12.5, color: 'var(--fg-1)', overflowWrap: 'anywhere' }}>{alias.email_address}</span>
+            {alias.verified
+              ? <Badge tone="live">{t('inboxes.detail.sendAs.verified')}</Badge>
+              : <Badge tone="neutral">{t(alias.code_pending ? 'inboxes.detail.sendAs.pending' : 'inboxes.detail.sendAs.unverified')}</Badge>}
+            <Btn variant="ghost" size="sm" disabled={readOnly || !!busy} onClick={() => handleRemove(alias)}>
+              {t('inboxes.detail.sendAs.remove')}
+            </Btn>
+          </div>
+          {!alias.verified && (
+            <div style={{ display: 'flex', alignItems: 'center', gap: 8, marginTop: 6 }}>
+              <input
+                className="input"
+                type="text"
+                inputMode="numeric"
+                autoComplete="one-time-code"
+                maxLength={9}
+                aria-label={t('inboxes.detail.sendAs.codeLabel', { address: alias.email_address })}
+                placeholder={t('inboxes.detail.sendAs.codePlaceholder')}
+                value={codes[alias.id] ?? ''}
+                onChange={e => setCodes(c => ({ ...c, [alias.id]: e.target.value }))}
+                onKeyDown={e => { if (e.key === 'Enter') { e.preventDefault(); handleVerify(alias); } }}
+                disabled={readOnly || !!busy}
+                style={{ width: 120, height: 30, padding: '0 10px' }}
+              />
+              <Btn variant="primary" size="sm" disabled={readOnly || !!busy || !(codes[alias.id] ?? '').trim()} onClick={() => handleVerify(alias)}>
+                {t('inboxes.detail.sendAs.verify')}
+              </Btn>
+              <Btn variant="ghost" size="sm" disabled={readOnly || !!busy} onClick={() => handleResend(alias)}>
+                {t('inboxes.detail.sendAs.resend')}
+              </Btn>
+            </div>
+          )}
+        </div>
+      ))}
+
+      <div style={{ display: 'flex', alignItems: 'center', gap: 8, marginTop: 8 }}>
+        <input
+          id={inputId}
+          className="input"
+          type="email"
+          autoComplete="off"
+          spellCheck={false}
+          maxLength={254}
+          placeholder={t('inboxes.detail.sendAs.placeholder')}
+          value={address}
+          onChange={e => setAddress(e.target.value)}
+          onKeyDown={e => { if (e.key === 'Enter') { e.preventDefault(); handleAdd(); } }}
+          disabled={readOnly || !!busy || aliases === null}
+          style={{ flex: 1, minWidth: 0, height: 32, padding: '0 10px' }}
+        />
+        <Btn variant="secondary" size="sm" disabled={readOnly || !!busy || !address.trim() || aliases === null} onClick={handleAdd}>
+          {busy === 'add' ? t('inboxes.detail.sendAs.adding') : t('inboxes.detail.sendAs.add')}
+        </Btn>
+      </div>
+      {error && (
+        <div role="alert" style={{ ...label, marginTop: 6, color: 'var(--red-500)' }}>
+          {t(`inboxes.detail.sendAs.errors.${error}`)}
+        </div>
+      )}
+    </div>
+  );
+}
+
+/**
  * `readOnly`: a viewer. Every control is disabled and nothing is saved (the
  * PATCH and image routes refuse a viewer). `canManageReview`: owner/admin. The
  * review gate is theirs alone, so for a member the selector is disabled with
@@ -2896,6 +3053,9 @@ function InboxDetailModal({ inbox, checking, onClose, onReconnect, onCheck, onDi
                 <p className="review-mode-note" role="note">{t('inboxes.viewerActionsNote')}</p>
               ) : null}
               {onSaveSenderName && <SenderNameEditor inbox={inbox} onSave={onSaveSenderName} t={t} readOnly={!canManageInbox} />}
+              {/* IMAP inboxes that can send. Gmail's own Send As list comes
+                  from Google; Outlook has none yet. */}
+              {inbox.hasImap && inbox.connectionMode !== 'imap' && <SendAsEditor inbox={inbox} t={t} readOnly={!canManageInbox} />}
               <SignatureEditor inbox={inbox} onSave={onSaveSignature} t={t} readOnly={!canManageInbox} canManageReview={canManageInbox && canManageReview} />
             </details>
           )}

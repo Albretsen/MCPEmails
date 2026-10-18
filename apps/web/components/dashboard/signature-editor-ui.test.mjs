@@ -82,6 +82,11 @@ async function renderInboxes(t, { inboxes = [inbox()], respond, userRole = 'owne
   const requests = [];
   const previousFetch = globalThis.fetch;
   globalThis.fetch = async (url, init = {}) => {
+    // The detail modal's Send As list (send-as-ui.test.mjs covers it). Not a
+    // signature request, so it is answered and left out of `requests`.
+    if (String(url).endsWith('/send-as') && (init.method ?? 'GET') === 'GET') {
+      return { ok: true, status: 200, json: async () => ({ aliases: [] }) };
+    }
     let body = null;
     if (typeof init.body === 'string') body = JSON.parse(init.body);
     const request = { url: String(url), method: init.method ?? 'GET', body, raw: init.body };

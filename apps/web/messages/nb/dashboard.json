@@ -206,6 +206,38 @@
         "saving": "Lagrer…",
         "tooLong": "Avsendernavnet er for langt (maks 100 tegn)."
       },
+      "sendAs": {
+        "title": "Send som-adresser",
+        "help": "Send fra en annen adresse som leverer til denne innboksen, for eksempel et iCloud-alias. Vi sender en kode til adressen for å bekrefte at den er din. E-postleverandøren din må også tillate sending fra den.",
+        "placeholder": "alias@eksempel.no",
+        "add": "Legg til adresse",
+        "adding": "Sender kode…",
+        "loading": "Laster…",
+        "verified": "Bekreftet",
+        "pending": "Kode sendt",
+        "unverified": "Ikke bekreftet",
+        "codePlaceholder": "6-sifret kode",
+        "codeLabel": "Bekreftelseskode for {address}",
+        "verify": "Bekreft",
+        "resend": "Send ny kode",
+        "remove": "Fjern",
+        "errors": {
+          "invalid_address": "Skriv inn en gyldig e-postadresse.",
+          "own_address": "Det er innboksens egen adresse.",
+          "connected_inbox": "Den adressen er koblet til som en egen innboks. Send fra den innboksen i stedet.",
+          "already_verified": "Den adressen er allerede bekreftet.",
+          "too_many_aliases": "Denne innboksen har ikke plass til flere adresser. Fjern en først.",
+          "rate_limited": "For mange koder sendt. Prøv igjen senere.",
+          "cooldown": "Vent ett minutt før du sender en ny kode.",
+          "code_expired": "Koden har utløpt. Send en ny.",
+          "too_many_attempts": "For mange feil koder. Send en ny.",
+          "wrong_code": "Koden stemmer ikke.",
+          "invalid_code": "Skriv inn den 6-sifrede koden.",
+          "mail_failed": "Vi klarte ikke å sende koden. Prøv igjen.",
+          "unsupported_provider": "Send som er ikke tilgjengelig for denne innboksen.",
+          "generic": "Noe gikk galt. Prøv igjen."
+        }
+      },
       "signature": {
         "title": "E-postsignatur",
         "enabled": "På",
