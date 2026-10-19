@@ -295,7 +295,8 @@ async function main() {
   {
     const c = await editor(formatted());
     expect("nothing before an edit", WARNING.test(c.text()), false);
-    c.input("d-body", FORMATTED_TEXT + "\n\nOne more thing.");
+    // A paragraph added in the middle (one added at the end merges since 2026-10-19).
+    c.input("d-body", FORMATTED_TEXT.replace("after the review.", "after the review.\n\nOne more thing."));
     await settle();
     expect("the warning shows", WARNING.test(c.text()), true);
     expect("as a warning notice", !!c.root.querySelector('.notice[data-tone="warning"]'), true);

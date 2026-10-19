@@ -3406,16 +3406,36 @@ Deno.test("formatted body: a list item and the heading edited in one save keep t
 });
 
 Deno.test("formatted body: an edit that cannot be placed drops the HTML part and SAYS so", async () => {
-  // A new paragraph: the text has more lines than the HTML can be told about.
+  // A new paragraph in the middle: which block it belongs to is not knowable.
   const { deps, writes } = fakeDeps({ stored: storedFormatted() });
   const out = await runDraftEditorSave(deps, caller(), {
     draft_id: "Drafts:2",
-    body_text: FORMATTED_TEXT + "\n\nOne more thing.",
+    body_text: FORMATTED_TEXT.replace("after the review.", "after the review.\n\nOne more thing."),
   });
   assertEquals(writes[0].params.htmlBody, undefined, "no generated part passing for the original");
   const body = (out.result.structuredContent as any).draft.body;
   assertEquals(body.html, null);
   assertEquals(body.formatting_removed, true);
+});
+
+Deno.test("formatted body: a paragraph added at the end keeps every tag (2026-10-19)", async () => {
+  const { deps, writes } = fakeDeps({ stored: storedFormatted() });
+  const out = await runDraftEditorSave(deps, caller(), {
+    draft_id: "Drafts:2",
+    body_text: FORMATTED_TEXT + " Thanks!\n\nOne more thing.",
+  });
+  // A word on the last line AND a new line: the alignment is not certain.
+  assertEquals(writes[0].params.htmlBody, undefined);
+  assertEquals((out.result.structuredContent as any).draft.body.formatting_removed, true);
+
+  const second = fakeDeps({ stored: storedFormatted() });
+  const appended = await runDraftEditorSave(second.deps, caller(), {
+    draft_id: "Drafts:2",
+    body_text: FORMATTED_TEXT + "\n\nOne more thing.",
+  });
+  assertEquals(appended.result.isError, false);
+  assertEquals(second.writes[0].params.htmlBody, FORMATTED_HTML + "<p>One more thing.</p>");
+  assert(!("formatting_removed" in (appended.result.structuredContent as any).draft.body));
 });
 
 Deno.test("formatted body: link words are never edited under their old address", async () => {
