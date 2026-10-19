@@ -1,7 +1,7 @@
 -- ============================================================
 -- SSO audit trail and the "has an admin tested SSO sign-in" gate
 -- ============================================================
--- Covers 20261019150000_sso_audit_events.sql.
+-- Covers 20261019152000_sso_audit_events.sql.
 --
 -- Turning enforcement on refuses every non-SSO sign-in on the company's
 -- domains, so the gate in front of it must mean "an owner/admin really got

@@ -4,7 +4,7 @@ import type { Database } from '@/types/database.types';
 /**
  * SSO sign-in entries in the SSO audit trail.
  *
- * WHERE. public.sso_audit_events (migration 20261019150000, PR #152), the same
+ * WHERE. public.sso_audit_events (migration 20261019152000, PR #152), the same
  * append-only table that records SSO configuration changes. NOT
  * public.activity_log: that table records MCP tool calls and feeds the usage
  * counts, the growth board's active-workspace numbers and the dormant-grant
