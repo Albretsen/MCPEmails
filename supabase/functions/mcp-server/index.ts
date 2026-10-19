@@ -359,7 +359,7 @@ import {
   validateTriageFilter,
   TRIAGE_MAX_MESSAGES_PER_RUN,
 } from "./triage-engine.ts";
-import { sendViaSmtp, SmtpAuthError, SmtpNotSentError } from "./smtp-client.ts";
+import { sendViaSmtp, SmtpAuthError, SmtpNotSentError, SmtpSenderRefusedError } from "./smtp-client.ts";
 import {
   attachmentFilenameFor,
   buildRelayForwardMime,
@@ -369,7 +369,15 @@ import {
   splitRawMessage,
   summarizeOriginal,
 } from "./forward-relay.ts";
-import { isSelfSenderIdentity, senderIdentityErrorCode } from "./sender-identity.ts";
+import {
+  findImapSenderAlias,
+  type ImapSenderAlias,
+  imapAliasSenderView,
+  isSelfSenderIdentity,
+  senderIdentityErrorCode,
+  unauthorizedSenderIdentityText,
+  unsupportedSenderIdentityText,
+} from "./sender-identity.ts";
 import { normaliseSenderName, SENDER_NAME_MAX_CHARS } from "./sender-name.ts";
 import {
   type ActionMisplacement,
@@ -935,6 +943,37 @@ function notSentResult(
     } as ToolErrorResult["result"],
     logStatus: "error",
     logErrorCode: PROVIDER_NOT_SENT_ERROR_CODE,
+  };
+}
+
+/**
+ * The sentence for {@link SmtpSenderRefusedError}: the mail server will not
+ * let this login send as the From address. Shared by the tool results and the
+ * batch forward's per-message line.
+ *
+ * Unlike {@link notSentResult}'s case, retrying cannot help, so it says what
+ * the user can change instead. For a Send As alias that is the provider's own
+ * alias settings, because MCP Emails only verified that mail for the address
+ * reaches the user, not that their provider lets them send from it.
+ */
+function senderRefusedText(fromAddress: string, reason: string): string {
+  return `Not sent: the mail server refused to send from ${fromAddress}, so nothing was sent and ` +
+    `there is nothing to check in Sent. Reason given: ${reason}. This login is not allowed to ` +
+    `send as that address, and retrying will fail the same way. Send from the inbox's own ` +
+    `address instead (omit from), or have the user set ${fromAddress} up as an alias or ` +
+    `sending address with their mail provider.`;
+}
+
+function senderRefusedResult(operation: string, inboxId: string, fromAddress: string, reason: string): ToolErrorResult {
+  console.warn(`[mcp-server] ${operation}: sender_refused`, { inbox_id: inboxId });
+  return {
+    result: {
+      content: [{ type: "text", text: senderRefusedText(fromAddress, reason) }],
+      isError: true,
+      delivery_status: DELIVERY_STATUS_NOT_SENT,
+    } as ToolErrorResult["result"],
+    logStatus: "error",
+    logErrorCode: "sender_identity_refused",
   };
 }
 
@@ -5175,7 +5214,7 @@ const LEGACY_TOOLS: ToolDefinition[] = [
           type: "string",
           format: "email",
           description:
-            "Gmail Send As address. Must be a verified identity from inbox_list; " +
+            "Send As address (Gmail or IMAP). Must be a verified identity from inbox_list; " +
             "anything else is rejected.",
         },
         to: {
@@ -5260,7 +5299,7 @@ const LEGACY_TOOLS: ToolDefinition[] = [
         from: {
           type: "string",
           format: "email",
-          description: "Optional Gmail Send As address. It must be a provider-verified identity returned by inbox_list.",
+          description: "Optional Send As address (Gmail or IMAP). It must be a verified identity returned by inbox_list.",
         },
         message_id: {
           type: "string",
@@ -5335,7 +5374,7 @@ const LEGACY_TOOLS: ToolDefinition[] = [
         from: {
           type: "string",
           format: "email",
-          description: "Optional Gmail Send As address. It must be a provider-verified identity returned by inbox_list.",
+          description: "Optional Send As address (Gmail or IMAP). It must be a verified identity returned by inbox_list.",
         },
         message_id: {
           type: "string",
@@ -10108,6 +10147,19 @@ async function executeListInboxes(
   // Only the matched rows are expanded. The Gmail sender-identity lookup below
   // is a network call per row, so narrowing first is also why filtering in
   // memory is no more expensive than the predicate it replaced.
+  // IMAP Send As addresses for every matched IMAP inbox, in one query. A
+  // failure here only costs those inboxes their aliases, never the listing.
+  const imapIds = matchedRows.filter((row) => row.provider === "imap").map((row) => row.id);
+  let imapAliases: Map<string, ImapSenderAlias[]> | null = new Map();
+  try {
+    imapAliases = await listImapSenderAliases(apiKey.workspace_id, imapIds);
+  } catch (err) {
+    console.error("[mcp-server] inbox_list: imap_sender_aliases_failed", {
+      error: err instanceof Error ? err.message : String(err),
+    });
+    imapAliases = null;
+  }
+
   const inboxes = await Promise.all(matchedRows.map(async (row: InboxListRow) => {
     let senderIdentities: Array<Record<string, unknown>> = [{
       email_address: row.email_address,
@@ -10116,6 +10168,21 @@ async function executeListInboxes(
       is_default: true,
     }];
     let senderIdentityStatus: "available" | "reconnect_required" | "unavailable" = "available";
+    if (row.provider === "imap") {
+      if (imapAliases === null) {
+        senderIdentityStatus = "unavailable";
+      } else {
+        for (const alias of imapAliases.get(row.id) ?? []) {
+          senderIdentities.push({
+            email_address: alias.email_address,
+            display_name: alias.display_name ?? row.display_name ?? row.email_address,
+            reply_to: null,
+            is_primary: false,
+            is_default: false,
+          });
+        }
+      }
+    }
     if (row.provider === "gmail") {
       try {
         const fullInbox = await resolveInbox(row.id, apiKey);
@@ -10768,6 +10835,34 @@ async function listGmailSenderIdentities(inbox: InboxRow): Promise<SenderIdentit
 }
 
 /**
+ * Verified Send As addresses of IMAP inboxes, keyed by inbox id. Rows without
+ * verified_at are never returned: an address is usable only after the
+ * dashboard mailed it a code and the code came back (20261018120000).
+ * Scoped to the caller's workspace as well as the inbox ids.
+ */
+async function listImapSenderAliases(
+  workspaceId: string,
+  inboxIds: string[],
+): Promise<Map<string, ImapSenderAlias[]>> {
+  const byInbox = new Map<string, ImapSenderAlias[]>();
+  if (inboxIds.length === 0) return byInbox;
+  const { data, error } = await supabase
+    .from("inbox_sender_aliases")
+    .select("inbox_id, email_address, display_name")
+    .eq("workspace_id", workspaceId)
+    .in("inbox_id", inboxIds)
+    .not("verified_at", "is", null)
+    .order("created_at", { ascending: true });
+  if (error) throw new Error(`imap_sender_aliases_failed: ${error.message}`);
+  for (const row of (data ?? []) as Array<ImapSenderAlias & { inbox_id: string }>) {
+    const list = byInbox.get(row.inbox_id) ?? [];
+    list.push({ email_address: row.email_address, display_name: row.display_name });
+    byInbox.set(row.inbox_id, list);
+  }
+  return byInbox;
+}
+
+/**
  * Resolve an optional `from` argument into a send-time inbox view. The OAuth
  * credentials and inbox id remain unchanged; only the validated sender name,
  * address, and alias-specific Gmail signature are substituted.
@@ -10792,6 +10887,13 @@ async function resolveSenderIdentity(
   // grants nothing that was not already available.
   if (isSelfSenderIdentity(inbox.email_address, rawFrom)) {
     return { inbox, defaultReplyTo: undefined };
+  }
+  if (inbox.provider === "imap") {
+    const aliases = (await listImapSenderAliases(inbox.workspace_id, [inbox.id])).get(inbox.id) ?? [];
+    const alias = findImapSenderAlias(aliases, rawFrom);
+    if (!alias) throw new Error("sender_identity_not_authorized");
+    // Signature stays the inbox's: an IMAP alias has no signature of its own.
+    return { inbox: imapAliasSenderView(inbox, alias), defaultReplyTo: undefined };
   }
   if (inbox.provider !== "gmail") {
     throw new Error("sender_identity_unsupported_provider");
@@ -16605,7 +16707,7 @@ function forwardTooLargeText(): string {
  * or an oversized file consumes the key instead — the same call will fail the
  * same way, and saying so beats pretending a retry might work.
  */
-function classifyForwardFailure(err: unknown, provider: string): ForwardFailure {
+function classifyForwardFailure(err: unknown, provider: string, fromAddress: string): ForwardFailure {
   const message = err instanceof Error ? err.message : String(err);
 
   if (message === "original_too_large") {
@@ -16673,6 +16775,16 @@ function classifyForwardFailure(err: unknown, provider: string): ForwardFailure 
     };
   }
 
+  if (err instanceof SmtpSenderRefusedError) {
+    return {
+      status: "not_sent",
+      error: senderRefusedText(fromAddress, message),
+      ledgerCode: "sender_identity_refused",
+      // Every message from this address is refused the same way.
+      fatal: true,
+    };
+  }
+
   if (err instanceof SmtpNotSentError) {
     return {
       status: "not_sent",
@@ -16722,6 +16834,8 @@ async function runForwardBatch(input: {
   apiKey: ApiKeyRow;
   inbox: InboxRow;
   provider: string;
+  /** The From address the batch sends as (a Send As alias or the inbox's own). */
+  fromAddress: string;
   messageIds: readonly string[];
   forwardOne: (messageId: string) => Promise<ForwardEmailResult>;
   idempotencyKey: string | null;
@@ -16730,7 +16844,7 @@ async function runForwardBatch(input: {
   logStatus: "success" | "error";
   logErrorCode: string | null;
 }> {
-  const { args, apiKey, inbox, provider, messageIds, forwardOne, idempotencyKey } = input;
+  const { args, apiKey, inbox, provider, fromAddress, messageIds, forwardOne, idempotencyKey } = input;
 
   // One ledger row per message, keyed off the caller's key. Held here rather
   // than re-read inside the run, because settling a row needs the very claim
@@ -16786,7 +16900,7 @@ async function runForwardBatch(input: {
         message_id: messageId,
         error: err instanceof Error ? err.message : String(err),
       });
-      return classifyForwardFailure(err, provider);
+      return classifyForwardFailure(err, provider, fromAddress);
     },
     settle: async (messageId, outcome) => {
       const claim = claims.get(messageId) ?? null;
@@ -17021,11 +17135,11 @@ async function executeForwardEmail(
     const text = message === "invalid_sender_identity"
       ? "email_forward: from must be a valid email address."
       : message === "sender_identity_unsupported_provider"
-        ? `email_forward: Send As identities are currently available only for Gmail; ${inbox.provider} only supports its connected address.`
+        ? unsupportedSenderIdentityText("email_forward", inbox.provider)
         : message === "gmail_sender_identities_scope_required"
           ? "email_forward: reconnect this Gmail inbox to enable Send As identities."
           : message === "sender_identity_not_authorized"
-            ? "email_forward: the requested From address is not a verified Send As identity for this inbox."
+            ? unauthorizedSenderIdentityText("email_forward", inbox.provider)
             : "email_forward: unable to verify the requested sender identity.";
     return { result: { content: [{ type: "text", text }], isError: true }, logStatus: "error", logErrorCode: senderIdentityErrorCode(message) };
   }
@@ -17119,6 +17233,7 @@ async function executeForwardEmail(
       apiKey,
       inbox,
       provider: senderInbox.provider,
+      fromAddress: senderInbox.email_address,
       messageIds,
       forwardOne,
       idempotencyKey: typeof batchKey === "string" ? batchKey : null,
@@ -17200,6 +17315,10 @@ async function executeForwardEmail(
       };
     }
 
+    // The server will not let this login send as the From address.
+    if (err instanceof SmtpSenderRefusedError) {
+      return senderRefusedResult("email_forward", inboxId, senderInbox.email_address, message);
+    }
     // Provably never transmitted: say so, and let the caller retry.
     if (err instanceof SmtpNotSentError) {
       return notSentResult("email_forward", inbox.provider, inboxId, message);
@@ -17406,11 +17525,11 @@ async function executeReplyToEmail(
     const text = message === "invalid_sender_identity"
       ? "email_reply: from must be a valid email address."
       : message === "sender_identity_unsupported_provider"
-        ? `email_reply: Send As identities are currently available only for Gmail; ${inbox.provider} only supports its connected address.`
+        ? unsupportedSenderIdentityText("email_reply", inbox.provider)
         : message === "gmail_sender_identities_scope_required"
           ? "email_reply: reconnect this Gmail inbox to enable Send As identities."
           : message === "sender_identity_not_authorized"
-            ? "email_reply: the requested From address is not a verified Send As identity for this inbox."
+            ? unauthorizedSenderIdentityText("email_reply", inbox.provider)
             : "email_reply: unable to verify the requested sender identity.";
     return { result: { content: [{ type: "text", text }], isError: true }, logStatus: "error", logErrorCode: senderIdentityErrorCode(message) };
   }
@@ -17564,6 +17683,10 @@ async function executeReplyToEmail(
       };
     }
 
+    // The server will not let this login send as the From address.
+    if (err instanceof SmtpSenderRefusedError) {
+      return senderRefusedResult("email_reply", inboxId, senderInbox.email_address, message);
+    }
     // Provably never transmitted: say so, and let the caller retry.
     if (err instanceof SmtpNotSentError) {
       return notSentResult("email_reply", inbox.provider, inboxId, message);
@@ -18235,11 +18358,11 @@ async function executeSendEmail(
     const text = message === "invalid_sender_identity"
       ? "email_send: from must be a valid email address."
       : message === "sender_identity_unsupported_provider"
-        ? `email_send: Send As identities are currently available only for Gmail; ${inbox.provider} only supports its connected address.`
+        ? unsupportedSenderIdentityText("email_send", inbox.provider)
         : message === "gmail_sender_identities_scope_required"
           ? "email_send: reconnect this Gmail inbox to enable Send As identities, then call inbox_list to choose one."
           : message === "sender_identity_not_authorized"
-            ? "email_send: the requested From address is not a verified Send As identity for this inbox. Call inbox_list and use one of its sender_identities."
+            ? unauthorizedSenderIdentityText("email_send", inbox.provider)
             : "email_send: unable to verify the requested sender identity. Try again later or use the connected inbox address.";
     return { result: { content: [{ type: "text", text }], isError: true }, logStatus: "error", logErrorCode: senderIdentityErrorCode(message) };
   }
@@ -18374,6 +18497,10 @@ async function executeSendEmail(
       return authFailedResult(inbox.provider, inbox.id, "access");
     }
 
+    // The server will not let this login send as the From address.
+    if (err instanceof SmtpSenderRefusedError) {
+      return senderRefusedResult("email_send", inboxId, senderInbox.email_address, message);
+    }
     // Provably never transmitted: say so, and let the caller retry.
     if (err instanceof SmtpNotSentError) {
       return notSentResult("email_send", inbox.provider, inboxId, message);
@@ -29145,6 +29272,10 @@ async function executeSendDraft(
         result: { content: [{ type: "text", text: "Your email account has exceeded its sending quota. Please try again later." }], isError: true },
         logStatus: "error", logErrorCode: "quota_exceeded",
       };
+    }
+    // The server will not let this login send as the From address.
+    if (err instanceof SmtpSenderRefusedError) {
+      return senderRefusedResult("draft_send", inbox.id, inbox.email_address, message);
     }
     // Provably never transmitted: say so, and let the caller retry.
     if (err instanceof SmtpNotSentError) {

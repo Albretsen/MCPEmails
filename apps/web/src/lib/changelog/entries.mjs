@@ -44,6 +44,13 @@ export const KINDS = ['added', 'improved', 'fixed', 'changed'];
 export const ENTRIES = [
   /* ── October 2026 ──────────────────────────────────────────── */
   {
+    date: '2026-10-18',
+    kind: 'added',
+    title: 'Send As for IMAP inboxes',
+    body:
+      'iCloud, Yahoo and other IMAP inboxes can now send from another address that delivers to the same mailbox, such as an iCloud alias. Add it in the inbox settings and enter the code we email to it, then your assistant can use it as the From address.',
+  },
+  {
     date: '2026-10-15',
     kind: 'added',
     title: 'Attachments on drafts',

@@ -63,6 +63,7 @@ import type {
 } from '@/lib/analytics/growth-types';
 import { PLANS, resolvePlanLimits } from '@/lib/stripe/plans';
 import { internalAccountMatchers } from '@/lib/analytics/internal-accounts';
+import type { SignupTrendRow } from '@/lib/analytics/signup-trend';
 
 // The cap projection is implemented next to the other pure helpers so it can be
 // unit tested without dragging in the Supabase client, and re-exported here
@@ -518,6 +519,20 @@ export async function fetchSignupPace(days: number): Promise<GrowthResult<Growth
   const internal = internalAccountMatchers();
   return rpcRows<GrowthSignupPaceRow>('growth_signup_pace', GROWTH_TAGS.daily, {
     p_days: clampInt(days, 1, 120),
+    p_internal_emails: internal.emails,
+    p_internal_domains: internal.domains,
+  });
+}
+
+/**
+ * New workspaces per Mon-Sun UTC week, soft-deleted included, current week
+ * last, each with its count at the same offset into the week as now. Feeds
+ * the signup trend tile; see signup-trend.ts for the verdict.
+ */
+export async function fetchSignupTrend(weeks: number): Promise<GrowthResult<SignupTrendRow[]>> {
+  const internal = internalAccountMatchers();
+  return rpcRows<SignupTrendRow>('growth_signup_trend', GROWTH_TAGS.daily, {
+    p_weeks: clampInt(weeks, 1, 52),
     p_internal_emails: internal.emails,
     p_internal_domains: internal.domains,
   });

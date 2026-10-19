@@ -86,7 +86,7 @@
     "intro": "Tus tokens son lo único sensible que conservamos, así que reciben la protección más fuerte que podemos darles:",
     "measures": [
       "Todos los datos en tránsito se cifran usando TLS 1.2 o superior. Las conexiones que no admiten TLS se rechazan.",
-      "Los tokens de OAuth y las credenciales de IMAP se cifran en reposo usando AES-256-GCM. La clave de cifrado se guarda por separado de los datos cifrados y nunca se ubica junto a ellos.",
+      "Los tokens de OAuth y las credenciales de IMAP se cifran en reposo usando AES-256-GCM. La clave de cifrado se guarda como secreto del servidor, separada de la base de datos, y nunca se almacena junto a los datos cifrados.",
       "Las API keys se cifran con hash SHA-256 antes de almacenarse. La clave en bruto no se puede recuperar a partir del hash.",
       "El acceso a la base de datos está protegido por políticas de Row-Level Security que impiden que un espacio de trabajo alcance los datos de otro, incluso si una consulta está mal escrita.",
       "El acceso administrativo a la infraestructura de producción requiere autenticación de varios factores y queda registrado."
@@ -108,12 +108,12 @@
       {
         "provider": "Supabase",
         "purpose": "Base de datos, autenticación, funciones edge",
-        "location": "UE (Estocolmo, Suecia)"
+        "location": "Datos almacenados en la UE (Estocolmo, Suecia); el correo se procesa en directo en EE. UU. (Este)"
       },
       {
         "provider": "Vercel",
-        "purpose": "Alojamiento del sitio web y del panel",
-        "location": "Edge global, la región más cercana al usuario"
+        "purpose": "Alojamiento del sitio web, del panel y del endpoint MCP",
+        "location": "CDN global; servidores en EE. UU. (Este) y en la UE (Estocolmo)"
       },
       {
         "provider": "Stripe",

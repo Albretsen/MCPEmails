@@ -86,7 +86,7 @@
     "intro": "Your tokens are the only sensitive thing we hold, so they get the strongest protection we can give them:",
     "measures": [
       "All data in transit is encrypted using TLS 1.2 or higher. Connections that do not support TLS are rejected.",
-      "OAuth tokens and IMAP credentials are encrypted at rest using AES-256-GCM. The encryption key is held separately from the encrypted data and is never co-located with it.",
+      "OAuth tokens and IMAP credentials are encrypted at rest using AES-256-GCM. The encryption key is held as a server secret, separate from the database, and is never stored alongside the encrypted data.",
       "API keys are hashed with SHA-256 before storage. The raw key cannot be recovered from the hash.",
       "Database access is protected by Row-Level Security policies that stop one workspace from reaching another's data, even if a query is written wrong.",
       "Administrative access to production infrastructure requires multi-factor authentication and is logged."
@@ -108,12 +108,12 @@
       {
         "provider": "Supabase",
         "purpose": "Database, auth, edge functions",
-        "location": "EU (Stockholm, Sweden)"
+        "location": "Data stored in the EU (Stockholm, Sweden); mail processed live in the US (East)"
       },
       {
         "provider": "Vercel",
-        "purpose": "Website and dashboard hosting",
-        "location": "Global edge, nearest region to user"
+        "purpose": "Website, dashboard and MCP endpoint hosting",
+        "location": "Global CDN; servers in the US (East) and the EU (Stockholm)"
       },
       {
         "provider": "Stripe",

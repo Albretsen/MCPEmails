@@ -86,7 +86,7 @@
     "intro": "Tokenene dine er det eneste sensitive vi holder på, så de får den sterkeste beskyttelsen vi kan gi dem:",
     "measures": [
       "All data under overføring krypteres med TLS 1.2 eller høyere. Tilkoblinger som ikke støtter TLS avvises.",
-      "OAuth-tokener og IMAP-legitimasjon krypteres i hvile med AES-256-GCM. Krypteringsnøkkelen holdes adskilt fra de krypterte dataene og plasseres aldri sammen med dem.",
+      "OAuth-tokener og IMAP-legitimasjon krypteres i hvile med AES-256-GCM. Krypteringsnøkkelen holdes som en serverhemmelighet, adskilt fra databasen, og lagres aldri sammen med de krypterte dataene.",
       "API-nøkler hashes med SHA-256 før lagring. Den rå nøkkelen kan ikke gjenopprettes fra hashen.",
       "Databasetilgang beskyttes av Row-Level Security-policyer som hindrer ett arbeidsområde fra å nå et annets data, selv om en spørring er skrevet feil.",
       "Administrativ tilgang til produksjonsinfrastruktur krever flerfaktorautentisering og logges."
@@ -108,12 +108,12 @@
       {
         "provider": "Supabase",
         "purpose": "Database, autentisering, edge-funksjoner",
-        "location": "EU (Stockholm, Sverige)"
+        "location": "Data lagres i EU (Stockholm, Sverige); e-post behandles direkte i USA (øst)"
       },
       {
         "provider": "Vercel",
-        "purpose": "Hosting av nettsted og dashbord",
-        "location": "Globalt edge-nettverk, nærmeste region til bruker"
+        "purpose": "Hosting av nettsted, dashbord og MCP-endepunkt",
+        "location": "Globalt CDN; servere i USA (øst) og EU (Stockholm)"
       },
       {
         "provider": "Stripe",
