@@ -21,6 +21,7 @@ import {
 } from '@/lib/drafts/editor-preference';
 import { ApprovalsPanel } from './ApprovalsPanel';
 import { AutomationsPanel } from './AutomationsPanel';
+import { SsoSettingsSection } from './SsoSettingsSection';
 import { usePricingView } from '@/lib/analytics/use-pricing-view.mjs';
 import { PLANS as CATALOGUE } from '@/lib/stripe/plans';
 import { formatAmountCents, formatPriceCents } from '@/lib/stripe/annual-offer';
@@ -7743,7 +7744,7 @@ function AuditTable({ entries }) {
  *
  * Subsequent pages are fetched client-side from GET /api/security/audit-log.
  */
-export function SecurityPage({ auditLog }) {
+export function SecurityPage({ auditLog, userRole }) {
   const t = useTranslations('dashboard');
   const initialEntries = auditLog?.entries ?? [];
   const initialTotal   = auditLog?.total    ?? 0;
@@ -7804,6 +7805,9 @@ export function SecurityPage({ auditLog }) {
 
       {/* Active sessions: loaded client-side */}
       <ActiveSessionsSection />
+
+      {/* SAML single sign-on: owner/admin on the enterprise plan only */}
+      <SsoSettingsSection userRole={userRole} />
 
       <div className="card" style={{ marginTop: 14 }}>
         <div className="card-h">
