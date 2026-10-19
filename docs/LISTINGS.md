@@ -114,10 +114,9 @@ UTMs are captured end to end, but only as coarse categories, first touch, for 30
 - Raw UTM strings are never stored. `utm_source` maps to one of: smithery, glama, cursor, lobehub, pulsemcp, mcpservers, mcp_so, freemcp, github, claude, chatgpt, and others (else `other`). `utm_source` also becomes `acquisition_source`.
 - `utm_medium=directory` is stored as `other` (allowed: organic, paid_search, social, email, referral, affiliate, display, other). `utm_campaign=listing` is stored as `other`.
 - `acquisition_landing_path` keeps the route shape, so `/docs/clients`, `/docs/claude` and `/connect` all survive.
-- So today: Smithery, Glama, LobeHub, PulseMCP, freemcp, mcp.so, mcpservers.org and Cursor are told apart. npm, the MCP registry and Docker all record as `other`. All three GitHub lists record as `github` and cannot be told apart. The Claude Directory records as `claude`, the same bucket as a claude.ai referral.
+- Before PR #143: npm, the MCP registry and Docker recorded as `other`; all three GitHub lists as `github`; the Claude Directory as `claude`; `utm_medium=directory` and `utm_campaign=listing` as `other`.
+- After PR #143 (needs its migration applied first, see the PR): every `utm_source` in the table above is its own `acquisition_source` value, `directory` and `listing` are allowed medium and campaign values, and /admin/growth labels each one. Filter on `acquisition_utm_medium = 'directory'` for the total across listings.
 - Caveat: the record lives in one browser. A visitor who reads a listing on a phone and signs up on a laptop records as `direct`.
-
-Smallest fix (not built): add `directory` to `UTM_MEDIA` and `mediumFromUtm` in `apps/web/src/lib/acquisition-context.mjs`, plus `npm`, `mcp_registry` and `docker` to `SOURCES` and `UTM_SOURCES`; then one migration that widens the `workspaces_acquisition_utm_medium_check`, `_utm_source_check`, `_source_check` and `_referrer_check` constraints and re-creates `handle_new_user` with the same lists. The drift test in `acquisition-context.test.mjs` compares the lists, so it must be updated in the same PR.
 
 ## Monthly drift check
 
