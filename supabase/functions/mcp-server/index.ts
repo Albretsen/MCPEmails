@@ -328,6 +328,7 @@ import {
 } from "./signature-sanitizer.ts";
 import {
   applySignature,
+  applySignatureOnce,
   composeSignatureBlocks,
   heldSendSnapshot,
   includeSignatureForSend,
@@ -335,6 +336,7 @@ import {
   signatureHtmlToText,
   signatureOutcome,
   type SignatureOutcome,
+  textCarriesOwnSignature,
 } from "./signature-compose.ts";
 import { bodyKeepingQuote } from "./quoted-reply.ts";
 import {
@@ -5702,7 +5704,8 @@ const LEGACY_TOOLS: ToolDefinition[] = [
         },
         body: {
           type: "string",
-          description: "Updated plain-text body. Omit to keep the stored body text.",
+          description: "Updated plain-text body, your text only: a reply's quoted original " +
+            "is kept and the signature added by the server. Omit to keep the stored body text.",
         },
         html_body: {
           type: "string",
@@ -8069,8 +8072,8 @@ const CONSOLIDATED_SPECS: Record<string, ConsolidatedSpec> = {
       "email_compose sends now. On IMAP a " +
       "draft_id changes on every update, so always use the most recent one. " +
       "'update' replaces only the fields passed: omit body and the stored " +
-      "body text is kept. A new body keeps a reply's quoted original " +
-      "(quote_kept) unless it includes one. " +
+      "body text is kept. A new body replaces only your text: a reply's " +
+      "quoted original stays below it (quote_kept). " +
       "'create', 'reply' and 'update' take attachments as email_compose does; " +
       "'update' adds them and keeps the draft's existing files. " +
       "Any inbox signature is embedded on create and on an update that passes body " +
@@ -8094,6 +8097,9 @@ const CONSOLIDATED_SPECS: Record<string, ConsolidatedSpec> = {
         "Not for reply: a reply draft goes to the original sender, reply_all " +
         "adds its To and Cc, and an update can change it afterwards.",
       subject: "Not for reply: a reply draft reuses the original subject.",
+      // Live claude.ai test 2026-10-19: updating a reply, Claude pasted the
+      // signature and the whole quote back into body. The server adds both.
+      body: "Your message text only: never paste the signature or quoted original; the server adds them.",
     },
     // Same rule as `folder`: the 'delete' action permanently removes an unsent
     // draft, which the legacy draft_delete entry has always flagged as
@@ -28077,7 +28083,7 @@ async function executeCreateReplyDraft(
   try {
     if (inbox.provider === "outlook") {
       const token = await withFreshOutlookToken(inbox);
-      const signed = applySignature({ textBody, htmlBody }, inbox, { include_signature: includeSignature });
+      const signed = applySignatureOnce({ textBody, htmlBody }, inbox, { include_signature: includeSignature });
       // createReply with a `message.body` REPLACES the body Graph generates,
       // quote and all. So: create the threaded draft as Graph builds it, then
       // put the caller's text above the quote it already holds.
@@ -28170,7 +28176,7 @@ async function executeCreateReplyDraft(
       } finally { await client.logout().catch(() => {}); }
     }
     if (!to.length) throw new Error("reply_recipients_not_found");
-    const signed = applySignature({ textBody, htmlBody }, inbox, { include_signature: includeSignature });
+    const signed = applySignatureOnce({ textBody, htmlBody }, inbox, { include_signature: includeSignature });
     // Extra Cc/Bcc (2026-09-23) are added to the derived recipients, exactly as
     // on email_compose reply.
     const params: DraftParams = { to, cc: replyExtraAddresses(args["cc"]), bcc: replyExtraAddresses(args["bcc"]), subject, body: buildReplyTextBody(signed.textBody, originalFrom, originalDate, originalBody), htmlBody: signed.htmlBody, threadId, inReplyTo: inReplyTo || undefined, references: references || undefined, ...(replyAttachments.length > 0 ? { attachments: replyAttachments } : {}) };
@@ -28189,7 +28195,7 @@ async function executeCreateReplyDraft(
       draftId: created.draft_id,
       origin: "reply",
       params,
-      signatureEmbedded: signed.textBody !== textBody,
+      signatureEmbedded: signed.textBody !== textBody || textCarriesOwnSignature(signed.textBody, inbox),
       lastSavedAt: created.created_at,
       revision: replyRevision,
       inReplyTo: {
@@ -28291,12 +28297,13 @@ async function executeCreateDraft(
   // in the provider's Drafts folder) already contains it. draft_send must NOT
   // re-append (see executeSendDraft) or the signature would double. Drafts are
   // new-message-shaped, so reuse applySignature (single source of signature
-  // strings). include_signature: false suppresses it for this draft.
+  // strings). include_signature: false suppresses it for this draft; a body
+  // the model signed itself is not signed again (applySignatureOnce).
   // The text part says what a formatted HTML part says, so the card can edit it
   // in place (html-text-merge.ts#textPartMatchingHtml, 2026-10-17).
   const textBody = textPartMatchingHtml(body, htmlBody);
   const includeSignature = args["include_signature"] === false ? false : undefined;
-  const signed = applySignature(
+  const signed = applySignatureOnce(
     { textBody, htmlBody },
     inbox,
     { include_signature: includeSignature },
@@ -28360,7 +28367,7 @@ async function executeCreateDraft(
       draftId: draftResult.draft_id,
       origin: "create",
       params: draftParams,
-      signatureEmbedded: signed.textBody !== textBody,
+      signatureEmbedded: signed.textBody !== textBody || textCarriesOwnSignature(signed.textBody, inbox),
       lastSavedAt: draftResult.created_at,
     }),
     recordDraftLine(apiKey, inbox, null, draftResult.draft_id, "agent", draftResult.created_at),
@@ -28630,7 +28637,8 @@ async function executeUpdateDraft(
   // Re-embed the inbox signature on update. This path was given a full body,
   // so we sign the new body just like draft_create (single source:
   // applySignature). A body-less update returned above and signs nothing. draft_send sends the stored body as-is and never re-appends
-  // (see executeSendDraft). include_signature: false suppresses it.
+  // (see executeSendDraft). include_signature: false suppresses it, and a body
+  // that already carries the signature is not signed twice (applySignatureOnce).
   //
   // A reply's quoted original is kept when the new body leaves it out, and the
   // signature goes above it, not under (quoted-reply.ts#bodyKeepingQuote).
@@ -28643,7 +28651,7 @@ async function executeUpdateDraft(
     textBody,
     htmlBody,
     storedBody,
-    (p) => applySignature(p, inbox, { include_signature: includeSignature }),
+    (p) => applySignatureOnce(p, inbox, { include_signature: includeSignature }),
     plainTextBodyToHtml,
   );
 
@@ -28740,7 +28748,7 @@ async function executeUpdateDraft(
     draftId: updateResult.draft_id,
     origin: "update",
     params: draftParams,
-    signatureEmbedded: signed.signed,
+    signatureEmbedded: signed.signed || textCarriesOwnSignature(signed.textBody, inbox),
     lastSavedAt: updateResult.updated_at,
     revision: updateRevision,
     formattingRemoved: updateFormattingRemoved,
