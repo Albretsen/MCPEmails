@@ -202,6 +202,56 @@ export function comparableQuote(text: string): string {
     .replace(/^\n+|\n+$/g, "");
 }
 
+/** "17:32", "5:32 PM", "17.32": a time of day, which every attribution's date has. */
+const TIME_OF_DAY = /\d{1,2}[:.]\d{2}(?:[:.]\d{2})?(?:\s?[AaPp]\.?[Mm]\.?)?/;
+
+/**
+ * Who a reply draft answers, read off the attribution line above its quoted
+ * original, or null when there is none this can read with confidence.
+ *
+ * WHY (live claude.ai test, 2026-10-19). The card's "Replying to Dana ·
+ * <subject>" line comes from `draft.in_reply_to`, which the server could fill
+ * on the reply path only, where it has just fetched the original. Every later
+ * envelope (an update, a read, a save) answered null, so the newer card a
+ * `draft{action:"update"}` mounts had no such line, while the older card above
+ * it still did. The stored draft does say who it answers: the attribution this
+ * server writes is `On <Date header>, <From header> wrote:`
+ * (index.ts#buildReplyTextBody), from the same From the reply path shows.
+ *
+ * Two shapes, tried in order:
+ *   - ours: `<date>, <from>`. The date holds commas ("Mon, 7 Sep 2026 ..."),
+ *     so the split is at the first ", " whose left side has a time of day.
+ *   - Gmail's: `<date> at <time> <from>`, no comma before the sender.
+ * Anything else (another client's wording, an Outlook header block) is null,
+ * and the card then says "Replying to an earlier message".
+ */
+export function attributionSender(text: string | null | undefined): string | null {
+  if (typeof text !== "string") return null;
+  const line = quotedTextLine(text);
+  if (line < 0) return null;
+  const lines = linesOf(text);
+  const first = lines[line] ?? "";
+  const joined = ATTRIBUTION.test(first)
+    ? first
+    : line + 1 < lines.length && ATTRIBUTION.test(`${first} ${lines[line + 1].trim()}`)
+    ? `${first} ${lines[line + 1].trim()}`
+    : null;
+  if (joined === null) return null;
+  const inner = joined
+    .replace(new RegExp(`^\\s*${ATTRIBUTION_LEAD}\\s+`, "i"), "")
+    .replace(new RegExp(`\\s*${ATTRIBUTION_VERB}\\s*:\\s*$`, "i"), "")
+    .trim();
+  const sane = (s: string) => {
+    const t = s.trim();
+    return t.length > 0 && t.length <= 300 ? t : null;
+  };
+  for (let at = inner.indexOf(", "); at !== -1; at = inner.indexOf(", ", at + 2)) {
+    if (TIME_OF_DAY.test(inner.slice(0, at))) return sane(inner.slice(at + 2));
+  }
+  const afterTime = new RegExp(`${TIME_OF_DAY.source}\\s+(.+)$`).exec(inner);
+  return afterTime ? sane(afterTime[1]) : null;
+}
+
 /**
  * The body a `draft{action:"update"}` writes when it is given a new `body`,
  * keeping a reply's quoted original (live re-test, 2026-10-17).

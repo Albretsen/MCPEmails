@@ -259,6 +259,7 @@ import {
 import {
   buildDraftEditorEnvelope,
   describeParts,
+  htmlForEditedText,
   DRAFT_EDITOR_TOOL_DEFINITIONS,
   type DraftPatch,
   runBodylessDraftUpdate,
@@ -27717,6 +27718,8 @@ async function draftEditorEnvelopeForWrite(
      * (an Outlook update, whose params carry only the files it added).
      */
     attachments?: { filename: string; size_bytes: number | null; mime_type: string | null }[];
+    /** The stored HTML part could not be kept under the new text (an update only). */
+    formattingRemoved?: boolean;
   },
 ): Promise<Record<string, unknown> | null> {
   try {
@@ -27756,6 +27759,7 @@ async function draftEditorEnvelopeForWrite(
       in_reply_to: input.inReplyTo ?? null,
       signature_embedded: input.signatureEmbedded,
       signature_rich: htmlCarriesSignatureBlock(input.params.htmlBody),
+      ...(input.formattingRemoved === true ? { formatting_removed: true } : {}),
       last_saved_at: input.lastSavedAt,
       // The headers the write carried. On an update they are the ones read off
       // the existing draft, and they are what makes the envelope say `threaded`
@@ -28618,9 +28622,29 @@ async function executeUpdateDraft(
     plainTextBodyToHtml,
   );
 
+  // A stored HTML part outlives a plain-text body that brought none of its own
+  // (live claude.ai test, 2026-10-19). With a signature appended the HTML part
+  // is rebuilt above; without one (`include_signature: false`, which a model
+  // passes over a body that already carries it, or an inbox with none) it was
+  // simply dropped, so the draft went text/plain, its formatted signature was
+  // lost, and the newer card had no "Show formatting". Kept by the rules a
+  // card save uses (mcp-app-drafts.ts#htmlForEditedText): merged, regenerated
+  // with the signature block and quote markup kept, or dropped and SAID to be
+  // (`body.formatting_removed`) when its own formatting cannot be kept.
+  let updateHtml = signed.htmlBody;
+  let updateFormattingRemoved = false;
+  if (
+    htmlBody === undefined && updateHtml === undefined &&
+    typeof storedBody?.html === "string" && storedBody.html.trim().length > 0
+  ) {
+    const kept = htmlForEditedText(signed.textBody, inbox, storedBody.text ?? null, storedBody.html);
+    updateHtml = kept.html;
+    updateFormattingRemoved = kept.formattingRemoved;
+  }
+
   const draftParams: DraftParams = {
     to: effectiveTo, cc: effectiveCc, bcc: effectiveBcc,
-    subject: effectiveSubject, body: signed.textBody, htmlBody: signed.htmlBody,
+    subject: effectiveSubject, body: signed.textBody, htmlBody: updateHtml,
     threadId, inReplyTo, references,
     // "Supplied" is `Array.isArray(args[field])` above and nothing else. The
     // server never injects the schema's `default: []`, so an omitted list is
@@ -28694,6 +28718,7 @@ async function executeUpdateDraft(
     signatureEmbedded: signed.signed,
     lastSavedAt: updateResult.updated_at,
     revision: updateRevision,
+    formattingRemoved: updateFormattingRemoved,
   });
   return {
     result: draftCardToolResult(updatePayload, updateCard),
