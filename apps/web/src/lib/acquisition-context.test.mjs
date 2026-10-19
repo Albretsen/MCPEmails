@@ -4,6 +4,8 @@ import { fileURLToPath } from 'node:url';
 import test from 'node:test';
 import {
   SOURCES,
+  UTM_CAMPAIGNS,
+  UTM_MEDIA,
   acquisitionFromLocation,
   acquisitionFromParams,
   appendAcquisitionParams,
@@ -295,6 +297,78 @@ test('a name still matches where a label can start', () => {
   assert.equal(sourceFromUtm('news.ycombinator.com'), 'hacker_news');
 });
 
+/* ------------------------------------------------- directory listings */
+
+// The exact utm_source values in docs/LISTINGS.md. Until 2026-10-19 npm and
+// Docker recorded as `other`, the three GitHub lists as one `github`, and the
+// Claude, ChatGPT and Cursor directories in the same bucket as a plain
+// referral from that product.
+const LISTING_UTM_SOURCES = {
+  npm: 'npm',
+  glama: 'glama',
+  smithery: 'smithery',
+  lobehub: 'lobehub',
+  pulsemcp: 'pulsemcp',
+  freemcp: 'freemcp',
+  'mcp.so': 'mcp_so',
+  mcpservers: 'mcpservers',
+  github_punkpeye: 'github_punkpeye',
+  github_tensorblock: 'github_tensorblock',
+  docker: 'docker',
+  github_bestof: 'github_bestof',
+  claude_directory: 'claude_directory',
+  chatgpt_directory: 'chatgpt_directory',
+  cursor_directory: 'cursor_directory',
+};
+
+test('every directory listing link records its own source, medium and campaign', () => {
+  const seen = new Set();
+  for (const [utm, category] of Object.entries(LISTING_UTM_SOURCES)) {
+    const value = acquisitionFromLocation(
+      new URL(`https://mcpemails.com/docs/clients?utm_source=${encodeURIComponent(utm)}&utm_medium=directory&utm_campaign=listing`),
+      null,
+    );
+    assert.equal(value.source, category, utm);
+    assert.equal(value.utmSource, category, utm);
+    assert.equal(value.utmMedium, 'directory', utm);
+    assert.equal(value.utmCampaign, 'listing', utm);
+    seen.add(category);
+  }
+  // Fifteen listings, fifteen buckets: no two share one.
+  assert.equal(seen.size, Object.keys(LISTING_UTM_SOURCES).length);
+  for (const bucket of ['other', 'github', 'claude', 'chatgpt', 'cursor', 'direct']) {
+    assert.equal(seen.has(bucket), false, bucket);
+  }
+});
+
+test('a directory source survives the OAuth query round trip', () => {
+  for (const category of Object.values(LISTING_UTM_SOURCES)) {
+    const params = new URLSearchParams();
+    appendAcquisitionParams(params, {
+      source: category, landing: 'docs', landingPath: '/docs/clients', locale: 'en', referrer: 'direct',
+      utmSource: category, utmMedium: 'directory', utmCampaign: 'listing',
+    });
+    const back = acquisitionFromParams(params);
+    assert.equal(back.source, category, category);
+    assert.equal(back.utmSource, category, category);
+    assert.equal(back.utmMedium, 'directory');
+    assert.equal(back.utmCampaign, 'listing');
+  }
+});
+
+test('plain product referrals and loose spellings keep their old buckets', () => {
+  assert.equal(sourceFromUtm('github'), 'github');
+  assert.equal(sourceFromUtm('claude'), 'claude');
+  assert.equal(sourceFromUtm('chatgpt.com'), 'chatgpt');
+  assert.equal(sourceFromUtm('cursor.directory'), 'cursor');
+  assert.equal(sourceFromHost('github.com'), 'github');
+  assert.equal(sourceFromHost('claude.ai'), 'claude');
+  assert.equal(sourceFromHost('cursor.directory'), 'cursor');
+  assert.equal(sourceFromUtm('npmjs.com'), 'npm');
+  // Not a label start, so not npm.
+  assert.equal(sourceFromUtm('snpm'), 'other');
+});
+
 /* --------------------------------------------------------- SQL/JS drift */
 
 /**
@@ -308,13 +382,13 @@ test('a name still matches where a label can start', () => {
  */
 test('the SQL allowlists and the JS SOURCES set hold exactly the same members', () => {
   const sql = readFileSync(
-    fileURLToPath(new URL('../../../../supabase/migrations/20260929190000_acquisition_source_google_ads.sql', import.meta.url)),
+    fileURLToPath(new URL('../../../../supabase/migrations/20261019130000_directory_listing_attribution.sql', import.meta.url)),
     'utf8',
   );
 
-  // Every `IN ( ... )` list in that migration that mentions 'direct' is an
-  // acquisition-source allowlist: three CHECK constraints plus the trigger's
-  // three guards.
+  // Every `IN ( ... )` list in the newest allowlist migration that mentions
+  // 'direct' is an acquisition-source allowlist: three CHECK constraints plus
+  // the trigger's three guards.
   const lists = [...sql.matchAll(/IN \(([^)]*)\)/g)]
     .map((match) => match[1].match(/'([a-z_]+)'/g)?.map((quoted) => quoted.slice(1, -1)) ?? [])
     .filter((members) => members.includes('direct'));
@@ -380,4 +454,37 @@ test('the redefined signup trigger differs from the previous one in the landing-
   assert.equal(changed.length, 1);
   assert.match(before[changed[0]], /^ {2}IF v_landing_path !~ /);
   assert.match(after[changed[0]], /^ {2}IF v_landing_path !~ .* THEN v_landing_path := NULL; END IF;$/);
+});
+/* ------------------------------------------- directory listings, SQL/JS */
+
+const DIRECTORY_MIGRATION = '20261019130000_directory_listing_attribution.sql';
+
+function inLists(sql, marker) {
+  return [...sql.matchAll(/IN \(([^)]*)\)/g)]
+    .map((match) => match[1].match(/'([a-z_]+)'/g)?.map((quoted) => quoted.slice(1, -1)) ?? [])
+    .filter((members) => members.includes(marker));
+}
+
+test('the SQL utm_medium and utm_campaign allowlists match the JS sets', () => {
+  const sql = migration(DIRECTORY_MIGRATION);
+  const media = inLists(sql, 'paid_search');
+  const campaigns = inLists(sql, 'newsletter');
+  // One CHECK constraint and one trigger guard each.
+  assert.equal(media.length, 2);
+  assert.equal(campaigns.length, 2);
+  for (const members of media) assert.deepEqual([...members].sort(), [...UTM_MEDIA].sort());
+  for (const members of campaigns) assert.deepEqual([...members].sort(), [...UTM_CAMPAIGNS].sort());
+});
+
+test('the directory migration changes only the five allowlist lines of the signup trigger', () => {
+  const body = (sql) => sql.slice(sql.indexOf('CREATE OR REPLACE FUNCTION public.handle_new_user()')).split('\n');
+  const before = body(migration(LANDING_PATH_MIGRATION));
+  const after = body(migration(DIRECTORY_MIGRATION));
+
+  assert.equal(after.length, before.length);
+  const changed = before.flatMap((line, index) => (line === after[index] ? [] : [index]));
+  assert.deepEqual(
+    changed.map((index) => before[index].match(/^ {2}IF (v_[a-z_]+) NOT IN /)?.[1]),
+    ['v_source', 'v_referrer', 'v_utm_source', 'v_utm_medium', 'v_utm_campaign'],
+  );
 });

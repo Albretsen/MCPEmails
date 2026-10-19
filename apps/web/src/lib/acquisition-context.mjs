@@ -19,8 +19,8 @@ export const ACQUISITION_QUERY_KEYS = Object.freeze({
  * it hides (which listing actually sends people who pay) unanswerable.
  *
  * The same strings are pinned by three CHECK constraints and by the signup
- * trigger's own allowlist in
- * supabase/migrations/20260915190000_widen_acquisition_sources.sql. A value
+ * trigger's own allowlist, newest in
+ * supabase/migrations/20261019130000_directory_listing_attribution.sql. A value
  * this file emits that the database has not been taught is not a soft failure:
  * the CHECK rejects the write, or the trigger silently NULLs it. The drift test
  * in acquisition-context.test.mjs reads that migration and compares the two
@@ -39,15 +39,23 @@ export const SOURCES = new Set([
   'claude', 'chatgpt', 'perplexity',
   // MCP directories and listings, the channel this whole widening is for.
   'smithery', 'glama', 'cursor', 'lobehub', 'pulsemcp', 'mcpservers', 'mcp_so', 'freemcp',
+  // Listings that only a tagged link can name (2026-10-19). Each has its own
+  // utm_source in docs/LISTINGS.md. Without these, npm, the MCP registry and
+  // Docker recorded as `other`, the three GitHub lists all as `github`, and the
+  // Claude, ChatGPT and Cursor directories in the same bucket as a plain
+  // referral from that product. Referrer hosts never produce these.
+  'npm', 'mcp_registry', 'docker',
+  'github_punkpeye', 'github_tensorblock', 'github_bestof',
+  'claude_directory', 'chatgpt_directory', 'cursor_directory',
   'other',
 ]);
 export const LANDINGS = new Set(['home', 'blog', 'provider', 'docs', 'pricing', 'other']);
 export const LOCALES = new Set(['en', 'nb', 'es', 'fr', 'zh']);
 export const UTM_MEDIA = new Set([
-  'organic', 'paid_search', 'social', 'email', 'referral', 'affiliate', 'display', 'other',
+  'organic', 'paid_search', 'social', 'email', 'referral', 'affiliate', 'display', 'directory', 'other',
 ]);
 export const UTM_CAMPAIGNS = new Set([
-  'launch', 'newsletter', 'content', 'product', 'partner', 'community', 'other',
+  'launch', 'newsletter', 'content', 'product', 'partner', 'community', 'listing', 'other',
 ]);
 
 /**
@@ -187,20 +195,31 @@ const UTM_SOURCES = Object.freeze([
   ['t.co', 'x_twitter'],
   ['linkedin', 'linkedin'],
   ['lnkd', 'linkedin'],
+  // Each listing value before the bare product name it starts with, or
+  // `github`, `claude`, `chatgpt` and `cursor` would claim it first.
+  ['github_punkpeye', 'github_punkpeye'],
+  ['github_tensorblock', 'github_tensorblock'],
+  ['github_bestof', 'github_bestof'],
   ['github', 'github'],
+  ['claude_directory', 'claude_directory'],
   ['claude', 'claude'],
   ['anthropic', 'claude'],
+  ['chatgpt_directory', 'chatgpt_directory'],
   ['chatgpt', 'chatgpt'],
   ['openai', 'chatgpt'],
   ['perplexity', 'perplexity'],
   ['smithery', 'smithery'],
   ['glama', 'glama'],
+  ['cursor_directory', 'cursor_directory'],
   ['cursor', 'cursor'],
   ['lobehub', 'lobehub'],
   ['pulsemcp', 'pulsemcp'],
   ['mcpservers', 'mcpservers'],
   ['mcp.so', 'mcp_so'],
   ['freemcp', 'freemcp'],
+  ['npm', 'npm'],
+  ['mcp_registry', 'mcp_registry'],
+  ['docker', 'docker'],
 ]);
 
 /** `t.co` may begin the value or follow a separator, never a letter or digit. */
@@ -225,6 +244,7 @@ export function mediumFromUtm(value) {
   if (medium === 'social' || medium === 'paid_social') return 'social';
   if (medium === 'email' || medium === 'newsletter') return 'email';
   if (medium === 'organic' || medium === 'referral' || medium === 'affiliate' || medium === 'display') return medium;
+  if (medium === 'directory') return 'directory';
   return 'other';
 }
 
@@ -238,6 +258,7 @@ export function campaignFromUtm(value) {
   if (campaign.includes('product')) return 'product';
   if (campaign.includes('partner')) return 'partner';
   if (campaign.includes('community')) return 'community';
+  if (campaign === 'listing') return 'listing';
   return 'other';
 }
 

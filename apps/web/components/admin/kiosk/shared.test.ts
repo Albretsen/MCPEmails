@@ -270,6 +270,15 @@ const EXPECTED_LABELS: Record<string, string> = {
   mcpservers: 'mcpservers.org',
   mcp_so: 'mcp.so',
   freemcp: 'freemcp',
+  npm: 'npm',
+  mcp_registry: 'MCP Registry',
+  docker: 'Docker MCP Catalog',
+  github_punkpeye: 'awesome-mcp-servers (punkpeye)',
+  github_tensorblock: 'awesome-mcp-servers (TensorBlock)',
+  github_bestof: 'best-of-mcp-servers',
+  claude_directory: 'Claude Directory',
+  chatgpt_directory: 'ChatGPT app directory',
+  cursor_directory: 'Cursor Directory',
   other: 'Other',
 };
 

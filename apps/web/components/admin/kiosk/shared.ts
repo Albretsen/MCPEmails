@@ -601,6 +601,16 @@ const CHANNEL_LABELS: Record<string, string> = {
   mcpservers: 'mcpservers.org',
   mcp_so: 'mcp.so',
   freemcp: 'freemcp',
+  // Listings told apart by their utm_source since 2026-10-19.
+  npm: 'npm',
+  mcp_registry: 'MCP Registry',
+  docker: 'Docker MCP Catalog',
+  github_punkpeye: 'awesome-mcp-servers (punkpeye)',
+  github_tensorblock: 'awesome-mcp-servers (TensorBlock)',
+  github_bestof: 'best-of-mcp-servers',
+  claude_directory: 'Claude Directory',
+  chatgpt_directory: 'ChatGPT app directory',
+  cursor_directory: 'Cursor Directory',
 };
 
 export function prettyChannel(source: string): string {
