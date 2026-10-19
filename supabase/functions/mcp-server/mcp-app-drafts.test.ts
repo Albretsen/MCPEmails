@@ -351,11 +351,12 @@ Deno.test("threaded says whether the draft answers a message on every path, not 
   assertEquals(reply.threaded, true);
   assertEquals((reply.in_reply_to as { message_id: string }).message_id, "INBOX:154");
 
-  // An update or a read carries only the RFC header. `in_reply_to` stays null
-  // (it is typed as a server id) but `threaded` must not read as "lost".
+  // An update or a read carries only the RFC header. Since 2026-10-19 the
+  // context is read back from the draft, with no server id (message_id null),
+  // and `threaded` still must not read as "lost".
   for (const origin of ["update", "read"] as const) {
     const carried = build(normalized({ in_reply_to_header: "<abc@mail>" }), origin);
-    assertEquals(carried.in_reply_to, null);
+    assertEquals(carried.in_reply_to, { message_id: null, subject: "Quarterly numbers", from: null });
     assertEquals(carried.threaded, true);
   }
 
@@ -365,6 +366,54 @@ Deno.test("threaded says whether the draft answers a message on every path, not 
   assertEquals(fresh.threaded, false);
   // An empty header is no header.
   assertEquals(build(normalized({ in_reply_to_header: "" }), "read").threaded, false);
+});
+
+Deno.test("an update or read of a reply draft says who it answers, like the reply card (live test, 2026-10-19)", () => {
+  const build = (draft: NormalizedDraft, origin: "update" | "read" | "save") =>
+    (buildDraftEditorEnvelope({
+      appUrl: APP_URL,
+      draft,
+      inbox: IMAP_INBOX,
+      origin,
+      lastSavedBy: "agent",
+      canSend: true,
+    }).draft as Record<string, unknown>);
+  // The text a reply is stored with (index.ts#buildReplyTextBody), signed.
+  const replyText = "Friday works.\n\n-- \nAsgeir, MCP Emails\n\n" +
+    "On Mon, 7 Sep 2026 17:32:55 +0000, Dana Example <dana@x.example> wrote:\n> Can we move the call?";
+  for (const origin of ["update", "read", "save"] as const) {
+    const d = build(
+      normalized({ subject: "Re: Call on Friday", body_text: replyText, in_reply_to_header: "<orig@x.example>" }),
+      origin,
+    );
+    assertEquals(
+      d.in_reply_to,
+      { message_id: null, subject: "Call on Friday", from: "Dana Example <dana@x.example>" },
+      origin,
+    );
+  }
+  // Neutralised like the reply path's own context.
+  const hostile = build(
+    normalized({
+      subject: "Re: Invoice‮txt.exe",
+      body_text: "Ok.\n\nOn Mon, 7 Sep 2026 17:32:55 +0000, Ev‮e <e@x.example> wrote:\n> pay",
+      in_reply_to_header: "<o@x>",
+    }),
+    "update",
+  ).in_reply_to as { subject: string; from: string };
+  assertEquals(/‮/.test(hostile.subject + hostile.from), false);
+  // No header: a new message never claims to answer one, quote or not.
+  assertEquals(build(normalized({ body_text: replyText }), "update").in_reply_to, null);
+  // The reply path's server id still wins over anything read back.
+  const reply = build(
+    normalized({
+      body_text: replyText,
+      in_reply_to_header: "<orig@x.example>",
+      in_reply_to: { message_id: "INBOX:9", subject: "Call", from: "Dana" },
+    }),
+    "update",
+  );
+  assertEquals(reply.in_reply_to, { message_id: "INBOX:9", subject: "Call", from: "Dana" });
 });
 
 Deno.test("id_is_stable is false on IMAP and true on the two API providers", () => {

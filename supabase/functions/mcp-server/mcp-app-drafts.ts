@@ -81,7 +81,13 @@ import {
   rebuildHtmlKeepingSignature,
   type SignatureInbox,
 } from "./signature-compose.ts";
-import { comparableQuote, quotedHtmlStart, quotedTextLine, splitQuotedText } from "./quoted-reply.ts";
+import {
+  attributionSender,
+  comparableQuote,
+  quotedHtmlStart,
+  quotedTextLine,
+  splitQuotedText,
+} from "./quoted-reply.ts";
 import {
   cardWriteConflict,
   type DraftWriter,
@@ -890,13 +896,22 @@ export function buildDraftEditorEnvelope(input: {
       // rather than a value the card would offer as openable and could not
       // open. Threading itself is preserved on every save regardless — see
       // `runDraftEditorSave`, which carries the headers through untouched.
-      in_reply_to: draft.in_reply_to
-        ? {
-          message_id: draft.in_reply_to.message_id,
-          subject: neutralizeMaybe(draft.in_reply_to.subject),
-          from: neutralizeMaybe(draft.in_reply_to.from),
-        }
-        : null,
+      //
+      // Off the reply path, a draft that still carries its In-Reply-To header
+      // gets the context read back from the draft itself (`storedReplyContext`)
+      // with `message_id: null`, which the card never offers to open. Without
+      // it the newer card a `draft{action:"update"}` mounts had no "Replying
+      // to" line while the older one above it did (live test, 2026-10-19).
+      in_reply_to: (() => {
+        const ctx = draft.in_reply_to ?? storedReplyContext(draft);
+        return ctx
+          ? {
+            message_id: ctx.message_id,
+            subject: neutralizeMaybe(ctx.subject),
+            from: neutralizeMaybe(ctx.from),
+          }
+          : null;
+      })(),
       // Whether this draft answers a message, whatever the path. `in_reply_to`
       // above is null on every path but reply, so on its own it reads as
       // "threading lost" after an update or a read, when the headers were in
@@ -913,6 +928,28 @@ export function buildDraftEditorEnvelope(input: {
       can_edit: input.canEdit ?? true,
       reason: input.editReason ?? null,
     },
+  };
+}
+
+/**
+ * The "Replying to" context of a stored reply draft, for the envelopes that are
+ * not the reply itself: who from the attribution above the quoted original
+ * (quoted-reply.ts#attributionSender), what from the draft's own subject with
+ * its "Re:" taken off. Null unless the draft carries an In-Reply-To header, so
+ * a new message never claims to answer one. `message_id` is null: no server id
+ * of the original is known here, and nothing may offer it as openable.
+ */
+export function storedReplyContext(
+  draft: Pick<NormalizedDraft, "in_reply_to_header" | "subject" | "body_text">,
+): { message_id: string | null; subject: string | null; from: string | null } | null {
+  if (typeof draft.in_reply_to_header !== "string" || draft.in_reply_to_header.trim().length === 0) {
+    return null;
+  }
+  const subject = (draft.subject ?? "").replace(/^\s*re\s*:\s*/i, "").trim();
+  return {
+    message_id: null,
+    subject: subject.length > 0 ? subject : null,
+    from: attributionSender(draft.body_text),
   };
 }
 
@@ -2147,37 +2184,9 @@ export async function applyDraftPatch(
   // The two meet in one place: a client quote block counts as formatting to
   // `htmlHasFormatting`, so when the quote is kept byte for byte only the part
   // above it is checked. Otherwise every reply edit would drop the quote.
-  let nextHtml: string | undefined;
-  let formattingRemoved = false;
-  const keptQuote = stored.body_html !== null && bodyTextChanged
-    ? htmlKeepingQuote(bodyText as string, stored.body_text, stored.body_html)
-    : null;
-  const merged = stored.body_html !== null && bodyTextChanged
-    ? mergeTextEditIntoHtml(stored.body_html, stored.body_text, bodyText as string)
-    : null;
-  if (merged !== null && merged.length <= EMAIL_HTML_MAX_LENGTH) {
-    nextHtml = merged;
-  } else if (
-    stored.body_html !== null && bodyTextChanged &&
-    htmlHasFormatting(keptQuote ? keptQuote.storedHtmlHead : stored.body_html)
-  ) {
-    nextHtml = undefined;
-    formattingRemoved = true;
-  } else if (stored.body_html !== null) {
-    if (bodyTextChanged) {
-      const kept = keptQuote;
-      const regenerated = kept
-        ? regenerateHtml(kept.head, inbox, kept.storedHtmlHead, kept.storedTextHead, kept.quoteHtml)
-        : regenerateHtml(bodyText as string, inbox, stored.body_html, stored.body_text, "");
-      nextHtml = regenerated === null || regenerated.length === 0 ||
-          regenerated.length > EMAIL_HTML_MAX_LENGTH
-        ? undefined
-        : regenerated;
-      formattingRemoved = nextHtml === undefined;
-    } else {
-      nextHtml = stored.body_html;
-    }
-  }
+  const { html: nextHtml, formattingRemoved } = stored.body_html !== null && bodyTextChanged
+    ? htmlForEditedText(bodyText as string, inbox, stored.body_text, stored.body_html)
+    : { html: stored.body_html ?? undefined, formattingRemoved: false };
 
 
   // ── NOTHING CHANGED, NOTHING WRITTEN ─────────────────────────────────────
@@ -2277,6 +2286,42 @@ export async function applyDraftPatch(
 }
 
 /**
+ * The HTML part a draft keeps when its TEXT is replaced, by the rules in
+ * `applyDraftPatch` (merged in place, the quote and the signature block kept,
+ * or regenerated from the text), or `html: undefined` with
+ * `formattingRemoved: true` when its formatting cannot be kept honestly.
+ *
+ * Shared with `draft{action:"update"}` (index.ts), whose plain-text body used
+ * to drop a stored HTML part outright whenever no signature was appended
+ * (`include_signature: false`, or an inbox without one): the newer card then
+ * had no "Show formatting" and the recipient got text/plain (live claude.ai
+ * test, 2026-10-19).
+ */
+export function htmlForEditedText(
+  bodyText: string,
+  inbox: SignatureInbox,
+  storedText: string | null,
+  storedHtml: string,
+): { html: string | undefined; formattingRemoved: boolean } {
+  const keptQuote = htmlKeepingQuote(bodyText, storedText, storedHtml);
+  const merged = mergeTextEditIntoHtml(storedHtml, storedText, bodyText);
+  if (merged !== null && merged.length <= EMAIL_HTML_MAX_LENGTH) {
+    return { html: merged, formattingRemoved: false };
+  }
+  if (htmlHasFormatting(keptQuote ? keptQuote.storedHtmlHead : storedHtml)) {
+    return { html: undefined, formattingRemoved: true };
+  }
+  const regenerated = keptQuote
+    ? regenerateHtml(keptQuote.head, inbox, keptQuote.storedHtmlHead, keptQuote.storedTextHead, keptQuote.quoteHtml)
+    : regenerateHtml(bodyText, inbox, storedHtml, storedText, "");
+  const html = regenerated === null || regenerated.length === 0 ||
+      regenerated.length > EMAIL_HTML_MAX_LENGTH
+    ? undefined
+    : regenerated;
+  return { html, formattingRemoved: html === undefined };
+}
+
+/**
  * The HTML part for an edited text, by the rules in `applyDraftPatch`: the
  * stored signature block kept when the HTML carries one, otherwise the text
  * escaped. `quoteHtml` (the stored quote markup, or "") follows verbatim. Null
@@ -2284,7 +2329,7 @@ export async function applyDraftPatch(
  */
 function regenerateHtml(
   text: string,
-  inbox: DraftEditorProviderInbox,
+  inbox: SignatureInbox,
   storedHtml: string,
   storedText: string | null,
   quoteHtml: string,
