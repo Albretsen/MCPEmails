@@ -100,6 +100,7 @@
     "test:app-locale": "node --test --experimental-strip-types --experimental-test-module-mocks --import ./scripts/register-dom-tests.mjs components/i18n/app-locale-provider.test.mjs",
     "test:sidebar-signout": "node --test --experimental-strip-types --experimental-test-module-mocks --import ./scripts/register-dom-tests.mjs components/dashboard/sidebar-signout.test.mjs",
     "test:pricing-ui": "node --test --experimental-strip-types --experimental-test-module-mocks --import ./scripts/register-dom-tests.mjs components/marketing/pricing-client-ui.test.mjs",
+    "test:microsoft-sign-in": "node --test --experimental-strip-types --experimental-test-module-mocks --import ./scripts/register-ts-alias.mjs src/lib/auth/microsoft-sign-in.test.ts app/auth/microsoft/route.test.ts app/auth/callback/route.microsoft.test.ts",
     "test:acquisition-device": "node --test --experimental-strip-types --experimental-test-module-mocks --import ./scripts/register-ts-alias.mjs src/lib/acquisition-device.test.mjs src/lib/acquisition-device-stamp.test.ts app/auth/callback/route.device.test.ts",
     "test:billing-portal": "node --test --experimental-strip-types --experimental-test-module-mocks --import ./scripts/register-ts-alias.mjs src/lib/stripe/portal-customer.test.ts app/api/stripe/portal/route.test.ts",
     "test:workspace-writes": "node --test --experimental-strip-types --experimental-test-module-mocks --import ./scripts/register-ts-alias.mjs app/api/analytics/first-tool-reported/route.test.ts",

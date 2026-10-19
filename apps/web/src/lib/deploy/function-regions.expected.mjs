@@ -234,6 +234,7 @@ export const ROUTES = [
   ['app/auth/gmail/callback/route.ts', 'iad1', '8', 'Google token endpoint + Gmail API (global)'],
   ['app/auth/gmail/route.ts', 'arn1', '3', '-'],
   ['app/auth/google/route.ts', 'arn1', '1', '-'],
+  ['app/auth/microsoft/route.ts', 'arn1', '1', '-'],
   ['app/auth/outlook/admin-consent/link/route.ts', 'arn1', '1', '-'],
   ['app/auth/outlook/admin-consent/result/page.tsx', 'arn1', '0', '-'],
   ['app/auth/outlook/admin-consent/route.ts', 'iad1', '3', 'Microsoft Graph (global)'],
