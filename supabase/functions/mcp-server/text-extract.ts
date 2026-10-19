@@ -847,9 +847,168 @@ function finishPreview(text: string, decoded: boolean): string {
   return decoded ? tidyPreview(clean) : normalizePreview(clean);
 }
 
-/** Text as it was decoded from a part, reduced to its visible text when it is markup. */
-function previewOfText(text: string, html: boolean): string {
-  return html || looksLikeHtml(text) ? finishPreview(htmlPreviewText(text), true) : finishPreview(text, false);
+/**
+ * Text as it was decoded from a part, reduced to its visible text when it is
+ * markup, with any CSS it OPENS with removed (`stripLeadingCss`). `complete`
+ * says the text is the whole part, not a prefix the fetch cut.
+ */
+function previewOfText(text: string, html: boolean, complete = false): string {
+  return html || looksLikeHtml(text)
+    ? finishPreview(stripLeadingCss(htmlPreviewText(text), complete), true)
+    : finishPreview(stripLeadingCss(text, complete), false);
+}
+
+// ---------------------------------------------------------------------------
+// CSS that reaches the visible text.
+//
+// `htmlPreviewText` drops a `<style>` element with its content, but CSS also
+// arrives OUTSIDE one: a template whose `<style>` tag a forwarder or a list
+// manager stripped, a stylesheet pasted after `</head>`, a text/plain part a
+// converter filled with the HTML part's stylesheet. Without this the preview
+// is `body{margin:0}.wrapper td{padding:0}...`, which is worse than "".
+//
+// Only what the text OPENS with is judged. Leaked CSS sits where the head
+// was, before the message, and a preview is the message's first visible
+// text. Judging CSS anywhere would mean telling `Hi Bob {name: x}` from a rule
+// in mid-sentence, which no heuristic does reliably. Every step below is an
+// indexOf or a regex over a bounded slice, and the scan only moves forward.
+// ---------------------------------------------------------------------------
+
+/** At-rules a stylesheet opens with. A known name only: "@john see below" is prose. */
+const CSS_AT_RULE =
+  /@(?:media|font-face|import|charset|supports|keyframes|-webkit-keyframes|-moz-keyframes|page|namespace|viewport|-ms-viewport|layer|container|font-feature-values)\b[^{};]{0,2000}/iy;
+
+/** The characters a selector list is written in. No sentence punctuation. */
+const CSS_SELECTOR_CHARS = /^[\w\s.#,:>*+~[\]="'()|^$\\-]{1,2000}$/;
+
+/**
+ * The element names an email stylesheet selects. A selector's bare words must
+ * all be among them: `Hi Ann, see you at noon {room: B}` is a valid selector
+ * list by grammar alone, and only its words (`Hi`, `Ann`) give it away.
+ */
+const CSS_TYPE_SELECTORS = new Set(
+  ("html body head div span p a img table tbody thead tfoot tr td th ul ol li h1 h2 h3 h4 h5 h6 b i u s em strong " +
+    "font center blockquote pre code br hr sup sub small big section article header footer nav main aside figure " +
+    "figcaption form input button label select textarea option iframe video audio source picture svg title meta " +
+    "link address caption col colgroup dl dt dd abbr cite q mark time del ins strike tt").split(" "),
+);
+
+/** Attribute selectors, pseudo-classes and -elements (with arguments), classes and ids. */
+const CSS_NON_TYPE_SELECTORS = /\[[^\]]*\]|::?[-\w]+(?:\([^)]*\))?|[.#][-\w\\]+/g;
+
+/**
+ * A selector list an email stylesheet would hold: its characters are selector
+ * characters, and every bare word is an element name. `cutTail`: the source
+ * may stop inside the last word, which then only has to begin an element name.
+ */
+function isCssSelectorList(selector: string, cutTail = false): boolean {
+  if (!CSS_SELECTOR_CHARS.test(selector)) return false;
+  const words = selector.replace(CSS_NON_TYPE_SELECTORS, " ").split(/[\s,>+~*]+/).filter((w) => w !== "");
+  const last = cutTail && !/[\s,>+~*]$/.test(selector) ? words.pop() : undefined;
+  if (!words.every((w) => CSS_TYPE_SELECTORS.has(w.toLowerCase()))) return false;
+  if (last === undefined) return true;
+  const prefix = last.toLowerCase();
+  for (const name of CSS_TYPE_SELECTORS) if (name.startsWith(prefix)) return true;
+  return false;
+}
+
+/**
+ * A declaration block's content: `prop: value;` pairs, the last `;` optional,
+ * or nothing. A property starts with a letter, `-`, `_` or `*` (old IE hacks).
+ * A pair ends at a `;` or at the end and nowhere else, so there is exactly one
+ * way to split a block and a block that is not CSS fails in linear time.
+ */
+const CSS_DECLARATIONS = /^\s*(?:[-*a-zA-Z_][-\w]*\s*:[^;{}]*(?:;\s*|$))*$/;
+
+/** The same, cut anywhere: inside a name, before the colon, inside a value. */
+const CSS_DECLARATIONS_CUT = /^\s*(?:[-*a-zA-Z_][-\w]*\s*:[^;{}]*;\s*)*(?:[-*a-zA-Z_][-\w]*\s*(?::[^;{}]*)?)?$/;
+
+/** The index just past the `}` that closes the `{` at `open`, or -1 when the text ends first. */
+function closeOfBlock(text: string, open: number): number {
+  let depth = 0;
+  for (let i = open; i < text.length; i++) {
+    const c = text.charCodeAt(i);
+    if (c === 0x7b /* { */) depth++;
+    else if (c === 0x7d /* } */ && --depth === 0) return i + 1;
+  }
+  return -1;
+}
+
+/**
+ * `text` without the CSS it opens with: rules, at-rules (`@media` with its
+ * nested rules) and comments, for as long as they last. "" when it is CSS to
+ * its end, closed or cut by the fetch; never CSS. Text that does not open with
+ * CSS comes back exactly as it was.
+ *
+ * `complete` false (a prefix): a short run of selectors with no `{` after it,
+ * following at least one rule, is where the fetch stopped in the middle of the
+ * next rule, and is dropped too. On a complete part it is kept, since nothing
+ * more can be fetched and it may be prose.
+ */
+export function stripLeadingCss(text: string, complete = false): string {
+  let i = 0;
+  let stripped = false;
+  const n = text.length;
+  for (;;) {
+    while (i < n && /\s/.test(text[i])) i++;
+    if (i >= n) return stripped ? "" : text;
+
+    if (text.startsWith("/*", i)) {
+      const end = text.indexOf("*/", i + 2);
+      if (end === -1) return "";
+      i = end + 2;
+      stripped = true;
+      continue;
+    }
+
+    if (text.charCodeAt(i) === 0x40 /* @ */) {
+      CSS_AT_RULE.lastIndex = i;
+      const at = CSS_AT_RULE.exec(text);
+      if (at === null) {
+        // After a rule, a prefix the fetch cut inside an at-rule's name.
+        if (stripped && !complete && n - i <= 32 && /^@[-a-zA-Z]*$/.test(text.slice(i))) return "";
+        break;
+      }
+      const next = i + at[0].length;
+      if (next >= n) return "";
+      if (text.charCodeAt(next) === 0x3b /* ; */) {
+        i = next + 1;
+        stripped = true;
+        continue;
+      }
+      if (text.charCodeAt(next) !== 0x7b /* { */) break;
+      const end = closeOfBlock(text, next);
+      if (end === -1) return "";
+      i = end;
+      stripped = true;
+      continue;
+    }
+
+    // A rule: a selector list, then `{ declarations }`.
+    const brace = text.indexOf("{", i);
+    const firstClose = text.indexOf("}", i);
+    if (brace === -1 || (firstClose !== -1 && firstClose < brace)) {
+      // No rule starts here. After a rule, a cut prefix that ends in a bare
+      // selector list is the next rule, cut before its `{`.
+      const rest = text.slice(i);
+      if (
+        stripped && !complete && brace === -1 && firstClose === -1 && rest.length <= 300 &&
+        isCssSelectorList(rest, true)
+      ) return "";
+      break;
+    }
+    if (brace - i > 2000 || !isCssSelectorList(text.slice(i, brace))) break;
+    if (firstClose === -1) {
+      // The fetch stopped inside this rule's declarations.
+      if (n - brace <= 4000 && CSS_DECLARATIONS_CUT.test(text.slice(brace + 1))) return "";
+      break;
+    }
+    const body = text.slice(brace + 1, firstClose);
+    if (body.length > 20000 || body.includes("{") || !CSS_DECLARATIONS.test(body)) break;
+    i = firstClose + 1;
+    stripped = true;
+  }
+  return stripped ? text.slice(i) : text;
 }
 
 /** A quoted-printable soft break or escape that the partial fetch cut in half. */
@@ -896,7 +1055,11 @@ export function cleanPreviewFromBodyPart(source: string, part: PreviewPartInfo |
       // Not a multipart after all: a leaf nothing described.
       return leafPreview(octets, { type: "text", subtype: "plain", charset: null, encoding: guessTransferEncoding(wire) });
     }
-    if (typeof nested.text === "string" && nested.text.trim() !== "") return previewOfText(nested.text, false);
+    if (typeof nested.text === "string" && nested.text.trim() !== "") {
+      // A text/plain part that is only a stylesheet (some converters) defers to the HTML.
+      const fromText = previewOfText(nested.text, false);
+      if (fromText !== "") return fromText;
+    }
     if (typeof nested.html === "string" && nested.html !== "") return previewOfText(nested.html, true);
     return "";
   }
@@ -909,6 +1072,6 @@ function leafPreview(octets: Uint8Array, part: PreviewPartInfo): string {
   const bytes = decodeTransferTolerant(octets, part.encoding);
   if (bytes === null) return "";
   const complete = typeof part.size === "number" && octets.length >= part.size;
-  return previewOfText(decodeCharsetTolerant(bytes, part.charset, complete), part.subtype === "html");
+  return previewOfText(decodeCharsetTolerant(bytes, part.charset, complete), part.subtype === "html", complete);
 }
 

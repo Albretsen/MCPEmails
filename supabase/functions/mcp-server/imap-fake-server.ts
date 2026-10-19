@@ -74,6 +74,8 @@ export interface FakeServerOptions {
   refuse?: (command: string) => string | null;
   /** Rewrites the mailbox name on a `* STATUS` line. */
   statusName?: (name: string) => string;
+  /** Told of every partial `BODY.PEEK[1]<offset.length>` a FETCH asks for, per message. */
+  onPartialFetch?: (uid: number, offset: number, length: number) => void;
   /** Answer the commands of one pipelined write in reverse order. */
   reversePipelined?: boolean;
   /** Receive LOGOUT but say nothing until `answerLogout()` is called. */
@@ -546,9 +548,13 @@ export class FakeImapServer {
         else if (item === "ENVELOPE") parts.push(`ENVELOPE ${envelopeOf(message.raw)}`);
         else if (item === "BODYSTRUCTURE") parts.push(`BODYSTRUCTURE ${bodyStructureOf(message.raw)}`);
         else if (item === "BODY.PEEK[]") parts.push(`BODY[] {${message.raw.length}}${CRLF}${message.raw}`);
-        else if (item === "BODY.PEEK[1]<0.2048>") {
-          const prefix = partOneOf(message.raw).slice(0, 2048);
-          parts.push(`BODY[1]<0> {${prefix.length}}${CRLF}${prefix}`);
+        else if (/^BODY\.PEEK\[1\]<\d+\.\d+>$/.test(item)) {
+          // A partial fetch of part one (RFC 3501 6.4.5): `<offset.length>`,
+          // answered as `BODY[1]<offset>`, "" past the end.
+          const [offset, length] = item.slice(item.indexOf("<") + 1, -1).split(".").map(Number);
+          if (this.#options.onPartialFetch) this.#options.onPartialFetch(uid, offset, length);
+          const slice = partOneOf(message.raw).slice(offset, offset + length);
+          parts.push(`BODY[1]<${offset}> {${slice.length}}${CRLF}${slice}`);
         }
       }
       // A UID FETCH always reports the UID, asked for or not (RFC 3501 6.4.8).
