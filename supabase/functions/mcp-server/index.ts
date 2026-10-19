@@ -496,6 +496,7 @@ import {
 import { assertUidPresent, presentUids } from "./imap-uid-presence.ts";
 import { listImapFoldersWithCounts } from "./imap-folder-counts.ts";
 import { newMessageIdsFor, succeededBulkRow, unknownNewIdNote } from "./imap-copyuid.ts";
+import { relocateFromGmailAllMail } from "./imap-gmail-relocate.ts";
 import { dedupeMessageIds } from "./message-id-dedupe.ts";
 import { type ImapFetchedThisCall, imapRawMessageOnce } from "./imap-fetch-once.ts";
 import {
@@ -21331,6 +21332,11 @@ async function imapArchiveEmail(
     // against a UID nobody holds is a tagged OK, not an error. See
     // imap-uid-presence.ts.
     await assertUidPresent(client, uid);
+    // Gmail, a message addressed by its All Mail id: archived by taking the
+    // \\Inbox label off, and it keeps its id. See imap-gmail-relocate.ts.
+    if (await relocateFromGmailAllMail(client, folder, [uid], target, () => Promise.resolve(mailboxes))) {
+      return { newMessageId: messageId, destination: target };
+    }
     // uidMove falls back internally if MOVE is unsupported (COPY + \\Deleted +
     // EXPUNGE); the COPY runs before the destructive steps.
     const moved = await client.uidMove([uid], target);
@@ -22046,6 +22052,12 @@ async function imapMoveEmail(
     // against a UID nobody holds is a tagged OK, not an error. See
     // imap-uid-presence.ts.
     await assertUidPresent(client, uid);
+    // Gmail, a message addressed by its All Mail id: relocated with labels,
+    // never expunged from All Mail, and it keeps its id. See imap-gmail-relocate.ts.
+    const gmailClient = client;
+    if (await relocateFromGmailAllMail(client, folder, [uid], destinationFolderId, () => gmailClient.listMailboxes())) {
+      return messageId;
+    }
     // uidMove falls back to COPY + \\Deleted + EXPUNGE when RFC 6851 MOVE is
     // unsupported by the server.
     const moved = await client.uidMove([uid], destinationFolderId);
@@ -23306,8 +23318,18 @@ function imapBulkMove(
   // Filled per folder group as each UID MOVE reports COPYUID. A group whose
   // move throws records nothing, and its ids land in `failed` as before.
   const newMessageIds: Record<string, string> = {};
+  // Gmail only, and only when a group's folder could be All Mail: the folder
+  // list, asked for once per run (see imap-gmail-relocate.ts).
+  let mailboxes: Promise<ImapMailboxInfo[]> | null = null;
   return imapBulkByFolderGroup(inbox, messageIds, runId, opts, async (client, group) => {
-    const moved = await client.uidMove(group.items.map((i) => i.uid), destinationFolderId);
+    const uids = group.items.map((i) => i.uid);
+    // Gmail, messages addressed by their All Mail ids: relocated with labels,
+    // never expunged from All Mail, and they keep their ids.
+    if (await relocateFromGmailAllMail(client, group.folder, uids, destinationFolderId, () => (mailboxes ??= client.listMailboxes()))) {
+      for (const item of group.items) newMessageIds[item.messageId] = item.messageId;
+      return;
+    }
+    const moved = await client.uidMove(uids, destinationFolderId);
     Object.assign(
       newMessageIds,
       newMessageIdsFor(group.items, moved, destinationFolderId, encodeImapId),
