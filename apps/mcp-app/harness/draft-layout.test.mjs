@@ -717,7 +717,7 @@ async function main() {
 
     // dir="auto" on a textarea reads the WHOLE box's first strong character;
     // `plaintext` is what gives each line its own.
-    const block = (sel) => css.match(new RegExp(`(?:^|\\n)${sel.replace(/[.[\]]/g, "\\$&")} \\{[^}]*\\}`, "g")) ?? [];
+    const block = (sel) => css.match(new RegExp(`(?:^|\\n)${sel.replace(/[.*+?^${}()|[\]\\]/g, "\\$&")} \\{[^}]*\\}`, "g")) ?? [];
     expect("message lines one by one (CSS)", block(".textarea").some((r) => /unicode-bidi:\s*plaintext/.test(r)), true);
     expect("quote lines one by one (CSS)", block(".quote-text").some((r) => /unicode-bidi:\s*plaintext/.test(r)), true);
     expect("formatted paragraphs one by one (CSS)", /\.html-preview \.body-html[^{]*\{\s*unicode-bidi:\s*plaintext/.test(css), true);
