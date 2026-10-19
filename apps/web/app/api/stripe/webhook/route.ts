@@ -87,6 +87,7 @@ import { NextRequest, NextResponse, after } from 'next/server';
 import type Stripe from 'stripe';
 import { stripe } from '@/lib/stripe/client';
 import { isAccountDeletionCancellation } from '@/lib/stripe/cancel-on-account-delete';
+import { accountState } from '@/lib/billing/deleted-account';
 import { createServiceRoleClient } from '@/lib/supabase/service';
 import {
   getPlanByStripePriceId,
@@ -773,6 +774,10 @@ async function maybeQueueCancellation(
       customerId,
       subscription.metadata?.user_id ?? null,
     );
+    if ((await accountState(db, userId)) === 'deleted') {
+      console.log(`[stripe-webhook] cancellation for ${customerId}: account deleted; nothing queued.`);
+      return;
+    }
 
     // The customer object is retrieved rather than read off the event, because
     // the event is serialised at the ENDPOINT's pinned API version while the
@@ -889,6 +894,16 @@ async function maybeQueueCancellationOnDelete(
       customerId,
       subscription.metadata?.user_id ?? null,
     );
+    // The comment check in the caller only covers a cancel that delete-account
+    // made. One made from the dashboard (or by Stripe) on an account that was
+    // already deleted carries no comment. 'unknown' still queues: the
+    // dispatcher asks again before it sends.
+    if ((await accountState(db, userId)) === 'deleted') {
+      console.log(
+        `[stripe-webhook] subscription.deleted ${subscription.id}: account deleted; nothing queued.`,
+      );
+      return;
+    }
     const recipient = await resolveRecipient(
       db,
       await stripeCustomerEmail(customerId),
