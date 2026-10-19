@@ -224,11 +224,17 @@ export interface SsoAuditEventView {
   createdAt: string;
 }
 
+/**
+ * The settings section lists configuration changes only. The same table also
+ * holds a row per SAML sign-in (`user.*`, written by /auth/callback), which
+ * would otherwise push every change out of the newest-N window.
+ */
 export async function loadAuditEvents(ctx: SsoAdminContext, limit = 20): Promise<SsoAuditEventView[]> {
   const { data, error } = await ctx.db
     .from('sso_audit_events')
     .select('id, action, details, actor_user_id, created_at')
     .eq('workspace_id', ctx.workspaceId)
+    .in('action', SSO_CONFIG_AUDIT_ACTIONS)
     .order('created_at', { ascending: false })
     .limit(limit);
   if (error) throw new Error(`load sso audit events: ${error.message}`);
@@ -259,17 +265,21 @@ export async function loadAuditEvents(ctx: SsoAdminContext, limit = 20): Promise
 
 // ── Audit ────────────────────────────────────────────────────────────────────
 
-export type SsoAuditAction =
-  | 'connection.created'
-  | 'connection.metadata_updated'
-  | 'connection.default_role_changed'
-  | 'connection.enforced'
-  | 'connection.enforcement_removed'
-  | 'connection.disabled'
-  | 'connection.enabled'
-  | 'domain.added'
-  | 'domain.removed'
-  | 'domain.verified';
+/** Configuration changes an admin makes. Sign-in rows live in lib/sso/audit.ts. */
+export const SSO_CONFIG_AUDIT_ACTIONS = [
+  'connection.created',
+  'connection.metadata_updated',
+  'connection.default_role_changed',
+  'connection.enforced',
+  'connection.enforcement_removed',
+  'connection.disabled',
+  'connection.enabled',
+  'domain.added',
+  'domain.removed',
+  'domain.verified',
+] as const;
+
+export type SsoAuditAction = (typeof SSO_CONFIG_AUDIT_ACTIONS)[number];
 
 /**
  * Appends one audit row. Runs after the change it records has been written;

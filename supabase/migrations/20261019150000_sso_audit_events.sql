@@ -3,14 +3,18 @@
 -- ============================================================================
 --
 -- WHY A NEW TABLE. The Security page's audit log is public.activity_log, which
--- records MCP tool calls and feeds usage counts, the Free allowance and the
--- growth board. An admin changing SSO settings is not a tool call, and a row
--- there would be counted as usage. So SSO configuration changes get their own
--- append-only table, read by the SSO settings section.
+-- records MCP tool calls and feeds usage counts (usage_summary), the growth
+-- board's active-workspace numbers and the dormant-grant sweeps. An admin
+-- changing SSO settings, or a person signing in through SSO, is not a tool
+-- call, and a row there would be counted as usage and make a quiet workspace
+-- look active. activity_log also has no column for WHO acted. So every SSO
+-- event goes here instead: configuration changes (actor = the admin) and
+-- SAML sign-ins and just-in-time joins (actor = the SSO user), written by
+-- /auth/callback through apps/web/src/lib/sso/audit.ts.
 --
--- WHO WRITES. Only the server (service role), from apps/web/app/api/sso/**,
--- after it has checked that the caller is owner/admin of the workspace and the
--- workspace is entitled to SSO. Owner/admin may read their workspace's rows.
+-- WHO WRITES. Only the server (service role): apps/web/app/api/sso/** after
+-- it has checked that the caller is owner/admin of the workspace and the
+-- workspace is entitled to SSO, and /auth/callback for sign-ins. Owner/admin may read their workspace's rows.
 -- Nobody may update or delete through the API: rows go away only with their
 -- workspace.
 --
@@ -47,11 +51,19 @@ CREATE TABLE IF NOT EXISTS public.sso_audit_events (
                      'connection.enabled',
                      'domain.added',
                      'domain.removed',
-                     'domain.verified'
+                     'domain.verified',
+                     -- SAML sign-in through the connection, and the join to
+                     -- its workspace. details.outcome = success | error,
+                     -- details.error_code on an error (never an address).
+                     'user.sign_in',
+                     'user.jit_join'
                    )),
   -- Small, value-free context: a domain, a role, a host. Never a token.
   details        jsonb NOT NULL DEFAULT '{}'::jsonb
                    CHECK (jsonb_typeof(details) = 'object' AND pg_column_size(details) <= 2048),
+  -- Request origin of a sign-in event; NULL for configuration changes.
+  ip_address     inet,
+  user_agent     text CHECK (user_agent IS NULL OR length(user_agent) <= 512),
   created_at     timestamptz NOT NULL DEFAULT now()
 );
 
@@ -71,8 +83,8 @@ CREATE POLICY "sso_audit_events_select_admins"
   USING (workspace_id = ANY (public.sso_admin_workspace_ids()));
 
 COMMENT ON TABLE public.sso_audit_events IS
-  'Append-only record of SSO configuration changes (connection, domains, enforcement). '
-  'Written only by the server after an owner/admin check; owner/admin may read.';
+  'Append-only record of SSO events: configuration changes (connection, domains, enforcement) '
+  'and SAML sign-ins / just-in-time joins. Written only by the server; owner/admin may read.';
 
 
 -- ── 2. Has an owner/admin completed a SAML sign-in through this connection? ──
