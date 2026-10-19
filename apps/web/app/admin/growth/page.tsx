@@ -262,6 +262,7 @@ export default async function GrowthBoardPage({
           <Suspense
             fallback={
               <>
+                <Skeleton span={12} tall={2} />
                 <Skeleton span={6} tall={2} />
                 <Skeleton span={6} tall={2} />
                 <Skeleton span={8} tall={2} />
