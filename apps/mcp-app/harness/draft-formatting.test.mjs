@@ -327,6 +327,22 @@ async function main() {
     await c.done();
   }
 
+  group("W4. a draft whose text writes a link as 'label (url)': a word at the end, no warning");
+  {
+    // Live claude.ai, v264: Claude's own text carried the address; drafts stored
+    // that way before the fix must still merge an edit after it.
+    const html = "<h2>Quick update</h2>\n<p>Learn more at <a href=\"https://mcpemails.com\">mcpemails.com</a>.</p>";
+    const text = "Quick update\n\nLearn more at mcpemails.com (https://mcpemails.com).";
+    const c = await editor({ body: { text, html } });
+    c.input("d-body", text + " Pineapple");
+    await settle();
+    expect("no warning after the address", WARNING.test(c.text()), false);
+    c.input("d-body", text.replace("mcpemails.com)", "mcpemails.com/x)"));
+    await settle();
+    expect("an edit inside the address: warned", WARNING.test(c.text()), true);
+    await c.done();
+  }
+
   // ── U. Keep the formatting ────────────────────────────────────────────────
 
   group("U1. Keep the formatting restores the stored message and focus");

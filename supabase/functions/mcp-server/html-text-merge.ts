@@ -499,6 +499,19 @@ export function mergeTextEditIntoHtml(
 ): string | null {
   if (typeof html !== "string" || html.length === 0) return null;
   if (typeof oldText !== "string" || oldText.trim().length === 0) return null;
+  // A link's address written after its words ("mcpemails.com (https://…)")
+  // belongs to the link, not to the text: set aside on both sides before any
+  // alignment, and only when the same addresses are set aside from both, in
+  // the same order. An edit inside one, or a copy typed elsewhere, changes
+  // that list and falls back; the address never becomes visible HTML text.
+  const links = htmlLinks(html);
+  if (links.length > 0) {
+    const before = withoutLinkAddresses(oldText, links);
+    const after = withoutLinkAddresses(newText, links);
+    if (before.found.join("\n") !== after.found.join("\n")) return null;
+    oldText = before.text;
+    newText = after.text;
+  }
   if (!sameWords(html, oldText)) return null;
   let oldLines = oldText.replace(/\r\n?/g, "\n").split("\n");
   let newLines = newText.replace(/\r\n?/g, "\n").split("\n");
@@ -935,7 +948,91 @@ function htmlAsText(html: string): string {
  */
 export function textPartMatchingHtml(text: string, html: string | null | undefined): string {
   if (typeof html !== "string" || html.trim().length === 0) return text;
-  if (!htmlHasFormatting(html) || sameWords(html, text)) return text;
+  if (!htmlHasFormatting(html)) return text;
+  if (sameWords(html, text)) {
+    // The same words, but links written "label (url)": the HTML's own text,
+    // when that is the only difference (live claude.ai, v264).
+    const links = htmlLinks(html);
+    const mine = withoutLinkAddresses(text, links);
+    if (mine.found.length === 0) return text;
+    const own = htmlAsText(html);
+    const flat = (s: string) => collapseText(withoutLinkAddresses(s, links).text, []).text.trim();
+    return own.length > 0 && sameWords(html, own) && flat(own) === flat(text) ? own : text;
+  }
   const own = htmlAsText(html);
   return own.length > 0 && sameWords(html, own) ? own : text;
+}
+
+// ── A LINK'S ADDRESS WRITTEN AFTER ITS WORDS (live claude.ai, v264) ─────────
+// Claude's plain `body` writes a link as "mcpemails.com (https://mcpemails.com)"
+// (or "<url>", "[url]", or the bare address) next to the HTML's
+// `<a href="https://mcpemails.com">mcpemails.com</a>`. `sameWords` ignores
+// addresses, so such a text was stored as it was, and the card showed it; a
+// word typed after the address then had no place in the HTML, whose text has
+// no address there, and the edit dropped every tag. And `htmlAsText` writes
+// one itself for a link whose words are not its address.
+//
+// Such an address is recognised only right after the words of a link in the
+// HTML, and only when it IS that link's address (compared without scheme,
+// `www.` or trailing slash) and is written as one ("https://", "mailto:",
+// "www."). It is then the link's, not text: `textPartMatchingHtml` stores the
+// HTML's own text when this is all that differs, and the merge sets it aside.
+
+/** Each link in `html` with a typeable address: its words and its address. */
+function htmlLinks(html: string): Array<{ label: string; href: string }> {
+  const out: Array<{ label: string; href: string }> = [];
+  const byOpen = new Map<number, string[]>();
+  for (const run of textRuns(html)) {
+    if (!run.link) continue;
+    const parts = byOpen.get(run.link.open) ?? [];
+    parts.push(run.units.map((u) => u.ch).join(""));
+    byOpen.set(run.link.open, parts);
+  }
+  const visible = textRuns(html).map((r) => r.units.map((u) => u.ch).join("")).join(" ");
+  for (const [open, parts] of byOpen) {
+    const tag = readTag(html, open);
+    const href = tag ? linkAddress(tag.attrs) : null;
+    const label = collapseText(parts.join(""), []).text.trim();
+    // An HTML that shows the address as text itself keeps it as text.
+    if (!href || label.length === 0 || visible.includes(href)) continue;
+    out.push({ label, href });
+  }
+  return out;
+}
+
+/** After a link's words: " (url)", " <url>", " [url]", or " url" (trailing punctuation not included). */
+const LINK_ADDRESS_AFTER =
+  /[ \t]*\(([^()\s]+)\)|[ \t]*<([^<>\s]+)>|[ \t]*\[([^\[\]\s]+)\]|[ \t]+((?:https?:\/\/|mailto:|www\.)[^\s<>()\[\]]*?)(?=[.,;:!?'"]*(?:\s|$))/y;
+
+/**
+ * `text` with every address written right after a link's words, that is that
+ * link's address, taken out; and those addresses, in order.
+ */
+function withoutLinkAddresses(
+  text: string,
+  links: Array<{ label: string; href: string }>,
+): { text: string; found: string[] } {
+  if (links.length === 0) return { text, found: [] };
+  const cuts: Array<{ from: number; to: number; href: string }> = [];
+  for (const { label, href } of links) {
+    for (let at = text.indexOf(label); at !== -1; at = text.indexOf(label, at + 1)) {
+      const from = at + label.length;
+      LINK_ADDRESS_AFTER.lastIndex = from;
+      const m = LINK_ADDRESS_AFTER.exec(text);
+      if (!m) continue;
+      const written = m[1] ?? m[2] ?? m[3] ?? m[4] ?? "";
+      if (!/^(?:https?:\/\/|mailto:|www\.)/i.test(written)) continue;
+      if (bareAddress(written) !== bareAddress(href)) continue;
+      if (cuts.some((c) => c.from < from + m[0].length && from < c.to)) continue;
+      cuts.push({ from, to: from + m[0].length, href: bareAddress(href) });
+    }
+  }
+  cuts.sort((a, b) => a.from - b.from);
+  let out = "";
+  let last = 0;
+  for (const c of cuts) {
+    out += text.slice(last, c.from);
+    last = c.to;
+  }
+  return { text: out + text.slice(last), found: cuts.map((c) => c.href) };
 }
