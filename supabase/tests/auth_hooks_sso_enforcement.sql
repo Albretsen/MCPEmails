@@ -12,6 +12,9 @@
 --   - an SSO user of the enforced connection is allowed; an SSO user of
 --     another provider asserting the domain is refused
 --   - the workspace owner keeps every method (break-glass)
+--   - every SSO token is bound to the provider that owns the email domain:
+--     another provider, an unverified domain and a disabled connection are
+--     refused even where nothing is enforced
 --   - an `azure` OAuth sign-in without a verified email is refused; verified,
 --     consumer-tenant, non-OAuth and newer-Google sign-ins are not
 --   - the hook fails open on an internal error and leaves claims untouched
@@ -23,7 +26,7 @@
 
 BEGIN;
 
-SELECT plan(72);
+SELECT plan(82);
 
 -- ------------------------------------------------------------
 -- 0. Fixtures (as the migration owner, which bypasses RLS)
@@ -37,6 +40,9 @@ SELECT plan(72);
 -- 660e...d2 Microsoft user, azure identity with xms_edov true
 -- 660e...d3 Microsoft personal account (consumer tenant, no xms_edov)
 -- 660e...d4 azure identity unverified, but a NEWER google sign-in
+-- 660e...e1 SSO user of the open connection's provider, on its own domain
+-- 660e...e2 SSO user of the open connection's provider, on a domain no one verified
+-- 660e...e3 SSO user of the ENFORCED connection's provider, asserting the open domain
 INSERT INTO auth.users (
   id, instance_id, aud, role, email, encrypted_password, email_confirmed_at,
   created_at, updated_at, is_sso_user, raw_app_meta_data, raw_user_meta_data
@@ -60,7 +66,16 @@ INSERT INTO auth.users (
   ('660e0000-0000-0000-0000-0000000000d3', '00000000-0000-0000-0000-000000000000', 'authenticated', 'authenticated',
    'ms-personal@hooks-test.example', NULL, now(), now(), now(), false, '{"provider":"azure"}', '{}'),
   ('660e0000-0000-0000-0000-0000000000d4', '00000000-0000-0000-0000-000000000000', 'authenticated', 'authenticated',
-   'ms-then-google@hooks-test.example', NULL, now(), now(), now(), false, '{"provider":"azure"}', '{}')
+   'ms-then-google@hooks-test.example', NULL, now(), now(), now(), false, '{"provider":"azure"}', '{}'),
+  ('660e0000-0000-0000-0000-0000000000e1', '00000000-0000-0000-0000-000000000000', 'authenticated', 'authenticated',
+   'member@open-sso.example', NULL, now(), now(), now(), true,
+   '{"provider":"sso:660ed000-0000-0000-0000-0000000000c1","providers":["sso:660ed000-0000-0000-0000-0000000000c1"]}', '{}'),
+  ('660e0000-0000-0000-0000-0000000000e2', '00000000-0000-0000-0000-000000000000', 'authenticated', 'authenticated',
+   'someone@unclaimed-sso.example', NULL, now(), now(), now(), true,
+   '{"provider":"sso:660ed000-0000-0000-0000-0000000000c1","providers":["sso:660ed000-0000-0000-0000-0000000000c1"]}', '{}'),
+  ('660e0000-0000-0000-0000-0000000000e3', '00000000-0000-0000-0000-000000000000', 'authenticated', 'authenticated',
+   'victim@open-sso.example', NULL, now(), now(), now(), true,
+   '{"provider":"sso:660ed000-0000-0000-0000-0000000000a1","providers":["sso:660ed000-0000-0000-0000-0000000000a1"]}', '{}')
 ON CONFLICT DO NOTHING;
 
 INSERT INTO auth.identities (provider_id, user_id, identity_data, provider, last_sign_in_at, created_at, updated_at) VALUES
@@ -122,8 +137,8 @@ SELECT ok(NOT has_function_privilege('anon', 'public.sso_sign_in_required(text)'
 SELECT ok(NOT has_table_privilege('anon', 'public.auth_hook_switches', 'SELECT,INSERT,UPDATE,DELETE')
       AND NOT has_table_privilege('authenticated', 'public.auth_hook_switches', 'SELECT,INSERT,UPDATE,DELETE'),
   'browsers cannot read or flip the kill switch');
-SELECT is((SELECT count(*)::int FROM public.auth_hook_switches WHERE enabled), 2,
-  'both switches ship on');
+SELECT is((SELECT count(*)::int FROM public.auth_hook_switches WHERE enabled), 3,
+  'all three switches ship on');
 
 -- ------------------------------------------------------------
 -- 2. Access-token hook: enforced domain
@@ -203,6 +218,46 @@ DELETE FROM public.auth_hook_switches WHERE name = 'sso_enforcement';
 SELECT is(public.auth_token_refusal('660e0000-0000-0000-0000-0000000000b1', 'password'), 'sso_required',
   'a missing switch row counts as on');
 INSERT INTO public.auth_hook_switches (name, enabled) VALUES ('sso_enforcement', true);
+
+-- ------------------------------------------------------------
+-- 3b. Access-token hook: SSO domain binding (nothing enforced here)
+-- ------------------------------------------------------------
+SELECT is(public.auth_token_refusal('660e0000-0000-0000-0000-0000000000e1', 'sso/saml'), NULL,
+  'an SSO user of the provider that owns their domain signs in');
+SELECT is(public.auth_token_refusal('660e0000-0000-0000-0000-0000000000e1', 'token_refresh'), NULL,
+  'and refreshes');
+SELECT is(public.auth_token_refusal('660e0000-0000-0000-0000-0000000000e3', 'sso/saml'), 'sso_not_configured',
+  'another company''s IdP asserting a non-enforced domain is refused (implicit-flow bypass of the callback)');
+SELECT is(public.auth_token_refusal('660e0000-0000-0000-0000-0000000000e3', 'token_refresh'), 'sso_not_configured',
+  'and cannot refresh');
+SELECT is(public.auth_token_refusal('660e0000-0000-0000-0000-0000000000e2', 'sso/saml'), 'sso_not_configured',
+  'an SSO user whose domain no connection verified is refused');
+
+UPDATE public.sso_domains SET verified_at = NULL WHERE domain = 'open-sso.example';
+SELECT is(public.auth_token_refusal('660e0000-0000-0000-0000-0000000000e1', 'sso/saml'), 'sso_not_configured',
+  'an unverified domain does not route');
+UPDATE public.sso_domains SET verified_at = now() WHERE domain = 'open-sso.example';
+
+UPDATE public.sso_connections SET status = 'disabled' WHERE id = '660ec000-0000-0000-0000-0000000000c1';
+SELECT is(public.auth_token_refusal('660e0000-0000-0000-0000-0000000000e1', 'token_refresh'), 'sso_not_configured',
+  'a disabled connection stops signing people in, refresh included');
+UPDATE public.sso_connections SET status = 'active' WHERE id = '660ec000-0000-0000-0000-0000000000c1';
+
+SELECT is(public.auth_token_refusal('660e0000-0000-0000-0000-0000000000c1', 'password'), NULL,
+  'binding never touches a non-SSO user');
+
+UPDATE public.auth_hook_switches SET enabled = false WHERE name = 'sso_domain_binding';
+SELECT is(public.auth_token_refusal('660e0000-0000-0000-0000-0000000000e3', 'sso/saml'), NULL,
+  'the sso_domain_binding kill switch turns binding off');
+UPDATE public.auth_hook_switches SET enabled = true WHERE name = 'sso_domain_binding';
+
+SELECT is(
+  public.auth_hook_custom_access_token(jsonb_build_object(
+    'user_id', '660e0000-0000-0000-0000-0000000000e3',
+    'authentication_method', 'sso/saml',
+    'claims', '{}'::jsonb)),
+  '{"error":{"http_code":403,"message":"sso_not_configured"}}'::jsonb,
+  'the binding refusal is a 403 with its own reason code');
 
 -- ------------------------------------------------------------
 -- 4. Access-token hook: Microsoft email guard

@@ -19,7 +19,17 @@
 --        row rather than on authentication_method also covers token_refresh:
 --        an existing session for that user stops refreshing once enforcement
 --        is on (UNVERIFIED that the hook runs on refresh: live-test item).
---     2. Microsoft email guard. Production auto-confirms email, and Supabase
+--     2. SSO domain binding. An SSO token is issued only when the user's
+--        email domain routes, through our verified sso_domains, to the very
+--        provider the user signed in with (sso_provider_for_domain). Any
+--        customer's IdP can assert any address, and anyone with the public
+--        anon key can start SAML for any provider id and take the implicit
+--        flow, which never reaches the /auth/callback check
+--        (lib/sso/join.ts). Without this, company A's IdP could mint a
+--        session for x@companyB.example on a domain B has not enforced, and
+--        a connection an admin disabled would keep signing people in. Same
+--        refusal as the callback: 'sso_not_configured'.
+--     3. Microsoft email guard. Production auto-confirms email, and Supabase
 --        then links an `azure` identity to an existing user with the same
 --        email even when Microsoft did not vouch for that email. The
 --        /auth/callback guard (PR #144) cannot catch the implicit flow, which
@@ -50,13 +60,14 @@
 --
 -- KILL SWITCH. public.auth_hook_switches, one row per check:
 --   UPDATE public.auth_hook_switches SET enabled = false WHERE name = 'sso_enforcement';
+--   UPDATE public.auth_hook_switches SET enabled = false WHERE name = 'sso_domain_binding';
 --   UPDATE public.auth_hook_switches SET enabled = false WHERE name = 'azure_email_guard';
 -- Takes effect on the next sign-in, no deploy. A missing row counts as on.
 -- To remove the hooks entirely, turn them off in the dashboard
 -- (Authentication > Hooks); the functions are harmless when unregistered.
 --
 -- ERROR MESSAGES are stable reason codes ('sso_required',
--- 'microsoft_email_unverified'), not prose: supabase-js returns them as
+-- 'sso_not_configured', 'microsoft_email_unverified'), not prose: supabase-js returns them as
 -- error.message, /auth/callback forwards them as /auth/error?reason=..., and
 -- the app turns them into localized copy.
 --
@@ -75,13 +86,14 @@ GRANT USAGE ON SCHEMA public TO supabase_auth_admin;
 -- ── 1. Kill switch ───────────────────────────────────────────────────────────
 CREATE TABLE IF NOT EXISTS public.auth_hook_switches (
   name        text PRIMARY KEY
-                CHECK (name IN ('sso_enforcement', 'azure_email_guard')),
+                CHECK (name IN ('sso_enforcement', 'sso_domain_binding', 'azure_email_guard')),
   enabled     boolean NOT NULL DEFAULT true,
   updated_at  timestamptz NOT NULL DEFAULT now()
 );
 
 INSERT INTO public.auth_hook_switches (name, enabled) VALUES
   ('sso_enforcement', true),
+  ('sso_domain_binding', true),
   ('azure_email_guard', true)
 ON CONFLICT (name) DO NOTHING;
 
@@ -208,6 +220,7 @@ DECLARE
   v_provider   text;
   v_is_sso     boolean;
   v_enforced   record;
+  v_routed     uuid;
   v_identity   record;
 BEGIN
   SELECT * INTO v_user FROM auth.users WHERE id = p_user_id;
@@ -234,7 +247,17 @@ BEGIN
     END IF;
   END IF;
 
-  -- 2. Microsoft email guard: only on an OAuth sign-in, and only when the
+  -- 2. SSO domain binding: an SSO user's email domain must route to the
+  -- provider they signed in with. Also refuses a disabled connection, an
+  -- unverified or removed domain, and a deleted workspace.
+  IF v_is_sso AND public.auth_hook_switch_on('sso_domain_binding') THEN
+    v_routed := public.sso_provider_for_domain(substring(v_user.email FROM '@([^@]*)$'));
+    IF v_routed IS NULL OR v_provider <> 'sso:' || v_routed::text THEN
+      RETURN 'sso_not_configured';
+    END IF;
+  END IF;
+
+  -- 3. Microsoft email guard: only on an OAuth sign-in, and only when the
   -- identity this sign-in used is azure. A later Google, password or magic
   -- link sign-in is never refused because of an old azure identity.
   IF p_authentication_method = 'oauth' AND public.auth_hook_switch_on('azure_email_guard') THEN

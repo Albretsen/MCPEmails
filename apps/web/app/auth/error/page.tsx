@@ -26,9 +26,11 @@ const ERROR_MESSAGE_KEYS: Record<string, string> = {
 /**
  * Reason codes the Supabase auth hooks return as their error message. The
  * callback forwards Supabase's error text, which may carry more than the bare
- * code, so these match anywhere in the reason.
+ * code, so these match anywhere in the reason. 'sso_not_configured' is the
+ * SSO domain-binding refusal; its message key comes with the SAML sign-in
+ * change (PR #151), and until then it shows the generic message.
  */
-const HOOK_REASONS = [SSO_REQUIRED_REASON, 'microsoft_email_unverified'];
+const HOOK_REASONS = [SSO_REQUIRED_REASON, 'sso_not_configured', 'microsoft_email_unverified'];
 
 const GENERIC_MESSAGE_KEY = 'generic';
 
