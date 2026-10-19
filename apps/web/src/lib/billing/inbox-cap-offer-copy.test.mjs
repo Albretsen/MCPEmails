@@ -15,7 +15,7 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
 import { readFileSync } from 'node:fs';
-import { PLANS } from '../stripe/plans.ts';
+import { PLANS, PRO_INBOX_CAP } from '../stripe/plans.ts';
 import { inboxCapOffer } from './inbox-cap-offer.mjs';
 
 const LOCALES = ['en', 'es', 'fr', 'nb', 'zh'];
@@ -154,11 +154,13 @@ test('the prices quoted are the prices in plans.ts, in every locale', () => {
   }
 });
 
-test('the only numbers in the new copy are the two prices', () => {
+test('the only numbers in the new copy are the two prices and the Pro cap', () => {
   // Personal's three inboxes are spelled out as a word in every locale, so any
   // other digit is a number nobody checked: a wrong price, a wrong cap, a
   // percentage that was never measured.
-  const allowed = new Set([PERSONAL_PRICE, PRO_PRICE]);
+  // Plus Pro's inbox cap: since 2026-10-19 Pro covers up to ten mailboxes, and
+  // the business copy says so as a figure, read from plans.ts, not typed.
+  const allowed = new Set([PERSONAL_PRICE, PRO_PRICE, String(PRO_INBOX_CAP)]);
   for (const [locale, file, key, value] of everyNewString()) {
     for (const number of value.match(/[0-9]+/g) ?? []) {
       assert.ok(allowed.has(number), `${locale}/${file}: ${key} quotes an unexpected number ${number}`);
@@ -218,4 +220,23 @@ test('the CONSUMER copy was not touched', () => {
     lookup(dashboard, 'inboxes.capBodyPersonal'),
     'Free connects one mailbox. Personal takes you to three for $9 a month, so work and personal can share the same agent.',
   );
+});
+
+test('the Business offer at the Pro cap has every key in every locale, quoting $39 and $3', () => {
+  // A Pro workspace past the 2026-10 cutover stops at ten and is sold Business.
+  const offer = inboxCapOffer(PRO_INBOX_CAP);
+  const business = dollars(PLANS.pro.monthlyPriceCents); // "39"
+  for (const locale of LOCALES) {
+    const chrome = readMessages(locale, 'dashboardChrome.json');
+    const dashboard = readMessages(locale, 'dashboard.json');
+    for (const key of [offer.titleKey, offer.bodyKey, offer.ctaKey, ...offer.featureKeys]) {
+      assert.equal(typeof lookup(chrome, key), 'string', `${locale}/dashboardChrome.json: ${key} missing`);
+    }
+    for (const key of [offer.noticeBodyKey, offer.offers[0].noticeCtaKey]) {
+      assert.equal(typeof lookup(dashboard, key), 'string', `${locale}/dashboard.json: ${key} missing`);
+    }
+    assert.ok(quotes(lookup(chrome, offer.ctaKey), business), `${locale}: Business CTA must quote ${business}`);
+    assert.ok(quotes(lookup(dashboard, offer.noticeBodyKey), business), `${locale}: notice must quote ${business}`);
+    assert.ok(quotes(lookup(dashboard, offer.noticeBodyKey), '3'), `${locale}: notice must quote the $3 extra`);
+  }
 });

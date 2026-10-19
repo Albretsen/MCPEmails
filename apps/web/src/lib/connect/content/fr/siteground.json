@@ -20,7 +20,7 @@
     "titleLine1": "Serveur MCP pour la messagerie SiteGround :",
     "titleLine2": "toutes les boîtes de votre entreprise, dans Claude et ChatGPT",
     "lead": "Vous gérez info@, ventes@, support@ et factures@ sur votre propre domaine chez SiteGround ? Connectez chaque boîte au même espace de travail et votre agent IA travaille dans toutes. Lisez, recherchez, envoyez, répondez, planifiez et organisez le courrier via IMAP, avec les paramètres que Site Tools affiche pour votre compte.",
-    "answer": "Claude ne peut pas accéder seul à une boîte SiteGround. mcpemails est un serveur MCP hébergé qui la connecte en IMAP standard sur le port 993, pour que Claude, Cursor ou tout client MCP puisse lire, rechercher, envoyer et organiser ce courrier. SiteGround n'exploite aucun nom d'hôte de messagerie partagé : votre serveur est mail.yourdomain.com, ou le nom de serveur sécurisé de la forme secureNNN.sgcpanel.com, et Site Tools affiche le bon sous Email, Accounts, Mail Configuration. L'authentification se fait avec le mot de passe défini sur la boîte, jamais avec votre identifiant de la Client Area SiteGround. Chaque adresse de l'entreprise, comme info@ ou ventes@, se connecte comme une boîte à part : une boîte est gratuite, Personal en connecte trois et Pro toutes celles que vous gérez.",
+    "answer": "Claude ne peut pas accéder seul à une boîte SiteGround. mcpemails est un serveur MCP hébergé qui la connecte en IMAP standard sur le port 993, pour que Claude, Cursor ou tout client MCP puisse lire, rechercher, envoyer et organiser ce courrier. SiteGround n'exploite aucun nom d'hôte de messagerie partagé : votre serveur est mail.yourdomain.com, ou le nom de serveur sécurisé de la forme secureNNN.sgcpanel.com, et Site Tools affiche le bon sous Email, Accounts, Mail Configuration. L'authentification se fait avec le mot de passe défini sur la boîte, jamais avec votre identifiant de la Client Area SiteGround. Chaque adresse de l'entreprise, comme info@ ou ventes@, se connecte comme une boîte à part : une boîte est gratuite, Personal en connecte trois, Pro jusqu'à 10 et Business autant qu'il vous en faut.",
     "meta0": "Première boîte gratuite, offres pour les autres",
     "meta1": "Mot de passe de la boîte depuis Site Tools",
     "meta2": "E-mails récupérés en direct, jamais stockés"
@@ -94,6 +94,6 @@
   ],
   "ctaBand": {
     "title": "Toutes vos boîtes SiteGround sur un seul agent",
-    "sub": "Connectez votre première boîte SiteGround gratuitement, sans carte bancaire. Personal en connecte trois, Pro toutes celles que vous gérez."
+    "sub": "Connectez votre première boîte SiteGround gratuitement, sans carte bancaire. Personal en connecte trois, Pro jusqu'à 10 et Business autant qu'il vous en faut."
   }
 }

@@ -101,7 +101,7 @@ Uansett kan du trekke tilbake enhver tilkobling fra dashbordet med ett klikk. He
 
 Kort svar: ja, og innlegget [er det trygt å gi en AI-agent e-posttilgang](/blog/is-it-safe-to-give-ai-agent-email-access) legger frem hele saken. Modellen holder scope-begrensede kapabiliteter, ikke passordet ditt; legitimasjon er kryptert; ingenting lagres; sending forblir på leverandøren din; tilgang trekkes tilbake med ett klikk.
 
-Når det gjelder rate-grenser, er hver API-nøkkel begrenset til 100 forespørsler/min, 1 000/time og 10 000/dag på alle planer. Det finnes også et burst-tak per arbeidsområde som skalerer med planen din: 60/min på Gratis, 120/min på Personal, 300/min på Pro, 1 000/min på Team. Når du treffer en grense returnerer serveren en feil som kan prøves på nytt, med en \`retry_after\`-verdi i sekunder. Respekter den. Og prøv aldri blindt å sende på nytt automatisk med \`email_compose\`: da sender du duplikater.
+Når det gjelder rate-grenser, er hver API-nøkkel begrenset til 100 forespørsler/min, 1 000/time og 10 000/dag på alle planer. Det finnes også et burst-tak per arbeidsområde som skalerer med planen din: 60/min på Gratis, 120/min på Personal, 300/min på Pro, 1 000/min på Business. Når du treffer en grense returnerer serveren en feil som kan prøves på nytt, med en \`retry_after\`-verdi i sekunder. Respekter den. Og prøv aldri blindt å sende på nytt automatisk med \`email_compose\`: da sender du duplikater.
 
 ## Priser
 
@@ -109,8 +109,8 @@ Planene prises etter antall tilkoblede innbokser. API-nøkler er ubegrenset på 
 
 - **Gratis, $0 for alltid.** Ingen kort. Én tilkoblet innboks, 60 req/min, 30-dagers analyser, fellesskapsstøtte.
 - **Personal, $9 per måned** (eller $86,40 per år, $7,20 per måned). Opptil tre tilkoblede innbokser, 120 req/min, 30-dagers analyser, e-poststøtte.
-- **Pro, $15 per måned** (eller $144 per år, $12 per måned). Ubegrenset antall tilkoblede innbokser, 300 req/min, 90-dagers analyser, e-poststøtte.
-- **Team, $79 per måned** (eller $756 per år, $63 per måned). Alt i Pro, pluss medlemmer med roller, et eget arbeidsområde per kunde eller virksomhet, SSO med SAML/OIDC pluss revisjonslogg, 1 000 req/min, 1-års analyser, prioritert støtte.
+- **Pro, $15 per måned** (eller $144 per år, $12 per måned). Opptil 10 tilkoblede innbokser, 300 req/min, 90-dagers analyser, e-poststøtte.
+- **Business, $39 per måned** (eller $374,40 per år, $31,20 per måned). Alt i Pro, pluss 10 postkasser inkludert og $3 per måned for hver ekstra, ubegrenset antall medlemmer med roller, administratorer som godkjenner tilbakeholdte sendinger, et eget arbeidsområde per kunde eller virksomhet, 1 000 req/min.
 
 Full oversikt på [prissiden](/pricing).
 

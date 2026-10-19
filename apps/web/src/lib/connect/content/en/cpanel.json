@@ -22,7 +22,7 @@
     "meta0": "First mailbox free, plans for the rest",
     "meta1": "Your mailbox password, no OAuth setup",
     "meta2": "Email fetched live, never stored",
-    "answer": "Claude cannot reach cPanel on its own. mcpemails is a hosted MCP server that connects it over IMAP using your mailbox password, so Claude, Cursor or any MCP client can read, search, send and organize that mail. Setup takes a couple of minutes. Each company address, such as info@ or sales@, connects as its own mailbox: one mailbox is free, Personal connects three and Pro every mailbox you run."
+    "answer": "Claude cannot reach cPanel on its own. mcpemails is a hosted MCP server that connects it over IMAP using your mailbox password, so Claude, Cursor or any MCP client can read, search, send and organize that mail. Setup takes a couple of minutes. Each company address, such as info@ or sales@, connects as its own mailbox: one mailbox is free, Personal connects three, Pro up to 10, and Business as many as you need."
   },
   "persona": {
     "intro": "Several company mailboxes on a cPanel host?",
@@ -102,6 +102,6 @@
   ],
   "ctaBand": {
     "title": "Put every cPanel mailbox on one agent",
-    "sub": "Connect your first cPanel mailbox free, no card required. Personal connects three, Pro every mailbox you run."
+    "sub": "Connect your first cPanel mailbox free, no card required. Personal connects three, Pro up to 10, and Business as many as you need."
   }
 }

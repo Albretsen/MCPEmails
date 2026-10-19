@@ -23,7 +23,13 @@ import {
   inboxLimitErrorBody,
 } from './check-inbox-limit.ts';
 
-type EffectivePlanRow = { plan: string; comped_scale: boolean; unlimited_inboxes: boolean };
+type EffectivePlanRow = {
+  plan: string;
+  comped_scale: boolean;
+  unlimited_inboxes: boolean;
+  /** Pro cap cutover exemption / kill switch (20261019150000). Absent = false. */
+  pro_unlimited_inboxes?: boolean;
+};
 
 /**
  * A Supabase client stub with exactly the surface these two functions touch:
@@ -106,8 +112,9 @@ test('a brand-new Free user gets exactly one inbox', async () => {
   assert.equal(second.unlimitedInboxes, false);
 });
 
-test('a paid plan is uncapped without needing the grandfather', async () => {
-  for (const plan of ['solo', 'pro']) {
+test('Business is uncapped without needing the grandfather', async () => {
+  // Business bills past ten instead of refusing (src/lib/stripe/mailbox-addon.ts).
+  for (const plan of ['pro']) {
     const result = await checkInboxLimit(
       fakeSupabase({
         effectivePlan: { plan, comped_scale: false, unlimited_inboxes: false },
@@ -290,4 +297,87 @@ test('a reconnect is exempt on Personal too, not only on Free', async () => {
   assert.equal((await checkInboxLimit(supabase, WORKSPACE)).atLimit, true);
   assert.equal(await inboxExistsForEmail(supabase, WORKSPACE, 'third@example.com'), true);
   assert.equal(await inboxExistsForEmail(supabase, WORKSPACE, 'fourth@example.com'), false);
+});
+
+// ---------------------------------------------------------------------------
+// Pro capped at ten for new customers, 2026-10-19.
+// ---------------------------------------------------------------------------
+
+test('a Pro workspace from before the cutover, with 21 inboxes, can still add one', async () => {
+  const result = await checkInboxLimit(
+    fakeSupabase({
+      effectivePlan: { plan: 'solo', comped_scale: false, unlimited_inboxes: false, pro_unlimited_inboxes: true },
+      inboxCount: 21,
+    }),
+    WORKSPACE,
+  );
+  assert.equal(result.atLimit, false);
+  assert.equal(result.maxInboxes, null);
+  assert.equal(result.proUnlimitedInboxes, true);
+});
+
+test('a new Pro workspace is blocked at its 11th inbox and offered Business', async () => {
+  const room = await checkInboxLimit(
+    fakeSupabase({
+      effectivePlan: { plan: 'solo', comped_scale: false, unlimited_inboxes: false, pro_unlimited_inboxes: false },
+      inboxCount: 9,
+    }),
+    WORKSPACE,
+  );
+  assert.equal(room.atLimit, false, 'the tenth inbox is allowed');
+  assert.equal(room.maxInboxes, 10);
+
+  const full = await checkInboxLimit(
+    fakeSupabase({
+      effectivePlan: { plan: 'solo', comped_scale: false, unlimited_inboxes: false, pro_unlimited_inboxes: false },
+      inboxCount: 10,
+    }),
+    WORKSPACE,
+  );
+  assert.equal(full.atLimit, true, 'the eleventh is refused');
+  assert.equal(full.maxInboxes, 10);
+  assert.equal(full.planName, 'Pro');
+
+  const body = inboxLimitErrorBody(full);
+  assert.equal(body.max_inboxes, 10);
+  assert.equal(body.upgrade_url, '/pricing?plan=pro&interval=month');
+});
+
+test('a Pro workspace without the new column (pre-migration RPC) is capped, not crashed', async () => {
+  // The web deploy can land before the migration; a row without the field
+  // reads as not exempt. The kill switch defaults the field to true once the
+  // migration is applied and until the cutover runs.
+  const result = await checkInboxLimit(
+    fakeSupabase({
+      effectivePlan: { plan: 'solo', comped_scale: false, unlimited_inboxes: false },
+      inboxCount: 10,
+    }),
+    WORKSPACE,
+  );
+  assert.equal(result.atLimit, true);
+});
+
+test('a grandfathered user on Pro keeps unlimited without the Pro exemption', async () => {
+  const result = await checkInboxLimit(
+    fakeSupabase({
+      effectivePlan: { plan: 'solo', comped_scale: false, unlimited_inboxes: true, pro_unlimited_inboxes: false },
+      inboxCount: 30,
+    }),
+    WORKSPACE,
+  );
+  assert.equal(result.atLimit, false);
+  assert.equal(result.unlimitedInboxes, true);
+});
+
+test('the Pro exemption does not lift Personal or Free', async () => {
+  for (const [plan, cap] of [['personal', 3], ['free', 1]] as const) {
+    const result = await checkInboxLimit(
+      fakeSupabase({
+        effectivePlan: { plan, comped_scale: false, unlimited_inboxes: false, pro_unlimited_inboxes: true },
+        inboxCount: cap,
+      }),
+      WORKSPACE,
+    );
+    assert.equal(result.atLimit, true, `${plan} stays capped at ${cap}`);
+  }
 });

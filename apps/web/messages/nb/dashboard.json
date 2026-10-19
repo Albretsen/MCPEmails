@@ -98,7 +98,7 @@
     "multiInboxTitle": "Legg til de andre jobbpostkassene dine",
     "multiInboxOptional": "Valgfritt",
     "multiInboxDesc": "Koble til post@, salg@, faktura@ og resten, så jobber agenten med alle firmaets postkasser fra én samtale og svarer fra riktig adresse.",
-    "multiInboxDescUpgrade": "Koble til post@, salg@, faktura@ og resten, så jobber agenten med alle firmaets postkasser fra én samtale og svarer fra riktig adresse. Gratis dekker én postkasse; Pro dekker alle postkassene bedriften din bruker.",
+    "multiInboxDescUpgrade": "Koble til post@, salg@, faktura@ og resten, så jobber agenten med alle firmaets postkasser fra én samtale og svarer fra riktig adresse. Gratis dekker én postkasse; Pro dekker opptil 10.",
     "multiInboxCta": "Legg til en postkasse"
   },
   "overview": {
@@ -129,7 +129,7 @@
     "goToMembers": "Gå til Medlemmer",
     "callsPerDayTitle": "Kall per dag",
     "callsPerDaySub": "Siste {days} dager · på tvers av alle verktøy",
-    "pro": "Team",
+    "pro": "Business",
     "recentActivityTitle": "Nylig aktivitet",
     "recentActivitySub": "Direkte MCP-verktøykall",
     "noActivityTitle": "Ingen aktivitet ennå",
@@ -146,8 +146,8 @@
     "usedSingular": "{count} av {max} innboks brukt",
     "capTitle": "Du har nådd innboksgrensen",
     "capBodyPersonal": "Gratis kobler til én postkasse. Personal tar deg til tre for 9 dollar i måneden, så jobb og privat kan dele samme agent.",
-    "capBodyPro": "Personal kobler til tre postkasser. Pro fjerner grensen for 15 dollar i måneden, så alle postkassene dine kjører på én agent.",
-    "capBodyBusiness": "Håndterer du flere bedriftspostkasser? Gratis kobler til én. Personal dekker tre for 9 dollar i måneden, nok til post@, salg@ og din egen. Pro dekker alle postkassene bedriften din bruker for 15 dollar i måneden: økonomi, salg, support, post og din egen.",
+    "capBodyPro": "Personal kobler til tre postkasser. Pro tar deg til 10 for 15 dollar i måneden, alle på én agent.",
+    "capBodyBusiness": "Håndterer du flere bedriftspostkasser? Gratis kobler til én. Personal dekker tre for 9 dollar i måneden, nok til post@, salg@ og din egen. Pro dekker opptil 10 for 15 dollar i måneden: økonomi, salg, support, post og din egen.",
     "capCtaPersonal": "Oppgrader til Personal, 9 $/md",
     "capCtaPro": "Oppgrader til Pro, 15 $/md",
     "capCompare": "Sammenlign alle planer",
@@ -266,7 +266,9 @@
     },
     "emptyAltLead": "Ikke klar til å koble til en postkasse ennå?",
     "emptyViewKeys": "Hent MCP-URL-en og API-nøkkelen din",
-    "emptyReadDocs": "Les oppsettsveiledningene"
+    "emptyReadDocs": "Les oppsettsveiledningene",
+    "capBodyProCap": "Pro kobler til 10 postkasser. Business inkluderer 10 for 39 dollar i måneden og legger til hver ekstra postkasse for 3 dollar i måneden, med ubegrenset antall medlemmer uten ekstra kostnad.",
+    "capCtaBusiness": "Oppgrader til Business, 39 $/md"
   },
   "apiKeys": {
     "title": "API-nøkler",
@@ -552,16 +554,15 @@
       "personalFeature2": "120 forespørsler / minutt (2× burst)",
       "personalFeatureActions": "Ingen månedlig grense for handlinger",
       "personalFeature4": "E-poststøtte",
-      "soloFeature1": "Ubegrenset antall tilkoblede innbokser",
+      "soloFeature1": "10 tilkoblede innbokser",
       "soloFeature2": "300 forespørsler / minutt (5× burst)",
       "soloFeature3": "Lengre analysehistorikk",
       "soloFeature4": "E-poststøtte",
-      "teamFeature1": "Alt i Pro",
-      "teamFeature2": "Ubegrenset antall medlemmer med roller",
-      "teamFeature3": "Et eget arbeidsområde per kunde eller virksomhet",
-      "teamFeature4": "SSO (SAML / OIDC) + revisjonslogg",
-      "teamFeature5": "Lengst analysehistorikk",
-      "teamFeature6": "Prioritert støtte"
+      "businessFeature1": "Alt i Pro",
+      "businessFeature2": "10 postkasser inkludert, 3 dollar i måneden for hver ekstra",
+      "businessFeature3": "Ubegrenset antall medlemmer med roller, uten ekstra kostnad",
+      "businessFeature4": "Administratorer godkjenner tilbakeholdte sendinger",
+      "businessFeature5": "Flere arbeidsområder på ett abonnement"
     },
     "planIncludes": "Hva planen din inkluderer",
     "inboxesOne": "1 tilkoblet innboks",
@@ -601,7 +602,10 @@
     "paymentRequiredBody": "Banken din må godkjenne betalingen, eller kortet ble avvist. Planen din er uendret, og du er ikke belastet. Betal den åpne fakturaen, så gjennomføres endringen automatisk.",
     "paymentRequiredPay": "Betal faktura",
     "paymentRequiredClose": "Lukk",
-    "paymentRequiredToast": "Betalingen ble ikke fullført, så du er fortsatt på {plan}. Åpne faktureringsportalen for å betale den utestående fakturaen."
+    "paymentRequiredToast": "Betalingen ble ikke fullført, så du er fortsatt på {plan}. Åpne faktureringsportalen for å betale den utestående fakturaen.",
+    "proInboxesKept": "Pro-abonnementet ditt beholder ubegrenset antall tilkoblede innbokser.",
+    "businessMailboxRate": "10 postkasser inkludert på tvers av alle arbeidsområdene dine. Hver ekstra postkasse faktureres med abonnementet: 3 dollar i måneden eller 28,80 dollar i året.",
+    "confirmExtraMailboxes": "Inkluderer {count, plural, one {# ekstra postkasse} other {# ekstra postkasser}} utover de 10 som er inkludert."
   },
   "security": {
     "title": "Sikkerhet",
@@ -665,8 +669,8 @@
     "roleOwner": "Eier",
     "sending": "Sender…",
     "sendInvite": "Send invitasjon",
-    "rolesLockedHint": "Inviterte blir med som Medlem. Oppgrader til Team for å tildele Administrator- og Visningsroller.",
-    "inviteUpgradeHint": "Å invitere samarbeidspartnere krever Team-planen. Oppgrader til Team for å legge til medlemmer i dette arbeidsområdet.",
+    "rolesLockedHint": "Inviterte blir med som Medlem. Oppgrader til Business for å tildele Administrator- og Visningsroller.",
+    "inviteUpgradeHint": "Å invitere samarbeidspartnere krever Business-planen. Oppgrader til Business for å legge til medlemmer i dette arbeidsområdet.",
     "errInviteFailed": "Kunne ikke sende invitasjon.",
     "errRemoveFailed": "Kunne ikke fjerne medlem.",
     "errRoleFailed": "Kunne ikke oppdatere rolle.",

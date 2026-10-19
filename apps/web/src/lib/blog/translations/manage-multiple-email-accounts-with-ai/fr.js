@@ -91,8 +91,8 @@ Les boîtes connectées sont ce sur quoi les forfaits sont tarifés :
 
 - **Free, $0.** Une boîte connectée. 150 actions e-mail facturables par mois calendaire UTC, les 3 premiers jours n'étant pas comptés. Ce plafond mensuel s'applique aux espaces de travail créés le 2026-09-13 ou après ; les espaces de travail créés avant en sont exemptés.
 - **Personal, $9 par mois ou $86,40 par an.** Trois boîtes connectées, pas de plafond mensuel d'actions, limite de débit en rafale 2x, support par e-mail.
-- **Pro, $15 par mois ou $144 par an.** Boîtes connectées illimitées, limite de débit en rafale 5x, historique analytique plus long.
-- **Team, $79 par mois ou $756 par an.** Membres illimités avec rôles, un espace de travail distinct par client ou par activité, SSO (SAML/OIDC) et journal d'audit, support prioritaire.
+- **Pro, $15 par mois ou $144 par an.** Jusqu'à 10 boîtes connectées, limite de débit en rafale 5x, historique analytique plus long.
+- **Business, $39 par mois ou $374,40 par an.** 10 boîtes incluses et $3 par mois pour chaque boîte en plus, membres illimités avec rôles sans surcoût, des administrateurs qui valident les envois retenus, un espace de travail distinct par client ou par activité.
 
 Une routine multi-boîtes coûte une action par boîte, donc votre nombre de boîtes détermine le volume autant que vos habitudes. Détails sur la page [tarifs](/pricing).
 

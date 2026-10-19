@@ -1,4 +1,5 @@
-import { NextRequest, NextResponse } from 'next/server';
+import { NextRequest, NextResponse, after } from 'next/server';
+import { syncMailboxAddonForWorkspace } from '@/lib/stripe/mailbox-addon';
 import { createClient } from '@/lib/supabase/server';
 import { createServiceRoleClient } from '@/lib/supabase/service';
 import { ACTIVE_WORKSPACE_COOKIE } from '@/lib/workspace/active';
@@ -351,6 +352,9 @@ export async function DELETE(
       { status: 500 },
     );
   }
+
+  // Its mailboxes no longer count toward a Business bill. After the response.
+  after(() => syncMailboxAddonForWorkspace(workspaceId).then(() => undefined));
 
   // 7. If the deleted workspace was the active one, clear the cookie so the
   //    next dashboard load resolves to a still-valid workspace.

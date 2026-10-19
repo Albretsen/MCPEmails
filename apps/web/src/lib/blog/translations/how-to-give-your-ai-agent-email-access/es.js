@@ -101,7 +101,7 @@ Sea como sea, revocas cualquier conexión desde el panel con un solo clic. Coge 
 
 Respuesta corta: sí, y el artículo [¿es seguro dar acceso al correo a un agente de IA?](/blog/is-it-safe-to-give-ai-agent-email-access) expone el caso completo. El modelo sostiene capacidades con scope, no tu contraseña; las credenciales están cifradas; nada se almacena; el envío se queda en tu proveedor; el acceso se revoca con un solo clic.
 
-En cuanto a los límites de tasa, cada clave de API está limitada a 100 peticiones/min, 1.000/hora y 10.000/día en todos los planes. También hay un techo de ráfaga por workspace que escala con tu plan: 60/min en Gratis, 120/min en Personal, 300/min en Pro, 1.000/min en Team. Cuando alcanzas un límite, el servidor devuelve un error reintentable con un valor \`retry_after\` en segundos. Respétalo. Y nunca reintentes a ciegas un envío con \`email_compose\`: enviarás duplicados.
+En cuanto a los límites de tasa, cada clave de API está limitada a 100 peticiones/min, 1.000/hora y 10.000/día en todos los planes. También hay un techo de ráfaga por workspace que escala con tu plan: 60/min en Gratis, 120/min en Personal, 300/min en Pro, 1.000/min en Business. Cuando alcanzas un límite, el servidor devuelve un error reintentable con un valor \`retry_after\` en segundos. Respétalo. Y nunca reintentes a ciegas un envío con \`email_compose\`: enviarás duplicados.
 
 ## Precios
 
@@ -109,8 +109,8 @@ Los planes se cobran por bandejas conectadas. Las claves de API son ilimitadas e
 
 - **Gratis, 0 $ para siempre.** Sin tarjeta. Una bandeja conectada, 60 req/min, analíticas de 30 días, soporte de la comunidad.
 - **Personal, 9 $/mes** (o 86,40 $/año, 7,20 $/mes). Hasta tres bandejas conectadas, 120 req/min, analíticas de 30 días, soporte por correo.
-- **Pro, 15 $/mes** (o 144 $/año, 12 $/mes). Bandejas conectadas ilimitadas, 300 req/min, analíticas de 90 días, soporte por correo.
-- **Team, 79 $/mes** (o 756 $/año, 63 $/mes). Todo lo de Pro, además de miembros con roles, un espacio de trabajo separado por cliente o negocio, SSO con SAML/OIDC más registro de auditoría, 1.000 req/min, analíticas de 1 año, soporte prioritario.
+- **Pro, 15 $/mes** (o 144 $/año, 12 $/mes). Hasta 10 bandejas conectadas, 300 req/min, analíticas de 90 días, soporte por correo.
+- **Business, 39 $/mes** (o 374,40 $/año, 31,20 $/mes). Todo lo de Pro, además de 10 buzones incluidos y 3 $/mes por cada uno extra, miembros ilimitados con roles, administradores que aprueban los envíos retenidos, un espacio de trabajo separado por cliente o negocio, 1.000 req/min.
 
 Desglose completo en la [página de precios](/pricing).
 

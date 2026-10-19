@@ -19,7 +19,7 @@
     "titleLine1": "Servidor MCP para el correo de STRATO:",
     "titleLine2": "todos los buzones de tu empresa, en Claude y ChatGPT",
     "lead": "¿Llevas info@, ventas@, soporte@ y facturas@ en tu propio dominio en STRATO? Conecta cada buzón al mismo espacio de trabajo y tu agente de IA trabaja en todos ellos. Lee, busca, envía, responde, programa y organiza correo por IMAP con la contraseña del buzón, no con tu acceso de cliente de STRATO.",
-    "answer": "Claude no puede acceder a un buzón de STRATO por sí solo. mcpemails es un servidor MCP alojado que lo conecta por IMAP en imap.strato.de en el puerto 993, autenticándose con tu dirección de correo completa y la contraseña establecida en ese buzón, no con tu acceso de cliente de STRATO, para que Claude, Cursor o cualquier cliente MCP pueda leer, buscar, enviar y organizar el correo. STRATO solo acepta la autenticación de contraseña normal sobre una conexión cifrada, tras haber desactivado el antiguo método de desafío-respuesta. Cada dirección de la empresa, como info@ o ventas@, se conecta como un buzón propio: un buzón es gratis, Personal conecta tres y Pro todos los que llevas.",
+    "answer": "Claude no puede acceder a un buzón de STRATO por sí solo. mcpemails es un servidor MCP alojado que lo conecta por IMAP en imap.strato.de en el puerto 993, autenticándose con tu dirección de correo completa y la contraseña establecida en ese buzón, no con tu acceso de cliente de STRATO, para que Claude, Cursor o cualquier cliente MCP pueda leer, buscar, enviar y organizar el correo. STRATO solo acepta la autenticación de contraseña normal sobre una conexión cifrada, tras haber desactivado el antiguo método de desafío-respuesta. Cada dirección de la empresa, como info@ o ventas@, se conecta como un buzón propio: un buzón es gratis, Personal conecta tres, Pro hasta 10 y Business todos los que necesites.",
     "meta0": "Primer buzón gratis, planes para el resto",
     "meta1": "Contraseña del buzón, no el acceso de cliente",
     "meta2": "El correo se obtiene en vivo, nunca se almacena"
@@ -97,6 +97,6 @@
   ],
   "ctaBand": {
     "title": "Todos tus buzones de STRATO en un solo agente",
-    "sub": "Conecta tu primer buzón de STRATO gratis, sin tarjeta. Personal conecta tres y Pro todos los que llevas."
+    "sub": "Conecta tu primer buzón de STRATO gratis, sin tarjeta. Personal conecta tres, Pro hasta 10 y Business todos los que necesites."
   }
 }

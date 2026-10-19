@@ -765,6 +765,10 @@ export default async function DashboardPage({ params }) {
   // show a grandfathered free account a 1-inbox cap and a scarcity bar for a
   // limit the server would never actually enforce against them.
   const unlimitedInboxes = effectiveWorkspacePlan?.unlimited_inboxes ?? false;
+  // The 2026-10 Pro cap: a workspace on Pro at the cutover keeps unlimited
+  // inboxes (or every Pro workspace does, while the cap's kill switch is off).
+  // Read here for the same reason as the grandfather above.
+  const proUnlimitedInboxes = effectiveWorkspacePlan?.pro_unlimited_inboxes ?? false;
   const plan = effectiveWorkspacePlan?.plan ?? workspace?.plan ?? 'free';
   // The period the usage-summary RPC scopes its (undisplayed) action meter to:
   // the allowance's own window, or the UTC month when that call failed.
@@ -802,7 +806,7 @@ export default async function DashboardPage({ params }) {
   // history this workspace may see is one of them. Both protections are
   // user-level and must be passed together: `compedScale` grants Team
   // features, `unlimitedInboxes` is the repricing grandfather.
-  const rawLimits = resolvePlanLimits(plan, { compedScale, unlimitedInboxes });
+  const rawLimits = resolvePlanLimits(plan, { compedScale, unlimitedInboxes, proUnlimitedInboxes });
   // The window the Usage page, the per-inbox activity counts and the audit log
   // are all bounded by. Free and Personal buy 30 days, Pro 90, Team a year;
   // those numbers are published copy, so they are read from the plan rather
@@ -850,6 +854,10 @@ export default async function DashboardPage({ params }) {
     // label their figures with it, so the number on screen always matches the
     // window the queries above actually used.
     historyDays,
+    // A Pro workspace from before the 2026-10 inbox cap, told on the billing
+    // panel that it keeps unlimited inboxes. Not for a grandfathered user,
+    // whose unlimited inboxes come from the older promise.
+    proInboxesKept: plan === 'solo' && proUnlimitedInboxes && !unlimitedInboxes && !compedScale,
   };
 
   // True only when the unlimited inboxes come from the grandfather rather than

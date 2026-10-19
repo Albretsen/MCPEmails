@@ -14,15 +14,15 @@ Trois échecs méritent qu'on s'en protège dès la conception : la **fuite entr
 
 L'espace de travail est l'unité de séparation. Les boîtes, les membres, les clés API et l'activité vivent à l'intérieur d'un seul, et la frontière est appliquée dans la base de données par la sécurité au niveau des lignes, pas par un filtrage soigneux dans le code applicatif. Une clé émise dans l'espace Acme ne peut pas lire une boîte de Bolt, quoi que dise la consigne.
 
-Avoir plusieurs espaces de travail est une fonction **Team** (79 $/mois, 756 $/an), qui apporte aussi des membres illimités avec des rôles, le SSO (SAML / OIDC), un journal d'audit et un support prioritaire. L'abonnement est rattaché à votre compte et non à un espace, donc un seul abonnement Team couvre tous les espaces clients que vous créez. Nommez chacun d'après le client, n'y connectez que les boîtes de ce client, et passez de l'un à l'autre depuis la barre latérale du tableau de bord.
+Avoir plusieurs espaces de travail est une fonction **Business** (39 $/mois, 374,40 $/an), qui apporte aussi des membres illimités avec des rôles sans surcoût, et 10 boîtes incluses avec 3 $ par mois pour chaque boîte en plus. L'abonnement est rattaché à votre compte et non à un espace, donc un seul abonnement Business couvre tous les espaces clients que vous créez. Nommez chacun d'après le client, n'y connectez que les boîtes de ce client, et passez de l'un à l'autre depuis la barre latérale du tableau de bord.
 
-En dessous de Team, les formules sont pour une personne dans un seul espace : **Pro** (15 $/mois, 144 $/an) connecte un nombre illimité de boîtes, **Personal** (9 $/mois) trois, **Free** une. C'est moins cher, et toutes les boîtes partagent le même rayon d'impact. Voir les [tarifs](/pricing) et la [matrice des fournisseurs](/docs/providers).
+En dessous de Business, les formules sont pour une personne dans un seul espace : **Pro** (15 $/mois, 144 $/an) connecte jusqu'à 10 boîtes, **Personal** (9 $/mois) trois, **Free** une. C'est moins cher, et toutes les boîtes partagent le même rayon d'impact. Voir les [tarifs](/pricing) et la [matrice des fournisseurs](/docs/providers).
 
 ## Membres et rôles
 
 Quatre rôles : **owner** (propriétaire), **admin**, **member** et **viewer**. Seul le propriétaire peut changer les rôles. Les admins peuvent inviter et retirer des membres, mais pas retirer un autre admin. Les viewers sont en lecture seule, et cela est appliqué jusque dans la couche des identifiants : une clé détenue par un viewer ne peut porter que \`read:email\` et \`search:email\`.
 
-Ajouter des personnes est en soi une fonction Team, puisque Free, Personal et Pro sont des formules mono-utilisateur. Le montage qui fonctionne : le responsable d'un client est admin dans l'espace de ce client et membre d'aucun autre, un junior qui fait du tri est viewer dans le seul espace où il travaille, et personne d'autre que vous ne détient un accès qui couvre tout votre portefeuille.
+Ajouter des personnes est en soi une fonction Business, puisque Free, Personal et Pro sont des formules mono-utilisateur. Le montage qui fonctionne : le responsable d'un client est admin dans l'espace de ce client et membre d'aucun autre, un junior qui fait du tri est viewer dans le seul espace où il travaille, et personne d'autre que vous ne détient un accès qui couvre tout votre portefeuille.
 
 ## Des clés API limitées par mission
 
@@ -93,7 +93,7 @@ Ne promettez pas que l'injection de consignes est résolue. Elle est contenue, p
 ## Questions fréquentes
 
 **Faut-il un compte MCP Emails distinct par client ?**  
-Non. Un compte, un abonnement Team, un espace de travail par client. L'abonnement suit votre utilisateur, donc chaque espace hérite de la formule.
+Non. Un compte, un abonnement Business, un espace de travail par client. L'abonnement suit votre utilisateur, donc chaque espace hérite de la formule.
 
 **Un client peut-il voir le courrier d'un autre ?**  
 Non, si les boîtes de chaque client vivent dans leur propre espace. La séparation est appliquée par la sécurité au niveau des lignes, et une clé émise dans un espace ne peut pas lire les boîtes d'un autre.
@@ -106,7 +106,7 @@ Oui. Une boîte Microsoft 365 se connecte avec la connexion Microsoft, sans mot 
 
 ## Étape suivante
 
-[Créez un compte gratuit](/signup), connectez une boîte client en lecture seule et lancez une consigne de tri avant de toucher à quoi que ce soit d'autre. Quand la séparation compte, passez à Team depuis la [page des tarifs](/pricing). La [documentation](/docs) contient la référence complète des outils et des portées, et [/security](/security) est la page à remettre au responsable sécurité du client.`,
+[Créez un compte gratuit](/signup), connectez une boîte client en lecture seule et lancez une consigne de tri avant de toucher à quoi que ce soit d'autre. Quand la séparation compte, passez à Business depuis la [page des tarifs](/pricing). La [documentation](/docs) contient la référence complète des outils et des portées, et [/security](/security) est la page à remettre au responsable sécurité du client.`,
 };
 
 export default translation;

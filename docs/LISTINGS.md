@@ -29,7 +29,7 @@ Published to the registry as 1.0.7 on 2026-10-19 (`isLatest: true`), so the regi
 >
 > 19 tools, 7 workflow prompts (morning triage, follow-up radar, reply drafts, safe cleanup and more). OAuth sign-in for Claude, ChatGPT and Cursor; a scoped API key for everything else.
 >
-> Pricing: Free connects 1 inbox with 150 email actions a month (the first 3 days are not counted). Personal $9/month for 3 inboxes, Pro $15/month for unlimited inboxes, Team $79/month adds members, roles, SSO and an audit log. Paid plans have no monthly action cap (fair use).
+> Pricing: Free connects 1 inbox with 150 email actions a month (the first 3 days are not counted). Personal $9/month for 3 inboxes, Pro $15/month for up to 10 inboxes, Business $39/month includes 10 inboxes ($3/month for each extra) and adds unlimited members with roles. Paid plans have no monthly action cap (fair use).
 >
 > LIMITS: Gmail connects with a Google app password over IMAP. Gmail has labels, not folders: there is no copy, and delete moves to Trash (no permanent delete). Labels are Gmail-only; Outlook uses folders. Outlook search cannot combine text with the unread, attachment, flagged or date filters. Work or school Microsoft 365 accounts can need an IT admin to approve the app once; personal Outlook.com, Hotmail, Live and MSN accounts do not. A Microsoft account with no Exchange Online mailbox cannot connect. Plain IMAP servers cannot search by "has attachment".
 
@@ -58,9 +58,9 @@ Full matrix: https://mcpemails.com/docs/providers. Do not advertise "Sign in wit
 
 ## Pricing line
 
-> Free: 1 inbox, 150 email actions a month (first 3 days uncounted). Personal $9/mo: 3 inboxes. Pro $15/mo: unlimited inboxes. Team $79/mo: members, roles, SSO, audit log. Paid plans: no monthly action cap. Annual saves about 20%.
+> Free: 1 inbox, 150 email actions a month (first 3 days uncounted). Personal $9/mo: 3 inboxes. Pro $15/mo: up to 10 inboxes. Business $39/mo: 10 inboxes included, $3/mo each extra, unlimited members with roles. Paid plans: no monthly action cap. Annual saves about 20%.
 
-Rules: the unit is "email actions". Never print an action number for a paid plan. Annual prices are $86.40, $144 and $756 a year.
+Rules: the unit is "email actions". Never print an action number for a paid plan. Annual prices are $86.40, $144 and $374.40 a year ($28.80 a year per extra Business mailbox).
 
 ## Icons
 
@@ -134,7 +134,7 @@ UTMs are captured end to end, but only as coarse categories, first touch, for 30
 - Registry order and contents: `supabase/functions/mcp-server/index.ts:8710-8732`; app-only approval and bulk tools pushed with `appOnlyReviewCardToolMeta()` at `index.ts:8774-8776` and `8795-8797`; draft editor tools at `index.ts:8854-8856`. `signature` unlisted: `advertised-schema.ts:121`. Full list pinned by `tool-surface.test.ts:105-141`.
 - Visibility: `mcp-app-resources.ts:383-387` (the three draft editor tools), `:428-431` (`draft_read` and `draft_editor_hide` are model + app), `:765-772` (`draft_editor_save` app-only when the editor is on). Editor defaults off for customers: `supabase/migrations/20260916140000_draft_editor_flag.sql:32`; with it off `draft_editor_save` refuses (`index.ts:8840-8841`).
 - Prompts: `WORKFLOW_PROMPTS`, `index.ts:31116-31172`, filtered by scope at `index.ts:31193`.
-- Prices and inboxes: `apps/web/src/lib/stripe/plans.ts:227,246` (Free), `:277,294-295` (Personal), `:332,346-347` (Pro), `:375,385-390` (Team). Allowance and grace: `plans.ts:168-169`, `supabase/migrations/20261017160000_free_grace_three_days.sql:25-27`.
+- Prices and inboxes: `apps/web/src/lib/stripe/plans.ts:227,246` (Free), `:277,294-295` (Personal), `:332,346-347` (Pro), `:375,385-390` (Business). Allowance and grace: `plans.ts:168-169`, `supabase/migrations/20261017160000_free_grace_three_days.sql:25-27`.
 - Provider limits: `index.ts:9526-9527` (Gmail copy and permanent delete unavailable), `:9553`, `:9555`, `:9556` (Outlook), `:9566` (IMAP attachment search). No Exchange mailbox: `apps/web/app/auth/outlook/callback/route.ts:334`. Gmail OAuth cap: `apps/web/components/marketing/ProvidersClient.jsx:89-96`.
 - Docs slugs: `apps/web/src/lib/clients/clients.mjs:45-232`.
 - Icons: `apps/web/public/icon.png`, `connector-icon-light.svg`, `connector-icon-dark.svg`.

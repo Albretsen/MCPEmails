@@ -28,7 +28,7 @@
       {
         "feature": "Price",
         "self": "Free, you run it",
-        "hosted": "Free, $9, $15, or $79"
+        "hosted": "Free, $9, $15, or $39"
       },
       {
         "feature": "The MCP server and all 23 tools",
@@ -71,14 +71,14 @@
         "hosted": "Managed"
       },
       {
-        "feature": "Team workspaces, roles, SSO, audit log",
+        "feature": "Members, roles and several workspaces",
         "self": "Not included",
-        "hosted": "Team plan"
+        "hosted": "Business plan"
       },
       {
         "feature": "Support",
         "self": "Community and GitHub",
-        "hosted": "Email and priority"
+        "hosted": "Email on paid plans"
       },
       {
         "feature": "Setup",

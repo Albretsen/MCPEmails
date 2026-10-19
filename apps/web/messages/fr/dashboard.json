@@ -98,7 +98,7 @@
     "multiInboxTitle": "Ajoutez vos autres boîtes professionnelles",
     "multiInboxOptional": "Facultatif",
     "multiInboxDesc": "Connectez info@, ventes@, factures@ et les autres : votre agent gère toutes les boîtes de l'entreprise depuis une seule conversation, et répond depuis la bonne adresse.",
-    "multiInboxDescUpgrade": "Connectez info@, ventes@, factures@ et les autres : votre agent gère toutes les boîtes de l'entreprise depuis une seule conversation, et répond depuis la bonne adresse. L'offre gratuite couvre une boîte ; Pro couvre toutes les boîtes de votre entreprise.",
+    "multiInboxDescUpgrade": "Connectez info@, ventes@, factures@ et les autres : votre agent gère toutes les boîtes de l'entreprise depuis une seule conversation, et répond depuis la bonne adresse. L'offre gratuite couvre une boîte ; Pro en couvre jusqu'à 10.",
     "multiInboxCta": "Ajouter une boîte"
   },
   "overview": {
@@ -129,7 +129,7 @@
     "goToMembers": "Aller aux Membres",
     "callsPerDayTitle": "Appels par jour",
     "callsPerDaySub": "{days} derniers jours · tous outils confondus",
-    "pro": "Team",
+    "pro": "Business",
     "recentActivityTitle": "Activité récente",
     "recentActivitySub": "Appels d'outils MCP en direct",
     "noActivityTitle": "Aucune activité pour l'instant",
@@ -146,8 +146,8 @@
     "usedSingular": "{count} sur {max} boîte utilisée",
     "capTitle": "Vous avez atteint votre limite de boîtes",
     "capBodyPersonal": "L'offre gratuite connecte une boîte. Personal vous en donne trois pour 9 $ par mois, pour que le pro et le perso partagent le même agent.",
-    "capBodyPro": "Personal connecte trois boîtes. Pro supprime la limite pour 15 $ par mois, pour réunir toutes vos boîtes sur un seul agent.",
-    "capBodyBusiness": "Vous gérez plusieurs boîtes d'entreprise ? L'offre gratuite en connecte une. Personal en couvre trois pour 9 $ par mois, de quoi couvrir info@, ventes@ et la vôtre. Pro couvre toutes les boîtes de votre entreprise pour 15 $ par mois : finance, ventes, support, info et la vôtre.",
+    "capBodyPro": "Personal connecte trois boîtes. Pro vous amène à 10 pour 15 $ par mois, toutes sur un seul agent.",
+    "capBodyBusiness": "Vous gérez plusieurs boîtes d'entreprise ? L'offre gratuite en connecte une. Personal en couvre trois pour 9 $ par mois, de quoi couvrir info@, ventes@ et la vôtre. Pro en couvre jusqu'à 10 pour 15 $ par mois : finance, ventes, support, info et la vôtre.",
     "capCtaPersonal": "Passer à Personal, 9 $/mois",
     "capCtaPro": "Passer à Pro, 15 $/mois",
     "capCompare": "Comparer toutes les formules",
@@ -266,7 +266,9 @@
     },
     "emptyAltLead": "Pas encore prêt à connecter une boîte ?",
     "emptyViewKeys": "Obtenir votre URL MCP et votre clé d’API",
-    "emptyReadDocs": "Lire les guides de configuration"
+    "emptyReadDocs": "Lire les guides de configuration",
+    "capBodyProCap": "Pro connecte 10 boîtes. Business en inclut 10 pour 39 $ par mois et ajoute chaque boîte supplémentaire pour 3 $ par mois, avec des membres illimités sans surcoût.",
+    "capCtaBusiness": "Passer à Business, 39 $/mois"
   },
   "apiKeys": {
     "title": "Clés API",
@@ -552,16 +554,15 @@
       "personalFeature2": "120 requêtes / minute (2× en pointe)",
       "personalFeatureActions": "Pas de plafond mensuel d'actions",
       "personalFeature4": "Support par e-mail",
-      "soloFeature1": "Boîtes connectées illimitées",
+      "soloFeature1": "10 boîtes connectées",
       "soloFeature2": "300 requêtes / minute (5× en pointe)",
       "soloFeature3": "Historique d'analytique plus long",
       "soloFeature4": "Support par e-mail",
-      "teamFeature1": "Tout ce que contient Pro",
-      "teamFeature2": "Membres illimités avec rôles",
-      "teamFeature3": "Un espace de travail distinct par client ou activité",
-      "teamFeature4": "SSO (SAML / OIDC) + journal d'audit",
-      "teamFeature5": "Historique d'analytique le plus long",
-      "teamFeature6": "Support prioritaire"
+      "businessFeature1": "Tout ce qu'inclut Pro",
+      "businessFeature2": "10 boîtes incluses, 3 $ par mois pour chaque boîte en plus",
+      "businessFeature3": "Membres illimités avec rôles, sans surcoût",
+      "businessFeature4": "Les administrateurs approuvent les envois en attente",
+      "businessFeature5": "Plusieurs espaces de travail sur un seul abonnement"
     },
     "planIncludes": "Ce que votre formule inclut",
     "inboxesOne": "1 boîte connectée",
@@ -601,7 +602,10 @@
     "paymentRequiredBody": "Votre banque doit autoriser le paiement, ou la carte a été refusée. Votre offre actuelle est inchangée et vous n'avez pas été débité. Réglez la facture ouverte et le changement sera appliqué automatiquement.",
     "paymentRequiredPay": "Payer la facture",
     "paymentRequiredClose": "Fermer",
-    "paymentRequiredToast": "Le paiement n'a pas abouti, vous êtes donc toujours sur {plan}. Ouvrez le portail de facturation pour régler la facture en attente."
+    "paymentRequiredToast": "Le paiement n'a pas abouti, vous êtes donc toujours sur {plan}. Ouvrez le portail de facturation pour régler la facture en attente.",
+    "proInboxesKept": "Votre formule Pro conserve des boîtes connectées illimitées.",
+    "businessMailboxRate": "10 boîtes incluses sur l'ensemble de vos espaces de travail. Chaque boîte supplémentaire est facturée avec votre formule : 3 $ par mois ou 28,80 $ par an.",
+    "confirmExtraMailboxes": "Comprend {count, plural, one {# boîte supplémentaire} other {# boîtes supplémentaires}} en plus des 10 incluses."
   },
   "security": {
     "title": "Sécurité",
@@ -665,8 +669,8 @@
     "roleOwner": "Propriétaire",
     "sending": "Envoi…",
     "sendInvite": "Envoyer l'invitation",
-    "rolesLockedHint": "Les invités rejoignent en tant que Membre. Passez à Team pour attribuer les rôles Administrateur et Lecteur.",
-    "inviteUpgradeHint": "L'invitation de collaborateurs nécessite la formule Team. Passez à Team pour ajouter des membres à cet espace de travail.",
+    "rolesLockedHint": "Les invités rejoignent en tant que Membre. Passez à Business pour attribuer les rôles Administrateur et Lecteur.",
+    "inviteUpgradeHint": "L'invitation de collaborateurs nécessite la formule Business. Passez à Business pour ajouter des membres à cet espace de travail.",
     "errInviteFailed": "Échec de l'envoi de l'invitation.",
     "errRemoveFailed": "Échec de la suppression du membre.",
     "errRoleFailed": "Échec de la mise à jour du rôle.",

@@ -28,7 +28,7 @@
       {
         "feature": "Precio",
         "self": "Gratis, tú lo ejecutas",
-        "hosted": "Gratis, $9, $15 o $79"
+        "hosted": "Gratis, $9, $15 o $39"
       },
       {
         "feature": "El servidor MCP y las 23 herramientas",
@@ -71,14 +71,14 @@
         "hosted": "Gestionado"
       },
       {
-        "feature": "Espacios de equipo, roles, SSO, registro de auditoría",
+        "feature": "Miembros, roles y varios espacios de trabajo",
         "self": "No incluido",
-        "hosted": "Plan Team"
+        "hosted": "Plan Business"
       },
       {
         "feature": "Soporte",
         "self": "Comunidad y GitHub",
-        "hosted": "Correo y prioridad"
+        "hosted": "Correo en los planes de pago"
       },
       {
         "feature": "Configuración",

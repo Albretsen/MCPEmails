@@ -19,7 +19,7 @@
     "titleLine1": "MCP-server for Hetzner-e-post:",
     "titleLine2": "alle firmaets postkasser, i Claude og ChatGPT",
     "lead": "Har du post@, salg@, support@ og faktura@ på eget domene hos Hetzner? Koble hver postkasse til ett arbeidsområde, så jobber AI-agenten din i alle sammen. Les, søk, send, svar, planlegg og organiser e-post over IMAP på mail.your-server.de, med postkassepassordet du satte i konsoleH.",
-    "answer": "Claude kan ikke nå en Hetzner-postkasse på egen hånd. mcpemails er en driftet MCP-server som kobler til e-post på Hetzner Web Hosting over IMAP på mail.your-server.de, port 993, og autentiserer med hele e-postadressen din og postkassepassordet du satte da du opprettet kontoen i konsoleH, slik at Claude, Cursor eller enhver MCP-klient kan lese, søke i, sende og organisere e-posten. Vertsnavnet er bokstavelig talt mail.your-server.de for alle kunder, ikke en variant av ditt eget domene. Hver firmaadresse, som post@ eller salg@, kobles til som sin egen postkasse: én postkasse er gratis, Personal kobler til tre og Pro alle postkassene du har.",
+    "answer": "Claude kan ikke nå en Hetzner-postkasse på egen hånd. mcpemails er en driftet MCP-server som kobler til e-post på Hetzner Web Hosting over IMAP på mail.your-server.de, port 993, og autentiserer med hele e-postadressen din og postkassepassordet du satte da du opprettet kontoen i konsoleH, slik at Claude, Cursor eller enhver MCP-klient kan lese, søke i, sende og organisere e-posten. Vertsnavnet er bokstavelig talt mail.your-server.de for alle kunder, ikke en variant av ditt eget domene. Hver firmaadresse, som post@ eller salg@, kobles til som sin egen postkasse: én postkasse er gratis, Personal kobler til tre, Pro opptil 10 og Business så mange du trenger.",
     "meta0": "Første postkasse gratis, planer for resten",
     "meta1": "Postkassepassord satt i konsoleH",
     "meta2": "E-post hentes direkte, lagres aldri"
@@ -93,6 +93,6 @@
   ],
   "ctaBand": {
     "title": "Samle alle Hetzner-postkassene på én agent",
-    "sub": "Koble til den første Hetzner-postkassen gratis, uten kort. Personal kobler til tre, Pro alle postkassene du har."
+    "sub": "Koble til den første Hetzner-postkassen gratis, uten kort. Personal kobler til tre, Pro opptil 10 og Business så mange du trenger."
   }
 }

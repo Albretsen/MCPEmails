@@ -28,7 +28,7 @@
       {
         "feature": "Prix",
         "self": "Gratuit, à vous de l'exécuter",
-        "hosted": "Gratuit, 9 $, 15 $ ou 79 $"
+        "hosted": "Gratuit, 9 $, 15 $ ou 39 $"
       },
       {
         "feature": "Le serveur MCP et ses 23 outils",
@@ -71,14 +71,14 @@
         "hosted": "Géré"
       },
       {
-        "feature": "Espaces d'équipe, rôles, SSO, journal d'audit",
+        "feature": "Membres, rôles et plusieurs espaces de travail",
         "self": "Non inclus",
-        "hosted": "Forfait Team"
+        "hosted": "Forfait Business"
       },
       {
         "feature": "Support",
         "self": "Communauté et GitHub",
-        "hosted": "E-mail et priorité"
+        "hosted": "E-mail sur les forfaits payants"
       },
       {
         "feature": "Installation",

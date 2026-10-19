@@ -24,7 +24,7 @@
     "meta0": "Første postkasse gratis, planer for resten",
     "meta1": "Postkassepassordet ditt, uten OAuth-oppsett",
     "meta2": "E-post hentes direkte, lagres aldri",
-    "answer": "Claude kan ikke nå IONOS på egen hånd. mcpemails er en driftet MCP-server som kobler til over IMAP med postkassepassordet ditt, slik at Claude, Cursor eller enhver MCP-klient kan lese, søke i, sende og organisere den e-posten. Oppsettet tar et par minutter. Hver firmaadresse, som post@ eller salg@, kobles til som sin egen postkasse: én postkasse er gratis, Personal kobler til tre og Pro alle postkassene du har."
+    "answer": "Claude kan ikke nå IONOS på egen hånd. mcpemails er en driftet MCP-server som kobler til over IMAP med postkassepassordet ditt, slik at Claude, Cursor eller enhver MCP-klient kan lese, søke i, sende og organisere den e-posten. Oppsettet tar et par minutter. Hver firmaadresse, som post@ eller salg@, kobles til som sin egen postkasse: én postkasse er gratis, Personal kobler til tre, Pro opptil 10 og Business så mange du trenger."
   },
   "persona": {
     "intro": "Flere bedriftspostkasser hos IONOS?",
@@ -103,7 +103,7 @@
   ],
   "ctaBand": {
     "title": "Samle alle IONOS-postkassene på én agent",
-    "sub": "Koble til den første IONOS-postkassen gratis, uten kort. Personal kobler til tre, Pro alle postkassene du har."
+    "sub": "Koble til den første IONOS-postkassen gratis, uten kort. Personal kobler til tre, Pro opptil 10 og Business så mange du trenger."
   },
   "seeAlso": {
     "intro": "Microsoft 365-postkasse fra IONOS?",

@@ -91,8 +91,8 @@ Los buzones conectados son lo que marca el precio de los planes:
 
 - **Free, $0.** Un buzón conectado. 150 acciones de correo facturables por mes natural UTC, con los primeros 3 días sin contar. Ese límite mensual se aplica a los espacios de trabajo creados el 2026-09-13 o después; los espacios de trabajo creados antes están exentos.
 - **Personal, $9 al mes o $86,40 al año.** Tres buzones conectados, sin límite mensual de acciones, límite de ráfaga 2x y soporte por correo.
-- **Pro, $15 al mes o $144 al año.** Buzones conectados ilimitados, límite de ráfaga 5x e historial de analítica más largo.
-- **Team, $79 al mes o $756 al año.** Miembros ilimitados con roles, un espacio de trabajo separado por cliente o negocio, SSO (SAML/OIDC) y registro de auditoría, soporte prioritario.
+- **Pro, $15 al mes o $144 al año.** Hasta 10 buzones conectados, límite de ráfaga 5x e historial de analítica más largo.
+- **Business, $39 al mes o $374,40 al año.** 10 buzones incluidos y $3 al mes por cada uno extra, miembros ilimitados con roles sin coste adicional, administradores que aprueban los envíos retenidos, un espacio de trabajo separado por cliente o negocio.
 
 Una rutina entre buzones cuesta una acción por buzón, así que tu número de buzones marca el volumen tanto como tus hábitos. Detalles en [precios](/pricing).
 

@@ -24,7 +24,7 @@
     "meta0": "第一个邮箱免费，其余按套餐连接",
     "meta1": "使用邮箱密码，无需 OAuth 配置",
     "meta2": "邮件实时获取，绝不存储",
-    "answer": "Claude 无法自行连接 OVH。mcpemails 是一个托管 MCP 服务器，用你的邮箱密码通过 IMAP 与之连接，让 Claude、Cursor 或任意 MCP 客户端都能读取、搜索、发送并整理这些邮件。设置只需几分钟。公司的每个地址（如 info@ 或 sales@）都作为独立邮箱连接：一个邮箱免费，Personal 连接三个，Pro 连接你管理的所有邮箱。"
+    "answer": "Claude 无法自行连接 OVH。mcpemails 是一个托管 MCP 服务器，用你的邮箱密码通过 IMAP 与之连接，让 Claude、Cursor 或任意 MCP 客户端都能读取、搜索、发送并整理这些邮件。设置只需几分钟。公司的每个地址（如 info@ 或 sales@）都作为独立邮箱连接：一个邮箱免费，Personal 连接三个，Pro 最多连接 10 个，Business 按需连接更多。"
   },
   "persona": {
     "intro": "在 OVH 有好几个公司邮箱？",
@@ -104,7 +104,7 @@
   ],
   "ctaBand": {
     "title": "把所有 OVH 邮箱交给同一个代理",
-    "sub": "免费连接第一个 OVH 邮箱，无需信用卡。Personal 连接三个，Pro 连接你管理的所有邮箱。"
+    "sub": "免费连接第一个 OVH 邮箱，无需信用卡。Personal 连接三个，Pro 最多连接 10 个，Business 按需连接更多。"
   },
   "seeAlso": {
     "intro": "通过 OVHcloud 购买的 Microsoft 365 邮箱？",

@@ -80,8 +80,8 @@ Activez **Vérifier avant d'envoyer** (Review before sending) sur n'importe quel
 
 - **Offre gratuite :** une boîte.
 - **Personal :** trois boîtes.
-- **Pro :** toutes les boîtes que vous gérez, sans limite, avec un seul identifiant.
-- **Team :** quand une deuxième personne a besoin de son propre identifiant.
+- **Pro :** jusqu'à 10 boîtes, avec un seul identifiant.
+- **Business :** 10 boîtes incluses et 3 $ par mois pour chaque boîte en plus, et quand une deuxième personne a besoin de son propre identifiant.
 
 Une entreprise avec info@, ventes@ et factures@ plus votre propre adresse, cela fait quatre boîtes, donc Pro. Les prix actuels figurent sur la [page des tarifs](/pricing), et [MCP Emails pour les entreprises](/for/business) montre comment une seule personne gère toutes les boîtes de l'entreprise depuis un seul agent.
 

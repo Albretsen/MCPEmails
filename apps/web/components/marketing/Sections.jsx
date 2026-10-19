@@ -467,7 +467,7 @@ export function Features() {
 /**
  * A self-consistent, on-brand mockup of the dashboard so prospects can see the
  * product before signing up. Rendered in HTML/CSS (not a screenshot) so it
- * never drifts from the real naming (note the "Team" plan and the real tool names)
+ * never drifts from the real naming (note the "Business" plan and the real tool names)
  * (email_read, email_compose, email_organize).
  */
 export function DashboardPreview() {
@@ -483,7 +483,7 @@ export function DashboardPreview() {
     { label: 'Inboxes connected', value: '4' },
     { label: 'MCP calls (30d)', value: '12,484' },
     { label: 'Avg. response', value: '214ms' },
-    { label: 'Plan', value: 'Team' },
+    { label: 'Plan', value: 'Business' },
   ];
   const activity = [
     { tool: 'email_read', inbox: 'work-gmail', time: 'just now' },
@@ -1103,7 +1103,7 @@ export function Quote() {
 export function Pricing({ onGetStarted, stripePrices }) {
   const t = useTranslations('home');
   // Static, non-translated attributes per tier. `msgKey` indexes the message
-  // bundle; `priceKey` indexes the live Stripe prices map (Team is `pro` there).
+  // bundle; `priceKey` indexes the live Stripe prices map (Business is `pro` there).
   // Paid links intentionally go through /signup even for signed-in visitors.
   // Auth middleware immediately forwards an existing session to the preserved
   // checkout intent, while new visitors keep that intent through Google,
@@ -1115,18 +1115,18 @@ export function Pricing({ onGetStarted, stripePrices }) {
   // could even begin checkout. These must stay plain <a> hrefs: a next/link
   // <Link> would prefetch the checkout route.
   //
-  // Pro carries the accent: unlimited inboxes for one person is the upgrade
-  // almost everyone actually wants, and Team only pays off once other people
-  // are involved. Personal sits between Free and Pro for the large group who
+  // Pro carries the accent: up to 10 inboxes for one person is the upgrade
+  // almost everyone actually wants, and Business pays off past 10 mailboxes or
+  // once other people are involved. Personal sits between Free and Pro for the large group who
   // need two or three mailboxes and nothing else.
   //
-  // Watch the ids: `solo` is sold as "Pro" and `pro` is sold as "Team".
+  // Watch the ids: `solo` is sold as "Pro" and `pro` is sold as "Business".
   // `personal` is the only id that matches its own display name.
   const allTiers = [
     { msgKey: 'free',     priceKey: 'free',     per: t('pricing.perForever'), accent: false, ctaHref: '/signup' },
     { msgKey: 'personal', priceKey: 'personal', per: t('pricing.perMonth'),   accent: false, ctaHref: pricingUpgradeHref('personal', false, false) },
     { msgKey: 'solo',     priceKey: 'solo',     per: t('pricing.perMonth'),   accent: true,  ctaHref: pricingUpgradeHref('solo', false, false) },
-    { msgKey: 'team',     priceKey: 'pro',      per: t('pricing.perMonth'),   accent: false, ctaHref: pricingUpgradeHref('pro', false, false) },
+    { msgKey: 'business', priceKey: 'pro',      per: t('pricing.perMonth'),   accent: false, ctaHref: pricingUpgradeHref('pro', false, false) },
   ];
 
   const tiers = allTiers;
