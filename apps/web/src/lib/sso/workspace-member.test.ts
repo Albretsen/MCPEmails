@@ -51,16 +51,18 @@ test('any other error is a refusal (seat cap, deleted workspace)', async () => {
   assert.deepEqual(await addWorkspaceMemberVia(service)(ARGS), { ok: false, reason: 'refused', message: 'seat limit reached' });
 });
 
-test('audit rows go to activity_log with no api key, no inbox and no address', async () => {
+test('audit rows go to sso_audit_events (never activity_log) with no address', async () => {
   const { service, inserts } = fakeService(null);
   await recordSsoAuditVia(service)({
-    workspaceId: 'ws-1', event: 'sso.jit_join', status: 'error', errorCode: 'contract_missing',
+    workspaceId: 'ws-1', connectionId: 'conn-1', userId: 'user-1',
+    event: 'user.jit_join', status: 'error', errorCode: 'contract_missing',
     ipAddress: '203.0.113.7', userAgent: 'ua',
   });
   assert.deepEqual(inserts, [{
-    table: 'activity_log',
+    table: 'sso_audit_events',
     row: {
-      workspace_id: 'ws-1', tool_name: 'sso.jit_join', status: 'error', error_code: 'contract_missing',
+      workspace_id: 'ws-1', connection_id: 'conn-1', actor_user_id: 'user-1', action: 'user.jit_join',
+      details: { outcome: 'error', error_code: 'contract_missing' },
       ip_address: '203.0.113.7', user_agent: 'ua',
     },
   }]);
@@ -68,7 +70,9 @@ test('audit rows go to activity_log with no api key, no inbox and no address', a
 
 test('a failed audit insert never throws', async () => {
   const { service } = fakeService(null, { message: 'partition missing' });
-  await recordSsoAuditVia(service)({ workspaceId: 'ws-1', event: 'sso.sign_in', status: 'success' });
+  await recordSsoAuditVia(service)({
+    workspaceId: 'ws-1', connectionId: 'conn-1', userId: 'user-1', event: 'user.sign_in', status: 'success',
+  });
 });
 
 test('client IP: first forwarded hop, garbage dropped', () => {

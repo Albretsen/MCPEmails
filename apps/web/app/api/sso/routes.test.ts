@@ -409,6 +409,21 @@ test('GET returns our SAML values and state, never the provider id', async () =>
   assert.ok(!JSON.stringify(body).includes(PROVIDER), 'provider id stays server-side');
 });
 
+test('GET lists configuration changes only, not SSO sign-in rows', async () => {
+  const conn = connectionRow();
+  world.tables.sso_connections.push(conn);
+  const at = '2026-10-19T12:00:00Z';
+  world.tables.sso_audit_events.push(
+    { id: uuid(), workspace_id: WS, action: 'domain.added', details: {}, actor_user_id: USER.id, created_at: at },
+    { id: uuid(), workspace_id: WS, action: 'user.sign_in', details: { outcome: 'success' }, actor_user_id: null, created_at: at },
+    { id: uuid(), workspace_id: WS, action: 'user.jit_join', details: { outcome: 'success' }, actor_user_id: null, created_at: at },
+  );
+  const res = await ssoRoute.GET();
+  assert.equal(res.status, 200);
+  const body = await res.json();
+  assert.deepEqual(body.events.map((e: { action: string }) => e.action), ['domain.added']);
+});
+
 test('PUT creates the provider, an active connection and an audit row', async () => {
   const res = await connectionRoute.PUT(json('PUT', `${BASE}/connection`, { metadataUrl: METADATA }));
   assert.equal(res.status, 200);
