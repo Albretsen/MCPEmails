@@ -4852,6 +4852,19 @@ export type Database = {
           new_users: number
         }[]
       }
+      growth_signup_trend: {
+        Args: {
+          p_internal_domains?: string[]
+          p_internal_emails?: string[]
+          p_weeks?: number
+        }
+        Returns: {
+          as_of: string
+          by_now: number
+          week_start: string
+          workspaces: number
+        }[]
+      }
       growth_user_signup_days: {
         Args: {
           p_days?: number
