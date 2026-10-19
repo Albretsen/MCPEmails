@@ -239,6 +239,7 @@ export const ROUTES = [
   ['app/auth/outlook/admin-consent/route.ts', 'iad1', '3', 'Microsoft Graph (global)'],
   ['app/auth/outlook/callback/route.ts', 'iad1', '11', 'Microsoft token endpoint + Graph (global)'],
   ['app/auth/outlook/route.ts', 'arn1', '3', '-'],
+  ['app/auth/sso/route.ts', 'arn1', '2', '-'],
   ['app/authorize/page.js', 'arn1', '8', 'CIMD fetch (client-hosted, memoised)'],
   ['app/dashboard/[[...section]]/page.js', 'arn1', '5 serial stages', '-'],
   ['app/invite/[token]/page.js', 'arn1', '4', '-'],

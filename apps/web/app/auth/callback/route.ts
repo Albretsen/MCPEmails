@@ -8,6 +8,10 @@ import {
   clearConsentCookieString,
   consentVersionFromCookieHeader,
 } from '@/lib/marketing-consent.mjs';
+import { ssoRouteForEmail, isSsoUser, type SsoLookupRpc } from '@/lib/sso/sign-in';
+import { completeSsoSignIn, findSsoConnectionVia } from '@/lib/sso/join';
+import { addWorkspaceMemberVia } from '@/lib/sso/workspace-member';
+import { clientIpFromHeaders, recordSsoAuditVia } from '@/lib/sso/audit';
 
 // ---------------------------------------------------------------------------
 // Route config
@@ -49,7 +53,7 @@ export async function GET(request: Request) {
   }
 
   const supabase = await createClient();
-  const { error } = await supabase.auth.exchangeCodeForSession(code);
+  const { data: exchanged, error } = await supabase.auth.exchangeCodeForSession(code);
 
   if (error) {
     // Common causes: code already used, link expired (>60 min), or PKCE
@@ -57,6 +61,34 @@ export async function GET(request: Request) {
     return NextResponse.redirect(
       `${origin}/auth/error?reason=${encodeURIComponent(error.message)}`
     );
+  }
+
+  // SAML SSO: the account has no personal workspace (the new-user trigger
+  // skips `sso:` users), so it joins its company's workspace here, on every
+  // sign-in, through the team tier's add_workspace_member. Anything that
+  // stops the join refuses the session (see src/lib/sso/join.ts). Scope
+  // 'local' ends only this session.
+  const exchangedUser = exchanged?.user ?? null;
+  if (exchangedUser && isSsoUser(exchangedUser)) {
+    const service = createServiceRoleClient();
+    const rpc = (service.rpc as unknown as SsoLookupRpc).bind(service);
+    const sso = await completeSsoSignIn(
+      {
+        routeForEmail: (email) => ssoRouteForEmail(rpc, email),
+        findConnection: findSsoConnectionVia(service),
+        addMember: addWorkspaceMemberVia(service),
+        audit: recordSsoAuditVia(service),
+      },
+      exchangedUser,
+      {
+        ipAddress: clientIpFromHeaders(request.headers),
+        userAgent: request.headers.get('user-agent'),
+      },
+    );
+    if (!sso.ok) {
+      await supabase.auth.signOut({ scope: 'local' });
+      return NextResponse.redirect(`${origin}/auth/error?reason=${sso.reason}`);
+    }
   }
 
   // Marketing consent ticked on the signup page before a Google/GitHub
