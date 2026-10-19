@@ -63,7 +63,7 @@ Du holder også en klar grense for sending: utkast forblir utkast til du godkjen
 
 ## Kom til null i dag
 
-Du trenger ikke en ny e-postapp eller et produktivitetssystem — bare den eksisterende innboksen din og en agent som kan handle på den. Koble til innboksen din én gang, lim inn endepunktet i Claude, og kjør de fem promptene over. Alle planer er ubegrensede, og Free-nivået krever ikke kort.
+Du trenger ikke en ny e-postapp eller et produktivitetssystem, bare den eksisterende innboksen din og en agent som kan handle på den. Koble til innboksen din én gang, lim inn endepunktet i Claude, og kjør de fem promptene over. Free-nivået krever ikke kort og kobler til én innboks, for alltid.
 
 [Koble til innboksen din gratis](/signup) og be Claude sortere den uleste e-posten din. Inbox zero, med tilsyn i stedet for lidelse.`,
 };

@@ -148,7 +148,7 @@
   "pricing": {
     "eyebrow": "Pricing",
     "title": "Priced by inbox. No metering on paid plans.",
-    "sub": "Free connects one inbox with 150 email actions a month. Personal connects three. Pro connects every mailbox your business runs. Team adds people, roles, and a separate workspace per client.",
+    "sub": "Free connects one inbox with 150 email actions a month. Personal connects three. Pro connects up to 10 for one person running a business. Business includes 10 mailboxes, adds $3 a month for each extra, and has room for your whole team.",
     "perForever": "/forever",
     "perMonth": "/month",
     "tiers": {
@@ -180,27 +180,26 @@
       },
       "solo": {
         "name": "Pro",
-        "desc": "Every mailbox your business runs, on one agent: finance, sales, support, info, and your own.",
+        "desc": "For one person running a business: up to 10 mailboxes on one agent, from finance and sales to support and your own.",
         "features": [
           "Everything in Personal",
-          "Unlimited connected inboxes",
+          "10 connected inboxes",
           "5x higher burst rate limit",
           "Longer analytics history"
         ],
         "cta": "Get Pro"
       },
-      "team": {
-        "name": "Team",
-        "desc": "Shared inboxes for a team, with a separate workspace per client or business.",
+      "business": {
+        "name": "Business",
+        "desc": "For a business with many mailboxes or several people: 10 mailboxes included, more at a fixed price each.",
         "features": [
           "Everything in Pro",
-          "Unlimited members with roles",
-          "A separate workspace per client or business",
-          "SSO (SAML / OIDC) and audit log",
-          "Longest analytics history",
-          "Priority support"
+          "10 mailboxes included, $3 a month for each extra",
+          "Unlimited members with roles, at no extra cost",
+          "Admins approve sends held for review",
+          "Several workspaces on one subscription, one per company or client"
         ],
-        "cta": "Get Team"
+        "cta": "Get Business"
       }
     },
     "footnote": "All plans: the mail your agent reads is fetched live and never stored. OAuth tokens encrypted at rest. Need something custom? <contact>Contact us</contact>. <comparison>See full feature comparison →</comparison>",
@@ -241,7 +240,7 @@
       },
       {
         "q": "Is it really free?",
-        "a": "Yes. The free plan connects one inbox, forever, with no card required, and your agent gets every tool we ship against it: read, search, send, reply, schedule and organise. Personal is $9 a month for a second and third mailbox on the same agent, Pro removes the inbox limit entirely, and Team is for when other people need in."
+        "a": "Yes. The free plan connects one inbox, forever, with no card required, and your agent gets every tool we ship against it: read, search, send, reply, schedule and organise. Personal is $9 a month for a second and third mailbox on the same agent, Pro covers up to 10 for $15, and Business is for more mailboxes or when other people need in."
       },
       {
         "q": "What can the AI actually do with my inbox?",

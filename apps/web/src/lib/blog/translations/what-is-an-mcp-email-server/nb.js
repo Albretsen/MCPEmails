@@ -76,7 +76,7 @@ En hostet MCP-e-postserver håndterer leverandørmangfoldet og legitimasjonssikk
 
 En MCP-e-postserver gjør innboksen din om til et sett med trygge, navngitte handlinger en AI-agent kan kalle over en standardprotokoll. Agenten får verb begrenset til det du tillot. Passordet ditt blir liggende på serveren, kryptert. Den faktiske e-posten din blir aldri lagret. For den fullstendige gjennomgangen av hvordan du kobler dette sammen fra ende til ende, start med pilarguiden om [å gi AI-agenten din e-posttilgang](/blog/how-to-give-your-ai-agent-email-access), eller hopp videre og [koble til en innboks på under to minutter](/blog/connect-email-to-ai-agent-under-2-minutes).
 
-Vil du prøve det? [Start gratis](/signup) — alle planer er ubegrensede, ingen kort kreves — eller les [dokumentasjonen](/docs) for verktøyreferansen og endepunkt-URL-en.`,
+Vil du prøve det? [Start gratis](/signup), uten kort og med én tilkoblet innboks, eller les [dokumentasjonen](/docs) for verktøyreferansen og endepunkt-URL-en.`,
 };
 
 export default translation;

@@ -80,8 +80,8 @@ Slå på **Gjennomgang før sending** (Review before sending) for en postkasse, 
 
 - **Gratis:** én postkasse.
 - **Personal:** tre postkasser.
-- **Pro:** alle postkassene du har, uten grense, på én innlogging.
-- **Team:** for når en person til trenger sin egen innlogging.
+- **Pro:** opptil 10 postkasser, på én innlogging.
+- **Business:** 10 postkasser inkludert og $3 i måneden for hver ekstra, og for når en person til trenger sin egen innlogging.
 
 Et firma med post@, salg@ og faktura@ pluss din egen adresse er fire postkasser, og det er Pro. Gjeldende priser finner du på [prissiden](/pricing), og [MCP Emails for bedrifter](/for/business) viser hvordan én person håndterer alle firmapostkassene fra én agent.
 

@@ -29,7 +29,11 @@ import test from 'node:test';
 import { fileURLToPath } from 'node:url';
 
 import { annualOffer } from './annual-offer.ts';
-import { PLANS } from './plans.ts';
+import {
+  BUSINESS_EXTRA_INBOX_MONTHLY_CENTS,
+  BUSINESS_EXTRA_INBOX_YEARLY_CENTS,
+  PLANS,
+} from './plans.ts';
 import { rows, entries } from '../compare/email-mcp-servers.mjs';
 
 const WEB = path.resolve(fileURLToPath(import.meta.url), '../../../..');
@@ -45,6 +49,10 @@ for (const plan of Object.values(PLANS)) {
     SOLD_CENTS.add(Math.round(plan.yearlyPriceCents / 12));
   }
 }
+// Business's per-mailbox price above the included ten is sold too.
+SOLD_CENTS.add(BUSINESS_EXTRA_INBOX_MONTHLY_CENTS);
+SOLD_CENTS.add(BUSINESS_EXTRA_INBOX_YEARLY_CENTS);
+SOLD_CENTS.add(Math.round(BUSINESS_EXTRA_INBOX_YEARLY_CENTS / 12));
 
 /**
  * Amounts that are not prices of ours, by file NAME (in any locale) and exact

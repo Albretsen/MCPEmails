@@ -37,6 +37,8 @@ export type EffectivePlanResolution =
       limits: PlanLimits;
       compedScale: boolean;
       unlimitedInboxes: boolean;
+      /** Pro cap cutover exemption, or the cap's kill switch is off. Pro only. */
+      proUnlimitedInboxes: boolean;
     }
   | {
       resolved: false;
@@ -59,12 +61,14 @@ export async function resolveEffectiveWorkspacePlan(
 
   const compedScale = row.comped_scale ?? false;
   const unlimitedInboxes = row.unlimited_inboxes ?? false;
+  const proUnlimitedInboxes = row.pro_unlimited_inboxes ?? false;
 
   return {
     resolved: true,
     plan: row.plan,
-    limits: resolvePlanLimits(row.plan, { compedScale, unlimitedInboxes }),
+    limits: resolvePlanLimits(row.plan, { compedScale, unlimitedInboxes, proUnlimitedInboxes }),
     compedScale,
     unlimitedInboxes,
+    proUnlimitedInboxes,
   };
 }

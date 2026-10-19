@@ -1,15 +1,25 @@
 import type Stripe from 'stripe';
 
 import { createClient } from '@/lib/supabase/server';
+import { createServiceRoleClient } from '@/lib/supabase/service';
 import { stripe } from '@/lib/stripe/client';
 import { getOrCreateStripeCustomer } from '@/lib/stripe/customer';
 import {
   PLANS,
+  basePlanItem,
+  extraMailboxQuantity,
+  mailboxAddonPriceId,
   planCommitmentRank,
   getPlanByStripePriceId,
   type PlanId,
   type BillingInterval,
 } from '@/lib/stripe/plans';
+import {
+  countOwnedInboxes,
+  mailboxAddonItemChanges,
+  readMailboxAddonState,
+  type MailboxAddonItemChange,
+} from '@/lib/stripe/mailbox-addon';
 import {
   billingTarget,
   planCategory,
@@ -62,7 +72,7 @@ type CheckoutTarget = Parameters<typeof recordCheckoutStarted>[1];
  * and is therefore still rejected, as before.
  *
  * NAMING TRAP: these are internal ids, not display names. `solo` is sold as
- * "Pro" and `pro` is sold as "Team"; `personal` is the one id that matches its
+ * "Pro" and `pro` is sold as "Business"; `personal` is the one id that matches its
  * own name. Use plan.name for anything a customer reads.
  */
 export type PurchasablePlanId = Exclude<PlanId, 'free'>;
@@ -142,8 +152,17 @@ export interface PlanChangePreview {
   amountDueNowCents: number;
   /** Credit for the unused remainder of the current plan, as a positive number. */
   creditCents: number;
-  /** The new plan's own price, per period, from the next renewal onwards. */
+  /**
+   * What the new plan costs per period from the next renewal onwards: its own
+   * price plus, for Business, the extra mailboxes at their per-mailbox price.
+   */
   recurringCents: number;
+  /**
+   * Business only: mailboxes above the included ten that `recurringCents`
+   * already prices. Zero for every other plan, so the dialog can say why the
+   * figure is above the list price instead of leaving the buyer to wonder.
+   */
+  extraMailboxes: number;
   /** Unix seconds. Null when Stripe reports no period on the subscription. */
   nextRenewalAt: number | null;
 }
@@ -215,8 +234,12 @@ async function previewPlanChange(args: {
   subscription: Stripe.Subscription;
   itemId: string;
   priceId: string;
+  /** The add-on half of the change, exactly as the swap below will send it. */
+  addonChanges: MailboxAddonItemChange[];
+  extraMailboxes: number;
+  addonPriceId: string | null;
 }): Promise<PlanChangePreview | null> {
-  const { subscription, itemId, priceId } = args;
+  const { subscription, itemId, priceId, addonChanges, extraMailboxes, addonPriceId } = args;
 
   try {
     const customerId =
@@ -224,18 +247,21 @@ async function previewPlanChange(args: {
         ? subscription.customer
         : subscription.customer.id;
 
-    const [preview, price] = await Promise.all([
+    const [preview, price, addonPrice] = await Promise.all([
       stripe.invoices.createPreview({
         customer: customerId,
         subscription: subscription.id,
         subscription_details: {
-          items: [{ id: itemId, price: priceId }],
-          // Must match the swap below, or the quote prices a different event
-          // from the one the button performs.
+          // The same items the swap below sends, add-on included, or the
+          // quote prices a different event from the one the button performs.
+          items: [{ id: itemId, price: priceId }, ...addonChanges],
           proration_behavior: 'always_invoice',
         },
       }),
       stripe.prices.retrieve(priceId),
+      extraMailboxes > 0 && addonPriceId
+        ? stripe.prices.retrieve(addonPriceId)
+        : Promise.resolve(null),
     ]);
 
     // Proration credit arrives as negative invoice lines (the unused remainder
@@ -251,8 +277,10 @@ async function previewPlanChange(args: {
       currency: preview.currency,
       amountDueNowCents: preview.amount_due,
       creditCents,
-      recurringCents: price.unit_amount ?? 0,
-      nextRenewalAt: subscription.items.data[0]?.current_period_end ?? null,
+      recurringCents:
+        (price.unit_amount ?? 0) + (addonPrice?.unit_amount ?? 0) * extraMailboxes,
+      extraMailboxes,
+      nextRenewalAt: basePlanItem(subscription.items.data)?.current_period_end ?? null,
     };
   } catch (err) {
     console.error(
@@ -615,7 +643,10 @@ export async function runCheckout(input: {
 
     try {
       const subscription = await stripe.subscriptions.retrieve(subscriptionId);
-      const currentItem = subscription.items.data[0];
+      // The plan's own item. A Business subscription also carries the
+      // per-mailbox add-on, and swapping THAT for the new plan's price would
+      // bill the new plan once per extra mailbox.
+      const currentItem = basePlanItem(subscription.items.data);
 
       if (!currentItem) {
         throw new Error(`Subscription ${subscriptionId} has no items.`);
@@ -654,6 +685,43 @@ export async function runCheckout(input: {
         );
       }
 
+      // ── The add-on half of the change ─────────────────────────────────────
+      //
+      // Business bills mailboxes past ten as a second item. Moving TO Business
+      // adds it (or re-prices it on an interval switch) at the owner's current
+      // count; moving AWAY removes it. Computed once and sent identically to
+      // the quote and to the swap, so what the buyer confirms is what Stripe
+      // bills: no silent re-pricing on the second call.
+      const extraMailboxes =
+        planId === 'pro'
+          ? extraMailboxQuantity(
+              (await countOwnedInboxes(createServiceRoleClient(), user.id)) ?? 0,
+            )
+          : 0;
+      let addonChanges: MailboxAddonItemChange[];
+      try {
+        addonChanges = mailboxAddonItemChanges({
+          targetPlan: planId,
+          interval,
+          extra: extraMailboxes,
+          addonItem: readMailboxAddonState(subscription).addonItem,
+        });
+      } catch {
+        await recordPlanChange({
+          workspaceId: workspace.id,
+          direction: changeDirection(),
+          target,
+          outcome: 'failure',
+          failure: 'price_not_configured',
+        });
+        return fail(
+          'price_not_configured',
+          503,
+          `Stripe price ID for the ${planId}/${interval} mailbox add-on is not configured. ` +
+            'Please try again later or contact support.',
+        );
+      }
+
       // ── The consent gate ───────────────────────────────────────────────────
       //
       // Everything above this line is a read. Below it, a card gets charged.
@@ -678,6 +746,9 @@ export async function runCheckout(input: {
             subscription,
             itemId: currentItem.id,
             priceId,
+            addonChanges,
+            extraMailboxes,
+            addonPriceId: mailboxAddonPriceId(interval),
           }),
         };
       }
@@ -721,7 +792,7 @@ export async function runCheckout(input: {
       // on the subscription from `subscription_data` at creation and survives
       // untouched, and the webhook resolves the plan from the price id.
       const updated = await stripe.subscriptions.update(subscriptionId, {
-        items: [{ id: currentItem.id, price: priceId }],
+        items: [{ id: currentItem.id, price: priceId }, ...addonChanges],
         proration_behavior: 'always_invoice',
         payment_behavior: 'pending_if_incomplete',
         expand: ['latest_invoice'],
@@ -804,6 +875,32 @@ export async function runCheckout(input: {
     }
   }
 
+  // ── 4c. Business: the mailboxes past ten ───────────────────────────────────
+  // A first-time Business buyer who already runs more than ten mailboxes is
+  // billed for them from the first invoice, on Stripe's own page, where the
+  // line and its quantity are shown before they pay. The per-mailbox price must
+  // be configured for EVERY Business checkout, not only one with extras today:
+  // the next connect past ten would otherwise have nothing to bill against.
+  const lineItems: Stripe.Checkout.SessionCreateParams.LineItem[] = [
+    { price: priceId, quantity: 1 },
+  ];
+  if (planId === 'pro') {
+    const addonPriceId = mailboxAddonPriceId(interval);
+    if (!addonPriceId) {
+      await recordAttempt('price_not_configured');
+      return fail(
+        'price_not_configured',
+        503,
+        `Stripe price ID for the ${planId}/${interval} mailbox add-on is not configured. ` +
+          'Please try again later or contact support.',
+      );
+    }
+    const extra = extraMailboxQuantity(
+      (await countOwnedInboxes(createServiceRoleClient(), user.id)) ?? 0,
+    );
+    if (extra > 0) lineItems.push({ price: addonPriceId, quantity: extra });
+  }
+
   // ── 5. Get or create the single Stripe Customer for this user ─────────────
   const ownerEmail = user.email ?? '';
   let customerId: string;
@@ -846,12 +943,7 @@ export async function runCheckout(input: {
     const session = await stripe.checkout.sessions.create({
       mode: 'subscription',
       customer: customerId,
-      line_items: [
-        {
-          price: priceId,
-          quantity: 1,
-        },
-      ],
+      line_items: lineItems,
       success_url: successUrl,
       cancel_url: cancelUrl,
       allow_promotion_codes: true,

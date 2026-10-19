@@ -117,11 +117,11 @@
         "p": "For et firma med to eller tre adresser. Ingen månedlig handlingsgrense, høyere burst-grense og e-poststøtte."
       },
       "pro": {
-        "h": "Pro, $15 i måneden: fire eller flere",
-        "p": "Alle postkassene virksomheten har, uten grense for antall, fortsatt med én innlogging. Planen for et firma med en adresse per avdeling."
+        "h": "Pro, $15 i måneden: fire til ti",
+        "p": "Opptil 10 postkasser, fortsatt med én innlogging. Planen for én person som driver en bedrift med en adresse per avdeling."
       }
     },
-    "note": "Team, til $79 i måneden, er for når flere personer trenger hver sin innlogging, med roller og et eget arbeidsområde per kunde.",
+    "note": "Business, til $39 i måneden, har 10 postkasser inkludert og koster $3 i måneden for hver ekstra. Medlemmer med roller koster ingenting ekstra, og du kan ha et eget arbeidsområde per firma eller kunde.",
     "cta": "Sammenlign alle planene"
   },
   "faq": {
@@ -131,7 +131,7 @@
     "items": [
       {
         "q": "Vi er et firma, ikke en privatperson. Er Pro virkelig riktig plan?",
-        "a": "Ja, hvis det er én person som tar seg av postkassene. Pro er én innlogging uten grense for antall tilkoblede postkasser, så én person kan håndtere post@, salg@, faktura@ og support@ fra én agent. Team er for når flere personer trenger å logge inn hver for seg, med roller og et eget arbeidsområde per kunde."
+        "a": "Ja, hvis det er én person som tar seg av postkassene. Pro er én innlogging med opptil 10 tilkoblede postkasser, så én person kan håndtere post@, salg@, faktura@ og support@ fra én agent. Business er for flere enn 10 postkasser eller flere personer som logger inn hver for seg, med roller og et eget arbeidsområde per kunde."
       },
       {
         "q": "E-posten vår ligger hos webhotellet, ikke Gmail. Vil det fungere?",
@@ -151,7 +151,7 @@
       },
       {
         "q": "Hva om en kollega også trenger tilgang?",
-        "a": "Gratis, Personal og Pro er planer med én innlogging. Når en person til trenger sin egen, legger Team til medlemmer med roller. Fram til da dekker én person på Pro alle postkassene."
+        "a": "Gratis, Personal og Pro er planer med én innlogging. Når en person til trenger sin egen, legger Business til medlemmer med roller, uten ekstra kostnad per person. Fram til da dekker én person på Pro opptil 10 postkasser."
       }
     ]
   },

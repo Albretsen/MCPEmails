@@ -91,8 +91,8 @@ Tilkoblede postkasser er det planene prises på:
 
 - **Free, $0.** Én tilkoblet postkasse. 150 fakturerbare e-posthandlinger per UTC-kalendermåned, der de første 3 dagene ikke telles. Den månedlige grensen gjelder arbeidsområder opprettet 2026-09-13 eller senere; arbeidsområder opprettet tidligere er unntatt.
 - **Personal, $9 i måneden eller $86,40 i året.** Tre tilkoblede postkasser, ingen månedlig handlingsgrense, 2x burst-grense, e-poststøtte.
-- **Pro, $15 i måneden eller $144 i året.** Ubegrenset antall tilkoblede postkasser, 5x burst-grense, lengre analysehistorikk.
-- **Team, $79 i måneden eller $756 i året.** Ubegrenset antall medlemmer med roller, et eget arbeidsområde per kunde eller virksomhet, SSO (SAML/OIDC) og revisjonslogg, prioritert støtte.
+- **Pro, $15 i måneden eller $144 i året.** Opptil 10 tilkoblede postkasser, 5x burst-grense, lengre analysehistorikk.
+- **Business, $39 i måneden eller $374,40 i året.** 10 postkasser inkludert og $3 i måneden for hver ekstra, ubegrenset antall medlemmer med roller uten ekstra kostnad, administratorer som godkjenner tilbakeholdte sendinger, et eget arbeidsområde per kunde eller virksomhet.
 
 En rutine på tvers av postkasser koster én handling per postkasse, så antallet postkasser driver volumet like mye som vanene dine gjør. Detaljer på [priser](/pricing).
 

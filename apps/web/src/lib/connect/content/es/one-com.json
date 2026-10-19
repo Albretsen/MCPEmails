@@ -20,7 +20,7 @@
     "titleLine1": "Servidor MCP para el correo de one.com:",
     "titleLine2": "todos los buzones de tu empresa, en Claude y ChatGPT",
     "lead": "¿Llevas info@, ventas@, soporte@ y facturas@ en tu propio dominio en one.com? Conecta cada buzón al mismo espacio de trabajo y tu agente de IA trabaja en todos ellos. Lee, busca, envía, responde, programa y organiza el correo por IMAP con la contraseña que estableciste al crear la dirección.",
-    "answer": "Claude no puede acceder a un buzón de one.com por sí solo. mcpemails es un servidor MCP alojado que lo conecta por IMAP en imap.one.com, puerto 993, y envía a través de send.one.com, puerto 465, autenticándose con tu dirección de correo completa y la contraseña que estableciste para esa cuenta en el Control Panel de one.com. Así Claude, Cursor o cualquier cliente MCP pueden leer, buscar, enviar y organizar el correo. No hay que generar ninguna contraseña de aplicación. Cada dirección de la empresa, como info@ o ventas@, se conecta como un buzón propio: un buzón es gratis, Personal conecta tres y Pro todos los que llevas.",
+    "answer": "Claude no puede acceder a un buzón de one.com por sí solo. mcpemails es un servidor MCP alojado que lo conecta por IMAP en imap.one.com, puerto 993, y envía a través de send.one.com, puerto 465, autenticándose con tu dirección de correo completa y la contraseña que estableciste para esa cuenta en el Control Panel de one.com. Así Claude, Cursor o cualquier cliente MCP pueden leer, buscar, enviar y organizar el correo. No hay que generar ninguna contraseña de aplicación. Cada dirección de la empresa, como info@ o ventas@, se conecta como un buzón propio: un buzón es gratis, Personal conecta tres, Pro hasta 10 y Business todos los que necesites.",
     "meta0": "Primer buzón gratis, planes para el resto",
     "meta1": "Contraseña de la cuenta de correo del Control Panel",
     "meta2": "El correo se obtiene en vivo, nunca se almacena"
@@ -95,7 +95,7 @@
   ],
   "ctaBand": {
     "title": "Todos tus buzones de one.com en un solo agente",
-    "sub": "Conecta tu primer buzón de one.com gratis, sin tarjeta. Personal conecta tres y Pro todos los que llevas."
+    "sub": "Conecta tu primer buzón de one.com gratis, sin tarjeta. Personal conecta tres, Pro hasta 10 y Business todos los que necesites."
   },
   "seeAlso": {
     "intro": "¿Un buzón de Microsoft 365 contratado con one.com?",

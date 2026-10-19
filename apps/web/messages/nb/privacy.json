@@ -113,9 +113,9 @@
         "reason": "Revisjonsspor; gjenopprettingsvindu"
       },
       {
-        "category": "MCP-verktøykall revisjonslogger",
-        "period": "7 dager (Free); 90 dager (Agent); 1 år (Scale)",
-        "reason": "Sikkerhetsrevisjon; abonnementsfunksjon"
+        "category": "Aktivitetslogg for MCP-verktøykall",
+        "period": "90 dager på alle planer",
+        "reason": "Sikkerhet; brukshistorikk i dashbordet"
       },
       {
         "category": "Aggregerte bruksmetrikker",

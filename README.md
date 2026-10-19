@@ -81,7 +81,7 @@ Copy‑paste instructions per client, including where each one keeps its config 
 - **Batch & search‑and‑act** — read, move, delete, or flag up to hundreds of messages in one call, including "search then move/delete" combinators.
 - **Drafts & scheduling** — compose drafts and queue messages for future send (server‑side dispatch).
 - **Provider‑agnostic search** — Gmail syntax, Microsoft Graph KQL and IMAP `SEARCH` are normalized behind one `email_read` (`action: "search"`) interface.
-- **Team‑ready**: workspaces, members, roles, SSO, and an audit log on the Team plan.
+- **Business‑ready**: several workspaces, unlimited members with roles, and admin approval of held sends on the Business plan.
 
 ## Tools
 
@@ -177,25 +177,24 @@ Notes:
 
 ## Pricing
 
-The value metric is **connected inboxes**. Free connects one mailbox, Personal connects up to three, Pro connects every mailbox you own, and Team adds people, roles, and a separate workspace per client. Annual billing saves about 20%.
+The value metric is **connected inboxes**. Free connects one mailbox, Personal connects up to three, Pro connects up to 10 for one person running a business, and Business includes 10 mailboxes, charges $3 a month for each extra one, and adds unlimited people with roles and a separate workspace per client. Annual billing saves about 20%.
 
-| | **Free** | **Personal** | **Pro** | **Team** |
+| | **Free** | **Personal** | **Pro** | **Business** |
 | --- | --- | --- | --- | --- |
-| Price | $0 | $9/mo · $86.40/yr ($7.20/mo) | $15/mo · $144/yr ($12/mo) | $79/mo · $756/yr ($63/mo) |
-| Connected inboxes | 1 | 3 | Unlimited | Unlimited |
+| Price | $0 | $9/mo · $86.40/yr ($7.20/mo) | $15/mo · $144/yr ($12/mo) | $39/mo · $374.40/yr ($31.20/mo) |
+| Connected inboxes | 1 | 3 | 10 | 10 included, then $3/mo each ($28.80/yr) |
 | Email actions / month | 150 (first 3 days uncounted) | No monthly cap (fair use) | No monthly cap (fair use) | No monthly cap (fair use) |
 | API keys | Unlimited | Unlimited | Unlimited | Unlimited |
-| Members | 1 (owner only) | 1 (owner only) | 1 (owner only) | Unlimited, with roles |
+| Members | 1 (owner only) | 1 (owner only) | 1 (owner only) | Unlimited, with roles, no extra cost |
 | Fair‑use rate limit | 60 req/min | 120 req/min | 300 req/min | 1,000 req/min |
-| Team roles & workspaces | No | No | No | ✅ |
-| SSO (SAML/OIDC) + audit log | No | No | No | ✅ |
-| Support | Community | Email | Email | Priority |
+| Roles, admin send approval, several workspaces | No | No | No | ✅ |
+| Support | Community | Email | Email | Email |
 
 Per‑API‑key limits also apply (100 req/min · 1,000/hr · 10,000/day). Rate limits are retryable: they come back as JSON-RPC error `-32003` with `data.retry_after` in seconds.
 
-Free workspaces get **150 email actions per calendar month (UTC)**. The first 3 days after signup are not counted (7 days for workspaces created before 2026-10-17), and `inbox_list` and the dashboard are never counted. When the allowance is reached, every other email action is refused until the 1st of the next month, unattended automations pause and resume automatically on the 1st, and the owner is emailed at 80% and at 100%. Personal, Pro and Team have no monthly cap, subject to fair use (their ceilings are abuse guards, not plan features, and are not printed anywhere). A refusal is not retryable and not a JSON-RPC error: it comes back as a normal tool result with `isError: true`, text that opens with the count and the reset date, and a `_meta["com.mcpemails/usage_limit"]` block that clears at `reset_at`.
+Free workspaces get **150 email actions per calendar month (UTC)**. The first 3 days after signup are not counted (7 days for workspaces created before 2026-10-17), and `inbox_list` and the dashboard are never counted. When the allowance is reached, every other email action is refused until the 1st of the next month, unattended automations pause and resume automatically on the 1st, and the owner is emailed at 80% and at 100%. Personal, Pro and Business have no monthly cap, subject to fair use (their ceilings are abuse guards, not plan features, and are not printed anywhere). A refusal is not retryable and not a JSON-RPC error: it comes back as a normal tool result with `isError: true`, text that opens with the count and the reset date, and a `_meta["com.mcpemails/usage_limit"]` block that clears at `reset_at`.
 
-Internal plan ids predate the names: `solo` is sold as **Pro** and `pro` is sold as **Team**. The newer `personal` id is the only one that matches its display name, **Personal**. Every user who existed before the 2026-08-19 repricing keeps unlimited inboxes for free, permanently, and every workspace created before the 2026-09-12 launch of the action allowance is an early member that is not metered against it. See [`apps/web/src/lib/stripe/plans.ts`](apps/web/src/lib/stripe/plans.ts).
+Internal plan ids predate the names: `solo` is sold as **Pro** and `pro` is sold as **Business** (it was **Team** until 2026-10-19). The newer `personal` id is the only one that matches its display name, **Personal**. Every user who existed before the 2026-08-19 repricing keeps unlimited inboxes for free, permanently, every workspace already on Pro when the 10-inbox cap arrived keeps unlimited inboxes, and every workspace created before the 2026-09-12 launch of the action allowance is an early member that is not metered against it. See [`apps/web/src/lib/stripe/plans.ts`](apps/web/src/lib/stripe/plans.ts).
 
 ## Architecture
 
@@ -290,7 +289,7 @@ Feature‑dependent:
 | `OUTLOOK_CLIENT_ID` / `OUTLOOK_CLIENT_SECRET` / `OUTLOOK_TENANT_ID` | Outlook OAuth (`Mail.ReadWrite`, `Mail.Send`, `offline_access`, `openid`, `profile`, `email`). `OUTLOOK_TENANT_ID` is optional and defaults to `common` |
 | `NEXT_PUBLIC_OAUTH_VERIFICATION_PENDING` | Shows the unverified‑app warning until Google verification completes (the Microsoft publisher is already verified) |
 | `STRIPE_SECRET_KEY` / `STRIPE_WEBHOOK_SECRET` / `NEXT_PUBLIC_STRIPE_PUBLISHABLE_KEY` | Billing |
-| `STRIPE_PRICE_PERSONAL_MONTHLY` / `_YEARLY`, `STRIPE_PRICE_SOLO_MONTHLY` / `_YEARLY`, `STRIPE_PRICE_PRO_MONTHLY` / `_YEARLY` | Plan price IDs (`personal` = Personal, `solo` = Pro, `pro` = Team) |
+| `STRIPE_PRICE_PERSONAL_MONTHLY` / `_YEARLY`, `STRIPE_PRICE_SOLO_MONTHLY` / `_YEARLY`, `STRIPE_PRICE_PRO_MONTHLY` / `_YEARLY` | Plan price IDs (`personal` = Personal, `solo` = Pro, `pro` = Business; the current Business prices live in `STRIPE_PRICE_BUSINESS_*`) |
 | `STRIPE_WEBHOOK_PROXY_KEY` | Optional. Restricts `/api/stripe/webhook` to the delivery queue in front of it. Unset = no restriction. Set it only AFTER the queue is sending the key, or every delivery 401s and is dead‑lettered. |
 | `STRIPE_WEBHOOK_TOLERANCE_SECONDS` | Optional. Stripe signature age limit, default 7 days. Wide because a queued replay carries its original signature; Stripe's own 300s default would reject every held retry. |
 

@@ -20,7 +20,7 @@
     "titleLine1": "MCP-server for one.com-e-post:",
     "titleLine2": "alle firmaets postkasser, i Claude og ChatGPT",
     "lead": "Har du post@, salg@, support@ og faktura@ på eget domene hos one.com? Koble hver postkasse til ett arbeidsområde, så jobber AI-agenten din i alle sammen. Les, søk, send, svar, planlegg og organiser e-post via IMAP med passordet du satte da du opprettet adressen.",
-    "answer": "Claude når ikke en one.com-postkasse på egen hånd. mcpemails er en hostet MCP-server som kobler til via IMAP på imap.one.com port 993 og sender gjennom send.one.com port 465, og autentiserer med hele e-postadressen din og passordet du satte for kontoen i one.com Control Panel. Claude, Cursor eller enhver MCP-klient kan da lese, søke, sende og organisere e-posten. Det er ikke noe app-passord å generere. Hver firmaadresse, som post@ eller salg@, kobles til som sin egen postkasse: én postkasse er gratis, Personal kobler til tre og Pro alle postkassene du har.",
+    "answer": "Claude når ikke en one.com-postkasse på egen hånd. mcpemails er en hostet MCP-server som kobler til via IMAP på imap.one.com port 993 og sender gjennom send.one.com port 465, og autentiserer med hele e-postadressen din og passordet du satte for kontoen i one.com Control Panel. Claude, Cursor eller enhver MCP-klient kan da lese, søke, sende og organisere e-posten. Det er ikke noe app-passord å generere. Hver firmaadresse, som post@ eller salg@, kobles til som sin egen postkasse: én postkasse er gratis, Personal kobler til tre, Pro opptil 10 og Business så mange du trenger.",
     "meta0": "Første postkasse gratis, planer for resten",
     "meta1": "Passord for e-postkontoen fra Control Panel",
     "meta2": "E-post hentes direkte, lagres aldri"
@@ -95,7 +95,7 @@
   ],
   "ctaBand": {
     "title": "Samle alle one.com-postkassene på én agent",
-    "sub": "Koble til den første one.com-postkassen gratis, uten kort. Personal kobler til tre, Pro alle postkassene du har."
+    "sub": "Koble til den første one.com-postkassen gratis, uten kort. Personal kobler til tre, Pro opptil 10 og Business så mange du trenger."
   },
   "seeAlso": {
     "intro": "Microsoft 365-postkasse fra one.com?",

@@ -38,7 +38,7 @@ test('uses the display name, never the internal plan id', () => {
     amountTotalCents: 75600,
     currency: 'usd',
   });
-  assert.match(team.subject, /Your MCPEmails Team subscription is active/);
+  assert.match(team.subject, /Your MCPEmails Business subscription is active/);
   // "pro" appears legitimately inside "Everything in Pro"; the id must not
   // appear as the plan NAME anywhere.
   assert.ok(!/Your MCPEmails pro/i.test(team.subject));
@@ -109,7 +109,18 @@ test('names the concrete inbox entitlement, including the jump from Free', () =>
     amountTotalCents: 2900,
     currency: 'usd',
   });
-  assert.match(unlimited.body, /Unlimited connected inboxes, up from 1 on Free\./);
+  // Pro is ten for a new customer since 2026-10-19.
+  assert.match(unlimited.body, /10 connected inboxes, up from 1 on Free\./);
+
+  // Business is not "unlimited": it bills past ten, and the email must say so.
+  const business = buildPurchaseConfirmationEmail({
+    planId: 'pro',
+    interval: 'month',
+    amountTotalCents: 3900,
+    currency: 'usd',
+  });
+  assert.match(business.body, /10 connected inboxes included, up from 1 on Free\. Each extra mailbox is \$3 a month\./);
+  assert.ok(!/unlimited connected inboxes/i.test(business.body));
 });
 
 test('never leaks the silent monthly tool-call ceiling', () => {

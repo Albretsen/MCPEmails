@@ -20,7 +20,7 @@
     "titleLine1": "Servidor MCP para el correo de SiteGround:",
     "titleLine2": "todos los buzones de tu empresa, en Claude y ChatGPT",
     "lead": "¿Llevas info@, ventas@, soporte@ y facturas@ en tu propio dominio en SiteGround? Conecta cada buzón al mismo espacio de trabajo y tu agente de IA trabaja en todos ellos. Lee, busca, envía, responde, programa y organiza correo por IMAP, con los ajustes que Site Tools muestra para tu cuenta.",
-    "answer": "Claude no puede acceder a un buzón de SiteGround por sí solo. mcpemails es un servidor MCP alojado que lo conecta por IMAP estándar en el puerto 993, para que Claude, Cursor o cualquier cliente MCP pueda leer, buscar, enviar y organizar ese correo. SiteGround no tiene un nombre de servidor de correo compartido: tu servidor es mail.yourdomain.com, o el nombre de servidor seguro con la forma secureNNN.sgcpanel.com, y Site Tools muestra el correcto en Email, Accounts, Mail Configuration. La autenticación es con la contraseña establecida en el buzón, nunca con tu acceso al Client Area de SiteGround. Cada dirección de la empresa, como info@ o ventas@, se conecta como un buzón propio: un buzón es gratis, Personal conecta tres y Pro todos los que llevas.",
+    "answer": "Claude no puede acceder a un buzón de SiteGround por sí solo. mcpemails es un servidor MCP alojado que lo conecta por IMAP estándar en el puerto 993, para que Claude, Cursor o cualquier cliente MCP pueda leer, buscar, enviar y organizar ese correo. SiteGround no tiene un nombre de servidor de correo compartido: tu servidor es mail.yourdomain.com, o el nombre de servidor seguro con la forma secureNNN.sgcpanel.com, y Site Tools muestra el correcto en Email, Accounts, Mail Configuration. La autenticación es con la contraseña establecida en el buzón, nunca con tu acceso al Client Area de SiteGround. Cada dirección de la empresa, como info@ o ventas@, se conecta como un buzón propio: un buzón es gratis, Personal conecta tres, Pro hasta 10 y Business todos los que necesites.",
     "meta0": "Primer buzón gratis, planes para el resto",
     "meta1": "Contraseña del buzón desde Site Tools",
     "meta2": "El correo se obtiene en vivo, nunca se almacena"
@@ -94,6 +94,6 @@
   ],
   "ctaBand": {
     "title": "Todos tus buzones de SiteGround en un solo agente",
-    "sub": "Conecta tu primer buzón de SiteGround gratis, sin tarjeta. Personal conecta tres y Pro todos los que llevas."
+    "sub": "Conecta tu primer buzón de SiteGround gratis, sin tarjeta. Personal conecta tres, Pro hasta 10 y Business todos los que necesites."
   }
 }

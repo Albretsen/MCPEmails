@@ -24,7 +24,7 @@
     "meta0": "Primer buzón gratis, planes para el resto",
     "meta1": "La contraseña de tu buzón, sin configurar OAuth",
     "meta2": "El correo se obtiene en vivo, nunca se almacena",
-    "answer": "Claude no puede acceder por sí solo a IONOS. mcpemails es un servidor MCP alojado que lo conecta por IMAP con la contraseña de tu buzón, para que Claude, Cursor o cualquier cliente MCP pueda leer, buscar, enviar y organizar ese correo. La configuración lleva un par de minutos. Cada dirección de la empresa, como info@ o ventas@, se conecta como un buzón propio: un buzón es gratis, Personal conecta tres y Pro todos los que llevas."
+    "answer": "Claude no puede acceder por sí solo a IONOS. mcpemails es un servidor MCP alojado que lo conecta por IMAP con la contraseña de tu buzón, para que Claude, Cursor o cualquier cliente MCP pueda leer, buscar, enviar y organizar ese correo. La configuración lleva un par de minutos. Cada dirección de la empresa, como info@ o ventas@, se conecta como un buzón propio: un buzón es gratis, Personal conecta tres, Pro hasta 10 y Business todos los que necesites."
   },
   "persona": {
     "intro": "¿Varios buzones de empresa en IONOS?",
@@ -103,7 +103,7 @@
   ],
   "ctaBand": {
     "title": "Todos tus buzones de IONOS en un solo agente",
-    "sub": "Conecta tu primer buzón de IONOS gratis, sin tarjeta. Personal conecta tres y Pro todos los que llevas."
+    "sub": "Conecta tu primer buzón de IONOS gratis, sin tarjeta. Personal conecta tres, Pro hasta 10 y Business todos los que necesites."
   },
   "seeAlso": {
     "intro": "¿Un buzón de Microsoft 365 contratado con IONOS?",

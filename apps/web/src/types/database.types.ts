@@ -2803,6 +2803,27 @@ export type Database = {
           },
         ]
       }
+      pricing_switches: {
+        Row: {
+          enabled: boolean
+          key: string
+          note: string | null
+          updated_at: string
+        }
+        Insert: {
+          enabled: boolean
+          key: string
+          note?: string | null
+          updated_at?: string
+        }
+        Update: {
+          enabled?: boolean
+          key?: string
+          note?: string | null
+          updated_at?: string
+        }
+        Relationships: []
+      }
       product_funnel_events: {
         Row: {
           auth_reason: string | null
@@ -3677,6 +3698,7 @@ export type Database = {
           created_at: string
           effective_plan: string
           id: string
+          limit_kind: string
           meter_version: number
           occurred_at: string
           used_actions: number
@@ -3687,6 +3709,7 @@ export type Database = {
           created_at?: string
           effective_plan: string
           id?: string
+          limit_kind?: string
           meter_version?: number
           occurred_at?: string
           used_actions: number
@@ -3697,6 +3720,7 @@ export type Database = {
           created_at?: string
           effective_plan?: string
           id?: string
+          limit_kind?: string
           meter_version?: number
           occurred_at?: string
           used_actions?: number
@@ -4098,6 +4122,7 @@ export type Database = {
           onboarding_value_activated_at: string | null
           owner_id: string
           plan: string
+          pro_unlimited_inboxes_exempt: boolean
           slug: string
           stripe_customer_id: string | null
           updated_at: string
@@ -4145,6 +4170,7 @@ export type Database = {
           onboarding_value_activated_at?: string | null
           owner_id: string
           plan?: string
+          pro_unlimited_inboxes_exempt?: boolean
           slug: string
           stripe_customer_id?: string | null
           updated_at?: string
@@ -4192,6 +4218,7 @@ export type Database = {
           onboarding_value_activated_at?: string | null
           owner_id?: string
           plan?: string
+          pro_unlimited_inboxes_exempt?: boolean
           slug?: string
           stripe_customer_id?: string | null
           updated_at?: string
@@ -4310,6 +4337,7 @@ export type Database = {
         Returns: {
           comped_scale: boolean
           plan: string
+          pro_unlimited_inboxes: boolean
           unlimited_inboxes: boolean
         }[]
       }
@@ -5025,6 +5053,15 @@ export type Database = {
           id: string
           should_alert: boolean
         }[]
+      }
+      record_inbox_cap_event: {
+        Args: {
+          p_cap: number
+          p_inbox_count: number
+          p_plan: string
+          p_workspace_id: string
+        }
+        Returns: undefined
       }
       record_usage_limit_event: {
         Args: {

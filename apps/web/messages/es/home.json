@@ -148,7 +148,7 @@
   "pricing": {
     "eyebrow": "Precios",
     "title": "Precio por bandeja. Sin medición en los planes de pago.",
-    "sub": "Gratis conecta una bandeja con 150 acciones de correo al mes. Personal conecta tres. Pro conecta todos los buzones que lleva tu negocio. Team añade personas, roles y un espacio de trabajo separado por cliente.",
+    "sub": "Gratis conecta una bandeja con 150 acciones de correo al mes. Personal conecta tres. Pro conecta hasta 10 para una persona que lleva un negocio. Business incluye 10 buzones, suma $3 al mes por cada uno extra y tiene sitio para todo tu equipo.",
     "perForever": "/para siempre",
     "perMonth": "/mes",
     "tiers": {
@@ -180,27 +180,26 @@
       },
       "solo": {
         "name": "Pro",
-        "desc": "Todos los buzones que lleva tu negocio, en un solo agente: finanzas, ventas, soporte, info y el tuyo.",
+        "desc": "Para una persona que lleva un negocio: hasta 10 buzones en un solo agente, desde finanzas y ventas hasta soporte y el tuyo.",
         "features": [
           "Todo lo de Personal",
-          "Bandejas conectadas ilimitadas",
+          "10 bandejas conectadas",
           "Límite de ráfaga 5x más alto",
           "Más historial de analíticas"
         ],
         "cta": "Obtener Pro"
       },
-      "team": {
-        "name": "Team",
-        "desc": "Bandejas compartidas para un equipo, con un espacio de trabajo separado por cliente o negocio.",
+      "business": {
+        "name": "Business",
+        "desc": "Para un negocio con muchos buzones o varias personas: 10 buzones incluidos y más a un precio fijo por buzón.",
         "features": [
           "Todo lo de Pro",
-          "Miembros ilimitados con roles",
-          "Un espacio de trabajo separado por cliente o negocio",
-          "SSO (SAML / OIDC) y registro de auditoría",
-          "El mayor historial de analíticas",
-          "Soporte prioritario"
+          "10 buzones incluidos, $3 al mes por cada buzón extra",
+          "Miembros ilimitados con roles, sin coste adicional",
+          "Los administradores aprueban los envíos en espera",
+          "Varios espacios de trabajo en una sola suscripción, uno por empresa o cliente"
         ],
-        "cta": "Obtener Team"
+        "cta": "Obtener Business"
       }
     },
     "footnote": "Todos los planes: el correo que lee tu agente se obtiene en vivo y nunca se almacena. Tokens de OAuth cifrados en reposo. ¿Necesitas algo a medida? <contact>Contáctanos</contact>. <comparison>Ver la comparación completa de funciones →</comparison>",
@@ -241,7 +240,7 @@
       },
       {
         "q": "¿Es realmente gratis?",
-        "a": "Sí. El plan Gratis conecta una bandeja, para siempre y sin tarjeta, y tu agente dispone de todas las herramientas que publicamos sobre ella: leer, buscar, enviar, responder, programar y organizar. Personal cuesta $9 al mes por un segundo y un tercer buzón en el mismo agente, Pro elimina el límite de bandejas por completo, y Team es para cuando otras personas necesiten acceso."
+        "a": "Sí. El plan Gratis conecta una bandeja, para siempre y sin tarjeta, y tu agente dispone de todas las herramientas que publicamos sobre ella: leer, buscar, enviar, responder, programar y organizar. Personal cuesta $9 al mes por un segundo y un tercer buzón en el mismo agente, Pro cubre hasta 10 por $15, y Business es para más buzones o para cuando otras personas necesiten acceso."
       },
       {
         "q": "¿Qué puede hacer realmente la IA con mi bandeja de entrada?",

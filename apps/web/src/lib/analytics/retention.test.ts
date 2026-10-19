@@ -12,7 +12,9 @@ test('every tier resolves the retention window it is sold with', () => {
   assert.equal(retentionDays(resolvePlanLimits('free')), 30);
   assert.equal(retentionDays(resolvePlanLimits('personal')), 30);
   assert.equal(retentionDays(resolvePlanLimits('solo')), 90);
-  assert.equal(retentionDays(resolvePlanLimits('pro')), 365);
+  // Business (was Team, sold as 365) is 90: activity_log is deleted after 90
+  // days on every plan, so a year was never there to show.
+  assert.equal(retentionDays(resolvePlanLimits('pro')), 90);
 });
 
 test('no tier resolves below the 30-day floor every account already had', () => {
@@ -37,6 +39,8 @@ test('the window ascends with the ladder and never reaches unlimited', () => {
     ladder[ladder.length - 1] > ladder[0],
     'the top tier must still buy more history than the bottom',
   );
+  // Pro and Business share the 90 days the activity log actually keeps.
+  assert.equal(ladder[2], ladder[3]);
   for (const plan of Object.values(PLANS)) {
     assert.ok(
       Number.isFinite(plan.limits.analyticsRetentionDays),
@@ -45,9 +49,9 @@ test('the window ascends with the ladder and never reaches unlimited', () => {
   }
 });
 
-test('a comped workspace gets the Team window, a grandfathered one does not', () => {
-  // compedScale grants Team features outright, so it buys Team's history too.
-  assert.equal(retentionDays(resolvePlanLimits('free', { compedScale: true })), 365);
+test('a comped workspace gets the Business window, a grandfathered one does not', () => {
+  // compedScale grants Business features outright, so it buys Business's history too.
+  assert.equal(retentionDays(resolvePlanLimits('free', { compedScale: true })), 90);
 
   // The 2026-08-19 grandfather lifts the INBOX cap and nothing else. It must
   // not quietly hand a free account a year of history.

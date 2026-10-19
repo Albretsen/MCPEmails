@@ -4,7 +4,14 @@ import path from 'node:path';
 import test from 'node:test';
 import { fileURLToPath } from 'node:url';
 
-import { FREE_ACTION_ALLOWANCE, FREE_ACTION_GRACE_DAYS, PLANS } from '../stripe/plans.ts';
+import {
+  BUSINESS_EXTRA_INBOX_MONTHLY_CENTS,
+  BUSINESS_INCLUDED_INBOXES,
+  FREE_ACTION_ALLOWANCE,
+  FREE_ACTION_GRACE_DAYS,
+  PLANS,
+  PRO_INBOX_CAP,
+} from '../stripe/plans.ts';
 
 /**
  * The business-positioning copy, pinned.
@@ -18,7 +25,7 @@ import { FREE_ACTION_ALLOWANCE, FREE_ACTION_GRACE_DAYS, PLANS } from '../stripe/
  *   - a translator leaves a value in English, or drops a key, and nothing
  *     notices because a missing key renders as an empty cell, not an error;
  *   - someone "tidies" the comparison table back to "Just you" for Pro, which
- *     is true about logins and tells every company it belongs on Team;
+ *     is true about logins and tells every company it belongs on Business;
  *   - a well-meant edit names a provider or a certification we cannot support.
  *     There is no SOC 2 report, no data-residency choice and no Enterprise
  *     tier, and each of those has already been removed from this site once.
@@ -85,6 +92,11 @@ const EM_DASH = new RegExp('[' + String.fromCharCode(0x2014, 0x2015) + ']');
 // Claims this product cannot support. Matched case-insensitively against the
 // strings this change wrote, never against whole legacy files.
 const BANNED_CLAIMS = /exchange online|soc\s*-?\s*2|data residency|enterprise|hipaa|iso\s*27001/i;
+// The pricing page's Enterprise row (enterprise.*) is the one place the word is
+// allowed: Asgeir decided on a talk-to-us row. Every other claim stays banned there.
+const BANNED_CLAIMS_ENTERPRISE_ROW = /exchange online|soc\s*-?\s*2|data residency|hipaa|iso\s*27001|\bsso\b|saml|oidc/i;
+const bannedFor = (file: string, key: string) =>
+  file === 'pricing' && key.startsWith('enterprise.') ? BANNED_CLAIMS_ENTERPRISE_ROW : BANNED_CLAIMS;
 
 // Microsoft 365 may be named, but never as instant: a company tenant usually
 // needs its IT admin to approve the app once, so "one click" (in any of the
@@ -111,7 +123,12 @@ const CHANGED_PATHS: Record<'pricing' | 'home' | 'imap', string[]> = {
     'plans.solo.desc',
     'comparison.sections.usage.rows.members',
     'comparison.values.oneSeat',
-    'comparison.values.unlimitedCompany',
+    'comparison.values.tenMailboxes',
+    'comparison.values.businessMailboxes',
+    'comparison.values.unlimitedPeople',
+    // 2026-10-19: the Enterprise row under the cards.
+    'enterprise.title',
+    'enterprise.body',
     'faq.items.5.a',
     // 2026-09-29: the operator question, inserted at 6, pushed "What if I
     // need a fourth inbox?" to 7.
@@ -215,7 +232,7 @@ test('the forBusiness prices and the Free allowance come from the plan catalogue
   // page that contradicts checkout.
   const dollars = (id: 'personal' | 'solo' | 'pro') => String(PLANS[id].monthlyPriceCents / 100);
   assert.equal(PLANS.personal.limits.maxInboxes, 3, 'the page says Personal covers up to three');
-  assert.equal(PLANS.solo.limits.maxInboxes, Infinity, 'the page says Pro has no mailbox limit');
+  assert.equal(PLANS.solo.limits.maxInboxes, PRO_INBOX_CAP, `the page says Pro covers up to ${PRO_INBOX_CAP}`);
   assert.equal(PLANS.solo.limits.maxMembers, 1, 'the page says Pro is one login');
   for (const locale of LOCALES) {
     const copy = messages(locale, 'forBusiness');
@@ -225,7 +242,9 @@ test('the forBusiness prices and the Free allowance come from the plan catalogue
     const free = str(copy, 'pricing.items.free.p', locale);
     assert.match(personal, new RegExp(`(^|\\D)${dollars('personal')}(\\D|$)`), `${locale}: Personal price`);
     assert.match(pro, new RegExp(`(^|\\D)${dollars('solo')}(\\D|$)`), `${locale}: Pro price`);
-    assert.match(team, new RegExp(`(^|\\D)${dollars('pro')}(\\D|$)`), `${locale}: Team price`);
+    assert.match(team, new RegExp(`(^|\\D)${dollars('pro')}(\\D|$)`), `${locale}: Business price`);
+    assert.match(team, new RegExp(`(^|\\D)${BUSINESS_EXTRA_INBOX_MONTHLY_CENTS / 100}(\\D|$)`), `${locale}: Business per-mailbox price`);
+    assert.match(pro, new RegExp(`(^|\\D|[^\\d])${PRO_INBOX_CAP}|\\b(ten|ti|diez|dix)\\b|十`, 'i'), `${locale}: Pro's mailbox cap`);
     assert.ok(free.includes(String(FREE_ACTION_ALLOWANCE)), `${locale}: Free allowance in "${free}"`);
     assert.ok(free.includes(String(FREE_ACTION_GRACE_DAYS)), `${locale}: Free grace days in "${free}"`);
   }
@@ -264,7 +283,8 @@ test('none of the new copy makes a claim the product cannot support', () => {
       for (const key of paths) {
         const value = str(files[file], key, `${locale} ${file}`);
         assert.ok(value.trim().length > 0, `${locale}: ${file} ${key} is empty`);
-        assert.ok(!BANNED_CLAIMS.test(value), `${locale}: ${file} ${key} claims "${value.match(BANNED_CLAIMS)?.[0]}"`);
+        const banned = bannedFor(file, key);
+        assert.ok(!banned.test(value), `${locale}: ${file} ${key} claims "${value.match(banned)?.[0]}"`);
         const overclaim = microsoftOverclaim(value);
         assert.equal(overclaim, null, `${locale}: ${file} ${key} promises Microsoft 365 in one click: "${overclaim}"`);
       }
@@ -378,12 +398,13 @@ test('the consumer framing does not come back on the English pricing surfaces', 
 
 test('Pro still reads as one seat, truthfully', () => {
   // The repositioning must not overclaim: Pro is one login. The FAQ answer that
-  // compares the tiers has to keep saying so, and Team stays the multi-person
-  // plan.
+  // compares the tiers has to keep saying so, and Business stays the plan for
+  // more people or more mailboxes.
   assert.equal(PLANS.solo.limits.maxMembers, 1);
   const answer = str(messages('en', 'pricing'), 'faq.items.5.a', 'en');
   assert.match(answer, /Pro is still one seat/);
-  assert.match(answer, /Team is for when more than one person/);
+  assert.match(answer, /Business is for more mailboxes or more people/);
+  assert.ok(answer.includes(`up to ${PRO_INBOX_CAP} connected mailboxes`), 'the comparison answer states the Pro cap');
 });
 
 test('"Just you" is gone from the comparison table, in every locale', () => {
@@ -392,15 +413,22 @@ test('"Just you" is gone from the comparison table, in every locale', () => {
     const pricing = messages(locale, 'pricing');
     assert.equal(at(pricing, 'comparison.values.ownerOnly'), undefined, `${locale}: values.ownerOnly is back`);
     str(pricing, 'comparison.values.oneSeat', locale);
-    str(pricing, 'comparison.values.unlimitedCompany', locale);
+    str(pricing, 'comparison.values.tenMailboxes', locale);
+    str(pricing, 'comparison.values.businessMailboxes', locale);
+    str(pricing, 'comparison.values.unlimitedPeople', locale);
     for (const [key, value] of leaves(pricing)) {
       for (const old of OLD_VALUES) {
         assert.ok(!value.includes(old), `${locale}: pricing ${key} still says "${old}"`);
       }
     }
   }
-  assert.equal(str(messages('en', 'pricing'), 'comparison.values.oneSeat', 'en'), '1 seat');
-  assert.equal(str(messages('en', 'pricing'), 'comparison.sections.usage.rows.members', 'en'), 'Seats');
+  assert.equal(str(messages('en', 'pricing'), 'comparison.values.oneSeat', 'en'), '1 person');
+  assert.equal(str(messages('en', 'pricing'), 'comparison.sections.usage.rows.members', 'en'), 'People who can sign in');
+  assert.equal(str(messages('en', 'pricing'), 'comparison.values.tenMailboxes', 'en'), `Up to ${PRO_INBOX_CAP} mailboxes`);
+  assert.ok(
+    str(messages('en', 'pricing'), 'comparison.values.businessMailboxes', 'en').startsWith(`${BUSINESS_INCLUDED_INBOXES} included`),
+    'the Business inbox cell states the included mailboxes',
+  );
 });
 
 test('the comparison table wires Pro to the seat count and the company-mailbox value', () => {
@@ -412,8 +440,9 @@ test('the comparison table wires Pro to the seat count and the company-mailbox v
     return match[0];
   };
   assert.match(row('members'), /solo: 'values\.oneSeat'/);
-  assert.match(row('members'), /pro: 'values\.unlimited'/);
-  assert.match(row('inboxes'), /solo: 'values\.unlimitedCompany'/);
+  assert.match(row('members'), /pro: 'values\.unlimitedPeople'/);
+  assert.match(row('inboxes'), /solo: 'values\.tenMailboxes'/);
+  assert.match(row('inboxes'), /pro: 'values\.businessMailboxes'/);
 
   // A missing message key renders an empty cell instead of failing the build,
   // so every values.* key the table names has to exist in every locale.
@@ -511,11 +540,13 @@ test('the homepage hero and the pricing cards point a company at /for/business, 
   }
 });
 
-test('the operator FAQ answer names Pro for one person and Team only for a second login', () => {
+test('the operator FAQ answer names Pro for one person and Business for a second login or more than 10 mailboxes', () => {
   for (const locale of LOCALES) {
     const answer = str(messages(locale, 'pricing'), 'faq.items.6.a', `${locale} pricing`);
     assert.ok(answer.includes('Pro'), `${locale}: the operator answer must name Pro`);
-    assert.ok(answer.includes('Team'), `${locale}: the operator answer must say when Team applies`);
+    assert.ok(answer.includes('Business'), `${locale}: the operator answer must say when Business applies`);
+    assert.ok(!/\bTeam\b/.test(answer), `${locale}: the operator answer still names the retired Team plan`);
+    assert.ok(answer.includes(String(PRO_INBOX_CAP)), `${locale}: the operator answer must state the ${PRO_INBOX_CAP}-mailbox line`);
     // It names Microsoft 365, so it carries the admin-approval caveat.
     assert.ok(ADMIN_APPROVAL.test(answer), `${locale}: the operator answer names Microsoft 365 without the admin approval`);
   }

@@ -98,7 +98,7 @@
     "multiInboxTitle": "Añade tus otros buzones de trabajo",
     "multiInboxOptional": "Opcional",
     "multiInboxDesc": "Conecta info@, ventas@, facturas@ y los demás, y tu agente trabaja con todos los buzones de la empresa desde una sola conversación, respondiendo desde la dirección correcta.",
-    "multiInboxDescUpgrade": "Conecta info@, ventas@, facturas@ y los demás, y tu agente trabaja con todos los buzones de la empresa desde una sola conversación, respondiendo desde la dirección correcta. El plan gratuito cubre un buzón; Pro cubre todos los buzones de tu empresa.",
+    "multiInboxDescUpgrade": "Conecta info@, ventas@, facturas@ y los demás, y tu agente trabaja con todos los buzones de la empresa desde una sola conversación, respondiendo desde la dirección correcta. El plan gratuito cubre un buzón; Pro cubre hasta 10.",
     "multiInboxCta": "Añadir un buzón"
   },
   "overview": {
@@ -129,7 +129,7 @@
     "goToMembers": "Ir a Miembros",
     "callsPerDayTitle": "Llamadas por día",
     "callsPerDaySub": "Últimos {days} días · en todas las herramientas",
-    "pro": "Team",
+    "pro": "Business",
     "recentActivityTitle": "Actividad reciente",
     "recentActivitySub": "Llamadas a herramientas MCP en vivo",
     "noActivityTitle": "Aún no hay actividad",
@@ -146,8 +146,8 @@
     "usedSingular": "{count} de {max} bandeja usada",
     "capTitle": "Has alcanzado tu límite de bandejas",
     "capBodyPersonal": "El plan gratuito conecta un buzón. Personal te lleva a tres por 9 $ al mes, para que el trabajo y lo personal compartan el mismo agente.",
-    "capBodyPro": "Personal conecta tres buzones. Pro elimina el límite por 15 $ al mes, para reunir todos tus buzones en un solo agente.",
-    "capBodyBusiness": "¿Gestionas más de un buzón de empresa? El plan gratuito conecta uno. Personal cubre tres por 9 $ al mes, suficiente para info@, ventas@ y el tuyo. Pro cubre todos los buzones de tu empresa por 15 $ al mes: finanzas, ventas, soporte, info y el tuyo.",
+    "capBodyPro": "Personal conecta tres buzones. Pro te lleva a 10 por 15 $ al mes, todos en un solo agente.",
+    "capBodyBusiness": "¿Gestionas más de un buzón de empresa? El plan gratuito conecta uno. Personal cubre tres por 9 $ al mes, suficiente para info@, ventas@ y el tuyo. Pro cubre hasta 10 por 15 $ al mes: finanzas, ventas, soporte, info y el tuyo.",
     "capCtaPersonal": "Mejorar a Personal, 9 $/mes",
     "capCtaPro": "Mejorar a Pro, 15 $/mes",
     "capCompare": "Comparar todos los planes",
@@ -266,7 +266,9 @@
     },
     "emptyAltLead": "¿Todavía no quieres conectar un buzón?",
     "emptyViewKeys": "Obtén tu URL de MCP y tu clave de API",
-    "emptyReadDocs": "Lee las guías de configuración"
+    "emptyReadDocs": "Lee las guías de configuración",
+    "capBodyProCap": "Pro conecta 10 buzones. Business incluye 10 por 39 $ al mes y añade cada buzón adicional por 3 $ al mes, con miembros ilimitados sin coste extra.",
+    "capCtaBusiness": "Mejorar a Business, 39 $/mes"
   },
   "apiKeys": {
     "title": "Claves de API",
@@ -552,16 +554,15 @@
       "personalFeature2": "120 peticiones / minuto (ráfaga 2×)",
       "personalFeatureActions": "Sin límite mensual de acciones",
       "personalFeature4": "Soporte por correo",
-      "soloFeature1": "Bandejas conectadas ilimitadas",
+      "soloFeature1": "10 bandejas conectadas",
       "soloFeature2": "300 peticiones / minuto (ráfaga 5×)",
       "soloFeature3": "Más historial de analíticas",
       "soloFeature4": "Soporte por correo",
-      "teamFeature1": "Todo lo de Pro",
-      "teamFeature2": "Miembros ilimitados con roles",
-      "teamFeature3": "Un espacio de trabajo separado por cliente o negocio",
-      "teamFeature4": "SSO (SAML / OIDC) + registro de auditoría",
-      "teamFeature5": "El mayor historial de analíticas",
-      "teamFeature6": "Soporte prioritario"
+      "businessFeature1": "Todo lo de Pro",
+      "businessFeature2": "10 buzones incluidos, 3 $ al mes por cada uno adicional",
+      "businessFeature3": "Miembros ilimitados con roles, sin coste extra",
+      "businessFeature4": "Los administradores aprueban los envíos retenidos",
+      "businessFeature5": "Varios espacios de trabajo con una sola suscripción"
     },
     "planIncludes": "Qué incluye tu plan",
     "inboxesOne": "1 bandeja conectada",
@@ -601,7 +602,10 @@
     "paymentRequiredBody": "Tu banco necesita autorizar el pago, o la tarjeta ha sido rechazada. Tu plan actual no ha cambiado y no se te ha cobrado nada. Paga la factura pendiente y el cambio se aplicará automáticamente.",
     "paymentRequiredPay": "Pagar factura",
     "paymentRequiredClose": "Cerrar",
-    "paymentRequiredToast": "El pago no se ha completado, así que sigues en {plan}. Abre el portal de facturación para pagar la factura pendiente."
+    "paymentRequiredToast": "El pago no se ha completado, así que sigues en {plan}. Abre el portal de facturación para pagar la factura pendiente.",
+    "proInboxesKept": "Tu plan Pro conserva las bandejas conectadas ilimitadas.",
+    "businessMailboxRate": "10 buzones incluidos entre todos tus espacios de trabajo. Cada buzón adicional se factura con tu plan: 3 $ al mes o 28,80 $ al año.",
+    "confirmExtraMailboxes": "Incluye {count, plural, one {# buzón adicional} other {# buzones adicionales}} además de los 10 incluidos."
   },
   "security": {
     "title": "Seguridad",
@@ -665,8 +669,8 @@
     "roleOwner": "Propietario",
     "sending": "Enviando…",
     "sendInvite": "Enviar invitación",
-    "rolesLockedHint": "Las invitaciones se unen como Miembro. Mejora a Team para asignar roles de Administrador y Visor.",
-    "inviteUpgradeHint": "Invitar colaboradores requiere el plan Team. Mejora tu plan para añadir miembros a este espacio de trabajo.",
+    "rolesLockedHint": "Las invitaciones se unen como Miembro. Mejora a Business para asignar roles de Administrador y Visor.",
+    "inviteUpgradeHint": "Invitar colaboradores requiere el plan Business. Mejora tu plan para añadir miembros a este espacio de trabajo.",
     "errInviteFailed": "No se pudo enviar la invitación.",
     "errRemoveFailed": "No se pudo eliminar al miembro.",
     "errRoleFailed": "No se pudo actualizar el rol.",

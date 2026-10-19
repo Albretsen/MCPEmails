@@ -113,9 +113,9 @@
         "reason": "Audit trail; recovery window"
       },
       {
-        "category": "MCP tool call audit logs",
-        "period": "7 days (Free); 90 days (Agent); 1 year (Scale)",
-        "reason": "Security audit; plan feature"
+        "category": "MCP tool call activity log",
+        "period": "90 days on every plan",
+        "reason": "Security; usage history in your dashboard"
       },
       {
         "category": "Aggregated usage metrics",

@@ -108,7 +108,7 @@ Either way, you revoke any connection from the dashboard in one click. Grab the 
 
 Short answer: yes, and the [is it safe to give an AI agent email access](/blog/is-it-safe-to-give-ai-agent-email-access) post makes the full case. The model holds scoped capabilities, not your password; credentials are encrypted; nothing is stored; sending stays on your provider; access revokes in one click.
 
-On rate limits, each API key is capped at 100 requests/min, 1,000/hour, and 10,000/day on every plan. There's also a per-workspace burst ceiling that scales with your plan: 60/min on Free, 120/min on Personal, 300/min on Pro, 1,000/min on Team. When you hit a limit the server returns a retryable error with a \`retry_after\` value in seconds. Honor it. And never blindly auto-retry an \`email_compose\` send: you'll send duplicates.
+On rate limits, each API key is capped at 100 requests/min, 1,000/hour, and 10,000/day on every plan. There's also a per-workspace burst ceiling that scales with your plan: 60/min on Free, 120/min on Personal, 300/min on Pro, 1,000/min on Business. When you hit a limit the server returns a retryable error with a \`retry_after\` value in seconds. Honor it. And never blindly auto-retry an \`email_compose\` send: you'll send duplicates.
 
 ## Pricing
 
@@ -116,8 +116,8 @@ Plans are priced by connected inboxes. API keys are unlimited on every tier, and
 
 - **Free, $0 forever.** No card. One connected inbox, 60 req/min, 30-day analytics, community support.
 - **Personal, $9/month** (or $86.40/year, $7.20/month). Up to three connected inboxes, 120 req/min, 30-day analytics, email support.
-- **Pro, $15/month** (or $144/year, $12/month). Unlimited connected inboxes, 300 req/min, 90-day analytics, email support.
-- **Team, $79/month** (or $756/year, $63/month). Everything in Pro, plus members with roles, a separate workspace per client or business, SSO with SAML/OIDC and an audit log, 1,000 req/min, 1-year analytics, priority support.
+- **Pro, $15/month** (or $144/year, $12/month). Up to 10 connected inboxes, 300 req/min, 90-day analytics, email support.
+- **Business, $39/month** (or $374.40/year, $31.20/month). Everything in Pro, plus 10 mailboxes included and $3/month for each extra, unlimited members with roles, admins who approve held sends, a separate workspace per client or business, 1,000 req/min.
 
 Full breakdown on the [pricing page](/pricing).
 

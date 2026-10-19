@@ -59,7 +59,14 @@
 
 import { Resend } from 'resend';
 
-import { PLANS, planDisplayName, type BillingInterval, type PlanId } from '@/lib/stripe/plans';
+import {
+  BUSINESS_EXTRA_INBOX_MONTHLY_CENTS,
+  BUSINESS_INCLUDED_INBOXES,
+  PLANS,
+  planDisplayName,
+  type BillingInterval,
+  type PlanId,
+} from '@/lib/stripe/plans';
 
 // ---------------------------------------------------------------------------
 // Configuration
@@ -123,6 +130,12 @@ export function formatAmount(amountCents: number, currency: string): string {
 function inboxHeadline(planId: Exclude<PlanId, 'free'>): string {
   const max = PLANS[planId].limits.maxInboxes;
   const free = PLANS.free.limits.maxInboxes;
+  // Business is uncapped because it bills past the included mailboxes, not
+  // because they are free. "Unlimited" here would contradict the invoice.
+  if (planId === 'pro') {
+    return `${BUSINESS_INCLUDED_INBOXES} connected inboxes included, up from ${free} on Free. ` +
+      `Each extra mailbox is $${BUSINESS_EXTRA_INBOX_MONTHLY_CENTS / 100} a month.`;
+  }
   const now = Number.isFinite(max) ? `${max} connected inboxes` : 'Unlimited connected inboxes';
   return `${now}, up from ${free} on Free.`;
 }
@@ -132,7 +145,7 @@ function inboxHeadline(planId: Exclude<PlanId, 'free'>): string {
  *
  * Everything customer-visible about the plan comes from the catalogue:
  * `planDisplayName` because the internal ids do not match what we sell
- * (`solo` is sold as "Pro", `pro` is sold as "Team"), and `plan.features`
+ * (`solo` is sold as "Pro", `pro` is sold as "Business"), and `plan.features`
  * because that copy is already reviewed, already consistent with the pricing
  * page, and already free of the silent action ceiling.
  */

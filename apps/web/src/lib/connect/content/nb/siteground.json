@@ -20,7 +20,7 @@
     "titleLine1": "MCP-server for SiteGround-e-post:",
     "titleLine2": "alle firmaets postkasser, i Claude og ChatGPT",
     "lead": "Har du post@, salg@, support@ og faktura@ på eget domene hos SiteGround? Koble hver postkasse til ett arbeidsområde, så jobber AI-agenten din i alle sammen. Les, søk, send, svar, planlegg og organiser e-post via IMAP, med innstillingene Site Tools viser for kontoen din.",
-    "answer": "Claude når ikke en SiteGround-postkasse på egen hånd. mcpemails er en hostet MCP-server som kobler til via vanlig IMAP på port 993, slik at Claude, Cursor eller enhver MCP-klient kan lese, søke, sende og organisere den e-posten. SiteGround har ikke noe felles e-postvertsnavn: verten din er mail.yourdomain.com, eller det sikre servernavnet på formen secureNNN.sgcpanel.com, og Site Tools viser det riktige under Email, Accounts, Mail Configuration. Autentisering skjer med passordet som er satt på postkassen, aldri innloggingen til SiteGround Client Area. Hver firmaadresse, som post@ eller salg@, kobles til som sin egen postkasse: én postkasse er gratis, Personal kobler til tre og Pro alle postkassene du har.",
+    "answer": "Claude når ikke en SiteGround-postkasse på egen hånd. mcpemails er en hostet MCP-server som kobler til via vanlig IMAP på port 993, slik at Claude, Cursor eller enhver MCP-klient kan lese, søke, sende og organisere den e-posten. SiteGround har ikke noe felles e-postvertsnavn: verten din er mail.yourdomain.com, eller det sikre servernavnet på formen secureNNN.sgcpanel.com, og Site Tools viser det riktige under Email, Accounts, Mail Configuration. Autentisering skjer med passordet som er satt på postkassen, aldri innloggingen til SiteGround Client Area. Hver firmaadresse, som post@ eller salg@, kobles til som sin egen postkasse: én postkasse er gratis, Personal kobler til tre, Pro opptil 10 og Business så mange du trenger.",
     "meta0": "Første postkasse gratis, planer for resten",
     "meta1": "Postkassepassord fra Site Tools",
     "meta2": "E-post hentes direkte, lagres aldri"
@@ -94,6 +94,6 @@
   ],
   "ctaBand": {
     "title": "Samle alle SiteGround-postkassene på én agent",
-    "sub": "Koble til den første SiteGround-postkassen gratis, uten kort. Personal kobler til tre, Pro alle postkassene du har."
+    "sub": "Koble til den første SiteGround-postkassen gratis, uten kort. Personal kobler til tre, Pro opptil 10 og Business så mange du trenger."
   }
 }

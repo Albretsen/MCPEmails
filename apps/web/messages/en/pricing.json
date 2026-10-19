@@ -1,14 +1,14 @@
 {
   "meta": {
-    "title": "AI Email MCP Server Pricing: Free, Personal, Pro and Team Plans",
-    "description": "Free connects one inbox. Personal connects three for $9 a month. Pro connects every mailbox your business runs for $15. Team adds members, roles and SSO."
+    "title": "AI Email MCP Server Pricing: Free, Personal, Pro and Business Plans",
+    "description": "Free connects one inbox. Personal connects three for $9 a month. Pro connects up to 10 for $15. Business includes 10 mailboxes and any number of people for $39."
   },
   "hero": {
     "eyebrow": "Pricing",
     "titleLine1": "One inbox, free.",
     "titleLine2": "Three inboxes, $9.",
     "titleLine2Yearly": "Three inboxes, $86.40 a year.",
-    "lead": "Connect a mailbox once and your agent can read, search, organise, draft, schedule and send. Free covers one inbox. Personal covers three for $9 a month. Pro covers every mailbox you or your business runs, on one login. Team adds people, roles, and a separate workspace per client."
+    "lead": "Connect a mailbox once and your agent can read, search, organise, draft, schedule and send. Free covers one inbox. Personal covers three for $9 a month. Pro covers up to 10 for one person running a business, on one login. Business includes 10 mailboxes, charges $3 a month for each one after that, and lets everyone on your team sign in at no extra cost."
   },
   "billing": {
     "monthly": "Monthly",
@@ -51,33 +51,35 @@
     },
     "solo": {
       "name": "Pro",
-      "desc": "Every mailbox your business runs, on one agent: finance, sales, support, info, and your own.",
+      "desc": "For one person running a business: up to 10 mailboxes on one agent, from finance and sales to support and your own.",
       "cta": "Get Pro",
       "features": [
         "Everything in Personal",
-        "Unlimited connected inboxes",
+        "10 connected inboxes",
         "5x higher burst rate limit",
         "Longer analytics history"
       ]
     },
     "pro": {
-      "name": "Team",
-      "desc": "Shared inboxes for a team, with a separate workspace per client or business.",
-      "cta": "Get Team",
+      "name": "Business",
+      "desc": "For a business with many mailboxes or several people: 10 mailboxes included, more at a fixed price each.",
+      "cta": "Get Business",
       "features": [
         "Everything in Pro",
-        "Unlimited members with roles",
-        "A separate workspace per client or business",
-        "SSO (SAML / OIDC) and audit log",
-        "Longest analytics history",
-        "Priority support"
+        "10 mailboxes included, $3 a month for each extra",
+        "Unlimited members with roles, at no extra cost",
+        "Admins approve sends held for review",
+        "Several workspaces on one subscription, one per company or client"
       ]
     }
   },
   "cardsFootnote": {
     "all": "All plans include: email fetched live, never stored · credentials encrypted at rest · EU & US hosting",
-    "business": "One person running several company mailboxes? That is Pro, not Team. <business>See how every work mailbox runs on one agent</business>.",
-    "custom": "Need something custom? <contact>Contact us</contact>."
+    "business": "One person running several company mailboxes? That is Pro, for up to 10. <business>See how every work mailbox runs on one agent</business>."
+  },
+  "enterprise": {
+    "title": "Enterprise: talk to us",
+    "body": "A DPA, invoice billing, and help getting Microsoft 365 approved by your IT admin. Write to <contact>hello@mcpemails.com</contact>."
   },
   "comparison": {
     "eyebrow": "Full comparison",
@@ -86,7 +88,7 @@
     "free": "Free",
     "personal": "Personal",
     "solo": "Pro",
-    "team": "Team",
+    "business": "Business",
     "sections": {
       "usage": {
         "label": "What you get",
@@ -94,7 +96,7 @@
           "inboxes": "Connected inboxes",
           "actions": "Email actions per month",
           "keys": "API keys",
-          "members": "Seats",
+          "members": "People who can sign in",
           "burst": "Burst rate limit",
           "approvals": "Send review and approval hold"
         }
@@ -116,9 +118,9 @@
         "label": "Analytics & security",
         "rows": {
           "dashboard": "Usage analytics dashboard",
-          "roles": "Team roles & workspaces",
-          "sso": "SSO (SAML / OIDC)",
-          "audit": "Audit log",
+          "roles": "Members with roles (viewer, member, admin)",
+          "adminApprovals": "Admins approve sends held for review",
+          "workspaces": "Several workspaces on one subscription",
           "history": "Analytics history"
         }
       },
@@ -133,26 +135,26 @@
         "label": "Support",
         "rows": {
           "community": "Community forum",
-          "email": "Email support",
-          "priority": "Priority support"
+          "email": "Email support"
         }
       }
     },
     "values": {
       "unlimited": "Unlimited",
-      "unlimitedCompany": "Unlimited, company mailboxes included",
+      "tenMailboxes": "Up to 10 mailboxes",
+      "businessMailboxes": "10 included, then $3 a month each",
       "actionsFree": "150 / month, first 3 days uncounted",
       "actionsPaid": "No monthly cap, fair use",
       "oneInbox": "1 inbox",
       "threeInboxes": "3 inboxes",
-      "oneSeat": "1 seat",
+      "oneSeat": "1 person",
+      "unlimitedPeople": "Unlimited, no extra cost",
       "burstFree": "60 / min",
       "burstPersonal": "120 / min",
       "burstSolo": "300 / min",
       "burstPro": "1,000 / min",
       "history30": "30 days",
-      "history90": "90 days",
-      "history365": "1 year"
+      "history90": "90 days"
     }
   },
   "faq": {
@@ -169,7 +171,7 @@
       },
       {
         "q": "What counts as an email action?",
-        "a": "One tool call against your /mcp endpoint that touches a mailbox: a read, a search, a move, a draft, a send. Listing your inboxes (inbox_list) and anything you do in the dashboard are never counted. We're a standard MCP server, so the same endpoint works with Claude, Cursor, VS Code, ChatGPT, Windsurf, n8n, Make, and any MCP-compatible client. Free includes 150 email actions a calendar month; Personal, Pro and Team have no monthly cap, subject to fair use."
+        "a": "One tool call against your /mcp endpoint that touches a mailbox: a read, a search, a move, a draft, a send. Listing your inboxes (inbox_list) and anything you do in the dashboard are never counted. We're a standard MCP server, so the same endpoint works with Claude, Cursor, VS Code, ChatGPT, Windsurf, n8n, Make, and any MCP-compatible client. Free includes 150 email actions a calendar month; Personal, Pro and Business have no monthly cap, subject to fair use."
       },
       {
         "q": "What happens when I reach 150 email actions?",
@@ -180,16 +182,16 @@
         "a": "The email your agent reads is never stored: bodies, subjects, attachments, and thread content are fetched live from your provider and returned directly to the agent, with nothing persisted between calls. We store your encrypted OAuth token or app password so we can authenticate future requests. The one exception is a message you ask us to schedule for later. We store it until it is sent, and keep a record afterwards for your history."
       },
       {
-        "q": "What's the difference between Personal, Pro and Team?",
-        "a": "Personal is one seat with three connected inboxes, a 120 requests/minute ceiling, and email support. Pro is still one seat and one login, with no inbox limit at all, so one person can connect every mailbox a company runs (sales, invoices, support, info). It also has a 300 requests/minute ceiling, 90 days of analytics history instead of 30, and email support. Team is for when more than one person needs to sign in: unlimited members with roles, a separate workspace per client or business, SSO (SAML / OIDC), an audit log, a year of analytics history, and priority support."
+        "q": "What's the difference between Personal, Pro and Business?",
+        "a": "Personal is one seat with three connected inboxes, a 120 requests/minute ceiling, and email support. Pro is still one seat and one login, with up to 10 connected mailboxes, so one person can run the mailboxes a company has (sales, invoices, support, info). It also has a 300 requests/minute ceiling, 90 days of analytics history instead of 30, and email support. Business is for more mailboxes or more people: 10 mailboxes included and $3 a month for each one after that, unlimited members with roles (viewer, member, admin) at no extra cost, admins who approve sends held for review, several workspaces on one subscription, and a 1,000 requests/minute ceiling."
       },
       {
         "q": "We are a company with several mailboxes. Which plan do we need?",
-        "a": "Count the people who sign in first, then the mailboxes. If one person runs info@, sales@, invoices@ and the rest, that is Pro: one login, no limit on connected mailboxes, and each mailbox keeps its own sender name and signature and sends through its own mail server. Two or three addresses fit on Personal. Team is only needed when a second person needs a login of their own. Any mailbox that speaks IMAP and SMTP connects, whoever hosts it, and so do Gmail, Google Workspace and Microsoft 365; a company Microsoft 365 account may need its IT admin to approve the app once."
+        "a": "Count the mailboxes first, then the people who sign in. If one person runs info@, sales@, invoices@ and the rest, that is Pro: one login, up to 10 connected mailboxes, and each mailbox keeps its own sender name and signature and sends through its own mail server. Two or three addresses fit on Personal. Business is for more than 10 mailboxes, or for when a second person needs a login of their own: 10 mailboxes are included, each extra one is $3 a month, and members cost nothing extra. Any mailbox that speaks IMAP and SMTP connects, whoever hosts it, and so do Gmail, Google Workspace and Microsoft 365; a company Microsoft 365 account may need its IT admin to approve the app once."
       },
       {
         "q": "What if I need a fourth inbox?",
-        "a": "Personal covers three connected inboxes. A fourth moves you to Pro at $15 a month, and that lifts the limit entirely: every mailbox you or your company runs, however many, on one agent and one login. If you are sitting just over three and that does not work for you, tell us at hello@mcpemails.com."
+        "a": "Personal covers three connected inboxes. A fourth moves you to Pro at $15 a month, which covers up to 10 mailboxes on one agent and one login. Past 10, Business includes 10 and charges $3 a month for each one after that. If you are sitting just over three and that does not work for you, tell us at hello@mcpemails.com."
       },
       {
         "q": "Can I change or cancel my plan?",
@@ -197,7 +199,7 @@
       },
       {
         "q": "How does the annual discount work?",
-        "a": "Paying annually saves about 20% versus monthly: Personal is $86.40 a year ($7.20 a month), Pro is $144 a year ($12 a month) and Team is $756 a year ($63 a month). You're charged once for 12 months upfront. Cancelling stops the renewal and you keep access until the year you paid for ends. Apart from the 14-day refund on a first charge, we don't refund the remaining months."
+        "a": "Paying annually saves about 20% versus monthly: Personal is $86.40 a year ($7.20 a month), Pro is $144 a year ($12 a month) and Business is $374.40 a year ($31.20 a month), with each extra mailbox at $28.80 a year ($2.40 a month). You're charged once for 12 months upfront. Cancelling stops the renewal and you keep access until the year you paid for ends. Apart from the 14-day refund on a first charge, we don't refund the remaining months."
       },
       {
         "q": "What email providers are supported?",
@@ -209,13 +211,13 @@
       },
       {
         "q": "Can I self-host it instead of paying?",
-        "a": "Yes. MCP Emails is open source under AGPL-3.0 and free to self-host. A docker-compose stack runs the same MCP server, with your mailbox credentials encrypted under a key only you hold. Self-host covers IMAP and SMTP mailboxes. Gmail and Outlook sign-in (OAuth) and the dashboard stay on the hosted service, where they work on every plan, Free included; team features and email support are on the paid plans."
+        "a": "Yes. MCP Emails is open source under AGPL-3.0 and free to self-host. A docker-compose stack runs the same MCP server, with your mailbox credentials encrypted under a key only you hold. Self-host covers IMAP and SMTP mailboxes. Gmail and Outlook sign-in (OAuth) and the dashboard stay on the hosted service, where they work on every plan, Free included; members and roles are on Business, and email support is on every paid plan."
       }
     ]
   },
   "ctaBand": {
     "title": "Ready to give your agent an inbox?",
-    "sub": "Start on Free: one inbox, no card required. Personal takes you to three mailboxes for $9 a month, and Pro covers every mailbox your business runs for $15.",
+    "sub": "Start on Free: one inbox, no card required. Personal takes you to three mailboxes for $9 a month, Pro to 10 for $15, and Business includes 10 for $39 with $3 a month for each one after that.",
     "ctaPrimary": "Get started free",
     "ctaSecondary": "Read the docs"
   }

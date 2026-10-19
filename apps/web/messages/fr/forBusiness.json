@@ -117,11 +117,11 @@
         "p": "Pour une entreprise qui a deux ou trois adresses. Aucun plafond mensuel d'actions, une limite de débit en rafale plus élevée et le support par e-mail."
       },
       "pro": {
-        "h": "Pro, 15 $ par mois : quatre ou plus",
-        "p": "Toutes les boîtes que gère l'entreprise, sans limite de nombre, toujours avec une seule connexion. La formule pour une entreprise qui a une adresse par service."
+        "h": "Pro, 15 $ par mois : de quatre à dix",
+        "p": "Jusqu'à 10 boîtes, toujours avec une seule connexion. La formule pour une personne qui gère une entreprise avec une adresse par service."
       }
     },
-    "note": "Team, à 79 $ par mois, c'est pour le moment où plusieurs personnes ont chacune besoin de leur propre connexion, avec des rôles et un espace de travail distinct par client.",
+    "note": "Business, à 39 $ par mois, inclut 10 boîtes et facture 3 $ par mois chaque boîte en plus. Les membres avec rôles ne coûtent rien de plus, et vous pouvez avoir un espace de travail distinct par entreprise ou client.",
     "cta": "Comparer toutes les formules"
   },
   "faq": {
@@ -131,7 +131,7 @@
     "items": [
       {
         "q": "Nous sommes une entreprise, pas un particulier. Pro est-elle vraiment la bonne formule ?",
-        "a": "Oui, si une seule personne gère les boîtes. Pro, c'est une seule connexion sans limite de boîtes connectées : une personne peut donc gérer info@, ventes@, factures@ et support@ depuis un seul agent. Team, c'est pour le moment où plusieurs personnes doivent chacune se connecter, avec des rôles et un espace de travail distinct par client."
+        "a": "Oui, si une seule personne gère les boîtes. Pro, c'est une seule connexion avec jusqu'à 10 boîtes connectées : une personne peut donc gérer info@, ventes@, factures@ et support@ depuis un seul agent. Business, c'est pour plus de 10 boîtes ou plusieurs personnes qui se connectent chacune, avec des rôles et un espace de travail distinct par client."
       },
       {
         "q": "Notre messagerie est chez notre hébergeur web, pas chez Gmail. Est-ce que ça marchera ?",
@@ -151,7 +151,7 @@
       },
       {
         "q": "Et si un collègue a lui aussi besoin d'un accès ?",
-        "a": "Gratuit, Personal et Pro sont des formules à une seule connexion. Quand une deuxième personne a besoin de la sienne, Team ajoute des membres avec des rôles. D'ici là, une seule personne sur Pro couvre toutes les boîtes."
+        "a": "Gratuit, Personal et Pro sont des formules à une seule connexion. Quand une deuxième personne a besoin de la sienne, Business ajoute des membres avec des rôles, sans surcoût par personne. D'ici là, une seule personne sur Pro couvre jusqu'à 10 boîtes."
       }
     ]
   },

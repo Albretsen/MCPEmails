@@ -2604,8 +2604,8 @@ async function checkPlanQuota(
  * What a plan is CALLED, which is not what its id is.
  *
  * The internal ids were never renamed as the pricing was: `solo` is sold as
- * "Pro" and `pro` is sold as "Team". Capitalising the id, which is what this
- * message used to do, therefore told a Team customer "Your Pro plan..." and a
+ * "Pro" and `pro` is sold as "Business" (Team until 2026-10-19). Capitalising
+ * the id, which is what this message used to do, therefore told a Team customer "Your Pro plan..." and a
  * Pro customer "Your Solo plan..." at the exact moment they hit a ceiling and
  * were deciding whether to pay us more.
  *
@@ -2618,7 +2618,7 @@ const PLAN_DISPLAY_NAMES: Record<string, string> = {
   free: "Free",
   personal: "Personal",
   solo: "Pro",
-  pro: "Team",
+  pro: "Business",
 };
 
 function buildQuotaExceededResponse(
@@ -3294,11 +3294,14 @@ async function writeUsageLimitEvent(
  *
  * Asked only by the dispatcher's pre-run check, which records the cap once
  * per workspace per period rather than once per parked rule (allowance-gate.ts
- * says why). A failed read answers false, so the event is recorded anyway. */
+ * says why). A failed read answers false, so the event is recorded anyway.
+ * Action-cap rows only: the web app writes limit_kind 'inboxes' rows for the
+ * Pro inbox cap into the same table (migration 20261019150000). */
 async function usageLimitEventRecorded(workspaceId: string, periodStart: string): Promise<boolean> {
   const { data, error } = await supabase
     .from("usage_limit_events").select("id")
-    .eq("workspace_id", workspaceId).gte("occurred_at", periodStart).limit(1);
+    .eq("workspace_id", workspaceId).eq("limit_kind", "actions")
+    .gte("occurred_at", periodStart).limit(1);
   if (error) {
     console.error("[mcp-server] usage_limit_event_lookup_failed", {
       workspace_id: workspaceId, error: error.message, error_code: error.code,

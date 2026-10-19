@@ -80,8 +80,8 @@ Activa **Revisar antes de enviar** (Review before sending) en cualquier buzón y
 
 - **Free:** un buzón.
 - **Personal:** tres buzones.
-- **Pro:** todos los buzones que lleves, sin límite, con un solo inicio de sesión.
-- **Team:** para cuando una segunda persona necesita su propio inicio de sesión.
+- **Pro:** hasta 10 buzones, con un solo inicio de sesión.
+- **Business:** 10 buzones incluidos y $3 al mes por cada uno extra, y para cuando una segunda persona necesita su propio inicio de sesión.
 
 Una empresa con info@, ventas@ y facturas@ más tu propia dirección son cuatro buzones, es decir, Pro. Los precios actuales están en la [página de precios](/pricing), y [MCP Emails para empresas](/for/business) muestra cómo una sola persona lleva todos los buzones de la empresa desde un solo agente.
 

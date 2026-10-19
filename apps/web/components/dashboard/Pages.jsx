@@ -76,7 +76,7 @@ export const PLAN_DISPLAY_NAMES = {
   free: 'Free',
   personal: 'Personal',
   solo: 'Pro',
-  pro: 'Team',
+  pro: 'Business',
 };
 
 /** Customer-facing name for a plan id, never the raw id. */
@@ -5493,15 +5493,16 @@ const BILLING_PLANS = [
     id: 'solo',
     name: PLAN_DISPLAY_NAMES.solo,
     featureKeys: ['billing.plans.soloFeature1', 'billing.plans.soloFeature2', 'billing.plans.soloFeature3', 'billing.plans.soloFeature4'],
-    // Pro is the highlighted plan: unlimited inboxes for one person is the
-    // upgrade nearly everyone here actually wants. Team only pays off once
-    // other people need in.
+    // Pro is the highlighted plan: ten mailboxes for one person running a
+    // business is the upgrade nearly everyone here actually wants. Business
+    // pays off past ten mailboxes or once other people need in.
     highlighted: true,
   },
   {
     id: 'pro',
     name: PLAN_DISPLAY_NAMES.pro,
-    featureKeys: ['billing.plans.teamFeature1', 'billing.plans.teamFeature2', 'billing.plans.teamFeature3', 'billing.plans.teamFeature4', 'billing.plans.teamFeature5', 'billing.plans.teamFeature6'],
+    // Only what Business does today: see the features note on PLANS.pro.
+    featureKeys: ['billing.plans.businessFeature1', 'billing.plans.businessFeature2', 'billing.plans.businessFeature3', 'billing.plans.businessFeature4', 'billing.plans.businessFeature5'],
     highlighted: false,
   },
 ];
@@ -5588,6 +5589,7 @@ function BillingSection({
   maxInboxes = null,
   inboxCount = 0,
   grandfathered = false,
+  proInboxesKept = false,
   actionAllowance = null,
   businessShaped = false,
 }) {
@@ -6028,6 +6030,21 @@ function BillingSection({
           {inboxesUnlimited && (
             <div style={{ fontFamily: 'var(--font-sans)', fontSize: 12, color: 'var(--fg-3)' }}>
               {t('billing.inboxesCount', { count: inboxCount })}
+            </div>
+          )}
+          {/* Pro bought before the 2026-10 cap keeps unlimited inboxes. Said
+              once, here, so the "10 mailboxes" on the pricing page does not
+              read as a change to their own plan. */}
+          {proInboxesKept && (
+            <div style={{ fontFamily: 'var(--font-sans)', fontSize: 12, color: 'var(--fg-3)' }}>
+              {t('billing.proInboxesKept')}
+            </div>
+          )}
+          {/* Business bills mailboxes above the included ten, across every
+              workspace on the subscription. Comped accounts pay nothing. */}
+          {currentPlan === 'pro' && !compedScale && (
+            <div style={{ fontFamily: 'var(--font-sans)', fontSize: 12, color: 'var(--fg-3)' }}>
+              {t('billing.businessMailboxRate')}
             </div>
           )}
           {allowanceLine && (
@@ -6490,6 +6507,14 @@ function PlanChangeDialog({ change, currentPlanId, currentPlanName, locale, busy
                   label={t('billing.confirmThen')}
                   value={`${recurring} ${intervalLabel}`}
                 />
+                {/* Business above ten mailboxes: the figure is the base price
+                    plus the extras, so say so rather than show a number that
+                    is not the list price without a reason. */}
+                {preview.extraMailboxes > 0 && (
+                  <div style={{ marginTop: 6, fontFamily: 'var(--font-sans)', fontSize: 12, color: 'var(--fg-3)' }}>
+                    {t('billing.confirmExtraMailboxes', { count: preview.extraMailboxes })}
+                  </div>
+                )}
               </div>
             )}
             {/* The date in the preview is the end of the period being left. It
@@ -7236,6 +7261,7 @@ export function SettingsPage({ user, workspace, workspaces = [], userRole, strip
         maxInboxes={planLimits?.maxInboxes ?? null}
         inboxCount={inboxCount}
         grandfathered={grandfathered}
+        proInboxesKept={planLimits?.proInboxesKept ?? false}
         actionAllowance={actionAllowance}
         businessShaped={businessShaped}
       />

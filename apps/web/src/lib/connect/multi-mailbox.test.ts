@@ -76,9 +76,11 @@ test('no em dash, no claim the product cannot back, and no price to go stale', (
 test('the inbox counts quoted are the plan catalogue\'s', () => {
   assert.equal(PLANS.free.limits.maxInboxes, 1);
   assert.equal(PLANS.personal.limits.maxInboxes, 3);
-  assert.equal(PLANS.solo.limits.maxInboxes, Infinity);
+  // Pro is ten for a new customer since 2026-10-19; Business has no cap.
+  assert.equal(PLANS.solo.limits.maxInboxes, 10);
+  assert.equal(PLANS.pro.limits.maxInboxes, Infinity);
   const en = copy('en');
   for (const text of [en.plans, en.faqA]) {
-    assert.match(text, /Free connects one mailbox, Personal three, and Pro every mailbox you run/);
+    assert.match(text, /Free connects one mailbox, Personal three, Pro up to 10, and Business as many as you need/);
   }
 });

@@ -401,6 +401,11 @@ CREATE TABLE IF NOT EXISTS public.usage_limit_events (
     CONSTRAINT usage_limit_events_workspace_id_fkey FOREIGN KEY (workspace_id) REFERENCES public.workspaces(id) ON DELETE CASCADE
 );
 CREATE INDEX IF NOT EXISTS usage_limit_events_occurred_idx ON public.usage_limit_events (occurred_at DESC);
+-- limit_kind: 'actions' (the MCP action cap) or 'inboxes' (the hosted Pro
+-- inbox cap). mcp-server filters on it; an install created before the column
+-- existed gets it here.
+ALTER TABLE public.usage_limit_events
+  ADD COLUMN IF NOT EXISTS limit_kind text DEFAULT 'actions' NOT NULL;
 CREATE INDEX IF NOT EXISTS usage_limit_events_workspace_occurred_idx ON public.usage_limit_events (workspace_id, occurred_at DESC);
 
 CREATE TABLE IF NOT EXISTS public.user_billing (

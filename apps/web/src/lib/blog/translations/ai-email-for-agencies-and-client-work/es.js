@@ -14,15 +14,15 @@ Hay tres fallos contra los que conviene diseñar: la **fuga entre clientes**, cu
 
 El espacio de trabajo es la unidad de separación. Los buzones, los miembros, las claves de API y la actividad viven dentro de uno, y la frontera se aplica en la base de datos con seguridad a nivel de fila, no filtrando con cuidado en el código de la aplicación. Una clave emitida en el espacio de Acme no puede leer un buzón de Bolt, diga lo que diga la instrucción.
 
-Tener más de un espacio de trabajo es una función de **Team** ($79/mes, $756/año), que además incluye miembros ilimitados con roles, SSO (SAML / OIDC), registro de auditoría y soporte prioritario. La suscripción va asociada a tu cuenta y no a un espacio concreto, así que una sola suscripción Team cubre todos los espacios de cliente que crees. Ponle a cada uno el nombre del cliente, conecta dentro solo los buzones de ese cliente y cambia entre ellos desde la barra lateral del panel.
+Tener más de un espacio de trabajo es una función de **Business** ($39/mes, $374,40/año), que además incluye miembros ilimitados con roles sin coste adicional, y 10 buzones con $3 al mes por cada uno adicional. La suscripción va asociada a tu cuenta y no a un espacio concreto, así que una sola suscripción Business cubre todos los espacios de cliente que crees. Ponle a cada uno el nombre del cliente, conecta dentro solo los buzones de ese cliente y cambia entre ellos desde la barra lateral del panel.
 
-Por debajo de Team, los planes son de una persona en un espacio: **Pro** ($15/mes, $144/año) conecta buzones ilimitados, **Personal** ($9/mes) tres y **Free** uno. Sale más barato, y todos los buzones comparten el mismo radio de impacto. Consulta los [precios](/pricing) y la [matriz de proveedores](/docs/providers).
+Por debajo de Business, los planes son de una persona en un espacio: **Pro** ($15/mes, $144/año) conecta hasta 10 buzones, **Personal** ($9/mes) tres y **Free** uno. Sale más barato, y todos los buzones comparten el mismo radio de impacto. Consulta los [precios](/pricing) y la [matriz de proveedores](/docs/providers).
 
 ## Miembros y roles
 
 Cuatro roles: **owner** (propietario), **admin**, **member** y **viewer**. Solo el propietario puede cambiar roles. Los admins pueden invitar y quitar miembros, pero no pueden quitar a otro admin. Los viewers son de solo lectura, y eso se aplica también en la capa de credenciales: una clave en manos de un viewer solo puede llevar \`read:email\` y \`search:email\`.
 
-Añadir personas es en sí una función de Team, porque Free, Personal y Pro son planes de una sola persona. El montaje que funciona: quien lleva la cuenta de un cliente es admin en el espacio de ese cliente y no es miembro de ningún otro, quien hace triaje es viewer en el único espacio donde trabaja, y nadie salvo tú tiene un acceso que abarque toda tu cartera.
+Añadir personas es en sí una función de Business, porque Free, Personal y Pro son planes de una sola persona. El montaje que funciona: quien lleva la cuenta de un cliente es admin en el espacio de ese cliente y no es miembro de ningún otro, quien hace triaje es viewer en el único espacio donde trabaja, y nadie salvo tú tiene un acceso que abarque toda tu cartera.
 
 ## Claves de API acotadas por encargo
 
@@ -93,7 +93,7 @@ No prometas que la inyección de instrucciones está resuelta. Está contenida, 
 ## Preguntas frecuentes
 
 **¿Necesito una cuenta de MCP Emails distinta para cada cliente?**  
-No. Una cuenta, una suscripción Team y un espacio de trabajo por cliente. La suscripción sigue a tu usuario, así que cada espacio hereda el plan.
+No. Una cuenta, una suscripción Business y un espacio de trabajo por cliente. La suscripción sigue a tu usuario, así que cada espacio hereda el plan.
 
 **¿Puede un cliente ver el correo de otro?**  
 No, si los buzones de cada cliente viven en su propio espacio. La separación se aplica con seguridad a nivel de fila, y una clave emitida en un espacio no puede leer los buzones de otro.
@@ -106,7 +106,7 @@ Sí. Un buzón de Microsoft 365 se conecta con Iniciar sesión con Microsoft, si
 
 ## Siguiente paso
 
-[Crea una cuenta gratis](/signup), conecta un buzón de cliente en solo lectura y lanza una instrucción de triaje antes de tocar nada más. Cuando la separación importe, pasa a Team desde la [página de precios](/pricing). La [documentación](/docs) tiene la referencia completa de herramientas y permisos, y [/security](/security) es la página que le pasas a quien revise la seguridad en casa del cliente.`,
+[Crea una cuenta gratis](/signup), conecta un buzón de cliente en solo lectura y lanza una instrucción de triaje antes de tocar nada más. Cuando la separación importe, pasa a Business desde la [página de precios](/pricing). La [documentación](/docs) tiene la referencia completa de herramientas y permisos, y [/security](/security) es la página que le pasas a quien revise la seguridad en casa del cliente.`,
 };
 
 export default translation;
