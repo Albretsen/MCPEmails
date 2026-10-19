@@ -391,3 +391,91 @@ Deno.test("edge still refuses: where a placement would be a guess", () => {
   // A word typed INTO link text is still never merged.
   assertEquals(mergeTextEditIntoHtml(EDGE_HTML, EDGE_TEXT, EDGE_TEXT.replace("mcpemails.com.", "mcpemails.comX.")), null);
 });
+
+// ═══════════════════════════════════════════════════════════════════════════
+// A link written out as "label (url)" in Claude's text (live claude.ai, v264)
+//
+// Claude's own text said "Learn more at mcpemails.com (https://mcpemails.com)."
+// next to `Learn more at <a href="https://mcpemails.com">mcpemails.com</a>.`.
+// `sameWords` ignores addresses, so that text was stored as is, and " Pineapple"
+// typed at the end of the line found no place in the HTML: the card warned
+// "Saving this edit turns the whole message into plain text". Now the stored
+// text is the HTML's own, and drafts stored before still merge: an address
+// right after a link's words that is that link's address belongs to the link.
+// ═══════════════════════════════════════════════════════════════════════════
+
+const URL_HTML = '<p>Learn more at <a href="https://mcpemails.com">mcpemails.com</a>.</p>';
+const URL_TEXT = "Learn more at mcpemails.com (https://mcpemails.com).";
+const URL_ANGLE = "Learn more at mcpemails.com <https://mcpemails.com>.";
+
+Deno.test("link url: textPartMatchingHtml stores the HTML's own text when Claude only adds the address", () => {
+  assertEquals(textPartMatchingHtml(URL_TEXT, URL_HTML), "Learn more at mcpemails.com.");
+  assertEquals(textPartMatchingHtml(URL_ANGLE, URL_HTML), "Learn more at mcpemails.com.");
+  assertEquals(textPartMatchingHtml("Learn more at mcpemails.com [https://mcpemails.com].", URL_HTML), "Learn more at mcpemails.com.");
+  assertEquals(textPartMatchingHtml("Learn more at mcpemails.com https://mcpemails.com.", URL_HTML), "Learn more at mcpemails.com.");
+  const full = EDGE_HTML;
+  assertEquals(
+    textPartMatchingHtml(EDGE_TEXT.replace("mcpemails.com.", "mcpemails.com (https://mcpemails.com)."), full),
+    EDGE_TEXT,
+  );
+  // Another address than the link's is not the link's: the text stays.
+  const other = "Learn more at mcpemails.com (https://other.example).";
+  assertEquals(textPartMatchingHtml(other, URL_HTML), other);
+});
+
+Deno.test("link url: a draft stored with the address still merges a word typed at the end", () => {
+  assertEquals(
+    mergeTextEditIntoHtml(URL_HTML, URL_TEXT, URL_TEXT + " Pineapple"),
+    URL_HTML.replace("</a>.</p>", "</a>. Pineapple</p>"),
+  );
+  assertEquals(
+    mergeTextEditIntoHtml(URL_HTML, URL_ANGLE, URL_ANGLE + " Pineapple"),
+    URL_HTML.replace("</a>.</p>", "</a>. Pineapple</p>"),
+  );
+  // In a full message, at the end of the line, and as before a new paragraph.
+  const text = EDGE_TEXT.replace("mcpemails.com.", "mcpemails.com (https://mcpemails.com).");
+  assertEquals(
+    mergeTextEditIntoHtml(EDGE_HTML, text, text + " Pineapple"),
+    EDGE_HTML.replace("</a>.</p>", "</a>. Pineapple</p>"),
+  );
+  assertEquals(mergeTextEditIntoHtml(EDGE_HTML, text, text + "\n\nNew."), EDGE_HTML + "<p>New.</p>");
+  assertEquals(
+    mergeTextEditIntoHtml(EDGE_HTML, text, text.replace("moved", "pushed")),
+    EDGE_HTML.replace("moved", "pushed"),
+  );
+});
+
+Deno.test("link url: a link mid-sentence, written with its address", () => {
+  const html = '<p>See <a href="https://x.example/docs">the docs</a> for details.</p>';
+  const text = "See the docs (https://x.example/docs) for details.";
+  assertEquals(
+    mergeTextEditIntoHtml(html, text, text.replace("for details", "for all details")),
+    html.replace("for details", "for all details"),
+  );
+  assertEquals(
+    mergeTextEditIntoHtml(html, text, text.replace("docs) for", "docs) now for")),
+    html.replace("</a> for", "</a> now for"),
+  );
+  // Claude's text without the address already says what the HTML says: kept.
+  assertEquals(textPartMatchingHtml("See the docs for details.", html), "See the docs for details.");
+  // With it, the HTML's own text is stored, which writes it the same way.
+  assertEquals(textPartMatchingHtml("See the docs <https://x.example/docs> for details.", html), text);
+});
+
+Deno.test("link url: edits inside the address are still refused, never shown as text", () => {
+  assertEquals(
+    mergeTextEditIntoHtml(URL_HTML, URL_TEXT, URL_TEXT.replace("(https://mcpemails.com)", "(https://mcpemails.com/x)")),
+    null,
+  );
+  assertEquals(
+    mergeTextEditIntoHtml(URL_HTML, URL_TEXT, URL_TEXT.replace("(https://mcpemails.com)", "(https://mcpemails.com today)")),
+    null,
+  );
+  // Deleting the address is an edit inside it too: not guessed at.
+  assertEquals(mergeTextEditIntoHtml(URL_HTML, URL_TEXT, "Learn more at mcpemails.com."), null);
+  // An address the person types elsewhere is their own words: shown as typed.
+  assertEquals(
+    mergeTextEditIntoHtml(URL_HTML, URL_TEXT, "Hi (https://mcpemails.com). " + URL_TEXT),
+    "<p>Hi (https://mcpemails.com). " + URL_HTML.slice(3),
+  );
+});
