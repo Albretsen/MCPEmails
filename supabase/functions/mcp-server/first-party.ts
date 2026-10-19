@@ -138,10 +138,16 @@ export function wantsTrashIds(): boolean {
  * store) this is the literal the command has always carried.
  */
 export function summaryPreviewItem(): string {
+  const bytes = summaryPreviewBytes();
+  return bytes === 2048 ? " BODY.PEEK[1]<0.2048>" : bytes > 0 ? ` BODY.PEEK[1]<0.${bytes}>` : "";
+}
+
+/** How many octets of part one {@link summaryPreviewItem} asks for; 0 for none. */
+export function summaryPreviewBytes(): number {
   const bytes = firstPartyContext.getStore()?.listPreviewBytes;
-  if (bytes === undefined) return " BODY.PEEK[1]<0.2048>";
-  if (!Number.isInteger(bytes) || bytes <= 0) return "";
-  return ` BODY.PEEK[1]<0.${Math.min(bytes, 8192)}>`;
+  if (bytes === undefined) return 2048;
+  if (!Number.isInteger(bytes) || bytes <= 0) return 0;
+  return Math.min(bytes, 8192);
 }
 
 // ── Conversation threading (client-api only) ────────────────────────────────

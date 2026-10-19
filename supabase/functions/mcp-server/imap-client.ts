@@ -52,6 +52,7 @@ import {
 } from "./relay-registry.ts";
 import {
   firstPartyContext,
+  summaryPreviewBytes,
   summaryPreviewItem,
   summaryReferencesItem,
   wantsThreadHeaders,
@@ -1576,14 +1577,55 @@ export class ImapClient {
       maxLiteralBytes: options.maxLiteralBytes,
     });
     const summaries: ImapMessageSummary[] = [];
+    const prefixBytes = previewPart === "" ? 0 : summaryPreviewBytes();
+    const cut = new Map<number, PreviewCut>();
     if (resp.status === "OK") {
       for (const line of resp.untagged) {
         if (!/^\* \d+ FETCH /.test(line)) continue;
-        const parsed = parseFetchLine(line, options.includeCc === true);
+        const parsed = parseFetchLine(line, options.includeCc === true, prefixBytes > 0 ? { prefixBytes, cut } : undefined);
         if (parsed) summaries.push(parsed);
       }
     }
+    if (cut.size > 0) await this.extendCutPreviewsUnlocked(summaries, cut, prefixBytes);
     return { status: resp.status, text: resp.text, summaries };
+  }
+
+  /**
+   * The second look a preview gets when the prefix held no text at all.
+   *
+   * An HTML-only newsletter very often opens with 5-30 KB of `<style>`, so its
+   * 2 KB prefix is CSS from end to end and previews as "" (CSS is never shown).
+   * For those rows only, ONE more UID FETCH asks for the octets that follow
+   * the prefix, up to {@link PREVIEW_EXTENDED_BYTES} in all, and the preview is
+   * decoded again from prefix + continuation. Rows whose prefix had text cost
+   * nothing, and a page of them costs one round trip, not one per row: that
+   * is the bound that matters on Yahoo, where a round trip dominates. A row
+   * still empty after it stays "": there is no text early enough to show.
+   *
+   * Failure here never fails the listing. A NO/BAD reply leaves the rows as
+   * they were; a broken connection still throws, as any command would.
+   */
+  private async extendCutPreviewsUnlocked(
+    summaries: ImapMessageSummary[],
+    cut: Map<number, PreviewCut>,
+    prefixBytes: number,
+  ): Promise<void> {
+    const more = PREVIEW_EXTENDED_BYTES - prefixBytes;
+    if (more <= 0) return;
+    const tag = this.nextTag();
+    await this.write(`${tag} UID FETCH ${[...cut.keys()].join(",")} (UID BODY.PEEK[1]<${prefixBytes}.${more}>)${CRLF}`);
+    const resp = await this.readTagged(tag, { maxLiteralBytes: PREVIEW_EXTENDED_BYTES * 2 });
+    if (resp.status !== "OK") return;
+    const byUid = new Map(summaries.map((s) => [s.uid, s]));
+    for (const line of resp.untagged) {
+      if (!/^\* \d+ FETCH /.test(line)) continue;
+      const continuation = parseContinuationLine(line);
+      if (continuation === null) continue;
+      const entry = cut.get(continuation.uid);
+      const summary = byUid.get(continuation.uid);
+      if (!entry || !summary) continue;
+      summary.preview = cleanPreviewFromBodyPart(entry.source + continuation.source, entry.part);
+    }
   }
 
   /**
@@ -3175,8 +3217,56 @@ async function withTimeout<T>(p: Promise<T>, ms: number): Promise<T> {
 
 type Token = string | Token[];
 
-/** Parse a single "* N FETCH (...)" line into a summary. */
-function parseFetchLine(line: string, includeCc = false): ImapMessageSummary | null {
+/**
+ * Everything a preview needs to be decoded again from a longer source: the
+ * prefix the summary FETCH returned and what BODYSTRUCTURE says part one is.
+ */
+interface PreviewCut {
+  source: string;
+  part: PreviewPartInfo | null;
+}
+
+/**
+ * How far into part one a preview may look, in octets, when its prefix held no
+ * text: the bounded scan window of `extendCutPreviewsUnlocked`. 32 KB covers
+ * the stylesheet of the newsletter templates seen in real mail (Mailchimp,
+ * Klaviyo, HubSpot: 6-25 KB) and caps a page of 25 such rows at 800 KB.
+ */
+export const PREVIEW_EXTENDED_BYTES = 32 * 1024;
+
+/**
+ * `* N FETCH (UID u BODY[1]<offset> {n} ...)`: the continuation of a cut
+ * preview, or null when the line carries no UID or no body string.
+ */
+function parseContinuationLine(line: string): { uid: number; source: string } | null {
+  const open = line.indexOf("(");
+  if (open === -1) return null;
+  const tokens = tokenize(line.slice(open));
+  const attrs = Array.isArray(tokens[0]) ? tokens[0] : tokens;
+  let uid = 0;
+  let source: string | null = null;
+  for (let i = 0; i < attrs.length; i++) {
+    const key = attrs[i];
+    if (key === "UID" && typeof attrs[i + 1] === "string") uid = Number(attrs[++i]);
+    else if (typeof key === "string" && key.startsWith("BODY[") && typeof attrs[i + 1] === "string") {
+      source = attrs[++i] as string;
+    }
+  }
+  return uid > 0 && source !== null ? { uid, source } : null;
+}
+
+/**
+ * Parse a single "* N FETCH (...)" line into a summary.
+ *
+ * `previewCut`, when given, collects the rows whose preview came out "" from a
+ * prefix the fetch cut (exactly `prefixBytes` octets of a longer text part),
+ * for `extendCutPreviewsUnlocked` to look further into.
+ */
+function parseFetchLine(
+  line: string,
+  includeCc = false,
+  previewCut?: { prefixBytes: number; cut: Map<number, PreviewCut> },
+): ImapMessageSummary | null {
   const open = line.indexOf("(");
   if (open === -1) return null;
   const tokens = tokenize(line.slice(open));
@@ -3244,7 +3334,15 @@ function parseFetchLine(line: string, includeCc = false): ImapMessageSummary | n
     }
   }
   if (previewSource !== null) {
-    preview = cleanPreviewFromBodyPart(previewSource, structure ? partOneOfStructure(structure) : null);
+    const part = structure ? partOneOfStructure(structure) : null;
+    preview = cleanPreviewFromBodyPart(previewSource, part);
+    if (
+      preview === "" && uid && previewCut !== undefined && previewSource.length >= previewCut.prefixBytes &&
+      // A text part, or a nested multipart (part null), that goes on past the prefix.
+      (part === null ? structure !== null : part.type === "text" && (part.size == null || part.size > previewSource.length))
+    ) {
+      previewCut.cut.set(uid, { source: previewSource, part });
+    }
   }
 
   if (!uid) return null;
