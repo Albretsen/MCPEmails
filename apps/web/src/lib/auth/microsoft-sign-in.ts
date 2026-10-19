@@ -43,7 +43,8 @@ export type MicrosoftErrorReason =
   | 'microsoft_email_unverified'
   | 'microsoft_admin_approval'
   | 'oauth_cancelled'
-  | 'provider_email_unverified';
+  | 'provider_email_unverified'
+  | 'sso_required';
 
 function timeOf(identity: IdentityLike): number {
   for (const value of [identity.last_sign_in_at, identity.updated_at, identity.created_at]) {
@@ -117,6 +118,10 @@ export function oauthErrorReason(params: URLSearchParams): MicrosoftErrorReason 
   const code = params.get('error_code') ?? '';
   const description = params.get('error_description') ?? '';
 
+  // Refusals from our own Supabase auth hooks (migration
+  // 20261019153000_auth_hooks_sso_enforcement.sql) arrive as the description.
+  if (/\bsso_required\b/.test(description)) return 'sso_required';
+  if (/\bmicrosoft_email_unverified\b/.test(description)) return 'microsoft_email_unverified';
   if (ADMIN_APPROVAL_CODES.test(description) || /admin(istrator)? (approval|consent)/i.test(description)) {
     return 'microsoft_admin_approval';
   }

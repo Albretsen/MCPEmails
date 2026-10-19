@@ -90,6 +90,9 @@ test('OAuth error redirects map to named reasons', () => {
   assert.equal(p('error=access_denied&error_description=AADSTS65004%3A+User+declined+to+consent'), 'oauth_cancelled');
   assert.equal(p('error=access_denied&error_description=The+user+cancelled'), 'oauth_cancelled');
   assert.equal(p('error=access_denied&error_code=provider_email_needs_verification&error_description=Unverified+email'), 'provider_email_unverified');
+  // Refusals from our auth hooks (Before User Created on a new OAuth account).
+  assert.equal(p('error=access_denied&error_description=sso_required'), 'sso_required');
+  assert.equal(p('error=server_error&error_description=Hook+error%3A+microsoft_email_unverified'), 'microsoft_email_unverified');
   // Supabase's own denials are not a cancel.
   assert.equal(p('error=access_denied&error_code=user_banned'), null);
   assert.equal(p('error=access_denied&error_code=signup_disabled'), null);
