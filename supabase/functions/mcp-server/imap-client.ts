@@ -1865,6 +1865,27 @@ export class ImapClient {
   }
 
   /**
+   * Gmail over IMAP (X-GM-EXT-1) only: add or remove Gmail LABELS on messages
+   * of the selected mailbox, `UID STORE <set> ±X-GM-LABELS.SILENT (<labels>)`.
+   * System labels go as Gmail spells them (`\\Inbox`); any other label is sent
+   * as a quoted, modified-UTF-7 encoded name. The message keeps its UID in the
+   * selected mailbox, which is what makes this the way to archive a message
+   * addressed by its All Mail UID (imap-gmail-relocate.ts).
+   */
+  uidStoreGmailLabels(uids: number[], labels: string[], mode: "add" | "remove"): Promise<void> {
+    if (uids.length === 0 || labels.length === 0) return Promise.resolve();
+    const list = labels.map((label) => (/^\\[A-Za-z]+$/.test(label) ? label : quoteMailbox(label))).join(" ");
+    return this.runExclusive(async () => {
+      const tag = this.nextTag();
+      await this.write(`${tag} UID STORE ${toUidSet(uids)} ${mode === "add" ? "+" : "-"}X-GM-LABELS.SILENT (${list})${CRLF}`);
+      const resp = await this.readTagged(tag);
+      if (resp.status !== "OK") {
+        throw new Error(`UID STORE failed: ${resp.text}`);
+      }
+    });
+  }
+
+  /**
    * UID COPY messages to a destination mailbox.
    * Accepts bulk UID sets.
    *
