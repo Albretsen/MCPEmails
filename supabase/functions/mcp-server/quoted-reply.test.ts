@@ -9,11 +9,13 @@
 
 import { assert, assertEquals } from "jsr:@std/assert@1";
 import {
+  bodyKeepingQuote,
   offsetOfLine,
   quotedHtmlStart,
   quotedTextLine,
   splitQuotedText,
 } from "./quoted-reply.ts";
+import { applySignature, plainTextBodyToHtml } from "./signature-compose.ts";
 import {
   applyDraftPatch,
   buildDraftEditorEnvelope,
@@ -285,4 +287,71 @@ Deno.test("save: with a rich signature above the quote, the signature block and 
   assert(html.includes('<div class="mcpemails-signature"><p><b>Asgeir Albretsen</b></p></div>'), html);
   assert(html.endsWith(GMAIL_QUOTE_HTML), html);
   assertEquals(html.split("mcpemails-signature").length, 2, "one signature block");
+});
+
+// ═══════════════════════════════════════════════════════════════════════════
+// draft{action:"update"} with a new body keeps the quote (live re-test 2026-10-17)
+// ═══════════════════════════════════════════════════════════════════════════
+
+const SIGN_INBOX = { signature_enabled: true, signature_text: "Asgeir Albretsen" };
+const sign = (on = true) => (p: { textBody: string; htmlBody?: string }) =>
+  applySignature({ ...p }, SIGN_INBOX, on ? {} : { include_signature: false });
+const STORED_REPLY = {
+  text: "Old words.\n\n-- \nAsgeir Albretsen\n\nOn Mon, 7 Sep 2026 17:32:55 +0000, Dana <dana@example.com> wrote:\n> Friday?\n> Dana",
+  html: '<p>Old words.</p>\n<div class="mcpemails-signature">Asgeir Albretsen</div>\n' +
+    '<div class="gmail_quote">On Mon, 7 Sep 2026, Dana &lt;dana@example.com&gt; wrote:<blockquote class="gmail_quote">Friday?</blockquote></div>',
+};
+const STORED_QUOTE = splitQuotedText(STORED_REPLY.text)!.quote;
+
+Deno.test("update: a new body without the quote keeps the stored quote under the new signature", () => {
+  const out = bodyKeepingQuote("New words.", undefined, STORED_REPLY, sign(), plainTextBodyToHtml);
+  assert(out.quoteKept);
+  assert(out.signed);
+  assertEquals(out.textBody, "New words.\n\n-- \nAsgeir Albretsen" + STORED_QUOTE);
+  assert(quotedTextLine(out.textBody) > 0, "the card is told where it starts");
+  // The stored HTML quote block follows the new HTML part byte for byte.
+  assert(out.htmlBody!.endsWith(STORED_REPLY.html.slice(quotedHtmlStart(STORED_REPLY.html))), out.htmlBody);
+  assertEquals(out.htmlBody!.split("<blockquote").length, 2, "one quote block");
+});
+
+Deno.test("update: a body that already carries the quote is not doubled, and the signature goes above it", () => {
+  const resent = "New words." + STORED_QUOTE;
+  const out = bodyKeepingQuote(resent, undefined, STORED_REPLY, sign(), plainTextBodyToHtml);
+  assertEquals(out.quoteKept, false);
+  assertEquals(out.textBody, "New words.\n\n-- \nAsgeir Albretsen" + STORED_QUOTE);
+  assertEquals(out.textBody.split("wrote:").length, 2, "one attribution");
+  assertEquals(out.htmlBody!.split("<blockquote").length, 2, "one quote in the HTML too");
+  // Claude's workaround (quote and signature sent back, signature off) is unchanged.
+  const workaround = "New words.\n\n-- \nAsgeir Albretsen" + STORED_QUOTE;
+  const same = bodyKeepingQuote(workaround, undefined, STORED_REPLY, sign(false), plainTextBodyToHtml);
+  assertEquals(same.textBody, workaround);
+  assertEquals(same.quoteKept, false);
+});
+
+Deno.test("update: a re-sent quote the detector misses is still not doubled", () => {
+  // The attribution kept, but an inline answer between quoted lines.
+  const body = "New words.\n\nOn Mon, 7 Sep 2026 17:32:55 +0000, Dana <dana@example.com> wrote:\n> Friday?\nYes, Friday.";
+  const out = bodyKeepingQuote(body, undefined, STORED_REPLY, sign(false), plainTextBodyToHtml);
+  assertEquals(out.quoteKept, false);
+  assertEquals(out.textBody, body);
+  // Caller HTML with a quote block of its own: nothing is carried either.
+  const html = bodyKeepingQuote("New.", '<p>New.</p><blockquote type="cite">x</blockquote>', STORED_REPLY, sign(false), plainTextBodyToHtml);
+  assertEquals(html.quoteKept, false);
+  assertEquals(html.textBody, "New.");
+});
+
+Deno.test("update: no stored quote, or no signature, behaves as before", () => {
+  const plain = bodyKeepingQuote("New.", undefined, { text: "Old.", html: null }, sign(), plainTextBodyToHtml);
+  assertEquals(plain.quoteKept, false);
+  assertEquals(plain.textBody, "New.\n\n-- \nAsgeir Albretsen");
+  const none = bodyKeepingQuote("New.", undefined, null, sign(false), plainTextBodyToHtml);
+  assertEquals(none, { textBody: "New.", quoteKept: false, signed: false });
+  // Signature off, stored quote kept: the HTML part keeps the client's quote block.
+  const off = bodyKeepingQuote("New.", undefined, STORED_REPLY, sign(false), plainTextBodyToHtml);
+  assert(off.quoteKept);
+  assertEquals(off.textBody, "New." + STORED_QUOTE);
+  assert(off.htmlBody!.includes('<div class="gmail_quote">'), off.htmlBody);
+  // A CRLF stored text (raw IMAP) does not leave mixed line endings.
+  const crlf = bodyKeepingQuote("New.", undefined, { text: STORED_REPLY.text.replace(/\n/g, "\r\n") }, sign(false), plainTextBodyToHtml);
+  assert(!crlf.textBody.includes("\r"), JSON.stringify(crlf.textBody));
 });

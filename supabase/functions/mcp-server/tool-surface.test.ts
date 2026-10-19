@@ -1137,8 +1137,10 @@ Deno.test("draft: the description, the update hint and draft_list say what is tr
   // "kept", not "kept exactly": on IMAP and Gmail the message is rebuilt and
   // only the decoded text is guaranteed. See draft-rebuild.ts.
   assert(/'update' replaces only the fields passed: omit body and the stored body text is kept\./.test(description));
+  // Live re-test 2026-10-17: a new body no longer drops a reply's quote.
+  assert(/A new body keeps a reply's quoted original \(quote_kept\) unless it includes one\./.test(description));
   assert(!/exactly/.test(description), "no description promises an exact copy");
-  assert(/The signature is embedded on create and on an update that passes body/.test(description));
+  assert(/Any inbox signature is embedded on create and on an update that passes body/.test(description));
   // The card sentence is true with the editor off as well as on.
   assert(
     /Where the draft editor card is on, hosts that render MCP Apps cards show the draft to the user in an editable card, where the user can change it\./

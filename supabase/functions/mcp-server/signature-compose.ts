@@ -177,6 +177,27 @@ export interface ApplySignatureOptions {
 }
 
 /**
+ * What `applySignature` did, as a write result reports it. Without this the
+ * model read the `include_signature` default and told users "your signature
+ * was added" on inboxes that have none.
+ *   - appended: a signature was added to the body.
+ *   - skipped: the call passed `include_signature: false`.
+ *   - disabled: the inbox has a signature turned off.
+ *   - none_configured: the inbox has no signature stored.
+ */
+export type SignatureOutcome = "appended" | "skipped" | "disabled" | "none_configured";
+
+/** The outcome `applySignature(params, inbox, opts)` has. Pure. */
+export function signatureOutcome(
+  inbox: SignatureInbox,
+  opts: ApplySignatureOptions = {},
+): SignatureOutcome {
+  if (opts.include_signature === false) return "skipped";
+  if (composeSignatureBlocks(inbox)) return "appended";
+  return inbox.signature_enabled === false ? "disabled" : "none_configured";
+}
+
+/**
  * Apply the inbox signature to a NEW-MESSAGE body params object in place,
  * before `buildMimeMessage()` serializes it. Mutates and returns `params`.
  *

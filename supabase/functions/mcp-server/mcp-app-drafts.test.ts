@@ -2840,7 +2840,10 @@ Deno.test("deferred body: every envelope an old bundle CAN still receive stays i
     assertEquals(out.result.content.length, 1, `${name}: one content block`);
   }
   // The save line is still the body-free summary.
-  assert(save.result.content[0].text.startsWith("Draft saved. Draft Drafts:3."));
+  assert(save.result.content[0].text.startsWith("Draft saved. To "));
+  // The id is a labelled handle at the end, never part of the sentence.
+  assert(save.result.content[0].text.endsWith(' draft_id: "Drafts:3"'));
+  assertEquals(save.result.content[0].text.split("Drafts:3").length, 2, "the id appears once");
   assert(!save.result.content[0].text.includes("Here they are."));
 
   const receipt = draftReceiptEnvelope({

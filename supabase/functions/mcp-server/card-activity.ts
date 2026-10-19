@@ -54,6 +54,21 @@
 //   * a non-draft tool: this costs a database round trip, and the draft tools
 //     are where a model goes to find out about a draft.
 //
+// ── A model's draft_read: told, NOT claimed (re-test 2026-10-17) ───────────
+// Live in claude.ai the card's `ui/update-model-context` reached the model
+// neither on the next turn nor later (see apps/mcp-app/src/model-context.ts),
+// and the descriptions send a model to `draft_read` before it states a
+// draft's state, so that read is where the model actually looks. Its result
+// shows the current subject and recipients but not WHAT the editor changed,
+// which is what "what did I change in the card?" asks. So a successful
+// `draft_read` carries the same note about its own draft's line
+// (`peekTargetDraftId`), but only READS the rows: the card makes `draft_read`
+// calls too (restore, deferred body, the focus re-check), with the same
+// arguments, and a claim there would hand the note to a result no model sees.
+// The note therefore stays for the next model draft call that claims it, and
+// may be told on every model read until then. Same scope as above: one key,
+// one inbox, one draft's line, no ids.
+//
 // ── Per key ────────────────────────────────────────────────────────────────
 // A row carries the API key the editor call came in on, and only a call on
 // that key claims it. A save made in Claude's card is news to Claude's
@@ -157,6 +172,12 @@ export interface CardActivityStore {
     since: string,
     at: string,
   ): Promise<CardActivityRow[]>;
+  /** The same rows `claim` would return, left unreported. */
+  peek(
+    scope: CardActivityScope,
+    target: CardActivityTarget,
+    since: string,
+  ): Promise<CardActivityRow[]>;
 }
 
 type Logger = (event: string, details: Record<string, unknown>) => void;
@@ -242,7 +263,7 @@ function draftName(subject: string | null | undefined): string {
  */
 export function cardActivityNote(
   rows: readonly CardActivityEvent[],
-  opts: { subject?: string | null } = {},
+  opts: { subject?: string | null; read?: boolean } = {},
 ): string | null {
   if (rows.length === 0) return null;
   const sorted = [...rows].sort((a, b) => Date.parse(a.occurredAt) - Date.parse(b.occurredAt));
@@ -275,7 +296,11 @@ export function cardActivityNote(
     const at = instant(send.occurredAt) ?? "an unrecorded time";
     parts.push(`At ${at} it was sent, so it is no longer a draft.`);
   } else if (saves.length > 0) {
-    parts.push("draft_read returns its current subject, recipients and text.");
+    parts.push(
+      opts.read
+        ? "This result shows its current subject, recipients and text."
+        : "draft_read returns its current subject, recipients and text.",
+    );
   }
   return parts.join(" ");
 }
@@ -310,6 +335,40 @@ export async function takeCardActivityNote(
     log("draft_card_activity_claim_failed", { inbox_id: scope.inboxId, error: message(error) });
     return null;
   }
+}
+
+/**
+ * Word the unreported editor actions of ONE draft for a model's `draft_read`,
+ * without claiming them (see "A model's draft_read"), or null. Never throws.
+ */
+export async function peekCardActivityNote(
+  store: CardActivityStore | null | undefined,
+  scope: CardActivityScope,
+  target: CardActivityTarget,
+  opts: { subject?: string | null; nowMs?: number; log?: Logger } = {},
+): Promise<string | null> {
+  const log = opts.log ?? defaultLog;
+  const nowMs = opts.nowMs ?? Date.now();
+  const draftIds = [...new Set(target.draftIds.filter((id) => typeof id === "string" && id.length > 0))];
+  if (!store || (!target.lineId && draftIds.length === 0)) return null;
+  try {
+    const since = new Date(nowMs - CARD_ACTIVITY_WINDOW_MS).toISOString();
+    const rows = await store.peek(scope, { lineId: target.lineId, draftIds }, since);
+    return cardActivityNote(rows, { subject: opts.subject, read: true });
+  } catch (error) {
+    log("draft_card_activity_peek_failed", { inbox_id: scope.inboxId, error: message(error) });
+    return null;
+  }
+}
+
+/**
+ * The draft a successful `draft_read` names, whose note it carries without
+ * claiming it (see "A model's draft_read"), or null.
+ */
+export function peekTargetDraftId(dispatchName: string, args: unknown): string | null {
+  if (dispatchName !== "draft_read") return null;
+  const a = args && typeof args === "object" && !Array.isArray(args) ? args as Record<string, unknown> : {};
+  return typeof a["draft_id"] === "string" && a["draft_id"].length > 0 ? a["draft_id"] : null;
 }
 
 /**
@@ -486,6 +545,26 @@ export function postgrestCardActivityStore(
       const seen = new Set<string>();
       return rows.filter((r) => !seen.has(r.id) && (seen.add(r.id), true));
     },
+    // `claim`'s filters exactly, as a select: nothing is marked.
+    async peek(scope, target, since) {
+      const peekBy = async (column: "line_id" | "draft_id", values: string[]) => {
+        let q = client
+          .from("draft_card_activity")
+          .select(CARD_ACTIVITY_COLUMNS)
+          .eq("workspace_id", scope.workspaceId)
+          .eq("inbox_id", scope.inboxId)
+          .eq("api_key_id", scope.apiKeyId);
+        q = values.length === 1 ? q.eq(column, values[0]) : q.in(column, values);
+        const { data, error } = await q.is("reported_at", null).gte("occurred_at", since);
+        if (error) throw new Error(error.message);
+        return ((data ?? []) as Record<string, unknown>[]).map(cardActivityRowFrom);
+      };
+      const rows: CardActivityRow[] = [];
+      if (target.lineId) rows.push(...await peekBy("line_id", [target.lineId]));
+      if (target.draftIds.length > 0) rows.push(...await peekBy("draft_id", target.draftIds));
+      const seen = new Set<string>();
+      return rows.filter((r) => !seen.has(r.id) && (seen.add(r.id), true));
+    },
   };
 }
 
@@ -510,6 +589,15 @@ export class FakeCardActivityStore implements CardActivityStore {
     since: string,
     at: string,
   ): Promise<CardActivityRow[]> {
+    return this.match(scope, target, since, at);
+  }
+
+  private match(
+    scope: CardActivityScope,
+    target: CardActivityTarget,
+    since: string,
+    at: string | null,
+  ): Promise<CardActivityRow[]> {
     if (this.failing) return Promise.reject(new Error("relation does not exist"));
     const out: CardActivityRow[] = [];
     for (const r of this.rows) {
@@ -519,10 +607,14 @@ export class FakeCardActivityStore implements CardActivityStore {
         target.draftIds.includes(r.draftId);
       if (!ofTarget) continue;
       if (r.reportedAt !== null || Date.parse(r.occurredAt) < Date.parse(since)) continue;
-      r.reportedAt = at;
+      if (at !== null) r.reportedAt = at;
       const { workspaceId: _w, inboxId: _i, apiKeyId: _k, reportedAt: _r, ...row } = r;
       out.push(row);
     }
     return Promise.resolve(out);
+  }
+
+  peek(scope: CardActivityScope, target: CardActivityTarget, since: string): Promise<CardActivityRow[]> {
+    return this.match(scope, target, since, null);
   }
 }

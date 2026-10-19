@@ -315,15 +315,20 @@ function mergeLine(html: string, oldText: string, oldLine: string, newLine: stri
   return null;
 }
 
-/** Letters and digits only, with web addresses left out. */
+/**
+ * Letters and digits only, with web addresses left out, and the number of a
+ * numbered line ("1. ", "2) ") too: an `<ol>` numbers its items without any
+ * digit in the HTML's text (card re-test, 2026-10-17).
+ */
 function wordsOf(text: string): string {
-  return text.replace(/\b(?:https?:\/\/|mailto:|www\.)[^\s<>()\[\]]+/gi, " ")
+  return text.replace(/^[ \t]*\d{1,3}[.)][ \t]+/gm, " ")
+    .replace(/\b(?:https?:\/\/|mailto:|www\.)[^\s<>()\[\]]+/gi, " ")
     .replace(/[^\p{L}\p{N}]+/gu, "");
 }
 
 /**
  * True when the HTML part and the text part say the same words, ignoring
- * punctuation, layout and addresses ("- " bullets, "> " quotes, a link's URL
+ * punctuation, layout and addresses ("- " bullets, "1. " numbers, "> " quotes, a link's URL
  * written out in the text).
  *
  * A merge changes only the lines that were edited and carries the rest of the
@@ -412,4 +417,178 @@ export function htmlHasFormatting(html: string | null | undefined): boolean {
     }
   }
   return false;
+}
+
+// ── A TEXT PART THAT SAYS WHAT THE HTML SAYS (card re-test, 2026-10-17) ──────
+// `sameWords` gates every merge, and on the drafts Claude actually writes it
+// never passed. `draft{action:"create"}` requires a plain-text `body`, and
+// Claude writes its own: "Learn more: https://mcpemails.com" in the text next
+// to `Learn more at <a href="…">mcpemails.com</a>` in the HTML, "- item" next
+// to `<li>item</li>`. So one changed word in the card warned "Saving this edit
+// turns the whole message into plain text", and saving stripped the heading,
+// the list and the link (live claude.ai re-test, 2026-10-17). When Claude was
+// made to write the text word for word from the HTML, the same one-word edit
+// kept every tag: the merge was fine, the stored pair was not.
+//
+// So when an agent writes both parts (create, reply, update) and the HTML is
+// formatted and says different words, the stored text part is the HTML's own
+// text, read off it here, instead of the agent's. The merge gate is unchanged
+// and still refuses parts that disagree; the card still asks it the same
+// question as the server. What changes is that the server no longer stores a
+// disagreement to begin with.
+//
+// The HTML wins because it is what nearly every recipient reads and what the
+// card's "Show formatting" shows. The result is used only when `sameWords`
+// holds for it, so it carries every word of the HTML and nothing else (link
+// addresses aside). Anything this reader gets wrong fails that check and leaves
+// the agent's text exactly as it was, which is the behaviour before this.
+// Unformatted HTML and parts that already agree are never touched. It runs on
+// the agent's own parts, before the signature or the quoted original is added
+// (`applySignature`, `buildReplyTextBody`), so neither is involved.
+//
+// A draft stored before this, or written elsewhere with parts that disagree,
+// still falls back with the warning: still true, just not fixed here.
+
+/** Elements that end a paragraph: a blank line after them. */
+const PARAGRAPH_ELEMENTS = new Set([
+  "p", "h1", "h2", "h3", "h4", "h5", "h6", "dl", "blockquote", "pre", "table", "hr",
+]);
+
+/** Elements that end a line. */
+const LINE_ELEMENTS = new Set([
+  "div", "li", "tr", "dt", "dd", "section", "article", "header", "footer", "main", "nav",
+  "aside", "figure", "figcaption", "address", "center", "form", "fieldset",
+]);
+
+/** The address of an `<a>` tag, when it is one a reader can type in. */
+function linkAddress(attrs: string): string | null {
+  const m = /\bhref\s*=\s*(?:"([^"]*)"|'([^']*)'|([^\s"'>]+))/i.exec(attrs);
+  const raw = (m?.[1] ?? m?.[2] ?? m?.[3] ?? "").trim().replace(/&amp;/gi, "&");
+  return /^(?:https?:\/\/|mailto:)\S+$/i.test(raw) ? raw : null;
+}
+
+/** An address, or a link's words, reduced to compare: no scheme, no `www.`, no trailing slash. */
+function bareAddress(s: string): string {
+  return s.trim().toLowerCase().replace(/^(?:https?:\/\/|mailto:)/, "").replace(/^www\./, "")
+    .replace(/\/+$/, "");
+}
+
+/**
+ * The HTML read as plain text the way a person would type it: a line per
+ * block with a blank line after a paragraph, "- " or "1. " before a list item,
+ * and a link's address after its words when the words are not the address.
+ */
+function htmlAsText(html: string): string {
+  let out = "";
+  let gap = 0; // line breaks owed before the next visible character
+  let space = false; // a space owed before it
+  let markerOnly = false; // the current line holds just a list marker so far
+  const lists: Array<{ ordered: boolean; n: number }> = [];
+  const links: Array<{ href: string | null; from: number }> = [];
+  const owe = (lines: number) => {
+    if (markerOnly) return; // `<li><p>item</p></li>` stays on the marker's line
+    gap = Math.max(gap, lines);
+    space = false;
+  };
+  const put = (s: string) => {
+    if (out.length > 0 && gap > 0) out += "\n".repeat(gap);
+    else if (space && out.length > 0 && !out.endsWith("\n") && !out.endsWith(" ")) out += " ";
+    gap = 0;
+    space = false;
+    markerOnly = false;
+    out += s;
+  };
+  let i = 0;
+  while (i < html.length) {
+    const c = html[i];
+    if (c === "<") {
+      if (html.startsWith("<!--", i)) {
+        const end = html.indexOf("-->", i + 4);
+        i = end === -1 ? html.length : end + 3;
+        continue;
+      }
+      if (html[i + 1] === "!" || html[i + 1] === "?") {
+        const end = html.indexOf(">", i);
+        i = end === -1 ? html.length : end + 1;
+        continue;
+      }
+      const tag = readTag(html, i);
+      if (tag) {
+        i = tag.end;
+        if (!tag.closing && !tag.selfClosing && RAW_TEXT_ELEMENTS.has(tag.name)) {
+          const close = html.toLowerCase().indexOf(`</${tag.name}`, i);
+          i = close === -1 ? html.length : close;
+          continue;
+        }
+        if (tag.name === "br") {
+          if (out.length > 0 && !markerOnly) gap = Math.min(2, gap + 1);
+          space = false;
+        } else if (tag.name === "ul" || tag.name === "ol") {
+          // A nested list starts and ends on the next line; an outer one is a paragraph.
+          const nested = tag.closing ? lists.length > 1 : lists.length > 0;
+          if (tag.closing) lists.pop();
+          else if (!tag.selfClosing) lists.push({ ordered: tag.name === "ol", n: 0 });
+          owe(nested ? 1 : 2);
+        } else if (tag.name === "li" && !tag.closing) {
+          const list = lists[lists.length - 1];
+          // Items follow one another on the next line, even after a `<p>` in the last one.
+          if (list && list.n > 0 && out.length > 0) {
+            gap = 1;
+            space = false;
+          } else {
+            owe(1);
+          }
+          if (list) list.n++;
+          put(list?.ordered ? `${list.n}. ` : "- ");
+          markerOnly = true;
+        } else if (PARAGRAPH_ELEMENTS.has(tag.name)) {
+          owe(2);
+        } else if (LINE_ELEMENTS.has(tag.name)) {
+          owe(1);
+        } else if (tag.name === "td" || tag.name === "th") {
+          space = true;
+        } else if (tag.name === "a" && !tag.selfClosing) {
+          if (!tag.closing) {
+            links.push({ href: linkAddress(tag.attrs), from: out.length });
+          } else {
+            const link = links.pop();
+            const words = link ? out.slice(link.from).trim() : "";
+            if (link?.href && words.length > 0 && bareAddress(words) !== bareAddress(link.href)) {
+              out += ` (${link.href})`;
+            }
+          }
+        }
+        continue;
+      }
+    }
+    if (c === "&") {
+      const ent = decodeEntity(html, i);
+      if (ent) {
+        for (const ch of ent.text) {
+          if (isSpace(ch)) space = true;
+          else put(ch);
+        }
+        i = ent.end;
+        continue;
+      }
+    }
+    if (isSpace(c)) space = true;
+    else put(c);
+    i++;
+  }
+  return out.split("\n").map((line) => line.trimEnd()).join("\n").replace(/\n{3,}/g, "\n\n")
+    .trim();
+}
+
+/**
+ * The text part to store next to `html` when an agent writes both: `text`
+ * itself, unless `html` is formatted and says different words, in which case
+ * the HTML's own text (see the block above). `text` comes back unchanged
+ * whenever there is any doubt.
+ */
+export function textPartMatchingHtml(text: string, html: string | null | undefined): string {
+  if (typeof html !== "string" || html.trim().length === 0) return text;
+  if (!htmlHasFormatting(html) || sameWords(html, text)) return text;
+  const own = htmlAsText(html);
+  return own.length > 0 && sameWords(html, own) ? own : text;
 }
