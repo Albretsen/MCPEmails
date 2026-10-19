@@ -25,6 +25,7 @@ import {
   type DraftEditorProviderInbox,
   htmlForEditedText,
   htmlKeepingQuote,
+  htmlPartForDraftUpdate,
   type NormalizedDraft,
   type ProviderDraft,
   type ProviderDraftParams,
@@ -421,4 +422,41 @@ Deno.test("a plain-text update with no signature appended keeps the stored HTML 
   const formatted = "<h1>Old words.</h1><ul><li>one</li></ul>";
   const lost = htmlForEditedText("Entirely different.", SIGN_INBOX, "Old words.\n\n- one", formatted);
   assertEquals(lost, { html: undefined, formattingRemoved: true });
+});
+
+Deno.test("update: a pasted-back signature keeps the stored HTML part, include_signature on or off", () => {
+  // Both live 2026-10-19 cases: the model sends its words, the signature and
+  // the quote back. With include_signature on, applySignatureOnce does not sign
+  // again and rebuilds an HTML part from the text; the stored part (its
+  // bold signature block) must still win, by the card save's rules.
+  const own = `New words.\n\n-- \nAsgeir Albretsen${STORED_QUOTE}`;
+  const ourHtml = '<p>Old words.</p>\n<div class="mcpemails-signature"><p><b>Asgeir Albretsen</b></p></div>';
+  const stored = { text: STORED_REPLY.text, html: ourHtml };
+  const once = (on: boolean) => (p: { textBody: string; htmlBody?: string }) =>
+    applySignatureOnce({ ...p }, SIGN_INBOX, on ? {} : { include_signature: false });
+  for (const on of [true, false]) {
+    const composed = bodyKeepingQuote(own, undefined, stored, once(on), plainTextBodyToHtml);
+    assertEquals(composed.signed, false, `on=${on}: nothing appended`);
+    const part = htmlPartForDraftUpdate({
+      composed, callerHtml: undefined, storedText: stored.text, storedHtml: stored.html,
+      inbox: SIGN_INBOX, includeSignature: on,
+    });
+    assertEquals(part.formattingRemoved, false, `on=${on}`);
+    assert(part.html!.includes("New words."), part.html);
+    assert(part.html!.includes('<div class="mcpemails-signature"><p><b>Asgeir Albretsen</b></p></div>'), part.html);
+    assertEquals(part.html!.split("mcpemails-signature").length, 2, "one signature block");
+  }
+  // A freshly appended signature, or HTML from the caller, is used as composed.
+  const fresh = bodyKeepingQuote("New words.", undefined, stored, once(true), plainTextBodyToHtml);
+  assert(fresh.signed);
+  const freshPart = htmlPartForDraftUpdate({
+    composed: fresh, callerHtml: undefined, storedText: stored.text, storedHtml: stored.html,
+    inbox: SIGN_INBOX, includeSignature: true,
+  });
+  assertEquals(freshPart, { html: fresh.htmlBody, formattingRemoved: false });
+  const callerPart = htmlPartForDraftUpdate({
+    composed: { textBody: "x", htmlBody: "<p>x</p>", signed: false }, callerHtml: "<p>x</p>",
+    storedText: stored.text, storedHtml: stored.html, inbox: SIGN_INBOX, includeSignature: true,
+  });
+  assertEquals(callerPart, { html: "<p>x</p>", formattingRemoved: false });
 });

@@ -80,6 +80,7 @@ import {
   plainTextBodyToHtml,
   rebuildHtmlKeepingSignature,
   type SignatureInbox,
+  textCarriesOwnSignature,
 } from "./signature-compose.ts";
 import {
   attributionSender,
@@ -2319,6 +2320,39 @@ export function htmlForEditedText(
     ? undefined
     : regenerated;
   return { html, formattingRemoved: html === undefined };
+}
+
+/**
+ * The HTML part `draft{action:"update"}` (index.ts#executeUpdateDraft) writes
+ * for a plain-text body, given what `bodyKeepingQuote` composed.
+ *
+ * The stored HTML part is kept by the card save's rules (`htmlForEditedText`)
+ * whenever the caller sent no HTML of its own and no signature was appended on
+ * this write: either nothing was to be signed (`include_signature: false`, an
+ * inbox with none), or the body already carried the signature and
+ * `applySignatureOnce` left it alone. In that second case `applySignatureOnce`
+ * hands back an HTML part rebuilt from the text, which would replace the
+ * stored formatting without saying so; it is used only when the stored part
+ * cannot be kept (2026-10-19, card-header-chips + draft-tool-quote-wording).
+ * A freshly appended signature rebuilt the HTML part already: used as is.
+ */
+export function htmlPartForDraftUpdate(input: {
+  composed: { textBody: string; htmlBody?: string; signed: boolean };
+  callerHtml: string | undefined;
+  storedText: string | null | undefined;
+  storedHtml: string | null | undefined;
+  inbox: SignatureInbox;
+  includeSignature: boolean;
+}): { html: string | undefined; formattingRemoved: boolean } {
+  const { composed, storedHtml } = input;
+  const composedOnly = { html: composed.htmlBody, formattingRemoved: false };
+  if (input.callerHtml !== undefined || composed.signed) return composedOnly;
+  if (typeof storedHtml !== "string" || storedHtml.trim().length === 0) return composedOnly;
+  const rebuiltOverOwnSignature = input.includeSignature &&
+    textCarriesOwnSignature(composed.textBody, input.inbox);
+  if (composed.htmlBody !== undefined && !rebuiltOverOwnSignature) return composedOnly;
+  const kept = htmlForEditedText(composed.textBody, input.inbox, input.storedText ?? null, storedHtml);
+  return { html: kept.html ?? composed.htmlBody, formattingRemoved: kept.formattingRemoved };
 }
 
 /**

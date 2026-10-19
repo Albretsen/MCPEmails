@@ -259,7 +259,7 @@ import {
 import {
   buildDraftEditorEnvelope,
   describeParts,
-  htmlForEditedText,
+  htmlPartForDraftUpdate,
   DRAFT_EDITOR_TOOL_DEFINITIONS,
   type DraftPatch,
   runBodylessDraftUpdate,
@@ -28664,16 +28664,16 @@ async function executeUpdateDraft(
   // card save uses (mcp-app-drafts.ts#htmlForEditedText): merged, regenerated
   // with the signature block and quote markup kept, or dropped and SAID to be
   // (`body.formatting_removed`) when its own formatting cannot be kept.
-  let updateHtml = signed.htmlBody;
-  let updateFormattingRemoved = false;
-  if (
-    htmlBody === undefined && updateHtml === undefined &&
-    typeof storedBody?.html === "string" && storedBody.html.trim().length > 0
-  ) {
-    const kept = htmlForEditedText(signed.textBody, inbox, storedBody.text ?? null, storedBody.html);
-    updateHtml = kept.html;
-    updateFormattingRemoved = kept.formattingRemoved;
-  }
+  // The same holds for a body that already carried the signature, which
+  // applySignatureOnce leaves unsigned (mcp-app-drafts.ts#htmlPartForDraftUpdate).
+  const { html: updateHtml, formattingRemoved: updateFormattingRemoved } = htmlPartForDraftUpdate({
+    composed: signed,
+    callerHtml: htmlBody,
+    storedText: storedBody?.text,
+    storedHtml: storedBody?.html,
+    inbox,
+    includeSignature: includeSignature !== false,
+  });
 
   const draftParams: DraftParams = {
     to: effectiveTo, cc: effectiveCc, bcc: effectiveBcc,
