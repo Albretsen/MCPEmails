@@ -9,20 +9,23 @@
 
 import { assert, assertEquals } from "jsr:@std/assert@1";
 import {
+  attributionSender,
   bodyKeepingQuote,
   offsetOfLine,
   quotedHtmlStart,
   quotedTextLine,
   splitQuotedText,
 } from "./quoted-reply.ts";
-import { applySignature, plainTextBodyToHtml } from "./signature-compose.ts";
+import { applySignature, applySignatureOnce, plainTextBodyToHtml } from "./signature-compose.ts";
 import {
   applyDraftPatch,
   buildDraftEditorEnvelope,
   DRAFT_BODY_META_KEY,
   draftCardToolResult,
   type DraftEditorProviderInbox,
+  htmlForEditedText,
   htmlKeepingQuote,
+  htmlPartForDraftUpdate,
   type NormalizedDraft,
   type ProviderDraft,
   type ProviderDraftParams,
@@ -328,6 +331,22 @@ Deno.test("update: a body that already carries the quote is not doubled, and the
   assertEquals(same.quoteKept, false);
 });
 
+Deno.test("update: signature and quote both pasted back with include_signature on are not doubled", () => {
+  // Live claude.ai test 2026-10-19: the model sent the whole stored body back.
+  // executeUpdateDraft signs through applySignatureOnce.
+  const once = (p: { textBody: string; htmlBody?: string }) => applySignatureOnce({ ...p }, SIGN_INBOX);
+  const resent = "New words.\n\n-- \nAsgeir Albretsen" + STORED_QUOTE;
+  const out = bodyKeepingQuote(resent, undefined, STORED_REPLY, once, plainTextBodyToHtml);
+  assertEquals(out.textBody, resent);
+  assertEquals(out.quoteKept, false);
+  assertEquals(out.textBody.split("-- \n").length, 2, "one signature in the text");
+  assertEquals(out.htmlBody!.split("mcpemails-signature").length, 2, "one signature block");
+  assertEquals(out.htmlBody!.split("<blockquote").length, 2, "one quote block");
+  // The plain applySignature this replaced would have doubled it.
+  const doubled = bodyKeepingQuote(resent, undefined, STORED_REPLY, sign(), plainTextBodyToHtml);
+  assertEquals(doubled.textBody.split("-- \n").length, 3);
+});
+
 Deno.test("update: a re-sent quote the detector misses is still not doubled", () => {
   // The attribution kept, but an inline answer between quoted lines.
   const body = "New words.\n\nOn Mon, 7 Sep 2026 17:32:55 +0000, Dana <dana@example.com> wrote:\n> Friday?\nYes, Friday.";
@@ -354,4 +373,90 @@ Deno.test("update: no stored quote, or no signature, behaves as before", () => {
   // A CRLF stored text (raw IMAP) does not leave mixed line endings.
   const crlf = bodyKeepingQuote("New.", undefined, { text: STORED_REPLY.text.replace(/\n/g, "\r\n") }, sign(false), plainTextBodyToHtml);
   assert(!crlf.textBody.includes("\r"), JSON.stringify(crlf.textBody));
+});
+
+// ═══════════════════════════════════════════════════════════════════════════
+// The newer card after draft{action:"update"} on a reply (live test, 2026-10-19)
+// ═══════════════════════════════════════════════════════════════════════════
+
+Deno.test("attributionSender reads who a reply answers off its attribution line", () => {
+  // Ours (index.ts#buildReplyTextBody): the Date header holds commas.
+  assertEquals(attributionSender(STORED_REPLY.text), "Dana <dana@example.com>");
+  assertEquals(
+    attributionSender('Ok.\r\n\r\nOn Tue, 8 Sep 2026 09:01 +0200, "Doe, Jane" <j@x.example> wrote:\r\n> hi'),
+    '"Doe, Jane" <j@x.example>',
+  );
+  // Gmail's own wording, wrapped over two lines as Gmail does.
+  assertEquals(
+    attributionSender("Ok.\n\nOn Mon, Sep 7, 2026 at 5:32 PM Dana Example <\ndana@x.example> wrote:\n> hi"),
+    "Dana Example < dana@x.example>",
+  );
+  // Nothing readable: no quote, an Outlook header block, an empty Date header.
+  assertEquals(attributionSender("Just a message."), null);
+  assertEquals(attributionSender(null), null);
+  assertEquals(
+    attributionSender("Ok.\n\n-----Original Message-----\nFrom: Dana\nSent: Monday\nSubject: Hi\n\nhi"),
+    null,
+  );
+  assertEquals(attributionSender("Ok.\n\nOn , Dana wrote:\n> hi"), null);
+});
+
+Deno.test("a plain-text update with no signature appended keeps the stored HTML part", () => {
+  // Claude sends the quote back itself with include_signature: false (see the
+  // bodyKeepingQuote note): nothing is signed, so for our own reply, whose
+  // HTML part has the signature block and NO client quote block (the quote is
+  // in the text part only), the composition comes out with no HTML part, and
+  // the draft used to go text/plain, formatted signature and all.
+  const own = `New words.\n\n-- \nAsgeir Albretsen${STORED_QUOTE}`;
+  const ourHtml = '<p>Old words.</p>\n<div class="mcpemails-signature"><p><b>Asgeir Albretsen</b></p></div>';
+  const ours = bodyKeepingQuote(own, undefined, { text: STORED_REPLY.text, html: ourHtml }, sign(false), plainTextBodyToHtml);
+  assertEquals(ours.htmlBody, undefined, "the composition alone drops it");
+  // index.ts now keeps the stored part by the card save's rules.
+  const kept = htmlForEditedText(ours.textBody, SIGN_INBOX, STORED_REPLY.text, ourHtml);
+  assertEquals(kept.formattingRemoved, false);
+  assert(kept.html !== undefined && kept.html.includes("New words."), kept.html);
+  assert(kept.html!.includes('<div class="mcpemails-signature"><p><b>Asgeir Albretsen</b></p></div>'), kept.html);
+  assertEquals(kept.html!.includes("Old words."), false);
+  // A stored part with formatting of its own that the new text cannot be
+  // placed into is dropped and SAID to be, never regenerated to pass for it.
+  const formatted = "<h1>Old words.</h1><ul><li>one</li></ul>";
+  const lost = htmlForEditedText("Entirely different.", SIGN_INBOX, "Old words.\n\n- one", formatted);
+  assertEquals(lost, { html: undefined, formattingRemoved: true });
+});
+
+Deno.test("update: a pasted-back signature keeps the stored HTML part, include_signature on or off", () => {
+  // Both live 2026-10-19 cases: the model sends its words, the signature and
+  // the quote back. With include_signature on, applySignatureOnce does not sign
+  // again and rebuilds an HTML part from the text; the stored part (its
+  // bold signature block) must still win, by the card save's rules.
+  const own = `New words.\n\n-- \nAsgeir Albretsen${STORED_QUOTE}`;
+  const ourHtml = '<p>Old words.</p>\n<div class="mcpemails-signature"><p><b>Asgeir Albretsen</b></p></div>';
+  const stored = { text: STORED_REPLY.text, html: ourHtml };
+  const once = (on: boolean) => (p: { textBody: string; htmlBody?: string }) =>
+    applySignatureOnce({ ...p }, SIGN_INBOX, on ? {} : { include_signature: false });
+  for (const on of [true, false]) {
+    const composed = bodyKeepingQuote(own, undefined, stored, once(on), plainTextBodyToHtml);
+    assertEquals(composed.signed, false, `on=${on}: nothing appended`);
+    const part = htmlPartForDraftUpdate({
+      composed, callerHtml: undefined, storedText: stored.text, storedHtml: stored.html,
+      inbox: SIGN_INBOX, includeSignature: on,
+    });
+    assertEquals(part.formattingRemoved, false, `on=${on}`);
+    assert(part.html!.includes("New words."), part.html);
+    assert(part.html!.includes('<div class="mcpemails-signature"><p><b>Asgeir Albretsen</b></p></div>'), part.html);
+    assertEquals(part.html!.split("mcpemails-signature").length, 2, "one signature block");
+  }
+  // A freshly appended signature, or HTML from the caller, is used as composed.
+  const fresh = bodyKeepingQuote("New words.", undefined, stored, once(true), plainTextBodyToHtml);
+  assert(fresh.signed);
+  const freshPart = htmlPartForDraftUpdate({
+    composed: fresh, callerHtml: undefined, storedText: stored.text, storedHtml: stored.html,
+    inbox: SIGN_INBOX, includeSignature: true,
+  });
+  assertEquals(freshPart, { html: fresh.htmlBody, formattingRemoved: false });
+  const callerPart = htmlPartForDraftUpdate({
+    composed: { textBody: "x", htmlBody: "<p>x</p>", signed: false }, callerHtml: "<p>x</p>",
+    storedText: stored.text, storedHtml: stored.html, inbox: SIGN_INBOX, includeSignature: true,
+  });
+  assertEquals(callerPart, { html: "<p>x</p>", formattingRemoved: false });
 });

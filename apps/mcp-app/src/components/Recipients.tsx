@@ -11,16 +11,12 @@ import {
 export const SUGGEST_DEBOUNCE_MS = 150;
 
 /**
- * Where a removed chip stood, held open until the pointer leaves the field.
- * `before` is the index of the chip it stands in front of (the list's length
- * when it was last), `width` and `height` the removed chip's own.
+ * After a chip is removed with the pointer, a remove button pressed sooner than
+ * this does nothing: it is the second half of a double-click, or a quick second
+ * click, landing on the chip that slid into the removed one's place. About the
+ * desktop double-click interval.
  */
-interface Ghost {
-  key: number;
-  before: number;
-  width: number;
-  height: number;
-}
+export const REMOVE_REPEAT_GUARD_MS = 500;
 
 /**
  * One recipient row of the draft editor: a label and ONE bordered box that
@@ -44,14 +40,20 @@ interface Ghost {
  * The remove button on each chip stays for the pointer and for a screen
  * reader's browse mode, with `tabindex="-1"`.
  *
- * Removing with the pointer leaves the chips where they were (QA, 2026-10-17).
- * A removed chip used to take its neighbours with it: the next chip slid left
- * under the pointer, so the second click of a double-click, or a quick second
- * click aimed at nothing in particular, removed a recipient nobody chose. The
- * removed chip's place is now held by an invisible spacer of its exact size
- * until the pointer leaves the field (or a key is pressed in it), so whatever
- * is under the pointer after a removal is empty space. The keyboard removal
- * needs none of this: focus moves to a chip, never a pointer.
+ * Removing with the pointer (live claude.ai test, 2026-10-19):
+ *
+ *   - The row reflows at once. From 2026-10-17 the removed chip's place was
+ *     held by an invisible spacer until the pointer left the field, so the
+ *     next chip could not slide under a second click. In use that read as a
+ *     broken layout: the remaining chip and the typed text sat shifted right
+ *     behind an empty gap. The second click is now refused instead: a remove
+ *     button pressed within `REMOVE_REPEAT_GUARD_MS` of a pointer removal, or
+ *     as part of a double-click, does nothing.
+ *   - Pressing × never takes focus out of the input. Its mousedown is
+ *     prevented, as a suggestion's is, so the input is not blurred, and a
+ *     partial address in it ("as") is not committed by that blur and warned
+ *     about as "not an email address". The partial stays as typed and focus
+ *     ends in the input.
  *
  * Typing a separator commits (QA, 2026-10-17). A comma, a semicolon or a
  * space after a complete address makes the chip at once, whether it arrived
@@ -119,19 +121,8 @@ export function RecipientField(props: {
    */
   const focusNext = useRef<{ to: number | "input"; count: number } | null>(null);
 
-  /** Spacers where chips were removed with the pointer. See the header. */
-  const [ghosts, setGhosts] = useState<Ghost[]>([]);
-  const ghostKey = useRef(0);
-  const dropGhosts = () => {
-    if (ghosts.length > 0) setGhosts([]);
-  };
-  // A list that changes for any other reason (a save, a resync) is laid out
-  // afresh: a spacer only ever stands for the chip this field just removed.
-  const expectCount = useRef(n);
-  useLayoutEffect(() => {
-    if (n !== expectCount.current) setGhosts([]);
-    expectCount.current = n;
-  }, [n]);
+  /** When a chip was last removed with the pointer. See the header. */
+  const lastPointerRemove = useRef(-Infinity);
 
   // ---- a long list folded to its first row (see the header) -----------------
   /** The field has been used since the frame last had focus. */
@@ -151,7 +142,7 @@ export function RecipientField(props: {
   }, []);
   const fold = canEdit && !opened && n > 1 && !props.typed.trim() && !props.invalid;
   /** How many chips fit on the first row, for this list at this width. */
-  const foldKey = `${width}|${items.join(",")}|${ghosts.length}`;
+  const foldKey = `${width}|${items.join(",")}`;
   const [fit, setFit] = useState<{ key: string; n: number } | null>(null);
   const shown = fold && fit?.key === foldKey ? fit.n : n;
   const more = useRef<HTMLButtonElement>(null);
@@ -283,29 +274,44 @@ export function RecipientField(props: {
     setSaid("");
   };
 
-  const remove = (i: number, then: number | "input", byPointer = false) => {
-    if (byPointer) {
-      const r = chipAt(i)?.getBoundingClientRect();
-      // Spacers already standing after this chip move down one with it.
-      const moved = ghosts.map((g) => (g.before > i ? { ...g, before: g.before - 1 } : g));
-      setGhosts([
-        ...moved,
-        { key: ++ghostKey.current, before: i, width: r?.width ?? 0, height: r?.height ?? 0 },
-      ]);
-    } else {
-      dropGhosts();
-    }
-    expectCount.current = n - 1;
+  const remove = (i: number, then: number | "input") => {
     setArmed(false);
     setSaid(`Removed ${items[i]} from ${label}.`);
     focusNext.current = { to: then, count: n - 1 };
     props.onRemove(i);
   };
 
+  /**
+   * The × on a chip. Focus ends in the input, with the caret at the end of
+   * whatever is typed there (the mousedown that would have moved it is
+   * prevented on the button), and a second press too soon after the last one
+   * is dropped. See the header.
+   */
+  const removeByPointer = (i: number, e: MouseEvent) => {
+    // `detail` counts the clicks of a real press; it is 0 for a click that no
+    // pointer made (a screen reader's activation, Enter on the button), and
+    // those are never a stray second click, so they are never refused.
+    if (e.detail > 1) return;
+    if (e.detail === 1) {
+      const now = typeof performance !== "undefined" ? performance.now() : Date.now();
+      if (now - lastPointerRemove.current < REMOVE_REPEAT_GUARD_MS) return;
+      lastPointerRemove.current = now;
+    }
+    const el = input.current;
+    if (el && document.activeElement !== el) {
+      el.focus();
+      try {
+        el.setSelectionRange(el.value.length, el.value.length);
+      } catch {
+        /* not every input type has a caret to place */
+      }
+    }
+    remove(i, "input");
+  };
+
   const onInputKey = (e: KeyboardEvent) => {
     const el = e.target as HTMLInputElement;
     if (e.isComposing) return;
-    dropGhosts();
     if (open) {
       if (e.key === "ArrowDown" || e.key === "ArrowUp") {
         e.preventDefault();
@@ -431,15 +437,6 @@ export function RecipientField(props: {
   const hint = n > 0 && canEdit ? `${id}-hint` : undefined;
   const described = [props.describedBy, hint].filter(Boolean).join(" ") || undefined;
 
-  /** A spacer, standing where a chip was. */
-  const ghostAt = (g: Ghost) => (
-    <span
-      class="chip-ghost"
-      key={`ghost-${g.key}`}
-      aria-hidden="true"
-      style={{ width: `${g.width}px`, height: `${g.height}px` }}
-    />
-  );
   const activeId = open && active >= 0 ? `${listId}-${active}` : undefined;
 
   return (
@@ -452,7 +449,6 @@ export function RecipientField(props: {
         id={`${id}-box`}
         ref={box}
         data-folded={shown < n ? "true" : undefined}
-        onPointerLeave={dropGhosts}
         onFocusIn={unfold}
         onPointerDown={unfold}
         onClick={(e) => {
@@ -461,8 +457,7 @@ export function RecipientField(props: {
           if (e.target === e.currentTarget) input.current?.focus();
         }}
       >
-        {items.slice(0, shown).map((addr, i) => [
-          ...ghosts.filter((g) => g.before === i).map(ghostAt),
+        {items.slice(0, shown).map((addr, i) => (
           <span
             class="chip"
             key={`${addr}-${i}`}
@@ -482,14 +477,16 @@ export function RecipientField(props: {
                 class="chip-x"
                 tabIndex={-1}
                 aria-label={`Remove ${addr}`}
-                onClick={() => remove(i, i, true)}
+                // Keep the focus where it is (the input, usually): a blur
+                // there would commit a partial address. See the header.
+                onMouseDown={(e) => e.preventDefault()}
+                onClick={(e) => removeByPointer(i, e as unknown as MouseEvent)}
               >
                 &#215;
               </button>
             )}
-          </span>,
-        ])}
-        {ghosts.filter((g) => g.before >= n).map(ghostAt)}
+          </span>
+        ))}
         {shown < n && (
           <button
             type="button"

@@ -603,6 +603,32 @@ async function main() {
     await c.done();
   }
 
+  group("R4. the newer card after draft update on a reply has the reply line and Show formatting (live, 2026-10-19)");
+  {
+    // What the server now answers an update with: the context read back from
+    // the stored draft (message_id null), and an HTML part kept.
+    const derived = { message_id: null, from: "Dana Example <dana@x.example>", subject: "Call" };
+    const html = `<p>${MESSAGE}</p>\n<div class="mcpemails-signature">Asgeir Albretsen</div>`;
+    const c = await editor(reply({ origin: "update", in_reply_to: derived, threaded: true, body: { html } }));
+    expect("Replying to is shown", /Replying to Dana Example <dana@x\.example> · Call/.test(c.text()), true);
+    expect("Show formatting is offered", !!c.btn(/^Show formatting$/), true);
+    await c.done();
+
+    // A card holding the reply's own context keeps it over a read-back one:
+    // the line does not change wording under the person on a Save.
+    const held = { message_id: "INBOX:9", from: "Dana Example <dana@x.example>", subject: "Re: Call" };
+    const d = await editor(reply({ origin: "reply", in_reply_to: held, threaded: true }));
+    d.tools.draft_editor_save = (args) =>
+      draftResult(reply({ draft_id: "Drafts:141", origin: "save", threaded: true, in_reply_to: derived, body: { text: args.body_text ?? REPLY } }));
+    d.input("d-body", "Friday at 3 then.\n");
+    await settle();
+    d.press(d.btn(/^Save$/));
+    await settle();
+    expect("saved", lastSave(d)?.body_text?.startsWith("Friday at 3 then."), true);
+    expect("the held wording stays", /Replying to Dana Example <dana@x\.example> · Re: Call/.test(d.text()), true);
+    await d.done();
+  }
+
   // ---- report ---------------------------------------------------------------
 
   let failed = 0;

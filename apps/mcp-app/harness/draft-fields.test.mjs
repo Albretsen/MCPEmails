@@ -9,9 +9,9 @@
 // the host answering `ui/initialize` and every `tools/call` from a script.
 // No test here sends anything. Groups:
 //
-//   R. rows and chips do not move under the pointer: an emptied Cc row stays
-//      until the card loses focus; a chip removed with the pointer leaves a
-//      spacer of its size until the pointer leaves the field.
+//   R. an emptied Cc row stays until the card loses focus; a chip removed
+//      with the pointer reflows the row at once, a second click too soon is
+//      refused, and × never blurs (so never commits) a partial address.
 //   D. a duplicate across fields (any case) is refused and named; the note
 //      outlives a typed space; no "not complete yet" while typing.
 //   L. a long list folds to one row and "+N more"; the Cc Bcc link inside
@@ -362,44 +362,94 @@ async function main() {
     await c.done();
   }
 
-  group("R3. a chip removed with the pointer leaves a spacer until the pointer leaves");
+  // ── The live claude.ai test of 2026-10-19: the spacer read as a broken
+  // layout, and pressing × blurred the input, which committed a partial. ──
+
+  /**
+   * A real press on a chip's ×: mousedown (whose default would move focus out
+   * of the input), then a click with `detail`, as a mouse makes it. The button
+   * is never focused by hand, unlike `press`, because a real one is not.
+   * Returns whether the mousedown's default was prevented.
+   */
+  const pointerX = (c, label, detail = 1) => {
+    const x = xFor(c, label);
+    const down = new c.w.MouseEvent("mousedown", { bubbles: true, cancelable: true, detail });
+    x.dispatchEvent(down);
+    // What the browser does with an unprevented mousedown on a button.
+    if (!down.defaultPrevented) x.focus();
+    x.dispatchEvent(new c.w.MouseEvent("click", { bubbles: true, cancelable: true, detail }));
+    return down.defaultPrevented;
+  };
+
+  group("R3. a chip removed with the pointer: the row reflows at once, no spacer");
   {
     const c = await editor({ recipients: { to: ["a@x.example", "b@x.example", "c@x.example"] } });
     const box = () => c.root.querySelector("#d-to-box");
-    const order = () =>
-      [...box().children]
-        .filter((el) => el.matches(".chip, .chip-ghost"))
-        .map((el) => (el.matches(".chip-ghost") ? "_" : el.querySelector(".name").textContent));
-    c.press(xFor(c, "Remove a@x.example"));
+    // Everything in the box before the input, in order: chips only.
+    const order = () => {
+      const kids = [...box().children];
+      return kids.slice(0, kids.indexOf(box().querySelector("input"))).map((el) =>
+        el.matches(".chip") ? el.querySelector(".name").textContent : `<${el.className}>`
+      );
+    };
+    pointerX(c, "Remove a@x.example");
     await settle();
-    expectJson("a spacer stands where the chip was", order(), ["_", "b@x.example", "c@x.example"]);
-    const ghost = box().querySelector(".chip-ghost");
-    expect("hidden from assistive technology", ghost?.getAttribute("aria-hidden"), "true");
-    expect("it has the removed chip's size set", /width:/.test(ghost?.getAttribute("style") ?? ""), true);
-    c.press(xFor(c, "Remove c@x.example"));
-    await settle();
-    expectJson("a second removal keeps both places", order(), ["_", "b@x.example", "_"]);
-    box().dispatchEvent(new c.w.Event("pointerleave"));
-    await settle();
-    expectJson("leaving the field closes the gaps", order(), ["b@x.example"]);
+    expectJson("the next chip moves into its place", order(), ["b@x.example", "c@x.example"]);
+    expect("no spacer element of any kind", box().querySelectorAll(".chip-ghost, [aria-hidden=true]").length, 0);
+    expect("and no spacer rule left in the stylesheet", /\.chip-ghost/.test(css), false);
     await c.done();
   }
 
-  group("R4. the keyboard leaves no spacer; a key in the field drops one");
+  group("R4. a second click too soon, or a double-click, removes nothing more");
+  {
+    const c = await editor({ recipients: { to: ["a@x.example", "b@x.example", "c@x.example"] } });
+    pointerX(c, "Remove a@x.example");
+    await settle();
+    // b@ slid under the pointer; the second click of the pair lands on its ×.
+    pointerX(c, "Remove b@x.example", 2);
+    await settle();
+    expectJson("a double-click's second click is refused", chipsIn(c, "to"), ["b@x.example", "c@x.example"]);
+    pointerX(c, "Remove b@x.example", 1);
+    await settle();
+    expectJson("so is a quick second click", chipsIn(c, "to"), ["b@x.example", "c@x.example"]);
+    await after(520);
+    pointerX(c, "Remove b@x.example", 1);
+    await settle();
+    expectJson("a deliberate click after the window removes", chipsIn(c, "to"), ["c@x.example"]);
+    // A click no pointer made (a screen reader's activation) is never refused.
+    c.input("d-to", "");
+    xFor(c, "Remove c@x.example").click();
+    await settle();
+    expectJson("an activation with detail 0 removes at once", chipsIn(c, "to"), []);
+    await c.done();
+  }
+
+  group("R5. pressing × keeps a partial address in the input, unwarned, with focus");
   {
     const c = await editor({ recipients: { to: ["a@x.example", "b@x.example"] } });
-    const chips = () => [...c.root.querySelectorAll("#d-to-box .chip")];
-    chips()[0].focus();
-    c.key(chips()[0], "Delete");
+    const input = () => c.root.querySelector("#d-to");
+    input().focus();
+    c.input("d-to", "as");
     await settle();
-    expect("no spacer after Delete", c.root.querySelectorAll("#d-to-box .chip-ghost").length, 0);
-    c.press(xFor(c, "Remove b@x.example"));
+    const prevented = pointerX(c, "Remove a@x.example");
     await settle();
-    expect("one after the pointer", c.root.querySelectorAll("#d-to-box .chip-ghost").length, 1);
-    c.key(c.root.querySelector("#d-to"), "a");
+    expect("the × does not take focus on mousedown", prevented, true);
+    expectJson("the chip is removed", chipsIn(c, "to"), ["b@x.example"]);
+    expect("the partial is still in the input", c.value("d-to"), "as");
+    expect("nothing was committed or warned about", warn(c, "to"), null);
+    expect("no 'does not look like an email' anywhere", /does not look like an email/.test(c.text()), false);
+    expect("focus is in the input", c.active(), input());
+    // And from a field that did not have focus: it ends in the input, the
+    // caret after what is typed.
+    c.input("d-to", "");
+    input().blur();
     await settle();
-    expect("typing drops it", c.root.querySelectorAll("#d-to-box .chip-ghost").length, 0);
-    expect("the spacer rule hides it and keeps its size", /\.chip-ghost \{[^}]*visibility: hidden/.test(css), true);
+    c.root.querySelector("#d-subject")?.focus();
+    await after(520); // past the second-click guard (R4)
+    pointerX(c, "Remove b@x.example");
+    await settle();
+    expectJson("removed", chipsIn(c, "to"), []);
+    expect("focus moved to the To input", c.active(), input());
     await c.done();
   }
 
@@ -505,7 +555,7 @@ async function main() {
       get() {
         const p = this.parentElement;
         if (!p || !p.classList.contains("fld")) return 0;
-        const flow = [...p.children].filter((el) => el.matches(".chip, .chip-ghost, .more-chip"));
+        const flow = [...p.children].filter((el) => el.matches(".chip, .more-chip"));
         const i = flow.indexOf(this);
         return i < 0 ? 0 : Math.floor(i / 4) * 24;
       },

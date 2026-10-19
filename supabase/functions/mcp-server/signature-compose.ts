@@ -488,6 +488,50 @@ export function rebuildHtmlKeepingSignature(
   return `${plainTextBodyToHtml(split.before)}${sigHtmlBlock}${tail}`;
 }
 
+/**
+ * True when the caller's own text (before any quoted original) already ends a
+ * paragraph with the inbox's signature: the `-- ` delimiter and the signature
+ * lines, or, for a signature of more than one line, those lines alone. A
+ * one-line signature without the delimiter is a sign-off ("Thanks,\nAsgeir"),
+ * not the signature, so it does not count (same rule as `splitAtSignature`).
+ */
+export function textCarriesOwnSignature(text: string, inbox: SignatureInbox): boolean {
+  const sig = composeSignatureBlocks(inbox);
+  if (!sig) return false;
+  const sigText = comparableText(sig.text).trim();
+  if (!sigText) return false;
+  const hay = `\n${comparableText(text)}`;
+  const endBy = quoteStart(hay);
+  const needles = sigText.includes("\n") ? [`\n--\n${sigText}`, `\n${sigText}`] : [`\n--\n${sigText}`];
+  return needles.some((needle) => lastWholeLineMatch(hay, needle, endBy) !== -1);
+}
+
+/**
+ * `applySignature` for a draft body the model may have signed itself.
+ *
+ * WHY (live claude.ai test, 2026-10-19). Updating a reply draft, Claude pasted
+ * the signature (and the quote) back into `body`. With `include_signature`
+ * left on, `applySignature` appended a second copy, since it is not idempotent
+ * on purpose (see its note). A draft body that already carries the signature
+ * is left as it is; when it has no HTML part, the HTML part is the one
+ * `applySignature` would have built, rich signature block included
+ * (`rebuildHtmlKeepingSignature`). `include_signature: false` is unchanged.
+ */
+export function applySignatureOnce<T extends { textBody: string; htmlBody?: string }>(
+  params: T,
+  inbox: SignatureInbox,
+  opts: ApplySignatureOptions = {},
+): T {
+  if (opts.include_signature === false || !textCarriesOwnSignature(params.textBody, inbox)) {
+    return applySignature(params, inbox, opts);
+  }
+  if (!(params.htmlBody && params.htmlBody.trim())) {
+    const html = rebuildHtmlKeepingSignature(params.textBody, inbox);
+    if (html !== null) params.htmlBody = html;
+  }
+  return params;
+}
+
 /** True when an HTML part carries our signature wrapper. */
 export function htmlCarriesSignatureBlock(html: string | null | undefined): boolean {
   return typeof html === "string" && html.includes(`class="${SIGNATURE_HTML_CLASS}"`);
