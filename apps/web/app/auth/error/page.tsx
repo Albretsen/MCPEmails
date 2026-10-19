@@ -21,6 +21,8 @@ const ERROR_MESSAGE_KEYS: Record<string, string> = {
   microsoft_email_unverified: 'microsoftEmailUnverified',
   provider_email_unverified: 'providerEmailUnverified',
   [SSO_REQUIRED_REASON]: 'ssoRequired',
+  sso_not_configured: 'ssoNotConfigured',
+  sso_join_failed: 'ssoJoinFailed',
 };
 
 /**
