@@ -164,8 +164,16 @@ Deno.test("divergent text: once stored as the HTML's own text, a one-word edit k
     mergeTextEditIntoHtml(CLAUDE_HTML, stored, stored.replace("- Docs updated", "- Docs rewritten")),
     CLAUDE_HTML.replace("<li>Docs updated</li>", "<li>Docs rewritten</li>"),
   );
-  // An added paragraph still cannot be placed: the caller falls back and warns.
-  assertEquals(mergeTextEditIntoHtml(CLAUDE_HTML, stored, stored + "\n\nOne more thing."), null);
+  // A paragraph added at the end becomes a new <p> (2026-10-19)...
+  assertEquals(
+    mergeTextEditIntoHtml(CLAUDE_HTML, stored, stored + "\n\nOne more thing."),
+    CLAUDE_HTML + "<p>One more thing.</p>",
+  );
+  // ...but one added in the middle still cannot be placed: the caller falls back and warns.
+  assertEquals(
+    mergeTextEditIntoHtml(CLAUDE_HTML, stored, stored.replace("Friday.", "Friday.\n\nOne more thing.")),
+    null,
+  );
   // And the address written after a link's words is not the link's words.
   assertEquals(
     mergeTextEditIntoHtml(CLAUDE_HTML, stored, stored.replace("example.com/plan)", "example.com/other)")),
@@ -233,4 +241,153 @@ Deno.test("save: an added paragraph on such a draft still drops the HTML and say
   assert(out.ok);
   assertEquals(writes[0].htmlBody, undefined);
   assertEquals(out.saved.formatting_removed, true);
+});
+
+// ═══════════════════════════════════════════════════════════════════════════
+// Words and lines added at the edge (live claude.ai test, 2026-10-19)
+//
+// A word typed mid-sentence merged, but one typed at the END of the last line
+// did not: "Learn more at mcpemails.com." ends in a one-character run (".")
+// after a link, so no single run held enough context, and the card warned
+// "Saving this edit turns the whole message into plain text". A new trailing
+// line or paragraph always fell back the same way.
+// ═══════════════════════════════════════════════════════════════════════════
+
+const EDGE_HTML = "<h2>Quick update</h2>\n<p>We moved the launch to <b>Friday</b>.</p>\n" +
+  '<p>Learn more at <a href="https://mcpemails.com">mcpemails.com</a>.</p>';
+const EDGE_TEXT = "Quick update\n\nWe moved the launch to Friday.\n\nLearn more at mcpemails.com.";
+
+Deno.test("edge: a word typed at the end of the last line lands after the period, outside the link", () => {
+  assertEquals(
+    mergeTextEditIntoHtml(EDGE_HTML, EDGE_TEXT, EDGE_TEXT + " Pineapple"),
+    EDGE_HTML.replace("</a>.</p>", "</a>. Pineapple</p>"),
+  );
+  // The same after bold text that ends a sentence.
+  assertEquals(
+    mergeTextEditIntoHtml(EDGE_HTML, EDGE_TEXT, EDGE_TEXT.replace("Friday.", "Friday. Or Monday.")),
+    EDGE_HTML.replace("</b>.</p>", "</b>. Or Monday.</p>"),
+  );
+});
+
+Deno.test("edge: a word typed right after a link, before the period, goes outside the link", () => {
+  assertEquals(
+    mergeTextEditIntoHtml(EDGE_HTML, EDGE_TEXT, EDGE_TEXT.replace("mcpemails.com.", "mcpemails.com today.")),
+    EDGE_HTML.replace("</a>.</p>", "</a> today.</p>"),
+  );
+});
+
+Deno.test("edge: a link that ends or starts the line keeps its words; the new ones go beside it", () => {
+  const end = '<p>Docs: <a href="https://x.example">x.example</a></p>';
+  assertEquals(
+    mergeTextEditIntoHtml(end, "Docs: x.example", "Docs: x.example today"),
+    end.replace("</a></p>", "</a> today</p>"),
+  );
+  const start = '<p><a href="https://x.example">x.example</a> has the docs.</p>';
+  assertEquals(
+    mergeTextEditIntoHtml(start, "x.example has the docs.", "See x.example has the docs."),
+    start.replace("<p><a", "<p>See <a"),
+  );
+  const item = '<ul><li>One</li><li>See <a href="https://x.example">x.example</a></li></ul>';
+  assertEquals(
+    mergeTextEditIntoHtml(item, "- One\n- See x.example", "- One\n- See x.example now"),
+    item.replace("</a></li>", "</a> now</li>"),
+  );
+  // Link words that are not the address: the word still goes after the link.
+  const words = '<p>Read <a href="https://x.example">the guide</a></p>';
+  assertEquals(
+    mergeTextEditIntoHtml(words, "Read the guide", "Read the guide now"),
+    words.replace("</a></p>", "</a> now</p>"),
+  );
+});
+
+Deno.test("edge: a new trailing paragraph becomes a new <p> after the last one", () => {
+  assertEquals(
+    mergeTextEditIntoHtml(EDGE_HTML, EDGE_TEXT, EDGE_TEXT + "\n\nPineapple & <you>."),
+    EDGE_HTML + "<p>Pineapple &amp; &lt;you&gt;.</p>",
+  );
+  // A trailing newline from the textarea is no edit.
+  assertEquals(mergeTextEditIntoHtml(EDGE_HTML, EDGE_TEXT, EDGE_TEXT + "\n"), EDGE_HTML);
+  // Two paragraphs, one with a line break in it.
+  assertEquals(
+    mergeTextEditIntoHtml(EDGE_HTML, EDGE_TEXT, EDGE_TEXT + "\n\nBest,\nSam\n\nP.S. Bring cake.\n"),
+    EDGE_HTML + "<p>Best,<br>Sam</p><p>P.S. Bring cake.</p>",
+  );
+  // Inside a wrapper and a full document, it stays inside them.
+  const doc = '<html><body><div style="font-family:Arial"><p>Hi <b>Dana</b>.</p></div></body></html>';
+  assertEquals(
+    mergeTextEditIntoHtml(doc, "Hi Dana.", "Hi Dana.\n\nBye."),
+    doc.replace("</p></div>", "</p><p>Bye.</p></div>"),
+  );
+});
+
+Deno.test("edge: a new trailing line in Gmail-style divs is a <div>; after a list, an item or a <p>", () => {
+  const gmail = '<div dir="ltr"><div>Hi <b>Dana</b>,</div><div><br></div><div>Thanks</div></div>';
+  assertEquals(
+    mergeTextEditIntoHtml(gmail, "Hi Dana,\n\nThanks", "Hi Dana,\n\nThanks\nSam"),
+    gmail.replace("<div>Thanks</div>", "<div>Thanks</div><div>Sam</div>"),
+  );
+  const list = "<p>To do:</p><ul><li>One</li><li>Two</li></ul>";
+  const listText = "To do:\n\n- One\n- Two";
+  assertEquals(
+    mergeTextEditIntoHtml(list, listText, listText + "\n- Three & four"),
+    list.replace("</ul>", "<li>Three &amp; four</li></ul>"),
+  );
+  assertEquals(
+    mergeTextEditIntoHtml(list, listText, listText + "\n\nThanks."),
+    list + "<p>Thanks.</p>",
+  );
+  const ol = "<ol><li>First</li><li>Second</li></ol>";
+  assertEquals(
+    mergeTextEditIntoHtml(ol, "1. First\n2. Second", "1. First\n2. Second\n3. Third"),
+    ol.replace("</ol>", "<li>Third</li></ol>"),
+  );
+});
+
+Deno.test("edge: a new first line becomes a new <p> before the first block", () => {
+  assertEquals(
+    mergeTextEditIntoHtml(EDGE_HTML, EDGE_TEXT, "Hi Dana,\n\n" + EDGE_TEXT),
+    "<p>Hi Dana,</p>" + EDGE_HTML,
+  );
+  const gmail = '<div dir="ltr"><div>Thanks <b>a lot</b></div></div>';
+  assertEquals(
+    mergeTextEditIntoHtml(gmail, "Thanks a lot", "Hi,\nThanks a lot"),
+    '<div dir="ltr"><div>Hi,</div><div>Thanks <b>a lot</b></div></div>',
+  );
+});
+
+Deno.test("edge still refuses: where a placement would be a guess", () => {
+  // A line added in the middle: which block it belongs to is not knowable.
+  assertEquals(
+    mergeTextEditIntoHtml(EDGE_HTML, EDGE_TEXT, EDGE_TEXT.replace("Friday.", "Friday.\n\nNew middle.")),
+    null,
+  );
+  // A line added AND another line edited: the alignment is not certain.
+  assertEquals(
+    mergeTextEditIntoHtml(EDGE_HTML, EDGE_TEXT, EDGE_TEXT.replace("moved", "pushed") + "\n\nMore."),
+    null,
+  );
+  // A line after our signature block: that block keeps its own path.
+  const signed = '<p>Hello <b>Dana</b></p>\n<div class="mcpemails-signature">Asgeir<br>Founder</div>';
+  const signedText = "Hello Dana\n\n-- \nAsgeir\nFounder";
+  assertEquals(mergeTextEditIntoHtml(signed, signedText, signedText + "\n\nP.S."), null);
+  // Something after the last text that is not a closing tag (an empty paragraph).
+  const trailing = "<p>Hi <b>Dana</b>.</p><p>&nbsp;</p>";
+  assertEquals(mergeTextEditIntoHtml(trailing, "Hi Dana.", "Hi Dana.\n\nBye."), null);
+  // A plain line under a list with no blank line: an item, or a paragraph?
+  const list = "<ul><li>One</li><li>Two</li></ul>";
+  assertEquals(mergeTextEditIntoHtml(list, "- One\n- Two", "- One\n- Two\nThanks."), null);
+  // The last line is in a quote: no new element guessed.
+  assertEquals(
+    mergeTextEditIntoHtml(
+      "<p>Hi</p><blockquote>Old <b>words</b></blockquote>",
+      "Hi\n\n> Old words",
+      "Hi\n\n> Old words\n\nNew.",
+    ),
+    null,
+  );
+  // Between two links there is no text of our own to carry the words.
+  const links = '<p><a href="https://a.example">a.example</a><a href="https://b.example">b.example</a></p>';
+  assertEquals(mergeTextEditIntoHtml(links, "a.exampleb.example", "a.example and b.example"), null);
+  // A word typed INTO link text is still never merged.
+  assertEquals(mergeTextEditIntoHtml(EDGE_HTML, EDGE_TEXT, EDGE_TEXT.replace("mcpemails.com.", "mcpemails.comX.")), null);
 });
