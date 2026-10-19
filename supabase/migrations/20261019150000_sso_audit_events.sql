@@ -23,10 +23,16 @@
 -- The admin route therefore only turns enforcement on after someone who is
 -- owner or admin of the workspace has completed a real SAML sign-in through
 -- the connection's provider. Supabase never links an SSO identity, so that
--- sign-in leaves its own public.users row with sso_provider_id set (see
+-- sign-in is its own public.users row with sso_provider_id set (see
 -- 20261019140000_sso_connections.sql). sso_admin_test_sign_in_seen() looks
--- for one whose email matches an owner/admin of the workspace, or which is
--- itself an owner/admin member.
+-- for a SUCCESSFUL sign-in, the `user.sign_in` row /auth/callback writes
+-- here with outcome success once the user has joined the workspace, whose
+-- SSO user's email matches an owner/admin of the workspace, or which is
+-- itself an owner/admin member. Not just the public.users row: Supabase
+-- creates that before our callback runs, so it also exists for a sign-in the
+-- callback refused (unverified domain, add_workspace_member missing or at
+-- the seat cap). Counting those would let an admin enforce a connection
+-- nobody can actually sign in through, locking out everyone but the owner.
 --
 -- RE-RUNNABLE: IF NOT EXISTS / CREATE OR REPLACE / DROP ... IF EXISTS.
 -- Apply after 20261019140000_sso_connections.sql.
@@ -110,10 +116,15 @@ AS $$
   )
   SELECT EXISTS (
     SELECT 1
-    FROM   public.users s
+    FROM   public.sso_audit_events e
+    JOIN   public.users s ON s.id = e.actor_user_id
     JOIN   conn ON s.sso_provider_id = conn.provider_id
-    WHERE  s.id IN (SELECT user_id FROM admins)
-       OR  lower(s.email) IN (SELECT email FROM admins)
+    WHERE  e.connection_id = p_connection_id
+    AND    e.workspace_id = conn.workspace_id
+    AND    e.action = 'user.sign_in'
+    AND    e.details->>'outcome' = 'success'
+    AND    (s.id IN (SELECT user_id FROM admins)
+            OR lower(s.email) IN (SELECT email FROM admins))
   );
 $$;
 
