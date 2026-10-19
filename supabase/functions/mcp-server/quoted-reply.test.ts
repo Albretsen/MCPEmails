@@ -15,7 +15,7 @@ import {
   quotedTextLine,
   splitQuotedText,
 } from "./quoted-reply.ts";
-import { applySignature, plainTextBodyToHtml } from "./signature-compose.ts";
+import { applySignature, applySignatureOnce, plainTextBodyToHtml } from "./signature-compose.ts";
 import {
   applyDraftPatch,
   buildDraftEditorEnvelope,
@@ -326,6 +326,22 @@ Deno.test("update: a body that already carries the quote is not doubled, and the
   const same = bodyKeepingQuote(workaround, undefined, STORED_REPLY, sign(false), plainTextBodyToHtml);
   assertEquals(same.textBody, workaround);
   assertEquals(same.quoteKept, false);
+});
+
+Deno.test("update: signature and quote both pasted back with include_signature on are not doubled", () => {
+  // Live claude.ai test 2026-10-19: the model sent the whole stored body back.
+  // executeUpdateDraft signs through applySignatureOnce.
+  const once = (p: { textBody: string; htmlBody?: string }) => applySignatureOnce({ ...p }, SIGN_INBOX);
+  const resent = "New words.\n\n-- \nAsgeir Albretsen" + STORED_QUOTE;
+  const out = bodyKeepingQuote(resent, undefined, STORED_REPLY, once, plainTextBodyToHtml);
+  assertEquals(out.textBody, resent);
+  assertEquals(out.quoteKept, false);
+  assertEquals(out.textBody.split("-- \n").length, 2, "one signature in the text");
+  assertEquals(out.htmlBody!.split("mcpemails-signature").length, 2, "one signature block");
+  assertEquals(out.htmlBody!.split("<blockquote").length, 2, "one quote block");
+  // The plain applySignature this replaced would have doubled it.
+  const doubled = bodyKeepingQuote(resent, undefined, STORED_REPLY, sign(), plainTextBodyToHtml);
+  assertEquals(doubled.textBody.split("-- \n").length, 3);
 });
 
 Deno.test("update: a re-sent quote the detector misses is still not doubled", () => {

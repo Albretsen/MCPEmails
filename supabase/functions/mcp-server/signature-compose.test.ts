@@ -19,6 +19,7 @@
 import { assertEquals } from "jsr:@std/assert@1";
 import {
   applySignature,
+  applySignatureOnce,
   composeSignatureBlocks,
   heldSendSnapshot,
   includeSignatureForSend,
@@ -29,6 +30,7 @@ import {
   type SignatureInbox,
   signatureOutcome,
   storedSignatureBlockOf,
+  textCarriesOwnSignature,
 } from "./signature-compose.ts";
 
 const TEXT_SIG_INBOX: SignatureInbox = {
@@ -355,4 +357,43 @@ Deno.test("draft and send results carry the signature outcome", () => {
     source.split("signature: signatureOutcome(inbox, { include_signature: includeSignature })").length - 1,
     2,
   );
+});
+
+// ---------------------------------------------------------------------------
+// A draft body the model signed itself (live claude.ai test, 2026-10-19)
+// ---------------------------------------------------------------------------
+
+type Body = { textBody: string; htmlBody?: string };
+
+Deno.test("applySignatureOnce: a body that already carries the signature is not signed twice", () => {
+  const pasted = "See you Friday.\n\n-- \nAsgeir Albretsen\nMCP Emails";
+  const out = applySignatureOnce({ textBody: pasted } as Body, TEXT_SIG_INBOX);
+  assertEquals(out.textBody, pasted);
+  assertEquals(signatureCounts(out.textBody, out.htmlBody), { text: 1, html: 1 });
+  // The HTML part is the one applySignature builds for the unsigned text.
+  const fresh = applySignature({ textBody: "See you Friday." } as Body, TEXT_SIG_INBOX);
+  assertEquals(out.htmlBody, fresh.htmlBody);
+  // A multi-line signature pasted without the delimiter line counts too.
+  const bare = applySignatureOnce({ textBody: "See you Friday.\n\nAsgeir Albretsen\nMCP Emails" } as Body, TEXT_SIG_INBOX);
+  assertEquals(bare.textBody, "See you Friday.\n\nAsgeir Albretsen\nMCP Emails");
+  // Caller HTML is left alone.
+  const withHtml = applySignatureOnce({ textBody: pasted, htmlBody: "<p>See you Friday.</p>" } as Body, TEXT_SIG_INBOX);
+  assertEquals(withHtml.htmlBody, "<p>See you Friday.</p>");
+});
+
+Deno.test("applySignatureOnce: anything short of the signature is signed as before", () => {
+  const one: SignatureInbox = { signature_enabled: true, signature_text: "Asgeir", signature_html: null };
+  // A one-line sign-off is not the signature.
+  const signoff = applySignatureOnce({ textBody: "Thanks,\nAsgeir" } as Body, one);
+  assertEquals(signoff.textBody, "Thanks,\nAsgeir\n\n-- \nAsgeir");
+  // The signature inside a quoted original is the quoted message's, not this one.
+  const quoted = "Sure.\n\nOn Mon, 7 Sep 2026, Asgeir <a@x.example> wrote:\n> Hi\n> -- \n> Asgeir";
+  assertEquals(textCarriesOwnSignature(quoted, one), false);
+  const plain = applySignatureOnce({ textBody: "Sure." } as Body, TEXT_SIG_INBOX);
+  assertEquals(signatureCounts(plain.textBody, plain.htmlBody), { text: 1, html: 1 });
+  // include_signature: false still means no signature, pasted one or not.
+  const off = applySignatureOnce({ textBody: "Hi." } as Body, TEXT_SIG_INBOX, { include_signature: false });
+  assertEquals(off, { textBody: "Hi." });
+  // No signature configured: nothing to detect, nothing appended.
+  assertEquals(textCarriesOwnSignature("Hi.\n\n-- \nAsgeir", { signature_enabled: true }), false);
 });
