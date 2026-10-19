@@ -97,7 +97,13 @@ const callback = (query = 'code=abc') =>
   }));
 
 const addMemberCalls = () => rpcs.filter((r) => r.fn === 'add_workspace_member');
-const auditRows = () => inserts.filter((i) => i.table === 'activity_log').map((i) => [i.row.tool_name, i.row.status, i.row.error_code]);
+const auditRows = () =>
+  inserts
+    .filter((i) => i.table === 'sso_audit_events')
+    .map((i) => {
+      const details = i.row.details as { outcome: string; error_code: string | null };
+      return [i.row.action, details.outcome, details.error_code];
+    });
 
 test('happy path: joined to the workspace, audited, sent on to next', async () => {
   reset();
@@ -107,7 +113,8 @@ test('happy path: joined to the workspace, audited, sent on to next', async () =
     fn: 'add_workspace_member',
     args: { p_workspace_id: WORKSPACE, p_user_id: 'user-1', p_role: 'member', p_source: 'sso' },
   }]);
-  assert.deepEqual(auditRows(), [['sso.jit_join', 'success', null], ['sso.sign_in', 'success', null]]);
+  assert.deepEqual(auditRows(), [['user.jit_join', 'success', null], ['user.sign_in', 'success', null]]);
+  assert.equal(inserts.filter((i) => i.table === 'activity_log').length, 0);
   assert.equal(inserts[0].row.workspace_id, WORKSPACE);
   assert.equal(inserts[0].row.ip_address, '203.0.113.7');
   assert.equal(signOuts.length, 0);
@@ -129,7 +136,7 @@ test('unverified domain: signed out, audited, not joined', async () => {
   assert.equal(res.headers.get('location'), 'https://mcpemails.test/auth/error?reason=sso_not_configured');
   assert.deepEqual(signOuts, [{ scope: 'local' }]);
   assert.equal(addMemberCalls().length, 0);
-  assert.deepEqual(auditRows(), [['sso.sign_in', 'error', 'domain_not_verified']]);
+  assert.deepEqual(auditRows(), [['user.sign_in', 'error', 'domain_not_verified']]);
 });
 
 test('disabled connection: signed out, audited, not joined', async () => {
@@ -139,7 +146,7 @@ test('disabled connection: signed out, audited, not joined', async () => {
   assert.equal(res.headers.get('location'), 'https://mcpemails.test/auth/error?reason=sso_not_configured');
   assert.deepEqual(signOuts, [{ scope: 'local' }]);
   assert.equal(addMemberCalls().length, 0);
-  assert.deepEqual(auditRows(), [['sso.sign_in', 'error', 'connection_disabled']]);
+  assert.deepEqual(auditRows(), [['user.sign_in', 'error', 'connection_disabled']]);
 });
 
 test('add_workspace_member not shipped yet: signed out with the join error', async () => {
@@ -148,7 +155,7 @@ test('add_workspace_member not shipped yet: signed out with the join error', asy
   const res = await callback();
   assert.equal(res.headers.get('location'), 'https://mcpemails.test/auth/error?reason=sso_join_failed');
   assert.deepEqual(signOuts, [{ scope: 'local' }]);
-  assert.deepEqual(auditRows(), [['sso.jit_join', 'error', 'contract_missing']]);
+  assert.deepEqual(auditRows(), [['user.jit_join', 'error', 'contract_missing']]);
 });
 
 test('a non-SSO sign-in never runs the SSO branch', async () => {

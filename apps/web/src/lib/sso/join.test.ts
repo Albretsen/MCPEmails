@@ -62,9 +62,10 @@ test('happy path: a new SSO user joins the workspace with the default role, audi
   assert.deepEqual(added, [{ workspaceId: WORKSPACE, userId: 'user-1', role: 'viewer', source: 'sso' }]);
   assert.deepEqual(
     audits.map((a) => [a.event, a.status, a.errorCode]),
-    [['sso.jit_join', 'success', null], ['sso.sign_in', 'success', null]],
+    [['user.jit_join', 'success', null], ['user.sign_in', 'success', null]],
   );
   assert.equal(audits[0].workspaceId, WORKSPACE);
+  assert.ok(audits.every((a) => a.connectionId === 'conn-1' && a.userId === 'user-1'), 'connection and actor recorded');
   assert.equal(audits[0].ipAddress, '203.0.113.7');
   assert.equal(audits[0].userAgent, 'test-agent');
 });
@@ -74,7 +75,7 @@ test('a returning SSO user is re-added (idempotent) and logs only a sign-in', as
   const result = await completeSsoSignIn(deps, ssoUser('2026-09-01T00:00:00Z'), META);
   assert.deepEqual(result, { ok: true, workspaceId: WORKSPACE, joined: false });
   assert.equal(added.length, 1);
-  assert.deepEqual(audits.map((a) => a.event), ['sso.sign_in']);
+  assert.deepEqual(audits.map((a) => a.event), ['user.sign_in']);
 });
 
 test('unknown provider: refused, nothing joined, nothing audited', async () => {
@@ -89,7 +90,7 @@ test('unverified domain: refused and audited as an error', async () => {
   const { deps, added, audits } = harness({ route: { sso: false, reason: 'not_configured' } });
   assert.deepEqual(await completeSsoSignIn(deps, ssoUser(), META), { ok: false, reason: 'sso_not_configured' });
   assert.equal(added.length, 0);
-  assert.deepEqual(audits.map((a) => [a.event, a.status, a.errorCode]), [['sso.sign_in', 'error', 'domain_not_verified']]);
+  assert.deepEqual(audits.map((a) => [a.event, a.status, a.errorCode]), [['user.sign_in', 'error', 'domain_not_verified']]);
 });
 
 test('disabled connection: refused and audited, even if the domain lookup still answered', async () => {
@@ -113,7 +114,7 @@ test('add_workspace_member missing (team-tier contract not shipped): refused, au
     added: { ok: false, reason: 'contract_missing', message: 'Could not find the function' },
   });
   assert.deepEqual(await completeSsoSignIn(deps, ssoUser(), META), { ok: false, reason: 'sso_join_failed' });
-  assert.deepEqual(audits.map((a) => [a.event, a.errorCode]), [['sso.jit_join', 'contract_missing']]);
+  assert.deepEqual(audits.map((a) => [a.event, a.errorCode]), [['user.jit_join', 'contract_missing']]);
 });
 
 test('add_workspace_member refusing (seat cap): refused, audited', async () => {

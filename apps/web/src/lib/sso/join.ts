@@ -80,6 +80,8 @@ export async function completeSsoSignIn(
   const audit = (event: (typeof SSO_AUDIT_EVENTS)[keyof typeof SSO_AUDIT_EVENTS], errorCode: string | null) =>
     deps.audit({
       workspaceId: connection.workspace_id,
+      connectionId: connection.id,
+      userId: user.id,
       event,
       status: errorCode ? 'error' : 'success',
       errorCode,
