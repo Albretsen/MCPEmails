@@ -348,13 +348,12 @@ jobs:
       # The remaining functions with no other coverage (2026-10-15). Until now
       # nothing type-checked them, including system-notify, which carries the
       # email-mute logic (MUTED_EVENT_TYPES) and had no check at all. The first run of this step found a real error in
-      # gmail-token-refresh (TS2769 on crypto.subtle.importKey), fixed in the
+      # gmail-token-refresh (TS2769, since removed: nothing called it), fixed in the
       # same change. Same flag as above, for the same reason.
       - name: Type check the other edge functions
         run: >-
           deno check --node-modules-dir=none
           supabase/functions/system-notify/index.ts
-          supabase/functions/gmail-token-refresh/index.ts
           supabase/functions/outlook-token-refresh/index.ts
           supabase/functions/synthetic-monitor/index.ts
 
