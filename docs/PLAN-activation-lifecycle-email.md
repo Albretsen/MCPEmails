@@ -799,7 +799,7 @@ signature. Cost: half a day. This is listed as prerequisite P2.
   `apps/web/src/lib/email/billing-lifecycle.ts:523` contains no address, which
   means the two live `winback_*` templates are already non-compliant if anyone
   cares to look. Add the registered address from
-  `project_founder_identity_trust.md` (Albretsen Consulting ENK, org 926 646 753,
+  `apps/web/src/lib/email/legal.ts` (Albretsen AS, org 938 702 373,
   Bergen, Norway) to the shared footer, which fixes both features at once.
 - **GDPR.** Lawful basis is legitimate interest (Art. 6(1)(f)): the recipient is
   an existing registered user of the service, the message concerns the service
