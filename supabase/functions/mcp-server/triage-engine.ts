@@ -2183,7 +2183,7 @@ export interface AutomationDeps {
 function toolOk(payload: Record<string, unknown>): TriageToolResult {
   return {
     result: {
-      content: [{ type: "text", text: JSON.stringify(payload, null, 2) }],
+      content: [{ type: "text", text: JSON.stringify(payload) }],
       structuredContent: payload,
       isError: false,
     },

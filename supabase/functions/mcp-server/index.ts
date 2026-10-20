@@ -1184,12 +1184,13 @@ function preTransmissionResult(
  */
 function jsonOk(
   obj: Record<string, unknown>,
-  pretty = false,
 ): { content: { type: string; text: string }[]; structuredContent: Record<string, unknown> } {
+  // Always compact: this text block is what lands in the model's context, and
+  // indentation is whitespace it pays tokens for and learns nothing from.
   return {
     content: [{
       type: "text",
-      text: pretty ? JSON.stringify(obj, null, 2) : JSON.stringify(obj),
+      text: JSON.stringify(obj),
     }],
     structuredContent: obj,
   };
@@ -4364,10 +4365,11 @@ const INBOX_ID_PROPERTY = {
   format: "uuid",
   // One sentence on purpose: the full selection rules (omit both when the key
   // has one inbox, never guess, the error lists every inbox_id) live in
-  // SERVER_INSTRUCTIONS, and this property is advertised on nine tools.
-  description:
-    "Inbox UUID from inbox_list. Optional when the key has one inbox; pass " +
-    "this or `inbox`, not both — a pair naming different mailboxes is refused.",
+  // SERVER_INSTRUCTIONS, and this property is advertised on 13 tools (39 on
+  // the per-operation surface), so every character is paid that many times.
+  // `inbox` says it is the alternative; a conflicting pair is refused with an
+  // error that says so.
+  description: "Inbox UUID (inbox_list). Optional with one inbox.",
 } as const;
 
 /** Shared `inbox` property — the email-address alternative to `inbox_id`. */
@@ -4420,10 +4422,7 @@ const IDEMPOTENCY_KEY_PROPERTY = {
   maxLength: 200,
   // Advertised on several tools, so only the facts that change a caller's
   // behaviour: retry-only reuse, the window, and the conflict rule.
-  description:
-    "Reuse only when retrying the identical request within 24 hours; the " +
-    "retry is collapsed, not repeated. Reuse with different arguments is " +
-    "rejected.",
+  description: "Retry key: reuse only for the identical call within 24h; it runs once.",
 } as const;
 
 /**
@@ -6714,15 +6713,12 @@ const EMAIL_SUMMARY_SCHEMA = {
   additionalProperties: true,
 } as const;
 
-/** JSON-Schema fragment for a search result summary (email_search). */
-const SEARCH_EMAIL_SUMMARY_SCHEMA = {
-  type: "object",
-  properties: {
-    ...EMAIL_SUMMARY_SCHEMA.properties,
-    relevance_score: { type: ["number", "null"] },
-  },
-  additionalProperties: true,
-} as const;
+/**
+ * JSON-Schema fragment for a search result summary (email_search). The same
+ * shape as a list summary since `relevance_score` was dropped on 2026-10-20:
+ * no provider path ever set it to anything but null.
+ */
+const SEARCH_EMAIL_SUMMARY_SCHEMA = EMAIL_SUMMARY_SCHEMA;
 
 /** Output schema for tools returning `{ success, message_id, operation, inbox_id }`. */
 const FLAG_RESULT_SCHEMA = {
@@ -10440,7 +10436,7 @@ async function executeListInboxes(
         },
         available: report.available,
         message: report.message,
-      }, true),
+      }),
       logStatus: "success",
       logErrorCode: null,
     };
@@ -10473,14 +10469,14 @@ async function executeListInboxes(
           "iCloud, Yahoo and Zoho connect in about a minute; any other provider " +
           "takes IMAP and SMTP details. Once a mailbox is connected, call " +
           "inbox_list again.",
-      }, true),
+      }),
       logStatus: "success",
       logErrorCode: null,
     };
   }
 
   return {
-    result: jsonOk({ inboxes }, true),
+    result: jsonOk({ inboxes }),
     logStatus: "success",
     logErrorCode: null,
   };
@@ -12641,7 +12637,6 @@ async function searchImapMessages(
       has_attachments: s.hasAttachments,
       folder,
       thread_id: String(s.uid),
-      relevance_score: null,
       ...flaggedField(() => s.flags.includes("\\Flagged")),
       ...threadFields(() => ({ messageId: s.envelope.messageId, inReplyTo: s.envelope.inReplyTo, references: referencesOfHeaderBlock(s.referencesHeader) })),
       ...gmailThreadField(() => s.gmThreadId),
@@ -14095,9 +14090,8 @@ function neutralizeReadResult(result: ReadEmailResult): ReadEmailResult {
 /**
  * The list/search equivalent. `preview` is body content, so it is left alone.
  *
- * Generic over the summary shape because search returns a widened
- * `SearchEmailSummary` (it carries `relevance_score`), and the extra fields must
- * survive the pass untouched.
+ * Generic over the summary shape so any widened summary (extra thread or flag
+ * fields) survives the pass untouched.
  */
 function neutralizeSummary<T extends EmailSummary>(summary: T): T {
   return {
@@ -18752,17 +18746,10 @@ async function executeSendEmail(
 // ---------------------------------------------------------------------------
 
 /**
- * A single email summary in a `email_search` result.
- * Extends EmailSummary with an optional provider relevance score.
+ * A single email summary in a `email_search` result. It used to carry a
+ * `relevance_score` that every provider path set to null; dropped 2026-10-20.
  */
-interface SearchEmailSummary extends EmailSummary {
-  /**
-   * Provider relevance score, if available.
-   * Outlook Graph may return a score for $search results; Gmail and IMAP/JMAP
-   * providers do not expose one, so this is null for those providers.
-   */
-  relevance_score: number | null;
-}
+type SearchEmailSummary = EmailSummary;
 
 interface SearchEmailsResult {
   messages: SearchEmailSummary[];
@@ -18989,7 +18976,6 @@ async function searchGmailMessages(
       has_attachments: gmailHasAttachments(msg),
       folder,
       thread_id: msg.threadId ?? pageRefs[i].threadId,
-      relevance_score: null,
       ...flaggedField(() => labelIds.includes("STARRED")),
       ...threadFields(() => ({ messageId: hdrs["message-id"], inReplyTo: hdrs["in-reply-to"], references: hdrs["references"] })),
     };
@@ -19204,7 +19190,6 @@ async function searchOutlookMessages(
     has_attachments: msg.hasAttachments ?? false,
     folder: (msg.parentFolderId && folderLabels.get(msg.parentFolderId)) || folder,
     thread_id: msg.conversationId ?? msg.id,
-    relevance_score: null,
     ...flaggedField(() => msg.flag?.flagStatus === "flagged"),
     ...threadMessageIdField(() => msg.internetMessageId),
   }));
@@ -20679,7 +20664,6 @@ async function executeListFolders(
           inboxId: inbox.id,
           folders,
         }) as unknown as Record<string, unknown>,
-        true,
       ),
       isError: false,
     },
@@ -21295,7 +21279,7 @@ async function executeCreateFolder(
               note: `A ${itemType} with this name already existed, so nothing was created; ` +
                 `use this id.`,
             },
-          }, true),
+          }),
           isError: false,
         },
         logStatus: "success",
@@ -21320,7 +21304,7 @@ async function executeCreateFolder(
             }
             : {}),
         },
-      }, true),
+      }),
       isError: false,
     },
     logStatus: "success",
@@ -21408,7 +21392,7 @@ async function executeRenameFolder(
             note: folderNameTrimNote(newNameReq, organizationItemType(inbox)),
           }
           : {}),
-      }, true),
+      }),
       isError: false,
     },
     logStatus: "success",
@@ -21470,7 +21454,7 @@ async function executeDeleteFolder(
         folder_id: folderId,
         item_type: organizationItemType(inbox),
         status: "deleted",
-      }, true),
+      }),
       isError: false,
     },
     logStatus: "success",
@@ -28108,7 +28092,6 @@ async function executeListDrafts(
         inboxId: inbox.id,
         drafts,
       }) as unknown as Record<string, unknown>,
-      true,
     ),
     logStatus: "success", logErrorCode: null,
   };
@@ -30185,7 +30168,6 @@ async function executeSearchContacts(
           limit,
           scanTruncated: false,
         }) as unknown as Record<string, unknown>,
-        true,
       ),
       logStatus: "success", logErrorCode: null,
     };
@@ -30278,7 +30260,6 @@ async function executeSearchContacts(
         limit,
         scanTruncated,
       }) as unknown as Record<string, unknown>,
-      true,
     ),
     logStatus: "success", logErrorCode: null,
   };
@@ -30535,7 +30516,7 @@ async function executeScheduleSend(
       send_at: created.send_at,
       status: created.status,
       created_at: created.created_at,
-    }, true),
+    }),
     logStatus: "success", logErrorCode: null,
   };
 }
@@ -30642,7 +30623,7 @@ async function executeListScheduled(
   }));
 
   return {
-    result: jsonOk({ scheduled_sends: rows, total: rows.length }, true),
+    result: jsonOk({ scheduled_sends: rows, total: rows.length }),
     logStatus: "success", logErrorCode: null,
   };
 }
@@ -30794,7 +30775,7 @@ async function executeCancelScheduled(
       inbox_id: row.inbox_id,
       send_at: row.send_at,
       previous_status: "pending",
-    }, true),
+    }),
     logStatus: "success", logErrorCode: null,
   };
 }
@@ -30848,7 +30829,7 @@ async function executeGetSignature(
       signature_reply_mode: inbox.signature_reply_mode,
       signature_source: inbox.signature_source,
       signature_updated_at: inbox.signature_updated_at,
-    }, true),
+    }),
     logStatus: "success", logErrorCode: null,
   };
 }
@@ -31004,7 +30985,7 @@ async function executeSetSignature(
       signature_reply_mode: merged.signature_reply_mode,
       signature_source: merged.signature_source,
       signature_updated_at: merged.signature_updated_at,
-    }, true),
+    }),
     logStatus: "success", logErrorCode: null,
   };
 }
@@ -32477,7 +32458,7 @@ async function handleToolsCall(
       };
       logErrorCode = "idempotency_unavailable";
     }
-    toolResult = { jsonrpc: "2.0", id, result: { ...jsonOk(payload, true), isError: logStatus !== "success" } };
+    toolResult = { jsonrpc: "2.0", id, result: { ...jsonOk(payload), isError: logStatus !== "success" } };
   } else {
   // ── Byte-heavy concurrency guard ──────────────────────────────────────────
   // The request-rate limiter counts calls, not bytes, so a client making three
@@ -32512,7 +32493,7 @@ async function handleToolsCall(
             "so that no single client can exhaust the server's memory. Nothing was fetched. " +
             "Wait for the in-progress download to finish, then retry this exact request; " +
             "fetching messages and attachments one at a time avoids this entirely.",
-        }, true),
+        }),
         isError: true,
       },
     };
