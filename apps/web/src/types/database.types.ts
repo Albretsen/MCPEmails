@@ -2163,6 +2163,7 @@ export type Database = {
           display_name: string | null
           draft_editor_hidden: boolean
           email_address: string
+          folder_overrides: Json | null
           id: string
           imap_host: string | null
           imap_password: string | null
@@ -2202,6 +2203,7 @@ export type Database = {
           display_name?: string | null
           draft_editor_hidden?: boolean
           email_address: string
+          folder_overrides?: Json | null
           id?: string
           imap_host?: string | null
           imap_password?: string | null
@@ -2241,6 +2243,7 @@ export type Database = {
           display_name?: string | null
           draft_editor_hidden?: boolean
           email_address?: string
+          folder_overrides?: Json | null
           id?: string
           imap_host?: string | null
           imap_password?: string | null
@@ -5093,6 +5096,10 @@ export type Database = {
           band: string
           workspaces: number
         }[]
+      }
+      inbox_folder_overrides_valid: {
+        Args: { overrides: Json }
+        Returns: boolean
       }
       internal_account_domains: { Args: never; Returns: string[] }
       internal_account_emails: { Args: never; Returns: string[] }

@@ -264,6 +264,34 @@
         "imageNote": "Certains clients de messagerie (p. ex. Gmail) peuvent masquer les images jusqu'à ce que le destinataire clique sur « afficher les images ». C'est normal pour les signatures comportant des images hébergées. Activez « Intégrer les images au message » ci-dessous pour les envoyer dans l'e-mail.",
         "embedImages": "Intégrer les images au message",
         "embedImagesHint": "Envoie votre logo à l'intérieur de chaque e-mail au lieu de le charger depuis son adresse web : il s'affiche ainsi dans les brouillons et dans les messageries qui bloquent les images distantes, comme Outlook et Thunderbird. Images jusqu'à 512 Ko ; les plus grandes restent liées."
+      },
+      "advanced": "Avancé",
+      "folders": {
+        "title": "Dossiers",
+        "help": "MCPEmails trouve ces dossiers tout seul. N'en choisissez un que s'il s'est trompé de dossier ou n'en a trouvé aucun.",
+        "loading": "Chargement des dossiers…",
+        "roles": {
+          "sent": "Envoyés",
+          "drafts": "Brouillons",
+          "trash": "Corbeille",
+          "spam": "Spam",
+          "archive": "Archives"
+        },
+        "automatic": "Automatique ({folder})",
+        "automaticNone": "Automatique (introuvable)",
+        "reset": "Revenir à automatique",
+        "saved": "Enregistré. {role} utilise maintenant {folder}.",
+        "resetDone": "Enregistré. {role} est de nouveau automatique.",
+        "errors": {
+          "load": "Impossible de charger les dossiers. Réessayez.",
+          "save": "Impossible d'enregistrer. Réessayez.",
+          "inbox_not_allowed": "La boîte de réception ne peut pas servir à cela.",
+          "not_listed": "Ce dossier n'existe plus sur le serveur de messagerie. Fermez et rouvrez pour actualiser la liste.",
+          "used_by_other_role": "Ce dossier est déjà utilisé pour un autre rôle.",
+          "folders_unreachable": "Impossible de joindre le serveur de messagerie pour lister les dossiers. Réessayez.",
+          "unavailable": "Les réglages des dossiers ne sont pas encore disponibles.",
+          "unsupported_inbox": "Les réglages des dossiers ne sont pas disponibles pour cette boîte."
+        }
       }
     },
     "emptyAltLead": "Pas encore prêt à connecter une boîte ?",

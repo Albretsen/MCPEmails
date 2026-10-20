@@ -44,6 +44,13 @@ export const KINDS = ['added', 'improved', 'fixed', 'changed'];
 export const ENTRIES = [
   /* ── October 2026 ──────────────────────────────────────────── */
   {
+    date: '2026-10-21',
+    kind: 'added',
+    title: 'Choose the folders MCPEmails uses',
+    body:
+      'For IMAP inboxes you can now pick which folder MCPEmails uses for Sent, Drafts, Trash, Spam and Archive, under Advanced in the inbox\'s settings. Automatic detection stays the default.',
+  },
+  {
     date: '2026-10-20',
     kind: 'added',
     title: 'Free IMAP and SMTP settings lookup',

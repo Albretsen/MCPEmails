@@ -349,16 +349,18 @@ Deno.test("neither soft-delete path moves mail to the literal string Trash", () 
   for (const name of ["imapDeleteEmail", "imapBulkDelete"]) {
     assertStringIncludes(
       functionBody(name),
-      "resolveImapTrashMailbox(client)",
+      "resolveImapTrashMailbox(client, inbox)",
       `${name} must resolve trash against the server's real layout`,
     );
   }
 });
 
 Deno.test("trash is resolved the same way archive already was", () => {
-  const body = functionBody("resolveImapTrashMailbox");
+  // resolveImapTrashMailbox lists and consults the user's folder pick
+  // (folder-overrides.ts); automatic detection is automaticImapTrashMailbox.
+  assertStringIncludes(functionBody("resolveImapTrashMailbox"), "listMailboxes()");
+  const body = functionBody("automaticImapTrashMailbox");
   assertStringIncludes(body, 'lookupCanonicalAlias("trash")');
-  assertStringIncludes(body, "listMailboxes()");
   assertStringIncludes(body, "matchImapAliasMailbox(mailboxes, trashAlias)");
   // Mirrors imapArchiveEmail's fallback: create the canonical mailbox rather
   // than dead-ending the operation with a raw "[TRYCREATE]" leak.
@@ -371,13 +373,13 @@ Deno.test("the trash destination exists before the source message is touched", (
   // sitting safely in its own folder — so the LIST/CREATE comes first, the way
   // imapArchiveEmail orders it.
   const body = functionBody("imapDeleteEmail");
-  const resolved = body.indexOf("resolveImapTrashMailbox(client)");
+  const resolved = body.indexOf("resolveImapTrashMailbox(client, inbox)");
   // Anchored on the two commands themselves rather than on their adjacency:
   // the F-09 fix (2026-09-20) put an `assertUidPresent` probe between the
   // SELECT and the MOVE, and an anchor that spelled out the exact intervening
   // bytes made an unrelated, correct insertion look like this ordering had
   // been broken. The property under test is which of the two happens FIRST.
-  const moved = body.indexOf("uidMove([uid], trash)");
+  const moved = body.indexOf("uidMoveIntoRoleTarget(client, inbox, \"trash\", [uid], trash");
   assert(resolved !== -1 && moved !== -1, "imapDeleteEmail changed shape");
   assert(
     resolved < moved,

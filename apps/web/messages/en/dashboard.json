@@ -264,6 +264,34 @@
         "imageNote": "Some email clients (e.g. Gmail) may hide images until the recipient clicks \"display images\". This is normal for signatures with hosted images. Turn on \"Embed images in the message\" below to send them inside the email instead.",
         "embedImages": "Embed images in the message",
         "embedImagesHint": "Sends your logo inside each email instead of loading it from its web address, so it shows in drafts and in mail apps that block remote images, such as Outlook and Thunderbird. Images up to 512 KB; larger ones stay linked."
+      },
+      "advanced": "Advanced",
+      "folders": {
+        "title": "Folders",
+        "help": "MCPEmails finds these folders on its own. Pick one only if it chose the wrong folder or found none.",
+        "loading": "Loading folders…",
+        "roles": {
+          "sent": "Sent",
+          "drafts": "Drafts",
+          "trash": "Trash",
+          "spam": "Spam",
+          "archive": "Archive"
+        },
+        "automatic": "Automatic ({folder})",
+        "automaticNone": "Automatic (not found)",
+        "reset": "Reset to automatic",
+        "saved": "Saved. {role} now uses {folder}.",
+        "resetDone": "Saved. {role} is automatic again.",
+        "errors": {
+          "load": "Could not load the folders. Try again.",
+          "save": "Could not save. Try again.",
+          "inbox_not_allowed": "The inbox cannot be used for this.",
+          "not_listed": "That folder is no longer on the mail server. Close and reopen to refresh the list.",
+          "used_by_other_role": "That folder is already used for another role.",
+          "folders_unreachable": "Could not reach the mail server to list folders. Try again.",
+          "unavailable": "Folder settings are not available yet.",
+          "unsupported_inbox": "Folder settings are not available for this inbox."
+        }
       }
     },
     "emptyAltLead": "Not ready to connect a mailbox yet?",
