@@ -24,7 +24,7 @@ I MCP Emails-dashbordet åpner du **Inboxes** og deretter **Connect Inbox**, og 
 
 ### Gmail og Google Workspace
 
-Gmail kobles til med et Google-apppassord over IMAP som standard, og Google OAuth-innlogging er også tilgjengelig. Bruk apppassordet hvis en Workspace-administrator begrenser tilgangen for tredjepartsapper. [Gmail-veiledningen](/blog/connect-gmail-to-claude) har stegene.
+Gmail kobles til med et Google-apppassord over IMAP. Slå på totrinnsbekreftelse, lag apppassordet på myaccount.google.com/apppasswords, og lim inn de 16 bokstavene sammen med hele Gmail-adressen din; det vanlige Google-passordet ditt fungerer ikke. En Google Workspace-administrator kan slå av apppassord for domenet, så spør administratoren hvis valget mangler. [Gmail-veiledningen](/blog/connect-gmail-to-claude) har stegene.
 
 ### iCloud, Fastmail, Yahoo og Zoho
 
@@ -79,7 +79,7 @@ For rutiner du gjentar, start fra [triageringsoppskriften for innboksen](/blog/a
 
 MCP Emails gir ChatGPT målrettede e-postverktøy i stedet for et passord eller en rå IMAP-forbindelse:
 
-- **Lese og søke:** \`email_read\` dekker list, read, read_batch, search og attachment. Gmail-søk godtar operatorer som \`from:\` og \`is:unread\`.
+- **Lese og søke:** \`email_read\` dekker list, read, read_batch, search og attachment. Søk bruker strukturerte felt som avsender, emne, dato og ulest-status, og Gmail-etiketter vises som mapper.
 - **Sende, svare og videresende:** \`email_compose\` sender gjennom din egen leverandør og adresse.
 - **Organisere:** \`email_organize\`, \`email_search_and_move\` og \`email_delete\`.
 - **Utkast, mapper og planlegging:** \`draft\`, \`draft_list\`, \`folder\`, \`folder_list\`, \`schedule\` og \`schedule_list\`.

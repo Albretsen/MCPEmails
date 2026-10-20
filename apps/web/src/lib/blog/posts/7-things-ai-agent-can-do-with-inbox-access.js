@@ -36,7 +36,7 @@ You get added to a 40-message thread at message 38. Nobody is going to read up. 
 
 > Read the thread with subject "Q3 vendor migration" and tell me where it actually landed: what was decided, who owns what, and any open question I need to answer.
 
-\`email_read\` with action search finds the thread (it uses your provider's native search syntax, so Gmail operators, Outlook KQL, and IMAP text search all work), then \`email_read\` with action read pulls the parsed plain text of each message. That read action can also return sanitized HTML and attachments when you ask, but for a summary the plain text is faster and cheaper.
+\`email_read\` with action search finds the thread (it takes structured fields such as sender, subject, text and date range, and MCP Emails turns them into each provider's own search), then \`email_read\` with action read pulls the parsed plain text of each message. That read action can also return sanitized HTML and attachments when you ask, but for a summary the plain text is faster and cheaper.
 
 ### 3. Draft replies in your voice
 

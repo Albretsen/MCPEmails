@@ -37,9 +37,9 @@ The classic mistake is granting full mailbox access when the task needs "read th
 
 Here's how MCP Emails handles each risk. I'm biased — I built it — but the design choices are checkable, and you should hold any tool you pick to the same bar.
 
-**Your email is never stored.** Every tool call hits your provider in real time, through the Gmail API, Microsoft Graph, or IMAP/SMTP. Message bodies, subjects, and attachments pass through to the agent and are discarded immediately. The only thing we keep per inbox is one encrypted credential so the next call can be made. There's no inbox mirror to breach, because the mirror doesn't exist.
+**Your email is never stored.** Every tool call hits your provider in real time, over IMAP/SMTP for Gmail and most other providers, or Microsoft Graph for Outlook. Message bodies, subjects, and attachments pass through to the agent and are discarded immediately. The only thing we keep per inbox is one encrypted credential so the next call can be made. There's no inbox mirror to breach, because the mirror doesn't exist.
 
-**Credentials are AES-256-GCM encrypted at rest.** Your OAuth token or app password is encrypted before it touches the database, and decryption happens only inside an isolated edge function at call time. The encryption key is an environment secret stored separately from the database, so a database dump alone is useless. This is the one piece of your data we persist, and it's the piece we treat most carefully.
+**Credentials are AES-256-GCM encrypted at rest.** Your app password or OAuth token is encrypted before it touches the database. It's decrypted on our servers only when a request needs it, and it's never sent to your agent. The encryption key is kept as a server secret, separate from the database, so a database dump alone is useless. This is the one piece of your data we persist, and it's the piece we treat most carefully.
 
 **Scopes are minimal by design.** When you connect an agent, you approve exactly two possible permissions: \`read:email\` and \`send:email\`. Want an agent that summarizes but can never send? Grant \`read:email\` only. The system doesn't have a "full access" sledgehammer, because there's nothing to gain from one. If you're weighing how agents authenticate, [OAuth vs API keys for AI email access](/blog/oauth-vs-api-keys-ai-email-access) breaks down which to use when.
 
@@ -54,7 +54,7 @@ Run through this before you connect anything, ours or anyone else's:
 1. **Does it store your email, or fetch it live?** Live fetch is the only answer that keeps your blast radius at zero. Stored copies are a standing liability.
 2. **How are credentials encrypted, and where is the key?** "Encrypted at rest" means little if the key sits next to the database. You want strong encryption (AES-256-GCM) and the key held separately.
 3. **Can you scope down to read-only?** If the only option is all-or-nothing access, walk away. You should be able to grant read without send.
-4. **Who sends the mail?** Sending through your own provider keeps deliverability and reputation under your control. Relayed-from-vendor sending does not.
+4. **Who sends the mail?** Sending through your own provider keeps deliverability and reputation under your control. Sending from the vendor's own domain does not.
 5. **Can you revoke in one click?** Instant, self-serve revocation is the difference between a scare and an incident.
 6. **Is there a human in the loop for sends?** For anything irreversible, the agent should draft and you should approve. This is your best defense against prompt injection.
 

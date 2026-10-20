@@ -11,7 +11,7 @@ Este artículo recorre por qué esa última milla es engañosamente difícil, y 
 
 El correo parece un problema resuelto. No lo es, al menos no para un agente autónomo. Hay tres cosas que se interponen:
 
-1. **La autenticación depende del proveedor.** Gmail quiere OAuth con los scopes adecuados. Outlook quiere identidad de Microsoft. Fastmail quiere una contraseña de aplicación. Cada uno tiene su propio ciclo de vida del token y sus propios modos de fallo.
+1. **La autenticación depende del proveedor.** Gmail quiere una contraseña de aplicación y la Verificación en dos pasos. Outlook quiere identidad de Microsoft. Fastmail quiere una contraseña de aplicación. Cada uno tiene su propio ciclo de vida del token y sus propios modos de fallo.
 2. **Las credenciales son radiactivas.** No quieres una contraseña de buzón en una transcripción de chat, en una línea de log o en un almacén vectorial. Nunca.
 3. **La "forma" del correo es caótica.** MIME, hilos, HTML frente a texto plano, adjuntos, carpetas que en realidad son etiquetas. Un agente necesita una interfaz limpia y predecible, no RFC 5322 en crudo.
 

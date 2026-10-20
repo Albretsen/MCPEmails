@@ -49,12 +49,12 @@
       "p": "Google a annoncé la prise en charge officielle de MCP pour ses services, dont un serveur MCP Workspace qui couvre Gmail ainsi que Drive, Agenda et Chat. Nous n'allons pas prétendre le contraire. Si Gmail est la seule boîte que vous voulez confier à un assistant, et que votre client sait dialoguer avec le serveur de Google, utilisez-le. La raison de connecter plutôt Gmail à mcpemails, c'est que le même serveur accueille aussi votre boîte iCloud, Fastmail, Zoho, Yahoo ou IMAP d'entreprise, les expose toutes via <b>une seule</b> URL MCP, et se comporte de la même façon dans Claude, Cursor et ChatGPT. Un connecteur par fournisseur, chacun avec sa propre authentification et ses propres noms d'outils : c'est précisément ce que cela vous évite."
     },
     {
-      "h": "Sur un Gmail professionnel, votre administrateur Workspace peut bloquer l'option de connexion avec Google",
-      "p": "Cela ne concerne que l'option de connexion avec Google, pas un mot de passe d'application. Les administrateurs Google Workspace contrôlent l'accès des API tierces sous Security, puis API controls, puis App access control. Un administrateur peut bloquer purement et simplement toutes les applications tierces, ou n'autoriser une application que pour certains champs d'application OAuth nommés. Lorsque c'est activé, Google refuse dès son propre écran de consentement avec <code>Error 400: admin_policy_enforced</code>, et la demande ne nous parvient jamais. Rien de notre côté ne peut passer outre : un administrateur doit autoriser l'application pour les champs d'application Gmail. Les comptes personnels se terminant par <code>@gmail.com</code> ne sont soumis à aucune règle de ce type et ne sont pas concernés."
+      "h": "Envoyer depuis une autre adresse demande une adresse d'envoi vérifiée",
+      "p": "Une boîte connectée avec un mot de passe d'application envoie depuis sa propre adresse. Pour que votre agent envoie depuis un alias ou une autre adresse qui vous appartient, ajoutez-la sous <b>Adresses d'envoi</b> dans les réglages de la boîte dans MCP Emails. Nous envoyons à cette adresse un code à 6 chiffres, et elle devient utilisable dès que vous saisissez le code. Gmail doit aussi accepter l'adresse : configurez-la d'abord dans Gmail sous <b>Envoyer des e-mails en tant que</b>. Une adresse From qui n'est ni celle de la boîte ni une adresse vérifiée est refusée, et non réécrite en silence."
     },
     {
       "h": "Gmail a des libellés, pas des dossiers : un déplacement n'est donc pas un déplacement",
-      "p": "Gmail stocke des libellés, pas des dossiers. En IMAP, chaque libellé apparaît comme un dossier, et l'option de connexion avec Google agit directement sur les libellés : dans les deux cas, un message peut porter plusieurs libellés à la fois et apparaître dans plusieurs dossiers. Le déplacer signifie donc ajouter un libellé et en retirer un autre, et archiver revient simplement à retirer <code>INBOX</code>. La suppression place le message dans la corbeille de Gmail au lieu de l'effacer. Si vous demandez à un agent de classer du courrier dans un dossier qui n'existe pas encore, le libellé doit d'abord être créé, et il apparaîtra ensuite dans Gmail sur tous vos appareils."
+      "p": "Gmail stocke des libellés, pas des dossiers. En IMAP, chaque libellé apparaît comme un dossier : un message peut donc porter plusieurs libellés à la fois et apparaître dans plusieurs dossiers. Le déplacer signifie ajouter un libellé et en retirer un autre, et archiver revient simplement à retirer <code>INBOX</code>. La suppression place le message dans la corbeille de Gmail au lieu de l'effacer. Si vous demandez à un agent de classer du courrier dans un dossier qui n'existe pas encore, le libellé doit d'abord être créé, et il apparaîtra ensuite dans Gmail sur tous vos appareils."
     },
     {
       "h": "Un administrateur Google Workspace peut désactiver les mots de passe d'application",
@@ -62,9 +62,9 @@
     }
   ],
   "limits": [
-    "Dans les deux cas, mcpemails n'atteint que le courrier : un mot de passe d'application sert uniquement à IMAP et SMTP, et l'option de connexion avec Google ne demande que les champs d'application Gmail de lecture, d'envoi, de modification et de paramètres de base. Drive, Agenda, Chat et Docs restent inaccessibles.",
-    "Un administrateur Google Workspace peut fermer l'une ou l'autre voie depuis la console d'administration : désactiver les mots de passe d'application pour le domaine, et bloquer l'accès des API tierces pour l'option de connexion avec Google. Seul un administrateur peut revenir sur ces décisions.",
-    "La suppression déplace un message dans la corbeille de Gmail. L'effacement définitif se fait dans Gmail lui-même."
+    "mcpemails n'atteint que le courrier : un mot de passe d'application sert uniquement à IMAP et SMTP. Drive, Agenda, Chat et Docs restent inaccessibles.",
+    "Un administrateur Google Workspace peut désactiver les mots de passe d'application pour le domaine depuis la console d'administration. Seul un administrateur peut revenir sur cette décision.",
+    "La suppression déplace un message dans la corbeille de Gmail. Une suppression définitive suit les réglages IMAP de Gmail : par défaut, elle retire seulement le libellé d'où le message a été supprimé, et un effacement depuis la corbeille le supprime pour de bon."
   ],
   "faq": [
     {
@@ -77,19 +77,19 @@
     },
     {
       "q": "Faut-il un mot de passe d'application pour Gmail ?",
-      "a": "Oui. Gmail se connecte en IMAP et SMTP avec un mot de passe d'application Google, et non avec votre mot de passe Google habituel. Google n'affiche les mots de passe d'application que sur les comptes où la validation en deux étapes est activée : activez-la d'abord, puis créez-en un sur myaccount.google.com/apppasswords. Cela prend environ une minute. La connexion avec Google reste proposée comme alternative, mais elle affiche un avertissement d'application non validée qu'il faut passer."
+      "a": "Oui. Gmail se connecte en IMAP et SMTP avec un mot de passe d'application Google, et non avec votre mot de passe Google habituel. Google n'affiche les mots de passe d'application que sur les comptes où la validation en deux étapes est activée : activez-la d'abord, puis créez-en un sur myaccount.google.com/apppasswords. Cela prend environ une minute."
     },
     {
-      "q": "Pourquoi Google refuse-t-il l'option de connexion avec Google sur mon compte professionnel ?",
-      "a": "Presque toujours à cause d'une règle d'administration. Les administrateurs Google Workspace limitent les applications tierces autorisées à utiliser les champs d'application Gmail sous Security, API controls, App access control. Quand l'application n'est pas autorisée, Google interrompt le processus avec Error 400: admin_policy_enforced avant que quoi que ce soit ne nous parvienne. Votre administrateur doit autoriser l'application, ou vous pouvez vous connecter avec un mot de passe d'application, si votre domaine les autorise. Un compte Gmail personnel ne rencontrera pas ce problème."
+      "q": "Pourquoi ne puis-je pas créer de mot de passe d'application sur mon compte professionnel ?",
+      "a": "Google ne propose les mots de passe d'application que sur les comptes où la validation en deux étapes est activée : vérifiez d'abord ce point. Sur un compte Google Workspace, un administrateur peut aussi désactiver les mots de passe d'application pour tout le domaine, et myaccount.google.com/apppasswords reste alors indisponible quoi que vous fassiez dans la boîte. Seul votre administrateur peut changer cela. Un compte Gmail personnel n'a besoin que de la validation en deux étapes."
     },
     {
       "q": "Cela fonctionne-t-il avec un domaine personnalisé Google Workspace ?",
-      "a": "Oui. Une boîte Workspace sur votre propre domaine se connecte avec un mot de passe d'application exactement comme une adresse gmail.com et se comporte ensuite de façon identique. La seule condition tient aux règles d'administration : le domaine doit autoriser les mots de passe d'application ou, si vous utilisez l'option de connexion avec Google, l'accès des API tierces doit être autorisé pour le compte, sinon Google bloque l'écran de consentement."
+      "a": "Oui. Une boîte Workspace sur votre propre domaine se connecte avec un mot de passe d'application exactement comme une adresse gmail.com et se comporte ensuite de façon identique. La seule condition tient aux règles d'administration : le domaine doit autoriser les mots de passe d'application et l'accès IMAP."
     },
     {
       "q": "Mon courrier Gmail est-il stocké sur vos serveurs ?",
-      "a": "Non. Les messages sont récupérés en direct chez Google à chaque requête et transmis à votre client IA. Votre mot de passe d'application, ou le jeton OAuth si vous utilisez la connexion avec Google, est chiffré au repos et le contenu des messages n'est pas conservé. Révoquer le mot de passe d'application ou l'accès dans votre compte Google, ou supprimer la boîte dans mcpemails, met fin immédiatement à la connexion."
+      "a": "Non. Les messages sont récupérés en direct chez Google à chaque requête et transmis à votre client IA. Votre mot de passe d'application est chiffré au repos et le contenu des messages n'est pas conservé. Révoquer le mot de passe d'application dans votre compte Google, ou supprimer la boîte dans mcpemails, met fin immédiatement à la connexion."
     }
   ],
   "ctaBand": {

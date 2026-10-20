@@ -20,7 +20,7 @@
   },
   "compare": {
     "title": "Auto-hébergé ou hébergé",
-    "intro": "Le serveur MCP complet et ses 23 outils sont présents dans les deux cas. L'auto-hébergement échange le confort du service géré contre un contrôle total.",
+    "intro": "Le serveur MCP complet et ses 19 outils sont présents dans les deux cas. L'auto-hébergement échange le confort du service géré contre un contrôle total.",
     "thFeature": "",
     "thSelf": "Auto-hébergé",
     "thHosted": "Hébergé",
@@ -31,7 +31,7 @@
         "hosted": "Gratuit, 9 $, 15 $ ou 39 $"
       },
       {
-        "feature": "Le serveur MCP et ses 23 outils",
+        "feature": "Le serveur MCP et ses 19 outils",
         "self": "Oui",
         "hosted": "Oui"
       },
@@ -51,9 +51,9 @@
         "hosted": "Oui"
       },
       {
-        "feature": "Connexion Gmail / Outlook (OAuth)",
+        "feature": "Connexion Outlook (OAuth)",
         "self": "Non inclus",
-        "hosted": "Gmail : oui ; Outlook : oui (les comptes professionnels peuvent nécessiter l'approbation de l'administrateur informatique)"
+        "hosted": "Oui (les comptes professionnels peuvent nécessiter l'approbation de l'administrateur informatique)"
       },
       {
         "feature": "Tableau de bord web (connexion, clés, activité)",

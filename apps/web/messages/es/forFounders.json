@@ -49,7 +49,7 @@
   "does": {
     "eyebrow": "Lo que hace de verdad",
     "title": "Una bandeja real, no un vistazo de solo lectura",
-    "sub": "Diecisiete herramientas basadas en acciones que tu agente puede usar de principio a fin.",
+    "sub": "Diecinueve herramientas basadas en acciones que tu agente puede usar de principio a fin.",
     "items": {
       "read": {
         "h": "Leer y buscar",
@@ -76,7 +76,7 @@
   "providers": {
     "eyebrow": "Cualquier bandeja, cualquier IA",
     "title": "Conecta la bandeja desde la que ya das soporte",
-    "sub": "Outlook con el inicio de sesión de Microsoft, Gmail con una contraseña de aplicación o el inicio de sesión de Google, el resto con una contraseña de aplicación. Esa misma bandeja funciona luego en Claude, Cursor, VS Code, ChatGPT y cualquier cliente MCP, así que nunca quedas atado a una sola app.",
+    "sub": "Outlook con el inicio de sesión de Microsoft, Gmail con una contraseña de aplicación de Google, el resto con una contraseña de aplicación. Esa misma bandeja funciona luego en Claude, Cursor, VS Code, ChatGPT y cualquier cliente MCP, así que nunca quedas atado a una sola app.",
     "ctaGmail": "Conectar Gmail",
     "ctaOutlook": "Conectar Outlook",
     "ctaFastmail": "Conectar Fastmail",

@@ -74,7 +74,7 @@
     }
   },
   "cardsFootnote": {
-    "all": "All plans include: email fetched live, never stored · credentials encrypted at rest · EU & US hosting",
+    "all": "All plans include: email fetched live, never stored · credentials encrypted at rest · data stored in the EU (Stockholm)",
     "business": "One person running several company mailboxes? That is Pro, for up to 10. <business>See how every work mailbox runs on one agent</business>."
   },
   "enterprise": {
@@ -104,7 +104,7 @@
       "providers": {
         "label": "Email providers",
         "rows": {
-          "gmail": "Gmail (app password or Sign in with Google)",
+          "gmail": "Gmail (Google app password)",
           "outlook": "Outlook / Microsoft 365 (Sign in with Microsoft)",
           "fastmail": "Fastmail (app password)",
           "appPassword": "iCloud, Yahoo, Zoho, Yandex (app password)",
@@ -180,7 +180,7 @@
       },
       {
         "q": "Is my email content stored anywhere?",
-        "a": "The email your agent reads is never stored: bodies, subjects, attachments, and thread content are fetched live from your provider and returned directly to the agent, with nothing persisted between calls. We store your encrypted OAuth token or app password so we can authenticate future requests. The one exception is a message you ask us to schedule for later. We store it until it is sent, and keep a record afterwards for your history."
+        "a": "The email your agent reads is never stored: bodies, subjects, attachments, and thread content are fetched live from your provider and returned directly to the agent, with nothing persisted between calls. We store your encrypted OAuth token or app password so we can authenticate future requests. The exceptions are outgoing messages that have to wait: a message you ask us to schedule for later, or a send held for your approval. We store those encrypted, and keep a record afterwards for your history."
       },
       {
         "q": "What's the difference between Personal, Pro and Business?",
@@ -204,7 +204,7 @@
       },
       {
         "q": "What email providers are supported?",
-        "a": "Gmail connects with an app password by default, or by signing in with Google (OAuth). Outlook and Microsoft 365 connect by signing in with Microsoft (OAuth): personal accounts connect directly, and a work or school account may need its IT admin to approve the app once. Fastmail connects with an app password. iCloud, Yahoo, Zoho, and Yandex connect with an app-specific password, and any other mailbox works through the generic IMAP / SMTP connector."
+        "a": "Gmail and Google Workspace connect with a Google app password over IMAP. Outlook and Microsoft 365 connect by signing in with Microsoft (OAuth): personal accounts connect directly, and a work or school account may need its IT admin to approve the app once. Fastmail connects with an app password. iCloud, Yahoo, Zoho, and Yandex connect with an app-specific password, and any other mailbox works through the generic IMAP / SMTP connector."
       },
       {
         "q": "Is there a refund policy?",

@@ -38,7 +38,7 @@
       },
       {
         "data": "Jeton OAuth ou mot de passe d'application",
-        "accessed": "Déchiffré uniquement à l'intérieur d'une fonction isolée, au moment de l'appel",
+        "accessed": "Déchiffré sur nos serveurs uniquement pour la requête qui en a besoin",
         "stored": "Oui, chiffré au repos avec AES-256-GCM ; la clé est conservée séparément"
       },
       {
@@ -52,12 +52,17 @@
         "stored": "Oui, chiffrés au repos jusqu'à l'envoi, puis conservés dans votre historique"
       },
       {
+        "data": "Envois retenus pour votre approbation",
+        "accessed": "Conservés jusqu'à ce qu'une personne les approuve ou les refuse, ou expirent au bout de 24 heures",
+        "stored": "Oui, chiffrés au repos, puis conservés dans votre historique des approbations"
+      },
+      {
         "data": "Activité des appels d'outils (métadonnées)",
         "accessed": "Enregistrée pour votre propre journal d'audit",
         "stored": "Nom de l'outil, boîte de réception, horodatage et statut uniquement. Aucun contenu d'e-mail"
       }
     ],
-    "outro": "La seule exception délibérée est un message que vous demandez à l'agent de programmer pour plus tard. Nous devons le conserver jusqu'à l'heure d'envoi, nous le stockons donc chiffré entre-temps, puis nous en gardons une trace ensuite pour votre historique."
+    "outro": "Les exceptions délibérées sont les messages sortants qui doivent attendre : un message que vous demandez à l'agent de programmer pour plus tard, et un envoi retenu pour votre approbation. Nous devons les conserver jusqu'à leur départ, nous les stockons donc chiffrés entre-temps, puis nous en gardons une trace pour votre historique."
   },
   "verify": {
     "title": "3. Vous n'avez pas à me faire confiance, vous pouvez vérifier",
@@ -114,6 +119,11 @@
         "provider": "Vercel",
         "purpose": "Hébergement du site web, du tableau de bord et du point de terminaison MCP",
         "location": "CDN mondial ; serveurs aux États-Unis (Est) et dans l'UE (Stockholm)"
+      },
+      {
+        "provider": "Hetzner",
+        "purpose": "Relais de messagerie pour les rares fournisseurs qui refusent les connexions depuis des adresses cloud (un tunnel TLS : il ne peut lire ni le courrier ni les mots de passe)",
+        "location": "Allemagne (UE)"
       },
       {
         "provider": "Stripe",

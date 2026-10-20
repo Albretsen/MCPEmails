@@ -7,7 +7,7 @@
     "https://support.google.com/a/answer/7281227",
     "apps/web/src/lib/email-providers/host-presets.ts (gmail: mxSuffixes .l.google.com, smtp.google.com)",
     "apps/web/src/lib/email-providers/imap-presets.ts (IMAP_PRESETS.gmail)",
-    "supabase/functions/mcp-server/index.ts (sender_identities: Send As listed only for provider gmail, the Google sign-in connection)"
+    "apps/web/src/lib/inboxes/send-as.ts (Send As addresses for IMAP inboxes, including Gmail and Google Workspace by app password, verified by a code emailed to the address)"
   ],
   "auth": {
     "method": "app-password",
@@ -32,7 +32,7 @@
   },
   "method": {
     "title": "So verbindet sich Google Workspace: ein App-Passwort über IMAP",
-    "body": "Geben Sie Ihre Adresse im IMAP-Formular ein, und MCP Emails liest die MX-Einträge Ihrer Domain: Eine Domain, deren E-Mails zu Google gehen (<code>aspmx.l.google.com</code> oder <code>smtp.google.com</code>), wird als Google Workspace erkannt. Das Formular trägt dann <b>imap.gmail.com</b> mit Port 993 und <b>smtp.gmail.com</b> mit Port 465 ein und weist darauf hin, dass ein App-Passwort nötig ist. Die Gmail-Karte macht dasselbe. Google hat 2025 die Anmeldung per Passwort für Workspace-Apps abgeschaltet, App-Passwörter ausgenommen. Das Kontopasswort funktioniert hier also nie. Als Alternative wird die Anmeldung mit Google angeboten."
+    "body": "Geben Sie Ihre Adresse im IMAP-Formular ein, und MCP Emails liest die MX-Einträge Ihrer Domain: Eine Domain, deren E-Mails zu Google gehen (<code>aspmx.l.google.com</code> oder <code>smtp.google.com</code>), wird als Google Workspace erkannt. Das Formular trägt dann <b>imap.gmail.com</b> mit Port 993 und <b>smtp.gmail.com</b> mit Port 465 ein und weist darauf hin, dass ein App-Passwort nötig ist. Die Gmail-Karte macht dasselbe. Google hat 2025 die Anmeldung per Passwort für Workspace-Apps abgeschaltet, App-Passwörter ausgenommen. Das Kontopasswort funktioniert hier also nie."
   },
   "setup": [
     {
@@ -55,7 +55,7 @@
   "gotchas": [
     {
       "h": "Bei einem Workspace-Konto kann die Option für App-Passwörter fehlen",
-      "p": "Google bietet App-Passwörter nur bei aktivierter Bestätigung in zwei Schritten an. Die eigene Hilfeseite nennt drei Gründe, warum die Option selbst dann fehlen kann: Die Bestätigung in zwei Schritten ist <b>nur mit Sicherheitsschlüsseln</b> eingerichtet, das Konto nutzt das <b>Erweiterte Sicherheitsprogramm</b>, oder Sie sind mit <b>einem Konto Ihrer Firma, Schule oder einer anderen Organisation</b> angemeldet, dessen Einstellungen das nicht erlauben. Letzteres entscheidet Ihr Administrator, und im Postfach selbst lässt sich daran nichts ändern. Fragen Sie den Administrator, oder verbinden Sie sich stattdessen mit der Google-Anmeldung, falls Ihre Organisation Drittanbieter-Apps erlaubt."
+      "p": "Google bietet App-Passwörter nur bei aktivierter Bestätigung in zwei Schritten an. Die eigene Hilfeseite nennt drei Gründe, warum die Option selbst dann fehlen kann: Die Bestätigung in zwei Schritten ist <b>nur mit Sicherheitsschlüsseln</b> eingerichtet, das Konto nutzt das <b>Erweiterte Sicherheitsprogramm</b>, oder Sie sind mit <b>einem Konto Ihrer Firma, Schule oder einer anderen Organisation</b> angemeldet, dessen Einstellungen das nicht erlauben. Letzteres entscheidet Ihr Administrator, und im Postfach selbst lässt sich daran nichts ändern. Bitten Sie den Administrator, App-Passwörter für Ihr Konto zu erlauben."
     },
     {
       "h": "IMAP schaltet der Administrator ein, nicht Sie",
@@ -66,13 +66,13 @@
       "p": "In Workspace kann ein Administrator einem Nutzer bis zu 30 Aliasse hinzufügen, und E-Mails an einen Alias landen im Posteingang dieses Nutzers. Ein Alias hat keine eigene Anmeldung. Sie verbinden also den Nutzer, zu dem er gehört, und die E-Mails des Alias sind bereits da. Eine Google-Gruppen-Adresse (eine Mailingliste oder ein gemeinsamer Posteingang) ist ebenfalls kein Konto, bei dem man sich anmelden kann, und hat daher kein App-Passwort: Verbinden Sie das Postfach eines Mitglieds. Nur echte Nutzerpostfächer lassen sich verbinden, jedes mit eigenem App-Passwort, und jedes zählt als ein verbundenes Postfach."
     },
     {
-      "h": "Antworten von einem Alias braucht die Verbindung per Google-Anmeldung",
-      "p": "Mit einem App-Passwort sendet ein Postfach von seiner eigenen Adresse. Senden von einer anderen Adresse, etwa einem Alias, der in Gmail unter <b>Senden als</b> eingerichtet ist, wird nur bei einem Postfach unterstützt, das per Google-Anmeldung verbunden ist. Dort werden die bestätigten Senden-als-Adressen für Ihren Agenten aufgelistet. Bei jeder anderen Verbindung wird eine Absenderadresse, die nicht die eigene Adresse des Postfachs ist, abgelehnt und nicht stillschweigend umgeschrieben."
+      "h": "Antworten von einem Alias funktioniert, sobald der Alias bestätigt ist",
+      "p": "Mit einem App-Passwort sendet ein Postfach standardmäßig von seiner eigenen Adresse. Um von einem Alias zu antworten, etwa einem, der in Gmail unter <b>Senden als</b> eingerichtet ist, fügen Sie ihn in den Postfach-Einstellungen von MCP Emails unter <b>Senden-als-Adressen</b> hinzu. Wir senden dem Alias einen 6-stelligen Code, und sobald Sie ihn eingeben, kann Ihr Agent von dieser Adresse senden. Eine Absenderadresse, die weder die eigene Adresse des Postfachs noch eine bestätigte Senden-als-Adresse ist, wird abgelehnt und nicht stillschweigend umgeschrieben."
     }
   ],
   "limits": [
     "MCP Emails erreicht nur E-Mails: Ein App-Passwort dient ausschließlich für IMAP und SMTP. Drive, Kalender, Chat und Docs werden nicht erreicht.",
-    "Ein Google Workspace Administrator kann beide Wege sperren: App-Passwörter können für Ihr Konto nicht verfügbar sein, IMAP kann ausgeschaltet oder auf bestimmte OAuth-Clients beschränkt sein, und der Zugriff durch Drittanbieter kann für die Google-Anmeldung blockiert sein. Nur ein Administrator kann diese Einstellungen ändern.",
+    "Ein Google Workspace Administrator kann diesen Weg sperren: App-Passwörter können für Ihr Konto nicht verfügbar sein, und IMAP kann ausgeschaltet oder auf bestimmte OAuth-Clients beschränkt sein. Nur ein Administrator kann diese Einstellungen ändern.",
     "Gmail speichert Labels statt Ordnern. Beim Verschieben wird also ein Label hinzugefügt und ein anderes entfernt, und Löschen verschiebt eine Nachricht in den Gmail-Papierkorb."
   ],
   "faq": [
@@ -98,7 +98,7 @@
     },
     {
       "q": "Werden meine Google Workspace E-Mails auf Ihren Servern gespeichert?",
-      "a": "Nein. Nachrichten werden bei jeder Anfrage live von Google abgerufen und an Ihren KI-Client übergeben. Das App-Passwort, oder das OAuth-Token bei der Anmeldung mit Google, wird verschlüsselt gespeichert, Nachrichteninhalte werden nicht aufbewahrt. Wenn Sie das App-Passwort in Ihrem Google-Konto widerrufen oder das Postfach in MCP Emails löschen, endet die Verbindung."
+      "a": "Nein. Nachrichten werden bei jeder Anfrage live von Google abgerufen und an Ihren KI-Client übergeben. Das App-Passwort wird verschlüsselt gespeichert, Nachrichteninhalte werden nicht aufbewahrt. Wenn Sie das App-Passwort in Ihrem Google-Konto widerrufen oder das Postfach in MCP Emails löschen, endet die Verbindung."
     }
   ],
   "ctaBand": {

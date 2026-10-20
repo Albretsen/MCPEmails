@@ -49,7 +49,7 @@
   "does": {
     "eyebrow": "Ce qu'il fait vraiment",
     "title": "Une vraie boîte de réception, pas un simple aperçu en lecture seule",
-    "sub": "Dix-sept outils orientés action que votre agent peut utiliser de bout en bout.",
+    "sub": "Dix-neuf outils orientés action que votre agent peut utiliser de bout en bout.",
     "items": {
       "read": {
         "h": "Lire et chercher",
@@ -76,7 +76,7 @@
   "providers": {
     "eyebrow": "N'importe quelle boîte, n'importe quelle IA",
     "title": "Connectez la boîte depuis laquelle vous gérez déjà votre support",
-    "sub": "Outlook via la connexion Microsoft, Gmail via un mot de passe d'application ou la connexion Google, le reste via un mot de passe d'application. La même boîte fonctionne ensuite dans Claude, Cursor, VS Code, ChatGPT et tout client MCP, pour que vous ne soyez jamais enfermé dans une seule application.",
+    "sub": "Outlook via la connexion Microsoft, Gmail via un mot de passe d'application Google, le reste via un mot de passe d'application. La même boîte fonctionne ensuite dans Claude, Cursor, VS Code, ChatGPT et tout client MCP, pour que vous ne soyez jamais enfermé dans une seule application.",
     "ctaGmail": "Connecter Gmail",
     "ctaOutlook": "Connecter Outlook",
     "ctaFastmail": "Connecter Fastmail",

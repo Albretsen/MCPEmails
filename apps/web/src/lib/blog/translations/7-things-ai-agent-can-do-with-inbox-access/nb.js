@@ -29,7 +29,7 @@ Du blir lagt til i en tråd med 40 meldinger ved melding 38. Ingen kommer til å
 
 > Les tråden med emnet «Q3 vendor migration» og fortell meg hvor det faktisk landet: hva ble bestemt, hvem eier hva, og eventuelle åpne spørsmål jeg må svare på.
 
-\`email_read\` med handlingen search finner tråden (den bruker leverandørens egen søkesyntaks, så Gmail-operatorer, Outlook KQL og IMAP-tekstsøk fungerer alle), så henter \`email_read\` med handlingen read ut den parsede rene teksten i hver melding. Den read-handlingen kan også returnere renset HTML og vedlegg når du ber om det, men for et sammendrag er ren tekst raskere og billigere.
+\`email_read\` med handlingen search finner tråden (den tar strukturerte felt som avsender, emne, tekst og datoperiode, og MCP Emails gjør dem om til hver leverandørs eget søk), så henter \`email_read\` med handlingen read ut den parsede rene teksten i hver melding. Den read-handlingen kan også returnere renset HTML og vedlegg når du ber om det, men for et sammendrag er ren tekst raskere og billigere.
 
 ### 3. Skriv utkast til svar i din stil
 

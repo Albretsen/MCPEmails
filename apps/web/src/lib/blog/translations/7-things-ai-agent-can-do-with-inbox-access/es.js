@@ -29,7 +29,7 @@ Te añaden a un hilo de 40 mensajes en el mensaje 38. Nadie va a leerse lo anter
 
 > Lee el hilo con asunto "Q3 vendor migration" y dime en qué quedó realmente: qué se decidió, quién se encarga de qué y cualquier pregunta abierta que yo tenga que responder.
 
-\`email_read\` con la acción search encuentra el hilo (usa la sintaxis de búsqueda nativa de tu proveedor, así que los operadores de Gmail, KQL de Outlook y la búsqueda de texto de IMAP funcionan todos), y luego \`email_read\` con la acción read extrae el texto plano ya parseado de cada mensaje. Esa acción read también puede devolver HTML saneado y adjuntos cuando lo pides, pero para un resumen el texto plano es más rápido y más barato.
+\`email_read\` con la acción search encuentra el hilo (recibe campos estructurados como remitente, asunto, texto y rango de fechas, y MCP Emails los convierte en la búsqueda propia de cada proveedor), y luego \`email_read\` con la acción read extrae el texto plano ya parseado de cada mensaje. Esa acción read también puede devolver HTML saneado y adjuntos cuando lo pides, pero para un resumen el texto plano es más rápido y más barato.
 
 ### 3. Redactar respuestas con tu voz
 

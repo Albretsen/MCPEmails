@@ -74,7 +74,7 @@
     }
   },
   "cardsFootnote": {
-    "all": "Toutes les formules incluent : e-mails récupérés en direct, jamais stockés · identifiants chiffrés au repos · hébergement UE et US",
+    "all": "Toutes les formules incluent : e-mails récupérés en direct, jamais stockés · identifiants chiffrés au repos · données stockées dans l'UE (Stockholm)",
     "business": "Une seule personne gère plusieurs boîtes d'entreprise ? C'est Pro, jusqu'à 10. <business>Voyez comment toutes les boîtes professionnelles tournent sur un seul agent</business>."
   },
   "enterprise": {
@@ -104,7 +104,7 @@
       "providers": {
         "label": "Fournisseurs d'e-mail",
         "rows": {
-          "gmail": "Gmail (mot de passe d'application ou connexion avec Google)",
+          "gmail": "Gmail (mot de passe d'application Google)",
           "outlook": "Outlook / Microsoft 365 (connexion avec Microsoft)",
           "fastmail": "Fastmail (mot de passe d'application)",
           "appPassword": "iCloud, Yahoo, Zoho, Yandex (mot de passe d'application)",
@@ -180,7 +180,7 @@
       },
       {
         "q": "Le contenu de mes e-mails est-il stocké quelque part ?",
-        "a": "Le courrier que votre agent lit n'est jamais stocké : les corps d'e-mails, les objets, les pièces jointes et le contenu des fils sont récupérés en direct depuis votre fournisseur et renvoyés directement à l'agent, sans rien conserver entre les appels. Nous stockons votre jeton OAuth chiffré ou votre mot de passe d'application afin de pouvoir authentifier les requêtes futures. La seule exception est un message que vous nous demandez de programmer pour plus tard : nous le stockons jusqu'à son envoi, puis en gardons une trace pour votre historique."
+        "a": "Le courrier que votre agent lit n'est jamais stocké : les corps d'e-mails, les objets, les pièces jointes et le contenu des fils sont récupérés en direct depuis votre fournisseur et renvoyés directement à l'agent, sans rien conserver entre les appels. Nous stockons votre jeton OAuth chiffré ou votre mot de passe d'application afin de pouvoir authentifier les requêtes futures. Les exceptions sont les messages sortants qui doivent attendre : un message que vous nous demandez de programmer pour plus tard, ou un envoi retenu pour votre approbation. Nous les stockons chiffrés, puis en gardons une trace pour votre historique."
       },
       {
         "q": "Quelle est la différence entre Personal, Pro et Business ?",
@@ -204,7 +204,7 @@
       },
       {
         "q": "Quels fournisseurs d'e-mail sont pris en charge ?",
-        "a": "Gmail se connecte par défaut avec un mot de passe d'application, ou via la connexion avec Google (OAuth). Outlook et Microsoft 365 se connectent via la connexion avec Microsoft (OAuth) : les comptes personnels se connectent directement, et un compte professionnel ou scolaire peut nécessiter que son administrateur informatique approuve l'application une fois. Fastmail se connecte avec un mot de passe d'application. iCloud, Yahoo, Zoho et Yandex se connectent avec un mot de passe d'application, et toute autre boîte fonctionne via le connecteur IMAP / SMTP générique."
+        "a": "Gmail et Google Workspace se connectent avec un mot de passe d'application Google via IMAP. Outlook et Microsoft 365 se connectent via la connexion avec Microsoft (OAuth) : les comptes personnels se connectent directement, et un compte professionnel ou scolaire peut nécessiter que son administrateur informatique approuve l'application une fois. Fastmail se connecte avec un mot de passe d'application. iCloud, Yahoo, Zoho et Yandex se connectent avec un mot de passe d'application, et toute autre boîte fonctionne via le connecteur IMAP / SMTP générique."
       },
       {
         "q": "Existe-t-il une politique de remboursement ?",
