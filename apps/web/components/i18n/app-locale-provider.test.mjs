@@ -53,11 +53,11 @@ const { default: AppLocaleProvider, useAppLocale } = await import('./AppLocalePr
 const { DashboardApp } = await import('../dashboard/App.jsx');
 const { LoginApp } = await import('../auth/LoginApp.jsx');
 
-const LOCALES = ['en', 'nb', 'es', 'fr', 'zh'];
+const LOCALES = ['en', 'nb', 'es', 'fr', 'zh', 'de'];
 const NAMESPACES = ['dashboard', 'dashboardChrome', 'auth', 'common'];
 const STORAGE_KEY = 'mcpe-locale';
 /** The language buttons on the Settings page, by their own-language names. */
-const AUTONYM = { en: 'English', nb: 'Norsk', es: 'Español', fr: 'Français', zh: '中文' };
+const AUTONYM = { en: 'English', nb: 'Norsk', es: 'Español', fr: 'Français', zh: '中文', de: 'Deutsch' };
 
 /** The catalogs, read straight off disk: the reference everything is held to. */
 const CATALOG = Object.fromEntries(LOCALES.map((locale) => [
@@ -359,13 +359,13 @@ for (const locale of LOCALES.filter((l) => l !== 'en')) {
   });
 }
 
-test('the five catalogs are five different languages (the comparison above is not vacuous)', () => {
+test('the six catalogs are six different languages (the comparison above is not vacuous)', () => {
   const headings = LOCALES.map((l) => CATALOG[l].dashboard.settings.languageHeading);
-  assert.equal(new Set(headings).size, 5);
+  assert.equal(new Set(headings).size, LOCALES.length);
   const titles = LOCALES.map((l) => CATALOG[l].auth.login.title);
-  assert.equal(new Set(titles).size, 5);
+  assert.equal(new Set(titles).size, LOCALES.length);
   const nav = LOCALES.map((l) => CATALOG[l].dashboardChrome.sidebar.navSettings);
-  assert.equal(new Set(nav).size, 5);
+  assert.equal(new Set(nav).size, LOCALES.length);
 });
 
 // ===========================================================================
@@ -379,8 +379,10 @@ const BROWSER_LANGUAGES = [
   [['es-MX', 'en'], 'es'],
   [['fr-CA'], 'fr'],
   [['zh-Hans-CN'], 'zh'],
-  [['de-DE', 'fr-FR'], 'fr'],
-  [['de-DE'], 'en'],
+  [['de-DE', 'fr-FR'], 'de'],
+  [['de-AT'], 'de'],
+  [['it-IT', 'fr-FR'], 'fr'],
+  [['it-IT'], 'en'],
   [['en-GB', 'nb'], 'en'],
 ];
 
@@ -406,11 +408,11 @@ test('a stored choice beats the browser language', async (t) => {
 });
 
 test('a stored value that is not a supported language is ignored', async (t) => {
-  reset(t, { stored: 'de', languages: ['fr-FR'] });
+  reset(t, { stored: 'it', languages: ['fr-FR'] });
   const seen = newSeen();
   const view = await mountWith(t, createElement(Probe, { seen }));
   await settled(view, 'fr');
-  assert.equal(window.localStorage.getItem(STORAGE_KEY), 'de', 'and it is left as it was');
+  assert.equal(window.localStorage.getItem(STORAGE_KEY), 'it', 'and it is left as it was');
 });
 
 // ===========================================================================
@@ -422,7 +424,7 @@ test('switching: each language button re-renders the dashboard in that language,
   await settled(view, 'en');
   const reference = strings(view.container);
 
-  for (const locale of ['nb', 'es', 'fr', 'zh', 'en']) {
+  for (const locale of ['nb', 'es', 'fr', 'zh', 'de', 'en']) {
     await flush(() => view.button(locale).click());
     await settled(view, locale);
     assert.equal(window.localStorage.getItem(STORAGE_KEY), locale, `${locale} is stored`);
@@ -452,7 +454,7 @@ test('switching: the picker marks the new language at once, and the screen never
 test('switching: setLocale ignores a language that is not supported', async (t) => {
   const view = await mountDashboard(t, { stored: 'nb' });
   await settled(view, 'nb');
-  await flush(() => { view.seen.setLocale('de'); view.seen.setLocale(undefined); view.seen.setLocale(''); });
+  await flush(() => { view.seen.setLocale('it'); view.seen.setLocale(undefined); view.seen.setLocale(''); });
   await flush(() => new Promise((resolve) => setTimeout(resolve, 20)));
   assert.equal(view.seen.renders.at(-1).app, 'nb');
   assert.equal(window.localStorage.getItem(STORAGE_KEY), 'nb');

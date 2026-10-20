@@ -84,6 +84,7 @@ export const OG_LOCALE: Record<string, string> = {
   es: 'es_ES',
   fr: 'fr_FR',
   zh: 'zh_CN',
+  de: 'de_DE',
 };
 
 /**

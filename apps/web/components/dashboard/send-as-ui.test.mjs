@@ -101,7 +101,7 @@ test('every locale has every Send As key, without < or an em dash', async () => 
   const keys = (obj, prefix = '') =>
     Object.entries(obj).flatMap(([k, v]) => (typeof v === 'object' ? keys(v, `${prefix}${k}.`) : [`${prefix}${k}`]));
   const want = keys(S).sort();
-  for (const locale of ['en', 'es', 'fr', 'nb', 'zh']) {
+  for (const locale of ['en', 'es', 'fr', 'nb', 'zh', 'de']) {
     const messages = (await import(`../../messages/${locale}/dashboard.json`, { with: { type: 'json' } })).default;
     const copy = messages.inboxes.detail.sendAs;
     assert.deepEqual(keys(copy).sort(), want, `${locale} has the same keys`);

@@ -44,7 +44,7 @@ test('the app: the analysis actually saw the routes and their reads', () => {
   assert.deepEqual(byFile.get('app/[locale]/blog/[slug]/page.js')?.needs, ['blog', 'compare', 'home']);
   assert.deepEqual(byFile.get('app/[locale]/for/founders/page.js')?.needs, ['compare', 'forFounders', 'home']);
   assert.ok(byFile.get('app/dashboard/[[...section]]/page.js').keyCount > 500, 'dashboard literal keys were not collected');
-  assert.deepEqual(real.locales.slice().sort(), ['en', 'es', 'fr', 'nb', 'zh']);
+  assert.deepEqual(real.locales.slice().sort(), ['de', 'en', 'es', 'fr', 'nb', 'zh']);
 });
 
 test('the app: nothing outside app/[locale] reads a marketing namespace', () => {

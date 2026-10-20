@@ -382,7 +382,81 @@ const ZH = {
   },
 };
 
-const UI = { en: EN, nb: NB, es: ES, fr: FR, zh: ZH };
+const DE = {
+  hub: {
+    eyebrow: 'MCP-Clients',
+    title: 'Verbinden Sie Ihr Postfach mit jedem MCP-Client',
+    lead: 'Ein gehosteter MCP-Server, {count} Setup-Anleitungen. Wählen Sie den Client, den Sie wirklich nutzen, und folgen Sie den Schritten, die für ihn geschrieben sind, nicht einer allgemeinen Vorlage.',
+    answer: 'mcpemails ist ein gehosteter MCP-Server für E-Mail. Sie verbinden ein Postfach einmal und fügen dann eine URL in den Client ein, in dem Sie ohnehin arbeiten. {oauth} der {count} Clients hier nutzen den OAuth-Ablauf im Browser und brauchen gar keinen API-Schlüssel; die übrigen verwenden einen API-Schlüssel mit Scopes in einem Authorization-Header.',
+    meta: {
+      title: 'E-Mail mit Claude, Cursor, ChatGPT und {count} MCP-Clients verbinden',
+      description: 'Setup-Anleitungen pro Client für den MCP-Server von mcpemails. Verbinden Sie ein echtes Postfach mit Claude, Claude Code, Cursor, VS Code, ChatGPT, Cline, Windsurf, Gemini CLI, Zed, JetBrains, Raycast, Warp oder curl.',
+    },
+    genericTitle: 'Ihr Client fehlt?',
+    genericSub: 'Jeder Client, der MCP über Streamable HTTP spricht, funktioniert. Endpunkt, Handshake und Tool-Katalog finden Sie in der Dokumentation.',
+    genericCta: 'Zur Dokumentation',
+    breadcrumb: 'MCP-Clients',
+    authOauth: 'OAuth',
+    authKey: 'API-Schlüssel',
+  },
+  page: {
+    breadcrumb: 'MCP-Clients',
+    ctaPrimary: 'Postfach verbinden',
+    ctaSecondary: 'Zur Dokumentation',
+    endpoint: {
+      title: 'Der eine Wert, den Sie brauchen',
+      sub: 'Alles auf dieser Seite dient dazu, diese URL in {client} einzutragen.',
+      colField: 'Feld',
+      colValue: 'Wert',
+      fieldUrl: 'MCP-Server-URL',
+      fieldTransport: 'Transport',
+      transport: 'Streamable HTTP (MCP 2025-06-18)',
+      fieldAuth: 'Authentifizierung',
+      authOauth: 'OAuth 2.1, Autorisierungscode mit PKCE. Kein API-Schlüssel.',
+      authKey: 'Authorization: Bearer, mit einem API-Schlüssel mit Scopes aus Ihrem Dashboard.',
+    },
+    how: {
+      eyebrow: 'Setup',
+      title: 'So verbinden Sie {client} mit Ihrem Postfach',
+      sub: 'Vier Schritte. Die ersten beiden sind bei jedem Client gleich, die übrigen gelten speziell für diesen.',
+    },
+    config: {
+      title: 'Konfiguration',
+      terminal: 'terminal',
+      json: 'json',
+    },
+    gotchas: {
+      eyebrow: 'Bevor Sie beginnen',
+      title: 'Typische Stolperfallen in {client}',
+    },
+    limits: {
+      title: 'Wichtige Grenzen',
+    },
+    faq: {
+      eyebrow: 'FAQ',
+      title: '{client} und E-Mail: Fragen und Antworten',
+    },
+    related: {
+      title: 'Weiteren Client einrichten',
+      sub: 'Dasselbe Postfach, dieselbe URL. Verbinden Sie so viele Clients, wie Sie möchten.',
+      link: '{client} verbinden',
+      all: 'Alle Setup-Anleitungen für MCP-Clients',
+    },
+    guideLink: {
+      intro: 'Offizielle Dokumentation von {client} zu entfernten MCP-Servern:',
+    },
+    providers: {
+      intro: 'Unsicher, welches Postfach Sie zuerst verbinden sollen?',
+      label: 'Zur Kompatibilitätsübersicht der Anbieter',
+    },
+    connect: {
+      intro: 'Sie verbinden ein bestimmtes Postfach?',
+      label: 'Setup-Anleitungen nach Anbieter',
+    },
+  },
+};
+
+const UI = { en: EN, nb: NB, es: ES, fr: FR, zh: ZH, de: DE };
 
 export function clientUi(locale) {
   return UI[locale] ?? EN;

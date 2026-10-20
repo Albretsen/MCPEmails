@@ -1,0 +1,103 @@
+{
+  "_sources": [
+    "https://www.telekom.de/hilfe/apps-dienste/e-mail/programme/passwort-definition",
+    "https://www.telekom.de/hilfe/apps-dienste/e-mail/programm-passwort-verwalten",
+    "https://www.telekom.de/hilfe/vertrag-meine-daten/login-daten-passwoerter/welche-passwoerter-fuer-welchen-zweck",
+    "https://www.netzwelt.de/galerie/19784-e-mail-passwort-e-mail-adressen-t-online-einrichten.html"
+  ],
+  "auth": {
+    "method": "mail-password",
+    "label": "E-Mail-Passwort für E-Mail-Programme",
+    "helpUrl": "https://www.telekom.de/hilfe/apps-dienste/e-mail/programm-passwort-verwalten",
+    "usernameForm": "Ihre vollständige Adresse mit Domain: name@t-online.de. Ältere Konten melden sich teils noch mit der 12-stelligen T-Online-Nummer an, die Telekom dokumentiert heute aber die Adresse.",
+    "status": "active"
+  },
+  "meta": {
+    "title": "T-Online E-Mail in Claude: das separate E-Mail-Passwort",
+    "description": "T-Online-Postfach mit Claude und jedem MCP-Client verbinden, über secureimap.t-online.de:993. Nötig ist das separate E-Mail-Passwort für E-Mail-Programme, nicht der Telekom Login."
+  },
+  "hero": {
+    "eyebrow": "T-Online + KI",
+    "titleLine1": "Ihr T-Online-Postfach verbinden",
+    "titleLine2": "mit Claude, Cursor und jedem MCP-Client",
+    "lead": "Geben Sie Ihrem KI-Agenten Zugriff auf Ihr echtes Telekom-Postfach. E-Mails lesen, suchen, senden, beantworten, planen und ordnen, per IMAP mit dem eigenen Passwort, das die Telekom für E-Mail-Programme vergibt.",
+    "answer": "Claude kann ein T-Online-Postfach nicht von sich aus erreichen. MCP Emails ist ein gehosteter MCP-Server, der es per IMAP über secureimap.t-online.de auf Port 993 anbindet. Die Anmeldung läuft über das separate E-Mail-Passwort für E-Mail-Programme, nicht über Ihr Telekom-Login-Passwort. Danach können Claude, Cursor oder jeder MCP-Client die E-Mails lesen, suchen, senden und ordnen. Haben Sie dieses Passwort nie angelegt, konnte sich noch nie ein Client am Postfach anmelden, und der Fehler sieht aus wie ein Tippfehler. Ein Postfach ist dauerhaft kostenlos.",
+    "meta0": "1 Postfach dauerhaft kostenlos",
+    "meta1": "Telekom E-Mail-Passwort für Programme nötig",
+    "meta2": "E-Mails live abgerufen, nie gespeichert"
+  },
+  "method": {
+    "title": "So verbindet sich T-Online: IMAP und ein zweites, separates Passwort",
+    "body": "Die Telekom stellt IMAP unter <code>secureimap.t-online.de</code> auf Port 993 mit implizitem TLS bereit, den SMTP-Versand unter <code>securesmtp.t-online.de</code> auf Port 465. Beide Namen liegen vor einem IMAP-Proxy, nicht vor einem Mailserver, mit dem Sie direkt sprechen. Das erklärt einige der Eigenheiten unten. Woran fast alle scheitern, sind die Zugangsdaten. Die Telekom führt zwei Passwörter pro Konto: das <b>Telekom Login</b>-Passwort für das Kundencenter und telekom.de, und ein zweites <b>Passwort für E-Mail-Programme</b>, in den Worten der Telekom gedacht <b>für das Verwenden eines E-Mail-Programms</b>. Nur das zweite meldet Sie an <code>secureimap.t-online.de</code> an. Die Telekom empfiehlt, dass beide nie gleich sind, und bei vielen Konten existiert das E-Mail-Passwort schlicht nicht, bis jemand es anlegt."
+  },
+  "setup": [
+    {
+      "h": "Kostenloses MCP Emails Konto erstellen",
+      "p": "Registrieren Sie sich auf mcpemails.com. Der Free-Tarif verbindet ein Postfach dauerhaft und fragt nicht nach einer Kreditkarte."
+    },
+    {
+      "h": "Das Passwort für E-Mail-Programme anlegen",
+      "p": "Öffnen Sie im E-Mail Center unter email.t-online.de das <b>Menü</b>, dann <b>Einstellungen</b>, dann links <b>Passwörter</b>. Unter der Überschrift <b>E-Mail-Passwort, für das Verwenden eines E-Mail-Programms</b> wählen Sie <b>E-Mail-Passwort ändern</b>, geben das neue Passwort zweimal ein und speichern. Dasselbe Passwort erreichen Sie auch im Kundencenter unter <b>Profil</b>, dann <b>Login-Daten und Passwörter</b>, dann <b>weitere Passwörter</b>. Legen Sie es auch dann fest, wenn Sie glauben, schon eines zu haben: Bei vielen Konten wurde es nie erstellt."
+    },
+    {
+      "h": "In MCP Emails einfügen",
+      "p": "Wählen Sie IMAP / SMTP, geben Sie die vollständige Adresse ein, etwa name@t-online.de, und fügen Sie das E-Mail-Passwort ein. Hosts und Ports der Telekom sind vorausgefüllt und wurden über eine echte TLS-Verbindung geprüft."
+    },
+    {
+      "h": "MCP-URL in Ihre KI einfügen",
+      "p": "Fügen Sie https://mcpemails.com/api/mcp in Claude, Cursor oder ChatGPT ein, autorisieren Sie den Zugriff, und Ihr Agent hat das Postfach."
+    }
+  ],
+  "gotchas": [
+    {
+      "h": "Das Telekom-Login-Passwort wird abgelehnt, und das ist so gewollt",
+      "p": "Das ist der mit Abstand häufigste Verbindungsfehler bei T-Online, und er erzeugt einen gewöhnlichen Authentifizierungsfehler, der keinen Grund nennt. Die Telekom trennt das Konto in ein Login-Passwort für telekom.de und das Kundencenter und ein separates <b>Passwort für E-Mail-Programme</b> für IMAP, POP3 und SMTP. Der Mailserver akzeptiert nur das zweite. Die Telekom rät ausdrücklich dazu, dass beide verschieden sind, beide gleich zu setzen ist also nicht die vorgesehene Lösung. Legen Sie das E-Mail-Passwort an und verwenden Sie es für den Posteingang und den Postausgang."
+    },
+    {
+      "h": "Der IMAP-Proxy kündigt vor der Anmeldung gar kein AUTH-Verfahren an",
+      "p": "Das Capability-Banner der Telekom lautet <code>IMAP4 IMAP4rev1 QUOTA LITERAL+ NAMESPACE UIDPLUS IDLE SORT</code>. Darin stehen kein <code>AUTH=PLAIN</code>, kein <code>AUTH=LOGIN</code> und kein <code>SASL-IR</code>. In der Praxis erwartet der Server den einfachen IMAP-Befehl <code>LOGIN</code> statt eines SASL-Austauschs per <code>AUTHENTICATE</code>. Client-Bibliotheken, die die angekündigten SASL-Verfahren auflisten und bei leerer Liste abbrechen, geben auf, bevor sie überhaupt Zugangsdaten senden. Deshalb melden manche IMAP-Tools T-Online als unerreichbar, während Thunderbird sich problemlos mit demselben Postfach verbindet. MCP Emails beherrscht den einfachen LOGIN-Weg, dieses Problem ist für Sie also bereits gelöst."
+    },
+    {
+      "h": "Kein MOVE und kein SPECIAL-USE, bei deutschen Ordnernamen",
+      "p": "Der Server kündigt die IMAP-Erweiterung <code>MOVE</code> nicht an. Das Verschieben einer Nachricht läuft daher als Kopieren, Markieren und Löschen statt als ein atomarer Befehl. Auch <code>SPECIAL-USE</code> fehlt, Gesendet, Entwürfe, Papierkorb und Spam werden also über den Namen erkannt, nicht über ihre Rolle. Ein T-Online-Postfach nennt sie normalerweise <b>Gesendet</b>, <b>Entwürfe</b>, <b>Papierkorb</b> und <b>Spam</b>. Findet ein Agent Ihr Archiv oder Ihren Gesendet-Ordner nicht, nennen Sie den Ordner in der Anweisung."
+    },
+    {
+      "h": "Der Versand ist auf 50 MB pro Nachricht begrenzt",
+      "p": "<code>securesmtp.t-online.de</code> meldet eine maximale Nachrichtengröße von 52.428.800 Byte. Das gilt für die gesamte kodierte Nachricht, base64-Anhänge zählen also etwa ein Drittel größer als auf der Festplatte. Ein Agent, der einen großen Anhang weiterleiten soll, bekommt eine harte SMTP-Ablehnung, keinen langsamen Versand."
+    }
+  ],
+  "limits": [
+    "Weil der Server kein MOVE unterstützt, ist ein Verschieben nicht atomar. Bricht die Verbindung mittendrin ab, kann eine Nachricht kurz in beiden Ordnern liegen.",
+    "Die Telekom beschränkt das E-Mail-Passwort auf E-Mail-Programme. Es öffnet nicht das Kundencenter, und ein neues Telekom-Login-Passwort ändert es nicht mit. Beide müssen also getrennt gepflegt werden."
+  ],
+  "faq": [
+    {
+      "q": "Funktioniert Claude mit T-Online E-Mail?",
+      "a": "Nicht von sich aus. Claude hat keinen eingebauten Telekom- oder T-Online-Konnektor. Wenn Sie einen MCP-Server wie MCP Emails per IMAP mit dem Postfach verbinden, kann Claude E-Mails lesen, suchen, senden, beantworten, planen und ordnen. Dieselbe Verbindung funktioniert dann auch in Cursor, ChatGPT und anderen MCP-Clients."
+    },
+    {
+      "q": "Wie lauten die IMAP- und SMTP-Einstellungen von T-Online?",
+      "a": "IMAP ist secureimap.t-online.de auf Port 993 mit implizitem TLS. SMTP ist securesmtp.t-online.de auf Port 465, ebenfalls mit implizitem TLS. Melden Sie sich mit Ihrer vollständigen t-online.de-Adresse und dem Passwort für E-Mail-Programme an. Beide Hosts wurden über eine echte TLS-Verbindung bestätigt und gelten für alle T-Online-Postfächer."
+    },
+    {
+      "q": "Warum wird mein T-Online-Passwort im E-Mail-Programm abgelehnt?",
+      "a": "Fast immer, weil Sie das Telekom-Login-Passwort eingegeben haben. Die Telekom vergibt ein zweites Passwort, das Passwort für E-Mail-Programme, und nur dieses meldet Sie an den Mailservern an. Legen Sie es im E-Mail Center unter Einstellungen, dann Passwörter an oder setzen Sie es dort zurück, alternativ im Kundencenter unter Profil, dann Login-Daten und Passwörter, dann weitere Passwörter."
+    },
+    {
+      "q": "Wo lege ich das Passwort für E-Mail-Programme an?",
+      "a": "Melden Sie sich im E-Mail Center unter email.t-online.de an und öffnen Sie Menü, dann Einstellungen, dann Passwörter. Der Block mit der Überschrift E-Mail-Passwort, für das Verwenden eines E-Mail-Programms hat eine Schaltfläche zum Ändern. Geben Sie das neue Passwort zweimal ein und speichern Sie. Verwenden Sie es in Ihrem Mailprogramm und in MCP Emails, für den Posteingangs- und den Postausgangsserver."
+    },
+    {
+      "q": "Funktioniert das auch mit magenta.de und anderen Telekom-Maildomains?",
+      "a": "Jedes Postfach im Telekom E-Mail Center meldet sich an denselben Hosts secureimap.t-online.de und securesmtp.t-online.de mit demselben E-Mail-Passwort an. Entscheidend ist, dass es ein Postfach im Telekom E-Mail Center ist, nicht der Text nach dem @-Zeichen."
+    },
+    {
+      "q": "Werden meine T-Online-E-Mails auf Ihren Servern gespeichert?",
+      "a": "Nein. Nachrichten werden bei jeder Anfrage live per IMAP von der Telekom abgerufen und an Ihren KI-Client übergeben. Zugangsdaten sind im Ruhezustand verschlüsselt, Nachrichteninhalte werden nicht aufbewahrt."
+    }
+  ],
+  "ctaBand": {
+    "title": "Geben Sie Ihrer KI ein T-Online-Postfach",
+    "sub": "Ihr Telekom-Postfach in wenigen Minuten verbinden. Ein Postfach dauerhaft kostenlos, ohne Kreditkarte."
+  }
+}

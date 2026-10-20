@@ -1,0 +1,315 @@
+{
+  "meta": {
+    "title": "E-Mail-MCP-Server: Gmail, Outlook, IMAP & Claude",
+    "description": "Gehosteter E-Mail-MCP-Server für Claude, ChatGPT und Cursor. Verbinden Sie Gmail, Outlook oder jedes IMAP-Postfach, auch mehrere gleichzeitig. E-Mails werden live abgerufen und nie gespeichert."
+  },
+  "nav": {
+    "features": "Funktionen",
+    "how": "So funktioniert es",
+    "pricing": "Preise",
+    "docs": "Doku",
+    "blog": "Blog",
+    "signIn": "Anmelden",
+    "dashboard": "Dashboard",
+    "getStarted": "Kostenlos starten",
+    "selfHost": "Self-Hosting"
+  },
+  "hero": {
+    "eyebrow": "Gehosteter E-Mail-MCP-Server",
+    "titleLine1": "Geben Sie Ihrem",
+    "titleLine2": "KI-Agenten ein",
+    "titleAccent": "Postfach.",
+    "lead": "Verbinden Sie Gmail, Outlook, iCloud, Fastmail oder jedes IMAP-Postfach einmal. Fügen Sie eine MCP-Endpunkt-URL in Claude, Cursor, VS Code, ChatGPT, Windsurf, n8n, Make oder einen beliebigen MCP-Client ein. OAuth-Clients verbinden sich mit einem Klick, ganz ohne API-Schlüssel. Ihr Agent liest, sucht und sendet E-Mails live, und was er liest, wird nie gespeichert.",
+    "ctaPrimary": "Postfach verbinden",
+    "ctaSecondary": "Zur Doku",
+    "metaFreeInbox": "1 Postfach dauerhaft kostenlos",
+    "metaNoCard": "Keine Kreditkarte nötig",
+    "metaNeverStored": "E-Mails live abgerufen",
+    "businessLine": "Sie betreuen info@, sales@ und invoices@ für ein Unternehmen? <business>Alle Geschäftspostfächer in einem Agenten</business>.",
+    "pipe": {
+      "flow": "So läuft ein Aufruf ab",
+      "agent": "KI-Agent",
+      "agentSub": "Claude · Cursor · VS Code · ChatGPT · jeder MCP-Client",
+      "serverSub": "/api/mcp-Endpunkt",
+      "provider": "Ihr Anbieter",
+      "providerSub": "Gmail · Outlook · iCloud · IMAP",
+      "logCalls": "Agent ruft auf",
+      "logReturns": "liefert Postfach-IDs, kein Kopieren aus dem Dashboard",
+      "logFetches": "mcpemails ruft über die Gmail API ab (Token rotiert)",
+      "logResult": "20 Nachrichten zurückgegeben",
+      "logNothing": "nichts gespeichert",
+      "legendPipe": "mcpemails (die Leitung)",
+      "legendLive": "Live-Anfrage",
+      "legendData": "Ihre Daten, Ihr Anbieter"
+    }
+  },
+  "trusted": {
+    "label": "Funktioniert mit jedem MCP-kompatiblen Agenten und Client"
+  },
+  "whatIs": {
+    "title": "Was ist ein E-Mail-MCP-Server?",
+    "p1": "Ein E-Mail-MCP-Server verbindet einen KI-Assistenten mit einem echten Postfach. Er spricht das Model Context Protocol, sodass Claude, ChatGPT, Cursor oder jeder andere MCP-Client über einen einzigen Endpunkt E-Mails lesen, suchen, entwerfen und senden kann, ohne eigene Integration für jede App.",
+    "p2": "MCP Emails ist ein gehosteter E-Mail-MCP-Server. Er funktioniert mit Gmail, Outlook und Microsoft 365, iCloud, Fastmail und jedem Postfach mit IMAP, und ein Agent kann mehrere Postfächer gleichzeitig bearbeiten. E-Mails werden bei jedem Aufruf live von Ihrem Anbieter abgerufen und nie auf unseren Servern gespeichert.",
+    "linkImap": "IMAP-MCP-Server einrichten",
+    "linkBusiness": "E-Mail-MCP für Firmenpostfächer",
+    "linkProviders": "Alle unterstützten E-Mail-Anbieter"
+  },
+  "features": {
+    "eyebrow": "Prinzipien",
+    "titleLine1": "Sechs Überzeugungen",
+    "titleLine2": "zu E-Mail und Agenten.",
+    "sub": "Die Entscheidungen hinter dem Produkt. Trifft eine davon nicht mehr zu, ist das ein Bug, den Sie melden sollten.",
+    "items": {
+      "0": {
+        "tag": "Umfang",
+        "h": "Siebzehn fokussierte Tools. Das Wesentliche, abgedeckt.",
+        "p": "Die Tools decken die tägliche Arbeit ab: <code>inbox_list</code>, <code>email_read</code> (auflisten, lesen, suchen) und <code>email_compose</code> (senden, antworten), dazu gezielte Tools zum Organisieren, Löschen, für Ordner, Entwürfe, geplantes Senden, Kontakte, Signaturen und unbeaufsichtigte Automatisierungen. Fügen Sie die MCP-Endpunkt-URL in claude.ai, Claude Desktop, Cursor oder einen beliebigen MCP-kompatiblen Agenten ein."
+      },
+      "1": {
+        "tag": "Speicherung",
+        "h": "E-Mails werden live abgerufen. Nie gespeichert.",
+        "p": "Jeder Tool-Aufruf geht in Echtzeit an Ihren Anbieter: Gmail API, Microsoft Graph oder IMAP. Nachrichtentexte, Betreffzeilen und Anhänge gehen an den Agenten und werden sofort verworfen. Pro Postfach speichern wir genau eine Sache, einen verschlüsselten Token oder ein App-Passwort, damit der nächste Aufruf funktioniert. Einzige Ausnahme ist eine Nachricht, die Sie für später planen: Wir halten sie bis zum Sendezeitpunkt vor und bewahren danach einen Eintrag für Ihren Verlauf auf."
+      },
+      "2": {
+        "tag": "Senden",
+        "h": "Sie behalten jeden Versand im Griff.",
+        "p": "Nachrichten laufen über Gmail, Outlook, Fastmail oder Ihren eigenen SMTP-Server, nie über unser Mail-Relay. Aktivieren Sie die Freigabe pro Postfach, um Sendungen, Antworten, Weiterleitungen, Entwurfsversand und geplante Sendungen zur Prüfung im Dashboard zurückzuhalten. Automatische Wiederholungen können einen Idempotenzschlüssel 24 Stunden lang wiederverwenden, und Gmail sendet nur von einer vom Anbieter verifizierten „Senden als“-Identität."
+      },
+      "3": {
+        "tag": "Anbieter",
+        "h": "Gmail, Outlook, iCloud, Fastmail und jedes IMAP-Postfach.",
+        "p": "Ein App-Passwort oder die Google-Anmeldung (OAuth 2.0) für Gmail; die Microsoft-Anmeldung (OAuth 2.0) für Outlook / Microsoft 365 (bei Arbeits- oder Schulkonten muss die IT-Administration die App eventuell einmal freigeben); app-spezifische Passwörter für Fastmail, iCloud, Yahoo, Zoho und Yandex; ein generischer IMAP- / SMTP-Konnektor für alles andere. Jedes Postfach meldet ein versioniertes Kompatibilitätsprofil, sodass ein Agent portable Aktionen nutzen kann und trotzdem sieht, wo sich ein Anbieter anders verhält oder eine Operation nicht unterstützt."
+      },
+      "4": {
+        "tag": "Zugriff",
+        "h": "OAuth 2.0 für Agenten. Mit einem Klick widerrufen.",
+        "p": "Wir sind Standard-MCP (streamable-http) mit OAuth 2.1, DCR und PKCE, also ohne Vendor-Lock-in. Funktioniert mit Claude, Cursor, VS Code, ChatGPT, Windsurf, n8n, Make, LibreChat, OpenWebUI und jedem MCP-kompatiblen Client. OAuth-Clients verbinden sich automatisch per Authorization Code + PKCE; ein eingeschränkter API-Schlüssel deckt Clients ohne OAuth und Skripte ab. Jede Verbindung lässt sich im Dashboard mit einem Klick widerrufen."
+      },
+      "5": {
+        "tag": "Sicherheit",
+        "h": "Zugangsdaten werden verschlüsselt gespeichert.",
+        "p": "OAuth-Tokens und App-Passwörter werden mit AES-256-GCM verschlüsselt, bevor sie in die Datenbank geschrieben werden. Entschlüsselt wird nur innerhalb einer isolierten Edge Function zum Zeitpunkt des Aufrufs. Der Schlüssel liegt als Umgebungs-Secret getrennt von der Datenbank."
+      }
+    }
+  },
+  "howItWorks": {
+    "eyebrow": "So funktioniert es",
+    "title": "Sie sind der Nutzer. Wir sind die Leitung.",
+    "sub": "Drei Schritte von der Registrierung bis Ihr Agent E-Mails liest und sendet.",
+    "steps": {
+      "0": {
+        "h": "Postfach verbinden",
+        "p": "Melden Sie sich an und klicken Sie auf <b>Postfach verbinden</b>. Wählen Sie Gmail, Outlook, iCloud, Fastmail oder ein beliebiges IMAP-Postfach, dann schließen Sie OAuth ab oder fügen ein App-Passwort ein. Zugangsdaten werden verschlüsselt; die E-Mails, die Ihr Agent liest, werden nie gespeichert."
+      },
+      "1": {
+        "h": "URL einfügen: OAuth oder API-Schlüssel",
+        "p": "Bei einem MCP-Client mit OAuth 2.0 (claude.ai, Claude Desktop, Cursor und andere) fügen Sie <code>https://mcpemails.com/api/mcp</code> ein, klicken auf Verbinden und autorisieren. Kein Schlüssel nötig. Für Clients ohne OAuth (Cline, JetBrains, eigene Skripte) erstellen Sie stattdessen im Dashboard einen eingeschränkten API-Schlüssel."
+      },
+      "2": {
+        "h": "Ihr Agent bearbeitet das Postfach",
+        "p": "Der Agent ruft Tools wie <code>email_read()</code> oder <code>email_compose()</code> auf. MCP Emails ruft live bei Ihrem Anbieter ab und liefert das Ergebnis. Zwischen den Aufrufen wird nichts zwischengespeichert."
+      }
+    },
+    "tools": {
+      "0": "Alle verbundenen Postfächer und ihre IDs ermitteln. Rufen Sie das zuerst auf, kein Kopieren von UUIDs aus dem Dashboard.",
+      "1": "E-Mails lesen: aktuelle Zusammenfassungen auflisten, eine vollständige Nachricht abrufen, bis zu 50 auf einmal lesen, anbieterübergreifend suchen, lesbaren Text aus Anhängen extrahieren oder die Original-E-Mail als .eml speichern.",
+      "2": "E-Mails organisieren: verschieben, kopieren, löschen, markieren oder archivieren, einzeln, in großen Mengen oder direkt aus einer Suche. Lange Massenvorgänge melden ihren Status und lassen sich im Dashboard abbrechen.",
+      "3": "Verfassen: eine neue Nachricht senden, im Thread antworten oder weiterleiten, über Gmail API, Microsoft Graph oder SMTP. Die optionale Freigabe pro Postfach hält ausgehende E-Mails zur Prüfung im Dashboard zurück, bevor sie rausgehen.",
+      "4": "Ordner verwalten (Labels bei Gmail): erstellen, umbenennen oder löschen und als Ziel beim Verschieben nutzen. folder_list liest die vorhandenen Ordner.",
+      "5": "Entwürfe: beim Anbieter gespeicherte Entwürfe erstellen, aktualisieren und senden, auch eine ungesendete Antwort, die zur Prüfung in der ursprünglichen Konversation liegt. draft_list liest, was gespeichert ist.",
+      "6": "Eine Nachricht für einen späteren Zeitpunkt planen und vor dem Versand stornieren. schedule_list zeigt, was in der Warteschlange steht.",
+      "7": "Personen nach Name oder E-Mail-Adresse finden, per Live-Scan der letzten passenden E-Mails. Nichts wird gespeichert."
+    }
+  },
+  "examples": {
+    "eyebrow": "Echte Prompts",
+    "titleLine1": "Einfach fragen.",
+    "titleLine2": "Er liest, schreibt und sortiert.",
+    "sub": "Kein Dashboard, das Sie erst lernen müssen. Sagen Sie Ihrem KI-Assistenten in normaler Sprache, was Sie wollen, und er erledigt es mit MCP Emails."
+  },
+  "quote": {
+    "text": "Ich wollte, dass meine Agenten mein Postfach bearbeiten, aber jede Lösung bedeutete, einem Dritten eine Kopie meiner E-Mails zu überlassen. Also habe ich die Leitung gebaut, die ich mir gewünscht hatte: einmal verbinden, das Postfach wird live abgerufen und nie gespeichert, und jeden Agenten können Sie mit einem Klick abklemmen. Diesem Produkt vertraue ich mein eigenes Postfach an.",
+    "role": "Gründer, MCP Emails"
+  },
+  "reviews": {
+    "eyebrow": "Bewertungen",
+    "titleLine1": "Nicht unser Wort.",
+    "titleLine2": "Ihres.",
+    "sub": "Echte Bewertungen von Menschen, die MCP Emails mit ihrem eigenen Postfach nutzen, veröffentlicht unter ihrem eigenen Namen.",
+    "ratingLabel": "Bewertet mit {rating} von 5",
+    "count": "{count, plural, one {# Bewertung} other {# Bewertungen}}",
+    "via": "Bewertet auf {source}",
+    "trackLabel": "Kundenbewertungen",
+    "prev": "Vorherige Bewertungen",
+    "next": "Weitere Bewertungen",
+    "featuredLabel": "Ausgewählte Kundenbewertung",
+    "readFull": "Ganze Bewertung lesen"
+  },
+  "pricing": {
+    "eyebrow": "Preise",
+    "title": "Preis pro Postfach. Keine Abrechnung nach Verbrauch in bezahlten Tarifen.",
+    "sub": "Free verbindet ein Postfach mit 150 E-Mail-Aktionen pro Monat. Personal verbindet drei. Pro verbindet bis zu 10 für eine Person, die ein Unternehmen führt. Business enthält 10 Postfächer, jedes weitere kostet $3 pro Monat, und Platz für Ihr ganzes Team ist auch dabei.",
+    "perForever": "/dauerhaft",
+    "perMonth": "/Monat",
+    "tiers": {
+      "free": {
+        "name": "Free",
+        "desc": "Verbinden Sie ein Postfach und geben Sie Ihrem Agenten eine echte Mailbox.",
+        "features": [
+          "1 verbundenes Postfach",
+          "Lesen, suchen, organisieren, entwerfen, planen und senden",
+          "Versandprüfung und Freigabe",
+          "Nutzungsanalyse",
+          "Gmail, Outlook, iCloud, Fastmail und jedes IMAP-Postfach",
+          "Unbegrenzt viele API-Schlüssel",
+          "Community-Support"
+        ],
+        "cta": "Kostenlos starten"
+      },
+      "personal": {
+        "name": "Personal",
+        "desc": "Drei Postfächer für eine Person oder ein kleines Unternehmen: beruflich, privat oder die ersten Firmenadressen.",
+        "features": [
+          "Alles aus Free",
+          "3 verbundene Postfächer",
+          "2x höheres Burst-Ratenlimit",
+          "E-Mail-Support"
+        ],
+        "cta": "Personal wählen",
+        "ctaGrandfathered": "Sie haben bereits unbegrenzt viele Postfächer"
+      },
+      "solo": {
+        "name": "Pro",
+        "desc": "Für eine Person, die ein Unternehmen führt: bis zu 10 Postfächer in einem Agenten, von Buchhaltung und Vertrieb bis Support und Ihrem eigenen.",
+        "features": [
+          "Alles aus Personal",
+          "10 verbundene Postfächer",
+          "5x höheres Burst-Ratenlimit",
+          "Längerer Analyseverlauf"
+        ],
+        "cta": "Pro wählen"
+      },
+      "business": {
+        "name": "Business",
+        "desc": "Für Unternehmen mit vielen Postfächern oder mehreren Personen: 10 Postfächer inklusive, weitere zum Festpreis.",
+        "features": [
+          "Alles aus Pro",
+          "10 Postfächer inklusive, $3 pro Monat für jedes weitere",
+          "Unbegrenzt viele Mitglieder mit Rollen, ohne Aufpreis",
+          "Admins geben zurückgehaltene Sendungen frei",
+          "Mehrere Workspaces in einem Abonnement, einer pro Firma oder Kunde"
+        ],
+        "cta": "Business wählen"
+      }
+    },
+    "footnote": "Alle Tarife: Die E-Mails, die Ihr Agent liest, werden live abgerufen und nie gespeichert. OAuth-Tokens verschlüsselt gespeichert. Sie brauchen etwas Individuelles? <contact>Kontaktieren Sie uns</contact>. <comparison>Vollständigen Funktionsvergleich ansehen →</comparison>",
+    "businessLink": "Sie verwalten die Postfächer eines Unternehmens? <business>So verbindet eine Person sie alle</business>."
+  },
+  "faq": {
+    "eyebrow": "FAQ",
+    "title": "Fragen und Antworten",
+    "sub": "Alles, was Sie wissen sollten, bevor Sie Ihr erstes Postfach verbinden.",
+    "items": [
+      {
+        "q": "Ist MCP Emails ein IMAP-MCP-Server?",
+        "a": "Ja. Neben der Gmail- und Outlook-Anmeldung gibt es einen generischen IMAP- und SMTP-Konnektor, also funktioniert jedes Postfach mit IMAP-Zugang: Ihre eigene Domain, ein Hosting-Anbieter, ein regionaler Provider. Sie geben die Serverdaten und ein App-Passwort einmal ein, und Ihr Agent liest über IMAP und sendet über Ihren eigenen SMTP-Server."
+      },
+      {
+        "q": "Kann ein Agent mehrere Postfächer gleichzeitig bearbeiten?",
+        "a": "Ja. Verbinden Sie jedes Postfach mit demselben Konto, und Ihr Agent erreicht alle über einen Endpunkt. Er kann die verbundenen Postfächer auflisten, für jede Anfrage das richtige wählen und in derselben Unterhaltung etwa zwischen einer Support-Adresse und einer privaten wechseln. Wie viele Postfächer Sie verbinden können, hängt von Ihrem Tarif ab."
+      },
+      {
+        "q": "Wie füge ich den E-Mail-MCP-Konnektor zu Claude oder ChatGPT hinzu?",
+        "a": "Fügen Sie in den Einstellungen Ihres Clients einen benutzerdefinierten Konnektor hinzu, tragen Sie https://mcpemails.com/api/mcp als Server-URL ein und bestätigen Sie die Anmeldung. Clients mit OAuth brauchen keinen API-Schlüssel. Dieselbe URL funktioniert in Cursor, VS Code und anderen MCP-Clients."
+      },
+      {
+        "q": "Nutzen Sie Analytics?",
+        "a": "Wir nutzen datenschutzfreundliche, cookielose Produktanalyse, um die Leistung der Website und der Einrichtung zu verstehen. E-Mail-Inhalte, Adressen, API-Schlüssel, OAuth-Tokens oder MCP-Anfragedaten erfassen wir nie."
+      },
+      {
+        "q": "Mit welchen KI-Clients funktioniert es?",
+        "a": "Mit jedem MCP-kompatiblen Client. Wir sind ein standardmäßiger streamable-http-MCP-Server mit OAuth 2.1, DCR und PKCE, also funktioniert dasselbe Postfach in Claude, Cursor, VS Code, ChatGPT, Windsurf, n8n, Make, LibreChat und mehr. Eine Endpunkt-URL einfügen, fertig, ohne Neuaufbau pro App."
+      },
+      {
+        "q": "Welche E-Mail-Anbieter kann ich verbinden?",
+        "a": "Gmail mit App-Passwort oder per Google-Anmeldung, Outlook und Microsoft 365 per Microsoft-Anmeldung (bei Arbeits- oder Schulkonten muss die IT-Administration die App eventuell einmal freigeben), Fastmail, iCloud, Yahoo, Zoho und Yandex mit app-spezifischem Passwort und jedes andere Postfach über eine generische IMAP/SMTP-Verbindung. Verbinden Sie so viele Postfächer, wie Sie möchten, und benennen Sie sie nach Einsatzzweck."
+      },
+      {
+        "q": "Werden meine E-Mails irgendwo gespeichert?",
+        "a": "Nein. Die E-Mails, die Ihr Agent liest, werden bei jeder Anfrage live von Ihrem Anbieter abgerufen und nie auf unseren Servern gespeichert. Einzige Ausnahme ist eine Nachricht, die Sie ausdrücklich für später planen: Sie wird bis zum Versand verschlüsselt vorgehalten."
+      },
+      {
+        "q": "Ist es wirklich kostenlos?",
+        "a": "Ja. Der Free-Tarif verbindet ein Postfach, dauerhaft und ohne Kreditkarte, und Ihr Agent bekommt dafür jedes Tool, das wir anbieten: lesen, suchen, senden, antworten, planen und organisieren. Personal kostet $9 pro Monat für ein zweites und drittes Postfach im selben Agenten, Pro deckt bis zu 10 für $15 ab, und Business ist für mehr Postfächer oder wenn weitere Personen Zugang brauchen."
+      },
+      {
+        "q": "Was kann die KI mit meinem Postfach tatsächlich tun?",
+        "a": "E-Mails lesen und durchsuchen, echte Nachrichten senden, beantworten und weiterleiten, den Versand für später planen und Ihr Postfach organisieren: verschieben, kopieren, markieren, archivieren und löschen. Siebzehn aktionsbasierte Tools, sodass der Agent die Aufgabe direkt im Postfach erledigt, statt nur Entwürfe zu schreiben."
+      },
+      {
+        "q": "Wie verbinde ich ein Postfach?",
+        "a": "Erstellen Sie ein kostenloses Konto, verbinden Sie Ihr Postfach (App-Passwort oder Google-Anmeldung für Gmail, Microsoft-Anmeldung für Outlook, App-Passwort für die anderen) und tragen Sie dann https://mcpemails.com/api/mcp in Ihren KI-Client ein und autorisieren Sie. Nach wenigen Minuten hat Ihr Agent Zugriff auf das Postfach."
+      },
+      {
+        "q": "Kann ich es selbst hosten?",
+        "a": "Ja. MCP Emails ist Open Source unter AGPL-3.0, und der gehostete Dienst läuft auf demselben Server, den Sie selbst betreiben können. Ein docker-compose-Stack bringt den vollständigen MCP-Server mit allen Tools in etwa fünf Minuten auf Ihrer eigenen Datenbank zum Laufen, für jedes IMAP- oder SMTP-Postfach. Gmail- und Outlook-Anmeldung (OAuth) und das Dashboard bleiben dem gehosteten Angebot vorbehalten."
+      }
+    ]
+  },
+  "footer": {
+    "tagline": "Ein gehosteter MCP-Server, der KI-Agenten Lese- und Sendezugriff auf Ihr Postfach gibt, ohne die gelesenen E-Mails je zu speichern.",
+    "productHeading": "Produkt",
+    "resourcesHeading": "Ressourcen",
+    "companyHeading": "Unternehmen",
+    "linkFeatures": "Funktionen",
+    "linkHow": "So funktioniert es",
+    "linkPricing": "Preise",
+    "linkDocs": "Doku",
+    "linkToolReference": "Tool-Referenz",
+    "linkQuickstart": "Schnellstart",
+    "linkOauth": "OAuth-Verbindung",
+    "linkProviders": "Unterstützte Anbieter",
+    "linkReadOnly": "Nur-Lese-Zugriff",
+    "linkPrivacy": "Datenschutz",
+    "linkTerms": "Nutzungsbedingungen",
+    "copyright": "© 2026 mcpemails.",
+    "legal": "E-Mails live abgerufen, nie gespeichert · Zugangsdaten verschlüsselt gespeichert",
+    "legalEntity": "MCP Emails ist ein Dienst von Albretsen Consulting (enkeltpersonforetak), Organisationsnummer 926 646 753, Håsteins gate 9, 5160 Laksevåg, Norwegen.",
+    "contactLabel": "Kontakt",
+    "mcpLabel": "MCP-Endpunkt",
+    "copy": "Kopieren",
+    "copied": "Kopiert",
+    "copyAria": "{label} kopieren",
+    "linkAbout": "Über uns",
+    "linkSecurity": "Sicherheit",
+    "linkStatus": "Status",
+    "linkHelp": "Hilfe & Support",
+    "linkSelfHost": "Self-Hosting",
+    "linkFounders": "Für Gründer",
+    "linkBusiness": "Für Unternehmen"
+  },
+  "languageSwitcher": {
+    "label": "Sprache",
+    "en": "English",
+    "nb": "Norsk",
+    "es": "Español",
+    "fr": "Français",
+    "zh": "中文",
+    "de": "Deutsch"
+  },
+  "preview": {
+    "eyebrow": "Produktvorschau",
+    "title": "Ihr gesamter MCP-Betrieb auf einen Blick.",
+    "sub": "Ein Echtzeit-Dashboard für jedes verbundene Postfach, jeden API-Schlüssel und jeden Tool-Aufruf, damit Sie immer wissen, was Ihre Agenten tun."
+  },
+  "demo": {
+    "eyebrow": "In Aktion",
+    "title": "Postfach verbinden, dann fragen, was ansteht.",
+    "sub": "Weniger als eine Minute, aufgenommen mit dem echten Produkt: eine echte IMAP-Verbindung, dann ein echter Tool-Aufruf, der die eine wichtige E-Mail findet.",
+    "caption": "Aufgenommen mit einem Demo-Postfach voller fiktiver E-Mails. In diesem Video ist keine echte Korrespondenz zu sehen.",
+    "player": {
+      "label": "Demo-Video: ein Postfach verbinden und mit einem KI-Agenten sichten",
+      "fallback": "Ihr Browser kann dieses Video nicht abspielen. Der Schnellstart in der Doku zeigt dieselben Schritte."
+    }
+  }
+}

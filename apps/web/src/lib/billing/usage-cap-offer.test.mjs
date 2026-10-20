@@ -42,7 +42,7 @@ test('every key the offer names exists in every dashboard locale', () => {
   // The offer is rendered through next-intl. A missing key renders as the
   // key itself, on a paywall, in one language only, which nobody notices
   // until a customer in that language does.
-  const locales = ['en', 'es', 'fr', 'nb', 'zh'];
+  const locales = ['en', 'es', 'fr', 'nb', 'zh', 'de'];
   for (const locale of locales) {
     const messages = JSON.parse(readFileSync(path.resolve(here, `../../../messages/${locale}/dashboard.json`), 'utf8'));
     for (const offer of [usageCapOffer(), usageCapOffer({ reached: true })]) {

@@ -116,7 +116,7 @@ test('the dashboard toasts both new callback codes and the modal names the 409',
   assert.match(read('app/auth/outlook/callback/route.ts'), /redirectWithError\('outlook_no_mailbox'\)/);
 });
 
-for (const locale of ['en', 'es', 'fr', 'nb', 'zh']) {
+for (const locale of ['en', 'es', 'fr', 'nb', 'zh', 'de']) {
   test(`${locale}: the new strings exist and are not empty`, () => {
     const messages = JSON.parse(read(`messages/${locale}/dashboardChrome.json`));
     for (const key of ['inboxExistsOtherProvider', 'outlookNoMailbox']) {

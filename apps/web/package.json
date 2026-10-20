@@ -79,6 +79,7 @@
     "test:retention": "node --test --experimental-strip-types --import ./scripts/register-ts-alias.mjs src/lib/analytics/retention.test.ts",
     "test:kiosk": "node --test --experimental-strip-types components/admin/kiosk/shared.test.ts",
     "test:subtitles": "node --test src/lib/demo-video/subtitles.test.mjs",
+    "test:i18n-de": "node --test src/lib/i18n/german-parity.test.mjs",
     "test:experiments": "node --test --experimental-strip-types --import ./scripts/register-ts-alias.mjs src/lib/experiments/experiments.test.ts",
     "test:draft-editor": "node --test --experimental-strip-types src/lib/drafts/editor-preference.test.ts",
     "test:draft-editor-ui": "node --test --experimental-strip-types --import ./scripts/register-dom-tests.mjs components/dashboard/draft-editor-ui.test.mjs",

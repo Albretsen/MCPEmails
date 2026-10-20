@@ -32,7 +32,7 @@ export function nameGrammar(name) {
  */
 export default async function ConnectProviderView({ locale, provider, content, multiMailbox = null }) {
   const t = await getTranslations({ locale, namespace: 'connect' });
-  const related = relatedProviders(provider.slug);
+  const related = relatedProviders(provider.slug, 6, new Date(), locale);
   const showGmailVerification = provider.slug === 'gmail' && OAUTH_VERIFICATION_PENDING;
   const ev = provider.evidence;
   const named = { provider: provider.name, ...nameGrammar(provider.name) };
@@ -368,7 +368,7 @@ export default async function ConnectProviderView({ locale, provider, content, m
         </div>
       </section>
 
-      <Footer />
+      <Footer locales={provider.locales} />
     </div>
   );
 }

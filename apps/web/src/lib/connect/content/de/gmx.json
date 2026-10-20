@@ -1,0 +1,97 @@
+{
+  "_sources": [
+    "https://support.gmx.com/pop-imap/toggle.html",
+    "https://support.gmx.com/pop-imap/imap/index.html"
+  ],
+  "auth": {
+    "method": "account-password",
+    "label": "GMX-Passwort",
+    "helpUrl": "https://support.gmx.com/pop-imap/toggle.html",
+    "usernameForm": "Ihre vollständige GMX-Adresse mit Domain: name@gmx.net, name@gmx.com, name@gmx.de oder name@gmx.at.",
+    "status": "active"
+  },
+  "meta": {
+    "title": "GMX mit Claude, Cursor & MCP verbinden (IMAP)",
+    "description": "GMX mit Claude, Cursor und jedem MCP-Client verbinden, per IMAP über imap.gmx.net:993. POP3 und IMAP sind bei GMX standardmäßig aus und müssen zuerst aktiviert werden."
+  },
+  "hero": {
+    "eyebrow": "GMX + KI",
+    "titleLine1": "GMX mit Claude verbinden,",
+    "titleLine2": "und mit Cursor, ChatGPT und jedem MCP-Client",
+    "lead": "Geben Sie Ihrem KI-Agenten in wenigen Minuten Zugriff auf Ihr echtes GMX-Postfach. E-Mails lesen, suchen, senden, beantworten, planen und ordnen, per IMAP mit Ihrem Kontopasswort. Dasselbe Postfach funktioniert in jedem MCP-Client, nicht nur in einem.",
+    "meta0": "1 Postfach dauerhaft kostenlos",
+    "meta1": "Ihr Kontopasswort, keine OAuth-Einrichtung",
+    "meta2": "E-Mails live abgerufen, nie gespeichert",
+    "answer": "Claude kann GMX nicht von sich aus erreichen. MCP Emails ist ein gehosteter MCP-Server, der das Postfach per IMAP mit Ihrem Kontopasswort anbindet. Danach können Claude, Cursor oder jeder MCP-Client diese E-Mails lesen, suchen, senden und ordnen. Die Einrichtung dauert ein paar Minuten, ein Postfach ist kostenlos."
+  },
+  "method": {
+    "title": "So verbindet sich GMX: IMAP und Ihr Kontopasswort",
+    "body": "GMX verbindet sich über IMAP/SMTP, aber <b>der Zugriff per POP3 und IMAP ist standardmäßig deaktiviert</b>. Aktivieren Sie ihn bei GMX unter E-Mail, Einstellungen, POP3/IMAP Abruf und verbinden Sie dann mit Ihrer GMX-Adresse und Ihrem Passwort. Fordert GMX Sie auf, ein anwendungsspezifisches Passwort zu erstellen, verwenden Sie stattdessen dieses. Deutsche Konten nutzen die .net-Hosts <code>imap.gmx.net</code> und <code>mail.gmx.net</code>."
+  },
+  "setup": [
+    {
+      "h": "Kostenloses Konto erstellen",
+      "p": "Registrieren Sie sich bei MCP Emails, ohne Kreditkarte. Der Free-Tarif verbindet ein Postfach, dauerhaft."
+    },
+    {
+      "h": "IMAP-Zugriff bei GMX aktivieren",
+      "p": "Öffnen Sie bei GMX den Bereich E-Mail, dann Einstellungen, dann POP3/IMAP Abruf, und erlauben Sie den Zugriff per POP3 und IMAP. GMX schaltet ihn wieder ab, wenn das Konto lange nicht genutzt wird."
+    },
+    {
+      "h": "Postfach in MCP Emails hinzufügen",
+      "p": "Wählen Sie IMAP / SMTP, geben Sie Ihre GMX-Adresse, die oben genannten Hosts und das Passwort ein, und das Postfach ist sicher verbunden."
+    },
+    {
+      "h": "MCP-URL in Ihre KI einfügen",
+      "p": "Fügen Sie https://mcpemails.com/api/mcp in Claude, Cursor oder ChatGPT ein, autorisieren Sie den Zugriff, und Ihr Agent hat das Postfach."
+    }
+  ],
+  "gotchas": [
+    {
+      "h": "GMX schaltet POP3 und IMAP standardmäßig ab, und später wieder ab",
+      "p": "Externer Zugriff auf ein GMX-Postfach ist deaktiviert, bis Sie ihn einschalten: Öffnen Sie E-Mail, dann Einstellungen, dann POP3/IMAP Abruf, setzen Sie den Haken bei <b>POP3 und IMAP Zugriff erlauben</b> und speichern Sie. GMX dokumentiert ein Detail, das kaum jemand bemerkt: Aus Sicherheitsgründen wird die Freigabe automatisch wieder entzogen, wenn das Postfach lange keine POP3- oder IMAP-Aktivität hatte. Eine Verbindung, die monatelang lief, kann also plötzlich mit einem Anmeldefehler abbrechen, obwohl sich auf Ihrer Seite nichts geändert hat. In der GMX-App gibt es diese Einstellung nicht, Sie müssen sie im Browser vornehmen."
+    },
+    {
+      "h": "Der Postausgangsserver heißt mail.gmx.net, nicht smtp.gmx.net",
+      "p": "GMX weicht von dem Namensschema ab, das fast jeder andere Anbieter nutzt. Eingehend ist <code>imap.gmx.net</code>, ausgehend aber <code>mail.gmx.net</code> auf Port 465. Ein geratenes <code>smtp.gmx.net</code> antwortet nicht, und Clients, die Hostnamen nach Muster ausfüllen, liegen hier jedes Mal falsch. Beide Namen auf dieser Seite wurden über eine echte TLS-Verbindung bestätigt, und das Zertifikat von GMX ist für <code>mail.gmx.net</code> ausgestellt."
+    },
+    {
+      "h": "GMX nimmt eine 135-MB-Nachricht an, die der Empfänger dann ablehnt",
+      "p": "Der Versandserver von GMX meldet eine maximale Nachrichtengröße von rund 135 MB, mit großem Abstand der höchste Wert aller Anbieter auf dieser Website. Das ist eine Obergrenze für das, was GMX von Ihnen annimmt, keine Zustellgarantie. Der empfangende Server setzt sein eigenes Limit, meist zwischen 10 MB und 50 MB. Ein großer Anhang, den GMX problemlos annimmt, kann also Minuten später von der Gegenseite zurückkommen. Wenn ein Agent etwas Großes verschickt, teilen Sie besser einen Link."
+    },
+    {
+      "h": "Mit Zwei-Faktor-Authentifizierung ändert sich das benötigte Passwort",
+      "p": "Ohne Zwei-Faktor-Authentifizierung funktioniert Ihr normales GMX-Passwort in einem Mailprogramm, sobald der Haken für POP3 und IMAP gesetzt ist. Haben Sie die Zwei-Faktor-Authentifizierung aktiviert und GMX fordert ein anwendungsspezifisches Passwort an, verwenden Sie dieses: Das normale Passwort funktioniert in externen Programmen dann nicht mehr, und der Fehler sieht aus wie ein Tippfehler statt wie eine Richtlinie. Der IMAP-Server von GMX bietet nur die Verfahren <code>PLAIN</code> und <code>LOGIN</code> an, ohne OAuth. Die Zugangsdaten sind also immer ein Passwort, so oder so."
+    }
+  ],
+  "limits": [
+    "GMX kann POP3 und IMAP nach längerer Zeit ohne Protokollaktivität wieder deaktivieren. Das Postfach ist dann getrennt, bis Sie den Zugriff in der Weboberfläche wieder einschalten.",
+    "Für GMX gibt es keine OAuth-Option, gespeichert wird also ein Passwort. Wenn Sie Ihr GMX-Passwort ändern, ist das Postfach getrennt, bis Sie das neue eingeben."
+  ],
+  "faq": [
+    {
+      "q": "Funktioniert Claude mit GMX?",
+      "a": "Nicht von sich aus. Claude hat keinen eingebauten GMX-Konnektor. Wenn Sie einen MCP-Server wie MCP Emails per IMAP mit Ihrem GMX-Postfach verbinden, kann Claude E-Mails lesen, suchen, senden, beantworten, planen und ordnen. Dieselbe Verbindung funktioniert in Cursor, ChatGPT und anderen MCP-Clients. Zuerst müssen Sie bei GMX den Zugriff per POP3 und IMAP aktivieren."
+    },
+    {
+      "q": "Wie lauten die IMAP- und SMTP-Einstellungen von GMX?",
+      "a": "IMAP ist imap.gmx.net auf Port 993 mit implizitem TLS. Ausgehende E-Mails gehen an mail.gmx.net auf Port 465, ebenfalls mit implizitem TLS, und nicht an einen Host namens smtp.gmx.net, den es nicht gibt. Der Benutzername ist Ihre vollständige GMX-Adresse. Beide Hosts wurden am auf dieser Seite angegebenen Datum über eine echte TLS-Verbindung bestätigt."
+    },
+    {
+      "q": "Wie aktiviere ich IMAP bei GMX?",
+      "a": "Melden Sie sich im Browser bei GMX an, öffnen Sie E-Mail, klicken Sie auf Einstellungen, dann auf POP3/IMAP Abruf, und setzen Sie den Haken, der den Zugriff per POP3 und IMAP erlaubt. Speichern Sie. In der GMX-App fehlt diese Option. Solange sie aus ist, lehnt GMX jede Anmeldung eines Mailprogramms ab, und der Fehler sieht genauso aus wie ein falsches Passwort."
+    },
+    {
+      "q": "Warum funktioniert meine GMX-Verbindung plötzlich nicht mehr?",
+      "a": "GMX dokumentiert, dass der Zugriff per POP3 und IMAP aus Sicherheitsgründen automatisch deaktiviert wird, wenn ein Postfach diese Protokolle lange nicht nutzt. Dafür muss sich auf Ihrer Seite nichts ändern. Melden Sie sich im Browser an, setzen Sie den Haken für POP3 und IMAP in den Einstellungen erneut, und die Verbindung funktioniert wieder mit demselben Passwort."
+    },
+    {
+      "q": "Werden meine GMX-E-Mails auf Ihren Servern gespeichert?",
+      "a": "Nein. Nachrichten werden bei jeder Anfrage live per IMAP von GMX abgerufen und an Ihren KI-Client übergeben. Zugangsdaten sind im Ruhezustand verschlüsselt, Nachrichteninhalte werden nicht aufbewahrt. Wenn Sie den Zugriff per POP3 und IMAP bei GMX wieder abschalten, ist die Verbindung auf deren Seite sofort getrennt."
+    }
+  ],
+  "ctaBand": {
+    "title": "Geben Sie Ihrer KI ein GMX-Postfach",
+    "sub": "GMX in wenigen Minuten verbinden. Ein Postfach dauerhaft kostenlos, ohne Kreditkarte."
+  }
+}

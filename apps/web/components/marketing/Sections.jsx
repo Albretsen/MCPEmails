@@ -1263,13 +1263,15 @@ export function Faq() {
  * `usePathname` here is next-intl's, so it returns the path with the locale
  * prefix already stripped ("/pricing" on both / and /es/pricing).
  */
-function LanguageSwitcher() {
+function LanguageSwitcher({ locales = null }) {
   const t = useTranslations('home');
   const locale = useLocale();
   // Falls back to the home path if the router has not resolved a pathname,
   // so the statically rendered HTML never ships an empty href.
   const pathname = usePathname() || '/';
-  const codes = ['en', 'nb', 'es', 'fr', 'zh'];
+  // A page that exists in only some locales (most provider pages have no de
+  // copy) passes its list, so the switcher never links to a 404.
+  const codes = ['en', 'nb', 'es', 'fr', 'zh', 'de'].filter((code) => !locales || locales.includes(code));
   /*
     Built by hand rather than with next-intl's `locale` prop, which always
     emits the prefix: under localePrefix 'as-needed' that produced /en/pricing,
@@ -1337,7 +1339,7 @@ function FooterCopy({ icon, label, value, href }) {
   );
 }
 
-export function Footer() {
+export function Footer({ locales = null } = {}) {
   const t = useTranslations('home');
   const tc = useTranslations('compare');
   // The footer renders on every locale, but three of its links point at
@@ -1357,7 +1359,7 @@ export function Footer() {
               <FooterCopy icon="mail" label={t('footer.contactLabel')} value={FOOTER_CONTACT_EMAIL} href={`mailto:${FOOTER_CONTACT_EMAIL}`} />
               <FooterCopy icon="server" label={t('footer.mcpLabel')} value={FOOTER_MCP_URL} />
             </div>
-            <LanguageSwitcher />
+            <LanguageSwitcher locales={locales} />
           </div>
           <div>
             <p className="footer-heading">{t('footer.productHeading')}</p>

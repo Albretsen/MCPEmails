@@ -1,0 +1,97 @@
+{
+  "_sources": [
+    "https://kundenservice.freenet.de/faq/e-mail-client-mail/einstellungen-serverdaten-fuer-alle-e-mail-programme/",
+    "https://kundenservice.freenet.de/faq/e-mail-client-mail/pop3-imap-und-smtp-aktivieren/"
+  ],
+  "auth": {
+    "method": "account-password",
+    "label": "freenet Mail Passwort",
+    "helpUrl": "https://kundenservice.freenet.de/faq/e-mail-client-mail/pop3-imap-und-smtp-aktivieren/",
+    "usernameForm": "Ihre vollständige Adresse in der Form name@domain, zum Beispiel max.mustermann@freenet.de. So beschreibt freenet selbst das Feld Benutzer oder Kontoname.",
+    "status": "active"
+  },
+  "meta": {
+    "title": "freenet Mail in Claude: der IMAP-Schalter, den Sie brauchen",
+    "description": "freenet.de Mail per IMAP über mx.freenet.de:993 mit Claude und jedem MCP-Client verbinden. Der Client-Zugriff liegt hinter einem Haken, den freenet lieber aus lässt."
+  },
+  "hero": {
+    "eyebrow": "freenet Mail + KI",
+    "titleLine1": "Ihr freenet.de-Postfach verbinden",
+    "titleLine2": "mit Claude, Cursor und jedem MCP-Client",
+    "lead": "freenet unterstützt IMAP, versteckt es aber hinter einem Schalter, den Sie nach freenets Wunsch lieber nicht anrühren. Einmal umgelegt, verbindet MCP Emails das Postfach, und Ihr KI-Agent kann E-Mails lesen, suchen, senden, beantworten und ablegen.",
+    "answer": "Claude kann ein freenet.de-Postfach nicht von sich aus erreichen. MCP Emails ist ein gehosteter MCP-Server, der es per IMAP über mx.freenet.de auf Port 993 anbindet, angemeldet mit Ihrer vollständigen Adresse und Ihrem freenet Mail Passwort. Vorher müssen Sie nur eines tun: in den Postfach-Einstellungen den Haken bei POP3, IMAP und SMTP aktivieren setzen. freenet sperrt jeden Client-Zugriff hinter diesem Kästchen und empfiehlt, es aus zu lassen. Ist es aktiv, können Claude, Cursor oder jeder andere MCP-Client diese E-Mails lesen, suchen, senden und ordnen. Ein Postfach ist dauerhaft kostenlos.",
+    "meta0": "1 Postfach dauerhaft kostenlos",
+    "meta1": "Client-Zugriff muss eingeschaltet werden",
+    "meta2": "E-Mails live abgerufen, nie gespeichert"
+  },
+  "method": {
+    "title": "So verbindet sich freenet: ein Hostname, ein Haken",
+    "body": "freenet nennt einen einzigen Servernamen für alles: <code>mx.freenet.de</code> ist IMAP- und SMTP-Server zugleich, und in derselben Tabelle warnt freenet, nur die angegebenen Namen zu verwenden, nie eine IP-Adresse oder einen anderen Namen. IMAP antwortet auf Port 993 mit TLS und auf 143 mit STARTTLS, der Versand läuft auf 465 mit TLS und auf 587 mit STARTTLS, jeweils mit SMTP-Authentifizierung. Der Benutzername ist die vollständige Adresse, das Passwort ist das freenet Mail Passwort. Was freenet von den meisten Anbietern unterscheidet, ist die Sperre davor. Der Client-Zugriff ist ein Kästchen in den Postfach-Einstellungen mit der Beschriftung <b>POP3, IMAP und SMTP aktivieren</b>, und freenets eigener Hilfeartikel empfiehlt, diese Funktionen zu deaktivieren, weil native Clients nicht alle modernen Sicherheitsfunktionen unterstützen. Das ist ein Rat, die Entscheidung liegt bei Ihnen: Solange das Kästchen leer ist, kann sich kein Client anmelden."
+  },
+  "setup": [
+    {
+      "h": "Kostenloses MCP Emails Konto erstellen",
+      "p": "Registrieren Sie sich auf mcpemails.com. Der Free-Tarif verbindet ein Postfach und fragt nicht nach einer Kreditkarte."
+    },
+    {
+      "h": "POP3, IMAP und SMTP aktivieren in freenet Mail ankreuzen",
+      "p": "Melden Sie sich auf mail.freenet.de an, öffnen Sie die Einstellungen über das Zahnrad oben rechts, wählen Sie <b>POP3/IMAP/SMTP</b> und dann <b>Einrichtung POP3/IMAP</b>, und setzen Sie den Haken bei <b>POP3, IMAP und SMTP aktivieren</b>. Über dasselbe Kästchen schalten Sie den Client-Zugriff später wieder ab, wenn Sie ihn nicht mehr möchten."
+    },
+    {
+      "h": "Adresse und freenet Mail Passwort eingeben",
+      "p": "Wählen Sie in MCP Emails IMAP / SMTP und geben Sie die vollständige Adresse als <code>name@freenet.de</code> mit dem Passwort dieses Postfachs ein. Beide Richtungen nutzen <code>mx.freenet.de</code>. Der Host ist hier vorausgefüllt und wurde über eine echte TLS-Verbindung geprüft."
+    },
+    {
+      "h": "MCP-URL in Ihre KI einfügen",
+      "p": "Fügen Sie https://mcpemails.com/api/mcp in Claude, Cursor oder ChatGPT ein, autorisieren Sie den Zugriff, und Ihr Agent hat das Postfach."
+    }
+  ],
+  "gotchas": [
+    {
+      "h": "freenet rät aktiv dazu, den Client-Zugriff aus zu lassen",
+      "p": "Das ist keine vergessene Einstellung, die nur noch niemand eingeschaltet hat. freenets Hilfeseite beginnt mit dem Hinweis, dass native Clients wie Outlook und Thunderbird immer POP3, IMAP und SMTP nutzen, dass diese Protokolle nicht alle modernen Sicherheitsfunktionen unterstützen und daher leichter angreifbar sind, und dass freenet empfiehlt, die Funktionen im Postfach zu deaktivieren. Rechnen Sie also damit, dass das Kästchen leer ist, dass kein Hinweis auf diese Ursache erscheint und dass ein korrektes Passwort abgelehnt wird, bis Sie den Haken setzen."
+    },
+    {
+      "h": "Ein Hostname für beide Richtungen, und freenet meint das wörtlich",
+      "p": "Es gibt kein <code>imap.freenet.de</code> und kein <code>smtp.freenet.de</code>. Eingehend und ausgehend nutzen beide <code>mx.freenet.de</code>. Wer die üblichen Präfixe gewohnt ist, hält das für falsch und korrigiert es beim Einrichten aus dem Gedächtnis stillschweigend. freenet schreibt in derselben Tabelle außerdem, dass Sie keine IP-Adressen oder anderen Namen einsetzen sollen, weil das im Betrieb zu Problemen führt."
+    },
+    {
+      "h": "Die Ordner heißen inbox, sent und drafts, kleingeschrieben",
+      "p": "freenet dokumentiert die Postfachordner als <code>inbox</code>, <code>sent</code> und <code>drafts</code> und weist darauf hin, dass sie je nach Client als <code>inbox.sent</code> und <code>inbox.drafts</code> unterhalb des Posteingangs erscheinen. Da der Server kein SPECIAL-USE ankündigt, erfährt ein Client nicht, welcher Ordner welche Rolle hat, und muss diese Namen erkennen. Werkzeuge, die nach Sent, Gesendet oder Gesendete Objekte suchen, finden nichts. Nennen Sie den Ordner ausdrücklich, wenn ein Agent ihn nicht findet."
+    },
+    {
+      "h": "Kein MOVE und kein UIDPLUS, aber IDLE ist da",
+      "p": "Dem Server fehlt die MOVE-Erweiterung. Das Ablegen einer Nachricht läuft daher als COPY, dann STORE des Gelöscht-Flags, dann EXPUNGE statt als ein atomarer Befehl. Ohne UIDPLUS wird die ID der neuen Kopie nicht zurückgemeldet und muss per Suche im Zielordner gefunden werden. IDLE wird unterstützt, neue E-Mails kommen also per Push statt per Abfrage an. Das schaffen mehrere andere Anbieter in dieser Kategorie nicht."
+    }
+  ],
+  "limits": [
+    "Verschieben ist nicht atomar und Ordnerrollen werden über den Namen erkannt, weil MOVE, UIDPLUS und SPECIAL-USE auf diesem Server nicht implementiert sind.",
+    "Der Client-Zugriff lässt sich in denselben Einstellungen wieder abschalten. Dann bricht jede Verbindung mit einem scheinbaren Authentifizierungsfehler ab."
+  ],
+  "faq": [
+    {
+      "q": "Funktioniert Claude mit freenet.de E-Mail?",
+      "a": "Nicht direkt. Claude hat keinen eingebauten freenet-Konnektor. Wenn Sie einen MCP-Server wie MCP Emails per IMAP mit dem Postfach verbinden, kann Claude Ihre freenet.de-E-Mails lesen, suchen, senden, beantworten, planen und ordnen. Dieselbe Verbindung funktioniert in Cursor, ChatGPT und anderen MCP-Clients. Zuerst muss der Client-Zugriff im Postfach aktiviert werden."
+    },
+    {
+      "q": "Wie lauten die IMAP- und SMTP-Einstellungen von freenet?",
+      "a": "Beide lauten mx.freenet.de. IMAP nutzt Port 993 mit implizitem TLS oder 143 mit STARTTLS, SMTP Port 465 mit implizitem TLS oder 587 mit STARTTLS, mit aktivierter SMTP-Authentifizierung. Der Benutzername ist Ihre vollständige Adresse. Die Hosts wurden am auf dieser Seite angegebenen Datum über eine echte TLS-Verbindung geprüft."
+    },
+    {
+      "q": "Warum lehnt freenet mein Passwort im Mailprogramm ab?",
+      "a": "Fast immer, weil POP3, IMAP und SMTP im Postfach nicht aktiviert sind. freenet legt den Client-Zugriff hinter ein Kästchen in den Einstellungen unter POP3/IMAP/SMTP, dann Einrichtung POP3/IMAP, und empfiehlt, es aus zu lassen. Solange es aus ist, lehnt der Server korrekte Zugangsdaten mit einem Fehler ab, der wie ein Tippfehler wirkt."
+    },
+    {
+      "q": "Vergibt freenet App-Passwörter?",
+      "a": "Nein. Es gibt kein anwendungsspezifisches Passwort zum Anlegen. Ein Client meldet sich mit dem Passwort des freenet Mail Postfachs selbst an, sobald der Client-Zugriff aktiviert ist. Um eine Verbindung zu widerrufen, entfernen Sie den Haken oder ändern das Postfach-Passwort."
+    },
+    {
+      "q": "Werden meine freenet-E-Mails auf Ihren Servern gespeichert?",
+      "a": "Nein. Nachrichten werden bei jeder Anfrage live per IMAP von freenet abgerufen und an Ihren KI-Client übergeben. Zugangsdaten sind im Ruhezustand verschlüsselt, Nachrichteninhalte werden nicht aufbewahrt."
+    }
+  ],
+  "ctaBand": {
+    "title": "Geben Sie Ihrer KI ein freenet Mail Postfach",
+    "sub": "Einen Haken in freenet Mail setzen, dann verbinden. Ein Postfach dauerhaft kostenlos, ohne Kreditkarte."
+  }
+}

@@ -146,10 +146,14 @@ export const PINNED_RELATED = {
  * links are the whole reason this set is crawlable, so running out of siblings
  * has to degrade into a wider net rather than into nothing.
  */
-export function relatedProviders(slug, limit = 6, now = new Date()) {
+export function relatedProviders(slug, limit = 6, now = new Date(), locale = null) {
   const self = getProvider(slug);
   if (!self) return [];
-  const pool = releasedProviders(now).filter((p) => p.slug !== slug);
+  // On a translated page, only suggest providers that have a page in that
+  // locale: the links are locale-prefixed, so any other one is a 404.
+  const pool = releasedProviders(now).filter(
+    (p) => p.slug !== slug && (!locale || p.locales.includes(locale)),
+  );
 
   // Rotate by slug so each page in a category seeds a different slice.
   const rotate = (list) => {
