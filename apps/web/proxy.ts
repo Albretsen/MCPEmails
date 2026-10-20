@@ -138,7 +138,7 @@ export default async function proxy(request: NextRequest) {
   // documents what the policy allows, why 'unsafe-inline' had to leave
   // `script-src`, and what was deliberately left alone (`style-src`).
   const nonce = generateNonce();
-  const csp = await buildContentSecurityPolicy(nonce);
+  const csp = await buildContentSecurityPolicy(nonce, request.nextUrl.pathname);
 
   // Next.js does not offer an API for handing it a nonce. It re-parses the CSP
   // off the INCOMING REQUEST and takes the first 'nonce-…' it finds in
