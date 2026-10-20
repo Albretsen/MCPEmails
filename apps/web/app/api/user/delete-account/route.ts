@@ -2,6 +2,8 @@ import { NextRequest, NextResponse } from 'next/server';
 import { createClient } from '@/lib/supabase/server';
 import { createServiceRoleClient } from '@/lib/supabase/service';
 import { selectAllRows } from '@/lib/supabase/paginate';
+import { stripe } from '@/lib/stripe/client';
+import { cancelSubscriptionsForDeletedAccount } from '@/lib/stripe/cancel-on-account-delete';
 
 /**
  * DELETE /api/user/delete-account
@@ -14,9 +16,14 @@ import { selectAllRows } from '@/lib/supabase/paginate';
  *   1. Authenticate the requesting user via Supabase session cookie.
  *   2. Validate the request body: confirmEmail must exactly match the user's email.
  *   3. Look up ALL workspaces the user owns.
+ *   3b. Cancel the user's Stripe subscriptions immediately. If Stripe fails,
+ *      stop here: nothing is torn down and the account stays usable, rather
+ *      than leaving a subscription charging an account that no longer exists.
  *   4. For each owned workspace: revoke API keys + OAuth refresh chains,
  *      disconnect inboxes and null their encrypted credentials, drop pending
  *      invites, and soft-delete the workspace.
+ *   4b. In EVERY workspace (owned or not): revoke the user's own API keys and
+ *      OAuth refresh chains and delete their pending authorization codes.
  *   5. Remove the user's membership rows everywhere (owned + invited).
  *   6. Ban the auth user via the service-role admin API (~100-year ban_duration)
  *      so the credentials can no longer be used to log in.
@@ -95,10 +102,11 @@ export async function DELETE(request: NextRequest): Promise<NextResponse> {
   const service = createServiceRoleClient();
   const { data: ownedWorkspaces, error: workspaceError } = await selectAllRows<{
     id: string;
+    stripe_customer_id: string | null;
   }>((from, to) =>
     service
       .from('workspaces')
-      .select('id')
+      .select('id, stripe_customer_id')
       .eq('owner_id', user.id)
       .is('deleted_at', null)
       // Total order: OFFSET paging over an unordered read may repeat or skip
@@ -118,6 +126,44 @@ export async function DELETE(request: NextRequest): Promise<NextResponse> {
 
   const ownedIds = ownedWorkspaces.map((w) => w.id);
   const now = new Date().toISOString();
+
+  // 3b. Stop billing BEFORE anything is torn down. The subscription lives in
+  //     Stripe and nothing else (no trigger, no edge function, not the webhook)
+  //     cancels it when an account goes away. The customer is user-level
+  //     (user_billing); the legacy per-workspace column is read too, because
+  //     the webhook still writes it and a customer found only there would
+  //     otherwise keep charging.
+  const { data: billing, error: billingError } = await service
+    .from('user_billing')
+    .select('stripe_customer_id')
+    .eq('user_id', user.id)
+    .maybeSingle();
+
+  if (billingError) {
+    console.error('[delete-account] billing lookup failed:', billingError.message);
+    return NextResponse.json(
+      { error: 'Could not check your subscription, so your account was not deleted. Please try again.' },
+      { status: 500 },
+    );
+  }
+
+  const customerIds = [
+    billing?.stripe_customer_id,
+    ...ownedWorkspaces.map((w) => w.stripe_customer_id),
+  ].filter((id): id is string => typeof id === 'string' && id.length > 0);
+
+  try {
+    await cancelSubscriptionsForDeletedAccount(stripe, customerIds);
+  } catch (err) {
+    console.error(
+      '[delete-account] subscription cancel failed:',
+      err instanceof Error ? err.message : String(err),
+    );
+    return NextResponse.json(
+      { error: 'Could not cancel your subscription, so your account was not deleted. Please try again or contact support.' },
+      { status: 502 },
+    );
+  }
 
   // 4. Tear down every owned workspace: revoke keys + refresh chains, disconnect
   //    inboxes AND wipe their encrypted credentials, drop pending invites, then
@@ -155,6 +201,38 @@ export async function DELETE(request: NextRequest): Promise<NextResponse> {
     const failed = results.find((r) => r.error);
     if (failed?.error) {
       console.error('[delete-account] teardown failed:', failed.error.message);
+      return NextResponse.json(
+        { error: 'Failed to delete account data. Please try again.' },
+        { status: 500 },
+      );
+    }
+  }
+
+  // 4b. Revoke the user's OWN credentials in every workspace, owned or not.
+  //     Step 4 covers owned workspaces only; in a team workspace the user was
+  //     merely a member of, dropping the membership row in step 5 would leave
+  //     every key they minted there, and every OAuth chain that can mint more,
+  //     fully live: the MCP server authenticates on the key alone, and the auth
+  //     ban below blocks Supabase logins, not mcpe_ bearer keys. Scoped by the
+  //     user's id rather than a workspace list, so it also reaches a workspace
+  //     whose membership row is already gone. Must run BEFORE step 5, so a
+  //     failure leaves an over-revoked member, never an ex-member with live keys.
+  {
+    const ownCredentialSteps = [
+      service.from('api_keys')
+        .update({ deleted_at: now, updated_at: now })
+        .eq('created_by', user.id).is('deleted_at', null),
+      service.from('oauth_refresh_tokens')
+        .update({ revoked_at: now })
+        .eq('user_id', user.id).is('revoked_at', null),
+      service.from('oauth_auth_codes')
+        .delete()
+        .eq('user_id', user.id),
+    ];
+    const ownResults = await Promise.all(ownCredentialSteps);
+    const ownFailed = ownResults.find((r) => r.error);
+    if (ownFailed?.error) {
+      console.error('[delete-account] credential revocation failed:', ownFailed.error.message);
       return NextResponse.json(
         { error: 'Failed to delete account data. Please try again.' },
         { status: 500 },

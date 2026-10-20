@@ -101,6 +101,10 @@ const SYNONYMS: Record<string, readonly AliasRule[]> = {
   email_read: [
     { from: "email_id", to: "message_id", translate: same },
     { from: "id", to: "message_id", translate: same },
+    // read_batch's list, by the short name: 16 refusals across 7 workspaces
+    // in 10-06..10-15, every one also missing message_ids. A single-message
+    // action then gets it back as message_id (normalizeMessageIdShape).
+    { from: "ids", to: "message_ids", translate: same },
     { from: "body_length", to: "body_max_chars", translate: same },
     { from: "body_limit", to: "body_max_chars", translate: same },
     { from: "body_char_limit", to: "body_max_chars", translate: same },
@@ -156,13 +160,21 @@ const STANDALONE_ACTION_WORDS: Record<string, readonly string[]> = {
 /**
  * Remove an `action` that only restates a standalone tool's own operation.
  * Returns true when one was removed. See STANDALONE_ACTION_WORDS.
+ *
+ * `operationWords` adds the words for a per-operation tool, which the caller
+ * derives from the consolidated action it is (email_search is email_read's
+ * 'search'), so that table does not have to list fifty tools by hand. One
+ * ChatGPT workspace sent email_search an `action` 30 times on 2026-10-14 and
+ * recovered once.
  */
 export function dropRedundantAction(
   toolName: string,
   args: Record<string, unknown>,
+  operationWords: readonly string[] = [],
 ): boolean {
-  const words = STANDALONE_ACTION_WORDS[toolName];
-  if (!words || typeof args["action"] !== "string") return false;
+  const listed = STANDALONE_ACTION_WORDS[toolName] ?? [];
+  const words = operationWords.length > 0 ? [...listed, ...operationWords] : listed;
+  if (words.length === 0 || typeof args["action"] !== "string") return false;
   const spoken = args["action"].trim().toLowerCase().replace(/[\s-]+/g, "_");
   if (!words.includes(spoken)) return false;
   delete args["action"];

@@ -102,6 +102,11 @@ export function fakePushStore(now: () => number = () => Date.now(), workspaceId 
       return Promise.resolve();
     },
     countSubscriptions: (userId) => Promise.resolve(store.subs.filter((s) => s.user_id === userId).length),
+    purgeDisabledSubscriptions(userId) {
+      const before = store.subs.length;
+      store.subs = store.subs.filter((s) => !(s.user_id === userId && s.disabled_at !== null));
+      return Promise.resolve(before - store.subs.length);
+    },
     deleteSubscription(userId, endpoint) {
       const before = store.subs.length;
       store.subs = store.subs.filter((s) => !(s.user_id === userId && s.endpoint === endpoint));

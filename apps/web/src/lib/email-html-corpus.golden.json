@@ -1,0 +1,370 @@
+{
+ "newsletter: table layout, MSO comments, preheader padding": {
+  "email": "\n\n\n\n<div>Five things worth reading this week &#847;&zwnj;&nbsp;&#847;&zwnj;&nbsp;&#847;&zwnj;&nbsp;&#847;&zwnj;&nbsp;&#847;&zwnj;&nbsp;&#847;&zwnj;&nbsp;&#847;&zwnj;&nbsp;&#847;&zwnj;&nbsp;&#847;&zwnj;&nbsp;&#847;&zwnj;&nbsp;&#847;&zwnj;&nbsp;&#847;&zwnj;&nbsp;&#847;&zwnj;&nbsp;&#847;&zwnj;&nbsp;&#847;&zwnj;&nbsp;&#847;&zwnj;&nbsp;&#847;&zwnj;&nbsp;&#847;&zwnj;&nbsp;&#847;&zwnj;&nbsp;&#847;&zwnj;&nbsp;&#847;&zwnj;&nbsp;&#847;&zwnj;&nbsp;&#847;&zwnj;&nbsp;&#847;&zwnj;&nbsp;&#847;&zwnj;&nbsp;&#847;&zwnj;&nbsp;&#847;&zwnj;&nbsp;&#847;&zwnj;&nbsp;&#847;&zwnj;&nbsp;&#847;&zwnj;&nbsp;&#847;&zwnj;&nbsp;&#847;&zwnj;&nbsp;&#847;&zwnj;&nbsp;&#847;&zwnj;&nbsp;&#847;&zwnj;&nbsp;&#847;&zwnj;&nbsp;&#847;&zwnj;&nbsp;&#847;&zwnj;&nbsp;&#847;&zwnj;&nbsp;&#847;&zwnj;&nbsp;</div>\n<table width=\"100%\">\n  <tr>\n    <td>\n      <a href=\"https://news.example.com/view?id=abc123&amp;utm_source=email\">View in browser</a>\n    </td>\n  </tr>\n  <tr>\n    <td>\n      <a href=\"https://news.example.com/?utm_source=email\"><img width=\"120\" alt=\"\"></a>\n      <h1>This week&rsquo;s top stories</h1>\n      <p>1. <a href=\"https://news.example.com/a/1?utm_campaign=wk42\">Why the ocean is getting louder</a> &mdash; a 6 minute read.</p>\n      <p>2. <a href=\"https://news.example.com/a/2\">Ten tools we actually use</a> &ndash; reader picks.</p>\n      <p>3. Visit <a href=\"https://news.example.com/events\">news.example.com/events</a> for this month&#39;s meetups.</p>\n      \n      <p>Swipe for more &rarr;</p>\n      \n      <table width=\"100%\"><tr><td>&nbsp;</td><td>&nbsp;</td></tr></table>\n      <p>Price: &euro;12&#46;00 &middot; &pound;10 &middot; &copy; 2026 Example Media&trade;</p>\n    </td>\n  </tr>\n  <tr>\n    <td>\n      You are receiving this because you subscribed.<br>\n      <a href=\"https://news.example.com/unsubscribe?u=xyz\">Unsubscribe</a> | <a href=\"https://news.example.com/prefs\">Preferences</a><br>\n      Example Media, 1 Harbour St, Springfield\n    </td>\n  </tr>\n</table>\n<img width=\"1\" height=\"1\" alt=\"\">\n\n",
+  "signature": "\n\n\n\n<div style=\"display: none; max-height: 0\">Five things worth reading this week &#847;&zwnj;&nbsp;&#847;&zwnj;&nbsp;&#847;&zwnj;&nbsp;&#847;&zwnj;&nbsp;&#847;&zwnj;&nbsp;&#847;&zwnj;&nbsp;&#847;&zwnj;&nbsp;&#847;&zwnj;&nbsp;&#847;&zwnj;&nbsp;&#847;&zwnj;&nbsp;&#847;&zwnj;&nbsp;&#847;&zwnj;&nbsp;&#847;&zwnj;&nbsp;&#847;&zwnj;&nbsp;&#847;&zwnj;&nbsp;&#847;&zwnj;&nbsp;&#847;&zwnj;&nbsp;&#847;&zwnj;&nbsp;&#847;&zwnj;&nbsp;&#847;&zwnj;&nbsp;&#847;&zwnj;&nbsp;&#847;&zwnj;&nbsp;&#847;&zwnj;&nbsp;&#847;&zwnj;&nbsp;&#847;&zwnj;&nbsp;&#847;&zwnj;&nbsp;&#847;&zwnj;&nbsp;&#847;&zwnj;&nbsp;&#847;&zwnj;&nbsp;&#847;&zwnj;&nbsp;&#847;&zwnj;&nbsp;&#847;&zwnj;&nbsp;&#847;&zwnj;&nbsp;&#847;&zwnj;&nbsp;&#847;&zwnj;&nbsp;&#847;&zwnj;&nbsp;&#847;&zwnj;&nbsp;&#847;&zwnj;&nbsp;&#847;&zwnj;&nbsp;&#847;&zwnj;&nbsp;</div>\n<table width=\"100%\">\n  <tr>\n    <td align=\"center\" style=\"padding: 20px 0\">\n      <a href=\"https://news.example.com/view?id=abc123&amp;utm_source=email\" style=\"color: #888; font-size: 12px\">View in browser</a>\n    </td>\n  </tr>\n  <tr>\n    <td style=\"padding: 0 24px\">\n      <a href=\"https://news.example.com/?utm_source=email\"><img src=\"https://cdn.example.com/logo.png\" width=\"120\" alt=\"\"></a>\n      <h1 style=\"font-size: 24px\">This week&rsquo;s top stories</h1>\n      <p>1. <a href=\"https://news.example.com/a/1?utm_campaign=wk42\">Why the ocean is getting louder</a> &mdash; a 6 minute read.</p>\n      <p>2. <a href=\"https://news.example.com/a/2\">Ten tools we actually use</a> &ndash; reader picks.</p>\n      <p>3. Visit <a href=\"https://news.example.com/events\">news.example.com/events</a> for this month&#39;s meetups.</p>\n      \n      <p>Swipe for more &rarr;</p>\n      \n      <table width=\"100%\"><tr><td>&nbsp;</td><td>&nbsp;</td></tr></table>\n      <p>Price: &euro;12&#46;00 &middot; &pound;10 &middot; &copy; 2026 Example Media&trade;</p>\n    </td>\n  </tr>\n  <tr>\n    <td style=\"font-size: 11px; color: #999\">\n      You are receiving this because you subscribed.<br>\n      <a href=\"https://news.example.com/unsubscribe?u=xyz\">Unsubscribe</a> | <a href=\"https://news.example.com/prefs\">Preferences</a><br>\n      Example Media, 1 Harbour St, Springfield\n    </td>\n  </tr>\n</table>\n<img src=\"https://t.example.com/open.gif?u=xyz\" width=\"1\" height=\"1\" alt=\"\" style=\"display: none\">\n\n"
+ },
+ "Outlook desktop: Word-generated HTML with o:p and mso styles": {
+  "email": "\r\n\r\n\r\n<div>\r\n<p>Hi Sam,</p>\r\n<p>&nbsp;</p>\r\n<p>Please find the Q3 numbers attached. The summary is on our <a href=\"https://intranet.example.org/finance/q3\">finance page</a>.</p>\r\n<p>&nbsp;</p>\r\n<p>Revenue grew 12% &#8211; mostly in the &quot;Enterprise&quot; segment.</p>\r\n<p>&nbsp;</p>\r\n<p>Kind regards,</p>\r\n<p><b><span>Alex Rivera</span></b></p>\r\n<p><span>Finance Lead | +1 555 0100 | <a href=\"mailto:alex@example.org\">alex@example.org</a></span></p>\r\n</div>\r\n\r\n\r\n",
+  "signature": "\r\n\r\n\r\n<div>\r\n<p>Hi Sam,</p>\r\n<p>&nbsp;</p>\r\n<p>Please find the Q3 numbers attached. The summary is on our <a href=\"https://intranet.example.org/finance/q3\">finance page</a>.</p>\r\n<p>&nbsp;</p>\r\n<p>Revenue grew 12% &#8211; mostly in the &quot;Enterprise&quot; segment.</p>\r\n<p>&nbsp;</p>\r\n<p>Kind regards,</p>\r\n<p><b><span style=\"font-size: 10.0pt; color: #1F3864\">Alex Rivera</span></b></p>\r\n<p><span style=\"font-size: 9.0pt\">Finance Lead | +1 555 0100 | <a href=\"mailto:alex@example.org\">alex@example.org</a></span></p>\r\n</div>\r\n\r\n\r\n"
+ },
+ "Gmail reply with quoted original": {
+  "email": "<div dir=\"ltr\">Sounds good, Thursday at 3pm works for me.<div><br></div><div>I&#39;ll book the room.</div></div><br><div><div dir=\"ltr\">On Tue, Oct 14, 2026 at 9:12 AM Jordan Lee &lt;<a href=\"mailto:jordan@example.net\">jordan@example.net</a>&gt; wrote:<br></div><blockquote><div dir=\"ltr\">Hi,<div><br></div><div>Can we move the review to Thursday? The deck is here:&nbsp;<a href=\"https://docs.example.net/d/1AbC/edit?usp=sharing\">https://docs.example.net/d/1AbC/edit?usp=sharing</a></div><div><br></div><div>Thanks,</div><div>Jordan</div></div>\n</blockquote></div>",
+  "signature": "<div>Sounds good, Thursday at 3pm works for me.<div><br></div><div>I&#39;ll book the room.</div></div><br><div><div>On Tue, Oct 14, 2026 at 9:12 AM Jordan Lee &lt;<a href=\"mailto:jordan@example.net\">jordan@example.net</a>&gt; wrote:<br></div><blockquote style=\"margin: 0px 0px 0px 0.8ex; border-left: 1px solid rgb(204,204,204); padding-left: 1ex\"><div>Hi,<div><br></div><div>Can we move the review to Thursday? The deck is here:&nbsp;<a href=\"https://docs.example.net/d/1AbC/edit?usp=sharing\" target=\"_blank\" rel=\"noopener noreferrer\">https://docs.example.net/d/1AbC/edit?usp=sharing</a></div><div><br></div><div>Thanks,</div><div>Jordan</div></div>\n</blockquote></div>"
+ },
+ "Outlook web reply with divRplyFwdMsg header": {
+  "email": "\n\n<div>\nApproved &#8212; go ahead with the order.</div>\n<div></div>\n<hr>\n<div dir=\"ltr\"><font><b>From:</b> Pat Morgan &lt;pat@example.com&gt;<br>\n<b>Sent:</b> Wednesday, October 15, 2026 4:01 PM<br>\n<b>To:</b> Chris Doe &lt;chris@example.com&gt;<br>\n<b>Subject:</b> PO 4471 for approval</font>\n<div>&nbsp;</div>\n</div>\n<div>\n<p>Hi Chris,</p>\n<p>PO 4471 (12 &times; monitors, total $3,480.00) needs your approval. Details: <a href=\"https://erp.example.com/po/4471\">https://erp.example.com/po/4471</a></p>\n<p>Thanks<br>Pat</p>\n</div>\n\n",
+  "signature": "\n\n<div style=\"font-family: Aptos, Arial, Helvetica, sans-serif; font-size: 12pt; color: rgb(0, 0, 0)\">\nApproved &#8212; go ahead with the order.</div>\n<div></div>\n<hr style=\"display: inline-block; width: 98%\">\n<div><font style=\"font-size: 11pt\" color=\"#000000\"><b>From:</b> Pat Morgan &lt;pat@example.com&gt;<br>\n<b>Sent:</b> Wednesday, October 15, 2026 4:01 PM<br>\n<b>To:</b> Chris Doe &lt;chris@example.com&gt;<br>\n<b>Subject:</b> PO 4471 for approval</font>\n<div>&nbsp;</div>\n</div>\n<div>\n<p>Hi Chris,</p>\n<p>PO 4471 (12 &times; monitors, total $3,480.00) needs your approval. Details: <a href=\"https://erp.example.com/po/4471\">https://erp.example.com/po/4471</a></p>\n<p>Thanks<br>Pat</p>\n</div>\n\n"
+ },
+ "Japanese newsletter (CJK) with full-width punctuation": {
+  "email": "<table width=\"100%\"><tr><td>\n<p>いつもご利用いただき、誠にありがとうございます。</p>\n<p>秋の新商品のご案内です。<br>詳しくは<a href=\"https://shop.example.jp/autumn?utm=mail\">こちら</a>をご覧ください。</p>\n<p>　・送料無料キャンペーン：10月31日まで</p>\n<p>　・ポイント２倍デー：毎週金曜日</p>\n<p>※本メールは送信専用です。ご返信いただいてもお答えできません。</p>\n<p>配信停止は<a href=\"https://shop.example.jp/unsubscribe\">こちら</a></p>\n</td></tr></table>",
+  "signature": "<table width=\"100%\"><tr><td style=\"font-family: &#39;Hiragino Sans&#39;,Meiryo,sans-serif\">\n<p>いつもご利用いただき、誠にありがとうございます。</p>\n<p>秋の新商品のご案内です。<br>詳しくは<a href=\"https://shop.example.jp/autumn?utm=mail\">こちら</a>をご覧ください。</p>\n<p>　・送料無料キャンペーン：10月31日まで</p>\n<p>　・ポイント２倍デー：毎週金曜日</p>\n<p>※本メールは送信専用です。ご返信いただいてもお答えできません。</p>\n<p>配信停止は<a href=\"https://shop.example.jp/unsubscribe\">こちら</a></p>\n</td></tr></table>"
+ },
+ "Chinese and Korean transactional notice": {
+  "email": "<div>您好，您的订单 <b>#20261016-88</b> 已发货。</div>\n<div>快递单号：SF1234567890&nbsp;&nbsp;（顺丰速运）</div>\n<div><a href=\"https://track.example.cn/?no=SF1234567890\">查看物流</a></div>\n<hr>\n<div>안녕하세요, 주문하신 상품이 발송되었습니다.</div>\n<div>배송 조회: <a href=\"https://track.example.kr/SF1234567890\">track.example.kr/SF1234567890</a></div>",
+  "signature": "<div style=\"font-size: 14px\">您好，您的订单 <b>#20261016-88</b> 已发货。</div>\n<div>快递单号：SF1234567890&nbsp;&nbsp;（顺丰速运）</div>\n<div><a href=\"https://track.example.cn/?no=SF1234567890\">查看物流</a></div>\n<hr>\n<div>안녕하세요, 주문하신 상품이 발송되었습니다.</div>\n<div>배송 조회: <a href=\"https://track.example.kr/SF1234567890\">track.example.kr/SF1234567890</a></div>"
+ },
+ "Hebrew and Arabic RTL with bidi marks": {
+  "email": "<div dir=\"rtl\">\n<p>&#x200F;שלום רב,&#x200E;</p>\n<p>הפגישה נקבעה ליום חמישי בשעה 10:00.</p>\n<p dir=\"rtl\">مرحبا، تم تأكيد طلبك رقم&nbsp;٤٥٦.</p>\n<p><a href=\"https://example.co.il/meet\">לפרטים נוספים</a></p>\n</div>",
+  "signature": "<div style=\"text-align: right\">\n<p>&#x200F;שלום רב,&#x200E;</p>\n<p>הפגישה נקבעה ליום חמישי בשעה 10:00.</p>\n<p>مرحبا، تم تأكيد طلبك رقم&nbsp;٤٥٦.</p>\n<p><a href=\"https://example.co.il/meet\">לפרטים נוספים</a></p>\n</div>"
+ },
+ "OTP / verification code email": {
+  "email": "\n<table width=\"480\"><tr><td>\n<h2>Verify your email</h2>\n<p>Your verification code is:</p>\n<p><strong>482&nbsp;913</strong></p>\n<p>This code expires in 10 minutes. If you didn&rsquo;t request it, you can ignore this email.</p>\n<p>&copy; 2026 Example Inc. &bull; <a href=\"https://example.com/privacy\">Privacy</a></p>\n</td></tr></table>\n",
+  "signature": "\n<table align=\"center\" width=\"480\"><tr><td>\n<h2>Verify your email</h2>\n<p>Your verification code is:</p>\n<p><strong>482&nbsp;913</strong></p>\n<p>This code expires in 10 minutes. If you didn&rsquo;t request it, you can ignore this email.</p>\n<p style=\"color: #999\">&copy; 2026 Example Inc. &bull; <a href=\"https://example.com/privacy\">Privacy</a></p>\n</td></tr></table>\n"
+ },
+ "receipt with entities, numeric refs and uppercase tags": {
+  "email": "\n<table>\n<tr><td><b>Item</b></td><td><b>Price</b></td></tr>\n<tr><td>Coffee beans 1&nbsp;kg</td><td>&#x20AC;24,90</td></tr>\n<tr><td>Shipping</td><td>&#8364;4,90</td></tr>\n<tr><td colspan=\"2\"><hr></td></tr>\n<tr><td><b>Total</b></td><td><b>&euro;29,80</b></td></tr>\n</table>\n<p>Questions? Reply to this email or visit <a href=\"https://help.example.de/orders\">our help centre</a>.</p>\n<p>Order ref: A&amp;B-7731 &lt;keep this&gt; &unknownentity; &#0; &#xD800; &#55357;</p>\n<br>\n",
+  "signature": "\n<table>\n<tr><td><b>Item</b></td><td align=\"RIGHT\"><b>Price</b></td></tr>\n<tr><td>Coffee beans 1&nbsp;kg</td><td align=\"RIGHT\">&#x20AC;24,90</td></tr>\n<tr><td>Shipping</td><td align=\"RIGHT\">&#8364;4,90</td></tr>\n<tr><td><hr></td></tr>\n<tr><td><b>Total</b></td><td align=\"RIGHT\"><b>&euro;29,80</b></td></tr>\n</table>\n<p>Questions? Reply to this email or visit <a href=\"https://help.example.de/orders\">our help centre</a>.</p>\n<p>Order ref: A&amp;B-7731 &lt;keep this&gt; &unknownentity; &#0; &#xD800; &#55357;</p>\n<br>\n"
+ },
+ "marketing email with script, noscript, svg and iframe": {
+  "email": "\n\n\n<div> Flash sale: 40% off everything!</div>\n\n<p><a href=\"https://deals.example.com/sale\">Shop now</a> &raquo;</p>\n<p><a>Do nothing</a> and <a>back to top</a> and <a>data link</a></p>\n<p><a href=\"https://deals.example.com/app\"><img alt=\"Get the app\"></a></p>\n\n\n\n<p>Use code <code>FALL40</code> at checkout.</p>\n",
+  "signature": "\n\n\n<div> Flash sale: 40% off everything!</div>\n\n<p><a href=\"https://deals.example.com/sale\">Shop now</a> &raquo;</p>\n<p><a>Do nothing</a> and <a>back to top</a> and <a>data link</a></p>\n<p><a href=\"https://deals.example.com/app\"><img src=\"https://cdn.example.com/appstore.png\" alt=\"Get the app\"></a></p>\n\n\n\n<p>Use code FALL40 at checkout.</p>\n"
+ },
+ "ticketing system: CRLF table cells and empty text part shape": {
+  "email": "<table>\r\n<tr>\r\n<td>\r\n \r\n</td>\r\n</tr>\r\n<tr>\r\n<td>\r\n<p>Ticket <b>#58210</b> has been updated by Support.</p>\r\n</td>\r\n</tr>\r\n<tr>\r\n<td>\r\n \r\n</td>\r\n</tr>\r\n<tr>\r\n<td>\r\n<p>We have reset your password link. Please follow <a href=\"https://support.example.io/hc/requests/58210\">this link</a> to view the conversation.</p>\r\n</td>\r\n</tr>\r\n<tr>\r\n<td>\r\n \r\n</td>\r\n</tr>\r\n<tr>\r\n<td>[ZX9-ABCDE-1]</td>\r\n</tr>\r\n</table>\r\n",
+  "signature": "<table>\r\n<tr>\r\n<td>\r\n \r\n</td>\r\n</tr>\r\n<tr>\r\n<td>\r\n<p>Ticket <b>#58210</b> has been updated by Support.</p>\r\n</td>\r\n</tr>\r\n<tr>\r\n<td>\r\n \r\n</td>\r\n</tr>\r\n<tr>\r\n<td>\r\n<p>We have reset your password link. Please follow <a href=\"https://support.example.io/hc/requests/58210\">this link</a> to view the conversation.</p>\r\n</td>\r\n</tr>\r\n<tr>\r\n<td>\r\n \r\n</td>\r\n</tr>\r\n<tr>\r\n<td style=\"color: #aaa\">[ZX9-ABCDE-1]</td>\r\n</tr>\r\n</table>\r\n"
+ },
+ "Apple Mail forward with blockquote type=cite": {
+  "email": "FYI, see below.<br><div><br><blockquote><div>Begin forwarded message:</div><br><div><span><b>From: </b></span><span>Taylor &lt;<a href=\"mailto:taylor@example.org\">taylor@example.org</a>&gt;<br></span></div><div><b>Subject: </b>Flight change</div><br><div><div>Your flight EX 123 now departs at 07:45 instead of 07:15.<br>Manage booking: <a href=\"https://air.example.org/manage?pnr=XY12AB\">air.example.org/manage</a></div></div></blockquote></div><br>",
+  "signature": "FYI, see below.<br><div><br><blockquote><div>Begin forwarded message:</div><br><div style=\"margin-top: 0px; margin-right: 0px; margin-bottom: 0px; margin-left: 0px\"><span style=\"font-family: -webkit-system-font, Helvetica Neue, Helvetica, sans-serif; color: rgba(0, 0, 0, 1.0)\"><b>From: </b></span><span style=\"font-family: -webkit-system-font, Helvetica Neue, Helvetica, sans-serif\">Taylor &lt;<a href=\"mailto:taylor@example.org\">taylor@example.org</a>&gt;<br></span></div><div><b>Subject: </b>Flight change</div><br><div><div>Your flight EX 123 now departs at 07:45 instead of 07:15.<br>Manage booking: <a href=\"https://air.example.org/manage?pnr=XY12AB\">air.example.org/manage</a></div></div></blockquote></div><br>"
+ },
+ "links: quoting styles, spacing, nested markup and duplicates": {
+  "email": "<p>Read the <a href=\"https://example.com/Guide\">user <em>guide</em></a>.</p>\n<p>Single: <a href=\"https://example.com/s?a=1&amp;b=2\">Start</a></p>\n<p>Unquoted: <a href=\"https://example.com/u/\">Profile</a></p>\n<p>Shown already: <a href=\"https://example.com/docs/\">example.com/docs</a></p>\n<p>Mail: <a href=\"mailto:help@example.com\">help@example.com</a> or <a href=\"mailto:help@example.com?subject=Hi\">write to us</a></p>\n<p>Empty: <a href=\"https://example.com/pixel\"></a><a href=\"https://example.com/logo\"><img></a></p>\n<p>No href: <a>anchor</a> <a>plain</a></p>\n<p>Data attr first: <a href=\"https://example.com/real\">real link</a></p>\n<p>Broken closer: <a href=\"https://example.com/b\">bold</a>after</p>\n<p>Tel: <a>call us</a></p>",
+  "signature": "<p>Read the <a href=\"https://example.com/Guide\">user <em>guide</em></a>.</p>\n<p>Single: <a href=\"https://example.com/s?a=1&amp;b=2\" target=\"_blank\" rel=\"noopener noreferrer\">Start</a></p>\n<p>Unquoted: <a href=\"https://example.com/u/\">Profile</a></p>\n<p>Shown already: <a href=\"https://example.com/docs/\">example.com/docs</a></p>\n<p>Mail: <a href=\"mailto:help@example.com\">help@example.com</a> or <a href=\"mailto:help@example.com?subject=Hi\">write to us</a></p>\n<p>Empty: <a href=\"https://example.com/pixel\"></a><a href=\"https://example.com/logo\"></a></p>\n<p>No href: <a>anchor</a> <a>plain</a></p>\n<p>Data attr first: <a href=\"https://example.com/real\">real link</a></p>\n<p>Broken closer: <a href=\"https://example.com/b\">bold</a>after</p>\n<p>Tel: <a>call us</a></p>"
+ },
+ "plain-text-ish HTML with pre and long lines": {
+  "email": "<pre>\nBuild #4182 FAILED\n\n  step 3/7: npm test\n    &gt; 2 failing tests\n    &gt; src/lib/foo.test.ts:41  expected 3, got 4\n\nSee https://ci.example.dev/builds/4182 for logs.\n</pre>",
+  "signature": "\nBuild #4182 FAILED\n\n  step 3/7: npm test\n    &gt; 2 failing tests\n    &gt; src/lib/foo.test.ts:41  expected 3, got 4\n\nSee https://ci.example.dev/builds/4182 for logs.\n"
+ },
+ "calendar invitation HTML": {
+  "email": "<div><table><tr><td><h2>Design sync</h2><p><b>When</b><br>Thursday Oct 16, 2026 &#8901; 3pm &ndash; 3:30pm (Central European Time - Oslo)</p><p><b>Joining info</b><br><a href=\"https://meet.example.com/abc-defg-hij\">meet.example.com/abc-defg-hij</a></p><p><b>Guests</b><br><a href=\"mailto:a@example.com\">a@example.com</a> - organizer<br><a href=\"mailto:b@example.com\">b@example.com</a></p><p><a href=\"https://calendar.example.com/event?action=RESPOND&amp;rst=1\">Yes</a> | <a href=\"https://calendar.example.com/event?action=RESPOND&amp;rst=2\">No</a> | <a href=\"https://calendar.example.com/event?action=RESPOND&amp;rst=3\">Maybe</a></p></td></tr></table></div>",
+  "signature": "<div style=\"font-family: Roboto,Helvetica,Arial,sans-serif\"><table style=\"width: 100%\"><tr><td><h2 style=\"font-size: 16px\">Design sync</h2><p><b>When</b><br>Thursday Oct 16, 2026 &#8901; 3pm &ndash; 3:30pm (Central European Time - Oslo)</p><p><b>Joining info</b><br><a href=\"https://meet.example.com/abc-defg-hij\" style=\"color: #1a73e8\">meet.example.com/abc-defg-hij</a></p><p><b>Guests</b><br><a href=\"mailto:a@example.com\">a@example.com</a> - organizer<br><a href=\"mailto:b@example.com\">b@example.com</a></p><p><a href=\"https://calendar.example.com/event?action=RESPOND&amp;rst=1\">Yes</a> | <a href=\"https://calendar.example.com/event?action=RESPOND&amp;rst=2\">No</a> | <a href=\"https://calendar.example.com/event?action=RESPOND&amp;rst=3\">Maybe</a></p></td></tr></table></div>"
+ },
+ "quirks: stray brackets, comment forms and mixed-case style": {
+  "email": "<p>If a &lt; b and b &gt; c then a ? c.</p>\n<p>Math: 3 &lt;&gt; 4, xz, &lt;&gt; empty</p>\n\n\n\n\n\n<p>After styles.</p>\nnot a script\nnot a style\n<p>Smart quotes: &ldquo;hi&rdquo; &lsquo;there&rsquo; &hellip; 20&deg;C</p>\n<p>Zero width: a&#8203;b&zwj;c&#xFEFF;d &shy;soft</p>\n<div>line<br>break<br>again<br>done</div>",
+  "signature": "<p>If a &lt; b and b &gt; c then a ? c.</p>\n<p>Math: 3 &lt;&gt; 4, xz, &lt;&gt; empty</p>\n\n\n\n\n\n<p>After styles.</p>\nnot a script\nnot a style\n<p>Smart quotes: &ldquo;hi&rdquo; &lsquo;there&rsquo; &hellip; 20&deg;C</p>\n<p>Zero width: a&#8203;b&zwj;c&#xFEFF;d &shy;soft</p>\n<div>line<br>break<br>again<br>done</div>"
+ },
+ "signature-style snippet": {
+  "email": "<table><tr><td><img width=\"64\" height=\"64\" alt=\"Robin\"></td><td><b>Robin Park</b><br><span>Head of Ops &middot; Example Co</span><br><a href=\"https://example.com\">example.com</a> &middot; <a>+47 123 45 678</a></td></tr></table>",
+  "signature": "<table><tr><td style=\"padding-right: 10px\"><img src=\"https://cdn.example.com/avatar.png\" width=\"64\" height=\"64\" alt=\"Robin\"></td><td><b style=\"color: #222\">Robin Park</b><br><span style=\"color: #666\">Head of Ops &middot; Example Co</span><br><a href=\"https://example.com\" style=\"color: #0a66c2\">example.com</a> &middot; <a>+47 123 45 678</a></td></tr></table>"
+ },
+ "payload 0: handler after a quote": {
+  "email": "<img>",
+  "signature": "<img src=\"https://a/b\">"
+ },
+ "payload 1: leading space in scheme": {
+  "email": "<a>click</a>",
+  "signature": "<a>click</a>"
+ },
+ "payload 2: entity-encoded scheme": {
+  "email": "<a>click</a>",
+  "signature": "<a>click</a>"
+ },
+ "payload 3: style-based scheme": {
+  "email": "<div>x</div>",
+  "signature": "<div>x</div>"
+ },
+ "payload 4: strip-and-rescan splice": {
+  "email": "ipt&gt;alert(1)",
+  "signature": "ipt&gt;alert(1)"
+ },
+ "payload 5: unquoted external src": {
+  "email": "<img>",
+  "signature": "<img src=\"https://evil.tld/pixel.gif\">"
+ },
+ "payload 6: srcset second channel": {
+  "email": "<img alt=\"x\">",
+  "signature": ""
+ },
+ "payload 7: double-quoted https": {
+  "email": "<img>",
+  "signature": "<img src=\"https://evil.tld/p.gif\">"
+ },
+ "payload 8: single-quoted https": {
+  "email": "<img>",
+  "signature": "<img src=\"https://evil.tld/p.gif\">"
+ },
+ "payload 9: unquoted https": {
+  "email": "<img>",
+  "signature": "<img src=\"https://evil.tld/p.gif\">"
+ },
+ "payload 10: unquoted http": {
+  "email": "<img>",
+  "signature": ""
+ },
+ "payload 11: uppercase attribute": {
+  "email": "<img>",
+  "signature": "<img src=\"https://evil.tld/p.gif\">"
+ },
+ "payload 12: whitespace around equals": {
+  "email": "<img>",
+  "signature": "<img src=\"https://evil.tld/p.gif\">"
+ },
+ "payload 13: protocol-relative": {
+  "email": "<img>",
+  "signature": ""
+ },
+ "payload 14: ftp": {
+  "email": "<img>",
+  "signature": ""
+ },
+ "payload 15: tab inside the scheme": {
+  "email": "<img>",
+  "signature": "<img src=\"https://evil.tld/p.gif\">"
+ },
+ "payload 16: entity-encoded scheme": {
+  "email": "<img>",
+  "signature": "<img src=\"https://evil.tld/p.gif\">"
+ },
+ "payload 17: srcset instead of src": {
+  "email": "<img>",
+  "signature": ""
+ },
+ "payload 18: slash-separated attribute": {
+  "email": "<img>",
+  "signature": "<img src=\"https://evil.tld/p.gif\">"
+ },
+ "payload 19: svg data URI": {
+  "email": "<img>",
+  "signature": ""
+ },
+ "payload 20: background attribute": {
+  "email": "<td>x</td>",
+  "signature": "<td>x</td>"
+ },
+ "payload 21: onclick double-quoted": {
+  "email": "<p>x</p>",
+  "signature": "<p>x</p>"
+ },
+ "payload 22: onclick uppercase": {
+  "email": "<p>x</p>",
+  "signature": "<p>x</p>"
+ },
+ "payload 23: onclick spaced equals": {
+  "email": "<p>x</p>",
+  "signature": "<p>x</p>"
+ },
+ "payload 24: handler after newline": {
+  "email": "<p>x</p>",
+  "signature": "<p>x</p>"
+ },
+ "payload 25: img onerror": {
+  "email": "<img>",
+  "signature": ""
+ },
+ "payload 26: body onload": {
+  "email": "x",
+  "signature": "x"
+ },
+ "payload 27: script then text": {
+  "email": "after",
+  "signature": "after"
+ },
+ "payload 28: style then text": {
+  "email": "after",
+  "signature": "after"
+ },
+ "payload 29: iframe": {
+  "email": "after",
+  "signature": "after"
+ },
+ "payload 30: object": {
+  "email": "after",
+  "signature": "after"
+ },
+ "payload 31: form with input": {
+  "email": "after",
+  "signature": "after"
+ },
+ "payload 32: svg with script": {
+  "email": "after",
+  "signature": "after"
+ },
+ "payload 33: noscript wrapper": {
+  "email": "after",
+  "signature": "after"
+ },
+ "payload 34: textarea smuggling": {
+  "email": "after",
+  "signature": "after"
+ },
+ "payload 35: title smuggling": {
+  "email": "after",
+  "signature": "after"
+ },
+ "payload 36: conditional comment": {
+  "email": "ab",
+  "signature": "ab"
+ },
+ "payload 37: doctype": {
+  "email": "<p>x</p>",
+  "signature": "<p>x</p>"
+ },
+ "payload 38: processing instruction": {
+  "email": "<p>x</p>",
+  "signature": "<p>x</p>"
+ },
+ "payload 39: data: html href": {
+  "email": "<a>x</a>",
+  "signature": "<a>x</a>"
+ },
+ "payload 40: vbscript href": {
+  "email": "<a>x</a>",
+  "signature": "<a>x</a>"
+ },
+ "payload 41: file href": {
+  "email": "<a>x</a>",
+  "signature": "<a>x</a>"
+ },
+ "payload 42: mixed-case javascript": {
+  "email": "<a>x</a>",
+  "signature": "<a>x</a>"
+ },
+ "payload 43: NUL inside scheme": {
+  "email": "<a>x</a>",
+  "signature": "<a>x</a>"
+ },
+ "payload 44: decimal entity scheme": {
+  "email": "<a>x</a>",
+  "signature": "<a>x</a>"
+ },
+ "payload 45: unterminated quote": {
+  "email": "",
+  "signature": ""
+ },
+ "payload 46: marquee unwrap": {
+  "email": "scrolling text",
+  "signature": "scrolling text"
+ },
+ "payload 47: unclosed nesting": {
+  "email": "<div><p>one</p><p>two</p><div><span>three</span></div></div>",
+  "signature": "<div><p>one</p><p>two</p><div><span>three</span></div></div>"
+ },
+ "payload 48: stray lt": {
+  "email": "5 &lt; 6 & 7 &gt; 3",
+  "signature": "5 &lt; 6 & 7 &gt; 3"
+ },
+ "payload 49: unknown entity": {
+  "email": "&zzz;",
+  "signature": "&zzz;"
+ },
+ "payload 50: named entity": {
+  "email": "caf&eacute;",
+  "signature": "caf&eacute;"
+ },
+ "payload 51: escaped amp": {
+  "email": "A&amp;B",
+  "signature": "A&amp;B"
+ },
+ "payload 52: style class id data": {
+  "email": "<p>text</p>",
+  "signature": "<p style=\"color: red\">text</p>"
+ },
+ "payload 53: orphan end tag": {
+  "email": "text",
+  "signature": "text"
+ },
+ "payload 54: bare lt": {
+  "email": "&lt;",
+  "signature": "&lt;"
+ },
+ "payload 55: empty": {
+  "email": "",
+  "signature": ""
+ },
+ "payload 56: safe link": {
+  "email": "<a href=\"https://example.com/x?a=1&amp;b=2\">link</a>",
+  "signature": "<a href=\"https://example.com/x?a=1&amp;b=2\">link</a>"
+ },
+ "payload 57: mailto": {
+  "email": "<a href=\"mailto:a@b.com\">m</a>",
+  "signature": "<a href=\"mailto:a@b.com\">m</a>"
+ },
+ "payload 58: cid image": {
+  "email": "<img src=\"cid:logo@example\" alt=\"Logo\">",
+  "signature": ""
+ },
+ "payload 59: https logo": {
+  "email": "<img alt=\"Acme\">",
+  "signature": "<img src=\"https://cdn.example.com/logo.png\" alt=\"Acme\">"
+ },
+ "payload 60: http logo": {
+  "email": "<img>",
+  "signature": ""
+ },
+ "payload 61: data png": {
+  "email": "<img src=\"data:image/png;base64,iVBORw0KGgo=\">",
+  "signature": ""
+ },
+ "payload 62: real mail": {
+  "email": "<div dir=\"ltr\"><p>Hi <strong>Asgeir</strong>,</p><p>See the <a href=\"https://example.com/report\">report</a>.</p><table><tbody><tr><td colspan=\"2\">Q3</td><td>42</td></tr></tbody></table><blockquote>Previous message</blockquote></div>",
+  "signature": "<div><p>Hi <strong>Asgeir</strong>,</p><p>See the <a href=\"https://example.com/report\">report</a>.</p><table><tbody><tr><td>Q3</td><td>42</td></tr></tbody></table><blockquote>Previous message</blockquote></div>"
+ },
+ "payload 63: unquoted attrs everywhere": {
+  "email": "<table width=\"100%\"><tbody><tr><td><a href=\"https://c.gle/AbCd\"><img width=\"204\"></a></td></tr></tbody></table>",
+  "signature": "<table align=\"center\" width=\"100%\"><tbody><tr><td align=\"center\" style=\"padding-top: 26px\"><a target=\"_blank\" href=\"https://c.gle/AbCd\" style=\"text-decoration: none\" rel=\"noopener noreferrer\"><img src=\"https://www.gstatic.com/logo.png\" width=\"204\" style=\"display: block\"></a></td></tr></tbody></table>"
+ },
+ "payload 64: unclosed td then new tr": {
+  "email": "<table><tbody><tr><td>A</td></tr><tr><td>B</td></tr></tbody></table>",
+  "signature": "<table><tbody><tr><td>A</td></tr><tr><td>B</td></tr></tbody></table>"
+ },
+ "payload 65: unclosed td then new td": {
+  "email": "<table><tbody><tr><td>A</td><td>B</td></tr></tbody></table>",
+  "signature": "<table><tbody><tr><td>A</td><td>B</td></tr></tbody></table>"
+ },
+ "payload 66: unclosed p run": {
+  "email": "<div><p>one</p><p>two</p><p>three</p></div>",
+  "signature": "<div><p>one</p><p>two</p><p>three</p></div>"
+ },
+ "payload 67: href to a bare fragment": {
+  "email": "<a>pub-1354741235649835</a>",
+  "signature": "<a>pub-1354741235649835</a>"
+ },
+ "payload 68: tracking pixel, unquoted": {
+  "email": "<img width=\"10\" height=\"1\">",
+  "signature": "<img src=\"https://www.gstatic.com/spacer.gif\" width=\"10\" height=\"1\">"
+ },
+ "payload 69: 1x1 hidden pixel": {
+  "email": "<img width=\"1\" height=\"1\">",
+  "signature": ""
+ },
+ "payload 70: xml doctype + xmlns": {
+  "email": "<p>hi</p>",
+  "signature": "<p>hi</p>"
+ },
+ "payload 71: mso conditional comment": {
+  "email": "<p>shown</p>",
+  "signature": "<p>shown</p>"
+ },
+ "payload 72: nbsp and emoji": {
+  "email": "<h3><span><strong>Kykkeli ki,&nbsp;<span>Asgeir</span>!&nbsp;🐓</strong></span></h3>",
+  "signature": "<h3><span style=\"font-family: Arial\"><strong>Kykkeli ki,&nbsp;<span>Asgeir</span>!&nbsp;🐓</strong></span></h3>"
+ },
+ "payload 73: preheader hidden text": {
+  "email": "<h4>hidden preheader</h4>",
+  "signature": "<h4 style=\"display: none; color: #F5F7FA; font-size: 0px\">hidden preheader</h4>"
+ },
+ "payload 74: table width percent": {
+  "email": "<table width=\"100%\"><tbody><tr><td width=\"640\">x</td></tr></tbody></table>",
+  "signature": "<table width=\"100%\"><tbody><tr><td width=\"640\" align=\"center\">x</td></tr></tbody></table>"
+ }
+}

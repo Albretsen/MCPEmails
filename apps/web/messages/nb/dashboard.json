@@ -22,20 +22,20 @@
       "step1": "I claude.ai eller Claude Desktop, åpne Innstillinger → Connectors.",
       "step2": "Klikk «Add custom connector».",
       "step3": "Lim inn URL-en over som connector-URL, og klikk deretter «Add».",
-      "step4": "Klikk «Connect» og logg inn med mcpemails for å autorisere. Ingen API-nøkkel nødvendig."
+      "step4": "Klikk «Connect» og logg inn med MCP Emails for å autorisere. Ingen API-nøkkel nødvendig."
     },
     "chatgpt": {
       "step1": "Åpne Settings → Apps & Connectors → Advanced settings og slå på Developer mode.",
       "step2": "Tilbake i Apps & Connectors, klikk «Create».",
       "step3": "Skriv inn et navn og lim inn URL-en over som Connector URL.",
-      "step4": "Velg OAuth, klikk «Create», og autoriser deretter med mcpemails.",
-      "step5": "I en samtale på chatgpt.com, klikk + → Developer mode og velg mcpemails-appen. Gjør dette i hver nye samtale, ellers ser ikke ChatGPT verktøyene.",
+      "step4": "Velg OAuth, klikk «Create», og autoriser deretter med MCP Emails.",
+      "step5": "I en samtale på chatgpt.com, klikk + → Developer mode og velg MCP Emails-appen. Gjør dette i hver nye samtale, ellers ser ikke ChatGPT verktøyene.",
       "note": "Fungerer på chatgpt.com (kun nett) med Plus, Pro, Business, Enterprise og Edu. Free- og Go-kontoer kan ikke legge til egne connectors. På Business og Enterprise må en administrator kanskje tillate Developer mode først."
     },
     "cursor": {
       "step1": "Rediger ~/.cursor/mcp.json (global) eller .cursor/mcp.json (prosjekt).",
       "step2": "Legg til serveren nedenfor under «mcpServers».",
-      "step3": "Cursor ber deg logge inn via OAuth. Autoriser med mcpemails."
+      "step3": "Cursor ber deg logge inn via OAuth. Autoriser med MCP Emails."
     },
     "vscode": {
       "step1": "Åpne kommandopaletten (⇧⌘P) og kjør «MCP: Add Server».",
@@ -51,7 +51,7 @@
     "windsurf": {
       "step1": "Åpne Cascades MCP-innstillinger, eller rediger ~/.codeium/windsurf/mcp_config.json.",
       "step2": "Legg til serveren nedenfor. Merk at feltet heter «serverUrl», ikke «url».",
-      "step3": "Oppdater MCP-servere i Cascade og autoriser med mcpemails når du blir bedt om det."
+      "step3": "Oppdater MCP-servere i Cascade og autoriser med MCP Emails når du blir bedt om det."
     },
     "gemini": {
       "step1": "Rediger ~/.gemini/settings.json (global) eller .gemini/settings.json (prosjekt).",
@@ -61,7 +61,7 @@
     "zed": {
       "step1": "I innstillingene for Agent Panel, klikk «Add Custom Server», eller rediger settings.json.",
       "step2": "Legg til serveren nedenfor under «context_servers».",
-      "step3": "Zed starter OAuth-flyten når ingen Authorization-header er satt. Logg inn med mcpemails."
+      "step3": "Zed starter OAuth-flyten når ingen Authorization-header er satt. Logg inn med MCP Emails."
     },
     "jetbrains": {
       "step1": "Åpne Settings → Tools → AI Assistant → Model Context Protocol (MCP).",
@@ -71,7 +71,7 @@
     "raycast": {
       "step1": "Kjør kommandoen «Install MCP Server» (eller «Manage MCP Servers»).",
       "step2": "Skriv inn et navn, sett Transport til «HTTP», og lim inn URL-en over.",
-      "step3": "Trykk «Install MCP Server», og klikk deretter «Sign In» for å autorisere med mcpemails."
+      "step3": "Trykk «Install MCP Server», og klikk deretter «Sign In» for å autorisere med MCP Emails."
     },
     "warp": {
       "step1": "Åpne Settings → Agents → MCP servers og klikk «+ Add».",
@@ -98,7 +98,7 @@
     "multiInboxTitle": "Legg til de andre jobbpostkassene dine",
     "multiInboxOptional": "Valgfritt",
     "multiInboxDesc": "Koble til post@, salg@, faktura@ og resten, så jobber agenten med alle firmaets postkasser fra én samtale og svarer fra riktig adresse.",
-    "multiInboxDescUpgrade": "Koble til post@, salg@, faktura@ og resten, så jobber agenten med alle firmaets postkasser fra én samtale og svarer fra riktig adresse. Gratis dekker én postkasse; Pro dekker alle postkassene bedriften din bruker.",
+    "multiInboxDescUpgrade": "Koble til post@, salg@, faktura@ og resten, så jobber agenten med alle firmaets postkasser fra én samtale og svarer fra riktig adresse. Gratis dekker én postkasse; Pro dekker opptil 10.",
     "multiInboxCompact": "Har du også post@, salg@ eller faktura@? Koble dem til, så jobber agenten med alle firmaets postkasser fra én samtale.",
     "multiInboxCompactUpgrade": "Har du også post@, salg@ eller faktura@? Agenten kan jobbe med alle firmaets postkasser fra én samtale. Postkasse nummer to krever en betalt plan.",
     "multiInboxCta": "Legg til en postkasse"
@@ -121,7 +121,7 @@
     "actionsThisMonth": "E-posthandlinger denne måneden",
     "actionsOfCap": "av {cap} · nullstilles {date}",
     "actionsCapReached": "Grensen er nådd · avvises til {date}",
-    "actionsGrace": "Prøveuke: ingen grense før {date}",
+    "actionsGrace": "Prøveperiode: ingen grense før {date}",
     "actionsExempt": "Ingen månedlig grense (tidlig medlem)",
     "teamMembers": "Teammedlemmer",
     "ofSeats": "av {cap} plasser · {remaining} igjen",
@@ -131,7 +131,7 @@
     "goToMembers": "Gå til Medlemmer",
     "callsPerDayTitle": "Kall per dag",
     "callsPerDaySub": "Siste {days} dager · på tvers av alle verktøy",
-    "pro": "Team",
+    "pro": "Business",
     "recentActivityTitle": "Nylig aktivitet",
     "recentActivitySub": "Direkte MCP-verktøykall",
     "noActivityTitle": "Ingen aktivitet ennå",
@@ -148,8 +148,8 @@
     "usedSingular": "{count} av {max} innboks brukt",
     "capTitle": "Du har nådd innboksgrensen",
     "capBodyPersonal": "Gratis kobler til én postkasse. Personal tar deg til tre for 9 dollar i måneden, så jobb og privat kan dele samme agent.",
-    "capBodyPro": "Personal kobler til tre postkasser. Pro fjerner grensen for 15 dollar i måneden, så alle postkassene dine kjører på én agent.",
-    "capBodyBusiness": "Håndterer du flere bedriftspostkasser? Gratis kobler til én. Personal dekker tre for 9 dollar i måneden, nok til post@, salg@ og din egen. Pro dekker alle postkassene bedriften din bruker for 15 dollar i måneden: økonomi, salg, support, post og din egen.",
+    "capBodyPro": "Personal kobler til tre postkasser. Pro tar deg til 10 for 15 dollar i måneden, alle på én agent.",
+    "capBodyBusiness": "Håndterer du flere bedriftspostkasser? Gratis kobler til én. Personal dekker tre for 9 dollar i måneden, nok til post@, salg@ og din egen. Pro dekker opptil 10 for 15 dollar i måneden: økonomi, salg, support, post og din egen.",
     "capCtaPersonal": "Oppgrader til Personal, 9 $/md",
     "capCtaPro": "Oppgrader til Pro, 15 $/md",
     "capCompare": "Sammenlign alle planer",
@@ -165,6 +165,7 @@
     "statusError": "Feil",
     "reconnect": "Koble til på nytt",
     "checkConnection": "Sjekk tilkobling",
+    "viewerActionsNote": "Lesere i arbeidsområdet kan se denne innboksen, men ikke sjekke, koble til på nytt, koble fra eller redigere den.",
     "disconnectInbox": "Koble fra innboks",
     "emptyTitle": "Ingen postkasser tilkoblet",
     "emptyDesc": "Koble til en hvilken som helst IMAP-postkasse, Gmail eller Outlook for å gi agentene dine tilgang.",
@@ -180,6 +181,9 @@
       "close": "Lukk",
       "openAria": "Vis detaljer for {label}",
       "connectionStatus": "Tilkoblingsstatus",
+      "accessMode": "Tilgang",
+      "accessSendOnly": "Kun sending (SMTP)",
+      "accessReceiveOnly": "Kun mottak (IMAP)",
       "authMethod": "Autentisering",
       "authOauth": "OAuth-token",
       "authAppPassword": "App-passord",
@@ -204,6 +208,38 @@
         "saving": "Lagrer…",
         "tooLong": "Avsendernavnet er for langt (maks 100 tegn)."
       },
+      "sendAs": {
+        "title": "Send som-adresser",
+        "help": "Send fra en annen adresse som leverer til denne innboksen, for eksempel et iCloud-alias. Vi sender en kode til adressen for å bekrefte at den er din. E-postleverandøren din må også tillate sending fra den.",
+        "placeholder": "alias@eksempel.no",
+        "add": "Legg til adresse",
+        "adding": "Sender kode…",
+        "loading": "Laster…",
+        "verified": "Bekreftet",
+        "pending": "Kode sendt",
+        "unverified": "Ikke bekreftet",
+        "codePlaceholder": "6-sifret kode",
+        "codeLabel": "Bekreftelseskode for {address}",
+        "verify": "Bekreft",
+        "resend": "Send ny kode",
+        "remove": "Fjern",
+        "errors": {
+          "invalid_address": "Skriv inn en gyldig e-postadresse.",
+          "own_address": "Det er innboksens egen adresse.",
+          "connected_inbox": "Den adressen er koblet til som en egen innboks. Send fra den innboksen i stedet.",
+          "already_verified": "Den adressen er allerede bekreftet.",
+          "too_many_aliases": "Denne innboksen har ikke plass til flere adresser. Fjern en først.",
+          "rate_limited": "For mange koder sendt. Prøv igjen senere.",
+          "cooldown": "Vent ett minutt før du sender en ny kode.",
+          "code_expired": "Koden har utløpt. Send en ny.",
+          "too_many_attempts": "For mange feil koder. Send en ny.",
+          "wrong_code": "Koden stemmer ikke.",
+          "invalid_code": "Skriv inn den 6-sifrede koden.",
+          "mail_failed": "Vi klarte ikke å sende koden. Prøv igjen.",
+          "unsupported_provider": "Send som er ikke tilgjengelig for denne innboksen.",
+          "generic": "Noe gikk galt. Prøv igjen."
+        }
+      },
       "signature": {
         "title": "E-postsignatur",
         "enabled": "På",
@@ -225,12 +261,16 @@
         "previewTitle": "Forhåndsvisning",
         "previewReplyQuote": "Man. skrev noen '<noen@eksempel.com>':",
         "previewTooLarge": "Signaturen er for stor til å forhåndsvises.",
-        "imageNote": "Enkelte e-postklienter (f.eks. Gmail) kan skjule bilder til mottakeren klikker «vis bilder». Dette er normalt for signaturer med bilder som ligger på nett."
+        "imageNote": "Enkelte e-postklienter (f.eks. Gmail) kan skjule bilder til mottakeren klikker «vis bilder». Dette er normalt for signaturer med bilder som ligger på nett. Slå på «Bygg inn bilder i meldingen» nedenfor for å sende dem inne i e-posten i stedet.",
+        "embedImages": "Bygg inn bilder i meldingen",
+        "embedImagesHint": "Sender logoen inne i hver e-post i stedet for å laste den fra nettadressen, slik at den vises i utkast og i e-postprogrammer som blokkerer eksterne bilder, som Outlook og Thunderbird. Bilder opptil 512 kB; større bilder forblir lenket."
       }
     },
     "emptyAltLead": "Ikke klar til å koble til en postkasse ennå?",
     "emptyViewKeys": "Hent MCP-URL-en og API-nøkkelen din",
-    "emptyReadDocs": "Les oppsettsveiledningene"
+    "emptyReadDocs": "Les oppsettsveiledningene",
+    "capBodyProCap": "Pro kobler til 10 postkasser. Business inkluderer 10 for 39 dollar i måneden og legger til hver ekstra postkasse for 3 dollar i måneden, med ubegrenset antall medlemmer uten ekstra kostnad.",
+    "capCtaBusiness": "Oppgrader til Business, 39 $/md"
   },
   "apiKeys": {
     "title": "API-nøkler",
@@ -249,6 +289,7 @@
     "accessCount": "{count, plural, one {# innboks} other {# innbokser}}",
     "editAccess": "Rediger tilgang",
     "revoke": "Opphev",
+    "notYours": "Bare den som opprettet nøkkelen, eller en administrator, kan endre den.",
     "emptyTitle": "Ingen API-nøkler ennå",
     "emptyDesc": "Opprett en nøkkel for å koble Claude Desktop eller en hvilken som helst MCP-klient til innboksene dine.",
     "never": "Aldri",
@@ -307,7 +348,9 @@
       "errInboxRequired": "Velg minst én innboks, eller velg alle innbokser.",
       "errSaveFailed": "Kunne ikke oppdatere tilgangen. Prøv igjen.",
       "saving": "Lagrer…",
-      "save": "Lagre endringer"
+      "save": "Lagre endringer",
+      "viewerCapNote": "Denne nøkkelen tilhører en leser, så den kan bare ha lesetilganger.",
+      "noWidenNote": "Den som opprettet nøkkelen, er ikke lenger med i arbeidsområdet. Du kan fjerne tilganger, men ikke legge til nye utover lesetilgang."
     },
     "revealModal": {
       "title": "Kopier API-nøkkelen din",
@@ -361,7 +404,7 @@
     "colAddress": "Adresse",
     "allowanceCounting": "{used} av {cap} e-posthandlinger brukt denne måneden · nullstilles {date}",
     "allowanceReached": "Alle {cap} e-posthandlinger er brukt · lesing og skriving avvises til {date}",
-    "allowanceGrace": "Prøveuke: ingen grense før {date}",
+    "allowanceGrace": "Prøveperiode: ingen grense før {date}",
     "allowanceExempt": "Ingen månedlig grense (tidlig medlem)",
     "capTitleNear": "Du nærmer deg månedens grense",
     "capBodyNear": "{used} av {cap} e-posthandlinger brukt. Ved {cap} avvises agentens lesing og skriving til {date}. Personal fjerner månedsgrensen for 9 dollar i måneden.",
@@ -513,16 +556,15 @@
       "personalFeature2": "120 forespørsler / minutt (2× burst)",
       "personalFeatureActions": "Ingen månedlig grense for handlinger",
       "personalFeature4": "E-poststøtte",
-      "soloFeature1": "Ubegrenset antall tilkoblede innbokser",
+      "soloFeature1": "10 tilkoblede innbokser",
       "soloFeature2": "300 forespørsler / minutt (5× burst)",
       "soloFeature3": "Lengre analysehistorikk",
       "soloFeature4": "E-poststøtte",
-      "teamFeature1": "Alt i Pro",
-      "teamFeature2": "Ubegrenset antall medlemmer med roller",
-      "teamFeature3": "Et eget arbeidsområde per kunde eller virksomhet",
-      "teamFeature4": "SSO (SAML / OIDC) + revisjonslogg",
-      "teamFeature5": "Lengst analysehistorikk",
-      "teamFeature6": "Prioritert støtte"
+      "businessFeature1": "Alt i Pro",
+      "businessFeature2": "10 postkasser inkludert, 3 dollar i måneden for hver ekstra",
+      "businessFeature3": "Ubegrenset antall medlemmer med roller, uten ekstra kostnad",
+      "businessFeature4": "Administratorer godkjenner tilbakeholdte sendinger",
+      "businessFeature5": "Flere arbeidsområder på ett abonnement"
     },
     "planIncludes": "Hva planen din inkluderer",
     "inboxesOne": "1 tilkoblet innboks",
@@ -553,7 +595,7 @@
     "confirmNoteInterval": "Belastes nå på kortet du har lagret, med fradrag for tiden som gjenstår av inneværende periode. Faktureringsperioden starter på nytt i dag, så neste fornyelsesdato flyttes.",
     "confirmNoteIntervalNoPreview": "Vi klarte ikke å prise endringen på forhånd. Kortet du har lagret belastes differansen, med fradrag for tiden som gjenstår av inneværende periode, og det eksakte beløpet står på fakturaen. Faktureringsperioden starter på nytt i dag, så neste fornyelsesdato flyttes.",
     "confirmPay": "Bekreft og betal {amount}",
-    "confirmChange": "Bekreft endring",
+    "confirmChange": "Bekreft og betal",
     "confirmCancel": "Avbryt",
     "confirming": "Belaster…",
     "planChangedCharged": "Du er nå på {plan}. {amount} ble belastet kortet ditt.",
@@ -562,7 +604,10 @@
     "paymentRequiredBody": "Banken din må godkjenne betalingen, eller kortet ble avvist. Planen din er uendret, og du er ikke belastet. Betal den åpne fakturaen, så gjennomføres endringen automatisk.",
     "paymentRequiredPay": "Betal faktura",
     "paymentRequiredClose": "Lukk",
-    "paymentRequiredToast": "Betalingen ble ikke fullført, så du er fortsatt på {plan}. Åpne faktureringsportalen for å betale den utestående fakturaen."
+    "paymentRequiredToast": "Betalingen ble ikke fullført, så du er fortsatt på {plan}. Åpne faktureringsportalen for å betale den utestående fakturaen.",
+    "proInboxesKept": "Pro-abonnementet ditt beholder ubegrenset antall tilkoblede innbokser.",
+    "businessMailboxRate": "10 postkasser inkludert på tvers av alle arbeidsområdene dine. Hver ekstra postkasse faktureres med abonnementet: 3 dollar i måneden eller 28,80 dollar i året.",
+    "confirmExtraMailboxes": "Inkluderer {count, plural, one {# ekstra postkasse} other {# ekstra postkasser}} utover de 10 som er inkludert."
   },
   "security": {
     "title": "Sikkerhet",
@@ -626,8 +671,8 @@
     "roleOwner": "Eier",
     "sending": "Sender…",
     "sendInvite": "Send invitasjon",
-    "rolesLockedHint": "Inviterte blir med som Medlem. Oppgrader til Team for å tildele Administrator- og Visningsroller.",
-    "inviteUpgradeHint": "Å invitere samarbeidspartnere krever Team-planen. Oppgrader til Team for å legge til medlemmer i dette arbeidsområdet.",
+    "rolesLockedHint": "Inviterte blir med som Medlem. Oppgrader til Business for å tildele Administrator- og Visningsroller.",
+    "inviteUpgradeHint": "Å invitere samarbeidspartnere krever Business-planen. Oppgrader til Business for å legge til medlemmer i dette arbeidsområdet.",
     "errInviteFailed": "Kunne ikke sende invitasjon.",
     "errRemoveFailed": "Kunne ikke fjerne medlem.",
     "errRoleFailed": "Kunne ikke oppdatere rolle.",
@@ -674,6 +719,7 @@
       "to": "Til",
       "cc": "Kopi",
       "bcc": "Blindkopi",
+      "replyTo": "Svar til",
       "subject": "Emne",
       "attachments": "Vedlegg",
       "operation": "Type",
@@ -689,11 +735,12 @@
       "attachmentsFromOriginal": "Den opprinnelige meldingens vedlegg, slik de ble sendt",
       "recipientsAtSend": "Denne siden klarte ikke å lese mottakerne fra den opprinnelige meldingen. De hentes når den sendes, så les gjennom meldingsteksten før du godkjenner.",
       "bccCount": "{count, plural, one {# skjult mottaker} other {# skjulte mottakere}}",
+      "bccHint": "Skjult for de andre mottakerne. Sjekk hver adresse før du godkjenner.",
       "attachmentCount": "{count, plural, one {# fil} other {# filer}}",
       "bodyTitle": "Melding",
       "bodyTruncated": "Denne meldingen er lengre enn 64 KB og er avkortet her. Åpne den i dashbordet for å lese alt.",
       "bodyWithheldRole": "Meldingsteksten vises til eiere, administratorer og medlemmer av arbeidsområdet. Din rolle kan bare se leveringsdetaljene.",
-      "bodyStoredWithProvider": "Denne forespørselen sender et utkast som er lagret hos e-postleverandøren din, så teksten er ikke en del av forespørselen. Åpne utkastet i e-postappen din før du bestemmer deg.",
+      "bodyStoredWithProvider": "Denne forespørselen ble laget før MCP Emails tok vare på en kopi av utkastet, så teksten kan ikke vises her, og den blir ikke sendt selv om du godkjenner den. Avvis den og be assistenten sende utkastet på nytt.",
       "bodyDecryptFailed": "Den lagrede meldingen kunne ikke dekrypteres og kan derfor ikke vises. Avvis denne forespørselen og be assistenten forberede den på nytt.",
       "bodyAbsent": "Denne forespørselen har ingen meldingstekst.",
       "bodyHtmlShow": "Vis HTML-kilde",
@@ -741,7 +788,10 @@
         "expiredTitle": "Denne forespørselen utløp",
         "expiredBody": "Den ble ikke avgjort i tide, så den blir ikke sendt. Be assistenten forberede den på nytt hvis du fortsatt vil sende den.",
         "decidedElsewhereTitle": "Allerede avgjort",
-        "decidedElsewhereBody": "Noen andre, eller en annen fane, avgjorde denne utsendingen mens denne siden var åpen. Ingenting ble endret nå. Åpne dashbordet for å se utfallet."
+        "decidedElsewhereBody": "Noen andre, eller en annen fane, avgjorde denne utsendingen mens denne siden var åpen. Ingenting ble endret nå. Åpne dashbordet for å se utfallet.",
+        "changedTitle": "Denne forespørselen ble endret etter at du åpnet den",
+        "changedBody": "Ingenting ble sendt. Den gjeldende versjonen vises nedenfor. Gå gjennom den på nytt før du bestemmer deg.",
+        "changedLoading": "Ingenting ble sendt. Laster inn den gjeldende versjonen…"
       },
       "done": {
         "approvedTitle": "Godkjent. E-posten er på vei.",
@@ -763,7 +813,8 @@
       "inlineHint": "Et kort vises i KI-samtalen med nøyaktig hva som blir sendt. Du kan avvise der; godkjenning åpner en side du må være innlogget for å bruke.",
       "dashboard": "Gjennomgang bare i dashbordet",
       "dashboardHint": "Ingen kort i samtalen. Assistenten får beskjed om at utsendingen venter, og du bestemmer her.",
-      "guarantee": "I begge gjennomgangsmodusene forberedes e-posten uten å bli levert. Godkjenning skjer bare i en innlogget nettleserøkt hos en eier eller administrator av arbeidsområdet, noe assistenten ikke har. Gjennomgangskortet er en bekvemmelighet, ikke en tilgangsgrense."
+      "guarantee": "I begge gjennomgangsmodusene forberedes e-posten uten å bli levert. Godkjenning skjer bare i en innlogget nettleserøkt hos en eier eller administrator av arbeidsområdet, noe assistenten ikke har. Gjennomgangskortet er en bekvemmelighet, ikke en tilgangsgrense.",
+      "ownerAdminOnly": "Bare eiere og administratorer i arbeidsområdet kan endre gjennomgangsinnstillingen."
     },
     "panel": {
       "decidedTitle": "Nylig avgjort",
@@ -773,7 +824,12 @@
       "statusApproved": "Godkjent",
       "statusRejected": "Avvist",
       "statusExpired": "Utløpt",
-      "statusCancelled": "Avbrutt"
+      "statusCancelled": "Avbrutt",
+      "changedNotice": "Denne forespørselen ble endret etter at du åpnet den. Ingenting ble sendt. Den gjeldende versjonen vises nedenfor; sjekk den før du bekrefter.",
+      "changedGone": "Denne forespørselen ble endret og venter ikke lenger på en avgjørelse. Ingenting ble sendt.",
+      "openReview": "Åpne hele gjennomgangen, med meldingsteksten",
+      "detailsFailed": "Kunne ikke laste inn detaljene for denne forespørselen. Ingenting ble sendt. Du kan fortsatt avvise den, eller lukke dette og prøve igjen.",
+      "loadingDetails": "Laster inn…"
     }
   },
   "automations": {
@@ -981,6 +1037,12 @@
       "cancel": "Avbryt",
       "confirm": "Slett automatisering",
       "deleting": "Sletter…"
+    }
+  },
+  "workflows": {
+    "bulkRuns": {
+      "viewerNotice": "Du kan følge store jobber her, men bare en eier, administrator eller et medlem i arbeidsområdet kan stoppe dem.",
+      "stopViewerTitle": "Lesere kan ikke stoppe jobber"
     }
   }
 }

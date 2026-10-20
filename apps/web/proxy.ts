@@ -11,8 +11,10 @@ import type { NextRequest } from 'next/server';
  * Next.js proxy entry point (formerly middleware.ts; renamed in Next.js 16).
  * Composes two concerns:
  *
- *  - next-intl handles locale negotiation, prefixing, and hreflang headers for
- *    the public marketing routes (URL-based locale).
+ *  - next-intl handles locale negotiation and prefixing for the public
+ *    marketing routes (URL-based locale). Its hreflang `Link:` header is off
+ *    (alternateLinks: false in src/i18n/routing.ts); pages declare hreflang in
+ *    their own <link rel="alternate"> tags.
  *  - updateSession refreshes the Supabase session cookie and guards protected
  *    routes for everything else (dashboard, auth, api).
  *
@@ -51,6 +53,14 @@ const MARKETING_PATHS = new Set([
   '/email-mcp-servers-compared',
   '/for/founders',
   '/for/business',
+  // Help & support. The route itself 404s anyone the release gate does not
+  // admit, so listing it here exposes nothing; without it /help never reaches
+  // the [locale] route and 404s even for staff. Stays at release.
+  '/help',
+  // The public cancellation and withdrawal form, and the withdrawal notice.
+  // Both must open without a login (§312k BGB, Directive (EU) 2023/2673).
+  '/cancel',
+  '/withdrawal',
 ]);
 
 function isLocalizedRoute(pathname: string): boolean {
@@ -265,7 +275,21 @@ export const config = {
      *  - video and caption files (the demo cut lives at /demo/*.mp4 and is
      *    fetched with Range requests; running the auth round trip on each of
      *    those byte-range requests is pure latency for no decision)
+     *  - machine routes, which no browser session ever drives and which read
+     *    nothing this proxy produces (no nonce, no subject id, no locale, no
+     *    refreshed Supabase session). Running the proxy on them minted a
+     *    visitor-id Set-Cookie and a Supabase getUser round trip on every MCP
+     *    call: ~1.18M of 1.24M proxy runs a week (measured 2026-10-20).
+     *      api/mcp                       Bearer key or OAuth token only
+     *      api/oauth/token|register|revoke|userinfo
+     *                                    client credentials / Bearer only.
+     *                                    api/oauth/authorize is NOT excluded:
+     *                                    the consent POST reads the session.
+     *      .well-known/*                 static discovery documents
+     *      sitemap.xml, robots.txt, opengraph-image
+     *    None of these is a protected path in updateSession, so the dashboard
+     *    guard is untouched by this list.
      */
-    '/((?!_next/static|_next/image|favicon\\.ico|.*\\.(?:svg|png|jpg|jpeg|gif|webp|woff|woff2|ttf|otf|mp4|webm|mov|vtt)$).*)',
+    '/((?!_next/static|_next/image|favicon\\.ico|api/mcp/?$|api/oauth/(?:token|register|revoke|userinfo)/?$|\\.well-known/|sitemap\\.xml$|robots\\.txt$|opengraph-image|.*\\.(?:svg|png|jpg|jpeg|gif|webp|woff|woff2|ttf|otf|mp4|webm|mov|vtt)$).*)',
   ],
 };

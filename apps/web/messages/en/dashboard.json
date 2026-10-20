@@ -22,20 +22,20 @@
       "step1": "In claude.ai or Claude Desktop, open Settings → Connectors.",
       "step2": "Click \"Add custom connector\".",
       "step3": "Paste the URL above as the connector URL, then click \"Add\".",
-      "step4": "Click \"Connect\" and sign in with mcpemails to authorize. No API key needed."
+      "step4": "Click \"Connect\" and sign in with MCP Emails to authorize. No API key needed."
     },
     "chatgpt": {
       "step1": "Open Settings → Apps & Connectors → Advanced settings and turn on Developer mode.",
       "step2": "Back in Apps & Connectors, click \"Create\".",
       "step3": "Enter a name and paste the URL above as the Connector URL.",
-      "step4": "Pick OAuth, click \"Create\", then authorize with mcpemails.",
-      "step5": "In a chat on chatgpt.com, click + → Developer mode and select the mcpemails app. Repeat this in every new chat, or ChatGPT will not see the tools.",
+      "step4": "Pick OAuth, click \"Create\", then authorize with MCP Emails.",
+      "step5": "In a chat on chatgpt.com, click + → Developer mode and select the MCP Emails app. Repeat this in every new chat, or ChatGPT will not see the tools.",
       "note": "Works on chatgpt.com (web only) with Plus, Pro, Business, Enterprise and Edu. Free and Go accounts cannot add custom connectors. On Business and Enterprise, an admin may need to allow developer mode first."
     },
     "cursor": {
       "step1": "Edit ~/.cursor/mcp.json (global) or .cursor/mcp.json (project).",
       "step2": "Add the server below under \"mcpServers\".",
-      "step3": "Cursor prompts you to sign in via OAuth. Authorize with mcpemails."
+      "step3": "Cursor prompts you to sign in via OAuth. Authorize with MCP Emails."
     },
     "vscode": {
       "step1": "Open the Command Palette (⇧⌘P) and run \"MCP: Add Server\".",
@@ -51,7 +51,7 @@
     "windsurf": {
       "step1": "Open Cascade’s MCP settings, or edit ~/.codeium/windsurf/mcp_config.json.",
       "step2": "Add the server below. Note the field is \"serverUrl\", not \"url\".",
-      "step3": "Refresh MCP servers in Cascade and authorize with mcpemails when prompted."
+      "step3": "Refresh MCP servers in Cascade and authorize with MCP Emails when prompted."
     },
     "gemini": {
       "step1": "Edit ~/.gemini/settings.json (global) or .gemini/settings.json (project).",
@@ -61,7 +61,7 @@
     "zed": {
       "step1": "In the Agent Panel settings click \"Add Custom Server\", or edit settings.json.",
       "step2": "Add the server below under \"context_servers\".",
-      "step3": "Zed prompts the OAuth flow when no Authorization header is set. Sign in with mcpemails."
+      "step3": "Zed prompts the OAuth flow when no Authorization header is set. Sign in with MCP Emails."
     },
     "jetbrains": {
       "step1": "Open Settings → Tools → AI Assistant → Model Context Protocol (MCP).",
@@ -71,7 +71,7 @@
     "raycast": {
       "step1": "Run the \"Install MCP Server\" command (or \"Manage MCP Servers\").",
       "step2": "Enter a name, set Transport to \"HTTP\", and paste the URL above.",
-      "step3": "Press \"Install MCP Server\", then click \"Sign In\" to authorize with mcpemails."
+      "step3": "Press \"Install MCP Server\", then click \"Sign In\" to authorize with MCP Emails."
     },
     "warp": {
       "step1": "Open Settings → Agents → MCP servers and click \"+ Add\".",
@@ -98,7 +98,7 @@
     "multiInboxTitle": "Add your other work mailboxes",
     "multiInboxOptional": "Optional",
     "multiInboxDesc": "Connect info@, sales@, invoices@ and the rest, and your agent works every company mailbox from one conversation, replying from the right address.",
-    "multiInboxDescUpgrade": "Connect info@, sales@, invoices@ and the rest, and your agent works every company mailbox from one conversation, replying from the right address. Free covers one mailbox; Pro covers every mailbox your business runs.",
+    "multiInboxDescUpgrade": "Connect info@, sales@, invoices@ and the rest, and your agent works every company mailbox from one conversation, replying from the right address. Free covers one mailbox; Pro covers up to 10.",
     "multiInboxCompact": "Running info@, sales@ or invoices@ too? Connect them and your agent works every company mailbox from one conversation.",
     "multiInboxCompactUpgrade": "Running info@, sales@ or invoices@ too? Your agent can work every company mailbox from one conversation. A second mailbox needs a paid plan.",
     "multiInboxCta": "Add a mailbox"
@@ -121,7 +121,7 @@
     "actionsThisMonth": "Email actions this month",
     "actionsOfCap": "of {cap} · resets {date}",
     "actionsCapReached": "Cap reached · refused until {date}",
-    "actionsGrace": "Trial week: no cap until {date}",
+    "actionsGrace": "Trial period: no cap until {date}",
     "actionsExempt": "No monthly cap (early member)",
     "teamMembers": "Team members",
     "ofSeats": "of {cap} seats · {remaining} remaining",
@@ -131,7 +131,7 @@
     "goToMembers": "Go to Members",
     "callsPerDayTitle": "Calls per day",
     "callsPerDaySub": "Last {days} days · across all tools",
-    "pro": "Team",
+    "pro": "Business",
     "recentActivityTitle": "Recent activity",
     "recentActivitySub": "Live MCP tool calls",
     "noActivityTitle": "No activity yet",
@@ -148,8 +148,8 @@
     "usedSingular": "{count} of {max} inbox used",
     "capTitle": "You're at your inbox limit",
     "capBodyPersonal": "Free connects one mailbox. Personal takes you to three for $9 a month, so work and personal can share the same agent.",
-    "capBodyPro": "Personal connects three mailboxes. Pro removes the limit for $15 a month, so every mailbox you own runs on one agent.",
-    "capBodyBusiness": "Running more than one company mailbox? Free connects one. Personal covers three for $9 a month, enough for info@, sales@ and your own. Pro covers every mailbox your business runs for $15 a month: finance, sales, support, info, and your own.",
+    "capBodyPro": "Personal connects three mailboxes. Pro takes you to 10 for $15 a month, all on one agent.",
+    "capBodyBusiness": "Running more than one company mailbox? Free connects one. Personal covers three for $9 a month, enough for info@, sales@ and your own. Pro covers up to 10 for $15 a month: finance, sales, support, info, and your own.",
     "capCtaPersonal": "Upgrade to Personal, $9/mo",
     "capCtaPro": "Upgrade to Pro, $15/mo",
     "capCompare": "Compare all plans",
@@ -165,6 +165,7 @@
     "statusError": "Error",
     "reconnect": "Reconnect",
     "checkConnection": "Check connection",
+    "viewerActionsNote": "Workspace viewers can see this inbox but cannot check, reconnect, disconnect or edit it.",
     "disconnectInbox": "Disconnect inbox",
     "emptyTitle": "No inboxes connected",
     "emptyDesc": "Connect any IMAP mailbox, Gmail, or Outlook to give your agents access.",
@@ -180,6 +181,9 @@
       "close": "Close",
       "openAria": "View details for {label}",
       "connectionStatus": "Connection status",
+      "accessMode": "Access",
+      "accessSendOnly": "Send only (SMTP)",
+      "accessReceiveOnly": "Receive only (IMAP)",
       "authMethod": "Authentication",
       "authOauth": "OAuth token",
       "authAppPassword": "App password",
@@ -204,6 +208,38 @@
         "saving": "Saving…",
         "tooLong": "Sender name is too long (max 100 characters)."
       },
+      "sendAs": {
+        "title": "Send As addresses",
+        "help": "Send from another address that delivers to this mailbox, such as an iCloud alias. We email it a code to confirm it is yours. Your mail provider must also allow sending from it.",
+        "placeholder": "alias@example.com",
+        "add": "Add address",
+        "adding": "Sending code…",
+        "loading": "Loading…",
+        "verified": "Verified",
+        "pending": "Code sent",
+        "unverified": "Not verified",
+        "codePlaceholder": "6-digit code",
+        "codeLabel": "Verification code for {address}",
+        "verify": "Verify",
+        "resend": "Resend code",
+        "remove": "Remove",
+        "errors": {
+          "invalid_address": "Enter a valid email address.",
+          "own_address": "That is this inbox's own address.",
+          "connected_inbox": "That address is connected as its own inbox. Send from that inbox instead.",
+          "already_verified": "That address is already verified.",
+          "too_many_aliases": "This inbox has no room for more addresses. Remove one first.",
+          "rate_limited": "Too many codes sent. Try again later.",
+          "cooldown": "Wait a minute before sending another code.",
+          "code_expired": "That code has expired. Send a new one.",
+          "too_many_attempts": "Too many wrong codes. Send a new one.",
+          "wrong_code": "That code is not right.",
+          "invalid_code": "Enter the 6-digit code.",
+          "mail_failed": "We could not send the code. Try again.",
+          "unsupported_provider": "Send As is not available for this inbox.",
+          "generic": "Something went wrong. Try again."
+        }
+      },
       "signature": {
         "title": "Email signature",
         "enabled": "Enabled",
@@ -225,12 +261,16 @@
         "previewTitle": "Preview",
         "previewReplyQuote": "On Mon, someone '<someone@example.com>' wrote:",
         "previewTooLarge": "Signature is too large to preview.",
-        "imageNote": "Some email clients (e.g. Gmail) may hide images until the recipient clicks \"display images\". This is normal for signatures with hosted images."
+        "imageNote": "Some email clients (e.g. Gmail) may hide images until the recipient clicks \"display images\". This is normal for signatures with hosted images. Turn on \"Embed images in the message\" below to send them inside the email instead.",
+        "embedImages": "Embed images in the message",
+        "embedImagesHint": "Sends your logo inside each email instead of loading it from its web address, so it shows in drafts and in mail apps that block remote images, such as Outlook and Thunderbird. Images up to 512 KB; larger ones stay linked."
       }
     },
     "emptyAltLead": "Not ready to connect a mailbox yet?",
     "emptyViewKeys": "Get your MCP URL and API key",
-    "emptyReadDocs": "Read the client setup guides"
+    "emptyReadDocs": "Read the client setup guides",
+    "capBodyProCap": "Pro connects 10 mailboxes. Business includes 10 for $39 a month and adds each extra mailbox for $3 a month, with unlimited members at no extra cost.",
+    "capCtaBusiness": "Upgrade to Business, $39/mo"
   },
   "apiKeys": {
     "title": "API keys",
@@ -249,6 +289,7 @@
     "accessCount": "{count, plural, one {# inbox} other {# inboxes}}",
     "editAccess": "Edit access",
     "revoke": "Revoke",
+    "notYours": "Only its creator or an admin can change this key.",
     "emptyTitle": "No API keys yet",
     "emptyDesc": "Create a key to connect Claude Desktop or any MCP client to your inboxes.",
     "never": "Never",
@@ -307,7 +348,9 @@
       "errInboxRequired": "Select at least one inbox, or choose all inboxes.",
       "errSaveFailed": "Failed to update access. Please try again.",
       "saving": "Saving…",
-      "save": "Save changes"
+      "save": "Save changes",
+      "viewerCapNote": "This key belongs to a viewer, so it can only have read-only permissions.",
+      "noWidenNote": "This key's creator is no longer in the workspace. You can remove permissions, but not add new ones beyond read-only."
     },
     "revealModal": {
       "title": "Copy your API key",
@@ -361,7 +404,7 @@
     "colAddress": "Address",
     "allowanceCounting": "{used} of {cap} email actions used this month · resets {date}",
     "allowanceReached": "All {cap} email actions used · reads and writes are refused until {date}",
-    "allowanceGrace": "Trial week: no cap until {date}",
+    "allowanceGrace": "Trial period: no cap until {date}",
     "allowanceExempt": "No monthly cap (early member)",
     "capTitleNear": "You're close to this month's allowance",
     "capBodyNear": "{used} of {cap} email actions used. At {cap}, your agent's reads and writes are refused until {date}. Personal removes the monthly cap for $9 a month.",
@@ -513,16 +556,15 @@
       "personalFeature2": "120 requests / minute (2× burst)",
       "personalFeatureActions": "No monthly action cap",
       "personalFeature4": "Email support",
-      "soloFeature1": "Unlimited connected inboxes",
+      "soloFeature1": "10 connected inboxes",
       "soloFeature2": "300 requests / minute (5× burst)",
       "soloFeature3": "Longer analytics history",
       "soloFeature4": "Email support",
-      "teamFeature1": "Everything in Pro",
-      "teamFeature2": "Unlimited members with roles",
-      "teamFeature3": "A separate workspace per client or business",
-      "teamFeature4": "SSO (SAML / OIDC) + audit log",
-      "teamFeature5": "Longest analytics history",
-      "teamFeature6": "Priority support"
+      "businessFeature1": "Everything in Pro",
+      "businessFeature2": "10 mailboxes included, $3 a month for each extra",
+      "businessFeature3": "Unlimited members with roles, at no extra cost",
+      "businessFeature4": "Admins approve held sends",
+      "businessFeature5": "Several workspaces on one subscription"
     },
     "planIncludes": "What your plan includes",
     "inboxesOne": "1 connected inbox",
@@ -553,7 +595,7 @@
     "confirmNoteInterval": "Charged now to your card on file, with credit for the time left in your current period. Your billing period restarts today, so your next renewal date moves.",
     "confirmNoteIntervalNoPreview": "We could not price this change in advance. Your card on file is charged the difference, credited for the time left in your current period, and the exact amount appears on your invoice. Your billing period restarts today, so your next renewal date moves.",
     "confirmPay": "Confirm and pay {amount}",
-    "confirmChange": "Confirm change",
+    "confirmChange": "Confirm and pay",
     "confirmCancel": "Cancel",
     "confirming": "Charging…",
     "planChangedCharged": "You are now on {plan}. {amount} was charged to your card.",
@@ -562,7 +604,10 @@
     "paymentRequiredBody": "Your bank needs to authorise the payment, or the card was declined. Your current plan is unchanged and you have not been charged. Pay the open invoice and the change is applied automatically.",
     "paymentRequiredPay": "Pay invoice",
     "paymentRequiredClose": "Close",
-    "paymentRequiredToast": "Payment was not completed, so you are still on {plan}. Open the billing portal to pay the outstanding invoice."
+    "paymentRequiredToast": "Payment was not completed, so you are still on {plan}. Open the billing portal to pay the outstanding invoice.",
+    "proInboxesKept": "Your Pro plan keeps unlimited connected inboxes.",
+    "businessMailboxRate": "10 mailboxes included across all your workspaces. Each extra mailbox is billed with your plan: $3 a month, or $28.80 a year.",
+    "confirmExtraMailboxes": "Includes {count, plural, one {# extra mailbox} other {# extra mailboxes}} above the 10 included."
   },
   "security": {
     "title": "Security",
@@ -626,8 +671,8 @@
     "roleOwner": "Owner",
     "sending": "Sending…",
     "sendInvite": "Send invite",
-    "rolesLockedHint": "Invites join as Member. Upgrade to Team to assign Admin and Viewer roles.",
-    "inviteUpgradeHint": "Inviting collaborators needs the Team plan. Upgrade to add members to this workspace.",
+    "rolesLockedHint": "Invites join as Member. Upgrade to Business to assign Admin and Viewer roles.",
+    "inviteUpgradeHint": "Inviting collaborators needs the Business plan. Upgrade to add members to this workspace.",
     "errInviteFailed": "Failed to send invite.",
     "errRemoveFailed": "Failed to remove member.",
     "errRoleFailed": "Failed to update role.",
@@ -674,6 +719,7 @@
       "to": "To",
       "cc": "Cc",
       "bcc": "Bcc",
+      "replyTo": "Reply-To",
       "subject": "Subject",
       "attachments": "Attachments",
       "operation": "Type",
@@ -689,11 +735,12 @@
       "attachmentsFromOriginal": "The original message's attachments, as sent",
       "recipientsAtSend": "This page could not read the recipients from the original message. They will be resolved when it is sent, so check the message text before approving.",
       "bccCount": "{count, plural, one {# hidden recipient} other {# hidden recipients}}",
+      "bccHint": "Hidden from the other recipients. Check every address before approving.",
       "attachmentCount": "{count, plural, one {# file} other {# files}}",
       "bodyTitle": "Message",
       "bodyTruncated": "This message is longer than 64 KB and has been clipped here. Open it in the dashboard to read all of it.",
       "bodyWithheldRole": "The message text is shown to workspace owners, admins and members. Your role can review the delivery details only.",
-      "bodyStoredWithProvider": "This request sends a draft that is stored with your email provider, so the text is not part of the request. Open the draft in your mail app to read it before deciding.",
+      "bodyStoredWithProvider": "This request was prepared before MCP Emails recorded a copy of the draft, so its text cannot be shown here, and an approved send of it will not go out. Reject it and ask your assistant to send the draft again.",
       "bodyDecryptFailed": "The stored message could not be decrypted, so it cannot be shown. Reject this request and ask your assistant to prepare it again.",
       "bodyAbsent": "This request has no message text.",
       "bodyHtmlShow": "Show HTML source",
@@ -741,7 +788,10 @@
         "expiredTitle": "This request expired",
         "expiredBody": "It was not decided in time, so it will not be sent. Ask your assistant to prepare it again if you still want it.",
         "decidedElsewhereTitle": "Already decided",
-        "decidedElsewhereBody": "Someone else, or another tab, decided this send while this page was open. Nothing changed just now. Open the dashboard to see the outcome."
+        "decidedElsewhereBody": "Someone else, or another tab, decided this send while this page was open. Nothing changed just now. Open the dashboard to see the outcome.",
+        "changedTitle": "This request changed after you opened it",
+        "changedBody": "Nothing was sent. The current version is shown below. Review it again before you decide.",
+        "changedLoading": "Nothing was sent. Loading the current version…"
       },
       "done": {
         "approvedTitle": "Approved. This email is on its way.",
@@ -763,7 +813,8 @@
       "inlineHint": "A card appears in the AI conversation showing exactly what will be sent. You can reject it there; approving opens a page you have to be signed in to use.",
       "dashboard": "Review in the dashboard only",
       "dashboardHint": "No card in the conversation. The assistant is told the send is waiting, and you decide here.",
-      "guarantee": "In both review modes the email is prepared but not delivered. Approving happens only in a signed-in browser session held by a workspace owner or admin, which the assistant does not have. The review card is a convenience, not a permission boundary."
+      "guarantee": "In both review modes the email is prepared but not delivered. Approving happens only in a signed-in browser session held by a workspace owner or admin, which the assistant does not have. The review card is a convenience, not a permission boundary.",
+      "ownerAdminOnly": "Only workspace owners and admins can change the review setting."
     },
     "panel": {
       "decidedTitle": "Recently decided",
@@ -773,7 +824,12 @@
       "statusApproved": "Approved",
       "statusRejected": "Rejected",
       "statusExpired": "Expired",
-      "statusCancelled": "Cancelled"
+      "statusCancelled": "Cancelled",
+      "changedNotice": "This request changed after you opened it. Nothing was sent. The current version is shown below; check it before you confirm.",
+      "changedGone": "This request changed and is no longer waiting for a decision. Nothing was sent.",
+      "openReview": "Open the full review, including the message text",
+      "detailsFailed": "Could not load this request's details. Nothing was sent. You can still reject it, or close this and try again.",
+      "loadingDetails": "Loading…"
     }
   },
   "automations": {
@@ -981,6 +1037,12 @@
       "cancel": "Cancel",
       "confirm": "Delete automation",
       "deleting": "Deleting…"
+    }
+  },
+  "workflows": {
+    "bulkRuns": {
+      "viewerNotice": "You can watch large-work runs here, but only a workspace owner, admin or member can stop one.",
+      "stopViewerTitle": "Viewers cannot stop runs"
     }
   }
 }

@@ -17,11 +17,13 @@
 import {
   appOnlyReviewCardToolMeta,
   buildResourceReadResult,
+  isStaleReviewCardUri,
   buildResourcesListResult,
   buildResourceTemplatesListResult,
   BULK_PLAN_CARD_TOOL_NAMES,
   clientSupportsUiExtension,
   DRAFT_EDITOR_APP_TOOL_NAMES,
+  DRAFT_EDITOR_MODEL_VISIBLE_TOOL_NAMES,
   DRAFT_EDITOR_CARD_TOOL_NAMES,
   MCP_APP_MIME_TYPE,
   mcpAppUiMeta,
@@ -34,6 +36,9 @@ import {
   isCardBearingToolName,
   serializeToolForList,
   withListingCardMeta,
+  modelAndAppReviewCardToolMeta,
+  modelAndAppUnmountedToolMeta,
+  DRAFT_EDITOR_UNMOUNTED_TOOL_NAMES,
 } from "./mcp-app-resources.ts";
 import { REVIEW_CARD_BUILD_ID, REVIEW_CARD_HTML } from "./ui/review-card.html.ts";
 import { createHash } from "node:crypto";
@@ -112,6 +117,12 @@ Deno.test("resources/list returns the single review card with listing-level _met
   assert(
     typeof entry["description"] === "string" && (entry["description"] as string).length > 0,
     "description present",
+  );
+  // The one card serves three surfaces; the description named two until
+  // 2026-10-13 and left the draft editor out.
+  assert(
+    /draft editor, where the user reads and edits an unsent draft/.test(entry["description"] as string),
+    "the resource description names the draft editor",
   );
 
   // The listing must never carry the document body — resources/read does that.
@@ -238,6 +249,86 @@ Deno.test("resources/read still answers the pre-fingerprint URI with today's car
     REVIEW_CARD_LEGACY_RESOURCE_URI,
     "echoes the requested uri",
   );
+});
+
+Deno.test("resources/read answers a previous build's fingerprint with today's card", () => {
+  // The production bug of 2026-10-13. Claude's host keeps its tools/list across
+  // a card deploy and ignores list_changed, so it goes on reading the URI of
+  // the build before: f53069d8832a was asked for while 6f24045a029e was live,
+  // and -32002 rendered as "cannot reach MCP Emails" in every chat.
+  for (const staleBuild of ["f53069d8832a", "6f24045a029e", "000000000000", "07359906cb80"]) {
+    // Guard the fixture: if a build ever hashes to one of these the loop would
+    // be testing the canonical path and proving nothing about stale ones.
+    if (staleBuild === REVIEW_CARD_BUILD_ID) continue;
+    const staleUri = `ui://mcpemails/review-card.${staleBuild}.html`;
+    const result = buildResourceReadResult(staleUri);
+
+    assert(result !== null, `stale fingerprint must resolve: ${staleUri}`);
+    assertEquals(result!.contents.length, 1, "contents length");
+    assertEquals(result!.contents[0]["text"], REVIEW_CARD_HTML, "serves the CURRENT bundle");
+    assertEquals(result!.contents[0]["mimeType"], "text/html;profile=mcp-app", "mimeType");
+    assertEquals(result!.contents[0]["_meta"], EXPECTED_UI_META, "content-level _meta.ui");
+    // Echoed, as on the legacy path: the host matches the content against the
+    // request it made, and its cache is keyed by the URI its listing named.
+    assertEquals(result!.contents[0]["uri"], staleUri, "echoes the requested uri");
+    assert(isStaleReviewCardUri(staleUri), "and is reported as stale for the log line");
+  }
+});
+
+Deno.test("a stale fingerprint is tolerated in the fingerprint slot and nowhere else", () => {
+  // The tolerance is for one thing: a build id we did not issue THIS deploy.
+  // Everything else about the URI still has to be exactly ours, or the read
+  // handler becomes "any string containing review-card".
+  const id = "f53069d8832a";
+  for (
+    const uri of [
+      // Not a build id: wrong length, wrong alphabet, wrong case, empty.
+      "ui://mcpemails/review-card.f53069d8832.html",
+      "ui://mcpemails/review-card.f53069d8832a0.html",
+      "ui://mcpemails/review-card.g53069d8832a.html",
+      "ui://mcpemails/review-card.F53069D8832A.html",
+      "ui://mcpemails/review-card..html",
+      `ui://mcpemails/review-card.${"a".repeat(64)}.html`,
+      // A build id, in a URI that is not the card's.
+      `ui://mcpemails/other-card.${id}.html`,
+      `ui://someone-else/review-card.${id}.html`,
+      `https://mcpemails.com/review-card.${id}.html`,
+      `ui://mcpemails/review-card.${id}.htm`,
+      `ui://mcpemails/review-card.${id}.html.js`,
+      `ui://mcpemails/review-card.${id}.${id}.html`,
+      `ui://mcpemails/sub/review-card.${id}.html`,
+      `ui://mcpemails/review-card.${id}/x.html`,
+      `ui://mcpemails/review-card-${id}.html`,
+      // Anchoring: nothing before, nothing after, no second line.
+      `ui://mcpemails/review-card.${id}.html?v=2`,
+      `ui://mcpemails/review-card.${id}.html#x`,
+      `ui://mcpemails/review-card.${id}.html `,
+      ` ui://mcpemails/review-card.${id}.html`,
+      `ui://mcpemails/review-card.${id}.html\n`,
+      `x\nui://mcpemails/review-card.${id}.html`,
+      `UI://mcpemails/review-card.${id}.html`,
+    ]
+  ) {
+    assertEquals(buildResourceReadResult(uri), null, `must not resolve: ${JSON.stringify(uri)}`);
+    assert(!isStaleReviewCardUri(uri), `must not count as stale: ${JSON.stringify(uri)}`);
+  }
+});
+
+Deno.test("a stale fingerprint is served but never advertised", () => {
+  // The read side is tolerant; the advertised side is what busts the host's
+  // cache and stays exact. Both listings name the current build and only it.
+  const listed = buildResourcesListResult().resources.map((entry) => entry["uri"]);
+  assertEquals(listed, [REVIEW_CARD_RESOURCE_URI], "resources/list names the current build only");
+  assertEquals(reviewCardToolMeta().ui.resourceUri, REVIEW_CARD_RESOURCE_URI, "tool _meta");
+  assertEquals(
+    appOnlyReviewCardToolMeta().ui.resourceUri,
+    REVIEW_CARD_RESOURCE_URI,
+    "app-only tool _meta",
+  );
+  // The current and legacy URIs are served, and neither is "stale": the log
+  // line counts clients behind a deploy, not every read.
+  assert(!isStaleReviewCardUri(REVIEW_CARD_RESOURCE_URI), "current uri is not stale");
+  assert(!isStaleReviewCardUri(REVIEW_CARD_LEGACY_RESOURCE_URI), "legacy uri is not stale");
 });
 
 Deno.test("the legacy URI is served but never advertised", () => {
@@ -454,7 +545,7 @@ Deno.test("a card-bearing tool gets the exact nested _meta.ui.resourceUri when g
   assert(!serialized.includes("visibility"), "mail tools must not restrict visibility");
 });
 
-Deno.test("the draft editor's app-only tools are gated by the SAME flag", () => {
+Deno.test("the draft editor's own tools are gated by the SAME flag, and draft_read is model-visible", () => {
   // The WS-2 fix. `draft_read` / `draft_editor_save` / `draft_editor_hide` were
   // stamped with appOnlyReviewCardToolMeta() in the registry unconditionally,
   // on the argument that an app-only tool always returns an envelope. That is
@@ -470,14 +561,48 @@ Deno.test("the draft editor's app-only tools are gated by the SAME flag", () => 
       undefined,
       `${name} must not be opened by either inbox opt-in`,
     );
-    // Gated in, they carry `visibility: ["app"]` on top of the resource URI —
-    // the difference from `draft`, which is model-callable and must not.
+    // Gated in, they carry a `visibility` list on top of the resource URI —
+    // the difference from `draft`, which carries none.
+    //
+    // 2026-10-13: `draft_read` and `draft_editor_hide` are `["model", "app"]`.
+    // The first was app-only with the card on, which left a model with no way
+    // to read a draft the user had edited in the card. The second was app-only
+    // while the card's own copy says it "can be brought back by asking in this
+    // chat": with the card hidden, the model calling this tool is the only way
+    // back. `draft_editor_save` stays `["app"]`.
+    //
+    // 2026-10-17: `draft_read` keeps its visibility list but loses the
+    // resource URI, so a model's read mounts no card (it drew a second,
+    // one-line card above every revision). See the dedicated test below.
     assertEquals(
       reviewCardMetaForListing(name, { outbound: false, bulk: false, drafts: true }),
-      { ui: { resourceUri: REVIEW_CARD_RESOURCE_URI, visibility: ["app"] } },
+      name === "draft_read" ? { ui: { visibility: ["model", "app"] } } : {
+        ui: {
+          resourceUri: REVIEW_CARD_RESOURCE_URI,
+          visibility: name === "draft_editor_save" ? ["app"] : ["model", "app"],
+        },
+      },
       `${name} is opened by the draft-editor flag alone`,
     );
   }
+  // Exactly two model-visible tools, both among the three.
+  assertEquals(
+    [...DRAFT_EDITOR_MODEL_VISIBLE_TOOL_NAMES],
+    ["draft_read", "draft_editor_hide"],
+    "the model-visible draft-editor tools",
+  );
+  for (const name of DRAFT_EDITOR_MODEL_VISIBLE_TOOL_NAMES) {
+    assert(DRAFT_EDITOR_APP_TOOL_NAMES.includes(name), `${name} is one of the gated three`);
+  }
+  assert(
+    !DRAFT_EDITOR_MODEL_VISIBLE_TOOL_NAMES.includes("draft_editor_save"),
+    "draft_editor_save writes what a person typed and stays app-only",
+  );
+  assertEquals(
+    modelAndAppReviewCardToolMeta(),
+    { ui: { resourceUri: REVIEW_CARD_RESOURCE_URI, visibility: ["model", "app"] } },
+    "the model-and-app metadata shape",
+  );
   // They are NOT the same list as the model-facing `draft`: same gate,
   // different metadata shape.
   for (const name of DRAFT_EDITOR_APP_TOOL_NAMES) {
@@ -485,6 +610,28 @@ Deno.test("the draft editor's app-only tools are gated by the SAME flag", () => 
       !DRAFT_EDITOR_CARD_TOOL_NAMES.includes(name),
       `${name} must not also be in the model-facing list`,
     );
+  }
+});
+
+Deno.test("draft_read mounts no card: visibility only, never the resource URI (2026-10-17)", () => {
+  // Live review in claude.ai: every revision showed two cards, the read's
+  // one-liner and the write's editor, because `draft_read` carried the card's
+  // `resourceUri` and a model calls it before each rewrite. A host mounts UI
+  // only for a tool with a `resourceUri`, so dropping it is the whole fix; the
+  // explicit `["model", "app"]` keeps the tool callable by the card itself
+  // (restore, Refresh, the deferred-body fallback).
+  assertEquals([...DRAFT_EDITOR_UNMOUNTED_TOOL_NAMES], ["draft_read"], "only draft_read");
+  assertEquals(modelAndAppUnmountedToolMeta(), { ui: { visibility: ["model", "app"] } }, "shape");
+  for (const surface of ["consolidated", "per_operation"] as const) {
+    const meta = reviewCardMetaForListing("draft_read", { outbound: true, bulk: true, drafts: true }, surface);
+    assertEquals(meta, { ui: { visibility: ["model", "app"] } }, surface);
+    assert(!JSON.stringify(meta).includes("resourceUri"), `${surface}: no card URI on draft_read`);
+    assert(!JSON.stringify(meta).includes("ui://"), `${surface}: no card URI on draft_read`);
+  }
+  // The rest of the editor's tools still mount the card.
+  for (const name of ["draft", "draft_editor_save", "draft_editor_hide"]) {
+    const meta = reviewCardMetaForListing(name, { outbound: false, bulk: false, drafts: true });
+    assertEquals(meta?.ui.resourceUri, REVIEW_CARD_RESOURCE_URI, name);
   }
 });
 
@@ -762,8 +909,8 @@ Deno.test("the review card is a small, self-contained HTML5 document", () => {
   // codegen.mjs, which exits non-zero above it — if you are raising one, raise
   // both, and re-read Q3 first.
   assert(
-    REVIEW_CARD_HTML.length < 150_000,
-    `review card is ${REVIEW_CARD_HTML.length} bytes; budget is 150 KB raw`,
+    REVIEW_CARD_HTML.length < 175 * 1024,
+    `review card is ${REVIEW_CARD_HTML.length} bytes; budget is 175 KB raw (raised from 150 KB on 2026-10-17, see codegen.mjs)`,
   );
 
   // The published CSP is empty on every axis, so any subresource request would
@@ -879,16 +1026,35 @@ Deno.test("the drafts gate opens all four draft-editor tools, and nothing else",
     assert(!carried.includes(name), `${name} must stay shut behind its own gate`);
   }
 
-  // And the shapes: the app-only three add `visibility: ["app"]`; `draft` does
-  // not, because it is model-callable.
+  // And the shapes: `draft_editor_save` adds `visibility: ["app"]`,
+  // `draft_editor_hide` adds `["model", "app"]`, `draft_read` carries the
+  // same list with no card URI (2026-10-17), and `draft` carries no list.
   const byName = new Map(
     withListingCardMeta(TOOL_REGISTRY, { outbound: false, bulk: false, drafts: true })
       .map((tool) => [tool.name, tool] as const),
   );
   for (const name of DRAFT_EDITOR_APP_TOOL_NAMES) {
-    assertEquals(byName.get(name)?._meta, appOnlyReviewCardToolMeta(), name);
+    assertEquals(
+      byName.get(name)?._meta,
+      name === "draft_editor_save"
+        ? appOnlyReviewCardToolMeta()
+        : name === "draft_read"
+        ? modelAndAppUnmountedToolMeta()
+        : modelAndAppReviewCardToolMeta(),
+      name,
+    );
   }
   assertEquals(byName.get("draft")?._meta, reviewCardToolMeta(), "draft is model-callable");
+
+  // With the gate shut `draft_read` carries no `_meta` at all, which a host
+  // reads as an ordinary model-visible tool: model-callable in BOTH states.
+  const shut = new Map(
+    withListingCardMeta(TOOL_REGISTRY, { outbound: true, bulk: true, drafts: false })
+      .map((tool) => [tool.name, tool] as const),
+  );
+  for (const name of DRAFT_EDITOR_APP_TOOL_NAMES) {
+    assertEquals(shut.get(name)?._meta, undefined, `${name} carries no _meta with the gate shut`);
+  }
 });
 
 Deno.test("every draft-editor tool is card-bearing for the staleness check", () => {
@@ -909,7 +1075,9 @@ Deno.test("every draft-editor tool is card-bearing for the staleness check", () 
   ) {
     assert(isCardBearingToolName(name), `${name} can hold a stale card URI`);
   }
-  for (const name of ["inbox_list", "email_read", "ping", "draft_update", ""]) {
+  // `draft_update` left this list on 2026-10-13: it is a card-bearing tool on
+  // the per-operation listing (PER_OPERATION_CARD_TOOL_NAMES).
+  for (const name of ["inbox_list", "email_read", "ping", "draft_list", "schedule_cancel", ""]) {
     assert(!isCardBearingToolName(name), `${name} cannot`);
   }
 });

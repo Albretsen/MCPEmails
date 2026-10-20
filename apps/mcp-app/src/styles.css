@@ -22,8 +22,13 @@
    - every structural colour / type / radius comes from a host style variable
      with a literal fallback. Phase-0 Q6: a host "can provide any subset".
    - literal colours appear only in the token block below, once per theme.
-   - no dropdowns / menus / popovers anywhere (clipped by the container,
-     conflicts with host z-index).
+   - no positioned dropdowns / popovers that can reach past the frame
+     (clipped by the container, conflicts with host z-index). The overlays
+     are the draft card's "⋯" menu (`.pop`), which opens downward from the
+     header of an open editor, a card always taller than the menu (a folded
+     card draws the same panel in flow instead, `.pop.inflow`), and the
+     recipient suggestions (`.suggest`), which open downward over the
+     subject and message under the field.
    - inline card: auto-fit height, no nested vertical scrolling.
    - visible focus rings, WCAG AA contrast, container queries not fixed widths.
 --------------------------------------------------------------------------- */
@@ -152,12 +157,42 @@ body {
   display: none;
 }
 
+/* Fullscreen (QA, 2026-10-13: "the card stays a narrow column", "two nested
+   scrollbars", "Claude's own prompt box covers the bottom of the card").
+
+   - The width is used. 720px was a reading measure, and on a wide screen it
+     left most of the surface empty around a compose box; 1100px still stops a
+     line from running across an ultra-wide monitor.
+   - ONE scrollbar: the message box grows with its text in fullscreen
+     (DraftEditor's FULLSCREEN_BODY_ROWS) and the frame is the only thing that
+     scrolls.
+   - The action row is sticky at the bottom, so Save and Send stay on screen
+     however long the body is, and it carries the bottom room: the host's
+     safe-area inset when it sends one, and never less than `--fs-room`,
+     because Claude's prompt box overlaps the bottom of a fullscreen frame
+     without reporting an inset. The provider line is moved above it with
+     `order` so nothing hides under the host's composer but empty space. */
 .card[data-mode="fullscreen"] {
+  --fs-room: max(var(--safe-bottom), 72px);
   padding: calc(12px + var(--safe-top)) calc(12px + var(--safe-right))
-    calc(12px + var(--safe-bottom)) calc(12px + var(--safe-left));
-  max-width: 720px;
+    0 calc(12px + var(--safe-left));
+  max-width: 1100px;
   margin: 0 auto;
   min-height: 100vh;
+  min-height: 100dvh;
+}
+
+.card[data-mode="fullscreen"] > .prov { order: 1; }
+
+.card[data-mode="fullscreen"] > .acts {
+  order: 2;
+  position: sticky;
+  bottom: 0;
+  z-index: 1;
+  margin: 0 -12px;
+  padding: 8px 12px calc(8px + var(--fs-room));
+  background: var(--bg);
+  border-top: var(--bw) solid var(--bd);
 }
 
 /* ---- type -------------------------------------------------------------- */
@@ -190,6 +225,7 @@ body {
 }
 
 .tiny { font-size: var(--fs-xs); color: var(--fg-3); margin: 0; }
+.nowrap { white-space: nowrap; }
 
 /* ---- header ------------------------------------------------------------ */
 
@@ -228,6 +264,50 @@ body {
 }
 
 .hdr-r > .muted { font-size: var(--fs-sm); color: var(--fg-3); }
+
+/* The draft editor's header: "Draft", the From address and the status on the
+   left, the controls (Expand, Hide, ⋯) on the right. It does NOT wrap: a
+   wrapping header moved the controls to a second line whenever the status
+   grew, and the status used to sit BETWEEN the controls, so Expand slid
+   sideways each time "Unsaved changes" came and went (live QA, 2026-10-17).
+   Now only the left side gives (below) and the right side never moves. */
+.hdr.ed-hdr { flex-wrap: nowrap; }
+.ed-hdr > .hdr-l { overflow: hidden; }
+/* "Draft" never shrinks: with the card's `overflow-wrap: anywhere` a squeezed
+   word breaks into two lines and the header doubles in height. */
+.ed-hdr > .hdr-l > b { flex: none; }
+/* The address gives way first, down to nothing, and the status keeps its words
+   ("Saved 15:15 by you" was cut to "Saved 15:15 …" while half the address
+   still showed, live re-test 2026-10-17). A zero basis takes the address out
+   of the sum, so it only fills what the status leaves, never past its own
+   width; when even "Draft" and the status do not fit, the status wraps to a
+   line of its own under them rather than lose its end. The controls are a
+   separate box on the first line and do not move either way. */
+.ed-hdr > .hdr-l { flex-wrap: wrap; row-gap: 0; }
+.ed-hdr > .hdr-l > .hdr-from { flex: 1 1 0; min-width: 0; max-width: max-content; }
+.hdr-status {
+  flex: 0 1 auto;
+  min-width: 0;
+  font-size: var(--fs-sm);
+  color: var(--fg-3);
+}
+.hdr-status[data-unsaved="true"] { color: var(--fg-2); }
+/* Narrow: the status always takes a line of its own, the full width of the
+   card, under "Draft", the address and the controls. Always, not only when it
+   is too long: "Saved 3:43 PM by the assistant" did not fit at 360px and
+   "Unsaved changes" did, so the first keystroke shrank the header and moved
+   the message box under the caret. `display: contents` lets the status go
+   under the controls too. The folded line is left alone. */
+@container card (max-width: 379px) {
+  .ed-main > .hdr.ed-hdr { flex-wrap: wrap; column-gap: 6px; row-gap: 0; }
+  .ed-main > .ed-hdr > .hdr-l { display: contents; }
+  .ed-main > .ed-hdr > .hdr-r { margin-left: auto; }
+  .ed-main > .ed-hdr .hdr-status { order: 1; flex-basis: 100%; }
+}
+
+/* Two text links side by side in a header ("Open in dashboard" and "Show",
+   "Expand" and "Hide") read as one phrase at the header's 6px gap. */
+.hdr-r > .link + .link { margin-left: 4px; }
 
 .dot {
   display: inline-block;
@@ -318,9 +398,15 @@ body {
 }
 
 .body-html { white-space: normal; }
+/* No cell borders. Tables in mail are layout, almost never data: a signature
+   is a logo cell beside a text cell, and ruling it made the preview look like
+   a spreadsheet (QA, 2026-10-13). */
 .body-html table { max-width: 100%; border-collapse: collapse; }
 .body-html td,
-.body-html th { border: var(--bw) solid var(--bd); padding: 3px 5px; }
+.body-html th { border: 0; padding: 0 6px 0 0; vertical-align: top; text-align: start; }
+.body-html p { margin: 0 0 6px; }
+/* The server's signature block, set apart from the message (ui.tsx#HtmlBody). */
+.body-html .html-sig { margin-top: 12px; }
 .body-html a { color: var(--fg-info); }
 .body-html blockquote {
   margin: 6px 0;
@@ -335,6 +421,36 @@ body {
   border-radius: var(--r-sm);
   font-size: var(--fs-xs);
   color: var(--fg-3);
+}
+
+/* The draft editor's formatted preview. Read only, and it has to look it: it
+   used to be the same bordered box as the editable message, so nothing said
+   you could not type in it. A filled surface, no field border, and a label. */
+.html-preview {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  padding: 6px 8px 8px;
+  background: var(--bg-2);
+  border-radius: var(--r-md);
+}
+
+.html-preview-lbl {
+  margin: 0;
+  font-size: var(--fs-xs);
+  color: var(--fg-3);
+}
+
+.html-preview > .body-full {
+  border: 0;
+  padding: 0;
+}
+
+/* Each paragraph of the formatted view picks its own direction, as the lines
+   of the message box do (`.textarea`). */
+.html-preview .body-html,
+.html-preview .body-html :is(p, div, li, blockquote, td, th, h1, h2, h3, h4, h5, h6) {
+  unicode-bidi: plaintext;
 }
 
 /* ---- chips ------------------------------------------------------------- */
@@ -382,6 +498,9 @@ body {
 .notice[data-tone="warning"] { border-color: var(--fg-warning); color: var(--fg-warning); }
 .notice[data-tone="success"] { border-color: var(--fg-success); color: var(--fg-success); }
 
+/* A recipient warning, directly under its field and aligned with it. */
+.fld-note { margin-left: calc(var(--gutter) + 8px); }
+
 /* ---- actions ----------------------------------------------------------- */
 
 /* One row, right-aligned, wrapping. Never full-width buttons: a stretched
@@ -407,6 +526,57 @@ body {
   min-width: 0;
 }
 
+/* The draft editor's footer: links on the left, Save and Send on the right.
+   It does NOT wrap. The links used to change width with their state
+   ("Refresh", "Refreshing", "Up to date"; "Show formatting", "Edit plain
+   text"; Refresh is now always "Refresh"), and with
+   `.acts`'s wrap that moved the wrap point: at 420px Save slid into Send's old
+   place and Send dropped to a row of its own (verifier, 2026-10-15). Now Save
+   and Send are one group (`.acts-r`) that never wraps, never shrinks and sits
+   at the top right of the row; the links take whatever width is left and wrap
+   among themselves, so only the row's height can change, below the buttons. */
+.acts.ed-acts {
+  flex-wrap: nowrap;
+  align-items: flex-start;
+}
+/* Fullscreen pins this row to the BOTTOM of the frame, so a row that grows
+   grows upward: there the buttons hold the bottom edge instead of the top. */
+.card[data-mode="fullscreen"] > .acts.ed-acts {
+  align-items: flex-end;
+}
+.ed-acts > .acts-l {
+  flex: 1 1 0;
+  min-height: 28px;
+  row-gap: 2px;
+}
+.ed-acts > .acts-l > .link {
+  text-align: left;
+  overflow-wrap: anywhere;
+}
+.acts-r {
+  display: flex;
+  gap: 6px;
+  flex: none;
+  margin-left: auto;
+}
+
+/* The delete confirm, in the left links' place: real buttons, "Keep draft"
+   first, where the "Delete draft" link was. The danger answer is a bordered
+   button here, not the text-only danger style, so it reads as a button. */
+.ed-acts > .acts-confirm { gap: 6px; flex-wrap: nowrap; }
+.acts-confirm > .btn[data-variant="danger"],
+.pop-btns > .btn[data-variant="danger"] {
+  border-color: var(--bd-danger);
+  padding: 0 10px;
+}
+.acts-confirm > .btn[data-variant="danger"]:hover:not(:disabled),
+.pop-btns > .btn[data-variant="danger"]:hover:not(:disabled) {
+  background: var(--bg-2);
+  text-decoration: none;
+}
+
+
+
 .btn {
   appearance: none;
   font: inherit;
@@ -426,6 +596,19 @@ body {
   white-space: nowrap;
 }
 
+/* The draft editor's Save and Send. A FIXED width, not a min-width: the label
+   in the Send slot changes (Send, Undo, Sending) and a button that resized with
+   it moved Save under the pointer (QA, 2026-10-15: a click aimed at Save landed
+   on what had just become "Save and send"). In em so it scales with the text;
+   7em fits "Sending", the longest label either slot shows, with room to
+   spare for a wider host font. */
+.btn.slot {
+  width: 7em;
+  flex: none;
+  padding: 0 6px;
+  overflow: hidden;
+}
+
 .btn:hover:not(:disabled) { background: var(--bg-2); }
 .btn:active:not(:disabled) { background: var(--bg-3); }
 
@@ -434,7 +617,8 @@ body {
   outline-offset: 1px;
 }
 
-.btn:disabled {
+.btn:disabled,
+.btn[aria-disabled="true"] {
   cursor: not-allowed;
   opacity: 0.45;
 }
@@ -489,10 +673,118 @@ body {
 
 .link[data-tone="danger"] { color: var(--fg-danger); }
 
-.link:disabled {
+/* A link riding at the end of a field row ("Cc Bcc" on To). It never wraps
+   inside itself and never shrinks: with three chips in To it used to break
+   onto two lines (QA, 2026-10-13). The field beside it wraps instead.
+   On a recipient row it sits INSIDE the field's box, at its right end, so the
+   To box is as wide as the Cc and Bcc boxes under it (live re-test,
+   2026-10-17: the link beside it made To the narrow one). */
+.row > .link,
+.fld > .link {
+  flex: 0 0 auto;
+  white-space: nowrap;
+}
+
+.link:disabled,
+.link[aria-disabled="true"] {
   cursor: default;
   opacity: 0.55;
   text-decoration: none;
+}
+
+/* ---- the draft card's "⋯" menu ------------------------------------------
+
+   An overlay under the button (`.pop`, below), in flow only on a folded card.
+   The button is a text link with no underline, sized to a real hit target. */
+.menu-btn {
+  text-decoration: none;
+  font-size: 15px;
+  line-height: 1;
+  padding: 2px 4px;
+  border-radius: var(--r-sm);
+  letter-spacing: 1px;
+}
+.menu-btn[aria-expanded="true"] { color: var(--fg); background: var(--bg-2); }
+
+/* The overlay, anchored under "⋯" and right-aligned to it. It covers the
+   fields under the header instead of pushing them down (live QA, 2026-10-17:
+   opening it moved To and Subject under the pointer). It is opaque and
+   bordered because it sits over content; no shadow, since a literal colour
+   would be needed for one. `max-height` keeps it inside the frame. */
+.menu-anchor {
+  position: relative;
+  display: inline-flex;
+  align-items: baseline;
+}
+.pop {
+  position: absolute;
+  top: calc(100% + 4px);
+  right: 0;
+  z-index: 3;
+  width: max-content;
+  min-width: 11em;
+  max-width: min(320px, calc(100vw - 24px));
+  max-height: calc(100vh - 48px);
+  overflow-y: auto;
+  background: var(--bg);
+  border: var(--bw) solid var(--bd-2);
+  border-radius: var(--r-md);
+  padding: 4px;
+  text-align: left;
+}
+/* The folded card is one line tall, so there the panel is in flow. */
+.pop.inflow {
+  position: static;
+  align-self: flex-end;
+}
+.pop-menu {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+}
+.pop-confirm {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  padding: 4px;
+}
+.pop-btns {
+  display: flex;
+  gap: 6px;
+  flex-wrap: wrap;
+}
+
+.menu-item {
+  appearance: none;
+  font: inherit;
+  font-size: var(--fs-sm);
+  color: var(--fg);
+  background: transparent;
+  border: 0;
+  border-radius: var(--r-sm);
+  padding: 5px 10px;
+  text-align: left;
+  width: 100%;
+  cursor: pointer;
+  white-space: nowrap;
+}
+.menu-item:hover { background: var(--bg-2); }
+.menu-item:focus-visible { outline: 2px solid var(--ring); outline-offset: -2px; }
+.menu-item[data-tone="danger"] { color: var(--fg-danger); }
+.menu-item[aria-disabled="true"] { opacity: 0.55; cursor: default; }
+/* Shown only at narrow widths: see the container query above `.ed-links`. */
+.pop-menu > .menu-item.narrow-only { display: none; }
+
+/* Narrow (a 300-460px frame): the left links wrapped unevenly, "Delete"
+   alone on a second line under the others (live QA, 2026-10-17). Below the
+   width at which all three fit beside Save and Send they move into the "⋯"
+   menu (`.menu-item.narrow-only`), so the row is Save and Send alone. Placed
+   after the rule that hides `.narrow-only`, so it wins. The width is the
+   card's content box: the three links (~230px) + Save and Send (2 x 7em) +
+   gaps, checked in Chrome by footer-geometry.mjs. */
+@container card (max-width: 439px) {
+  .ed-acts > .ed-links { display: none; }
+  .pop-menu > .menu-item.narrow-only { display: block; }
 }
 
 /* ---- signature ---------------------------------------------------------- */
@@ -515,6 +807,25 @@ body {
   text-overflow: ellipsis;
   white-space: nowrap;
 }
+
+/* The quoted original of a reply, expanded: read only, in the dimmed
+   material of the signature row above it, and visibly not a text box. Bounded
+   inline so a long thread does not push Save off the card; fullscreen lets it
+   run, like the body. */
+.quote-text {
+  margin: 0;
+  padding: 6px 8px;
+  background: var(--bg-2);
+  border-radius: var(--r-md);
+  color: var(--fg-3);
+  font-size: var(--fs-sm);
+  white-space: pre-wrap;
+  overflow-wrap: anywhere;
+  unicode-bidi: plaintext;
+  max-height: 240px;
+  overflow-y: auto;
+}
+.card[data-mode="fullscreen"] .quote-text { max-height: none; }
 
 /* ---- segmented control (fullscreen panel switcher only) ---------------- */
 
@@ -566,17 +877,22 @@ body {
   border: var(--bw) solid var(--bd);
   border-radius: var(--r-md);
   cursor: text;
+  /* The suggestions' anchor. */
+  position: relative;
 }
+.fld > .link { margin-left: auto; }
 
 .fld:focus-within {
   border-color: var(--ring);
   outline: 1px solid var(--ring);
 }
 
-/* The input inside .fld carries no chrome of its own. */
+/* The input inside .fld carries no chrome of its own. It shares the last
+   chip row while there is a little room (live re-test, 2026-10-17: at 360px
+   one chip and an 80px minimum left an empty second line), and grows. */
 .fld > input {
-  flex: 1 1 80px;
-  min-width: 80px;
+  flex: 1 1 3em;
+  min-width: 3em;
   font: inherit;
   font-size: var(--fs);
   border: 0;
@@ -599,9 +915,14 @@ body {
   border-radius: var(--r-md);
 }
 
+/* Per LINE direction: `dir="auto"` on a textarea reads the first strong
+   character of the whole box, so a Norwegian first line left every Arabic line
+   under it left-aligned with its full stop on the wrong side (live re-test,
+   2026-10-17). `plaintext` gives each line its own direction and alignment. */
 .textarea {
   line-height: var(--lh);
   resize: none;
+  unicode-bidi: plaintext;
   display: block;
   overflow: hidden;
 }
@@ -614,6 +935,15 @@ body {
 .card[data-mode="fullscreen"] .textarea {
   flex: 1 1 auto;
   min-height: 8lh;
+}
+
+/* "No subject. Send anyway?", inside the Subject row so the row keeps its
+   height and Send stays where the first press was. */
+.subj-warn {
+  flex: 0 0 auto;
+  white-space: nowrap;
+  font-size: var(--fs-sm);
+  color: var(--fg-warning);
 }
 
 .subj {
@@ -792,8 +1122,163 @@ body {
 
 .chip-x:hover { color: var(--fg); }
 
+/* A folded list (Recipients.tsx): the input takes what is left of the first
+   row, however little, so the field stays one row tall. */
+.fld[data-folded="true"] > input {
+  flex: 1 1 0;
+  min-width: 0;
+}
+.more-chip {
+  flex: none;
+  appearance: none;
+  padding: 0 6px;
+  border: var(--bw) solid var(--bd);
+  border-radius: var(--r-sm);
+  background: none;
+  font: inherit;
+  font-size: var(--fs-sm);
+  line-height: 18px;
+  color: var(--fg-2);
+  cursor: pointer;
+}
+.more-chip:hover { color: var(--fg); }
+.more-chip:focus-visible { outline: 2px solid var(--ring); outline-offset: 1px; }
+
+/* Recipient suggestions: an overlay under the field's box, over the rows below
+   it, like the "⋯" menu (live re-test, 2026-10-17: in the flow, they pushed
+   the whole card down). Opaque and bordered because it sits over content;
+   `max-height` keeps it inside the frame. */
+.suggest {
+  position: absolute;
+  top: calc(100% + 2px);
+  left: calc(-1 * var(--bw));
+  right: calc(-1 * var(--bw));
+  z-index: 3;
+  max-height: calc(100vh - 48px);
+  overflow-y: auto;
+  margin: 0;
+  padding: 2px;
+  list-style: none;
+  background: var(--bg);
+  border: var(--bw) solid var(--bd-2);
+  border-radius: var(--r-md);
+  font-size: var(--fs-sm);
+  cursor: default;
+}
+.suggest[hidden] { display: none; }
+.suggest > li {
+  padding: 2px 6px;
+  border-radius: var(--r-sm);
+  cursor: pointer;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+/* The highlighted one in the host's inverse pair, like the primary button:
+   `--bg-2` was barely lighter than the card in dark (live re-test,
+   2026-10-17). */
+.suggest > li[aria-selected="true"] {
+  background: var(--accent);
+  color: var(--accent-fg);
+}
+.suggest > li[aria-selected="true"] .muted { color: inherit; }
+
+/* The draft's files (Attachments.tsx): chips like the recipients', wrapping. */
+.att-list {
+  flex: 1 1 auto;
+  min-width: 0;
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 4px;
+}
+.chip.att > .att-size { color: var(--fg-3); white-space: nowrap; }
+.chip.att[data-removed="true"] > .name,
+.chip.att[data-removed="true"] > .att-size { text-decoration: line-through; color: var(--fg-3); }
+.chip.att[data-new="true"] { border-style: dashed; }
+.chip-x.att-undo { font-size: var(--fs-sm); text-decoration: underline; margin-right: 0; }
+
 .chip-x:focus-visible {
   outline: 2px solid var(--ring);
   outline-offset: 1px;
   border-radius: var(--r-sm);
+}
+
+/* A recipient chip that has focus (arrow keys from the input), or that the
+   first Backspace in an empty input has marked for the second one. The same
+   look for both, because both mean "Backspace removes this one". */
+.chip:focus {
+  outline: none;
+}
+
+.chip:focus,
+.chip[data-armed="true"] {
+  border-color: var(--ring);
+  background: var(--bg-2);
+  box-shadow: 0 0 0 1px var(--ring);
+}
+
+/* Actions that follow one another in a notice ("Check again", "Copy text").
+   Two underlined links a single space apart read as one link. */
+.notice .link + .link {
+  margin-left: 10px;
+}
+
+/* Cancel under the open signature box. */
+.sig-acts {
+  margin-top: 4px;
+}
+
+/* ---- draft editor, fullscreen ------------------------------------------- */
+
+/* Everything above the action row (DraftEditor's `.ed-main`). Inline it is no
+   box at all, so the card lays out exactly as if it were not there. */
+.ed-main {
+  display: contents;
+}
+
+/* Fullscreen: the action row used to be `position: sticky` over the one
+   scrolling frame, so it covered whatever was under it: the end of the
+   message, the caret while typing there, the signature row, a focus ring (QA,
+   2026-10-13). Now the card is exactly the frame's height, `.ed-main` is the
+   scroller and the action row is an ordinary row beneath it. Nothing can be
+   under the row, however tall it wraps at a narrow width, and the browser's
+   own "keep the caret in view" stops at the scroller's edge.
+
+   `:has()` scopes this to the draft editor, the one card with an `.ed-main`.
+   A browser without it keeps the sticky row above. */
+.card[data-mode="fullscreen"]:has(> .ed-main) {
+  height: 100vh;
+  height: 100dvh;
+  /* Only if the frame is too short for the footer and `.ed-main`'s floor. */
+  overflow-y: auto;
+}
+
+.card[data-mode="fullscreen"] > .ed-main {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  flex: 1 1 0;
+  min-height: 96px;
+  overflow-y: auto;
+  /* Out to the card's edge, so the scrollbar sits there, and padded so a focus
+     ring on the first or last control is not clipped by the scroller. */
+  margin: 0 -12px;
+  padding: 2px 12px 8px;
+  scroll-padding: 8px 0;
+}
+
+/* Rows keep their height and the scroller scrolls. Without this the message
+   box, a shrinkable flex item, would be squeezed instead. */
+.card[data-mode="fullscreen"] > .ed-main > * {
+  flex-shrink: 0;
+}
+
+.card[data-mode="fullscreen"]:has(> .ed-main) > .prov,
+.card[data-mode="fullscreen"]:has(> .ed-main) > .acts {
+  flex: none;
+}
+
+.card[data-mode="fullscreen"]:has(> .ed-main) > .acts {
+  position: static;
 }

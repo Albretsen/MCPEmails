@@ -54,7 +54,15 @@
  * would only reach the address that is blocked in the first place.
  */
 
-import { guardMailHostCached, isAllowedAddress, MailHostBlockedError, normalizeMailHost } from "./host-guard.ts";
+import {
+  guardMailHostCached,
+  isAllowedAddress,
+  MailHostBlockedError,
+  normalizeMailHost,
+  parseIpv6,
+  parseLooseIpv4,
+} from "./host-guard.ts";
+import { isLearnedRelayHost, type RelayProtocol, type RelayRoute } from "./relay-registry.ts";
 
 /** The relay could not carry this connection. The caller should dial directly. */
 export class RelayUnavailableError extends Error {
@@ -64,6 +72,35 @@ export class RelayUnavailableError extends Error {
   }
 }
 
+/**
+ * The relay is up and answered, but its own policy will not carry this target
+ * (tinyproxy's filter answers `403` for an IP literal, localhost or a port it
+ * does not allow; docs/smtp-relay.md). Says nothing about the relay's health,
+ * so it must not trip the breaker or count as `relay_down`: one inbox with an
+ * odd host would otherwise switch the relay off for every host in the isolate.
+ */
+export class RelayTargetRefusedError extends RelayUnavailableError {
+  constructor(message: string) {
+    super(message);
+    this.name = "RelayTargetRefusedError";
+  }
+}
+
+/** True when a relay failure means the relay itself is unwell. See {@link RelayTargetRefusedError}. */
+export function relayFailureIsRelayDown(err: unknown): boolean {
+  return err instanceof RelayUnavailableError && !(err instanceof RelayTargetRefusedError);
+}
+
+/**
+ * True when `host` is an IP address rather than a name. The relay's filter
+ * refuses those (docs/smtp-relay.md), so a fallback for one could only fail.
+ */
+export function isIpLiteralHost(host: string): boolean {
+  const target = normalizeMailHost(host).replace(/^\[|\]$/g, "");
+  if (!target) return false;
+  return parseLooseIpv4(target) !== null || (target.includes(":") && parseIpv6(target) !== null);
+}
+
 export interface RelayConfig {
   host: string;
   port: number;
@@ -71,6 +108,8 @@ export interface RelayConfig {
   authorization: string | null;
   /** Lower-case host suffixes whose submission goes through the relay. */
   hostSuffixes: string[];
+  /** Host suffixes reached only through the relay, IMAP included. See above. */
+  relayOnlyHostSuffixes: string[];
 }
 
 export interface RelayTarget {
@@ -85,7 +124,29 @@ export interface RelayTarget {
  * provider that does not need it adds a hop, a timeout budget and a second
  * thing to page about, and buys nothing.
  */
-export const DEFAULT_RELAY_HOST_SUFFIXES = ["domeneshop.no"];
+export const DEFAULT_RELAY_HOST_SUFFIXES = ["domeneshop.no", "orange.fr"];
+
+/**
+ * Hosts that are reached ONLY through the relay, for IMAP as well as SMTP,
+ * when `MAIL_RELAY_ONLY_HOSTS` is not set.
+ *
+ * A different situation from Domeneshop, which refuses our SUBMISSIONS and is
+ * happy to be read from anywhere. Orange refuses the sign-in itself from our
+ * egress: measured 2026-10-12 with one customer login, the same credential got
+ * `NO [ALERT] Authentication failed.` from AWS and was accepted through the
+ * relay, on IMAP and on SMTP. Two consequences, and both are the reason this
+ * list exists separately from the SMTP one:
+ *
+ *   - IMAP goes through the relay too. No other host needs that.
+ *   - There is NO direct fallback. For every other relayed host a broken relay
+ *     degrades to a direct dial, which costs nothing. Here the direct dial is
+ *     the one thing known not to work, and what it produces is a refused login
+ *     that reads as a bad password: it would tell the user to reconnect a
+ *     mailbox that is fine, and count a failed sign-in against their account.
+ *     A relay that cannot carry the connection is therefore an ordinary
+ *     transient failure for these hosts, and the breaker does not skip them.
+ */
+export const DEFAULT_RELAY_ONLY_HOST_SUFFIXES = ["orange.fr"];
 
 /** Squid's default. Explicit ports in `SMTP_RELAY_URL` win. */
 const DEFAULT_RELAY_PORT = 3128;
@@ -139,6 +200,7 @@ export function shouldRelayHost(host: string, suffixes: readonly string[]): bool
 export function parseRelayConfig(env: {
   SMTP_RELAY_URL?: string | null;
   SMTP_RELAY_HOSTS?: string | null;
+  MAIL_RELAY_ONLY_HOSTS?: string | null;
 }): RelayConfig | null {
   const raw = (env.SMTP_RELAY_URL ?? "").trim();
   if (!raw) return null;
@@ -179,11 +241,25 @@ export function parseRelayConfig(env: {
     return null;
   }
 
-  return { host, port, authorization: basicAuthorization(url), hostSuffixes };
+  const relayOnlyHostSuffixes = parseHostSuffixes(
+    env.MAIL_RELAY_ONLY_HOSTS,
+    DEFAULT_RELAY_ONLY_HOST_SUFFIXES,
+  );
+  // A relay-only host is relayed for SMTP by definition, whatever
+  // SMTP_RELAY_HOSTS says: leaving it off that list would send its submissions
+  // straight from the address the host refuses.
+  for (const suffix of relayOnlyHostSuffixes) {
+    if (!hostSuffixes.includes(suffix)) hostSuffixes.push(suffix);
+  }
+
+  return { host, port, authorization: basicAuthorization(url), hostSuffixes, relayOnlyHostSuffixes };
 }
 
-function parseHostSuffixes(raw: string | null | undefined): string[] {
-  if (raw === undefined || raw === null || raw.trim() === "") return [...DEFAULT_RELAY_HOST_SUFFIXES];
+function parseHostSuffixes(
+  raw: string | null | undefined,
+  defaults: readonly string[] = DEFAULT_RELAY_HOST_SUFFIXES,
+): string[] {
+  if (raw === undefined || raw === null || raw.trim() === "") return [...defaults];
   return raw
     .split(",")
     .map((entry) => normalizeMailHost(entry.trim().replace(/^\.+/, "")))
@@ -297,6 +373,11 @@ export async function connectThroughRelay(
     if (status === null) {
       throw new RelayUnavailableError(`relay ${relay.host} did not answer CONNECT with an HTTP status line`);
     }
+    if (status.code === 403) {
+      throw new RelayTargetRefusedError(
+        `relay ${relay.host} will not carry ${target.host}:${target.port}: ${status.code} ${status.reason}`,
+      );
+    }
     if (status.code < 200 || status.code > 299) {
       throw new RelayUnavailableError(
         `relay ${relay.host} refused CONNECT ${target.host}:${target.port}: ${status.code} ${status.reason}`,
@@ -355,11 +436,13 @@ function currentConfig(): RelayConfig | null {
     cachedConfig = parseRelayConfig({
       SMTP_RELAY_URL: Deno.env.get("SMTP_RELAY_URL"),
       SMTP_RELAY_HOSTS: Deno.env.get("SMTP_RELAY_HOSTS"),
+      MAIL_RELAY_ONLY_HOSTS: Deno.env.get("MAIL_RELAY_ONLY_HOSTS"),
     });
     if (cachedConfig) {
       console.log("[mcp-server] smtp_relay: enabled", {
         relay: `${cachedConfig.host}:${cachedConfig.port}`,
         hosts: cachedConfig.hostSuffixes.join(","),
+        relay_only: cachedConfig.relayOnlyHostSuffixes.join(","),
         authenticated: cachedConfig.authorization !== null,
       });
     }
@@ -389,15 +472,78 @@ export function resetRelayStateForTests(): void {
 /**
  * The relay to use for this SMTP host, or null to dial it directly.
  *
- * Null covers every ordinary case: relaying not configured, this host not on
- * the list, or the relay currently suspended after a failure.
+ * Null covers every ordinary case: relaying not configured, this host neither
+ * on the list nor learned (relay-registry.ts), or the relay currently
+ * suspended after a failure.
  */
 export function relayFor(host: string, now: number = Date.now()): RelayConfig | null {
   const config = currentConfig();
   if (!config) return null;
-  if (!shouldRelayHost(host, config.hostSuffixes)) return null;
-  if (relaySuspended(now)) return null;
+  if (relayRouteFor(host, "smtp") === null) return null;
+  // The breaker exists so a dead relay is skipped in favour of the direct dial.
+  // A relay-only host has no direct dial to fall back to, so it is never
+  // skipped: the relay is tried every time.
+  if (relaySuspended(now) && !shouldRelayHost(host, config.relayOnlyHostSuffixes)) return null;
   return config;
+}
+
+/**
+ * Why `host` is relayed for `protocol`, or null when it is not.
+ *
+ * "listed" is the hand-kept list (SMTP_RELAY_HOSTS for submission, the
+ * relay-only list for both); "learned" is a host the relay registry learned
+ * after a direct attempt failed and a relayed one worked. Ignores the breaker:
+ * this answers what the host needs, not whether the relay is up right now.
+ */
+export function relayRouteFor(host: string, protocol: RelayProtocol): Exclude<RelayRoute, "fallback"> | null {
+  const config = currentConfig();
+  if (!config) return null;
+  const listed = protocol === "smtp" ? config.hostSuffixes : config.relayOnlyHostSuffixes;
+  if (shouldRelayHost(host, listed)) return "listed";
+  if (isLearnedRelayHost(host, protocol)) return "learned";
+  return null;
+}
+
+/** True when a relay is configured at all. Nothing relay-related runs without one. */
+export function relayConfigured(): boolean {
+  return currentConfig() !== null;
+}
+
+/**
+ * The relay for a one-off retry of a host that is on no list, or null when
+ * there is nothing to retry through: relaying not configured, or the relay
+ * suspended after it failed a moment ago.
+ */
+export function relayForFallback(now: number = Date.now()): RelayConfig | null {
+  const config = currentConfig();
+  if (!config || relaySuspended(now)) return null;
+  return config;
+}
+
+/**
+ * True when `host` may only be reached through the relay. Decides two things:
+ * that IMAP is relayed at all, and that a relay failure is NOT answered with a
+ * direct dial. False when no relay is configured, because then there is nothing
+ * to be "only" about and the host is dialled as it always was.
+ */
+export function relayOnlyHost(host: string): boolean {
+  const config = currentConfig();
+  if (!config) return false;
+  return shouldRelayHost(host, config.relayOnlyHostSuffixes);
+}
+
+/**
+ * The relay for an IMAP host, or null to dial it directly.
+ *
+ * Relay-only hosts (see {@link DEFAULT_RELAY_ONLY_HOST_SUFFIXES}) and hosts the
+ * registry learned need the relay for reading. Never suspended: a relay-only
+ * host has nothing to fall back to, and for a learned host the caller does the
+ * falling back itself.
+ */
+export function imapRelayFor(host: string): RelayConfig | null {
+  const config = currentConfig();
+  if (!config) return null;
+  return relayRouteFor(host, "imap") === null ? null : config;
 }
 
 /**
@@ -410,8 +556,11 @@ export function relayFor(host: string, now: number = Date.now()): RelayConfig | 
  * that refusal is NOT a relay failure: falling back to a direct dial would
  * only reach the same verdict.
  */
-export async function guardRelayTarget(target: RelayTarget): Promise<void> {
-  const verdict = await guardMailHostCached(target.host, { protocol: "smtp", port: target.port });
+export async function guardRelayTarget(
+  target: RelayTarget,
+  protocol: "smtp" | "imap" = "smtp",
+): Promise<void> {
+  const verdict = await guardMailHostCached(target.host, { protocol, port: target.port });
   if (verdict.ok) return;
   throw new MailHostBlockedError(
     verdict.code,

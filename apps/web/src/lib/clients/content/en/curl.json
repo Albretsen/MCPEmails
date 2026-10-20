@@ -2,12 +2,12 @@
   "_sources": [
     "apps/web/components/dashboard/Pages.jsx (MCP_CLIENTS) + apps/web/messages/en/dashboard.json (clients.*)",
     "apps/web/src/lib/api-keys/generate.ts + apps/web/src/lib/api-keys/scopes.ts",
-    "apps/web/app/api/mcp/route.ts",
+    "supabase/functions/mcp-server/web-ingress.ts",
     "apps/web/messages/en/docs.json"
   ],
   "meta": {
     "title": "Email MCP Server API: curl, JSON-RPC and Bearer Auth",
-    "description": "Call the mcpemails MCP server directly over HTTP. One Streamable HTTP endpoint, JSON-RPC 2.0, a scoped bearer key, and the full tool catalogue. One inbox free."
+    "description": "Call the MCP Emails MCP server directly over HTTP. One Streamable HTTP endpoint, JSON-RPC 2.0, a scoped bearer key, and the full tool catalogue. One inbox free."
   },
   "hero": {
     "eyebrow": "HTTP + email",
@@ -26,7 +26,7 @@
   "setup": [
     {
       "h": "Create a free account and connect a mailbox",
-      "p": "Sign up at mcpemails.com, no card required, then go to Dashboard, Inboxes, Connect Inbox. Outlook and Microsoft 365 connect with Sign in with Microsoft; Gmail, iCloud, Fastmail, Yahoo, Zoho and Yandex take an app-specific password, and Gmail can also use Google sign-in; anything else connects over plain IMAP and SMTP. The free plan holds one inbox, forever."
+      "p": "Sign up at mcpemails.com, no card required, then go to Dashboard, Inboxes, Connect Inbox. Outlook and Microsoft 365 connect with Sign in with Microsoft; Gmail, iCloud, Fastmail, Yahoo, Zoho and Yandex take an app-specific password; anything else connects over plain IMAP and SMTP. The free plan holds one inbox, forever."
     },
     {
       "h": "Create a scoped API key",

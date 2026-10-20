@@ -7,7 +7,7 @@
     "eyebrow": "Para quien lleva el correo de la empresa",
     "titleLine1": "Todos los buzones de la empresa,",
     "titleLine2": "una persona, un agente",
-    "lead": "info@, ventas@, facturas@, soporte@ y tu propia dirección suelen acabar en manos de la misma persona. mcpemails los conecta todos a Claude, Cursor, ChatGPT o cualquier cliente MCP, para que leas, respondas, reenvíes y archives en todas las direcciones desde una sola conversación. Funciona con quien aloje tu correo, y puedes retener cada mensaje saliente hasta que lo apruebes.",
+    "lead": "info@, ventas@, facturas@, soporte@ y tu propia dirección suelen acabar en manos de la misma persona. MCP Emails los conecta todos a Claude, Cursor, ChatGPT o cualquier cliente MCP, para que leas, respondas, reenvíes y archives en todas las direcciones desde una sola conversación. Funciona con quien aloje tu correo, y puedes retener cada mensaje saliente hasta que lo apruebes.",
     "ctaPrimary": "Conecta tu primer buzón gratis",
     "ctaSecondary": "Mira lo que hace"
   },
@@ -96,7 +96,7 @@
   "providers": {
     "eyebrow": "Cualquier proveedor",
     "title": "Conecta todos los buzones de la empresa, los aloje quien los aloje",
-    "sub": "La mayor parte del correo de empresa vive en el proveedor de hosting o en el registrador del dominio, y eso no es ningún problema. Cualquier buzón que hable IMAP y SMTP en los puertos estándar se conecta con su dirección, su servidor y su contraseña. IONOS, Hostinger, OVH, Namecheap y otros proveedores habituales se reconocen por la dirección y se rellenan solos. Gmail y Google Workspace se conectan con una contraseña de aplicación o iniciando sesión con Google. Microsoft 365 y Outlook se conectan iniciando sesión con Microsoft; en una cuenta de empresa de Microsoft 365, puede que tu administrador de TI tenga que aprobar mcpemails una vez para toda la organización. iCloud, Fastmail, Yahoo, Zoho y Yandex se conectan con una contraseña de aplicación.",
+    "sub": "La mayor parte del correo de empresa vive en el proveedor de hosting o en el registrador del dominio, y eso no es ningún problema. Cualquier buzón que hable IMAP y SMTP en los puertos estándar se conecta con su dirección, su servidor y su contraseña. IONOS, Hostinger, OVH, Namecheap y otros proveedores habituales se reconocen por la dirección y se rellenan solos. Gmail y Google Workspace se conectan con una contraseña de aplicación de Google. Microsoft 365 y Outlook se conectan iniciando sesión con Microsoft; en una cuenta de empresa de Microsoft 365, puede que tu administrador de TI tenga que aprobar MCP Emails una vez para toda la organización. iCloud, Fastmail, Yahoo, Zoho y Yandex se conectan con una contraseña de aplicación.",
     "ctaImap": "Conecta cualquier buzón IMAP",
     "ctaGmail": "Conecta Gmail o Google Workspace",
     "ctaMicrosoft": "Conecta Microsoft 365",
@@ -110,18 +110,18 @@
     "items": {
       "free": {
         "h": "Gratis: un buzón",
-        "p": "Empieza por la dirección con más movimiento. 150 acciones de correo al mes, los primeros 7 días no cuentan, sin tarjeta."
+        "p": "Empieza por la dirección con más movimiento. 150 acciones de correo al mes, los primeros 3 días no cuentan, sin tarjeta."
       },
       "personal": {
         "h": "Personal, $9 al mes: hasta tres",
         "p": "Para una empresa con dos o tres direcciones. Sin tope mensual de acciones, un límite de ráfaga más alto y soporte por correo."
       },
       "pro": {
-        "h": "Pro, $15 al mes: cuatro o más",
-        "p": "Todos los buzones que lleva el negocio, sin límite de cantidad y con un solo inicio de sesión. El plan para una empresa con una dirección por departamento."
+        "h": "Pro, $15 al mes: de cuatro a diez",
+        "p": "Hasta 10 buzones, con un solo inicio de sesión. El plan para una persona que lleva un negocio con una dirección por departamento."
       }
     },
-    "note": "Team, por $79 al mes, es para cuando varias personas necesitan cada una su propio inicio de sesión, con roles y un espacio de trabajo separado por cliente.",
+    "note": "Business, por $39 al mes, incluye 10 buzones y cobra $3 al mes por cada uno adicional. Los miembros con roles no cuestan nada extra, y puedes tener un espacio de trabajo separado por empresa o cliente.",
     "cta": "Compara todos los planes"
   },
   "faq": {
@@ -131,11 +131,11 @@
     "items": [
       {
         "q": "Somos una empresa, no un particular. ¿De verdad Pro es el plan adecuado?",
-        "a": "Sí, si es una sola persona quien lleva los buzones. Pro es un único inicio de sesión sin límite de buzones conectados, así que una sola persona puede llevar info@, ventas@, facturas@ y soporte@ desde un mismo agente. Team es para cuando varias personas necesitan iniciar sesión cada una, con roles y un espacio de trabajo separado por cliente."
+        "a": "Sí, si es una sola persona quien lleva los buzones. Pro es un único inicio de sesión con hasta 10 buzones conectados, así que una sola persona puede llevar info@, ventas@, facturas@ y soporte@ desde un mismo agente. Business es para más de 10 buzones o para varias personas que inician sesión cada una, con roles y un espacio de trabajo separado por cliente."
       },
       {
         "q": "Nuestro correo está en nuestro proveedor de hosting, no en Gmail. ¿Funcionará?",
-        "a": "Casi seguro que sí. Cualquier buzón que hable IMAP y SMTP en los puertos estándar se conecta con su dirección, su servidor y su contraseña, y los proveedores habituales se reconocen por la dirección, de modo que los ajustes se rellenan solos. El servidor tiene que ser accesible desde internet, y un buzón que solo acepte un inicio de sesión OAuth por IMAP no se puede conectar de esta forma. Si el correo de tu empresa está en Microsoft 365, conéctalo como Outlook: inicias sesión con Microsoft, y puede que tu administrador de TI tenga que aprobar mcpemails una vez para toda la organización."
+        "a": "Casi seguro que sí. Cualquier buzón que hable IMAP y SMTP en los puertos estándar se conecta con su dirección, su servidor y su contraseña, y los proveedores habituales se reconocen por la dirección, de modo que los ajustes se rellenan solos. El servidor tiene que ser accesible desde internet, y un buzón que solo acepte un inicio de sesión OAuth por IMAP no se puede conectar de esta forma. Si el correo de tu empresa está en Microsoft 365, conéctalo como Outlook: inicias sesión con Microsoft, y puede que tu administrador de TI tenga que aprobar MCP Emails una vez para toda la organización."
       },
       {
         "q": "¿El agente envía desde la dirección correcta?",
@@ -151,7 +151,7 @@
       },
       {
         "q": "¿Y si un compañero también necesita acceso?",
-        "a": "Gratis, Personal y Pro son planes de un solo inicio de sesión. Cuando una segunda persona necesite el suyo, Team añade miembros con roles. Hasta entonces, una sola persona en Pro cubre todos los buzones."
+        "a": "Gratis, Personal y Pro son planes de un solo inicio de sesión. Cuando una segunda persona necesite el suyo, Business añade miembros con roles sin coste extra por persona. Hasta entonces, una sola persona en Pro cubre hasta 10 buzones."
       }
     ]
   },

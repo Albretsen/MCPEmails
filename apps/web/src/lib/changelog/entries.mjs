@@ -44,6 +44,209 @@ export const KINDS = ['added', 'improved', 'fixed', 'changed'];
 export const ENTRIES = [
   /* ── October 2026 ──────────────────────────────────────────── */
   {
+    date: '2026-10-20',
+    kind: 'added',
+    title: 'MCP Emails in German',
+    body:
+      'The website, sign-up, dashboard, setup guides for every AI client and the pages for German, Austrian and Swiss mailbox providers such as GMX, WEB.DE and T-Online are now in German. Checkout opens in German for German visitors too.',
+  },
+  {
+    date: '2026-10-20',
+    kind: 'improved',
+    title: 'Tool calls start sooner',
+    body:
+      'The account and usage checks that run before every tool call now take one trip to the database instead of up to four, so a typical call starts about 0.4 seconds sooner. Connecting and listing tools got the same treatment.',
+  },
+  {
+    date: '2026-10-20',
+    kind: 'improved',
+    title: 'Smaller tool results',
+    body:
+      'Tool results and tool descriptions are sent more compactly, so they take up less of your assistant\'s context. The information in them is the same.',
+  },
+  {
+    date: '2026-10-20',
+    kind: 'improved',
+    title: 'Automations keep to their schedule at busy times',
+    body:
+      'Recurring automations are now picked up by several workers at once, so rules run close to their scheduled time even when many are due together.',
+  },
+  {
+    date: '2026-10-20',
+    kind: 'changed',
+    title: 'MCP Emails is run by Albretsen AS',
+    body:
+      'From 1 November 2026 the service is provided by Albretsen AS (org. no. 938 702 373), a Norwegian limited company owned by the same founder at the same address. The terms, privacy policy and email footers name the new company.',
+  },
+  {
+    date: '2026-10-19',
+    kind: 'fixed',
+    title: 'Archiving a Gmail conversation opened from Sent',
+    body:
+      'On Gmail connected over IMAP, archiving or moving a conversation you reached from Sent or another folder now takes it out of the Inbox. Before, those messages could stay in the Inbox.',
+  },
+  {
+    date: '2026-10-19',
+    kind: 'fixed',
+    title: 'Previews for newsletters that open with styling',
+    body:
+      'HTML emails that start with a long block of styling used to show an empty preview in lists and search results on IMAP inboxes. They now show the first lines of the message.',
+  },
+  {
+    date: '2026-10-19',
+    kind: 'improved',
+    title: 'Reply drafts keep their quote and a single signature',
+    body:
+      'Updating a reply draft keeps the quoted original message when the new text leaves it out, without doubling it when the assistant includes it, and a draft that already ends with your signature is no longer signed twice.',
+  },
+  {
+    date: '2026-10-16',
+    kind: 'improved',
+    title: 'Read-only keys are enforced by your mail server too',
+    body:
+      'A read-only key now opens IMAP folders in the mail server\'s own read-only mode, so the server itself refuses any change to flags, folders or messages. The read-only access page in the docs explains what each key can do.',
+  },
+  {
+    date: '2026-10-16',
+    kind: 'improved',
+    title: 'Security hardening across the workspace',
+    body:
+      'Viewers stay read-only everywhere, leaving a workspace revokes its connected apps, approvers see the Bcc list and full draft they are approving, and the sign-in consent screen shows where it will send you and labels unverified apps.',
+  },
+  {
+    date: '2026-10-15',
+    kind: 'improved',
+    title: 'Faster IMAP searches across several folders',
+    body:
+      'Searching many folders at once on an IMAP inbox is quicker, and a search that runs out of time now returns the folders it finished with a note naming the ones it skipped.',
+  },
+  {
+    date: '2026-10-15',
+    kind: 'improved',
+    title: 'Clearer guidance when a tool call is refused',
+    body:
+      'When an assistant sends an argument a tool does not take, the error now names the tool or field to use instead, so it can correct itself on the next call.',
+  },
+  {
+    date: '2026-10-15',
+    kind: 'fixed',
+    title: 'Large attachments up to 10 MB',
+    body:
+      'Files between about 3 MB and the 10 MB limit can now be attached to drafts and sent emails. A file over the limit gets a clear message.',
+  },
+  {
+    date: '2026-10-20',
+    kind: 'fixed',
+    title: 'IONOS mailboxes outside the US get their own server settings',
+    body:
+      'Adding an address on your own domain hosted by IONOS in Germany or the UK filled in the US server imap.ionos.com, and France, Spain and Italy got no settings at all. The connect form now fills in the server for your region, such as imap.ionos.de, and the IONOS setup page lists each region\'s server names.',
+  },
+  {
+    date: '2026-10-20',
+    kind: 'fixed',
+    title: 'Language menu always opens a real page',
+    body:
+      'On a page that is not available in every language, the language menu in the footer used to lead to a missing page. It now opens that language\'s home page instead.',
+  },
+  {
+    date: '2026-10-20',
+    kind: 'improved',
+    title: 'Sign up in the language you were reading',
+    body:
+      'Signing up or signing in from a French, Spanish, Norwegian or Chinese page now opens the form and your dashboard in that language, including after signing in with Google or GitHub. You can still change the language in Settings.',
+  },
+  {
+    date: '2026-10-18',
+    kind: 'added',
+    title: 'Send As for IMAP inboxes',
+    body:
+      'iCloud, Yahoo and other IMAP inboxes can now send from another address that delivers to the same mailbox, such as an iCloud alias. Add it in the inbox settings and enter the code we email to it, then your assistant can use it as the From address.',
+  },
+  {
+    date: '2026-10-15',
+    kind: 'added',
+    title: 'Attachments on drafts',
+    body:
+      'Drafts can now carry files: new ones you give your assistant (including files shared in ChatGPT), or attachments copied from an email already in the inbox. Editing a draft keeps the files it already has, where an edit on Gmail or IMAP used to drop them.',
+  },
+  {
+    date: '2026-10-15',
+    kind: 'fixed',
+    title: 'Mail hosts that turn away cloud servers now connect',
+    body:
+      'A few mail providers refuse connections from cloud servers, so connecting or sending from them timed out or was refused even with the right password. MCP Emails now retries those connections through a separate route and remembers which providers need it.',
+  },
+  {
+    date: '2026-10-15',
+    kind: 'fixed',
+    title: 'Self-hosted servers find their inboxes',
+    body:
+      'A self-hosted install answered "No inbox matches" on every tool except inbox_list, and could not read stored IMAP credentials. The bundled database schema is back in step with the server, and existing installs upgrade in place with make migrate, keeping their inboxes and keys.',
+  },
+  {
+    date: '2026-10-13',
+    kind: 'added',
+    title: 'Signature images embedded in the message',
+    body:
+      'A new option in the signature editor embeds your signature\'s images in each message, so logos show in Thunderbird, Outlook and other clients that block remote images. Works on Gmail and IMAP inboxes; it is off unless you turn it on.',
+  },
+  {
+    date: '2026-10-13',
+    kind: 'fixed',
+    title: 'Inline cards in Claude keep working after an update',
+    body:
+      'After we shipped a new version, Claude could show "can\'t reach MCP Emails" where a card belonged until the connector was refreshed. Cards now load from the current version whatever Claude has cached.',
+  },
+  {
+    date: '2026-10-13',
+    kind: 'fixed',
+    title: 'Clearer error for a mistaken mail server',
+    body:
+      'Browser autofill no longer fills the IMAP or SMTP server fields, and entering mcpemails.com as a mail server now says so directly instead of reporting that your provider never answered.',
+  },
+  {
+    date: '2026-10-13',
+    kind: 'added',
+    title: 'Receive-only and send-only inboxes',
+    body:
+      'A mailbox with only an IMAP server or only an SMTP server can now connect: pick the connection type under Advanced settings in the IMAP/SMTP form. A tool that needs the other half says what still works on that inbox.',
+  },
+  {
+    date: '2026-10-13',
+    kind: 'changed',
+    title: 'ChatGPT and Codex list one tool per operation',
+    body:
+      'OpenAI clients now see a separate tool for each operation, such as creating a draft or renaming a folder, each with its own safety annotations. Every other client keeps the same tool list as before.',
+  },
+  {
+    date: '2026-10-12',
+    kind: 'improved',
+    title: 'Orange mailboxes connect',
+    body:
+      'orange.fr inboxes now sign in for both reading and sending, with nothing extra to set up.',
+  },
+  {
+    date: '2026-10-09',
+    kind: 'improved',
+    title: '163.com and 126.com mailboxes can read mail',
+    body:
+      'Listing, searching and reading now work on NetEase mailboxes (163.com, 126.com, yeah.net, 188.com) and other Coremail servers.',
+  },
+  {
+    date: '2026-10-09',
+    kind: 'improved',
+    title: 'Room for long sessions in ChatGPT and Notion',
+    body:
+      'Clients that reconnect around every tool call can now run long, busy sessions without being slowed down by connection checks.',
+  },
+  {
+    date: '2026-10-08',
+    kind: 'fixed',
+    title: 'Sent copies land in the real Sent folder on IMAP',
+    body:
+      'Mail sent from an IMAP inbox is now filed in the folder the server marks as Sent, including Chinese-named folders such as QQ Mail\'s 已发送, which also now resolve as sent, drafts, trash and spam. If no Sent folder accepts the copy, the result says so instead of silently leaving Sent empty.',
+  },
+  {
     date: '2026-10-03',
     kind: 'improved',
     title: 'Faster mailbox reads on IMAP accounts',

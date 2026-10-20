@@ -110,6 +110,8 @@ const AUTH_REASON_HEADLINE_KEYS = {
   app_password_required: 'connect.errorAuthAppPassword',
   account_password_used: 'connect.errorAuthAccountPassword',
   app_password_length: 'connect.errorAuthAppPasswordLength',
+  // The provider refused the sign-in itself; the password is not the story.
+  provider_refused_signin: 'connect.errorAuthProviderRefused',
   login_username_required: 'connect.errorAuthLoginName',
   // The plain case keeps the plain headline. It is listed so the reason is
   // kept: what to do next is host-specific, and lib/email/auth-failure-help
@@ -187,6 +189,22 @@ const ERROR_HEADLINE_KEYS = {
  * leaving the user to work out that the mailbox was never the problem.
  */
 const SESSION_EXPIRED_CODE = 'session_expired';
+
+/**
+ * The "Still stuck? Contact support" target for a failed connect.
+ *
+ * /help reads `topic`, `provider` and `code` to preselect the contact form and
+ * `#contact` scrolls to it. Each value is URL-encoded, and an empty one is left
+ * out rather than sent as `provider=`, so /help never has to tell "unknown"
+ * from "blank". The path has no locale prefix: the caller renders it through
+ * the locale-aware Link, which adds /nb, /es, ... from the app's own locale.
+ */
+export function supportContactHref(provider, code) {
+  const params = [['topic', 'connect'], ['provider', provider], ['code', code]]
+    .filter(([, v]) => typeof v === 'string' && v.trim() !== '')
+    .map(([k, v]) => `${k}=${encodeURIComponent(v.trim())}`);
+  return `/help?${params.join('&')}#contact`;
+}
 
 /**
  * The app's ordinary "sign in and come back here" link.
@@ -574,6 +592,7 @@ export function ConnectModal({
   // lib/analytics/connect-entry-point.mjs, set by App.jsx's `openConnect`. It
   // rides on the rows this modal already writes and changes nothing on screen.
   entryPoint = null,
+  supportVisible = false, // SUPPORT_RELEASE_GATE
 }) {
   const tr = useTranslations('dashboardChrome');
   // The toast lives in ToastProvider, above this modal in App.jsx, so it
@@ -605,6 +624,14 @@ export function ConnectModal({
   const seedForm = seed?.card === 'generic' ? (seed.form ?? null) : null;
   const [provider, setProvider] = useState(reconnectProvider ?? seed?.card ?? 'generic');
   const [step, setStep] = useState(isReconnect ? 2 : 1);
+  /**
+   * Which halves of a generic IMAP/SMTP mailbox this connection carries:
+   * 'both', 'imap' (receive only) or 'smtp' (send only). A receive-only
+   * mailbox has no SMTP server to give and a send-only one has no IMAP server,
+   * and requiring both shut either out. A reconnect keeps the mode the inbox
+   * was stored with, for the same reason it keeps the hosts.
+   */
+  const [connectionMode, setConnectionMode] = useState(reconnect?.connectionMode ?? 'both');
   const [form, setForm] = useState(() => ({
     email: reconnect?.address ?? '',
     username: reconnect?.username ?? '',
@@ -756,6 +783,13 @@ export function ConnectModal({
    * exactly one rejection.
    */
   const [sessionExpired, setSessionExpired] = useState(false);
+  /**
+   * The route's failure code for the error on screen right now, for the
+   * "Contact support" link. Like `sessionExpired` (and unlike `lastFailure`,
+   * which outlives one rejection on purpose) it is cleared by `showError`, so a
+   * client-side validation message never carries an older route's code.
+   */
+  const [shownFailureCode, setShownFailureCode] = useState(null);
   // The exact secret we have already warned about the shape of.
   //
   // The shape rule is evidence, not a gate. It is right often enough to be
@@ -783,10 +817,14 @@ export function ConnectModal({
     // to submit. The ports are now on the form itself, always visible, so
     // opening the panel for one would open it to point at a field that is not
     // in it. Only the two things still inside can force it open.
+    // A receive-only or send-only inbox opens it too: the connection type is
+    // in the panel, and it is the reason half the form is missing.
+    const partial = reconnect?.connectionMode === 'imap' || reconnect?.connectionMode === 'smtp';
     return (
       imapSecurity !== 'tls' ||
       smtpSecurity !== GENERIC_IMAP_DEFAULTS.smtpSecurity ||
-      Boolean(reconnect?.username)
+      Boolean(reconnect?.username) ||
+      partial
     );
   });
   // Set when a port was lifted out of a host field, so the move is announced
@@ -1273,6 +1311,7 @@ export function ConnectModal({
     // failure, which may be a hostname.
     setAuthReason(null);
     setSessionExpired(false);
+    setShownFailureCode(null);
   };
 
   /**
@@ -1581,13 +1620,18 @@ export function ConnectModal({
       // Digits that cannot be used as a port were just stripped off a host
       // field. Submitting anyway would connect on the default port, which is
       // not what the user asked for, so stop and say which ports are accepted.
-      if (imapParsed.portRejected || smtpParsed.portRejected) {
+      const withImap = connectionMode !== 'smtp';
+      const withSmtp = connectionMode !== 'imap';
+      // A half the connection type leaves out is neither checked nor sent: its
+      // fields are hidden, and anything still in them was typed before the
+      // user switched type.
+      if ((withImap && imapParsed.portRejected) || (withSmtp && smtpParsed.portRejected)) {
         // The offending text is in the HOST box, which is where the digits were
         // typed and where they have just been stripped from, so that is the
         // field the message is about and the field focus goes to.
         failValidation(
           tr('connect.errorPortRange'),
-          [imapParsed.portRejected ? 'imapHost' : null, smtpParsed.portRejected ? 'smtpHost' : null].filter(Boolean)
+          [withImap && imapParsed.portRejected ? 'imapHost' : null, withSmtp && smtpParsed.portRejected ? 'smtpHost' : null].filter(Boolean)
         );
         return;
       }
@@ -1595,21 +1639,22 @@ export function ConnectModal({
       const smtpHost = smtpParsed.host.toLowerCase();
       const imapPort = Number(imapParsed.port ?? form.imapPort);
       const smtpPort = Number(smtpParsed.port ?? form.smtpPort);
-      if (!imapHost || !smtpHost) {
+      if ((withImap && !imapHost) || (withSmtp && !smtpHost)) {
         // "IMAP and SMTP host are required" names two fields, so both are
         // marked; focus goes to the first one that is actually empty rather
         // than always to the IMAP box, which would move the cursor away from
-        // the field the user still has to fill.
+        // the field the user still has to fill. A one-sided connection names
+        // only the field it has.
         failValidation(
-          tr('connect.errorHostRequired'),
-          [!imapHost ? 'imapHost' : null, !smtpHost ? 'smtpHost' : null].filter(Boolean)
+          tr(withImap && withSmtp ? 'connect.errorHostRequired' : withImap ? 'connect.errorImapHostRequired' : 'connect.errorSmtpHostRequired'),
+          [withImap && !imapHost ? 'imapHost' : null, withSmtp && !smtpHost ? 'smtpHost' : null].filter(Boolean)
         );
         return;
       }
-      if (!imapPort || !smtpPort) {
+      if ((withImap && !imapPort) || (withSmtp && !smtpPort)) {
         failValidation(
-          tr('connect.errorPortRequired'),
-          [!imapPort ? 'imapPort' : null, !smtpPort ? 'smtpPort' : null].filter(Boolean)
+          tr(withImap && withSmtp ? 'connect.errorPortRequired' : withImap ? 'connect.errorImapPortRequired' : 'connect.errorSmtpPortRequired'),
+          [withImap && !imapPort ? 'imapPort' : null, withSmtp && !smtpPort ? 'smtpPort' : null].filter(Boolean)
         );
         return;
       }
@@ -1623,7 +1668,9 @@ export function ConnectModal({
       // sent with implicit TLS and fail the handshake.
       const imapSecurity = (imapParsed.port !== null ? securityForPort('imap', imapPort) : null) ?? form.imapSecurity;
       const smtpSecurity = (smtpParsed.port !== null ? securityForPort('smtp', smtpPort) : null) ?? form.smtpSecurity;
-      body = { email, username, appPassword, imapHost, imapPort, smtpHost, smtpPort, imapSecurity, smtpSecurity };
+      body = { email, username, appPassword, mode: connectionMode };
+      if (withImap) Object.assign(body, { imapHost, imapPort, imapSecurity });
+      if (withSmtp) Object.assign(body, { smtpHost, smtpPort, smtpSecurity });
     }
 
     // Last gate before the network call, and deliberately last: a missing host
@@ -1645,6 +1692,7 @@ export function ConnectModal({
       shapeWarnedFor.current = appPassword;
       const shapeReason = shape.problem === 'account_password' ? 'account_password_used' : 'app_password_length';
       setAuthReason(shapeReason);
+      setShownFailureCode(null); // a client-side warning, no route code
       setFormError(tr(AUTH_REASON_HEADLINE_KEYS[shapeReason], { provider: appPasswordProvider }));
       // The objection is about one field and one value, so say which. Focus is
       // deliberately NOT stolen here: the whole point of this warning is that
@@ -1738,6 +1786,7 @@ export function ConnectModal({
         setLastFailure({ code, count });
         setAuthReason(reason);
         setSessionExpired(code === SESSION_EXPIRED_CODE);
+        setShownFailureCode(code);
         setFormError(headline);
         // A rejected credential is about the password box; a login name the
         // server did not recognise is about the username box. Every other code
@@ -1747,9 +1796,13 @@ export function ConnectModal({
         setInvalidFields(
           reason === 'login_username_required'
             ? ['username']
-            : code === 'auth_failed'
-              ? ['password']
-              : []
+            : reason === 'provider_refused_signin'
+              // The provider refused the sign-in, not the password. Marking the
+              // password box invalid would ask for an edit that cannot help.
+              ? []
+              : code === 'auth_failed'
+                ? ['password']
+                : []
         );
         bumpErrorSeq();
         setErrorDetail(detail);
@@ -1793,7 +1846,7 @@ export function ConnectModal({
         // rather than edited, so hand the field back ready to overwrite. Only
         // for auth failures: stealing focus when the fix is a host or a port
         // would move the user away from the field they need.
-        if (code === 'auth_failed' && passwordRef.current) {
+        if (code === 'auth_failed' && reason !== 'provider_refused_signin' && passwordRef.current) {
           // Arm the one-shot select first: taking focus fires the focus
           // handler, which spends the flag, so the contents are selected
           // exactly once per rejection and never on an ordinary click-back.
@@ -2961,124 +3014,144 @@ export function ConnectModal({
                   rare: the security modes and the separate login username. */}
               {isGeneric && (
                 <>
-                  <div className="host-port-row">
-                    <div className="field host-field">
-                      <label htmlFor="cm-imap-host">{tr('connect.imapHostLabel')}</label>
-                      <input
-                        id="cm-imap-host"
-                        ref={bindField('imapHost')}
-                        className="input"
-                        type="text"
-                        placeholder="imap.example.com"
-                        required
-                        aria-required="true"
-                        aria-invalid={isInvalid('imapHost') || undefined}
-                        // The paste hint and the two notices below belong to
-                        // this pair of controls but render outside the field
-                        // (see the comment on the hint), so the association has
-                        // to be made by id: without it, tabbing here announced
-                        // "IMAP host, edit text" and nothing else.
-                        aria-describedby={describedBy(
-                          'cm-host-paste-hint',
-                          portRangeError === 'imap' ? 'cm-imap-port-error' : null,
-                          isInvalid('imapHost') ? 'cm-form-error' : null
-                        )}
-                        value={form.imapHost}
-                        onChange={e => { setPortNote(null); setPortRangeError(null); setForm(prev => ({ ...prev, imapHost: e.target.value })); }}
-                        onBlur={() => normalizeHostField('imap')}
-                        readOnly={isReconnect}
-                        aria-readonly={isReconnect || undefined}
-                      />
-                    </div>
-                    <div className="field port-field">
-                      <label htmlFor="cm-imap-port">{tr('connect.imapPortLabel')}</label>
-                      <PortSelect
-                        id="cm-imap-port"
-                        inputRef={bindField('imapPort')}
-                        protocol="imap"
-                        value={form.imapPort}
-                        onChange={value => setPort('imap', value)}
-                        disabled={isReconnect}
-                        invalid={isInvalid('imapPort')}
-                        describedBy={describedBy(
-                          portNote?.protocol === 'imap' ? 'cm-imap-port-note' : null,
-                          isInvalid('imapPort') ? 'cm-form-error' : null
-                        )}
-                      />
-                    </div>
-                  </div>
-                  {/* The hints belong to the row, not to the host box: with the
-                      port beside it, a hint nested inside the host field would
-                      be indented under a column rather than under the pair it
-                      describes. */}
-                  <span id="cm-host-paste-hint" style={{ fontFamily: 'var(--font-sans)', fontSize: 12, color: 'var(--fg-3)', marginTop: -6 }}>
-                    {tr('connect.hostPasteHint')}
-                  </span>
-                  {/* Neither of these carries a live role any longer: both were
-                      spans that arrive with their own text, which is the case
-                      that does not announce. The dialog's persistent announcers
-                      say them; the ids are what tie them to the controls. */}
-                  {portNote?.protocol === 'imap' && (
-                    <span id="cm-imap-port-note" style={{ fontFamily: 'var(--font-sans)', fontSize: 12, color: 'var(--brand)', marginTop: -6 }}>
-                      {portMovedNote}
-                    </span>
-                  )}
-                  {portRangeError === 'imap' && (
-                    <span id="cm-imap-port-error" style={{ fontFamily: 'var(--font-sans)', fontSize: 12, color: 'var(--red-700)', marginTop: -6 }}>
-                      {portRangeNote}
-                    </span>
+                  {connectionMode !== 'smtp' && (
+                    <>
+                      <div className="host-port-row">
+                        <div className="field host-field">
+                          <label htmlFor="cm-imap-host">{tr('connect.imapHostLabel')}</label>
+                          <input
+                            id="cm-imap-host"
+                            ref={bindField('imapHost')}
+                            className="input"
+                            type="text"
+                            // See NOT_A_LOGIN_FIELD. The SMTP host is the text box
+                            // directly above the password, which is where a password
+                            // manager looks for "the username" of this site's login,
+                            // and it was once submitted holding mcpemails.com.
+                            {...NOT_A_LOGIN_FIELD}
+                            name="mcpe-imap-server"
+                            placeholder="imap.example.com"
+                            required
+                            aria-required="true"
+                            aria-invalid={isInvalid('imapHost') || undefined}
+                            // The paste hint and the two notices below belong to
+                            // this pair of controls but render outside the field
+                            // (see the comment on the hint), so the association has
+                            // to be made by id: without it, tabbing here announced
+                            // "IMAP host, edit text" and nothing else.
+                            aria-describedby={describedBy(
+                              'cm-host-paste-hint',
+                              portRangeError === 'imap' ? 'cm-imap-port-error' : null,
+                              isInvalid('imapHost') ? 'cm-form-error' : null
+                            )}
+                            value={form.imapHost}
+                            onChange={e => { setPortNote(null); setPortRangeError(null); setForm(prev => ({ ...prev, imapHost: e.target.value })); }}
+                            onBlur={() => normalizeHostField('imap')}
+                            readOnly={isReconnect}
+                            aria-readonly={isReconnect || undefined}
+                          />
+                        </div>
+                        <div className="field port-field">
+                          <label htmlFor="cm-imap-port">{tr('connect.imapPortLabel')}</label>
+                          <PortSelect
+                            id="cm-imap-port"
+                            inputRef={bindField('imapPort')}
+                            protocol="imap"
+                            value={form.imapPort}
+                            onChange={value => setPort('imap', value)}
+                            disabled={isReconnect}
+                            invalid={isInvalid('imapPort')}
+                            describedBy={describedBy(
+                              portNote?.protocol === 'imap' ? 'cm-imap-port-note' : null,
+                              isInvalid('imapPort') ? 'cm-form-error' : null
+                            )}
+                          />
+                        </div>
+                      </div>
+                      {/* The hints belong to the row, not to the host box: with the
+                          port beside it, a hint nested inside the host field would
+                          be indented under a column rather than under the pair it
+                          describes. */}
+                      <span id="cm-host-paste-hint" style={{ fontFamily: 'var(--font-sans)', fontSize: 12, color: 'var(--fg-3)', marginTop: -6 }}>
+                        {tr('connect.hostPasteHint')}
+                      </span>
+                      {/* Neither of these carries a live role any longer: both were
+                          spans that arrive with their own text, which is the case
+                          that does not announce. The dialog's persistent announcers
+                          say them; the ids are what tie them to the controls. */}
+                      {portNote?.protocol === 'imap' && (
+                        <span id="cm-imap-port-note" style={{ fontFamily: 'var(--font-sans)', fontSize: 12, color: 'var(--brand)', marginTop: -6 }}>
+                          {portMovedNote}
+                        </span>
+                      )}
+                      {portRangeError === 'imap' && (
+                        <span id="cm-imap-port-error" style={{ fontFamily: 'var(--font-sans)', fontSize: 12, color: 'var(--red-700)', marginTop: -6 }}>
+                          {portRangeNote}
+                        </span>
+                      )}
+                    </>
                   )}
 
-                  <div className="host-port-row">
-                    <div className="field host-field">
-                      <label htmlFor="cm-smtp-host">{tr('connect.smtpHostLabel')}</label>
-                      <input
-                        id="cm-smtp-host"
-                        ref={bindField('smtpHost')}
-                        className="input"
-                        type="text"
-                        placeholder="smtp.example.com"
-                        required
-                        aria-required="true"
-                        aria-invalid={isInvalid('smtpHost') || undefined}
-                        aria-describedby={describedBy(
-                          'cm-host-paste-hint',
-                          portRangeError === 'smtp' ? 'cm-smtp-port-error' : null,
-                          isInvalid('smtpHost') ? 'cm-form-error' : null
-                        )}
-                        value={form.smtpHost}
-                        onChange={e => { setPortNote(null); setPortRangeError(null); setForm(prev => ({ ...prev, smtpHost: e.target.value })); }}
-                        onBlur={() => normalizeHostField('smtp')}
-                        readOnly={isReconnect}
-                        aria-readonly={isReconnect || undefined}
-                      />
-                    </div>
-                    <div className="field port-field">
-                      <label htmlFor="cm-smtp-port">{tr('connect.smtpPortLabel')}</label>
-                      <PortSelect
-                        id="cm-smtp-port"
-                        inputRef={bindField('smtpPort')}
-                        protocol="smtp"
-                        value={form.smtpPort}
-                        onChange={value => setPort('smtp', value)}
-                        disabled={isReconnect}
-                        invalid={isInvalid('smtpPort')}
-                        describedBy={describedBy(
-                          portNote?.protocol === 'smtp' ? 'cm-smtp-port-note' : null,
-                          isInvalid('smtpPort') ? 'cm-form-error' : null
-                        )}
-                      />
-                    </div>
-                  </div>
-                  {portNote?.protocol === 'smtp' && (
-                    <span id="cm-smtp-port-note" style={{ fontFamily: 'var(--font-sans)', fontSize: 12, color: 'var(--brand)', marginTop: -6 }}>
-                      {portMovedNote}
-                    </span>
-                  )}
-                  {portRangeError === 'smtp' && (
-                    <span id="cm-smtp-port-error" style={{ fontFamily: 'var(--font-sans)', fontSize: 12, color: 'var(--red-700)', marginTop: -6 }}>
-                      {portRangeNote}
-                    </span>
+                  {connectionMode !== 'imap' && (
+                    <>
+                      <div className="host-port-row">
+                        <div className="field host-field">
+                          <label htmlFor="cm-smtp-host">{tr('connect.smtpHostLabel')}</label>
+                          <input
+                            id="cm-smtp-host"
+                            ref={bindField('smtpHost')}
+                            className="input"
+                            type="text"
+                            // See NOT_A_LOGIN_FIELD. The SMTP host is the text box
+                            // directly above the password, which is where a password
+                            // manager looks for "the username" of this site's login,
+                            // and it was once submitted holding mcpemails.com.
+                            {...NOT_A_LOGIN_FIELD}
+                            name="mcpe-smtp-server"
+                            placeholder="smtp.example.com"
+                            required
+                            aria-required="true"
+                            aria-invalid={isInvalid('smtpHost') || undefined}
+                            aria-describedby={describedBy(
+                              'cm-host-paste-hint',
+                              portRangeError === 'smtp' ? 'cm-smtp-port-error' : null,
+                              isInvalid('smtpHost') ? 'cm-form-error' : null
+                            )}
+                            value={form.smtpHost}
+                            onChange={e => { setPortNote(null); setPortRangeError(null); setForm(prev => ({ ...prev, smtpHost: e.target.value })); }}
+                            onBlur={() => normalizeHostField('smtp')}
+                            readOnly={isReconnect}
+                            aria-readonly={isReconnect || undefined}
+                          />
+                        </div>
+                        <div className="field port-field">
+                          <label htmlFor="cm-smtp-port">{tr('connect.smtpPortLabel')}</label>
+                          <PortSelect
+                            id="cm-smtp-port"
+                            inputRef={bindField('smtpPort')}
+                            protocol="smtp"
+                            value={form.smtpPort}
+                            onChange={value => setPort('smtp', value)}
+                            disabled={isReconnect}
+                            invalid={isInvalid('smtpPort')}
+                            describedBy={describedBy(
+                              portNote?.protocol === 'smtp' ? 'cm-smtp-port-note' : null,
+                              isInvalid('smtpPort') ? 'cm-form-error' : null
+                            )}
+                          />
+                        </div>
+                      </div>
+                      {portNote?.protocol === 'smtp' && (
+                        <span id="cm-smtp-port-note" style={{ fontFamily: 'var(--font-sans)', fontSize: 12, color: 'var(--brand)', marginTop: -6 }}>
+                          {portMovedNote}
+                        </span>
+                      )}
+                      {portRangeError === 'smtp' && (
+                        <span id="cm-smtp-port-error" style={{ fontFamily: 'var(--font-sans)', fontSize: 12, color: 'var(--red-700)', marginTop: -6 }}>
+                          {portRangeNote}
+                        </span>
+                      )}
+                    </>
                   )}
                 </>
               )}
@@ -3277,8 +3350,8 @@ export function ConnectModal({
 
               {/* ── Advanced settings (generic IMAP only) ──────────────────
                   What is left in here after the ports moved up to the host
-                  rows: the two transport security modes and the optional login
-                  username.
+                  rows: the connection type, the two transport security modes
+                  and the optional login username.
 
                   Closed by default, but opened automatically whenever it holds
                   a value that differs from the default, and whenever a failure
@@ -3331,6 +3404,32 @@ export function ConnectModal({
                         {tr('connect.advancedHint')}
                       </span>
 
+                      {/* Connection type. Most mailboxes are both, and the form
+                          opens that way, which is why the choice lives in here
+                          and not on the form itself. A receive-only mailbox has
+                          no SMTP server to give and a send-only one (a
+                          transactional sender, a relay account) has no IMAP
+                          server; choosing one hides the other half's host row
+                          above, so nobody is asked for a server they do not have. */}
+                      <div className="field">
+                        <label htmlFor="cm-connection-mode">{tr('connect.connectionModeLabel')}</label>
+                        <select
+                          id="cm-connection-mode"
+                          className="input"
+                          value={connectionMode}
+                          onChange={e => { setPortNote(null); setPortRangeError(null); setConnectionMode(e.target.value); }}
+                          disabled={isReconnect}
+                          aria-describedby="cm-connection-mode-hint"
+                        >
+                          <option value="both">{tr('connect.connectionModeBoth')}</option>
+                          <option value="imap">{tr('connect.connectionModeImap')}</option>
+                          <option value="smtp">{tr('connect.connectionModeSmtp')}</option>
+                        </select>
+                        <span id="cm-connection-mode-hint" style={{ fontFamily: 'var(--font-sans)', fontSize: 12, color: 'var(--fg-3)' }}>
+                          {tr(connectionMode === 'imap' ? 'connect.connectionModeImapHint' : connectionMode === 'smtp' ? 'connect.connectionModeSmtpHint' : 'connect.connectionModeBothHint')}
+                        </span>
+                      </div>
+
                       <div className="field">
                         <label htmlFor="cm-username">{tr('connect.usernameLabel')}</label>
                         <input
@@ -3369,37 +3468,41 @@ export function ConnectModal({
                           the form with nothing saying which half either
                           governed, and losing the legends when the ports moved
                           out to the host rows would put that ambiguity back. */}
-                      <fieldset style={{ border: '1px solid var(--border-1)', borderRadius: 8, padding: 12, margin: 0, display: 'flex', flexDirection: 'column', gap: 12 }}>
-                        <legend style={{ fontFamily: 'var(--font-sans)', fontSize: 12, fontWeight: 600, color: 'var(--fg-2)', padding: '0 6px' }}>
-                          {tr('connect.imapSectionLabel')}
-                        </legend>
-                        <div className="field">
-                          <label htmlFor="cm-imap-security">{tr('connect.imapSecurityLabel')}</label>
-                          <select id="cm-imap-security" className="input" value={form.imapSecurity} onChange={e => setSecurity('imap', e.target.value)} disabled={isReconnect} aria-describedby="cm-imap-security-hint">
-                            <option value="tls">{tr('connect.securityTls')}</option>
-                            <option value="starttls">{tr('connect.securityStarttls')}</option>
-                          </select>
-                          <span id="cm-imap-security-hint" style={{ fontFamily: 'var(--font-sans)', fontSize: 12, color: 'var(--fg-3)' }}>
-                            {tr('connect.securityPortNote')}
-                          </span>
-                        </div>
-                      </fieldset>
+                      {connectionMode !== 'smtp' && (
+                        <fieldset style={{ border: '1px solid var(--border-1)', borderRadius: 8, padding: 12, margin: 0, display: 'flex', flexDirection: 'column', gap: 12 }}>
+                          <legend style={{ fontFamily: 'var(--font-sans)', fontSize: 12, fontWeight: 600, color: 'var(--fg-2)', padding: '0 6px' }}>
+                            {tr('connect.imapSectionLabel')}
+                          </legend>
+                          <div className="field">
+                            <label htmlFor="cm-imap-security">{tr('connect.imapSecurityLabel')}</label>
+                            <select id="cm-imap-security" className="input" value={form.imapSecurity} onChange={e => setSecurity('imap', e.target.value)} disabled={isReconnect} aria-describedby="cm-imap-security-hint">
+                              <option value="tls">{tr('connect.securityTls')}</option>
+                              <option value="starttls">{tr('connect.securityStarttls')}</option>
+                            </select>
+                            <span id="cm-imap-security-hint" style={{ fontFamily: 'var(--font-sans)', fontSize: 12, color: 'var(--fg-3)' }}>
+                              {tr('connect.securityPortNote')}
+                            </span>
+                          </div>
+                        </fieldset>
+                      )}
 
-                      <fieldset style={{ border: '1px solid var(--border-1)', borderRadius: 8, padding: 12, margin: 0, display: 'flex', flexDirection: 'column', gap: 12 }}>
-                        <legend style={{ fontFamily: 'var(--font-sans)', fontSize: 12, fontWeight: 600, color: 'var(--fg-2)', padding: '0 6px' }}>
-                          {tr('connect.smtpSectionLabel')}
-                        </legend>
-                        <div className="field">
-                          <label htmlFor="cm-smtp-security">{tr('connect.smtpSecurityLabel')}</label>
-                          <select id="cm-smtp-security" className="input" value={form.smtpSecurity} onChange={e => setSecurity('smtp', e.target.value)} disabled={isReconnect} aria-describedby="cm-smtp-security-hint">
-                            <option value="tls">{tr('connect.securityTls')}</option>
-                            <option value="starttls">{tr('connect.securityStarttls')}</option>
-                          </select>
-                          <span id="cm-smtp-security-hint" style={{ fontFamily: 'var(--font-sans)', fontSize: 12, color: 'var(--fg-3)' }}>
-                            {tr('connect.securityPortNote')}
-                          </span>
-                        </div>
-                      </fieldset>
+                      {connectionMode !== 'imap' && (
+                        <fieldset style={{ border: '1px solid var(--border-1)', borderRadius: 8, padding: 12, margin: 0, display: 'flex', flexDirection: 'column', gap: 12 }}>
+                          <legend style={{ fontFamily: 'var(--font-sans)', fontSize: 12, fontWeight: 600, color: 'var(--fg-2)', padding: '0 6px' }}>
+                            {tr('connect.smtpSectionLabel')}
+                          </legend>
+                          <div className="field">
+                            <label htmlFor="cm-smtp-security">{tr('connect.smtpSecurityLabel')}</label>
+                            <select id="cm-smtp-security" className="input" value={form.smtpSecurity} onChange={e => setSecurity('smtp', e.target.value)} disabled={isReconnect} aria-describedby="cm-smtp-security-hint">
+                              <option value="tls">{tr('connect.securityTls')}</option>
+                              <option value="starttls">{tr('connect.securityStarttls')}</option>
+                            </select>
+                            <span id="cm-smtp-security-hint" style={{ fontFamily: 'var(--font-sans)', fontSize: 12, color: 'var(--fg-3)' }}>
+                              {tr('connect.securityPortNote')}
+                            </span>
+                          </div>
+                        </fieldset>
+                      )}
                     </div>
                   )}
                 </div>
@@ -3578,6 +3681,16 @@ export function ConnectModal({
                         </div>
                       )}
                     </>
+                  )}
+
+                  {/* SUPPORT_RELEASE_GATE: at release drop the condition and the prop. */}
+                  {supportVisible && (
+                    <Link
+                      href={supportContactHref(provider, shownFailureCode)}
+                      style={{ color: 'var(--red-700)', fontSize: 12.5, width: 'fit-content' }}
+                    >
+                      {tr('connect.errorContactSupport')}
+                    </Link>
                   )}
                 </div>
               )}

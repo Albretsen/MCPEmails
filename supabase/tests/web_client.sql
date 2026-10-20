@@ -5,6 +5,7 @@
 --   - workspaces.web_client_enabled defaults false
 --   - api_keys.kind: CHECK, one live web_client key per workspace, and the
 --     member RLS policies can neither see, create nor edit a system key
+--     (and since 20261016160300 members cannot write api_keys at all)
 --   - the growth functions and their api_keys counts ignore the hidden key
 --   - workspace_assistant_allowance / reserve / finalize: caps per plan, the
 --     atomic reservation, usage recorded only for runs that used tokens
@@ -16,7 +17,7 @@
 
 BEGIN;
 
-SELECT plan(42);
+SELECT plan(43);
 
 INSERT INTO auth.users (
   id, instance_id, aud, role, email, encrypted_password, email_confirmed_at,
@@ -110,19 +111,31 @@ SELECT throws_ok(
             '__web_client__', 'mcpe_webclient', '!web-client:forged', 'web_client')$$,
   '42501', NULL,
   'a member cannot create a web_client key');
-SELECT lives_ok(
+-- Since 20261016160300 a browser session has no write grant on api_keys at
+-- all: ordinary keys are created by POST /api/api-keys through the service
+-- role, after its role, scope and plan checks (see api_keys_write_grants.sql).
+SELECT throws_ok(
   $$INSERT INTO public.api_keys (workspace_id, created_by, name, key_prefix, key_hash)
     VALUES ('cb000000-0000-0000-0000-00000000000b', 'c1000000-0000-0000-0000-000000000001',
             'Alice second', 'mcpe_test', 'wc-hash-member-made')$$,
-  'a member can still create an ordinary key');
--- An UPDATE the policy filters out is not an error: it matches zero rows.
-UPDATE public.api_keys SET scopes = '{}' WHERE id = 'c0000000-0000-0000-0000-0000000000a2';
+  '42501', NULL,
+  'a member cannot create an ordinary key directly either (service-role route only)');
+SELECT throws_ok(
+  $$UPDATE public.api_keys SET scopes = '{}' WHERE id = 'c0000000-0000-0000-0000-0000000000a2'$$,
+  '42501', NULL,
+  'a member cannot UPDATE the web_client key (no write grant)');
 SELECT throws_ok(
   $$UPDATE public.api_keys SET kind = 'web_client' WHERE id = 'c0000000-0000-0000-0000-0000000000a1'$$,
   '42501', NULL,
   'a member cannot turn an ordinary key into a web_client key');
 
 RESET ROLE;
+
+-- The ordinary key the member could not insert directly, created the way
+-- POST /api/api-keys now does it (as the privileged role). Section 3 counts it.
+INSERT INTO public.api_keys (workspace_id, created_by, name, key_prefix, key_hash)
+VALUES ('cb000000-0000-0000-0000-00000000000b', 'c1000000-0000-0000-0000-000000000001',
+        'Alice second', 'mcpe_test', 'wc-hash-member-made');
 
 SELECT is(
   (SELECT scopes FROM public.api_keys WHERE id = 'c0000000-0000-0000-0000-0000000000a2'),

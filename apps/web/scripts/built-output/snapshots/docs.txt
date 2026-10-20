@@ -1110,7 +1110,7 @@ Tool executed but encountered an error (inbox not found, message not found, prov
 No
 isError: true
 Tool result
-The workspace has used its monthly allowance of email actions: 150 a calendar month on Free, with the first 7 days after signup uncounted; Personal, Pro and Team have no monthly cap under fair use. Returned as a normal tool result with isError: true, not as a JSON-RPC error. content[0].text starts with the count and the reset date (the 1st of the next month, UTC), and _meta["com.mcpemails/usage_limit"] carries error_code "usage_limit_reached" and reset_at. inbox_list still works. Retrying cannot succeed before reset_at.
+The workspace has used its monthly allowance of email actions: 150 a calendar month on Free, with the first 3 days after signup uncounted; Personal, Pro and Team have no monthly cap under fair use. Returned as a normal tool result with isError: true, not as a JSON-RPC error. content[0].text starts with the count and the reset date (the 1st of the next month, UTC), and _meta["com.mcpemails/usage_limit"] carries error_code "usage_limit_reached" and reset_at. inbox_list still works. Retrying cannot succeed before reset_at.
 No
 Example error responses
 json
@@ -1188,7 +1188,7 @@ data.retry_after
 countdown (seconds). Personal, Pro and Team raise the ceiling.
 Monthly allowance
 Free 150 email actions / month · Personal, Pro and Team no monthly cap
-A Free workspace gets 150 email actions per calendar month (UTC). Nothing is counted during the first 7 days after signup, and
+A Free workspace gets 150 email actions per calendar month (UTC). Nothing is counted during the first 3 days after signup, and
 inbox_list
 and the dashboard are never counted. Personal, Pro and Team have no monthly cap, subject to fair use. Reaching the allowance is not a JSON-RPC error: the call returns HTTP 200 with a normal tool result carrying
 isError: true

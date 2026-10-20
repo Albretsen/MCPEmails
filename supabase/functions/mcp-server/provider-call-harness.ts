@@ -211,6 +211,9 @@ export const executeListDrafts = server.executeListDrafts;
 export const executeListInbox = server.executeListInbox;
 export const executeReadEmails = server.executeReadEmails;
 export const executeReadEmail = server.executeReadEmail;
+export const executeCreateDraft = server.executeCreateDraft;
+export const executeCreateReplyDraft = server.executeCreateReplyDraft;
+export const executeUpdateDraft = server.executeUpdateDraft;
 
 /** The API key projection the executors read. Full scopes, no inbox allowlist. */
 // deno-lint-ignore no-explicit-any
@@ -460,6 +463,24 @@ export function gmailFull(m: FakeGmailMessage): Record<string, unknown> {
       headers: gmailHeaders(m),
       parts,
     },
+  };
+}
+
+/**
+ * A `messages.get?format=raw` body: the message as RFC 822 (headers, then the
+ * text part), base64url-encoded, as Gmail returns it. Header values are the
+ * fixture's, which a raw message holds undecoded.
+ */
+export function gmailRaw(m: FakeGmailMessage): Record<string, unknown> {
+  const headers = gmailHeaders(m).map((h) => `${h.name}: ${h.value}`);
+  const raw = [...headers, "MIME-Version: 1.0", "Content-Type: text/plain; charset=UTF-8", "", m.text ?? ""].join("\r\n");
+  return {
+    id: m.id,
+    threadId: m.threadId ?? `thread-${m.id}`,
+    labelIds: m.labelIds ?? ["INBOX"],
+    snippet: m.snippet ?? "",
+    raw: b64url(raw),
+    internalDate: m.internalDate ?? "1767225600000",
   };
 }
 

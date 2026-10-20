@@ -2,7 +2,7 @@
 // The arithmetic around a workspace's action allowance, as pure functions.
 //
 // The allowance itself (150 billable email actions per UTC month on Free, the
-// first 7 days after signup uncounted, every workspace from before 2026-09-12
+// first 3 days after signup uncounted, every workspace from before 2026-09-12
 // exempt, silent ceilings on paid plans) is computed in ONE place: the SQL
 // function `workspace_action_allowance(p_workspace_id)` from migration
 // 20260912200000. This module never re-derives the window or the cap. It only

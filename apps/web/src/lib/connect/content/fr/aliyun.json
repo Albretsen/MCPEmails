@@ -22,7 +22,7 @@
     "titleLine1": "Connectez Alibaba Mail à Claude,",
     "titleLine2": "Cursor, ChatGPT, tout client MCP",
     "lead": "Donnez à votre agent IA une vraie boîte Aliyun. Lisez, recherchez, envoyez, répondez, planifiez et organisez le courrier en IMAP, dans tous les clients MCP et pas un seul.",
-    "answer": "Claude ne peut pas accéder seul à Alibaba Mail. mcpemails est un serveur MCP hébergé qui s'y connecte en IMAP sur imap.aliyun.com, port 993, pour que Claude, Cursor ou tout client MCP puisse lire, rechercher, envoyer et organiser ce courrier. Alibaba est le seul grand fournisseur chinois qui n'impose pas de code d'autorisation : votre mot de passe de boîte habituel suffit, à condition que la collecte POP/IMAP soit activée dans les paramètres de la boîte. Si vous ou l'administrateur de votre domaine avez activé le mot de passe de sécurité pour clients tiers (三方客户端安全密码), ce mot de passe de 16 caractères remplace le mot de passe de la boîte partout où un client en demande un. Une boîte est gratuite.",
+    "answer": "Claude ne peut pas accéder seul à Alibaba Mail. MCP Emails est un serveur MCP hébergé qui s'y connecte en IMAP sur imap.aliyun.com, port 993, pour que Claude, Cursor ou tout client MCP puisse lire, rechercher, envoyer et organiser ce courrier. Alibaba est le seul grand fournisseur chinois qui n'impose pas de code d'autorisation : votre mot de passe de boîte habituel suffit, à condition que la collecte POP/IMAP soit activée dans les paramètres de la boîte. Si vous ou l'administrateur de votre domaine avez activé le mot de passe de sécurité pour clients tiers (三方客户端安全密码), ce mot de passe de 16 caractères remplace le mot de passe de la boîte partout où un client en demande un. Une boîte est gratuite.",
     "meta0": "1 boîte gratuite, pour toujours",
     "meta1": "Mot de passe de la boîte, ou mot de passe de sécurité client",
     "meta2": "E-mails récupérés en direct, jamais stockés"
@@ -33,7 +33,7 @@
   },
   "setup": [
     {
-      "h": "Créez votre compte mcpemails gratuit",
+      "h": "Créez votre compte MCP Emails gratuit",
       "p": "Inscrivez-vous sur mcpemails.com. L'offre gratuite connecte une boîte et reste gratuite, sans carte bancaire. Gardez l'onglet ouvert : vous y collerez vos identifiants Aliyun à l'étape trois."
     },
     {
@@ -42,7 +42,7 @@
     },
     {
       "h": "Déterminez quel mot de passe votre compte attend réellement",
-      "p": "Ouvrez 设置, puis 查看更多设置 (view more settings), puis 账户与安全 (Account and security) et 账户安全 (Account safety), et regardez 三方客户端登录安全管理, la section de sécurité de connexion des clients tiers. Si 三方客户端安全密码 est désactivé, votre mot de passe de boîte est l'identifiant et il n'y a rien d'autre à faire. S'il est activé, ou si vous l'activez ici, cliquez sur 生成新密码 (generate new password), passez la vérification par mobile et copiez le mot de passe de 16 caractères. Alibaba ne l'affiche qu'une fois. Collez votre adresse complète et celui des deux mots de passe qui s'applique dans mcpemails ; les serveurs sont préremplis."
+      "p": "Ouvrez 设置, puis 查看更多设置 (view more settings), puis 账户与安全 (Account and security) et 账户安全 (Account safety), et regardez 三方客户端登录安全管理, la section de sécurité de connexion des clients tiers. Si 三方客户端安全密码 est désactivé, votre mot de passe de boîte est l'identifiant et il n'y a rien d'autre à faire. S'il est activé, ou si vous l'activez ici, cliquez sur 生成新密码 (generate new password), passez la vérification par mobile et copiez le mot de passe de 16 caractères. Alibaba ne l'affiche qu'une fois. Collez votre adresse complète et celui des deux mots de passe qui s'applique dans MCP Emails ; les serveurs sont préremplis."
     },
     {
       "h": "Collez l'URL MCP dans votre client IA",
@@ -60,7 +60,7 @@
     },
     {
       "h": "Le mot de passe de sécurité est délivré par appareil, jusqu'à dix, et affiché une seule fois",
-      "p": "Alibaba les traite comme des identifiants d'appareil plutôt que comme un identifiant de compte unique. Vous pouvez en détenir jusqu'à dix à la fois, et la pratique recommandée est d'en utiliser un distinct par appareil. Chacun s'affiche une fois à sa création et plus jamais ensuite : un mot de passe perdu se remplace, il ne se récupère pas. Générez un mot de passe dédié à mcpemails plutôt que de réutiliser celui déjà présent sur votre téléphone : révoquer un mot de passe n'affecte alors que ce pour quoi il a été délivré."
+      "p": "Alibaba les traite comme des identifiants d'appareil plutôt que comme un identifiant de compte unique. Vous pouvez en détenir jusqu'à dix à la fois, et la pratique recommandée est d'en utiliser un distinct par appareil. Chacun s'affiche une fois à sa création et plus jamais ensuite : un mot de passe perdu se remplace, il ne se récupère pas. Générez un mot de passe dédié à MCP Emails plutôt que de réutiliser celui déjà présent sur votre téléphone : révoquer un mot de passe n'affecte alors que ce pour quoi il a été délivré."
     }
   ],
   "limits": [
@@ -71,7 +71,7 @@
   "faq": [
     {
       "q": "Claude fonctionne-t-il avec Alibaba Mail ?",
-      "a": "Pas directement. Claude n'a pas de connecteur Aliyun intégré et ne peut pas ouvrir seul une connexion IMAP. Connecter un serveur MCP comme mcpemails à votre boîte Alibaba donne à Claude un accès en lecture, recherche, envoi, réponse, transfert, planification et organisation, et la même connexion fonctionne depuis Cursor et d'autres clients MCP."
+      "a": "Pas directement. Claude n'a pas de connecteur Aliyun intégré et ne peut pas ouvrir seul une connexion IMAP. Connecter un serveur MCP comme MCP Emails à votre boîte Alibaba donne à Claude un accès en lecture, recherche, envoi, réponse, transfert, planification et organisation, et la même connexion fonctionne depuis Cursor et d'autres clients MCP."
     },
     {
       "q": "Quels sont les réglages IMAP et SMTP d'Alibaba Mail ?",
@@ -87,7 +87,7 @@
     },
     {
       "q": "Puis-je connecter Alibaba Mail sur mon propre domaine ?",
-      "a": "Oui, mais pas avec les noms d'hôte de cette page. Alibaba Mail entreprise utilise ses propres noms de serveur, indiqués dans la console d'administration de votre domaine. Prenez-y les serveurs entrant et sortant, puis connectez-les dans mcpemails comme une boîte IMAP et SMTP classique. Les règles de mot de passe de sécurité décrites ici s'appliquent aussi à ces comptes."
+      "a": "Oui, mais pas avec les noms d'hôte de cette page. Alibaba Mail entreprise utilise ses propres noms de serveur, indiqués dans la console d'administration de votre domaine. Prenez-y les serveurs entrant et sortant, puis connectez-les dans MCP Emails comme une boîte IMAP et SMTP classique. Les règles de mot de passe de sécurité décrites ici s'appliquent aussi à ces comptes."
     },
     {
       "q": "Mes e-mails Alibaba sont-ils stockés sur vos serveurs ?",

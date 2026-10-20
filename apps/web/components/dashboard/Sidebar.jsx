@@ -22,7 +22,7 @@ import { Link } from '@/i18n/navigation';
  *   - `onClose` is called when the user taps the overlay backdrop.
  *   - Clicking a nav item also calls `onClose` so the drawer closes.
  */
-export function Sidebar({ route, setRoute, counts, user, workspace, workspaces = [], activeWorkspaceId, canCreateWorkspace = false, isOpen, onClose }) {
+export function Sidebar({ route, setRoute, counts, user, workspace, workspaces = [], activeWorkspaceId, canCreateWorkspace = false, supportVisible = false /* SUPPORT_RELEASE_GATE */, isOpen, onClose }) {
   const tr = useTranslations('dashboardChrome');
   const router = useRouter();
   const [wsMenuOpen, setWsMenuOpen] = useState(false);
@@ -140,7 +140,7 @@ export function Sidebar({ route, setRoute, counts, user, workspace, workspaces =
         aria-label="Dashboard navigation"
       >
         <div className="brand">
-          <img className="logo-light" src="/logo-wordmark.svg" alt="mcpemails" /><img className="logo-dark" src="/logo-wordmark-dark.svg" alt="mcpemails" />
+          <img className="logo-light" src="/logo-wordmark.svg" alt="MCP Emails" /><img className="logo-dark" src="/logo-wordmark-dark.svg" alt="MCP Emails" />
         </div>
 
         {/* Workspace switcher */}
@@ -272,6 +272,18 @@ export function Sidebar({ route, setRoute, counts, user, workspace, workspaces =
               <span>{it.label}</span>
             </a>
           ))}
+          {/* SUPPORT_RELEASE_GATE: at release drop the condition and the prop.
+              Not a dashboard section: /help is a marketing page, so this is the
+              locale-aware Link (same as the /pricing upsell above). The
+              dashboard's locale lives in the client provider, not the URL, and
+              Link reads it from there, so a Norwegian user lands on /nb/help
+              and an English one on /help. */}
+          {supportVisible && (
+            <Link href="/help" className="nav-item" onClick={() => { if (onClose) onClose(); }}>
+              <Icon name="mail" size={16} />
+              <span>{tr('sidebar.navHelp')}</span>
+            </Link>
+          )}
         </nav>
 
         <div className="footer-user">

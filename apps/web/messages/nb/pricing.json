@@ -1,14 +1,14 @@
 {
   "meta": {
-    "title": "Priser for AI-e-post-MCP-server, Gratis, Personal, Pro og Team",
-    "description": "Gratis kobler til én innboks. Personal kobler til tre for $9. Pro kobler til alle postkassene firmaet ditt har for $15. Team legger til medlemmer, roller og SSO."
+    "title": "Priser for AI-e-post-MCP-server, Gratis, Personal, Pro og Business",
+    "description": "Gratis kobler til én innboks. Personal kobler til tre for $9. Pro kobler til opptil 10 for $15. Business har 10 postkasser inkludert og så mange folk du vil for $39."
   },
   "hero": {
     "eyebrow": "Priser",
     "titleLine1": "Én innboks, gratis.",
     "titleLine2": "Tre innbokser, $9.",
     "titleLine2Yearly": "Tre innbokser, $86,40 i året.",
-    "lead": "Koble til en postkasse én gang, så kan agenten lese, søke, organisere, skrive, planlegge og sende. Gratis dekker én innboks. Personal dekker tre for $9 i måneden. Pro dekker alle postkassene du eller firmaet ditt har, med én innlogging. Team legger til folk, roller og et eget arbeidsområde per kunde."
+    "lead": "Koble til en postkasse én gang, så kan agenten lese, søke, organisere, skrive, planlegge og sende. Gratis dekker én innboks. Personal dekker tre for $9 i måneden. Pro dekker opptil 10 for én person som driver en bedrift, med én innlogging. Business har 10 postkasser inkludert, koster $3 i måneden for hver ekstra, og alle i teamet kan logge inn uten ekstra kostnad."
   },
   "billing": {
     "monthly": "Månedlig",
@@ -27,7 +27,7 @@
       "cta": "Start gratis",
       "features": [
         "1 tilkoblet innboks",
-        "150 e-posthandlinger i måneden, de første 7 dagene telles ikke",
+        "150 e-posthandlinger i måneden, de første 3 dagene telles ikke",
         "Les, søk, organiser, skriv, planlegg og send",
         "Godkjenning før sending",
         "Bruksanalyse",
@@ -51,33 +51,35 @@
     },
     "solo": {
       "name": "Pro",
-      "desc": "Alle postkassene firmaet ditt har, i én agent: økonomi, salg, support, post@ og din egen.",
+      "desc": "For én person som driver en bedrift: opptil 10 postkasser på én agent, fra økonomi og salg til support og din egen.",
       "cta": "Få Pro",
       "features": [
         "Alt i Personal",
-        "Ubegrenset antall tilkoblede innbokser",
+        "10 tilkoblede innbokser",
         "5x høyere burst-grense",
         "Lengre analysehistorikk"
       ]
     },
     "pro": {
-      "name": "Team",
-      "desc": "Delte innbokser for et team, med et eget arbeidsområde per kunde eller virksomhet.",
-      "cta": "Få Team",
+      "name": "Business",
+      "desc": "For en bedrift med mange postkasser eller flere folk: 10 postkasser inkludert, flere til fast pris per stykk.",
+      "cta": "Få Business",
       "features": [
         "Alt i Pro",
-        "Ubegrenset antall medlemmer med roller",
-        "Et eget arbeidsområde per kunde eller virksomhet",
-        "SSO (SAML / OIDC) og revisjonslogg",
-        "Lengst analysehistorikk",
-        "Prioritert støtte"
+        "10 postkasser inkludert, $3 i måneden for hver ekstra",
+        "Ubegrenset antall medlemmer med roller, uten ekstra kostnad",
+        "Administratorer godkjenner sendinger som venter",
+        "Flere arbeidsområder på ett abonnement, ett per firma eller kunde"
       ]
     }
   },
   "cardsFootnote": {
-    "all": "Alle planer inkluderer: e-post hentes i sanntid, lagres aldri · legitimasjon kryptert i hvile · hosting i EU og USA",
-    "business": "Én person som har flere firmapostkasser? Det er Pro, ikke Team. <business>Se hvordan alle jobbpostkassene kjører på én agent</business>.",
-    "custom": "Trenger du noe tilpasset? <contact>Kontakt oss</contact>."
+    "all": "Alle planer inkluderer: e-post hentes i sanntid, lagres aldri · legitimasjon kryptert i hvile · data lagret i EU (Stockholm)",
+    "business": "Én person som har flere firmapostkasser? Det er Pro, for opptil 10. <business>Se hvordan alle jobbpostkassene kjører på én agent</business>."
+  },
+  "enterprise": {
+    "title": "Enterprise: snakk med oss",
+    "body": "Databehandleravtale, betaling mot faktura og hjelp til å få Microsoft 365 godkjent av IT-administratoren. Skriv til <contact>hello@mcpemails.com</contact>."
   },
   "comparison": {
     "eyebrow": "Full sammenligning",
@@ -86,7 +88,7 @@
     "free": "Gratis",
     "personal": "Personal",
     "solo": "Pro",
-    "team": "Team",
+    "business": "Business",
     "sections": {
       "usage": {
         "label": "Hva du får",
@@ -94,7 +96,7 @@
           "inboxes": "Tilkoblede innbokser",
           "actions": "E-posthandlinger per måned",
           "keys": "API-nøkler",
-          "members": "Brukere",
+          "members": "Personer som kan logge inn",
           "burst": "Burst-grense",
           "approvals": "Godkjenning før sending"
         }
@@ -102,7 +104,7 @@
       "providers": {
         "label": "E-postleverandører",
         "rows": {
-          "gmail": "Gmail (app-passord eller Logg inn med Google)",
+          "gmail": "Gmail (Google-app-passord)",
           "outlook": "Outlook / Microsoft 365 (logg inn med Microsoft)",
           "fastmail": "Fastmail (app-passord)",
           "appPassword": "iCloud, Yahoo, Zoho, Yandex (app-passord)",
@@ -116,9 +118,9 @@
         "label": "Analyse og sikkerhet",
         "rows": {
           "dashboard": "Dashbord for bruksanalyse",
-          "roles": "Teamroller og arbeidsområder",
-          "sso": "SSO (SAML / OIDC)",
-          "audit": "Revisjonslogg",
+          "roles": "Medlemmer med roller (leser, medlem, administrator)",
+          "adminApprovals": "Administratorer godkjenner sendinger som venter",
+          "workspaces": "Flere arbeidsområder på ett abonnement",
           "history": "Analysehistorikk"
         }
       },
@@ -133,26 +135,27 @@
         "label": "Kundestøtte",
         "rows": {
           "community": "Fellesskapsforum",
-          "email": "E-poststøtte",
-          "priority": "Prioritert støtte"
+          "email": "E-poststøtte"
         }
       }
     },
     "values": {
       "unlimited": "Ubegrenset",
-      "unlimitedCompany": "Ubegrenset, også firmaets postkasser",
-      "actionsFree": "150 / måned, de første 7 dagene telles ikke",
+      "tenMailboxes": "Opptil 10 postkasser",
+      "businessMailboxes": "10 inkludert, deretter $3 i måneden per stykk",
+      "actionsFree": "150 / måned, de første 3 dagene telles ikke",
       "actionsPaid": "Ingen månedlig grense, rimelig bruk",
       "oneInbox": "1 innboks",
       "threeInboxes": "3 innbokser",
-      "oneSeat": "1 bruker",
+      "oneSeat": "Én person",
+      "unlimitedPeople": "Ubegrenset, uten ekstra kostnad",
       "burstFree": "60 / min",
       "burstPersonal": "120 / min",
       "burstSolo": "300 / min",
       "burstPro": "1 000 / min",
       "history30": "30 dager",
       "history90": "90 dager",
-      "history365": "1 år"
+      "history2y": "2 år"
     }
   },
   "faq": {
@@ -161,15 +164,15 @@
     "items": [
       {
         "q": "Hva får jeg på gratisplanen?",
-        "a": "Én tilkoblet innboks, for alltid, uten kort, og 150 e-posthandlinger per kalendermåned. De første 7 dagene etter registrering telles ikke, så du kan koble opp agenten og prøve alt før telleren starter. Agenten din får alle MCP-verktøyene vi leverer mot den postkassen: lese, søke, organisere, merke, skrive, planlegge og sende, i tillegg til godkjenning før sending per innboks. Når du vil ha postkasse nummer to eller tre, eller slippe den månedlige handlingsgrensen, er det Personal, til $9 i måneden."
+        "a": "Én tilkoblet innboks, for alltid, uten kort, og 150 e-posthandlinger per kalendermåned. De første 3 dagene etter registrering telles ikke, så du kan koble opp agenten og prøve alt før telleren starter. Agenten din får alle MCP-verktøyene vi leverer mot den postkassen: lese, søke, organisere, merke, skrive, planlegge og sende, i tillegg til godkjenning før sending per innboks. Når du vil ha postkasse nummer to eller tre, eller slippe den månedlige handlingsgrensen, er det Personal, til $9 i måneden."
       },
       {
         "q": "Hva gir Personal utover Free?",
-        "a": "To innbokser til, ingen månedlig grense på e-posthandlinger (rimelig bruk gjelder), dobbelt så høyt burst-tak (120 forespørsler per minutt i stedet for 60), og e-poststøtte i stedet for fellesskapsforumet. Det er hele listen. Alt annet ligger allerede i Free: alle MCP-verktøyene, inkludert planlagte sendinger, godkjenning før sending per innboks, og dashbordet for bruksanalyse. Vi holder ikke funksjoner tilbake fra Free for å få de betalte planene til å se større ut."
+        "a": "To innbokser til, ingen månedlig grense på e-posthandlinger (rimelig bruk gjelder), dobbelt så høyt burst-tak (120 forespørsler per minutt i stedet for 60), 90 dager analysehistorikk i stedet for 30, og e-poststøtte i stedet for fellesskapsforumet. Det er hele listen. Alt annet ligger allerede i Free: alle MCP-verktøyene, inkludert planlagte sendinger, godkjenning før sending per innboks, og dashbordet for bruksanalyse. Vi holder ikke funksjoner tilbake fra Free for å få de betalte planene til å se større ut."
       },
       {
         "q": "Hva regnes som en e-posthandling?",
-        "a": "Ett verktøykall mot /mcp-endepunktet ditt som rører en postkasse: en lesing, et søk, en flytting, et utkast, en sending. Å liste innboksene dine (inbox_list) og alt du gjør i dashbordet telles aldri. Vi er en standard MCP-server, så det samme endepunktet fungerer med Claude, Cursor, VS Code, ChatGPT, Windsurf, n8n, Make og enhver MCP-kompatibel klient. Free inkluderer 150 e-posthandlinger per kalendermåned; Personal, Pro og Team har ingen månedlig grense, innenfor rimelig bruk."
+        "a": "Ett verktøykall mot /mcp-endepunktet ditt som rører en postkasse: en lesing, et søk, en flytting, et utkast, en sending. Å liste innboksene dine (inbox_list) og alt du gjør i dashbordet telles aldri. Vi er en standard MCP-server, så det samme endepunktet fungerer med Claude, Cursor, VS Code, ChatGPT, Windsurf, n8n, Make og enhver MCP-kompatibel klient. Free inkluderer 150 e-posthandlinger per kalendermåned; Personal, Pro og Business har ingen månedlig grense, innenfor rimelig bruk."
       },
       {
         "q": "Hva skjer når jeg når 150 e-posthandlinger?",
@@ -177,19 +180,19 @@
       },
       {
         "q": "Lagres e-postinnholdet mitt noe sted?",
-        "a": "E-posten agenten din leser lagres aldri: brødtekst, emnefelt, vedlegg og trådinnhold hentes direkte fra leverandøren din i sanntid og returneres rett til agenten, uten at noe beholdes mellom kall. Vi lagrer ditt krypterte OAuth-token eller app-passord, slik at vi kan autentisere fremtidige forespørsler. Det eneste unntaket er en melding du ber oss om å planlegge til senere. Den lagrer vi frem til den er sendt, og beholder deretter en oppføring for historikken din."
+        "a": "E-posten agenten din leser lagres aldri: brødtekst, emnefelt, vedlegg og trådinnhold hentes direkte fra leverandøren din i sanntid og returneres rett til agenten, uten at noe beholdes mellom kall. Vi lagrer ditt krypterte OAuth-token eller app-passord, slik at vi kan autentisere fremtidige forespørsler. Unntakene er utgående meldinger som må vente: en melding du ber oss om å planlegge til senere, eller en sending som holdes tilbake for godkjenning. Dem lagrer vi kryptert, og vi beholder deretter en oppføring for historikken din."
       },
       {
-        "q": "Hva er forskjellen mellom Personal, Pro og Team?",
-        "a": "Personal er én bruker med tre tilkoblede innbokser, et tak på 120 forespørsler per minutt og e-poststøtte. Pro er fortsatt én bruker og én innlogging, helt uten innboksgrense, så én person kan koble til alle postkassene et firma har (salg, faktura, support, post@). I tillegg kommer et tak på 300 forespørsler per minutt, 90 dager analysehistorikk i stedet for 30, og e-poststøtte. Team er for når flere enn én person trenger å logge inn: ubegrenset antall medlemmer med roller, et eget arbeidsområde per kunde eller virksomhet, SSO (SAML / OIDC), revisjonslogg, ett år med analysehistorikk og prioritert støtte."
+        "q": "Hva er forskjellen mellom Personal, Pro og Business?",
+        "a": "Personal er én bruker med tre tilkoblede innbokser, et tak på 120 forespørsler per minutt, 90 dager analysehistorikk og e-poststøtte. Pro er fortsatt én bruker og én innlogging, med opptil 10 tilkoblede postkasser, så én person kan håndtere postkassene et firma har (salg, faktura, support, post@). I tillegg kommer et tak på 300 forespørsler per minutt, to års analysehistorikk i stedet for 90 dager, og e-poststøtte. Business er for flere postkasser eller flere folk: 10 postkasser inkludert og $3 i måneden for hver ekstra, ubegrenset antall medlemmer med roller (leser, medlem, administrator) uten ekstra kostnad, administratorer som godkjenner sendinger som venter, flere arbeidsområder på ett abonnement og et tak på 1 000 forespørsler per minutt."
       },
       {
         "q": "Vi er et firma med flere postkasser. Hvilken plan trenger vi?",
-        "a": "Tell først hvor mange personer som logger inn, og deretter postkassene. Hvis én person tar seg av post@, salg@, faktura@ og resten, er det Pro: én innlogging, ingen grense for tilkoblede postkasser, og hver postkasse beholder sitt eget avsendernavn og sin egen signatur og sender gjennom sin egen e-postserver. To eller tre adresser får plass på Personal. Team trengs bare når en person til trenger sin egen innlogging. Alle postkasser som snakker IMAP og SMTP kan kobles til, uansett hvem som leverer dem, og det kan Gmail, Google Workspace og Microsoft 365 også; en Microsoft 365-konto i et firma kan trenge at IT-administratoren godkjenner appen én gang."
+        "a": "Tell først postkassene, og deretter hvor mange personer som logger inn. Hvis én person tar seg av post@, salg@, faktura@ og resten, er det Pro: én innlogging, opptil 10 tilkoblede postkasser, og hver postkasse beholder sitt eget avsendernavn og sin egen signatur og sender gjennom sin egen e-postserver. To eller tre adresser får plass på Personal. Business er for flere enn 10 postkasser, eller når en person til trenger sin egen innlogging: 10 postkasser er inkludert, hver ekstra koster $3 i måneden, og medlemmer koster ingenting ekstra. Alle postkasser som snakker IMAP og SMTP kan kobles til, uansett hvem som leverer dem, og det kan Gmail, Google Workspace og Microsoft 365 også; en Microsoft 365-konto i et firma kan trenge at IT-administratoren godkjenner appen én gang."
       },
       {
         "q": "Hva om jeg trenger en fjerde innboks?",
-        "a": "Personal dekker tre tilkoblede innbokser. En fjerde tar deg over på Pro til $15 i måneden, og det fjerner grensen helt: alle postkassene du eller firmaet ditt har, uansett hvor mange, på én agent og én innlogging. Ligger du så vidt over tre, og det ikke fungerer for deg, si fra til oss på hello@mcpemails.com."
+        "a": "Personal dekker tre tilkoblede innbokser. En fjerde tar deg over på Pro til $15 i måneden, som dekker opptil 10 postkasser på én agent og én innlogging. Over 10 har Business 10 inkludert og koster $3 i måneden for hver ekstra. Ligger du så vidt over tre, og det ikke fungerer for deg, si fra til oss på hello@mcpemails.com."
       },
       {
         "q": "Kan jeg endre eller si opp planen min?",
@@ -197,11 +200,11 @@
       },
       {
         "q": "Hvordan fungerer årsrabatten?",
-        "a": "Å betale årlig sparer omtrent 20 % sammenlignet med månedlig fakturering: Personal koster $86,40 i året ($7,20 i måneden), Pro koster $144 i året ($12 i måneden) og Team koster $756 i året ($63 i måneden). Du belastes én gang for 12 måneder på forhånd. Oppsigelse stopper fornyelsen, og du beholder tilgangen ut året du har betalt for. Bortsett fra 14-dagers refusjonen på den første belastningen refunderer vi ikke de gjenstående månedene."
+        "a": "Å betale årlig sparer omtrent 20 % sammenlignet med månedlig fakturering: Personal koster $86,40 i året ($7,20 i måneden), Pro koster $144 i året ($12 i måneden) og Business koster $374,40 i året ($31,20 i måneden), med hver ekstra postkasse til $28,80 i året ($2,40 i måneden). Du belastes én gang for 12 måneder på forhånd. Oppsigelse stopper fornyelsen, og du beholder tilgangen ut året du har betalt for. Bortsett fra 14-dagers refusjonen på den første belastningen refunderer vi ikke de gjenstående månedene."
       },
       {
         "q": "Hvilke e-postleverandører støttes?",
-        "a": "Gmail kobles til med et app-passord som standard, eller ved å logge inn med Google (OAuth). Outlook og Microsoft 365 kobles til ved å logge inn med Microsoft (OAuth): personlige kontoer kobles til direkte, og en jobb- eller skolekonto kan trenge at IT-administratoren godkjenner appen én gang. Fastmail kobles til med et app-passord. iCloud, Yahoo, Zoho og Yandex kobles til med et app-spesifikt passord, og enhver annen postkasse fungerer gjennom den generiske IMAP- / SMTP-tilkoblingen."
+        "a": "Gmail og Google Workspace kobles til med et Google-app-passord over IMAP. Outlook og Microsoft 365 kobles til ved å logge inn med Microsoft (OAuth): personlige kontoer kobles til direkte, og en jobb- eller skolekonto kan trenge at IT-administratoren godkjenner appen én gang. Fastmail kobles til med et app-passord. iCloud, Yahoo, Zoho og Yandex kobles til med et app-spesifikt passord, og enhver annen postkasse fungerer gjennom den generiske IMAP- / SMTP-tilkoblingen."
       },
       {
         "q": "Finnes det en refusjonsordning?",
@@ -209,13 +212,13 @@
       },
       {
         "q": "Kan jeg selvhoste den i stedet for å betale?",
-        "a": "Ja. MCP Emails er åpen kildekode under AGPL-3.0 og gratis å selvhoste. En docker-compose-stack kjører den samme MCP-serveren, med legitimasjonen til postkassen din kryptert under en nøkkel bare du har. Selvhosting dekker IMAP- og SMTP-postkasser. Gmail- og Outlook-innlogging (OAuth) og dashboardet finnes på den hostede tjenesten, der de fungerer på alle planer, også Gratis; teamfunksjoner og e-poststøtte hører til de betalte planene."
+        "a": "Ja. MCP Emails er åpen kildekode under AGPL-3.0 og gratis å selvhoste. En docker-compose-stack kjører den samme MCP-serveren, med legitimasjonen til postkassen din kryptert under en nøkkel bare du har. Selvhosting dekker IMAP- og SMTP-postkasser. Gmail- og Outlook-innlogging (OAuth) og dashboardet finnes på den hostede tjenesten, der de fungerer på alle planer, også Gratis; medlemmer og roller hører til Business, og e-poststøtte følger med alle betalte planer."
       }
     ]
   },
   "ctaBand": {
     "title": "Klar til å gi agenten din en innboks?",
-    "sub": "Start på Gratis: én innboks, uten kort. Tre postkasser koster $9 i måneden med Personal, og alle postkassene firmaet ditt har, koster $15 med Pro.",
+    "sub": "Start på Gratis: én innboks, uten kort. Tre postkasser koster $9 i måneden med Personal, opptil 10 koster $15 med Pro, og Business har 10 inkludert for $39, med $3 i måneden for hver ekstra.",
     "ctaPrimary": "Kom i gang gratis",
     "ctaSecondary": "Les dokumentasjonen"
   }

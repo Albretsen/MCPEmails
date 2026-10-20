@@ -19,8 +19,16 @@
 // into the headers are converted to their UTF-8 octets first for the same
 // reason.
 //
-// Pure and dependency-free so it can be tested without booting the server.
+// Pure (no I/O) so it can be tested without booting the server.
+//
+// SECURITY (2026-10-16): an entry is validated as a whole (no control
+// characters anywhere, a valid address) and written back through
+// mime-build.ts#headerAddressList, never as given, so a display name can no
+// longer carry a CRLF into the stored message.
 // ---------------------------------------------------------------------------
+
+import { hasHeaderControls, parseMailbox } from "./address-header.ts";
+import { headerAddressList } from "./mime-build.ts";
 
 /** The recipient lists to set. An absent list is left as stored. */
 export interface RecipientOverride {
@@ -41,6 +49,60 @@ export function recipientOverrideFrom(args: Record<string, unknown>): RecipientO
     }
   }
   return Object.keys(override).length > 0 ? override : null;
+}
+
+/**
+ * The first entry of a draft-send recipient override that cannot be used, or
+ * null when every entry can.
+ *
+ * `recipientOverrideFrom` drops what it cannot read (a non-string, a blank) and
+ * writes everything else into the header as given, so a mistyped address was
+ * either left off the mail without a word or stored as a recipient no server
+ * will accept. A send is the last place to find that out, so the call is
+ * refused instead and nothing is rewritten.
+ *
+ * An entry may be a bare address or `Name <address>`; the address part is what
+ * is validated, with the validator every other send path uses. A blank string
+ * is not a mistyped address and stays ignored, as before.
+ */
+export function invalidRecipientIn(
+  args: Record<string, unknown>,
+  isValidEmailAddress: (address: string) => boolean,
+): { field: "to" | "cc" | "bcc"; entry: unknown } | null {
+  for (const field of ["to", "cc", "bcc"] as const) {
+    const value = args[field];
+    if (!Array.isArray(value)) continue;
+    for (const entry of value) {
+      if (typeof entry !== "string") return { field, entry };
+      const trimmed = entry.trim();
+      if (trimmed === "") continue;
+      // A control character anywhere (a CRLF in the display name included)
+      // is refused outright: it can only be an attempt to add a header.
+      if (hasHeaderControls(trimmed)) return { field, entry };
+      // One entry is one mailbox; its address part, read structurally (the
+      // last angle-addr outside any quoted name), is what is validated.
+      if (!isValidEmailAddress(parseMailbox(trimmed).email)) return { field, entry };
+    }
+  }
+  return null;
+}
+
+/**
+ * One header's value from a Gmail `payload.headers` list, or null.
+ *
+ * Case-insensitive on purpose. Gmail returns header names as the message
+ * spells them, and RFC 5322 names are case-insensitive, so `CC:` written by
+ * another mail client is the same field as the `Cc:` this server writes.
+ */
+export function gmailHeaderValue(
+  headers: readonly { name: string; value: string }[] | null | undefined,
+  name: string,
+): string | null {
+  const wanted = name.toLowerCase();
+  const found = (headers ?? []).find((h) =>
+    typeof h?.name === "string" && h.name.toLowerCase() === wanted
+  );
+  return typeof found?.value === "string" ? found.value : null;
 }
 
 const HEADER_NAMES: Record<keyof RecipientOverride, string> = { to: "To", cc: "Cc", bcc: "Bcc" };
@@ -124,8 +186,10 @@ export function rewriteRecipientHeaders(
 
   const added: string[] = [];
   for (const key of ["to", "cc", "bcc"] as const) {
-    const addresses = override[key];
-    if (addresses && addresses.length > 0) added.push(headerField(HEADER_NAMES[key], addresses, eol));
+    // Re-serialized, not written as given: names RFC 2047-encoded, addresses
+    // stripped of anything that could split the field (mime-build.ts).
+    const addresses = headerAddressList(override[key] ?? []);
+    if (addresses.length > 0) added.push(headerField(HEADER_NAMES[key], addresses, eol));
   }
 
   // New fields go right after From, where a mail client writes them; a message

@@ -55,6 +55,11 @@ const FIXTURES = {
       body: { text: "This body belongs to another conversation.", html: null },
     },
   },
+  // A model-initiated draft write: body deferred. Mounted with its `_meta`
+  // ("mount deferred draft") the card fills the body in at once; without
+  // ("... host drops _meta") it shows its loading line and calls draft_read.
+  deferred: F.draftReplyDeferred,
+  deferred_read: F.draftReadInline,
   // What the server would send for an internal workspace once the envelope
   // carries the flag (contract.ts#Envelope.diagnostics).
   draft_internal: { ...F.draftEditorImap, diagnostics: true },
@@ -131,7 +136,9 @@ window.addEventListener("message", (e) => {
     }
     // draft_read is the re-request a restored stub makes. Everything else gets
     // the mounted fixture back so the card has something coherent.
-    const result = name === "draft_read" ? FIXTURES.draft : (FIXTURES[mountedFixture] ?? FIXTURES.draft);
+    const result = name === "draft_read"
+      ? (mountedFixture === "deferred" ? FIXTURES.deferred_read : FIXTURES.draft)
+      : (FIXTURES[mountedFixture] ?? FIXTURES.draft);
     post({ jsonrpc: "2.0", id: m.id, result: { structuredContent: result, content: [{ type: "text", text: "ok" }] } });
     return;
   }
@@ -143,7 +150,9 @@ window.addEventListener("message", (e) => {
   if (m.id !== undefined) post({ jsonrpc: "2.0", id: m.id, result: {} });
 });
 
-function mount(fixture, { withResult = true, args } = {}) {
+const RESULT_META = __RESULT_META__;
+
+function mount(fixture, { withResult = true, args, meta } = {}) {
   mountedFixture = fixture;
   if (args) mountedArgs = args;
   frame.src = "/card.html" + location.search;
@@ -151,7 +160,8 @@ function mount(fixture, { withResult = true, args } = {}) {
     post({ jsonrpc: "2.0", method: "ui/notifications/tool-input", params: { arguments: mountedArgs } });
     if (withResult) {
       post({ jsonrpc: "2.0", method: "ui/notifications/tool-result",
-             params: { structuredContent: FIXTURES[fixture], content: [{ type: "text", text: "ok" }] } });
+             params: { structuredContent: FIXTURES[fixture], content: [{ type: "text", text: "ok" }],
+                       ...(meta ? { _meta: RESULT_META } : {}) } });
     }
     log("-> mounted", fixture, withResult ? "with result" : "WITHOUT result (remount)");
   }, 60);
@@ -176,6 +186,8 @@ const buttons = [
   ["mount draft", () => mount("draft")],
   ["mount outbound", () => mount("outbound", { args: { approval_id: "ap-1" } })],
   ["remount draft (no result)", () => mount("draft", { withResult: false })],
+  ["mount deferred draft", () => mount("deferred", { meta: true })],
+  ["mount deferred draft, host drops _meta", () => mount("deferred")],
   ["push draft-less envelope", () => push("draftless")],
   ["push someone else's draft", () => push("someone_else")],
   ["mount internal draft (diagnostics)", () => mount("draft_internal")],
@@ -214,7 +226,10 @@ createServer((req, res) => {
     // script tag. Exactly the class of bug the fixtures exist to catch, found
     // by the fixtures. Escaping `<` is the standard answer.
     .end(
-      PAGE.replace("__FIXTURES__", JSON.stringify(FIXTURES).replace(/</g, "\\u003c")),
+      PAGE.replace("__FIXTURES__", JSON.stringify(FIXTURES).replace(/</g, "\\u003c")).replace(
+        "__RESULT_META__",
+        JSON.stringify(F.draftReplyResultMeta).replace(/</g, "\\u003c"),
+      ),
     );
 }).listen(PORT, () => {
   console.log(`[mini-host] http://localhost:${PORT}  (?card=before for the old bundle)`);

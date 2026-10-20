@@ -230,6 +230,33 @@ export async function recordInboxPaywallReached(
 }
 
 /**
+ * A buy button on the inbox-cap offer was clicked.
+ *
+ * The other half of `recordInboxPaywallReached`: same workspace resolution,
+ * same `connection_type = 'first_connect'`, same category (the plan the user
+ * was on when the cap stopped them), so shown and clicked join on the row
+ * shape alone. A Pro workspace at its cap is offered Business only, so for
+ * Pro a click IS a Business-offer click. Its own stage, `paywall_clicked`,
+ * rather than a second outcome on `paywall_reached`, because
+ * `billing_funnel_by_workspace` counts every `paywall_reached` row as a hit.
+ *
+ * Not deduped, like the shown row: two clicks are two attempts.
+ */
+export async function recordInboxPaywallClicked(workspaceId: string | null): Promise<void> {
+  if (!workspaceId) return;
+  const db = createServiceRoleClient();
+  const { data, error } = await db.from('workspaces').select('plan').eq('id', workspaceId).maybeSingle();
+  if (error) console.error('[billing-funnel] paywall click plan lookup failed', { error: error.message });
+  await record({
+    workspaceId,
+    stage: 'paywall_clicked',
+    outcome: 'success',
+    category: planCategory(data?.plan),
+    connectionType: 'first_connect',
+  });
+}
+
+/**
  * A signed-in user looked at the plans.
  *
  * Deduped to one row per workspace / surface / UTC day so a refresh loop or a

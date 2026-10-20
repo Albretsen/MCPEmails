@@ -18,6 +18,7 @@ import '../styles/marketing.css';
 // This screen replaces the root layout, so it brings the webfonts itself too.
 import './fonts';
 import { THEME_BOOTSTRAP_SCRIPT } from '../src/lib/theme-bootstrap';
+import { SupportHelpLink } from '../components/support/SupportHelpLink';
 
 export default function GlobalError({ reset }) {
   return (
@@ -39,7 +40,7 @@ export default function GlobalError({ reset }) {
           <div className="auth-wrap">
             {/* Brand */}
             <div className="auth-brand">
-              <img className="logo-light" src="/logo-wordmark.svg" width="280" height="48" alt="mcpemails" /><img className="logo-dark" src="/logo-wordmark-dark.svg" width="280" height="48" alt="mcpemails" />
+              <img className="logo-light" src="/logo-wordmark.svg" width="280" height="48" alt="MCP Emails" /><img className="logo-dark" src="/logo-wordmark-dark.svg" width="280" height="48" alt="MCP Emails" />
             </div>
 
             {/* Card */}
@@ -133,6 +134,11 @@ export default function GlobalError({ reset }) {
               >
                 Go to homepage
               </a>
+              {/* SUPPORT_RELEASE_GATE: a plain link to /help at release. English label,
+                  like the rest of this page. */}
+              <SupportHelpLink
+                style={{ display: 'block', marginTop: 14, textAlign: 'center', color: 'var(--fg-3)', fontFamily: 'var(--font-sans)', fontSize: 13 }}
+              />
             </div>
           </div>
         </div>

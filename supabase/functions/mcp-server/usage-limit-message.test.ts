@@ -21,6 +21,8 @@ import {
   freeCapUpgradeUrl,
   PLAN_DISPLAY_NAMES,
   USAGE_LIMIT_SUPPORT_EMAIL,
+  plansInfoUrl,
+  rateLimitPlanSentence,
 } from "./usage-limit-message.ts";
 
 function assert(condition: boolean, message: string): void {
@@ -133,7 +135,7 @@ Deno.test("Free states the number exactly as passed, with no thousands noise", (
 Deno.test("Free says the first seven days were not counted", () => {
   const text = buildUsageLimitText("free", FREE_ALLOWANCE, FREE_ALLOWANCE, RESET, ORIGIN);
   assertIncludes(text, `first ${FREE_ACTION_GRACE_DAYS} days after signup are not counted`, "the grace sentence");
-  assert(FREE_ACTION_GRACE_DAYS === 7, "the grace constant mirrors c_grace in workspace_action_allowance()");
+  assert(FREE_ACTION_GRACE_DAYS === 3, "the grace constant mirrors free_action_grace_ends_at() for new workspaces");
 });
 
 Deno.test("Free says what keeps working", () => {
@@ -151,6 +153,48 @@ Deno.test("Free carries the upgrade URL with its funnel tag and the price", () =
   assertIncludes(text, "Personal plan removes the monthly cap", "the true remedy is named as a fact");
   assert(FREE_CAP_UPGRADE_PATH.includes("from=usage_cap"), "the funnel tag tells this door apart");
   assert(freeCapUpgradeUrl("https://x.test") === "https://x.test/pricing?from=usage_cap", "helper builds the same URL");
+});
+
+// ---------------------------------------------------------------------------
+// Directory wording: OpenAI's plugin guidelines allow explaining a plan limit
+// and linking to an informational plans page, and forbid quoting prices or
+// promoting an upgrade. ChatGPT and Codex clients get this wording.
+// ---------------------------------------------------------------------------
+
+Deno.test("directory wording explains the Free limit without a price, a plan to buy or an upgrade pitch", () => {
+  const text = buildUsageLimitText("free", FREE_ALLOWANCE, FREE_ALLOWANCE, RESET, ORIGIN, "directory");
+  // The facts the person needs are all still there.
+  assertIncludes(text, "Monthly allowance reached", "the limit is still named");
+  assertIncludes(text, "retrying will not help", "the retry loop is still stopped");
+  assertIncludes(text, "inbox_list and the dashboard keep working", "what keeps working is still said");
+  assertIncludes(text, `${ORIGIN}/dashboard/usage`, "the meter link is kept");
+  assertIncludes(text, `${plansInfoUrl(ORIGIN)}.`, "one informational link to the plans page");
+  assert(plansInfoUrl("https://x.test") === "https://x.test/pricing", "the plans link carries no funnel tag");
+  for (const phrase of [FREE_CAP_UPGRADE_PRICE, "$", "per month", "upgrade", "Personal", "removes the monthly cap", "from=usage_cap"]) {
+    assert(!text.toLowerCase().includes(phrase.toLowerCase()), `directory wording must not contain "${phrase}"`);
+  }
+});
+
+Deno.test("directory wording leaves the paid fair-use text exactly as it is", () => {
+  for (const plan of ["personal", "solo", "pro"]) {
+    assert(
+      buildUsageLimitText(plan, 10, 10, RESET, ORIGIN, "directory") === buildUsageLimitText(plan, 10, 10, RESET, ORIGIN),
+      `${plan}: nothing is sold there, so there is nothing to neutralise`,
+    );
+  }
+});
+
+Deno.test("standard wording is the default and is unchanged", () => {
+  assert(
+    buildUsageLimitText("free", FREE_ALLOWANCE, FREE_ALLOWANCE, RESET, ORIGIN, "standard") ===
+      buildUsageLimitText("free", FREE_ALLOWANCE, FREE_ALLOWANCE, RESET, ORIGIN),
+    "omitting the argument means standard",
+  );
+});
+
+Deno.test("the rate-limit refusal drops its plan sentence for directory clients only", () => {
+  assert(rateLimitPlanSentence("directory") === "", "waiting is the whole remedy");
+  assertIncludes(rateLimitPlanSentence("standard"), "https://www.mcpemails.com/pricing", "standard keeps its link");
 });
 
 // ---------------------------------------------------------------------------
@@ -187,10 +231,10 @@ Deno.test("paid plans never mention the Free grace week", () => {
 
 Deno.test("messages use the plan name the pricing page sells", () => {
   // The internal ids drifted from the marketing names twice: `solo` is now sold
-  // as Pro and `pro` as Team. Naming the internal id would send the user looking
+  // as Pro and `pro` as Business. Naming the internal id would send the user looking
   // for a product that does not exist on the pricing page.
   assertIncludes(buildUsageLimitText("solo", 1, 2, RESET, ORIGIN), "Pro plan", "solo renders as Pro");
-  assertIncludes(buildUsageLimitText("pro", 1, 2, RESET, ORIGIN), "Team plan", "pro renders as Team");
+  assertIncludes(buildUsageLimitText("pro", 1, 2, RESET, ORIGIN), "Business plan", "pro renders as Business");
   assertIncludes(buildUsageLimitText("free", 1, 2, RESET, ORIGIN), "Free plan", "free renders as Free");
 });
 
@@ -223,5 +267,5 @@ Deno.test("Personal is named by the name it is sold under", () => {
   assert(PLAN_DISPLAY_NAMES.personal === "Personal", "Personal needs its own display name entry");
   // Mirror of planDisplayName in apps/web/src/lib/stripe/plans.ts. Both halves
   // of the product show a plan name; they must show the same one.
-  assert(PLAN_DISPLAY_NAMES.solo === "Pro" && PLAN_DISPLAY_NAMES.pro === "Team", "the two drifted ids must keep their sold names");
+  assert(PLAN_DISPLAY_NAMES.solo === "Pro" && PLAN_DISPLAY_NAMES.pro === "Business", "the two drifted ids must keep their sold names");
 });

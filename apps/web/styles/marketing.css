@@ -1330,7 +1330,9 @@ a.footer-copy-value:hover { color: #fff; text-decoration: none; }
 
 @media (max-width: 767px) {
   /* Show hamburger, hide desktop nav + cta */
-  .nav-hamburger { display: flex; }
+  /* margin-left: auto pins it to the right edge: .nav-grow, the spacer that
+     does that on desktop, is hidden below. */
+  .nav-hamburger { display: flex; margin-left: auto; }
   .nav-links { display: none !important; }
   .nav-grow { display: none; }
   .nav-cta { display: none !important; }
@@ -1469,6 +1471,13 @@ a.footer-copy-value:hover { color: #fff; text-decoration: none; }
   width: 7px; height: 7px; border-radius: 99px;
   background: var(--mint-600); flex: none;
 }
+/* /docs/read-only-access: plain readable bullets. */
+.read-only-list {
+  font-family: var(--font-sans); font-size: 16px; line-height: 1.65;
+  color: var(--fg-2); margin: 12px 0 0; padding-left: 20px;
+}
+.read-only-list li { margin: 0 0 10px; }
+.read-only-list a { color: var(--fg-1); }
 .providers-h2 {
   font-family: var(--font-sans); font-size: clamp(22px, 3vw, 28px);
   line-height: 1.2; letter-spacing: -0.02em; font-weight: 600;
@@ -1551,6 +1560,15 @@ a.footer-copy-value:hover { color: #fff; text-decoration: none; }
 .connect-limits li {
   font-size: 14px; line-height: 1.65; color: var(--fg-3); margin-bottom: 6px;
 }
+
+.connect-chatgpt-steps {
+  max-width: 680px; margin: 0 auto; padding-left: 22px;
+}
+.connect-chatgpt-steps li {
+  font-size: 15px; line-height: 1.65; color: var(--fg-2); margin-bottom: 8px;
+}
+.connect-chatgpt-steps + .how-guide-link { margin-top: 20px; }
+.connect-chatgpt-steps ~ .how-guide-link + .how-guide-link { margin-top: 8px; }
 
 .connect-faq { max-width: 820px; margin: 0 auto; }
 .connect-faq-item {

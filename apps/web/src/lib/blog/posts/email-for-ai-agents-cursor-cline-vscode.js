@@ -19,7 +19,7 @@ The MCP server doesn't own your mail. It brokers a live connection to whatever p
 
 Go to **Dashboard → Inboxes → Connect Inbox** and pick a provider:
 
-- **Gmail** → a Google app password over IMAP by default (your Google account needs 2-Step Verification for it), or Sign in with Google if you prefer.
+- **Gmail** → a Google app password over IMAP. Turn on 2-Step Verification, create one at myaccount.google.com/apppasswords, and paste the 16 letters with your full Gmail address. A Google Workspace admin can switch app passwords off for the domain.
 - **Outlook / Microsoft 365** → OAuth with Sign in with Microsoft, no app password. Personal Outlook.com, Hotmail, Live and MSN accounts connect straight away. A work or school Microsoft 365 account may need an IT admin to approve the app once for the whole organisation first; the dashboard gives you a link to send them.
 - **iCloud, Fastmail, Yahoo, Zoho, or any generic IMAP host** → an app-specific password. Generate it in the provider's settings (for iCloud that's appleid.apple.com) and paste it in.
 
@@ -88,7 +88,7 @@ Both paths expose the same surface. A handful of consolidated, action-based tool
 - \`inbox_list\` — always call this first to discover connected inboxes and their IDs.
 - \`email_read\` (action \`list\`) — paginated, newest-first.
 - \`email_read\` (action \`read\`) — parsed plain text, optional sanitized HTML, attachments.
-- \`email_read\` (action \`search\`) — provider-native search (Gmail operators, Outlook KQL, IMAP text).
+- \`email_read\` (action \`search\`): search by sender, subject, date, unread state and other structured fields, translated to each provider's own search.
 - \`email_compose\` (action \`send\`) — compose with CC/BCC, HTML, attachments up to 10 MB.
 - \`email_compose\` (action \`reply\`) — sets In-Reply-To and References headers for you so the thread stays intact.
 
@@ -106,19 +106,19 @@ The agent runs \`inbox_list\`, then \`email_read\` with action \`list\` and \`un
 
 > Reply to the message from the design contractor confirming Thursday at 2pm works, keep it short.
 
-It calls \`email_compose\` with action \`reply\`, threading is handled, and the reply leaves through my own Gmail — so it lands from my address with my domain's reputation, not some relay. For a deeper treatment of triage prompts, see [how to make an AI agent triage and summarize your inbox](/blog/ai-agent-triage-summarize-inbox).
+It calls \`email_compose\` with action \`reply\`, threading is handled, and the reply leaves through my own Gmail, so it lands from my address with my domain's reputation. For a deeper treatment of triage prompts, see [how to make an AI agent triage and summarize your inbox](/blog/ai-agent-triage-summarize-inbox).
 
 One honest limitation: there are no webhooks. The server doesn't push you new mail. If you want the agent to react to incoming messages, you poll — \`email_read\` with action \`list\` and \`unread: true\` on a schedule. That's a deliberate design choice, and it shapes how you build anything reactive, like an [auto-responder over MCP](/blog/build-email-auto-responder-mcp-agent).
 
 ## Rate limits for scripted access
 
-If you're driving the server from a cron job or a tight agent loop, mind the limits. Every API key is capped at **100 requests per minute, 1,000 per hour, and 10,000 per day**, on every plan. On top of that there's a per-workspace burst ceiling set by your plan: 60/min on Free, 120/min on Personal ($9/month), 300/min on Pro ($15/month), 1,000/min on Team ($79/month). See the [pricing page](/pricing) for the full breakdown.
+If you're driving the server from a cron job or a tight agent loop, mind the limits. Every API key is capped at **100 requests per minute, 1,000 per hour, and 10,000 per day**, on every plan. On top of that there's a per-workspace burst ceiling set by your plan: 60/min on Free, 120/min on Personal ($9/month), 300/min on Pro ($15/month), 1,000/min on Business ($39/month). See the [pricing page](/pricing) for the full breakdown.
 
 When you hit a rate limit the server returns a retryable error (code \`-32003\`) with \`data.retry_after\` in seconds. Honor it — back off for that long and try again. Not everything is retryable, though: if you exhaust your plan's monthly action allowance, the call returns a normal tool result with \`isError: true\` and a \`_meta["com.mcpemails/usage_limit"]\` block, there is no \`retry_after\`, and no amount of retrying clears it before \`reset_at\`. And never blind-retry an \`email_compose\` send on a generic failure; you'll fire duplicates. Check whether it actually sent first.
 
 ## Wrapping up
 
-Cursor gets you connected with a URL and a sign-in. Everything else takes a scoped key and a bearer header. Both hit the same endpoint and the same tools, and both keep your credentials out of your repo and out of the model's context.
+Cursor gets you connected with a URL and a sign-in. Everything else takes a scoped key and a bearer header. Both hit the same endpoint and the same tools, and both keep your credentials out of your repo and out of the model's context. Using ChatGPT or Codex outside the editor? The [ChatGPT email setup guide](/blog/connect-chatgpt-to-email) covers both.
 
 [Start free](/signup) and connect your first inbox, or read the [docs](/docs) for the full tool reference.`,
 };

@@ -20,6 +20,8 @@ import { runCheckout } from '@/lib/stripe/checkout-core';
  *              been shown, and accepted, the amount from a previous call. An
  *              existing subscriber's plan change is a two-call handshake:
  *              the first returns the quote, the second performs it.
+ *   locale   : the buyer's app-realm language. Only 'de' changes anything (a
+ *              German hosted page); any other value, or none, is English.
  *
  * Response (200):
  *   { url: string }        : the Stripe Checkout hosted page URL to redirect to
@@ -64,9 +66,9 @@ export async function POST(request: NextRequest): Promise<NextResponse> {
     );
   }
 
-  const { planId, interval, confirm } = body as Record<string, unknown>;
+  const { planId, interval, confirm, locale } = body as Record<string, unknown>;
 
-  const outcome = await runCheckout({ planId, interval, confirmChange: confirm });
+  const outcome = await runCheckout({ planId, interval, confirmChange: confirm, locale });
 
   if (outcome.kind === 'checkout') {
     return NextResponse.json({ url: outcome.url }, { status: 200 });

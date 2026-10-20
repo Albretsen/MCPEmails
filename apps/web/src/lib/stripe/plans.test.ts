@@ -2,9 +2,18 @@ import assert from 'node:assert/strict';
 import test from 'node:test';
 
 import {
+  BUSINESS_EXTRA_INBOX_MONTHLY_CENTS,
+  BUSINESS_EXTRA_INBOX_YEARLY_CENTS,
+  BUSINESS_INCLUDED_INBOXES,
   FREE_ACTION_ALLOWANCE,
   FREE_ACTION_GRACE_DAYS,
   PLANS,
+  PRO_INBOX_CAP,
+  basePlanItem,
+  extraMailboxQuantity,
+  isMailboxAddonPriceId,
+  mailboxAddonItem,
+  mailboxAddonPriceId,
   planCommitmentRank,
   getPlanByStripePriceId,
   planDisplayName,
@@ -17,20 +26,22 @@ const FREE_ALLOWANCE_FEATURE = `${FREE_ACTION_ALLOWANCE} email actions a month, 
 test('the value metric is inboxes, and the tiers are named the way they are sold', () => {
   assert.equal(PLANS.free.name, 'Free');
   assert.equal(PLANS.solo.name, 'Pro');
-  assert.equal(PLANS.pro.name, 'Team');
+  assert.equal(PLANS.pro.name, 'Business');
 
   // Free is one inbox. This is the paywall now; everything else follows from it.
+  // Pro is ten for a new customer (2026-10-19); Business is never capped, it
+  // bills past ten instead.
   assert.equal(resolvePlanLimits('free').maxInboxes, 1);
-  assert.equal(resolvePlanLimits('solo').maxInboxes, Infinity);
+  assert.equal(resolvePlanLimits('solo').maxInboxes, 10);
   assert.equal(resolvePlanLimits('pro').maxInboxes, Infinity);
 
-  // Members are a Team feature. Pro buys mailboxes, not seats.
+  // Members are a Business feature. Pro buys mailboxes, not seats.
   assert.equal(resolvePlanLimits('free').maxMembers, 1);
   assert.equal(resolvePlanLimits('solo').maxMembers, 1);
   assert.equal(resolvePlanLimits('pro').maxMembers, Infinity);
 
   assert.equal(planDisplayName('solo'), 'Pro');
-  assert.equal(planDisplayName('pro'), 'Team');
+  assert.equal(planDisplayName('pro'), 'Business');
   assert.equal(planDisplayName('free'), 'Free');
   assert.equal(planDisplayName(null), 'Free');
 });
@@ -38,8 +49,8 @@ test('the value metric is inboxes, and the tiers are named the way they are sold
 test('prices match the published repricing', () => {
   assert.equal(PLANS.solo.monthlyPriceCents, 1500);
   assert.equal(PLANS.solo.yearlyPriceCents, 14400);
-  assert.equal(PLANS.pro.monthlyPriceCents, 7900);
-  assert.equal(PLANS.pro.yearlyPriceCents, 75600);
+  assert.equal(PLANS.pro.monthlyPriceCents, 3900);
+  assert.equal(PLANS.pro.yearlyPriceCents, 37440);
   assert.equal(PLANS.free.monthlyPriceCents, 0);
 });
 
@@ -47,10 +58,11 @@ test('Free sells its action allowance; the paid ceilings stay silent', () => {
   // Free's allowance is public (2026-09-12): the pricing page, the dashboard
   // and the docs all quote it, and the MCP edge function refuses at exactly
   // this number. The constants are mirrored from the SQL function
-  // workspace_action_allowance (c_free_cap = 150, c_grace = 7 days); if either
+  // workspace_action_allowance (c_free_cap = 150) and free_action_grace_ends_at
+  // (3 days for new workspaces); if either
   // moves here, the migration and the pricing copy move with it.
   assert.equal(FREE_ACTION_ALLOWANCE, 150);
-  assert.equal(FREE_ACTION_GRACE_DAYS, 7);
+  assert.equal(FREE_ACTION_GRACE_DAYS, 3);
   assert.equal(resolvePlanLimits('free').maxMonthlyToolCalls, FREE_ACTION_ALLOWANCE);
   assert.ok(
     PLANS.free.features.includes(FREE_ALLOWANCE_FEATURE),
@@ -62,7 +74,7 @@ test('Free sells its action allowance; the paid ceilings stay silent', () => {
   // "No monthly action cap" is the only sentence a paid tier may say about
   // actions. If this test is updated, check that nothing customer-facing
   // quotes the old numbers.
-  assert.equal(resolvePlanLimits('personal').maxMonthlyToolCalls, 25_000);
+  assert.equal(resolvePlanLimits('personal').maxMonthlyToolCalls, 100_000);
   assert.equal(resolvePlanLimits('solo').maxMonthlyToolCalls, 100_000);
   assert.equal(resolvePlanLimits('pro').maxMonthlyToolCalls, 500_000);
   assert.ok(PLANS.personal.features.includes('No monthly action cap'));
@@ -95,7 +107,7 @@ test('no feature list promises an analytics retention window', () => {
   // `pricing.plans.*.features` message arrays are two renderings of one
   // promise and must not diverge again.
   //
-  // The Free allowance line ("first 7 days uncounted") is the one exception:
+  // The Free allowance line ("first 3 days uncounted") is the one exception:
   // it is a metering rule, not a retention window, and it is built from the
   // same constant the enforcing SQL mirrors, so it cannot drift on its own.
   for (const plan of Object.values(PLANS)) {
@@ -142,7 +154,10 @@ test('the two entitlements stack without either swallowing the other', () => {
   assert.equal(compedFromFree.maxMonthlyToolCalls, Infinity);
   assert.equal(compedFromPro.maxMonthlyToolCalls, Infinity);
   assert.equal(compedFromFree.maxRequestsPerMinute, PLANS.pro.limits.maxRequestsPerMinute);
-  assert.equal(compedFromFree.auditLogEnabled, true);
+  // The comp is Business's limits, and Business has no audit-log feature.
+  assert.equal(compedFromFree.auditLogEnabled, false);
+  assert.equal(compedFromFree.maxInboxes, Infinity);
+  assert.equal(compedFromPro.maxInboxes, Infinity);
 
   const both = resolvePlanLimits('free', { compedScale: true, unlimitedInboxes: true });
   assert.equal(both.maxInboxes, Infinity);
@@ -231,8 +246,8 @@ test('Personal ships at the numbers it was signed off at', () => {
   assert.equal(personal.limits.maxInboxes, 3);
   assert.equal(personal.limits.maxMembers, 1);
   assert.equal(personal.limits.maxRequestsPerMinute, 120);
-  assert.equal(personal.limits.analyticsRetentionDays, 30);
-  assert.equal(personal.limits.maxMonthlyToolCalls, 25_000);
+  assert.equal(personal.limits.analyticsRetentionDays, 90);
+  assert.equal(personal.limits.maxMonthlyToolCalls, 100_000);
   // A paid plan the customer cannot cancel themselves is a support ticket
   // waiting to happen, and in several jurisdictions a legal problem.
   assert.equal(personal.limits.billingPortalEnabled, true);
@@ -246,18 +261,18 @@ test('Personal ships at the numbers it was signed off at', () => {
   assert.equal(PLANS.free.limits.maxInboxes, 1);
   assert.equal(PLANS.solo.monthlyPriceCents, 1500);
   assert.equal(PLANS.solo.yearlyPriceCents, 14400);
-  assert.equal(PLANS.pro.monthlyPriceCents, 7900);
-  assert.equal(PLANS.pro.yearlyPriceCents, 75600);
+  assert.equal(PLANS.pro.monthlyPriceCents, 3900);
+  assert.equal(PLANS.pro.yearlyPriceCents, 37440);
 });
 
-test('the ladder is ordered Free, Personal, Pro, Team', () => {
+test('the ladder is ordered Free, Personal, Pro, Business', () => {
   // The pricing page renders columns in Object.values(PLANS) order, so the
   // position of the key in the object literal IS the marketing layout. Moving
   // it produces a page that reads $0, $15, $5, $79 and nothing errors.
   assert.deepEqual(Object.keys(PLANS), ['free', 'personal', 'solo', 'pro']);
 
   const monthly = Object.values(PLANS).map((plan) => plan.monthlyPriceCents);
-  assert.deepEqual(monthly, [0, 900, 1500, 7900]);
+  assert.deepEqual(monthly, [0, 900, 1500, 3900]);
   for (let i = 1; i < monthly.length; i += 1) {
     assert.ok(monthly[i] > monthly[i - 1], 'the ladder must ascend in price');
   }
@@ -287,8 +302,8 @@ test('a grandfathered user on Personal keeps unlimited inboxes', () => {
   // It lifts the inbox cap and nothing else: they are still a Personal account.
   assert.equal(grandfathered.maxMembers, 1);
   assert.equal(grandfathered.maxRequestsPerMinute, 120);
-  assert.equal(grandfathered.analyticsRetentionDays, 30);
-  assert.equal(grandfathered.maxMonthlyToolCalls, 25_000);
+  assert.equal(grandfathered.analyticsRetentionDays, 90);
+  assert.equal(grandfathered.maxMonthlyToolCalls, 100_000);
   assert.equal(grandfathered.supportTier, 'email');
   assert.equal(grandfathered.teamRolesEnabled, false);
 });
@@ -440,4 +455,141 @@ test('the commitment rank orders every (plan, interval) pair', () => {
     'personal -> solo is an upgrade',
   );
   assert.equal(planCommitmentRank('free', 'month'), 0);
+});
+
+
+// ---------------------------------------------------------------------------
+// Pro capped at 10 and Business priced by mailbox, 2026-10-19.
+// ---------------------------------------------------------------------------
+
+test('Pro is capped at ten for a new customer, and the cutover exemption lifts it', () => {
+  assert.equal(PRO_INBOX_CAP, 10);
+  assert.equal(PLANS.solo.limits.maxInboxes, PRO_INBOX_CAP);
+  assert.equal(resolvePlanLimits('solo').maxInboxes, 10);
+  assert.equal(resolvePlanLimits('solo', { proUnlimitedInboxes: false }).maxInboxes, 10);
+  // A workspace on Pro at the cutover (or every one, kill switch off).
+  assert.equal(resolvePlanLimits('solo', { proUnlimitedInboxes: true }).maxInboxes, Infinity);
+  // The 2026-08-19 grandfather still lifts Pro's cap on its own.
+  assert.equal(resolvePlanLimits('solo', { unlimitedInboxes: true }).maxInboxes, Infinity);
+});
+
+test('the Pro exemption widens Pro and nothing else', () => {
+  // It is a promise about Pro. A Pro customer who moves to Personal gets
+  // Personal's three, and Free stays one: the flag must not travel.
+  assert.equal(resolvePlanLimits('free', { proUnlimitedInboxes: true }).maxInboxes, 1);
+  assert.equal(resolvePlanLimits('personal', { proUnlimitedInboxes: true }).maxInboxes, 3);
+  // It touches the inbox cap only.
+  const exempt = resolvePlanLimits('solo', { proUnlimitedInboxes: true });
+  assert.equal(exempt.maxMembers, 1);
+  assert.equal(exempt.maxMonthlyToolCalls, 100_000);
+  assert.equal(exempt.teamRolesEnabled, false);
+});
+
+test('Business is $39 with ten mailboxes included and $3 for each extra', () => {
+  const business = PLANS.pro;
+  assert.equal(business.name, 'Business');
+  assert.equal(business.monthlyPriceCents, 3900);
+  assert.equal(BUSINESS_INCLUDED_INBOXES, 10);
+  assert.equal(BUSINESS_EXTRA_INBOX_MONTHLY_CENTS, 300);
+  // Twelve months less exactly 20%, the discount every annual price carries,
+  // in the same integer form as Personal's check: x5 = x12 x4.
+  assert.equal(business.yearlyPriceCents, 37440);
+  assert.equal(business.yearlyPriceCents! * 5, business.monthlyPriceCents * 12 * 4);
+  assert.equal(BUSINESS_EXTRA_INBOX_YEARLY_CENTS, 2880);
+  assert.equal(BUSINESS_EXTRA_INBOX_YEARLY_CENTS * 5, BUSINESS_EXTRA_INBOX_MONTHLY_CENTS * 12 * 4);
+  // People cost nothing: unlimited members with roles.
+  assert.equal(business.limits.maxMembers, Infinity);
+  assert.equal(business.limits.teamRolesEnabled, true);
+  assert.equal(business.limits.maxInboxes, Infinity);
+});
+
+test('Business claims only what exists', () => {
+  // Team said SSO, audit log, a year of history and priority support. None of
+  // it had code behind it. The limits must not carry it either, because a
+  // limit set to true is one copy edit away from a claim again.
+  const limits = PLANS.pro.limits;
+  assert.equal(limits.ssoEnabled, false);
+  assert.equal(limits.auditLogEnabled, false);
+  assert.equal(limits.supportTier, 'email');
+  // Two years, the same as Pro, kept by the per-plan activity_log job
+  // (migration 20261020153742) rather than the old flat 90-day delete.
+  assert.equal(limits.analyticsRetentionDays, 730);
+  for (const plan of Object.values(PLANS)) {
+    for (const feature of plan.features) {
+      assert.ok(
+        !/\b(SSO|SAML|OIDC|audit log|priority support|365|unlimited (connected )?inbox)/i.test(feature),
+        `plan ${plan.id} claims something that does not exist: ${feature}`,
+      );
+    }
+  }
+});
+
+test('extra mailboxes are the ones above ten, never negative', () => {
+  assert.equal(extraMailboxQuantity(0), 0);
+  assert.equal(extraMailboxQuantity(10), 0);
+  assert.equal(extraMailboxQuantity(11), 1);
+  assert.equal(extraMailboxQuantity(25), 15);
+  assert.equal(extraMailboxQuantity(-3), 0);
+  assert.equal(extraMailboxQuantity(Number.NaN), 0);
+});
+
+test('the add-on price is recognised at both intervals and is not a plan', () => {
+  process.env.STRIPE_PRICE_BUSINESS_MAILBOX_MONTHLY = 'price_addon_month_fixture';
+  process.env.STRIPE_PRICE_BUSINESS_MAILBOX_YEARLY = 'price_addon_year_fixture';
+  try {
+    assert.equal(mailboxAddonPriceId('month'), 'price_addon_month_fixture');
+    assert.equal(mailboxAddonPriceId('year'), 'price_addon_year_fixture');
+    assert.equal(isMailboxAddonPriceId('price_addon_month_fixture'), true);
+    assert.equal(isMailboxAddonPriceId('price_addon_year_fixture'), true);
+    assert.equal(isMailboxAddonPriceId('price_1TcQBFARrgumc6cqmaRTXJ5Q'), false);
+    assert.equal(isMailboxAddonPriceId(null), false);
+    // The webhook maps a price to a plan; the add-on must never be one.
+    assert.equal(getPlanByStripePriceId('price_addon_month_fixture'), null);
+  } finally {
+    delete process.env.STRIPE_PRICE_BUSINESS_MAILBOX_MONTHLY;
+    delete process.env.STRIPE_PRICE_BUSINESS_MAILBOX_YEARLY;
+  }
+});
+
+test('the base plan item is found whatever order Stripe lists the items in', () => {
+  process.env.STRIPE_PRICE_BUSINESS_MAILBOX_MONTHLY = 'price_addon_month_fixture';
+  try {
+    const plan = { id: 'si_plan', price: { id: 'price_1TcQBFARrgumc6cqmaRTXJ5Q' } }; // legacy Business
+    const addon = { id: 'si_addon', price: { id: 'price_addon_month_fixture' } };
+    assert.equal(basePlanItem([plan, addon])?.id, 'si_plan');
+    assert.equal(basePlanItem([addon, plan])?.id, 'si_plan');
+    assert.equal(mailboxAddonItem([addon, plan])?.id, 'si_addon');
+    assert.equal(mailboxAddonItem([plan]), undefined);
+    // An unmapped price still comes back, exactly as items[0] did before.
+    const unknown = { id: 'si_unknown', price: { id: 'price_unknown' } };
+    assert.equal(basePlanItem([addon, unknown])?.id, 'si_unknown');
+    assert.equal(basePlanItem([unknown])?.id, 'si_unknown');
+    assert.equal(basePlanItem([]), undefined);
+    assert.equal(basePlanItem(undefined), undefined);
+  } finally {
+    delete process.env.STRIPE_PRICE_BUSINESS_MAILBOX_MONTHLY;
+  }
+});
+
+test('the retired $79 / $756 Team prices still resolve to Business', async () => {
+  // Team had no paying subscriber, but a stray subscription on its price must
+  // keep mapping to the plan rather than become an unknown price.
+  process.env.STRIPE_PRICE_PRO_MONTHLY = 'price_team_79_fixture';
+  process.env.STRIPE_PRICE_PRO_YEARLY = 'price_team_756_fixture';
+  process.env.STRIPE_PRICE_BUSINESS_MONTHLY = 'price_business_39_fixture';
+  process.env.STRIPE_PRICE_BUSINESS_YEARLY = 'price_business_37440_fixture';
+  // @ts-expect-error TS2307: runtime cache-buster, not a resolvable path.
+  const fresh = (await import('./plans.ts?business-prices')) as typeof import('./plans.ts');
+  try {
+    assert.equal(fresh.PLANS.pro.stripePriceIdMonthly, 'price_business_39_fixture');
+    assert.equal(fresh.PLANS.pro.stripePriceIdYearly, 'price_business_37440_fixture');
+    assert.deepEqual(fresh.getPlanByStripePriceId('price_business_39_fixture'), { plan: fresh.PLANS.pro, interval: 'month' });
+    assert.deepEqual(fresh.getPlanByStripePriceId('price_team_79_fixture'), { plan: fresh.PLANS.pro, interval: 'month' });
+    assert.deepEqual(fresh.getPlanByStripePriceId('price_team_756_fixture'), { plan: fresh.PLANS.pro, interval: 'year' });
+  } finally {
+    delete process.env.STRIPE_PRICE_PRO_MONTHLY;
+    delete process.env.STRIPE_PRICE_PRO_YEARLY;
+    delete process.env.STRIPE_PRICE_BUSINESS_MONTHLY;
+    delete process.env.STRIPE_PRICE_BUSINESS_YEARLY;
+  }
 });

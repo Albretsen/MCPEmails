@@ -2,6 +2,8 @@ import { NextResponse } from 'next/server';
 import { createClient } from '@/lib/supabase/server';
 import { primaryWorkspaceId, recordInboxPaywallReached } from '@/lib/analytics/billing-funnel';
 import { connectEntryPoint } from '@/lib/analytics/product-funnel';
+import { checkInboxLimit } from '@/lib/plans/check-inbox-limit';
+import { recordInboxCapHit } from '@/lib/plans/inbox-cap-events';
 
 /**
  * POST /api/analytics/paywall   body (optional): {"entry_point": "<closed list>"}
@@ -43,10 +45,16 @@ export async function POST(request: Request): Promise<NextResponse> {
     // A body-less beacon (an older tab still open across the deploy) is a
     // paywall view all the same.
     const body = await request.json().catch(() => null);
-    await recordInboxPaywallReached(
-      await primaryWorkspaceId(supabase, user.id),
-      connectEntryPoint(body?.entry_point),
-    );
+    const workspaceId = await primaryWorkspaceId(supabase, user.id);
+    await recordInboxPaywallReached(workspaceId, connectEntryPoint(body?.entry_point));
+    // A Pro workspace at its cap is a hit for the Pro cap read-out
+    // (docs/sql/pro-cap-readout.sql). The modal shows the offer from the page's
+    // own count without calling a connect route, so this beacon is where most
+    // hits are seen. Re-checked here with the user's client: the browser only
+    // says "the panel showed", never what the plan or the count is.
+    if (workspaceId) {
+      await recordInboxCapHit(workspaceId, await checkInboxLimit(supabase, workspaceId));
+    }
   } catch (err) {
     console.error('[paywall-beacon] record failed', {
       error: err instanceof Error ? err.message : String(err),

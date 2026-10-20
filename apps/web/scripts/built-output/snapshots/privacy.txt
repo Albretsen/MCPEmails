@@ -21,7 +21,7 @@ Get started free
 Legal
 Privacy Policy
 We built MCPEmails with privacy as a first principle. The email content your agent reads is never stored on our servers; it passes through to your agent and disappears. The one exception is a message you schedule to send later, which we hold only until it is delivered. This policy explains what we do collect, and why.
-Last updated: September 29, 2026 · Effective: May 25, 2026
+Last updated: October 18, 2026 · Effective: May 25, 2026
 1. Who We Are
 The MCPEmails service at
 mcpemails.com
@@ -35,11 +35,11 @@ privacy@mcpemails.com
 .
 2. Data We Collect
 2.1 Account data
-When you create an account we collect your email address and a hashed password (we never store plaintext passwords). You may optionally provide a display name. This data is required to create and maintain your account. If you tick the box on the signup form asking for product tips and offers by email, we also record that you did, when, and which wording you saw.
+When you create an account we collect your email address and a hashed password (we never store plaintext passwords). You may optionally provide a display name. This data is required to create and maintain your account. If you tick the box on the signup form asking for product tips and offers by email, we also record that you did, when, and which wording you saw. When you sign up, we also record whether you used a phone, a tablet, or a computer, worked out from your browser's request headers. We store only that one word, never your browser's user-agent string or any device identifier, and use it only to understand where signups come from.
 2.2 Workspace and configuration data
 We store the workspace name you choose, and the configuration of each connected inbox (provider type, email address, OAuth status, and connection timestamp). We do
 not
-store OAuth access tokens or app passwords in plaintext. They are encrypted with AES-256-GCM before being written to the database, and the encryption key is stored in a separate secrets vault.
+store OAuth access tokens or app passwords in plaintext. They are encrypted with AES-256-GCM before being written to the database, and the encryption key is held as a server secret in our application environment, never in the database.
 2.3 API keys
 We store a SHA-256 hash of each API key you create, along with the key's name, scopes, creation timestamp, and last-used timestamp. The raw key value is shown to you exactly once at creation time and is never stored in recoverable form.
 2.4 Usage and audit logs
@@ -179,12 +179,12 @@ Data processed
 Location
 Supabase
 Database, auth, edge functions
-Account data, workspace config, audit logs
-EU (Stockholm, Sweden)
+Account data, workspace config, audit logs; email content passes through live and is stored only as section 2.5 describes
+Data stored in the EU (Stockholm, Sweden). Edge functions run in the US (East) and process email live
 Vercel
-Web hosting, CDN
-HTTP request metadata; no email content
-Global edge (nearest region to user)
+Web hosting, CDN, MCP endpoint
+HTTP request metadata; MCP requests and responses, including email content, pass through in transit and are not stored
+Global CDN; server functions in the US (East) and the EU (Stockholm, Sweden)
 Stripe
 (paid plans only)
 Payment processing
@@ -201,7 +201,7 @@ In the event of a merger, acquisition, or sale of assets, personal data may be t
 6. International Data Transfers
 MCPEmails is operated from Norway, which is subject to the European Economic Area (EEA) data protection framework. If you access the service from outside the EEA, your data may be transferred to and processed in countries within the EEA.
 Our infrastructure sub-processors (Supabase, Vercel) operate under Standard Contractual Clauses (SCCs) approved by the European Commission for data transfers to third countries. For Stripe, processing is covered by their EU-US Data Privacy Framework certification.
-Our database, which holds account and configuration data, is hosted in the EU (Stockholm, Sweden) for every customer. There is no plan or setting that moves it to another region.
+Our database, which holds account and configuration data, is hosted in the EU (Stockholm, Sweden) for every customer. There is no plan or setting that moves it to another region. Not every server that handles your agent's requests is in the EU: the edge functions that connect to your mailbox run in the United States (US East), and so does the part of our website that relays those requests. Email content passes through them live, to answer the request, and is not stored there. Encrypted credentials are decrypted in that same US environment for the duration of a request.
 7. Your Rights
 Depending on your location, you may have the following rights regarding your personal data:
 Access.
@@ -227,7 +227,7 @@ Datatilsynet
 8. Security
 We take the security of your data seriously and implement appropriate technical and organisational measures, including:
 All data in transit is encrypted using TLS 1.2 or higher. Connections that do not support TLS are rejected.
-OAuth tokens and IMAP credentials are encrypted at rest using AES-256-GCM. The encryption key is stored in a separate Supabase Vault instance and is never co-located with the encrypted data.
+OAuth tokens and IMAP credentials are encrypted at rest using AES-256-GCM. The encryption key is held as a server secret in our application environment, separate from the database, and is never stored alongside the encrypted data.
 API keys are hashed with SHA-256 before storage. The raw key cannot be recovered from the hash.
 Database access is protected by Row-Level Security (RLS) policies that prevent one workspace from accessing another's data, even in the event of a query logic error.
 Administrative access to production infrastructure requires multi-factor authentication and is logged.
@@ -288,6 +288,7 @@ Tool reference
 Quickstart
 OAuth connection
 Provider support
+Read-only access
 MCP client setup
 Blog
 Changelog

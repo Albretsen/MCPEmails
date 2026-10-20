@@ -1,0 +1,30 @@
+{
+  "meta": {
+    "title": "Anleitungen für KI-E-Mail-Agenten, MCP-Tutorials & Sicherheit",
+    "description": "Praxisnahe Anleitungen, um E-Mail mit Claude und MCP-Clients zu verbinden, den Zugriff von KI-Agenten abzusichern und Gmail, Outlook, IMAP und E-Mail-Workflows sicher zu nutzen."
+  },
+  "blogName": "MCP Emails Blog",
+  "index": {
+    "eyebrow": "Der MCP Emails Blog",
+    "title": "Notizen zu Agenten, E-Mail & MCP",
+    "lead": "Anleitungen, Hintergründe und Praxisnotizen dazu, wie Sie Gmail, Outlook, Fastmail und jedes IMAP-Postfach mit Claude, Cursor und MCP-kompatiblen Clients verbinden.",
+    "filterAria": "Beiträge nach Thema filtern",
+    "all": "Alle",
+    "empty": "Noch keine Beiträge mit dem Tag „{tag}“.",
+    "minRead": "{minutes} Min."
+  },
+  "post": {
+    "home": "Startseite",
+    "blog": "Blog",
+    "toc": "Auf dieser Seite",
+    "writtenBy": "Geschrieben von",
+    "back": "← Zurück zu allen Beiträgen",
+    "minRead": "{minutes} Min. Lesezeit",
+    "cta": {
+      "title": "Geben Sie Ihrem Agenten ein Postfach",
+      "sub": "Verbinden Sie Gmail, Outlook, Fastmail oder jedes IMAP-Konto in wenigen Minuten mit Ihrem KI-Agenten.",
+      "primary": "Kostenlos starten",
+      "secondary": "Zur Doku"
+    }
+  }
+}

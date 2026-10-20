@@ -22,20 +22,20 @@
       "step1": "Dans claude.ai ou Claude Desktop, ouvrez Settings → Connectors.",
       "step2": "Cliquez sur « Add custom connector ».",
       "step3": "Collez l'URL ci-dessus comme URL du connecteur, puis cliquez sur « Add ».",
-      "step4": "Cliquez sur « Connect » et connectez-vous avec mcpemails pour autoriser. Aucune clé API nécessaire."
+      "step4": "Cliquez sur « Connect » et connectez-vous avec MCP Emails pour autoriser. Aucune clé API nécessaire."
     },
     "chatgpt": {
       "step1": "Ouvrez Settings → Apps & Connectors → Advanced settings et activez le mode développeur.",
       "step2": "De retour dans Apps & Connectors, cliquez sur « Create ».",
       "step3": "Saisissez un nom et collez l'URL ci-dessus comme Connector URL.",
-      "step4": "Choisissez OAuth, cliquez sur « Create », puis autorisez avec mcpemails.",
-      "step5": "Dans une conversation sur chatgpt.com, cliquez sur + → mode développeur et sélectionnez l'app mcpemails. Refaites-le dans chaque nouvelle conversation, sinon ChatGPT ne verra pas les outils.",
+      "step4": "Choisissez OAuth, cliquez sur « Create », puis autorisez avec MCP Emails.",
+      "step5": "Dans une conversation sur chatgpt.com, cliquez sur + → mode développeur et sélectionnez l'app MCP Emails. Refaites-le dans chaque nouvelle conversation, sinon ChatGPT ne verra pas les outils.",
       "note": "Fonctionne sur chatgpt.com (web uniquement) avec Plus, Pro, Business, Enterprise et Edu. Les comptes Free et Go ne peuvent pas ajouter de connecteur personnalisé. Sur Business et Enterprise, un administrateur doit parfois d'abord autoriser le mode développeur."
     },
     "cursor": {
       "step1": "Modifiez ~/.cursor/mcp.json (global) ou .cursor/mcp.json (projet).",
       "step2": "Ajoutez le serveur ci-dessous sous « mcpServers ».",
-      "step3": "Cursor vous invite à vous connecter via OAuth. Autorisez avec mcpemails."
+      "step3": "Cursor vous invite à vous connecter via OAuth. Autorisez avec MCP Emails."
     },
     "vscode": {
       "step1": "Ouvrez la palette de commandes (⇧⌘P) et exécutez « MCP: Add Server ».",
@@ -51,7 +51,7 @@
     "windsurf": {
       "step1": "Ouvrez les paramètres MCP de Cascade, ou modifiez ~/.codeium/windsurf/mcp_config.json.",
       "step2": "Ajoutez le serveur ci-dessous. Notez que le champ est « serverUrl », et non « url ».",
-      "step3": "Actualisez les serveurs MCP dans Cascade et autorisez avec mcpemails lorsque demandé."
+      "step3": "Actualisez les serveurs MCP dans Cascade et autorisez avec MCP Emails lorsque demandé."
     },
     "gemini": {
       "step1": "Modifiez ~/.gemini/settings.json (global) ou .gemini/settings.json (projet).",
@@ -61,7 +61,7 @@
     "zed": {
       "step1": "Dans les paramètres du panneau Agent, cliquez sur « Add Custom Server », ou modifiez settings.json.",
       "step2": "Ajoutez le serveur ci-dessous sous « context_servers ».",
-      "step3": "Zed déclenche le flux OAuth lorsqu'aucun en-tête Authorization n'est défini. Connectez-vous avec mcpemails."
+      "step3": "Zed déclenche le flux OAuth lorsqu'aucun en-tête Authorization n'est défini. Connectez-vous avec MCP Emails."
     },
     "jetbrains": {
       "step1": "Ouvrez Settings → Tools → AI Assistant → Model Context Protocol (MCP).",
@@ -71,7 +71,7 @@
     "raycast": {
       "step1": "Exécutez la commande « Install MCP Server » (ou « Manage MCP Servers »).",
       "step2": "Saisissez un nom, définissez Transport sur « HTTP » et collez l'URL ci-dessus.",
-      "step3": "Appuyez sur « Install MCP Server », puis cliquez sur « Sign In » pour autoriser avec mcpemails."
+      "step3": "Appuyez sur « Install MCP Server », puis cliquez sur « Sign In » pour autoriser avec MCP Emails."
     },
     "warp": {
       "step1": "Ouvrez Settings → Agents → MCP servers et cliquez sur « + Add ».",
@@ -98,7 +98,7 @@
     "multiInboxTitle": "Ajoutez vos autres boîtes professionnelles",
     "multiInboxOptional": "Facultatif",
     "multiInboxDesc": "Connectez info@, ventes@, factures@ et les autres : votre agent gère toutes les boîtes de l'entreprise depuis une seule conversation, et répond depuis la bonne adresse.",
-    "multiInboxDescUpgrade": "Connectez info@, ventes@, factures@ et les autres : votre agent gère toutes les boîtes de l'entreprise depuis une seule conversation, et répond depuis la bonne adresse. L'offre gratuite couvre une boîte ; Pro couvre toutes les boîtes de votre entreprise.",
+    "multiInboxDescUpgrade": "Connectez info@, ventes@, factures@ et les autres : votre agent gère toutes les boîtes de l'entreprise depuis une seule conversation, et répond depuis la bonne adresse. L'offre gratuite couvre une boîte ; Pro en couvre jusqu'à 10.",
     "multiInboxCompact": "Vous gérez aussi info@, ventes@ ou factures@ ? Connectez-les : votre agent gère toutes les boîtes de l'entreprise depuis une seule conversation.",
     "multiInboxCompactUpgrade": "Vous gérez aussi info@, ventes@ ou factures@ ? Votre agent peut gérer toutes les boîtes de l'entreprise depuis une seule conversation. Une deuxième boîte nécessite une offre payante.",
     "multiInboxCta": "Ajouter une boîte"
@@ -121,7 +121,7 @@
     "actionsThisMonth": "Actions e-mail ce mois-ci",
     "actionsOfCap": "sur {cap} · remise à zéro le {date}",
     "actionsCapReached": "Plafond atteint · refusées jusqu'au {date}",
-    "actionsGrace": "Semaine d'essai : aucun plafond avant le {date}",
+    "actionsGrace": "Période d'essai : aucun plafond avant le {date}",
     "actionsExempt": "Aucun plafond mensuel (membre de la première heure)",
     "teamMembers": "Membres d'équipe",
     "ofSeats": "sur {cap} sièges · {remaining} restants",
@@ -131,7 +131,7 @@
     "goToMembers": "Aller aux Membres",
     "callsPerDayTitle": "Appels par jour",
     "callsPerDaySub": "{days} derniers jours · tous outils confondus",
-    "pro": "Team",
+    "pro": "Business",
     "recentActivityTitle": "Activité récente",
     "recentActivitySub": "Appels d'outils MCP en direct",
     "noActivityTitle": "Aucune activité pour l'instant",
@@ -148,8 +148,8 @@
     "usedSingular": "{count} sur {max} boîte utilisée",
     "capTitle": "Vous avez atteint votre limite de boîtes",
     "capBodyPersonal": "L'offre gratuite connecte une boîte. Personal vous en donne trois pour 9 $ par mois, pour que le pro et le perso partagent le même agent.",
-    "capBodyPro": "Personal connecte trois boîtes. Pro supprime la limite pour 15 $ par mois, pour réunir toutes vos boîtes sur un seul agent.",
-    "capBodyBusiness": "Vous gérez plusieurs boîtes d'entreprise ? L'offre gratuite en connecte une. Personal en couvre trois pour 9 $ par mois, de quoi couvrir info@, ventes@ et la vôtre. Pro couvre toutes les boîtes de votre entreprise pour 15 $ par mois : finance, ventes, support, info et la vôtre.",
+    "capBodyPro": "Personal connecte trois boîtes. Pro vous amène à 10 pour 15 $ par mois, toutes sur un seul agent.",
+    "capBodyBusiness": "Vous gérez plusieurs boîtes d'entreprise ? L'offre gratuite en connecte une. Personal en couvre trois pour 9 $ par mois, de quoi couvrir info@, ventes@ et la vôtre. Pro en couvre jusqu'à 10 pour 15 $ par mois : finance, ventes, support, info et la vôtre.",
     "capCtaPersonal": "Passer à Personal, 9 $/mois",
     "capCtaPro": "Passer à Pro, 15 $/mois",
     "capCompare": "Comparer toutes les formules",
@@ -165,6 +165,7 @@
     "statusError": "Erreur",
     "reconnect": "Reconnecter",
     "checkConnection": "Vérifier la connexion",
+    "viewerActionsNote": "Les lecteurs de l’espace de travail peuvent voir cette boîte, mais pas la vérifier, la reconnecter, la déconnecter ni la modifier.",
     "disconnectInbox": "Déconnecter la boîte",
     "emptyTitle": "Aucune boîte connectée",
     "emptyDesc": "Connectez n’importe quelle boîte IMAP, Gmail ou Outlook pour donner accès à vos agents.",
@@ -180,6 +181,9 @@
       "close": "Fermer",
       "openAria": "Voir les détails de {label}",
       "connectionStatus": "État de la connexion",
+      "accessMode": "Accès",
+      "accessSendOnly": "Envoi uniquement (SMTP)",
+      "accessReceiveOnly": "Réception uniquement (IMAP)",
       "authMethod": "Authentification",
       "authOauth": "Jeton OAuth",
       "authAppPassword": "Mot de passe d'application",
@@ -204,6 +208,38 @@
         "saving": "Enregistrement…",
         "tooLong": "Le nom d’expéditeur est trop long (max 100 caractères)."
       },
+      "sendAs": {
+        "title": "Adresses d'envoi",
+        "help": "Envoyez depuis une autre adresse qui arrive dans cette boîte, comme un alias iCloud. Nous lui envoyons un code pour confirmer qu'elle est à vous. Votre fournisseur de messagerie doit aussi autoriser l'envoi depuis cette adresse.",
+        "placeholder": "alias@exemple.fr",
+        "add": "Ajouter l'adresse",
+        "adding": "Envoi du code…",
+        "loading": "Chargement…",
+        "verified": "Vérifiée",
+        "pending": "Code envoyé",
+        "unverified": "Non vérifiée",
+        "codePlaceholder": "Code à 6 chiffres",
+        "codeLabel": "Code de vérification pour {address}",
+        "verify": "Vérifier",
+        "resend": "Renvoyer le code",
+        "remove": "Retirer",
+        "errors": {
+          "invalid_address": "Saisissez une adresse e-mail valide.",
+          "own_address": "C'est l'adresse de cette boîte.",
+          "connected_inbox": "Cette adresse est connectée comme boîte à part entière. Envoyez depuis cette boîte.",
+          "already_verified": "Cette adresse est déjà vérifiée.",
+          "too_many_aliases": "Cette boîte ne peut pas recevoir plus d'adresses. Retirez-en une d'abord.",
+          "rate_limited": "Trop de codes envoyés. Réessayez plus tard.",
+          "cooldown": "Attendez une minute avant de demander un autre code.",
+          "code_expired": "Ce code a expiré. Demandez-en un nouveau.",
+          "too_many_attempts": "Trop de codes erronés. Demandez-en un nouveau.",
+          "wrong_code": "Ce code est incorrect.",
+          "invalid_code": "Saisissez le code à 6 chiffres.",
+          "mail_failed": "Nous n'avons pas pu envoyer le code. Réessayez.",
+          "unsupported_provider": "L'envoi depuis une autre adresse n'est pas disponible pour cette boîte.",
+          "generic": "Une erreur s'est produite. Réessayez."
+        }
+      },
       "signature": {
         "title": "Signature e-mail",
         "enabled": "Activée",
@@ -225,12 +261,16 @@
         "previewTitle": "Aperçu",
         "previewReplyQuote": "Le lun, quelqu'un '<quelquun@exemple.com>' a écrit :",
         "previewTooLarge": "La signature est trop volumineuse pour afficher un aperçu.",
-        "imageNote": "Certains clients de messagerie (p. ex. Gmail) peuvent masquer les images jusqu'à ce que le destinataire clique sur « afficher les images ». C'est normal pour les signatures comportant des images hébergées."
+        "imageNote": "Certains clients de messagerie (p. ex. Gmail) peuvent masquer les images jusqu'à ce que le destinataire clique sur « afficher les images ». C'est normal pour les signatures comportant des images hébergées. Activez « Intégrer les images au message » ci-dessous pour les envoyer dans l'e-mail.",
+        "embedImages": "Intégrer les images au message",
+        "embedImagesHint": "Envoie votre logo à l'intérieur de chaque e-mail au lieu de le charger depuis son adresse web : il s'affiche ainsi dans les brouillons et dans les messageries qui bloquent les images distantes, comme Outlook et Thunderbird. Images jusqu'à 512 Ko ; les plus grandes restent liées."
       }
     },
     "emptyAltLead": "Pas encore prêt à connecter une boîte ?",
     "emptyViewKeys": "Obtenir votre URL MCP et votre clé d’API",
-    "emptyReadDocs": "Lire les guides de configuration"
+    "emptyReadDocs": "Lire les guides de configuration",
+    "capBodyProCap": "Pro connecte 10 boîtes. Business en inclut 10 pour 39 $ par mois et ajoute chaque boîte supplémentaire pour 3 $ par mois, avec des membres illimités sans surcoût.",
+    "capCtaBusiness": "Passer à Business, 39 $/mois"
   },
   "apiKeys": {
     "title": "Clés API",
@@ -249,6 +289,7 @@
     "accessCount": "{count, plural, one {# boîte} other {# boîtes}}",
     "editAccess": "Modifier l'accès",
     "revoke": "Révoquer",
+    "notYours": "Seul son créateur ou un administrateur peut modifier cette clé.",
     "emptyTitle": "Aucune clé API pour l'instant",
     "emptyDesc": "Créez une clé pour connecter Claude Desktop ou tout client MCP à vos boîtes.",
     "never": "Jamais",
@@ -307,7 +348,9 @@
       "errInboxRequired": "Sélectionnez au moins une boîte, ou choisissez toutes les boîtes.",
       "errSaveFailed": "Échec de la mise à jour de l'accès. Veuillez réessayer.",
       "saving": "Enregistrement…",
-      "save": "Enregistrer les modifications"
+      "save": "Enregistrer les modifications",
+      "viewerCapNote": "Cette clé appartient à un observateur : elle ne peut avoir que des autorisations de lecture.",
+      "noWidenNote": "Le créateur de cette clé ne fait plus partie de l'espace de travail. Vous pouvez retirer des autorisations, mais pas en ajouter au-delà de la lecture."
     },
     "revealModal": {
       "title": "Copiez votre clé API",
@@ -361,7 +404,7 @@
     "colAddress": "Adresse",
     "allowanceCounting": "{used} actions e-mail sur {cap} utilisées ce mois-ci · remise à zéro le {date}",
     "allowanceReached": "Les {cap} actions e-mail sont épuisées · lectures et écritures refusées jusqu'au {date}",
-    "allowanceGrace": "Semaine d'essai : aucun plafond avant le {date}",
+    "allowanceGrace": "Période d'essai : aucun plafond avant le {date}",
     "allowanceExempt": "Aucun plafond mensuel (membre de la première heure)",
     "capTitleNear": "Vous approchez du quota de ce mois-ci",
     "capBodyNear": "{used} actions e-mail sur {cap} utilisées. À {cap}, les lectures et écritures de votre agent sont refusées jusqu'au {date}. Personal supprime le plafond mensuel pour 9 $ par mois.",
@@ -513,16 +556,15 @@
       "personalFeature2": "120 requêtes / minute (2× en pointe)",
       "personalFeatureActions": "Pas de plafond mensuel d'actions",
       "personalFeature4": "Support par e-mail",
-      "soloFeature1": "Boîtes connectées illimitées",
+      "soloFeature1": "10 boîtes connectées",
       "soloFeature2": "300 requêtes / minute (5× en pointe)",
       "soloFeature3": "Historique d'analytique plus long",
       "soloFeature4": "Support par e-mail",
-      "teamFeature1": "Tout ce que contient Pro",
-      "teamFeature2": "Membres illimités avec rôles",
-      "teamFeature3": "Un espace de travail distinct par client ou activité",
-      "teamFeature4": "SSO (SAML / OIDC) + journal d'audit",
-      "teamFeature5": "Historique d'analytique le plus long",
-      "teamFeature6": "Support prioritaire"
+      "businessFeature1": "Tout ce qu'inclut Pro",
+      "businessFeature2": "10 boîtes incluses, 3 $ par mois pour chaque boîte en plus",
+      "businessFeature3": "Membres illimités avec rôles, sans surcoût",
+      "businessFeature4": "Les administrateurs approuvent les envois en attente",
+      "businessFeature5": "Plusieurs espaces de travail sur un seul abonnement"
     },
     "planIncludes": "Ce que votre formule inclut",
     "inboxesOne": "1 boîte connectée",
@@ -553,7 +595,7 @@
     "confirmNoteInterval": "Débité maintenant sur la carte enregistrée, avec un avoir pour le temps restant de la période en cours. Votre période de facturation repart aujourd’hui, votre prochaine date de renouvellement change donc.",
     "confirmNoteIntervalNoPreview": "Nous n’avons pas pu chiffrer ce changement à l’avance. La carte enregistrée est débitée de la différence, avec un avoir pour le temps restant de la période en cours, et le montant exact figure sur votre facture. Votre période de facturation repart aujourd’hui, votre prochaine date de renouvellement change donc.",
     "confirmPay": "Confirmer et payer {amount}",
-    "confirmChange": "Confirmer le changement",
+    "confirmChange": "Confirmer et payer",
     "confirmCancel": "Annuler",
     "confirming": "Débit en cours…",
     "planChangedCharged": "Vous êtes maintenant sur {plan}. {amount} ont été débités de votre carte.",
@@ -562,7 +604,10 @@
     "paymentRequiredBody": "Votre banque doit autoriser le paiement, ou la carte a été refusée. Votre offre actuelle est inchangée et vous n'avez pas été débité. Réglez la facture ouverte et le changement sera appliqué automatiquement.",
     "paymentRequiredPay": "Payer la facture",
     "paymentRequiredClose": "Fermer",
-    "paymentRequiredToast": "Le paiement n'a pas abouti, vous êtes donc toujours sur {plan}. Ouvrez le portail de facturation pour régler la facture en attente."
+    "paymentRequiredToast": "Le paiement n'a pas abouti, vous êtes donc toujours sur {plan}. Ouvrez le portail de facturation pour régler la facture en attente.",
+    "proInboxesKept": "Votre formule Pro conserve des boîtes connectées illimitées.",
+    "businessMailboxRate": "10 boîtes incluses sur l'ensemble de vos espaces de travail. Chaque boîte supplémentaire est facturée avec votre formule : 3 $ par mois ou 28,80 $ par an.",
+    "confirmExtraMailboxes": "Comprend {count, plural, one {# boîte supplémentaire} other {# boîtes supplémentaires}} en plus des 10 incluses."
   },
   "security": {
     "title": "Sécurité",
@@ -626,8 +671,8 @@
     "roleOwner": "Propriétaire",
     "sending": "Envoi…",
     "sendInvite": "Envoyer l'invitation",
-    "rolesLockedHint": "Les invités rejoignent en tant que Membre. Passez à Team pour attribuer les rôles Administrateur et Lecteur.",
-    "inviteUpgradeHint": "L'invitation de collaborateurs nécessite la formule Team. Passez à Team pour ajouter des membres à cet espace de travail.",
+    "rolesLockedHint": "Les invités rejoignent en tant que Membre. Passez à Business pour attribuer les rôles Administrateur et Lecteur.",
+    "inviteUpgradeHint": "L'invitation de collaborateurs nécessite la formule Business. Passez à Business pour ajouter des membres à cet espace de travail.",
     "errInviteFailed": "Échec de l'envoi de l'invitation.",
     "errRemoveFailed": "Échec de la suppression du membre.",
     "errRoleFailed": "Échec de la mise à jour du rôle.",
@@ -674,6 +719,7 @@
       "to": "À",
       "cc": "Cc",
       "bcc": "Cci",
+      "replyTo": "Répondre à",
       "subject": "Objet",
       "attachments": "Pièces jointes",
       "operation": "Type",
@@ -689,11 +735,12 @@
       "attachmentsFromOriginal": "Les pièces jointes du message d'origine, telles qu'envoyées",
       "recipientsAtSend": "Cette page n’a pas pu lire les destinataires du message d’origine. Ils seront résolus au moment de l’envoi : vérifiez le texte du message avant d’approuver.",
       "bccCount": "{count, plural, one {# destinataire masqué} other {# destinataires masqués}}",
+      "bccHint": "Masqué pour les autres destinataires. Vérifiez chaque adresse avant d’approuver.",
       "attachmentCount": "{count, plural, one {# fichier} other {# fichiers}}",
       "bodyTitle": "Message",
       "bodyTruncated": "Ce message dépasse 64 Ko et a été tronqué ici. Ouvrez-le dans le tableau de bord pour tout lire.",
       "bodyWithheldRole": "Le texte du message est visible par les propriétaires, administrateurs et membres de l'espace. Votre rôle ne peut consulter que les détails de remise.",
-      "bodyStoredWithProvider": "Cette demande envoie un brouillon stocké chez votre fournisseur de messagerie ; son texte ne fait donc pas partie de la demande. Ouvrez le brouillon dans votre application de messagerie avant de décider.",
+      "bodyStoredWithProvider": "Cette demande a été préparée avant que MCP Emails n’enregistre une copie du brouillon : son texte ne peut pas être affiché ici et, même approuvée, elle ne sera pas envoyée. Rejetez-la et demandez à votre assistant de renvoyer le brouillon.",
       "bodyDecryptFailed": "Le message stocké n'a pas pu être déchiffré et ne peut donc pas être affiché. Rejetez cette demande et demandez à votre assistant de la refaire.",
       "bodyAbsent": "Cette demande ne contient aucun texte de message.",
       "bodyHtmlShow": "Afficher la source HTML",
@@ -741,7 +788,10 @@
         "expiredTitle": "Cette demande a expiré",
         "expiredBody": "Elle n'a pas été traitée à temps et ne sera pas envoyée. Demandez à votre assistant de la refaire si vous le souhaitez toujours.",
         "decidedElsewhereTitle": "Déjà traité",
-        "decidedElsewhereBody": "Quelqu'un d'autre, ou un autre onglet, a traité cet envoi pendant que cette page était ouverte. Rien n'a changé à l'instant. Ouvrez le tableau de bord pour voir le résultat."
+        "decidedElsewhereBody": "Quelqu'un d'autre, ou un autre onglet, a traité cet envoi pendant que cette page était ouverte. Rien n'a changé à l'instant. Ouvrez le tableau de bord pour voir le résultat.",
+        "changedTitle": "Cette demande a changé depuis que vous l’avez ouverte",
+        "changedBody": "Rien n’a été envoyé. La version actuelle est affichée ci-dessous. Relisez-la avant de décider.",
+        "changedLoading": "Rien n’a été envoyé. Chargement de la version actuelle…"
       },
       "done": {
         "approvedTitle": "Approuvé. Cet e-mail est en route.",
@@ -763,7 +813,8 @@
       "inlineHint": "Une carte apparaît dans la conversation et montre exactement ce qui sera envoyé. Vous pouvez rejeter depuis la carte ; approuver ouvre une page qui exige d'être connecté.",
       "dashboard": "Revue uniquement dans le tableau de bord",
       "dashboardHint": "Aucune carte dans la conversation. L'assistant est informé que l'envoi attend, et vous décidez ici.",
-      "guarantee": "Dans les deux modes de revue, l'e-mail est préparé mais pas remis. L'approbation n'a lieu que dans une session de navigateur connectée d'un propriétaire ou d'un administrateur de l'espace, ce dont l'assistant ne dispose pas. La carte de revue est un confort, pas une frontière de permissions."
+      "guarantee": "Dans les deux modes de revue, l'e-mail est préparé mais pas remis. L'approbation n'a lieu que dans une session de navigateur connectée d'un propriétaire ou d'un administrateur de l'espace, ce dont l'assistant ne dispose pas. La carte de revue est un confort, pas une frontière de permissions.",
+      "ownerAdminOnly": "Seuls les propriétaires et administrateurs de l’espace de travail peuvent modifier le réglage de revue."
     },
     "panel": {
       "decidedTitle": "Décidés récemment",
@@ -773,7 +824,12 @@
       "statusApproved": "Approuvé",
       "statusRejected": "Rejeté",
       "statusExpired": "Expiré",
-      "statusCancelled": "Annulé"
+      "statusCancelled": "Annulé",
+      "changedNotice": "Cette demande a changé depuis que vous l’avez ouverte. Rien n’a été envoyé. La version actuelle est affichée ci-dessous ; vérifiez-la avant de confirmer.",
+      "changedGone": "Cette demande a changé et n’attend plus de décision. Rien n’a été envoyé.",
+      "openReview": "Ouvrir la vérification complète, avec le texte du message",
+      "detailsFailed": "Impossible de charger les détails de cette demande. Rien n’a été envoyé. Vous pouvez quand même la rejeter, ou fermer et réessayer.",
+      "loadingDetails": "Chargement…"
     }
   },
   "automations": {
@@ -981,6 +1037,12 @@
       "cancel": "Annuler",
       "confirm": "Supprimer l'automatisation",
       "deleting": "Suppression…"
+    }
+  },
+  "workflows": {
+    "bulkRuns": {
+      "viewerNotice": "Vous pouvez suivre ici les traitements volumineux, mais seul un propriétaire, un administrateur ou un membre de l'espace peut les arrêter.",
+      "stopViewerTitle": "Les observateurs ne peuvent pas arrêter un traitement"
     }
   }
 }

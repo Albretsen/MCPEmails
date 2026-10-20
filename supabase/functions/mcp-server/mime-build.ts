@@ -17,6 +17,13 @@
 // mime-build.test.ts for the assertions that hold it in place.
 // ---------------------------------------------------------------------------
 
+import {
+  headerSafeAddress,
+  parseMailbox,
+  splitAddressList,
+  stripHeaderControls,
+} from "./address-header.ts";
+
 /**
  * Encode a UTF-8 text string as base64, split into 76-character lines per
  * MIME spec (RFC 2045). Used for text/plain and text/html body parts with
@@ -81,7 +88,8 @@ const ENCODED_WORD_MAX_BYTES = 45;
  *
  *   * plain atoms ("Acme Support")            -> bare, unchanged
  *   * ASCII with specials ("Bot (Prod)")     -> quoted-string, `"` and `\` escaped
- *   * anything non-ASCII ("Åsgeir Bjelland") -> RFC 2047 encoded-word(s), each
+ *   * anything non-ASCII ("Åsgeir Bjelland"), or any name containing "=?"
+ *                                             -> RFC 2047 encoded-word(s), each
  *     at most 75 characters, never split inside a UTF-8 sequence
  *
  * Control characters (CR/LF included) are collapsed to a space first, so a
@@ -92,9 +100,16 @@ export function encodeMimeDisplayName(name: string): string {
   // deno-lint-ignore no-control-regex
   const sanitized = name.replace(/[\x00-\x1F\x7F]+/g, " ").trim();
   if (sanitized.length === 0) return "";
+  // A name that itself looks like an encoded-word ("=?UTF-8?B?...?=" as
+  // literal text, e.g. the once-decoded name of a hostile sender) is ENCODED,
+  // not quoted (2026-10-16). Readers decode encoded-words inside quoted
+  // strings too (mailers write them, clients decode them, and so does
+  // address-header.ts for headers it reads), so a quoted literal lost one
+  // layer of encoding on every draft_read / draft_update. Encoded, it decodes
+  // back to exactly this literal, however often the draft is re-read.
   // deno-lint-ignore no-control-regex
-  if (/^[\x00-\x7F]*$/.test(sanitized)) {
-    if (BARE_PHRASE_RE.test(sanitized) && !sanitized.includes("=?")) return sanitized;
+  if (/^[\x00-\x7F]*$/.test(sanitized) && !sanitized.includes("=?")) {
+    if (BARE_PHRASE_RE.test(sanitized)) return sanitized;
     return `"${sanitized.replace(/["\\]/g, (c) => `\\${c}`)}"`;
   }
   const words: string[] = [];
@@ -124,6 +139,49 @@ function encodedWord(bytes: number[]): string {
 export function formatMailbox(name: string | null | undefined, address: string): string {
   const encoded = name ? encodeMimeDisplayName(name) : "";
   return encoded ? `${encoded} <${address}>` : address;
+}
+
+/**
+ * Re-serialize address-header entries for writing.
+ *
+ * Each element may be one mailbox or a list, in any of the forms callers
+ * hand in: our display form ("Åse Ødegård <a@x>", "\"Doe, Jane\" <j@x>"),
+ * formatMailbox output (already RFC 2047-encoded), or a bare address. Each is
+ * parsed STRUCTURALLY first (address-header.ts), then written back through
+ * formatMailbox: the name through encodeMimeDisplayName, the address with
+ * whitespace, control characters, `<>`, `,` and `;` removed. An encoded-word
+ * is decoded only in an unquoted phrase (RFC 2047 §5), which makes this
+ * idempotent on formatMailbox output and never decodes a quoted literal.
+ * Elements without an address are dropped.
+ */
+export function headerAddressList(elements: readonly string[]): string[] {
+  const out: string[] = [];
+  for (const element of elements) {
+    if (typeof element !== "string") continue;
+    let mailboxes = splitAddressList(element).map((raw) => parseMailbox(raw, "unquoted"));
+    // `Doe, Jane <j@x>` with the comma unquoted is one person, not a mailbox
+    // "Doe" plus one "Jane": when a split yields a piece with no address in
+    // it, the element is read as ONE mailbox whose name holds the comma.
+    if (mailboxes.length > 1 && mailboxes.some((m) => !m.email.includes("@"))) {
+      mailboxes = [parseMailbox(element, "unquoted")];
+    }
+    for (const mailbox of mailboxes) {
+      const address = headerSafeAddress(mailbox.email);
+      if (address) out.push(formatMailbox(mailbox.name, address));
+    }
+  }
+  return out;
+}
+
+/** A free-text header value (msg-id lists) with every control-character run collapsed to a space. */
+export function headerText(value: string): string {
+  return stripHeaderControls(value).replace(/\s+/g, " ").trim();
+}
+
+/** The local token we put inside our own Message-ID: nothing that can end the msg-id or the line. */
+function headerMsgIdToken(value: string): string {
+  // deno-lint-ignore no-control-regex
+  return value.replace(/[\x00-\x20\x7F<>]/g, "");
 }
 
 /**
@@ -191,6 +249,21 @@ export interface MimeMessageParams {
     /** Standard base64-encoded binary data */
     data: string;
   }>;
+  /**
+   * Images the HTML body shows through `cid:` references (a signature logo,
+   * see signature-images.ts). They ride in a multipart/related around the HTML
+   * part. Each is written with a Content-ID and NO filename, deliberately: our
+   * own readers (mime.ts, the Gmail part walk) list a part as an attachment
+   * when it has a name, and an embedded logo is not one. Ignored without an
+   * `htmlBody`, because nothing could reference them.
+   */
+  inlineImages?: Array<{
+    /** Content-ID without angle brackets. */
+    cid: string;
+    mimeType: string;
+    /** Standard base64-encoded binary data */
+    data: string;
+  }>;
   replyTo?: string;
   /** Pre-generated UUID (without angle brackets) used as Message-ID */
   messageId: string;
@@ -207,6 +280,47 @@ export interface MimeMessageParams {
 }
 
 /**
+ * Write the HTML alternative: the text/html part alone, or, when the body
+ * shows inline images, a multipart/related holding it and them.
+ *
+ * The related sits INSIDE the alternative (alternative[plain, related[html,
+ * images]]), which is the shape Thunderbird, Outlook and Gmail write and the
+ * one every client resolves `cid:` against.
+ */
+function pushHtmlPart(lines: string[], params: MimeMessageParams): void {
+  const images = params.inlineImages ?? [];
+  if (images.length === 0) {
+    lines.push(`Content-Type: text/html; charset=UTF-8`);
+    lines.push(`Content-Transfer-Encoding: base64`);
+    lines.push("");
+    lines.push(encodeTextAsBase64Lines(params.htmlBody!));
+    return;
+  }
+  const relBoundary = `mcpe_rel_${crypto.randomUUID().replace(/-/g, "")}`;
+  lines.push(`Content-Type: multipart/related; type="text/html"; boundary="${relBoundary}"`);
+  lines.push("");
+  lines.push(`--${relBoundary}`);
+  lines.push(`Content-Type: text/html; charset=UTF-8`);
+  lines.push(`Content-Transfer-Encoding: base64`);
+  lines.push("");
+  lines.push(encodeTextAsBase64Lines(params.htmlBody!));
+  for (const image of images) {
+    lines.push("");
+    lines.push(`--${relBoundary}`);
+    // Both values pass through encodeMimeHeaderValue for the same reason an
+    // attachment's do: no CR/LF may reach a header line.
+    lines.push(`Content-Type: ${encodeMimeHeaderValue(image.mimeType)}`);
+    lines.push(`Content-Transfer-Encoding: base64`);
+    lines.push(`Content-ID: <${encodeMimeHeaderValue(image.cid).replace(/[<>\s]/g, "")}>`);
+    lines.push(`Content-Disposition: inline`);
+    lines.push("");
+    lines.push(chunkBase64(image.data));
+  }
+  lines.push("");
+  lines.push(`--${relBoundary}--`);
+}
+
+/**
  * Build an RFC 5322 / MIME message string from the given parameters.
  *
  * Structure selection:
@@ -215,6 +329,8 @@ export interface MimeMessageParams {
  *   - Text only + attachments               → multipart/mixed
  *   - Text + HTML + attachments             → multipart/mixed with nested
  *                                             multipart/alternative
+ *   - `inlineImages` with an HTML body      → the text/html part becomes a
+ *                                             multipart/related (see pushHtmlPart)
  *
  * Body content is base64-encoded (Content-Transfer-Encoding: base64) for
  * reliable UTF-8 transport. Attachment data passes through as-is — the caller
@@ -233,20 +349,30 @@ export function buildMimeMessage(params: MimeMessageParams): string {
   const lines: string[] = [];
 
   // ── Required headers ──────────────────────────────────────────────────────
-  lines.push(`From: ${params.from}`);
-  lines.push(`To: ${params.to.join(", ")}`);
-  if (params.cc?.length) lines.push(`Cc: ${params.cc.join(", ")}`);
+  // SECURITY (2026-10-16): no header value is written as given. Every address
+  // field is re-serialized mailbox by mailbox (headerAddressList), and every
+  // other value has its control characters collapsed (headerText), so nothing
+  // a caller passes, whatever it was read from, can start a new header line.
+  const to = headerAddressList(params.to);
+  const cc = headerAddressList(params.cc ?? []);
+  const bcc = headerAddressList(params.bcc ?? []);
+  lines.push(`From: ${headerAddressList([params.from]).join(", ")}`);
+  lines.push(`To: ${to.join(", ")}`);
+  if (cc.length) lines.push(`Cc: ${cc.join(", ")}`);
   // Bcc is written ONLY for draft persistence (includeBccHeader). It is stripped
   // before transmission so To/Cc recipients never see BCC addresses.
-  if (params.includeBccHeader && params.bcc?.length) {
-    lines.push(`Bcc: ${params.bcc.join(", ")}`);
+  if (params.includeBccHeader && bcc.length) {
+    lines.push(`Bcc: ${bcc.join(", ")}`);
   }
   lines.push(`Subject: ${encodeMimeHeaderValue(params.subject)}`);
   lines.push(`Date: ${new Date().toUTCString()}`);
-  lines.push(`Message-ID: <${params.messageId}@mcpemails.com>`);
-  if (params.replyTo) lines.push(`Reply-To: ${params.replyTo}`);
-  if (params.inReplyTo) lines.push(`In-Reply-To: ${params.inReplyTo}`);
-  if (params.references) lines.push(`References: ${params.references}`);
+  lines.push(`Message-ID: <${headerMsgIdToken(params.messageId)}@mcpemails.com>`);
+  const replyTo = params.replyTo ? headerAddressList([params.replyTo]) : [];
+  if (replyTo.length) lines.push(`Reply-To: ${replyTo.join(", ")}`);
+  const inReplyTo = params.inReplyTo ? headerText(params.inReplyTo) : "";
+  if (inReplyTo) lines.push(`In-Reply-To: ${inReplyTo}`);
+  const references = params.references ? headerText(params.references) : "";
+  if (references) lines.push(`References: ${references}`);
   lines.push(`MIME-Version: 1.0`);
 
   const hasHtml = !!params.htmlBody;
@@ -269,10 +395,7 @@ export function buildMimeMessage(params: MimeMessageParams): string {
     lines.push(encodeTextAsBase64Lines(params.textBody));
     lines.push("");
     lines.push(`--${boundary}`);
-    lines.push(`Content-Type: text/html; charset=UTF-8`);
-    lines.push(`Content-Transfer-Encoding: base64`);
-    lines.push("");
-    lines.push(encodeTextAsBase64Lines(params.htmlBody!));
+    pushHtmlPart(lines, params);
     lines.push("");
     lines.push(`--${boundary}--`);
   } else {
@@ -295,10 +418,7 @@ export function buildMimeMessage(params: MimeMessageParams): string {
       lines.push(encodeTextAsBase64Lines(params.textBody));
       lines.push("");
       lines.push(`--${altBoundary}`);
-      lines.push(`Content-Type: text/html; charset=UTF-8`);
-      lines.push(`Content-Transfer-Encoding: base64`);
-      lines.push("");
-      lines.push(encodeTextAsBase64Lines(params.htmlBody!));
+      pushHtmlPart(lines, params);
       lines.push("");
       lines.push(`--${altBoundary}--`);
     } else {
@@ -365,8 +485,9 @@ export function mimeMessageToBase64url(mimeText: string): string {
  */
 export function buildDraftMime(params: MimeMessageParams): string {
   const mime = buildMimeMessage(params);
-  // buildMimeMessage always writes a To line; drop it when it is empty.
-  return params.to.length ? mime : mime.replace(/^To:[ \t]*\r?\n/m, "");
+  // buildMimeMessage always writes a To line; drop it when it is empty (also
+  // when every entry given was dropped for having no address).
+  return mime.replace(/^To:[ \t]*\r?\n/m, "");
 }
 
 /**

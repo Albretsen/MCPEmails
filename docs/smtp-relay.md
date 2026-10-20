@@ -188,7 +188,155 @@ Both are `query_logs` on source `function_logs`. Counting `provider_not_sent` in
 
 ## Adding another provider
 
-Only on evidence, meaning a logged rejection that names our sending address.
-Append the registrable domain to `SMTP_RELAY_HOSTS`, add it to the relay's own
-allowlist, and set the secret. No code change and no deploy: the function reads
-the secret per isolate.
+Usually nothing to do: since 2026-10-15 hosts are learned (next section). The
+hand-kept list is for a host known in advance. Append the registrable domain to
+`SMTP_RELAY_HOSTS` and set the secret. No code change and no deploy: the
+function reads the secret per isolate.
+
+## Learned hosts: the relay retry and `mail_relay_hosts`
+
+A 2026-10-15 sweep of the connect logs found hosts refusing our AWS egress that
+nobody reported (Telstra's submission port timed out 15 times for two
+workspaces; both settled for a receive-only mailbox). So the hand-kept list is
+now the floor:
+
+1. **One relayed retry.** A direct connection that fails in a way a different
+   address can fix is tried once more through the relay: a connect that never
+   opened or went quiet, a greeting that turned us away, an SMTP rejection
+   before DATA, or a login/envelope refusal whose own text blames where we
+   connect from (`isOriginRefusalText`, two copies that a test keeps equal:
+   `supabase/functions/mcp-server/relay-registry.ts` and
+   `apps/web/src/lib/email/relay-fallback.ts`). Never a plain wrong password,
+   a certificate problem or a name that does not resolve. Nothing can be sent
+   twice: every retry happens before SMTP DATA. A host whose retry also failed
+   is left alone for 10 minutes per isolate.
+   - **After the password went out** (edge IMAP, since 2026-10-16) only a read
+     timeout earns the retry. A server that hangs up or resets after LOGIN has
+     answered on the credential (`exchange.ionos.eu` does this on a wrong
+     password), and a retry would be a second failed sign-in. The connect form
+     already worked this way.
+   - **An IP-literal host** never gets the retry: the filter below refuses it.
+   - **A `403` from the relay** is the filter refusing that one target, not the
+     relay being down. It neither trips the per-isolate breaker nor counts as
+     `relay_down`; it is counted as `host_refused`.
+   - The direct IMAP TCP connect is capped at 10 s (it used to wait for the
+     OS timeout, about 2 minutes, before the retry could start).
+2. **Learning.** When the retry works, `learn_mail_relay_host` records the
+   host per protocol, and from then on the connect form, the health check and
+   the edge function (IMAP and SMTP) go through the relay first. A learned host
+   whose relay is down falls back to a direct dial; only the relay-only list
+   has no fallback. A relayed 465 row is submitted on 587 with STARTTLS.
+3. **The learning rule** (migration `20261015200000`, after a false positive
+   on 2026-10-15). One rescue only makes a host a *candidate*
+   (`mail_relay_candidates`). It is learned at a second rescue at least 5
+   minutes after the first, within 7 days, and never while it has 5 or more
+   direct successful calls for that protocol in the last 7 days, however many
+   failures it has. Failures prove nothing about our address: the first
+   version compared successes with failures, and `exchange.ionos.eu` (82
+   direct successes, 172 failures from two inboxes with wrong passwords) was
+   learned after one dropped connection. Measured: Orange and Telstra
+   submission 0, Domeneshop submission about 2 a week before it was relayed,
+   Yahoo 29,023. A host that is never learned loses nothing: each failed call
+   still gets its own relay retry.
+   Since migration `20261016100000`, "direct" means direct: successful calls
+   the fallback carried (`mail_relay_stats`, route `fallback`, outcome `ok`)
+   are subtracted, and IMAP counts only tools that open IMAP (not signature,
+   schedule, automation or contact tools). Before that, a blocked host used by
+   one active person was refused within minutes of its first rescue, because
+   its rescued calls looked like direct ones.
+4. **Re-check.** A learned row is honoured for 30 days from `last_learned_at`.
+   After that connections are direct again and the host is re-learned by the
+   same rule if it still needs the relay; only successes since it expired
+   count, so the calls it made through the relay are not held against it.
+
+Every relayed connection is counted in `mail_relay_stats` (hourly, per runtime,
+protocol, host, route `listed`/`learned`/`fallback` and outcome
+`ok`/`relay_down`/`host_refused`). The **Relay** band at the foot of
+`/admin/growth` reads it: up or down, how many relayed connections worked, and
+every host with its last failure. `relay_down` is ours; `host_refused` is the
+mail host saying no through a working tunnel, usually a wrong password.
+
+To relay a host by hand without waiting for a failure, insert a row with
+`source = 'manual'` (never expires):
+
+```sql
+insert into mail_relay_hosts (host, protocol, source, reason)
+values ('smtp.example.net', 'smtp', 'manual', 'why');
+```
+
+**Relay filter since 2026-10-15.** Learned hosts can be any mail host, so the
+tinyproxy filter on the relay allows any DNS name with an alphabetic TLD (no IP
+literal, no `localhost`) on `ConnectPort` 143, 465, 587 and 993 only, and
+`MaxClients` is 100. Nothing on the relay box listens on those ports. The
+previous host-by-host filter is in `/etc/tinyproxy/filter.bak-*`.
+
+**Egress guard since 2026-10-16.** tinyproxy resolves the CONNECT name itself,
+so a name that resolves, or is rebound, to the box or a private network would
+pass the filter. ufw's `before.rules` / `before6.rules` therefore reject NEW
+connections from the `tinyproxy` user to `127.0.0.0/8` (except the resolver on
+127.0.0.53/54 port 53), the box's own address, `0/8`, `10/8`, `100.64/10`,
+`169.254/16`, `172.16/12`, `192.168/16`, and on IPv6 `::1`, `::ffff:0:0/96`,
+`fc00::/7` and `fe80::/10`. Only that user is affected. The rules sit above
+ufw's loopback ACCEPT and must stay there. Restricting them to NEW matters: the
+first version without it also rejected tinyproxy's replies to a client on the
+box itself. Check with `iptables -L ufw-before-output -v -n`; a CONNECT to
+`localtest.me:993` (resolves to loopback) should bump the `127.0.0.0/8` counter.
+Backups: `/etc/ufw/before*.rules.bak-20261016075058`.
+
+## Relay-only hosts: Orange (IMAP and SMTP, no direct fallback)
+
+Domeneshop refuses our submissions. Orange refuses our **sign-ins**, for reading
+as well as sending, and that needs more than the SMTP relay above.
+
+**What was measured (2026-10-12).** `imap.orange.fr` answered every login from
+our servers with `NO [ALERT] Authentication failed.`, which is not its
+wrong-password answer: a made-up address gets `NO [AUTHENTICATIONFAILED] ...`
+from AWS, from the relay and from a residential line, and Dovecot sends
+`[ALERT]` only when its auth backend attached a refusal reason of its own.
+Orange only issues mailboxes with a French internet contract, so the question
+was put to one customer login, repeated from several addresses in a single
+attempt:
+
+| Login | From | Result |
+| --- | --- | --- |
+| IMAP | our web app (AWS) | `NO [ALERT] Authentication failed.` |
+| IMAP | a relay in France | accepted |
+| IMAP | this relay (Germany) | accepted |
+| SMTP | our web app (AWS) | greeting `550 Service refused, please try later. OFR105_103` |
+| SMTP, 587 | this relay (Germany) | accepted |
+
+Same password throughout. Orange refuses real accounts from where we connect.
+
+**What the code does about it.** `orange.fr` is a *relay-only* host, in both
+runtimes, and the two lists must name the same hosts:
+
+- Edge function: `DEFAULT_RELAY_ONLY_HOST_SUFFIXES` in `smtp-relay.ts`
+  (override with the `MAIL_RELAY_ONLY_HOSTS` secret). IMAP for these hosts goes
+  through the relay (`imap-client.ts#connectOnce`), they are always on the SMTP
+  relay list whatever `SMTP_RELAY_HOSTS` says, and a row stored as 465 is
+  submitted on 587 with STARTTLS.
+- Web app: `RELAY_ONLY_MAIL_HOST_SUFFIXES` in
+  `apps/web/src/lib/email/mail-relay.ts`, read from `MAIL_RELAY_URL` on Vercel.
+  The connect form validates these hosts through the relay and stores SMTP as
+  587/STARTTLS; the inbox health check opens its session the same way.
+
+**No direct fallback, and the breaker does not skip them.** For every other
+relayed host a broken relay degrades to a direct dial. Here the direct dial is
+the one path known to be refused, and its refusal reads as a wrong password: it
+would tell the user to reconnect a mailbox that is fine and count a failed
+sign-in against their account. A relay that cannot carry the connection is an
+ordinary transient failure for these hosts.
+
+**Relay setup for a relay-only host**, on top of the above: `ConnectPort 993`,
+and both the IMAP and the SMTP host in the filter file
+(`^imap\.orange\.fr$`, `^smtp\.orange\.fr$`).
+
+**Baselines worth knowing when reading logs.** Orange's wrong-password answers
+are `NO [AUTHENTICATIONFAILED] Authentication failed.` on IMAP and
+`550 5.7.0 ... Mot de passe invalide` on SMTP, the latter after about eight
+seconds. An `[ALERT]` through the relay would mean the relay's own address has
+started being refused, and no code change fixes that.
+
+A second relay in France was stood up for the measurement. It is not used:
+Orange's SMTP greets that address with `550 Service refused. OFR_99`, and the
+German relay is accepted for both protocols.

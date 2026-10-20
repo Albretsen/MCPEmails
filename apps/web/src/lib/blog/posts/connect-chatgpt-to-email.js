@@ -31,7 +31,7 @@ In the MCP Emails dashboard, open **Inboxes**, then **Connect Inbox**, then pick
 
 ### Gmail and Google Workspace
 
-Gmail connects with a Google app password over IMAP by default, and Google OAuth sign-in is also available. Use the app password if a Workspace administrator restricts third-party app access. The [Gmail walkthrough](/blog/connect-gmail-to-claude) has the steps.
+Gmail connects with a Google app password over IMAP. Turn on 2-Step Verification, create the app password at myaccount.google.com/apppasswords, and paste the 16 letters in with your full Gmail address; your normal Google password will not work. A Google Workspace admin can switch app passwords off for the domain, so ask them if the option is missing. The [Gmail walkthrough](/blog/connect-gmail-to-claude) has the steps.
 
 ### iCloud, Fastmail, Yahoo and Zoho
 
@@ -86,7 +86,7 @@ For repeatable routines, start from the [inbox triage playbook](/blog/ai-agent-t
 
 MCP Emails hands ChatGPT focused tools rather than a password or a raw IMAP socket:
 
-- **Read and search:** \`email_read\` covers list, read, read_batch, search and attachment. Gmail searches accept operators such as \`from:\` and \`is:unread\`.
+- **Read and search:** \`email_read\` covers list, read, read_batch, search and attachment. Search uses structured fields such as sender, subject, date and unread state, and Gmail labels show up as folders.
 - **Send, reply and forward:** \`email_compose\` sends through your own provider and address.
 - **Organize:** \`email_organize\`, \`email_search_and_move\` and \`email_delete\`.
 - **Drafts, folders and scheduling:** \`draft\`, \`draft_list\`, \`folder\`, \`folder_list\`, \`schedule\` and \`schedule_list\`.
@@ -130,7 +130,7 @@ No. Codex is a terminal surface, so it uses a scoped API key on an \`Authorizati
 No. Every message is fetched live from your provider for the request that asked for it, then discarded. Only the encrypted provider credential is retained. [Why never storing email matters](/blog/why-email-never-stored-matters) explains the reasoning.
 
 **What does it cost?**
-Free covers one connected inbox and 150 billable email actions per UTC calendar month, with the first 7 days uncounted. That monthly cap applies to workspaces created on or after 2026-09-13; workspaces created earlier are exempt. Paid plans add inboxes and remove the cap: see [pricing](/pricing).
+Free covers one connected inbox and 150 billable email actions per UTC calendar month, with the first 3 days uncounted. That monthly cap applies to workspaces created on or after 2026-09-13; workspaces created earlier are exempt. Paid plans add inboxes and remove the cap: see [pricing](/pricing).
 
 ## Next step
 

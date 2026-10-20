@@ -20,7 +20,7 @@
     "titleLine1": "Connectez l'e-mail Loopia à Claude,",
     "titleLine2": "Cursor, ChatGPT, tout client MCP",
     "lead": "Offrez à votre agent IA une vraie boîte Loopia. Lisez, recherchez, envoyez, répondez, planifiez et organisez le courrier en IMAP avec le mot de passe défini pour le compte dans Loopia Kundzon.",
-    "answer": "Claude ne peut pas accéder seul à une boîte Loopia. mcpemails est un serveur MCP hébergé qui s'y connecte en IMAP sur mailcluster.loopia.se, port 993, en s'authentifiant avec votre adresse e-mail complète et le mot de passe défini pour ce compte dans Loopia Kundzon, pour que Claude, Cursor ou tout client MCP puisse lire, rechercher, envoyer et organiser le courrier. Loopia utilise un seul nom de cluster partagé pour tous ses clients : il n'y a donc aucun serveur par domaine à chercher ni de mot de passe d'application à générer. Une boîte est gratuite, pour toujours.",
+    "answer": "Claude ne peut pas accéder seul à une boîte Loopia. MCP Emails est un serveur MCP hébergé qui s'y connecte en IMAP sur mailcluster.loopia.se, port 993, en s'authentifiant avec votre adresse e-mail complète et le mot de passe défini pour ce compte dans Loopia Kundzon, pour que Claude, Cursor ou tout client MCP puisse lire, rechercher, envoyer et organiser le courrier. Loopia utilise un seul nom de cluster partagé pour tous ses clients : il n'y a donc aucun serveur par domaine à chercher ni de mot de passe d'application à générer. Une boîte est gratuite, pour toujours.",
     "meta0": "1 boîte gratuite, pour toujours",
     "meta1": "Mot de passe du compte défini dans Loopia Kundzon",
     "meta2": "E-mails récupérés en direct, jamais stockés"
@@ -31,7 +31,7 @@
   },
   "setup": [
     {
-      "h": "Créez votre compte mcpemails gratuit",
+      "h": "Créez votre compte MCP Emails gratuit",
       "p": "Inscrivez-vous sur mcpemails.com. L'offre gratuite connecte une boîte pour toujours et ne demande pas de carte bancaire."
     },
     {
@@ -39,7 +39,7 @@
       "p": "Connectez-vous à Loopia Kundzon, ouvrez la liste des adresses e-mail de votre domaine, cliquez sur l'adresse et choisissez Edit (modifier). Un champ de mot de passe apparaît à côté de Password : saisissez-en un nouveau et enregistrez. La même modification peut se faire sur mailadmin.loopia.se si vous administrez le courrier sans accès complet à Kundzon."
     },
     {
-      "h": "Collez-le dans mcpemails",
+      "h": "Collez-le dans MCP Emails",
       "p": "Choisissez IMAP / SMTP, saisissez l'adresse complète et collez le mot de passe du compte. Le serveur mailcluster.loopia.se et les ports 993 et 465 sont préremplis et ont été vérifiés par une vraie connexion TLS."
     },
     {
@@ -68,7 +68,7 @@
   "faq": [
     {
       "q": "Claude fonctionne-t-il avec l'e-mail Loopia ?",
-      "a": "Pas tout seul. Claude n'a pas de connecteur Loopia intégré. Relier un serveur MCP comme mcpemails à votre boîte Loopia en IMAP donne à Claude un accès en lecture, recherche, envoi, réponse, planification et organisation, et la même connexion fonctionne depuis Cursor, ChatGPT et d'autres clients MCP."
+      "a": "Pas tout seul. Claude n'a pas de connecteur Loopia intégré. Relier un serveur MCP comme MCP Emails à votre boîte Loopia en IMAP donne à Claude un accès en lecture, recherche, envoi, réponse, planification et organisation, et la même connexion fonctionne depuis Cursor, ChatGPT et d'autres clients MCP."
     },
     {
       "q": "Quels sont les réglages IMAP et SMTP de Loopia ?",

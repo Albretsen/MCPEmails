@@ -19,7 +19,7 @@
     "titleLine1": "Servidor MCP para el correo de STRATO:",
     "titleLine2": "todos los buzones de tu empresa, en Claude y ChatGPT",
     "lead": "¿Llevas info@, ventas@, soporte@ y facturas@ en tu propio dominio en STRATO? Conecta cada buzón al mismo espacio de trabajo y tu agente de IA trabaja en todos ellos. Lee, busca, envía, responde, programa y organiza correo por IMAP con la contraseña del buzón, no con tu acceso de cliente de STRATO.",
-    "answer": "Claude no puede acceder a un buzón de STRATO por sí solo. mcpemails es un servidor MCP alojado que lo conecta por IMAP en imap.strato.de en el puerto 993, autenticándose con tu dirección de correo completa y la contraseña establecida en ese buzón, no con tu acceso de cliente de STRATO, para que Claude, Cursor o cualquier cliente MCP pueda leer, buscar, enviar y organizar el correo. STRATO solo acepta la autenticación de contraseña normal sobre una conexión cifrada, tras haber desactivado el antiguo método de desafío-respuesta. Cada dirección de la empresa, como info@ o ventas@, se conecta como un buzón propio: un buzón es gratis, Personal conecta tres y Pro todos los que llevas.",
+    "answer": "Claude no puede acceder a un buzón de STRATO por sí solo. MCP Emails es un servidor MCP alojado que lo conecta por IMAP en imap.strato.de en el puerto 993, autenticándose con tu dirección de correo completa y la contraseña establecida en ese buzón, no con tu acceso de cliente de STRATO, para que Claude, Cursor o cualquier cliente MCP pueda leer, buscar, enviar y organizar el correo. STRATO solo acepta la autenticación de contraseña normal sobre una conexión cifrada, tras haber desactivado el antiguo método de desafío-respuesta. Cada dirección de la empresa, como info@ o ventas@, se conecta como un buzón propio: un buzón es gratis, Personal conecta tres, Pro hasta 10 y Business todos los que necesites.",
     "meta0": "Primer buzón gratis, planes para el resto",
     "meta1": "Contraseña del buzón, no el acceso de cliente",
     "meta2": "El correo se obtiene en vivo, nunca se almacena"
@@ -35,7 +35,7 @@
   },
   "setup": [
     {
-      "h": "Crea tu cuenta gratis de mcpemails",
+      "h": "Crea tu cuenta gratis de MCP Emails",
       "p": "Regístrate en mcpemails.com. El plan gratuito conecta una bandeja para siempre y no pide tarjeta."
     },
     {
@@ -43,7 +43,7 @@
       "p": "Inicia sesión en el STRATO Kundenlogin (área de cliente), abre tu paquete y ve a E-Mail y luego a E-Mail-Adressen verwalten (gestionar direcciones de correo). Selecciona la dirección y establece ahí una contraseña nueva. Esta contraseña pertenece solo al buzón y no es la que acabas de usar para entrar en el Kundenlogin."
     },
     {
-      "h": "Pégala en mcpemails",
+      "h": "Pégala en MCP Emails",
       "p": "Elige IMAP / SMTP, escribe la dirección completa y pega la contraseña del buzón. Los servidores imap.strato.de y smtp.strato.de y los puertos 993 y 465 vienen rellenados y se verificaron mediante una conexión TLS real."
     },
     {
@@ -58,7 +58,7 @@
     },
     {
       "h": "STRATO no anuncia SASL-IR",
-      "p": "El servidor IMAP omite la capacidad SASL-IR, así que rechaza la autenticación en un solo paso que lleva las credenciales en la misma línea que el comando AUTHENTICATE. Un cliente que da por hecho SASL-IR recibe un <code>BAD</code> a secas sin explicación, que de nuevo parece un problema de contraseña. mcpemails detecta esa respuesta y reintenta con el intercambio en dos pasos, así que la conexión funciona, pero, sumado a la eliminación de CRAM-MD5, es la razón de que STRATO genere tantos falsos avisos de contraseña incorrecta."
+      "p": "El servidor IMAP omite la capacidad SASL-IR, así que rechaza la autenticación en un solo paso que lleva las credenciales en la misma línea que el comando AUTHENTICATE. Un cliente que da por hecho SASL-IR recibe un <code>BAD</code> a secas sin explicación, que de nuevo parece un problema de contraseña. MCP Emails detecta esa respuesta y reintenta con el intercambio en dos pasos, así que la conexión funciona, pero, sumado a la eliminación de CRAM-MD5, es la razón de que STRATO genere tantos falsos avisos de contraseña incorrecta."
     },
     {
       "h": "STRATO tiene el servidor IMAP mejor equipado de su rango de precio",
@@ -76,7 +76,7 @@
   "faq": [
     {
       "q": "¿Funciona Claude con el correo de STRATO?",
-      "a": "No por sí solo. Claude no tiene un conector de STRATO integrado. Apuntar un servidor MCP como mcpemails a tu buzón de STRATO por IMAP le da a Claude acceso para leer, buscar, enviar, responder, programar y organizar, y la misma conexión funciona desde Cursor, ChatGPT y otros clientes MCP."
+      "a": "No por sí solo. Claude no tiene un conector de STRATO integrado. Apuntar un servidor MCP como MCP Emails a tu buzón de STRATO por IMAP le da a Claude acceso para leer, buscar, enviar, responder, programar y organizar, y la misma conexión funciona desde Cursor, ChatGPT y otros clientes MCP."
     },
     {
       "q": "¿Cuáles son los ajustes IMAP y SMTP de STRATO?",
@@ -97,6 +97,6 @@
   ],
   "ctaBand": {
     "title": "Todos tus buzones de STRATO en un solo agente",
-    "sub": "Conecta tu primer buzón de STRATO gratis, sin tarjeta. Personal conecta tres y Pro todos los que llevas."
+    "sub": "Conecta tu primer buzón de STRATO gratis, sin tarjeta. Personal conecta tres, Pro hasta 10 y Business todos los que necesites."
   }
 }

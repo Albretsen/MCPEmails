@@ -1,5 +1,7 @@
 'use client';
 
+import { SupportHelpLink } from '../components/support/SupportHelpLink';
+
 /**
  * app/error.js
  *
@@ -38,7 +40,7 @@ export default function ErrorPage({ reset }) {
 
         {/* Brand */}
         <div className="auth-brand">
-          <img className="logo-light" src="/logo-wordmark.svg" width="280" height="48" alt="mcpemails" /><img className="logo-dark" src="/logo-wordmark-dark.svg" width="280" height="48" alt="mcpemails" />
+          <img className="logo-light" src="/logo-wordmark.svg" width="280" height="48" alt="MCP Emails" /><img className="logo-dark" src="/logo-wordmark-dark.svg" width="280" height="48" alt="MCP Emails" />
         </div>
 
         {/* Card */}
@@ -166,6 +168,11 @@ export default function ErrorPage({ reset }) {
           >
             Back to homepage
           </a>
+          {/* SUPPORT_RELEASE_GATE: a plain link to /help at release. English label,
+              like the rest of this page. */}
+          <SupportHelpLink
+            style={{ display: 'block', marginTop: 14, textAlign: 'center', color: 'var(--fg-3)', fontFamily: 'var(--font-sans)', fontSize: 13 }}
+          />
         </div>
       </div>
     </div>

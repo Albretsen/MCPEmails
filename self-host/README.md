@@ -159,6 +159,7 @@ the MCP container over Docker's private network. For an existing reverse proxy, 
 | `make key NAME=… SCOPES=read:email,send:email INBOX=you@example.com EXPIRES_DAYS=90` | Mint a scoped, optionally inbox-restricted, expiring key |
 | `make revoke PREFIX=mcpe_ab1` | Revoke a key by prefix |
 | `make provision …` | Connect another mailbox |
+| `make migrate` | Upgrade the database schema after pulling a new version (safe to re-run) |
 | `make psql` | Open a `psql` shell |
 | `make dispatch` | Manually flush due scheduled sends |
 | `make destroy` | Stop and **delete all data** |
@@ -191,8 +192,8 @@ curl -fsS -X POST -H "X-Dispatch-Secret: $DISPATCH_SECRET" http://localhost:8787
   and do not publish or port-forward the plaintext MCP port.
 - **No outbound calls to us.** The only network the server makes is to your mail provider and your
   own Postgres. Verify it: `make logs S=mcp-server` and watch.
-- **Single-tenant.** One workspace, one operator, is seeded for you. Multi-user workspaces, roles,
-  SSO, and audit-log retention are hosted-only features.
+- **Single-tenant.** One workspace, one operator, is seeded for you. Multi-user workspaces, roles and
+  the web dashboard (with its activity log) are hosted-only features.
 
 ## How it maps to the hosted product
 
@@ -210,6 +211,10 @@ production. The only differences are operational, not behavioral:
 
 ## Troubleshooting
 
+- **Every tool except `inbox_list` says "No inbox matches", or reads fail with "Failed to decode
+  base64"**, the database was created by an older version of this repo. The schema is only applied
+  on first start, so pull, then run `make up` and `make migrate`. It adds what is missing and
+  converts stored credentials in place; your inboxes and keys are kept.
 - **`postgrest` keeps restarting**, usually a stale volume from a previous `.env`. `make destroy`
   then `make up` to reinitialize the database with the current secrets.
 - **`make setup` says `.env` already exists**, it refuses to overwrite, because regenerating

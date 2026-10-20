@@ -228,6 +228,132 @@ export function calendarWeekBuckets<T extends { day: string }>(
   return buckets;
 }
 
+/* ------------------------------------------------------ today's projection */
+
+/** Complete days the intraday shape is learned from. */
+export const PACE_HISTORY_DAYS = 28;
+
+/** Complete days the expected size of today is taken from. */
+export const PACE_BASELINE_DAYS = 7;
+
+/**
+ * Fewer signups than this in the history and the board shows today's count
+ * with no projection. At ~35 a day the window holds ~1,000, so this only bites
+ * on a fresh database or a broken query, never on an ordinary quiet week.
+ */
+export const PACE_MIN_HISTORY = 100;
+
+export type TodayProjection = {
+  soFar: number;
+  /** null when the history is too thin to say anything honest. */
+  projected: number | null;
+  /** Roughly an 80% interval on the whole day, same nullability. */
+  low: number | null;
+  high: number | null;
+  /** What a typical recent day had reached by this time of day. */
+  usualByNow: number | null;
+  /** Mean of the last PACE_BASELINE_DAYS complete days. */
+  baseline: number | null;
+  /** Share of a typical day's signups that has arrived by now, 0..1. */
+  shareByNow: number | null;
+};
+
+/**
+ * Projects today's UTC signup total from the part of the day already lived.
+ *
+ * THE FORMULA IS A BLEND, and the blend weight is the clock. Two estimates of
+ * today exist: today's own pace (`soFar / share`) and an ordinary recent day
+ * (`baseline`). Weighting them by `share`, the fraction of a typical day's
+ * signups already in, gives
+ *
+ *   share * (soFar / share) + (1 - share) * baseline  =  soFar + (1 - share) * baseline
+ *
+ * so the projection is what has happened plus what normally still happens.
+ * At 00:30 it is the baseline, by 23:30 it is today's own count, and it never
+ * divides by a small share, which is where a naive `soFar / share` produces a
+ * 400 off one early signup.
+ *
+ * `share` is MEASURED, not hours/24: from PACE_HISTORY_DAYS of real signup
+ * times, because arrivals bunch in the European and US afternoons. The interval
+ * treats what is left of the day as Poisson around its expectation.
+ *
+ * `rows` is growth_signup_pace output: gapless days, oldest first, today last.
+ */
+export function projectToday(
+  rows: { new_users: number; by_now: number }[],
+  {
+    historyDays = PACE_HISTORY_DAYS,
+    baselineDays = PACE_BASELINE_DAYS,
+    minHistory = PACE_MIN_HISTORY,
+  }: { historyDays?: number; baselineDays?: number; minHistory?: number } = {},
+): TodayProjection {
+  const today = rows.at(-1);
+  const soFar = today?.new_users ?? 0;
+  const empty = { soFar, projected: null, low: null, high: null, usualByNow: null, baseline: null, shareByNow: null };
+
+  const complete = rows.slice(0, -1);
+  const history = complete.slice(-historyDays);
+  const recent = complete.slice(-baselineDays);
+  const total = history.reduce((acc, row) => acc + row.new_users, 0);
+  if (!today || recent.length === 0 || total < minHistory) return empty;
+
+  const share = history.reduce((acc, row) => acc + row.by_now, 0) / total;
+  const baseline = recent.reduce((acc, row) => acc + row.new_users, 0) / recent.length;
+  const remaining = (1 - share) * baseline;
+  // z = 1.28, the two-sided 80% normal quantile; adequate once the remaining
+  // expectation is above a handful, and the floor keeps it sane below that.
+  const spread = 1.28 * Math.sqrt(remaining);
+
+  return {
+    soFar,
+    projected: Math.round(soFar + remaining),
+    low: soFar + Math.max(0, Math.floor(remaining - spread)),
+    high: soFar + Math.ceil(remaining + spread),
+    usualByNow: Math.round(share * baseline),
+    baseline,
+    shareByNow: share,
+  };
+}
+
+/**
+ * Projects the current calendar week (Monday to Sunday, UTC).
+ *
+ * The days already finished this week count as they are, today counts at its
+ * own projection, and every day still to come counts at the same baseline
+ * today's projection uses. null whenever today's projection is.
+ */
+export function projectWeek(
+  rows: { day: string; new_users: number }[],
+  today: TodayProjection,
+): number | null {
+  const last = rows.at(-1);
+  if (!last || today.projected === null || today.baseline === null) return null;
+  const todayKey = last.day.slice(0, 10);
+  const monday = mondayOf(todayKey);
+  const earlier = rows
+    .slice(0, -1)
+    .filter((row) => row.day.slice(0, 10) >= monday)
+    .reduce((acc, row) => acc + row.new_users, 0);
+  const offset = (new Date(`${todayKey}T00:00:00Z`).getUTCDay() + 6) % 7;
+  return Math.round(earlier + today.projected + (6 - offset) * today.baseline);
+}
+
+const WEEKDAY_INITIAL =new Intl.DateTimeFormat('en-GB', { weekday: 'narrow', timeZone: 'UTC' });
+
+/** The last `count` days as chart columns, today carrying its projection. */
+export function signupDayColumns(
+  rows: { day: string; new_users: number }[],
+  projected: number | null,
+  count = 14,
+): { label: string; value: number; projected?: number }[] {
+  const tail = rows.slice(-count);
+  return tail.map((row, index) => ({
+    label: WEEKDAY_INITIAL.format(new Date(`${row.day.slice(0, 10)}T00:00:00Z`)),
+    value: row.new_users,
+    ...(index === tail.length - 1 && projected !== null ? { projected: Math.max(projected, row.new_users) } : {}),
+  }));
+}
+
 /** Convenience for the two series the signups chart draws, in one place. */
 export function signupWeeks(rows: GrowthUserSignupDayRow[], weeks = CHART_WEEKS): WeekBucket[] {
   return calendarWeekBuckets(rows, weeks, (row) => [row.new_users, row.activated_users]);
@@ -475,6 +601,16 @@ const CHANNEL_LABELS: Record<string, string> = {
   mcpservers: 'mcpservers.org',
   mcp_so: 'mcp.so',
   freemcp: 'freemcp',
+  // Listings told apart by their utm_source since 2026-10-19.
+  npm: 'npm',
+  mcp_registry: 'MCP Registry',
+  docker: 'Docker MCP Catalog',
+  github_punkpeye: 'awesome-mcp-servers (punkpeye)',
+  github_tensorblock: 'awesome-mcp-servers (TensorBlock)',
+  github_bestof: 'best-of-mcp-servers',
+  claude_directory: 'Claude Directory',
+  chatgpt_directory: 'ChatGPT app directory',
+  cursor_directory: 'Cursor Directory',
 };
 
 export function prettyChannel(source: string): string {
@@ -488,4 +624,21 @@ function humanise(value: string): string {
   const spaced = value.replace(/[_-]+/g, ' ').trim();
   if (!spaced) return 'Unknown';
   return spaced.charAt(0).toUpperCase() + spaced.slice(1);
+}
+
+/**
+ * The tone of the Recurring revenue tile: THE DIRECTION, not the worst
+ * subscriber.
+ *
+ * It used to go red on any failing card and amber on any scheduled cancel. At
+ * eighty-odd subscribers one of each is nearly always in flight (Stripe retries
+ * a card for weeks), so the headline money tile sat red in weeks MRR grew. It
+ * now answers "is MRR up or down in this window": green when net new MRR is
+ * zero or positive, amber when it fell. Failing and leaving still surface, by
+ * count in the tile's aside and by amount in the Money at risk tile, which
+ * owns that question. Never red: a fall is a reason to look, not an outage.
+ */
+export function revenueTone(mrr: Pick<RevenueSummary, 'mrrMinor' | 'netNewMrrMinor'>): 'good' | 'warn' | 'goal' {
+  if (mrr.mrrMinor <= 0) return 'goal';
+  return mrr.netNewMrrMinor < 0 ? 'warn' : 'good';
 }

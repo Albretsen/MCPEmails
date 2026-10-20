@@ -4,7 +4,7 @@ import { viteSingleFile } from "vite-plugin-singlefile";
 // One self-contained HTML file. Every byte here is re-transferred out of the
 // Supabase edge function on *every* tool call (phase-0 findings Q4: the host
 // caches nothing), so the bundle budget is hard: <50 KB raw is the target,
-// >150 KB is a build failure.
+// >175 KB is a build failure (raised from 150 KB on 2026-10-17, see codegen.mjs).
 export default defineConfig({
   esbuild: {
     jsx: "automatic",

@@ -36,6 +36,30 @@ test('a Personal cap of three inboxes is cleared by Pro, never by Personal', () 
   assert.equal(offer.ctaKey, 'connect.viewUpgradeOptions');
 });
 
+test("Pro's cap of ten is cleared by Business, never by Pro", () => {
+  // A Pro workspace from after the 2026-10 cutover stops at ten. Offering Pro
+  // would sell the plan it holds; Business is the only plan past ten.
+  const offer = inboxCapOffer(10);
+  assert.equal(offer.plan, 'pro');
+  assert.equal(offer.ctaKey, 'connect.businessCapCta');
+  assert.equal(offer.noticeBodyKey, 'inboxes.capBodyProCap');
+  assert.deepEqual(offer.offers.map(o => o.plan), ['pro']);
+  assert.equal(offer.dual, false);
+});
+
+test('business shape does not change the Pro-cap offer', () => {
+  // Shape only widens the Free cap. At ten there is one way forward for
+  // everybody.
+  assert.deepEqual(inboxCapOffer(10, BUSINESS), inboxCapOffer(10, CONSUMER));
+  assert.deepEqual(inboxCapOffer(10, BUSINESS), inboxCapOffer(10));
+});
+
+test('every cap above Personal\'s three sells Business, not only exactly ten', () => {
+  for (const cap of [4, 10, 25]) {
+    assert.equal(inboxCapOffer(cap).plan, 'pro');
+  }
+});
+
 test('an unknown cap falls back to the Free assumption', () => {
   // The 402 body always carries a cap, but the client-side prop can be null
   // before plan limits have loaded. Assuming Free matches what the panel's
@@ -57,7 +81,7 @@ test('both offers name a plan the checkout route will accept', () => {
   // instead of to Stripe, which is the failure this whole surface exists to
   // avoid.
   const purchasable = new Set(['personal', 'solo', 'pro']);
-  for (const cap of [1, 3]) {
+  for (const cap of [1, 3, 10]) {
     assert.ok(purchasable.has(inboxCapOffer(cap).plan));
   }
 });
@@ -66,7 +90,7 @@ test('the modal and the page notice cannot drift, because there is one rule', ()
   // Both surfaces call this with the same cap and must get the same plan: a
   // user who reads $5 in the modal, closes it, and sees $15 on the page behind
   // has been given two prices for one block, and neither is now trustworthy.
-  for (const cap of [1, 3, null]) {
+  for (const cap of [1, 3, 10, null]) {
     assert.deepEqual(inboxCapOffer(cap), inboxCapOffer(cap));
   }
 });
@@ -150,7 +174,7 @@ test('a business panel\'s primary offer is Pro; with no shape, a Free cap still 
 test('a Personal cap gets Pro alone REGARDLESS of shape', () => {
   // From three inboxes there is one way forward. Showing a Personal
   // subscriber "Personal and Pro" would offer them the plan they already hold.
-  for (const cap of [2, 3, 5]) {
+  for (const cap of [2, 3]) {
     for (const context of [undefined, CONSUMER, BUSINESS]) {
       const offer = inboxCapOffer(cap, context);
       assert.equal(offer.dual, false, `cap ${cap} must never be dual`);
@@ -200,7 +224,7 @@ test('garbage caps never throw and never produce an empty offer', () => {
 test('EVERY offered plan is one the checkout route will accept, at both intervals', () => {
   // Uses the real allowlist the checkout-start route validates against, not a
   // copy of it, so the two cannot drift.
-  for (const cap of [null, 0, 1, 2, 3]) {
+  for (const cap of [null, 0, 1, 2, 3, 10]) {
     for (const context of [CONSUMER, BUSINESS]) {
       for (const planOffer of inboxCapOffer(cap, context).offers) {
         for (const interval of ['month', 'year']) {
@@ -215,11 +239,13 @@ test('EVERY offered plan is one the checkout route will accept, at both interval
   }
 });
 
-test('no offer ever sells Team, and no plan appears twice on one panel', () => {
+test('below Pro\'s cap no offer sells Business, and no plan appears twice on one panel', () => {
+  // Business (internal `pro`) is for past ten mailboxes or several people. It
+  // must never be what a Free or Personal block is sold.
   for (const cap of [null, 1, 3]) {
     for (const context of [CONSUMER, BUSINESS]) {
       const plans = inboxCapOffer(cap, context).offers.map(o => o.plan);
-      assert.equal(plans.includes('pro'), false, 'internal `pro` is Team, $79');
+      assert.equal(plans.includes('pro'), false, 'internal `pro` is Business');
       assert.equal(new Set(plans).size, plans.length);
     }
   }

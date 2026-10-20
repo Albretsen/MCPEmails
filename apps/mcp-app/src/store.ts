@@ -14,7 +14,7 @@ import type {
   ToolCancelledParams,
   ToolResultParams,
 } from "./bridge";
-import { isEnvelope, type Envelope } from "./contract";
+import { DRAFT_BODY_META_KEY, isEnvelope, type Envelope } from "./contract";
 import {
   cardKey,
   isRestoreStub,
@@ -23,6 +23,7 @@ import {
   stripStubMarker,
 } from "./persist";
 import { neutralizeDeep, neutralizeText } from "./sanitize";
+import { announceDraft } from "./draft-signal";
 
 /**
  * What the last tool result was, which is NOT the same question as "did it
@@ -98,8 +99,62 @@ export interface ToolInfoSummary {
  */
 export type ResultArrival = "none" | "ontime" | "late";
 
+/**
+ * Whether the draft on screen is known to be the draft the server has.
+ *
+ *   trusted    — it came from the server just now: a first mount's own result,
+ *                or the answer to a call this card made.
+ *   pending    — it is a REPLAY (see `isReplayedDraft`) and nothing has checked
+ *                it yet. App.tsx reads this and starts the re-read.
+ *   checking   — that re-read is in flight.
+ *   unverified — the re-read did not settle it, or a write the card started
+ *                ended without an answer, so what the server holds is unknown.
+ *
+ * Save and Send are offered in `trusted` only. That is the whole point of the
+ * field: a re-mounted card is handed the ORIGINAL tool result, and sending from
+ * it sends whatever the draft said before every edit since.
+ */
+export type DraftCheck = "trusted" | "pending" | "checking" | "unverified";
+
 export interface CardStore {
   envelope: Envelope | null;
+  /** See `DraftCheck`. Meaningful only while a draft editor is on screen. */
+  draftCheck: DraftCheck;
+  /**
+   * A draft id NEWER than the one in a replayed envelope: the id this card last
+   * held, read back out of its restore stub at the moment the replay replaced
+   * it. On a server without draft lineage it is the only id that still
+   * resolves, so the re-read asks with it first. Null once a read has settled.
+   */
+  draftIdHint: string | null;
+  /**
+   * A read found a newer version of this draft that the assistant wrote after
+   * this card last saw it, so a newer card for it exists. See `supersededBy`.
+   * Cleared by this card's own save, which makes it the newest writer again.
+   */
+  draftSuperseded: boolean;
+  /**
+   * Where the card that is current for this draft sits, and why, while
+   * `draftSuperseded` is true; the folded line says it (DraftEditor#Superseded).
+   * `newer`: the assistant wrote a newer version, whose card is below.
+   * `taken`: another card took the draft over (a Save or "Open here" there,
+   * draft-signal.ts#claimDraft), above or below this one, or `other` when the
+   * order is not known. Meaningless while `draftSuperseded` is false.
+   */
+  supersededAt: SupersededAt;
+  /**
+   * The draft revision of the result this card was MOUNTED for, or null. A
+   * later tool call has a higher revision, so comparing two cards' values says
+   * which is further down the chat (draft-signal.ts, "A CLAIM").
+   */
+  mountedRevision: number | null;
+  /**
+   * The terminal receipt this card had ended on (restored from storage) when a
+   * replayed draft result replaced it. Held until the replay is checked: a
+   * draft that was sent, discarded or hidden here does not come back as an
+   * editor unless the server says it is still a draft. Null otherwise.
+   */
+  priorReceipt: Envelope | null;
   /** Classification of the most recent tool result. See `ResultStatus`. */
   resultStatus: ResultStatus;
   hostContext: HostContext;
@@ -141,10 +196,35 @@ export interface CardStore {
    * every host forever: it is the counter that would say otherwise.
    */
   uncorrelatedResults: number;
+  /**
+   * `true` when the result this card was MOUNTED for is the model's own
+   * `draft_read` (a pushed draft envelope with `origin: "read"`), false for any
+   * other first result, null before one arrived.
+   *
+   * Only a push can say this: the card's own `draft_read` calls (restore,
+   * Refresh, the deferred-body fallback, the attention check) come back as
+   * answers to its requests, never as the pushed result. A model that reads a
+   * draft back used to get a second full editor under the first, so one draft
+   * piled up as three cards in a thread (QA 2026-10-15); App.tsx draws this
+   * one as a single line instead, with a way to open the editor.
+   */
+  mountedForRead: boolean | null;
+}
+
+/** See `CardStore#supersededAt`. */
+export interface SupersededAt {
+  why: "newer" | "taken";
+  where: "above" | "below" | "other";
 }
 
 let state: CardStore = {
   envelope: null,
+  draftCheck: "trusted",
+  draftIdHint: null,
+  draftSuperseded: false,
+  supersededAt: { why: "newer", where: "below" },
+  mountedRevision: null,
+  priorReceipt: null,
   resultStatus: "waiting",
   hostContext: {},
   connected: false,
@@ -156,6 +236,7 @@ let state: CardStore = {
   handshakeTick: 0,
   restored: null,
   uncorrelatedResults: 0,
+  mountedForRead: null,
 };
 
 const listeners = new Set<() => void>();
@@ -247,6 +328,35 @@ export async function runTeardownSaver(): Promise<void> {
   }
 }
 
+// ---------------------------------------------------------------------------
+// A send still inside its undo window at teardown
+//
+// DraftEditor holds Send for a few seconds with Undo in its place
+// (`SEND_UNDO_MS`). A frame torn down inside that window CANCELS the send, it
+// never hurries it: a send nobody is left to see, from a card that is going
+// away, is exactly the accident the window exists to prevent. The unmount
+// clears the timer too; this slot is for the host's `ui/resource-teardown`,
+// which can arrive before anything unmounts. One slot, like the saver above.
+// ---------------------------------------------------------------------------
+
+let pendingSendCancel: (() => void) | null = null;
+
+/** Register (or clear, with `null`) how to cancel a send that is counting down. */
+export function setPendingSendCancel(fn: (() => void) | null) {
+  pendingSendCancel = fn;
+}
+
+/** Cancel a send that is counting down, if there is one. Never throws. */
+export function cancelPendingSend(): void {
+  const fn = pendingSendCancel;
+  pendingSendCancel = null;
+  try {
+    fn?.();
+  } catch {
+    /* the card is going away either way */
+  }
+}
+
 /**
  * Does this payload claim to be ours?
  *
@@ -296,8 +406,13 @@ export function classifyResult(result: ToolResultParams | undefined): Classified
   // can no longer clear. Applied to BOTH channels and on the single path every
   // envelope takes — the pushed notification and the card's own tool calls both
   // land here — so there is no second place to forget it.
+  //
+  // `admit` is those two steps plus the third thing that belongs at this
+  // boundary for the same reason: a deferred draft body is filled in from the
+  // result's own `_meta` here, so that on a host which delivers it nothing
+  // downstream ever sees the placeholder.
   if (isEnvelope(sc)) {
-    return { envelope: stripStubMarker(neutralizeDeep(sc as Envelope)), status: "envelope" };
+    return { envelope: admit(sc as Envelope, result), status: "envelope" };
   }
   if (claimsToBeOurs(sc)) return { envelope: null, status: "malformed" };
 
@@ -306,7 +421,7 @@ export function classifyResult(result: ToolResultParams | undefined): Classified
     try {
       const parsed: unknown = JSON.parse(text);
       if (isEnvelope(parsed)) {
-        return { envelope: stripStubMarker(neutralizeDeep(parsed)), status: "envelope" };
+        return { envelope: admit(parsed, result), status: "envelope" };
       }
       if (claimsToBeOurs(parsed)) return { envelope: null, status: "malformed" };
     } catch {
@@ -317,6 +432,195 @@ export function classifyResult(result: ToolResultParams | undefined): Classified
   // Not our payload. The tool did whatever it does, the host is showing its
   // own text result, and this card has nothing to say about it.
   return { envelope: null, status: "foreign" };
+}
+
+/** Everything an envelope goes through on its way in. See `classifyResult`. */
+function admit(env: Envelope, result: ToolResultParams): Envelope {
+  return resolveDeferredBody(stripStubMarker(neutralizeDeep(env)), result);
+}
+
+// ---------------------------------------------------------------------------
+// A deferred draft body (contract §8, 2026-10-13)
+//
+// `draft{action:"create"|"reply"|"update"}` no longer puts the body in
+// `structuredContent`: `draft.body` arrives as `{ text: null, html: null,
+// truncated, deferred: true }` and the real one rides in the tool RESULT's
+// `_meta["mcpemails/draft_body"]`. There are two ways the card gets it, tried
+// in this order:
+//
+//   1. FROM THE RESULT ITSELF. Both ways a result reaches this file hand over
+//      the whole `CallToolResult` (bridge.ts passes the notification's params
+//      and the `tools/call` response through untouched), so if the host
+//      forwarded `_meta` it is right here and `resolveDeferredBody` fills the
+//      body in before anything else sees the envelope.
+//   2. BY ASKING. A host may drop result `_meta` on the way to a view, and the
+//      card cannot find out in advance whether this one does. The envelope then
+//      stays deferred, App.tsx shows the loading line, and its effect calls
+//      `draft_read` (`deferredBodyCall`), which returns the body inline.
+//
+// The one rule both serve: A DEFERRED BODY IS NEVER RENDERED AS A BODY.
+// `text: null` reads as an empty string through every `?? ""` in the
+// components, and an editor mounted on it would hold an empty body under the
+// real draft's `version` — so nothing would ever resync it, Save would light up
+// on the first keystroke, and that save would write the blank over the draft.
+// ---------------------------------------------------------------------------
+
+/** Is this a draft envelope whose body the card does not have yet? */
+export function isBodyDeferred(env: Envelope | null | undefined): boolean {
+  return !!env && env.card === "draft_editor" && env.draft?.body?.deferred === true;
+}
+
+/**
+ * Fill a deferred body from the result's `_meta`, when the host delivered it.
+ *
+ * Returns the envelope unchanged when there is nothing usable there, which is
+ * the signal for path 2 above; a malformed value is treated exactly like an
+ * absent one rather than guessed at. `text` and `html` may each be null (an
+ * HTML-only draft has no text part), so "usable" means the key is an object
+ * that says what the body is, not that the body is non-empty.
+ *
+ * Neutralised like every other string that crosses this boundary. The inline
+ * body always was, because it sits inside the envelope `neutralizeDeep` walks;
+ * this one arrives beside the envelope and would otherwise be the only body
+ * the card shows without that pass.
+ */
+function resolveDeferredBody(env: Envelope, result: ToolResultParams): Envelope {
+  if (!isBodyDeferred(env) || !env.draft) return env;
+  const meta = result._meta;
+  const raw =
+    meta && typeof meta === "object" && !Array.isArray(meta)
+      ? (meta as Record<string, unknown>)[DRAFT_BODY_META_KEY]
+      : undefined;
+  if (!raw || typeof raw !== "object" || Array.isArray(raw)) return env;
+  const b = raw as Record<string, unknown>;
+  if (!("text" in b)) return env;
+  if (typeof b.text !== "string" && b.text !== null) return env;
+  if (typeof b.html !== "string" && b.html !== null && b.html !== undefined) return env;
+  return {
+    ...env,
+    draft: {
+      ...env.draft,
+      body: neutralizeDeep({
+        text: b.text ?? "",
+        html: b.html ?? null,
+        truncated:
+          typeof b.truncated === "boolean" ? b.truncated : env.draft.body?.truncated === true,
+        // Where the reply's quoted original starts (contract.ts#Body.quoted).
+        // Shape-checked again where it is used (format.ts#splitQuote).
+        ...(b.quoted && typeof b.quoted === "object" && !Array.isArray(b.quoted)
+          ? { quoted: b.quoted as { line: number } }
+          : {}),
+      }),
+    },
+  };
+}
+
+/** The read that returns a deferred body. Null when there is nothing to ask. */
+export function deferredBodyCall(env: Envelope | null | undefined): RehydrationCall | null {
+  if (!env || !isBodyDeferred(env) || !env.draft?.draft_id) return null;
+  return {
+    tool: "draft_read",
+    args: {
+      inbox_id: env.draft.identity?.inbox_id,
+      draft_id: env.draft.draft_id,
+    },
+  };
+}
+
+/**
+ * Names one deferred envelope, so App.tsx asks for each body exactly once and
+ * a failure is remembered against the envelope it happened to, not against
+ * whichever one is on screen later. Local to the frame, never stored or sent.
+ */
+export function deferredBodyKey(env: Envelope | null | undefined): string | null {
+  if (!env || !isBodyDeferred(env) || !env.draft) return null;
+  return JSON.stringify([
+    env.draft.identity?.inbox_id ?? null,
+    env.draft.draft_id,
+    env.draft.version ?? null,
+  ]);
+}
+
+/**
+ * Validate the `draft_read` answer to a deferred body.
+ *
+ * `acceptRehydration` first, unchanged, because this is the same event as a
+ * restored stub being re-requested: a server answer about one specific id,
+ * arriving into a card that is showing a placeholder for it. Same shape rule,
+ * same identity rule, same `gone` for a draft that has since left Drafts, same
+ * short list of receipts that mean the editor must stop.
+ *
+ * Two things are added, both about the body:
+ *
+ *  - AN ANSWER THAT IS ITSELF DEFERRED IS A FAILURE. `draft_read` returns the
+ *    body inline by contract. If it ever does not, adopting the answer would
+ *    put the card straight back where it started and ask again, forever.
+ *  - WHICH ENVELOPE IS KEPT. When the answer's `version` equals the one the
+ *    deferred envelope carried, the two describe the same content, and only the
+ *    body is taken: the original envelope is the richer one (`in_reply_to` is
+ *    populated on a reply and null on every read, and `origin` says who wrote
+ *    it). When they differ, or either is missing, the draft has changed since
+ *    the envelope was built, and the answer is adopted whole: a body grafted
+ *    under a version that does not describe it is exactly the mismatch the
+ *    editor's resync rule cannot see.
+ */
+export function acceptDeferredBody(
+  asked: Envelope | null | undefined,
+  next: Envelope | null,
+): Rehydration {
+  const decided = acceptRehydration(asked, next);
+  if (decided.kind !== "adopt" || decided.envelope.card !== "draft_editor") return decided;
+  const answer = decided.envelope;
+  if (isBodyDeferred(answer) || !asked?.draft || !answer.draft) return { kind: "failed" };
+  const mine = asked.draft.version;
+  if (typeof mine === "string" && mine.length > 0 && answer.draft.version === mine) {
+    return {
+      kind: "adopt",
+      envelope: { ...asked, draft: { ...asked.draft, body: answer.draft.body } },
+    };
+  }
+  return decided;
+}
+
+/**
+ * Is the card still waiting for the body of exactly this envelope?
+ *
+ * The answer to a `draft_read` lands a round trip after it was asked, and the
+ * store may have moved on: a pushed result may have replaced the envelope, or
+ * resolved it. An answer to a question nobody is asking any more is dropped.
+ */
+export function awaitsBodyOf(asked: Envelope | null | undefined): boolean {
+  const key = deferredBodyKey(asked);
+  return key !== null && key === deferredBodyKey(state.envelope);
+}
+
+/** Put a fetched body on screen, if it is still the one being waited for. */
+export function adoptDeferredBody(asked: Envelope, envelope: Envelope): boolean {
+  if (!awaitsBodyOf(asked)) return false;
+  setState({ envelope });
+  return true;
+}
+
+/**
+ * A deferred envelope that describes the content the card ALREADY HAS keeps the
+ * body it has.
+ *
+ * Same draft, same mailbox, same `version`: by the server's own definition that
+ * is the same content, so the body on screen is the body the placeholder stands
+ * for. Without this, a host that drops `_meta` and delivers the same result
+ * twice would take a mounted editor down to its loading line and back, and the
+ * remount would discard whatever the user had typed in between.
+ */
+function keepKnownBody(current: Envelope | null | undefined, next: Envelope): Envelope {
+  if (!isBodyDeferred(next) || !next.draft) return next;
+  if (!current || current.card !== "draft_editor" || !current.draft?.body) return next;
+  if (isRestoreStub(current) || isBodyDeferred(current)) return next;
+  const version = next.draft.version;
+  if (typeof version !== "string" || !version || current.draft.version !== version) return next;
+  const mine = envelopeSubject(current);
+  const theirs = envelopeSubject(next);
+  if (!mine || !theirs || !sameSubject(mine, theirs)) return next;
+  return { ...next, draft: { ...next.draft, body: current.draft.body } };
 }
 
 /** Convenience wrapper for callers that only need the envelope. */
@@ -367,10 +671,56 @@ export function isDepartedReceipt(env: Envelope | null | undefined): boolean {
   return env.receipt.outcome === "sent" || env.receipt.outcome === "scheduled";
 }
 
+/**
+ * Does this envelope report that something FAILED?
+ *
+ * §4 says the envelope state and the receipt outcome describe the same
+ * condition from two levels; either one saying so is enough, for the same
+ * reason `isDepartedReceipt` requires both to agree before calling it a send.
+ */
+export function isFailure(env: Envelope | null | undefined): boolean {
+  return !!env && (env.state === "error" || env.receipt?.outcome === "failed");
+}
+
+/** A draft editor with real content in it, as opposed to a restore stub. */
+function isLiveEditor(env: Envelope | null | undefined): env is Envelope {
+  return !!env && env.card === "draft_editor" && !!env.draft && !isRestoreStub(env);
+}
+
+/**
+ * A read or save of the same reply draft keeps the "Replying to" context the
+ * card already has (live re-test, 2026-10-17).
+ *
+ * The server knows the original as a server message id on the reply path only,
+ * so every `draft_read` and `draft_editor_save` answers `in_reply_to: null`
+ * with `threaded: true`. Adopting that took the "Replying to Dana · <subject>"
+ * line away on the first Save (and on the read a reloaded card makes), and the
+ * card jumped up by a line. The draft still answers the same message, so the
+ * held context stays until an answer says the draft no longer answers one.
+ */
+function keepReplyContext(current: Envelope | null | undefined, next: Envelope): Envelope {
+  const held = current?.card === "draft_editor" ? current.draft?.in_reply_to : null;
+  const n = next.card === "draft_editor" ? next.draft : null;
+  // Since 2026-10-19 those answers carry a context read back from the stored
+  // draft (`message_id: null`, mcp-app-drafts.ts#storedReplyContext). The one
+  // already held came from the reply itself and is the better copy, so it
+  // still wins: the line must not change wording under the person on a Save.
+  if (!held || !n || n.in_reply_to?.message_id || n.threaded !== true) return next;
+  const was = current!.draft!;
+  if (was.identity?.inbox_id !== n.identity?.inbox_id) return next;
+  const same = n.draft_id === was.draft_id ||
+    (!!n.resolved_from && (n.resolved_from === was.draft_id || n.resolved_from === was.resolved_from)) ||
+    n.origin === "save";
+  return same ? { ...next, draft: { ...n, in_reply_to: held } } : next;
+}
+
 /** Rule 0 above: keep the sent message on screen under its receipt. */
 function carrySentDraft(current: Envelope | null | undefined, next: Envelope): Envelope {
   if (!current || current.card !== "draft_editor" || !current.draft) return next;
   if (isRestoreStub(current)) return next;
+  // Nor from an editor whose body never arrived: the copy would render as a
+  // sent message with nothing in it.
+  if (isBodyDeferred(current)) return next;
   if (!isDepartedReceipt(next) || next.draft) return next;
   return { ...next, draft: current.draft };
 }
@@ -423,6 +773,11 @@ function carrySentDraft(current: Envelope | null | undefined, next: Envelope): E
  * neutral headline. The message lives in this tab's memory until the frame goes
  * away, which is exactly as long as the user is looking at it.
  *
+ * (Since 2026-10-14 a send made from the card's own Send button also leaves a
+ * plain-text copy in sessionStorage, for the "Show" link a reopened card
+ * offers. That is App.tsx and ended.ts, not this carry, and it never touches
+ * the localStorage stub.)
+ *
  * "Always" is scoped to what reaches here. The card's own calls (App.tsx
  * #callDraft) reach this function directly, so a send the user pressed always
  * flips the card to its receipt. A PUSHED receipt is filtered first by
@@ -434,8 +789,26 @@ function carrySentDraft(current: Envelope | null | undefined, next: Envelope): E
  */
 export function mergeEnvelope(
   current: Envelope | null | undefined,
-  next: Envelope,
+  incoming: Envelope,
 ): Envelope {
+  const next = keepReplyContext(current, keepKnownBody(current, incoming));
+  // ── RULE -1: A FAILURE NEVER TAKES THE EDITOR AWAY ────────────────────────
+  // "Anything renderable replaces" was written when the only receipt that
+  // could follow a draft was a send completing. It is not: every draft tool
+  // answers a refusal with `card: "receipt"`, `outcome: "failed"`
+  // (mcp-app-drafts.ts#draftFailure), which is renderable, so a stale id on
+  // Save replaced a screen of the user's typing with "That draft could not be
+  // found." and no way back (QA, 2026-10-13). Rule 1 below already had the
+  // right idea and could not reach this case, because it keys on the card kind
+  // being the SAME and a failure arrives as a different one.
+  //
+  // So a failed receipt over a live editor becomes what rule 1 produces: the
+  // editor, with `state: "error"` and the receipt around it, which DraftEditor
+  // renders as a notice. Only an outcome that ends the draft (sent, scheduled,
+  // discarded, a held send) replaces the editor.
+  if (isLiveEditor(current) && next.card === "receipt" && isFailure(next)) {
+    return { ...current, state: "error", receipt: next.receipt };
+  }
   if (isRenderable(next) || !current) {
     return carrySentDraft(current, next);
   }
@@ -636,7 +1009,23 @@ export function acceptRehydration(
     // receipt's missing scope.
     const mine = envelopeSubject(asked);
     const theirs = envelopeSubject(next);
-    if (!mine || !theirs || !sameSubject(mine, theirs)) return { kind: "failed" };
+    if (!mine || !theirs) return { kind: "failed" };
+    // DRAFT LINEAGE (2026-10-13). `draft_read` now accepts any EARLIER id of a
+    // draft and answers with the current one, so on this path a different
+    // `draft_id` is the designed answer rather than the mislabelled one this
+    // check was written against. What still has to hold is the mailbox: the
+    // answer must be a draft in the inbox that was asked about. An approval
+    // has no lineage and is still compared id for id.
+    //
+    // And the server says so: an answer under a different id names the id it
+    // was asked with in `resolved_from`. One that names neither the asked id
+    // nor resolves from it is about some other draft and is not adopted.
+    const same = kind === "draft_editor"
+      ? theirs.kind === "draft" &&
+        (mine.scope === null || theirs.scope === null || mine.scope === theirs.scope) &&
+        (theirs.id === mine.id || next.draft?.resolved_from === mine.id)
+      : sameSubject(mine, theirs);
+    if (!same) return { kind: "failed" };
     return { kind: "adopt", envelope: next };
   }
 
@@ -693,7 +1082,143 @@ export function acceptRehydration(
  */
 export function adoptRehydration(envelope: Envelope): void {
   pushAccepted = true;
-  setState({ envelope });
+  ownAnswer = true;
+  setState({ envelope, draftCheck: "trusted", draftIdHint: null, priorReceipt: null });
+}
+
+/**
+ * How much later than the copy on screen a save has to be before it counts as
+ * a different write, when neither side has a revision to compare. A write
+ * stamps its own response and the lineage stamps its record, a moment apart.
+ */
+export const SUPERSEDE_SLACK_MS = 5_000;
+
+/**
+ * Did the ASSISTANT write this draft after the copy this card holds?
+ *
+ * A card is never told about a later tool call, so this is read off the one
+ * thing it does get: a `draft_read` answer, whose `revision` and
+ * `last_saved_by` come from the server's draft lineage. A read that reports a
+ * higher revision, last written by the assistant, means a later
+ * `draft{action:"update"}` (or reply) wrote it, and that call mounted its own
+ * card further down. The person's own saves never count: they are
+ * `last_saved_by: "user"`, and this card may well be where they were made.
+ *
+ * Without a revision on the held copy (a draft with no line when this card
+ * loaded it) the save times decide instead, with slack.
+ */
+export function supersededBy(
+  held: Envelope["draft"] | null | undefined,
+  next: Envelope["draft"] | null | undefined,
+): boolean {
+  if (!held || !next || next.origin !== "read" || next.last_saved_by !== "agent") return false;
+  const now = typeof next.revision === "number" ? next.revision : 0;
+  if (now < 1) return false;
+  const was = typeof held.revision === "number" ? held.revision : 0;
+  if (was >= 1) return now > was;
+  const a = Date.parse(String(held.last_saved_at ?? ""));
+  const b = Date.parse(String(next.last_saved_at ?? ""));
+  return Number.isFinite(a) && Number.isFinite(b) && b - a > SUPERSEDE_SLACK_MS;
+}
+
+/**
+ * Apply the answer to a call THIS CARD made from its draft editor.
+ *
+ * The one door for App.tsx#callDraft, for the reason `adoptRehydration` is the
+ * one door for a re-request: both are the moment the card knows more than the
+ * host does. From here on a pushed draft envelope can only be the mounting
+ * call's result arriving late, which is older than what is on screen by
+ * construction, so `wireResultHandlers` stops letting one replace it.
+ *
+ * A successful draft envelope is also what makes the draft `trusted` again. A
+ * failure leaves `draftCheck` alone: it says nothing about what the server
+ * holds, and the caller knows which failures mean "unknown".
+ */
+export function adoptOwnAnswer(next: Envelope): Envelope {
+  const applied = mergeEnvelope(state.envelope, next);
+  pushAccepted = true;
+  ownAnswer = true;
+  const fresh = next.card === "draft_editor" && !!next.draft && !isFailure(next);
+  const held = isLiveEditor(state.envelope) ? state.envelope.draft : null;
+  setState({
+    envelope: applied,
+    ...(fresh
+      ? {
+        draftCheck: "trusted" as const,
+        draftIdHint: null,
+        priorReceipt: null,
+        ...(next.draft?.origin === "save"
+          ? { draftSuperseded: false }
+          : state.draftSuperseded
+          ? {}
+          : supersededBy(held, next.draft)
+          ? { draftSuperseded: true, supersededAt: { why: "newer" as const, where: "below" as const } }
+          : {}),
+      }
+      : {}),
+  });
+  return applied;
+}
+
+/**
+ * Take a previous failure's notice off the editor before the next call starts,
+ * so a retry is not read under the error it is retrying.
+ */
+export function clearDraftError(): void {
+  const env = state.envelope;
+  if (!isLiveEditor(env) || env.state !== "error") return;
+  const { receipt: _old, ...rest } = env;
+  setState({ envelope: { ...rest, state: "editing" } });
+}
+
+/**
+ * How old a first-mount result can be before it is treated as a replay.
+ *
+ * Claude delivers a first mount's result at the end of the assistant's turn
+ * (measured 4.5s). 30s covers an ordinary turn. Past it the card re-reads,
+ * which costs one `draft_read` and is also right on the merits: a turn that
+ * long has usually made more tool calls, and one of them may have changed this
+ * draft.
+ *
+ * ── WHAT THE STAMP MEANS NOW (2026-10-13) ──────────────────────────────────
+ * `last_saved_at` used to be the server's clock at RESPONSE time on every path.
+ * Since draft lineage it is the time of the last real SAVE: a write still
+ * stamps its own time, but a `draft_read` reports when the draft was last
+ * saved (or null). The age test is still SOUND — a response is never older
+ * than the save it reports, so a replay, which arrives more than 30s after its
+ * response, is still always more than 30s past its stamp — but it is no longer
+ * TIGHT: a model's fresh `draft_read` of a draft saved an hour ago also reads
+ * as old. That costs exactly one verifying re-read, never a loop: the re-read
+ * is the card's own answer (`adoptOwnAnswer`), which makes the draft `trusted`
+ * without consulting this test, and every later push is ignored behind it.
+ * structuredContent carries no response timestamp a tighter test could use,
+ * and `restored === "storage"` cannot be the only signal because a second
+ * device, an evicted entry or a host without storage would then trust a stale
+ * replay with Send on. Pinned in harness/draft-polish.test.mjs.
+ */
+export const REPLAY_AGE_MS = 30_000;
+
+/**
+ * Is this pushed draft a REPLAY of an old result rather than a fresh one?
+ *
+ * The host hands a re-mounted view the original tool result with nothing to
+ * mark it as old, so this is inferred from the only two things the card has:
+ *
+ *   - `restored === "storage"`: a stub for this very call was already in
+ *     storage, so the card has rendered it before. Exact, when storage works.
+ *   - the save stamp is not recent by this browser's clock. Covers a host
+ *     that keeps no storage (see `REPLAY_AGE_MS` for why a save stamp works). A wrong clock, a missing stamp or an unparseable
+ *     one all read as "replay", which is the direction that costs one read
+ *     instead of a send from stale text.
+ */
+export function isReplayedDraft(
+  env: Envelope,
+  restored: CardStore["restored"],
+  now = Date.now(),
+): boolean {
+  if (restored === "storage") return true;
+  const at = Date.parse(String(env.draft?.last_saved_at ?? ""));
+  return !Number.isFinite(at) || Math.abs(now - at) > REPLAY_AGE_MS;
 }
 
 /**
@@ -999,6 +1524,9 @@ export function toolInfoFrom(ctx: HostContext | undefined): ToolInfoSummary | nu
  */
 let pushAccepted = false;
 
+/** Has an answer to one of the card's OWN calls been adopted? See `adoptOwnAnswer`. */
+let ownAnswer = false;
+
 export function wireResultHandlers(bridge: HostBridge) {
   // The host MUST send tool-input with the full arguments after ui/initialize,
   // including to a view that mounts long after the call finished — which makes
@@ -1089,8 +1617,64 @@ export function wireResultHandlers(bridge: HostBridge) {
       }
     }
 
+    // ── A PUSHED DRAFT IS THE MOUNTING CALL'S RESULT, AND MAY BE OLD ────────
+    let check: Partial<CardStore> = {};
+    if (envelope.card === "draft_editor" && envelope.draft) {
+      // The card has already asked the server itself (a re-request, a save, a
+      // refresh). The push is the original result arriving after that, so it is
+      // older than what is on screen and must not replace it. With a stable id
+      // (Gmail, Outlook) it passes the correlation above, and used to resync
+      // the editor back to the draft as first created.
+      if (ownAnswer && isLiveEditor(current)) {
+        setState(timing);
+        return;
+      }
+      if (!pushAccepted && isReplayedDraft(envelope, getState().restored)) {
+        // The stub this replay is about to replace remembers the LAST id the
+        // card held, which after an IMAP save is not the replayed one.
+        const stub = isRestoreStub(current) && current?.card === "draft_editor"
+          ? current.draft
+          : undefined;
+        const a = stub?.identity?.inbox_id;
+        const b = envelope.draft.identity?.inbox_id;
+        const hint = stub?.draft_id && stub.draft_id !== envelope.draft.draft_id &&
+            (!a || !b || a === b)
+          ? stub.draft_id
+          : null;
+        // A card that had ended on a receipt keeps it until the replay has
+        // been checked (App.tsx#readDraft).
+        const prior = isRestoreStub(current) && current?.card === "receipt" ? current : null;
+        check = { draftCheck: "pending", draftIdHint: hint, priorReceipt: prior ?? null };
+      }
+    }
+
+    // Decided by the FIRST result accepted, which is the mounting call's.
+    if (!pushAccepted) {
+      const rev = envelope.card === "draft_editor" ? envelope.draft?.revision : null;
+      check = {
+        ...check,
+        mountedForRead: envelope.card === "draft_editor" && envelope.draft?.origin === "read",
+        mountedRevision: typeof rev === "number" ? rev : null,
+      };
+    }
     pushAccepted = true;
-    setState({ ...timing, envelope: mergeEnvelope(current, envelope) });
+    setState({ ...timing, ...check, envelope: mergeEnvelope(current, envelope) });
+    // A FRESH draft result is a tool call the assistant just made, so any
+    // older card for the same draft may now be out of date. Tell them; each
+    // re-reads its own draft and decides (draft-signal.ts). A replay is not
+    // fresh (`check` set it pending) and says nothing, which, with re-reads
+    // never announcing, is what keeps this from looping.
+    //
+    // Not for a model's `draft_read` (2026-10-17): a read writes nothing, so
+    // no card holds an older version because of it, and the card it mounts
+    // (only on a host with a listing from before draft_read lost its card URI)
+    // is the one-line DraftReadLine, which an older card must not fold toward.
+    if (
+      envelope.card === "draft_editor" && envelope.draft && !isFailure(envelope) &&
+      check.draftCheck === undefined && envelope.draft.origin !== "read"
+    ) {
+      announceDraft(envelope.draft);
+    }
   };
 
   bridge.onToolCancelled = (_params: ToolCancelledParams) => {

@@ -34,12 +34,14 @@ import {
 import {
   checkTriageAuthority,
   handleTriageDispatch,
+  MAX_RULES_PER_INVOCATION,
   redactForRunLog,
   renderTriageTemplate,
   reportedActionErrorCode,
   runTriageRule,
   TRIAGE_MAX_FORWARD_RECIPIENTS,
   TRIAGE_RUN_ERROR_DESTINATION_MISSING,
+  TRIAGE_DISPATCH_FANOUT,
   TRIAGE_STALE_LEASE_MS,
   TRIAGE_STOP_REASON_TIME_BUDGET,
   type TriageActionOutcome,
@@ -138,6 +140,16 @@ function fakeStore(state: FakeState): TriageStore {
       if (state.leases.has(ruleId)) return Promise.resolve(false);
       state.leases.set(ruleId, nowIso);
       return Promise.resolve(true);
+    },
+    inboxLeaseHeld: (inboxId, exceptRuleId) => {
+      const inboxOf = (id: string) => state.dueRules.find((r) => r.id === id)?.inbox_id ?? "inbox-1";
+      return Promise.resolve(
+        [...state.leases.keys()].some((id) => id !== exceptRuleId && inboxOf(id) === inboxId),
+      );
+    },
+    abandonClaim: (ruleId, claimedAtIso) => {
+      if (state.leases.get(ruleId) === claimedAtIso) state.leases.delete(ruleId);
+      return Promise.resolve();
     },
     releaseRule: (ruleId, update) => {
       state.leases.delete(ruleId);
@@ -653,6 +665,90 @@ Deno.test("two overlapping dispatches cannot both claim the same rule", async ()
   const secondBody = await second.json();
   assertEquals(secondBody.ran, 0, "the second dispatch runs nothing");
   assertEquals(secondBody.contended, 1, "and reports the contention rather than hiding it");
+});
+
+Deno.test("the dispatcher lists a fan-out-wide window but claims at most one batch", async () => {
+  const rules = Array.from({ length: 30 }, (_, i) => fakeRule({ id: `rule-${i}`, inbox_id: `inbox-${i}` }));
+  const state = freshState({ dueRules: rules });
+  const applied = { calls: [] as any[] };
+  const base = fakeDeps(state, [], applied);
+  let listedWith = 0;
+  const deps: TriageDeps = {
+    ...base,
+    store: {
+      ...base.store,
+      listDueRules: (nowIso, limit) => {
+        listedWith = limit;
+        return base.store.listDueRules(nowIso, limit);
+      },
+    },
+  };
+
+  const body = await (await handleTriageDispatch(deps)).json();
+  assertEquals(listedWith, MAX_RULES_PER_INVOCATION * TRIAGE_DISPATCH_FANOUT, "the window is fan-out wide");
+  assertEquals(body.ran, MAX_RULES_PER_INVOCATION, "but one invocation still claims at most one batch");
+});
+
+Deno.test("a rule is skipped while another rule on its inbox holds a lease", async () => {
+  const busy = fakeRule({ id: "rule-busy", inbox_id: "inbox-1" });
+  const waiting = fakeRule({ id: "rule-1", inbox_id: "inbox-1" });
+  const elsewhere = fakeRule({ id: "rule-2", inbox_id: "inbox-2" });
+  const state = freshState({ dueRules: [busy, waiting, elsewhere] });
+  // rule-busy is mid-run in another invocation.
+  state.leases.set("rule-busy", new Date(0).toISOString());
+  const applied = { calls: [] as any[] };
+
+  const body = await (await handleTriageDispatch(fakeDeps(state, [fakeMatch("msg-a")], applied))).json();
+  assertEquals(body.ran, 1, "only the rule on the idle inbox runs");
+  assertEquals(body.inbox_busy, 1, "the rule on the busy inbox waits");
+  assertEquals(body.contended, 1, "and the busy rule itself is contended, not re-run");
+  assertEquals(state.runs.map((r) => r.rule_id), ["rule-2"], "one run, on the idle inbox");
+});
+
+Deno.test("a claim that lost the inbox race after the CAS is given back, not run", async () => {
+  // Both invocations saw the inbox idle and both won a CAS on different rules.
+  // The re-check after the claim sees the other lease and backs off.
+  const state = freshState({ dueRules: [fakeRule({ id: "rule-1", inbox_id: "inbox-1" })] });
+  const applied = { calls: [] as any[] };
+  const base = fakeDeps(state, [fakeMatch("msg-a")], applied);
+  let looks = 0;
+  const abandoned: string[] = [];
+  const deps: TriageDeps = {
+    ...base,
+    store: {
+      ...base.store,
+      inboxLeaseHeld: () => Promise.resolve(++looks > 1),
+      abandonClaim: async (ruleId, claimedAtIso) => {
+        abandoned.push(ruleId);
+        await base.store.abandonClaim(ruleId, claimedAtIso);
+      },
+    },
+  };
+
+  const body = await (await handleTriageDispatch(deps)).json();
+  assertEquals(body.ran, 0, "the rule does not run");
+  assertEquals(body.inbox_busy, 1, "counted as a busy inbox");
+  assertEquals(abandoned, ["rule-1"], "its claim is given back");
+  assertEquals(state.leases.size, 0, "and no lease is left for the stale sweep");
+  assertEquals(state.runs.length, 0, "no run row is opened");
+});
+
+Deno.test("a failed re-check is treated as a collision", async () => {
+  const state = freshState({ dueRules: [fakeRule()] });
+  const applied = { calls: [] as any[] };
+  const base = fakeDeps(state, [fakeMatch("msg-a")], applied);
+  let looks = 0;
+  const deps: TriageDeps = {
+    ...base,
+    store: {
+      ...base.store,
+      inboxLeaseHeld: () => (++looks > 1 ? Promise.reject(new Error("db down")) : Promise.resolve(false)),
+    },
+  };
+
+  const body = await (await handleTriageDispatch(deps)).json();
+  assertEquals(body.ran, 0, "the rule does not run");
+  assertEquals(state.leases.size, 0, "the claim is given back");
 });
 
 Deno.test("a completed run releases the lease and schedules the next", async () => {

@@ -47,7 +47,7 @@
  *
  * The internal plan ids have never matched the pricing page and drifted twice:
  * `solo` was sold as Solo, then Agent, and is now Pro; `pro` was Team, then
- * Scale, and is Team again. `personal` is the lone id that matches the name it
+ * Scale, then Team again, and is Business since 2026-10-19. `personal` is the lone id that matches the name it
  * is sold under, which makes it the easy one to mis-read the others against. A
  * message a person reads has to use the name printed on the pricing page.
  * Mirror of `planDisplayName` in apps/web/src/lib/stripe/plans.ts.
@@ -56,7 +56,7 @@ export const PLAN_DISPLAY_NAMES: Record<string, string> = {
   free: "Free",
   personal: "Personal",
   solo: "Pro",
-  pro: "Team",
+  pro: "Business",
 };
 
 /**
@@ -71,11 +71,11 @@ export const USAGE_LIMIT_SUPPORT_EMAIL = "hello@mcpemails.com";
 
 /**
  * Days after signup during which a Free workspace's actions are not counted.
- * Mirrors `c_grace` in `workspace_action_allowance()` (migration
- * 20260912200000) and `FREE_ACTION_GRACE_DAYS` in plans.ts. Copy only: the
+ * Mirrors `free_action_grace_ends_at()` (migration 20261017160000;
+ * workspaces created before 2026-10-17 16:00 UTC keep 7 days) and `FREE_ACTION_GRACE_DAYS` in plans.ts. Copy only: the
  * SQL function is what actually decides.
  */
-export const FREE_ACTION_GRACE_DAYS = 7;
+export const FREE_ACTION_GRACE_DAYS = 3;
 
 /** Monthly price of the plan that removes the Free cap, as printed on /pricing. */
 export const FREE_CAP_UPGRADE_PRICE = "$9 per month";
@@ -86,6 +86,35 @@ export const FREE_CAP_UPGRADE_PATH = "/pricing?from=usage_cap";
 /** Where a Free workspace goes to remove the cap. */
 export function freeCapUpgradeUrl(appOrigin: string): string {
   return `${appOrigin}${FREE_CAP_UPGRADE_PATH}`;
+}
+
+/**
+ * Which wording a plan-limit message uses.
+ *
+ * `directory` is for clients that reach us through OpenAI's plugin directory
+ * (ChatGPT, Codex). Its plugin guidelines let a plugin explain that a plan
+ * limit was reached and link to an informational page describing the plans,
+ * and forbid displaying subscription plans, quoting their prices or promoting
+ * an upgrade. So that wording names no plan to buy and no price, and its one
+ * link is the plain pricing page rather than the tagged upgrade door.
+ * Everyone else keeps `standard`, which is unchanged.
+ */
+export type PlanLimitWording = "standard" | "directory";
+
+/** The informational page that describes the plans, with no funnel tag. */
+export function plansInfoUrl(appOrigin: string): string {
+  return `${appOrigin}/pricing`;
+}
+
+/**
+ * The sentence a per-minute rate-limit refusal ends on. `standard` points at
+ * the plan with a higher ceiling; `directory` says nothing about plans at all,
+ * because waiting is the whole remedy and the rest would be an upsell.
+ */
+export function rateLimitPlanSentence(wording: PlanLimitWording): string {
+  return wording === "directory"
+    ? ""
+    : " Usage is unlimited — upgrade for a higher burst ceiling: https://www.mcpemails.com/pricing";
 }
 
 /**
@@ -134,6 +163,7 @@ export function buildUsageLimitText(
   cap: number,
   resetAt: string,
   appOrigin: string,
+  wording: PlanLimitWording = "standard",
 ): string {
   const planLabel = PLAN_DISPLAY_NAMES[plan] ?? plan;
   // Date only, in ISO order. An LLM relaying "2026-10-01" to a person will
@@ -149,7 +179,9 @@ export function buildUsageLimitText(
       `so retrying will not help: this is a plan limit, not a temporary failure. ` +
       `The ${planLabel} plan includes ${total} email actions per calendar month; the first ${FREE_ACTION_GRACE_DAYS} days ` +
       `after signup are not counted. inbox_list and the dashboard keep working. ` +
-      `The Personal plan removes the monthly cap for ${FREE_CAP_UPGRADE_PRICE} at ${freeCapUpgradeUrl(appOrigin)}. ` +
+      (wording === "directory"
+        ? `The plans and what each includes are described at ${plansInfoUrl(appOrigin)}. `
+        : `The Personal plan removes the monthly cap for ${FREE_CAP_UPGRADE_PRICE} at ${freeCapUpgradeUrl(appOrigin)}. `) +
       `The current count is at ${appOrigin}/dashboard/usage.`;
   }
 

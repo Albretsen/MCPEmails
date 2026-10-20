@@ -397,11 +397,23 @@ export type GrowthUserSignupDayRow = {
 };
 
 /**
+ * One UTC day of external signups for the kiosk's today projection. The last
+ * row is today, so far. `by_now` counts the day's signups that arrived before
+ * the UTC time of day at `as_of`; see growth_signup_pace in the migration.
+ */
+export type GrowthSignupPaceRow = {
+  day: string;
+  new_users: number;
+  by_now: number;
+  as_of: string;
+};
+
+/**
  * The Free action allowance, one row of counts.
  * `growth_usage_cap_overview(p_window_days, p_internal_emails, p_internal_domains)`.
  *
  * The state counts are a snapshot of now, bucketed by the SAME rules as
- * `workspace_action_allowance()` (150 per UTC month, first 7 days uncounted,
+ * `workspace_action_allowance()` (150 per UTC month, first 3 days uncounted,
  * exempt for every workspace that existed at launch) written set-based in
  * migration 20260912210000. Everything else is over the window. Internal
  * accounts are excluded in SQL, so these never include our own traffic.
@@ -415,7 +427,7 @@ export type GrowthUserSignupDayRow = {
  * ones included.
  */
 export type GrowthUsageCapOverviewRow = {
-  /** Non-exempt Free, inside the first 7 days: nothing is counted yet. */
+  /** Non-exempt Free, inside the first 3 days: nothing is counted yet. */
   in_grace: number;
   /** Counting, under 50% of the allowance. */
   under_half: number;
@@ -496,4 +508,46 @@ export type GrowthUsageCapWorkspaceRow = {
   /** Comma-separated usage templates still pending this period, null when none. */
   emails_queued: string | null;
   paused_rules: number;
+};
+
+/**
+ * One host the mail relay carried connections for, or one the relay registry
+ * learned, over the window. `growth_mail_relay_hosts(p_days)`.
+ *
+ * Host names only: no address, credential or account. `last_failure` is the
+ * refusal text the runtime recorded, already free of credentials.
+ */
+export type GrowthMailRelayHostRow = {
+  host: string;
+  protocol: 'imap' | 'smtp';
+  /** In mail_relay_hosts and not expired. */
+  learned: boolean;
+  learned_source: 'auto' | 'manual' | null;
+  first_learned_at: string | null;
+  /** When an auto-learned host is next tried directly again. */
+  learned_expires_at: string | null;
+  /** Relay rescues counted toward learning (2 needed, 5+ minutes apart). Null when not a candidate. */
+  candidate_rescues: number | null;
+  /** True when the host was refused learning because it works directly. */
+  candidate_refused: boolean | null;
+  /** Direct successful calls in the last 7 days, as counted at the last rescue. */
+  candidate_direct_successes: number | null;
+  /** Comma-separated: listed, learned, fallback. Null when nothing was carried. */
+  routes: string | null;
+  connections: number;
+  ok: number;
+  relay_down: number;
+  host_refused: number;
+  avg_ms: number | null;
+  last_at: string | null;
+  last_failure_at: string | null;
+  last_failure: string | null;
+};
+
+/** Relayed connections per UTC day, zero-filled. `growth_mail_relay_daily(p_days)`. */
+export type GrowthMailRelayDayRow = {
+  day: string;
+  ok: number;
+  relay_down: number;
+  host_refused: number;
 };

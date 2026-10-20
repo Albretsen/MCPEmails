@@ -16,7 +16,7 @@ const translation = {
 2. 粘贴 endpoint：\`https://www.mcpemails.com/api/mcp\`
 3. 点击 **Connect**，登录你的 MCP Emails 账户，并批准你想要的权限范围（\`read:email\`、\`send:email\`，或者两者都要）。
 
-客户端这边就这些了。令牌严格限定在你批准的范围内，而且你可以在控制台一键撤销连接。如果想把利弊讲清楚，请看 [OAuth 与 API 密钥在 AI 邮件访问中的对比](/blog/oauth-vs-api-keys-ai-email-access)。
+客户端这边就这些了。令牌严格限定在你批准的范围内，而且你可以在控制台一键撤销连接。如果想把利弊讲清楚，请看 [OAuth 与 API 密钥在 AI 邮件访问中的对比](/blog/oauth-vs-api-keys-ai-email-access)。如果想看针对具体客户端的教程，请参阅[把 Claude 连接到你的邮箱](/blog/connect-claude-to-email)或[把 ChatGPT 连接到你的邮箱](/blog/connect-chatgpt-to-email)。
 
 **路径 B——API 密钥客户端（Cline、JetBrains、cURL、自定义智能体）。** 适用于任何不内置 OAuth 的工具：
 
@@ -30,7 +30,7 @@ const translation = {
 
 ## 逐个连接服务商
 
-### Gmail（应用专用密码，或使用 Google 登录）
+### Gmail（应用专用密码）
 
 Gmail 默认通过 IMAP 使用 Google 应用专用密码连接。
 
@@ -39,7 +39,7 @@ Gmail 默认通过 IMAP 使用 Google 应用专用密码连接。
 3. 输入完整的 Gmail 地址，粘贴应用专用密码，然后点击**连接收件箱**。
 4. 连接会在 Gmail 上测试，随后邮箱显示为已连接。完成。
 
-你的常规 Google 密码在这里不起作用，也从不需要。如果你更想用 Google 登录，可以在同一个窗口中展开**更想用 Google 登录？**，然后点击**使用 Google 连接**；Google 会先显示应用未经验证的警告（点击**高级（Advanced）**，再点击**前往 mcpemails.com（Go to mcpemails.com）**）。这种方式使用 Gmail API，因此搜索可以使用 Gmail 自己的操作符（\`from:\`、\`is:unread\`、\`after:\`），Claude 也能使用真正的标签。应用专用密码方式使用 IMAP 文本搜索，把标签显示为文件夹，并且可以永久删除。[Gmail 指南](/blog/connect-gmail-to-claude)有更多细节。
+你的常规 Google 密码在这里不起作用，也从不需要。通过 IMAP，Gmail 标签会显示为文件夹，搜索使用 MCP Emails 的结构化字段（发件人、主题、日期、未读等），而不是 Gmail 自己的搜索操作符。你可以随时在同一个 Google 页面撤销应用专用密码。如果你使用 Google Workspace 却找不到应用专用密码页面，可能是管理员为该域名关闭了应用专用密码。[Gmail 指南](/blog/connect-gmail-to-claude)有更多细节。
 
 ### Outlook / Microsoft 365（使用 Microsoft 登录）
 
@@ -106,11 +106,11 @@ iCloud 底层走 IMAP/SMTP，所以你能用到和其他人完全相同的工具
 
 ## 为什么可以放心地快速完成
 
-这里的快不是靠在安全上偷工减料换来的。邮件在每次调用时实时获取、从不存储——正文、主题和附件交给智能体后会立即丢弃。每个邮箱唯一被持久化的东西，是你的 OAuth 令牌或应用密码，它用 AES-256-GCM 加密，只在调用时于一个隔离的函数内部被解密。发送始终经由你自己的服务商，所以你的域名信誉依旧属于你。如果想了解架构细节，请阅读[为什么“邮件从不存储”真的很重要](/blog/why-email-never-stored-matters)。
+这里的快不是靠在安全上偷工减料换来的。邮件在每次调用时实时获取、从不存储：正文、主题和附件交给智能体后会立即丢弃。每个邮箱唯一被持久化的东西，是你的 OAuth 令牌或应用密码。它在存储时用 AES-256-GCM 加密，只有在请求需要时才在我们的服务器上解密，并且从不发送给你的智能体。发送始终经由你自己的服务商，所以你的域名信誉依旧属于你。如果想了解架构细节，请阅读[为什么“邮件从不存储”真的很重要](/blog/why-email-never-stored-matters)。
 
 ## 总结
 
-整件事就这么简单：一次邮箱连接、一个 endpoint、寥寥数个工具。免费套餐可连接一个邮箱，分文不取、无需绑卡；Personal 每月 9 美元，最多可连接三个邮箱；Pro 可连接你拥有的每一个邮箱。去看看[价格](/pricing)。准备好试一试了吗？[免费开始](/signup)，连接你的邮箱，把 endpoint 粘贴进你的智能体。`,
+整件事就这么简单：一次邮箱连接、一个 endpoint、寥寥数个工具。免费套餐可连接一个邮箱，分文不取、无需绑卡；Personal 每月 9 美元，最多可连接三个邮箱；Pro 最多可连接 10 个。去看看[价格](/pricing)。准备好试一试了吗？[免费开始](/signup)，连接你的邮箱，把 endpoint 粘贴进你的智能体。`,
 };
 
 export default translation;

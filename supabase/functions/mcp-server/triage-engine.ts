@@ -85,6 +85,21 @@ import { classifyProviderError, providerErrorLogCode } from "./provider-error.ts
 export const MAX_RULES_PER_INVOCATION = 20;
 
 /**
+ * How many /triage-dispatch invocations pg_cron may fire in the same minute.
+ * Keep in step with c_max_requests in public.dispatch_triage_rules().
+ *
+ * One invocation is time-bound, not count-bound: at 3 to 5 seconds a rule it
+ * gets through about ten inside TRIAGE_TIME_BUDGET_MS, while the enabled rules
+ * ask for about 1,500 runs an hour. So the cron function fans out when the
+ * backlog is deep, and each invocation lists a window this many batches wide.
+ * Invocations that start in the same second all list the same oldest rules; a
+ * window only one batch wide would have them fight over the same twenty and
+ * cap the whole fleet at twenty a minute. The CAS sorts out who runs what, and
+ * MAX_RULES_PER_INVOCATION still bounds what any one invocation claims.
+ */
+export const TRIAGE_DISPATCH_FANOUT = 4;
+
+/**
  * Hard wall-clock budget. The Edge Function has its own execution ceiling, and
  * being killed mid-rule is precisely the situation that produces a stale lease
  * and a fail-forward run. Returning cleanly at 40 seconds trades a little
@@ -773,7 +788,13 @@ export interface TriageStore {
   /** Rules whose lease is older than the cutoff. Global, as befits a cron sweep. */
   listStaleLeases(cutoffIso: string): Promise<{ id: string }[]>;
   /** Release a stale lease and fail its open run. Never re-queues the run. */
-  reclaimStaleLease(ruleId: string, nowIso: string): Promise<void>;
+  /**
+   * Both writes are conditioned on the cutoff, so a reclaim that loses a race
+   * is a no-op. Several invocations can sweep at once: if one releases a stale
+   * lease and another claims the rule afresh, a third still holding the stale
+   * listing must not fail that new run or drop its lease.
+   */
+  reclaimStaleLease(ruleId: string, nowIso: string, cutoffIso: string): Promise<void>;
   /** Due, enabled, undeleted, unleased rules, oldest first. */
   listDueRules(nowIso: string, limit: number): Promise<TriageRuleRow[]>;
   /**
@@ -786,6 +807,22 @@ export interface TriageStore {
    * -> executing), and a zero-row update is an unambiguous "somebody else got it".
    */
   claimRule(ruleId: string, nowIso: string): Promise<boolean>;
+  /**
+   * True when some OTHER rule on this inbox holds a lease right now.
+   *
+   * One mailbox, one scheduled run at a time. With a single invocation per
+   * minute that held by construction; with several in flight it has to be
+   * checked, because a mailbox with forty rules would otherwise have up to
+   * TRIAGE_DISPATCH_FANOUT IMAP sessions opened against it at once, which is
+   * exactly what trips Yahoo's per-account connection limit.
+   */
+  inboxLeaseHeld(inboxId: string, exceptRuleId: string): Promise<boolean>;
+  /**
+   * Give back a lease this caller won but must not use. Matches on the claim
+   * timestamp so it can only ever undo its own claim, and writes nothing else:
+   * the rule stays due and the next tick picks it up.
+   */
+  abandonClaim(ruleId: string, claimedAtIso: string): Promise<void>;
   /**
    * Release the lease and write the post-run scheduling state.
    *
@@ -2002,7 +2039,7 @@ export async function handleTriageDispatch(deps: TriageDeps): Promise<Response> 
   try {
     const stale = await store.listStaleLeases(staleCutoff);
     for (const row of stale) {
-      await store.reclaimStaleLease(row.id, nowIso);
+      await store.reclaimStaleLease(row.id, nowIso, staleCutoff);
       reclaimed++;
     }
   } catch (error) {
@@ -2013,7 +2050,7 @@ export async function handleTriageDispatch(deps: TriageDeps): Promise<Response> 
 
   let due: TriageRuleRow[];
   try {
-    due = await store.listDueRules(nowIso, MAX_RULES_PER_INVOCATION);
+    due = await store.listDueRules(nowIso, MAX_RULES_PER_INVOCATION * TRIAGE_DISPATCH_FANOUT);
   } catch (error) {
     console.error("[triage-dispatch] failed to list due rules:", redactErrorDetail(error));
     return new Response(
@@ -2026,9 +2063,14 @@ export async function handleTriageDispatch(deps: TriageDeps): Promise<Response> 
   let failedRuns = 0;
   let contended = 0;
   let paused = 0;
+  let inboxBusy = 0;
+  let claimedCount = 0;
   let budgetExhausted = false;
 
   for (const rule of due) {
+    // The window is wider than one batch (see TRIAGE_DISPATCH_FANOUT); what
+    // one invocation may hold is not.
+    if (claimedCount >= MAX_RULES_PER_INVOCATION) break;
     if (nowMs(deps) - startedMs >= TRIAGE_TIME_BUDGET_MS) {
       // Return cleanly rather than being killed mid-rule. pg_cron re-invokes in
       // under a minute and the remaining rules are still due, so nothing is lost.
@@ -2036,11 +2078,24 @@ export async function handleTriageDispatch(deps: TriageDeps): Promise<Response> 
       break;
     }
 
+    // One mailbox, one scheduled run at a time. A cheap look first, so a busy
+    // mailbox costs one read rather than a claim and an undo.
+    try {
+      if (await store.inboxLeaseHeld(rule.inbox_id, rule.id)) {
+        inboxBusy++;
+        continue;
+      }
+    } catch (error) {
+      console.warn("[triage-dispatch] inbox lease check failed for rule", rule.id, redactErrorDetail(error));
+      continue;
+    }
+
     // Optimistic CAS. A zero-row update means a concurrent invocation claimed it
     // first; skip without touching the mailbox and without counting it.
+    const claimedAtIso = new Date(nowMs(deps)).toISOString();
     let claimed = false;
     try {
-      claimed = await store.claimRule(rule.id, new Date(nowMs(deps)).toISOString());
+      claimed = await store.claimRule(rule.id, claimedAtIso);
     } catch (error) {
       console.warn("[triage-dispatch] could not claim rule", rule.id, redactErrorDetail(error));
       continue;
@@ -2049,6 +2104,31 @@ export async function handleTriageDispatch(deps: TriageDeps): Promise<Response> 
       contended++;
       continue;
     }
+
+    // The look above is not atomic with the claim: two invocations can each see
+    // the mailbox idle and each claim a different rule on it. So look again now
+    // that our claim is committed. Of two such claims, whichever looks second
+    // is bound to see the other and backs off; if both see each other, both
+    // back off and the rules wait a minute. Never both run. A failed look is
+    // treated as a collision: skipping a rule for a minute is cheap.
+    let collision = true;
+    try {
+      collision = await store.inboxLeaseHeld(rule.inbox_id, rule.id);
+    } catch (error) {
+      console.warn("[triage-dispatch] inbox lease re-check failed for rule", rule.id, redactErrorDetail(error));
+    }
+    if (collision) {
+      inboxBusy++;
+      try {
+        await store.abandonClaim(rule.id, claimedAtIso);
+      } catch (error) {
+        // The lease stays until the stale sweep releases it. No run was
+        // created, so the sweep has nothing to fail forward.
+        console.warn("[triage-dispatch] could not abandon claim on rule", rule.id, redactErrorDetail(error));
+      }
+      continue;
+    }
+    claimedCount++;
 
     // THE ALLOWANCE, BEFORE THE MAILBOX. A workspace with nothing left this
     // period gets its rule paused here, holding the lease we just won, rather
@@ -2100,6 +2180,7 @@ export async function handleTriageDispatch(deps: TriageDeps): Promise<Response> 
 
   console.log(
     `[triage-dispatch] Done: ran=${ran} failed=${failedRuns} contended=${contended} paused=${paused} ` +
+      `inbox_busy=${inboxBusy} ` +
       `reclaimed=${reclaimed} due=${due.length} budget_exhausted=${budgetExhausted}`,
   );
   return new Response(
@@ -2108,6 +2189,7 @@ export async function handleTriageDispatch(deps: TriageDeps): Promise<Response> 
       failed: failedRuns,
       contended,
       paused,
+      inbox_busy: inboxBusy,
       reclaimed,
       due: due.length,
       budget_exhausted: budgetExhausted,
@@ -2183,7 +2265,7 @@ export interface AutomationDeps {
 function toolOk(payload: Record<string, unknown>): TriageToolResult {
   return {
     result: {
-      content: [{ type: "text", text: JSON.stringify(payload, null, 2) }],
+      content: [{ type: "text", text: JSON.stringify(payload) }],
       structuredContent: payload,
       isError: false,
     },
@@ -2221,10 +2303,23 @@ function hasInboxSelector(args: Record<string, unknown>): boolean {
 /** Columns safe to return to a model. Never the lease or internal counters raw.
  * The two pause columns are included so an agent reading `automation_list`
  * sees WHY an enabled rule has not run, instead of a next_run_at weeks out. */
-const AUTOMATION_PUBLIC_COLUMNS =
+export const AUTOMATION_PUBLIC_COLUMNS =
   "id, name, enabled, inbox_id, filter, action, interval_minutes, " +
   "max_messages_per_run, next_run_at, last_run_at, consecutive_failures, " +
   "disabled_reason, paused_reason, paused_until, created_at, updated_at";
+
+/**
+ * What loadAutomation reads: the public columns plus `api_key_id`, the key the
+ * rule RUNS as, which the edit/enable paths compare against the caller and
+ * which `publicAutomation` strips before anything reaches a model. Spelled out
+ * as a literal (not built from the constant above) so self-host-schema.test.ts
+ * can evaluate it; automation-inbox-allowlist.test.ts pins the two together.
+ */
+export const AUTOMATION_LOAD_COLUMNS =
+  "id, name, enabled, inbox_id, filter, action, interval_minutes, " +
+  "max_messages_per_run, next_run_at, last_run_at, consecutive_failures, " +
+  "disabled_reason, paused_reason, paused_until, created_at, updated_at, " +
+  "api_key_id";
 
 /**
  * Validates the create/update body as a whole.
@@ -2395,7 +2490,33 @@ async function ruleInboxMismatch(
   return null;
 }
 
-/** Loads one rule, scoped to the caller's workspace. Tenancy is never implicit. */
+/**
+ * Whether the calling key may see a rule bound to `inboxId` at all.
+ *
+ * The key's inbox allow-list is the data-isolation mechanism every inbox-bound
+ * tool enforces through resolveInboxArg, and a rule is inbox-bound data: its
+ * filter, action and run history describe a mailbox. A rule on an inbox outside
+ * the allow-list is therefore INVISIBLE to the key, exactly as the inbox itself
+ * is: not listed, not loadable, and "not found" rather than "forbidden", so the
+ * answer does not confirm that the rule exists. `!== null` rather than
+ * `length > 0`, as everywhere else: an empty allow-list denies everything.
+ * A rule with no inbox is visible only to an unrestricted key.
+ */
+export function automationVisibleToCaller(
+  caller: AutomationCaller,
+  inboxId: unknown,
+): boolean {
+  if (caller.inbox_ids === null) return true;
+  return typeof inboxId === "string" && caller.inbox_ids.includes(inboxId);
+}
+
+/**
+ * Loads one rule, scoped to the caller's workspace AND the caller's inbox
+ * allow-list. Tenancy is never implicit.
+ *
+ * Also reads `api_key_id`, the key the rule RUNS as, which is internal and is
+ * stripped by `publicAutomation` before anything is returned to a model.
+ */
 async function loadAutomation(
   deps: AutomationDeps,
   ruleId: string,
@@ -2403,14 +2524,122 @@ async function loadAutomation(
 ): Promise<any | null> {
   const { data, error } = await deps.db
     .from("triage_rules")
-    .select(AUTOMATION_PUBLIC_COLUMNS)
+    .select(AUTOMATION_LOAD_COLUMNS)
     .eq("id", ruleId)
     .eq("workspace_id", deps.caller.workspace_id)
     .is("deleted_at", null)
     .maybeSingle();
   if (error || !data) return null;
+  if (!automationVisibleToCaller(deps.caller, data.inbox_id)) return null;
   return data;
 }
+
+/** The model-facing projection of a loaded rule: never the key it runs as. */
+// deno-lint-ignore no-explicit-any
+function publicAutomation(rule: any): Record<string, unknown> {
+  const { api_key_id: _runsAs, ...rest } = rule ?? {};
+  return rest;
+}
+
+/**
+ * Re-binds a rule to the key that is editing or enabling it.
+ *
+ * The unattended runner executes a rule as its stored `api_key_id`, and
+ * checkTriageAuthority checks THAT key's scopes and inbox allow-list on every
+ * run. Before this, a second key could rewrite or re-enable a rule created by a
+ * different (possibly unrestricted) key, and the rule then ran with the
+ * creator's authority, not the editor's. So whoever last shaped or switched on
+ * a rule is the key it runs as from then on: the runner re-checks the editor's
+ * own scopes and allow-list, and a rule can never do more than the key that
+ * last changed it may do.
+ *
+ * Returns the patch fragment to merge (empty when the caller already owns the
+ * rule), or a refusal when the caller could not run the rule itself. Refusing
+ * here, rather than re-binding and letting the next run fail with
+ * `scope_denied`, keeps a rename by an under-scoped key from silently breaking
+ * somebody else's working rule.
+ */
+function rebindToCaller(
+  deps: AutomationDeps,
+  // deno-lint-ignore no-explicit-any
+  rule: any,
+  effectiveAction: unknown,
+  verb: string,
+): { ok: true; patch: Record<string, unknown> } | { ok: false; result: TriageToolResult } {
+  if (rule.api_key_id === deps.caller.id) return { ok: true, patch: {} };
+  const check = validateTriageAction(effectiveAction);
+  if (check.ok) {
+    const needed = TRIAGE_ACTION_SCOPES[check.value.type];
+    const missing = !deps.caller.scopes.includes(needed)
+      ? needed
+      : check.value.type === "draft_reply" && !deps.caller.scopes.includes("read:email")
+      ? "read:email"
+      : null;
+    if (missing) {
+      return {
+        ok: false,
+        result: toolErr(
+          `automation ${verb}: this automation was set up with a different API key. ` +
+            `Changing it makes it run as this key from now on, and this key does not ` +
+            `hold the '${missing}' scope its action needs. Nothing was changed.`,
+          "scope_denied",
+        ),
+      };
+    }
+  }
+  return { ok: true, patch: { api_key_id: deps.caller.id } };
+}
+
+/**
+ * Why `update` cannot use a rule's own inbox, worded for the actual cause.
+ *
+ * The rule was loaded through loadAutomation, which already applied the
+ * caller's inbox allow-list, so the inbox is one this key may know about and
+ * reading its status discloses nothing new. The visibility check is repeated
+ * anyway so this can never become the place an out-of-list inbox is described.
+ * The resolver only accepts an active, non-deleted inbox, so the common cause
+ * for an owner key is a disconnected or removed mailbox, and saying "not
+ * available to this key" there sends the user looking at key settings instead.
+ */
+async function unresolvedRuleInbox(
+  deps: AutomationDeps,
+  // deno-lint-ignore no-explicit-any
+  rule: any,
+): Promise<TriageToolResult> {
+  if (!automationVisibleToCaller(deps.caller, rule.inbox_id) || typeof rule.inbox_id !== "string") {
+    return toolErr("automation update: no automation with that id in this workspace.", "not_found");
+  }
+  const { data } = await deps.db
+    .from("inboxes")
+    .select("status, deleted_at")
+    .eq("id", rule.inbox_id)
+    .eq("workspace_id", deps.caller.workspace_id)
+    .maybeSingle();
+  if (!data || data.deleted_at) {
+    return toolErr(
+      "automation update: this automation's inbox has been removed from the workspace, so the " +
+        "rule can no longer run. Delete the automation (action 'delete'). Nothing was changed.",
+      "inbox_removed",
+    );
+  }
+  if (data.status !== "active") {
+    return toolErr(
+      "automation update: this automation's inbox is disconnected. Reconnect it in the " +
+        "dashboard, or disable or delete the automation. Nothing was changed.",
+      "inbox_disconnected",
+    );
+  }
+  return toolErr(
+    "automation update: this automation's inbox could not be opened right now. Try again in a " +
+      "moment. Nothing was changed.",
+    "inbox_not_found",
+  );
+}
+
+/** The one-line disclosure that a rule now runs as the calling key. */
+const REBOUND_NOTE =
+  "This automation was set up with a different API key; it now runs as this key, " +
+  "with this key's scopes and inbox access.";
 
 export async function runAutomationTool(
   action: string,
@@ -2505,15 +2734,27 @@ export async function runAutomationTool(
     }
 
     case "list": {
-      const { data, error } = await deps.db
+      // Scoped to the key's inbox allow-list IN THE QUERY, so the 100-row page
+      // is a page of rules this key may see, and again on the rows returned,
+      // so a builder that ignored the filter still cannot leak one.
+      let query = deps.db
         .from("triage_rules")
         .select(AUTOMATION_PUBLIC_COLUMNS)
         .eq("workspace_id", deps.caller.workspace_id)
-        .is("deleted_at", null)
+        .is("deleted_at", null);
+      if (deps.caller.inbox_ids !== null) {
+        if (deps.caller.inbox_ids.length === 0) return toolOk({ automations: [], count: 0 });
+        query = query.in("inbox_id", deps.caller.inbox_ids);
+      }
+      const { data, error } = await query
         .order("created_at", { ascending: false })
         .limit(100);
       if (error) return toolErr("automation list: could not read automations.", "db_error");
-      return toolOk({ automations: data ?? [], count: (data ?? []).length });
+      // deno-lint-ignore no-explicit-any
+      const visible = ((data ?? []) as any[]).filter((row) =>
+        automationVisibleToCaller(deps.caller, row?.inbox_id)
+      );
+      return toolOk({ automations: visible, count: visible.length });
     }
 
     case "get": {
@@ -2521,7 +2762,7 @@ export async function runAutomationTool(
       if (!rule) return toolErr("automation get: no automation with that id in this workspace.", "not_found");
       const getMismatch = await ruleInboxMismatch(deps, rule, args, "get");
       if (getMismatch) return getMismatch;
-      return toolOk({ automation: rule });
+      return toolOk({ automation: publicAutomation(rule) });
     }
 
     case "update": {
@@ -2529,8 +2770,13 @@ export async function runAutomationTool(
       if (!rule) return toolErr("automation update: no automation with that id in this workspace.", "not_found");
       const updateMismatch = await ruleInboxMismatch(deps, rule, args, "update");
       if (updateMismatch) return updateMismatch;
+      // The rule's own inbox has to resolve FOR THIS KEY. It used to be read
+      // only for the provider, and a failure carried on with provider=null,
+      // which both skipped the provider-specific filter checks and let the
+      // write go ahead against an inbox the key could not touch.
       const resolved = await deps.resolveInbox({ inbox_id: rule.inbox_id });
-      const provider = resolved.ok ? resolved.inbox.provider : null;
+      if (!resolved.ok) return await unresolvedRuleInbox(deps, rule);
+      const provider = resolved.inbox.provider;
       const body = validateAutomationBody(args, provider, true);
       if (!body.ok) return toolErr(`automation update: ${body.error}`, "-32602");
       if (Object.keys(body.value).length === 0) {
@@ -2542,9 +2788,11 @@ export async function runAutomationTool(
           return toolErr(`automation update: this key needs the '${needed}' scope for that action.`, "scope_denied");
         }
       }
+      const updateRebind = rebindToCaller(deps, rule, body.value.action ?? rule.action, "update");
+      if (!updateRebind.ok) return updateRebind.result;
       const { data, error } = await deps.db
         .from("triage_rules")
-        .update(body.value)
+        .update({ ...body.value, ...updateRebind.patch })
         .eq("id", ruleIdArg)
         .eq("workspace_id", deps.caller.workspace_id)
         .is("deleted_at", null)
@@ -2552,9 +2800,14 @@ export async function runAutomationTool(
         .maybeSingle();
       if (error || !data) return toolErr("automation update: could not save the change.", "db_error");
       const updateNote = labelAppliedNote(body.value.action, provider);
+      const updateRebound = Object.keys(updateRebind.patch).length > 0;
+      const updateMessage = [updateNote, updateRebound ? REBOUND_NOTE : null]
+        .filter((part): part is string => part !== null)
+        .join(" ");
       return toolOk({
-        automation: data,
-        ...(updateNote ? { label_applied_as: updateNote, message: updateNote } : {}),
+        automation: publicAutomation(data),
+        ...(updateNote ? { label_applied_as: updateNote } : {}),
+        ...(updateMessage ? { message: updateMessage } : {}),
       });
     }
 
@@ -2572,9 +2825,14 @@ export async function runAutomationTool(
       if (!deps.caller.scopes.includes(needed)) {
         return toolErr(`automation enable: this key needs the '${needed}' scope to enable that action.`, "scope_denied");
       }
+      // Enabling is the moment unattended work becomes possible, so it is also
+      // the moment the rule is bound to the key doing it (see rebindToCaller).
+      const enableRebind = rebindToCaller(deps, rule, rule.action, "enable");
+      if (!enableRebind.ok) return enableRebind.result;
       const { data, error } = await deps.db
         .from("triage_rules")
         .update({
+          ...enableRebind.patch,
           enabled: true,
           disabled_reason: null,
           consecutive_failures: 0,
@@ -2588,18 +2846,20 @@ export async function runAutomationTool(
         .select(AUTOMATION_PUBLIC_COLUMNS)
         .maybeSingle();
       if (error || !data) return toolErr("automation enable: could not enable the automation.", "db_error");
-      return toolOk({ automation: data, enabled: true });
+      return toolOk({
+        automation: publicAutomation(data),
+        enabled: true,
+        ...(Object.keys(enableRebind.patch).length > 0 ? { message: REBOUND_NOTE } : {}),
+      });
     }
 
     case "disable": {
-      // Only disable and delete skip the load, so they load here when there is
-      // an inbox to check against.
-      if (typeof args["inbox_id"] === "string" || typeof args["inbox"] === "string") {
-        const rule = await loadAutomation(deps, ruleIdArg);
-        if (!rule) return toolErr("automation disable: no automation with that id in this workspace.", "not_found");
-        const disableMismatch = await ruleInboxMismatch(deps, rule, args, "disable");
-        if (disableMismatch) return disableMismatch;
-      }
+      // Always loaded first: the load is what applies the key's inbox
+      // allow-list, so a key cannot switch off a rule on an inbox it cannot see.
+      const disableRule = await loadAutomation(deps, ruleIdArg);
+      if (!disableRule) return toolErr("automation disable: no automation with that id in this workspace.", "not_found");
+      const disableMismatch = await ruleInboxMismatch(deps, disableRule, args, "disable");
+      if (disableMismatch) return disableMismatch;
       const { data, error } = await deps.db
         .from("triage_rules")
         .update({ enabled: false, next_run_at: null, disabled_reason: "Disabled by request." })
@@ -2624,12 +2884,11 @@ export async function runAutomationTool(
       // SOFT delete. Run history outlives the rule on purpose: it is the record
       // of what was done to a mailbox, and it is exactly what a user goes
       // looking for after the fact.
-      if (typeof args["inbox_id"] === "string" || typeof args["inbox"] === "string") {
-        const rule = await loadAutomation(deps, ruleIdArg);
-        if (!rule) return toolErr("automation delete: no automation with that id in this workspace.", "not_found");
-        const deleteMismatch = await ruleInboxMismatch(deps, rule, args, "delete");
-        if (deleteMismatch) return deleteMismatch;
-      }
+      // Always loaded first, for the same allow-list reason as disable.
+      const deleteRule = await loadAutomation(deps, ruleIdArg);
+      if (!deleteRule) return toolErr("automation delete: no automation with that id in this workspace.", "not_found");
+      const deleteMismatch = await ruleInboxMismatch(deps, deleteRule, args, "delete");
+      if (deleteMismatch) return deleteMismatch;
       const { data, error } = await deps.db
         .from("triage_rules")
         .update({ deleted_at: nowIso, enabled: false, next_run_at: null })

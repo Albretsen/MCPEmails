@@ -135,7 +135,7 @@ export function DashboardApp(props) {
  * DashboardInner: holds all dashboard state and routing logic.
  * Calls useToast() for user-facing feedback on all mutating actions.
  */
-function DashboardInner({ initialRoute = 'overview', user, workspace: serverWorkspace, workspaces = [], activeWorkspaceId, canCreateWorkspace = false, mcpUrl, userRole, planLimits, actionAllowance = null, inboxesGrandfathered = false, stripePrices, overviewStats, activityFeed, inboxes: serverInboxes, apiKeys: serverApiKeys, usageData, auditLog, members: serverMembers, pendingInvites: serverPendingInvites, firstToolEvent = null }) {
+function DashboardInner({ initialRoute = 'overview', user, workspace: serverWorkspace, workspaces = [], activeWorkspaceId, canCreateWorkspace = false, mcpUrl, userRole, planLimits, actionAllowance = null, inboxesGrandfathered = false, stripePrices, overviewStats, activityFeed, inboxes: serverInboxes, apiKeys: serverApiKeys, usageData, auditLog, members: serverMembers, pendingInvites: serverPendingInvites, firstToolEvent = null, supportVisible = false /* SUPPORT_RELEASE_GATE */ }) {
   const searchParams = useSearchParams();
   const router = useRouter();
   const tr = useTranslations('dashboardChrome');
@@ -759,6 +759,7 @@ function DashboardInner({ initialRoute = 'overview', user, workspace: serverWork
             signatureHtml: sig.signature_html ?? null,
             signatureEnabled: sig.signature_enabled ?? true,
             signatureReplyMode: sig.signature_reply_mode ?? 'first_only',
+            signatureEmbedImages: sig.signature_embed_images ?? x.signatureEmbedImages ?? false,
             signatureSource: sig.signature_source ?? 'manual',
             sendApprovalRequired: data.sendApprovalRequired ?? x.sendApprovalRequired ?? false,
             sendReviewMode: data.sendReviewMode ?? x.sendReviewMode ?? 'off',
@@ -990,8 +991,15 @@ function DashboardInner({ initialRoute = 'overview', user, workspace: serverWork
     // only person who needs the sentence is the one who would otherwise find a
     // different number on the Inboxes page later and have to work out why.
     if (transport) {
+      // A receive-only or send-only connection has one half, and its other
+      // port comes back null; reciting "SMTP null" would be worse than nothing.
+      const hasImapPort = transport.imapPort != null;
+      const hasSmtpPort = transport.smtpPort != null;
+      const adjustedKey = hasImapPort && hasSmtpPort
+        ? 'app.inboxConnectedAdjusted'
+        : hasImapPort ? 'app.inboxConnectedAdjustedImap' : 'app.inboxConnectedAdjustedSmtp';
       toast({
-        message: tr('app.inboxConnectedAdjusted', {
+        message: tr(adjustedKey, {
           label,
           imapPort: String(transport.imapPort),
           imapSecurity: securityLabel(tr, transport.imapSecurity),
@@ -1052,7 +1060,9 @@ function DashboardInner({ initialRoute = 'overview', user, workspace: serverWork
    * Adds the new key row (without rawKey) to local state and shows a toast.
    */
   const onKeyCreated = (keyRow) => {
-    setKeys(xs => [keyRow, ...xs]);
+    // The creator is the person who just made it; the POST response does not
+    // carry it, and the Keys page needs it to offer Edit/Revoke on this row.
+    setKeys(xs => [{ createdBy: user?.id ?? null, ...keyRow }, ...xs]);
     toast({
       message: tr('app.apiKeyCreated'),
       variant: 'success',
@@ -1181,6 +1191,7 @@ function DashboardInner({ initialRoute = 'overview', user, workspace: serverWork
         workspaces={workspaces}
         activeWorkspaceId={activeWorkspaceId}
         canCreateWorkspace={canCreateWorkspace}
+        supportVisible={supportVisible} // SUPPORT_RELEASE_GATE
         isOpen={sidebarOpen}
         onClose={() => setSidebarOpen(false)}
       />
@@ -1191,12 +1202,12 @@ function DashboardInner({ initialRoute = 'overview', user, workspace: serverWork
           <FirstRunBanner onConnect={() => openConnect('first_run')} />
         )}
 
-        {route === "overview" && <OverviewPage key={guideResumeKey} inboxes={inboxes} apiKeys={keys} activity={activityFeed ?? SEED_ACTIVITY} stats={overviewStats} usageData={usageData} planLimits={planLimits} actionAllowance={actionAllowance} plan={workspace?.plan ?? 'free'} mcpUrl={mcpUrl} memberCount={members.length} onConnect={openConnect} onGoToKeys={() => setRoute("keys")} onGoToMembers={() => setRoute("members")} onboardingClient={onboardingClient} onClientSelected={selectOnboardingClient} businessShaped={businessShaped} />}
+        {route === "overview" && <OverviewPage key={guideResumeKey} userRole={userRole} inboxes={inboxes} apiKeys={keys} activity={activityFeed ?? SEED_ACTIVITY} stats={overviewStats} usageData={usageData} planLimits={planLimits} actionAllowance={actionAllowance} plan={workspace?.plan ?? 'free'} mcpUrl={mcpUrl} memberCount={members.length} onConnect={openConnect} onGoToKeys={() => setRoute("keys")} onGoToMembers={() => setRoute("members")} onboardingClient={onboardingClient} onClientSelected={selectOnboardingClient} businessShaped={businessShaped} />}
         {route === "inboxes"  && <InboxesPage  inboxes={inboxes} planLimits={planLimits} stripePrices={stripePrices} businessShaped={businessShaped} onConnect={openConnect} onRemove={onRemoveInbox} onReconnect={onReconnectInbox} onCheck={onCheckInbox} onSaveSignature={onSaveSignature} onSaveSenderName={onSaveSenderName} onSaveDraftEditorHidden={onSaveDraftEditorHidden} draftEditorRolledOut={workspace?.draftEditorEnabled === true} draftEditorWorkspaceHidden={workspace?.draftEditorHidden === true} userRole={userRole} onGoToKeys={() => setRoute("keys")} />}
-        {route === "keys"     && <KeysPage     keys={keys} inboxes={inboxes} mcpUrl={mcpUrl} onCreate={onCreateKey} onKeyCreated={onKeyCreated} onRevoke={onRevokeKey} onUpdate={onUpdateKey} />}
+        {route === "keys"     && <KeysPage     keys={keys} inboxes={inboxes} mcpUrl={mcpUrl} onCreate={onCreateKey} onKeyCreated={onKeyCreated} onRevoke={onRevokeKey} onUpdate={onUpdateKey} userRole={userRole} currentUserId={user?.id} members={members} />}
         {route === "members"  && <MembersPage  members={members} pendingInvites={pendingInvites} planLimits={planLimits} userRole={userRole} currentUserId={user?.id} workspaceName={workspace?.displayName ?? workspace?.display_name ?? workspace?.slug ?? ''} onInvite={onInviteMember} onCancelInvite={onCancelInvite} onResendInvite={onResendInvite} onRemove={onRemoveMember} onChangeRole={onChangeRole} onLeave={onLeaveWorkspace} />}
         {route === "usage"    && <UsagePage usageData={usageData} planLimits={planLimits} actionAllowance={actionAllowance} stripePrices={stripePrices} onConnect={() => openConnect('other')} onGoToKeys={() => setRoute("keys")} />}
-        {route === "workflows" && <WorkflowsPage mcpUrl={mcpUrl} />}
+        {route === "workflows" && <WorkflowsPage mcpUrl={mcpUrl} userRole={userRole} />}
         {route === "approvals" && <ApprovalsPage userRole={userRole} />}
         {route === "automations" && <AutomationsPage userRole={userRole} inboxes={inboxes} keys={keys} />}
         {route === "settings" && <SettingsPage user={user} workspace={workspace} workspaces={workspaces} userRole={userRole} stripePrices={stripePrices} upgradeIntent={upgradeIntent} planLimits={planLimits} actionAllowance={actionAllowance} inboxCount={inboxes.length} grandfathered={inboxesGrandfathered} businessShaped={businessShaped} onWorkspaceUpdate={setWorkspace} />}
@@ -1225,6 +1236,7 @@ function DashboardInner({ initialRoute = 'overview', user, workspace: serverWork
           stripePrices={stripePrices}
           businessShaped={businessShaped}
           onAdminConsentLink={() => setShowAdminLink(true)}
+          supportVisible={supportVisible} // SUPPORT_RELEASE_GATE
         />
       )}
 

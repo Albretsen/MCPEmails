@@ -1,11 +1,15 @@
 import { redirect, notFound } from 'next/navigation';
 import { after } from 'next/server';
-import { cookies } from 'next/headers';
+import { cookies, headers } from 'next/headers';
 import { createClient } from '@/lib/supabase/server';
 import { createServiceRoleClient } from '@/lib/supabase/service';
 import { ACTIVE_WORKSPACE_COOKIE } from '@/lib/workspace/active';
 import { linkExperimentSubjectForRequest } from '@/lib/experiments/link-request';
 import { stampAcquisitionSegment } from '@/lib/segment/record-segment';
+import { deviceClassFromHeaders } from '@/lib/acquisition-device.mjs';
+import { shouldStampDeviceOnDashboard, stampAcquisitionDevice } from '@/lib/acquisition-device-stamp';
+import { countryFromHeaders } from '@/lib/acquisition-country.mjs';
+import { stampAcquisitionCountry } from '@/lib/acquisition-country-stamp';
 import { PENDING_INBOX_COLUMNS, selectTolerantly } from '@/lib/approvals/columns';
 import { DashboardApp } from '../../../components/dashboard/App';
 import { pathSegmentToSection } from '../../../components/dashboard/routes';
@@ -14,6 +18,7 @@ import { retentionDays } from '../../../src/lib/analytics/retention';
 import { calendarMonthWindow } from '../../../src/lib/usage/billing-window';
 import { fetchWorkspaceActionAllowance } from '../../../src/lib/usage/allowance';
 import { fetchStripePrices } from '../../../src/lib/stripe/getPrices';
+import { supportVisibleTo } from '@/lib/support/release-gate';
 import '../../../styles/dashboard.css';
 import '../../../styles/theme.css';
 
@@ -41,7 +46,7 @@ import '../../../styles/theme.css';
  * Fallback activity window, in UTC days, for a caller that passes none.
  *
  * The real window is the workspace's `analyticsRetentionDays` (Free 30,
- * Personal 30, Pro 90, Team 365), resolved once in the page component and
+ * Personal 90, Pro and Business 730), resolved once in the page component and
  * threaded into every history fetcher below. This constant only keeps those
  * fetchers callable on their own; it is not the product's answer to "how much
  * history do I get". See src/lib/analytics/retention.ts.
@@ -60,7 +65,7 @@ const ACTION_METER_VERSION = 1;
 export const dynamic = 'force-dynamic';
 
 export const metadata = {
-  title: 'Dashboard · MCP Emails',
+  title: 'Dashboard',
   description: 'Manage your MCP Emails inboxes and API keys',
 };
 
@@ -169,8 +174,8 @@ async function fetchInboxes(supabase, workspaceId, historyDays = USAGE_WINDOW_DA
         'imap_host', 'imap_port', 'imap_security', 'smtp_host', 'smtp_port', 'smtp_security',
         'imap_username', 'created_at', 'signature_text', 'signature_html', 'signature_enabled',
         'signature_reply_mode', 'signature_source', 'send_approval_required', 'send_review_mode',
-        'draft_editor_hidden'],
-      [...PENDING_INBOX_COLUMNS, 'draft_editor_hidden'],
+        'draft_editor_hidden', 'signature_embed_images'],
+      [...PENDING_INBOX_COLUMNS, 'draft_editor_hidden', 'signature_embed_images'],
       (columns) => supabase
         .from('inboxes')
         .select(columns)
@@ -226,8 +231,12 @@ async function fetchInboxes(supabase, workspaceId, historyDays = USAGE_WINDOW_DA
     status: row.status,
     // Human-readable error shown on errored inboxes; null when healthy.
     lastError: row.last_error ?? null,
-    // True when this inbox uses an IMAP app-password path (not OAuth).
-    hasImap: !!row.imap_host,
+    // True when this inbox uses an IMAP/SMTP app-password path (not OAuth).
+    // A send-only inbox has no IMAP host but is still a password connection,
+    // and must reopen the password form on reconnect, not an OAuth route.
+    hasImap: !!row.imap_host || !!row.smtp_host,
+    // 'both' | 'imap' (receive only) | 'smtp' (send only); null for OAuth.
+    connectionMode: row.imap_host && row.smtp_host ? 'both' : row.imap_host ? 'imap' : row.smtp_host ? 'smtp' : null,
     // IMAP service brand ('generic' for the plain IMAP connector, or
     // 'fastmail'/'icloud'/'yahoo'/'zoho'/'yandex'). Used by the reconnect flow
     // to re-open the SAME connect form this inbox was created with.
@@ -257,6 +266,7 @@ async function fetchInboxes(supabase, workspaceId, historyDays = USAGE_WINDOW_DA
     signatureHtml: row.signature_html ?? null,
     signatureEnabled: row.signature_enabled ?? true,
     signatureReplyMode: row.signature_reply_mode ?? 'first_only',
+    signatureEmbedImages: row.signature_embed_images ?? false,
     signatureSource: row.signature_source ?? null,
     sendApprovalRequired: row.send_approval_required ?? false,
     // Three-way review mode (off | inline | dashboard). Falls back to the
@@ -288,6 +298,7 @@ async function fetchInboxes(supabase, workspaceId, historyDays = USAGE_WINDOW_DA
  *   name: string,
  *   keyPrefix: string,
  *   scopes: string[],
+ *   createdBy: string | null,
  *   createdAt: string,
  *   lastUsedAt: string | null,
  *   expiresAt: string | null,
@@ -296,7 +307,7 @@ async function fetchInboxes(supabase, workspaceId, historyDays = USAGE_WINDOW_DA
 async function fetchApiKeys(supabase, workspaceId) {
   const { data, error } = await supabase
     .from('api_keys')
-    .select('id, name, key_prefix, scopes, inbox_ids, created_at, last_used_at, expires_at')
+    .select('id, name, key_prefix, scopes, inbox_ids, created_by, created_at, last_used_at, expires_at')
     .eq('workspace_id', workspaceId)
     .is('deleted_at', null)
     .order('created_at', { ascending: false });
@@ -313,6 +324,10 @@ async function fetchApiKeys(supabase, workspaceId) {
     scopes: row.scopes ?? [],
     // null = all inboxes (including any connected later); array = explicit allowlist.
     inboxIds: row.inbox_ids ?? null,
+    // Who holds the key. The Keys page offers Edit/Revoke only on keys the
+    // viewer may change (their own, or any key for an owner/admin), matching
+    // the authorization in /api/api-keys/[id] and /revoke.
+    createdBy: row.created_by ?? null,
     createdAt: row.created_at,
     lastUsedAt: row.last_used_at ?? null,
     expiresAt: row.expires_at ?? null,
@@ -508,6 +523,11 @@ async function fetchAuditLog(supabase, workspaceId) {
   // down hard by tier, Auth0 at 1-30 days, is publicly complained about for it.
   // Nobody ships a 7-day audit log. Do not re-add a window here without a
   // reason that is about storage, not packaging.
+  //
+  // What it can show is bounded by storage, not by this query: the per-plan
+  // activity_log job (migration 20261020153742) never deletes a
+  // mailbox-changing call before 90 days on any plan, and keeps read-only
+  // calls at least as long as the plan's Usage window.
 
   const [countResult, rowsResult] = await Promise.all([
     supabase
@@ -686,6 +706,23 @@ export default async function DashboardPage({ params }) {
     }));
   }
 
+  // Record whether a password signup came from a phone, a tablet or a desktop.
+  // This render is the first request such a signup's browser makes to us:
+  // signUp() goes from the page straight to Supabase, so nothing earlier sees
+  // its User-Agent. Google and GitHub signups are stamped in /auth/callback
+  // instead and are skipped here. The class is read before the response and
+  // written after it; the User-Agent itself is never kept. Gated on an account
+  // that is minutes old, owner's workspace only, never overwrites.
+  // The signup country rides along on the same gate and the same request:
+  // Vercel's x-vercel-ip-country, two letters, never the IP itself.
+  if (shouldStampDeviceOnDashboard({ provider: user.app_metadata?.provider, userCreatedAt: user.created_at })) {
+    const requestHeaders = await headers();
+    const device = deviceClassFromHeaders(requestHeaders);
+    const country = countryFromHeaders(requestHeaders);
+    after(() => stampAcquisitionDevice(createServiceRoleClient(), { ownerId: user.id, device }));
+    after(() => stampAcquisitionCountry(createServiceRoleClient(), { ownerId: user.id, country }));
+  }
+
   // The calling user's role in the ACTIVE workspace (drives role-gated UI).
   let userRole = 'member';
   let effectiveWorkspacePlan = null;
@@ -729,6 +766,9 @@ export default async function DashboardPage({ params }) {
   const displayName = userRecord?.display_name ?? user.user_metadata?.full_name ?? '';
   const email = userRecord?.email ?? user.email ?? '';
   const initials = computeInitials(displayName || null, email);
+  // Help & support entry points (sidebar item, connect-error contact line).
+  // Internal-only in v1; at release this becomes `true` and the prop goes away.
+  const supportVisible = supportVisibleTo(email || null); // SUPPORT_RELEASE_GATE
   const workspaceSlug = workspace?.slug ?? 'workspace';
   const compedScale = effectiveWorkspacePlan?.comped_scale ?? false;
   // The 2026-08-19 repricing grandfather: every user who existed before inboxes
@@ -737,6 +777,10 @@ export default async function DashboardPage({ params }) {
   // show a grandfathered free account a 1-inbox cap and a scarcity bar for a
   // limit the server would never actually enforce against them.
   const unlimitedInboxes = effectiveWorkspacePlan?.unlimited_inboxes ?? false;
+  // The 2026-10 Pro cap: a workspace on Pro at the cutover keeps unlimited
+  // inboxes (or every Pro workspace does, while the cap's kill switch is off).
+  // Read here for the same reason as the grandfather above.
+  const proUnlimitedInboxes = effectiveWorkspacePlan?.pro_unlimited_inboxes ?? false;
   const plan = effectiveWorkspacePlan?.plan ?? workspace?.plan ?? 'free';
   // The period the usage-summary RPC scopes its (undisplayed) action meter to:
   // the allowance's own window, or the UTC month when that call failed.
@@ -774,7 +818,7 @@ export default async function DashboardPage({ params }) {
   // history this workspace may see is one of them. Both protections are
   // user-level and must be passed together: `compedScale` grants Team
   // features, `unlimitedInboxes` is the repricing grandfather.
-  const rawLimits = resolvePlanLimits(plan, { compedScale, unlimitedInboxes });
+  const rawLimits = resolvePlanLimits(plan, { compedScale, unlimitedInboxes, proUnlimitedInboxes });
   // The window the Usage page, the per-inbox activity counts and the audit log
   // are all bounded by. Free and Personal buy 30 days, Pro 90, Team a year;
   // those numbers are published copy, so they are read from the plan rather
@@ -822,6 +866,10 @@ export default async function DashboardPage({ params }) {
     // label their figures with it, so the number on screen always matches the
     // window the queries above actually used.
     historyDays,
+    // A Pro workspace from before the 2026-10 inbox cap, told on the billing
+    // panel that it keeps unlimited inboxes. Not for a grandfathered user,
+    // whose unlimited inboxes come from the older promise.
+    proInboxesKept: plan === 'solo' && proUnlimitedInboxes && !unlimitedInboxes && !compedScale,
   };
 
   // True only when the unlimited inboxes come from the grandfather rather than
@@ -873,6 +921,7 @@ export default async function DashboardPage({ params }) {
       auditLog={auditLog}
       members={members}
       pendingInvites={pendingInvites}
+      supportVisible={supportVisible} // SUPPORT_RELEASE_GATE
       firstToolEvent={workspace?.analytics_first_tool_name && !workspace?.analytics_first_tool_reported_at ? { tool_name: workspace.analytics_first_tool_name, provider: workspace.analytics_first_tool_provider ?? 'unknown', client: workspace.analytics_first_tool_client ?? 'unknown', activation_path: workspace.analytics_first_tool_path ?? 'api_key' } : null}
     />
   );

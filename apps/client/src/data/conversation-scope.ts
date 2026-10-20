@@ -12,7 +12,9 @@ import { queryClient } from "./query-client";
  * "in the current folder scope": every message of it that the list on screen
  * holds, plus any the `thread` op found in that same folder but on a page the
  * list has not loaded yet. Messages of the conversation in other folders (the
- * person's own replies in Sent) are left where they are.
+ * person's own replies in Sent) are left where they are. One exception:
+ * archiving a Gmail conversation also takes its Inbox messages out of the
+ * Inbox, whichever folder it is archived from (`withGmailInboxMessages`).
  *
  * Reply, Reply all and Forward act on ONE message (state/conversation-store
  * `replyTargetOf`).
@@ -54,6 +56,31 @@ export function conversationKeys(key: MessageKey): MessageKey[] {
     for (const r of thread.rows) {
       if (have.has(r.key) || r.inbox_id !== conv.head.inbox_id || r.folder !== conv.head.folder) continue;
       if (r.message_id_header && ids.has(r.message_id_header)) continue;
+      out.push(r.key);
+    }
+  }
+  return out;
+}
+
+/** Gmail: archive means "out of the Inbox" for the WHOLE conversation,
+ *  whichever folder it was opened from, as it does in Gmail itself. So for a
+ *  `g:` conversation opened outside the Inbox (Sent, a label), the messages
+ *  of it that the cached thread places in the Inbox join `target`. Over IMAP
+ *  those carry their All Mail ids, which the server archives by taking the
+ *  \Inbox label off (mcp-server imap-gmail-relocate.ts). Every other
+ *  provider keeps the folder-on-screen rule of the header: there the Inbox
+ *  copy of a conversation is separate mail. */
+export function withGmailInboxMessages(target: readonly MessageKey[]): MessageKey[] {
+  const out = [...target];
+  if (!conversationView()) return out;
+  const have = new Set(out);
+  for (const key of target) {
+    const conv = conversationOf(key);
+    const row = conv?.head ?? findRow(key);
+    if (!row?.thread_key?.startsWith("g:") || row.folder_role === "inbox") continue;
+    for (const r of cachedThread(row, conv)?.rows ?? []) {
+      if (r.inbox_id !== row.inbox_id || r.folder_role !== "inbox" || have.has(r.key)) continue;
+      have.add(r.key);
       out.push(r.key);
     }
   }

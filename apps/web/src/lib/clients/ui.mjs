@@ -75,6 +75,12 @@ const EN = {
     guideLink: {
       intro: 'Official {client} documentation for remote MCP servers:',
     },
+    postLink: {
+      intro: 'Prefer a full walkthrough?',
+      claude: 'How to connect Claude to your email',
+      chatgpt: 'How to connect ChatGPT to your email',
+      editors: 'Email for AI agents in Cursor, Cline and VS Code',
+    },
     providers: {
       intro: 'Wondering which mailbox to connect first?',
       label: 'See the provider compatibility matrix',
@@ -148,6 +154,12 @@ const NB = {
     },
     guideLink: {
       intro: 'Offisiell dokumentasjon fra {client} for eksterne MCP-servere:',
+    },
+    postLink: {
+      intro: 'Vil du ha en fullstendig gjennomgang?',
+      claude: 'Slik kobler du Claude til e-posten din',
+      chatgpt: 'Slik kobler du ChatGPT til e-posten din',
+      editors: 'E-post for AI-agenter i Cursor, Cline og VS Code',
     },
     providers: {
       intro: 'Lurer du på hvilken postkasse du bør koble til først?',
@@ -223,6 +235,12 @@ const ES = {
     guideLink: {
       intro: 'Documentación oficial de {client} sobre servidores MCP remotos:',
     },
+    postLink: {
+      intro: '¿Prefieres una guía completa?',
+      claude: 'Cómo conectar Claude a tu correo',
+      chatgpt: 'Cómo conectar ChatGPT a tu correo',
+      editors: 'Correo para agentes de IA en Cursor, Cline y VS Code',
+    },
     providers: {
       intro: '¿No sabes qué buzón conectar primero?',
       label: 'Consulta la tabla de compatibilidad de proveedores',
@@ -296,6 +314,12 @@ const FR = {
     },
     guideLink: {
       intro: 'Documentation officielle de {client} sur les serveurs MCP distants :',
+    },
+    postLink: {
+      intro: 'Vous préférez un guide complet ?',
+      claude: 'Connecter Claude à vos e-mails',
+      chatgpt: 'Connecter ChatGPT à vos e-mails',
+      editors: 'L\'e-mail pour les agents IA dans Cursor, Cline et VS Code',
     },
     providers: {
       intro: 'Vous ne savez pas quelle boîte connecter en premier ?',
@@ -371,6 +395,12 @@ const ZH = {
     guideLink: {
       intro: '{client} 关于远程 MCP 服务器的官方文档：',
     },
+    postLink: {
+      intro: '想看完整教程？',
+      claude: '如何将 Claude 连接到你的邮箱',
+      chatgpt: '如何将 ChatGPT 连接到你的邮箱',
+      editors: '在 Cursor、Cline 和 VS Code 中为 AI 智能体接入邮件',
+    },
     providers: {
       intro: '不确定先连接哪个邮箱？',
       label: '查看邮箱服务商兼容性对照表',
@@ -382,7 +412,87 @@ const ZH = {
   },
 };
 
-const UI = { en: EN, nb: NB, es: ES, fr: FR, zh: ZH };
+const DE = {
+  hub: {
+    eyebrow: 'MCP-Clients',
+    title: 'Verbinden Sie Ihr Postfach mit jedem MCP-Client',
+    lead: 'Ein gehosteter MCP-Server, {count} Setup-Anleitungen. Wählen Sie den Client, den Sie wirklich nutzen, und folgen Sie den Schritten, die für ihn geschrieben sind, nicht einer allgemeinen Vorlage.',
+    answer: 'mcpemails ist ein gehosteter MCP-Server für E-Mail. Sie verbinden ein Postfach einmal und fügen dann eine URL in den Client ein, in dem Sie ohnehin arbeiten. {oauth} der {count} Clients hier nutzen den OAuth-Ablauf im Browser und brauchen gar keinen API-Schlüssel; die übrigen verwenden einen API-Schlüssel mit Scopes in einem Authorization-Header.',
+    meta: {
+      title: 'E-Mail mit Claude, Cursor, ChatGPT und {count} MCP-Clients verbinden',
+      description: 'Setup-Anleitungen pro Client für den MCP-Server von mcpemails. Verbinden Sie ein echtes Postfach mit Claude, Claude Code, Cursor, VS Code, ChatGPT, Cline, Windsurf, Gemini CLI, Zed, JetBrains, Raycast, Warp oder curl.',
+    },
+    genericTitle: 'Ihr Client fehlt?',
+    genericSub: 'Jeder Client, der MCP über Streamable HTTP spricht, funktioniert. Endpunkt, Handshake und Tool-Katalog finden Sie in der Dokumentation.',
+    genericCta: 'Zur Dokumentation',
+    breadcrumb: 'MCP-Clients',
+    authOauth: 'OAuth',
+    authKey: 'API-Schlüssel',
+  },
+  page: {
+    breadcrumb: 'MCP-Clients',
+    ctaPrimary: 'Postfach verbinden',
+    ctaSecondary: 'Zur Dokumentation',
+    endpoint: {
+      title: 'Der eine Wert, den Sie brauchen',
+      sub: 'Alles auf dieser Seite dient dazu, diese URL in {client} einzutragen.',
+      colField: 'Feld',
+      colValue: 'Wert',
+      fieldUrl: 'MCP-Server-URL',
+      fieldTransport: 'Transport',
+      transport: 'Streamable HTTP (MCP 2025-06-18)',
+      fieldAuth: 'Authentifizierung',
+      authOauth: 'OAuth 2.1, Autorisierungscode mit PKCE. Kein API-Schlüssel.',
+      authKey: 'Authorization: Bearer, mit einem API-Schlüssel mit Scopes aus Ihrem Dashboard.',
+    },
+    how: {
+      eyebrow: 'Setup',
+      title: 'So verbinden Sie {client} mit Ihrem Postfach',
+      sub: 'Vier Schritte. Die ersten beiden sind bei jedem Client gleich, die übrigen gelten speziell für diesen.',
+    },
+    config: {
+      title: 'Konfiguration',
+      terminal: 'terminal',
+      json: 'json',
+    },
+    gotchas: {
+      eyebrow: 'Bevor Sie beginnen',
+      title: 'Typische Stolperfallen in {client}',
+    },
+    limits: {
+      title: 'Wichtige Grenzen',
+    },
+    faq: {
+      eyebrow: 'FAQ',
+      title: '{client} und E-Mail: Fragen und Antworten',
+    },
+    related: {
+      title: 'Weiteren Client einrichten',
+      sub: 'Dasselbe Postfach, dieselbe URL. Verbinden Sie so viele Clients, wie Sie möchten.',
+      link: '{client} verbinden',
+      all: 'Alle Setup-Anleitungen für MCP-Clients',
+    },
+    guideLink: {
+      intro: 'Offizielle Dokumentation von {client} zu entfernten MCP-Servern:',
+    },
+    postLink: {
+      intro: 'Lieber eine ausführliche Anleitung?',
+      claude: 'So verbinden Sie Claude mit Ihren E-Mails',
+      chatgpt: 'So verbinden Sie ChatGPT mit Ihren E-Mails',
+      editors: 'E-Mail für KI-Agenten in Cursor, Cline und VS Code',
+    },
+    providers: {
+      intro: 'Unsicher, welches Postfach Sie zuerst verbinden sollen?',
+      label: 'Zur Kompatibilitätsübersicht der Anbieter',
+    },
+    connect: {
+      intro: 'Sie verbinden ein bestimmtes Postfach?',
+      label: 'Setup-Anleitungen nach Anbieter',
+    },
+  },
+};
+
+const UI = { en: EN, nb: NB, es: ES, fr: FR, zh: ZH, de: DE };
 
 export function clientUi(locale) {
   return UI[locale] ?? EN;

@@ -20,7 +20,7 @@
     "titleLine1": "Connect HostGator email to Claude,",
     "titleLine2": "Cursor, ChatGPT, any MCP client",
     "lead": "Give your AI agent a real HostGator mailbox. Read, search, send, reply, schedule and organize mail over IMAP, using the server hostname HostGator's certificate actually covers.",
-    "answer": "Claude cannot reach a HostGator mailbox on its own. mcpemails is a hosted MCP server that connects it over plain IMAP on port 993, so Claude, Cursor or any MCP client can read, search, send and organize that mail. HostGator does not run one shared mail server: for a secure connection you point at your own server's hostname, which is gatorNNNN.hostgator.com on shared and cloud plans and servername.websitewelcome.com on reseller plans, because those are the names their wildcard certificate covers. Authentication is the password set on the mailbox in cPanel, and one inbox is free.",
+    "answer": "Claude cannot reach a HostGator mailbox on its own. MCP Emails is a hosted MCP server that connects it over plain IMAP on port 993, so Claude, Cursor or any MCP client can read, search, send and organize that mail. HostGator does not run one shared mail server: for a secure connection you point at your own server's hostname, which is gatorNNNN.hostgator.com on shared and cloud plans and servername.websitewelcome.com on reseller plans, because those are the names their wildcard certificate covers. Authentication is the password set on the mailbox in cPanel, and one inbox is free.",
     "meta0": "1 inbox free, forever",
     "meta1": "Mailbox password from cPanel",
     "meta2": "Email fetched live, never stored"
@@ -31,7 +31,7 @@
   },
   "setup": [
     {
-      "h": "Create a free mcpemails account",
+      "h": "Create a free MCP Emails account",
       "p": "Sign up at mcpemails.com. The free plan connects one inbox and needs no card."
     },
     {
@@ -40,7 +40,7 @@
     },
     {
       "h": "Use the mailbox password, not the cPanel password",
-      "p": "IMAP authenticates against the password set on the individual address. In cPanel, open <b>Email Accounts</b> and click <b>Manage</b> next to the address to set one. Then paste it into mcpemails together with the full email address as the username and the server hostname you just copied."
+      "p": "IMAP authenticates against the password set on the individual address. In cPanel, open <b>Email Accounts</b> and click <b>Manage</b> next to the address to set one. Then paste it into MCP Emails together with the full email address as the username and the server hostname you just copied."
     },
     {
       "h": "Paste the MCP URL into your AI",
@@ -68,7 +68,7 @@
   "faq": [
     {
       "q": "Does Claude work with HostGator email?",
-      "a": "Not directly. Claude has no HostGator connector. Connecting an MCP server such as mcpemails to the mailbox over IMAP gives Claude read, search, send, reply, schedule and organize access to it, with the same credentials any desktop mail client would use."
+      "a": "Not directly. Claude has no HostGator connector. Connecting an MCP server such as MCP Emails to the mailbox over IMAP gives Claude read, search, send, reply, schedule and organize access to it, with the same credentials any desktop mail client would use."
     },
     {
       "q": "What are the HostGator IMAP and SMTP settings?",

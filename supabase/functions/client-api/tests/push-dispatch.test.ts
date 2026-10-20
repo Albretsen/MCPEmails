@@ -677,3 +677,34 @@ Deno.test("no mail content in the log or the store: not a sender, a subject, an 
   // The stored cursor is numbers only.
   assertEquals(Object.keys(r.store.watches[0].folders["inbox"]).sort(), ["fingerprint", "total", "unread"]);
 });
+
+Deno.test("a send-only inbox (no IMAP server) is never probed and never backs off as if broken", async () => {
+  const r = await rig();
+  await r.subscribe();
+  r.store.watch({ inbox_id: INBOX, provider: "imap", mail_host: null });
+  const summary = await pass(r);
+  assertEquals(r.mail.calls.filter((c) => c.inbox_id === INBOX), [], "there is no mailbox to dial");
+  assertEquals([summary.failed, summary.skipped_reconnect], [0, 0]);
+  const row = r.store.watches.find((w) => w.inbox_id === INBOX)!;
+  assertEquals(row.failure_count, 0);
+  assertEquals(row.backoff_until, null);
+  // Left alone for a day, not re-leased on the next tick.
+  assertEquals((await pass(r)).leased, 0);
+});
+
+Deno.test("the largest possible new-mail payload still fits one push message", async () => {
+  const { buildNewMailPayload } = await import("../push/notify.ts");
+  const { MAX_PLAINTEXT_BYTES } = await import("../push/webpush.ts");
+  // 4-byte characters and JSON-escaped quotes in every field, at every length cap.
+  const wide = "\u{1F600}\"\\".repeat(200);
+  const payload = buildNewMailPayload({
+    mode: "rich",
+    inboxId: "0b9f6c2e-1d2a-4c3b-9e8f-7a6b5c4d3e2f",
+    mailboxLabel: wide,
+    count: 99999,
+    unread: 99999,
+    messages: [1, 2, 3].map((n) => ({ id: `INBOX:${"9".repeat(40)}${n}`, from: `${wide} <a@b.example>`, subject: wide })),
+  });
+  const bytes = new TextEncoder().encode(JSON.stringify(payload)).length;
+  if (bytes > MAX_PLAINTEXT_BYTES) throw new Error(`worst case is ${bytes} bytes, limit ${MAX_PLAINTEXT_BYTES}`);
+});

@@ -1,16 +1,43 @@
 // ---------------------------------------------------------------------------
 // Formatting helpers.
 //
-// Phase-0 Q6: the reference host provides neither `locale` nor `timeZone`, so
-// nothing here may assume them. Dates are formatted with the browser's own
-// resolved locale/zone, with `hostContext.locale` used only when the host
-// actually sent one.
+// ── DATES ARE IN THE CARD'S LANGUAGE, NOT THE BROWSER'S ─────────────────────
+// Every word on this card is English, so a date has to be English too. Phase-0
+// Q6 said to format with the browser's resolved locale (or `hostContext.locale`
+// when the host sends one), and that is how QA (2026-10-13) got "13. okt. 2026,
+// 14:02" in the middle of an English sentence on a Norwegian machine. The
+// LANGUAGE is now always `en`; the person's own locale is consulted only for
+// the one convention that is about them rather than about the language, the
+// clock (24-hour on a Norwegian machine, 12-hour on an American one). Should
+// the card's text ever be localised, `CARD_LANGUAGE` is the one thing to change.
 // ---------------------------------------------------------------------------
 
+/** The language every string on the card is written in. */
+export const CARD_LANGUAGE = "en";
+
+/** The person's locale (host first, else the browser's). Clock style only. */
 let locale: string | undefined;
+let hourCycle: "h12" | "h23" | undefined;
 
 export function setLocale(l: string | undefined) {
   locale = typeof l === "string" && l.length > 1 ? l : undefined;
+  hourCycle = undefined;
+  try {
+    const hc = new Intl.DateTimeFormat(locale, { hour: "numeric" }).resolvedOptions().hourCycle;
+    hourCycle = hc === "h11" || hc === "h12" ? "h12" : hc ? "h23" : undefined;
+  } catch {
+    hourCycle = undefined;
+  }
+}
+setLocale(undefined);
+
+function fmt(options: Intl.DateTimeFormatOptions): Intl.DateTimeFormat {
+  const withClock = options.timeStyle || options.hour ? { ...options, hourCycle } : options;
+  try {
+    return new Intl.DateTimeFormat(CARD_LANGUAGE, withClock);
+  } catch {
+    return new Intl.DateTimeFormat(CARD_LANGUAGE, options);
+  }
 }
 
 function parse(iso: string | null | undefined): Date | null {
@@ -23,9 +50,30 @@ export function formatDateTime(iso: string | null | undefined): string {
   const d = parse(iso);
   if (!d) return "";
   try {
-    return new Intl.DateTimeFormat(locale, {
-      dateStyle: "medium",
-      timeStyle: "short",
+    return fmt({ dateStyle: "medium", timeStyle: "short" }).format(d);
+  } catch {
+    return d.toISOString().replace("T", " ").slice(0, 16);
+  }
+}
+
+/**
+ * When something was saved, as short as it can be while still unambiguous:
+ * "14:02" today, "Oct 9, 14:02" this year, "Oct 9, 2025, 14:02" before that.
+ */
+export function formatWhen(iso: string | null | undefined, now = new Date()): string {
+  const d = parse(iso);
+  if (!d) return "";
+  try {
+    const sameYear = d.getFullYear() === now.getFullYear();
+    if (sameYear && d.getMonth() === now.getMonth() && d.getDate() === now.getDate()) {
+      return fmt({ hour: "numeric", minute: "2-digit" }).format(d);
+    }
+    return fmt({
+      month: "short",
+      day: "numeric",
+      ...(sameYear ? {} : { year: "numeric" }),
+      hour: "numeric",
+      minute: "2-digit",
     }).format(d);
   } catch {
     return d.toISOString().replace("T", " ").slice(0, 16);
@@ -36,7 +84,7 @@ export function formatDate(iso: string | null | undefined): string {
   const d = parse(iso);
   if (!d) return "";
   try {
-    return new Intl.DateTimeFormat(locale, { dateStyle: "medium" }).format(d);
+    return fmt({ dateStyle: "medium" }).format(d);
   } catch {
     return d.toISOString().slice(0, 10);
   }
@@ -55,14 +103,14 @@ export function relativeExpiry(iso: string | null | undefined): string {
   return `expires ${formatDate(iso)}`;
 }
 
-/** "10:04". Used in the model-context line, where the date is redundant. */
-export function formatClock(iso: string | null | undefined): string {
-  const d = parse(iso);
-  if (!d) return "";
+/** "10:04:31". For a moment that has to be told apart from one seconds earlier. */
+export function formatClockSeconds(ms: number): string {
+  const d = new Date(ms);
+  if (isNaN(d.getTime())) return "";
   try {
-    return new Intl.DateTimeFormat(locale, { timeStyle: "short" }).format(d);
+    return fmt({ timeStyle: "medium" }).format(d);
   } catch {
-    return d.toISOString().slice(11, 16);
+    return d.toISOString().slice(11, 19);
   }
 }
 
@@ -73,39 +121,8 @@ export function wordCount(text: string | null | undefined): number {
   return trimmed ? trimmed.split(/\s+/).length : 0;
 }
 
-/**
- * Contract §8, the line the card sends after a successful save:
- *
- *   User edited draft Drafts:3 in the editor at 10:04. Subject: "…". To 1,
- *   cc 1, bcc 0. Body 412 words. Current draft_id is Drafts:3.
- *
- * Body-free on purpose. The model gets the shape of the draft — who it is to,
- * what it is about, how long it is, and above all which id is live now — and
- * not a word of what the user wrote. §8 prints the same id in both positions,
- * which is the post-save id, so that is what both use: on IMAP the id the card
- * was mounted with is dead by the time this is sent, and naming it here would
- * hand the model the one id it must not call back with.
- */
-export function draftSavedContextLine(draft: {
-  draft_id?: string;
-  subject?: string;
-  recipients?: { to?: string[]; cc?: string[]; bcc?: string[] };
-  body?: { text?: string };
-  last_saved_at?: string | null;
-}): string {
-  const id = draft.draft_id || "unknown";
-  const at = formatClock(draft.last_saved_at) || formatClock(new Date().toISOString());
-  const subject = (draft.subject ?? "").trim() || "(no subject)";
-  const to = draft.recipients?.to?.length ?? 0;
-  const cc = draft.recipients?.cc?.length ?? 0;
-  const bcc = draft.recipients?.bcc?.length ?? 0;
-  const words = wordCount(draft.body?.text);
-  return (
-    `User edited draft ${id} in the editor at ${at}. ` +
-    `Subject: "${subject}". To ${to}, cc ${cc}, bcc ${bcc}. ` +
-    `Body ${words} words. Current draft_id is ${id}.`
-  );
-}
+// The sentences the card sends to the model live in model-context.ts, all of
+// them, with the rules they share.
 
 export function formatBytes(n: unknown): string {
   const bytes = typeof n === "number" && isFinite(n) && n >= 0 ? n : 0;
@@ -329,4 +346,134 @@ export function splitBody(text: string): SplitBody {
 export function joinBody(parts: SplitBody): string {
   if (parts.separator === null || parts.signature === null) return parts.message;
   return parts.message + parts.separator + parts.signature;
+}
+
+// ---------------------------------------------------------------------------
+// The quoted original of a reply (2026-10-17)
+// ---------------------------------------------------------------------------
+
+export interface QuotedSplit {
+  /** The person's words and signature: what the editor shows. */
+  head: string;
+  /** The quoted original, from the blank lines above it to the end. */
+  quote: string;
+}
+
+const isBlankLine = (line: string) => line.trim().length === 0;
+
+/**
+ * Split a draft body at the quoted original the server found
+ * (contract.ts#Body.quoted), or null when it found none or the marker does not
+ * describe this text.
+ *
+ * Why: a reply's text is `message, -- , signature, attribution, > lines`, and
+ * `splitBody` takes the LAST `-- ` line, so before this the whole quote was
+ * called the signature: "Asgeir Albretsen + 17 more lines", with the quoted
+ * thread in the signature's Edit box (release review, 2026-10-17).
+ *
+ * `head + quote` is `text` byte for byte, which is the only property a save
+ * depends on: the editor joins the edited head back onto the quote it was
+ * handed, unchanged. The blank lines above the quote, and the line break that
+ * ends the head's last line, belong to the quote, so the head ends where the
+ * person's words do. Same rule as the server's `splitQuotedText`.
+ *
+ * Defensive about `quoted` because it is wire input: anything but a whole
+ * number of lines that the text actually has, followed by something that is
+ * not blank, is treated as no quote at all, which is the old behaviour.
+ */
+export function splitQuote(text: string, quoted: unknown): QuotedSplit | null {
+  if (!quoted || typeof quoted !== "object") return null;
+  const line = (quoted as { line?: unknown }).line;
+  if (typeof line !== "number" || !Number.isInteger(line) || line < 0) return null;
+  let at = 0;
+  for (let i = 0; i < line; i++) {
+    const nl = text.indexOf("\n", at);
+    if (nl === -1) return null;
+    at = nl + 1;
+  }
+  if (text.slice(at).trim().length === 0) return null;
+  while (at > 0) {
+    const prevEnd = at - 1;
+    const prevStart = text.lastIndexOf("\n", prevEnd - 1) + 1;
+    if (!isBlankLine(text.slice(prevStart, prevEnd))) break;
+    at = prevStart;
+  }
+  if (at > 0 && text[at - 1] === "\n") at -= text[at - 2] === "\r" ? 2 : 1;
+  return { head: text.slice(0, at), quote: text.slice(at) };
+}
+
+/** The first non-empty line of a text, trimmed, or null. */
+export function firstLine(text: string): string | null {
+  return text.split(/\r\n|\n|\r/).map((l) => l.trim()).find((l) => l.length > 0) ?? null;
+}
+
+/**
+ * The quote's collapsed line: its attribution ("On ..., Dana wrote:") when it
+ * opens with one, else a plain label. Never a `>` line out of context.
+ */
+export function quotePreview(quote: string): string {
+  const first = firstLine(quote);
+  if (!first || first.startsWith(">") || /^_+$/.test(first)) return "Earlier message";
+  return first;
+}
+
+/**
+ * The opened quote: the quote without its leading blank lines, and without its
+ * attribution line when the collapsed row already shows it ("On ..., Dana
+ * wrote:" read twice, one under the other; live re-test, 2026-10-17). Only a
+ * line ending in ":" is dropped: Outlook's "From: Dana" opens a header block
+ * that reads wrong without its first line.
+ */
+export function quoteBody(quote: string): string {
+  const text = quote.replace(/^(?:[ \t]*\r?\n)+/, "");
+  const preview = quotePreview(quote);
+  const nl = text.search(/\r?\n/);
+  const first = (nl === -1 ? text : text.slice(0, nl)).trim();
+  if (first !== preview || !first.endsWith(":") || nl === -1) return text;
+  const rest = text.slice(nl).replace(/^(?:[ \t]*\r?\n)+/, "");
+  return rest.length > 0 ? rest : text;
+}
+
+/**
+ * True when the message already signs off with the name the signature starts
+ * with: "Best regards,\nAsgeir" over a signature that opens "Asgeir
+ * Albretsen". One of the last two non-empty lines, short enough to be a
+ * sign-off, equal to the signature's first line or the start of it (whole
+ * words). A hint, so it errs toward silence.
+ */
+export function repeatsSignOff(message: string, signatureFirstLine: string | null): boolean {
+  if (!signatureFirstLine) return false;
+  const clean = (s: string) => s.trim().toLowerCase().replace(/[\s,.!;:-]+$/, "");
+  const sig = clean(signatureFirstLine);
+  if (sig.length < 2) return false;
+  const lines = message.split(/\r\n|\n|\r/).filter((l) => l.trim().length > 0).slice(-2);
+  return lines.some((raw) => {
+    const l = clean(raw);
+    return l.length >= 2 && l.length <= 40 && (l === sig || sig.startsWith(`${l} `));
+  });
+}
+
+/**
+ * What the server's sent receipt says since QA on 2026-10-15
+ * (`mcp-app-drafts.ts#DRAFT_SENT_RECEIPT_DETAIL`).
+ */
+export const SENT_DETAIL = "Accepted by the mail server for delivery.";
+
+/**
+ * A receipt's detail as the card shows it.
+ *
+ * Until QA on 2026-10-15 the server's sent receipt read "Delivered via IMAP +
+ * SMTP.", which said more than anyone knows (the mail server accepted the
+ * message, and in that run it landed in the recipient's spam folder) and named
+ * the provider a second time beside the footer that already shows it. The
+ * server now says `SENT_DETAIL`. A result stored before that change is still
+ * replayed into reopened chats, so the old sentence (with or without the ISO
+ * time it carried before 2026-09-17) is reworded here too. Anything else
+ * passes through unchanged.
+ */
+export function receiptDetail(detail: string | null | undefined): string | null {
+  const d = typeof detail === "string" ? detail.trim() : "";
+  if (!d) return null;
+  if (/^Delivered via .{1,160}\.$/.test(d)) return SENT_DETAIL;
+  return d;
 }

@@ -460,7 +460,8 @@ export const heldSendLegacy = {
 // Two providers, because the two halves of the feature only show up one per
 // provider: IMAP has `id_is_stable: false`, so the card has to adopt a new
 // draft_id on every save or its next call 404s, and Gmail is where a draft with
-// attachments demonstrates the save refusal. Hostile strings throughout for the
+// attachments shows its file line (a save keeps them since 2026-10-15; the
+// refusal fixture below is the rare case where it cannot). Hostile strings throughout for the
 // same reason as everything else in this file: a draft subject and the reply
 // metadata come from whoever wrote the message being answered.
 // ---------------------------------------------------------------------------
@@ -569,6 +570,106 @@ export const draftEditorGmailAttachments = {
     in_reply_to: null,
     can_send: true,
   },
+};
+
+// ---------------------------------------------------------------------------
+// DEFERRED BODY (contract §8, 2026-10-13)
+//
+// `draft{action:"create"|"reply"|"update"}` no longer puts the body in
+// `structuredContent`. The envelope is published under its own version with a
+// placeholder where the body was, and the real body rides in the tool RESULT's
+// `_meta`. The three objects below are one such result taken apart, plus the
+// `draft_read` answer a card falls back to when the host drops `_meta`.
+// ---------------------------------------------------------------------------
+
+/** The result-level `_meta` key. Mirrors mcp-app-drafts.ts#DRAFT_BODY_META_KEY. */
+export const DRAFT_BODY_META_KEY = "mcpemails/draft_body";
+
+/** What the server stamps on a deferred envelope, and on nothing else. */
+export const DEFERRED_V = "review-card-v2";
+
+/**
+ * Opaque by contract: the card compares it and never parses it. It describes
+ * the REAL body on the deferred envelope and on the read alike, which is what
+ * makes them recognisably the same content.
+ */
+const DEFERRED_VERSION = "v1:fixture-q3-reply";
+
+/**
+ * `structuredContent` of a `draft{action:"reply"}` result: today's payload keys
+ * with the envelope merged on top (§8's merge), the body deferred.
+ */
+export const draftReplyDeferred = {
+  draft_id: draftEditorImap.draft.draft_id,
+  inbox_id: draftEditorImap.draft.identity.inbox_id,
+  threaded: true,
+  ...draftEditorImap,
+  schema_version: DEFERRED_V,
+  draft: {
+    ...draftEditorImap.draft,
+    version: DEFERRED_VERSION,
+    body: { text: null, html: null, truncated: false, deferred: true },
+  },
+};
+
+/** The value under `_meta[DRAFT_BODY_META_KEY]` of that same result. */
+export const draftReplyBodyMeta = {
+  text: draftEditorImap.draft.body.text,
+  html: null,
+  truncated: false,
+};
+
+/** The whole `_meta` of that result, as a host that forwards it delivers it. */
+export const draftReplyResultMeta = { [DRAFT_BODY_META_KEY]: draftReplyBodyMeta };
+
+/**
+ * `draft_read` for that draft: v1, body INLINE, the same `version`.
+ *
+ * Faithful to the server in the two fields that differ from the write it
+ * follows: `origin` is "read", and `in_reply_to` is null because a stored draft
+ * carries only the RFC header and not the server message id (§8, deviations).
+ * Those are the two things a card loses if it adopts this envelope whole
+ * instead of taking only its body.
+ */
+export const draftReadInline = {
+  ...draftEditorImap,
+  draft: {
+    ...draftEditorImap.draft,
+    version: DEFERRED_VERSION,
+    origin: "read",
+    in_reply_to: null,
+  },
+};
+
+/** The same read after somebody changed the draft: another version, another body. */
+export const draftReadInlineChanged = {
+  ...draftReadInline,
+  draft: {
+    ...draftReadInline.draft,
+    version: "v1:fixture-q3-reply-edited-elsewhere",
+    body: { text: "EDITED-ELSEWHERE body.", html: null, truncated: false },
+  },
+};
+
+/**
+ * `draft_read` failing the way the REAL server fails it: a `card: "receipt"`
+ * envelope from `draftFailure`, not the `card: "draft_editor"` error shape the
+ * two fixtures below use.
+ */
+export const draftReadNotFoundReceipt = {
+  schema_version: V,
+  card: "receipt",
+  state: "error",
+  dashboard_url: "https://mcpemails.com/dashboard",
+  receipt: {
+    outcome: "failed",
+    headline: "That draft could not be found.",
+    detail: "It may have been sent, discarded, or saved again under a new id.",
+    affected_count: 0,
+    dashboard_url: "https://mcpemails.com/dashboard",
+    error_code: "draft_not_found",
+  },
+  actor: { can_decide: false, reason: null },
 };
 
 /** A save refused because the draft carries attachments. Nothing changed. */

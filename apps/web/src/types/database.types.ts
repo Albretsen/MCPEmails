@@ -1733,6 +1733,153 @@ export type Database = {
           },
         ]
       }
+      draft_card_activity: {
+        Row: {
+          action: string
+          api_key_id: string
+          bcc_count: number | null
+          cc_count: number | null
+          created_at: string
+          draft_id: string
+          fields: string[]
+          id: string
+          inbox_id: string
+          line_id: string | null
+          occurred_at: string
+          reported_at: string | null
+          revision: number | null
+          to_count: number | null
+          workspace_id: string
+        }
+        Insert: {
+          action: string
+          api_key_id: string
+          bcc_count?: number | null
+          cc_count?: number | null
+          created_at?: string
+          draft_id: string
+          fields?: string[]
+          id?: string
+          inbox_id: string
+          line_id?: string | null
+          occurred_at: string
+          reported_at?: string | null
+          revision?: number | null
+          to_count?: number | null
+          workspace_id: string
+        }
+        Update: {
+          action?: string
+          api_key_id?: string
+          bcc_count?: number | null
+          cc_count?: number | null
+          created_at?: string
+          draft_id?: string
+          fields?: string[]
+          id?: string
+          inbox_id?: string
+          line_id?: string | null
+          occurred_at?: string
+          reported_at?: string | null
+          revision?: number | null
+          to_count?: number | null
+          workspace_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "draft_card_activity_api_key_id_fkey"
+            columns: ["api_key_id"]
+            isOneToOne: false
+            referencedRelation: "api_keys"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "draft_card_activity_inbox_id_fkey"
+            columns: ["inbox_id"]
+            isOneToOne: false
+            referencedRelation: "inboxes"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "draft_card_activity_workspace_id_fkey"
+            columns: ["workspace_id"]
+            isOneToOne: false
+            referencedRelation: "billing_funnel_by_workspace"
+            referencedColumns: ["workspace_id"]
+          },
+          {
+            foreignKeyName: "draft_card_activity_workspace_id_fkey"
+            columns: ["workspace_id"]
+            isOneToOne: false
+            referencedRelation: "workspaces"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      draft_lineage: {
+        Row: {
+          closed_at: string | null
+          closed_reason: string | null
+          created_at: string
+          draft_id: string
+          id: string
+          inbox_id: string
+          line_id: string
+          revision: number
+          workspace_id: string
+          written_at: string
+          written_by: string
+        }
+        Insert: {
+          closed_at?: string | null
+          closed_reason?: string | null
+          created_at?: string
+          draft_id: string
+          id?: string
+          inbox_id: string
+          line_id: string
+          revision: number
+          workspace_id: string
+          written_at?: string
+          written_by: string
+        }
+        Update: {
+          closed_at?: string | null
+          closed_reason?: string | null
+          created_at?: string
+          draft_id?: string
+          id?: string
+          inbox_id?: string
+          line_id?: string
+          revision?: number
+          workspace_id?: string
+          written_at?: string
+          written_by?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "draft_lineage_inbox_id_fkey"
+            columns: ["inbox_id"]
+            isOneToOne: false
+            referencedRelation: "inboxes"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "draft_lineage_workspace_id_fkey"
+            columns: ["workspace_id"]
+            isOneToOne: false
+            referencedRelation: "billing_funnel_by_workspace"
+            referencedColumns: ["workspace_id"]
+          },
+          {
+            foreignKeyName: "draft_lineage_workspace_id_fkey"
+            columns: ["workspace_id"]
+            isOneToOne: false
+            referencedRelation: "workspaces"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       experiment_assignments: {
         Row: {
           experiment_key: string
@@ -1878,6 +2025,83 @@ export type Database = {
           },
         ]
       }
+      inbox_sender_aliases: {
+        Row: {
+          code_attempts: number
+          code_expires_at: string | null
+          code_hash: string | null
+          code_sent_at: string | null
+          created_at: string
+          created_by: string | null
+          display_name: string | null
+          email_address: string
+          id: string
+          inbox_id: string
+          updated_at: string
+          verified_at: string | null
+          workspace_id: string
+        }
+        Insert: {
+          code_attempts?: number
+          code_expires_at?: string | null
+          code_hash?: string | null
+          code_sent_at?: string | null
+          created_at?: string
+          created_by?: string | null
+          display_name?: string | null
+          email_address: string
+          id?: string
+          inbox_id: string
+          updated_at?: string
+          verified_at?: string | null
+          workspace_id: string
+        }
+        Update: {
+          code_attempts?: number
+          code_expires_at?: string | null
+          code_hash?: string | null
+          code_sent_at?: string | null
+          created_at?: string
+          created_by?: string | null
+          display_name?: string | null
+          email_address?: string
+          id?: string
+          inbox_id?: string
+          updated_at?: string
+          verified_at?: string | null
+          workspace_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "inbox_sender_aliases_created_by_fkey"
+            columns: ["created_by"]
+            isOneToOne: false
+            referencedRelation: "users"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "inbox_sender_aliases_inbox_id_fkey"
+            columns: ["inbox_id"]
+            isOneToOne: false
+            referencedRelation: "inboxes"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "inbox_sender_aliases_workspace_id_fkey"
+            columns: ["workspace_id"]
+            isOneToOne: false
+            referencedRelation: "billing_funnel_by_workspace"
+            referencedColumns: ["workspace_id"]
+          },
+          {
+            foreignKeyName: "inbox_sender_aliases_workspace_id_fkey"
+            columns: ["workspace_id"]
+            isOneToOne: false
+            referencedRelation: "workspaces"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       inbox_watch_state: {
         Row: {
           backoff_until: string | null
@@ -1956,6 +2180,7 @@ export type Database = {
           send_approval_required: boolean
           send_review_mode: string
           service: string | null
+          signature_embed_images: boolean
           signature_enabled: boolean
           signature_html: string | null
           signature_reply_mode: string
@@ -1994,6 +2219,7 @@ export type Database = {
           send_approval_required?: boolean
           send_review_mode?: string
           service?: string | null
+          signature_embed_images?: boolean
           signature_enabled?: boolean
           signature_html?: string | null
           signature_reply_mode?: string
@@ -2032,6 +2258,7 @@ export type Database = {
           send_approval_required?: boolean
           send_review_mode?: string
           service?: string | null
+          signature_embed_images?: boolean
           signature_enabled?: boolean
           signature_html?: string | null
           signature_reply_mode?: string
@@ -2085,6 +2312,7 @@ export type Database = {
         Row: {
           detail: string | null
           email: string
+          finished_at: string | null
           provider_message_id: string | null
           sent_at: string
           status: string
@@ -2095,6 +2323,7 @@ export type Database = {
         Insert: {
           detail?: string | null
           email: string
+          finished_at?: string | null
           provider_message_id?: string | null
           sent_at?: string
           status?: string
@@ -2105,6 +2334,7 @@ export type Database = {
         Update: {
           detail?: string | null
           email?: string
+          finished_at?: string | null
           provider_message_id?: string | null
           sent_at?: string
           status?: string
@@ -2121,6 +2351,114 @@ export type Database = {
             referencedColumns: ["id"]
           },
         ]
+      }
+      mail_relay_candidates: {
+        Row: {
+          direct_successes: number
+          first_rescue_at: string
+          host: string
+          last_reason: string | null
+          last_rescue_at: string
+          last_runtime: string | null
+          protocol: string
+          refused: boolean
+          rescues: number
+        }
+        Insert: {
+          direct_successes?: number
+          first_rescue_at?: string
+          host: string
+          last_reason?: string | null
+          last_rescue_at?: string
+          last_runtime?: string | null
+          protocol: string
+          refused?: boolean
+          rescues?: number
+        }
+        Update: {
+          direct_successes?: number
+          first_rescue_at?: string
+          host?: string
+          last_reason?: string | null
+          last_rescue_at?: string
+          last_runtime?: string | null
+          protocol?: string
+          refused?: boolean
+          rescues?: number
+        }
+        Relationships: []
+      }
+      mail_relay_hosts: {
+        Row: {
+          first_learned_at: string
+          host: string
+          last_learned_at: string
+          learned_by: string | null
+          protocol: string
+          reason: string | null
+          source: string
+          times_learned: number
+        }
+        Insert: {
+          first_learned_at?: string
+          host: string
+          last_learned_at?: string
+          learned_by?: string | null
+          protocol: string
+          reason?: string | null
+          source?: string
+          times_learned?: number
+        }
+        Update: {
+          first_learned_at?: string
+          host?: string
+          last_learned_at?: string
+          learned_by?: string | null
+          protocol?: string
+          reason?: string | null
+          source?: string
+          times_learned?: number
+        }
+        Relationships: []
+      }
+      mail_relay_stats: {
+        Row: {
+          count: number
+          host: string
+          hour: string
+          last_at: string
+          last_detail: string | null
+          outcome: string
+          protocol: string
+          route: string
+          runtime: string
+          total_ms: number
+        }
+        Insert: {
+          count?: number
+          host: string
+          hour: string
+          last_at?: string
+          last_detail?: string | null
+          outcome: string
+          protocol: string
+          route: string
+          runtime: string
+          total_ms?: number
+        }
+        Update: {
+          count?: number
+          host?: string
+          hour?: string
+          last_at?: string
+          last_detail?: string | null
+          outcome?: string
+          protocol?: string
+          route?: string
+          runtime?: string
+          total_ms?: number
+        }
+        Relationships: []
       }
       mcp_client_capabilities: {
         Row: {
@@ -2551,6 +2889,27 @@ export type Database = {
           },
         ]
       }
+      pricing_switches: {
+        Row: {
+          enabled: boolean
+          key: string
+          note: string | null
+          updated_at: string
+        }
+        Insert: {
+          enabled: boolean
+          key: string
+          note?: string | null
+          updated_at?: string
+        }
+        Update: {
+          enabled?: boolean
+          key?: string
+          note?: string | null
+          updated_at?: string
+        }
+        Relationships: []
+      }
       product_funnel_events: {
         Row: {
           auth_reason: string | null
@@ -2817,12 +3176,14 @@ export type Database = {
           decided_by_api_key_id: string | null
           decided_via: string | null
           decision_note: string | null
+          dispatch_scheduled_send_id: string | null
           expires_at: string | null
           id: string
           inbox_id: string
           operation: string
           payload: Json
           payload_encrypted: boolean
+          revision: number
           send_at: string | null
           status: string
           summary: Json
@@ -2836,12 +3197,14 @@ export type Database = {
           decided_by_api_key_id?: string | null
           decided_via?: string | null
           decision_note?: string | null
+          dispatch_scheduled_send_id?: string | null
           expires_at?: string | null
           id?: string
           inbox_id: string
           operation: string
           payload: Json
           payload_encrypted?: boolean
+          revision?: number
           send_at?: string | null
           status?: string
           summary?: Json
@@ -2855,12 +3218,14 @@ export type Database = {
           decided_by_api_key_id?: string | null
           decided_via?: string | null
           decision_note?: string | null
+          dispatch_scheduled_send_id?: string | null
           expires_at?: string | null
           id?: string
           inbox_id?: string
           operation?: string
           payload?: Json
           payload_encrypted?: boolean
+          revision?: number
           send_at?: string | null
           status?: string
           summary?: Json
@@ -2886,6 +3251,13 @@ export type Database = {
             columns: ["decided_by"]
             isOneToOne: false
             referencedRelation: "users"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "send_approvals_dispatch_scheduled_send_id_fkey"
+            columns: ["dispatch_scheduled_send_id"]
+            isOneToOne: false
+            referencedRelation: "scheduled_sends"
             referencedColumns: ["id"]
           },
           {
@@ -2934,6 +3306,75 @@ export type Database = {
           stripe_customer_id?: string | null
         }
         Relationships: []
+      }
+      support_tickets: {
+        Row: {
+          category: string
+          confirmation_sent_at: string | null
+          context: Json
+          created_at: string
+          email: string
+          id: string
+          ip_hash: string | null
+          message: string
+          notified_at: string | null
+          ref: string
+          source: string
+          status: string
+          subject: string
+          user_id: string | null
+          workspace_id: string | null
+        }
+        Insert: {
+          category: string
+          confirmation_sent_at?: string | null
+          context?: Json
+          created_at?: string
+          email: string
+          id?: string
+          ip_hash?: string | null
+          message: string
+          notified_at?: string | null
+          ref?: string
+          source: string
+          status?: string
+          subject: string
+          user_id?: string | null
+          workspace_id?: string | null
+        }
+        Update: {
+          category?: string
+          confirmation_sent_at?: string | null
+          context?: Json
+          created_at?: string
+          email?: string
+          id?: string
+          ip_hash?: string | null
+          message?: string
+          notified_at?: string | null
+          ref?: string
+          source?: string
+          status?: string
+          subject?: string
+          user_id?: string | null
+          workspace_id?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "support_tickets_workspace_id_fkey"
+            columns: ["workspace_id"]
+            isOneToOne: false
+            referencedRelation: "billing_funnel_by_workspace"
+            referencedColumns: ["workspace_id"]
+          },
+          {
+            foreignKeyName: "support_tickets_workspace_id_fkey"
+            columns: ["workspace_id"]
+            isOneToOne: false
+            referencedRelation: "workspaces"
+            referencedColumns: ["id"]
+          },
+        ]
       }
       synthetic_monitor_incidents: {
         Row: {
@@ -3353,6 +3794,7 @@ export type Database = {
           created_at: string
           effective_plan: string
           id: string
+          limit_kind: string
           meter_version: number
           occurred_at: string
           used_actions: number
@@ -3363,6 +3805,7 @@ export type Database = {
           created_at?: string
           effective_plan: string
           id?: string
+          limit_kind?: string
           meter_version?: number
           occurred_at?: string
           used_actions: number
@@ -3373,6 +3816,7 @@ export type Database = {
           created_at?: string
           effective_plan?: string
           id?: string
+          limit_kind?: string
           meter_version?: number
           occurred_at?: string
           used_actions?: number
@@ -3733,6 +4177,8 @@ export type Database = {
       }
       workspaces: {
         Row: {
+          acquisition_country: string | null
+          acquisition_device: string | null
           acquisition_email_segment: string | null
           acquisition_landing: string | null
           acquisition_landing_path: string | null
@@ -3773,12 +4219,15 @@ export type Database = {
           onboarding_value_activated_at: string | null
           owner_id: string
           plan: string
+          pro_unlimited_inboxes_exempt: boolean
           slug: string
           stripe_customer_id: string | null
           updated_at: string
           web_client_enabled: boolean
         }
         Insert: {
+          acquisition_country?: string | null
+          acquisition_device?: string | null
           acquisition_email_segment?: string | null
           acquisition_landing?: string | null
           acquisition_landing_path?: string | null
@@ -3819,12 +4268,15 @@ export type Database = {
           onboarding_value_activated_at?: string | null
           owner_id: string
           plan?: string
+          pro_unlimited_inboxes_exempt?: boolean
           slug: string
           stripe_customer_id?: string | null
           updated_at?: string
           web_client_enabled?: boolean
         }
         Update: {
+          acquisition_country?: string | null
+          acquisition_device?: string | null
           acquisition_email_segment?: string | null
           acquisition_landing?: string | null
           acquisition_landing_path?: string | null
@@ -3865,6 +4317,7 @@ export type Database = {
           onboarding_value_activated_at?: string | null
           owner_id?: string
           plan?: string
+          pro_unlimited_inboxes_exempt?: boolean
           slug?: string
           stripe_customer_id?: string | null
           updated_at?: string
@@ -3913,6 +4366,32 @@ export type Database = {
           workspace_slug: string
         }[]
       }
+      activity_log_retention_preview: {
+        Args: { p_min_days?: number }
+        Returns: {
+          plan: string
+          rows_kept_by_audit_floor: number
+          rows_to_delete: number
+          rows_total: number
+          window_days: number
+        }[]
+      }
+      activity_log_retention_window_days: {
+        Args: { p_plan: string }
+        Returns: number
+      }
+      activity_log_retention_workspace_windows: {
+        Args: never
+        Returns: {
+          days: number
+          plan: string
+          workspace_id: string
+        }[]
+      }
+      activity_log_tool_is_read_only: {
+        Args: { p_tool: string }
+        Returns: boolean
+      }
       claim_billing_emails: {
         Args: { p_limit?: number }
         Returns: {
@@ -3958,13 +4437,33 @@ export type Database = {
         Returns: undefined
       }
       dispatch_inbox_watch: { Args: never; Returns: undefined }
+      dispatch_paywall_followup: { Args: never; Returns: undefined }
       dispatch_scheduled_sends: { Args: never; Returns: undefined }
       dispatch_triage_rules: { Args: never; Returns: undefined }
+      draft_lineage_record: {
+        Args: {
+          p_adopt?: boolean
+          p_draft_id: string
+          p_expected_revision?: number
+          p_inbox_id: string
+          p_line_id?: string
+          p_seed_draft_id?: string
+          p_workspace_id: string
+          p_written_at?: string
+          p_written_by: string
+        }
+        Returns: {
+          contended: boolean
+          recorded_line_id: string
+          recorded_revision: number
+        }[]
+      }
       effective_workspace_plan: {
         Args: { p_workspace_id: string }
         Returns: {
           comped_scale: boolean
           plan: string
+          pro_unlimited_inboxes: boolean
           unlimited_inboxes: boolean
         }[]
       }
@@ -4021,6 +4520,10 @@ export type Database = {
           p_reservation_id: string
         }
         Returns: boolean
+      }
+      free_action_grace_ends_at: {
+        Args: { p_created_at: string }
+        Returns: string
       }
       get_current_user_sessions: {
         Args: never
@@ -4194,6 +4697,38 @@ export type Database = {
           value_activated: number
         }[]
       }
+      growth_mail_relay_daily: {
+        Args: { p_days: number }
+        Returns: {
+          day: string
+          host_refused: number
+          ok: number
+          relay_down: number
+        }[]
+      }
+      growth_mail_relay_hosts: {
+        Args: { p_days: number }
+        Returns: {
+          avg_ms: number
+          candidate_direct_successes: number
+          candidate_refused: boolean
+          candidate_rescues: number
+          connections: number
+          first_learned_at: string
+          host: string
+          host_refused: number
+          last_at: string
+          last_failure: string
+          last_failure_at: string
+          learned: boolean
+          learned_expires_at: string
+          learned_source: string
+          ok: number
+          protocol: string
+          relay_down: number
+          routes: string
+        }[]
+      }
       growth_oauth_abandonment: {
         Args: never
         Returns: {
@@ -4268,6 +4803,32 @@ export type Database = {
           paying_scale: number
           paying_solo: number
           paying_workspaces: number
+        }[]
+      }
+      growth_signup_pace: {
+        Args: {
+          p_days?: number
+          p_internal_domains?: string[]
+          p_internal_emails?: string[]
+        }
+        Returns: {
+          as_of: string
+          by_now: number
+          day: string
+          new_users: number
+        }[]
+      }
+      growth_signup_trend: {
+        Args: {
+          p_internal_domains?: string[]
+          p_internal_emails?: string[]
+          p_weeks?: number
+        }
+        Returns: {
+          as_of: string
+          by_now: number
+          week_start: string
+          workspaces: number
         }[]
       }
       growth_upgrade_pressure: {
@@ -4540,6 +5101,15 @@ export type Database = {
         Args: { controlled_failure?: boolean; mode: string }
         Returns: undefined
       }
+      learn_mail_relay_host: {
+        Args: {
+          p_host: string
+          p_protocol: string
+          p_reason: string
+          p_runtime: string
+        }
+        Returns: boolean
+      }
       lease_inbox_watches: {
         Args: { p_lease_seconds?: number; p_limit?: number }
         Returns: {
@@ -4562,7 +5132,20 @@ export type Database = {
         Args: { p_incident_id: string }
         Returns: undefined
       }
+      mcp_tools_call_preflight: {
+        Args: {
+          p_include_allowance: boolean
+          p_key_hash: string
+          p_key_window_starts: string[]
+          p_workspace_window_start: string
+        }
+        Returns: Json
+      }
       my_workspace_ids: { Args: never; Returns: string[] }
+      purge_activity_log_batch: {
+        Args: { p_limit?: number; p_min_days?: number }
+        Returns: number
+      }
       push_recipients: {
         Args: { p_inbox_id: string }
         Returns: {
@@ -4580,6 +5163,27 @@ export type Database = {
       rate_limit_check: {
         Args: { p_key: string; p_max_count: number; p_window_ms: number }
         Returns: boolean
+      }
+      record_inbox_cap_event: {
+        Args: {
+          p_cap: number
+          p_inbox_count: number
+          p_plan: string
+          p_workspace_id: string
+        }
+        Returns: undefined
+      }
+      record_mail_relay_use: {
+        Args: {
+          p_detail?: string
+          p_host: string
+          p_ms: number
+          p_outcome: string
+          p_protocol: string
+          p_route: string
+          p_runtime: string
+        }
+        Returns: undefined
       }
       record_push_results: {
         Args: { p_failed: string[]; p_gone: string[]; p_sent: string[] }
@@ -4664,6 +5268,7 @@ export type Database = {
           revoked_session_id: string
         }[]
       }
+      scheduled_sends_operator_workspace_ids: { Args: never; Returns: string[] }
       signup_scoreboard: {
         Args: never
         Returns: {

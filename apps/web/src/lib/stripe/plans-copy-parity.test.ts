@@ -8,8 +8,9 @@ import { FREE_ACTION_ALLOWANCE, FREE_ACTION_GRACE_DAYS, PLANS } from './plans.ts
 
 /**
  * The Free action allowance is quoted in three places that cannot import each
- * other: the SQL function that enforces it (c_free_cap / c_grace in
- * supabase/migrations/20260912200000_free_action_cap_150.sql), plans.ts (the
+ * other: the SQL function that enforces it (c_free_cap in
+ * supabase/migrations/20260912200000_free_action_cap_150.sql, the grace in
+ * free_action_grace_ends_at(), 20261017160000), plans.ts (the
  * constants and the Free feature list), and the translated pricing page copy.
  * This file pins the last two to each other. The first is pinned by
  * scripts/verify-action-allowance.sql, run by hand before the edge deploy.
@@ -41,7 +42,7 @@ test('every locale states the allowance on the pricing page, with the same two n
   // noticing, and a copy edit can drop the row entirely. Both are the same
   // failure: the number a customer reads stops being the number that blocks
   // them. The row is required, not optional; Phase 4 shipped it on 2026-09-12.
-  for (const locale of ['en', 'es', 'fr', 'nb', 'zh']) {
+  for (const locale of ['en', 'es', 'fr', 'nb', 'zh', 'de']) {
     const file = path.resolve(here, `../../../messages/${locale}/pricing.json`);
     const copy = JSON.parse(readFileSync(file, 'utf8')) as Record<string, unknown>;
     const value = comparisonValue(copy, 'actionsFree');

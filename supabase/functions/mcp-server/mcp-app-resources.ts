@@ -76,6 +76,50 @@ export const REVIEW_CARD_RESOURCE_URI =
 export const REVIEW_CARD_LEGACY_RESOURCE_URI = "ui://mcpemails/review-card.html";
 
 /**
+ * The shape of every fingerprinted card URI this server has ever advertised:
+ * the canonical one above with ANY build id in the fingerprint slot.
+ *
+ * ── Why a read accepts a fingerprint that is not ours ──────────────────────
+ * Fingerprinting assumed the client re-reads `tools/list` after a card deploy.
+ * Claude's host does not: it keeps the listing it has, ignores
+ * `notifications/tools/list_changed`, and goes on asking `resources/read` for
+ * the PREVIOUS build's URI, in new chats too. Measured 2026-10-13: the client
+ * asked for `review-card.f53069d8832a.html` while the server was on
+ * `6f24045a029e`, got `-32002`, and showed "cannot reach MCP Emails" where the
+ * card belongs, until the tool list was refreshed by hand. Every card deploy
+ * did this to every connected client.
+ *
+ * So the READ side is tolerant and the ADVERTISED side is not. This is the
+ * legacy URI's argument again (see REVIEW_CARD_LEGACY_RESOURCE_URI): the only
+ * two answers to a stale URI are today's card or a broken cell, and there is
+ * exactly one bundle on this server to give.
+ *
+ * It costs the cache busting nothing. That works by the advertised URI being
+ * one the host has never read, which is still true: a client that refreshes
+ * its listing gets the new fingerprint and must fetch it. What a client that
+ * does NOT refresh may keep is its cached copy of the old bundle, which is
+ * where it already was before this, and envelope skew between an old card and
+ * a new server is what `schema_version` is for.
+ *
+ * Anchored, and the hash is exactly what `REVIEW_CARD_BUILD_ID` is pinned to
+ * be (12 lowercase hex), so nothing but a build id fits the slot: no query, no
+ * path, no second extension, no other resource name.
+ */
+const REVIEW_CARD_FINGERPRINTED_URI_PATTERN =
+  /^ui:\/\/mcpemails\/review-card\.[0-9a-f]{12}\.html$/;
+
+/**
+ * True when `uri` is a well-formed card URI carrying another build's
+ * fingerprint. False for the current URI, the legacy one and anything else.
+ *
+ * Exported for the `resources/read` log line only, so a stale read is
+ * countable after a deploy. `buildResourceReadResult` is what serves it.
+ */
+export function isStaleReviewCardUri(uri: string): boolean {
+  return uri !== REVIEW_CARD_RESOURCE_URI && REVIEW_CARD_FINGERPRINTED_URI_PATTERN.test(uri);
+}
+
+/**
  * The `resources` capability object declared in the `initialize` result.
  *
  * Phase 0 Q5 makes this a hard blocker rather than a nicety: the host's
@@ -159,7 +203,8 @@ const MCP_APP_RESOURCES: readonly McpAppResource[] = [
     title: "Review card",
     description:
       "Interactive review surface for outbound and bulk mailbox operations: " +
-      "shows exactly what will be sent, deleted, or moved before it happens.",
+      "shows exactly what will be sent, deleted, or moved before it happens. " +
+      "Also the draft editor, where the user reads and edits an unsent draft.",
     html: REVIEW_CARD_HTML,
   },
 ];
@@ -188,8 +233,10 @@ export function buildResourcesListResult(): {
 }
 
 /**
- * `resources/read` result for `uri`, or `null` when the URI is not in the
- * catalogue (the caller turns that into a JSON-RPC error, never a throw).
+ * `resources/read` result for `uri`, or `null` when the URI names nothing we
+ * serve (the caller turns that into a JSON-RPC error, never a throw). Three
+ * URIs resolve, all to the one current bundle: the catalogue's, the legacy
+ * bare name, and the catalogue's with another build's fingerprint.
  *
  * Phase 0 Q7.6: `contents` must contain *exactly one* item — the reference
  * host throws `Unexpected contents count` on zero or two, which surfaces to
@@ -203,7 +250,12 @@ export function buildResourceReadResult(
     // still asks for the bare name; answer it with today's card rather than a
     // "resource not found" that renders as a broken cell. See
     // REVIEW_CARD_LEGACY_RESOURCE_URI.
-    (uri === REVIEW_CARD_LEGACY_RESOURCE_URI ? MCP_APP_RESOURCES[0] : undefined);
+    // The same answer for a fingerprint from an earlier build: a client that
+    // kept its `tools/list` across a card deploy asks for the URI that listing
+    // named. See REVIEW_CARD_FINGERPRINTED_URI_PATTERN.
+    (uri === REVIEW_CARD_LEGACY_RESOURCE_URI || isStaleReviewCardUri(uri)
+      ? MCP_APP_RESOURCES[0]
+      : undefined);
   if (!resource) return null;
 
   return {
@@ -211,7 +263,9 @@ export function buildResourceReadResult(
       // Echo the URI that was ASKED for, not the catalogue's. A host matches the
       // content it gets back against the request it made and against its own
       // cache key; handing it a URI it did not ask for is how a legacy read
-      // turns into an unrenderable cell.
+      // turns into an unrenderable cell. A stale fingerprint is echoed too, for
+      // the same reason: the host keys its cache by the URI its listing named,
+      // and that listing is the one thing we know it has not replaced.
       uri,
       name: resource.name,
       title: resource.title,
@@ -295,7 +349,9 @@ export const DRAFT_EDITOR_CARD_TOOL_NAMES: readonly string[] = [
 ];
 
 /**
- * The draft editor's own three app-only tools, gated by the SAME flag.
+ * The draft editor's own three tools, gated by the SAME flag: one app-only,
+ * and two the model may call too (see
+ * `DRAFT_EDITOR_MODEL_VISIBLE_TOOL_NAMES` below).
  *
  * ── Why they are no longer stamped at module load ──────────────────────────
  * They were pushed into the registry with `appOnlyReviewCardToolMeta()`
@@ -321,13 +377,93 @@ export const DRAFT_EDITOR_CARD_TOOL_NAMES: readonly string[] = [
  * `mcp-app-drafts.ts#gateDraftTool`.
  *
  * Kept apart from `DRAFT_EDITOR_CARD_TOOL_NAMES` because the metadata differs:
- * these carry `visibility: ["app"]` on top of the resource URI, `draft` does
+ * these carry a `visibility` list on top of the resource URI, `draft` does
  * not. Same gate, different shape.
  */
 export const DRAFT_EDITOR_APP_TOOL_NAMES: readonly string[] = [
   "draft_read",
   "draft_editor_save",
   "draft_editor_hide",
+];
+
+/**
+ * The draft-editor tools the model is meant to call while the card is on.
+ *
+ * ── Why `draft_read` stopped being app-only (2026-10-13, owner's decision) ──
+ * With the gate open it carried `visibility: ["app"]`, so a host that honours
+ * the hint kept it out of the model's picker. That left a model with no way to
+ * learn what a draft says once the user had edited it in the card: `draft_list`
+ * returns no body, the write results return none, and the model's own copy is
+ * the text it wrote BEFORE the edit. Its next `draft{action:"update"}` then put
+ * that older text back over the user's.
+ *
+ * So `draft_read` is listed to both audiences, `["model", "app"]`: the card
+ * still calls it (restore, Refresh, and the fallback when a write's `_meta`
+ * body did not arrive), and the model can call it for the current text. Its
+ * `content` is the plain read in both gate states, which is what makes the
+ * model's call worth making. See `mcp-app-drafts.ts#runDraftRead`.
+ *
+ * Nothing about what it DISCLOSES changed: `visibility` was never a boundary
+ * (Phase 0 Q2, quoted on `reviewCardToolMeta`), the tool has returned the body
+ * to any caller with both scopes since it shipped, and with the gate shut it
+ * was already an ordinary model-visible tool.
+ *
+ * It no longer keeps `resourceUri` (2026-10-17, see
+ * `DRAFT_EDITOR_UNMOUNTED_TOOL_NAMES` below): a model's read draws no card.
+ *
+ * ── And `draft_editor_hide`, for consistency with what the card says ───────
+ * It was `["app"]` too, as "the card's own Hide link". But the card's copy
+ * tells a person the card "can be brought back by asking in this chat", and
+ * once the card is hidden there is no card left to click: the only route back
+ * is the model calling this tool with `hidden:false`. An app-only listing made
+ * that sentence false on every host that honours the hint, and the server
+ * instructions said the same wrong thing from the other side ("The host drives
+ * them, not you"). So it is `["model", "app"]`, the instructions no longer
+ * list it as app-only, and its description says when to call it. It is a
+ * display preference, reversible by the same call; the hostile-caller analysis
+ * on `runDraftEditorHide` already assumed a model calls it.
+ *
+ * `draft_editor_save` stays `["app"]`: it writes what a person typed.
+ */
+export const DRAFT_EDITOR_MODEL_VISIBLE_TOOL_NAMES: readonly string[] = [
+  "draft_read",
+  "draft_editor_hide",
+];
+
+/**
+ * The draft-editor tools listed WITHOUT the card's `resourceUri`, so a host
+ * never mounts a card under their results. Only `draft_read`.
+ *
+ * ── Why (live review in claude.ai, 2026-10-17) ─────────────────────────────
+ * A model rewriting a draft calls `draft_read` first (its description tells it
+ * to), then `draft{action:"update"}`. With `resourceUri` on both, every
+ * revision drew TWO cards: the read's one-liner ("Draft: <subject> to <addr>
+ * · Open editor", DraftReadLine.tsx) and the editor under the write. The read
+ * is for the model; the person already has the editor the write mounts, so the
+ * one-liner was noise, and its "Open editor" was a second way into a second
+ * live editor for one draft, which is the very thing the one-liner had been
+ * introduced to stop.
+ *
+ * So the listing keeps `visibility: ["model", "app"]` and drops the URI. Per
+ * the MCP Apps spec a host mounts UI only for a tool with a `resourceUri`, and
+ * an app may call any tool of its own server whose visibility includes "app"
+ * (Phase 0 Q2: the reference host's proxy does not check either). The card's
+ * own `draft_read` calls (restore, Refresh, the deferred-body fallback,
+ * attention checks) are app calls, which never mount anything, so they are
+ * unchanged.
+ *
+ * ── Is the "Open editor" one-liner still needed? ─────────────────────────────
+ * Decided no as a default. The case it served, "the original card is gone or
+ * far above", is served by the model calling `draft{action:"update"}`, which
+ * mounts a full editor under the newest turn. DraftReadLine.tsx stays in the
+ * card for one reason: a host still holding a listing from before this change
+ * mounts the card for `draft_read` until it re-reads `tools/list`, and the
+ * one-liner is the right rendering there. If a real need appears (a person
+ * asking to "show me the draft" with no write to make), bring it back as an
+ * explicit tool argument, not by re-adding the URI to every read.
+ */
+export const DRAFT_EDITOR_UNMOUNTED_TOOL_NAMES: readonly string[] = [
+  "draft_read",
 ];
 
 /**
@@ -359,6 +495,34 @@ export const BULK_PLAN_CARD_TOOL_NAMES: readonly string[] = [
 ];
 
 /**
+ * The same three gates on the per-operation surface (the listing OpenAI
+ * clients get, PER_OPERATION_LISTING in index.ts), keyed by the operation
+ * rather than by the consolidated tool it belongs to.
+ *
+ * `_meta.ui` is per tool, so one tool per operation lets the card be claimed
+ * only by the operations that can actually return something it renders: the
+ * three sends and a scheduled send (held for approval), the four bulk
+ * operations that plan before they act, and the five draft writes. The
+ * single-message `email_delete` and `email_move`, `schedule_cancel` and every
+ * read carry nothing, where their consolidated parents have to.
+ */
+export const PER_OPERATION_CARD_TOOL_NAMES: Readonly<
+  Record<keyof ReviewCardGates, readonly string[]>
+> = {
+  outbound: ["email_send", "email_reply", "email_forward", "schedule_create"],
+  bulk: [
+    "email_move_batch",
+    "email_delete_batch",
+    "email_search_and_move",
+    "email_search_and_delete",
+  ],
+  drafts: ["draft_create", "draft_reply", "draft_update", "draft_send", "draft_delete"],
+};
+
+/** Which listing a tool is being serialised for. See PER_OPERATION_LISTING. */
+export type ToolSurface = "consolidated" | "per_operation";
+
+/**
  * True when a call to this tool name can mount the review card, under any of
  * the three gates.
  *
@@ -377,7 +541,7 @@ export const BULK_PLAN_CARD_TOOL_NAMES: readonly string[] = [
  * already made. Two ways:
  *
  *   * By this function's own definition they ARE card-bearing:
- *     `reviewCardMetaForListing` hands all three `appOnlyReviewCardToolMeta()`
+ *     `reviewCardMetaForListing` hands all three a card `_meta`
  *     whenever the drafts gate is open, so their listing carries a card URI
  *     that a deploy can make stale exactly like `draft`'s. They are also the
  *     tools the card itself calls most — a restoring cell calls `draft_read`
@@ -400,7 +564,8 @@ export function isCardBearingToolName(name: string): boolean {
     REVIEW_CARD_TOOL_NAMES.includes(name) ||
     BULK_PLAN_CARD_TOOL_NAMES.includes(name) ||
     DRAFT_EDITOR_CARD_TOOL_NAMES.includes(name) ||
-    DRAFT_EDITOR_APP_TOOL_NAMES.includes(name)
+    DRAFT_EDITOR_APP_TOOL_NAMES.includes(name) ||
+    Object.values(PER_OPERATION_CARD_TOOL_NAMES).some((names) => names.includes(name))
   );
 }
 
@@ -466,6 +631,35 @@ export function appOnlyReviewCardToolMeta(): {
 }
 
 /**
+ * `_meta` for a card tool the model is also meant to call: the same card, with
+ * `visibility: ["model", "app"]`.
+ *
+ * The list is spelled out rather than omitted. Omitting `visibility` means the
+ * same thing to the reference host (its default is both), but the explicit form
+ * says in the listing itself that the card calls this tool as well, and it is
+ * the shape the owner asked for. `draft_editor_hide` carries it; `draft_read`
+ * carries the same list without the URI (`modelAndAppUnmountedToolMeta`).
+ */
+export function modelAndAppReviewCardToolMeta(): {
+  ui: { resourceUri: string; visibility: string[] };
+} {
+  return {
+    ui: { resourceUri: REVIEW_CARD_RESOURCE_URI, visibility: ["model", "app"] },
+  };
+}
+
+/**
+ * `_meta` for a tool the card calls and the model calls, whose results must
+ * NOT mount the card: `visibility` only, no `resourceUri`. `draft_read`; see
+ * `DRAFT_EDITOR_UNMOUNTED_TOOL_NAMES`.
+ */
+export function modelAndAppUnmountedToolMeta(): {
+  ui: { visibility: string[] };
+} {
+  return { ui: { visibility: ["model", "app"] } };
+}
+
+/**
  * The two per-key opt-ins that decide whether a card-bearing tool is listed
  * with `_meta.ui` in one `tools/list` response.
  *
@@ -519,7 +713,26 @@ export interface ReviewCardGates {
 export function reviewCardMetaForListing(
   toolName: string,
   gates: ReviewCardGates,
-): { ui: { resourceUri: string; visibility?: string[] } } | undefined {
+  surface: ToolSurface = "consolidated",
+): { ui: { resourceUri?: string; visibility?: string[] } } | undefined {
+  if (surface === "per_operation") {
+    // Checked INSTEAD of the consolidated lists, not as well as them:
+    // `email_delete` is on the bulk list above as the consolidated tool, and
+    // on this surface the same name is the single-message delete, which never
+    // plans.
+    for (const gate of ["outbound", "bulk", "drafts"] as const) {
+      if (PER_OPERATION_CARD_TOOL_NAMES[gate].includes(toolName)) {
+        return gates[gate] ? reviewCardToolMeta() : undefined;
+      }
+    }
+    // The draft editor's own three are the same tools on both surfaces, so
+    // they get the same metadata from the same function: `draft_read` and
+    // `draft_editor_hide` model-and-app, `draft_editor_save` app-only. (When
+    // this branch was written all three were app-only, and it said so inline;
+    // a second copy of that rule here is what would have left the model unable
+    // to read a draft back on this surface alone.)
+    return draftEditorOwnToolMeta(toolName, gates);
+  }
   if (REVIEW_CARD_TOOL_NAMES.includes(toolName)) {
     return gates.outbound ? reviewCardToolMeta() : undefined;
   }
@@ -529,13 +742,33 @@ export function reviewCardMetaForListing(
   if (DRAFT_EDITOR_CARD_TOOL_NAMES.includes(toolName)) {
     return gates.drafts ? reviewCardToolMeta() : undefined;
   }
-  // The app-only three: same gate, plus `visibility: ["app"]`. They are no
-  // longer stamped in the registry, so `undefined` here really does mean "this
-  // listing carries no `_meta` at all" — see DRAFT_EDITOR_APP_TOOL_NAMES.
-  if (DRAFT_EDITOR_APP_TOOL_NAMES.includes(toolName)) {
-    return gates.drafts ? appOnlyReviewCardToolMeta() : undefined;
-  }
-  return undefined;
+  // The draft editor's own three: same gate, plus a `visibility` list. They
+  // are no longer stamped in the registry, so `undefined` here really does mean
+  // "this listing carries no `_meta` at all" — see DRAFT_EDITOR_APP_TOOL_NAMES.
+  // `draft_read` and `draft_editor_hide` are listed to the model as well as
+  // the card; `draft_editor_save` is app-only.
+  return draftEditorOwnToolMeta(toolName, gates);
+}
+
+/**
+ * The listing `_meta` of the draft editor's own three tools, or `undefined`
+ * for any other name and whenever the drafts gate is shut.
+ *
+ * One function for both surfaces (consolidated and per-operation): these three
+ * are not operations of anything and are listed under the same names with the
+ * same definitions on each, so which of them the model may call cannot differ
+ * by surface.
+ */
+function draftEditorOwnToolMeta(
+  toolName: string,
+  gates: ReviewCardGates,
+): { ui: { resourceUri?: string; visibility: string[] } } | undefined {
+  if (!DRAFT_EDITOR_APP_TOOL_NAMES.includes(toolName)) return undefined;
+  if (!gates.drafts) return undefined;
+  if (DRAFT_EDITOR_UNMOUNTED_TOOL_NAMES.includes(toolName)) return modelAndAppUnmountedToolMeta();
+  return DRAFT_EDITOR_MODEL_VISIBLE_TOOL_NAMES.includes(toolName)
+    ? modelAndAppReviewCardToolMeta()
+    : appOnlyReviewCardToolMeta();
 }
 
 /**
@@ -581,10 +814,14 @@ export function reviewCardMetaForListing(
 export function withListingCardMeta(
   tools: readonly ListedTool[],
   gates: ReviewCardGates,
+  surface: ToolSurface = "consolidated",
 ): ListedTool[] {
   return tools.map((tool) => {
-    const meta = reviewCardMetaForListing(tool.name, gates);
-    return meta ? { ...tool, _meta: meta } : tool;
+    const meta = reviewCardMetaForListing(tool.name, gates, surface);
+    // Merged, not replaced: a per-operation draft tool already carries
+    // `openai/fileParams` (draft-attachments.ts), and the card's `ui` must not
+    // erase it. Every other tool's own `_meta` is absent, so nothing changes.
+    return meta ? { ...tool, _meta: { ...(tool._meta ?? {}), ...meta } } : tool;
   });
 }
 

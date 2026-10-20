@@ -49,6 +49,9 @@ import {
   fetchUsageCapOverview,
   fetchUsageCapWorkspaces,
   fetchUserSignupDays,
+  fetchMailRelayDaily,
+  fetchMailRelayHosts,
+  fetchSignupTrend,
   gmailCapProjection,
   type GrowthResult,
 } from '@/lib/analytics/growth-queries';
@@ -108,6 +111,10 @@ import { CalendarHeat } from './CalendarHeat';
 import { ChannelQuality, Rail, StatStrip, Verdict, type RailRow } from './board/panels';
 import { Milestones } from './board/milestones';
 import { Tables } from './Tables';
+import { RelayHostTable, RelayHostsTile, RelayStatusTile, RelayWorkingTile } from './board/relay';
+import { relayHealth } from '@/lib/analytics/mail-relay-health';
+import { FETCH_WEEKS, signupTrend } from '@/lib/analytics/signup-trend';
+import { SignupTrendTile } from './board/signup-trend';
 
 /** Ninety is a ceiling, not a taste: activity_log is purged past 90 days. */
 const DAILY_DAYS = 90;
@@ -565,7 +572,7 @@ export async function MoneySection({ days }: { days: number }) {
 const WALL_ROWS = 5;
 
 /**
- * The Free action allowance: 150 email actions a month, first 7 days
+ * The Free action allowance: 150 email actions a month, first 3 days
  * uncounted, every workspace from before 2026-09-12 exempt for good.
  *
  * WHAT THIS BAND ANSWERS, in the order the tiles sit: how many workspaces
@@ -794,7 +801,7 @@ export async function MilestoneSection() {
 /* ============================================================ growth band */
 
 export async function GrowthSection({ days }: { days: number }) {
-  const [signups, funnel, checkout, channels, providers, providerFunnel, bands, revenue, lifecycle] =
+  const [signups, funnel, checkout, channels, providers, providerFunnel, bands, revenue, lifecycle, trend] =
     await Promise.all([
       fetchUserSignupDays(DURABLE_DAYS),
       fetchActivationFunnel(DURABLE_DAYS),
@@ -805,6 +812,7 @@ export async function GrowthSection({ days }: { days: number }) {
       fetchEngagementBands(days),
       fetchRecurringRevenue(days),
       fetchLifecycleCounts(),
+      fetchSignupTrend(FETCH_WEEKS),
     ]);
 
   const signupRows = signups.ok ? signups.data : [];
@@ -816,6 +824,16 @@ export async function GrowthSection({ days }: { days: number }) {
 
   return (
     <>
+      {/* First in the band because it answers the question the rest of the
+          band only illustrates. Weekly on purpose: see signup-trend.ts. */}
+      <Cell span={12} tall={2}>
+        {trend.ok ? (
+          <SignupTrendTile trend={signupTrend(trend.data)} />
+        ) : (
+          <TileError label="Is signup growth over?" message={trend.error} />
+        )}
+      </Cell>
+
       <Cell span={6} tall={2}>
         {signups.ok && weeks.length > 0 ? (
           <Tile label="Signups and first mailboxes" aside={`${CHART_WEEKS} calendar weeks`}>
@@ -1239,4 +1257,40 @@ function cohortRows(cells: { cohort_week: string; cohort_size: number; week_inde
       // came back" for a week that has not happened.
       values: Array.from({ length: row.values.length }, (_, index) => row.values[index] ?? null),
     }));
+}
+
+
+/* ================================================== the mail relay */
+
+/**
+ * Which hosts go through the mail relay, and whether it works. Low priority,
+ * so it is the last band on the page. See components/admin/growth/board/relay.tsx.
+ */
+export async function RelaySection({ days }: { days: number }) {
+  const [daily, hosts] = await Promise.all([fetchMailRelayDaily(days), fetchMailRelayHosts(days)]);
+  if (!daily.ok || !hosts.ok) {
+    const message = !daily.ok ? daily.error : !hosts.ok ? hosts.error : '';
+    return (
+      <Cell span={12}>
+        <TileError label="Mail relay" message={message} />
+      </Cell>
+    );
+  }
+  const health = relayHealth(daily.data, hosts.data);
+  return (
+    <>
+      <Cell span={4}>
+        <RelayStatusTile health={health} days={days} />
+      </Cell>
+      <Cell span={4}>
+        <RelayWorkingTile health={health} days={days} />
+      </Cell>
+      <Cell span={4}>
+        <RelayHostsTile health={health} />
+      </Cell>
+      <Cell span={12}>
+        <RelayHostTable rows={hosts.data} />
+      </Cell>
+    </>
+  );
 }

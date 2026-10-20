@@ -1,7 +1,30 @@
 # OpenAI plugin submission: tool annotation justifications
 
-The reasoning behind the annotation justification fields of the plugin
-submission portal, one block per advertised tool.
+The reasoning behind every tool annotation an OpenAI client is shown, one block
+per tool on the per-operation listing.
+
+**Which listing this is.** Since 2026-10-13 the server lists a ChatGPT or Codex
+key one tool per operation (`PER_OPERATION_LISTING` in
+`supabase/functions/mcp-server/index.ts`), because OpenAI's scan rejects a tool
+that selects its operation through an `action` argument ("Please expose each
+model-callable operation upfront as a separate tool"). That listing is what the
+portal scans, so it is what this file documents. Every other client is still
+listed the consolidated tools (`email_organize`, `draft`, ...), which are not
+described here.
+
+**Three automation tools are not on that listing.** The rescan of 2026-10-13
+passed 52 of the 55 per-operation tools and flagged `automation_create`,
+`automation_update` and `automation_enable` with the same "executes operations
+that are not individually exposed" finding. They set up, change or start a
+stored rule whose action is run later by the server, so they are withheld from
+OpenAI clients (`PER_OPERATION_UNLISTED`) and have no block below. The reads,
+`automation_disable` and `automation_delete` passed and are listed.
+
+**The portal no longer asks for these strings.** Since the move to ZIP upload
+the listing comes from the plugin package and the annotations are judged by
+the scan alone. The submitted text below is kept, and still tested, because it
+is the record of why each boolean is what it is, and the place to answer from
+if a reviewer asks.
 
 Each tool block has two parts:
 
@@ -62,8 +85,8 @@ read-only"):
    account or workspace, even when that service is externally hosted". One
    connected mailbox is such an account. It is now true only for the four tools
    that can address recipients outside it.
-2. `destructiveHint` was `false` on `email_compose` and `schedule`, which send
-   mail. The rule counts "sending messages ... you can't undo" as irreversible.
+2. `destructiveHint` was `false` on the tools that send mail (then the
+   consolidated `email_compose` and `schedule`). The rule counts "sending messages ... you can't undo" as irreversible.
    Both are now true.
 
 Plus one schema change: `email_read` advertised `mark_as_read`, which wrote the
@@ -71,8 +94,8 @@ Plus one schema change: `email_read` advertised `mark_as_read`, which wrote the
 was retired (2026-09-16) instead of the hint being flipped. It is still accepted
 on the wire, because MCP clients cache tools/list for the life of a connection,
 but it is dropped before validation and the result says so. Marking a message
-read is `email_organize { action: "flag", flag_action: "read" }`, which is
-annotated as the write it is.
+read is `email_flag { flag_action: "read" }`, which is annotated as the write
+it is.
 
 The booleans in each heading are transcribed from the server by hand and then
 pinned: `tool-surface.test.ts` fails if any of them drifts from what the
@@ -84,8 +107,16 @@ Rules applied throughout:
 - **readOnlyHint true** only where the tool strictly fetches. Anything that can
   create, update, delete, send or enqueue, in any mode or through any default,
   is false.
-- **destructiveHint true** where an outcome cannot be undone: mail destroyed, a
-  folder or rule removed, or a message delivered to someone outside the account.
+- **destructiveHint true** on every write that is not purely additive. That is
+  OpenAI's wording as applied by the 2026-10-13 scan: false is for additive
+  writes only, an overwrite counts as destructive, and "Being able to undo an
+  action does not, by itself, justify setting destructiveHint to false." So it
+  is true for mail destroyed or delivered, and also for a move, an archive, a
+  flag change, a rename, an overwrite, a cancellation, and an automation's
+  disable. It is false on exactly five listed writes, which only ever add:
+  `email_copy`, `email_copy_batch`, `folder_create`, `draft_create` and
+  `draft_reply`. `per-operation-surface.test.ts` pins
+  that list.
 - **openWorldHint true** only where the tool can reach a party outside the one
   connected mailbox.
 
@@ -129,58 +160,145 @@ settings — see its block, which is the one place in this file a
   changes is the sentence: "no mail provider is contacted at all" was written
   before this call was checked, and it was not true.
 
+## email_list (readOnly: true, destructive: false, openWorld: false)
+
+**Submitted text.**
+
+- **readOnlyHint:** It lists recent messages in one inbox, optionally by folder or unread state. It takes no argument that writes.
+- **destructiveHint:** It is a read. No message is changed, moved or marked by listing it.
+- **openWorldHint:** It reads one connected mailbox and fetches nothing else.
+
 ## email_read (readOnly: true, destructive: false, openWorld: false)
 
 **Submitted text.**
 
-- **readOnlyHint:** Every action fetches: list, read, read_batch, search, attachment, extract, original. It advertises no argument that writes; mark_as_read, the one that did, was removed on 2026-09-16.
-- **destructiveHint:** Nothing it does removes or alters a message. Reading an attachment copies the bytes out; it does not detach them from the message.
-- **openWorldHint:** It reads one connected mailbox and fetches nothing else. Remote image sources are stripped out of an HTML body by the sanitizer, and a link comes back as text that is never followed.
+- **readOnlyHint:** It fetches the full content of one message. It takes no argument that writes; mark_as_read, the one that did, was removed on 2026-09-16.
+- **destructiveHint:** Nothing it does removes or alters a message. The read state is left as it was.
+- **openWorldHint:** It reads one connected mailbox and fetches nothing else. Remote image sources are stripped from an HTML body by the sanitizer, and a link comes back as text that is never followed.
 
 **Reasoning.**
 
-- **readOnly true:** the advertised actions are `list`, `read`, `read_batch`,
-  `search`, `attachment`, `extract` and `original`. Every one fetches. As of
-  2026-09-16 the tool advertises no argument that writes: `mark_as_read`, the
-  one that did, was removed, and a call that still sends it has it ignored and
-  is told so in the result.
-- **destructive false:** nothing it does removes or alters a message. Reading an
-  attachment copies bytes out; it does not detach them.
-- **openWorld false:** it reads the single mailbox named on the call. It fetches
-  nothing from the public internet. `sanitizeEmailHtml` rebuilds an HTML body
-  from an allow-list in which the only permitted image `src` values are `cid:`
-  and inline base64 data URIs for the RASTER types (`png`, `gif`, `jpeg`,
-  `jpg`, `webp`, `bmp`; `data:image/svg+xml` is deliberately not among them),
-  so no remote image reference survives to be fetched by anything downstream. An `http(s)` or `mailto` `href` IS kept, as
-  text in the returned markup: the server never follows it, and no tool here
-  can.
+- **openWorld false:** `sanitizeEmailHtml` rebuilds an HTML body from an
+  allow-list in which the only permitted image `src` values are `cid:` and
+  inline base64 data URIs for the raster types, so no remote image reference
+  survives to be fetched by anything downstream. An `http(s)` or `mailto` `href`
+  is kept as text in the returned markup: the server never follows it, and no
+  tool here can.
 
-## email_organize (readOnly: false, destructive: false, openWorld: false)
+## email_read_batch (readOnly: true, destructive: false, openWorld: false)
 
 **Submitted text.**
 
-- **readOnlyHint:** It writes: move, move_batch, copy, copy_batch, archive, and set read or flagged state, always on message ids the caller passed explicitly.
-- **destructiveHint:** Nothing is deleted or sent, and it only touches ids the caller named. A move is undone by a move back, a flag by the opposite flag, an archive by a move back; a copy leaves the original.
-- **openWorldHint:** It rearranges mail inside the connected mailbox and transmits nothing out of it.
+- **readOnlyHint:** It fetches up to 50 messages by id in one call, with bodies windowed. It takes no argument that writes.
+- **destructiveHint:** Nothing it does removes or alters a message.
+- **openWorldHint:** It reads one connected mailbox and fetches nothing else. Bodies pass through the same sanitizer as a single read.
+
+## email_search (readOnly: true, destructive: false, openWorld: false)
+
+**Submitted text.**
+
+- **readOnlyHint:** It runs a search over one inbox and returns the matching messages. It applies nothing to them.
+- **destructiveHint:** It is a read. A search changes no message and no folder.
+- **openWorldHint:** The search runs inside the connected mailbox, through that mailbox's own provider.
+
+## email_attachment (readOnly: true, destructive: false, openWorld: false)
+
+**Submitted text.**
+
+- **readOnlyHint:** It downloads one attachment of one message.
+- **destructiveHint:** Reading an attachment copies the bytes out. It does not detach them from the message.
+- **openWorldHint:** The bytes come from the connected mailbox and go only to the caller.
+
+## email_extract (readOnly: true, destructive: false, openWorld: false)
+
+**Submitted text.**
+
+- **readOnlyHint:** It returns the readable text of one attachment, without its bytes.
+- **destructiveHint:** Nothing is changed. The attachment stays on the message as it was.
+- **openWorldHint:** The text is extracted on this server from a file already in the connected mailbox. No outside service is called.
+
+## email_original (readOnly: true, destructive: false, openWorld: false)
+
+**Submitted text.**
+
+- **readOnlyHint:** It returns one stored message whole, as a base64 .eml with its sha256.
+- **destructiveHint:** It copies the message out. The stored message is not altered or removed.
+- **openWorldHint:** The message comes from the connected mailbox and goes only to the caller.
+
+## email_move (readOnly: false, destructive: true, openWorld: false)
+
+**Submitted text.**
+
+- **readOnlyHint:** It moves one message, named by id, to another folder or label.
+- **destructiveHint:** A move takes the message out of the folder it was in, so it is not additive. On Gmail it also removes the INBOX label. Nothing is deleted, and it acts only on the id the caller passed.
+- **openWorldHint:** It acts inside the one connected mailbox and transmits nothing out of it.
 
 **Reasoning.**
 
-- **readOnly false:** the advertised actions are `move`, `move_batch`, `copy`,
-  `copy_batch`, `flag` and `archive`.
-- **destructive false:** every advertised action acts only on message ids the
-  caller passed explicitly, and none of them destroys mail. A move is undone by
-  a move back, a flag by the opposite `flag_action`, an archive by moving the
-  message back to the inbox; a copy adds a duplicate and leaves the original
-  untouched (there is no inverse action for a copy, but nothing is lost by one).
-  Nothing is deleted here (deletion is `email_delete`) and nothing is sent. The
-  one action that acted on everything a search matched was deliberately moved
-  out of this tool into `email_search_and_move`, which carries destructive:
-  true, so a routine triage call cannot inherit a sweep's blast radius.
-  `search_and_move` is still ACCEPTED under this name for clients that cached
-  the old enum before 2026-09-09, and is not advertised; a client connecting
-  today cannot see it.
-- **openWorld false:** it rearranges mail inside the connected mailbox and
-  transmits nothing out of it.
+- **destructive true:** changed from false on 2026-10-13. The earlier reading
+  was that a move is undone by a move back. OpenAI's rule does not accept that
+  ("Being able to undo an action does not, by itself, justify setting
+  destructiveHint to false") and reserves false for additive writes. A move is
+  not additive: the message leaves the folder it was in.
+
+## email_move_batch (readOnly: false, destructive: true, openWorld: false)
+
+**Submitted text.**
+
+- **readOnlyHint:** It moves up to 500 messages, named by id, to another folder or label.
+- **destructiveHint:** Each move takes a message out of the folder it was in, so it is not additive. Nothing is deleted, it acts only on the ids the caller passed, and every id's outcome is reported.
+- **openWorldHint:** It acts inside the one connected mailbox and transmits nothing out of it.
+
+**Reasoning.**
+
+- **destructive true:** the same reasoning as `email_move`, at up to 500 ids a
+  call. On an inbox with `bulk_review_mode = 'plan'` the move is planned and
+  shown for approval before anything is touched.
+
+## email_copy (readOnly: false, destructive: false, openWorld: false)
+
+**Submitted text.**
+
+- **readOnlyHint:** It writes: it duplicates one message into another folder.
+- **destructiveHint:** Purely additive. The copy is a new message and the original stays where it was, unchanged.
+- **openWorldHint:** It acts inside the one connected mailbox and transmits nothing out of it.
+
+## email_copy_batch (readOnly: false, destructive: false, openWorld: false)
+
+**Submitted text.**
+
+- **readOnlyHint:** It writes: it duplicates up to 500 messages into another folder.
+- **destructiveHint:** Purely additive. Each copy is a new message and every original stays where it was, unchanged.
+- **openWorldHint:** It acts inside the one connected mailbox and transmits nothing out of it.
+
+## email_flag (readOnly: false, destructive: true, openWorld: false)
+
+**Submitted text.**
+
+- **readOnlyHint:** It sets read, unread, flagged or unflagged on the messages named by id.
+- **destructiveHint:** It overwrites the read or flagged state each message had, which is not additive. No message is deleted or moved, and it acts only on the ids the caller passed.
+- **openWorldHint:** It acts inside the one connected mailbox and transmits nothing out of it.
+
+**Reasoning.**
+
+- **destructive true:** changed from false on 2026-10-13. It is the mildest
+  write on the surface, and the old value rested on the opposite flag undoing
+  it, which the rule does not accept. What it does is overwrite a state, and an
+  unread mark that is cleared is information the user may not get back (which
+  messages they had not yet read).
+
+## email_archive (readOnly: false, destructive: true, openWorld: false)
+
+**Submitted text.**
+
+- **readOnlyHint:** It moves one message, named by id, out of the Inbox.
+- **destructiveHint:** An archive removes the message from the Inbox, so it is not additive. The message is kept in the archive and nothing is deleted.
+- **openWorldHint:** It acts inside the one connected mailbox and transmits nothing out of it.
+
+**Reasoning.**
+
+- **destructive true:** changed from false on 2026-10-13, for the same reason as
+  `email_move`: it is a move out of the Inbox.
 
 ## email_search_and_move (readOnly: false, destructive: true, openWorld: false)
 
@@ -219,48 +337,74 @@ settings — see its block, which is the one place in this file a
 
 **Submitted text.**
 
-- **readOnlyHint:** It deletes mail.
-- **destructiveHint:** Destroys mail, including a search-driven sweep over a set the caller never enumerated. Landing in Trash on Gmail and Outlook is a mitigation, and on IMAP permanent:true bypasses Trash entirely.
+- **readOnlyHint:** It deletes one message, named by id.
+- **destructiveHint:** It destroys mail. Landing in Trash on Gmail and Outlook is a mitigation, and on IMAP permanent:true bypasses Trash entirely.
 - **openWorldHint:** It destroys mail inside the connected mailbox and reaches nothing outside it.
 
 **Reasoning.**
 
-- **readOnly false:** it deletes mail. Advertised actions: `delete`,
-  `delete_batch`, `search_and_delete`.
-- **destructive true:** by definition, and for `search_and_delete` for the same
-  reason as `email_search_and_move` (it acts on a matched set, not on ids the
-  caller listed; an empty filter is refused there too). By default a delete
-  moves the message to Trash, which on Gmail and Outlook is recoverable for a
-  period; that is a mitigation, not a reason to under-state the hint. On IMAP
-  `permanent: true` hard-deletes, bypassing Trash. Stated per provider because
-  it is not uniform: a provider whose capability is `trash_vs_expunge:
-  "trash"` — Gmail and Outlook — REFUSES `permanent: true` up front rather than
-  honouring it, so on those two every delete lands in Trash. An earlier
-  revision said flatly that `permanent: true` bypasses Trash, which read as a
-  claim about all three providers and was true of one.
-- **openWorld false:** it destroys mail inside the connected mailbox and reaches
-  nothing outside it.
+- **destructive true:** by definition. By default a delete moves the message to
+  Trash, which on Gmail and Outlook is recoverable for a period; that is a
+  mitigation, not a reason to under-state the hint. On IMAP `permanent: true`
+  hard-deletes, bypassing Trash. Gmail and Outlook REFUSE `permanent: true` up
+  front rather than honouring it, so on those two every delete lands in Trash.
 
-## email_compose (readOnly: false, destructive: true, openWorld: true)
+## email_delete_batch (readOnly: false, destructive: true, openWorld: false)
 
 **Submitted text.**
 
-- **readOnlyHint:** It sends mail: send, reply and forward.
+- **readOnlyHint:** It deletes up to 500 messages, named by id.
+- **destructiveHint:** It destroys mail, up to 500 messages a call. Landing in Trash on Gmail and Outlook is a mitigation, and on IMAP permanent:true bypasses Trash entirely.
+- **openWorldHint:** It destroys mail inside the connected mailbox and reaches nothing outside it.
+
+## email_search_and_delete (readOnly: false, destructive: true, openWorld: false)
+
+**Submitted text.**
+
+- **readOnlyHint:** It deletes every message a search matches, up to a limit.
+- **destructiveHint:** It destroys a set of messages the caller never enumerated. Safeguards: an empty filter is refused, the sweep is capped at 500, and every deleted id is reported.
+- **openWorldHint:** The search and the delete both happen inside the connected mailbox.
+
+**Reasoning.**
+
+- **destructive true:** for the same reason as `email_search_and_move`: it acts
+  on a matched set, not on ids the caller listed. An empty filter is refused,
+  and `has_more` says whether matches were left behind. On an inbox with
+  `bulk_review_mode = 'plan'` the sweep is planned and shown for approval before
+  anything is deleted.
+
+## email_send (readOnly: false, destructive: true, openWorld: true)
+
+**Submitted text.**
+
+- **readOnlyHint:** It sends a new message.
 - **destructiveHint:** A delivered message cannot be recalled. Safeguards: it sends from the user's own connected account, an inbox can hold every send for human approval, and idempotency_key collapses a retry.
 - **openWorldHint:** The recipients are arbitrary parties outside the account.
 
 **Reasoning.**
 
-- **readOnly false:** it sends mail. Advertised actions: `send`, `reply`,
-  `forward`.
-- **destructive true:** a delivered message cannot be recalled. This covers
-  send, reply and forward. Safeguards, stated because the review asks what they
-  are: the mail goes out through the user's own connected account, from their
-  own address (the Gmail and Graph send APIs for those providers, the user's own
-  SMTP credentials for IMAP); an inbox can be set to `send_approval_required`,
-  which holds every send for a human decision instead of delivering it; and an
-  `idempotency_key` collapses a retried call rather than sending twice.
-- **openWorld true:** the recipients are arbitrary parties outside the account.
+- **destructive true:** a delivered message cannot be recalled. Safeguards,
+  stated because the review asks what they are: the mail goes out through the
+  user's own connected account, from their own address; an inbox can be set to
+  `send_approval_required`, which holds every send for a human decision instead
+  of delivering it; and an `idempotency_key` collapses a retried call rather
+  than sending twice.
+
+## email_reply (readOnly: false, destructive: true, openWorld: true)
+
+**Submitted text.**
+
+- **readOnlyHint:** It sends a reply to an existing message.
+- **destructiveHint:** A delivered reply cannot be recalled. Safeguards: it sends from the user's own connected account, an inbox can hold every send for human approval, and idempotency_key collapses a retry.
+- **openWorldHint:** The reply goes to the original sender, and with reply_all to every original recipient: parties outside the account.
+
+## email_forward (readOnly: false, destructive: true, openWorld: true)
+
+**Submitted text.**
+
+- **readOnlyHint:** It forwards one message, or up to 50, to new recipients.
+- **destructiveHint:** A delivered forward cannot be recalled. Safeguards: it sends from the user's own connected account, an inbox can hold every send for human approval, and idempotency_key collapses a retry.
+- **openWorldHint:** The recipients are arbitrary parties outside the account, and they receive the original message intact.
 
 ## folder_list (readOnly: true, destructive: false, openWorld: false)
 
@@ -277,23 +421,34 @@ settings — see its block, which is the one place in this file a
 - **destructive false:** it is a read.
 - **openWorld false:** the folder tree of the one connected mailbox.
 
-## folder (readOnly: false, destructive: true, openWorld: false)
+## folder_create (readOnly: false, destructive: false, openWorld: false)
 
 **Submitted text.**
 
-- **readOnlyHint:** It creates, renames and deletes folders and labels.
-- **destructiveHint:** delete is irreversible and no provider offers an undo. On Gmail it strips the label from every message carrying it; on IMAP the messages inside the mailbox can go with it.
+- **readOnlyHint:** It writes: it creates a folder, or a label on Gmail.
+- **destructiveHint:** Purely additive. A new, empty folder is created and no existing folder or message is changed.
+- **openWorldHint:** Folders and labels exist inside the connected mailbox.
+
+## folder_rename (readOnly: false, destructive: true, openWorld: false)
+
+**Submitted text.**
+
+- **readOnlyHint:** It renames a folder, or a label on Gmail.
+- **destructiveHint:** It replaces the folder's name, which is an overwrite: anything that addressed the folder by its old name no longer finds it. No message is deleted or moved.
 - **openWorldHint:** Folders and labels exist inside the connected mailbox.
 
 **Reasoning.**
 
-- **readOnly false:** it creates, renames and deletes folders and labels.
-- **destructive true:** `delete` is irreversible and no provider offers an undo.
-  On Gmail deleting a label strips it from every message carrying it; on IMAP
-  deleting a mailbox issues DELETE against it and the messages inside can be
-  lost with it. Create and rename are reversible, but the hint is per tool and
-  the delete governs.
-- **openWorld false:** folders exist inside the connected mailbox.
+- **destructive true:** changed from false on 2026-10-13. A rename overwrites
+  the one name the folder had.
+
+## folder_delete (readOnly: false, destructive: true, openWorld: false)
+
+**Submitted text.**
+
+- **readOnlyHint:** It deletes a folder, or a label on Gmail.
+- **destructiveHint:** Irreversible, and no provider offers an undo. On Gmail it strips the label from every message carrying it; on IMAP the messages inside the mailbox can go with it.
+- **openWorldHint:** Folders and labels exist inside the connected mailbox.
 
 ## draft_list (readOnly: true, destructive: false, openWorld: false)
 
@@ -310,24 +465,81 @@ settings — see its block, which is the one place in this file a
 - **openWorld false:** drafts live in the connected mailbox and are not
   transmitted by listing them.
 
-## draft (readOnly: false, destructive: true, openWorld: true)
+## draft_create (readOnly: false, destructive: false, openWorld: false)
 
 **Submitted text.**
 
-- **readOnlyHint:** It creates, replies, updates, sends and deletes unsent drafts.
-- **destructiveHint:** Two reasons: delete permanently discards an unsent draft, and send delivers it, which cannot be undone. The same approval hold and idempotency key apply as on email_compose.
-- **openWorldHint:** send delivers to recipients outside the account. The other actions stay inside the mailbox, but the hint is per tool and the widest action governs.
+- **readOnlyHint:** It writes: it saves a new unsent draft.
+- **destructiveHint:** Purely additive. It adds one draft to Drafts and changes no existing draft or message. Nothing is sent.
+- **openWorldHint:** The draft is stored in the connected mailbox and is not transmitted to anyone.
+
+## draft_reply (readOnly: false, destructive: false, openWorld: false)
+
+**Submitted text.**
+
+- **readOnlyHint:** It writes: it saves a new unsent reply to an existing message, kept in its thread.
+- **destructiveHint:** Purely additive. It adds one draft and leaves the message it answers untouched. Nothing is sent.
+- **openWorldHint:** The draft is stored in the connected mailbox and is not transmitted to anyone.
+
+**Files on drafts (2026-10-15).** `draft_create`, `draft_reply` and
+`draft_update` take `attachments` (inline base64, or a file already in the
+inbox by `source_message_id`) and, on this per-operation listing only, `files`,
+declared through `_meta["openai/fileParams"]` in the exact four-property shape
+the scan requires. A `files` entry is downloaded by the server from the
+short-lived `download_url` ChatGPT supplies, through the same SSRF guard as
+signature images, and stored on the draft. None of the three hints moves:
+the download only reads a file the user shared in the conversation, and the
+draft is still stored in the user's own mailbox and transmitted to nobody, so
+openWorld stays false. `draft_update` ADDS files and keeps the stored ones.
+
+## draft_update (readOnly: false, destructive: true, openWorld: false)
+
+**Submitted text.**
+
+- **readOnlyHint:** It replaces fields of an existing unsent draft.
+- **destructiveHint:** It overwrites the stored draft with the fields passed, and the previous body and recipients are not kept. Nothing is sent, and only the one draft named by id is touched.
+- **openWorldHint:** The draft stays in the connected mailbox and is not transmitted to anyone.
 
 **Reasoning.**
 
-- **readOnly false:** advertised actions are `create`, `reply`, `update`, `send`
-  and `delete`.
-- **destructive true:** two independent reasons. `delete` permanently discards
-  an unsent draft, and `send` delivers it, which cannot be undone. The same
-  `send_approval_required` hold and idempotency key apply as on `email_compose`.
-- **openWorld true:** `send` delivers to recipients outside the account. The
-  other actions stay inside the mailbox, but the hint is per tool and the widest
-  action governs.
+- **destructive true:** changed from false on 2026-10-13. This is the same shape
+  as `signature_set`, which the scan flagged: an overwrite of stored text whose
+  previous value is not kept. On IMAP the update is a replace of the stored
+  message, and the draft_id changes with it.
+- **`body` is optional since 2026-10-13, and that does not move the hint.** An
+  update that omits `body` keeps the stored body text and overwrites only the
+  recipients or subject it names, through the same merge `draft_editor_save`
+  runs (`applyDraftPatch`): no signature is applied, the HTML part, Reply-To and
+  threading headers are carried through, and a recipient list passed as `[]` is
+  cleared. It is still an overwrite of stored fields, so it is still `true`
+  under the additive-only rule; the submitted text ("the fields passed") covers
+  both forms. On IMAP and Gmail, where the write rebuilds the message, a
+  body-less update of a draft with attachments, inline images or other extra
+  parts is refused and changes nothing (`draft_has_attachments`,
+  `draft_not_rebuildable`). The result's card envelope carries the STORED body,
+  so it is attached only for a key that also holds `read:email`.
+
+## draft_send (readOnly: false, destructive: true, openWorld: true)
+
+**Submitted text.**
+
+- **readOnlyHint:** It sends a saved draft and removes it from Drafts.
+- **destructiveHint:** A delivered message cannot be recalled. The same approval hold and idempotency key apply as on email_send, and a draft with no recipient is refused and left untouched.
+- **openWorldHint:** The draft is delivered to its recipients, who are parties outside the account.
+
+**Reasoning.**
+
+- **destructive true:** two reasons. The draft is delivered, which cannot be
+  undone, and it is removed from Drafts. The same `send_approval_required` hold
+  and idempotency key apply as on `email_send`.
+
+## draft_delete (readOnly: false, destructive: true, openWorld: false)
+
+**Submitted text.**
+
+- **readOnlyHint:** It discards an unsent draft.
+- **destructiveHint:** It permanently removes the draft. Nothing is sent, and only the one draft named by id is touched.
+- **openWorldHint:** The draft is removed from the connected mailbox. Nothing leaves it.
 
 ## schedule_list (readOnly: true, destructive: false, openWorld: false)
 
@@ -345,24 +557,30 @@ settings — see its block, which is the one place in this file a
 - **openWorld false:** the queue is this workspace's own data; nothing is
   transmitted by reading it.
 
-## schedule (readOnly: false, destructive: true, openWorld: true)
+## schedule_create (readOnly: false, destructive: true, openWorld: true)
 
 **Submitted text.**
 
-- **readOnlyHint:** It queues a send and cancels a queued one.
+- **readOnlyHint:** It queues a message for delivery at a future time.
 - **destructiveHint:** A scheduled send is a delivery with a delay: once it fires it is as irreversible as an immediate send. It is validated at create time, listed while pending, and cancellable until it fires.
 - **openWorldHint:** The recipients are outside the account.
 
+## schedule_cancel (readOnly: false, destructive: true, openWorld: false)
+
+**Submitted text.**
+
+- **readOnlyHint:** It cancels one queued send, named by id.
+- **destructiveHint:** It removes a send the user queued, and putting it back means scheduling the message again. Only a send still pending can be cancelled; a sent message is not affected.
+- **openWorldHint:** It changes this workspace's own queue. Cancelling transmits nothing; it stops a transmission.
+
 **Reasoning.**
 
-- **readOnly false:** it queues a send and cancels a queued one.
-- **destructive true:** a scheduled send is a delivery with a delay. `cancel`
-  works only while the send is still pending, so once the queue fires the
-  outcome is exactly as irreversible as an immediate send. Safeguards: the
-  message is validated at create time so an invalid send is never queued, the
-  queued item is visible in `schedule_list` for as long as it is pending, and
-  cancel is available until the send window.
-- **openWorld true:** the recipients are outside the account.
+- **destructive true:** changed from false on 2026-10-13. A cancellation removes
+  something the user created, and nothing restores it short of scheduling the
+  message again.
+- **openWorld false:** `schedule_create` is open-world because it queues a
+  delivery to outside recipients. Cancelling does the reverse and addresses
+  nobody.
 
 ## signature_get (readOnly: true, destructive: false, openWorld: false)
 
@@ -381,74 +599,82 @@ settings — see its block, which is the one place in this file a
 - **openWorld false:** the signature is stored by this service against the
   inbox; reading it contacts no provider.
 
-## signature_set (readOnly: false, destructive: false, openWorld: false)
+## signature_set (readOnly: false, destructive: true, openWorld: false)
 
 **Submitted text.**
 
 - **readOnlyHint:** It writes the stored signature, its enabled and reply-mode settings, and the sender display name.
-- **destructiveHint:** It replaces signature settings on one inbox. It sends nothing and deletes no mail, and another call carrying the previous text restores it. It only affects mail sent later.
+- **destructiveHint:** It overwrites the signature settings on one inbox, and the previous text is not kept. It sends nothing and deletes no mail, and it only affects mail sent later.
 - **openWorldHint:** The write is to this service's own record for the inbox.
 
 **Reasoning.**
 
 - **readOnly false:** it writes the stored signature (text and/or HTML), its
   enabled flag, its reply/forward mode and the sender display name.
-- **destructive false:** it replaces settings fields on one inbox. It sends
-  nothing, deletes no mail, and another call carrying the previous text restores
-  it. The signature only ever affects mail sent later, through the sending
-  tools, which carry their own destructive flag. One side effect is worth
-  stating rather than hiding: setting a signature marks its source `manual`,
-  which stops Gmail auto-import for that inbox from then on. Nothing is
-  destroyed by that, but it is not undone by re-writing the text.
+- **destructive true:** changed from false on 2026-10-13, when OpenAI's scan
+  flagged exactly this value ("marked destructiveHint: false, but its behavior
+  appears to cause material loss or a hard-to-reverse change"). The old
+  justification was that another call carrying the previous text restores it.
+  The guideline rules that argument out in so many words, and it was also only
+  true for a caller that still had the previous text: the server does not keep
+  it. One side effect is worth stating rather than hiding: setting a signature
+  marks its source `manual`, which stops Gmail auto-import for that inbox from
+  then on, and that is not undone by re-writing the text.
 - **openWorld false:** the write is to this service's own record for the inbox.
 
-## automation_read (readOnly: true, destructive: false, openWorld: false)
+## automation_list (readOnly: true, destructive: false, openWorld: false)
 
 **Submitted text.**
 
-- **readOnlyHint:** It lists rules, reads one in full, returns run history and dry-runs a filter. The dry run applies nothing, sends nothing and claims no message in the deduplication ledger.
-- **destructiveHint:** Nothing here changes a rule or a mailbox.
-- **openWorldHint:** The rules are this workspace's own rows and the preview searches the connected mailbox.
+- **readOnlyHint:** It lists the workspace's automation rules with their schedule, action and health.
+- **destructiveHint:** It is a read. No rule and no mailbox is changed.
+- **openWorldHint:** The rules are this workspace's own rows.
 
-**Reasoning.**
-
-- **readOnly true:** advertised actions are `list`, `get`, `runs` and `preview`:
-  list rules, read one in full, return run history, and dry-run a filter. The
-  dry run is explicitly a preview: it reports what a filter matches right now,
-  applies nothing, sends nothing, writes no run row, and does not claim any
-  message in the `triage_seen_messages` deduplication ledger, so a later real
-  run is unaffected.
-- **destructive false:** nothing here changes a rule or a mailbox.
-- **openWorld false:** the rules are this workspace's own rows and the preview
-  searches the connected mailbox.
-
-## automation (readOnly: false, destructive: true, openWorld: true)
+## automation_get (readOnly: true, destructive: false, openWorld: false)
 
 **Submitted text.**
 
-- **readOnlyHint:** It creates, updates, enables, disables and deletes unattended triage rules.
-- **destructiveHint:** delete removes a rule, and an enabled rule acts on the mailbox on a schedule with no human in the loop. Rules are created disabled, may never delete mail, and cap each run (default 25, max 200).
-- **openWorldHint:** A rule's action can be a forward to addresses outside the mailbox. Such a forward is always held for human approval, but that is a safeguard on delivery, not confinement to the account.
+- **readOnlyHint:** It returns one automation rule in full, with its filter and failure state.
+- **destructiveHint:** It is a read. No rule and no mailbox is changed.
+- **openWorldHint:** The rule is one of this workspace's own rows.
+
+## automation_runs (readOnly: true, destructive: false, openWorld: false)
+
+**Submitted text.**
+
+- **readOnlyHint:** It returns the recent runs of one automation rule, with their counters.
+- **destructiveHint:** It is a read. No rule and no mailbox is changed.
+- **openWorldHint:** The run history is this workspace's own data.
+
+## automation_preview (readOnly: true, destructive: false, openWorld: false)
+
+**Submitted text.**
+
+- **readOnlyHint:** It dry-runs a filter and reports what it matches right now. It applies nothing, sends nothing and claims no message in the deduplication ledger.
+- **destructiveHint:** Nothing here changes a rule or a mailbox, so a later real run is unaffected.
+- **openWorldHint:** The preview searches the connected mailbox and nothing else.
+
+## automation_disable (readOnly: false, destructive: true, openWorld: false)
+
+**Submitted text.**
+
+- **readOnlyHint:** It turns an automation rule off.
+- **destructiveHint:** It stops unattended triage the user was relying on, so mail the rule handled is left unhandled until someone notices. The rule, its filter and its run history are kept.
+- **openWorldHint:** It flips a flag on one of this workspace's own rules and transmits nothing.
 
 **Reasoning.**
 
-- **readOnly false:** advertised actions are `create`, `update`, `enable`,
-  `disable` and `delete` on unattended triage rules.
-- **destructive true:** `delete` removes a rule, and an enabled rule then acts
-  on the mailbox on a schedule with no model and no human in the loop, which is
-  the widest effect any tool here has. Safeguards: a rule is created DISABLED
-  and enabling is always a separate explicit call; deleting mail is not an
-  available rule action and is refused (the closed set is move, label,
-  mark_read, forward, draft_reply); the cadence is a fixed ladder
-  (15/30/60/180/360/720/1440 minutes), not a free integer; every rule carries a
-  per-run message cap (default 25, maximum 200) so one bad filter cannot run
-  away before a human sees the run log; and the rule runs as the API key that
-  created it and can never do more than that key may do.
-- **openWorld true:** a rule's action can be `{type: "forward", to: [...]}`,
-  which addresses recipients outside the mailbox. Such a forward stops at an
-  approval row and is always held for a human decision regardless of the inbox's
-  approval setting, but that is a safeguard on the delivery, not a reason to
-  tell a client the tool is confined to the account.
+- **destructive true:** changed from false on 2026-10-13. It is the least
+  destructive of the automation writes and is flagged for the rule's wording
+  rather than for a loss of data: a state change, not an addition.
+
+## automation_delete (readOnly: false, destructive: true, openWorld: false)
+
+**Submitted text.**
+
+- **readOnlyHint:** It deletes an automation rule.
+- **destructiveHint:** It removes the rule, and its filter and action have to be written again to get it back. Run history is kept. No mail is touched by deleting a rule.
+- **openWorldHint:** It removes one of this workspace's own rules and transmits nothing.
 
 ## contact_search (readOnly: true, destructive: false, openWorld: false)
 
@@ -599,10 +825,29 @@ settings — see its block, which is the one place in this file a
 
 **Reasoning.**
 
-- **readOnly true:** it reads one unsent draft and returns it. Where the draft
-  editor card is on, the result is the card envelope and the card shows it;
-  where it is not, the result is a plain payload the model reads. Nothing is
-  written and nothing is sent in either case.
+- **readOnly true:** it reads one unsent draft and returns it. `content` is the
+  same plain read in both states (recipients, subject, `body_text`, attachment
+  names, `untrusted_content: true`), because the model is this tool's primary
+  reader. Where the draft editor card is on, `structuredContent` is the card
+  envelope and the card shows it; where it is not, `structuredContent` is that
+  same plain payload. Nothing is written and nothing is sent in either case.
+- **The card half is marked untrusted too (2026-10-13).** With the card on,
+  `structuredContent` is the editor envelope plus a top-level
+  `untrusted_content: true`, so the draft's subject, recipients and body are
+  flagged in both channels and not only in `content`.
+- **A failed read is reported as a failed read.** The Gmail and Outlook
+  readers answer "not found" only for a 404 or a malformed-id 400. A 429 or a
+  5xx is `provider_error`, "could not be read, nothing was changed", where it
+  used to come back as `draft_not_found`.
+- **The model is meant to call it (2026-10-13).** With the card on it used to
+  be listed `visibility: ["app"]`, and its `content` was a body-free summary
+  line. A model then had no way to read a draft the user had edited in the
+  card: `draft_list` returns no body and neither does any draft write, so the
+  next `draft` update put the model's older text back over the user's. It is
+  now listed `visibility: ["model", "app"]` with the card on (and with no
+  `_meta` at all with it off, as before), and its `content` carries the text.
+  None of the three hints moves: it was already a read that returned the body
+  to any caller holding both scopes, and `visibility` was never a boundary.
 - **destructive false:** it changes nothing at all.
 - **openWorld false:** the draft is inside the connected mailbox. It also
   requires `read:email` on top of `manage:drafts`, because on IMAP and Outlook a
@@ -628,15 +873,17 @@ settings — see its block, which is the one place in this file a
   a plain payload is not an envelope, so the card's restore-recovery path
   cannot re-open an editor from it for an inbox the user switched off.
 - **What the same flags do to `tools/list`.** This tool is LISTED
-  unconditionally; what it loses is `_meta.ui`, on the same `drafts` gate
-  `draft` uses — the workspace must be rolled out and not hidden
+  unconditionally; what it loses is `_meta.ui` (resource URI plus
+  `visibility: ["model", "app"]`), on the same `drafts` gate
+  the five draft writes use (`draft_create`, `draft_reply`, `draft_update`,
+  `draft_send`, `draft_delete`) — the workspace must be rolled out and not hidden
   (`workspaceDraftEditorEnabled` ANDs those two), and the inboxes the key can
   reach must not ALL be hidden (`allReachableInboxesHideDraftEditor`). In the
   mixed case (some hidden, some not) the metadata stays, and a hidden inbox
-  instead gets no envelope from `draft` — which is the only mail tool on this
-  gate (`DRAFT_EDITOR_CARD_TOOL_NAMES` has one member).
-  `email_compose` and `schedule` are on a DIFFERENT gate:
-  `REVIEW_CARD_TOOL_NAMES` rides `gates.outbound`, which reads
+  instead gets no envelope from those draft writes, which are the only mail
+  tools on this gate (`PER_OPERATION_CARD_TOOL_NAMES.drafts`).
+  The three sends and `schedule_create` are on a DIFFERENT gate:
+  `PER_OPERATION_CARD_TOOL_NAMES.outbound` rides `gates.outbound`, which reads
   `send_approval_required` and never looks at `draft_editor_hidden`. None of
   that is a permission boundary; the scope and inbox checks are.
 
@@ -645,8 +892,8 @@ settings — see its block, which is the one place in this file a
 **Submitted text.**
 
 - **readOnlyHint:** It saves the fields a person edited in the draft editor.
-- **destructiveHint:** Overwrites an unsent draft, as draft's own update already does, and transmits nothing. A real body_text edit also regenerates the HTML part from that text, replacing any rich HTML there.
-- **openWorldHint:** The draft stays in the connected mailbox. Sending it still goes through the draft tool, including its approval hold.
+- **destructiveHint:** Overwrites an unsent draft, only with what a person typed into the card, and transmits nothing. A real body_text edit also regenerates the HTML part from that text, replacing any rich HTML there.
+- **openWorldHint:** The draft stays in the connected mailbox. Sending it still goes through draft_send, including its approval hold.
 
 **Reasoning.**
 
@@ -662,9 +909,14 @@ settings — see its block, which is the one place in this file a
   recipient read the sentence that had been replaced. Between losing formatting
   and silently sending wording the user replaced, this tool loses the
   formatting. It is still annotated `destructiveHint: false` because what it
-  overwrites is an UNSENT draft in the user's own mailbox, which
-  `draft{action:"update"}` already overwrites, and because nothing is
-  transmitted and no stored mail is touched. The regenerated part is DROPPED,
+  overwrites is an UNSENT draft in the user's own mailbox, with text a person
+  typed into the card themselves, and because nothing is transmitted and no
+  stored mail is touched. OPEN QUESTION since 2026-10-13: `draft_update`, the
+  model-callable overwrite of the same draft, is now `true` under the
+  additive-only rule, and this app-only tool was left `false` because the scan
+  that flagged `signature_set` did not flag it and a host that prompts on every
+  destructive call would prompt on every Save in the editor. If a later scan
+  flags it, the value to change is in `mcp-app-drafts.ts`. The regenerated part is DROPPED,
   leaving the message text/plain, in two cases: when it would exceed the HTML
   body limit (escaping can multiply the input), and when it is empty — a
   cleared body should leave a message with no HTML part, not one carrying an
@@ -686,13 +938,30 @@ settings — see its block, which is the one place in this file a
   part for the line endings to differ from. A genuine body edit still regenerates, and
   that trade-off is not softened by a character. Other safeguards: omitted fields are
   left as stored rather than blanked; recipients are validated with the same
-  validator as `email_compose` before anything is written; no signature is
+  validator as `email_send` before anything is written; no signature is
   applied, so a saved draft cannot end up with two; and a draft that carries
   attachments is refused outright on IMAP and Gmail (whose updates rebuild the
   MIME from parameters and would drop them) rather than being rebuilt without
   them, while Outlook, whose update is a field PATCH, may proceed.
 - **openWorld false:** the draft stays in the connected mailbox. Sending it
-  still goes through `draft`, including its approval hold.
+  still goes through `draft_send`, including its approval hold.
+- **More is refused than attachments (2026-10-13).** On IMAP and Gmail the save
+  rebuilds the message from its text, and the rebuild cannot represent an
+  inline image, a second text part, a calendar alternative, a signature part or
+  `format=flowed` text. Those used to be dropped without a word, because none
+  of them is an "attachment" to the parser. Each is now refused with
+  `draft_not_rebuildable` and nothing is written, exactly as
+  `draft_has_attachments` already worked. This narrows what the tool can
+  overwrite and moves none of the three hints. Also since 2026-10-13: a
+  recipient list supplied as `[]` is cleared on Outlook as it is elsewhere
+  (Graph's PATCH used to keep it), and the stored Reply-To is carried through
+  a rebuild.
+- **`draft_update` can now do a partial update too (2026-10-13).** It may omit
+  `body`, and when it does it runs the same merge this tool runs
+  (`applyDraftPatch`): omitted fields kept, no signature, the HTML part carried
+  through, and the same two refusals on IMAP and Gmail. The two tools still
+  differ in who writes: this one records `last_saved_by: "user"` and is listed
+  app-only, `draft_update` is the model's and is `destructiveHint: true`.
 - **When the card is switched off.** The same gate `draft_read` reads, but
   here it refuses, with two codes. Not rolled out is `draft_editor_disabled`;
   switched off by the user, at the WORKSPACE grain or at the grain of the INBOX
@@ -700,12 +969,12 @@ settings — see its block, which is the one place in this file a
   the stored draft is read, so nothing is read and nothing is written. The
   per-inbox flag did not refuse this tool until 2026-09-16.
 
-## draft_editor_hide (readOnly: false, destructive: false, openWorld: false)
+## draft_editor_hide (readOnly: false, destructive: true, openWorld: false)
 
 **Submitted text.**
 
 - **readOnlyHint:** It writes a display preference: inboxes.draft_editor_hidden for one mailbox, or workspaces.draft_editor_hidden for all of them.
-- **destructiveHint:** Nothing is lost and nothing is sent; it only decides whether the draft editor card renders. Drafts and every other tool behave identically, and hidden:false sets it back at either scope.
+- **destructiveHint:** It overwrites a stored display preference: whether the draft editor card renders. No mail or draft is changed and nothing is sent; hidden:false sets it back at either scope.
 - **openWorldHint:** It writes one column in the caller's own workspace. The inbox is resolved through the same gate every other draft tool uses, so it can only address a mailbox this key may already use.
 
 **Reasoning.**
@@ -714,12 +983,30 @@ settings — see its block, which is the one place in this file a
   `inboxes.draft_editor_hidden` for one mailbox or
   `workspaces.draft_editor_hidden` for all of them. `scope` is required and has
   no default; `hidden` defaults to true.
-- **destructive false:** nothing is lost and nothing is sent. It changes only
-  whether the draft editor card is rendered; drafts, sending and every other
-  tool behave identically either way, and the result of a draft call is the same
-  text it has always been.
-- **How it is reversed, precisely — and this is the `destructiveHint: false`
-  argument, nothing else.** The same call with `hidden: false` restores the
+- **The model is meant to call it (2026-10-13).** With the card on it is listed
+  `visibility: ["model", "app"]`; it was `["app"]`. The card tells a person the
+  card "can be brought back by asking in this chat", and once the card is
+  hidden the model calling this tool with `hidden:false` is the only route that
+  sentence can mean, so an app-only listing made the copy false. The server
+  instructions no longer list it among the app-only tools. None of the three
+  hints moves: `visibility` was never a boundary, and every argument below was
+  already written on the assumption that a model calls this.
+- **destructive true:** changed from false on 2026-10-13, for two reasons that
+  arrived the same day. The additive-only rule the scan applied to
+  `signature_set` leaves false for writes that only add, counts an overwrite as
+  destructive, and says being able to undo an action does not justify false;
+  this tool overwrites a stored setting and its `false` rested on exactly that
+  reversibility. And it became model-callable, so it is no longer one of the
+  card-only tools that rule was left unapplied to (compare the open question on
+  `draft_editor_save`, which is still app-only and still `false`). What the
+  write touches is unchanged: nothing is lost from the mailbox and nothing is
+  sent. It changes only whether the draft editor card is rendered; drafts,
+  sending and every other tool behave identically either way, and the result of
+  a draft call is the same text it has always been.
+- **How it is reversed, precisely. This was the whole `destructiveHint: false`
+  argument; it no longer carries the annotation and is kept because the
+  submitted text still states it ("hidden:false sets it back at either
+  scope").** The same call with `hidden: false` restores the
   card, at BOTH scopes, because this tool is the only one that passes
   `allowWhileHidden: true` to the shared gate, and it passes it
   UNCONDITIONALLY, in both directions. So the tool that writes the opt-out
@@ -754,8 +1041,8 @@ settings — see its block, which is the one place in this file a
   this block for which branch that is on.
 - **Why idempotent — a SEPARATE property, argued separately.** Conflating
   reversibility with idempotence is how an annotation gets written that the
-  spec does not support, so: reversibility says another call can undo this, and
-  is the `destructiveHint: false` argument above. `idempotentHint: true` is the
+  spec does not support, so: reversibility says another call can undo this (the
+  paragraph above, which used to be the `destructiveHint: false` argument). `idempotentHint: true` is the
   MCP spec's narrower claim that repeating THIS call with THESE arguments has no
   ADDITIONAL EFFECT ON THE ENVIRONMENT. It holds because the write is an
   assignment and not an increment or an append: `setDraftEditorHidden(scope,
@@ -827,10 +1114,12 @@ settings — see its block, which is the one place in this file a
 > `app/api/inboxes/[id]/route.ts` and the generated `src/types/database.types.ts`.
 > The control is real and merged-pending, not shipped-here.
 >
-> **What this changes for the annotation: nothing.** `destructiveHint: false`
-> rests on the reversal, and since 2026-09-16 the tool reverses itself at both
-> scopes without help. That was already enough before the dashboard existed and
-> is still the argument; the dashboard is a second route, and the submitted text
+> **What this changes for the annotation: nothing.** (Written while the hint
+> was `false` and rested on the reversal. It is `true` since 2026-10-13, for the
+> reasons in the block above; the dashboard has no bearing on that either.)
+> Since 2026-09-16 the tool reverses itself at both
+> scopes without help. That was already enough before the dashboard existed;
+> the dashboard is a second route, and the submitted text
 > deliberately does not mention it. A reviewer cannot see our dashboard, and a
 > justification that leans on a screen they cannot check is weaker than one that
 > describes the tool in front of them, not stronger.

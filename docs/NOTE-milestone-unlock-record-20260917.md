@@ -186,10 +186,47 @@ run can be proved.
 
 ---
 
+## Addendum 2026-10-15: eight more rungs
+
+By 2026-10-15 eight rungs had been crossed since the record was written and sat
+in the undated pile. Each was dated the same way, and each query was also
+checked against an existing entry (the reruns reproduced 250 activations on
+2026-09-11, 100 active on 2026-08-31 and the 30 day streak on 2026-08-31).
+
+**Money, from Stripe itself.** The `user_billing` list-price rebuild no longer
+works: Personal moved to $9 on 2026-09-29 for new customers and six
+subscriptions were upgraded Personal to Pro in place. The Stripe CLI's live key
+now reads, so all 83 subscriptions (`stripe subscriptions list --live --status
+all`) and all 105 invoices were pulled. Each subscription starts at its first
+invoice line's price, changes price at the period start of the proration line
+that carried the new price, and leaves at `ended_at`. Internal accounts are
+excluded with `internal_account_emails()`, and `past_due` counts as live, as on
+the board. Walking those events in time order:
+
+| rung | crossed (UTC) | at that moment |
+|------|---------------|----------------|
+| `paying-25` | 2026-09-24 01:27 | 25 paying, MRR $204 |
+| `mrr-25000` | 2026-09-29 23:50 | MRR $257, 33 paying |
+| `paying-50` | 2026-10-10 15:54 | 50 paying, MRR $476 |
+| `mrr-50000` | 2026-10-11 16:55 | MRR $507.20, 53 paying |
+
+The same walk ends at MRR $763.40 and 80 paying on 2026-10-15. It also agrees
+with the board's figures reconciled against Stripe on 2026-09-30 ($267, 32
+active plus 1 past due).
+
+**People and streaks**, with the queries above and the bounds widened:
+
+- `activated-500`: the 500th first activation on **2026-10-01** (778 in
+  total; including deleted workspaces gives the same day).
+- `active-7d-250`: first 7 day window with 250 workspaces served on
+  **2026-09-23**; `active-7d-500` on **2026-10-14** (peak 509).
+- `signup-streak-60`: the run reached 60 on **2026-09-30** (75 long on
+  2026-10-15).
+
 ## What is not recorded, and why
 
-`mrr-25000` and up, `paying-25` and up, `activated-500`, `active-7d-250`,
-`signup-streak-60` and the rest are not here because they have not happened.
-When they do, they will land in the undated pile until someone reruns the
-relevant query above and adds a line to the record. The pile is still rendered
-for exactly that reason.
+`mrr-100000` and up, `paying-100`, `activated-1000`, `signup-streak-100`,
+`record-signup-day-50` (the best day so far is 46) and the rest are not here
+because they have not happened. When they do, they will land in the undated
+pile until someone reruns the relevant query above and adds a line to the
+record. The pile is still rendered for exactly that reason.

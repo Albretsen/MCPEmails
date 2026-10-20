@@ -61,3 +61,20 @@ export function useInboxPaywallView({ isReconnect, atInboxLimit, serverLimitReac
     };
   }, [isReconnect, atInboxLimit, serverLimitReached]);
 }
+
+/**
+ * Fire-and-forget beacon: a buy button on the inbox-cap offer was clicked.
+ *
+ * The second half of the shown beacon above. `keepalive` because the click is
+ * a navigation to Stripe, and the request has to outlive the page. No body:
+ * nothing about the mailbox or the plan comes from the browser.
+ */
+export function reportInboxPaywallClick() {
+  try {
+    fetch('/api/analytics/paywall-click', { method: 'POST', keepalive: true }).catch(() => {
+      // Analytics is never worth a console error in a user's browser.
+    });
+  } catch {
+    // A missing fetch (tests, very old browsers) must never block the click.
+  }
+}

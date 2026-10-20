@@ -49,17 +49,17 @@ A stored corpus of real email is irresistible. It's tempting to use it to improv
 Here's the path a single \`email_read\` call (action \`read\`) takes through MCP Emails:
 
 \`\`\`
-agent  →  MCP server  →  isolated Edge Function
+agent  →  MCP server  →  provider connection
                               ↓ decrypt token (in memory)
                          your provider (Gmail / Graph / IMAP)
                               ↓ message body
-agent  ←  parsed result  ←  Edge Function
+agent  ←  parsed result  ←  MCP server
                          (body discarded, nothing written)
 \`\`\`
 
-The credential is the only thing at rest, and it's encrypted with **AES-256-GCM**. Decryption happens only inside an isolated Edge Function at call time, and the encryption key is an environment secret stored separately from the database — so a database dump alone is useless. The message itself never touches durable storage. It's parsed, returned to your agent, and gone.
+The credential is the only thing at rest, and it's encrypted with **AES-256-GCM**. It's decrypted on our servers only when a request needs it and is never sent to your agent, and the encryption key is kept as a server secret, separate from the database, so a database dump alone is useless. The message itself never touches durable storage. It's parsed, returned to your agent, and gone.
 
-Sending works the same way and adds one more guarantee: outbound mail goes through *your* provider — the Gmail API, Microsoft Graph, or your own SMTP. We never relay from our own domain, so your deliverability and domain reputation stay entirely yours. There's no shared sending pool to land you in someone else's spam reputation.
+Sending works the same way and adds one more guarantee: outbound mail goes through *your* provider: Gmail or another provider over SMTP, or Microsoft Graph for Outlook. We never relay from our own domain, so your deliverability and domain reputation stay entirely yours. There's no shared sending pool to land you in someone else's spam reputation.
 
 If you want the deeper mechanics of the credential model — OAuth tokens versus app passwords and why both stay encrypted — I wrote that up in [OAuth vs. API keys for AI email access](/blog/oauth-vs-api-keys-ai-email-access).
 

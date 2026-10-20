@@ -4,13 +4,17 @@ import { useState, useEffect, useRef } from 'react';
 import { useTranslations } from 'next-intl';
 import { trackProductEvent, scopeProfile } from '@/lib/analytics.mjs';
 import { Icon, Badge, Btn, Avatar, ProviderLogo } from '../Primitives';
-import { useAppLocale } from '../i18n/AppLocaleProvider';
+import { preferredAppLocale, useAppLocale } from '../i18n/AppLocaleProvider';
 import { routing } from '@/i18n/routing';
 import { Link } from '@/i18n/navigation';
 import { CLIENT_LOGOS } from './clientLogos';
 import { useToast } from './Toast';
 import { loadSignatureEditor, peekSignatureEditor, warmSignatureEditor } from './signature-editor-loader.mjs';
 import { normalizeSenderName } from '@/lib/inboxes/sender-name';
+import { canChangeApiKey, keyScopeCap } from '@/lib/api-keys/key-authority';
+import { VIEWER_SCOPES } from '@/lib/api-keys/scopes';
+import { canOperateWorkspace } from '@/lib/workspace/roles';
+import { startVisiblePoll } from '@/lib/polling/visible-poll';
 import {
   hiddenFromShown,
   inboxDraftEditorControl,
@@ -20,6 +24,7 @@ import { ApprovalsPanel } from './ApprovalsPanel';
 import { AutomationsPanel } from './AutomationsPanel';
 import { usePricingView } from '@/lib/analytics/use-pricing-view.mjs';
 import { PLANS as CATALOGUE } from '@/lib/stripe/plans';
+import { trimLeadingQuietDays } from '@/lib/analytics/retention';
 import { formatAmountCents, formatPriceCents } from '@/lib/stripe/annual-offer';
 import { pricingCompareHref } from '@/lib/billing/upgrade-intent.mjs';
 import { inboxCapOffer } from '@/lib/billing/inbox-cap-offer.mjs';
@@ -73,7 +78,7 @@ export const PLAN_DISPLAY_NAMES = {
   free: 'Free',
   personal: 'Personal',
   solo: 'Pro',
-  pro: 'Team',
+  pro: 'Business',
 };
 
 /** Customer-facing name for a plan id, never the raw id. */
@@ -453,7 +458,7 @@ const MCP_CLIENTS = [
  * and links to the client's official guide. For non-OAuth clients it surfaces
  * a shortcut to create an API key.
  */
-function ClientGuideModal({ client, mcpUrl, onClose, onGoToKeys, inbox = null }) {
+function ClientGuideModal({ client, mcpUrl, onClose, onGoToKeys, inbox = null, canCheckConnection = true }) {
   const t = useTranslations('dashboard');
   const steps = client.stepKeys.map((k) => t(k));
   const config = client.config ? client.config(mcpUrl) : null;
@@ -532,7 +537,9 @@ function ClientGuideModal({ client, mcpUrl, onClose, onGoToKeys, inbox = null })
               </button>
             </div>
           ) : null}
-          {inbox?.id ? (
+          {/* A viewer cannot run the check (POST /api/inboxes/[id]/check
+              answers 403, lib/workspace/roles.ts), so the row is not offered. */}
+          {inbox?.id && canCheckConnection ? (
             <div style={{ display: 'flex', alignItems: 'center', gap: 10, padding: '10px 12px', background: 'var(--bg-sunken)', border: '1px solid var(--border-1)', borderRadius: 8 }}>
               <Icon name={verified ? 'check' : 'refresh'} size={15} color={verified ? 'var(--mint-600)' : 'var(--brand)'} />
               <span style={{ flex: 1, fontFamily: 'var(--font-sans)', fontSize: 12.5, color: 'var(--fg-2)' }}>
@@ -568,7 +575,7 @@ function ClientGuideModal({ client, mcpUrl, onClose, onGoToKeys, inbox = null })
  * connect an inbox, then connect an MCP client (the URL is highlighted and a
  * per-client guide opens on click).
  */
-function GettingStartedGuide({ inboxes, inboxCount, callsThisMonth, mcpUrl, onConnect, onGoToKeys, initialClient = null, onClientSelected }) {
+function GettingStartedGuide({ inboxes, inboxCount, callsThisMonth, mcpUrl, onConnect, onGoToKeys, initialClient = null, onClientSelected, canCheckConnection = true }) {
   const t = useTranslations('dashboard');
   const [activeClient, setActiveClient] = useState(() => MCP_CLIENTS.find(c => (c.k === 'api' ? 'curl' : c.k) === initialClient) ?? null);
   // The second-work-mailbox invitation used to be the last row of this guide.
@@ -673,6 +680,7 @@ function GettingStartedGuide({ inboxes, inboxCount, callsThisMonth, mcpUrl, onCo
           onClose={() => setActiveClient(null)}
           onGoToKeys={onGoToKeys}
           inbox={inboxes?.[0] ?? null}
+          canCheckConnection={canCheckConnection}
         />
       ) : null}
     </div>
@@ -846,7 +854,7 @@ function StepDot({ num, done }) {
 }
 
 /* ---------------- Overview ---------------- */
-export function OverviewPage({ inboxes, apiKeys = [], activity, stats, usageData, planLimits, actionAllowance = null, plan: _plan = 'free', mcpUrl, memberCount = 0, onConnect, onGoToKeys, onGoToMembers, onboardingClient = null, onClientSelected, businessShaped = false }) {
+export function OverviewPage({ inboxes, apiKeys = [], activity, stats, usageData, planLimits, actionAllowance = null, plan: _plan = 'free', mcpUrl, memberCount = 0, onConnect, onGoToKeys, onGoToMembers, onboardingClient = null, onClientSelected, businessShaped = false, userRole }) {
   const t = useTranslations('dashboard');
   // Counted off the same live arrays the sidebar counts, never off the server
   // stats snapshot. `stats.inboxCount` was a separate server-side query taken
@@ -1040,6 +1048,7 @@ export function OverviewPage({ inboxes, apiKeys = [], activity, stats, usageData
       {showGuide ? (
         <GettingStartedGuide
           inboxes={inboxes}
+          canCheckConnection={userRole !== 'viewer'}
           inboxCount={inboxCount}
           callsThisMonth={callsThisMonth}
           mcpUrl={mcpUrl}
@@ -1209,11 +1218,12 @@ function UsageBars({ dailyCounts }) {
 }
 
 /**
- * 30-day bar chart that renders real daily call counts from `activity_log`.
+ * Daily bar chart that renders real call counts from `activity_log`.
  *
  * Props:
- *   dailyCounts: array of 30 { date: "YYYY-MM-DD", count: number } objects,
- *                 oldest first (index 0 = 29 days ago, index 29 = today).
+ *   dailyCounts: array of { date: "YYYY-MM-DD", count: number } objects,
+ *                 oldest first, last = today. At least 30 entries for a real
+ *                 workspace (see trimLeadingQuietDays), up to the plan window.
  */
 function UsageChart30({ dailyCounts }) {
   const t = useTranslations('dashboard');
@@ -1234,11 +1244,13 @@ function UsageChart30({ dailyCounts }) {
   }
 
   const max = Math.max(...dailyCounts.map((d) => d.count), 1);
-  const total = dailyCounts.length; // always 30
+  const total = dailyCounts.length; // 30 to 730 days, depending on plan and history
 
-  // Show a date label every 5 bars; always show the last bar's label.
+  // A date label every `step` bars (every 5 up to 40 days, then about eight in
+  // all so a long window does not print a hundred dates); always the last.
+  const step = Math.max(5, Math.ceil(total / 8));
   const labels = dailyCounts.map((d, i) => {
-    if (i === 0 || i % 5 === 4 || i === total - 1) return formatBarDate(d.date);
+    if (i === 0 || i % step === step - 1 || i === total - 1) return formatBarDate(d.date);
     return '';
   });
 
@@ -1272,7 +1284,7 @@ const WORKFLOW_CARDS = [
   { title: 'Review scheduled sends', prompt: 'Review my pending scheduled sends. Highlight anything stale, ambiguous, or unusually broad. Do not create or cancel anything.', scope: 'Scheduled sends' },
 ];
 
-export function WorkflowsPage({ mcpUrl }) {
+export function WorkflowsPage({ mcpUrl, userRole }) {
   const { toast } = useToast();
   const [copied, setCopied] = useState('');
   const copy = async (title, prompt) => {
@@ -1298,7 +1310,7 @@ export function WorkflowsPage({ mcpUrl }) {
           </article>
         ))}
       </div>
-      <BulkRunsPanel />
+      <BulkRunsPanel userRole={userRole} />
     </main>
   );
 }
@@ -1372,8 +1384,17 @@ export function InboxesPage({ inboxes, planLimits, stripePrices = null, business
     ? (inboxes.find(ib => ib.id === detailInbox.id) ?? detailInbox)
     : null;
 
+  // Viewers are read-only: checking, reconnecting and disconnecting an inbox
+  // are operator actions the server refuses them (403 from /check and DELETE
+  // /api/inboxes/[id], insufficient_role from the connect routes and OAuth
+  // callbacks; lib/workspace/roles.ts). The buttons are shown disabled with
+  // the reason instead of failing on click.
+  const canManage = userRole !== 'viewer';
+  const viewerNote = t('inboxes.viewerActionsNote');
+  const checkTitle = canManage ? t('inboxes.checkConnection') : viewerNote;
+
   const handleCheck = async (inbox) => {
-    if (checkingId) return;
+    if (checkingId || !canManage) return;
     setCheckingId(inbox.id);
     try {
       await onCheck(inbox);
@@ -1383,6 +1404,7 @@ export function InboxesPage({ inboxes, planLimits, stripePrices = null, business
   };
 
   const handleDisconnectRequest = (inbox) => {
+    if (!canManage) return;
     setConfirmInbox(inbox);
   };
 
@@ -1722,6 +1744,8 @@ export function InboxesPage({ inboxes, planLimits, stripePrices = null, business
                         variant="secondary"
                         size="sm"
                         icon="refresh"
+                        disabled={!canManage}
+                        title={canManage ? undefined : viewerNote}
                         onClick={() => onReconnect(ib)}
                       >
                         {t('inboxes.reconnect')}
@@ -1732,9 +1756,9 @@ export function InboxesPage({ inboxes, planLimits, stripePrices = null, business
                         size="sm"
                         icon="refresh"
                         className={checkingId === ib.id ? "is-checking" : ""}
-                        disabled={checkingId === ib.id}
+                        disabled={!canManage || checkingId === ib.id}
                         aria-label={t('inboxes.checkConnection')}
-                        title={t('inboxes.checkConnection')}
+                        title={checkTitle}
                         onClick={() => handleCheck(ib)}
                       >
                         {""}
@@ -1745,6 +1769,8 @@ export function InboxesPage({ inboxes, planLimits, stripePrices = null, business
                       size="sm"
                       icon="trash"
                       aria-label={t('inboxes.disconnectInbox')}
+                      disabled={!canManage}
+                      title={canManage ? undefined : viewerNote}
                       onClick={() => handleDisconnectRequest(ib)}
                     >
                       {""}
@@ -1790,11 +1816,11 @@ export function InboxesPage({ inboxes, planLimits, stripePrices = null, business
                   <div className="inbox-mobile-actions" onClick={e => e.stopPropagation()}>
                     <Btn variant="secondary" size="sm" onClick={() => setDetailInbox(ib)}>View details</Btn>
                     {canReconnect ? (
-                      <Btn variant="secondary" size="sm" icon="refresh" onClick={() => onReconnect(ib)}>{t('inboxes.reconnect')}</Btn>
+                      <Btn variant="secondary" size="sm" icon="refresh" disabled={!canManage} title={canManage ? undefined : viewerNote} onClick={() => onReconnect(ib)}>{t('inboxes.reconnect')}</Btn>
                     ) : (
-                      <Btn variant="ghost" size="sm" icon="refresh" className={checkingId === ib.id ? 'is-checking' : ''} disabled={checkingId === ib.id} onClick={() => handleCheck(ib)}>{t('inboxes.checkConnection')}</Btn>
+                      <Btn variant="ghost" size="sm" icon="refresh" className={checkingId === ib.id ? 'is-checking' : ''} disabled={!canManage || checkingId === ib.id} title={checkTitle} onClick={() => handleCheck(ib)}>{t('inboxes.checkConnection')}</Btn>
                     )}
-                    <Btn variant="ghost" size="sm" icon="trash" aria-label={t('inboxes.disconnectInbox')} onClick={() => handleDisconnectRequest(ib)}>{t('inboxes.detail.disconnect')}</Btn>
+                    <Btn variant="ghost" size="sm" icon="trash" aria-label={t('inboxes.disconnectInbox')} disabled={!canManage} title={canManage ? undefined : viewerNote} onClick={() => handleDisconnectRequest(ib)}>{t('inboxes.detail.disconnect')}</Btn>
                   </div>
                 </article>
               );
@@ -1864,6 +1890,8 @@ export function InboxesPage({ inboxes, planLimits, stripePrices = null, business
           draftEditorRolledOut={draftEditorRolledOut}
           draftEditorWorkspaceHidden={draftEditorWorkspaceHidden}
           canManageInbox={userRole !== 'viewer'}
+          // The review gate is owner/admin-only (lib/workspace/roles.ts).
+          canManageReview={userRole !== 'viewer' && userRole !== 'member'}
           historyDays={historyDays}
         />
       )}
@@ -2174,7 +2202,7 @@ export function resolveReviewMode(inbox) {
  * here, is that nothing is delivered until a signed-in owner or admin approves
  * it in the browser, which holds in both `inline` and `dashboard`.
  */
-function ReviewModeSelector({ value, onChange, disabled }) {
+function ReviewModeSelector({ value, onChange, disabled, lockedNote = null }) {
   const t = useTranslations('dashboard');
   return (
     <div className="review-mode">
@@ -2197,6 +2225,7 @@ function ReviewModeSelector({ value, onChange, disabled }) {
           </span>
         </label>
       ))}
+      {lockedNote ? <p className="review-mode-note">{lockedNote}</p> : null}
       <p className="review-mode-note">{t('approvals.mode.guarantee')}</p>
     </div>
   );
@@ -2210,7 +2239,7 @@ function ReviewModeSelector({ value, onChange, disabled }) {
    it. Normalisation (control chars and angle brackets stripped, whitespace
    collapsed, 100-char cap) is shared with the PATCH route so the preview and
    the stored value never disagree. */
-function SenderNameEditor({ inbox, onSave, t }) {
+function SenderNameEditor({ inbox, onSave, t, readOnly = false }) {
   const [value, setValue] = useState(inbox.displayName ?? '');
   const [saving, setSaving] = useState(false);
 
@@ -2229,7 +2258,7 @@ function SenderNameEditor({ inbox, onSave, t }) {
   const inputId = `sender-name-${inbox.id}`;
 
   const handleSave = async () => {
-    if (saving || !dirty) return;
+    if (saving || !dirty || readOnly) return;
     setSaving(true);
     try {
       await onSave(inbox.id, nextName);
@@ -2271,13 +2300,13 @@ function SenderNameEditor({ inbox, onSave, t }) {
               handleSave();
             }
           }}
-          disabled={saving}
+          disabled={saving || readOnly}
           style={{ flex: 1, minWidth: 0, height: 32, padding: '0 10px' }}
         />
         <Btn
           variant="primary"
           size="sm"
-          disabled={!dirty || saving}
+          disabled={!dirty || saving || readOnly}
           onClick={handleSave}
         >
           {saving ? t('inboxes.detail.senderName.saving') : t('inboxes.detail.senderName.save')}
@@ -2306,11 +2335,175 @@ function SenderNameEditor({ inbox, onSave, t }) {
   );
 }
 
-function SignatureEditor({ inbox, onSave, t }) {
+/**
+ * Send As addresses for an IMAP inbox: another From address that delivers to
+ * this mailbox (an iCloud alias, say). Adding one emails a code to that
+ * address; it can be used only once the code is entered here. The rules and
+ * limits live in lib/inboxes/send-as.ts; this only drives
+ * /api/inboxes/[id]/send-as. `readOnly`: a viewer sees the list, nothing else.
+ */
+const SEND_AS_ERRORS = new Set([
+  'invalid_address', 'own_address', 'connected_inbox', 'already_verified', 'too_many_aliases',
+  'rate_limited', 'cooldown', 'code_expired', 'too_many_attempts', 'wrong_code', 'invalid_code',
+  'mail_failed', 'unsupported_provider',
+]);
+
+export function SendAsEditor({ inbox, t, readOnly = false }) {
+  const [aliases, setAliases] = useState(null);
+  const [address, setAddress] = useState('');
+  const [codes, setCodes] = useState({});
+  const [busy, setBusy] = useState(null);
+  const [error, setError] = useState(null);
+  const endpoint = `/api/inboxes/${encodeURIComponent(inbox.id)}/send-as`;
+
+  useEffect(() => {
+    let live = true;
+    // eslint-disable-next-line react-hooks/set-state-in-effect
+    setAliases(null);
+    setError(null);
+    fetch(endpoint)
+      .then(res => (res.ok ? res.json() : Promise.reject(new Error('load'))))
+      .then(body => { if (live) setAliases(Array.isArray(body.aliases) ? body.aliases : []); })
+      .catch(() => { if (live) { setAliases([]); setError('generic'); } });
+    return () => { live = false; };
+  }, [endpoint]);
+
+  const call = async (key, init, url = endpoint) => {
+    setBusy(key);
+    setError(null);
+    try {
+      const res = await fetch(url, init);
+      const body = await res.json().catch(() => ({}));
+      if (!res.ok) {
+        setError(SEND_AS_ERRORS.has(body.error) ? body.error : 'generic');
+        return null;
+      }
+      return body;
+    } catch {
+      setError('generic');
+      return null;
+    } finally {
+      setBusy(null);
+    }
+  };
+
+  const upsert = alias => setAliases(list => {
+    const current = list ?? [];
+    return current.some(a => a.id === alias.id)
+      ? current.map(a => (a.id === alias.id ? alias : a))
+      : [...current, alias];
+  });
+
+  const post = payload => ({ method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(payload) });
+
+  const handleAdd = async () => {
+    if (readOnly || busy || !address.trim()) return;
+    const body = await call('add', post({ action: 'add', email_address: address.trim() }));
+    if (body?.alias) { upsert(body.alias); setAddress(''); }
+  };
+  const handleVerify = async alias => {
+    const body = await call(`verify:${alias.id}`, post({ action: 'verify', alias_id: alias.id, code: codes[alias.id] ?? '' }));
+    if (body?.alias) { upsert(body.alias); setCodes(c => ({ ...c, [alias.id]: '' })); }
+  };
+  const handleResend = async alias => {
+    const body = await call(`resend:${alias.id}`, post({ action: 'resend', alias_id: alias.id }));
+    if (body?.alias) upsert(body.alias);
+  };
+  const handleRemove = async alias => {
+    const body = await call(`remove:${alias.id}`, { method: 'DELETE' }, `${endpoint}?alias_id=${encodeURIComponent(alias.id)}`);
+    if (body) setAliases(list => (list ?? []).filter(a => a.id !== alias.id));
+  };
+
+  const label = { fontFamily: 'var(--font-sans)', fontSize: 12.5, color: 'var(--fg-2)' };
+  const inputId = `send-as-${inbox.id}`;
+
+  return (
+    <div style={{ marginBottom: 16 }} data-send-as>
+      <label htmlFor={inputId} style={{ display: 'block', margin: '0 0 2px', fontFamily: 'var(--font-sans)', fontSize: 13.5, fontWeight: 600, color: 'var(--fg-1)' }}>
+        {t('inboxes.detail.sendAs.title')}
+      </label>
+      <div style={{ ...label, marginBottom: 8 }}>{t('inboxes.detail.sendAs.help')}</div>
+
+      {aliases === null ? (
+        <div style={label}>{t('inboxes.detail.sendAs.loading')}</div>
+      ) : aliases.map(alias => (
+        <div key={alias.id} data-alias={alias.email_address} style={{ padding: '6px 0', borderBottom: '1px solid var(--border-1)' }}>
+          <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
+            <span style={{ flex: 1, minWidth: 0, fontFamily: 'var(--font-mono)', fontSize: 12.5, color: 'var(--fg-1)', overflowWrap: 'anywhere' }}>{alias.email_address}</span>
+            {alias.verified
+              ? <Badge tone="live">{t('inboxes.detail.sendAs.verified')}</Badge>
+              : <Badge tone="neutral">{t(alias.code_pending ? 'inboxes.detail.sendAs.pending' : 'inboxes.detail.sendAs.unverified')}</Badge>}
+            <Btn variant="ghost" size="sm" disabled={readOnly || !!busy} onClick={() => handleRemove(alias)}>
+              {t('inboxes.detail.sendAs.remove')}
+            </Btn>
+          </div>
+          {!alias.verified && (
+            <div style={{ display: 'flex', alignItems: 'center', gap: 8, marginTop: 6 }}>
+              <input
+                className="input"
+                type="text"
+                inputMode="numeric"
+                autoComplete="one-time-code"
+                maxLength={9}
+                aria-label={t('inboxes.detail.sendAs.codeLabel', { address: alias.email_address })}
+                placeholder={t('inboxes.detail.sendAs.codePlaceholder')}
+                value={codes[alias.id] ?? ''}
+                onChange={e => setCodes(c => ({ ...c, [alias.id]: e.target.value }))}
+                onKeyDown={e => { if (e.key === 'Enter') { e.preventDefault(); handleVerify(alias); } }}
+                disabled={readOnly || !!busy}
+                style={{ width: 120, height: 30, padding: '0 10px' }}
+              />
+              <Btn variant="primary" size="sm" disabled={readOnly || !!busy || !(codes[alias.id] ?? '').trim()} onClick={() => handleVerify(alias)}>
+                {t('inboxes.detail.sendAs.verify')}
+              </Btn>
+              <Btn variant="ghost" size="sm" disabled={readOnly || !!busy} onClick={() => handleResend(alias)}>
+                {t('inboxes.detail.sendAs.resend')}
+              </Btn>
+            </div>
+          )}
+        </div>
+      ))}
+
+      <div style={{ display: 'flex', alignItems: 'center', gap: 8, marginTop: 8 }}>
+        <input
+          id={inputId}
+          className="input"
+          type="email"
+          autoComplete="off"
+          spellCheck={false}
+          maxLength={254}
+          placeholder={t('inboxes.detail.sendAs.placeholder')}
+          value={address}
+          onChange={e => setAddress(e.target.value)}
+          onKeyDown={e => { if (e.key === 'Enter') { e.preventDefault(); handleAdd(); } }}
+          disabled={readOnly || !!busy || aliases === null}
+          style={{ flex: 1, minWidth: 0, height: 32, padding: '0 10px' }}
+        />
+        <Btn variant="secondary" size="sm" disabled={readOnly || !!busy || !address.trim() || aliases === null} onClick={handleAdd}>
+          {busy === 'add' ? t('inboxes.detail.sendAs.adding') : t('inboxes.detail.sendAs.add')}
+        </Btn>
+      </div>
+      {error && (
+        <div role="alert" style={{ ...label, marginTop: 6, color: 'var(--red-500)' }}>
+          {t(`inboxes.detail.sendAs.errors.${error}`)}
+        </div>
+      )}
+    </div>
+  );
+}
+
+/**
+ * `readOnly`: a viewer. Every control is disabled and nothing is saved (the
+ * PATCH and image routes refuse a viewer). `canManageReview`: owner/admin. The
+ * review gate is theirs alone, so for a member the selector is disabled with
+ * the reason, and the save only sends the review fields when they changed.
+ */
+function SignatureEditor({ inbox, onSave, t, readOnly = false, canManageReview = true }) {
   const wasImported = inbox.signatureSource === 'gmail_import';
 
   const [enabled, setEnabled] = useState(inbox.signatureEnabled ?? true);
   const [replyMode, setReplyMode] = useState(inbox.signatureReplyMode ?? 'first_only');
+  const [embedImages, setEmbedImages] = useState(inbox.signatureEmbedImages ?? false);
   const [reviewMode, setReviewMode] = useState(() => resolveReviewMode(inbox));
   const [saving, setSaving] = useState(false);
   const [sizeError, setSizeError] = useState('');
@@ -2450,6 +2643,7 @@ function SignatureEditor({ inbox, onSave, t }) {
     // eslint-disable-next-line react-hooks/set-state-in-effect
     setEnabled(inbox.signatureEnabled ?? true);
     setReplyMode(inbox.signatureReplyMode ?? 'first_only');
+    setEmbedImages(inbox.signatureEmbedImages ?? false);
     setReviewMode(resolveReviewMode(inbox));
     setSizeError('');
     // A "not saved" notice is about the inbox it happened on.
@@ -2484,7 +2678,7 @@ function SignatureEditor({ inbox, onSave, t }) {
   }, [inbox.id, editorModule]); // eslint-disable-line react-hooks/exhaustive-deps
 
   const handleSave = async () => {
-    if (saving || awaitingEditor) return;
+    if (saving || awaitingEditor || readOnly) return;
     setSizeError('');
     setSaveBlocked(false);
 
@@ -2542,12 +2736,21 @@ function SignatureEditor({ inbox, onSave, t }) {
         signature_text: text,
         signature_enabled: enabled,
         signature_reply_mode: replyMode,
-        // Both columns are sent: `send_review_mode` is the new three-way
-        // setting, `send_approval_required` is the boolean the edge function
-        // still gates on. The API keeps them consistent; remove the boolean
-        // once the server reads the mode directly.
-        send_review_mode: reviewMode,
-        send_approval_required: reviewMode !== 'off',
+        // Sent only when the box was actually changed, so a save that did
+        // not touch it writes nothing. (Outlook never shows the box: its mail
+        // goes through Microsoft Graph, which has no embedded path yet.)
+        ...(canEmbedImages && embedImages !== (inbox.signatureEmbedImages ?? false)
+          ? { signature_embed_images: embedImages }
+          : {}),
+        // Sent only when the selection changed: the review gate is
+        // owner/admin-only, and a member saving a signature must not be
+        // refused for restating it. Both columns go together:
+        // `send_review_mode` is the three-way setting, `send_approval_required`
+        // the boolean the edge function still gates on. The API keeps them
+        // consistent; remove the boolean once the server reads the mode.
+        ...(reviewMode !== resolveReviewMode(inbox)
+          ? { send_review_mode: reviewMode, send_approval_required: reviewMode !== 'off' }
+          : {}),
       });
     } catch {
       // App.jsx already showed an error toast; keep the form as-is for retry.
@@ -2564,6 +2767,9 @@ function SignatureEditor({ inbox, onSave, t }) {
   // `saving` alone, so an editor that mounts during that wait is not created
   // read-only.
   const busy = saving || awaitingEditor;
+  // Every control below is also off for a viewer.
+  const locked = busy || readOnly;
+  const canEmbedImages = inbox.provider !== 'outlook';
 
   return (
     <div style={{ marginBottom: 16 }}>
@@ -2576,14 +2782,19 @@ function SignatureEditor({ inbox, onSave, t }) {
             type="checkbox"
             checked={enabled}
             onChange={() => setEnabled(v => !v)}
-            disabled={busy}
+            disabled={locked}
             style={{ accentColor: 'var(--brand)' }}
           />
           {t('inboxes.detail.signature.enabled')}
         </label>
       </div>
 
-      <ReviewModeSelector value={reviewMode} onChange={setReviewMode} disabled={busy} />
+      <ReviewModeSelector
+        value={reviewMode}
+        onChange={setReviewMode}
+        disabled={locked || !canManageReview}
+        lockedNote={!readOnly && !canManageReview ? t('approvals.mode.ownerAdminOnly') : null}
+      />
 
       {wasImported && (
         <div style={{ ...label, marginBottom: 8, color: 'var(--fg-2)' }}>
@@ -2601,7 +2812,7 @@ function SignatureEditor({ inbox, onSave, t }) {
             initialText={
               inbox.signatureText ?? (wasImported ? htmlToPlainSeed(inbox.signatureHtml) : '')
             }
-            disabled={saving || !enabled}
+            disabled={saving || !enabled || readOnly}
             onChange={syncPreview}
             onReady={() => handleEditorReady(inbox.id)}
           />
@@ -2662,6 +2873,24 @@ function SignatureEditor({ inbox, onSave, t }) {
         </div>
       )}
 
+      {canEmbedImages && (
+        <div style={{ marginTop: 10 }}>
+          <label style={{ display: 'inline-flex', alignItems: 'center', gap: 8, cursor: 'pointer', ...label }}>
+            <input
+              type="checkbox"
+              checked={embedImages}
+              onChange={() => setEmbedImages(v => !v)}
+              disabled={locked}
+              style={{ accentColor: 'var(--brand)' }}
+            />
+            {t('inboxes.detail.signature.embedImages')}
+          </label>
+          <div style={{ ...label, marginTop: 4, color: 'var(--fg-3)' }}>
+            {t('inboxes.detail.signature.embedImagesHint')}
+          </div>
+        </div>
+      )}
+
       <div style={{ display: 'flex', alignItems: 'center', gap: 10, marginTop: 10, flexWrap: 'wrap' }}>
         <span style={label}>{t('inboxes.detail.signature.replyModeLabel')}</span>
         {/* This is the one select in the dashboard that sets its own padding
@@ -2672,7 +2901,7 @@ function SignatureEditor({ inbox, onSave, t }) {
           className="input"
           value={replyMode}
           onChange={e => setReplyMode(e.target.value)}
-          disabled={busy}
+          disabled={locked}
           style={{ height: 32, padding: '0 28px 0 8px', flex: '0 0 auto', width: 'auto' }}
         >
           <option value="always">{t('inboxes.detail.signature.replyModeAlways')}</option>
@@ -2683,7 +2912,7 @@ function SignatureEditor({ inbox, onSave, t }) {
         <Btn
           variant="primary"
           size="sm"
-          disabled={busy}
+          disabled={locked}
           onClick={handleSave}
         >
           {busy ? t('inboxes.detail.signature.saving') : t('inboxes.detail.signature.save')}
@@ -2796,7 +3025,7 @@ const InboxDetailRow = ({ label, children }) => (
   </div>
 );
 
-function InboxDetailModal({ inbox, checking, onClose, onReconnect, onCheck, onDisconnect, onSaveSignature, onSaveSenderName, onSaveDraftEditorHidden, draftEditorRolledOut = false, draftEditorWorkspaceHidden = false, canManageInbox = true, historyDays = 30 }) {
+function InboxDetailModal({ inbox, checking, onClose, onReconnect, onCheck, onDisconnect, onSaveSignature, onSaveSenderName, onSaveDraftEditorHidden, draftEditorRolledOut = false, draftEditorWorkspaceHidden = false, canManageInbox = true, canManageReview = true, historyDays = 30 }) {
   const t = useTranslations('dashboard');
   if (!inbox) return null;
 
@@ -2853,6 +3082,15 @@ function InboxDetailModal({ inbox, checking, onClose, onReconnect, onCheck, onDi
             <InboxDetailRow label={t('inboxes.detail.authMethod')}>
               {usesOauth ? t('inboxes.detail.authOauth') : t('inboxes.detail.authAppPassword')}
             </InboxDetailRow>
+            {/* Only a partial connection gets the row: "send and receive" is
+                what every other inbox does, and saying so on each would be
+                noise. A send-only or receive-only inbox is the case a user
+                needs told, because half the tools will refuse it. */}
+            {(inbox.connectionMode === 'smtp' || inbox.connectionMode === 'imap') && (
+              <InboxDetailRow label={t('inboxes.detail.accessMode')}>
+                {inbox.connectionMode === 'smtp' ? t('inboxes.detail.accessSendOnly') : t('inboxes.detail.accessReceiveOnly')}
+              </InboxDetailRow>
+            )}
             <InboxDetailRow label={t('inboxes.detail.connectedOn')}>{formatDate(inbox.createdAt)}</InboxDetailRow>
             <InboxDetailRow label={t('inboxes.detail.lastCall')}>
               {inbox.lastCallAt ? formatLastUsed(inbox.lastCallAt, t) : t('inboxes.detail.lastCallNone', { days: historyDays })}
@@ -2914,24 +3152,48 @@ function InboxDetailModal({ inbox, checking, onClose, onReconnect, onCheck, onDi
                 <span>{t(`approvals.mode.${resolveReviewMode(inbox)}`)}</span>
               </summary>
               <p>Set the sender name and signature, and choose where a prepared send waits for a human decision.</p>
-              {onSaveSenderName && <SenderNameEditor inbox={inbox} onSave={onSaveSenderName} t={t} />}
-              <SignatureEditor inbox={inbox} onSave={onSaveSignature} t={t} />
+              {!canManageInbox ? (
+                <p className="review-mode-note" role="note">{t('inboxes.viewerActionsNote')}</p>
+              ) : null}
+              {onSaveSenderName && <SenderNameEditor inbox={inbox} onSave={onSaveSenderName} t={t} readOnly={!canManageInbox} />}
+              {/* IMAP inboxes that can send. Gmail's own Send As list comes
+                  from Google; Outlook has none yet. */}
+              {inbox.hasImap && inbox.connectionMode !== 'imap' && <SendAsEditor inbox={inbox} t={t} readOnly={!canManageInbox} />}
+              <SignatureEditor inbox={inbox} onSave={onSaveSignature} t={t} readOnly={!canManageInbox} canManageReview={canManageInbox && canManageReview} />
             </details>
           )}
 
+          {!canManageInbox ? (
+            <p style={{ margin: 0, fontSize: 12, color: 'var(--fg-3)', textAlign: 'right' }}>
+              {t('inboxes.viewerActionsNote')}
+            </p>
+          ) : null}
           <div style={{ display: 'flex', gap: 8, justifyContent: 'flex-end', flexWrap: 'wrap' }}>
-            <Btn variant="ghost" icon="trash" onClick={() => onDisconnect(inbox)}>
+            <Btn
+              variant="ghost"
+              icon="trash"
+              disabled={!canManageInbox}
+              title={canManageInbox ? undefined : t('inboxes.viewerActionsNote')}
+              onClick={() => onDisconnect(inbox)}
+            >
               {t('inboxes.detail.disconnect')}
             </Btn>
             <Btn
               variant="secondary"
               icon="refresh"
-              disabled={checking}
+              disabled={checking || !canManageInbox}
+              title={canManageInbox ? undefined : t('inboxes.viewerActionsNote')}
               onClick={() => onCheck(inbox)}
             >
               {t('inboxes.checkConnection')}
             </Btn>
-            <Btn variant="primary" icon="refresh" onClick={() => onReconnect(inbox)}>
+            <Btn
+              variant="primary"
+              icon="refresh"
+              disabled={!canManageInbox}
+              title={canManageInbox ? undefined : t('inboxes.viewerActionsNote')}
+              onClick={() => onReconnect(inbox)}
+            >
               {t('inboxes.reconnect')}
             </Btn>
           </div>
@@ -2958,7 +3220,7 @@ function formatDate(iso) {
  * The same short absolute date as formatDate, but read in UTC.
  *
  * Every boundary of the action allowance is a UTC instant: the counting window
- * ends at UTC month start, and the grace week ends seven days after the
+ * ends at UTC month start, and the grace period ends three days after the
  * workspace row was created. formatDate renders in the viewer's own zone, which
  * anywhere west of Greenwich turns a reset at 2026-10-01T00:00:00Z into
  * "30 Sep", a day before it is true, on the one surface whose whole job is to
@@ -3306,8 +3568,15 @@ function CreateKeyModal({ onCreate, onCancel, existingNames = [] }) {
  * On save it calls onSave(apiKey.id, { scopes, inboxIds }). onSave throws on
  * failure so the error can be shown inline; on success the modal closes.
  */
-function EditConnectionModal({ apiKey, inboxes, onSave, onClose }) {
+function EditConnectionModal({ apiKey, inboxes, onSave, onClose, scopeCap = 'none' }) {
   const t = useTranslations('dashboard');
+  // A scope the key's holder may not be given is shown but cannot be ticked
+  // (it can always be unticked). 'viewer': only the read-only allow-list.
+  // 'no_widen': nothing beyond it that the key does not already have.
+  const heldScopes = apiKey.scopes ?? [];
+  const scopeLocked = (value) => scopeCap !== 'none'
+    && !VIEWER_SCOPES.has(value)
+    && (scopeCap === 'viewer' || !heldScopes.includes(value));
   const [selectedScopes, setSelectedScopes] = useState(apiKey.scopes ?? []);
   // inboxIds === null means "all inboxes". Otherwise it's an explicit allowlist.
   const [allInboxes, setAllInboxes] = useState(apiKey.inboxIds == null);
@@ -3410,9 +3679,18 @@ function EditConnectionModal({ apiKey, inboxes, onSave, onClose }) {
               }}>
                 {t('apiKeys.editModal.permissions')}
               </div>
+              {scopeCap !== 'none' && (
+                <div data-testid="scope-cap-note" style={{
+                  fontFamily: 'var(--font-sans)', fontSize: 12, color: 'var(--fg-3)',
+                  marginBottom: 8, lineHeight: 1.5,
+                }}>
+                  {t(scopeCap === 'viewer' ? 'apiKeys.editModal.viewerCapNote' : 'apiKeys.editModal.noWidenNote')}
+                </div>
+              )}
               <div style={{ display: 'flex', flexDirection: 'column', gap: 6 }}>
                 {SCOPE_OPTIONS.map(opt => {
                   const checked = selectedScopes.includes(opt.value);
+                  const locked = !checked && scopeLocked(opt.value);
                   return (
                     <label
                       key={opt.value}
@@ -3422,16 +3700,16 @@ function EditConnectionModal({ apiKey, inboxes, onSave, onClose }) {
                         border: `1px solid ${checked ? 'var(--border-focus)' : 'var(--border-1)'}`,
                         borderRadius: 8,
                         background: checked ? 'var(--brand-soft)' : 'var(--bg-surface)',
-                        cursor: submitting ? 'not-allowed' : 'pointer',
+                        cursor: submitting || locked ? 'not-allowed' : 'pointer',
                         transition: 'border-color 120ms, background 120ms',
-                        opacity: submitting ? 0.7 : 1,
+                        opacity: submitting ? 0.7 : locked ? 0.5 : 1,
                       }}
                     >
                       <input
                         type="checkbox"
                         checked={checked}
-                        onChange={() => !submitting && toggleScope(opt.value)}
-                        disabled={submitting}
+                        onChange={() => !submitting && !locked && toggleScope(opt.value)}
+                        disabled={submitting || locked}
                         style={{ marginTop: 1, accentColor: 'var(--brand)', flexShrink: 0 }}
                       />
                       <div>
@@ -3900,8 +4178,24 @@ function RevokeDialog({ apiKey, revoking, onConfirm, onCancel }) {
 }
 
 /* ---------------- API Keys ---------------- */
-export function KeysPage({ keys, inboxes = [], mcpUrl, onCreate, onKeyCreated, onRevoke, onUpdate }) {
+export function KeysPage({ keys, inboxes = [], mcpUrl, onCreate, onKeyCreated, onRevoke, onUpdate, userRole, currentUserId, members = [] }) {
   const t = useTranslations('dashboard');
+  // Edit and Revoke are offered only on keys this person may change: any key
+  // for an owner/admin, otherwise only their own. Same rule the two routes
+  // enforce (lib/api-keys/key-authority.ts), so nobody is shown a button that
+  // can only answer 403. When the role is not known (older callers), keep the
+  // buttons and let the server decide, as before.
+  const mayChange = (k) => (userRole == null
+    ? true
+    : canChangeApiKey({ callerRole: userRole, callerId: currentUserId ?? '', keyCreatorId: k.createdBy }));
+  // The scope cap follows the key's HOLDER: a viewer's key stays read-only
+  // whoever edits it. A creator who is not in the member list (left, or not
+  // loaded) may keep but not widen.
+  const capFor = (k) => {
+    if (k.createdBy && k.createdBy === currentUserId && userRole) return keyScopeCap(userRole);
+    const holder = members.find(m => m.userId === k.createdBy);
+    return keyScopeCap(holder?.role ?? null);
+  };
   const [copiedId, setCopiedId] = useState(null);
   // The key object pending revoke confirmation, or null.
   const [confirmKey, setConfirmKey] = useState(null);
@@ -4034,12 +4328,18 @@ export function KeysPage({ keys, inboxes = [], mcpUrl, onCreate, onKeyCreated, o
                     </div>
                   </td>
                   <td className="right">
-                    <div style={{ display: "flex", gap: 6, justifyContent: "flex-end" }}>
-                      {onUpdate && (
-                        <Btn variant="secondary" size="sm" icon="settings" onClick={() => setEditKey(k)}>{t('apiKeys.editAccess')}</Btn>
-                      )}
-                      <Btn variant="danger" size="sm" onClick={() => handleRevokeRequest(k)}>{t('apiKeys.revoke')}</Btn>
-                    </div>
+                    {mayChange(k) ? (
+                      <div style={{ display: "flex", gap: 6, justifyContent: "flex-end" }}>
+                        {onUpdate && (
+                          <Btn variant="secondary" size="sm" icon="settings" onClick={() => setEditKey(k)}>{t('apiKeys.editAccess')}</Btn>
+                        )}
+                        <Btn variant="danger" size="sm" onClick={() => handleRevokeRequest(k)}>{t('apiKeys.revoke')}</Btn>
+                      </div>
+                    ) : (
+                      <span data-testid="key-not-yours" style={{ fontFamily: "var(--font-sans)", fontSize: 12, color: "var(--fg-3)" }}>
+                        {t('apiKeys.notYours')}
+                      </span>
+                    )}
                   </td>
                 </tr>
               ))}
@@ -4127,6 +4427,7 @@ export function KeysPage({ keys, inboxes = [], mcpUrl, onCreate, onKeyCreated, o
       {editKey && (
         <EditConnectionModal
           apiKey={editKey}
+          scopeCap={userRole == null ? 'none' : capFor(editKey)}
           inboxes={inboxes}
           onSave={onUpdate}
           onClose={() => setEditKey(null)}
@@ -4140,28 +4441,49 @@ export function KeysPage({ keys, inboxes = [], mcpUrl, onCreate, onKeyCreated, o
 
 // Kept separate from the customer-facing workflow library above. Bulk-run
 // controls need their own route/API wiring before they can replace it.
-function BulkRunsPanel() {
+//
+// Stop is an operator action (owner/admin/member). Viewers are read-only, and
+// PATCH /api/workflows/runs refuses them with a 403, so for a viewer the button
+// is shown disabled with the reason beside it instead of failing on click.
+export const BULK_RUNS_ACTIVE_POLL_MS = 5_000;
+export const BULK_RUNS_IDLE_POLL_MS = 60_000;
+const isActiveBulkRun = (run) => run.status === 'running' || run.status === 'cancelling';
+
+function BulkRunsPanel({ userRole }) {
+  const t = useTranslations('dashboard');
+  const canStop = canOperateWorkspace(userRole);
   const [runs, setRuns] = useState([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState('');
   const [cancelling, setCancelling] = useState(null);
+
+  // Whether the last answer had a run in flight. Read by the poll clock, so a
+  // ref rather than state: changing it must not restart the effect.
+  const activeRef = useRef(false);
 
   const load = async () => {
     try {
       const response = await fetch('/api/workflows/runs', { cache: 'no-store' });
       const payload = await response.json();
       if (!response.ok) throw new Error(payload.error || 'Failed to load runs.');
-      setRuns(payload.runs || []); setError('');
+      const next = payload.runs || [];
+      activeRef.current = next.some(isActiveBulkRun);
+      setRuns(next); setError('');
     } catch (err) { setError(err instanceof Error ? err.message : 'Failed to load runs.'); }
     finally { setLoading(false); }
   };
 
   useEffect(() => {
-    // Initial load plus a 5s poll; the fetch it runs necessarily sets state.
-    // eslint-disable-next-line react-hooks/set-state-in-effect
-    load();
-    const id = window.setInterval(load, 5000);
-    return () => window.clearInterval(id);
+    // Initial load, then 5 s while a run is in flight and 60 s while idle,
+    // paused while the tab is hidden and refreshed the moment it is shown.
+    // Runs are started from an MCP client, not this page, so the idle poll is
+    // what notices a new one. The fetch it runs necessarily sets state.
+    const poll = startVisiblePoll({
+      poll: load,
+      intervalMs: () => (activeRef.current ? BULK_RUNS_ACTIVE_POLL_MS : BULK_RUNS_IDLE_POLL_MS),
+      immediate: true,
+    });
+    return () => poll.stop();
   }, []);
 
   const cancel = async (id) => {
@@ -4179,12 +4501,13 @@ function BulkRunsPanel() {
     <h2 style={{ margin: '0 0 6px', fontSize: 18 }}>Large-work controls</h2>
     <p style={{ color: 'var(--fg-2)', margin: '0 0 14px' }}>See bulk inbox work as it happens. Stop prevents work that has not started; it does not undo messages already changed.</p>
     {error && <div className="alert alert-error" role="alert">{error}</div>}
+    {!canStop && <div className="alert" role="status" data-testid="bulk-runs-viewer-notice" style={{ marginBottom: 12 }}>{t('workflows.bulkRuns.viewerNotice')}</div>}
     <div className="card" style={{ overflowX: 'auto' }}>
       {loading ? <p style={{ color: 'var(--fg-3)' }}>Loading runs…</p> : runs.length === 0 ? <div className="empty-state"><Icon name="activity" size={24} /><h3>No large-work runs yet</h3><p>Bulk move and flag actions will appear here while they run.</p></div> :
         <table className="data-table"><thead><tr><th>Action</th><th>Inbox</th><th>Progress</th><th>Status</th><th>Started</th><th /></tr></thead><tbody>{runs.map((run) => {
-          const active = run.status === 'running' || run.status === 'cancelling';
+          const active = isActiveBulkRun(run);
           const label = run.operation.replaceAll('_', ' ');
-          return <tr key={run.id}><td style={{ textTransform: 'capitalize' }}>{label}</td><td>{run.inbox}</td><td>{run.processed} / {run.total} processed · {run.succeeded} changed{run.failed ? ` · ${run.failed} failed` : ''}</td><td><Badge tone={run.status === 'completed' ? 'live' : run.status === 'cancelled_partial' ? 'warning' : active ? 'neutral' : 'danger'}>{run.status.replaceAll('_', ' ')}</Badge></td><td>{new Date(run.createdAt).toLocaleString()}</td><td className="right">{active && <Btn variant="secondary" size="sm" disabled={run.status === 'cancelling' || cancelling === run.id} onClick={() => cancel(run.id)}>{run.status === 'cancelling' ? 'Stopping…' : 'Stop'}</Btn>}</td></tr>;
+          return <tr key={run.id}><td style={{ textTransform: 'capitalize' }}>{label}</td><td>{run.inbox}</td><td>{run.processed} / {run.total} processed · {run.succeeded} changed{run.failed ? ` · ${run.failed} failed` : ''}</td><td><Badge tone={run.status === 'completed' ? 'live' : run.status === 'cancelled_partial' ? 'warning' : active ? 'neutral' : 'danger'}>{run.status.replaceAll('_', ' ')}</Badge></td><td>{new Date(run.createdAt).toLocaleString()}</td><td className="right">{active && <Btn variant="secondary" size="sm" disabled={!canStop || run.status === 'cancelling' || cancelling === run.id} title={canStop ? undefined : t('workflows.bulkRuns.stopViewerTitle')} onClick={canStop ? () => cancel(run.id) : undefined}>{run.status === 'cancelling' ? 'Stopping…' : 'Stop'}</Btn>}</td></tr>;
         })}</tbody></table>}
     </div>
   </section>;
@@ -4200,7 +4523,7 @@ function BulkRunsPanel() {
  * ceiling) was not something a customer could buy their way out of. It is
  * back since 2026-09-12 for exactly one case, a metered Free workspace,
  * because that number is now public, sold, and the one the MCP edge function
- * refuses at: 150 email actions a month after a 7-day grace week
+ * refuses at: 150 email actions a month after a 3-day grace period
  * (docs/PLAN-free-action-cap-150.md). From 80% the strip is joined by a
  * banner that names the plan that removes the cap, carrying the offer to
  * checkout and to /pricing the same way the inbox-cap notice does. Paid plans
@@ -4221,6 +4544,7 @@ export function UsagePage({ usageData, planLimits, actionAllowance = null, strip
   // in the banner can switch it. Hoisted here because the banner renders from
   // a conditional and hooks cannot live inside it.
   const [capInterval, setCapInterval] = useState('month');
+  const { locale } = useAppLocale();
   const allowanceState = allowanceTileState(actionAllowance);
   const allowance = allowanceProgress(actionAllowance);
   const {
@@ -4230,13 +4554,18 @@ export function UsagePage({ usageData, planLimits, actionAllowance = null, strip
     byInbox = [],
   } = usageData ?? {};
 
-  // The analytics window this plan buys (Free 7, Personal 30, Pro 90, Team
-  // 365). Every figure on this page comes from a query scoped to it, so the
-  // average has to divide by the same number and the copy has to quote it.
+  // The analytics window this plan buys (Free 30, Personal 90, Pro and
+  // Business 730). Every figure on this page comes from a query scoped to it.
   const historyDays = planLimits?.historyDays ?? 30;
+  // What is drawn: the window minus the quiet days before the first call, never
+  // under 30. Rows past 90 days were deleted on every plan until 2026-10-20, so
+  // a 730-day window would otherwise chart ~640 empty days and divide the
+  // average by days that never had data. The labels quote what is drawn.
+  const shownCounts = trimLeadingQuietDays(dailyCounts);
+  const shownDays = shownCounts.length || historyDays;
 
   // Derived stats
-  const avgPerDay = totalCalls > 0 ? Math.round(totalCalls / historyDays) : 0;
+  const avgPerDay = totalCalls > 0 ? Math.round(totalCalls / shownDays) : 0;
   const busiestDay = dailyCounts.reduce(
     (best, d) => (d.count > best.count ? d : best),
     { date: '', count: 0 },
@@ -4249,7 +4578,7 @@ export function UsagePage({ usageData, planLimits, actionAllowance = null, strip
     <div className="page">
       <PageHeader
         title={t('usage.title')}
-        sub={t('usage.sub', { days: historyDays })}
+        sub={t('usage.sub', { days: shownDays })}
       />
 
       {/* The allowance strip: bar plus one sentence for a metered Free
@@ -4367,7 +4696,7 @@ export function UsagePage({ usageData, planLimits, actionAllowance = null, strip
                 {t('usage.capCompare')}
               </Link>
               <a
-                href={usageCapCheckoutHref(offer.plan, capInterval === 'year')}
+                href={usageCapCheckoutHref(offer.plan, capInterval === 'year', locale)}
                 style={{
                   display: 'inline-flex',
                   alignItems: 'center',
@@ -4442,7 +4771,7 @@ export function UsagePage({ usageData, planLimits, actionAllowance = null, strip
           {/* Summary stats */}
           <div className="stat-grid usage-stat-grid">
             <div className="stat">
-              <div className="label">{t('usage.totalCalls', { days: historyDays })}</div>
+              <div className="label">{t('usage.totalCalls', { days: shownDays })}</div>
               <div className="value">{totalCalls.toLocaleString()}</div>
               <div className="delta">{t('usage.totalCallsDelta')}</div>
             </div>
@@ -4465,11 +4794,11 @@ export function UsagePage({ usageData, planLimits, actionAllowance = null, strip
             <div className="card-h">
               <div>
                 <div className="title">{t('usage.callsPerDayTitle')}</div>
-                <div className="sub">{t('usage.callsPerDaySub', { days: historyDays })}</div>
+                <div className="sub">{t('usage.callsPerDaySub', { days: shownDays })}</div>
               </div>
             </div>
             <div className="card-body">
-              <UsageChart30 dailyCounts={dailyCounts} />
+              <UsageChart30 dailyCounts={shownCounts} />
             </div>
           </div>
 
@@ -5288,15 +5617,16 @@ const BILLING_PLANS = [
     id: 'solo',
     name: PLAN_DISPLAY_NAMES.solo,
     featureKeys: ['billing.plans.soloFeature1', 'billing.plans.soloFeature2', 'billing.plans.soloFeature3', 'billing.plans.soloFeature4'],
-    // Pro is the highlighted plan: unlimited inboxes for one person is the
-    // upgrade nearly everyone here actually wants. Team only pays off once
-    // other people need in.
+    // Pro is the highlighted plan: ten mailboxes for one person running a
+    // business is the upgrade nearly everyone here actually wants. Business
+    // pays off past ten mailboxes or once other people need in.
     highlighted: true,
   },
   {
     id: 'pro',
     name: PLAN_DISPLAY_NAMES.pro,
-    featureKeys: ['billing.plans.teamFeature1', 'billing.plans.teamFeature2', 'billing.plans.teamFeature3', 'billing.plans.teamFeature4', 'billing.plans.teamFeature5', 'billing.plans.teamFeature6'],
+    // Only what Business does today: see the features note on PLANS.pro.
+    featureKeys: ['billing.plans.businessFeature1', 'billing.plans.businessFeature2', 'billing.plans.businessFeature3', 'billing.plans.businessFeature4', 'billing.plans.businessFeature5'],
     highlighted: false,
   },
 ];
@@ -5383,6 +5713,7 @@ function BillingSection({
   maxInboxes = null,
   inboxCount = 0,
   grandfathered = false,
+  proInboxesKept = false,
   actionAllowance = null,
   businessShaped = false,
 }) {
@@ -5460,7 +5791,11 @@ function BillingSection({
       const res = await fetch('/api/stripe/checkout', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ planId, interval: checkoutInterval }),
+        // The buyer's language picks the hosted page's (German is the only
+        // one that changes it, see checkout-core). Read at call time, not
+        // from `locale`: the ?upgrade= effect below calls this on mount,
+        // before the provider has resolved the stored choice into context.
+        body: JSON.stringify({ planId, interval: checkoutInterval, locale: preferredAppLocale() }),
       });
 
       const data = await res.json();
@@ -5823,6 +6158,21 @@ function BillingSection({
           {inboxesUnlimited && (
             <div style={{ fontFamily: 'var(--font-sans)', fontSize: 12, color: 'var(--fg-3)' }}>
               {t('billing.inboxesCount', { count: inboxCount })}
+            </div>
+          )}
+          {/* Pro bought before the 2026-10 cap keeps unlimited inboxes. Said
+              once, here, so the "10 mailboxes" on the pricing page does not
+              read as a change to their own plan. */}
+          {proInboxesKept && (
+            <div style={{ fontFamily: 'var(--font-sans)', fontSize: 12, color: 'var(--fg-3)' }}>
+              {t('billing.proInboxesKept')}
+            </div>
+          )}
+          {/* Business bills mailboxes above the included ten, across every
+              workspace on the subscription. Comped accounts pay nothing. */}
+          {currentPlan === 'pro' && !compedScale && (
+            <div style={{ fontFamily: 'var(--font-sans)', fontSize: 12, color: 'var(--fg-3)' }}>
+              {t('billing.businessMailboxRate')}
             </div>
           )}
           {allowanceLine && (
@@ -6285,6 +6635,14 @@ function PlanChangeDialog({ change, currentPlanId, currentPlanName, locale, busy
                   label={t('billing.confirmThen')}
                   value={`${recurring} ${intervalLabel}`}
                 />
+                {/* Business above ten mailboxes: the figure is the base price
+                    plus the extras, so say so rather than show a number that
+                    is not the list price without a reason. */}
+                {preview.extraMailboxes > 0 && (
+                  <div style={{ marginTop: 6, fontFamily: 'var(--font-sans)', fontSize: 12, color: 'var(--fg-3)' }}>
+                    {t('billing.confirmExtraMailboxes', { count: preview.extraMailboxes })}
+                  </div>
+                )}
               </div>
             )}
             {/* The date in the preview is the end of the period being left. It
@@ -6421,7 +6779,7 @@ function LanguageSection() {
 
   // Each language is shown by its own native name (autonym) so the option is
   // recognizable regardless of the current interface language.
-  const LOCALE_LABELS = { en: 'English', nb: 'Norsk', es: 'Español', fr: 'Français', zh: '中文' };
+  const LOCALE_LABELS = { en: 'English', nb: 'Norsk', es: 'Español', fr: 'Français', zh: '中文', de: 'Deutsch' };
   const options = routing.locales.map((value) => ({ value, label: LOCALE_LABELS[value] || value }));
 
   return (
@@ -7031,6 +7389,7 @@ export function SettingsPage({ user, workspace, workspaces = [], userRole, strip
         maxInboxes={planLimits?.maxInboxes ?? null}
         inboxCount={inboxCount}
         grandfathered={grandfathered}
+        proInboxesKept={planLimits?.proInboxesKept ?? false}
         actionAllowance={actionAllowance}
         businessShaped={businessShaped}
       />

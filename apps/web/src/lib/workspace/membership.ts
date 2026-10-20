@@ -1,5 +1,6 @@
 import type { SupabaseClient } from '@supabase/supabase-js';
-import { VIEWER_SCOPES, viewerScopeList } from '@/lib/api-keys/scopes';
+import { viewerScopeList } from '@/lib/api-keys/scopes';
+import { exceedsViewerToolScopes } from '@/lib/oauth/grant-role';
 import type { Database } from '@/types/database.types';
 
 /**
@@ -54,10 +55,43 @@ export async function revokeMemberApiKeys(
 }
 
 /**
- * Remove a member from a workspace: revoke their keys, then drop the
- * membership row. The order matters. Revoking first means a failure part-way
- * through leaves an over-revoked member rather than an ex-member holding live
- * credentials.
+ * End every OAuth grant this member holds in this workspace that has not yet
+ * become (or no longer has) an api_keys row: pending authorization codes are
+ * deleted and refresh-token chains are revoked.
+ *
+ * Revoking the api_keys row alone is not enough. A code issued minutes before
+ * removal would still be redeemable at /api/oauth/token, and a LEGACY refresh
+ * chain (api_key_id NULL, from before connections were linked to one key row)
+ * has no key to revoke and would mint a brand-new one on its next refresh. The
+ * token endpoint now re-checks membership on both grants as well; this is the
+ * half that does not depend on that check, and it makes the dashboard state
+ * true immediately rather than at the next refresh.
+ */
+export async function revokeMemberOAuthGrants(
+  service: SupabaseClient<Database>,
+  workspaceId: string,
+  userId: string,
+): Promise<WriteFailure> {
+  const codes = await service
+    .from('oauth_auth_codes')
+    .delete()
+    .eq('workspace_id', workspaceId)
+    .eq('user_id', userId);
+  if (codes.error) return codes;
+
+  return service
+    .from('oauth_refresh_tokens')
+    .update({ revoked_at: new Date().toISOString() })
+    .eq('workspace_id', workspaceId)
+    .eq('user_id', userId)
+    .is('revoked_at', null);
+}
+
+/**
+ * Remove a member from a workspace: revoke their keys and OAuth grants, then
+ * drop the membership row. The order matters. Revoking first means a failure
+ * part-way through leaves an over-revoked member rather than an ex-member
+ * holding live credentials.
  */
 export async function removeWorkspaceMember(
   service: SupabaseClient<Database>,
@@ -66,6 +100,9 @@ export async function removeWorkspaceMember(
 ): Promise<WriteFailure> {
   const revoked = await revokeMemberApiKeys(service, workspaceId, userId);
   if (revoked.error) return revoked;
+
+  const grants = await revokeMemberOAuthGrants(service, workspaceId, userId);
+  if (grants.error) return grants;
 
   return service
     .from('workspace_members')
@@ -112,22 +149,86 @@ export async function revokeApiKeysBeyondViewerScopes(
 
   if (readError) return { revokedKeyIds: [], error: readError };
 
+  // Identity scopes (`openid`, `email`) on an OAuth key are not a write
+  // permission, so they do not make a read-only connection over-privileged.
   const overPrivileged = (keys ?? [])
-    .filter((k: { scopes: string[] | null }) =>
-      (k.scopes ?? []).some((s) => !VIEWER_SCOPES.has(s)))
+    .filter((k: { scopes: string[] | null }) => exceedsViewerToolScopes(k.scopes))
     .map((k: { id: string }) => k.id);
 
-  if (overPrivileged.length === 0) return { revokedKeyIds: [], error: null };
+  if (overPrivileged.length > 0) {
+    const { error: writeError } = await service
+      .from('api_keys')
+      .update({ deleted_at: new Date().toISOString() })
+      .in('id', overPrivileged)
+      .eq('workspace_id', workspaceId)
+      .is('deleted_at', null);
 
-  const { error: writeError } = await service
-    .from('api_keys')
-    .update({ deleted_at: new Date().toISOString() })
-    .in('id', overPrivileged)
-    .eq('workspace_id', workspaceId)
-    .is('deleted_at', null);
+    if (writeError) return { revokedKeyIds: [], error: writeError };
+  }
 
-  if (writeError) return { revokedKeyIds: [], error: writeError };
+  // The OAuth half: chains and pending codes that would hand the write scopes
+  // straight back. Done even when no key was revoked, because a legacy chain or
+  // a pending code has no key row for the filter above to find.
+  const grants = await revokeOAuthGrantsBeyondViewerScopes(service, workspaceId, userId, overPrivileged);
+  if (grants.error) return { revokedKeyIds: overPrivileged, error: grants.error };
+
   return { revokedKeyIds: overPrivileged, error: null };
+}
+
+/**
+ * The OAuth side of a demotion to viewer.
+ *
+ *  - Pending authorization codes carrying a write scope are deleted, so a
+ *    consent given minutes before the demotion cannot be redeemed for it.
+ *  - Refresh chains carrying a write scope, or hanging off a key that was just
+ *    revoked, are revoked. The connection then ends cleanly with invalid_grant
+ *    and the client asks the user to reconnect, within what a viewer may hold.
+ *
+ * Chains already inside the allow-list are left alone, like keys are. The token
+ * endpoint also narrows any chain to the grantee's current role on every
+ * refresh, so a chain this sweep missed still cannot rotate a write scope.
+ */
+export async function revokeOAuthGrantsBeyondViewerScopes(
+  service: SupabaseClient<Database>,
+  workspaceId: string,
+  userId: string,
+  revokedKeyIds: readonly string[] = [],
+): Promise<WriteFailure> {
+  const { data: codes, error: codeReadError } = await service
+    .from('oauth_auth_codes')
+    .select('id, scopes')
+    .eq('workspace_id', workspaceId)
+    .eq('user_id', userId);
+  if (codeReadError) return { error: codeReadError };
+
+  const overCodes = (codes ?? [])
+    .filter((c: { scopes: string[] | null }) => exceedsViewerToolScopes(c.scopes))
+    .map((c: { id: string }) => c.id);
+  if (overCodes.length > 0) {
+    const { error } = await service.from('oauth_auth_codes').delete().in('id', overCodes);
+    if (error) return { error };
+  }
+
+  const { data: chains, error: chainReadError } = await service
+    .from('oauth_refresh_tokens')
+    .select('id, scopes, api_key_id')
+    .eq('workspace_id', workspaceId)
+    .eq('user_id', userId)
+    .is('revoked_at', null);
+  if (chainReadError) return { error: chainReadError };
+
+  const revokedKeys = new Set(revokedKeyIds);
+  const overChains = (chains ?? [])
+    .filter((c: { scopes: string[] | null; api_key_id: string | null }) =>
+      exceedsViewerToolScopes(c.scopes) || (c.api_key_id !== null && revokedKeys.has(c.api_key_id)))
+    .map((c: { id: string }) => c.id);
+  if (overChains.length === 0) return { error: null };
+
+  return service
+    .from('oauth_refresh_tokens')
+    .update({ revoked_at: new Date().toISOString() })
+    .in('id', overChains)
+    .is('revoked_at', null);
 }
 
 /** Sentence for the demotion response, naming what a viewer is left with. */

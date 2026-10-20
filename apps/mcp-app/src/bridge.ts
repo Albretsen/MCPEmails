@@ -12,6 +12,8 @@
 // from the traffic captured in phase-0.
 // ---------------------------------------------------------------------------
 
+import { modelContextParams } from "./model-context";
+
 export const UI_PROTOCOL_VERSION = "2026-01-26";
 
 export type DisplayMode = "inline" | "fullscreen" | "pip";
@@ -68,10 +70,21 @@ export interface HostCapabilities {
   [key: string]: unknown;
 }
 
+/**
+ * A `CallToolResult`, which is what both `ui/notifications/tool-result` (as
+ * its params) and a `tools/call` response (as its result) carry.
+ *
+ * `_meta` is the result-level metadata of that same object. This bridge hands
+ * the whole object on untouched on both paths, so whatever the host forwarded
+ * arrives; whether a given host forwards result `_meta` to a view at all is the
+ * host's decision, and nothing here may depend on it being present
+ * (store.ts#resolveDeferredBody is the one reader that wants it).
+ */
 export interface ToolResultParams {
   content?: Array<{ type: string; text?: string; [k: string]: unknown }>;
   structuredContent?: Record<string, unknown>;
   isError?: boolean;
+  _meta?: Record<string, unknown>;
   [key: string]: unknown;
 }
 
@@ -97,6 +110,15 @@ type Json = Record<string, unknown>;
 
 const INITIALIZE_TIMEOUT_MS = 10_000;
 const REQUEST_TIMEOUT_MS = 120_000;
+
+/**
+ * The floor under `observeSize`'s animation frame. Long enough that a painted
+ * frame always measures from rAF (one frame at 60Hz is ~17ms, and a host that
+ * is mid-layout gets a couple of them), short enough that an UNPAINTED frame
+ * reports its height before the user could read the gap as a card that failed
+ * to load. See observeSize().
+ */
+const SIZE_FALLBACK_MS = 50;
 
 /**
  * How long `ui/resource-teardown` waits for an async teardown handler before
@@ -167,6 +189,10 @@ export class HostBridge {
 
   private nextId = 1;
   private pending = new Map<number, Pending>();
+  /** Ids of `ui/initialize` attempts that timed out. See connect(). */
+  private abandonedInitialize = new Set<number>();
+  /** Completes the handshake from a late answer to one of those attempts. */
+  private lateInitialize: ((result: unknown) => void) | null = null;
   private target: Window = window.parent;
   private listening = false;
 
@@ -206,7 +232,17 @@ export class HostBridge {
     // Response to one of our requests.
     if (id !== undefined && (("result" in msg) || ("error" in msg))) {
       const p = this.pending.get(id);
-      if (!p) return;
+      if (!p) {
+        // A late answer to an `ui/initialize` attempt we had already given up
+        // on. It is still the host's answer to the handshake; see connect().
+        if (this.abandonedInitialize.has(id) && this.lateInitialize && "result" in msg) {
+          const settle = this.lateInitialize;
+          this.lateInitialize = null;
+          this.abandonedInitialize.clear();
+          settle(msg.result);
+        }
+        return;
+      }
       this.pending.delete(id);
       if ("error" in msg) {
         const e = (msg.error ?? {}) as Json;
@@ -313,12 +349,14 @@ export class HostBridge {
     method: string,
     params: Json,
     timeoutMs = REQUEST_TIMEOUT_MS,
+    onTimeout?: (id: number) => void,
   ): Promise<T> {
     this.listen();
     const id = this.nextId++;
     return new Promise<T>((resolve, reject) => {
       const timer = setTimeout(() => {
         this.pending.delete(id);
+        onTimeout?.(id);
         reject(new Error(`${method} timed out`));
       }, timeoutMs);
       this.pending.set(id, {
@@ -381,6 +419,26 @@ export class HostBridge {
     // is no longer pending, so a host that answers two of them is harmless. The
     // total budget is unchanged at INITIALIZE_TIMEOUT_MS, so a host that is
     // genuinely absent fails in exactly the same time it did before.
+    //
+    // ── A late answer still counts ──────────────────────────────────────────
+    // "ignores responses whose id is no longer pending" used to apply to the
+    // handshake too, which was wrong for a SLOW host as opposed to a deaf one:
+    // an answer to attempt 1 that took longer than its 250ms window was thrown
+    // away, and the card went on waiting for an answer to a later attempt. A
+    // host that answers each request in turn then connects one whole attempt
+    // late, and a host that answers `ui/initialize` only once never connects
+    // at all, leaving a card that renders but never reports its height. So an
+    // attempt that times out is remembered, and the first answer to ANY of
+    // them completes the handshake.
+    type InitializeResult = {
+      protocolVersion?: string;
+      hostInfo?: Json;
+      hostCapabilities?: HostCapabilities;
+      hostContext?: HostContext;
+    };
+    const late = new Promise<InitializeResult>((resolve) => {
+      this.lateInitialize = (result) => resolve(result as InitializeResult);
+    });
     const deadline = Date.now() + INITIALIZE_TIMEOUT_MS;
     let attemptMs = 250;
     let lastError: unknown;
@@ -395,12 +453,18 @@ export class HostBridge {
       this.initializeAttempts++;
       this.onInitializeAttempt?.();
       try {
-        const answered = await this.request<{
-          protocolVersion?: string;
-          hostInfo?: Json;
-          hostCapabilities?: HostCapabilities;
-          hostContext?: HostContext;
-        }>("ui/initialize", params, Math.min(attemptMs, remaining));
+        const attempt = this.request<InitializeResult>(
+          "ui/initialize",
+          params,
+          Math.min(attemptMs, remaining),
+          (id) => this.abandonedInitialize.add(id),
+        );
+        // If `late` wins the race this attempt is left to time out on its own,
+        // and that rejection must not surface as an unhandled one.
+        attempt.catch(() => undefined);
+        const answered = await Promise.race([attempt, late]);
+        this.lateInitialize = null;
+        this.abandonedInitialize.clear();
         return this.applyInitializeResult(answered);
       } catch (e) {
         // Only a timeout is worth another attempt. An actual JSON-RPC error
@@ -463,12 +527,82 @@ export class HostBridge {
     return !r?.isError;
   }
 
-  updateModelContext(text: string, structured?: Json): Promise<unknown> {
-    if (!this.hostCapabilities.updateModelContext) return Promise.resolve(null);
-    return this.request("ui/update-model-context", {
-      content: [{ type: "text", text }],
-      ...(structured ? { structuredContent: structured } : {}),
-    }).catch(() => null);
+  /**
+   * What became of the `ui/update-model-context` requests this frame sent.
+   * INTERNAL v1 ONLY, read by the diagnostics line, which is the only way to
+   * learn from a real host whether it accepts them (QA 2026-10-15).
+   */
+  modelContext = { sent: 0, ok: 0, failed: 0 };
+
+  /**
+   * The error the host answered the last failed `ui/update-model-context`
+   * with, as `code: message`, or null. Diagnostics only, like the counters.
+   */
+  modelContextLastError: string | null = null;
+
+  private modelContextListeners = new Set<() => void>();
+
+  /**
+   * Be told whenever `modelContext` changes. The counters live here, not in
+   * the store, so nothing re-rendered when a reply landed: QA 2026-10-17 read
+   * `0/0/0` right after a save and only saw `1/0/1` after the next keystroke.
+   * The diagnostics line subscribes through this. Returns the unsubscribe.
+   */
+  onModelContextChange(fn: () => void): () => void {
+    this.modelContextListeners.add(fn);
+    return () => this.modelContextListeners.delete(fn);
+  }
+
+  private modelContextChanged() {
+    for (const fn of this.modelContextListeners) {
+      try {
+        fn();
+      } catch {
+        /* a listener is a re-render hint, never worth an exception */
+      }
+    }
+  }
+
+  /**
+   * Tell the host what the card did, for the model's future turns.
+   *
+   * ── SENT WHETHER OR NOT THE HOST ADVERTISES IT (QA 2026-10-15) ────────────
+   * This used to return early unless `hostCapabilities.updateModelContext` was
+   * set. The capability is in ext-apps' `McpUiHostCapabilities` type, but the
+   * published 2026-01-26 specification's `HostCapabilities` does not list it at
+   * all, and the reference SDK's `App.updateModelContext` sends the request
+   * without checking. So a host that implements the method and follows the
+   * published spec never advertises it, and this card stayed silent to it. In
+   * Claude the model never heard about a save or a send from the card, and
+   * nothing here could say whether the gate was why: nobody had recorded what
+   * Claude advertises.
+   *
+   * Sending to a host that does not implement it costs one error reply
+   * (-32601), swallowed here. The request shape is the spec's exactly:
+   * `{ content: ContentBlock[], structuredContent? }`, chosen against what the
+   * host advertised by model-context.ts#modelContextParams. The server says
+   * the same facts in the model's next draft result for that draft regardless
+   * (card-activity.ts), so this is the fast path, not the only one.
+   */
+  updateModelContext(text: string): Promise<unknown> {
+    this.modelContext.sent++;
+    this.modelContextChanged();
+    return this.request(
+      "ui/update-model-context",
+      modelContextParams(text, this.hostCapabilities.updateModelContext),
+    ).then(
+      (r) => {
+        this.modelContext.ok++;
+        this.modelContextChanged();
+        return r;
+      },
+      (e) => {
+        this.modelContext.failed++;
+        this.modelContextLastError = e instanceof Error ? e.message : String(e);
+        this.modelContextChanged();
+        return null;
+      },
+    );
   }
 
   sendSizeChanged(width: number, height: number) {
@@ -515,7 +649,21 @@ export class HostBridge {
     const measure = () => {
       if (scheduled) return;
       scheduled = true;
-      requestAnimationFrame(() => {
+      // rAF FIRST, A TIMER AS THE FLOOR. The measurement wants a frame: it
+      // writes `height: max-content` onto <html>, reads the box, and puts the
+      // old value back, which is only meaningful once the browser has done
+      // layout. But a document the host has not painted — a frame mounted
+      // off-screen, or any frame in a backgrounded tab — gets no animation
+      // frames at all, and with rAF as the only scheduler this whole function
+      // then does nothing: `scheduled` stays true, so every later
+      // ResizeObserver callback returns early too, and the card never tells the
+      // host a height for as long as it stays unpainted. That is one of the
+      // ways a card "never appears". Timers do run in that state, so one is
+      // armed alongside the frame and whichever arrives first wins.
+      let taken = false;
+      const take = () => {
+        if (taken) return;
+        taken = true;
         scheduled = false;
         const html = document.documentElement;
         const prev = html.style.height;
@@ -528,7 +676,9 @@ export class HostBridge {
           lastH = height;
           this.sendSizeChanged(width, height);
         }
-      });
+      };
+      requestAnimationFrame(take);
+      setTimeout(take, SIZE_FALLBACK_MS);
     };
 
     measure();

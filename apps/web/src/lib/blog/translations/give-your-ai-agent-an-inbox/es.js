@@ -2,7 +2,7 @@ const translation = {
   title: 'Dale una bandeja de entrada a tu agente de IA: guía práctica del correo sobre MCP',
   description:
     'Por qué conectar el correo a tu agente de IA es más difícil de lo que parece, y cómo el Model Context Protocol convierte Gmail, Outlook e IMAP en un único endpoint seguro que tu agente puede usar de verdad.',
-  coverAlt: 'Dale una bandeja de entrada a tu agente de IA — MCPEmails',
+  coverAlt: 'Dale una bandeja de entrada a tu agente de IA — MCP Emails',
   content: `La mayoría de las demos de "correo con IA" se quedan en una captura de pantalla. El agente redacta una respuesta, todos aplauden y nadie hace la pregunta incómoda: **¿cómo llega realmente el modelo a una bandeja de entrada de verdad?** De forma segura, entre proveedores distintos y sin que tengas que pegar una contraseña de aplicación en un prompt.
 
 Este artículo recorre por qué esa última milla es engañosamente difícil, y cómo el [Model Context Protocol](https://modelcontextprotocol.io) (MCP) convierte Gmail, Outlook, Fastmail e IMAP genérico en un único endpoint que tu agente puede invocar como cualquier otra herramienta.
@@ -11,7 +11,7 @@ Este artículo recorre por qué esa última milla es engañosamente difícil, y 
 
 El correo parece un problema resuelto. No lo es, al menos no para un agente autónomo. Hay tres cosas que se interponen:
 
-1. **La autenticación depende del proveedor.** Gmail quiere OAuth con los scopes adecuados. Outlook quiere identidad de Microsoft. Fastmail quiere una contraseña de aplicación. Cada uno tiene su propio ciclo de vida del token y sus propios modos de fallo.
+1. **La autenticación depende del proveedor.** Gmail quiere una contraseña de aplicación y la Verificación en dos pasos. Outlook quiere identidad de Microsoft. Fastmail quiere una contraseña de aplicación. Cada uno tiene su propio ciclo de vida del token y sus propios modos de fallo.
 2. **Las credenciales son radiactivas.** No quieres una contraseña de buzón en una transcripción de chat, en una línea de log o en un almacén vectorial. Nunca.
 3. **La "forma" del correo es caótica.** MIME, hilos, HTML frente a texto plano, adjuntos, carpetas que en realidad son etiquetas. Un agente necesita una interfaz limpia y predecible, no RFC 5322 en crudo.
 

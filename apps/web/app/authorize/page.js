@@ -4,11 +4,14 @@ import { createClient } from '@/lib/supabase/server';
 import { issueCsrfToken } from '@/lib/oauth/csrf';
 import { storeStateNonce } from '@/lib/oauth/state';
 import { isValidRedirectUri } from '@/lib/oauth/redirect-uri';
+import { isSafeRedirectScheme } from '@/lib/oauth/redirect-scheme';
+import { describeClientIdentity } from '@/lib/oauth/client-identity';
 import { validateResourceIndicator } from '@/lib/oauth/resource';
 import { looksLikeUrlClientId, redirectUriAllowed, resolveCimdClient } from '@/lib/oauth/cimd';
 import { identifyStepUpLimitedClient } from '@/lib/oauth/consent-presets';
 import { checkRateLimit } from '@/lib/rate-limit';
 import { resolveActiveWorkspaceId } from '@/lib/workspace/active';
+import { isScopeLimitedRole, lookupWorkspaceRole, scopesAllowedForRole } from '@/lib/oauth/grant-role';
 import { AuthorizeApp } from '../../components/auth/AuthorizeApp';
 import '../../styles/marketing.css';
 import '../../styles/dashboard.css';
@@ -17,7 +20,7 @@ import '../../styles/theme.css';
 export const dynamic = 'force-dynamic';
 
 export const metadata = {
-  title: 'Authorize · MCP Emails',
+  title: 'Authorize',
   description: 'Authorize an agent to access your inboxes',
 };
 
@@ -176,6 +179,14 @@ export default async function AuthorizePage({ searchParams }) {
     }
   }
 
+  // Never a script-running or browser-internal scheme (javascript:, data:,
+  // file:, ...), whatever the client registered. The consent component assigns
+  // this URI to window.location on Allow and on Deny, on our own origin. Rows
+  // registered before this check existed are caught here too.
+  if (!isSafeRedirectScheme(resolvedRedirectUri)) {
+    return <ErrorPage title="Invalid redirect_uri" message="The redirect_uri uses a URL scheme that is not allowed for an OAuth redirect." />;
+  }
+
   if (isCimd) {
     // Same origin as the client_id URL, or a loopback URI compared with the
     // PORT IGNORED (RFC 8252 §7.3). A plain `includes` would be wrong in both
@@ -212,7 +223,7 @@ export default async function AuthorizePage({ searchParams }) {
   // whatever the client put in the `scope` param. Many MCP clients (especially
   // dynamically-registered ones) send no `scope` at all; without this they'd land
   // on a read-only default with nothing to select.
-  const offeredScopes = [...VALID_SCOPES].filter((s) =>
+  let offeredScopes = [...VALID_SCOPES].filter((s) =>
     oauthClient.scopes_allowed.includes(s),
   );
   // Scopes the client explicitly asked for, narrowed to what it may hold. This
@@ -220,13 +231,13 @@ export default async function AuthorizePage({ searchParams }) {
   // selectable); it decides which card the screen OPENS on, and it feeds the
   // "previously approved" hint below.
   //
-  // Since 2026-09-09 the challenge in app/api/mcp/route.ts asks for
+  // Since 2026-09-09 the /api/mcp challenge (now mcp-server/web-ingress.ts) asks for
   // `read:email` alone rather than all nine scopes, so this is now a real
   // signal for the clients that send one: claude.ai's authorize request arrives
   // as `scope=read:email`, verified on the wire. The default-selection rule is
   // in lib/oauth/consent-presets.ts, which also explains why a request with no
   // `scope` param at all keeps the older, wider default.
-  const clientRequestedScopes = rawScope
+  let clientRequestedScopes = rawScope
     .split(/[\s,]+/)
     .filter(Boolean)
     .filter((s) => offeredScopes.includes(s));
@@ -271,6 +282,22 @@ export default async function AuthorizePage({ searchParams }) {
         .is('deleted_at', null)
         .maybeSingle()
     : { data: null };
+
+  // ── 7b. Cap the menu to what the caller's role may grant ──────────────────
+  //    A viewer may only hold the read-only allow-list (the same rule as the
+  //    API keys page), so the menu offers nothing else, and the screen says why
+  //    the other levels are unavailable. The consent POST enforces the same
+  //    cap; this keeps the screen honest so a viewer is never offered a
+  //    checkbox the server would refuse. Owner/admin/member: unchanged.
+  let roleLimited = false;
+  if (workspace) {
+    const { role } = await lookupWorkspaceRole(supabase, workspace.id, user.id);
+    if (role && isScopeLimitedRole(role)) {
+      roleLimited = true;
+      offeredScopes = scopesAllowedForRole(role, offeredScopes);
+      clientRequestedScopes = clientRequestedScopes.filter((s) => offeredScopes.includes(s));
+    }
+  }
 
   let inboxes = [];
   if (workspace) {
@@ -320,6 +347,19 @@ export default async function AuthorizePage({ searchParams }) {
     redirectUri: resolvedRedirectUri,
   }) !== null;
 
+  // Who the screen says is asking, keyed on the VALIDATED redirect_uri: the
+  // code goes to that host, so that host is what the user must see. A DCR
+  // client's client_name and client_uri are self-asserted by an anonymous
+  // registrant and never become the identity on their own. The rule:
+  // lib/oauth/client-identity.ts.
+  const identity = describeClientIdentity({
+    clientId:     oauthClient.client_id,
+    clientName:   oauthClient.client_name,
+    clientByline: oauthClient.client_byline,
+    isCimd,
+    redirectUri:  resolvedRedirectUri,
+  });
+
   const scopesWithMeta = offeredScopes.map((scope) => ({
     scope,
     ...(SCOPE_META[scope] ?? { icon: 'key', title: scope, desc: '', required: false, destructive: false }),
@@ -329,15 +369,23 @@ export default async function AuthorizePage({ searchParams }) {
     <AuthorizeApp
       client={{
         client_id:      oauthClient.client_id,
-        client_name:    oauthClient.client_name,
-        client_byline:  oauthClient.client_byline,
+        client_name:    identity.displayName,
+        client_byline:  identity.byline,
         logo_url:       oauthClient.logo_url,
         is_first_party: oauthClient.is_first_party,
+      }}
+      identity={{
+        verification:       identity.verification,
+        selfReportedName:   identity.selfReportedName,
+        destinationKind:    identity.destinationKind,
+        destinationLabel:   identity.destinationLabel,
+        impersonates:       identity.impersonates,
       }}
       workspaceName={workspace?.display_name ?? ''}
       requestedScopes={scopesWithMeta}
       clientRequestedScopes={clientRequestedScopes}
       clientCannotStepUp={clientCannotStepUp}
+      roleLimited={roleLimited}
       identityScopes={identityScopes}
       inboxes={inboxes}
       redirectUri={resolvedRedirectUri}

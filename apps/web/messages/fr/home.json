@@ -35,10 +35,10 @@
       "providerSub": "Gmail · Outlook · iCloud · IMAP",
       "logCalls": "l'agent appelle",
       "logReturns": "renvoie les ID de boîtes, sans copier-coller depuis le tableau de bord",
-      "logFetches": "mcpemails récupère via l'API Gmail (jeton renouvelé)",
+      "logFetches": "MCP Emails récupère en direct chez votre fournisseur",
       "logResult": "20 messages renvoyés",
       "logNothing": "rien n'est stocké",
-      "legendPipe": "mcpemails (le tuyau)",
+      "legendPipe": "MCP Emails (le tuyau)",
       "legendLive": "requête en direct",
       "legendData": "vos données, votre fournisseur"
     }
@@ -52,7 +52,10 @@
     "p2": "MCP Emails en est un, hébergé. Il fonctionne avec Gmail, Outlook et Microsoft 365, iCloud, Fastmail et toute boîte compatible IMAP, et un même agent peut travailler sur plusieurs boîtes à la fois. Le courrier est récupéré en direct auprès de votre fournisseur à chaque appel et n'est jamais stocké sur nos serveurs.",
     "linkImap": "Configurer le serveur MCP pour IMAP",
     "linkBusiness": "MCP e-mail pour les boîtes de l'entreprise",
-    "linkProviders": "Tous les fournisseurs e-mail pris en charge"
+    "linkProviders": "Tous les fournisseurs e-mail pris en charge",
+    "guideClaude": "Connecter Claude à vos e-mails",
+    "guideChatgpt": "Connecter ChatGPT à vos e-mails",
+    "guideImap": "Guide du connecteur IMAP pour Claude"
   },
   "features": {
     "eyebrow": "Principes",
@@ -62,13 +65,13 @@
     "items": {
       "0": {
         "tag": "Périmètre",
-        "h": "Dix-sept outils ciblés. L'essentiel, couvert.",
+        "h": "Dix-neuf outils ciblés. L'essentiel, couvert.",
         "p": "Les outils couvrent le travail quotidien : <code>inbox_list</code>, <code>email_read</code> (list, read, search) et <code>email_compose</code> (send, reply), ainsi que des outils ciblés pour organiser, supprimer, gérer les dossiers, les brouillons, la planification, les contacts, les signatures et les automatisations sans surveillance. Collez l'URL du point de terminaison MCP dans claude.ai, Claude Desktop, Cursor ou tout agent compatible MCP."
       },
       "1": {
         "tag": "Stockage",
         "h": "Les e-mails sont récupérés en direct. Jamais stockés.",
-        "p": "Chaque appel d'outil contacte votre fournisseur en temps réel : API Gmail, Microsoft Graph ou IMAP. Les corps de message, les objets et les pièces jointes vont à l'agent et sont immédiatement supprimés. Nous conservons une seule chose par boîte de réception, un jeton chiffré ou un mot de passe d'application, afin de pouvoir effectuer l'appel suivant. La seule exception est un message que vous programmez pour un envoi ultérieur : nous le conservons jusqu'à l'heure d'envoi, puis en gardons une trace pour votre historique."
+        "p": "Chaque appel d'outil contacte votre fournisseur en temps réel : API Gmail, Microsoft Graph ou IMAP. Les corps de message, les objets et les pièces jointes vont à l'agent et sont immédiatement supprimés. Nous conservons une seule chose par boîte de réception, un jeton chiffré ou un mot de passe d'application, afin de pouvoir effectuer l'appel suivant. Les exceptions sont les messages sortants qui doivent attendre : un message que vous programmez pour plus tard, ou un envoi retenu pour votre approbation, est stocké chiffré, et sa trace est conservée pour votre historique."
       },
       "2": {
         "tag": "Envoi",
@@ -78,7 +81,7 @@
       "3": {
         "tag": "Fournisseurs",
         "h": "Gmail, Outlook, iCloud, Fastmail et toute boîte IMAP.",
-        "p": "Un mot de passe d'application ou la connexion Google (OAuth 2.0) pour Gmail ; la connexion Microsoft (OAuth 2.0) pour Outlook / Microsoft 365 (un compte professionnel ou scolaire peut nécessiter que son administrateur informatique approuve l'application une fois) ; mots de passe d'application pour Fastmail, iCloud, Yahoo, Zoho et Yandex ; un connecteur IMAP / SMTP générique pour tout le reste. Connectez plusieurs boîtes, étiquetez-les par cas d'usage (work-gmail, ops-fastmail, support-imap) et limitez chaque clé API aux boîtes que vous souhaitez rendre accessibles à cet agent. Les équipes et les agences peuvent gérer toutes les boîtes de leurs clients dans un espace de travail partagé, avec rôles et journal d'audit."
+        "p": "Un mot de passe d'application Google via IMAP pour Gmail ; la connexion Microsoft (OAuth 2.0) pour Outlook / Microsoft 365 (un compte professionnel ou scolaire peut nécessiter que son administrateur informatique approuve l'application une fois) ; mots de passe d'application pour Fastmail, iCloud, Yahoo, Zoho et Yandex ; un connecteur IMAP / SMTP générique pour tout le reste. Connectez plusieurs boîtes, étiquetez-les par cas d'usage (work-gmail, ops-fastmail, support-imap) et limitez chaque clé API aux boîtes que vous souhaitez rendre accessibles à cet agent. Les équipes et les agences peuvent gérer toutes les boîtes de leurs clients dans un espace de travail partagé, avec rôles et journal d'audit."
       },
       "4": {
         "tag": "Accès",
@@ -88,7 +91,7 @@
       "5": {
         "tag": "Sécurité",
         "h": "Les identifiants sont chiffrés au repos.",
-        "p": "Les jetons OAuth et les mots de passe d'application sont chiffrés en AES-256-GCM avant d'être écrits dans la base de données. Le déchiffrement n'a lieu qu'à l'intérieur d'une Edge Function isolée, au moment de l'appel. La clé de chiffrement est stockée sous forme de secret d'environnement, séparée de la base de données."
+        "p": "Les jetons OAuth et les mots de passe d'application sont chiffrés en AES-256-GCM avant d'être écrits dans la base de données. Ils ne sont déchiffrés sur nos serveurs que pour la requête qui en a besoin. La clé de chiffrement est stockée sous forme de secret d'environnement, séparée de la base de données."
       }
     }
   },
@@ -107,7 +110,7 @@
       },
       "2": {
         "h": "Votre agent travaille la boîte de réception",
-        "p": "L'agent appelle des outils comme <code>email_read()</code> ou <code>email_compose()</code>. MCPEmails récupère en direct depuis votre fournisseur et renvoie le résultat. Rien n'est mis en cache entre les appels."
+        "p": "L'agent appelle des outils comme <code>email_read()</code> ou <code>email_compose()</code>. MCP Emails récupère en direct depuis votre fournisseur et renvoie le résultat. Rien n'est mis en cache entre les appels."
       }
     },
     "tools": {
@@ -125,17 +128,17 @@
     "eyebrow": "De vraies demandes",
     "titleLine1": "Demandez, simplement.",
     "titleLine2": "Il lit, écrit et classe.",
-    "sub": "Aucun tableau de bord à apprendre. Dites à votre assistant IA ce que vous voulez en langage courant, et il utilise mcpemails pour le faire."
+    "sub": "Aucun tableau de bord à apprendre. Dites à votre assistant IA ce que vous voulez en langage courant, et il utilise MCP Emails pour le faire."
   },
   "quote": {
     "text": "Je voulais que mes agents travaillent ma boîte de réception, mais chaque option impliquait de confier une copie de mes e-mails à un tiers. Alors j'ai construit le tuyau dont je rêvais : connectez-vous une fois, votre boîte de réception est récupérée en direct et jamais stockée, et vous pouvez couper l'accès à n'importe quel agent en un clic. C'est le produit auquel je confie ma propre boîte de réception.",
-    "role": "fondateur, mcpemails"
+    "role": "fondateur, MCP Emails"
   },
   "reviews": {
     "eyebrow": "Avis",
     "titleLine1": "Ne nous croyez pas.",
     "titleLine2": "Croyez-les.",
-    "sub": "De vrais avis de personnes qui utilisent mcpemails sur leur propre boîte mail, publiés sous leur nom.",
+    "sub": "De vrais avis de personnes qui utilisent MCP Emails sur leur propre boîte mail, publiés sous leur nom.",
     "ratingLabel": "Noté {rating} sur 5",
     "count": "{count, plural, one {# avis} other {# avis}}",
     "via": "Avis publié sur {source}",
@@ -148,7 +151,7 @@
   "pricing": {
     "eyebrow": "Tarifs",
     "title": "Un tarif par boîte. Aucun comptage sur les offres payantes.",
-    "sub": "Gratuit connecte une boîte avec 150 actions e-mail par mois. Personal en connecte trois. Pro connecte toutes les boîtes que gère votre entreprise. Team ajoute des personnes, des rôles et un espace de travail distinct par client.",
+    "sub": "Gratuit connecte une boîte avec 150 actions e-mail par mois. Personal en connecte trois. Pro en connecte jusqu'à 10 pour une personne qui gère une entreprise. Business inclut 10 boîtes, ajoute 3 $ par mois par boîte en plus et accueille toute votre équipe.",
     "perForever": "/pour toujours",
     "perMonth": "/mois",
     "tiers": {
@@ -180,27 +183,26 @@
       },
       "solo": {
         "name": "Pro",
-        "desc": "Toutes les boîtes que gère votre entreprise, sur un seul agent : finance, ventes, support, info et la vôtre.",
+        "desc": "Pour une personne qui gère une entreprise : jusqu'à 10 boîtes sur un seul agent, de la finance et des ventes au support et à la vôtre.",
         "features": [
           "Tout ce que contient Personal",
-          "Boîtes connectées illimitées",
+          "10 boîtes connectées",
           "Limite de pointe 5x plus élevée",
           "Historique d'analytique plus long"
         ],
         "cta": "Choisir Pro"
       },
-      "team": {
-        "name": "Team",
-        "desc": "Des boîtes partagées pour une équipe, avec un espace de travail distinct par client ou activité.",
+      "business": {
+        "name": "Business",
+        "desc": "Pour une entreprise avec beaucoup de boîtes ou plusieurs personnes : 10 boîtes incluses, et d'autres à prix fixe par boîte.",
         "features": [
           "Tout ce que contient Pro",
-          "Membres illimités avec rôles",
-          "Un espace de travail distinct par client ou activité",
-          "SSO (SAML / OIDC) et journal d'audit",
-          "Historique d'analytique le plus long",
-          "Support prioritaire"
+          "10 boîtes incluses, 3 $ par mois pour chaque boîte en plus",
+          "Membres illimités avec rôles, sans surcoût",
+          "Les administrateurs valident les envois en attente",
+          "Plusieurs espaces de travail sur un seul abonnement, un par entreprise ou client"
         ],
-        "cta": "Choisir Team"
+        "cta": "Choisir Business"
       }
     },
     "footnote": "Toutes les formules : le courrier que votre agent lit est récupéré en direct et jamais stocké. Jetons OAuth chiffrés au repos. Besoin de quelque chose de sur mesure ? <contact>Contactez-nous</contact>. <comparison>Voir le comparatif complet des fonctionnalités →</comparison>",
@@ -213,7 +215,7 @@
     "items": [
       {
         "q": "MCP Emails est-il un serveur MCP pour IMAP ?",
-        "a": "Oui. En plus de la connexion Gmail et Outlook, il existe un connecteur IMAP et SMTP générique : toute boîte accessible en IMAP fonctionne, qu'elle soit sur votre propre domaine, chez un hébergeur ou chez un FAI régional. Vous saisissez les paramètres du serveur et un mot de passe d'application une seule fois, puis votre agent lit en IMAP et envoie via votre propre serveur SMTP."
+        "a": "Oui. En plus de Gmail et Outlook, il existe un connecteur IMAP et SMTP générique : toute boîte accessible en IMAP fonctionne, qu'elle soit sur votre propre domaine, chez un hébergeur ou chez un FAI régional. Vous saisissez les paramètres du serveur et un mot de passe d'application une seule fois, puis votre agent lit en IMAP et envoie via votre propre serveur SMTP."
       },
       {
         "q": "Un même agent peut-il travailler sur plusieurs boîtes à la fois ?",
@@ -233,23 +235,23 @@
       },
       {
         "q": "Quels fournisseurs d'e-mail puis-je connecter ?",
-        "a": "Gmail avec un mot de passe d'application ou en se connectant avec Google, Outlook et Microsoft 365 en se connectant avec Microsoft (un compte professionnel ou scolaire peut nécessiter que son administrateur informatique approuve l'application une fois), Fastmail, iCloud, Yahoo, Zoho et Yandex avec un mot de passe d'application, et toute autre boîte via une connexion IMAP / SMTP générique. Connectez autant de boîtes que vous le souhaitez et étiquetez-les par cas d'usage."
+        "a": "Gmail et Google Workspace avec un mot de passe d'application Google via IMAP, Outlook et Microsoft 365 en se connectant avec Microsoft (un compte professionnel ou scolaire peut nécessiter que son administrateur informatique approuve l'application une fois), Fastmail, iCloud, Yahoo, Zoho et Yandex avec un mot de passe d'application, et toute autre boîte via une connexion IMAP / SMTP générique. Connectez autant de boîtes que vous le souhaitez et étiquetez-les par cas d'usage."
       },
       {
         "q": "Mes e-mails sont-ils stockés quelque part ?",
-        "a": "Non. Le courrier que votre agent lit est récupéré en direct depuis votre fournisseur à chaque requête et n'est jamais stocké sur nos serveurs. La seule exception est un message que vous programmez explicitement pour un envoi ultérieur : il est conservé chiffré jusqu'à son départ."
+        "a": "Non. Le courrier que votre agent lit est récupéré en direct depuis votre fournisseur à chaque requête et n'est jamais stocké sur nos serveurs. Les exceptions sont les messages sortants qui doivent attendre : un message que vous programmez pour plus tard, ou un envoi retenu pour votre approbation, est stocké chiffré."
       },
       {
         "q": "Est-ce vraiment gratuit ?",
-        "a": "Oui. L'offre gratuite connecte une boîte, pour toujours et sans carte bancaire, et votre agent dispose de tous les outils que nous publions sur elle : lire, chercher, envoyer, répondre, programmer et organiser. Personal coûte 9 $ par mois pour une deuxième et une troisième boîte sur le même agent, Pro supprime entièrement la limite de boîtes, et Team sert dès que d'autres personnes doivent y accéder."
+        "a": "Oui. L'offre gratuite connecte une boîte, pour toujours et sans carte bancaire, et votre agent dispose de tous les outils que nous publions sur elle : lire, chercher, envoyer, répondre, programmer et organiser. Personal coûte 9 $ par mois pour une deuxième et une troisième boîte sur le même agent, Pro en couvre jusqu'à 10 pour 15 $, et Business sert pour plus de boîtes ou dès que d'autres personnes doivent y accéder."
       },
       {
         "q": "Que peut réellement faire l'IA avec ma boîte de réception ?",
-        "a": "Lire et rechercher du courrier, envoyer, répondre et transférer de vrais messages, programmer des envois pour plus tard et organiser votre boîte de réception : déplacer, copier, marquer, archiver et supprimer. Dix-sept outils basés sur l'action, pour que l'agent termine le travail dans votre boîte au lieu de se contenter de rédiger."
+        "a": "Lire et rechercher du courrier, envoyer, répondre et transférer de vrais messages, programmer des envois pour plus tard et organiser votre boîte de réception : déplacer, copier, marquer, archiver et supprimer. Dix-neuf outils basés sur l'action, pour que l'agent termine le travail dans votre boîte au lieu de se contenter de rédiger."
       },
       {
         "q": "Comment connecter une boîte de réception ?",
-        "a": "Créez un compte gratuit, connectez votre boîte (mot de passe d'application ou connexion Google pour Gmail, connexion avec Microsoft pour Outlook, ou collez un mot de passe d'application pour les autres), puis déposez https://mcpemails.com/api/mcp dans votre client IA et autorisez. Votre agent dispose de la boîte en quelques minutes."
+        "a": "Créez un compte gratuit, connectez votre boîte (mot de passe d'application Google pour Gmail, connexion avec Microsoft pour Outlook, ou collez un mot de passe d'application pour les autres), puis déposez https://mcpemails.com/api/mcp dans votre client IA et autorisez. Votre agent dispose de la boîte en quelques minutes."
       },
       {
         "q": "Puis-je l'héberger moi-même ?",
@@ -270,11 +272,16 @@
     "linkQuickstart": "Démarrage rapide",
     "linkOauth": "Connexion OAuth",
     "linkProviders": "Fournisseurs pris en charge",
+    "linkReadOnly": "Accès en lecture seule",
+    "linkClients": "Configuration des clients MCP",
     "linkPrivacy": "Confidentialité",
     "linkTerms": "Conditions",
-    "copyright": "© 2026 mcpemails.",
+    "linkWithdrawal": "Droit de rétractation",
+    "linkCancel": "Résilier des contrats ici",
+    "linkImpressum": "Impressum",
+    "copyright": "© 2026 MCP Emails.",
     "legal": "E-mails récupérés en direct, jamais stockés · Identifiants chiffrés au repos",
-    "legalEntity": "MCPEmails est un service d'Albretsen Consulting (enkeltpersonforetak, entreprise individuelle norvégienne), numéro d'organisation 926 646 753, Håsteins gate 9, 5160 Laksevåg, Norvège.",
+    "legalEntity": "MCP Emails est un service d'Albretsen AS, numéro d'organisation 938 702 373, Håsteins gate 9, 5160 Laksevåg, Norvège.",
     "contactLabel": "Contact",
     "mcpLabel": "Point de terminaison MCP",
     "copy": "Copier",
@@ -283,6 +290,7 @@
     "linkAbout": "À propos",
     "linkSecurity": "Sécurité",
     "linkStatus": "Statut",
+    "linkHelp": "Aide et support",
     "linkSelfHost": "Auto-hébergement",
     "linkFounders": "Pour les fondateurs",
     "linkBusiness": "Pour les entreprises"
@@ -293,7 +301,8 @@
     "nb": "Norsk",
     "es": "Español",
     "fr": "Français",
-    "zh": "中文"
+    "zh": "中文",
+    "de": "Deutsch"
   },
   "preview": {
     "eyebrow": "Aperçu du produit",

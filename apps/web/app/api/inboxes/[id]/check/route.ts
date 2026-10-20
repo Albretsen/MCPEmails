@@ -6,9 +6,33 @@ import { checkOutlookMailbox, OutlookAuthError } from '@/lib/email-providers/out
 import { OUTLOOK_NO_MAILBOX_REASON } from '@/lib/email-providers/outlook-oauth';
 import { openImapSession, McpEmailsError, ImapAuthError } from '@/lib/email/imap';
 import { guardMailHost } from '@/lib/email/host-guard';
+import { validateSmtpCredential } from '@/lib/email/validate-smtp';
+import { legacySecurityForPort } from '@/lib/email/connection-config';
+import {
+  mailRelayConfigFromEnv,
+  MailRelayTargetRefusedError,
+  MailRelayUnavailableError,
+  openMailRelayTunnel,
+} from '@/lib/email/mail-relay';
+import { explainAuthFailure } from '@/lib/email/auth-failure';
+import { isIP } from 'net';
+import {
+  describeDirectFailure,
+  learnRelayHost,
+  RELAYED_TRANSPORTS,
+  recordRelayUse,
+  refreshLearnedRelayHosts,
+  relayRouteForHost,
+  shouldTryRelayAfter,
+} from '@/lib/email/relay-fallback';
 import type { Tables } from '@/types/database.types';
 import { createServiceRoleClient } from '@/lib/supabase/service';
 import { recordProductFunnelEvent } from '@/lib/analytics/product-funnel';
+import {
+  canManageInboxes,
+  fetchWorkspaceRole,
+  insufficientRoleBody,
+} from '@/lib/workspace/roles';
 
 /**
  * POST /api/inboxes/[id]/check
@@ -22,6 +46,10 @@ import { recordProductFunnelEvent } from '@/lib/analytics/product-funnel';
  * still accepted server-side.
  *
  * For Fastmail app-password (IMAP) inboxes: open an IMAP session and log out.
+ *
+ * For a send-only (SMTP-only) inbox: authenticate to the SMTP server without
+ * sending anything. There is no IMAP server to log in to, and answering
+ * "Unsupported provider" for a mailbox that works was the old behaviour.
  *
  * Three outcomes:
  *  - healthy  → status set to 'active', last_error cleared, last_sync_at stamped.
@@ -54,22 +82,52 @@ export async function POST(
     return NextResponse.json({ error: 'Unauthorized.' }, { status: 401 });
   }
 
-  // 2. Fetch the inbox (including credentials, which never leave this handler).
-  //    RLS on inboxes restricts SELECT to workspaces the user is a member of
-  //    (and to non-deleted rows), so this both authorizes and scopes the read,
-  //    correct even when the user belongs to multiple workspaces.
-  const { data: inbox, error: fetchError } = await supabase
+  // 2. Authorize through the RLS-scoped client. The inboxes SELECT policy only
+  //    returns rows in the caller's workspaces that are not soft-deleted, so a
+  //    returned row proves membership, and it is correct even when the user
+  //    belongs to several workspaces. Only non-secret columns: authenticated
+  //    cannot read the encrypted credentials at all (20261016160200).
+  const { data: visible, error: fetchError } = await supabase
     .from('inboxes')
-    .select('*')
+    .select('id, workspace_id')
     .eq('id', inboxId)
     .is('deleted_at', null)
-    .single<Tables<'inboxes'>>();
+    .single();
 
-  if (fetchError || !inbox) {
+  if (fetchError || !visible) {
     return NextResponse.json({ error: 'Inbox not found.' }, { status: 404 });
   }
 
-  const workspaceId = inbox.workspace_id;
+  const workspaceId = visible.workspace_id;
+
+  // 3. Membership is not permission. This handler decrypts the stored
+  //    credentials, dials the stored host and rewrites the inbox's status for
+  //    everyone in the workspace. It sits with connect / disconnect on the
+  //    operator side of the line (lib/workspace/roles.ts); viewers are read
+  //    only, and the dashboard disables the button for them.
+  const callerRole = await fetchWorkspaceRole(supabase, workspaceId, user.id);
+  if (!canManageInboxes(callerRole)) {
+    return NextResponse.json(
+      insufficientRoleBody('Workspace viewers cannot run a connection check.'),
+      { status: 403 },
+    );
+  }
+
+  // 3b. The full row, credentials included, through the service-role client,
+  //     scoped to the id AND the workspace step 2 authorized. The credentials
+  //     never leave this handler.
+  const service = createServiceRoleClient();
+  const { data: inbox, error: rowError } = await service
+    .from('inboxes')
+    .select('*')
+    .eq('id', inboxId)
+    .eq('workspace_id', workspaceId)
+    .is('deleted_at', null)
+    .single<Tables<'inboxes'>>();
+
+  if (rowError || !inbox) {
+    return NextResponse.json({ error: 'Inbox not found.' }, { status: 404 });
+  }
 
   // 4. Run the credential check. `healthy` is null while inconclusive.
   let healthy: boolean | null = null;
@@ -77,6 +135,15 @@ export async function POST(
 
   const isAppPassword =
     !!inbox.imap_host && !!inbox.imap_password && !inbox.oauth_access_token;
+  const isSendOnly =
+    !inbox.imap_host && !!inbox.smtp_host && !!inbox.imap_password && !inbox.oauth_access_token;
+
+  // Hosts the relay registry learned are checked through the relay, like the
+  // relay-only list (relay-fallback.ts). Best-effort and bounded
+  // (RELAY_REGISTRY_TIMEOUT_MS): a failed read leaves the previous list in place.
+  if ((isAppPassword || isSendOnly) && mailRelayConfigFromEnv()) {
+    await refreshLearnedRelayHosts(service);
+  }
 
   try {
     if (isAppPassword) {
@@ -108,6 +175,96 @@ export async function POST(
       });
       await session.logout();
       healthy = true;
+    } else if (isSendOnly) {
+      const smtpHost = inbox.smtp_host!;
+      // A host that refuses this app's own address (relay-only, or learned by
+      // the relay registry) is checked the way it was connected: through the
+      // relay, on the one transport it carries (see relay-fallback.ts).
+      const relay = relayRouteForHost(smtpHost, 'smtp') ? mailRelayConfigFromEnv() : null;
+      const smtpPort = relay ? RELAYED_TRANSPORTS.smtp.port : inbox.smtp_port ?? 465;
+      // Same SSRF guard as the IMAP branch, on the host this branch dials.
+      const guard = await guardMailHost(smtpHost, { protocol: 'smtp', port: smtpPort });
+      if (!guard.ok) {
+        return NextResponse.json({ error: guard.message, error_code: guard.code }, { status: 422 });
+      }
+      const password = decryptToken(inbox.imap_password!);
+      let relayDown = false;
+      const viaRelay = (config: NonNullable<ReturnType<typeof mailRelayConfigFromEnv>>) =>
+        validateSmtpCredential({
+          host: smtpHost,
+          port: RELAYED_TRANSPORTS.smtp.port,
+          email: inbox.email_address,
+          username: inbox.imap_username || undefined,
+          password,
+          security: RELAYED_TRANSPORTS.smtp.security,
+          timeoutMs: 15_000,
+          tunnel: async () => {
+            try {
+              return await openMailRelayTunnel(config, smtpHost, RELAYED_TRANSPORTS.smtp.port);
+            } catch (err) {
+              if (err instanceof MailRelayUnavailableError && !(err instanceof MailRelayTargetRefusedError)) {
+                relayDown = true;
+              }
+              throw err;
+            }
+          },
+        });
+      let result = relay
+        ? await viaRelay(relay)
+        : await validateSmtpCredential({
+            host: smtpHost,
+            pinnedAddress: guard.address,
+            port: smtpPort,
+            email: inbox.email_address,
+            username: inbox.imap_username || undefined,
+            password,
+            security:
+              inbox.smtp_security === 'starttls' || inbox.smtp_security === 'tls'
+                ? inbox.smtp_security
+                : legacySecurityForPort(smtpPort, 'smtp'),
+          });
+      // The same one relay retry the connect form gives (relay-fallback.ts): a
+      // host that refuses this app's address, such as Telenor's "threshold
+      // limitation", would otherwise read as a rejected password here.
+      const fallbackRelay = relay ? null : mailRelayConfigFromEnv();
+      const authReason =
+        !result.ok && result.code === 'AUTH_FAILED'
+          ? explainAuthFailure({
+              detail: result.detail,
+              email: inbox.email_address,
+              host: smtpHost,
+              secret: password,
+              usernameProvided: Boolean(inbox.imap_username),
+            }).reason
+          : null;
+      if (!result.ok && fallbackRelay && !isIP(smtpHost) && shouldTryRelayAfter(result, authReason)) {
+        const startedMs = Date.now();
+        const retried = await viaRelay(fallbackRelay);
+        await recordRelayUse(service, {
+          protocol: 'smtp',
+          host: smtpHost,
+          route: 'fallback',
+          outcome: retried.ok ? 'ok' : relayDown ? 'relay_down' : 'host_refused',
+          ms: Date.now() - startedMs,
+          detail: retried.ok ? null : describeDirectFailure(retried),
+        });
+        if (retried.ok) {
+          await learnRelayHost(service, smtpHost, 'smtp', describeDirectFailure(result));
+          result = retried;
+        } else if (!relayDown && retried.code === 'AUTH_FAILED') {
+          // The relayed attempt reached the server and it judged the password.
+          result = retried;
+        }
+      }
+      if (result.ok) {
+        healthy = true;
+      } else if (result.code === 'AUTH_FAILED') {
+        healthy = false;
+        reason = `The SMTP server rejected the saved password. ${RECONNECT_HINT}`;
+      } else {
+        // Anything short of a rejected login is inconclusive, as for IMAP.
+        throw new Error(result.message);
+      }
     } else if (inbox.provider === 'gmail') {
       const token = await withFreshGmailToken(inbox);
       healthy = await verifyGmailAccess(token);
@@ -171,14 +328,15 @@ export async function POST(
 
   const now = new Date().toISOString();
 
+  // The status writes go through the service-role client: authenticated has no
+  // UPDATE on inboxes (20261016160200). Scoped to id AND workspace_id.
   if (healthy) {
-    await supabase
+    await service
       .from('inboxes')
       .update({ status: 'active', last_error: null, last_sync_at: now, updated_at: now })
       .eq('id', inboxId)
       .eq('workspace_id', workspaceId);
 
-    const service = createServiceRoleClient();
     const { data: claimed } = await service.from('workspaces').update({ onboarding_connection_verified_at: now }).eq('id', workspaceId).is('onboarding_connection_verified_at', null).select('id');
     const category = (inbox.provider === 'imap' ? 'generic_imap' : inbox.provider) as Parameters<typeof recordProductFunnelEvent>[1]['category'];
     if (claimed?.length) await recordProductFunnelEvent(service, { workspaceId, stage: 'connection_verified', outcome: 'success', category });
@@ -194,7 +352,7 @@ export async function POST(
   // Definitive failure: ensure the row reflects the errored state. (OAuth
   // refresh-token failures are already persisted by the provider helper; this
   // also covers live-ping rejections and IMAP auth failures.)
-  await supabase
+  await service
     .from('inboxes')
     .update({ status: 'error', last_error: reason, updated_at: now })
     .eq('id', inboxId)

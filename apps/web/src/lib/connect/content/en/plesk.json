@@ -21,7 +21,7 @@
     "titleLine1": "Connect a Plesk mailbox to Claude,",
     "titleLine2": "Cursor, ChatGPT, any MCP client",
     "lead": "Give your AI agent a real Plesk mailbox. Read, search, send, reply, schedule and organize mail over IMAP, on any server running Plesk Obsidian, whoever hosts it.",
-    "answer": "Claude cannot reach a Plesk mailbox on its own. mcpemails is a hosted MCP server that connects it over plain IMAP on port 993, so Claude, Cursor or any MCP client can read, search, send and organize that mail. Plesk is control panel software rather than a hosting company, so there is no shared hostname: the mail server is your own domain, or the server's hostname, and Plesk prints the exact pair under Mail Accounts, then Mail Client Setup. Authentication is the password set on the mailbox in Plesk, not the panel login, and one inbox is free.",
+    "answer": "Claude cannot reach a Plesk mailbox on its own. MCP Emails is a hosted MCP server that connects it over plain IMAP on port 993, so Claude, Cursor or any MCP client can read, search, send and organize that mail. Plesk is control panel software rather than a hosting company, so there is no shared hostname: the mail server is your own domain, or the server's hostname, and Plesk prints the exact pair under Mail Accounts, then Mail Client Setup. Authentication is the password set on the mailbox in Plesk, not the panel login, and one inbox is free.",
     "meta0": "1 inbox free, forever",
     "meta1": "Mailbox password set in Plesk",
     "meta2": "Email fetched live, never stored"
@@ -32,7 +32,7 @@
   },
   "setup": [
     {
-      "h": "Create a free mcpemails account",
+      "h": "Create a free MCP Emails account",
       "p": "Sign up at mcpemails.com. The free plan connects one inbox and needs no card."
     },
     {
@@ -69,7 +69,7 @@
   "faq": [
     {
       "q": "Does Claude work with a Plesk mailbox?",
-      "a": "Not directly. Claude has no connector for Plesk servers. Connecting an MCP server such as mcpemails to the mailbox over IMAP gives Claude read, search, send, reply, schedule and organize access to it. Because Plesk mail is ordinary IMAP and SMTP, this works the same on any host running Plesk."
+      "a": "Not directly. Claude has no connector for Plesk servers. Connecting an MCP server such as MCP Emails to the mailbox over IMAP gives Claude read, search, send, reply, schedule and organize access to it. Because Plesk mail is ordinary IMAP and SMTP, this works the same on any host running Plesk."
     },
     {
       "q": "What are the Plesk IMAP and SMTP settings?",

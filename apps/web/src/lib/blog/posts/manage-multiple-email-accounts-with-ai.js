@@ -52,11 +52,12 @@ One field does three jobs. Each inbox has a display name: it is the **Label** in
 
 "work2" is therefore a bad name twice over: the agent cannot tell what the mailbox is for, and some client will render "work2" beside your address. Use something a stranger could read, such as "Jane Doe (Acme)" or "Northside Studio". Set it in the dashboard under the inbox's **Sender name**, or with \`signature_set\`, and read it back with \`signature_get\`. Names are capped at 100 characters.
 
-Sending from an alias is narrower than people expect:
+Sending from an alias works, but only from addresses you have proved are yours:
 
 - Your own connected address always works as the From value, on every provider.
-- A **different** address must be a verified Gmail Send As identity, listed under \`sender_identities\` in that inbox's \`inbox_list\` entry.
-- On a non-Gmail provider, a From address that is not the inbox's own is refused rather than silently rewritten.
+- On an IMAP inbox (iCloud, Yahoo, Gmail connected by app password, any SMTP host), a **different** address works once it is verified. Add it in that inbox's settings in the dashboard, then enter the code MCP Emails emails to that address. Verified addresses are listed under \`sender_identities\` in that inbox's \`inbox_list\` entry.
+- Outlook sends from the connected address.
+- A From address that is not verified for the inbox is refused rather than silently rewritten.
 
 Signatures are per inbox too: a formal one on the work address, nothing on the personal one. See [email signatures for Claude](/blog/email-signatures-for-claude).
 
@@ -96,10 +97,10 @@ Mixed setups are the normal case, and providers disagree about what a folder is.
 
 Connected inboxes are what plans are priced on:
 
-- **Free, $0.** One connected inbox. 150 billable email actions per UTC calendar month, with the first 7 days uncounted. That monthly cap applies to workspaces created on or after 2026-09-13; workspaces created earlier are exempt.
+- **Free, $0.** One connected inbox. 150 billable email actions per UTC calendar month, with the first 3 days uncounted. That monthly cap applies to workspaces created on or after 2026-09-13; workspaces created earlier are exempt.
 - **Personal, $9 a month or $86.40 a year.** Three connected inboxes, no monthly action cap, 2x burst rate limit, email support.
-- **Pro, $15 a month or $144 a year.** Unlimited connected inboxes, 5x burst rate limit, longer analytics history.
-- **Team, $79 a month or $756 a year.** Unlimited members with roles, a separate workspace per client or business, SSO (SAML/OIDC) and audit log, priority support.
+- **Pro, $15 a month or $144 a year.** Up to 10 connected inboxes, 5x burst rate limit, longer analytics history.
+- **Business, $39 a month or $374.40 a year.** 10 mailboxes included and $3 a month for each extra, unlimited members with roles at no extra cost, admins who approve held sends, a separate workspace per client or business.
 
 A cross-inbox routine costs one action per mailbox, so your mailbox count drives volume as much as your habits do. Details on [pricing](/pricing).
 
@@ -109,7 +110,7 @@ A cross-inbox routine costs one action per mailbox, so your mailbox count drives
 From \`inbox_list\`, which returns the address and display name of every inbox it may use. Name the address in your request. A mailbox ID and an address that disagree are refused, not guessed.
 
 **Will replies go out from the right address?**
-Yes, when you send from the inbox that owns the address: each inbox sends through its own provider, display name, and signature. A different From address requires a verified Gmail Send As identity, and is refused on other providers.
+Yes, when you send from the inbox that owns the address: each inbox sends through its own provider, display name, and signature. A different From address works on an IMAP inbox once you verify it with a code sent to that address. Outlook sends from the connected address, and an unverified From address is refused.
 
 **Can I let the agent send freely from one mailbox and hold another?**
 Yes. Review before sending is a per-inbox setting, so one mailbox can send immediately while another waits for your approval in a signed-in browser.

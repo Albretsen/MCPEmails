@@ -66,6 +66,11 @@ const FIXTURES = {
   fx_draft_imap: F.draftEditorImap,
   fx_draft_gmail_attachments: F.draftEditorGmailAttachments,
   fx_draft_error_not_found: F.draftErrorNotFound,
+  // A model-initiated draft write as of 2026-10-13: body deferred, the real
+  // one in result `_meta` (see RESULT_META). The second is the same result on
+  // a host that drops `_meta`, which sends the card to `draft_read`.
+  fx_draft_deferred: F.draftReplyDeferred,
+  fx_draft_deferred_no_meta: F.draftReplyDeferred,
   fx_unknown_version: F.unknownVersion,
   fx_malformed: F.malformed,
   // Not an envelope at all: what a UI-bearing tool returns for an inbox that
@@ -85,6 +90,11 @@ const PROSE = {
   // into content[0].text. That matters: it exercises the card's text-fallback
   // parse branch (text starting with "{"), not just the structuredContent one.
   fx_non_envelope: JSON.stringify(F.nonEnvelope),
+};
+
+/** Result-level `_meta` per fixture. Only a deferred draft write has any. */
+const RESULT_META = {
+  fx_draft_deferred: F.draftReplyResultMeta,
 };
 
 const EMPTY_SCHEMA = { type: "object", properties: {}, additionalProperties: false };
@@ -135,12 +145,13 @@ const fail = (id, code, message) => ({
   error: { code, message },
 });
 
-function envelopeResult(id, envelope, prose) {
+function envelopeResult(id, envelope, prose, meta) {
   // Contract degradation rule: meaningful `content` prose always accompanies
   // `structuredContent`, so a non-UI client sees the same facts.
   return ok(id, {
     content: [{ type: "text", text: prose }],
     structuredContent: envelope,
+    ...(meta ? { _meta: meta } : {}),
   });
 }
 
@@ -154,6 +165,7 @@ function handleToolsCall(req) {
       id(req),
       env,
       PROSE[name] ?? `Fixture ${name} (${env.card ?? "not an envelope"}).`,
+      RESULT_META[name],
     );
   }
 
@@ -307,6 +319,9 @@ function draftFor(draftId) {
     return F.draftEditorGmailAttachments;
   }
   if (!/^Drafts:\d+$/.test(key)) return null;
+  // The draft the deferred fixtures point at reads back under the version
+  // their envelope carries, so the card recognises it as the same content.
+  if (key === F.draftReadInline.draft.draft_id) return F.draftReadInline;
   return {
     ...F.draftEditorImap,
     draft: { ...F.draftEditorImap.draft, draft_id: key },
