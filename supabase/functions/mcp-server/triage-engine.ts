@@ -46,6 +46,7 @@
 // ---------------------------------------------------------------------------
 
 import { neutralizeMaybe, neutralizeText } from "./text-safety.ts";
+import { isForbiddenMoveDestination } from "./triage-forbidden-destinations.ts";
 // The SAME date predicate the tool schema enforces, imported rather than
 // re-expressed. A stored rule must not be allowed to hold a date shape an
 // interactive search would have refused: see the note in validateTriageFilter.
@@ -218,38 +219,10 @@ export const TRIAGE_FORBIDDEN_ACTION_TYPES = [
   "erase",
 ];
 
-/**
- * Move destinations that are refused because moving mail there is deletion
- * wearing a different hat.
- *
- * `TRIAGE_FORBIDDEN_ACTION_TYPES` blocks an action literally named "delete",
- * but every provider also auto-purges its trash folder on a timer, so a rule
- * with {type:'move', folder:'Trash'} is an unattended delete with a 30-day
- * fuse. We advertise that Automations never delete mail, and that claim has to
- * survive somebody typing "Trash" into the folder box.
- *
- * Matching is on the normalized leaf name, so "Trash", "[Gmail]/Trash",
- * "INBOX.Trash" and "Deleted Items" are all caught. Moving mail OUT of trash is
- * unaffected: only the destination is checked.
- */
-export const TRIAGE_FORBIDDEN_MOVE_DESTINATIONS = [
-  "trash",
-  "bin",
-  "deleted",
-  "deleted items",
-  "deleted messages",
-  "junk",
-  "spam",
-];
-
-/**
- * Reduce a user-supplied folder path to its comparable leaf name.
- * "[Gmail]/Trash" -> "trash";  "INBOX.Deleted Items" -> "deleted items".
- */
-export function triageFolderLeaf(folder: string): string {
-  const leaf = folder.split(/[/.\\]/).filter(Boolean).pop() ?? folder;
-  return leaf.trim().toLowerCase().replace(/\s+/g, " ");
-}
+// Move destinations refused because moving mail there is deletion wearing a
+// different hat. Derived from IMAP_ALIAS_ALTERNATE_NAMES so every language the
+// folder resolver knows is refused too; see triage-forbidden-destinations.ts.
+export { TRIAGE_FORBIDDEN_MOVE_DESTINATIONS } from "./triage-forbidden-destinations.ts";
 
 /** The scope a key must hold for each action, identical to the interactive tool. */
 export const TRIAGE_ACTION_SCOPES: Record<TriageActionType, string> = {
@@ -496,10 +469,10 @@ export function validateTriageAction(raw: unknown): TriageValidation<TriageActio
       if (!folder) return fail("action.folder is required for a move action.");
       if (folder.length > 200) return fail("action.folder must be at most 200 characters.");
       // See TRIAGE_FORBIDDEN_MOVE_DESTINATIONS: a move to trash is a delete on a timer.
-      if (TRIAGE_FORBIDDEN_MOVE_DESTINATIONS.includes(triageFolderLeaf(folder))) {
+      if (isForbiddenMoveDestination(folder)) {
         return fail(
           `action.folder '${folder}' is not available to automations. Every provider ` +
-            "empties its trash and junk folders on a timer, so moving mail there " +
+            "empties its trash on a timer, so moving mail there " +
             "unattended is a delete with a delayed fuse, and automations do not delete " +
             "mail. Move it to a folder you own and review it there.",
         );
@@ -952,6 +925,13 @@ export interface TriageFolderTarget {
    * 100), but is not evidence the folder is there.
    */
   verified: boolean;
+  /**
+   * Set when the provider says the resolved folder IS its trash, even though
+   * the rule's name for it passed validateTriageAction: an IMAP mailbox flagged
+   * \\Trash under a name nobody listed ("Müll"). The run
+   * refuses the move, for the reason TRIAGE_FORBIDDEN_MOVE_DESTINATIONS gives.
+   */
+  forbiddenRole?: "trash" | null;
 }
 
 export interface TriageDeps {
@@ -1610,13 +1590,26 @@ export async function runTriageRule(
     let destinationId: string | null = null;
     let destinationVerified = false;
     if (action.type === "move") {
+      let target: TriageFolderTarget;
       try {
-        const target = await deps.resolveFolder(inbox, action.folder, session);
-        destinationId = target.id;
-        destinationVerified = target.verified;
+        target = await deps.resolveFolder(inbox, action.folder, session);
       } catch (error) {
         return await failRun("folder_unresolved", redactErrorDetail(error));
       }
+      // The name passed validation; the folder it RESOLVED to is checked too,
+      // by its provider-native id ("TRASH", "deleteditems", "[Gmail]/Bin") and
+      // by the role the provider advertises for it.
+      if (target.forbiddenRole || isForbiddenMoveDestination(target.id)) {
+        return await failRun(
+          "invalid_action",
+          `action.folder '${action.folder}' resolves to this mailbox's ` +
+            "trash folder. Every provider empties its trash on a timer, so automations " +
+            "do not move mail there.",
+          "Point the rule at a folder you own.",
+        );
+      }
+      destinationId = target.id;
+      destinationVerified = target.verified;
     }
 
     /**
