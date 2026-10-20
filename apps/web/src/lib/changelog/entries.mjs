@@ -46,6 +46,13 @@ export const ENTRIES = [
   {
     date: '2026-10-20',
     kind: 'fixed',
+    title: 'Approved scheduled sends go out on time',
+    body:
+      'On an inbox that holds sends for approval, a scheduled email you approve now goes out at the time it was scheduled for. Before, the approved message could end in an error at that time instead of being sent.',
+  },
+  {
+    date: '2026-10-20',
+    kind: 'fixed',
     title: 'Sent, Trash and Spam in your language',
     body:
       'On mail servers whose folders use localized names, such as "Éléments envoyés", "Gesendete Objekte" or "Отправленные", Sent copies are now saved and Trash, Spam, Drafts and Archive are recognised. Before, a copy of mail sent from these mailboxes was not saved to Sent.',
