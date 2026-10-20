@@ -557,6 +557,7 @@ import {
   handlerValidationAuditDetails,
 } from "./validation-observability.ts";
 import { remediesFor, withSiblingOperations } from "./argument-remedies.ts";
+import { withGuessedArgumentHints } from "./argument-guesses.ts";
 import {
   closeDraftLine,
   draftIdIsRecordable,
@@ -4789,6 +4790,8 @@ const LEGACY_TOOLS: ToolDefinition[] = [
       "List email messages inside an inbox. Returns message summaries " +
       "(sender, subject, date, preview, read status, attachment flag) ordered " +
       "newest first. Supports filtering by folder, unread status, and pagination. " +
+      "It has no date filter and reads one folder: since, before and " +
+      "include_folders are email_search's, which needs no other criterion with them. " +
       "A response is only one page, not the complete result set: always inspect " +
       "has_more. When it is true, call email_list again with the returned " +
       "next_offset (and keep every other argument unchanged); only has_more: false " +
@@ -9502,6 +9505,63 @@ function perOperationActionNote(toolName: string, args: unknown): string | undef
   const target = CONSOLIDATED_SPECS[parent.tool]?.actions[word]?.legacy;
   if (!target || target === toolName || !PER_OPERATION_LISTED_NAMES.has(target)) return undefined;
   return `'${word}' is the ${target} tool`;
+}
+
+/**
+ * How a refusal names the refused operation, every argument it takes, and
+ * where since/before live when it has no date filter, for
+ * withGuessedArgumentHints. On a consolidated tool the operation is the
+ * selected action and the place is another action; otherwise it is the tool
+ * and, for a per-operation tool, a listed sibling tool.
+ */
+function guessHintContext(
+  toolName: string,
+  tool: { inputSchema: Record<string, unknown> },
+  selectedAction: string | null,
+): {
+  subject: string;
+  allowed: string[];
+  elsewhere: (canonical: readonly string[]) => string | null;
+} {
+  const index = CONSOLIDATED_ARGUMENT_INDEX[toolName];
+  if (index && selectedAction) {
+    return {
+      subject: `action '${selectedAction}'`,
+      allowed: [...(index.allowedByAction[selectedAction] ?? [])],
+      elsewhere: (canonical) => {
+        const owners = Object.keys(index.allowedByAction).filter((action) =>
+          action !== selectedAction &&
+          canonical.every((name) => index.allowedByAction[action]?.includes(name))
+        );
+        if (owners.length === 0) return null;
+        const quoted = owners.map((owner) => `'${owner}'`);
+        const who = quoted.length === 1
+          ? `action ${quoted[0]} takes`
+          : `actions ${quoted.slice(0, -1).join(", ")} and ${quoted[quoted.length - 1]} take`;
+        return `${who} ${canonical.join(" and ")}`;
+      },
+    };
+  }
+  const properties = tool.inputSchema.properties;
+  const allowed = properties && typeof properties === "object" && !Array.isArray(properties)
+    ? Object.keys(properties)
+    : [];
+  return {
+    subject: toolName,
+    allowed,
+    elsewhere: (canonical) => {
+      if (!PER_OPERATION_ONLY_TOOLS.has(toolName)) return null;
+      const siblings = perOperationSiblings(toolName);
+      const tools = (siblings[canonical[0]] ?? []).filter((name) =>
+        canonical.every((property) => siblings[property]?.includes(name))
+      );
+      if (tools.length === 0) return null;
+      const who = tools.length === 1
+        ? `${tools[0]} takes`
+        : `${tools.slice(0, -1).join(", ")} and ${tools[tools.length - 1]} take`;
+      return `${who} ${canonical.join(" and ")}`;
+    },
+  };
 }
 
 // ---------------------------------------------------------------------------
@@ -32510,14 +32570,24 @@ async function handleToolsCall(
         perOperationActionNote(toolName, rawArgs),
       )
       : argumentErrors;
+    // A name that exists nowhere on the tool ("after", "criteria") is only
+    // "not allowed" to the validator; say which argument does exist, and for
+    // a missing message_id, where one comes from. See argument-guesses.ts.
+    const hint = guessHintContext(toolName, tool, consolidated ? selectedAction : null);
+    const hintedErrors = withGuessedArgumentHints(
+      validatedErrors,
+      hint.subject,
+      hint.allowed,
+      hint.elsewhere,
+    );
     // A per-operation tool is validated under its legacy argument names; say
     // the name it was listed with (`flag_action`, not `action`).
     const listedNames = PER_OPERATION_ONLY_TOOLS.has(toolName)
       ? Object.entries(PER_OPERATION_PARENT.get(toolName)?.action.renames ?? {})
       : [];
     const reportedErrors = listedNames.length === 0
-      ? validatedErrors
-      : validatedErrors.map((error) => {
+      ? hintedErrors
+      : hintedErrors.map((error) => {
         let { path, message } = error;
         for (const [legacyKey, exposedKey] of listedNames) {
           path = path.split(`arguments.${legacyKey}`).join(`arguments.${exposedKey}`);
