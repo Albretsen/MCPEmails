@@ -16,6 +16,8 @@ const ERROR_MESSAGE_KEYS: Record<string, string> = {
   missing_code: 'missingCode',
   'Email link is invalid or has expired': 'linkExpired',
   'Auth session missing': 'sessionMissing',
+  sso_not_configured: 'ssoNotConfigured',
+  sso_join_failed: 'ssoJoinFailed',
   oauth_cancelled: 'oauthCancelled',
   microsoft_admin_approval: 'microsoftAdminApproval',
   microsoft_email_unverified: 'microsoftEmailUnverified',
