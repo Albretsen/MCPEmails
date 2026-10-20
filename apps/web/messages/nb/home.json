@@ -75,8 +75,8 @@
       },
       "2": {
         "tag": "Sending",
-        "h": "Sending går gjennom leverandøren din.",
-        "p": "Når agenten din kaller <code>email_compose</code> (for å sende eller svare), sendes meldingen via Gmail API, Microsoft Graph eller din egen SMTP-server. Domenets omdømme og leveringsdyktighet forblir helt i dine hender. Vi videresender aldri e-post fra vårt eget domene."
+        "h": "Du har kontroll over hver sending.",
+        "p": "Din egen leverandør sender hver melding, fra din adresse: Gmail, Outlook, Fastmail eller din egen SMTP-server. Hvis en leverandør avviser tilkoblinger fra skyadresser, går tilkoblingen gjennom vårt relé, en ren tunnel med TLS hele veien, så reléet ser aldri e-posten eller passordet ditt. Slå på godkjenning per innboks for å holde tilbake sendinger, svar, videresendinger, sending av utkast og planlagte sendinger til de er gjennomgått i dashbordet. Automatiske nye forsøk kan gjenbruke en idempotensnøkkel i 24 timer, og en annen avsenderadresse fungerer bare når den er en verifisert Send As-adresse for den innboksen."
       },
       "3": {
         "tag": "Leverandører",

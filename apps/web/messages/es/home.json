@@ -75,8 +75,8 @@
       },
       "2": {
         "tag": "Envío",
-        "h": "El envío pasa por tu proveedor.",
-        "p": "Cuando tu agente llama a <code>email_compose</code> (para enviar o responder), el mensaje se envía mediante la API de Gmail, Microsoft Graph o tu propio servidor SMTP. La reputación de tu dominio y la entregabilidad quedan completamente en tus manos. Nunca retransmitimos correo desde nuestro propio dominio."
+        "h": "Tú decides cada envío.",
+        "p": "Cada mensaje lo envía tu propio proveedor, desde tu dirección: Gmail, Outlook, Fastmail o tu propio servidor SMTP. Si un proveedor rechaza las conexiones desde direcciones de la nube, la conexión pasa por nuestro relé, un simple túnel con TLS de extremo a extremo, así que el relé nunca ve tu correo ni tu contraseña. Activa la aprobación por bandeja para retener envíos, respuestas, reenvíos, envíos de borradores y envíos programados hasta que los revises en el panel. Los reintentos automáticos pueden reutilizar una clave de idempotencia durante 24 horas, y otra dirección de remitente solo funciona si es una dirección Send As verificada de esa bandeja."
       },
       "3": {
         "tag": "Proveedores",

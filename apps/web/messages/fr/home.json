@@ -75,8 +75,8 @@
       },
       "2": {
         "tag": "Envoi",
-        "h": "L'envoi passe par votre fournisseur.",
-        "p": "Lorsque votre agent appelle <code>email_compose</code> (pour envoyer ou répondre), le message est expédié via l'API Gmail, Microsoft Graph ou votre propre serveur SMTP. La réputation de votre domaine et votre délivrabilité restent entièrement entre vos mains. Nous ne relayons jamais de courrier depuis notre propre domaine."
+        "h": "Vous gardez la main sur chaque envoi.",
+        "p": "Chaque message part de votre propre fournisseur, depuis votre adresse : Gmail, Outlook, Fastmail ou votre propre serveur SMTP. Si un fournisseur refuse les connexions venant d'adresses cloud, la connexion passe par notre relais, un simple tunnel chiffré en TLS de bout en bout, si bien que le relais ne voit jamais vos e-mails ni votre mot de passe. Activez l'approbation par boîte de réception pour retenir les envois, réponses, transferts, envois de brouillons et envois programmés jusqu'à leur validation dans le tableau de bord. Les nouvelles tentatives automatiques peuvent réutiliser une clé d'idempotence pendant 24 heures, et une autre adresse d'expéditeur ne fonctionne que si c'est une adresse Send As vérifiée pour cette boîte."
       },
       "3": {
         "tag": "Fournisseurs",

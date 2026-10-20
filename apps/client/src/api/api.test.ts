@@ -39,7 +39,7 @@ const row = (inbox_id: string, id: string, minutesAgo: number): MessageRow => ({
 
 describe("types helpers", () => {
   it("maps plan slugs to the names they are sold under", () => {
-    expect(["free", "personal", "solo", "pro"].map((p) => planDisplayName(p as never))).toEqual(["Free", "Personal", "Pro", "Team"]);
+    expect(["free", "personal", "solo", "pro"].map((p) => planDisplayName(p as never))).toEqual(["Free", "Personal", "Pro", "Business"]);
   });
 
   it("never renders a null cap as a number", () => {
