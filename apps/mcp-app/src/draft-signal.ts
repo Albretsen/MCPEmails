@@ -67,6 +67,8 @@
 // hint with a read sends nothing, and nothing answers it.
 // ---------------------------------------------------------------------------
 
+import { fnv1a } from "./hash";
+
 export const SIGNAL_CHANNEL = "mcpemails-draft-cards";
 export const SIGNAL_KEY = "mcpemails.draft.signal";
 const SIGNAL_TYPE = "mcpemails-draft/1";
@@ -98,16 +100,6 @@ export interface DraftSignal {
 
 /** This frame's own name. Random per load, never stored. */
 const self = Math.random().toString(36).slice(2) + Date.now().toString(36);
-
-/** FNV-1a, 32-bit, seedable. A comparison key, not a security primitive. */
-function fnv1a(s: string, seed = 0x811c9dc5): string {
-  let h = seed;
-  for (let i = 0; i < s.length; i++) {
-    h ^= s.charCodeAt(i);
-    h = Math.imul(h, 0x01000193) >>> 0;
-  }
-  return h.toString(36);
-}
 
 /** The digest of one id, or null for none. Equal across frames. */
 export function signalTag(id: string | null | undefined): string | null {

@@ -7,7 +7,9 @@
 //      and lowers the quantity from the next renewal (proration 'none').
 //   2. A repeated sync with nothing changed does not call Stripe at all.
 //   3. Creating the add-on item carries an idempotency key, so two concurrent
-//      first connects past ten cannot create two items.
+//      first connects past ten cannot create two items, and the key changes
+//      between creations, so an add-on removed and needed again is recreated
+//      instead of Stripe replaying the old "created" response.
 //   4. Only a live Business subscription is ever touched.
 //
 // Run: node --test --experimental-strip-types --import ./scripts/register-ts-alias.mjs \
@@ -22,7 +24,7 @@ process.env.STRIPE_PRICE_BUSINESS_MAILBOX_MONTHLY = 'price_addon_month';
 process.env.STRIPE_PRICE_BUSINESS_MAILBOX_YEARLY = 'price_addon_year';
 process.env.STRIPE_PRICE_SOLO_MONTHLY = 'price_solo_month';
 
-const { mailboxAddonItemChanges, syncMailboxAddon, syncMailboxAddonForWorkspace } = await import(
+const { mailboxAddonCreateKey, mailboxAddonItemChanges, syncMailboxAddon, syncMailboxAddonForWorkspace } = await import(
   './mailbox-addon.ts'
 );
 
@@ -55,28 +57,42 @@ function fakeDb(opts: { billing: Billing | null; inboxes: number; workspaceOwner
   } as any;
 }
 
-/** A Stripe stand-in recording every update with its options. */
+/**
+ * A Stripe stand-in recording every update with its options. Stateful: an
+ * update that adds an item without an id creates the add-on, so a retrieve
+ * after it sees the item, unless `dropCreates` says the create was a replay.
+ */
 function fakeStripe(opts: {
   status?: string;
   basePrice?: string;
   addon?: { price: string; quantity: number } | null;
+  /** How many creates to swallow, as a replayed stale response would. */
+  dropCreates?: number;
 }) {
   const updates: Array<{ id: string; params: Record<string, unknown>; options?: Record<string, unknown> }> = [];
+  let addon = opts.addon ?? null;
+  let drops = opts.dropCreates ?? 0;
+  const snapshot = (id: string) => ({
+    id,
+    status: opts.status ?? 'active',
+    items: {
+      data: [
+        ...(addon ? [{ id: 'si_addon', price: { id: addon.price }, quantity: addon.quantity }] : []),
+        { id: 'si_base', price: { id: opts.basePrice ?? 'price_business_month' }, quantity: 1 },
+      ],
+    },
+  });
   const stripe = {
     subscriptions: {
-      retrieve: async (id: string) => ({
-        id,
-        status: opts.status ?? 'active',
-        items: {
-          data: [
-            ...(opts.addon ? [{ id: 'si_addon', price: { id: opts.addon.price }, quantity: opts.addon.quantity }] : []),
-            { id: 'si_base', price: { id: opts.basePrice ?? 'price_business_month' }, quantity: 1 },
-          ],
-        },
-      }),
+      retrieve: async (id: string) => snapshot(id),
       update: async (id: string, params: Record<string, unknown>, options?: Record<string, unknown>) => {
         updates.push({ id, params, options });
-        return {};
+        for (const item of (params.items ?? []) as Array<{ id?: string; price?: string; quantity?: number; deleted?: boolean }>) {
+          if (item.deleted) addon = null;
+          else if (!item.id && drops > 0) drops -= 1;
+          else if (item.price) addon = { price: item.price, quantity: item.quantity ?? 0 };
+        }
+        return snapshot(id);
       },
     },
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
@@ -93,7 +109,10 @@ test('the eleventh mailbox creates the add-on at one, billed now, with an idempo
   assert.equal(updates.length, 1);
   assert.deepEqual(updates[0].params.items, [{ price: 'price_addon_month', quantity: 1 }]);
   assert.equal(updates[0].params.proration_behavior, 'always_invoice');
-  assert.equal(updates[0].options?.idempotencyKey, 'mailbox-addon-create:sub_1:price_addon_month');
+  assert.equal(
+    updates[0].options?.idempotencyKey,
+    mailboxAddonCreateKey('sub_1', 'price_addon_month', 1, Date.now()),
+  );
 });
 
 test('another mailbox raises the quantity and prorates it now', async () => {
@@ -216,4 +235,50 @@ test('the pure item plan: delete when leaving Business, refuse an unconfigured p
   } finally {
     process.env.STRIPE_PRICE_BUSINESS_MAILBOX_YEARLY = saved;
   }
+});
+
+test('the create key dedupes one intent but changes for a later creation', () => {
+  const t = Date.UTC(2026, 9, 20, 12, 0, 0);
+  const key = mailboxAddonCreateKey('sub_1', 'price_addon_month', 1, t);
+  assert.equal(mailboxAddonCreateKey('sub_1', 'price_addon_month', 1, t + 30_000), key, 'a retry seconds later dedupes');
+  assert.notEqual(mailboxAddonCreateKey('sub_1', 'price_addon_month', 1, t + 3_600_000), key, 'an hour later is a new create');
+  assert.notEqual(mailboxAddonCreateKey('sub_1', 'price_addon_month', 2, t), key, 'a different quantity is a different intent');
+  assert.notEqual(mailboxAddonCreateKey('sub_1', 'price_addon_year', 1, t), key);
+});
+
+test('created, removed, then needed again within a day: the add-on is recreated', async () => {
+  const realNow = Date.now;
+  try {
+    const t = Date.UTC(2026, 9, 20, 12, 0, 0);
+    Date.now = () => t;
+    const { stripe, updates } = fakeStripe({ addon: null });
+    const db = fakeDb({ billing: BUSINESS, inboxes: 11 });
+    assert.equal((await syncMailboxAddon(OWNER, { db, stripe })).status, 'updated');
+    // The add-on goes away (a plan change off Business and back).
+    await stripe.subscriptions.update('sub_1', { items: [{ id: 'si_addon', deleted: true }] });
+    Date.now = () => t + 2 * 3_600_000;
+    assert.deepEqual(await syncMailboxAddon(OWNER, { db, stripe }), { status: 'updated', from: 0, to: 1 });
+    const creates = updates.filter((u) => u.options?.idempotencyKey);
+    assert.equal(creates.length, 2);
+    assert.notEqual(creates[0].options?.idempotencyKey, creates[1].options?.idempotencyKey);
+    const live = await stripe.subscriptions.retrieve('sub_1');
+    assert.equal(live.items.data.some((i: { price: { id: string } }) => i.price.id === 'price_addon_month'), true);
+  } finally {
+    Date.now = realNow;
+  }
+});
+
+test('a create that leaves no item on the live subscription is retried once with a fresh key', async () => {
+  const { stripe, updates } = fakeStripe({ addon: null, dropCreates: 1 });
+  const result = await syncMailboxAddon(OWNER, { db: fakeDb({ billing: BUSINESS, inboxes: 12 }), stripe });
+  assert.deepEqual(result, { status: 'updated', from: 0, to: 2 });
+  assert.equal(updates.length, 2);
+  assert.notEqual(updates[0].options?.idempotencyKey, updates[1].options?.idempotencyKey);
+  assert.match(String(updates[1].options?.idempotencyKey), /:retry:/);
+});
+
+test('a create that still leaves no item is reported as failed, not updated', async () => {
+  const { stripe } = fakeStripe({ addon: null, dropCreates: 2 });
+  const result = await syncMailboxAddon(OWNER, { db: fakeDb({ billing: BUSINESS, inboxes: 12 }), stripe });
+  assert.deepEqual(result, { status: 'failed', reason: 'addon_item_missing_after_create' });
 });

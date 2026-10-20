@@ -209,7 +209,7 @@ flowchart LR
     subgraph Supabase
       Edge["mcp-server<br/>edge function (Deno)"]
       DB[("Postgres<br/>RLS + encrypted creds")]
-      Cron["token-refresh<br/>edge functions"]
+      Cron["outlook-token-refresh<br/>edge function"]
     end
 
     Web -->|proxies| Edge
@@ -221,7 +221,7 @@ flowchart LR
 
 - **`/api/mcp`** is a thin Next.js route handler that proxies to the Supabase edge function `mcp-server` — the real MCP implementation, where credentials are decrypted and provider calls are made.
 - **The Postgres database** stores workspaces, members, inboxes (encrypted tokens/passwords), hashed API keys, OAuth clients, scheduled sends, and an activity log — all guarded by Row‑Level Security.
-- **Cron edge functions** refresh Gmail/Outlook OAuth tokens before expiry.
+- **A cron edge function** (`outlook-token-refresh`) refreshes Outlook OAuth tokens before expiry.
 
 **Stack:** Next.js 16 (App Router) · React 19 · next‑intl 4 · Supabase (Auth, Postgres, Edge Functions) · Stripe · Resend · TypeScript. Email parsing and sanitization run in the edge functions (`supabase/functions/mcp-server/mime.ts`); signature HTML is sanitized with DOMPurify in the browser and a dependency-free allow-list on the server.
 

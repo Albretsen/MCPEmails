@@ -1337,6 +1337,24 @@ export type Database = {
           },
         ]
       }
+      auth_hook_switches: {
+        Row: {
+          enabled: boolean
+          name: string
+          updated_at: string
+        }
+        Insert: {
+          enabled?: boolean
+          name: string
+          updated_at?: string
+        }
+        Update: {
+          enabled?: boolean
+          name?: string
+          updated_at?: string
+        }
+        Relationships: []
+      }
       auth_logs: {
         Row: {
           created_at: string
@@ -3286,6 +3304,187 @@ export type Database = {
           },
         ]
       }
+      sso_audit_events: {
+        Row: {
+          action: string
+          actor_user_id: string | null
+          connection_id: string | null
+          created_at: string
+          details: Json
+          id: string
+          ip_address: unknown
+          user_agent: string | null
+          workspace_id: string
+        }
+        Insert: {
+          action: string
+          actor_user_id?: string | null
+          connection_id?: string | null
+          created_at?: string
+          details?: Json
+          id?: string
+          ip_address?: unknown
+          user_agent?: string | null
+          workspace_id: string
+        }
+        Update: {
+          action?: string
+          actor_user_id?: string | null
+          connection_id?: string | null
+          created_at?: string
+          details?: Json
+          id?: string
+          ip_address?: unknown
+          user_agent?: string | null
+          workspace_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "sso_audit_events_actor_user_id_fkey"
+            columns: ["actor_user_id"]
+            isOneToOne: false
+            referencedRelation: "users"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "sso_audit_events_connection_id_fkey"
+            columns: ["connection_id"]
+            isOneToOne: false
+            referencedRelation: "sso_connections"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "sso_audit_events_workspace_id_fkey"
+            columns: ["workspace_id"]
+            isOneToOne: false
+            referencedRelation: "billing_funnel_by_workspace"
+            referencedColumns: ["workspace_id"]
+          },
+          {
+            foreignKeyName: "sso_audit_events_workspace_id_fkey"
+            columns: ["workspace_id"]
+            isOneToOne: false
+            referencedRelation: "workspaces"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      sso_connections: {
+        Row: {
+          created_at: string
+          created_by: string | null
+          default_role: string
+          display_name: string
+          enforced: boolean
+          id: string
+          status: string
+          supabase_sso_provider_id: string | null
+          updated_at: string
+          workspace_id: string
+        }
+        Insert: {
+          created_at?: string
+          created_by?: string | null
+          default_role?: string
+          display_name: string
+          enforced?: boolean
+          id?: string
+          status?: string
+          supabase_sso_provider_id?: string | null
+          updated_at?: string
+          workspace_id: string
+        }
+        Update: {
+          created_at?: string
+          created_by?: string | null
+          default_role?: string
+          display_name?: string
+          enforced?: boolean
+          id?: string
+          status?: string
+          supabase_sso_provider_id?: string | null
+          updated_at?: string
+          workspace_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "sso_connections_created_by_fkey"
+            columns: ["created_by"]
+            isOneToOne: false
+            referencedRelation: "users"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "sso_connections_workspace_id_fkey"
+            columns: ["workspace_id"]
+            isOneToOne: false
+            referencedRelation: "billing_funnel_by_workspace"
+            referencedColumns: ["workspace_id"]
+          },
+          {
+            foreignKeyName: "sso_connections_workspace_id_fkey"
+            columns: ["workspace_id"]
+            isOneToOne: false
+            referencedRelation: "workspaces"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      sso_domains: {
+        Row: {
+          connection_id: string
+          created_at: string
+          domain: string
+          id: string
+          updated_at: string
+          verification_token: string
+          verified_at: string | null
+          workspace_id: string
+        }
+        Insert: {
+          connection_id: string
+          created_at?: string
+          domain: string
+          id?: string
+          updated_at?: string
+          verification_token?: string
+          verified_at?: string | null
+          workspace_id: string
+        }
+        Update: {
+          connection_id?: string
+          created_at?: string
+          domain?: string
+          id?: string
+          updated_at?: string
+          verification_token?: string
+          verified_at?: string | null
+          workspace_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "sso_domains_connection_id_fkey"
+            columns: ["connection_id"]
+            isOneToOne: false
+            referencedRelation: "sso_connections"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "sso_domains_workspace_id_fkey"
+            columns: ["workspace_id"]
+            isOneToOne: false
+            referencedRelation: "billing_funnel_by_workspace"
+            referencedColumns: ["workspace_id"]
+          },
+          {
+            foreignKeyName: "sso_domains_workspace_id_fkey"
+            columns: ["workspace_id"]
+            isOneToOne: false
+            referencedRelation: "workspaces"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       stripe_webhook_events: {
         Row: {
           event_created: string | null
@@ -3973,6 +4172,7 @@ export type Database = {
           id: string
           marketing_consent_at: string | null
           marketing_consent_source: string | null
+          sso_provider_id: string | null
           unsubscribe_token: string
           unsubscribed_at: string | null
           unsubscribed_categories: string[]
@@ -3986,6 +4186,7 @@ export type Database = {
           id: string
           marketing_consent_at?: string | null
           marketing_consent_source?: string | null
+          sso_provider_id?: string | null
           unsubscribe_token?: string
           unsubscribed_at?: string | null
           unsubscribed_categories?: string[]
@@ -3999,6 +4200,7 @@ export type Database = {
           id?: string
           marketing_consent_at?: string | null
           marketing_consent_source?: string | null
+          sso_provider_id?: string | null
           unsubscribe_token?: string
           unsubscribed_at?: string | null
           unsubscribed_categories?: string[]
@@ -4394,6 +4596,15 @@ export type Database = {
       activity_log_tool_is_read_only: {
         Args: { p_tool: string }
         Returns: boolean
+      }
+      auth_azure_email_verified: { Args: { p_data: Json }; Returns: boolean }
+      auth_hook_before_user_created: { Args: { event: Json }; Returns: Json }
+      auth_hook_custom_access_token: { Args: { event: Json }; Returns: Json }
+      auth_hook_switch_on: { Args: { p_name: string }; Returns: boolean }
+      auth_signup_refusal: { Args: { p_user: Json }; Returns: string }
+      auth_token_refusal: {
+        Args: { p_authentication_method: string; p_user_id: string }
+        Returns: string
       }
       claim_billing_emails: {
         Args: { p_limit?: number }
@@ -5139,6 +5350,17 @@ export type Database = {
         Args: { p_incident_id: string }
         Returns: undefined
       }
+      mcp_tools_call_gate: {
+        Args: {
+          p_include_allowance: boolean
+          p_key_hash: string
+          p_key_window_starts: string[]
+          p_meter_version: number
+          p_reserve_tool_name: string
+          p_workspace_window_start: string
+        }
+        Returns: Json
+      }
       mcp_tools_call_preflight: {
         Args: {
           p_include_allowance: boolean
@@ -5153,6 +5375,7 @@ export type Database = {
         Args: { p_limit?: number; p_min_days?: number }
         Returns: number
       }
+      purge_operational_history: { Args: never; Returns: Json }
       push_recipients: {
         Args: { p_inbox_id: string }
         Returns: {
@@ -5285,8 +5508,41 @@ export type Database = {
           total: number
         }[]
       }
+      sso_admin_test_sign_in_seen: {
+        Args: { p_connection_id: string }
+        Returns: boolean
+      }
+      sso_admin_workspace_ids: { Args: never; Returns: string[] }
+      sso_enforced_connection_for_email: {
+        Args: { p_email: string }
+        Returns: {
+          connection_id: string
+          owner_id: string
+          supabase_sso_provider_id: string
+          workspace_id: string
+        }[]
+      }
+      sso_is_consumer_domain: { Args: { p_domain: string }; Returns: boolean }
+      sso_provider_for_domain: { Args: { p_domain: string }; Returns: string }
+      sso_sign_in_required: { Args: { p_email: string }; Returns: boolean }
       sync_inbox_watch_state: { Args: never; Returns: undefined }
       workspace_action_allowance: {
+        Args: { p_workspace_id: string }
+        Returns: {
+          cap: number
+          exempt: boolean
+          exempt_reason: string
+          grace_ends_at: string
+          in_grace: boolean
+          owner_id: string
+          period_end: string
+          period_start: string
+          plan: string
+          remaining: number
+          used: number
+        }[]
+      }
+      workspace_action_allowance_terms: {
         Args: { p_workspace_id: string }
         Returns: {
           cap: number

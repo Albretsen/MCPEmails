@@ -23,12 +23,6 @@ export const SUBJECT_ID_PATTERN = /^[a-f0-9]{32}$/;
 /** The only shape a variant id is ever allowed to have. */
 export const VARIANT_ID_PATTERN = /^[a-z0-9_]{1,32}$/;
 
-/** The first experiment. Keys are referenced from code, so they get a constant. */
-export const HOMEPAGE_DEMO_VIDEO = {
-  key: 'homepage_demo_video',
-  variants: { control: 'control', video: 'video' },
-} as const;
-
 export interface ExperimentVariant {
   id: string;
   label: string;

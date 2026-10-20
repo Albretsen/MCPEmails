@@ -160,7 +160,7 @@ export async function fetchRevenueDetail(): Promise<GrowthResult<RevenueDetail>>
 }
 
 /** Reduce one Stripe subscription to the named row the table renders. */
-function toCustomerRow(subscription: Stripe.Subscription): RevenueCustomerRow {
+export function toCustomerRow(subscription: Stripe.Subscription): RevenueCustomerRow {
   const items = subscription.items.data;
   // The plan's own item, not whichever comes first: a Business subscription
   // also carries the per-mailbox add-on, which is not a plan.
@@ -241,7 +241,9 @@ export function hasEnded(row: RevenueCustomerRow): boolean {
  * because of which API version wrote the object.
  */
 function periodEnd(subscription: Stripe.Subscription): number | null {
-  const item = subscription.items.data[0] as { current_period_end?: number } | undefined;
+  // The plan's own item, as toCustomerRow prices it; the add-on shares the
+  // period today, but the renewal shown is the plan's.
+  const item = basePlanItem(subscription.items.data) as { current_period_end?: number } | undefined;
   const legacy = (subscription as unknown as { current_period_end?: number }).current_period_end;
   return item?.current_period_end ?? legacy ?? null;
 }

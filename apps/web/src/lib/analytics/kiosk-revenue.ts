@@ -23,7 +23,7 @@
 
 import type Stripe from 'stripe';
 import { createServiceRoleClient } from '@/lib/supabase/service';
-import { getPlanByStripePriceId, planDisplayName } from '@/lib/stripe/plans';
+import { basePlanItem, getPlanByStripePriceId, planDisplayName } from '@/lib/stripe/plans';
 import { isInternalAccount } from '@/lib/analytics/internal-accounts';
 import { GROWTH_TAGS, cachedSection, type GrowthResult } from '@/lib/analytics/growth-queries';
 import {
@@ -86,9 +86,11 @@ export async function fetchRecurringRevenue(windowDays: number): Promise<GrowthR
 }
 
 /** Reduce a Stripe subscription to the facts revenue-math.ts works on. */
-function subscriptionFacts(subscription: Stripe.Subscription): SubscriptionFacts {
+export function subscriptionFacts(subscription: Stripe.Subscription): SubscriptionFacts {
   const items = subscription.items.data;
-  const first = items[0]?.price;
+  // The plan's own item, not whichever comes first: a Business subscription
+  // also carries the per-mailbox add-on, which is not a plan.
+  const first = basePlanItem(items)?.price;
   const interval = first?.recurring?.interval ?? 'month';
   const intervalCount = first?.recurring?.interval_count ?? 1;
 

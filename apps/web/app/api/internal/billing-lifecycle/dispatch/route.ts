@@ -61,7 +61,7 @@ import type Stripe from 'stripe';
 
 import { stripe } from '@/lib/stripe/client';
 import { createServiceRoleClient } from '@/lib/supabase/service';
-import { getPlanByStripePriceId } from '@/lib/stripe/plans';
+import { basePlanItem, getPlanByStripePriceId } from '@/lib/stripe/plans';
 import {
   composeBillingEmail,
   isUsageTemplate,
@@ -483,7 +483,9 @@ async function sweepExpiringCards(): Promise<Response> {
         continue;
       }
 
-      const item = subscription.items.data[0];
+      // The plan's own item: a Business subscription also carries the
+      // per-mailbox add-on, and Stripe does not promise which comes first.
+      const item = basePlanItem(subscription.items.data);
       const resolved = item?.price?.id ? getPlanByStripePriceId(item.price.id) : null;
 
       const queued = await queueCardExpiryWarning({

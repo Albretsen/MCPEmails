@@ -53,7 +53,8 @@ export async function POST(request: NextRequest): Promise<NextResponse> {
 
     const { data, error } = await ctx.db
       .from('sso_domains')
-      .insert({ connection_id: connection.id, domain: check.domain })
+      // workspace_id is pinned to the connection's by a trigger either way.
+      .insert({ connection_id: connection.id, workspace_id: ctx.workspaceId, domain: check.domain })
       .select(DOMAIN_COLUMNS)
       .single();
     if (error?.code === '23505') return ssoError(409, 'domain_exists', 'That domain is already on the list.');

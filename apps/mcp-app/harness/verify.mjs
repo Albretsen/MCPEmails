@@ -47,6 +47,7 @@
 // ---------------------------------------------------------------------------
 
 import { spawn } from "node:child_process";
+import { readdirSync } from "node:fs";
 import { dirname, resolve } from "node:path";
 import { fileURLToPath } from "node:url";
 
@@ -139,6 +140,12 @@ const SUITES = [
   ["sanitize layer 1", "sanitize.test.mjs"],
 ];
 
+// Every *.test.mjs in this folder must be listed above. The count used to be
+// written down in ci.yml ("thirteen") and went stale at eighteen; a missing
+// suite is now an error derived from the folder, not a number to keep in step.
+const listed = new Set(SUITES.map(([, file]) => file));
+const unlisted = readdirSync(here).filter((f) => f.endsWith(".test.mjs") && !listed.has(f));
+
 function runSuite([label, file]) {
   return new Promise((done) => {
     const started = Date.now();
@@ -215,6 +222,7 @@ for (const o of outcomes) {
 }
 
 const bad = outcomes.filter((o) => o.state !== "passed");
+for (const f of unlisted) console.log(`FAIL  ${f} is not in SUITES in harness/verify.mjs, so it never runs`);
 console.log(`${outcomes.length - bad.length}/${outcomes.length} suites passed`);
 // exitCode, not exit(): a pipe may still be draining the buffered output.
-process.exitCode = bad.length ? 1 : 0;
+process.exitCode = bad.length || unlisted.length ? 1 : 0;

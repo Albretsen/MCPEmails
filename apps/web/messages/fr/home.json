@@ -75,8 +75,8 @@
       },
       "2": {
         "tag": "Envoi",
-        "h": "L'envoi passe par votre fournisseur.",
-        "p": "Lorsque votre agent appelle <code>email_compose</code> (pour envoyer ou répondre), le message est expédié via l'API Gmail, Microsoft Graph ou votre propre serveur SMTP. La réputation de votre domaine et votre délivrabilité restent entièrement entre vos mains. Nous ne relayons jamais de courrier depuis notre propre domaine."
+        "h": "Vous gardez la main sur chaque envoi.",
+        "p": "Chaque message part de votre propre fournisseur, depuis votre adresse : Gmail, Outlook, Fastmail ou votre propre serveur SMTP. Si un fournisseur refuse les connexions venant d'adresses cloud, la connexion passe par notre relais, un simple tunnel chiffré en TLS de bout en bout, si bien que le relais ne voit jamais vos e-mails ni votre mot de passe. Activez l'approbation par boîte de réception pour retenir les envois, réponses, transferts, envois de brouillons et envois programmés jusqu'à leur validation dans le tableau de bord. Les nouvelles tentatives automatiques peuvent réutiliser une clé d'idempotence pendant 24 heures, et une autre adresse d'expéditeur ne fonctionne que si c'est une adresse Send As vérifiée pour cette boîte."
       },
       "3": {
         "tag": "Fournisseurs",
@@ -308,15 +308,5 @@
     "eyebrow": "Aperçu du produit",
     "title": "Visualisez toute votre opération MCP en un coup d'œil.",
     "sub": "Un tableau de bord en temps réel pour chaque boîte connectée, clé d'API et appel d'outil, pour toujours savoir ce que font vos agents."
-  },
-  "demo": {
-    "eyebrow": "Voir le produit à l'œuvre",
-    "title": "Connectez une boîte mail, puis demandez ce qui compte.",
-    "sub": "Moins d'une minute, enregistré sur le produit réel : une vraie connexion IMAP, puis un vrai appel d'outil qui trouve le seul e-mail qui compte.",
-    "caption": "Enregistré avec une boîte de démonstration remplie de courrier fictif. Aucune correspondance réelle n'apparaît dans cette vidéo.",
-    "player": {
-      "label": "Vidéo de démonstration : connecter une boîte mail et la trier avec un agent IA",
-      "fallback": "Votre navigateur ne peut pas lire cette vidéo. Le guide de démarrage rapide de la documentation couvre les mêmes étapes."
-    }
   }
 }
