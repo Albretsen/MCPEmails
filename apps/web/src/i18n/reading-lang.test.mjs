@@ -27,7 +27,7 @@ test('every supported language is accepted', () => {
 });
 
 test('anything else is ignored', () => {
-  for (const value of [undefined, null, '', 'de', 'FR', 'fr-CA', 'fr ', 'no', 'nn', 'zh-Hans', ['fr'], ['fr', 'es'], 1, {}]) {
+  for (const value of [undefined, null, '', 'it', 'FR', 'fr-CA', 'fr ', 'no', 'nn', 'zh-Hans', ['fr'], ['fr', 'es'], 1, {}]) {
     assert.equal(readingLangFromParam(value), null, JSON.stringify(value));
   }
 });
@@ -48,7 +48,7 @@ test('an English page adds nothing', () => {
 });
 
 test('an unknown or missing locale adds nothing', () => {
-  for (const locale of [undefined, null, '', 'de', 'FR']) {
+  for (const locale of [undefined, null, '', 'it', 'FR']) {
     assert.equal(withReadingLang('/signup', locale), '/signup', String(locale));
   }
 });

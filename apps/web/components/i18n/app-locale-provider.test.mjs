@@ -636,7 +636,7 @@ test('reading language from the URL: /signup?lang=nb renders Norwegian from the 
 });
 
 test('reading language from the URL: no or an invalid lang leaves the usual rules', async (t) => {
-  for (const search of ['', 'lang=de', 'lang=FR', 'lang=', 'provider=gmx']) {
+  for (const search of ['', 'lang=it', 'lang=FR', 'lang=', 'provider=gmx']) {
     reset(t, { stored: 'es', languages: ['fr-FR'] });
     const html = renderToString(atUrl(search, createElement(Probe, { seen: newSeen() })));
     assert.equal(html, `<p id="probe">${CATALOG.en.dashboard.settings.languageHeading}</p>`, search);
@@ -648,7 +648,7 @@ test('reading language from the URL: no or an invalid lang leaves the usual rule
 });
 
 test('reading language: an unsupported value is ignored, and the usual rules apply', async (t) => {
-  for (const initialLocale of ['de', 'FR', '', ['fr']]) {
+  for (const initialLocale of ['it', 'FR', '', ['fr']]) {
     reset(t, { languages: ['es-ES'] });
     const html = renderToString(createElement(AppLocaleProvider, { initialLocale }, createElement(Probe, { seen: newSeen() })));
     assert.equal(html, `<p id="probe">${CATALOG.en.dashboard.settings.languageHeading}</p>`, JSON.stringify(initialLocale));

@@ -156,7 +156,7 @@
   },
   "operator": {
     "title": "Hvem som driver dette",
-    "p1": "Én person: meg. Jeg heter Asgeir Albretsen og driver dette som Albretsen Consulting, et norsk enkeltpersonforetak med organisasjonsnummer 926 646 753, med adresse i Bergen. Commitene er også mine, under <gh>github.com/Albretsen</gh>, så navnet på denne siden og navnet på koden er det samme. Mer om dette finner du på <about>om-siden</about>, og den fullstendige juridiske identifikasjonen står i <terms>vilkårene</terms>.",
+    "p1": "Én person: meg. Jeg heter Asgeir Albretsen og driver MCPEmails gjennom Albretsen AS, et norsk aksjeselskap som jeg eier, med organisasjonsnummer 938 702 373 og adresse i Bergen. Commitene er også mine, under <gh>github.com/Albretsen</gh>, så navnet på denne siden og navnet på koden er det samme. Mer om dette finner du på <about>om-siden</about>, og den fullstendige juridiske identifikasjonen står i <terms>vilkårene</terms>.",
     "p2": "At alt hviler på én person, er en reell risiko, og svaret er ikke et løfte om at jeg alltid kommer til å være her. MCPEmails er offentlig tilgjengelig under AGPL-3.0, og den hostede tjenesten kjører nøyaktig den samme koden, så hvis jeg slutter, eller du rett og slett slutter å stole på meg, kan du klone repoet og kjøre det på din egen infrastruktur med dine egne nøkler. <selfhostpage>Selvhosting-guiden</selfhostpage> er hele fremgangsmåten. Jeg vil heller være en navngitt person du kan nå og gå fra, enn en anonym leverandør du bare kan stole på.",
     "p3": "Support- og sikkerhetshenvendelser går ikke gjennom en kø. De kommer til meg, og jeg svarer på hver melding selv."
   }

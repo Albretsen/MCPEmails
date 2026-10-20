@@ -156,7 +156,7 @@
   },
   "operator": {
     "title": "Who runs this",
-    "p1": "One person: me. I'm Asgeir Albretsen, operating as Albretsen Consulting, a Norwegian sole proprietorship (enkeltpersonforetak), organisation number 926 646 753, based in Bergen, Norway. The commits are mine too, under <gh>github.com/Albretsen</gh>, so the name on this page and the name on the code are the same one. There is more detail on the <about>about page</about>, and the full legal identification is in the <terms>terms</terms>.",
+    "p1": "One person: me. I'm Asgeir Albretsen, and I run MCPEmails through Albretsen AS, a Norwegian private limited company (aksjeselskap) that I own, organisation number 938 702 373, based in Bergen, Norway. The commits are mine too, under <gh>github.com/Albretsen</gh>, so the name on this page and the name on the code are the same one. There is more detail on the <about>about page</about>, and the full legal identification is in the <terms>terms</terms>.",
     "p2": "Everything resting on one person is a real risk, and the answer is not a promise that I will always be here. MCPEmails is public under AGPL-3.0 and the hosted service runs that same code, so if I stop, or you simply stop trusting me, you can clone the repository and run it on your own infrastructure with your own keys. <selfhostpage>The self-hosting guide</selfhostpage> is the whole procedure. I would rather be a named person you can reach and can leave than an anonymous vendor you can only trust.",
     "p3": "Support and security mail does not go through a queue. It comes to me, and I answer every message myself."
   }

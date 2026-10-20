@@ -156,7 +156,7 @@
   },
   "operator": {
     "title": "Quién lleva esto",
-    "p1": "Una sola persona: yo. Soy Asgeir Albretsen y opero como Albretsen Consulting, una empresa individual noruega (enkeltpersonforetak), número de organización 926 646 753, con sede en Bergen, Noruega. Los commits también son míos, bajo <gh>github.com/Albretsen</gh>, así que el nombre de esta página y el nombre del código son el mismo. Hay más detalle en la <about>página «Acerca de»</about>, y la identificación legal completa está en los <terms>términos</terms>.",
+    "p1": "Una sola persona: yo. Soy Asgeir Albretsen y llevo MCPEmails a través de Albretsen AS, una sociedad de responsabilidad limitada noruega (aksjeselskap) de mi propiedad, número de organización 938 702 373, con sede en Bergen, Noruega. Los commits también son míos, bajo <gh>github.com/Albretsen</gh>, así que el nombre de esta página y el nombre del código son el mismo. Hay más detalle en la <about>página «Acerca de»</about>, y la identificación legal completa está en los <terms>términos</terms>.",
     "p2": "Que todo dependa de una sola persona es un riesgo real, y la respuesta no es prometer que siempre estaré aquí. MCPEmails es público bajo AGPL-3.0 y el servicio alojado ejecuta ese mismo código, así que si lo dejo, o si simplemente dejas de confiar en mí, puedes clonar el repositorio y ejecutarlo en tu propia infraestructura con tus propias claves. <selfhostpage>La guía de auto-alojamiento</selfhostpage> es el procedimiento completo. Prefiero ser una persona con nombre a la que puedes escribir y a la que puedes dejar, que un proveedor anónimo en el que solo puedes confiar.",
     "p3": "El correo de soporte y de seguridad no pasa por ninguna cola. Llega a mí, y respondo cada mensaje personalmente."
   }

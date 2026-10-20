@@ -36,14 +36,14 @@
     "intro": "三样东西：",
     "points": [
       "<b>一个有名有姓的人。</b>就是我，不是某个客服别名。出了问题，你知道该找谁负责。",
-      "<b>一家已注册的企业。</b>MCPEmails 由 Albretsen Consulting 运营，这是一家挪威个人独资企业，登记在 Brønnøysundregistrene 的 Enhetsregisteret（挪威企业统一登记册）中。个人独资企业意味着我本人承担责任。",
+      "<b>一家已注册的公司。</b>MCPEmails 由 Albretsen AS 运营，这是一家挪威有限责任公司，登记在 Brønnøysundregistrene 的 Foretaksregisteret（挪威企业登记册）中。公司归我所有，我同时担任董事会主席。",
       "<b>你能读的代码。</b>服务端以 AGPL-3.0 许可在 GitHub 上公开，托管服务运行的就是同一份代码。"
     ],
     "entityTitle": "法律实体",
-    "entityName": "Albretsen Consulting（enkeltpersonforetak，挪威个人独资企业）",
-    "entityOrgNo": "组织机构号 926 646 753",
+    "entityName": "Albretsen AS（aksjeselskap，挪威有限责任公司）",
+    "entityOrgNo": "组织机构号 938 702 373",
     "entityAddress": "Håsteins gate 9, 5160 Laksevåg, Norway",
-    "entityRegistry": "已在 Brønnøysundregistrene 的 Enhetsregisteret 登记",
+    "entityRegistry": "已在 Brønnøysundregistrene 的 Foretaksregisteret 登记",
     "entityNote": "完整的法律信息见<terms>服务条款</terms>和<privacy>隐私政策</privacy>。"
   },
   "busFactor": {

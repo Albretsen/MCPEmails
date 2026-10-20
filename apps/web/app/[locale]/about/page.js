@@ -97,14 +97,15 @@ function aboutJsonLd(locale, { title, description }) {
         '@type': 'Organization',
         '@id': orgId,
         name: 'mcpemails',
-        legalName: 'Albretsen Consulting',
+        legalName: 'Albretsen AS',
         url: APP_URL,
         logo: `${APP_URL}/favicon.svg`,
         founder: { '@id': personId },
         email: CONTACT_EMAIL,
-        // Norwegian organisation number, as registered in Enhetsregisteret.
-        identifier: '926646753',
-        vatID: 'NO926646753',
+        // Norwegian organisation number, as registered in Foretaksregisteret.
+        // No vatID until the MVA registration of Albretsen AS is confirmed;
+        // then add vatID: 'NO938702373MVA'.
+        identifier: '938702373',
         address: {
           '@type': 'PostalAddress',
           streetAddress: 'Håsteins gate 9',
