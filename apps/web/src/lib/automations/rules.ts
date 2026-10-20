@@ -28,6 +28,7 @@ import {
   unappliedSearchFields,
   type NormalizedSearch,
 } from '../../../../../supabase/functions/mcp-server/search-translate.ts';
+import { isForbiddenMoveDestination } from '../../../../../supabase/functions/mcp-server/triage-forbidden-destinations.ts';
 
 /** Cadences the dispatcher understands. Mirrors the interval_minutes CHECK. */
 export const ALLOWED_INTERVALS = [15, 30, 60, 180, 360, 720, 1440] as const;
@@ -73,13 +74,12 @@ const DELETE_SHAPED = ['delete', 'trash', 'purge', 'remove', 'destroy', 'erase',
 
 // Move destinations refused because moving mail there is deletion wearing a
 // different hat: every provider auto-purges trash and junk on a timer, so an
-// unattended move to Trash is a delete with a delayed fuse. Kept in step with
-// TRIAGE_FORBIDDEN_MOVE_DESTINATIONS in
-// supabase/functions/mcp-server/triage-engine.ts, which is the enforcing copy.
-const FORBIDDEN_MOVE_DESTINATIONS = [
-  'trash', 'bin', 'deleted', 'deleted items', 'deleted messages', 'junk', 'spam',
-];
-
+// unattended move to Trash is a delete with a delayed fuse. IMPORTED from the
+// edge function rather than copied: the refused names are derived from the
+// folder resolver's localized trash and junk names (Papierkorb, Корзина,
+// Éléments supprimés, ...), and a copy here is how this list stayed English
+// while the resolver learned 42 languages. Pure and import-free apart from
+// imap-folder-target.ts, for the reason given above unrunnableFilterFields.
 /**
  * The date shape a stored filter may hold.
  *
@@ -106,11 +106,6 @@ export function isIsoDateOrDateTime(value: string): boolean {
   const [, date, time, zone] = match;
   const normalized = time === undefined ? `${date}T00:00:00Z` : `${date}T${time}${zone ?? 'Z'}`;
   return !Number.isNaN(new Date(normalized).getTime());
-}
-
-function folderLeaf(folder: string): string {
-  const leaf = folder.split(/[/.\\]/).filter(Boolean).pop() ?? folder;
-  return leaf.trim().toLowerCase().replace(/\s+/g, ' ');
 }
 
 export type ValidationResult<T> = { ok: true; value: T } | { ok: false; error: string };
@@ -248,7 +243,7 @@ export function validateAction(raw: unknown): ValidationResult<StoredAction> {
     const folder = typeof input.folder === 'string' ? input.folder.trim() : '';
     if (!folder) return fail('Choose the folder to move matching mail into.');
     if (folder.length > 200) return fail('A folder name can be at most 200 characters.');
-    if (FORBIDDEN_MOVE_DESTINATIONS.includes(folderLeaf(folder))) {
+    if (isForbiddenMoveDestination(folder)) {
       return fail(
         'Automations cannot move mail into trash or junk. Those folders are emptied '
         + 'automatically, so it would be a delete on a timer. Choose a folder you own.',

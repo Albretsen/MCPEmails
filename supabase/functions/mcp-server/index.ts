@@ -364,6 +364,7 @@ import {
   validateTriageFilter,
   TRIAGE_MAX_MESSAGES_PER_RUN,
 } from "./triage-engine.ts";
+import { purgedRoleFromFlags } from "./triage-forbidden-destinations.ts";
 import { sendViaSmtp, SmtpAuthError, SmtpNotSentError, SmtpSenderRefusedError } from "./smtp-client.ts";
 import {
   attachmentFilenameFor,
@@ -34582,19 +34583,30 @@ function triageDeps(): TriageDeps {
       const inboxRow = run?.inboxRow ?? await loadInboxRowForTriage(inbox.id);
       if (!inboxRow) throw new Error("inbox_unavailable");
       const imap = run?.imap ?? undefined;
+      // IMAP: LIST once and hand it to the strict resolve, so the SPECIAL-USE
+      // flags of whatever it resolves to are already in hand. A mailbox the
+      // server flags \\Trash or \\Junk is refused by the engine whatever the
+      // rule called it ("Müll" is in no name list). Strict cannot create a
+      // mailbox, so the listing cannot go stale under it; the fallback below
+      // may create an archive and lists for itself.
+      const mailboxes = isImapProvider(inboxRow)
+        ? await imapMailboxListing(inboxRow, imap)
+        : null;
+      const forbiddenRole = (id: string) =>
+        purgedRoleFromFlags(mailboxes?.find((mb) => mb.name === id)?.flags ?? []);
       try {
-        return {
-          id: await resolveFolderId(inboxRow, nameOrId, { strict: true, session: imap }),
-          verified: true,
-        };
+        const id = await resolveFolderId(inboxRow, nameOrId, {
+          strict: true,
+          session: imap,
+          ...(mailboxes ? { imapMailboxes: mailboxes } : {}),
+        });
+        return { id, verified: true, forbiddenRole: forbiddenRole(id) };
       } catch (error) {
         if (!(error instanceof FolderTargetError) || error.logErrorCode !== "folder_not_found") {
           throw error;
         }
-        return {
-          id: await resolveFolderId(inboxRow, nameOrId, { session: imap }),
-          verified: false,
-        };
+        const id = await resolveFolderId(inboxRow, nameOrId, { session: imap });
+        return { id, verified: false, forbiddenRole: forbiddenRole(id) };
       }
     },
     applyAction: applyTriageAction,

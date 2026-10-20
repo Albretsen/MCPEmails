@@ -24,6 +24,8 @@
 // deno-lint-ignore-file no-explicit-any
 
 import { parsePermanentFlags } from "./imap-client.ts";
+import { IMAP_ALIAS_ALTERNATE_NAMES } from "./imap-folder-target.ts";
+import { isForbiddenMoveDestination, purgedRoleFromFlags } from "./triage-forbidden-destinations.ts";
 import {
   labelTargetFor,
   MAX_IMAP_KEYWORD_CHARS,
@@ -2045,6 +2047,111 @@ Deno.test("a move to an ordinary folder is still allowed", () => {
     const result = validateTriageAction({ type: "move", folder });
     assert(result.ok, `move to '${folder}' must be allowed, got: ${!result.ok ? result.error : ""}`);
   }
+});
+
+Deno.test("a move to a localized trash or junk folder is refused", () => {
+  // Until 2026-10-20 the refused list was seven English words, so a rule moving
+  // mail to "Papierkorb" saved and then deleted it on the provider's timer. The
+  // set is now derived from the folder resolver's own localized names.
+  for (
+    const folder of [
+      "Papierkorb",
+      "INBOX.Papierkorb",
+      "Корзина",
+      "Éléments supprimés",
+      "INBOX/Éléments supprimés",
+      // NFD input (e + combining acute) must match the NFC list entry.
+      "E\u0301le\u0301ments supprime\u0301s",
+      "Gelöschte Elemente",
+      "Cestino",
+      "Prullenbak",
+      "Papirkurv",
+      "ごみ箱",
+      "휴지통",
+      "已删除邮件",
+      "Spamverdacht",
+      "Courrier indésirable",
+      "Correo no deseado",
+      "迷惑メール",
+      // A name with a dot in it is not reduced to the text after the dot.
+      "INBOX.Nepageidaujamas el. paštas",
+      // Provider-native ids of the same folders.
+      "deleteditems",
+      "JunkEmail",
+      "[Gmail]/Bin",
+    ]
+  ) {
+    const result = validateTriageAction({ type: "move", folder });
+    assert(!result.ok, `move to '${folder}' must be refused`);
+    assert(
+      !result.ok && /trash and junk/i.test(result.error),
+      `refusal for '${folder}' must explain why, got: ${!result.ok ? result.error : ""}`,
+    );
+  }
+});
+
+Deno.test("every localized trash and spam name the resolver knows is refused", () => {
+  // The derivation itself: a name added to IMAP_ALIAS_ALTERNATE_NAMES for
+  // resolving is refused here with no second edit.
+  for (const role of ["trash", "spam"]) {
+    for (const name of IMAP_ALIAS_ALTERNATE_NAMES[role]) {
+      if (["Bulk", "Bulk Mail"].includes(name)) continue; // see the next test
+      assert(isForbiddenMoveDestination(name), `${role} name '${name}' must be refused`);
+      assert(isForbiddenMoveDestination(`INBOX/${name}`), `'INBOX/${name}' must be refused`);
+    }
+  }
+  // And the other roles are not: Sent, Drafts and Archive are ordinary
+  // destinations for an automation.
+  for (const role of ["sent", "drafts", "archive"]) {
+    for (const name of IMAP_ALIAS_ALTERNATE_NAMES[role]) {
+      assert(!isForbiddenMoveDestination(name), `${role} name '${name}' must stay allowed`);
+    }
+  }
+});
+
+Deno.test("'Bulk' is left to the run-time flag check", () => {
+  // Yahoo and AOL's spam folder, but also a folder people make themselves: on
+  // 2026-10-20 one iCloud workspace had 91 rules filing into its own "Bulk".
+  // Where Bulk IS spam the server flags it \\Junk and the run refuses it.
+  for (const folder of ["Bulk", "Bulk Mail", "INBOX/Bulk"]) {
+    assert(validateTriageAction({ type: "move", folder }).ok, `'${folder}' must save`);
+  }
+});
+
+Deno.test("a destination the provider flags as trash or junk is refused at run time", async () => {
+  // "Müll" is in no name list, so it passes validation; the IMAP server flags
+  // it \\Trash, so moving mail there is still a delete on a timer.
+  const state = freshState();
+  const applied = { calls: [] as any[] };
+  const deps = fakeDeps(state, [fakeMatch("msg-a")], applied, undefined, {
+    resolveFolder: (_inbox, name) => Promise.resolve({ id: name, verified: true, forbiddenRole: "trash" }),
+  });
+  const summary = await runTriageRule(deps, fakeRule({ action: { type: "move", folder: "Müll" } }));
+  assertEquals(summary.status, "failed", "the run fails");
+  assertEquals(summary.error_code, "invalid_action", "as an invalid rule");
+  assertEquals(applied.calls.length, 0, "and moves nothing");
+});
+
+Deno.test("a destination that resolves to a trash id is refused at run time", async () => {
+  // A rule's name can resolve to the provider's own trash by role, e.g. a Gmail
+  // alias landing on the TRASH system label.
+  for (const id of ["TRASH", "SPAM", "deleteditems", "[Gmail]/Trash", "INBOX.Papierkorb"]) {
+    const state = freshState();
+    const applied = { calls: [] as any[] };
+    const deps = fakeDeps(state, [fakeMatch("msg-a")], applied, undefined, {
+      resolveFolder: () => Promise.resolve({ id, verified: true }),
+    });
+    const summary = await runTriageRule(deps, fakeRule({ action: { type: "move", folder: "Clients" } }));
+    assertEquals(summary.error_code, "invalid_action", `resolved id '${id}' must be refused`);
+    assertEquals(applied.calls.length, 0, `nothing moved into '${id}'`);
+  }
+});
+
+Deno.test("SPECIAL-USE flags name the purged role", () => {
+  assertEquals(purgedRoleFromFlags(["\\HasNoChildren", "\\Trash"]), "trash", "\\Trash");
+  assertEquals(purgedRoleFromFlags(["\\junk"]), "junk", "flags compare case-insensitively");
+  assertEquals(purgedRoleFromFlags(["\\Archive"]), null, "archive is an ordinary destination");
+  assertEquals(purgedRoleFromFlags([]), null, "no flags, no role");
 });
 
 // ---------------------------------------------------------------------------
