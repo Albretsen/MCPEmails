@@ -24,6 +24,7 @@ import { ApprovalsPanel } from './ApprovalsPanel';
 import { AutomationsPanel } from './AutomationsPanel';
 import { usePricingView } from '@/lib/analytics/use-pricing-view.mjs';
 import { PLANS as CATALOGUE } from '@/lib/stripe/plans';
+import { trimLeadingQuietDays } from '@/lib/analytics/retention';
 import { formatAmountCents, formatPriceCents } from '@/lib/stripe/annual-offer';
 import { pricingCompareHref } from '@/lib/billing/upgrade-intent.mjs';
 import { inboxCapOffer } from '@/lib/billing/inbox-cap-offer.mjs';
@@ -1125,11 +1126,12 @@ function UsageBars({ dailyCounts }) {
 }
 
 /**
- * 30-day bar chart that renders real daily call counts from `activity_log`.
+ * Daily bar chart that renders real call counts from `activity_log`.
  *
  * Props:
- *   dailyCounts: array of 30 { date: "YYYY-MM-DD", count: number } objects,
- *                 oldest first (index 0 = 29 days ago, index 29 = today).
+ *   dailyCounts: array of { date: "YYYY-MM-DD", count: number } objects,
+ *                 oldest first, last = today. At least 30 entries for a real
+ *                 workspace (see trimLeadingQuietDays), up to the plan window.
  */
 function UsageChart30({ dailyCounts }) {
   const t = useTranslations('dashboard');
@@ -1150,11 +1152,13 @@ function UsageChart30({ dailyCounts }) {
   }
 
   const max = Math.max(...dailyCounts.map((d) => d.count), 1);
-  const total = dailyCounts.length; // always 30
+  const total = dailyCounts.length; // 30 to 730 days, depending on plan and history
 
-  // Show a date label every 5 bars; always show the last bar's label.
+  // A date label every `step` bars (every 5 up to 40 days, then about eight in
+  // all so a long window does not print a hundred dates); always the last.
+  const step = Math.max(5, Math.ceil(total / 8));
   const labels = dailyCounts.map((d, i) => {
-    if (i === 0 || i % 5 === 4 || i === total - 1) return formatBarDate(d.date);
+    if (i === 0 || i % step === step - 1 || i === total - 1) return formatBarDate(d.date);
     return '';
   });
 
@@ -4451,13 +4455,18 @@ export function UsagePage({ usageData, planLimits, actionAllowance = null, strip
     byInbox = [],
   } = usageData ?? {};
 
-  // The analytics window this plan buys (Free 7, Personal 30, Pro 90, Team
-  // 365). Every figure on this page comes from a query scoped to it, so the
-  // average has to divide by the same number and the copy has to quote it.
+  // The analytics window this plan buys (Free 30, Personal 90, Pro and
+  // Business 730). Every figure on this page comes from a query scoped to it.
   const historyDays = planLimits?.historyDays ?? 30;
+  // What is drawn: the window minus the quiet days before the first call, never
+  // under 30. Rows past 90 days were deleted on every plan until 2026-10-20, so
+  // a 730-day window would otherwise chart ~640 empty days and divide the
+  // average by days that never had data. The labels quote what is drawn.
+  const shownCounts = trimLeadingQuietDays(dailyCounts);
+  const shownDays = shownCounts.length || historyDays;
 
   // Derived stats
-  const avgPerDay = totalCalls > 0 ? Math.round(totalCalls / historyDays) : 0;
+  const avgPerDay = totalCalls > 0 ? Math.round(totalCalls / shownDays) : 0;
   const busiestDay = dailyCounts.reduce(
     (best, d) => (d.count > best.count ? d : best),
     { date: '', count: 0 },
@@ -4470,7 +4479,7 @@ export function UsagePage({ usageData, planLimits, actionAllowance = null, strip
     <div className="page">
       <PageHeader
         title={t('usage.title')}
-        sub={t('usage.sub', { days: historyDays })}
+        sub={t('usage.sub', { days: shownDays })}
       />
 
       {/* The allowance strip: bar plus one sentence for a metered Free
@@ -4663,7 +4672,7 @@ export function UsagePage({ usageData, planLimits, actionAllowance = null, strip
           {/* Summary stats */}
           <div className="stat-grid usage-stat-grid">
             <div className="stat">
-              <div className="label">{t('usage.totalCalls', { days: historyDays })}</div>
+              <div className="label">{t('usage.totalCalls', { days: shownDays })}</div>
               <div className="value">{totalCalls.toLocaleString()}</div>
               <div className="delta">{t('usage.totalCallsDelta')}</div>
             </div>
@@ -4686,11 +4695,11 @@ export function UsagePage({ usageData, planLimits, actionAllowance = null, strip
             <div className="card-h">
               <div>
                 <div className="title">{t('usage.callsPerDayTitle')}</div>
-                <div className="sub">{t('usage.callsPerDaySub', { days: historyDays })}</div>
+                <div className="sub">{t('usage.callsPerDaySub', { days: shownDays })}</div>
               </div>
             </div>
             <div className="card-body">
-              <UsageChart30 dailyCounts={dailyCounts} />
+              <UsageChart30 dailyCounts={shownCounts} />
             </div>
           </div>
 
