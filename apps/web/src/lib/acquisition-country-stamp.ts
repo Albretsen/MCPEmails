@@ -31,26 +31,6 @@ import { sanitizedCountry } from '@/lib/acquisition-country.mjs';
  * A statement of its own, so the attribution and device writes cannot fail on
  * this column while its migration is unapplied. Never throws.
  */
-/**
- * The one statement this file runs, until the generated types know the column.
- *
- * src/types/database.types.ts is generated from the production schema, which
- * gains acquisition_country only when 20261020140000_acquisition_country.sql
- * is applied, and supabase-js refuses (as a type error) an update naming a
- * column those types do not have. The types are never hand-edited, so the
- * workspaces builder is viewed through this narrow shape for this one write.
- * After the migration is applied and `npm run gen:types` is run, the view can
- * go and the chain below is checked against the real schema like the device
- * stamp's.
- */
-type PendingCountryWrite = {
-  update(values: { acquisition_country: string }): {
-    eq(column: 'owner_id', value: string): {
-      is(column: 'acquisition_country', value: null): PromiseLike<{ error: { message: string } | null }>;
-    };
-  };
-};
-
 export async function stampAcquisitionCountry(
   db: Pick<SupabaseClient<Database>, 'from'>,
   args: {
@@ -61,8 +41,8 @@ export async function stampAcquisitionCountry(
   try {
     const country = sanitizedCountry(args.country);
     if (!args.ownerId || !country) return;
-    const workspaces = db.from('workspaces') as unknown as PendingCountryWrite;
-    const { error } = await workspaces
+    const { error } = await db
+      .from('workspaces')
       .update({ acquisition_country: country })
       .eq('owner_id', args.ownerId)
       .is('acquisition_country', null);
