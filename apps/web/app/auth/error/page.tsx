@@ -15,6 +15,10 @@ const ERROR_MESSAGE_KEYS: Record<string, string> = {
   missing_code: 'missingCode',
   'Email link is invalid or has expired': 'linkExpired',
   'Auth session missing': 'sessionMissing',
+  oauth_cancelled: 'oauthCancelled',
+  microsoft_admin_approval: 'microsoftAdminApproval',
+  microsoft_email_unverified: 'microsoftEmailUnverified',
+  provider_email_unverified: 'providerEmailUnverified',
 };
 
 const GENERIC_MESSAGE_KEY = 'generic';

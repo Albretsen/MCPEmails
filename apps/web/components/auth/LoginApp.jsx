@@ -12,7 +12,8 @@ import {
   withConnectIntent,
 } from '@/lib/connect/intent-carry.mjs';
 import { MIcon, MBtn } from '../MarketingPrimitives';
-import { ThemeBtn, Spinner, GoogleIcon, GitHubIcon, SocialButton, OrDivider } from './AuthShared';
+import { ThemeBtn, Spinner, GoogleIcon, GitHubIcon, MicrosoftIcon, SocialButton, OrDivider } from './AuthShared';
+import { microsoftSignInEnabled } from '@/lib/auth/microsoft-flag.mjs';
 
 export function LoginApp({ redirectTo = null, connectProvider = null }) {
   const t = useTranslations('auth');
@@ -23,7 +24,7 @@ export function LoginApp({ redirectTo = null, connectProvider = null }) {
   const [mode, setMode] = useState('password'); // 'password' | 'magic-link'
   const [step, setStep] = useState('form'); // 'form' | 'submitting' | 'error' | 'sending' | 'sent'
   const [serverError, setServerError] = useState('');
-  const [socialLoading, setSocialLoading] = useState(null); // null | 'google' | 'github'
+  const [socialLoading, setSocialLoading] = useState(null); // null | 'google' | 'microsoft' | 'github'
 
   // This page shows no marketing-consent checkbox, so an account it creates
   // (first OAuth login, magic link) must record none. Drop any tick the signup
@@ -88,6 +89,11 @@ export function LoginApp({ redirectTo = null, connectProvider = null }) {
   function handleGoogleSignIn() {
     setSocialLoading('google');
     window.location.href = buildOAuthUrl('google');
+  }
+
+  function handleMicrosoftSignIn() {
+    setSocialLoading('microsoft');
+    window.location.href = buildOAuthUrl('microsoft');
   }
 
   function handleGitHubSignIn() {
@@ -181,6 +187,15 @@ export function LoginApp({ redirectTo = null, connectProvider = null }) {
         onClick={handleGoogleSignIn}
         disabled={anyBusy}
       />
+      {microsoftSignInEnabled() && (
+        <SocialButton
+          icon={<MicrosoftIcon />}
+          label={t('shared.signInWithMicrosoft')}
+          loading={socialLoading === 'microsoft'}
+          onClick={handleMicrosoftSignIn}
+          disabled={anyBusy}
+        />
+      )}
       <SocialButton
         icon={<GitHubIcon />}
         label={t('shared.continueWithGitHub')}
