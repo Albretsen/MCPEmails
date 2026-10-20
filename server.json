@@ -1,9 +1,9 @@
 {
   "$schema": "https://static.modelcontextprotocol.io/schemas/2025-12-11/server.schema.json",
   "name": "com.mcpemails/emails",
-  "title": "MCP Emails",
+  "title": "MCPEmails",
   "description": "Never-stored live email: read, send and triage Gmail, Outlook / Microsoft 365, or any IMAP mailbox.",
-  "version": "1.0.7",
+  "version": "1.0.8",
   "websiteUrl": "https://mcpemails.com",
   "icons": [
     {
@@ -42,7 +42,7 @@
       "environmentVariables": [
         {
           "name": "MCPEMAILS_API_KEY",
-          "description": "MCP Emails API key: 'mcpe_' followed by 64 hex characters. Create one at https://mcpemails.com/dashboard/keys",
+          "description": "MCPEmails API key: 'mcpe_' followed by 64 hex characters. Create one at https://mcpemails.com/dashboard/keys",
           "isRequired": true,
           "isSecret": true,
           "format": "string"

@@ -15,7 +15,7 @@ The one source every external listing is synced from. Each fact below was read f
 
 This is the `server.json` description verbatim. Keep them identical.
 
-Published to the registry as 1.0.7 on 2026-10-19 (`isLatest: true`), so the registry now carries this one-liner. The next change needs a new `version` in `server.json` (see the registry note in project memory for auth).
+Published to the registry as 1.0.8 on 2026-10-20 (`isLatest: true`, title "MCPEmails"), so the registry carries this one-liner. The next change needs a new `version` in `server.json` (see the registry note in project memory for auth).
 
 ## Short description (297 chars)
 
