@@ -822,7 +822,7 @@ Deno.test("an envelope that cannot be built degrades to exactly the old payload"
   assertEquals(result.structuredContent, payload, "the pre-card payload, unchanged");
   assertEquals(
     result.content[0].text,
-    JSON.stringify(payload, null, 2),
+    JSON.stringify(payload),
     "the pre-card content text, unchanged",
   );
 });
