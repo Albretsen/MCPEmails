@@ -33560,7 +33560,7 @@ const triageStore: TriageStore = {
     return (data ?? []) as { id: string }[];
   },
 
-  async reclaimStaleLease(ruleId, nowIso) {
+  async reclaimStaleLease(ruleId, nowIso, cutoffIso) {
     // Fail the open run BEFORE releasing the lease. If this invocation dies
     // between the two writes, the rule keeps a stale lease and the next sweep
     // retries the pair; the reverse order would briefly present a runnable rule
@@ -33577,11 +33577,13 @@ const triageStore: TriageStore = {
           "have been acted on.",
       })
       .eq("rule_id", ruleId)
-      .eq("status", "running");
+      .eq("status", "running")
+      .lt("started_at", cutoffIso);
     await supabase
       .from("triage_rules")
       .update({ running_since: null })
-      .eq("id", ruleId);
+      .eq("id", ruleId)
+      .lt("running_since", cutoffIso);
   },
 
   async listDueRules(nowIso, limit) {
@@ -33624,6 +33626,29 @@ const triageStore: TriageStore = {
       .select("id");
     if (error) throw new Error(error.message);
     return Array.isArray(data) && data.length > 0;
+  },
+
+  async inboxLeaseHeld(inboxId, exceptRuleId) {
+    // Any lease, stale or not: a lease the stale sweep has not yet released
+    // may still belong to a run with a live IMAP session.
+    const { data, error } = await supabase
+      .from("triage_rules")
+      .select("id")
+      .eq("inbox_id", inboxId)
+      .neq("id", exceptRuleId)
+      .not("running_since", "is", null)
+      .limit(1);
+    if (error) throw new Error(error.message);
+    return Array.isArray(data) && data.length > 0;
+  },
+
+  async abandonClaim(ruleId, claimedAtIso) {
+    const { error } = await supabase
+      .from("triage_rules")
+      .update({ running_since: null })
+      .eq("id", ruleId)
+      .eq("running_since", claimedAtIso);
+    if (error) throw new Error(error.message);
   },
 
   async releaseRule(ruleId, update) {

@@ -244,6 +244,14 @@ function deps(run: Runner, db: Ledger): TriageDeps {
         run.leases.add(ruleId);
         return Promise.resolve(true);
       },
+      // One inbox in this suite and rules run one after another, so no other
+      // lease is ever held while a claim is being made.
+      inboxLeaseHeld: (_inboxId, exceptRuleId) =>
+        Promise.resolve([...run.leases].some((id) => id !== exceptRuleId)),
+      abandonClaim: (ruleId) => {
+        run.leases.delete(ruleId);
+        return Promise.resolve();
+      },
       releaseRule: (ruleId, update) => {
         run.leases.delete(ruleId);
         run.released.push({ ruleId, ...update });
@@ -413,7 +421,7 @@ Deno.test("120 rules parked across six dispatcher cycles are one cap, not 120", 
   for (; cycles < 10; cycles++) {
     const body = await dispatch(run, db);
     if (body.due === 0) break;
-    assert(body.due <= MAX_RULES_PER_INVOCATION, "one invocation takes a bounded batch");
+    assert(body.paused + body.ran <= MAX_RULES_PER_INVOCATION, "one invocation takes a bounded batch");
     paused += body.paused;
   }
 
