@@ -36,14 +36,14 @@
     "intro": "Drei Dingen:",
     "points": [
       "<b>Einer namentlich bekannten Person.</b> Mir, nicht einer Support-Adresse. Wenn etwas schiefgeht, wissen Sie, wer dafür geradesteht.",
-      "<b>Einem eingetragenen Unternehmen.</b> MCP Emails wird von Albretsen Consulting betrieben, einem norwegischen Einzelunternehmen, eingetragen im Enhetsregisteret bei den Brønnøysundregistrene. Ein Einzelunternehmen bedeutet persönliche Haftung.",
+      "<b>Einem eingetragenen Unternehmen.</b> MCP Emails wird von der Albretsen AS betrieben, einer norwegischen Gesellschaft mit beschränkter Haftung (aksjeselskap), eingetragen im Foretaksregisteret bei den Brønnøysundregistrene. Die Gesellschaft gehört mir, und ich bin Vorsitzender ihres Vorstands.",
       "<b>Code, den Sie lesen können.</b> Der Server ist öffentlich auf GitHub unter AGPL-3.0, und der gehostete Dienst läuft mit demselben Code."
     ],
     "entityTitle": "Rechtsträger",
-    "entityName": "Albretsen Consulting (enkeltpersonforetak)",
-    "entityOrgNo": "Organisationsnummer 926 646 753",
+    "entityName": "Albretsen AS (aksjeselskap)",
+    "entityOrgNo": "Organisationsnummer 938 702 373",
     "entityAddress": "Håsteins gate 9, 5160 Laksevåg, Norwegen",
-    "entityRegistry": "Eingetragen im Enhetsregisteret, Brønnøysundregistrene",
+    "entityRegistry": "Eingetragen im Foretaksregisteret, Brønnøysundregistrene",
     "entityNote": "Alle rechtlichen Angaben finden Sie in den <terms>Nutzungsbedingungen</terms> und der <privacy>Datenschutzerklärung</privacy>."
   },
   "busFactor": {

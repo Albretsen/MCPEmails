@@ -70,7 +70,7 @@ test('the withdrawal notice names the contact details and the online form in eve
 // Albretsen AS has applied for MVA registration but it is not confirmed. Until
 // it is, no locale may print a VAT number or claim VAT registration. When
 // Skatteetaten confirms it, flip these two checks back to requiring {vatNumber}.
-const VAT_CLAIM = /\{vatNumber\}|Merverdiavgiftsregister|MVA-nummer|VAT (number|register)|TVA|IVA|增值税/;
+const VAT_CLAIM = /\{vatNumber\}|Merverdiavgiftsregister|MVA-nummer|VAT (number|register)|TVA|IVA|增值税|Umsatzsteuer/;
 
 test('terms: no VAT claim, no ODR link, courts and class waiver limited to businesses', () => {
   for (const locale of LOCALES) {
@@ -93,7 +93,7 @@ test('privacy: no VAT claim in any locale', () => {
 });
 
 test('the legal entity is Albretsen AS everywhere, with no sole-proprietorship wording left', () => {
-  const OLD = /Albretsen Consulting|926 646 753|enkeltpersonforetak|sole proprietor|entreprise individuelle|empresa individual|独资/;
+  const OLD = /Albretsen Consulting|926 646 753|enkeltpersonforetak|sole proprietor|entreprise individuelle|empresa individual|独资|Einzelunternehm/;
   for (const locale of LOCALES) {
     for (const ns of ['terms', 'privacy', 'about', 'security', 'home']) {
       const raw = JSON.stringify(messages(locale, ns));
