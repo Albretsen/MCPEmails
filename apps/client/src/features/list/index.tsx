@@ -1,5 +1,5 @@
 import { useVirtualizer } from "@tanstack/react-virtual";
-import { ArrowUp, ChevronDown, Inbox as InboxIcon, Pause, PenLine, Search, X } from "lucide-react";
+import { ArrowUp, Bell, ChevronDown, Inbox as InboxIcon, Pause, PenLine, Search, X } from "lucide-react";
 import {
   type ChangeEvent,
   type KeyboardEvent,
@@ -37,8 +37,8 @@ import { useAssistantStore } from "../../state/assistant-store";
 import { setConversationList, useThreadStore } from "../../state/conversation-store";
 import { selectHasMulti, setVisibleKeys, useSelectionStore } from "../../state/selection-store";
 import { selectConversationView, useUiStore } from "../../state/ui-store";
-import { Button, EmptyState, Kbd, Skeleton, Spinner } from "../../ui";
-import { SEARCH_INPUT_ATTR, useShell } from "../shell";
+import { Button, EmptyState, IconButton, Kbd, Skeleton, Spinner } from "../../ui";
+import { SEARCH_INPUT_ATTR, SHELL_MENU, useShell } from "../shell";
 import s from "./List.module.css";
 import { READ_ONLY_EXPLANATION, useCanWrite } from "../../state/permissions";
 import { openRow } from "./open-row";
@@ -595,6 +595,16 @@ const PhoneNav = memo(function PhoneNav({ scope, folderId, isInbox, inboxes, fol
         </select>
         <ChevronDown size={16} aria-hidden="true" className={s.phoneChevron} />
       </label>
+      {/* Phones have no sidebar and so no account menu: this is the way to the
+          Notifications settings (turn off, per mailbox, quiet hours, test), and
+          the only way back to "Turn on" once the install card is dismissed. */}
+      <IconButton
+        label="Notifications"
+        className={s.phoneBell}
+        onClick={() => useUiStore.getState().setMenu(SHELL_MENU.notifications)}
+      >
+        <Bell size={18} aria-hidden="true" />
+      </IconButton>
     </div>
   );
 });

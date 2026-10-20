@@ -1,0 +1,96 @@
+{
+  "_sources": [
+    "apps/web/components/dashboard/Pages.jsx (MCP_CLIENTS) + apps/web/messages/en/dashboard.json (clients.*)",
+    "apps/web/app/.well-known/oauth-authorization-server/route.ts",
+    "https://help.openai.com/en/articles/12584461"
+  ],
+  "meta": {
+    "title": "E-Mail mit ChatGPT verbinden: Setup des MCP-Konnektors",
+    "description": "Fügen Sie ChatGPT mit dem Entwicklermodus und einem benutzerdefinierten MCP-Konnektor ein echtes Postfach hinzu. OAuth, kein API-Schlüssel, dann E-Mails lesen, suchen, senden und planen. Ein Postfach kostenlos."
+  },
+  "hero": {
+    "eyebrow": "ChatGPT + E-Mail",
+    "titleLine1": "Verbinden Sie Ihr Postfach mit ChatGPT",
+    "titleLine2": "als benutzerdefinierten MCP-Konnektor",
+    "lead": "Schalten Sie den Entwicklermodus ein, legen Sie einen Konnektor mit einer einzigen URL an, und ChatGPT kann Ihre echten E-Mails lesen, suchen, senden, beantworten, weiterleiten, planen und organisieren.",
+    "meta0": "1 Postfach kostenlos, dauerhaft",
+    "meta1": "OAuth, kein API-Schlüssel nötig",
+    "meta2": "E-Mails werden live abgerufen, nie gespeichert",
+    "answer": "Schalten Sie in ChatGPT unter Einstellungen, Apps und Konnektoren, Erweiterte Einstellungen den Entwicklermodus ein. Erstellen Sie einen Konnektor, fügen Sie https://mcpemails.com/api/mcp als Konnektor-URL ein, wählen Sie OAuth und autorisieren Sie mit MCP Emails. Der Entwicklermodus funktioniert auf chatgpt.com mit Plus, Pro, Business, Enterprise und Edu, und Sie aktivieren ihn in jedem Chat über das Menü +."
+  },
+  "method": {
+    "title": "So verbindet sich ChatGPT: OAuth, kein API-Schlüssel",
+    "body": "ChatGPT durchläuft mit diesem Server den standardmäßigen MCP-OAuth-Ablauf. Der Client registriert sich selbst per <b>dynamischer Client-Registrierung nach RFC 7591</b>, Sie müssen also keine Client-ID anlegen, und autorisiert sich per <b>Autorisierungscode mit PKCE</b> (S256). Ein Client-Secret wird nie übertragen, und das Token enthält nur die Scopes, die Sie auf unserem Zustimmungsbildschirm freigeben. Das Zugriffstoken gilt eine Stunde und erneuert sich selbst. Sie finden es unter Dashboard, API-Schlüssel als <code>OAuth:</code> mit dem Namen des Clients dahinter, und dort widerrufen Sie die Verbindung auch."
+  },
+  "setup": [
+    {
+      "h": "Kostenloses Konto erstellen und Postfach verbinden",
+      "p": "Registrieren Sie sich auf mcpemails.com, ohne Kreditkarte, und öffnen Sie dann Dashboard, Postfächer, Postfach verbinden. Outlook und Microsoft 365 verbinden Sie über „Mit Microsoft anmelden“; Gmail, iCloud, Fastmail, Yahoo, Zoho und Yandex nutzen ein App-Passwort; alle anderen Postfächer verbinden sich ganz normal per IMAP und SMTP. Der Free-Tarif umfasst ein Postfach, dauerhaft."
+    },
+    {
+      "h": "Entwicklermodus einschalten",
+      "p": "Öffnen Sie Einstellungen, Apps und Konnektoren, Erweiterte Einstellungen und schalten Sie den Entwicklermodus ein."
+    },
+    {
+      "h": "Konnektor erstellen",
+      "p": "Klicken Sie zurück unter Apps und Konnektoren auf „Erstellen“. Geben Sie einen Namen ein und fügen Sie <code>https://mcpemails.com/api/mcp</code> als Konnektor-URL ein."
+    },
+    {
+      "h": "OAuth wählen und autorisieren",
+      "p": "Wählen Sie OAuth, klicken Sie auf „Erstellen“, autorisieren Sie dann mit MCP Emails und geben Sie die Scopes frei, die der Konnektor erhalten soll."
+    },
+    {
+      "h": "In jedem Chat aktivieren",
+      "p": "Öffnen Sie auf chatgpt.com einen neuen Chat, klicken Sie auf <b>+</b>, wählen Sie den Entwicklermodus und dann die App MCP Emails. ChatGPT sieht die Tools nur in einem Chat, in dem Sie das getan haben, also wiederholen Sie es in jeder neuen Unterhaltung. Dazwischen bleibt der Konnektor unter Apps und Konnektoren aufgeführt."
+    }
+  ],
+  "gotchas": [
+    {
+      "h": "Der Entwicklermodus braucht einen kostenpflichtigen Tarif, das Web und einen Schalter in jedem Chat",
+      "p": "Benutzerdefinierte MCP-Konnektoren stehen auf chatgpt.com für Plus-, Pro-, Business-, Enterprise- und Edu-Konten zur Verfügung. Free- und Go-Konten können keinen hinzufügen, und die Mobil- und Desktop-Apps bieten keinen Entwicklermodus. Bei Business und Enterprise muss eventuell zuerst ein Admin den Entwicklermodus für den Workspace erlauben. Der Schritt, den viele übersehen, ist der letzte: Der Konnektor tut nichts, bis Sie im aktuellen Chat über das Menü <b>+</b> den Entwicklermodus und die App MCP Emails auswählen."
+    },
+    {
+      "h": "Wählen Sie beim Erstellen des Konnektors OAuth, nicht „keine Authentifizierung“",
+      "p": "Das Konnektor-Formular fragt nach der Authentifizierung. Dieser Server lehnt anonyme Aufrufe ab: Eine nicht authentifizierte Anfrage erhält eine 401 mit einem Verweis auf die OAuth-Discovery, dem ein konformer Client folgt, um den Ablauf zu starten. Mit „keine Authentifizierung“ entsteht ein Konnektor, der erst beim ersten Tool-Aufruf scheitert statt beim Einrichten, und das ist die verwirrendere Reihenfolge."
+    },
+    {
+      "h": "Nur-Lese-Zugriff ist eine echte Option und oft der richtige Anfang",
+      "p": "Auf dem Zustimmungsbildschirm können Sie ChatGPT nur <code>read:email</code> und <code>search:email</code> geben. Das reicht zum Sichten, Zusammenfassen und Finden und nimmt jede unumkehrbare Aktion vom Tisch, während Sie entscheiden, wie weit Sie gehen wollen."
+    }
+  ],
+  "limits": [
+    "Anfragen sind auf 100 pro Minute, 1.000 pro Stunde und 10.000 pro Tag je Schlüssel begrenzt, dazu kommt die Obergrenze Ihres Tarifs für abrechenbare Aktionen.",
+    "Der Server arbeitet rein nach Anfrage und Antwort. Es gibt keine Webhooks und keine vom Server ausgelösten Ereignisse, neue E-Mails wecken Ihren Agenten also nie von selbst. Um auf eingehende E-Mails zu reagieren, fragen Sie in festen Abständen ab.",
+    "E-Mails werden bei jedem Aufruf live von Ihrem Anbieter abgerufen und nie gespeichert. Gespeichert wird nur das verschlüsselte OAuth-Token oder App-Passwort. Ein widerrufenes Token oder ein geändertes Postfachpasswort beendet den Zugriff deshalb sofort."
+  ],
+  "faq": [
+    {
+      "q": "Kann ChatGPT meine E-Mails lesen und senden?",
+      "a": "Über einen benutzerdefinierten MCP-Konnektor, ja. ChatGPT erreicht von sich aus kein Postfach; ein Konnektor, der auf MCP Emails zeigt, gibt ihm Tools zum Lesen, Suchen, Senden, Beantworten, Weiterleiten, Organisieren und Planen von E-Mails, beschränkt auf die Scopes, die Sie beim Einrichten freigeben."
+    },
+    {
+      "q": "Warum kann ich in meinem ChatGPT-Konto keinen Konnektor erstellen?",
+      "a": "Der Entwicklermodus erfordert ChatGPT Plus, Pro, Business, Enterprise oder Edu, und zwar im Web. Free- und Go-Konten können keine benutzerdefinierten Konnektoren hinzufügen, und die Mobil- und Desktop-Apps zeigen die Option nicht. In einem Business- oder Enterprise-Workspace bitten Sie einen Admin, den Entwicklermodus zu erlauben. Ist der Konnektor angelegt, wird aber ignoriert, öffnen Sie im Chat das Menü <b>+</b> und wählen Sie den Entwicklermodus und die App MCP Emails."
+    },
+    {
+      "q": "Brauche ich für ChatGPT einen API-Schlüssel?",
+      "a": "Nein. Wählen Sie beim Erstellen des Konnektors OAuth, dann registriert sich ChatGPT selbst und durchläuft einen Ablauf mit Autorisierungscode und PKCE. API-Schlüssel sind für Clients gedacht, die das nicht können, und für Skripte."
+    },
+    {
+      "q": "Welche Postfächer erreicht ChatGPT auf diesem Weg?",
+      "a": "Outlook.com und Microsoft 365 über „Mit Microsoft anmelden“, wobei bei einem Arbeitskonto eventuell einmalig die IT-Administration die App freigeben muss; Gmail, iCloud, Fastmail, Yahoo, Zoho und Yandex mit einem App-Passwort; und jedes andere Postfach, das IMAP und SMTP auf den Standardports spricht. Der Client sieht alle über dieselbe Verbindung: Ihr Agent ruft zuerst inbox_list auf und findet so jedes verbundene Postfach samt ID. Sie müssen also nirgends UUIDs einfügen."
+    },
+    {
+      "q": "Kann ChatGPT E-Mails senden, ohne dass ich es mitbekomme?",
+      "a": "Nur wenn Sie es zulassen. Senden erfordert den Scope send:email, ein Schlüssel oder Token ohne diesen Scope kann also überhaupt nicht senden. Zusätzlich kann der Inhaber eines Postfachs im Dashboard eine menschliche Freigabe verlangen. Dann wartet jedes Senden, Antworten, Weiterleiten, Senden eines Entwurfs und geplante Senden, bis eine Person es freigibt."
+    },
+    {
+      "q": "Werden meine E-Mails auf Ihren Servern gespeichert?",
+      "a": "Nein. Jede Nachricht wird für die Anfrage, die sie anfordert, live von Ihrem Anbieter abgerufen und direkt an Ihren Client übergeben. Gespeichert wird nur das verschlüsselte OAuth-Token oder App-Passwort, damit spätere Aufrufe sich authentifizieren können. Wenn Sie das Postfach im Dashboard löschen oder den Zugriff bei Ihrem Anbieter widerrufen, endet die Verbindung sofort."
+    }
+  ],
+  "ctaBand": {
+    "title": "Geben Sie ChatGPT ein echtes Postfach",
+    "sub": "Ein Konnektor für jedes verbundene Postfach. Ein Postfach dauerhaft kostenlos."
+  }
+}

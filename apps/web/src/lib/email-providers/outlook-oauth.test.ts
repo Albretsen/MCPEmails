@@ -378,7 +378,7 @@ test('every locale has the admin-link dialog, every result status and the Micros
   const webRoot = fileURLToPath(new URL('../../../', import.meta.url));
   const en = JSON.parse(readFileSync(`${webRoot}messages/en/dashboardChrome.json`, 'utf8'));
   const linkKeys = Object.keys(en.adminConsentLink);
-  for (const locale of ['en', 'es', 'fr', 'nb', 'zh']) {
+  for (const locale of ['en', 'es', 'fr', 'nb', 'zh', 'de']) {
     const m = JSON.parse(readFileSync(`${webRoot}messages/${locale}/dashboardChrome.json`, 'utf8'));
     for (const key of linkKeys) assert.ok(m.adminConsentLink?.[key], `${locale} adminConsentLink.${key}`);
     for (const status of ADMIN_CONSENT_RESULT_STATUSES) {

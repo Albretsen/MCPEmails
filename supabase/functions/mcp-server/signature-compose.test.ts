@@ -19,6 +19,7 @@
 import { assertEquals } from "jsr:@std/assert@1";
 import {
   applySignature,
+  applySignatureOnce,
   composeSignatureBlocks,
   heldSendSnapshot,
   includeSignatureForSend,
@@ -27,7 +28,9 @@ import {
   SIGNATURE_HTML_CLASS,
   SIGNATURE_TEXT_DELIMITER,
   type SignatureInbox,
+  signatureOutcome,
   storedSignatureBlockOf,
+  textCarriesOwnSignature,
 } from "./signature-compose.ts";
 
 const TEXT_SIG_INBOX: SignatureInbox = {
@@ -308,4 +311,89 @@ Deno.test("a stored text WITH a delimiter never lets a multi-line signature matc
   assertEquals(rebuildHtmlKeepingSignature(edited, TEXT_SIG_INBOX, signed.htmlBody, signed.textBody), null);
   // Stored text unknown: two whole lines repeated verbatim still count.
   assertEquals(rebuildHtmlKeepingSignature(edited, TEXT_SIG_INBOX, signed.htmlBody) !== null, true);
+});
+
+// ---------------------------------------------------------------------------
+// What a write result says about the signature (2026-10-17 re-test: Claude told
+// users "your signature was added" on inboxes that had none)
+// ---------------------------------------------------------------------------
+
+Deno.test("signatureOutcome reports what applySignature did, for every case", () => {
+  const cases: [SignatureInbox, boolean | undefined, string][] = [
+    [TEXT_SIG_INBOX, undefined, "appended"],
+    [RICH_SIG_INBOX, true, "appended"],
+    [TEXT_SIG_INBOX, false, "skipped"],
+    // signature_get's answer on both inboxes in the re-test: enabled, nothing stored.
+    [{ signature_enabled: true, signature_text: null, signature_html: null }, undefined, "none_configured"],
+    // The dashboard editor's untouched field: a non-empty string that is no signature.
+    [{ signature_enabled: true, signature_text: "", signature_html: "<p></p>" }, undefined, "none_configured"],
+    [{ ...TEXT_SIG_INBOX, signature_enabled: false }, undefined, "disabled"],
+    [{ signature_enabled: false, signature_text: null, signature_html: null }, false, "skipped"],
+  ];
+  for (const [inbox, include, expected] of cases) {
+    const outcome = signatureOutcome(inbox, { include_signature: include });
+    assertEquals(outcome, expected, JSON.stringify([inbox, include]));
+    // And it agrees with what applySignature actually does to a body.
+    const signed = applySignature({ textBody: "Hi." } as { textBody: string; htmlBody?: string }, inbox, {
+      include_signature: include,
+    });
+    assertEquals(signed.textBody !== "Hi.", outcome === "appended", `${expected}: body matches`);
+  }
+});
+
+Deno.test("draft and send results carry the signature outcome", () => {
+  // index.ts cannot be imported by a test; pin that each write that signs a
+  // new body reports it.
+  const source = Deno.readTextFileSync(new URL("./index.ts", import.meta.url));
+  for (const marker of [
+    "draftResult.signature = signatureOutcome(inbox, { include_signature: includeSignature });",
+    "updateResult.signature = signatureOutcome(inbox, { include_signature: includeSignature });",
+    "sendResult.signature = signatureOutcome(senderInbox, { include_signature: includeSignature });",
+  ]) {
+    assertEquals(source.split(marker).length, 2, marker);
+  }
+  // draft_reply: the Outlook branch and the Gmail/IMAP branch.
+  assertEquals(
+    source.split("signature: signatureOutcome(inbox, { include_signature: includeSignature })").length - 1,
+    2,
+  );
+});
+
+// ---------------------------------------------------------------------------
+// A draft body the model signed itself (live claude.ai test, 2026-10-19)
+// ---------------------------------------------------------------------------
+
+type Body = { textBody: string; htmlBody?: string };
+
+Deno.test("applySignatureOnce: a body that already carries the signature is not signed twice", () => {
+  const pasted = "See you Friday.\n\n-- \nAsgeir Albretsen\nMCP Emails";
+  const out = applySignatureOnce({ textBody: pasted } as Body, TEXT_SIG_INBOX);
+  assertEquals(out.textBody, pasted);
+  assertEquals(signatureCounts(out.textBody, out.htmlBody), { text: 1, html: 1 });
+  // The HTML part is the one applySignature builds for the unsigned text.
+  const fresh = applySignature({ textBody: "See you Friday." } as Body, TEXT_SIG_INBOX);
+  assertEquals(out.htmlBody, fresh.htmlBody);
+  // A multi-line signature pasted without the delimiter line counts too.
+  const bare = applySignatureOnce({ textBody: "See you Friday.\n\nAsgeir Albretsen\nMCP Emails" } as Body, TEXT_SIG_INBOX);
+  assertEquals(bare.textBody, "See you Friday.\n\nAsgeir Albretsen\nMCP Emails");
+  // Caller HTML is left alone.
+  const withHtml = applySignatureOnce({ textBody: pasted, htmlBody: "<p>See you Friday.</p>" } as Body, TEXT_SIG_INBOX);
+  assertEquals(withHtml.htmlBody, "<p>See you Friday.</p>");
+});
+
+Deno.test("applySignatureOnce: anything short of the signature is signed as before", () => {
+  const one: SignatureInbox = { signature_enabled: true, signature_text: "Asgeir", signature_html: null };
+  // A one-line sign-off is not the signature.
+  const signoff = applySignatureOnce({ textBody: "Thanks,\nAsgeir" } as Body, one);
+  assertEquals(signoff.textBody, "Thanks,\nAsgeir\n\n-- \nAsgeir");
+  // The signature inside a quoted original is the quoted message's, not this one.
+  const quoted = "Sure.\n\nOn Mon, 7 Sep 2026, Asgeir <a@x.example> wrote:\n> Hi\n> -- \n> Asgeir";
+  assertEquals(textCarriesOwnSignature(quoted, one), false);
+  const plain = applySignatureOnce({ textBody: "Sure." } as Body, TEXT_SIG_INBOX);
+  assertEquals(signatureCounts(plain.textBody, plain.htmlBody), { text: 1, html: 1 });
+  // include_signature: false still means no signature, pasted one or not.
+  const off = applySignatureOnce({ textBody: "Hi." } as Body, TEXT_SIG_INBOX, { include_signature: false });
+  assertEquals(off, { textBody: "Hi." });
+  // No signature configured: nothing to detect, nothing appended.
+  assertEquals(textCarriesOwnSignature("Hi.\n\n-- \nAsgeir", { signature_enabled: true }), false);
 });

@@ -2,7 +2,7 @@ const translation = {
   title: '¿Qué es un servidor de correo MCP? Una explicación en lenguaje claro',
   description:
     'Un servidor de correo MCP es una herramienta que permite a un agente de IA leer y enviar correo mediante verbos limpios en vez de IMAP y contraseñas. Esto es lo que significa.',
-  coverAlt: 'Qué es un servidor de correo MCP: una explicación en lenguaje claro de MCPEmails',
+  coverAlt: 'Qué es un servidor de correo MCP: una explicación en lenguaje claro de MCP Emails',
   content: `Un servidor de correo MCP es un pequeño servicio que da a un agente de IA como Claude o Cursor acceso en vivo para leer y enviar correo de una bandeja de entrada real, usando el Model Context Protocol. En lugar de entregar a tu agente una contraseña de correo y una biblioteca de IMAP, le entrega una lista corta de acciones: lista mis mensajes, lee este, busca aquello, envía una respuesta. El agente llama a esas acciones como a cualquier otra herramienta, y el servidor hace el trabajo engorroso del proveedor entre bastidores.
 
 Si has oído por ahí el término "MCP" y quieres la versión sin jerga de lo que hace de verdad un servidor de correo *MCP*, aquí la tienes. Vamos a construirla pieza a pieza.
@@ -19,7 +19,7 @@ La parte que importa aquí: un servidor MCP no tiene por qué vivir en tu máqui
 
 Un servidor de correo MCP es un servidor MCP cuyas herramientas resultan ser sobre correo. Se sitúa entre tu agente de IA y un buzón real, y traduce las "intenciones del agente" en "operaciones del proveedor".
 
-Aquí va la versión concreta. Conectas una vez tu bandeja de Gmail, Outlook, iCloud, Fastmail o cualquier bandeja IMAP al servidor. El servidor expone entonces el correo como un puñado de herramientas. Cuando tu agente quiere lidiar con el correo, llama a una de esas herramientas, el servidor habla con la API de Gmail (o con Microsoft Graph, o con IMAP) en tu nombre, y devuelve un resultado limpio.
+Aquí va la versión concreta. Conectas una vez tu bandeja de Gmail, Outlook, iCloud, Fastmail o cualquier bandeja IMAP al servidor. El servidor expone entonces el correo como un puñado de herramientas. Cuando tu agente quiere lidiar con el correo, llama a una de esas herramientas, el servidor habla con tu proveedor por IMAP y SMTP (o por Microsoft Graph para Outlook) en tu nombre, y devuelve un resultado limpio.
 
 Una buena forma de imaginarlo: el servidor de correo MCP es un **traductor y un portero**. La parte de traductor convierte la petición sencilla del agente ("lee el último mensaje de mi casero") en la llamada de API correcta y específica del proveedor, y convierte la respuesta enredada (partes MIME, codificación, cabeceras de hilos) de vuelta en algo legible. La parte de portero decide qué tiene permitido hacer el agente —solo leer, o leer y enviar— y nunca lo deja acercarse a tu contraseña real.
 
@@ -51,7 +51,7 @@ La forma ingenua de dar a un agente acceso al correo es soltar la contraseña de
 
 Los verbos son distintos. Cuando tu agente se conecta a MCP Emails, recibe un token acotado exactamente a lo que aprobaste: \`read:email\`, \`send:email\`, o ambos. El agente sostiene una capacidad, no una credencial. Si solo concediste acceso de lectura, no hay verbo de envío en su menú: físicamente no puede enviarle correo a nadie.
 
-¿Y el secreto en sí? Se queda en el servidor, cifrado. MCP Emails almacena una sola cosa por bandeja: un token de OAuth o una contraseña de aplicación, cifrada con AES-256-GCM, descifrada solo dentro de una función aislada en el momento de una llamada. Tu correo en sí nunca se almacena. Cada llamada a una herramienta obtiene el mensaje en vivo de tu proveedor y lo descarta en cuanto el agente lo tiene. El cuerpo de tu correo no se queda en alguna base de datos esperando a filtrarse. Si quieres la versión más larga de por qué importa esa decisión de diseño, escribí sobre ello en [por qué importa no almacenar nunca tu correo](/blog/why-email-never-stored-matters).
+¿Y el secreto en sí? Se queda en el servidor, cifrado. MCP Emails almacena una sola cosa por bandeja: una contraseña de aplicación o un token de OAuth, cifrado con AES-256-GCM, descifrado en nuestros servidores solo cuando una petición lo necesita, y nunca enviado a tu agente. Tu correo en sí nunca se almacena. Cada llamada a una herramienta obtiene el mensaje en vivo de tu proveedor y lo descarta en cuanto el agente lo tiene. El cuerpo de tu correo no se queda en alguna base de datos esperando a filtrarse. Si quieres la versión más larga de por qué importa esa decisión de diseño, escribí sobre ello en [por qué importa no almacenar nunca tu correo](/blog/why-email-never-stored-matters).
 
 El modelo de capacidad-no-credencial es también la razón por la que puedes [revocar una conexión con un clic](/blog/oauth-vs-api-keys-ai-email-access) desde el panel. Revocar un verbo es instantáneo y quirúrgico. Rotar una contraseña filtrada no lo es.
 

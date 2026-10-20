@@ -224,7 +224,7 @@ jobs:
       - run: npm ci
       - name: Type check the card
         run: cd apps/mcp-app && npm run typecheck
-      - name: Run card tests (thirteen suites via harness/verify.mjs)
+      - name: Run card tests (harness/verify.mjs, DOM suites serial, the rest alongside)
         run: cd apps/mcp-app && npm test
       # The card ships through the generated file
       # supabase/functions/mcp-server/ui/review-card.html.ts, not through src.
@@ -291,6 +291,11 @@ jobs:
           # Match the version the functions are developed against; Deno's
           # minor releases have changed type-checking strictness before.
           deno-version: v2.x
+          # CACHE (2026-10-20). Keeps deno's global cache (the jsr:/npm:
+          # modules the type checks download) between runs, keyed by
+          # setup-deno on deno.lock, so a run without a lockfile change does
+          # not fetch them again.
+          cache: true
       # WHY --node-modules-dir=none ON BOTH DENO STEPS. The repo root has a
       # package.json, which puts deno into "bring your own node_modules" mode.
       # A fresh checkout here runs no `npm install`, so there is no
@@ -343,13 +348,12 @@ jobs:
       # The remaining functions with no other coverage (2026-10-15). Until now
       # nothing type-checked them, including system-notify, which carries the
       # email-mute logic (MUTED_EVENT_TYPES) and had no check at all. The first run of this step found a real error in
-      # gmail-token-refresh (TS2769 on crypto.subtle.importKey), fixed in the
+      # gmail-token-refresh (TS2769, since removed: nothing called it), fixed in the
       # same change. Same flag as above, for the same reason.
       - name: Type check the other edge functions
         run: >-
           deno check --node-modules-dir=none
           supabase/functions/system-notify/index.ts
-          supabase/functions/gmail-token-refresh/index.ts
           supabase/functions/outlook-token-refresh/index.ts
           supabase/functions/synthetic-monitor/index.ts
 

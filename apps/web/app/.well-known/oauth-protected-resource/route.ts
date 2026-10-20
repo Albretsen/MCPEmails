@@ -9,8 +9,9 @@
  * This is the first document in the discovery chain:
  *   401 on /api/mcp → fetch this document → fetch /.well-known/oauth-authorization-server
  *
- * No authentication required. Cached for 1 hour.
+ * No authentication required. Cached for 1 hour by clients, 1 day by the CDN.
  */
+import { DISCOVERY_CACHE_CONTROL } from '@/lib/oauth/metadata';
 import { canonicalResource, oauthIssuerBase } from '@/lib/oauth/resource';
 
 // CORS — discovery documents must be readable cross-origin by browser-based
@@ -50,7 +51,7 @@ export async function GET() {
     {
       headers: {
         ...CORS_HEADERS,
-        'Cache-Control': 'max-age=3600',
+        'Cache-Control': DISCOVERY_CACHE_CONTROL,
       },
     }
   );

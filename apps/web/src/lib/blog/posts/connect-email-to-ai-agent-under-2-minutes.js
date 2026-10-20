@@ -33,7 +33,7 @@ Before you touch a provider, decide how your AI agent will talk to MCP Emails. T
 2. Paste the endpoint: \`https://www.mcpemails.com/api/mcp\`
 3. Click **Connect**, sign in to your MCP Emails account, and approve the scopes you want (\`read:email\`, \`send:email\`, or both).
 
-That's the whole client side. Tokens are scoped to exactly what you approved, and you can revoke the connection from the dashboard in one click. If you want the trade-offs spelled out, see [OAuth vs API keys for AI email access](/blog/oauth-vs-api-keys-ai-email-access).
+That's the whole client side. Tokens are scoped to exactly what you approved, and you can revoke the connection from the dashboard in one click. If you want the trade-offs spelled out, see [OAuth vs API keys for AI email access](/blog/oauth-vs-api-keys-ai-email-access). For a client-specific walkthrough, see how to [connect Claude to your email](/blog/connect-claude-to-email) or [connect ChatGPT to your email](/blog/connect-chatgpt-to-email).
 
 **Path B — API-key client (Cline, JetBrains, cURL, custom agents).** For anything without built-in OAuth:
 
@@ -47,7 +47,7 @@ Now the inbox. Every provider below starts the same way: **Dashboard → Inboxes
 
 ## Connect each provider
 
-### Gmail (app password, or Sign in with Google)
+### Gmail (app password)
 
 Gmail connects with a Google app password by default, over IMAP.
 
@@ -56,7 +56,7 @@ Gmail connects with a Google app password by default, over IMAP.
 3. Enter your full Gmail address, paste the app password, and click **Connect inbox**.
 4. The connection is tested against Gmail and the inbox shows up connected. Done.
 
-Your normal Google password never works here and is never needed. If you would rather sign in with Google, open **Prefer to sign in with Google?** in the same window and click **Connect with Google**; Google shows an unverified-app warning first (click **Advanced**, then **Go to mcpemails.com**). That route uses the Gmail API, so searches can use Gmail's own operators (\`from:\`, \`is:unread\`, \`after:\`) and Claude works with real labels. The app-password route uses IMAP text search, shows labels as folders, and can delete permanently. The [Gmail walkthrough](/blog/connect-gmail-to-claude) has the details.
+Your normal Google password never works here and is never needed. Over IMAP, Gmail labels show up as folders, and searches use MCP Emails' structured fields (sender, subject, date, unread and so on) rather than Gmail's own search operators. You can revoke the app password anytime from the same Google page. If you are on Google Workspace and the app passwords page is missing, your admin may have switched app passwords off for the domain. The [Gmail walkthrough](/blog/connect-gmail-to-claude) has the details.
 
 ### Outlook / Microsoft 365 (Sign in with Microsoft)
 
@@ -123,11 +123,11 @@ One honest caveat worth setting up front: MCP Emails is poll-based. There are no
 
 ## Why this is safe to do quickly
 
-Speed here doesn't come from cutting corners on security. Email is fetched live on every call and never stored — bodies, subjects, and attachments are handed to the agent and dropped immediately. The only thing persisted per inbox is your OAuth token or app password, encrypted with AES-256-GCM, and decrypted only inside an isolated function at call time. Sending always goes through your own provider, so your domain reputation stays yours. If you want the architecture in detail, read [why "email is never stored" actually matters](/blog/why-email-never-stored-matters).
+Speed here doesn't come from cutting corners on security. Email is fetched live on every call and never stored: bodies, subjects, and attachments are handed to the agent and dropped immediately. The only thing persisted per inbox is your OAuth token or app password, encrypted at rest with AES-256-GCM and decrypted on our servers only when a request needs it. It is never sent to your agent. Sending always goes through your own provider, so your domain reputation stays yours. If you want the architecture in detail, read [why "email is never stored" actually matters](/blog/why-email-never-stored-matters).
 
 ## Wrap-up
 
-That's the whole thing: one inbox connection, one endpoint, a handful of tools. The Free tier connects one inbox and needs no card; Personal is $9/month for up to three inboxes, and Pro connects every mailbox you own. See [pricing](/pricing). Ready to try it? [Start free](/signup), connect your inbox, and paste the endpoint into your agent.`,
+That's the whole thing: one inbox connection, one endpoint, a handful of tools. The Free tier connects one inbox and needs no card; Personal is $9/month for up to three inboxes, and Pro connects up to 10. See [pricing](/pricing). Ready to try it? [Start free](/signup), connect your inbox, and paste the endpoint into your agent.`,
     es: `Conectas tu correo a un agente de IA en dos pasos: conecta el buzón en el panel de MCP Emails y luego apunta tu agente a una única URL de endpoint. Con un cliente compatible con OAuth como claude.ai, eso es todo. Sin código, sin SDK, y tu correo no se almacena en ningún sitio: cada lectura y cada envío llega a tu proveedor en tiempo real y se descarta en cuanto el agente lo recibe.
 
 Esta es la guía rápida. Elige tu proveedor más abajo, sigue los cuatro o cinco pasos y tendrás a Claude (o Cursor, o un script propio) leyendo y enviando correo real en aproximadamente el tiempo que tardas en leer este párrafo dos veces. Si prefieres la versión más a fondo de "qué es esto y si es seguro", empieza por la [guía completa para dar acceso al correo a tu agente de IA](/blog/how-to-give-your-ai-agent-email-access).
@@ -142,7 +142,7 @@ Antes de tocar un proveedor, decide cómo hablará tu agente de IA con MCP Email
 2. Pega el endpoint: \`https://www.mcpemails.com/api/mcp\`
 3. Pulsa **Conectar**, inicia sesión en tu cuenta de MCP Emails y aprueba los permisos que quieras (\`read:email\`, \`send:email\`, o ambos).
 
-Eso es todo en el lado del cliente. Los tokens se limitan exactamente a lo que aprobaste, y puedes revocar la conexión desde el panel con un clic. Si quieres ver los pros y contras al detalle, lee [OAuth frente a claves de API para el acceso al correo con IA](/blog/oauth-vs-api-keys-ai-email-access).
+Eso es todo en el lado del cliente. Los tokens se limitan exactamente a lo que aprobaste, y puedes revocar la conexión desde el panel con un clic. Si quieres ver los pros y contras al detalle, lee [OAuth frente a claves de API para el acceso al correo con IA](/blog/oauth-vs-api-keys-ai-email-access). Si quieres una guía para un cliente concreto, mira cómo [conectar Claude a tu correo](/blog/connect-claude-to-email) o [conectar ChatGPT a tu correo](/blog/connect-chatgpt-to-email).
 
 **Camino B — cliente con clave de API (Cline, JetBrains, cURL, agentes propios).** Para cualquier cosa sin OAuth integrado:
 
@@ -156,7 +156,7 @@ Ahora el buzón. Todos los proveedores de abajo empiezan igual: **Panel → Inbo
 
 ## Conecta cada proveedor
 
-### Gmail (contraseña de aplicación, o Iniciar sesión con Google)
+### Gmail (contraseña de aplicación)
 
 Gmail se conecta de forma predeterminada con una contraseña de aplicación de Google, por IMAP.
 
@@ -165,7 +165,7 @@ Gmail se conecta de forma predeterminada con una contraseña de aplicación de G
 3. Introduce tu dirección de Gmail completa, pega la contraseña de aplicación y haz clic en **Conectar bandeja de entrada**.
 4. La conexión se prueba con Gmail y el buzón aparece conectado. Listo.
 
-Tu contraseña normal de Google no funciona aquí y nunca se necesita. Si prefieres iniciar sesión con Google, abre **¿Prefieres iniciar sesión con Google?** en la misma ventana y haz clic en **Conectar con Google**; antes, Google muestra una advertencia de aplicación no verificada (haz clic en **Advanced** y luego en **Go to mcpemails.com**). Esa vía usa la API de Gmail, así que las búsquedas pueden usar los operadores propios de Gmail (\`from:\`, \`is:unread\`, \`after:\`) y Claude trabaja con etiquetas reales. La vía de la contraseña de aplicación usa la búsqueda de texto de IMAP, muestra las etiquetas como carpetas y puede eliminar de forma permanente. La [guía de Gmail](/blog/connect-gmail-to-claude) tiene los detalles.
+Tu contraseña normal de Google no funciona aquí y nunca se necesita. Por IMAP, las etiquetas de Gmail aparecen como carpetas, y las búsquedas usan los campos estructurados de MCP Emails (remitente, asunto, fecha, no leídos, etc.) en lugar de los operadores de búsqueda de Gmail. Puedes revocar la contraseña de aplicación cuando quieras desde la misma página de Google. Si usas Google Workspace y no aparece la página de contraseñas de aplicación, puede que tu administrador las haya desactivado para el dominio. La [guía de Gmail](/blog/connect-gmail-to-claude) tiene los detalles.
 
 ### Outlook / Microsoft 365 (Iniciar sesión con Microsoft)
 
@@ -232,7 +232,7 @@ Una advertencia honesta que conviene dejar clara desde el principio: MCP Emails 
 
 ## Por qué es seguro hacerlo rápido
 
-La rapidez aquí no viene de recortar en seguridad. El correo se obtiene en tiempo real en cada llamada y nunca se almacena: los cuerpos, asuntos y adjuntos se entregan al agente y se descartan de inmediato. Lo único que se conserva por buzón es tu token de OAuth o contraseña de app, cifrado con AES-256-GCM y descifrado solo dentro de una función aislada en el momento de la llamada. El envío siempre pasa por tu propio proveedor, así que la reputación de tu dominio sigue siendo tuya. Si quieres la arquitectura al detalle, lee [por qué importa de verdad que "el correo nunca se almacene"](/blog/why-email-never-stored-matters).
+La rapidez aquí no viene de recortar en seguridad. El correo se obtiene en tiempo real en cada llamada y nunca se almacena: los cuerpos, asuntos y adjuntos se entregan al agente y se descartan de inmediato. Lo único que se conserva por buzón es tu token de OAuth o contraseña de app, cifrado en reposo con AES-256-GCM y descifrado en nuestros servidores solo cuando una solicitud lo necesita. Nunca se envía a tu agente. El envío siempre pasa por tu propio proveedor, así que la reputación de tu dominio sigue siendo tuya. Si quieres la arquitectura al detalle, lee [por qué importa de verdad que "el correo nunca se almacene"](/blog/why-email-never-stored-matters).
 
 ## Para terminar
 

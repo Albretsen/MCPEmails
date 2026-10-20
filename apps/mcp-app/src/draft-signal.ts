@@ -45,6 +45,21 @@
 // A claim never answers a claim and never causes a read, so it cannot loop
 // either. A frame running an older bundle reads a claim as a hint: one read.
 //
+// ── AT THE PRESS, NOT AT THE ANSWER (re-test 2026-10-17) ──────────────────
+// The claim used to go out when the save's answer landed, and a save is one
+// to five seconds of provider round trip. In that window the newer card kept
+// Send on over content the save was about to make stale (live: folded at
+// ~3.5 s on Outlook, ~5 s on Gmail). So Save now sends a PENDING claim the
+// moment it is pressed, and every other card for the draft folds on it. Then:
+//   * the save stored: the usual claim follows, with the new id;
+//   * the save did not store: a RELEASE from the same frame, and a card that
+//     a pending claim from THAT frame folded (and nothing since) unfolds,
+//     since what it holds is still the current draft;
+//   * the answer was lost: App.tsx#reconcile reads, then claims or releases.
+// A frame running an older bundle folds on the pending claim exactly as on a
+// claim, and reads a release as a hint (one read, which it skips while
+// folded); it unfolds through "Open here" as before.
+//
 // ── WHY THIS CANNOT LOOP ───────────────────────────────────────────────────
 // A hint is sent ONLY when a card accepts a fresh pushed result, i.e. a tool
 // call the assistant made (store.ts#wireResultHandlers). A replayed result, a
@@ -70,8 +85,13 @@ export interface DraftSignal {
   /** Digest of the inbox id. */
   inbox: string | null;
   revision: number | null;
-  /** "hint" (a card mounted) or "claim" (a card took the draft over). */
-  kind: "hint" | "claim";
+  /**
+   * "hint" (a card mounted), "claim" (a card took the draft over) or
+   * "release" (that card's pending claim did not come to anything).
+   */
+  kind: "hint" | "claim" | "release";
+  /** On a claim: sent at the press of Save, before the save has answered. */
+  pending: boolean;
   /** The revision the sending card was mounted with, on a claim. */
   mounted: number | null;
 }
@@ -123,7 +143,8 @@ function parse(raw: unknown): DraftSignal | null {
     ids,
     inbox: typeof o.inbox === "string" ? o.inbox : null,
     revision: typeof o.revision === "number" ? o.revision : null,
-    kind: o.kind === "claim" ? "claim" : "hint",
+    kind: o.kind === "claim" ? "claim" : o.kind === "release" ? "release" : "hint",
+    pending: o.pending === true,
     mounted: typeof o.mounted === "number" ? o.mounted : null,
   };
 }
@@ -159,12 +180,17 @@ export function claimDraft(d: {
   revision?: number | null;
   mounted?: number | null;
   inbox_id?: string | null;
+  /** Sent at the press of Save, before its answer (see "AT THE PRESS"). */
+  pending?: boolean;
+  /** Withdraw this frame's pending claim: the save did not store. */
+  release?: boolean;
 }): void {
   const ids = [...new Set(d.ids.map((id) => signalTag(id)).filter((x): x is string => !!x))].slice(-4);
   if (ids.length === 0) return;
   post({
     t: SIGNAL_TYPE,
-    kind: "claim",
+    kind: d.release ? "release" : "claim",
+    ...(d.pending && !d.release ? { pending: true } : {}),
     from: self,
     ids,
     inbox: signalTag(d.inbox_id ?? null),

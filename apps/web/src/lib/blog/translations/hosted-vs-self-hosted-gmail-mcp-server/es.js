@@ -23,7 +23,7 @@ El código se ejecuta en tu propio hardware. Ningún tercero se interpone jamás
 
 ### Es gratis en dólares
 
-Sin suscripción. La propia API de Gmail es gratuita en cualquier volumen que vaya a alcanzar un agente. Si tu tiempo es barato en relación con 9 $/mes (o 15 $/mes cuando necesites bandejas ilimitadas), las cuentas favorecen montártelo tú mismo.
+Sin suscripción. La propia API de Gmail es gratuita en cualquier volumen que vaya a alcanzar un agente. Si tu tiempo es barato en relación con 9 $/mes (o 15 $/mes cuando necesites más de tres bandejas), las cuentas favorecen montártelo tú mismo.
 
 ### Puedes adaptarlo a cualquier cosa
 
@@ -61,11 +61,11 @@ Un servidor MCP alojado invierte el trato. Renuncias a ejecutar el código; recu
 
 ### La configuración son minutos, no una tarde
 
-Te registras, vas a **Dashboard → Inboxes → Connect Inbox**, eliges Gmail y pegas una contraseña de aplicación de Google, o eliges Iniciar sesión con Google. Sin proyecto de Cloud propio, sin pantalla de consentimiento que configurar, sin cola de verificación. Luego conectas tu agente. Para [claude.ai o Claude Desktop](/blog/connect-email-to-ai-agent-under-2-minutes) pegas la URL del endpoint MCP, inicias sesión y apruebas los scopes; sin API key. Para un cliente sin OAuth, como [Cursor, Cline o un script directo](/blog/email-for-ai-agents-cursor-cline-vscode), generas una API key con scopes en **Dashboard → API Keys** y la envías como bearer token.
+Te registras, vas a **Dashboard → Inboxes → Connect Inbox**, eliges Gmail y pegas una contraseña de aplicación de Google (Google te pide activar la verificación en dos pasos antes de crearla). Sin proyecto de Cloud propio, sin pantalla de consentimiento que configurar, sin cola de verificación. Luego conectas tu agente. Para [claude.ai o Claude Desktop](/blog/connect-email-to-ai-agent-under-2-minutes) pegas la URL del endpoint MCP, inicias sesión y apruebas los scopes; sin API key. Para un cliente sin OAuth, como [Cursor, Cline o un script directo](/blog/email-for-ai-agents-cursor-cline-vscode), generas una API key con scopes en **Dashboard → API Keys** y la envías como bearer token.
 
 ### Las credenciales están cifradas y el correo nunca se almacena
 
-La credencial del buzón (la contraseña de aplicación o el token OAuth) es lo único que se persiste por buzón, y está cifrado con AES-256-GCM en reposo. La clave vive como un secreto de entorno, separada de la base de datos, y el descifrado ocurre solo dentro de una Edge Function aislada en el momento de la llamada. El correo en sí no se almacena en absoluto: cada llamada \`email_read\` (ya sea para listar, leer o buscar) consulta Gmail en vivo, entrega el resultado a tu agente y lo descarta. Ese es el trabajo de cifrado de la sección de autoalojamiento, hecho y mantenido. [¿Es seguro dar acceso al correo a un agente de IA?](/blog/is-it-safe-to-give-ai-agent-email-access) recorre el modelo de seguridad completo.
+La credencial del buzón (la contraseña de aplicación o el token OAuth) es lo único que se persiste por buzón, y está cifrado con AES-256-GCM en reposo. La clave se guarda como secreto del servidor, separada de la base de datos, y la credencial se descifra en nuestros servidores solo cuando una petición la necesita. Nunca se envía a tu agente. El correo en sí no se almacena en absoluto: cada llamada \`email_read\` (ya sea para listar, leer o buscar) consulta Gmail en vivo, entrega el resultado a tu agente y lo descarta. Ese es el trabajo de cifrado de la sección de autoalojamiento, hecho y mantenido. [¿Es seguro dar acceso al correo a un agente de IA?](/blog/is-it-safe-to-give-ai-agent-email-access) recorre el modelo de seguridad completo.
 
 ### El multiproveedor viene gratis
 
@@ -73,15 +73,15 @@ El mismo endpoint y las mismas herramientas principales —\`inbox_list\`, \`ema
 
 ### El envío se queda en tu proveedor
 
-MCP Emails nunca retransmite correo desde su propio dominio. \`email_compose\` (con la acción \`send\`) sale a través de tu Gmail (o Microsoft Graph, o tu propio SMTP), así que la reputación de tu dominio y la entregabilidad siguen siendo tuyas. Es la misma propiedad que obtendrías autoalojando, sin tener que construirla.
+MCP Emails nunca retransmite correo desde su propio dominio. \`email_compose\` (con la acción \`send\`) sale a través de tu proveedor (Gmail u otro proveedor por SMTP, o Microsoft Graph para Outlook), así que la reputación de tu dominio y la entregabilidad siguen siendo tuyas. Es la misma propiedad que obtendrías autoalojando, sin tener que construirla.
 
 ### El coste honesto: confías en un proveedor
 
-Este es el verdadero compromiso, y no voy a maquillarlo. Con un servidor alojado, tu token cifrado se aloja en la base de datos de otra persona y las llamadas de tu agente pasan por el código de otra persona. Estás confiando en que el cifrado es real, en que el aislamiento se mantiene y en que la empresa no hace ninguna tontería. Para la mayoría de la gente esa confianza está bien depositada y ahorra muchísimo tiempo. Si tu modelo de amenazas lo prohíbe de plano, autoaloja: esa es la razón legítima para hacerlo.
+Este es el verdadero compromiso, y no voy a maquillarlo. Con un servidor alojado, tu token cifrado se aloja en la base de datos de otra persona y las llamadas de tu agente pasan por el código de otra persona. Estás confiando en que el cifrado es real, en que los controles de acceso se mantienen y en que la empresa no hace ninguna tontería. Para la mayoría de la gente esa confianza está bien depositada y ahorra muchísimo tiempo. Si tu modelo de amenazas lo prohíbe de plano, autoaloja: esa es la razón legítima para hacerlo.
 
 ## Cuánto cuesta en dólares
 
-MCP Emails es gratis para empezar: una bandeja conectada, API keys ilimitadas y sin tarjeta de crédito. El plan Gratis funciona a 60 peticiones por minuto con analíticas de 30 días y soporte de la comunidad. [Personal cuesta 9 $/mes](/pricing) (hasta tres bandejas conectadas, 120 req/min, analíticas de 30 días, soporte por correo), Pro cuesta 15 $/mes (bandejas conectadas ilimitadas, 300 req/min, analíticas de 90 días) y Team cuesta 79 $/mes (miembros con roles, un espacio de trabajo separado por cliente, SSO y registros de auditoría). El autoalojamiento son $0 de suscripción más lo que cuesten tu VPS y tus horas. Sé honesto sobre las horas.
+MCP Emails es gratis para empezar: una bandeja conectada, API keys ilimitadas y sin tarjeta de crédito. El plan Gratis funciona a 60 peticiones por minuto con analíticas de 30 días y soporte de la comunidad. [Personal cuesta 9 $/mes](/pricing) (hasta tres bandejas conectadas, 120 req/min, analíticas de 90 días, soporte por correo), Pro cuesta 15 $/mes (hasta 10 bandejas conectadas, 300 req/min, analíticas de 2 años) y Business cuesta 39 $/mes (10 buzones incluidos más 3 $/mes por cada uno extra, miembros con roles, un espacio de trabajo separado por cliente). El autoalojamiento son $0 de suscripción más lo que cuesten tu VPS y tus horas. Sé honesto sobre las horas.
 
 ## ¿Cuál deberías elegir?
 

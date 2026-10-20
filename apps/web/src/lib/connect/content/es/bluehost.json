@@ -20,7 +20,7 @@
     "titleLine1": "Servidor MCP para el correo de Bluehost:",
     "titleLine2": "todos los buzones de tu empresa, en Claude y ChatGPT",
     "lead": "¿Llevas info@, ventas@, soporte@ y facturas@ en tu propio dominio en Bluehost? Conecta cada buzón al mismo espacio de trabajo y tu agente de IA trabaja en todos ellos. Lee, busca, envía, responde, programa y organiza correo por IMAP, tanto si el buzón es una cuenta de cPanel Email como si es de Professional Email.",
-    "answer": "Claude no puede acceder por sí solo a un buzón de Bluehost. mcpemails es un servidor MCP alojado que lo conecta por IMAP estándar en el puerto 993, para que Claude, Cursor o cualquier cliente MCP pueda leer, buscar, enviar y organizar ese correo. Lo primero es averiguar cuál de los tres productos de correo de Bluehost tienes, porque cPanel Email responde en un servidor construido a partir de tu propio dominio mientras que Professional Email responde en los servidores de Titan, y los dos juegos de ajustes no son intercambiables. En ambos casos te autenticas con la contraseña definida en el buzón, nunca con la de tu portal de Bluehost. Cada dirección de la empresa, como info@ o ventas@, se conecta como un buzón propio: un buzón es gratis, Personal conecta tres y Pro todos los que llevas.",
+    "answer": "Claude no puede acceder por sí solo a un buzón de Bluehost. MCP Emails es un servidor MCP alojado que lo conecta por IMAP estándar en el puerto 993, para que Claude, Cursor o cualquier cliente MCP pueda leer, buscar, enviar y organizar ese correo. Lo primero es averiguar cuál de los tres productos de correo de Bluehost tienes, porque cPanel Email responde en un servidor construido a partir de tu propio dominio mientras que Professional Email responde en los servidores de Titan, y los dos juegos de ajustes no son intercambiables. En ambos casos te autenticas con la contraseña definida en el buzón, nunca con la de tu portal de Bluehost. Cada dirección de la empresa, como info@ o ventas@, se conecta como un buzón propio: un buzón es gratis, Personal conecta tres, Pro hasta 10 y Business todos los que necesites.",
     "meta0": "Primer buzón gratis, planes para el resto",
     "meta1": "Contraseña del buzón, no el acceso al portal",
     "meta2": "El correo se obtiene en vivo, nunca se almacena"
@@ -36,7 +36,7 @@
   },
   "setup": [
     {
-      "h": "Crea una cuenta gratis en mcpemails",
+      "h": "Crea una cuenta gratis en MCP Emails",
       "p": "Regístrate en mcpemails.com. El plan gratuito conecta una bandeja y no pide tarjeta."
     },
     {
@@ -67,13 +67,13 @@
     }
   ],
   "limits": [
-    "Un buzón de Google Workspace comprado a través de Bluehost es un buzón de Google. Conéctalo como Gmail, con una contraseña de aplicación de Google o con la opción de inicio de sesión con Google, no con credenciales de Bluehost.",
-    "mcpemails conecta buzones, no la cuenta de hosting. Los reenviadores, alias y filtros se quedan en el portal de Bluehost."
+    "Un buzón de Google Workspace comprado a través de Bluehost es un buzón de Google. Conéctalo como Gmail, con una contraseña de aplicación de Google, no con credenciales de Bluehost.",
+    "MCP Emails conecta buzones, no la cuenta de hosting. Los reenviadores, alias y filtros se quedan en el portal de Bluehost."
   ],
   "faq": [
     {
       "q": "¿Funciona Claude con el correo de Bluehost?",
-      "a": "No directamente. Claude no tiene un conector integrado para Bluehost. Conectar un servidor MCP como mcpemails al buzón por IMAP le da a Claude acceso para leer, buscar, enviar, responder, programar y organizar. Funciona tanto con cuentas de cPanel Email como de Professional Email, siempre que uses el servidor correcto para el producto que tienes."
+      "a": "No directamente. Claude no tiene un conector integrado para Bluehost. Conectar un servidor MCP como MCP Emails al buzón por IMAP le da a Claude acceso para leer, buscar, enviar, responder, programar y organizar. Funciona tanto con cuentas de cPanel Email como de Professional Email, siempre que uses el servidor correcto para el producto que tienes."
     },
     {
       "q": "¿Cuáles son los ajustes IMAP y SMTP de Bluehost?",
@@ -94,6 +94,6 @@
   ],
   "ctaBand": {
     "title": "Todos tus buzones de Bluehost en un solo agente",
-    "sub": "Conecta tu primer buzón de Bluehost gratis, sin tarjeta. Personal conecta tres y Pro todos los que llevas."
+    "sub": "Conecta tu primer buzón de Bluehost gratis, sin tarjeta. Personal conecta tres, Pro hasta 10 y Business todos los que necesites."
   }
 }

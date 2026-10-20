@@ -20,7 +20,7 @@
     "titleLine1": "MCP-server for Bluehost-e-post:",
     "titleLine2": "alle firmaets postkasser, i Claude og ChatGPT",
     "lead": "Har du post@, salg@, support@ og faktura@ på eget domene hos Bluehost? Koble hver postkasse til ett arbeidsområde, så jobber AI-agenten din i alle sammen. Les, søk, send, svar, planlegg og organiser e-post over IMAP, enten postkassen er en cPanel Email-konto eller en Professional Email-postkasse.",
-    "answer": "Claude kan ikke nå en Bluehost-postkasse på egen hånd. mcpemails er en hostet MCP-server som kobler den til over vanlig IMAP på port 993, slik at Claude, Cursor eller enhver MCP-klient kan lese, søke i, sende og organisere den e-posten. Det første du må finne ut, er hvilket av Bluehosts tre e-postprodukter du har, fordi cPanel Email svarer på en vert bygget fra ditt eget domene, mens Professional Email svarer på Titans servere, og de to settene med innstillinger kan ikke byttes om. Uansett autentiserer du med passordet som er satt på postkassen, aldri med passordet til Bluehost-portalen. Hver firmaadresse, som post@ eller salg@, kobles til som sin egen postkasse: én postkasse er gratis, Personal kobler til tre og Pro alle postkassene du har.",
+    "answer": "Claude kan ikke nå en Bluehost-postkasse på egen hånd. MCP Emails er en hostet MCP-server som kobler den til over vanlig IMAP på port 993, slik at Claude, Cursor eller enhver MCP-klient kan lese, søke i, sende og organisere den e-posten. Det første du må finne ut, er hvilket av Bluehosts tre e-postprodukter du har, fordi cPanel Email svarer på en vert bygget fra ditt eget domene, mens Professional Email svarer på Titans servere, og de to settene med innstillinger kan ikke byttes om. Uansett autentiserer du med passordet som er satt på postkassen, aldri med passordet til Bluehost-portalen. Hver firmaadresse, som post@ eller salg@, kobles til som sin egen postkasse: én postkasse er gratis, Personal kobler til tre, Pro opptil 10 og Business så mange du trenger.",
     "meta0": "Første postkasse gratis, planer for resten",
     "meta1": "Postkassepassord, ikke portalpålogging",
     "meta2": "E-post hentes direkte, lagres aldri"
@@ -36,7 +36,7 @@
   },
   "setup": [
     {
-      "h": "Opprett en gratis mcpemails-konto",
+      "h": "Opprett en gratis MCP Emails-konto",
       "p": "Registrer deg på mcpemails.com. Gratisplanen kobler til én innboks og krever ikke kort."
     },
     {
@@ -67,13 +67,13 @@
     }
   ],
   "limits": [
-    "En Google Workspace-postkasse kjøpt gjennom Bluehost er en Google-postkasse. Koble den til som Gmail, med et Google-app-passord eller innlogging med Google, ikke med Bluehost-påloggingsopplysninger.",
-    "mcpemails kobler til postkasser, ikke webhotellkontoen. Videresendinger, alias og filtre forblir i Bluehost-portalen."
+    "En Google Workspace-postkasse kjøpt gjennom Bluehost er en Google-postkasse. Koble den til som Gmail, med et Google-app-passord, ikke med Bluehost-påloggingsopplysninger.",
+    "MCP Emails kobler til postkasser, ikke webhotellkontoen. Videresendinger, alias og filtre forblir i Bluehost-portalen."
   ],
   "faq": [
     {
       "q": "Fungerer Claude med Bluehost-e-post?",
-      "a": "Ikke direkte. Claude har ingen innebygd Bluehost-kobling. Kobler du en MCP-server som mcpemails til postkassen over IMAP, får Claude tilgang til å lese, søke, sende, svare, planlegge og organisere i den. Dette fungerer både for cPanel Email-kontoer og Professional Email-kontoer, så lenge du bruker riktig vert for produktet du har."
+      "a": "Ikke direkte. Claude har ingen innebygd Bluehost-kobling. Kobler du en MCP-server som MCP Emails til postkassen over IMAP, får Claude tilgang til å lese, søke, sende, svare, planlegge og organisere i den. Dette fungerer både for cPanel Email-kontoer og Professional Email-kontoer, så lenge du bruker riktig vert for produktet du har."
     },
     {
       "q": "Hva er IMAP- og SMTP-innstillingene for Bluehost?",
@@ -94,6 +94,6 @@
   ],
   "ctaBand": {
     "title": "Samle alle Bluehost-postkassene på én agent",
-    "sub": "Koble til den første Bluehost-postkassen gratis, uten kort. Personal kobler til tre, Pro alle postkassene du har."
+    "sub": "Koble til den første Bluehost-postkassen gratis, uten kort. Personal kobler til tre, Pro opptil 10 og Business så mange du trenger."
   }
 }

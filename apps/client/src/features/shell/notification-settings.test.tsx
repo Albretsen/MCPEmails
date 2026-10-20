@@ -41,19 +41,32 @@ function fakeController(initial: Partial<PushState> = {}) {
     saved: [] as Array<Array<Partial<InboxPushPreference> & { inbox_id: string }>>,
     failSave: false,
     test: { devices: 1, sent: 1, failed: 0, expired: 0 },
+    /** What the server does with a forced re-registration: true = it takes it. */
+    syncRegisters: true,
+    enableThrows: false,
   };
+  // A device that is on is on the server too (unless a test says otherwise).
+  if (server.state.subscribed) server.prefs.subscribed_devices = 1;
   const controller: PushController = {
     state: async () => server.state,
     enable: async () => {
       calls.push("enable");
-      if (server.enableResult === "enabled") server.state = { availability: "ready", permission: "granted", subscribed: true };
+      if (server.enableThrows) throw new Error("storage exploded");
+      if (server.enableResult === "enabled") {
+        server.state = { availability: "ready", permission: "granted", subscribed: true };
+        server.prefs.subscribed_devices = 1;
+      }
       return server.enableResult;
     },
     disable: async () => {
       calls.push("disable");
       server.state = { ...server.state, subscribed: false };
+      server.prefs.subscribed_devices = 0;
     },
-    sync: async () => {},
+    sync: async (options) => {
+      calls.push(options?.force ? "sync:force" : "sync");
+      if (server.syncRegisters) server.prefs.subscribed_devices = Math.max(1, server.prefs.subscribed_devices);
+    },
     signOut: async () => {},
     preferences: async () => {
       calls.push("preferences");
@@ -218,6 +231,46 @@ describe("Notifications settings", () => {
     await click(button("Turn on notifications"));
     expect(toast()).toContain("Notifications are blocked");
     expect(host.textContent).toContain("Notifications are off");
+  });
+
+  it("opening it while this device is on re-registers it, so the server matches the switch", async () => {
+    const f = fakeController({ permission: "granted", subscribed: true });
+    f.server.prefs.subscribed_devices = 0; // the server dropped the row (push service said "gone")
+    await render(f.controller);
+    expect(f.calls.slice(0, 2)).toEqual(["sync:force", "preferences"]);
+    expect(host.textContent).toContain("Notifications are on");
+    expect(host.textContent).not.toContain("could not be registered");
+  });
+
+  it("opening it while this device is off does not touch the subscription", async () => {
+    const f = fakeController();
+    await render(f.controller);
+    expect(f.calls).not.toContain("sync:force");
+  });
+
+  it("this browser says on but the server refuses the device: it says so instead of claiming all is well", async () => {
+    const f = fakeController({ permission: "granted", subscribed: true });
+    f.server.prefs.subscribed_devices = 0;
+    f.server.syncRegisters = false;
+    await render(f.controller);
+    expect(host.querySelector('[role="alert"]')?.textContent).toContain("could not be registered");
+  });
+
+  it("the server has no VAPID keys: Turn on cannot be pressed (it would only fail)", async () => {
+    const f = fakeController();
+    f.server.prefs.configured = false;
+    await render(f.controller);
+    expect(host.textContent).toContain("not set up to send notifications");
+    expect(button("Turn on notifications")!.disabled).toBe(true);
+  });
+
+  it("an error inside Turn on is reported and the button is usable again", async () => {
+    const f = fakeController();
+    f.server.enableThrows = true;
+    await render(f.controller);
+    await click(button("Turn on notifications"));
+    expect(toast()).toContain("could not be turned on");
+    expect(button("Turn on notifications")!.disabled).toBe(false);
   });
 
   it("without a push controller (the demo) it says so and offers nothing", async () => {

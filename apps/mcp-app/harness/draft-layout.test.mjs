@@ -22,6 +22,9 @@
 //   6. An empty subject asks "No subject. Send anyway?" beside Subject, and a
 //      second, deliberate press on the same Send sends.
 //   7. Narrow widths: the footer's links move into the ⋯ menu.
+//   8. Right-to-left text (re-test, 2026-10-17): each field and read-only text
+//      view picks its own direction, and the message box does it per line.
+//   9. A narrow header gives up the From address before the status.
 //
 // jsdom has no layout, so this pins the DOM and the CSS that make the
 // geometry hold; footer-geometry.mjs measures the same promises in real Chrome
@@ -359,9 +362,9 @@ async function main() {
   });
 
   const css = readFileSync(resolve(appRoot, "src/styles.css"), "utf8");
-  /** The body of the LAST rule with exactly this selector. */
+  /** The body of the LAST top-level rule with exactly this selector. */
   const rule = (selector) => {
-    const at = css.lastIndexOf(`${selector} {`);
+    const at = css.lastIndexOf(`\n${selector} {`);
     return at === -1 ? "" : css.slice(at, css.indexOf("}", at));
   };
 
@@ -682,6 +685,58 @@ async function main() {
     expect("a container query exists at all", at >= 0, true);
     expect("Save and Send stay one group that does not wrap", /flex:\s*none/.test(rule(".acts-r")), true);
     await c.done();
+  }
+
+  // ── 8. Right-to-left text (live re-test, 2026-10-17) ─────────────────────
+
+  group("8. every field and read-only text view picks its own direction");
+  {
+    const quoted =
+      "Hei, dette er en test.\nمرحبا، هذه رسالة اختبار.\n-- \nAsgeir" +
+      "\n\nOn Mon, 7 Sep 2026 17:32:55 +0000, Dana Example <dana@x.example> wrote:\n> مرحبا\n";
+    const line = quoted.slice(0, quoted.indexOf("On Mon")).split("\n").length - 1;
+    const c = await card({ subject: "رسالة اختبار", body: { text: quoted, quoted: { line } } });
+    const dir = (el) => el?.getAttribute("dir") ?? null;
+    expect("Subject", dir(c.root.querySelector("#d-subject")), "auto");
+    expect("Message", dir(c.root.querySelector("#d-body")), "auto");
+    expect("the signature preview", dir(c.root.querySelector(".row.sig:not(.quote-row) .sig-text")), "auto");
+    expect("the quote preview", dir(c.root.querySelector(".quote-row .sig-text")), "auto");
+    c.press(c.btn(/^Show quote$/));
+    await settle();
+    expect("the quote", dir(c.root.querySelector("#d-quoted")), "auto");
+    c.press(c.btn(/^Edit$/));
+    await settle();
+    expect("the signature box", dir(c.root.querySelector("#d-signature")), "auto");
+    await c.done();
+
+    const h = await card({ body: { text: "Hei.", html: "<p>Hei.</p><p>مرحبا.</p>" } });
+    h.press(h.btn(/^Show formatting$/));
+    await settle();
+    expect("the formatted view", dir(h.root.querySelector(".html-preview .body-html")), "auto");
+    await h.done();
+
+    // dir="auto" on a textarea reads the WHOLE box's first strong character;
+    // `plaintext` is what gives each line its own.
+    const block = (sel) => css.match(new RegExp(`(?:^|\\n)${sel.replace(/[.*+?^${}()|[\]\\]/g, "\\$&")} \\{[^}]*\\}`, "g")) ?? [];
+    expect("message lines one by one (CSS)", block(".textarea").some((r) => /unicode-bidi:\s*plaintext/.test(r)), true);
+    expect("quote lines one by one (CSS)", block(".quote-text").some((r) => /unicode-bidi:\s*plaintext/.test(r)), true);
+    expect("formatted paragraphs one by one (CSS)", /\.html-preview \.body-html[^{]*\{\s*unicode-bidi:\s*plaintext/.test(css), true);
+  }
+
+  group("9. narrow header: the From address gives way before the status");
+  {
+    // "Saved 15:15 by you" was cut to "Saved 15:15 …" at 300px while half the
+    // address still showed. footer-geometry.mjs measures it in Chrome.
+    expect("the address has no basis of its own (CSS)", /flex:\s*1 1 0/.test(rule(".ed-hdr > .hdr-l > .hdr-from")), true);
+    expect("and shrinks to nothing (CSS)", /min-width:\s*0/.test(rule(".ed-hdr > .hdr-l > .hdr-from")), true);
+    expect("the status is never cut with an ellipsis (CSS)", /ellipsis|nowrap/.test(rule(".hdr-status")), false);
+    expect("the status wraps under, not the controls (CSS)", /flex-wrap:\s*wrap/.test(rule(".ed-hdr > .hdr-l")), true);
+    expect("the header itself still does not wrap (CSS)", /flex-wrap:\s*nowrap/.test(rule(".hdr.ed-hdr")), true);
+    // Narrow, the status always has its own line, so a status that fits and
+    // one that does not leave the header the same height.
+    const narrow = css.slice(css.indexOf("@container card (max-width: 379px) {\n  .ed-main"));
+    expect("narrow: the status takes a line of its own (CSS)", /\.ed-main > \.ed-hdr \.hdr-status \{ order: 1; flex-basis: 100%; \}/.test(narrow.slice(0, 400)), true);
+    expect("narrow: the controls stay on the right (CSS)", /\.ed-main > \.ed-hdr > \.hdr-r \{ margin-left: auto; \}/.test(narrow.slice(0, 400)), true);
   }
 
   report();

@@ -1,0 +1,91 @@
+{
+  "_sources": [
+    "https://yandex.com/support/mail/mail-clients/others.html",
+    "https://yandex.com/support/id/authorization/app-passwords.html"
+  ],
+  "auth": {
+    "method": "app-password",
+    "label": "App-Passwort",
+    "helpUrl": "https://id.yandex.com/security/app-passwords",
+    "usernameForm": "Ihre vollständige Adresse mit Domain: name@yandex.com."
+  },
+  "meta": {
+    "title": "Yandex Mail mit Claude, Cursor und MCP-Clients verbinden",
+    "description": "Yandex Mail mit Claude, Cursor und jedem MCP-Client verbinden, per IMAP über imap.yandex.com:993. Geprüfte Einstellungen, App-Passwort erforderlich. Ein Postfach kostenlos."
+  },
+  "hero": {
+    "eyebrow": "Yandex Mail + KI",
+    "titleLine1": "Yandex Mail mit Claude verbinden,",
+    "titleLine2": "und mit Cursor, ChatGPT und jedem MCP-Client",
+    "lead": "Geben Sie Ihrem KI-Agenten ein echtes Yandex-Postfach. Lesen, suchen, senden, antworten, planen und sortieren Sie E-Mails per IMAP mit einem Yandex App-Passwort, in jedem MCP-Client statt nur in einem.",
+    "answer": "Claude erreicht Yandex Mail nicht von sich aus. MCP Emails ist ein gehosteter MCP-Server, der Yandex Mail per IMAP über imap.yandex.com auf Port 993 verbindet. Die Anmeldung erfolgt mit einem Yandex App-Passwort statt mit Ihrem Kontopasswort. So können Claude, Cursor oder jeder MCP-Client diese E-Mails lesen, suchen, senden und sortieren. Bei Yandex müssen Sie das Postfach auf Zugriff per App-Passwort umstellen, bevor sich irgendein E-Mail-Client anmelden kann. Die Einrichtung dauert ein paar Minuten, und ein Postfach ist kostenlos.",
+    "meta0": "1 Postfach dauerhaft kostenlos",
+    "meta1": "App-Passwort, nicht Ihr Kontopasswort",
+    "meta2": "E-Mails werden live abgerufen, nie gespeichert"
+  },
+  "method": {
+    "title": "So verbindet sich Yandex Mail: IMAP und ein App-Passwort",
+    "body": "Yandex stellt IMAP unter <code>imap.yandex.com</code> auf Port 993 über TLS bereit und SMTP unter <code>smtp.yandex.com</code> auf Port 465. Ihr normales Yandex-Passwort meldet keinen E-Mail-Client an: Sie müssen ein <b>App-Passwort</b> für E-Mail erstellen und den Zugriff per App-Passwort für das Postfach einschalten, bevor die Anmeldung klappt. Konten auf <code>yandex.ru</code> nutzen dieselben Hostnamen. Die Einstellungen unten gelten also unabhängig davon, auf welche Domain Ihre Adresse endet."
+  },
+  "setup": [
+    {
+      "h": "IMAP-Zugriff in Yandex Mail einschalten",
+      "p": "Öffnen Sie die Einstellungen von Yandex Mail, gehen Sie zum Bereich für E-Mail-Clients und aktivieren Sie den IMAP-Zugriff. Bis das eingeschaltet ist, lehnt Yandex Anmeldungen von Clients rundweg ab, und der Fehler sieht genauso aus wie ein falsches Passwort."
+    },
+    {
+      "h": "App-Passwort für E-Mail erstellen",
+      "p": "Öffnen Sie auf id.yandex.com den Sicherheitsbereich, dann die App-Passwörter, und erstellen Sie eines vom Typ E-Mail. Yandex zeigt das Passwort nur einmal an. Kopieren Sie es sofort; Ihr normales Kontopasswort funktioniert hier nicht."
+    },
+    {
+      "h": "In MCP Emails einfügen",
+      "p": "Wählen Sie IMAP / SMTP, geben Sie Ihre vollständige Yandex-Adresse ein und fügen Sie das App-Passwort ein. Die oben genannten Hosts sind bereits eingetragen."
+    },
+    {
+      "h": "MCP-URL in Ihre KI einfügen",
+      "p": "Fügen Sie https://mcpemails.com/api/mcp in Claude, Cursor oder ChatGPT ein, autorisieren Sie den Zugriff, und Ihr Agent hat das Postfach."
+    }
+  ],
+  "gotchas": [
+    {
+      "h": "Yandex meldet kein SASL-IR, und die meisten Clients setzen es voraus",
+      "p": "Dem IMAP-Server von Yandex fehlt die Fähigkeit SASL-IR. Er lehnt deshalb die einstufige Authentifizierung ab, bei der die Zugangsdaten gleich mit dem AUTHENTICATE-Befehl gesendet werden. Clients, die SASL-IR voraussetzen, bekommen ein nacktes BAD ohne Erklärung, das wie falsche Zugangsdaten wirkt. MCP Emails erkennt das BAD und wiederholt den Vorgang zweistufig, das ist für Sie also schon erledigt. Es erklärt aber, warum andere IMAP-Tools bei Yandex scheitern, obwohl sie überall sonst funktionieren."
+    },
+    {
+      "h": "Das Kontopasswort funktioniert nie, auch ohne 2FA",
+      "p": "Yandex verlangt für E-Mail-Clients ein App-Passwort, egal ob die Zwei-Faktor-Authentifizierung eingeschaltet ist. Die meisten fehlgeschlagenen Anmeldungen bei Yandex haben diesen Grund und keinen Tippfehler."
+    },
+    {
+      "h": "yandex.com und yandex.ru teilen sich dieselben Hosts",
+      "p": "Adressen auf beiden Domains, ebenso auf eigenen Domains bei Yandex 360, melden sich bei denselben Hosts imap.yandex.com und smtp.yandex.com an. Es gibt keinen regionalen Hostnamen nachzuschlagen."
+    }
+  ],
+  "limits": [
+    "Yandex meldet die Erweiterung SPECIAL-USE nicht, Ordner werden also über den Namen statt über ihre Rolle gefunden. Bei einem Postfach mit russisch umbenannten Ordnern muss der Ordner eventuell ausdrücklich gewählt werden."
+  ],
+  "faq": [
+    {
+      "q": "Funktioniert Claude mit Yandex Mail?",
+      "a": "Nicht direkt. Claude hat keinen eingebauten Yandex-Konnektor. Verbinden Sie einen MCP-Server wie MCP Emails per IMAP mit Ihrem Yandex-Postfach, kann Claude darin lesen, suchen, senden, antworten, planen und sortieren."
+    },
+    {
+      "q": "Wie lauten die IMAP- und SMTP-Einstellungen für Yandex?",
+      "a": "IMAP ist imap.yandex.com auf Port 993 mit implizitem TLS. SMTP ist smtp.yandex.com auf Port 465, ebenfalls mit implizitem TLS. Melden Sie sich mit Ihrer vollständigen E-Mail-Adresse und einem Yandex App-Passwort an. Beide Hosts wurden über eine Live-TLS-Verbindung an dem auf dieser Seite angegebenen Datum verifiziert."
+    },
+    {
+      "q": "Warum wird mein Yandex-Passwort abgelehnt?",
+      "a": "Zwei Gründe, in dieser Reihenfolge: Der IMAP-Zugriff ist in den Einstellungen von Yandex Mail im Bereich für E-Mail-Clients ausgeschaltet, oder Sie verwenden Ihr Kontopasswort statt eines App-Passworts. Yandex verlangt für E-Mail-Clients ein App-Passwort, unabhängig davon, ob Sie Zwei-Faktor-Authentifizierung nutzen."
+    },
+    {
+      "q": "Funktioniert das mit einer eigenen Domain bei Yandex 360?",
+      "a": "Ja. Yandex 360 Postfächer auf Ihrer eigenen Domain nutzen dieselben Hosts imap.yandex.com und smtp.yandex.com und brauchen ebenfalls ein App-Passwort."
+    },
+    {
+      "q": "Werden meine Yandex-E-Mails auf Ihren Servern gespeichert?",
+      "a": "Nein. Nachrichten werden bei jeder Anfrage live per IMAP von Yandex abgerufen und an Ihren KI-Client übergeben. Zugangsdaten werden verschlüsselt gespeichert; Nachrichteninhalte werden nicht aufbewahrt."
+    }
+  ],
+  "ctaBand": {
+    "title": "Geben Sie Ihrer KI ein Yandex-Postfach",
+    "sub": "Yandex Mail in wenigen Minuten verbinden. Ein Postfach dauerhaft kostenlos, ohne Kreditkarte."
+  }
+}

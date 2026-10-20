@@ -1,7 +1,7 @@
 const translation = {
   title: 'OAuth o claves de API para el acceso de la IA al email: ¿cuál usar?',
   description: 'OAuth o claves de API para el acceso de la IA al email: usa OAuth en claude.ai, Claude Desktop y Cursor; usa una clave de API con alcance en Cline, JetBrains y scripts.',
-  coverAlt: 'OAuth frente a claves de API para conectar agentes de IA al email — MCPEmails',
+  coverAlt: 'OAuth frente a claves de API para conectar agentes de IA al email — MCP Emails',
   content: `Cuando conectas un agente de IA a tu email a través de MCP Emails, te autenticas de una de dos formas: con OAuth o con una clave de API. La respuesta corta es OAuth si tu cliente lo admite (claude.ai, Claude Desktop, Cursor), y una clave de API con alcance si no lo admite (Cline, JetBrains, scripts, cURL). Ambos llegan al mismo endpoint y exponen las mismas herramientas. La diferencia está en quién gestiona el secreto y con qué facilidad puedes cortar el acceso.
 
 Esto no es un intercambio entre seguridad y comodidad en el que sacrificas una por la otra. Ambos caminos quedan limitados exactamente a \`read:email\`, \`send:email\`, o ambos, y los dos se pueden revocar desde el panel con un clic. La verdadera pregunta es cuál encaja con el cliente que realmente estás usando. Para tener la visión de conjunto de cómo se conecta todo esto, empieza por la guía principal, [cómo dar acceso al email a tu agente de IA](/blog/how-to-give-your-ai-agent-email-access).
@@ -76,7 +76,7 @@ Tu cliente es claude.ai, Claude Desktop o Cursor. Quieres cero secretos en tu co
 
 Tu cliente no admite OAuth: Cline, JetBrains, los ejecutores de herramientas al estilo de OpenAI o tu propio código. Estás haciendo scripts contra el endpoint con cURL o un programa pequeño. Necesitas una credencial estable que un proceso sin interfaz pueda usar sin que una persona tenga que hacer clic en una pantalla de consentimiento. Una clave con alcance encaja perfecto aquí, y hay un recorrido completo para los [clientes Cursor, Cline y VS Code](/blog/email-for-ai-agents-cursor-cline-vscode).
 
-Una cosa más que es cierta sin importar cuál elijas: los límites de uso. Cada clave de API está limitada a 100 requests/minute, 1,000/hour y 10,000/day, y cada workspace tiene un techo de ráfaga según el plan (60/min en [Free](/pricing), hasta 1,000/min en Team). Cuando alcanzas un límite, el servidor te devuelve un valor \`retry_after\` en segundos. Respétalo, y nunca reintentes a ciegas un envío de \`email_compose\`: enviarías el mensaje dos veces.
+Una cosa más que es cierta sin importar cuál elijas: los límites de uso. Cada clave de API está limitada a 100 requests/minute, 1,000/hour y 10,000/day, y cada workspace tiene un techo de ráfaga según el plan (60/min en [Free](/pricing), hasta 1,000/min en Business). Cuando alcanzas un límite, el servidor te devuelve un valor \`retry_after\` en segundos. Respétalo, y nunca reintentes a ciegas un envío de \`email_compose\`: enviarías el mensaje dos veces.
 
 ## En resumen
 

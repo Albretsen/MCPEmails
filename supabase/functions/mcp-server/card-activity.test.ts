@@ -29,6 +29,8 @@ import {
   closedBySendText,
   FakeCardActivityStore,
   noteTargetDraftId,
+  peekCardActivityNote,
+  peekTargetDraftId,
   postgrestCardActivityStore,
   recordCardActivity,
   resultDraftFacts,
@@ -132,6 +134,61 @@ Deno.test("each action is told once, only to its key and inbox, only while recen
   assertEquals(store.rows.find((r) => r.draftId === "old")?.reportedAt, null, "a day-old action is not news");
   assertEquals(await take(S, { lineId: null, draftIds: [] }), null, "a call with no draft claims nothing");
   assertEquals(store.rows.find((r) => r.draftId === "Drafts:115")?.reportedAt, null);
+});
+
+// ── A model's draft_read tells without claiming (re-test 2026-10-17) ──────
+//
+// Live in claude.ai the card's ui/update-model-context never reached the
+// model, and a draft_read result named the current subject but not what the
+// editor changed. The card reads with the same arguments, so a read must not
+// consume the note.
+
+Deno.test("a draft_read result carries its own draft's note without claiming it, so a later draft call still hears it", async () => {
+  const store = new FakeCardActivityStore();
+  await recordCardActivity(store, S, saved({ occurredAt: new Date(NOW - 60_000).toISOString() }), quiet);
+  await recordCardActivity(store, S, saved({ lineId: "line-2", draftId: "Drafts:115", fields: ["body"] }), quiet);
+
+  const peek = (scope = S, target = LINE) => peekCardActivityNote(store, scope, target, { subject: "Q3", nowMs: NOW, log: quiet });
+  const read1 = await peek();
+  assert(read1?.includes('this draft ("Q3")'), String(read1));
+  assert(read1?.includes("changing the subject and To."), String(read1));
+  assert(read1?.endsWith("This result shows its current subject, recipients and text."), String(read1));
+  assert(!/Drafts:|line-/.test(read1!), "no raw ids");
+  assert(!read1!.includes("the body"), "not the other draft's save");
+  assertEquals(store.rows.every((r) => r.reportedAt === null), true, "nothing marked reported");
+  assertEquals(await peek(), read1, "a second read (the card's own, say) does not take it away");
+  assertEquals(await peek({ ...S, apiKeyId: "key-2" }), null, "another key gets nothing");
+  assertEquals(await peek(S, { lineId: null, draftIds: [] }), null, "no draft, nothing");
+
+  const update = await takeCardActivityNote(store, S, LINE, { nowMs: NOW, log: quiet });
+  assert(update?.includes("draft_read returns its current subject"), String(update));
+  assertEquals(await peek(), null, "once claimed, a read no longer repeats it");
+});
+
+Deno.test("only draft_read with a draft_id peeks", () => {
+  assertEquals(peekTargetDraftId("draft_read", { draft_id: "Drafts:7" }), "Drafts:7");
+  assertEquals(peekTargetDraftId("draft_read", {}), null);
+  for (const name of ["draft_list", "draft_update", "draft_send", "draft_editor_save", "email_read"]) {
+    assertEquals(peekTargetDraftId(name, { draft_id: "Drafts:7" }), null, name);
+  }
+});
+
+Deno.test("the store's peek uses claim's filters as a select and marks nothing", async () => {
+  const { client, calls } = recordingClient();
+  await postgrestCardActivityStore(client, () => NOW).peek(S, { lineId: "line-1", draftIds: ["Drafts:7"] }, "2026-10-14T12:00:00Z");
+  assertEquals(calls.length, 2);
+  for (const call of calls) {
+    assertEquals(call.chain[0][0], "select");
+    assert(!call.chain.some(([m]) => m === "update" || m === "delete"), "no write");
+    const scoped = call.chain.filter(([m]) => m === "eq").map(([, a]) => a).slice(0, 3);
+    assertEquals(scoped, [["workspace_id", "ws-1"], ["inbox_id", "inbox-1"], ["api_key_id", "key-1"]]);
+    assert(call.chain.some(([m, a]) => m === "is" && a[0] === "reported_at" && a[1] === null), "unreported only");
+  }
+  const store = new FakeCardActivityStore();
+  store.failing = true;
+  const logged: string[] = [];
+  assertEquals(await peekCardActivityNote(store, S, LINE, { log: (e) => logged.push(e) }), null);
+  assertEquals(logged, ["draft_card_activity_peek_failed"]);
 });
 
 Deno.test("an event recorded before its draft had a line still matches on its id", async () => {
@@ -451,6 +508,10 @@ Deno.test("index.ts claims the note on the MCP tools/call path only, scoped to t
   assert(call.includes("resolveDraftLine(apiKey, logCtx.inboxId, noteDraftId)"), "resolved to its line");
   assert(call.includes("{ lineId: line.lineId, draftIds: [noteDraftId, line.draftId"), "claimed by line and ids");
   assertEquals(src.split("takeCardActivityNote(").length - 1, 1, "and nothing else claims");
+  // A model's draft_read tells the note without claiming it (re-test 2026-10-17).
+  assert(call.includes("peekTargetDraftId(dispatchName, rawArgs)"), "draft_read peeks");
+  assert(call.includes("peekCardActivityNote("), "through the non-claiming reader");
+  assertEquals(dispatch.includes("peekCardActivityNote("), false, "not for the web client either");
   // And the web client never reaches handleToolsCall: client-api's runtime
   // code calls the executors through dispatchExecutor only.
   const clientApi = new URL("../client-api/", import.meta.url);
@@ -490,6 +551,11 @@ Deno.test("index.ts claims the note on the MCP tools/call path only, scoped to t
   const deps = src.slice(src.indexOf("function draftEditorDepsFor("), src.indexOf("function draftEditorCallerFor("));
   assert(deps.includes("cardActivity: {"), "the editor's tools get the port");
 
+  // draft_list too: it is where a model goes to look a draft up (re-test 2026-10-17).
+  assert(
+    src.includes('"The user can edit, save and send a draft in the draft editor card without you " +'),
+    "the draft_list description carries the re-read guidance",
+  );
   // The `draft` tool tells the model the card can act without it, and to re-read.
   assert(
     src.includes(

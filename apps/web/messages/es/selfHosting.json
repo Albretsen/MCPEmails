@@ -20,7 +20,7 @@
   },
   "compare": {
     "title": "Auto-alojado frente a alojado",
-    "intro": "El servidor MCP completo y las 23 herramientas están en ambos. Auto-alojar cambia la comodidad gestionada por control total.",
+    "intro": "El servidor MCP completo y las 19 herramientas están en ambos. Auto-alojar cambia la comodidad gestionada por control total.",
     "thFeature": "",
     "thSelf": "Auto-alojado",
     "thHosted": "Alojado",
@@ -28,10 +28,10 @@
       {
         "feature": "Precio",
         "self": "Gratis, tú lo ejecutas",
-        "hosted": "Gratis, $9, $15 o $79"
+        "hosted": "Gratis, $9, $15 o $39"
       },
       {
-        "feature": "El servidor MCP y las 23 herramientas",
+        "feature": "El servidor MCP y las 19 herramientas",
         "self": "Sí",
         "hosted": "Sí"
       },
@@ -51,9 +51,9 @@
         "hosted": "Sí"
       },
       {
-        "feature": "Inicio de sesión con Gmail / Outlook (OAuth)",
+        "feature": "Inicio de sesión con Outlook (OAuth)",
         "self": "No incluido",
-        "hosted": "Gmail: sí; Outlook: sí (las cuentas profesionales pueden necesitar la aprobación del administrador de TI)"
+        "hosted": "Sí (las cuentas profesionales pueden necesitar la aprobación del administrador de TI)"
       },
       {
         "feature": "Panel web (conexión, claves, actividad)",
@@ -71,14 +71,14 @@
         "hosted": "Gestionado"
       },
       {
-        "feature": "Espacios de equipo, roles, SSO, registro de auditoría",
+        "feature": "Miembros, roles y varios espacios de trabajo",
         "self": "No incluido",
-        "hosted": "Plan Team"
+        "hosted": "Plan Business"
       },
       {
         "feature": "Soporte",
         "self": "Comunidad y GitHub",
-        "hosted": "Correo y prioridad"
+        "hosted": "Correo en los planes de pago"
       },
       {
         "feature": "Configuración",

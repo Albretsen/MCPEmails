@@ -13,7 +13,7 @@ const post = {
   featured: false,
   content: `Inbox zero has always had the same problem: getting there takes an hour you don't have, and you're back to fifty unread by tomorrow. An AI agent changes the math. Instead of you sorting one message at a time, you tell Claude what "handled" means and it works the whole inbox at once — triaging, archiving, labeling, and drafting replies against your *real* mail, live.
 
-This guide is the routine: a repeatable loop you can run every morning, the exact prompts that drive it, and the one rule that keeps it safe (nothing is ever stored). It assumes Claude can already see your inbox. If it can't yet, start with [how to connect Gmail to Claude](/blog/connect-gmail-to-claude) (or the [Outlook and Microsoft 365 guide](/blog/connect-outlook-microsoft-365-ai-agent-mcp)) — it takes about two minutes — then come back.
+This guide is the routine: a repeatable loop you can run every morning, the exact prompts that drive it, and the one rule that keeps it safe (nothing is ever stored). It assumes Claude can already see your inbox. If it can't yet, start with [how to connect Gmail to Claude](/blog/connect-gmail-to-claude) (or the [Outlook and Microsoft 365 guide](/blog/connect-outlook-microsoft-365-ai-agent-mcp)) — it takes about two minutes — then come back. On iCloud, Fastmail or another IMAP host, use the [Claude email connection guide](/blog/connect-claude-to-email) instead.
 
 ## Why "inbox zero" is finally realistic with AI
 

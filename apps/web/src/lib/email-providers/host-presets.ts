@@ -89,11 +89,88 @@ export interface MailHostPreset {
 }
 
 export const MAIL_HOST_PRESETS: readonly MailHostPreset[] = [
+  // IONOS runs two mail platforms, and the host names are not interchangeable
+  // labels for one server. The .com names (imap.ionos.com, mx00.ionos.com)
+  // resolve to 74.208.x and present a certificate issued to IONOS Inc. (US);
+  // the European names (.de, .co.uk, .fr, .es, .it, and the old 1und1/1and1
+  // ones) resolve to 212.227.x and present one issued to IONOS SE. Each
+  // country's help page documents its own names: ionos.de lists imap.ionos.de
+  // and smtp.ionos.de, ionos.co.uk lists imap.ionos.co.uk, ionos.com lists
+  // imap.ionos.com. This used to be one entry that answered imap.ionos.com for
+  // every one of them, so a German custom domain (MX mx00.ionos.de) was
+  // prefilled with the US host. In production every connected .de address on
+  // IONOS uses imap.ionos.de or imap.1und1.de, and none uses imap.ionos.com.
+  // `id` stays 'ionos' on the US entry so diagnostics keep their history.
+  {
+    id: 'ionos-de',
+    label: 'IONOS',
+    domains: ['ionos.de'],
+    hostSuffixes: ['.ionos.de', '.1und1.de'],
+    // The pre-rebrand MX name some older German 1&1 domains still publish.
+    mxSuffixes: ['.kundenserver.de'],
+    imapHost: 'imap.ionos.de',
+    imapPort: 993,
+    imapSecurity: 'tls',
+    smtpHost: 'smtp.ionos.de',
+    smtpPort: 465,
+    smtpSecurity: 'tls',
+  },
+  {
+    id: 'ionos-uk',
+    label: 'IONOS',
+    domains: ['ionos.co.uk'],
+    hostSuffixes: ['.ionos.co.uk', '.1and1.co.uk'],
+    imapHost: 'imap.ionos.co.uk',
+    imapPort: 993,
+    imapSecurity: 'tls',
+    smtpHost: 'smtp.ionos.co.uk',
+    smtpPort: 465,
+    smtpSecurity: 'tls',
+  },
+  {
+    id: 'ionos-fr',
+    label: 'IONOS',
+    domains: ['ionos.fr'],
+    hostSuffixes: ['.ionos.fr', '.1and1.fr'],
+    imapHost: 'imap.ionos.fr',
+    imapPort: 993,
+    imapSecurity: 'tls',
+    smtpHost: 'smtp.ionos.fr',
+    smtpPort: 465,
+    smtpSecurity: 'tls',
+  },
+  {
+    id: 'ionos-es',
+    label: 'IONOS',
+    domains: ['ionos.es'],
+    hostSuffixes: ['.ionos.es', '.1and1.es'],
+    imapHost: 'imap.ionos.es',
+    imapPort: 993,
+    imapSecurity: 'tls',
+    smtpHost: 'smtp.ionos.es',
+    smtpPort: 465,
+    smtpSecurity: 'tls',
+  },
+  {
+    id: 'ionos-it',
+    label: 'IONOS',
+    domains: ['ionos.it'],
+    hostSuffixes: ['.ionos.it', '.1and1.it'],
+    imapHost: 'imap.ionos.it',
+    imapPort: 993,
+    imapSecurity: 'tls',
+    smtpHost: 'smtp.ionos.it',
+    smtpPort: 465,
+    smtpSecurity: 'tls',
+  },
   {
     id: 'ionos',
     label: 'IONOS',
-    domains: ['ionos.com', 'ionos.de', 'ionos.co.uk', '1and1.com'],
-    hostSuffixes: ['imap.ionos.com', 'smtp.ionos.com', '.ionos.de', '.ionos.co.uk', '.1and1.com'],
+    domains: ['ionos.com', '1and1.com'],
+    hostSuffixes: ['imap.ionos.com', 'smtp.ionos.com', '.1and1.com'],
+    // mx00.ionos.com / mx01.ionos.com: a US custom domain. Not a hostSuffix,
+    // because a typed "something.ionos.com" host is not evidence of anything.
+    mxSuffixes: ['.ionos.com'],
     imapHost: 'imap.ionos.com',
     imapPort: 993,
     imapSecurity: 'tls',

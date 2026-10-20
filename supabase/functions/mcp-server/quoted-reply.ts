@@ -201,3 +201,138 @@ export function comparableQuote(text: string): string {
   return text.replace(/\r\n?/g, "\n").split("\n").map((l) => l.replace(/[ \t]+$/, "")).join("\n")
     .replace(/^\n+|\n+$/g, "");
 }
+
+/** "17:32", "5:32 PM", "17.32": a time of day, which every attribution's date has. */
+const TIME_OF_DAY = /\d{1,2}[:.]\d{2}(?:[:.]\d{2})?(?:\s?[AaPp]\.?[Mm]\.?)?/;
+
+/**
+ * Who a reply draft answers, read off the attribution line above its quoted
+ * original, or null when there is none this can read with confidence.
+ *
+ * WHY (live claude.ai test, 2026-10-19). The card's "Replying to Dana ·
+ * <subject>" line comes from `draft.in_reply_to`, which the server could fill
+ * on the reply path only, where it has just fetched the original. Every later
+ * envelope (an update, a read, a save) answered null, so the newer card a
+ * `draft{action:"update"}` mounts had no such line, while the older card above
+ * it still did. The stored draft does say who it answers: the attribution this
+ * server writes is `On <Date header>, <From header> wrote:`
+ * (index.ts#buildReplyTextBody), from the same From the reply path shows.
+ *
+ * Two shapes, tried in order:
+ *   - ours: `<date>, <from>`. The date holds commas ("Mon, 7 Sep 2026 ..."),
+ *     so the split is at the first ", " whose left side has a time of day.
+ *   - Gmail's: `<date> at <time> <from>`, no comma before the sender.
+ * Anything else (another client's wording, an Outlook header block) is null,
+ * and the card then says "Replying to an earlier message".
+ */
+export function attributionSender(text: string | null | undefined): string | null {
+  if (typeof text !== "string") return null;
+  const line = quotedTextLine(text);
+  if (line < 0) return null;
+  const lines = linesOf(text);
+  const first = lines[line] ?? "";
+  const joined = ATTRIBUTION.test(first)
+    ? first
+    : line + 1 < lines.length && ATTRIBUTION.test(`${first} ${lines[line + 1].trim()}`)
+    ? `${first} ${lines[line + 1].trim()}`
+    : null;
+  if (joined === null) return null;
+  const inner = joined
+    .replace(new RegExp(`^\\s*${ATTRIBUTION_LEAD}\\s+`, "i"), "")
+    .replace(new RegExp(`\\s*${ATTRIBUTION_VERB}\\s*:\\s*$`, "i"), "")
+    .trim();
+  const sane = (s: string) => {
+    const t = s.trim();
+    return t.length > 0 && t.length <= 300 ? t : null;
+  };
+  for (let at = inner.indexOf(", "); at !== -1; at = inner.indexOf(", ", at + 2)) {
+    if (TIME_OF_DAY.test(inner.slice(0, at))) return sane(inner.slice(at + 2));
+  }
+  const afterTime = new RegExp(`${TIME_OF_DAY.source}\\s+(.+)$`).exec(inner);
+  return afterTime ? sane(afterTime[1]) : null;
+}
+
+/**
+ * The body a `draft{action:"update"}` writes when it is given a new `body`,
+ * keeping a reply's quoted original (live re-test, 2026-10-17).
+ *
+ * WHY. A new body replaced the whole text, so an update to a reply dropped the
+ * thread it answers. Claude worked around it by sending the quote back itself,
+ * copied from a read, with the automatic signature turned off so it would not
+ * land under the quote. The card's own saves never had this problem: they hand
+ * the quote back byte for byte (mcp-app-drafts.ts#applyDraftPatch).
+ *
+ * Three cases, by what the caller's body holds:
+ *   - no quote of its own, and none of the stored one's opening line: the
+ *     stored quote follows the new (signed) text, and its stored HTML block
+ *     follows the HTML part when there is one. `quoteKept: true`.
+ *   - a quote of its own (Claude sent it back, as above): it is NOT doubled.
+ *     With no caller HTML, the signature goes above that quote rather than
+ *     under it, and the HTML part ends in the stored quote block when the two
+ *     quotes are the same text.
+ *   - the stored draft has no quote: exactly what it did before.
+ *
+ * `sign` is `applySignature` with the caller's options and `toHtml` is
+ * `plainTextBodyToHtml`, passed in so this module stays string work only.
+ */
+export function bodyKeepingQuote(
+  body: string,
+  htmlBody: string | undefined,
+  stored: { text?: string | null; html?: string | null } | null | undefined,
+  sign: (p: { textBody: string; htmlBody?: string }) => { textBody: string; htmlBody?: string },
+  toHtml: (text: string) => string,
+): { textBody: string; htmlBody?: string; quoteKept: boolean; signed: boolean } {
+  const storedSplit = splitQuotedText(stored?.text);
+  const storedHtml = typeof stored?.html === "string" ? stored.html : "";
+  const htmlAt = quotedHtmlStart(storedHtml);
+  const storedQuoteHtml = htmlAt >= 0 ? storedHtml.slice(htmlAt) : "";
+  const own = htmlBody === undefined ? splitQuotedText(body) : null;
+  const dropLeadingBlanks = (t: string) => t.replace(/^(?:[ \t]*\r?\n)+/, "");
+
+  let head = body;
+  let tail = "";
+  let tailHtml = "";
+  let quoteKept = false;
+  if (own) {
+    head = own.head;
+    tail = own.quote;
+    tailHtml = storedSplit && storedQuoteHtml &&
+        comparableQuote(own.quote) === comparableQuote(storedSplit.quote)
+      ? storedQuoteHtml
+      : toHtml(dropLeadingBlanks(own.quote));
+  } else if (storedSplit && !alreadyQuotes(body, htmlBody, storedSplit.quote)) {
+    // The stored text may be CRLF (a raw IMAP read); the caller's is not.
+    tail = body.includes("\r") ? storedSplit.quote : storedSplit.quote.replace(/\r\n/g, "\n");
+    tailHtml = storedQuoteHtml || toHtml(dropLeadingBlanks(tail));
+    quoteKept = true;
+  }
+
+  const signed = sign({ textBody: head, ...(htmlBody !== undefined ? { htmlBody } : {}) });
+  const wasSigned = signed.textBody !== head;
+  if (!tail) return { ...signed, quoteKept: false, signed: wasSigned };
+  // No HTML part (no signature, no caller HTML): one is written only to keep a
+  // client's own quote block, which plain text would flatten.
+  const html = signed.htmlBody !== undefined
+    ? `${signed.htmlBody}\n${tailHtml}`
+    : storedQuoteHtml && tailHtml === storedQuoteHtml
+    ? `${toHtml(signed.textBody)}\n${tailHtml}`
+    : undefined;
+  return {
+    textBody: signed.textBody + tail,
+    ...(html !== undefined ? { htmlBody: html } : {}),
+    quoteKept,
+    signed: wasSigned,
+  };
+}
+
+/**
+ * True when the caller's body already carries the stored quote in some form
+ * the line count above did not recognise (an HTML quote block, or the quote's
+ * opening line as a line of the text), so carrying it would double it.
+ */
+function alreadyQuotes(body: string, htmlBody: string | undefined, quote: string): boolean {
+  if (quotedHtmlStart(htmlBody) >= 0) return true;
+  const opening = linesOf(quote).map((l) => l.trim()).find((l) => l.length > 0);
+  if (!opening) return true;
+  return linesOf(body).some((l) => l.trim() === opening);
+}

@@ -16,7 +16,7 @@ export interface InboxLimitCheckResult {
    * 2026-08-19 repricing (solo is sold as Pro, pro as Team). Use `planName`.
    */
   plan: string;
-  /** Customer-facing plan name ("Free" | "Pro" | "Team"). Safe to render. */
+  /** Customer-facing plan name ("Free" | "Personal" | "Pro" | "Business"). Safe to render. */
   planName: string;
   /** Number of active (non-deleted) inboxes currently connected. */
   currentCount: number;
@@ -33,6 +33,12 @@ export interface InboxLimitCheckResult {
    * has an answer that is not a guess.
    */
   unlimitedInboxes: boolean;
+  /**
+   * True when a Pro workspace is uncapped by the 2026-10 cutover exemption
+   * (`workspaces.pro_unlimited_inboxes_exempt`) or because the Pro cap's kill
+   * switch is off. Returned for every plan; only `solo` acts on it.
+   */
+  proUnlimitedInboxes: boolean;
 }
 
 /**
@@ -72,9 +78,11 @@ export async function checkInboxLimit(
   const effectivePlan = effectivePlanResult.data?.[0];
   const plan = effectivePlan?.plan ?? 'free';
   const unlimitedInboxes = effectivePlan?.unlimited_inboxes ?? false;
+  const proUnlimitedInboxes = effectivePlan?.pro_unlimited_inboxes ?? false;
   const limits = resolvePlanLimits(plan, {
     compedScale: effectivePlan?.comped_scale ?? false,
     unlimitedInboxes,
+    proUnlimitedInboxes,
   });
   const currentCount = inboxCountResult.count ?? 0;
 
@@ -87,6 +95,7 @@ export async function checkInboxLimit(
       currentCount,
       maxInboxes: null,
       unlimitedInboxes,
+      proUnlimitedInboxes,
     };
   }
 
@@ -97,6 +106,7 @@ export async function checkInboxLimit(
     currentCount,
     maxInboxes: limits.maxInboxes,
     unlimitedInboxes,
+    proUnlimitedInboxes,
   };
 }
 
@@ -148,7 +158,7 @@ export interface InboxLimitErrorBody {
   error_code: 'inbox_limit_reached';
   /** Internal plan slug. For logs and support, not for display. */
   plan: string;
-  /** Customer-facing plan name: "Free" | "Pro" | "Team". */
+  /** Customer-facing plan name: "Free" | "Personal" | "Pro" | "Business". */
   plan_name: string;
   /** Inboxes already connected. */
   current_count: number;

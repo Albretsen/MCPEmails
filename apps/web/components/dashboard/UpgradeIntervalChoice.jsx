@@ -6,7 +6,9 @@ import {
   formatPriceCents,
 } from '@/lib/stripe/annual-offer';
 import { checkoutStartHref } from '@/lib/billing/upgrade-intent.mjs';
+import { useAppLocale } from '../i18n/LocaleCore';
 import { buysAnnual, sharedIntervalChoice } from '@/lib/billing/inbox-cap-offer.mjs';
+import { reportInboxPaywallClick } from '@/lib/analytics/use-inbox-paywall.mjs';
 
 /**
  * The monthly / annual choice on the in-product upsell surfaces.
@@ -317,13 +319,18 @@ export function PlanCheckoutLink({
   children,
 }) {
   const tr = useTranslations('dashboardChrome');
+  const { locale } = useAppLocale();
   const annual = buysAnnual(interval, annualOffer);
   const compact = size === 'sm';
   const height = compact ? 32 : 34;
   const secondary = variant === 'secondary';
   return (
     <a
-      href={checkoutStartHref(plan, annual)}
+      href={checkoutStartHref(plan, annual, locale)}
+      // Every PlanCheckoutLink sits on an inbox-cap offer, so a click is the
+      // offer's "clicked" event (paywall_clicked). The navigation is not held
+      // up: the beacon is keepalive and never awaited.
+      onClick={reportInboxPaywallClick}
       data-cap-offer-plan={plan}
       data-cap-offer-variant={variant}
       style={{

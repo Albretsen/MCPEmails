@@ -1,0 +1,24 @@
+{
+  "eyebrow": "ChatGPT",
+  "title": "Bruk {provider} i ChatGPT",
+  "sub": "ChatGPT når {provider} gjennom en egendefinert MCP-kobling. Det krever utviklermodus, som fungerer på chatgpt.com med Plus, Pro, Business, Enterprise og Edu.",
+  "steps": [
+    "Koble {provider} til MCP Emails med stegene over.",
+    "I ChatGPT åpner du Settings, Apps and Connectors, Advanced settings, og slår på utviklermodus.",
+    "I Apps and Connectors klikker du Create, limer inn <code>https://mcpemails.com/api/mcp</code> som koblings-URL, velger OAuth og logger inn hos MCP Emails.",
+    "I hver nye samtale klikker du <b>+</b>, velger utviklermodus og velger koblingen din."
+  ],
+  "docsLink": "Fullstendig oppsettguide for ChatGPT",
+  "blogLink": "Slik kobler du ChatGPT til e-posten din",
+  "faqQ": "Kan ChatGPT lese e-posten min i {provider}?",
+  "faqQMailName": "Kan ChatGPT lese e-posten min i {provider}?",
+  "faqA": "Ja, når {provider} er koblet til MCP Emails. Legg til en egendefinert MCP-kobling i ChatGPT med URL-en https://mcpemails.com/api/mcp og OAuth-innlogging. Egendefinerte koblinger krever utviklermodus, som fungerer på chatgpt.com med Plus, Pro, Business, Enterprise og Edu. ChatGPT får bare tilgangen du godkjenner, og e-posten hentes direkte og lagres aldri.",
+  "directorySub": "ChatGPT når {provider} gjennom Any Mailbox-appen fra MCP Emails.",
+  "directorySteps": [
+    "Koble {provider} til MCP Emails med stegene over.",
+    "Åpne Any Mailbox i appkatalogen i ChatGPT og klikk Connect.",
+    "Logg inn hos MCP Emails og godkjenn tilgangen du vil gi ChatGPT."
+  ],
+  "directoryLink": "Any Mailbox i appkatalogen i ChatGPT",
+  "directoryFaqA": "Ja, når {provider} er koblet til MCP Emails. Installer Any Mailbox fra appkatalogen i ChatGPT og logg inn hos MCP Emails. ChatGPT får bare tilgangen du godkjenner, og e-posten hentes direkte og lagres aldri."
+}

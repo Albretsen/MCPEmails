@@ -1,0 +1,113 @@
+{
+  "_sources": [
+    "https://support.microsoft.com/en-us/office/outlook-and-other-apps-are-unable-to-connect-to-outlook-com-when-using-basic-authentication-f4202ebf-89c6-4a8a-bec3-3d60cf7deaef",
+    "https://support.microsoft.com/en-us/accounts-billing/manage/how-to-get-and-use-app-passwords"
+  ],
+  "auth": {
+    "method": "oauth",
+    "label": "Mit Microsoft anmelden (OAuth 2.0)",
+    "helpUrl": "https://support.microsoft.com/en-us/office/outlook-and-other-apps-are-unable-to-connect-to-outlook-com-when-using-basic-authentication-f4202ebf-89c6-4a8a-bec3-3d60cf7deaef",
+    "usernameForm": "Sie müssen nichts eintippen. Sie melden sich auf Microsofts eigener Seite mit Ihrem Microsoft-Konto an und erteilen den Zugriff, hier wird also weder ein Passwort noch ein App-Passwort eingegeben. Die für Outlook.com veröffentlichten IMAP- und SMTP-Einstellungen gelten nicht: MCP Emails verbindet sich über Microsoft Graph.",
+    "status": "active"
+  },
+  "meta": {
+    "title": "Outlook mit Claude, ChatGPT und Cursor verbinden",
+    "description": "Outlook.com, Hotmail, Live oder MSN mit Claude, ChatGPT, Cursor oder jedem MCP-Client verbinden. Mit Microsoft anmelden, kein App-Passwort. Ein Postfach dauerhaft kostenlos."
+  },
+  "hero": {
+    "eyebrow": "Outlook.com + KI",
+    "titleLine1": "Outlook.com mit Claude verbinden,",
+    "titleLine2": "und mit ChatGPT, Cursor und jedem MCP-Client",
+    "lead": "Geben Sie Ihrem KI-Agenten Ihr Postfach bei Outlook.com, Hotmail, Live oder MSN. Melden Sie sich mit Microsoft an, erteilen Sie einmal den Zugriff, und lesen, suchen, senden, beantworten, planen und sortieren Sie E-Mails aus jedem MCP-Client mit einer URL.",
+    "meta0": "1 Postfach dauerhaft kostenlos",
+    "meta1": "Mit Microsoft anmelden, kein App-Passwort",
+    "meta2": "E-Mails werden live abgerufen, nie gespeichert",
+    "answer": "Ja. MCP Emails ist ein gehosteter MCP-Server, der ein privates Microsoft-Konto, also eine Adresse mit outlook.com, hotmail.com, live.com oder msn.com, über Microsoft Graph verbindet. Sie klicken auf Mit Microsoft verbinden, melden sich an und erteilen den Zugriff auf Microsofts Zustimmungsbildschirm, wo MCP Emails als verifizierter Herausgeber erscheint. Es gibt kein App-Passwort und keine IMAP-Einstellung, und bei einem privaten Konto ist kein Administrator beteiligt. Fügen Sie eine URL in Claude, ChatGPT, Cursor oder einen anderen MCP-Client ein, und der Agent kann Ihre E-Mails lesen, suchen, senden, beantworten, weiterleiten, planen und ablegen. Ein Postfach ist dauerhaft kostenlos."
+  },
+  "method": {
+    "title": "So verbindet sich Outlook.com: Anmeldung mit Microsoft",
+    "body": "Outlook.com verbindet sich über <b>Microsoft Graph</b> mit OAuth 2.0, nicht über IMAP. Sie melden sich auf Microsofts eigener Seite an und erteilen eine kurze Liste von Berechtigungen: E-Mails lesen und ändern (<b>Mail.ReadWrite</b>), E-Mails senden (<b>Mail.Send</b>), verbunden bleiben (<b>offline_access</b>) sowie Ihr Basisprofil und Ihre E-Mail-Adresse. Ihr Microsoft-Passwort geben Sie nur auf Microsofts Seite ein, es erreicht uns nie. Zum Trennen löschen Sie das Postfach in MCP Emails oder entfernen MCP Emails aus den Apps, die Zugriff auf Ihr Microsoft-Konto haben."
+  },
+  "setup": [
+    {
+      "h": "Kostenloses Konto erstellen",
+      "p": "Registrieren Sie sich bei MCP Emails, ohne Kreditkarte. Der Free-Tarif verbindet ein Postfach, dauerhaft."
+    },
+    {
+      "h": "Outlook wählen und mit Microsoft verbinden",
+      "p": "Öffnen Sie im Dashboard Postfach verbinden, wählen Sie Outlook und klicken Sie auf Mit Microsoft verbinden."
+    },
+    {
+      "h": "Anmelden und Zugriff erteilen",
+      "p": "Melden Sie sich auf der Microsoft-Seite mit Ihrer Adresse bei Outlook.com, Hotmail, Live oder MSN an und bestätigen Sie die Berechtigungen. Danach landen Sie wieder im Dashboard, und das Postfach ist verbunden."
+    },
+    {
+      "h": "MCP-URL in Ihre KI einfügen",
+      "p": "Fügen Sie https://mcpemails.com/api/mcp in Claude, Cursor oder ChatGPT ein, autorisieren Sie den Zugriff, und Ihr Agent hat das Postfach."
+    }
+  ],
+  "gotchas": [
+    {
+      "h": "App-Passwörter und IMAP-Passwörter funktionieren nicht, deshalb nutzen wir Microsoft Graph",
+      "p": "Microsoft hat die Standardauthentifizierung für private Konten in Apps anderer Hersteller zum 16. September 2024 beendet, und der IMAP-Dienst von Outlook.com bietet nur noch OAuth. Viele ältere Anleitungen raten weiterhin zu einem App-Passwort; damit lässt sich kein E-Mail-Zugriff mehr herstellen. MCP Emails nutzt für Outlook.com überhaupt kein IMAP: Es meldet sich mit Microsoft an und spricht mit Microsoft Graph. Es gibt also kein Passwort zu erstellen und keine Servereinstellung, die falsch sein könnte."
+    },
+    {
+      "h": "Adressen mit hotmail.com, live.com und msn.com sind derselbe Dienst",
+      "p": "Hinter all diesen Domains steckt ein einziger Microsoft-Maildienst für Privatkunden. Eine alte hotmail.com-Adresse verbindet sich genau wie eine gestern erstellte outlook.com-Adresse: Wählen Sie Outlook und melden Sie sich mit dieser Adresse an."
+    },
+    {
+      "h": "Ein Microsoft-Konto ohne Outlook-Postfach wird abgelehnt",
+      "p": "Hat das Microsoft-Konto, mit dem Sie sich anmelden, kein Exchange Online-Postfach, kann Microsoft Graph nichts öffnen. MCP Emails lehnt die Verbindung dann ab und sagt Ihnen das. Liegen die E-Mails dieser Adresse auf einem anderen Server, verbinden Sie sie stattdessen per IMAP."
+    },
+    {
+      "h": "Ein ganz neues Outlook.com-Konto darf eine Zeit lang eventuell nicht senden",
+      "p": "Microsofts Systeme gegen Missbrauch können ein neu erstelltes Outlook.com-Konto vorübergehend am Senden hindern, wenn es in kurzer Zeit viele Nachrichten verschickt. Das ist eine Einschränkung des Microsoft-Kontos, kein Verbindungsfehler. Ein erneutes Verbinden des Postfachs ändert daran nichts."
+    }
+  ],
+  "limits": [
+    "Outlook ordnet E-Mails in Ordnern, auch in verschachtelten. Die Label-Tools gibt es nur für Gmail, aber die Label-Aktion einer Automatisierung weist der Nachricht in Outlook eine Kategorie zu.",
+    "Microsoft Graph kann eine Textsuche nicht mit den Filtern für ungelesen, Anhang, markiert oder Datum kombinieren. Enthält eine Suche Text, werden diese Filter nicht angewendet, und das Ergebnis nennt die ausgelassenen Filter.",
+    "Beim Senden sind bis zu 10 MB Anhänge pro Nachricht möglich; Anhänge herunterladen und Originale weiterleiten funktioniert bis 25 MB.",
+    "Die Self-Hosting-Version verbindet sich nur über IMAP und SMTP. Die Anmeldung mit Microsoft gehört zum gehosteten Dienst."
+  ],
+  "faq": [
+    {
+      "q": "Funktioniert Claude mit Outlook.com?",
+      "a": "Ja. Verbinden Sie Ihr Outlook.com-Postfach mit MCP Emails, indem Sie sich mit Microsoft anmelden, und fügen Sie eine MCP-URL in Claude ein. Dann kann Claude Ihre E-Mails lesen, suchen, senden, beantworten, weiterleiten, planen und ablegen. Dieselbe URL funktioniert in ChatGPT, Cursor und anderen MCP-Clients."
+    },
+    {
+      "q": "Funktioniert es mit Adressen von Hotmail, Live und MSN?",
+      "a": "Ja. Das ist derselbe Microsoft-Maildienst für Privatkunden wie outlook.com, die Verbindung läuft also genauso: Wählen Sie im Dashboard Outlook und melden Sie sich mit dieser Adresse an."
+    },
+    {
+      "q": "Brauche ich ein App-Passwort oder IMAP-Einstellungen?",
+      "a": "Nein. MCP Emails verbindet Outlook.com nach Ihrer Anmeldung mit Microsoft über Microsoft Graph. Sie müssen also kein App-Passwort erstellen und keinen IMAP- oder SMTP-Server eintragen. Ein App-Passwort würde ohnehin nicht funktionieren: Microsoft akzeptiert seit September 2024 bei privaten Konten keine Passwörter mehr aus Mail-Apps anderer Hersteller."
+    },
+    {
+      "q": "Was kann meine KI in Outlook.com tun?",
+      "a": "Lesen, suchen, senden, antworten und weiterleiten; mit Entwürfen arbeiten; Ordner anlegen und nutzen, auch verschachtelte; verschieben, kopieren und archivieren; markieren; in den Papierkorb oder endgültig löschen; bis zu 10 MB Anhänge pro Nachricht senden und Anhänge herunterladen oder Originale weiterleiten bis 25 MB; Sendungen planen; Automatisierungsregeln ausführen; und Ihre Signatur verwalten."
+    },
+    {
+      "q": "Ist das dasselbe wie die Verbindung eines geschäftlichen Microsoft 365-Kontos?",
+      "a": "Die Anmeldung ist dieselbe, die Freigabe eventuell nicht. Ein privates Konto braucht keinen Administrator. Ein Geschäfts- oder Schulkonto bei Microsoft 365 braucht oft zuerst eine einmalige Freigabe von MCP Emails für die Organisation durch die IT. In diesem Fall gibt Ihnen das Dashboard einen Freigabelink für Ihren IT-Administrator, der dafür kein eigenes MCP Emails-Konto braucht."
+    },
+    {
+      "q": "Werden meine E-Mails auf Ihren Servern gespeichert?",
+      "a": "Nein. Nachrichten werden bei jeder Anfrage live von Microsoft abgerufen und an Ihren KI-Client übergeben. Das OAuth-Token aus Ihrer Microsoft-Anmeldung wird verschlüsselt gespeichert, und Nachrichteninhalte werden nicht aufbewahrt. Wenn Sie das Postfach in MCP Emails löschen, endet die Verbindung sofort. Sie können MCP Emails auch aus den Apps entfernen, die Zugriff auf Ihr Microsoft-Konto haben."
+    }
+  ],
+  "ctaBand": {
+    "title": "Geben Sie Ihrer KI Ihr Outlook.com-Postfach",
+    "sub": "Mit Microsoft anmelden und in wenigen Minuten verbinden. Ein Postfach dauerhaft kostenlos, ohne Kreditkarte."
+  },
+  "seeAlso": {
+    "intro": "Sie nutzen ein Geschäfts- oder Schulkonto von Microsoft?",
+    "label": "Microsoft 365-E-Mail verbinden",
+    "href": "/connect/office365"
+  },
+  "guide": {
+    "intro": "Lieber eine Schritt-für-Schritt-Anleitung?",
+    "label": "Outlook und Microsoft 365 per MCP mit Ihrem KI-Agenten verbinden",
+    "href": "/blog/connect-outlook-microsoft-365-ai-agent-mcp"
+  }
+}

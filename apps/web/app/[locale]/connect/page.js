@@ -40,12 +40,12 @@ export async function generateMetadata({ params }) {
     openGraph: {
       type: 'website',
       url: localePath(locale, '/connect'),
-      title: `${title} · mcpemails`,
+      title: `${title} · MCP Emails`,
       description,
       locale: OG_LOCALE[locale],
       images: [OG_IMAGE],
     },
-    twitter: { card: 'summary_large_image', title: `${title} · mcpemails`, description, images: [OG_IMAGE.url] },
+    twitter: { card: 'summary_large_image', title: `${title} · MCP Emails`, description, images: [OG_IMAGE.url] },
   };
 }
 
@@ -94,7 +94,7 @@ export default async function ConnectHubPage({ params }) {
         '@type': 'BreadcrumbList',
         '@id': `${url}#breadcrumb`,
         itemListElement: [
-          { '@type': 'ListItem', position: 1, name: 'mcpemails', item: localePath(locale, '') },
+          { '@type': 'ListItem', position: 1, name: 'MCP Emails', item: localePath(locale, '') },
           { '@type': 'ListItem', position: 2, name: t('title') },
         ],
       },

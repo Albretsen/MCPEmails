@@ -20,7 +20,7 @@
     "titleLine1": "Serveur MCP pour la messagerie Infomaniak :",
     "titleLine2": "toutes les boîtes de votre entreprise, dans Claude et ChatGPT",
     "lead": "Vous gérez info@, ventes@, support@ et factures@ sur votre propre domaine chez Infomaniak ? Connectez chaque boîte au même espace de travail et votre agent IA travaille dans toutes. Lisez, recherchez, envoyez, répondez, planifiez et organisez le courrier en IMAP avec un mot de passe d'appareil généré pour cette adresse.",
-    "answer": "Claude ne peut pas accéder seul à Infomaniak Mail. mcpemails est un serveur MCP hébergé qui s'y connecte en IMAP sur mail.infomaniak.com, port 993, en s'authentifiant avec un mot de passe d'appareil généré pour cette adresse mail plutôt qu'avec le mot de passe de votre compte Infomaniak, pour que Claude, Cursor ou tout client MCP puisse lire, rechercher, envoyer et organiser le courrier. Infomaniak n'accepte pas du tout le mot de passe du compte en IMAP, et ses mots de passe d'application, distincts, sont une autre chose qui ne fonctionnera pas ici. Chaque adresse de l'entreprise, comme info@ ou ventes@, se connecte comme une boîte à part : une boîte est gratuite, Personal en connecte trois et Pro toutes celles que vous gérez.",
+    "answer": "Claude ne peut pas accéder seul à Infomaniak Mail. MCP Emails est un serveur MCP hébergé qui s'y connecte en IMAP sur mail.infomaniak.com, port 993, en s'authentifiant avec un mot de passe d'appareil généré pour cette adresse mail plutôt qu'avec le mot de passe de votre compte Infomaniak, pour que Claude, Cursor ou tout client MCP puisse lire, rechercher, envoyer et organiser le courrier. Infomaniak n'accepte pas du tout le mot de passe du compte en IMAP, et ses mots de passe d'application, distincts, sont une autre chose qui ne fonctionnera pas ici. Chaque adresse de l'entreprise, comme info@ ou ventes@, se connecte comme une boîte à part : une boîte est gratuite, Personal en connecte trois, Pro jusqu'à 10 et Business autant qu'il vous en faut.",
     "meta0": "Première boîte gratuite, offres pour les autres",
     "meta1": "Mot de passe d'appareil, pas celui du compte",
     "meta2": "E-mails récupérés en direct, jamais stockés"
@@ -36,7 +36,7 @@
   },
   "setup": [
     {
-      "h": "Créez votre compte mcpemails gratuit",
+      "h": "Créez votre compte MCP Emails gratuit",
       "p": "Inscrivez-vous sur mcpemails.com. L'offre gratuite connecte une boîte pour toujours et ne demande pas de carte bancaire."
     },
     {
@@ -44,7 +44,7 @@
       "p": "Ouvrez manager.infomaniak.com, allez dans Mail Service, cliquez sur votre domaine, puis sur l'adresse mail elle-même. Ouvrez l'onglet Devices et choisissez Add a device. Laissez l'utilisateur sur « No user », sauf si vous voulez délibérément lier des restrictions SMTP à un compte précis, donnez-lui un nom que vous reconnaîtrez plus tard, et copiez immédiatement le mot de passe généré. Infomaniak ne l'affichera plus."
     },
     {
-      "h": "Collez-le dans mcpemails",
+      "h": "Collez-le dans MCP Emails",
       "p": "Choisissez IMAP / SMTP, saisissez l'adresse mail complète et collez le mot de passe d'appareil. Le serveur mail.infomaniak.com et les ports 993 et 465 sont préremplis et ont été vérifiés par une vraie connexion TLS."
     },
     {
@@ -59,11 +59,11 @@
     },
     {
       "h": "Infomaniak n'annonce pas SASL-IR, et la plupart des clients le supposent",
-      "p": "Le serveur IMAP n'annonce pas la capacité SASL-IR : il rejette donc l'authentification en une étape qui envoie les identifiants sur la même ligne que la commande AUTHENTICATE. Un client qui suppose SASL-IR reçoit un simple <code>BAD</code> sans explication, qui ressemble exactement à un mauvais mot de passe. mcpemails le détecte et relance l'échange en deux étapes, donc la connexion aboutit ici, mais c'est une cause fréquente d'échecs d'autres outils IMAP avec Infomaniak."
+      "p": "Le serveur IMAP n'annonce pas la capacité SASL-IR : il rejette donc l'authentification en une étape qui envoie les identifiants sur la même ligne que la commande AUTHENTICATE. Un client qui suppose SASL-IR reçoit un simple <code>BAD</code> sans explication, qui ressemble exactement à un mauvais mot de passe. MCP Emails le détecte et relance l'échange en deux étapes, donc la connexion aboutit ici, mais c'est une cause fréquente d'échecs d'autres outils IMAP avec Infomaniak."
     },
     {
       "h": "La bannière d'accueil ne contient aucune liste de capacités",
-      "p": "Le serveur d'Infomaniak répond par un simple <code>* OK IMAP4 ready</code> et rien d'autre, alors que la plupart des serveurs annoncent leurs extensions dès l'accueil. Un client qui ne lit les capacités que dans la bannière en conclut que le serveur ne prend rien en charge, et soit se rabat sur le comportement le plus rudimentaire, soit abandonne. La bonne méthode consiste à envoyer une commande CAPABILITY explicite après l'accueil, puis de nouveau après l'authentification, et c'est ce que fait mcpemails."
+      "p": "Le serveur d'Infomaniak répond par un simple <code>* OK IMAP4 ready</code> et rien d'autre, alors que la plupart des serveurs annoncent leurs extensions dès l'accueil. Un client qui ne lit les capacités que dans la bannière en conclut que le serveur ne prend rien en charge, et soit se rabat sur le comportement le plus rudimentaire, soit abandonne. La bonne méthode consiste à envoyer une commande CAPABILITY explicite après l'accueil, puis de nouveau après l'authentification, et c'est ce que fait MCP Emails."
     }
   ],
   "limits": [
@@ -73,7 +73,7 @@
   "faq": [
     {
       "q": "Claude fonctionne-t-il avec Infomaniak Mail ?",
-      "a": "Pas seul. Claude n'a pas de connecteur Infomaniak intégré. Diriger un serveur MCP comme mcpemails vers votre adresse Infomaniak en IMAP donne à Claude un accès en lecture, recherche, envoi, réponse, planification et organisation, et la même connexion fonctionne depuis Cursor, ChatGPT et d'autres clients MCP."
+      "a": "Pas seul. Claude n'a pas de connecteur Infomaniak intégré. Diriger un serveur MCP comme MCP Emails vers votre adresse Infomaniak en IMAP donne à Claude un accès en lecture, recherche, envoi, réponse, planification et organisation, et la même connexion fonctionne depuis Cursor, ChatGPT et d'autres clients MCP."
     },
     {
       "q": "Quels sont les réglages IMAP et SMTP d'Infomaniak ?",
@@ -89,7 +89,7 @@
     },
     {
       "q": "Puis-je révoquer l'accès sans casser mes autres appareils ?",
-      "a": "Oui. Chaque mot de passe d'appareil est distinct : vous pouvez en créer un pour mcpemails, le nommer en conséquence, puis supprimer uniquement celui-ci plus tard. Les connexions existantes depuis votre téléphone et votre client de bureau continuent de fonctionner, car elles ont leurs propres mots de passe."
+      "a": "Oui. Chaque mot de passe d'appareil est distinct : vous pouvez en créer un pour MCP Emails, le nommer en conséquence, puis supprimer uniquement celui-ci plus tard. Les connexions existantes depuis votre téléphone et votre client de bureau continuent de fonctionner, car elles ont leurs propres mots de passe."
     },
     {
       "q": "Mon courrier Infomaniak est-il stocké sur vos serveurs ?",
@@ -98,6 +98,6 @@
   ],
   "ctaBand": {
     "title": "Toutes vos boîtes Infomaniak sur un seul agent",
-    "sub": "Connectez votre première boîte Infomaniak gratuitement, sans carte bancaire. Personal en connecte trois, Pro toutes celles que vous gérez."
+    "sub": "Connectez votre première boîte Infomaniak gratuitement, sans carte bancaire. Personal en connecte trois, Pro jusqu'à 10 et Business autant qu'il vous en faut."
   }
 }

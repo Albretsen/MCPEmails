@@ -23,23 +23,23 @@
     "meta0": "1 innboks gratis, for alltid",
     "meta1": "Postkassepassordet ditt, ingen OAuth-oppsett",
     "meta2": "E-post hentes direkte, lagres aldri",
-    "answer": "Claude når ikke Migadu på egen hånd. mcpemails er en hostet MCP-server som kobler til via IMAP med postkassepassordet ditt, slik at Claude, Cursor eller enhver MCP-klient kan lese, søke, sende og organisere den e-posten. Oppsettet tar et par minutter, og én innboks er gratis."
+    "answer": "Claude når ikke Migadu på egen hånd. MCP Emails er en hostet MCP-server som kobler til via IMAP med postkassepassordet ditt, slik at Claude, Cursor eller enhver MCP-klient kan lese, søke, sende og organisere den e-posten. Oppsettet tar et par minutter, og én innboks er gratis."
   },
   "method": {
     "title": "Slik kobler Migadu seg til: IMAP og postkassepassordet ditt",
-    "body": "Migadu kobles til via IMAP/SMTP med <b>postkassepassordet</b>, som ikke er passordet til Migadu-adminkontoen din. Sett eller tilbakestill det i Migadus adminområde under Mailboxes, og lim det så inn i mcpemails sammen med adressen din. Alle Migadu-postkasser bruker de samme to vertene uansett domene, så det er ingenting å slå opp."
+    "body": "Migadu kobles til via IMAP/SMTP med <b>postkassepassordet</b>, som ikke er passordet til Migadu-adminkontoen din. Sett eller tilbakestill det i Migadus adminområde under Mailboxes, og lim det så inn i MCP Emails sammen med adressen din. Alle Migadu-postkasser bruker de samme to vertene uansett domene, så det er ingenting å slå opp."
   },
   "setup": [
     {
       "h": "Opprett en gratis konto",
-      "p": "Registrer deg på mcpemails, uten kort. Gratisplanen kobler til én innboks, for alltid."
+      "p": "Registrer deg på MCP Emails, uten kort. Gratisplanen kobler til én innboks, for alltid."
     },
     {
       "h": "Sett et postkassepassord i Migadu",
       "p": "I Migadus adminområde åpner du Mailboxes, velger postkassen og setter passordet. E-postklienter autentiserer med det passordet; admininnloggingen din fungerer ikke."
     },
     {
-      "h": "Lim det inn i mcpemails",
+      "h": "Lim det inn i MCP Emails",
       "p": "Velg IMAP / SMTP, legg til Migadu-adressen din, vertene over og passordet for å koble til innboksen trygt."
     },
     {
@@ -62,18 +62,18 @@
     },
     {
       "h": "Ingen MOVE, ingen UIDPLUS, ingen SPECIAL-USE og ingen IDLE",
-      "p": "Migadus annonserte funksjonssett mangler fire utvidelser som de fleste verter har. Uten <b>MOVE</b> utføres flytting av en melding som en kopi, en flaggoppdatering og en expunge i stedet for én atomisk kommando. Uten <b>UIDPLUS</b> rapporterer ikke serveren den nye identifikatoren til en kopiert melding, så den må finnes ved å søke i målmappen. Uten <b>SPECIAL-USE</b> matches Sent, Drafts, Trash og Archive etter navn i stedet for rolle, så en postkasse med omdøpte mapper trenger at mappen oppgis eksplisitt. Uten <b>IDLE</b> finnes det ingen push-kanal i det hele tatt. Ingenting av dette hindrer tilkoblingen i å fungere, og mcpemails leser ved behov i stedet for å vente på push, men det forklarer oppførsel du ikke ser hos andre leverandører."
+      "p": "Migadus annonserte funksjonssett mangler fire utvidelser som de fleste verter har. Uten <b>MOVE</b> utføres flytting av en melding som en kopi, en flaggoppdatering og en expunge i stedet for én atomisk kommando. Uten <b>UIDPLUS</b> rapporterer ikke serveren den nye identifikatoren til en kopiert melding, så den må finnes ved å søke i målmappen. Uten <b>SPECIAL-USE</b> matches Sent, Drafts, Trash og Archive etter navn i stedet for rolle, så en postkasse med omdøpte mapper trenger at mappen oppgis eksplisitt. Uten <b>IDLE</b> finnes det ingen push-kanal i det hele tatt. Ingenting av dette hindrer tilkoblingen i å fungere, og MCP Emails leser ved behov i stedet for å vente på push, men det forklarer oppførsel du ikke ser hos andre leverandører."
     }
   ],
   "limits": [
     "Fordi serveren ikke annonserer MOVE, er en flytting ikke atomisk. Hvis en tilkobling brytes underveis, kan en melding kortvarig finnes i begge mapper.",
     "Mapper matches etter navn i stedet for rolle, så en postkasse med omdøpte eller ikke-engelske mappenavn kan trenge at målmappen oppgis eksplisitt.",
-    "mcpemails kobler til en postkasse. Domener, videresendinger, omskrivinger og Migadus egne sende- og mottakskvoter blir værende i Migadus adminområde."
+    "MCP Emails kobler til en postkasse. Domener, videresendinger, omskrivinger og Migadus egne sende- og mottakskvoter blir værende i Migadus adminområde."
   ],
   "faq": [
     {
       "q": "Fungerer Claude med Migadu?",
-      "a": "Ikke på egen hånd. Claude har ingen innebygd Migadu-kobling. Kobler du en MCP-server som mcpemails til Migadu-postkassen din via IMAP, får Claude tilgang til å lese, søke, sende, svare, planlegge og organisere, og fordi tilkoblingen er vanlig IMAP, er samme postkasse også tilgjengelig i Cursor, ChatGPT og andre MCP-klienter."
+      "a": "Ikke på egen hånd. Claude har ingen innebygd Migadu-kobling. Kobler du en MCP-server som MCP Emails til Migadu-postkassen din via IMAP, får Claude tilgang til å lese, søke, sende, svare, planlegge og organisere, og fordi tilkoblingen er vanlig IMAP, er samme postkasse også tilgjengelig i Cursor, ChatGPT og andre MCP-klienter."
     },
     {
       "q": "Hva er IMAP- og SMTP-innstillingene for Migadu?",

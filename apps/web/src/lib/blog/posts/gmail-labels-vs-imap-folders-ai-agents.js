@@ -22,42 +22,42 @@ Neither model is better. Labels are flexible for overlapping categories. Folders
 
 ## How MCP Emails handles the common workflow
 
-MCP Emails presents folders and labels through one provider-aware organization flow. Your agent can list the organization options available in an inbox, then use the returned name or provider-native ID when it needs to move, copy, archive, create, rename, or delete one.
+MCP Emails connects Gmail with a Google app password over IMAP, and Gmail's IMAP server shows each label as a folder. A message with three labels appears in three folders. Your agent lists the folders in an inbox with \`folder_list\`, then uses the returned folder name when it needs to move, copy, archive, create, rename, or delete one.
 
-For Gmail, creating a folder creates a label. Moving to a destination adds that label and removes the Inbox label; it does not remove the message’s other labels. On IMAP-style inboxes, moving places the message in the destination folder. The response explains the provider semantics so the agent does not have to guess.
+On Gmail, creating a folder creates a label. Moving a message out of Inbox to a destination adds that label and removes the Inbox label, and the message keeps its other labels. Archiving removes it from Inbox, and it stays in All Mail. On other IMAP inboxes, moving places the message in the destination folder and takes it out of the old one.
 
 That is a practical kind of compatibility: the same high-level intent works across providers, but the product does not hide a behavior that could surprise the person who owns the mailbox.
 
 ## Copying is the key difference
 
-Copying a message leaves the original in place. MCP Emails supports that on IMAP, Outlook, and Fastmail inboxes. Gmail’s label model has no direct copy equivalent, because adding another label already gives a message another way to appear without duplicating it.
+Copying a message leaves the original in place. MCP Emails supports copy on every IMAP inbox, Gmail included, and on Outlook. What a copy produces depends on the provider.
 
-If you ask an agent to “put this in Receipts but keep it in the Inbox,” the right outcome is provider-specific:
+If you ask an agent to "put this in Receipts but keep it in the Inbox," the agent copies the message to Receipts in both cases, with a different result:
 
-- In Gmail, add the Receipts label and leave Inbox in place.
-- In a folder-based inbox, copy the message to Receipts.
+- On Gmail, the copy adds the Receipts label to the same message. Nothing is duplicated, and the message still shows in Inbox.
+- On a folder-based inbox, the copy is a second message in Receipts, next to the original in Inbox.
 
 This is why the best instructions state the outcome you want rather than prescribing a provider command. Tell the agent “keep the original visible in Inbox” and let it use the inbox capabilities it discovers.
 
 ## Search has provider differences too
 
-MCP Emails gives agents structured search fields—sender, recipient, subject, body, dates, attachment state, and more—rather than forcing everyone to learn Gmail syntax or IMAP search rules. That makes a request like “find unread invoices from May with attachments” portable.
+MCP Emails gives agents structured search fields, such as sender, recipient, subject, body, dates, unread state, and attachments, and translates them into each provider's search. On Gmail connected by app password, that is IMAP search, so Gmail's own operators such as \`from:\` or \`is:unread\` do not apply. The structured fields make a request like "find unread invoices from May with attachments" portable.
 
-An optional raw query remains available when a provider-specific search is truly needed. But it should be the exception. Structured search is easier to reuse across accounts and helps prevent a workflow from being tied to the quirks of one provider.
+An optional raw query remains available when a provider-specific search is truly needed. On an IMAP inbox, Gmail included, it takes IMAP search syntax. It should be the exception. Structured search is easier to reuse across accounts and helps prevent a workflow from being tied to the quirks of one provider.
 
 ## A safe organization prompt
 
 Try this after connecting your mailbox:
 
-> Find purchase receipts from the last 30 days. Show me the first 20 matches with sender, date, subject, and current labels or folder. Do not move anything yet. After I confirm, file the selected messages under Receipts while preserving any labels or folders that should remain visible.
+> Find purchase receipts from the last two months. Show me the first 20 matches with sender, date, subject, and the folder each one is in. Do not move anything yet. After I confirm, file the selected messages under Receipts while preserving any labels or folders that should remain visible.
 
 The preview is useful whether you use Gmail labels or IMAP folders. It also prevents an agent from creating a rigid, provider-specific rule before you have seen the actual messages.
 
 ## One workflow, multiple inboxes
 
-MCP Emails supports Gmail (with a Google app password or Sign in with Google), Outlook and Microsoft 365 over Microsoft Graph, and IMAP/SMTP mailboxes through app passwords, including Fastmail, iCloud, Yahoo, Zoho, Yandex, and generic providers. Outlook sits on the folder side of this divide, with nested folders and no labels. Connect the account you have; your agent discovers its capabilities instead of assuming every inbox behaves like Gmail.
+MCP Emails supports Gmail and Google Workspace (with a Google app password over IMAP), Outlook and Microsoft 365 over Microsoft Graph, and IMAP/SMTP mailboxes through app passwords, including Fastmail, iCloud, Yahoo, Zoho, Yandex, and generic providers. Outlook sits on the folder side of this divide, with nested folders and no labels. Connect the account you have; your agent discovers its capabilities instead of assuming every inbox behaves like Gmail.
 
-For a provider-specific setup guide, see [Connect iCloud or Fastmail IMAP to Claude](/blog/connect-icloud-fastmail-imap-to-claude). For Gmail, start with [How to Connect Gmail to Claude](/blog/connect-gmail-to-claude).`,
+For a provider-specific setup guide, see [Connect iCloud or Fastmail IMAP to Claude](/blog/connect-icloud-fastmail-imap-to-claude). For Gmail, start with [How to Connect Gmail to Claude](/blog/connect-gmail-to-claude). For any other IMAP mailbox, the [IMAP connector guide](/blog/claude-imap-connector) covers server settings and troubleshooting.`,
 };
 
 export default post;

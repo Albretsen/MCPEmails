@@ -318,8 +318,8 @@ async function main() {
       contents:
         'import "./src/main";\n' +
         'export { setSendUndoMs } from "./src/components/DraftEditor";\n' +
-        'export { getState, setState, disarmResultWatchdog } from "./src/store";\n' +
-        'export { splitQuote, quotePreview, repeatsSignOff, splitBody, joinBody } from "./src/format";\n' +
+        'export { getState, setState, disarmResultWatchdog, mergeEnvelope } from "./src/store";\n' +
+        'export { splitQuote, quotePreview, quoteBody, repeatsSignOff, splitBody, joinBody } from "./src/format";\n' +
         'export { render } from "preact";\n',
       resolveDir: appRoot,
       sourcefile: "draft-quote-entry.ts",
@@ -530,6 +530,103 @@ async function main() {
     const c = await editor(reply());
     expect("no hint", /already ends with a sign-off/.test(c.text()), false);
     await c.done();
+  }
+
+  // ── R. live re-test, 2026-10-17 ───────────────────────────────────────────
+  group("R1. the opened quote does not repeat the attribution the row shows");
+  {
+    const c = await editor(reply());
+    c.press(c.btn(/^Show quote$/));
+    await settle();
+    const region = c.root.querySelector("#d-quoted")?.textContent ?? "";
+    expect("the row has the attribution", /Dana Example <dana@x\.example> wrote:/.test(quoteRow(c)?.textContent ?? ""), true);
+    expect("the opened quote does not", /wrote:/.test(region), false);
+    expect("it starts at the quoted lines", region.startsWith("> Can we move the call to Friday?"), true);
+    expect("an Outlook header block keeps its From line", c.mod.quoteBody("\n\nFrom: Dana\nSent: Monday\nSubject: x\n\nHi"), "From: Dana\nSent: Monday\nSubject: x\n\nHi");
+    expect("a bare > quote is unchanged", c.mod.quoteBody("\n\n> hi"), "> hi");
+    await c.done();
+  }
+
+  group("R2. unsaved edits over a newer version whose quote differs keep the Quoted row");
+  {
+    const c = await editor(reply({ revision: 1 }));
+    c.tools.draft_editor_save = saved(c);
+    c.input("d-body", "Friday at 3 then.\n");
+    await settle();
+    // The newer version Claude wrote: its quote re-sent with LF line endings,
+    // so the kept edits no longer end in the newer copy's quote bytes.
+    const newerText = `New words from Claude.\n\n-- \n${SIGNATURE}${QUOTE.replace(/\r\n/g, "\n")}`;
+    const newerLine = newerText.slice(0, newerText.indexOf("On Mon")).split("\n").length - 1;
+    const prev = c.mod.getState().envelope;
+    c.mod.setState({
+      envelope: {
+        ...prev,
+        draft: {
+          ...prev.draft,
+          revision: 2,
+          origin: "read",
+          body: { text: newerText, html: null, truncated: false, quoted: { line: newerLine } },
+        },
+      },
+    });
+    await settle();
+    expect("the edits are kept", c.value("d-body"), "Friday at 3 then.\n");
+    expect("the Signature row is the signature", sigRow(c)?.querySelector(".sig-text")?.textContent, "Asgeir Albretsen + 2 more lines");
+    expect("the Quoted row is there", !!quoteRow(c), true);
+    // And a newer version with no quote marker at all (the server dropped it).
+    c.mod.setState({
+      envelope: { ...c.mod.getState().envelope, draft: { ...c.mod.getState().envelope.draft, revision: 3, body: { text: "Just this.", html: null, truncated: false } } },
+    });
+    await settle();
+    expect("no marker: still split", sigRow(c)?.querySelector(".sig-text")?.textContent, "Asgeir Albretsen + 2 more lines");
+    expect("no marker: Quoted row", !!quoteRow(c), true);
+    await c.done();
+  }
+
+  group("R3. Replying to survives a Save that answers in_reply_to: null");
+  {
+    const inReplyTo = { message_id: "INBOX:9", from: "Dana Example <dana@x.example>", subject: "Call" };
+    const c = await editor(reply({ origin: "reply", in_reply_to: inReplyTo, threaded: true }));
+    c.tools.draft_editor_save = (args) =>
+      draftResult(reply({ draft_id: "Drafts:140", origin: "save", threaded: true, body: { text: args.body_text ?? REPLY } }));
+    expect("shown on open", /Replying to Dana Example/.test(c.text()), true);
+    c.input("d-body", "Friday at 3 then.\n");
+    await settle();
+    c.press(c.btn(/^Save$/));
+    await settle();
+    expect("saved", lastSave(c)?.body_text?.startsWith("Friday at 3 then."), true);
+    expect("still shown after the save", /Replying to Dana Example <dana@x\.example> · Call/.test(c.text()), true);
+    // A draft that no longer answers anything does not keep it.
+    c.mod.setState({ envelope: c.mod.mergeEnvelope(c.mod.getState().envelope, draftEnvelope({ draft_id: "Drafts:140", origin: "read", threaded: false })) });
+    await settle();
+    expect("not threaded: gone", /Replying to/.test(c.text()), false);
+    await c.done();
+  }
+
+  group("R4. the newer card after draft update on a reply has the reply line and Show formatting (live, 2026-10-19)");
+  {
+    // What the server now answers an update with: the context read back from
+    // the stored draft (message_id null), and an HTML part kept.
+    const derived = { message_id: null, from: "Dana Example <dana@x.example>", subject: "Call" };
+    const html = `<p>${MESSAGE}</p>\n<div class="mcpemails-signature">Asgeir Albretsen</div>`;
+    const c = await editor(reply({ origin: "update", in_reply_to: derived, threaded: true, body: { html } }));
+    expect("Replying to is shown", /Replying to Dana Example <dana@x\.example> · Call/.test(c.text()), true);
+    expect("Show formatting is offered", !!c.btn(/^Show formatting$/), true);
+    await c.done();
+
+    // A card holding the reply's own context keeps it over a read-back one:
+    // the line does not change wording under the person on a Save.
+    const held = { message_id: "INBOX:9", from: "Dana Example <dana@x.example>", subject: "Re: Call" };
+    const d = await editor(reply({ origin: "reply", in_reply_to: held, threaded: true }));
+    d.tools.draft_editor_save = (args) =>
+      draftResult(reply({ draft_id: "Drafts:141", origin: "save", threaded: true, in_reply_to: derived, body: { text: args.body_text ?? REPLY } }));
+    d.input("d-body", "Friday at 3 then.\n");
+    await settle();
+    d.press(d.btn(/^Save$/));
+    await settle();
+    expect("saved", lastSave(d)?.body_text?.startsWith("Friday at 3 then."), true);
+    expect("the held wording stays", /Replying to Dana Example <dana@x\.example> · Re: Call/.test(d.text()), true);
+    await d.done();
   }
 
   // ---- report ---------------------------------------------------------------

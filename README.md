@@ -7,7 +7,7 @@
 [![MCP registry](https://img.shields.io/badge/MCP%20registry-com.mcpemails%2Femails-blue)](https://registry.modelcontextprotocol.io/v0/servers?search=mcpemails)
 [![License: AGPL-3.0](https://img.shields.io/badge/license-AGPL--3.0-blue)](LICENSE)
 
-> Connect a mailbox once, paste one URL into your agent, and it can work your inbox live. Email is fetched on demand and never retained; credentials are encrypted at rest and decrypted only at call time inside an isolated edge function.
+> Connect a mailbox once, paste one URL into your agent, and it can work your inbox live. Email is fetched on demand and never retained; credentials are encrypted at rest and decrypted on our servers only for the request that needs them.
 
 🔗 **[mcpemails.com](https://mcpemails.com)** · 📚 **[Docs](https://mcpemails.com/docs)** · 💳 **[Pricing](https://mcpemails.com/pricing)**
 
@@ -36,7 +36,7 @@
 
 ## How it works
 
-1. **Connect a mailbox.** Sign in at [mcpemails.com](https://mcpemails.com) and connect Outlook / Microsoft 365 (Sign in with Microsoft, over Microsoft Graph), Gmail (a Google app password over IMAP by default, or Sign in with Google), or any IMAP/SMTP account (app password). Credentials are encrypted with AES‑256‑GCM before they touch the database.
+1. **Connect a mailbox.** Sign in at [mcpemails.com](https://mcpemails.com) and connect Outlook / Microsoft 365 (Sign in with Microsoft, over Microsoft Graph), Gmail (a Google app password over IMAP), or any IMAP/SMTP account (app password). Credentials are encrypted with AES‑256‑GCM before they touch the database.
 2. **Get access.** OAuth‑capable clients (claude.ai, Claude Desktop, Cursor) connect in one click via OAuth 2.0 + PKCE. Everything else uses a scoped API key (`mcpe_…`).
 3. **Point your client at the server.** The MCP endpoint is a single URL:
    ```
@@ -75,17 +75,17 @@ Copy‑paste instructions per client, including where each one keeps its config 
 ## Capabilities
 
 - **Live, never stored** — email is read straight from your provider on each call; no message bodies are persisted.
-- **Multi‑provider** — Outlook / Microsoft 365 via Microsoft Graph (Sign in with Microsoft), Gmail via a Google app password or Sign in with Google, plus any IMAP/SMTP mailbox (Fastmail, iCloud, Yahoo, Zoho, Yandex, self‑hosted…) via app password.
-- **No relay** — outbound mail is sent through *your* provider's SMTP/API, from your real address.
+- **Multi‑provider** — Outlook / Microsoft 365 via Microsoft Graph (Sign in with Microsoft), Gmail via a Google app password over IMAP, plus any IMAP/SMTP mailbox (Fastmail, iCloud, Yahoo, Zoho, Yandex, self‑hosted…) via app password.
+- **Your provider sends** — outbound mail is sent through *your* provider's SMTP/API, from your real address. When a provider refuses connections from cloud addresses, the IMAP/SMTP connection goes through our own tunnel (an HTTP CONNECT relay); TLS still runs end to end to the provider, so the relay never sees mail or credentials.
 - **Granular scopes** — eight permission scopes, grantable independently per API key and per inbox.
 - **Batch & search‑and‑act** — read, move, delete, or flag up to hundreds of messages in one call, including "search then move/delete" combinators.
 - **Drafts & scheduling** — compose drafts and queue messages for future send (server‑side dispatch).
 - **Provider‑agnostic search** — Gmail syntax, Microsoft Graph KQL and IMAP `SEARCH` are normalized behind one `email_read` (`action: "search"`) interface.
-- **Team‑ready**: workspaces, members, roles, SSO, and an audit log on the Team plan.
+- **Business‑ready**: several workspaces, unlimited members with roles, and admin approval of held sends on the Business plan.
 
 ## Tools
 
-17 tools you call directly. Most are resource-oriented and take an `action` argument that selects the specific operation (and, for actions that need different privileges, the required scope):
+19 tools you call directly. Most are resource-oriented and take an `action` argument that selects the specific operation (and, for actions that need different privileges, the required scope):
 
 - `inbox_list` - Lists the inboxes the key can reach, with each one's provider capabilities.
 - `email_read` - Lists, reads and searches messages, in batches, plus attachments, extracted attachment text and the original `.eml`.
@@ -104,6 +104,8 @@ Copy‑paste instructions per client, including where each one keeps its config 
 - `automation_read` - Lists triage rules, reads one, shows run history, and dry-runs a filter. Read-only.
 - `automation` - Creates, updates, enables, disables and deletes unattended triage rules, with no model in the loop.
 - `contact_search` - Looks up contacts by scanning recent mail live, with no stored address book.
+- `draft_read` - Reads one unsent draft in full, for example after the user edited it in the draft editor card. Read-only.
+- `draft_editor_hide` - Hides or shows the in-chat draft editor card for one inbox or the whole workspace. A display preference only.
 
 | Tool | Actions | Scope(s) |
 | --- | --- | --- |
@@ -124,8 +126,12 @@ Copy‑paste instructions per client, including where each one keeps its config 
 | `automation_read` | `list`, `get`, `runs`, `preview` | `manage:automations` |
 | `automation` | `create`, `update`, `enable`, `disable`, `delete` | `manage:automations` |
 | `contact_search` | *(single action)* | `manage:contacts` (also accepts `read:email`) |
+| `draft_read` | *(single action)* | `manage:drafts` and `read:email` |
+| `draft_editor_hide` | *(single action)* | `manage:drafts` |
 
-A full-scope key sees **22** tools in `tools/list`: the 16 above plus six app-only tools (`approval_review`, `approval_decide`, `approval_update`, `approval_schedule`, `bulk_execute`, `bulk_cancel`). Those carry `_meta.ui.visibility: ["app"]` and drive the review card an MCP client renders for a held send or a previewed bulk operation, rather than being composed by hand.
+A full-scope key sees **26** tools in `tools/list`: the 19 above plus seven app-only tools that drive the in-chat cards rather than being composed by hand: `approval_review`, `approval_decide`, `approval_update`, `approval_schedule` (a held send), `bulk_execute`, `bulk_cancel` (a previewed bulk operation) and `draft_editor_save` (the draft editor's Save button). The six `approval_*` and `bulk_*` tools always carry `_meta.ui.visibility: ["app"]`; `draft_editor_save` carries it where the draft editor is on and refuses every call where it is off.
+
+`prompts/list` holds 7 user-invoked workflow prompts (`morning_inbox_triage`, `find_and_brief`, `follow_up_radar`, `decision_tracker`, `prepare_reply_drafts`, `clean_up_safely`, `review_scheduled_sends`), each listed only to a key holding its scopes.
 
 Notes:
 - Tools accept either an explicit `inbox_id` (UUID) or an `inbox` email address; single‑inbox keys auto‑resolve the target.
@@ -137,7 +143,7 @@ Notes:
 - `draft`'s `reply` action creates an unsent, provider-native reply in the source conversation. It needs both `manage:drafts` and `read:email`, and defaults to replying only to the sender.
 - The read-only halves (`folder_list`, `draft_list`, `schedule_list`, `signature_get`, `automation_read`) were split out of their write tools on 2026-09-09, so a read-only key is never shown a write tool. The old combined shapes (`folder` `action: "list"`, `draft` `action: "list"`, `schedule` `action: "list"`, `signature` `action: "get"`/`"set"`, `automation` `action: "list"`/`"get"`/`"runs"`/`"preview"`) are still accepted on the wire for already-connected clients, but are no longer advertised.
 - `automation` manages unattended scheduled triage rules: a stored search plus one fixed action, evaluated on a cadence with no model in the loop. There is no delete-mail action, a `forward` always waits for human approval, and `draft_reply` only ever writes a draft. See `docs/automations-trust-boundary.md`.
-- `tools/list` only returns the tools your key (or OAuth token) is actually scoped for.
+- For an API key, `tools/list` returns only the tools its scopes allow. An OAuth connection is listed every tool, and a call that needs a scope it was not granted gets the MCP step-up challenge (`insufficient_scope`).
 
 ## OAuth scopes
 
@@ -157,39 +163,38 @@ Notes:
 
 | Provider | Connect via | Read/Search | Send | Folders | Permanent delete | Drafts |
 | --- | --- | --- | --- | --- | --- | --- |
-| **Gmail / Google Workspace** | App password (IMAP/SMTP) by default, or OAuth 2.0 (Sign in with Google) | ✅ | ✅ | Labels | Trash only | ✅ |
+| **Gmail / Google Workspace** | App password (IMAP/SMTP) | ✅ | ✅ | Labels | ✅ (follows Gmail's IMAP expunge settings) | ✅ |
 | **Fastmail** | App password (IMAP/SMTP) | ✅ | ✅ | ✅ | ✅ | ✅ |
 | **iCloud, Yahoo, AOL, GMX, Zoho, Yandex** | App password (IMAP/SMTP) | ✅ | ✅ | ✅ | ✅ | ✅ |
 | **IONOS, STRATO, One.com, OVHcloud, Namecheap Private Email, Hostinger, Infomaniak, Hetzner** | Mailbox password (IMAP/SMTP) | ✅ | ✅ | ✅ | ✅ | ✅ |
 | **cPanel, Plesk, SiteGround, Bluehost and other shared hosts** | Mailbox password (IMAP/SMTP) | ✅ | ✅ | ✅ | ✅ | ✅ |
 | **Any other IMAP/SMTP mailbox** | App password or mailbox password | ✅ | ✅ | ✅ | ✅ | ✅ |
+| **Outlook / Microsoft 365** | OAuth 2.0 (Microsoft Graph) | ✅ | ✅ | ✅ (nested) | ✅ | ✅ |
 
 > Mail on your own domain at a web host connects like any IMAP mailbox, and one workspace can hold several of them (info@, sales@, support@). Per-host settings and known pitfalls for 100 providers are at [mcpemails.com/connect](https://mcpemails.com/connect).
-| **Outlook / Microsoft 365** | OAuth 2.0 (Microsoft Graph) | ✅ | ✅ | ✅ (nested) | ✅ | ✅ |
 
 > Outlook uses Microsoft Graph with "Sign in with Microsoft", not IMAP. Personal Microsoft accounts (outlook.com, hotmail.com, live.com, msn.com) connect directly. On work or school Microsoft 365 tenants, Microsoft's default consent policy stops employees approving mail permissions themselves, so an IT admin approves the app once for the organisation; the dashboard gives the user a shareable approval link to send them (`/auth/outlook/admin-consent`), and the admin needs no MCP Emails account. A Microsoft account with no Exchange Online mailbox is refused, with a pointer to IMAP. The label tools are Gmail-only (Outlook uses folders), except that an automation's label action applies an Outlook category; and Graph cannot combine a text search with the unread, attachment, flagged or date filters.
 
 ## Pricing
 
-The value metric is **connected inboxes**. Free connects one mailbox, Personal connects up to three, Pro connects every mailbox you own, and Team adds people, roles, and a separate workspace per client. Annual billing saves about 20%.
+The value metric is **connected inboxes**. Free connects one mailbox, Personal connects up to three, Pro connects up to 10 for one person running a business, and Business includes 10 mailboxes, charges $3 a month for each extra one, and adds unlimited people with roles and a separate workspace per client. Annual billing saves about 20%.
 
-| | **Free** | **Personal** | **Pro** | **Team** |
+| | **Free** | **Personal** | **Pro** | **Business** |
 | --- | --- | --- | --- | --- |
-| Price | $0 | $9/mo · $86.40/yr ($7.20/mo) | $15/mo · $144/yr ($12/mo) | $79/mo · $756/yr ($63/mo) |
-| Connected inboxes | 1 | 3 | Unlimited | Unlimited |
-| Email actions / month | 150 (first 7 days uncounted) | No monthly cap (fair use) | No monthly cap (fair use) | No monthly cap (fair use) |
+| Price | $0 | $9/mo · $86.40/yr ($7.20/mo) | $15/mo · $144/yr ($12/mo) | $39/mo · $374.40/yr ($31.20/mo) |
+| Connected inboxes | 1 | 3 | 10 | 10 included, then $3/mo each ($28.80/yr) |
+| Email actions / month | 150 (first 3 days uncounted) | No monthly cap (fair use) | No monthly cap (fair use) | No monthly cap (fair use) |
 | API keys | Unlimited | Unlimited | Unlimited | Unlimited |
-| Members | 1 (owner only) | 1 (owner only) | 1 (owner only) | Unlimited, with roles |
+| Members | 1 (owner only) | 1 (owner only) | 1 (owner only) | Unlimited, with roles, no extra cost |
 | Fair‑use rate limit | 60 req/min | 120 req/min | 300 req/min | 1,000 req/min |
-| Team roles & workspaces | No | No | No | ✅ |
-| SSO (SAML/OIDC) + audit log | No | No | No | ✅ |
-| Support | Community | Email | Email | Priority |
+| Roles, admin send approval, several workspaces | No | No | No | ✅ |
+| Support | Community | Email | Email | Email |
 
 Per‑API‑key limits also apply (100 req/min · 1,000/hr · 10,000/day). Rate limits are retryable: they come back as JSON-RPC error `-32003` with `data.retry_after` in seconds.
 
-Free workspaces get **150 email actions per calendar month (UTC)**. The first 7 days after signup are not counted, and `inbox_list` and the dashboard are never counted. When the allowance is reached, every other email action is refused until the 1st of the next month, unattended automations pause and resume automatically on the 1st, and the owner is emailed at 80% and at 100%. Personal, Pro and Team have no monthly cap, subject to fair use (their ceilings are abuse guards, not plan features, and are not printed anywhere). A refusal is not retryable and not a JSON-RPC error: it comes back as a normal tool result with `isError: true`, text that opens with the count and the reset date, and a `_meta["com.mcpemails/usage_limit"]` block that clears at `reset_at`.
+Free workspaces get **150 email actions per calendar month (UTC)**. The first 3 days after signup are not counted (7 days for workspaces created before 2026-10-17), and `inbox_list` and the dashboard are never counted. When the allowance is reached, every other email action is refused until the 1st of the next month, unattended automations pause and resume automatically on the 1st, and the owner is emailed at 80% and at 100%. Personal, Pro and Business have no monthly cap, subject to fair use (their ceilings are abuse guards, not plan features, and are not printed anywhere). A refusal is not retryable and not a JSON-RPC error: it comes back as a normal tool result with `isError: true`, text that opens with the count and the reset date, and a `_meta["com.mcpemails/usage_limit"]` block that clears at `reset_at`.
 
-Internal plan ids predate the names: `solo` is sold as **Pro** and `pro` is sold as **Team**. The newer `personal` id is the only one that matches its display name, **Personal**. Every user who existed before the 2026-08-19 repricing keeps unlimited inboxes for free, permanently, and every workspace created before the 2026-09-12 launch of the action allowance is an early member that is not metered against it. See [`apps/web/src/lib/stripe/plans.ts`](apps/web/src/lib/stripe/plans.ts).
+Internal plan ids predate the names: `solo` is sold as **Pro** and `pro` is sold as **Business** (it was **Team** until 2026-10-19). The newer `personal` id is the only one that matches its display name, **Personal**. Every user who existed before the 2026-08-19 repricing keeps unlimited inboxes for free, permanently, every workspace already on Pro when the 10-inbox cap arrived keeps unlimited inboxes, and every workspace created before the 2026-09-12 launch of the action allowance is an early member that is not metered against it. See [`apps/web/src/lib/stripe/plans.ts`](apps/web/src/lib/stripe/plans.ts).
 
 ## Architecture
 
@@ -218,7 +223,7 @@ flowchart LR
 - **The Postgres database** stores workspaces, members, inboxes (encrypted tokens/passwords), hashed API keys, OAuth clients, scheduled sends, and an activity log — all guarded by Row‑Level Security.
 - **Cron edge functions** refresh Gmail/Outlook OAuth tokens before expiry.
 
-**Stack:** Next.js 16 (App Router) · React 19 · next‑intl 4 · Supabase (Auth, Postgres, Edge Functions) · Stripe · Resend · TypeScript. Email parsing/sanitization via `mailparser`, `jsdom`, and `isomorphic-dompurify`.
+**Stack:** Next.js 16 (App Router) · React 19 · next‑intl 4 · Supabase (Auth, Postgres, Edge Functions) · Stripe · Resend · TypeScript. Email parsing and sanitization run in the edge functions (`supabase/functions/mcp-server/mime.ts`); signature HTML is sanitized with DOMPurify in the browser and a dependency-free allow-list on the server.
 
 ## Repository layout
 
@@ -234,7 +239,6 @@ flowchart LR
 ├── supabase/
 │   ├── functions/
 │   │   ├── mcp-server/          # the MCP server (tools, auth, scopes)
-│   │   ├── gmail-token-refresh/
 │   │   └── outlook-token-refresh/
 │   └── migrations/              # SQL migrations (schema + RLS)
 └── package.json                 # npm workspaces (apps/*)
@@ -284,7 +288,7 @@ Feature‑dependent:
 | `OUTLOOK_CLIENT_ID` / `OUTLOOK_CLIENT_SECRET` / `OUTLOOK_TENANT_ID` | Outlook OAuth (`Mail.ReadWrite`, `Mail.Send`, `offline_access`, `openid`, `profile`, `email`). `OUTLOOK_TENANT_ID` is optional and defaults to `common` |
 | `NEXT_PUBLIC_OAUTH_VERIFICATION_PENDING` | Shows the unverified‑app warning until Google verification completes (the Microsoft publisher is already verified) |
 | `STRIPE_SECRET_KEY` / `STRIPE_WEBHOOK_SECRET` / `NEXT_PUBLIC_STRIPE_PUBLISHABLE_KEY` | Billing |
-| `STRIPE_PRICE_PERSONAL_MONTHLY` / `_YEARLY`, `STRIPE_PRICE_SOLO_MONTHLY` / `_YEARLY`, `STRIPE_PRICE_PRO_MONTHLY` / `_YEARLY` | Plan price IDs (`personal` = Personal, `solo` = Pro, `pro` = Team) |
+| `STRIPE_PRICE_PERSONAL_MONTHLY` / `_YEARLY`, `STRIPE_PRICE_SOLO_MONTHLY` / `_YEARLY`, `STRIPE_PRICE_PRO_MONTHLY` / `_YEARLY` | Plan price IDs (`personal` = Personal, `solo` = Pro, `pro` = Business; the current Business prices live in `STRIPE_PRICE_BUSINESS_*`) |
 | `STRIPE_WEBHOOK_PROXY_KEY` | Optional. Restricts `/api/stripe/webhook` to the delivery queue in front of it. Unset = no restriction. Set it only AFTER the queue is sending the key, or every delivery 401s and is dead‑lettered. |
 | `STRIPE_WEBHOOK_TOLERANCE_SECONDS` | Optional. Stripe signature age limit, default 7 days. Wide because a queued replay carries its original signature; Stripe's own 300s default would reject every held retry. |
 
@@ -431,7 +435,7 @@ Supported locales: **English, Norwegian Bokmål, Spanish, French, Chinese (Simpl
 
 ## Security model
 
-- **Credentials encrypted at rest** with AES‑256‑GCM; decrypted only inside the edge function at call time.
+- **Credentials encrypted at rest** with AES‑256‑GCM; decrypted on the server only for the request that needs them (the `mcp-server` edge function, and the web API routes that check or test a connection).
 - **No message storage** — email bodies and attachments are fetched live and never persisted. Attachment text extraction runs transiently in the request and returns no raw attachment bytes.
 - **API keys are hashed** (only a prefix is stored for display) and scoped per permission and per inbox, with optional expiry.
 - **OAuth 2.0 + PKCE** for client authorization; **Dynamic Client Registration** (RFC 7591) for MCP clients.

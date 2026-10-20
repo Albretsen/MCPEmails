@@ -351,11 +351,12 @@ Deno.test("threaded says whether the draft answers a message on every path, not 
   assertEquals(reply.threaded, true);
   assertEquals((reply.in_reply_to as { message_id: string }).message_id, "INBOX:154");
 
-  // An update or a read carries only the RFC header. `in_reply_to` stays null
-  // (it is typed as a server id) but `threaded` must not read as "lost".
+  // An update or a read carries only the RFC header. Since 2026-10-19 the
+  // context is read back from the draft, with no server id (message_id null),
+  // and `threaded` still must not read as "lost".
   for (const origin of ["update", "read"] as const) {
     const carried = build(normalized({ in_reply_to_header: "<abc@mail>" }), origin);
-    assertEquals(carried.in_reply_to, null);
+    assertEquals(carried.in_reply_to, { message_id: null, subject: "Quarterly numbers", from: null });
     assertEquals(carried.threaded, true);
   }
 
@@ -365,6 +366,54 @@ Deno.test("threaded says whether the draft answers a message on every path, not 
   assertEquals(fresh.threaded, false);
   // An empty header is no header.
   assertEquals(build(normalized({ in_reply_to_header: "" }), "read").threaded, false);
+});
+
+Deno.test("an update or read of a reply draft says who it answers, like the reply card (live test, 2026-10-19)", () => {
+  const build = (draft: NormalizedDraft, origin: "update" | "read" | "save") =>
+    (buildDraftEditorEnvelope({
+      appUrl: APP_URL,
+      draft,
+      inbox: IMAP_INBOX,
+      origin,
+      lastSavedBy: "agent",
+      canSend: true,
+    }).draft as Record<string, unknown>);
+  // The text a reply is stored with (index.ts#buildReplyTextBody), signed.
+  const replyText = "Friday works.\n\n-- \nAsgeir, MCP Emails\n\n" +
+    "On Mon, 7 Sep 2026 17:32:55 +0000, Dana Example <dana@x.example> wrote:\n> Can we move the call?";
+  for (const origin of ["update", "read", "save"] as const) {
+    const d = build(
+      normalized({ subject: "Re: Call on Friday", body_text: replyText, in_reply_to_header: "<orig@x.example>" }),
+      origin,
+    );
+    assertEquals(
+      d.in_reply_to,
+      { message_id: null, subject: "Call on Friday", from: "Dana Example <dana@x.example>" },
+      origin,
+    );
+  }
+  // Neutralised like the reply path's own context.
+  const hostile = build(
+    normalized({
+      subject: "Re: Invoice‮txt.exe",
+      body_text: "Ok.\n\nOn Mon, 7 Sep 2026 17:32:55 +0000, Ev‮e <e@x.example> wrote:\n> pay",
+      in_reply_to_header: "<o@x>",
+    }),
+    "update",
+  ).in_reply_to as { subject: string; from: string };
+  assertEquals(/‮/.test(hostile.subject + hostile.from), false);
+  // No header: a new message never claims to answer one, quote or not.
+  assertEquals(build(normalized({ body_text: replyText }), "update").in_reply_to, null);
+  // The reply path's server id still wins over anything read back.
+  const reply = build(
+    normalized({
+      body_text: replyText,
+      in_reply_to_header: "<orig@x.example>",
+      in_reply_to: { message_id: "INBOX:9", subject: "Call", from: "Dana" },
+    }),
+    "update",
+  );
+  assertEquals(reply.in_reply_to, { message_id: "INBOX:9", subject: "Call", from: "Dana" });
 });
 
 Deno.test("id_is_stable is false on IMAP and true on the two API providers", () => {
@@ -2840,7 +2889,10 @@ Deno.test("deferred body: every envelope an old bundle CAN still receive stays i
     assertEquals(out.result.content.length, 1, `${name}: one content block`);
   }
   // The save line is still the body-free summary.
-  assert(save.result.content[0].text.startsWith("Draft saved. Draft Drafts:3."));
+  assert(save.result.content[0].text.startsWith("Draft saved. To "));
+  // The id is a labelled handle at the end, never part of the sentence.
+  assert(save.result.content[0].text.endsWith(' draft_id: "Drafts:3"'));
+  assertEquals(save.result.content[0].text.split("Drafts:3").length, 2, "the id appears once");
   assert(!save.result.content[0].text.includes("Here they are."));
 
   const receipt = draftReceiptEnvelope({
@@ -3354,16 +3406,36 @@ Deno.test("formatted body: a list item and the heading edited in one save keep t
 });
 
 Deno.test("formatted body: an edit that cannot be placed drops the HTML part and SAYS so", async () => {
-  // A new paragraph: the text has more lines than the HTML can be told about.
+  // A new paragraph in the middle: which block it belongs to is not knowable.
   const { deps, writes } = fakeDeps({ stored: storedFormatted() });
   const out = await runDraftEditorSave(deps, caller(), {
     draft_id: "Drafts:2",
-    body_text: FORMATTED_TEXT + "\n\nOne more thing.",
+    body_text: FORMATTED_TEXT.replace("after the review.", "after the review.\n\nOne more thing."),
   });
   assertEquals(writes[0].params.htmlBody, undefined, "no generated part passing for the original");
   const body = (out.result.structuredContent as any).draft.body;
   assertEquals(body.html, null);
   assertEquals(body.formatting_removed, true);
+});
+
+Deno.test("formatted body: a paragraph added at the end keeps every tag (2026-10-19)", async () => {
+  const { deps, writes } = fakeDeps({ stored: storedFormatted() });
+  const out = await runDraftEditorSave(deps, caller(), {
+    draft_id: "Drafts:2",
+    body_text: FORMATTED_TEXT + " Thanks!\n\nOne more thing.",
+  });
+  // A word on the last line AND a new line: the alignment is not certain.
+  assertEquals(writes[0].params.htmlBody, undefined);
+  assertEquals((out.result.structuredContent as any).draft.body.formatting_removed, true);
+
+  const second = fakeDeps({ stored: storedFormatted() });
+  const appended = await runDraftEditorSave(second.deps, caller(), {
+    draft_id: "Drafts:2",
+    body_text: FORMATTED_TEXT + "\n\nOne more thing.",
+  });
+  assertEquals(appended.result.isError, false);
+  assertEquals(second.writes[0].params.htmlBody, FORMATTED_HTML + "<p>One more thing.</p>");
+  assert(!("formatting_removed" in (appended.result.structuredContent as any).draft.body));
 });
 
 Deno.test("formatted body: link words are never edited under their old address", async () => {
