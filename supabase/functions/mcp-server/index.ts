@@ -33200,7 +33200,8 @@ const DEFAULT_SCHEDULED_DISPATCH_DEPS: ScheduledDispatchDeps = {
       const { args: draftArgs, digest } = splitApprovedDraftPayload(original);
       return executeSendDraft(draftArgs, internalKey, { draftDigest: digest });
     }
-    if (operation === "schedule_create") return executeScheduleSend(original, internalKey);
+    // schedule_create never reaches here: the dispatcher sends an approved
+    // schedule directly (re-running it would try to schedule it again).
     return executeSendEmail(original, internalKey);
   },
   completeApprovedIdempotency: completeApprovedOutboundIdempotency,
@@ -33319,6 +33320,14 @@ async function handleScheduledDispatch(
       continue;
     }
 
+    // Set when this row is the marker of an approved `schedule_create`: its
+    // message goes out by the plain scheduled-send path below, and the
+    // caller's idempotency record is settled once that send has an outcome.
+    let approvedScheduleId: string | null = null;
+    // Whether the provider was asked to send, so a terminal failure of an
+    // approved schedule settles as "unknown" (maybe sent) or "failed" (not).
+    let providerAttempted = false;
+
     try {
       // ── Look up the inbox ──────────────────────────────────────────────
       //
@@ -33412,7 +33421,7 @@ async function handleScheduledDispatch(
       // ── Build SendEmailParams from stored payload ───────────────────────
       // Dual-mode: decrypts encrypted rows, passes legacy plaintext through.
       // An approval marker needs no payload beyond its id.
-      const payload = approvalId === null ? await resolveScheduledPayload(row) : {};
+      let payload: Record<string, unknown> = approvalId === null ? await resolveScheduledPayload(row) : {};
       // Approved requests retain their original operation (reply, forward,
       // draft send, direct send, or schedule). Re-run it only inside this
       // trusted dispatcher; the internal marker cannot be supplied by MCP.
@@ -33512,49 +33521,70 @@ async function handleScheduledDispatch(
           .single();
         if (keyErr || !key) throw new Error("originating API key is unavailable");
         const original = await resolveScheduledPayload(approval);
-        const internalKey = { ...(key as ApiKeyRow), internalApprovalDispatch: true };
-        const dispatchedResult = await deps.runApprovedOperation(
-          String(approval.operation),
-          original,
-          internalKey,
-        );
-        // The caller's idempotency record remains pending until this trusted
-        // dispatcher has reached a terminal outcome. This makes replays after
-        // approval accurately report delivery/failure instead of a stale
-        // approval state.
-        await deps.completeApprovedIdempotency(
-          approval.id,
-          dispatchedResult.logStatus,
-          dispatchedResult.logErrorCode,
-        );
-        if (dispatchedResult.logStatus !== "success") {
-          // Rebuild the non-send signal the handler swallowed when it turned
-          // the error into a tool result, so the catch below can defer this
-          // row instead of failing it. Same reasoning as the interactive path:
-          // nothing was transmitted, so a retry is free of consequence.
-          if (dispatchedResult.logErrorCode === PROVIDER_NOT_SENT_ERROR_CODE) {
-            throw new SmtpNotSentError(`approved ${approval.operation} was refused before transmission`, true);
+        if (String(approval.operation) === "schedule_create") {
+          // An approved SCHEDULED send is not re-run. Re-running
+          // executeScheduleSend would ask it to schedule the message again:
+          // its payload carries no send_at (that lives on the approval and on
+          // this marker's own send_at, which decide.ts copied from it), and by
+          // now that time is not in the future either, so the re-run could
+          // only refuse and the approved message would never go out. This
+          // marker IS the schedule and it is due, so the approved message is
+          // sent as-is by the same path an unapproved scheduled send takes.
+          //
+          // The re-run also re-resolved the inbox through the key, which
+          // honoured a key narrowed to other inboxes since it was approved.
+          // Kept here, as a refusal before anything is sent.
+          approvedScheduleId = approval.id as string;
+          const keyInboxes = (key as ApiKeyRow).inbox_ids;
+          if (keyInboxes !== null && keyInboxes !== undefined && !keyInboxes.includes(row.inbox_id as string)) {
+            throw new Error("the originating API key no longer has access to this mailbox. Nothing was sent.");
           }
-          // The draft could not be read to check it against what was approved:
-          // nothing was sent and nothing is known to have changed, so the send
-          // is held and retried rather than failed as "changed".
-          if (dispatchedResult.logErrorCode === "approved_draft_unreadable") {
-            throw new SmtpNotSentError(
+          payload = original;
+        } else {
+          const internalKey = { ...(key as ApiKeyRow), internalApprovalDispatch: true };
+          const dispatchedResult = await deps.runApprovedOperation(
+            String(approval.operation),
+            original,
+            internalKey,
+          );
+          // The caller's idempotency record remains pending until this trusted
+          // dispatcher has reached a terminal outcome. This makes replays after
+          // approval accurately report delivery/failure instead of a stale
+          // approval state.
+          await deps.completeApprovedIdempotency(
+            approval.id,
+            dispatchedResult.logStatus,
+            dispatchedResult.logErrorCode,
+          );
+          if (dispatchedResult.logStatus !== "success") {
+            // Rebuild the non-send signal the handler swallowed when it turned
+            // the error into a tool result, so the catch below can defer this
+            // row instead of failing it. Same reasoning as the interactive path:
+            // nothing was transmitted, so a retry is free of consequence.
+            if (dispatchedResult.logErrorCode === PROVIDER_NOT_SENT_ERROR_CODE) {
+              throw new SmtpNotSentError(`approved ${approval.operation} was refused before transmission`, true);
+            }
+            // The draft could not be read to check it against what was approved:
+            // nothing was sent and nothing is known to have changed, so the send
+            // is held and retried rather than failed as "changed".
+            if (dispatchedResult.logErrorCode === "approved_draft_unreadable") {
+              throw new SmtpNotSentError(
+                approvedSendRefusalDetail(approval.operation, dispatchedResult.logErrorCode) ??
+                  "the draft could not be read",
+                true,
+              );
+            }
+            // A draft send refused because the draft moved on after approval
+            // (or was already sent) says so in the approver's words.
+            throw new Error(
               approvedSendRefusalDetail(approval.operation, dispatchedResult.logErrorCode) ??
-                "the draft could not be read",
-              true,
+                `approved ${approval.operation} failed: ${dispatchedResult.logErrorCode ?? "unknown"}`,
             );
           }
-          // A draft send refused because the draft moved on after approval
-          // (or was already sent) says so in the approver's words.
-          throw new Error(
-            approvedSendRefusalDetail(approval.operation, dispatchedResult.logErrorCode) ??
-              `approved ${approval.operation} failed: ${dispatchedResult.logErrorCode ?? "unknown"}`,
-          );
+          await db.from("scheduled_sends").update({ status: "sent", sent_at: new Date().toISOString(), updated_at: new Date().toISOString() }).eq("id", row.id);
+          dispatched++;
+          continue;
         }
-        await db.from("scheduled_sends").update({ status: "sent", sent_at: new Date().toISOString(), updated_at: new Date().toISOString() }).eq("id", row.id);
-        dispatched++;
-        continue;
       }
       const sendParams: SendEmailParams = {
         to: Array.isArray(payload["to"]) ? (payload["to"] as string[]) : [],
@@ -33587,7 +33617,11 @@ async function handleScheduledDispatch(
       applySignature(sendParams, inbox);
 
       // ── Per-provider send (mirrors executeSendEmail dispatch) ──────────
+      providerAttempted = true;
       const sendResult: SendEmailResult = await deps.sendViaProvider(inbox, sendParams);
+      if (approvedScheduleId !== null) {
+        await deps.completeApprovedIdempotency(approvedScheduleId, "success", null);
+      }
 
       // ── Mark sent ──────────────────────────────────────────────────────
       await db
@@ -33638,6 +33672,16 @@ async function handleScheduledDispatch(
         `[dispatch] scheduled_send ${row.id} failed:`,
         detail,
       );
+
+      // A deferred row above is still in flight, so only a terminal failure
+      // settles the approved schedule's idempotency record.
+      if (approvedScheduleId !== null) {
+        await deps.completeApprovedIdempotency(
+          approvedScheduleId,
+          "error",
+          !providerAttempted || err instanceof SmtpNotSentError ? PROVIDER_NOT_SENT_ERROR_CODE : "provider_error",
+        );
+      }
 
       // Truncate error_detail to 1 000 chars to match column convention.
       await db
@@ -35558,6 +35602,10 @@ export {
 // statement rather than three more names in the block above, so the two do not
 // collide when another branch edits that list.
 export { executeListDrafts, executeListInbox, executeReadEmails };
+
+// For scheduled-send-approval-flow.test.ts: the production dispatcher deps, so
+// a test can keep the REAL approved-operation path and stub only the provider.
+export { DEFAULT_SCHEDULED_DISPATCH_DEPS };
 
 // For draft-attachments-flow.test.ts: the three draft writes, driven over the
 // fake Gmail / Graph network to pin which files each stored message carries.
