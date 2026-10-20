@@ -1,7 +1,9 @@
-/* /tools/*: the settings lookup card and its explainer. Tokens only; loaded by app/[locale]/tools/email-settings-lookup/page.js. */
+/* /tools/*: the settings lookup card and its explainer. Tokens only; loaded by app/[locale]/tools/email-settings-lookup/page.js.
+   One column: every block starts at the container's left edge, under the H1. Nothing is centered. */
+.pricing-footnote.tool-footnote { margin: 16px 0 0; max-width: 760px; text-align: left; }
 
 .tool-card {
-  max-width: 760px; margin: 28px auto 0; text-align: left; box-sizing: border-box;
+  max-width: 760px; margin: 28px 0 0; text-align: left; box-sizing: border-box;
   background: var(--bg-surface); border: 1px solid var(--border-1); border-radius: 12px; padding: 20px;
 }
 .tool-label { display: block; font-size: 13px; font-weight: 500; color: var(--fg-1); margin-bottom: 6px; }
@@ -43,12 +45,12 @@
 .tool-cta .tool-cta-row { margin-top: 0; }
 .tool-link { font-size: 14px; font-weight: 500; color: var(--cobalt-600); }
 
-.tool-explain { max-width: 760px; margin: 0 auto; display: grid; gap: 24px; }
+.tool-explain { max-width: 760px; margin: 0; display: grid; gap: 24px; }
 .tool-explain h3 { margin: 0 0 6px; font-size: 18px; }
 .tool-explain p { margin: 0; color: var(--fg-2); font-size: 15px; line-height: 1.65; }
 .tool-faq-q { margin: 0; padding: 20px 0 8px; font-family: var(--font-sans); font-size: 16px; font-weight: 500; color: var(--fg-1); }
 .tool-related, .tool-sources {
-  margin: 0 auto; padding: 0; max-width: 760px; list-style: none; display: grid; gap: 10px;
+  margin: 0; padding: 0; max-width: 760px; list-style: none; display: grid; gap: 10px;
   font-size: 14px; line-height: 1.6; color: var(--fg-2);
 }
 .tool-sources { font-size: 13.5px; }
