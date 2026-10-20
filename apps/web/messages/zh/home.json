@@ -52,7 +52,10 @@
     "p2": "MCP Emails 就是一个托管的邮件 MCP 服务器。它支持 Gmail、Outlook 和 Microsoft 365、iCloud、Fastmail 以及任何支持 IMAP 的邮箱，同一个智能体可以同时处理多个邮箱。每次调用时，邮件都从你的服务商实时获取，从不存储在我们的服务器上。",
     "linkImap": "设置 IMAP MCP 服务器",
     "linkBusiness": "面向公司邮箱的邮件 MCP",
-    "linkProviders": "所有支持的邮箱服务商"
+    "linkProviders": "所有支持的邮箱服务商",
+    "guideClaude": "如何将 Claude 连接到你的邮箱",
+    "guideChatgpt": "如何将 ChatGPT 连接到你的邮箱",
+    "guideImap": "Claude IMAP 连接器指南"
   },
   "features": {
     "eyebrow": "原则",

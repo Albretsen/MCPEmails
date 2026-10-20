@@ -427,6 +427,17 @@ export function WhatIs() {
             <Link href="/best-email-mcp-servers">Best email MCP servers compared</Link>
           )}
         </p>
+        {/*
+          The setup guides search sends people to, which the home page did not
+          link at all until 2026-10-20. /blog/connect-claude-to-email turns
+          more of its signups into payers than any provider page. All three
+          posts are translated into every locale, so the Link stays in-locale.
+        */}
+        <p className="whatis-links">
+          <Link href="/blog/connect-claude-to-email">{t('whatIs.guideClaude')}</Link>
+          <Link href="/blog/connect-chatgpt-to-email">{t('whatIs.guideChatgpt')}</Link>
+          <Link href="/blog/claude-imap-connector">{t('whatIs.guideImap')}</Link>
+        </p>
       </div>
     </section>
   );

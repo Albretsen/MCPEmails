@@ -52,7 +52,10 @@
     "p2": "MCP Emails en est un, hébergé. Il fonctionne avec Gmail, Outlook et Microsoft 365, iCloud, Fastmail et toute boîte compatible IMAP, et un même agent peut travailler sur plusieurs boîtes à la fois. Le courrier est récupéré en direct auprès de votre fournisseur à chaque appel et n'est jamais stocké sur nos serveurs.",
     "linkImap": "Configurer le serveur MCP pour IMAP",
     "linkBusiness": "MCP e-mail pour les boîtes de l'entreprise",
-    "linkProviders": "Tous les fournisseurs e-mail pris en charge"
+    "linkProviders": "Tous les fournisseurs e-mail pris en charge",
+    "guideClaude": "Connecter Claude à vos e-mails",
+    "guideChatgpt": "Connecter ChatGPT à vos e-mails",
+    "guideImap": "Guide du connecteur IMAP pour Claude"
   },
   "features": {
     "eyebrow": "Principes",
