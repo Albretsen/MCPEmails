@@ -26,6 +26,17 @@ import { connectJsonLd } from '../../i18n/seo.ts';
 import { stripTags } from '../../../components/marketing/RichText.jsx';
 import { getPost, getPostLocales } from '../blog/posts.js';
 
+// URLs and host names are compared after parsing, never by substring.
+const urlsIn = (text) =>
+  (stripTags(text).match(/https?:\/\/[^\s"'()，。、]+/g) ?? [])
+    .map((u) => new URL(u.replace(/[.,;:]+$/, '')))
+    .map((u) => `${u.protocol}//${u.host}${u.pathname}`);
+const codeUrlsIn = (text) =>
+  [...text.matchAll(/<code>([\s\S]*?)<\/code>/g)].flatMap((m) => urlsIn(m[1]));
+const hostsIn = (text) =>
+  (stripTags(text).match(/(?<![\w./-])[a-z0-9-]+(?:\.[a-z0-9-]+)+(?![\w/-])/gi) ?? [])
+    .map((h) => h.replace(/\.+$/, '').toLowerCase());
+
 const here = path.dirname(fileURLToPath(import.meta.url));
 const copy = (locale) => JSON.parse(readFileSync(path.join(here, 'chatgpt', `${locale}.json`), 'utf8'));
 const docs = (locale) =>
@@ -91,10 +102,10 @@ test('the claims match /docs/chatgpt in every locale', () => {
     assert.ok(PLAN_LIST.test(answer), `${locale}: /docs/chatgpt lost its plan list`);
     for (const key of ['sub', 'faqA']) {
       assert.ok(PLAN_LIST.test(c[key]), `${locale} ${key} must name the docs' plans`);
-      assert.ok(c[key].includes('chatgpt.com'), `${locale} ${key} must say it is on chatgpt.com`);
+      assert.ok(hostsIn(c[key]).some((h) => h === 'chatgpt.com'), `${locale} ${key} must say it is on chatgpt.com`);
     }
-    assert.ok(c.steps.some((s) => s.includes(`<code>${MCP_URL}</code>`)), `${locale}: connector URL`);
-    assert.ok(c.faqA.includes(MCP_URL), `${locale}: FAQ connector URL`);
+    assert.deepEqual(c.steps.flatMap(codeUrlsIn), [MCP_URL], `${locale}: connector URL`);
+    assert.deepEqual(urlsIn(c.faqA), [MCP_URL], `${locale}: FAQ connector URL`);
     assert.ok(c.steps.some((s) => s.includes('OAuth')) && c.faqA.includes('OAuth'), `${locale}: OAuth`);
     // The menu path is written the way /docs/chatgpt writes it in that locale.
     assert.ok(c.steps.some((s) => MENU_PATH.test(s)), locale);
@@ -127,7 +138,7 @@ test('the provider name is filled in, and the directory variant swaps the steps'
     const listed = chatgptSection(c, 'AOL Mail', 'https://chatgpt.com/apps/example');
     assert.deepEqual(listed.steps, c.directorySteps.map((x) => x.replaceAll('{provider}', 'AOL Mail')));
     assert.deepEqual(listed.listing, { href: 'https://chatgpt.com/apps/example', label: c.directoryLink });
-    assert.ok(!listed.steps.join(' ').includes(MCP_URL), `${locale}: directory steps need no URL`);
+    assert.deepEqual(listed.steps.flatMap(urlsIn), [], `${locale}: directory steps need no URL`);
 
     const faq = chatgptFaq(c, 'AOL Mail');
     assert.ok(faq.q.includes('AOL Mail') && faq.a.includes('AOL Mail'), locale);
