@@ -23,6 +23,7 @@ import {
 import { ApprovalsPanel } from './ApprovalsPanel';
 import { AutomationsPanel } from './AutomationsPanel';
 import { SsoSettingsSection } from './SsoSettingsSection';
+import { FolderOverridesEditor } from './FolderOverridesEditor';
 import { usePricingView } from '@/lib/analytics/use-pricing-view.mjs';
 import { PLANS as CATALOGUE } from '@/lib/stripe/plans';
 import { trimLeadingQuietDays } from '@/lib/analytics/retention';
@@ -3029,6 +3030,33 @@ const InboxDetailRow = ({ label, children }) => (
   </div>
 );
 
+/**
+ * Folder choice applies to an inbox that reads over IMAP with a password, on
+ * implicit TLS (the dashboard's IMAP client does not speak STARTTLS). Gmail
+ * and Outlook API inboxes file Sent themselves, and a send-only inbox has no
+ * folders. The route checks the same on the stored row.
+ */
+export function folderChoiceAvailable(inbox) {
+  return !!inbox.hasImap
+    && (inbox.connectionMode === 'both' || inbox.connectionMode === 'imap')
+    && inbox.imapSecurity !== 'starttls'
+    && inbox.status !== 'pending';
+}
+
+/**
+ * The collapsed "Advanced" section of the inbox detail. Its contents mount
+ * only while it is open, so opening an inbox never dials its mail server.
+ */
+export function InboxAdvancedSection({ inbox, t }) {
+  const [open, setOpen] = useState(false);
+  return (
+    <details className="inbox-sending-details inbox-advanced-details" onToggle={e => setOpen(e.currentTarget.open)}>
+      <summary><span>{t('inboxes.detail.advanced')}</span></summary>
+      {open && <FolderOverridesEditor inbox={inbox} t={t} />}
+    </details>
+  );
+}
+
 function InboxDetailModal({ inbox, checking, onClose, onReconnect, onCheck, onDisconnect, onSaveSignature, onSaveSenderName, onSaveDraftEditorHidden, draftEditorRolledOut = false, draftEditorWorkspaceHidden = false, canManageInbox = true, canManageReview = true, historyDays = 30 }) {
   const t = useTranslations('dashboard');
   if (!inbox) return null;
@@ -3166,6 +3194,8 @@ function InboxDetailModal({ inbox, checking, onClose, onReconnect, onCheck, onDi
               <SignatureEditor inbox={inbox} onSave={onSaveSignature} t={t} readOnly={!canManageInbox} canManageReview={canManageInbox && canManageReview} />
             </details>
           )}
+
+          {canManageInbox && folderChoiceAvailable(inbox) && <InboxAdvancedSection inbox={inbox} t={t} />}
 
           {!canManageInbox ? (
             <p style={{ margin: 0, fontSize: 12, color: 'var(--fg-3)', textAlign: 'right' }}>

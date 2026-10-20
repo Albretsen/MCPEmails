@@ -264,6 +264,34 @@
         "imageNote": "Enkelte e-postklienter (f.eks. Gmail) kan skjule bilder til mottakeren klikker «vis bilder». Dette er normalt for signaturer med bilder som ligger på nett. Slå på «Bygg inn bilder i meldingen» nedenfor for å sende dem inne i e-posten i stedet.",
         "embedImages": "Bygg inn bilder i meldingen",
         "embedImagesHint": "Sender logoen inne i hver e-post i stedet for å laste den fra nettadressen, slik at den vises i utkast og i e-postprogrammer som blokkerer eksterne bilder, som Outlook og Thunderbird. Bilder opptil 512 kB; større bilder forblir lenket."
+      },
+      "advanced": "Avansert",
+      "folders": {
+        "title": "Mapper",
+        "help": "MCPEmails finner disse mappene selv. Velg en mappe bare hvis den valgte feil mappe eller ikke fant noen.",
+        "loading": "Laster inn mapper…",
+        "roles": {
+          "sent": "Sendt",
+          "drafts": "Utkast",
+          "trash": "Papirkurv",
+          "spam": "Søppelpost",
+          "archive": "Arkiv"
+        },
+        "automatic": "Automatisk ({folder})",
+        "automaticNone": "Automatisk (ikke funnet)",
+        "reset": "Tilbakestill til automatisk",
+        "saved": "Lagret. {role} bruker nå {folder}.",
+        "resetDone": "Lagret. {role} er automatisk igjen.",
+        "errors": {
+          "load": "Kunne ikke laste inn mappene. Prøv igjen.",
+          "save": "Kunne ikke lagre. Prøv igjen.",
+          "inbox_not_allowed": "Innboksen kan ikke brukes til dette.",
+          "not_listed": "Den mappen finnes ikke lenger på e-postserveren. Lukk og åpne igjen for å oppdatere listen.",
+          "used_by_other_role": "Den mappen brukes allerede til noe annet.",
+          "folders_unreachable": "Fikk ikke kontakt med e-postserveren for å hente mappene. Prøv igjen.",
+          "unavailable": "Mappeinnstillinger er ikke tilgjengelige ennå.",
+          "unsupported_inbox": "Mappeinnstillinger er ikke tilgjengelige for denne innboksen."
+        }
       }
     },
     "emptyAltLead": "Ikke klar til å koble til en postkasse ennå?",

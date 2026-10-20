@@ -264,6 +264,34 @@
         "imageNote": "Manche E-Mail-Programme (z. B. Gmail) blenden Bilder aus, bis der Empfänger auf „Bilder anzeigen“ klickt. Das ist bei Signaturen mit gehosteten Bildern normal. Aktivieren Sie unten „Bilder in die Nachricht einbetten“, um sie stattdessen in der E-Mail mitzusenden.",
         "embedImages": "Bilder in die Nachricht einbetten",
         "embedImagesHint": "Sendet Ihr Logo in jeder E-Mail mit, statt es von seiner Webadresse zu laden. So erscheint es auch in Entwürfen und in Mail-Apps, die externe Bilder blockieren, etwa Outlook und Thunderbird. Bilder bis 512 KB, größere bleiben verlinkt."
+      },
+      "advanced": "Erweitert",
+      "folders": {
+        "title": "Ordner",
+        "help": "MCPEmails findet diese Ordner selbst. Wählen Sie nur dann einen aus, wenn der falsche Ordner gewählt oder keiner gefunden wurde.",
+        "loading": "Ordner werden geladen…",
+        "roles": {
+          "sent": "Gesendet",
+          "drafts": "Entwürfe",
+          "trash": "Papierkorb",
+          "spam": "Spam",
+          "archive": "Archiv"
+        },
+        "automatic": "Automatisch ({folder})",
+        "automaticNone": "Automatisch (nicht gefunden)",
+        "reset": "Auf automatisch zurücksetzen",
+        "saved": "Gespeichert. {role} verwendet jetzt {folder}.",
+        "resetDone": "Gespeichert. {role} ist wieder automatisch.",
+        "errors": {
+          "load": "Die Ordner konnten nicht geladen werden. Bitte erneut versuchen.",
+          "save": "Speichern fehlgeschlagen. Bitte erneut versuchen.",
+          "inbox_not_allowed": "Der Posteingang kann dafür nicht verwendet werden.",
+          "not_listed": "Dieser Ordner ist nicht mehr auf dem Mailserver. Schließen und erneut öffnen, um die Liste zu aktualisieren.",
+          "used_by_other_role": "Dieser Ordner wird bereits für eine andere Rolle verwendet.",
+          "folders_unreachable": "Der Mailserver war nicht erreichbar, um die Ordner abzurufen. Bitte erneut versuchen.",
+          "unavailable": "Ordnereinstellungen sind noch nicht verfügbar.",
+          "unsupported_inbox": "Ordnereinstellungen sind für dieses Postfach nicht verfügbar."
+        }
       }
     },
     "emptyAltLead": "Noch nicht bereit, ein Postfach zu verbinden?",

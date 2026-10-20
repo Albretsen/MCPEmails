@@ -1,12 +1,13 @@
 {
   "$schema": "https://openapi.vercel.sh/vercel.json",
-  "ignoreCommand": "if [ \"$VERCEL_ENV\" != \"production\" ]; then exit 0; fi; git diff --quiet HEAD^ HEAD -- . ../../packages ../../package.json ../../package-lock.json ../../supabase/functions/mcp-server/search-translate.ts",
+  "ignoreCommand": "if [ \"$VERCEL_ENV\" != \"production\" ]; then exit 0; fi; git diff --quiet HEAD^ HEAD -- . ../../packages ../../package.json ../../package-lock.json ../../supabase/functions/mcp-server/search-translate.ts ../../supabase/functions/mcp-server/folder-overrides.ts ../../supabase/functions/mcp-server/imap-folder-target.ts ../../supabase/functions/mcp-server/sent-copy.ts",
   "functions": {
     "app/api/automations/preview/route.ts": { "regions": ["iad1"] },
     "app/api/inboxes/imap/route.ts": { "regions": ["iad1"] },
     "app/api/inboxes/app-password/route.ts": { "regions": ["iad1"] },
     "app/api/inboxes/fastmail-app-password/route.ts": { "regions": ["iad1"] },
     "app/api/inboxes/[id]/check/route.ts": { "regions": ["iad1"] },
+    "app/api/inboxes/[id]/folders/route.ts": { "regions": ["iad1"] },
     "app/api/inboxes/[id]/route.ts": { "regions": ["iad1"] },
     "app/auth/gmail/callback/route.ts": { "regions": ["iad1"] },
     "app/auth/outlook/callback/route.ts": { "regions": ["iad1"] },

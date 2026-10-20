@@ -264,6 +264,34 @@
         "imageNote": "Algunos clientes de correo (p. ej. Gmail) pueden ocultar las imágenes hasta que el destinatario haga clic en \"mostrar imágenes\". Esto es normal en las firmas con imágenes alojadas. Activa \"Incrustar las imágenes en el mensaje\" más abajo para enviarlas dentro del correo.",
         "embedImages": "Incrustar las imágenes en el mensaje",
         "embedImagesHint": "Envía tu logotipo dentro de cada correo en lugar de cargarlo desde su dirección web, para que se vea en los borradores y en las aplicaciones de correo que bloquean las imágenes remotas, como Outlook y Thunderbird. Imágenes de hasta 512 KB; las más grandes siguen enlazadas."
+      },
+      "advanced": "Avanzado",
+      "folders": {
+        "title": "Carpetas",
+        "help": "MCPEmails encuentra estas carpetas por sí solo. Elige una solo si eligió la carpeta equivocada o no encontró ninguna.",
+        "loading": "Cargando carpetas…",
+        "roles": {
+          "sent": "Enviados",
+          "drafts": "Borradores",
+          "trash": "Papelera",
+          "spam": "Spam",
+          "archive": "Archivo"
+        },
+        "automatic": "Automático ({folder})",
+        "automaticNone": "Automático (no encontrada)",
+        "reset": "Volver a automático",
+        "saved": "Guardado. {role} usa ahora {folder}.",
+        "resetDone": "Guardado. {role} vuelve a ser automático.",
+        "errors": {
+          "load": "No se pudieron cargar las carpetas. Inténtalo de nuevo.",
+          "save": "No se pudo guardar. Inténtalo de nuevo.",
+          "inbox_not_allowed": "La bandeja de entrada no se puede usar para esto.",
+          "not_listed": "Esa carpeta ya no está en el servidor de correo. Cierra y vuelve a abrir para actualizar la lista.",
+          "used_by_other_role": "Esa carpeta ya se usa para otra función.",
+          "folders_unreachable": "No se pudo contactar con el servidor de correo para ver las carpetas. Inténtalo de nuevo.",
+          "unavailable": "Los ajustes de carpetas aún no están disponibles.",
+          "unsupported_inbox": "Los ajustes de carpetas no están disponibles para esta bandeja."
+        }
       }
     },
     "emptyAltLead": "¿Todavía no quieres conectar un buzón?",

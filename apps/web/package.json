@@ -57,6 +57,8 @@
     "test:sanitizer": "node --test src/lib/sanitizeSignatureHtml.test.mjs",
     "test:sender-name": "node --test --experimental-strip-types src/lib/inboxes/sender-name.test.ts",
     "test:send-as": "node --test --experimental-strip-types --experimental-test-module-mocks --import ./scripts/register-ts-alias.mjs src/lib/inboxes/send-as.test.ts app/api/inboxes/send-as-route.test.ts",
+    "test:folder-overrides": "node --test --experimental-strip-types --experimental-test-module-mocks --import ./scripts/register-ts-alias.mjs src/lib/inboxes/folder-overrides.test.ts app/api/inboxes/folders-route.test.ts",
+    "test:folder-overrides-ui": "node --test --experimental-strip-types --import ./scripts/register-dom-tests.mjs components/dashboard/folder-overrides-ui.test.mjs",
     "test:send-as-ui": "node --test --experimental-strip-types --import ./scripts/register-dom-tests.mjs components/dashboard/send-as-ui.test.mjs",
     "test:oauth-resource": "node --test --experimental-strip-types src/lib/oauth/resource.test.ts",
     "test:oauth-cimd": "node --test --experimental-strip-types --import ./scripts/register-ts-alias.mjs src/lib/oauth/cimd.test.ts",
