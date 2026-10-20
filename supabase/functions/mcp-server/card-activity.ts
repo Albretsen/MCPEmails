@@ -271,7 +271,7 @@ export function cardActivityNote(
   const send = sorted.filter((r) => r.action === "sent").at(-1) ?? null;
   const name = draftName(opts.subject);
   const parts: string[] = [
-    `Before this call, the MCP Emails draft editor (the card in which the user can edit, save and ` +
+    `Before this call, the MCPEmails draft editor (the card in which the user can edit, save and ` +
     `send a draft) recorded changes to ${name} that may not appear in this conversation.`,
   ];
   if (saves.length > 0) {

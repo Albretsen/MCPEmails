@@ -26,7 +26,7 @@
     "meta0": "第一个邮箱免费，其余按套餐连接",
     "meta1": "使用邮箱密码，无需 OAuth 配置",
     "meta2": "邮件实时获取，绝不存储",
-    "answer": "Claude 无法自行访问 IONOS。MCP Emails 是一个托管 MCP 服务器，使用你的邮箱密码通过 IMAP 与之连接，让 Claude、Cursor 或任意 MCP 客户端都能读取、搜索、发送并整理这些邮件。设置只需几分钟。公司的每个地址（如 info@ 或 sales@）都作为独立邮箱连接：一个邮箱免费，Personal 连接三个，Pro 最多连接 10 个，Business 按需连接更多。"
+    "answer": "Claude 无法自行访问 IONOS。MCPEmails 是一个托管 MCP 服务器，使用你的邮箱密码通过 IMAP 与之连接，让 Claude、Cursor 或任意 MCP 客户端都能读取、搜索、发送并整理这些邮件。设置只需几分钟。公司的每个地址（如 info@ 或 sales@）都作为独立邮箱连接：一个邮箱免费，Personal 连接三个，Pro 最多连接 10 个，Business 按需连接更多。"
   },
   "persona": {
     "intro": "在 IONOS 有好几个公司邮箱？",
@@ -35,19 +35,19 @@
   },
   "method": {
     "title": "IONOS 如何连接：IMAP 与你的邮箱密码",
-    "body": "IONOS 通过 IMAP/SMTP 连接，使用你在 IONOS 控制面板“电子邮件”中为该地址设置的<b>邮箱密码</b>，它与 IONOS 登录密码是分开的。服务器名称取决于向你出售邮箱的 IONOS 站点：IONOS 德国的文档是 <code>imap.ionos.de</code> 和 <code>smtp.ionos.de</code>，IONOS 英国是 <code>imap.ionos.co.uk</code> 和 <code>smtp.ionos.co.uk</code>，ionos.com 是 <code>imap.ionos.com</code> 和 <code>smtp.ionos.com</code>。IONOS 在两种标准传输方式上都会响应，993 加 TLS 和 143 加 STARTTLS，所以端口很少是 IONOS 登录失败的原因，而且如果第一种没有响应，MCP Emails 会自动尝试另一种。"
+    "body": "IONOS 通过 IMAP/SMTP 连接，使用你在 IONOS 控制面板“电子邮件”中为该地址设置的<b>邮箱密码</b>，它与 IONOS 登录密码是分开的。服务器名称取决于向你出售邮箱的 IONOS 站点：IONOS 德国的文档是 <code>imap.ionos.de</code> 和 <code>smtp.ionos.de</code>，IONOS 英国是 <code>imap.ionos.co.uk</code> 和 <code>smtp.ionos.co.uk</code>，ionos.com 是 <code>imap.ionos.com</code> 和 <code>smtp.ionos.com</code>。IONOS 在两种标准传输方式上都会响应，993 加 TLS 和 143 加 STARTTLS，所以端口很少是 IONOS 登录失败的原因，而且如果第一种没有响应，MCPEmails 会自动尝试另一种。"
   },
   "setup": [
     {
       "h": "创建免费账户",
-      "p": "注册 MCP Emails，无需信用卡。免费套餐可永久连接一个收件箱。"
+      "p": "注册 MCPEmails，无需信用卡。免费套餐可永久连接一个收件箱。"
     },
     {
       "h": "获取你的 IONOS 邮箱密码",
       "p": "在 IONOS 控制面板中打开 Email，选择该地址，设置或重置其密码。它不是你登录 IONOS 本身所用的密码。"
     },
     {
-      "h": "粘贴到 MCP Emails",
+      "h": "粘贴到 MCPEmails",
       "p": "选择 IMAP / SMTP，填入你的 IONOS 地址和邮箱密码。上方显示的是 ionos.com 的服务器：如果邮箱是在 ionos.de 购买的，请改用 imap.ionos.de 和 smtp.ionos.de；ionos.co.uk 则使用 .co.uk 的名称。"
     },
     {
@@ -66,7 +66,7 @@
     },
     {
       "h": "IONOS 销售的 Microsoft 365 是微软的邮箱，而不是 IONOS 的",
-      "p": "IONOS 在自己的 Mail Basic 和 Mail Business 产品之外还转售 Microsoft 365，大量自认为拥有 IONOS 邮箱的客户，实际上拥有的是开着 IONOS 发票的微软租户。<code>imap.ionos.com</code> 上的任何东西都不适用于这些邮箱：它们位于微软的服务器上，在 Microsoft 365 Admin Center 而不是 IONOS 控制面板中管理。请用 Outlook 选项（使用 Microsoft 登录）而不是 IMAP 连接它们。你所在组织的 IT 管理员可能需要先批准一次 MCP Emails，控制台会给你一个审批链接，供你发给管理员。判断方法是看网页邮箱把你带到哪里：Outlook 网页版就意味着是微软。"
+      "p": "IONOS 在自己的 Mail Basic 和 Mail Business 产品之外还转售 Microsoft 365，大量自认为拥有 IONOS 邮箱的客户，实际上拥有的是开着 IONOS 发票的微软租户。<code>imap.ionos.com</code> 上的任何东西都不适用于这些邮箱：它们位于微软的服务器上，在 Microsoft 365 Admin Center 而不是 IONOS 控制面板中管理。请用 Outlook 选项（使用 Microsoft 登录）而不是 IMAP 连接它们。你所在组织的 IT 管理员可能需要先批准一次 MCPEmails，控制台会给你一个审批链接，供你发给管理员。判断方法是看网页邮箱把你带到哪里：Outlook 网页版就意味着是微软。"
     },
     {
       "h": "IONOS 德国、IONOS 英国和 ionos.com 的文档给出的服务器名称不同",
@@ -75,12 +75,12 @@
   ],
   "limits": [
     "通过 IONOS 购买的 Microsoft 365 邮箱不在 imap.ionos.com 上。请用 Outlook（使用 Microsoft 登录）连接；可能需要 IT 管理员批准一次该应用。",
-    "MCP Emails 连接的是邮箱。IONOS 的别名、转发器、全部接收规则和垃圾邮件设置仍在 IONOS 控制面板中管理，你的 AI 客户端看不到它们。"
+    "MCPEmails 连接的是邮箱。IONOS 的别名、转发器、全部接收规则和垃圾邮件设置仍在 IONOS 控制面板中管理，你的 AI 客户端看不到它们。"
   ],
   "faq": [
     {
       "q": "Claude 能用于 IONOS 邮箱吗？",
-      "a": "只要将 MCP Emails 这样的 MCP 服务器通过 IMAP 连接到 IONOS 邮箱（即由 imap.ionos.com 提供服务的那种），就能使用。Claude 没有内置的 IONOS 连接器。通过 IONOS 购买的 Microsoft 365 邮箱同样可以使用，但要用 Outlook（使用 Microsoft 登录）而不是 IMAP 连接，并且可能需要 IT 管理员先批准一次 MCP Emails。"
+      "a": "只要将 MCPEmails 这样的 MCP 服务器通过 IMAP 连接到 IONOS 邮箱（即由 imap.ionos.com 提供服务的那种），就能使用。Claude 没有内置的 IONOS 连接器。通过 IONOS 购买的 Microsoft 365 邮箱同样可以使用，但要用 Outlook（使用 Microsoft 登录）而不是 IMAP 连接，并且可能需要 IT 管理员先批准一次 MCPEmails。"
     },
     {
       "q": "IONOS 的 IMAP 和 SMTP 设置是什么？",

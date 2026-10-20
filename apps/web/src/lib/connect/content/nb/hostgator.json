@@ -20,7 +20,7 @@
     "titleLine1": "Koble HostGator-e-post til Claude,",
     "titleLine2": "Cursor, ChatGPT og enhver MCP-klient",
     "lead": "Gi AI-agenten din en ekte HostGator-postkasse. Les, søk, send, svar, planlegg og organiser e-post over IMAP, med servernavnet som HostGators sertifikat faktisk dekker.",
-    "answer": "Claude kan ikke nå en HostGator-postkasse på egen hånd. MCP Emails er en driftet MCP-server som kobler den til over vanlig IMAP på port 993, slik at Claude, Cursor eller enhver MCP-klient kan lese, søke i, sende og organisere den e-posten. HostGator har ikke én felles e-postserver: for en sikker tilkobling peker du mot din egen servers vertsnavn, som er gatorNNNN.hostgator.com på delte planer og skyplaner og servername.websitewelcome.com på forhandlerplaner, fordi det er de navnene wildcard-sertifikatet deres dekker. Autentiseringen skjer med passordet som er satt på postkassen i cPanel, og én innboks er gratis.",
+    "answer": "Claude kan ikke nå en HostGator-postkasse på egen hånd. MCPEmails er en driftet MCP-server som kobler den til over vanlig IMAP på port 993, slik at Claude, Cursor eller enhver MCP-klient kan lese, søke i, sende og organisere den e-posten. HostGator har ikke én felles e-postserver: for en sikker tilkobling peker du mot din egen servers vertsnavn, som er gatorNNNN.hostgator.com på delte planer og skyplaner og servername.websitewelcome.com på forhandlerplaner, fordi det er de navnene wildcard-sertifikatet deres dekker. Autentiseringen skjer med passordet som er satt på postkassen i cPanel, og én innboks er gratis.",
     "meta0": "1 innboks gratis, for alltid",
     "meta1": "Postkassepassord fra cPanel",
     "meta2": "E-post hentes direkte, lagres aldri"
@@ -31,7 +31,7 @@
   },
   "setup": [
     {
-      "h": "Opprett en gratis MCP Emails-konto",
+      "h": "Opprett en gratis MCPEmails-konto",
       "p": "Registrer deg på mcpemails.com. Gratisplanen kobler til én innboks og krever ikke kort."
     },
     {
@@ -40,7 +40,7 @@
     },
     {
       "h": "Bruk postkassepassordet, ikke cPanel-passordet",
-      "p": "IMAP autentiserer mot passordet som er satt på den enkelte adressen. Åpne <b>Email Accounts</b> i cPanel og klikk <b>Manage</b> ved siden av adressen for å sette et. Lim det deretter inn i MCP Emails sammen med hele e-postadressen som brukernavn og servernavnet du nettopp kopierte."
+      "p": "IMAP autentiserer mot passordet som er satt på den enkelte adressen. Åpne <b>Email Accounts</b> i cPanel og klikk <b>Manage</b> ved siden av adressen for å sette et. Lim det deretter inn i MCPEmails sammen med hele e-postadressen som brukernavn og servernavnet du nettopp kopierte."
     },
     {
       "h": "Lim MCP-URL-en inn i AI-en",
@@ -68,7 +68,7 @@
   "faq": [
     {
       "q": "Fungerer Claude med HostGator-e-post?",
-      "a": "Ikke direkte. Claude har ingen HostGator-kobling. Kobler du en MCP-server som MCP Emails til postkassen over IMAP, får Claude tilgang til å lese, søke, sende, svare, planlegge og organisere den, med de samme påloggingsopplysningene som enhver e-postklient på datamaskinen ville brukt."
+      "a": "Ikke direkte. Claude har ingen HostGator-kobling. Kobler du en MCP-server som MCPEmails til postkassen over IMAP, får Claude tilgang til å lese, søke, sende, svare, planlegge og organisere den, med de samme påloggingsopplysningene som enhver e-postklient på datamaskinen ville brukt."
     },
     {
       "q": "Hva er IMAP- og SMTP-innstillingene for HostGator?",

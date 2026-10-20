@@ -19,7 +19,7 @@ Lo que ninguno de los dos está pensado para cubrir es el buzón que una empresa
 
 ## Un solo conector para todos los buzones
 
-MCP Emails es un servidor MCP alojado. Conectas cada buzón una vez y tu cliente de IA llega a todos a través de una sola URL:
+MCPEmails es un servidor MCP alojado. Conectas cada buzón una vez y tu cliente de IA llega a todos a través de una sola URL:
 
 \`\`\`
 https://mcpemails.com/api/mcp
@@ -34,7 +34,7 @@ El correo se obtiene en vivo en cada solicitud y no se almacena. La única excep
 
 ## Conecta los buzones
 
-En el panel de MCP Emails, abre **Inboxes**, luego **Connect Inbox**, una vez por buzón:
+En el panel de MCPEmails, abre **Inboxes**, luego **Connect Inbox**, una vez por buzón:
 
 - **Buzón de empresa en su propio dominio.** Elige **IMAP** y escribe la dirección. Los proveedores habituales se reconocen a partir de la dirección, y un dominio de Google Workspace se reconoce por sus registros de correo, así que los ajustes se rellenan solos. Usa la contraseña o la contraseña de aplicación que pida tu proveedor.
 - **Gmail o Google Workspace.** Una contraseña de aplicación de Google por IMAP. Google solo la ofrece cuando la verificación en dos pasos está activada, y en Workspace tu administrador puede desactivar las contraseñas de aplicación y el IMAP.
@@ -48,7 +48,7 @@ En claude.ai o Claude Desktop:
 
 1. Abre **Settings**, luego **Connectors**.
 2. Elige **Add custom connector** y pega \`https://mcpemails.com/api/mcp\`.
-3. Selecciona **Connect**, inicia sesión en MCP Emails y aprueba.
+3. Selecciona **Connect**, inicia sesión en MCPEmails y aprueba.
 
 Todos los buzones que conectaste quedan disponibles. La [guía de Claude](/blog/connect-claude-to-email) tiene los detalles.
 
@@ -57,8 +57,8 @@ Todos los buzones que conectaste quedan disponibles. La [guía de Claude](/blog/
 Los conectores personalizados requieren ChatGPT Plus, Pro, Business, Enterprise o Edu en la web, con el modo de desarrollador activado. En Business y Enterprise, puede que un administrador tenga que permitirlo antes.
 
 1. Activa el **modo de desarrollador** en los ajustes de ChatGPT, dentro de la configuración avanzada de aplicaciones y conectores.
-2. Crea un conector, pega \`https://mcpemails.com/api/mcp\`, elige **OAuth** y autoriza con MCP Emails.
-3. En cada chat nuevo, haz clic en **+**, elige **Developer mode** y selecciona la app de MCP Emails.
+2. Crea un conector, pega \`https://mcpemails.com/api/mcp\`, elige **OAuth** y autoriza con MCPEmails.
+3. En cada chat nuevo, haz clic en **+**, elige **Developer mode** y selecciona la app de MCPEmails.
 
 La [guía de ChatGPT](/blog/connect-chatgpt-to-email) explica los menús y los errores habituales.
 
@@ -83,18 +83,18 @@ Activa **Revisar antes de enviar** (Review before sending) en cualquier buzón y
 - **Pro:** hasta 10 buzones, con un solo inicio de sesión.
 - **Business:** 10 buzones incluidos y $3 al mes por cada uno extra, y para cuando una segunda persona necesita su propio inicio de sesión.
 
-Una empresa con info@, ventas@ y facturas@ más tu propia dirección son cuatro buzones, es decir, Pro. Los precios actuales están en la [página de precios](/pricing), y [MCP Emails para empresas](/for/business) muestra cómo una sola persona lleva todos los buzones de la empresa desde un solo agente.
+Una empresa con info@, ventas@ y facturas@ más tu propia dirección son cuatro buzones, es decir, Pro. Los precios actuales están en la [página de precios](/pricing), y [MCPEmails para empresas](/for/business) muestra cómo una sola persona lleva todos los buzones de la empresa desde un solo agente.
 
 ## Preguntas frecuentes
 
 **¿Puede Claude usar más de una cuenta de correo a la vez?**
-Sí, a través de un servidor MCP. Conecta cada buzón a MCP Emails, añade un conector personalizado a Claude y Claude los verá todos e indicará el buzón en cada llamada.
+Sí, a través de un servidor MCP. Conecta cada buzón a MCPEmails, añade un conector personalizado a Claude y Claude los verá todos e indicará el buzón en cada llamada.
 
 **¿Puede ChatGPT usar más de una cuenta de correo?**
-Su propio plugin de Gmail ya admite varias cuentas de Google. Para los buzones que no están en Google, como una dirección de empresa en IONOS, Zoho o un hosting con cPanel, añade MCP Emails como conector personalizado y todos los buzones conectados quedarán disponibles.
+Su propio plugin de Gmail ya admite varias cuentas de Google. Para los buzones que no están en Google, como una dirección de empresa en IONOS, Zoho o un hosting con cPanel, añade MCPEmails como conector personalizado y todos los buzones conectados quedarán disponibles.
 
 **¿Necesito un conector distinto para cada buzón?**
-No. Una sola URL de conector cubre todos los buzones de tu espacio de trabajo de MCP Emails, y la misma URL funciona en Claude, ChatGPT y otros clientes MCP.
+No. Una sola URL de conector cubre todos los buzones de tu espacio de trabajo de MCPEmails, y la misma URL funciona en Claude, ChatGPT y otros clientes MCP.
 
 **¿Saldrá la respuesta desde la dirección correcta?**
 Sí. Cada buzón envía a través de su propio proveedor o servidor de correo, con su propio nombre visible y su propia firma. Para enviar desde otra dirección en un buzón IMAP, añádela en los ajustes de ese buzón en el panel y verifícala con el código que se envía a esa dirección. Outlook envía desde la dirección conectada, y una dirección From sin verificar se rechaza.
@@ -104,7 +104,7 @@ No. El contenido de los mensajes se obtiene en vivo de tu proveedor en cada soli
 
 ## Siguiente paso
 
-[Empieza gratis](/signup) con tu buzón más activo, añade el conector de MCP Emails a Claude o ChatGPT y pregunta qué necesita respuesta hoy. Añade los demás buzones cuando quieras una sola respuesta en lugar de varias.`,
+[Empieza gratis](/signup) con tu buzón más activo, añade el conector de MCPEmails a Claude o ChatGPT y pregunta qué necesita respuesta hoy. Añade los demás buzones cuando quieras una sola respuesta en lugar de varias.`,
 };
 
 export default translation;

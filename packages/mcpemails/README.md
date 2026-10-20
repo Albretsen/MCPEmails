@@ -7,7 +7,7 @@ Email for AI agents. Read, search, send, organize, draft and schedule email acro
 [![MCP registry](https://img.shields.io/badge/MCP%20registry-com.mcpemails%2Femails-blue)](https://registry.modelcontextprotocol.io/v0/servers?search=mcpemails)
 [![License: AGPL-3.0](https://img.shields.io/badge/license-AGPL--3.0-blue)](https://github.com/Albretsen/MCPEmails/blob/main/LICENSE)
 
-This package is a **stdio bridge**. [MCP Emails](https://mcpemails.com) is a hosted MCP server that speaks JSON-RPC over HTTPS, and many MCP clients can only launch a local command and talk over stdin/stdout. `mcpemails` sits between the two: it forwards every JSON-RPC message from your client to `https://mcpemails.com/api/mcp` and writes every response straight back. It adds nothing to the protocol.
+This package is a **stdio bridge**. [MCPEmails](https://mcpemails.com) is a hosted MCP server that speaks JSON-RPC over HTTPS, and many MCP clients can only launch a local command and talk over stdin/stdout. `mcpemails` sits between the two: it forwards every JSON-RPC message from your client to `https://mcpemails.com/api/mcp` and writes every response straight back. It adds nothing to the protocol.
 
 Works with Gmail, Outlook / Microsoft 365, Fastmail, iCloud, Yahoo, Zoho, Yandex, and any IMAP/SMTP mailbox you connect at [mcpemails.com](https://mcpemails.com).
 
@@ -175,7 +175,7 @@ Each tool is gated by the scopes on your API key, so a key issued with read scop
 
 Prefer the environment variable over `--key`. Command-line arguments are visible to any other process on the machine that can list processes.
 
-`--url` exists for self-hosting. The MCP Emails server is source-available and can be run on your own infrastructure; see [the repository](https://github.com/Albretsen/MCPEmails) and [mcpemails.com/security](https://mcpemails.com/security).
+`--url` exists for self-hosting. The MCPEmails server is source-available and can be run on your own infrastructure; see [the repository](https://github.com/Albretsen/MCPEmails) and [mcpemails.com/security](https://mcpemails.com/security).
 
 ## Where your key goes
 

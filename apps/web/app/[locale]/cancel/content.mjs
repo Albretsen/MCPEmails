@@ -19,12 +19,12 @@ const en = {
   meta: {
     title: 'Cancel contracts here',
     description:
-      'Cancel your MCP Emails subscription, or withdraw from it within 14 days, without logging in. You get a confirmation by email.',
+      'Cancel your MCPEmails subscription, or withdraw from it within 14 days, without logging in. You get a confirmation by email.',
   },
   eyebrow: 'Legal',
   title: 'Cancel contracts here',
   lead:
-    'Cancel your MCP Emails subscription, or withdraw from it within 14 days of buying. No login needed, and you get a confirmation by email. Signed in? You can also cancel from your dashboard.',
+    'Cancel your MCPEmails subscription, or withdraw from it within 14 days of buying. No login needed, and you get a confirmation by email. Signed in? You can also cancel from your dashboard.',
   withdrawalLink: 'How the right of withdrawal works',
   form: {
     kindLegend: 'What do you want to do?',
@@ -33,7 +33,7 @@ const en = {
     kindWithdraw: 'Withdraw from my contract',
     kindWithdrawHint: 'Within 14 days of buying. We refund the first charge in full.',
     name: 'Your name',
-    email: 'Email address of your MCP Emails account',
+    email: 'Email address of your MCPEmails account',
     contract: 'Plan or invoice number (optional)',
     contractHint: 'Helps us find the right subscription if you have more than one.',
     typeLegend: 'Type of cancellation',
@@ -73,7 +73,7 @@ const en = {
     print: 'Print or save this confirmation',
   },
   errors: {
-    invalid_email: 'Enter the email address of your MCP Emails account.',
+    invalid_email: 'Enter the email address of your MCPEmails account.',
     name_required: 'Enter your name.',
     name_too_long: 'The name can be at most 100 characters.',
     contract_too_long: 'The plan or invoice number can be at most 100 characters.',
@@ -91,12 +91,12 @@ const nb = {
   meta: {
     title: 'Si opp avtaler her',
     description:
-      'Si opp MCP Emails-abonnementet, eller gå fra det innen 14 dager, uten å logge inn. Du får en bekreftelse på e-post.',
+      'Si opp MCPEmails-abonnementet, eller gå fra det innen 14 dager, uten å logge inn. Du får en bekreftelse på e-post.',
   },
   eyebrow: 'Juridisk',
   title: 'Si opp avtaler her',
   lead:
-    'Si opp MCP Emails-abonnementet, eller gå fra det innen 14 dager etter kjøpet. Du trenger ikke logge inn, og du får en bekreftelse på e-post. Er du logget inn, kan du også si opp fra dashbordet.',
+    'Si opp MCPEmails-abonnementet, eller gå fra det innen 14 dager etter kjøpet. Du trenger ikke logge inn, og du får en bekreftelse på e-post. Er du logget inn, kan du også si opp fra dashbordet.',
   withdrawalLink: 'Slik fungerer angreretten',
   form: {
     kindLegend: 'Hva vil du gjøre?',
@@ -105,7 +105,7 @@ const nb = {
     kindWithdraw: 'Gå fra avtalen (angrerett)',
     kindWithdrawHint: 'Innen 14 dager etter kjøpet. Vi betaler tilbake hele den første belastningen.',
     name: 'Navnet ditt',
-    email: 'E-postadressen til MCP Emails-kontoen din',
+    email: 'E-postadressen til MCPEmails-kontoen din',
     contract: 'Plan eller fakturanummer (valgfritt)',
     contractHint: 'Hjelper oss å finne riktig abonnement hvis du har flere.',
     typeLegend: 'Type oppsigelse',
@@ -145,7 +145,7 @@ const nb = {
     print: 'Skriv ut eller lagre bekreftelsen',
   },
   errors: {
-    invalid_email: 'Skriv inn e-postadressen til MCP Emails-kontoen din.',
+    invalid_email: 'Skriv inn e-postadressen til MCPEmails-kontoen din.',
     name_required: 'Skriv inn navnet ditt.',
     name_too_long: 'Navnet kan være på høyst 100 tegn.',
     contract_too_long: 'Plan eller fakturanummer kan være på høyst 100 tegn.',
@@ -163,12 +163,12 @@ const es = {
   meta: {
     title: 'Cancelar contratos aquí',
     description:
-      'Cancela tu suscripción a MCP Emails, o desiste de ella en un plazo de 14 días, sin iniciar sesión. Recibirás una confirmación por correo electrónico.',
+      'Cancela tu suscripción a MCPEmails, o desiste de ella en un plazo de 14 días, sin iniciar sesión. Recibirás una confirmación por correo electrónico.',
   },
   eyebrow: 'Legal',
   title: 'Cancelar contratos aquí',
   lead:
-    'Cancela tu suscripción a MCP Emails, o desiste de ella en los 14 días siguientes a la compra. No necesitas iniciar sesión y recibirás una confirmación por correo. Si has iniciado sesión, también puedes cancelar desde tu panel.',
+    'Cancela tu suscripción a MCPEmails, o desiste de ella en los 14 días siguientes a la compra. No necesitas iniciar sesión y recibirás una confirmación por correo. Si has iniciado sesión, también puedes cancelar desde tu panel.',
   withdrawalLink: 'Cómo funciona el derecho de desistimiento',
   form: {
     kindLegend: '¿Qué quieres hacer?',
@@ -177,7 +177,7 @@ const es = {
     kindWithdraw: 'Desistir de mi contrato',
     kindWithdrawHint: 'En los 14 días siguientes a la compra. Reembolsamos el primer cargo completo.',
     name: 'Tu nombre',
-    email: 'Correo electrónico de tu cuenta de MCP Emails',
+    email: 'Correo electrónico de tu cuenta de MCPEmails',
     contract: 'Plan o número de factura (opcional)',
     contractHint: 'Nos ayuda a encontrar la suscripción correcta si tienes más de una.',
     typeLegend: 'Tipo de cancelación',
@@ -217,7 +217,7 @@ const es = {
     print: 'Imprimir o guardar esta confirmación',
   },
   errors: {
-    invalid_email: 'Introduce el correo electrónico de tu cuenta de MCP Emails.',
+    invalid_email: 'Introduce el correo electrónico de tu cuenta de MCPEmails.',
     name_required: 'Introduce tu nombre.',
     name_too_long: 'El nombre puede tener como máximo 100 caracteres.',
     contract_too_long: 'El plan o número de factura puede tener como máximo 100 caracteres.',
@@ -235,12 +235,12 @@ const fr = {
   meta: {
     title: 'Résilier des contrats ici',
     description:
-      'Résiliez votre abonnement MCP Emails, ou rétractez-vous sous 14 jours, sans vous connecter. Vous recevez une confirmation par e-mail.',
+      'Résiliez votre abonnement MCPEmails, ou rétractez-vous sous 14 jours, sans vous connecter. Vous recevez une confirmation par e-mail.',
   },
   eyebrow: 'Juridique',
   title: 'Résilier des contrats ici',
   lead:
-    "Résiliez votre abonnement MCP Emails, ou rétractez-vous dans les 14 jours suivant l'achat. Pas besoin de vous connecter, et vous recevez une confirmation par e-mail. Si vous êtes connecté, vous pouvez aussi résilier depuis votre tableau de bord.",
+    "Résiliez votre abonnement MCPEmails, ou rétractez-vous dans les 14 jours suivant l'achat. Pas besoin de vous connecter, et vous recevez une confirmation par e-mail. Si vous êtes connecté, vous pouvez aussi résilier depuis votre tableau de bord.",
   withdrawalLink: 'Comment fonctionne le droit de rétractation',
   form: {
     kindLegend: 'Que souhaitez-vous faire ?',
@@ -249,7 +249,7 @@ const fr = {
     kindWithdraw: 'Me rétracter du contrat',
     kindWithdrawHint: "Dans les 14 jours suivant l'achat. Nous remboursons l'intégralité du premier prélèvement.",
     name: 'Votre nom',
-    email: 'Adresse e-mail de votre compte MCP Emails',
+    email: 'Adresse e-mail de votre compte MCPEmails',
     contract: 'Formule ou numéro de facture (facultatif)',
     contractHint: 'Nous aide à trouver le bon abonnement si vous en avez plusieurs.',
     typeLegend: 'Type de résiliation',
@@ -289,7 +289,7 @@ const fr = {
     print: 'Imprimer ou enregistrer cette confirmation',
   },
   errors: {
-    invalid_email: "Saisissez l'adresse e-mail de votre compte MCP Emails.",
+    invalid_email: "Saisissez l'adresse e-mail de votre compte MCPEmails.",
     name_required: 'Saisissez votre nom.',
     name_too_long: 'Le nom peut comporter au maximum 100 caractères.',
     contract_too_long: 'La formule ou le numéro de facture peut comporter au maximum 100 caractères.',
@@ -306,11 +306,11 @@ const fr = {
 const zh = {
   meta: {
     title: '在此取消合同',
-    description: '无需登录即可取消你的 MCP Emails 订阅，或在 14 天内撤回。你会收到电子邮件确认。',
+    description: '无需登录即可取消你的 MCPEmails 订阅，或在 14 天内撤回。你会收到电子邮件确认。',
   },
   eyebrow: '法律',
   title: '在此取消合同',
-  lead: '取消你的 MCP Emails 订阅，或在购买后 14 天内撤回合同。无需登录，你会收到电子邮件确认。如果你已登录，也可以在控制台中取消。',
+  lead: '取消你的 MCPEmails 订阅，或在购买后 14 天内撤回合同。无需登录，你会收到电子邮件确认。如果你已登录，也可以在控制台中取消。',
   withdrawalLink: '撤回权如何运作',
   form: {
     kindLegend: '你想做什么？',
@@ -319,7 +319,7 @@ const zh = {
     kindWithdraw: '撤回我的合同',
     kindWithdrawHint: '购买后 14 天内。我们全额退还首笔费用。',
     name: '你的姓名',
-    email: '你的 MCP Emails 账户的电子邮件地址',
+    email: '你的 MCPEmails 账户的电子邮件地址',
     contract: '套餐或发票号（可选）',
     contractHint: '如果你有多个订阅，这有助于我们找到正确的那个。',
     typeLegend: '取消类型',
@@ -359,7 +359,7 @@ const zh = {
     print: '打印或保存此确认',
   },
   errors: {
-    invalid_email: '请输入你的 MCP Emails 账户的电子邮件地址。',
+    invalid_email: '请输入你的 MCPEmails 账户的电子邮件地址。',
     name_required: '请输入你的姓名。',
     name_too_long: '姓名最多 100 个字符。',
     contract_too_long: '套餐或发票号最多 100 个字符。',
@@ -377,12 +377,12 @@ const de = {
   meta: {
     title: 'Verträge hier kündigen',
     description:
-      'Kündigen Sie Ihr Abonnement für MCP Emails oder widerrufen Sie es innerhalb von 14 Tagen, ohne Anmeldung. Sie erhalten eine Bestätigung per E-Mail.',
+      'Kündigen Sie Ihr Abonnement für MCPEmails oder widerrufen Sie es innerhalb von 14 Tagen, ohne Anmeldung. Sie erhalten eine Bestätigung per E-Mail.',
   },
   eyebrow: 'Rechtliches',
   title: 'Verträge hier kündigen',
   lead:
-    'Kündigen Sie Ihr Abonnement für MCP Emails oder widerrufen Sie es innerhalb von 14 Tagen nach dem Kauf. Eine Anmeldung ist nicht nötig, und Sie erhalten eine Bestätigung per E-Mail. Wenn Sie angemeldet sind, können Sie auch im Dashboard kündigen.',
+    'Kündigen Sie Ihr Abonnement für MCPEmails oder widerrufen Sie es innerhalb von 14 Tagen nach dem Kauf. Eine Anmeldung ist nicht nötig, und Sie erhalten eine Bestätigung per E-Mail. Wenn Sie angemeldet sind, können Sie auch im Dashboard kündigen.',
   withdrawalLink: 'So funktioniert das Widerrufsrecht',
   form: {
     kindLegend: 'Was möchten Sie tun?',
@@ -391,7 +391,7 @@ const de = {
     kindWithdraw: 'Meinen Vertrag widerrufen',
     kindWithdrawHint: 'Innerhalb von 14 Tagen nach dem Kauf. Wir erstatten die erste Zahlung vollständig.',
     name: 'Ihr Name',
-    email: 'E-Mail-Adresse Ihres Kontos bei MCP Emails',
+    email: 'E-Mail-Adresse Ihres Kontos bei MCPEmails',
     contract: 'Tarif oder Rechnungsnummer (optional)',
     contractHint: 'Hilft uns, das richtige Abonnement zu finden, wenn Sie mehrere haben.',
     typeLegend: 'Art der Kündigung',
@@ -431,7 +431,7 @@ const de = {
     print: 'Diese Bestätigung drucken oder speichern',
   },
   errors: {
-    invalid_email: 'Geben Sie die E-Mail-Adresse Ihres Kontos bei MCP Emails ein.',
+    invalid_email: 'Geben Sie die E-Mail-Adresse Ihres Kontos bei MCPEmails ein.',
     name_required: 'Geben Sie Ihren Namen ein.',
     name_too_long: 'Der Name darf höchstens 100 Zeichen lang sein.',
     contract_too_long: 'Tarif oder Rechnungsnummer dürfen höchstens 100 Zeichen lang sein.',

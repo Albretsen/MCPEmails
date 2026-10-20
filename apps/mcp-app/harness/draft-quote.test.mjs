@@ -294,7 +294,7 @@ async function editor(over = {}, opts = {}) {
 
 /** A reply as the server writes it: message, signature, attribution, quote. */
 const MESSAGE = "Thanks, Friday works for me.";
-const SIGNATURE = "Asgeir Albretsen\nFounder, MCP Emails\nmcpemails.com";
+const SIGNATURE = "Asgeir Albretsen\nFounder, MCPEmails\nmcpemails.com";
 // CRLF in the quote on purpose: a save must hand these bytes back unchanged,
 // though a textarea would have turned them into LF.
 const QUOTE =

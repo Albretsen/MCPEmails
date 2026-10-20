@@ -23,7 +23,7 @@
     "meta0": "1 innboks gratis, for alltid",
     "meta1": "Postkassepassordet ditt, ingen OAuth-oppsett",
     "meta2": "E-post hentes direkte, lagres aldri",
-    "answer": "Claude når ikke Rackspace Email på egen hånd. MCP Emails er en hostet MCP-server som kobler til via IMAP med postkassepassordet ditt, slik at Claude, Cursor eller enhver MCP-klient kan lese, søke, sende og organisere den e-posten. Oppsettet tar et par minutter, og én innboks er gratis."
+    "answer": "Claude når ikke Rackspace Email på egen hånd. MCPEmails er en hostet MCP-server som kobler til via IMAP med postkassepassordet ditt, slik at Claude, Cursor eller enhver MCP-klient kan lese, søke, sende og organisere den e-posten. Oppsettet tar et par minutter, og én innboks er gratis."
   },
   "method": {
     "title": "Slik kobler Rackspace Email seg til: IMAP og postkassepassordet ditt",
@@ -32,14 +32,14 @@
   "setup": [
     {
       "h": "Opprett en gratis konto",
-      "p": "Registrer deg på MCP Emails, uten kort. Gratisplanen kobler til én innboks, for alltid."
+      "p": "Registrer deg på MCPEmails, uten kort. Gratisplanen kobler til én innboks, for alltid."
     },
     {
       "h": "Hent Rackspace-postkassepassordet ditt",
       "p": "I kontrollpanelet for Cloud Office åpner du postkassen og setter passordet. Bruk den sikre verten, secure.emailsrvr.com, ikke den ukrypterte."
     },
     {
-      "h": "Lim det inn i MCP Emails",
+      "h": "Lim det inn i MCPEmails",
       "p": "Velg IMAP / SMTP, legg til Rackspace Email-adressen din, vertene over og passordet for å koble til innboksen trygt."
     },
     {
@@ -58,7 +58,7 @@
     },
     {
       "h": "Rackspace selger tre forskjellige e-postprodukter, og bare ett av dem er på emailsrvr",
-      "p": "<b>Rackspace Email</b> er det frittstående IMAP-postkasseproduktet og det denne siden dekker. Rackspace selger også <b>Hosted Exchange</b>, som kjører Exchange på Rackspaces egen infrastruktur, og videreselger <b>Microsoft 365</b>, der postkassen ligger på Microsofts servere under Microsofts identitetsplattform. Bare Rackspace Email svarer på <code>secure.emailsrvr.com</code>. En Microsoft 365-postkasse kobles til med Outlook-valget (innlogging med Microsoft) i stedet for over IMAP; en IT-administrator kan måtte godkjenne MCP Emails én gang først, og dashbordet gir deg en godkjenningslenke du kan sende til vedkommende. Er webmailen din Outlook på nettet, er det Microsoft-produktet."
+      "p": "<b>Rackspace Email</b> er det frittstående IMAP-postkasseproduktet og det denne siden dekker. Rackspace selger også <b>Hosted Exchange</b>, som kjører Exchange på Rackspaces egen infrastruktur, og videreselger <b>Microsoft 365</b>, der postkassen ligger på Microsofts servere under Microsofts identitetsplattform. Bare Rackspace Email svarer på <code>secure.emailsrvr.com</code>. En Microsoft 365-postkasse kobles til med Outlook-valget (innlogging med Microsoft) i stedet for over IMAP; en IT-administrator kan måtte godkjenne MCPEmails én gang først, og dashbordet gir deg en godkjenningslenke du kan sende til vedkommende. Er webmailen din Outlook på nettet, er det Microsoft-produktet."
     },
     {
       "h": "Du snakker med en proxy, og funksjonene du ser, er proxyens",
@@ -73,7 +73,7 @@
   "faq": [
     {
       "q": "Fungerer Claude med Rackspace Email?",
-      "a": "Ikke på egen hånd. Claude har ingen innebygd Rackspace-kobling. Kobler du en MCP-server som MCP Emails til postkassen via IMAP, får Claude tilgang til å lese, søke, sende, svare, planlegge og organisere, og fordi det er vanlig IMAP, er samme postkasse da tilgjengelig i Cursor, ChatGPT og andre MCP-klienter."
+      "a": "Ikke på egen hånd. Claude har ingen innebygd Rackspace-kobling. Kobler du en MCP-server som MCPEmails til postkassen via IMAP, får Claude tilgang til å lese, søke, sende, svare, planlegge og organisere, og fordi det er vanlig IMAP, er samme postkasse da tilgjengelig i Cursor, ChatGPT og andre MCP-klienter."
     },
     {
       "q": "Hva er IMAP- og SMTP-innstillingene for Rackspace Email?",

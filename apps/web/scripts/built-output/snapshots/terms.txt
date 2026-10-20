@@ -1,12 +1,12 @@
-Terms of Service · mcpemails
+Terms of Service · MCPEmails
 [meta description] The terms governing your use of MCPEmails: acceptable use, liability, account termination, and governing law.
-[meta og:title] Terms of Service · mcpemails
+[meta og:title] Terms of Service · MCPEmails
 [meta og:description] The terms governing your use of MCPEmails: acceptable use, liability, account termination, and governing law.
 [meta og:locale] en_US
-[meta twitter:title] Terms of Service · mcpemails
+[meta twitter:title] Terms of Service · MCPEmails
 [meta twitter:description] The terms governing your use of MCPEmails: acceptable use, liability, account termination, and governing law.
-[alt] mcpemails
-[alt] mcpemails
+[alt] MCPEmails
+[alt] MCPEmails
 [aria-label] Primary navigation
 Features
 How it works
@@ -21,14 +21,14 @@ Get started free
 Legal
 Terms of Service
 These terms govern your access to and use of MCPEmails. By creating an account or using the service you agree to be bound by them. Please read them carefully.
-Last updated: September 26, 2026 · Effective: May 25, 2026
+Last updated: October 20, 2026 · Effective: May 25, 2026
 1. Agreement to These Terms
-These Terms of Service ("Terms") constitute a legally binding agreement between you ("you" or "User") and Albretsen Consulting, a Norwegian sole proprietorship (enkeltpersonforetak) with organisation number
-926 646 753
+These Terms of Service ("Terms") constitute a legally binding agreement between you ("you" or "User") and Albretsen AS, a Norwegian private limited company (aksjeselskap) with organisation number
+938 702 373
 , owned and operated by Asgeir Albretsen and trading as "MCPEmails" ("MCPEmails", "we", "us", or "our"). They govern your access to and use of the MCPEmails service, including the website at
 mcpemails.com
-, the dashboard, the Model Context Protocol (MCP) API endpoint, and all related software and documentation (collectively, the "Service"). Your contract is with Albretsen Consulting; "MCPEmails" is a trading name, not a separate legal entity.
-Service provider identification: Albretsen Consulting, organisation number 926 646 753, entered in Enhetsregisteret (the Norwegian Central Coordinating Register for Legal Entities, operated by Brønnøysundregistrene). Registered address: Håsteins gate 9, 5160 Laksevåg, Norway. Albretsen Consulting is not currently registered in the Norwegian VAT register (Merverdiavgiftsregisteret). Legal enquiries:
+, the dashboard, the Model Context Protocol (MCP) API endpoint, and all related software and documentation (collectively, the "Service"). Your contract is with Albretsen AS; "MCPEmails" is a trading name, not a separate legal entity.
+Service provider identification: Albretsen AS, organisation number 938 702 373, registered in Foretaksregisteret (the Norwegian Register of Business Enterprises, operated by Brønnøysundregistrene). Registered address: Håsteins gate 9, 5160 Laksevåg, Norway. Legal enquiries:
 legal@mcpemails.com
 .
 By creating an account, accepting these Terms, or using any part of the Service, you confirm that you are at least 16 years of age (or the minimum age of digital consent in your jurisdiction, if higher), that you have the legal capacity to enter into a binding agreement, and that you agree to be bound by these Terms and our
@@ -167,19 +167,21 @@ These Terms and any dispute arising out of or in connection with them or the Ser
 Norway
 , without regard to its conflict-of-law provisions. The United Nations Convention on Contracts for the International Sale of Goods does not apply.
 9.2 Jurisdiction
-Any legal action or proceeding relating to these Terms or the Service shall be brought exclusively in the courts of
+If you use the Service as a business, any legal action or proceeding relating to these Terms or the Service shall be brought exclusively in the courts of
 Bergen, Norway
-. You consent to the personal jurisdiction of those courts and waive any objection to venue.
+, and you consent to the jurisdiction of those courts. If you are a consumer, you may bring proceedings in the courts of Norway or in the courts of your country of residence, and we may bring proceedings against you only in the courts of your country of residence.
 9.3 Consumer rights (EEA/UK)
-Nothing in these Terms affects any statutory rights you may have as a consumer under the laws of your country of residence that cannot be excluded or limited by contract. If you are a consumer resident in the European Union, you may also submit a complaint through the EU Online Dispute Resolution platform at
-ec.europa.eu/consumers/odr
+Nothing in these Terms affects any statutory rights you may have as a consumer under the laws of your country of residence that cannot be excluded or limited by contract. How to use your right of withdrawal is described on the
+right of withdrawal
+page, and you can cancel your subscription or withdraw without logging in at
+mcpemails.com/cancel
 .
 9.4 Informal resolution
 Before initiating any formal legal proceedings, we encourage you to contact us at
 legal@mcpemails.com
 so that we can attempt to resolve the dispute informally. We will respond within 14 business days and work in good faith toward a resolution.
-9.5 Class action waiver
-To the extent permitted by applicable law, you agree that any dispute resolution proceedings shall be conducted on an individual basis only. You waive any right to bring or participate in a class, collective, or representative action against MCPEmails.
+9.5 Class action waiver (business customers)
+If you use the Service as a business, then to the extent permitted by applicable law you agree that any dispute resolution proceedings shall be conducted on an individual basis only, and you waive any right to bring or participate in a class, collective, or representative action against MCPEmails. This section does not apply to consumers.
 10. General Provisions
 10.1 Entire agreement
 These Terms, together with the Privacy Policy and any supplemental terms applicable to specific features or plans, constitute the entire agreement between you and MCPEmails relating to the Service and supersede all prior agreements, representations, and understandings.
@@ -208,14 +210,14 @@ privacy@mcpemails.com
 Security reports
 security@mcpemails.com
 Postal address
-Albretsen Consulting (organisation number 926 646 753), Håsteins gate 9, 5160 Laksevåg, Norway
+Albretsen AS (organisation number 938 702 373), Håsteins gate 9, 5160 Laksevåg, Norway
 Response time
 We respond to all legal enquiries within 14 business days
 Questions about these Terms?
 Reach out about anything in these Terms and we will respond within 14 business days.
 Contact us about these Terms
 Read our Privacy Policy
-[alt] mcpemails
+[alt] MCPEmails
 A hosted MCP server that gives AI agents read and send access to your inbox, without ever storing the email it reads.
 Contact
 hello@mcpemails.com
@@ -231,6 +233,7 @@ Norsk
 Español
 Français
 中文
+Deutsch
 Product
 Features
 How it works
@@ -244,6 +247,7 @@ Tool reference
 Quickstart
 OAuth connection
 Provider support
+Read-only access
 MCP client setup
 Blog
 Changelog
@@ -265,6 +269,9 @@ Security
 Status
 Privacy
 Terms
-© 2026 mcpemails.
+Right of withdrawal
+Cancel contracts here
+Impressum
+© 2026 MCPEmails.
 Email fetched live, never stored · Credentials encrypted at rest
-MCPEmails is a service of Albretsen Consulting (enkeltpersonforetak), organisation number 926 646 753, Håsteins gate 9, 5160 Laksevåg, Norway.
+MCPEmails is a service of Albretsen AS, organisation number 938 702 373, Håsteins gate 9, 5160 Laksevåg, Norway.

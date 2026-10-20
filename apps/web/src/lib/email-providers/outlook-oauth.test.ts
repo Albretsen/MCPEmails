@@ -352,7 +352,7 @@ test('an admin without a session lands on the public result page, not the dashbo
   );
 });
 
-test('an admin signed in to a DIFFERENT MCP Emails account still gets the public page', () => {
+test('an admin signed in to a DIFFERENT MCPEmails account still gets the public page', () => {
   const url = adminConsentCallbackRedirect({ appUrl: APP, outcome: 'admin_consent_granted', sessionUserId: WS, inviterUserId: USER });
   assert.ok(url.includes('/auth/outlook/admin-consent/result?status=granted'));
 });

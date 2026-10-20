@@ -3,13 +3,13 @@ const post = {
   title: 'OAuth vs. API Keys for AI Email Access: Which Should You Use?',
   description: 'OAuth vs. API keys for AI email access: use OAuth for claude.ai, Claude Desktop, and Cursor; use a scoped API key for Cline, JetBrains, and scripts.',
   cover: '/blog/cover-oauth-vs-api-keys-ai-email-access.svg',
-  coverAlt: 'OAuth versus API keys for connecting AI agents to email — MCP Emails',
+  coverAlt: 'OAuth versus API keys for connecting AI agents to email — MCPEmails',
   authorId: 'asgeir',
   publishedAt: "2026-06-12T09:00:00.000Z",
   updatedAt: "2026-06-21T09:00:00.000Z",
   tags: ['OAuth', 'Security', 'MCP', 'Tutorial'],
   featured: false,
-  content: `When you connect an AI agent to your email through MCP Emails, you authenticate one of two ways: OAuth or an API key. The short answer is OAuth if your client supports it (claude.ai, Claude Desktop, Cursor), and a scoped API key if it doesn't (Cline, JetBrains, scripts, cURL). Both hit the same endpoint and expose the same tools. The difference is who manages the secret and how easily you can pull the plug.
+  content: `When you connect an AI agent to your email through MCPEmails, you authenticate one of two ways: OAuth or an API key. The short answer is OAuth if your client supports it (claude.ai, Claude Desktop, Cursor), and a scoped API key if it doesn't (Cline, JetBrains, scripts, cURL). Both hit the same endpoint and expose the same tools. The difference is who manages the secret and how easily you can pull the plug.
 
 This isn't a security-vs-convenience tradeoff where you sacrifice one for the other. Both paths are scoped to exactly \`read:email\`, \`send:email\`, or both, and both can be revoked from the dashboard in one click. The real question is which fits the client you're actually using. For the bigger picture on how any of this connects, start with the pillar guide, [how to give your AI agent access to email](/blog/how-to-give-your-ai-agent-email-access).
 

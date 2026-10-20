@@ -18,12 +18,12 @@ const en = {
   meta: {
     title: 'Right of withdrawal',
     description:
-      'How to withdraw from an MCP Emails subscription within 14 days, the refund you get, and a model withdrawal form.',
+      'How to withdraw from an MCPEmails subscription within 14 days, the refund you get, and a model withdrawal form.',
   },
   eyebrow: 'Legal',
   title: 'Right of withdrawal',
   lead:
-    'If you are a consumer, you can withdraw from a new MCP Emails subscription within 14 days without giving a reason. Below is the formal notice, followed by a form you can copy.',
+    'If you are a consumer, you can withdraw from a new MCPEmails subscription within 14 days without giving a reason. Below is the formal notice, followed by a form you can copy.',
   notice: {
     h: 'Withdrawal notice',
     paras: [
@@ -45,11 +45,11 @@ const en = {
     intro: 'Complete and return this form only if you wish to withdraw from the contract.',
     lines: [
       'To: {entity}, {address}, {email}',
-      'I hereby give notice that I withdraw from my contract for the provision of the following service: MCP Emails subscription (plan: ______)',
+      'I hereby give notice that I withdraw from my contract for the provision of the following service: MCPEmails subscription (plan: ______)',
       'Ordered on: ______',
       'Name of consumer: ______',
       'Address of consumer: ______',
-      'Email address of the MCP Emails account: ______',
+      'Email address of the MCPEmails account: ______',
       'Signature of consumer (only if this form is sent on paper): ______',
       'Date: ______',
     ],
@@ -67,12 +67,12 @@ const nb = {
   meta: {
     title: 'Angrerett',
     description:
-      'Slik går du fra et MCP Emails-abonnement innen 14 dager, hva du får tilbake, og et standardskjema for angrerett.',
+      'Slik går du fra et MCPEmails-abonnement innen 14 dager, hva du får tilbake, og et standardskjema for angrerett.',
   },
   eyebrow: 'Juridisk',
   title: 'Angrerett',
   lead:
-    'Er du forbruker, kan du gå fra et nytt MCP Emails-abonnement innen 14 dager uten å oppgi grunn. Under finner du angrerettsinformasjonen og et skjema du kan kopiere.',
+    'Er du forbruker, kan du gå fra et nytt MCPEmails-abonnement innen 14 dager uten å oppgi grunn. Under finner du angrerettsinformasjonen og et skjema du kan kopiere.',
   notice: {
     h: 'Angrerettsinformasjon',
     paras: [
@@ -94,11 +94,11 @@ const nb = {
     intro: 'Fyll ut og send dette skjemaet bare hvis du vil gå fra avtalen.',
     lines: [
       'Til: {entity}, {address}, {email}',
-      'Jeg meddeler herved at jeg ønsker å gå fra min avtale om levering av følgende tjeneste: MCP Emails-abonnement (plan: ______)',
+      'Jeg meddeler herved at jeg ønsker å gå fra min avtale om levering av følgende tjeneste: MCPEmails-abonnement (plan: ______)',
       'Bestilt den: ______',
       'Forbrukerens navn: ______',
       'Forbrukerens adresse: ______',
-      'E-postadressen til MCP Emails-kontoen: ______',
+      'E-postadressen til MCPEmails-kontoen: ______',
       'Forbrukerens underskrift (bare hvis skjemaet sendes på papir): ______',
       'Dato: ______',
     ],
@@ -116,12 +116,12 @@ const es = {
   meta: {
     title: 'Derecho de desistimiento',
     description:
-      'Cómo desistir de una suscripción a MCP Emails en un plazo de 14 días, el reembolso que recibes y un modelo de formulario de desistimiento.',
+      'Cómo desistir de una suscripción a MCPEmails en un plazo de 14 días, el reembolso que recibes y un modelo de formulario de desistimiento.',
   },
   eyebrow: 'Legal',
   title: 'Derecho de desistimiento',
   lead:
-    'Si eres consumidor, puedes desistir de una nueva suscripción a MCP Emails en un plazo de 14 días sin dar ninguna razón. Abajo tienes la información formal y un formulario que puedes copiar.',
+    'Si eres consumidor, puedes desistir de una nueva suscripción a MCPEmails en un plazo de 14 días sin dar ninguna razón. Abajo tienes la información formal y un formulario que puedes copiar.',
   notice: {
     h: 'Información sobre el desistimiento',
     paras: [
@@ -143,11 +143,11 @@ const es = {
     intro: 'Cumplimenta y envía este formulario solo si deseas desistir del contrato.',
     lines: [
       'A la atención de: {entity}, {address}, {email}',
-      'Por la presente les comunico que desisto de mi contrato de prestación del siguiente servicio: suscripción a MCP Emails (plan: ______)',
+      'Por la presente les comunico que desisto de mi contrato de prestación del siguiente servicio: suscripción a MCPEmails (plan: ______)',
       'Pedido el: ______',
       'Nombre del consumidor: ______',
       'Domicilio del consumidor: ______',
-      'Correo electrónico de la cuenta de MCP Emails: ______',
+      'Correo electrónico de la cuenta de MCPEmails: ______',
       'Firma del consumidor (solo si el formulario se presenta en papel): ______',
       'Fecha: ______',
     ],
@@ -165,12 +165,12 @@ const fr = {
   meta: {
     title: 'Droit de rétractation',
     description:
-      "Comment vous rétracter d'un abonnement MCP Emails sous 14 jours, le remboursement que vous recevez et un modèle de formulaire de rétractation.",
+      "Comment vous rétracter d'un abonnement MCPEmails sous 14 jours, le remboursement que vous recevez et un modèle de formulaire de rétractation.",
   },
   eyebrow: 'Juridique',
   title: 'Droit de rétractation',
   lead:
-    "Si vous êtes un consommateur, vous pouvez vous rétracter d'un nouvel abonnement MCP Emails sous 14 jours sans avoir à vous justifier. Vous trouverez ci-dessous l'information officielle, puis un formulaire à copier.",
+    "Si vous êtes un consommateur, vous pouvez vous rétracter d'un nouvel abonnement MCPEmails sous 14 jours sans avoir à vous justifier. Vous trouverez ci-dessous l'information officielle, puis un formulaire à copier.",
   notice: {
     h: "Informations concernant l'exercice du droit de rétractation",
     paras: [
@@ -192,11 +192,11 @@ const fr = {
     intro: 'Veuillez compléter et renvoyer le présent formulaire uniquement si vous souhaitez vous rétracter du contrat.',
     lines: [
       "À l'attention de : {entity}, {address}, {email}",
-      'Je vous notifie par la présente ma rétractation du contrat portant sur la prestation de services ci-dessous : abonnement MCP Emails (formule : ______)',
+      'Je vous notifie par la présente ma rétractation du contrat portant sur la prestation de services ci-dessous : abonnement MCPEmails (formule : ______)',
       'Commandé le : ______',
       'Nom du consommateur : ______',
       'Adresse du consommateur : ______',
-      'Adresse e-mail du compte MCP Emails : ______',
+      'Adresse e-mail du compte MCPEmails : ______',
       'Signature du consommateur (uniquement en cas de notification du présent formulaire sur papier) : ______',
       'Date : ______',
     ],
@@ -213,11 +213,11 @@ const fr = {
 const zh = {
   meta: {
     title: '撤回权',
-    description: '如何在 14 天内撤回 MCP Emails 订阅、你将获得的退款，以及撤回表格范本。',
+    description: '如何在 14 天内撤回 MCPEmails 订阅、你将获得的退款，以及撤回表格范本。',
   },
   eyebrow: '法律',
   title: '撤回权',
-  lead: '如果你是消费者，你可以在 14 天内撤回新的 MCP Emails 订阅，无需说明理由。下面是正式通知，以及一份可以复制的表格。',
+  lead: '如果你是消费者，你可以在 14 天内撤回新的 MCPEmails 订阅，无需说明理由。下面是正式通知，以及一份可以复制的表格。',
   notice: {
     h: '撤回通知',
     paras: [
@@ -239,11 +239,11 @@ const zh = {
     intro: '仅在你希望撤回合同时填写并发送此表格。',
     lines: [
       '致：{entity}，{address}，{email}',
-      '本人特此通知，撤回本人关于提供以下服务的合同：MCP Emails 订阅（套餐：______）',
+      '本人特此通知，撤回本人关于提供以下服务的合同：MCPEmails 订阅（套餐：______）',
       '订购日期：______',
       '消费者姓名：______',
       '消费者地址：______',
-      'MCP Emails 账户的电子邮件地址：______',
+      'MCPEmails 账户的电子邮件地址：______',
       '消费者签名（仅在以纸质形式发送本表格时需要）：______',
       '日期：______',
     ],
@@ -260,12 +260,12 @@ const de = {
   meta: {
     title: 'Widerrufsrecht',
     description:
-      'So widerrufen Sie ein Abonnement für MCP Emails innerhalb von 14 Tagen, welche Erstattung Sie erhalten, und ein Muster-Widerrufsformular.',
+      'So widerrufen Sie ein Abonnement für MCPEmails innerhalb von 14 Tagen, welche Erstattung Sie erhalten, und ein Muster-Widerrufsformular.',
   },
   eyebrow: 'Rechtliches',
   title: 'Widerrufsrecht',
   lead:
-    'Wenn Sie Verbraucher sind, können Sie ein neues Abonnement für MCP Emails innerhalb von 14 Tagen ohne Angabe von Gründen widerrufen. Unten finden Sie die Widerrufsbelehrung und ein Formular zum Kopieren.',
+    'Wenn Sie Verbraucher sind, können Sie ein neues Abonnement für MCPEmails innerhalb von 14 Tagen ohne Angabe von Gründen widerrufen. Unten finden Sie die Widerrufsbelehrung und ein Formular zum Kopieren.',
   notice: {
     h: 'Widerrufsbelehrung',
     paras: [
@@ -287,11 +287,11 @@ const de = {
     intro: 'Wenn Sie den Vertrag widerrufen wollen, dann füllen Sie bitte dieses Formular aus und senden Sie es zurück.',
     lines: [
       'An: {entity}, {address}, {email}',
-      'Hiermit widerrufe ich den von mir abgeschlossenen Vertrag über die Erbringung der folgenden Dienstleistung: Abonnement für MCP Emails (Tarif: ______)',
+      'Hiermit widerrufe ich den von mir abgeschlossenen Vertrag über die Erbringung der folgenden Dienstleistung: Abonnement für MCPEmails (Tarif: ______)',
       'Bestellt am: ______',
       'Name des Verbrauchers: ______',
       'Anschrift des Verbrauchers: ______',
-      'E-Mail-Adresse des Kontos bei MCP Emails: ______',
+      'E-Mail-Adresse des Kontos bei MCPEmails: ______',
       'Unterschrift des Verbrauchers (nur bei Mitteilung auf Papier): ______',
       'Datum: ______',
     ],

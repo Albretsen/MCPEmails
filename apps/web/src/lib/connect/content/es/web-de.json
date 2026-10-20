@@ -26,23 +26,23 @@
     "meta0": "1 bandeja gratis, para siempre",
     "meta1": "La contraseña de tu cuenta, sin configurar OAuth",
     "meta2": "El correo se obtiene en vivo, nunca se almacena",
-    "answer": "Claude no puede acceder por sí solo a WEB.DE. MCP Emails es un servidor MCP alojado que lo conecta por IMAP con la contraseña de tu cuenta, para que Claude, Cursor o cualquier cliente MCP pueda leer, buscar, enviar y organizar ese correo. La configuración lleva un par de minutos y una bandeja es gratis."
+    "answer": "Claude no puede acceder por sí solo a WEB.DE. MCPEmails es un servidor MCP alojado que lo conecta por IMAP con la contraseña de tu cuenta, para que Claude, Cursor o cualquier cliente MCP pueda leer, buscar, enviar y organizar ese correo. La configuración lleva un par de minutos y una bandeja es gratis."
   },
   "method": {
     "title": "Cómo se conecta WEB.DE: IMAP y la contraseña de tu cuenta",
-    "body": "WEB.DE se conecta por IMAP/SMTP, pero <b>el acceso POP3 e IMAP viene desactivado de forma predeterminada</b>. Actívalo en WEB.DE en E-Mail-Einstellungen (ajustes de correo), E-Mail empfangen (recibir correo), POP3/IMAP, y luego conéctate con tu dirección y tu contraseña de WEB.DE. WEB.DE responde en los dos transportes de salida estándar, TLS implícito en el puerto 465 y STARTTLS en el puerto 587, así que el puerto casi nunca es la razón de que falle un envío. MCP Emails usa la pareja del 465 indicada abajo y, si hace falta, pasa a la otra por sí solo."
+    "body": "WEB.DE se conecta por IMAP/SMTP, pero <b>el acceso POP3 e IMAP viene desactivado de forma predeterminada</b>. Actívalo en WEB.DE en E-Mail-Einstellungen (ajustes de correo), E-Mail empfangen (recibir correo), POP3/IMAP, y luego conéctate con tu dirección y tu contraseña de WEB.DE. WEB.DE responde en los dos transportes de salida estándar, TLS implícito en el puerto 465 y STARTTLS en el puerto 587, así que el puerto casi nunca es la razón de que falle un envío. MCPEmails usa la pareja del 465 indicada abajo y, si hace falta, pasa a la otra por sí solo."
   },
   "setup": [
     {
       "h": "Crea una cuenta gratis",
-      "p": "Regístrate en MCP Emails, sin tarjeta. El plan gratuito conecta una bandeja, para siempre."
+      "p": "Regístrate en MCPEmails, sin tarjeta. El plan gratuito conecta una bandeja, para siempre."
     },
     {
       "h": "Activa el acceso IMAP en WEB.DE",
       "p": "En WEB.DE, abre E-Mail-Einstellungen (ajustes de correo), elige POP3/IMAP en E-Mail empfangen y mueve el control deslizante a POP3- und IMAP-Zugriff erlauben (permitir el acceso POP3 e IMAP)."
     },
     {
-      "h": "Añade el buzón en MCP Emails",
+      "h": "Añade el buzón en MCPEmails",
       "p": "Elige IMAP / SMTP y añade tu dirección de WEB.DE, los servidores indicados arriba y la contraseña para conectar la bandeja de forma segura."
     },
     {
@@ -61,7 +61,7 @@
     },
     {
       "h": "Activar la autenticación de dos factores retira tu contraseña para los clientes de correo",
-      "p": "WEB.DE coloca su contraseña de aplicación dentro de la autenticación en dos factores y la describe como la contraseña para programas de correo externos por POP3 e IMAP. Cuando la 2FA protege tu cuenta, crea una en un navegador: haz clic en tus iniciales, luego <b>Account verwalten</b>, luego <b>Login & Sicherheit</b>, luego <b>App-Passwörter (für externe Apps)</b> y luego <b>Neues App-Passwort erstellen</b>. Ponle un nombre, por ejemplo MCP Emails, y cópiala al momento, porque WEB.DE la muestra una sola vez. Pégala en MCP Emails en lugar de tu contraseña normal y guarda la normal para la web. Sin 2FA, la contraseña de la cuenta es la credencial correcta."
+      "p": "WEB.DE coloca su contraseña de aplicación dentro de la autenticación en dos factores y la describe como la contraseña para programas de correo externos por POP3 e IMAP. Cuando la 2FA protege tu cuenta, crea una en un navegador: haz clic en tus iniciales, luego <b>Account verwalten</b>, luego <b>Login & Sicherheit</b>, luego <b>App-Passwörter (für externe Apps)</b> y luego <b>Neues App-Passwort erstellen</b>. Ponle un nombre, por ejemplo MCPEmails, y cópiala al momento, porque WEB.DE la muestra una sola vez. Pégala en MCPEmails en lugar de tu contraseña normal y guarda la normal para la web. Sin 2FA, la contraseña de la cuenta es la credencial correcta."
     },
     {
       "h": "Los dos puertos SMTP funcionan, así que un fallo de envío rara vez es el puerto",
@@ -69,18 +69,18 @@
     }
   ],
   "limits": [
-    "MCP Emails conecta solo el buzón de WEB.DE. WEB.DE Online-Speicher, la libreta de direcciones y el calendario son productos independientes y no se exponen a tu cliente de IA.",
+    "MCPEmails conecta solo el buzón de WEB.DE. WEB.DE Online-Speicher, la libreta de direcciones y el calendario son productos independientes y no se exponen a tu cliente de IA.",
     "El control deslizante de POP3/IMAP lo controla WEB.DE, no nosotros. Si WEB.DE desactiva la recuperación tras un largo periodo de inactividad, hay que volver a habilitar la conexión en WEB.DE para que funcione de nuevo.",
     "WEB.DE es un buzón para particulares con sus propios límites de envío contra el abuso. Úsalo para correspondencia normal, no para envíos masivos o campañas."
   ],
   "faq": [
     {
       "q": "¿Funciona Claude con WEB.DE?",
-      "a": "No por sí solo. Claude no tiene un conector integrado para WEB.DE. Conectar un servidor MCP como MCP Emails a tu buzón de WEB.DE por IMAP le da a Claude acceso para leer, buscar, enviar, responder, programar y organizar, y la misma conexión funciona después desde Cursor, ChatGPT y otros clientes MCP, no solo desde uno."
+      "a": "No por sí solo. Claude no tiene un conector integrado para WEB.DE. Conectar un servidor MCP como MCPEmails a tu buzón de WEB.DE por IMAP le da a Claude acceso para leer, buscar, enviar, responder, programar y organizar, y la misma conexión funciona después desde Cursor, ChatGPT y otros clientes MCP, no solo desde uno."
     },
     {
       "q": "¿Cuáles son los ajustes IMAP y SMTP de WEB.DE?",
-      "a": "El IMAP es imap.web.de en el puerto 993 con SSL. El SMTP es smtp.web.de, en el puerto 587 con STARTTLS tal como lo documenta WEB.DE, o en el 465 con SSL, que es el que usa MCP Emails. El usuario es tu dirección completa de WEB.DE con el dominio incluido. Ambos servidores se confirmaron con una conexión TLS real en la fecha indicada en esta página."
+      "a": "El IMAP es imap.web.de en el puerto 993 con SSL. El SMTP es smtp.web.de, en el puerto 587 con STARTTLS tal como lo documenta WEB.DE, o en el 465 con SSL, que es el que usa MCPEmails. El usuario es tu dirección completa de WEB.DE con el dominio incluido. Ambos servidores se confirmaron con una conexión TLS real en la fecha indicada en esta página."
     },
     {
       "q": "¿Cómo activo IMAP en WEB.DE?",
@@ -92,7 +92,7 @@
     },
     {
       "q": "¿WEB.DE necesita una contraseña de aplicación?",
-      "a": "Solo si tienes activada la autenticación en dos factores. Sin 2FA, tu contraseña normal de WEB.DE autentica los clientes de correo una vez activada la recuperación. Con 2FA, crea un App-Passwort en Account verwalten, Login & Sicherheit, App-Passwörter (für externe Apps), y úsalo en MCP Emails. WEB.DE lo muestra una sola vez; si lo pierdes, bórralo y crea otro."
+      "a": "Solo si tienes activada la autenticación en dos factores. Sin 2FA, tu contraseña normal de WEB.DE autentica los clientes de correo una vez activada la recuperación. Con 2FA, crea un App-Passwort en Account verwalten, Login & Sicherheit, App-Passwörter (für externe Apps), y úsalo en MCPEmails. WEB.DE lo muestra una sola vez; si lo pierdes, bórralo y crea otro."
     },
     {
       "q": "¿Se almacena mi correo de WEB.DE en sus servidores?",

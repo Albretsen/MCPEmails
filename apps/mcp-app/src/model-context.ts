@@ -151,7 +151,7 @@ export function modelContextParams(
   return {
     content: [{ type: "text", text }],
     ...(listed.includes("structuredContent")
-      ? { structuredContent: { source: "MCP Emails draft card", context: text } }
+      ? { structuredContent: { source: "MCPEmails draft card", context: text } }
       : {}),
   };
 }
@@ -182,7 +182,7 @@ export function draftSavedContextLine(
   opts: { bodyEdited: boolean },
 ): string {
   return (
-    `The user saved edits to a draft in the MCP Emails card at ${contextInstant(draft.last_saved_at)}. ` +
+    `The user saved edits to a draft in the MCPEmails card at ${contextInstant(draft.last_saved_at)}. ` +
     `Its current draft_id is ${idOf(draft)}. ${draftShape(draft)} ` +
     `Body ${wordCount(draft.body?.text)} words. ` +
     (opts.bodyEdited ? BODY_DIFFERS : "This save did not change the body.")
@@ -328,7 +328,7 @@ export function draftActionContextLine(
   switch (outcome.kind) {
     case "sent":
       return (
-        `The user sent draft ${id} from the MCP Emails card at ${contextInstant(outcome.sentAt)}. ${shape} ` +
+        `The user sent draft ${id} from the MCPEmails card at ${contextInstant(outcome.sentAt)}. ${shape} ` +
         `The message has left Drafts, so that draft_id no longer resolves.` +
         (opts.bodyEdited
           ? " The user edited the body in the card before sending, so the sent text differs from the text the agent last wrote."
@@ -336,18 +336,18 @@ export function draftActionContextLine(
       );
     case "held":
       return (
-        `The user pressed Send on draft ${id} in the MCP Emails card. ${shape} ` +
+        `The user pressed Send on draft ${id} in the MCPEmails card. ${shape} ` +
         `The send is held for approval${outcome.approvalId ? ` under approval_id ${outcome.approvalId}` : ""} and nothing has been sent. ` +
         `The draft is still in Drafts under that draft_id.${body}`
       );
     case "discarded":
       return (
-        `The user discarded draft ${id} from the MCP Emails card. ${shape} ` +
+        `The user discarded draft ${id} from the MCPEmails card. ${shape} ` +
         `Nothing was sent. The draft was deleted from Drafts, so that draft_id no longer resolves.`
       );
     case "hidden":
       return (
-        `The user hid the MCP Emails draft editor card for ${
+        `The user hid the MCPEmails draft editor card for ${
           opts.scope === "workspace" ? "every inbox in the workspace" : "this inbox"
         }. That is a display setting only. ` +
         `Draft ${id} was not sent, changed or deleted and is still in Drafts under that draft_id. ${shape}${body}`
@@ -356,13 +356,13 @@ export function draftActionContextLine(
       const said = `The server reported: ${quoted(outcome.said || "no reason", SERVER_TEXT_MAX)}.`;
       if (action === "hide") {
         return (
-          `The user asked to hide the MCP Emails draft editor card and it was not hidden. ${said} ` +
+          `The user asked to hide the MCPEmails draft editor card and it was not hidden. ${said} ` +
           `Draft ${id} was not sent, changed or deleted and is still in Drafts under that draft_id. ${shape}${body}`
         );
       }
       if (action === "discard") {
         return (
-          `The user pressed Delete draft on draft ${id} in the MCP Emails card and the delete failed. ${shape} ${said} ` +
+          `The user pressed Delete draft on draft ${id} in the MCPEmails card and the delete failed. ${shape} ${said} ` +
           `The card still holds the draft under that draft_id.${body}`
         );
       }
@@ -373,7 +373,7 @@ export function draftActionContextLine(
             ? "Whether the message was delivered is not known, so the draft may or may not still be in Drafts."
             : "Nothing was reported as sent, and the card still holds the draft under that draft_id.";
       return (
-        `The user pressed Send on draft ${id} in the MCP Emails card and the send failed. ${shape} ${said} ${after}${body}`
+        `The user pressed Send on draft ${id} in the MCPEmails card and the send failed. ${shape} ${said} ${after}${body}`
       );
     }
     case "no_answer": {
@@ -384,7 +384,7 @@ export function draftActionContextLine(
             ? "The card does not know whether the draft was deleted."
             : "The card does not know whether it was hidden. The draft itself is not affected by that setting.";
       return (
-        `The user ${PRESSED[action]} draft ${id} in the MCP Emails card and the card got no usable answer ` +
+        `The user ${PRESSED[action]} draft ${id} in the MCPEmails card and the card got no usable answer ` +
         `(${quoted(outcome.why, SERVER_TEXT_MAX)}). ${shape} ${unknown}${body}`
       );
     }
@@ -414,11 +414,11 @@ export function outboundRejectContextLine(o: Outbound, answer: Envelope | null):
   if (!answer) return null;
   const about = `the queued send under approval_id ${o.approval_id}`;
   if (answer.state !== "error" && answer.receipt?.outcome === "rejected") {
-    return `The user rejected ${about} in the MCP Emails card. ${outboundShape(o)} Nothing was sent.`;
+    return `The user rejected ${about} in the MCPEmails card. ${outboundShape(o)} Nothing was sent.`;
   }
   if (!answer.receipt) return null;
   return (
-    `The user pressed Reject on ${about} in the MCP Emails card, and that press did not reject it. ` +
+    `The user pressed Reject on ${about} in the MCPEmails card, and that press did not reject it. ` +
     `${outboundShape(o)} The server reported: ${quoted(failureText(null, answer.receipt), SERVER_TEXT_MAX)}.`
   );
 }
@@ -441,7 +441,7 @@ function planShape(plan: Plan): string {
 /** After the user confirmed a plan, from what `bulk_execute` answered. */
 export function bulkExecuteContextLine(plan: Plan, answer: Envelope | null): string | null {
   if (!answer?.receipt) return null;
-  const head = `The user confirmed ${planShape(plan)} in the MCP Emails card.`;
+  const head = `The user confirmed ${planShape(plan)} in the MCPEmails card.`;
   const r = answer.receipt;
   if (answer.state !== "error" && r.outcome === "executed") {
     const n = typeof r.affected_count === "number" ? ` ${r.affected_count} messages were affected.` : "";
@@ -452,5 +452,5 @@ export function bulkExecuteContextLine(plan: Plan, answer: Envelope | null): str
 
 /** After the user cancelled a plan in the card. Local: no server call is made. */
 export function bulkCancelContextLine(plan: Plan): string {
-  return `The user cancelled ${planShape(plan)} in the MCP Emails card. Nothing was changed.`;
+  return `The user cancelled ${planShape(plan)} in the MCPEmails card. Nothing was changed.`;
 }

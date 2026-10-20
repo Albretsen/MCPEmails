@@ -28,14 +28,14 @@ export async function generateMetadata({ params }) {
     openGraph: {
       type: 'website',
       url: localePath(locale, '/changelog'),
-      title: `${title} · MCP Emails`,
+      title: `${title} · MCPEmails`,
       description,
       locale: OG_LOCALE[locale],
       images: [OG_IMAGE],
     },
     twitter: {
       card: 'summary_large_image',
-      title: `${title} · MCP Emails`,
+      title: `${title} · MCPEmails`,
       description,
       images: [OG_IMAGE.url],
     },
@@ -53,7 +53,7 @@ export default async function ChangelogPage({ params }) {
 
   // WebPage + BreadcrumbList (the shape every other static marketing page
   // emits), plus an ItemList of the releases themselves so an assistant asked
-  // "what is new in MCP Emails" has something machine readable to read. Every
+  // "what is new in MCPEmails" has something machine readable to read. Every
   // item mirrors visible page content; nothing is claimed here that the list
   // above does not already say.
   const base = pageJsonLd(locale, {

@@ -20,7 +20,7 @@
     "titleLine1": "将你的 Ziggo 邮箱连接到",
     "titleLine2": "Claude、Cursor、任意 MCP 客户端",
     "lead": "为你的 AI 代理接入一个真正的 Ziggo 收件箱。用你在 Mijn Ziggo 中设置的 e-mailwachtwoord（邮箱密码），通过 IMAP 读取、搜索、发送、回复、定时与整理邮件。",
-    "answer": "Claude 无法自行连接 Ziggo 邮箱。MCP Emails 是一个托管 MCP 服务器，通过 IMAP 连接 imap.ziggo.nl 的 993 端口，用你的完整地址和你在 Mijn Ziggo 中为该地址设置的 e-mailwachtwoord 认证，让 Claude、Cursor 或任意 MCP 客户端都能读取、搜索、发送并整理邮件。Ziggo 没有应用密码，也没有客户端访问开关，但发信是这一类中的例外：它在 smtp.ziggo.nl 的 587 端口使用 STARTTLS，而不是 465 端口的隐式 TLS。一个收件箱永久免费。",
+    "answer": "Claude 无法自行连接 Ziggo 邮箱。MCPEmails 是一个托管 MCP 服务器，通过 IMAP 连接 imap.ziggo.nl 的 993 端口，用你的完整地址和你在 Mijn Ziggo 中为该地址设置的 e-mailwachtwoord 认证，让 Claude、Cursor 或任意 MCP 客户端都能读取、搜索、发送并整理邮件。Ziggo 没有应用密码，也没有客户端访问开关，但发信是这一类中的例外：它在 smtp.ziggo.nl 的 587 端口使用 STARTTLS，而不是 465 端口的隐式 TLS。一个收件箱永久免费。",
     "meta0": "1 个收件箱永久免费",
     "meta1": "Mijn Ziggo 中的 e-mailwachtwoord",
     "meta2": "邮件实时获取，绝不存储"
@@ -31,7 +31,7 @@
   },
   "setup": [
     {
-      "h": "创建免费 MCP Emails 账户",
+      "h": "创建免费 MCPEmails 账户",
       "p": "在 mcpemails.com 注册。免费套餐可永久连接一个收件箱，无需信用卡。"
     },
     {
@@ -43,7 +43,7 @@
       "p": "有互联网订阅时，Ziggo 允许你创建最多六个邮箱地址；仅有电话订阅则只有一个。如果你不想把主地址交给代理，可以在 Mijn Ziggo 中再创建一个并连接它。请注意，主地址与互联网订阅绑定，取消订阅后就会失效。"
     },
     {
-      "h": "在 MCP Emails 中添加邮箱",
+      "h": "在 MCPEmails 中添加邮箱",
       "p": "选择 IMAP / SMTP，输入完整地址（例如 naam@ziggo.nl），粘贴 e-mailwachtwoord。Ziggo 的服务器和端口（包括 STARTTLS 提交端口）已自动填好，并已通过实时 TLS 连接验证。然后把 https://mcpemails.com/api/mcp 粘贴到 Claude、Cursor 或 ChatGPT 中，完成授权，代理便拥有该收件箱。"
     }
   ],
@@ -73,7 +73,7 @@
   "faq": [
     {
       "q": "Claude 能用 Ziggo 邮箱吗？",
-      "a": "不能单独使用。Claude 没有内置的 Ziggo 连接器。通过 IMAP 将 MCP Emails 这样的 MCP 服务器指向该邮箱后，Claude 就能读取、搜索、发送、回复、定时和整理其中的邮件，同一个连接也可在 Cursor、ChatGPT 和其他 MCP 客户端中使用。"
+      "a": "不能单独使用。Claude 没有内置的 Ziggo 连接器。通过 IMAP 将 MCPEmails 这样的 MCP 服务器指向该邮箱后，Claude 就能读取、搜索、发送、回复、定时和整理其中的邮件，同一个连接也可在 Cursor、ChatGPT 和其他 MCP 客户端中使用。"
     },
     {
       "q": "Ziggo 的 IMAP 和 SMTP 设置是什么？",

@@ -202,8 +202,8 @@ describe("service worker: showing a push", () => {
 
   it("the test push is shown with its fixed text", async () => {
     const w = worker();
-    await w.push({ type: "test", title: "MCP Emails", body: "Notifications are working on this device.", url: "/", tag: "push-test" });
-    expect([w.shown[0]!.title, w.shown[0]!.options.body, w.shown[0]!.options.tag]).toEqual(["MCP Emails", "Notifications are working on this device.", "push-test"]);
+    await w.push({ type: "test", title: "MCPEmails", body: "Notifications are working on this device.", url: "/", tag: "push-test" });
+    expect([w.shown[0]!.title, w.shown[0]!.options.body, w.shown[0]!.options.tag]).toEqual(["MCPEmails", "Notifications are working on this device.", "push-test"]);
     expect(w.shown[0]!.options.renotify).toBeUndefined();
   });
 });

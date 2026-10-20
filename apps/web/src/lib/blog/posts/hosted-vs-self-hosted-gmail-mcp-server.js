@@ -4,13 +4,13 @@ const post = {
   description:
     'Hosted vs. self-hosted Gmail MCP server, compared honestly: free DIY repos give you full control but you own OAuth, encryption, and uptime. A hosted server costs minutes.',
   cover: '/blog/cover-hosted-vs-self-hosted-gmail-mcp-server.svg',
-  coverAlt: 'Hosted versus self-hosted Gmail MCP server comparison — MCP Emails',
+  coverAlt: 'Hosted versus self-hosted Gmail MCP server comparison — MCPEmails',
   authorId: 'asgeir',
   publishedAt: "2026-05-28T09:00:00.000Z",
   updatedAt: "2026-09-26T09:00:00.000Z",
   tags: ['Comparison', 'Gmail', 'MCP', 'Security'],
   featured: false,
-  content: `If you want your AI agent to read and send Gmail, you have two real options: run a self-hosted Gmail MCP server from an open-source repo, or point your client at a hosted one. The DIY route costs zero dollars and gives you total control, but you personally own the OAuth setup, token encryption, hosting, updates, and security. A hosted server like MCP Emails costs minutes to wire up and keeps credentials encrypted, at the price of trusting a vendor with the connection.
+  content: `If you want your AI agent to read and send Gmail, you have two real options: run a self-hosted Gmail MCP server from an open-source repo, or point your client at a hosted one. The DIY route costs zero dollars and gives you total control, but you personally own the OAuth setup, token encryption, hosting, updates, and security. A hosted server like MCPEmails costs minutes to wire up and keeps credentials encrypted, at the price of trusting a vendor with the connection.
 
 This is the honest breakdown. I built a hosted server, so I have a side, but I'll tell you exactly where self-hosting wins and which kind of person should pick it. If you only want the verb-level model first, the [complete guide to giving an AI agent email access](/blog/how-to-give-your-ai-agent-email-access) is the pillar to read alongside this.
 
@@ -62,7 +62,7 @@ MCP is young. The spec moves, Google rotates requirements, and the repo you clon
 
 The repo you picked does Gmail. The day you add an Outlook account or an iCloud address, you're integrating Microsoft Graph or wiring IMAP and SMTP yourself, with a second auth model and a second set of edge cases. Most DIY servers stay Gmail-only because the second provider is a project of its own.
 
-## The hosted case: MCP Emails, honestly
+## The hosted case: MCPEmails, honestly
 
 A hosted MCP server flips the trade. You give up running the code; you get back all the time the list above would cost.
 
@@ -80,7 +80,7 @@ The same endpoint and the same core tools — \`inbox_list\`, \`email_read\`, \`
 
 ### Sending stays on your provider
 
-MCP Emails never relays mail from its own domain. \`email_compose\` (with the \`send\` action) goes out through your provider (Gmail or another provider over SMTP, or Microsoft Graph for Outlook), so your domain reputation and deliverability stay yours. That's the same property you'd get self-hosting, without building it.
+MCPEmails never relays mail from its own domain. \`email_compose\` (with the \`send\` action) goes out through your provider (Gmail or another provider over SMTP, or Microsoft Graph for Outlook), so your domain reputation and deliverability stay yours. That's the same property you'd get self-hosting, without building it.
 
 ### The honest cost: you trust a vendor
 
@@ -88,7 +88,7 @@ This is the real trade-off, and I won't dress it up. With a hosted server, your 
 
 ## What it costs in dollars
 
-MCP Emails is free to start: one connected inbox, unlimited API keys, and no credit card. The Free tier runs at 60 requests/minute with 30-day analytics and community support. [Personal is $9/month](/pricing) (up to three connected inboxes, 120 req/min, 90-day analytics, email support), Pro is $15/month (up to 10 connected inboxes, 300 req/min, 2-year analytics), and Business is $39/month (10 mailboxes included plus $3/month for each extra, members with roles, a separate workspace per client). Self-hosting is $0 in subscription plus whatever your VPS and your hours cost. Be honest about the hours.
+MCPEmails is free to start: one connected inbox, unlimited API keys, and no credit card. The Free tier runs at 60 requests/minute with 30-day analytics and community support. [Personal is $9/month](/pricing) (up to three connected inboxes, 120 req/min, 90-day analytics, email support), Pro is $15/month (up to 10 connected inboxes, 300 req/min, 2-year analytics), and Business is $39/month (10 mailboxes included plus $3/month for each extra, members with roles, a separate workspace per client). Self-hosting is $0 in subscription plus whatever your VPS and your hours cost. Be honest about the hours.
 
 ## So which should you pick?
 

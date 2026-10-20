@@ -4,7 +4,7 @@ const post = {
   description:
     'Seven concrete things an AI agent can do with inbox access: triage unread mail, summarize threads, draft replies, find attachments, chase follow-ups, and route mail.',
   cover: '/blog/cover-7-things-ai-agent-can-do-with-inbox-access.svg',
-  coverAlt: 'Seven things your AI agent can do with inbox access over MCP — MCP Emails',
+  coverAlt: 'Seven things your AI agent can do with inbox access over MCP — MCPEmails',
   authorId: 'asgeir',
   publishedAt: "2026-04-18T09:00:00.000Z",
   updatedAt: "2026-04-18T09:00:00.000Z",
@@ -14,7 +14,7 @@ const post = {
 
 Every example below maps to real MCP tools you can call right now. The tools are the same whether you connect Gmail, Outlook, iCloud, Fastmail, or a generic IMAP box. If you haven't wired an agent to your inbox yet, the [complete guide to giving your AI agent email access](/blog/how-to-give-your-ai-agent-email-access) covers the setup; the [2-minute connect walkthrough](/blog/connect-email-to-ai-agent-under-2-minutes) is the fast path.
 
-One honest caveat up front, because it shapes half of this list: **MCP Emails is poll-based, not push.** There are no webhooks and no server-initiated events. The agent doesn't get pinged when mail arrives. It checks on a schedule. That sounds like a limitation, and for a few use cases it is, but it also means nothing fires without a clock you control. I'll flag where polling matters.
+One honest caveat up front, because it shapes half of this list: **MCPEmails is poll-based, not push.** There are no webhooks and no server-initiated events. The agent doesn't get pinged when mail arrives. It checks on a schedule. That sounds like a limitation, and for a few use cases it is, but it also means nothing fires without a clock you control. I'll flag where polling matters.
 
 ## The toolset, in one breath
 
@@ -36,7 +36,7 @@ You get added to a 40-message thread at message 38. Nobody is going to read up. 
 
 > Read the thread with subject "Q3 vendor migration" and tell me where it actually landed: what was decided, who owns what, and any open question I need to answer.
 
-\`email_read\` with action search finds the thread (it takes structured fields such as sender, subject, text and date range, and MCP Emails turns them into each provider's own search), then \`email_read\` with action read pulls the parsed plain text of each message. That read action can also return sanitized HTML and attachments when you ask, but for a summary the plain text is faster and cheaper.
+\`email_read\` with action search finds the thread (it takes structured fields such as sender, subject, text and date range, and MCPEmails turns them into each provider's own search), then \`email_read\` with action read pulls the parsed plain text of each message. That read action can also return sanitized HTML and attachments when you ask, but for a summary the plain text is faster and cheaper.
 
 ### 3. Draft replies in your voice
 

@@ -20,7 +20,7 @@
     "titleLine1": "将 mailcow 连接到 Claude，",
     "titleLine2": "以及 Cursor、ChatGPT、任意 MCP 客户端",
     "lead": "mailcow 已经在一个栈中为你提供了 Dovecot、Postfix 和 SOGo。在它之上加一个 MCP 服务器，你的代理就能在你自己托管的邮箱中读取、搜索、发送、回复、定时和归档邮件。",
-    "answer": "Claude 无法自行访问 mailcow 服务器。MCP Emails 是一个托管 MCP 服务器，通过端口 993 的 IMAP 连接你的 mailcow 实例，使用你在 mailcow.conf 中设置为 MAILCOW_HOSTNAME 的主机名，以及 Mailboxes 列表中的邮箱密码，让 Claude、Cursor 或任意 MCP 客户端都能读取、搜索、发送并整理这些邮件。没有共用主机：这是你的服务器，它必须发布到互联网上，而且你必须完全使用 acme-mailcow 签发的证书上的那个主机名来连接。1 个收件箱免费。",
+    "answer": "Claude 无法自行访问 mailcow 服务器。MCPEmails 是一个托管 MCP 服务器，通过端口 993 的 IMAP 连接你的 mailcow 实例，使用你在 mailcow.conf 中设置为 MAILCOW_HOSTNAME 的主机名，以及 Mailboxes 列表中的邮箱密码，让 Claude、Cursor 或任意 MCP 客户端都能读取、搜索、发送并整理这些邮件。没有共用主机：这是你的服务器，它必须发布到互联网上，而且你必须完全使用 acme-mailcow 签发的证书上的那个主机名来连接。1 个收件箱免费。",
     "meta0": "1 个收件箱永久免费",
     "meta1": "mailcow 界面中的邮箱密码",
     "meta2": "邮件实时获取，绝不存储"
@@ -32,7 +32,7 @@
   "setup": [
     {
       "h": "创建免费账户",
-      "p": "注册 MCP Emails，无需信用卡。免费套餐可永久连接一个收件箱。"
+      "p": "注册 MCPEmails，无需信用卡。免费套餐可永久连接一个收件箱。"
     },
     {
       "h": "从 mailcow.conf 中读取 MAILCOW_HOSTNAME",
@@ -40,7 +40,7 @@
     },
     {
       "h": "确认邮箱及其密码",
-      "p": "在 mailcow 界面中依次打开 Configuration、Mailboxes。确认该地址处于启用状态；如果你不知道它的密码，就在那里设置一个新密码。然后在 MCP Emails 中添加收件箱：选择 IMAP / SMTP，输入 MAILCOW_HOSTNAME 主机名和邮箱凭据。"
+      "p": "在 mailcow 界面中依次打开 Configuration、Mailboxes。确认该地址处于启用状态；如果你不知道它的密码，就在那里设置一个新密码。然后在 MCPEmails 中添加收件箱：选择 IMAP / SMTP，输入 MAILCOW_HOSTNAME 主机名和邮箱凭据。"
     },
     {
       "h": "将 MCP URL 粘贴到你的 AI",
@@ -66,13 +66,13 @@
     }
   ],
   "limits": [
-    "托管 MCP 服务器必须向你的栈建立入站 IMAP 连接，所以只发布在私有接口上、或只能通过 VPN 访问的 mailcow 无法用这种方式连接。如果你不希望任何外部系统接触 993，可以把 MCP Emails 与 mailcow 一起自托管。",
+    "托管 MCP 服务器必须向你的栈建立入站 IMAP 连接，所以只发布在私有接口上、或只能通过 VPN 访问的 mailcow 无法用这种方式连接。如果你不希望任何外部系统接触 993，可以把 MCPEmails 与 mailcow 一起自托管。",
     "发信由你自己的 Postfix 处理，所以下游是否接受邮件，完全取决于你的 SPF、DKIM 和 DMARC 记录，以及你的 IP 是否被列入任何黑名单。"
   ],
   "faq": [
     {
       "q": "Claude 能用于 mailcow 吗？",
-      "a": "不能单独使用。Claude 没有 mailcow 连接器，也无法向你运行的服务器打开 IMAP 会话。将 MCP Emails 这样的 MCP 服务器连接到你的 mailcow 实例后，无论你使用哪个 MCP 客户端，Claude 都能读取、搜索、发送、回复、定时和整理其上邮箱中的邮件。"
+      "a": "不能单独使用。Claude 没有 mailcow 连接器，也无法向你运行的服务器打开 IMAP 会话。将 MCPEmails 这样的 MCP 服务器连接到你的 mailcow 实例后，无论你使用哪个 MCP 客户端，Claude 都能读取、搜索、发送、回复、定时和整理其上邮箱中的邮件。"
     },
     {
       "q": "mailcow 的 IMAP 和 SMTP 设置是什么？",

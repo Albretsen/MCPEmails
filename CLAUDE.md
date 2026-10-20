@@ -70,7 +70,7 @@ npm only, one root `package-lock.json`, Node 24 from `.nvmrc`. Run `npm ci` at t
 
 - Never claim SOC 2, even as "in progress". Data is stored in one region, Stockholm.
 - Customer-facing copy never mentions action caps, never says "30 days" (the refund window is 14 days), and never shows raw plan slugs (use `planDisplayName`).
-- The product is "MCP Emails", with a space, in anything a customer reads.
+- The product is "MCPEmails", one word, camel case, in anything a customer or an AI engine reads (page titles, JSON-LD, copy, emails, tool descriptions). Lowercase `mcpemails` appears only in the domain, the npm package and ids. "MCP Emails" survives only in the JSON-LD `alternateName` list.
 - No em dashes. Avoid common signs of AI writing (filler, "the honest answer is", stacked adjectives).
 - Copy must match the code. Do not hardcode a tool count, and do not claim Fastmail OAuth or JMAP (Fastmail connects with an app password only).
 - The pre-commit hook in `.githooks/` blocks customer addresses under `docs/` and untracked working briefs. A fresh clone must run `git config core.hooksPath .githooks`.

@@ -294,7 +294,7 @@ async function editor(over = {}, opts = {}) {
 
 
 const SIG_HTML =
-  '<p>Here they are.</p>\n<div class="mcpemails-signature"><table><tr><td><img src="https://x.example/logo.png" alt="MCP Emails logo"></td><td>Asgeir<br><a href="https://mcpemails.com">mcpemails.com</a></td></tr></table></div>';
+  '<p>Here they are.</p>\n<div class="mcpemails-signature"><table><tr><td><img src="https://x.example/logo.png" alt="MCPEmails logo"></td><td>Asgeir<br><a href="https://mcpemails.com">mcpemails.com</a></td></tr></table></div>';
 const SIG_TEXT = "Here they are.\n\n-- \nAsgeir\nmcpemails.com";
 
 async function main() {
@@ -533,7 +533,7 @@ async function main() {
     c.press(c.btn(/^Turn off draft cards…$/));
     await settle();
     expect("the confirm names the dashboard switch", /Show the draft editor\s+card/.test(c.text()), true);
-    expect("and where it is", /MCP Emails dashboard/.test(c.text()), true);
+    expect("and where it is", /MCPEmails dashboard/.test(c.text()), true);
     expectJson("nothing was called yet", c.calls, []);
     c.tools.draft_editor_hide = (args) => ({
       content: [{ type: "text", text: "Draft editor card hidden." }],

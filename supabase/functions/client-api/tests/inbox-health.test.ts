@@ -12,7 +12,7 @@ const PASSWORD_TEXT = "This mailbox's password was refused by the mail server. R
 const OAUTH_TEXT = "Access to this mailbox has expired or was revoked. Reconnect it in the dashboard.";
 const AGENT_TEXT = (provider: string) =>
   `Unable to access the ${provider} inbox: its OAuth token has been revoked or expired, so the inbox has been marked 'error'. ` +
-  "Ask the user to reconnect it by opening this link in their browser (they may need to sign in to MCP Emails first): https://mcpemails.com/x";
+  "Ask the user to reconnect it by opening this link in their browser (they may need to sign in to MCPEmails first): https://mcpemails.com/x";
 
 const noHandler: harness.ProviderHandler = (call) => harness.json({ error: `unexpected provider call ${call.url}` }, 500);
 const refuse = () => {

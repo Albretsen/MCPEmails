@@ -22,23 +22,23 @@
     "meta0": "1 bandeja gratis, para siempre",
     "meta1": "Contraseña específica de aplicación, sin OAuth",
     "meta2": "El correo se obtiene en vivo, nunca se almacena",
-    "answer": "Apple no ofrece OAuth para iCloud Mail, así que Claude no puede conectarse directamente. MCP Emails conecta tu bandeja de iCloud por IMAP con una contraseña específica de aplicación de Apple, lo que permite a Claude, Cursor o cualquier cliente MCP leer, buscar, enviar y organizar ese correo. La configuración lleva unos dos minutos y una bandeja es gratis."
+    "answer": "Apple no ofrece OAuth para iCloud Mail, así que Claude no puede conectarse directamente. MCPEmails conecta tu bandeja de iCloud por IMAP con una contraseña específica de aplicación de Apple, lo que permite a Claude, Cursor o cualquier cliente MCP leer, buscar, enviar y organizar ese correo. La configuración lleva unos dos minutos y una bandeja es gratis."
   },
   "method": {
     "title": "Cómo se conecta iCloud: una contraseña específica de aplicación",
-    "body": "iCloud Mail se conecta por IMAP/SMTP con una <b>contraseña específica de aplicación de Apple</b>. Genera una en account.apple.com, en Sign-In and Security → App-Specific Passwords (hace falta la autenticación de doble factor), y pégala en MCP Emails con tu dirección de iCloud."
+    "body": "iCloud Mail se conecta por IMAP/SMTP con una <b>contraseña específica de aplicación de Apple</b>. Genera una en account.apple.com, en Sign-In and Security → App-Specific Passwords (hace falta la autenticación de doble factor), y pégala en MCPEmails con tu dirección de iCloud."
   },
   "setup": [
     {
       "h": "Crea una cuenta gratis",
-      "p": "Regístrate en MCP Emails, sin tarjeta. El plan gratuito conecta una bandeja, para siempre."
+      "p": "Regístrate en MCPEmails, sin tarjeta. El plan gratuito conecta una bandeja, para siempre."
     },
     {
       "h": "Genera una contraseña específica de aplicación",
       "p": "En account.apple.com, ve a Sign-In and Security → App-Specific Passwords y crea una (la autenticación de doble factor tiene que estar activada)."
     },
     {
-      "h": "Pégala en MCP Emails",
+      "h": "Pégala en MCPEmails",
       "p": "Añade tu dirección de iCloud y la contraseña específica de aplicación para conectar la bandeja de forma segura."
     },
     {
@@ -72,7 +72,7 @@
   "faq": [
     {
       "q": "¿Funciona Claude con iCloud Mail?",
-      "a": "No por sí solo. Claude no tiene un conector integrado para iCloud y Apple no publica ninguna interfaz OAuth para iCloud Mail. Conectar un servidor MCP como MCP Emails al buzón por IMAP, con una contraseña específica de aplicación de Apple, le da a Claude acceso para leer, buscar, enviar, responder, programar y organizar, y la misma conexión funciona desde Cursor y ChatGPT."
+      "a": "No por sí solo. Claude no tiene un conector integrado para iCloud y Apple no publica ninguna interfaz OAuth para iCloud Mail. Conectar un servidor MCP como MCPEmails al buzón por IMAP, con una contraseña específica de aplicación de Apple, le da a Claude acceso para leer, buscar, enviar, responder, programar y organizar, y la misma conexión funciona desde Cursor y ChatGPT."
     },
     {
       "q": "¿Cuáles son los ajustes IMAP y SMTP de iCloud Mail?",

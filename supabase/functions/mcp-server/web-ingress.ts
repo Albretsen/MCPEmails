@@ -60,7 +60,7 @@ export function isWebIngress(req: Request): boolean {
  * error param (RFC 6750 section 3.1).
  */
 export function discoveryChallenge(appUrl: string, invalidToken = false): string {
-  return `Bearer realm="MCP Emails", ` +
+  return `Bearer realm="MCPEmails", ` +
     (invalidToken ? `error="invalid_token", ` : "") +
     `resource_metadata="${appUrl}/.well-known/oauth-protected-resource", ` +
     `scope="${FIRST_CONSENT_SCOPE}"`;

@@ -91,7 +91,7 @@
     "densityLabel": "Density",
     "densityCompact": "Compact",
     "densitySpacious": "Spacious",
-    "firstRunTitle": "Welcome to MCP Emails",
+    "firstRunTitle": "Welcome to MCPEmails",
     "firstRunBody": "Connect your first inbox to get a working MCP endpoint in under a minute.",
     "firstRunCta": "Connect inbox",
     "inviteSentNotDelivered": "Invite created for {email}, but the email could not be sent. Use Resend on the pending invite.",
@@ -135,7 +135,7 @@
   },
   "connect": {
     "subOutlook": "Outlook.com · Microsoft 365",
-    "hintOutlook": "Outlook.com, Hotmail, Live and MSN accounts sign in straight away. A work or school Microsoft 365 account may need your IT admin to approve MCP Emails once; they don't need an MCP Emails account to do it.",
+    "hintOutlook": "Outlook.com, Hotmail, Live and MSN accounts sign in straight away. A work or school Microsoft 365 account may need your IT admin to approve MCPEmails once; they don't need an MCPEmails account to do it.",
     "subFastmail": "App password",
     "subAppPassword": "App password",
     "subGeneric": "Any mailbox · recommended",
@@ -398,7 +398,7 @@
   },
   "adminConsentLink": {
     "title": "Send this link to your IT admin",
-    "body": "Send this link to your Microsoft 365 administrator. They sign in with their Microsoft admin account and approve once; they don't need an MCP Emails account. After that, everyone in your organisation can connect Outlook.",
+    "body": "Send this link to your Microsoft 365 administrator. They sign in with their Microsoft admin account and approve once; they don't need an MCPEmails account. After that, everyone in your organisation can connect Outlook.",
     "label": "Approval link",
     "loading": "Creating link...",
     "copy": "Copy",
@@ -411,20 +411,20 @@
   },
   "adminConsentResult": {
     "grantedTitle": "Approved",
-    "grantedBody": "Your team can now connect Outlook in MCP Emails. Nobody needs to approve anything else: each person signs in with Microsoft when they connect their own mailbox.",
+    "grantedBody": "Your team can now connect Outlook in MCPEmails. Nobody needs to approve anything else: each person signs in with Microsoft when they connect their own mailbox.",
     "cancelledTitle": "Not approved",
     "cancelledBody": "The approval was cancelled on Microsoft's screen, so nothing changed. Open the link again whenever you are ready.",
     "failedTitle": "The approval did not go through",
     "failedBody": "Microsoft did not confirm the approval. Approving needs a Microsoft 365 administrator account, such as a Global Administrator or Cloud Application Administrator. Sign in with one and open the link again.",
     "link_invalidTitle": "This link is not valid",
-    "link_invalidBody": "The approval link is incomplete or has been changed. Ask the person who sent it for a new one from their MCP Emails dashboard.",
+    "link_invalidBody": "The approval link is incomplete or has been changed. Ask the person who sent it for a new one from their MCPEmails dashboard.",
     "link_expiredTitle": "This link has expired",
-    "link_expiredBody": "Approval links work for 7 days. Ask the person who sent it for a new one from their MCP Emails dashboard.",
+    "link_expiredBody": "Approval links work for 7 days. Ask the person who sent it for a new one from their MCPEmails dashboard.",
     "timed_outTitle": "Please start again",
     "timed_outBody": "The approval took too long or finished in a different browser. Open the approval link again in this browser.",
     "unavailableTitle": "Something went wrong",
     "unavailableBody": "We could not start the approval. Please try again in a few minutes.",
     "closeHint": "Questions? Email hello@mcpemails.com.",
-    "openApp": "Open MCP Emails"
+    "openApp": "Open MCPEmails"
   }
 }

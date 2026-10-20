@@ -212,7 +212,7 @@
       },
       {
         "q": "Kann ich es selbst hosten, statt zu bezahlen?",
-        "a": "Ja. MCP Emails ist Open Source unter AGPL-3.0 und kostenlos selbst zu hosten. Ein docker-compose-Stack betreibt denselben MCP-Server, und Ihre Postfach-Zugangsdaten werden mit einem Schlüssel verschlüsselt, den nur Sie besitzen. Self-Hosting deckt IMAP- und SMTP-Postfächer ab. Gmail- und Outlook-Anmeldung (OAuth) und das Dashboard bleiben im gehosteten Dienst, wo sie in jedem Tarif funktionieren, auch in Free; Mitglieder und Rollen gibt es in Business, E-Mail-Support in jedem bezahlten Tarif."
+        "a": "Ja. MCPEmails ist Open Source unter AGPL-3.0 und kostenlos selbst zu hosten. Ein docker-compose-Stack betreibt denselben MCP-Server, und Ihre Postfach-Zugangsdaten werden mit einem Schlüssel verschlüsselt, den nur Sie besitzen. Self-Hosting deckt IMAP- und SMTP-Postfächer ab. Gmail- und Outlook-Anmeldung (OAuth) und das Dashboard bleiben im gehosteten Dienst, wo sie in jedem Tarif funktionieren, auch in Free; Mitglieder und Rollen gibt es in Business, E-Mail-Support in jedem bezahlten Tarif."
       }
     ]
   },

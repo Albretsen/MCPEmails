@@ -1,7 +1,7 @@
 {
   "meta": {
     "title": "Status",
-    "description": "Live-Verfügbarkeit des MCP-Endpunkts von MCP Emails, gemessen durch eine automatische Prüfung, die alle fünf Minuten gegen die Produktion läuft. Echte aufgezeichnete Werte, keine Marketingzahl."
+    "description": "Live-Verfügbarkeit des MCP-Endpunkts von MCPEmails, gemessen durch eine automatische Prüfung, die alle fünf Minuten gegen die Produktion läuft. Echte aufgezeichnete Werte, keine Marketingzahl."
   },
   "hero": {
     "eyebrow": "Status",

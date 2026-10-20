@@ -20,7 +20,7 @@
     "titleLine1": "Connectez l'e-mail ScalaHosting à Claude,",
     "titleLine2": "Cursor, ChatGPT, tout client MCP",
     "lead": "Offrez à votre agent IA une vraie boîte ScalaHosting. Lisez, recherchez, envoyez, répondez, planifiez et organisez le courrier via IMAP, que votre compte tourne sous SPanel ou sous cPanel.",
-    "answer": "Claude ne peut pas accéder seul à une boîte ScalaHosting. MCP Emails est un serveur MCP hébergé qui la connecte en IMAP standard sur le port 993, pour que Claude, Cursor ou tout client MCP puisse lire, rechercher, envoyer et organiser ce courrier. ScalaHosting n'exploite aucun nom d'hôte de messagerie partagé : votre serveur de courrier est votre propre domaine ou le nom du serveur d'hébergement, et les deux panneaux l'affichent sous Connect device pour l'adresse. Le panneau dont vous disposez dépend de l'offre, car SPanel et cPanel sont tous deux utilisés. L'authentification se fait avec le mot de passe de la boîte, et une boîte est gratuite.",
+    "answer": "Claude ne peut pas accéder seul à une boîte ScalaHosting. MCPEmails est un serveur MCP hébergé qui la connecte en IMAP standard sur le port 993, pour que Claude, Cursor ou tout client MCP puisse lire, rechercher, envoyer et organiser ce courrier. ScalaHosting n'exploite aucun nom d'hôte de messagerie partagé : votre serveur de courrier est votre propre domaine ou le nom du serveur d'hébergement, et les deux panneaux l'affichent sous Connect device pour l'adresse. Le panneau dont vous disposez dépend de l'offre, car SPanel et cPanel sont tous deux utilisés. L'authentification se fait avec le mot de passe de la boîte, et une boîte est gratuite.",
     "meta0": "1 boîte gratuite, pour toujours",
     "meta1": "Mot de passe de la boîte depuis SPanel",
     "meta2": "E-mails récupérés en direct, jamais stockés"
@@ -32,7 +32,7 @@
   "setup": [
     {
       "h": "Créez un compte gratuit",
-      "p": "Inscrivez-vous sur MCP Emails, sans carte bancaire. L'offre gratuite connecte une boîte, pour toujours."
+      "p": "Inscrivez-vous sur MCPEmails, sans carte bancaire. L'offre gratuite connecte une boîte, pour toujours."
     },
     {
       "h": "Ouvrez Connect device dans le panneau dont vous disposez",
@@ -40,7 +40,7 @@
     },
     {
       "h": "Définissez ou récupérez le mot de passe de la boîte",
-      "p": "IMAP vérifie le mot de passe de l'adresse, qui n'est pas votre identifiant de l'espace client ScalaHosting. Dans SPanel, créez ou modifiez l'adresse sous Email Accounts, avec le bouton Generate si vous voulez une valeur robuste. Collez-le ensuite dans MCP Emails avec l'adresse complète comme nom d'utilisateur et le nom d'hôte que vous avez copié."
+      "p": "IMAP vérifie le mot de passe de l'adresse, qui n'est pas votre identifiant de l'espace client ScalaHosting. Dans SPanel, créez ou modifiez l'adresse sous Email Accounts, avec le bouton Generate si vous voulez une valeur robuste. Collez-le ensuite dans MCPEmails avec l'adresse complète comme nom d'utilisateur et le nom d'hôte que vous avez copié."
     },
     {
       "h": "Collez l'URL MCP dans votre IA",
@@ -62,13 +62,13 @@
     }
   ],
   "limits": [
-    "MCP Emails connecte des boîtes, pas le serveur. Les outils propres à SPanel, les sauvegardes et les fonctions de sécurité restent où ils sont.",
+    "MCPEmails connecte des boîtes, pas le serveur. Les outils propres à SPanel, les sauvegardes et les fonctions de sécurité restent où ils sont.",
     "Sur un VPS géré, vous avez peut-être modifié la pile de messagerie après le provisionnement. Dans ce cas, la fenêtre Connect device indique toujours ce que SPanel a configuré, ce qui ne correspond peut-être plus à ce qui écoute réellement."
   ],
   "faq": [
     {
       "q": "Claude fonctionne-t-il avec l'e-mail ScalaHosting ?",
-      "a": "Pas directement. Claude n'a pas de connecteur ScalaHosting. Connecter un serveur MCP comme MCP Emails à la boîte via IMAP donne à Claude un accès en lecture, recherche, envoi, réponse, planification et organisation. Cela fonctionne à l'identique sur les comptes SPanel et cPanel, puisque les deux servent un IMAP ordinaire."
+      "a": "Pas directement. Claude n'a pas de connecteur ScalaHosting. Connecter un serveur MCP comme MCPEmails à la boîte via IMAP donne à Claude un accès en lecture, recherche, envoi, réponse, planification et organisation. Cela fonctionne à l'identique sur les comptes SPanel et cPanel, puisque les deux servent un IMAP ordinaire."
     },
     {
       "q": "Quels sont les paramètres IMAP et SMTP de ScalaHosting ?",

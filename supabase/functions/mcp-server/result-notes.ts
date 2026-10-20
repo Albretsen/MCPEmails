@@ -66,7 +66,7 @@ export const RESULT_NOTES_SCHEMA: Record<string, unknown> = {
   description:
     "Server notes about how this call was handled — for example an argument " +
     "that was not applied because the selected action does not accept it. " +
-    "Written by MCP Emails, not taken from any message, and absent when there " +
+    "Written by MCPEmails, not taken from any message, and absent when there " +
     "is nothing to report.",
 };
 

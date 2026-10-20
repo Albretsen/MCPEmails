@@ -1,12 +1,12 @@
 const translation = {
   title: 'Des règles de tri automatique du courrier qui tournent sans modèle dans la boucle',
   description:
-    'Comment fonctionnent les automatisations de MCP Emails : une recherche enregistrée plus une action fixe, selon une cadence, sans aucun modèle qui interprète vos e-mails. Prévisualiser, créer, activer, lire le journal des exécutions.',
+    'Comment fonctionnent les automatisations de MCPEmails : une recherche enregistrée plus une action fixe, selon une cadence, sans aucun modèle qui interprète vos e-mails. Prévisualiser, créer, activer, lire le journal des exécutions.',
   coverAlt:
-    'Règles de tri du courrier sans supervision dans MCP Emails : une recherche enregistrée plus une action fixe selon un calendrier',
+    'Règles de tri du courrier sans supervision dans MCPEmails : une recherche enregistrée plus une action fixe selon un calendrier',
   content: `Chaque matin, vous demandez à votre agent de dégager le bruit : classer les notifications de build, marquer les reçus comme lus, transférer les factures à votre comptable. Cela fonctionne. Cela coûte aussi un appel au modèle à chaque fois, et le mardi le résultat diffère légèrement de celui du lundi.
 
-MCP Emails propose une seconde surface pour exactement ce courrier. Une **automatisation** est une recherche enregistrée plus une action fixe, évaluée selon une cadence, sans aucun modèle dans la boucle. Le courrier est mis en correspondance, jamais interprété.
+MCPEmails propose une seconde surface pour exactement ce courrier. Une **automatisation** est une recherche enregistrée plus une action fixe, évaluée selon une cadence, sans aucun modèle dans la boucle. Le courrier est mis en correspondance, jamais interprété.
 
 **Aller à :** [Ce qu'est une règle](#ce-quune-automatisation-est-vraiment) · [En créer une](#en-créer-une-prévisualiser-créer-activer) · [Ce qu'elle peut faire](#ce-quune-règle-peut-et-ne-peut-pas-faire) · [Quand s'en passer](#quand-ne-pas-écrire-de-règle)
 
@@ -25,7 +25,7 @@ Définissez aussi \`max_messages_per_run\` (25 par défaut, 200 au maximum) : c'
 - **Coût.** Une règle ne consomme aucun token. La conversation du matin en consomme tous les jours, pour du courrier dont vous avez décidé le traitement il y a des mois.
 - **Reproductibilité.** Le même filtre produit la même action. Il n'y a pas de « aujourd'hui il a décidé autrement », parce qu'il n'y a aucune décision.
 - **Aucun geste halluciné.** Une règle ne peut pas inventer un dossier, improviser un destinataire ni agir sur une instruction trouvée dans le corps d'un e-mail.
-- **Elle tourne pendant que vous dormez.** MCP Emails fonctionne par ailleurs par sondage : l'agent regarde s'il y a du courrier quand vous le lui demandez. La règle est la partie qui ne demande rien.
+- **Elle tourne pendant que vous dormez.** MCPEmails fonctionne par ailleurs par sondage : l'agent regarde s'il y a du courrier quand vous le lui demandez. La règle est la partie qui ne demande rien.
 
 ## Le tri par agent et les règles automatiques ne font pas le même travail
 

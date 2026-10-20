@@ -1,8 +1,8 @@
 import { ResetPasswordApp } from '../../../components/auth/ResetPasswordApp';
 
 export const metadata = {
-  title: 'Choose new password · MCP Emails',
-  description: 'Set a new password for your MCP Emails account',
+  title: 'Choose new password',
+  description: 'Set a new password for your MCPEmails account',
 };
 
 /**

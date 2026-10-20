@@ -22,7 +22,7 @@ const ASSISTANT_WORDS_PER_SECOND = 7;
 /**
  * A NEUTRAL assistant surface. Read the two rules before editing this file.
  *
- * Rule one, whose UI this is. MCP Emails has no first-party chat surface: it is
+ * Rule one, whose UI this is. MCPEmails has no first-party chat surface: it is
  * an MCP server consumed by Claude Desktop, Claude Code, Cursor and others. The
  * obvious move is therefore to draw something that looks like Claude Desktop.
  * Do not. Reproducing another company's interface in our marketing material
@@ -141,7 +141,7 @@ export const Chat: React.FC<{
           </div>
           <div style={{ flex: 1 }} />
           <div style={{ fontFamily: theme.fontMono, fontSize: 18, color: theme.fg4 }}>
-            MCP Emails
+            MCPEmails
           </div>
         </div>
 

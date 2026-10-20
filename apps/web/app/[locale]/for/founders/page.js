@@ -10,7 +10,7 @@ export async function generateMetadata({ params }) {
   const title = t.has('meta.title') ? t('meta.title') : 'Email for founders';
   const description = t.has('meta.description')
     ? t('meta.description')
-    : 'Founders use MCP Emails to answer customer email straight from Claude or any AI.';
+    : 'Founders use MCPEmails to answer customer email straight from Claude or any AI.';
   return {
     title,
     description,
@@ -18,14 +18,14 @@ export async function generateMetadata({ params }) {
     openGraph: {
       type: 'website',
       url: localePath(locale, PATH),
-      title: `${title} · MCP Emails`,
+      title: `${title} · MCPEmails`,
       description,
       locale: OG_LOCALE[locale],
       images: [OG_IMAGE],
     },
     twitter: {
       card: 'summary_large_image',
-      title: `${title} · MCP Emails`,
+      title: `${title} · MCPEmails`,
       description,
       images: [OG_IMAGE.url],
     },

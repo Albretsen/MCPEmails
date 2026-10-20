@@ -21,7 +21,7 @@ import {
  * GET /auth/outlook/admin-consent?t=<token>
  *
  * PUBLIC. This is the link an employee copies from the dashboard and sends to
- * their IT administrator, who usually has no MCP Emails account. The `t`
+ * their IT administrator, who usually has no MCPEmails account. The `t`
  * token (lib/email-providers/outlook-admin-link.ts) is an HMAC-signed,
  * seven-day capability naming the inviting workspace and user; no session is
  * needed to use it. Opening it mints a fresh 10-minute state and sends the

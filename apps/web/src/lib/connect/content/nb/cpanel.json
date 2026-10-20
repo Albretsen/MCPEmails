@@ -22,7 +22,7 @@
     "meta0": "Første postkasse gratis, planer for resten",
     "meta1": "Postkassepassordet ditt, uten OAuth-oppsett",
     "meta2": "E-post hentes direkte, lagres aldri",
-    "answer": "Claude kan ikke nå cPanel på egen hånd. MCP Emails er en hostet MCP-server som kobler den til over IMAP med postkassepassordet ditt, slik at Claude, Cursor eller enhver MCP-klient kan lese, søke i, sende og organisere e-posten. Oppsettet tar et par minutter. Hver firmaadresse, som post@ eller salg@, kobles til som sin egen postkasse: én postkasse er gratis, Personal kobler til tre, Pro opptil 10 og Business så mange du trenger."
+    "answer": "Claude kan ikke nå cPanel på egen hånd. MCPEmails er en hostet MCP-server som kobler den til over IMAP med postkassepassordet ditt, slik at Claude, Cursor eller enhver MCP-klient kan lese, søke i, sende og organisere e-posten. Oppsettet tar et par minutter. Hver firmaadresse, som post@ eller salg@, kobles til som sin egen postkasse: én postkasse er gratis, Personal kobler til tre, Pro opptil 10 og Business så mange du trenger."
   },
   "persona": {
     "intro": "Flere bedriftspostkasser hos en cPanel-vert?",
@@ -36,14 +36,14 @@
   "setup": [
     {
       "h": "Opprett en gratis konto",
-      "p": "Registrer deg hos MCP Emails, uten kort. Gratisplanen kobler til én innboks, for alltid."
+      "p": "Registrer deg hos MCPEmails, uten kort. Gratisplanen kobler til én innboks, for alltid."
     },
     {
       "h": "Hent innstillingene fra cPanel",
       "p": "Åpne Email Accounts i cPanel og klikk Connect Devices for postkassen. Kopier de sikre IMAP- og SMTP-vertene og -portene fra Mail Client Manual Settings. Hvis du ikke kan postkassepassordet, kan du sette et nytt på samme skjermbilde."
     },
     {
-      "h": "Lim det inn i MCP Emails",
+      "h": "Lim det inn i MCPEmails",
       "p": "Velg IMAP / SMTP, legg inn cPanel-adressen din, vertene ovenfor og passordet for å koble til innboksen på en sikker måte."
     },
     {
@@ -72,12 +72,12 @@
   "limits": [
     "Vi kan ikke forhåndsutfylle verter for en cPanel-postkasse, fordi vertsnavnet tilhører serveren din og ikke en felles tjeneste. Du må lime det inn fra Connect Devices.",
     "Noen webhotell blokkerer utgående innsending i brannmuren eller slår av ekstern IMAP på delte planer. cPanel viser innstillingene også da, så en avvisning der er et spørsmål til webhotellet ditt, ikke et innstillingsproblem.",
-    "MCP Emails kobler til postkassen. Videresendinger, aliaser, autosvar, filtre og kvoter blir værende i cPanel og er ikke synlige for AI-klienten din."
+    "MCPEmails kobler til postkassen. Videresendinger, aliaser, autosvar, filtre og kvoter blir værende i cPanel og er ikke synlige for AI-klienten din."
   ],
   "faq": [
     {
       "q": "Fungerer Claude med cPanel-e-post?",
-      "a": "Ikke direkte. Claude har ingen innebygd kobling for cPanel-e-postservere. Kobler du en MCP-server som MCP Emails til postkassen over IMAP, får Claude tilgang til å lese, søke, sende, svare, planlegge og organisere, med de samme påloggingsopplysningene som en e-postklient på datamaskinen ville brukt, og den samme tilkoblingen fungerer også fra Cursor og ChatGPT."
+      "a": "Ikke direkte. Claude har ingen innebygd kobling for cPanel-e-postservere. Kobler du en MCP-server som MCPEmails til postkassen over IMAP, får Claude tilgang til å lese, søke, sende, svare, planlegge og organisere, med de samme påloggingsopplysningene som en e-postklient på datamaskinen ville brukt, og den samme tilkoblingen fungerer også fra Cursor og ChatGPT."
     },
     {
       "q": "Hva er IMAP- og SMTP-innstillingene for cPanel?",

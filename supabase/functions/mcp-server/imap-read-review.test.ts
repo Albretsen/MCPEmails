@@ -273,7 +273,7 @@ Deno.test("ENVELOPE: cc is parsed when asked for, and only then (draft_list repo
     "NIL",
     "NIL",
     '((NIL NIL "a" "x.com"))',
-    '(("MCP Emails" NIL "hello" "mcpemails.com")(NIL NIL "second" "x.com"))',
+    '(("MCPEmails" NIL "hello" "mcpemails.com")(NIL NIL "second" "x.com"))',
     "NIL",
     "NIL",
     '"<m9@mcpemails.com>"',
@@ -283,7 +283,7 @@ Deno.test("ENVELOPE: cc is parsed when asked for, and only then (draft_list repo
   await asked.imap.selectMailbox("Drafts");
   const [withCc] = await asked.imap.fetchSummaries([9], { includePreview: false, includeCc: true });
   assertEquals(withCc.envelope.cc, [
-    { name: "MCP Emails", email: "hello@mcpemails.com" },
+    { name: "MCPEmails", email: "hello@mcpemails.com" },
     { name: "", email: "second@x.com" },
   ]);
   assertEquals(withCc.envelope.to, [{ name: "", email: "a@x.com" }]);
@@ -295,7 +295,7 @@ Deno.test("ENVELOPE: cc is parsed when asked for, and only then (draft_list repo
   assert(!("cc" in without.envelope));
 
   // A draft with no Cc is an empty list, not a missing key.
-  const none = client(fetchReply(9, envelope.replace(/\(\("MCP Emails".*?\)\) NIL NIL/, "NIL NIL NIL")));
+  const none = client(fetchReply(9, envelope.replace(/\(\("MCPEmails".*?\)\) NIL NIL/, "NIL NIL NIL")));
   await none.imap.selectMailbox("Drafts");
   const [empty] = await none.imap.fetchSummaries([9], { includePreview: false, includeCc: true });
   assertEquals(empty.envelope.cc, []);

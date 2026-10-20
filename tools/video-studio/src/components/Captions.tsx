@@ -38,7 +38,7 @@ const MAX_GAP_MS = 500;
  */
 const SPELLINGS: { heard: string; text: string }[] = [
   { heard: 'mcpemails.com', text: 'mcpemails.com' },
-  { heard: 'mcpemails', text: 'MCP Emails' },
+  { heard: 'mcpemails', text: 'MCPEmails' },
   { heard: 'encrypted', text: 'encrypted' },
   { heard: 'fastmail', text: 'Fastmail' },
   { heard: 'codebase', text: 'codebase' },

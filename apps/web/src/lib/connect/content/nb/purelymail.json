@@ -24,7 +24,7 @@
     "titleLine1": "Koble Purelymail til Claude,",
     "titleLine2": "og Cursor, ChatGPT, enhver MCP-klient",
     "lead": "Gi AI-agenten din en ekte Purelymail-innboks. Les, søk, send, svar, planlegg og organiser e-post via IMAP med postkassens eget passord, i alle MCP-klienter i stedet for bare én.",
-    "answer": "Claude når ikke Purelymail på egen hånd. MCP Emails er en hostet MCP-server som kobler til via IMAP på imap.purelymail.com port 993, slik at Claude, Cursor eller enhver MCP-klient kan lese, søke, sende og organisere den e-posten. Purelymail har ingen IMAP-bryter å lete etter: du autentiserer med postkassens fullstendige e-postadresse og postkassens eget passord, eller et app-passord hvis postkassen har tofaktorautentisering slått på. Én innboks er gratis, for alltid.",
+    "answer": "Claude når ikke Purelymail på egen hånd. MCPEmails er en hostet MCP-server som kobler til via IMAP på imap.purelymail.com port 993, slik at Claude, Cursor eller enhver MCP-klient kan lese, søke, sende og organisere den e-posten. Purelymail har ingen IMAP-bryter å lete etter: du autentiserer med postkassens fullstendige e-postadresse og postkassens eget passord, eller et app-passord hvis postkassen har tofaktorautentisering slått på. Én innboks er gratis, for alltid.",
     "meta0": "1 innboks gratis, for alltid",
     "meta1": "Postkassepassord, eller app-passord",
     "meta2": "E-post hentes direkte, lagres aldri"
@@ -35,7 +35,7 @@
   },
   "setup": [
     {
-      "h": "Opprett en gratis MCP Emails-konto",
+      "h": "Opprett en gratis MCPEmails-konto",
       "p": "Registrer deg på mcpemails.com. Det kreves ikke kort, og gratisplanen kobler til én innboks så lenge du vil ha den."
     },
     {
@@ -44,7 +44,7 @@
     },
     {
       "h": "Legg til et app-passord hvis brukeren har 2FA, og koble så til",
-      "p": "Er flerfaktorautentisering på for brukeren, åpner du brukeren, blar ned til <b>App Passwords</b>, klikker <b>Add New</b>, gir det et navn og kopierer koden. Purelymail viser den én gang. Velg nå IMAP / SMTP i MCP Emails, skriv inn hele adressen og det passordet. Vertene over er forhåndsutfylt."
+      "p": "Er flerfaktorautentisering på for brukeren, åpner du brukeren, blar ned til <b>App Passwords</b>, klikker <b>Add New</b>, gir det et navn og kopierer koden. Purelymail viser den én gang. Velg nå IMAP / SMTP i MCPEmails, skriv inn hele adressen og det passordet. Vertene over er forhåndsutfylt."
     },
     {
       "h": "Lim MCP-URL-en inn i AI-en",
@@ -72,7 +72,7 @@
   "faq": [
     {
       "q": "Fungerer Claude med Purelymail?",
-      "a": "Ikke direkte. Claude har ingen innebygd Purelymail-kobling og kan ikke åpne en IMAP-økt selv. Kobler du en MCP-server som MCP Emails til Purelymail-postkassen din, får Claude tilgang til å lese, søke, sende, svare, planlegge og organisere, og samme tilkobling fungerer i Cursor, ChatGPT og alle andre MCP-klienter i stedet for bare i én app."
+      "a": "Ikke direkte. Claude har ingen innebygd Purelymail-kobling og kan ikke åpne en IMAP-økt selv. Kobler du en MCP-server som MCPEmails til Purelymail-postkassen din, får Claude tilgang til å lese, søke, sende, svare, planlegge og organisere, og samme tilkobling fungerer i Cursor, ChatGPT og alle andre MCP-klienter i stedet for bare i én app."
     },
     {
       "q": "Hva er IMAP- og SMTP-innstillingene for Purelymail?",

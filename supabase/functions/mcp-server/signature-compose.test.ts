@@ -35,14 +35,14 @@ import {
 
 const TEXT_SIG_INBOX: SignatureInbox = {
   signature_enabled: true,
-  signature_text: "Asgeir Albretsen\nMCP Emails",
+  signature_text: "Asgeir Albretsen\nMCPEmails",
   signature_html: null,
 };
 
 const RICH_SIG_INBOX: SignatureInbox = {
   signature_enabled: true,
   signature_text: null,
-  signature_html: '<p><strong>Asgeir</strong> · <a href="https://mcpemails.com">MCP Emails</a></p>',
+  signature_html: '<p><strong>Asgeir</strong> · <a href="https://mcpemails.com">MCPEmails</a></p>',
 };
 
 /** How many times our own signature appears in each half of a message. */
@@ -366,7 +366,7 @@ Deno.test("draft and send results carry the signature outcome", () => {
 type Body = { textBody: string; htmlBody?: string };
 
 Deno.test("applySignatureOnce: a body that already carries the signature is not signed twice", () => {
-  const pasted = "See you Friday.\n\n-- \nAsgeir Albretsen\nMCP Emails";
+  const pasted = "See you Friday.\n\n-- \nAsgeir Albretsen\nMCPEmails";
   const out = applySignatureOnce({ textBody: pasted } as Body, TEXT_SIG_INBOX);
   assertEquals(out.textBody, pasted);
   assertEquals(signatureCounts(out.textBody, out.htmlBody), { text: 1, html: 1 });
@@ -374,8 +374,8 @@ Deno.test("applySignatureOnce: a body that already carries the signature is not 
   const fresh = applySignature({ textBody: "See you Friday." } as Body, TEXT_SIG_INBOX);
   assertEquals(out.htmlBody, fresh.htmlBody);
   // A multi-line signature pasted without the delimiter line counts too.
-  const bare = applySignatureOnce({ textBody: "See you Friday.\n\nAsgeir Albretsen\nMCP Emails" } as Body, TEXT_SIG_INBOX);
-  assertEquals(bare.textBody, "See you Friday.\n\nAsgeir Albretsen\nMCP Emails");
+  const bare = applySignatureOnce({ textBody: "See you Friday.\n\nAsgeir Albretsen\nMCPEmails" } as Body, TEXT_SIG_INBOX);
+  assertEquals(bare.textBody, "See you Friday.\n\nAsgeir Albretsen\nMCPEmails");
   // Caller HTML is left alone.
   const withHtml = applySignatureOnce({ textBody: pasted, htmlBody: "<p>See you Friday.</p>" } as Body, TEXT_SIG_INBOX);
   assertEquals(withHtml.htmlBody, "<p>See you Friday.</p>");

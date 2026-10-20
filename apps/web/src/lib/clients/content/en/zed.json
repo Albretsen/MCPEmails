@@ -37,7 +37,7 @@
     },
     {
       "h": "Authorize",
-      "p": "Zed prompts the OAuth flow when no Authorization header is set. Sign in with MCP Emails and approve the scopes you want Zed to hold."
+      "p": "Zed prompts the OAuth flow when no Authorization header is set. Sign in with MCPEmails and approve the scopes you want Zed to hold."
     }
   ],
   "gotchas": [

@@ -18,7 +18,7 @@
     "titleLine1": "iiNet stopped running email.",
     "titleLine2": "Here is what still connects",
     "lead": "iiNet handed its mailboxes to another company and stopped issuing addresses. That changes where your settings come from, not whether an AI agent can work in the mailbox.",
-    "answer": "iiNet is out of the email business. It transferred iinet.net.au addresses to another Australian provider, The Messaging Company, closed the opt-in period, deleted every address that was not opted in, and states that it is not possible to create new email addresses on the iinet.net.au domain. So the question is not whether Claude can reach iiNet, it is which server holds your mailbox today. MCP Emails is a hosted MCP server that connects any IMAP mailbox, including an ex-iiNet address on its new host, so Claude, Cursor or any MCP client can read, search, send and organise that mail. One inbox is free, forever.",
+    "answer": "iiNet is out of the email business. It transferred iinet.net.au addresses to another Australian provider, The Messaging Company, closed the opt-in period, deleted every address that was not opted in, and states that it is not possible to create new email addresses on the iinet.net.au domain. So the question is not whether Claude can reach iiNet, it is which server holds your mailbox today. MCPEmails is a hosted MCP server that connects any IMAP mailbox, including an ex-iiNet address on its new host, so Claude, Cursor or any MCP client can read, search, send and organise that mail. One inbox is free, forever.",
     "meta0": "1 inbox free, forever",
     "meta1": "Settings come from your new provider",
     "meta2": "Email fetched live, never stored"
@@ -29,7 +29,7 @@
   },
   "setup": [
     {
-      "h": "Create a free MCP Emails account",
+      "h": "Create a free MCPEmails account",
       "p": "Sign up at mcpemails.com. The free plan connects one inbox and does not ask for a card."
     },
     {
@@ -38,7 +38,7 @@
     },
     {
       "h": "Enter the settings your current provider gives you",
-      "p": "In MCP Emails choose IMAP / SMTP and fill in the host, port and password exactly as your provider documents them, with the full address as the username. We publish only settings we have opened a connection to ourselves, so we do not print The Messaging Company's hostnames here. Take them from their support material rather than from a third party blog."
+      "p": "In MCPEmails choose IMAP / SMTP and fill in the host, port and password exactly as your provider documents them, with the full address as the username. We publish only settings we have opened a connection to ourselves, so we do not print The Messaging Company's hostnames here. Take them from their support material rather than from a third party blog."
     },
     {
       "h": "Paste the MCP URL into your AI",
@@ -70,7 +70,7 @@
   "faq": [
     {
       "q": "Does Claude work with iiNet email?",
-      "a": "Claude has no built-in connector for it, and iiNet no longer runs the service. If your iinet.net.au address survived the transfer to The Messaging Company, connecting an MCP server such as MCP Emails to it over IMAP gives Claude read, search, send, reply, schedule and organise access, using the server settings your current provider gives you."
+      "a": "Claude has no built-in connector for it, and iiNet no longer runs the service. If your iinet.net.au address survived the transfer to The Messaging Company, connecting an MCP server such as MCPEmails to it over IMAP gives Claude read, search, send, reply, schedule and organise access, using the server settings your current provider gives you."
     },
     {
       "q": "What happened to iiNet email?",
@@ -82,7 +82,7 @@
     },
     {
       "q": "Can I get a new iinet.net.au email address?",
-      "a": "No. iiNet's help page states directly that it is not possible to create new email addresses using the iinet.net.au domain. If you need a fresh mailbox for an assistant to work in, it has to be on a provider that still issues them, and MCP Emails connects any of those over IMAP."
+      "a": "No. iiNet's help page states directly that it is not possible to create new email addresses using the iinet.net.au domain. If you need a fresh mailbox for an assistant to work in, it has to be on a provider that still issues them, and MCPEmails connects any of those over IMAP."
     },
     {
       "q": "Is my mail stored on your servers?",

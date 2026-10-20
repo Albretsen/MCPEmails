@@ -7,7 +7,7 @@
   ],
   "meta": {
     "title": "API du serveur MCP e-mail : curl, JSON-RPC et Bearer",
-    "description": "Appelez le serveur MCP de MCP Emails en HTTP. Un point de terminaison Streamable HTTP, JSON-RPC 2.0, une clé bearer limitée et tous les outils. 1 boîte gratuite."
+    "description": "Appelez le serveur MCP de MCPEmails en HTTP. Un point de terminaison Streamable HTTP, JSON-RPC 2.0, une clé bearer limitée et tous les outils. 1 boîte gratuite."
   },
   "hero": {
     "eyebrow": "HTTP + e-mail",

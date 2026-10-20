@@ -19,7 +19,7 @@
     "titleLine1": "将你的 OptusNet 收件箱连接到",
     "titleLine2": "Claude、Cursor、任意 MCP 客户端",
     "lead": "不管网上一半的说法如何，OptusNet 邮箱并没有关闭。它在 2025 年转入新的套餐和新的条款，并停止接受新注册。你现有的邮箱仍然支持 IMAP。",
-    "answer": "Claude 无法自行连接 OptusNet 邮箱。MCP Emails 是一个托管 MCP 服务器，通过 IMAP 连接 mail.optusnet.com.au 的 993 端口，用完整填写的地址和 OptusNet 邮箱密码登录。无需生成应用密码。在此基础上搭建之前，有两个事实很重要：Optus 自 2025 年 5 月起将该服务转入新套餐和新条款，并要求邮箱套餐关联一项符合条件的 Optus 服务；而且它已不再接受新的 OptusNet 邮箱注册。对于你已有的地址，一个收件箱永久免费。",
+    "answer": "Claude 无法自行连接 OptusNet 邮箱。MCPEmails 是一个托管 MCP 服务器，通过 IMAP 连接 mail.optusnet.com.au 的 993 端口，用完整填写的地址和 OptusNet 邮箱密码登录。无需生成应用密码。在此基础上搭建之前，有两个事实很重要：Optus 自 2025 年 5 月起将该服务转入新套餐和新条款，并要求邮箱套餐关联一项符合条件的 Optus 服务；而且它已不再接受新的 OptusNet 邮箱注册。对于你已有的地址，一个收件箱永久免费。",
     "meta0": "1 个收件箱永久免费",
     "meta1": "邮箱密码，无需应用密码",
     "meta2": "邮件实时获取，绝不存储"
@@ -30,7 +30,7 @@
   },
   "setup": [
     {
-      "h": "创建免费 MCP Emails 账户",
+      "h": "创建免费 MCPEmails 账户",
       "p": "在 mcpemails.com 注册。免费套餐可连接一个收件箱，无需信用卡。"
     },
     {
@@ -39,7 +39,7 @@
     },
     {
       "h": "输入完整地址和邮箱密码",
-      "p": "在 MCP Emails 中选择 IMAP / SMTP，在用户名栏按 Optus 自己的格式填写完整地址 <code>username@optusnet.com.au</code>。使用该邮箱的密码。上方的服务器和端口已自动填好，并已通过实时 TLS 连接验证。"
+      "p": "在 MCPEmails 中选择 IMAP / SMTP，在用户名栏按 Optus 自己的格式填写完整地址 <code>username@optusnet.com.au</code>。使用该邮箱的密码。上方的服务器和端口已自动填好，并已通过实时 TLS 连接验证。"
     },
     {
       "h": "将 MCP URL 粘贴到你的 AI",
@@ -57,7 +57,7 @@
     },
     {
       "h": "旧的邮件客户端是被有意放弃的",
-      "p": "Optus 表示大多数客户不会感受到变化，但某些第三方客户端的旧版本（点名了 Outlook 2010）已不再受支持，因为它们不再获得更新，可能不符合当前的加密和安全标准。所以，一个在变更前后出问题、被归咎于服务器的配置，更可能是客户端的问题。MCP Emails 使用当前的 TLS 连接，正处于你希望所在的那一边。"
+      "p": "Optus 表示大多数客户不会感受到变化，但某些第三方客户端的旧版本（点名了 Outlook 2010）已不再受支持，因为它们不再获得更新，可能不符合当前的加密和安全标准。所以，一个在变更前后出问题、被归咎于服务器的配置，更可能是客户端的问题。MCPEmails 使用当前的 TLS 连接，正处于你希望所在的那一边。"
     },
     {
       "h": "有 SPECIAL-USE 和 IDLE，没有 MOVE 和 UIDPLUS",
@@ -72,7 +72,7 @@
   "faq": [
     {
       "q": "Claude 能用 OptusNet 邮箱吗？",
-      "a": "不能直接使用。Claude 没有内置的 Optus 连接器。通过 IMAP 将 MCP Emails 这样的 MCP 服务器连接到该邮箱后，Claude 就能对你的 optusnet.com.au 邮件进行读取、搜索、发送、回复、定时和整理，同一个连接也可在 Cursor、ChatGPT 和其他 MCP 客户端中使用。"
+      "a": "不能直接使用。Claude 没有内置的 Optus 连接器。通过 IMAP 将 MCPEmails 这样的 MCP 服务器连接到该邮箱后，Claude 就能对你的 optusnet.com.au 邮件进行读取、搜索、发送、回复、定时和整理，同一个连接也可在 Cursor、ChatGPT 和其他 MCP 客户端中使用。"
     },
     {
       "q": "OptusNet 的 IMAP 和 SMTP 设置是什么？",

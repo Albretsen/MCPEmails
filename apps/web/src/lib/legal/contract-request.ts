@@ -182,10 +182,10 @@ export function receivedAtLabel(iso: string): string {
 }
 
 function requestLabel(r: ValidContractRequest): string {
-  if (r.kind === 'withdraw') return 'Withdrawal from your MCP Emails contract';
+  if (r.kind === 'withdraw') return 'Withdrawal from your MCPEmails contract';
   return r.cancelType === 'extraordinary'
-    ? 'Extraordinary cancellation of your MCP Emails subscription'
-    : 'Cancellation of your MCP Emails subscription';
+    ? 'Extraordinary cancellation of your MCPEmails subscription'
+    : 'Cancellation of your MCPEmails subscription';
 }
 
 function effectiveLabel(r: ValidContractRequest): string {
@@ -231,7 +231,7 @@ export function buildContractReceiptEmail(r: ValidContractRequest, ref: string, 
     '',
     notYou,
     '',
-    'MCP Emails Support',
+    'MCPEmails Support',
     SUPPORT_INBOX,
     `${baseUrl}${WITHDRAWAL_PATH}`,
     '',
@@ -251,7 +251,7 @@ export function buildContractReceiptEmail(r: ValidContractRequest, ref: string, 
 ${reasonNote ? `<p>${escapeHtml(reasonNote)}</p>` : ''}
 <p>${escapeHtml(nextStep(r))}</p>
 <p style="color:#64748b;font-size:13px;">${escapeHtml(notYou)}</p>
-<p>MCP Emails Support<br><a href="mailto:${SUPPORT_INBOX}" style="color:#3b82f6;">${SUPPORT_INBOX}</a></p>
+<p>MCPEmails Support<br><a href="mailto:${SUPPORT_INBOX}" style="color:#3b82f6;">${SUPPORT_INBOX}</a></p>
 <p style="color:#94a3b8;font-size:12px;">${escapeHtml(POSTAL_ADDRESS_LINE)}</p>
 </body></html>`;
   return { subject, body, htmlBody };

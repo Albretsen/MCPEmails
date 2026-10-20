@@ -19,7 +19,7 @@
     "titleLine1": "将 Comcast Xfinity 邮箱连接到",
     "titleLine2": "Claude、Cursor 及任意 MCP 客户端",
     "lead": "为你的 AI 代理接入一个真正的 comcast.net 收件箱。使用你的 Xfinity ID，通过 IMAP 读取、搜索、发送、回复、定时与整理邮件，可在所有 MCP 客户端中使用而不止一个。",
-    "answer": "Claude 无法自行访问 Comcast Xfinity 邮箱。MCP Emails 是一个托管 MCP 服务器，通过 imap.comcast.net 端口 993 的 IMAP 与之连接，使用你完整的 comcast.net 地址和 Xfinity ID 密码登录。在你于 Xfinity Email 设置中勾选 Third Party Access Security（第三方访问安全）之前，Xfinity 会阻止所有外部邮件客户端，所以请先开启它，否则即使密码正确也会被拒绝。设置只需几分钟，1 个收件箱永久免费。",
+    "answer": "Claude 无法自行访问 Comcast Xfinity 邮箱。MCPEmails 是一个托管 MCP 服务器，通过 imap.comcast.net 端口 993 的 IMAP 与之连接，使用你完整的 comcast.net 地址和 Xfinity ID 密码登录。在你于 Xfinity Email 设置中勾选 Third Party Access Security（第三方访问安全）之前，Xfinity 会阻止所有外部邮件客户端，所以请先开启它，否则即使密码正确也会被拒绝。设置只需几分钟，1 个收件箱永久免费。",
     "meta0": "1 个收件箱永久免费",
     "meta1": "必须开启第三方访问",
     "meta2": "邮件实时获取，绝不存储"
@@ -30,7 +30,7 @@
   },
   "setup": [
     {
-      "h": "创建免费的 MCP Emails 账户",
+      "h": "创建免费的 MCPEmails 账户",
       "p": "在 mcpemails.com 注册。免费套餐可连接一个收件箱，无需信用卡。"
     },
     {
@@ -38,7 +38,7 @@
       "p": "在 connect.xfinity.com 登录 Xfinity Email，点击齿轮图标，选择 <b>Settings</b>，然后选择 <b>Security</b>，勾选 <b>Third Party Access Security</b> 下的复选框。勾选时 Xfinity 会提醒你外部客户端的风险。在勾选之前，本页的其他步骤都不会生效。"
     },
     {
-      "h": "在 MCP Emails 中输入 Xfinity ID 和密码",
+      "h": "在 MCPEmails 中输入 Xfinity ID 和密码",
       "p": "选择 IMAP / SMTP，输入完整的 <code>@comcast.net</code> 地址和该 Xfinity ID 的密码。Comcast 的服务器地址已预填。如果你的账户使用两步验证，请先在网页邮箱中完成验证，以免登录仍处于待处理状态。"
     },
     {
@@ -57,11 +57,11 @@
     },
     {
       "h": "Comcast 前端没有 SPECIAL-USE，也没有 MOVE",
-      "p": "imap.comcast.net 上的 Dovecot 前端不声明 SPECIAL-USE，因此客户端无法询问哪个文件夹是 Sent、哪个是 Trash，只能按名称匹配。它也不支持 MOVE 和 UIDPLUS，所以归档一封邮件要依次执行 COPY、STORE 删除标记、EXPUNGE，服务器也不会报告新副本的 ID。MCP Emails 会替你完成所有这些操作；这也是为什么在 Comcast 上移动邮件不是单一的原子操作。"
+      "p": "imap.comcast.net 上的 Dovecot 前端不声明 SPECIAL-USE，因此客户端无法询问哪个文件夹是 Sent、哪个是 Trash，只能按名称匹配。它也不支持 MOVE 和 UIDPLUS，所以归档一封邮件要依次执行 COPY、STORE 删除标记、EXPUNGE，服务器也不会报告新副本的 ID。MCPEmails 会替你完成所有这些操作；这也是为什么在 Comcast 上移动邮件不是单一的原子操作。"
     },
     {
       "h": "服务器声明了你用不了的 OAuth 机制",
-      "p": "imap.comcast.net 在 PLAIN 和 LOGIN 之外还提供 OAUTHBEARER 和 XOAUTH2。这些 OAuth 机制是给 Comcast 自己的合作伙伴用的，并不向任何人开放，也没有供客户自助获取令牌的页面。在开启第三方访问的前提下使用密码认证，是你能走的路，MCP Emails 用的也正是这种方式。"
+      "p": "imap.comcast.net 在 PLAIN 和 LOGIN 之外还提供 OAUTHBEARER 和 XOAUTH2。这些 OAuth 机制是给 Comcast 自己的合作伙伴用的，并不向任何人开放，也没有供客户自助获取令牌的页面。在开启第三方访问的前提下使用密码认证，是你能走的路，MCPEmails 用的也正是这种方式。"
     }
   ],
   "limits": [
@@ -71,7 +71,7 @@
   "faq": [
     {
       "q": "Claude 能用于 Comcast Xfinity 邮箱吗？",
-      "a": "不能直接使用。Claude 没有内置的 Comcast 连接器。通过 IMAP 将 MCP Emails 这样的 MCP 服务器连接到邮箱后，Claude 就能读取、搜索、发送、回复、定时和整理你的 comcast.net 邮件，而且同一个连接也可在 Cursor、ChatGPT 和其他 MCP 客户端中使用。"
+      "a": "不能直接使用。Claude 没有内置的 Comcast 连接器。通过 IMAP 将 MCPEmails 这样的 MCP 服务器连接到邮箱后，Claude 就能读取、搜索、发送、回复、定时和整理你的 comcast.net 邮件，而且同一个连接也可在 Cursor、ChatGPT 和其他 MCP 客户端中使用。"
     },
     {
       "q": "Comcast 的 IMAP 和 SMTP 设置是什么？",

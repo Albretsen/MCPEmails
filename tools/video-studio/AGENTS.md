@@ -328,7 +328,7 @@ These are prohibitions, not preferences.
   you have checked which value is actually wrong.
 - **Never film a real inbox.** Use the throwaway mailbox. Every fixture address
   is on a `.example` domain, reserved by RFC 2606 so it can never be registered.
-- **Never copy another vendor's UI.** MCP Emails has no chat surface of its own,
+- **Never copy another vendor's UI.** MCPEmails has no chat surface of its own,
   so the `chat` scene is drawn. Draw it in our type and colours with a generic
   label. Do not reproduce Claude Desktop, Cursor or anyone else's chrome. Name a
   client in the voiceover as a fact if you must.

@@ -100,7 +100,7 @@ export function datasetJson(appUrl) {
     title: 'IMAP and SMTP provider compatibility dataset',
     description:
       'Connection settings and pre-login capabilities of public mail providers, read from a live TLS probe.',
-    publisher: 'MCP Emails',
+    publisher: 'MCPEmails',
     homepage: `${appUrl}${DATASET_PATH}`,
     license: LICENSE_URL,
     probedOn: datasetStats(rows).probedOn,

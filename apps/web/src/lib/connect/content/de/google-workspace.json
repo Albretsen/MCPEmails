@@ -28,23 +28,23 @@
     "meta0": "1 Postfach dauerhaft kostenlos",
     "meta1": "Verbindung mit einem Google App-Passwort",
     "meta2": "E-Mails werden live abgerufen, nie gespeichert",
-    "answer": "Ein Google Workspace Postfach auf Ihrer eigenen Domain ist technisch ein Gmail-Postfach. Es verbindet sich deshalb wie Gmail mit MCP Emails: mit einem Google App-Passwort über IMAP und SMTP bei imap.gmail.com und smtp.gmail.com. MCP Emails ist ein gehosteter MCP-Server. Sobald das Postfach verbunden ist, können Claude, ChatGPT, Cursor oder jeder andere MCP-Client die E-Mails lesen, suchen, senden und sortieren. Ob ein App-Passwort verfügbar und IMAP erlaubt ist, hängt von den Einstellungen Ihres Workspace-Administrators ab."
+    "answer": "Ein Google Workspace Postfach auf Ihrer eigenen Domain ist technisch ein Gmail-Postfach. Es verbindet sich deshalb wie Gmail mit MCPEmails: mit einem Google App-Passwort über IMAP und SMTP bei imap.gmail.com und smtp.gmail.com. MCPEmails ist ein gehosteter MCP-Server. Sobald das Postfach verbunden ist, können Claude, ChatGPT, Cursor oder jeder andere MCP-Client die E-Mails lesen, suchen, senden und sortieren. Ob ein App-Passwort verfügbar und IMAP erlaubt ist, hängt von den Einstellungen Ihres Workspace-Administrators ab."
   },
   "method": {
     "title": "So verbindet sich Google Workspace: ein App-Passwort über IMAP",
-    "body": "Geben Sie Ihre Adresse im IMAP-Formular ein, und MCP Emails liest die MX-Einträge Ihrer Domain: Eine Domain, deren E-Mails zu Google gehen (<code>aspmx.l.google.com</code> oder <code>smtp.google.com</code>), wird als Google Workspace erkannt. Das Formular trägt dann <b>imap.gmail.com</b> mit Port 993 und <b>smtp.gmail.com</b> mit Port 465 ein und weist darauf hin, dass ein App-Passwort nötig ist. Die Gmail-Karte macht dasselbe. Google hat 2025 die Anmeldung per Passwort für Workspace-Apps abgeschaltet, App-Passwörter ausgenommen. Das Kontopasswort funktioniert hier also nie."
+    "body": "Geben Sie Ihre Adresse im IMAP-Formular ein, und MCPEmails liest die MX-Einträge Ihrer Domain: Eine Domain, deren E-Mails zu Google gehen (<code>aspmx.l.google.com</code> oder <code>smtp.google.com</code>), wird als Google Workspace erkannt. Das Formular trägt dann <b>imap.gmail.com</b> mit Port 993 und <b>smtp.gmail.com</b> mit Port 465 ein und weist darauf hin, dass ein App-Passwort nötig ist. Die Gmail-Karte macht dasselbe. Google hat 2025 die Anmeldung per Passwort für Workspace-Apps abgeschaltet, App-Passwörter ausgenommen. Das Kontopasswort funktioniert hier also nie."
   },
   "setup": [
     {
       "h": "Kostenloses Konto erstellen",
-      "p": "Registrieren Sie sich bei MCP Emails, ohne Kreditkarte. Der Free-Tarif verbindet ein Postfach, dauerhaft."
+      "p": "Registrieren Sie sich bei MCPEmails, ohne Kreditkarte. Der Free-Tarif verbindet ein Postfach, dauerhaft."
     },
     {
       "h": "Google App-Passwort erstellen",
       "p": "Melden Sie sich mit dem Postfach an, das Sie verbinden möchten, aktivieren Sie die Bestätigung in zwei Schritten, falls sie noch aus ist, und erstellen Sie unter myaccount.google.com/apppasswords ein App-Passwort. Fehlt die Option, liegt das wahrscheinlich an den Einstellungen Ihres Administrators (siehe unten)."
     },
     {
-      "h": "In MCP Emails einfügen",
+      "h": "In MCPEmails einfügen",
       "p": "Wählen Sie IMAP / SMTP oder Gmail, geben Sie die vollständige Adresse auf Ihrer Domain ein und fügen Sie das 16-stellige App-Passwort ein. Die Hosts werden anhand Ihrer Domain ausgefüllt."
     },
     {
@@ -67,22 +67,22 @@
     },
     {
       "h": "Antworten von einem Alias funktioniert, sobald der Alias bestätigt ist",
-      "p": "Mit einem App-Passwort sendet ein Postfach standardmäßig von seiner eigenen Adresse. Um von einem Alias zu antworten, etwa einem, der in Gmail unter <b>Senden als</b> eingerichtet ist, fügen Sie ihn in den Postfach-Einstellungen von MCP Emails unter <b>Senden-als-Adressen</b> hinzu. Wir senden dem Alias einen 6-stelligen Code, und sobald Sie ihn eingeben, kann Ihr Agent von dieser Adresse senden. Eine Absenderadresse, die weder die eigene Adresse des Postfachs noch eine bestätigte Senden-als-Adresse ist, wird abgelehnt und nicht stillschweigend umgeschrieben."
+      "p": "Mit einem App-Passwort sendet ein Postfach standardmäßig von seiner eigenen Adresse. Um von einem Alias zu antworten, etwa einem, der in Gmail unter <b>Senden als</b> eingerichtet ist, fügen Sie ihn in den Postfach-Einstellungen von MCPEmails unter <b>Senden-als-Adressen</b> hinzu. Wir senden dem Alias einen 6-stelligen Code, und sobald Sie ihn eingeben, kann Ihr Agent von dieser Adresse senden. Eine Absenderadresse, die weder die eigene Adresse des Postfachs noch eine bestätigte Senden-als-Adresse ist, wird abgelehnt und nicht stillschweigend umgeschrieben."
     }
   ],
   "limits": [
-    "MCP Emails erreicht nur E-Mails: Ein App-Passwort dient ausschließlich für IMAP und SMTP. Drive, Kalender, Chat und Docs werden nicht erreicht.",
+    "MCPEmails erreicht nur E-Mails: Ein App-Passwort dient ausschließlich für IMAP und SMTP. Drive, Kalender, Chat und Docs werden nicht erreicht.",
     "Ein Google Workspace Administrator kann diesen Weg sperren: App-Passwörter können für Ihr Konto nicht verfügbar sein, und IMAP kann ausgeschaltet oder auf bestimmte OAuth-Clients beschränkt sein. Nur ein Administrator kann diese Einstellungen ändern.",
     "Gmail speichert Labels statt Ordnern. Beim Verschieben wird also ein Label hinzugefügt und ein anderes entfernt, und Löschen verschiebt eine Nachricht in den Gmail-Papierkorb."
   ],
   "faq": [
     {
       "q": "Funktioniert Claude mit Google Workspace E-Mail?",
-      "a": "Ja, sobald ein MCP-Server wie MCP Emails das Postfach verbindet. Ein Workspace-Postfach auf Ihrer eigenen Domain verbindet sich mit einem Google App-Passwort über IMAP, genau wie eine gmail.com-Adresse. Danach kann Claude die E-Mails lesen, suchen, senden, beantworten und sortieren. Dieselbe Verbindung funktioniert in ChatGPT, Cursor und jedem anderen MCP-Client."
+      "a": "Ja, sobald ein MCP-Server wie MCPEmails das Postfach verbindet. Ein Workspace-Postfach auf Ihrer eigenen Domain verbindet sich mit einem Google App-Passwort über IMAP, genau wie eine gmail.com-Adresse. Danach kann Claude die E-Mails lesen, suchen, senden, beantworten und sortieren. Dieselbe Verbindung funktioniert in ChatGPT, Cursor und jedem anderen MCP-Client."
     },
     {
       "q": "Wie lauten die IMAP- und SMTP-Einstellungen für Google Workspace?",
-      "a": "IMAP ist imap.gmail.com auf Port 993 mit SSL/TLS, SMTP ist smtp.gmail.com auf Port 465 mit SSL/TLS. Der Benutzername ist Ihre vollständige Adresse auf Ihrer eigenen Domain, das Passwort ein Google App-Passwort. MCP Emails trägt diese Werte ein, wenn die MX-Einträge Ihrer Domain auf Google zeigen."
+      "a": "IMAP ist imap.gmail.com auf Port 993 mit SSL/TLS, SMTP ist smtp.gmail.com auf Port 465 mit SSL/TLS. Der Benutzername ist Ihre vollständige Adresse auf Ihrer eigenen Domain, das Passwort ein Google App-Passwort. MCPEmails trägt diese Werte ein, wenn die MX-Einträge Ihrer Domain auf Google zeigen."
     },
     {
       "q": "Warum kann ich in meinem Workspace-Konto kein App-Passwort erstellen?",
@@ -98,7 +98,7 @@
     },
     {
       "q": "Werden meine Google Workspace E-Mails auf Ihren Servern gespeichert?",
-      "a": "Nein. Nachrichten werden bei jeder Anfrage live von Google abgerufen und an Ihren KI-Client übergeben. Das App-Passwort wird verschlüsselt gespeichert, Nachrichteninhalte werden nicht aufbewahrt. Wenn Sie das App-Passwort in Ihrem Google-Konto widerrufen oder das Postfach in MCP Emails löschen, endet die Verbindung."
+      "a": "Nein. Nachrichten werden bei jeder Anfrage live von Google abgerufen und an Ihren KI-Client übergeben. Das App-Passwort wird verschlüsselt gespeichert, Nachrichteninhalte werden nicht aufbewahrt. Wenn Sie das App-Passwort in Ihrem Google-Konto widerrufen oder das Postfach in MCPEmails löschen, endet die Verbindung."
     }
   ],
   "ctaBand": {

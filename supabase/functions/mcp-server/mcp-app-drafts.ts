@@ -160,7 +160,7 @@ export const DRAFT_BODY_META_KEY = "mcpemails/draft_body";
  *
  * Every bundle ever shipped has the same answer to a version it does not know:
  * `isSupportedVersion` is an equality test against "review-card-v1", and a miss
- * renders "Update the MCP Emails connector" with the envelope-level
+ * renders "Update the MCPEmails connector" with the envelope-level
  * `dashboard_url` and nothing else (App.tsx, the version gate, which runs
  * before any editor is drawn). So a deferred envelope is published under a
  * version old bundles do not know, and the unsafe rendering becomes that

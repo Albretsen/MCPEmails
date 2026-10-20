@@ -23,7 +23,7 @@ const COPY = {
     meta: {
       title: 'Changelog',
       description:
-        'Everything that has shipped in MCP Emails, newest first: new capabilities, provider fixes, and billing and pricing changes, with the date each one went live.',
+        'Everything that has shipped in MCPEmails, newest first: new capabilities, provider fixes, and billing and pricing changes, with the date each one went live.',
     },
     eyebrow: 'Changelog',
     title: 'What has shipped',
@@ -35,7 +35,7 @@ const COPY = {
     meta: {
       title: 'Endringslogg',
       description:
-        'Alt som er lansert i MCP Emails, nyeste først: nye funksjoner, rettelser hos e-postleverandører og endringer i pris og fakturering, med datoen hver enkelt gikk live.',
+        'Alt som er lansert i MCPEmails, nyeste først: nye funksjoner, rettelser hos e-postleverandører og endringer i pris og fakturering, med datoen hver enkelt gikk live.',
     },
     eyebrow: 'Endringslogg',
     title: 'Dette er lansert',
@@ -47,7 +47,7 @@ const COPY = {
     meta: {
       title: 'Novedades',
       description:
-        'Todo lo que se ha publicado en MCP Emails, lo más reciente primero: nuevas funciones, correcciones por proveedor y cambios de precio y facturación, con la fecha en que se activó cada uno.',
+        'Todo lo que se ha publicado en MCPEmails, lo más reciente primero: nuevas funciones, correcciones por proveedor y cambios de precio y facturación, con la fecha en que se activó cada uno.',
     },
     eyebrow: 'Novedades',
     title: 'Lo que hemos publicado',
@@ -59,7 +59,7 @@ const COPY = {
     meta: {
       title: 'Journal des versions',
       description:
-        'Tout ce qui a été livré dans MCP Emails, du plus récent au plus ancien : nouvelles fonctions, correctifs par fournisseur et changements de tarif et de facturation, avec la date de mise en ligne.',
+        'Tout ce qui a été livré dans MCPEmails, du plus récent au plus ancien : nouvelles fonctions, correctifs par fournisseur et changements de tarif et de facturation, avec la date de mise en ligne.',
     },
     eyebrow: 'Journal des versions',
     title: 'Ce qui a été livré',
@@ -71,7 +71,7 @@ const COPY = {
     meta: {
       title: '更新日志',
       description:
-        'MCP Emails 已上线的全部更新，按时间倒序排列：新增功能、各邮箱服务商的修复，以及价格与账单方面的调整，并标注每项更新的上线日期。',
+        'MCPEmails 已上线的全部更新，按时间倒序排列：新增功能、各邮箱服务商的修复，以及价格与账单方面的调整，并标注每项更新的上线日期。',
     },
     eyebrow: '更新日志',
     title: '已经上线的更新',
@@ -83,7 +83,7 @@ const COPY = {
     meta: {
       title: 'Changelog',
       description:
-        'Alles, was in MCP Emails veröffentlicht wurde, das Neueste zuerst: neue Funktionen, Korrekturen für einzelne Anbieter sowie Änderungen an Preisen und Abrechnung, jeweils mit dem Datum, an dem sie live gingen.',
+        'Alles, was in MCPEmails veröffentlicht wurde, das Neueste zuerst: neue Funktionen, Korrekturen für einzelne Anbieter sowie Änderungen an Preisen und Abrechnung, jeweils mit dem Datum, an dem sie live gingen.',
     },
     eyebrow: 'Changelog',
     title: 'Was neu ist',

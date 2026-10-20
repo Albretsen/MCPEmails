@@ -35,10 +35,10 @@
       "providerSub": "Gmail · Outlook · iCloud · IMAP",
       "logCalls": "Agent ruft auf",
       "logReturns": "liefert Postfach-IDs, kein Kopieren aus dem Dashboard",
-      "logFetches": "MCP Emails ruft live bei Ihrem Anbieter ab",
+      "logFetches": "MCPEmails ruft live bei Ihrem Anbieter ab",
       "logResult": "20 Nachrichten zurückgegeben",
       "logNothing": "nichts gespeichert",
-      "legendPipe": "MCP Emails (die Leitung)",
+      "legendPipe": "MCPEmails (die Leitung)",
       "legendLive": "Live-Anfrage",
       "legendData": "Ihre Daten, Ihr Anbieter"
     }
@@ -49,7 +49,7 @@
   "whatIs": {
     "title": "Was ist ein E-Mail-MCP-Server?",
     "p1": "Ein E-Mail-MCP-Server verbindet einen KI-Assistenten mit einem echten Postfach. Er spricht das Model Context Protocol, sodass Claude, ChatGPT, Cursor oder jeder andere MCP-Client über einen einzigen Endpunkt E-Mails lesen, suchen, entwerfen und senden kann, ohne eigene Integration für jede App.",
-    "p2": "MCP Emails ist ein gehosteter E-Mail-MCP-Server. Er funktioniert mit Gmail, Outlook und Microsoft 365, iCloud, Fastmail und jedem Postfach mit IMAP, und ein Agent kann mehrere Postfächer gleichzeitig bearbeiten. E-Mails werden bei jedem Aufruf live von Ihrem Anbieter abgerufen und nie auf unseren Servern gespeichert.",
+    "p2": "MCPEmails ist ein gehosteter E-Mail-MCP-Server. Er funktioniert mit Gmail, Outlook und Microsoft 365, iCloud, Fastmail und jedem Postfach mit IMAP, und ein Agent kann mehrere Postfächer gleichzeitig bearbeiten. E-Mails werden bei jedem Aufruf live von Ihrem Anbieter abgerufen und nie auf unseren Servern gespeichert.",
     "linkImap": "IMAP-MCP-Server einrichten",
     "linkBusiness": "E-Mail-MCP für Firmenpostfächer",
     "linkProviders": "Alle unterstützten E-Mail-Anbieter",
@@ -110,7 +110,7 @@
       },
       "2": {
         "h": "Ihr Agent bearbeitet das Postfach",
-        "p": "Der Agent ruft Tools wie <code>email_read()</code> oder <code>email_compose()</code> auf. MCP Emails ruft live bei Ihrem Anbieter ab und liefert das Ergebnis. Zwischen den Aufrufen wird nichts zwischengespeichert."
+        "p": "Der Agent ruft Tools wie <code>email_read()</code> oder <code>email_compose()</code> auf. MCPEmails ruft live bei Ihrem Anbieter ab und liefert das Ergebnis. Zwischen den Aufrufen wird nichts zwischengespeichert."
       }
     },
     "tools": {
@@ -128,17 +128,17 @@
     "eyebrow": "Echte Prompts",
     "titleLine1": "Einfach fragen.",
     "titleLine2": "Er liest, schreibt und sortiert.",
-    "sub": "Kein Dashboard, das Sie erst lernen müssen. Sagen Sie Ihrem KI-Assistenten in normaler Sprache, was Sie wollen, und er erledigt es mit MCP Emails."
+    "sub": "Kein Dashboard, das Sie erst lernen müssen. Sagen Sie Ihrem KI-Assistenten in normaler Sprache, was Sie wollen, und er erledigt es mit MCPEmails."
   },
   "quote": {
     "text": "Ich wollte, dass meine Agenten mein Postfach bearbeiten, aber jede Lösung bedeutete, einem Dritten eine Kopie meiner E-Mails zu überlassen. Also habe ich die Leitung gebaut, die ich mir gewünscht hatte: einmal verbinden, das Postfach wird live abgerufen und nie gespeichert, und jeden Agenten können Sie mit einem Klick abklemmen. Diesem Produkt vertraue ich mein eigenes Postfach an.",
-    "role": "Gründer, MCP Emails"
+    "role": "Gründer, MCPEmails"
   },
   "reviews": {
     "eyebrow": "Bewertungen",
     "titleLine1": "Nicht unser Wort.",
     "titleLine2": "Ihres.",
-    "sub": "Echte Bewertungen von Menschen, die MCP Emails mit ihrem eigenen Postfach nutzen, veröffentlicht unter ihrem eigenen Namen.",
+    "sub": "Echte Bewertungen von Menschen, die MCPEmails mit ihrem eigenen Postfach nutzen, veröffentlicht unter ihrem eigenen Namen.",
     "ratingLabel": "Bewertet mit {rating} von 5",
     "count": "{count, plural, one {# Bewertung} other {# Bewertungen}}",
     "via": "Bewertet auf {source}",
@@ -214,7 +214,7 @@
     "sub": "Alles, was Sie wissen sollten, bevor Sie Ihr erstes Postfach verbinden.",
     "items": [
       {
-        "q": "Ist MCP Emails ein IMAP-MCP-Server?",
+        "q": "Ist MCPEmails ein IMAP-MCP-Server?",
         "a": "Ja. Neben Gmail und Outlook gibt es einen generischen IMAP- und SMTP-Konnektor, also funktioniert jedes Postfach mit IMAP-Zugang: Ihre eigene Domain, ein Hosting-Anbieter, ein regionaler Provider. Sie geben die Serverdaten und ein App-Passwort einmal ein, und Ihr Agent liest über IMAP und sendet über Ihren eigenen SMTP-Server."
       },
       {
@@ -255,7 +255,7 @@
       },
       {
         "q": "Kann ich es selbst hosten?",
-        "a": "Ja. MCP Emails ist Open Source unter AGPL-3.0, und der gehostete Dienst läuft auf demselben Server, den Sie selbst betreiben können. Ein docker-compose-Stack bringt den vollständigen MCP-Server mit allen Tools in etwa fünf Minuten auf Ihrer eigenen Datenbank zum Laufen, für jedes IMAP- oder SMTP-Postfach. Gmail- und Outlook-Anmeldung (OAuth) und das Dashboard bleiben dem gehosteten Angebot vorbehalten."
+        "a": "Ja. MCPEmails ist Open Source unter AGPL-3.0, und der gehostete Dienst läuft auf demselben Server, den Sie selbst betreiben können. Ein docker-compose-Stack bringt den vollständigen MCP-Server mit allen Tools in etwa fünf Minuten auf Ihrer eigenen Datenbank zum Laufen, für jedes IMAP- oder SMTP-Postfach. Gmail- und Outlook-Anmeldung (OAuth) und das Dashboard bleiben dem gehosteten Angebot vorbehalten."
       }
     ]
   },
@@ -279,9 +279,9 @@
     "linkWithdrawal": "Widerrufsrecht",
     "linkCancel": "Verträge hier kündigen",
     "linkImpressum": "Impressum",
-    "copyright": "© 2026 MCP Emails.",
+    "copyright": "© 2026 MCPEmails.",
     "legal": "E-Mails live abgerufen, nie gespeichert · Zugangsdaten verschlüsselt gespeichert",
-    "legalEntity": "MCP Emails ist ein Dienst der Albretsen AS, Organisationsnummer 938 702 373, Håsteins gate 9, 5160 Laksevåg, Norwegen.",
+    "legalEntity": "MCPEmails ist ein Dienst der Albretsen AS, Organisationsnummer 938 702 373, Håsteins gate 9, 5160 Laksevåg, Norwegen.",
     "contactLabel": "Kontakt",
     "mcpLabel": "MCP-Endpunkt",
     "copy": "Kopieren",

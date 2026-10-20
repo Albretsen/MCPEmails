@@ -19,7 +19,7 @@
     "titleLine1": "MCP-server for STRATO-e-post:",
     "titleLine2": "alle firmaets postkasser, i Claude og ChatGPT",
     "lead": "Har du post@, salg@, support@ og faktura@ på eget domene hos STRATO? Koble hver postkasse til ett arbeidsområde, så jobber AI-agenten din i alle sammen. Les, søk, send, svar, planlegg og organiser e-post via IMAP med postkassepassordet, ikke STRATO-kundeinnloggingen din.",
-    "answer": "Claude når ikke en STRATO-postkasse på egen hånd. MCP Emails er en hostet MCP-server som kobler til via IMAP på imap.strato.de port 993 og autentiserer med hele e-postadressen din og passordet som er satt på den postkassen, ikke STRATO-kundeinnloggingen, slik at Claude, Cursor eller enhver MCP-klient kan lese, søke, sende og organisere e-posten. STRATO godtar bare vanlig passordautentisering over en kryptert tilkobling, etter å ha slått av den eldre challenge-response-metoden. Hver firmaadresse, som post@ eller salg@, kobles til som sin egen postkasse: én postkasse er gratis, Personal kobler til tre, Pro opptil 10 og Business så mange du trenger.",
+    "answer": "Claude når ikke en STRATO-postkasse på egen hånd. MCPEmails er en hostet MCP-server som kobler til via IMAP på imap.strato.de port 993 og autentiserer med hele e-postadressen din og passordet som er satt på den postkassen, ikke STRATO-kundeinnloggingen, slik at Claude, Cursor eller enhver MCP-klient kan lese, søke, sende og organisere e-posten. STRATO godtar bare vanlig passordautentisering over en kryptert tilkobling, etter å ha slått av den eldre challenge-response-metoden. Hver firmaadresse, som post@ eller salg@, kobles til som sin egen postkasse: én postkasse er gratis, Personal kobler til tre, Pro opptil 10 og Business så mange du trenger.",
     "meta0": "Første postkasse gratis, planer for resten",
     "meta1": "Postkassepassord, ikke kundeinnloggingen",
     "meta2": "E-post hentes direkte, lagres aldri"
@@ -35,7 +35,7 @@
   },
   "setup": [
     {
-      "h": "Opprett din gratis MCP Emails-konto",
+      "h": "Opprett din gratis MCPEmails-konto",
       "p": "Registrer deg på mcpemails.com. Gratisplanen kobler til én innboks for alltid og ber ikke om kort."
     },
     {
@@ -43,7 +43,7 @@
       "p": "Logg inn i STRATO Kundenlogin, åpne pakken din og gå til E-Mail, så E-Mail-Adressen verwalten. Velg adressen og sett et nytt passord der. Dette passordet hører bare til postkassen og er ikke det du nettopp brukte for å komme inn i Kundenlogin."
     },
     {
-      "h": "Lim det inn i MCP Emails",
+      "h": "Lim det inn i MCPEmails",
       "p": "Velg IMAP / SMTP, skriv inn hele adressen og lim inn postkassepassordet. Vertene imap.strato.de og smtp.strato.de og portene 993 og 465 er forhåndsutfylt og ble verifisert via en direkte TLS-tilkobling."
     },
     {
@@ -58,7 +58,7 @@
     },
     {
       "h": "STRATO annonserer ikke SASL-IR",
-      "p": "IMAP-serveren mangler SASL-IR-funksjonen, så den avviser autentisering i ett steg, der påloggingsdetaljene sendes på samme linje som AUTHENTICATE-kommandoen. En klient som antar SASL-IR, får en naken <code>BAD</code> uten forklaring, som igjen ser ut som et passordproblem. MCP Emails oppdager det svaret og prøver utvekslingen i to steg på nytt, så tilkoblingen lykkes, men sammen med fjerningen av CRAM-MD5 er det grunnen til at STRATO gir så mange falske meldinger om feil passord."
+      "p": "IMAP-serveren mangler SASL-IR-funksjonen, så den avviser autentisering i ett steg, der påloggingsdetaljene sendes på samme linje som AUTHENTICATE-kommandoen. En klient som antar SASL-IR, får en naken <code>BAD</code> uten forklaring, som igjen ser ut som et passordproblem. MCPEmails oppdager det svaret og prøver utvekslingen i to steg på nytt, så tilkoblingen lykkes, men sammen med fjerningen av CRAM-MD5 er det grunnen til at STRATO gir så mange falske meldinger om feil passord."
     },
     {
       "h": "STRATO er den best utstyrte IMAP-serveren i sin prisklasse",
@@ -76,7 +76,7 @@
   "faq": [
     {
       "q": "Fungerer Claude med STRATO-e-post?",
-      "a": "Ikke på egen hånd. Claude har ingen innebygd STRATO-kobling. Peker du en MCP-server som MCP Emails mot STRATO-postkassen din via IMAP, får Claude tilgang til å lese, søke, sende, svare, planlegge og organisere, og samme tilkobling fungerer fra Cursor, ChatGPT og andre MCP-klienter."
+      "a": "Ikke på egen hånd. Claude har ingen innebygd STRATO-kobling. Peker du en MCP-server som MCPEmails mot STRATO-postkassen din via IMAP, får Claude tilgang til å lese, søke, sende, svare, planlegge og organisere, og samme tilkobling fungerer fra Cursor, ChatGPT og andre MCP-klienter."
     },
     {
       "q": "Hva er IMAP- og SMTP-innstillingene for STRATO?",

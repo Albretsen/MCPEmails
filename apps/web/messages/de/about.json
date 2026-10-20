@@ -1,16 +1,16 @@
 {
   "meta": {
-    "title": "Über MCP Emails und Asgeir Albretsen",
-    "description": "MCP Emails wird von Asgeir Albretsen entwickelt und betrieben, einem Softwareentwickler in Bergen, Norwegen: eine Person, ein eingetragenes norwegisches Unternehmen und offener Quellcode."
+    "title": "Über MCPEmails und Asgeir Albretsen",
+    "description": "MCPEmails wird von Asgeir Albretsen entwickelt und betrieben, einem Softwareentwickler in Bergen, Norwegen: eine Person, ein eingetragenes norwegisches Unternehmen und offener Quellcode."
   },
   "hero": {
     "eyebrow": "Über uns",
-    "title": "Wer hinter MCP Emails steht",
+    "title": "Wer hinter MCPEmails steht",
     "lead": "Sie geben einem KI-Agenten Zugriff auf Ihre E-Mails. Hier sehen Sie, wer den Dienst dazwischen betreibt: eine Person, ein eingetragenes Unternehmen, Code, den Sie lesen können."
   },
   "who": {
     "title": "Wer ich bin",
-    "p1": "Mein Name ist Asgeir Albretsen. Ich bin Softwareentwickler in Bergen, Norwegen, mit einem Bachelor in Computertechnologie der Universität Bergen. Ich entwickle und betreibe MCP Emails allein.",
+    "p1": "Mein Name ist Asgeir Albretsen. Ich bin Softwareentwickler in Bergen, Norwegen, mit einem Bachelor in Computertechnologie der Universität Bergen. Ich entwickle und betreibe MCPEmails allein.",
     "p2": "Berufserfahrung:",
     "thPeriod": "Zeitraum",
     "thRole": "Position",
@@ -20,9 +20,9 @@
       { "period": "Jan. 2023 bis Sep. 2024", "role": "IT-Beratung an der BI Norwegian Business School" },
       { "period": "Sep. 2024 bis heute", "role": "Softwareentwickler, Vollzeit" }
     ],
-    "p3": "Ich arbeite weiterhin Vollzeit als Softwareentwickler bei einem anderen Arbeitgeber. MCP Emails ist unabhängig, eigenfinanziert und in meiner Freizeit entstanden.",
+    "p3": "Ich arbeite weiterhin Vollzeit als Softwareentwickler bei einem anderen Arbeitgeber. MCPEmails ist unabhängig, eigenfinanziert und in meiner Freizeit entstanden.",
     "linksIntro": "Außerdem:",
-    "linkGithubNote": "Code, auch von MCP Emails",
+    "linkGithubNote": "Code, auch von MCPEmails",
     "linkSiteNote": "persönliche Website",
     "linkLinkedinNote": "Berufserfahrung"
   },
@@ -36,7 +36,7 @@
     "intro": "Drei Dingen:",
     "points": [
       "<b>Einer namentlich bekannten Person.</b> Mir, nicht einer Support-Adresse. Wenn etwas schiefgeht, wissen Sie, wer dafür geradesteht.",
-      "<b>Einem eingetragenen Unternehmen.</b> MCP Emails wird von der Albretsen AS betrieben, einer norwegischen Gesellschaft mit beschränkter Haftung (aksjeselskap), eingetragen im Foretaksregisteret bei den Brønnøysundregistrene. Die Gesellschaft gehört mir, und ich bin Vorsitzender ihres Vorstands.",
+      "<b>Einem eingetragenen Unternehmen.</b> MCPEmails wird von der Albretsen AS betrieben, einer norwegischen Gesellschaft mit beschränkter Haftung (aksjeselskap), eingetragen im Foretaksregisteret bei den Brønnøysundregistrene. Die Gesellschaft gehört mir, und ich bin Vorsitzender ihres Vorstands.",
       "<b>Code, den Sie lesen können.</b> Der Server ist öffentlich auf GitHub unter AGPL-3.0, und der gehostete Dienst läuft mit demselben Code."
     ],
     "entityTitle": "Rechtsträger",
@@ -49,7 +49,7 @@
   "busFactor": {
     "title": "Wenn mich der Bus erwischt",
     "p1": "Ein E-Mail-Dienst, den eine Person betreibt, ist ein echtes Risiko. Ich könnte krank werden, das Interesse verlieren oder vom Bus erfasst werden. Bei einem geschlossenen Dienst hingen Ihre Agenten dann an etwas, das niemand mehr pflegt.",
-    "p2": "Genau dafür ist die Lizenz da. MCP Emails ist Open Source unter AGPL-3.0, und der gehostete Dienst läuft mit demselben Server, den Sie klonen können. Höre ich auf, klonen Sie das Repository, starten den Stack mit einem Befehl, richten Ihren Agenten auf Ihre eigene Instanz aus und machen weiter. Die Tool-Namen bleiben gleich. Ihre Zugangsdaten gehören Ihnen, und Ihre E-Mails wurden hier nie gespeichert.",
+    "p2": "Genau dafür ist die Lizenz da. MCPEmails ist Open Source unter AGPL-3.0, und der gehostete Dienst läuft mit demselben Server, den Sie klonen können. Höre ich auf, klonen Sie das Repository, starten den Stack mit einem Befehl, richten Ihren Agenten auf Ihre eigene Instanz aus und machen weiter. Die Tool-Namen bleiben gleich. Ihre Zugangsdaten gehören Ihnen, und Ihre E-Mails wurden hier nie gespeichert.",
     "p3": "Gehen Sie den Self-Hosting-Weg einmal durch, solange alles läuft, damit Sie wissen, dass er funktioniert, bevor Sie ihn brauchen.",
     "ctaSelfHost": "Anleitung zum Self-Hosting",
     "ctaSource": "Quellcode"

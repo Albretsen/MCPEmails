@@ -284,10 +284,10 @@ async function main() {
   // Defect 3. Before the fix this found nothing at all, so the signature stayed
   // in the message box for exactly the drafts the feature was built for.
   group("the signature split fires on CRLF, LF and CR");
-  const crlf = mod.splitBody("Hi Dana,\r\n\r\nNumbers attached.\r\n\r\n-- \r\nDemo User\r\nMCP Emails");
+  const crlf = mod.splitBody("Hi Dana,\r\n\r\nNumbers attached.\r\n\r\n-- \r\nDemo User\r\nMCPEmails");
   expect("a separator was found", crlf.separator, "\r\n-- \r\n");
   expect("the message stops before it", crlf.message, "Hi Dana,\r\n\r\nNumbers attached.\r\n");
-  expect("the signature starts after it", crlf.signature, "Demo User\r\nMCP Emails");
+  expect("the signature starts after it", crlf.signature, "Demo User\r\nMCPEmails");
   // The full CRLF form is taken, not the `\n-- \r\n` that also matches one
   // character later. A stray `\r` welded to the end of the message would be
   // invisible on screen and would go out in the next real save.
@@ -358,9 +358,9 @@ async function main() {
   // bare-CR signature returned the whole thing as ONE line, so the row that
   // exists to show one line rendered all of them.
   group("the collapsed signature preview handles every line ending");
-  expect("LF: first line and a count", mod.signaturePreview("Demo User\nMCP Emails"), "Demo User + 1 more line");
-  expect("CRLF: no stray CR", mod.signaturePreview("Demo User\r\nMCP Emails"), "Demo User + 1 more line");
-  expect("CR: still two lines", mod.signaturePreview("Demo User\rMCP Emails"), "Demo User + 1 more line");
+  expect("LF: first line and a count", mod.signaturePreview("Demo User\nMCPEmails"), "Demo User + 1 more line");
+  expect("CRLF: no stray CR", mod.signaturePreview("Demo User\r\nMCPEmails"), "Demo User + 1 more line");
+  expect("CR: still two lines", mod.signaturePreview("Demo User\rMCPEmails"), "Demo User + 1 more line");
   expect("CRLF, one line only", mod.signaturePreview("Demo User\r\n"), "Demo User");
   expect("blank lines do not count", mod.signaturePreview("\r\n\r\nDemo User\r\n\r\n"), "Demo User");
   expect("nothing to show", mod.signaturePreview("\r\n \r\n"), "Signature");

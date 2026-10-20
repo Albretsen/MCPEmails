@@ -91,7 +91,7 @@
     "densityLabel": "Densité",
     "densityCompact": "Compacte",
     "densitySpacious": "Spacieuse",
-    "firstRunTitle": "Bienvenue sur MCP Emails",
+    "firstRunTitle": "Bienvenue sur MCPEmails",
     "firstRunBody": "Connectez votre première boîte pour obtenir un point de terminaison MCP fonctionnel en moins d'une minute.",
     "firstRunCta": "Connecter une boîte",
     "inviteSentNotDelivered": "Invitation créée pour {email}, mais l'e-mail n'a pas pu être envoyé. Utilisez Renvoyer sur l'invitation en attente.",
@@ -135,7 +135,7 @@
   },
   "connect": {
     "subOutlook": "Outlook.com · Microsoft 365",
-    "hintOutlook": "Les comptes Outlook.com, Hotmail, Live et MSN se connectent directement. Un compte Microsoft 365 professionnel ou scolaire peut nécessiter que votre administrateur informatique approuve MCP Emails une fois ; il n'a pas besoin d'un compte MCP Emails pour le faire.",
+    "hintOutlook": "Les comptes Outlook.com, Hotmail, Live et MSN se connectent directement. Un compte Microsoft 365 professionnel ou scolaire peut nécessiter que votre administrateur informatique approuve MCPEmails une fois ; il n'a pas besoin d'un compte MCPEmails pour le faire.",
     "subFastmail": "Mot de passe d'application",
     "subAppPassword": "Mot de passe d'application",
     "subGeneric": "Toute boîte mail · recommandé",
@@ -398,7 +398,7 @@
   },
   "adminConsentLink": {
     "title": "Envoyez ce lien à votre administrateur informatique",
-    "body": "Envoyez ce lien à votre administrateur Microsoft 365. Il se connecte avec son compte administrateur Microsoft et approuve une seule fois ; il n'a pas besoin d'un compte MCP Emails. Ensuite, tout le monde dans votre organisation peut connecter Outlook.",
+    "body": "Envoyez ce lien à votre administrateur Microsoft 365. Il se connecte avec son compte administrateur Microsoft et approuve une seule fois ; il n'a pas besoin d'un compte MCPEmails. Ensuite, tout le monde dans votre organisation peut connecter Outlook.",
     "label": "Lien d'approbation",
     "loading": "Création du lien...",
     "copy": "Copier",
@@ -411,20 +411,20 @@
   },
   "adminConsentResult": {
     "grantedTitle": "Approuvé",
-    "grantedBody": "Votre équipe peut maintenant connecter Outlook dans MCP Emails. Personne n'a rien d'autre à approuver : chacun se connecte avec Microsoft au moment de connecter sa propre boîte.",
+    "grantedBody": "Votre équipe peut maintenant connecter Outlook dans MCPEmails. Personne n'a rien d'autre à approuver : chacun se connecte avec Microsoft au moment de connecter sa propre boîte.",
     "cancelledTitle": "Non approuvé",
     "cancelledBody": "L'approbation a été annulée sur l'écran de Microsoft, rien n'a donc changé. Ouvrez à nouveau le lien quand vous serez prêt.",
     "failedTitle": "L'approbation n'a pas abouti",
     "failedBody": "Microsoft n'a pas confirmé l'approbation. Il faut un compte administrateur Microsoft 365, par exemple Administrateur général ou Administrateur d'applications cloud. Connectez-vous avec l'un d'eux et ouvrez à nouveau le lien.",
     "link_invalidTitle": "Ce lien n'est pas valide",
-    "link_invalidBody": "Le lien d'approbation est incomplet ou a été modifié. Demandez-en un nouveau à la personne qui vous l'a envoyé, depuis son tableau de bord MCP Emails.",
+    "link_invalidBody": "Le lien d'approbation est incomplet ou a été modifié. Demandez-en un nouveau à la personne qui vous l'a envoyé, depuis son tableau de bord MCPEmails.",
     "link_expiredTitle": "Ce lien a expiré",
-    "link_expiredBody": "Les liens d'approbation restent valables 7 jours. Demandez-en un nouveau à la personne qui vous l'a envoyé, depuis son tableau de bord MCP Emails.",
+    "link_expiredBody": "Les liens d'approbation restent valables 7 jours. Demandez-en un nouveau à la personne qui vous l'a envoyé, depuis son tableau de bord MCPEmails.",
     "timed_outTitle": "Veuillez recommencer",
     "timed_outBody": "L'approbation a pris trop de temps ou s'est terminée dans un autre navigateur. Ouvrez à nouveau le lien d'approbation dans ce navigateur.",
     "unavailableTitle": "Un problème est survenu",
     "unavailableBody": "Impossible de lancer l'approbation. Réessayez dans quelques minutes.",
     "closeHint": "Des questions ? Écrivez à hello@mcpemails.com.",
-    "openApp": "Ouvrir MCP Emails"
+    "openApp": "Ouvrir MCPEmails"
   }
 }

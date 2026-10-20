@@ -16,7 +16,7 @@ import {
  *
  *   { url: "https://mcpemails.com/auth/outlook/admin-consent?t=...", expires_at: "..." }
  *
- * Any member may mint one. The link grants nothing inside MCP Emails: it only
+ * Any member may mint one. The link grants nothing inside MCPEmails: it only
  * starts Microsoft's own admin-consent flow, where a tenant administrator has
  * to sign in and approve. See lib/email-providers/outlook-admin-link.ts.
  */

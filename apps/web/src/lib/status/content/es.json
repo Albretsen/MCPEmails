@@ -1,7 +1,7 @@
 {
   "meta": {
     "title": "Estado",
-    "description": "Disponibilidad en vivo del endpoint de MCP Emails, medida por una comprobación automática que se ejecuta cada cinco minutos contra producción. Cifras reales registradas, sin marketing."
+    "description": "Disponibilidad en vivo del endpoint de MCPEmails, medida por una comprobación automática que se ejecuta cada cinco minutos contra producción. Cifras reales registradas, sin marketing."
   },
   "hero": {
     "eyebrow": "Estado",

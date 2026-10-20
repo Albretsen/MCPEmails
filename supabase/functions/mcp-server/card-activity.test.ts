@@ -80,7 +80,7 @@ Deno.test("the note collapses a draft's saves into one statement about this draf
   ], { subject: "Q3 numbers" });
   assertEquals(
     note,
-    "Before this call, the MCP Emails draft editor (the card in which the user can edit, save and send " +
+    "Before this call, the MCPEmails draft editor (the card in which the user can edit, save and send " +
       'a draft) recorded changes to this draft ("Q3 numbers") that may not appear in this conversation. ' +
       "It was saved there 2 times, last at 2026-10-15T11:59:30Z, changing the subject, To and Cc. " +
       "After that save it had To 1, Cc 2, Bcc 0. " +

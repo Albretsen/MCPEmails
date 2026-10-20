@@ -107,7 +107,7 @@ function textFor(data) {
     return { title: data.title || "The assistant wants to send an email", body: data.body || "" };
   }
   if (data.type === "test") {
-    return { title: data.title || "MCP Emails", body: data.body || "Notifications are working on this device." };
+    return { title: data.title || "MCPEmails", body: data.body || "Notifications are working on this device." };
   }
   const count = Number.isFinite(data.count) && data.count > 0 ? Math.round(data.count) : 1;
   const fallback = count === 1 ? "1 new message" : `${count} new messages`;

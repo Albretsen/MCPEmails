@@ -19,8 +19,8 @@
     "eyebrow": "WP.pl Poczta + AI",
     "titleLine1": "将你的 WP.pl 邮箱连接到",
     "titleLine2": "Claude、Cursor、任意 MCP 客户端",
-    "lead": "WP Poczta 一旦开启就支持 IMAP。MCP Emails 连接该邮箱，让你的 AI 代理可以在所有 MCP 客户端（而不止一个应用）中读取、搜索、发送、回复和归档邮件。",
-    "answer": "Claude 无法自行连接 WP.pl 邮箱。MCP Emails 是一个托管 MCP 服务器，通过 IMAP 连接 imap.wp.pl 的 993 端口，用你的完整地址登录。决定登录能否成功的有两件事：必须在网页邮箱 Opcje 的 IMAP/POP 标签中开启 IMAP；如果你使用两步登录，普通密码会被拒绝，你需要改为创建一个邮件程序密码。解决这两点后，Claude、Cursor 或任何其他 MCP 客户端都能读取、搜索、发送和整理邮件，一个收件箱永久免费。",
+    "lead": "WP Poczta 一旦开启就支持 IMAP。MCPEmails 连接该邮箱，让你的 AI 代理可以在所有 MCP 客户端（而不止一个应用）中读取、搜索、发送、回复和归档邮件。",
+    "answer": "Claude 无法自行连接 WP.pl 邮箱。MCPEmails 是一个托管 MCP 服务器，通过 IMAP 连接 imap.wp.pl 的 993 端口，用你的完整地址登录。决定登录能否成功的有两件事：必须在网页邮箱 Opcje 的 IMAP/POP 标签中开启 IMAP；如果你使用两步登录，普通密码会被拒绝，你需要改为创建一个邮件程序密码。解决这两点后，Claude、Cursor 或任何其他 MCP 客户端都能读取、搜索、发送和整理邮件，一个收件箱永久免费。",
     "meta0": "1 个收件箱永久免费",
     "meta1": "先在 Opcje 中开启 IMAP",
     "meta2": "邮件实时获取，绝不存储"
@@ -31,7 +31,7 @@
   },
   "setup": [
     {
-      "h": "创建免费 MCP Emails 账户",
+      "h": "创建免费 MCPEmails 账户",
       "p": "在 mcpemails.com 注册。免费套餐可连接一个收件箱，无需信用卡。"
     },
     {
@@ -44,7 +44,7 @@
     },
     {
       "h": "将 MCP URL 粘贴到你的 AI",
-      "p": "在 MCP Emails 中选择 IMAP / SMTP，输入地址和密码（WP 的服务器已自动填好），然后把 https://mcpemails.com/api/mcp 粘贴到 Claude、Cursor 或 ChatGPT 中并完成授权。"
+      "p": "在 MCPEmails 中选择 IMAP / SMTP，输入地址和密码（WP 的服务器已自动填好），然后把 https://mcpemails.com/api/mcp 粘贴到 Claude、Cursor 或 ChatGPT 中并完成授权。"
     }
   ],
   "gotchas": [
@@ -58,7 +58,7 @@
     },
     {
       "h": "只有 AUTH=PLAIN，没有 SASL-IR",
-      "p": "<code>imap.wp.pl</code> 声明了 <code>AUTH=PLAIN</code>，但没有声明 SASL-IR，因此会拒绝在 AUTHENTICATE 命令中一并发送凭据的一步认证，也不为写死使用 LOGIN 机制的客户端提供任何东西。两种失败返回的都是一个看起来像凭据错误的简单拒绝。MCP Emails 会用两步交换重试，这就是为什么在其他 IMAP 工具中失败的 WP 邮箱在这里能连上。"
+      "p": "<code>imap.wp.pl</code> 声明了 <code>AUTH=PLAIN</code>，但没有声明 SASL-IR，因此会拒绝在 AUTHENTICATE 命令中一并发送凭据的一步认证，也不为写死使用 LOGIN 机制的客户端提供任何东西。两种失败返回的都是一个看起来像凭据错误的简单拒绝。MCPEmails 会用两步交换重试，这就是为什么在其他 IMAP 工具中失败的 WP 邮箱在这里能连上。"
     },
     {
       "h": "有 MOVE 和 UIDPLUS，但没有 SPECIAL-USE",
@@ -72,7 +72,7 @@
   "faq": [
     {
       "q": "Claude 能用 WP.pl 邮箱吗？",
-      "a": "不能直接使用。Claude 没有内置的 WP 连接器。通过 IMAP 将 MCP Emails 这样的 MCP 服务器连接到该邮箱后，Claude 就能对你的 wp.pl 邮件进行读取、搜索、发送、回复、定时和整理，同一个连接也可在 Cursor、ChatGPT 和其他 MCP 客户端中使用。必须先在邮箱上开启 IMAP。"
+      "a": "不能直接使用。Claude 没有内置的 WP 连接器。通过 IMAP 将 MCPEmails 这样的 MCP 服务器连接到该邮箱后，Claude 就能对你的 wp.pl 邮件进行读取、搜索、发送、回复、定时和整理，同一个连接也可在 Cursor、ChatGPT 和其他 MCP 客户端中使用。必须先在邮箱上开启 IMAP。"
     },
     {
       "q": "WP.pl 的 IMAP 和 SMTP 设置是什么？",

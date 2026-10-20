@@ -26,7 +26,7 @@
     "meta0": "Erstes Postfach kostenlos, Tarife für weitere",
     "meta1": "Ihr Postfach-Passwort, keine OAuth-Einrichtung",
     "meta2": "E-Mails live abgerufen, nie gespeichert",
-    "answer": "Claude kann IONOS nicht von sich aus erreichen. MCP Emails ist ein gehosteter MCP-Server, der das Postfach per IMAP mit Ihrem Postfach-Passwort anbindet. Danach können Claude, Cursor oder jeder MCP-Client diese E-Mails lesen, suchen, senden und ordnen. Die Einrichtung dauert ein paar Minuten. Jede Firmenadresse, etwa info@ oder vertrieb@, wird als eigenes Postfach verbunden: Ein Postfach ist kostenlos, Personal verbindet drei, Pro bis zu 10 und Business so viele, wie Sie brauchen."
+    "answer": "Claude kann IONOS nicht von sich aus erreichen. MCPEmails ist ein gehosteter MCP-Server, der das Postfach per IMAP mit Ihrem Postfach-Passwort anbindet. Danach können Claude, Cursor oder jeder MCP-Client diese E-Mails lesen, suchen, senden und ordnen. Die Einrichtung dauert ein paar Minuten. Jede Firmenadresse, etwa info@ oder vertrieb@, wird als eigenes Postfach verbunden: Ein Postfach ist kostenlos, Personal verbindet drei, Pro bis zu 10 und Business so viele, wie Sie brauchen."
   },
   "persona": {
     "intro": "Mehrere Firmenpostfächer bei IONOS?",
@@ -35,19 +35,19 @@
   },
   "method": {
     "title": "So verbindet sich IONOS: IMAP und Ihr Postfach-Passwort",
-    "body": "IONOS verbindet sich über IMAP/SMTP mit dem <b>E-Mail-Passwort</b>, das Sie im IONOS Control-Panel unter E-Mail festlegen. Es ist nicht Ihr IONOS-Login. Die Servernamen hängen davon ab, über welche IONOS-Website Sie das Postfach gekauft haben: IONOS Deutschland dokumentiert <code>imap.ionos.de</code> und <code>smtp.ionos.de</code>, IONOS UK <code>imap.ionos.co.uk</code> und <code>smtp.ionos.co.uk</code>, ionos.com <code>imap.ionos.com</code> und <code>smtp.ionos.com</code>. IONOS antwortet auf beiden üblichen Transportwegen, 993 mit TLS und 143 mit STARTTLS, am Port scheitert eine IONOS-Anmeldung also selten. MCP Emails versucht den anderen Weg, wenn der erste nicht antwortet."
+    "body": "IONOS verbindet sich über IMAP/SMTP mit dem <b>E-Mail-Passwort</b>, das Sie im IONOS Control-Panel unter E-Mail festlegen. Es ist nicht Ihr IONOS-Login. Die Servernamen hängen davon ab, über welche IONOS-Website Sie das Postfach gekauft haben: IONOS Deutschland dokumentiert <code>imap.ionos.de</code> und <code>smtp.ionos.de</code>, IONOS UK <code>imap.ionos.co.uk</code> und <code>smtp.ionos.co.uk</code>, ionos.com <code>imap.ionos.com</code> und <code>smtp.ionos.com</code>. IONOS antwortet auf beiden üblichen Transportwegen, 993 mit TLS und 143 mit STARTTLS, am Port scheitert eine IONOS-Anmeldung also selten. MCPEmails versucht den anderen Weg, wenn der erste nicht antwortet."
   },
   "setup": [
     {
       "h": "Kostenloses Konto erstellen",
-      "p": "Registrieren Sie sich bei MCP Emails, ohne Kreditkarte. Der Free-Tarif verbindet ein Postfach, dauerhaft."
+      "p": "Registrieren Sie sich bei MCPEmails, ohne Kreditkarte. Der Free-Tarif verbindet ein Postfach, dauerhaft."
     },
     {
       "h": "Ihr IONOS-Postfach-Passwort besorgen",
       "p": "Öffnen Sie im IONOS Control-Panel den Bereich E-Mail, wählen Sie die Adresse und legen Sie ihr Passwort fest oder setzen Sie es zurück. Es ist nicht das Passwort, mit dem Sie sich bei IONOS selbst anmelden."
     },
     {
-      "h": "In MCP Emails einfügen",
+      "h": "In MCPEmails einfügen",
       "p": "Wählen Sie IMAP / SMTP und geben Sie Ihre IONOS-Adresse und das Postfach-Passwort ein. Die oben gezeigten Hosts sind die von ionos.com: Für ein Postfach von ionos.de verwenden Sie stattdessen imap.ionos.de und smtp.ionos.de, für ionos.co.uk die .co.uk-Namen."
     },
     {
@@ -66,7 +66,7 @@
     },
     {
       "h": "Microsoft 365 von IONOS ist ein Microsoft-Postfach, kein IONOS-Postfach",
-      "p": "IONOS verkauft Microsoft 365 neben den eigenen Produkten Mail Basic und Mail Business, und viele Kunden, die glauben, IONOS-E-Mail zu haben, haben in Wahrheit einen Microsoft-Tenant mit IONOS-Rechnung. Für diese Postfächer gilt nichts zu <code>imap.ionos.com</code>: Sie liegen auf Microsofts Servern und werden im Microsoft 365 Admin Center verwaltet, nicht im IONOS Control-Panel. Verbinden Sie sie über die Outlook-Option (Mit Microsoft anmelden) statt per IMAP. Eventuell muss Ihre IT-Administration MCP Emails einmalig freigeben, das Dashboard gibt Ihnen dafür einen Freigabelink zum Weiterleiten. Erkennbar ist es daran, wohin Ihr Webmailer führt: Outlook im Web bedeutet Microsoft."
+      "p": "IONOS verkauft Microsoft 365 neben den eigenen Produkten Mail Basic und Mail Business, und viele Kunden, die glauben, IONOS-E-Mail zu haben, haben in Wahrheit einen Microsoft-Tenant mit IONOS-Rechnung. Für diese Postfächer gilt nichts zu <code>imap.ionos.com</code>: Sie liegen auf Microsofts Servern und werden im Microsoft 365 Admin Center verwaltet, nicht im IONOS Control-Panel. Verbinden Sie sie über die Outlook-Option (Mit Microsoft anmelden) statt per IMAP. Eventuell muss Ihre IT-Administration MCPEmails einmalig freigeben, das Dashboard gibt Ihnen dafür einen Freigabelink zum Weiterleiten. Erkennbar ist es daran, wohin Ihr Webmailer führt: Outlook im Web bedeutet Microsoft."
     },
     {
       "h": "IONOS Deutschland, IONOS UK und ionos.com dokumentieren verschiedene Servernamen",
@@ -75,12 +75,12 @@
   ],
   "limits": [
     "Über IONOS gekaufte Microsoft 365 Postfächer liegen nicht auf imap.ionos.com. Verbinden Sie sie über Outlook (Mit Microsoft anmelden), eventuell muss eine IT-Administration die App einmalig freigeben.",
-    "MCP Emails verbindet ein Postfach. IONOS-Aliase, Weiterleitungen, Catch-all-Regeln und Spam-Einstellungen bleiben im IONOS Control-Panel und sind für Ihren KI-Client nicht sichtbar."
+    "MCPEmails verbindet ein Postfach. IONOS-Aliase, Weiterleitungen, Catch-all-Regeln und Spam-Einstellungen bleiben im IONOS Control-Panel und sind für Ihren KI-Client nicht sichtbar."
   ],
   "faq": [
     {
       "q": "Funktioniert Claude mit IONOS E-Mail?",
-      "a": "Es funktioniert mit einem IONOS-Postfach, also einem, das über imap.ionos.com läuft, sobald ein MCP-Server wie MCP Emails per IMAP damit verbunden ist. Claude hat keinen eingebauten IONOS-Konnektor. Ein über IONOS gekauftes Microsoft 365 Postfach funktioniert ebenfalls, wird aber über Outlook (Mit Microsoft anmelden) verbunden statt per IMAP, und eventuell muss eine IT-Administration MCP Emails einmalig freigeben."
+      "a": "Es funktioniert mit einem IONOS-Postfach, also einem, das über imap.ionos.com läuft, sobald ein MCP-Server wie MCPEmails per IMAP damit verbunden ist. Claude hat keinen eingebauten IONOS-Konnektor. Ein über IONOS gekauftes Microsoft 365 Postfach funktioniert ebenfalls, wird aber über Outlook (Mit Microsoft anmelden) verbunden statt per IMAP, und eventuell muss eine IT-Administration MCPEmails einmalig freigeben."
     },
     {
       "q": "Wie lauten die IMAP- und SMTP-Einstellungen von IONOS?",

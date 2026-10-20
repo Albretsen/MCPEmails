@@ -7,7 +7,7 @@
     "method": "oauth",
     "label": "Inicio de sesión con Microsoft (OAuth 2.0)",
     "helpUrl": "https://support.microsoft.com/en-us/office/outlook-and-other-apps-are-unable-to-connect-to-outlook-com-when-using-basic-authentication-f4202ebf-89c6-4a8a-bec3-3d60cf7deaef",
-    "usernameForm": "No hay nada que escribir. Inicias sesión con tu cuenta Microsoft en la propia página de Microsoft y apruebas el acceso, así que aquí no se introduce ninguna contraseña ni contraseña de aplicación. Los ajustes IMAP y SMTP publicados para Outlook.com no se aplican: MCP Emails se conecta a través de Microsoft Graph.",
+    "usernameForm": "No hay nada que escribir. Inicias sesión con tu cuenta Microsoft en la propia página de Microsoft y apruebas el acceso, así que aquí no se introduce ninguna contraseña ni contraseña de aplicación. Los ajustes IMAP y SMTP publicados para Outlook.com no se aplican: MCPEmails se conecta a través de Microsoft Graph.",
     "status": "active"
   },
   "meta": {
@@ -22,16 +22,16 @@
     "meta0": "1 bandeja gratis, para siempre",
     "meta1": "Inicio de sesión con Microsoft, sin contraseña de aplicación",
     "meta2": "El correo se obtiene en vivo, nunca se almacena",
-    "answer": "Sí. MCP Emails es un servidor MCP alojado que conecta una cuenta Microsoft personal, una dirección que termina en outlook.com, hotmail.com, live.com o msn.com, a través de Microsoft Graph. Haces clic en Conectar con Microsoft, inicias sesión y apruebas el acceso en la pantalla de consentimiento de Microsoft, donde MCP Emails aparece como editor verificado. No hay contraseña de aplicación ni ajustes IMAP que introducir, y en una cuenta personal no interviene ningún administrador. Pega una URL en Claude, ChatGPT, Cursor o cualquier cliente MCP y el agente podrá leer, buscar, enviar, responder, reenviar, programar y archivar tu correo. Una bandeja es gratis, para siempre."
+    "answer": "Sí. MCPEmails es un servidor MCP alojado que conecta una cuenta Microsoft personal, una dirección que termina en outlook.com, hotmail.com, live.com o msn.com, a través de Microsoft Graph. Haces clic en Conectar con Microsoft, inicias sesión y apruebas el acceso en la pantalla de consentimiento de Microsoft, donde MCPEmails aparece como editor verificado. No hay contraseña de aplicación ni ajustes IMAP que introducir, y en una cuenta personal no interviene ningún administrador. Pega una URL en Claude, ChatGPT, Cursor o cualquier cliente MCP y el agente podrá leer, buscar, enviar, responder, reenviar, programar y archivar tu correo. Una bandeja es gratis, para siempre."
   },
   "method": {
     "title": "Cómo se conecta Outlook.com: inicio de sesión con Microsoft",
-    "body": "Outlook.com se conecta a través de <b>Microsoft Graph</b> con OAuth 2.0, no por IMAP. Inicias sesión en la propia página de Microsoft y apruebas una lista corta de permisos: leer y modificar el correo (<b>Mail.ReadWrite</b>), enviar correo (<b>Mail.Send</b>), mantener la conexión (<b>offline_access</b>) y tu perfil básico y dirección de correo. Tu contraseña de Microsoft solo se escribe en la página de Microsoft y nunca nos llega. Para desconectar, elimina la bandeja en MCP Emails o quita MCP Emails de las aplicaciones con acceso a tu cuenta Microsoft."
+    "body": "Outlook.com se conecta a través de <b>Microsoft Graph</b> con OAuth 2.0, no por IMAP. Inicias sesión en la propia página de Microsoft y apruebas una lista corta de permisos: leer y modificar el correo (<b>Mail.ReadWrite</b>), enviar correo (<b>Mail.Send</b>), mantener la conexión (<b>offline_access</b>) y tu perfil básico y dirección de correo. Tu contraseña de Microsoft solo se escribe en la página de Microsoft y nunca nos llega. Para desconectar, elimina la bandeja en MCPEmails o quita MCPEmails de las aplicaciones con acceso a tu cuenta Microsoft."
   },
   "setup": [
     {
       "h": "Crea una cuenta gratis",
-      "p": "Regístrate en MCP Emails, sin tarjeta. El plan gratuito conecta una bandeja, para siempre."
+      "p": "Regístrate en MCPEmails, sin tarjeta. El plan gratuito conecta una bandeja, para siempre."
     },
     {
       "h": "Elige Outlook y conecta con Microsoft",
@@ -49,7 +49,7 @@
   "gotchas": [
     {
       "h": "Las contraseñas de aplicación y las contraseñas IMAP no funcionan, por eso usamos Microsoft Graph",
-      "p": "Microsoft dejó de admitir la autenticación básica para cuentas personales que se conectan desde aplicaciones ajenas a Microsoft a partir del 16 de septiembre de 2024, y el servicio IMAP de Outlook.com ahora solo ofrece OAuth. Muchas guías antiguas siguen diciendo que generes una contraseña de aplicación; ya no sirve para iniciar sesión en el correo. MCP Emails no usa IMAP para Outlook.com en absoluto: inicia sesión con Microsoft y habla con Microsoft Graph, así que no hay contraseña que crear ni ajuste de servidor que equivocar."
+      "p": "Microsoft dejó de admitir la autenticación básica para cuentas personales que se conectan desde aplicaciones ajenas a Microsoft a partir del 16 de septiembre de 2024, y el servicio IMAP de Outlook.com ahora solo ofrece OAuth. Muchas guías antiguas siguen diciendo que generes una contraseña de aplicación; ya no sirve para iniciar sesión en el correo. MCPEmails no usa IMAP para Outlook.com en absoluto: inicia sesión con Microsoft y habla con Microsoft Graph, así que no hay contraseña que crear ni ajuste de servidor que equivocar."
     },
     {
       "h": "Las direcciones hotmail.com, live.com y msn.com son el mismo servicio",
@@ -57,7 +57,7 @@
     },
     {
       "h": "Se rechaza una cuenta Microsoft sin buzón de Outlook",
-      "p": "Si la cuenta Microsoft con la que inicias sesión no tiene detrás un buzón de Exchange Online, Microsoft Graph no tiene nada que abrir, así que MCP Emails rechaza la conexión y te lo indica. Si el correo de esa dirección está alojado en otro servidor, conéctala por IMAP."
+      "p": "Si la cuenta Microsoft con la que inicias sesión no tiene detrás un buzón de Exchange Online, Microsoft Graph no tiene nada que abrir, así que MCPEmails rechaza la conexión y te lo indica. Si el correo de esa dirección está alojado en otro servidor, conéctala por IMAP."
     },
     {
       "h": "Una cuenta de Outlook.com recién creada puede quedar bloqueada para enviar durante un tiempo",
@@ -73,7 +73,7 @@
   "faq": [
     {
       "q": "¿Funciona Claude con Outlook.com?",
-      "a": "Sí. Conecta tu buzón de Outlook.com a MCP Emails iniciando sesión con Microsoft, pega una URL MCP en Claude y Claude podrá leer, buscar, enviar, responder, reenviar, programar y archivar tu correo. La misma URL funciona en ChatGPT, Cursor y otros clientes MCP."
+      "a": "Sí. Conecta tu buzón de Outlook.com a MCPEmails iniciando sesión con Microsoft, pega una URL MCP en Claude y Claude podrá leer, buscar, enviar, responder, reenviar, programar y archivar tu correo. La misma URL funciona en ChatGPT, Cursor y otros clientes MCP."
     },
     {
       "q": "¿Funciona con direcciones de Hotmail, Live y MSN?",
@@ -81,7 +81,7 @@
     },
     {
       "q": "¿Necesito una contraseña de aplicación o ajustes IMAP?",
-      "a": "No. MCP Emails conecta Outlook.com a través de Microsoft Graph después de que inicias sesión con Microsoft, así que no hay contraseña de aplicación que crear ni servidor IMAP o SMTP que introducir. De todos modos, una contraseña de aplicación no funcionaría: Microsoft dejó de aceptar contraseñas de aplicaciones de correo ajenas a Microsoft en cuentas personales en septiembre de 2024."
+      "a": "No. MCPEmails conecta Outlook.com a través de Microsoft Graph después de que inicias sesión con Microsoft, así que no hay contraseña de aplicación que crear ni servidor IMAP o SMTP que introducir. De todos modos, una contraseña de aplicación no funcionaría: Microsoft dejó de aceptar contraseñas de aplicaciones de correo ajenas a Microsoft en cuentas personales en septiembre de 2024."
     },
     {
       "q": "¿Qué puede hacer mi IA en Outlook.com?",
@@ -89,11 +89,11 @@
     },
     {
       "q": "¿Es lo mismo que conectar una cuenta de Microsoft 365 del trabajo?",
-      "a": "El inicio de sesión es el mismo, la aprobación puede no serlo. Una cuenta personal no necesita administrador. Una cuenta de Microsoft 365 del trabajo o de un centro educativo a menudo necesita que un administrador de TI apruebe MCP Emails una vez para toda la organización. En ese caso, el panel te da un enlace de aprobación para enviar a tu administrador de TI, y no necesita una cuenta de MCP Emails para usarlo."
+      "a": "El inicio de sesión es el mismo, la aprobación puede no serlo. Una cuenta personal no necesita administrador. Una cuenta de Microsoft 365 del trabajo o de un centro educativo a menudo necesita que un administrador de TI apruebe MCPEmails una vez para toda la organización. En ese caso, el panel te da un enlace de aprobación para enviar a tu administrador de TI, y no necesita una cuenta de MCPEmails para usarlo."
     },
     {
       "q": "¿Se almacena mi correo en sus servidores?",
-      "a": "No. Los mensajes se obtienen en vivo de Microsoft en cada solicitud y se entregan a tu cliente de IA. El token OAuth de tu inicio de sesión con Microsoft se cifra en reposo y el cuerpo de los mensajes no se conserva. Eliminar la bandeja en MCP Emails corta la conexión de inmediato, y también puedes quitar MCP Emails de las aplicaciones con acceso a tu cuenta Microsoft."
+      "a": "No. Los mensajes se obtienen en vivo de Microsoft en cada solicitud y se entregan a tu cliente de IA. El token OAuth de tu inicio de sesión con Microsoft se cifra en reposo y el cuerpo de los mensajes no se conserva. Eliminar la bandeja en MCPEmails corta la conexión de inmediato, y también puedes quitar MCPEmails de las aplicaciones con acceso a tu cuenta Microsoft."
     }
   ],
   "ctaBand": {

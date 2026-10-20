@@ -3,7 +3,7 @@ const translation = {
   description:
     'Conecta Gmail con Claude a través de MCP en unos dos minutos: una contraseña de aplicación de Google, una URL de endpoint, sin API key, sin código. Claude lee, busca y envía tu correo en directo, y tu correo nunca se almacena.',
   coverAlt: 'Cómo conectar Gmail con Claude en dos minutos a través de MCP: una contraseña de aplicación de Google, una URL de endpoint, sin correo almacenado',
-  content: `Para conectar Gmail con Claude, haces dos cosas: conectas tu bandeja de Gmail una vez en el panel de MCP Emails con una contraseña de aplicación de Google y, después, pegas una única URL de endpoint en los ajustes de conectores de Claude y apruebas un inicio de sesión. Eso es todo: sin código, sin SDK, sin API key. Tarda unos dos minutos, y Claude nunca almacena tu correo: cada lectura y cada envío va a Gmail en directo y se descarta en cuanto Claude lo tiene.
+  content: `Para conectar Gmail con Claude, haces dos cosas: conectas tu bandeja de Gmail una vez en el panel de MCPEmails con una contraseña de aplicación de Google y, después, pegas una única URL de endpoint en los ajustes de conectores de Claude y apruebas un inicio de sesión. Eso es todo: sin código, sin SDK, sin API key. Tarda unos dos minutos, y Claude nunca almacena tu correo: cada lectura y cada envío va a Gmail en directo y se descarta en cuanto Claude lo tiene.
 
 Esta es la guía centrada exclusivamente en Gmail. Si gestionas varias bandejas o un proveedor que no es Gmail, la guía [conecta cualquier correo en menos de dos minutos](/blog/connect-email-to-ai-agent-under-2-minutes) cubre también Outlook, iCloud, Fastmail e IMAP.
 
@@ -11,25 +11,25 @@ Esta es la guía centrada exclusivamente en Gmail. Si gestionas varias bandejas 
 
 - Una cuenta de **Gmail o Google Workspace**.
 - Una versión de **Claude que admita conectores personalizados**: claude.ai en un plan de pago, o Claude Desktop. (Los conectores son la forma en que Claude se comunica con los servidores MCP.)
-- Una cuenta gratuita de **MCP Emails**. Sin tarjeta de crédito, una bandeja conectada para siempre. [Empieza gratis](/signup) y mantén esta pestaña abierta.
+- Una cuenta gratuita de **MCPEmails**. Sin tarjeta de crédito, una bandeja conectada para siempre. [Empieza gratis](/signup) y mantén esta pestaña abierta.
 
-MCP Emails es el puente que está en medio: habla el Model Context Protocol con Claude por un lado y se comunica con Gmail por el otro mediante IMAP y SMTP. Si quieres el contexto sobre lo que eso significa, consulta [qué es realmente un servidor de correo MCP](/blog/what-is-an-mcp-email-server).
+MCPEmails es el puente que está en medio: habla el Model Context Protocol con Claude por un lado y se comunica con Gmail por el otro mediante IMAP y SMTP. Si quieres el contexto sobre lo que eso significa, consulta [qué es realmente un servidor de correo MCP](/blog/what-is-an-mcp-email-server).
 
 ## Paso 1: Conecta tu bandeja de Gmail
 
-En el panel de MCP Emails, abre **Inboxes → Connect Inbox** y elige **Gmail**. Gmail se conecta de forma predeterminada con una contraseña de aplicación de Google:
+En el panel de MCPEmails, abre **Inboxes → Connect Inbox** y elige **Gmail**. Gmail se conecta de forma predeterminada con una contraseña de aplicación de Google:
 
 1. Activa la verificación en dos pasos en tu cuenta de Google si aún no lo está. Google solo ofrece contraseñas de aplicación en las cuentas que la tienen.
 2. Ve a **myaccount.google.com/apppasswords** y crea una. Son 16 letras minúsculas en cuatro grupos, y los espacios no importan.
-3. De vuelta en MCP Emails, introduce tu dirección de Gmail completa, pega la contraseña de aplicación y haz clic en **Conectar bandeja de entrada**. La conexión se prueba con Gmail antes de guardarse. Listo.
+3. De vuelta en MCPEmails, introduce tu dirección de Gmail completa, pega la contraseña de aplicación y haz clic en **Conectar bandeja de entrada**. La conexión se prueba con Gmail antes de guardarse. Listo.
 
-Tu contraseña normal de Google nunca se usa. La contraseña de aplicación es una credencial aparte, MCP Emails la cifra con AES-256-GCM y puedes revocarla desde la misma página de Google cuando quieras. Por debajo, la bandeja se conecta por IMAP y SMTP (\`imap.gmail.com\`).
+Tu contraseña normal de Google nunca se usa. La contraseña de aplicación es una credencial aparte, MCPEmails la cifra con AES-256-GCM y puedes revocarla desde la misma página de Google cuando quieras. Por debajo, la bandeja se conecta por IMAP y SMTP (\`imap.gmail.com\`).
 
 ### En una cuenta de Google Workspace
 
 Un administrador de Google Workspace puede desactivar las contraseñas de aplicación en todo el dominio. Si **myaccount.google.com/apppasswords** no está disponible para ti, pide a tu administrador que las active. La página de [ajustes y límites de Gmail](/connect/gmail) reúne en un solo sitio los detalles específicos de Gmail.
 
-## Paso 2: Añade MCP Emails a Claude
+## Paso 2: Añade MCPEmails a Claude
 
 Ahora apunta Claude al mismo endpoint. Como Claude es un cliente OAuth, no necesitas ninguna API key en absoluto: pegas una URL y apruebas un inicio de sesión.
 
@@ -41,7 +41,7 @@ Ahora apunta Claude al mismo endpoint. Como Claude es un cliente OAuth, no neces
 https://mcpemails.com/api/mcp
 \`\`\`
 
-4. Haz clic en **Connect**, inicia sesión con tu cuenta de MCP Emails y aprueba los scopes que quieras: \`read:email\`, \`send:email\`, o ambos.
+4. Haz clic en **Connect**, inicia sesión con tu cuenta de MCPEmails y aprueba los scopes que quieras: \`read:email\`, \`send:email\`, o ambos.
 
 Eso es todo lo que hay del lado del cliente. La conexión queda limitada exactamente a lo que aprobaste, y puedes revocarla desde el panel con un solo clic. Si prefieres entender la ruta con API key (para clientes sin OAuth integrado, como Cline o un script personalizado), lee [OAuth frente a API keys para el acceso de la IA al correo](/blog/oauth-vs-api-keys-ai-email-access). ¿También quieres conectar otro buzón? La [configuración del correo en Claude paso a paso](/blog/connect-claude-to-email) cubre Outlook, iCloud, Fastmail e IMAP.
 
@@ -69,7 +69,7 @@ Una vez conectado, Claude trabaja con un pequeño conjunto de herramientas conso
 - **Organizar:** \`email_organize\` (mover, copiar, marcar, archivar). Las etiquetas de Gmail aparecen como carpetas, así que un mensaje con varias etiquetas aparece en varias carpetas, moverlo cambia sus etiquetas y archivarlo lo quita de la bandeja de entrada.
 - **Borradores, carpetas, programación y contactos:** \`draft\`, \`folder\`, \`schedule\` y \`contact_search\` completan el conjunto.
 
-Una cosa que conviene esperar de entrada: MCP Emails funciona por sondeo (poll-based). No hay webhooks push, así que Claude reacciona al correo nuevo cuando le pides que lo revise, no en el instante en que llega un mensaje. Para casi cualquier flujo de trabajo de asistente, ese es exactamente el modelo adecuado.
+Una cosa que conviene esperar de entrada: MCPEmails funciona por sondeo (poll-based). No hay webhooks push, así que Claude reacciona al correo nuevo cuando le pides que lo revise, no en el instante en que llega un mensaje. Para casi cualquier flujo de trabajo de asistente, ese es exactamente el modelo adecuado.
 
 ## ¿Es seguro conectar Gmail con Claude?
 
@@ -77,7 +77,7 @@ Versión corta: sí, y el diseño está construido en torno a ello.
 
 - **Tu correo nunca se almacena.** Los cuerpos, los asuntos y los adjuntos se obtienen en directo en cada llamada, se entregan a Claude y se descartan de inmediato. Lo único que se persiste por bandeja es la credencial cifrada, tu contraseña de aplicación. Aquí tienes [por qué que "el correo nunca se almacena" importa de verdad](/blog/why-email-never-stored-matters).
 - **Tú controlas el alcance.** Aprueba solo lectura y Claude literalmente no puede enviar. Aprueba ambos y aun así puedes revocar cualquiera en cualquier momento.
-- **Sin compartir contraseñas.** Tu contraseña normal de Google nunca llega a MCP Emails. Una contraseña de aplicación es una credencial aparte que puedes revocar en myaccount.google.com/apppasswords cuando quieras, o puedes eliminar la bandeja en MCP Emails.
+- **Sin compartir contraseñas.** Tu contraseña normal de Google nunca llega a MCPEmails. Una contraseña de aplicación es una credencial aparte que puedes revocar en myaccount.google.com/apppasswords cuando quieras, o puedes eliminar la bandeja en MCPEmails.
 
 El modelo de amenazas completo (qué está cifrado, qué vería y qué no vería un atacante) se expone en [¿es seguro dar a un agente de IA acceso al correo?](/blog/is-it-safe-to-give-ai-agent-email-access)
 
@@ -93,10 +93,10 @@ No. El correo se obtiene en directo desde Gmail en cada solicitud y se descarta 
 Sí, si concedes el scope \`send:email\`. Los envíos salen a través de Gmail como mensajes normales desde tu propia cuenta. Concede solo lectura si prefieres que Claude no envíe nunca.
 
 **¿Funciona con el plan gratuito de Claude?**
-Los conectores personalizados requieren un plan de Claude que los admita (claude.ai de pago o Claude Desktop). La parte de MCP Emails es gratuita y sin tarjeta.
+Los conectores personalizados requieren un plan de Claude que los admita (claude.ai de pago o Claude Desktop). La parte de MCPEmails es gratuita y sin tarjeta.
 
-**¿Verá MCP Emails mi contraseña de Google?**
-No. Pegas una contraseña de aplicación, una credencial aparte que genera Google y que puedes revocar cuando quieras. Tu contraseña normal de Google nunca se introduce en ningún lugar de MCP Emails.
+**¿Verá MCPEmails mi contraseña de Google?**
+No. Pegas una contraseña de aplicación, una credencial aparte que genera Google y que puedes revocar cuando quieras. Tu contraseña normal de Google nunca se introduce en ningún lugar de MCPEmails.
 
 ## Conclusión
 

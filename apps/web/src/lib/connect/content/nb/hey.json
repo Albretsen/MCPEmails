@@ -13,14 +13,14 @@
   },
   "meta": {
     "title": "HEY-e-post og AI: ingen IMAP, og hva som virker i stedet",
-    "description": "HEY godtar ingen IMAP-, POP- eller SMTP-tilkoblinger, så MCP Emails kan ikke koble til en HEY-postkasse. Hvorfor 37signals bygde det slik, og to veier som fungerer."
+    "description": "HEY godtar ingen IMAP-, POP- eller SMTP-tilkoblinger, så MCPEmails kan ikke koble til en HEY-postkasse. Hvorfor 37signals bygde det slik, og to veier som fungerer."
   },
   "hero": {
     "eyebrow": "HEY + AI",
     "titleLine1": "HEY har ingen IMAP, så ingen",
     "titleLine2": "driftet MCP-server kan nå den",
     "lead": "HEY er et lukket e-postsystem med vilje. Ingen tredjepartsklient og ingen driftet server kan logge inn på en hey.com-postkasse. Denne siden gir deg det korrekte bildet og veiene som faktisk gir en AI-agent tilgang til e-posten din.",
-    "answer": "Nei, og ikke fordi det mangler en funksjon hos oss. HEY godtar ingen IMAP-, POP- eller SMTP-tilkoblinger i det hele tatt, verken på hey.com-adresser eller på egne domener i HEY for Domains, så MCP Emails kan ikke koble til en HEY-postkasse, og det kan heller ingen annen driftet MCP-server. 37signals ser på dette som et designvalg og ikke som en mangel: screening, regler per kontakt og HEYs trådvisning ligger på deres servere, og bare deres egne apper snakker den protokollen. Vil du ha en agent inne i HEY, leverer 37signals hey-cli, som kjører en MCP-server lokalt mot den innloggede kontoen din. MCP Emails er for IMAP-postkassene du har ved siden av, og én innboks der er gratis.",
+    "answer": "Nei, og ikke fordi det mangler en funksjon hos oss. HEY godtar ingen IMAP-, POP- eller SMTP-tilkoblinger i det hele tatt, verken på hey.com-adresser eller på egne domener i HEY for Domains, så MCPEmails kan ikke koble til en HEY-postkasse, og det kan heller ingen annen driftet MCP-server. 37signals ser på dette som et designvalg og ikke som en mangel: screening, regler per kontakt og HEYs trådvisning ligger på deres servere, og bare deres egne apper snakker den protokollen. Vil du ha en agent inne i HEY, leverer 37signals hey-cli, som kjører en MCP-server lokalt mot den innloggede kontoen din. MCPEmails er for IMAP-postkassene du har ved siden av, og én innboks der er gratis.",
     "meta0": "1 innboks gratis, for alltid",
     "meta1": "Ingen IMAP-, POP- eller SMTP-innlogging",
     "meta2": "hey-cli tilbyr en lokal MCP-server"
@@ -31,12 +31,12 @@
   },
   "setup": [
     {
-      "h": "Opprett den gratis MCP Emails-kontoen",
+      "h": "Opprett den gratis MCPEmails-kontoen",
       "p": "Det krever en e-postadresse og ikke noe kort. Du får én tilkoblet innboks gratis, og det er den resten av stegene fyller."
     },
     {
       "h": "Bestem hvilken postkasse agenten faktisk skal jobbe i",
-      "p": "Velg en postkasse som snakker IMAP: jobbadressen din, en domenepostkasse hos Fastmail eller Migadu, en Gmail-konto, hva som helst med en ekte server. Det er den kontoen MCP Emails kobler til, og den agenten leser, sender og sorterer fra."
+      "p": "Velg en postkasse som snakker IMAP: jobbadressen din, en domenepostkasse hos Fastmail eller Migadu, en Gmail-konto, hva som helst med en ekte server. Det er den kontoen MCPEmails kobler til, og den agenten leser, sender og sorterer fra."
     },
     {
       "h": "Pek HEY mot den, eller eksporter fra HEY",
@@ -84,7 +84,7 @@
     },
     {
       "q": "Hva er den praktiske måten å gi en AI-agent tilgang til e-posten min på hvis jeg bruker HEY?",
-      "a": "To alternativer, og du kan bruke begge. Bruk hey-cli lokalt for selve HEY. Koble en separat IMAP-postkasse til MCP Emails for korrespondansen du vil ha håndtert fra enhver MCP-klient, også de som bare tar imot en URL, og videresend e-post inn i den hvis du vil ha et speil av det som kommer inn i HEY."
+      "a": "To alternativer, og du kan bruke begge. Bruk hey-cli lokalt for selve HEY. Koble en separat IMAP-postkasse til MCPEmails for korrespondansen du vil ha håndtert fra enhver MCP-klient, også de som bare tar imot en URL, og videresend e-post inn i den hvis du vil ha et speil av det som kommer inn i HEY."
     },
     {
       "q": "Kan jeg eksportere e-posten min ut av HEY?",

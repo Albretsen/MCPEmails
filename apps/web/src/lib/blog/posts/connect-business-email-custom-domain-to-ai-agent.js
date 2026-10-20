@@ -5,7 +5,7 @@ const post = {
     'Setup guide for you@yourcompany.com: find out who really runs your mail, connect Google Workspace, Zoho, Fastmail, Migadu, Titan, Rackspace, IONOS or cPanel, and fix the From name before your agent replies.',
   cover: '/blog/cover-connect-gmail-to-claude.svg',
   coverAlt:
-    'Connect a business email on your own domain to an AI agent with MCP Emails',
+    'Connect a business email on your own domain to an AI agent with MCPEmails',
   authorId: 'asgeir',
   publishedAt: '2026-09-15T09:00:00.000Z',
   updatedAt: '2026-09-25T09:00:00.000Z',
@@ -26,7 +26,7 @@ Most guides for connecting email to an AI agent assume your address ends in gmai
 
 ## Step 1: Find out who actually runs your mail
 
-MCP Emails tries to answer this for you. Type your address into the IMAP connect form, pause for half a second, and it checks four sources in order: a table of providers that caused real connection failures, your domain's RFC 6186 service records, your MX record matched back against that table, and Mozilla's autoconfiguration database. Nothing is filled in unless both halves resolved.
+MCPEmails tries to answer this for you. Type your address into the IMAP connect form, pause for half a second, and it checks four sources in order: a table of providers that caused real connection failures, your domain's RFC 6186 service records, your MX record matched back against that table, and Mozilla's autoconfiguration database. Nothing is filled in unless both halves resolved.
 
 To check yourself first:
 
@@ -55,7 +55,7 @@ Workspace connects with a **Google app password** over IMAP (\`imap.gmail.com\` 
 
 **Enable IMAP access** first, under Settings → Mail Accounts → the address → IMAP Access. It is off by default and set per mailbox, so enabling it for yourself does nothing for a colleague. Generate an **application-specific password** too if two-factor authentication is on.
 
-Your host depends on two things Zoho never shows together: which of its six regional data centres the account lives in (\`.com\`, \`.eu\`, \`.in\`, \`.com.au\`, \`.jp\`, \`zohocloud.ca\`), and whether it is a paid custom-domain organization account, which uses \`imappro\` and \`smtppro\` for that region. MCP Emails asks for both and builds the hostname.
+Your host depends on two things Zoho never shows together: which of its six regional data centres the account lives in (\`.com\`, \`.eu\`, \`.in\`, \`.com.au\`, \`.jp\`, \`zohocloud.ca\`), and whether it is a paid custom-domain organization account, which uses \`imappro\` and \`smtppro\` for that region. MCPEmails asks for both and builds the hostname.
 
 ### Fastmail and Migadu
 
@@ -81,14 +81,14 @@ There is no cPanel mail service, only your hosting company's server, so the pane
 
 ## When nothing is detected and you supply the settings yourself
 
-Give MCP Emails four things per protocol: host, port, security mode, and your full address as the username. The conventions are fixed, and the form keeps port and security in step so they cannot drift apart:
+Give MCPEmails four things per protocol: host, port, security mode, and your full address as the username. The conventions are fixed, and the form keeps port and security in step so they cannot drift apart:
 
 - IMAP **993** is implicit TLS; IMAP **143** is STARTTLS.
 - SMTP **465** is implicit TLS; SMTP **587** is STARTTLS, and **25** is STARTTLS on small hosts that offer nothing else.
 
 Mixing those up was the largest cause of failed generic connections: STARTTLS on 993 stalls waiting for a greeting a TLS-only listener never sends, and implicit TLS on 143 fails the handshake. You no longer have to get it right first time. A connection that never established a usable session is retried on the other standard transports, up to three attempts per protocol, starting with the one you asked for. A password the server refused is never retried: re-sending it would only triple the failed-login count your provider uses for lockout. See also the [generic IMAP connection page](/connect/imap).
 
-Sending negotiates one more thing you will never see. Exchange-style hosts advertise **LOGIN** without PLAIN, so MCP Emails reads what the server offers, tries PLAIN first when both are there, and falls back to LOGIN. A refused mechanism is never reported as a bad password.
+Sending negotiates one more thing you will never see. Exchange-style hosts advertise **LOGIN** without PLAIN, so MCPEmails reads what the server offers, tries PLAIN first when both are there, and falls back to LOGIN. A refused mechanism is never reported as a bad password.
 
 ## Set the sender display name before your agent replies
 
@@ -117,7 +117,7 @@ Yes, with a Google app password over IMAP. 2-Step Verification must be on to cre
 **What if my host publishes no IMAP settings?**
 Supply them yourself: host, port, security mode, and your full address as the username. If the first transport does not answer, the standard alternatives are tried automatically.
 
-**Does MCP Emails store my company's email?**
+**Does MCPEmails store my company's email?**
 No. Message content is fetched live from your provider on each request and discarded. Only the encrypted provider credential is retained.
 
 **Is one inbox enough on the free plan?**

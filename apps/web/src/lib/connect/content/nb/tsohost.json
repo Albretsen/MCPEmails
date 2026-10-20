@@ -21,7 +21,7 @@
     "titleLine1": "Koble Tsohost-e-post til Claude,",
     "titleLine2": "Cursor, ChatGPT, enhver MCP-klient",
     "lead": "Gi AI-agenten din en ekte Tsohost-postkasse. Les, søk, send, svar, planlegg og organiser e-post via IMAP, med innstillingene hentet fra den ene skjermen som fortsatt er autoritativ etter to migreringer.",
-    "answer": "Claude når ikke en Tsohost-postkasse på egen hånd. MCP Emails er en hostet MCP-server som kobler til via vanlig IMAP på port 993 og SMTP på 465, slik at Claude, Cursor eller enhver MCP-klient kan lese, søke, sende og organisere den e-posten. Det finnes ingen felles tsohost.com-e-postserver å peke en klient mot: verten bygges fra ditt eget domene eller fra navnet på hostingserveren din, og den autoritative versjonen står inne i cPanel under Email Accounts, så Connect Devices. Autentisering skjer med passordet som er satt på den enkelte postkassen, aldri innloggingen til kontrollpanelet. tsoHost-merket er avviklet og innlemmet i 123 Reg, så start fra 123 Reg Control Panel. Én innboks er gratis, for alltid.",
+    "answer": "Claude når ikke en Tsohost-postkasse på egen hånd. MCPEmails er en hostet MCP-server som kobler til via vanlig IMAP på port 993 og SMTP på 465, slik at Claude, Cursor eller enhver MCP-klient kan lese, søke, sende og organisere den e-posten. Det finnes ingen felles tsohost.com-e-postserver å peke en klient mot: verten bygges fra ditt eget domene eller fra navnet på hostingserveren din, og den autoritative versjonen står inne i cPanel under Email Accounts, så Connect Devices. Autentisering skjer med passordet som er satt på den enkelte postkassen, aldri innloggingen til kontrollpanelet. tsoHost-merket er avviklet og innlemmet i 123 Reg, så start fra 123 Reg Control Panel. Én innboks er gratis, for alltid.",
     "meta0": "1 innboks gratis, for alltid",
     "meta1": "Postkassepassord fra cPanel",
     "meta2": "E-post hentes direkte, lagres aldri"
@@ -32,7 +32,7 @@
   },
   "setup": [
     {
-      "h": "Opprett en gratis MCP Emails-konto",
+      "h": "Opprett en gratis MCPEmails-konto",
       "p": "Registrer deg på mcpemails.com. Gratisplanen kobler til én innboks for alltid og ber ikke om kort."
     },
     {
@@ -45,7 +45,7 @@
     },
     {
       "h": "Lim MCP-URL-en inn i AI-en",
-      "p": "Legg til postkassen i MCP Emails med hele adressen og det passordet, lim så https://mcpemails.com/api/mcp inn i Claude, Cursor eller ChatGPT, autoriser, så har agenten innboksen."
+      "p": "Legg til postkassen i MCPEmails med hele adressen og det passordet, lim så https://mcpemails.com/api/mcp inn i Claude, Cursor eller ChatGPT, autoriser, så har agenten innboksen."
     }
   ],
   "gotchas": [
@@ -67,14 +67,14 @@
     }
   ],
   "limits": [
-    "MCP Emails kobler til postkassen, ikke hostingkontoen. Videresendinger, aliaser, autosvar, spamfiltre og DNS blir alle værende i cPanel og 123 Reg Control Panel, og AI-klienten din kan verken se eller endre dem.",
+    "MCPEmails kobler til postkassen, ikke hostingkontoen. Videresendinger, aliaser, autosvar, spamfiltre og DNS blir alle værende i cPanel og 123 Reg Control Panel, og AI-klienten din kan verken se eller endre dem.",
     "Viser adressen seg å være en Titan-postkasse og ikke en cPanel-postkasse, gjelder ingen av innstillingene her. Koble den til som Titan i stedet, med Titans egne verter og postkassepassordet fra Titans kontrollpanel.",
     "Denne siden beskriver cPanel-e-post slik den er etter migreringen. Vertsnavn fra den gamle tsoHost-plattformen, fra før overgangen til cPanel, beskriver ikke lenger hvor postkassen din ligger, og slås ikke opp til den."
   ],
   "faq": [
     {
       "q": "Fungerer Claude med Tsohost-e-post?",
-      "a": "Ikke direkte. Claude har ingen innebygd kobling for cPanel-e-postverter. Kobler du en MCP-server som MCP Emails til Tsohost-postkassen din via IMAP, får Claude tilgang til å lese, søke, sende, svare, planlegge og organisere, med de påloggingsdetaljene en e-postklient på datamaskinen ville brukt, og samme tilkobling fungerer fra Cursor og ChatGPT."
+      "a": "Ikke direkte. Claude har ingen innebygd kobling for cPanel-e-postverter. Kobler du en MCP-server som MCPEmails til Tsohost-postkassen din via IMAP, får Claude tilgang til å lese, søke, sende, svare, planlegge og organisere, med de påloggingsdetaljene en e-postklient på datamaskinen ville brukt, og samme tilkobling fungerer fra Cursor og ChatGPT."
     },
     {
       "q": "Hva er IMAP- og SMTP-innstillingene for Tsohost?",

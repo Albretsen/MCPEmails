@@ -1,4 +1,4 @@
-# MCP Emails self-hosted MCP server.
+# MCPEmails self-hosted MCP server.
 #
 # This root-level Dockerfile lets MCP directories such as Glama build and
 # evaluate the open-source server directly from the repository root.

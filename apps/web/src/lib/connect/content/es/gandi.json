@@ -21,7 +21,7 @@
     "titleLine1": "Conecta Gandi Mail a Claude,",
     "titleLine2": "Cursor, ChatGPT y cualquier cliente MCP",
     "lead": "Dale a tu agente de IA una bandeja real de Gandi. Lee, busca, envía, responde, programa y organiza correo por IMAP con la contraseña definida en el propio buzón, no en tu cuenta de Gandi.",
-    "answer": "Claude no puede acceder por sí solo a un buzón de Gandi. MCP Emails es un servidor MCP alojado que lo conecta por IMAP en mail.gandi.net en el puerto 993, autenticándose con la dirección de correo entera y la contraseña definida en ese buzón, que Gandi mantiene separada de la contraseña de tu cuenta de gandi.net. Así Claude, Cursor o cualquier cliente MCP puede leer, buscar, enviar y organizar el correo. No hay contraseña de aplicación que generar ni ningún interruptor IMAP por buzón que buscar. Una bandeja es gratis, para siempre.",
+    "answer": "Claude no puede acceder por sí solo a un buzón de Gandi. MCPEmails es un servidor MCP alojado que lo conecta por IMAP en mail.gandi.net en el puerto 993, autenticándose con la dirección de correo entera y la contraseña definida en ese buzón, que Gandi mantiene separada de la contraseña de tu cuenta de gandi.net. Así Claude, Cursor o cualquier cliente MCP puede leer, buscar, enviar y organizar el correo. No hay contraseña de aplicación que generar ni ningún interruptor IMAP por buzón que buscar. Una bandeja es gratis, para siempre.",
     "meta0": "1 bandeja gratis, para siempre",
     "meta1": "Contraseña del buzón, no el acceso a la cuenta",
     "meta2": "El correo se obtiene en vivo, nunca se almacena"
@@ -32,7 +32,7 @@
   },
   "setup": [
     {
-      "h": "Crea tu cuenta gratis en MCP Emails",
+      "h": "Crea tu cuenta gratis en MCPEmails",
       "p": "Regístrate en mcpemails.com. El plan gratuito conecta una bandeja para siempre y no pide tarjeta."
     },
     {
@@ -40,7 +40,7 @@
       "p": "Inicia sesión en gandi.net, elige Domains en el menú de la izquierda, selecciona el dominio al que pertenece la dirección y abre su pestaña Email. Haz clic en el buzón, o en su menú de tres puntos, luego en Manage, y usa Change junto a Password en la sección Configuration. También puedes cambiarla desde Settings, Password dentro del webmail Roundcube de Gandi."
     },
     {
-      "h": "Pégala en MCP Emails",
+      "h": "Pégala en MCPEmails",
       "p": "Elige IMAP / SMTP, introduce la dirección completa y pega la contraseña del buzón. El servidor mail.gandi.net y los puertos 993 y 465 ya vienen rellenados y se verificaron con una conexión TLS real."
     },
     {
@@ -51,7 +51,7 @@
   "gotchas": [
     {
       "h": "La autenticación en dos factores del correo de Gandi solo cubre el webmail, y no puede cubrir IMAP",
-      "p": "Si activaste la autenticación en dos factores en un buzón de Gandi, se aplica a los portales de webmail SOGo y Roundcube y a nada más. La documentación de Gandi dice directamente que la 2FA solo se puede usar a través de sus portales de webmail, que los clientes de correo como Thunderbird u Outlook no son compatibles, y que desactivar POP, IMAP y SMTP es la única forma de proteger del todo el buzón con 2FA. Dos consecuencias prácticas. Primera, tener la 2FA activada no impide que MCP Emails se conecte: la contraseña del buzón sigue autenticando por IMAP. Segunda, si desactivaste a propósito el protocolo IMAP en el buzón para que esa 2FA tuviera sentido, ningún cliente puede conectarse hasta que lo vuelvas a activar."
+      "p": "Si activaste la autenticación en dos factores en un buzón de Gandi, se aplica a los portales de webmail SOGo y Roundcube y a nada más. La documentación de Gandi dice directamente que la 2FA solo se puede usar a través de sus portales de webmail, que los clientes de correo como Thunderbird u Outlook no son compatibles, y que desactivar POP, IMAP y SMTP es la única forma de proteger del todo el buzón con 2FA. Dos consecuencias prácticas. Primera, tener la 2FA activada no impide que MCPEmails se conecte: la contraseña del buzón sigue autenticando por IMAP. Segunda, si desactivaste a propósito el protocolo IMAP en el buzón para que esa 2FA tuviera sentido, ningún cliente puede conectarse hasta que lo vuelvas a activar."
     },
     {
       "h": "Los buzones gratuitos terminaron en 2023, y las direcciones antiguas pueden haber desaparecido",
@@ -69,7 +69,7 @@
   "faq": [
     {
       "q": "¿Funciona Claude con Gandi Mail?",
-      "a": "No por sí solo. Claude no tiene un conector integrado para Gandi. Apuntar un servidor MCP como MCP Emails a tu buzón de Gandi por IMAP le da a Claude acceso para leer, buscar, enviar, responder, programar y organizar, y la misma conexión funciona desde Cursor, ChatGPT y otros clientes MCP."
+      "a": "No por sí solo. Claude no tiene un conector integrado para Gandi. Apuntar un servidor MCP como MCPEmails a tu buzón de Gandi por IMAP le da a Claude acceso para leer, buscar, enviar, responder, programar y organizar, y la misma conexión funciona desde Cursor, ChatGPT y otros clientes MCP."
     },
     {
       "q": "¿Cuáles son los ajustes IMAP y SMTP de Gandi?",

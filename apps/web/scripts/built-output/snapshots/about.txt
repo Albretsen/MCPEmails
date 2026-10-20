@@ -1,12 +1,12 @@
-About: the person behind MCPEmails · mcpemails
-[meta description] MCPEmails is built and run by Asgeir Albretsen, a software developer in Bergen, Norway, through Albretsen Consulting, a registered Norwegian sole proprietorship.
-[meta og:title] About: the person behind MCPEmails · mcpemails
-[meta og:description] MCPEmails is built and run by Asgeir Albretsen, a software developer in Bergen, Norway, through Albretsen Consulting, a registered Norwegian sole proprietorship.
+About MCPEmails and Asgeir Albretsen · MCPEmails
+[meta description] MCPEmails is built and run by Asgeir Albretsen, a software developer in Bergen, Norway: one person, a registered Norwegian business, and open source code.
+[meta og:title] About MCPEmails and Asgeir Albretsen · MCPEmails
+[meta og:description] MCPEmails is built and run by Asgeir Albretsen, a software developer in Bergen, Norway: one person, a registered Norwegian business, and open source code.
 [meta og:locale] en_US
-[meta twitter:title] About: the person behind MCPEmails · mcpemails
-[meta twitter:description] MCPEmails is built and run by Asgeir Albretsen, a software developer in Bergen, Norway, through Albretsen Consulting, a registered Norwegian sole proprietorship.
-[alt] mcpemails
-[alt] mcpemails
+[meta twitter:title] About MCPEmails and Asgeir Albretsen · MCPEmails
+[meta twitter:description] MCPEmails is built and run by Asgeir Albretsen, a software developer in Bergen, Norway: one person, a registered Norwegian business, and open source code.
+[alt] MCPEmails
+[alt] MCPEmails
 [aria-label] Primary navigation
 Features
 How it works
@@ -19,11 +19,11 @@ Sign in
 Get started free
 [aria-label] Open navigation menu
 About
-Who is asking for your inbox
-Connecting MCPEmails means letting an AI agent reach your mail, so it is fair to ask who runs the service on the other end. It is one person, working under a registered business, on code you can read. This page exists so you can check that rather than take my word for it.
-1. Who I am
-My name is Asgeir Albretsen. I am a software developer in Bergen, Norway, with a BSc in Computer Technology (datateknologi) from the University of Bergen. I build and run MCPEmails myself.
-The working history behind the name:
+Who runs MCPEmails
+You are giving an AI agent access to your mail. Here is who runs the service in between: one person, a registered business, code you can read.
+Who I am
+My name is Asgeir Albretsen. I am a software developer in Bergen, Norway, with a BSc in Computer Technology from the University of Bergen. I build and run MCPEmails alone.
+Work history:
 Period
 Role
 Aug 2019 to Feb 2022
@@ -34,55 +34,55 @@ Jan 2023 to Sep 2024
 IT consulting at BI Norwegian Business School
 Sep 2024 to today
 Software developer, full time
-I am still employed full time as a software developer. I do not name that employer here: listing them beside a product they have nothing to do with would read as an endorsement they never gave. MCPEmails is separate from the job, independent and self funded, and built in my own time.
-You do not have to take that on trust either. The same person, in three places you can check:
+I still work full time as a software developer elsewhere. MCPEmails is independent, self funded, and built in my own time.
+Elsewhere:
 github.com/Albretsen
-the code, including this product
+code, including MCPEmails
 albretsen.no
 personal site
 linkedin.com/in/asgeir-albretsen
-the work history above
-2. Why I built this
-I wanted my own agents working my inbox. Every option I looked at wanted a copy of my mail first: sync it, index it, keep it in someone else's database for as long as the account exists. For a mailbox that holds invoices, contracts, and password resets, that is a large permanent trade for a convenience I only wanted some of the time.
-So I built the version I was willing to use myself. Mail is fetched live when your agent asks for it and dropped when the response is sent, so there is no stored copy here to leak. The one sensitive thing kept is the mailbox credential, encrypted at rest, because the next call you ask for needs it. I run my own mail through it every day.
-3. What you are actually trusting
-Three separate things, worth naming separately, because they fail in different ways.
+work history
+Why I built it
+I wanted my own agents working my inbox. Every option I found wanted a copy of my mail first: sync it, index it, keep it in someone else's database for as long as the account exists. For a mailbox full of invoices, contracts and password resets, that is a lot to give up for something I only needed now and then.
+So I built the version I was willing to use. Mail is fetched live when your agent asks for it and dropped once the response is sent, so there is no stored copy. The only thing kept is the mailbox credential, encrypted at rest, because the next call needs it. I run my own mail through it every day.
+What you are trusting
+Three things:
 A named person.
-Me. Not a support alias, not a brand with nobody visible behind it. If something goes wrong, you know whose name is on it.
-A registered business.
-MCPEmails is operated by Albretsen Consulting, a Norwegian sole proprietorship registered in Enhetsregisteret at Brønnøysundregistrene. A sole proprietorship carries personal liability, so the name is attached in the legal sense too, not just the moral one.
+Me, not a support alias. If something goes wrong, you know whose name is on it.
+A registered company.
+MCPEmails is operated by Albretsen AS, a Norwegian private limited company (aksjeselskap) registered in Foretaksregisteret at Brønnøysundregistrene. I own the company and chair its board.
 Code you can read.
-The server is public on GitHub under AGPL-3.0, and the hosted service runs that same code. Every claim on this site is a claim the source can contradict.
+The server is public on GitHub under AGPL-3.0, and the hosted service runs the same code.
 Legal entity
-Albretsen Consulting (enkeltpersonforetak)
-Organisation number 926 646 753
+Albretsen AS (aksjeselskap)
+Organisation number 938 702 373
 Håsteins gate 9, 5160 Laksevåg, Norway
-Registered in Enhetsregisteret, Brønnøysundregistrene
-Full legal identification is set out in the
+Registered in Foretaksregisteret, Brønnøysundregistrene
+Full legal details are in the
 terms of service
 and the
 privacy policy
 .
-4. What happens if I am hit by a bus
-One person running an email service is a real risk, and it would be dishonest to write a page like this without saying so. I could fall ill, lose interest, or be hit by a bus. A hosted service with a single operator and closed source would leave you with agents wired into something nobody maintains, and a support address nobody reads.
-That is what the licence is for. MCPEmails is open source under AGPL-3.0, and the hosted service runs the same server you can clone. If I stop, you clone the repository, bring the stack up with one command, point your agent at your own instance, and carry on. Your credentials are yours, your mail was never stored here in the first place, and the tools your agent already knows keep the same names. There is nothing of yours held in a database of mine to be stranded in.
-That is as far as an honest one person business can go: not a promise that I will always be here, but a way out that does not depend on my being here. It is worth walking the self-host path once while everything is fine, so you know it works before you ever need it.
-Read the self-hosting guide
-Read the source
-5. How to reach me
-There is no support queue and nobody to route your message to. It arrives with me, and I answer it.
+If I get hit by a bus
+One person running an email service is a real risk. I could fall ill, lose interest, or get hit by a bus. With a closed service, that would leave your agents wired into something nobody maintains.
+That is what the licence is for. MCPEmails is open source under AGPL-3.0, and the hosted service runs the same server you can clone. If I stop, you clone the repository, bring the stack up with one command, point your agent at your own instance, and carry on. The tool names stay the same. Your credentials are yours, and your mail was never stored here.
+Walk the self-host path once while everything is fine, so you know it works before you need it.
+Self-hosting guide
+Source code
+Contact
+There is no support queue. Your message arrives with me, and I answer it.
 hello@mcpemails.com
-for anything about the product, an account, billing, or a bug. I aim to reply within one business day.
+for the product, your account, billing, or a bug. Expect a reply within one business day.
 security@mcpemails.com
-for a vulnerability report. I aim to acknowledge those within 24 hours, and the full disclosure process, including safe harbour, is on the
+for vulnerability reports. Expect an acknowledgement within 24 hours. The disclosure process, including safe harbour, is on the
 security page
 .
-I am in Bergen, Norway, so a message sent late in the North American day is usually answered the next morning, European time.
-Still deciding whether to hand this a mailbox?
-Read what the service touches and what it keeps, or skip me entirely and run it yourself.
+I am in Bergen, Norway. A message sent late in the North American day is usually answered the next morning, European time.
+Still deciding?
+Read what the service touches and what it keeps, or run it yourself.
 How your email is handled
 Run it yourself
-[alt] mcpemails
+[alt] MCPEmails
 A hosted MCP server that gives AI agents read and send access to your inbox, without ever storing the email it reads.
 Contact
 hello@mcpemails.com
@@ -98,6 +98,7 @@ Norsk
 Español
 Français
 中文
+Deutsch
 Product
 Features
 How it works
@@ -111,6 +112,7 @@ Tool reference
 Quickstart
 OAuth connection
 Provider support
+Read-only access
 MCP client setup
 Blog
 Changelog
@@ -132,7 +134,10 @@ Security
 Status
 Privacy
 Terms
-© 2026 mcpemails.
+Right of withdrawal
+Cancel contracts here
+Impressum
+© 2026 MCPEmails.
 Email fetched live, never stored · Credentials encrypted at rest
-MCPEmails is a service of Albretsen Consulting (enkeltpersonforetak), organisation number 926 646 753, Håsteins gate 9, 5160 Laksevåg, Norway.
-[json-ld] {"@context":"https://schema.org","@graph":[{"@type":"WebPage","@id":"https://mcpemails.com/about","url":"https://mcpemails.com/about","name":"About: the person behind MCPEmails","description":"MCPEmails is built and run by Asgeir Albretsen, a software developer in Bergen, Norway, through Albretsen Consulting, a registered Norwegian sole proprietorship.","inLanguage":"en","isPartOf":{"@id":"https://mcpemails.com/#website"},"breadcrumb":{"@id":"https://mcpemails.com/about#breadcrumb"}},{"@type":"BreadcrumbList","@id":"https://mcpemails.com/about#breadcrumb","itemListElement":[{"@type":"ListItem","position":1,"name":"mcpemails","item":"https://mcpemails.com"},{"@type":"ListItem","position":2,"name":"About: the person behind MCPEmails"}]},{"@type":"Person","@id":"https://mcpemails.com/#asgeir-albretsen","name":"Asgeir Albretsen","jobTitle":"Software developer","url":"https://albretsen.no","mainEntityOfPage":{"@id":"https://mcpemails.com/about"},"sameAs":["https://github.com/Albretsen","https://albretsen.no","https://www.linkedin.com/in/asgeir-albretsen/"],"address":{"@type":"PostalAddress","addressLocality":"Bergen","addressCountry":"NO"},"alumniOf":{"@type":"CollegeOrUniversity","name":"University of Bergen"},"worksFor":{"@id":"https://mcpemails.com/#organization"}},{"@type":"Organization","@id":"https://mcpemails.com/#organization","name":"mcpemails","legalName":"Albretsen Consulting","url":"https://mcpemails.com","logo":"https://mcpemails.com/favicon.svg","founder":{"@id":"https://mcpemails.com/#asgeir-albretsen"},"email":"hello@mcpemails.com","identifier":"926646753","vatID":"NO926646753","address":{"@type":"PostalAddress","streetAddress":"Håsteins gate 9","postalCode":"5160","addressLocality":"Laksevåg","addressCountry":"NO"}}]}
+MCPEmails is a service of Albretsen AS, organisation number 938 702 373, Håsteins gate 9, 5160 Laksevåg, Norway.
+[json-ld] {"@context":"https://schema.org","@graph":[{"@type":"WebPage","@id":"https://mcpemails.com/about","url":"https://mcpemails.com/about","name":"About MCPEmails and Asgeir Albretsen","description":"MCPEmails is built and run by Asgeir Albretsen, a software developer in Bergen, Norway: one person, a registered Norwegian business, and open source code.","inLanguage":"en","isPartOf":{"@id":"https://mcpemails.com/#website"},"breadcrumb":{"@id":"https://mcpemails.com/about#breadcrumb"}},{"@type":"BreadcrumbList","@id":"https://mcpemails.com/about#breadcrumb","itemListElement":[{"@type":"ListItem","position":1,"name":"MCPEmails","item":"https://mcpemails.com"},{"@type":"ListItem","position":2,"name":"About MCPEmails and Asgeir Albretsen"}]},{"@type":"Person","@id":"https://mcpemails.com/#asgeir-albretsen","name":"Asgeir Albretsen","jobTitle":"Software developer","url":"https://albretsen.no","mainEntityOfPage":{"@id":"https://mcpemails.com/about"},"sameAs":["https://github.com/Albretsen","https://albretsen.no","https://www.linkedin.com/in/asgeir-albretsen/"],"address":{"@type":"PostalAddress","addressLocality":"Bergen","addressCountry":"NO"},"alumniOf":{"@type":"CollegeOrUniversity","name":"University of Bergen"},"worksFor":{"@id":"https://mcpemails.com/#organization"}},{"@type":"Organization","@id":"https://mcpemails.com/#organization","name":"MCPEmails","legalName":"Albretsen AS","url":"https://mcpemails.com","logo":"https://mcpemails.com/favicon.svg","founder":{"@id":"https://mcpemails.com/#asgeir-albretsen"},"email":"hello@mcpemails.com","identifier":"938702373","address":{"@type":"PostalAddress","streetAddress":"Håsteins gate 9","postalCode":"5160","addressLocality":"Laksevåg","addressCountry":"NO"}}]}

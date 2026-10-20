@@ -22,14 +22,14 @@ interface FrameProps {
 function Frame({ icon, title, children, actions, workspaces }: FrameProps) {
   const user = useAuthStore((a) => a.user);
   useEffect(() => {
-    document.title = `${title} · mcpemails`;
+    document.title = `${title} · MCPEmails`;
   }, [title]);
 
   return (
     <div className={s.page}>
       <main className={s.center}>
         <div className={s.brand}>
-          <img className={s.wordmark} src="/logo-wordmark.svg" alt="mcpemails" />
+          <img className={s.wordmark} src="/logo-wordmark.svg" alt="MCPEmails" />
         </div>
         <div className={s.card}>
           <div className={s.noticeIcon}>{icon}</div>
@@ -152,7 +152,7 @@ export function MisconfiguredNotice() {
 /** While the stored session is being checked. */
 export function Splash() {
   return (
-    <div className={s.splash} role="status" aria-label="Loading mcpemails">
+    <div className={s.splash} role="status" aria-label="Loading MCPEmails">
       <LogoMark size={36} />
     </div>
   );

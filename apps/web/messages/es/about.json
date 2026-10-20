@@ -1,16 +1,16 @@
 {
   "meta": {
-    "title": "Sobre MCP Emails y Asgeir Albretsen",
-    "description": "MCP Emails lo desarrolla y gestiona Asgeir Albretsen, desarrollador de software en Bergen (Noruega): una persona, una empresa noruega registrada y código abierto."
+    "title": "Sobre MCPEmails y Asgeir Albretsen",
+    "description": "MCPEmails lo desarrolla y gestiona Asgeir Albretsen, desarrollador de software en Bergen (Noruega): una persona, una empresa noruega registrada y código abierto."
   },
   "hero": {
     "eyebrow": "Acerca de",
-    "title": "Quién está detrás de MCP Emails",
+    "title": "Quién está detrás de MCPEmails",
     "lead": "Vas a darle a un agente de IA acceso a tu correo. Conviene que sepas quién gestiona el servicio que hay entre los dos: una persona, una empresa registrada y código que puedes leer."
   },
   "who": {
     "title": "Quién soy",
-    "p1": "Me llamo Asgeir Albretsen. Soy desarrollador de software en Bergen (Noruega) y tengo un grado en Tecnología Informática por la Universidad de Bergen. Desarrollo y gestiono MCP Emails yo solo.",
+    "p1": "Me llamo Asgeir Albretsen. Soy desarrollador de software en Bergen (Noruega) y tengo un grado en Tecnología Informática por la Universidad de Bergen. Desarrollo y gestiono MCPEmails yo solo.",
     "p2": "Trayectoria profesional:",
     "thPeriod": "Periodo",
     "thRole": "Puesto",
@@ -20,23 +20,23 @@
       { "period": "ene. 2023 a sep. 2024", "role": "Consultoría de TI en BI Norwegian Business School" },
       { "period": "sep. 2024 hasta hoy", "role": "Desarrollador de software a jornada completa" }
     ],
-    "p3": "Sigo trabajando a jornada completa como desarrollador de software en otra empresa. MCP Emails es independiente, autofinanciado y lo hago en mi tiempo libre.",
+    "p3": "Sigo trabajando a jornada completa como desarrollador de software en otra empresa. MCPEmails es independiente, autofinanciado y lo hago en mi tiempo libre.",
     "linksIntro": "También me encuentras en:",
-    "linkGithubNote": "código, incluido MCP Emails",
+    "linkGithubNote": "código, incluido MCPEmails",
     "linkSiteNote": "web personal",
     "linkLinkedinNote": "trayectoria profesional"
   },
   "why": {
     "title": "Por qué lo hice",
     "p1": "Quería que mis propios agentes trabajaran con mi bandeja de entrada. Todas las opciones que encontré pedían antes una copia de mi correo: sincronizarlo, indexarlo y guardarlo en la base de datos de otro mientras existiera la cuenta. Para un buzón lleno de facturas, contratos y restablecimientos de contraseña, era mucho ceder a cambio de algo que solo necesitaba de vez en cuando.",
-    "p2": "Así que hice la versión que yo sí estaba dispuesto a usar. El correo se consulta en directo cuando tu agente lo pide y se descarta en cuanto se envía la respuesta, así que no queda ninguna copia guardada. Lo único que se conserva es la credencial del buzón, cifrada en reposo, porque la necesita la siguiente llamada. Uso MCP Emails con mi propio correo todos los días."
+    "p2": "Así que hice la versión que yo sí estaba dispuesto a usar. El correo se consulta en directo cuando tu agente lo pide y se descarta en cuanto se envía la respuesta, así que no queda ninguna copia guardada. Lo único que se conserva es la credencial del buzón, cifrada en reposo, porque la necesita la siguiente llamada. Uso MCPEmails con mi propio correo todos los días."
   },
   "trusting": {
     "title": "En qué estás confiando",
     "intro": "En tres cosas:",
     "points": [
       "<b>Una persona con nombre y apellidos.</b> Yo, no un alias de soporte. Si algo sale mal, sabes quién da la cara.",
-      "<b>Una sociedad registrada.</b> MCP Emails lo opera Albretsen AS, una sociedad de responsabilidad limitada noruega inscrita en Foretaksregisteret, en Brønnøysundregistrene. Soy el propietario de la sociedad y presido su consejo de administración.",
+      "<b>Una sociedad registrada.</b> MCPEmails lo opera Albretsen AS, una sociedad de responsabilidad limitada noruega inscrita en Foretaksregisteret, en Brønnøysundregistrene. Soy el propietario de la sociedad y presido su consejo de administración.",
       "<b>Código que puedes leer.</b> El servidor es público en GitHub bajo AGPL-3.0, y el servicio alojado ejecuta ese mismo código."
     ],
     "entityTitle": "Entidad legal",
@@ -49,7 +49,7 @@
   "busFactor": {
     "title": "Si me atropella un autobús",
     "p1": "Que una sola persona lleve un servicio de correo es un riesgo real. Puede que enferme, que pierda el interés o que me atropelle un autobús. Si el servicio fuera cerrado, tus agentes quedarían conectados a algo que nadie mantiene.",
-    "p2": "Para eso está la licencia. MCP Emails es código abierto bajo AGPL-3.0, y el servicio alojado ejecuta el mismo servidor que puedes clonar. Si lo dejo, clonas el repositorio, lo levantas todo con un solo comando, apuntas tu agente a tu propia instancia y sigues como si nada. Las herramientas se siguen llamando igual. Tus credenciales son tuyas, y tu correo nunca se guardó aquí.",
+    "p2": "Para eso está la licencia. MCPEmails es código abierto bajo AGPL-3.0, y el servicio alojado ejecuta el mismo servidor que puedes clonar. Si lo dejo, clonas el repositorio, lo levantas todo con un solo comando, apuntas tu agente a tu propia instancia y sigues como si nada. Las herramientas se siguen llamando igual. Tus credenciales son tuyas, y tu correo nunca se guardó aquí.",
     "p3": "Prueba a alojarlo tú mismo una vez, ahora que todo va bien, para saber que funciona antes de necesitarlo.",
     "ctaSelfHost": "Guía de auto-alojamiento",
     "ctaSource": "Código fuente"

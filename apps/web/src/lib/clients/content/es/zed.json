@@ -37,7 +37,7 @@
     },
     {
       "h": "Autoriza",
-      "p": "Zed lanza el flujo OAuth cuando no hay ningún encabezado Authorization configurado. Inicia sesión con MCP Emails y aprueba los permisos que quieres que tenga Zed."
+      "p": "Zed lanza el flujo OAuth cuando no hay ningún encabezado Authorization configurado. Inicia sesión con MCPEmails y aprueba los permisos que quieres que tenga Zed."
     }
   ],
   "gotchas": [
@@ -77,7 +77,7 @@
       "a": "Solo si tú lo permites. El envío depende del permiso send:email, así que una clave o un token sin ese permiso no puede enviar nada. Además, el propietario de una bandeja puede exigir aprobación humana en el panel, que retiene cada envío, respuesta, reenvío, envío de borrador y envío programado hasta que una persona lo libera."
     },
     {
-      "q": "¿Se guarda mi correo en los servidores de MCP Emails?",
+      "q": "¿Se guarda mi correo en los servidores de MCPEmails?",
       "a": "No. Cada mensaje se obtiene en vivo de tu proveedor para la solicitud que lo pidió y se entrega directamente a tu cliente. Solo se guarda el token OAuth o la contraseña de aplicación cifrados, para que las llamadas futuras puedan autenticarse. Eliminar la bandeja en el panel, o revocar el acceso en tu proveedor, corta la conexión al instante."
     }
   ],

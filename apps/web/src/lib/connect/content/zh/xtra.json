@@ -18,8 +18,8 @@
     "eyebrow": "Spark Xtra Mail + AI",
     "titleLine1": "将你的 Xtra Mail 收件箱连接到",
     "titleLine2": "Claude、Cursor、任意 MCP 客户端",
-    "lead": "Xtra Mail 通过 IMAP 接受普通密码，无需生成应用密码，也没有第二重验证挡路。MCP Emails 连接它，让你的 AI 代理可以读取、搜索、发送、回复和归档邮件。",
-    "answer": "Claude 无法自行连接 Xtra Mail 收件箱。MCP Emails 是一个托管 MCP 服务器，通过 IMAP 连接 imap.xtra.co.nz 的 993 端口，用你完整的 xtra.co.nz 地址和普通的 Xtra Mail 密码登录。Spark 不为 Xtra Mail 签发应用专用密码，并声明其两步验证只作用于网页邮箱门户、不适用于邮件客户端，所以即使开启了两步验证，正确的密码也能直接通过认证。连接后，Claude、Cursor 或任何其他 MCP 客户端都能读取、搜索、发送和整理邮件。一个收件箱永久免费。",
+    "lead": "Xtra Mail 通过 IMAP 接受普通密码，无需生成应用密码，也没有第二重验证挡路。MCPEmails 连接它，让你的 AI 代理可以读取、搜索、发送、回复和归档邮件。",
+    "answer": "Claude 无法自行连接 Xtra Mail 收件箱。MCPEmails 是一个托管 MCP 服务器，通过 IMAP 连接 imap.xtra.co.nz 的 993 端口，用你完整的 xtra.co.nz 地址和普通的 Xtra Mail 密码登录。Spark 不为 Xtra Mail 签发应用专用密码，并声明其两步验证只作用于网页邮箱门户、不适用于邮件客户端，所以即使开启了两步验证，正确的密码也能直接通过认证。连接后，Claude、Cursor 或任何其他 MCP 客户端都能读取、搜索、发送和整理邮件。一个收件箱永久免费。",
     "meta0": "1 个收件箱永久免费",
     "meta1": "你的 Xtra 密码，无需应用密码",
     "meta2": "邮件实时获取，绝不存储"
@@ -30,7 +30,7 @@
   },
   "setup": [
     {
-      "h": "创建免费 MCP Emails 账户",
+      "h": "创建免费 MCPEmails 账户",
       "p": "在 mcpemails.com 注册。免费套餐可连接一个收件箱，无需信用卡。"
     },
     {
@@ -39,7 +39,7 @@
     },
     {
       "h": "输入完整地址和你的 Xtra Mail 密码",
-      "p": "在 MCP Emails 中选择 IMAP / SMTP，按 Spark 的写法原样输入地址，例如 <code>joe.bloggs@xtra.co.nz</code>，以及你登录 Xtra 网页邮箱所用的密码。上方的服务器和端口已自动填好，并已通过实时 TLS 连接验证。"
+      "p": "在 MCPEmails 中选择 IMAP / SMTP，按 Spark 的写法原样输入地址，例如 <code>joe.bloggs@xtra.co.nz</code>，以及你登录 Xtra 网页邮箱所用的密码。上方的服务器和端口已自动填好，并已通过实时 TLS 连接验证。"
     },
     {
       "h": "将 MCP URL 粘贴到你的 AI",
@@ -72,7 +72,7 @@
   "faq": [
     {
       "q": "Claude 能用 Xtra Mail 吗？",
-      "a": "不能直接使用。Claude 没有内置的 Spark 或 Xtra 连接器。通过 IMAP 将 MCP Emails 这样的 MCP 服务器连接到该邮箱后，Claude 就能对你的 xtra.co.nz 邮件进行读取、搜索、发送、回复、定时和整理，同一个连接也可在 Cursor、ChatGPT 和其他 MCP 客户端中使用。"
+      "a": "不能直接使用。Claude 没有内置的 Spark 或 Xtra 连接器。通过 IMAP 将 MCPEmails 这样的 MCP 服务器连接到该邮箱后，Claude 就能对你的 xtra.co.nz 邮件进行读取、搜索、发送、回复、定时和整理，同一个连接也可在 Cursor、ChatGPT 和其他 MCP 客户端中使用。"
     },
     {
       "q": "Xtra Mail 的 IMAP 和 SMTP 设置是什么？",

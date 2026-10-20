@@ -20,7 +20,7 @@
     "titleLine1": "MCP-server for Infomaniak-e-post:",
     "titleLine2": "alle firmaets postkasser, i Claude og ChatGPT",
     "lead": "Har du post@, salg@, support@ og faktura@ på eget domene hos Infomaniak? Koble hver postkasse til ett arbeidsområde, så jobber AI-agenten din i alle sammen. Les, søk, send, svar, planlegg og organiser e-post over IMAP med et enhetspassord generert for den adressen.",
-    "answer": "Claude kan ikke nå Infomaniak Mail på egen hånd. MCP Emails er en driftet MCP-server som kobler til over IMAP på mail.infomaniak.com på port 993, og autentiserer med et enhetspassord generert for den e-postadressen, ikke med passordet til Infomaniak-kontoen din, slik at Claude, Cursor eller enhver MCP-klient kan lese, søke i, sende og organisere e-posten. Infomaniak godtar ikke kontopassordet over IMAP i det hele tatt, og de separate applikasjonspassordene deres er noe annet som ikke fungerer her. Hver firmaadresse, som post@ eller salg@, kobles til som sin egen postkasse: én postkasse er gratis, Personal kobler til tre, Pro opptil 10 og Business så mange du trenger.",
+    "answer": "Claude kan ikke nå Infomaniak Mail på egen hånd. MCPEmails er en driftet MCP-server som kobler til over IMAP på mail.infomaniak.com på port 993, og autentiserer med et enhetspassord generert for den e-postadressen, ikke med passordet til Infomaniak-kontoen din, slik at Claude, Cursor eller enhver MCP-klient kan lese, søke i, sende og organisere e-posten. Infomaniak godtar ikke kontopassordet over IMAP i det hele tatt, og de separate applikasjonspassordene deres er noe annet som ikke fungerer her. Hver firmaadresse, som post@ eller salg@, kobles til som sin egen postkasse: én postkasse er gratis, Personal kobler til tre, Pro opptil 10 og Business så mange du trenger.",
     "meta0": "Første postkasse gratis, planer for resten",
     "meta1": "Enhetspassord, ikke kontopassordet",
     "meta2": "E-post hentes direkte, lagres aldri"
@@ -36,7 +36,7 @@
   },
   "setup": [
     {
-      "h": "Opprett en gratis MCP Emails-konto",
+      "h": "Opprett en gratis MCPEmails-konto",
       "p": "Registrer deg på mcpemails.com. Gratisplanen kobler til én innboks for alltid og ber ikke om kort."
     },
     {
@@ -44,7 +44,7 @@
       "p": "Åpne manager.infomaniak.com, gå til Mail Service, klikk på domenet ditt og deretter på selve e-postadressen. Åpne fanen Devices og velg Add a device. La brukeren stå som \"No user\" med mindre du bevisst vil knytte SMTP-begrensninger til en bestemt konto, gi den et navn du kjenner igjen senere, og kopier det genererte passordet med én gang. Infomaniak viser det ikke igjen."
     },
     {
-      "h": "Lim det inn i MCP Emails",
+      "h": "Lim det inn i MCPEmails",
       "p": "Velg IMAP / SMTP, skriv inn hele e-postadressen, og lim inn enhetspassordet. Verten mail.infomaniak.com og portene 993 og 465 er forhåndsutfylt og ble verifisert via en direkte TLS-tilkobling."
     },
     {
@@ -59,11 +59,11 @@
     },
     {
       "h": "Infomaniak annonserer ikke SASL-IR, og de fleste klienter tar det for gitt",
-      "p": "IMAP-serveren utelater SASL-IR-funksjonen, så den avviser autentisering i ett trinn, der påloggingsopplysningene sendes på samme linje som AUTHENTICATE-kommandoen. En klient som tar SASL-IR for gitt, får en naken <code>BAD</code> uten forklaring, noe som ser nøyaktig ut som feil passord. MCP Emails oppdager det og prøver på nytt med utvekslingen i to trinn, så tilkoblingen lykkes her, men det er en hyppig årsak til feil med andre IMAP-verktøy mot Infomaniak."
+      "p": "IMAP-serveren utelater SASL-IR-funksjonen, så den avviser autentisering i ett trinn, der påloggingsopplysningene sendes på samme linje som AUTHENTICATE-kommandoen. En klient som tar SASL-IR for gitt, får en naken <code>BAD</code> uten forklaring, noe som ser nøyaktig ut som feil passord. MCPEmails oppdager det og prøver på nytt med utvekslingen i to trinn, så tilkoblingen lykkes her, men det er en hyppig årsak til feil med andre IMAP-verktøy mot Infomaniak."
     },
     {
       "h": "Hilsenen inneholder ingen funksjonsliste",
-      "p": "Infomaniaks server svarer med en naken <code>* OK IMAP4 ready</code> og ingenting annet, der de fleste servere annonserer utvidelsene sine i hilsenen. En klient som bare leser funksjoner fra banneret, konkluderer med at serveren ikke støtter noe som helst, og faller enten tilbake på den enkleste mulige oppførselen eller gir opp. Riktig håndtering er å sende en eksplisitt CAPABILITY-kommando etter hilsenen og igjen etter autentisering, og det er det MCP Emails gjør."
+      "p": "Infomaniaks server svarer med en naken <code>* OK IMAP4 ready</code> og ingenting annet, der de fleste servere annonserer utvidelsene sine i hilsenen. En klient som bare leser funksjoner fra banneret, konkluderer med at serveren ikke støtter noe som helst, og faller enten tilbake på den enkleste mulige oppførselen eller gir opp. Riktig håndtering er å sende en eksplisitt CAPABILITY-kommando etter hilsenen og igjen etter autentisering, og det er det MCPEmails gjør."
     }
   ],
   "limits": [
@@ -73,7 +73,7 @@
   "faq": [
     {
       "q": "Fungerer Claude med Infomaniak Mail?",
-      "a": "Ikke på egen hånd. Claude har ingen innebygd Infomaniak-kobling. Peker du en MCP-server som MCP Emails mot Infomaniak-adressen din over IMAP, får Claude tilgang til å lese, søke, sende, svare, planlegge og organisere i den, og den samme tilkoblingen fungerer fra Cursor, ChatGPT og andre MCP-klienter."
+      "a": "Ikke på egen hånd. Claude har ingen innebygd Infomaniak-kobling. Peker du en MCP-server som MCPEmails mot Infomaniak-adressen din over IMAP, får Claude tilgang til å lese, søke, sende, svare, planlegge og organisere i den, og den samme tilkoblingen fungerer fra Cursor, ChatGPT og andre MCP-klienter."
     },
     {
       "q": "Hva er IMAP- og SMTP-innstillingene for Infomaniak?",
@@ -89,7 +89,7 @@
     },
     {
       "q": "Kan jeg tilbakekalle tilgangen uten å ødelegge for de andre enhetene mine?",
-      "a": "Ja. Hvert enhetspassord er separat, så du kan opprette ett for MCP Emails, gi det et passende navn og senere slette bare det. Eksisterende tilkoblinger fra telefonen og e-postklienten på datamaskinen fortsetter å virke, fordi de har sine egne passord."
+      "a": "Ja. Hvert enhetspassord er separat, så du kan opprette ett for MCPEmails, gi det et passende navn og senere slette bare det. Eksisterende tilkoblinger fra telefonen og e-postklienten på datamaskinen fortsetter å virke, fordi de har sine egne passord."
     },
     {
       "q": "Lagres Infomaniak-e-posten min på serverne deres?",

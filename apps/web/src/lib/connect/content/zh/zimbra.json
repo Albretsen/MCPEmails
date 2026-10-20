@@ -22,7 +22,7 @@
     "titleLine1": "将 Zimbra 连接到 Claude，",
     "titleLine2": "Cursor、ChatGPT 及任意 MCP 客户端",
     "lead": "Zimbra 多年来一直存放着你们组织的邮件，它使用的是完全普通的 IMAP。这正是 AI 代理在真实邮箱中读取、搜索、发送、回复、定时和归档所需的一切。",
-    "answer": "Claude 无法自行连接 Zimbra 服务器。MCP Emails 是一个托管 MCP 服务器，通过 IMAP 在你自己的主机名上（安装了 Zimbra 代理时为 993 端口）使用邮箱密码连接你的服务器，让 Claude、Cursor 或任意 MCP 客户端都能读取、搜索、发送并整理邮件。Zimbra 是你们组织自己运行的软件，所以没有可公布的共享主机名，端口也值得确认而不是想当然：993 和 143 属于 Zimbra 代理，而 mailboxd 本身监听的是 7993 和 7143。服务器必须能从互联网访问，其证书也必须能通过校验。一个收件箱免费。",
+    "answer": "Claude 无法自行连接 Zimbra 服务器。MCPEmails 是一个托管 MCP 服务器，通过 IMAP 在你自己的主机名上（安装了 Zimbra 代理时为 993 端口）使用邮箱密码连接你的服务器，让 Claude、Cursor 或任意 MCP 客户端都能读取、搜索、发送并整理邮件。Zimbra 是你们组织自己运行的软件，所以没有可公布的共享主机名，端口也值得确认而不是想当然：993 和 143 属于 Zimbra 代理，而 mailboxd 本身监听的是 7993 和 7143。服务器必须能从互联网访问，其证书也必须能通过校验。一个收件箱免费。",
     "meta0": "1 个收件箱永久免费",
     "meta1": "邮箱密码，在 COS 中启用 IMAP",
     "meta2": "邮件实时获取，绝不存储"
@@ -33,7 +33,7 @@
   },
   "setup": [
     {
-      "h": "创建免费 MCP Emails 账户",
+      "h": "创建免费 MCPEmails 账户",
       "p": "在 mcpemails.com 注册。一个收件箱永久免费，无需信用卡，足以用一个真实的 Zimbra 账户来试一试。"
     },
     {
@@ -42,7 +42,7 @@
     },
     {
       "h": "检查服务等级，然后添加账户",
-      "p": "打开 Configure，然后是 Class of Service，再选择该账户所属的服务等级，查看 Preferences 下的 POP/IMAP 选项。关闭了 IMAP 的服务等级会拒绝其中的每一个账户。然后在 MCP Emails 中添加收件箱：选择 IMAP / SMTP，输入你的 Zimbra 主机名、完整地址和邮箱密码。"
+      "p": "打开 Configure，然后是 Class of Service，再选择该账户所属的服务等级，查看 Preferences 下的 POP/IMAP 选项。关闭了 IMAP 的服务等级会拒绝其中的每一个账户。然后在 MCPEmails 中添加收件箱：选择 IMAP / SMTP，输入你的 Zimbra 主机名、完整地址和邮箱密码。"
     },
     {
       "h": "将 MCP URL 粘贴到你的 AI",
@@ -64,14 +64,14 @@
     }
   ],
   "limits": [
-    "你的 Zimbra 服务器必须接受来自互联网的入站 IMAP 连接。只在企业内网或 VPN 之后发布的部署，托管服务无法访问。MCP Emails 也可以自托管在同一网络中，与安全团队商量这件事，通常比开放一个端口更容易。",
+    "你的 Zimbra 服务器必须接受来自互联网的入站 IMAP 连接。只在企业内网或 VPN 之后发布的部署，托管服务无法访问。MCPEmails 也可以自托管在同一网络中，与安全团队商量这件事，通常比开放一个端口更容易。",
     "IMAP 连接只传输邮件。Zimbra 的日历、联系人、任务和公文包通过其自身的网页客户端以及 CalDAV、CardDAV 或 Zimbra API 提供，所以以这种方式连接的代理只能处理邮件。",
     "发信通过你自己的 Zimbra MTA 发出，所以投递能力取决于你的 SPF、DKIM 和 DMARC 记录，与服务器上的其他所有客户端完全一样。"
   ],
   "faq": [
     {
       "q": "Claude 能用 Zimbra 吗？",
-      "a": "不能直接使用。Claude 没有 Zimbra 连接器，也无法向你们组织运行的服务器打开 IMAP 会话。将 MCP Emails 这样的 MCP 服务器连接到你的 Zimbra 主机后，Claude 就能用与 Zimbra Web Client 相同的凭据，读取、搜索、发送、回复、定时和整理其上某个邮箱中的邮件，之后同一个收件箱在 Cursor 或 ChatGPT 中也能使用。"
+      "a": "不能直接使用。Claude 没有 Zimbra 连接器，也无法向你们组织运行的服务器打开 IMAP 会话。将 MCPEmails 这样的 MCP 服务器连接到你的 Zimbra 主机后，Claude 就能用与 Zimbra Web Client 相同的凭据，读取、搜索、发送、回复、定时和整理其上某个邮箱中的邮件，之后同一个收件箱在 Cursor 或 ChatGPT 中也能使用。"
     },
     {
       "q": "Zimbra 的 IMAP 和 SMTP 设置是什么？",

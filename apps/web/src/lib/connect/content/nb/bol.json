@@ -20,7 +20,7 @@
     "titleLine1": "Koble BOL Mail til Claude,",
     "titleLine2": "Cursor, ChatGPT og enhver MCP-klient",
     "lead": "Gi AI-agenten din en ekte BOL-innboks. Les, søk, send, svar, planlegg og organiser e-post over IMAP, forutsatt at postkassen er på et betalt BOL-abonnement og ikke på det gratis webmailnivået.",
-    "answer": "Claude kan ikke nå BOL Mail på egen hånd. MCP Emails er en hostet MCP-server som kobler den til over IMAP på imap.bol.com.br, port 993, og autentiserer med BOL-passordet ditt, slik at Claude, Cursor eller enhver MCP-klient kan lese, søke i, sende og organisere den e-posten. Haken ligger sannsynligvis i abonnementet, ikke i protokollen: tredjepartsveiledninger oppgir at BOL fjernet IMAP- og POP-tilgang fra gratiskontoene sine, som dermed bare har webmail, så en gratis bol.com.br-adresse lar seg kanskje ikke koble til fra noen klient før den er oppgradert til et betalt BOL-abonnement. Én innboks i MCP Emails er gratis.",
+    "answer": "Claude kan ikke nå BOL Mail på egen hånd. MCPEmails er en hostet MCP-server som kobler den til over IMAP på imap.bol.com.br, port 993, og autentiserer med BOL-passordet ditt, slik at Claude, Cursor eller enhver MCP-klient kan lese, søke i, sende og organisere den e-posten. Haken ligger sannsynligvis i abonnementet, ikke i protokollen: tredjepartsveiledninger oppgir at BOL fjernet IMAP- og POP-tilgang fra gratiskontoene sine, som dermed bare har webmail, så en gratis bol.com.br-adresse lar seg kanskje ikke koble til fra noen klient før den er oppgradert til et betalt BOL-abonnement. Én innboks i MCPEmails er gratis.",
     "meta0": "1 innboks gratis, for alltid",
     "meta1": "Betalt BOL-abonnement, deretter passordet ditt",
     "meta2": "E-post hentes direkte, lagres aldri"
@@ -31,15 +31,15 @@
   },
   "setup": [
     {
-      "h": "Opprett en gratis MCP Emails-konto",
+      "h": "Opprett en gratis MCPEmails-konto",
       "p": "Registrer deg på mcpemails.com. Gratisplanen kobler til én innboks og forblir gratis, uten kort. Før du går videre, sjekker du hvilket BOL-abonnement postkassen er på, fordi det avgjør om resten av denne siden gjelder."
     },
     {
       "h": "Bekreft at postkassen er på et betalt BOL-abonnement",
-      "p": "Logg inn i BOLs webmail og sjekk abonnementet på kontoen. Tredjepartsveiledninger oppgir at en gratis BOL-konto ikke har noen klienttilgang å slå på, fordi POP og IMAP ble fjernet fra det nivået, og at det er en oppgradering til BOL Completo som gjør en IMAP-tilkobling mulig. Hvis kontoen er gratis og et riktig passord avvises, er det den sannsynlige årsaken; koble da heller en annen postkasse til MCP Emails og videresend BOL-e-posten dit."
+      "p": "Logg inn i BOLs webmail og sjekk abonnementet på kontoen. Tredjepartsveiledninger oppgir at en gratis BOL-konto ikke har noen klienttilgang å slå på, fordi POP og IMAP ble fjernet fra det nivået, og at det er en oppgradering til BOL Completo som gjør en IMAP-tilkobling mulig. Hvis kontoen er gratis og et riktig passord avvises, er det den sannsynlige årsaken; koble da heller en annen postkasse til MCPEmails og videresend BOL-e-posten dit."
     },
     {
-      "h": "Skriv inn adressen og passordet ditt i MCP Emails",
+      "h": "Skriv inn adressen og passordet ditt i MCPEmails",
       "p": "Velg IMAP / SMTP og skriv inn hele adressen, for eksempel <code>nome@bol.com.br</code>, sammen med BOL-passordet ditt. Verter og porter er forhåndsutfylt og ble bekreftet via en faktisk TLS-tilkobling. Legg merke til den utgående porten: BOL bruker implisitt TLS på 465, som ikke er den samme innstillingen søstertjenesten bruker."
     },
     {
@@ -62,14 +62,14 @@
     }
   ],
   "limits": [
-    "Tredjepartsveiledninger oppgir at IMAP krever et betalt BOL-abonnement. Hvis det gjelder postkassen din, kan ikke MCP Emails omgå det, fordi innloggingen avvises på BOLs server.",
+    "Tredjepartsveiledninger oppgir at IMAP krever et betalt BOL-abonnement. Hvis det gjelder postkassen din, kan ikke MCPEmails omgå det, fordi innloggingen avvises på BOLs server.",
     "Det finnes ingen IDLE-støtte, så e-post hentes ved jevnlige sjekker i stedet for å bli dyttet ut. Agenten ser en ny melding neste gang den sjekker, ikke i det øyeblikket den kommer.",
     "SMTP-serveren godtar meldinger opptil omtrent 33 MB. En videresending med større vedlegg avvises ved sending i stedet for å settes i kø."
   ],
   "faq": [
     {
       "q": "Fungerer Claude med BOL-e-post?",
-      "a": "Etter det som oppgis, bare på et betalt BOL-abonnement. Claude har ingen innebygd BOL-kobling og kan ikke åpne en IMAP-tilkobling på egen hånd, så den trenger en MCP-server som MCP Emails foran postkassen. Den tilkoblingen går over IMAP, som gratis BOL-kontoer ifølge tredjepartsveiledninger ikke tilbyr, så en gratis bol.com.br-adresse må kanskje oppgraderes først."
+      "a": "Etter det som oppgis, bare på et betalt BOL-abonnement. Claude har ingen innebygd BOL-kobling og kan ikke åpne en IMAP-tilkobling på egen hånd, så den trenger en MCP-server som MCPEmails foran postkassen. Den tilkoblingen går over IMAP, som gratis BOL-kontoer ifølge tredjepartsveiledninger ikke tilbyr, så en gratis bol.com.br-adresse må kanskje oppgraderes først."
     },
     {
       "q": "Hva er IMAP- og SMTP-innstillingene for BOL?",
@@ -94,6 +94,6 @@
   ],
   "ctaBand": {
     "title": "Gi AI-en din en BOL-innboks",
-    "sub": "Koble til en betalt BOL-postkasse på få minutter. Én innboks gratis for alltid i MCP Emails, uten kort."
+    "sub": "Koble til en betalt BOL-postkasse på få minutter. Én innboks gratis for alltid i MCPEmails, uten kort."
   }
 }

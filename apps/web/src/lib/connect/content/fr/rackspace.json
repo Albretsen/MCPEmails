@@ -23,7 +23,7 @@
     "meta0": "1 boîte gratuite, pour toujours",
     "meta1": "Le mot de passe de votre boîte, sans configuration OAuth",
     "meta2": "E-mails récupérés en direct, jamais stockés",
-    "answer": "Claude ne peut pas accéder seul à Rackspace Email. MCP Emails est un serveur MCP hébergé qui l'y connecte en IMAP avec le mot de passe de votre boîte, pour que Claude, Cursor ou tout client MCP puisse lire, rechercher, envoyer et organiser ce courrier. La configuration prend quelques minutes et une boîte est gratuite."
+    "answer": "Claude ne peut pas accéder seul à Rackspace Email. MCPEmails est un serveur MCP hébergé qui l'y connecte en IMAP avec le mot de passe de votre boîte, pour que Claude, Cursor ou tout client MCP puisse lire, rechercher, envoyer et organiser ce courrier. La configuration prend quelques minutes et une boîte est gratuite."
   },
   "method": {
     "title": "Comment Rackspace Email se connecte : IMAP et le mot de passe de votre boîte",
@@ -32,14 +32,14 @@
   "setup": [
     {
       "h": "Créez un compte gratuit",
-      "p": "Inscrivez-vous sur MCP Emails, sans carte bancaire. L'offre gratuite connecte une boîte, pour toujours."
+      "p": "Inscrivez-vous sur MCPEmails, sans carte bancaire. L'offre gratuite connecte une boîte, pour toujours."
     },
     {
       "h": "Obtenez le mot de passe de votre boîte Rackspace",
       "p": "Dans le panneau de contrôle Cloud Office, ouvrez la boîte et définissez son mot de passe. Utilisez le serveur sécurisé, secure.emailsrvr.com, et non celui qui n'est pas chiffré."
     },
     {
-      "h": "Collez-le dans MCP Emails",
+      "h": "Collez-le dans MCPEmails",
       "p": "Choisissez IMAP / SMTP, ajoutez votre adresse Rackspace Email, les serveurs ci-dessus et le mot de passe pour connecter la boîte en toute sécurité."
     },
     {
@@ -58,7 +58,7 @@
     },
     {
       "h": "Rackspace vend trois produits de messagerie différents, et un seul se trouve sur emailsrvr",
-      "p": "<b>Rackspace Email</b> est le produit de boîte IMAP autonome, celui que couvre cette page. Rackspace vend aussi <b>Hosted Exchange</b>, qui fait tourner Exchange sur l'infrastructure de Rackspace, et revend <b>Microsoft 365</b>, où la boîte est hébergée sur les serveurs de Microsoft, sous sa plateforme d'identité. Seul Rackspace Email répond sur <code>secure.emailsrvr.com</code>. Une boîte Microsoft 365 se connecte avec l'option Outlook (connexion avec Microsoft) plutôt qu'en IMAP ; un administrateur informatique devra peut-être d'abord approuver MCP Emails une fois, et le tableau de bord vous donne un lien d'approbation à lui envoyer. Si votre webmail est Outlook on the web, c'est le produit Microsoft."
+      "p": "<b>Rackspace Email</b> est le produit de boîte IMAP autonome, celui que couvre cette page. Rackspace vend aussi <b>Hosted Exchange</b>, qui fait tourner Exchange sur l'infrastructure de Rackspace, et revend <b>Microsoft 365</b>, où la boîte est hébergée sur les serveurs de Microsoft, sous sa plateforme d'identité. Seul Rackspace Email répond sur <code>secure.emailsrvr.com</code>. Une boîte Microsoft 365 se connecte avec l'option Outlook (connexion avec Microsoft) plutôt qu'en IMAP ; un administrateur informatique devra peut-être d'abord approuver MCPEmails une fois, et le tableau de bord vous donne un lien d'approbation à lui envoyer. Si votre webmail est Outlook on the web, c'est le produit Microsoft."
     },
     {
       "h": "Vous parlez à un proxy, et les capacités que vous voyez sont les siennes",
@@ -73,7 +73,7 @@
   "faq": [
     {
       "q": "Claude fonctionne-t-il avec Rackspace Email ?",
-      "a": "Pas seul. Claude n'a pas de connecteur Rackspace intégré. Connecter un serveur MCP comme MCP Emails à la boîte en IMAP donne à Claude un accès en lecture, recherche, envoi, réponse, planification et organisation, et comme il s'agit d'IMAP standard, la même boîte est ensuite disponible dans Cursor, ChatGPT et d'autres clients MCP."
+      "a": "Pas seul. Claude n'a pas de connecteur Rackspace intégré. Connecter un serveur MCP comme MCPEmails à la boîte en IMAP donne à Claude un accès en lecture, recherche, envoi, réponse, planification et organisation, et comme il s'agit d'IMAP standard, la même boîte est ensuite disponible dans Cursor, ChatGPT et d'autres clients MCP."
     },
     {
       "q": "Quels sont les paramètres IMAP et SMTP de Rackspace Email ?",

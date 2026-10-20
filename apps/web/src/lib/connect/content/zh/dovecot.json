@@ -19,8 +19,8 @@
     "eyebrow": "Dovecot + AI",
     "titleLine1": "将你的 Dovecot 服务器连接到",
     "titleLine2": "Claude、Cursor 及任意 MCP 客户端",
-    "lead": "IMAP 服务器由你运行，所以代理能访问什么由你决定。把 MCP Emails 指向你自己的 Dovecot 主机，让 Claude 在你已经运营的邮箱中读取、搜索、发送、回复、定时和归档邮件。",
-    "answer": "Claude 无法自行访问 Dovecot 服务器。MCP Emails 是一个托管 MCP 服务器，通过 IMAP 连接你自己主机名上的 Dovecot 实例（通常是 mail.yourdomain.com，端口 993），使用你的 passdb 本来就接受的邮箱密码，让 Claude、Cursor 或任意 MCP 客户端都能读取、搜索、发送并整理这些邮件。没有可查的共用主机名：主机就是你服务器的名称，它必须能从互联网访问，而且其 TLS 证书必须对你所连接的名称有效。1 个收件箱免费。",
+    "lead": "IMAP 服务器由你运行，所以代理能访问什么由你决定。把 MCPEmails 指向你自己的 Dovecot 主机，让 Claude 在你已经运营的邮箱中读取、搜索、发送、回复、定时和归档邮件。",
+    "answer": "Claude 无法自行访问 Dovecot 服务器。MCPEmails 是一个托管 MCP 服务器，通过 IMAP 连接你自己主机名上的 Dovecot 实例（通常是 mail.yourdomain.com，端口 993），使用你的 passdb 本来就接受的邮箱密码，让 Claude、Cursor 或任意 MCP 客户端都能读取、搜索、发送并整理这些邮件。没有可查的共用主机名：主机就是你服务器的名称，它必须能从互联网访问，而且其 TLS 证书必须对你所连接的名称有效。1 个收件箱免费。",
     "meta0": "1 个收件箱永久免费",
     "meta1": "你现有的 Dovecot 邮箱密码",
     "meta2": "邮件实时获取，绝不存储"
@@ -32,7 +32,7 @@
   "setup": [
     {
       "h": "创建免费账户",
-      "p": "注册 MCP Emails，无需信用卡。免费套餐可永久连接一个收件箱，足以用你自己服务器上的真实邮箱来试用。"
+      "p": "注册 MCPEmails，无需信用卡。免费套餐可永久连接一个收件箱，足以用你自己服务器上的真实邮箱来试用。"
     },
     {
       "h": "确认 Dovecot 在监听什么",
@@ -40,7 +40,7 @@
     },
     {
       "h": "从外部检查 993 上的证书",
-      "p": "在一台不是你邮件服务器的机器上运行 <code>openssl s_client -connect mail.yourdomain.com:993</code>。你需要看到一条能通过校验的证书链，以及与你将在 MCP Emails 中输入的主机名相符的主题名称。然后添加收件箱：选择 IMAP / SMTP，输入主机名、邮箱登录名及其密码。"
+      "p": "在一台不是你邮件服务器的机器上运行 <code>openssl s_client -connect mail.yourdomain.com:993</code>。你需要看到一条能通过校验的证书链，以及与你将在 MCPEmails 中输入的主机名相符的主题名称。然后添加收件箱：选择 IMAP / SMTP，输入主机名、邮箱登录名及其密码。"
     },
     {
       "h": "将 MCP URL 粘贴到你的 AI",
@@ -50,7 +50,7 @@
   "gotchas": [
     {
       "h": "没有 special_use 条目，Dovecot 就不提供文件夹角色",
-      "p": "Dovecot 只为你声明过的邮箱文件夹声明 SPECIAL-USE 扩展。除非 <code>15-mailboxes.conf</code> 中有 <code>mailbox Sent { special_use = \\Sent }</code> 这样的条目，否则 IMAP 客户端拿到的只是一份扁平的名称列表，只能去猜哪个是 Sent、Drafts、Junk 或 Trash。MCP Emails 会退回到按名称匹配，所以文件夹叫 Sent Items、Gesendet 或 Papierkorb 的服务器，可能需要手动选择一次文件夹。加上 special_use 配置行，就能为你所有的客户端一劳永逸地解决这个问题。"
+      "p": "Dovecot 只为你声明过的邮箱文件夹声明 SPECIAL-USE 扩展。除非 <code>15-mailboxes.conf</code> 中有 <code>mailbox Sent { special_use = \\Sent }</code> 这样的条目，否则 IMAP 客户端拿到的只是一份扁平的名称列表，只能去猜哪个是 Sent、Drafts、Junk 或 Trash。MCPEmails 会退回到按名称匹配，所以文件夹叫 Sent Items、Gesendet 或 Papierkorb 的服务器，可能需要手动选择一次文件夹。加上 special_use 配置行，就能为你所有的客户端一劳永逸地解决这个问题。"
     },
     {
       "h": "命名空间前缀会改写你看到的每个文件夹名称",
@@ -66,14 +66,14 @@
     }
   ],
   "limits": [
-    "你的 Dovecot 服务器必须接受来自公网的连接，托管 MCP 服务器才能访问它。如果你的策略是 IMAP 绝不离开局域网或 VPN，那是合理的决定，而本产品作为托管服务无法为你服务。你可以改为自托管 MCP Emails，让 IMAP 连接留在你自己的网络中。",
+    "你的 Dovecot 服务器必须接受来自公网的连接，托管 MCP 服务器才能访问它。如果你的策略是 IMAP 绝不离开局域网或 VPN，那是合理的决定，而本产品作为托管服务无法为你服务。你可以改为自托管 MCPEmails，让 IMAP 连接留在你自己的网络中。",
     "在这里，严格的 TLS 校验不是可选项。自签名证书、过期证书，或签发给其他主机名的证书都会被拒绝，也没有“仍然接受”的复选框。",
     "发信通过你自己的提交服务发出，因此送达率由你的 SPF、DKIM 和 DMARC 记录决定，与该服务器上的其他所有客户端完全一样。"
   ],
   "faq": [
     {
       "q": "Claude 能用于 Dovecot 吗？",
-      "a": "不能直接使用。Claude 无法向你运行的服务器打开 IMAP 套接字。将 MCP Emails 这样的 MCP 服务器连接到你的 Dovecot 主机后，Claude 就能读取、搜索、发送、回复、定时和整理其上邮箱中的邮件，所用凭据与其他任何 IMAP 客户端相同。"
+      "a": "不能直接使用。Claude 无法向你运行的服务器打开 IMAP 套接字。将 MCPEmails 这样的 MCP 服务器连接到你的 Dovecot 主机后，Claude 就能读取、搜索、发送、回复、定时和整理其上邮箱中的邮件，所用凭据与其他任何 IMAP 客户端相同。"
     },
     {
       "q": "Dovecot 的 IMAP 和 SMTP 设置是什么？",
@@ -85,7 +85,7 @@
     },
     {
       "q": "我的 Dovecot 服务器必须能从互联网访问吗？",
-      "a": "对于托管服务来说，是的。MCP Emails 需要从外部连入你的 IMAP 端口，所以绑定在回环地址、被防火墙限制为只允许办公室网段，或只能通过 VPN 访问的服务器都无法连接。如果你不想公开暴露 IMAP，MCP Emails 可以自托管，与邮件服务器运行在同一网络中。"
+      "a": "对于托管服务来说，是的。MCPEmails 需要从外部连入你的 IMAP 端口，所以绑定在回环地址、被防火墙限制为只允许办公室网段，或只能通过 VPN 访问的服务器都无法连接。如果你不想公开暴露 IMAP，MCPEmails 可以自托管，与邮件服务器运行在同一网络中。"
     },
     {
       "q": "哪些产品是基于 Dovecot 构建的？",
@@ -98,6 +98,6 @@
   ],
   "ctaBand": {
     "title": "给你的 AI 一个 Dovecot 收件箱",
-    "sub": "把 MCP Emails 指向你自己的服务器。1 个收件箱永久免费，无需信用卡。"
+    "sub": "把 MCPEmails 指向你自己的服务器。1 个收件箱永久免费，无需信用卡。"
   }
 }

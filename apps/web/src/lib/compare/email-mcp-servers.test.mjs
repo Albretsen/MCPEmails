@@ -72,8 +72,9 @@ test('our own copy never claims a region choice and never writes the brand as on
   for (const s of copy) {
     assert.doesNotMatch(s, /EU or US/i, s);
     assert.doesNotMatch(s, /picked at signup|region at signup/i, s);
-    // "mcpemails" may appear in a URL, never as the product name.
-    assert.doesNotMatch(s.replace(/https?:\/\/\S+/g, ''), /\bmcpemails\b/i, s);
+    // The brand is "MCPEmails". Lowercase "mcpemails" may appear in a URL, never
+    // as the product name, and "MCP Emails" (two words) is not the brand.
+    assert.doesNotMatch(s.replace(/https?:\/\/\S+/g, ''), /\b[Mm]cpemails\b|MCP[ -]Emails/, s);
   }
 });
 
@@ -95,7 +96,7 @@ test('every table row fills every column', () => {
 
 test('the lineup names the hosted apps AI answers recommend', () => {
   const names = C.entries.map((e) => e.name);
-  for (const n of ['MCP Emails', 'Mailbox MCP', 'anymailmcp', 'MailMCP', 'Mailopoly']) {
+  for (const n of ['MCPEmails', 'Mailbox MCP', 'anymailmcp', 'MailMCP', 'Mailopoly']) {
     assert.ok(names.includes(n), `missing ${n}`);
   }
 });

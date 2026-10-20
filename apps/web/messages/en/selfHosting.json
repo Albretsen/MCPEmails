@@ -1,11 +1,11 @@
 {
   "meta": {
     "title": "Self-Host an Open-Source Email MCP Server",
-    "description": "Run the open-source MCP Emails server for IMAP and SMTP on your own infrastructure. Keep your encryption key, fetch email live, and never store mailbox content."
+    "description": "Run the open-source MCPEmails server for IMAP and SMTP on your own infrastructure. Keep your encryption key, fetch email live, and never store mailbox content."
   },
   "hero": {
     "eyebrow": "Open source, AGPL-3.0",
-    "title": "Run MCP Emails yourself.",
+    "title": "Run MCPEmails yourself.",
     "lead": "The same MCP server that powers mcpemails.com, on your own machine, against your own database. Your mailbox credentials never leave infrastructure you control. They are encrypted with a key only you hold and decrypted only in your container, at the moment a tool call needs them."
   },
   "proof": {

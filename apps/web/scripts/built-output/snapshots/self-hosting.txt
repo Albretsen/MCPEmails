@@ -1,12 +1,12 @@
-Self-Host an Open-Source Email MCP Server · mcpemails
-[meta description] Run the open-source mcpemails server for IMAP and SMTP on your own infrastructure. Keep your encryption key, fetch email live, and never store mailbox content.
-[meta og:title] Self-Host an Open-Source Email MCP Server · mcpemails
-[meta og:description] Run the open-source mcpemails server for IMAP and SMTP on your own infrastructure. Keep your encryption key, fetch email live, and never store mailbox content.
+Self-Host an Open-Source Email MCP Server · MCPEmails
+[meta description] Run the open-source MCPEmails server for IMAP and SMTP on your own infrastructure. Keep your encryption key, fetch email live, and never store mailbox content.
+[meta og:title] Self-Host an Open-Source Email MCP Server · MCPEmails
+[meta og:description] Run the open-source MCPEmails server for IMAP and SMTP on your own infrastructure. Keep your encryption key, fetch email live, and never store mailbox content.
 [meta og:locale] en_US
-[meta twitter:title] Self-Host an Open-Source Email MCP Server · mcpemails
-[meta twitter:description] Run the open-source mcpemails server for IMAP and SMTP on your own infrastructure. Keep your encryption key, fetch email live, and never store mailbox content.
-[alt] mcpemails
-[alt] mcpemails
+[meta twitter:title] Self-Host an Open-Source Email MCP Server · MCPEmails
+[meta twitter:description] Run the open-source MCPEmails server for IMAP and SMTP on your own infrastructure. Keep your encryption key, fetch email live, and never store mailbox content.
+[alt] MCPEmails
+[alt] MCPEmails
 [aria-label] Primary navigation
 Features
 How it works
@@ -19,7 +19,7 @@ Sign in
 Get started free
 [aria-label] Open navigation menu
 Open source, AGPL-3.0
-Run MCP Emails yourself.
+Run MCPEmails yourself.
 The same MCP server that powers mcpemails.com, on your own machine, against your own database. Your mailbox credentials never leave infrastructure you control. They are encrypted with a key only you hold and decrypted only in your container, at the moment a tool call needs them.
 The whole thing in one command
 git clone https://github.com/Albretsen/MCPEmails
@@ -33,13 +33,13 @@ View the source
 Your inbox never leaves your box.
 Connect Fastmail, iCloud, Yahoo, Zoho, Yandex, or any IMAP/SMTP mailbox with an app password. Email is fetched live and never stored. Credentials are encrypted at rest with AES-256-GCM using a key you generate and keep. There is nothing to phone home to.
 Self-host vs hosted
-The full MCP server and all 23 tools are in both. Self-hosting trades managed convenience for total control.
+The full MCP server and all 19 tools are in both. Self-hosting trades managed convenience for total control.
 Self-host
 Hosted
 Price
 Free, you run it
-Free, $9, $15, or $79
-The MCP server and all 23 tools
+Free, $9, $15, or $39
+The MCP server and all 19 tools
 Yes
 Yes
 IMAP / SMTP inboxes (app password)
@@ -51,9 +51,9 @@ Yes
 Credentials encrypted at rest
 Yes, your key
 Yes
-Gmail / Outlook sign-in (OAuth)
+Outlook sign-in (OAuth)
 Not included
-Gmail: yes; Outlook: yes (work accounts may need IT admin approval)
+Yes (work accounts may need IT admin approval)
 Web dashboard (connect, keys, activity)
 CLI instead
 Yes
@@ -63,12 +63,12 @@ Managed
 Automatic updates, backups, uptime
 You
 Managed
-Team workspaces, roles, SSO, audit log
+Members, roles and several workspaces
 Not included
-Team plan
+Business plan
 Support
 Community and GitHub
-Email and priority
+Email on paid plans
 Setup
 About 5 minutes
 About 2 minutes
@@ -91,7 +91,7 @@ Run it yourself, or let us run it.
 Same server either way. Your call on who holds the keys.
 Read the self-host guide
 Use the hosted version
-[alt] mcpemails
+[alt] MCPEmails
 A hosted MCP server that gives AI agents read and send access to your inbox, without ever storing the email it reads.
 Contact
 hello@mcpemails.com
@@ -107,6 +107,7 @@ Norsk
 Español
 Français
 中文
+Deutsch
 Product
 Features
 How it works
@@ -120,6 +121,7 @@ Tool reference
 Quickstart
 OAuth connection
 Provider support
+Read-only access
 MCP client setup
 Blog
 Changelog
@@ -141,6 +143,9 @@ Security
 Status
 Privacy
 Terms
-© 2026 mcpemails.
+Right of withdrawal
+Cancel contracts here
+Impressum
+© 2026 MCPEmails.
 Email fetched live, never stored · Credentials encrypted at rest
-MCPEmails is a service of Albretsen Consulting (enkeltpersonforetak), organisation number 926 646 753, Håsteins gate 9, 5160 Laksevåg, Norway.
+MCPEmails is a service of Albretsen AS, organisation number 938 702 373, Håsteins gate 9, 5160 Laksevåg, Norway.

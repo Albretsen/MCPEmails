@@ -19,7 +19,7 @@ Wofür keiner von beiden gebaut ist: das Postfach, das eine Firma tatsächlich a
 
 ## Ein Konnektor für alle Postfächer
 
-MCP Emails ist ein gehosteter MCP-Server. Sie verbinden jedes Postfach einmal damit, und Ihr KI-Client erreicht alle über eine URL:
+MCPEmails ist ein gehosteter MCP-Server. Sie verbinden jedes Postfach einmal damit, und Ihr KI-Client erreicht alle über eine URL:
 
 \`\`\`
 https://mcpemails.com/api/mcp
@@ -34,7 +34,7 @@ E-Mails werden für jede Anfrage live abgerufen und nicht gespeichert. Die einzi
 
 ## Die Postfächer verbinden
 
-Öffnen Sie im Dashboard von MCP Emails **Postfächer**, dann **Postfach verbinden**, einmal pro Postfach:
+Öffnen Sie im Dashboard von MCPEmails **Postfächer**, dann **Postfach verbinden**, einmal pro Postfach:
 
 - **Firmenpostfach auf eigener Domain.** Wählen Sie **IMAP** und geben Sie die Adresse ein. Gängige Hoster werden an der Adresse erkannt, eine Google-Workspace-Domain an ihren Mail-Einträgen, die Einstellungen füllen sich also selbst aus. Verwenden Sie das Passwort oder App-Passwort, das Ihr Hoster verlangt.
 - **Gmail oder Google Workspace.** Ein Google-App-Passwort über IMAP. Google bietet es erst an, wenn die Bestätigung in zwei Schritten aktiv ist, und bei Workspace kann Ihr Administrator App-Passwörter und IMAP abschalten.
@@ -48,7 +48,7 @@ In claude.ai oder Claude Desktop:
 
 1. Öffnen Sie **Einstellungen**, dann **Konnektoren**.
 2. Wählen Sie **Benutzerdefinierten Konnektor hinzufügen** und fügen Sie \`https://mcpemails.com/api/mcp\` ein.
-3. Wählen Sie **Verbinden**, melden Sie sich bei MCP Emails an und stimmen Sie zu.
+3. Wählen Sie **Verbinden**, melden Sie sich bei MCPEmails an und stimmen Sie zu.
 
 Jedes verbundene Postfach ist jetzt verfügbar. Details stehen in der [Anleitung für Claude](/blog/connect-claude-to-email).
 
@@ -57,8 +57,8 @@ Jedes verbundene Postfach ist jetzt verfügbar. Details stehen in der [Anleitung
 Benutzerdefinierte Konnektoren erfordern ChatGPT Plus, Pro, Business, Enterprise oder Edu im Web, mit eingeschaltetem Entwicklermodus. Bei Business und Enterprise muss unter Umständen zuerst ein Admin ihn erlauben.
 
 1. Schalten Sie in den ChatGPT-Einstellungen unter **Apps und Konnektoren** in den erweiterten Einstellungen den **Entwicklermodus** ein.
-2. Erstellen Sie einen Konnektor, fügen Sie \`https://mcpemails.com/api/mcp\` ein, wählen Sie **OAuth** und autorisieren Sie ihn bei MCP Emails.
-3. Klicken Sie in jedem neuen Chat auf **+**, wählen Sie **Entwicklermodus** und dann die App MCP Emails.
+2. Erstellen Sie einen Konnektor, fügen Sie \`https://mcpemails.com/api/mcp\` ein, wählen Sie **OAuth** und autorisieren Sie ihn bei MCPEmails.
+3. Klicken Sie in jedem neuen Chat auf **+**, wählen Sie **Entwicklermodus** und dann die App MCPEmails.
 
 Die [Anleitung für ChatGPT](/blog/connect-chatgpt-to-email) behandelt die Menüs und die häufigen Fehler.
 
@@ -83,18 +83,18 @@ Schalten Sie für ein Postfach **Vor dem Senden prüfen** ein, und jedes Senden,
 - **Pro:** bis zu 10 Postfächer, mit einem Login.
 - **Business:** 10 Postfächer inklusive und $3 pro Monat für jedes weitere, und für den Fall, dass eine zweite Person einen eigenen Login braucht.
 
-Eine Firma mit info@, vertrieb@ und rechnungen@ plus Ihrer eigenen Adresse hat vier Postfächer, das ist Pro. Aktuelle Preise stehen auf der [Preisseite](/pricing), und [MCP Emails für Unternehmen](/for/business) zeigt, wie eine Person alle Firmenpostfächer mit einem Agenten betreut.
+Eine Firma mit info@, vertrieb@ und rechnungen@ plus Ihrer eigenen Adresse hat vier Postfächer, das ist Pro. Aktuelle Preise stehen auf der [Preisseite](/pricing), und [MCPEmails für Unternehmen](/for/business) zeigt, wie eine Person alle Firmenpostfächer mit einem Agenten betreut.
 
 ## FAQ
 
 **Kann Claude mehr als ein E-Mail-Konto gleichzeitig nutzen?**
-Ja, über einen MCP-Server. Verbinden Sie jedes Postfach mit MCP Emails, fügen Sie Claude einen benutzerdefinierten Konnektor hinzu, und Claude sieht alle und nennt bei jedem Aufruf das Postfach.
+Ja, über einen MCP-Server. Verbinden Sie jedes Postfach mit MCPEmails, fügen Sie Claude einen benutzerdefinierten Konnektor hinzu, und Claude sieht alle und nennt bei jedem Aufruf das Postfach.
 
 **Kann ChatGPT mehr als ein E-Mail-Konto nutzen?**
-Das eigene Gmail-Plugin kann inzwischen mehrere Google-Konten halten. Für Postfächer, die nicht bei Google liegen, etwa eine Firmenadresse bei IONOS, Zoho oder einem cPanel-Hoster, fügen Sie MCP Emails als benutzerdefinierten Konnektor hinzu, und jedes verbundene Postfach ist verfügbar.
+Das eigene Gmail-Plugin kann inzwischen mehrere Google-Konten halten. Für Postfächer, die nicht bei Google liegen, etwa eine Firmenadresse bei IONOS, Zoho oder einem cPanel-Hoster, fügen Sie MCPEmails als benutzerdefinierten Konnektor hinzu, und jedes verbundene Postfach ist verfügbar.
 
 **Brauche ich einen eigenen Konnektor pro Postfach?**
-Nein. Eine Konnektor-URL deckt alle Postfächer in Ihrem MCP-Emails-Workspace ab, und dieselbe URL funktioniert in Claude, ChatGPT und anderen MCP-Clients.
+Nein. Eine Konnektor-URL deckt alle Postfächer in Ihrem MCPEmails-Workspace ab, und dieselbe URL funktioniert in Claude, ChatGPT und anderen MCP-Clients.
 
 **Geht eine Antwort von der richtigen Adresse raus?**
 Ja. Jedes Postfach sendet über seinen eigenen Anbieter oder Mailserver mit eigenem Anzeigenamen und eigener Signatur. Um bei einem IMAP-Postfach von einer anderen Adresse zu senden, fügen Sie diese in den Einstellungen des Postfachs im Dashboard hinzu und bestätigen sie mit dem Code, der an diese Adresse gesendet wird. Outlook sendet von der verbundenen Adresse, und eine nicht bestätigte Absenderadresse wird abgelehnt.
@@ -104,7 +104,7 @@ Nein. Nachrichteninhalte werden bei jeder Anfrage live von Ihrem Anbieter abgeru
 
 ## Nächster Schritt
 
-[Kostenlos starten](/signup) mit Ihrem meistgenutzten Postfach, den Konnektor von MCP Emails zu Claude oder ChatGPT hinzufügen und fragen, was heute eine Antwort braucht. Verbinden Sie die anderen Postfächer, wenn Sie eine Antwort statt mehrerer möchten.`,
+[Kostenlos starten](/signup) mit Ihrem meistgenutzten Postfach, den Konnektor von MCPEmails zu Claude oder ChatGPT hinzufügen und fragen, was heute eine Antwort braucht. Verbinden Sie die anderen Postfächer, wenn Sie eine Antwort statt mehrerer möchten.`,
 };
 
 export default translation;

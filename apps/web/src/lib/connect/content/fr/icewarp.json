@@ -21,7 +21,7 @@
     "titleLine1": "Connectez IceWarp à Claude,",
     "titleLine2": "Cursor, ChatGPT et tout client MCP",
     "lead": "IceWarp gère déjà votre messagerie, vos agendas et votre chat. Ajouter un serveur MCP par-dessus permet à un agent IA de travailler directement dans la boîte : lire, rechercher, envoyer, répondre, planifier et classer, avec les mêmes identifiants que n'importe quel client de bureau.",
-    "answer": "Claude ne peut pas accéder seul à un serveur IceWarp. MCP Emails est un serveur MCP hébergé qui se connecte à votre installation IceWarp en IMAP sur votre propre nom d'hôte, port 993 en TLS implicite, avec le mot de passe de la boîte enregistré dans la console d'administration IceWarp, pour que Claude, Cursor ou tout client MCP puisse lire, rechercher, envoyer et organiser ce courrier. IceWarp est un logiciel que vous hébergez vous-même : il n'y a donc aucun nom d'hôte partagé à publier. Le serveur doit pouvoir être résolu et joint depuis Internet, et le certificat sur le 993 doit être valide pour le nom auquel vous vous connectez. Une boîte est gratuite.",
+    "answer": "Claude ne peut pas accéder seul à un serveur IceWarp. MCPEmails est un serveur MCP hébergé qui se connecte à votre installation IceWarp en IMAP sur votre propre nom d'hôte, port 993 en TLS implicite, avec le mot de passe de la boîte enregistré dans la console d'administration IceWarp, pour que Claude, Cursor ou tout client MCP puisse lire, rechercher, envoyer et organiser ce courrier. IceWarp est un logiciel que vous hébergez vous-même : il n'y a donc aucun nom d'hôte partagé à publier. Le serveur doit pouvoir être résolu et joint depuis Internet, et le certificat sur le 993 doit être valide pour le nom auquel vous vous connectez. Une boîte est gratuite.",
     "meta0": "1 boîte gratuite, pour toujours",
     "meta1": "Mot de passe de la boîte depuis la console",
     "meta2": "E-mails récupérés en direct, jamais stockés"
@@ -32,16 +32,16 @@
   },
   "setup": [
     {
-      "h": "Créez votre compte MCP Emails gratuit",
+      "h": "Créez votre compte MCPEmails gratuit",
       "p": "Inscrivez-vous sur mcpemails.com. Une boîte est gratuite pour toujours et aucune carte bancaire n'est demandée, ce qui suffit pour tester avec un vrai compte IceWarp."
     },
     {
       "h": "Ouvrez le service IMAP dans la console d'administration",
-      "p": "Allez dans le nœud System, puis Services, et double-cliquez sur IMAP. Vérifiez que le service tourne et que le port sécurisé est le 993. Tant que vous êtes dans System, ouvrez Certificates et vérifiez quel certificat est associé au nom d'hôte que vous comptez donner à MCP Emails."
+      "p": "Allez dans le nœud System, puis Services, et double-cliquez sur IMAP. Vérifiez que le service tourne et que le port sécurisé est le 993. Tant que vous êtes dans System, ouvrez Certificates et vérifiez quel certificat est associé au nom d'hôte que vous comptez donner à MCPEmails."
     },
     {
       "h": "Vérifiez le Mailbox Type du compte, puis ajoutez la boîte",
-      "p": "Sous Domains and Accounts, ouvrez l'utilisateur et regardez l'onglet Options. Le réglage <code>Mailbox: Type</code> doit avoir la valeur combinée IMAP et POP3, et non POP3 seul. Ajoutez ensuite la boîte dans MCP Emails : choisissez IMAP / SMTP, saisissez votre nom d'hôte IceWarp, l'adresse complète et le mot de passe de la boîte."
+      "p": "Sous Domains and Accounts, ouvrez l'utilisateur et regardez l'onglet Options. Le réglage <code>Mailbox: Type</code> doit avoir la valeur combinée IMAP et POP3, et non POP3 seul. Ajoutez ensuite la boîte dans MCPEmails : choisissez IMAP / SMTP, saisissez votre nom d'hôte IceWarp, l'adresse complète et le mot de passe de la boîte."
     },
     {
       "h": "Collez l'URL MCP dans votre IA",
@@ -63,14 +63,14 @@
     }
   ],
   "limits": [
-    "Un serveur MCP hébergé doit ouvrir une connexion entrante vers votre serveur IceWarp : un serveur publié uniquement sur un réseau interne, ou joignable uniquement via un VPN d'entreprise, ne peut pas être connecté de cette façon. MCP Emails peut être auto-hébergé si vous voulez que la session IMAP reste à l'intérieur du périmètre.",
+    "Un serveur MCP hébergé doit ouvrir une connexion entrante vers votre serveur IceWarp : un serveur publié uniquement sur un réseau interne, ou joignable uniquement via un VPN d'entreprise, ne peut pas être connecté de cette façon. MCPEmails peut être auto-hébergé si vous voulez que la session IMAP reste à l'intérieur du périmètre.",
     "La validation des certificats est stricte et ne peut pas être contournée : un certificat expiré ou émis pour un autre nom sera refusé, et non accepté avec un avertissement.",
-    "Les agendas, contacts et le chat d'IceWarp ne sont pas concernés. MCP Emails parle IMAP et SMTP : il fonctionne avec la messagerie, pas avec les fonctions de travail collaboratif qui l'accompagnent."
+    "Les agendas, contacts et le chat d'IceWarp ne sont pas concernés. MCPEmails parle IMAP et SMTP : il fonctionne avec la messagerie, pas avec les fonctions de travail collaboratif qui l'accompagnent."
   ],
   "faq": [
     {
       "q": "Claude fonctionne-t-il avec IceWarp ?",
-      "a": "Pas seul. Claude n'a pas de connecteur IceWarp et ne peut pas ouvrir de session IMAP vers un serveur que vous exploitez. Connecter un serveur MCP comme MCP Emails à votre serveur IceWarp donne à Claude un accès en lecture, recherche, envoi, réponse, planification et organisation à une boîte hébergée dessus, et la même boîte est ensuite disponible dans Cursor et ChatGPT."
+      "a": "Pas seul. Claude n'a pas de connecteur IceWarp et ne peut pas ouvrir de session IMAP vers un serveur que vous exploitez. Connecter un serveur MCP comme MCPEmails à votre serveur IceWarp donne à Claude un accès en lecture, recherche, envoi, réponse, planification et organisation à une boîte hébergée dessus, et la même boîte est ensuite disponible dans Cursor et ChatGPT."
     },
     {
       "q": "Quels sont les réglages IMAP et SMTP d'IceWarp ?",

@@ -244,7 +244,7 @@ export function buildNewMailPayload(input: {
 /** The fixed payload of "Send test notification". No mailbox is read to build it. */
 export const TEST_PAYLOAD = {
   type: "test",
-  title: "MCP Emails",
+  title: "MCPEmails",
   body: "Notifications are working on this device.",
   url: "/",
   tag: "push-test",

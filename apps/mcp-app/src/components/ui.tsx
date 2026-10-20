@@ -366,7 +366,7 @@ export function AutoTextarea(props: {
  *
  * `preview` is the draft editor's read-only formatted view (QA, 2026-10-13):
  *
- *   - images are left out rather than drawn as `[image: MCP Emails logo]`. The
+ *   - images are left out rather than drawn as `[image: MCPEmails logo]`. The
  *     card cannot load them (remote images are tracking pixels and the CSP is
  *     empty), and a bracketed literal read as text the draft contained.
  *   - the server's own signature wrapper (`<div class="mcpemails-signature">`,

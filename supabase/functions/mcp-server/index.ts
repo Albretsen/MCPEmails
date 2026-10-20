@@ -855,7 +855,7 @@ function authFailedResult(
           `Unable to ${action} the ${provider} inbox: its OAuth token has been ` +
           `revoked or expired, so the inbox has been marked 'error'. Ask the user ` +
           `to reconnect it by opening this link in their browser (they may need ` +
-          `to sign in to MCP Emails first): ${reconnectUrl(provider, inboxId)}`,
+          `to sign in to MCPEmails first): ${reconnectUrl(provider, inboxId)}`,
       }],
       isError: true,
     },
@@ -872,7 +872,7 @@ function authFailedResult(
  */
 function outlookNoMailboxText(): string {
   return `Unable to use this Outlook inbox. ${OUTLOOK_NO_MAILBOX_MESSAGE} ` +
-    `The inbox has been marked 'error' in the MCP Emails dashboard. Tell the ` +
+    `The inbox has been marked 'error' in the MCPEmails dashboard. Tell the ` +
     `user this; do not retry and do not ask them to reconnect.`;
 }
 
@@ -967,7 +967,7 @@ function notSentResult(
           `idempotency_key may be reused. If retries keep failing this way, ` +
           `the mail host is refusing the sending connection rather than the ` +
           `message, and the user should ask their mail provider to allow ` +
-          `submission from MCP Emails.`,
+          `submission from MCPEmails.`,
       }],
       isError: true,
       // The machine-readable half of the same sentence. `provider_error` sets
@@ -988,7 +988,7 @@ function notSentResult(
  *
  * Unlike {@link notSentResult}'s case, retrying cannot help, so it says what
  * the user can change instead. For a Send As alias that is the provider's own
- * alias settings, because MCP Emails only verified that mail for the address
+ * alias settings, because MCPEmails only verified that mail for the address
  * reaches the user, not that their provider lets them send from it.
  */
 function senderRefusedText(fromAddress: string, reason: string): string {
@@ -1563,7 +1563,7 @@ const SERVER_INSTRUCTIONS_MAX_BYTES = 1800;
  * exists.
  */
 const SERVER_INSTRUCTIONS =
-  "MCP Emails reads, searches, organizes, sends and schedules email across " +
+  "MCPEmails reads, searches, organizes, sends and schedules email across " +
   "the user's connected inboxes. Search these tools for any mailbox task.\n\n" +
   "INBOX: most tools take `inbox_id` (a UUID) or `inbox` (an email address). " +
   "A key with exactly one inbox picks it automatically, so omit both. With " +
@@ -11374,7 +11374,7 @@ async function resolveSenderIdentity(
       ...inbox,
       email_address: identity.email_address,
       display_name: identity.display_name ?? inbox.display_name,
-      // Gmail only auto-inserts a sendAs signature in its own UI. MCP Emails
+      // Gmail only auto-inserts a sendAs signature in its own UI. MCPEmails
       // builds raw messages, so use the selected identity's signature here.
       signature_html: identity.signature_html ?? inbox.signature_html,
       signature_text: identity.signature_html
@@ -18520,7 +18520,7 @@ function pendingApprovalPayload(
     // Default wording, unchanged from before this feature, for every inbox
     // whose review mode is 'dashboard' (which is what the migration backfills
     // for every inbox that already had the gate switched on).
-    : `This ${noun} has not been sent. Approve it in the MCP Emails dashboard.`;
+    : `This ${noun} has not been sent. Approve it in the MCPEmails dashboard.`;
   return {
     status: "pending_approval",
     approval_id: approval.id,
@@ -33404,7 +33404,7 @@ async function handleScheduledDispatch(
           });
           throw new Error(
             "Refused: this scheduled send carries an unencrypted message payload, " +
-              "which MCP Emails never writes. Nothing was sent.",
+              "which MCPEmails never writes. Nothing was sent.",
           );
         }
       }

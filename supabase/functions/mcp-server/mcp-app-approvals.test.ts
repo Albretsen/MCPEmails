@@ -243,7 +243,7 @@ function inboxRow(overrides: Row = {}): Row {
     smtp_host: null,
     smtp_port: null,
     signature_enabled: true,
-    signature_text: "--\nAsgeir, MCP Emails",
+    signature_text: "--\nAsgeir, MCPEmails",
     signature_html: null,
     signature_source: "manual",
     ...overrides,
@@ -1017,7 +1017,7 @@ Deno.test("a text-only edit keeps the signature at exactly one", async () => {
   // A real held email_send: signed at enqueue, in both parts. The reviewer edits
   // the signed text they were shown, so their replacement text carries the
   // signature — and nothing here may add a second one.
-  const inbox = { signature_enabled: true, signature_text: "Asgeir\nMCP Emails", signature_html: null };
+  const inbox = { signature_enabled: true, signature_text: "Asgeir\nMCPEmails", signature_html: null };
   const composed = applySignature({ textBody: "Original wording.", htmlBody: undefined }, inbox);
   const store = freshStore();
   store.send_approvals[0].payload = {

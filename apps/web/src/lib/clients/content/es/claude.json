@@ -14,11 +14,11 @@
     "eyebrow": "Claude + correo",
     "titleLine1": "Conecta tu bandeja a Claude",
     "titleLine2": "como conector personalizado",
-    "lead": "Claude no tiene un cliente de correo propio. MCP Emails es el servidor MCP alojado que se lo da: leer, buscar, enviar, responder, reenviar, programar y organizar correo real desde claude.ai o Claude Desktop.",
+    "lead": "Claude no tiene un cliente de correo propio. MCPEmails es el servidor MCP alojado que se lo da: leer, buscar, enviar, responder, reenviar, programar y organizar correo real desde claude.ai o Claude Desktop.",
     "meta0": "1 bandeja gratis, para siempre",
     "meta1": "OAuth, sin clave de API",
     "meta2": "Correo obtenido en vivo, nunca almacenado",
-    "answer": "Añade https://mcpemails.com/api/mcp como conector personalizado en Claude, haz clic en Connect e inicia sesión con tu cuenta de MCP Emails. Claude se registra automáticamente y pide los permisos que tú apruebas. No hay clave de API que crear ni archivo de configuración que editar."
+    "answer": "Añade https://mcpemails.com/api/mcp como conector personalizado en Claude, haz clic en Connect e inicia sesión con tu cuenta de MCPEmails. Claude se registra automáticamente y pide los permisos que tú apruebas. No hay clave de API que crear ni archivo de configuración que editar."
   },
   "method": {
     "title": "Cómo se conecta Claude: OAuth, sin clave de API",
@@ -39,7 +39,7 @@
     },
     {
       "h": "Conecta y autoriza",
-      "p": "Haz clic en Connect e inicia sesión con MCP Emails para autorizar. Aprueba los permisos que quieres que tenga Claude. No necesitas clave de API."
+      "p": "Haz clic en Connect e inicia sesión con MCPEmails para autorizar. Aprueba los permisos que quieres que tenga Claude. No necesitas clave de API."
     }
   ],
   "gotchas": [
@@ -64,7 +64,7 @@
   "faq": [
     {
       "q": "¿Puede Claude leer mi correo?",
-      "a": "No por sí solo. Claude solo puede acceder a un buzón a través de un conector, y un conector personalizado que apunte a MCP Emails es una forma de darle uno. Una vez conectado, Claude puede listar, leer, buscar, enviar, responder, reenviar, organizar y programar correo en todas las bandejas que tengas conectadas, dentro de los permisos que aprobaste."
+      "a": "No por sí solo. Claude solo puede acceder a un buzón a través de un conector, y un conector personalizado que apunte a MCPEmails es una forma de darle uno. Una vez conectado, Claude puede listar, leer, buscar, enviar, responder, reenviar, organizar y programar correo en todas las bandejas que tengas conectadas, dentro de los permisos que aprobaste."
     },
     {
       "q": "¿Necesito una clave de API para Claude?",
@@ -79,7 +79,7 @@
       "a": "Solo si tú lo permites. El envío depende del permiso send:email, así que una clave o un token sin ese permiso no puede enviar nada. Además, el propietario de una bandeja puede exigir aprobación humana en el panel, que retiene cada envío, respuesta, reenvío, envío de borrador y envío programado hasta que una persona lo libera."
     },
     {
-      "q": "¿Se guarda mi correo en los servidores de MCP Emails?",
+      "q": "¿Se guarda mi correo en los servidores de MCPEmails?",
       "a": "No. Cada mensaje se obtiene en vivo de tu proveedor para la solicitud que lo pidió y se entrega directamente a tu cliente. Solo se guarda el token OAuth o la contraseña de aplicación cifrados, para que las llamadas futuras puedan autenticarse. Eliminar la bandeja en el panel, o revocar el acceso en tu proveedor, corta la conexión al instante."
     },
     {

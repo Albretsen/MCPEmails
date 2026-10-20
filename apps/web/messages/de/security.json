@@ -1,12 +1,12 @@
 {
   "meta": {
     "title": "Sicherheit für KI-E-Mail-Agenten: OAuth, Verschlüsselung, Datenschutz",
-    "description": "So schützt MCP Emails den KI-Zugriff auf Ihre E-Mails: Live-Abruf statt Speicherung, verschlüsselte Zugangsdaten, begrenzte und widerrufbare Berechtigungen, Schutz vor Prompt-Injection und offener Quellcode."
+    "description": "So schützt MCPEmails den KI-Zugriff auf Ihre E-Mails: Live-Abruf statt Speicherung, verschlüsselte Zugangsdaten, begrenzte und widerrufbare Berechtigungen, Schutz vor Prompt-Injection und offener Quellcode."
   },
   "hero": {
     "eyebrow": "Sicherheit & Vertrauen",
     "title": "Sie sollten mir nicht einfach glauben müssen",
-    "lead": "MCP Emails verbindet einen KI-Agenten mit Ihrem Postfach. Dafür braucht es echtes Vertrauen. Hier steht, was der Dienst berührt, was er speichert, was er nie tun kann und wie Sie all das selbst prüfen."
+    "lead": "MCPEmails verbindet einen KI-Agenten mit Ihrem Postfach. Dafür braucht es echtes Vertrauen. Hier steht, was der Dienst berührt, was er speichert, was er nie tun kann und wie Sie all das selbst prüfen."
   },
   "tldr": {
     "title": "1. Die Kurzfassung",
@@ -68,12 +68,12 @@
     "title": "3. Sie müssen mir nicht vertrauen, Sie können es prüfen",
     "p1": "„Das hat irgendwer schnell zusammengecodet“ ist eine berechtigte Sorge bei jedem gehosteten Tool, das auf Ihre E-Mails zugreift. Die richtige Antwort ist kein größeres Versprechen, sondern dass Sie mir gar nicht aufs Wort glauben müssen.",
     "points": [
-      "<b>Lesen Sie den Code.</b> Der Server hinter MCP Emails ist öffentlich auf GitHub. Sie sehen genau, was er speichert (ein verschlüsseltes Token) und was nicht (Ihre E-Mails).",
+      "<b>Lesen Sie den Code.</b> Der Server hinter MCPEmails ist öffentlich auf GitHub. Sie sehen genau, was er speichert (ein verschlüsseltes Token) und was nicht (Ihre E-Mails).",
       "<selfhost><b>Hosten Sie es selbst.</b></selfhost> Wenn Sie den gehosteten Dienst gar nicht nutzen möchten, betreiben Sie denselben Code auf Ihrer eigenen Infrastruktur mit Ihren eigenen Schlüsseln: Ein Docker-Stack mit einem einzigen Befehl liegt in <selfhost>self-host/</selfhost>.",
       "<b>Nutzen Sie eine begrenzte, widerrufbare Verbindung.</b> Sie verbinden sich per OAuth oder App-Passwort, das nur E-Mail-Zugriff gewährt, und können es bei Ihrem Anbieter mit einem Klick widerrufen, ganz ohne mich.",
       "<b>Sehen Sie, was passiert.</b> Jeder Tool-Aufruf Ihres Agenten landet in einem Aktivitätsprotokoll, das Sie lesen können. So sehen Sie genau, worauf wann zugegriffen wurde."
     ],
-    "outro": "Und wenn ein nativer Konnektor Ihren Anbieter schon abdeckt und alles kann, was Sie brauchen, nutzen Sie ihn. MCP Emails gibt es für die Anbieter und Kombinationen mehrerer Postfächer, die diese nicht abdecken."
+    "outro": "Und wenn ein nativer Konnektor Ihren Anbieter schon abdeckt und alles kann, was Sie brauchen, nutzen Sie ihn. MCPEmails gibt es für die Anbieter und Kombinationen mehrerer Postfächer, die diese nicht abdecken."
   },
   "injection": {
     "title": "4. Das eigentliche Risiko: Prompt-Injection",
@@ -100,12 +100,12 @@
   "google": {
     "title": "6. Prüfung durch Google, Microsoft und Anbieter",
     "p1": "Der Gmail-Zugriff nutzt die eingeschränkten Scopes von Google, also die Stufe, die Google am genauesten prüft.",
-    "p2": "Die Nutzung und Weitergabe von Informationen, die MCP Emails über Google-APIs erhält, an andere Apps entspricht der <link>Google API Services User Data Policy</link>, einschließlich der Anforderungen zur eingeschränkten Nutzung (Limited Use).",
+    "p2": "Die Nutzung und Weitergabe von Informationen, die MCPEmails über Google-APIs erhält, an andere Apps entspricht der <link>Google API Services User Data Policy</link>, einschließlich der Anforderungen zur eingeschränkten Nutzung (Limited Use).",
     "p3": "Der Zugriff auf Outlook und Microsoft 365 läuft über Microsoft Graph, über eine App mit von Microsoft verifiziertem Herausgeber, und fordert nur die benannten Berechtigungen an, die auf dem Zustimmungsbildschirm von Microsoft stehen: Mail.ReadWrite, Mail.Send, offline_access, openid, profile und email. Bei Fastmail, iCloud, Yahoo, Zoho, Yandex und anderen IMAP-Anbietern verbinden Sie sich mit einem App-Passwort Ihres Anbieters, das Sie jederzeit widerrufen können. Es gibt keine weitreichenden OAuth-Scopes, die wir zu großzügig anfordern könnten."
   },
   "subprocessors": {
     "title": "7. Unterauftragsverarbeiter",
-    "intro": "Die Liste der Unternehmen, die überhaupt mit Daten in Berührung kommen, halten wir kurz, und jedes ist an einen Auftragsverarbeitungsvertrag gebunden. Beachten Sie, was fehlt: Kein KI-Anbieter steht auf dieser Liste. MCP Emails sendet Ihre E-Mails an kein eigenes Modell. Das tut Ihr Agent, unter Ihrer Kontrolle und nach den Datenrichtlinien seines Anbieters.",
+    "intro": "Die Liste der Unternehmen, die überhaupt mit Daten in Berührung kommen, halten wir kurz, und jedes ist an einen Auftragsverarbeitungsvertrag gebunden. Beachten Sie, was fehlt: Kein KI-Anbieter steht auf dieser Liste. MCPEmails sendet Ihre E-Mails an kein eigenes Modell. Das tut Ihr Agent, unter Ihrer Kontrolle und nach den Datenrichtlinien seines Anbieters.",
     "thProvider": "Anbieter",
     "thPurpose": "Zweck",
     "thLocation": "Standort",
@@ -150,14 +150,14 @@
   },
   "selfhost": {
     "title": "Selbst betreiben, niemandem vertrauen (auch uns nicht)",
-    "p1": "MCP Emails ist Open Source unter AGPL-3.0, und der gehostete Dienst läuft auf genau demselben MCP-Server, den Sie selbst hosten können. „E-Mails werden live abgerufen und nie gespeichert“ können Sie also prüfen, indem Sie ihn betreiben und den Netzwerkverkehr beobachten. Sie müssen es nicht einfach glauben.",
+    "p1": "MCPEmails ist Open Source unter AGPL-3.0, und der gehostete Dienst läuft auf genau demselben MCP-Server, den Sie selbst hosten können. „E-Mails werden live abgerufen und nie gespeichert“ können Sie also prüfen, indem Sie ihn betreiben und den Netzwerkverkehr beobachten. Sie müssen es nicht einfach glauben.",
     "p2": "Self-Hosting setzt auf IMAP/SMTP: Verbinden Sie jedes Postfach mit einem App-Passwort. Ihre Zugangsdaten werden mit einem Schlüssel verschlüsselt, den nur Sie besitzen. Ein einziger Befehl startet den ganzen Stack auf Ihrem eigenen Rechner.",
     "cta": "Zur Self-Hosting-Anleitung"
   },
   "operator": {
     "title": "Wer dahintersteht",
     "p1": "Eine Person: ich. Ich bin Asgeir Albretsen und betreibe den Dienst über die Albretsen AS, eine norwegische Gesellschaft mit beschränkter Haftung (aksjeselskap), die mir gehört, Organisationsnummer 938 702 373, mit Sitz in Bergen, Norwegen. Die Commits sind auch von mir, unter <gh>github.com/Albretsen</gh>. Der Name auf dieser Seite und der Name am Code sind also derselbe. Mehr steht auf der <about>Über-uns-Seite</about>, die vollständigen rechtlichen Angaben finden Sie in den <terms>Nutzungsbedingungen</terms>.",
-    "p2": "Dass alles an einer Person hängt, ist ein echtes Risiko, und die Antwort darauf ist nicht das Versprechen, dass ich immer da sein werde. MCP Emails ist unter AGPL-3.0 öffentlich, und der gehostete Dienst läuft auf genau diesem Code. Wenn ich aufhöre oder Sie mir einfach nicht mehr vertrauen, können Sie das Repository klonen und auf Ihrer eigenen Infrastruktur mit Ihren eigenen Schlüsseln betreiben. <selfhostpage>Die Self-Hosting-Anleitung</selfhostpage> beschreibt das komplette Vorgehen. Ich bin lieber eine namentlich bekannte Person, die Sie erreichen und verlassen können, als ein anonymer Anbieter, dem Sie nur vertrauen können.",
+    "p2": "Dass alles an einer Person hängt, ist ein echtes Risiko, und die Antwort darauf ist nicht das Versprechen, dass ich immer da sein werde. MCPEmails ist unter AGPL-3.0 öffentlich, und der gehostete Dienst läuft auf genau diesem Code. Wenn ich aufhöre oder Sie mir einfach nicht mehr vertrauen, können Sie das Repository klonen und auf Ihrer eigenen Infrastruktur mit Ihren eigenen Schlüsseln betreiben. <selfhostpage>Die Self-Hosting-Anleitung</selfhostpage> beschreibt das komplette Vorgehen. Ich bin lieber eine namentlich bekannte Person, die Sie erreichen und verlassen können, als ein anonymer Anbieter, dem Sie nur vertrauen können.",
     "p3": "Support- und Sicherheitsmails landen in keiner Warteschlange. Sie kommen bei mir an, und ich beantworte jede Nachricht selbst."
   }
 }

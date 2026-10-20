@@ -2196,7 +2196,7 @@ export function DraftEditor(props: Props) {
       <p class="line" id="d-off-q">
         Turn off draft cards? Drafts keep working, the assistant just describes
         them in text. To turn the cards back on, use "Show the draft editor
-        card" in the MCP Emails dashboard.
+        card" in the MCPEmails dashboard.
       </p>
       <div class="pop-btns">
         <Btn soft btnRef={safeChoice} onClick={() => closeConfirm()}>

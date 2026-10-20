@@ -21,7 +21,7 @@
     "titleLine1": "Connectez Daum Mail à Claude,",
     "titleLine2": "Cursor, ChatGPT, tout client MCP",
     "lead": "Offrez à votre agent IA une vraie boîte Daum ou Hanmail. Lisez, recherchez, envoyez, répondez, planifiez et organisez le courrier via IMAP avec un mot de passe d'application Kakao, dans tous les clients MCP et pas un seul.",
-    "answer": "Claude ne peut pas accéder seul à Daum Mail. MCP Emails est un serveur MCP hébergé qui la connecte via IMAP sur imap.daum.net, port 993, en s'authentifiant avec un mot de passe d'application Kakao (앱 비밀번호) plutôt qu'avec le mot de passe de votre compte Kakao. Depuis le 2 janvier 2025, Daum exige la validation en deux étapes sur le compte Kakao associé à la boîte et un mot de passe d'application pour chaque connexion IMAP et POP3 : le mot de passe habituel ne fonctionne donc plus dans aucun client de messagerie. IMAP est par ailleurs une option distincte dans les réglages de Daum Mail, qu'il faut aussi activer. Une boîte est gratuite.",
+    "answer": "Claude ne peut pas accéder seul à Daum Mail. MCPEmails est un serveur MCP hébergé qui la connecte via IMAP sur imap.daum.net, port 993, en s'authentifiant avec un mot de passe d'application Kakao (앱 비밀번호) plutôt qu'avec le mot de passe de votre compte Kakao. Depuis le 2 janvier 2025, Daum exige la validation en deux étapes sur le compte Kakao associé à la boîte et un mot de passe d'application pour chaque connexion IMAP et POP3 : le mot de passe habituel ne fonctionne donc plus dans aucun client de messagerie. IMAP est par ailleurs une option distincte dans les réglages de Daum Mail, qu'il faut aussi activer. Une boîte est gratuite.",
     "meta0": "1 boîte gratuite, pour toujours",
     "meta1": "Mot de passe d'application Kakao, pas votre mot de passe",
     "meta2": "E-mails récupérés en direct, jamais stockés"
@@ -32,7 +32,7 @@
   },
   "setup": [
     {
-      "h": "Créez votre compte MCP Emails gratuit",
+      "h": "Créez votre compte MCPEmails gratuit",
       "p": "Inscrivez-vous sur mcpemails.com. L'offre gratuite connecte une boîte et reste gratuite, sans carte bancaire. Les deux étapes suivantes se déroulent sur deux services Kakao différents : attendez-vous à passer de l'un à l'autre."
     },
     {
@@ -41,7 +41,7 @@
     },
     {
       "h": "Générez un mot de passe d'application dans votre compte Kakao",
-      "p": "Allez sur accounts.kakao.com et ouvrez 계정 보안 (sécurité du compte), puis 2단계 인증 (validation en deux étapes), puis 앱 비밀번호 (mot de passe d'application). Le même écran est accessible dans KakaoTalk sous 설정, 카카오계정, 2단계 인증, 앱 비밀번호. La validation en deux étapes doit être activée avant de pouvoir créer un mot de passe d'application. Générez-en un, puis dans MCP Emails choisissez IMAP / SMTP, saisissez votre adresse Daum ou Hanmail complète et collez le mot de passe d'application plutôt que votre mot de passe Kakao."
+      "p": "Allez sur accounts.kakao.com et ouvrez 계정 보안 (sécurité du compte), puis 2단계 인증 (validation en deux étapes), puis 앱 비밀번호 (mot de passe d'application). Le même écran est accessible dans KakaoTalk sous 설정, 카카오계정, 2단계 인증, 앱 비밀번호. La validation en deux étapes doit être activée avant de pouvoir créer un mot de passe d'application. Générez-en un, puis dans MCPEmails choisissez IMAP / SMTP, saisissez votre adresse Daum ou Hanmail complète et collez le mot de passe d'application plutôt que votre mot de passe Kakao."
     },
     {
       "h": "Collez l'URL MCP dans votre client IA",
@@ -74,7 +74,7 @@
   "faq": [
     {
       "q": "Claude fonctionne-t-il avec Daum Mail ?",
-      "a": "Pas directement. Claude n'a pas de connecteur Daum intégré et ne peut pas ouvrir lui-même une connexion IMAP. Connecter un serveur MCP comme MCP Emails à votre boîte Daum donne à Claude un accès en lecture, recherche, envoi, réponse, transfert, planification et organisation, et la même connexion fonctionne depuis Cursor et d'autres clients MCP."
+      "a": "Pas directement. Claude n'a pas de connecteur Daum intégré et ne peut pas ouvrir lui-même une connexion IMAP. Connecter un serveur MCP comme MCPEmails à votre boîte Daum donne à Claude un accès en lecture, recherche, envoi, réponse, transfert, planification et organisation, et la même connexion fonctionne depuis Cursor et d'autres clients MCP."
     },
     {
       "q": "Quels sont les réglages IMAP et SMTP de Daum Mail ?",

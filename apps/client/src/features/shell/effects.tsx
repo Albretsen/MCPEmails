@@ -9,10 +9,10 @@ import { useUiStore } from "../../state/ui-store";
 import s from "./AppShell.module.css";
 import { usePendingSequence } from "./shortcuts";
 
-const APP_NAME = "mcpemails";
+const APP_NAME = "MCPEmails";
 const CHAT_OVERLAY = "chat";
 
-/** Document title: "Inbox (7) · mcpemails". */
+/** Document title: "Inbox (7) · MCPEmails". */
 function useDocumentTitle(): void {
   const scope = useSelectionStore((x) => x.scope);
   const folder = useSelectionStore((x) => x.folder);

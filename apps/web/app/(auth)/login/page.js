@@ -4,8 +4,8 @@ import { LoginApp } from '../../../components/auth/LoginApp';
 import { CONNECT_INTENT_PARAM, connectIntentSlugShape } from '@/lib/connect/intent-carry.mjs';
 
 export const metadata = {
-  title: 'Sign in · MCP Emails',
-  description: 'Sign in to your MCP Emails workspace',
+  title: 'Sign in',
+  description: 'Sign in to your MCPEmails workspace',
 };
 
 export default async function LoginPage({ searchParams }) {

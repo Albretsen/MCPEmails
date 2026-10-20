@@ -3,7 +3,7 @@ const post = {
   title: 'Is It Safe to Give an AI Agent Access to Your Email? What to Know',
   description: 'Is it safe to give an AI agent email access? The honest answer: it depends on the architecture. Here are the real risks and the checklist that makes it safe.',
   cover: '/blog/cover-is-it-safe-to-give-ai-agent-email-access.svg',
-  coverAlt: 'Is it safe to give an AI agent email access — risks and safeguards explained — MCP Emails',
+  coverAlt: 'Is it safe to give an AI agent email access — risks and safeguards explained — MCPEmails',
   authorId: 'asgeir',
   publishedAt: "2026-06-07T09:00:00.000Z",
   updatedAt: "2026-06-21T09:00:00.000Z",
@@ -35,7 +35,7 @@ The classic mistake is granting full mailbox access when the task needs "read th
 
 ## What a safe setup actually looks like
 
-Here's how MCP Emails handles each risk. I'm biased — I built it — but the design choices are checkable, and you should hold any tool you pick to the same bar.
+Here's how MCPEmails handles each risk. I'm biased — I built it — but the design choices are checkable, and you should hold any tool you pick to the same bar.
 
 **Your email is never stored.** Every tool call hits your provider in real time, over IMAP/SMTP for Gmail and most other providers, or Microsoft Graph for Outlook. Message bodies, subjects, and attachments pass through to the agent and are discarded immediately. The only thing we keep per inbox is one encrypted credential so the next call can be made. There's no inbox mirror to breach, because the mirror doesn't exist.
 

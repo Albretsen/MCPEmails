@@ -3,7 +3,7 @@ const translation = {
   description:
     "Comment une agence ou un indépendant donne à un agent IA l'accès à plusieurs boîtes clients sans les mélanger : un espace de travail par client, des clés limitées, la lecture seule d'abord et une validation humaine avant chaque envoi.",
   coverAlt:
-    'Un agent IA travaillant sur des boîtes clients séparées avec un accès limité, MCP Emails',
+    'Un agent IA travaillant sur des boîtes clients séparées avec un accès limité, MCPEmails',
   content: `Si vous gérez le courrier de plusieurs clients, vous vivez avec une règle : rien du client A ne doit apparaître dans un fil du client B. Un agent IA ne change pas la règle, il rend simplement plus facile de l'enfreindre. Un seul agent avec un seul identifiant qui atteint toutes les boîtes que vous gérez est à une consigne maladroite de citer la mauvaise facture à la mauvaise personne.
 
 Trois échecs méritent qu'on s'en protège dès la conception : la **fuite entre clients**, quand un identifiant trop large laisse une recherche tomber sur la mauvaise boîte ; le **prestataire qui s'en va**, dont le portable contient toujours une clé API valide ; et l'**envoi non relu**, quand un agent répond au client de votre client, poliment et à côté. Intégrez la séparation à l'accès lui-même et l'agent ne peut plus franchir une frontière, même si une consigne le lui demande.
@@ -64,7 +64,7 @@ Ici, les adresses partagées sont des boîtes ordinaires. Connectez support@ ou 
 
 Votre agent trouve les boîtes avec \`inbox_list\` et s'y adresse par leur nom, vous ne collez donc jamais d'identifiant de boîte dans une consigne. Ensuite l'ensemble est réduit : \`email_read\` et \`email_compose\`, \`email_organize\` et \`email_search_and_move\` pour le tri, \`draft\` et \`schedule\` pour tout ce qui doit attendre une personne.
 
-Posez une attente dès le départ : MCP Emails fonctionne par interrogation. L'agent vérifie le courrier quand vous le lui demandez, ou quand une automatisation planifiée s'exécute. "Nous répondons en 60 secondes" n'est donc pas une promesse que cette architecture permet.
+Posez une attente dès le départ : MCPEmails fonctionne par interrogation. L'agent vérifie le courrier quand vous le lui demandez, ou quand une automatisation planifiée s'exécute. "Nous répondons en 60 secondes" n'est donc pas une promesse que cette architecture permet.
 
 ## Passation et fin de mission
 
@@ -85,14 +85,14 @@ Ce que vous pouvez écrire noir sur blanc :
 - Le contenu des messages n'est jamais stocké. Il est récupéré en direct chez le fournisseur du client à chaque requête, puis abandonné.
 - La seule donnée de boîte conservée est l'identifiant du fournisseur, chiffré au repos en AES-256-GCM, la clé étant gardée séparément.
 - L'activité est journalisée en métadonnées seulement : nom de l'outil, boîte, horodatage et statut, jamais le contenu.
-- Aucun fournisseur d'IA n'est sous-traitant. MCP Emails n'envoie pas votre courrier à un modèle de son choix et ne s'en sert pas pour entraîner quoi que ce soit. Les sous-traitants sont Supabase, Vercel et Stripe.
+- Aucun fournisseur d'IA n'est sous-traitant. MCPEmails n'envoie pas votre courrier à un modèle de son choix et ne s'en sert pas pour entraîner quoi que ce soit. Les sous-traitants sont Supabase, Vercel et Stripe.
 - La seule exception au "jamais stocké" est un message programmé pour plus tard, conservé chiffré jusqu'à son heure d'envoi.
 
 Ne promettez pas que l'injection de consignes est résolue. Elle est contenue, pas résolue, et c'est bien pour cela que les clés en lecture seule, les boîtes restreintes et le blocage avant envoi existent. Ne promettez pas de réaction instantanée, ni des certifications que le produit n'a pas revendiquées. Envoyez celui qui fait la revue de sécurité vers [/security](/security) et rédigez votre contrat pour coller à cette page, pas pour aller au-delà. Le code est public et auto-hébergeable, ce qui répond à un audit mieux que n'importe quelle promesse.
 
 ## Questions fréquentes
 
-**Faut-il un compte MCP Emails distinct par client ?**  
+**Faut-il un compte MCPEmails distinct par client ?**  
 Non. Un compte, un abonnement Business, un espace de travail par client. L'abonnement suit votre utilisateur, donc chaque espace hérite de la formule.
 
 **Un client peut-il voir le courrier d'un autre ?**  

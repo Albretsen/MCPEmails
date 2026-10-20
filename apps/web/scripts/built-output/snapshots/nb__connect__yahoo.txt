@@ -1,12 +1,12 @@
-Koble Yahoo Mail til Claude, Cursor og MCP-klienter · mcpemails
+Koble Yahoo Mail til Claude, Cursor og MCP-klienter · MCPEmails
 [meta description] Koble Yahoo Mail til Claude, Cursor og enhver MCP-klient via IMAP port 993 med et Yahoo-app-passord. Kontopassordet ditt virker ikke. Én innboks gratis.
-[meta og:title] Koble Yahoo Mail til Claude, Cursor og MCP-klienter · mcpemails
+[meta og:title] Koble Yahoo Mail til Claude, Cursor og MCP-klienter · MCPEmails
 [meta og:description] Koble Yahoo Mail til Claude, Cursor og enhver MCP-klient via IMAP port 993 med et Yahoo-app-passord. Kontopassordet ditt virker ikke. Én innboks gratis.
 [meta og:locale] nb_NO
-[meta twitter:title] Koble Yahoo Mail til Claude, Cursor og MCP-klienter · mcpemails
+[meta twitter:title] Koble Yahoo Mail til Claude, Cursor og MCP-klienter · MCPEmails
 [meta twitter:description] Koble Yahoo Mail til Claude, Cursor og enhver MCP-klient via IMAP port 993 med et Yahoo-app-passord. Kontopassordet ditt virker ikke. Én innboks gratis.
-[alt] mcpemails
-[alt] mcpemails
+[alt] MCPEmails
+[alt] MCPEmails
 [aria-label] Primary navigation
 Funksjoner
 Slik fungerer det
@@ -22,7 +22,7 @@ Yahoo Mail + AI
 Koble Yahoo Mail til Claude,
 og Cursor, ChatGPT, enhver MCP-klient
 Gi AI-agenten din en ekte Yahoo-innboks på minutter. Les, søk, send, svar, planlegg og organiser e-post med ett enkelt app-passord, og bruk samme innboks i alle MCP-klienter, ikke bare én.
-Claude når ikke Yahoo Mail på egen hånd. mcpemails er en hostet MCP-server som kobler til via IMAP på port 993 og autentiserer med et Yahoo-app-passord opprettet under External connections på Account Security-siden din, slik at Claude, Cursor eller enhver MCP-klient kan lese, søke, sende og organisere den e-posten. Det vanlige Yahoo-passordet ditt godtas aldri fra en e-postklient. Oppsettet tar et par minutter, og én innboks er gratis, for alltid.
+Claude når ikke Yahoo Mail på egen hånd. MCPEmails er en hostet MCP-server som kobler til via IMAP på port 993 og autentiserer med et Yahoo-app-passord opprettet under External connections på Account Security-siden din, slik at Claude, Cursor eller enhver MCP-klient kan lese, søke, sende og organisere den e-posten. Det vanlige Yahoo-passordet ditt godtas aldri fra en e-postklient. Oppsettet tar et par minutter, og én innboks er gratis, for alltid.
 Koble til Yahoo Mail gratis
 Les dokumentasjonen
 1 innboks gratis, for alltid
@@ -31,9 +31,9 @@ E-post hentes direkte, lagres aldri
 Slik kobler Yahoo seg til: et app-passord
 Yahoo Mail kobles til via IMAP/SMTP med et
 Yahoo-app-passord
-. Generer et i Yahoo Account Security under External connections, og lim det så inn i mcpemails sammen med Yahoo-adressen din. Ser du ikke valget, slår du på totrinnsbekreftelse og ser etter igjen. Ingen OAuth-dans, ingen popup-vinduer i nettleseren.
+. Generer et i Yahoo Account Security under External connections, og lim det så inn i MCPEmails sammen med Yahoo-adressen din. Ser du ikke valget, slår du på totrinnsbekreftelse og ser etter igjen. Ingen OAuth-dans, ingen popup-vinduer i nettleseren.
 Nøyaktige IMAP- og SMTP-innstillinger for Yahoo Mail
-Kopier disse inn i tilkoblingsskjemaet. mcpemails fyller dem ut der det er mulig, og prøver den andre standardtransporten hvis den første ikke svarer.
+Kopier disse inn i tilkoblingsskjemaet. MCPEmails fyller dem ut der det er mulig, og prøver den andre standardtransporten hvis den første ikke svarer.
 Protokoll
 Server
 Port
@@ -50,7 +50,7 @@ Verifisert 2026-08-31: export.imap.mail.yahoo.com svarte på en TLS-tilkobling o
 Logg inn med: Hele Yahoo-adressen din, inkludert domenet: name@yahoo.com, eller ymail.com- eller rocketmail.com-formen du registrerte deg med.
 Hva AI-en din kan gjøre
 En Yahoo Mail-innboks agenten faktisk kan bruke
-Sytten handlingsbaserte MCP-verktøy: send, svar, videresend, planlegg og organiser. Agenten fullfører jobben inne i Yahoo Mail.
+19 handlingsbaserte MCP-verktøy: send, svar, videresend, planlegg og organiser. Agenten fullfører jobben inne i Yahoo Mail.
 01
 Les
 Les og søk i e-post
@@ -72,18 +72,35 @@ Koble til Yahoo Mail i fire steg
 Fra registrering til første AI-e-post på et par minutter.
 01
 Opprett en gratis konto
-Registrer deg på mcpemails, uten kort. Gratisplanen kobler til én innboks, for alltid.
+Registrer deg på MCPEmails, uten kort. Gratisplanen kobler til én innboks, for alltid.
 02
 Generer et Yahoo-app-passord
 Generer et app-passord i Yahoo Account Security, under External connections. Finnes ikke valget der, slår du på totrinnsbekreftelse først.
 03
-Lim det inn i mcpemails
+Lim det inn i MCPEmails
 Legg til Yahoo-adressen din og app-passordet for å koble til innboksen trygt.
 04
 Lim MCP-URL-en inn i AI-en
 Lim https://mcpemails.com/api/mcp inn i Claude, Cursor eller ChatGPT, autoriser, så har agenten innboksen.
+Steg-for-steg-guider:
+Slik kobler du Claude til e-posten din
+·
+Guide til Claude IMAP-koblingen
 Vil du sammenligne leverandører først?
 Se kompatibilitetsmatrisen for e-postleverandører
+ChatGPT
+Bruk Yahoo Mail i ChatGPT
+ChatGPT når Yahoo Mail gjennom en egendefinert MCP-kobling. Det krever utviklermodus, som fungerer på chatgpt.com med Plus, Pro, Business, Enterprise og Edu.
+Koble Yahoo Mail til MCPEmails med stegene over.
+I ChatGPT åpner du Settings, Apps and Connectors, Advanced settings, og slår på utviklermodus.
+I Apps and Connectors klikker du Create, limer inn
+https://mcpemails.com/api/mcp
+som koblings-URL, velger OAuth og logger inn hos MCPEmails.
+I hver nye samtale klikker du
++
+, velger utviklermodus og velger koblingen din.
+Fullstendig oppsettguide for ChatGPT
+Slik kobler du ChatGPT til e-posten din
 Før du starter
 Hva som faktisk går galt med Yahoo Mail
 Verten Yahoo dokumenterer og verten vi kobler til, er to navn på én server
@@ -123,12 +140,12 @@ i stedet for navn, så en omdøpt eller ikke-engelsk systemmappe fortsatt finnes
 AUTH=LOGIN
 på IMAP, bare PLAIN og OAuth-mekanismene, så verktøy som er hardkodet til LOGIN-mekanismen, feiler ved autentisering selv med et riktig app-passord.
 Kjente begrensninger med Yahoo Mail
-Yahoos innsendingsserver annonserer en maksimal meldingsstørrelse på omtrent 41 MB. Lesing av vedlegg gjennom mcpemails er begrenset til 25 MB per forespørsel, så alt større må hentes i selve Yahoo Mail.
+Yahoos innsendingsserver annonserer en maksimal meldingsstørrelse på omtrent 41 MB. Lesing av vedlegg gjennom MCPEmails er begrenset til 25 MB per forespørsel, så alt større må hentes i selve Yahoo Mail.
 App-passord utløper ikke og overlever at du endrer Yahoo-passordet. Å slette app-passordet i Account Security er den eneste måten å trekke tilbake tilgangen på.
 FAQ
 Yahoo Mail og AI: vanlige spørsmål
 Fungerer Claude med Yahoo Mail?
-Ikke direkte. Claude har ingen innebygd Yahoo-kobling. Kobler du en MCP-server som mcpemails til Yahoo-postkassen din via IMAP, med et Yahoo-app-passord, får Claude tilgang til å lese, søke, sende, svare, planlegge og organisere. Samme tilkobling fungerer da uendret fra Cursor, ChatGPT og andre MCP-klienter.
+Ikke direkte. Claude har ingen innebygd Yahoo-kobling. Kobler du en MCP-server som MCPEmails til Yahoo-postkassen din via IMAP, med et Yahoo-app-passord, får Claude tilgang til å lese, søke, sende, svare, planlegge og organisere. Samme tilkobling fungerer da uendret fra Cursor, ChatGPT og andre MCP-klienter.
 Hva er IMAP- og SMTP-innstillingene for Yahoo Mail?
 IMAP er på port 993 med implisitt TLS, og SMTP er smtp.mail.yahoo.com på port 465, også med implisitt TLS. Yahoo dokumenterer innkommende vert som imap.mail.yahoo.com; tabellen på denne siden viser export.imap.mail.yahoo.com, som er et alias til den samme serveren og navnet vi verifiserte direkte. Logg inn med hele adressen din og et app-passord.
 Hvorfor blir Yahoo-passordet mitt avvist?
@@ -138,7 +155,7 @@ Yahoo oppretter app-passord på Account Security-siden under External connection
 Lagres Yahoo-e-posten min på serverne deres?
 Nei. Meldinger hentes direkte fra Yahoo via IMAP for hver forespørsel og leveres til AI-klienten din. Påloggingsdetaljer krypteres ved lagring, og meldingsinnhold beholdes ikke. Å slette app-passordet i Yahoo Account Security avslutter tilkoblingen hos Yahoo med en gang.
 Koble til en annen postkasse
-Samme MCP-server, samme sytten verktøy, en annen leverandør.
+Samme MCP-server, samme 19 verktøy, en annen leverandør.
 Koble til Gmail
 Koble til Outlook.com
 Koble til Yandex Mail
@@ -150,7 +167,7 @@ Gi AI-en din en Yahoo-innboks
 Koble til Yahoo Mail på minutter. Én innboks gratis for alltid, uten kort.
 Koble til Yahoo Mail gratis
 Les dokumentasjonen
-[alt] mcpemails
+[alt] MCPEmails
 En vertsbasert MCP-server som gir AI-agenter tilgang til å lese og sende fra innboksen din, uten å noen gang lagre e-posten den leser.
 Kontakt
 hello@mcpemails.com
@@ -166,6 +183,7 @@ Norsk
 Español
 Français
 中文
+Deutsch
 Produkt
 Funksjoner
 Slik fungerer det
@@ -179,6 +197,8 @@ Verktøyreferanse
 Hurtigstart
 OAuth-tilkobling
 Leverandørstøtte
+Skrivebeskyttet tilgang
+Oppsett av MCP-klienter
 Blog
 Changelog
 Koble til
@@ -198,7 +218,10 @@ Sikkerhet
 Status
 Personvern
 Vilkår
-© 2026 mcpemails.
+Angrerett
+Si opp avtaler her
+Impressum
+© 2026 MCPEmails.
 E-post hentes i sanntid, lagres aldri · Legitimasjon kryptert ved lagring
-MCPEmails er en tjeneste fra Albretsen Consulting (enkeltpersonforetak), organisasjonsnummer 926 646 753, Håsteins gate 9, 5160 Laksevåg, Norge.
-[json-ld] {"@context":"https://schema.org","@graph":[{"@type":"HowTo","name":"Koble til Yahoo Mail i fire steg","description":"Koble Yahoo Mail til Claude, Cursor og enhver MCP-klient via IMAP port 993 med et Yahoo-app-passord. Kontopassordet ditt virker ikke. Én innboks gratis.","step":[{"@type":"HowToStep","position":1,"name":"Opprett en gratis konto","text":"Registrer deg på mcpemails, uten kort. Gratisplanen kobler til én innboks, for alltid."},{"@type":"HowToStep","position":2,"name":"Generer et Yahoo-app-passord","text":"Generer et app-passord i Yahoo Account Security, under External connections. Finnes ikke valget der, slår du på totrinnsbekreftelse først."},{"@type":"HowToStep","position":3,"name":"Lim det inn i mcpemails","text":"Legg til Yahoo-adressen din og app-passordet for å koble til innboksen trygt."},{"@type":"HowToStep","position":4,"name":"Lim MCP-URL-en inn i AI-en","text":"Lim https://mcpemails.com/api/mcp inn i Claude, Cursor eller ChatGPT, autoriser, så har agenten innboksen."}]},{"@type":"WebPage","@id":"https://mcpemails.com/nb/connect/yahoo","url":"https://mcpemails.com/nb/connect/yahoo","name":"Koble Yahoo Mail til Claude, Cursor og MCP-klienter","description":"Koble Yahoo Mail til Claude, Cursor og enhver MCP-klient via IMAP port 993 med et Yahoo-app-passord. Kontopassordet ditt virker ikke. Én innboks gratis.","inLanguage":"nb","isPartOf":{"@id":"https://mcpemails.com/#website"},"breadcrumb":{"@id":"https://mcpemails.com/nb/connect/yahoo#breadcrumb"}},{"@type":"BreadcrumbList","@id":"https://mcpemails.com/nb/connect/yahoo#breadcrumb","itemListElement":[{"@type":"ListItem","position":1,"name":"mcpemails","item":"https://mcpemails.com/nb"},{"@type":"ListItem","position":2,"name":"E-postleverandører","item":"https://mcpemails.com/nb/connect"},{"@type":"ListItem","position":3,"name":"Koble Yahoo Mail til Claude, Cursor og MCP-klienter"}]},{"@type":"FAQPage","@id":"https://mcpemails.com/nb/connect/yahoo#faq","mainEntity":[{"@type":"Question","name":"Fungerer Claude med Yahoo Mail?","acceptedAnswer":{"@type":"Answer","text":"Ikke direkte. Claude har ingen innebygd Yahoo-kobling. Kobler du en MCP-server som mcpemails til Yahoo-postkassen din via IMAP, med et Yahoo-app-passord, får Claude tilgang til å lese, søke, sende, svare, planlegge og organisere. Samme tilkobling fungerer da uendret fra Cursor, ChatGPT og andre MCP-klienter."}},{"@type":"Question","name":"Hva er IMAP- og SMTP-innstillingene for Yahoo Mail?","acceptedAnswer":{"@type":"Answer","text":"IMAP er på port 993 med implisitt TLS, og SMTP er smtp.mail.yahoo.com på port 465, også med implisitt TLS. Yahoo dokumenterer innkommende vert som imap.mail.yahoo.com; tabellen på denne siden viser export.imap.mail.yahoo.com, som er et alias til den samme serveren og navnet vi verifiserte direkte. Logg inn med hele adressen din og et app-passord."}},{"@type":"Question","name":"Hvorfor blir Yahoo-passordet mitt avvist?","acceptedAnswer":{"@type":"Answer","text":"Fordi Yahoo ikke godtar kontopassordet ditt fra et tredjeparts e-postprogram. Du trenger et app-passord opprettet på Yahoo Account Security-siden under External connections. Kopier det når det vises, fordi Yahoo ikke viser det igjen. Har et gammelt app-passord sluttet å virke, generer et nytt i stedet for å gjenbruke det."}},{"@type":"Question","name":"Trenger jeg totrinnsbekreftelse for å få et Yahoo-app-passord?","acceptedAnswer":{"@type":"Answer","text":"Yahoo oppretter app-passord på Account Security-siden under External connections. Er det alternativet ikke synlig på kontoen din, slå på totrinnsbekreftelse og se igjen: Yahoo har flyttet og endret tilgangen til denne skjermen mer enn én gang gjennom årene. Generer passordet i en nettleser du har logget inn fra før, og ikke i et privat vindu."}},{"@type":"Question","name":"Lagres Yahoo-e-posten min på serverne deres?","acceptedAnswer":{"@type":"Answer","text":"Nei. Meldinger hentes direkte fra Yahoo via IMAP for hver forespørsel og leveres til AI-klienten din. Påloggingsdetaljer krypteres ved lagring, og meldingsinnhold beholdes ikke. Å slette app-passordet i Yahoo Account Security avslutter tilkoblingen hos Yahoo med en gang."}}]}]}
+MCPEmails er en tjeneste fra Albretsen AS, organisasjonsnummer 938 702 373, Håsteins gate 9, 5160 Laksevåg, Norge.
+[json-ld] {"@context":"https://schema.org","@graph":[{"@type":"HowTo","name":"Koble til Yahoo Mail i fire steg","description":"Koble Yahoo Mail til Claude, Cursor og enhver MCP-klient via IMAP port 993 med et Yahoo-app-passord. Kontopassordet ditt virker ikke. Én innboks gratis.","step":[{"@type":"HowToStep","position":1,"name":"Opprett en gratis konto","text":"Registrer deg på MCPEmails, uten kort. Gratisplanen kobler til én innboks, for alltid."},{"@type":"HowToStep","position":2,"name":"Generer et Yahoo-app-passord","text":"Generer et app-passord i Yahoo Account Security, under External connections. Finnes ikke valget der, slår du på totrinnsbekreftelse først."},{"@type":"HowToStep","position":3,"name":"Lim det inn i MCPEmails","text":"Legg til Yahoo-adressen din og app-passordet for å koble til innboksen trygt."},{"@type":"HowToStep","position":4,"name":"Lim MCP-URL-en inn i AI-en","text":"Lim https://mcpemails.com/api/mcp inn i Claude, Cursor eller ChatGPT, autoriser, så har agenten innboksen."}]},{"@type":"WebPage","@id":"https://mcpemails.com/nb/connect/yahoo","url":"https://mcpemails.com/nb/connect/yahoo","name":"Koble Yahoo Mail til Claude, Cursor og MCP-klienter","description":"Koble Yahoo Mail til Claude, Cursor og enhver MCP-klient via IMAP port 993 med et Yahoo-app-passord. Kontopassordet ditt virker ikke. Én innboks gratis.","inLanguage":"nb","isPartOf":{"@id":"https://mcpemails.com/#website"},"breadcrumb":{"@id":"https://mcpemails.com/nb/connect/yahoo#breadcrumb"}},{"@type":"BreadcrumbList","@id":"https://mcpemails.com/nb/connect/yahoo#breadcrumb","itemListElement":[{"@type":"ListItem","position":1,"name":"MCPEmails","item":"https://mcpemails.com/nb"},{"@type":"ListItem","position":2,"name":"E-postleverandører","item":"https://mcpemails.com/nb/connect"},{"@type":"ListItem","position":3,"name":"Koble Yahoo Mail til Claude, Cursor og MCP-klienter"}]},{"@type":"FAQPage","@id":"https://mcpemails.com/nb/connect/yahoo#faq","mainEntity":[{"@type":"Question","name":"Fungerer Claude med Yahoo Mail?","acceptedAnswer":{"@type":"Answer","text":"Ikke direkte. Claude har ingen innebygd Yahoo-kobling. Kobler du en MCP-server som MCPEmails til Yahoo-postkassen din via IMAP, med et Yahoo-app-passord, får Claude tilgang til å lese, søke, sende, svare, planlegge og organisere. Samme tilkobling fungerer da uendret fra Cursor, ChatGPT og andre MCP-klienter."}},{"@type":"Question","name":"Hva er IMAP- og SMTP-innstillingene for Yahoo Mail?","acceptedAnswer":{"@type":"Answer","text":"IMAP er på port 993 med implisitt TLS, og SMTP er smtp.mail.yahoo.com på port 465, også med implisitt TLS. Yahoo dokumenterer innkommende vert som imap.mail.yahoo.com; tabellen på denne siden viser export.imap.mail.yahoo.com, som er et alias til den samme serveren og navnet vi verifiserte direkte. Logg inn med hele adressen din og et app-passord."}},{"@type":"Question","name":"Hvorfor blir Yahoo-passordet mitt avvist?","acceptedAnswer":{"@type":"Answer","text":"Fordi Yahoo ikke godtar kontopassordet ditt fra et tredjeparts e-postprogram. Du trenger et app-passord opprettet på Yahoo Account Security-siden under External connections. Kopier det når det vises, fordi Yahoo ikke viser det igjen. Har et gammelt app-passord sluttet å virke, generer et nytt i stedet for å gjenbruke det."}},{"@type":"Question","name":"Trenger jeg totrinnsbekreftelse for å få et Yahoo-app-passord?","acceptedAnswer":{"@type":"Answer","text":"Yahoo oppretter app-passord på Account Security-siden under External connections. Er det alternativet ikke synlig på kontoen din, slå på totrinnsbekreftelse og se igjen: Yahoo har flyttet og endret tilgangen til denne skjermen mer enn én gang gjennom årene. Generer passordet i en nettleser du har logget inn fra før, og ikke i et privat vindu."}},{"@type":"Question","name":"Lagres Yahoo-e-posten min på serverne deres?","acceptedAnswer":{"@type":"Answer","text":"Nei. Meldinger hentes direkte fra Yahoo via IMAP for hver forespørsel og leveres til AI-klienten din. Påloggingsdetaljer krypteres ved lagring, og meldingsinnhold beholdes ikke. Å slette app-passordet i Yahoo Account Security avslutter tilkoblingen hos Yahoo med en gang."}}]}]}

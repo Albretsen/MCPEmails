@@ -18,8 +18,8 @@
     "eyebrow": "EarthLink Mail + AI",
     "titleLine1": "将 EarthLink 收件箱连接到",
     "titleLine2": "Claude、Cursor 及任意 MCP 客户端",
-    "lead": "EarthLink 仍在运行自己的邮件服务器，它们比大部分互联网都要古老，却依然在响应。MCP Emails 通过 IMAP 连接其中一台，让你的 AI 代理能读取、搜索、发送、回复和归档这些邮件。",
-    "answer": "Claude 无法自行访问 EarthLink 邮箱。MCP Emails 是一个托管 MCP 服务器，通过 imap.earthlink.net 端口 993 的 IMAP 与之连接，使用你的完整邮箱地址和普通邮箱密码登录。EarthLink 不签发应用专用密码，也没有需要打开的客户端访问开关，所以你已经在用的凭据就是可用的凭据；同样的设置也适用于 EarthLink 仍在托管的 mindspring.com、peoplepc.com 和 ix.netcom.com 地址。外发邮件使用另一个主机名：smtpauth.earthlink.net，端口 587。1 个收件箱永久免费。",
+    "lead": "EarthLink 仍在运行自己的邮件服务器，它们比大部分互联网都要古老，却依然在响应。MCPEmails 通过 IMAP 连接其中一台，让你的 AI 代理能读取、搜索、发送、回复和归档这些邮件。",
+    "answer": "Claude 无法自行访问 EarthLink 邮箱。MCPEmails 是一个托管 MCP 服务器，通过 imap.earthlink.net 端口 993 的 IMAP 与之连接，使用你的完整邮箱地址和普通邮箱密码登录。EarthLink 不签发应用专用密码，也没有需要打开的客户端访问开关，所以你已经在用的凭据就是可用的凭据；同样的设置也适用于 EarthLink 仍在托管的 mindspring.com、peoplepc.com 和 ix.netcom.com 地址。外发邮件使用另一个主机名：smtpauth.earthlink.net，端口 587。1 个收件箱永久免费。",
     "meta0": "1 个收件箱永久免费",
     "meta1": "邮箱密码即可，无需应用专用密码",
     "meta2": "邮件实时获取，绝不存储"
@@ -30,7 +30,7 @@
   },
   "setup": [
     {
-      "h": "创建免费的 MCP Emails 账户",
+      "h": "创建免费的 MCPEmails 账户",
       "p": "在 mcpemails.com 注册。免费套餐可连接一个收件箱，无需信用卡。"
     },
     {
@@ -39,7 +39,7 @@
     },
     {
       "h": "输入完整地址和该密码",
-      "p": "在 MCP Emails 中选择 IMAP / SMTP，按原样输入地址，包括 <code>name@mindspring.com</code> 这样的形式。上方的 EarthLink 服务器和端口已预填，并经实时 TLS 连接验证，包括端口 587 上单独的发信服务器。"
+      "p": "在 MCPEmails 中选择 IMAP / SMTP，按原样输入地址，包括 <code>name@mindspring.com</code> 这样的形式。上方的 EarthLink 服务器和端口已预填，并经实时 TLS 连接验证，包括端口 587 上单独的发信服务器。"
     },
     {
       "h": "将 MCP URL 粘贴到你的 AI",
@@ -48,8 +48,8 @@
   ],
   "gotchas": [
     {
-      "h": "EarthLink 既不声明 PLAIN 也不声明 LOGIN，因此 MCP Emails 使用 IMAP LOGIN 命令登录",
-      "p": "EarthLink 在登录前返回的能力列表提供 <code>AUTH=CRAM-MD5</code>、<code>AUTH=EL-TAC</code> 和 <code>AUTH=EL-VOICE</code>，没有 <code>AUTH=PLAIN</code>，也没有 <code>AUTH=LOGIN</code>。后两者是 EarthLink 自己的机制，没有任何普通邮件客户端实现它们。MCP Emails 会在登录前读取这个列表。当服务器提供了机制但没有 PLAIN，并且没有声明 <code>LOGINDISABLED</code> 时，MCP Emails 使用 IMAP 的 <code>LOGIN</code> 命令，它属于基础 IMAP，无需声明。它发送的地址和密码与 PLAIN 相同，也走同一条 TLS 连接。我们用一个虚构的账户探测了 EarthLink，每种机制只试一次：<code>LOGIN</code> 返回 \"Login incorrect\"，这是服务器真正检查了凭据后的回答；而 PLAIN 和 CRAM-MD5 都返回 \"Server(s) unavailable to complete operation\"。MCP Emails 也实现了 CRAM-MD5，但只在服务器禁用 LOGIN 时才使用。尚未测试的是用真实的 EarthLink 邮箱登录，所以这条路径已根据服务器的回答验证，但还没有端到端验证。"
+      "h": "EarthLink 既不声明 PLAIN 也不声明 LOGIN，因此 MCPEmails 使用 IMAP LOGIN 命令登录",
+      "p": "EarthLink 在登录前返回的能力列表提供 <code>AUTH=CRAM-MD5</code>、<code>AUTH=EL-TAC</code> 和 <code>AUTH=EL-VOICE</code>，没有 <code>AUTH=PLAIN</code>，也没有 <code>AUTH=LOGIN</code>。后两者是 EarthLink 自己的机制，没有任何普通邮件客户端实现它们。MCPEmails 会在登录前读取这个列表。当服务器提供了机制但没有 PLAIN，并且没有声明 <code>LOGINDISABLED</code> 时，MCPEmails 使用 IMAP 的 <code>LOGIN</code> 命令，它属于基础 IMAP，无需声明。它发送的地址和密码与 PLAIN 相同，也走同一条 TLS 连接。我们用一个虚构的账户探测了 EarthLink，每种机制只试一次：<code>LOGIN</code> 返回 \"Login incorrect\"，这是服务器真正检查了凭据后的回答；而 PLAIN 和 CRAM-MD5 都返回 \"Server(s) unavailable to complete operation\"。MCPEmails 也实现了 CRAM-MD5，但只在服务器禁用 LOGIN 时才使用。尚未测试的是用真实的 EarthLink 邮箱登录，所以这条路径已根据服务器的回答验证，但还没有端到端验证。"
     },
     {
       "h": "发信服务器不是 imap 或 smtp.earthlink.net",
@@ -57,7 +57,7 @@
     },
     {
       "h": "一次登录失败就会断开连接",
-      "p": "EarthLink 不声明 SASL-IR，并且在登录被拒绝后会直接关闭连接，不让客户端换一种方式再试。因此 MCP Emails 在发送任何内容之前就根据能力列表选定机制，而不是先试 PLAIN 再回退：第一次猜错就会用掉这次尝试，而对同一邮箱反复失败最好避免。<code>LOGIN</code> 命令只有一步，所以缺少 SASL-IR 对它没有影响。"
+      "p": "EarthLink 不声明 SASL-IR，并且在登录被拒绝后会直接关闭连接，不让客户端换一种方式再试。因此 MCPEmails 在发送任何内容之前就根据能力列表选定机制，而不是先试 PLAIN 再回退：第一次猜错就会用掉这次尝试，而对同一邮箱反复失败最好避免。<code>LOGIN</code> 命令只有一步，所以缺少 SASL-IR 对它没有影响。"
     },
     {
       "h": "该服务器没有 IDLE、没有 MOVE、没有 SPECIAL-USE",
@@ -72,7 +72,7 @@
   "faq": [
     {
       "q": "Claude 能用于 EarthLink 邮箱吗？",
-      "a": "不能直接使用。Claude 没有内置的 EarthLink 连接器。通过 IMAP 将 MCP Emails 这样的 MCP 服务器连接到邮箱后，Claude 就能读取、搜索、发送、回复、定时和整理你的 earthlink.net 或 mindspring.com 邮件，而且同一个连接也可在 Cursor、ChatGPT 和其他 MCP 客户端中使用。"
+      "a": "不能直接使用。Claude 没有内置的 EarthLink 连接器。通过 IMAP 将 MCPEmails 这样的 MCP 服务器连接到邮箱后，Claude 就能读取、搜索、发送、回复、定时和整理你的 earthlink.net 或 mindspring.com 邮件，而且同一个连接也可在 Cursor、ChatGPT 和其他 MCP 客户端中使用。"
     },
     {
       "q": "EarthLink 的 IMAP 和 SMTP 设置是什么？",
@@ -84,7 +84,7 @@
     },
     {
       "q": "EarthLink 需要应用专用密码吗？",
-      "a": "不需要。EarthLink 不签发应用专用密码，也没有创建它的页面。邮件客户端使用该邮箱的密码登录。EarthLink 在登录前只声明 CRAM-MD5 和两个自有机制，没有 PLAIN 或 LOGIN，所以有些客户端连正确的密码都不会发送。MCP Emails 改用 IMAP LOGIN 命令登录，EarthLink 的服务器会把它当作正常的凭据检查来回答。这一点目前只用虚构账户确认过，尚未用真实的 EarthLink 邮箱确认。"
+      "a": "不需要。EarthLink 不签发应用专用密码，也没有创建它的页面。邮件客户端使用该邮箱的密码登录。EarthLink 在登录前只声明 CRAM-MD5 和两个自有机制，没有 PLAIN 或 LOGIN，所以有些客户端连正确的密码都不会发送。MCPEmails 改用 IMAP LOGIN 命令登录，EarthLink 的服务器会把它当作正常的凭据检查来回答。这一点目前只用虚构账户确认过，尚未用真实的 EarthLink 邮箱确认。"
     },
     {
       "q": "我的 EarthLink 邮件会存储在你们的服务器上吗？",

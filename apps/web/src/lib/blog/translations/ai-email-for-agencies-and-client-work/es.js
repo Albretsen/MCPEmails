@@ -3,7 +3,7 @@ const translation = {
   description:
     'Cómo una agencia o un profesional independiente da a un agente de IA acceso a varios buzones de clientes sin mezclarlos: un espacio de trabajo por cliente, claves acotadas, solo lectura primero y una aprobación humana en cada envío.',
   coverAlt:
-    'Un agente de IA trabajando sobre buzones de clientes separados con acceso acotado, MCP Emails',
+    'Un agente de IA trabajando sobre buzones de clientes separados con acceso acotado, MCPEmails',
   content: `Si gestionas el correo de más de un cliente, vives con una regla: nada del cliente A puede aparecer en un hilo del cliente B. Un agente de IA no cambia la regla, solo hace que sea más fácil romperla. Un único agente con una única credencial que alcanza todos los buzones que administras está a un descuido de citar la factura equivocada a la persona equivocada.
 
 Hay tres fallos contra los que conviene diseñar: la **fuga entre clientes**, cuando una credencial demasiado amplia permite que una búsqueda encuentre el buzón que no era; el **colaborador que se va**, cuyo portátil sigue guardando una clave de API que funciona; y el **envío sin revisar**, cuando un agente responde al cliente de tu cliente con educación y con datos incorrectos. Si construyes la separación dentro del propio acceso, el agente no puede cruzar la frontera ni aunque un mensaje se lo pida.
@@ -64,7 +64,7 @@ Aquí las direcciones compartidas son buzones normales. Conecta support@ o billi
 
 Tu agente encuentra los buzones con \`inbox_list\` y se dirige a ellos por su nombre, así que nunca pegas identificadores en una instrucción. A partir de ahí el conjunto es pequeño: \`email_read\` y \`email_compose\`, \`email_organize\` y \`email_search_and_move\` para el triaje, y \`draft\` y \`schedule\` para todo lo que deba esperar a una persona.
 
-Deja clara una expectativa desde el principio: MCP Emails funciona por consulta. El agente comprueba el correo nuevo cuando se lo pides, o cuando se ejecuta una automatización programada, así que "respondemos en 60 segundos" no es una promesa que permita esta arquitectura.
+Deja clara una expectativa desde el principio: MCPEmails funciona por consulta. El agente comprueba el correo nuevo cuando se lo pides, o cuando se ejecuta una automatización programada, así que "respondemos en 60 segundos" no es una promesa que permita esta arquitectura.
 
 ## Traspaso y cierre de accesos
 
@@ -85,14 +85,14 @@ Afirmaciones que puedes poner por escrito:
 - El contenido de los mensajes nunca se almacena. Se obtiene en vivo del proveedor del cliente en cada petición y se descarta.
 - El único dato del buzón que se conserva es la credencial del proveedor, cifrada en reposo con AES-256-GCM y con la clave guardada por separado.
 - La actividad se registra solo como metadatos: nombre de la herramienta, buzón, marca de tiempo y estado, nunca contenido.
-- Ningún proveedor de IA es subencargado. MCP Emails ni envía tu correo a un modelo propio ni entrena con él. Los subencargados son Supabase, Vercel y Stripe.
+- Ningún proveedor de IA es subencargado. MCPEmails ni envía tu correo a un modelo propio ni entrena con él. Los subencargados son Supabase, Vercel y Stripe.
 - La única excepción al "nunca se almacena" es un mensaje programado para más tarde, que se guarda cifrado hasta su hora de envío.
 
 No prometas que la inyección de instrucciones está resuelta. Está contenida, no resuelta, y por eso existen las claves de solo lectura, los buzones restringidos y la aprobación previa. No prometas reacción instantánea ni certificaciones que el producto no ha reclamado. Manda a quien revise la seguridad a [/security](/security) y redacta tu contrato para que encaje con esa página, no por delante de ella. El código es público y se puede autoalojar, lo que responde a una auditoría mejor que cualquier promesa.
 
 ## Preguntas frecuentes
 
-**¿Necesito una cuenta de MCP Emails distinta para cada cliente?**  
+**¿Necesito una cuenta de MCPEmails distinta para cada cliente?**  
 No. Una cuenta, una suscripción Business y un espacio de trabajo por cliente. La suscripción sigue a tu usuario, así que cada espacio hereda el plan.
 
 **¿Puede un cliente ver el correo de otro?**  

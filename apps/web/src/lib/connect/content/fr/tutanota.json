@@ -21,7 +21,7 @@
     "titleLine1": "Tuta Mail n'a ni IMAP",
     "titleLine2": "ni SMTP, et il n'existe aucun bridge",
     "lead": "Tuta, anciennement Tutanota, ne fait tourner aucun des protocoles dont un client de messagerie ou un serveur MCP a besoin, et contrairement à Proton, il ne fournit aucun bridge local pour en simuler un. Cette page explique pourquoi, et ce qui vous est réellement accessible.",
-    "answer": "Non, et il n'y a pas de solution de contournement. Tuta n'offre aucun accès IMAP, POP ou SMTP : MCP Emails ne peut pas connecter une boîte Tuta, pas plus que Thunderbird, Apple Mail ou tout autre client. Cela découle du fonctionnement du chiffrement de Tuta : objets, corps des messages, pièces jointes, contacts et entrées d'agenda sont tous chiffrés avec une clé qui ne quitte jamais votre appareil, et les serveurs de Tuta ne détiennent que du texte chiffré. IMAP suppose un serveur capable de lire les objets, de trier, de rechercher et de remettre du texte en clair à un client, soit précisément la capacité que Tuta a supprimée. Contrairement à Proton, il n'existe pas non plus d'application bridge à exécuter localement : si vous voulez qu'un agent IA travaille sur du courrier, ce doit être une boîte chez un fournisseur qui parle IMAP, et MCP Emails en connecte une gratuitement."
+    "answer": "Non, et il n'y a pas de solution de contournement. Tuta n'offre aucun accès IMAP, POP ou SMTP : MCPEmails ne peut pas connecter une boîte Tuta, pas plus que Thunderbird, Apple Mail ou tout autre client. Cela découle du fonctionnement du chiffrement de Tuta : objets, corps des messages, pièces jointes, contacts et entrées d'agenda sont tous chiffrés avec une clé qui ne quitte jamais votre appareil, et les serveurs de Tuta ne détiennent que du texte chiffré. IMAP suppose un serveur capable de lire les objets, de trier, de rechercher et de remettre du texte en clair à un client, soit précisément la capacité que Tuta a supprimée. Contrairement à Proton, il n'existe pas non plus d'application bridge à exécuter localement : si vous voulez qu'un agent IA travaille sur du courrier, ce doit être une boîte chez un fournisseur qui parle IMAP, et MCPEmails en connecte une gratuitement."
   },
   "method": {
     "title": "Comment Tuta se connecte : uniquement via ses propres applications",
@@ -29,7 +29,7 @@
   },
   "setup": [
     {
-      "h": "Créez le compte MCP Emails gratuit",
+      "h": "Créez le compte MCPEmails gratuit",
       "p": "Une adresse e-mail, sans carte bancaire. Une boîte connectée est gratuite pour toujours, et les deux étapes suivantes déterminent ce qu'elle contiendra."
     },
     {
@@ -90,7 +90,7 @@
     },
     {
       "q": "Que faire si je veux qu'un agent IA gère mon courrier ?",
-      "a": "Utilisez délibérément deux adresses. Gardez la correspondance privée chez Tuta, où rien d'automatisé ne peut l'atteindre, et utilisez une boîte IMAP distincte pour le courrier que vous voulez faire trier, traiter, planifier et classer par un agent. MCP Emails connecte cette seconde boîte à Claude, Cursor ou ChatGPT, une boîte gratuite, et ne voit jamais celle de Tuta."
+      "a": "Utilisez délibérément deux adresses. Gardez la correspondance privée chez Tuta, où rien d'automatisé ne peut l'atteindre, et utilisez une boîte IMAP distincte pour le courrier que vous voulez faire trier, traiter, planifier et classer par un agent. MCPEmails connecte cette seconde boîte à Claude, Cursor ou ChatGPT, une boîte gratuite, et ne voit jamais celle de Tuta."
     }
   ],
   "ctaBand": {

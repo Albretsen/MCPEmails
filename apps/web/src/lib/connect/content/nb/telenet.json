@@ -21,18 +21,18 @@
     "titleLine1": "Koble Telenet-postkassen din",
     "titleLine2": "til Claude, Cursor, enhver MCP-klient",
     "lead": "Gi AI-agenten din en ekte Telenet-innboks. Les, søk, send, svar, planlegg og organiser e-post via IMAP med postkassepassordet du har satt i MyTelenet.",
-    "answer": "Claude når ikke en Telenet-postkasse på egen hånd. MCP Emails er en hostet MCP-server som kobler til via IMAP på imap.telenet.be port 993 og autentiserer med hele telenet.be-adressen din og passordet som er satt på den postkassen i MyTelenet, slik at Claude, Cursor eller enhver MCP-klient kan lese, søke, sende og organisere e-posten. Telenet utsteder ikke programspesifikke passord og har ingen bryter for klienttilgang: alle postkasser opprettes, og får passordet sitt, på skjermen Je mailbox i MyTelenet. Én innboks er gratis, for alltid.",
+    "answer": "Claude når ikke en Telenet-postkasse på egen hånd. MCPEmails er en hostet MCP-server som kobler til via IMAP på imap.telenet.be port 993 og autentiserer med hele telenet.be-adressen din og passordet som er satt på den postkassen i MyTelenet, slik at Claude, Cursor eller enhver MCP-klient kan lese, søke, sende og organisere e-posten. Telenet utsteder ikke programspesifikke passord og har ingen bryter for klienttilgang: alle postkasser opprettes, og får passordet sitt, på skjermen Je mailbox i MyTelenet. Én innboks er gratis, for alltid.",
     "meta0": "1 innboks gratis, for alltid",
     "meta1": "Postkassepassord fra MyTelenet",
     "meta2": "E-post hentes direkte, lagres aldri"
   },
   "method": {
     "title": "Slik kobler Telenet seg til: IMAP mot en proxy, med passord per postkasse",
-    "body": "Telenet tilbyr IMAP på <code>imap.telenet.be</code> port 993 over implisitt TLS. For utgående e-post dokumenterer Telenets egne oppsettsider <code>smtp.telenet.be</code> på port 587 med TLS og autentisert SMTP; den samme verten svarer også på port 465 med implisitt TLS, som er det MCP Emails forhåndsutfyller. Telenet er tydelig på formen for brukernavnet: <b>Gebruikersnaam: je volledige e-mailadres</b>. Passordet er det som hører til den enkelte postkassen, ikke en egen app-pålogging, og postkasser opprettes og administreres i MyTelenet: en <b>beheerder</b> på kontoen kan opprette opptil ti postkasser, en vanlig <b>gebruiker</b> én. Det som svarer på de vertsnavnene, er en proxy (<code>* OK IMAP4rev1 proxy server ready</code>) foran e-postlageret, noe som forklarer det tynne funksjonssettet beskrevet under."
+    "body": "Telenet tilbyr IMAP på <code>imap.telenet.be</code> port 993 over implisitt TLS. For utgående e-post dokumenterer Telenets egne oppsettsider <code>smtp.telenet.be</code> på port 587 med TLS og autentisert SMTP; den samme verten svarer også på port 465 med implisitt TLS, som er det MCPEmails forhåndsutfyller. Telenet er tydelig på formen for brukernavnet: <b>Gebruikersnaam: je volledige e-mailadres</b>. Passordet er det som hører til den enkelte postkassen, ikke en egen app-pålogging, og postkasser opprettes og administreres i MyTelenet: en <b>beheerder</b> på kontoen kan opprette opptil ti postkasser, en vanlig <b>gebruiker</b> én. Det som svarer på de vertsnavnene, er en proxy (<code>* OK IMAP4rev1 proxy server ready</code>) foran e-postlageret, noe som forklarer det tynne funksjonssettet beskrevet under."
   },
   "setup": [
     {
-      "h": "Opprett din gratis MCP Emails-konto",
+      "h": "Opprett din gratis MCPEmails-konto",
       "p": "Registrer deg på mcpemails.com. Gratisplanen kobler til én innboks for alltid og ber ikke om kort."
     },
     {
@@ -44,14 +44,14 @@
       "p": "En kontoadministrator kan opprette opptil ti Telenet-postkasser, en vanlig bruker én. Vil du helst ikke gi en agent adressen du har brukt i femten år, oppretter du en ekstra postkasse på samme konto og kobler til den i stedet. Det er samme vert, samme porter og et passord du kan bytte uten å forstyrre noe annet."
     },
     {
-      "h": "Legg til postkassen i MCP Emails",
+      "h": "Legg til postkassen i MCPEmails",
       "p": "Velg IMAP / SMTP, skriv inn hele adressen, for eksempel naam@telenet.be, og lim inn postkassepassordet. Telenet-vertene og -portene er forhåndsutfylt og ble verifisert via en direkte TLS-tilkobling. Lim så https://mcpemails.com/api/mcp inn i Claude, Cursor eller ChatGPT, autoriser, så har agenten innboksen."
     }
   ],
   "gotchas": [
     {
       "h": "Å endre Telenet-passordet ditt ødelegger stille alle tilkoblede klienter",
-      "p": "Telenet sier det rett ut i sin egen oppsettveiledning: endrer du passordet til Telenet-brukernavnet eller e-postadressen din, <b>verander dan ook het wachtwoord in je e-mailprogramma</b>. Det finnes ikke noe app-passord som skjermer klienten fra kontoen, så en rutinemessig passordbytte i MyTelenet tar agenten ned sammen med det. Feilen dukker opp som en autentiseringsfeil timer senere, lenge etter at noen kobler den til det de gjorde i portalen. Bytter du Telenet-passordet, oppdater MCP Emails i samme slengen."
+      "p": "Telenet sier det rett ut i sin egen oppsettveiledning: endrer du passordet til Telenet-brukernavnet eller e-postadressen din, <b>verander dan ook het wachtwoord in je e-mailprogramma</b>. Det finnes ikke noe app-passord som skjermer klienten fra kontoen, så en rutinemessig passordbytte i MyTelenet tar agenten ned sammen med det. Feilen dukker opp som en autentiseringsfeil timer senere, lenge etter at noen kobler den til det de gjorde i portalen. Bytter du Telenet-passordet, oppdater MCPEmails i samme slengen."
     },
     {
       "h": "Du snakker med en proxy, og den annonserer verken MOVE eller SPECIAL-USE",
@@ -69,16 +69,16 @@
   "limits": [
     "Fordi serveren ikke støtter MOVE, er en flytting ikke atomisk. Hvis en tilkobling brytes midt i operasjonen, kan en melding kortvarig finnes i begge mapper.",
     "Innsendingsgrensen på 20 MB er det praktiske taket for alt agenten din sender fra denne postkassen.",
-    "Telenet utsteder ikke programspesifikke passord, så påloggingen du gir MCP Emails, er selve postkassepassordet. Bytt det i MyTelenet og oppdater det her samtidig."
+    "Telenet utsteder ikke programspesifikke passord, så påloggingen du gir MCPEmails, er selve postkassepassordet. Bytt det i MyTelenet og oppdater det her samtidig."
   ],
   "faq": [
     {
       "q": "Fungerer Claude med Telenet-e-post?",
-      "a": "Ikke på egen hånd. Claude har ingen innebygd Telenet-kobling. Peker du en MCP-server som MCP Emails mot postkassen via IMAP, får Claude tilgang til å lese, søke, sende, svare, planlegge og organisere, og samme tilkobling fungerer da fra Cursor, ChatGPT og andre MCP-klienter."
+      "a": "Ikke på egen hånd. Claude har ingen innebygd Telenet-kobling. Peker du en MCP-server som MCPEmails mot postkassen via IMAP, får Claude tilgang til å lese, søke, sende, svare, planlegge og organisere, og samme tilkobling fungerer da fra Cursor, ChatGPT og andre MCP-klienter."
     },
     {
       "q": "Hva er IMAP- og SMTP-innstillingene for Telenet?",
-      "a": "IMAP er imap.telenet.be på port 993 med SSL. For utgående e-post dokumenterer Telenet smtp.telenet.be på port 587 med TLS og autentisert SMTP; den samme verten svarer også på 465 med implisitt TLS, som er det MCP Emails bruker. Brukernavnet er hele telenet.be-adressen din."
+      "a": "IMAP er imap.telenet.be på port 993 med SSL. For utgående e-post dokumenterer Telenet smtp.telenet.be på port 587 med TLS og autentisert SMTP; den samme verten svarer også på 465 med implisitt TLS, som er det MCPEmails bruker. Brukernavnet er hele telenet.be-adressen din."
     },
     {
       "q": "Trenger Telenet et app-passord?",
@@ -86,7 +86,7 @@
     },
     {
       "q": "Hvorfor sluttet Telenet-e-postklienten min å virke etter en passordendring?",
-      "a": "Fordi klienten bruker kontopassordet direkte. Telenets egen veiledning er å endre passordet i e-postprogrammet ditt hver gang du endrer det for Telenet-brukernavnet eller -adressen din. Oppdater det lagrede passordet i MCP Emails til den nye verdien, så gjenopptas tilkoblingen med en gang."
+      "a": "Fordi klienten bruker kontopassordet direkte. Telenets egen veiledning er å endre passordet i e-postprogrammet ditt hver gang du endrer det for Telenet-brukernavnet eller -adressen din. Oppdater det lagrede passordet i MCPEmails til den nye verdien, så gjenopptas tilkoblingen med en gang."
     },
     {
       "q": "Hvor mange Telenet-postkasser kan jeg opprette?",

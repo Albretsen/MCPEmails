@@ -21,7 +21,7 @@
     "titleLine1": "Onet Poczta en IMAP,",
     "titleLine2": "dans Claude, Cursor, tout client MCP",
     "lead": "Onet a réservé l'accès des clients de messagerie à une offre payante en 2026. Si votre compte y a droit, un agent IA peut lire, rechercher, envoyer, répondre, planifier et organiser la boîte en IMAP.",
-    "answer": "Claude ne peut pas atteindre une boîte Onet tout seul, et depuis le 31 mars 2026, rien d'autre ne le peut non plus sur un compte Onet gratuit. Onet a retiré POP3 pour tout le monde et a placé IMAP dans ses offres de messagerie payantes : un compte gratuit se limite désormais au webmail et à l'application mobile. Sur une offre payante, ou sur l'un des anciens comptes perpétuels maintenus, MCP Emails est un serveur MCP hébergé qui connecte la boîte en IMAP sur imap.poczta.onet.pl, port 993, avec votre mot de passe Onet, et donne à Claude, Cursor ou tout client MCP un accès en lecture, recherche, envoi et organisation. Une boîte sur MCP Emails est gratuite, pour toujours.",
+    "answer": "Claude ne peut pas atteindre une boîte Onet tout seul, et depuis le 31 mars 2026, rien d'autre ne le peut non plus sur un compte Onet gratuit. Onet a retiré POP3 pour tout le monde et a placé IMAP dans ses offres de messagerie payantes : un compte gratuit se limite désormais au webmail et à l'application mobile. Sur une offre payante, ou sur l'un des anciens comptes perpétuels maintenus, MCPEmails est un serveur MCP hébergé qui connecte la boîte en IMAP sur imap.poczta.onet.pl, port 993, avec votre mot de passe Onet, et donne à Claude, Cursor ou tout client MCP un accès en lecture, recherche, envoi et organisation. Une boîte sur MCPEmails est gratuite, pour toujours.",
     "meta0": "1 boîte gratuite, pour toujours",
     "meta1": "Exige une offre de messagerie Onet payante",
     "meta2": "E-mails récupérés en direct, jamais stockés"
@@ -32,7 +32,7 @@
   },
   "setup": [
     {
-      "h": "Créez votre compte MCP Emails gratuit",
+      "h": "Créez votre compte MCPEmails gratuit",
       "p": "Inscrivez-vous sur mcpemails.com. L'offre gratuite connecte une boîte pour toujours et ne demande pas de carte bancaire."
     },
     {
@@ -44,7 +44,7 @@
       "p": "Onet n'émet pas de mot de passe spécifique pour les clients de messagerie ; vous vous authentifiez avec le mot de passe de votre compte Onet et l'adresse complète. Si vous reprenez les réglages d'un ancien client, ne recopiez pas le serveur POP3. POP3 a été purement et simplement retiré, pas seulement déprécié : plus rien ne vous répondra sur le port 995."
     },
     {
-      "h": "Ajoutez la boîte dans MCP Emails",
+      "h": "Ajoutez la boîte dans MCPEmails",
       "p": "Choisissez IMAP / SMTP, saisissez l'adresse complète, par exemple nazwa@onet.pl, et entrez le mot de passe. Les serveurs et ports Onet sont préremplis et ont été vérifiés par une connexion TLS réelle. Mettez ensuite https://mcpemails.com/api/mcp dans Claude, Cursor ou ChatGPT, autorisez, et votre agent a la boîte."
     }
   ],
@@ -74,7 +74,7 @@
   "faq": [
     {
       "q": "Claude fonctionne-t-il avec Onet Poczta ?",
-      "a": "Seulement si le compte dispose d'IMAP, ce qui depuis mars 2026 signifie une offre de messagerie Onet payante ou un ancien compte perpétuel maintenu. Dans ce cas, pointer un serveur MCP comme MCP Emails vers la boîte donne à Claude un accès en lecture, recherche, envoi, réponse, planification et organisation, et la même connexion fonctionne depuis Cursor, ChatGPT et d'autres clients MCP."
+      "a": "Seulement si le compte dispose d'IMAP, ce qui depuis mars 2026 signifie une offre de messagerie Onet payante ou un ancien compte perpétuel maintenu. Dans ce cas, pointer un serveur MCP comme MCPEmails vers la boîte donne à Claude un accès en lecture, recherche, envoi, réponse, planification et organisation, et la même connexion fonctionne depuis Cursor, ChatGPT et d'autres clients MCP."
     },
     {
       "q": "Quels sont les réglages IMAP et SMTP d'Onet ?",

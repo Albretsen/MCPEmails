@@ -107,14 +107,14 @@ export function missingTransportMessage(
       "and there are no stored messages to look up. Sending new mail from it works. " +
       "Nothing is wrong with its credentials; do not retry and do not ask the user to " +
       "reconnect it for this. If the user wants to read this mailbox too, they can " +
-      `reconnect it with IMAP settings in the MCP Emails dashboard: ${dashboardUrl}`;
+      `reconnect it with IMAP settings in the MCPEmails dashboard: ${dashboardUrl}`;
   }
   return `The inbox ${emailAddress} is connected for receiving only: it has no SMTP ` +
     "server, so it cannot send, reply, forward or schedule mail. Reading, searching " +
     "and organizing its mail works. Nothing is wrong with its credentials; do not " +
     "retry and do not ask the user to reconnect it for this. If the user wants to " +
     "send from this address too, they can reconnect it with SMTP settings in the " +
-    `MCP Emails dashboard: ${dashboardUrl}`;
+    `MCPEmails dashboard: ${dashboardUrl}`;
 }
 
 /** The structured tool-result body for {@link missingTransportMessage}. */

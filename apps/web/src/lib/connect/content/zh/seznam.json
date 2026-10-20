@@ -20,7 +20,7 @@
     "titleLine1": "将 Seznam 邮箱连接到 Claude，",
     "titleLine2": "以及 Cursor、ChatGPT、任意 MCP 客户端",
     "lead": "为你的 AI 代理接入一个真正的 Seznam 邮箱。用你已在使用的密码通过 IMAP 读取、搜索、发送、回复、定时与整理邮件，可在所有 MCP 客户端中使用，而不止一个。",
-    "answer": "Claude 无法自行连接 Seznam 邮箱。MCP Emails 是一个托管 MCP 服务器，通过 IMAP 连接 imap.seznam.cz 的 993 端口，用你的完整地址和普通 Seznam 密码登录，让 Claude、Cursor 或任意 MCP 客户端都能读取、搜索、发送并整理邮件。如果你开启了双重认证，账户密码将无法再用于邮件协议，你需要另设一个 Heslo pro aplikace（应用密码）。一个收件箱永久免费。",
+    "answer": "Claude 无法自行连接 Seznam 邮箱。MCPEmails 是一个托管 MCP 服务器，通过 IMAP 连接 imap.seznam.cz 的 993 端口，用你的完整地址和普通 Seznam 密码登录，让 Claude、Cursor 或任意 MCP 客户端都能读取、搜索、发送并整理邮件。如果你开启了双重认证，账户密码将无法再用于邮件协议，你需要另设一个 Heslo pro aplikace（应用密码）。一个收件箱永久免费。",
     "meta0": "1 个收件箱永久免费",
     "meta1": "账户密码，除非开启了两步验证",
     "meta2": "邮件实时获取，绝不存储"
@@ -31,7 +31,7 @@
   },
   "setup": [
     {
-      "h": "创建免费 MCP Emails 账户",
+      "h": "创建免费 MCPEmails 账户",
       "p": "在 mcpemails.com 注册。免费套餐可永久连接一个收件箱，无需信用卡。"
     },
     {
@@ -39,7 +39,7 @@
       "p": "登录你的 Seznam 账户，打开 <b>Zabezpečení účtu</b>（账户安全）。如果 <b>Dvoufázové ověření</b> 处于关闭状态，就使用普通的 Seznam 密码，这一步无需再做任何事。如果已开启，找到 <b>Heslo pro aplikace</b>（应用密码）一行，点击 <b>Nastavit</b>（设置），输入两次新密码，然后点击 <b>Uložit změny</b>（保存更改）。Seznam 不接受与你登录密码相同的值。"
     },
     {
-      "h": "把地址和密码粘贴到 MCP Emails",
+      "h": "把地址和密码粘贴到 MCPEmails",
       "p": "选择 IMAP / SMTP，完整输入地址（包括 @ 之后的部分），并粘贴适用的密码。服务器和端口已按本页经过验证的值自动填好。"
     },
     {
@@ -58,7 +58,7 @@
     },
     {
       "h": "Seznam 不声明 IDLE，所以不会推送任何东西",
-      "p": "IMAP 服务器省略了 IDLE 能力，这意味着客户端无法保持连接打开并在邮件到达时收到通知，只能轮询。对代理来说这不成问题，因为 MCP Emails 是在你的 AI 提出问题时才打开连接并获取邮件，而不是一直守着一个套接字。不过了解这一点仍有意义，因为它解释了为什么 Seznam 账户上的桌面客户端比网页邮箱更晚发现新邮件，也解释了为什么依赖 IDLE 的工具在别处正常、在这里却看起来坏了。"
+      "p": "IMAP 服务器省略了 IDLE 能力，这意味着客户端无法保持连接打开并在邮件到达时收到通知，只能轮询。对代理来说这不成问题，因为 MCPEmails 是在你的 AI 提出问题时才打开连接并获取邮件，而不是一直守着一个套接字。不过了解这一点仍有意义，因为它解释了为什么 Seznam 账户上的桌面客户端比网页邮箱更晚发现新邮件，也解释了为什么依赖 IDLE 的工具在别处正常、在这里却看起来坏了。"
     }
   ],
   "limits": [
@@ -68,7 +68,7 @@
   "faq": [
     {
       "q": "Claude 能用 Seznam 邮箱吗？",
-      "a": "不能直接使用。Claude 没有内置的 Seznam 连接器，也无法自行建立 IMAP 连接。将 MCP Emails 这样的 MCP 服务器连接到你的 seznam.cz 或 email.cz 邮箱后，Claude 就能读取、搜索、发送、回复、定时和整理其中的邮件，同一个连接也可在 Cursor 和其他 MCP 客户端中使用。"
+      "a": "不能直接使用。Claude 没有内置的 Seznam 连接器，也无法自行建立 IMAP 连接。将 MCPEmails 这样的 MCP 服务器连接到你的 seznam.cz 或 email.cz 邮箱后，Claude 就能读取、搜索、发送、回复、定时和整理其中的邮件，同一个连接也可在 Cursor 和其他 MCP 客户端中使用。"
     },
     {
       "q": "Seznam 的 IMAP 和 SMTP 设置是什么？",

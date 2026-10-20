@@ -82,7 +82,7 @@ async function toWav(mp3, wav) {
  */
 const SPELLINGS = [
   { heard: 'mcpemails.com', text: 'mcpemails.com' },
-  { heard: 'mcpemails', text: 'MCP Emails' },
+  { heard: 'mcpemails', text: 'MCPEmails' },
   { heard: 'encrypted', text: 'encrypted' },
   { heard: 'fastmail', text: 'Fastmail' },
   { heard: 'codebase', text: 'codebase' },
@@ -133,7 +133,7 @@ export function applySpellings(words) {
         // the comma before "mcpemails.com", swallow it, and shift the window
         // by one so the closing "com" fell outside the six-token limit. The
         // comma then vanished from the caption and the domain came out as
-        // "MCP Emails." plus a stranded "com.".
+        // "MCPEmails." plus a stranded "com.".
         if (k === '') break;
 
         acc += k;

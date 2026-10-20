@@ -1,5 +1,5 @@
 # ============================================================
-# MCP Emails, self-host
+# MCPEmails, self-host
 # ============================================================
 # Quick start:
 #   make setup        # generate .env (secrets), run once

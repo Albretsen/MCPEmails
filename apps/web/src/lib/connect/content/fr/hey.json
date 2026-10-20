@@ -13,14 +13,14 @@
   },
   "meta": {
     "title": "HEY et l'IA : pas d'IMAP, et ce qui marche à la place",
-    "description": "HEY n'accepte aucune connexion IMAP, POP ou SMTP : MCP Emails ne peut donc pas connecter une boîte HEY. Pourquoi 37signals l'a voulu ainsi, et les deux voies qui marchent."
+    "description": "HEY n'accepte aucune connexion IMAP, POP ou SMTP : MCPEmails ne peut donc pas connecter une boîte HEY. Pourquoi 37signals l'a voulu ainsi, et les deux voies qui marchent."
   },
   "hero": {
     "eyebrow": "HEY + IA",
     "titleLine1": "HEY n'a pas d'IMAP, donc aucun",
     "titleLine2": "serveur MCP hébergé ne peut l'atteindre",
     "lead": "HEY est une messagerie fermée à dessein. Aucun client tiers et aucun serveur hébergé ne peut se connecter à une boîte hey.com. Cette page vous donne une image exacte de la situation et les voies qui permettent réellement à un agent IA d'accéder à votre courrier.",
-    "answer": "Non, et ce n'est pas faute d'une fonctionnalité de notre côté. HEY n'accepte aucune connexion IMAP, POP ou SMTP, que ce soit sur les adresses hey.com ou sur les domaines personnalisés HEY for Domains : MCP Emails ne peut donc pas connecter une boîte HEY, et aucun autre serveur MCP hébergé non plus. 37signals considère cela comme un choix de conception plutôt que comme une lacune : le filtrage des expéditeurs, les règles par contact et l'organisation des fils de HEY vivent sur ses serveurs, et seules ses propres applications parlent ce protocole. Si vous voulez un agent dans HEY, 37signals propose hey-cli, qui fait tourner un serveur MCP en local sur votre compte connecté. MCP Emails sert aux boîtes IMAP que vous gardez à côté, et une boîte y est gratuite.",
+    "answer": "Non, et ce n'est pas faute d'une fonctionnalité de notre côté. HEY n'accepte aucune connexion IMAP, POP ou SMTP, que ce soit sur les adresses hey.com ou sur les domaines personnalisés HEY for Domains : MCPEmails ne peut donc pas connecter une boîte HEY, et aucun autre serveur MCP hébergé non plus. 37signals considère cela comme un choix de conception plutôt que comme une lacune : le filtrage des expéditeurs, les règles par contact et l'organisation des fils de HEY vivent sur ses serveurs, et seules ses propres applications parlent ce protocole. Si vous voulez un agent dans HEY, 37signals propose hey-cli, qui fait tourner un serveur MCP en local sur votre compte connecté. MCPEmails sert aux boîtes IMAP que vous gardez à côté, et une boîte y est gratuite.",
     "meta0": "1 boîte gratuite, pour toujours",
     "meta1": "Aucune connexion IMAP, POP ou SMTP",
     "meta2": "hey-cli propose un serveur MCP local"
@@ -31,12 +31,12 @@
   },
   "setup": [
     {
-      "h": "Créez le compte MCP Emails gratuit",
+      "h": "Créez le compte MCPEmails gratuit",
       "p": "Il suffit d'une adresse e-mail, sans carte bancaire. Vous obtenez une boîte connectée gratuite, que les étapes suivantes remplissent."
     },
     {
       "h": "Choisissez la boîte dans laquelle l'agent travaillera vraiment",
-      "p": "Choisissez une boîte qui parle IMAP : votre adresse professionnelle, une boîte sur votre domaine chez Fastmail ou Migadu, un compte Gmail, n'importe quelle boîte avec un vrai serveur. C'est ce compte que MCP Emails connecte, et c'est depuis lui que votre agent lit, envoie et classe."
+      "p": "Choisissez une boîte qui parle IMAP : votre adresse professionnelle, une boîte sur votre domaine chez Fastmail ou Migadu, un compte Gmail, n'importe quelle boîte avec un vrai serveur. C'est ce compte que MCPEmails connecte, et c'est depuis lui que votre agent lit, envoie et classe."
     },
     {
       "h": "Redirigez HEY vers elle, ou exportez depuis HEY",
@@ -84,7 +84,7 @@
     },
     {
       "q": "Quelle est la solution pratique pour donner accès à un agent IA à mon courrier si j'utilise HEY ?",
-      "a": "Deux options, que vous pouvez utiliser ensemble. Utilisez hey-cli en local pour HEY lui-même. Connectez une boîte IMAP distincte à MCP Emails pour la correspondance que vous voulez faire traiter depuis n'importe quel client MCP, y compris ceux qui n'acceptent qu'une URL, et transférez-y le courrier si vous voulez un miroir de ce qui arrive dans HEY."
+      "a": "Deux options, que vous pouvez utiliser ensemble. Utilisez hey-cli en local pour HEY lui-même. Connectez une boîte IMAP distincte à MCPEmails pour la correspondance que vous voulez faire traiter depuis n'importe quel client MCP, y compris ceux qui n'acceptent qu'une URL, et transférez-y le courrier si vous voulez un miroir de ce qui arrive dans HEY."
     },
     {
       "q": "Puis-je exporter mon courrier hors de HEY ?",

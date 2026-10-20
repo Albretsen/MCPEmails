@@ -22,20 +22,20 @@
       "step1": "Dans claude.ai ou Claude Desktop, ouvrez Settings → Connectors.",
       "step2": "Cliquez sur « Add custom connector ».",
       "step3": "Collez l'URL ci-dessus comme URL du connecteur, puis cliquez sur « Add ».",
-      "step4": "Cliquez sur « Connect » et connectez-vous avec MCP Emails pour autoriser. Aucune clé API nécessaire."
+      "step4": "Cliquez sur « Connect » et connectez-vous avec MCPEmails pour autoriser. Aucune clé API nécessaire."
     },
     "chatgpt": {
       "step1": "Ouvrez Settings → Apps & Connectors → Advanced settings et activez le mode développeur.",
       "step2": "De retour dans Apps & Connectors, cliquez sur « Create ».",
       "step3": "Saisissez un nom et collez l'URL ci-dessus comme Connector URL.",
-      "step4": "Choisissez OAuth, cliquez sur « Create », puis autorisez avec MCP Emails.",
-      "step5": "Dans une conversation sur chatgpt.com, cliquez sur + → mode développeur et sélectionnez l'app MCP Emails. Refaites-le dans chaque nouvelle conversation, sinon ChatGPT ne verra pas les outils.",
+      "step4": "Choisissez OAuth, cliquez sur « Create », puis autorisez avec MCPEmails.",
+      "step5": "Dans une conversation sur chatgpt.com, cliquez sur + → mode développeur et sélectionnez l'app MCPEmails. Refaites-le dans chaque nouvelle conversation, sinon ChatGPT ne verra pas les outils.",
       "note": "Fonctionne sur chatgpt.com (web uniquement) avec Plus, Pro, Business, Enterprise et Edu. Les comptes Free et Go ne peuvent pas ajouter de connecteur personnalisé. Sur Business et Enterprise, un administrateur doit parfois d'abord autoriser le mode développeur."
     },
     "cursor": {
       "step1": "Modifiez ~/.cursor/mcp.json (global) ou .cursor/mcp.json (projet).",
       "step2": "Ajoutez le serveur ci-dessous sous « mcpServers ».",
-      "step3": "Cursor vous invite à vous connecter via OAuth. Autorisez avec MCP Emails."
+      "step3": "Cursor vous invite à vous connecter via OAuth. Autorisez avec MCPEmails."
     },
     "vscode": {
       "step1": "Ouvrez la palette de commandes (⇧⌘P) et exécutez « MCP: Add Server ».",
@@ -51,7 +51,7 @@
     "windsurf": {
       "step1": "Ouvrez les paramètres MCP de Cascade, ou modifiez ~/.codeium/windsurf/mcp_config.json.",
       "step2": "Ajoutez le serveur ci-dessous. Notez que le champ est « serverUrl », et non « url ».",
-      "step3": "Actualisez les serveurs MCP dans Cascade et autorisez avec MCP Emails lorsque demandé."
+      "step3": "Actualisez les serveurs MCP dans Cascade et autorisez avec MCPEmails lorsque demandé."
     },
     "gemini": {
       "step1": "Modifiez ~/.gemini/settings.json (global) ou .gemini/settings.json (projet).",
@@ -61,7 +61,7 @@
     "zed": {
       "step1": "Dans les paramètres du panneau Agent, cliquez sur « Add Custom Server », ou modifiez settings.json.",
       "step2": "Ajoutez le serveur ci-dessous sous « context_servers ».",
-      "step3": "Zed déclenche le flux OAuth lorsqu'aucun en-tête Authorization n'est défini. Connectez-vous avec MCP Emails."
+      "step3": "Zed déclenche le flux OAuth lorsqu'aucun en-tête Authorization n'est défini. Connectez-vous avec MCPEmails."
     },
     "jetbrains": {
       "step1": "Ouvrez Settings → Tools → AI Assistant → Model Context Protocol (MCP).",
@@ -71,7 +71,7 @@
     "raycast": {
       "step1": "Exécutez la commande « Install MCP Server » (ou « Manage MCP Servers »).",
       "step2": "Saisissez un nom, définissez Transport sur « HTTP » et collez l'URL ci-dessus.",
-      "step3": "Appuyez sur « Install MCP Server », puis cliquez sur « Sign In » pour autoriser avec MCP Emails."
+      "step3": "Appuyez sur « Install MCP Server », puis cliquez sur « Sign In » pour autoriser avec MCPEmails."
     },
     "warp": {
       "step1": "Ouvrez Settings → Agents → MCP servers et cliquez sur « + Add ».",
@@ -740,7 +740,7 @@
       "bodyTitle": "Message",
       "bodyTruncated": "Ce message dépasse 64 Ko et a été tronqué ici. Ouvrez-le dans le tableau de bord pour tout lire.",
       "bodyWithheldRole": "Le texte du message est visible par les propriétaires, administrateurs et membres de l'espace. Votre rôle ne peut consulter que les détails de remise.",
-      "bodyStoredWithProvider": "Cette demande a été préparée avant que MCP Emails n’enregistre une copie du brouillon : son texte ne peut pas être affiché ici et, même approuvée, elle ne sera pas envoyée. Rejetez-la et demandez à votre assistant de renvoyer le brouillon.",
+      "bodyStoredWithProvider": "Cette demande a été préparée avant que MCPEmails n’enregistre une copie du brouillon : son texte ne peut pas être affiché ici et, même approuvée, elle ne sera pas envoyée. Rejetez-la et demandez à votre assistant de renvoyer le brouillon.",
       "bodyDecryptFailed": "Le message stocké n'a pas pu être déchiffré et ne peut donc pas être affiché. Rejetez cette demande et demandez à votre assistant de la refaire.",
       "bodyAbsent": "Cette demande ne contient aucun texte de message.",
       "bodyHtmlShow": "Afficher la source HTML",
@@ -850,7 +850,7 @@
       "bannerAlsoFailing": "{count, plural, =1 {Une autre échoue encore.} other {# autres échouent encore.}}",
       "bannerFix": "Corrigez la cause, puis réactivez-les.",
       "rowFailing": "{count, plural, =0 {La dernière exécution a échoué.} =1 {1 exécution consécutive a échoué.} other {# exécutions consécutives ont échoué ; elle se désactive à 5.}}",
-      "causeConnectionEnded": "La connexion sous laquelle tourne cette automatisation a pris fin. Reconnectez MCP Emails dans votre client MCP.",
+      "causeConnectionEnded": "La connexion sous laquelle tourne cette automatisation a pris fin. Reconnectez MCPEmails dans votre client MCP.",
       "causeKeyRevoked": "La clé API sous laquelle tourne cette automatisation a été révoquée. Choisissez une clé active.",
       "causeScopeDenied": "La clé API n'a plus l'autorisation nécessaire à l'action de cette automatisation.",
       "causeInboxNotPermitted": "La clé API n'a plus le droit d'utiliser la boîte de cette automatisation.",

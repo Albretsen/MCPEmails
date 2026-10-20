@@ -3,7 +3,7 @@ import { AuthErrorApp } from '../../../components/auth/AuthErrorApp';
 import { SSO_REQUIRED_REASON } from '@/lib/sso/enforcement';
 
 export const metadata: Metadata = {
-  title: 'Sign-in error · MCP Emails',
+  title: 'Sign-in error',
   description: 'Something went wrong during sign-in',
 };
 

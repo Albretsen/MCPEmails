@@ -474,7 +474,7 @@ function DashboardInner({ initialRoute = 'overview', user, workspace: serverWork
       // the person has to take somewhere else.
       //
       // The action opens a dialog with a real, copyable link: the admin who
-      // can clear this usually has no MCP Emails account, so "send it to them"
+      // can clear this usually has no MCPEmails account, so "send it to them"
       // has to produce something that can be sent.
       toast({
         message: tr('app.adminConsentRequired'),

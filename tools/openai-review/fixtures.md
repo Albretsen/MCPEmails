@@ -1,7 +1,7 @@
 # Demo mailbox fixtures (demo@mcpemails.com)
 
 The fixture set that `seed-demo-mailbox.mjs` writes into the OpenAI app-review
-demo mailbox. Test-case expectations for the "MCP Emails" ChatGPT app are
+demo mailbox. Test-case expectations for the "MCPEmails" ChatGPT app are
 written against this file.
 
 All people and companies are fictional and use `.example` domains (RFC 2606).

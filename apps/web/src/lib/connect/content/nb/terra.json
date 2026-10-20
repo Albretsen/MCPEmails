@@ -21,7 +21,7 @@
     "titleLine1": "Koble Terra Mail til Claude,",
     "titleLine2": "Cursor, ChatGPT, enhver MCP-klient",
     "lead": "Gi AI-agenten din en ekte Terra-innboks. Les, søk, send, svar, planlegg og organiser e-post via IMAP, på en brasiliansk terra.com.br-postkasse med et aktivt betalt abonnement.",
-    "answer": "Claude når ikke Terra Mail på egen hånd. MCP Emails er en hostet MCP-server som kobler til via IMAP på imap.terra.com.br port 993 og autentiserer med hele adressen din og Terra Mail-passordet ditt, slik at Claude, Cursor eller enhver MCP-klient kan lese, søke, sende og organisere den e-posten. Terra har avviklet gratispostkassene sine, så en adresse uten en aktiv betalt Terra Mail-pakke er blokkert, ikke bare begrenset, og Terras ikke-brasilianske domener ble stengt for mange år siden og har ingen server i det hele tatt. Bare terra.com.br er fortsatt i drift. Én innboks er gratis på MCP Emails.",
+    "answer": "Claude når ikke Terra Mail på egen hånd. MCPEmails er en hostet MCP-server som kobler til via IMAP på imap.terra.com.br port 993 og autentiserer med hele adressen din og Terra Mail-passordet ditt, slik at Claude, Cursor eller enhver MCP-klient kan lese, søke, sende og organisere den e-posten. Terra har avviklet gratispostkassene sine, så en adresse uten en aktiv betalt Terra Mail-pakke er blokkert, ikke bare begrenset, og Terras ikke-brasilianske domener ble stengt for mange år siden og har ingen server i det hele tatt. Bare terra.com.br er fortsatt i drift. Én innboks er gratis på MCPEmails.",
     "meta0": "1 innboks gratis, for alltid",
     "meta1": "Aktiv betalt Terra Mail-pakke",
     "meta2": "E-post hentes direkte, lagres aldri"
@@ -32,7 +32,7 @@
   },
   "setup": [
     {
-      "h": "Opprett din gratis MCP Emails-konto",
+      "h": "Opprett din gratis MCPEmails-konto",
       "p": "Registrer deg på mcpemails.com. Gratisplanen kobler til én innboks og forblir gratis, uten kort."
     },
     {
@@ -40,7 +40,7 @@
       "p": "Logg inn i Terra-webmailen. Avviser selve webmailen deg eller sier at pakken må oppdateres, er postkassen en av kontoene som ble rammet da Terras gratisnivå ble avviklet, og ingen e-postklient vil koble til før en betalt Terra Mail-pakke er aktiv på den. Åpner webmailen normalt, er kontoen aktiv og du kan fortsette."
     },
     {
-      "h": "Skriv inn adressen og passordet ditt i MCP Emails",
+      "h": "Skriv inn adressen og passordet ditt i MCPEmails",
       "p": "Velg IMAP / SMTP og skriv inn hele adressen, for eksempel <code>nome@terra.com.br</code>, med postkassepassordet. Terra-vertene og -portene er forhåndsutfylt og ble bekreftet via en direkte TLS-tilkobling. Terra utsteder ikke programspesifikke passord, så har du lett etter et i innstillingene, er det ingenting å finne."
     },
     {
@@ -63,14 +63,14 @@
     }
   ],
   "limits": [
-    "En betalt Terra Mail-pakke kreves. Det finnes ingen gratis terra.com.br-postkasse igjen å koble til, og MCP Emails kan ikke omgå en blokkering som håndheves på Terras egen server.",
+    "En betalt Terra Mail-pakke kreves. Det finnes ingen gratis terra.com.br-postkasse igjen å koble til, og MCPEmails kan ikke omgå en blokkering som håndheves på Terras egen server.",
     "Fordi både MOVE og UIDPLUS mangler, er arkivering av en melding ikke atomisk, og resultatet må bekreftes med et søk. En avbrutt operasjon kan etterlate en melding kortvarig i to mapper.",
     "SPECIAL-USE mangler, så mapper matches etter navn i stedet for rolle. I en portugisisk postkasse heter de som regel Enviados, Rascunhos, Lixeira og Spam."
   ],
   "faq": [
     {
       "q": "Fungerer Claude med Terra Mail?",
-      "a": "Ikke direkte. Claude har ingen innebygd Terra-kobling og kan ikke åpne en IMAP-tilkobling selv. Kobler du en MCP-server som MCP Emails til terra.com.br-postkassen din, får Claude tilgang til å lese, søke, sende, svare, videresende, planlegge og organisere, og samme tilkobling fungerer fra Cursor og andre MCP-klienter."
+      "a": "Ikke direkte. Claude har ingen innebygd Terra-kobling og kan ikke åpne en IMAP-tilkobling selv. Kobler du en MCP-server som MCPEmails til terra.com.br-postkassen din, får Claude tilgang til å lese, søke, sende, svare, videresende, planlegge og organisere, og samme tilkobling fungerer fra Cursor og andre MCP-klienter."
     },
     {
       "q": "Hva er IMAP- og SMTP-innstillingene for Terra?",
@@ -95,6 +95,6 @@
   ],
   "ctaBand": {
     "title": "Gi AI-en din en Terra-innboks",
-    "sub": "Koble til en aktiv terra.com.br-postkasse på minutter. Én innboks gratis for alltid på MCP Emails, uten kort."
+    "sub": "Koble til en aktiv terra.com.br-postkasse på minutter. Én innboks gratis for alltid på MCPEmails, uten kort."
   }
 }

@@ -20,7 +20,7 @@
     "titleLine1": "Connect ScalaHosting email to Claude,",
     "titleLine2": "Cursor, ChatGPT, any MCP client",
     "lead": "Give your AI agent a real ScalaHosting mailbox. Read, search, send, reply, schedule and organize mail over IMAP, whether your account runs SPanel or cPanel.",
-    "answer": "Claude cannot reach a ScalaHosting mailbox on its own. MCP Emails is a hosted MCP server that connects it over plain IMAP on port 993, so Claude, Cursor or any MCP client can read, search, send and organize that mail. ScalaHosting operates no shared mail hostname: your mail server is your own domain or the hosting server's name, and both panels print it under Connect device on the address. Which panel you get depends on the plan, because SPanel and cPanel are both in use. Authentication is the mailbox password, and one inbox is free.",
+    "answer": "Claude cannot reach a ScalaHosting mailbox on its own. MCPEmails is a hosted MCP server that connects it over plain IMAP on port 993, so Claude, Cursor or any MCP client can read, search, send and organize that mail. ScalaHosting operates no shared mail hostname: your mail server is your own domain or the hosting server's name, and both panels print it under Connect device on the address. Which panel you get depends on the plan, because SPanel and cPanel are both in use. Authentication is the mailbox password, and one inbox is free.",
     "meta0": "1 inbox free, forever",
     "meta1": "Mailbox password from SPanel",
     "meta2": "Email fetched live, never stored"
@@ -31,7 +31,7 @@
   },
   "setup": [
     {
-      "h": "Create a free MCP Emails account",
+      "h": "Create a free MCPEmails account",
       "p": "Sign up at mcpemails.com. The free plan connects one inbox and needs no card."
     },
     {
@@ -40,7 +40,7 @@
     },
     {
       "h": "Set or recover the mailbox password",
-      "p": "IMAP checks the password on the address, which is not your ScalaHosting client area login. In SPanel, create or edit the address under Email Accounts, using the Generate button if you want a strong value. Then paste it into MCP Emails with the full address as the username and the hostname you copied."
+      "p": "IMAP checks the password on the address, which is not your ScalaHosting client area login. In SPanel, create or edit the address under Email Accounts, using the Generate button if you want a strong value. Then paste it into MCPEmails with the full address as the username and the hostname you copied."
     },
     {
       "h": "Paste the MCP URL into your AI",
@@ -62,13 +62,13 @@
     }
   ],
   "limits": [
-    "MCP Emails connects mailboxes, not the server. SPanel's own tools, backups and security features stay where they are.",
+    "MCPEmails connects mailboxes, not the server. SPanel's own tools, backups and security features stay where they are.",
     "On a managed VPS you may have changed the mail stack after provisioning. If so, the Connect device popup still reports what SPanel configured, which may no longer be what is listening."
   ],
   "faq": [
     {
       "q": "Does Claude work with ScalaHosting email?",
-      "a": "Not directly. Claude has no ScalaHosting connector. Connecting an MCP server such as MCP Emails to the mailbox over IMAP gives Claude read, search, send, reply, schedule and organize access to it. This works identically on SPanel accounts and cPanel accounts, since both serve ordinary IMAP."
+      "a": "Not directly. Claude has no ScalaHosting connector. Connecting an MCP server such as MCPEmails to the mailbox over IMAP gives Claude read, search, send, reply, schedule and organize access to it. This works identically on SPanel accounts and cPanel accounts, since both serve ordinary IMAP."
     },
     {
       "q": "What are the ScalaHosting IMAP and SMTP settings?",

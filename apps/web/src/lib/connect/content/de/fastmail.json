@@ -24,23 +24,23 @@
     "meta0": "1 Postfach dauerhaft kostenlos",
     "meta1": "App-Passwort, kein OAuth-Setup",
     "meta2": "E-Mails werden live abgerufen, nie gespeichert",
-    "answer": "Claude erreicht Fastmail nicht von sich aus. MCP Emails ist ein gehosteter MCP-Server, der Fastmail per IMAP über imap.fastmail.com auf Port 993 verbindet. Die Anmeldung erfolgt mit einem Fastmail App-Passwort statt mit Ihrem Kontopasswort. So können Claude, Cursor oder jeder MCP-Client die E-Mails lesen, suchen, senden und sortieren. Fastmail betreibt einen eigenen MCP-Server, der nur für Fastmail gedacht ist. Der Grund, stattdessen diesen hier zu nutzen: Eine einzige URL deckt auch Ihre anderen Postfächer ab. Ein Postfach ist dauerhaft kostenlos."
+    "answer": "Claude erreicht Fastmail nicht von sich aus. MCPEmails ist ein gehosteter MCP-Server, der Fastmail per IMAP über imap.fastmail.com auf Port 993 verbindet. Die Anmeldung erfolgt mit einem Fastmail App-Passwort statt mit Ihrem Kontopasswort. So können Claude, Cursor oder jeder MCP-Client die E-Mails lesen, suchen, senden und sortieren. Fastmail betreibt einen eigenen MCP-Server, der nur für Fastmail gedacht ist. Der Grund, stattdessen diesen hier zu nutzen: Eine einzige URL deckt auch Ihre anderen Postfächer ab. Ein Postfach ist dauerhaft kostenlos."
   },
   "method": {
     "title": "So verbindet sich Fastmail: mit einem App-Passwort",
-    "body": "Fastmail verbindet sich über IMAP/SMTP mit einem <b>Fastmail App-Passwort</b>. Erstellen Sie es in den Fastmail-Einstellungen unter Datenschutz & Sicherheit, im Bereich für verbundene Apps und API-Tokens, wo Sie App-Passwörter verwalten und ein neues anlegen. Fügen Sie es in MCP Emails ein, und die Verbindung steht. Kein OAuth-Ablauf, keine Browser-Pop-ups."
+    "body": "Fastmail verbindet sich über IMAP/SMTP mit einem <b>Fastmail App-Passwort</b>. Erstellen Sie es in den Fastmail-Einstellungen unter Datenschutz & Sicherheit, im Bereich für verbundene Apps und API-Tokens, wo Sie App-Passwörter verwalten und ein neues anlegen. Fügen Sie es in MCPEmails ein, und die Verbindung steht. Kein OAuth-Ablauf, keine Browser-Pop-ups."
   },
   "setup": [
     {
       "h": "Kostenloses Konto erstellen",
-      "p": "Registrieren Sie sich bei MCP Emails, ohne Kreditkarte. Der Free-Tarif verbindet ein Postfach, dauerhaft."
+      "p": "Registrieren Sie sich bei MCPEmails, ohne Kreditkarte. Der Free-Tarif verbindet ein Postfach, dauerhaft."
     },
     {
       "h": "Fastmail App-Passwort erstellen",
       "p": "Öffnen Sie in Fastmail die Einstellungen, dann Datenschutz & Sicherheit, und legen Sie im Bereich für verbundene Apps und API-Tokens ein neues App-Passwort für E-Mail (IMAP/SMTP) an."
     },
     {
-      "h": "In MCP Emails einfügen",
+      "h": "In MCPEmails einfügen",
       "p": "Geben Sie Ihre Fastmail-Adresse und das App-Passwort ein, um das Postfach sicher zu verbinden."
     },
     {
@@ -51,7 +51,7 @@
   "gotchas": [
     {
       "h": "Fastmail hat einen eigenen MCP-Server, und der ist gut",
-      "p": "Im April 2026 hat Fastmail einen eigenen MCP-Server unter <code>https://api.fastmail.com/mcp</code> gestartet. Er nutzt OAuth, bietet Lese-, Schreib- oder Sendezugriff und deckt E-Mail, Kalender und Kontakte ab. Ist Fastmail das einzige Postfach, das ein Assistent erreichen soll, ist das der direkteste Weg, und das sagen wir offen. MCP Emails beantwortet eine andere Frage: <b>eine</b> MCP-URL, die Ihr Fastmail-Konto und gleichzeitig Ihr iCloud-, Zoho-, Yahoo-, GMX- oder Firmen-IMAP-Postfach enthält, mit denselben Tools für alle. So kann ein Agent postfachübergreifend suchen, und Sie richten einen Server ein statt fünf. Uns ist wichtiger, dass Ihnen die Seite hilft, als dass sie gut für uns klingt."
+      "p": "Im April 2026 hat Fastmail einen eigenen MCP-Server unter <code>https://api.fastmail.com/mcp</code> gestartet. Er nutzt OAuth, bietet Lese-, Schreib- oder Sendezugriff und deckt E-Mail, Kalender und Kontakte ab. Ist Fastmail das einzige Postfach, das ein Assistent erreichen soll, ist das der direkteste Weg, und das sagen wir offen. MCPEmails beantwortet eine andere Frage: <b>eine</b> MCP-URL, die Ihr Fastmail-Konto und gleichzeitig Ihr iCloud-, Zoho-, Yahoo-, GMX- oder Firmen-IMAP-Postfach enthält, mit denselben Tools für alle. So kann ein Agent postfachübergreifend suchen, und Sie richten einen Server ein statt fünf. Uns ist wichtiger, dass Ihnen die Seite hilft, als dass sie gut für uns klingt."
     },
     {
       "h": "Fastmail Basic-Konten können gar kein IMAP nutzen",
@@ -64,16 +64,16 @@
   ],
   "limits": [
     "Fastmail Basic enthält kein IMAP oder SMTP, ein Basic-Postfach lässt sich also nicht verbinden. Standard und Professional schon.",
-    "Der Versandserver von Fastmail gibt eine Obergrenze von etwa 71 MB pro Nachricht an. Anhänge lesen über MCP Emails ist auf 25 MB pro Anfrage begrenzt, größere Dateien müssen Sie direkt in Fastmail abrufen."
+    "Der Versandserver von Fastmail gibt eine Obergrenze von etwa 71 MB pro Nachricht an. Anhänge lesen über MCPEmails ist auf 25 MB pro Anfrage begrenzt, größere Dateien müssen Sie direkt in Fastmail abrufen."
   ],
   "faq": [
     {
       "q": "Funktioniert Claude mit Fastmail?",
-      "a": "Ja, auf zwei verschiedenen Wegen. Fastmail betreibt einen eigenen MCP-Server, mit dem Claude sich direkt per OAuth verbinden lässt. Alternativ verbindet MCP Emails dasselbe Postfach per IMAP mit einem App-Passwort und stellt es zusammen mit allen weiteren Postfächern, die Sie hinzufügen, über eine einzige MCP-URL bereit, die auch in Cursor und ChatGPT funktioniert. In beiden Fällen kann Claude die E-Mails lesen, suchen, senden, beantworten und sortieren."
+      "a": "Ja, auf zwei verschiedenen Wegen. Fastmail betreibt einen eigenen MCP-Server, mit dem Claude sich direkt per OAuth verbinden lässt. Alternativ verbindet MCPEmails dasselbe Postfach per IMAP mit einem App-Passwort und stellt es zusammen mit allen weiteren Postfächern, die Sie hinzufügen, über eine einzige MCP-URL bereit, die auch in Cursor und ChatGPT funktioniert. In beiden Fällen kann Claude die E-Mails lesen, suchen, senden, beantworten und sortieren."
     },
     {
       "q": "Soll ich den MCP-Server von Fastmail nutzen oder diesen hier?",
-      "a": "Nehmen Sie den von Fastmail, wenn Fastmail Ihr einziges Postfach ist und Ihr Client ihn unterstützt: Er kommt vom Anbieter selbst, nutzt OAuth und lässt Sie zwischen Lese-, Schreib- oder Sendezugriff wählen. Nehmen Sie MCP Emails, wenn Sie mehr als einen Anbieter hinter einer URL möchten, wenn Sie zusätzlich ein iCloud-, Zoho- oder Firmen-IMAP-Postfach haben, oder wenn sich dieselben Tools in mehreren MCP-Clients gleich verhalten sollen."
+      "a": "Nehmen Sie den von Fastmail, wenn Fastmail Ihr einziges Postfach ist und Ihr Client ihn unterstützt: Er kommt vom Anbieter selbst, nutzt OAuth und lässt Sie zwischen Lese-, Schreib- oder Sendezugriff wählen. Nehmen Sie MCPEmails, wenn Sie mehr als einen Anbieter hinter einer URL möchten, wenn Sie zusätzlich ein iCloud-, Zoho- oder Firmen-IMAP-Postfach haben, oder wenn sich dieselben Tools in mehreren MCP-Clients gleich verhalten sollen."
     },
     {
       "q": "Wie lauten die IMAP- und SMTP-Einstellungen für Fastmail?",

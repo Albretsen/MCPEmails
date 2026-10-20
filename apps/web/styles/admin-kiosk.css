@@ -87,7 +87,7 @@
   gap: 0.55em;
   /* The wordmark is the header's only compressible element, and it compresses
      by ELLIPSIS rather than by wrapping. A flex item's default `min-width:auto`
-     lets it shrink to min-content, which for "MCP Emails" is two lines, and a
+     lets it shrink to min-content, which for "MCPEmails" is two lines, and a
      two-line header steals height from a board whose rows are fractions of
      whatever the header leaves. Below about 800 logical pixels — an operator's
      narrow window, never the panel — the view name gives way instead. */

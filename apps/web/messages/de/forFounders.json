@@ -7,7 +7,7 @@
     "eyebrow": "Für Gründer gebaut",
     "titleLine1": "Jedem Kunden antworten,",
     "titleLine2": "direkt aus Ihrer KI",
-    "lead": "Sie sind Support, Vertrieb und Gründer in einer Person. MCP Emails verbindet Ihr Postfach mit Claude. So sortieren Sie, entwerfen Antworten in Ihrem eigenen Ton, senden und planen Nachfassmails, ohne die Unterhaltung zu verlassen. Unser aktivster Nutzer macht genau das, jeden einzelnen Tag.",
+    "lead": "Sie sind Support, Vertrieb und Gründer in einer Person. MCPEmails verbindet Ihr Postfach mit Claude. So sortieren Sie, entwerfen Antworten in Ihrem eigenen Ton, senden und planen Nachfassmails, ohne die Unterhaltung zu verlassen. Unser aktivster Nutzer macht genau das, jeden einzelnen Tag.",
     "ctaPrimary": "Postfach kostenlos verbinden",
     "ctaSecondary": "So funktioniert es"
   },
@@ -70,7 +70,7 @@
     }
   },
   "proof": {
-    "quote": "Der Gründer, der MCP Emails am meisten nutzt, öffnet jeden Morgen Claude, arbeitet die Kundenanfragen ab und ist vor dem ersten Kaffee fertig. Mehr muss man nicht sagen.",
+    "quote": "Der Gründer, der MCPEmails am meisten nutzt, öffnet jeden Morgen Claude, arbeitet die Kundenanfragen ab und ist vor dem ersten Kaffee fertig. Mehr muss man nicht sagen.",
     "label": "Unser aktivster Workflow in einem Satz"
   },
   "providers": {
@@ -89,7 +89,7 @@
     "items": [
       {
         "q": "Ich gründe allein und mache meinen Support selbst. Ist das übertrieben?",
-        "a": "Im Gegenteil. Je weniger Leute Sie sind, desto mehr schmerzt ein Support-Rückstau. MCP Emails macht aus dem Beantworten von Kunden einen kurzen täglichen Durchgang in Claude statt einer Stunde ständiger Kontextwechsel, und der Einstieg ist kostenlos, ohne Kreditkarte."
+        "a": "Im Gegenteil. Je weniger Leute Sie sind, desto mehr schmerzt ein Support-Rückstau. MCPEmails macht aus dem Beantworten von Kunden einen kurzen täglichen Durchgang in Claude statt einer Stunde ständiger Kontextwechsel, und der Einstieg ist kostenlos, ohne Kreditkarte."
       },
       {
         "q": "Klingen die Antworten nicht generisch?",

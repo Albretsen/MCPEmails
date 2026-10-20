@@ -19,7 +19,7 @@
     "titleLine1": "Servidor MCP para el correo de Hetzner:",
     "titleLine2": "todos los buzones de tu empresa, en Claude y ChatGPT",
     "lead": "¿Llevas info@, ventas@, soporte@ y facturas@ en tu propio dominio en Hetzner? Conecta cada buzón al mismo espacio de trabajo y tu agente de IA trabaja en todos ellos. Lee, busca, envía, responde, programa y organiza correo por IMAP en mail.your-server.de, con la contraseña del buzón que definiste en konsoleH.",
-    "answer": "Claude no puede acceder por sí solo a un buzón de Hetzner. MCP Emails es un servidor MCP alojado que conecta el correo de Hetzner Web Hosting por IMAP en mail.your-server.de en el puerto 993, autenticándose con tu dirección de correo completa y la contraseña del buzón que definiste al crear la cuenta en konsoleH, para que Claude, Cursor o cualquier cliente MCP pueda leer, buscar, enviar y organizar el correo. El nombre de servidor es literalmente mail.your-server.de para todos los clientes, no una variante de tu propio dominio. Cada dirección de la empresa, como info@ o ventas@, se conecta como un buzón propio: un buzón es gratis, Personal conecta tres, Pro hasta 10 y Business todos los que necesites.",
+    "answer": "Claude no puede acceder por sí solo a un buzón de Hetzner. MCPEmails es un servidor MCP alojado que conecta el correo de Hetzner Web Hosting por IMAP en mail.your-server.de en el puerto 993, autenticándose con tu dirección de correo completa y la contraseña del buzón que definiste al crear la cuenta en konsoleH, para que Claude, Cursor o cualquier cliente MCP pueda leer, buscar, enviar y organizar el correo. El nombre de servidor es literalmente mail.your-server.de para todos los clientes, no una variante de tu propio dominio. Cada dirección de la empresa, como info@ o ventas@, se conecta como un buzón propio: un buzón es gratis, Personal conecta tres, Pro hasta 10 y Business todos los que necesites.",
     "meta0": "Primer buzón gratis, planes para el resto",
     "meta1": "Contraseña del buzón definida en konsoleH",
     "meta2": "El correo se obtiene en vivo, nunca se almacena"
@@ -35,7 +35,7 @@
   },
   "setup": [
     {
-      "h": "Crea tu cuenta gratis en MCP Emails",
+      "h": "Crea tu cuenta gratis en MCPEmails",
       "p": "Regístrate en mcpemails.com. El plan gratuito conecta una bandeja para siempre y no pide tarjeta."
     },
     {
@@ -43,7 +43,7 @@
       "p": "Inicia sesión en konsoleH, selecciona el dominio y abre E-Mail, luego Mailboxes. Elige la dirección e introduce una contraseña nueva en los dos campos de contraseña si no tienes la actual. Ten en cuenta que el buzón se crea solo con la parte local anterior a la arroba, pero lo que escribes como nombre de usuario en cualquier cliente es la dirección completa."
     },
     {
-      "h": "Pégala en MCP Emails",
+      "h": "Pégala en MCPEmails",
       "p": "Elige IMAP / SMTP, introduce la dirección completa y pega la contraseña del buzón. El servidor mail.your-server.de y los puertos 993 y 465 ya vienen rellenados y se verificaron con una conexión TLS real."
     },
     {
@@ -72,7 +72,7 @@
   "faq": [
     {
       "q": "¿Funciona Claude con el correo de Hetzner?",
-      "a": "No por sí solo. Claude no tiene un conector integrado para Hetzner. Apuntar un servidor MCP como MCP Emails a tu buzón de Hetzner por IMAP le da a Claude acceso para leer, buscar, enviar, responder, programar y organizar, y la misma conexión funciona desde Cursor, ChatGPT y otros clientes MCP."
+      "a": "No por sí solo. Claude no tiene un conector integrado para Hetzner. Apuntar un servidor MCP como MCPEmails a tu buzón de Hetzner por IMAP le da a Claude acceso para leer, buscar, enviar, responder, programar y organizar, y la misma conexión funciona desde Cursor, ChatGPT y otros clientes MCP."
     },
     {
       "q": "¿Cuáles son los ajustes IMAP y SMTP de Hetzner?",

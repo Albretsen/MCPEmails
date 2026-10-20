@@ -184,7 +184,7 @@ Deno.test("the OpenAI result is a JSON-RPC result, isError, with text and no err
   assertEquals(out.result.content.length, 1);
   assertEquals(out.result.content[0].type, "text");
   assert(out.result.content[0].text.startsWith("This needs permission to send email."));
-  assert(out.result.content[0].text.includes("Reconnect MCP Emails and approve sending."));
+  assert(out.result.content[0].text.includes("Reconnect MCPEmails and approve sending."));
   assert(!("structuredContent" in out.result), "an error result need not match outputSchema");
 });
 
@@ -198,7 +198,7 @@ Deno.test("mcp/www_authenticate carries error, error_description and the SAME sc
   assertEquals(
     challenges[0],
     `Bearer error="insufficient_scope", ` +
-      `error_description="This needs permission to send email. Reconnect MCP Emails and approve sending.", ` +
+      `error_description="This needs permission to send email. Reconnect MCPEmails and approve sending.", ` +
       `scope="send:email read:email search:email", ` +
       `resource_metadata="${RESOURCE}"`,
   );
@@ -310,7 +310,7 @@ Deno.test("the OpenAI result for an automation missing both scopes names both, a
   assert(
     text.startsWith(
       "This needs permission to create and manage automations and to organize email and manage folders. " +
-        "Reconnect MCP Emails and approve managing automations and organizing email.",
+        "Reconnect MCPEmails and approve managing automations and organizing email.",
     ),
     text,
   );

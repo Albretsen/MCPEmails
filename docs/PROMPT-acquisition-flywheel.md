@@ -1,6 +1,6 @@
 # Keep the acquisition flywheel compounding
 
-You are working on top-of-funnel growth for MCP Emails (`apps/web`, Next.js 16 App
+You are working on top-of-funnel growth for MCPEmails (`apps/web`, Next.js 16 App
 Router, Supabase backend, deployed on Vercel). Today is 2026-09-07.
 
 Signups are accelerating with zero paid spend: **118 in the last 7 days against 86 the

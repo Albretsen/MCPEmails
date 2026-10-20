@@ -1,7 +1,7 @@
 {
   "meta": {
     "title": "MCP Email Server Documentation: Gmail, Outlook, IMAP & OAuth",
-    "description": "Set up MCP Emails with Gmail, Outlook or IMAP, connect Claude and other MCP clients with OAuth or an API key, and use the complete email tool reference."
+    "description": "Set up MCPEmails with Gmail, Outlook or IMAP, connect Claude and other MCP clients with OAuth or an API key, and use the complete email tool reference."
   },
   "hero": {
     "eyebrow": "Documentation",
@@ -17,7 +17,7 @@
   "quickstart": {
     "eyebrow": "Quick start",
     "heading": "Up and running in minutes.",
-    "sub": "No SDK required. MCP Emails speaks standard MCP over HTTP, so it drops into any MCP-compatible agent.",
+    "sub": "No SDK required. MCPEmails speaks standard MCP over HTTP, so it drops into any MCP-compatible agent.",
     "steps": {
       "signup": {
         "label": "Sign up & connect an inbox",
@@ -31,7 +31,7 @@
         "body": "In Dashboard → API Keys, click \"Create key\". Name it, select the scopes your agent needs (read:email, search:email, send:email, manage:folders, delete:email, manage:drafts, manage:contacts, schedule:email, and manage:automations), then copy the key. It is shown only once."
       },
       "addclient": {
-        "label": "Add MCP Emails to your agent",
+        "label": "Add MCPEmails to your agent",
         "heading": "Paste the MCP endpoint into your client",
         "body": "Pick the tab for your client below. MCP clients with OAuth 2.0 support (claude.ai, Claude Desktop, Cursor, and others) just paste the URL and authorize, no API key needed. Clients without OAuth, plus scripted access, use the API key from step 02."
       },
@@ -63,7 +63,7 @@
     "infoFormat": "Response format: <b>JSON-RPC 2.0</b>. Successful results also carry a typed <code>structuredContent</code> object",
     "handshakeLabel": "Initialize handshake",
     "pollingHeading": "Polling, not push",
-    "pollingBody": "MCP Emails is request/response only: every result comes from a tool call your agent makes. There are <b>no webhooks, push notifications, or server-initiated events</b>, so an incoming email never triggers an agent call on its own. To react to new mail, have your agent <b>poll</b> on a schedule, e.g. call <code>email_read</code> with <code>action: \"list\"</code> and <code>unread: true</code> at whatever interval your workflow needs (mind the rate limits above)."
+    "pollingBody": "MCPEmails is request/response only: every result comes from a tool call your agent makes. There are <b>no webhooks, push notifications, or server-initiated events</b>, so an incoming email never triggers an agent call on its own. To react to new mail, have your agent <b>poll</b> on a schedule, e.g. call <code>email_read</code> with <code>action: \"list\"</code> and <code>unread: true</code> at whatever interval your workflow needs (mind the rate limits above)."
   },
   "operations": {
     "eyebrow": "Built for real inbox work",
@@ -100,8 +100,8 @@
     "sub": "MCP clients that support OAuth 2.0 (claude.ai, Claude Desktop, Cursor, and others) connect automatically via authorization code + PKCE. No API key, no config file. Paste the URL and click Connect.",
     "step1": "<b>Step 1:</b> Go to claude.ai → Customize → Connectors → Add connector",
     "step2": "<b>Step 2:</b> Paste <code>https://mcpemails.com/api/mcp</code> as the server URL",
-    "step3": "<b>Step 3:</b> Click Connect. MCP Emails opens an authorization screen",
-    "step4": "<b>Step 4:</b> Sign in with your MCP Emails account and approve access",
+    "step3": "<b>Step 3:</b> Click Connect. MCPEmails opens an authorization screen",
+    "step4": "<b>Step 4:</b> Sign in with your MCPEmails account and approve access",
     "stepDone": "<b>Done:</b> Every tool your approved scopes allow is live. claude.ai refreshes tokens automatically",
     "howTitle": "How it works under the hood",
     "howP1": "claude.ai registers itself via <b>RFC 7591 Dynamic Client Registration</b>, so you never pre-register a client ID.",
@@ -553,7 +553,7 @@
     },
     "profiles": {
       "title": "Compatibility profiles",
-      "body": "Every inbox reports a versioned profile to an MCP agent: <code>exact</code> means the normalized operation keeps its meaning, <code>different</code> means the provider uses documented alternative semantics, and <code>unavailable</code> means MCP Emails will not silently weaken the request. Profiles describe connector behavior without inspecting or storing mail."
+      "body": "Every inbox reports a versioned profile to an MCP agent: <code>exact</code> means the normalized operation keeps its meaning, <code>different</code> means the provider uses documented alternative semantics, and <code>unavailable</code> means MCPEmails will not silently weaken the request. Profiles describe connector behavior without inspecting or storing mail."
     },
     "ariaSupported": "Supported",
     "ariaNotSupported": "Not supported",
@@ -608,7 +608,7 @@
         "yahoo": "Yahoo accepts at most 5 simultaneous connections. Its rejection text, “Incorrect username or password”, names both halves on purpose and will not tell you which one was wrong.",
         "zoho": "IMAP access ships switched off and has to be enabled first. Zoho also runs six regional data centres, and paid custom-domain mailboxes live on imappro/smtppro rather than imap/smtp, so the right host depends on both region and account type.",
         "yandex": "Yandex does not implement RFC 4959 SASL-IR, so the inline login form comes back as a command syntax error rather than a credential error. Both “IMAP” and “App passwords and OAuth tokens” have to be switched on, and Yandex 360 custom-domain accounts may sign in with a login name that is not the address.",
-        "outlook": "Personal Microsoft accounts (outlook.com, hotmail.com, live.com, msn.com) connect directly. Work and school accounts are different: Microsoft’s default consent policy stops employees from approving mail permissions themselves, so the dashboard gives you a shareable approval link to send to your IT admin, who approves the app once for the whole organisation and does not need an MCP Emails account; after that everyone connects normally. A Microsoft account with no Exchange Online mailbox is refused, with a hint to connect the address over IMAP instead. Microsoft may temporarily block sending from a brand-new outlook.com account that sends in bursts, as part of its own anti-abuse checks.",
+        "outlook": "Personal Microsoft accounts (outlook.com, hotmail.com, live.com, msn.com) connect directly. Work and school accounts are different: Microsoft’s default consent policy stops employees from approving mail permissions themselves, so the dashboard gives you a shareable approval link to send to your IT admin, who approves the app once for the whole organisation and does not need an MCPEmails account; after that everyone connects normally. A Microsoft account with no Exchange Online mailbox is refused, with a hint to connect the address over IMAP instead. Microsoft may temporarily block sending from a brand-new outlook.com account that sends in bursts, as part of its own anti-abuse checks.",
         "generic": "A port and a security mode that disagree. Choosing STARTTLS while the port stays 993 opens a plaintext socket to a TLS-only listener, and the connection just times out. Failed transports are now retried automatically on the other standard combination."
       },
       "notes": {

@@ -1,7 +1,7 @@
 {
   "meta": {
     "title": "Status",
-    "description": "Live uptime for the MCP Emails endpoint, measured by an automated check that runs every five minutes against production. Real recorded numbers, no marketing figure."
+    "description": "Live uptime for the MCPEmails endpoint, measured by an automated check that runs every five minutes against production. Real recorded numbers, no marketing figure."
   },
   "hero": {
     "eyebrow": "Status",

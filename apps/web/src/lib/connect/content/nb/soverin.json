@@ -21,7 +21,7 @@
     "titleLine1": "Koble Soverin til Claude,",
     "titleLine2": "Cursor, ChatGPT, enhver MCP-klient",
     "lead": "Gi AI-agenten din en ekte Soverin-innboks. Les, søk, send, svar, planlegg og organiser e-post via IMAP, i enhver MCP-klient, også postkasser på ditt eget domene, med en ærlig gjennomgang av hva som beskytter tilkoblingen og hva som ikke gjør det.",
-    "answer": "Claude når ikke en Soverin-postkasse på egen hånd. MCP Emails er en hostet MCP-server som kobler til via IMAP på imap.soverin.net port 993, og SMTP på smtp.soverin.net port 465, slik at Claude, Cursor eller enhver MCP-klient kan lese, søke, sende og organisere den e-posten. Soverin dokumenterer e-postadressen din som brukernavn og kontopassordet ditt som passord, og de samme to vertene betjener postkasser på eget domene i tillegg til soverin.net-postkasser. Soverin utsteder ingen app-passord, og tofaktorautentiseringen deres beskytter dashbordet og webmailen og ikke IMAP, så påloggingen du lagrer her, er kontopassordet. Én innboks er gratis, for alltid.",
+    "answer": "Claude når ikke en Soverin-postkasse på egen hånd. MCPEmails er en hostet MCP-server som kobler til via IMAP på imap.soverin.net port 993, og SMTP på smtp.soverin.net port 465, slik at Claude, Cursor eller enhver MCP-klient kan lese, søke, sende og organisere den e-posten. Soverin dokumenterer e-postadressen din som brukernavn og kontopassordet ditt som passord, og de samme to vertene betjener postkasser på eget domene i tillegg til soverin.net-postkasser. Soverin utsteder ingen app-passord, og tofaktorautentiseringen deres beskytter dashbordet og webmailen og ikke IMAP, så påloggingen du lagrer her, er kontopassordet. Én innboks er gratis, for alltid.",
     "meta0": "1 innboks gratis, for alltid",
     "meta1": "Passordet til Soverin-kontoen din",
     "meta2": "E-post hentes direkte, lagres aldri"
@@ -32,7 +32,7 @@
   },
   "setup": [
     {
-      "h": "Opprett din gratis MCP Emails-konto",
+      "h": "Opprett din gratis MCPEmails-konto",
       "p": "Registrer deg på mcpemails.com. Gratisplanen kobler til én innboks, for alltid, uten kort. Til slutt får du en MCP-URL og en nøkkel."
     },
     {
@@ -40,7 +40,7 @@
       "p": "I Soverin Dashboard åpner du postkassen du vil koble til. Adressen på selve postkassen er brukernavnet, ikke et av aliasene du har pekt mot den. Soverin gir hver postkasse ubegrenset med aliaser, så det er lett å ha sluttet å bruke den opprinnelige adressen for mange år siden og ikke lenger tenke på den som innloggingen."
     },
     {
-      "h": "Legg til postkassen i MCP Emails",
+      "h": "Legg til postkassen i MCPEmails",
       "p": "Velg IMAP / SMTP, skriv inn den fullstendige adressen og passordet til Soverin-kontoen din. Vertene er forhåndsutfylt som <code>imap.soverin.net</code> og <code>smtp.soverin.net</code> og ble verifisert via en direkte TLS-tilkobling. Ikke erstatt dem med et vertsnavn bygd fra ditt eget domene; sertifikatet er utstedt for Soverins eget navn, og en klient som validerer strengt, vil avvise det."
     },
     {
@@ -67,14 +67,14 @@
     }
   ],
   "limits": [
-    "Å koble en Soverin-postkasse til en AI-klient betyr at den AI-leverandøren leser innholdet i meldingene den jobber med. MCP Emails henter e-post direkte fra imap.soverin.net for hver forespørsel og lagrer ikke meldingsinnhold, og påloggingsdetaljer krypteres ved lagring, men teksten når likevel Claude, Cursor eller hvilken klient du kobler til. Soverins hosting kun i EU, abonnementsfinansieringen og løftet om ikke å skanne eller profilere e-posten din beskriver alle Soverin. Ingen av dem følger en melding inn til en AI-leverandør du selv kobler til.",
+    "Å koble en Soverin-postkasse til en AI-klient betyr at den AI-leverandøren leser innholdet i meldingene den jobber med. MCPEmails henter e-post direkte fra imap.soverin.net for hver forespørsel og lagrer ikke meldingsinnhold, og påloggingsdetaljer krypteres ved lagring, men teksten når likevel Claude, Cursor eller hvilken klient du kobler til. Soverins hosting kun i EU, abonnementsfinansieringen og løftet om ikke å skanne eller profilere e-posten din beskriver alle Soverin. Ingen av dem følger en melding inn til en AI-leverandør du selv kobler til.",
     "Det finnes ingen avgrenset pålogging. Soverin har ikke app-passord, så det som lagres her, er kontopassordet ditt, det samme som åpner Soverin Dashboard. Å trekke tilbake denne tilkoblingen betyr å endre det passordet i stedet for å slette ett enkelt token.",
-    "MCP Emails kobler til postkassen, ikke kontoen. Aliaser, ekstra postkasser, domeneinnstillinger og videresending blir værende i Soverin Dashboard og er verken synlige for eller kan endres av AI-klienten din."
+    "MCPEmails kobler til postkassen, ikke kontoen. Aliaser, ekstra postkasser, domeneinnstillinger og videresending blir værende i Soverin Dashboard og er verken synlige for eller kan endres av AI-klienten din."
   ],
   "faq": [
     {
       "q": "Fungerer Claude med Soverin?",
-      "a": "Ikke direkte. Claude har ingen Soverin-kobling og kan ikke snakke IMAP selv. Kobler du en MCP-server som MCP Emails til Soverin-postkassen din, får Claude tilgang til å lese, søke, sende, svare, planlegge og organisere via IMAP, og samme tilkobling fungerer da i Cursor, ChatGPT og andre MCP-klienter uten at oppsettet må gjentas."
+      "a": "Ikke direkte. Claude har ingen Soverin-kobling og kan ikke snakke IMAP selv. Kobler du en MCP-server som MCPEmails til Soverin-postkassen din, får Claude tilgang til å lese, søke, sende, svare, planlegge og organisere via IMAP, og samme tilkobling fungerer da i Cursor, ChatGPT og andre MCP-klienter uten at oppsettet må gjentas."
     },
     {
       "q": "Hva er IMAP- og SMTP-innstillingene for Soverin?",

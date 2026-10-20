@@ -7,7 +7,7 @@
     "eyebrow": "Für alle, die die E-Mails der Firma betreuen",
     "titleLine1": "Alle Firmenpostfächer,",
     "titleLine2": "eine Person, ein Agent",
-    "lead": "info@, sales@, invoices@, support@ und Ihre eigene Adresse landen meist bei derselben Person. MCP Emails verbindet sie alle mit Claude, Cursor, ChatGPT oder einem anderen MCP-Client. So lesen, beantworten, leiten weiter und sortieren Sie über alle Adressen hinweg in einer Unterhaltung. Es funktioniert mit jedem Mail-Hoster, und Sie können jede ausgehende Nachricht zur Freigabe zurückhalten.",
+    "lead": "info@, sales@, invoices@, support@ und Ihre eigene Adresse landen meist bei derselben Person. MCPEmails verbindet sie alle mit Claude, Cursor, ChatGPT oder einem anderen MCP-Client. So lesen, beantworten, leiten weiter und sortieren Sie über alle Adressen hinweg in einer Unterhaltung. Es funktioniert mit jedem Mail-Hoster, und Sie können jede ausgehende Nachricht zur Freigabe zurückhalten.",
     "ctaPrimary": "Erstes Postfach kostenlos verbinden",
     "ctaSecondary": "Funktionen ansehen"
   },
@@ -96,7 +96,7 @@
   "providers": {
     "eyebrow": "Jeder Hoster",
     "title": "Alle Firmenpostfächer verbinden, egal wo sie liegen",
-    "sub": "Die meisten Firmen-E-Mails liegen beim Webhoster oder Domain-Registrar, und das ist kein Problem. Jedes Postfach, das IMAP und SMTP auf den Standardports spricht, verbindet sich mit Adresse, Host und Passwort. IONOS, Hostinger, OVH, Namecheap und andere gängige Hoster werden an der Adresse erkannt und automatisch eingetragen. Gmail und Google Workspace verbinden sich per Google-App-Passwort. Microsoft 365 und Outlook verbinden sich per Anmeldung mit Microsoft; bei einem Firmenkonto in Microsoft 365 muss Ihre IT-Administration MCP Emails eventuell einmal für die ganze Organisation freigeben. iCloud, Fastmail, Yahoo, Zoho und Yandex verbinden sich per App-Passwort.",
+    "sub": "Die meisten Firmen-E-Mails liegen beim Webhoster oder Domain-Registrar, und das ist kein Problem. Jedes Postfach, das IMAP und SMTP auf den Standardports spricht, verbindet sich mit Adresse, Host und Passwort. IONOS, Hostinger, OVH, Namecheap und andere gängige Hoster werden an der Adresse erkannt und automatisch eingetragen. Gmail und Google Workspace verbinden sich per Google-App-Passwort. Microsoft 365 und Outlook verbinden sich per Anmeldung mit Microsoft; bei einem Firmenkonto in Microsoft 365 muss Ihre IT-Administration MCPEmails eventuell einmal für die ganze Organisation freigeben. iCloud, Fastmail, Yahoo, Zoho und Yandex verbinden sich per App-Passwort.",
     "ctaImap": "Beliebiges IMAP-Postfach verbinden",
     "ctaGmail": "Gmail oder Google Workspace verbinden",
     "ctaMicrosoft": "Microsoft 365 verbinden",
@@ -135,7 +135,7 @@
       },
       {
         "q": "Unsere E-Mails liegen bei unserem Webhoster, nicht bei Gmail. Funktioniert das?",
-        "a": "Mit großer Wahrscheinlichkeit. Jedes Postfach, das IMAP und SMTP auf den Standardports spricht, verbindet sich mit Adresse, Host und Passwort, und gängige Hoster werden an der Adresse erkannt, sodass sich die Einstellungen selbst ausfüllen. Der Server muss aus dem öffentlichen Internet erreichbar sein, und ein Postfach, das über IMAP nur eine OAuth-Anmeldung akzeptiert, lässt sich so nicht verbinden. Liegen Ihre Firmen-E-Mails bei Microsoft 365, verbinden Sie sie stattdessen als Outlook: Sie melden sich mit Microsoft an, und Ihre IT-Administration muss MCP Emails eventuell einmal für die ganze Organisation freigeben."
+        "a": "Mit großer Wahrscheinlichkeit. Jedes Postfach, das IMAP und SMTP auf den Standardports spricht, verbindet sich mit Adresse, Host und Passwort, und gängige Hoster werden an der Adresse erkannt, sodass sich die Einstellungen selbst ausfüllen. Der Server muss aus dem öffentlichen Internet erreichbar sein, und ein Postfach, das über IMAP nur eine OAuth-Anmeldung akzeptiert, lässt sich so nicht verbinden. Liegen Ihre Firmen-E-Mails bei Microsoft 365, verbinden Sie sie stattdessen als Outlook: Sie melden sich mit Microsoft an, und Ihre IT-Administration muss MCPEmails eventuell einmal für die ganze Organisation freigeben."
       },
       {
         "q": "Sendet der Agent von der richtigen Adresse?",

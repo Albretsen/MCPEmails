@@ -76,7 +76,7 @@ const sectionsHtml = SECTIONS.map(([key, title, hint, cap]) => {
 const generated = new Date(brief.generated_at ?? Date.now())
 const stamp = generated.toLocaleString('en-GB', { timeZone: 'Europe/Oslo', weekday: 'short', day: 'numeric', month: 'short', hour: '2-digit', minute: '2-digit' })
 
-const html = `<title>MCP Emails State</title>
+const html = `<title>MCPEmails State</title>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Instrument+Sans:wght@400;600;700&family=JetBrains+Mono:wght@400;500&display=swap">
 <style>
@@ -128,7 +128,7 @@ code.src { font: inherit; }
 <main class="wrap">
   <div class="top">
     <span class="eyebrow">State brief &middot; ${esc(stamp)} Oslo</span>
-    <h1>MCP Emails state</h1>
+    <h1>MCPEmails state</h1>
     <p class="changed"><b>Changed since last brief:</b> ${esc(brief.changed || 'First brief, nothing to compare yet.')}</p>
   </div>
   <nav class="jump" aria-label="Sections">${SECTIONS.map(([k, t]) => `<a href="#${k}">${esc(t)}</a>`).join('')}</nav>

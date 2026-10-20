@@ -3,7 +3,7 @@
  *
  * Glama connector ownership verification. Glama fetches this document from the
  * server's own domain to confirm that whoever publishes it controls the domain,
- * which lets the owner claim and edit the auto-generated MCP Emails connector
+ * which lets the owner claim and edit the auto-generated MCPEmails connector
  * listing at https://glama.ai/mcp/connectors.
  *
  * The maintainer email MUST match the email on the Glama account doing the

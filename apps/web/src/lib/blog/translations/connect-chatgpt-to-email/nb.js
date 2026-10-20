@@ -3,8 +3,8 @@ const translation = {
   description:
     'Steg for steg: koble Gmail, Outlook, iCloud, Fastmail eller en hvilken som helst IMAP-innboks til ChatGPT med en egendefinert MCP-kobling, og til OpenAI Codex med en avgrenset nøkkel. Ingen e-post lagres.',
   coverAlt:
-    'Koble ChatGPT og OpenAI Codex til Gmail, Outlook, iCloud, Fastmail og IMAP-e-post med MCP Emails',
-  content: `ChatGPT kommer ikke til en postkasse på egen hånd. Den trenger en MCP-server foran e-posten din, og MCP Emails er den serveren: koble til en innboks én gang, pek ChatGPT mot én enkelt URL, og den får de samme e-postverktøyene enten posten ligger i Gmail, Outlook eller Microsoft 365, iCloud, Fastmail, Yahoo, Zoho eller på en egen IMAP-server.
+    'Koble ChatGPT og OpenAI Codex til Gmail, Outlook, iCloud, Fastmail og IMAP-e-post med MCPEmails',
+  content: `ChatGPT kommer ikke til en postkasse på egen hånd. Den trenger en MCP-server foran e-posten din, og MCPEmails er den serveren: koble til en innboks én gang, pek ChatGPT mot én enkelt URL, og den får de samme e-postverktøyene enten posten ligger i Gmail, Outlook eller Microsoft 365, iCloud, Fastmail, Yahoo, Zoho eller på en egen IMAP-server.
 
 To OpenAI-flater er involvert, og de autentiserer på hver sin måte. ChatGPT kjører en OAuth-flyt i nettleseren, så det finnes ingen API-nøkkel å lime inn. OpenAI Codex kjører i terminalen, så den bruker en avgrenset bearer-nøkkel i stedet. Samme endepunkt, samme verktøy.
 
@@ -13,14 +13,14 @@ To OpenAI-flater er involvert, og de autentiserer på hver sin måte. ChatGPT kj
 ## Dette trenger du
 
 - **ChatGPT Plus, Pro, Business, Enterprise eller Edu, i nettleseren.** Egne MCP-koblinger ligger bak utviklermodus, som OpenAI tilbyr på chatgpt.com for disse abonnementene. Free- og Go-kontoer kan ikke legge til en, og mobil- og skrivebordsappene viser ikke valget. På Business og Enterprise må en administrator kanskje tillate utviklermodus først.
-- **En gratis MCP Emails-konto.** [Opprett en her](/signup). Gratisplanen rommer én tilkoblet innboks og krever ikke kort.
+- **En gratis MCPEmails-konto.** [Opprett en her](/signup). Gratisplanen rommer én tilkoblet innboks og krever ikke kort.
 - **Én postkasse.** Gmail, Outlook eller Microsoft 365, iCloud, Fastmail, Yahoo, Zoho, Yandex, eller hva som helst som snakker IMAP og SMTP.
 
 Er du på Free eller Go, fungerer den samme innboksen og URL-en allerede i [Claude](/docs/claude), [Cursor](/docs/cursor), [VS Code](/docs/vscode) og de andre [støttede klientene](/docs/clients).
 
-## Steg 1: Koble innboksen til MCP Emails
+## Steg 1: Koble innboksen til MCPEmails
 
-I MCP Emails-dashbordet åpner du **Inboxes** og deretter **Connect Inbox**, og velger leverandøren din.
+I MCPEmails-dashbordet åpner du **Inboxes** og deretter **Connect Inbox**, og velger leverandøren din.
 
 ### Gmail og Google Workspace
 
@@ -28,7 +28,7 @@ Gmail kobles til med et Google-apppassord over IMAP. Slå på totrinnsbekreftels
 
 ### iCloud, Fastmail, Yahoo og Zoho
 
-Disse vil ha et apspesifikt passord, ikke passordet du skriver inn på nettet. Opprett ett hos leverandøren, velg leverandøren i MCP Emails, og lim det inn. [Veiledningen for iCloud, Fastmail og IMAP](/blog/connect-icloud-fastmail-imap-to-claude) har de nøyaktige stegene.
+Disse vil ha et apspesifikt passord, ikke passordet du skriver inn på nettet. Opprett ett hos leverandøren, velg leverandøren i MCPEmails, og lim det inn. [Veiledningen for iCloud, Fastmail og IMAP](/blog/connect-icloud-fastmail-imap-to-claude) har de nøyaktige stegene.
 
 ### Outlook og Microsoft 365
 
@@ -50,8 +50,8 @@ Koble til mer enn én postkasse hvis planen din tillater det. ChatGPT finner dem
 https://mcpemails.com/api/mcp
 \`\`\`
 
-4. Velg **OAuth** som autentiseringsmetode, opprett koblingen, og autoriser deretter med MCP Emails.
-5. Åpne en ny samtale, klikk **+**, velg **Developer mode** og velg MCP Emails-appen. ChatGPT ser bare verktøyene i en samtale der du har gjort dette, så gjenta det i hver nye samtale.
+4. Velg **OAuth** som autentiseringsmetode, opprett koblingen, og autoriser deretter med MCPEmails.
+5. Åpne en ny samtale, klikk **+**, velg **Developer mode** og velg MCPEmails-appen. ChatGPT ser bare verktøyene i en samtale der du har gjort dette, så gjenta det i hver nye samtale.
 
 Velg OAuth, ikke "ingen autentisering". Denne serveren avviser anonyme kall, så en kobling opprettet uten autentisering ser riktig ut under oppsettet og feiler så ved første verktøykall, som er den forvirrende rekkefølgen. Med OAuth registrerer ChatGPT seg selv og fullfører en authorization code-flyt med PKCE: ingen klient-id å opprette, ingen klienthemmelighet noe sted. Ordlyden i menyene flytter seg mens OpenAI itererer på betaen, så sjekk [oppsettssiden for ChatGPT](/docs/chatgpt) for gjeldende sti.
 
@@ -77,7 +77,7 @@ For rutiner du gjentar, start fra [triageringsoppskriften for innboksen](/blog/a
 
 ## Dette kan ChatGPT gjøre når det er koblet til
 
-MCP Emails gir ChatGPT målrettede e-postverktøy i stedet for et passord eller en rå IMAP-forbindelse:
+MCPEmails gir ChatGPT målrettede e-postverktøy i stedet for et passord eller en rå IMAP-forbindelse:
 
 - **Lese og søke:** \`email_read\` dekker list, read, read_batch, search og attachment. Søk bruker strukturerte felt som avsender, emne, dato og ulest-status, og Gmail-etiketter vises som mapper.
 - **Sende, svare og videresende:** \`email_compose\` sender gjennom din egen leverandør og adresse.
@@ -85,7 +85,7 @@ MCP Emails gir ChatGPT målrettede e-postverktøy i stedet for et passord eller 
 - **Utkast, mapper og planlegging:** \`draft\`, \`draft_list\`, \`folder\`, \`folder_list\`, \`schedule\` og \`schedule_list\`.
 - **Resten:** \`contact_search\`, \`signature_get\`, \`signature_set\`, pluss \`automation\` og \`automation_read\` for gjentakende regler.
 
-Én begrensning å planlegge rundt: MCP Emails er basert på polling. Det finnes ingen webhooks og ingen hendelser serveren starter selv, så ChatGPT ser etter ny post når du ber den om det, ikke i det øyeblikket en melding lander.
+Én begrensning å planlegge rundt: MCPEmails er basert på polling. Det finnes ingen webhooks og ingen hendelser serveren starter selv, så ChatGPT ser etter ny post når du ber den om det, ikke i det øyeblikket en melding lander.
 
 ## OpenAI Codex i terminalen
 
@@ -103,7 +103,7 @@ Avgrens nøkkelen stramt. Bare lesetilgang er som regel riktig for en kodeagent:
 
 - **Ingen mulighet til å opprette en egendefinert kobling.** Utviklermodus krever Plus, Pro, Business, Enterprise eller Edu, på chatgpt.com i en nettleser. Free- og Go-kontoer har det ikke. I et Business- eller Enterprise-arbeidsområde må en administrator tillate det.
 - **Koblingen feiler ved første verktøykall.** Den ble sannsynligvis opprettet uten autentisering. Slett den og opprett den på nytt med OAuth.
-- **Koblingen er opprettet, men ChatGPT svarer uten å røre e-posten din.** Den er ikke slått på i denne samtalen. Klikk **+**, velg **Developer mode** og velg MCP Emails-appen, og spør igjen.
+- **Koblingen er opprettet, men ChatGPT svarer uten å røre e-posten din.** Den er ikke slått på i denne samtalen. Klikk **+**, velg **Developer mode** og velg MCPEmails-appen, og spør igjen.
 - **Leverandøren avviser passordet ditt.** Bruk et apppassord generert av leverandøren, ikke passordet du logger inn med på nettet. Noen leverandører utsteder det bare når tofaktorautentisering er slått på.
 - **En egendefinert IMAP-tilkobling får tidsavbrudd.** Bekreft vert, port og TLS-modus. Port 993 bruker normalt implisitt TLS. Port 143 bruker normalt STARTTLS.
 - **ChatGPT kobler til, men ser ingen post.** Sjekk at innboksen er aktiv i dashbordet, bekreft at tilkoblingen har \`read:email\`, og be ChatGPT kalle \`inbox_list\` først.

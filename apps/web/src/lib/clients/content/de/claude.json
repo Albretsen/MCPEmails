@@ -14,11 +14,11 @@
     "eyebrow": "Claude + E-Mail",
     "titleLine1": "Verbinden Sie Ihr Postfach mit Claude",
     "titleLine2": "als benutzerdefinierten Konnektor",
-    "lead": "Claude hat kein eigenes E-Mail-Programm. MCP Emails ist der gehostete MCP-Server, der ihm eines gibt: echte E-Mails lesen, suchen, senden, beantworten, weiterleiten, planen und organisieren, direkt aus claude.ai oder Claude Desktop.",
+    "lead": "Claude hat kein eigenes E-Mail-Programm. MCPEmails ist der gehostete MCP-Server, der ihm eines gibt: echte E-Mails lesen, suchen, senden, beantworten, weiterleiten, planen und organisieren, direkt aus claude.ai oder Claude Desktop.",
     "meta0": "1 Postfach kostenlos, dauerhaft",
     "meta1": "OAuth, kein API-Schlüssel nötig",
     "meta2": "E-Mails werden live abgerufen, nie gespeichert",
-    "answer": "Fügen Sie https://mcpemails.com/api/mcp in Claude als benutzerdefinierten Konnektor hinzu, klicken Sie auf „Verbinden“ und melden Sie sich mit Ihrem MCP Emails-Konto an. Claude registriert sich automatisch und fragt nach den Scopes, die Sie freigeben. Sie müssen weder einen API-Schlüssel erstellen noch eine Konfigurationsdatei bearbeiten."
+    "answer": "Fügen Sie https://mcpemails.com/api/mcp in Claude als benutzerdefinierten Konnektor hinzu, klicken Sie auf „Verbinden“ und melden Sie sich mit Ihrem MCPEmails-Konto an. Claude registriert sich automatisch und fragt nach den Scopes, die Sie freigeben. Sie müssen weder einen API-Schlüssel erstellen noch eine Konfigurationsdatei bearbeiten."
   },
   "method": {
     "title": "So verbindet sich Claude: OAuth, kein API-Schlüssel",
@@ -39,7 +39,7 @@
     },
     {
       "h": "Verbinden und autorisieren",
-      "p": "Klicken Sie auf „Verbinden“ und melden Sie sich zur Autorisierung bei MCP Emails an. Geben Sie die Scopes frei, die Claude erhalten soll. Ein API-Schlüssel ist nicht nötig."
+      "p": "Klicken Sie auf „Verbinden“ und melden Sie sich zur Autorisierung bei MCPEmails an. Geben Sie die Scopes frei, die Claude erhalten soll. Ein API-Schlüssel ist nicht nötig."
     }
   ],
   "gotchas": [
@@ -64,7 +64,7 @@
   "faq": [
     {
       "q": "Kann Claude meine E-Mails lesen?",
-      "a": "Nicht von selbst. Claude erreicht ein Postfach nur über einen Konnektor, und ein benutzerdefinierter Konnektor, der auf MCP Emails zeigt, ist eine Möglichkeit dafür. Nach der Verbindung kann Claude E-Mails in allen verbundenen Postfächern auflisten, lesen, suchen, senden, beantworten, weiterleiten, organisieren und planen, beschränkt auf die freigegebenen Scopes."
+      "a": "Nicht von selbst. Claude erreicht ein Postfach nur über einen Konnektor, und ein benutzerdefinierter Konnektor, der auf MCPEmails zeigt, ist eine Möglichkeit dafür. Nach der Verbindung kann Claude E-Mails in allen verbundenen Postfächern auflisten, lesen, suchen, senden, beantworten, weiterleiten, organisieren und planen, beschränkt auf die freigegebenen Scopes."
     },
     {
       "q": "Brauche ich für Claude einen API-Schlüssel?",

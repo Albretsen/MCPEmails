@@ -7,7 +7,7 @@
     "method": "oauth",
     "label": "Logg inn med Microsoft (OAuth 2.0)",
     "helpUrl": "https://support.microsoft.com/en-us/office/outlook-and-other-apps-are-unable-to-connect-to-outlook-com-when-using-basic-authentication-f4202ebf-89c6-4a8a-bec3-3d60cf7deaef",
-    "usernameForm": "Ingenting å skrive inn. Du logger inn med Microsoft-kontoen din på Microsofts egen side og godkjenner tilgangen, så verken passord eller app-passord skrives inn her. IMAP- og SMTP-innstillinger som er publisert for Outlook.com, gjelder ikke: MCP Emails kobler til via Microsoft Graph.",
+    "usernameForm": "Ingenting å skrive inn. Du logger inn med Microsoft-kontoen din på Microsofts egen side og godkjenner tilgangen, så verken passord eller app-passord skrives inn her. IMAP- og SMTP-innstillinger som er publisert for Outlook.com, gjelder ikke: MCPEmails kobler til via Microsoft Graph.",
     "status": "active"
   },
   "meta": {
@@ -22,16 +22,16 @@
     "meta0": "1 innboks gratis, for alltid",
     "meta1": "Logg inn med Microsoft, uten app-passord",
     "meta2": "E-post hentes direkte, lagres aldri",
-    "answer": "Ja. MCP Emails er en driftet MCP-server som kobler til en personlig Microsoft-konto, en adresse som slutter på outlook.com, hotmail.com, live.com eller msn.com, via Microsoft Graph. Du klikker Koble til med Microsoft, logger inn og godkjenner tilgangen på Microsofts samtykkeskjerm, der MCP Emails vises som verifisert utgiver. Det finnes ikke noe app-passord eller IMAP-innstilling å skrive inn, og ingen administrator er involvert for en personlig konto. Lim én URL inn i Claude, ChatGPT, Cursor eller en annen MCP-klient, så kan agenten lese, søke i, sende, svare på, videresende, planlegge og arkivere e-posten din. Én innboks er gratis, for alltid."
+    "answer": "Ja. MCPEmails er en driftet MCP-server som kobler til en personlig Microsoft-konto, en adresse som slutter på outlook.com, hotmail.com, live.com eller msn.com, via Microsoft Graph. Du klikker Koble til med Microsoft, logger inn og godkjenner tilgangen på Microsofts samtykkeskjerm, der MCPEmails vises som verifisert utgiver. Det finnes ikke noe app-passord eller IMAP-innstilling å skrive inn, og ingen administrator er involvert for en personlig konto. Lim én URL inn i Claude, ChatGPT, Cursor eller en annen MCP-klient, så kan agenten lese, søke i, sende, svare på, videresende, planlegge og arkivere e-posten din. Én innboks er gratis, for alltid."
   },
   "method": {
     "title": "Slik kobles Outlook.com til: innlogging med Microsoft",
-    "body": "Outlook.com kobles til via <b>Microsoft Graph</b> med OAuth 2.0, ikke over IMAP. Du logger inn på Microsofts egen side og godkjenner en kort liste med tillatelser: lese og endre e-post (<b>Mail.ReadWrite</b>), sende e-post (<b>Mail.Send</b>), holde forbindelsen (<b>offline_access</b>) og den grunnleggende profilen og e-postadressen din. Microsoft-passordet ditt skrives bare inn på Microsofts side og når aldri oss. For å koble fra sletter du innboksen i MCP Emails, eller fjerner MCP Emails fra appene som har tilgang til Microsoft-kontoen din."
+    "body": "Outlook.com kobles til via <b>Microsoft Graph</b> med OAuth 2.0, ikke over IMAP. Du logger inn på Microsofts egen side og godkjenner en kort liste med tillatelser: lese og endre e-post (<b>Mail.ReadWrite</b>), sende e-post (<b>Mail.Send</b>), holde forbindelsen (<b>offline_access</b>) og den grunnleggende profilen og e-postadressen din. Microsoft-passordet ditt skrives bare inn på Microsofts side og når aldri oss. For å koble fra sletter du innboksen i MCPEmails, eller fjerner MCPEmails fra appene som har tilgang til Microsoft-kontoen din."
   },
   "setup": [
     {
       "h": "Opprett en gratis konto",
-      "p": "Registrer deg hos MCP Emails, uten kort. Gratisplanen kobler til én innboks, for alltid."
+      "p": "Registrer deg hos MCPEmails, uten kort. Gratisplanen kobler til én innboks, for alltid."
     },
     {
       "h": "Velg Outlook og koble til med Microsoft",
@@ -49,7 +49,7 @@
   "gotchas": [
     {
       "h": "App-passord og IMAP-passord fungerer ikke, og derfor bruker vi Microsoft Graph",
-      "p": "Microsoft avsluttet grunnleggende autentisering for personlige kontoer som kobler til fra apper utenfor Microsoft fra 16. september 2024, og IMAP-tjenesten til Outlook.com tilbyr nå bare OAuth. Mange eldre veiledninger ber deg fortsatt lage et app-passord; det kan ikke lenger logge inn på e-posten. MCP Emails bruker ikke IMAP for Outlook.com i det hele tatt: den logger inn med Microsoft og snakker med Microsoft Graph, så det finnes ikke noe passord å lage og ingen serverinnstilling å gjøre feil."
+      "p": "Microsoft avsluttet grunnleggende autentisering for personlige kontoer som kobler til fra apper utenfor Microsoft fra 16. september 2024, og IMAP-tjenesten til Outlook.com tilbyr nå bare OAuth. Mange eldre veiledninger ber deg fortsatt lage et app-passord; det kan ikke lenger logge inn på e-posten. MCPEmails bruker ikke IMAP for Outlook.com i det hele tatt: den logger inn med Microsoft og snakker med Microsoft Graph, så det finnes ikke noe passord å lage og ingen serverinnstilling å gjøre feil."
     },
     {
       "h": "Adresser på hotmail.com, live.com og msn.com er samme tjeneste",
@@ -57,7 +57,7 @@
     },
     {
       "h": "En Microsoft-konto uten Outlook-postkasse blir avvist",
-      "p": "Hvis Microsoft-kontoen du logger inn med ikke har en Exchange Online-postkasse bak seg, har Microsoft Graph ingenting å åpne, så MCP Emails avviser tilkoblingen og sier ifra. Hvis e-posten til den adressen ligger på en annen server, kobler du den til med IMAP i stedet."
+      "p": "Hvis Microsoft-kontoen du logger inn med ikke har en Exchange Online-postkasse bak seg, har Microsoft Graph ingenting å åpne, så MCPEmails avviser tilkoblingen og sier ifra. Hvis e-posten til den adressen ligger på en annen server, kobler du den til med IMAP i stedet."
     },
     {
       "h": "En helt ny Outlook.com-konto kan bli sperret for sending en stund",
@@ -73,7 +73,7 @@
   "faq": [
     {
       "q": "Fungerer Claude med Outlook.com?",
-      "a": "Ja. Koble Outlook.com-postkassen din til MCP Emails ved å logge inn med Microsoft, lim én MCP-URL inn i Claude, så kan Claude lese, søke i, sende, svare på, videresende, planlegge og arkivere e-posten din. Den samme URL-en fungerer i ChatGPT, Cursor og andre MCP-klienter."
+      "a": "Ja. Koble Outlook.com-postkassen din til MCPEmails ved å logge inn med Microsoft, lim én MCP-URL inn i Claude, så kan Claude lese, søke i, sende, svare på, videresende, planlegge og arkivere e-posten din. Den samme URL-en fungerer i ChatGPT, Cursor og andre MCP-klienter."
     },
     {
       "q": "Fungerer det med Hotmail-, Live- og MSN-adresser?",
@@ -81,7 +81,7 @@
     },
     {
       "q": "Trenger jeg et app-passord eller IMAP-innstillinger?",
-      "a": "Nei. MCP Emails kobler til Outlook.com via Microsoft Graph etter at du har logget inn med Microsoft, så det finnes ikke noe app-passord å lage og ingen IMAP- eller SMTP-server å skrive inn. Et app-passord ville uansett ikke fungert: Microsoft sluttet å godta passord fra e-postapper utenfor Microsoft på personlige kontoer i september 2024."
+      "a": "Nei. MCPEmails kobler til Outlook.com via Microsoft Graph etter at du har logget inn med Microsoft, så det finnes ikke noe app-passord å lage og ingen IMAP- eller SMTP-server å skrive inn. Et app-passord ville uansett ikke fungert: Microsoft sluttet å godta passord fra e-postapper utenfor Microsoft på personlige kontoer i september 2024."
     },
     {
       "q": "Hva kan AI-en min gjøre i Outlook.com?",
@@ -89,11 +89,11 @@
     },
     {
       "q": "Er dette det samme som å koble til en Microsoft 365-konto på jobben?",
-      "a": "Innloggingen er den samme, godkjenningen er det kanskje ikke. En personlig konto trenger ingen administrator. En Microsoft 365-konto fra jobb eller skole trenger ofte at en IT-administrator godkjenner MCP Emails én gang for hele organisasjonen først. Da gir dashbordet deg en godkjenningslenke du kan sende til IT-administratoren, og vedkommende trenger ingen MCP Emails-konto for å bruke den."
+      "a": "Innloggingen er den samme, godkjenningen er det kanskje ikke. En personlig konto trenger ingen administrator. En Microsoft 365-konto fra jobb eller skole trenger ofte at en IT-administrator godkjenner MCPEmails én gang for hele organisasjonen først. Da gir dashbordet deg en godkjenningslenke du kan sende til IT-administratoren, og vedkommende trenger ingen MCPEmails-konto for å bruke den."
     },
     {
       "q": "Lagres e-posten min på serverne deres?",
-      "a": "Nei. Meldinger hentes direkte fra Microsoft for hver forespørsel og sendes videre til AI-klienten din. OAuth-tokenet fra Microsoft-innloggingen din er kryptert ved lagring, og meldingsinnhold beholdes ikke. Sletter du innboksen i MCP Emails, avsluttes tilkoblingen umiddelbart, og du kan også fjerne MCP Emails fra appene som har tilgang til Microsoft-kontoen din."
+      "a": "Nei. Meldinger hentes direkte fra Microsoft for hver forespørsel og sendes videre til AI-klienten din. OAuth-tokenet fra Microsoft-innloggingen din er kryptert ved lagring, og meldingsinnhold beholdes ikke. Sletter du innboksen i MCPEmails, avsluttes tilkoblingen umiddelbart, og du kan også fjerne MCPEmails fra appene som har tilgang til Microsoft-kontoen din."
     }
   ],
   "ctaBand": {

@@ -1,4 +1,4 @@
-# MCP Emails, self-host server image.
+# MCPEmails, self-host server image.
 #
 # Runs the exact same Deno MCP server that powers mcpemails.com
 # (supabase/functions/mcp-server), plus the provisioning CLI. No build step or

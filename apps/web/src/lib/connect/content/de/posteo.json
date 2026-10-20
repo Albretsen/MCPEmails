@@ -22,7 +22,7 @@
     "titleLine1": "Posteo mit Claude verbinden,",
     "titleLine2": "mit Cursor, ChatGPT und jedem MCP-Client",
     "lead": "Geben Sie Ihrem KI-Agenten Zugriff auf Ihr echtes Posteo-Postfach. E-Mails lesen, suchen, senden, beantworten, planen und ordnen, per IMAP und in jedem MCP-Client statt nur in einem. Dazu eine klare Antwort, was Posteos Verschlüsselung vor einem Agenten verbirgt und was nicht.",
-    "answer": "Claude kann Posteo nicht von sich aus erreichen. MCP Emails ist ein gehosteter MCP-Server, der das Postfach per IMAP über posteo.de auf Port 993 und per SMTP über posteo.de auf Port 465 anbindet. Danach können Claude, Cursor oder jeder MCP-Client diese E-Mails lesen, suchen, senden und ordnen. Es gibt kein Präfix imap. oder smtp.: Die bloße Domain ist der Server für jede Posteo-Adresse, egal auf welche Posteo-Domain Ihre endet. Angemeldet wird mit Ihrem normalen Posteo-Passwort, außer Sie haben den zusätzlichen Postfachschutz eingeschaltet. Dann akzeptieren IMAP, POP3 und SMTP nur noch ein App-Passwort aus Ihren Posteo-Einstellungen. Ein Postfach ist dauerhaft kostenlos.",
+    "answer": "Claude kann Posteo nicht von sich aus erreichen. MCPEmails ist ein gehosteter MCP-Server, der das Postfach per IMAP über posteo.de auf Port 993 und per SMTP über posteo.de auf Port 465 anbindet. Danach können Claude, Cursor oder jeder MCP-Client diese E-Mails lesen, suchen, senden und ordnen. Es gibt kein Präfix imap. oder smtp.: Die bloße Domain ist der Server für jede Posteo-Adresse, egal auf welche Posteo-Domain Ihre endet. Angemeldet wird mit Ihrem normalen Posteo-Passwort, außer Sie haben den zusätzlichen Postfachschutz eingeschaltet. Dann akzeptieren IMAP, POP3 und SMTP nur noch ein App-Passwort aus Ihren Posteo-Einstellungen. Ein Postfach ist dauerhaft kostenlos.",
     "meta0": "1 Postfach dauerhaft kostenlos",
     "meta1": "App-Passwort, sobald der Zusatzschutz aktiv ist",
     "meta2": "E-Mails live abgerufen, nie gespeichert"
@@ -33,7 +33,7 @@
   },
   "setup": [
     {
-      "h": "Kostenloses MCP Emails Konto erstellen",
+      "h": "Kostenloses MCPEmails Konto erstellen",
       "p": "Registrieren Sie sich auf mcpemails.com. Der Free-Tarif verbindet ein Postfach dauerhaft, ohne Kreditkarte. Am Ende erhalten Sie eine MCP-URL und einen Schlüssel."
     },
     {
@@ -41,7 +41,7 @@
       "p": "Melden Sie sich im Posteo-Webmailer an und öffnen Sie die <b>Einstellungen</b>, dann den Bereich zu Passwort und Sicherheit, in dem <b>App-Passwörter</b> angelegt und verwaltet werden. Posteo verlangt mindestens 16 Zeichen mit mindestens einer Zahl und einem Großbuchstaben, und Sie können bis zu fünf gleichzeitig haben. Benennen Sie es nach dieser Verbindung, damit Sie später wissen, welches Sie löschen. Ist der Zusatzschutz aus, können Sie diesen Schritt überspringen, aber Zugangsdaten, die sich einzeln widerrufen lassen, gibt man einem Dritten lieber."
     },
     {
-      "h": "Postfach in MCP Emails hinzufügen",
+      "h": "Postfach in MCPEmails hinzufügen",
       "p": "Wählen Sie IMAP / SMTP und geben Sie Ihre vollständige Posteo-Adresse und dann das Passwort ein. Der Host ist für beide Richtungen als <code>posteo.de</code> vorausgefüllt und über eine echte TLS-Verbindung geprüft. Das Passwort für den Postausgang muss ebenso ausgefüllt werden wie das für den Posteingang, weil Posteo den Versand immer authentifiziert."
     },
     {
@@ -68,14 +68,14 @@
     }
   ],
   "limits": [
-    "Wenn Sie ein Posteo-Postfach mit einem KI-Client verbinden, liest dieser KI-Anbieter den Inhalt von allem, womit er arbeiten soll. MCP Emails ruft E-Mails bei jeder Anfrage live von Posteo ab, speichert keine Nachrichteninhalte und verschlüsselt Zugangsdaten im Ruhezustand, aber der Text erreicht trotzdem Claude, Cursor oder den Client, den Sie verbinden. Posteos anonyme Registrierung, anonyme Bezahlung und das Hosting in Deutschland schützen die Beziehung zwischen Ihnen und Posteo. Nichts davon begleitet eine Nachricht zu einem KI-Anbieter, den Sie selbst anbinden.",
-    "Mit eingeschalteter Eingangsverschlüsselung kann ein Agent Ihre E-Mails gar nicht lesen. Nachrichten kommen als PGP- oder S/MIME-Chiffretext an, MCP Emails besitzt keinen privaten Schlüssel von Ihnen, und es bleiben nur Kopfzeilen, Datumsangaben und Ordneroperationen.",
+    "Wenn Sie ein Posteo-Postfach mit einem KI-Client verbinden, liest dieser KI-Anbieter den Inhalt von allem, womit er arbeiten soll. MCPEmails ruft E-Mails bei jeder Anfrage live von Posteo ab, speichert keine Nachrichteninhalte und verschlüsselt Zugangsdaten im Ruhezustand, aber der Text erreicht trotzdem Claude, Cursor oder den Client, den Sie verbinden. Posteos anonyme Registrierung, anonyme Bezahlung und das Hosting in Deutschland schützen die Beziehung zwischen Ihnen und Posteo. Nichts davon begleitet eine Nachricht zu einem KI-Anbieter, den Sie selbst anbinden.",
+    "Mit eingeschalteter Eingangsverschlüsselung kann ein Agent Ihre E-Mails gar nicht lesen. Nachrichten kommen als PGP- oder S/MIME-Chiffretext an, MCPEmails besitzt keinen privaten Schlüssel von Ihnen, und es bleiben nur Kopfzeilen, Datumsangaben und Ordneroperationen.",
     "Posteos Standardpostfach ist für heutige Verhältnisse klein, und ein volles Postfach weist eingehende E-Mails ab. Ein Agent, der ablegt und markiert, schafft keinen Platz, Löschen und Leeren des Papierkorbs schon."
   ],
   "faq": [
     {
       "q": "Funktioniert Claude mit Posteo?",
-      "a": "Nicht von sich aus. Claude hat keinen Posteo-Konnektor und spricht kein IMAP. Wenn Sie einen MCP-Server wie MCP Emails mit Ihrem Posteo-Postfach verbinden, kann Claude E-Mails lesen, suchen, senden, beantworten, planen und ordnen. Dieselbe Verbindung funktioniert dann auch in Cursor, ChatGPT und anderen MCP-Clients, ohne sie ein zweites Mal einzurichten."
+      "a": "Nicht von sich aus. Claude hat keinen Posteo-Konnektor und spricht kein IMAP. Wenn Sie einen MCP-Server wie MCPEmails mit Ihrem Posteo-Postfach verbinden, kann Claude E-Mails lesen, suchen, senden, beantworten, planen und ordnen. Dieselbe Verbindung funktioniert dann auch in Cursor, ChatGPT und anderen MCP-Clients, ohne sie ein zweites Mal einzurichten."
     },
     {
       "q": "Wie lauten die IMAP- und SMTP-Einstellungen von Posteo?",

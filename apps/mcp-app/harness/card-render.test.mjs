@@ -9,7 +9,7 @@
 // The founder's complaint, 2026-10-12: "while it loads it is a thin sliver",
 // and "sometimes the card never appears at all". Both are the same defect seen
 // twice — a card that renders NOTHING, reports height 0, and leaves Claude
-// drawing its own "Widget from MCP Emails draft" header over an empty box. The
+// drawing its own "Widget from MCPEmails draft" header over an empty box. The
 // design had assumed an empty frame is an invisible frame (`.card:empty {
 // display: none }`). It is not, in this host, and that single wrong premise is
 // what every branch checked below was written against.
@@ -388,7 +388,7 @@ async function main() {
     await settle();
     expect("it failed", typeof c.state().connectError, "string");
     expect("the card is not empty", c.filled(), true);
-    expect("one line", c.text(), "MCP Emails: not shown here.");
+    expect("one line", c.text(), "MCPEmails: not shown here.");
     expect("and the host was told its size", c.sizes().length > 0, true);
     await c.done();
   }
@@ -435,7 +435,7 @@ async function main() {
     await settle();
     expect("classified foreign", c.state().resultStatus, "foreign");
     expect("the card is not empty", c.filled(), true);
-    expect("one line", c.text(), "MCP Emails: no preview for this result.");
+    expect("one line", c.text(), "MCPEmails: no preview for this result.");
     await c.done();
   }
 
@@ -451,7 +451,7 @@ async function main() {
     await settle();
     expect("classified cancelled", c.state().resultStatus, "cancelled");
     expect("the card is not empty", c.filled(), true);
-    expect("one line", c.text(), "MCP Emails: cancelled.");
+    expect("one line", c.text(), "MCPEmails: cancelled.");
     await c.done();
   }
 
@@ -550,7 +550,7 @@ async function main() {
     c.deliver(toolResult(deferredNow(), "Draft saved.", F.draftReplyResultMeta));
     await after(80);
     expect("it rendered", c.state().envelope?.schema_version, F.DEFERRED_V);
-    expect("not the update-the-connector screen", c.text().includes("Update the MCP Emails"), false);
+    expect("not the update-the-connector screen", c.text().includes("Update the MCPEmails"), false);
     expect("the real body is in the box", bodyBox()?.value, REAL_MESSAGE);
     expect("Save is there", !!c.button("Save"), true);
     expect("and the card asked the server for nothing", c.calls.length, 0);
@@ -590,7 +590,7 @@ async function main() {
     await c.done();
   }
 
-  const failedLine = "MCP Emails: open the dashboard to see this.";
+  const failedLine = "MCPEmails: open the dashboard to see this.";
   for (const [name, reply, line] of [
     ["the read is refused", { error: { code: -32000, message: "host refused" } }, failedLine],
     [
@@ -704,7 +704,7 @@ async function main() {
     expect(
       "a body edit",
       c.contexts().at(-1),
-      "The user saved edits to a draft in the MCP Emails card at 2026-10-13T10:03:00Z. " +
+      "The user saved edits to a draft in the MCPEmails card at 2026-10-13T10:03:00Z. " +
         'Its current draft_id is Drafts:3. Subject: "Quarterly numbers". To 1, cc 0, bcc 0. ' +
         `Body 5 words. ${DIFFERS}`,
     );
@@ -718,7 +718,7 @@ async function main() {
     expect(
       "and its line still says the body is not the agent's",
       c.contexts().at(-1),
-      "The user saved edits to a draft in the MCP Emails card at 2026-10-13T10:04:00Z. " +
+      "The user saved edits to a draft in the MCPEmails card at 2026-10-13T10:04:00Z. " +
         'Its current draft_id is Drafts:4. Subject: "Quarterly numbers, final". To 1, cc 0, bcc 0. ' +
         `Body 5 words. ${DIFFERS}`,
     );
@@ -729,7 +729,7 @@ async function main() {
     expect(
       "sent",
       c.contexts().at(-1),
-      "The user sent draft Drafts:4 from the MCP Emails card at 2026-10-13T10:09:30Z. " +
+      "The user sent draft Drafts:4 from the MCPEmails card at 2026-10-13T10:09:30Z. " +
         'Subject: "Quarterly numbers, final". To 1, cc 0, bcc 0. ' +
         "The message has left Drafts, so that draft_id no longer resolves. " +
         "The user edited the body in the card before sending, so the sent text differs from the text the agent last wrote.",
@@ -751,7 +751,7 @@ async function main() {
     expect(
       "the line",
       c.contexts().at(-1),
-      "The user saved edits to a draft in the MCP Emails card at 2026-10-13T10:03:00Z. " +
+      "The user saved edits to a draft in the MCPEmails card at 2026-10-13T10:03:00Z. " +
         'Its current draft_id is Drafts:3. Subject: "Quarterly numbers v2". To 1, cc 0, bcc 0. ' +
         "Body 3 words. This save did not change the body.",
     );
@@ -778,7 +778,7 @@ async function main() {
     expect(
       "the line",
       c.contexts().at(-1),
-      "The user pressed Send on draft Drafts:2 in the MCP Emails card and the send failed. " +
+      "The user pressed Send on draft Drafts:2 in the MCPEmails card and the send failed. " +
         'Subject: "Quarterly numbers". To 1, cc 0, bcc 0. ' +
         'The server reported: "Your email account has exceeded its sending quota. Please try again later.". ' +
         "Nothing was reported as sent, and the card still holds the draft under that draft_id.",
@@ -804,7 +804,7 @@ async function main() {
     expect(
       "the line",
       c.contexts().at(-1),
-      "The user pressed Send on draft Drafts:2 in the MCP Emails card. " +
+      "The user pressed Send on draft Drafts:2 in the MCPEmails card. " +
         'Subject: "Quarterly numbers". To 1, cc 0, bcc 0. ' +
         `The send is held for approval under approval_id ${F.heldSendMerged.approval_id} and nothing has been sent. ` +
         "The draft is still in Drafts under that draft_id.",
@@ -835,7 +835,7 @@ async function main() {
     expect(
       "the line",
       c.contexts().at(-1),
-      "The user discarded draft Drafts:2 from the MCP Emails card. " +
+      "The user discarded draft Drafts:2 from the MCPEmails card. " +
         'Subject: "Quarterly numbers". To 1, cc 0, bcc 0. ' +
         "Nothing was sent. The draft was deleted from Drafts, so that draft_id no longer resolves.",
     );

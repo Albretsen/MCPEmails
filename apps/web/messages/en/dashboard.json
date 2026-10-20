@@ -22,20 +22,20 @@
       "step1": "In claude.ai or Claude Desktop, open Settings → Connectors.",
       "step2": "Click \"Add custom connector\".",
       "step3": "Paste the URL above as the connector URL, then click \"Add\".",
-      "step4": "Click \"Connect\" and sign in with MCP Emails to authorize. No API key needed."
+      "step4": "Click \"Connect\" and sign in with MCPEmails to authorize. No API key needed."
     },
     "chatgpt": {
       "step1": "Open Settings → Apps & Connectors → Advanced settings and turn on Developer mode.",
       "step2": "Back in Apps & Connectors, click \"Create\".",
       "step3": "Enter a name and paste the URL above as the Connector URL.",
-      "step4": "Pick OAuth, click \"Create\", then authorize with MCP Emails.",
-      "step5": "In a chat on chatgpt.com, click + → Developer mode and select the MCP Emails app. Repeat this in every new chat, or ChatGPT will not see the tools.",
+      "step4": "Pick OAuth, click \"Create\", then authorize with MCPEmails.",
+      "step5": "In a chat on chatgpt.com, click + → Developer mode and select the MCPEmails app. Repeat this in every new chat, or ChatGPT will not see the tools.",
       "note": "Works on chatgpt.com (web only) with Plus, Pro, Business, Enterprise and Edu. Free and Go accounts cannot add custom connectors. On Business and Enterprise, an admin may need to allow developer mode first."
     },
     "cursor": {
       "step1": "Edit ~/.cursor/mcp.json (global) or .cursor/mcp.json (project).",
       "step2": "Add the server below under \"mcpServers\".",
-      "step3": "Cursor prompts you to sign in via OAuth. Authorize with MCP Emails."
+      "step3": "Cursor prompts you to sign in via OAuth. Authorize with MCPEmails."
     },
     "vscode": {
       "step1": "Open the Command Palette (⇧⌘P) and run \"MCP: Add Server\".",
@@ -51,7 +51,7 @@
     "windsurf": {
       "step1": "Open Cascade’s MCP settings, or edit ~/.codeium/windsurf/mcp_config.json.",
       "step2": "Add the server below. Note the field is \"serverUrl\", not \"url\".",
-      "step3": "Refresh MCP servers in Cascade and authorize with MCP Emails when prompted."
+      "step3": "Refresh MCP servers in Cascade and authorize with MCPEmails when prompted."
     },
     "gemini": {
       "step1": "Edit ~/.gemini/settings.json (global) or .gemini/settings.json (project).",
@@ -61,7 +61,7 @@
     "zed": {
       "step1": "In the Agent Panel settings click \"Add Custom Server\", or edit settings.json.",
       "step2": "Add the server below under \"context_servers\".",
-      "step3": "Zed prompts the OAuth flow when no Authorization header is set. Sign in with MCP Emails."
+      "step3": "Zed prompts the OAuth flow when no Authorization header is set. Sign in with MCPEmails."
     },
     "jetbrains": {
       "step1": "Open Settings → Tools → AI Assistant → Model Context Protocol (MCP).",
@@ -71,7 +71,7 @@
     "raycast": {
       "step1": "Run the \"Install MCP Server\" command (or \"Manage MCP Servers\").",
       "step2": "Enter a name, set Transport to \"HTTP\", and paste the URL above.",
-      "step3": "Press \"Install MCP Server\", then click \"Sign In\" to authorize with MCP Emails."
+      "step3": "Press \"Install MCP Server\", then click \"Sign In\" to authorize with MCPEmails."
     },
     "warp": {
       "step1": "Open Settings → Agents → MCP servers and click \"+ Add\".",
@@ -740,7 +740,7 @@
       "bodyTitle": "Message",
       "bodyTruncated": "This message is longer than 64 KB and has been clipped here. Open it in the dashboard to read all of it.",
       "bodyWithheldRole": "The message text is shown to workspace owners, admins and members. Your role can review the delivery details only.",
-      "bodyStoredWithProvider": "This request was prepared before MCP Emails recorded a copy of the draft, so its text cannot be shown here, and an approved send of it will not go out. Reject it and ask your assistant to send the draft again.",
+      "bodyStoredWithProvider": "This request was prepared before MCPEmails recorded a copy of the draft, so its text cannot be shown here, and an approved send of it will not go out. Reject it and ask your assistant to send the draft again.",
       "bodyDecryptFailed": "The stored message could not be decrypted, so it cannot be shown. Reject this request and ask your assistant to prepare it again.",
       "bodyAbsent": "This request has no message text.",
       "bodyHtmlShow": "Show HTML source",
@@ -850,7 +850,7 @@
       "bannerAlsoFailing": "{count, plural, =1 {Another one is still failing.} other {# more are still failing.}}",
       "bannerFix": "Fix the cause, then switch them back on.",
       "rowFailing": "{count, plural, =0 {The last run failed.} =1 {1 run in a row has failed.} other {# runs in a row have failed; it switches itself off at 5.}}",
-      "causeConnectionEnded": "The connection this automation runs as has ended. Reconnect MCP Emails in your MCP client.",
+      "causeConnectionEnded": "The connection this automation runs as has ended. Reconnect MCPEmails in your MCP client.",
       "causeKeyRevoked": "The API key this automation runs as was revoked. Point it at a live key.",
       "causeScopeDenied": "The API key no longer has permission for this automation's action.",
       "causeInboxNotPermitted": "The API key is no longer allowed to use this automation's inbox.",

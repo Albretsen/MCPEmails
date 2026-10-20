@@ -19,7 +19,7 @@
     "titleLine1": "Connectez Kolab Now à Claude,",
     "titleLine2": "Cursor, ChatGPT, tout client MCP",
     "lead": "Donnez à votre agent IA une vraie boîte Kolab Now. Lisez, recherchez, envoyez, répondez, planifiez et organisez vos e-mails en IMAP depuis la Suisse, dans tous vos clients MCP plutôt que dans un seul.",
-    "answer": "Claude ne peut pas accéder seul à Kolab Now. MCP Emails est un serveur MCP hébergé qui s'y connecte en IMAP sur imap.kolabnow.com, port 993, et en SMTP sur smtp.kolabnow.com, port 465, en s'authentifiant avec votre adresse Kolab Now principale et le mot de passe de votre compte, pour que Claude, Cursor ou tout client MCP puisse lire, rechercher, envoyer et organiser ce courrier. Ces deux noms d'hôte s'utilisent quel que soit le domaine de votre adresse, y compris le vôtre. Une boîte est gratuite, pour toujours.",
+    "answer": "Claude ne peut pas accéder seul à Kolab Now. MCPEmails est un serveur MCP hébergé qui s'y connecte en IMAP sur imap.kolabnow.com, port 993, et en SMTP sur smtp.kolabnow.com, port 465, en s'authentifiant avec votre adresse Kolab Now principale et le mot de passe de votre compte, pour que Claude, Cursor ou tout client MCP puisse lire, rechercher, envoyer et organiser ce courrier. Ces deux noms d'hôte s'utilisent quel que soit le domaine de votre adresse, y compris le vôtre. Une boîte est gratuite, pour toujours.",
     "meta0": "1 boîte gratuite, pour toujours",
     "meta1": "Adresse principale et mot de passe du compte",
     "meta2": "E-mails récupérés en direct, jamais stockés"
@@ -30,7 +30,7 @@
   },
   "setup": [
     {
-      "h": "Créez votre compte MCP Emails gratuit",
+      "h": "Créez votre compte MCPEmails gratuit",
       "p": "Inscrivez-vous sur mcpemails.com. L'offre gratuite connecte une boîte, pour toujours, sans carte bancaire. Vous obtenez une URL MCP et une clé à la fin."
     },
     {
@@ -38,7 +38,7 @@
       "p": "Kolab Now authentifie sur l'adresse e-mail principale du compte. Si votre courrier arrive à plusieurs adresses, ou si la boîte est sur votre propre domaine, seule l'adresse principale permet de se connecter. Elle apparaît dans les paramètres de votre compte Kolab Now ; un alias dans le champ identifiant produit un simple échec d'authentification, sans aucun indice sur la cause."
     },
     {
-      "h": "Ajoutez la boîte dans MCP Emails",
+      "h": "Ajoutez la boîte dans MCPEmails",
       "p": "Choisissez IMAP / SMTP, saisissez cette adresse principale et votre mot de passe Kolab Now. Les serveurs sont préremplis avec <code>imap.kolabnow.com</code> et <code>smtp.kolabnow.com</code>, qui sont corrects quel que soit le domaine de votre adresse. Les identifiants sont chiffrés au repos ; le courrier est récupéré en direct à chaque requête et n'est pas conservé."
     },
     {
@@ -65,14 +65,14 @@
     }
   ],
   "limits": [
-    "Connecter une boîte Kolab Now à un client IA signifie que ce fournisseur d'IA lit le contenu de vos messages. L'hébergement suisse de Kolab Now et la pile logicielle libre de Kolab ne s'étendent pas au client IA situé à l'autre bout de la connexion. MCP Emails récupère le courrier en direct depuis Kolab Now à chaque requête et ne stocke pas le contenu des messages, et les identifiants sont chiffrés au repos, mais le texte parvient tout de même à Claude, Cursor ou au client que vous y connectez. Si une boîte est chez Kolab Now précisément pour garder son contenu sous une seule juridiction, la connecter à un grand fournisseur d'IA annule cet avantage.",
-    "Les messages chiffrés avec votre clé OpenPGP ou S/MIME arrivent en IMAP sous forme de texte chiffré. MCP Emails ne détient aucune clé privée : un agent peut donc lire les en-têtes et classer le message, mais pas son contenu.",
-    "Kolab Now ne propose ni mot de passe d'application ni mot de passe par appareil : l'identifiant que MCP Emails stocke est donc le mot de passe de votre compte. Pour révoquer une seule connexion, il faut changer le mot de passe du compte."
+    "Connecter une boîte Kolab Now à un client IA signifie que ce fournisseur d'IA lit le contenu de vos messages. L'hébergement suisse de Kolab Now et la pile logicielle libre de Kolab ne s'étendent pas au client IA situé à l'autre bout de la connexion. MCPEmails récupère le courrier en direct depuis Kolab Now à chaque requête et ne stocke pas le contenu des messages, et les identifiants sont chiffrés au repos, mais le texte parvient tout de même à Claude, Cursor ou au client que vous y connectez. Si une boîte est chez Kolab Now précisément pour garder son contenu sous une seule juridiction, la connecter à un grand fournisseur d'IA annule cet avantage.",
+    "Les messages chiffrés avec votre clé OpenPGP ou S/MIME arrivent en IMAP sous forme de texte chiffré. MCPEmails ne détient aucune clé privée : un agent peut donc lire les en-têtes et classer le message, mais pas son contenu.",
+    "Kolab Now ne propose ni mot de passe d'application ni mot de passe par appareil : l'identifiant que MCPEmails stocke est donc le mot de passe de votre compte. Pour révoquer une seule connexion, il faut changer le mot de passe du compte."
   ],
   "faq": [
     {
       "q": "Claude fonctionne-t-il avec Kolab Now ?",
-      "a": "Pas directement. Claude n'a pas de connecteur Kolab Now intégré et ne parle pas IMAP par lui-même. Connecter un serveur MCP comme MCP Emails à votre boîte Kolab Now donne à Claude un accès en lecture, recherche, envoi, réponse, planification et organisation, et la même connexion est réutilisable depuis Cursor et d'autres clients MCP."
+      "a": "Pas directement. Claude n'a pas de connecteur Kolab Now intégré et ne parle pas IMAP par lui-même. Connecter un serveur MCP comme MCPEmails à votre boîte Kolab Now donne à Claude un accès en lecture, recherche, envoi, réponse, planification et organisation, et la même connexion est réutilisable depuis Cursor et d'autres clients MCP."
     },
     {
       "q": "Quels sont les paramètres IMAP et SMTP de Kolab Now ?",

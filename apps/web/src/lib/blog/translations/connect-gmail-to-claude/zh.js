@@ -3,7 +3,7 @@ const translation = {
   description:
     '通过 MCP 大约两分钟即可将 Gmail 连接到 Claude：一个 Google 应用专用密码、一个端点 URL，无需 API 密钥，无需写代码。Claude 实时读取、搜索并发送你的邮件，而你的邮件从不被存储。',
   coverAlt: '如何通过 MCP 在两分钟内将 Gmail 连接到 Claude：一个 Google 应用专用密码、一个端点 URL，邮件不被存储',
-  content: `要将 Gmail 连接到 Claude，你只需做两件事：在 MCP Emails 控制台中用 Google 应用专用密码连接一次你的 Gmail 收件箱，然后把单个端点 URL 粘贴进 Claude 的连接器设置并批准一次登录。这就是全部工作：无需写代码，无需 SDK，无需 API 密钥。大约只要两分钟，而且 Claude 从不存储你的邮件：每一次读取和发送都实时访问 Gmail，并在 Claude 拿到后立即丢弃。
+  content: `要将 Gmail 连接到 Claude，你只需做两件事：在 MCPEmails 控制台中用 Google 应用专用密码连接一次你的 Gmail 收件箱，然后把单个端点 URL 粘贴进 Claude 的连接器设置并批准一次登录。这就是全部工作：无需写代码，无需 SDK，无需 API 密钥。大约只要两分钟，而且 Claude 从不存储你的邮件：每一次读取和发送都实时访问 Gmail，并在 Claude 拿到后立即丢弃。
 
 这是聚焦于 Gmail 的专项教程。如果你管理多个邮箱或使用非 Gmail 的服务商，[两分钟内连接任意邮箱](/blog/connect-email-to-ai-agent-under-2-minutes)指南还涵盖了 Outlook、iCloud、Fastmail 和 IMAP。
 
@@ -11,25 +11,25 @@ const translation = {
 
 - 一个 **Gmail 或 Google Workspace** 账户。
 - 一个**支持自定义连接器的 Claude** 版本：付费方案下的 claude.ai，或 Claude Desktop。（连接器是 Claude 与 MCP 服务器对话的方式。）
-- 一个免费的 **MCP Emails** 账户。无需信用卡，可永久连接一个邮箱。[免费开始](/signup)，并保持此标签页打开。
+- 一个免费的 **MCPEmails** 账户。无需信用卡，可永久连接一个邮箱。[免费开始](/signup)，并保持此标签页打开。
 
-MCP Emails 是中间的桥梁：它一侧用 Model Context Protocol 与 Claude 对话，另一侧通过 IMAP 和 SMTP 与 Gmail 通信。如果你想了解这意味着什么的背景知识，请参阅[MCP 邮件服务器究竟是什么](/blog/what-is-an-mcp-email-server)。
+MCPEmails 是中间的桥梁：它一侧用 Model Context Protocol 与 Claude 对话，另一侧通过 IMAP 和 SMTP 与 Gmail 通信。如果你想了解这意味着什么的背景知识，请参阅[MCP 邮件服务器究竟是什么](/blog/what-is-an-mcp-email-server)。
 
 ## 第 1 步：连接你的 Gmail 收件箱
 
-在 MCP Emails 控制台中，打开 **Inboxes → Connect Inbox**，选择 **Gmail**。Gmail 默认通过 Google 应用专用密码连接：
+在 MCPEmails 控制台中，打开 **Inboxes → Connect Inbox**，选择 **Gmail**。Gmail 默认通过 Google 应用专用密码连接：
 
 1. 如果你的 Google 账户尚未开启两步验证，请先开启。Google 只为开启了两步验证的账户提供应用专用密码。
 2. 前往 **myaccount.google.com/apppasswords** 创建一个。它由 16 个小写字母组成，分为四组，空格无关紧要。
-3. 回到 MCP Emails，输入完整的 Gmail 地址，粘贴应用专用密码，然后点击**连接收件箱**。连接会先在 Gmail 上测试，通过后才会保存。搞定。
+3. 回到 MCPEmails，输入完整的 Gmail 地址，粘贴应用专用密码，然后点击**连接收件箱**。连接会先在 Gmail 上测试，通过后才会保存。搞定。
 
-你的常规 Google 密码从不会被使用。应用专用密码是一个独立的凭据，MCP Emails 使用 AES-256-GCM 对其加密，你也可以随时在同一个 Google 页面上吊销它。在底层，收件箱通过 IMAP 和 SMTP（\`imap.gmail.com\`）连接。
+你的常规 Google 密码从不会被使用。应用专用密码是一个独立的凭据，MCPEmails 使用 AES-256-GCM 对其加密，你也可以随时在同一个 Google 页面上吊销它。在底层，收件箱通过 IMAP 和 SMTP（\`imap.gmail.com\`）连接。
 
 ### 使用 Google Workspace 账户时
 
 Google Workspace 管理员可以为整个域关闭应用专用密码。如果你无法打开 **myaccount.google.com/apppasswords**，请让管理员开启应用专用密码。[Gmail 设置与限制](/connect/gmail)页面把 Gmail 的具体细节集中在一处。
 
-## 第 2 步：将 MCP Emails 添加到 Claude
+## 第 2 步：将 MCPEmails 添加到 Claude
 
 现在把 Claude 指向同一个端点。由于 Claude 是一个 OAuth 客户端，你完全不需要 API 密钥：只需粘贴一个 URL 并批准一次登录。
 
@@ -41,7 +41,7 @@ Google Workspace 管理员可以为整个域关闭应用专用密码。如果你
 https://mcpemails.com/api/mcp
 \`\`\`
 
-4. 点击**连接（Connect）**，用你的 MCP Emails 账户登录，并批准你想要的范围：\`read:email\`、\`send:email\`，或两者都选。
+4. 点击**连接（Connect）**，用你的 MCPEmails 账户登录，并批准你想要的范围：\`read:email\`、\`send:email\`，或两者都选。
 
 这就是客户端的全部工作。该连接的范围严格限定于你所批准的内容，你可以在控制台中一键撤销。如果你更想了解 API 密钥的方式（适用于没有内置 OAuth 的客户端，如 Cline 或自定义脚本），请阅读[AI 邮件访问中 OAuth 与 API 密钥的对比](/blog/oauth-vs-api-keys-ai-email-access)。还要连接其他邮箱？[Claude 邮箱分步设置指南](/blog/connect-claude-to-email)涵盖 Outlook、iCloud、Fastmail 和 IMAP。
 
@@ -69,7 +69,7 @@ https://mcpemails.com/api/mcp
 - **整理：** \`email_organize\`（移动、复制、标记、归档）。Gmail 标签会显示为文件夹，所以带有多个标签的邮件会出现在多个文件夹中，移动邮件会改变它的标签，归档则会把它从收件箱中移除。
 - **草稿、文件夹、定时发送、联系人：** \`draft\`、\`folder\`、\`schedule\` 和 \`contact_search\` 让整套工具更加完整。
 
-有一点要事先说明：MCP Emails 是基于轮询的。没有推送 webhook，所以 Claude 是在你让它检查时才对新邮件作出反应，而不是在邮件抵达的那一刻。对于几乎所有助手类工作流而言，这正是恰到好处的模型。
+有一点要事先说明：MCPEmails 是基于轮询的。没有推送 webhook，所以 Claude 是在你让它检查时才对新邮件作出反应，而不是在邮件抵达的那一刻。对于几乎所有助手类工作流而言，这正是恰到好处的模型。
 
 ## 把 Gmail 连接到 Claude 安全吗？
 
@@ -77,7 +77,7 @@ https://mcpemails.com/api/mcp
 
 - **你的邮件从不被存储。** 正文、主题和附件在每次调用时实时获取，交给 Claude，随后立即丢弃。每个收件箱唯一被持久化的，是加密后的凭据，也就是你的应用专用密码。这里讲了[为什么“邮件从不被存储”真正重要](/blog/why-email-never-stored-matters)。
 - **范围由你掌控。** 只批准只读权限，Claude 就根本无法发送。两者都批准后，你仍可随时撤销其中任意一个。
-- **不共享密码。** 你的常规 Google 密码永远不会到达 MCP Emails。应用专用密码是一个独立的凭据，你可以随时在 myaccount.google.com/apppasswords 吊销它，也可以在 MCP Emails 中删除该收件箱。
+- **不共享密码。** 你的常规 Google 密码永远不会到达 MCPEmails。应用专用密码是一个独立的凭据，你可以随时在 myaccount.google.com/apppasswords 吊销它，也可以在 MCPEmails 中删除该收件箱。
 
 完整的威胁模型（哪些内容被加密、攻击者能看到什么、又看不到什么）都在[给 AI 智能体邮件访问权限安全吗？](/blog/is-it-safe-to-give-ai-agent-email-access)中作了说明。
 
@@ -93,10 +93,10 @@ https://mcpemails.com/api/mcp
 可以，前提是你授予了 \`send:email\` 范围。发送通过 Gmail 以来自你自己账户的普通邮件形式进行。如果你更希望 Claude 永不发送，可只授予只读权限。
 
 **这在免费版 Claude 方案下能用吗？**
-自定义连接器需要一个支持它们的 Claude 方案（付费版 claude.ai 或 Claude Desktop）。MCP Emails 这一侧是免费的，无需信用卡。
+自定义连接器需要一个支持它们的 Claude 方案（付费版 claude.ai 或 Claude Desktop）。MCPEmails 这一侧是免费的，无需信用卡。
 
-**MCP Emails 会看到我的 Google 密码吗？**
-不会。你粘贴的是应用专用密码，这是 Google 生成、可以随时吊销的独立凭据。你的常规 Google 密码从不会在 MCP Emails 的任何地方输入。
+**MCPEmails 会看到我的 Google 密码吗？**
+不会。你粘贴的是应用专用密码，这是 Google 生成、可以随时吊销的独立凭据。你的常规 Google 密码从不会在 MCPEmails 的任何地方输入。
 
 ## 总结
 

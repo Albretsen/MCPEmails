@@ -19,8 +19,8 @@
     "eyebrow": "Cox Email + AI",
     "titleLine1": "将你的 cox.net 收件箱连接到",
     "titleLine2": "Claude、Cursor 及任意 MCP 客户端",
-    "lead": "Cox 已退出邮箱业务，cox.net 邮箱现由 Yahoo 运营。地址依然有效，MCP Emails 通过 IMAP 连接它，让你的 AI 代理能读取、搜索、发送、回复和归档这些邮件。",
-    "answer": "Claude 无法自行访问 cox.net 邮箱。MCP Emails 是一个托管 MCP 服务器，通过下表中 Yahoo 服务器端口 993 的 IMAP 与之连接，因为 Cox 已把邮箱服务交给 Yahoo，cox.net 邮件现在由 Yahoo 而非 Cox 的基础设施提供。凭据是在账户安全页面生成的 Yahoo 应用专用密码，既不是你旧的 Cox 密码，也不是你在网页邮箱中输入的密码。连接后，Claude、Cursor 或任何其他 MCP 客户端都能读取、搜索、发送、回复和整理这些邮件，1 个收件箱永久免费。",
+    "lead": "Cox 已退出邮箱业务，cox.net 邮箱现由 Yahoo 运营。地址依然有效，MCPEmails 通过 IMAP 连接它，让你的 AI 代理能读取、搜索、发送、回复和归档这些邮件。",
+    "answer": "Claude 无法自行访问 cox.net 邮箱。MCPEmails 是一个托管 MCP 服务器，通过下表中 Yahoo 服务器端口 993 的 IMAP 与之连接，因为 Cox 已把邮箱服务交给 Yahoo，cox.net 邮件现在由 Yahoo 而非 Cox 的基础设施提供。凭据是在账户安全页面生成的 Yahoo 应用专用密码，既不是你旧的 Cox 密码，也不是你在网页邮箱中输入的密码。连接后，Claude、Cursor 或任何其他 MCP 客户端都能读取、搜索、发送、回复和整理这些邮件，1 个收件箱永久免费。",
     "meta0": "1 个收件箱永久免费",
     "meta1": "Yahoo 应用专用密码，而非 Cox 密码",
     "meta2": "邮件实时获取，绝不存储"
@@ -31,7 +31,7 @@
   },
   "setup": [
     {
-      "h": "创建免费的 MCP Emails 账户",
+      "h": "创建免费的 MCPEmails 账户",
       "p": "在 mcpemails.com 注册。免费套餐可连接一个收件箱，无需信用卡。"
     },
     {
@@ -40,7 +40,7 @@
     },
     {
       "h": "输入 cox.net 地址和应用专用密码",
-      "p": "在 MCP Emails 中选择 IMAP / SMTP，在用户名字段填入完整的 cox.net 地址，并粘贴应用专用密码，而不是你的 Cox 账户密码。上方的服务器地址和端口已预填，并经实时 TLS 连接验证。"
+      "p": "在 MCPEmails 中选择 IMAP / SMTP，在用户名字段填入完整的 cox.net 地址，并粘贴应用专用密码，而不是你的 Cox 账户密码。上方的服务器地址和端口已预填，并经实时 TLS 连接验证。"
     },
     {
       "h": "将 MCP URL 粘贴到你的 AI",
@@ -72,7 +72,7 @@
   "faq": [
     {
       "q": "Claude 能用于 Cox 邮箱吗？",
-      "a": "不能直接使用。Claude 没有内置的 Cox 连接器，而且 Cox 已不再自己运营邮箱服务。通过 IMAP 将 MCP Emails 这样的 MCP 服务器连接到邮箱后，Claude 就能读取、搜索、发送、回复、定时和整理你的 cox.net 邮件，而且同一个连接也可在 Cursor、ChatGPT 和其他 MCP 客户端中使用。"
+      "a": "不能直接使用。Claude 没有内置的 Cox 连接器，而且 Cox 已不再自己运营邮箱服务。通过 IMAP 将 MCPEmails 这样的 MCP 服务器连接到邮箱后，Claude 就能读取、搜索、发送、回复、定时和整理你的 cox.net 邮件，而且同一个连接也可在 Cursor、ChatGPT 和其他 MCP 客户端中使用。"
     },
     {
       "q": "现在 Cox 的 IMAP 和 SMTP 设置是什么？",

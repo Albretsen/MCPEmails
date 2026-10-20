@@ -23,23 +23,23 @@
     "meta0": "1 Postfach dauerhaft kostenlos",
     "meta1": "Konto- oder App-Passwort, kein OAuth-Setup",
     "meta2": "E-Mails werden live abgerufen, nie gespeichert",
-    "answer": "Claude erreicht Zoho Mail nicht von sich aus. MCP Emails ist ein gehosteter MCP-Server, der Zoho Mail per IMAP über imap.zoho.com auf Port 993 verbindet. So können Claude, Cursor oder jeder MCP-Client diese E-Mails lesen, suchen, senden und sortieren. Zwei Dinge müssen vorher stimmen: Der IMAP-Zugriff ist bei einem neuen Zoho-Postfach ausgeschaltet, bis Sie ihn aktivieren, und der Hostname richtet sich nach Ihrem Zoho-Rechenzentrum. Ein Konto, das in der EU oder in Indien angelegt wurde, nutzt also einen anderen. Ein Postfach ist dauerhaft kostenlos."
+    "answer": "Claude erreicht Zoho Mail nicht von sich aus. MCPEmails ist ein gehosteter MCP-Server, der Zoho Mail per IMAP über imap.zoho.com auf Port 993 verbindet. So können Claude, Cursor oder jeder MCP-Client diese E-Mails lesen, suchen, senden und sortieren. Zwei Dinge müssen vorher stimmen: Der IMAP-Zugriff ist bei einem neuen Zoho-Postfach ausgeschaltet, bis Sie ihn aktivieren, und der Hostname richtet sich nach Ihrem Zoho-Rechenzentrum. Ein Konto, das in der EU oder in Indien angelegt wurde, nutzt also einen anderen. Ein Postfach ist dauerhaft kostenlos."
   },
   "method": {
     "title": "So verbindet sich Zoho: IMAP und ein Passwort",
-    "body": "Zoho Mail verbindet sich über IMAP/SMTP. Aktivieren Sie zuerst den IMAP-Zugriff in Zoho (er ist standardmäßig aus) und fügen Sie dann Ihre Zoho-Adresse und Ihr Passwort in MCP Emails ein. Nutzen Sie Zwei-Faktor-Authentifizierung, föderierte Anmeldung oder SAML, erstellen Sie ein anwendungsspezifisches Passwort und verwenden Sie dieses. MCP Emails unterstützt jede Rechenzentrumsregion von Zoho."
+    "body": "Zoho Mail verbindet sich über IMAP/SMTP. Aktivieren Sie zuerst den IMAP-Zugriff in Zoho (er ist standardmäßig aus) und fügen Sie dann Ihre Zoho-Adresse und Ihr Passwort in MCPEmails ein. Nutzen Sie Zwei-Faktor-Authentifizierung, föderierte Anmeldung oder SAML, erstellen Sie ein anwendungsspezifisches Passwort und verwenden Sie dieses. MCPEmails unterstützt jede Rechenzentrumsregion von Zoho."
   },
   "setup": [
     {
       "h": "Kostenloses Konto erstellen",
-      "p": "Registrieren Sie sich bei MCP Emails, ohne Kreditkarte. Der Free-Tarif verbindet ein Postfach, dauerhaft."
+      "p": "Registrieren Sie sich bei MCPEmails, ohne Kreditkarte. Der Free-Tarif verbindet ein Postfach, dauerhaft."
     },
     {
       "h": "IMAP aktivieren und bei Bedarf ein App-Passwort erstellen",
       "p": "Schalten Sie in den Einstellungen von Zoho Mail bei Ihrem E-Mail-Konto den IMAP-Zugriff ein. Nutzen Sie Zwei-Faktor-Authentifizierung, föderierte Anmeldung oder SAML, erstellen Sie im Sicherheitsbereich Ihres Zoho-Kontos ein anwendungsspezifisches Passwort."
     },
     {
-      "h": "In MCP Emails einfügen",
+      "h": "In MCPEmails einfügen",
       "p": "Geben Sie Ihre Zoho-Adresse und das Passwort ein und wählen Sie bei Nachfrage Ihre Zoho-Region, um das Postfach sicher zu verbinden."
     },
     {
@@ -73,7 +73,7 @@
   "faq": [
     {
       "q": "Funktioniert Claude mit Zoho Mail?",
-      "a": "Nicht von sich aus. Claude hat keinen eingebauten Zoho-Konnektor. Verbinden Sie einen MCP-Server wie MCP Emails per IMAP mit Ihrem Zoho-Postfach, kann Claude darin lesen, suchen, senden, antworten, planen und sortieren, und dieselbe Verbindung funktioniert in Cursor, ChatGPT und anderen MCP-Clients. Vorher müssen Sie den IMAP-Zugriff für das Postfach aktivieren."
+      "a": "Nicht von sich aus. Claude hat keinen eingebauten Zoho-Konnektor. Verbinden Sie einen MCP-Server wie MCPEmails per IMAP mit Ihrem Zoho-Postfach, kann Claude darin lesen, suchen, senden, antworten, planen und sortieren, und dieselbe Verbindung funktioniert in Cursor, ChatGPT und anderen MCP-Clients. Vorher müssen Sie den IMAP-Zugriff für das Postfach aktivieren."
     },
     {
       "q": "Wie lauten die IMAP- und SMTP-Einstellungen für Zoho Mail?",

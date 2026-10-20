@@ -1,7 +1,7 @@
 {
   "id": "/",
-  "name": "mcpemails",
-  "short_name": "mcpemails",
+  "name": "MCPEmails",
+  "short_name": "MCPEmails",
   "description": "A fast email client with an AI assistant that works in the open.",
   "lang": "en",
   "start_url": "/",

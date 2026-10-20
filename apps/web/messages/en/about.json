@@ -1,16 +1,16 @@
 {
   "meta": {
-    "title": "About MCP Emails and Asgeir Albretsen",
-    "description": "MCP Emails is built and run by Asgeir Albretsen, a software developer in Bergen, Norway: one person, a registered Norwegian business, and open source code."
+    "title": "About MCPEmails and Asgeir Albretsen",
+    "description": "MCPEmails is built and run by Asgeir Albretsen, a software developer in Bergen, Norway: one person, a registered Norwegian business, and open source code."
   },
   "hero": {
     "eyebrow": "About",
-    "title": "Who runs MCP Emails",
+    "title": "Who runs MCPEmails",
     "lead": "You are giving an AI agent access to your mail. Here is who runs the service in between: one person, a registered business, code you can read."
   },
   "who": {
     "title": "Who I am",
-    "p1": "My name is Asgeir Albretsen. I am a software developer in Bergen, Norway, with a BSc in Computer Technology from the University of Bergen. I build and run MCP Emails alone.",
+    "p1": "My name is Asgeir Albretsen. I am a software developer in Bergen, Norway, with a BSc in Computer Technology from the University of Bergen. I build and run MCPEmails alone.",
     "p2": "Work history:",
     "thPeriod": "Period",
     "thRole": "Role",
@@ -20,9 +20,9 @@
       { "period": "Jan 2023 to Sep 2024", "role": "IT consulting at BI Norwegian Business School" },
       { "period": "Sep 2024 to today", "role": "Software developer, full time" }
     ],
-    "p3": "I still work full time as a software developer elsewhere. MCP Emails is independent, self funded, and built in my own time.",
+    "p3": "I still work full time as a software developer elsewhere. MCPEmails is independent, self funded, and built in my own time.",
     "linksIntro": "Elsewhere:",
-    "linkGithubNote": "code, including MCP Emails",
+    "linkGithubNote": "code, including MCPEmails",
     "linkSiteNote": "personal site",
     "linkLinkedinNote": "work history"
   },
@@ -36,7 +36,7 @@
     "intro": "Three things:",
     "points": [
       "<b>A named person.</b> Me, not a support alias. If something goes wrong, you know whose name is on it.",
-      "<b>A registered company.</b> MCP Emails is operated by Albretsen AS, a Norwegian private limited company (aksjeselskap) registered in Foretaksregisteret at Brønnøysundregistrene. I own the company and chair its board.",
+      "<b>A registered company.</b> MCPEmails is operated by Albretsen AS, a Norwegian private limited company (aksjeselskap) registered in Foretaksregisteret at Brønnøysundregistrene. I own the company and chair its board.",
       "<b>Code you can read.</b> The server is public on GitHub under AGPL-3.0, and the hosted service runs the same code."
     ],
     "entityTitle": "Legal entity",
@@ -49,7 +49,7 @@
   "busFactor": {
     "title": "If I get hit by a bus",
     "p1": "One person running an email service is a real risk. I could fall ill, lose interest, or get hit by a bus. With a closed service, that would leave your agents wired into something nobody maintains.",
-    "p2": "That is what the licence is for. MCP Emails is open source under AGPL-3.0, and the hosted service runs the same server you can clone. If I stop, you clone the repository, bring the stack up with one command, point your agent at your own instance, and carry on. The tool names stay the same. Your credentials are yours, and your mail was never stored here.",
+    "p2": "That is what the licence is for. MCPEmails is open source under AGPL-3.0, and the hosted service runs the same server you can clone. If I stop, you clone the repository, bring the stack up with one command, point your agent at your own instance, and carry on. The tool names stay the same. Your credentials are yours, and your mail was never stored here.",
     "p3": "Walk the self-host path once while everything is fine, so you know it works before you need it.",
     "ctaSelfHost": "Self-hosting guide",
     "ctaSource": "Source code"

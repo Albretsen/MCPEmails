@@ -18,8 +18,8 @@
     "eyebrow": "freenet Mail + KI",
     "titleLine1": "Ihr freenet.de-Postfach verbinden",
     "titleLine2": "mit Claude, Cursor und jedem MCP-Client",
-    "lead": "freenet unterstützt IMAP, versteckt es aber hinter einem Schalter, den Sie nach freenets Wunsch lieber nicht anrühren. Einmal umgelegt, verbindet MCP Emails das Postfach, und Ihr KI-Agent kann E-Mails lesen, suchen, senden, beantworten und ablegen.",
-    "answer": "Claude kann ein freenet.de-Postfach nicht von sich aus erreichen. MCP Emails ist ein gehosteter MCP-Server, der es per IMAP über mx.freenet.de auf Port 993 anbindet, angemeldet mit Ihrer vollständigen Adresse und Ihrem freenet Mail Passwort. Vorher müssen Sie nur eines tun: in den Postfach-Einstellungen den Haken bei POP3, IMAP und SMTP aktivieren setzen. freenet sperrt jeden Client-Zugriff hinter diesem Kästchen und empfiehlt, es aus zu lassen. Ist es aktiv, können Claude, Cursor oder jeder andere MCP-Client diese E-Mails lesen, suchen, senden und ordnen. Ein Postfach ist dauerhaft kostenlos.",
+    "lead": "freenet unterstützt IMAP, versteckt es aber hinter einem Schalter, den Sie nach freenets Wunsch lieber nicht anrühren. Einmal umgelegt, verbindet MCPEmails das Postfach, und Ihr KI-Agent kann E-Mails lesen, suchen, senden, beantworten und ablegen.",
+    "answer": "Claude kann ein freenet.de-Postfach nicht von sich aus erreichen. MCPEmails ist ein gehosteter MCP-Server, der es per IMAP über mx.freenet.de auf Port 993 anbindet, angemeldet mit Ihrer vollständigen Adresse und Ihrem freenet Mail Passwort. Vorher müssen Sie nur eines tun: in den Postfach-Einstellungen den Haken bei POP3, IMAP und SMTP aktivieren setzen. freenet sperrt jeden Client-Zugriff hinter diesem Kästchen und empfiehlt, es aus zu lassen. Ist es aktiv, können Claude, Cursor oder jeder andere MCP-Client diese E-Mails lesen, suchen, senden und ordnen. Ein Postfach ist dauerhaft kostenlos.",
     "meta0": "1 Postfach dauerhaft kostenlos",
     "meta1": "Client-Zugriff muss eingeschaltet werden",
     "meta2": "E-Mails live abgerufen, nie gespeichert"
@@ -30,7 +30,7 @@
   },
   "setup": [
     {
-      "h": "Kostenloses MCP Emails Konto erstellen",
+      "h": "Kostenloses MCPEmails Konto erstellen",
       "p": "Registrieren Sie sich auf mcpemails.com. Der Free-Tarif verbindet ein Postfach und fragt nicht nach einer Kreditkarte."
     },
     {
@@ -39,7 +39,7 @@
     },
     {
       "h": "Adresse und freenet Mail Passwort eingeben",
-      "p": "Wählen Sie in MCP Emails IMAP / SMTP und geben Sie die vollständige Adresse als <code>name@freenet.de</code> mit dem Passwort dieses Postfachs ein. Beide Richtungen nutzen <code>mx.freenet.de</code>. Der Host ist hier vorausgefüllt und wurde über eine echte TLS-Verbindung geprüft."
+      "p": "Wählen Sie in MCPEmails IMAP / SMTP und geben Sie die vollständige Adresse als <code>name@freenet.de</code> mit dem Passwort dieses Postfachs ein. Beide Richtungen nutzen <code>mx.freenet.de</code>. Der Host ist hier vorausgefüllt und wurde über eine echte TLS-Verbindung geprüft."
     },
     {
       "h": "MCP-URL in Ihre KI einfügen",
@@ -71,11 +71,11 @@
   "faq": [
     {
       "q": "Funktioniert Claude mit freenet.de E-Mail?",
-      "a": "Nicht direkt. Claude hat keinen eingebauten freenet-Konnektor. Wenn Sie einen MCP-Server wie MCP Emails per IMAP mit dem Postfach verbinden, kann Claude Ihre freenet.de-E-Mails lesen, suchen, senden, beantworten, planen und ordnen. Dieselbe Verbindung funktioniert in Cursor, ChatGPT und anderen MCP-Clients. Zuerst muss der Client-Zugriff im Postfach aktiviert werden."
+      "a": "Nicht direkt. Claude hat keinen eingebauten freenet-Konnektor. Wenn Sie einen MCP-Server wie MCPEmails per IMAP mit dem Postfach verbinden, kann Claude Ihre freenet.de-E-Mails lesen, suchen, senden, beantworten, planen und ordnen. Dieselbe Verbindung funktioniert in Cursor, ChatGPT und anderen MCP-Clients. Zuerst muss der Client-Zugriff im Postfach aktiviert werden."
     },
     {
       "q": "Welchen Server nutzt freenet für IMAP und SMTP?",
-      "a": "Beide lauten mx.freenet.de. freenet nennt zwei Kombinationen: SSL/TLS mit IMAP auf Port 993 und SMTP auf Port 465, oder STARTTLS mit IMAP auf Port 143 und SMTP auf Port 587. Verschlüsselung ist Pflicht, und die SMTP-Authentifizierung muss aktiviert sein. Der Benutzername ist Ihre vollständige Adresse, etwa name@freenet.de. MCP Emails nutzt 993 und 465, und die Hosts wurden am auf dieser Seite angegebenen Datum über eine echte TLS-Verbindung geprüft."
+      "a": "Beide lauten mx.freenet.de. freenet nennt zwei Kombinationen: SSL/TLS mit IMAP auf Port 993 und SMTP auf Port 465, oder STARTTLS mit IMAP auf Port 143 und SMTP auf Port 587. Verschlüsselung ist Pflicht, und die SMTP-Authentifizierung muss aktiviert sein. Der Benutzername ist Ihre vollständige Adresse, etwa name@freenet.de. MCPEmails nutzt 993 und 465, und die Hosts wurden am auf dieser Seite angegebenen Datum über eine echte TLS-Verbindung geprüft."
     },
     {
       "q": "Warum lehnt freenet mein Passwort im Mailprogramm ab?",

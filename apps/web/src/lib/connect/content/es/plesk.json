@@ -21,7 +21,7 @@
     "titleLine1": "Conecta un buzón de Plesk a Claude,",
     "titleLine2": "Cursor, ChatGPT, cualquier cliente MCP",
     "lead": "Dale a tu agente de IA un buzón de Plesk real. Lee, busca, envía, responde, programa y organiza correo por IMAP, en cualquier servidor con Plesk Obsidian, lo aloje quien lo aloje.",
-    "answer": "Claude no puede llegar a un buzón de Plesk por su cuenta. MCP Emails es un servidor MCP alojado que lo conecta por IMAP estándar en el puerto 993, para que Claude, Cursor o cualquier cliente MCP pueda leer, buscar, enviar y organizar ese correo. Plesk es un software de panel de control y no una empresa de alojamiento, así que no hay un nombre de servidor compartido: el servidor de correo es tu propio dominio, o el nombre del servidor, y Plesk muestra el par exacto en Mail Accounts, luego Mail Client Setup. La autenticación usa la contraseña que se configura en el buzón en Plesk, no el acceso al panel, y una bandeja es gratis.",
+    "answer": "Claude no puede llegar a un buzón de Plesk por su cuenta. MCPEmails es un servidor MCP alojado que lo conecta por IMAP estándar en el puerto 993, para que Claude, Cursor o cualquier cliente MCP pueda leer, buscar, enviar y organizar ese correo. Plesk es un software de panel de control y no una empresa de alojamiento, así que no hay un nombre de servidor compartido: el servidor de correo es tu propio dominio, o el nombre del servidor, y Plesk muestra el par exacto en Mail Accounts, luego Mail Client Setup. La autenticación usa la contraseña que se configura en el buzón en Plesk, no el acceso al panel, y una bandeja es gratis.",
     "meta0": "1 bandeja gratis, para siempre",
     "meta1": "Contraseña del buzón configurada en Plesk",
     "meta2": "El correo se obtiene en vivo, nunca se almacena"
@@ -32,7 +32,7 @@
   },
   "setup": [
     {
-      "h": "Crea una cuenta gratis de MCP Emails",
+      "h": "Crea una cuenta gratis de MCPEmails",
       "p": "Regístrate en mcpemails.com. El plan gratuito conecta una bandeja y no necesita tarjeta."
     },
     {
@@ -69,7 +69,7 @@
   "faq": [
     {
       "q": "¿Claude funciona con un buzón de Plesk?",
-      "a": "No directamente. Claude no tiene un conector para servidores Plesk. Conectar un servidor MCP como MCP Emails al buzón por IMAP le da a Claude acceso para leer, buscar, enviar, responder, programar y organizar. Como el correo de Plesk es IMAP y SMTP normales, funciona igual en cualquier proveedor que use Plesk."
+      "a": "No directamente. Claude no tiene un conector para servidores Plesk. Conectar un servidor MCP como MCPEmails al buzón por IMAP le da a Claude acceso para leer, buscar, enviar, responder, programar y organizar. Como el correo de Plesk es IMAP y SMTP normales, funciona igual en cualquier proveedor que use Plesk."
     },
     {
       "q": "¿Cuál es la configuración IMAP y SMTP de Plesk?",

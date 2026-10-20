@@ -2,7 +2,7 @@ const translation = {
   title: '¿Qué es un servidor de correo MCP? Una explicación en lenguaje claro',
   description:
     'Un servidor de correo MCP es una herramienta que permite a un agente de IA leer y enviar correo mediante verbos limpios en vez de IMAP y contraseñas. Esto es lo que significa.',
-  coverAlt: 'Qué es un servidor de correo MCP: una explicación en lenguaje claro de MCP Emails',
+  coverAlt: 'Qué es un servidor de correo MCP: una explicación en lenguaje claro de MCPEmails',
   content: `Un servidor de correo MCP es un pequeño servicio que da a un agente de IA como Claude o Cursor acceso en vivo para leer y enviar correo de una bandeja de entrada real, usando el Model Context Protocol. En lugar de entregar a tu agente una contraseña de correo y una biblioteca de IMAP, le entrega una lista corta de acciones: lista mis mensajes, lee este, busca aquello, envía una respuesta. El agente llama a esas acciones como a cualquier otra herramienta, y el servidor hace el trabajo engorroso del proveedor entre bastidores.
 
 Si has oído por ahí el término "MCP" y quieres la versión sin jerga de lo que hace de verdad un servidor de correo *MCP*, aquí la tienes. Vamos a construirla pieza a pieza.
@@ -13,7 +13,7 @@ MCP son las siglas de [Model Context Protocol](https://modelcontextprotocol.io).
 
 Antes de MCP, si querías que tu agente usara un calendario, una base de datos y tu correo, escribías tres integraciones distintas con tres formas distintas. MCP resuelve eso. Un servicio expone sus capacidades como **herramientas** (acciones con nombre que el modelo puede llamar) sobre un transporte estándar, y cualquier cliente compatible con MCP sabe cómo descubrirlas y llamarlas.
 
-La parte que importa aquí: un servidor MCP no tiene por qué vivir en tu máquina. MCP Emails funciona sobre **Streamable HTTP** en una única URL de endpoint. Pegas esa URL en tu cliente y ya estás conectado. Sin SDK, sin instalar paquetes, sin un proceso local que cuidar.
+La parte que importa aquí: un servidor MCP no tiene por qué vivir en tu máquina. MCPEmails funciona sobre **Streamable HTTP** en una única URL de endpoint. Pegas esa URL en tu cliente y ya estás conectado. Sin SDK, sin instalar paquetes, sin un proceso local que cuidar.
 
 ## Entonces, ¿qué es un servidor de correo *MCP*?
 
@@ -29,7 +29,7 @@ Este es el meollo del asunto, así que quiero ir despacio aquí.
 
 Si alguna vez has configurado el correo en un cliente de correo, te has topado con IMAP y SMTP. Son los protocolos sobre los que funciona el correo, y no son nada amables. IMAP te obliga a hacer malabares con el estado de las carpetas, las marcas de los mensajes, las descargas parciales y una sintaxis de consulta que varía según el servidor. SMTP te obliga a construir a mano mensajes MIME con las cabeceras correctas o tu respuesta cae en el hilo equivocado. Entregar todo eso a un modelo de lenguaje es mala idea. El modelo se equivocará con la codificación, filtrará una credencial en un registro o disparará un envío mal formado.
 
-Un servidor de correo MCP reemplaza eso con **verbos**. El agente no ve protocolos. Ve un menú corto de acciones. MCP Emails incluye un puñado de herramientas consolidadas, y estas tres son las que más trabajan a diario:
+Un servidor de correo MCP reemplaza eso con **verbos**. El agente no ve protocolos. Ve un menú corto de acciones. MCPEmails incluye un puñado de herramientas consolidadas, y estas tres son las que más trabajan a diario:
 
 \`\`\`json
 {
@@ -49,9 +49,9 @@ El cambio de "aquí tienes una biblioteca, apáñatelas" a "aquí tienes tres ve
 
 La forma ingenua de dar a un agente acceso al correo es soltar la contraseña de tu buzón en un prompt o una configuración y dejar que ejecute un cliente IMAP. No hagas esto. Una contraseña es una llave maestra: lo concede todo, para siempre, sin manera de acotarla a "solo lectura" y sin forma limpia de retirarla sin cambiarla en todas partes.
 
-Los verbos son distintos. Cuando tu agente se conecta a MCP Emails, recibe un token acotado exactamente a lo que aprobaste: \`read:email\`, \`send:email\`, o ambos. El agente sostiene una capacidad, no una credencial. Si solo concediste acceso de lectura, no hay verbo de envío en su menú: físicamente no puede enviarle correo a nadie.
+Los verbos son distintos. Cuando tu agente se conecta a MCPEmails, recibe un token acotado exactamente a lo que aprobaste: \`read:email\`, \`send:email\`, o ambos. El agente sostiene una capacidad, no una credencial. Si solo concediste acceso de lectura, no hay verbo de envío en su menú: físicamente no puede enviarle correo a nadie.
 
-¿Y el secreto en sí? Se queda en el servidor, cifrado. MCP Emails almacena una sola cosa por bandeja: una contraseña de aplicación o un token de OAuth, cifrado con AES-256-GCM, descifrado en nuestros servidores solo cuando una petición lo necesita, y nunca enviado a tu agente. Tu correo en sí nunca se almacena. Cada llamada a una herramienta obtiene el mensaje en vivo de tu proveedor y lo descarta en cuanto el agente lo tiene. El cuerpo de tu correo no se queda en alguna base de datos esperando a filtrarse. Si quieres la versión más larga de por qué importa esa decisión de diseño, escribí sobre ello en [por qué importa no almacenar nunca tu correo](/blog/why-email-never-stored-matters).
+¿Y el secreto en sí? Se queda en el servidor, cifrado. MCPEmails almacena una sola cosa por bandeja: una contraseña de aplicación o un token de OAuth, cifrado con AES-256-GCM, descifrado en nuestros servidores solo cuando una petición lo necesita, y nunca enviado a tu agente. Tu correo en sí nunca se almacena. Cada llamada a una herramienta obtiene el mensaje en vivo de tu proveedor y lo descarta en cuanto el agente lo tiene. El cuerpo de tu correo no se queda en alguna base de datos esperando a filtrarse. Si quieres la versión más larga de por qué importa esa decisión de diseño, escribí sobre ello en [por qué importa no almacenar nunca tu correo](/blog/why-email-never-stored-matters).
 
 El modelo de capacidad-no-credencial es también la razón por la que puedes [revocar una conexión con un clic](/blog/oauth-vs-api-keys-ai-email-access) desde el panel. Revocar un verbo es instantáneo y quirúrgico. Rotar una contraseña filtrada no lo es.
 

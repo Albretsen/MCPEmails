@@ -2,8 +2,8 @@ const translation = {
   title: 'Hostet vs. selvhostet Gmail MCP-server: fordeler, ulemper og kostnader',
   description:
     'Hostet vs. selvhostet Gmail MCP-server, ærlig sammenlignet: gratis gjør-det-selv-repoer gir full kontroll, men du eier OAuth, kryptering og oppetid. En hostet server tar minutter.',
-  coverAlt: 'Sammenligning av hostet og selvhostet Gmail MCP-server — MCP Emails',
-  content: `Hvis du vil at AI-agenten din skal lese og sende Gmail, har du to reelle valg: kjøre en selvhostet Gmail MCP-server fra et åpen kildekode-repo, eller peke klienten din mot en hostet en. Gjør-det-selv-veien koster null kroner og gir deg total kontroll, men du eier personlig OAuth-oppsettet, token-krypteringen, hostingen, oppdateringene og sikkerheten. En hostet server som MCP Emails tar minutter å sette opp og holder legitimasjonen kryptert, mot at du stoler på at en leverandør håndterer tilkoblingen.
+  coverAlt: 'Sammenligning av hostet og selvhostet Gmail MCP-server — MCPEmails',
+  content: `Hvis du vil at AI-agenten din skal lese og sende Gmail, har du to reelle valg: kjøre en selvhostet Gmail MCP-server fra et åpen kildekode-repo, eller peke klienten din mot en hostet en. Gjør-det-selv-veien koster null kroner og gir deg total kontroll, men du eier personlig OAuth-oppsettet, token-krypteringen, hostingen, oppdateringene og sikkerheten. En hostet server som MCPEmails tar minutter å sette opp og holder legitimasjonen kryptert, mot at du stoler på at en leverandør håndterer tilkoblingen.
 
 Dette er den ærlige gjennomgangen. Jeg har bygd en hostet server, så jeg har en side i saken, men jeg skal si deg nøyaktig hvor selvhosting vinner og hvilken type person som bør velge det. Hvis du først bare vil ha modellen på verb-nivå, er [den komplette guiden til å gi en AI-agent tilgang til e-post](/blog/how-to-give-your-ai-agent-email-access) hovedartikkelen du bør lese ved siden av denne.
 
@@ -55,7 +55,7 @@ MCP er ungt. Spesifikasjonen beveger seg, Google roterer krav, og repoet du klon
 
 Repoet du valgte gjør Gmail. Den dagen du legger til en Outlook-konto eller en iCloud-adresse, integrerer du Microsoft Graph eller kobler opp IMAP og SMTP selv, med en andre auth-modell og et andre sett med kanttilfeller. De fleste gjør-det-selv-servere forblir kun Gmail, fordi den andre leverandøren er et prosjekt i seg selv.
 
-## Argumentet for hostet: MCP Emails, ærlig
+## Argumentet for hostet: MCPEmails, ærlig
 
 En hostet MCP-server snur byttehandelen. Du gir opp å kjøre koden; du får tilbake all tiden listen over ville kostet.
 
@@ -73,7 +73,7 @@ Det samme endepunktet og de samme kjerneverktøyene — \`inbox_list\`, \`email_
 
 ### Sending forblir hos din leverandør
 
-MCP Emails videresender aldri e-post fra sitt eget domene. \`email_compose\` (med \`send\`-handlingen) går ut gjennom leverandøren din (Gmail eller en annen leverandør over SMTP, eller Microsoft Graph for Outlook), så domenets omdømme og leveringsevne forblir dine. Det er den samme egenskapen du ville fått med selvhosting, uten å bygge den.
+MCPEmails videresender aldri e-post fra sitt eget domene. \`email_compose\` (med \`send\`-handlingen) går ut gjennom leverandøren din (Gmail eller en annen leverandør over SMTP, eller Microsoft Graph for Outlook), så domenets omdømme og leveringsevne forblir dine. Det er den samme egenskapen du ville fått med selvhosting, uten å bygge den.
 
 ### Den ærlige kostnaden: du stoler på en leverandør
 
@@ -81,7 +81,7 @@ Dette er den reelle byttehandelen, og jeg skal ikke pynte på den. Med en hostet
 
 ## Hva det koster i kroner
 
-MCP Emails er gratis å komme i gang med: én tilkoblet innboks, ubegrenset antall API-nøkler, uten kredittkort. Gratisnivået kjører på 60 forespørsler per minutt med 30-dagers analyse og fellesskapsstøtte. [Personal koster $9 per måned](/pricing) (opptil tre tilkoblede innbokser, 120 req/min, 90-dagers analyse, e-poststøtte), Pro koster $15 per måned (opptil 10 tilkoblede innbokser, 300 req/min, 2 års analyse), og Business koster $39 per måned (10 postkasser inkludert pluss $3 per måned for hver ekstra, medlemmer med roller, et eget arbeidsområde per kunde). Selvhosting er $0 i abonnement pluss hva enn VPS-en din og timene dine koster. Vær ærlig om timene.
+MCPEmails er gratis å komme i gang med: én tilkoblet innboks, ubegrenset antall API-nøkler, uten kredittkort. Gratisnivået kjører på 60 forespørsler per minutt med 30-dagers analyse og fellesskapsstøtte. [Personal koster $9 per måned](/pricing) (opptil tre tilkoblede innbokser, 120 req/min, 90-dagers analyse, e-poststøtte), Pro koster $15 per måned (opptil 10 tilkoblede innbokser, 300 req/min, 2 års analyse), og Business koster $39 per måned (10 postkasser inkludert pluss $3 per måned for hver ekstra, medlemmer med roller, et eget arbeidsområde per kunde). Selvhosting er $0 i abonnement pluss hva enn VPS-en din og timene dine koster. Vær ærlig om timene.
 
 ## Så hva bør du velge?
 

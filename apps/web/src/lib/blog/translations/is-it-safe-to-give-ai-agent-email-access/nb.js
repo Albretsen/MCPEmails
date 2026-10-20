@@ -1,7 +1,7 @@
 const translation = {
   title: 'Er det trygt å gi en AI-agent tilgang til e-posten din? Dette bør du vite',
   description: 'Er det trygt å gi en AI-agent e-posttilgang? Det ærlige svaret: det kommer an på arkitekturen. Her er de reelle risikoene og sjekklisten som gjør det trygt.',
-  coverAlt: 'Er det trygt å gi en AI-agent e-posttilgang — risikoer og sikkerhetstiltak forklart — MCP Emails',
+  coverAlt: 'Er det trygt å gi en AI-agent e-posttilgang — risikoer og sikkerhetstiltak forklart — MCPEmails',
   content: `Kort svar: det kan være det, men tryggheten ligger i arkitekturen, ikke i markedsføringen. Å gi en AI-agent e-posttilgang er trygt når tjenesten henter posten din i sanntid i stedet for å kopiere den, krypterer påloggingsdataene dine skikkelig, kjører på minimale tilganger og lar deg kutte tilgangen med ett klikk. Det er risikabelt når noen av disse fire tingene mangler. Trikset er å vite hvilke spørsmål du skal stille før du kobler til en innboks.
 
 Dette er innvendingen jeg hører oftest, og den er berettiget. Innboksen din er knutepunktet for passordtilbakestillinger, kontraktsarkivet ditt, privatlivet ditt. Å overlate nøklene til en språkmodell føles uvøren. Så la oss være ærlige om hva som faktisk kan gå galt, og deretter gå gjennom hvordan et gjennomtenkt oppsett ser ut. Vil du ha det store bildet først, dekker hovedguiden om [hvordan du gir AI-agenten din e-posttilgang](/blog/how-to-give-your-ai-agent-email-access) hele oppsettet; dette innlegget handler spesifikt om tillitsspørsmålet.
@@ -28,7 +28,7 @@ Den klassiske tabben er å gi full postkassetilgang når oppgaven trenger «les 
 
 ## Hvordan et trygt oppsett faktisk ser ut
 
-Slik håndterer MCP Emails hver enkelt risiko. Jeg er partisk — jeg bygde det — men designvalgene er etterprøvbare, og du bør holde et hvilket som helst verktøy du velger, til samme standard.
+Slik håndterer MCPEmails hver enkelt risiko. Jeg er partisk — jeg bygde det — men designvalgene er etterprøvbare, og du bør holde et hvilket som helst verktøy du velger, til samme standard.
 
 **E-posten din lagres aldri.** Hvert verktøykall treffer leverandøren din i sanntid, over IMAP/SMTP for Gmail og de fleste andre leverandører, eller Microsoft Graph for Outlook. Meldingstekster, emner og vedlegg passerer gjennom til agenten og forkastes umiddelbart. Det eneste vi beholder per innboks, er én kryptert påloggingsopplysning slik at neste kall kan gjøres. Det finnes ingen innbokskopi å bryte seg inn i, fordi kopien ikke eksisterer.
 

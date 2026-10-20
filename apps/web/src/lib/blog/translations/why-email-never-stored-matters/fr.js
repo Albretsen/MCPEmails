@@ -1,9 +1,9 @@
 const translation = {
   title: "Pourquoi le « courriel jamais stocké » compte quand vous connectez l’IA à votre boîte mail",
   description:
-    'Jamais stocké : MCP Emails récupère vos messages en direct puis les jette, ne gardant qu’un jeton chiffré. Voyez pourquoi c’est mieux qu’un outil qui copie toute votre boîte.',
+    'Jamais stocké : MCPEmails récupère vos messages en direct puis les jette, ne gardant qu’un jeton chiffré. Voyez pourquoi c’est mieux qu’un outil qui copie toute votre boîte.',
   coverAlt: 'Un courriel récupéré en direct puis jeté, face à une seconde copie stockée dans la base de données d’un fournisseur',
-  content: `Quand vous connectez un agent IA à votre boîte mail, la question la plus importante de toutes est de savoir où finissent vos courriels. Avec MCP Emails, la réponse est : nulle part. Chaque appel d’outil récupère vos messages en direct depuis Gmail, Microsoft Graph ou votre serveur IMAP, les transmet à l’agent, puis les jette. La seule chose que nous conservons, c’est un jeton chiffré pour que l’appel suivant puisse avoir lieu.
+  content: `Quand vous connectez un agent IA à votre boîte mail, la question la plus importante de toutes est de savoir où finissent vos courriels. Avec MCPEmails, la réponse est : nulle part. Chaque appel d’outil récupère vos messages en direct depuis Gmail, Microsoft Graph ou votre serveur IMAP, les transmet à l’agent, puis les jette. La seule chose que nous conservons, c’est un jeton chiffré pour que l’appel suivant puisse avoir lieu.
 
 Cela ressemble à un petit détail d’implémentation. Ça n’en est pas un. C’est la différence entre confier à un agent *une clé de votre maison* et lui confier *une photocopie de tout ce qu’elle contient*, gardée à jamais dans le classeur de quelqu’un d’autre. Beaucoup d’outils « IA pour courriel » font discrètement la seconde chose. Cet article explique pourquoi ça compte et en quoi l’architecture diffère vraiment.
 
@@ -13,7 +13,7 @@ Il n’existe en réalité que deux approches de conception, et la plupart des p
 
 **Tout copier (synchroniser-et-stocker).** L’outil se connecte une fois à votre boîte, puis aspire vos messages dans sa propre base de données — souvent en continu. Votre boîte est répliquée dans leur infrastructure pour être indexée, intégrée dans un magasin de vecteurs, fournie à un modèle ou renvoyée rapidement. L’agent lit depuis *leur* copie, pas depuis votre fournisseur.
 
-**Récupération en direct (jamais stocké).** L’outil ne détient qu’un identifiant. Quand l’agent a besoin d’un message, le serveur appelle votre fournisseur en temps réel, renvoie le résultat et jette le corps du message. Rien du contenu n’est conservé. C’est ainsi que fonctionne MCP Emails.
+**Récupération en direct (jamais stocké).** L’outil ne détient qu’un identifiant. Quand l’agent a besoin d’un message, le serveur appelle votre fournisseur en temps réel, renvoie le résultat et jette le corps du message. Rien du contenu n’est conservé. C’est ainsi que fonctionne MCPEmails.
 
 Le modèle tout-copier est populaire parce qu’il est facile à construire et donne l’impression d’une recherche instantanée. Mais il change ce à quoi vous consentez réellement quand vous cliquez sur « Connect ». Vous n’accordez pas un accès. Vous autorisez un double.
 
@@ -39,7 +39,7 @@ Un corpus stocké de courriels réels est irrésistible. Il est tentant de s’e
 
 ## Comment fonctionne réellement la récupération en direct
 
-Voici le chemin parcouru par un seul appel \`email_read\` (action \`read\`) à travers MCP Emails :
+Voici le chemin parcouru par un seul appel \`email_read\` (action \`read\`) à travers MCPEmails :
 
 \`\`\`
 agent  →  serveur MCP  →  connexion au fournisseur

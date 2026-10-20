@@ -2,7 +2,7 @@ const translation = {
   title: 'Comment donner à votre agent IA un accès à la messagerie (le guide complet 2026)',
   description:
     'Donnez à votre agent IA un accès en lecture et en envoi à une vraie boîte mail via MCP — Gmail, Outlook, iCloud, Fastmail ou IMAP. Fonctionnement, outils, sécurité et configuration.',
-  coverAlt: 'Comment donner à votre agent IA un accès à la messagerie via MCP — MCP Emails',
+  coverAlt: 'Comment donner à votre agent IA un accès à la messagerie via MCP — MCPEmails',
   content: `Pour donner à un agent IA un accès à la messagerie, vous connectez votre boîte mail à un serveur MCP et vous pointez votre agent vers une seule URL de point de terminaison. L'agent dispose alors d'un petit ensemble d'outils pour lire, rechercher et envoyer des e-mails. Le plus difficile, ce n'est pas l'agent — c'est de faire tout cela sans laisser fuiter votre mot de passe dans un prompt, un journal ou une base vectorielle. C'est ce dernier kilomètre qui fait l'objet de ce guide.
 
 Si vous voulez juste la voie rapide : connectez une boîte mail dans le tableau de bord, collez le point de terminaison MCP dans [claude.ai](https://claude.ai), Claude Desktop, Cursor ou votre propre agent, et appelez d'abord \`inbox_list\`. Le reste de cet article explique ce qui se passe réellement, pourquoi le modèle de sécurité est important et comment câbler chaque fournisseur pris en charge.
@@ -11,7 +11,7 @@ Si vous voulez juste la voie rapide : connectez une boîte mail dans le tableau 
 
 Le [Model Context Protocol](https://modelcontextprotocol.io) est une manière standardisée d'exposer des outils à un modèle de langage via HTTP. Un serveur e-mail MCP présente votre boîte mail non pas comme de l'IMAP brut, mais comme une poignée de verbes typés que l'agent peut appeler : lister les messages, en lire un, rechercher, envoyer, répondre. L'agent raisonne sur ces verbes. Il ne touche jamais au protocole de messagerie sous-jacent, et il ne voit jamais vos identifiants.
 
-C'est toute l'idée derrière [MCP Emails](/). Un point de terminaison, un ensemble d'outils, n'importe quel client compatible MCP. Si vous voulez l'explication de l'architecture depuis les fondations, l'article complémentaire [qu'est-ce qu'un serveur e-mail MCP](/blog/what-is-an-mcp-email-server) la décrit en termes simples.
+C'est toute l'idée derrière [MCPEmails](/). Un point de terminaison, un ensemble d'outils, n'importe quel client compatible MCP. Si vous voulez l'explication de l'architecture depuis les fondations, l'article complémentaire [qu'est-ce qu'un serveur e-mail MCP](/blog/what-is-an-mcp-email-server) la décrit en termes simples.
 
 ## Pourquoi le dernier kilomètre est difficile
 
@@ -23,7 +23,7 @@ Brancher un modèle sur la messagerie semble trivial jusqu'à ce que vous l'essa
 
 La solution naïve du bricolage maison — donner au modèle une bibliothèque IMAP et votre mot de passe — échoue sur ces trois points à la fois. La plupart des dépôts « Gmail MCP server » sur GitHub s'arrêtent exactement là.
 
-## Comment MCP Emails résout le problème
+## Comment MCPEmails résout le problème
 
 Quatre décisions de conception font le gros du travail. Ce sont elles qui font que je confie ma propre boîte mail à cet outil.
 
@@ -37,7 +37,7 @@ Le mot de passe d'application ou le jeton OAuth de chaque boîte mail est chiffr
 
 ### L'envoi passe par votre propre fournisseur
 
-Lorsque l'agent envoie ou répond, l'e-mail part via votre Gmail, votre Microsoft 365 ou votre serveur SMTP. MCP Emails ne relaie jamais depuis son propre domaine. Votre délivrabilité et la réputation de votre domaine restent entièrement les vôtres — pas de roulette du dossier spam liée à une IP partagée.
+Lorsque l'agent envoie ou répond, l'e-mail part via votre Gmail, votre Microsoft 365 ou votre serveur SMTP. MCPEmails ne relaie jamais depuis son propre domaine. Votre délivrabilité et la réputation de votre domaine restent entièrement les vôtres — pas de roulette du dossier spam liée à une IP partagée.
 
 ### C'est du MCP standard via HTTP
 
@@ -80,7 +80,7 @@ Vous connectez une boîte mail une seule fois dans **Dashboard → Inboxes → C
 
 ### Fournisseurs à mot de passe d'application
 
-Gmail, iCloud, Fastmail, Yahoo, Zoho, Yandex et toute boîte mail IMAP générique se connectent avec un mot de passe spécifique à l'application plutôt qu'avec OAuth. Vous générez le mot de passe dans les paramètres de sécurité de votre fournisseur et le collez dans MCP Emails. Les mots de passe d'application Gmail se créent dans votre compte Google, et Google exige la validation en deux étapes pour en créer un. Les mots de passe iCloud proviennent d'appleid.apple.com ; Fastmail fonctionne **uniquement avec un mot de passe d'application** (créez-en un dans les paramètres de Fastmail). Ils empruntent tous le même transport IMAP/SMTP et partagent un ensemble de fonctionnalités identique. Le parcours complet se trouve dans [connecter iCloud, Fastmail ou n'importe quelle boîte IMAP à Claude](/blog/connect-icloud-fastmail-imap-to-claude).
+Gmail, iCloud, Fastmail, Yahoo, Zoho, Yandex et toute boîte mail IMAP générique se connectent avec un mot de passe spécifique à l'application plutôt qu'avec OAuth. Vous générez le mot de passe dans les paramètres de sécurité de votre fournisseur et le collez dans MCPEmails. Les mots de passe d'application Gmail se créent dans votre compte Google, et Google exige la validation en deux étapes pour en créer un. Les mots de passe iCloud proviennent d'appleid.apple.com ; Fastmail fonctionne **uniquement avec un mot de passe d'application** (créez-en un dans les paramètres de Fastmail). Ils empruntent tous le même transport IMAP/SMTP et partagent un ensemble de fonctionnalités identique. Le parcours complet se trouve dans [connecter iCloud, Fastmail ou n'importe quelle boîte IMAP à Claude](/blog/connect-icloud-fastmail-imap-to-claude).
 
 ## Connexion de votre client IA
 
@@ -88,7 +88,7 @@ Même point de terminaison, mêmes outils, deux façons d'entrer selon que votre
 
 ### Clients compatibles OAuth (sans clé API)
 
-claude.ai, Claude Desktop, Cursor et les clients similaires se connectent avec OAuth 2.0 Authorization Code + PKCE et l'enregistrement dynamique de client RFC 7591. Dans claude.ai, c'est **Customize → Connectors → Add connector**, collez l'URL du point de terminaison MCP, cliquez sur Connect, connectez-vous à votre compte MCP Emails et approuvez. Les jetons sont limités exactement à ce que vous approuvez : \`read:email\`, \`send:email\`, ou les deux. Pour des guides pas à pas, consultez [configurer Claude avec votre boîte mail](/blog/connect-claude-to-email) et [ajouter vos e-mails à ChatGPT](/blog/connect-chatgpt-to-email).
+claude.ai, Claude Desktop, Cursor et les clients similaires se connectent avec OAuth 2.0 Authorization Code + PKCE et l'enregistrement dynamique de client RFC 7591. Dans claude.ai, c'est **Customize → Connectors → Add connector**, collez l'URL du point de terminaison MCP, cliquez sur Connect, connectez-vous à votre compte MCPEmails et approuvez. Les jetons sont limités exactement à ce que vous approuvez : \`read:email\`, \`send:email\`, ou les deux. Pour des guides pas à pas, consultez [configurer Claude avec votre boîte mail](/blog/connect-claude-to-email) et [ajouter vos e-mails à ChatGPT](/blog/connect-chatgpt-to-email).
 
 ### Clients sans OAuth (clé API)
 

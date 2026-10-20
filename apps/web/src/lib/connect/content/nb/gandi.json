@@ -21,7 +21,7 @@
     "titleLine1": "Koble Gandi Mail til Claude,",
     "titleLine2": "Cursor, ChatGPT og enhver MCP-klient",
     "lead": "Gi AI-agenten din en ekte Gandi-innboks. Les, søk, send, svar, planlegg og organiser e-post over IMAP med passordet som er satt på selve postkassen, ikke på Gandi-kontoen din.",
-    "answer": "Claude kan ikke nå en Gandi-postkasse på egen hånd. MCP Emails er en driftet MCP-server som kobler den til over IMAP på mail.gandi.net, port 993, og autentiserer med hele e-postadressen og passordet som er definert på postkassen. Gandi holder det passordet atskilt fra passordet til gandi.net-kontoen din. Claude, Cursor eller enhver MCP-klient kan deretter lese, søke i, sende og organisere e-posten. Det finnes ikke noe app-passord å lage og ingen IMAP-bryter per postkasse å lete etter. Én innboks er gratis, for alltid.",
+    "answer": "Claude kan ikke nå en Gandi-postkasse på egen hånd. MCPEmails er en driftet MCP-server som kobler den til over IMAP på mail.gandi.net, port 993, og autentiserer med hele e-postadressen og passordet som er definert på postkassen. Gandi holder det passordet atskilt fra passordet til gandi.net-kontoen din. Claude, Cursor eller enhver MCP-klient kan deretter lese, søke i, sende og organisere e-posten. Det finnes ikke noe app-passord å lage og ingen IMAP-bryter per postkasse å lete etter. Én innboks er gratis, for alltid.",
     "meta0": "1 innboks gratis, for alltid",
     "meta1": "Postkassepassord, ikke kontoinnloggingen",
     "meta2": "E-post hentes direkte, lagres aldri"
@@ -32,7 +32,7 @@
   },
   "setup": [
     {
-      "h": "Opprett en gratis MCP Emails-konto",
+      "h": "Opprett en gratis MCPEmails-konto",
       "p": "Registrer deg på mcpemails.com. Gratisplanen kobler til én innboks for alltid og krever ikke kort."
     },
     {
@@ -40,7 +40,7 @@
       "p": "Logg inn på gandi.net, velg Domains i menyen til venstre, velg domenet adressen hører til, og åpne fanen Email. Klikk på postkassen, eller på menyen med tre prikker, deretter Manage, og bruk Change ved siden av Password i seksjonen Configuration. Du kan også endre det under Settings, Password i Gandis Roundcube-webmail."
     },
     {
-      "h": "Lim det inn i MCP Emails",
+      "h": "Lim det inn i MCPEmails",
       "p": "Velg IMAP / SMTP, skriv inn hele adressen og lim inn postkassepassordet. Verten mail.gandi.net og portene 993 og 465 er forhåndsutfylt og ble bekreftet med en direkte TLS-tilkobling."
     },
     {
@@ -51,7 +51,7 @@
   "gotchas": [
     {
       "h": "Gandis tofaktorautentisering for e-post gjelder bare webmail og kan ikke dekke IMAP",
-      "p": "Har du slått på tofaktorautentisering for en Gandi-postkasse, gjelder den webmailportalene SOGo og Roundcube og ingen andre steder. Gandis dokumentasjon sier rett ut at 2FA bare kan brukes via webmailportalene, at e-postklienter som Thunderbird eller Outlook ikke støttes, og at det å slå av POP, IMAP og SMTP er den eneste måten å sikre postkassen fullt ut med 2FA. Det har to praktiske følger. For det første hindrer ikke 2FA MCP Emails i å koble til: postkassepassordet autentiserer fortsatt over IMAP. For det andre, hvis du bevisst har slått av IMAP-protokollen på postkassen for at 2FA skal ha noen effekt, kan ingen klient koble til før du slår den på igjen."
+      "p": "Har du slått på tofaktorautentisering for en Gandi-postkasse, gjelder den webmailportalene SOGo og Roundcube og ingen andre steder. Gandis dokumentasjon sier rett ut at 2FA bare kan brukes via webmailportalene, at e-postklienter som Thunderbird eller Outlook ikke støttes, og at det å slå av POP, IMAP og SMTP er den eneste måten å sikre postkassen fullt ut med 2FA. Det har to praktiske følger. For det første hindrer ikke 2FA MCPEmails i å koble til: postkassepassordet autentiserer fortsatt over IMAP. For det andre, hvis du bevisst har slått av IMAP-protokollen på postkassen for at 2FA skal ha noen effekt, kan ingen klient koble til før du slår den på igjen."
     },
     {
       "h": "Gratis postkasser ble avviklet i 2023, og gamle adresser kan rett og slett være borte",
@@ -69,7 +69,7 @@
   "faq": [
     {
       "q": "Fungerer Claude med Gandi Mail?",
-      "a": "Ikke på egen hånd. Claude har ingen innebygd Gandi-kobling. Peker du en MCP-server som MCP Emails mot Gandi-postkassen din over IMAP, får Claude tilgang til å lese, søke, sende, svare, planlegge og organisere den, og den samme tilkoblingen fungerer fra Cursor, ChatGPT og andre MCP-klienter."
+      "a": "Ikke på egen hånd. Claude har ingen innebygd Gandi-kobling. Peker du en MCP-server som MCPEmails mot Gandi-postkassen din over IMAP, får Claude tilgang til å lese, søke, sende, svare, planlegge og organisere den, og den samme tilkoblingen fungerer fra Cursor, ChatGPT og andre MCP-klienter."
     },
     {
       "q": "Hva er IMAP- og SMTP-innstillingene for Gandi?",

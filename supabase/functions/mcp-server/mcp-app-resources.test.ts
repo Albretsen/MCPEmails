@@ -255,7 +255,7 @@ Deno.test("resources/read answers a previous build's fingerprint with today's ca
   // The production bug of 2026-10-13. Claude's host keeps its tools/list across
   // a card deploy and ignores list_changed, so it goes on reading the URI of
   // the build before: f53069d8832a was asked for while 6f24045a029e was live,
-  // and -32002 rendered as "cannot reach MCP Emails" in every chat.
+  // and -32002 rendered as "cannot reach MCPEmails" in every chat.
   for (const staleBuild of ["f53069d8832a", "6f24045a029e", "000000000000", "07359906cb80"]) {
     // Guard the fixture: if a build ever hashes to one of these the loop would
     // be testing the canonical path and proving nothing about stale ones.

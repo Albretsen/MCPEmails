@@ -19,7 +19,7 @@
     "titleLine1": "Connectez la messagerie Bluewin à Claude,",
     "titleLine2": "Cursor, ChatGPT, tout client MCP",
     "lead": "Donnez à votre agent IA une vraie boîte bluewin.ch. Lisez, recherchez, envoyez, répondez, planifiez et organisez le courrier en IMAP avec votre mot de passe e-mail Swisscom, dans tous les clients MCP et pas un seul.",
-    "answer": "Claude ne peut pas accéder seul à une boîte Bluewin. MCP Emails est un serveur MCP hébergé qui s'y connecte en IMAP sur imaps.bluewin.ch, port 993, avec votre adresse bluewin.ch complète et votre mot de passe e-mail Bluewin, que Swisscom distingue du mot de passe de votre login My Swisscom. Une fois la connexion établie, Claude, Cursor ou tout autre client MCP peut lire, rechercher, envoyer, répondre et organiser ce courrier. Une boîte est gratuite, pour toujours.",
+    "answer": "Claude ne peut pas accéder seul à une boîte Bluewin. MCPEmails est un serveur MCP hébergé qui s'y connecte en IMAP sur imaps.bluewin.ch, port 993, avec votre adresse bluewin.ch complète et votre mot de passe e-mail Bluewin, que Swisscom distingue du mot de passe de votre login My Swisscom. Une fois la connexion établie, Claude, Cursor ou tout autre client MCP peut lire, rechercher, envoyer, répondre et organiser ce courrier. Une boîte est gratuite, pour toujours.",
     "meta0": "1 boîte gratuite, pour toujours",
     "meta1": "Mot de passe e-mail, pas le login Swisscom",
     "meta2": "E-mails récupérés en direct, jamais stockés"
@@ -30,7 +30,7 @@
   },
   "setup": [
     {
-      "h": "Créez un compte MCP Emails gratuit",
+      "h": "Créez un compte MCPEmails gratuit",
       "p": "Inscrivez-vous sur mcpemails.com. L'offre gratuite connecte une boîte et ne demande pas de carte."
     },
     {
@@ -38,7 +38,7 @@
       "p": "Connectez-vous à My Swisscom et ouvrez la section de modification du mot de passe e-mail pour l'adresse Bluewin que vous voulez connecter. Ce mot de passe est différent de celui qui vous a permis d'entrer dans My Swisscom. Si vous ne l'avez jamais défini, faites-le maintenant ; la valeur choisie ici est celle qu'utilise un client de messagerie."
     },
     {
-      "h": "Saisissez l'adresse et le mot de passe e-mail dans MCP Emails",
+      "h": "Saisissez l'adresse et le mot de passe e-mail dans MCPEmails",
       "p": "Choisissez IMAP / SMTP, saisissez votre adresse <code>@bluewin.ch</code> complète et collez le mot de passe e-mail plutôt que votre mot de passe de login Swisscom. Les serveurs Bluewin sont préremplis, y compris les lettres finales faciles à mal taper."
     },
     {
@@ -61,7 +61,7 @@
     },
     {
       "h": "MOVE et UIDPLUS manquent tous les deux",
-      "p": "Ce serveur n'implémente ni MOVE ni UIDPLUS. Classer un message s'effectue donc par COPY, puis STORE de l'indicateur de suppression, puis EXPUNGE, et le serveur ne communique jamais l'identifiant attribué à la nouvelle copie. MCP Emails gère la séquence, mais un déplacement n'est pas atomique ici et un message classé est confirmé en cherchant dans la destination plutôt que par identifiant."
+      "p": "Ce serveur n'implémente ni MOVE ni UIDPLUS. Classer un message s'effectue donc par COPY, puis STORE de l'indicateur de suppression, puis EXPUNGE, et le serveur ne communique jamais l'identifiant attribué à la nouvelle copie. MCPEmails gère la séquence, mais un déplacement n'est pas atomique ici et un message classé est confirmé en cherchant dans la destination plutôt que par identifiant."
     }
   ],
   "limits": [
@@ -71,7 +71,7 @@
   "faq": [
     {
       "q": "Claude fonctionne-t-il avec l'e-mail Bluewin ?",
-      "a": "Pas directement. Claude n'a pas de connecteur Bluewin ou Swisscom intégré. Connecter un serveur MCP comme MCP Emails à la boîte en IMAP donne à Claude un accès en lecture, recherche, envoi, réponse, planification et organisation à votre courrier bluewin.ch, et la même connexion fonctionne dans Cursor, ChatGPT et d'autres clients MCP."
+      "a": "Pas directement. Claude n'a pas de connecteur Bluewin ou Swisscom intégré. Connecter un serveur MCP comme MCPEmails à la boîte en IMAP donne à Claude un accès en lecture, recherche, envoi, réponse, planification et organisation à votre courrier bluewin.ch, et la même connexion fonctionne dans Cursor, ChatGPT et d'autres clients MCP."
     },
     {
       "q": "Quels sont les réglages IMAP et SMTP de Bluewin ?",

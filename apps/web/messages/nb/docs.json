@@ -1,7 +1,7 @@
 {
   "meta": {
     "title": "Dokumentasjon for e-post-MCP-server: Gmail, Outlook, IMAP og OAuth",
-    "description": "Kom i gang med MCP Emails på minutter. Hurtigstartveiledning, verktøyreferanse og eksempelsvar for Gmail-, Outlook- og IMAP-agenter."
+    "description": "Kom i gang med MCPEmails på minutter. Hurtigstartveiledning, verktøyreferanse og eksempelsvar for Gmail-, Outlook- og IMAP-agenter."
   },
   "hero": {
     "eyebrow": "Dokumentasjon",
@@ -17,7 +17,7 @@
   "quickstart": {
     "eyebrow": "Hurtigstart",
     "heading": "Oppe og kjører på minutter.",
-    "sub": "Ingen SDK kreves. MCP Emails snakker standard MCP over HTTP, så det passer rett inn i enhver MCP-kompatibel agent.",
+    "sub": "Ingen SDK kreves. MCPEmails snakker standard MCP over HTTP, så det passer rett inn i enhver MCP-kompatibel agent.",
     "steps": {
       "signup": {
         "label": "Registrer deg og koble til en innboks",
@@ -31,7 +31,7 @@
         "body": "I Dashbord → API-nøkler klikker du «Opprett nøkkel». Gi den navn, velg omfangene agenten din trenger (read:email, search:email, send:email, manage:folders, delete:email, manage:drafts, manage:contacts, schedule:email og manage:automations), og kopier nøkkelen. Den vises bare én gang."
       },
       "addclient": {
-        "label": "Legg MCP Emails til i agenten din",
+        "label": "Legg MCPEmails til i agenten din",
         "heading": "Lim MCP-endepunktet inn i klienten din",
         "body": "Velg fanen for klienten din nedenfor. MCP-klienter med OAuth 2.0-støtte (claude.ai, Claude Desktop, Cursor og andre) limer bare inn URL-en og godkjenner, ingen API-nøkkel nødvendig. Klienter uten OAuth, samt skriptbasert tilgang, bruker API-nøkkelen fra steg 02."
       },
@@ -63,7 +63,7 @@
     "infoFormat": "Responsformat: <b>JSON-RPC 2.0</b>. Vellykkede resultater bærer også et typet <code>structuredContent</code>-objekt",
     "handshakeLabel": "Initialize-håndtrykk",
     "pollingHeading": "Polling, ikke push",
-    "pollingBody": "MCP Emails er kun forespørsel/svar: hvert resultat kommer fra et verktøykall agenten din gjør. Det finnes <b>ingen webhooks, push-varsler eller hendelser initiert av serveren</b>. En innkommende e-post utløser aldri et agentkall av seg selv. For å reagere på ny e-post bør agenten din <b>polle</b> etter en tidsplan, f.eks. kalle <code>email_read</code> med <code>action: \"list\"</code> og <code>unread: true</code> med intervallet arbeidsflyten din trenger (vær oppmerksom på rategrensene over)."
+    "pollingBody": "MCPEmails er kun forespørsel/svar: hvert resultat kommer fra et verktøykall agenten din gjør. Det finnes <b>ingen webhooks, push-varsler eller hendelser initiert av serveren</b>. En innkommende e-post utløser aldri et agentkall av seg selv. For å reagere på ny e-post bør agenten din <b>polle</b> etter en tidsplan, f.eks. kalle <code>email_read</code> med <code>action: \"list\"</code> og <code>unread: true</code> med intervallet arbeidsflyten din trenger (vær oppmerksom på rategrensene over)."
   },
   "operations": {
     "eyebrow": "Bygget for ekte innboksarbeid",
@@ -100,8 +100,8 @@
     "sub": "MCP-klienter som støtter OAuth 2.0 (claude.ai, Claude Desktop, Cursor og andre) kobler til automatisk via authorization code + PKCE. Ingen API-nøkkel, ingen konfigurasjonsfil. Lim inn URL-en og klikk Connect.",
     "step1": "<b>Steg 1:</b> Gå til claude.ai → Customize → Connectors → Add connector",
     "step2": "<b>Steg 2:</b> Lim inn <code>https://mcpemails.com/api/mcp</code> som server-URL",
-    "step3": "<b>Steg 3:</b> Klikk Connect. MCP Emails åpner et godkjenningsskjermbilde",
-    "step4": "<b>Steg 4:</b> Logg inn med MCP Emails-kontoen din og godkjenn tilgang",
+    "step3": "<b>Steg 3:</b> Klikk Connect. MCPEmails åpner et godkjenningsskjermbilde",
+    "step4": "<b>Steg 4:</b> Logg inn med MCPEmails-kontoen din og godkjenn tilgang",
     "stepDone": "<b>Ferdig:</b> Alle verktøyene som de godkjente omfangene dine tillater, er aktive. claude.ai fornyer tokens automatisk",
     "howTitle": "Hvordan det fungerer under panseret",
     "howP1": "claude.ai registrerer seg selv via <b>RFC 7591 Dynamic Client Registration</b>, så du forhåndsregistrerer aldri en client-ID.",
@@ -553,7 +553,7 @@
     },
     "profiles": {
       "title": "Kompatibilitetsprofiler",
-      "body": "Hver innboks rapporterer en versjonert profil til en MCP-agent: <code>exact</code> betyr at den normaliserte operasjonen beholder betydningen sin, <code>different</code> betyr at leverandøren bruker dokumenterte alternative semantikker, og <code>unavailable</code> betyr at MCP Emails ikke svekker forespørselen i det stille. Profilene beskriver hvordan koblingen oppfører seg, uten å inspisere eller lagre e-post."
+      "body": "Hver innboks rapporterer en versjonert profil til en MCP-agent: <code>exact</code> betyr at den normaliserte operasjonen beholder betydningen sin, <code>different</code> betyr at leverandøren bruker dokumenterte alternative semantikker, og <code>unavailable</code> betyr at MCPEmails ikke svekker forespørselen i det stille. Profilene beskriver hvordan koblingen oppfører seg, uten å inspisere eller lagre e-post."
     },
     "ariaSupported": "Støttet",
     "ariaNotSupported": "Ikke støttet",
@@ -608,7 +608,7 @@
         "yahoo": "Yahoo tillater høyst 5 samtidige tilkoblinger. Avvisningsteksten, «Incorrect username or password», nevner begge deler med vilje og sier ikke hvilken av dem som var feil.",
         "zoho": "IMAP-tilgang er slått av som standard og må aktiveres først. Zoho driver dessuten seks regionale datasentre, og betalte postkasser på eget domene ligger på imappro/smtppro i stedet for imap/smtp, så riktig vert avhenger både av region og kontotype.",
         "yandex": "Yandex implementerer ikke RFC 4959 SASL-IR, så den innebygde innloggingsformen kommer tilbake som en kommandosyntaksfeil i stedet for en passordfeil. Både «IMAP» og «App-passord og OAuth-token» må slås på, og Yandex 360-kontoer på eget domene kan logge inn med et brukernavn som ikke er e-postadressen.",
-        "outlook": "Personlige Microsoft-kontoer (outlook.com, hotmail.com, live.com, msn.com) kobles til direkte. Jobb- og skolekontoer er annerledes: Microsofts standard samtykkeregler hindrer ansatte i å godkjenne e-posttillatelser selv, så dashboardet gir deg en delbar godkjenningslenke du sender til IT-administratoren, som godkjenner appen én gang for hele organisasjonen og ikke trenger en MCP Emails-konto; deretter kobler alle til som vanlig. En Microsoft-konto uten Exchange Online-postkasse blir avvist, med et hint om å koble til adressen over IMAP i stedet. Microsoft kan midlertidig blokkere sending fra en helt ny outlook.com-konto som sender i støt, som en del av sine egne kontroller mot misbruk.",
+        "outlook": "Personlige Microsoft-kontoer (outlook.com, hotmail.com, live.com, msn.com) kobles til direkte. Jobb- og skolekontoer er annerledes: Microsofts standard samtykkeregler hindrer ansatte i å godkjenne e-posttillatelser selv, så dashboardet gir deg en delbar godkjenningslenke du sender til IT-administratoren, som godkjenner appen én gang for hele organisasjonen og ikke trenger en MCPEmails-konto; deretter kobler alle til som vanlig. En Microsoft-konto uten Exchange Online-postkasse blir avvist, med et hint om å koble til adressen over IMAP i stedet. Microsoft kan midlertidig blokkere sending fra en helt ny outlook.com-konto som sender i støt, som en del av sine egne kontroller mot misbruk.",
         "generic": "En port og en sikkerhetsmodus som ikke stemmer overens. Å velge STARTTLS mens porten fortsatt er 993 åpner en ukryptert forbindelse mot en lytter som bare snakker TLS, og tilkoblingen går rett i tidsavbrudd. Mislykkede transporter forsøkes nå automatisk på den andre standardkombinasjonen."
       },
       "notes": {

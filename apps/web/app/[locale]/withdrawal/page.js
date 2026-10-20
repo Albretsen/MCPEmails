@@ -35,7 +35,7 @@ export async function generateMetadata({ params }) {
     openGraph: {
       type: 'website',
       url: localePath(locale, PATH),
-      title: `${meta.title} · MCP Emails`,
+      title: `${meta.title} · MCPEmails`,
       description: meta.description,
       locale: OG_LOCALE[locale],
       images: [OG_IMAGE],

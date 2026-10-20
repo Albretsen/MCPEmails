@@ -1,12 +1,12 @@
-E-post for gründere: svar kundene fra Claude · mcpemails
+E-post for gründere: svar kundene fra Claude · MCPEmails
 [meta description] Bruk Claude eller en annen MCP-klient til å sortere og svare på kunde-e-post. Les, skriv utkast, send, planlegg og organiser Gmail-, Outlook- eller IMAP-innbokser i én sikker arbeidsflyt.
-[meta og:title] E-post for gründere: svar kundene fra Claude · mcpemails
+[meta og:title] E-post for gründere: svar kundene fra Claude · MCPEmails
 [meta og:description] Bruk Claude eller en annen MCP-klient til å sortere og svare på kunde-e-post. Les, skriv utkast, send, planlegg og organiser Gmail-, Outlook- eller IMAP-innbokser i én sikker arbeidsflyt.
 [meta og:locale] nb_NO
-[meta twitter:title] E-post for gründere: svar kundene fra Claude · mcpemails
+[meta twitter:title] E-post for gründere: svar kundene fra Claude · MCPEmails
 [meta twitter:description] Bruk Claude eller en annen MCP-klient til å sortere og svare på kunde-e-post. Les, skriv utkast, send, planlegg og organiser Gmail-, Outlook- eller IMAP-innbokser i én sikker arbeidsflyt.
-[alt] mcpemails
-[alt] mcpemails
+[alt] MCPEmails
+[alt] MCPEmails
 [aria-label] Primary navigation
 Funksjoner
 Slik fungerer det
@@ -21,7 +21,7 @@ Kom i gang gratis
 Laget for gründere
 Svar hver eneste kunde
 rett fra din AI
-Du er supportavdelingen, salgsavdelingen og gründeren. mcpemails kobler innboksen din til Claude, så du kan sortere, skrive svarutkast i din egen stemme, sende og planlegge oppfølginger uten å forlate samtalen. Vår mest aktive bruker gjør akkurat dette, hver eneste dag.
+Du er supportavdelingen, salgsavdelingen og gründeren. MCPEmails kobler innboksen din til Claude, så du kan sortere, skrive svarutkast i din egen stemme, sende og planlegge oppfølginger uten å forlate samtalen. Vår mest aktive bruker gjør akkurat dette, hver eneste dag.
 Koble til innboksen gratis
 Se hvordan det fungerer
 Hvorfor gründere velger det
@@ -62,7 +62,7 @@ Planlegg denne oppfølgingen til å sendes mandag kl. 08:00, så den lander før
 Arkiver alle nyhetsbrev og varsler, så bare ekte mennesker er igjen i innboksen min.
 Hva det faktisk gjør
 En ekte innboks, ikke et skrivebeskyttet glimt
-Sytten handlingsbaserte verktøy agenten din kan bruke fra start til slutt.
+Nitten handlingsbaserte verktøy agenten din kan bruke fra start til slutt.
 Les og søk
 List opp, les og søk på tvers av mapper og hver tilkoblet innboks, hentet i sanntid.
 Send og svar
@@ -71,11 +71,11 @@ Planlegg
 Sett en sending i kø til senere, så oppfølginger går ut til rett tidspunkt i kundens dag.
 Organiser
 Flytt, kopier, flagg, arkiver og merk, så sorteringen skjer mens du leser, ikke etterpå.
-Gründeren som bruker mcpemails mest åpner Claude hver morgen, tømmer kundekøen, og er ferdig før kaffen. Det er hele poenget.
+Gründeren som bruker MCPEmails mest åpner Claude hver morgen, tømmer kundekøen, og er ferdig før kaffen. Det er hele poenget.
 Vår mest aktive arbeidsflyt, på én linje
 Hvilken som helst innboks, hvilken som helst AI
 Koble til innboksen du allerede driver support fra
-Outlook via Microsoft-innlogging, Gmail via et app-passord eller Google-innlogging, resten via et app-passord. Den samme innboksen fungerer så i Claude, Cursor, VS Code, ChatGPT og en hvilken som helst MCP-klient, så du er aldri låst til én app.
+Outlook via Microsoft-innlogging, Gmail via et Google-app-passord, resten via et app-passord. Den samme innboksen fungerer så i Claude, Cursor, VS Code, ChatGPT og en hvilken som helst MCP-klient, så du er aldri låst til én app.
 Koble til Gmail
 Koble til Outlook
 Koble til Fastmail
@@ -92,7 +92,7 @@ Få kveldene dine tilbake
 Koble til innboksen på minutter og la Claude tømme kundekøen sammen med deg. Én innboks gratis for å komme i gang, uten kort.
 Koble til innboksen gratis
 Les dokumentasjonen
-[alt] mcpemails
+[alt] MCPEmails
 En vertsbasert MCP-server som gir AI-agenter tilgang til å lese og sende fra innboksen din, uten å noen gang lagre e-posten den leser.
 Kontakt
 hello@mcpemails.com
@@ -108,6 +108,7 @@ Norsk
 Español
 Français
 中文
+Deutsch
 Produkt
 Funksjoner
 Slik fungerer det
@@ -121,6 +122,8 @@ Verktøyreferanse
 Hurtigstart
 OAuth-tilkobling
 Leverandørstøtte
+Skrivebeskyttet tilgang
+Oppsett av MCP-klienter
 Blog
 Changelog
 Koble til
@@ -140,7 +143,10 @@ Sikkerhet
 Status
 Personvern
 Vilkår
-© 2026 mcpemails.
+Angrerett
+Si opp avtaler her
+Impressum
+© 2026 MCPEmails.
 E-post hentes i sanntid, lagres aldri · Legitimasjon kryptert ved lagring
-MCPEmails er en tjeneste fra Albretsen Consulting (enkeltpersonforetak), organisasjonsnummer 926 646 753, Håsteins gate 9, 5160 Laksevåg, Norge.
-[json-ld] {"@context":"https://schema.org","@graph":[{"@type":"WebPage","@id":"https://mcpemails.com/nb/for/founders","url":"https://mcpemails.com/nb/for/founders","name":"E-post for gründere: svar kundene fra Claude","description":"Bruk Claude eller en annen MCP-klient til å sortere og svare på kunde-e-post. Les, skriv utkast, send, planlegg og organiser Gmail-, Outlook- eller IMAP-innbokser i én sikker arbeidsflyt.","inLanguage":"nb","isPartOf":{"@id":"https://mcpemails.com/#website"},"breadcrumb":{"@id":"https://mcpemails.com/nb/for/founders#breadcrumb"}},{"@type":"BreadcrumbList","@id":"https://mcpemails.com/nb/for/founders#breadcrumb","itemListElement":[{"@type":"ListItem","position":1,"name":"mcpemails","item":"https://mcpemails.com/nb"},{"@type":"ListItem","position":2,"name":"E-post for gründere: svar kundene fra Claude"}]}]}
+MCPEmails er en tjeneste fra Albretsen AS, organisasjonsnummer 938 702 373, Håsteins gate 9, 5160 Laksevåg, Norge.
+[json-ld] {"@context":"https://schema.org","@graph":[{"@type":"WebPage","@id":"https://mcpemails.com/nb/for/founders","url":"https://mcpemails.com/nb/for/founders","name":"E-post for gründere: svar kundene fra Claude","description":"Bruk Claude eller en annen MCP-klient til å sortere og svare på kunde-e-post. Les, skriv utkast, send, planlegg og organiser Gmail-, Outlook- eller IMAP-innbokser i én sikker arbeidsflyt.","inLanguage":"nb","isPartOf":{"@id":"https://mcpemails.com/#website"},"breadcrumb":{"@id":"https://mcpemails.com/nb/for/founders#breadcrumb"}},{"@type":"BreadcrumbList","@id":"https://mcpemails.com/nb/for/founders#breadcrumb","itemListElement":[{"@type":"ListItem","position":1,"name":"MCPEmails","item":"https://mcpemails.com/nb"},{"@type":"ListItem","position":2,"name":"E-post for gründere: svar kundene fra Claude"}]}]}

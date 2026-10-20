@@ -97,11 +97,11 @@ const listMetaUrl = (id: string) =>
 
 const GMAIL_AUTH_FAILED =
   "Unable to access the gmail inbox: its OAuth token has been revoked or expired, so the inbox has been marked 'error'. " +
-  "Ask the user to reconnect it by opening this link in their browser (they may need to sign in to MCP Emails first): " +
+  "Ask the user to reconnect it by opening this link in their browser (they may need to sign in to MCPEmails first): " +
   `https://mcpemails.com/auth/gmail?inbox=${INBOX_ID}`;
 const OUTLOOK_AUTH_FAILED =
   "Unable to access the outlook inbox: its OAuth token has been revoked or expired, so the inbox has been marked 'error'. " +
-  "Ask the user to reconnect it by opening this link in their browser (they may need to sign in to MCP Emails first): " +
+  "Ask the user to reconnect it by opening this link in their browser (they may need to sign in to MCPEmails first): " +
   `https://mcpemails.com/auth/outlook?inbox=${INBOX_ID}`;
 const NOT_FOUND_ENTRY =
   "Message not found. The message may have been deleted or the ID is stale — " +

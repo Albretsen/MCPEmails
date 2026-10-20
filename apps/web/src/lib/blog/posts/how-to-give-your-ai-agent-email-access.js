@@ -4,7 +4,7 @@ const post = {
   description:
     'Give your AI agent read and send access to a real inbox over MCP — Gmail, Outlook, iCloud, Fastmail, or IMAP. How it works, the tools, security, and setup.',
   cover: '/blog/cover-how-to-give-your-ai-agent-email-access.svg',
-  coverAlt: 'How to give your AI agent access to email over MCP — MCP Emails',
+  coverAlt: 'How to give your AI agent access to email over MCP — MCPEmails',
   authorId: 'asgeir',
   publishedAt: "2026-06-02T09:00:00.000Z",
   updatedAt: "2026-09-25T09:00:00.000Z",
@@ -18,7 +18,7 @@ If you just want the fast path: connect an inbox in the dashboard, paste the MCP
 
 The [Model Context Protocol](https://modelcontextprotocol.io) is a standard way to expose tools to a language model over HTTP. An MCP email server presents your inbox not as raw IMAP, but as a handful of typed verbs the agent can call: list messages, read one, search, send, reply. The agent reasons over those verbs. It never touches the underlying mailbox protocol, and it never sees your credentials.
 
-That's the whole idea behind [MCP Emails](/). One endpoint, one set of tools, any MCP-compatible client. If you want the ground-up explanation of the architecture, the companion post [what is an MCP email server](/blog/what-is-an-mcp-email-server) covers it in plain English.
+That's the whole idea behind [MCPEmails](/). One endpoint, one set of tools, any MCP-compatible client. If you want the ground-up explanation of the architecture, the companion post [what is an MCP email server](/blog/what-is-an-mcp-email-server) covers it in plain English.
 
 ## Why the last mile is hard
 
@@ -30,7 +30,7 @@ Hooking a model up to email looks trivial until you try it for real. Three thing
 
 The naive DIY fix — hand the model an IMAP library and your password — fails all three at once. Most "Gmail MCP server" repos on GitHub stop right there.
 
-## How MCP Emails solves it
+## How MCPEmails solves it
 
 Four design decisions do the heavy lifting. They're the reason I trust this with my own inbox.
 
@@ -44,7 +44,7 @@ The app password or OAuth token for each inbox is encrypted before it's written 
 
 ### Sending goes through your own provider
 
-When the agent sends or replies, the mail leaves through your Gmail, your Microsoft 365, or your SMTP server. MCP Emails never relays from its own domain. Your deliverability and domain reputation stay entirely yours — no shared-IP spam-folder roulette.
+When the agent sends or replies, the mail leaves through your Gmail, your Microsoft 365, or your SMTP server. MCPEmails never relays from its own domain. Your deliverability and domain reputation stay entirely yours — no shared-IP spam-folder roulette.
 
 ### It's standard MCP over HTTP
 
@@ -87,7 +87,7 @@ You connect an inbox once in **Dashboard → Inboxes → Connect Inbox**. How yo
 
 ### App-password providers
 
-Gmail, iCloud, Fastmail, Yahoo, Zoho, Yandex, and any generic IMAP mailbox connect with an app-specific password rather than OAuth. You generate the password in your provider's security settings and paste it into MCP Emails. Gmail app passwords come from your Google Account, and Google requires 2-Step Verification before it will create one. iCloud passwords come from appleid.apple.com; Fastmail is **app-password only** (create one in Fastmail settings). They all ride the same IMAP/SMTP transport and share an identical feature set. The full walkthrough lives in [connect iCloud, Fastmail, or any IMAP inbox to Claude](/blog/connect-icloud-fastmail-imap-to-claude).
+Gmail, iCloud, Fastmail, Yahoo, Zoho, Yandex, and any generic IMAP mailbox connect with an app-specific password rather than OAuth. You generate the password in your provider's security settings and paste it into MCPEmails. Gmail app passwords come from your Google Account, and Google requires 2-Step Verification before it will create one. iCloud passwords come from appleid.apple.com; Fastmail is **app-password only** (create one in Fastmail settings). They all ride the same IMAP/SMTP transport and share an identical feature set. The full walkthrough lives in [connect iCloud, Fastmail, or any IMAP inbox to Claude](/blog/connect-icloud-fastmail-imap-to-claude).
 
 ## Connecting your AI client
 
@@ -95,7 +95,7 @@ Same endpoint, same tools, two ways in depending on whether your client speaks O
 
 ### OAuth-capable clients (no API key)
 
-claude.ai, Claude Desktop, Cursor, and similar clients connect with OAuth 2.0 Authorization Code + PKCE and RFC 7591 Dynamic Client Registration. In claude.ai it's **Customize → Connectors → Add connector**, paste the MCP endpoint URL, click Connect, sign in to your MCP Emails account, and approve. Tokens are scoped to exactly what you approve: \`read:email\`, \`send:email\`, or both. For step-by-step walkthroughs, see [set up Claude with your inbox](/blog/connect-claude-to-email) and [add your email to ChatGPT](/blog/connect-chatgpt-to-email).
+claude.ai, Claude Desktop, Cursor, and similar clients connect with OAuth 2.0 Authorization Code + PKCE and RFC 7591 Dynamic Client Registration. In claude.ai it's **Customize → Connectors → Add connector**, paste the MCP endpoint URL, click Connect, sign in to your MCPEmails account, and approve. Tokens are scoped to exactly what you approve: \`read:email\`, \`send:email\`, or both. For step-by-step walkthroughs, see [set up Claude with your inbox](/blog/connect-claude-to-email) and [add your email to ChatGPT](/blog/connect-chatgpt-to-email).
 
 ### Clients without OAuth (API key)
 

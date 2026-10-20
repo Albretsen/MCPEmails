@@ -23,7 +23,7 @@
     "meta0": "Primer buzón gratis, planes para el resto",
     "meta1": "La contraseña de tu buzón, sin configurar OAuth",
     "meta2": "El correo se obtiene en vivo, nunca se almacena",
-    "answer": "Claude no puede acceder a Namecheap Private Email por sí solo. MCP Emails es un servidor MCP alojado que lo conecta por IMAP con la contraseña de tu buzón, para que Claude, Cursor o cualquier cliente MCP puedan leer, buscar, enviar y organizar ese correo. La configuración lleva un par de minutos. Cada dirección de la empresa, como info@ o ventas@, se conecta como un buzón propio: un buzón es gratis, Personal conecta tres, Pro hasta 10 y Business todos los que necesites."
+    "answer": "Claude no puede acceder a Namecheap Private Email por sí solo. MCPEmails es un servidor MCP alojado que lo conecta por IMAP con la contraseña de tu buzón, para que Claude, Cursor o cualquier cliente MCP puedan leer, buscar, enviar y organizar ese correo. La configuración lleva un par de minutos. Cada dirección de la empresa, como info@ o ventas@, se conecta como un buzón propio: un buzón es gratis, Personal conecta tres, Pro hasta 10 y Business todos los que necesites."
   },
   "persona": {
     "intro": "¿Varios buzones de empresa en Namecheap?",
@@ -37,14 +37,14 @@
   "setup": [
     {
       "h": "Crea una cuenta gratis",
-      "p": "Regístrate en MCP Emails, sin tarjeta. El plan gratuito conecta una bandeja, para siempre."
+      "p": "Regístrate en MCPEmails, sin tarjeta. El plan gratuito conecta una bandeja, para siempre."
     },
     {
       "h": "Busca la contraseña de tu buzón de Private Email",
       "p": "Usa la contraseña del propio buzón, no la contraseña de tu cuenta de Namecheap. Puedes restablecerla en cualquier momento desde el panel de control de Private Email."
     },
     {
-      "h": "Pégala en MCP Emails",
+      "h": "Pégala en MCPEmails",
       "p": "Elige IMAP / SMTP y añade tu dirección de Namecheap Private Email, los servidores indicados arriba y la contraseña para conectar la bandeja de forma segura."
     },
     {
@@ -59,7 +59,7 @@
     },
     {
       "h": "La autenticación de dos factores de Private Email es solo para el webmail y bloquea todos los clientes de correo",
-      "p": "Namecheap documenta que la 2FA de Private Email protege la interfaz web. En cuanto la activas, tu contraseña habitual del buzón deja de autenticar por IMAP y SMTP, y el rechazo llega como un simple fallo de inicio de sesión, sin mencionar el segundo factor. La solución es una <b>contraseña específica de aplicación</b>: en el webmail de Private Email abre <b>Settings</b>, luego <b>Security</b> y después <b>Application Passwords</b>, elige el tipo de cliente en el desplegable y genera una. Pégala en MCP Emails en lugar de la contraseña del buzón. Si nunca has activado la 2FA, no existe ninguna contraseña de aplicación y no la necesitas."
+      "p": "Namecheap documenta que la 2FA de Private Email protege la interfaz web. En cuanto la activas, tu contraseña habitual del buzón deja de autenticar por IMAP y SMTP, y el rechazo llega como un simple fallo de inicio de sesión, sin mencionar el segundo factor. La solución es una <b>contraseña específica de aplicación</b>: en el webmail de Private Email abre <b>Settings</b>, luego <b>Security</b> y después <b>Application Passwords</b>, elige el tipo de cliente en el desplegable y genera una. Pégala en MCPEmails en lugar de la contraseña del buzón. Si nunca has activado la 2FA, no existe ninguna contraseña de aplicación y no la necesitas."
     },
     {
       "h": "El servidor es mail.privateemail.com para todos los clientes, y Namecheap indica que no se cambie",
@@ -73,12 +73,12 @@
   "limits": [
     "Como el servidor no anuncia MOVE, mover un mensaje no es atómico. Si la conexión se corta a mitad, un mensaje puede existir brevemente en ambas carpetas.",
     "Private Email es una suscripción independiente del dominio. Tener un dominio de Namecheap no significa que tengas un buzón de Namecheap que conectar.",
-    "MCP Emails conecta el buzón. Los alias, reenvíos, reglas catch-all y la creación de buzones siguen gestionándose en el panel de control de Namecheap Private Email."
+    "MCPEmails conecta el buzón. Los alias, reenvíos, reglas catch-all y la creación de buzones siguen gestionándose en el panel de control de Namecheap Private Email."
   ],
   "faq": [
     {
       "q": "¿Funciona Claude con Namecheap Private Email?",
-      "a": "No por sí solo. Claude no tiene un conector integrado para Namecheap. Conectar un servidor MCP como MCP Emails al buzón por IMAP le da a Claude acceso para leer, buscar, enviar, responder, programar y organizar, y esa misma conexión funciona después desde Cursor, ChatGPT y otros clientes MCP, no solo desde uno."
+      "a": "No por sí solo. Claude no tiene un conector integrado para Namecheap. Conectar un servidor MCP como MCPEmails al buzón por IMAP le da a Claude acceso para leer, buscar, enviar, responder, programar y organizar, y esa misma conexión funciona después desde Cursor, ChatGPT y otros clientes MCP, no solo desde uno."
     },
     {
       "q": "¿Cuál es la configuración IMAP y SMTP de Namecheap Private Email?",
@@ -90,7 +90,7 @@
     },
     {
       "q": "¿Cómo creo una contraseña de aplicación de Namecheap?",
-      "a": "Inicia sesión en el webmail de Private Email en privateemail.com y abre Settings, luego Security y después Application Passwords. Elige la aplicación o el tipo de cliente en el desplegable y genera una contraseña. Cópiala de inmediato y pégala en MCP Emails en lugar de la contraseña del buzón. Solo la necesitas si tienes activada la autenticación de dos factores."
+      "a": "Inicia sesión en el webmail de Private Email en privateemail.com y abre Settings, luego Security y después Application Passwords. Elige la aplicación o el tipo de cliente en el desplegable y genera una contraseña. Cópiala de inmediato y pégala en MCPEmails en lugar de la contraseña del buzón. Solo la necesitas si tienes activada la autenticación de dos factores."
     },
     {
       "q": "¿Puedo usar mail.mydomain.com en lugar de mail.privateemail.com?",

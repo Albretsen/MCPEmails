@@ -4,7 +4,7 @@ const post = {
   description:
     'A practical how-to for AI agent inbox triage: copy-paste prompts that list unread mail, read what matters, summarize and prioritize, and poll on a schedule.',
   cover: '/blog/cover-ai-agent-triage-summarize-inbox.svg',
-  coverAlt: 'AI agent triaging and summarizing an inbox over MCP — MCP Emails',
+  coverAlt: 'AI agent triaging and summarizing an inbox over MCP — MCPEmails',
   authorId: 'asgeir',
   publishedAt: "2026-04-23T09:00:00.000Z",
   updatedAt: "2026-04-23T09:00:00.000Z",
@@ -12,7 +12,7 @@ const post = {
   featured: false,
   content: `The fastest way to get an AI agent to triage your inbox is to lean on two tools in order: \`inbox_list\` to find your mailbox, then \`email_read\` — with \`action: list\` and \`unread: true\` to pull what's new, then \`action: read\` for the handful that look important — and then a plain-English instruction to summarize and rank them. That's the whole loop. If you want it to draft or send responses, you add \`email_compose\` with \`action: reply\` at the end.
 
-This post gives you the exact prompts I use, what good output looks like, and how to run the same loop on a schedule so your morning triage happens before you sit down. It assumes your agent already has email access through [MCP Emails](/blog/how-to-give-your-ai-agent-email-access). If you haven't connected an inbox yet, the [under-two-minutes connect guide](/blog/connect-email-to-ai-agent-under-2-minutes) gets you there first.
+This post gives you the exact prompts I use, what good output looks like, and how to run the same loop on a schedule so your morning triage happens before you sit down. It assumes your agent already has email access through [MCPEmails](/blog/how-to-give-your-ai-agent-email-access). If you haven't connected an inbox yet, the [under-two-minutes connect guide](/blog/connect-email-to-ai-agent-under-2-minutes) gets you there first.
 
 ## The triage loop, in one picture
 
@@ -28,7 +28,7 @@ Steps 1 through 4 are read-only. If you connected with a \`read:email\`-scoped [
 
 ## Prompt 1: the morning summary
 
-Start simple. This is the one I run most days. Paste it into Claude (or any MCP client connected to MCP Emails) and let it work:
+Start simple. This is the one I run most days. Paste it into Claude (or any MCP client connected to MCPEmails) and let it work:
 
 > Look at my main inbox. Pull everything unread, then give me a summary grouped into three buckets: needs a reply today, FYI / can wait, and probably noise. For each item in the first two buckets, give me one line: who it's from and what they want. Don't open anything I don't need — skim the subjects and senders first, only read the body when the subject is ambiguous.
 
@@ -71,7 +71,7 @@ The "not by how loud the sender is" line matters. Without it, agents over-index 
 ...
 \`\`\`
 
-For this prompt the agent will call \`email_read\` with \`action: read\` eight times, once per top item, because you asked it to stop guessing. That's the right trade: a few extra calls for rankings you can act on. If the agent does hit a limit mid-run, MCP Emails returns a retryable error with a \`retry_after\` value in seconds — a well-behaved client waits that long and resumes rather than hammering the server.
+For this prompt the agent will call \`email_read\` with \`action: read\` eight times, once per top item, because you asked it to stop guessing. That's the right trade: a few extra calls for rankings you can act on. If the agent does hit a limit mid-run, MCPEmails returns a retryable error with a \`retry_after\` value in seconds — a well-behaved client waits that long and resumes rather than hammering the server.
 
 ## Prompt 3: triage that ends in a reply
 
@@ -79,13 +79,13 @@ Triage is more valuable when it closes loops. Once you trust the summaries, let 
 
 > Same triage as usual. For anything in "needs a reply today" that I can answer in two sentences, draft the reply and show it to me. Don't send yet — I'll say "send 1 and 3" or edit them. Match my usual tone: short, direct, no corporate filler.
 
-The agent runs the read-only loop, then writes drafts inline. When you say "send 1 and 3," it calls \`email_compose\` with \`action: reply\` for those two. Replies thread automatically: MCP Emails sets the \`In-Reply-To\` and \`References\` headers for you, so your answer lands in the right conversation instead of starting a new one. The mail goes out through your own provider (Gmail's SMTP, Microsoft Graph, or your provider's SMTP), so deliverability and your domain reputation stay yours. Nothing is relayed from some shared sending domain.
+The agent runs the read-only loop, then writes drafts inline. When you say "send 1 and 3," it calls \`email_compose\` with \`action: reply\` for those two. Replies thread automatically: MCPEmails sets the \`In-Reply-To\` and \`References\` headers for you, so your answer lands in the right conversation instead of starting a new one. The mail goes out through your own provider (Gmail's SMTP, Microsoft Graph, or your provider's SMTP), so deliverability and your domain reputation stay yours. Nothing is relayed from some shared sending domain.
 
 If you want to take the next step and remove yourself from the loop entirely, that's a different shape of automation — see [building an email auto-responder with an MCP agent](/blog/build-email-auto-responder-mcp-agent) for the guardrails I'd put on it before letting an agent send unattended.
 
 ## Running triage on a schedule
 
-Here's the honest limitation: MCP is **poll, not push.** MCP Emails has no webhooks and sends no server-initiated events. Your agent doesn't get pinged when mail arrives. To do ongoing triage, something has to call \`email_read\` with \`action: list\` and \`unread: true\` on a timer.
+Here's the honest limitation: MCP is **poll, not push.** MCPEmails has no webhooks and sends no server-initiated events. Your agent doesn't get pinged when mail arrives. To do ongoing triage, something has to call \`email_read\` with \`action: list\` and \`unread: true\` on a timer.
 
 In practice that means one of two setups:
 

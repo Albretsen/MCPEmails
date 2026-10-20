@@ -109,7 +109,7 @@ export const outboundGmail = {
     signature: {
       will_append: true,
       source: "manual",
-      preview_text: "--\nAsgeir Albretsen\nMCP Emails",
+      preview_text: "--\nAsgeir Albretsen\nMCPEmails",
     },
     requested_by: { api_key_name: "Claude desktop", client_name: "claude-ai" },
   },
@@ -511,7 +511,7 @@ export const draftEditorImap = {
         // fixture never actually showed. The card splits on the RFC 3676
         // separator to dim it; without it here, that path shipped untested
         // against the reference host.
-        "-- \nDemo User\nMCP Emails\nmcpemails.com",
+        "-- \nDemo User\nMCPEmails\nmcpemails.com",
       html: null,
       truncated: false,
     },

@@ -85,7 +85,7 @@ export const REVIEW_CARD_LEGACY_RESOURCE_URI = "ui://mcpemails/review-card.html"
  * `notifications/tools/list_changed`, and goes on asking `resources/read` for
  * the PREVIOUS build's URI, in new chats too. Measured 2026-10-13: the client
  * asked for `review-card.f53069d8832a.html` while the server was on
- * `6f24045a029e`, got `-32002`, and showed "cannot reach MCP Emails" where the
+ * `6f24045a029e`, got `-32002`, and showed "cannot reach MCPEmails" where the
  * card belongs, until the tool list was refreshed by hand. Every card deploy
  * did this to every connected client.
  *

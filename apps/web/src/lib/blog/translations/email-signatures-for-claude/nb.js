@@ -4,7 +4,7 @@ const translation = {
     'Sett signaturen din én gang per innboks, så signerer Claude automatisk hver e-post den sender, i Gmail, Outlook, Fastmail, iCloud og alle IMAP-kontoer.',
   coverAlt:
     'E-postsignaturer for Claude: angi en signatur per innboks én gang, så signerer Claude hver melding den sender, hos alle leverandører',
-  content: `Når Claude sender en e-post for deg, bør den se ut som om du sendte den. Det inkluderer avslutningen: navnet ditt, tittelen din, firmalinjen din, den lenken til bestillingssiden din. Frem til nå måtte du enten skrive signaturen din inn i hver melding, eller godta e-post som sluttet litt brått. I dag endres det: **MCP Emails legger nå signaturen din automatisk til i hver melding Claude sender.**
+  content: `Når Claude sender en e-post for deg, bør den se ut som om du sendte den. Det inkluderer avslutningen: navnet ditt, tittelen din, firmalinjen din, den lenken til bestillingssiden din. Frem til nå måtte du enten skrive signaturen din inn i hver melding, eller godta e-post som sluttet litt brått. I dag endres det: **MCPEmails legger nå signaturen din automatisk til i hver melding Claude sender.**
 
 Signaturer er **per innboks**. Hver tilkoblet postkasse beholder sin egen, så gründerhatten havner på jobbadressen din og et enkelt "— Sam" på den private. Når den først er satt, tenker du aldri på den igjen.
 
@@ -21,17 +21,17 @@ Det er ingenting ekstra å si i meldingen din. "Svar Dana og fortell henne at pr
 
 ## Svar og videresendinger plasserer den riktig
 
-Det vanskelige med signaturer er plasseringen, og det er der de fleste verktøy svikter. På et svar eller en videresending plasserer MCP Emails signaturen din **etter den nye teksten din og før den siterte tråden**, akkurat der et menneske ville plassert den, i stedet for å strande den helt nederst under sider med historikk.
+Det vanskelige med signaturer er plasseringen, og det er der de fleste verktøy svikter. På et svar eller en videresending plasserer MCPEmails signaturen din **etter den nye teksten din og før den siterte tråden**, akkurat der et menneske ville plassert den, i stedet for å strande den helt nederst under sider med historikk.
 
 Den er også smart med frem og tilbake. Det finnes en **svarmodus** slik at signaturen ikke gjentas hver gang Claude svarer i samme tråd. Det første svaret er signert; de raske oppfølgingene i den samtalen stables ikke opp med doble avslutninger. Du får rene tråder, ikke en vegg av gjentatte navn.
 
 ## Fungerer hos alle leverandører
 
-Dette er ikke en finesse bare for Gmail. Signaturer gjelder hos **alle** tilkoblede leverandører: Gmail, Outlook, Fastmail, iCloud og alle andre IMAP-kontoer. Fordi MCP Emails komponerer den utgående meldingen selv, er oppførselen identisk uansett hvor postkassen ligger. Koble til en ny innboks av hvilken som helst type, og signaturer bare fungerer.
+Dette er ikke en finesse bare for Gmail. Signaturer gjelder hos **alle** tilkoblede leverandører: Gmail, Outlook, Fastmail, iCloud og alle andre IMAP-kontoer. Fordi MCPEmails komponerer den utgående meldingen selv, er oppførselen identisk uansett hvor postkassen ligger. Koble til en ny innboks av hvilken som helst type, og signaturer bare fungerer.
 
 ## To måter å sette den opp på
 
-**1. Signatureditoren i dashbordet.** Åpne en innboks i MCP Emails-dashbordet og rediger signaturen dens direkte. Hver innboks har sin egen, så du kan gi hver adresse riktig stemme.
+**1. Signatureditoren i dashbordet.** Åpne en innboks i MCPEmails-dashbordet og rediger signaturen dens direkte. Hver innboks har sin egen, så du kan gi hver adresse riktig stemme.
 
 **2. Bare spør Claude.** Det finnes et nytt \`signature\`-verktøy, så du kan sette eller endre signaturen din i naturlig språk uten å forlate chatten:
 
@@ -60,7 +60,7 @@ Per innboks. Hver tilkoblet postkasse har sin egen signatur, så du kan signere 
 Ja. Den plasseres etter den nye teksten din og før den siterte tråden, og svarmodus hindrer at den gjentas gjennom et frem og tilbake i samme tråd.
 
 **Hvilke leverandører støtter signaturer?**
-Alle: Gmail, Outlook, Fastmail, iCloud og alle andre IMAP-kontoer. MCP Emails komponerer den utgående meldingen, så oppførselen er den samme overalt.
+Alle: Gmail, Outlook, Fastmail, iCloud og alle andre IMAP-kontoer. MCPEmails komponerer den utgående meldingen, så oppførselen er den samme overalt.
 
 **Kan jeg sende en melding uten signaturen min?**
 Ja. Bruk \`include_signature\`-valget (bare be Claude hoppe over signaturen) for en kort enkeltmelding. Den lagrede signaturen din blir værende for alt annet.

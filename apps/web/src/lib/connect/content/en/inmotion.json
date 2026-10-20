@@ -20,7 +20,7 @@
     "titleLine1": "Connect InMotion Hosting email",
     "titleLine2": "to Claude, Cursor, any MCP client",
     "lead": "Give your AI agent a real InMotion mailbox. Read, search, send, reply, schedule and organize mail over IMAP on the secure hostname InMotion assigns to your server.",
-    "answer": "Claude cannot reach an InMotion Hosting mailbox on its own. MCP Emails is a hosted MCP server that connects it over plain IMAP on port 993, so Claude, Cursor or any MCP client can read, search, send and organize that mail. InMotion has no single shared mail server: for a secure connection you use your account's secure hostname, in the form secureNN.inmotionhosting.com, where NN is the server number shown in the technical details of your Account Management Panel. Authentication is the password set on the mailbox in cPanel, and one inbox is free.",
+    "answer": "Claude cannot reach an InMotion Hosting mailbox on its own. MCPEmails is a hosted MCP server that connects it over plain IMAP on port 993, so Claude, Cursor or any MCP client can read, search, send and organize that mail. InMotion has no single shared mail server: for a secure connection you use your account's secure hostname, in the form secureNN.inmotionhosting.com, where NN is the server number shown in the technical details of your Account Management Panel. Authentication is the password set on the mailbox in cPanel, and one inbox is free.",
     "meta0": "1 inbox free, forever",
     "meta1": "Mailbox password from cPanel",
     "meta2": "Email fetched live, never stored"
@@ -31,7 +31,7 @@
   },
   "setup": [
     {
-      "h": "Create a free MCP Emails account",
+      "h": "Create a free MCPEmails account",
       "p": "Sign up at mcpemails.com. The free plan connects one inbox and needs no card."
     },
     {
@@ -40,7 +40,7 @@
     },
     {
       "h": "Set the mailbox password in cPanel",
-      "p": "IMAP checks the password on the individual address, not your AMP login. In cPanel open <b>Email Accounts</b>, click <b>Manage</b> on the address, and set a password. Then enter it in MCP Emails with the full address as the username and <code>secureNN.inmotionhosting.com</code> as the host."
+      "p": "IMAP checks the password on the individual address, not your AMP login. In cPanel open <b>Email Accounts</b>, click <b>Manage</b> on the address, and set a password. Then enter it in MCPEmails with the full address as the username and <code>secureNN.inmotionhosting.com</code> as the host."
     },
     {
       "h": "Paste the MCP URL into your AI",
@@ -68,7 +68,7 @@
   "faq": [
     {
       "q": "Does Claude work with InMotion Hosting email?",
-      "a": "Not directly. Claude has no InMotion connector. Connecting an MCP server such as MCP Emails to your InMotion mailbox over IMAP gives Claude read, search, send, reply, schedule and organize access to it, using the same credentials a desktop mail client would use."
+      "a": "Not directly. Claude has no InMotion connector. Connecting an MCP server such as MCPEmails to your InMotion mailbox over IMAP gives Claude read, search, send, reply, schedule and organize access to it, using the same credentials a desktop mail client would use."
     },
     {
       "q": "What are the InMotion Hosting IMAP and SMTP settings?",

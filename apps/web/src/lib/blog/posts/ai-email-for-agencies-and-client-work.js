@@ -5,7 +5,7 @@ const post = {
     'How an agency or freelancer gives an AI agent access to several client mailboxes without mixing clients up: a workspace per client, scoped keys, read-only first, and an approval hold on every send.',
   cover: '/blog/cover-best-ways-to-let-claude-manage-your-inbox.svg',
   coverAlt:
-    'One AI agent working across separate client mailboxes with scoped access, MCP Emails',
+    'One AI agent working across separate client mailboxes with scoped access, MCPEmails',
   authorId: 'asgeir',
   publishedAt: '2026-09-15T09:00:00.000Z',
   updatedAt: '2026-09-25T09:00:00.000Z',
@@ -71,7 +71,7 @@ Shared addresses are ordinary inboxes here. Connect support@ or billing@ with a 
 
 Your agent finds mailboxes with \`inbox_list\` and addresses them by name, so you never paste mailbox IDs into prompts. From there the set is small: \`email_read\` and \`email_compose\`, \`email_organize\` and \`email_search_and_move\` for triage, \`draft\` and \`schedule\` for anything that should wait for a person.
 
-Set one expectation early: MCP Emails is poll-based. The agent checks for new mail when you ask it to, or when a scheduled automation runs, so "we reply within 60 seconds" is not a promise this architecture makes.
+Set one expectation early: MCPEmails is poll-based. The agent checks for new mail when you ask it to, or when a scheduled automation runs, so "we reply within 60 seconds" is not a promise this architecture makes.
 
 ## Handover and offboarding
 
@@ -92,14 +92,14 @@ Claims you can put in writing:
 - Message content is never stored. It is fetched live from the client's provider on each request and discarded.
 - The only inbox data retained is the provider credential, encrypted at rest with AES-256-GCM, the key held separately.
 - Activity is logged as metadata only: tool name, inbox, timestamp, status, never content.
-- No AI provider is a subprocessor. MCP Emails neither sends email to a model of its own nor trains on it. The subprocessors are Supabase, Vercel, and Stripe.
+- No AI provider is a subprocessor. MCPEmails neither sends email to a model of its own nor trains on it. The subprocessors are Supabase, Vercel, and Stripe.
 - The one exception to "never stored" is a message scheduled for later, held encrypted until its send time.
 
 Do not promise that prompt injection is solved. It is contained, not solved, which is why read-only keys, restricted inboxes, and the approval hold exist. Do not promise instant reaction, and do not promise certifications the product has not claimed. Send the client's reviewer to [/security](/security) and write your contract to match that page, not ahead of it. The code is public and self-hostable, which answers a security review better than a promise.
 
 ## FAQ
 
-**Do I need a separate MCP Emails account for each client?**  
+**Do I need a separate MCPEmails account for each client?**  
 No. One account, one Business subscription, a separate workspace per client. The subscription follows your user, so each workspace inherits the plan.
 
 **Can one client see another client's mail?**  

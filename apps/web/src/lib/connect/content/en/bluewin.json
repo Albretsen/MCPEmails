@@ -19,7 +19,7 @@
     "titleLine1": "Connect Bluewin mail to Claude,",
     "titleLine2": "Cursor, ChatGPT, any MCP client",
     "lead": "Give your AI agent a real bluewin.ch inbox. Read, search, send, reply, schedule and organise mail over IMAP with your Swisscom email password, in every MCP client rather than one.",
-    "answer": "Claude cannot reach a Bluewin mailbox on its own. MCP Emails is a hosted MCP server that connects it over IMAP at imaps.bluewin.ch on port 993, signing in with your full bluewin.ch address and your Bluewin email password, which Swisscom keeps separate from your My Swisscom login password. Once it is connected, Claude, Cursor or any other MCP client can read, search, send, reply and organise that mail. One inbox is free, forever.",
+    "answer": "Claude cannot reach a Bluewin mailbox on its own. MCPEmails is a hosted MCP server that connects it over IMAP at imaps.bluewin.ch on port 993, signing in with your full bluewin.ch address and your Bluewin email password, which Swisscom keeps separate from your My Swisscom login password. Once it is connected, Claude, Cursor or any other MCP client can read, search, send, reply and organise that mail. One inbox is free, forever.",
     "meta0": "1 inbox free, forever",
     "meta1": "Email password, not Swisscom login",
     "meta2": "Email fetched live, never stored"
@@ -30,7 +30,7 @@
   },
   "setup": [
     {
-      "h": "Create a free MCP Emails account",
+      "h": "Create a free MCPEmails account",
       "p": "Sign up at mcpemails.com. The free plan connects one inbox and does not ask for a card."
     },
     {
@@ -38,7 +38,7 @@
       "p": "Sign in to My Swisscom and open the section for changing the mail password for the Bluewin address you want to connect. This is a different password from the one that got you into My Swisscom. If you have never set it, set it now; the value you choose here is the one a mail client uses."
     },
     {
-      "h": "Enter the address and the email password in MCP Emails",
+      "h": "Enter the address and the email password in MCPEmails",
       "p": "Choose IMAP / SMTP, enter your full <code>@bluewin.ch</code> address, and paste the email password rather than your Swisscom login password. The Bluewin hosts are prefilled, including the trailing letters that are easy to mistype."
     },
     {
@@ -61,7 +61,7 @@
     },
     {
       "h": "MOVE and UIDPLUS are both missing",
-      "p": "This server implements neither MOVE nor UIDPLUS. Filing a message therefore runs as COPY, then STORE the deleted flag, then EXPUNGE, and the server never reports the id it assigned to the new copy. MCP Emails handles the sequence, but a move here is not atomic and a filed message is confirmed by searching the destination rather than by id."
+      "p": "This server implements neither MOVE nor UIDPLUS. Filing a message therefore runs as COPY, then STORE the deleted flag, then EXPUNGE, and the server never reports the id it assigned to the new copy. MCPEmails handles the sequence, but a move here is not atomic and a filed message is confirmed by searching the destination rather than by id."
     }
   ],
   "limits": [
@@ -71,7 +71,7 @@
   "faq": [
     {
       "q": "Does Claude work with Bluewin email?",
-      "a": "Not directly. Claude has no built-in Bluewin or Swisscom connector. Connecting an MCP server such as MCP Emails to the mailbox over IMAP gives Claude read, search, send, reply, schedule and organise access to your bluewin.ch mail, and the same connection works in Cursor, ChatGPT and other MCP clients."
+      "a": "Not directly. Claude has no built-in Bluewin or Swisscom connector. Connecting an MCP server such as MCPEmails to the mailbox over IMAP gives Claude read, search, send, reply, schedule and organise access to your bluewin.ch mail, and the same connection works in Cursor, ChatGPT and other MCP clients."
     },
     {
       "q": "What are the Bluewin IMAP and SMTP settings?",

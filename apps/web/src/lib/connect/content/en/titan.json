@@ -23,7 +23,7 @@
     "titleLine1": "Connect Titan Email to Claude,",
     "titleLine2": "and Cursor, ChatGPT, any MCP client",
     "lead": "Give your AI agent a real Titan inbox. Read, search, send, reply, schedule and organize mail over IMAP, in every MCP client rather than just one.",
-    "answer": "Claude cannot reach Titan Email on its own. MCP Emails is a hosted MCP server that connects it over IMAP at imap.titan.email on port 993, so Claude, Cursor or any MCP client can read, search, send and organize that mail. Titan turns every third-party client away until you switch on Enable Titan on Other Apps in webmail settings, and a mailbox with two-factor authentication needs a Titan application password rather than the normal one. One inbox is free, forever.",
+    "answer": "Claude cannot reach Titan Email on its own. MCPEmails is a hosted MCP server that connects it over IMAP at imap.titan.email on port 993, so Claude, Cursor or any MCP client can read, search, send and organize that mail. Titan turns every third-party client away until you switch on Enable Titan on Other Apps in webmail settings, and a mailbox with two-factor authentication needs a Titan application password rather than the normal one. One inbox is free, forever.",
     "meta0": "1 inbox free, forever",
     "meta1": "Third-party access must be enabled",
     "meta2": "Email fetched live, never stored"
@@ -34,7 +34,7 @@
   },
   "setup": [
     {
-      "h": "Create a free MCP Emails account",
+      "h": "Create a free MCPEmails account",
       "p": "Sign up at mcpemails.com. No card is required, and the free plan connects one inbox for as long as you want it."
     },
     {
@@ -42,8 +42,8 @@
       "p": "Sign in to Titan webmail at app.titan.email, click the <b>Settings</b> icon in the top right, and click <b>Enable Titan on Other Apps</b>. A short feature tour opens; click the button again to confirm. If that entry is missing and you see <b>Configure 3rd party apps</b> instead, third-party access is already on for the mailbox."
     },
     {
-      "h": "Confirm your hostnames, then paste everything into MCP Emails",
-      "p": "Most Titan mailboxes use the hosts prefilled above. If your domain is managed through GoDaddy, GoDaddy documents <code>imap.secureserver.net</code> on 993 and <code>smtpout.secureserver.net</code> on 465 instead. If you bought Titan from Blacknight, MonoVM, DomainDiscount24, Fluccs or Domain Central, Titan documents <code>imap0101.titan.email</code> and <code>smtp0101.titan.email</code>. Choose IMAP / SMTP in MCP Emails, enter your full Titan address and its password."
+      "h": "Confirm your hostnames, then paste everything into MCPEmails",
+      "p": "Most Titan mailboxes use the hosts prefilled above. If your domain is managed through GoDaddy, GoDaddy documents <code>imap.secureserver.net</code> on 993 and <code>smtpout.secureserver.net</code> on 465 instead. If you bought Titan from Blacknight, MonoVM, DomainDiscount24, Fluccs or Domain Central, Titan documents <code>imap0101.titan.email</code> and <code>smtp0101.titan.email</code>. Choose IMAP / SMTP in MCPEmails, enter your full Titan address and its password."
     },
     {
       "h": "Paste the MCP URL into your AI",
@@ -65,7 +65,7 @@
     },
     {
       "h": "Titan's IMAP server is unusually bare, and that changes behaviour",
-      "p": "Titan's capability banner advertises little beyond IMAP4rev1, AUTH=PLAIN and SASL-IR. It does not offer MOVE, so relocating a message becomes a copy, a flag and an expunge rather than one atomic command, and an interrupted move can leave the original behind. It does not offer IDLE, so no client can hold a connection open waiting for new mail; MCP Emails fetches live per request, but a desktop client on the same mailbox will poll. UIDPLUS and SPECIAL-USE are missing too, which is why folders here are matched by name."
+      "p": "Titan's capability banner advertises little beyond IMAP4rev1, AUTH=PLAIN and SASL-IR. It does not offer MOVE, so relocating a message becomes a copy, a flag and an expunge rather than one atomic command, and an interrupted move can leave the original behind. It does not offer IDLE, so no client can hold a connection open waiting for new mail; MCPEmails fetches live per request, but a desktop client on the same mailbox will poll. UIDPLUS and SPECIAL-USE are missing too, which is why folders here are matched by name."
     }
   ],
   "limits": [
@@ -76,7 +76,7 @@
   "faq": [
     {
       "q": "Does Claude work with Titan Email?",
-      "a": "Not directly. Claude has no built-in Titan connector and cannot open an IMAP session by itself. Connecting an MCP server such as MCP Emails to your Titan mailbox gives Claude read, search, send, reply, schedule and organize access, and the same connection works in Cursor and any other MCP client rather than one app only."
+      "a": "Not directly. Claude has no built-in Titan connector and cannot open an IMAP session by itself. Connecting an MCP server such as MCPEmails to your Titan mailbox gives Claude read, search, send, reply, schedule and organize access, and the same connection works in Cursor and any other MCP client rather than one app only."
     },
     {
       "q": "How do I know whether my mailbox is actually Titan?",

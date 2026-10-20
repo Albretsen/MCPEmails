@@ -271,7 +271,7 @@ Deno.test("test: a fixed payload to the caller's own subscriptions in this works
   assertEquals(r.sender!.sent.map((m) => m.endpoint), [`${ENDPOINT}-mine`]);
   assertEquals(r.sender!.sent[0].payload, {
     type: "test",
-    title: "MCP Emails",
+    title: "MCPEmails",
     body: "Notifications are working on this device.",
     url: "/",
     tag: "push-test",

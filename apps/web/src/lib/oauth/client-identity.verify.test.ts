@@ -185,8 +185,8 @@ for (const [name, uri] of [
 
 // Claude and ChatGPT may put the user's connector name in client_name.
 for (const uri of ['https://claude.ai/api/mcp/auth_callback', 'https://chatgpt.com/connector_platform_oauth_redirect']) {
-  test(`"MCP Emails" as client_name on a vendor host is verified, no alert: ${uri}`, () => {
-    const id = dcr('MCP Emails', uri);
+  test(`"MCPEmails" as client_name on a vendor host is verified, no alert: ${uri}`, () => {
+    const id = dcr('MCPEmails', uri);
     assert.equal(id.verification, 'verified');
     assert.equal(id.impersonates, null);
   });
@@ -401,7 +401,7 @@ test('u13: legitimate Gemini redirects (r and a, all three hosts, optional trail
     for (const seg of ['r', 'a']) {
       for (const tail of ['', '/']) {
         const uri = `https://${host}.googleusercontent.com/${seg}/user_bound_custom-mcp-111522063632794171720-mcpemails_com${tail}`;
-        for (const name of ['Google', 'MCP Emails']) {
+        for (const name of ['Google', 'MCPEmails']) {
           const id = dcr(name, uri);
           assert.equal(id.verification, 'verified', `${name} -> ${uri}`);
           assert.equal(id.displayName, name, uri);
@@ -487,7 +487,7 @@ test('u13 round 3: whitespace/control chars in a vendor redirect are never Verif
   const CLEAN: Array<[string, string]> = [
     ['Claude', 'https://claude.ai/api/mcp/auth_callback'],
     ['ChatGPT', 'https://chatgpt.com/connector_platform_oauth_redirect'],
-    ['MCP Emails', 'https://mcpemails.com/cb'],
+    ['MCPEmails', 'https://mcpemails.com/cb'],
     ['Google', `https://oauth-redirect.googleusercontent.com${U13_PIN}`],
     ['Google', `https://oauth-redirect-sandbox.googleusercontent.com/a/user_bound_custom-mcp-1-mcpemails_com/`],
     ['Grok', 'https://grok.com/oauth/callback'],
@@ -505,9 +505,9 @@ test('u13 round 3: whitespace/control chars in a vendor redirect are never Verif
       const bad = m(uri);
       const id = dcr(name, bad);
       assert.notEqual(id.verification, 'verified', JSON.stringify(bad));
-      assert.notEqual(id.displayName, name === 'MCP Emails' ? '\u0000never' : name, JSON.stringify(bad));
+      assert.notEqual(id.displayName, name === 'MCPEmails' ? '\u0000never' : name, JSON.stringify(bad));
       // The name claims the vendor whose host it was, so the alert must fire.
-      if (name !== 'MCP Emails') assert.ok(id.impersonates, `alert for ${JSON.stringify(bad)}`);
+      if (name !== 'MCPEmails') assert.ok(id.impersonates, `alert for ${JSON.stringify(bad)}`);
     }
   }
   // Loopback and native schemes do not go through vendorForWebRedirect.

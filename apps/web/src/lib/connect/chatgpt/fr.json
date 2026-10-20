@@ -3,22 +3,22 @@
   "title": "Utiliser {provider} dans ChatGPT",
   "sub": "ChatGPT accède à {provider} via un connecteur MCP personnalisé. Il faut le mode développeur, disponible sur chatgpt.com avec Plus, Pro, Business, Enterprise et Edu.",
   "steps": [
-    "Connectez {provider} à MCP Emails avec les étapes ci-dessus.",
+    "Connectez {provider} à MCPEmails avec les étapes ci-dessus.",
     "Dans ChatGPT, ouvrez Settings, Apps and Connectors, Advanced settings, et activez le mode développeur.",
-    "Dans Apps and Connectors, cliquez sur Create, collez <code>https://mcpemails.com/api/mcp</code> comme URL du connecteur, choisissez OAuth et connectez-vous à MCP Emails.",
+    "Dans Apps and Connectors, cliquez sur Create, collez <code>https://mcpemails.com/api/mcp</code> comme URL du connecteur, choisissez OAuth et connectez-vous à MCPEmails.",
     "Dans chaque nouvelle conversation, cliquez sur <b>+</b>, choisissez le mode développeur et sélectionnez votre connecteur."
   ],
   "docsLink": "Guide complet de configuration de ChatGPT",
   "blogLink": "Comment connecter ChatGPT à votre messagerie",
   "faqQ": "ChatGPT peut-il lire mes e-mails {provider} ?",
   "faqQMailName": "ChatGPT peut-il lire mes e-mails {provider} ?",
-  "faqA": "Oui, une fois {provider} connecté à MCP Emails. Dans ChatGPT, ajoutez un connecteur MCP personnalisé avec l'URL https://mcpemails.com/api/mcp et une connexion OAuth. Les connecteurs personnalisés exigent le mode développeur, disponible sur chatgpt.com avec Plus, Pro, Business, Enterprise et Edu. ChatGPT n'obtient que les accès que vous approuvez, et vos e-mails sont lus en direct, jamais stockés.",
-  "directorySub": "ChatGPT accède à {provider} via l'application Any Mailbox de MCP Emails.",
+  "faqA": "Oui, une fois {provider} connecté à MCPEmails. Dans ChatGPT, ajoutez un connecteur MCP personnalisé avec l'URL https://mcpemails.com/api/mcp et une connexion OAuth. Les connecteurs personnalisés exigent le mode développeur, disponible sur chatgpt.com avec Plus, Pro, Business, Enterprise et Edu. ChatGPT n'obtient que les accès que vous approuvez, et vos e-mails sont lus en direct, jamais stockés.",
+  "directorySub": "ChatGPT accède à {provider} via l'application Any Mailbox de MCPEmails.",
   "directorySteps": [
-    "Connectez {provider} à MCP Emails avec les étapes ci-dessus.",
+    "Connectez {provider} à MCPEmails avec les étapes ci-dessus.",
     "Ouvrez Any Mailbox dans l'annuaire d'applications de ChatGPT et cliquez sur Connect.",
-    "Connectez-vous à MCP Emails et approuvez les accès que vous accordez à ChatGPT."
+    "Connectez-vous à MCPEmails et approuvez les accès que vous accordez à ChatGPT."
   ],
   "directoryLink": "Any Mailbox dans l'annuaire d'applications de ChatGPT",
-  "directoryFaqA": "Oui, une fois {provider} connecté à MCP Emails. Installez Any Mailbox depuis l'annuaire d'applications de ChatGPT et connectez-vous à MCP Emails. ChatGPT n'obtient que les accès que vous approuvez, et vos e-mails sont lus en direct, jamais stockés."
+  "directoryFaqA": "Oui, une fois {provider} connecté à MCPEmails. Installez Any Mailbox depuis l'annuaire d'applications de ChatGPT et connectez-vous à MCPEmails. ChatGPT n'obtient que les accès que vous approuvez, et vos e-mails sont lus en direct, jamais stockés."
 }

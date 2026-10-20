@@ -3,22 +3,22 @@
   "title": "Use {provider} in ChatGPT",
   "sub": "ChatGPT reaches {provider} through a custom MCP connector. That needs developer mode, which works on chatgpt.com with Plus, Pro, Business, Enterprise and Edu.",
   "steps": [
-    "Connect {provider} to MCP Emails with the steps above.",
+    "Connect {provider} to MCPEmails with the steps above.",
     "In ChatGPT, open Settings, Apps and Connectors, Advanced settings, and turn on Developer mode.",
-    "In Apps and Connectors, click Create, paste <code>https://mcpemails.com/api/mcp</code> as the Connector URL, choose OAuth and sign in to MCP Emails.",
+    "In Apps and Connectors, click Create, paste <code>https://mcpemails.com/api/mcp</code> as the Connector URL, choose OAuth and sign in to MCPEmails.",
     "In each new chat, click <b>+</b>, choose Developer mode and select your connector."
   ],
   "docsLink": "Full ChatGPT setup guide",
   "blogLink": "How to connect ChatGPT to your email",
   "faqQ": "Can ChatGPT read my {provider} mail?",
   "faqQMailName": "Can ChatGPT read my {provider}?",
-  "faqA": "Yes, once {provider} is connected to MCP Emails. In ChatGPT, add a custom MCP connector with the URL https://mcpemails.com/api/mcp and OAuth sign-in. Custom connectors need developer mode, which works on chatgpt.com with Plus, Pro, Business, Enterprise and Edu. ChatGPT gets only the access you approve, and your mail is fetched live, never stored.",
-  "directorySub": "ChatGPT reaches {provider} through the Any Mailbox app from MCP Emails.",
+  "faqA": "Yes, once {provider} is connected to MCPEmails. In ChatGPT, add a custom MCP connector with the URL https://mcpemails.com/api/mcp and OAuth sign-in. Custom connectors need developer mode, which works on chatgpt.com with Plus, Pro, Business, Enterprise and Edu. ChatGPT gets only the access you approve, and your mail is fetched live, never stored.",
+  "directorySub": "ChatGPT reaches {provider} through the Any Mailbox app from MCPEmails.",
   "directorySteps": [
-    "Connect {provider} to MCP Emails with the steps above.",
+    "Connect {provider} to MCPEmails with the steps above.",
     "Open Any Mailbox in the ChatGPT app directory and click Connect.",
-    "Sign in to MCP Emails and approve the access you want ChatGPT to have."
+    "Sign in to MCPEmails and approve the access you want ChatGPT to have."
   ],
   "directoryLink": "Any Mailbox in the ChatGPT app directory",
-  "directoryFaqA": "Yes, once {provider} is connected to MCP Emails. Install Any Mailbox from the ChatGPT app directory and sign in to MCP Emails. ChatGPT gets only the access you approve, and your mail is fetched live, never stored."
+  "directoryFaqA": "Yes, once {provider} is connected to MCPEmails. Install Any Mailbox from the ChatGPT app directory and sign in to MCPEmails. ChatGPT gets only the access you approve, and your mail is fetched live, never stored."
 }

@@ -27,7 +27,7 @@ import type { TicketContext } from '@/lib/support/context';
 import { SUPPORT_CATEGORY_LABELS, type SupportCategory, type SupportTicketSource } from '@/lib/support/validation';
 
 export const SUPPORT_INBOX = 'support@mcpemails.com';
-export const SUPPORT_FROM = `MCP Emails Support <${SUPPORT_INBOX}>`;
+export const SUPPORT_FROM = `MCPEmails Support <${SUPPORT_INBOX}>`;
 
 export interface ComposedEmail {
   subject: string;
@@ -108,9 +108,9 @@ export function buildSupportConfirmationEmail(input: { ref: string }): ComposedE
     '',
     'A person will read it and reply to this address. If you want to add anything, reply to this email and keep the reference in the subject.',
     '',
-    'If you did not contact MCP Emails, you can ignore this email.',
+    'If you did not contact MCPEmails, you can ignore this email.',
     '',
-    'MCP Emails Support',
+    'MCPEmails Support',
     SUPPORT_INBOX,
   ].join('\n');
   const htmlBody = `<!DOCTYPE html>
@@ -119,8 +119,8 @@ export function buildSupportConfirmationEmail(input: { ref: string }): ComposedE
 <p>Hi,</p>
 <p>We received your support request. Its reference is <strong>${escapeHtml(ref)}</strong>.</p>
 <p>A person will read it and reply to this address. If you want to add anything, reply to this email and keep the reference in the subject.</p>
-<p style="color:#64748b;font-size:13px;">If you did not contact MCP Emails, you can ignore this email.</p>
-<p>MCP Emails Support<br><a href="mailto:${SUPPORT_INBOX}" style="color:#3b82f6;">${SUPPORT_INBOX}</a></p>
+<p style="color:#64748b;font-size:13px;">If you did not contact MCPEmails, you can ignore this email.</p>
+<p>MCPEmails Support<br><a href="mailto:${SUPPORT_INBOX}" style="color:#3b82f6;">${SUPPORT_INBOX}</a></p>
 </body></html>`;
   return { subject, body, htmlBody };
 }

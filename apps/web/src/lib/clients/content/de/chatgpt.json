@@ -16,7 +16,7 @@
     "meta0": "1 Postfach kostenlos, dauerhaft",
     "meta1": "OAuth, kein API-Schlüssel nötig",
     "meta2": "E-Mails werden live abgerufen, nie gespeichert",
-    "answer": "Schalten Sie in ChatGPT unter Einstellungen, Apps und Konnektoren, Erweiterte Einstellungen den Entwicklermodus ein. Erstellen Sie einen Konnektor, fügen Sie https://mcpemails.com/api/mcp als Konnektor-URL ein, wählen Sie OAuth und autorisieren Sie mit MCP Emails. Der Entwicklermodus funktioniert auf chatgpt.com mit Plus, Pro, Business, Enterprise und Edu, und Sie aktivieren ihn in jedem Chat über das Menü +."
+    "answer": "Schalten Sie in ChatGPT unter Einstellungen, Apps und Konnektoren, Erweiterte Einstellungen den Entwicklermodus ein. Erstellen Sie einen Konnektor, fügen Sie https://mcpemails.com/api/mcp als Konnektor-URL ein, wählen Sie OAuth und autorisieren Sie mit MCPEmails. Der Entwicklermodus funktioniert auf chatgpt.com mit Plus, Pro, Business, Enterprise und Edu, und Sie aktivieren ihn in jedem Chat über das Menü +."
   },
   "method": {
     "title": "So verbindet sich ChatGPT: OAuth, kein API-Schlüssel",
@@ -37,17 +37,17 @@
     },
     {
       "h": "OAuth wählen und autorisieren",
-      "p": "Wählen Sie OAuth, klicken Sie auf „Erstellen“, autorisieren Sie dann mit MCP Emails und geben Sie die Scopes frei, die der Konnektor erhalten soll."
+      "p": "Wählen Sie OAuth, klicken Sie auf „Erstellen“, autorisieren Sie dann mit MCPEmails und geben Sie die Scopes frei, die der Konnektor erhalten soll."
     },
     {
       "h": "In jedem Chat aktivieren",
-      "p": "Öffnen Sie auf chatgpt.com einen neuen Chat, klicken Sie auf <b>+</b>, wählen Sie den Entwicklermodus und dann die App MCP Emails. ChatGPT sieht die Tools nur in einem Chat, in dem Sie das getan haben, also wiederholen Sie es in jeder neuen Unterhaltung. Dazwischen bleibt der Konnektor unter Apps und Konnektoren aufgeführt."
+      "p": "Öffnen Sie auf chatgpt.com einen neuen Chat, klicken Sie auf <b>+</b>, wählen Sie den Entwicklermodus und dann die App MCPEmails. ChatGPT sieht die Tools nur in einem Chat, in dem Sie das getan haben, also wiederholen Sie es in jeder neuen Unterhaltung. Dazwischen bleibt der Konnektor unter Apps und Konnektoren aufgeführt."
     }
   ],
   "gotchas": [
     {
       "h": "Der Entwicklermodus braucht einen kostenpflichtigen Tarif, das Web und einen Schalter in jedem Chat",
-      "p": "Benutzerdefinierte MCP-Konnektoren stehen auf chatgpt.com für Plus-, Pro-, Business-, Enterprise- und Edu-Konten zur Verfügung. Free- und Go-Konten können keinen hinzufügen, und die Mobil- und Desktop-Apps bieten keinen Entwicklermodus. Bei Business und Enterprise muss eventuell zuerst ein Admin den Entwicklermodus für den Workspace erlauben. Der Schritt, den viele übersehen, ist der letzte: Der Konnektor tut nichts, bis Sie im aktuellen Chat über das Menü <b>+</b> den Entwicklermodus und die App MCP Emails auswählen."
+      "p": "Benutzerdefinierte MCP-Konnektoren stehen auf chatgpt.com für Plus-, Pro-, Business-, Enterprise- und Edu-Konten zur Verfügung. Free- und Go-Konten können keinen hinzufügen, und die Mobil- und Desktop-Apps bieten keinen Entwicklermodus. Bei Business und Enterprise muss eventuell zuerst ein Admin den Entwicklermodus für den Workspace erlauben. Der Schritt, den viele übersehen, ist der letzte: Der Konnektor tut nichts, bis Sie im aktuellen Chat über das Menü <b>+</b> den Entwicklermodus und die App MCPEmails auswählen."
     },
     {
       "h": "Wählen Sie beim Erstellen des Konnektors OAuth, nicht „keine Authentifizierung“",
@@ -66,11 +66,11 @@
   "faq": [
     {
       "q": "Kann ChatGPT meine E-Mails lesen und senden?",
-      "a": "Über einen benutzerdefinierten MCP-Konnektor, ja. ChatGPT erreicht von sich aus kein Postfach; ein Konnektor, der auf MCP Emails zeigt, gibt ihm Tools zum Lesen, Suchen, Senden, Beantworten, Weiterleiten, Organisieren und Planen von E-Mails, beschränkt auf die Scopes, die Sie beim Einrichten freigeben."
+      "a": "Über einen benutzerdefinierten MCP-Konnektor, ja. ChatGPT erreicht von sich aus kein Postfach; ein Konnektor, der auf MCPEmails zeigt, gibt ihm Tools zum Lesen, Suchen, Senden, Beantworten, Weiterleiten, Organisieren und Planen von E-Mails, beschränkt auf die Scopes, die Sie beim Einrichten freigeben."
     },
     {
       "q": "Warum kann ich in meinem ChatGPT-Konto keinen Konnektor erstellen?",
-      "a": "Der Entwicklermodus erfordert ChatGPT Plus, Pro, Business, Enterprise oder Edu, und zwar im Web. Free- und Go-Konten können keine benutzerdefinierten Konnektoren hinzufügen, und die Mobil- und Desktop-Apps zeigen die Option nicht. In einem Business- oder Enterprise-Workspace bitten Sie einen Admin, den Entwicklermodus zu erlauben. Ist der Konnektor angelegt, wird aber ignoriert, öffnen Sie im Chat das Menü <b>+</b> und wählen Sie den Entwicklermodus und die App MCP Emails."
+      "a": "Der Entwicklermodus erfordert ChatGPT Plus, Pro, Business, Enterprise oder Edu, und zwar im Web. Free- und Go-Konten können keine benutzerdefinierten Konnektoren hinzufügen, und die Mobil- und Desktop-Apps zeigen die Option nicht. In einem Business- oder Enterprise-Workspace bitten Sie einen Admin, den Entwicklermodus zu erlauben. Ist der Konnektor angelegt, wird aber ignoriert, öffnen Sie im Chat das Menü <b>+</b> und wählen Sie den Entwicklermodus und die App MCPEmails."
     },
     {
       "q": "Brauche ich für ChatGPT einen API-Schlüssel?",

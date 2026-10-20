@@ -23,23 +23,23 @@
     "meta0": "1 innboks gratis, for alltid",
     "meta1": "Konto- eller app-passord, ingen OAuth-oppsett",
     "meta2": "E-post hentes direkte, lagres aldri",
-    "answer": "Claude når ikke Zoho Mail på egen hånd. MCP Emails er en hostet MCP-server som kobler til via IMAP på imap.zoho.com port 993, slik at Claude, Cursor eller enhver MCP-klient kan lese, søke, sende og organisere den e-posten. To ting må være riktige først: IMAP-tilgang er slått av på en ny Zoho-postkasse til du slår den på, og vertsnavnet følger Zoho-datasenteret ditt, så en konto opprettet i EU eller India bruker et annet. Én innboks er gratis, for alltid."
+    "answer": "Claude når ikke Zoho Mail på egen hånd. MCPEmails er en hostet MCP-server som kobler til via IMAP på imap.zoho.com port 993, slik at Claude, Cursor eller enhver MCP-klient kan lese, søke, sende og organisere den e-posten. To ting må være riktige først: IMAP-tilgang er slått av på en ny Zoho-postkasse til du slår den på, og vertsnavnet følger Zoho-datasenteret ditt, så en konto opprettet i EU eller India bruker et annet. Én innboks er gratis, for alltid."
   },
   "method": {
     "title": "Slik kobler Zoho seg til: IMAP og et passord",
-    "body": "Zoho Mail kobles til via IMAP/SMTP. Slå på IMAP-tilgang i Zoho først (den er av som standard), og lim så inn Zoho-adressen og passordet ditt i MCP Emails. Bruker du tofaktorautentisering, føderert innlogging eller SAML, genererer du et programspesifikt passord og bruker det i stedet. MCP Emails støtter alle Zohos datasenterregioner."
+    "body": "Zoho Mail kobles til via IMAP/SMTP. Slå på IMAP-tilgang i Zoho først (den er av som standard), og lim så inn Zoho-adressen og passordet ditt i MCPEmails. Bruker du tofaktorautentisering, føderert innlogging eller SAML, genererer du et programspesifikt passord og bruker det i stedet. MCPEmails støtter alle Zohos datasenterregioner."
   },
   "setup": [
     {
       "h": "Opprett en gratis konto",
-      "p": "Registrer deg på MCP Emails, uten kort. Gratisplanen kobler til én innboks, for alltid."
+      "p": "Registrer deg på MCPEmails, uten kort. Gratisplanen kobler til én innboks, for alltid."
     },
     {
       "h": "Slå på IMAP, og lag et app-passord ved behov",
       "p": "I Zoho Mail slår du på IMAP-tilgang (Settings, Mail Accounts, IMAP Access). Bruker du tofaktorautentisering, føderert innlogging eller SAML, genererer du et programspesifikt passord i Zoho Account, Security."
     },
     {
-      "h": "Lim det inn i MCP Emails",
+      "h": "Lim det inn i MCPEmails",
       "p": "Legg til Zoho-adressen din og passordet, og velg Zoho-regionen din hvis du blir spurt, for å koble til innboksen trygt."
     },
     {
@@ -73,7 +73,7 @@
   "faq": [
     {
       "q": "Fungerer Claude med Zoho Mail?",
-      "a": "Ikke på egen hånd. Claude har ingen innebygd Zoho-kobling. Kobler du en MCP-server som MCP Emails til Zoho-postkassen din via IMAP, får Claude tilgang til å lese, søke, sende, svare, planlegge og organisere, og samme tilkobling fungerer fra Cursor, ChatGPT og andre MCP-klienter. Du må slå på IMAP-tilgang på postkassen først."
+      "a": "Ikke på egen hånd. Claude har ingen innebygd Zoho-kobling. Kobler du en MCP-server som MCPEmails til Zoho-postkassen din via IMAP, får Claude tilgang til å lese, søke, sende, svare, planlegge og organisere, og samme tilkobling fungerer fra Cursor, ChatGPT og andre MCP-klienter. Du må slå på IMAP-tilgang på postkassen først."
     },
     {
       "q": "Hva er IMAP- og SMTP-innstillingene for Zoho Mail?",

@@ -21,7 +21,7 @@
     "titleLine1": "Connectez une boîte Plesk à Claude,",
     "titleLine2": "Cursor, ChatGPT, tout client MCP",
     "lead": "Offrez à votre agent IA une vraie boîte Plesk. Lisez, recherchez, envoyez, répondez, planifiez et organisez le courrier en IMAP, sur n'importe quel serveur sous Plesk Obsidian, quel que soit l'hébergeur.",
-    "answer": "Claude ne peut pas accéder seul à une boîte Plesk. MCP Emails est un serveur MCP hébergé qui l'y connecte en IMAP classique sur le port 993, pour que Claude, Cursor ou tout client MCP puisse lire, rechercher, envoyer et organiser ce courrier. Plesk est un logiciel de panneau de contrôle et non un hébergeur : il n'y a donc pas de nom de serveur commun. Le serveur de messagerie est votre propre domaine, ou le nom d'hôte du serveur, et Plesk affiche la paire exacte sous Mail Accounts, puis Mail Client Setup. L'authentification utilise le mot de passe défini sur la boîte dans Plesk, pas l'identifiant du panneau, et une boîte est gratuite.",
+    "answer": "Claude ne peut pas accéder seul à une boîte Plesk. MCPEmails est un serveur MCP hébergé qui l'y connecte en IMAP classique sur le port 993, pour que Claude, Cursor ou tout client MCP puisse lire, rechercher, envoyer et organiser ce courrier. Plesk est un logiciel de panneau de contrôle et non un hébergeur : il n'y a donc pas de nom de serveur commun. Le serveur de messagerie est votre propre domaine, ou le nom d'hôte du serveur, et Plesk affiche la paire exacte sous Mail Accounts, puis Mail Client Setup. L'authentification utilise le mot de passe défini sur la boîte dans Plesk, pas l'identifiant du panneau, et une boîte est gratuite.",
     "meta0": "1 boîte gratuite, pour toujours",
     "meta1": "Mot de passe de la boîte défini dans Plesk",
     "meta2": "E-mails récupérés en direct, jamais stockés"
@@ -33,7 +33,7 @@
   "setup": [
     {
       "h": "Créez un compte gratuit",
-      "p": "Inscrivez-vous sur MCP Emails, sans carte bancaire. L'offre gratuite connecte une boîte, pour toujours."
+      "p": "Inscrivez-vous sur MCPEmails, sans carte bancaire. L'offre gratuite connecte une boîte, pour toujours."
     },
     {
       "h": "Ouvrez Mail Client Setup dans Plesk",
@@ -69,7 +69,7 @@
   "faq": [
     {
       "q": "Claude fonctionne-t-il avec une boîte Plesk ?",
-      "a": "Pas directement. Claude n'a pas de connecteur pour les serveurs Plesk. Connecter un serveur MCP comme MCP Emails à la boîte en IMAP donne à Claude un accès en lecture, recherche, envoi, réponse, planification et organisation. Comme la messagerie Plesk est de l'IMAP et du SMTP ordinaires, cela fonctionne de la même façon chez n'importe quel hébergeur sous Plesk."
+      "a": "Pas directement. Claude n'a pas de connecteur pour les serveurs Plesk. Connecter un serveur MCP comme MCPEmails à la boîte en IMAP donne à Claude un accès en lecture, recherche, envoi, réponse, planification et organisation. Comme la messagerie Plesk est de l'IMAP et du SMTP ordinaires, cela fonctionne de la même façon chez n'importe quel hébergeur sous Plesk."
     },
     {
       "q": "Quels sont les paramètres IMAP et SMTP de Plesk ?",

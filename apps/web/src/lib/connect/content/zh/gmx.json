@@ -27,7 +27,7 @@
     "meta0": "1 个收件箱永久免费",
     "meta1": "使用账户密码，无需 OAuth 配置",
     "meta2": "邮件实时获取，绝不存储",
-    "answer": "Claude 无法自行访问 GMX。MCP Emails 是一个托管 MCP 服务器，使用你的账户密码通过 IMAP 与之连接，让 Claude、Cursor 或任意 MCP 客户端都能读取、搜索、发送并整理这些邮件。设置只需几分钟，1 个收件箱免费。"
+    "answer": "Claude 无法自行访问 GMX。MCPEmails 是一个托管 MCP 服务器，使用你的账户密码通过 IMAP 与之连接，让 Claude、Cursor 或任意 MCP 客户端都能读取、搜索、发送并整理这些邮件。设置只需几分钟，1 个收件箱免费。"
   },
   "method": {
     "title": "GMX 如何连接：IMAP 与你的账户密码",
@@ -36,14 +36,14 @@
   "setup": [
     {
       "h": "创建免费账户",
-      "p": "注册 MCP Emails，无需信用卡。免费套餐可永久连接一个收件箱。"
+      "p": "注册 MCPEmails，无需信用卡。免费套餐可永久连接一个收件箱。"
     },
     {
       "h": "在 GMX 中开启 IMAP 访问",
       "p": "在浏览器中登录 GMX，点击带有你姓名首字母的圆形图标，打开 E-Mail-Einstellungen，在 E-Mail empfangen 下选择 POP3/IMAP，把开关拨到 POP3- und IMAP-Zugriff erlauben（允许 POP3 和 IMAP 访问）。gmx.com：Email 标签，然后 Settings，再到 POP3 & IMAP。"
     },
     {
-      "h": "在 MCP Emails 中添加邮箱",
+      "h": "在 MCPEmails 中添加邮箱",
       "p": "选择 IMAP / SMTP，填入你的 GMX 地址、上方的服务器地址和密码，安全地连接收件箱。"
     },
     {
@@ -58,7 +58,7 @@
     },
     {
       "h": "外发邮件走 mail.gmx.net，端口 587 或 465",
-      "p": "GMX 的外发服务器叫 <code>mail.gmx.net</code>，而大多数服务商用的是 smtp 前缀。GMX 帮助列出的是 587 端口加 STARTTLS，465 端口加 SSL 作为备选，并且只支持 TLS 1.2 或 1.3：旧版 TLS 和 SMTP after POP 都已不再支持。<code>smtp.gmx.net</code> 也存在，它是指向同一台服务器的别名，也在其证书覆盖范围内，所以两个名称都可用。MCP Emails 填入的是 GMX 文档中的 <code>mail.gmx.net</code>，端口 465。"
+      "p": "GMX 的外发服务器叫 <code>mail.gmx.net</code>，而大多数服务商用的是 smtp 前缀。GMX 帮助列出的是 587 端口加 STARTTLS，465 端口加 SSL 作为备选，并且只支持 TLS 1.2 或 1.3：旧版 TLS 和 SMTP after POP 都已不再支持。<code>smtp.gmx.net</code> 也存在，它是指向同一台服务器的别名，也在其证书覆盖范围内，所以两个名称都可用。MCPEmails 填入的是 GMX 文档中的 <code>mail.gmx.net</code>，端口 465。"
     },
     {
       "h": "GMX 会接受一封 135 MB 的邮件，而收件方随后会拒收",
@@ -66,7 +66,7 @@
     },
     {
       "h": "开启双重身份验证后，邮件程序需要 App-Passwort",
-      "p": "GMX 把应用专用密码放在双重身份验证之下，并将其描述为通过 POP3 和 IMAP 使用外部邮件程序时的密码。请在浏览器中创建：点击你的姓名首字母，然后依次进入 <b>Account verwalten</b>、<b>Login & Sicherheit</b>、<b>App-Passwörter (für externe Apps)</b>、<b>Neues App-Passwort erstellen</b>。给它起个名字，例如 MCP Emails，并立即复制，因为 GMX 只显示一次。如果丢失了，删除后重新创建一个即可。GMX 的 IMAP 只提供 <code>PLAIN</code> 和 <code>LOGIN</code> 两种机制，没有 OAuth，所以凭据始终是某一种密码。"
+      "p": "GMX 把应用专用密码放在双重身份验证之下，并将其描述为通过 POP3 和 IMAP 使用外部邮件程序时的密码。请在浏览器中创建：点击你的姓名首字母，然后依次进入 <b>Account verwalten</b>、<b>Login & Sicherheit</b>、<b>App-Passwörter (für externe Apps)</b>、<b>Neues App-Passwort erstellen</b>。给它起个名字，例如 MCPEmails，并立即复制，因为 GMX 只显示一次。如果丢失了，删除后重新创建一个即可。GMX 的 IMAP 只提供 <code>PLAIN</code> 和 <code>LOGIN</code> 两种机制，没有 OAuth，所以凭据始终是某一种密码。"
     },
     {
       "h": "邮件程序无法告诉你 GMX 为什么拒绝登录，但浏览器可以",
@@ -80,11 +80,11 @@
   "faq": [
     {
       "q": "Claude 能用于 GMX Mail 吗？",
-      "a": "不能单独使用。Claude 没有内置的 GMX 连接器。通过 IMAP 将 MCP Emails 这样的 MCP 服务器连接到你的 GMX 邮箱后，Claude 就能读取、搜索、发送、回复、定时和整理其中的邮件，而且同一个连接也可在 Cursor、ChatGPT 和其他 MCP 客户端中使用。你需要先在 GMX 中启用 POP3 和 IMAP 访问。"
+      "a": "不能单独使用。Claude 没有内置的 GMX 连接器。通过 IMAP 将 MCPEmails 这样的 MCP 服务器连接到你的 GMX 邮箱后，Claude 就能读取、搜索、发送、回复、定时和整理其中的邮件，而且同一个连接也可在 Cursor、ChatGPT 和其他 MCP 客户端中使用。你需要先在 GMX 中启用 POP3 和 IMAP 访问。"
     },
     {
       "q": "GMX Mail 的 IMAP 和 SMTP 设置是什么？",
-      "a": "德国 GMX 账户的 IMAP 是 imap.gmx.net，端口 993，使用 SSL。外发邮件走 mail.gmx.net，端口 587 加 STARTTLS，或端口 465 加 SSL；MCP Emails 使用 465。smtp.gmx.net 是同一台外发服务器的别名。用户名是完整的 GMX 地址。GMX 国际版帮助为 gmx.com 账户列出的是 imap.gmx.com 和 mail.gmx.com。"
+      "a": "德国 GMX 账户的 IMAP 是 imap.gmx.net，端口 993，使用 SSL。外发邮件走 mail.gmx.net，端口 587 加 STARTTLS，或端口 465 加 SSL；MCPEmails 使用 465。smtp.gmx.net 是同一台外发服务器的别名。用户名是完整的 GMX 地址。GMX 国际版帮助为 gmx.com 账户列出的是 imap.gmx.com 和 mail.gmx.com。"
     },
     {
       "q": "如何在 GMX 中启用 IMAP？",
@@ -96,7 +96,7 @@
     },
     {
       "q": "GMX 需要应用专用密码吗？",
-      "a": "只有开启了双重身份验证时才需要。届时请在浏览器中进入 Account verwalten、Login & Sicherheit、App-Passwörter (für externe Apps) 创建一个 App-Passwort，并在 MCP Emails 中用它代替 GMX 密码。GMX 只显示一次；如果丢失，删除后重新创建即可。"
+      "a": "只有开启了双重身份验证时才需要。届时请在浏览器中进入 Account verwalten、Login & Sicherheit、App-Passwörter (für externe Apps) 创建一个 App-Passwort，并在 MCPEmails 中用它代替 GMX 密码。GMX 只显示一次；如果丢失，删除后重新创建即可。"
     },
     {
       "q": "我的 GMX 邮件会存储在你们的服务器上吗？",

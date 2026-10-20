@@ -561,7 +561,7 @@ export class MailHostBlockedError extends Error {
   constructor(code: HostGuardCode, host: string, port: number, protocol: MailProtocol) {
     super(
       `${protocol.toUpperCase()} host refused (${code}): ${host}:${port} — ${HOST_GUARD_MESSAGES[code]} ` +
-        `Fix the server settings for this inbox in the MCP Emails dashboard; retrying will not help.`,
+        `Fix the server settings for this inbox in the MCPEmails dashboard; retrying will not help.`,
     );
     this.name = "MailHostBlockedError";
     this.code = code;

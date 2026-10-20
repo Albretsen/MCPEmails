@@ -91,7 +91,7 @@
     "densityLabel": "Densidad",
     "densityCompact": "Compacta",
     "densitySpacious": "Espaciosa",
-    "firstRunTitle": "Te damos la bienvenida a MCP Emails",
+    "firstRunTitle": "Te damos la bienvenida a MCPEmails",
     "firstRunBody": "Conecta tu primera bandeja de entrada para obtener un endpoint MCP funcional en menos de un minuto.",
     "firstRunCta": "Conectar bandeja de entrada",
     "inviteSentNotDelivered": "Se creó la invitación para {email}, pero no se pudo enviar el correo. Usa Reenviar en la invitación pendiente.",
@@ -135,7 +135,7 @@
   },
   "connect": {
     "subOutlook": "Outlook.com · Microsoft 365",
-    "hintOutlook": "Las cuentas de Outlook.com, Hotmail, Live y MSN inician sesión directamente. Una cuenta de Microsoft 365 del trabajo o de un centro educativo puede necesitar que tu administrador de TI apruebe MCP Emails una vez; no necesita una cuenta de MCP Emails para hacerlo.",
+    "hintOutlook": "Las cuentas de Outlook.com, Hotmail, Live y MSN inician sesión directamente. Una cuenta de Microsoft 365 del trabajo o de un centro educativo puede necesitar que tu administrador de TI apruebe MCPEmails una vez; no necesita una cuenta de MCPEmails para hacerlo.",
     "subFastmail": "Contraseña de aplicación",
     "subAppPassword": "Contraseña de aplicación",
     "subGeneric": "Cualquier buzón · recomendado",
@@ -398,7 +398,7 @@
   },
   "adminConsentLink": {
     "title": "Envía este enlace a tu administrador de TI",
-    "body": "Envía este enlace a tu administrador de Microsoft 365. Inicia sesión con su cuenta de administrador de Microsoft y lo aprueba una sola vez; no necesita una cuenta de MCP Emails. Después, todas las personas de tu organización podrán conectar Outlook.",
+    "body": "Envía este enlace a tu administrador de Microsoft 365. Inicia sesión con su cuenta de administrador de Microsoft y lo aprueba una sola vez; no necesita una cuenta de MCPEmails. Después, todas las personas de tu organización podrán conectar Outlook.",
     "label": "Enlace de aprobación",
     "loading": "Creando el enlace...",
     "copy": "Copiar",
@@ -411,20 +411,20 @@
   },
   "adminConsentResult": {
     "grantedTitle": "Aprobado",
-    "grantedBody": "Tu equipo ya puede conectar Outlook en MCP Emails. Nadie tiene que aprobar nada más: cada persona inicia sesión con Microsoft cuando conecta su propio buzón.",
+    "grantedBody": "Tu equipo ya puede conectar Outlook en MCPEmails. Nadie tiene que aprobar nada más: cada persona inicia sesión con Microsoft cuando conecta su propio buzón.",
     "cancelledTitle": "No aprobado",
     "cancelledBody": "La aprobación se canceló en la pantalla de Microsoft, así que no ha cambiado nada. Abre el enlace de nuevo cuando quieras.",
     "failedTitle": "La aprobación no se completó",
     "failedBody": "Microsoft no confirmó la aprobación. Para aprobar hace falta una cuenta de administrador de Microsoft 365, como Administrador global o Administrador de aplicaciones en la nube. Inicia sesión con una y abre el enlace de nuevo.",
     "link_invalidTitle": "Este enlace no es válido",
-    "link_invalidBody": "El enlace de aprobación está incompleto o se ha modificado. Pide a quien te lo envió uno nuevo desde su panel de MCP Emails.",
+    "link_invalidBody": "El enlace de aprobación está incompleto o se ha modificado. Pide a quien te lo envió uno nuevo desde su panel de MCPEmails.",
     "link_expiredTitle": "Este enlace ha caducado",
-    "link_expiredBody": "Los enlaces de aprobación funcionan durante 7 días. Pide a quien te lo envió uno nuevo desde su panel de MCP Emails.",
+    "link_expiredBody": "Los enlaces de aprobación funcionan durante 7 días. Pide a quien te lo envió uno nuevo desde su panel de MCPEmails.",
     "timed_outTitle": "Empieza de nuevo",
     "timed_outBody": "La aprobación tardó demasiado o terminó en otro navegador. Abre el enlace de aprobación de nuevo en este navegador.",
     "unavailableTitle": "Algo salió mal",
     "unavailableBody": "No pudimos iniciar la aprobación. Vuelve a intentarlo dentro de unos minutos.",
     "closeHint": "¿Preguntas? Escribe a hello@mcpemails.com.",
-    "openApp": "Abrir MCP Emails"
+    "openApp": "Abrir MCPEmails"
   }
 }

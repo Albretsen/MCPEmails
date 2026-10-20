@@ -3,7 +3,7 @@ const translation = {
   description:
     'Guía de configuración para tu@tuempresa.com: averigua quién gestiona realmente tu correo, conecta Google Workspace, Zoho, Fastmail, Migadu, Titan, Rackspace, IONOS o cPanel, y corrige el nombre del remitente antes de que tu agente responda.',
   coverAlt:
-    'Conecta un correo de empresa con dominio propio a un agente de IA con MCP Emails',
+    'Conecta un correo de empresa con dominio propio a un agente de IA con MCPEmails',
   content: `> **¿Usas Microsoft 365?** Si resulta que tu buzón de empresa es un tenant de Microsoft, esta guía te ayudará a confirmarlo. Conéctalo con **Outlook** e Iniciar sesión con Microsoft en lugar de IMAP; puede que tu administrador de TI tenga que aprobar antes la aplicación una sola vez para toda la organización. La [guía de Outlook y Microsoft 365](/blog/connect-outlook-microsoft-365-ai-agent-mcp) explica los pasos.
 
 Casi todas las guías para conectar el correo a un agente de IA dan por hecho que tu dirección acaba en gmail.com. El correo de empresa es distinto: el dominio no dice quién sirve el buzón, puede que otra persona controle si los clientes de correo pueden iniciar sesión, y lo que envía tu agente llega a tus clientes con tu nombre. Esta es la guía para tu@tuempresa.com.
@@ -19,7 +19,7 @@ Casi todas las guías para conectar el correo a un agente de IA dan por hecho qu
 
 ## Paso 1: Averigua quién gestiona realmente tu correo
 
-MCP Emails intenta responder por ti. Escribe tu dirección en el formulario IMAP, espera medio segundo y consultará cuatro fuentes en orden: una tabla de los proveedores que han causado fallos de conexión reales, los registros de servicio RFC 6186 de tu dominio, tu registro MX comparado con esa tabla y la base de datos de autoconfiguración de Mozilla. No se rellena nada salvo que se resuelvan las dos mitades.
+MCPEmails intenta responder por ti. Escribe tu dirección en el formulario IMAP, espera medio segundo y consultará cuatro fuentes en orden: una tabla de los proveedores que han causado fallos de conexión reales, los registros de servicio RFC 6186 de tu dominio, tu registro MX comparado con esa tabla y la base de datos de autoconfiguración de Mozilla. No se rellena nada salvo que se resuelvan las dos mitades.
 
 Para comprobarlo tú mismo antes:
 
@@ -48,7 +48,7 @@ Workspace se conecta con una **contraseña de aplicación de Google** sobre IMAP
 
 **Activa el acceso IMAP** primero, en Configuración → Cuentas de correo → la dirección → Acceso IMAP. Viene desactivado y se configura buzón por buzón, así que activarlo para ti no hace nada por un compañero. Genera además una **contraseña específica de aplicación** si tienes la verificación en dos pasos activada.
 
-Tu host depende de dos cosas que Zoho nunca muestra juntas: en cuál de sus seis centros de datos regionales vive la cuenta (\`.com\`, \`.eu\`, \`.in\`, \`.com.au\`, \`.jp\`, \`zohocloud.ca\`) y si es una cuenta de organización de pago con dominio propio, que usa \`imappro\` y \`smtppro\` de esa región. MCP Emails pregunta por ambas y construye el nombre del host.
+Tu host depende de dos cosas que Zoho nunca muestra juntas: en cuál de sus seis centros de datos regionales vive la cuenta (\`.com\`, \`.eu\`, \`.in\`, \`.com.au\`, \`.jp\`, \`zohocloud.ca\`) y si es una cuenta de organización de pago con dominio propio, que usa \`imappro\` y \`smtppro\` de esa región. MCPEmails pregunta por ambas y construye el nombre del host.
 
 ### Fastmail y Migadu
 
@@ -74,14 +74,14 @@ No existe un servicio de correo de cPanel, solo el servidor de tu empresa de hos
 
 ## Cuando no se detecta nada y tienes que introducir los datos
 
-Da a MCP Emails cuatro cosas por protocolo: host, puerto, modo de seguridad y tu dirección completa como usuario. Las convenciones son fijas, y el formulario mantiene el puerto y la seguridad sincronizados para que no se separen:
+Da a MCPEmails cuatro cosas por protocolo: host, puerto, modo de seguridad y tu dirección completa como usuario. Las convenciones son fijas, y el formulario mantiene el puerto y la seguridad sincronizados para que no se separen:
 
 - IMAP **993** es TLS implícito; IMAP **143** es STARTTLS.
 - SMTP **465** es TLS implícito; SMTP **587** es STARTTLS, y el **25** es STARTTLS en los hosts pequeños que no ofrecen otra cosa.
 
 Confundirlos era la mayor causa de conexiones genéricas fallidas: STARTTLS en el 993 se queda esperando un saludo que un servidor solo TLS nunca envía, y TLS implícito en el 143 falla el handshake. Ya no tienes que acertar a la primera. Una conexión que nunca llegó a establecer una sesión utilizable se reintenta en los otros transportes estándar, hasta tres intentos por protocolo, empezando por el que pediste. Una contraseña rechazada por el servidor nunca se reintenta: reenviarla solo triplicaría el contador de inicios de sesión fallidos que tu proveedor usa para bloquear cuentas. Consulta también la [página de conexión IMAP genérica](/connect/imap).
 
-El envío negocia una cosa más que nunca verás. Los hosts tipo Exchange anuncian **LOGIN** sin PLAIN, así que MCP Emails lee lo que ofrece el servidor, prueba PLAIN primero cuando están los dos y recurre a LOGIN. Un mecanismo rechazado nunca se comunica como contraseña incorrecta.
+El envío negocia una cosa más que nunca verás. Los hosts tipo Exchange anuncian **LOGIN** sin PLAIN, así que MCPEmails lee lo que ofrece el servidor, prueba PLAIN primero cuando están los dos y recurre a LOGIN. Un mecanismo rechazado nunca se comunica como contraseña incorrecta.
 
 ## Define el nombre del remitente antes de que tu agente responda
 
@@ -110,7 +110,7 @@ Sí, con una contraseña de aplicación de Google sobre IMAP. Necesitas la Verif
 **¿Y si mi proveedor no publica los ajustes IMAP?**
 Introdúcelos tú: host, puerto, modo de seguridad y tu dirección completa como usuario. Si el primer transporte no responde, se prueban automáticamente las alternativas estándar.
 
-**¿MCP Emails almacena el correo de mi empresa?**
+**¿MCPEmails almacena el correo de mi empresa?**
 No. El contenido de los mensajes se obtiene en tiempo real de tu proveedor en cada solicitud y se descarta. Solo se conserva la credencial cifrada del proveedor.
 
 **¿Basta un buzón en el plan gratuito?**

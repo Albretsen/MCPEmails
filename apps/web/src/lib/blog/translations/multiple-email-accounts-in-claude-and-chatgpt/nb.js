@@ -19,7 +19,7 @@ Det ingen av dem er laget for, er postkassen et firma faktisk bruker på sitt eg
 
 ## Én kobling for alle postkassene
 
-MCP Emails er en driftet MCP-server. Du kobler hver postkasse til den én gang, og AI-klienten din når alle sammen gjennom én URL:
+MCPEmails er en driftet MCP-server. Du kobler hver postkasse til den én gang, og AI-klienten din når alle sammen gjennom én URL:
 
 \`\`\`
 https://mcpemails.com/api/mcp
@@ -34,7 +34,7 @@ E-post hentes direkte ved hver forespørsel og lagres ikke. Det eneste unntaket 
 
 ## Koble til postkassene
 
-I MCP Emails-dashbordet åpner du **Inboxes** og deretter **Connect Inbox**, én gang per postkasse:
+I MCPEmails-dashbordet åpner du **Inboxes** og deretter **Connect Inbox**, én gang per postkasse:
 
 - **Firmapostkasse på eget domene.** Velg **IMAP** og skriv inn adressen. Vanlige leverandører gjenkjennes ut fra adressen, og et Google Workspace-domene gjenkjennes ut fra e-postoppføringene i DNS, så innstillingene fyller seg inn selv. Bruk passordet eller app-passordet leverandøren din krever.
 - **Gmail eller Google Workspace.** Et app-passord fra Google, over IMAP. Google tilbyr det først når totrinnsbekreftelse er slått på, og i Workspace kan administratoren din slå av app-passord og IMAP.
@@ -48,7 +48,7 @@ I claude.ai eller Claude Desktop:
 
 1. Åpne **Settings** og deretter **Connectors**.
 2. Velg **Add custom connector** og lim inn \`https://mcpemails.com/api/mcp\`.
-3. Velg **Connect**, logg inn på MCP Emails og godkjenn.
+3. Velg **Connect**, logg inn på MCPEmails og godkjenn.
 
 Alle postkassene du har koblet til, er nå tilgjengelige. [Claude-guiden](/blog/connect-claude-to-email) har detaljene.
 
@@ -57,8 +57,8 @@ Alle postkassene du har koblet til, er nå tilgjengelige. [Claude-guiden](/blog/
 Egendefinerte koblinger krever ChatGPT Plus, Pro, Business, Enterprise eller Edu i nettleseren, med utviklermodus slått på. På Business og Enterprise må en administrator kanskje tillate det først.
 
 1. Slå på **utviklermodus** i ChatGPT-innstillingene, under de avanserte innstillingene for apper og koblinger.
-2. Opprett en kobling, lim inn \`https://mcpemails.com/api/mcp\`, velg **OAuth** og autoriser med MCP Emails.
-3. I hver nye samtale klikker du **+**, velger **Developer mode** og velger MCP Emails-appen.
+2. Opprett en kobling, lim inn \`https://mcpemails.com/api/mcp\`, velg **OAuth** og autoriser med MCPEmails.
+3. I hver nye samtale klikker du **+**, velger **Developer mode** og velger MCPEmails-appen.
 
 [ChatGPT-guiden](/blog/connect-chatgpt-to-email) går gjennom menyene og de vanlige feilene.
 
@@ -83,18 +83,18 @@ Slå på **Gjennomgang før sending** (Review before sending) for en postkasse, 
 - **Pro:** opptil 10 postkasser, på én innlogging.
 - **Business:** 10 postkasser inkludert og $3 i måneden for hver ekstra, og for når en person til trenger sin egen innlogging.
 
-Et firma med post@, salg@ og faktura@ pluss din egen adresse er fire postkasser, og det er Pro. Gjeldende priser finner du på [prissiden](/pricing), og [MCP Emails for bedrifter](/for/business) viser hvordan én person håndterer alle firmapostkassene fra én agent.
+Et firma med post@, salg@ og faktura@ pluss din egen adresse er fire postkasser, og det er Pro. Gjeldende priser finner du på [prissiden](/pricing), og [MCPEmails for bedrifter](/for/business) viser hvordan én person håndterer alle firmapostkassene fra én agent.
 
 ## Vanlige spørsmål
 
 **Kan Claude bruke mer enn én e-postkonto samtidig?**
-Ja, gjennom en MCP-server. Koble hver postkasse til MCP Emails, legg til én egendefinert kobling i Claude, så ser Claude alle sammen og oppgir postkassen i hvert kall.
+Ja, gjennom en MCP-server. Koble hver postkasse til MCPEmails, legg til én egendefinert kobling i Claude, så ser Claude alle sammen og oppgir postkassen i hvert kall.
 
 **Kan ChatGPT bruke mer enn én e-postkonto?**
-ChatGPTs eget Gmail-programtillegg kan nå ha flere Google-kontoer. For postkasser som ikke ligger hos Google, for eksempel en firmaadresse hos IONOS, Zoho eller et cPanel-webhotell, legger du til MCP Emails som en egendefinert kobling, så er alle tilkoblede postkasser tilgjengelige.
+ChatGPTs eget Gmail-programtillegg kan nå ha flere Google-kontoer. For postkasser som ikke ligger hos Google, for eksempel en firmaadresse hos IONOS, Zoho eller et cPanel-webhotell, legger du til MCPEmails som en egendefinert kobling, så er alle tilkoblede postkasser tilgjengelige.
 
 **Trenger jeg en egen kobling per postkasse?**
-Nei. Én koblings-URL dekker alle postkassene i MCP Emails-arbeidsområdet ditt, og den samme URL-en fungerer i Claude, ChatGPT og andre MCP-klienter.
+Nei. Én koblings-URL dekker alle postkassene i MCPEmails-arbeidsområdet ditt, og den samme URL-en fungerer i Claude, ChatGPT og andre MCP-klienter.
 
 **Går svaret ut fra riktig adresse?**
 Ja. Hver postkasse sender gjennom sin egen leverandør eller e-postserver, med sitt eget visningsnavn og sin egen signatur. For å sende fra en annen adresse på en IMAP-postkasse legger du den til i postkassens innstillinger i dashbordet og verifiserer den med koden som sendes til den adressen. Outlook sender fra den tilkoblede adressen, og en From-adresse som ikke er verifisert, blir avvist.
@@ -104,7 +104,7 @@ Nei. Meldingsinnholdet hentes direkte fra leverandøren din ved hver forespørse
 
 ## Neste steg
 
-[Start gratis](/signup) med den travleste postkassen din, legg MCP Emails-koblingen til i Claude eller ChatGPT, og spør hva som trenger svar i dag. Legg til de andre postkassene når du vil ha ett svar i stedet for flere.`,
+[Start gratis](/signup) med den travleste postkassen din, legg MCPEmails-koblingen til i Claude eller ChatGPT, og spør hva som trenger svar i dag. Legg til de andre postkassene når du vil ha ett svar i stedet for flere.`,
 };
 
 export default translation;

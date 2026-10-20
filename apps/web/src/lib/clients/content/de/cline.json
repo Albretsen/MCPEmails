@@ -67,7 +67,7 @@
   "faq": [
     {
       "q": "Wie verbinde ich meine E-Mails mit Cline?",
-      "a": "Fügen Sie MCP Emails als entfernten Server hinzu: MCP Servers, Remote Servers, https://mcpemails.com/api/mcp einfügen, Transport Type auf Streamable HTTP setzen und einen Authorization-Bearer-Header mit einem API-Schlüssel aus Ihrem Dashboard ergänzen. Danach hat Cline Tools zum Lesen, Suchen, Senden, Beantworten, Weiterleiten, Organisieren und Planen von E-Mails."
+      "a": "Fügen Sie MCPEmails als entfernten Server hinzu: MCP Servers, Remote Servers, https://mcpemails.com/api/mcp einfügen, Transport Type auf Streamable HTTP setzen und einen Authorization-Bearer-Header mit einem API-Schlüssel aus Ihrem Dashboard ergänzen. Danach hat Cline Tools zum Lesen, Suchen, Senden, Beantworten, Weiterleiten, Organisieren und Planen von E-Mails."
     },
     {
       "q": "Warum braucht Cline einen API-Schlüssel, Cursor aber nicht?",

@@ -35,10 +35,10 @@
       "providerSub": "Gmail · Outlook · iCloud · IMAP",
       "logCalls": "智能体调用",
       "logReturns": "返回收件箱 ID，无需在仪表盘里复制粘贴",
-      "logFetches": "MCP Emails 从你的服务商实时获取",
+      "logFetches": "MCPEmails 从你的服务商实时获取",
       "logResult": "返回 20 封邮件",
       "logNothing": "不存储任何内容",
-      "legendPipe": "MCP Emails（管道）",
+      "legendPipe": "MCPEmails（管道）",
       "legendLive": "实时请求",
       "legendData": "你的数据，你的服务商"
     }
@@ -49,7 +49,7 @@
   "whatIs": {
     "title": "什么是邮件 MCP 服务器？",
     "p1": "邮件 MCP 服务器（email MCP server）是 AI 助手与真实邮箱之间的桥梁。它使用 Model Context Protocol，因此 Claude、ChatGPT、Cursor 或任何其他 MCP 客户端都能通过同一个端点读取、搜索、起草和发送邮件，无需为每个应用单独做集成。",
-    "p2": "MCP Emails 就是一个托管的邮件 MCP 服务器。它支持 Gmail、Outlook 和 Microsoft 365、iCloud、Fastmail 以及任何支持 IMAP 的邮箱，同一个智能体可以同时处理多个邮箱。每次调用时，邮件都从你的服务商实时获取，从不存储在我们的服务器上。",
+    "p2": "MCPEmails 就是一个托管的邮件 MCP 服务器。它支持 Gmail、Outlook 和 Microsoft 365、iCloud、Fastmail 以及任何支持 IMAP 的邮箱，同一个智能体可以同时处理多个邮箱。每次调用时，邮件都从你的服务商实时获取，从不存储在我们的服务器上。",
     "linkImap": "设置 IMAP MCP 服务器",
     "linkBusiness": "面向公司邮箱的邮件 MCP",
     "linkProviders": "所有支持的邮箱服务商",
@@ -110,7 +110,7 @@
       },
       "2": {
         "h": "你的智能体处理收件箱",
-        "p": "智能体调用诸如 <code>email_read()</code> 或 <code>email_compose()</code> 之类的工具。MCP Emails 从你的服务商实时获取并返回结果。两次调用之间不会缓存任何内容。"
+        "p": "智能体调用诸如 <code>email_read()</code> 或 <code>email_compose()</code> 之类的工具。MCPEmails 从你的服务商实时获取并返回结果。两次调用之间不会缓存任何内容。"
       }
     },
     "tools": {
@@ -128,17 +128,17 @@
     "eyebrow": "真实的提示词",
     "titleLine1": "开口就行。",
     "titleLine2": "它会读、会写、会归档。",
-    "sub": "无需学习任何仪表板。用日常语言告诉你的 AI 助手你想做什么，它就会通过 MCP Emails 完成。"
+    "sub": "无需学习任何仪表板。用日常语言告诉你的 AI 助手你想做什么，它就会通过 MCPEmails 完成。"
   },
   "quote": {
     "text": "我希望我的智能体能处理我的收件箱，但每一个方案都意味着把我的邮件副本交给第三方。于是我打造了一直渴望存在的那条管道：连接一次，你的收件箱实时获取且从不存储，并且你可以一键切断任何智能体。这就是我敢用自己收件箱去信任的产品。",
-    "role": "创始人，MCP Emails"
+    "role": "创始人，MCPEmails"
   },
   "reviews": {
     "eyebrow": "用户评价",
     "titleLine1": "不必听我们说。",
     "titleLine2": "听他们说。",
-    "sub": "来自真实用户的评价，他们用 MCP Emails 连接自己的收件箱，并以实名公开发表。",
+    "sub": "来自真实用户的评价，他们用 MCPEmails 连接自己的收件箱，并以实名公开发表。",
     "ratingLabel": "评分 {rating} 分（满分 5 分）",
     "count": "{count, plural, other {# 条评价}}",
     "via": "发表于 {source}",
@@ -214,7 +214,7 @@
     "sub": "连接第一个收件箱前，你需要了解的一切。",
     "items": [
       {
-        "q": "MCP Emails 是 IMAP MCP 服务器吗？",
+        "q": "MCPEmails 是 IMAP MCP 服务器吗？",
         "a": "是的。除了 Gmail 和 Outlook 之外，还有通用的 IMAP 和 SMTP 连接器，因此任何提供 IMAP 访问的邮箱都可以使用：你自己的域名、主机服务商或本地运营商的邮箱。只需填写一次服务器信息和应用密码，你的智能体就会通过 IMAP 读取邮件，并通过你自己的 SMTP 服务器发送。"
       },
       {
@@ -255,7 +255,7 @@
       },
       {
         "q": "我可以自托管吗？",
-        "a": "可以。MCP Emails 采用 AGPL-3.0 开源，托管服务运行的正是你可以自己运行的同一个服务器。一个 docker-compose 栈能在约五分钟内，让完整的 MCP 服务器及其全部工具对接你自己的数据库运行，适用于任意 IMAP 或 SMTP 邮箱。Gmail 和 Outlook 登录（OAuth）以及控制台仍保留在托管套餐中。"
+        "a": "可以。MCPEmails 采用 AGPL-3.0 开源，托管服务运行的正是你可以自己运行的同一个服务器。一个 docker-compose 栈能在约五分钟内，让完整的 MCP 服务器及其全部工具对接你自己的数据库运行，适用于任意 IMAP 或 SMTP 邮箱。Gmail 和 Outlook 登录（OAuth）以及控制台仍保留在托管套餐中。"
       }
     ]
   },
@@ -279,9 +279,9 @@
     "linkWithdrawal": "撤回权",
     "linkCancel": "在此取消合同",
     "linkImpressum": "Impressum",
-    "copyright": "© 2026 MCP Emails.",
+    "copyright": "© 2026 MCPEmails.",
     "legal": "邮件实时获取，从不存储 · 凭据静态加密",
-    "legalEntity": "MCP Emails 由 Albretsen AS 运营，组织机构号 938 702 373，地址：Håsteins gate 9, 5160 Laksevåg, 挪威。",
+    "legalEntity": "MCPEmails 由 Albretsen AS 运营，组织机构号 938 702 373，地址：Håsteins gate 9, 5160 Laksevåg, 挪威。",
     "contactLabel": "联系",
     "mcpLabel": "MCP 端点",
     "copy": "复制",

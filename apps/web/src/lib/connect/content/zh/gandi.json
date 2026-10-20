@@ -21,7 +21,7 @@
     "titleLine1": "将 Gandi Mail 连接到 Claude，",
     "titleLine2": "以及 Cursor、ChatGPT、任意 MCP 客户端",
     "lead": "为你的 AI 代理接入一个真正的 Gandi 收件箱。使用为邮箱本身（而不是 Gandi 账户）设置的密码，通过 IMAP 读取、搜索、发送、回复、定时与整理邮件。",
-    "answer": "Claude 无法自行访问 Gandi 邮箱。MCP Emails 是一个托管 MCP 服务器，通过 mail.gandi.net 端口 993 的 IMAP 与之连接，使用完整邮箱地址和为该邮箱设定的密码进行认证；Gandi 将这个密码与你的 gandi.net 账户密码分开管理。之后，Claude、Cursor 或任意 MCP 客户端都能读取、搜索、发送并整理这些邮件。没有需要生成的应用专用密码，也没有需要寻找的按邮箱 IMAP 开关。1 个收件箱永久免费。",
+    "answer": "Claude 无法自行访问 Gandi 邮箱。MCPEmails 是一个托管 MCP 服务器，通过 mail.gandi.net 端口 993 的 IMAP 与之连接，使用完整邮箱地址和为该邮箱设定的密码进行认证；Gandi 将这个密码与你的 gandi.net 账户密码分开管理。之后，Claude、Cursor 或任意 MCP 客户端都能读取、搜索、发送并整理这些邮件。没有需要生成的应用专用密码，也没有需要寻找的按邮箱 IMAP 开关。1 个收件箱永久免费。",
     "meta0": "1 个收件箱永久免费",
     "meta1": "邮箱密码，而非账户登录密码",
     "meta2": "邮件实时获取，绝不存储"
@@ -32,7 +32,7 @@
   },
   "setup": [
     {
-      "h": "创建免费的 MCP Emails 账户",
+      "h": "创建免费的 MCPEmails 账户",
       "p": "在 mcpemails.com 注册。免费套餐可永久连接一个收件箱，无需信用卡。"
     },
     {
@@ -40,7 +40,7 @@
       "p": "登录 gandi.net，在左侧菜单中选择 Domains，选中该地址所属的域名，打开其 Email 选项卡。点击该邮箱或其三点菜单，然后选择 Manage，在 Configuration 部分点击 Password 旁的 Change。你也可以在 Gandi 的 Roundcube 网页邮箱中通过 Settings、Password 修改。"
     },
     {
-      "h": "粘贴到 MCP Emails",
+      "h": "粘贴到 MCPEmails",
       "p": "选择 IMAP / SMTP，输入完整地址，并粘贴邮箱密码。服务器 mail.gandi.net 以及端口 993 和 465 已预填，并经实时 TLS 连接验证。"
     },
     {
@@ -51,7 +51,7 @@
   "gotchas": [
     {
       "h": "Gandi 邮箱的双重身份验证只覆盖网页邮箱，无法覆盖 IMAP",
-      "p": "如果你为某个 Gandi 邮箱开启了双重身份验证，它只作用于 SOGo 和 Roundcube 网页邮箱门户，别处都不生效。Gandi 的文档直接说明，2FA 只能通过其网页邮箱门户使用，不支持 Thunderbird 或 Outlook 等邮件客户端，而停用 POP、IMAP 和 SMTP 是用 2FA 完全保护邮箱的唯一方法。这带来两个实际后果。第一，开启 2FA 并不会阻止 MCP Emails 连接：邮箱密码仍可通过 IMAP 认证。第二，如果你为了让 2FA 真正起作用而特意在邮箱上停用了 IMAP 协议，那么在你重新启用之前，任何客户端都无法连接。"
+      "p": "如果你为某个 Gandi 邮箱开启了双重身份验证，它只作用于 SOGo 和 Roundcube 网页邮箱门户，别处都不生效。Gandi 的文档直接说明，2FA 只能通过其网页邮箱门户使用，不支持 Thunderbird 或 Outlook 等邮件客户端，而停用 POP、IMAP 和 SMTP 是用 2FA 完全保护邮箱的唯一方法。这带来两个实际后果。第一，开启 2FA 并不会阻止 MCPEmails 连接：邮箱密码仍可通过 IMAP 认证。第二，如果你为了让 2FA 真正起作用而特意在邮箱上停用了 IMAP 协议，那么在你重新启用之前，任何客户端都无法连接。"
     },
     {
       "h": "免费邮箱已于 2023 年结束，旧地址可能已经不存在",
@@ -69,7 +69,7 @@
   "faq": [
     {
       "q": "Claude 能用于 Gandi Mail 吗？",
-      "a": "不能单独使用。Claude 没有内置的 Gandi 连接器。通过 IMAP 将 MCP Emails 这样的 MCP 服务器指向你的 Gandi 邮箱后，Claude 就能读取、搜索、发送、回复、定时和整理其中的邮件，而且同一个连接也可在 Cursor、ChatGPT 和其他 MCP 客户端中使用。"
+      "a": "不能单独使用。Claude 没有内置的 Gandi 连接器。通过 IMAP 将 MCPEmails 这样的 MCP 服务器指向你的 Gandi 邮箱后，Claude 就能读取、搜索、发送、回复、定时和整理其中的邮件，而且同一个连接也可在 Cursor、ChatGPT 和其他 MCP 客户端中使用。"
     },
     {
       "q": "Gandi 的 IMAP 和 SMTP 设置是什么？",

@@ -21,7 +21,7 @@
     "titleLine1": "将 Plesk 邮箱连接到 Claude，",
     "titleLine2": "Cursor、ChatGPT、任意 MCP 客户端",
     "lead": "为你的 AI 代理接入一个真正的 Plesk 邮箱。在任何运行 Plesk Obsidian 的服务器上（无论由谁托管），都能通过 IMAP 读取、搜索、发送、回复、定时与整理邮件。",
-    "answer": "Claude 无法自行连接 Plesk 邮箱。MCP Emails 是一个托管 MCP 服务器，通过 993 端口的标准 IMAP 与之连接，让 Claude、Cursor 或任意 MCP 客户端都能读取、搜索、发送并整理邮件。Plesk 是控制面板软件而不是主机公司，所以没有共享的主机名：邮件服务器就是你自己的域名或服务器的主机名，Plesk 会在 Mail Accounts 的 Mail Client Setup 中列出确切的一对。认证使用在 Plesk 中为邮箱设置的密码，而不是面板登录密码。一个收件箱免费。",
+    "answer": "Claude 无法自行连接 Plesk 邮箱。MCPEmails 是一个托管 MCP 服务器，通过 993 端口的标准 IMAP 与之连接，让 Claude、Cursor 或任意 MCP 客户端都能读取、搜索、发送并整理邮件。Plesk 是控制面板软件而不是主机公司，所以没有共享的主机名：邮件服务器就是你自己的域名或服务器的主机名，Plesk 会在 Mail Accounts 的 Mail Client Setup 中列出确切的一对。认证使用在 Plesk 中为邮箱设置的密码，而不是面板登录密码。一个收件箱免费。",
     "meta0": "1 个收件箱永久免费",
     "meta1": "在 Plesk 中设置的邮箱密码",
     "meta2": "邮件实时获取，绝不存储"
@@ -32,7 +32,7 @@
   },
   "setup": [
     {
-      "h": "创建免费 MCP Emails 账户",
+      "h": "创建免费 MCPEmails 账户",
       "p": "在 mcpemails.com 注册。免费套餐可连接一个收件箱，无需信用卡。"
     },
     {
@@ -69,7 +69,7 @@
   "faq": [
     {
       "q": "Claude 能用 Plesk 邮箱吗？",
-      "a": "不能直接使用。Claude 没有针对 Plesk 服务器的连接器。通过 IMAP 将 MCP Emails 这样的 MCP 服务器连接到该邮箱后，Claude 就能读取、搜索、发送、回复、定时和整理其中的邮件。由于 Plesk 邮件是普通的 IMAP 和 SMTP，这在任何运行 Plesk 的主机上都同样适用。"
+      "a": "不能直接使用。Claude 没有针对 Plesk 服务器的连接器。通过 IMAP 将 MCPEmails 这样的 MCP 服务器连接到该邮箱后，Claude 就能读取、搜索、发送、回复、定时和整理其中的邮件。由于 Plesk 邮件是普通的 IMAP 和 SMTP，这在任何运行 Plesk 的主机上都同样适用。"
     },
     {
       "q": "Plesk 的 IMAP 和 SMTP 设置是什么？",

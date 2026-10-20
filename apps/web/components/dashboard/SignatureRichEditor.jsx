@@ -108,7 +108,7 @@ const BLOCK_BOUNDARY = /<\/(?:p|div|tr|td|th|li|h[1-6]|blockquote|pre)>/gi;
  * Line breaks are injected at block boundaries BEFORE the markup is flattened.
  * Reading `textContent` alone concatenates adjacent block elements with no
  * separator, which collapsed every multi-line signature into a single run-on
- * line ("Asgeir AlbretsenFounder · MCP Emailsmcpemails.com") and shipped that
+ * line ("Asgeir AlbretsenFounder · MCPEmailsmcpemails.com") and shipped that
  * to `signature_text`, where it became the visible signature on any text-only
  * message. The detached node is still used afterwards to decode entities.
  */

@@ -2,8 +2,8 @@ const translation = {
   title: 'Serveur MCP Gmail hébergé ou auto-hébergé : avantages, inconvénients et coûts',
   description:
     'Serveur MCP Gmail hébergé ou auto-hébergé, comparés en toute franchise : les dépôts DIY gratuits offrent un contrôle total mais vous gérez OAuth, chiffrement et disponibilité. Un serveur hébergé prend quelques minutes.',
-  coverAlt: 'Comparaison entre serveur MCP Gmail hébergé et auto-hébergé — MCP Emails',
-  content: `Si vous voulez que votre agent IA lise et envoie des e-mails Gmail, vous avez deux vraies options : faire tourner un serveur MCP Gmail auto-hébergé à partir d'un dépôt open source, ou pointer votre client vers un serveur hébergé. La voie DIY ne coûte pas un centime et vous donne un contrôle total, mais vous gérez vous-même la configuration OAuth, le chiffrement des jetons, l'hébergement, les mises à jour et la sécurité. Un serveur hébergé comme MCP Emails se branche en quelques minutes et garde les identifiants chiffrés, au prix de faire confiance à un prestataire pour la connexion.
+  coverAlt: 'Comparaison entre serveur MCP Gmail hébergé et auto-hébergé — MCPEmails',
+  content: `Si vous voulez que votre agent IA lise et envoie des e-mails Gmail, vous avez deux vraies options : faire tourner un serveur MCP Gmail auto-hébergé à partir d'un dépôt open source, ou pointer votre client vers un serveur hébergé. La voie DIY ne coûte pas un centime et vous donne un contrôle total, mais vous gérez vous-même la configuration OAuth, le chiffrement des jetons, l'hébergement, les mises à jour et la sécurité. Un serveur hébergé comme MCPEmails se branche en quelques minutes et garde les identifiants chiffrés, au prix de faire confiance à un prestataire pour la connexion.
 
 Voici le bilan honnête. J'ai construit un serveur hébergé, j'ai donc un parti pris, mais je vais vous dire exactement où l'auto-hébergement l'emporte et quel profil de personne devrait le choisir. Si vous voulez d'abord le modèle au niveau des verbes, le [guide complet pour donner à un agent IA l'accès à l'e-mail](/blog/how-to-give-your-ai-agent-email-access) est l'article pilier à lire en parallèle.
 
@@ -55,7 +55,7 @@ MCP est jeune. La spécification évolue, Google fait tourner ses exigences, et 
 
 Le dépôt que vous avez choisi gère Gmail. Le jour où vous ajoutez un compte Outlook ou une adresse iCloud, vous intégrez Microsoft Graph ou câblez vous-même IMAP et SMTP, avec un deuxième modèle d'authentification et un deuxième lot de cas particuliers. La plupart des serveurs DIY restent Gmail uniquement parce que le deuxième fournisseur est un projet à part entière.
 
-## L'argument de l'hébergé : MCP Emails, en toute franchise
+## L'argument de l'hébergé : MCPEmails, en toute franchise
 
 Un serveur MCP hébergé inverse le compromis. Vous renoncez à faire tourner le code ; vous récupérez tout le temps que la liste ci-dessus vous aurait coûté.
 
@@ -73,7 +73,7 @@ Le même point de terminaison et les mêmes outils principaux — \`inbox_list\`
 
 ### L'envoi reste sur votre fournisseur
 
-MCP Emails ne relaie jamais le courrier depuis son propre domaine. \`email_compose\` (avec l'action \`send\`) part via votre fournisseur (Gmail ou un autre fournisseur via SMTP, ou Microsoft Graph pour Outlook), de sorte que la réputation de votre domaine et votre délivrabilité restent les vôtres. C'est la même propriété que vous obtiendriez en auto-hébergeant, sans avoir à la construire.
+MCPEmails ne relaie jamais le courrier depuis son propre domaine. \`email_compose\` (avec l'action \`send\`) part via votre fournisseur (Gmail ou un autre fournisseur via SMTP, ou Microsoft Graph pour Outlook), de sorte que la réputation de votre domaine et votre délivrabilité restent les vôtres. C'est la même propriété que vous obtiendriez en auto-hébergeant, sans avoir à la construire.
 
 ### Le coût honnête : vous faites confiance à un prestataire
 
@@ -81,7 +81,7 @@ C'est le vrai compromis, et je ne vais pas l'enjoliver. Avec un serveur héberg�
 
 ## Ce que ça coûte en dollars
 
-MCP Emails est gratuit pour démarrer : une boîte connectée, des clés API illimitées, sans carte bancaire. L'offre Gratuit tourne à 60 requêtes/minute avec 30 jours d'analytics et un support communautaire. [Personal est à 9 $/mois](/pricing) (jusqu'à trois boîtes connectées, 120 req/min, 90 jours d'analytics, support par e-mail), Pro est à 15 $/mois (jusqu'à 10 boîtes connectées, 300 req/min, 2 ans d'analytics), et Business est à 39 $/mois (10 boîtes incluses plus 3 $/mois par boîte en plus, membres avec rôles, un espace de travail distinct par client). L'auto-hébergement, c'est 0 $ d'abonnement plus le coût de votre VPS et de vos heures. Soyez honnête sur les heures.
+MCPEmails est gratuit pour démarrer : une boîte connectée, des clés API illimitées, sans carte bancaire. L'offre Gratuit tourne à 60 requêtes/minute avec 30 jours d'analytics et un support communautaire. [Personal est à 9 $/mois](/pricing) (jusqu'à trois boîtes connectées, 120 req/min, 90 jours d'analytics, support par e-mail), Pro est à 15 $/mois (jusqu'à 10 boîtes connectées, 300 req/min, 2 ans d'analytics), et Business est à 39 $/mois (10 boîtes incluses plus 3 $/mois par boîte en plus, membres avec rôles, un espace de travail distinct par client). L'auto-hébergement, c'est 0 $ d'abonnement plus le coût de votre VPS et de vos heures. Soyez honnête sur les heures.
 
 ## Alors, lequel choisir ?
 

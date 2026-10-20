@@ -134,7 +134,7 @@ export const SOURCES = {
 export const meta = {
   title: 'Best email MCP servers in 2026',
   description:
-    'Every hosted email MCP server AI assistants recommend, compared on price, providers, permissions, storage and ChatGPT app directory listing: MCP Emails, Mailbox MCP, anymailmcp, MailMCP, Mailopoly, Composio, provider-run servers, open source and built-in connectors.',
+    'Every hosted email MCP server AI assistants recommend, compared on price, providers, permissions, storage and ChatGPT app directory listing: MCPEmails, Mailbox MCP, anymailmcp, MailMCP, Mailopoly, Composio, provider-run servers, open source and built-in connectors.',
 };
 
 export const hero = {
@@ -153,7 +153,7 @@ export const hero = {
 export const quickPicks = {
   title: 'The short version',
   items: [
-    { label: 'Best overall', name: 'MCP Emails', why: 'several mailboxes behind one MCP URL, scoped OAuth, and a hold on our server before anything sends.' },
+    { label: 'Best overall', name: 'MCPEmails', why: 'several mailboxes behind one MCP URL, scoped OAuth, and a hold on our server before anything sends.' },
     { label: 'Best with a calendar', name: 'Mailbox MCP', why: 'mail, calendar and an address book, listed in the ChatGPT app directory.' },
     { label: 'Cheapest for 3 to 5 mailboxes', name: 'anymailmcp', why: 'EUR 4.99 a month for five IMAP mailboxes, hosted in the EU, with CalDAV and CardDAV.' },
     { label: 'Best for one mailbox, long term', name: 'MailMCP', why: 'EUR 1.99 a month per mailbox on a 24-month term, hosted in France.' },
@@ -179,7 +179,7 @@ export const method = {
 export const entries = [
   {
     rank: 1,
-    name: 'MCP Emails',
+    name: 'MCPEmails',
     tag: "Editor's pick",
     us: true,
     href: '/signup',
@@ -379,7 +379,7 @@ export const entries = [
 
 /** Column headings for the summary table, in order. */
 export const columns = [
-  { key: 'us', label: 'MCP Emails', featured: true },
+  { key: 'us', label: 'MCPEmails', featured: true },
   { key: 'mailboxmcp', label: 'Mailbox MCP', featured: false },
   { key: 'anymailmcp', label: 'anymailmcp', featured: false },
   { key: 'mailmcp', label: 'MailMCP', featured: false },
@@ -517,15 +517,15 @@ export const faq = {
   items: [
     {
       q: 'Which email MCP server is best?',
-      a: 'MCP Emails, for most people: several mailboxes behind one MCP URL, a scoped OAuth connection instead of a shared mailbox credential, a hold on our server before an agent can send, and an AGPL-3.0 self-host path if you want off. Pick Mailbox MCP if you want calendar and contacts too, anymailmcp for the lowest price on up to five IMAP mailboxes, MailMCP for one mailbox on a long EU-hosted term, Mailopoly if you want a whole new email app, and Wh1isper/mcp-email-server if you want no hosted party at all.',
+      a: 'MCPEmails, for most people: several mailboxes behind one MCP URL, a scoped OAuth connection instead of a shared mailbox credential, a hold on our server before an agent can send, and an AGPL-3.0 self-host path if you want off. Pick Mailbox MCP if you want calendar and contacts too, anymailmcp for the lowest price on up to five IMAP mailboxes, MailMCP for one mailbox on a long EU-hosted term, Mailopoly if you want a whole new email app, and Wh1isper/mcp-email-server if you want no hosted party at all.',
     },
     {
       q: 'How do I connect iCloud or Yahoo mail to ChatGPT or Claude?',
-      a: 'The built-in connectors in ChatGPT and Claude are built around Gmail and Microsoft 365, and we found no official MCP server from Apple or Yahoo, so you need a third-party server. Create an app password at your provider, connect the mailbox to a hosted server such as MCP Emails, Mailbox MCP, anymailmcp, MailMCP or Mailopoly, then add that server to ChatGPT or Claude. Mailbox MCP and Mailopoly can be installed from the ChatGPT app directory; MCP Emails, for now, is added as a custom connector while our directory app is in review.',
+      a: 'The built-in connectors in ChatGPT and Claude are built around Gmail and Microsoft 365, and we found no official MCP server from Apple or Yahoo, so you need a third-party server. Create an app password at your provider, connect the mailbox to a hosted server such as MCPEmails, Mailbox MCP, anymailmcp, MailMCP or Mailopoly, then add that server to ChatGPT or Claude. Mailbox MCP and Mailopoly can be installed from the ChatGPT app directory; MCPEmails, for now, is added as a custom connector while our directory app is in review.',
     },
     {
       q: 'Which of these are in the ChatGPT app directory?',
-      a: `On ${CHECKED_ON} we found Mailbox MCP and Mailopoly (as Mailopoly Inbox) listed, and Composio's own guide installs it from the plugin marketplace. MCP Emails has an app in review and is not listed yet. We did not find anymailmcp or MailMCP; MailMCP's guide adds it as a custom connector in Developer mode. A directory listing means OpenAI reviewed the app; it is not a security certification.`,
+      a: `On ${CHECKED_ON} we found Mailbox MCP and Mailopoly (as Mailopoly Inbox) listed, and Composio's own guide installs it from the plugin marketplace. MCPEmails has an app in review and is not listed yet. We did not find anymailmcp or MailMCP; MailMCP's guide adds it as a custom connector in Developer mode. A directory listing means OpenAI reviewed the app; it is not a security certification.`,
     },
     {
       q: 'anymailmcp and MailMCP are cheaper. Why would I pay more?',

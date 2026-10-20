@@ -39,7 +39,7 @@
  *                              and Preview. Missing key = no send, logged,
  *                              never thrown.
  *   PURCHASE_EMAIL_FROM        OPTIONAL override for the sender.
- *                              Default: MCP Emails <hello@mcpemails.com>.
+ *                              Default: MCPEmails <hello@mcpemails.com>.
  *                              Deliberately NOT RESEND_FROM_EMAIL, which is
  *                              the invite sender (invites@mcpemails.com) and
  *                              is wrong on a purchase confirmation.
@@ -74,7 +74,7 @@ import { withdrawalLine, WITHDRAWAL_PATH } from '@/lib/email/legal';
 // ---------------------------------------------------------------------------
 
 const SUPPORT_ADDRESS = 'hello@mcpemails.com';
-const DEFAULT_FROM = `MCP Emails <${SUPPORT_ADDRESS}>`;
+const DEFAULT_FROM = `MCPEmails <${SUPPORT_ADDRESS}>`;
 const DEFAULT_APP_URL = 'https://mcpemails.com';
 
 function appUrl(): string {

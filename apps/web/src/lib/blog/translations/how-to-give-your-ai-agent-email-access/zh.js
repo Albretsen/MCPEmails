@@ -2,7 +2,7 @@ const translation = {
   title: '如何让 AI 智能体访问邮箱（2026 完整指南）',
   description:
     '通过 MCP 让你的 AI 智能体读取并发送真实邮箱的邮件——支持 Gmail、Outlook、iCloud、Fastmail 或 IMAP。原理、工具、安全机制与配置一文讲清。',
-  coverAlt: '如何通过 MCP 让你的 AI 智能体访问邮箱——MCP Emails',
+  coverAlt: '如何通过 MCP 让你的 AI 智能体访问邮箱——MCPEmails',
   content: `要让 AI 智能体访问邮箱，你需要把邮箱连接到一台 MCP 服务器，再把智能体指向一个端点 URL。智能体随后就能拿到一小组工具，用来读取、搜索和发送邮件。难点其实不在智能体本身——而在于如何做到这一点，又不让你的密码泄露到提示词、日志或向量库里。这"最后一公里"正是本指南要讲的内容。
 
 如果你只想走最快的路径：在仪表盘里连接一个邮箱，把 MCP 端点粘贴到 [claude.ai](https://claude.ai)、Claude Desktop、Cursor 或你自己的智能体里，然后先调用一次 \`inbox_list\`。本文余下部分会解释背后实际发生了什么、为什么安全模型至关重要，以及如何接入每一个受支持的服务商。
@@ -11,7 +11,7 @@ const translation = {
 
 [Model Context Protocol](https://modelcontextprotocol.io) 是一种通过 HTTP 向语言模型暴露工具的标准方式。一台 MCP 邮件服务器不会把你的邮箱当作原始 IMAP 暴露出来，而是呈现为智能体可以调用的几个带类型的动词：列出邮件、读取某封、搜索、发送、回复。智能体围绕这些动词进行推理。它从不接触底层的邮箱协议，也从不看到你的凭据。
 
-这正是 [MCP Emails](/) 的核心理念。一个端点，一组工具，适配任何兼容 MCP 的客户端。如果你想从头理解整个架构，配套文章 [什么是 MCP 邮件服务器](/blog/what-is-an-mcp-email-server) 用通俗的语言做了讲解。
+这正是 [MCPEmails](/) 的核心理念。一个端点，一组工具，适配任何兼容 MCP 的客户端。如果你想从头理解整个架构，配套文章 [什么是 MCP 邮件服务器](/blog/what-is-an-mcp-email-server) 用通俗的语言做了讲解。
 
 ## 为什么"最后一公里"这么难
 
@@ -23,7 +23,7 @@ const translation = {
 
 那种最朴素的 DIY 做法——丢给模型一个 IMAP 库再加上你的密码——这三关一关都过不了。GitHub 上大多数"Gmail MCP 服务器"仓库恰恰就止步于此。
 
-## MCP Emails 是如何解决的
+## MCPEmails 是如何解决的
 
 四个设计决策挑起了大梁。它们正是我敢用它来管自己邮箱的原因。
 
@@ -37,7 +37,7 @@ const translation = {
 
 ### 发送走你自己的服务商
 
-当智能体发送或回复时，邮件是通过你的 Gmail、你的 Microsoft 365 或你的 SMTP 服务器发出去的。MCP Emails 从不用自己的域名做中转。你的送达率和域名信誉完全归你所有——不必再玩共享 IP 那种"进不进垃圾箱看运气"的轮盘赌。
+当智能体发送或回复时，邮件是通过你的 Gmail、你的 Microsoft 365 或你的 SMTP 服务器发出去的。MCPEmails 从不用自己的域名做中转。你的送达率和域名信誉完全归你所有——不必再玩共享 IP 那种"进不进垃圾箱看运气"的轮盘赌。
 
 ### 它就是基于 HTTP 的标准 MCP
 
@@ -80,7 +80,7 @@ const translation = {
 
 ### 应用密码服务商
 
-Gmail、iCloud、Fastmail、Yahoo、Zoho、Yandex 以及任何通用 IMAP 邮箱，都用专用应用密码而非 OAuth 来连接。你在服务商的安全设置里生成密码，再粘贴到 MCP Emails 中。Gmail 应用密码在你的 Google 账号里创建，Google 要求先开启两步验证才能创建。iCloud 密码来自 appleid.apple.com；Fastmail **只支持应用密码**（在 Fastmail 设置里创建一个）。它们都跑在同一套 IMAP/SMTP 传输之上，共享一套完全相同的功能集。完整教程见 [将 iCloud、Fastmail 或任意 IMAP 邮箱连接到 Claude](/blog/connect-icloud-fastmail-imap-to-claude)。
+Gmail、iCloud、Fastmail、Yahoo、Zoho、Yandex 以及任何通用 IMAP 邮箱，都用专用应用密码而非 OAuth 来连接。你在服务商的安全设置里生成密码，再粘贴到 MCPEmails 中。Gmail 应用密码在你的 Google 账号里创建，Google 要求先开启两步验证才能创建。iCloud 密码来自 appleid.apple.com；Fastmail **只支持应用密码**（在 Fastmail 设置里创建一个）。它们都跑在同一套 IMAP/SMTP 传输之上，共享一套完全相同的功能集。完整教程见 [将 iCloud、Fastmail 或任意 IMAP 邮箱连接到 Claude](/blog/connect-icloud-fastmail-imap-to-claude)。
 
 ## 连接你的 AI 客户端
 
@@ -88,7 +88,7 @@ Gmail、iCloud、Fastmail、Yahoo、Zoho、Yandex 以及任何通用 IMAP 邮箱
 
 ### 支持 OAuth 的客户端（无需 API key）
 
-claude.ai、Claude Desktop、Cursor 等同类客户端，通过 OAuth 2.0 授权码 + PKCE 以及 RFC 7591 动态客户端注册来连接。在 claude.ai 里依次是 **Customize → Connectors → Add connector**，粘贴 MCP 端点 URL，点击 Connect，登录你的 MCP Emails 账户，然后授权。Token 的范围严格限定在你所批准的内容上：\`read:email\`、\`send:email\` 或两者皆有。分步教程请看[为 Claude 设置你的收件箱](/blog/connect-claude-to-email)和[把你的邮箱添加到 ChatGPT](/blog/connect-chatgpt-to-email)。
+claude.ai、Claude Desktop、Cursor 等同类客户端，通过 OAuth 2.0 授权码 + PKCE 以及 RFC 7591 动态客户端注册来连接。在 claude.ai 里依次是 **Customize → Connectors → Add connector**，粘贴 MCP 端点 URL，点击 Connect，登录你的 MCPEmails 账户，然后授权。Token 的范围严格限定在你所批准的内容上：\`read:email\`、\`send:email\` 或两者皆有。分步教程请看[为 Claude 设置你的收件箱](/blog/connect-claude-to-email)和[把你的邮箱添加到 ChatGPT](/blog/connect-chatgpt-to-email)。
 
 ### 不支持 OAuth 的客户端（API key）
 
