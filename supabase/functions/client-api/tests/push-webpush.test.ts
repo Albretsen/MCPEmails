@@ -424,3 +424,120 @@ Deno.test("send: the VAPID token is signed once per push service and reused", as
   assertEquals(tokens[0], tokens[1]);
   assertNotEquals(tokens[0], tokens[2], "a different audience gets its own token");
 });
+
+// ── each push service, with what it actually requires ───────────────────────
+//
+// Recorded expectations, per endpoint family, of what a real push service
+// checks before it accepts a message:
+//   FCM (Chrome, Edge on Android, Opera, Brave): VAPID `vapid t=, k=`, aud =
+//     "https://fcm.googleapis.com", exp <= 24 h, aes128gcm, TTL required.
+//   Mozilla autopush (Firefox): the same; TTL required (400 without it).
+//   Apple (Safari macOS, every iOS Home Screen app): the same, plus `sub` MUST
+//     be a reachable mailto:/https: contact (403 BadJwtToken otherwise), the
+//     legacy aesgcm headers (Encryption, Crypto-Key) are not accepted, and the
+//     body is at most 4096 bytes (413 PayloadTooLarge).
+//   WNS (Edge on Windows): the same RFC 8030 + 8292 contract.
+// And what each answers when a subscription has ended: Apple 410
+// ("Unregistered"), FCM 404 / 410, Mozilla 410, WNS 410.
+
+const ENDPOINTS = {
+  fcm_legacy: { endpoint: "https://fcm.googleapis.com/fcm/send/cXk1:APA91bH", aud: "https://fcm.googleapis.com" },
+  fcm_wp: { endpoint: "https://fcm.googleapis.com/wp/dQw4w9WgXcQ:APA91bE", aud: "https://fcm.googleapis.com" },
+  mozilla: { endpoint: "https://updates.push.services.mozilla.com/wpush/v2/gAAAAABm", aud: "https://updates.push.services.mozilla.com" },
+  apple: { endpoint: "https://web.push.apple.com/QGuQyavXutnMH-kBcW6MQ8z9YAm5e3vSO1n", aud: "https://web.push.apple.com" },
+  wns: { endpoint: "https://wns2-par02p.notify.windows.com/w/?token=BQYAAAB", aud: "https://wns2-par02p.notify.windows.com" },
+} as const;
+
+for (const [name, target] of Object.entries(ENDPOINTS)) {
+  Deno.test(`push service ${name}: the request carries exactly what that service checks`, async () => {
+    const h = await harness([new Response(null, { status: 201 })]);
+    const nowSec = Math.floor(Date.now() / 1000);
+    assertEquals((await h.sender.send({ ...h.message, endpoint: target.endpoint, urgency: "high" })).kind, "sent");
+    const { url, headers, body } = h.sent[0];
+    assertEquals(url, target.endpoint, "the endpoint, query string and all");
+    // VAPID (RFC 8292).
+    const match = /^vapid t=([^,]+), k=([A-Za-z0-9_-]+)$/.exec(headers.get("authorization") ?? "");
+    assert(match, "vapid t=..., k=...");
+    assertEquals(match[2], h.config.publicKey);
+    assertEquals(b64urlDecode(match[2]).length, 65, "k is the raw uncompressed P-256 point");
+    const [head, claims, signature] = match[1].split(".");
+    assertEquals(JSON.parse(decoder.decode(b64urlDecode(head))), { typ: "JWT", alg: "ES256" });
+    const jwt = JSON.parse(decoder.decode(b64urlDecode(claims)));
+    assertEquals(jwt.aud, target.aud, "aud is the endpoint's origin, no path, no trailing slash");
+    assert(/^mailto:[^\s@]+@[^\s@]+\.[^\s@]+$/.test(jwt.sub), "sub is a mailto: contact with a real domain");
+    assert(jwt.exp > nowSec + 60 * 60, "exp is comfortably in the future");
+    assert(jwt.exp <= nowSec + 24 * 60 * 60, "exp is at most 24 hours away (Apple and FCM refuse more)");
+    assertEquals(Object.keys(jwt).sort(), ["aud", "exp", "sub"]);
+    assertEquals(b64urlDecode(signature).length, 64, "ES256 JWS signature is r || s");
+    assert(await crypto.subtle.verify({ name: "ECDSA", hash: "SHA-256" }, h.verifyKey, b64urlDecode(signature), encoder.encode(`${head}.${claims}`)));
+    // RFC 8291 / 8188 / 8030.
+    assertEquals(headers.get("content-encoding"), "aes128gcm");
+    assertEquals(headers.get("content-type"), "application/octet-stream");
+    assertEquals(headers.get("ttl"), "3600");
+    assertEquals(headers.get("urgency"), "high");
+    assertEquals(headers.get("topic"), "0123456789abcdef0123456789abcdef");
+    for (const legacy of ["encryption", "crypto-key", "content-length"]) {
+      assertEquals(headers.get(legacy), null, `no hand-set ${legacy} header (legacy aesgcm, or one fetch owns)`);
+    }
+    assert(body.length <= 4096, "within every push service's 4 KB limit");
+    assertEquals(body.length, 86 + encoder.encode(JSON.stringify(h.message.payload)).length + 1 + 16, "header + one record");
+    assertEquals(JSON.parse(await browserDecrypt(body, h.browser.pair, h.browser.p256dh, h.browser.auth)), h.message.payload);
+  });
+}
+
+Deno.test("Apple's real answers map to the right outcome", async () => {
+  const json = (status: number, reason: string) =>
+    new Response(JSON.stringify({ reason }), { status, headers: { "content-type": "application/json" } });
+  const cases: Array<[Response, string]> = [
+    [json(410, "Unregistered"), "gone"],
+    [json(404, "BadPath"), "gone"],
+    [json(403, "BadJwtToken"), "rejected"],
+    [json(403, "ExpiredJwtToken"), "rejected"],
+    [json(413, "PayloadTooLarge"), "too_large"],
+    [json(400, "BadWebPushTopic"), "rejected"],
+    [new Response(null, { status: 429, headers: { "Retry-After": "600" } }), "rate_limited"],
+  ];
+  for (const [response, kind] of cases) {
+    const h = await harness([response]);
+    assertEquals((await h.sender.send({ ...h.message, endpoint: ENDPOINTS.apple.endpoint })).kind, kind);
+    assertEquals(h.sent.length, 1, "none of these is retried at once");
+  }
+});
+
+Deno.test("a cached VAPID token is never sent close to its exp: re-signed after an hour", async () => {
+  const { config } = await newVapid();
+  const browser = await newBrowser();
+  const start = Date.UTC(2026, 9, 19, 12, 0, 0);
+  let now = start;
+  const seen: string[] = [];
+  const sender = createPushSender({
+    vapid: config,
+    now: () => now,
+    fetch: ((_: string, init?: RequestInit) => {
+      seen.push(new Headers(init?.headers).get("authorization") ?? "");
+      return Promise.resolve(new Response(null, { status: 201 }));
+    }) as typeof fetch,
+  });
+  const message: PushMessage = { endpoint: ENDPOINTS.apple.endpoint, keys: browser, payload: {}, ttlSec: 60 };
+  for (const minutes of [0, 30, 59, 61, 6 * 60, 23 * 60]) {
+    now = start + minutes * 60_000;
+    await sender.send(message);
+    const token = /t=([^,]+)/.exec(seen.at(-1)!)![1];
+    const exp = JSON.parse(decoder.decode(b64urlDecode(token.split(".")[1]))).exp;
+    assert(exp * 1000 - now > 10 * 60 * 60_000, `at +${minutes} min the token still has >10 h left`);
+    assert(exp * 1000 - now <= 24 * 60 * 60_000);
+  }
+  assertEquals(new Set(seen.map((a) => /t=([^,]+)/.exec(a)![1])).size, 4, "re-signed at 61 min, 6 h and 23 h");
+});
+
+Deno.test("vapidFromEnv: a contact Apple cannot reach (localhost, .local, no dot) turns push off", async () => {
+  const { config } = await newVapid();
+  const env = (subject: string) => (name: string) =>
+    ({ VAPID_PUBLIC_KEY: config.publicKey, VAPID_PRIVATE_KEY: config.privateKey, VAPID_SUBJECT: subject } as Record<string, string>)[name];
+  for (const bad of ["mailto:me@localhost", "mailto:dev@macbook.local", "mailto:root@intranet", "https://localhost/contact", "mailto: support@mcpemails.com", "mailto:<support@mcpemails.com>"]) {
+    assertEquals(vapidFromEnv(env(bad)), null, bad);
+  }
+  for (const good of ["mailto:support@mcpemails.com", "https://mcpemails.com/contact"]) {
+    assertEquals(vapidFromEnv(env(good))?.subject, good);
+  }
+});

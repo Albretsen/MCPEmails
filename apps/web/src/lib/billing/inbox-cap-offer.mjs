@@ -13,9 +13,12 @@
  * THE RULE: the cheapest plan that actually clears the cap that was just hit.
  * Free stops at one inbox, so Personal (three, $5) clears it, and sending
  * someone to $15 Pro to add a second mailbox prices the upgrade far above the
- * problem. Personal itself stops at three, so from there only Pro (unlimited)
- * is a way forward, and offering Personal to a Personal subscriber would sell
- * them the plan they are already on.
+ * problem. Personal itself stops at three, so from there Pro (ten) is the
+ * way forward, and offering Personal to a Personal subscriber would sell them
+ * the plan they are already on. Pro stops at ten for customers who bought
+ * after the 2026-10 cutover, and past ten the only plan is Business (ten
+ * included, then a fixed price per mailbox), so a cap above Personal's sells
+ * Business.
  *
  * Keyed off the CAP rather than off a plan id, because the cap is the server's
  * own number, counted at the moment of the refusal, so it stays right even when
@@ -65,7 +68,7 @@
  * the `dashboard` namespace rather than `dashboardChrome`.
  *
  * @typedef {object} InboxCapPlanOffer
- * @property {'personal'|'solo'} plan  Internal plan id the checkout accepts.
+ * @property {'personal'|'solo'|'pro'} plan  Internal plan id the checkout accepts.
  * @property {string} ctaKey           `dashboardChrome` key: monthly buy label.
  * @property {string} noticeCtaKey     `dashboard` key: the same label on the page notice.
  * @property {string|null} pitchKey    `dashboardChrome` key: one-line pitch on a dual card.
@@ -80,11 +83,31 @@
  *   offers: InboxCapPlanOffer[],
  * }}
  */
+/** Personal's cap. Any cap above it is Pro's, and Pro's way forward is Business. */
+const PERSONAL_CAP = 3;
+
 export function inboxCapOffer(maxInboxes, context) {
   const atFreeCap = (maxInboxes ?? 1) <= 1;
   // Strictly `true`. A truthy string or a stray object from a caller that
   // wired the prop wrong must not quietly change what a paywall sells.
   const businessShaped = context?.businessShaped === true;
+
+  // Pro's cap (10). Only Business clears it. Keyed to "above Personal's cap"
+  // rather than to 10, so a later change to Pro's cap cannot fall back to
+  // offering Pro to a Pro subscriber.
+  if ((maxInboxes ?? 1) > PERSONAL_CAP) {
+    const business = businessOffer();
+    return {
+      plan: business.plan,
+      titleKey: 'connect.businessCapTitle',
+      bodyKey: 'connect.businessCapBody',
+      ctaKey: business.ctaKey,
+      featureKeys: [...business.featureKeys],
+      noticeBodyKey: 'inboxes.capBodyProCap',
+      dual: false,
+      offers: [business],
+    };
+  }
 
   if (!atFreeCap) {
     const pro = proOffer();
@@ -163,6 +186,23 @@ function proOffer() {
       'connect.featureRateLimit',
       'connect.featureTeam',
       'connect.featureSupport',
+    ],
+  };
+}
+
+function businessOffer() {
+  return {
+    plan: 'pro',
+    ctaKey: 'connect.businessCapCta',
+    noticeCtaKey: 'inboxes.capCtaBusiness',
+    pitchKey: null,
+    recommended: false,
+    // Only what Business does today; see the features note on PLANS.pro.
+    featureKeys: [
+      'connect.businessFeatureInboxes',
+      'connect.businessFeatureMembers',
+      'connect.businessFeatureApprovals',
+      'connect.businessFeatureWorkspaces',
     ],
   };
 }

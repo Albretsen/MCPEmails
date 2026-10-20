@@ -1,7 +1,7 @@
 const translation = {
   title: 'Cómo crear un autorrespondedor de correo con un agente conectado por MCP',
   description: 'Crea un autorrespondedor de correo con un agente de IA conectado por MCP: sondea el correo sin leer, redacta y responde con seguridad usando scopes, límites y guardarraíles.',
-  coverAlt: 'Cómo crear un autorrespondedor de correo con un agente conectado por MCP — MCPEmails',
+  coverAlt: 'Cómo crear un autorrespondedor de correo con un agente conectado por MCP — MCP Emails',
   content: `Un autorrespondedor de correo construido sobre MCP Emails es un bucle, no un webhook. No hay eventos iniciados por el servidor, así que tu agente **sondea** el correo sin leer según una programación con \`email_read\` (acción \`list\`), lee cada mensaje con \`email_read\` (acción \`read\`), redacta una respuesta y llama a \`email_compose\` (acción \`reply\`). Este artículo recorre la construcción completa: el bucle de sondeo, los scopes que necesitas, cómo sobrevivir a los límites de tasa y los guardarraíles que evitan que un agente bombardee a tus contactos con respuestas alucinadas.
 
 Esto es el extremo avanzado de la historia de [dale acceso al correo a tu agente de IA](/blog/how-to-give-your-ai-agent-email-access). Si solo quieres triaje y resúmenes matutinos sin enviar nada, lee antes [triaje y resumen de bandeja con un agente de IA](/blog/ai-agent-triage-summarize-inbox): es el sitio más seguro para empezar. Vuelve aquí cuando de verdad quieras que el agente le dé a enviar.
@@ -87,7 +87,7 @@ Si quieres que un mensaje deje de aparecer como sin leer una vez que has respond
 
 ## Límites de tasa, y por qué nunca reintentas un envío a ciegas
 
-Cada API key está limitada a **100 peticiones por minuto, 1000 por hora y 10 000 por día**, independientemente del plan. Tu workspace también tiene un techo de ráfaga según el tier: **60 req/min en Gratis, 120 en Personal, 300 en Pro, 1000 en Team** (consulta [precios](/pricing)). Un bucle educado de sondear y responder vive holgadamente dentro de eso, pero uno que se porta mal puede dispararlo.
+Cada API key está limitada a **100 peticiones por minuto, 1000 por hora y 10 000 por día**, independientemente del plan. Tu workspace también tiene un techo de ráfaga según el tier: **60 req/min en Gratis, 120 en Personal, 300 en Pro, 1000 en Business** (consulta [precios](/pricing)). Un bucle educado de sondear y responder vive holgadamente dentro de eso, pero uno que se porta mal puede dispararlo.
 
 Cuando alcanzas un límite de tasa, el servidor devuelve un error reintentable (código \`-32003\`) que lleva \`data.retry_after\` en segundos. Hónralo. Duerme ese tiempo y luego continúa.
 
@@ -150,7 +150,7 @@ Si fuera a lanzar esto para una bandeja real mañana, empezaría pequeño y abur
 
 Ese es un sistema en el que de verdad puedes confiar, y se generaliza. El mismo bucle con un prompt distinto se convierte en un bot de triaje, un enrutador de leads o un notificador. Para ver el menú más amplio de lo que un agente puede hacer una vez conectado, consulta [7 cosas que un agente de IA puede hacer con acceso a la bandeja](/blog/7-things-ai-agent-can-do-with-inbox-access). Si aún estás decidiendo si darle a un agente acceso de envío siquiera, vale la pena leer [¿es seguro dar acceso al correo a un agente de IA?](/blog/is-it-safe-to-give-ai-agent-email-access) antes de lanzarlo.
 
-¿Listo para construirlo? Crea una API key acotada y lee la referencia de herramientas en [la documentación](/docs), o [empieza gratis](/signup): Gratis conecta una bandeja, Personal (9 $/mes) conecta hasta tres y Pro conecta todas las que tengas, así que configura primero los guardarraíles antes de automatizar.`,
+¿Listo para construirlo? Crea una API key acotada y lee la referencia de herramientas en [la documentación](/docs), o [empieza gratis](/signup): Gratis conecta una bandeja, Personal (9 $/mes) conecta hasta tres y Pro conecta hasta 10, así que configura primero los guardarraíles antes de automatizar.`,
 };
 
 export default translation;

@@ -6,21 +6,22 @@ import { useLocale, useTranslations } from 'next-intl';
 import { Link } from '@/i18n/navigation';
 import { Nav, Footer } from './Sections';
 import { MIcon } from '../MarketingPrimitives';
-import { createClient } from '@/lib/supabase/client';
 import { parseUpgradeIntent, pricingUpgradeHref } from '@/lib/billing/upgrade-intent.mjs';
+import { withReadingLang } from '@/i18n/reading-lang.mjs';
 import { usePricingView } from '@/lib/analytics/use-pricing-view.mjs';
 import { PLANS as CATALOGUE } from '@/lib/stripe/plans';
 import { formatAmountCents, formatPriceCents } from '@/lib/stripe/annual-offer';
 
 /* ─── Plan data ─────────────────────────────────────────────── */
 // The value metric is CONNECTED INBOXES. Free is one inbox, Personal is three
-// for one person, Pro is every inbox you own, Team adds people. Since
+// for one person, Pro is up to 10 for one person running a business, and
+// Business includes 10, sells each extra mailbox and adds people. Since
 // 2026-09-12 Free also carries a public allowance of 150 email actions a
 // calendar month (first 3 days uncounted), stated in the table and the FAQ;
 // paid tiers have no monthly cap and their fair-use ceilings stay silent
 // (see src/lib/stripe/plans.ts, FREE_ACTION_ALLOWANCE / FREE_ACTION_GRACE_DAYS).
 //
-// NOTE: the "Pro" tier keeps the internal key `solo` and "Team" keeps `pro`, so
+// NOTE: the "Pro" tier keeps the internal key `solo` and "Business" keeps `pro`, so
 // live Stripe prices (keyed by plan id) resolve correctly. Only the display
 // names changed. `personal` is the one id that matches its own display name.
 // User-facing copy (name, desc, cta, features) is read from the `pricing`
@@ -65,7 +66,7 @@ const PLANS = [
 // Plan-availability matrix only. Labels (section + feature names) and string
 // values are resolved from the message bundle by key.
 
-// Column order is the ladder order: free, personal, solo ("Pro"), pro ("Team").
+// Column order is the ladder order: free, personal, solo ("Pro"), pro ("Business").
 // EVERY row must carry all four keys. A missing key renders an empty cell
 // instead of failing the build, so new rows have to be checked by eye.
 
@@ -73,22 +74,22 @@ const TABLE_SECTIONS = [
   {
     key: 'usage',
     rows: [
-      // Pro's cell says company mailboxes out loud. Pro is the plan a business
-      // with a mailbox per department wants, and a bare "Unlimited" next to a
-      // single seat read as "one person's own mailboxes" and sent companies to
-      // Team.
-      { key: 'inboxes',  free: 'values.oneInbox',  personal: 'values.threeInboxes', solo: 'values.unlimitedCompany', pro: 'values.unlimited' },
+      // Pro is capped at PRO_INBOX_CAP and Business includes
+      // BUSINESS_INCLUDED_INBOXES plus a per-mailbox price (src/lib/stripe/plans.ts).
+      // Pro workspaces from before the 2026-10 cap keep unlimited; the dashboard
+      // says so, this public table quotes what a new customer buys.
+      { key: 'inboxes',  free: 'values.oneInbox',  personal: 'values.threeInboxes', solo: 'values.tenMailboxes', pro: 'values.businessMailboxes' },
       // Free's allowance is public and must match FREE_ACTION_ALLOWANCE /
       // FREE_ACTION_GRACE_DAYS in src/lib/stripe/plans.ts. Paid tiers never
       // print a number: they have no monthly cap, subject to fair use.
       { key: 'actions',  free: 'values.actionsFree', personal: 'values.actionsPaid', solo: 'values.actionsPaid', pro: 'values.actionsPaid' },
       { key: 'keys',     free: 'values.unlimited', personal: 'values.unlimited',    solo: 'values.unlimited', pro: 'values.unlimited' },
-      // Personal and Pro are deliberately single-seat: sharing inboxes with
-      // other people is what Team is for. The row is labelled "Seats" and the
-      // value is a count, not "Just you": the old wording was true about logins
-      // and read as "not for a company", which is wrong about the buyer.
+      // Personal and Pro are deliberately single-seat: other people signing in
+      // is what Business is for, at no per-person price. The value is a count,
+      // not "Just you": the old wording was true about logins and read as "not
+      // for a company", which is wrong about the buyer.
       // src/lib/personas/business-copy.test.ts keeps "Just you" from returning.
-      { key: 'members',  free: 'values.oneSeat', personal: 'values.oneSeat',     solo: 'values.oneSeat', pro: 'values.unlimited' },
+      { key: 'members',  free: 'values.oneSeat', personal: 'values.oneSeat',     solo: 'values.oneSeat', pro: 'values.unlimitedPeople' },
       { key: 'burst',    free: 'values.burstFree', personal: 'values.burstPersonal', solo: 'values.burstSolo', pro: 'values.burstPro' },
       // On every tier, and broken out as its own row on purpose. It is an
       // inbox setting (`inboxes.send_review_mode`) with no plan gate anywhere,
@@ -127,14 +128,16 @@ const TABLE_SECTIONS = [
     key: 'analytics',
     rows: [
       { key: 'dashboard', free: true,              personal: true,                 solo: true,               pro: true },
-      { key: 'roles',     free: false,             personal: false,                solo: false,              pro: true },
-      { key: 'sso',       free: false,             personal: false,                solo: false,              pro: true },
-      { key: 'audit',     free: false,             personal: false,                solo: false,              pro: true },
+      // Only what Business really does today. No SSO, audit-log or priority
+      // support rows: none of those exist on any plan.
+      { key: 'roles',          free: false, personal: false, solo: false, pro: true },
+      { key: 'adminApprovals', free: false, personal: false, solo: false, pro: true },
+      { key: 'workspaces',     free: false, personal: false, solo: false, pro: true },
       // The ONLY analytics difference between the tiers. The dashboard itself
       // is on every plan, so listing "usage analytics" as a paid feature was
       // the claim this row replaces. Values mirror `analyticsRetentionDays` in
       // src/lib/stripe/plans.ts, enforced via src/lib/analytics/retention.ts.
-      { key: 'history',   free: 'values.history30', personal: 'values.history30',   solo: 'values.history90', pro: 'values.history365' },
+      { key: 'history',   free: 'values.history30', personal: 'values.history90',   solo: 'values.history2y', pro: 'values.history2y' },
     ],
   },
   {
@@ -149,7 +152,6 @@ const TABLE_SECTIONS = [
     rows: [
       { key: 'community', free: true,  personal: true,  solo: true,  pro: true },
       { key: 'email',     free: false, personal: true,  solo: true,  pro: true },
-      { key: 'priority',  free: false, personal: false, solo: false, pro: true },
     ],
   },
 ];
@@ -295,7 +297,7 @@ function PlanCards({ annual, stripePrices, user, highlightPlan }) {
             {plan.key === 'free' ? (
               <a
                 className={'btn btn-lg ' + (ctaPrimary ? 'btn-primary' : 'btn-secondary')}
-                href={user ? '/dashboard' : plan.ctaHref}
+                href={user ? '/dashboard' : withReadingLang(plan.ctaHref, locale)}
                 style={{ textAlign: 'center', justifyContent: 'center' }}
               >
                 {t(`plans.${plan.key}.cta`)}
@@ -309,7 +311,7 @@ function PlanCards({ annual, stripePrices, user, highlightPlan }) {
                  prefetch the checkout route. */
               <a
                 className={'btn btn-lg ' + (ctaPrimary ? 'btn-primary' : 'btn-secondary')}
-                href={pricingUpgradeHref(plan.key, annual, Boolean(user))}
+                href={withReadingLang(pricingUpgradeHref(plan.key, annual, Boolean(user), locale), locale)}
                 style={{ textAlign: 'center', justifyContent: 'center' }}
               >
                 {t(`plans.${plan.key}.cta`)}
@@ -351,7 +353,7 @@ function ComparisonTable() {
             <th>{t('comparison.free')}</th>
             <th>{t('comparison.personal')}</th>
             <th className="featured-col">{t('comparison.solo')}</th>
-            <th>{t('comparison.team')}</th>
+            <th>{t('comparison.business')}</th>
           </tr>
         </thead>
         <tbody>
@@ -430,6 +432,7 @@ export default function PricingClient({ stripePrices }) {
     setHighlightPlan(planId);
   }, []);
   const t = useTranslations('pricing');
+  const locale = useLocale();
   const faqItems = t.raw('faq.items');
 
   // Billing funnel. The endpoint ignores anonymous callers, so this records
@@ -440,13 +443,27 @@ export default function PricingClient({ stripePrices }) {
   // Marketing pages are CDN-cached and therefore cannot render session state
   // on the server. Resolve it client-side so signed-in visitors still see a
   // clear account affordance without making the public page private.
+  //
+  // The Supabase browser client is loaded on demand, not imported at the top:
+  // it is only needed for this one check, and a static import put supabase-js
+  // (about 67 KB gzipped) on the page's first load for every visitor.
   useEffect(() => {
-    const supabase = createClient();
-    supabase.auth.getUser().then(({ data }) => setUser(data.user ?? null));
-    const { data: { subscription } } = supabase.auth.onAuthStateChange((_event, session) => {
-      setUser(session?.user ?? null);
+    let cancelled = false;
+    let subscription = null;
+    import('@/lib/supabase/client').then(({ createClient }) => {
+      if (cancelled) return;
+      const supabase = createClient();
+      supabase.auth.getUser().then(({ data }) => {
+        if (!cancelled) setUser(data.user ?? null);
+      });
+      ({ data: { subscription } } = supabase.auth.onAuthStateChange((_event, session) => {
+        setUser(session?.user ?? null);
+      }));
     });
-    return () => subscription.unsubscribe();
+    return () => {
+      cancelled = true;
+      subscription?.unsubscribe();
+    };
   }, []);
 
   return (
@@ -489,16 +506,19 @@ export default function PricingClient({ stripePrices }) {
           <p className="pricing-footnote" style={{ textAlign: 'center', marginTop: 24 }}>
             {t('cardsFootnote.all')}
           </p>
-          {/* A company reading these cards has to find out that Pro, not
-              Team, is the plan for one person running several company
-              mailboxes. The FAQ says so too; this is the line people see. */}
+          {/* A company reading these cards has to find out that Pro is the
+              plan for one person running several company mailboxes. The FAQ
+              says so too; this is the line people see. */}
           <p className="pricing-footnote" style={{ textAlign: 'center', marginTop: 8 }}>
             {t.rich('cardsFootnote.business', {
               business: (chunks) => <Link href="/for/business">{chunks}</Link>,
             })}
           </p>
-          <p className="pricing-footnote" style={{ textAlign: 'center', marginTop: 8 }}>
-            {t.rich('cardsFootnote.custom', {
+          {/* Enterprise is a conversation, not a fifth card: a DPA, invoice
+              billing and Microsoft 365 admin help, all by email. */}
+          <p className="pricing-footnote" style={{ textAlign: 'center', marginTop: 16 }}>
+            <strong>{t('enterprise.title')}</strong>{' '}
+            {t.rich('enterprise.body', {
               contact: (chunks) => <a href="mailto:hello@mcpemails.com">{chunks}</a>,
             })}
           </p>
@@ -539,7 +559,7 @@ export default function PricingClient({ stripePrices }) {
             {t('ctaBand.sub')}
           </p>
           <div className="pricing-cta-btns">
-            <a className="btn btn-primary btn-lg" href="/signup">{t('ctaBand.ctaPrimary')}</a>
+            <a className="btn btn-primary btn-lg" href={withReadingLang('/signup', locale)}>{t('ctaBand.ctaPrimary')}</a>
             <Link className="btn btn-on-dark btn-lg" href="/docs">{t('ctaBand.ctaSecondary')}</Link>
           </div>
         </div>

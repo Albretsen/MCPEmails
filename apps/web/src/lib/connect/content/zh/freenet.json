@@ -18,8 +18,8 @@
     "eyebrow": "freenet Mail + AI",
     "titleLine1": "将你的 freenet.de 收件箱连接到",
     "titleLine2": "Claude、Cursor 及任意 MCP 客户端",
-    "lead": "freenet 支持 IMAP，但把它放在一个它更希望你别碰的开关后面。打开一次，mcpemails 就能连接这个邮箱，让你的 AI 代理读取、搜索、发送、回复和归档邮件。",
-    "answer": "Claude 无法自行访问 freenet.de 邮箱。mcpemails 是一个托管 MCP 服务器，通过 mx.freenet.de 端口 993 的 IMAP 与之连接，使用你的完整地址和 freenet Mail 密码进行认证。你必须先做的一件事，是在邮箱设置中勾选 POP3, IMAP und SMTP aktivieren，因为 freenet 把所有客户端访问都放在这个复选框后面，并建议保持关闭。开启后，Claude、Cursor 或任何其他 MCP 客户端都能读取、搜索、发送和整理这些邮件，1 个收件箱永久免费。",
+    "lead": "freenet 支持 IMAP，但把它放在一个它更希望你别碰的开关后面。打开一次，MCP Emails 就能连接这个邮箱，让你的 AI 代理读取、搜索、发送、回复和归档邮件。",
+    "answer": "Claude 无法自行访问 freenet.de 邮箱。MCP Emails 是一个托管 MCP 服务器，通过 mx.freenet.de 端口 993 的 IMAP 与之连接，使用你的完整地址和 freenet Mail 密码进行认证。你必须先做的一件事，是在邮箱设置中勾选 POP3, IMAP und SMTP aktivieren，因为 freenet 把所有客户端访问都放在这个复选框后面，并建议保持关闭。开启后，Claude、Cursor 或任何其他 MCP 客户端都能读取、搜索、发送和整理这些邮件，1 个收件箱永久免费。",
     "meta0": "1 个收件箱永久免费",
     "meta1": "必须开启客户端访问",
     "meta2": "邮件实时获取，绝不存储"
@@ -30,7 +30,7 @@
   },
   "setup": [
     {
-      "h": "创建免费的 mcpemails 账户",
+      "h": "创建免费的 MCP Emails 账户",
       "p": "在 mcpemails.com 注册。免费套餐可连接一个收件箱，无需信用卡。"
     },
     {
@@ -39,7 +39,7 @@
     },
     {
       "h": "输入地址和 freenet Mail 密码",
-      "p": "在 mcpemails 中选择 IMAP / SMTP，以 <code>name@freenet.de</code> 的形式输入完整地址和该邮箱的密码。收发两个方向都使用 <code>mx.freenet.de</code>，此处已预填，并经实时 TLS 连接验证。"
+      "p": "在 MCP Emails 中选择 IMAP / SMTP，以 <code>name@freenet.de</code> 的形式输入完整地址和该邮箱的密码。收发两个方向都使用 <code>mx.freenet.de</code>，此处已预填，并经实时 TLS 连接验证。"
     },
     {
       "h": "将 MCP URL 粘贴到你的 AI",
@@ -53,7 +53,7 @@
     },
     {
       "h": "收发共用一个主机名，freenet 说的就是字面意思",
-      "p": "没有 <code>imap.freenet.de</code>，也没有 <code>smtp.freenet.de</code>。收信和发信都使用 <code>mx.freenet.de</code>，习惯了常见前缀的人会觉得它看起来不对，凭记忆配置的人还会悄悄把它“改正”。freenet 在同一张表中还声明，不应以 IP 地址或其他名称替代，因为这样做会在使用中引发问题。"
+      "p": "不存在 <code>imap.freenet.de</code>，也不存在 <code>smtp.freenet.de</code>。收信和发信都使用 <code>mx.freenet.de</code>，习惯了常见前缀的人会觉得这不对，凭记忆配置的人也常常悄悄把它“改正”。freenet 还在同一张表中说明，不要用 IP 地址或其他名称代替，而且每个连接都必须加密，所以即使密码正确，未加密的登录也会被拒绝。"
     },
     {
       "h": "文件夹名称是小写的 inbox、sent 和 drafts",
@@ -71,11 +71,11 @@
   "faq": [
     {
       "q": "Claude 能用于 freenet.de 邮箱吗？",
-      "a": "不能直接使用。Claude 没有内置的 freenet 连接器。通过 IMAP 将 mcpemails 这样的 MCP 服务器连接到邮箱后，Claude 就能读取、搜索、发送、回复、定时和整理你的 freenet.de 邮件，而且同一个连接也可在 Cursor、ChatGPT 和其他 MCP 客户端中使用。必须先在邮箱中启用客户端访问。"
+      "a": "不能直接使用。Claude 没有内置的 freenet 连接器。通过 IMAP 将 MCP Emails 这样的 MCP 服务器连接到邮箱后，Claude 就能读取、搜索、发送、回复、定时和整理你的 freenet.de 邮件，而且同一个连接也可在 Cursor、ChatGPT 和其他 MCP 客户端中使用。必须先在邮箱中启用客户端访问。"
     },
     {
-      "q": "freenet 的 IMAP 和 SMTP 设置是什么？",
-      "a": "两者都是 mx.freenet.de。IMAP 使用端口 993（隐式 TLS）或 143（STARTTLS），SMTP 使用端口 465（隐式 TLS）或 587（STARTTLS），并开启 SMTP 认证。用户名是你的完整地址。服务器已在本页所示日期通过实时 TLS 连接验证。"
+      "q": "freenet 的 IMAP 和 SMTP 用哪个服务器？",
+      "a": "两者都是 mx.freenet.de。freenet 列出两种组合：SSL/TLS，IMAP 端口 993、SMTP 端口 465；或 STARTTLS，IMAP 端口 143、SMTP 端口 587。必须加密，并且必须开启 SMTP 身份验证。用户名是完整地址，例如 name@freenet.de。MCP Emails 使用 993 和 465，服务器已在本页显示的日期通过真实 TLS 连接验证。"
     },
     {
       "q": "为什么 freenet 在邮件客户端中拒绝我的密码？",
@@ -83,7 +83,7 @@
     },
     {
       "q": "freenet 签发应用专用密码吗？",
-      "a": "不签发。没有可以创建的应用专用密码。启用客户端访问后，客户端使用 freenet Mail 邮箱本身的密码进行认证。如果你想撤销某个连接，可以取消勾选激活复选框，或者修改邮箱密码。"
+      "a": "freenet 针对邮件程序的说明中没有提到任何应用专用密码。启用客户端访问后，客户端使用你的完整地址和 freenet Mail 邮箱本身的密码登录。如果想撤销某个连接，取消勾选激活复选框或修改邮箱密码即可。"
     },
     {
       "q": "我的 freenet 邮件会存储在你们的服务器上吗？",

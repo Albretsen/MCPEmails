@@ -21,7 +21,7 @@
     "titleLine1": "Koble Mailfence til Claude,",
     "titleLine2": "Cursor, ChatGPT og enhver MCP-klient",
     "lead": "Gi AI-agenten din en ekte Mailfence-innboks. Les, søk, send, svar, planlegg og organiser e-post over IMAP, i enhver MCP-klient, med plankravet og forbeholdet om tofaktor forklart på forhånd i stedet for oppdaget i etterkant.",
-    "answer": "Claude kan ikke nå Mailfence på egen hånd. mcpemails er en driftet MCP-server som kobler den til over IMAP på imap.mailfence.com port 993 og SMTP på smtp.mailfence.com port 465, slik at Claude, Cursor eller enhver MCP-klient kan lese, søke i, sende og organisere e-posten. To forhold avgjør om det fungerer: IMAP, POP og SMTP er bare tilgjengelig på Mailfences betalte planer, ikke på gratiskontoen, og innloggingen må være den primære adressen eller brukernavnet ditt, ikke et alias. Autentisering skjer med Mailfence-passordet ditt, eller helst et tjenestespesifikt passord generert under Settings, Account, Security. Én innboks er gratis hos oss, for alltid.",
+    "answer": "Claude kan ikke nå Mailfence på egen hånd. MCP Emails er en driftet MCP-server som kobler den til over IMAP på imap.mailfence.com port 993 og SMTP på smtp.mailfence.com port 465, slik at Claude, Cursor eller enhver MCP-klient kan lese, søke i, sende og organisere e-posten. To forhold avgjør om det fungerer: IMAP, POP og SMTP er bare tilgjengelig på Mailfences betalte planer, ikke på gratiskontoen, og innloggingen må være den primære adressen eller brukernavnet ditt, ikke et alias. Autentisering skjer med Mailfence-passordet ditt, eller helst et tjenestespesifikt passord generert under Settings, Account, Security. Én innboks er gratis hos oss, for alltid.",
     "meta0": "1 innboks gratis, for alltid",
     "meta1": "Betalt Mailfence-plan kreves for IMAP",
     "meta2": "E-post hentes direkte, lagres aldri"
@@ -32,7 +32,7 @@
   },
   "setup": [
     {
-      "h": "Opprett din gratis mcpemails-konto",
+      "h": "Opprett din gratis MCP Emails-konto",
       "p": "Registrer deg på mcpemails.com. Gratisplanen kobler til én innboks, for alltid, uten kort. Til slutt får du en MCP-URL og en nøkkel."
     },
     {
@@ -41,7 +41,7 @@
     },
     {
       "h": "Generer et tjenestespesifikt passord og slå av det du ikke trenger",
-      "p": "Under <b>Settings</b>, <b>Account</b>, <b>Security</b>, <b>Services access</b> oppretter du et passord avgrenset til IMAP og ett for SMTP i stedet for å gjenbruke kontopassordet, og deaktiverer POP, xDAV og andre protokoller du ikke bruker. Mailfences egne råd om sikring er å gjøre nettopp dette. Legg deretter til postkassen i mcpemails med den <b>primære</b> adressen eller brukernavnet ditt og det passordet."
+      "p": "Under <b>Settings</b>, <b>Account</b>, <b>Security</b>, <b>Services access</b> oppretter du et passord avgrenset til IMAP og ett for SMTP i stedet for å gjenbruke kontopassordet, og deaktiverer POP, xDAV og andre protokoller du ikke bruker. Mailfences egne råd om sikring er å gjøre nettopp dette. Legg deretter til postkassen i MCP Emails med den <b>primære</b> adressen eller brukernavnet ditt og det passordet."
     },
     {
       "h": "Lim MCP-URL-en inn i AI-en",
@@ -67,14 +67,14 @@
     }
   ],
   "limits": [
-    "Å koble en Mailfence-postkasse til en AI-klient betyr at AI-leverandøren leser meldingsinnholdet den jobber med. mcpemails henter e-post direkte fra Mailfence per forespørsel og lagrer ikke meldingsinnhold, og påloggingsopplysninger er kryptert ved lagring, men teksten når likevel Claude, Cursor eller hvilken klient du kobler til. Mailfences belgiske jurisdiksjon og holdning mot sporing gjelder Mailfence, og følger ikke med en melding inn til en AI-leverandør du kobler til selv.",
-    "OpenPGP-nøkkellageret til Mailfence er hele poenget med produktet for mange av brukerne, og en melding som er kryptert til nøkkelen din, kommer over IMAP som chiffertekst. mcpemails har ingen privat nøkkel fra deg, så en agent kan sortere, flagge og arkivere slike meldinger, men ikke lese dem. De forblir lesbare i Mailfence sitt nettgrensesnitt, der nøkkelen ligger.",
+    "Å koble en Mailfence-postkasse til en AI-klient betyr at AI-leverandøren leser meldingsinnholdet den jobber med. MCP Emails henter e-post direkte fra Mailfence per forespørsel og lagrer ikke meldingsinnhold, og påloggingsopplysninger er kryptert ved lagring, men teksten når likevel Claude, Cursor eller hvilken klient du kobler til. Mailfences belgiske jurisdiksjon og holdning mot sporing gjelder Mailfence, og følger ikke med en melding inn til en AI-leverandør du kobler til selv.",
+    "OpenPGP-nøkkellageret til Mailfence er hele poenget med produktet for mange av brukerne, og en melding som er kryptert til nøkkelen din, kommer over IMAP som chiffertekst. MCP Emails har ingen privat nøkkel fra deg, så en agent kan sortere, flagge og arkivere slike meldinger, men ikke lese dem. De forblir lesbare i Mailfence sitt nettgrensesnitt, der nøkkelen ligger.",
     "En gratis Mailfence-konto kan ikke kobles til her i det hele tatt. Det er en begrensning i Mailfences planer og ikke i MCP-serveren, og det finnes ingen omvei utenom en betalt plan."
   ],
   "faq": [
     {
       "q": "Fungerer Claude med Mailfence?",
-      "a": "Ikke direkte. Claude har ingen innebygd Mailfence-kobling. Ved å koble en MCP-server som mcpemails til en betalt Mailfence-konto over IMAP får Claude tilgang til å lese, søke, sende, svare, planlegge og organisere i den, og den samme tilkoblingen fungerer i Cursor og andre MCP-klienter uten å gjenta oppsettet."
+      "a": "Ikke direkte. Claude har ingen innebygd Mailfence-kobling. Ved å koble en MCP-server som MCP Emails til en betalt Mailfence-konto over IMAP får Claude tilgang til å lese, søke, sende, svare, planlegge og organisere i den, og den samme tilkoblingen fungerer i Cursor og andre MCP-klienter uten å gjenta oppsettet."
     },
     {
       "q": "Hva er IMAP- og SMTP-innstillingene for Mailfence?",
@@ -90,7 +90,7 @@
     },
     {
       "q": "Kan AI-en min lese OpenPGP-kryptert e-post hos Mailfence?",
-      "a": "Nei. Krypteringen hos Mailfence bygger på en nøkkel som AI-klienten din ikke har og som mcpemails aldri mottar, så en kryptert melding kommer over IMAP som en armert chiffertekstblokk. Agenten kan se avsender, emne og dato og kan flytte eller flagge meldingen, men innholdet er uleselig utenfor Mailfence-grensesnittet."
+      "a": "Nei. Krypteringen hos Mailfence bygger på en nøkkel som AI-klienten din ikke har og som MCP Emails aldri mottar, så en kryptert melding kommer over IMAP som en armert chiffertekstblokk. Agenten kan se avsender, emne og dato og kan flytte eller flagge meldingen, men innholdet er uleselig utenfor Mailfence-grensesnittet."
     },
     {
       "q": "Lagres Mailfence-e-posten min på serverne deres?",

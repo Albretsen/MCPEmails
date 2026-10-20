@@ -20,7 +20,7 @@
     "titleLine1": "将 Interia Poczta 连接到 Claude，",
     "titleLine2": "以及 Cursor、ChatGPT、任意 MCP 客户端",
     "lead": "为你的 AI 代理接入一个真正的 Interia 收件箱。在账户设置中开启邮件程序通道后，即可通过 IMAP 读取、搜索、发送、回复、定时与整理邮件。",
-    "answer": "Claude 无法自行访问 Interia 邮箱。mcpemails 是一个托管 MCP 服务器，通过 poczta.interia.pl 端口 993 的 IMAP 与之连接，使用你的完整地址和普通 Interia 密码进行认证，让 Claude、Cursor 或任意 MCP 客户端都能读取、搜索、发送并整理这些邮件。在你于账户参数中把 korzystam z programu pocztowego 设为 TAK 之前，Interia 会保持 POP3 和 IMAP 通道关闭；而开启了两步登录的邮箱则完全无法在任何邮件程序中使用。1 个收件箱永久免费。",
+    "answer": "Claude 无法自行访问 Interia 邮箱。MCP Emails 是一个托管 MCP 服务器，通过 poczta.interia.pl 端口 993 的 IMAP 与之连接，使用你的完整地址和普通 Interia 密码进行认证，让 Claude、Cursor 或任意 MCP 客户端都能读取、搜索、发送并整理这些邮件。在你于账户参数中把 korzystam z programu pocztowego 设为 TAK 之前，Interia 会保持 POP3 和 IMAP 通道关闭；而开启了两步登录的邮箱则完全无法在任何邮件程序中使用。1 个收件箱永久免费。",
     "meta0": "1 个收件箱永久免费",
     "meta1": "先开启邮件程序通道",
     "meta2": "邮件实时获取，绝不存储"
@@ -31,7 +31,7 @@
   },
   "setup": [
     {
-      "h": "创建免费的 mcpemails 账户",
+      "h": "创建免费的 MCP Emails 账户",
       "p": "在 mcpemails.com 注册。免费套餐可永久连接一个收件箱，无需信用卡。"
     },
     {
@@ -43,7 +43,7 @@
       "p": "Interia 的两步登录（<b>logowanie dwuetapowe</b>）与邮件程序是互斥的。Interia 在开启它的页面上就说明了：开启两步登录后，该账户无法在邮件程序中使用。Interia 不提供可以绕过它的应用专用密码，所以如果邮箱已开启两步登录，你需要在继续之前做出选择。"
     },
     {
-      "h": "在 mcpemails 中添加邮箱",
+      "h": "在 MCP Emails 中添加邮箱",
       "p": "选择 IMAP / SMTP，输入完整地址（例如 nazwa@interia.pl），并输入你的 Interia 密码。服务器地址和端口已预填，并经实时 TLS 连接验证。然后把 https://mcpemails.com/api/mcp 粘贴到 Claude、Cursor 或 ChatGPT 中，完成授权，代理便拥有该收件箱。"
     }
   ],
@@ -58,7 +58,7 @@
     },
     {
       "h": "没有 SASL-IR，默认支持它的客户端会收到光秃秃的 BAD",
-      "p": "Interia 的横幅声明了 <code>AUTH=PLAIN</code>，但没有 <code>SASL-IR</code>，因此它会拒绝随 <code>AUTHENTICATE</code> 命令一起发送凭据的一步式认证。默认假设支持 SASL-IR 的客户端会收到一个没有任何解释的 <code>BAD</code>，与密码错误无法区分。mcpemails 会检测到这一点并改用两步交互重试，所以这已经处理好了，但这解释了为什么有些 IMAP 工具报告 Interia 有问题，而 Thunderbird 却能正常连接。"
+      "p": "Interia 的横幅声明了 <code>AUTH=PLAIN</code>，但没有 <code>SASL-IR</code>，因此它会拒绝随 <code>AUTHENTICATE</code> 命令一起发送凭据的一步式认证。默认假设支持 SASL-IR 的客户端会收到一个没有任何解释的 <code>BAD</code>，与密码错误无法区分。MCP Emails 会检测到这一点并改用两步交互重试，所以这已经处理好了，但这解释了为什么有些 IMAP 工具报告 Interia 有问题，而 Thunderbird 却能正常连接。"
     },
     {
       "h": "收信和发信使用同一个主机名，IMAP 上只提供 PLAIN",
@@ -67,12 +67,12 @@
   ],
   "limits": [
     "Interia 不声明 MOVE 或 SPECIAL-USE，因此归档以复制加标记加清除的方式完成，Sent、Drafts 和 Trash 按名称匹配。在波兰语邮箱中，它们通常是 Wysłane、Kopie robocze 和 Kosz，所以如果代理找不到某个文件夹，请写出它的名称。",
-    "在 Interia 账户上开启两步登录，会让邮箱与所有邮件客户端（包括 mcpemails）断开连接，而且不存在可以恢复连接的应用专用密码。"
+    "在 Interia 账户上开启两步登录，会让邮箱与所有邮件客户端（包括 MCP Emails）断开连接，而且不存在可以恢复连接的应用专用密码。"
   ],
   "faq": [
     {
       "q": "Claude 能用于 Interia Poczta 吗？",
-      "a": "不能单独使用。Claude 没有内置的 Interia 连接器。通过 IMAP 将 mcpemails 这样的 MCP 服务器指向该邮箱后，Claude 就能读取、搜索、发送、回复、定时和整理其中的邮件，而且同一个连接随后也可在 Cursor、ChatGPT 和其他 MCP 客户端中使用。"
+      "a": "不能单独使用。Claude 没有内置的 Interia 连接器。通过 IMAP 将 MCP Emails 这样的 MCP 服务器指向该邮箱后，Claude 就能读取、搜索、发送、回复、定时和整理其中的邮件，而且同一个连接随后也可在 Cursor、ChatGPT 和其他 MCP 客户端中使用。"
     },
     {
       "q": "Interia 的 IMAP 和 SMTP 设置是什么？",

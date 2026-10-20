@@ -12,11 +12,12 @@
  * template that later wants the same line, without dragging suppression
  * machinery along with it.
  *
- * THESE VALUES ARE NOT COPY. They must match our entry in Enhetsregisteret and
+ * THESE VALUES ARE NOT COPY. They must match our entry in Foretaksregisteret and
  * the identical strings on /privacy, /terms and the home page footer
  * (messages/{en,nb}/home.json, key `legalEntity`). Do not edit them without
  * checking brreg.no first. "MCPEmails" is only the trading name of the service;
- * the legal person is Albretsen Consulting.
+ * the legal person is Albretsen AS (aksjeselskap), which takes over MCPEmails
+ * from the founder's former sole proprietorship on 2026-11-01.
  *
  * TONE. The address is a legal identifier, not a message. Wherever it is
  * rendered it goes BELOW the human footer and in the quietest type available:
@@ -24,12 +25,33 @@
  * registration number set at the same weight drowns that out.
  */
 
-export const LEGAL_ENTITY_NAME = 'Albretsen Consulting';
-export const LEGAL_ORG_NUMBER = '926 646 753';
+export const LEGAL_ENTITY_NAME = 'Albretsen AS';
+export const LEGAL_ORG_NUMBER = '938 702 373';
 export const LEGAL_POSTAL_ADDRESS = 'Håsteins gate 9, 5160 Laksevåg, Norway';
 
 /**
  * The one sentence, worded exactly as it already appears on the marketing site
  * so a reader who checks both sees the same registration and the same street.
  */
-export const POSTAL_ADDRESS_LINE = `MCPEmails is a service of ${LEGAL_ENTITY_NAME} (enkeltpersonforetak), organisation number ${LEGAL_ORG_NUMBER}, ${LEGAL_POSTAL_ADDRESS}.`;
+export const POSTAL_ADDRESS_LINE = `MCPEmails is a service of ${LEGAL_ENTITY_NAME}, organisation number ${LEGAL_ORG_NUMBER}, ${LEGAL_POSTAL_ADDRESS}.`;
+
+/**
+ * Consumer-law pages, as paths on the marketing site. /withdrawal is the
+ * statutory withdrawal notice plus the model form; /cancel is the public
+ * cancellation and withdrawal form (no login), the page §312k BGB and the
+ * withdrawal function of Directive (EU) 2023/2673 ask for.
+ */
+export const WITHDRAWAL_PATH = '/withdrawal';
+export const CANCEL_PATH = '/cancel';
+
+/**
+ * The one withdrawal sentence for an email that confirms a purchase. The
+ * contract confirmation on a durable medium has to carry the withdrawal
+ * information, so it points at the full notice and the online form.
+ */
+export function withdrawalLine(baseUrl: string): string {
+  return (
+    'You can withdraw from this contract within 14 days without giving a reason, ' +
+    `and we refund the first charge in full. How it works: ${baseUrl}${WITHDRAWAL_PATH}`
+  );
+}

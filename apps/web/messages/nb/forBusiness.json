@@ -7,7 +7,7 @@
     "eyebrow": "For den som tar seg av firmaets e-post",
     "titleLine1": "Alle firmaets postkasser,",
     "titleLine2": "én person, én agent",
-    "lead": "post@, salg@, faktura@, support@ og din egen adresse havner som regel hos den samme personen. mcpemails kobler alle sammen til Claude, Cursor, ChatGPT eller en annen MCP-klient, så du kan lese, svare, videresende og rydde i hver adresse fra én samtale. Det fungerer uansett hvem som drifter e-posten, og du kan holde tilbake hver utgående melding til du har godkjent den.",
+    "lead": "post@, salg@, faktura@, support@ og din egen adresse havner som regel hos den samme personen. MCP Emails kobler alle sammen til Claude, Cursor, ChatGPT eller en annen MCP-klient, så du kan lese, svare, videresende og rydde i hver adresse fra én samtale. Det fungerer uansett hvem som drifter e-posten, og du kan holde tilbake hver utgående melding til du har godkjent den.",
     "ctaPrimary": "Koble til den første postkassen gratis",
     "ctaSecondary": "Se hva den gjør"
   },
@@ -96,7 +96,7 @@
   "providers": {
     "eyebrow": "Enhver vert",
     "title": "Koble til alle postkassene firmaet har, uansett hvem som drifter dem",
-    "sub": "Det meste av firma-e-post ligger hos webhotellet eller domeneregistraren, og det er helt greit. Enhver postkasse som snakker IMAP og SMTP på standardportene, kobles til med adresse, vert og passord. IONOS, Hostinger, OVH, Namecheap og andre vanlige verter gjenkjennes ut fra adressen og fylles ut for deg. Gmail og Google Workspace kobles til med et app-passord eller ved å logge inn med Google. Microsoft 365 og Outlook kobles til ved å logge inn med Microsoft; på en Microsoft 365-konto i firmaet kan IT-administratoren måtte godkjenne mcpemails én gang for hele organisasjonen. iCloud, Fastmail, Yahoo, Zoho og Yandex kobles til med et app-passord.",
+    "sub": "Det meste av firma-e-post ligger hos webhotellet eller domeneregistraren, og det er helt greit. Enhver postkasse som snakker IMAP og SMTP på standardportene, kobles til med adresse, vert og passord. IONOS, Hostinger, OVH, Namecheap og andre vanlige verter gjenkjennes ut fra adressen og fylles ut for deg. Gmail og Google Workspace kobles til med et Google-app-passord. Microsoft 365 og Outlook kobles til ved å logge inn med Microsoft; på en Microsoft 365-konto i firmaet kan IT-administratoren måtte godkjenne MCP Emails én gang for hele organisasjonen. iCloud, Fastmail, Yahoo, Zoho og Yandex kobles til med et app-passord.",
     "ctaImap": "Koble til enhver IMAP-postkasse",
     "ctaGmail": "Koble til Gmail eller Google Workspace",
     "ctaMicrosoft": "Koble til Microsoft 365",
@@ -117,11 +117,11 @@
         "p": "For et firma med to eller tre adresser. Ingen månedlig handlingsgrense, høyere burst-grense og e-poststøtte."
       },
       "pro": {
-        "h": "Pro, $15 i måneden: fire eller flere",
-        "p": "Alle postkassene virksomheten har, uten grense for antall, fortsatt med én innlogging. Planen for et firma med en adresse per avdeling."
+        "h": "Pro, $15 i måneden: fire til ti",
+        "p": "Opptil 10 postkasser, fortsatt med én innlogging. Planen for én person som driver en bedrift med en adresse per avdeling."
       }
     },
-    "note": "Team, til $79 i måneden, er for når flere personer trenger hver sin innlogging, med roller og et eget arbeidsområde per kunde.",
+    "note": "Business, til $39 i måneden, har 10 postkasser inkludert og koster $3 i måneden for hver ekstra. Medlemmer med roller koster ingenting ekstra, og du kan ha et eget arbeidsområde per firma eller kunde.",
     "cta": "Sammenlign alle planene"
   },
   "faq": {
@@ -131,11 +131,11 @@
     "items": [
       {
         "q": "Vi er et firma, ikke en privatperson. Er Pro virkelig riktig plan?",
-        "a": "Ja, hvis det er én person som tar seg av postkassene. Pro er én innlogging uten grense for antall tilkoblede postkasser, så én person kan håndtere post@, salg@, faktura@ og support@ fra én agent. Team er for når flere personer trenger å logge inn hver for seg, med roller og et eget arbeidsområde per kunde."
+        "a": "Ja, hvis det er én person som tar seg av postkassene. Pro er én innlogging med opptil 10 tilkoblede postkasser, så én person kan håndtere post@, salg@, faktura@ og support@ fra én agent. Business er for flere enn 10 postkasser eller flere personer som logger inn hver for seg, med roller og et eget arbeidsområde per kunde."
       },
       {
         "q": "E-posten vår ligger hos webhotellet, ikke Gmail. Vil det fungere?",
-        "a": "Nesten helt sikkert. Enhver postkasse som snakker IMAP og SMTP på standardportene, kobles til med adresse, vert og passord, og vanlige verter gjenkjennes ut fra adressen slik at innstillingene fyller seg ut selv. Serveren må være tilgjengelig fra det åpne internett, og en postkasse som bare godtar OAuth-innlogging over IMAP, kan ikke kobles til på denne måten. Ligger firmaets e-post i Microsoft 365, kobler du den heller til som Outlook: du logger inn med Microsoft, og IT-administratoren kan måtte godkjenne mcpemails én gang for hele organisasjonen."
+        "a": "Nesten helt sikkert. Enhver postkasse som snakker IMAP og SMTP på standardportene, kobles til med adresse, vert og passord, og vanlige verter gjenkjennes ut fra adressen slik at innstillingene fyller seg ut selv. Serveren må være tilgjengelig fra det åpne internett, og en postkasse som bare godtar OAuth-innlogging over IMAP, kan ikke kobles til på denne måten. Ligger firmaets e-post i Microsoft 365, kobler du den heller til som Outlook: du logger inn med Microsoft, og IT-administratoren kan måtte godkjenne MCP Emails én gang for hele organisasjonen."
       },
       {
         "q": "Sender agenten fra riktig adresse?",
@@ -151,7 +151,7 @@
       },
       {
         "q": "Hva om en kollega også trenger tilgang?",
-        "a": "Gratis, Personal og Pro er planer med én innlogging. Når en person til trenger sin egen, legger Team til medlemmer med roller. Fram til da dekker én person på Pro alle postkassene."
+        "a": "Gratis, Personal og Pro er planer med én innlogging. Når en person til trenger sin egen, legger Business til medlemmer med roller, uten ekstra kostnad per person. Fram til da dekker én person på Pro opptil 10 postkasser."
       }
     ]
   },

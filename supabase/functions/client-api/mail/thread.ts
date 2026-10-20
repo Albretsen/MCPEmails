@@ -75,7 +75,10 @@
 //            Inbox: the id the list row has, and the one an archive or a move
 //            out of the Inbox must be issued against). Every other message is
 //            returned with its All Mail id ("[Gmail]/All Mail:<uid>"), which
-//            reads, flags and deletes correctly; its `folder` is the role its
+//            reads, flags and deletes correctly, and which the tool layer
+//            archives and moves with labels (UID STORE -X-GM-LABELS (\Inbox),
+//            mcp-server/imap-gmail-relocate.ts: a UID MOVE out of All Mail
+//            would leave it in the Inbox); its `folder` is the role its
 //            labels give it (the Sent folder for \Sent, "INBOX" for \Inbox,
 //            else All Mail). Copies are matched by X-GM-MSGID, never by
 //            Message-ID. Drafts are left out; Trash and Spam are not in All

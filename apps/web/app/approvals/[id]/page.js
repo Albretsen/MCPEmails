@@ -31,7 +31,7 @@ export const dynamic = 'force-dynamic';
 
 export async function generateMetadata() {
   return {
-    title: 'Review send · MCP Emails',
+    title: 'Review send',
     // This URL travels through an AI conversation. Keep it out of every index.
     robots: { index: false, follow: false, nocache: true },
   };

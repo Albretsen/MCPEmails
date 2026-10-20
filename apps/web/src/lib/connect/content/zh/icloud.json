@@ -22,23 +22,23 @@
     "meta0": "1 个收件箱永久免费",
     "meta1": "App 专用密码，无需 OAuth",
     "meta2": "邮件实时获取，绝不存储",
-    "answer": "Apple 没有为 iCloud 邮件提供 OAuth，所以 Claude 无法直接连接它。mcpemails 使用 Apple App 专用密码通过 IMAP 连接你的 iCloud 收件箱，让 Claude、Cursor 或任意 MCP 客户端都能读取、搜索、发送并整理这些邮件。设置大约只需两分钟，1 个收件箱免费。"
+    "answer": "Apple 没有为 iCloud 邮件提供 OAuth，所以 Claude 无法直接连接它。MCP Emails 使用 Apple App 专用密码通过 IMAP 连接你的 iCloud 收件箱，让 Claude、Cursor 或任意 MCP 客户端都能读取、搜索、发送并整理这些邮件。设置大约只需两分钟，1 个收件箱免费。"
   },
   "method": {
     "title": "iCloud 如何连接：App 专用密码",
-    "body": "iCloud 邮件使用 <b>Apple App 专用密码</b>通过 IMAP/SMTP 连接。在 account.apple.com 的 Sign-In and Security → App-Specific Passwords（登录与安全、App 专用密码）中生成一个（需要开启双重认证），然后连同你的 iCloud 地址一起粘贴到 mcpemails。"
+    "body": "iCloud 邮件使用 <b>Apple App 专用密码</b>通过 IMAP/SMTP 连接。在 account.apple.com 的 Sign-In and Security → App-Specific Passwords（登录与安全、App 专用密码）中生成一个（需要开启双重认证），然后连同你的 iCloud 地址一起粘贴到 MCP Emails。"
   },
   "setup": [
     {
       "h": "创建免费账户",
-      "p": "注册 mcpemails，无需信用卡。免费套餐可永久连接一个收件箱。"
+      "p": "注册 MCP Emails，无需信用卡。免费套餐可永久连接一个收件箱。"
     },
     {
       "h": "生成 App 专用密码",
       "p": "在 account.apple.com 进入 Sign-In and Security → App-Specific Passwords，创建一个密码（必须已开启双重认证）。"
     },
     {
-      "h": "粘贴到 mcpemails",
+      "h": "粘贴到 MCP Emails",
       "p": "填入你的 iCloud 地址和 App 专用密码，安全地连接收件箱。"
     },
     {
@@ -72,7 +72,7 @@
   "faq": [
     {
       "q": "Claude 能用于 iCloud 邮件吗？",
-      "a": "不能单独使用。Claude 没有内置的 iCloud 连接器，Apple 也没有为 iCloud 邮件公布 OAuth 接口。使用 Apple App 专用密码，通过 IMAP 将 mcpemails 这样的 MCP 服务器连接到邮箱后，Claude 就能读取、搜索、发送、回复、定时和整理邮件，而且同一个连接也可在 Cursor 和 ChatGPT 中使用。"
+      "a": "不能单独使用。Claude 没有内置的 iCloud 连接器，Apple 也没有为 iCloud 邮件公布 OAuth 接口。使用 Apple App 专用密码，通过 IMAP 将 MCP Emails 这样的 MCP 服务器连接到邮箱后，Claude 就能读取、搜索、发送、回复、定时和整理邮件，而且同一个连接也可在 Cursor 和 ChatGPT 中使用。"
     },
     {
       "q": "iCloud 邮件的 IMAP 和 SMTP 设置是什么？",

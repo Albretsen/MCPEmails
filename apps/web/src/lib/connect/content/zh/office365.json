@@ -23,7 +23,7 @@
     "meta0": "1 个收件箱永久免费",
     "meta1": "使用 Microsoft 登录，无需应用专用密码",
     "meta2": "内置 IT 管理员审批链接",
-    "answer": "可以，但有一个取决于你所在组织的条件。mcpemails 通过 Microsoft Graph 连接工作和学校的 Microsoft 365 邮箱：你点击“使用 Microsoft 连接”，用工作账户登录即可。不过，许多组织需要 IT 管理员先批准一次该应用，因为 Microsoft 自 2025 年底起生效的默认同意策略不允许员工自行批准读取邮件的权限。遇到这种情况，控制台会给你一个审批链接，供你发给 IT 管理员。管理员打开链接，用其 Microsoft 工作账户登录，为整个组织批准一次 MCP Emails，无需 MCP Emails 账户，之后你和同事就可以正常连接。然后把一个 URL 粘贴到 Claude、ChatGPT、Cursor 或任意 MCP 客户端。1 个收件箱永久免费。"
+    "answer": "可以，但有一个取决于你所在组织的条件。MCP Emails 通过 Microsoft Graph 连接工作和学校的 Microsoft 365 邮箱：你点击“使用 Microsoft 连接”，用工作账户登录即可。不过，许多组织需要 IT 管理员先批准一次该应用，因为 Microsoft 自 2025 年底起生效的默认同意策略不允许员工自行批准读取邮件的权限。遇到这种情况，控制台会给你一个审批链接，供你发给 IT 管理员。管理员打开链接，用其 Microsoft 工作账户登录，为整个组织批准一次 MCP Emails，无需 MCP Emails 账户，之后你和同事就可以正常连接。然后把一个 URL 粘贴到 Claude、ChatGPT、Cursor 或任意 MCP 客户端。1 个收件箱永久免费。"
   },
   "method": {
     "title": "Microsoft 365 如何连接：使用 Microsoft 登录，有时需要管理员批准",
@@ -32,7 +32,7 @@
   "setup": [
     {
       "h": "创建免费账户",
-      "p": "注册 mcpemails，无需信用卡。免费套餐可永久连接一个收件箱。"
+      "p": "注册 MCP Emails，无需信用卡。免费套餐可永久连接一个收件箱。"
     },
     {
       "h": "选择 Outlook 并使用 Microsoft 连接",
@@ -50,7 +50,7 @@
   "gotchas": [
     {
       "h": "密码和应用专用密码都无法使用，所以我们使用 Microsoft Graph",
-      "p": "Microsoft 已在 2022 年从所有 Exchange Online 租户中移除了 IMAP 和 POP 的基本身份验证，而且无法重新启用。密码登录失败时看起来与密码错误完全一样，这就是为什么有人会反复重置本来正确的凭据。mcpemails 对 Microsoft 365 不使用 IMAP：它使用 Microsoft 登录并与 Microsoft Graph 通信，因此无需输入密码，也没有会填错的服务器设置。"
+      "p": "Microsoft 已在 2022 年从所有 Exchange Online 租户中移除了 IMAP 和 POP 的基本身份验证，而且无法重新启用。密码登录失败时看起来与密码错误完全一样，这就是为什么有人会反复重置本来正确的凭据。MCP Emails 对 Microsoft 365 不使用 IMAP：它使用 Microsoft 登录并与 Microsoft Graph 通信，因此无需输入密码，也没有会填错的服务器设置。"
     },
     {
       "h": "管理员批准由你的组织决定，已验证发布者也无法绕过",
@@ -58,7 +58,7 @@
     },
     {
       "h": "没有 Exchange Online 邮箱的账户会被拒绝",
-      "p": "有些 Microsoft 365 账户没有 Exchange Online 邮箱，例如没有 Exchange 许可证的管理员账户，或邮件托管在其他地方的组织。此时 Microsoft Graph 没有可打开的邮箱，因此 mcpemails 会拒绝连接并说明原因。如果你的邮件在其他服务器上，请改用 IMAP 连接该地址。"
+      "p": "有些 Microsoft 365 账户没有 Exchange Online 邮箱，例如没有 Exchange 许可证的管理员账户，或邮件托管在其他地方的组织。此时 Microsoft Graph 没有可打开的邮箱，因此 MCP Emails 会拒绝连接并说明原因。如果你的邮件在其他服务器上，请改用 IMAP 连接该地址。"
     },
     {
       "h": "如果批准没有成功，请管理员再次打开链接",
@@ -74,7 +74,7 @@
   "faq": [
     {
       "q": "Claude 能用于 Microsoft 365 邮箱吗？",
-      "a": "可以。使用 Microsoft 登录，将你工作或学校的邮箱连接到 mcpemails，把一个 MCP URL 粘贴到 Claude，Claude 就能阅读、搜索、发送、回复、转发、定时发送和归档你的邮件。如果你的组织要求管理员批准，你的 IT 管理员需要先用控制台提供的链接批准一次 MCP Emails。"
+      "a": "可以。使用 Microsoft 登录，将你工作或学校的邮箱连接到 MCP Emails，把一个 MCP URL 粘贴到 Claude，Claude 就能阅读、搜索、发送、回复、转发、定时发送和归档你的邮件。如果你的组织要求管理员批准，你的 IT 管理员需要先用控制台提供的链接批准一次 MCP Emails。"
     },
     {
       "q": "为什么要求我获得管理员批准？",
@@ -86,7 +86,7 @@
     },
     {
       "q": "我需要应用专用密码或 IMAP 设置吗？",
-      "a": "不需要。你使用 Microsoft 登录后，mcpemails 通过 Microsoft Graph 连接 Microsoft 365，因此无需创建应用专用密码，也无需填写 IMAP 或 SMTP 服务器。反正密码也无法使用：基本身份验证已于 2022 年从 Exchange Online 中移除，且无法重新启用。"
+      "a": "不需要。你使用 Microsoft 登录后，MCP Emails 通过 Microsoft Graph 连接 Microsoft 365，因此无需创建应用专用密码，也无需填写 IMAP 或 SMTP 服务器。反正密码也无法使用：基本身份验证已于 2022 年从 Exchange Online 中移除，且无法重新启用。"
     },
     {
       "q": "我的 AI 能在 Microsoft 365 中做什么？",
@@ -94,7 +94,7 @@
     },
     {
       "q": "我的邮件会存储在你们的服务器上吗？",
-      "a": "不会。每次请求都从 Microsoft 实时获取邮件，并交给你的 AI 客户端。你 Microsoft 登录所得的 OAuth 令牌静态加密存储，邮件正文不会保留。在 mcpemails 中删除该收件箱会立即终止连接。"
+      "a": "不会。每次请求都从 Microsoft 实时获取邮件，并交给你的 AI 客户端。你 Microsoft 登录所得的 OAuth 令牌静态加密存储，邮件正文不会保留。在 MCP Emails 中删除该收件箱会立即终止连接。"
     }
   ],
   "ctaBand": {

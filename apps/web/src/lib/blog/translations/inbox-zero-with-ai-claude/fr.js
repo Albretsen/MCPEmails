@@ -5,7 +5,7 @@ const translation = {
   coverAlt: 'Atteignez l\'inbox zero avec l\'IA — Claude trie, archive et rédige des réponses dans votre vraie boîte mail via MCP',
   content: `L'inbox zero a toujours eu le même problème : y parvenir vous coûte une heure que vous n'avez pas, et demain vous voilà revenu à cinquante non lus. Un agent IA change le calcul. Au lieu de trier vous-même les messages un par un, vous dites à Claude ce que signifie « traité » et il s'occupe de toute la boîte d'un coup — en triant, archivant, étiquetant et rédigeant des réponses sur votre *vrai* courrier, en direct.
 
-Ce guide, c'est la routine : une boucle reproductible à lancer chaque matin, les prompts exacts qui la pilotent et la seule règle qui la rend sûre (rien n'est jamais stocké). Il part du principe que Claude peut déjà voir votre boîte mail. Si ce n'est pas encore le cas, commencez par [comment connecter Gmail à Claude](/blog/connect-gmail-to-claude) (ou le [guide Outlook et Microsoft 365](/blog/connect-outlook-microsoft-365-ai-agent-mcp)) — cela prend environ deux minutes — puis revenez.
+Ce guide, c'est la routine : une boucle reproductible à lancer chaque matin, les prompts exacts qui la pilotent et la seule règle qui la rend sûre (rien n'est jamais stocké). Il part du principe que Claude peut déjà voir votre boîte mail. Si ce n'est pas encore le cas, commencez par [comment connecter Gmail à Claude](/blog/connect-gmail-to-claude) (ou le [guide Outlook et Microsoft 365](/blog/connect-outlook-microsoft-365-ai-agent-mcp)) — cela prend environ deux minutes — puis revenez. Sur iCloud, Fastmail ou un autre hôte IMAP, suivez plutôt le [guide de connexion des e-mails à Claude](/blog/connect-claude-to-email).
 
 ## Pourquoi l'« inbox zero » est enfin réaliste avec l'IA
 

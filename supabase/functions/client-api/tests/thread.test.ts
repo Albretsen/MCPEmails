@@ -863,6 +863,114 @@ Deno.test("thread (Gmail over IMAP): no key, a wrong key, an anchor in Sent, a t
   await gone.pool.closeAll();
 });
 
+// ── Acting on a thread's All Mail ids (Gmail over IMAP) ─────────────────────
+//
+// Opened from Sent, a conversation's Inbox messages carry their All Mail ids.
+// Archiving them used to UID MOVE them out of All Mail, which on Gmail leaves
+// \Inbox on: they stayed in the Inbox. Now the tool layer takes the \Inbox
+// label off instead (mcp-server/imap-gmail-relocate.ts). The fake server
+// models labels as Gmail does: a label is a folder.
+
+function gmailWorldWithTrash(): FakeMailbox[] {
+  return [
+    ...gmailWorld(),
+    { name: "[Gmail]/Trash", attrs: ["\\HasNoChildren", "\\Trash"], messages: [] },
+    { name: "Projects", attrs: ["\\HasNoChildren"], messages: [] },
+  ];
+}
+
+const inboxMsgIds = (boxes: FakeMailbox[]) => boxes.find((b) => b.name === "INBOX")!.messages.map((m) => m.gmMessageId).sort();
+const allMailMsg = (boxes: FakeMailbox[], uid: number) => boxes.find((b) => b.name === ALL_MAIL)!.messages.find((m) => m.uid === uid);
+
+Deno.test("archive (Gmail over IMAP): a conversation opened from Sent: its Inbox messages, addressed by All Mail ids, leave the Inbox", async () => {
+  const { app, pool, run, boxes } = await rig({ boxes: gmailWorldWithTrash(), advertised: GM_CAPS });
+  const thread = await run(() => app.mail("thread", { message_id: `${GM_SENT}:31` }));
+  const inInbox = (thread.value.body.messages as ThreadRowLite[]).filter((m) => m.folder === "INBOX").map((m) => m.id);
+  assertEquals(inInbox, [`${ALL_MAIL}:101`, `${ALL_MAIL}:103`], "the Inbox messages carry their All Mail ids");
+  assertEquals(inboxMsgIds(boxes), ["5001", "5003", "5009"]);
+
+  const before = pool.servers.map((s) => s.commands.length);
+  const archived = await run(() => app.mail("archive", { message_ids: inInbox }));
+  assertEquals(archived.value.status, 200, JSON.stringify(archived.value.body));
+  assertEquals(archived.value.body.succeeded, 2);
+  // The messages keep their All Mail ids: still valid, so undo and reads work.
+  assertEquals(archived.value.body.results.map((r: { new_message_id: string }) => r.new_message_id), inInbox);
+
+  // Out of the Inbox; still in All Mail, without \Inbox; the other thread untouched.
+  assertEquals(inboxMsgIds(boxes), ["5009"]);
+  for (const uid of [101, 103]) {
+    assert(allMailMsg(boxes, uid) !== undefined, `All Mail ${uid} is still there`);
+    assert(!allMailMsg(boxes, uid)!.gmLabels!.includes("\\Inbox"), `All Mail ${uid} lost \\Inbox`);
+  }
+  const sent = pool.servers.flatMap((s, i) => s.commands.slice(before[i] ?? 0));
+  assert(!sent.some((c) => /^UID MOVE/.test(c)), `nothing is moved out of All Mail: ${sent.join(" | ")}`);
+  assert(sent.some((c) => /^UID STORE 101,103 -X-GM-LABELS\.SILENT \(\\Inbox\)$/.test(c)), sent.join(" | "));
+  await pool.closeAll();
+
+  // One message takes the single archive executor: the same result.
+  const one = await rig({ boxes: gmailWorldWithTrash(), advertised: GM_CAPS });
+  const single = await one.run(() => one.app.mail("archive", { message_ids: [`${ALL_MAIL}:103`] }));
+  assertEquals(single.value.status, 200, JSON.stringify(single.value.body));
+  assertEquals(single.value.body.results, [{ message_id: `${ALL_MAIL}:103`, success: true, new_message_id: `${ALL_MAIL}:103` }]);
+  assertEquals(inboxMsgIds(one.boxes), ["5001", "5009"]);
+  assert(!one.pool.servers.flatMap((s) => s.commands).some((c) => /^UID MOVE/.test(c)));
+  await one.pool.closeAll();
+});
+
+Deno.test("move / delete / flag (Gmail over IMAP) on All Mail ids: a label move leaves the Inbox, delete still trashes, flags land", async () => {
+  const { app, pool, run, boxes } = await rig({ boxes: gmailWorldWithTrash(), advertised: GM_CAPS });
+  await run(() => app.mail("thread", { message_id: `${GM_SENT}:31` }));
+
+  const moved = await run(() => app.mail("move", { message_ids: [`${ALL_MAIL}:101`], destination_folder_id: "Projects" }));
+  assertEquals(moved.value.status, 200, JSON.stringify(moved.value.body));
+  assertEquals(moved.value.body.results[0].new_message_id, `${ALL_MAIL}:101`);
+  assertEquals(inboxMsgIds(boxes), ["5003", "5009"], "out of the Inbox");
+  assertEquals(boxes.find((b) => b.name === "Projects")!.messages.map((m) => m.gmMessageId), ["5001"], "filed under the label");
+  assert(allMailMsg(boxes, 101)!.gmLabels!.includes("Projects"));
+
+  // Back to the Inbox (what undo does): a COPY adds \Inbox, nothing is taken off.
+  const back = await run(() => app.mail("move", { message_ids: [`${ALL_MAIL}:101`], destination_folder_id: "inbox" }));
+  assertEquals(back.value.status, 200, JSON.stringify(back.value.body));
+  assertEquals(inboxMsgIds(boxes), ["5001", "5003", "5009"]);
+
+  const flagged = await run(() => app.mail("flag", { message_ids: [`${ALL_MAIL}:103`], read: true, starred: true }));
+  assertEquals(flagged.value.status, 200, JSON.stringify(flagged.value.body));
+  assert(allMailMsg(boxes, 103)!.flags.includes("\\Seen") && allMailMsg(boxes, 103)!.flags.includes("\\Flagged"));
+
+  // Delete is Gmail's own: a UID MOVE from All Mail to Trash, as before.
+  const del = await run(() => app.mail("delete", { message_ids: [`${ALL_MAIL}:103`] }));
+  assertEquals(del.value.status, 200, JSON.stringify(del.value.body));
+  assertEquals(del.value.body.succeeded, 1);
+  assert(pool.servers.flatMap((s) => s.commands).some((c) => /^UID MOVE 103 "\[Gmail\]\/Trash"$/.test(c)));
+  assertEquals(boxes.find((b) => b.name === "[Gmail]/Trash")!.messages.length, 1);
+  await pool.closeAll();
+});
+
+Deno.test("archive: unchanged where All Mail is not the source: Gmail's INBOX ids, and a server without X-GM-EXT-1", async () => {
+  // Gmail, an INBOX id: the one UID MOVE it always was, no label command.
+  const gm = await rig({ boxes: gmailWorldWithTrash(), advertised: GM_CAPS });
+  const fromInbox = await gm.run(() => gm.app.mail("archive", { message_ids: ["INBOX:13"] }));
+  assertEquals(fromInbox.value.status, 200, JSON.stringify(fromInbox.value.body));
+  const gmCommands = gm.pool.servers.flatMap((s) => s.commands);
+  assert(gmCommands.some((c) => /^UID MOVE 13 /.test(c)), gmCommands.join(" | "));
+  assert(!gmCommands.some((c) => /X-GM-LABELS|^UID COPY/.test(c)), gmCommands.join(" | "));
+  await gm.pool.closeAll();
+
+  // Any other server: a Sent message is moved to Archive with UID MOVE; no LIST
+  // or label command is spent on finding All Mail, even for a "[Gmail]/" name.
+  const plainBoxes = world();
+  plainBoxes.push({ name: "[Gmail]/All Mail", attrs: ["\\HasNoChildren", "\\All"], messages: [mail(1, { subject: "x", date: "01 Sep 2026 10:00:00 +0000" })] });
+  const plain = await rig({ boxes: plainBoxes });
+  const fromSent = await plain.run(() => plain.app.mail("archive", { message_ids: ["Sent:1", "[Gmail]/All Mail:1"] }));
+  assertEquals(fromSent.value.status, 200, JSON.stringify(fromSent.value.body));
+  assertEquals(fromSent.value.body.succeeded, 2);
+  const plainCommands = plain.pool.servers.flatMap((s) => s.commands);
+  assertEquals(plainCommands.filter((c) => /^UID MOVE/.test(c)), ['UID MOVE 1 "Archive"', 'UID MOVE 1 "Archive"']);
+  assert(!plainCommands.some((c) => /X-GM-LABELS|^UID COPY/.test(c)), plainCommands.join(" | "));
+  assertEquals(plain.boxes.find((b) => b.name === "Archive")!.messages.length, 3);
+  await plain.pool.closeAll();
+});
+
 // ── The thread op: Gmail and Outlook ────────────────────────────────────────
 
 Deno.test("thread (gmail): threads.get metadata, one request with the key, drafts and trash left out", async () => {

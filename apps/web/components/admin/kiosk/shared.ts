@@ -625,3 +625,20 @@ function humanise(value: string): string {
   if (!spaced) return 'Unknown';
   return spaced.charAt(0).toUpperCase() + spaced.slice(1);
 }
+
+/**
+ * The tone of the Recurring revenue tile: THE DIRECTION, not the worst
+ * subscriber.
+ *
+ * It used to go red on any failing card and amber on any scheduled cancel. At
+ * eighty-odd subscribers one of each is nearly always in flight (Stripe retries
+ * a card for weeks), so the headline money tile sat red in weeks MRR grew. It
+ * now answers "is MRR up or down in this window": green when net new MRR is
+ * zero or positive, amber when it fell. Failing and leaving still surface, by
+ * count in the tile's aside and by amount in the Money at risk tile, which
+ * owns that question. Never red: a fall is a reason to look, not an outage.
+ */
+export function revenueTone(mrr: Pick<RevenueSummary, 'mrrMinor' | 'netNewMrrMinor'>): 'good' | 'warn' | 'goal' {
+  if (mrr.mrrMinor <= 0) return 'goal';
+  return mrr.netNewMrrMinor < 0 ? 'warn' : 'good';
+}

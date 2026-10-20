@@ -1,4 +1,5 @@
 import { Link } from '@/i18n/navigation';
+import { withReadingLang } from '@/i18n/reading-lang.mjs';
 import { Nav, Footer } from './Sections';
 import { MIcon } from '../MarketingPrimitives';
 import RichText from './RichText';
@@ -84,7 +85,7 @@ export default function ClientSetupView({ locale, client, content }) {
           */}
           {content.hero.answer && <p className="pricing-page-answer">{content.hero.answer}</p>}
           <div className="hero-cta" style={{ justifyContent: 'center', marginTop: 24 }}>
-            <a className="btn btn-primary btn-lg" href="/signup">{ui.ctaPrimary}</a>
+            <a className="btn btn-primary btn-lg" href={withReadingLang('/signup', locale)}>{ui.ctaPrimary}</a>
             <Link className="btn btn-secondary btn-lg" href="/docs">{ui.ctaSecondary}</Link>
           </div>
           <div className="hero-meta" style={{ justifyContent: 'center' }}>
@@ -179,6 +180,13 @@ export default function ClientSetupView({ locale, client, content }) {
               <a href={client.guide} target="_blank" rel="noopener noreferrer">{client.guide}</a>
             </p>
           )}
+          {/* The blog walkthrough for this client, where one exists (clients.mjs `post`). */}
+          {client.post && (
+            <p className="how-guide-link">
+              {ui.postLink.intro}{' '}
+              <Link href={client.post.href}>{ui.postLink[client.post.key]}</Link>
+            </p>
+          )}
           <p className="how-guide-link">
             {ui.providers.intro} <Link href="/docs/providers">{ui.providers.label}</Link>
           </p>
@@ -268,13 +276,13 @@ export default function ClientSetupView({ locale, client, content }) {
           <h2>{content.ctaBand.title}</h2>
           <p className="sub">{content.ctaBand.sub}</p>
           <div className="hero-cta" style={{ justifyContent: 'center' }}>
-            <a className="btn btn-primary btn-lg" href="/signup">{ui.ctaPrimary}</a>
+            <a className="btn btn-primary btn-lg" href={withReadingLang('/signup', locale)}>{ui.ctaPrimary}</a>
             <Link className="btn btn-secondary btn-lg" href="/docs">{ui.ctaSecondary}</Link>
           </div>
         </div>
       </section>
 
-      <Footer />
+      <Footer locales={client.locales} />
     </div>
   );
 }

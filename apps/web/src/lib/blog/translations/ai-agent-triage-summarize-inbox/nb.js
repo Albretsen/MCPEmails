@@ -72,7 +72,7 @@ Sortering er mer verdifull når den lukker løkker. Når du først stoler på op
 
 > Samme sortering som vanlig. For alt under «må besvares i dag» som jeg kan svare på med to setninger, skriv utkastet til svaret og vis det til meg. Ikke send ennå — jeg sier «send 1 og 3» eller redigerer dem. Treff min vanlige tone: kort, direkte, ingen byråkratspråk.
 
-Agenten kjører den skrivebeskyttede løkka og skriver så utkast direkte i samtalen. Når du sier «send 1 og 3», kaller den \`email_compose\` med \`action: reply\` for de to. Svar tråder automatisk — MCP Emails setter \`In-Reply-To\`- og \`References\`-overskriftene for deg, så svaret ditt lander i riktig samtale i stedet for å starte en ny. E-posten går ut gjennom din egen leverandør (Gmail API, Microsoft Graph eller din SMTP), så leveringsdyktighet og domeneomdømmet ditt forblir dine. Ingenting relayes fra et delt avsenderdomene.
+Agenten kjører den skrivebeskyttede løkka og skriver så utkast direkte i samtalen. Når du sier «send 1 og 3», kaller den \`email_compose\` med \`action: reply\` for de to. Svar tråder automatisk: MCP Emails setter \`In-Reply-To\`- og \`References\`-overskriftene for deg, så svaret ditt lander i riktig samtale i stedet for å starte en ny. E-posten går ut gjennom din egen leverandør (Gmails SMTP, Microsoft Graph eller leverandørens SMTP), så leveringsdyktighet og domeneomdømmet ditt forblir dine. Ingenting relayes fra et delt avsenderdomene.
 
 Vil du ta neste steg og fjerne deg selv fra løkka helt, er det en annen form for automatisering — se [å bygge en e-post-autosvarer med en MCP-agent](/blog/build-email-auto-responder-mcp-agent) for sikkerhetstiltakene jeg ville lagt på den før jeg lot en agent sende uten tilsyn.
 

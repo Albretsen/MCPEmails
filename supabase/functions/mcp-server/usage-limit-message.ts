@@ -47,7 +47,7 @@
  *
  * The internal plan ids have never matched the pricing page and drifted twice:
  * `solo` was sold as Solo, then Agent, and is now Pro; `pro` was Team, then
- * Scale, and is Team again. `personal` is the lone id that matches the name it
+ * Scale, then Team again, and is Business since 2026-10-19. `personal` is the lone id that matches the name it
  * is sold under, which makes it the easy one to mis-read the others against. A
  * message a person reads has to use the name printed on the pricing page.
  * Mirror of `planDisplayName` in apps/web/src/lib/stripe/plans.ts.
@@ -56,7 +56,7 @@ export const PLAN_DISPLAY_NAMES: Record<string, string> = {
   free: "Free",
   personal: "Personal",
   solo: "Pro",
-  pro: "Team",
+  pro: "Business",
 };
 
 /**

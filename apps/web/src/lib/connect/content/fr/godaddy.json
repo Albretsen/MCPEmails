@@ -21,7 +21,7 @@
     "titleLine1": "Connectez votre messagerie GoDaddy à Claude,",
     "titleLine2": "Cursor, ChatGPT, tout client MCP",
     "lead": "Offrez à votre agent IA une vraie boîte GoDaddy. Lisez, recherchez, envoyez, répondez, planifiez et organisez le courrier en IMAP, une fois que vous savez sur lequel des différents produits de messagerie GoDaddy se trouve réellement votre adresse.",
-    "answer": "Claude ne peut pas accéder seul à une boîte GoDaddy. mcpemails est un serveur MCP hébergé qui connecte GoDaddy Professional Email en IMAP sur imap.secureserver.net, port 993, en s'authentifiant avec votre adresse complète et le mot de passe de messagerie propre à cette boîte, pour que Claude, Cursor ou tout client MCP puisse lire, rechercher, envoyer et organiser le courrier. GoDaddy vend plus d'un produit de messagerie sous la même marque, et une boîte Microsoft 365 achetée via GoDaddy est une boîte Microsoft, qui se connecte avec Outlook (connexion avec Microsoft) et non en IMAP : vérifiez donc d'abord laquelle vous avez. Une boîte est gratuite, pour toujours.",
+    "answer": "Claude ne peut pas accéder seul à une boîte GoDaddy. MCP Emails est un serveur MCP hébergé qui connecte GoDaddy Professional Email en IMAP sur imap.secureserver.net, port 993, en s'authentifiant avec votre adresse complète et le mot de passe de messagerie propre à cette boîte, pour que Claude, Cursor ou tout client MCP puisse lire, rechercher, envoyer et organiser le courrier. GoDaddy vend plus d'un produit de messagerie sous la même marque, et une boîte Microsoft 365 achetée via GoDaddy est une boîte Microsoft, qui se connecte avec Outlook (connexion avec Microsoft) et non en IMAP : vérifiez donc d'abord laquelle vous avez. Une boîte est gratuite, pour toujours.",
     "meta0": "1 boîte gratuite, pour toujours",
     "meta1": "Le mot de passe de messagerie propre à la boîte",
     "meta2": "E-mails récupérés en direct, jamais stockés"
@@ -32,7 +32,7 @@
   },
   "setup": [
     {
-      "h": "Créez votre compte mcpemails gratuit",
+      "h": "Créez votre compte MCP Emails gratuit",
       "p": "Inscrivez-vous sur mcpemails.com. L'offre gratuite connecte une boîte pour toujours et ne demande pas de carte bancaire."
     },
     {
@@ -45,7 +45,7 @@
     },
     {
       "h": "Collez l'URL MCP dans votre IA",
-      "p": "Ajoutez votre adresse et votre mot de passe dans mcpemails, puis collez https://mcpemails.com/api/mcp dans Claude, Cursor ou ChatGPT, autorisez l'accès, et votre agent dispose de la boîte."
+      "p": "Ajoutez votre adresse et votre mot de passe dans MCP Emails, puis collez https://mcpemails.com/api/mcp dans Claude, Cursor ou ChatGPT, autorisez l'accès, et votre agent dispose de la boîte."
     }
   ],
   "gotchas": [
@@ -63,7 +63,7 @@
     },
     {
       "h": "Le serveur IMAP de GoDaddy n'annonce pas SASL-IR",
-      "p": "Le serveur IMAP derrière <code>imap.secureserver.net</code> s'identifie comme Fenix et n'annonce pas la capacité SASL-IR : il rejette donc l'authentification en une étape qui envoie les identifiants sur la même ligne que la commande AUTHENTICATE. Les clients qui supposent SASL-IR reçoivent un simple <code>BAD</code> sans explication, qui ressemble exactement à de mauvais identifiants. mcpemails le détecte et relance l'échange en deux étapes, donc la connexion aboutit, mais c'est pourquoi d'autres outils IMAP échouent avec GoDaddy alors qu'ils fonctionnent ailleurs."
+      "p": "Le serveur IMAP derrière <code>imap.secureserver.net</code> s'identifie comme Fenix et n'annonce pas la capacité SASL-IR : il rejette donc l'authentification en une étape qui envoie les identifiants sur la même ligne que la commande AUTHENTICATE. Les clients qui supposent SASL-IR reçoivent un simple <code>BAD</code> sans explication, qui ressemble exactement à de mauvais identifiants. MCP Emails le détecte et relance l'échange en deux étapes, donc la connexion aboutit, mais c'est pourquoi d'autres outils IMAP échouent avec GoDaddy alors qu'ils fonctionnent ailleurs."
     }
   ],
   "limits": [
@@ -74,7 +74,7 @@
   "faq": [
     {
       "q": "Claude fonctionne-t-il avec la messagerie GoDaddy ?",
-      "a": "Il fonctionne avec GoDaddy Professional Email, le produit basé sur Titan, dès qu'un serveur MCP comme mcpemails est connecté à la boîte en IMAP. Claude n'a pas de connecteur GoDaddy intégré. Une boîte Microsoft 365 achetée via GoDaddy fonctionne aussi, mais elle se connecte avec Outlook (connexion avec Microsoft) et non en IMAP, et un administrateur informatique devra peut-être d'abord approuver MCP Emails une fois."
+      "a": "Il fonctionne avec GoDaddy Professional Email, le produit basé sur Titan, dès qu'un serveur MCP comme MCP Emails est connecté à la boîte en IMAP. Claude n'a pas de connecteur GoDaddy intégré. Une boîte Microsoft 365 achetée via GoDaddy fonctionne aussi, mais elle se connecte avec Outlook (connexion avec Microsoft) et non en IMAP, et un administrateur informatique devra peut-être d'abord approuver MCP Emails une fois."
     },
     {
       "q": "Quels sont les réglages IMAP et SMTP de GoDaddy ?",

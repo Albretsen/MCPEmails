@@ -44,8 +44,15 @@ process.env.STRIPE_PRICE_SOLO_YEARLY = 'price_solo_year';
 // Every tier needs a price here: the unconfigured-price check runs BEFORE the
 // entitlement guards, so a missing env var would mask a guard test with a
 // `price_not_configured` that looks like a pass.
+// Since 2026-10-19 these two hold the RETIRED $79 / $756 Team prices, read as
+// Business legacy ids; Business itself sells on the _BUSINESS_ variables, plus
+// the per-mailbox add-on above ten.
 process.env.STRIPE_PRICE_PRO_MONTHLY = 'price_pro_month';
 process.env.STRIPE_PRICE_PRO_YEARLY = 'price_pro_year';
+process.env.STRIPE_PRICE_BUSINESS_MONTHLY = 'price_business_month';
+process.env.STRIPE_PRICE_BUSINESS_YEARLY = 'price_business_year';
+process.env.STRIPE_PRICE_BUSINESS_MAILBOX_MONTHLY = 'price_addon_month';
+process.env.STRIPE_PRICE_BUSINESS_MAILBOX_YEARLY = 'price_addon_year';
 
 const USER_ID = '00000000-0000-0000-0000-0000000000a1';
 const WORKSPACE_ID = '00000000-0000-0000-0000-0000000000b1';
@@ -230,6 +237,12 @@ let swapBehaviour: 'applied' | 'pending' | 'throws' = 'applied';
 /** The subscription the stub says the user is currently on. */
 let currentSubscriptionPrice = 'price_personal_month';
 
+/** The per-mailbox add-on item on the current subscription, when it has one. */
+let currentAddon: { id: string; price: { id: string }; quantity: number } | null = null;
+
+/** Inboxes across the buyer's owned workspaces, for the Business add-on count. */
+let ownedInboxes = 0;
+
 /** Every `subscriptions.update` call, so a test can prove the swap happened. */
 const subscriptionsUpdated: Array<Record<string, unknown>> = [];
 
@@ -250,6 +263,9 @@ nodeMock.module('@/lib/stripe/client', {
           customer: 'cus_test_subscriber',
           items: {
             data: [
+              // The add-on FIRST when present: Stripe does not promise the
+              // plan's item leads, and the code must not assume it.
+              ...(currentAddon ? [currentAddon] : []),
               {
                 id: 'si_test_item',
                 price: { id: currentSubscriptionPrice },
@@ -285,7 +301,7 @@ nodeMock.module('@/lib/stripe/client', {
         },
       },
       prices: {
-        retrieve: async () => ({ unit_amount: 1500 }),
+        retrieve: async (id: string) => ({ unit_amount: id.startsWith('price_addon') ? 300 : 1500 }),
       },
     },
   },
@@ -294,6 +310,31 @@ nodeMock.module('@/lib/stripe/client', {
 let currentSupabase: ReturnType<typeof fakeSupabase>;
 nodeMock.module('@/lib/supabase/server', {
   namedExports: { createClient: async () => currentSupabase },
+});
+
+// The service-role reads `countOwnedInboxes` makes for a Business change: the
+// owner's workspaces, then a head count of their live inboxes.
+nodeMock.module('@/lib/supabase/service', {
+  namedExports: {
+    createServiceRoleClient: () => ({
+      from(table: string) {
+        const builder: Record<string, unknown> = {};
+        const chain = () => builder;
+        Object.assign(builder, {
+          select: chain,
+          eq: chain,
+          in: chain,
+          is: () =>
+            Promise.resolve(
+              table === 'workspaces'
+                ? { data: [{ id: WORKSPACE_ID }], error: null }
+                : { count: ownedInboxes, error: null },
+            ),
+        });
+        return builder;
+      },
+    }),
+  },
 });
 
 const { runCheckout } = await import('./checkout-core.ts');
@@ -312,6 +353,12 @@ async function checkout(opts: {
   /** The price the existing subscription is on, for the plan-change path. */
   currentPrice?: string;
   swap?: 'applied' | 'pending' | 'throws';
+  /** An existing add-on quantity on the subscription (Business only). */
+  addonQuantity?: number;
+  /** Inboxes the buyer owns across workspaces. */
+  inboxes?: number;
+  /** The buyer's language, as a caller hands it over. Omitted when undefined. */
+  locale?: unknown;
 }) {
   currentSupabase = fakeSupabase({
     entitlement: opts.entitlement,
@@ -326,10 +373,16 @@ async function checkout(opts: {
   previewsRequested.length = 0;
   swapBehaviour = opts.swap ?? 'applied';
   currentSubscriptionPrice = opts.currentPrice ?? 'price_personal_month';
+  currentAddon =
+    opts.addonQuantity != null
+      ? { id: 'si_addon', price: { id: 'price_addon_month' }, quantity: opts.addonQuantity }
+      : null;
+  ownedInboxes = opts.inboxes ?? 0;
   const outcome = await runCheckout({
     planId: opts.planId,
     interval: opts.interval ?? 'month',
     confirmChange: opts.confirmChange,
+    ...('locale' in opts ? { locale: opts.locale } : {}),
   });
   return {
     outcome,
@@ -1213,4 +1266,256 @@ test('a $5 Personal subscriber upgrading to Pro is an upgrade, not a no-op', asy
   });
 
   assert.equal(outcome.kind, 'confirmation_required');
+});
+
+
+// ---------------------------------------------------------------------------
+// Business, billed per mailbox above ten (2026-10-19).
+// ---------------------------------------------------------------------------
+
+const ACTIVE_PRO: BillingRow = {
+  plan: 'solo',
+  subscription_status: 'active',
+  stripe_subscription_id: SUBSCRIPTION_ID,
+};
+
+test('a first Business checkout bills the mailboxes past ten on the hosted page', async () => {
+  const { outcome, sessionsCreated } = await checkout({ planId: 'pro', entitlement: null, inboxes: 15 });
+  assert.equal(outcome.kind, 'checkout');
+  assert.deepEqual(sessionsCreated[0].line_items, [
+    { price: 'price_business_month', quantity: 1 },
+    { price: 'price_addon_month', quantity: 5 },
+  ]);
+});
+
+test('a first Business checkout at ten or fewer mailboxes has no add-on line', async () => {
+  const { sessionsCreated } = await checkout({ planId: 'pro', interval: 'year', entitlement: null, inboxes: 10 });
+  assert.deepEqual(sessionsCreated[0].line_items, [{ price: 'price_business_year', quantity: 1 }]);
+});
+
+test('a Business checkout refuses when the per-mailbox price is not configured', async () => {
+  const saved = process.env.STRIPE_PRICE_BUSINESS_MAILBOX_MONTHLY;
+  delete process.env.STRIPE_PRICE_BUSINESS_MAILBOX_MONTHLY;
+  try {
+    const { outcome, sessionsCreated, funnelCalls } = await checkout({ planId: 'pro', entitlement: null, inboxes: 3 });
+    assert.equal(outcome.kind, 'error');
+    assert.equal(outcome.kind === 'error' ? outcome.reason : null, 'price_not_configured');
+    assert.equal(sessionsCreated.length, 0);
+    assert.deepEqual(funnelCalls, ['price_not_configured']);
+  } finally {
+    process.env.STRIPE_PRICE_BUSINESS_MAILBOX_MONTHLY = saved;
+  }
+});
+
+test('Pro to Business quotes the add-on, and the confirmation sends exactly what was quoted', async () => {
+  const quote = await checkout({
+    planId: 'pro',
+    entitlement: null,
+    billing: ACTIVE_PRO,
+    currentPrice: 'price_solo_month',
+    inboxes: 14,
+  });
+  assert.equal(quote.outcome.kind, 'confirmation_required');
+  assert.equal(quote.subscriptionsUpdated.length, 0, 'the quote must change nothing');
+  const expectedItems = [
+    { id: 'si_test_item', price: 'price_business_month' },
+    { price: 'price_addon_month', quantity: 4 },
+  ];
+  const details = quote.previewsRequested[0].subscription_details as { items: unknown };
+  assert.deepEqual(details.items, expectedItems);
+  if (quote.outcome.kind === 'confirmation_required') {
+    // Base (stub 1500) plus four mailboxes at 300.
+    assert.equal(quote.outcome.preview?.recurringCents, 1500 + 4 * 300);
+    assert.equal(quote.outcome.preview?.extraMailboxes, 4);
+  }
+
+  const confirmed = await checkout({
+    planId: 'pro',
+    entitlement: null,
+    billing: ACTIVE_PRO,
+    currentPrice: 'price_solo_month',
+    inboxes: 14,
+    confirmChange: true,
+  });
+  assert.equal(confirmed.outcome.kind, 'changed');
+  assert.deepEqual(confirmed.subscriptionsUpdated[0].items, expectedItems);
+});
+
+test('Business to Pro removes the add-on and swaps the PLAN item, not the add-on', async () => {
+  const confirmed = await checkout({
+    planId: 'solo',
+    entitlement: null,
+    billing: { plan: 'pro', subscription_status: 'active', stripe_subscription_id: SUBSCRIPTION_ID },
+    currentPrice: 'price_business_month',
+    addonQuantity: 3,
+    inboxes: 13,
+    confirmChange: true,
+  });
+  assert.equal(confirmed.outcome.kind, 'changed');
+  assert.deepEqual(confirmed.subscriptionsUpdated[0].items, [
+    { id: 'si_test_item', price: 'price_solo_month' },
+    { id: 'si_addon', deleted: true },
+  ]);
+});
+
+test('Business monthly to annual re-prices the add-on to its yearly price', async () => {
+  const confirmed = await checkout({
+    planId: 'pro',
+    interval: 'year',
+    entitlement: null,
+    billing: { plan: 'pro', subscription_status: 'active', stripe_subscription_id: SUBSCRIPTION_ID },
+    currentPrice: 'price_business_month',
+    addonQuantity: 2,
+    inboxes: 12,
+    confirmChange: true,
+  });
+  assert.equal(confirmed.outcome.kind, 'changed');
+  assert.deepEqual(confirmed.subscriptionsUpdated[0].items, [
+    { id: 'si_test_item', price: 'price_business_year' },
+    { id: 'si_addon', price: 'price_addon_year', quantity: 2 },
+  ]);
+});
+
+test('a Business subscriber asking for Business at the same interval is a no-op, add-on or not', async () => {
+  const { outcome, subscriptionsUpdated } = await checkout({
+    planId: 'pro',
+    entitlement: null,
+    billing: { plan: 'pro', subscription_status: 'active', stripe_subscription_id: SUBSCRIPTION_ID },
+    currentPrice: 'price_business_month',
+    addonQuantity: 2,
+    inboxes: 12,
+    confirmChange: true,
+  });
+  assert.equal(outcome.kind, 'error');
+  assert.equal(outcome.kind === 'error' ? outcome.reason : null, 'already_on_plan_interval');
+  assert.equal(subscriptionsUpdated.length, 0);
+});
+
+// ---------------------------------------------------------------------------
+// Adaptive Pricing: local-currency checkout, prices still in USD.
+// ---------------------------------------------------------------------------
+
+const { adaptivePricingEnabled, adaptivePricingParam } = await import('./adaptive-pricing.ts');
+
+test('every new checkout session asks Stripe for Adaptive Pricing by default', async () => {
+  const previous = process.env.STRIPE_ADAPTIVE_PRICING;
+  delete process.env.STRIPE_ADAPTIVE_PRICING;
+  try {
+    const { outcome, sessionsCreated } = await checkout({ planId: 'personal', entitlement: null });
+    assert.equal(outcome.kind, 'checkout');
+    assert.equal(sessionsCreated.length, 1);
+    assert.deepEqual(sessionsCreated[0].adaptive_pricing, { enabled: true });
+    // Converting the amount must not change the presentation language or the
+    // subscription mode; both are pinned for their own reasons.
+    assert.equal(sessionsCreated[0].locale, 'en');
+    assert.equal(sessionsCreated[0].mode, 'subscription');
+  } finally {
+    if (previous === undefined) delete process.env.STRIPE_ADAPTIVE_PRICING;
+    else process.env.STRIPE_ADAPTIVE_PRICING = previous;
+  }
+});
+
+test('STRIPE_ADAPTIVE_PRICING=false sends an explicit opt-out, not the dashboard default', async () => {
+  const previous = process.env.STRIPE_ADAPTIVE_PRICING;
+  process.env.STRIPE_ADAPTIVE_PRICING = 'false';
+  try {
+    const { sessionsCreated } = await checkout({ planId: 'solo', entitlement: null });
+    assert.equal(sessionsCreated.length, 1);
+    assert.deepEqual(sessionsCreated[0].adaptive_pricing, { enabled: false });
+  } finally {
+    if (previous === undefined) delete process.env.STRIPE_ADAPTIVE_PRICING;
+    else process.env.STRIPE_ADAPTIVE_PRICING = previous;
+  }
+});
+
+test('the Adaptive Pricing flag defaults on and only explicit off-values disable it', () => {
+  assert.equal(adaptivePricingEnabled({}), true);
+  assert.equal(adaptivePricingEnabled({ STRIPE_ADAPTIVE_PRICING: 'true' }), true);
+  assert.equal(adaptivePricingEnabled({ STRIPE_ADAPTIVE_PRICING: '' }), true);
+  assert.equal(adaptivePricingEnabled({ STRIPE_ADAPTIVE_PRICING: 'yes' }), true);
+  for (const off of ['false', 'FALSE', ' off ', '0', 'no']) {
+    assert.equal(adaptivePricingEnabled({ STRIPE_ADAPTIVE_PRICING: off }), false, off);
+  }
+  assert.deepEqual(adaptivePricingParam({}), { enabled: true });
+  assert.deepEqual(adaptivePricingParam({ STRIPE_ADAPTIVE_PRICING: 'off' }), { enabled: false });
+});
+
+// ---------------------------------------------------------------------------
+// Checkout language: German buyers get Stripe's German page, everyone else
+// keeps the English pin.
+//
+// The point is the button. In subscription mode its label follows `locale`
+// and nothing else, and only under 'de' does Stripe write "Zahlungspflichtig
+// abonnieren", the wording §312j BGB asks for. The custom_text beside it must
+// be German too, or the page reads in two languages exactly where the buyer
+// commits to pay.
+// ---------------------------------------------------------------------------
+
+const { checkoutLocale } = await import('./checkout-core.ts');
+
+type SubmitText = { submit: { message: string }; after_submit: { message: string } };
+
+test('a German buyer gets a German hosted page with German text beside the button', async () => {
+  const { outcome, sessionsCreated } = await checkout({ planId: 'personal', entitlement: null, locale: 'de' });
+  assert.equal(outcome.kind, 'checkout');
+  assert.equal(sessionsCreated.length, 1);
+  assert.equal(sessionsCreated[0].locale, 'de');
+  const text = sessionsCreated[0].custom_text as SubmitText;
+  assert.match(text.submit.message, /^Mit dem Abonnieren verpflichten Sie sich, den angezeigten Preis/);
+  // Formal Sie, never du.
+  assert.doesNotMatch(text.submit.message, /\b(du|dich|dein)\b/i);
+  // The German consumer-law pages, still as working Markdown links.
+  assert.match(text.submit.message, /\[mcpemails\.com\/de\/cancel\]\(http[^)]*\/de\/cancel\)/);
+  assert.match(text.submit.message, /\[Widerrufsrecht\]\(http[^)]*\/de\/withdrawal\)/);
+  assert.match(text.submit.message, /14 Tagen/);
+  assert.match(text.submit.message, /hello@mcpemails\.com/);
+  assert.match(text.after_submit.message, /^Sie werden zu mcpemails\.com zurückgeleitet/);
+  for (const message of [text.submit.message, text.after_submit.message]) {
+    assert.doesNotMatch(message, /\u2014/, 'no em dashes');
+    assert.doesNotMatch(message, /[<>]/);
+  }
+});
+
+test('the language changes nothing about what is sold', async () => {
+  const en = await checkout({ planId: 'solo', interval: 'year', entitlement: null });
+  const de = await checkout({ planId: 'solo', interval: 'year', entitlement: null, locale: 'de' });
+  const strip = (params: Record<string, unknown>) => {
+    const { locale: _locale, custom_text: _text, ...rest } = params;
+    return rest;
+  };
+  assert.deepEqual(strip(de.sessionsCreated[0]), strip(en.sessionsCreated[0]));
+  assert.deepEqual(de.funnelRows, en.funnelRows);
+});
+
+test('a buyer with no language, or any other language, keeps the English page', async () => {
+  for (const locale of [undefined, null, 'en', 'nb', 'fr', 'es', 'zh', '', 'DE', 'de-AT', ['de'], 42]) {
+    const { sessionsCreated } = await checkout({ planId: 'personal', entitlement: null, locale });
+    assert.equal(sessionsCreated[0].locale, 'en', JSON.stringify(locale));
+    const text = sessionsCreated[0].custom_text as SubmitText;
+    assert.match(text.submit.message, /^By subscribing you agree to pay the price shown/);
+    assert.match(text.submit.message, /\(http[^)]*\/cancel\)/);
+    assert.doesNotMatch(text.submit.message, /\/de\//);
+    assert.equal(text.after_submit.message, 'Taking you back to mcpemails.com to connect your inboxes.');
+  }
+});
+
+test('the locale allow-list maps exactly "de" to German and everything else to English', () => {
+  assert.equal(checkoutLocale('de'), 'de');
+  for (const value of [undefined, null, 'en', 'nb', 'DE', ' de', 'de-DE', ['de'], { de: true }, 1]) {
+    assert.equal(checkoutLocale(value), 'en', JSON.stringify(value));
+  }
+});
+
+test('a German subscriber asking for a plan change still only gets a quote', async () => {
+  // The in-place swap creates no hosted page, so the language has nowhere to
+  // go; it must not open a checkout session or skip the consent gate either.
+  const { outcome, sessionsCreated, subscriptionsUpdated } = await checkout({
+    planId: 'solo',
+    entitlement: null,
+    billing: { plan: 'personal', subscription_status: 'active', stripe_subscription_id: SUBSCRIPTION_ID },
+    locale: 'de',
+  });
+  assert.equal(outcome.kind, 'confirmation_required');
+  assert.equal(sessionsCreated.length, 0);
+  assert.equal(subscriptionsUpdated.length, 0);
 });

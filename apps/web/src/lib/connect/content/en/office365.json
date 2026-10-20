@@ -23,7 +23,7 @@
     "meta0": "1 inbox free, forever",
     "meta1": "Sign in with Microsoft, no app password",
     "meta2": "IT admin approval link built in",
-    "answer": "Yes, with one condition that depends on your organisation. mcpemails connects work and school Microsoft 365 mailboxes through Microsoft Graph: you click Connect with Microsoft and sign in with your work account. Many organisations, though, need an IT admin to approve the app once first, because Microsoft's default consent policy, in effect since late 2025, stops employees from approving mail-reading permissions themselves. If that happens, the dashboard gives you an approval link to send to your IT admin. The admin opens it, signs in with their Microsoft work account and approves MCP Emails once for the whole organisation, with no MCP Emails account needed, and after that you and your colleagues connect normally. Then paste one URL into Claude, ChatGPT, Cursor or any MCP client. One inbox is free, forever."
+    "answer": "Yes, with one condition that depends on your organisation. MCP Emails connects work and school Microsoft 365 mailboxes through Microsoft Graph: you click Connect with Microsoft and sign in with your work account. Many organisations, though, need an IT admin to approve the app once first, because Microsoft's default consent policy, in effect since late 2025, stops employees from approving mail-reading permissions themselves. If that happens, the dashboard gives you an approval link to send to your IT admin. The admin opens it, signs in with their Microsoft work account and approves MCP Emails once for the whole organisation, with no MCP Emails account needed, and after that you and your colleagues connect normally. Then paste one URL into Claude, ChatGPT, Cursor or any MCP client. One inbox is free, forever."
   },
   "method": {
     "title": "How Microsoft 365 connects: Microsoft sign-in, sometimes with admin approval",
@@ -32,7 +32,7 @@
   "setup": [
     {
       "h": "Create a free account",
-      "p": "Sign up for mcpemails, no card required. The free plan connects one inbox, forever."
+      "p": "Sign up for MCP Emails, no card required. The free plan connects one inbox, forever."
     },
     {
       "h": "Choose Outlook and connect with Microsoft",
@@ -50,7 +50,7 @@
   "gotchas": [
     {
       "h": "Passwords and app passwords do not work, which is why this uses Microsoft Graph",
-      "p": "Microsoft removed Basic authentication for IMAP and POP in every Exchange Online tenant in 2022, and it cannot be turned back on. A password login fails in a way that looks exactly like a wrong password, which is why people reset credentials that were correct all along. mcpemails does not use IMAP for Microsoft 365: it signs in with Microsoft and talks to Microsoft Graph, so there is no password to type and no server setting to get wrong."
+      "p": "Microsoft removed Basic authentication for IMAP and POP in every Exchange Online tenant in 2022, and it cannot be turned back on. A password login fails in a way that looks exactly like a wrong password, which is why people reset credentials that were correct all along. MCP Emails does not use IMAP for Microsoft 365: it signs in with Microsoft and talks to Microsoft Graph, so there is no password to type and no server setting to get wrong."
     },
     {
       "h": "Admin approval is set by your organisation, and a verified publisher does not bypass it",
@@ -58,7 +58,7 @@
     },
     {
       "h": "An account without an Exchange Online mailbox is refused",
-      "p": "Some Microsoft 365 accounts have no Exchange Online mailbox, for example an admin account without an Exchange licence, or an organisation whose mail is hosted elsewhere. Microsoft Graph then has nothing to open, so mcpemails refuses the connection and says so. If your mail lives on another server, connect the address with IMAP instead."
+      "p": "Some Microsoft 365 accounts have no Exchange Online mailbox, for example an admin account without an Exchange licence, or an organisation whose mail is hosted elsewhere. Microsoft Graph then has nothing to open, so MCP Emails refuses the connection and says so. If your mail lives on another server, connect the address with IMAP instead."
     },
     {
       "h": "If the approval did not go through, the admin opens the link again",
@@ -74,7 +74,7 @@
   "faq": [
     {
       "q": "Does Claude work with Microsoft 365 email?",
-      "a": "Yes. Connect your work or school mailbox to mcpemails by signing in with Microsoft, paste one MCP URL into Claude, and Claude can read, search, send, reply, forward, schedule and file your mail. If your organisation requires admin approval, your IT admin approves MCP Emails once first, using the link the dashboard gives you."
+      "a": "Yes. Connect your work or school mailbox to MCP Emails by signing in with Microsoft, paste one MCP URL into Claude, and Claude can read, search, send, reply, forward, schedule and file your mail. If your organisation requires admin approval, your IT admin approves MCP Emails once first, using the link the dashboard gives you."
     },
     {
       "q": "Why am I asked for admin approval?",
@@ -86,7 +86,7 @@
     },
     {
       "q": "Do I need an app password or IMAP settings?",
-      "a": "No. mcpemails connects Microsoft 365 through Microsoft Graph after you sign in with Microsoft, so there is no app password to create and no IMAP or SMTP server to enter. A password would not work anyway: Basic authentication was removed from Exchange Online in 2022 and cannot be turned back on."
+      "a": "No. MCP Emails connects Microsoft 365 through Microsoft Graph after you sign in with Microsoft, so there is no app password to create and no IMAP or SMTP server to enter. A password would not work anyway: Basic authentication was removed from Exchange Online in 2022 and cannot be turned back on."
     },
     {
       "q": "What can my AI do in Microsoft 365?",
@@ -94,7 +94,7 @@
     },
     {
       "q": "Is my email stored on your servers?",
-      "a": "No. Messages are fetched live from Microsoft for each request and handed to your AI client. The OAuth token from your Microsoft sign-in is encrypted at rest and message bodies are not retained. Deleting the inbox in mcpemails ends the connection straight away."
+      "a": "No. Messages are fetched live from Microsoft for each request and handed to your AI client. The OAuth token from your Microsoft sign-in is encrypted at rest and message bodies are not retained. Deleting the inbox in MCP Emails ends the connection straight away."
     }
   ],
   "ctaBand": {

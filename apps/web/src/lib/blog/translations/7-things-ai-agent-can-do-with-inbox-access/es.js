@@ -2,7 +2,7 @@ const translation = {
   title: '7 cosas que tu agente de IA puede hacer en cuanto tiene acceso a la bandeja de entrada',
   description:
     'Siete cosas concretas que un agente de IA puede hacer con acceso a tu bandeja: clasificar correo sin leer, resumir hilos, redactar respuestas, encontrar adjuntos y hacer seguimientos.',
-  coverAlt: 'Siete cosas que tu agente de IA puede hacer con acceso a la bandeja de entrada a través de MCP — MCPEmails',
+  coverAlt: 'Siete cosas que tu agente de IA puede hacer con acceso a la bandeja de entrada a través de MCP — MCP Emails',
   content: `En cuanto tu agente puede leer y enviar correo de verdad, se acaban las demos de juguete y empieza el trabajo real. Aquí tienes siete cosas que puedes ponerle a hacer hoy mismo: clasificar el montón de correos sin leer, resumir un hilo largo, redactar respuestas con tu voz, rescatar ese adjunto concreto, perseguir seguimientos, dirigir el correo al sitio correcto y enviarte un resumen semanal.
 
 Cada ejemplo de abajo se corresponde con herramientas MCP reales que puedes invocar ahora mismo. Las herramientas son las mismas tanto si conectas Gmail, Outlook, iCloud, Fastmail o un buzón IMAP genérico. Si todavía no has conectado un agente a tu bandeja, la [guía completa para darle acceso al correo a tu agente de IA](/blog/how-to-give-your-ai-agent-email-access) cubre la configuración; el [tutorial de conexión en 2 minutos](/blog/connect-email-to-ai-agent-under-2-minutes) es el camino rápido.
@@ -29,7 +29,7 @@ Te añaden a un hilo de 40 mensajes en el mensaje 38. Nadie va a leerse lo anter
 
 > Lee el hilo con asunto "Q3 vendor migration" y dime en qué quedó realmente: qué se decidió, quién se encarga de qué y cualquier pregunta abierta que yo tenga que responder.
 
-\`email_read\` con la acción search encuentra el hilo (usa la sintaxis de búsqueda nativa de tu proveedor, así que los operadores de Gmail, KQL de Outlook y la búsqueda de texto de IMAP funcionan todos), y luego \`email_read\` con la acción read extrae el texto plano ya parseado de cada mensaje. Esa acción read también puede devolver HTML saneado y adjuntos cuando lo pides, pero para un resumen el texto plano es más rápido y más barato.
+\`email_read\` con la acción search encuentra el hilo (recibe campos estructurados como remitente, asunto, texto y rango de fechas, y MCP Emails los convierte en la búsqueda propia de cada proveedor), y luego \`email_read\` con la acción read extrae el texto plano ya parseado de cada mensaje. Esa acción read también puede devolver HTML saneado y adjuntos cuando lo pides, pero para un resumen el texto plano es más rápido y más barato.
 
 ### 3. Redactar respuestas con tu voz
 
@@ -73,7 +73,7 @@ Esto cose las demás: \`email_read\` (acción search y luego list) para reunir l
 
 ## Cuánto cuesta esto y dónde están los límites
 
-Los siete funcionan en el [plan Gratis](/pricing), que cuesta 0 $ y conecta una bandeja a 60 peticiones por minuto. Personal (9 $/mes) conecta hasta tres bandejas y sube el límite de ráfaga a 120 peticiones por minuto; Pro (15 $/mes) conecta todos los buzones que tengas y lo sube a 300; Team (79 $/mes) añade miembros con roles, un espacio de trabajo separado por cliente, SSO y 1.000 peticiones por minuto. Una bandeja sobra para un resumen semanal; en cuanto quieras el trabajo y lo personal en el mismo agente, eso es Personal por 9 $/mes, y Pro solo cuando pases de tres bandejas.
+Los siete funcionan en el [plan Gratis](/pricing), que cuesta 0 $ y conecta una bandeja a 60 peticiones por minuto. Personal (9 $/mes) conecta hasta tres bandejas y sube el límite de ráfaga a 120 peticiones por minuto; Pro (15 $/mes) conecta hasta 10 y lo sube a 300; Business (39 $/mes) incluye 10 buzones, añade miembros con roles y un espacio de trabajo separado por cliente, y lo sube a 1.000 peticiones por minuto. Una bandeja sobra para un resumen semanal; en cuanto quieras el trabajo y lo personal en el mismo agente, eso es Personal por 9 $/mes, y Pro solo cuando pases de tres bandejas.
 
 Cuando llegues a un límite, el servidor devuelve un error reintentable con \`data.retry_after\` en segundos. Respétalo. Y nunca reintentes a ciegas un envío de \`email_compose\`, porque un reintento tras un timeout puede significar que dos copias del mismo mensaje aterricen en la bandeja de alguien.
 

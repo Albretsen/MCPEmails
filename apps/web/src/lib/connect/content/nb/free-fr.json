@@ -17,8 +17,8 @@
     "eyebrow": "Free.fr Mail + AI",
     "titleLine1": "Koble Free.fr-innboksen din",
     "titleLine2": "til Claude, Cursor og enhver MCP-klient",
-    "lead": "Free gir hver abonnent en postkasse og enkel IMAP-tilgang til den. mcpemails kobler til innboksen slik at AI-agenten din kan lese, søke i, sende, svare på og arkivere e-post fra enhver MCP-klient i stedet for én app.",
-    "answer": "Claude kan ikke nå en Free.fr-postkasse på egen hånd. mcpemails er en hostet MCP-server som kobler den til over IMAP på imap.free.fr, port 993, og autentiserer med hele adressen din og passordet til Free-kontoen din. Free utsteder ingen app-spesifikke passord og krever ikke at noe slås på først, noe som gjør den til en av de enkleste leverandørene å koble til, men IMAP-serveren er uvanlig sparsom, og det har konsekvenser som er beskrevet nedenfor. Når den er koblet til, kan Claude, Cursor eller en hvilken som helst annen MCP-klient lese, søke i, sende og organisere e-posten, og én innboks er gratis, for alltid.",
+    "lead": "Free gir hver abonnent en postkasse og enkel IMAP-tilgang til den. MCP Emails kobler til innboksen slik at AI-agenten din kan lese, søke i, sende, svare på og arkivere e-post fra enhver MCP-klient i stedet for én app.",
+    "answer": "Claude kan ikke nå en Free.fr-postkasse på egen hånd. MCP Emails er en hostet MCP-server som kobler den til over IMAP på imap.free.fr, port 993, og autentiserer med hele adressen din og passordet til Free-kontoen din. Free utsteder ingen app-spesifikke passord og krever ikke at noe slås på først, noe som gjør den til en av de enkleste leverandørene å koble til, men IMAP-serveren er uvanlig sparsom, og det har konsekvenser som er beskrevet nedenfor. Når den er koblet til, kan Claude, Cursor eller en hvilken som helst annen MCP-klient lese, søke i, sende og organisere e-posten, og én innboks er gratis, for alltid.",
     "meta0": "1 innboks gratis, for alltid",
     "meta1": "Passordet til Free-kontoen, ingenting annet",
     "meta2": "E-post hentes direkte, lagres aldri"
@@ -29,7 +29,7 @@
   },
   "setup": [
     {
-      "h": "Opprett en gratis mcpemails-konto",
+      "h": "Opprett en gratis MCP Emails-konto",
       "p": "Registrer deg på mcpemails.com. Gratisplanen kobler til én innboks og ber ikke om kort."
     },
     {
@@ -37,7 +37,7 @@
       "p": "Postkassepassordet er passordet til Free-kontoen din. Endrer du det i espace abonné, endres det for alle e-postklienter samtidig, også denne, så hvis du bytter det senere, må du regne med å oppdatere tilkoblingen. Har du glemt det, tilbakestiller du det der i stedet for å lete etter en egen påloggingsopplysning for e-post; det finnes ingen."
     },
     {
-      "h": "Skriv inn hele adressen i mcpemails",
+      "h": "Skriv inn hele adressen i MCP Emails",
       "p": "Velg IMAP / SMTP og skriv hele adressen, <code>name@free.fr</code>, i brukernavnfeltet. Frees egen dokumentasjon sier at du skal oppgi hele adressen med domenet. Vertene og portene ovenfor er forhåndsutfylt og ble bekreftet via en faktisk TLS-tilkobling."
     },
     {
@@ -48,7 +48,7 @@
   "gotchas": [
     {
       "h": "Free annonserer bare AUTH=PLAIN, og uten SASL-IR",
-      "p": "Kapabilitetsbanneret fra <code>imap.free.fr</code> er omtrent så kort som et IMAP-banner kan bli. Det tilbyr <code>AUTH=PLAIN</code> og ingenting annet, og det annonserer ikke SASL-IR, så serveren avviser ettstegsformen som sender påloggingsopplysningene sammen med AUTHENTICATE-kommandoen. En klient som er hardkodet til LOGIN-mekanismen, eller som forutsetter SASL-IR, får en naken avvisning som ser ut som et feil passord. mcpemails prøver igjen med utvekslingen i to steg i stedet for å behandle avvisningen som endelig."
+      "p": "Kapabilitetsbanneret fra <code>imap.free.fr</code> er omtrent så kort som et IMAP-banner kan bli. Det tilbyr <code>AUTH=PLAIN</code> og ingenting annet, og det annonserer ikke SASL-IR, så serveren avviser ettstegsformen som sender påloggingsopplysningene sammen med AUTHENTICATE-kommandoen. En klient som er hardkodet til LOGIN-mekanismen, eller som forutsetter SASL-IR, får en naken avvisning som ser ut som et feil passord. MCP Emails prøver igjen med utvekslingen i to steg i stedet for å behandle avvisningen som endelig."
     },
     {
       "h": "Den utgående serveren godtar mekanismer som den innkommende ikke gjør",
@@ -60,7 +60,7 @@
     },
     {
       "h": "Ett passord, én sprengradius",
-      "p": "Fordi påloggingsopplysningen for e-post er passordet til Free-kontoen og ikke en hemmelighet per program, har alt du limer det inn i, nøklene til kontoen, og å trekke tilbake tilgangen for ett verktøy betyr å endre passordet for alle. Det er en egenskap ved Frees design og ikke en kritikk av det, men det er verdt å vite før du kobler til. mcpemails krypterer lagrede påloggingsopplysninger, og du kan koble fra innboksen i dashbordet når som helst."
+      "p": "Fordi påloggingsopplysningen for e-post er passordet til Free-kontoen og ikke en hemmelighet per program, har alt du limer det inn i, nøklene til kontoen, og å trekke tilbake tilgangen for ett verktøy betyr å endre passordet for alle. Det er en egenskap ved Frees design og ikke en kritikk av det, men det er verdt å vite før du kobler til. MCP Emails krypterer lagrede påloggingsopplysninger, og du kan koble fra innboksen i dashbordet når som helst."
     }
   ],
   "limits": [
@@ -71,7 +71,7 @@
   "faq": [
     {
       "q": "Fungerer Claude med Free.fr-e-post?",
-      "a": "Ikke direkte. Claude har ingen innebygd Free-kobling. Kobler du en MCP-server som mcpemails til postkassen over IMAP, får Claude tilgang til å lese, søke, sende, svare, planlegge og organisere free.fr-e-posten din, og den samme tilkoblingen fungerer i Cursor, ChatGPT og andre MCP-klienter."
+      "a": "Ikke direkte. Claude har ingen innebygd Free-kobling. Kobler du en MCP-server som MCP Emails til postkassen over IMAP, får Claude tilgang til å lese, søke, sende, svare, planlegge og organisere free.fr-e-posten din, og den samme tilkoblingen fungerer i Cursor, ChatGPT og andre MCP-klienter."
     },
     {
       "q": "Hva er IMAP- og SMTP-innstillingene for Free.fr?",

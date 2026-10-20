@@ -23,7 +23,7 @@
     "meta0": "1 bandeja gratis, para siempre",
     "meta1": "La contraseña de tu buzón, sin configurar OAuth",
     "meta2": "El correo se obtiene en vivo, nunca se almacena",
-    "answer": "Claude no puede acceder a Rackspace Email por sí solo. mcpemails es un servidor MCP alojado que lo conecta por IMAP con la contraseña de tu buzón, para que Claude, Cursor o cualquier cliente MCP pueda leer, buscar, enviar y organizar ese correo. La configuración lleva un par de minutos y una bandeja es gratis."
+    "answer": "Claude no puede acceder a Rackspace Email por sí solo. MCP Emails es un servidor MCP alojado que lo conecta por IMAP con la contraseña de tu buzón, para que Claude, Cursor o cualquier cliente MCP pueda leer, buscar, enviar y organizar ese correo. La configuración lleva un par de minutos y una bandeja es gratis."
   },
   "method": {
     "title": "Cómo se conecta Rackspace Email: IMAP y la contraseña de tu buzón",
@@ -32,14 +32,14 @@
   "setup": [
     {
       "h": "Crea una cuenta gratis",
-      "p": "Regístrate en mcpemails, sin tarjeta. El plan gratuito conecta una bandeja, para siempre."
+      "p": "Regístrate en MCP Emails, sin tarjeta. El plan gratuito conecta una bandeja, para siempre."
     },
     {
       "h": "Consigue la contraseña de tu buzón de Rackspace",
       "p": "En el panel de control de Cloud Office, abre el buzón y establece su contraseña. Usa el servidor seguro, secure.emailsrvr.com, no el que va sin cifrar."
     },
     {
-      "h": "Pégala en mcpemails",
+      "h": "Pégala en MCP Emails",
       "p": "Elige IMAP / SMTP y añade tu dirección de Rackspace Email, los servidores de arriba y la contraseña para conectar la bandeja de forma segura."
     },
     {
@@ -73,7 +73,7 @@
   "faq": [
     {
       "q": "¿Funciona Claude con Rackspace Email?",
-      "a": "No por sí solo. Claude no tiene un conector de Rackspace integrado. Conectar un servidor MCP como mcpemails al buzón por IMAP le da a Claude acceso para leer, buscar, enviar, responder, programar y organizar, y como es IMAP estándar, el mismo buzón queda disponible también en Cursor, ChatGPT y otros clientes MCP."
+      "a": "No por sí solo. Claude no tiene un conector de Rackspace integrado. Conectar un servidor MCP como MCP Emails al buzón por IMAP le da a Claude acceso para leer, buscar, enviar, responder, programar y organizar, y como es IMAP estándar, el mismo buzón queda disponible también en Cursor, ChatGPT y otros clientes MCP."
     },
     {
       "q": "¿Cuáles son los ajustes IMAP y SMTP de Rackspace Email?",

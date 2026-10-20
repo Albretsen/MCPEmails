@@ -37,7 +37,10 @@ export type ProductFunnelEvent = {
     // The Overview guide asked a business-domain workspace to connect a second
     // work mailbox. outcome `started` = shown, `success` = clicked; at most one
     // of each per workspace (lib/analytics/multi-inbox-prompt.ts).
-    | 'multi_inbox_prompt';
+    | 'multi_inbox_prompt'
+    // A buy button on the inbox-cap offer was clicked. The matching "shown" is
+    // the `paywall_reached` row with connection_type 'first_connect'.
+    | 'paywall_clicked';
   outcome: 'started' | 'success' | 'failure';
   category:
     | 'gmail' | 'outlook' | 'fastmail' | 'icloud' | 'yahoo' | 'zoho' | 'yandex' | 'generic_imap'

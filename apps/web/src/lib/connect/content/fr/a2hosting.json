@@ -20,7 +20,7 @@
     "titleLine1": "Connectez l'e-mail A2 Hosting à Claude,",
     "titleLine2": "Cursor, ChatGPT, tout client MCP",
     "lead": "Donnez à votre agent IA une vraie boîte A2 Hosting. Lisez, recherchez, envoyez, répondez, planifiez et organisez le courrier en IMAP avec le mot de passe défini sur la boîte dans cPanel, dans tous les clients MCP et pas un seul.",
-    "answer": "Claude ne peut pas accéder seul à une boîte A2 Hosting. mcpemails est un serveur MCP hébergé qui s'y connecte en IMAP classique sur le port 993, via le serveur de messagerie sur lequel se trouve votre propre compte plutôt qu'une adresse a2hosting.com partagée, pour que Claude, Cursor ou tout client MCP puisse lire, rechercher, envoyer et organiser ce courrier. A2 Hosting est devenu hosting.com en avril 2025, mais la plateforme de messagerie n'a pas changé : cPanel affiche votre serveur exact sous Email Accounts, puis Connect Devices. L'authentification se fait avec le mot de passe défini sur la boîte, pas avec votre identifiant du panneau de contrôle, et une boîte est gratuite.",
+    "answer": "Claude ne peut pas accéder seul à une boîte A2 Hosting. MCP Emails est un serveur MCP hébergé qui s'y connecte en IMAP classique sur le port 993, via le serveur de messagerie sur lequel se trouve votre propre compte plutôt qu'une adresse a2hosting.com partagée, pour que Claude, Cursor ou tout client MCP puisse lire, rechercher, envoyer et organiser ce courrier. A2 Hosting est devenu hosting.com en avril 2025, mais la plateforme de messagerie n'a pas changé : cPanel affiche votre serveur exact sous Email Accounts, puis Connect Devices. L'authentification se fait avec le mot de passe défini sur la boîte, pas avec votre identifiant du panneau de contrôle, et une boîte est gratuite.",
     "meta0": "1 boîte gratuite, pour toujours",
     "meta1": "Mot de passe de la boîte depuis cPanel",
     "meta2": "E-mails récupérés en direct, jamais stockés"
@@ -31,7 +31,7 @@
   },
   "setup": [
     {
-      "h": "Créez un compte mcpemails gratuit",
+      "h": "Créez un compte MCP Emails gratuit",
       "p": "Inscrivez-vous sur mcpemails.com. L'offre gratuite connecte une boîte et ne demande aucune carte."
     },
     {
@@ -62,13 +62,13 @@
     }
   ],
   "limits": [
-    "mcpemails agit sur la boîte, pas sur le compte d'hébergement. Les alias, redirections, répondeurs automatiques et filtres antispam restent gérés dans cPanel et ne sont pas visibles par votre client IA.",
+    "MCP Emails agit sur la boîte, pas sur le compte d'hébergement. Les alias, redirections, répondeurs automatiques et filtres antispam restent gérés dans cPanel et ne sont pas visibles par votre client IA.",
     "Les comptes revendeurs et VPS peuvent se trouver sur un nom d'hôte qu'A2 ne publie nulle part dans sa base de connaissances. Le panneau Connect Devices dans le cPanel de ce compte est la seule source qui fait foi."
   ],
   "faq": [
     {
       "q": "Claude fonctionne-t-il avec l'e-mail A2 Hosting ?",
-      "a": "Pas directement. Claude n'a pas de connecteur intégré pour les hébergeurs de messagerie cPanel. Connecter un serveur MCP comme mcpemails à votre boîte A2 Hosting en IMAP donne à Claude un accès en lecture, recherche, envoi, réponse, planification et organisation, avec les mêmes identifiants qu'un client de messagerie de bureau."
+      "a": "Pas directement. Claude n'a pas de connecteur intégré pour les hébergeurs de messagerie cPanel. Connecter un serveur MCP comme MCP Emails à votre boîte A2 Hosting en IMAP donne à Claude un accès en lecture, recherche, envoi, réponse, planification et organisation, avec les mêmes identifiants qu'un client de messagerie de bureau."
     },
     {
       "q": "Quels sont les réglages IMAP et SMTP d'A2 Hosting ?",

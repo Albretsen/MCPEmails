@@ -21,7 +21,7 @@
     "titleLine1": "Connectez votre boîte SFR",
     "titleLine2": "à Claude, Cursor, tout client MCP",
     "lead": "Offrez à votre agent IA une vraie boîte SFR. Lisez, recherchez, envoyez, répondez, planifiez et organisez le courrier via IMAP avec le mot de passe propre à la boîte, et non celui de votre compte client.",
-    "answer": "Claude ne peut pas accéder seul à une boîte SFR. mcpemails est un serveur MCP hébergé qui la connecte via IMAP sur imap.sfr.fr, port 993, en s'authentifiant avec votre adresse sfr.fr complète et votre mot de passe SFR Mail, pour que Claude, Cursor ou tout client MCP puisse lire, rechercher, envoyer et organiser le courrier. L'identifiant est le point de défaillance à connaître d'avance : SFR Mail a son propre mot de passe, distinct de celui de votre Espace Client, et changer l'un ne change pas l'autre. Une boîte est gratuite, pour toujours.",
+    "answer": "Claude ne peut pas accéder seul à une boîte SFR. MCP Emails est un serveur MCP hébergé qui la connecte via IMAP sur imap.sfr.fr, port 993, en s'authentifiant avec votre adresse sfr.fr complète et votre mot de passe SFR Mail, pour que Claude, Cursor ou tout client MCP puisse lire, rechercher, envoyer et organiser le courrier. L'identifiant est le point de défaillance à connaître d'avance : SFR Mail a son propre mot de passe, distinct de celui de votre Espace Client, et changer l'un ne change pas l'autre. Une boîte est gratuite, pour toujours.",
     "meta0": "1 boîte gratuite, pour toujours",
     "meta1": "Mot de passe SFR Mail, pas celui de l'Espace Client",
     "meta2": "E-mails récupérés en direct, jamais stockés"
@@ -33,7 +33,7 @@
   "setup": [
     {
       "h": "Créez un compte gratuit",
-      "p": "Inscrivez-vous sur mcpemails, sans carte bancaire. L'offre gratuite connecte une boîte, pour toujours."
+      "p": "Inscrivez-vous sur MCP Emails, sans carte bancaire. L'offre gratuite connecte une boîte, pour toujours."
     },
     {
       "h": "Vérifiez ou réinitialisez le mot de passe SFR Mail dans le webmail",
@@ -44,18 +44,18 @@
       "p": "SFR permet à un abonné de créer des adresses et alias supplémentaires depuis le même écran de configuration des boîtes, en plus de l'adresse principale fournie avec la ligne. Si vous préférez ne pas confier à un agent l'adresse à laquelle tous vos contacts écrivent, créez-en une seconde et connectez-la. Les serveurs et ports sont les mêmes."
     },
     {
-      "h": "Ajoutez la boîte dans mcpemails",
+      "h": "Ajoutez la boîte dans MCP Emails",
       "p": "Choisissez IMAP / SMTP, saisissez l'adresse complète, par exemple prenom.nom@sfr.fr, et collez le mot de passe SFR Mail. Les serveurs et ports SFR sont préremplis et ont été vérifiés via une connexion TLS réelle. Mettez ensuite https://mcpemails.com/api/mcp dans Claude, Cursor ou ChatGPT, autorisez, et votre agent a la boîte."
     }
   ],
   "gotchas": [
     {
       "h": "Le mot de passe de l'Espace Client et celui de SFR Mail sont deux choses différentes",
-      "p": "C'est l'échec SFR qui fait perdre le plus de temps, car les deux identifiants appartiennent à la même personne, tous deux s'appellent couramment <b>mot de passe SFR</b>, et l'un comme l'autre peut être saisi dans un client de messagerie sans erreur explicite. Ce sont des comptes indépendants : changer l'un ne change pas l'autre, même si vous leur avez volontairement donné la même valeur par le passé et les croyez toujours synchronisés. Quand un client est refusé à la connexion, allez dans SFR Mail et réinitialisez-y le mot de passe de la boîte, puis utilisez exactement cette valeur dans mcpemails."
+      "p": "C'est l'échec SFR qui fait perdre le plus de temps, car les deux identifiants appartiennent à la même personne, tous deux s'appellent couramment <b>mot de passe SFR</b>, et l'un comme l'autre peut être saisi dans un client de messagerie sans erreur explicite. Ce sont des comptes indépendants : changer l'un ne change pas l'autre, même si vous leur avez volontairement donné la même valeur par le passé et les croyez toujours synchronisés. Quand un client est refusé à la connexion, allez dans SFR Mail et réinitialisez-y le mot de passe de la boîte, puis utilisez exactement cette valeur dans MCP Emails."
     },
     {
       "h": "Pas de SASL-IR, donc un client qui le suppose reçoit un BAD sec",
-      "p": "La bannière IMAP de SFR est on ne peut plus courte (<code>* OK IMAP4 ready</code>) et n'annonce pas <code>SASL-IR</code>. Le serveur rejette donc l'authentification en une étape qui envoie l'identifiant avec la commande <code>AUTHENTICATE</code>, en répondant un <code>BAD</code> sans précision, impossible à distinguer de mauvais identifiants. Avec la confusion de mots de passe décrite plus haut, la combinaison est particulièrement peu utile : les deux causes les plus probables d'un échec de connexion SFR produisent le même message. mcpemails détecte le <code>BAD</code> et relance l'échange en deux étapes, donc cette moitié-là est déjà gérée pour vous."
+      "p": "La bannière IMAP de SFR est on ne peut plus courte (<code>* OK IMAP4 ready</code>) et n'annonce pas <code>SASL-IR</code>. Le serveur rejette donc l'authentification en une étape qui envoie l'identifiant avec la commande <code>AUTHENTICATE</code>, en répondant un <code>BAD</code> sans précision, impossible à distinguer de mauvais identifiants. Avec la confusion de mots de passe décrite plus haut, la combinaison est particulièrement peu utile : les deux causes les plus probables d'un échec de connexion SFR produisent le même message. MCP Emails détecte le <code>BAD</code> et relance l'échange en deux étapes, donc cette moitié-là est déjà gérée pour vous."
     },
     {
       "h": "L'envoi est plafonné à 20 Mo, ce qui est bas pour un FAI français",
@@ -74,7 +74,7 @@
   "faq": [
     {
       "q": "Claude fonctionne-t-il avec SFR Mail ?",
-      "a": "Pas seul. Claude n'a pas de connecteur SFR intégré. Pointer un serveur MCP comme mcpemails vers la boîte via IMAP donne à Claude un accès en lecture, recherche, envoi, réponse, planification et organisation, et la même connexion fonctionne ensuite depuis Cursor, ChatGPT et les autres clients MCP."
+      "a": "Pas seul. Claude n'a pas de connecteur SFR intégré. Pointer un serveur MCP comme MCP Emails vers la boîte via IMAP donne à Claude un accès en lecture, recherche, envoi, réponse, planification et organisation, et la même connexion fonctionne ensuite depuis Cursor, ChatGPT et les autres clients MCP."
     },
     {
       "q": "Quels sont les paramètres IMAP et SMTP de SFR ?",

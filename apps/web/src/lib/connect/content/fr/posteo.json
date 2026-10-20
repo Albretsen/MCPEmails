@@ -22,7 +22,7 @@
     "titleLine1": "Connectez Posteo à Claude,",
     "titleLine2": "Cursor, ChatGPT, tout client MCP",
     "lead": "Offrez à votre agent IA une vraie boîte Posteo. Lisez, recherchez, envoyez, répondez, planifiez et organisez le courrier en IMAP, dans tous vos clients MCP et pas un seul, avec une réponse claire sur ce que le chiffrement de Posteo cache ou non à un agent.",
-    "answer": "Claude ne peut pas accéder seul à Posteo. mcpemails est un serveur MCP hébergé qui l'y connecte en IMAP via posteo.de sur le port 993, et en SMTP via posteo.de sur le port 465, pour que Claude, Cursor ou tout client MCP puisse lire, rechercher, envoyer et organiser ce courrier. Il n'y a pas de préfixe imap. ou smtp. : le domaine nu est le serveur de toutes les adresses Posteo, quel que soit le domaine Posteo de la vôtre. L'authentification se fait avec votre mot de passe Posteo habituel, sauf si vous avez activé la protection supplémentaire du compte de messagerie : dès lors, IMAP, POP3 et SMTP n'acceptent plus qu'un mot de passe d'application créé dans vos réglages Posteo. Une boîte est gratuite, pour toujours.",
+    "answer": "Claude ne peut pas accéder seul à Posteo. MCP Emails est un serveur MCP hébergé qui l'y connecte en IMAP via posteo.de sur le port 993, et en SMTP via posteo.de sur le port 465, pour que Claude, Cursor ou tout client MCP puisse lire, rechercher, envoyer et organiser ce courrier. Il n'y a pas de préfixe imap. ou smtp. : le domaine nu est le serveur de toutes les adresses Posteo, quel que soit le domaine Posteo de la vôtre. L'authentification se fait avec votre mot de passe Posteo habituel, sauf si vous avez activé la protection supplémentaire du compte de messagerie : dès lors, IMAP, POP3 et SMTP n'acceptent plus qu'un mot de passe d'application créé dans vos réglages Posteo. Une boîte est gratuite, pour toujours.",
     "meta0": "1 boîte gratuite, pour toujours",
     "meta1": "Mot de passe d'application si la protection renforcée est active",
     "meta2": "E-mails récupérés en direct, jamais stockés"
@@ -34,14 +34,14 @@
   "setup": [
     {
       "h": "Créez un compte gratuit",
-      "p": "Inscrivez-vous sur mcpemails, sans carte bancaire. L'offre gratuite connecte une boîte, pour toujours. Vous obtenez à la fin une URL MCP et une clé."
+      "p": "Inscrivez-vous sur MCP Emails, sans carte bancaire. L'offre gratuite connecte une boîte, pour toujours. Vous obtenez à la fin une URL MCP et une clé."
     },
     {
       "h": "Créez un mot de passe d'application dans vos réglages Posteo",
       "p": "Connectez-vous au webmail Posteo et ouvrez <b>Settings</b>, puis <b>Password and security</b>, où les mots de passe d'application se créent et se gèrent. Posteo exige que chacun compte au moins 16 caractères, dont au moins un chiffre et une majuscule, et vous pouvez en avoir jusqu'à cinq à la fois. Nommez-le d'après cette connexion pour savoir lequel supprimer plus tard. Vous pouvez sauter cette étape si la protection renforcée est désactivée, mais un identifiant révocable séparément est préférable à confier à un tiers."
     },
     {
-      "h": "Ajoutez la boîte dans mcpemails",
+      "h": "Ajoutez la boîte dans MCP Emails",
       "p": "Choisissez IMAP / SMTP et saisissez votre adresse Posteo complète, puis le mot de passe. Le serveur est prérempli avec <code>posteo.de</code> dans les deux sens, vérifié par une connexion TLS réelle, et le mot de passe sortant doit être renseigné en plus du mot de passe entrant, car Posteo authentifie toujours la soumission."
     },
     {
@@ -68,14 +68,14 @@
     }
   ],
   "limits": [
-    "Connecter une boîte Posteo à un client IA signifie que ce fournisseur d'IA lit le contenu de tout ce sur quoi on lui demande de travailler. mcpemails récupère le courrier en direct depuis Posteo à chaque requête et ne stocke pas le corps des messages, et les identifiants sont chiffrés au repos, mais le texte parvient tout de même à Claude, Cursor ou au client que vous connectez. L'inscription anonyme, le paiement anonyme et l'hébergement en Allemagne de Posteo protègent la relation entre vous et Posteo. Rien de cela ne suit un message chez un fournisseur d'IA que vous connectez vous-même.",
-    "Avec le chiffrement entrant activé, un agent ne peut pas lire votre courrier du tout. Les messages arrivent chiffrés en PGP ou S/MIME, mcpemails ne détient aucune de vos clés privées, et seuls les en-têtes, les dates et les opérations sur les dossiers restent disponibles.",
+    "Connecter une boîte Posteo à un client IA signifie que ce fournisseur d'IA lit le contenu de tout ce sur quoi on lui demande de travailler. MCP Emails récupère le courrier en direct depuis Posteo à chaque requête et ne stocke pas le corps des messages, et les identifiants sont chiffrés au repos, mais le texte parvient tout de même à Claude, Cursor ou au client que vous connectez. L'inscription anonyme, le paiement anonyme et l'hébergement en Allemagne de Posteo protègent la relation entre vous et Posteo. Rien de cela ne suit un message chez un fournisseur d'IA que vous connectez vous-même.",
+    "Avec le chiffrement entrant activé, un agent ne peut pas lire votre courrier du tout. Les messages arrivent chiffrés en PGP ou S/MIME, MCP Emails ne détient aucune de vos clés privées, et seuls les en-têtes, les dates et les opérations sur les dossiers restent disponibles.",
     "La boîte standard de Posteo est petite selon les critères actuels, et une boîte qui atteint son quota refuse le courrier entrant. Un agent qui classe et marque des messages ne libère pas d'espace ; supprimer et vider la corbeille, si."
   ],
   "faq": [
     {
       "q": "Claude fonctionne-t-il avec Posteo ?",
-      "a": "Pas seul. Claude n'a pas de connecteur Posteo et ne parle pas l'IMAP. Pointer un serveur MCP comme mcpemails vers votre boîte Posteo donne à Claude un accès en lecture, recherche, envoi, réponse, planification et organisation, et la même connexion fonctionne ensuite depuis Cursor, ChatGPT et d'autres clients MCP sans avoir à la configurer une seconde fois."
+      "a": "Pas seul. Claude n'a pas de connecteur Posteo et ne parle pas l'IMAP. Pointer un serveur MCP comme MCP Emails vers votre boîte Posteo donne à Claude un accès en lecture, recherche, envoi, réponse, planification et organisation, et la même connexion fonctionne ensuite depuis Cursor, ChatGPT et d'autres clients MCP sans avoir à la configurer une seconde fois."
     },
     {
       "q": "Quels sont les paramètres IMAP et SMTP de Posteo ?",

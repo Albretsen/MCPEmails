@@ -21,7 +21,7 @@
     "titleLine1": "Conecta Soverin a Claude,",
     "titleLine2": "Cursor, ChatGPT, cualquier cliente MCP",
     "lead": "Dale a tu agente de IA una bandeja real de Soverin. Lee, busca, envía, responde, programa y organiza correo por IMAP, en cualquier cliente MCP, incluidos los buzones en tu propio dominio, con una explicación honesta de qué protege la conexión y qué no.",
-    "answer": "Claude no puede acceder a un buzón de Soverin por sí solo. mcpemails es un servidor MCP alojado que lo conecta por IMAP en imap.soverin.net en el puerto 993, y por SMTP en smtp.soverin.net en el puerto 465, para que Claude, Cursor o cualquier cliente MCP pueda leer, buscar, enviar y organizar ese correo. Soverin documenta tu dirección de correo como nombre de usuario y la contraseña de tu cuenta como contraseña, y esos mismos dos servidores atienden tanto los buzones con dominio propio como los de soverin.net. Soverin no emite contraseñas de aplicación, y su autenticación de dos factores protege el panel y el webmail, no IMAP, así que la credencial que guardas aquí es la contraseña de la cuenta. Una bandeja es gratis, para siempre.",
+    "answer": "Claude no puede acceder a un buzón de Soverin por sí solo. MCP Emails es un servidor MCP alojado que lo conecta por IMAP en imap.soverin.net en el puerto 993, y por SMTP en smtp.soverin.net en el puerto 465, para que Claude, Cursor o cualquier cliente MCP pueda leer, buscar, enviar y organizar ese correo. Soverin documenta tu dirección de correo como nombre de usuario y la contraseña de tu cuenta como contraseña, y esos mismos dos servidores atienden tanto los buzones con dominio propio como los de soverin.net. Soverin no emite contraseñas de aplicación, y su autenticación de dos factores protege el panel y el webmail, no IMAP, así que la credencial que guardas aquí es la contraseña de la cuenta. Una bandeja es gratis, para siempre.",
     "meta0": "1 bandeja gratis, para siempre",
     "meta1": "La contraseña de tu cuenta de Soverin",
     "meta2": "El correo se obtiene en vivo, nunca se almacena"
@@ -32,7 +32,7 @@
   },
   "setup": [
     {
-      "h": "Crea tu cuenta gratis de mcpemails",
+      "h": "Crea tu cuenta gratis de MCP Emails",
       "p": "Regístrate en mcpemails.com. El plan gratuito conecta una bandeja, para siempre, sin tarjeta. Al final obtienes una URL MCP y una clave."
     },
     {
@@ -40,7 +40,7 @@
       "p": "En el Soverin Dashboard, abre el buzón que quieres conectar. El nombre de usuario es la dirección del propio buzón, no uno de los alias que hayas apuntado a él. Soverin da a cada buzón alias ilimitados, así que es fácil haber dejado de usar la dirección original hace años y ya no pensar en ella como el inicio de sesión."
     },
     {
-      "h": "Añade el buzón en mcpemails",
+      "h": "Añade el buzón en MCP Emails",
       "p": "Elige IMAP / SMTP y escribe esa dirección completa y la contraseña de tu cuenta de Soverin. Los servidores vienen rellenados como <code>imap.soverin.net</code> y <code>smtp.soverin.net</code> y se verificaron mediante una conexión TLS real. No los sustituyas por un nombre de servidor construido a partir de tu dominio; el certificado está emitido para el nombre propio de Soverin y un cliente que valide de forma estricta lo rechazará."
     },
     {
@@ -67,14 +67,14 @@
     }
   ],
   "limits": [
-    "Conectar un buzón de Soverin a un cliente de IA implica que ese proveedor de IA lee el contenido de los mensajes con los que trabaja. mcpemails obtiene el correo en vivo de imap.soverin.net en cada solicitud y no almacena el cuerpo de los mensajes, y las credenciales se cifran en reposo, pero el texto sigue llegando a Claude, Cursor o el cliente que conectes. El alojamiento exclusivamente en la UE de Soverin, su financiación por suscripción y su compromiso de no escanear ni perfilar tu correo describen a Soverin. Nada de eso acompaña a un mensaje cuando llega a un proveedor de IA que conectas tú mismo.",
+    "Conectar un buzón de Soverin a un cliente de IA implica que ese proveedor de IA lee el contenido de los mensajes con los que trabaja. MCP Emails obtiene el correo en vivo de imap.soverin.net en cada solicitud y no almacena el cuerpo de los mensajes, y las credenciales se cifran en reposo, pero el texto sigue llegando a Claude, Cursor o el cliente que conectes. El alojamiento exclusivamente en la UE de Soverin, su financiación por suscripción y su compromiso de no escanear ni perfilar tu correo describen a Soverin. Nada de eso acompaña a un mensaje cuando llega a un proveedor de IA que conectas tú mismo.",
     "No hay una credencial acotada. Soverin no tiene contraseñas de aplicación, así que lo que se guarda aquí es la contraseña de tu cuenta, la misma que abre el Soverin Dashboard. Retirar esta conexión implica cambiar esa contraseña en lugar de borrar un único token.",
-    "mcpemails conecta el buzón, no la cuenta. Los alias, los buzones adicionales, los ajustes de dominio y los reenvíos siguen en el Soverin Dashboard, y tu cliente de IA no puede verlos ni cambiarlos."
+    "MCP Emails conecta el buzón, no la cuenta. Los alias, los buzones adicionales, los ajustes de dominio y los reenvíos siguen en el Soverin Dashboard, y tu cliente de IA no puede verlos ni cambiarlos."
   ],
   "faq": [
     {
       "q": "¿Funciona Claude con Soverin?",
-      "a": "No directamente. Claude no tiene conector de Soverin y no puede hablar IMAP por sí mismo. Conectar un servidor MCP como mcpemails a tu buzón de Soverin le da a Claude acceso por IMAP para leer, buscar, enviar, responder, programar y organizar, y la misma conexión funciona después en Cursor, ChatGPT y otros clientes MCP sin repetir la configuración."
+      "a": "No directamente. Claude no tiene conector de Soverin y no puede hablar IMAP por sí mismo. Conectar un servidor MCP como MCP Emails a tu buzón de Soverin le da a Claude acceso por IMAP para leer, buscar, enviar, responder, programar y organizar, y la misma conexión funciona después en Cursor, ChatGPT y otros clientes MCP sin repetir la configuración."
     },
     {
       "q": "¿Cuáles son los ajustes IMAP y SMTP de Soverin?",

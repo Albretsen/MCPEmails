@@ -19,6 +19,7 @@ import {
   normalizePreview,
   preferredBodyText,
   stripHtmlToText,
+  stripLeadingCss,
 } from "./text-extract.ts";
 
 // Until 2026-10-04 the IMAP preview had two generators and the fixtures below
@@ -429,4 +430,69 @@ Deno.test("a plain body whose line starts with -- is not mistaken for a multipar
   const preview = undescribedPartPreview(body);
   assert(preview.startsWith("Thanks, that works for me."), `body mangled: ${preview}`);
   assert(preview.includes("Karin"), `signature dropped: ${preview}`);
+});
+
+// ── CSS before the first visible text (2026-10-19) ──────────────────────────
+//
+// An HTML-only newsletter whose first kilobytes are a stylesheet previewed as
+// "" in MCP rows and in the web client: the listing's 2 KB prefix was CSS end
+// to end. The listing now looks further for such rows (imap-preview.test.ts);
+// these pin the generator that judges the longer source.
+
+const htmlPart = { type: "text", subtype: "html", charset: "utf-8", encoding: "8bit" };
+const plainPart = { type: "text", subtype: "plain", charset: "utf-8", encoding: "8bit" };
+/** The whole part: BODYSTRUCTURE's size equals what was fetched. */
+const whole = (source: string, part: typeof htmlPart): string =>
+  cleanPreviewFromBodyPart(wire(source), { ...part, size: wire(source).length });
+
+Deno.test("css preview: 4 KB of <style> then text previews as the text, entities decoded", () => {
+  const style = `<style type="text/css">${".a{color:#333;margin:0 auto;} @media (max-width:600px){.b{display:block!important}} ".repeat(60)}</style>`;
+  assert(style.length > 4096, "the style block fills the first 4 KB");
+  const html = `<!DOCTYPE html><html><head><meta charset="utf-8">${style}</head><body><p>Caf&#233; &amp; bar &#8211; open&nbsp;today</p></body></html>`;
+  assertEquals(whole(html, htmlPart), "Café & bar – open today", "the first visible text, however far in");
+  // A prefix of it that ends inside the style block has no text: "", never CSS.
+  assertEquals(htmlSnippetPreview(html.slice(0, 2048)), "", "a prefix that is all CSS");
+});
+
+Deno.test("css preview: CSS without a <style> tag is dropped, cut or whole", () => {
+  const css = "body{margin:0;padding:0} /* reset */ @import url(https://fonts.example.com/x.css); " +
+    "@font-face{font-family:X;src:url(x.woff2)} @media screen and (max-width:480px){.col , td > p{width:100%!important}} " +
+    "a:hover, .btn#go{color:#1a73e8;-webkit-text-size-adjust:none;*zoom:1} ";
+  assertEquals(whole(`<html>${css}<body><p>Your invoice is ready.</p></body></html>`, htmlPart), "Your invoice is ready.", "html");
+  // Cut inside a declaration, a selector, a comment, an @media block: all "".
+  const cutSource = `<html>${css.repeat(20)}`;
+  for (let end = 300; end <= 2048; end += 37) {
+    assertEquals(htmlSnippetPreview(cutSource.slice(0, end)), "", `cut at ${end}`);
+  }
+  // A text/plain part a converter filled with the stylesheet.
+  assertEquals(whole(`${css}\r\nYour invoice is ready.`, plainPart), "Your invoice is ready.", "plain");
+});
+
+Deno.test("css preview: normal HTML and plain text are untouched", () => {
+  assertEquals(
+    whole("<html><body><p>Hi Ann,</p><p>See you at 10:00 {room: B}.</p></body></html>", htmlPart),
+    "Hi Ann, See you at 10:00 {room: B}.",
+    "html",
+  );
+  assertEquals(
+    whole("Hello there.\r\nThe build is green: {ok: true}; ship it.", plainPart),
+    "Hello there. The build is green: {ok: true}; ship it.",
+    "plain",
+  );
+  assertEquals(whole("Tom &amp; Jerry", plainPart), "Tom & Jerry", "plain text still decodes its entities once");
+  assertEquals(whole("Hello, world. a.b is fine", plainPart), "Hello, world. a.b is fine", "selector-ish prose");
+  assertEquals(stripLeadingCss("Visit example.com today"), "Visit example.com today", "no brace");
+  assertEquals(stripLeadingCss("@john see below"), "@john see below", "not an at-rule");
+  assertEquals(stripLeadingCss("Hi {name}, welcome"), "Hi {name}, welcome", "not declarations");
+});
+
+Deno.test("css preview: a hostile body costs linear time", () => {
+  const t0 = performance.now();
+  stripLeadingCss(`a{${"b:c:".repeat(20000)}x;!}`);
+  stripLeadingCss(`a{${"b:c ".repeat(20000)}`);
+  stripLeadingCss(`@media ${"{".repeat(50000)}`);
+  stripLeadingCss(`${".a{b:c}".repeat(20000)}Done`);
+  stripLeadingCss(`${"/*".repeat(50000)}`);
+  const ms = performance.now() - t0;
+  assert(ms < 500, `took ${ms} ms`);
 });
