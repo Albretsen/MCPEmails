@@ -5,6 +5,7 @@ import { routing } from '@/i18n/routing';
 import { metaAlternates, localePath, APP_URL, OG_LOCALE, OG_IMAGE } from '@/i18n/seo';
 import { Nav, Footer } from '../../../../components/marketing/Sections';
 import { EVIDENCE_LINKS, readOnlyAccessCopy } from './content.mjs';
+import { withReadingLang } from '@/i18n/reading-lang.mjs';
 
 /**
  * What a read-only connection can and cannot do, and how each limit is
@@ -139,7 +140,7 @@ export default async function ReadOnlyAccessPage({ params }) {
             <h2>{copy.cta.title}</h2>
             <p className="sub">{copy.cta.sub}</p>
             <div className="hero-cta" style={{ justifyContent: 'center' }}>
-              <Link className="btn btn-primary btn-lg" href="/signup">{copy.cta.button}</Link>
+              <a className="btn btn-primary btn-lg" href={withReadingLang('/signup', locale)}>{copy.cta.button}</a>
               <Link className="btn btn-secondary btn-lg" href="/docs/providers">{copy.cta.providers}</Link>
             </div>
           </div>

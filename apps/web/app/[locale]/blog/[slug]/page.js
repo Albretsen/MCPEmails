@@ -5,6 +5,7 @@ import { routing } from '@/i18n/routing';
 import { getAllPosts, getPost, getPostLocales, getLocalizedPost, getAuthor } from '@/lib/blog/posts';
 import { renderMarkdown, readingTime } from '@/lib/blog/markdown';
 import { localizeHref } from '@/lib/blog/links.mjs';
+import { withReadingLangEscaped } from '@/i18n/reading-lang.mjs';
 import BlogPostClient from '../../../../components/marketing/BlogPostClient';
 
 /**
@@ -90,7 +91,9 @@ export default async function BlogPostPage({ params }) {
   const t = await getTranslations({ locale, namespace: 'blog' });
   const author = getAuthor(post);
   const { html, headings } = renderMarkdown(post.content, {
-    hrefFor: (href) => localizeHref(href, locale, { postLocales }),
+    // Locale prefix where the target exists in this locale, and ?lang= on
+    // signup and login links so the form opens in the language being read.
+    hrefFor: (href) => withReadingLangEscaped(localizeHref(href, locale, { postLocales }), locale),
   });
   const readingMinutes = readingTime(post.content);
   const path = `/blog/${slug}`;

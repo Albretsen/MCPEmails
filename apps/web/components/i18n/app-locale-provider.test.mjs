@@ -532,3 +532,127 @@ test('rapid switching: a click before the stored language has been applied still
   await flush(() => languageButton(view.container, 'es').click());
   await assertEndsOn({ ...view, seen, button: (l) => languageButton(view.container, l) }, 'es');
 });
+
+// ===========================================================================
+// The reading language from a marketing page (`/signup?lang=fr`)
+// ===========================================================================
+//
+// The signup and login pages validate `lang` on the server and pass it as
+// `initialLocale` to a provider nested inside the layout's one. That inner
+// provider must render the language from the server render on (no English
+// flash, nothing to hydrate differently), store it under the key Settings
+// writes, and leave the layout's provider on it too.
+
+/** Reports the language of the provider it sits under. */
+function OuterProbe({ seen }) {
+  seen.outer = useAppLocale().locale;
+  return null;
+}
+
+test('reading language: the server render is already in it, whatever is stored', async (t) => {
+  reset(t, { stored: 'nb', languages: ['nb-NO'] });
+  const seen = newSeen();
+  const html = renderToString(createElement(AppLocaleProvider, { initialLocale: 'fr' }, createElement(Probe, { seen })));
+  assert.equal(html, `<p id="probe">${CATALOG.fr.dashboard.settings.languageHeading}</p>`);
+  assert.deepEqual(seen.renders, [{ intl: 'fr', app: 'fr', heading: CATALOG.fr.dashboard.settings.languageHeading }]);
+});
+
+test('reading language: hydrates without a mismatch, never shows English, and is stored', async (t) => {
+  reset(t, { stored: 'nb', languages: ['en-US'] });
+  const tree = (seen) => createElement(AppLocaleProvider, { initialLocale: 'es' }, createElement(Probe, { seen }));
+  const container = document.createElement('div');
+  container.innerHTML = renderToString(tree(newSeen()));
+  document.body.appendChild(container);
+
+  const errors = [];
+  const previousError = console.error;
+  console.error = (...args) => { errors.push(args.map(String).join(' ')); };
+  const seen = newSeen();
+  let root;
+  await act(async () => {
+    root = hydrateRoot(container, tree(seen), { onRecoverableError: (err) => errors.push(String(err)) });
+  });
+  t.after(async () => {
+    console.error = previousError;
+    await act(async () => { root.unmount(); });
+    container.remove();
+  });
+
+  await waitFor(() => window.localStorage.getItem(STORAGE_KEY) === 'es', { message: 'the reading language stored' });
+  await flush(() => new Promise((resolve) => setTimeout(resolve, 20)));
+  assert.deepEqual([...new Set(seen.renders.map((r) => r.app))], ['es'], 'every render is Spanish');
+  assert.equal(container.querySelector('#probe').textContent, CATALOG.es.dashboard.settings.languageHeading);
+  assert.equal(document.documentElement.lang, 'es');
+  assert.deepEqual(errors, [], 'no hydration mismatch and no console error');
+});
+
+test('reading language: the layout provider around it follows, so later pages and the dashboard do too', async (t) => {
+  reset(t, { languages: ['en-US'] });
+  const seen = newSeen();
+  seen.outer = null;
+  const view = await mountWith(t, [
+    createElement(OuterProbe, { key: 'outer', seen }),
+    createElement(AppLocaleProvider, { key: 'inner', initialLocale: 'zh' }, createElement(Probe, { seen })),
+  ]);
+  await settled(view, 'zh');
+  await waitFor(() => seen.outer === 'zh', { message: 'the layout provider on zh' });
+  assert.equal(window.localStorage.getItem(STORAGE_KEY), 'zh');
+  assert.equal(document.documentElement.lang, 'zh');
+});
+
+test('reading language: a later choice in Settings still wins', async (t) => {
+  reset(t);
+  const seen = newSeen();
+  const view = await mountWith(t, createElement(AppLocaleProvider, { initialLocale: 'fr' }, createElement(Probe, { seen })));
+  await waitFor(() => window.localStorage.getItem(STORAGE_KEY) === 'fr', { message: 'fr stored' });
+  await flush(() => seen.setLocale('en'));
+  await settled(view, 'en');
+  assert.equal(window.localStorage.getItem(STORAGE_KEY), 'en');
+});
+
+// The /signup and /login layouts pass `readLangParam`: the provider reads
+// `?lang=` itself through next/navigation, which in the app reads Next's
+// SearchParamsContext. Supplying that context is how the router hands the URL
+// to the server render and to hydration alike.
+const { SearchParamsContext } = await import('next/dist/shared/lib/hooks-client-context.shared-runtime.js');
+
+/** The layout's provider, rendered for a URL with `search`. */
+function atUrl(search, children) {
+  return createElement(SearchParamsContext.Provider, { value: new URLSearchParams(search) },
+    createElement(AppLocaleProvider, { readLangParam: true }, children));
+}
+
+test('reading language from the URL: /signup?lang=nb renders Norwegian from the server render on', async (t) => {
+  reset(t, { stored: 'es', languages: ['en-US'] });
+  const html = renderToString(atUrl('lang=nb&redirect=%2Fdashboard', createElement(Probe, { seen: newSeen() })));
+  assert.equal(html, `<p id="probe">${CATALOG.nb.dashboard.settings.languageHeading}</p>`);
+  const seen = newSeen();
+  const view = await mountWith(t, atUrl('lang=nb', createElement(Probe, { seen })));
+  await waitFor(() => window.localStorage.getItem(STORAGE_KEY) === 'nb', { message: 'nb stored' });
+  assert.deepEqual([...new Set(seen.renders.map((r) => r.app))], ['nb']);
+  assert.equal(view.container.querySelector('#probe').textContent, CATALOG.nb.dashboard.settings.languageHeading);
+});
+
+test('reading language from the URL: no or an invalid lang leaves the usual rules', async (t) => {
+  for (const search of ['', 'lang=de', 'lang=FR', 'lang=', 'provider=gmx']) {
+    reset(t, { stored: 'es', languages: ['fr-FR'] });
+    const html = renderToString(atUrl(search, createElement(Probe, { seen: newSeen() })));
+    assert.equal(html, `<p id="probe">${CATALOG.en.dashboard.settings.languageHeading}</p>`, search);
+    const view = await mount(atUrl(search, createElement(Probe, { seen: newSeen() })));
+    await settled(view, 'es');
+    assert.equal(window.localStorage.getItem(STORAGE_KEY), 'es', `${search}: the stored choice is kept`);
+    await view.unmount();
+  }
+});
+
+test('reading language: an unsupported value is ignored, and the usual rules apply', async (t) => {
+  for (const initialLocale of ['de', 'FR', '', ['fr']]) {
+    reset(t, { languages: ['es-ES'] });
+    const html = renderToString(createElement(AppLocaleProvider, { initialLocale }, createElement(Probe, { seen: newSeen() })));
+    assert.equal(html, `<p id="probe">${CATALOG.en.dashboard.settings.languageHeading}</p>`, JSON.stringify(initialLocale));
+    const view = await mount(createElement(AppLocaleProvider, { initialLocale }, createElement(Probe, { seen: newSeen() })));
+    await settled(view, 'es');
+    assert.equal(window.localStorage.getItem(STORAGE_KEY), null, 'nothing stored for an invalid value');
+    await view.unmount();
+  }
+});

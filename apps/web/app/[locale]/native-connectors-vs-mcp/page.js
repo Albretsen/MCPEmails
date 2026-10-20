@@ -90,7 +90,7 @@ export default async function ComparePage({ params }) {
         type="application/ld+json"
         dangerouslySetInnerHTML={{ __html: JSON.stringify(jsonLd) }}
       />
-      <CompareClient c={c} checkedOn={formatDate(locale, N.CHECKED_ON)} isEnglish={locale === 'en'} />
+      <CompareClient c={c} checkedOn={formatDate(locale, N.CHECKED_ON)} isEnglish={locale === 'en'} locale={locale} />
     </>
   );
 }
