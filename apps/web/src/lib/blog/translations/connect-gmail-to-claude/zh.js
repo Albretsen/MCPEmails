@@ -27,7 +27,7 @@ MCP Emails 是中间的桥梁：它一侧用 Model Context Protocol 与 Claude �
 
 ### 使用 Google Workspace 账户时
 
-Google Workspace 管理员可以为整个域关闭应用专用密码。如果你无法打开 **myaccount.google.com/apppasswords**，请让管理员开启应用专用密码。
+Google Workspace 管理员可以为整个域关闭应用专用密码。如果你无法打开 **myaccount.google.com/apppasswords**，请让管理员开启应用专用密码。[Gmail 设置与限制](/connect/gmail)页面把 Gmail 的具体细节集中在一处。
 
 ## 第 2 步：将 MCP Emails 添加到 Claude
 
@@ -43,7 +43,7 @@ https://mcpemails.com/api/mcp
 
 4. 点击**连接（Connect）**，用你的 MCP Emails 账户登录，并批准你想要的范围：\`read:email\`、\`send:email\`，或两者都选。
 
-这就是客户端的全部工作。该连接的范围严格限定于你所批准的内容，你可以在控制台中一键撤销。如果你更想了解 API 密钥的方式（适用于没有内置 OAuth 的客户端，如 Cline 或自定义脚本），请阅读[AI 邮件访问中 OAuth 与 API 密钥的对比](/blog/oauth-vs-api-keys-ai-email-access)。
+这就是客户端的全部工作。该连接的范围严格限定于你所批准的内容，你可以在控制台中一键撤销。如果你更想了解 API 密钥的方式（适用于没有内置 OAuth 的客户端，如 Cline 或自定义脚本），请阅读[AI 邮件访问中 OAuth 与 API 密钥的对比](/blog/oauth-vs-api-keys-ai-email-access)。还要连接其他邮箱？[Claude 邮箱分步设置指南](/blog/connect-claude-to-email)涵盖 Outlook、iCloud、Fastmail 和 IMAP。
 
 ## 第 3 步：向 Claude 发出你的第一条提示
 

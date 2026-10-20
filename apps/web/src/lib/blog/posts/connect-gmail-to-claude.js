@@ -35,7 +35,7 @@ Your normal Google password is never used. The app password is a separate creden
 
 ### On a Google Workspace account
 
-A Google Workspace administrator can switch app passwords off for the whole domain. If **myaccount.google.com/apppasswords** is not available to you, ask your admin to turn app passwords on.
+A Google Workspace administrator can switch app passwords off for the whole domain. If **myaccount.google.com/apppasswords** is not available to you, ask your admin to turn app passwords on. The [Gmail settings and limits](/connect/gmail) page collects the Gmail-specific details in one place.
 
 ## Step 2: Add MCP Emails to Claude
 
@@ -51,7 +51,7 @@ https://mcpemails.com/api/mcp
 
 4. Click **Connect**, sign in with your MCP Emails account, and approve the scopes you want: \`read:email\`, \`send:email\`, or both.
 
-That's the entire client side. The connection is scoped to exactly what you approved, and you can revoke it from the dashboard in one click. If you'd rather understand the API-key path (for clients without built-in OAuth, like Cline or a custom script), read [OAuth vs API keys for AI email access](/blog/oauth-vs-api-keys-ai-email-access).
+That's the entire client side. The connection is scoped to exactly what you approved, and you can revoke it from the dashboard in one click. If you'd rather understand the API-key path (for clients without built-in OAuth, like Cline or a custom script), read [OAuth vs API keys for AI email access](/blog/oauth-vs-api-keys-ai-email-access). Connecting a different inbox too? The [step-by-step Claude email setup](/blog/connect-claude-to-email) covers Outlook, iCloud, Fastmail and IMAP.
 
 ## Step 3: Ask Claude your first prompt
 

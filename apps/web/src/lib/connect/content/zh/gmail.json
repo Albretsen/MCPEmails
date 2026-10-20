@@ -64,7 +64,7 @@
   "limits": [
     "mcpemails 只访问邮件：应用专用密码仅用于 IMAP 和 SMTP。不会访问 Drive、Calendar、Chat 和 Docs。",
     "Google Workspace 管理员可以在 Admin console 中为整个域关闭应用专用密码。只有管理员能更改这一决定。",
-    "删除会把邮件移入 Gmail 的 Trash。要永久清除邮件，请在 Gmail 中操作。"
+    "删除会把邮件移入 Gmail 的 Trash。永久删除遵循 Gmail 的 IMAP 设置：默认只会移除邮件被删除时所在的标签，从 Trash 中清除才会彻底删除。"
   ],
   "faq": [
     {

@@ -96,7 +96,7 @@
   "providers": {
     "eyebrow": "Enhver vert",
     "title": "Koble til alle postkassene firmaet har, uansett hvem som drifter dem",
-    "sub": "Det meste av firma-e-post ligger hos webhotellet eller domeneregistraren, og det er helt greit. Enhver postkasse som snakker IMAP og SMTP på standardportene, kobles til med adresse, vert og passord. IONOS, Hostinger, OVH, Namecheap og andre vanlige verter gjenkjennes ut fra adressen og fylles ut for deg. Gmail og Google Workspace kobles til med et app-passord eller ved å logge inn med Google. Microsoft 365 og Outlook kobles til ved å logge inn med Microsoft; på en Microsoft 365-konto i firmaet kan IT-administratoren måtte godkjenne mcpemails én gang for hele organisasjonen. iCloud, Fastmail, Yahoo, Zoho og Yandex kobles til med et app-passord.",
+    "sub": "Det meste av firma-e-post ligger hos webhotellet eller domeneregistraren, og det er helt greit. Enhver postkasse som snakker IMAP og SMTP på standardportene, kobles til med adresse, vert og passord. IONOS, Hostinger, OVH, Namecheap og andre vanlige verter gjenkjennes ut fra adressen og fylles ut for deg. Gmail og Google Workspace kobles til med et Google-app-passord. Microsoft 365 og Outlook kobles til ved å logge inn med Microsoft; på en Microsoft 365-konto i firmaet kan IT-administratoren måtte godkjenne mcpemails én gang for hele organisasjonen. iCloud, Fastmail, Yahoo, Zoho og Yandex kobles til med et app-passord.",
     "ctaImap": "Koble til enhver IMAP-postkasse",
     "ctaGmail": "Koble til Gmail eller Google Workspace",
     "ctaMicrosoft": "Koble til Microsoft 365",

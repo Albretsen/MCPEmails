@@ -156,10 +156,7 @@ function numberOf(token) {
 function publicCopyFiles() {
   const lib = path.join(webRoot, 'src/lib');
   return [
-    // compare.json is skipped: PR #167 moves the /native-connectors-vs-mcp copy
-    // (and its stale "seventeen") to src/lib/compare/native-connectors/, which
-    // the src/lib/compare walk below scans.
-    ...walk(path.join(webRoot, 'messages'), ['.json']).filter((f) => path.basename(f) !== 'compare.json'),
+    ...walk(path.join(webRoot, 'messages'), ['.json']),
     ...walk(path.join(lib, 'blog/posts'), ['.js']),
     ...walk(path.join(lib, 'blog/translations'), ['.js']),
     ...walk(path.join(lib, 'connect/content'), ['.json']),

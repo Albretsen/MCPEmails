@@ -22,23 +22,23 @@ const translation = {
 
 ### Gmail 与 Google Workspace
 
-选择 **Gmail**，在 myaccount.google.com/apppasswords 创建一个 Google 应用专用密码（只有开启两步验证后 Google 才会提供），然后把这 16 个字母连同完整的 Gmail 地址一起填入。常规 Google 密码在这里无法使用，你也可以随时撤销应用专用密码。如果 Workspace 管理员为你的域名关闭了应用专用密码，请参阅专门的 [Gmail 指南](/blog/connect-gmail-to-claude)。
+选择 **Gmail**，在 myaccount.google.com/apppasswords 创建一个 Google 应用专用密码（只有开启两步验证后 Google 才会提供），然后把这 16 个字母连同完整的 Gmail 地址一起填入。常规 Google 密码在这里无法使用，你也可以随时撤销应用专用密码。如果 Workspace 管理员为你的域名关闭了应用专用密码，请参阅专门的 [Gmail 指南](/blog/connect-gmail-to-claude)。另见[Gmail 设置与限制](/connect/gmail)和[Google Workspace 设置页面](/connect/google-workspace)。
 
 ### iCloud 邮件
 
-在 Apple 账户中创建应用专用密码，选择 **iCloud**，然后输入该密码，而不是你的常规 Apple 账户密码。[iCloud 和 IMAP 指南](/blog/connect-icloud-fastmail-imap-to-claude)包含各服务商的具体步骤。
+在 Apple 账户中创建应用专用密码，选择 **iCloud**，然后输入该密码，而不是你的常规 Apple 账户密码。[iCloud 和 IMAP 指南](/blog/connect-icloud-fastmail-imap-to-claude)包含各服务商的具体步骤。另见[将 iCloud 邮件连接到 Claude](/connect/icloud)。
 
 ### Fastmail
 
-在 Fastmail 中创建具有邮件访问权限的应用密码，选择 **Fastmail**，然后粘贴到 MCP Emails。在连接测试成功之前，请保留生成的密码。
+在 Fastmail 中创建具有邮件访问权限的应用密码，选择 **Fastmail**，然后粘贴到 MCP Emails。在连接测试成功之前，请保留生成的密码。另见[适用于 Claude 的 Fastmail 设置](/connect/fastmail)。
 
 ### Outlook 与 Microsoft 365
 
-选择 **Outlook**，点击**使用 Microsoft 连接**并批准，无需应用专用密码。个人 Outlook.com、Hotmail、Live 和 MSN 账户可以直接连接。工作或学校的 Microsoft 365 账户可能需要 IT 管理员先为整个组织一次性批准该应用；控制台会给你一个可以发给管理员的链接。详情见 [Outlook 与 Microsoft 365 指南](/blog/connect-outlook-microsoft-365-ai-agent-mcp)。
+选择 **Outlook**，点击**使用 Microsoft 连接**并批准，无需应用专用密码。个人 Outlook.com、Hotmail、Live 和 MSN 账户可以直接连接。工作或学校的 Microsoft 365 账户可能需要 IT 管理员先为整个组织一次性批准该应用；控制台会给你一个可以发给管理员的链接。详情见 [Outlook 与 Microsoft 365 指南](/blog/connect-outlook-microsoft-365-ai-agent-mcp)。另见[Outlook 设置页面](/connect/outlook)或[Microsoft 365 设置页面](/connect/office365)。
 
 ### Yahoo、Zoho、Yandex 和自定义 IMAP
 
-创建应用密码，选择 **IMAP**，然后输入地址和密码。常见的服务器设置会自动识别；自定义域名可能需要服务商提供的 IMAP/SMTP 主机、端口和加密方式。
+创建应用密码，选择 **IMAP**，然后输入地址和密码。常见的服务器设置会自动识别；自定义域名可能需要服务商提供的 IMAP/SMTP 主机、端口和加密方式。各服务的设置见[Yahoo Mail](/connect/yahoo)、[Zoho Mail](/connect/zoho)、[Yandex Mail](/connect/yandex)和[自定义 IMAP](/connect/imap)页面。你也可以查看[所有支持的服务商](/connect)。
 
 你可以连接多个收件箱。Claude 会通过 \`inbox_list\` 发现它们，因此无需在提示词中粘贴邮箱 ID。
 
@@ -58,7 +58,7 @@ https://mcpemails.com/api/mcp
 
 4. 选择 **Connect**，登录 MCP Emails，并批准所需范围：\`read:email\`、\`send:email\` 或两者。
 
-这就是 Claude 端的全部设置。OAuth 会将连接限制在你批准的范围内，你可以随时在 MCP Emails 中撤销它。如果你使用的客户端不支持 OAuth，请改用受限 API 密钥；[OAuth 与 API 密钥](/blog/oauth-vs-api-keys-ai-email-access)介绍了这种方式。
+这就是 Claude 端的全部设置。OAuth 会将连接限制在你批准的范围内，你可以随时在 MCP Emails 中撤销它。如果你使用的客户端不支持 OAuth，请改用受限 API 密钥；[OAuth 与 API 密钥](/blog/oauth-vs-api-keys-ai-email-access)介绍了这种方式。如遇 Claude 端的问题，请参阅[Claude 设置页面](/docs/claude)。
 
 ## 第 3 步：给 Claude 一个安全的首个任务
 

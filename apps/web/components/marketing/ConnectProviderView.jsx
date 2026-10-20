@@ -4,6 +4,7 @@ import { Nav, Footer } from './Sections';
 import { MIcon } from '../MarketingPrimitives';
 import RichText from './RichText';
 import { relatedProviders } from '@/lib/connect/release.mjs';
+import { guideLinksFor } from '@/lib/connect/guides.mjs';
 import { OAUTH_VERIFICATION_PENDING } from '@/lib/oauth/verification-status';
 import { withProvider } from '@/lib/connect/multi-mailbox.mjs';
 import { chatgptSection } from '@/lib/connect/chatgpt.mjs';
@@ -33,9 +34,10 @@ export function nameGrammar(name) {
  * src/lib/connect/content, where only this page loads it. Nav and Footer are
  * still client components; they are the only things on the page that hydrate.
  */
-export default async function ConnectProviderView({ locale, provider, content, multiMailbox = null, chatgpt = null }) {
+export default async function ConnectProviderView({ locale, provider, content, multiMailbox = null, guides = null, chatgpt = null }) {
   const t = await getTranslations({ locale, namespace: 'connect' });
   const related = relatedProviders(provider.slug);
+  const guideLinks = guides ? guideLinksFor(content) : [];
   const showGmailVerification = provider.slug === 'gmail' && OAUTH_VERIFICATION_PENDING;
   const ev = provider.evidence;
   const named = { provider: provider.name, ...nameGrammar(provider.name) };
@@ -240,6 +242,22 @@ export default async function ConnectProviderView({ locale, provider, content, m
             <p className="how-guide-link">
               {content.guide.intro}{' '}
               <Link href={content.guide.href}>{content.guide.label}</Link>
+            </p>
+          )}
+          {/*
+            The blog walkthroughs that convert best, with generic anchors so the
+            blog keeps the generic query and this page keeps the provider one.
+            See lib/connect/guides.mjs.
+          */}
+          {guideLinks.length > 0 && (
+            <p className="how-guide-link">
+              {guides.intro}{' '}
+              {guideLinks.map((g, i) => (
+                <span key={g.key}>
+                  {i > 0 && ' · '}
+                  <Link href={g.href}>{guides[g.key]}</Link>
+                </span>
+              ))}
             </p>
           )}
           <p className="how-guide-link">

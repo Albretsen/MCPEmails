@@ -743,3 +743,11 @@ test('an unusable recipient is refused before any network call', async () => {
     delete process.env.RESEND_API_KEY;
   }
 });
+
+test('the cancellation email points a customer inside 14 days at withdrawal', () => {
+  const email = composeBillingEmail('cancel_ask', payload());
+  assert.ok(email);
+  assert.match(email.body, /withdraw from the contract/);
+  assert.match(email.body, /\/withdrawal\b/);
+  assert.match(email.htmlBody, /href="[^"]*\/withdrawal"/);
+});

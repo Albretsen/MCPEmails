@@ -593,7 +593,7 @@
     "confirmNoteInterval": "Charged now to your card on file, with credit for the time left in your current period. Your billing period restarts today, so your next renewal date moves.",
     "confirmNoteIntervalNoPreview": "We could not price this change in advance. Your card on file is charged the difference, credited for the time left in your current period, and the exact amount appears on your invoice. Your billing period restarts today, so your next renewal date moves.",
     "confirmPay": "Confirm and pay {amount}",
-    "confirmChange": "Confirm change",
+    "confirmChange": "Confirm and pay",
     "confirmCancel": "Cancel",
     "confirming": "Charging…",
     "planChangedCharged": "You are now on {plan}. {amount} was charged to your card.",

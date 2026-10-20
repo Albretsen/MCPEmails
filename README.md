@@ -163,7 +163,7 @@ Notes:
 
 | Provider | Connect via | Read/Search | Send | Folders | Permanent delete | Drafts |
 | --- | --- | --- | --- | --- | --- | --- |
-| **Gmail / Google Workspace** | App password (IMAP/SMTP) | ✅ | ✅ | Labels | Trash only | ✅ |
+| **Gmail / Google Workspace** | App password (IMAP/SMTP) | ✅ | ✅ | Labels | ✅ (follows Gmail's IMAP expunge settings) | ✅ |
 | **Fastmail** | App password (IMAP/SMTP) | ✅ | ✅ | ✅ | ✅ | ✅ |
 | **iCloud, Yahoo, AOL, GMX, Zoho, Yandex** | App password (IMAP/SMTP) | ✅ | ✅ | ✅ | ✅ | ✅ |
 | **IONOS, STRATO, One.com, OVHcloud, Namecheap Private Email, Hostinger, Infomaniak, Hetzner** | Mailbox password (IMAP/SMTP) | ✅ | ✅ | ✅ | ✅ | ✅ |

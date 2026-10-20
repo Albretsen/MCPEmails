@@ -27,7 +27,7 @@ Det vanlige Google-passordet ditt brukes aldri. Apppassordet er en egen legitima
 
 ### På en Google Workspace-konto
 
-En Google Workspace-administrator kan slå av apppassord for hele domenet. Hvis **myaccount.google.com/apppasswords** ikke er tilgjengelig for deg, be administratoren din om å slå dem på.
+En Google Workspace-administrator kan slå av apppassord for hele domenet. Hvis **myaccount.google.com/apppasswords** ikke er tilgjengelig for deg, be administratoren din om å slå dem på. Siden om [Gmail-innstillinger og begrensninger](/connect/gmail) samler de Gmail-spesifikke detaljene på ett sted.
 
 ## Steg 2: Legg til MCP Emails i Claude
 
@@ -43,7 +43,7 @@ https://mcpemails.com/api/mcp
 
 4. Klikk **Connect**, logg inn med MCP Emails-kontoen din, og godkjenn scopene du ønsker: \`read:email\`, \`send:email\`, eller begge.
 
-Det er hele klientsiden. Tilkoblingen er begrenset til nøyaktig det du godkjente, og du kan tilbakekalle den fra dashbordet med ett klikk. Hvis du heller vil forstå API-nøkkel-veien (for klienter uten innebygd OAuth, som Cline eller et egendefinert skript), les [OAuth vs. API-nøkler for AI-e-posttilgang](/blog/oauth-vs-api-keys-ai-email-access).
+Det er hele klientsiden. Tilkoblingen er begrenset til nøyaktig det du godkjente, og du kan tilbakekalle den fra dashbordet med ett klikk. Hvis du heller vil forstå API-nøkkel-veien (for klienter uten innebygd OAuth, som Cline eller et egendefinert skript), les [OAuth vs. API-nøkler for AI-e-posttilgang](/blog/oauth-vs-api-keys-ai-email-access). Skal du koble til en annen innboks også? [Steg-for-steg-oppsettet for e-post i Claude](/blog/connect-claude-to-email) dekker Outlook, iCloud, Fastmail og IMAP.
 
 ## Steg 3: Be Claude om din første prompt
 
