@@ -224,7 +224,7 @@ jobs:
       - run: npm ci
       - name: Type check the card
         run: cd apps/mcp-app && npm run typecheck
-      - name: Run card tests (every suite via harness/verify.mjs, 4 at a time)
+      - name: Run card tests (harness/verify.mjs: DOM suites serial, the rest alongside)
         run: cd apps/mcp-app && npm test
       # The card ships through the generated file
       # supabase/functions/mcp-server/ui/review-card.html.ts, not through src.

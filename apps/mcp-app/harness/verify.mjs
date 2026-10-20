@@ -27,13 +27,23 @@
 // itself a finding, and it is now a finding you get to read alongside the
 // others rather than instead of them.
 //
-// IN PARALLEL (2026-10-20). Run one after another the suites took ~144 s of
-// the card job, almost all of it esbuild bundling and jsdom start-up, on a
-// four-CPU runner. They now run CARD_TEST_CONCURRENCY at a time (default 4;
-// 1 is the old serial run). Each suite still bundles to its own
+// IN PARALLEL, EXCEPT THE DOM SUITES (2026-10-20). Run one after another the
+// suites took ~144 s of the card job. A third of that is the state machine
+// sleeping through its real 9 s watchdogs, using no CPU. Suites now run in
+// lanes: the DOM suites (DOM_LANE below) one after another in a lane of their
+// own, everything else alongside them, CARD_TEST_CONCURRENCY lanes in all
+// (default 4; 1 is the old fully serial run). Each suite bundles to its own
 // dist/<name>.bundle.mjs and owns its own fake host, so nothing is shared.
 // Output is buffered per suite and printed whole, in the order below, so the
 // log reads exactly as it did serially.
+//
+// WHY THE DOM SUITES STAY SERIAL. Every one of them waits for the card with a
+// fixed `settle = () => after(40)` (50 in draft-sync, 30 in card-render), not
+// for a condition. With three of them sharing a 4-CPU runner, one CI run
+// failed "L. fullscreen ... got inline, want fullscreen" in draft polish: the
+// card's chain of timers had not finished inside 40 ms of a busier CPU. Run
+// one at a time, as they always were, they have no such failure on record. Do
+// not move a suite out of DOM_LANE unless its waits are on conditions.
 // ---------------------------------------------------------------------------
 
 import { spawn } from "node:child_process";
@@ -131,6 +141,7 @@ const SUITES = [
 
 function runSuite([label, file]) {
   return new Promise((done) => {
+    const started = Date.now();
     const chunks = [];
     const child = spawn(process.execPath, [resolve(here, file)], { stdio: ["ignore", "pipe", "pipe"] });
     child.stdout.on("data", (c) => chunks.push(c));
@@ -149,10 +160,26 @@ function runSuite([label, file]) {
           : status === 0
             ? { label, state: "passed", detail: "" }
             : { label, state: "failed", detail: `exit ${status}` };
-      done({ ...outcome, output: Buffer.concat(chunks) });
+      done({ ...outcome, seconds: (Date.now() - started) / 1000, output: Buffer.concat(chunks) });
     });
   });
 }
+
+/** Suites that wait on fixed timers inside jsdom: run one at a time. */
+const DOM_LANE = new Set([
+  "draft-sync.test.mjs",
+  "card-render.test.mjs",
+  "draft-qa.test.mjs",
+  "draft-polish.test.mjs",
+  "draft-state.test.mjs",
+  "draft-ux.test.mjs",
+  "draft-ended.test.mjs",
+  "draft-send-safety.test.mjs",
+  "draft-formatting.test.mjs",
+  "draft-quote.test.mjs",
+  "draft-layout.test.mjs",
+  "draft-fields.test.mjs",
+]);
 
 const outcomes = new Array(SUITES.length);
 let printed = 0;
@@ -164,20 +191,27 @@ function flush() {
   }
 }
 
-let next = 0;
-async function worker() {
-  while (next < SUITES.length) {
-    const i = next++;
+/** One lane: takes the next suite from `queue` (indexes into SUITES) until it is empty. */
+async function lane(queue) {
+  while (queue.length) {
+    const i = queue.shift();
     outcomes[i] = await runSuite(SUITES[i]);
     flush();
   }
 }
-await Promise.all(Array.from({ length: Math.min(concurrency, SUITES.length) }, worker));
+const all = SUITES.map((_, i) => i);
+if (concurrency === 1) {
+  await lane(all);
+} else {
+  const dom = all.filter((i) => DOM_LANE.has(SUITES[i][1]));
+  const rest = all.filter((i) => !DOM_LANE.has(SUITES[i][1]));
+  await Promise.all([lane(dom), ...Array.from({ length: concurrency - 1 }, () => lane(rest))]);
+}
 
 console.log(`\n──── verify ${"─".repeat(56)}`);
 for (const o of outcomes) {
   const mark = o.state === "passed" ? "ok  " : "FAIL";
-  console.log(`${mark}  ${o.label}${o.detail ? `  (${o.detail})` : ""}`);
+  console.log(`${mark}  ${o.label}${o.detail ? `  (${o.detail})` : ""}  ${o.seconds.toFixed(1)}s`);
 }
 
 const bad = outcomes.filter((o) => o.state !== "passed");
