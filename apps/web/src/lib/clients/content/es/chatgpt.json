@@ -5,8 +5,8 @@
     "https://help.openai.com/en/articles/12584461"
   ],
   "meta": {
-    "title": "Conecta el correo a ChatGPT: conector MCP paso a paso",
-    "description": "Añade una bandeja real a ChatGPT con el modo desarrollador y un conector MCP personalizado. OAuth, sin clave de API; lee, busca, envía y programa correo. Una bandeja gratis."
+    "title": "Modo desarrollador de ChatGPT: añade un conector MCP de correo",
+    "description": "Añade un conector MCP personalizado en el modo desarrollador de ChatGPT y dale una bandeja real: Yahoo, iCloud, Outlook o IMAP. OAuth, sin clave de API. Una bandeja gratis."
   },
   "hero": {
     "eyebrow": "ChatGPT + correo",

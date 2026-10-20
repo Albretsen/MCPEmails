@@ -1,5 +1,5 @@
 const translation = {
-  title: 'Koble ChatGPT til e-posten din med MCP (Gmail, Outlook, iCloud og IMAP)',
+  title: 'Koble ChatGPT til e-posten din: Yahoo, iCloud, Outlook og IMAP',
   description:
     'Steg for steg: koble Gmail, Outlook, iCloud, Fastmail eller en hvilken som helst IMAP-innboks til ChatGPT med en egendefinert MCP-kobling, og til OpenAI Codex med en avgrenset nøkkel. Ingen e-post lagres.',
   coverAlt:

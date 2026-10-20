@@ -1,21 +1,21 @@
 const post = {
   slug: 'connect-claude-to-email',
-  title: 'Connect Claude to Your Email with MCP (Gmail, Outlook, iCloud & IMAP)',
+  title: 'Connect Claude to Any Email: iCloud, Apple Mail, Yahoo, IMAP',
   description:
-    'A practical guide to connecting Claude to Gmail, Outlook and Microsoft 365, iCloud, Fastmail, Yahoo, Zoho, or any IMAP inbox over MCP. No code, and no email stored.',
+    'Connect Claude to iCloud, Yahoo, Outlook or any IMAP inbox over MCP, including accounts you read in Apple Mail. Two minutes, no code, nothing stored.',
   cover: '/blog/cover-connect-email-to-ai-agent-under-2-minutes.svg',
   coverAlt:
     'Connect Claude to Gmail, Outlook, iCloud, Fastmail, Yahoo, Zoho, and IMAP email with MCP Emails',
   authorId: 'asgeir',
   publishedAt: '2026-07-28T09:00:00.000Z',
-  updatedAt: '2026-09-26T09:00:00.000Z',
+  updatedAt: '2026-10-28T09:00:00.000Z',
   tags: ['Claude', 'MCP', 'Email', 'Tutorial'],
   featured: false,
   content: `Claude can read, search, organize, and send your email, but it needs an MCP server to reach a real inbox. MCP Emails is that bridge: connect an inbox once, add one secure endpoint to Claude, and Claude gets a consistent set of email tools across Gmail, Outlook and Microsoft 365, iCloud, Fastmail, Yahoo, Zoho, and other IMAP providers.
 
 There is no code to write, no SDK to install, and no API key when you connect through Claude's OAuth flow. Email is fetched live from your provider for each request and is not stored by MCP Emails.
 
-**Jump to your provider:** [Gmail](#gmail-and-google-workspace) · [iCloud](#icloud-mail) · [Fastmail](#fastmail) · [Outlook](#outlook-and-microsoft-365) · [Yahoo, Zoho, Yandex, or custom IMAP](#yahoo-zoho-yandex-and-custom-imap)
+**Jump to your provider:** [Gmail](#gmail-and-google-workspace) · [iCloud](#icloud-mail) · [Apple Mail](#apple-mail) · [Fastmail](#fastmail) · [Outlook](#outlook-and-microsoft-365) · [Yahoo, Zoho, Yandex, or custom IMAP](#yahoo-zoho-yandex-and-custom-imap)
 
 ## What you need
 
@@ -34,6 +34,10 @@ Choose **Gmail**, create a Google app password at myaccount.google.com/apppasswo
 ### iCloud Mail
 
 Create an app-specific password in your Apple Account, choose **iCloud**, and enter that password, not your normal Apple Account password. The [iCloud and IMAP walkthrough](/blog/connect-icloud-fastmail-imap-to-claude) includes the exact provider steps. See also [Connect iCloud Mail to Claude](/connect/icloud).
+
+### Apple Mail
+
+Apple Mail is a mail app, so Claude connects to the account behind it rather than to the app. An iCloud address connects as described above. A Gmail, Outlook, Yahoo or work account connects through its own provider. Folders kept only On My Mac are not on any server, so Claude cannot see them. Nothing has to run on your Mac.
 
 ### Fastmail
 

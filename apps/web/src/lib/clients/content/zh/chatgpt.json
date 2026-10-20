@@ -5,8 +5,8 @@
     "https://help.openai.com/en/articles/12584461"
   ],
   "meta": {
-    "title": "将邮箱连接到 ChatGPT：MCP 连接器设置",
-    "description": "借助开发者模式和自定义 MCP 连接器，为 ChatGPT 接入真实收件箱。使用 OAuth，无需 API 密钥，即可读取、搜索、发送和定时发送邮件。1 个收件箱免费。"
+    "title": "ChatGPT 开发者模式：添加邮件 MCP 连接器",
+    "description": "在 ChatGPT 开发者模式中添加自定义 MCP 连接器，接入真实收件箱：Yahoo、iCloud、Outlook 或任意 IMAP 邮箱。使用 OAuth，无需 API 密钥。1 个收件箱免费。"
   },
   "hero": {
     "eyebrow": "ChatGPT + 邮件",

@@ -1,14 +1,14 @@
 const translation = {
-  title: '通过 MCP 将 Claude 连接到你的邮箱（Gmail、Outlook、iCloud 和 IMAP）',
+  title: '将 Claude 连接到任意邮箱：iCloud、Apple Mail、Yahoo 与 IMAP',
   description:
-    '实用指南：通过 MCP 将 Claude 连接到 Gmail、Outlook 与 Microsoft 365、iCloud、Fastmail、Yahoo、Zoho 或任何 IMAP 收件箱。无需编写代码，也不存储邮件。',
+    '如何通过 MCP 将 Claude 连接到 iCloud、Yahoo、Outlook 或任意 IMAP 收件箱，包括你在 Apple Mail 中阅读的账户。约两分钟，无需代码，不存储任何邮件。',
   coverAlt:
     '使用 MCP Emails 将 Claude 连接到 Gmail、Outlook、iCloud、Fastmail、Yahoo、Zoho 和 IMAP 邮箱',
   content: `Claude 可以读取、搜索、整理和发送你的电子邮件，但它需要一台 MCP 服务器才能访问真实收件箱。MCP Emails 就是这座桥梁：只需连接一次收件箱，将一个安全端点添加到 Claude，Claude 就能在 Gmail、Outlook 与 Microsoft 365、iCloud、Fastmail、Yahoo、Zoho 以及其他 IMAP 服务商之间使用一致的邮件工具。
 
 通过 Claude 的 OAuth 流程连接时，无需编写代码、安装 SDK 或使用 API 密钥。每次请求都会从你的服务商实时获取邮件，MCP Emails 不会存储邮件。
 
-**跳转到你的服务商：** [Gmail](#gmail-与-google-workspace) · [iCloud](#icloud-邮件) · [Fastmail](#fastmail) · [Outlook](#outlook-与-microsoft-365) · [Yahoo、Zoho、Yandex 或自定义 IMAP](#yahoozohoyandex-和自定义-imap)
+**跳转到你的服务商：** [Gmail](#gmail-与-google-workspace) · [iCloud](#icloud-邮件) · [Apple Mail](#apple-mail) · [Fastmail](#fastmail) · [Outlook](#outlook-与-microsoft-365) · [Yahoo、Zoho、Yandex 或自定义 IMAP](#yahoozohoyandex-和自定义-imap)
 
 ## 你需要准备什么
 
@@ -27,6 +27,10 @@ const translation = {
 ### iCloud 邮件
 
 在 Apple 账户中创建应用专用密码，选择 **iCloud**，然后输入该密码，而不是你的常规 Apple 账户密码。[iCloud 和 IMAP 指南](/blog/connect-icloud-fastmail-imap-to-claude)包含各服务商的具体步骤。另见[将 iCloud 邮件连接到 Claude](/connect/icloud)。
+
+### Apple Mail
+
+Apple Mail 是一个邮件应用，所以 Claude 连接的是它背后的账户，而不是应用本身。iCloud 地址按上文方式连接。Gmail、Outlook、Yahoo 或工作邮箱通过各自的服务商连接。仅存放在“我的 Mac 上”的文件夹不在任何服务器上，因此 Claude 看不到。你的 Mac 上不需要运行任何东西。
 
 ### Fastmail
 
