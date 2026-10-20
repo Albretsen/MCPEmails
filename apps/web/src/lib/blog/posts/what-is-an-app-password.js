@@ -32,7 +32,7 @@ Many mail providers no longer accept your normal password from a third-party mai
 
 An AI connector is in exactly the same position. When Claude or ChatGPT works with your inbox through [an MCP email server](/blog/what-is-an-mcp-email-server), the AI does not log in to your mailbox itself. The MCP server does, over IMAP and SMTP, the same way Thunderbird would. So for iCloud, Yahoo, AOL, Fastmail, Gmail and similar providers, the server needs an app password, and the AI client gets only a scoped token for the server. The [guide to OAuth and API keys for email access](/blog/oauth-vs-api-keys-ai-email-access) covers that second layer.
 
-The common mistake is pasting the password you use on the provider's website. In MCPEmails' own connection logs, 72.9% of failed inbox connections were a rejected login, and the usual cause was an account password entered where an app password belongs. Generated app passwords have a recognisable shape, so the MCPEmails connect form checks what you paste for Gmail, iCloud, Yahoo, Yandex and Fastmail and warns you before the attempt reaches the provider, which would otherwise count it as a failed sign-in. If you are sure the value is right, pressing Connect again sends it anyway.
+The common mistake is pasting the password you use on the provider's website. It is the most common reason a mail app or AI connector cannot sign in. Generated app passwords have a recognisable shape, so the MCPEmails connect form checks what you paste for Gmail, iCloud, Yahoo, Yandex and Fastmail and warns you before the attempt reaches the provider, which would otherwise count it as a failed sign-in. If you are sure the value is right, pressing Connect again sends it anyway.
 
 ## Where to create an app password for each provider
 
