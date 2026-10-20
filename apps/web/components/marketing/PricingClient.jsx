@@ -6,7 +6,6 @@ import { useLocale, useTranslations } from 'next-intl';
 import { Link } from '@/i18n/navigation';
 import { Nav, Footer } from './Sections';
 import { MIcon } from '../MarketingPrimitives';
-import { createClient } from '@/lib/supabase/client';
 import { parseUpgradeIntent, pricingUpgradeHref } from '@/lib/billing/upgrade-intent.mjs';
 import { withReadingLang } from '@/i18n/reading-lang.mjs';
 import { usePricingView } from '@/lib/analytics/use-pricing-view.mjs';
@@ -444,13 +443,27 @@ export default function PricingClient({ stripePrices }) {
   // Marketing pages are CDN-cached and therefore cannot render session state
   // on the server. Resolve it client-side so signed-in visitors still see a
   // clear account affordance without making the public page private.
+  //
+  // The Supabase browser client is loaded on demand, not imported at the top:
+  // it is only needed for this one check, and a static import put supabase-js
+  // (about 67 KB gzipped) on the page's first load for every visitor.
   useEffect(() => {
-    const supabase = createClient();
-    supabase.auth.getUser().then(({ data }) => setUser(data.user ?? null));
-    const { data: { subscription } } = supabase.auth.onAuthStateChange((_event, session) => {
-      setUser(session?.user ?? null);
+    let cancelled = false;
+    let subscription = null;
+    import('@/lib/supabase/client').then(({ createClient }) => {
+      if (cancelled) return;
+      const supabase = createClient();
+      supabase.auth.getUser().then(({ data }) => {
+        if (!cancelled) setUser(data.user ?? null);
+      });
+      ({ data: { subscription } } = supabase.auth.onAuthStateChange((_event, session) => {
+        setUser(session?.user ?? null);
+      }));
     });
-    return () => subscription.unsubscribe();
+    return () => {
+      cancelled = true;
+      subscription?.unsubscribe();
+    };
   }, []);
 
   return (

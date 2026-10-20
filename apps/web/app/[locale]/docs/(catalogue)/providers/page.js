@@ -1,6 +1,6 @@
 import { setRequestLocale, getTranslations } from 'next-intl/server';
 import { metaAlternates, localePath, OG_LOCALE, pageJsonLd } from '@/i18n/seo';
-import ProvidersClient from '../../../../components/marketing/ProvidersClient';
+import ProvidersClient from '../../../../../components/marketing/ProvidersClient';
 
 export async function generateMetadata({ params }) {
   const { locale } = await params;

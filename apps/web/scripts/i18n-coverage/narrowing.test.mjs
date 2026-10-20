@@ -26,19 +26,10 @@ test('the root layout sends no messages: a route outside app/[locale] gets only 
   }
 });
 
-// Pages that are handed a namespace they do not read, and why. All sit under
-// app/[locale]/docs/layout.js, which has to cover the docs index; a narrower
-// layout nested under it would not stop that layout's messages being sent.
-const KNOWN_SURPLUS = {
-  'app/[locale]/docs/[client]/page.js': ['docs'],
-  'app/[locale]/docs/clients/page.js': ['docs'],
-  'app/[locale]/docs/read-only-access/page.js': ['docs'],
-};
-
 test('every marketing page is handed exactly the namespaces its client code reads, plus the two shared ones', () => {
   assert.ok(marketingPages.length >= 20);
   for (const route of marketingPages) {
-    const expected = [...new Set([...SHARED, ...route.needs, ...(KNOWN_SURPLUS[route.file] ?? [])])].sort();
+    const expected = [...new Set([...SHARED, ...route.needs])].sort();
     assert.deepEqual(route.provided, expected, route.file);
   }
 });
@@ -51,8 +42,13 @@ test('namespaces only Server Components read are sent to no route', () => {
   }
 });
 
-test('the heavy docs catalogue goes only to the docs section', () => {
+// The docs catalogue (about 70 KB raw in English) goes to the two pages whose
+// client code reads it, through app/[locale]/docs/(catalogue)/layout.js, and
+// to no other docs page.
+test('the heavy docs catalogue goes only to the docs index and the provider matrix', () => {
   const withDocs = real.routes.filter((route) => isPage(route) && route.provided.includes('docs')).map((route) => route.file);
-  assert.ok(withDocs.length > 0);
-  for (const file of withDocs) assert.ok(file.startsWith('app/[locale]/docs/'), file);
+  assert.deepEqual(withDocs.sort(), ['app/[locale]/docs/(catalogue)/page.js', 'app/[locale]/docs/(catalogue)/providers/page.js']);
+  const otherDocs = marketingPages.filter((route) => route.file.startsWith('app/[locale]/docs/') && !route.file.includes('/(catalogue)/'));
+  assert.ok(otherDocs.length >= 3, `only ${otherDocs.length} other docs pages found`);
+  for (const route of otherDocs) assert.deepEqual(route.provided, SHARED, route.file);
 });
