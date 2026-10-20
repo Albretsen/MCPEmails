@@ -45,6 +45,13 @@ export const ENTRIES = [
   /* ── October 2026 ──────────────────────────────────────────── */
   {
     date: '2026-10-20',
+    kind: 'fixed',
+    title: 'Approved scheduled sends go out on time',
+    body:
+      'On an inbox that holds sends for approval, a scheduled email you approve now goes out at the time it was scheduled for. Before, the approved message could end in an error at that time instead of being sent.',
+  },
+  {
+    date: '2026-10-20',
     kind: 'added',
     title: 'MCP Emails in German',
     body:
