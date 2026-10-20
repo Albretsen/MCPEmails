@@ -1,0 +1,102 @@
+{
+  "_sources": [
+    "apps/web/src/lib/api-keys/generate.ts + apps/web/src/lib/api-keys/scopes.ts",
+    "supabase/functions/mcp-server/web-ingress.ts",
+    "supabase/functions/mcp-server/index.ts (RATE_LIMIT_WINDOWS, search_and_move partial output schema)",
+    "apps/web/messages/en/docs.json (approval, automation)",
+    "https://docs.n8n.io/integrations/builtin/cluster-nodes/sub-nodes/n8n-nodes-langchain.toolmcp/",
+    "https://docs.n8n.io/integrations/builtin/core-nodes/n8n-nodes-langchain.mcpclient/",
+    "https://docs.n8n.io/integrations/builtin/credentials/mcp/",
+    "https://github.com/n8n-io/n8n/blob/master/packages/@n8n/nodes-langchain/nodes/mcp/McpClientTool/McpClientTool.node.ts",
+    "https://github.com/n8n-io/n8n/blob/master/packages/nodes-base/credentials/HttpBearerAuth.credentials.ts"
+  ],
+  "meta": {
+    "title": "Connect Email to n8n: MCP Client Tool for the AI Agent",
+    "description": "Connect email to an n8n AI Agent with the MCP Client Tool node: HTTP Streamable, Bearer Auth and a scoped API key. Read, search, draft and send mail."
+  },
+  "hero": {
+    "eyebrow": "n8n + email",
+    "titleLine1": "Connect your inbox to n8n",
+    "titleLine2": "with the MCP Client Tool",
+    "lead": "Give the AI Agent in your n8n workflow a real mailbox. It can read, search, draft, send, reply, forward and file mail through one MCP endpoint, with a key scoped to exactly what the workflow should do.",
+    "meta0": "Works with the built-in MCP Client Tool node",
+    "meta1": "Scoped API key, revocable in one click",
+    "meta2": "Email fetched live, never stored",
+    "answer": "In your n8n workflow, add an MCP Client Tool node to the AI Agent's Tool input. Set Endpoint to https://mcpemails.com/api/mcp, Server Transport to HTTP Streamable and Authentication to Bearer Auth, then paste an API key from your MCPEmails dashboard as the Bearer Token."
+  },
+  "method": {
+    "title": "How n8n connects: a Bearer Auth credential holding a scoped key",
+    "body": "The MCP Client Tool node sends whatever credential you attach to it. This guide uses n8n's <b>Bearer Auth</b> credential, which puts your key on the <code>Authorization</code> header of every request. Create the key in your dashboard and tick only the scopes the workflow needs. A workflow often runs on a schedule with nobody watching, so those scopes are the boundary that matters. Key connections and OAuth connections hit the same endpoint and get the same tool catalogue."
+  },
+  "setup": [
+    {
+      "h": "Create a free account and connect a mailbox",
+      "p": "Sign up at mcpemails.com, no card required, then go to Dashboard, Inboxes, Connect Inbox. Outlook and Microsoft 365 connect with Sign in with Microsoft; Gmail, iCloud, Fastmail, Yahoo, Zoho and Yandex take an app-specific password; anything else connects over plain IMAP and SMTP."
+    },
+    {
+      "h": "Create a scoped API key",
+      "p": "In Dashboard, API Keys, click Create key. Name it after the workflow and tick only the scopes it needs: <code>read:email</code>, <code>search:email</code>, <code>send:email</code>, <code>manage:folders</code>, <code>delete:email</code>, <code>manage:drafts</code>, <code>manage:contacts</code>, <code>schedule:email</code> and <code>manage:automations</code>. The key looks like <code>mcpe_</code> followed by 64 hex characters and is shown once, so copy it before you close the dialog."
+    },
+    {
+      "h": "Add the MCP Client Tool to your AI Agent",
+      "p": "Open the workflow, click the plus under the AI Agent node's <b>Tool</b> input and pick <b>MCP Client Tool</b>. Paste <code>https://mcpemails.com/api/mcp</code> into <b>Endpoint</b> and set <b>Server Transport</b> to <b>HTTP Streamable</b>."
+    },
+    {
+      "h": "Attach a Bearer Auth credential",
+      "p": "Set <b>Authentication</b> to <b>Bearer Auth</b>, create a new credential and paste the key into <b>Bearer Token</b>, with nothing in front of it. Leave <b>Tools to Include</b> on All, or switch to Selected and pick only the tools this workflow should see."
+    }
+  ],
+  "gotchas": [
+    {
+      "h": "Paste the key without the word Bearer",
+      "p": "n8n's Bearer Auth credential adds <code>Bearer</code> and a space for you. Typing it yourself sends the word twice and the call fails with a 401. If you use <b>Header Auth</b> instead, it is the other way round: Name is <code>Authorization</code> and Value is <code>Bearer</code>, a space, then the key."
+    },
+    {
+      "h": "A field called SSE Endpoint means an old node",
+      "p": "Version 1 of the MCP Client Tool node had a single <b>SSE Endpoint</b> field and no transport choice. Current versions show <b>Endpoint</b> plus <b>Server Transport</b>. This server speaks Streamable HTTP, so if you only see SSE Endpoint, add a fresh node or update n8n. If Server Transport reads Server Sent Events (Deprecated), switch it to HTTP Streamable."
+    },
+    {
+      "h": "Keep the default timeout",
+      "p": "The node waits 60,000 ms for a tool call, set under Options, <b>Timeout</b>. That is enough even for bulk work: a move or delete across a large folder stops on the server's own time limit before then and returns a result marked <code>partial</code>, with the untouched messages listed in <code>remaining_message_ids</code>, so the agent can call again with those ids. Setting Timeout much lower can cut a call off before that result arrives, and the agent is left not knowing what was done."
+    },
+    {
+      "h": "Tools to Include hides tools; the key's scopes forbid them",
+      "p": "The node only ever lists the tools your key is scoped for, because the server leaves the rest out of <code>tools/list</code>. Picking a subset under Tools to Include narrows that further, which helps the model choose, but it does not change what the key may do. Set the boundary on the key and use Tools to Include to keep the agent focused."
+    }
+  ],
+  "limits": [
+    "Requests are rate limited to 100 per minute, 1,000 per hour and 10,000 per day per key. A workflow that loops over many items should pace itself or share the work across separate keys.",
+    "The server is request and response only. There are no webhooks and no server-initiated events, so new mail never starts a workflow by itself. To react to arriving mail, start the workflow with a Schedule Trigger and have the agent check for unread messages.",
+    "Mail is fetched live from your provider on every call and never stored. Only the encrypted OAuth token or app password is kept, so a revoked token or a changed mailbox password ends access immediately."
+  ],
+  "faq": [
+    {
+      "q": "How do I connect email to an n8n AI Agent?",
+      "a": "Add an MCP Client Tool node to the AI Agent's Tool input. Set Endpoint to https://mcpemails.com/api/mcp and Server Transport to HTTP Streamable, choose Bearer Auth, and paste an API key from Dashboard, API Keys as the Bearer Token. The agent then has tools for reading, searching, drafting, sending, replying, forwarding, organizing and scheduling mail."
+    },
+    {
+      "q": "Can I call an email tool without an AI Agent?",
+      "a": "Yes. n8n's standalone MCP Client node runs one MCP tool as an ordinary workflow step, with no model deciding what to call. Point its MCP Endpoint URL at the same address, attach the same Bearer Auth credential, pick a tool and fill in its parameters, for example email_read with action set to list and unread set to true. This suits fixed pipelines where the steps never change."
+    },
+    {
+      "q": "Why Bearer Auth rather than the MCP OAuth2 credential?",
+      "a": "n8n also offers an MCP OAuth2 credential. This guide uses Bearer Auth because the scopes on a key are fixed when you create it and visible in your dashboard, which is easier to reason about for a workflow that runs unattended. Revoking the key in Dashboard, API Keys stops the workflow on its next call."
+    },
+    {
+      "q": "Can the workflow send email without anyone checking?",
+      "a": "Only if you let it. Sending needs the send:email scope, so a key without it cannot send at all. You can also turn on approval for an inbox in the dashboard: sends, replies, forwards, draft sends and scheduled sends are then held, the agent gets a pending result, and a workspace member approves or rejects each one before anything goes out."
+    },
+    {
+      "q": "Which mailboxes can an n8n workflow reach?",
+      "a": "Outlook.com and Microsoft 365 over Sign in with Microsoft, where a work account may need an IT admin to approve the app once; Gmail, iCloud, Fastmail, Yahoo, Zoho and Yandex with an app-specific password; and any other mailbox that speaks IMAP and SMTP on the standard ports. With several inboxes connected, the agent calls inbox_list to find each one's id, so there are no UUIDs to hardcode in the workflow."
+    },
+    {
+      "q": "Is my email stored on your servers?",
+      "a": "No. Every message is fetched live from your provider for the request that asked for it and handed straight to n8n. Only the encrypted OAuth token or app password is kept, so future calls can authenticate. Deleting the inbox in the dashboard, or revoking access at your provider, ends the connection at once."
+    }
+  ],
+  "ctaBand": {
+    "title": "Give your n8n agent a real inbox",
+    "sub": "One endpoint, one Bearer Auth credential, one scoped key. No card required."
+  }
+}

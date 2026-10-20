@@ -44,6 +44,9 @@ const MARKETING_PATHS = new Set([
   '/status',
   '/about',
   '/native-connectors-vs-mcp',
+  // The free IMAP/SMTP settings lookup. en, nb, es, fr and de; the route
+  // itself 404s zh, which has no content file.
+  '/tools/email-settings-lookup',
   // The ranked field of email MCP servers. English only, so it is a flat entry
   // rather than a prefix; the route itself 404s the other locales.
   '/best-email-mcp-servers',
@@ -135,7 +138,7 @@ export default async function proxy(request: NextRequest) {
   // documents what the policy allows, why 'unsafe-inline' had to leave
   // `script-src`, and what was deliberately left alone (`style-src`).
   const nonce = generateNonce();
-  const csp = await buildContentSecurityPolicy(nonce);
+  const csp = await buildContentSecurityPolicy(nonce, request.nextUrl.pathname);
 
   // Next.js does not offer an API for handing it a nonce. It re-parses the CSP
   // off the INCOMING REQUEST and takes the first 'nonce-…' it finds in

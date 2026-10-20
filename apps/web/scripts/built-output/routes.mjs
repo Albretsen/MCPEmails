@@ -32,6 +32,8 @@ export const ROUTES = [
   { route: '/for/business', status: 200 },
   { route: '/native-connectors-vs-mcp', status: 200 },
   { route: '/best-email-mcp-servers', status: 200 },
+  { route: '/tools/email-settings-lookup', status: 200 },
+  { route: '/de/tools/email-settings-lookup', status: 200 },
   { route: '/about', status: 200 },
   { route: '/privacy', status: 200 },
   { route: '/terms', status: 200 },
@@ -50,6 +52,8 @@ export const ROUTES = [
   // notFound() thrown by a page inside app/[locale], default and prefixed.
   { route: '/blog/this-post-does-not-exist', status: 404 },
   { route: '/nb/blog/this-post-does-not-exist', status: 404 },
+  // zh has no content file for the settings lookup.
+  { route: '/zh/tools/email-settings-lookup', status: 404 },
   // No route at all.
   { route: '/this-page-does-not-exist', status: 404 },
   // --- session-gated: only the redirect is observable -----------------------

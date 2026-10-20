@@ -1,0 +1,163 @@
+{
+  "meta": {
+    "title": "IMAP and SMTP Settings Lookup for Any Email Address",
+    "description": "Type an email address and get its IMAP and SMTP server, port and security, plus which provider handles a custom domain's mail. Free, runs in your browser."
+  },
+  "hero": {
+    "eyebrow": "Free tool",
+    "title": "IMAP and SMTP settings lookup",
+    "lead": "Find the IMAP and SMTP settings for any email address. Type an address, a domain or a mail server name and the lookup returns the incoming (IMAP) and outgoing (SMTP) server, port and security setting. For an address on a company domain it reads the domain's MX records to show which provider actually runs the mailbox.",
+    "updated": "Standards and third-party facts checked on {date}."
+  },
+  "tool": {
+    "label": "Email address, domain or mail server",
+    "placeholder": "you@yourcompany.com",
+    "submit": "Look up settings",
+    "checking": "Checking DNS records...",
+    "privacy": "Runs in your browser. The part before the @ never leaves this page. When a domain is not in our tables, only the domain is sent to Cloudflare's public DNS resolver and to Mozilla's Thunderbird autoconfig database.",
+    "invalid": "Enter an email address like you@example.com, a domain, or a server name.",
+    "examplesLabel": "Try:",
+    "examples": ["you@gmx.net", "ex4.mail.ovh.net", "you@purelymail.com"],
+    "provider": "Provider",
+    "providerUnknown": "Not named",
+    "incoming": "Incoming mail (IMAP)",
+    "outgoing": "Outgoing mail (SMTP)",
+    "server": "Server",
+    "port": "Port",
+    "security": "Security",
+    "securityTls": "SSL/TLS",
+    "securityStarttls": "STARTTLS",
+    "username": "Username",
+    "usernameValue": "Usually your full email address",
+    "mxTitle": "MX records for {domain}",
+    "mxNote": "These servers receive the domain's mail. They are not the servers a mail app signs in to.",
+    "source": {
+      "registry": "Settings MCPEmails verified with a TLS connection to this provider's servers.",
+      "host": "Recognised from the server name you typed.",
+      "table": "From MCPEmails' table of provider settings.",
+      "srv": "Published by {domain} itself in its DNS service records (RFC 6186).",
+      "mx": "Worked out from the MX records, which point at {provider}.",
+      "ispdb": "From Mozilla Thunderbird's autoconfig database."
+    },
+    "appPassword": "{provider} expects an app password from mail apps. If your normal password is refused, create an app password and use that instead.",
+    "appPasswordCreate": "Create an app password",
+    "appPasswordGeneric": "If the provider refuses your normal password with these settings, it most likely wants an app password.",
+    "appPasswordLearn": "What is an app password?",
+    "microsoftOutlook": "This is a personal Microsoft account (Outlook.com, Hotmail, Live or MSN). Microsoft stopped accepting passwords from mail apps on these accounts on 16 September 2024, so server settings with a password will not get you in. Mail apps and connectors now sign in with your Microsoft account instead.",
+    "microsoftOffice365": "The MX records for {domain} point at Microsoft, so this mailbox is in Microsoft 365. Exchange Online no longer accepts a password over IMAP, so mail apps and connectors sign in with Microsoft instead.",
+    "microsoftCta": "Connect with Microsoft",
+    "limited": "{provider} has no IMAP or SMTP server that an app on another computer can sign in to, so there are no settings to show.",
+    "limitedLink": "Why {provider} cannot be connected",
+    "notFound": "No settings found for {domain}. It publishes no mail service records, Mozilla's database does not list it, and its MX records do not point at a provider we recognise.",
+    "notFoundMx": "Ask whoever manages the domain which host runs its mailboxes, or look in that host's control panel.",
+    "notFoundNoMx": "{domain} publishes no MX records, so there is no mail provider to read settings from. Check the spelling.",
+    "dnsFailed": "The DNS lookup for {domain} got no answer, so nothing can be said about its mail yet. Try again in a moment.",
+    "ctaTitle": "Use this mailbox from Claude, ChatGPT or Cursor",
+    "ctaBody": "MCPEmails connects {provider} to your AI assistant over these settings and checks the IMAP and SMTP login when you connect. The connect form fills the servers in for you.",
+    "ctaBodyGeneric": "MCPEmails connects any IMAP mailbox to your AI assistant and checks the IMAP and SMTP login when you connect. The connect form fills the servers in for you.",
+    "ctaButton": "Connect {provider}",
+    "ctaButtonGeneric": "Connect this mailbox",
+    "guideLink": "{provider} setup guide"
+  },
+  "explain": {
+    "title": "What these settings mean",
+    "sub": "Every mail app and connector asks for the same six values. Here is what each one does.",
+    "items": [
+      {
+        "h": "IMAP is for reading, SMTP is for sending",
+        "p": "IMAP (Internet Message Access Protocol) lets an app read your mailbox where it lives: folders, read and unread flags and moves stay in sync with webmail and your phone. SMTP (Simple Mail Transfer Protocol) is how an app hands a new message to your provider for delivery. A mailbox needs both, and they often run on different servers, such as <code>imap.gmx.net</code> and <code>mail.gmx.net</code>."
+      },
+      {
+        "h": "Ports and security",
+        "p": "The port and the security setting go together. <b>SSL/TLS</b> (also called implicit TLS) encrypts the connection from the first byte, on port 993 for IMAP and 465 for SMTP. <b>STARTTLS</b> connects on port 143 or 587 and then upgrades to encryption. RFC 8314 recommends implicit TLS for both reading and sending. A port paired with the wrong security setting usually ends in a timeout or a vague TLS error, not a clear message."
+      },
+      {
+        "h": "Your username and password",
+        "p": "The username is almost always your full email address. The password is where most failed connections come from: Gmail, iCloud, Yahoo, AOL, Fastmail and Yandex refuse your normal account password from a mail app and want an [app password](appPassword) instead, and Zoho does too once two-factor or single sign-on is turned on. Personal Microsoft accounts accept neither and need Microsoft sign-in."
+      },
+      {
+        "h": "Custom domains and MX records",
+        "p": "An address on your own domain says nothing about where the mailbox is. The domain's MX records do: they name the servers that receive its mail, and that server's owner almost always runs the IMAP and SMTP servers too. <code>aspmx.l.google.com</code> means Google Workspace, <code>*.mail.protection.outlook.com</code> means Microsoft 365, <code>aspmx1.migadu.com</code> means Migadu. When the MX points at a spam filter, the mailbox host is hidden behind it and you need to ask whoever manages the domain. The [custom domain guide](customDomain) walks through the common hosts."
+      },
+      {
+        "h": "How this lookup works",
+        "p": "It checks, in order: the [provider settings](providers) MCPEmails verified by connecting to each server; a table of hosting providers built from real connection failures; the domain's own RFC 6186 service records; its MX records, matched back to those tables; and Mozilla Thunderbird's autoconfig database. It shows a result only when both the IMAP and the SMTP half were found. The provider settings are also published as an open [dataset](dataset)."
+      }
+    ]
+  },
+  "ports": {
+    "title": "Standard email ports",
+    "colPort": "Port",
+    "colProtocol": "Protocol",
+    "colSecurity": "Security",
+    "colUse": "Use",
+    "rows": [
+      { "port": "993", "protocol": "IMAP", "security": "SSL/TLS", "use": "Reading mail. The default almost everywhere." },
+      { "port": "143", "protocol": "IMAP", "security": "STARTTLS", "use": "Reading mail on servers without port 993." },
+      { "port": "465", "protocol": "SMTP", "security": "SSL/TLS", "use": "Sending from a mail app. Preferred by RFC 8314." },
+      { "port": "587", "protocol": "SMTP", "security": "STARTTLS", "use": "Sending from a mail app (message submission, RFC 6409)." },
+      { "port": "25", "protocol": "SMTP", "security": "STARTTLS or none", "use": "Delivery between mail servers. Some networks block it for outgoing connections." }
+    ],
+    "note": "MCPEmails connects over SSL/TLS or STARTTLS only, never in cleartext."
+  },
+  "faq": {
+    "title": "Questions",
+    "items": [
+      {
+        "q": "How do I find the IMAP and SMTP settings for my email address?",
+        "a": "Type the address into the lookup above. For a provider address such as @gmx.net or @yahoo.com it returns the provider's IMAP and SMTP servers, ports and security straight away. For an address on your own domain it reads the domain's DNS records to find which provider runs the mailbox and returns that provider's settings. If nothing is found, the MX records it shows tell you who receives the domain's mail, which is who to ask."
+      },
+      {
+        "q": "What are the SMTP settings for OVH Hosted Exchange (ex4.mail.ovh.net)?",
+        "a": "Outgoing mail uses the same numbered host as incoming, for example <code>ex4.mail.ovh.net</code>, on port 587 with STARTTLS. IMAP is on that host at port 993 with SSL/TLS. Port 465 does not answer on Hosted Exchange, so settings copied from OVH's shared hosting (<code>ssl0.ovh.net</code>, port 465) hang until they time out. The number in the host name is specific to your service and shown in the OVHcloud Control Panel. More on the [OVH page](ovh)."
+      },
+      {
+        "q": "What are Purelymail's IMAP and SMTP settings?",
+        "a": "IMAP is <code>imap.purelymail.com</code> on port 993 with SSL/TLS, and SMTP is <code>smtp.purelymail.com</code> on port 465 with SSL/TLS. The username is the mailbox's full email address. Setup notes are on the [Purelymail page](purelymail)."
+      },
+      {
+        "q": "Should I use port 465 or 587 for SMTP?",
+        "a": "Use whichever your provider documents. Port 465 encrypts from the start and is what RFC 8314 recommends; port 587 starts in plain text and upgrades with STARTTLS. Many providers offer both. What matters is pairing each port with its own security setting: 465 with SSL/TLS, 587 with STARTTLS."
+      },
+      {
+        "q": "The settings are right but my password is rejected. Why?",
+        "a": "Many providers refuse your normal account password from a mail app. Gmail, iCloud, Yahoo, AOL, Fastmail and Yandex want an [app password](appPassword), which you create in the account's security settings, and so does Zoho once two-factor or single sign-on is turned on. Personal Microsoft accounts stopped accepting passwords from mail apps on 16 September 2024 and need Microsoft sign-in."
+      },
+      {
+        "q": "Can this tool test my login?",
+        "a": "No. A web page cannot open an IMAP or SMTP connection, and you should not type a mailbox password into a lookup page anyway. MCPEmails tests the IMAP and SMTP login when you [connect a mailbox](imap) to your AI assistant, and tells you which half failed."
+      }
+    ]
+  },
+  "related": {
+    "title": "Related guides",
+    "items": {
+      "imap": "Connect any IMAP mailbox to Claude or ChatGPT",
+      "customDomain": "Connect email on your own domain to an AI agent",
+      "appPassword": "What is an app password?",
+      "providers": "Provider compatibility matrix",
+      "dataset": "Open IMAP and SMTP provider dataset",
+      "connect": "Setup guides for every provider"
+    }
+  },
+  "sources": {
+    "title": "Sources",
+    "sub": "Read on {date}.",
+    "items": {
+      "rfc8314": "RFC 8314: Use of TLS for email submission and access",
+      "rfc6186": "RFC 6186: Use of SRV records for locating email services",
+      "rfc6409": "RFC 6409: Message submission for mail",
+      "rfc5068": "RFC 5068: Email submission operations",
+      "msBasicAuth": "Microsoft Support: modern authentication now needed for Outlook.com in other apps",
+      "msExchangeOnline": "Microsoft Learn: deprecation of basic authentication in Exchange Online",
+      "ispdb": "Mozilla Thunderbird autoconfig database (ISPDB)",
+      "cloudflareDoh": "Cloudflare: DNS over HTTPS JSON API"
+    }
+  },
+  "ctaBand": {
+    "title": "Found your settings? Give the mailbox to your AI assistant.",
+    "sub": "MCPEmails connects Gmail, Outlook, iCloud and any IMAP mailbox to Claude, ChatGPT, Cursor and other MCP clients. Mail is fetched live and never stored.",
+    "ctaPrimary": "Connect a mailbox",
+    "ctaSecondary": "Browse providers"
+  }
+}

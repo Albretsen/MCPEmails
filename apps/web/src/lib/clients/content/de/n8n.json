@@ -1,0 +1,102 @@
+{
+  "_sources": [
+    "apps/web/src/lib/api-keys/generate.ts + apps/web/src/lib/api-keys/scopes.ts",
+    "supabase/functions/mcp-server/web-ingress.ts",
+    "supabase/functions/mcp-server/index.ts (RATE_LIMIT_WINDOWS, search_and_move partial output schema)",
+    "apps/web/messages/en/docs.json (approval, automation)",
+    "https://docs.n8n.io/integrations/builtin/cluster-nodes/sub-nodes/n8n-nodes-langchain.toolmcp/",
+    "https://docs.n8n.io/integrations/builtin/core-nodes/n8n-nodes-langchain.mcpclient/",
+    "https://docs.n8n.io/integrations/builtin/credentials/mcp/",
+    "https://github.com/n8n-io/n8n/blob/master/packages/@n8n/nodes-langchain/nodes/mcp/McpClientTool/McpClientTool.node.ts",
+    "https://github.com/n8n-io/n8n/blob/master/packages/nodes-base/credentials/HttpBearerAuth.credentials.ts"
+  ],
+  "meta": {
+    "title": "E-Mail mit n8n verbinden: MCP Client Tool für den AI Agent",
+    "description": "Verbinden Sie E-Mail per MCP Client Tool mit einem n8n AI Agent: HTTP Streamable, Bearer Auth und ein API-Schlüssel mit Scopes. E-Mails lesen, suchen, entwerfen und senden."
+  },
+  "hero": {
+    "eyebrow": "n8n + E-Mail",
+    "titleLine1": "Verbinden Sie Ihr Postfach mit n8n",
+    "titleLine2": "über das MCP Client Tool",
+    "lead": "Geben Sie dem AI Agent in Ihrem n8n-Workflow ein echtes Postfach. Er kann E-Mails über einen einzigen MCP-Endpunkt lesen, suchen, entwerfen, senden, beantworten, weiterleiten und ablegen, mit einem Schlüssel, dessen Scopes genau das abdecken, was der Workflow tun soll.",
+    "meta0": "Funktioniert mit dem eingebauten MCP Client Tool Node",
+    "meta1": "API-Schlüssel mit Scopes, mit einem Klick widerrufbar",
+    "meta2": "E-Mails werden live abgerufen, nie gespeichert",
+    "answer": "Fügen Sie in Ihrem n8n-Workflow am Tool-Eingang des AI Agent einen MCP Client Tool Node hinzu. Setzen Sie Endpoint auf https://mcpemails.com/api/mcp, Server Transport auf HTTP Streamable und Authentication auf Bearer Auth, und fügen Sie dann einen API-Schlüssel aus Ihrem MCPEmails-Dashboard als Bearer Token ein."
+  },
+  "method": {
+    "title": "So verbindet sich n8n: ein Bearer-Auth-Credential mit einem Schlüssel mit Scopes",
+    "body": "Der MCP Client Tool Node sendet das Credential, das Sie ihm zuweisen. Diese Anleitung nutzt das <b>Bearer Auth</b>-Credential von n8n, das Ihren Schlüssel bei jeder Anfrage in den Header <code>Authorization</code> schreibt. Erstellen Sie den Schlüssel im Dashboard und aktivieren Sie nur die Scopes, die der Workflow braucht. Ein Workflow läuft oft zeitgesteuert, ohne dass jemand zusieht, und genau deshalb sind diese Scopes die Grenze, auf die es ankommt. Verbindungen per Schlüssel und per OAuth nutzen denselben Endpunkt und erhalten denselben Tool-Katalog."
+  },
+  "setup": [
+    {
+      "h": "Kostenloses Konto erstellen und Postfach verbinden",
+      "p": "Registrieren Sie sich auf mcpemails.com, ohne Kreditkarte, und öffnen Sie dann Dashboard, Postfächer, Postfach verbinden. Outlook und Microsoft 365 verbinden Sie über „Mit Microsoft anmelden“; Gmail, iCloud, Fastmail, Yahoo, Zoho und Yandex nutzen ein App-Passwort; alle anderen Postfächer verbinden sich ganz normal per IMAP und SMTP."
+    },
+    {
+      "h": "API-Schlüssel mit Scopes erstellen",
+      "p": "Klicken Sie unter Dashboard, API-Schlüssel auf „Schlüssel erstellen“. Benennen Sie ihn nach dem Workflow und aktivieren Sie nur die Scopes, die er braucht: <code>read:email</code>, <code>search:email</code>, <code>send:email</code>, <code>manage:folders</code>, <code>delete:email</code>, <code>manage:drafts</code>, <code>manage:contacts</code>, <code>schedule:email</code> und <code>manage:automations</code>. Der Schlüssel besteht aus <code>mcpe_</code> und 64 Hex-Zeichen und wird nur einmal angezeigt. Kopieren Sie ihn also, bevor Sie den Dialog schließen."
+    },
+    {
+      "h": "MCP Client Tool zum AI Agent hinzufügen",
+      "p": "Öffnen Sie den Workflow, klicken Sie auf das Plus unter dem Eingang <b>Tool</b> des AI Agent Node und wählen Sie <b>MCP Client Tool</b>. Fügen Sie <code>https://mcpemails.com/api/mcp</code> unter <b>Endpoint</b> ein und setzen Sie <b>Server Transport</b> auf <b>HTTP Streamable</b>."
+    },
+    {
+      "h": "Bearer-Auth-Credential zuweisen",
+      "p": "Setzen Sie <b>Authentication</b> auf <b>Bearer Auth</b>, legen Sie ein neues Credential an und fügen Sie den Schlüssel unter <b>Bearer Token</b> ein, ohne etwas davor. Lassen Sie <b>Tools to Include</b> auf All, oder wechseln Sie zu Selected und wählen Sie nur die Tools aus, die dieser Workflow sehen soll."
+    }
+  ],
+  "gotchas": [
+    {
+      "h": "Fügen Sie den Schlüssel ohne das Wort Bearer ein",
+      "p": "Das Bearer-Auth-Credential von n8n ergänzt <code>Bearer</code> und ein Leerzeichen selbst. Wenn Sie es zusätzlich eintippen, wird das Wort doppelt gesendet und der Aufruf scheitert mit einer 401. Bei <b>Header Auth</b> ist es genau umgekehrt: Name ist <code>Authorization</code>, und Value ist <code>Bearer</code>, ein Leerzeichen, dann der Schlüssel."
+    },
+    {
+      "h": "Ein Feld SSE Endpoint deutet auf einen alten Node hin",
+      "p": "Version 1 des MCP Client Tool Node hatte nur ein Feld <b>SSE Endpoint</b> und keine Auswahl für den Transport. Aktuelle Versionen zeigen <b>Endpoint</b> und dazu <b>Server Transport</b>. Dieser Server spricht Streamable HTTP. Wenn Sie nur SSE Endpoint sehen, fügen Sie also einen neuen Node hinzu oder aktualisieren Sie n8n. Zeigt Server Transport den Wert Server Sent Events (Deprecated), stellen Sie auf HTTP Streamable um."
+    },
+    {
+      "h": "Behalten Sie das Standard-Timeout bei",
+      "p": "Der Node wartet 60.000 ms auf einen Tool-Aufruf, einstellbar unter Options, <b>Timeout</b>. Das reicht auch für Massenoperationen: Wer Nachrichten in einem großen Ordner verschiebt oder löscht, stößt vorher an das eigene Zeitlimit des Servers und erhält ein Ergebnis mit der Markierung <code>partial</code>, in dem die noch nicht bearbeiteten Nachrichten unter <code>remaining_message_ids</code> stehen. Der Agent kann das Tool also mit diesen IDs erneut aufrufen. Ein deutlich niedrigeres Timeout kann einen Aufruf abbrechen, bevor dieses Ergebnis ankommt, und der Agent weiß dann nicht, was erledigt wurde."
+    },
+    {
+      "h": "Tools to Include blendet Tools aus; die Scopes des Schlüssels verbieten sie",
+      "p": "Der Node listet immer nur die Tools, für die Ihr Schlüssel Scopes hat, weil der Server den Rest in <code>tools/list</code> weglässt. Eine Auswahl unter Tools to Include grenzt das weiter ein, was dem Modell bei der Wahl hilft, ändert aber nichts daran, was der Schlüssel darf. Ziehen Sie die Grenze beim Schlüssel und nutzen Sie Tools to Include, damit der Agent fokussiert bleibt."
+    }
+  ],
+  "limits": [
+    "Anfragen sind auf 100 pro Minute, 1.000 pro Stunde und 10.000 pro Tag je Schlüssel begrenzt. Ein Workflow, der viele Items in einer Schleife abarbeitet, sollte sein Tempo drosseln oder die Arbeit auf mehrere Schlüssel verteilen.",
+    "Der Server arbeitet rein nach Anfrage und Antwort. Es gibt keine Webhooks und keine vom Server ausgelösten Ereignisse, eine neue E-Mail startet also nie von selbst einen Workflow. Um auf eingehende E-Mails zu reagieren, starten Sie den Workflow mit einem Schedule Trigger und lassen den Agenten nach ungelesenen Nachrichten suchen.",
+    "E-Mails werden bei jedem Aufruf live von Ihrem Anbieter abgerufen und nie gespeichert. Gespeichert wird nur das verschlüsselte OAuth-Token oder App-Passwort. Ein widerrufenes Token oder ein geändertes Postfachpasswort beendet den Zugriff deshalb sofort."
+  ],
+  "faq": [
+    {
+      "q": "Wie verbinde ich E-Mail mit einem n8n AI Agent?",
+      "a": "Fügen Sie am Tool-Eingang des AI Agent einen MCP Client Tool Node hinzu. Setzen Sie Endpoint auf https://mcpemails.com/api/mcp und Server Transport auf HTTP Streamable, wählen Sie Bearer Auth und fügen Sie einen API-Schlüssel aus Dashboard, API-Schlüssel als Bearer Token ein. Danach hat der Agent Tools zum Lesen, Suchen, Entwerfen, Senden, Beantworten, Weiterleiten, Organisieren und Planen von E-Mails."
+    },
+    {
+      "q": "Kann ich ein E-Mail-Tool ohne AI Agent aufrufen?",
+      "a": "Ja. Der eigenständige MCP Client Node von n8n führt ein MCP-Tool als ganz normalen Workflow-Schritt aus, ohne dass ein Modell entscheidet, was aufgerufen wird. Setzen Sie seine MCP Endpoint URL auf dieselbe Adresse, weisen Sie dasselbe Bearer-Auth-Credential zu, wählen Sie ein Tool und füllen Sie seine Parameter aus, zum Beispiel email_read mit action auf list und unread auf true. Das passt zu festen Abläufen, deren Schritte sich nie ändern."
+    },
+    {
+      "q": "Warum Bearer Auth und nicht das MCP-OAuth2-Credential?",
+      "a": "n8n bietet auch ein MCP-OAuth2-Credential an. Diese Anleitung nutzt Bearer Auth, weil die Scopes eines Schlüssels beim Erstellen festgelegt werden und in Ihrem Dashboard sichtbar sind. Bei einem Workflow, der unbeaufsichtigt läuft, ist das leichter zu überblicken. Wenn Sie den Schlüssel unter Dashboard, API-Schlüssel widerrufen, stoppt der Workflow beim nächsten Aufruf."
+    },
+    {
+      "q": "Kann der Workflow E-Mails senden, ohne dass jemand sie prüft?",
+      "a": "Nur wenn Sie es zulassen. Senden erfordert den Scope send:email, ein Schlüssel ohne diesen Scope kann also überhaupt nicht senden. Zusätzlich können Sie im Dashboard für ein Postfach eine Freigabe aktivieren: Dann werden Senden, Antworten, Weiterleiten, das Senden von Entwürfen und geplantes Senden zurückgehalten, der Agent erhält ein Ergebnis mit dem Status ausstehend, und ein Mitglied des Workspace gibt jede Nachricht frei oder lehnt sie ab, bevor etwas verschickt wird."
+    },
+    {
+      "q": "Welche Postfächer erreicht ein n8n-Workflow?",
+      "a": "Outlook.com und Microsoft 365 über „Mit Microsoft anmelden“, wobei bei einem Arbeitskonto eventuell einmalig die IT-Administration die App freigeben muss; Gmail, iCloud, Fastmail, Yahoo, Zoho und Yandex mit einem App-Passwort; und jedes andere Postfach, das IMAP und SMTP auf den Standardports spricht. Sind mehrere Postfächer verbunden, ruft der Agent inbox_list auf und findet so die ID jedes Postfachs. Sie müssen also keine UUIDs fest in den Workflow schreiben."
+    },
+    {
+      "q": "Werden meine E-Mails auf Ihren Servern gespeichert?",
+      "a": "Nein. Jede Nachricht wird für genau die Anfrage, die sie angefordert hat, live von Ihrem Anbieter abgerufen und direkt an n8n übergeben. Gespeichert wird nur das verschlüsselte OAuth-Token oder App-Passwort, damit spätere Aufrufe sich authentifizieren können. Wenn Sie das Postfach im Dashboard löschen oder den Zugriff bei Ihrem Anbieter widerrufen, endet die Verbindung sofort."
+    }
+  ],
+  "ctaBand": {
+    "title": "Geben Sie Ihrem n8n-Agenten ein echtes Postfach",
+    "sub": "Ein Endpunkt, ein Bearer-Auth-Credential, ein Schlüssel mit Scopes. Keine Kreditkarte nötig."
+  }
+}
