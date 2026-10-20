@@ -30,12 +30,12 @@ INSERT INTO auth.users (
 -- comped: Personal, owner comped. diag: Personal with card diagnostics on.
 INSERT INTO public.workspaces (id, slug, display_name, owner_id, plan, created_at, free_action_cap_exempt, card_diagnostics)
 VALUES
-  ('ae000000-0000-0000-0000-000000000001', 'gate-free-open', 'G1', '9e000000-0000-0000-0000-000000000001', 'free', now() - interval '60 days', false, false),
-  ('ae000000-0000-0000-0000-000000000002', 'gate-free-full', 'G2', '9e000000-0000-0000-0000-000000000001', 'free', now() - interval '60 days', false, false),
-  ('ae000000-0000-0000-0000-000000000003', 'gate-free-new',  'G3', '9e000000-0000-0000-0000-000000000001', 'free', now(), false, false),
-  ('ae000000-0000-0000-0000-000000000004', 'gate-early',     'G4', '9e000000-0000-0000-0000-000000000001', 'free', now() - interval '60 days', true, false),
-  ('ae000000-0000-0000-0000-000000000005', 'gate-comped',    'G5', '9e000000-0000-0000-0000-000000000002', 'personal', now() - interval '60 days', false, false),
-  ('ae000000-0000-0000-0000-000000000006', 'gate-diag',      'G6', '9e000000-0000-0000-0000-000000000001', 'personal', now() - interval '60 days', false, true);
+  ('ae000000-0000-0000-0000-000000000001', 'pgtap-gw-1', 'G1', '9e000000-0000-0000-0000-000000000001', 'free', now() - interval '60 days', false, false),
+  ('ae000000-0000-0000-0000-000000000002', 'pgtap-gw-2', 'G2', '9e000000-0000-0000-0000-000000000001', 'free', now() - interval '60 days', false, false),
+  ('ae000000-0000-0000-0000-000000000003', 'pgtap-gw-3',  'G3', '9e000000-0000-0000-0000-000000000001', 'free', now(), false, false),
+  ('ae000000-0000-0000-0000-000000000004', 'pgtap-gw-4',     'G4', '9e000000-0000-0000-0000-000000000001', 'free', now() - interval '60 days', true, false),
+  ('ae000000-0000-0000-0000-000000000005', 'pgtap-gw-5',    'G5', '9e000000-0000-0000-0000-000000000002', 'personal', now() - interval '60 days', false, false),
+  ('ae000000-0000-0000-0000-000000000006', 'pgtap-gw-6',      'G6', '9e000000-0000-0000-0000-000000000001', 'personal', now() - interval '60 days', false, true);
 
 INSERT INTO public.user_usage_entitlements (user_id, kind, reason, source)
 VALUES ('9e000000-0000-0000-0000-000000000002', 'comped_scale', 'pgTAP fixture', 'support');
