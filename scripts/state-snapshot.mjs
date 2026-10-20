@@ -192,7 +192,7 @@ const worktreeCounts = { total: 0, empty: 0, pr_open: 0, pr_merged_or_closed: 0,
 // ---------- owed lines ----------
 
 const KEYWORD = /\b(OWED:|DONE:|owed|pending|read-?outs?|awaiting)/i
-const DUE_HINT = /(due|read-?out|re-?read|by|after|until|before|from|on|~)\s*:?\s*~?$/i
+const DUE_HINT = /(due|read-?out|re-?read|re-?test|merges?|check|around|by|after|until|before|from|on|~)\s*:?\s*~?$/i
 const FULL_DATE = /\b(20\d\d)-(\d\d)-(\d\d)\b/g
 const SHORT_DATE = /(?<![\d#v.\-/:])(~?)(\d{1,2})-(\d{2})(?![\d\-%])/g
 
