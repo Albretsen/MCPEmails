@@ -4,7 +4,8 @@
     "https://hilfe.web.de/pop-imap/index.html",
     "https://hilfe.web.de/pop-imap/imap/index.html",
     "https://hilfe.web.de/sicherheit/2fa/anwendungsspezifisches-passwort.html",
-    "https://hilfe.web.de/pop-imap/einrichtung-mailprogramm-scheitert.html"
+    "https://hilfe.web.de/pop-imap/einrichtung-mailprogramm-scheitert.html",
+    "https://hilfe.web.de/pop-imap/imap/imap-serverdaten.html"
   ],
   "auth": {
     "method": "account-password",
@@ -60,11 +61,11 @@
     },
     {
       "h": "Mit Zwei-Faktor-Authentifizierung gilt Ihr Passwort nicht mehr für Mailprogramme",
-      "p": "Die Zwei-Faktor-Authentifizierung von WEB.DE schützt die Web-Anmeldung. Sobald sie aktiv ist, funktioniert Ihr normales WEB.DE-Passwort in nichts mehr, das IMAP oder SMTP spricht. Sie brauchen dann ein <b>anwendungsspezifisches Passwort</b>, das Sie im Postfach unter Account verwalten, dann Login & Sicherheit, dann Anwendungsspezifische Passwörter verwalten erzeugen. Legen Sie eines für E-Mail an, fügen Sie es statt Ihres normalen Passworts in MCP Emails ein und nutzen Sie das normale Passwort weiter für die Website. Ohne 2FA ist das Kontopasswort richtig, und es gibt kein App-Passwort zum Erstellen."
+      "p": "WEB.DE führt das App-Passwort unter der Zwei-Faktor-Authentifizierung und beschreibt es als Passwort für externe Mailprogramme per POP3 und IMAP. Sobald 2FA Ihr Konto schützt, erstellen Sie eines im Browser: Klicken Sie auf Ihre Initialen, dann <b>Account verwalten</b>, dann <b>Login & Sicherheit</b>, dann <b>App-Passwörter (für externe Apps)</b>, dann <b>Neues App-Passwort erstellen</b>. Geben Sie ihm einen Namen, etwa MCP Emails, und kopieren Sie es sofort, denn WEB.DE zeigt es nur einmal an. Fügen Sie es statt Ihres normalen Passworts in MCP Emails ein und nutzen Sie das normale Passwort weiter für die Website. Ohne 2FA ist das Kontopasswort richtig."
     },
     {
-      "h": "Beide SMTP-Wege antworten, ein Versandfehler liegt selten am Port",
-      "p": "Anleitungen für WEB.DE widersprechen sich beim Postausgang: Manche nennen <code>smtp.web.de</code> auf Port 465 mit implizitem TLS, andere Port 587 mit STARTTLS. Beides funktioniert, und unser Test hat auf 465 einen TLS-Handshake abgeschlossen, wobei der Server PLAIN und LOGIN anbot. Zwischen den Ports zu wechseln bringt also nichts. Wird der Versand abgelehnt, liegt es am Schieberegler für den Abruf, am fehlenden App-Passwort oder an einer Absenderadresse, die nicht zu den im Konto registrierten Adressen gehört."
+      "h": "Beide SMTP-Ports funktionieren, ein Versandfehler liegt selten am Port",
+      "p": "Die WEB.DE-Hilfe nennt <code>smtp.web.de</code> auf Port 587 mit STARTTLS, Port 465 mit SSL als Alternative, und akzeptiert nur TLS 1.2 oder 1.3. Beide Ports funktionieren, und unser Test hat auf 465 einen TLS-Handshake abgeschlossen, wobei der Server PLAIN und LOGIN anbot. Zwischen den Ports zu wechseln bringt also nichts. Wird der Versand abgelehnt, liegt es am Schieberegler für den Abruf, am fehlenden App-Passwort oder an der Absenderadresse: WEB.DE bittet darum, nur von Adressen zu senden, die nachweislich zu Ihrem Postfach gehören."
     }
   ],
   "limits": [
@@ -79,7 +80,7 @@
     },
     {
       "q": "Wie lauten die IMAP- und SMTP-Einstellungen von WEB.DE?",
-      "a": "IMAP ist imap.web.de auf Port 993 mit implizitem TLS, SMTP ist smtp.web.de auf Port 465, ebenfalls mit implizitem TLS. Für ausgehende E-Mails akzeptiert WEB.DE zusätzlich Port 587 mit STARTTLS. Der Benutzername ist Ihre vollständige WEB.DE-Adresse mit Domain. Beide Hosts wurden am auf dieser Seite angegebenen Datum über eine echte TLS-Verbindung bestätigt."
+      "a": "IMAP ist imap.web.de auf Port 993 mit SSL. SMTP ist smtp.web.de, laut WEB.DE auf Port 587 mit STARTTLS, oder auf Port 465 mit SSL, den MCP Emails nutzt. Der Benutzername ist Ihre vollständige WEB.DE-Adresse mit Domain. Beide Hosts wurden am auf dieser Seite angegebenen Datum über eine echte TLS-Verbindung bestätigt."
     },
     {
       "q": "Wie aktiviere ich IMAP bei WEB.DE?",
@@ -91,7 +92,7 @@
     },
     {
       "q": "Braucht WEB.DE ein App-Passwort?",
-      "a": "Nur wenn die Zwei-Faktor-Authentifizierung eingeschaltet ist. Ohne 2FA meldet Ihr normales WEB.DE-Passwort Mailprogramme an, sobald der Abruf aktiviert ist. Mit 2FA erzeugen Sie unter Account verwalten, Login & Sicherheit, Anwendungsspezifische Passwörter verwalten ein anwendungsspezifisches Passwort und verwenden dieses in MCP Emails."
+      "a": "Nur wenn die Zwei-Faktor-Authentifizierung eingeschaltet ist. Ohne 2FA meldet Ihr normales WEB.DE-Passwort Mailprogramme an, sobald der Abruf aktiviert ist. Mit 2FA erstellen Sie unter Account verwalten, Login & Sicherheit, App-Passwörter (für externe Apps) ein App-Passwort und verwenden es in MCP Emails. WEB.DE zeigt es nur einmal an; wenn Sie es verlieren, löschen Sie es und erstellen ein neues."
     },
     {
       "q": "Werden meine WEB.DE-E-Mails auf Ihren Servern gespeichert?",

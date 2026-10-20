@@ -1,9 +1,10 @@
 {
   "_sources": [
-    "https://www.telekom.de/hilfe/apps-dienste/e-mail/programme/passwort-definition",
     "https://www.telekom.de/hilfe/apps-dienste/e-mail/programm-passwort-verwalten",
-    "https://www.telekom.de/hilfe/vertrag-meine-daten/login-daten-passwoerter/welche-passwoerter-fuer-welchen-zweck",
-    "https://www.netzwelt.de/galerie/19784-e-mail-passwort-e-mail-adressen-t-online-einrichten.html"
+    "https://www.telekom.de/hilfe/apps-dienste/e-mail/app-programm-passwort",
+    "https://www.telekom.de/hilfe/apps-dienste/e-mail/posteingang-postausgang-server",
+    "https://www.telekom.de/hilfe/apps-dienste/e-mail/versand-blockiert",
+    "https://www.telekom.de/hilfe/vertrag-meine-daten/login-daten-passwoerter/welche-passwoerter-fuer-welchen-zweck"
   ],
   "auth": {
     "method": "mail-password",
@@ -28,7 +29,7 @@
   },
   "method": {
     "title": "So verbindet sich T-Online: IMAP und ein zweites, separates Passwort",
-    "body": "Die Telekom stellt IMAP unter <code>secureimap.t-online.de</code> auf Port 993 mit implizitem TLS bereit, den SMTP-Versand unter <code>securesmtp.t-online.de</code> auf Port 465. Beide Namen liegen vor einem IMAP-Proxy, nicht vor einem Mailserver, mit dem Sie direkt sprechen. Das erklärt einige der Eigenheiten unten. Woran fast alle scheitern, sind die Zugangsdaten. Die Telekom führt zwei Passwörter pro Konto: das <b>Telekom Login</b>-Passwort für das Kundencenter und telekom.de, und ein zweites <b>Passwort für E-Mail-Programme</b>, in den Worten der Telekom gedacht <b>für das Verwenden eines E-Mail-Programms</b>. Nur das zweite meldet Sie an <code>secureimap.t-online.de</code> an. Die Telekom empfiehlt, dass beide nie gleich sind, und bei vielen Konten existiert das E-Mail-Passwort schlicht nicht, bis jemand es anlegt."
+    "body": "Die Telekom dokumentiert für jede Adresse mit @t-online.de und @magenta.de dieselben Server: IMAP unter <code>secureimap.t-online.de</code> auf Port 993 mit SSL und SMTP unter <code>securesmtp.t-online.de</code> auf Port 465 oder 587. Beide Namen liegen vor einem IMAP-Proxy, nicht vor einem Mailserver, mit dem Sie direkt sprechen. Das erklärt einige der Eigenheiten unten. Woran fast alle scheitern, sind die Zugangsdaten. Die Telekom führt zwei Passwörter pro Konto: das <b>Telekom Login</b>-Passwort für das E-Mail Center, das Kundencenter und die MeinMagenta App, und ein zweites <b>Passwort für E-Mail-Programme</b>, das Sie laut Telekom brauchen, sobald Sie Ihre E-Mails in einem Programm wie Outlook oder Thunderbird statt im E-Mail Center lesen. Nur das zweite meldet Sie an <code>secureimap.t-online.de</code> an, und die Telekom rät, dass beide verschieden sind."
   },
   "setup": [
     {
@@ -37,7 +38,7 @@
     },
     {
       "h": "Das Passwort für E-Mail-Programme anlegen",
-      "p": "Öffnen Sie im E-Mail Center unter email.t-online.de das <b>Menü</b>, dann <b>Einstellungen</b>, dann links <b>Passwörter</b>. Unter der Überschrift <b>E-Mail-Passwort, für das Verwenden eines E-Mail-Programms</b> wählen Sie <b>E-Mail-Passwort ändern</b>, geben das neue Passwort zweimal ein und speichern. Dasselbe Passwort erreichen Sie auch im Kundencenter unter <b>Profil</b>, dann <b>Login-Daten und Passwörter</b>, dann <b>weitere Passwörter</b>. Legen Sie es auch dann fest, wenn Sie glauben, schon eines zu haben: Bei vielen Konten wurde es nie erstellt."
+      "p": "Klicken Sie im E-Mail Center unter email.t-online.de auf das Zahnrad (<b>Einstellungen</b>), dann auf <b>Alle Einstellungen anzeigen</b>, dann <b>Passwörter</b>, dann <b>Passwort für E-Mail-Programme</b>, und legen Sie ein neues fest. Der andere Weg führt über das Kundencenter: <b>Profil verwalten</b>, dann <b>Login-Daten</b>, dann <b>Weitere Passwörter</b>. Die Telekom rät, es anders als Ihr Telekom Login-Passwort zu wählen."
     },
     {
       "h": "In MCP Emails einfügen",
@@ -64,6 +65,10 @@
     {
       "h": "Der Versand ist auf 50 MB pro Nachricht begrenzt",
       "p": "<code>securesmtp.t-online.de</code> meldet eine maximale Nachrichtengröße von 52.428.800 Byte. Das gilt für die gesamte kodierte Nachricht, base64-Anhänge zählen also etwa ein Drittel größer als auf der Festplatte. Ein Agent, der einen großen Anhang weiterleiten soll, bekommt eine harte SMTP-Ablehnung, keinen langsamen Versand."
+    },
+    {
+      "h": "Die Telekom kann einen Versand von einer unbekannten Internetverbindung zurückhalten",
+      "p": "Die Telekom prüft, von welcher Internetverbindung eine Nachricht gesendet wird. Laut ihrer Hilfe wird eine Nachricht nicht gesendet und das Programm erhält eine Fehlermeldung, wenn ein Mailprogramm von einer unbekannten oder nicht freigegebenen IP-Adresse sendet. Als häufige Ursachen nennt sie ein anderes WLAN, das Mobilfunknetz, ein VPN oder eine Verbindung im Ausland. E-Mails, die Ihr Agent über MCP Emails sendet, gehen von den Servern von MCP Emails aus, nicht von Ihrem Anschluss zu Hause, und können deshalb ebenso zurückgehalten werden. Laut Telekom können Sie die IP-Adresse <b>freischalten</b>, wenn der Versuch von Ihnen stammt. Stammt er nicht von Ihnen, schalten Sie sie nicht frei und ändern Sie Ihr Telekom Login-Passwort."
     }
   ],
   "limits": [
@@ -77,19 +82,19 @@
     },
     {
       "q": "Wie lauten die IMAP- und SMTP-Einstellungen von T-Online?",
-      "a": "IMAP ist secureimap.t-online.de auf Port 993 mit implizitem TLS. SMTP ist securesmtp.t-online.de auf Port 465, ebenfalls mit implizitem TLS. Melden Sie sich mit Ihrer vollständigen t-online.de-Adresse und dem Passwort für E-Mail-Programme an. Beide Hosts wurden über eine echte TLS-Verbindung bestätigt und gelten für alle T-Online-Postfächer."
+      "a": "IMAP ist secureimap.t-online.de auf Port 993 mit SSL. SMTP ist securesmtp.t-online.de auf Port 465 oder 587, ebenfalls mit SSL; MCP Emails nutzt 465. Melden Sie sich mit Ihrer vollständigen Adresse und dem Passwort für E-Mail-Programme an. Die Telekom nennt dieselben Server für Adressen mit @t-online.de und @magenta.de, und beide Hosts wurden über eine echte TLS-Verbindung bestätigt."
     },
     {
       "q": "Warum wird mein T-Online-Passwort im E-Mail-Programm abgelehnt?",
-      "a": "Fast immer, weil Sie das Telekom-Login-Passwort eingegeben haben. Die Telekom vergibt ein zweites Passwort, das Passwort für E-Mail-Programme, und nur dieses meldet Sie an den Mailservern an. Legen Sie es im E-Mail Center unter Einstellungen, dann Passwörter an oder setzen Sie es dort zurück, alternativ im Kundencenter unter Profil, dann Login-Daten und Passwörter, dann weitere Passwörter."
+      "a": "Fast immer, weil Sie das Telekom Login-Passwort eingegeben haben. Die Telekom vergibt ein zweites Passwort, das Passwort für E-Mail-Programme, und nur dieses meldet Sie an den Mailservern an. Legen Sie es im E-Mail Center unter dem Zahnrad, Alle Einstellungen anzeigen, Passwörter an oder setzen Sie es dort zurück, alternativ im Kundencenter unter Profil verwalten, Login-Daten, Weitere Passwörter."
     },
     {
       "q": "Wo lege ich das Passwort für E-Mail-Programme an?",
-      "a": "Melden Sie sich im E-Mail Center unter email.t-online.de an und öffnen Sie Menü, dann Einstellungen, dann Passwörter. Der Block mit der Überschrift E-Mail-Passwort, für das Verwenden eines E-Mail-Programms hat eine Schaltfläche zum Ändern. Geben Sie das neue Passwort zweimal ein und speichern Sie. Verwenden Sie es in Ihrem Mailprogramm und in MCP Emails, für den Posteingangs- und den Postausgangsserver."
+      "a": "An zwei Stellen. Im E-Mail Center unter email.t-online.de klicken Sie auf das Zahnrad (Einstellungen), dann Alle Einstellungen anzeigen, dann Passwörter, dann Passwort für E-Mail-Programme. Im Kundencenter öffnen Sie Profil verwalten, dann Login-Daten, dann Weitere Passwörter. Verwenden Sie das neue Passwort in MCP Emails, für den Posteingangs- und den Postausgangsserver."
     },
     {
-      "q": "Funktioniert das auch mit magenta.de und anderen Telekom-Maildomains?",
-      "a": "Jedes Postfach im Telekom E-Mail Center meldet sich an denselben Hosts secureimap.t-online.de und securesmtp.t-online.de mit demselben E-Mail-Passwort an. Entscheidend ist, dass es ein Postfach im Telekom E-Mail Center ist, nicht der Text nach dem @-Zeichen."
+      "q": "Funktioniert das auch mit magenta.de-Adressen?",
+      "a": "Ja. Die Telekom dokumentiert dieselben Server für Adressen mit @magenta.de und @t-online.de: secureimap.t-online.de für IMAP und securesmtp.t-online.de für SMTP, mit dem Passwort für E-Mail-Programme als Passwort und der vollständigen Adresse als Benutzername."
     },
     {
       "q": "Werden meine T-Online-E-Mails auf Ihren Servern gespeichert?",

@@ -53,7 +53,7 @@
     },
     {
       "h": "Ein Hostname für beide Richtungen, und freenet meint das wörtlich",
-      "p": "Es gibt kein <code>imap.freenet.de</code> und kein <code>smtp.freenet.de</code>. Eingehend und ausgehend nutzen beide <code>mx.freenet.de</code>. Wer die üblichen Präfixe gewohnt ist, hält das für falsch und korrigiert es beim Einrichten aus dem Gedächtnis stillschweigend. freenet schreibt in derselben Tabelle außerdem, dass Sie keine IP-Adressen oder anderen Namen einsetzen sollen, weil das im Betrieb zu Problemen führt."
+      "p": "Es gibt kein <code>imap.freenet.de</code> und kein <code>smtp.freenet.de</code>. Eingehend und ausgehend nutzen beide <code>mx.freenet.de</code>. Wer die üblichen Präfixe gewohnt ist, hält das für falsch und korrigiert es beim Einrichten aus dem Gedächtnis stillschweigend. freenet schreibt in derselben Tabelle außerdem, dass Sie keine IP-Adressen oder anderen Namen einsetzen sollen und dass jede Verbindung verschlüsselt sein muss. Eine unverschlüsselte Anmeldung wird also auch mit dem richtigen Passwort abgelehnt."
     },
     {
       "h": "Die Ordner heißen inbox, sent und drafts, kleingeschrieben",
@@ -74,8 +74,8 @@
       "a": "Nicht direkt. Claude hat keinen eingebauten freenet-Konnektor. Wenn Sie einen MCP-Server wie MCP Emails per IMAP mit dem Postfach verbinden, kann Claude Ihre freenet.de-E-Mails lesen, suchen, senden, beantworten, planen und ordnen. Dieselbe Verbindung funktioniert in Cursor, ChatGPT und anderen MCP-Clients. Zuerst muss der Client-Zugriff im Postfach aktiviert werden."
     },
     {
-      "q": "Wie lauten die IMAP- und SMTP-Einstellungen von freenet?",
-      "a": "Beide lauten mx.freenet.de. IMAP nutzt Port 993 mit implizitem TLS oder 143 mit STARTTLS, SMTP Port 465 mit implizitem TLS oder 587 mit STARTTLS, mit aktivierter SMTP-Authentifizierung. Der Benutzername ist Ihre vollständige Adresse. Die Hosts wurden am auf dieser Seite angegebenen Datum über eine echte TLS-Verbindung geprüft."
+      "q": "Welchen Server nutzt freenet für IMAP und SMTP?",
+      "a": "Beide lauten mx.freenet.de. freenet nennt zwei Kombinationen: SSL/TLS mit IMAP auf Port 993 und SMTP auf Port 465, oder STARTTLS mit IMAP auf Port 143 und SMTP auf Port 587. Verschlüsselung ist Pflicht, und die SMTP-Authentifizierung muss aktiviert sein. Der Benutzername ist Ihre vollständige Adresse, etwa name@freenet.de. MCP Emails nutzt 993 und 465, und die Hosts wurden am auf dieser Seite angegebenen Datum über eine echte TLS-Verbindung geprüft."
     },
     {
       "q": "Warum lehnt freenet mein Passwort im Mailprogramm ab?",
@@ -83,7 +83,7 @@
     },
     {
       "q": "Vergibt freenet App-Passwörter?",
-      "a": "Nein. Es gibt kein anwendungsspezifisches Passwort zum Anlegen. Ein Client meldet sich mit dem Passwort des freenet Mail Postfachs selbst an, sobald der Client-Zugriff aktiviert ist. Um eine Verbindung zu widerrufen, entfernen Sie den Haken oder ändern das Postfach-Passwort."
+      "a": "freenets Anleitung für Mailprogramme erwähnt kein App-Passwort. Ein Client meldet sich mit Ihrer vollständigen Adresse und dem Passwort des freenet Mail Postfachs selbst an, sobald der Client-Zugriff aktiviert ist. Um eine Verbindung zu widerrufen, entfernen Sie den Haken oder ändern das Postfach-Passwort."
     },
     {
       "q": "Werden meine freenet-E-Mails auf Ihren Servern gespeichert?",
