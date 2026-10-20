@@ -8,6 +8,8 @@ import { linkExperimentSubjectForRequest } from '@/lib/experiments/link-request'
 import { stampAcquisitionSegment } from '@/lib/segment/record-segment';
 import { deviceClassFromHeaders } from '@/lib/acquisition-device.mjs';
 import { shouldStampDeviceOnDashboard, stampAcquisitionDevice } from '@/lib/acquisition-device-stamp';
+import { countryFromHeaders } from '@/lib/acquisition-country.mjs';
+import { stampAcquisitionCountry } from '@/lib/acquisition-country-stamp';
 import { PENDING_INBOX_COLUMNS, selectTolerantly } from '@/lib/approvals/columns';
 import { DashboardApp } from '../../../components/dashboard/App';
 import { pathSegmentToSection } from '../../../components/dashboard/routes';
@@ -706,9 +708,14 @@ export default async function DashboardPage({ params }) {
   // instead and are skipped here. The class is read before the response and
   // written after it; the User-Agent itself is never kept. Gated on an account
   // that is minutes old, owner's workspace only, never overwrites.
+  // The signup country rides along on the same gate and the same request:
+  // Vercel's x-vercel-ip-country, two letters, never the IP itself.
   if (shouldStampDeviceOnDashboard({ provider: user.app_metadata?.provider, userCreatedAt: user.created_at })) {
-    const device = deviceClassFromHeaders(await headers());
+    const requestHeaders = await headers();
+    const device = deviceClassFromHeaders(requestHeaders);
+    const country = countryFromHeaders(requestHeaders);
     after(() => stampAcquisitionDevice(createServiceRoleClient(), { ownerId: user.id, device }));
+    after(() => stampAcquisitionCountry(createServiceRoleClient(), { ownerId: user.id, country }));
   }
 
   // The calling user's role in the ACTIVE workspace (drives role-gated UI).

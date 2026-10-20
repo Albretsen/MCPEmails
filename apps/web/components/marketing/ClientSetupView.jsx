@@ -1,4 +1,5 @@
 import { Link } from '@/i18n/navigation';
+import { withReadingLang } from '@/i18n/reading-lang.mjs';
 import { Nav, Footer } from './Sections';
 import { MIcon } from '../MarketingPrimitives';
 import RichText from './RichText';
@@ -84,7 +85,7 @@ export default function ClientSetupView({ locale, client, content }) {
           */}
           {content.hero.answer && <p className="pricing-page-answer">{content.hero.answer}</p>}
           <div className="hero-cta" style={{ justifyContent: 'center', marginTop: 24 }}>
-            <a className="btn btn-primary btn-lg" href="/signup">{ui.ctaPrimary}</a>
+            <a className="btn btn-primary btn-lg" href={withReadingLang('/signup', locale)}>{ui.ctaPrimary}</a>
             <Link className="btn btn-secondary btn-lg" href="/docs">{ui.ctaSecondary}</Link>
           </div>
           <div className="hero-meta" style={{ justifyContent: 'center' }}>
@@ -268,7 +269,7 @@ export default function ClientSetupView({ locale, client, content }) {
           <h2>{content.ctaBand.title}</h2>
           <p className="sub">{content.ctaBand.sub}</p>
           <div className="hero-cta" style={{ justifyContent: 'center' }}>
-            <a className="btn btn-primary btn-lg" href="/signup">{ui.ctaPrimary}</a>
+            <a className="btn btn-primary btn-lg" href={withReadingLang('/signup', locale)}>{ui.ctaPrimary}</a>
             <Link className="btn btn-secondary btn-lg" href="/docs">{ui.ctaSecondary}</Link>
           </div>
         </div>

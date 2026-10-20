@@ -72,7 +72,7 @@ export default async function BlogPostPage({ params }) {
 
   const t = await getTranslations({ locale, namespace: 'blog' });
   const author = getAuthor(post);
-  const { html, headings } = renderMarkdown(post.content);
+  const { html, headings } = renderMarkdown(post.content, { locale });
   const readingMinutes = readingTime(post.content);
   const path = `/blog/${slug}`;
   const { canonical, canonicalLocale } = buildAlternates(post, locale, path);

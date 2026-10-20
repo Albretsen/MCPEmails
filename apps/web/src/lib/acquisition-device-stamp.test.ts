@@ -186,6 +186,7 @@ test('the dashboard page gates, classifies its own request headers and writes af
     'utf8',
   );
   assert.match(page, /if \(shouldStampDeviceOnDashboard\(\{ provider: user\.app_metadata\?\.provider, userCreatedAt: user\.created_at \}\)\) \{/);
-  assert.match(page, /const device = deviceClassFromHeaders\(await headers\(\)\);/);
+  assert.match(page, /const requestHeaders = await headers\(\);/);
+  assert.match(page, /const device = deviceClassFromHeaders\(requestHeaders\);/);
   assert.match(page, /after\(\(\) => stampAcquisitionDevice\(createServiceRoleClient\(\), \{ ownerId: user\.id, device \}\)\);/);
 });

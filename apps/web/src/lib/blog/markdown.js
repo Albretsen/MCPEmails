@@ -11,6 +11,8 @@
  * paragraphs, and inline bold / italic / code / links.
  */
 
+import { withReadingLang } from '../../i18n/reading-lang.mjs';
+
 /**
  * Slugify heading text into a stable, URL-safe anchor id.
  *
@@ -51,8 +53,15 @@ function escapeHtml(s) {
     .replace(/>/g, '&gt;');
 }
 
-/** Inline formatting: code, bold, italic, links. Operates on escaped text. */
-function inline(text) {
+/**
+ * Inline formatting: code, bold, italic, links. Operates on escaped text.
+ *
+ * `locale` is the language of the post being rendered. A link to /signup or
+ * /login in a translated post carries it (`/signup?lang=fr`), so the form and
+ * the dashboard open in the language the reader was reading. Other links are
+ * left exactly as written.
+ */
+function inline(text, locale) {
   let out = escapeHtml(text);
   // inline code first so its contents aren't touched by other rules
   out = out.replace(/`([^`]+)`/g, (_m, c) => `<code>${c}</code>`);
@@ -65,7 +74,11 @@ function inline(text) {
   out = out.replace(/\[([^\]]+)\]\(([^)\s]+)\)/g, (_m, label, href) => {
     const ext = /^https?:\/\//.test(href);
     const rel = ext ? ' target="_blank" rel="noopener noreferrer"' : '';
-    return `<a href="${href}"${rel}>${label}</a>`;
+    // href is already HTML-escaped: undo the &amp; to edit the query, redo it after.
+    const target = ext
+      ? href
+      : withReadingLang(href.replace(/&amp;/g, '&'), locale).replace(/&/g, '&amp;');
+    return `<a href="${target}"${rel}>${label}</a>`;
   });
   // bold then italic
   out = out.replace(/\*\*([^*]+)\*\*/g, '<strong>$1</strong>');
@@ -75,16 +88,18 @@ function inline(text) {
 
 /**
  * Render markdown to an HTML string and collect headings for a table of
- * contents. Returns { html, headings: [{ id, text, level }] }.
+ * contents. Returns { html, headings: [{ id, text, level }] }. Pass the post's
+ * `locale` so signup and login links keep the reader's language.
  */
-export function renderMarkdown(markdown) {
+export function renderMarkdown(markdown, { locale } = {}) {
+  const inl = (text) => inline(text, locale);
   const lines = markdown.replace(/\r\n/g, '\n').split('\n');
   const html = [];
   const headings = [];
   let i = 0;
 
   const flushParagraph = (buf) => {
-    if (buf.length) html.push(`<p>${inline(buf.join(' '))}</p>`);
+    if (buf.length) html.push(`<p>${inl(buf.join(' '))}</p>`);
     return [];
   };
 
@@ -128,7 +143,7 @@ export function renderMarkdown(markdown) {
       const text = h[2].trim();
       const id = uniqueId(text);
       if (level === 2 || level === 3) headings.push({ id, text, level });
-      html.push(`<h${level} id="${id}">${inline(text)}</h${level}>`);
+      html.push(`<h${level} id="${id}">${inl(text)}</h${level}>`);
       i++;
       continue;
     }
@@ -149,7 +164,7 @@ export function renderMarkdown(markdown) {
         quote.push(lines[i].replace(/^>\s?/, ''));
         i++;
       }
-      html.push(`<blockquote>${inline(quote.join(' '))}</blockquote>`);
+      html.push(`<blockquote>${inl(quote.join(' '))}</blockquote>`);
       continue;
     }
 
@@ -161,7 +176,7 @@ export function renderMarkdown(markdown) {
         items.push(lines[i].replace(/^\s*[-*]\s+/, ''));
         i++;
       }
-      html.push(`<ul>${items.map((it) => `<li>${inline(it)}</li>`).join('')}</ul>`);
+      html.push(`<ul>${items.map((it) => `<li>${inl(it)}</li>`).join('')}</ul>`);
       continue;
     }
 
@@ -177,7 +192,7 @@ export function renderMarkdown(markdown) {
         i++;
       }
       const startAttr = start === 1 ? '' : ` start="${start}"`;
-      html.push(`<ol${startAttr}>${items.map((it) => `<li>${inline(it)}</li>`).join('')}</ol>`);
+      html.push(`<ol${startAttr}>${items.map((it) => `<li>${inl(it)}</li>`).join('')}</ol>`);
       continue;
     }
 
@@ -192,7 +207,7 @@ export function renderMarkdown(markdown) {
     const img = line.match(/^!\[([^\]]*)\]\(([^)\s]+)\)\s*$/);
     if (img) {
       paragraph = flushParagraph(paragraph);
-      const caption = img[1] ? `<figcaption>${inline(img[1])}</figcaption>` : '';
+      const caption = img[1] ? `<figcaption>${inl(img[1])}</figcaption>` : '';
       html.push(
         `<figure><img src="${img[2]}" alt="${img[1]}" loading="lazy" decoding="async" />${caption}</figure>`,
       );

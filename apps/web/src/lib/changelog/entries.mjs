@@ -44,6 +44,13 @@ export const KINDS = ['added', 'improved', 'fixed', 'changed'];
 export const ENTRIES = [
   /* ── October 2026 ──────────────────────────────────────────── */
   {
+    date: '2026-10-20',
+    kind: 'improved',
+    title: 'Sign up in the language you were reading',
+    body:
+      'Signing up or signing in from a French, Spanish, Norwegian or Chinese page now opens the form and your dashboard in that language, including after signing in with Google or GitHub. You can still change the language in Settings.',
+  },
+  {
     date: '2026-10-18',
     kind: 'added',
     title: 'Send As for IMAP inboxes',

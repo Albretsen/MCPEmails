@@ -12,6 +12,7 @@ import { pricingUpgradeHref } from '@/lib/billing/upgrade-intent.mjs';
 import { PLANS as CATALOGUE } from '@/lib/stripe/plans';
 import { formatPriceCents } from '@/lib/stripe/annual-offer';
 import { SupportHelpLink } from '../support/SupportHelpLink';
+import { withReadingLang } from '@/i18n/reading-lang.mjs';
 
 // Rich-text tag handlers shared across sections (inline code + bold).
 const RICH = {
@@ -22,6 +23,9 @@ const RICH = {
 export function Nav({ onSignIn, onGetStarted, user }) {
   const t = useTranslations('home');
   const tc = useTranslations('compare');
+  // /signup and /login are not localized by URL: say which language this page
+  // was in, so the form and the dashboard after it open in that language.
+  const locale = useLocale();
   const [mobileOpen, setMobileOpen] = useState(false);
   const menuId = 'mobile-nav-menu';
 
@@ -59,8 +63,8 @@ export function Nav({ onSignIn, onGetStarted, user }) {
             </>
           ) : (
             <>
-              <a className="btn btn-ghost" onClick={onSignIn} href="/login">{t('nav.signIn')}</a>
-              <a className="btn btn-primary" onClick={onGetStarted} href="/signup">{t('nav.getStarted')}</a>
+              <a className="btn btn-ghost" onClick={onSignIn} href={withReadingLang('/login', locale)}>{t('nav.signIn')}</a>
+              <a className="btn btn-primary" onClick={onGetStarted} href={withReadingLang('/signup', locale)}>{t('nav.getStarted')}</a>
             </>
           )}
         </div>
@@ -97,8 +101,8 @@ export function Nav({ onSignIn, onGetStarted, user }) {
               <a className="btn btn-primary" href="/dashboard" onClick={closeMenu}>{t('nav.dashboard')}</a>
             ) : (
               <>
-                <a className="btn btn-ghost" href="/login" onClick={() => { onSignIn?.(); closeMenu(); }}>{t('nav.signIn')}</a>
-                <a className="btn btn-primary" href="/signup" onClick={() => { onGetStarted?.(); closeMenu(); }}>{t('nav.getStarted')}</a>
+                <a className="btn btn-ghost" href={withReadingLang('/login', locale)} onClick={() => { onSignIn?.(); closeMenu(); }}>{t('nav.signIn')}</a>
+                <a className="btn btn-primary" href={withReadingLang('/signup', locale)} onClick={() => { onGetStarted?.(); closeMenu(); }}>{t('nav.getStarted')}</a>
               </>
             )}
           </div>
@@ -112,6 +116,7 @@ export function Nav({ onSignIn, onGetStarted, user }) {
 
 export function HeroTextBlock({ onGetStarted }) {
   const t = useTranslations('home');
+  const locale = useLocale();
   return (
     <div>
       {/* The kicker is part of the H1 on purpose: it is the one place the page
@@ -125,7 +130,7 @@ export function HeroTextBlock({ onGetStarted }) {
       </h1>
       <p className="lead">{t('hero.lead')}</p>
       <div className="hero-cta">
-        <MBtn variant="primary" size="lg" icon="arrow" href="/signup" onClick={onGetStarted}>{t('hero.ctaPrimary')}</MBtn>
+        <MBtn variant="primary" size="lg" icon="arrow" href={withReadingLang('/signup', locale)} onClick={onGetStarted}>{t('hero.ctaPrimary')}</MBtn>
         <Link className="btn btn-secondary btn-lg" href="/docs">{t('hero.ctaSecondary')}</Link>
       </div>
       <div className="hero-meta">
@@ -1102,6 +1107,7 @@ export function Quote() {
  */
 export function Pricing({ onGetStarted, stripePrices }) {
   const t = useTranslations('home');
+  const locale = useLocale();
   // Static, non-translated attributes per tier. `msgKey` indexes the message
   // bundle; `priceKey` indexes the live Stripe prices map (Business is `pro` there).
   // Paid links intentionally go through /signup even for signed-in visitors.
@@ -1123,10 +1129,10 @@ export function Pricing({ onGetStarted, stripePrices }) {
   // Watch the ids: `solo` is sold as "Pro" and `pro` is sold as "Business".
   // `personal` is the only id that matches its own display name.
   const allTiers = [
-    { msgKey: 'free',     priceKey: 'free',     per: t('pricing.perForever'), accent: false, ctaHref: '/signup' },
-    { msgKey: 'personal', priceKey: 'personal', per: t('pricing.perMonth'),   accent: false, ctaHref: pricingUpgradeHref('personal', false, false) },
-    { msgKey: 'solo',     priceKey: 'solo',     per: t('pricing.perMonth'),   accent: true,  ctaHref: pricingUpgradeHref('solo', false, false) },
-    { msgKey: 'business', priceKey: 'pro',      per: t('pricing.perMonth'),   accent: false, ctaHref: pricingUpgradeHref('pro', false, false) },
+    { msgKey: 'free',     priceKey: 'free',     per: t('pricing.perForever'), accent: false, ctaHref: withReadingLang('/signup', locale) },
+    { msgKey: 'personal', priceKey: 'personal', per: t('pricing.perMonth'),   accent: false, ctaHref: withReadingLang(pricingUpgradeHref('personal', false, false), locale) },
+    { msgKey: 'solo',     priceKey: 'solo',     per: t('pricing.perMonth'),   accent: true,  ctaHref: withReadingLang(pricingUpgradeHref('solo', false, false), locale) },
+    { msgKey: 'business', priceKey: 'pro',      per: t('pricing.perMonth'),   accent: false, ctaHref: withReadingLang(pricingUpgradeHref('pro', false, false), locale) },
   ];
 
   const tiers = allTiers;

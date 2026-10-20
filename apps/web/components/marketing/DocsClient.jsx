@@ -1,10 +1,11 @@
 'use client';
 
 import { useState } from 'react';
-import { useTranslations } from 'next-intl';
+import { useTranslations, useLocale } from 'next-intl';
 import { Link } from '@/i18n/navigation';
 import { Nav, Footer } from './Sections';
 import { MIcon } from '../MarketingPrimitives';
+import { withReadingLang } from '@/i18n/reading-lang.mjs';
 
 // Rich-text tag handlers shared across this page (inline code + bold).
 const RICH = {
@@ -944,6 +945,7 @@ function ClientTabs() {
 
 function QuickstartStep({ step }) {
   const t = useTranslations('docs');
+  const locale = useLocale();
   const base = `quickstart.steps.${step.id}`;
   return (
     <div className="docs-step">
@@ -957,7 +959,7 @@ function QuickstartStep({ step }) {
         {step.tabs && <ClientTabs />}
         {step.code && <CodeBlock code={step.code} />}
         {step.cta && (
-          <a className="btn btn-primary" href={step.cta.href} style={{ marginTop: 16 }}>
+          <a className="btn btn-primary" href={withReadingLang(step.cta.href, locale)} style={{ marginTop: 16 }}>
             {t(`${base}.cta`)}
           </a>
         )}
@@ -1064,6 +1066,7 @@ function ToolSection({ tool }) {
 
 export default function DocsClient() {
   const t = useTranslations('docs');
+  const locale = useLocale();
   return (
     <div>
       <Nav />
@@ -1496,7 +1499,7 @@ export default function DocsClient() {
             {t('cta.sub')}
           </p>
           <div className="pricing-cta-btns">
-            <a className="btn btn-primary btn-lg" href="/signup">{t('cta.primary')}</a>
+            <a className="btn btn-primary btn-lg" href={withReadingLang('/signup', locale)}>{t('cta.primary')}</a>
             <Link className="btn btn-on-dark btn-lg" href="/pricing">{t('cta.secondary')}</Link>
           </div>
         </div>

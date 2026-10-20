@@ -104,6 +104,15 @@ test('the locales under test are the ones the site routes', () => {
   assert.equal(routing.localePrefix, 'as-needed');
 });
 
+/**
+ * The signup href a page in `locale` gives `slug`: the provider, plus the
+ * page's language on a translated page so the form opens in it
+ * (src/i18n/reading-lang.mjs). English adds nothing.
+ */
+function expectedHref(locale, slug) {
+  return locale === 'en' ? `/signup?provider=${slug}` : `/signup?provider=${slug}&lang=${locale}`;
+}
+
 for (const locale of LOCALES) {
   test(`${locale}: /connect/ionos sends both signup buttons to /signup?provider=ionos`, async () => {
     const ionos = PROVIDERS.find((p) => p.slug === 'ionos');
@@ -111,7 +120,7 @@ for (const locale of LOCALES) {
     assert.equal(anchors.length, 2, 'the hero and the closing band each have one signup button');
     const label = messagesFor(locale).cta.primary.replace('{provider}', ionos.name);
     for (const a of anchors) {
-      assert.equal(a.href, '/signup?provider=ionos');
+      assert.equal(a.href, expectedHref(locale, 'ionos'));
       assert.equal(a.text, label);
       // A plain anchor: no locale prefix is ever added to it.
       assert.equal(a.intlLink, false);
@@ -129,7 +138,8 @@ test('every released provider page carries its own slug, identically in every lo
       const anchors = await signupAnchors(locale, provider);
       assert.equal(anchors.length, 2, `${locale}/${provider.slug}`);
       for (const a of anchors) {
-        assert.equal(a.href, `/signup?${CONNECT_INTENT_PARAM}=${provider.slug}`, `${locale}/${provider.slug}`);
+        assert.equal(CONNECT_INTENT_PARAM, 'provider');
+        assert.equal(a.href, expectedHref(locale, provider.slug), `${locale}/${provider.slug}`);
         assert.equal(a.intlLink, false, `${locale}/${provider.slug}`);
       }
       pages += 1;
@@ -154,5 +164,5 @@ test('the slug is the only thing the link carries, and it needs no escaping', ()
 test('no bare /signup is left on the page for the hint to be lost through', () => {
   const source = readFileSync(new URL('./ConnectProviderView.jsx', import.meta.url), 'utf8');
   assert.equal(source.match(/href="\/signup"/g), null);
-  assert.equal(source.match(/href=\{`\/signup\?provider=\$\{provider\.slug\}`\}/g)?.length, 2);
+  assert.equal(source.match(/href=\{withReadingLang\(`\/signup\?provider=\$\{provider\.slug\}`, locale\)\}/g)?.length, 2);
 });
