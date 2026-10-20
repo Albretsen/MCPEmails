@@ -223,7 +223,7 @@ flowchart LR
 - **The Postgres database** stores workspaces, members, inboxes (encrypted tokens/passwords), hashed API keys, OAuth clients, scheduled sends, and an activity log — all guarded by Row‑Level Security.
 - **Cron edge functions** refresh Gmail/Outlook OAuth tokens before expiry.
 
-**Stack:** Next.js 16 (App Router) · React 19 · next‑intl 4 · Supabase (Auth, Postgres, Edge Functions) · Stripe · Resend · TypeScript. Email parsing/sanitization via `mailparser`, `jsdom`, and `isomorphic-dompurify`.
+**Stack:** Next.js 16 (App Router) · React 19 · next‑intl 4 · Supabase (Auth, Postgres, Edge Functions) · Stripe · Resend · TypeScript. Email parsing and sanitization run in the edge functions (`supabase/functions/mcp-server/mime.ts`); signature HTML is sanitized with DOMPurify in the browser and a dependency-free allow-list on the server.
 
 ## Repository layout
 
@@ -239,7 +239,6 @@ flowchart LR
 ├── supabase/
 │   ├── functions/
 │   │   ├── mcp-server/          # the MCP server (tools, auth, scopes)
-│   │   ├── gmail-token-refresh/
 │   │   └── outlook-token-refresh/
 │   └── migrations/              # SQL migrations (schema + RLS)
 └── package.json                 # npm workspaces (apps/*)

@@ -17,7 +17,7 @@
  *     conflates two unrelated things: the 7-day refresh-token expiry applies to
  *     Google Cloud projects left in *Testing* publishing status, which is not
  *     the same as being unverified. Access tokens last an hour and are renewed
- *     by the gmail-token-refresh job; the refresh token behind them is only
+ *     on demand when a call finds one near expiry; the refresh token is only
  *     invalidated when the user revokes access. Production agrees: the oldest
  *     Gmail inbox has been connected and healthy for 82 days, and the only
  *     Gmail inboxes in an error state got there by explicit revocation.

@@ -343,11 +343,11 @@ Reads, writes, or both: **both**.
 
 | Field | Answer |
 | --- | --- |
-| Company name | Albretsen Consulting ENK |
+| Company name | Albretsen AS |
 | Website | `https://mcpemails.com` |
 | Primary contact | Asgeir Albretsen, `hello@mcpemails.com` |
 
-Org number 926 646 753, Bergen, Norway, if the form asks for a legal entity.
+Org number 938 702 373 (aksjeselskap), Bergen, Norway, if the form asks for a legal entity. No VAT number until the MVA registration is confirmed.
 
 ### Authentication
 

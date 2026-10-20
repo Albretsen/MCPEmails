@@ -39,6 +39,19 @@ export const IDENTITY_SCOPES = ['openid', 'email'] as const;
 /** The claims the userinfo endpoint can return, in the order OIDC names them. */
 export const SUPPORTED_CLAIMS = ['sub', 'email', 'email_verified'] as const;
 
+/**
+ * Cache-Control for the three OAuth discovery documents.
+ *
+ * Each body depends only on NEXT_PUBLIC_APP_URL, a deploy-time constant, and
+ * on nothing in the request (app/.well-known/discovery-documents.test.ts
+ * proves it), so a shared cache may hold them. `s-maxage` lets Vercel's CDN
+ * answer them without running a function; a deploy purges the CDN, so a
+ * changed document is not served across deploys. Clients still keep their own
+ * copy for one hour, as before.
+ */
+export const DISCOVERY_CACHE_CONTROL =
+  'public, max-age=3600, s-maxage=86400, stale-while-revalidate=604800';
+
 export function issuerBase(): string {
   return process.env.NEXT_PUBLIC_APP_URL ?? 'https://mcpemails.com';
 }
