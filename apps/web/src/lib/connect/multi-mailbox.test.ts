@@ -8,7 +8,7 @@ import { MULTI_MAILBOX_CATEGORIES, multiMailboxFaq, showsMultiMailbox, withProvi
 import { PLANS } from '../stripe/plans.ts';
 
 const here = path.dirname(fileURLToPath(import.meta.url));
-const LOCALES = ['en', 'es', 'fr', 'nb', 'zh'];
+const LOCALES = ['en', 'es', 'fr', 'nb', 'zh', 'de'];
 const copy = (locale: string) =>
   JSON.parse(readFileSync(path.join(here, 'multi-mailbox', `${locale}.json`), 'utf8')) as Record<string, string>;
 

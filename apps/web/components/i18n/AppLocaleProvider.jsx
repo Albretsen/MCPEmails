@@ -27,6 +27,10 @@ import zhDashboard from '../../messages/zh/dashboard.json';
 import zhDashboardChrome from '../../messages/zh/dashboardChrome.json';
 import zhAuth from '../../messages/zh/auth.json';
 import zhCommon from '../../messages/zh/common.json';
+import deDashboard from '../../messages/de/dashboard.json';
+import deDashboardChrome from '../../messages/de/dashboardChrome.json';
+import deAuth from '../../messages/de/auth.json';
+import deCommon from '../../messages/de/common.json';
 
 /**
  * Client-side locale provider for the authenticated app and auth screens.
@@ -60,6 +64,7 @@ const MESSAGES = {
   es: { dashboard: esDashboard, dashboardChrome: esDashboardChrome, auth: esAuth, common: esCommon },
   fr: { dashboard: frDashboard, dashboardChrome: frDashboardChrome, auth: frAuth, common: frCommon },
   zh: { dashboard: zhDashboard, dashboardChrome: zhDashboardChrome, auth: zhAuth, common: zhCommon },
+  de: { dashboard: deDashboard, dashboardChrome: deDashboardChrome, auth: deAuth, common: deCommon },
 };
 
 /**
@@ -93,6 +98,7 @@ function detectBrowserLocale() {
     if (low.startsWith('es')) return 'es';
     if (low.startsWith('fr')) return 'fr';
     if (low.startsWith('zh')) return 'zh';
+    if (low.startsWith('de')) return 'de';
     if (low.startsWith('en')) return 'en';
   }
   return routing.defaultLocale;

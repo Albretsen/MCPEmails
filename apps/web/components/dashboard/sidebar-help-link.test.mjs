@@ -84,7 +84,7 @@ test('Norwegian app locale: the link goes to /nb/help with the Norwegian label',
 });
 
 test('every locale has a non-empty navHelp label with no literal "<"', async () => {
-  for (const l of ['en', 'nb', 'es', 'fr', 'zh']) {
+  for (const l of ['en', 'nb', 'es', 'fr', 'zh', 'de']) {
     const m = (await import(`../../messages/${l}/dashboardChrome.json`, { with: { type: 'json' } })).default;
     for (const v of [m.sidebar.navHelp, m.connect.errorContactSupport]) {
       assert.equal(typeof v === 'string' && v.trim().length > 0, true, `${l} label present`);

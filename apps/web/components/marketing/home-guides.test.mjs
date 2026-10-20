@@ -34,7 +34,7 @@ const { NextIntlClientProvider } = await import('next-intl');
 const { renderToStaticMarkup } = await import('react-dom/server');
 const { WhatIs } = await import('./Sections.jsx');
 
-const LOCALES = ['en', 'nb', 'es', 'fr', 'zh'];
+const LOCALES = ['en', 'nb', 'es', 'fr', 'zh', 'de'];
 const GUIDES = [
   ['/blog/connect-claude-to-email', 'guideClaude'],
   ['/blog/connect-chatgpt-to-email', 'guideChatgpt'],

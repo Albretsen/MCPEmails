@@ -14,7 +14,7 @@ import assert from 'node:assert/strict';
 const HERE = dirname(fileURLToPath(import.meta.url));
 const DEMO_DIR = join(HERE, '..', '..', '..', 'public', 'demo');
 
-const LOCALES = ['en', 'es', 'fr', 'nb', 'zh'];
+const LOCALES = ['en', 'es', 'fr', 'nb', 'zh', 'de'];
 const REFERENCE = 'en';
 
 function read(locale) {

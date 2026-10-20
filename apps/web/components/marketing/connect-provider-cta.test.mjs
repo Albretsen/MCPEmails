@@ -99,7 +99,7 @@ async function signupAnchors(locale, provider) {
 }
 
 test('the locales under test are the ones the site routes', () => {
-  assert.deepEqual([...LOCALES], ['en', 'nb', 'es', 'fr', 'zh']);
+  assert.deepEqual([...LOCALES], ['en', 'nb', 'es', 'fr', 'zh', 'de']);
   assert.equal(routing.defaultLocale, 'en');
   assert.equal(routing.localePrefix, 'as-needed');
 });

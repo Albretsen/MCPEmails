@@ -256,7 +256,56 @@ const zh = {
   termsLabel: '服务条款',
 };
 
-export const WITHDRAWAL_COPY = { en, nb, es, fr, zh };
+const de = {
+  meta: {
+    title: 'Widerrufsrecht',
+    description:
+      'So widerrufen Sie ein Abonnement für MCP Emails innerhalb von 14 Tagen, welche Erstattung Sie erhalten, und ein Muster-Widerrufsformular.',
+  },
+  eyebrow: 'Rechtliches',
+  title: 'Widerrufsrecht',
+  lead:
+    'Wenn Sie Verbraucher sind, können Sie ein neues Abonnement für MCP Emails innerhalb von 14 Tagen ohne Angabe von Gründen widerrufen. Unten finden Sie die Widerrufsbelehrung und ein Formular zum Kopieren.',
+  notice: {
+    h: 'Widerrufsbelehrung',
+    paras: [
+      'Sie haben das Recht, binnen 14 Tagen ohne Angabe von Gründen diesen Vertrag zu widerrufen.',
+      'Die Widerrufsfrist beträgt 14 Tage ab dem Tag des Vertragsabschlusses, also dem Tag, an dem Sie den Bezahlvorgang abgeschlossen haben.',
+      'Um Ihr Widerrufsrecht auszuüben, müssen Sie uns ({entity}, {address}, {email}) mittels einer eindeutigen Erklärung (z. B. eine E-Mail) über Ihren Entschluss, diesen Vertrag zu widerrufen, informieren. Sie können dafür das Online-Formular unter {cancelLink} oder das unten stehende Muster-Widerrufsformular verwenden, das jedoch nicht vorgeschrieben ist.',
+      'Zur Wahrung der Widerrufsfrist reicht es aus, dass Sie die Mitteilung über die Ausübung des Widerrufsrechts vor Ablauf der Widerrufsfrist absenden.',
+    ],
+  },
+  effects: {
+    h: 'Folgen des Widerrufs',
+    paras: [
+      'Wenn Sie diesen Vertrag widerrufen, haben wir Ihnen alle Zahlungen, die wir von Ihnen erhalten haben, unverzüglich und spätestens binnen 14 Tagen ab dem Tag zurückzuzahlen, an dem die Mitteilung über Ihren Widerruf dieses Vertrags bei uns eingegangen ist. Für diese Rückzahlung verwenden wir dasselbe Zahlungsmittel, das Sie bei der ursprünglichen Transaktion eingesetzt haben, es sei denn, mit Ihnen wurde ausdrücklich etwas anderes vereinbart. In keinem Fall werden Ihnen wegen dieser Rückzahlung Entgelte berechnet.',
+      'Ihr Tarif beginnt, sobald der Bezahlvorgang abgeschlossen ist. Die Leistung beginnt also während der Widerrufsfrist. Wir erstatten die erste Zahlung trotzdem vollständig, wie in Abschnitt 5.4 unserer {terms} zugesagt, und berechnen nichts für die Tage, an denen Sie den Dienst genutzt haben.',
+    ],
+  },
+  form: {
+    h: 'Muster-Widerrufsformular',
+    intro: 'Wenn Sie den Vertrag widerrufen wollen, dann füllen Sie bitte dieses Formular aus und senden Sie es zurück.',
+    lines: [
+      'An: {entity}, {address}, {email}',
+      'Hiermit widerrufe ich den von mir abgeschlossenen Vertrag über die Erbringung der folgenden Dienstleistung: Abonnement für MCP Emails (Tarif: ______)',
+      'Bestellt am: ______',
+      'Name des Verbrauchers: ______',
+      'Anschrift des Verbrauchers: ______',
+      'E-Mail-Adresse des Kontos bei MCP Emails: ______',
+      'Unterschrift des Verbrauchers (nur bei Mitteilung auf Papier): ______',
+      'Datum: ______',
+    ],
+  },
+  cancelling: {
+    h: 'Kündigung zu jedem anderen Zeitpunkt',
+    para:
+      'Sie können jederzeit kündigen, innerhalb oder außerhalb der 14 Tage. Die Kündigung beendet die nächste Verlängerung, und Ihr Tarif bleibt bis zum Ende des bereits bezahlten Zeitraums aktiv. Kündigen Sie im Dashboard oder ohne Anmeldung unter {cancelLink}.',
+  },
+  cta: 'Online widerrufen',
+  termsLabel: 'Nutzungsbedingungen',
+};
+
+export const WITHDRAWAL_COPY = { en, nb, es, fr, zh, de };
 
 export function withdrawalCopy(locale) {
   return WITHDRAWAL_COPY[locale] ?? en;
