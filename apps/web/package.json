@@ -106,6 +106,7 @@
     "test:connect-multi-mailbox": "node --test --experimental-strip-types --import ./scripts/register-ts-alias.mjs src/lib/connect/multi-mailbox.test.ts",
     "test:marketing-consent": "node --test src/lib/marketing-consent.test.mjs",
     "test:connect-intent-auth-ui": "node --test --experimental-strip-types --experimental-test-module-mocks --import ./scripts/register-dom-tests.mjs components/auth/connect-intent-auth-ui.test.mjs",
+    "test:microsoft-button-ui": "node --test --experimental-strip-types --experimental-test-module-mocks --import ./scripts/register-dom-tests.mjs components/auth/microsoft-button-ui.test.mjs",
     "test:authorize-viewer-ui": "node --test --experimental-strip-types --experimental-test-module-mocks --import ./scripts/register-dom-tests.mjs components/auth/authorize-viewer-ui.test.mjs",
     "test:signup-consent-ui": "node --test --experimental-strip-types --experimental-test-module-mocks --import ./scripts/register-dom-tests.mjs components/auth/signup-consent-ui.test.mjs",
     "test:locale-policy": "node --test src/i18n/locale-policy.test.mjs",

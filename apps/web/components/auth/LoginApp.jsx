@@ -13,6 +13,7 @@ import {
 } from '@/lib/connect/intent-carry.mjs';
 import { MIcon, MBtn } from '../MarketingPrimitives';
 import { ThemeBtn, Spinner, GoogleIcon, GitHubIcon, MicrosoftIcon, SocialButton, OrDivider } from './AuthShared';
+import { microsoftSignInEnabled } from '@/lib/auth/microsoft-flag.mjs';
 
 export function LoginApp({ redirectTo = null, connectProvider = null }) {
   const t = useTranslations('auth');
@@ -186,13 +187,15 @@ export function LoginApp({ redirectTo = null, connectProvider = null }) {
         onClick={handleGoogleSignIn}
         disabled={anyBusy}
       />
-      <SocialButton
-        icon={<MicrosoftIcon />}
-        label={t('shared.signInWithMicrosoft')}
-        loading={socialLoading === 'microsoft'}
-        onClick={handleMicrosoftSignIn}
-        disabled={anyBusy}
-      />
+      {microsoftSignInEnabled() && (
+        <SocialButton
+          icon={<MicrosoftIcon />}
+          label={t('shared.signInWithMicrosoft')}
+          loading={socialLoading === 'microsoft'}
+          onClick={handleMicrosoftSignIn}
+          disabled={anyBusy}
+        />
+      )}
       <SocialButton
         icon={<GitHubIcon />}
         label={t('shared.continueWithGitHub')}
