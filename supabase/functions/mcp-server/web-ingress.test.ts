@@ -13,6 +13,10 @@ import {
   discoveryChallenge,
   handleWebIngress,
   isWebIngress,
+  JSON_ONLY_DEADLINE_MS,
+  JSONRPC_UPSTREAM_TIMEOUT,
+  STILL_RUNNING_MESSAGE,
+  streamedPayload,
   WEB_CORS_HEADERS,
 } from "./web-ingress.ts";
 
@@ -243,6 +247,117 @@ Deno.test("a slow call from a JSON-only client stays JSON", async () => {
   );
   assertEquals(res.headers.get("content-type"), "application/json");
   assertEquals((await res.json()).id, 1);
+});
+
+Deno.test("the JSON-only deadline is under Vercel's 120 s first-byte limit", () => {
+  assert(JSON_ONLY_DEADLINE_MS <= 110_000);
+  assert(JSON_ONLY_DEADLINE_MS > 90_000);
+});
+
+/** Install `EdgeRuntime.waitUntil` for one test and hand back what it was given. */
+function withWaitUntil(): { kept: Promise<unknown>[]; restore: () => void } {
+  const g = globalThis as { EdgeRuntime?: unknown };
+  const before = g.EdgeRuntime;
+  const kept: Promise<unknown>[] = [];
+  g.EdgeRuntime = { waitUntil: (p: Promise<unknown>) => void kept.push(p) };
+  return { kept, restore: () => void (g.EdgeRuntime = before) };
+}
+
+Deno.test("a JSON-only call past the deadline gets the old 504 with its id, not a proxy 502", async () => {
+  const rt = withWaitUntil();
+  try {
+    let finished = false;
+    const { seen, inner } = recorder(async () => {
+      await sleep(80);
+      finished = true;
+      return json({ jsonrpc: "2.0", id: "call-7", result: {} });
+    });
+    const body = '{"jsonrpc":"2.0","id":"call-7","method":"tools/call","params":{"name":"email_organize",' +
+      '"arguments":{"idempotency_key":"k-1"}}}';
+    const res = await handleWebIngress(
+      new Request(URL_WEB, { method: "POST", headers: { Authorization: "Bearer k", Accept: "application/json" }, body }),
+      inner,
+      { appUrl: APP, jsonOnlyDeadlineMs: 15 },
+    );
+    assertEquals(res.status, 504);
+    assertEquals(headersOf(res), { ...CORS, "content-type": "application/json" });
+    const payload = await res.json();
+    assertEquals(payload, {
+      jsonrpc: "2.0",
+      id: "call-7",
+      error: { code: JSONRPC_UPSTREAM_TIMEOUT, message: STILL_RUNNING_MESSAGE },
+    });
+    assert(payload.error.message.includes("may still be running"));
+    assert(payload.error.message.includes("idempotency_key"));
+    // The call was not cancelled: it runs on, kept alive by the runtime.
+    assertEquals(finished, false);
+    assertEquals(rt.kept.length, 1);
+    await rt.kept[0];
+    assertEquals(finished, true);
+    // The server saw the body byte for byte, so its idempotency_key dedupes a retry.
+    assertEquals(seen[0].body, body);
+  } finally {
+    rt.restore();
+  }
+});
+
+Deno.test("a JSON-only call past the deadline with a failing upstream does not leak a rejection", async () => {
+  const rt = withWaitUntil();
+  try {
+    const inner = async () => {
+      await sleep(40);
+      throw new Error("isolate gone");
+    };
+    const res = await handleWebIngress(
+      new Request(URL_WEB, { method: "POST", headers: { Authorization: "Bearer k" }, body: '{"id":2}' }),
+      inner,
+      { appUrl: APP, jsonOnlyDeadlineMs: 5 },
+    );
+    assertEquals(res.status, 504);
+    assertEquals((await res.json()).id, 2);
+    await rt.kept[0];
+  } finally {
+    rt.restore();
+  }
+});
+
+Deno.test("a slow call that upgraded to SSE carries the upstream status and challenge in error.data", async () => {
+  const own = 'Bearer error="insufficient_scope", scope="send:email read:email"';
+  const { inner } = recorder(async () => {
+    await sleep(40);
+    return json({ jsonrpc: "2.0", id: 4, error: { code: -32001, message: "Insufficient scope" } }, 403, {
+      "WWW-Authenticate": own,
+    });
+  });
+  const res = await handleWebIngress(
+    new Request(URL_WEB, { method: "POST", headers: { Authorization: "Bearer k", Accept: "application/json, text/event-stream" }, body: '{"id":4}' }),
+    inner,
+    { appUrl: APP, sseUpgradeAfterMs: 5, heartbeatMs: 1000 },
+  );
+  assertEquals(res.status, 200);
+  const line = (await res.text()).split("\n").find((l) => l.startsWith("data: "))!;
+  assertEquals(JSON.parse(line.slice(6)), {
+    jsonrpc: "2.0",
+    id: 4,
+    error: { code: -32001, message: "Insufficient scope", data: { http_status: 403, www_authenticate: own } },
+  });
+});
+
+Deno.test("streamedPayload: success untouched, non-JSON-RPC error bodies get an envelope with the id", () => {
+  const ok = { jsonrpc: "2.0", id: 1, result: { a: 1 } };
+  assertEquals(streamedPayload(ok, 200, null, 1), ok);
+  assertEquals(streamedPayload({ error: "unauthorized", error_description: "Bearer token required." }, 401, "Bearer x", 9), {
+    jsonrpc: "2.0",
+    id: 9,
+    error: { code: -32001, message: "Bearer token required.", data: { http_status: 401, www_authenticate: "Bearer x" } },
+  });
+  // Existing object data is kept and extended; a scalar data is left alone.
+  assertEquals(
+    streamedPayload({ jsonrpc: "2.0", id: 2, error: { code: 1, message: "m", data: { k: "v" } } }, 500, null, 2),
+    { jsonrpc: "2.0", id: 2, error: { code: 1, message: "m", data: { k: "v", http_status: 500 } } },
+  );
+  const scalar = { jsonrpc: "2.0", id: 3, error: { code: 1, message: "m", data: "x" } };
+  assertEquals(streamedPayload(scalar, 500, null, 3), scalar);
 });
 
 // Wiring: the real handleRequest routes /web through the ingress and leaves

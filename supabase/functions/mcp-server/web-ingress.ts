@@ -19,16 +19,37 @@
  *      A token that was sent and refused also gets `error="invalid_token"`.
  *   3. The old route's CORS headers, byte for byte, on every answer, and its
  *      204 preflight. Other methods get its bare 405, plus `Allow`.
- *   4. Only Content-Type, WWW-Authenticate and CORS leave this path, as before.
+ *   4. The answer is rebuilt with only Content-Type, WWW-Authenticate and
+ *      CORS from this function. That is all this code can control: Supabase's
+ *      gateway and Cloudflare add their own headers after it (sb-project-ref,
+ *      sb-request-id, x-sb-edge-region, x-deno-execution-id, a `__cf_bm`
+ *      cookie scoped to supabase.co) and Vercel passes them on. None carries
+ *      a credential, and the cookie's Domain makes browsers drop it on
+ *      mcpemails.com.
  *
- * And one thing the old route did not need: Vercel gives an external origin
- * 120 seconds to send its first byte, then answers 502 itself. Real calls take
- * longer (search_and_move on a large mailbox, ~100 a month over 120 s). So a
- * call still running after SSE_UPGRADE_AFTER_MS, from a client that accepts
- * `text/event-stream` (every Streamable HTTP client must), is answered as an
- * SSE stream: headers and a comment at once, a comment every HEARTBEAT_MS,
- * then the JSON-RPC response as one `data:` event. Calls that finish sooner
- * are answered exactly as before.
+ * And one thing the old route did not need: Vercel gives an external rewrite
+ * origin 120 seconds to send its first byte, then answers 502 itself
+ * (ROUTER_EXTERNAL_TARGET_ERROR; vercel.com/docs/errors/ROUTER_EXTERNAL_TARGET_ERROR
+ * and the changelog "CDN origin timeout increased to two minutes"). Once
+ * a byte is out, the origin may keep streaming as long as it sends something
+ * at least every 120 s. Real calls take longer (search_and_move on a large
+ * mailbox, ~100 a month over 120 s). So:
+ *
+ *   - A call still running after SSE_UPGRADE_AFTER_MS, from a client that
+ *     accepts `text/event-stream` (every Streamable HTTP client must), is
+ *     answered as an SSE stream: headers and a comment at once, a comment
+ *     every HEARTBEAT_MS, then the JSON-RPC response as one `data:` event.
+ *     The HTTP status is already 200 by then, so an upstream error status
+ *     and challenge travel inside the JSON-RPC error's `data` instead.
+ *   - A client that only takes JSON cannot be kept waiting past 120 s. After
+ *     JSON_ONLY_DEADLINE_MS it gets the old route's timeout answer (504,
+ *     JSON-RPC -32001, the request id, "may still be running") instead of a
+ *     bare Vercel 502, and the call keeps running to completion. The text
+ *     says not to repeat a write blindly: a retry with the same
+ *     idempotency_key is deduplicated by the server (it answers "in
+ *     progress" or replays the result), one without it could act twice.
+ *
+ * Calls that finish sooner are answered exactly as before.
  */
 
 import { clientLabel } from "./client-label.ts";
@@ -48,6 +69,32 @@ export const FIRST_CONSENT_SCOPE = "read:email";
 
 export const SSE_UPGRADE_AFTER_MS = 90_000;
 export const HEARTBEAT_MS = 15_000;
+/** Under Vercel's 120 s first-byte limit, with room for the Supabase gateway
+ * and the Vercel hop on the way out. */
+export const JSON_ONLY_DEADLINE_MS = 105_000;
+
+/** The removed route's JSON-RPC code for "upstream did not answer in time". */
+export const JSONRPC_UPSTREAM_TIMEOUT = -32001;
+
+/**
+ * The old route's 504 text ("did not respond in time. The operation may
+ * still be running"), with its "retry in a moment" made safe for writes.
+ */
+export const STILL_RUNNING_MESSAGE =
+  "Upstream MCP server did not respond in time. The operation may still be running. " +
+  "Do not repeat a send, move or delete blindly: retry with the same idempotency_key, " +
+  "or check the mailbox first.";
+
+/** Keep the isolate alive for a call whose answer the client no longer waits for. */
+function keepRunning(pending: Promise<unknown>): void {
+  const settled = pending.catch(() => {});
+  const runtime = (globalThis as { EdgeRuntime?: { waitUntil?: (p: Promise<unknown>) => void } }).EdgeRuntime;
+  try {
+    runtime?.waitUntil?.(settled);
+  } catch {
+    // The call is already running; losing the keep-alive only risks a cut-off tail.
+  }
+}
 
 /** True when the request arrived through the mcpemails.com rewrite. */
 export function isWebIngress(req: Request): boolean {
@@ -70,6 +117,7 @@ export interface WebIngressOptions {
   appUrl: string;
   sseUpgradeAfterMs?: number;
   heartbeatMs?: number;
+  jsonOnlyDeadlineMs?: number;
 }
 
 /** JSON-RPC id of a body, or null (batch, notification, unparsable). */
@@ -135,28 +183,78 @@ export async function handleWebIngress(
   const pending = inner(forwarded);
   const wantsStream = (req.headers.get("accept") ?? "").toLowerCase().includes("text/event-stream");
   const rejected = discoveryChallenge(opts.appUrl, true);
-  if (!wantsStream) {
-    // Past 120 s Vercel answers 502 for us and this client cannot take the
-    // SSE upgrade. Logged so the size of that group can be read, not guessed.
-    const started = Date.now();
-    const res = await pending;
-    const ms = Date.now() - started;
-    if (ms > 110_000) {
-      console.warn("[mcp-server] web_ingress_slow_json_only", { ms, client: clientLabel(req.headers.get("user-agent")) });
-    }
-    return dress(res, rejected);
-  }
-
-  const upgradeAfter = opts.sseUpgradeAfterMs ?? SSE_UPGRADE_AFTER_MS;
+  const waitMs = wantsStream
+    ? opts.sseUpgradeAfterMs ?? SSE_UPGRADE_AFTER_MS
+    : opts.jsonOnlyDeadlineMs ?? JSON_ONLY_DEADLINE_MS;
   let timer: ReturnType<typeof setTimeout> | undefined;
   const late = new Promise<"late">((resolve) => {
-    timer = setTimeout(() => resolve("late"), upgradeAfter);
+    timer = setTimeout(() => resolve("late"), waitMs);
   });
   const first = await Promise.race([pending, late]);
   clearTimeout(timer);
   if (first !== "late") return dress(first, rejected);
 
-  return upgradeToStream(pending, requestIdOf(body), opts.heartbeatMs ?? HEARTBEAT_MS);
+  keepRunning(pending);
+  const requestId = requestIdOf(body);
+  if (wantsStream) {
+    return upgradeToStream(pending, requestId, opts.heartbeatMs ?? HEARTBEAT_MS);
+  }
+
+  // This client cannot take the SSE upgrade, and past 120 s Vercel would
+  // answer a bare 502 for us. Answer as the old route did on its timeout.
+  console.warn("[mcp-server] web_ingress_json_only_deadline", {
+    ms: waitMs,
+    jsonrpc_id_present: requestId !== null,
+    client: clientLabel(req.headers.get("user-agent")),
+  });
+  return new Response(
+    JSON.stringify({
+      jsonrpc: "2.0",
+      id: requestId,
+      error: { code: JSONRPC_UPSTREAM_TIMEOUT, message: STILL_RUNNING_MESSAGE },
+    }),
+    { status: 504, headers: { ...WEB_CORS_HEADERS, "Content-Type": "application/json" } },
+  );
+}
+
+/**
+ * After the SSE upgrade the status line is already 200, so an upstream error
+ * status and its WWW-Authenticate challenge would be lost. Carry them in the
+ * JSON-RPC error's `data`, and give a non-JSON-RPC error body (for example a
+ * bare `{"error": ...}`) a JSON-RPC envelope with the request id so the client
+ * can match it.
+ */
+export function streamedPayload(
+  parsed: unknown,
+  status: number,
+  wwwAuthenticate: string | null,
+  requestId: string | number | null,
+): unknown {
+  if (status < 400) return parsed;
+  const extra: Record<string, unknown> = { http_status: status };
+  if (wwwAuthenticate) extra.www_authenticate = wwwAuthenticate;
+  const obj = parsed && typeof parsed === "object" && !Array.isArray(parsed)
+    ? parsed as Record<string, unknown>
+    : null;
+  if (obj?.jsonrpc === "2.0") {
+    const error = obj.error;
+    if (!error || typeof error !== "object" || Array.isArray(error)) return parsed;
+    const err = error as Record<string, unknown>;
+    if (err.data !== undefined && (typeof err.data !== "object" || err.data === null || Array.isArray(err.data))) {
+      return parsed;
+    }
+    return { ...obj, error: { ...err, data: { ...(err.data as Record<string, unknown> | undefined), ...extra } } };
+  }
+  const description = typeof obj?.error_description === "string"
+    ? obj.error_description
+    : typeof obj?.error === "string"
+    ? obj.error
+    : "Request failed.";
+  return {
+    jsonrpc: "2.0",
+    id: requestId,
+    error: { code: status === 401 || status === 403 ? -32001 : -32603, message: description, data: extra },
+  };
 }
 
 /** Rebuild the response with exactly the headers the old route sent. */
@@ -206,7 +304,9 @@ function upgradeToStream(
           const text = await res.text();
           let data: string;
           try {
-            data = JSON.stringify(JSON.parse(text));
+            data = JSON.stringify(
+              streamedPayload(JSON.parse(text), res.status, res.headers.get("www-authenticate"), requestId),
+            );
           } catch {
             data = JSON.stringify({
               jsonrpc: "2.0",
