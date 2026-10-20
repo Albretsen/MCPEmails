@@ -158,6 +158,18 @@ function readStored() {
 }
 
 /**
+ * The app-realm language the provider settles on (stored choice, else browser
+ * language), read directly rather than from context. For code that runs in a
+ * child's mount effect, which fires before the provider's own effect has moved
+ * `locale` off the default: the dashboard's ?upgrade= checkout is one. Server:
+ * the default locale.
+ */
+export function preferredAppLocale() {
+  if (typeof window === 'undefined') return routing.defaultLocale;
+  return readStored() ?? detectBrowserLocale();
+}
+
+/**
  * Starts fetching the visitor's preferred language as soon as a wrapper module
  * runs in the browser, so it is usually there by the time the provider's
  * effect asks for it. Server: no-op.

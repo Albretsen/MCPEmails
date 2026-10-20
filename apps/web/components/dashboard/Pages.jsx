@@ -4,7 +4,7 @@ import { useState, useEffect, useRef } from 'react';
 import { useTranslations } from 'next-intl';
 import { trackProductEvent, scopeProfile } from '@/lib/analytics.mjs';
 import { Icon, Badge, Btn, Avatar, ProviderLogo } from '../Primitives';
-import { useAppLocale } from '../i18n/AppLocaleProvider';
+import { preferredAppLocale, useAppLocale } from '../i18n/AppLocaleProvider';
 import { routing } from '@/i18n/routing';
 import { Link } from '@/i18n/navigation';
 import { CLIENT_LOGOS } from './clientLogos';
@@ -4446,6 +4446,7 @@ export function UsagePage({ usageData, planLimits, actionAllowance = null, strip
   // in the banner can switch it. Hoisted here because the banner renders from
   // a conditional and hooks cannot live inside it.
   const [capInterval, setCapInterval] = useState('month');
+  const { locale } = useAppLocale();
   const allowanceState = allowanceTileState(actionAllowance);
   const allowance = allowanceProgress(actionAllowance);
   const {
@@ -4597,7 +4598,7 @@ export function UsagePage({ usageData, planLimits, actionAllowance = null, strip
                 {t('usage.capCompare')}
               </Link>
               <a
-                href={usageCapCheckoutHref(offer.plan, capInterval === 'year')}
+                href={usageCapCheckoutHref(offer.plan, capInterval === 'year', locale)}
                 style={{
                   display: 'inline-flex',
                   alignItems: 'center',
@@ -5692,7 +5693,11 @@ function BillingSection({
       const res = await fetch('/api/stripe/checkout', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ planId, interval: checkoutInterval }),
+        // The buyer's language picks the hosted page's (German is the only
+        // one that changes it, see checkout-core). Read at call time, not
+        // from `locale`: the ?upgrade= effect below calls this on mount,
+        // before the provider has resolved the stored choice into context.
+        body: JSON.stringify({ planId, interval: checkoutInterval, locale: preferredAppLocale() }),
       });
 
       const data = await res.json();

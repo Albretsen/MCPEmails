@@ -1143,9 +1143,9 @@ export function Pricing({ onGetStarted, stripePrices }) {
   // `personal` is the only id that matches its own display name.
   const allTiers = [
     { msgKey: 'free',     priceKey: 'free',     per: t('pricing.perForever'), accent: false, ctaHref: withReadingLang('/signup', locale) },
-    { msgKey: 'personal', priceKey: 'personal', per: t('pricing.perMonth'),   accent: false, ctaHref: withReadingLang(pricingUpgradeHref('personal', false, false), locale) },
-    { msgKey: 'solo',     priceKey: 'solo',     per: t('pricing.perMonth'),   accent: true,  ctaHref: withReadingLang(pricingUpgradeHref('solo', false, false), locale) },
-    { msgKey: 'business', priceKey: 'pro',      per: t('pricing.perMonth'),   accent: false, ctaHref: withReadingLang(pricingUpgradeHref('pro', false, false), locale) },
+    { msgKey: 'personal', priceKey: 'personal', per: t('pricing.perMonth'),   accent: false, ctaHref: withReadingLang(pricingUpgradeHref('personal', false, false, locale), locale) },
+    { msgKey: 'solo',     priceKey: 'solo',     per: t('pricing.perMonth'),   accent: true,  ctaHref: withReadingLang(pricingUpgradeHref('solo', false, false, locale), locale) },
+    { msgKey: 'business', priceKey: 'pro',      per: t('pricing.perMonth'),   accent: false, ctaHref: withReadingLang(pricingUpgradeHref('pro', false, false, locale), locale) },
   ];
 
   const tiers = allTiers;
