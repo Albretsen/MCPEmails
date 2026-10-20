@@ -206,7 +206,9 @@ export default function BlogPostClient({ post }) {
         </div>
       </section>
 
-      <Footer />
+      {/* Only the locales the post is translated into: an English fallback URL
+          canonicalises to English, so the switcher sends those to the home page. */}
+      <Footer locales={post.locales} />
 
       <style>{`
         /* progress bar */

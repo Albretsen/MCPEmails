@@ -168,7 +168,7 @@ export default async function ClientHubPage({ params }) {
           </div>
         </section>
 
-        <Footer />
+        <Footer locales={clientHubLocales()} />
       </div>
     </>
   );

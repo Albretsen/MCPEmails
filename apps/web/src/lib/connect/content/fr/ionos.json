@@ -3,7 +3,9 @@
     "https://www.ionos.com/help/email/general-topics/ionos-mail-server-details-for-imap-pop3-and-smtp/",
     "https://www.ionos.com/help/email/other-email-programs/setting-up-an-ionos-email-account-in-apple-mail/",
     "https://www.ionos.com/help/office/setting-up-microsoft-365/migrating-emails-from-11-ionos-mail-accounts-to-office-365/",
-    "https://www.ionos.co.uk/help/email/mail-basic/"
+    "https://www.ionos.co.uk/help/email/mail-basic/",
+    "https://www.ionos.de/hilfe/e-mail/allgemeine-themen/serverinformationen-fuer-imap-pop3-und-smtp/",
+    "https://www.ionos.co.uk/help/email/general-topics/ionos-mail-server-details-for-imap-pop3-and-smtp/"
   ],
   "auth": {
     "method": "mail-password",
@@ -33,7 +35,7 @@
   },
   "method": {
     "title": "Comment IONOS se connecte : IMAP et le mot de passe de votre boîte mail",
-    "body": "IONOS se connecte en IMAP/SMTP avec le <b>mot de passe de l'adresse e-mail</b> que vous définissez dans l'espace client IONOS, sous Email, et qui est distinct de votre identifiant IONOS. IONOS répond sur les deux transports standard, 993 en TLS et 143 en STARTTLS, si bien que le port est rarement la cause d'un échec de connexion IONOS. mcpemails renseigne une combinaison qui fonctionne et essaie l'autre si la première ne répond pas : si la connexion est refusée ici, c'est vraiment le mot de passe."
+    "body": "IONOS se connecte en IMAP/SMTP avec le <b>mot de passe de messagerie</b> que vous définissez dans le panneau de contrôle IONOS sous E-mail, distinct de votre identifiant IONOS. Les noms de serveur dépendent du site IONOS qui vous a vendu la boîte : IONOS Allemagne documente <code>imap.ionos.de</code> et <code>smtp.ionos.de</code>, IONOS Royaume-Uni <code>imap.ionos.co.uk</code> et <code>smtp.ionos.co.uk</code>, et ionos.com <code>imap.ionos.com</code> et <code>smtp.ionos.com</code>. IONOS répond sur les deux transports standard, 993 avec TLS et 143 avec STARTTLS, donc le port est rarement la cause d'un échec de connexion IONOS, et MCP Emails essaie l'autre transport si le premier ne répond pas."
   },
   "setup": [
     {
@@ -46,7 +48,7 @@
     },
     {
       "h": "Collez-le dans mcpemails",
-      "p": "Choisissez IMAP / SMTP, ajoutez votre adresse IONOS, les serveurs ci-dessus et le mot de passe pour connecter la boîte en toute sécurité."
+      "p": "Choisissez IMAP / SMTP et ajoutez votre adresse IONOS et le mot de passe de la boîte. Les serveurs affichés ci-dessus sont ceux d'ionos.com : pour une boîte achetée sur ionos.de, utilisez plutôt imap.ionos.de et smtp.ionos.de, et pour ionos.co.uk les noms en .co.uk."
     },
     {
       "h": "Collez l'URL MCP dans votre IA",
@@ -67,8 +69,8 @@
       "p": "IONOS revend Microsoft 365 à côté de ses propres offres Mail Basic et Mail Business, et beaucoup de clients qui pensent avoir un e-mail IONOS ont en réalité un tenant Microsoft facturé par IONOS. Rien de ce qui concerne <code>imap.ionos.com</code> ne s'applique à ces boîtes : elles sont hébergées sur les serveurs de Microsoft et administrées depuis le Microsoft 365 Admin Center, pas depuis l'espace client IONOS. Connectez-les avec l'option Outlook (connexion avec Microsoft) plutôt qu'en IMAP. L'administrateur informatique de votre organisation devra peut-être d'abord approuver MCP Emails une fois, et le tableau de bord vous donne un lien d'approbation à lui envoyer. L'indice, c'est l'endroit où vous mène votre webmail : Outlook sur le web signifie Microsoft."
     },
     {
-      "h": "Toutes les marques nationales d'IONOS et toutes les anciennes adresses 1&1 utilisent les deux mêmes serveurs",
-      "p": "IONOS exploite des boutiques distinctes sur ionos.de, ionos.co.uk, ionos.fr, ionos.es, ionos.it et ionos.com, qui existent pour la facturation et le marketing, et non parce que la plateforme de messagerie serait régionale. L'IMAP est <code>imap.ionos.com</code> et le SMTP est <code>smtp.ionos.com</code>, quelle que soit la boutique qui vous a vendu la boîte. Les guides tiers qui imposent encore des noms régionaux construits sur l'ancienne marque 1&1 datent d'avant le changement de nom, et les suivre vous mène vers un nom d'hôte qui ne répond pas. Il n'y a aucun serveur régional à chercher."
+      "h": "IONOS Allemagne, IONOS Royaume-Uni et ionos.com documentent des noms de serveur différents",
+      "p": "IONOS exploite des boutiques sur ionos.de, ionos.co.uk, ionos.fr, ionos.es, ionos.it et ionos.com, et ses pages d'aide donnent à chacune ses propres noms de serveur. L'aide allemande indique <code>imap.ionos.de</code> sur le port 993 et <code>smtp.ionos.de</code> sur le port 465, avec 587 et STARTTLS si le 465 est bloqué ; l'aide britannique indique <code>imap.ionos.co.uk</code> et <code>smtp.ionos.co.uk</code> ; ionos.com indique <code>imap.ionos.com</code> et <code>smtp.ionos.com</code>. Ce ne sont pas des étiquettes interchangeables pour un même serveur. Les serveurs en .com présentent un certificat délivré à IONOS Inc. aux États-Unis, tandis que les serveurs en .de et .co.uk présentent un certificat délivré à IONOS SE en Allemagne, qui couvre aussi les anciens noms 1&1 comme <code>imap.1und1.de</code>. Utilisez les noms du site IONOS où vous avez acheté la boîte."
     }
   ],
   "limits": [
@@ -82,7 +84,7 @@
     },
     {
       "q": "Quels sont les paramètres IMAP et SMTP d'IONOS ?",
-      "a": "L'IMAP est imap.ionos.com sur le port 993 en SSL/TLS et le SMTP est smtp.ionos.com sur le port 465, également en SSL/TLS. IONOS documente le port 587 en STARTTLS comme alternative sortante si votre réseau bloque le 465. L'identifiant est votre adresse e-mail complète. Les deux serveurs ont été confirmés par une vraie connexion TLS à la date indiquée sur cette page."
+      "a": "Cela dépend de l'endroit où vous avez acheté la boîte. IONOS Allemagne documente imap.ionos.de sur le port 993 et smtp.ionos.de sur le port 465, tous deux en SSL/TLS, avec 587 et STARTTLS comme alternative sortante. IONOS Royaume-Uni documente imap.ionos.co.uk et smtp.ionos.co.uk, et ionos.com documente imap.ionos.com et smtp.ionos.com, sur les mêmes ports. L'identifiant est votre adresse e-mail complète."
     },
     {
       "q": "Faut-il utiliser le port 993 ou le port 143 chez IONOS ?",
@@ -93,8 +95,8 @@
       "a": "Parce qu'IONOS attribue à chaque adresse e-mail son propre mot de passe et que vous utilisez probablement l'identifiant de votre compte IONOS à la place. Ouvrez l'espace client IONOS, allez dans Email, sélectionnez l'adresse et définissez-lui un nouveau mot de passe, puis utilisez celui-ci. Si l'adresse a été migrée vers Microsoft 365, elle n'existe plus du tout sur les serveurs de messagerie IONOS ; connectez-la alors avec Outlook."
     },
     {
-      "q": "Les comptes IONOS britanniques, allemands et français utilisent-ils des serveurs différents ?",
-      "a": "Non. Les boutiques régionales d'IONOS partagent une seule plateforme de messagerie, et chaque boîte utilise imap.ionos.com et smtp.ionos.com, quel que soit le site national qui l'a vendue. Les guides qui montrent des noms d'hôte régionaux construits sur l'ancienne marque 1&1 sont obsolètes, et ces noms ne se connecteront pas."
+      "q": "Les boîtes IONOS d'Allemagne, du Royaume-Uni et des États-Unis utilisent-elles des serveurs différents ?",
+      "a": "Oui. L'aide allemande d'IONOS donne imap.ionos.de et smtp.ionos.de, son aide britannique imap.ionos.co.uk et smtp.ionos.co.uk, et ionos.com donne imap.ionos.com et smtp.ionos.com. Les serveurs en .com appartiennent à IONOS Inc. aux États-Unis et les serveurs européens à IONOS SE : utilisez donc les noms du site IONOS où vous avez acheté la boîte. Les anciens noms 1&1 comme imap.1und1.de sont servis par les serveurs européens."
     },
     {
       "q": "Mon courrier IONOS est-il stocké sur vos serveurs ?",

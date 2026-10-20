@@ -27,6 +27,24 @@ test('every host in the recorded failure data is recognised', () => {
   }
 });
 
+test('a typed IONOS host keeps its region: European names never become imap.ionos.com', () => {
+  const cases: [string, string, string][] = [
+    ['imap.ionos.de', 'ionos-de', 'imap.ionos.de'],
+    ['imap.1und1.de', 'ionos-de', 'imap.ionos.de'],
+    ['smtp.ionos.co.uk', 'ionos-uk', 'imap.ionos.co.uk'],
+    ['imap.ionos.fr', 'ionos-fr', 'imap.ionos.fr'],
+    ['imap.ionos.es', 'ionos-es', 'imap.ionos.es'],
+    ['imap.ionos.it', 'ionos-it', 'imap.ionos.it'],
+    ['imap.ionos.com', 'ionos', 'imap.ionos.com'],
+  ];
+  for (const [host, id, imapHost] of cases) {
+    const preset = findMailHostPreset({ host });
+    assert.equal(preset?.id, id, host);
+    assert.equal(preset?.imapHost, imapHost, host);
+  }
+  assert.equal(findMailHostPreset({ email: 'anna@ionos.de' })?.imapHost, 'imap.ionos.de');
+});
+
 test('OVH Hosted Exchange wins over OVH shared hosting, and gets 587', () => {
   // The specific suffix has to be matched first: Hosted Exchange does not
   // listen on 465 at all, so falling through to the shared-hosting entry would

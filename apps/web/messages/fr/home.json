@@ -273,6 +273,7 @@
     "linkOauth": "Connexion OAuth",
     "linkProviders": "Fournisseurs pris en charge",
     "linkReadOnly": "Accès en lecture seule",
+    "linkClients": "Configuration des clients MCP",
     "linkPrivacy": "Confidentialité",
     "linkTerms": "Conditions",
     "linkWithdrawal": "Droit de rétractation",
