@@ -75,7 +75,7 @@
     },
     {
       "q": "Can ChatGPT connect to Yahoo Mail?",
-      "a": "Yes, by adding MCP Emails as a custom connector. Turn on developer mode in ChatGPT (chatgpt.com, on Plus, Pro, Business, Enterprise and Edu), create a connector with the MCP Emails URL, choose OAuth and sign in. The Yahoo inbox you connected here is then available in any chat where you switch developer mode on, and the same app password serves Claude too."
+      "a": "Yes, by adding MCPEmails as a custom connector. Turn on developer mode in ChatGPT (chatgpt.com, on Plus, Pro, Business, Enterprise and Edu), create a connector with the MCPEmails URL, choose OAuth and sign in. The Yahoo inbox you connected here is then available in any chat where you switch developer mode on, and the same app password serves Claude too."
     },
     {
       "q": "What are the Yahoo Mail IMAP and SMTP settings?",

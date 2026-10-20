@@ -76,7 +76,7 @@
     },
     {
       "q": "Kan Claude kobles til Apple Mail?",
-      "a": "Ikke til selve appen, og det trengs ikke. Apple Mail viser innbokser som ligger hos en leverandør. Er din en iCloud-adresse, kobler du den til her med et appspesifikt passord, og Claude eller ChatGPT ser de samme mappene og meldingene, bortsett fra mapper som bare ligger På min Mac. Viser Apple Mail en Gmail-, Outlook-, Yahoo- eller jobbkonto, kobler du til den leverandøren i stedet. MCP Emails driftes for deg, så Macen trenger ikke være på."
+      "a": "Ikke til selve appen, og det trengs ikke. Apple Mail viser innbokser som ligger hos en leverandør. Er din en iCloud-adresse, kobler du den til her med et appspesifikt passord, og Claude eller ChatGPT ser de samme mappene og meldingene, bortsett fra mapper som bare ligger På min Mac. Viser Apple Mail en Gmail-, Outlook-, Yahoo- eller jobbkonto, kobler du til den leverandøren i stedet. MCPEmails driftes for deg, så Macen trenger ikke være på."
     },
     {
       "q": "Hva er IMAP- og SMTP-innstillingene for iCloud Mail?",
@@ -96,7 +96,7 @@
     },
     {
       "q": "Når den iCloud-kalender, kontakter, notater eller Drive?",
-      "a": "Nei. MCP Emails håndterer bare e-post: iCloud-innboksen og mappene, via IMAP og SMTP. Kalender, Kontakter, Notater, Påminnelser og iCloud Drive kobles ikke til, og det appspesifikke passordet brukes bare til e-post."
+      "a": "Nei. MCPEmails håndterer bare e-post: iCloud-innboksen og mappene, via IMAP og SMTP. Kalender, Kontakter, Notater, Påminnelser og iCloud Drive kobles ikke til, og det appspesifikke passordet brukes bare til e-post."
     }
   ],
   "ctaBand": {

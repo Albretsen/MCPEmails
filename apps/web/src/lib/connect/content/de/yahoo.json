@@ -11,14 +11,14 @@
     "status": "active"
   },
   "meta": {
-    "title": "Yahoo Mail mit Claude, ChatGPT und Cursor verbinden",
-    "description": "Yahoo Mail mit Claude, Cursor und jedem MCP-Client verbinden, per IMAP auf Port 993 mit einem Yahoo App-Passwort. Ihr Kontopasswort funktioniert nicht. Ein Postfach kostenlos."
+    "title": "Yahoo Mail MCP: Yahoo Mail mit Claude und ChatGPT verbinden",
+    "description": "Yahoo Mail mit Claude oder ChatGPT verbinden, per IMAP auf Port 993 mit einem Yahoo App-Passwort. Ihr Kontopasswort funktioniert nicht. Ein Postfach kostenlos."
   },
   "hero": {
     "eyebrow": "Yahoo Mail + KI",
     "titleLine1": "Yahoo Mail mit Claude verbinden,",
     "titleLine2": "und mit Cursor, ChatGPT und jedem MCP-Client",
-    "lead": "Geben Sie Ihrem KI-Agenten in wenigen Minuten ein echtes Yahoo-Postfach. Lesen, suchen, senden, antworten, planen und sortieren Sie E-Mails mit einem einzigen App-Passwort, und nutzen Sie dasselbe Postfach in jedem MCP-Client, nicht nur in einem.",
+    "lead": "Geben Sie Claude oder ChatGPT in wenigen Minuten Ihr echtes Yahoo-Postfach. Lesen, suchen, senden, antworten, planen und sortieren Sie E-Mails mit einem einzigen App-Passwort, und nutzen Sie dasselbe Postfach in jedem MCP-Client, nicht nur in einem.",
     "meta0": "1 Postfach dauerhaft kostenlos",
     "meta1": "App-Passwort, keine OAuth-Einrichtung",
     "meta2": "E-Mails werden live abgerufen, nie gespeichert",
@@ -72,6 +72,10 @@
     {
       "q": "Funktioniert Claude mit Yahoo Mail?",
       "a": "Nicht direkt. Claude hat keinen eingebauten Yahoo-Konnektor. Verbinden Sie einen MCP-Server wie MCP Emails per IMAP und mit einem Yahoo App-Passwort mit Ihrem Yahoo-Postfach. Dann kann Claude E-Mails lesen, suchen, senden, beantworten, planen und sortieren. Dieselbe Verbindung funktioniert danach unverändert in Cursor, ChatGPT und anderen MCP-Clients."
+    },
+    {
+      "q": "Kann ChatGPT sich mit Yahoo Mail verbinden?",
+      "a": "Ja, indem Sie MCPEmails als benutzerdefinierten Konnektor hinzufügen. Aktivieren Sie in ChatGPT den Entwicklermodus (chatgpt.com, mit Plus, Pro, Business, Enterprise und Edu), legen Sie einen Konnektor mit der MCPEmails-URL an, wählen Sie OAuth und melden Sie sich an. Das hier verbundene Yahoo-Postfach steht dann in jedem Chat bereit, in dem Sie den Entwicklermodus einschalten, und dasselbe App-Passwort gilt auch für Claude."
     },
     {
       "q": "Wie lauten die IMAP- und SMTP-Einstellungen für Yahoo Mail?",

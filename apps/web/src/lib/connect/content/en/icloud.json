@@ -76,7 +76,7 @@
     },
     {
       "q": "Can Claude connect to Apple Mail?",
-      "a": "Not to the app, and it does not need to. Apple Mail displays mailboxes that live with a provider. If yours is an iCloud address, connect it here with an app-specific password and Claude or ChatGPT sees the same folders and messages, apart from folders kept only On My Mac. If Apple Mail shows a Gmail, Outlook, Yahoo or work account, connect that provider instead. MCP Emails is hosted, so your Mac does not have to be on."
+      "a": "Not to the app, and it does not need to. Apple Mail displays mailboxes that live with a provider. If yours is an iCloud address, connect it here with an app-specific password and Claude or ChatGPT sees the same folders and messages, apart from folders kept only On My Mac. If Apple Mail shows a Gmail, Outlook, Yahoo or work account, connect that provider instead. MCPEmails is hosted, so your Mac does not have to be on."
     },
     {
       "q": "What are the iCloud Mail IMAP and SMTP settings?",
@@ -96,7 +96,7 @@
     },
     {
       "q": "Does it reach iCloud Calendar, Contacts, Notes or Drive?",
-      "a": "No. MCP Emails handles mail only: your iCloud inbox and its folders, over IMAP and SMTP. Calendar, Contacts, Notes, Reminders and iCloud Drive are not connected, and the app-specific password is used for mail and nothing else."
+      "a": "No. MCPEmails handles mail only: your iCloud inbox and its folders, over IMAP and SMTP. Calendar, Contacts, Notes, Reminders and iCloud Drive are not connected, and the app-specific password is used for mail and nothing else."
     }
   ],
   "ctaBand": {
