@@ -4,6 +4,7 @@ import { releasedProviders } from '@/lib/connect/release.mjs';
 import { CLIENTS } from '@/lib/clients/clients.mjs';
 import { getAllPosts, getPostLocales } from '@/lib/blog/posts';
 import { blogPostLanguageAlternates } from '@/lib/blog/seo.mjs';
+import { PATH as COMPARE_PATH, PAGE_UPDATED as COMPARE_UPDATED } from '@/lib/compare/email-mcp-servers.mjs';
 
 /**
  * The provider pages are gated by a release schedule (lib/connect/release.mjs)
@@ -135,13 +136,14 @@ export default function sitemap(): MetadataRoute.Sitemap {
       lastModified: '2026-09-26',
       priority: 0.8,
     })),
-    // Dated factual claims about named competitors. Re-verify the sources on
-    // the page before moving this date. The old /email-mcp-servers-compared
+    // Dated factual claims about named competitors. The date is the page's own
+    // PAGE_UPDATED, the same constant behind its visible "Updated" line and its
+    // JSON-LD dateModified. The old /email-mcp-servers-compared
     // slug is deliberately absent: it is a 308 to this one, and a redirect in
     // a sitemap is an instruction to crawl a URL we have just said is wrong.
     {
-      path: '/best-email-mcp-servers',
-      lastModified: '2026-09-12',
+      path: COMPARE_PATH,
+      lastModified: COMPARE_UPDATED,
       priority: 0.8,
     },
   ].map(({ path, lastModified, priority }) => ({
