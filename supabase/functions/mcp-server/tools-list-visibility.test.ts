@@ -321,7 +321,7 @@ Deno.test("the first consent grants no write, which is the point of narrowing it
 // proof the gate let the call through.
 // ═══════════════════════════════════════════════════════════════════════════
 
-const NO_REQUEST_CONTEXT = { ipAddress: null, userAgent: null };
+const NO_REQUEST_CONTEXT = { userAgent: null };
 
 interface CallResponse {
   error?: { code: number; data?: Record<string, unknown> };

@@ -31,6 +31,8 @@
  * are answered exactly as before.
  */
 
+import { clientLabel } from "./client-label.ts";
+
 /** The old route's CORS set, verbatim (measured on production 2026-10-20). */
 export const WEB_CORS_HEADERS: Readonly<Record<string, string>> = {
   "Access-Control-Allow-Origin": "*",
@@ -140,7 +142,7 @@ export async function handleWebIngress(
     const res = await pending;
     const ms = Date.now() - started;
     if (ms > 110_000) {
-      console.warn("[mcp-server] web_ingress_slow_json_only", { ms, user_agent: req.headers.get("user-agent") });
+      console.warn("[mcp-server] web_ingress_slow_json_only", { ms, client: clientLabel(req.headers.get("user-agent")) });
     }
     return dress(res, rejected);
   }

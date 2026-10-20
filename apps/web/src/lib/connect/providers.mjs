@@ -86,7 +86,7 @@ export const PROVIDERS = [
     // never use. The page explains OAuth instead.
     imap: null,
     smtp: null,
-    evidence: {"verifiedOn": "2026-08-31", "reachable": true, "authMechs": ["OAUTHBEARER", "PLAIN", "PLAIN-CLIENTTOKEN", "XOAUTH2"], "saslIr": true, "move": false, "idle": true, "uidplus": false, "specialUse": false, "banner": "* OK Gimap ready for requests from 2001:4643:b9ff:0:2d3d:3074:e86a:6646 17ba6d92412a-343921bcb62mb13712213e", "smtpAuthMechs": ["LOGIN", "PLAIN", "XOAUTH2", "PLAIN-CLIENTTOKEN", "OAUTHBEARER", "XOAUTH"], "smtpStarttls": false, "smtpMaxSize": "35882577"},
+    evidence: {"verifiedOn": "2026-08-31", "reachable": true, "authMechs": ["OAUTHBEARER", "PLAIN", "PLAIN-CLIENTTOKEN", "XOAUTH2"], "saslIr": true, "move": false, "idle": true, "uidplus": false, "specialUse": false, "banner": "* OK Gimap ready for requests from [client] 17ba6d92412a-343921bcb62mb13712213e", "smtpAuthMechs": ["LOGIN", "PLAIN", "XOAUTH2", "PLAIN-CLIENTTOKEN", "OAUTHBEARER", "XOAUTH"], "smtpStarttls": false, "smtpMaxSize": "35882577"},
     locales: ["en", "nb", "es", "fr", "zh", "de"],
   },
   {
@@ -184,7 +184,7 @@ export const PROVIDERS = [
     source: "ispdb+probe",
     imap: {"host": "imap.yandex.com", "port": 993, "security": "tls"},
     smtp: {"host": "smtp.yandex.com", "port": 465, "security": "tls"},
-    evidence: {"verifiedOn": "2026-08-31", "reachable": true, "authMechs": ["PLAIN", "XOAUTH2"], "saslIr": false, "move": true, "idle": true, "uidplus": true, "specialUse": false, "banner": "* OK Yandex IMAP4rev1 at mail-imap-production-main-835.vla.yp-c.yandex.net:993 ready to talk with 2001:4643:b9ff:0:2d3d:3074:e86a:6646:61713, 2026-Aug-31 19:37:", "smtpAuthMechs": ["LOGIN", "PLAIN", "XOAUTH2"], "smtpStarttls": true, "smtpMaxSize": "53477376"},
+    evidence: {"verifiedOn": "2026-08-31", "reachable": true, "authMechs": ["PLAIN", "XOAUTH2"], "saslIr": false, "move": true, "idle": true, "uidplus": true, "specialUse": false, "banner": "* OK Yandex IMAP4rev1 at mail-imap-production-main-835.vla.yp-c.yandex.net:993 ready to talk with [client], 2026-Aug-31 19:37:", "smtpAuthMechs": ["LOGIN", "PLAIN", "XOAUTH2"], "smtpStarttls": true, "smtpMaxSize": "53477376"},
     locales: ["en", "nb", "es", "fr", "zh", "de"],
   },
   {
@@ -1531,7 +1531,7 @@ export const PROVIDERS = [
     source: "vendor+probe",
     imap: {"host": "imap.gmail.com", "port": 993, "security": "tls"},
     smtp: {"host": "smtp.gmail.com", "port": 465, "security": "tls"},
-    evidence: {"verifiedOn": "2026-08-31", "reachable": true, "authMechs": ["OAUTHBEARER", "PLAIN", "PLAIN-CLIENTTOKEN", "XOAUTH2"], "saslIr": true, "move": false, "idle": true, "uidplus": false, "specialUse": false, "banner": "* OK Gimap ready for requests from 2001:4643:b9ff:0:2d3d:3074:e86a:6646 17ba6d92412a-343921bcb62mb13712213e", "smtpAuthMechs": ["LOGIN", "PLAIN", "XOAUTH2", "PLAIN-CLIENTTOKEN", "OAUTHBEARER", "XOAUTH"], "smtpStarttls": false, "smtpMaxSize": "35882577"},
+    evidence: {"verifiedOn": "2026-08-31", "reachable": true, "authMechs": ["OAUTHBEARER", "PLAIN", "PLAIN-CLIENTTOKEN", "XOAUTH2"], "saslIr": true, "move": false, "idle": true, "uidplus": false, "specialUse": false, "banner": "* OK Gimap ready for requests from [client] 17ba6d92412a-343921bcb62mb13712213e", "smtpAuthMechs": ["LOGIN", "PLAIN", "XOAUTH2", "PLAIN-CLIENTTOKEN", "OAUTHBEARER", "XOAUTH"], "smtpStarttls": false, "smtpMaxSize": "35882577"},
     contentUpdatedOn: "2026-09-29",
     locales: ["en", "nb", "es", "fr", "zh", "de"],
   },

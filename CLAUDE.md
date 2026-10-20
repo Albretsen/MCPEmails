@@ -31,6 +31,18 @@ IMPORTANT: a push to `main` is a production deploy of the web app. Vercel promot
 - After a web deploy, verify a route with `curl -sI <url> | grep -i x-matched-path`, not the status code: an unmatched route can still answer 200.
 - After any change in `apps/mcp-app/src`, run `cd apps/mcp-app && npm run build` and commit the regenerated `review-card.html.ts`, or CI fails.
 
+## Sessions and hand-off
+
+Asgeir runs many sessions at once and reads a twice-daily brief built by `scripts/state-snapshot.mjs`. These rules keep that brief accurate.
+
+- A session that starts more than 2 child sessions creates a sidebar group named after itself and moves its children into it.
+- WIP cap: at most 3 PR-producing sessions in flight, plus up to 2 read-only ones. Before starting another, count the open ones; if at the cap, propose instead of starting.
+- A large research fan-out ends in a ranked list for Asgeir to pick from. It does not auto-start the follow-up sessions.
+- Every session ends with one line per open or finished item, in its final message and in the relevant memory file:
+  - `OWED: <what> (due YYYY-MM-DD)` for anything still waiting on someone, including a read-out or a check in production.
+  - `DONE: <what> (PR #n)` for anything that shipped.
+- Use full dates (`2026-11-14`, not `11-14` or "next week") in those lines. The collector only picks up dated lines.
+
 ## Commands
 
 npm only, one root `package-lock.json`, Node 24 from `.nvmrc`. Run `npm ci` at the root of a new worktree (a symlinked `node_modules` breaks Turbopack). If npm rewrites thousands of lockfile lines in an unrelated change, revert the lockfile.

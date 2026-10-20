@@ -241,7 +241,7 @@ async function call(name: string, args: Record<string, unknown>): Promise<string
     { jsonrpc: "2.0", id: 1, method: "tools/call", params: { name, arguments: args } },
     1,
     oauthToken("OAuth: ChatGPT"),
-    { ipAddress: null, userAgent: null },
+    { userAgent: null },
   ) as CallResponse;
   return response.result?.content?.[0]?.text ?? "";
 }

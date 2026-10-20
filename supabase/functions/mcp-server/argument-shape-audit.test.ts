@@ -63,7 +63,7 @@ async function failures(tool: string, args: Record<string, unknown>): Promise<st
     { jsonrpc: "2.0", id: 1, method: "tools/call", params: { name: tool, arguments: { ...args, zz_canary: 1 } } },
     1,
     key(),
-    { ipAddress: null, userAgent: null },
+    { userAgent: null },
   );
   const errors = response?.result?._meta?.["com.mcpemails/invalid_arguments"]?.errors;
   if (Array.isArray(errors)) {

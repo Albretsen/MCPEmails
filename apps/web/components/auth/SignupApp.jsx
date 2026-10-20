@@ -13,7 +13,8 @@ import {
   withConnectIntent,
 } from '@/lib/connect/intent-carry.mjs';
 import { MIcon, MBtn } from '../MarketingPrimitives';
-import { ThemeBtn, Spinner, GoogleIcon, GitHubIcon, SocialButton, OrDivider } from './AuthShared';
+import { ThemeBtn, Spinner, GoogleIcon, GitHubIcon, MicrosoftIcon, SocialButton, OrDivider } from './AuthShared';
+import { microsoftSignInEnabled } from '@/lib/auth/microsoft-flag.mjs';
 
 export function SignupApp({ redirectTo = null, connectProvider = null }) {
   const t = useTranslations('auth');
@@ -31,7 +32,7 @@ export function SignupApp({ redirectTo = null, connectProvider = null }) {
   const [step, setStep] = useState('form'); // 'form' | 'submitting' | 'sent' | 'error'
   const [serverError, setServerError] = useState('');
   const [loadingMsg, setLoadingMsg] = useState(SIGNUP_LOADING_MESSAGES[0]);
-  const [socialLoading, setSocialLoading] = useState(null); // null | 'google' | 'github'
+  const [socialLoading, setSocialLoading] = useState(null); // null | 'google' | 'microsoft' | 'github'
   // Marketing email consent. UNTICKED by default and never pre-filled: consent
   // under markedsføringsloven § 15 / GDPR has to be an active choice. What the
   // box says is versioned in src/lib/marketing-consent.mjs.
@@ -120,6 +121,14 @@ export function SignupApp({ redirectTo = null, connectProvider = null }) {
     trackProductEvent('signup_started', { method: 'google' });
     setSocialLoading('google');
     window.location.href = buildOAuthUrl('google');
+  }
+
+  function handleMicrosoftSignIn() {
+    rememberOAuthConsent(marketingConsent);
+    // No signup_started event: its `method` enum (src/lib/analytics.mjs) has no
+    // 'microsoft' yet, and an unlisted value throws.
+    setSocialLoading('microsoft');
+    window.location.href = buildOAuthUrl('microsoft');
   }
 
   function handleGitHubSignIn() {
@@ -237,6 +246,15 @@ export function SignupApp({ redirectTo = null, connectProvider = null }) {
         onClick={handleGoogleSignIn}
         disabled={anyBusy}
       />
+      {microsoftSignInEnabled() && (
+        <SocialButton
+          icon={<MicrosoftIcon />}
+          label={t('shared.signInWithMicrosoft')}
+          loading={socialLoading === 'microsoft'}
+          onClick={handleMicrosoftSignIn}
+          disabled={anyBusy}
+        />
+      )}
       <SocialButton
         icon={<GitHubIcon />}
         label={t('shared.continueWithGitHub')}

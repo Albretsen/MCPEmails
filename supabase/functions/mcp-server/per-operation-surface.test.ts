@@ -123,7 +123,7 @@ async function call(
     { jsonrpc: "2.0", id: 1, method: "tools/call", params: { name, arguments: args } },
     1,
     key,
-    { ipAddress: null, userAgent: null },
+    { userAgent: null },
   ) as CallResponse;
 }
 

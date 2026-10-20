@@ -90,6 +90,11 @@ async function renderInboxes(t, { inboxes = [inbox()], respond, userRole = 'owne
     let body = null;
     if (typeof init.body === 'string') body = JSON.parse(init.body);
     const request = { url: String(url), method: init.method ?? 'GET', body, raw: init.body };
+    // Analytics beacons are not what this suite counts. The fixture is a
+    // business-domain workspace with one mailbox, so the Inboxes page shows the
+    // second-mailbox invitation, and with no IntersectionObserver in this DOM
+    // its `shown` beacon fires on mount (covered in inbox-cap-offer-ui.test.mjs).
+    if (request.url.startsWith('/api/analytics/')) return { ok: true, status: 204, json: async () => ({}) };
     requests.push(request);
     if (respond) return respond(request);
     return {
@@ -274,7 +279,12 @@ test('load: a text-only signature becomes one paragraph per line', async (t) => 
   await view.openReady();
   // The blank line is `<br>` from textToHtml, which TipTap wraps in its own
   // paragraph: a hard break plus ProseMirror's trailing break in the DOM.
-  assert.equal(view.pm().innerHTML, '<p>Ada &lt;Lovelace&gt;</p><p><br><br class="ProseMirror-trailingBreak"></p><p>Acme &amp; Co</p>');
+  // prosemirror-view >= 1.42.6 also puts a `ProseMirror-separator` <img> in
+  // front of an inline atom at the start of a block on Safari and Firefox, and
+  // jsdom reports `navigator.vendor` "Apple Computer, Inc.", so it counts as
+  // Safari here. That node is editor DOM only: the preview below (the saved
+  // HTML) has no separator.
+  assert.equal(view.pm().innerHTML, '<p>Ada &lt;Lovelace&gt;</p><p><img class="ProseMirror-separator" alt=""><br><br class="ProseMirror-trailingBreak"></p><p>Acme &amp; Co</p>');
   await waitFor(() => view.preview().innerHTML === '<p>Ada &lt;Lovelace&gt;</p><p><br></p><p>Acme &amp; Co</p>',
     { message: 'the preview to show the text-seeded signature' });
 });
