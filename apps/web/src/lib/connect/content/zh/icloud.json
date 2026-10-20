@@ -11,14 +11,14 @@
     "status": "active"
   },
   "meta": {
-    "title": "iCloud MCP 服务器：将 iCloud 邮件连接到 Claude",
-    "description": "是的，Claude 可以使用 iCloud 邮件。用 Apple App 专用密码两分钟即可连接，然后在任意 MCP 客户端中读取、搜索、发送和整理邮件。"
+    "title": "iCloud 邮件与 Apple Mail MCP 服务器，适用于 Claude 和 ChatGPT",
+    "description": "在 Claude 或 ChatGPT 中使用你在 Apple Mail 里阅读的 iCloud 收件箱。用 App 专用密码两分钟即可连接，无需 Mac。一个收件箱免费。"
   },
   "hero": {
     "eyebrow": "iCloud 邮件 + AI",
     "titleLine1": "iCloud MCP 服务器",
     "titleLine2": "适用于 Claude、Cursor 和 ChatGPT",
-    "lead": "几分钟即可为你的 AI 代理接入一个真正的 iCloud 收件箱。使用 Apple App 专用密码读取、搜索、发送、回复、定时与整理邮件，同一个收件箱可在所有 MCP 客户端中使用，而不止一个。",
+    "lead": "把你在 Apple Mail 中阅读的 iCloud 收件箱交给 Claude 或 ChatGPT。使用 Apple App 专用密码读取、搜索、发送、回复、定时与整理邮件。服务为托管式，Mac 无需开机，同一个收件箱可在所有 MCP 客户端中使用。",
     "meta0": "1 个收件箱永久免费",
     "meta1": "App 专用密码，无需 OAuth",
     "meta2": "邮件实时获取，绝不存储",
@@ -75,6 +75,10 @@
       "a": "不能单独使用。Claude 没有内置的 iCloud 连接器，Apple 也没有为 iCloud 邮件公布 OAuth 接口。使用 Apple App 专用密码，通过 IMAP 将 MCP Emails 这样的 MCP 服务器连接到邮箱后，Claude 就能读取、搜索、发送、回复、定时和整理邮件，而且同一个连接也可在 Cursor 和 ChatGPT 中使用。"
     },
     {
+      "q": "Claude 能连接 Apple Mail 吗？",
+      "a": "不能连接这个应用本身，也不需要。Apple Mail 显示的是存放在邮件服务商那里的邮箱。如果你的是 iCloud 地址，在这里用 App 专用密码连接，Claude 或 ChatGPT 就能看到相同的文件夹和邮件，仅存放在“我的 Mac 上”的文件夹除外。如果 Apple Mail 里显示的是 Gmail、Outlook、Yahoo 或工作邮箱，请改为连接对应的服务商。MCP Emails 是托管服务，Mac 无需开机。"
+    },
+    {
       "q": "iCloud 邮件的 IMAP 和 SMTP 设置是什么？",
       "a": "IMAP 为 imap.mail.me.com，端口 993，使用隐式 TLS。SMTP 为 smtp.mail.me.com，端口 587，使用 STARTTLS，而不是 465 上的隐式 TLS。两者的密码都是 Apple App 专用密码。Apple 的文档规定收信用户名为地址的名称部分。两个服务器均已在本页所示日期通过实时 TLS 连接确认。"
     },
@@ -89,6 +93,10 @@
     {
       "q": "我的 iCloud 邮件会存储在你们的服务器上吗？",
       "a": "不会。每次请求都通过 IMAP 从 Apple 实时获取邮件，并交给你的 AI 客户端。凭据静态加密存储，邮件正文不会保留。在你的 Apple 账户中撤销 App 专用密码，会立即在 Apple 那一端终止连接。"
+    },
+    {
+      "q": "能访问 iCloud 日历、通讯录、备忘录或云盘吗？",
+      "a": "不能。MCP Emails 只处理邮件：通过 IMAP 和 SMTP 访问你的 iCloud 收件箱及其文件夹。日历、通讯录、备忘录、提醒事项和 iCloud 云盘都不会被连接，App 专用密码只用于邮件。"
     }
   ],
   "ctaBand": {

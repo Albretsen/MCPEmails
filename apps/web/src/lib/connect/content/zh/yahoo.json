@@ -11,14 +11,14 @@
     "status": "active"
   },
   "meta": {
-    "title": "将 Yahoo Mail 连接到 Claude、Cursor 与 MCP 客户端",
-    "description": "用 Yahoo 应用密码通过 IMAP 993 端口将 Yahoo Mail 连接到 Claude、Cursor 及任意 MCP 客户端。账户密码无法使用。一个收件箱免费。"
+    "title": "Yahoo Mail MCP：将 Yahoo Mail 连接到 Claude 和 ChatGPT",
+    "description": "用 Yahoo 应用密码通过 IMAP 993 端口将 Yahoo Mail 连接到 Claude 或 ChatGPT。账户密码无法使用。一个收件箱免费。"
   },
   "hero": {
     "eyebrow": "Yahoo Mail + AI",
     "titleLine1": "将 Yahoo Mail 连接到 Claude，",
     "titleLine2": "以及 Cursor、ChatGPT、任意 MCP 客户端",
-    "lead": "几分钟即可为你的 AI 代理接入一个真正的 Yahoo 收件箱。只需一个应用密码即可读取、搜索、发送、回复、定时与整理邮件，同一个收件箱可在所有 MCP 客户端中使用，而不止一个。",
+    "lead": "几分钟即可把你真正的 Yahoo 收件箱交给 Claude 或 ChatGPT。只需一个应用密码即可读取、搜索、发送、回复、定时与整理邮件，同一个收件箱可在所有 MCP 客户端中使用，而不止一个。",
     "meta0": "1 个收件箱永久免费",
     "meta1": "应用密码，无需 OAuth 配置",
     "meta2": "邮件实时获取，绝不存储",
@@ -72,6 +72,10 @@
     {
       "q": "Claude 能用 Yahoo Mail 吗？",
       "a": "不能直接使用。Claude 没有内置的 Yahoo 连接器。使用 Yahoo 应用密码，通过 IMAP 将 MCP Emails 这样的 MCP 服务器连接到你的 Yahoo 邮箱后，Claude 就能读取、搜索、发送、回复、定时和整理其中的邮件。同一个连接无需任何改动，也可在 Cursor、ChatGPT 和其他 MCP 客户端中使用。"
+    },
+    {
+      "q": "ChatGPT 能连接 Yahoo Mail 吗？",
+      "a": "可以，把 MCP Emails 添加为自定义连接器即可。在 ChatGPT（chatgpt.com，Plus、Pro、Business、Enterprise 和 Edu）中开启开发者模式，用 MCP Emails 的 URL 创建连接器，选择 OAuth 并登录。之后，在开启了开发者模式的每个对话中都能使用你在这里连接的 Yahoo 收件箱，同一个应用密码也可同时用于 Claude。"
     },
     {
       "q": "Yahoo Mail 的 IMAP 和 SMTP 设置是什么？",

@@ -11,14 +11,14 @@
     "status": "active"
   },
   "meta": {
-    "title": "Servidor MCP de iCloud: conecta iCloud Mail a Claude",
-    "description": "Sí, Claude puede usar iCloud Mail. Conéctalo con una contraseña específica de aplicación de Apple en dos minutos y gestiona tu correo desde cualquier cliente MCP."
+    "title": "Servidor MCP de iCloud y Apple Mail para Claude y ChatGPT",
+    "description": "Usa desde Claude o ChatGPT la bandeja de iCloud que lees en Apple Mail. Conéctala en dos minutos con una contraseña de aplicación. Sin Mac. Una bandeja gratis."
   },
   "hero": {
     "eyebrow": "iCloud Mail + IA",
     "titleLine1": "El servidor MCP de iCloud",
     "titleLine2": "para Claude, Cursor y ChatGPT",
-    "lead": "Dale a tu agente de IA una bandeja real de iCloud en minutos. Lee, busca, envía, responde, programa y organiza correo con una contraseña específica de aplicación de Apple, y usa la misma bandeja en todos los clientes MCP, no solo en uno.",
+    "lead": "Dale a Claude o ChatGPT la bandeja de iCloud que lees en Apple Mail. Lee, busca, envía, responde, programa y organiza correo con una contraseña específica de aplicación de Apple. Es un servicio alojado, así que tu Mac puede estar apagado, y la misma bandeja funciona en todos los clientes MCP.",
     "meta0": "1 bandeja gratis, para siempre",
     "meta1": "Contraseña específica de aplicación, sin OAuth",
     "meta2": "El correo se obtiene en vivo, nunca se almacena",
@@ -75,6 +75,10 @@
       "a": "No por sí solo. Claude no tiene un conector integrado para iCloud y Apple no publica ninguna interfaz OAuth para iCloud Mail. Conectar un servidor MCP como MCP Emails al buzón por IMAP, con una contraseña específica de aplicación de Apple, le da a Claude acceso para leer, buscar, enviar, responder, programar y organizar, y la misma conexión funciona desde Cursor y ChatGPT."
     },
     {
+      "q": "¿Puede Claude conectarse a Apple Mail?",
+      "a": "A la app no, y no hace falta. Apple Mail muestra buzones que están en un proveedor. Si el tuyo es una dirección de iCloud, conéctala aquí con una contraseña de aplicación y Claude o ChatGPT verán las mismas carpetas y mensajes, salvo las carpetas guardadas solo En mi Mac. Si Apple Mail muestra una cuenta de Gmail, Outlook, Yahoo o del trabajo, conecta ese proveedor. MCP Emails es un servicio alojado, así que tu Mac no tiene que estar encendido."
+    },
+    {
       "q": "¿Cuáles son los ajustes IMAP y SMTP de iCloud Mail?",
       "a": "IMAP es imap.mail.me.com en el puerto 993 con TLS implícito. SMTP es smtp.mail.me.com en el puerto 587 con STARTTLS, no con TLS implícito en el 465. La contraseña es una contraseña específica de aplicación de Apple para ambos. Apple documenta como nombre de usuario de entrada la parte del nombre de tu dirección. Ambos servidores se confirmaron con una conexión TLS real en la fecha que indica esta página."
     },
@@ -89,6 +93,10 @@
     {
       "q": "¿Se almacena mi correo de iCloud en sus servidores?",
       "a": "No. Los mensajes se obtienen en vivo de Apple por IMAP en cada solicitud y se entregan a tu cliente de IA. Las credenciales se cifran en reposo y el cuerpo de los mensajes no se conserva. Revocar la contraseña específica de aplicación en tu cuenta de Apple corta la conexión en el lado de Apple de inmediato."
+    },
+    {
+      "q": "¿Llega a Calendario, Contactos, Notas o iCloud Drive?",
+      "a": "No. MCP Emails solo gestiona el correo: tu bandeja de iCloud y sus carpetas, por IMAP y SMTP. Calendario, Contactos, Notas, Recordatorios e iCloud Drive no se conectan, y la contraseña de aplicación solo se usa para el correo."
     }
   ],
   "ctaBand": {

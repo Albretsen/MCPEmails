@@ -11,14 +11,14 @@
     "status": "active"
   },
   "meta": {
-    "title": "Connectez Yahoo Mail à Claude, Cursor et aux clients MCP",
-    "description": "Connectez Yahoo Mail à Claude, Cursor et tout client MCP en IMAP, port 993, avec un mot de passe d'application Yahoo. Votre mot de passe de compte ne marche pas."
+    "title": "MCP Yahoo Mail : connectez Yahoo Mail à Claude et ChatGPT",
+    "description": "Connectez Yahoo Mail à Claude ou ChatGPT avec un mot de passe d'application Yahoo, en IMAP port 993. Votre mot de passe de compte ne marche pas. Une boîte gratuite."
   },
   "hero": {
     "eyebrow": "Yahoo Mail + IA",
     "titleLine1": "Connectez Yahoo Mail à Claude,",
     "titleLine2": "et à Cursor, ChatGPT, tout client MCP",
-    "lead": "Offrez à votre agent IA une vraie boîte Yahoo en quelques minutes. Lisez, recherchez, envoyez, répondez, planifiez et organisez le courrier avec un seul mot de passe d'application, et utilisez la même boîte dans tous vos clients MCP, pas un seul.",
+    "lead": "Offrez à Claude ou ChatGPT votre vraie boîte Yahoo en quelques minutes. Lisez, recherchez, envoyez, répondez, planifiez et organisez le courrier avec un seul mot de passe d'application, et utilisez la même boîte dans tous vos clients MCP, pas un seul.",
     "meta0": "1 boîte gratuite, pour toujours",
     "meta1": "Mot de passe d'application, sans configuration OAuth",
     "meta2": "E-mails récupérés en direct, jamais stockés",
@@ -72,6 +72,10 @@
     {
       "q": "Claude fonctionne-t-il avec Yahoo Mail ?",
       "a": "Pas directement. Claude n'a pas de connecteur Yahoo intégré. Connecter un serveur MCP comme MCP Emails à votre boîte Yahoo en IMAP, avec un mot de passe d'application Yahoo, donne à Claude un accès en lecture, recherche, envoi, réponse, planification et organisation. La même connexion fonctionne ensuite sans modification depuis Cursor, ChatGPT et les autres clients MCP."
+    },
+    {
+      "q": "ChatGPT peut-il se connecter à Yahoo Mail ?",
+      "a": "Oui, en ajoutant MCP Emails comme connecteur personnalisé. Activez le mode développeur dans ChatGPT (chatgpt.com, offres Plus, Pro, Business, Enterprise et Edu), créez un connecteur avec l'URL de MCP Emails, choisissez OAuth et connectez-vous. La boîte Yahoo connectée ici est alors disponible dans chaque conversation où le mode développeur est activé, et le même mot de passe d'application sert aussi à Claude."
     },
     {
       "q": "Quels sont les paramètres IMAP et SMTP de Yahoo Mail ?",
