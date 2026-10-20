@@ -960,7 +960,7 @@ export function heldSendToolResult(
   envelope: Record<string, unknown> | null,
 ): { content: { type: string; text: string }[]; structuredContent: Record<string, unknown> } {
   return {
-    content: [{ type: "text", text: JSON.stringify(payload, null, 2) }],
+    content: [{ type: "text", text: JSON.stringify(payload) }],
     structuredContent: envelope ? { ...payload, ...envelope } : payload,
   };
 }

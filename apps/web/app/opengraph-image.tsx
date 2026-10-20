@@ -1,7 +1,7 @@
 import { ImageResponse } from 'next/og';
 
-// Route segment config
-export const runtime = 'edge';
+// Route segment config. No `runtime = 'edge'`: on the edge runtime the image
+// rendered on every request (643 ms, max-age=0). On Node it prerenders at build.
 export const alt = 'mcpemails: Give your AI agent an inbox';
 export const size = { width: 1200, height: 630 };
 export const contentType = 'image/png';

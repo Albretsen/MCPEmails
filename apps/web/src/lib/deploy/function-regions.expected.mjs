@@ -246,7 +246,7 @@ export const ROUTES = [
   ['app/authorize/page.js', 'arn1', '8', 'CIMD fetch (client-hosted, memoised)'],
   ['app/dashboard/[[...section]]/page.js', 'arn1', '5 serial stages', '-'],
   ['app/invite/[token]/page.js', 'arn1', '4', '-'],
-  ['app/opengraph-image.tsx', 'edge', '0', '-'],
+  ['app/opengraph-image.tsx', 'iad1', '0', 'prerendered at build; static'],
   ['app/robots.ts', 'iad1', '0', '-'],
   ['app/signup/page.js', 'arn1', '0', '-'],
   ['app/sitemap.ts', 'iad1', '0', '-'],

@@ -67,10 +67,15 @@ test('the withdrawal notice names the contact details and the online form in eve
   }
 });
 
-test('terms: VAT registered, no ODR link, courts and class waiver limited to businesses', () => {
+// Albretsen AS has applied for MVA registration but it is not confirmed. Until
+// it is, no locale may print a VAT number or claim VAT registration. When
+// Skatteetaten confirms it, flip these two checks back to requiring {vatNumber}.
+const VAT_CLAIM = /\{vatNumber\}|Merverdiavgiftsregister|MVA-nummer|VAT (number|register)|TVA|IVA|增值税|Umsatzsteuer/;
+
+test('terms: no VAT claim, no ODR link, courts and class waiver limited to businesses', () => {
   for (const locale of LOCALES) {
     const t = messages(locale, 'terms');
-    assert.ok(t.agreement.p1b.includes('{vatNumber}'), `${locale} p1b has no VAT number`);
+    assert.ok(!VAT_CLAIM.test(t.agreement.p1b), `${locale} p1b claims VAT registration`);
     assert.ok(!/odr/i.test(JSON.stringify(t)), `${locale} still links the EU ODR platform`);
     assert.ok(t.governingLaw.p93.includes('<withdrawal>') && t.governingLaw.p93.includes('<cancel>'), `${locale} p93 links`);
   }
@@ -81,9 +86,21 @@ test('terms: VAT registered, no ODR link, courts and class waiver limited to bus
   assert.match(en.p95, /does not apply to consumers/);
 });
 
-test('privacy: VAT registered in every locale', () => {
+test('privacy: no VAT claim in any locale', () => {
   for (const locale of LOCALES) {
-    assert.ok(messages(locale, 'privacy').whoWeAre.p4.includes('{vatNumber}'), locale);
+    assert.ok(!VAT_CLAIM.test(messages(locale, 'privacy').whoWeAre.p4), locale);
+  }
+});
+
+test('the legal entity is Albretsen AS everywhere, with no sole-proprietorship wording left', () => {
+  const OLD = /Albretsen Consulting|926 646 753|enkeltpersonforetak|sole proprietor|entreprise individuelle|empresa individual|独资|Einzelunternehm/;
+  for (const locale of LOCALES) {
+    for (const ns of ['terms', 'privacy', 'about', 'security', 'home']) {
+      const raw = JSON.stringify(messages(locale, ns));
+      assert.ok(!OLD.test(raw), `${locale}/${ns} still names the old entity`);
+    }
+    assert.match(messages(locale, 'home').footer.legalEntity, /Albretsen AS.*938 702 373/, `${locale} footer`);
+    assert.match(messages(locale, 'about').trusting.entityOrgNo, /938 702 373$/, `${locale} about`);
   }
 });
 
