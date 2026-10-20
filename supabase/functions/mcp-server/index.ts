@@ -2259,6 +2259,24 @@ async function bearerKeyHash(
   req: Request,
   requestId: string | number | null,
 ): Promise<string | Response> {
+  const token = bearerToken(req, requestId);
+  if (token instanceof Response) return token;
+
+  // ── Hash the bearer token ─────────────────────────────────────────────────
+  // Only the SHA-256 hash of the key is stored in the database. The raw key
+  // is never logged or persisted after the user's initial key creation.
+  return await hashApiKey(token);
+}
+
+/**
+ * Steps 1-2 of authenticateRequest: the bearer token from the Authorization
+ * header, or the 401 for a missing, malformed or query-string credential. A
+ * format check only: no hashing and no database I/O. Notifications stop here.
+ */
+function bearerToken(
+  req: Request,
+  requestId: string | number | null,
+): string | Response {
   // ── Extract the API key ───────────────────────────────────────────────────
   // API keys and OAuth access tokens must be supplied in the Authorization
   // header. Query-string credentials are deliberately rejected: URLs are
@@ -2301,7 +2319,7 @@ async function bearerKeyHash(
       401,
     );
   }
-  const bearerToken = authHeader.slice(7).trim();
+  const token = authHeader.slice(7).trim();
 
   // ── Token format check → HTTP 401 ────────────────────────────────────────
   // MCPEmails keys are always exactly 69 characters: "mcpe_" (5) + 64 hex chars.
@@ -2311,7 +2329,7 @@ async function bearerKeyHash(
   // 401 (not 403) so the /api/mcp proxy attaches WWW-Authenticate. OAuth MCP
   // clients refresh their access token on 401 but treat 403 as a hard failure,
   // so an expired token must surface as 401 for the connection to auto-refresh.
-  if (!bearerToken.startsWith("mcpe_") || bearerToken.length !== 69) {
+  if (!token.startsWith("mcpe_") || token.length !== 69) {
     return jsonResponse(
       jsonRpcErrorBody(
         requestId,
@@ -2323,10 +2341,7 @@ async function bearerKeyHash(
     );
   }
 
-  // ── Hash the bearer token ─────────────────────────────────────────────────
-  // Only the SHA-256 hash of the key is stored in the database. The raw key
-  // is never logged or persisted after the user's initial key creation.
-  return await hashApiKey(bearerToken);
+  return token;
 }
 
 /** Step 4 of authenticateRequest: the api_keys lookup by hash, then acceptKeyRow. */
@@ -3054,8 +3069,8 @@ const RESOURCE_RATE_LIMITS: SlidingWindowLimit[] = [
  * Check per-key sliding-window limits for the cheap (non-`tools/call`) methods.
  *
  * Each window is an atomic UPSERT-and-count via the `rate_limit_check` RPC, so
- * concurrent isolates cannot race past the ceiling. The narrowest window is
- * checked first. Fail-open on a DB error — a transient RPC failure must never
+ * concurrent isolates cannot race past the ceiling. All windows are issued
+ * together; the narrowest refusing window decides. Fail-open on a DB error — a transient RPC failure must never
  * block a legitimate client's handshake.
  *
  * `rate_limit_check` returns only a boolean (within-limit), not the residual
@@ -3072,12 +3087,26 @@ async function checkDiscoveryRateLimit(
   limits: SlidingWindowLimit[] = DISCOVERY_RATE_LIMITS,
   namespace = "discovery",
 ): Promise<RateLimitResult> {
-  for (const w of limits) {
-    const { data, error } = await supabase.rpc("rate_limit_check", {
+  // Every window is asked at once: each is its own bucket and its own round
+  // trip, and none depends on another. The answers are still READ narrowest
+  // first, so the narrowest refusing window decides, as when they ran in turn.
+  //
+  // One deliberate difference from the serial loop: a request the minute
+  // window refuses now also counts in the hour bucket (rate_limit_check
+  // increments before it compares). Only a client already over the minute
+  // ceiling, which no legitimate session reaches (see DISCOVERY_RATE_LIMITS),
+  // can see it, and for that client the hour bucket now counts every request
+  // it actually made rather than only the admitted ones.
+  const answers = await Promise.all(limits.map((w) =>
+    supabase.rpc("rate_limit_check", {
       p_key: `mcp:${namespace}:${w.bucket}:${apiKeyId}`,
       p_max_count: w.max,
       p_window_ms: w.windowMs,
-    });
+    })
+  ));
+
+  for (const [index, w] of limits.entries()) {
+    const { data, error } = answers[index];
 
     if (error) {
       // Fail open: skip this window on a DB/RPC error and check the rest.
@@ -31216,7 +31245,12 @@ async function handleToolsList(
   // rather than merely any key — but it is the same gap. Fixing it properly
   // needs the card to fall back to the text result on a non-envelope payload,
   // which is a frontend change.
-  const uiGates = await keyReviewCardGates(apiKey);
+  // Both reads below are independent pure reads, so they share one round trip:
+  // `perOperation` is started here and only taken further down.
+  const [uiGates, perOperation] = await Promise.all([
+    keyReviewCardGates(apiKey),
+    isOpenAiClientKey(apiKey),
+  ]);
 
   // Which tools this credential is shown, and whether the scope filter applies
   // to it at all: a dashboard API key stays filtered to what its scopes allow,
@@ -31236,8 +31270,8 @@ async function handleToolsList(
   // `mcp-app-resources.test.ts` tests this composition instead.
   //
   // An OpenAI client (ChatGPT, Codex) is listed one tool per operation, which
-  // is what its plugin review requires; see PER_OPERATION_LISTING.
-  const perOperation = await isOpenAiClientKey(apiKey);
+  // is what its plugin review requires; see PER_OPERATION_LISTING. Read
+  // alongside the card gates above.
   const visibleTools = withListingCardMeta(
     toolsForListing(apiKey, perOperation),
     uiGates,
@@ -34631,12 +34665,22 @@ async function handleMeteredRequest(req: Request): Promise<Response> {
   // ── Notifications (no id) ─────────────────────────────────────────────────
   // MCP notifications are fire-and-forget: the Streamable HTTP transport says
   // to acknowledge with HTTP 202 Accepted and no body (it was 204 here until
-  // 2026-09-08). Notifications are still authenticated — an unauthenticated
-  // sender should not receive a 202 that implies the notification was accepted.
+  // 2026-09-08). A request with no bearer token, or one that is not shaped like
+  // a key, still gets the same 401 as any other method, so a client that has
+  // not authenticated never reads a 202 as acceptance.
+  //
+  // The key is NOT looked up (2026-10-20). A notification does nothing here:
+  // no handler, no row, no state; the only effect is the log line below. The
+  // api_keys round trip and the last_used_at write it used to cost (~23k
+  // notifications a day, each a full us-east-1 to eu-north-1 round trip in
+  // front of an empty 202) bought nothing, because a revoked key that sends one
+  // learns only that its notification was ignored, and is refused with a 401 on
+  // the very next request that carries an id. last_used_at is still stamped by
+  // the initialize that precedes every notifications/initialized.
   if (isNotification(rpcRequest)) {
-    const authResult = await authenticateRequest(req, null);
-    if (authResult instanceof Response) {
-      return authResult;
+    const malformed = bearerToken(req, null);
+    if (malformed instanceof Response) {
+      return malformed;
     }
     console.log(`[mcp-server] notification received: ${rpcRequest.method}`);
     return new Response(null, { status: 202, headers: CORS_HEADERS });
@@ -34741,22 +34785,24 @@ async function handleMeteredRequest(req: Request): Promise<Response> {
   // scanner on a private network; the metered surface it is exempt from is the
   // one it cannot reach (`tools/call` is not introspectable at all).
   const metered = !INTROSPECTION_ONLY;
-  if (metered && rpcRequest.method !== "tools/call" && rpcRequest.method !== "ping") {
-    const cheapMethodResult = isResourceMethod
-      ? await checkDiscoveryRateLimit(apiKey.id, RESOURCE_RATE_LIMITS, "resources")
-      : await checkDiscoveryRateLimit(apiKey.id);
-    if (!cheapMethodResult.allowed) {
-      console.warn("[mcp-server] cheap_method_rate_limit_exceeded", {
-        key_id: apiKey.id,
-        method: rpcRequest.method,
-        namespace: isResourceMethod ? "resources" : "discovery",
-        window: cheapMethodResult.windowLabel,
-        limit: cheapMethodResult.limit,
-        retry_after_seconds: cheapMethodResult.retryAfterSeconds,
-      });
-      return buildRateLimitResponse(requestId, cheapMethodResult);
-    }
-  }
+  //
+  // Started here and DECIDED first, below, but no longer waited on before the
+  // activity_log limiter and the plan quota are asked (2026-10-20): those are
+  // reads, and they need nothing from this answer. A request this bucket
+  // refuses still gets exactly this 429 and nothing else happens for it; the
+  // only cost is that the reads it no longer needs have been issued. Measured
+  // the same day: no discovery bucket in production was over either ceiling
+  // (highest minute 86 of 250, highest hour 1159 of 2500), so that is a cost
+  // paid by a runaway loop, while every initialize and tools/list saves the
+  // round trips this used to put in front of the other gates.
+  const cheapMethodPending = metered && rpcRequest.method !== "tools/call" && rpcRequest.method !== "ping"
+    ? (isResourceMethod
+      ? checkDiscoveryRateLimit(apiKey.id, RESOURCE_RATE_LIMITS, "resources")
+      : checkDiscoveryRateLimit(apiKey.id))
+    : null;
+  // Awaited below before anything else is; this only keeps a rejection that
+  // lands first from counting as unhandled.
+  cheapMethodPending?.catch(() => {});
 
   // ── Per-key rate limit check ──────────────────────────────────────────────
   // Runs after authentication and before routing to any tool handler. This
@@ -34800,9 +34846,31 @@ async function handleMeteredRequest(req: Request): Promise<Response> {
       : loadActionAllowance(apiKey.workspace_id);
     ctx.allowance.catch(() => {});
   }
-  const rateLimitResult = isResourceMethod || !metered
+  const rateLimitPending = isResourceMethod || !metered
+    ? null
+    : checkRateLimit(apiKey.id, preloaded?.rateLimit);
+  // Never awaited when the cheap-method bucket refuses first.
+  rateLimitPending?.catch(() => {});
+
+  // The cheap-method bucket outranks both gates below, as it always has.
+  if (cheapMethodPending !== null) {
+    const cheapMethodResult = await cheapMethodPending;
+    if (!cheapMethodResult.allowed) {
+      console.warn("[mcp-server] cheap_method_rate_limit_exceeded", {
+        key_id: apiKey.id,
+        method: rpcRequest.method,
+        namespace: isResourceMethod ? "resources" : "discovery",
+        window: cheapMethodResult.windowLabel,
+        limit: cheapMethodResult.limit,
+        retry_after_seconds: cheapMethodResult.retryAfterSeconds,
+      });
+      return buildRateLimitResponse(requestId, cheapMethodResult);
+    }
+  }
+
+  const rateLimitResult = rateLimitPending === null
     ? { allowed: true as const }
-    : await checkRateLimit(apiKey.id, preloaded?.rateLimit);
+    : await rateLimitPending;
   if (!rateLimitResult.allowed) {
     console.warn("[mcp-server] rate_limit_exceeded", {
       key_id: apiKey.id,
