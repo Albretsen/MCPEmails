@@ -36,7 +36,7 @@ Begge veiene fortsetter å virke, og valget avgjør hva Claude kan gjøre etterp
 - **Apppassord (IMAP):** Gmail-etiketter vises som mapper, søk bruker IMAP-tekstsøk, og Claude kan kopiere meldinger og slette dem permanent.
 - **Logg inn med Google (Gmail API):** Claude jobber med ekte Gmail-etiketter og kan søke med Gmail-operatorer som \`from:\`, \`is:unread\` og \`after:\`. Sletting flytter e-posten til papirkurven.
 
-På en Google Workspace-konto kan en administrator slå av apppassord for hele domenet, eller blokkere tredjepartsapper på Google-innloggingsveien. Hvis én vei er blokkert, prøv den andre, eller spør administratoren din.
+På en Google Workspace-konto kan en administrator slå av apppassord for hele domenet, eller blokkere tredjepartsapper på Google-innloggingsveien. Hvis én vei er blokkert, prøv den andre, eller spør administratoren din. Siden om [Gmail-innstillinger og begrensninger](/connect/gmail) samler de Gmail-spesifikke detaljene på ett sted.
 
 ## Steg 2: Legg til MCP Emails i Claude
 
@@ -52,7 +52,7 @@ https://mcpemails.com/api/mcp
 
 4. Klikk **Connect**, logg inn med MCP Emails-kontoen din, og godkjenn scopene du ønsker: \`read:email\`, \`send:email\`, eller begge.
 
-Det er hele klientsiden. Tilkoblingen er begrenset til nøyaktig det du godkjente, og du kan tilbakekalle den fra dashbordet med ett klikk. Hvis du heller vil forstå API-nøkkel-veien (for klienter uten innebygd OAuth, som Cline eller et egendefinert skript), les [OAuth vs. API-nøkler for AI-e-posttilgang](/blog/oauth-vs-api-keys-ai-email-access).
+Det er hele klientsiden. Tilkoblingen er begrenset til nøyaktig det du godkjente, og du kan tilbakekalle den fra dashbordet med ett klikk. Hvis du heller vil forstå API-nøkkel-veien (for klienter uten innebygd OAuth, som Cline eller et egendefinert skript), les [OAuth vs. API-nøkler for AI-e-posttilgang](/blog/oauth-vs-api-keys-ai-email-access). Skal du koble til en annen innboks også? [Steg-for-steg-oppsettet for e-post i Claude](/blog/connect-claude-to-email) dekker Outlook, iCloud, Fastmail og IMAP.
 
 ## Steg 3: Be Claude om din første prompt
 

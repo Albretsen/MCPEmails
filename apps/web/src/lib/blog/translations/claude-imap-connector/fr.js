@@ -21,7 +21,7 @@ Claude n’a donc besoin ni d’une bibliothèque IMAP, ni d’une configuration
 
 ## Ce qu’il vous faut avant la configuration
 
-Rassemblez les informations suivantes depuis la page d’aide de votre fournisseur de messagerie ou auprès de votre administrateur :
+Rassemblez les informations suivantes depuis la page d’aide de votre fournisseur de messagerie ou auprès de votre administrateur. Vous pouvez aussi consulter les [réglages IMAP et SMTP vérifiés pour chaque fournisseur](/connect) :
 
 - **Adresse e-mail :** par exemple, \`you@example.com\`. C’est l’adresse affichée sur la boîte connectée.
 - **Nom d’utilisateur :** généralement l’adresse e-mail complète. Certains hébergeurs de domaines personnalisés fournissent un identifiant IMAP/SMTP différent.
@@ -33,7 +33,7 @@ Ne déduisez pas les noms de serveur du domaine si votre fournisseur publie ses 
 
 Utilisez un **mot de passe d’application** dès que le fournisseur le permet. Il est distinct du mot de passe principal du compte et peut être révoqué sans changer celui que vous utilisez pour vous connecter. Les fournisseurs exigent souvent l’authentification à deux facteurs avant de permettre sa création. Certains demandent également d’activer d’abord l’accès IMAP dans les réglages de messagerie.
 
-MCPEmails inclut des préréglages pour iCloud, Yahoo, Zoho et Yandex, ainsi qu’un flux dédié aux mots de passe d’application Fastmail. Ces choix renseignent automatiquement les hôtes et ports connus. Choisissez **Generic IMAP** pour un autre fournisseur ou votre propre serveur de messagerie, puis saisissez vous-même les valeurs.
+MCPEmails inclut des préréglages pour [iCloud](/connect/icloud), [Yahoo](/connect/yahoo), [Zoho](/connect/zoho) et [Yandex](/connect/yandex), ainsi qu’un flux dédié aux mots de passe d’application [Fastmail](/connect/fastmail). Ces choix renseignent automatiquement les hôtes et ports connus. Choisissez **Generic IMAP** pour un autre fournisseur ou votre propre serveur de messagerie, puis saisissez vous-même les valeurs. Consultez la [page de configuration IMAP générique](/connect/imap).
 
 ## Étape 1 : connecter la boîte IMAP/SMTP
 

@@ -2,8 +2,10 @@ import { notFound } from 'next/navigation';
 import { setRequestLocale, getTranslations } from 'next-intl/server';
 import { localePath, OG_LOCALE, APP_URL } from '@/i18n/seo';
 import { routing } from '@/i18n/routing';
-import { getAllPosts, getLocalizedPost, getAuthor } from '@/lib/blog/posts';
+import { getAllPosts, getLocalizedPost, getAuthor, getPost, getPostLocales } from '@/lib/blog/posts';
 import { renderMarkdown, readingTime } from '@/lib/blog/markdown';
+import { localizeHrefFor } from '@/lib/blog/localize-href.mjs';
+import { getProvider } from '@/lib/connect/providers.mjs';
 import BlogPostClient from '../../../../components/marketing/BlogPostClient';
 
 /** Pre-render every post in every locale (untranslated locales fall back to English). */
@@ -72,7 +74,16 @@ export default async function BlogPostPage({ params }) {
 
   const t = await getTranslations({ locale, namespace: 'blog' });
   const author = getAuthor(post);
-  const { html, headings } = renderMarkdown(post.content);
+  // Body links are written as English paths in every translation; this points
+  // them at the reader's locale wherever that page exists (lib/blog/localize-href).
+  const mapHref = localizeHrefFor(locale, {
+    postLocales: (target) => {
+      const p = getPost(target);
+      return p ? getPostLocales(p) : null;
+    },
+    providerLocales: (target) => getProvider(target)?.locales ?? null,
+  });
+  const { html, headings } = renderMarkdown(post.content, { mapHref });
   const readingMinutes = readingTime(post.content);
   const path = `/blog/${slug}`;
   const { canonical, canonicalLocale } = buildAlternates(post, locale, path);

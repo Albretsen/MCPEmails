@@ -22,23 +22,23 @@ En el panel de MCP Emails, abre **Inboxes → Connect Inbox** y elige tu proveed
 
 ### Gmail y Google Workspace
 
-Elige **Gmail**, crea una contraseña de aplicación de Google (tu cuenta de Google necesita la verificación en dos pasos para ello) y pégala junto con tu dirección de Gmail. También puedes elegir Iniciar sesión con Google. En ambos casos, tu contraseña normal de Google nunca se comparte con MCP Emails. Consulta la [guía específica de Gmail](/blog/connect-gmail-to-claude) si un administrador de Workspace controla el acceso a aplicaciones.
+Elige **Gmail**, crea una contraseña de aplicación de Google (tu cuenta de Google necesita la verificación en dos pasos para ello) y pégala junto con tu dirección de Gmail. También puedes elegir Iniciar sesión con Google. En ambos casos, tu contraseña normal de Google nunca se comparte con MCP Emails. Consulta la [guía específica de Gmail](/blog/connect-gmail-to-claude) si un administrador de Workspace controla el acceso a aplicaciones. Consulta los [ajustes y límites de Gmail](/connect/gmail) y la [página de configuración de Google Workspace](/connect/google-workspace).
 
 ### iCloud Mail
 
-Crea una contraseña específica de aplicación en tu cuenta de Apple, elige **iCloud** e introduce esa contraseña, no la normal de tu cuenta de Apple. La [guía de iCloud e IMAP](/blog/connect-icloud-fastmail-imap-to-claude) incluye los pasos exactos.
+Crea una contraseña específica de aplicación en tu cuenta de Apple, elige **iCloud** e introduce esa contraseña, no la normal de tu cuenta de Apple. La [guía de iCloud e IMAP](/blog/connect-icloud-fastmail-imap-to-claude) incluye los pasos exactos. Consulta también [Conectar iCloud Mail a Claude](/connect/icloud).
 
 ### Fastmail
 
-Crea en Fastmail una contraseña de aplicación con acceso a Mail, elige **Fastmail** y pégala en MCP Emails. Consérvala hasta que la prueba de conexión termine correctamente.
+Crea en Fastmail una contraseña de aplicación con acceso a Mail, elige **Fastmail** y pégala en MCP Emails. Consérvala hasta que la prueba de conexión termine correctamente. Consulta los [ajustes de Fastmail para Claude](/connect/fastmail).
 
 ### Outlook y Microsoft 365
 
-Outlook se conecta con Iniciar sesión con Microsoft, no con una contraseña de aplicación: elige **Outlook**, haz clic en **Conectar con Microsoft** y aprueba. Las cuentas personales de Outlook.com, Hotmail, Live y MSN se conectan directamente. Las cuentas de trabajo o educativas de Microsoft 365 pueden necesitar antes que un administrador de TI apruebe la aplicación una sola vez para toda la organización; el panel te da un enlace para enviárselo. La [guía de Outlook y Microsoft 365](/blog/connect-outlook-microsoft-365-ai-agent-mcp) tiene los detalles.
+Outlook se conecta con Iniciar sesión con Microsoft, no con una contraseña de aplicación: elige **Outlook**, haz clic en **Conectar con Microsoft** y aprueba. Las cuentas personales de Outlook.com, Hotmail, Live y MSN se conectan directamente. Las cuentas de trabajo o educativas de Microsoft 365 pueden necesitar antes que un administrador de TI apruebe la aplicación una sola vez para toda la organización; el panel te da un enlace para enviárselo. La [guía de Outlook y Microsoft 365](/blog/connect-outlook-microsoft-365-ai-agent-mcp) tiene los detalles. Consulta la [página de configuración de Outlook](/connect/outlook) o la [página de configuración de Microsoft 365](/connect/office365).
 
 ### Yahoo, Zoho, Yandex e IMAP personalizado
 
-Crea una contraseña de aplicación, elige **IMAP** e introduce la dirección y la contraseña. Los ajustes comunes se detectan automáticamente; los dominios personalizados pueden requerir el host, puerto y modo de seguridad IMAP/SMTP indicados por el proveedor.
+Crea una contraseña de aplicación, elige **IMAP** e introduce la dirección y la contraseña. Los ajustes comunes se detectan automáticamente; los dominios personalizados pueden requerir el host, puerto y modo de seguridad IMAP/SMTP indicados por el proveedor. Los ajustes de cada uno están en las páginas de [Yahoo Mail](/connect/yahoo), [Zoho Mail](/connect/zoho), [Yandex Mail](/connect/yandex) e [IMAP personalizado](/connect/imap). También puedes ver [todos los proveedores compatibles](/connect).
 
 Puedes conectar más de un buzón. Claude los descubre con \`inbox_list\`, así que no tienes que pegar identificadores de buzón en un prompt.
 
@@ -58,7 +58,7 @@ https://mcpemails.com/api/mcp
 
 4. Selecciona **Connect**, inicia sesión en MCP Emails y aprueba los permisos que quieras: \`read:email\`, \`send:email\` o ambos.
 
-Ese es todo el proceso en Claude. OAuth limita la conexión a los permisos que aprobaste y puedes revocarla desde MCP Emails cuando quieras. Si usas un cliente sin OAuth, emplea una clave de API limitada; [OAuth frente a claves de API](/blog/oauth-vs-api-keys-ai-email-access) explica ese camino.
+Ese es todo el proceso en Claude. OAuth limita la conexión a los permisos que aprobaste y puedes revocarla desde MCP Emails cuando quieras. Si usas un cliente sin OAuth, emplea una clave de API limitada; [OAuth frente a claves de API](/blog/oauth-vs-api-keys-ai-email-access) explica ese camino. Para problemas específicos de Claude, consulta la [página de configuración de Claude](/docs/claude).
 
 ## Paso 3: Dale a Claude una primera tarea segura
 
