@@ -42,6 +42,7 @@ const SUBTITLE_TRACKS = [
   { locale: 'fr', label: 'Français' },
   { locale: 'nb', label: 'Norsk bokmål' },
   { locale: 'zh', label: '中文' },
+  { locale: 'de', label: 'Deutsch' },
 ];
 
 const DEFAULT_TRACK_LOCALE = 'en';

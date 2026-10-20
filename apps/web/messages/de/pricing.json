@@ -1,0 +1,224 @@
+{
+  "meta": {
+    "title": "Preise für den KI-E-Mail-MCP-Server: Free, Personal, Pro und Business",
+    "description": "Free verbindet ein Postfach. Personal verbindet drei für $9 pro Monat. Pro verbindet bis zu 10 für $15. Business enthält 10 Postfächer und beliebig viele Personen für $39."
+  },
+  "hero": {
+    "eyebrow": "Preise",
+    "titleLine1": "Ein Postfach, kostenlos.",
+    "titleLine2": "Drei Postfächer, $9.",
+    "titleLine2Yearly": "Drei Postfächer, $86.40 pro Jahr.",
+    "lead": "Verbinden Sie ein Postfach einmal, und Ihr Agent kann lesen, suchen, organisieren, entwerfen, planen und senden. Free umfasst ein Postfach. Personal umfasst drei für $9 pro Monat. Pro umfasst bis zu 10 für eine Person, die ein Unternehmen führt, mit einem Login. Business enthält 10 Postfächer, berechnet $3 pro Monat für jedes weitere, und Ihr ganzes Team kann sich ohne Aufpreis anmelden."
+  },
+  "billing": {
+    "monthly": "Monatlich",
+    "annual": "Jährlich",
+    "save": "Rund 20 % sparen"
+  },
+  "card": {
+    "perForever": "/dauerhaft",
+    "perMonth": "/Monat",
+    "billedYearly": "${total}/Jahr, jährlich abgerechnet"
+  },
+  "plans": {
+    "free": {
+      "name": "Free",
+      "desc": "Verbinden Sie ein Postfach und geben Sie Ihrem Agenten eine echte Mailbox.",
+      "cta": "Kostenlos starten",
+      "features": [
+        "1 verbundenes Postfach",
+        "150 E-Mail-Aktionen pro Monat, die ersten 3 Tage zählen nicht",
+        "Lesen, suchen, organisieren, entwerfen, planen und senden",
+        "Versandprüfung und Freigabe",
+        "Nutzungsanalyse",
+        "Gmail, Outlook, iCloud, Fastmail und jedes IMAP-Postfach",
+        "Unbegrenzt viele API-Schlüssel",
+        "Community-Support"
+      ]
+    },
+    "personal": {
+      "name": "Personal",
+      "desc": "Drei Postfächer für eine Person oder ein kleines Unternehmen: beruflich, privat oder die ersten Firmenadressen.",
+      "cta": "Personal wählen",
+      "ctaGrandfathered": "Sie haben bereits unbegrenzt viele Postfächer",
+      "features": [
+        "Alles aus Free",
+        "3 verbundene Postfächer",
+        "Kein monatliches Aktionslimit",
+        "2x höheres Burst-Ratenlimit",
+        "E-Mail-Support"
+      ]
+    },
+    "solo": {
+      "name": "Pro",
+      "desc": "Für eine Person, die ein Unternehmen führt: bis zu 10 Postfächer in einem Agenten, von Buchhaltung und Vertrieb bis Support und Ihrem eigenen.",
+      "cta": "Pro wählen",
+      "features": [
+        "Alles aus Personal",
+        "10 verbundene Postfächer",
+        "5x höheres Burst-Ratenlimit",
+        "Längerer Analyseverlauf"
+      ]
+    },
+    "pro": {
+      "name": "Business",
+      "desc": "Für Unternehmen mit vielen Postfächern oder mehreren Personen: 10 Postfächer inklusive, weitere zum Festpreis.",
+      "cta": "Business wählen",
+      "features": [
+        "Alles aus Pro",
+        "10 Postfächer inklusive, $3 pro Monat für jedes weitere",
+        "Unbegrenzt viele Mitglieder mit Rollen, ohne Aufpreis",
+        "Admins geben zurückgehaltene Sendungen frei",
+        "Mehrere Workspaces in einem Abonnement, einer pro Firma oder Kunde"
+      ]
+    }
+  },
+  "cardsFootnote": {
+    "all": "In allen Tarifen: E-Mails live abgerufen, nie gespeichert · Zugangsdaten verschlüsselt gespeichert · Daten in der EU gespeichert (Stockholm)",
+    "business": "Eine Person mit mehreren Firmenpostfächern? Das ist Pro, für bis zu 10. <business>So läuft jedes Geschäftspostfach in einem Agenten</business>."
+  },
+  "enterprise": {
+    "title": "Enterprise: Sprechen Sie uns an",
+    "body": "Ein AVV, Abrechnung per Rechnung und Hilfe dabei, Microsoft 365 von Ihrer IT-Administration freigeben zu lassen. Schreiben Sie an <contact>hello@mcpemails.com</contact>."
+  },
+  "comparison": {
+    "eyebrow": "Vollständiger Vergleich",
+    "title": "Alles im direkten Vergleich.",
+    "featureCol": "Funktion",
+    "free": "Free",
+    "personal": "Personal",
+    "solo": "Pro",
+    "business": "Business",
+    "sections": {
+      "usage": {
+        "label": "Was Sie bekommen",
+        "rows": {
+          "inboxes": "Verbundene Postfächer",
+          "actions": "E-Mail-Aktionen pro Monat",
+          "keys": "API-Schlüssel",
+          "members": "Personen mit eigenem Login",
+          "burst": "Burst-Ratenlimit",
+          "approvals": "Versandprüfung und Freigabe"
+        }
+      },
+      "providers": {
+        "label": "E-Mail-Anbieter",
+        "rows": {
+          "gmail": "Gmail (Google-App-Passwort)",
+          "outlook": "Outlook / Microsoft 365 (Microsoft-Anmeldung)",
+          "fastmail": "Fastmail (App-Passwort)",
+          "appPassword": "iCloud, Yahoo, Zoho, Yandex (App-Passwort)",
+          "imap": "Jedes IMAP- / SMTP-Postfach"
+        }
+      },
+      "mcpTools": {
+        "label": "MCP-Tools"
+      },
+      "analytics": {
+        "label": "Analyse & Sicherheit",
+        "rows": {
+          "dashboard": "Dashboard zur Nutzungsanalyse",
+          "roles": "Mitglieder mit Rollen (Betrachter, Mitglied, Admin)",
+          "adminApprovals": "Admins geben zurückgehaltene Sendungen frei",
+          "workspaces": "Mehrere Workspaces in einem Abonnement",
+          "history": "Analyseverlauf"
+        }
+      },
+      "privacy": {
+        "label": "Datenschutz & Sicherheit",
+        "rows": {
+          "neverStored": "E-Mails live abgerufen, nie gespeichert",
+          "encrypted": "Zugangsdaten verschlüsselt gespeichert"
+        }
+      },
+      "support": {
+        "label": "Support",
+        "rows": {
+          "community": "Community-Forum",
+          "email": "E-Mail-Support"
+        }
+      }
+    },
+    "values": {
+      "unlimited": "Unbegrenzt",
+      "tenMailboxes": "Bis zu 10 Postfächer",
+      "businessMailboxes": "10 inklusive, dann je $3 pro Monat",
+      "actionsFree": "150 / Monat, die ersten 3 Tage zählen nicht",
+      "actionsPaid": "Kein Monatslimit, Fair Use",
+      "oneInbox": "1 Postfach",
+      "threeInboxes": "3 Postfächer",
+      "oneSeat": "1 Person",
+      "unlimitedPeople": "Unbegrenzt, ohne Aufpreis",
+      "burstFree": "60 / Min.",
+      "burstPersonal": "120 / Min.",
+      "burstSolo": "300 / Min.",
+      "burstPro": "1.000 / Min.",
+      "history30": "30 Tage",
+      "history90": "90 Tage"
+    }
+  },
+  "faq": {
+    "eyebrow": "FAQ",
+    "title": "Häufige Fragen.",
+    "items": [
+      {
+        "q": "Was bekomme ich im Free-Tarif?",
+        "a": "Ein verbundenes Postfach, dauerhaft, ohne Kreditkarte, und 150 E-Mail-Aktionen pro Kalendermonat. Die ersten 3 Tage nach der Registrierung zählen nicht, sodass Sie Ihren Agenten einrichten und alles ausprobieren können, bevor gezählt wird. Ihr Agent bekommt für dieses Postfach jedes MCP-Tool, das wir anbieten: lesen, suchen, organisieren, labeln, entwerfen, planen und senden, dazu die Versandprüfung und Freigabe pro Postfach. Wenn Sie ein zweites oder drittes Postfach oder kein monatliches Aktionslimit möchten, ist das Personal, für $9 pro Monat."
+      },
+      {
+        "q": "Was bietet Personal zusätzlich zu Free?",
+        "a": "Zwei weitere verbundene Postfächer, kein monatliches Limit für E-Mail-Aktionen (Fair Use gilt), die doppelte Burst-Grenze (120 Anfragen pro Minute statt 60) und E-Mail-Support statt Community-Forum. Das ist die ganze Liste. Alles andere ist schon in Free enthalten: jedes MCP-Tool einschließlich geplanter Sendungen, die Versandprüfung und Freigabe pro Postfach und das Dashboard zur Nutzungsanalyse. Wir halten in Free keine Funktionen zurück, nur damit die bezahlten Tarife größer wirken."
+      },
+      {
+        "q": "Was zählt als E-Mail-Aktion?",
+        "a": "Ein Tool-Aufruf an Ihren /mcp-Endpunkt, der ein Postfach berührt: Lesen, Suchen, Verschieben, Entwurf, Senden. Das Auflisten Ihrer Postfächer (inbox_list) und alles, was Sie im Dashboard tun, wird nie gezählt. Wir sind ein Standard-MCP-Server, also funktioniert derselbe Endpunkt mit Claude, Cursor, VS Code, ChatGPT, Windsurf, n8n, Make und jedem MCP-kompatiblen Client. Free enthält 150 E-Mail-Aktionen pro Kalendermonat; Personal, Pro und Business haben kein Monatslimit, vorbehaltlich Fair Use."
+      },
+      {
+        "q": "Was passiert, wenn ich 150 E-Mail-Aktionen erreicht habe?",
+        "a": "Jede weitere E-Mail-Aktion in diesem Workspace wird bis zum 1. des Folgemonats (UTC) abgelehnt, dann wird das Kontingent zurückgesetzt. Ihr Agent erhält ein klares Tool-Ergebnis mit der Zahl der verbrauchten Aktionen und dem Zeitpunkt des Zurücksetzens, sodass er weiß, dass erneute Versuche nichts bringen. Unbeaufsichtigte Automatisierungen pausieren und laufen am 1. von selbst weiter. Das Dashboard und inbox_list funktionieren weiter, und wir schicken Ihnen bei 80 % und noch einmal bei 100 % eine E-Mail. Personal hebt das Monatslimit für $9 pro Monat auf. Workspaces, die vor dem 2026-09-12 erstellt wurden, gelten als frühe Mitglieder und werden nicht gegen das Kontingent gezählt."
+      },
+      {
+        "q": "Werden meine E-Mail-Inhalte irgendwo gespeichert?",
+        "a": "Die E-Mails, die Ihr Agent liest, werden nie gespeichert: Texte, Betreffzeilen, Anhänge und Thread-Inhalte werden live von Ihrem Anbieter abgerufen und direkt an den Agenten zurückgegeben, zwischen den Aufrufen bleibt nichts liegen. Wir speichern Ihren verschlüsselten OAuth-Token oder Ihr App-Passwort, damit wir künftige Anfragen authentifizieren können. Ausnahmen sind ausgehende Nachrichten, die warten müssen: eine Nachricht, die Sie für später planen lassen, oder eine Sendung, die auf Ihre Freigabe wartet. Diese speichern wir verschlüsselt und bewahren danach einen Eintrag für Ihren Verlauf auf."
+      },
+      {
+        "q": "Was ist der Unterschied zwischen Personal, Pro und Business?",
+        "a": "Personal ist ein Platz mit drei verbundenen Postfächern, einer Grenze von 120 Anfragen pro Minute und E-Mail-Support. Pro ist weiterhin ein Platz und ein Login, mit bis zu 10 verbundenen Postfächern, sodass eine Person alle Postfächer eines Unternehmens betreuen kann (Vertrieb, Rechnungen, Support, Info). Dazu kommen eine Grenze von 300 Anfragen pro Minute, 90 statt 30 Tage Analyseverlauf und E-Mail-Support. Business ist für mehr Postfächer oder mehr Personen: 10 Postfächer inklusive und $3 pro Monat für jedes weitere, unbegrenzt viele Mitglieder mit Rollen (Betrachter, Mitglied, Admin) ohne Aufpreis, Admins, die zurückgehaltene Sendungen freigeben, mehrere Workspaces in einem Abonnement und eine Grenze von 1.000 Anfragen pro Minute."
+      },
+      {
+        "q": "Wir sind ein Unternehmen mit mehreren Postfächern. Welchen Tarif brauchen wir?",
+        "a": "Zählen Sie zuerst die Postfächer, dann die Personen, die sich anmelden. Betreut eine Person info@, sales@, invoices@ und den Rest, ist das Pro: ein Login, bis zu 10 verbundene Postfächer, und jedes Postfach behält seinen eigenen Absendernamen und seine Signatur und sendet über seinen eigenen Mailserver. Zwei oder drei Adressen passen in Personal. Business ist für mehr als 10 Postfächer oder wenn eine zweite Person ein eigenes Login braucht: 10 Postfächer sind inklusive, jedes weitere kostet $3 pro Monat, und Mitglieder kosten nichts extra. Jedes Postfach mit IMAP und SMTP lässt sich verbinden, egal wo es gehostet ist, ebenso Gmail, Google Workspace und Microsoft 365; bei einem Firmenkonto von Microsoft 365 muss die IT-Administration die App eventuell einmal freigeben."
+      },
+      {
+        "q": "Was, wenn ich ein viertes Postfach brauche?",
+        "a": "Personal umfasst drei verbundene Postfächer. Mit einem vierten wechseln Sie zu Pro für $15 pro Monat, das bis zu 10 Postfächer in einem Agenten und mit einem Login abdeckt. Ab 10 enthält Business 10 Postfächer und berechnet $3 pro Monat für jedes weitere. Wenn Sie knapp über drei liegen und das für Sie nicht passt, schreiben Sie uns an hello@mcpemails.com."
+      },
+      {
+        "q": "Kann ich meinen Tarif ändern oder kündigen?",
+        "a": "Ja. Upgraden, downgraden oder kündigen Sie jederzeit im Abrechnungsbereich Ihres Dashboards. Eine Kündigung stoppt die nächste Verlängerung, und Sie behalten alles Bezahlte bis zum Ende des laufenden Zeitraums, danach wechseln Sie zu Free mit einem verbundenen Postfach. Angebrochene Zeiträume erstatten wir nicht, aber für die erste Zahlung eines neuen Abonnements siehe die Frage zur Rückerstattung unten."
+      },
+      {
+        "q": "Wie funktioniert der Jahresrabatt?",
+        "a": "Bei jährlicher Zahlung sparen Sie rund 20 % gegenüber monatlich: Personal kostet $86.40 pro Jahr ($7.20 pro Monat), Pro $144 pro Jahr ($12 pro Monat) und Business $374.40 pro Jahr ($31.20 pro Monat), jedes weitere Postfach $28.80 pro Jahr ($2.40 pro Monat). Sie zahlen einmal im Voraus für 12 Monate. Eine Kündigung stoppt die Verlängerung, und Sie behalten den Zugang bis zum Ende des bezahlten Jahres. Abgesehen von der 14-tägigen Rückerstattung bei einer ersten Zahlung erstatten wir die restlichen Monate nicht."
+      },
+      {
+        "q": "Welche E-Mail-Anbieter werden unterstützt?",
+        "a": "Gmail und Google Workspace verbinden sich mit einem Google-App-Passwort über IMAP. Outlook und Microsoft 365 verbinden sich per Microsoft-Anmeldung (OAuth): Private Konten direkt, bei Arbeits- oder Schulkonten muss die IT-Administration die App eventuell einmal freigeben. Fastmail verbindet sich mit einem App-Passwort. iCloud, Yahoo, Zoho und Yandex verbinden sich mit einem app-spezifischen Passwort, und jedes andere Postfach funktioniert über den generischen IMAP- / SMTP-Konnektor."
+      },
+      {
+        "q": "Gibt es eine Rückerstattung?",
+        "a": "Ja. Wenn die erste Zahlung eines neuen Abonnements nicht Ihren Erwartungen entspricht, schreiben Sie uns innerhalb von 14 Tagen, und wir erstatten sie vollständig. Danach können Sie jederzeit kündigen und behalten den Zugang bis zum Ende des bereits bezahlten Zeitraums, angebrochene Zeiträume erstatten wir aber nicht. Wenn Sie Verbraucher in der EU oder im Vereinigten Königreich sind, sind diese 14 Tage zugleich Ihr gesetzliches Widerrufsrecht."
+      },
+      {
+        "q": "Kann ich es selbst hosten, statt zu bezahlen?",
+        "a": "Ja. MCP Emails ist Open Source unter AGPL-3.0 und kostenlos selbst zu hosten. Ein docker-compose-Stack betreibt denselben MCP-Server, und Ihre Postfach-Zugangsdaten werden mit einem Schlüssel verschlüsselt, den nur Sie besitzen. Self-Hosting deckt IMAP- und SMTP-Postfächer ab. Gmail- und Outlook-Anmeldung (OAuth) und das Dashboard bleiben im gehosteten Dienst, wo sie in jedem Tarif funktionieren, auch in Free; Mitglieder und Rollen gibt es in Business, E-Mail-Support in jedem bezahlten Tarif."
+      }
+    ]
+  },
+  "ctaBand": {
+    "title": "Bereit, Ihrem Agenten ein Postfach zu geben?",
+    "sub": "Starten Sie mit Free: ein Postfach, keine Kreditkarte nötig. Personal bringt Sie auf drei Postfächer für $9 pro Monat, Pro auf 10 für $15, und Business enthält 10 für $39 mit $3 pro Monat für jedes weitere.",
+    "ctaPrimary": "Kostenlos starten",
+    "ctaSecondary": "Zur Doku"
+  }
+}

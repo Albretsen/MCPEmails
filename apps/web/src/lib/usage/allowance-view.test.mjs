@@ -143,7 +143,7 @@ function lookup(messages, key) {
 }
 
 test('every allowance string exists in all five locales', () => {
-  for (const locale of ['en', 'es', 'fr', 'nb', 'zh']) {
+  for (const locale of ['en', 'es', 'fr', 'nb', 'zh', 'de']) {
     const messages = JSON.parse(
       readFileSync(path.resolve(here, `../../../messages/${locale}/dashboard.json`), 'utf8'),
     );
@@ -157,7 +157,7 @@ test('no allowance string smuggles a literal "<" past next-intl', () => {
   // next-intl escapes ICU apostrophes and angle brackets at build time only in
   // development: a bare "<" renders literally in production, where it reads as
   // a broken tag (feedback_nextintl_icu_escape_dev_only). Reword, never escape.
-  for (const locale of ['en', 'es', 'fr', 'nb', 'zh']) {
+  for (const locale of ['en', 'es', 'fr', 'nb', 'zh', 'de']) {
     const messages = JSON.parse(
       readFileSync(path.resolve(here, `../../../messages/${locale}/dashboard.json`), 'utf8'),
     );
@@ -171,7 +171,7 @@ test('the placeholders each allowance string declares are the ones it is given',
   // The render sites pass {used}, {cap} and {date}; a translation that invents
   // a fourth placeholder throws at render rather than degrading.
   const allowed = new Set(['used', 'cap', 'date']);
-  for (const locale of ['en', 'es', 'fr', 'nb', 'zh']) {
+  for (const locale of ['en', 'es', 'fr', 'nb', 'zh', 'de']) {
     const messages = JSON.parse(
       readFileSync(path.resolve(here, `../../../messages/${locale}/dashboard.json`), 'utf8'),
     );
@@ -187,7 +187,7 @@ test('a locale never quotes a different set of placeholders than English', () =>
   const placeholders = (messages, key) =>
     [...lookup(messages, key).matchAll(/\{(\w+)\}/g)].map(([, n]) => n).sort();
   const en = JSON.parse(readFileSync(path.resolve(here, '../../../messages/en/dashboard.json'), 'utf8'));
-  for (const locale of ['es', 'fr', 'nb', 'zh']) {
+  for (const locale of ['es', 'fr', 'nb', 'zh', 'de']) {
     const messages = JSON.parse(
       readFileSync(path.resolve(here, `../../../messages/${locale}/dashboard.json`), 'utf8'),
     );

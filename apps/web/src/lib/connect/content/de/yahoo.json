@@ -1,0 +1,97 @@
+{
+  "_sources": [
+    "https://help.yahoo.com/kb/SLN4075.html",
+    "https://help.yahoo.com/kb/SLN15241.html"
+  ],
+  "auth": {
+    "method": "app-password",
+    "label": "App-Passwort",
+    "helpUrl": "https://help.yahoo.com/kb/SLN15241.html",
+    "usernameForm": "Ihre vollständige Yahoo-Adresse mit Domain: name@yahoo.com, oder die Variante mit ymail.com oder rocketmail.com, mit der Sie sich registriert haben.",
+    "status": "active"
+  },
+  "meta": {
+    "title": "Yahoo Mail mit Claude, ChatGPT und Cursor verbinden",
+    "description": "Yahoo Mail mit Claude, Cursor und jedem MCP-Client verbinden, per IMAP auf Port 993 mit einem Yahoo App-Passwort. Ihr Kontopasswort funktioniert nicht. Ein Postfach kostenlos."
+  },
+  "hero": {
+    "eyebrow": "Yahoo Mail + KI",
+    "titleLine1": "Yahoo Mail mit Claude verbinden,",
+    "titleLine2": "und mit Cursor, ChatGPT und jedem MCP-Client",
+    "lead": "Geben Sie Ihrem KI-Agenten in wenigen Minuten ein echtes Yahoo-Postfach. Lesen, suchen, senden, antworten, planen und sortieren Sie E-Mails mit einem einzigen App-Passwort, und nutzen Sie dasselbe Postfach in jedem MCP-Client, nicht nur in einem.",
+    "meta0": "1 Postfach dauerhaft kostenlos",
+    "meta1": "App-Passwort, keine OAuth-Einrichtung",
+    "meta2": "E-Mails werden live abgerufen, nie gespeichert",
+    "answer": "Claude kann Yahoo Mail nicht selbst erreichen. MCP Emails ist ein gehosteter MCP-Server, der das Postfach per IMAP auf Port 993 verbindet. Die Anmeldung erfolgt mit einem Yahoo App-Passwort, das Sie auf der Seite zur Kontosicherheit im Bereich für externe Verbindungen erstellen. Danach können Claude, Cursor oder jeder MCP-Client diese E-Mails lesen, suchen, senden und sortieren. Ihr normales Yahoo-Passwort wird von einem Mail-Client nie akzeptiert. Die Einrichtung dauert ein paar Minuten, und ein Postfach ist dauerhaft kostenlos."
+  },
+  "method": {
+    "title": "So verbindet sich Yahoo: mit einem App-Passwort",
+    "body": "Yahoo Mail verbindet sich über IMAP/SMTP mit einem <b>Yahoo App-Passwort</b>. Erstellen Sie es in den Yahoo-Einstellungen zur Kontosicherheit im Bereich für externe Verbindungen und fügen Sie es zusammen mit Ihrer Yahoo-Adresse in MCP Emails ein. Ist die Option nicht sichtbar, aktivieren Sie die Bestätigung in zwei Schritten und sehen Sie erneut nach. Kein OAuth-Ablauf, keine Browser-Pop-ups."
+  },
+  "setup": [
+    {
+      "h": "Kostenloses Konto erstellen",
+      "p": "Registrieren Sie sich bei MCP Emails, ohne Kreditkarte. Der Free-Tarif verbindet ein Postfach, dauerhaft."
+    },
+    {
+      "h": "Yahoo App-Passwort erstellen",
+      "p": "Erstellen Sie in den Yahoo-Einstellungen zur Kontosicherheit, im Bereich für externe Verbindungen, ein App-Passwort. Fehlt die Option, aktivieren Sie zuerst die Bestätigung in zwei Schritten."
+    },
+    {
+      "h": "In MCP Emails einfügen",
+      "p": "Tragen Sie Ihre Yahoo-Adresse und das App-Passwort ein, um das Postfach sicher zu verbinden."
+    },
+    {
+      "h": "MCP-URL in Ihre KI einfügen",
+      "p": "Fügen Sie https://mcpemails.com/api/mcp in Claude, Cursor oder ChatGPT ein, autorisieren Sie den Zugriff, und Ihr Agent hat das Postfach."
+    }
+  ],
+  "gotchas": [
+    {
+      "h": "Der Host aus Yahoos Dokumentation und der Host, mit dem wir uns verbinden, sind zwei Namen für einen Server",
+      "p": "Yahoos eigener Hilfeartikel nennt <code>imap.mail.yahoo.com</code>. Die Tabelle mit den Einstellungen auf dieser Seite zeigt <code>export.imap.mail.yahoo.com</code>. Beides ist richtig: Beide Namen sind Aliase für denselben <code>jimap.imap.mail.yahoo.com</code>, sie lösen auf dieselben Adressen auf, und das Zertifikat von Yahoo ist ein Wildcard-Zertifikat für <code>*.imap.mail.yahoo.com</code>, das beide abdeckt. Wir veröffentlichen den Namen, zu dem wir eine echte TLS-Verbindung aufgebaut haben. Ist ein vorhandener Mail-Client bei Ihnen mit dem dokumentierten Namen eingerichtet, lassen Sie ihn so: Er spricht mit derselben Maschine."
+    },
+    {
+      "h": "Das App-Passwort finden Sie bei den externen Verbindungen, und es überdauert eine Passwortänderung",
+      "p": "Yahoo erstellt App-Passwörter auf der Seite zur Kontosicherheit, im Bereich für <b>externe Verbindungen</b>: App-Passwort erstellen, der App einen Namen geben, Passwort generieren. Yahoo zeigt es nur einmal an. Was viele übersehen, ist, was danach passiert. Ein App-Passwort bleibt gültig, auch wenn Sie Ihr Yahoo-Hauptpasswort ändern. Eine Passwortänderung entzieht einem Mail-Client also nicht den Zugriff. Die einzige Möglichkeit, eine Verbindung bei Yahoo zu kappen, ist, genau dieses App-Passwort auf derselben Seite zu löschen."
+    },
+    {
+      "h": "Yahoo und AOL teilen sich eine Plattform, aber kein Konto, und die Zugangsdaten gelten nicht übergreifend",
+      "p": "Adressen mit ymail.com und rocketmail.com sind normale Yahoo-Konten und gehören auf diese Seite. AOL Mail läuft auf derselben Infrastruktur, und <code>imap.aol.com</code> wird über denselben Dienst <code>yahoodns.net</code> aufgelöst, aber AOL hat eigene Hostnamen und eine eigene Seite zur Kontosicherheit. Ein in einem Yahoo-Konto erstelltes App-Passwort öffnet kein AOL-Postfach, und umgekehrt. Verbinden Sie eine AOL-Adresse als AOL."
+    },
+    {
+      "h": "Yahoos IMAP kann mehr als die meisten kostenlosen Postfächer, und das hilft Ihnen",
+      "p": "Bei unserem Test meldete Yahoo <code>SASL-IR</code>, <code>MOVE</code>, <code>UIDPLUS</code>, <code>IDLE</code> und <code>SPECIAL-USE</code>. In der Praxis heißt das: Verschieben ist ein einziger atomarer Befehl statt Kopieren und anschließendem Löschen, und Gesendet, Entwürfe, Spam und Papierkorb werden über ihre <b>Rolle</b> statt über ihren Namen erkannt. Auch ein umbenannter oder nicht englischer Systemordner wird also richtig zugeordnet. Für IMAP meldet Yahoo kein <code>AUTH=LOGIN</code>, nur PLAIN und die OAuth-Verfahren. Werkzeuge, die fest auf das LOGIN-Verfahren setzen, scheitern deshalb bei der Anmeldung, selbst mit einem korrekten App-Passwort."
+    }
+  ],
+  "limits": [
+    "Yahoos Server für ausgehende E-Mails gibt eine maximale Nachrichtengröße von etwa 41 MB an. Anhänge lassen sich über MCP Emails mit bis zu 25 MB pro Anfrage lesen, größere müssen Sie in Yahoo Mail selbst abrufen.",
+    "App-Passwörter laufen nicht ab und überstehen eine Änderung Ihres Yahoo-Passworts. Nur wenn Sie das App-Passwort in der Kontosicherheit löschen, wird der Zugriff entzogen."
+  ],
+  "faq": [
+    {
+      "q": "Funktioniert Claude mit Yahoo Mail?",
+      "a": "Nicht direkt. Claude hat keinen eingebauten Yahoo-Konnektor. Verbinden Sie einen MCP-Server wie MCP Emails per IMAP und mit einem Yahoo App-Passwort mit Ihrem Yahoo-Postfach. Dann kann Claude E-Mails lesen, suchen, senden, beantworten, planen und sortieren. Dieselbe Verbindung funktioniert danach unverändert in Cursor, ChatGPT und anderen MCP-Clients."
+    },
+    {
+      "q": "Wie lauten die IMAP- und SMTP-Einstellungen für Yahoo Mail?",
+      "a": "IMAP läuft auf Port 993 mit implizitem TLS, SMTP ist smtp.mail.yahoo.com auf Port 465, ebenfalls mit implizitem TLS. Yahoo dokumentiert als Eingangsserver imap.mail.yahoo.com; die Tabelle auf dieser Seite zeigt export.imap.mail.yahoo.com, einen Alias für denselben Server und den Namen, den wir live geprüft haben. Melden Sie sich mit Ihrer vollständigen Adresse und einem App-Passwort an."
+    },
+    {
+      "q": "Warum wird mein Yahoo-Passwort abgelehnt?",
+      "a": "Weil Yahoo Ihr Kontopasswort von einer Mail-App eines Drittanbieters nicht akzeptiert. Sie brauchen ein App-Passwort, das Sie auf der Seite zur Kontosicherheit von Yahoo im Bereich für externe Verbindungen erstellen. Kopieren Sie es, sobald es angezeigt wird, denn Yahoo zeigt es nicht noch einmal an. Funktioniert ein altes App-Passwort nicht mehr, erstellen Sie ein neues, statt das alte wiederzuverwenden."
+    },
+    {
+      "q": "Brauche ich die Bestätigung in zwei Schritten für ein Yahoo App-Passwort?",
+      "a": "Yahoo erstellt App-Passwörter auf der Seite zur Kontosicherheit im Bereich für externe Verbindungen. Ist diese Option in Ihrem Konto nicht sichtbar, aktivieren Sie die Bestätigung in zwei Schritten und sehen Sie erneut nach: Yahoo hat diese Seite über die Jahre mehrmals verschoben und an neue Bedingungen geknüpft. Erstellen Sie das Passwort in einem Browser, in dem Sie sich schon früher angemeldet haben, und nicht in einem privaten Fenster."
+    },
+    {
+      "q": "Werden meine Yahoo-E-Mails auf Ihren Servern gespeichert?",
+      "a": "Nein. Nachrichten werden bei jeder Anfrage live per IMAP von Yahoo abgerufen und an Ihren KI-Client übergeben. Zugangsdaten werden verschlüsselt gespeichert, und Nachrichteninhalte werden nicht aufbewahrt. Wenn Sie das App-Passwort in der Yahoo-Kontosicherheit löschen, endet die Verbindung bei Yahoo sofort."
+    }
+  ],
+  "ctaBand": {
+    "title": "Geben Sie Ihrer KI ein Yahoo-Postfach",
+    "sub": "Yahoo Mail in wenigen Minuten verbinden. Ein Postfach dauerhaft kostenlos, ohne Kreditkarte."
+  }
+}

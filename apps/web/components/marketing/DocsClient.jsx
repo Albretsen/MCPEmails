@@ -1,11 +1,12 @@
 'use client';
 
 import { useState } from 'react';
-import { useTranslations } from 'next-intl';
+import { useTranslations, useLocale } from 'next-intl';
 import { Link } from '@/i18n/navigation';
 import { Nav, Footer } from './Sections';
 import { MIcon } from '../MarketingPrimitives';
 import { MODEL_VISIBLE_TOOL_COUNT, APP_ONLY_TOOL_COUNT, LISTED_TOOL_COUNT } from '@/lib/public-facts.mjs';
+import { withReadingLang } from '@/i18n/reading-lang.mjs';
 
 // Rich-text tag handlers shared across this page (inline code + bold).
 const RICH = {
@@ -137,7 +138,8 @@ const SCOPE_STYLES = {
 // _meta.ui.visibility: ["app"] and exist to drive the cards an MCP client
 // renders for a held send, a previewed bulk operation or the draft editor.
 // draft_read and draft_editor_hide are listed to the model as well, so they are
-// documented here. public-facts.test.mjs checks this list against the server. They are reached from that card, not composed by hand from
+// documented here. public-facts.test.mjs checks this list against the server.
+// The seven are reached from their cards, not composed by hand from
 // this reference, and documenting their plan_id/approval_id arguments here would
 // suggest a workflow nobody starts from scratch. Everything a caller writes a
 // tools/call for by hand is on this page.
@@ -1017,6 +1019,7 @@ function ClientTabs() {
 
 function QuickstartStep({ step }) {
   const t = useTranslations('docs');
+  const locale = useLocale();
   const base = `quickstart.steps.${step.id}`;
   return (
     <div className="docs-step">
@@ -1030,7 +1033,7 @@ function QuickstartStep({ step }) {
         {step.tabs && <ClientTabs />}
         {step.code && <CodeBlock code={step.code} />}
         {step.cta && (
-          <a className="btn btn-primary" href={step.cta.href} style={{ marginTop: 16 }}>
+          <a className="btn btn-primary" href={withReadingLang(step.cta.href, locale)} style={{ marginTop: 16 }}>
             {t(`${base}.cta`)}
           </a>
         )}
@@ -1137,6 +1140,7 @@ function ToolSection({ tool }) {
 
 export default function DocsClient() {
   const t = useTranslations('docs');
+  const locale = useLocale();
   return (
     <div>
       <Nav />
@@ -1569,7 +1573,7 @@ export default function DocsClient() {
             {t('cta.sub')}
           </p>
           <div className="pricing-cta-btns">
-            <a className="btn btn-primary btn-lg" href="/signup">{t('cta.primary')}</a>
+            <a className="btn btn-primary btn-lg" href={withReadingLang('/signup', locale)}>{t('cta.primary')}</a>
             <Link className="btn btn-on-dark btn-lg" href="/pricing">{t('cta.secondary')}</Link>
           </div>
         </div>
