@@ -475,6 +475,12 @@ const DE = {
     guideLink: {
       intro: 'Offizielle Dokumentation von {client} zu entfernten MCP-Servern:',
     },
+    postLink: {
+      intro: 'Lieber eine ausführliche Anleitung?',
+      claude: 'So verbinden Sie Claude mit Ihren E-Mails',
+      chatgpt: 'So verbinden Sie ChatGPT mit Ihren E-Mails',
+      editors: 'E-Mail für KI-Agenten in Cursor, Cline und VS Code',
+    },
     providers: {
       intro: 'Unsicher, welches Postfach Sie zuerst verbinden sollen?',
       label: 'Zur Kompatibilitätsübersicht der Anbieter',

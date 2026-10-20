@@ -21,7 +21,7 @@ Claude braucht also keine IMAP-Bibliothek, keine SMTP-Konfiguration und kein Pas
 
 ## Was Sie vor der Einrichtung brauchen
 
-Sammeln Sie diese Angaben von der Hilfeseite Ihres E-Mail-Anbieters oder von Ihrem Administrator:
+Sammeln Sie diese Angaben von der Hilfeseite Ihres E-Mail-Anbieters oder von Ihrem Administrator. Sie können auch die [geprüften IMAP- und SMTP-Einstellungen für jeden Anbieter](/connect) nachschlagen:
 
 - **E-Mail-Adresse:** zum Beispiel \`you@example.com\`. Diese Adresse wird beim verbundenen Postfach angezeigt.
 - **Benutzername für die Anmeldung:** meist die vollständige E-Mail-Adresse. Manche Hoster für eigene Domains vergeben einen abweichenden IMAP/SMTP-Benutzernamen.
@@ -33,7 +33,7 @@ Raten Sie die Servernamen nicht aus der Domain, wenn Ihr Anbieter Einstellungen 
 
 Verwenden Sie ein **App-Passwort**, wann immer der Anbieter eines anbietet. Es ist von Ihrem Hauptpasswort getrennt und lässt sich widerrufen, ohne das Passwort zu ändern, mit dem Sie sich anmelden. Anbieter verlangen oft die Zwei-Faktor-Authentifizierung, bevor Sie eines erstellen können. Manche verlangen außerdem, dass Sie zuerst den IMAP-Zugriff in den E-Mail-Einstellungen aktivieren.
 
-MCP Emails enthält Vorlagen für iCloud, Yahoo, Zoho und Yandex sowie einen eigenen Ablauf für Fastmail-App-Passwörter. Diese Auswahl füllt die bekannten Hosts und Ports für Sie aus. Wählen Sie **Generic IMAP** für einen anderen Anbieter oder Ihren eigenen Mailserver und geben Sie die Werte selbst ein.
+MCP Emails enthält Vorlagen für [iCloud](/connect/icloud), [Yahoo](/connect/yahoo), [Zoho](/connect/zoho) und [Yandex](/connect/yandex) sowie einen eigenen Ablauf für [Fastmail](/connect/fastmail)-App-Passwörter. Diese Auswahl füllt die bekannten Hosts und Ports für Sie aus. Wählen Sie **Generic IMAP** für einen anderen Anbieter oder Ihren eigenen Mailserver und geben Sie die Werte selbst ein. Siehe die [Einrichtungsseite für allgemeines IMAP](/connect/imap).
 
 ## Schritt 1: das IMAP/SMTP-Postfach verbinden
 

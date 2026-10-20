@@ -18,7 +18,7 @@ Bevor Sie sich um einen Anbieter kümmern, legen Sie fest, wie Ihr KI-Agent mit 
 2. Fügen Sie den Endpunkt ein: \`https://www.mcpemails.com/api/mcp\`
 3. Klicken Sie auf **Verbinden**, melden Sie sich bei Ihrem MCP-Emails-Konto an und genehmigen Sie die gewünschten Berechtigungen (\`read:email\`, \`send:email\` oder beide).
 
-Das ist die gesamte Client-Seite. Tokens sind genau auf das beschränkt, was Sie genehmigt haben, und Sie können die Verbindung mit einem Klick im Dashboard widerrufen. Die Vor- und Nachteile im Detail stehen in [OAuth oder API-Schlüssel für den E-Mail-Zugriff von KI](/blog/oauth-vs-api-keys-ai-email-access).
+Das ist die gesamte Client-Seite. Tokens sind genau auf das beschränkt, was Sie genehmigt haben, und Sie können die Verbindung mit einem Klick im Dashboard widerrufen. Die Vor- und Nachteile im Detail stehen in [OAuth oder API-Schlüssel für den E-Mail-Zugriff von KI](/blog/oauth-vs-api-keys-ai-email-access). Eine Anleitung für einen bestimmten Client finden Sie unter [Claude mit Ihrer E-Mail verbinden](/blog/connect-claude-to-email) und [ChatGPT mit Ihrer E-Mail verbinden](/blog/connect-chatgpt-to-email).
 
 **Weg B: Client mit API-Schlüssel (Cline, JetBrains, cURL, eigene Agenten).** Für alles ohne eingebautes OAuth:
 

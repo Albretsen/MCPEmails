@@ -593,7 +593,7 @@
     "confirmNoteInterval": "Wird jetzt von Ihrer hinterlegten Karte abgebucht, mit Gutschrift für die Restlaufzeit Ihres aktuellen Zeitraums. Ihr Abrechnungszeitraum beginnt heute neu, daher verschiebt sich Ihr nächstes Verlängerungsdatum.",
     "confirmNoteIntervalNoPreview": "Wir konnten diese Änderung nicht vorab berechnen. Ihre hinterlegte Karte wird mit der Differenz belastet, abzüglich einer Gutschrift für die Restlaufzeit Ihres aktuellen Zeitraums. Den genauen Betrag sehen Sie auf Ihrer Rechnung. Ihr Abrechnungszeitraum beginnt heute neu, daher verschiebt sich Ihr nächstes Verlängerungsdatum.",
     "confirmPay": "Bestätigen und {amount} zahlen",
-    "confirmChange": "Änderung bestätigen",
+    "confirmChange": "Bestätigen und bezahlen",
     "confirmCancel": "Abbrechen",
     "confirming": "Wird abgebucht…",
     "planChangedCharged": "Sie nutzen jetzt {plan}. {amount} wurden von Ihrer Karte abgebucht.",

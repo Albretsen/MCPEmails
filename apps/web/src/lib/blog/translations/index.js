@@ -118,6 +118,7 @@ import t105 from './connect-chatgpt-to-email/de';
 import t106 from './multiple-email-accounts-in-claude-and-chatgpt/de';
 import t107 from './connect-email-to-ai-agent-under-2-minutes/de';
 import t108 from './connect-gmail-to-claude/de';
+import t109 from './email-for-ai-agents-cursor-cline-vscode/de';
 
 const TRANSLATIONS = {
   '7-things-ai-agent-can-do-with-inbox-access': { es: t0, fr: t1, nb: t2, zh: t3 },
@@ -130,7 +131,7 @@ const TRANSLATIONS = {
   'connect-claude-to-email': { es: t71, fr: t72, nb: t73, zh: t74, de: t103 },
   'connect-icloud-fastmail-imap-to-claude': { es: t23, fr: t24, nb: t25, zh: t26 },
   'connect-outlook-microsoft-365-ai-agent-mcp': { es: t27, fr: t28, nb: t29, zh: t30 },
-  'email-for-ai-agents-cursor-cline-vscode': { es: t31, fr: t32, nb: t33, zh: t34 },
+  'email-for-ai-agents-cursor-cline-vscode': { es: t31, fr: t32, nb: t33, zh: t34, de: t109 },
   'email-signatures-for-claude': { es: t67, fr: t68, nb: t69, zh: t70 },
   'give-your-ai-agent-an-inbox': { es: t35, fr: t36, nb: t37, zh: t38 },
   'hosted-vs-self-hosted-gmail-mcp-server': { es: t39, fr: t40, nb: t41, zh: t42 },

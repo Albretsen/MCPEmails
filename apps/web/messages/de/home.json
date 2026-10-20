@@ -52,7 +52,10 @@
     "p2": "MCP Emails ist ein gehosteter E-Mail-MCP-Server. Er funktioniert mit Gmail, Outlook und Microsoft 365, iCloud, Fastmail und jedem Postfach mit IMAP, und ein Agent kann mehrere Postfächer gleichzeitig bearbeiten. E-Mails werden bei jedem Aufruf live von Ihrem Anbieter abgerufen und nie auf unseren Servern gespeichert.",
     "linkImap": "IMAP-MCP-Server einrichten",
     "linkBusiness": "E-Mail-MCP für Firmenpostfächer",
-    "linkProviders": "Alle unterstützten E-Mail-Anbieter"
+    "linkProviders": "Alle unterstützten E-Mail-Anbieter",
+    "guideClaude": "So verbinden Sie Claude mit Ihren E-Mails",
+    "guideChatgpt": "So verbinden Sie ChatGPT mit Ihren E-Mails",
+    "guideImap": "Anleitung zum Claude-IMAP-Konnektor"
   },
   "features": {
     "eyebrow": "Prinzipien",
@@ -272,6 +275,9 @@
     "linkReadOnly": "Nur-Lese-Zugriff",
     "linkPrivacy": "Datenschutz",
     "linkTerms": "Nutzungsbedingungen",
+    "linkWithdrawal": "Widerrufsrecht",
+    "linkCancel": "Verträge hier kündigen",
+    "linkImpressum": "Impressum",
     "copyright": "© 2026 mcpemails.",
     "legal": "E-Mails live abgerufen, nie gespeichert · Zugangsdaten verschlüsselt gespeichert",
     "legalEntity": "MCP Emails ist ein Dienst von Albretsen Consulting (enkeltpersonforetak), Organisationsnummer 926 646 753, Håsteins gate 9, 5160 Laksevåg, Norwegen.",

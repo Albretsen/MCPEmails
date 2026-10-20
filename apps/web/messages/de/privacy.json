@@ -14,7 +14,7 @@
     "p1": "Der Dienst MCPEmails unter <b>mcpemails.com</b> wird von {companyName} betrieben, einem norwegischen Einzelunternehmen (enkeltpersonforetak), das im Eigentum von {ownerName} steht und von diesem geführt wird und unter dem Namen „MCPEmails“ auftritt. In dieser Erklärung bezeichnen „MCPEmails“, „wir“, „uns“ und „unser“ jeweils {companyName}. Der Dienst umfasst alle Dashboard-Seiten, API-Endpunkte und den Model-Context-Protocol-Server (MCP-Server), über den KI-Agenten auf verbundene E-Mail-Konten zugreifen.",
     "p2": "Im Sinne des anwendbaren Datenschutzrechts (einschließlich der EU-Datenschutz-Grundverordnung, „DSGVO“) ist MCPEmails Verantwortlicher für Konto- und Nutzungsdaten. Für E-Mail-Inhalte handeln wir als Auftragsverarbeiter in Ihrem Auftrag: Wir übermitteln Inhalte, deren Abruf Sie uns gestatten, und speichern sie nicht.",
     "p3": "Angaben zum Diensteanbieter: {companyName} ist ein in Norwegen ansässiges Einzelunternehmen (enkeltpersonforetak), das von {ownerName} betrieben wird. Es ist in {register} eingetragen, dem norwegischen zentralen Koordinierungsregister für juristische Einheiten, das von Brønnøysundregistrene geführt wird, und zwar unter der Organisationsnummer <b>{orgNumber}</b>. Unsere eingetragene Anschrift lautet {companyAddress}.",
-    "p4": "{companyName} ist derzeit nicht im norwegischen Umsatzsteuerregister (Merverdiavgiftsregisteret) eingetragen. Für Datenschutzfragen erreichen Sie uns unter <email></email>."
+    "p4": "{companyName} ist im norwegischen Umsatzsteuerregister (Merverdiavgiftsregisteret) eingetragen, Umsatzsteuernummer {vatNumber}. Für Datenschutzfragen erreichen Sie uns unter <email></email>."
   },
   "dataWeCollect": {
     "title": "2. Welche Daten wir erheben",

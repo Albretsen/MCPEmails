@@ -37,7 +37,7 @@ Beide Wege funktionieren weiterhin, und Ihre Wahl entscheidet, was Claude danach
 - **App-Passwort (IMAP):** Gmail-Labels erscheinen als Ordner, die Suche nutzt die IMAP-Textsuche, und Claude kann Nachrichten kopieren und endgültig löschen.
 - **Mit Google anmelden (Gmail API):** Claude arbeitet mit echten Gmail-Labels und kann mit Gmail-Operatoren wie \`from:\`, \`is:unread\` und \`after:\` suchen. Löschen verschiebt E-Mails in den Papierkorb.
 
-Bei einem Google-Workspace-Konto kann ein Administrator App-Passwörter für die gesamte Domain abschalten oder Drittanbieter-Apps beim Weg über die Google-Anmeldung blockieren. Ist ein Weg gesperrt, versuchen Sie den anderen oder fragen Sie Ihren Administrator.
+Bei einem Google-Workspace-Konto kann ein Administrator App-Passwörter für die gesamte Domain abschalten oder Drittanbieter-Apps beim Weg über die Google-Anmeldung blockieren. Ist ein Weg gesperrt, versuchen Sie den anderen oder fragen Sie Ihren Administrator. Auf der Seite [Gmail-Einstellungen und -Limits](/connect/gmail) finden Sie alle Gmail-spezifischen Details an einem Ort.
 
 ## Schritt 2: MCP Emails zu Claude hinzufügen
 
@@ -53,7 +53,7 @@ https://mcpemails.com/api/mcp
 
 4. Klicken Sie auf **Verbinden**, melden Sie sich mit Ihrem MCP-Emails-Konto an und genehmigen Sie die gewünschten Berechtigungen: \`read:email\`, \`send:email\` oder beide.
 
-Das ist die gesamte Client-Seite. Die Verbindung ist genau auf das beschränkt, was Sie genehmigt haben, und Sie können sie mit einem Klick im Dashboard widerrufen. Wenn Sie den Weg über API-Schlüssel verstehen möchten (für Clients ohne eingebautes OAuth, etwa Cline oder ein eigenes Skript), lesen Sie [OAuth oder API-Schlüssel für den E-Mail-Zugriff von KI](/blog/oauth-vs-api-keys-ai-email-access).
+Das ist die gesamte Client-Seite. Die Verbindung ist genau auf das beschränkt, was Sie genehmigt haben, und Sie können sie mit einem Klick im Dashboard widerrufen. Wenn Sie den Weg über API-Schlüssel verstehen möchten (für Clients ohne eingebautes OAuth, etwa Cline oder ein eigenes Skript), lesen Sie [OAuth oder API-Schlüssel für den E-Mail-Zugriff von KI](/blog/oauth-vs-api-keys-ai-email-access). Sie möchten auch ein anderes Postfach verbinden? Die [Schritt-für-Schritt-Anleitung für E-Mail in Claude](/blog/connect-claude-to-email) behandelt Outlook, iCloud, Fastmail und IMAP.
 
 ## Schritt 3: Claude den ersten Prompt geben
 

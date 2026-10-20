@@ -16,7 +16,7 @@ import { clientLocales, getClient } from '../clients/clients.mjs';
  * and otherwise keeps the English path, which always exists.
  */
 
-const LOCALES = ['nb', 'es', 'fr', 'zh'];
+const LOCALES = ['nb', 'es', 'fr', 'zh', 'de'];
 
 /** Paths outside the URL-localized marketing site: never prefixed. */
 const UNLOCALIZED = /^\/(?:signup|login|dashboard|authorize|auth|api|forgot-password|reset-password|\.well-known)(?:\/|$)/;
