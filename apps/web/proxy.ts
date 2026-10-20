@@ -275,9 +275,9 @@ export const config = {
      *  - _next/image   (image optimisation endpoint)
      *  - favicon.ico
      *  - common image/font extensions
-     *  - video and caption files (the demo cut lives at /demo/*.mp4 and is
-     *    fetched with Range requests; running the auth round trip on each of
-     *    those byte-range requests is pure latency for no decision)
+     *  - video and caption files (fetched with Range requests; running the
+     *    auth round trip on each byte-range request is pure latency for no
+     *    decision)
      *  - machine routes, which no browser session ever drives and which read
      *    nothing this proxy produces (no nonce, no subject id, no locale, no
      *    refreshed Supabase session). Running the proxy on them minted a

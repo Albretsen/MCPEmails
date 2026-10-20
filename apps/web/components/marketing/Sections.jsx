@@ -412,8 +412,7 @@ export function Trusted() {
  * and three crawlable links, in server-rendered text: until this block the
  * phrase "email MCP server" appeared in the body only as a footer link label.
  *
- * It sits after the client marquee and so below the hero, the proof bar and the
- * demo-video slot, at the same depth in both arms of the homepage experiment.
+ * It sits after the client marquee and so below the hero and the proof bar.
  */
 export function WhatIs() {
   const t = useTranslations('home');
@@ -1012,10 +1011,6 @@ export function Reviews() {
  * to attach to. (An earlier draft parked this after Features on the theory
  * that the referent arrived later. That was wrong, and it cost the bar five
  * screens of reach.)
- *
- * Keep it ABOVE the demo-video slot in HomeClient. The video is the treatment
- * arm of a running experiment; ordering the bar after it would change the
- * bar's depth between arms and confound the test.
  *
  * Deliberately not a card and not the display serif. The founder Quote already
  * owns the big italic pull-quote treatment, and a second one would read as the

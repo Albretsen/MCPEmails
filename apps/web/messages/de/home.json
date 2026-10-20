@@ -308,15 +308,5 @@
     "eyebrow": "Produktvorschau",
     "title": "Ihr gesamter MCP-Betrieb auf einen Blick.",
     "sub": "Ein Echtzeit-Dashboard für jedes verbundene Postfach, jeden API-Schlüssel und jeden Tool-Aufruf, damit Sie immer wissen, was Ihre Agenten tun."
-  },
-  "demo": {
-    "eyebrow": "In Aktion",
-    "title": "Postfach verbinden, dann fragen, was ansteht.",
-    "sub": "Weniger als eine Minute, aufgenommen mit dem echten Produkt: eine echte IMAP-Verbindung, dann ein echter Tool-Aufruf, der die eine wichtige E-Mail findet.",
-    "caption": "Aufgenommen mit einem Demo-Postfach voller fiktiver E-Mails. In diesem Video ist keine echte Korrespondenz zu sehen.",
-    "player": {
-      "label": "Demo-Video: ein Postfach verbinden und mit einem KI-Agenten sichten",
-      "fallback": "Ihr Browser kann dieses Video nicht abspielen. Der Schnellstart in der Doku zeigt dieselben Schritte."
-    }
   }
 }
