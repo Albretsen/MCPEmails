@@ -104,8 +104,14 @@ after(async () => {
   if (server) await server.stop();
 });
 
+// `compare` holds only the nav and footer link labels (the comparison page's
+// copy moved to src/lib/compare/native-connectors/), and every one of them is
+// shorter than a sentinel can be. Its absence checks are vacuous, which is fine:
+// the labels are handed to every marketing page on purpose.
+const LABELS_ONLY = new Set(['compare']);
+
 test('sentinels: every marketing namespace has strings that identify it', () => {
-  for (const namespace of MARKETING) {
+  for (const namespace of MARKETING.filter((n) => !LABELS_ONLY.has(n))) {
     assert.ok(sentinels(namespace).length >= 1, `no usable sentinel in messages/en/${namespace}.json`);
   }
 });

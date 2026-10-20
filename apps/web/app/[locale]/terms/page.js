@@ -1,5 +1,6 @@
 import { setRequestLocale, getTranslations } from 'next-intl/server';
 import { metaAlternates, localePath, OG_LOCALE, OG_IMAGE } from '@/i18n/seo';
+import { Link } from '@/i18n/navigation';
 import { Nav, Footer } from '../../../components/marketing/Sections';
 import { LAST_UPDATED, EFFECTIVE_DATE } from '@/lib/legal-config';
 
@@ -55,8 +56,8 @@ export default async function TermsPage({ params }) {
   const t = await getTranslations('terms');
   const richTags = {
     b: (c) => <strong>{c}</strong>,
-    privacy: (c) => <a href="/privacy">{c}</a>,
-    pricing: (c) => <a href="/pricing">{c}</a>,
+    privacy: (c) => <Link href="/privacy">{c}</Link>,
+    pricing: (c) => <Link href="/pricing">{c}</Link>,
     email: () => <a href={`mailto:${CONTACT_EMAIL}`}>{CONTACT_EMAIL}</a>,
     odr: (c) => (
       <a href="https://ec.europa.eu/consumers/odr" target="_blank" rel="noopener noreferrer">
@@ -356,9 +357,9 @@ export default async function TermsPage({ params }) {
             <a className="btn btn-primary btn-lg" href={`mailto:${CONTACT_EMAIL}`}>
               {t('cta.contactBtn')}
             </a>
-            <a className="btn btn-on-dark btn-lg" href="/privacy">
+            <Link className="btn btn-on-dark btn-lg" href="/privacy">
               {t('cta.privacyBtn')}
-            </a>
+            </Link>
           </div>
         </div>
       </section>
