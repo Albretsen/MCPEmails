@@ -1,7 +1,12 @@
 {
   "_sources": [
     "https://support.gmx.com/pop-imap/toggle.html",
-    "https://support.gmx.com/pop-imap/imap/index.html"
+    "https://support.gmx.com/pop-imap/imap/index.html",
+    "https://support.gmx.com/pop-imap/imap/server.html",
+    "https://hilfe.gmx.net/pop-imap/einschalten.html",
+    "https://hilfe.gmx.net/pop-imap/imap/imap-serverdaten.html",
+    "https://hilfe.gmx.net/sicherheit/2fa/anwendungsspezifisches-passwort.html",
+    "https://hilfe.gmx.net/pop-imap/einrichtung-mailprogramm-scheitert.html"
   ],
   "auth": {
     "method": "account-password",
@@ -26,7 +31,7 @@
   },
   "method": {
     "title": "Slik kobles GMX til: IMAP og kontopassordet ditt",
-    "body": "GMX kobles til over IMAP/SMTP, men <b>POP3- og IMAP-tilgang er slått av som standard</b>. Slå det på i GMX under fanen Email, Settings, POP3 & IMAP, og koble deretter til med GMX-adressen og passordet ditt. Hvis GMX ber deg lage et applikasjonsspesifikt passord, bruker du det i stedet. Tyske kontoer bruker .net-vertene, <code>imap.gmx.net</code> og <code>mail.gmx.net</code>."
+    "body": "GMX kobles til over IMAP/SMTP, men <b>POP3- og IMAP-tilgang er slått av som standard</b>. På en tysk GMX-konto slår du den på under <b>E-Mail-Einstellungen</b> (e-postinnstillinger), <b>E-Mail empfangen</b>, <b>POP3/IMAP</b>; på gmx.com er det fanen Email, Settings, POP3 & IMAP. Koble deretter til med GMX-adressen og passordet ditt, eller med et App-Passwort hvis tofaktorautentisering er på. Tyske kontoer bruker .net-vertene, <code>imap.gmx.net</code> og <code>mail.gmx.net</code>. GMX sin internasjonale hjelp oppgir <code>imap.gmx.com</code> og <code>mail.gmx.com</code> for gmx.com."
   },
   "setup": [
     {
@@ -35,7 +40,7 @@
     },
     {
       "h": "Slå på IMAP-tilgang i GMX",
-      "p": "Åpne fanen Email, deretter Settings, deretter POP3 & IMAP i GMX, og tillat POP3- og IMAP-tilgang. GMX slår det av igjen hvis kontoen står ubrukt lenge."
+      "p": "Logg inn på GMX i en nettleser, klikk på sirkelen med initialene dine, åpne E-Mail-Einstellungen, velg POP3/IMAP under E-Mail empfangen og flytt bryteren til POP3- und IMAP-Zugriff erlauben (tillat POP3- og IMAP-tilgang). På gmx.com: fanen Email, så Settings, så POP3 & IMAP."
     },
     {
       "h": "Legg til postkassen i mcpemails",
@@ -49,19 +54,23 @@
   "gotchas": [
     {
       "h": "GMX slår av POP3 og IMAP som standard, og slår dem av igjen senere",
-      "p": "Ekstern tilgang til en GMX Mail-konto er deaktivert til du slår den på: åpne fanen Email, deretter Settings, deretter POP3 & IMAP, huk av for <b>Enable access to this account via POP3 and IMAP</b> og lagre. GMX dokumenterer noe folk sjelden legger merke til i farten: av sikkerhetshensyn slår tjenesten tillatelsen automatisk av igjen hvis postkassen går lenge uten POP3- eller IMAP-aktivitet. En tilkobling som har fungert i månedsvis, kan dermed stoppe med en innloggingsfeil uten at noe som helst er endret på din side. Innstillingen finnes heller ikke i GMX-mobilappen, så du må gjøre dette i en nettleser."
+      "p": "Ekstern tilgang til en GMX-postkasse er slått av til du slår den på. På en tysk konto logger du inn på gmx.net, klikker på sirkelen med initialene dine i topplinjen, åpner <b>E-Mail-Einstellungen</b>, velger <b>POP3/IMAP</b> under <b>E-Mail empfangen</b>, flytter bryteren under <b>POP3-/IMAP-Abruf</b> til <b>POP3- und IMAP-Zugriff erlauben</b> og løser det lille puslespillet GMX viser, der du drar to symboler oppå hverandre. På gmx.com ligger den samme bryteren under fanen Email, Settings, POP3 & IMAP, <b>Enable access to this account via POP3 and IMAP</b>. GMX dokumenterer også at tillatelsen slås av igjen automatisk, av sikkerhetshensyn, når postkassen går lenge uten POP3- eller IMAP-bruk. En tilkobling som har virket i månedsvis kan derfor stoppe med en innloggingsfeil uten at noe er endret hos deg."
     },
     {
-      "h": "Utgående server er mail.gmx.net, ikke smtp.gmx.net",
-      "p": "GMX bryter navnekonvensjonen nesten alle andre leverandører følger. Innkommende er <code>imap.gmx.net</code>, men utgående innsending er <code>mail.gmx.net</code> på port 465. En gjettet <code>smtp.gmx.net</code> svarer ikke, og klienter som fyller inn vertsnavn etter mønster, tar feil hver gang. Begge navnene på denne siden ble bekreftet ved å åpne en direkte TLS-tilkobling til dem, og sertifikatet GMX presenterer, er utstedt for <code>mail.gmx.net</code>."
+      "h": "Utgående e-post går til mail.gmx.net, på port 587 eller 465",
+      "p": "GMX kaller den utgående serveren sin <code>mail.gmx.net</code>, der de fleste leverandører bruker et smtp-prefiks. GMX sin hjelp oppgir port 587 med STARTTLS, port 465 med SSL som alternativ, og bare TLS 1.2 eller 1.3: eldre TLS-versjoner og SMTP etter POP støttes ikke lenger. <code>smtp.gmx.net</code> finnes også, som et alias som peker til samme server og står i sertifikatet, så begge navnene virker. MCP Emails fyller inn <code>mail.gmx.net</code>, navnet GMX dokumenterer, på port 465."
     },
     {
       "h": "GMX godtar en melding på 135 MB som mottakeren deretter avviser",
       "p": "Innsendingsserveren til GMX Mail oppgir en maksimal meldingsstørrelse på omtrent 135 MB, som med god margin er den største blant alle leverandørene på dette nettstedet. Det er et tak for hva GMX tar imot fra deg, ikke et løfte om levering. Mottakerserveren har sin egen grense, og de fleste ligger et sted mellom 10 MB og 50 MB, så et stort vedlegg som GMX villig godtar, kan fortsatt returneres fra den andre enden noen minutter senere. Hvis en agent skal sende noe stort, del heller en lenke."
     },
     {
-      "h": "Når du slår på tofaktorautentisering, endres hvilket passord klienten trenger",
-      "p": "Med tofaktorautentisering av fungerer det vanlige GMX-passordet ditt i en e-postklient så snart avkrysningsboksen for POP3 og IMAP er huket av. Hvis du har slått på tofaktorautentisering og GMX ber deg om et applikasjonsspesifikt passord, bruker du det i stedet: da slutter det vanlige passordet å fungere i eksterne programmer, og feilen ser ut som en skrivefeil og ikke som en endret policy. IMAP hos GMX tilbyr bare mekanismene <code>PLAIN</code> og <code>LOGIN</code>, uten noen OAuth-vei, så påloggingsopplysningen er alltid et passord av den ene eller den andre typen."
+      "h": "Med tofaktorautentisering på trenger e-postprogrammer et App-Passwort",
+      "p": "GMX plasserer apppassordet sitt under tofaktorautentisering og beskriver det som passordet for eksterne e-postprogrammer over POP3 og IMAP. Lag det i en nettleser: klikk på initialene dine, så <b>Account verwalten</b>, så <b>Login & Sicherheit</b>, så <b>App-Passwörter (für externe Apps)</b>, så <b>Neues App-Passwort erstellen</b>. Gi det et navn, for eksempel MCP Emails, og kopier det med en gang, for GMX viser det bare én gang. Mister du det, sletter du det og lager et nytt. IMAP hos GMX tilbyr bare mekanismene <code>PLAIN</code> og <code>LOGIN</code>, uten OAuth, så legitimasjonen er alltid et passord av den ene eller andre typen."
+    },
+    {
+      "h": "Et e-postprogram kan ikke fortelle deg hvorfor GMX avviste det, men nettleseren kan",
+      "p": "En avvist IMAP-innlogging har ingen begrunnelse, så avslått POP3/IMAP-tilgang, et manglende App-Passwort og et feilskrevet passord ser like ut utenfra. GMX sitt eget råd når et e-postprogram ikke får koblet til, er å logge inn direkte på GMX i en nettleser på en datamaskin og lese meldingen som vises der. Gjør det før du endrer noe annet: det skiller de tre årsakene fra hverandre i ett steg."
     }
   ],
   "limits": [
@@ -75,15 +84,19 @@
     },
     {
       "q": "Hva er IMAP- og SMTP-innstillingene for GMX Mail?",
-      "a": "IMAP er imap.gmx.net på port 993 med implisitt TLS. Utgående e-post går til mail.gmx.net på port 465, også med implisitt TLS, og ikke til en vert som heter smtp.gmx.net, som ikke finnes. Brukernavnet er hele GMX-adressen din. Begge vertene ble bekreftet med en direkte TLS-tilkobling på datoen som vises på denne siden."
+      "a": "For en tysk GMX-konto er IMAP imap.gmx.net på port 993 med SSL. Utgående e-post går til mail.gmx.net, på port 587 med STARTTLS eller port 465 med SSL; MCP Emails bruker 465. smtp.gmx.net er et alias for den samme utgående serveren. Brukernavnet er hele GMX-adressen din. GMX sin internasjonale hjelp oppgir imap.gmx.com og mail.gmx.com for gmx.com-kontoer."
     },
     {
       "q": "Hvordan slår jeg på IMAP i GMX?",
-      "a": "Logg inn på GMX i en nettleser, åpne fanen Email, klikk Settings og deretter POP3 & IMAP, og huk av boksen som gir tilgang til kontoen via POP3 og IMAP. Lagre. Valget finnes ikke i GMX-mobilappen. Før dette er på, avviser GMX alle innlogginger fra e-postklienter, og feilen ser nøyaktig ut som et feil passord."
+      "a": "Logg inn på GMX i en nettleser, klikk på initialene dine, åpne E-Mail-Einstellungen, velg POP3/IMAP under E-Mail empfangen og flytt bryteren til POP3- und IMAP-Zugriff erlauben, og løs så dra-puslespillet GMX viser. På gmx.com er det fanen Email, Settings, POP3 & IMAP. Til dette er på, avviser GMX all innlogging fra e-postklienter, og feilen ser akkurat ut som et feil passord."
     },
     {
       "q": "Hvorfor sluttet GMX-tilkoblingen min å virke av seg selv?",
-      "a": "GMX dokumenterer at tjenesten av sikkerhetshensyn deaktiverer POP3- og IMAP-tilgang automatisk når en postkasse går lenge uten å bruke disse protokollene. Ingenting på din side trenger å endres for at det skal skje. Logg inn via en nettleser, huk av POP3- og IMAP-boksen i Settings igjen, så fungerer tilkoblingen igjen med det samme passordet."
+      "a": "GMX dokumenterer at POP3- og IMAP-tilgang slås av automatisk, av sikkerhetshensyn, når en postkasse går lenge uten å bruke disse protokollene. Ingenting trenger å endre seg hos deg for at det skal skje. Logg inn i en nettleser, slå POP3/IMAP-tilgangen på igjen i innstillingene, så virker tilkoblingen igjen med samme passord."
+    },
+    {
+      "q": "Trenger GMX et apppassord?",
+      "a": "Bare med tofaktorautentisering på. Da lager du et App-Passwort i en nettleser under Account verwalten, Login & Sicherheit, App-Passwörter (für externe Apps), og bruker det i MCP Emails i stedet for GMX-passordet ditt. GMX viser det bare én gang; mister du det, sletter du det og lager et nytt."
     },
     {
       "q": "Lagres GMX-e-posten min på serverne deres?",
