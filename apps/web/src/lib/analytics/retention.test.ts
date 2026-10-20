@@ -1,18 +1,77 @@
 import assert from 'node:assert/strict';
+import { readFileSync } from 'node:fs';
 import test from 'node:test';
 
 import { PLANS, resolvePlanLimits } from '@/lib/stripe/plans';
-import { MIN_RETENTION_DAYS, retentionCutoffISO, retentionDays } from './retention.ts';
+import {
+  MIN_RETENTION_DAYS,
+  retentionCutoffISO,
+  retentionDays,
+  trimLeadingQuietDays,
+} from './retention.ts';
+
+test('the usage series drops quiet days before the first call, down to 30', () => {
+  const series = (counts: number[]) => counts.map((count, i) => ({ date: `d${i}`, count }));
+  const zeros = (n: number) => new Array(n).fill(0);
+
+  // 730-day window, data only in the last 90 days: 90 bars, not 730.
+  const pro = series([...zeros(640), 5, ...zeros(10), ...new Array(79).fill(3)]);
+  const shown = trimLeadingQuietDays(pro);
+  assert.equal(shown.length, 90);
+  assert.equal(shown[0].count, 5);
+  // A quiet stretch after the first call is real and kept.
+  assert.equal(shown[1].count, 0);
+
+  // Never shorter than 30 days, so Free (and a brand-new workspace) keep the
+  // chart they always had.
+  assert.equal(trimLeadingQuietDays(series([...zeros(725), 1, 1, 1, 1, 1])).length, 30);
+  assert.equal(trimLeadingQuietDays(series(zeros(730))).length, 30);
+  assert.equal(trimLeadingQuietDays(series([1, ...zeros(29)])).length, 30);
+  assert.equal(trimLeadingQuietDays(series(zeros(7))).length, 7);
+  assert.deepEqual(trimLeadingQuietDays([]), []);
+});
 
 test('every tier resolves the retention window it is sold with', () => {
-  // These numbers are published copy: the blog posts quote "30-day analytics"
-  // on Free and Personal and "90-day" on Pro, so changing one here without
+  // These numbers are published copy: the pricing table, the privacy policy
+  // and the blog posts quote 30 days on Free, 90 on Personal and two years on
+  // Pro and Business (owner decision 2026-10-20), so changing one here without
   // changing the copy makes the product lie again, which is the exact state
   // this module was written to fix.
   assert.equal(retentionDays(resolvePlanLimits('free')), 30);
-  assert.equal(retentionDays(resolvePlanLimits('personal')), 30);
-  assert.equal(retentionDays(resolvePlanLimits('solo')), 90);
-  assert.equal(retentionDays(resolvePlanLimits('pro')), 365);
+  assert.equal(retentionDays(resolvePlanLimits('personal')), 90);
+  assert.equal(retentionDays(resolvePlanLimits('solo')), 730);
+  // Business (was Team, sold as 365 but held to 90 by the old flat purge).
+  assert.equal(retentionDays(resolvePlanLimits('pro')), 730);
+});
+
+test('the activity_log purge keeps every plan at least as long as it shows', () => {
+  // The pg_cron job deletes by plan in SQL. If its window for a plan were
+  // shorter than the one the dashboard shows, the Usage page would chart days
+  // whose rows are already gone. Parse the CASE in the migration and hold it
+  // to plans.ts.
+  const sql = readFileSync(
+    new URL(
+      '../../../../../supabase/migrations/20261020153742_activity_log_retention_per_plan.sql',
+      import.meta.url,
+    ),
+    'utf8',
+  );
+  const fn = sql.slice(sql.indexOf('FUNCTION public.activity_log_retention_window_days'));
+  const body = fn.slice(0, fn.indexOf('END;'));
+  const sqlDays: Record<string, number> = {};
+  for (const m of body.matchAll(/WHEN '([a-z_]+)' THEN (\d+)/g)) sqlDays[m[1]] = Number(m[2]);
+  const elseDays = Number(/ELSE (\d+)/.exec(body)?.[1]);
+
+  for (const plan of Object.values(PLANS)) {
+    assert.equal(
+      sqlDays[plan.id],
+      plan.limits.analyticsRetentionDays,
+      `SQL window for ${plan.id} must equal plans.ts`,
+    );
+  }
+  // A workspace the job cannot classify keeps the longest window, never less.
+  const longest = Math.max(...Object.values(PLANS).map((p) => p.limits.analyticsRetentionDays));
+  assert.ok(elseDays >= longest, 'unclassified rows must get the longest window');
 });
 
 test('no tier resolves below the 30-day floor every account already had', () => {
@@ -37,6 +96,8 @@ test('the window ascends with the ladder and never reaches unlimited', () => {
     ladder[ladder.length - 1] > ladder[0],
     'the top tier must still buy more history than the bottom',
   );
+  // Pro and Business share the same two years.
+  assert.equal(ladder[2], ladder[3]);
   for (const plan of Object.values(PLANS)) {
     assert.ok(
       Number.isFinite(plan.limits.analyticsRetentionDays),
@@ -45,13 +106,16 @@ test('the window ascends with the ladder and never reaches unlimited', () => {
   }
 });
 
-test('a comped workspace gets the Team window, a grandfathered one does not', () => {
-  // compedScale grants Team features outright, so it buys Team's history too.
-  assert.equal(retentionDays(resolvePlanLimits('free', { compedScale: true })), 365);
+test('a comped workspace gets the Business window, a grandfathered one does not', () => {
+  // compedScale grants Business features outright, so it buys Business's history too.
+  assert.equal(retentionDays(resolvePlanLimits('free', { compedScale: true })), 730);
 
   // The 2026-08-19 grandfather lifts the INBOX cap and nothing else. It must
   // not quietly hand a free account a year of history.
   assert.equal(retentionDays(resolvePlanLimits('free', { unlimitedInboxes: true })), 30);
+  assert.equal(retentionDays(resolvePlanLimits('personal', { unlimitedInboxes: true })), 90);
+  // Pro at the inbox-cap cutover keeps unlimited inboxes and Pro's history.
+  assert.equal(retentionDays(resolvePlanLimits('solo', { proUnlimitedInboxes: true })), 730);
 });
 
 test('an unknown plan falls back to the floor, never to unlimited', () => {

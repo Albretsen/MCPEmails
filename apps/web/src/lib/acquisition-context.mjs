@@ -50,7 +50,7 @@ export const SOURCES = new Set([
   'other',
 ]);
 export const LANDINGS = new Set(['home', 'blog', 'provider', 'docs', 'pricing', 'other']);
-export const LOCALES = new Set(['en', 'nb', 'es', 'fr', 'zh']);
+export const LOCALES = new Set(['en', 'nb', 'es', 'fr', 'zh', 'de']);
 export const UTM_MEDIA = new Set([
   'organic', 'paid_search', 'social', 'email', 'referral', 'affiliate', 'display', 'directory', 'other',
 ]);
@@ -110,7 +110,7 @@ export function sourceFromHost(hostname) {
 }
 
 export function localeAndPath(pathname) {
-  const match = pathname.match(/^\/(nb|es|fr|zh)(?=\/|$)/);
+  const match = pathname.match(/^\/(nb|es|fr|zh|de)(?=\/|$)/);
   const locale = match?.[1] ?? 'en';
   const path = pathname.slice(match?.[0].length ?? 0) || '/';
   return { locale, path };

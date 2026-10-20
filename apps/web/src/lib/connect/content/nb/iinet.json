@@ -18,7 +18,7 @@
     "titleLine1": "iiNet har sluttet å drive e-post.",
     "titleLine2": "Dette kan fortsatt kobles til",
     "lead": "iiNet overlot postkassene sine til et annet selskap og sluttet å utstede adresser. Det endrer hvor innstillingene dine kommer fra, ikke om en AI-agent kan jobbe i postkassen.",
-    "answer": "iiNet har gått ut av e-postvirksomheten. Selskapet overførte iinet.net.au-adresser til en annen australsk leverandør, The Messaging Company, avsluttet innmeldingsperioden, slettet alle adresser som ikke ble meldt inn, og opplyser at det ikke er mulig å opprette nye e-postadresser på domenet iinet.net.au. Spørsmålet er derfor ikke om Claude kan nå iiNet, men hvilken server som har postkassen din i dag. mcpemails er en driftet MCP-server som kobler til enhver IMAP-postkasse, også en tidligere iiNet-adresse hos den nye verten, slik at Claude, Cursor eller enhver MCP-klient kan lese, søke i, sende og organisere den e-posten. Én innboks er gratis, for alltid.",
+    "answer": "iiNet har gått ut av e-postvirksomheten. Selskapet overførte iinet.net.au-adresser til en annen australsk leverandør, The Messaging Company, avsluttet innmeldingsperioden, slettet alle adresser som ikke ble meldt inn, og opplyser at det ikke er mulig å opprette nye e-postadresser på domenet iinet.net.au. Spørsmålet er derfor ikke om Claude kan nå iiNet, men hvilken server som har postkassen din i dag. MCP Emails er en driftet MCP-server som kobler til enhver IMAP-postkasse, også en tidligere iiNet-adresse hos den nye verten, slik at Claude, Cursor eller enhver MCP-klient kan lese, søke i, sende og organisere den e-posten. Én innboks er gratis, for alltid.",
     "meta0": "1 innboks gratis, for alltid",
     "meta1": "Innstillingene kommer fra den nye leverandøren",
     "meta2": "E-post hentes direkte, lagres aldri"
@@ -29,7 +29,7 @@
   },
   "setup": [
     {
-      "h": "Opprett en gratis mcpemails-konto",
+      "h": "Opprett en gratis MCP Emails-konto",
       "p": "Registrer deg på mcpemails.com. Gratisplanen kobler til én innboks og ber ikke om kort."
     },
     {
@@ -38,7 +38,7 @@
     },
     {
       "h": "Skriv inn innstillingene du får fra din nåværende leverandør",
-      "p": "I mcpemails velger du IMAP / SMTP og fyller inn vert, port og passord nøyaktig slik leverandøren dokumenterer dem, med hele adressen som brukernavn. Vi publiserer bare innstillinger vi selv har åpnet en tilkobling til, så vi oppgir ikke vertsnavnene til The Messaging Company her. Hent dem fra deres egne hjelpesider, ikke fra en blogg hos en tredjepart."
+      "p": "I MCP Emails velger du IMAP / SMTP og fyller inn vert, port og passord nøyaktig slik leverandøren dokumenterer dem, med hele adressen som brukernavn. Vi publiserer bare innstillinger vi selv har åpnet en tilkobling til, så vi oppgir ikke vertsnavnene til The Messaging Company her. Hent dem fra deres egne hjelpesider, ikke fra en blogg hos en tredjepart."
     },
     {
       "h": "Lim MCP-URL-en inn i AI-en",
@@ -70,7 +70,7 @@
   "faq": [
     {
       "q": "Fungerer Claude med iiNet-e-post?",
-      "a": "Claude har ingen innebygd kobling for det, og iiNet driver ikke lenger tjenesten. Hvis iinet.net.au-adressen din overlevde overføringen til The Messaging Company, gir en MCP-server som mcpemails koblet til den over IMAP Claude tilgang til å lese, søke, sende, svare, planlegge og organisere, med serverinnstillingene din nåværende leverandør gir deg."
+      "a": "Claude har ingen innebygd kobling for det, og iiNet driver ikke lenger tjenesten. Hvis iinet.net.au-adressen din overlevde overføringen til The Messaging Company, gir en MCP-server som MCP Emails koblet til den over IMAP Claude tilgang til å lese, søke, sende, svare, planlegge og organisere, med serverinnstillingene din nåværende leverandør gir deg."
     },
     {
       "q": "Hva skjedde med iiNet-e-post?",
@@ -82,7 +82,7 @@
     },
     {
       "q": "Kan jeg få en ny iinet.net.au-e-postadresse?",
-      "a": "Nei. iiNets hjelpeside sier rett ut at det ikke er mulig å opprette nye e-postadresser på domenet iinet.net.au. Trenger du en ny postkasse som en assistent kan jobbe i, må den ligge hos en leverandør som fortsatt utsteder dem, og mcpemails kobler til alle slike over IMAP."
+      "a": "Nei. iiNets hjelpeside sier rett ut at det ikke er mulig å opprette nye e-postadresser på domenet iinet.net.au. Trenger du en ny postkasse som en assistent kan jobbe i, må den ligge hos en leverandør som fortsatt utsteder dem, og MCP Emails kobler til alle slike over IMAP."
     },
     {
       "q": "Lagres e-posten min på serverne deres?",

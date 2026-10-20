@@ -24,7 +24,7 @@
     "titleLine1": "Conecta Purelymail a Claude,",
     "titleLine2": "y a Cursor, ChatGPT, cualquier cliente MCP",
     "lead": "Dale a tu agente de IA una bandeja de Purelymail real. Lee, busca, envía, responde, programa y organiza correo por IMAP con la contraseña propia del buzón, en todos los clientes MCP y no solo en uno.",
-    "answer": "Claude no puede llegar a Purelymail por su cuenta. mcpemails es un servidor MCP alojado que lo conecta por IMAP en imap.purelymail.com, puerto 993, para que Claude, Cursor o cualquier cliente MCP pueda leer, buscar, enviar y organizar ese correo. Purelymail no tiene ningún interruptor de IMAP que buscar: te autenticas con la dirección de correo completa del buzón y la contraseña propia de ese buzón, o con una contraseña de aplicación si el buzón tiene activada la autenticación de dos factores. Una bandeja es gratis, para siempre.",
+    "answer": "Claude no puede llegar a Purelymail por su cuenta. MCP Emails es un servidor MCP alojado que lo conecta por IMAP en imap.purelymail.com, puerto 993, para que Claude, Cursor o cualquier cliente MCP pueda leer, buscar, enviar y organizar ese correo. Purelymail no tiene ningún interruptor de IMAP que buscar: te autenticas con la dirección de correo completa del buzón y la contraseña propia de ese buzón, o con una contraseña de aplicación si el buzón tiene activada la autenticación de dos factores. Una bandeja es gratis, para siempre.",
     "meta0": "1 bandeja gratis, para siempre",
     "meta1": "Contraseña del buzón o contraseña de aplicación",
     "meta2": "El correo se obtiene en vivo, nunca se almacena"
@@ -35,7 +35,7 @@
   },
   "setup": [
     {
-      "h": "Crea una cuenta gratis de mcpemails",
+      "h": "Crea una cuenta gratis de MCP Emails",
       "p": "Regístrate en mcpemails.com. No hace falta tarjeta, y el plan gratuito conecta una bandeja durante todo el tiempo que quieras."
     },
     {
@@ -44,7 +44,7 @@
     },
     {
       "h": "Añade una contraseña de aplicación si ese usuario tiene 2FA, y conecta",
-      "p": "Si la autenticación multifactor está activada para ese usuario, abre el usuario, baja hasta <b>App Passwords</b>, haz clic en <b>Add New</b>, ponle un nombre y copia el código. Purelymail lo muestra una sola vez. Ahora elige IMAP / SMTP en mcpemails e introduce la dirección completa y esa contraseña. Los servidores de arriba ya vienen rellenados."
+      "p": "Si la autenticación multifactor está activada para ese usuario, abre el usuario, baja hasta <b>App Passwords</b>, haz clic en <b>Add New</b>, ponle un nombre y copia el código. Purelymail lo muestra una sola vez. Ahora elige IMAP / SMTP en MCP Emails e introduce la dirección completa y esa contraseña. Los servidores de arriba ya vienen rellenados."
     },
     {
       "h": "Pega la URL MCP en tu IA",
@@ -72,7 +72,7 @@
   "faq": [
     {
       "q": "¿Claude funciona con Purelymail?",
-      "a": "No directamente. Claude no tiene un conector integrado para Purelymail y no puede abrir una sesión IMAP por sí mismo. Conectar un servidor MCP como mcpemails a tu buzón de Purelymail le da a Claude acceso para leer, buscar, enviar, responder, programar y organizar, y la misma conexión funciona en Cursor, ChatGPT y cualquier otro cliente MCP, no solo en una aplicación."
+      "a": "No directamente. Claude no tiene un conector integrado para Purelymail y no puede abrir una sesión IMAP por sí mismo. Conectar un servidor MCP como MCP Emails a tu buzón de Purelymail le da a Claude acceso para leer, buscar, enviar, responder, programar y organizar, y la misma conexión funciona en Cursor, ChatGPT y cualquier otro cliente MCP, no solo en una aplicación."
     },
     {
       "q": "¿Cuál es la configuración IMAP y SMTP de Purelymail?",

@@ -23,7 +23,7 @@
     "titleLine1": "Connectez Titan Email à Claude,",
     "titleLine2": "et à Cursor, ChatGPT, tout client MCP",
     "lead": "Offrez à votre agent IA une vraie boîte Titan. Lisez, recherchez, envoyez, répondez, planifiez et organisez le courrier en IMAP, dans tous les clients MCP plutôt qu'un seul.",
-    "answer": "Claude ne peut pas atteindre Titan Email tout seul. mcpemails est un serveur MCP hébergé qui s'y connecte en IMAP sur imap.titan.email, port 993, pour que Claude, Cursor ou tout client MCP puisse lire, rechercher, envoyer et organiser ce courrier. Titan refuse tous les clients tiers tant que vous n'avez pas activé Enable Titan on Other Apps dans les réglages du webmail, et une boîte avec double authentification exige un mot de passe d'application Titan plutôt que le mot de passe habituel. Une boîte est gratuite, pour toujours.",
+    "answer": "Claude ne peut pas atteindre Titan Email tout seul. MCP Emails est un serveur MCP hébergé qui s'y connecte en IMAP sur imap.titan.email, port 993, pour que Claude, Cursor ou tout client MCP puisse lire, rechercher, envoyer et organiser ce courrier. Titan refuse tous les clients tiers tant que vous n'avez pas activé Enable Titan on Other Apps dans les réglages du webmail, et une boîte avec double authentification exige un mot de passe d'application Titan plutôt que le mot de passe habituel. Une boîte est gratuite, pour toujours.",
     "meta0": "1 boîte gratuite, pour toujours",
     "meta1": "L'accès tiers doit être activé",
     "meta2": "E-mails récupérés en direct, jamais stockés"
@@ -34,7 +34,7 @@
   },
   "setup": [
     {
-      "h": "Créez un compte mcpemails gratuit",
+      "h": "Créez un compte MCP Emails gratuit",
       "p": "Inscrivez-vous sur mcpemails.com. Aucune carte bancaire n'est demandée, et l'offre gratuite connecte une boîte aussi longtemps que vous le souhaitez."
     },
     {
@@ -42,8 +42,8 @@
       "p": "Connectez-vous au webmail Titan sur app.titan.email, cliquez sur l'icône <b>Settings</b> en haut à droite, puis sur <b>Enable Titan on Other Apps</b>. Une courte présentation de la fonctionnalité s'ouvre ; cliquez à nouveau sur le bouton pour confirmer. Si cette entrée est absente et que vous voyez <b>Configure 3rd party apps</b> à la place, l'accès tiers est déjà activé pour la boîte."
     },
     {
-      "h": "Vérifiez vos noms de serveurs, puis collez le tout dans mcpemails",
-      "p": "La plupart des boîtes Titan utilisent les serveurs préremplis ci-dessus. Si votre domaine est géré via GoDaddy, GoDaddy indique plutôt <code>imap.secureserver.net</code> sur le 993 et <code>smtpout.secureserver.net</code> sur le 465. Si vous avez acheté Titan chez Blacknight, MonoVM, DomainDiscount24, Fluccs ou Domain Central, Titan indique <code>imap0101.titan.email</code> et <code>smtp0101.titan.email</code>. Choisissez IMAP / SMTP dans mcpemails, saisissez votre adresse Titan complète et son mot de passe."
+      "h": "Vérifiez vos noms de serveurs, puis collez le tout dans MCP Emails",
+      "p": "La plupart des boîtes Titan utilisent les serveurs préremplis ci-dessus. Si votre domaine est géré via GoDaddy, GoDaddy indique plutôt <code>imap.secureserver.net</code> sur le 993 et <code>smtpout.secureserver.net</code> sur le 465. Si vous avez acheté Titan chez Blacknight, MonoVM, DomainDiscount24, Fluccs ou Domain Central, Titan indique <code>imap0101.titan.email</code> et <code>smtp0101.titan.email</code>. Choisissez IMAP / SMTP dans MCP Emails, saisissez votre adresse Titan complète et son mot de passe."
     },
     {
       "h": "Collez l'URL MCP dans votre IA",
@@ -65,7 +65,7 @@
     },
     {
       "h": "Le serveur IMAP de Titan est remarquablement dépouillé, et cela change son comportement",
-      "p": "La bannière de capacités de Titan n'annonce guère plus qu'IMAP4rev1, AUTH=PLAIN et SASL-IR. Il ne propose pas MOVE : déplacer un message devient une copie, un indicateur et un expunge plutôt qu'une seule commande atomique, et un déplacement interrompu peut laisser l'original en place. Il ne propose pas IDLE : aucun client ne peut garder une connexion ouverte en attendant le nouveau courrier ; mcpemails récupère en direct à chaque requête, mais un client de bureau sur la même boîte interrogera périodiquement. UIDPLUS et SPECIAL-USE manquent aussi, ce qui explique que les dossiers soient ici reconnus par leur nom."
+      "p": "La bannière de capacités de Titan n'annonce guère plus qu'IMAP4rev1, AUTH=PLAIN et SASL-IR. Il ne propose pas MOVE : déplacer un message devient une copie, un indicateur et un expunge plutôt qu'une seule commande atomique, et un déplacement interrompu peut laisser l'original en place. Il ne propose pas IDLE : aucun client ne peut garder une connexion ouverte en attendant le nouveau courrier ; MCP Emails récupère en direct à chaque requête, mais un client de bureau sur la même boîte interrogera périodiquement. UIDPLUS et SPECIAL-USE manquent aussi, ce qui explique que les dossiers soient ici reconnus par leur nom."
     }
   ],
   "limits": [
@@ -76,7 +76,7 @@
   "faq": [
     {
       "q": "Claude fonctionne-t-il avec Titan Email ?",
-      "a": "Pas directement. Claude n'a pas de connecteur Titan intégré et ne peut pas ouvrir seul une session IMAP. Connecter un serveur MCP comme mcpemails à votre boîte Titan donne à Claude un accès en lecture, recherche, envoi, réponse, planification et organisation, et la même connexion fonctionne dans Cursor et tout autre client MCP, pas dans une seule application."
+      "a": "Pas directement. Claude n'a pas de connecteur Titan intégré et ne peut pas ouvrir seul une session IMAP. Connecter un serveur MCP comme MCP Emails à votre boîte Titan donne à Claude un accès en lecture, recherche, envoi, réponse, planification et organisation, et la même connexion fonctionne dans Cursor et tout autre client MCP, pas dans une seule application."
     },
     {
       "q": "Comment savoir si ma boîte est vraiment Titan ?",

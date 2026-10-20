@@ -24,7 +24,7 @@ I MCP Emails-dashbordet åpner du **Inboxes** og deretter **Connect Inbox**, og 
 
 ### Gmail og Google Workspace
 
-Gmail kobles til med et Google-apppassord over IMAP som standard, og Google OAuth-innlogging er også tilgjengelig. Bruk apppassordet hvis en Workspace-administrator begrenser tilgangen for tredjepartsapper. [Gmail-veiledningen](/blog/connect-gmail-to-claude) har stegene.
+Gmail kobles til med et Google-apppassord over IMAP. Slå på totrinnsbekreftelse, lag apppassordet på myaccount.google.com/apppasswords, og lim inn de 16 bokstavene sammen med hele Gmail-adressen din; det vanlige Google-passordet ditt fungerer ikke. En Google Workspace-administrator kan slå av apppassord for domenet, så spør administratoren hvis valget mangler. [Gmail-veiledningen](/blog/connect-gmail-to-claude) har stegene.
 
 ### iCloud, Fastmail, Yahoo og Zoho
 
@@ -79,7 +79,7 @@ For rutiner du gjentar, start fra [triageringsoppskriften for innboksen](/blog/a
 
 MCP Emails gir ChatGPT målrettede e-postverktøy i stedet for et passord eller en rå IMAP-forbindelse:
 
-- **Lese og søke:** \`email_read\` dekker list, read, read_batch, search og attachment. Gmail-søk godtar operatorer som \`from:\` og \`is:unread\`.
+- **Lese og søke:** \`email_read\` dekker list, read, read_batch, search og attachment. Søk bruker strukturerte felt som avsender, emne, dato og ulest-status, og Gmail-etiketter vises som mapper.
 - **Sende, svare og videresende:** \`email_compose\` sender gjennom din egen leverandør og adresse.
 - **Organisere:** \`email_organize\`, \`email_search_and_move\` og \`email_delete\`.
 - **Utkast, mapper og planlegging:** \`draft\`, \`draft_list\`, \`folder\`, \`folder_list\`, \`schedule\` og \`schedule_list\`.
@@ -123,7 +123,7 @@ Nei. Codex er en terminalflate, så den bruker en avgrenset API-nøkkel i en \`A
 Nei. Hver melding hentes direkte fra leverandøren din for den forespørselen som ba om den, og forkastes deretter. Bare den krypterte leverandørlegitimasjonen beholdes. [Hvorfor det betyr noe at e-post aldri lagres](/blog/why-email-never-stored-matters) forklarer resonnementet.
 
 **Hva koster det?**
-Gratis dekker én tilkoblet innboks og 150 fakturerbare e-posthandlinger per UTC-kalendermåned, med de første 3 dagene utelatt fra tellingen. Den månedlige grensen gjelder arbeidsområder opprettet 13.09.2026 eller senere. Arbeidsområder opprettet tidligere er unntatt. Personal koster $9 per måned for 3 innbokser uten månedlig handlingsgrense, og Pro koster $15 per måned for ubegrenset antall innbokser. Se [priser](/pricing).
+Gratis dekker én tilkoblet innboks og 150 fakturerbare e-posthandlinger per UTC-kalendermåned, med de første 3 dagene utelatt fra tellingen. Den månedlige grensen gjelder arbeidsområder opprettet 13.09.2026 eller senere. Arbeidsområder opprettet tidligere er unntatt. Personal koster $9 per måned for 3 innbokser uten månedlig handlingsgrense, og Pro koster $15 per måned for opptil 10 innbokser. Se [priser](/pricing).
 
 ## Neste steg
 

@@ -19,7 +19,7 @@
     "titleLine1": "SAPO Mail over IMAP,",
     "titleLine2": "in Claude, Cursor, any MCP client",
     "lead": "SAPO puts mail-client access on its Premium tier. If your account has it, an AI agent can read, search, send, reply, schedule and organize the mailbox over IMAP.",
-    "answer": "Claude cannot reach a SAPO mailbox on its own, and on a free SAPO Base account neither can anything else: SAPO states in its own documentation that o acesso IMAP/POP está disponível apenas para contas Premium. On a Premium account, mcpemails is a hosted MCP server that connects the mailbox over IMAP at imap.sapo.pt on port 993 with your SAPO address and password, so Claude, Cursor or any MCP client can read, search, send and organize the mail. There is no app password and no toggle to switch on: the gate is the plan. One inbox on mcpemails is free, forever.",
+    "answer": "Claude cannot reach a SAPO mailbox on its own, and on a free SAPO Base account neither can anything else: SAPO states in its own documentation that o acesso IMAP/POP está disponível apenas para contas Premium. On a Premium account, MCP Emails is a hosted MCP server that connects the mailbox over IMAP at imap.sapo.pt on port 993 with your SAPO address and password, so Claude, Cursor or any MCP client can read, search, send and organize the mail. There is no app password and no toggle to switch on: the gate is the plan. One inbox on MCP Emails is free, forever.",
     "meta0": "1 inbox free, forever",
     "meta1": "Needs a SAPO Premium account",
     "meta2": "Email fetched live, never stored"
@@ -30,7 +30,7 @@
   },
   "setup": [
     {
-      "h": "Create your free mcpemails account",
+      "h": "Create your free MCP Emails account",
       "p": "Sign up at mcpemails.com. The free plan connects one inbox forever and does not ask for a card."
     },
     {
@@ -42,7 +42,7 @@
       "p": "SAPO issues no application-specific password. The credential is your ordinary SAPO password with the complete address as the username, used on both the incoming and the outgoing side. If the webmail accepts it and the client does not, the account is almost certainly on the Base tier rather than Premium."
     },
     {
-      "h": "Paste it into mcpemails, then paste the MCP URL into your AI",
+      "h": "Paste it into MCP Emails, then paste the MCP URL into your AI",
       "p": "Choose IMAP / SMTP, enter the full address such as nome@sapo.pt, and enter the password. The SAPO hosts and ports are prefilled and were verified from a live TLS connection. Then drop https://mcpemails.com/api/mcp into Claude, Cursor or ChatGPT, authorize, and your agent has the inbox."
     }
   ],
@@ -57,7 +57,7 @@
     },
     {
       "h": "Only PLAIN on IMAP, both PLAIN and LOGIN on SMTP",
-      "p": "The IMAP banner offers <code>AUTH=PLAIN</code> and nothing else, with no <code>AUTH=LOGIN</code>. Client libraries hard-wired to the LOGIN mechanism, which is common in tooling written against Exchange, are refused at the authentication step with an error that reads like bad credentials. The SMTP side accepts both PLAIN and LOGIN, so the two halves of the same account can behave differently inside one client. mcpemails negotiates whatever each leg actually offers."
+      "p": "The IMAP banner offers <code>AUTH=PLAIN</code> and nothing else, with no <code>AUTH=LOGIN</code>. Client libraries hard-wired to the LOGIN mechanism, which is common in tooling written against Exchange, are refused at the authentication step with an error that reads like bad credentials. The SMTP side accepts both PLAIN and LOGIN, so the two halves of the same account can behave differently inside one client. MCP Emails negotiates whatever each leg actually offers."
     },
     {
       "h": "No MOVE and no SPECIAL-USE on a Portuguese-named mailbox",
@@ -72,7 +72,7 @@
   "faq": [
     {
       "q": "Does Claude work with SAPO Mail?",
-      "a": "Only on a Premium account. SAPO restricts IMAP, POP and SMTP to Premium, so a free Base account cannot be connected by any mail client or MCP server. With Premium, pointing mcpemails at the mailbox gives Claude read, search, send, reply, schedule and organize access, and the same connection works from Cursor and ChatGPT."
+      "a": "Only on a Premium account. SAPO restricts IMAP, POP and SMTP to Premium, so a free Base account cannot be connected by any mail client or MCP server. With Premium, pointing MCP Emails at the mailbox gives Claude read, search, send, reply, schedule and organize access, and the same connection works from Cursor and ChatGPT."
     },
     {
       "q": "What are the SAPO IMAP and SMTP settings?",

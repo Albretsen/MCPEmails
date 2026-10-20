@@ -1,25 +1,25 @@
 {
   "meta": {
     "title": "Privacy Policy",
-    "description": "How MCPEmails collects, uses, and protects your data. Our privacy policy for users, workspace owners, and AI agents."
+    "description": "How MCP Emails collects, uses, and protects your data. Our privacy policy for users, workspace owners, and AI agents."
   },
   "hero": {
     "eyebrow": "Legal",
     "title": "Privacy Policy",
-    "lead": "We built MCPEmails with privacy as a first principle. The email content your agent reads is never stored on our servers; it passes through to your agent and disappears. The one exception is a message you schedule to send later, which we hold only until it is delivered. This policy explains what we do collect, and why.",
+    "lead": "We built MCP Emails with privacy as a first principle. The email content your agent reads is never stored on our servers; it passes through to your agent and disappears. The exceptions are outgoing messages that have to wait: a message you schedule to send later, or a send held for your approval, which we store encrypted. This policy explains what we do collect, and why.",
     "dates": "Last updated: {lastUpdated}  ·  Effective: {effectiveDate}"
   },
   "whoWeAre": {
     "title": "1. Who We Are",
-    "p1": "The MCPEmails service at <b>mcpemails.com</b> is operated by {companyName}, a Norwegian sole proprietorship (enkeltpersonforetak) owned and run by {ownerName}, trading as \"MCPEmails\". In this policy, \"MCPEmails\", \"we\", \"us\", and \"our\" all mean {companyName}. The service includes all dashboard pages, API endpoints, and the Model Context Protocol (MCP) server that AI agents use to access connected email accounts.",
-    "p2": "For the purposes of applicable data protection law (including the EU General Data Protection Regulation, \"GDPR\"), MCPEmails is the data controller for account and usage data. For email content, we act as a data processor on your behalf: we transmit content you authorise us to retrieve, and we do not store it.",
-    "p3": "Service provider identification: {companyName} is a sole proprietorship (enkeltpersonforetak) established in Norway and operated by {ownerName}. It is entered in {register}, the Norwegian Central Coordinating Register for Legal Entities operated by Brønnøysundregistrene, under organisation number <b>{orgNumber}</b>. Our registered address is {companyAddress}.",
-    "p4": "{companyName} is not currently registered in the Norwegian VAT register (Merverdiavgiftsregisteret). You can reach us about privacy at <email></email>."
+    "p1": "The MCPEmails service at <b>mcpemails.com</b> is operated by {companyName}, a Norwegian private limited company (aksjeselskap) owned and run by {ownerName}, trading as \"MCPEmails\". In this policy, \"MCPEmails\", \"we\", \"us\", and \"our\" all mean {companyName}. The service includes all dashboard pages, API endpoints, and the Model Context Protocol (MCP) server that AI agents use to access connected email accounts.",
+    "p2": "For the purposes of applicable data protection law (including the EU General Data Protection Regulation, \"GDPR\"), MCP Emails is the data controller for account and usage data. For email content, we act as a data processor on your behalf: we transmit content you authorise us to retrieve, and we do not store it.",
+    "p3": "Service provider identification: {companyName} is a private limited company (aksjeselskap) established in Norway, owned by {ownerName}, who also chairs its board. It is registered in {register}, the Norwegian Register of Business Enterprises operated by Brønnøysundregistrene, under organisation number <b>{orgNumber}</b>. Our registered address is {companyAddress}.",
+    "p4": "You can reach us about privacy at <email></email>."
   },
   "dataWeCollect": {
     "title": "2. Data We Collect",
     "accountTitle": "2.1 Account data",
-    "accountP": "When you create an account we collect your email address and a hashed password (we never store plaintext passwords). You may optionally provide a display name. This data is required to create and maintain your account. If you tick the box on the signup form asking for product tips and offers by email, we also record that you did, when, and which wording you saw. When you sign up, we also record whether you used a phone, a tablet, or a computer, worked out from your browser's request headers. We store only that one word, never your browser's user-agent string or any device identifier, and use it only to understand where signups come from.",
+    "accountP": "When you create an account we collect your email address and a hashed password (we never store plaintext passwords). You may optionally provide a display name. This data is required to create and maintain your account. If you tick the box on the signup form asking for product tips and offers by email, we also record that you did, when, and which wording you saw. When you sign up, we also record whether you used a phone, a tablet, or a computer, worked out from your browser's request headers. We store only that one word, never your browser's user-agent string or any device identifier, and use it only to understand where signups come from. We also record the country a signup came from, as a two-letter code that our hosting provider works out from your IP address. We store only that code, never the IP address, and use it only to understand where signups come from.",
     "workspaceTitle": "2.2 Workspace and configuration data",
     "workspaceP": "We store the workspace name you choose, and the configuration of each connected inbox (provider type, email address, OAuth status, and connection timestamp). We do <b>not</b> store OAuth access tokens or app passwords in plaintext. They are encrypted with AES-256-GCM before being written to the database, and the encryption key is held as a server secret in our application environment, never in the database.",
     "apiKeysTitle": "2.3 API keys",
@@ -27,8 +27,8 @@
     "logsTitle": "2.4 Usage and audit logs",
     "logsP": "For every MCP tool call your agent makes, we record: the tool name (e.g. <c>email_read</c>), the API key that made the call, the inbox that was accessed, the timestamp, and whether the call succeeded. We do<b> not</b> record email subjects, bodies, recipients, or any other email content in these logs.",
     "emailContentTitle": "2.5 Email content: not stored",
-    "emailContentP": "When your agent calls <c>email_read</c> (to list, read, or search) or any other read tool, we fetch the requested content live from your email provider and return it to your agent in the same HTTP response. That content is never written to disk, cached, or logged. Once the HTTP response is sent, we hold no copy of any email body, subject, attachment, or contact detail. The one exception is scheduled sends: when you ask your agent to schedule a message for future delivery, we store that outgoing message (its recipients, subject, body, and any attachments) in our database until it is sent, and we retain the record afterwards for audit and troubleshooting. This applies only to messages you explicitly schedule; mail your agent reads or sends immediately is never stored.",
-    "emailContentAgentP": "Your email content is only ever sent to the MCP client or AI agent that <b>you</b> have connected and are operating (for example Claude, Cursor, or another MCP client of your choosing). When you invoke a tool, MCPEmails transmits the requested content to that client so it can fulfil your request. MCPEmails does not send your email content to any AI provider of its own choosing. Once the content reaches your chosen client, it is governed by that client's or AI provider's own privacy policy and terms, which you are responsible for reviewing. MCPEmails acts only as a conduit and retains no copy of the content.",
+    "emailContentP": "When your agent calls <c>email_read</c> (to list, read, or search) or any other read tool, we fetch the requested content live from your email provider and return it to your agent in the same HTTP response. That content is never written to disk, cached, or logged. Once the HTTP response is sent, we hold no copy of any email body, subject, attachment, or contact detail. There are two exceptions, both outgoing messages that have to wait. Scheduled sends: when you ask your agent to schedule a message for future delivery, we store that outgoing message (its recipients, subject, body, and any attachments) in our database until it is sent, and we retain the record afterwards for audit and troubleshooting. Sends held for approval: when an inbox requires approval, a send, reply, forward, or draft send your agent requests is stored encrypted in our database until a workspace member approves or rejects it, or until it expires after 24 hours, and the record is kept afterwards as your approval history. Mail your agent reads, and mail it sends immediately without an approval hold, is never stored.",
+    "emailContentAgentP": "Your email content is only ever sent to the MCP client or AI agent that <b>you</b> have connected and are operating (for example Claude, Cursor, or another MCP client of your choosing). When you invoke a tool, MCP Emails transmits the requested content to that client so it can fulfil your request. MCP Emails does not send your email content to any AI provider of its own choosing. Once the content reaches your chosen client, it is governed by that client's or AI provider's own privacy policy and terms, which you are responsible for reviewing. MCP Emails acts only as a conduit and retains no copy of the content.",
     "technicalTitle": "2.6 Technical and operational data",
     "technicalP": "We collect standard server-side operational data including IP addresses (for rate limiting and abuse prevention), request timestamps, HTTP status codes, and error types. This data is retained in aggregated, anonymised form and is not linked to individual accounts after 30 days.",
     "cookiesTitle": "2.7 Cookies and local storage",
@@ -57,12 +57,12 @@
       "Share your data with third parties for their own marketing purposes."
     ],
     "googleTitle": "3.7 Google API Services: Limited Use",
-    "googleP1": "MCPEmails' use and transfer to any other app of information received from Google APIs (including the Gmail API) will adhere to the <link>Google API Services User Data Policy</link>, including the <b>Limited Use</b> requirements.",
-    "googleP2": "When you connect a Gmail account, you grant MCPEmails the following Gmail scopes. We request each scope solely to provide the features you invoke through your AI agent, and we use them only on your behalf:",
+    "googleP1": "MCP Emails' use and transfer to any other app of information received from Google APIs (including the Gmail API) will adhere to the <link>Google API Services User Data Policy</link>, including the <b>Limited Use</b> requirements.",
+    "googleP2": "When you connect a Gmail account, you grant MCP Emails the following Gmail scopes. We request each scope solely to provide the features you invoke through your AI agent, and we use them only on your behalf:",
     "googleScopeReadonly": "<c>gmail.readonly</c>: list messages and read message contents so your agent can search, read, and summarise email at your request.",
     "googleScopeSend": "<c>gmail.send</c>: compose and send messages that your agent creates at your request.",
     "googleScopeModify": "<c>gmail.modify</c>: organise your mail at your direction, including applying and removing labels, marking messages read or unread, archiving messages, moving messages between folders, and moving messages to trash.",
-    "googleLimitedIntro": "Consistent with the Limited Use requirements, MCPEmails:",
+    "googleLimitedIntro": "Consistent with the Limited Use requirements, MCP Emails:",
     "googleLimitedList": [
       "uses Google user data only to provide and improve the user-facing features described above;",
       "does not transfer or sell Google user data to third parties, data brokers, or advertising networks;",
@@ -70,11 +70,11 @@
       "does not use Google user data to develop, improve, or train generalised or non-personalised AI or machine-learning models;",
       "does not allow humans to read Google user data unless (a) you give explicit consent for specific messages, (b) it is necessary for security purposes such as investigating abuse, (c) it is required to comply with applicable law, or (d) the data has been aggregated and anonymised."
     ],
-    "googleP3": "As described in Section 2.5, email content retrieved from the Gmail API is streamed through to your agent in the same request and is never stored, cached, or logged by MCPEmails.",
+    "googleP3": "As described in Section 2.5, email content retrieved from the Gmail API is streamed through to your agent in the same request and is never stored, cached, or logged by MCP Emails.",
     "microsoftTitle": "3.8 Microsoft APIs: mailbox access and revoking it",
     "microsoftP1": "When you connect an Outlook or Microsoft 365 mailbox, Microsoft asks you to approve a specific, named set of permissions: reading and organising your mail, and sending mail on your behalf. We use that access only to run the features you ask an AI agent to perform on your mailbox, such as reading, searching, organising, drafting and sending. We do not use it to build a copy of your mailbox, and we never use mail content, or anything derived from it, for advertising or marketing.",
-    "microsoftRevokeP": "You can withdraw this access at any time, directly with Microsoft and without asking us. For a personal Microsoft account, use <personal>Microsoft account permissions</personal>. For a work or school account, use <work>My Apps</work>. Revoking access there immediately stops us being able to reach that mailbox. If your IT admin approved MCPEmails for your whole organisation, only an admin can remove that organisation-wide approval.",
-    "microsoftDisconnectP": "Disconnecting the inbox in your MCPEmails dashboard has the same effect from our side and additionally deletes the stored credentials for that mailbox. You can do either one first; you do not have to do both.",
+    "microsoftRevokeP": "You can withdraw this access at any time, directly with Microsoft and without asking us. For a personal Microsoft account, use <personal>Microsoft account permissions</personal>. For a work or school account, use <work>My Apps</work>. Revoking access there immediately stops us being able to reach that mailbox. If your IT admin approved MCP Emails for your whole organisation, only an admin can remove that organisation-wide approval.",
+    "microsoftDisconnectP": "Disconnecting the inbox in your MCP Emails dashboard has the same effect from our side and additionally deletes the stored credentials for that mailbox. You can do either one first; you do not have to do both.",
     "marketingTitle": "3.9 Direct marketing email",
     "marketingP1": "We send marketing email (product tips and offers, for example about a paid plan when your workspace reaches a plan limit) only if you agreed to it by ticking the box on the signup form. The box is unticked by default, and we do not infer consent from anything else. The legal basis is your <b>consent</b> (GDPR Article 6(1)(a)), which the Norwegian Marketing Control Act (markedsføringsloven) § 15 also requires for marketing by email.",
     "marketingP2": "To choose which of a small number of messages to send, and when, we use account and product-usage signals: for example that your workspace reached a plan limit, how many inboxes you have connected, your plan, and when you signed up. We never use the content of your mailbox, or anything derived from it, for this.",
@@ -113,9 +113,9 @@
         "reason": "Audit trail; recovery window"
       },
       {
-        "category": "MCP tool call audit logs",
-        "period": "7 days (Free); 90 days (Agent); 1 year (Scale)",
-        "reason": "Security audit; plan feature"
+        "category": "MCP tool call activity log",
+        "period": "Up to 90 days on Free and Personal, up to 2 years on Pro and Business",
+        "reason": "Security; usage history in your dashboard"
       },
       {
         "category": "Aggregated usage metrics",
@@ -136,6 +136,11 @@
         "category": "Scheduled send messages",
         "period": "Until sent; record retained afterwards for audit",
         "reason": "Required to deliver messages you schedule"
+      },
+      {
+        "category": "Sends held for approval",
+        "period": "Encrypted while waiting for a decision (at most 24 hours); record kept afterwards as approval history",
+        "reason": "Required to show the message to a reviewer and send it once approved"
       }
     ],
     "outro": "When you delete your account, we initiate deletion of all personal data within 30 days. Aggregated, non-personal usage statistics derived from your account may be retained beyond this period in anonymised form."
@@ -154,22 +159,25 @@
     "vercelPurpose": "Web hosting, CDN, MCP endpoint",
     "vercelData": "HTTP request metadata; MCP requests and responses, including email content, pass through in transit and are not stored",
     "vercelLocation": "Global CDN; server functions in the US (East) and the EU (Stockholm, Sweden)",
+    "relayPurpose": "Mail relay for the few providers that refuse connections from cloud addresses",
+    "relayData": "The encrypted IMAP and SMTP connection to those providers, passed through as a tunnel with TLS end to end: the relay cannot read mail or passwords",
+    "relayLocation": "Germany (EU)",
     "stripeProvider": "(paid plans only)",
     "stripePurpose": "Payment processing",
     "stripeData": "Billing email, payment card data (stored by Stripe, not us)",
     "stripeLocation": "US (Stripe is PCI-DSS certified)",
     "emailProvidersTitle": "5.2 Email providers (your providers, not ours)",
-    "emailProvidersP": "When you connect Gmail, Outlook / Microsoft 365, Fastmail, or another IMAP account, MCPEmails authenticates with that provider using credentials you supply. Your email provider's own privacy policy governs the data held in your mailbox. MCPEmails accesses your mailbox only when your agent makes a tool call, and only for the specific messages or folders the tool requests.",
+    "emailProvidersP": "When you connect Gmail, Outlook / Microsoft 365, Fastmail, or another IMAP account, MCP Emails authenticates with that provider using credentials you supply. Your email provider's own privacy policy governs the data held in your mailbox. MCP Emails accesses your mailbox only when your agent makes a tool call, and only for the specific messages or folders the tool requests.",
     "noBrokersTitle": "5.3 No data brokers or advertising networks",
     "noBrokersP": "We do not share any data with data brokers, advertising networks, social media platforms, or analytics companies that build user profiles.",
     "legalDisclosuresTitle": "5.4 Legal disclosures",
-    "legalDisclosuresP": "We may disclose personal data if required by law, valid legal process (such as a court order or subpoena), or to protect the rights, property, or safety of MCPEmails, our users, or the public. Where permitted by law, we will notify affected users before disclosing their data.",
+    "legalDisclosuresP": "We may disclose personal data if required by law, valid legal process (such as a court order or subpoena), or to protect the rights, property, or safety of MCP Emails, our users, or the public. Where permitted by law, we will notify affected users before disclosing their data.",
     "businessTransfersTitle": "5.5 Business transfers",
     "businessTransfersP": "In the event of a merger, acquisition, or sale of assets, personal data may be transferred as part of that transaction. We will notify users via the email address on their account before any such transfer occurs and before their data becomes subject to a different privacy policy."
   },
   "internationalTransfers": {
     "title": "6. International Data Transfers",
-    "p1": "MCPEmails is operated from Norway, which is subject to the European Economic Area (EEA) data protection framework. If you access the service from outside the EEA, your data may be transferred to and processed in countries within the EEA.",
+    "p1": "MCP Emails is operated from Norway, which is subject to the European Economic Area (EEA) data protection framework. If you access the service from outside the EEA, your data may be transferred to and processed in countries within the EEA.",
     "p2": "Our infrastructure sub-processors (Supabase, Vercel) operate under Standard Contractual Clauses (SCCs) approved by the European Commission for data transfers to third countries. For Stripe, processing is covered by their EU-US Data Privacy Framework certification.",
     "p3": "Our database, which holds account and configuration data, is hosted in the EU (Stockholm, Sweden) for every customer. There is no plan or setting that moves it to another region. Not every server that handles your agent's requests is in the EU: the edge functions that connect to your mailbox run in the United States (US East), and so does the part of our website that relays those requests. Email content passes through them live, to answer the request, and is not stored there. Encrypted credentials are decrypted in that same US environment for the duration of a request."
   },
@@ -224,7 +232,7 @@
   },
   "children": {
     "title": "9. Children's Privacy",
-    "p": "MCPEmails is not directed at children under the age of 16. We do not knowingly collect personal data from anyone under 16. If you believe we have inadvertently collected data from a child, please contact us at <email></email> and we will delete it promptly."
+    "p": "MCP Emails is not directed at children under the age of 16. We do not knowingly collect personal data from anyone under 16. If you believe we have inadvertently collected data from a child, please contact us at <email></email> and we will delete it promptly."
   },
   "changes": {
     "title": "10. Changes to This Policy",

@@ -32,7 +32,7 @@ import {
 const here = path.dirname(fileURLToPath(import.meta.url));
 const webRoot = path.resolve(here, '../..');
 const repoRoot = path.resolve(webRoot, '../..');
-const LOCALES = ['en', 'es', 'fr', 'nb', 'zh'];
+const LOCALES = ['en', 'es', 'fr', 'nb', 'zh', 'de'];
 
 function authMessages(locale) {
   return JSON.parse(readFileSync(path.join(webRoot, 'messages', locale, 'auth.json'), 'utf8'));

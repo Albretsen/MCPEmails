@@ -17,8 +17,8 @@
     "eyebrow": "Free.fr Mail + IA",
     "titleLine1": "Conecta tu bandeja de Free.fr",
     "titleLine2": "a Claude, Cursor y cualquier cliente MCP",
-    "lead": "Free da a cada abonado un buzón con acceso IMAP estándar. mcpemails conecta esa bandeja para que tu agente de IA pueda leer, buscar, enviar, responder y archivar correo desde cualquier cliente MCP y no desde una sola aplicación.",
-    "answer": "Claude no puede acceder por sí solo a un buzón de Free.fr. mcpemails es un servidor MCP alojado que lo conecta por IMAP en imap.free.fr en el puerto 993, autenticándose con tu dirección completa y la contraseña de tu cuenta de Free. Free no emite contraseñas específicas de aplicación ni exige activar nada antes, lo que lo convierte en uno de los proveedores más sencillos de conectar, aunque su servidor IMAP es inusualmente básico y eso tiene consecuencias que se explican más abajo. Una vez conectada, Claude, Cursor o cualquier otro cliente MCP puede leer, buscar, enviar y organizar ese correo, y una bandeja es gratis, para siempre.",
+    "lead": "Free da a cada abonado un buzón con acceso IMAP estándar. MCP Emails conecta esa bandeja para que tu agente de IA pueda leer, buscar, enviar, responder y archivar correo desde cualquier cliente MCP y no desde una sola aplicación.",
+    "answer": "Claude no puede acceder por sí solo a un buzón de Free.fr. MCP Emails es un servidor MCP alojado que lo conecta por IMAP en imap.free.fr en el puerto 993, autenticándose con tu dirección completa y la contraseña de tu cuenta de Free. Free no emite contraseñas específicas de aplicación ni exige activar nada antes, lo que lo convierte en uno de los proveedores más sencillos de conectar, aunque su servidor IMAP es inusualmente básico y eso tiene consecuencias que se explican más abajo. Una vez conectada, Claude, Cursor o cualquier otro cliente MCP puede leer, buscar, enviar y organizar ese correo, y una bandeja es gratis, para siempre.",
     "meta0": "1 bandeja gratis, para siempre",
     "meta1": "La contraseña de tu cuenta de Free, nada más",
     "meta2": "El correo se obtiene en vivo, nunca se almacena"
@@ -29,7 +29,7 @@
   },
   "setup": [
     {
-      "h": "Crea una cuenta gratis en mcpemails",
+      "h": "Crea una cuenta gratis en MCP Emails",
       "p": "Regístrate en mcpemails.com. El plan gratuito conecta una bandeja y no pide tarjeta."
     },
     {
@@ -37,7 +37,7 @@
       "p": "La contraseña del buzón es la contraseña de tu cuenta de Free. Cambiarla en el espace abonné la cambia en todos los clientes de correo a la vez, incluido este, así que si la cambias más adelante tendrás que actualizar la conexión. Si la has olvidado, restablécela ahí en lugar de buscar una credencial específica del correo; no la hay."
     },
     {
-      "h": "Introduce la dirección completa en mcpemails",
+      "h": "Introduce la dirección completa en MCP Emails",
       "p": "Elige IMAP / SMTP y escribe la dirección entera, <code>name@free.fr</code>, en el campo de nombre de usuario. La propia documentación de Free dice que se indique la dirección completa, dominio incluido. Los servidores y puertos de arriba ya vienen rellenados y se verificaron con una conexión TLS real."
     },
     {
@@ -48,7 +48,7 @@
   "gotchas": [
     {
       "h": "Free solo anuncia AUTH=PLAIN, y sin SASL-IR",
-      "p": "El banner de capacidades de <code>imap.free.fr</code> es de lo más corto que puede ser un banner IMAP. Ofrece <code>AUTH=PLAIN</code> y nada más, y no anuncia SASL-IR, así que el servidor rechaza la forma de un solo paso que envía las credenciales junto con el comando AUTHENTICATE. Un cliente programado para usar siempre el mecanismo LOGIN, o que da por hecho SASL-IR, recibe un rechazo seco que parece una contraseña incorrecta. mcpemails reintenta con el intercambio en dos pasos en lugar de tomar ese rechazo como definitivo."
+      "p": "El banner de capacidades de <code>imap.free.fr</code> es de lo más corto que puede ser un banner IMAP. Ofrece <code>AUTH=PLAIN</code> y nada más, y no anuncia SASL-IR, así que el servidor rechaza la forma de un solo paso que envía las credenciales junto con el comando AUTHENTICATE. Un cliente programado para usar siempre el mecanismo LOGIN, o que da por hecho SASL-IR, recibe un rechazo seco que parece una contraseña incorrecta. MCP Emails reintenta con el intercambio en dos pasos en lugar de tomar ese rechazo como definitivo."
     },
     {
       "h": "El servidor de salida acepta mecanismos que el de entrada no",
@@ -60,7 +60,7 @@
     },
     {
       "h": "Una contraseña, un solo radio de impacto",
-      "p": "Como la credencial del correo es la contraseña de tu cuenta de Free y no un secreto por aplicación, cualquier cosa en la que la pegues tiene las llaves de la cuenta, y revocar el acceso a una herramienta significa cambiar la contraseña para todas. Es una característica del diseño de Free, no una crítica, pero conviene saberlo antes de conectar. mcpemails cifra en reposo las credenciales guardadas, y puedes desconectar la bandeja desde el panel en cualquier momento."
+      "p": "Como la credencial del correo es la contraseña de tu cuenta de Free y no un secreto por aplicación, cualquier cosa en la que la pegues tiene las llaves de la cuenta, y revocar el acceso a una herramienta significa cambiar la contraseña para todas. Es una característica del diseño de Free, no una crítica, pero conviene saberlo antes de conectar. MCP Emails cifra en reposo las credenciales guardadas, y puedes desconectar la bandeja desde el panel en cualquier momento."
     }
   ],
   "limits": [
@@ -71,7 +71,7 @@
   "faq": [
     {
       "q": "¿Funciona Claude con el correo de Free.fr?",
-      "a": "No directamente. Claude no tiene un conector integrado para Free. Conectar un servidor MCP como mcpemails al buzón por IMAP le da a Claude acceso para leer, buscar, enviar, responder, programar y organizar tu correo de free.fr, y la misma conexión funciona en Cursor, ChatGPT y otros clientes MCP."
+      "a": "No directamente. Claude no tiene un conector integrado para Free. Conectar un servidor MCP como MCP Emails al buzón por IMAP le da a Claude acceso para leer, buscar, enviar, responder, programar y organizar tu correo de free.fr, y la misma conexión funciona en Cursor, ChatGPT y otros clientes MCP."
     },
     {
       "q": "¿Cuáles son los ajustes IMAP y SMTP de Free.fr?",

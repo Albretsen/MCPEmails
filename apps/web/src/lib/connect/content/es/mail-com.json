@@ -24,18 +24,18 @@
     "titleLine1": "Conecta Mail.com a Claude",
     "titleLine2": "y a Cursor, ChatGPT, cualquier cliente MCP",
     "lead": "Dale a tu agente de IA una bandeja real de mail.com. Lee, busca, envía, responde, programa y organiza correo por IMAP, en todos los clientes MCP y no solo en uno, una vez activado el acceso de clientes.",
-    "answer": "Claude no puede acceder por sí solo a mail.com. mcpemails es un servidor MCP alojado que lo conecta por IMAP en imap.mail.com en el puerto 993, para que Claude, Cursor o cualquier cliente MCP pueda leer, buscar, enviar y organizar ese correo. Antes hay dos condiciones de mail.com: POP3, IMAP y SMTP son funciones Premium, e incluso en Premium el acceso empieza desactivado hasta que lo activas en Email, Settings, POP3 and IMAP. Una vez activado, conectar una bandeja es gratis, para siempre.",
+    "answer": "Claude no puede acceder por sí solo a mail.com. MCP Emails es un servidor MCP alojado que lo conecta por IMAP en imap.mail.com en el puerto 993, para que Claude, Cursor o cualquier cliente MCP pueda leer, buscar, enviar y organizar ese correo. Antes hay dos condiciones de mail.com: POP3, IMAP y SMTP son funciones Premium, e incluso en Premium el acceso empieza desactivado hasta que lo activas en Email, Settings, POP3 and IMAP. Una vez activado, conectar una bandeja es gratis, para siempre.",
     "meta0": "1 bandeja gratis, para siempre",
     "meta1": "Cuenta Premium, IMAP activado",
     "meta2": "El correo se obtiene en vivo, nunca se almacena"
   },
   "method": {
     "title": "Cómo se conecta mail.com: IMAP Premium, activado a mano",
-    "body": "mail.com sirve IMAP en <code>imap.mail.com</code> en el puerto 993 con TLS. Para el correo saliente, su centro de ayuda indica <code>smtp.mail.com</code> en el puerto 587 con STARTTLS y ofrece luego el puerto 465 con SSL/TLS como alternativa, que es el que usa mcpemails. mail.com lo gestiona 1&1 Mail and Media, el mismo grupo que está detrás de GMX y WEB.DE, y hereda su norma de la casa: <b>el acceso fuera del navegador es una función de pago y empieza desactivado</b>. La página de aplicaciones de terceros de mail.com indica que POP, IMAP y SMTP son solo funciones Premium, y su página de resolución de problemas indica por separado que la recogida por POP3 o IMAP está desactivada por defecto en tu buzón. Una dirección gratuita de mail.com no se puede conectar con este ni con ningún otro cliente de correo hasta que la cuenta pase a Premium, y una cuenta Premium sigue necesitando que se marque la casilla."
+    "body": "mail.com sirve IMAP en <code>imap.mail.com</code> en el puerto 993 con TLS. Para el correo saliente, su centro de ayuda indica <code>smtp.mail.com</code> en el puerto 587 con STARTTLS y ofrece luego el puerto 465 con SSL/TLS como alternativa, que es el que usa MCP Emails. mail.com lo gestiona 1&1 Mail and Media, el mismo grupo que está detrás de GMX y WEB.DE, y hereda su norma de la casa: <b>el acceso fuera del navegador es una función de pago y empieza desactivado</b>. La página de aplicaciones de terceros de mail.com indica que POP, IMAP y SMTP son solo funciones Premium, y su página de resolución de problemas indica por separado que la recogida por POP3 o IMAP está desactivada por defecto en tu buzón. Una dirección gratuita de mail.com no se puede conectar con este ni con ningún otro cliente de correo hasta que la cuenta pase a Premium, y una cuenta Premium sigue necesitando que se marque la casilla."
   },
   "setup": [
     {
-      "h": "Crea una cuenta gratis en mcpemails",
+      "h": "Crea una cuenta gratis en MCP Emails",
       "p": "Regístrate en mcpemails.com. No se pide tarjeta, y el plan gratuito conecta una bandeja durante todo el tiempo que quieras."
     },
     {
@@ -44,7 +44,7 @@
     },
     {
       "h": "Crea una contraseña específica de aplicación si la 2FA está activada, y conecta",
-      "p": "Con la autenticación en dos factores activada, tu contraseña normal de mail.com deja de funcionar en los clientes. Haz clic en el <b>profile icon</b>, luego <b>Security Options</b>, luego <b>Manage application-specific passwords</b> y luego <b>Create new application-specific password</b>. mail.com la muestra una sola vez. Ahora elige IMAP / SMTP en mcpemails e introduce tu dirección completa, en el dominio de la familia mail.com que tenga, con esa contraseña."
+      "p": "Con la autenticación en dos factores activada, tu contraseña normal de mail.com deja de funcionar en los clientes. Haz clic en el <b>profile icon</b>, luego <b>Security Options</b>, luego <b>Manage application-specific passwords</b> y luego <b>Create new application-specific password</b>. mail.com la muestra una sola vez. Ahora elige IMAP / SMTP en MCP Emails e introduce tu dirección completa, en el dominio de la familia mail.com que tenga, con esa contraseña."
     },
     {
       "h": "Pega la URL MCP en tu IA",
@@ -71,12 +71,12 @@
   ],
   "limits": [
     "Un buzón gratuito de mail.com no se puede conectar en absoluto, ni con nosotros ni con ningún cliente de correo, porque POP3, IMAP y SMTP están reservados a las cuentas Premium.",
-    "La página de datos del servidor IMAP de mail.com también indica el puerto 143, que va sin cifrar salvo que el cliente negocie STARTTLS. mcpemails solo se conecta en el 993 con TLS implícito y no ofrece el puerto sin cifrar."
+    "La página de datos del servidor IMAP de mail.com también indica el puerto 143, que va sin cifrar salvo que el cliente negocie STARTTLS. MCP Emails solo se conecta en el 993 con TLS implícito y no ofrece el puerto sin cifrar."
   ],
   "faq": [
     {
       "q": "¿Funciona Claude con mail.com?",
-      "a": "No directamente, y en absoluto con una cuenta gratuita de mail.com. Claude no tiene un conector integrado para mail.com. En un buzón Premium con POP3 e IMAP activados, conectar un servidor MCP como mcpemails le da a Claude acceso para leer, buscar, enviar, responder, programar y organizar, y la misma conexión funciona en Cursor, ChatGPT y cualquier otro cliente MCP."
+      "a": "No directamente, y en absoluto con una cuenta gratuita de mail.com. Claude no tiene un conector integrado para mail.com. En un buzón Premium con POP3 e IMAP activados, conectar un servidor MCP como MCP Emails le da a Claude acceso para leer, buscar, enviar, responder, programar y organizar, y la misma conexión funciona en Cursor, ChatGPT y cualquier otro cliente MCP."
     },
     {
       "q": "¿Necesito mail.com Premium para usar IMAP?",
@@ -84,7 +84,7 @@
     },
     {
       "q": "¿Cuáles son los ajustes IMAP y SMTP de mail.com?",
-      "a": "IMAP es imap.mail.com en el puerto 993 con TLS implícito. Para SMTP, mail.com documenta smtp.mail.com en el puerto 587 con STARTTLS y el puerto 465 con SSL/TLS como alternativa equivalente; mcpemails usa el 465. Inicia sesión con tu dirección de mail.com completa y la contraseña de tu cuenta, o una contraseña específica de aplicación si la autenticación en dos factores está activada."
+      "a": "IMAP es imap.mail.com en el puerto 993 con TLS implícito. Para SMTP, mail.com documenta smtp.mail.com en el puerto 587 con STARTTLS y el puerto 465 con SSL/TLS como alternativa equivalente; MCP Emails usa el 465. Inicia sesión con tu dirección de mail.com completa y la contraseña de tu cuenta, o una contraseña específica de aplicación si la autenticación en dos factores está activada."
     },
     {
       "q": "Mi conexión con mail.com se rompió al activar la autenticación en dos factores. ¿Por qué?",
@@ -101,6 +101,6 @@
   ],
   "ctaBand": {
     "title": "Dale a tu IA una bandeja de Mail.com",
-    "sub": "Conecta mail.com Premium en minutos. Una bandeja gratis para siempre en mcpemails, sin tarjeta."
+    "sub": "Conecta mail.com Premium en minutos. Una bandeja gratis para siempre en MCP Emails, sin tarjeta."
   }
 }

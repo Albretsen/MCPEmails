@@ -123,7 +123,7 @@ export function InstallPrompt() {
         outcome === "enabled"
           ? "Notifications are on"
           : outcome === "failed"
-            ? { text: "Notifications could not be turned on. Try again from the account menu.", kind: "error" }
+            ? { text: "Notifications could not be turned on. Try again in Notifications settings.", kind: "error" }
             : "Notifications are allowed. They will start once they are available for your account.",
       );
       // Stay up only if there is still an install to offer.

@@ -57,7 +57,7 @@ export const ROUTES = {
   invite: '/invite/[token]/page',
   pricing: '/[locale]/pricing/page',
   home: '/[locale]/page',
-  docs: '/[locale]/docs/page',
+  docs: '/[locale]/docs/(catalogue)/page',
 };
 
 /** One long sentence per language that exists only in that language's catalog. */
@@ -82,6 +82,7 @@ export const FINGERPRINTS = {
   'catalog-es': () => catalogSentence('es'),
   'catalog-fr': () => catalogSentence('fr'),
   'catalog-zh': () => catalogSentence('zh'),
+  'catalog-de': () => catalogSentence('de'),
 };
 
 /** True when `source` holds `needle`, as written or as a JS string escape of it. */

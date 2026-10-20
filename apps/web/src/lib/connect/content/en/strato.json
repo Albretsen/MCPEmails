@@ -19,7 +19,7 @@
     "titleLine1": "MCP server for STRATO mail:",
     "titleLine2": "every company mailbox, in Claude and ChatGPT",
     "lead": "Running info@, sales@, support@ and invoices@ on your own domain at STRATO? Connect each mailbox to one workspace and your AI agent works across all of them. Read, search, send, reply, schedule and organize mail over IMAP with the mailbox password, not your STRATO customer login.",
-    "answer": "Claude cannot reach a STRATO mailbox on its own. mcpemails is a hosted MCP server that connects it over IMAP at imap.strato.de on port 993, authenticating with your full email address and the password set on that mailbox rather than your STRATO customer login, so Claude, Cursor or any MCP client can read, search, send and organize the mail. STRATO accepts only normal password authentication over an encrypted connection, having switched off the older challenge-response method. Each company address, such as info@ or sales@, connects as its own mailbox: one mailbox is free, Personal connects three and Pro every mailbox you run.",
+    "answer": "Claude cannot reach a STRATO mailbox on its own. MCP Emails is a hosted MCP server that connects it over IMAP at imap.strato.de on port 993, authenticating with your full email address and the password set on that mailbox rather than your STRATO customer login, so Claude, Cursor or any MCP client can read, search, send and organize the mail. STRATO accepts only normal password authentication over an encrypted connection, having switched off the older challenge-response method. Each company address, such as info@ or sales@, connects as its own mailbox: one mailbox is free, Personal connects three, Pro up to 10, and Business as many as you need.",
     "meta0": "First mailbox free, plans for the rest",
     "meta1": "Mailbox password, not the customer login",
     "meta2": "Email fetched live, never stored"
@@ -35,7 +35,7 @@
   },
   "setup": [
     {
-      "h": "Create your free mcpemails account",
+      "h": "Create your free MCP Emails account",
       "p": "Sign up at mcpemails.com. The free plan connects one inbox forever and does not ask for a card."
     },
     {
@@ -43,7 +43,7 @@
       "p": "Sign in to the STRATO Kundenlogin, open your package, and go to E-Mail, then E-Mail-Adressen verwalten. Select the address and set a new password there. This password belongs to the mailbox alone and is not the one you just used to reach the Kundenlogin."
     },
     {
-      "h": "Paste it into mcpemails",
+      "h": "Paste it into MCP Emails",
       "p": "Choose IMAP / SMTP, enter the full address, and paste the mailbox password. The hosts imap.strato.de and smtp.strato.de and ports 993 and 465 are prefilled and were verified from a live TLS connection."
     },
     {
@@ -58,7 +58,7 @@
     },
     {
       "h": "STRATO does not advertise SASL-IR",
-      "p": "The IMAP server omits the SASL-IR capability, so it refuses the one-step authentication that carries credentials on the same line as the AUTHENTICATE command. A client that assumes SASL-IR gets a bare <code>BAD</code> with no explanation, which again reads like a password problem. mcpemails detects that response and retries the two-step exchange, so the connection succeeds, but combined with the CRAM-MD5 removal it is why STRATO produces so many false wrong-password reports."
+      "p": "The IMAP server omits the SASL-IR capability, so it refuses the one-step authentication that carries credentials on the same line as the AUTHENTICATE command. A client that assumes SASL-IR gets a bare <code>BAD</code> with no explanation, which again reads like a password problem. MCP Emails detects that response and retries the two-step exchange, so the connection succeeds, but combined with the CRAM-MD5 removal it is why STRATO produces so many false wrong-password reports."
     },
     {
       "h": "STRATO is the best-equipped IMAP server in its price class",
@@ -76,7 +76,7 @@
   "faq": [
     {
       "q": "Does Claude work with STRATO email?",
-      "a": "Not on its own. Claude has no built-in STRATO connector. Pointing an MCP server such as mcpemails at your STRATO mailbox over IMAP gives Claude read, search, send, reply, schedule and organize access to it, and the same connection works from Cursor, ChatGPT and other MCP clients."
+      "a": "Not on its own. Claude has no built-in STRATO connector. Pointing an MCP server such as MCP Emails at your STRATO mailbox over IMAP gives Claude read, search, send, reply, schedule and organize access to it, and the same connection works from Cursor, ChatGPT and other MCP clients."
     },
     {
       "q": "What are the STRATO IMAP and SMTP settings?",
@@ -97,6 +97,6 @@
   ],
   "ctaBand": {
     "title": "Put every STRATO mailbox on one agent",
-    "sub": "Connect your first STRATO mailbox free, no card required. Personal connects three, Pro every mailbox you run."
+    "sub": "Connect your first STRATO mailbox free, no card required. Personal connects three, Pro up to 10, and Business as many as you need."
   }
 }

@@ -20,7 +20,7 @@
     "titleLine1": "Connectez votre messagerie HostGator à Claude,",
     "titleLine2": "Cursor, ChatGPT, tout client MCP",
     "lead": "Offrez à votre agent IA une vraie boîte HostGator. Lisez, recherchez, envoyez, répondez, planifiez et organisez le courrier en IMAP, avec le nom d'hôte de serveur que le certificat de HostGator couvre réellement.",
-    "answer": "Claude ne peut pas accéder seul à une boîte HostGator. mcpemails est un serveur MCP hébergé qui s'y connecte en IMAP standard sur le port 993, pour que Claude, Cursor ou tout client MCP puisse lire, rechercher, envoyer et organiser ce courrier. HostGator n'exploite pas un serveur mail partagé unique : pour une connexion sécurisée, vous pointez vers le nom d'hôte de votre propre serveur, gatorNNNN.hostgator.com sur les offres mutualisées et cloud, et servername.websitewelcome.com sur les offres revendeur, car ce sont les noms que couvre leur certificat wildcard. L'authentification se fait avec le mot de passe défini sur la boîte dans cPanel, et une boîte est gratuite.",
+    "answer": "Claude ne peut pas accéder seul à une boîte HostGator. MCP Emails est un serveur MCP hébergé qui s'y connecte en IMAP standard sur le port 993, pour que Claude, Cursor ou tout client MCP puisse lire, rechercher, envoyer et organiser ce courrier. HostGator n'exploite pas un serveur mail partagé unique : pour une connexion sécurisée, vous pointez vers le nom d'hôte de votre propre serveur, gatorNNNN.hostgator.com sur les offres mutualisées et cloud, et servername.websitewelcome.com sur les offres revendeur, car ce sont les noms que couvre leur certificat wildcard. L'authentification se fait avec le mot de passe défini sur la boîte dans cPanel, et une boîte est gratuite.",
     "meta0": "1 boîte gratuite, pour toujours",
     "meta1": "Mot de passe de la boîte depuis cPanel",
     "meta2": "E-mails récupérés en direct, jamais stockés"
@@ -31,7 +31,7 @@
   },
   "setup": [
     {
-      "h": "Créez un compte mcpemails gratuit",
+      "h": "Créez un compte MCP Emails gratuit",
       "p": "Inscrivez-vous sur mcpemails.com. L'offre gratuite connecte une boîte, sans carte bancaire."
     },
     {
@@ -40,7 +40,7 @@
     },
     {
       "h": "Utilisez le mot de passe de la boîte, pas celui de cPanel",
-      "p": "IMAP s'authentifie avec le mot de passe défini sur l'adresse elle-même. Dans cPanel, ouvrez <b>Email Accounts</b> et cliquez sur <b>Manage</b> à côté de l'adresse pour en définir un. Collez-le ensuite dans mcpemails avec l'adresse e-mail complète comme identifiant et le nom d'hôte du serveur que vous venez de copier."
+      "p": "IMAP s'authentifie avec le mot de passe défini sur l'adresse elle-même. Dans cPanel, ouvrez <b>Email Accounts</b> et cliquez sur <b>Manage</b> à côté de l'adresse pour en définir un. Collez-le ensuite dans MCP Emails avec l'adresse e-mail complète comme identifiant et le nom d'hôte du serveur que vous venez de copier."
     },
     {
       "h": "Collez l'URL MCP dans votre IA",
@@ -68,7 +68,7 @@
   "faq": [
     {
       "q": "Claude fonctionne-t-il avec la messagerie HostGator ?",
-      "a": "Pas directement. Claude n'a pas de connecteur HostGator. Connecter un serveur MCP comme mcpemails à la boîte en IMAP donne à Claude un accès en lecture, recherche, envoi, réponse, planification et organisation, avec les mêmes identifiants que n'importe quel client mail de bureau."
+      "a": "Pas directement. Claude n'a pas de connecteur HostGator. Connecter un serveur MCP comme MCP Emails à la boîte en IMAP donne à Claude un accès en lecture, recherche, envoi, réponse, planification et organisation, avec les mêmes identifiants que n'importe quel client mail de bureau."
     },
     {
       "q": "Quels sont les réglages IMAP et SMTP de HostGator ?",

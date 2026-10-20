@@ -20,8 +20,8 @@
     "eyebrow": "Optimum Email + AI",
     "titleLine1": "Koble Optimum-innboksen din",
     "titleLine2": "til Claude, Cursor, enhver MCP-klient",
-    "lead": "Optimum sluttet å dele ut adresser for mange år siden, men postkassene som finnes, snakker fortsatt IMAP. mcpemails kobler til en, slik at AI-agenten din kan lese, søke, sende, svare og arkivere den e-posten.",
-    "answer": "Claude når ikke en Optimum-postkasse på egen hånd. mcpemails er en hostet MCP-server som kobler til via IMAP på mail.optimum.net port 993 og logger inn med hele optimum.net-, optonline.net- eller Suddenlink-adressen din og passordet for Optimum ID. Det er ikke noe app-passord å generere og ingen bryter å slå på, fordi Optimum aldri laget noen av delene. Merk at Optimum sluttet å la noen opprette nye e-postkontoer 4. mai 2021, så dette virker for en adresse du allerede har, ikke en ny. Én innboks er gratis, for alltid.",
+    "lead": "Optimum sluttet å dele ut adresser for mange år siden, men postkassene som finnes, snakker fortsatt IMAP. MCP Emails kobler til en, slik at AI-agenten din kan lese, søke, sende, svare og arkivere den e-posten.",
+    "answer": "Claude når ikke en Optimum-postkasse på egen hånd. MCP Emails er en hostet MCP-server som kobler til via IMAP på mail.optimum.net port 993 og logger inn med hele optimum.net-, optonline.net- eller Suddenlink-adressen din og passordet for Optimum ID. Det er ikke noe app-passord å generere og ingen bryter å slå på, fordi Optimum aldri laget noen av delene. Merk at Optimum sluttet å la noen opprette nye e-postkontoer 4. mai 2021, så dette virker for en adresse du allerede har, ikke en ny. Én innboks er gratis, for alltid.",
     "meta0": "1 innboks gratis, for alltid",
     "meta1": "Passord for Optimum ID, ikke app-passord",
     "meta2": "E-post hentes direkte, lagres aldri"
@@ -32,7 +32,7 @@
   },
   "setup": [
     {
-      "h": "Opprett en gratis mcpemails-konto",
+      "h": "Opprett en gratis MCP Emails-konto",
       "p": "Registrer deg på mcpemails.com. Gratisplanen kobler til én innboks og ber ikke om kort."
     },
     {
@@ -41,7 +41,7 @@
     },
     {
       "h": "Skriv inn adressen og passordet for Optimum ID",
-      "p": "I mcpemails velger du IMAP / SMTP, skriver hele adressen i brukernavnfeltet, for eksempel <code>name@optonline.net</code>, og bruker passordet for den Optimum ID-en. Verten er forhåndsutfylt og ble verifisert via en direkte TLS-tilkobling."
+      "p": "I MCP Emails velger du IMAP / SMTP, skriver hele adressen i brukernavnfeltet, for eksempel <code>name@optonline.net</code>, og bruker passordet for den Optimum ID-en. Verten er forhåndsutfylt og ble verifisert via en direkte TLS-tilkobling."
     },
     {
       "h": "Lim MCP-URL-en inn i AI-en",
@@ -51,7 +51,7 @@
   "gotchas": [
     {
       "h": "Optimum annonserer ikke SASL-IR, og de fleste klienter antar det",
-      "p": "Optimums IMAP-server mangler funksjonen SASL-IR, så den avviser autentisering i ett steg, der påloggingsdetaljene sendes sammen med AUTHENTICATE-kommandoen. En klient som antar SASL-IR, får en naken <code>BAD</code> uten forklaring, som ser nøyaktig ut som et feil passord og får folk til å tilbakestille en Optimum ID som var i orden. mcpemails oppdager det svaret og prøver utvekslingen i to steg på nytt, så det er håndtert her, men det er grunnen til at andre IMAP-verktøy feiler mot Optimum mens de virker andre steder."
+      "p": "Optimums IMAP-server mangler funksjonen SASL-IR, så den avviser autentisering i ett steg, der påloggingsdetaljene sendes sammen med AUTHENTICATE-kommandoen. En klient som antar SASL-IR, får en naken <code>BAD</code> uten forklaring, som ser nøyaktig ut som et feil passord og får folk til å tilbakestille en Optimum ID som var i orden. MCP Emails oppdager det svaret og prøver utvekslingen i to steg på nytt, så det er håndtert her, men det er grunnen til at andre IMAP-verktøy feiler mot Optimum mens de virker andre steder."
     },
     {
       "h": "Junk og Deleted tømmer seg selv, og på domener som ikke er Optimums skjer det etter tre dager",
@@ -74,7 +74,7 @@
   "faq": [
     {
       "q": "Fungerer Claude med Optimum-e-post?",
-      "a": "Ikke direkte. Claude har ingen innebygd Optimum-kobling. Kobler du en MCP-server som mcpemails til postkassen via IMAP, får Claude tilgang til å lese, søke, sende, svare, planlegge og organisere optimum.net-, optonline.net- eller Suddenlink-e-posten din, og samme tilkobling fungerer i Cursor, ChatGPT og andre MCP-klienter."
+      "a": "Ikke direkte. Claude har ingen innebygd Optimum-kobling. Kobler du en MCP-server som MCP Emails til postkassen via IMAP, får Claude tilgang til å lese, søke, sende, svare, planlegge og organisere optimum.net-, optonline.net- eller Suddenlink-e-posten din, og samme tilkobling fungerer i Cursor, ChatGPT og andre MCP-klienter."
     },
     {
       "q": "Hva er IMAP-innstillingene for Optimum?",

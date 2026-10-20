@@ -21,7 +21,7 @@
     "titleLine1": "Tuta Mail has no IMAP",
     "titleLine2": "or SMTP, and there is no bridge",
     "lead": "Tuta, formerly Tutanota, runs none of the protocols a mail client or an MCP server needs, and unlike Proton it ships no local bridge to fake one. This page explains why, and what is actually available to you.",
-    "answer": "No, and there is no workaround. Tuta offers no IMAP, POP or SMTP access at all, so mcpemails cannot connect a Tuta mailbox and neither can Thunderbird, Apple Mail or any other client. This follows from how Tuta's encryption works: subject lines, bodies, attachments, contacts and calendar entries are all encrypted with a key that never leaves your device, and Tuta's servers hold only ciphertext. Standard IMAP assumes a server that can read subjects, sort, search and hand a client plaintext, which is precisely the capability Tuta removed. Unlike Proton there is no bridge application to run locally either, so if you want an AI agent working on mail, it has to be a mailbox on a provider that speaks IMAP, and mcpemails connects one of those free."
+    "answer": "No, and there is no workaround. Tuta offers no IMAP, POP or SMTP access at all, so MCP Emails cannot connect a Tuta mailbox and neither can Thunderbird, Apple Mail or any other client. This follows from how Tuta's encryption works: subject lines, bodies, attachments, contacts and calendar entries are all encrypted with a key that never leaves your device, and Tuta's servers hold only ciphertext. Standard IMAP assumes a server that can read subjects, sort, search and hand a client plaintext, which is precisely the capability Tuta removed. Unlike Proton there is no bridge application to run locally either, so if you want an AI agent working on mail, it has to be a mailbox on a provider that speaks IMAP, and MCP Emails connects one of those free."
   },
   "method": {
     "title": "How Tuta connects: through its own apps only",
@@ -29,7 +29,7 @@
   },
   "setup": [
     {
-      "h": "Create the free mcpemails account",
+      "h": "Create the free MCP Emails account",
       "p": "An email address, no card required. One connected inbox is free forever, and the next two steps decide what goes in it."
     },
     {
@@ -90,7 +90,7 @@
     },
     {
       "q": "What should I do if I want an AI agent handling my email?",
-      "a": "Run two addresses on purpose. Keep private correspondence in Tuta, where nothing automated can reach it, and use a separate IMAP mailbox for the mail you want an agent to triage, answer, schedule and file. mcpemails connects that second mailbox to Claude, Cursor or ChatGPT, one inbox free, and never sees the Tuta one."
+      "a": "Run two addresses on purpose. Keep private correspondence in Tuta, where nothing automated can reach it, and use a separate IMAP mailbox for the mail you want an agent to triage, answer, schedule and file. MCP Emails connects that second mailbox to Claude, Cursor or ChatGPT, one inbox free, and never sees the Tuta one."
     }
   ],
   "ctaBand": {

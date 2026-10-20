@@ -16,7 +16,7 @@
     "meta0": "1 innboks gratis, for alltid",
     "meta1": "OAuth, ingen API-nøkkel nødvendig",
     "meta2": "E-post hentes direkte, lagres aldri",
-    "answer": "I ChatGPT slår du på utviklermodus under Settings, Apps and Connectors, Advanced settings. Opprett en kobling, lim inn https://mcpemails.com/api/mcp som koblings-URL, velg OAuth og autoriser med mcpemails. Utviklermodus fungerer på chatgpt.com med Plus, Pro, Business, Enterprise og Edu, og i hver samtale slår du den på fra +-menyen."
+    "answer": "I ChatGPT slår du på utviklermodus under Settings, Apps and Connectors, Advanced settings. Opprett en kobling, lim inn https://mcpemails.com/api/mcp som koblings-URL, velg OAuth og autoriser med MCP Emails. Utviklermodus fungerer på chatgpt.com med Plus, Pro, Business, Enterprise og Edu, og i hver samtale slår du den på fra +-menyen."
   },
   "method": {
     "title": "Slik kobler ChatGPT seg til: OAuth, ingen API-nøkkel",
@@ -25,7 +25,7 @@
   "setup": [
     {
       "h": "Opprett en gratis konto og koble til en postkasse",
-      "p": "Registrer deg på mcpemails.com, uten kort, og gå til Dashboard, Inboxes, Connect Inbox. Outlook og Microsoft 365 kobles til med Microsoft-innlogging; Gmail, iCloud, Fastmail, Yahoo, Zoho og Yandex krever et app-spesifikt passord, og Gmail kan også bruke Google-innlogging; alt annet kobles til over vanlig IMAP og SMTP. Gratisplanen gir deg én innboks, for alltid."
+      "p": "Registrer deg på mcpemails.com, uten kort, og gå til Dashboard, Inboxes, Connect Inbox. Outlook og Microsoft 365 kobles til med Microsoft-innlogging; Gmail, iCloud, Fastmail, Yahoo, Zoho og Yandex krever et app-spesifikt passord; alt annet kobles til over vanlig IMAP og SMTP. Gratisplanen gir deg én innboks, for alltid."
     },
     {
       "h": "Slå på utviklermodus",
@@ -37,17 +37,17 @@
     },
     {
       "h": "Velg OAuth og autoriser",
-      "p": "Velg OAuth, klikk Create, autoriser deretter med mcpemails og godkjenn tilgangene du vil at koblingen skal ha."
+      "p": "Velg OAuth, klikk Create, autoriser deretter med MCP Emails og godkjenn tilgangene du vil at koblingen skal ha."
     },
     {
       "h": "Slå den på i hver samtale",
-      "p": "Åpne en ny samtale på chatgpt.com, klikk <b>+</b>, velg Developer mode og velg mcpemails-appen. ChatGPT ser bare verktøyene i en samtale der du har gjort dette, så gjenta det i hver nye samtale. Koblingen blir liggende under Apps and Connectors i mellomtiden."
+      "p": "Åpne en ny samtale på chatgpt.com, klikk <b>+</b>, velg Developer mode og velg MCP Emails-appen. ChatGPT ser bare verktøyene i en samtale der du har gjort dette, så gjenta det i hver nye samtale. Koblingen blir liggende under Apps and Connectors i mellomtiden."
     }
   ],
   "gotchas": [
     {
       "h": "Utviklermodus krever et betalt abonnement, nettleseren og et valg i hver samtale",
-      "p": "Egne MCP-koblinger er tilgjengelige på chatgpt.com for Plus-, Pro-, Business-, Enterprise- og Edu-kontoer. Free- og Go-kontoer kan ikke legge til en, og mobil- og skrivebordsappene har ikke utviklermodus. På Business og Enterprise må en administrator kanskje tillate utviklermodus for arbeidsområdet først. Steget folk glemmer er det siste: koblingen gjør ingenting før du velger Developer mode og mcpemails-appen fra <b>+</b>-menyen i samtalen du bruker."
+      "p": "Egne MCP-koblinger er tilgjengelige på chatgpt.com for Plus-, Pro-, Business-, Enterprise- og Edu-kontoer. Free- og Go-kontoer kan ikke legge til en, og mobil- og skrivebordsappene har ikke utviklermodus. På Business og Enterprise må en administrator kanskje tillate utviklermodus for arbeidsområdet først. Steget folk glemmer er det siste: koblingen gjør ingenting før du velger Developer mode og MCP Emails-appen fra <b>+</b>-menyen i samtalen du bruker."
     },
     {
       "h": "Velg OAuth, ikke ingen autentisering, når du oppretter koblingen",
@@ -66,11 +66,11 @@
   "faq": [
     {
       "q": "Kan ChatGPT lese og sende e-posten min?",
-      "a": "Ja, gjennom en egendefinert MCP-kobling. ChatGPT kan ikke nå en postkasse på egen hånd; når du peker en kobling mot mcpemails, får den verktøy for å lese, søke, sende, svare, videresende, organisere og planlegge e-post, begrenset til tilgangene du godkjenner under oppsettet."
+      "a": "Ja, gjennom en egendefinert MCP-kobling. ChatGPT kan ikke nå en postkasse på egen hånd; når du peker en kobling mot MCP Emails, får den verktøy for å lese, søke, sende, svare, videresende, organisere og planlegge e-post, begrenset til tilgangene du godkjenner under oppsettet."
     },
     {
       "q": "Hvorfor kan jeg ikke opprette en kobling i ChatGPT-kontoen min?",
-      "a": "Utviklermodus krever ChatGPT Plus, Pro, Business, Enterprise eller Edu, i nettleseren. Free- og Go-kontoer kan ikke legge til egne koblinger, og mobil- og skrivebordsappene viser ikke valget. I et Business- eller Enterprise-arbeidsområde ber du en administrator tillate utviklermodus. Hvis koblingen er opprettet, men ChatGPT overser den, åpner du <b>+</b>-menyen i samtalen og velger Developer mode og mcpemails-appen."
+      "a": "Utviklermodus krever ChatGPT Plus, Pro, Business, Enterprise eller Edu, i nettleseren. Free- og Go-kontoer kan ikke legge til egne koblinger, og mobil- og skrivebordsappene viser ikke valget. I et Business- eller Enterprise-arbeidsområde ber du en administrator tillate utviklermodus. Hvis koblingen er opprettet, men ChatGPT overser den, åpner du <b>+</b>-menyen i samtalen og velger Developer mode og MCP Emails-appen."
     },
     {
       "q": "Trenger jeg en API-nøkkel for ChatGPT?",
@@ -78,7 +78,7 @@
     },
     {
       "q": "Hvilke postkasser kan ChatGPT nå på denne måten?",
-      "a": "Outlook.com og Microsoft 365 via Microsoft-innlogging, der en jobbkonto kan trenge at en IT-administrator godkjenner appen én gang; Gmail, iCloud, Fastmail, Yahoo, Zoho og Yandex med et app-spesifikt passord, med Google-innlogging som et alternativ for Gmail; og enhver annen postkasse som støtter IMAP og SMTP på standardportene. Klienten ser alle gjennom den samme tilkoblingen: agenten kaller inbox_list først for å finne alle tilkoblede postkasser og ID-ene deres, så du slipper å lime inn UUID-er noe sted."
+      "a": "Outlook.com og Microsoft 365 via Microsoft-innlogging, der en jobbkonto kan trenge at en IT-administrator godkjenner appen én gang; Gmail, iCloud, Fastmail, Yahoo, Zoho og Yandex med et app-spesifikt passord; og enhver annen postkasse som støtter IMAP og SMTP på standardportene. Klienten ser alle gjennom den samme tilkoblingen: agenten kaller inbox_list først for å finne alle tilkoblede postkasser og ID-ene deres, så du slipper å lime inn UUID-er noe sted."
     },
     {
       "q": "Kan ChatGPT sende e-post uten at jeg ser det?",

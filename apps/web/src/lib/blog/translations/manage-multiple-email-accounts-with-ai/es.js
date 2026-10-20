@@ -45,11 +45,12 @@ Un solo campo hace tres trabajos. Cada buzón tiene un nombre visible: es la **E
 
 Por eso «work2» es un mal nombre por partida doble: el agente no puede saber para qué sirve el buzón, y algún cliente de correo mostrará «work2» junto a tu dirección. Usa algo que un desconocido pueda leer, como «Jane Doe (Acme)» o «Northside Studio». Configúralo en el panel, en el **Nombre del remitente** (Sender name) del buzón, o con \`signature_set\`, y léelo de vuelta con \`signature_get\`. Los nombres tienen un límite de 100 caracteres.
 
-Enviar desde un alias es más estrecho de lo que la gente espera:
+Enviar desde un alias funciona, pero solo desde direcciones que hayas demostrado que son tuyas:
 
 - Tu propia dirección conectada siempre funciona como valor de From, en todos los proveedores.
-- Una dirección **distinta** tiene que ser una identidad Send As de Gmail verificada, listada en \`sender_identities\` dentro de la entrada de ese buzón en \`inbox_list\`.
-- En un proveedor que no sea Gmail, una dirección From que no sea la propia del buzón se rechaza en lugar de reescribirse en silencio.
+- En un buzón IMAP (iCloud, Yahoo, Gmail conectado con contraseña de aplicación, cualquier servidor SMTP), una dirección **distinta** funciona en cuanto se verifica. Añádela en los ajustes de ese buzón en el panel y luego introduce el código que MCP Emails envía a esa dirección. Las direcciones verificadas aparecen en \`sender_identities\` dentro de la entrada de ese buzón en \`inbox_list\`.
+- Outlook envía desde la dirección conectada.
+- Una dirección From que no esté verificada para el buzón se rechaza en lugar de reescribirse en silencio.
 
 Las firmas también son por buzón: una formal en la dirección de trabajo, ninguna en la personal. Consulta [firmas de correo para Claude](/blog/email-signatures-for-claude).
 
@@ -91,8 +92,8 @@ Los buzones conectados son lo que marca el precio de los planes:
 
 - **Free, $0.** Un buzón conectado. 150 acciones de correo facturables por mes natural UTC, con los primeros 3 días sin contar. Ese límite mensual se aplica a los espacios de trabajo creados el 2026-09-13 o después; los espacios de trabajo creados antes están exentos.
 - **Personal, $9 al mes o $86,40 al año.** Tres buzones conectados, sin límite mensual de acciones, límite de ráfaga 2x y soporte por correo.
-- **Pro, $15 al mes o $144 al año.** Buzones conectados ilimitados, límite de ráfaga 5x e historial de analítica más largo.
-- **Team, $79 al mes o $756 al año.** Miembros ilimitados con roles, un espacio de trabajo separado por cliente o negocio, SSO (SAML/OIDC) y registro de auditoría, soporte prioritario.
+- **Pro, $15 al mes o $144 al año.** Hasta 10 buzones conectados, límite de ráfaga 5x e historial de analítica más largo.
+- **Business, $39 al mes o $374,40 al año.** 10 buzones incluidos y $3 al mes por cada uno extra, miembros ilimitados con roles sin coste adicional, administradores que aprueban los envíos retenidos, un espacio de trabajo separado por cliente o negocio.
 
 Una rutina entre buzones cuesta una acción por buzón, así que tu número de buzones marca el volumen tanto como tus hábitos. Detalles en [precios](/pricing).
 
@@ -102,7 +103,7 @@ Una rutina entre buzones cuesta una acción por buzón, así que tu número de b
 Por \`inbox_list\`, que devuelve la dirección y el nombre visible de cada buzón que puede usar. Nombra la dirección en tu solicitud. Un identificador de buzón y una dirección que no coinciden se rechazan, no se adivinan.
 
 **¿Saldrán las respuestas desde la dirección correcta?**
-Sí, cuando envías desde el buzón dueño de esa dirección: cada buzón envía a través de su propio proveedor, su nombre visible y su firma. Una dirección From distinta requiere una identidad Send As de Gmail verificada, y se rechaza en otros proveedores.
+Sí, cuando envías desde el buzón dueño de esa dirección: cada buzón envía a través de su propio proveedor, su nombre visible y su firma. Una dirección From distinta funciona en un buzón IMAP una vez que la verificas con un código enviado a esa dirección. Outlook envía desde la dirección conectada, y una dirección From sin verificar se rechaza.
 
 **¿Puedo dejar que el agente envíe libremente desde un buzón y retener otro?**
 Sí. Revisar antes de enviar es un ajuste por buzón, así que un buzón puede enviar de inmediato mientras otro espera tu aprobación en un navegador con la sesión iniciada.

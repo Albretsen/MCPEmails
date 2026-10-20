@@ -74,6 +74,8 @@ export interface FakeServerOptions {
   refuse?: (command: string) => string | null;
   /** Rewrites the mailbox name on a `* STATUS` line. */
   statusName?: (name: string) => string;
+  /** Told of every partial `BODY.PEEK[1]<offset.length>` a FETCH asks for, per message. */
+  onPartialFetch?: (uid: number, offset: number, length: number) => void;
   /** Answer the commands of one pipelined write in reverse order. */
   reversePipelined?: boolean;
   /** Receive LOGOUT but say nothing until `answerLogout()` is called. */
@@ -427,6 +429,34 @@ export class FakeImapServer {
     this.#wakeReader();
   }
 
+  get #gmail(): boolean {
+    return (this.#options.capabilities ?? []).includes("X-GM-EXT-1");
+  }
+
+  /**
+   * Gmail: add or take off one label of a message, wherever it was addressed.
+   * The label list lives on the All Mail copy (and on the copy addressed); the
+   * label's folder gains or loses its copy of the message. System labels other
+   * than \Inbox change the list only.
+   */
+  #gmailLabel(message: FakeMessage, label: string, add: boolean): void {
+    const all = this.mailboxes.find((box) => (box.attrs ?? []).some((a) => a.toLowerCase() === "\\all"));
+    const canonical = all?.messages.find((m) => m.gmMessageId === message.gmMessageId) ?? message;
+    for (const m of new Set([canonical, message])) {
+      const now = m.gmLabels ?? [];
+      m.gmLabels = add ? [...new Set([...now, label])] : now.filter((l) => l !== label);
+    }
+    const folder = label === "\\Inbox" ? this.#mailbox("INBOX") : label.startsWith("\\") ? undefined : this.#mailbox(label);
+    if (!folder || folder === all) return;
+    const filed = folder.messages.find((m) => m.gmMessageId === message.gmMessageId);
+    if (add && !filed) {
+      const next = folder.messages.reduce((max, m) => Math.max(max, m.uid), 0) + 1;
+      folder.messages.push({ ...canonical, flags: [...canonical.flags], gmLabels: [], uid: next });
+    } else if (!add && filed) {
+      folder.messages = folder.messages.filter((m) => m !== filed);
+    }
+  }
+
   #mailbox(name: string): FakeMailbox | undefined {
     return this.mailboxes.find((m) =>
       m.name === name || (m.name.toUpperCase() === "INBOX" && name.toUpperCase() === "INBOX")
@@ -546,9 +576,13 @@ export class FakeImapServer {
         else if (item === "ENVELOPE") parts.push(`ENVELOPE ${envelopeOf(message.raw)}`);
         else if (item === "BODYSTRUCTURE") parts.push(`BODYSTRUCTURE ${bodyStructureOf(message.raw)}`);
         else if (item === "BODY.PEEK[]") parts.push(`BODY[] {${message.raw.length}}${CRLF}${message.raw}`);
-        else if (item === "BODY.PEEK[1]<0.2048>") {
-          const prefix = partOneOf(message.raw).slice(0, 2048);
-          parts.push(`BODY[1]<0> {${prefix.length}}${CRLF}${prefix}`);
+        else if (/^BODY\.PEEK\[1\]<\d+\.\d+>$/.test(item)) {
+          // A partial fetch of part one (RFC 3501 6.4.5): `<offset.length>`,
+          // answered as `BODY[1]<offset>`, "" past the end.
+          const [offset, length] = item.slice(item.indexOf("<") + 1, -1).split(".").map(Number);
+          if (this.#options.onPartialFetch) this.#options.onPartialFetch(uid, offset, length);
+          const slice = partOneOf(message.raw).slice(offset, offset + length);
+          parts.push(`BODY[1]<${offset}> {${slice.length}}${CRLF}${slice}`);
         }
       }
       // A UID FETCH always reports the UID, asked for or not (RFC 3501 6.4.8).
@@ -599,6 +633,66 @@ export class FakeImapServer {
       }
       if (selected.mailbox.modSeq !== undefined) selected.mailbox.modSeq += 1;
       return ok("STORE completed");
+    }
+
+    // Gmail labels (X-GM-EXT-1), added for the All Mail relocation tests
+    // (imap-gmail-relocate.ts). Modelled the way Gmail behaves: a label IS a
+    // folder, so taking \Inbox off a message takes it out of INBOX, and adding
+    // a label files a copy in that label's folder. Only on a server that
+    // advertises X-GM-EXT-1.
+    const labels = /^UID STORE (\S+) ([+-])X-GM-LABELS(?:\.SILENT)? \((.*)\)$/i.exec(command);
+    if (labels) {
+      const selected = this.#selected;
+      if (!selected) return `${tag} BAD No mailbox selected${CRLF}`;
+      if (!this.#gmail) return `${tag} BAD Unknown command in the fake${CRLF}`;
+      if (selected.readOnly) return `${tag} NO [READ-ONLY] Mailbox is read-only${CRLF}`;
+      const largest = selected.uids[selected.uids.length - 1] ?? 0;
+      const names = [...labels[3].matchAll(/"((?:[^"\\]|\\.)*)"|(\S+)/g)].map((m) => m[1] !== undefined ? decodeModifiedUtf7(m[1].replace(/\\(.)/g, "$1")) : m[2]);
+      for (const uid of parseSet(labels[1], largest)) {
+        const message = selected.mailbox.messages.find((m) => m.uid === uid);
+        if (message) for (const label of names) this.#gmailLabel(message, label, labels[2] === "+");
+      }
+      return ok("STORE completed");
+    }
+
+    // UID COPY, with COPYUID. On a Gmail server a copy is adding the label of
+    // the destination folder ("\Inbox" for INBOX), so a message is never filed
+    // twice in one folder.
+    const copy = /^UID COPY (\S+) (.+)$/i.exec(command);
+    if (copy) {
+      const selected = this.#selected;
+      if (!selected) return `${tag} BAD No mailbox selected${CRLF}`;
+      const target = this.#mailbox(decodeModifiedUtf7(takeArgument(copy[2]).value));
+      if (!target) return `${tag} NO [TRYCREATE] Mailbox does not exist${CRLF}`;
+      const largest = selected.uids[selected.uids.length - 1] ?? 0;
+      const from: number[] = [];
+      const to: number[] = [];
+      for (const uid of parseSet(copy[1], largest)) {
+        const message = selected.mailbox.messages.find((m) => m.uid === uid);
+        if (!message) continue;
+        if (this.#gmail) {
+          this.#gmailLabel(message, target.name.toUpperCase() === "INBOX" ? "\\Inbox" : target.name, true);
+          const filed = target.messages.find((m) => m.gmMessageId === message.gmMessageId);
+          if (filed) {
+            from.push(uid);
+            to.push(filed.uid);
+          }
+          continue;
+        }
+        const next = target.messages.reduce((max, m) => Math.max(max, m.uid), 0) + 1;
+        target.messages.push({ ...message, flags: [...message.flags], uid: next });
+        from.push(uid);
+        to.push(next);
+      }
+      const copyuid = from.length > 0 && this.#options.uidplus !== false ? ` [COPYUID 1 ${from.join(",")} ${to.join(",")}]` : "";
+      return `${tag} OK${copyuid} COPY completed${CRLF}`;
+    }
+
+    if (verb === "CREATE") {
+      const name = decodeModifiedUtf7(takeArgument(command.slice(7)).value);
+      if (this.#mailbox(name)) return `${tag} NO [ALREADYEXISTS] Mailbox exists${CRLF}`;
+      this.mailboxes.push({ name, attrs: ["\\HasNoChildren"], messages: [] });
+      return ok("CREATE completed");
     }
 
     // UID MOVE (RFC 6851) with COPYUID (RFC 4315), added for client-api's

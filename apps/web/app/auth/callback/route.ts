@@ -4,6 +4,8 @@ import { createServiceRoleClient } from '@/lib/supabase/service';
 import { acquisitionFromParams, isNewAccountSignup } from '@/lib/acquisition-context.mjs';
 import { deviceClassFromHeaders } from '@/lib/acquisition-device.mjs';
 import { stampAcquisitionDevice } from '@/lib/acquisition-device-stamp';
+import { countryFromHeaders } from '@/lib/acquisition-country.mjs';
+import { stampAcquisitionCountry } from '@/lib/acquisition-country-stamp';
 import {
   clearConsentCookieString,
   consentVersionFromCookieHeader,
@@ -124,6 +126,15 @@ export async function GET(request: Request) {
       await stampAcquisitionDevice(service, {
         ownerId: user.id,
         device: deviceClassFromHeaders(request.headers),
+      });
+
+      // The country, from Vercel's x-vercel-ip-country on this same request,
+      // for the same reason: it is the user's own browser, so the code places
+      // the person, not a server. Only the two letters are kept, never the IP.
+      // Its own statement, first write wins, never throws.
+      await stampAcquisitionCountry(service, {
+        ownerId: user.id,
+        country: countryFromHeaders(request.headers),
       });
     }
   }

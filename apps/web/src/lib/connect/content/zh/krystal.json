@@ -20,7 +20,7 @@
     "titleLine1": "将 Krystal 邮箱连接到 Claude，",
     "titleLine2": "以及 Cursor、ChatGPT、任意 MCP 客户端",
     "lead": "为你的 AI 代理接入一个真正的 Krystal 邮箱。无论是 cPanel 共享主机还是 Onyx 邮箱附加服务，都可以通过 IMAP 读取、搜索、发送、回复、定时与整理邮件。",
-    "answer": "Claude 无法自行访问 Krystal 邮箱。mcpemails 是一个托管 MCP 服务器，通过端口 993 的标准 IMAP 与之连接，让 Claude、Cursor 或任意 MCP 客户端都能读取、搜索、发送并整理这些邮件。Krystal 没有共用的邮件主机名：你要使用 mail.yourdomain.co.uk 或你主机服务器自己的名称，两者都列在 cPanel 的 Connect Devices 页面上。开始之前，请确认你的套餐确实包含邮箱，因为 Krystal 的 Onyx 托管 WordPress 平台默认不带邮箱，除非你购买了附加服务。认证使用邮箱密码，1 个收件箱免费。",
+    "answer": "Claude 无法自行访问 Krystal 邮箱。MCP Emails 是一个托管 MCP 服务器，通过端口 993 的标准 IMAP 与之连接，让 Claude、Cursor 或任意 MCP 客户端都能读取、搜索、发送并整理这些邮件。Krystal 没有共用的邮件主机名：你要使用 mail.yourdomain.co.uk 或你主机服务器自己的名称，两者都列在 cPanel 的 Connect Devices 页面上。开始之前，请确认你的套餐确实包含邮箱，因为 Krystal 的 Onyx 托管 WordPress 平台默认不带邮箱，除非你购买了附加服务。认证使用邮箱密码，1 个收件箱免费。",
     "meta0": "1 个收件箱永久免费",
     "meta1": "来自 cPanel 的邮箱密码",
     "meta2": "邮件实时获取，绝不存储"
@@ -31,7 +31,7 @@
   },
   "setup": [
     {
-      "h": "创建免费的 mcpemails 账户",
+      "h": "创建免费的 MCP Emails 账户",
       "p": "在 mcpemails.com 注册。免费套餐可连接一个收件箱，无需信用卡。"
     },
     {
@@ -40,7 +40,7 @@
     },
     {
       "h": "设置邮箱密码",
-      "p": "Krystal 邮箱使用为地址本身设置的密码进行认证，而不是你的 Krystal 客户区登录密码。在共享主机上，请在 Email Accounts 中该地址所在行点击 <b>Manage</b> 设置密码。然后在 mcpemails 中输入它，用户名为完整地址，服务器为你复制的主机名。"
+      "p": "Krystal 邮箱使用为地址本身设置的密码进行认证，而不是你的 Krystal 客户区登录密码。在共享主机上，请在 Email Accounts 中该地址所在行点击 <b>Manage</b> 设置密码。然后在 MCP Emails 中输入它，用户名为完整地址，服务器为你复制的主机名。"
     },
     {
       "h": "将 MCP URL 粘贴到你的 AI",
@@ -63,12 +63,12 @@
   ],
   "limits": [
     "在 Krystal 共享主机上，邮箱大小按套餐设有上限，较小档位为 5GB，较大档位为 50GB。邮箱满后会拒收新邮件，而不是悄悄降级。",
-    "mcpemails 只连接邮箱。域名级设置、转发器和垃圾邮件规则仍在 cPanel 或 Onyx 门户中管理。"
+    "MCP Emails 只连接邮箱。域名级设置、转发器和垃圾邮件规则仍在 cPanel 或 Onyx 门户中管理。"
   ],
   "faq": [
     {
       "q": "Claude 能用于 Krystal 邮箱吗？",
-      "a": "不能直接使用。Claude 没有 Krystal 连接器。通过 IMAP 将 mcpemails 这样的 MCP 服务器连接到你的 Krystal 邮箱后，无论邮箱位于 Krystal 的 cPanel 共享主机还是 Onyx 邮箱附加服务上，Claude 都能读取、搜索、发送、回复、定时和整理其中的邮件。"
+      "a": "不能直接使用。Claude 没有 Krystal 连接器。通过 IMAP 将 MCP Emails 这样的 MCP 服务器连接到你的 Krystal 邮箱后，无论邮箱位于 Krystal 的 cPanel 共享主机还是 Onyx 邮箱附加服务上，Claude 都能读取、搜索、发送、回复、定时和整理其中的邮件。"
     },
     {
       "q": "Krystal 的 IMAP 和 SMTP 设置是什么？",

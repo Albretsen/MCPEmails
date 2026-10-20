@@ -23,7 +23,7 @@
     "meta0": "1 bandeja gratis, para siempre",
     "meta1": "Inicio de sesión con Microsoft, sin contraseña de aplicación",
     "meta2": "Enlace de aprobación para el administrador de TI incluido",
-    "answer": "Sí, con una condición que depende de tu organización. mcpemails conecta buzones de Microsoft 365 del trabajo y de centros educativos a través de Microsoft Graph: haces clic en Conectar con Microsoft e inicias sesión con tu cuenta del trabajo. Sin embargo, muchas organizaciones necesitan que un administrador de TI apruebe la aplicación una vez primero, porque la directiva de consentimiento predeterminada de Microsoft, vigente desde finales de 2025, impide que los empleados aprueben por sí mismos permisos de lectura de correo. Si ocurre, el panel te da un enlace de aprobación para enviar a tu administrador de TI. El administrador lo abre, inicia sesión con su cuenta de Microsoft del trabajo y aprueba MCP Emails una vez para toda la organización, sin necesitar una cuenta de MCP Emails, y a partir de ahí tú y tus compañeros os conectáis con normalidad. Después, pega una URL en Claude, ChatGPT, Cursor o cualquier cliente MCP. Una bandeja es gratis, para siempre."
+    "answer": "Sí, con una condición que depende de tu organización. MCP Emails conecta buzones de Microsoft 365 del trabajo y de centros educativos a través de Microsoft Graph: haces clic en Conectar con Microsoft e inicias sesión con tu cuenta del trabajo. Sin embargo, muchas organizaciones necesitan que un administrador de TI apruebe la aplicación una vez primero, porque la directiva de consentimiento predeterminada de Microsoft, vigente desde finales de 2025, impide que los empleados aprueben por sí mismos permisos de lectura de correo. Si ocurre, el panel te da un enlace de aprobación para enviar a tu administrador de TI. El administrador lo abre, inicia sesión con su cuenta de Microsoft del trabajo y aprueba MCP Emails una vez para toda la organización, sin necesitar una cuenta de MCP Emails, y a partir de ahí tú y tus compañeros os conectáis con normalidad. Después, pega una URL en Claude, ChatGPT, Cursor o cualquier cliente MCP. Una bandeja es gratis, para siempre."
   },
   "method": {
     "title": "Cómo se conecta Microsoft 365: inicio de sesión con Microsoft, a veces con aprobación del administrador",
@@ -32,7 +32,7 @@
   "setup": [
     {
       "h": "Crea una cuenta gratis",
-      "p": "Regístrate en mcpemails, sin tarjeta. El plan gratuito conecta una bandeja, para siempre."
+      "p": "Regístrate en MCP Emails, sin tarjeta. El plan gratuito conecta una bandeja, para siempre."
     },
     {
       "h": "Elige Outlook y conecta con Microsoft",
@@ -50,7 +50,7 @@
   "gotchas": [
     {
       "h": "Las contraseñas y las contraseñas de aplicación no funcionan, por eso usamos Microsoft Graph",
-      "p": "Microsoft eliminó la autenticación básica para IMAP y POP en todos los inquilinos de Exchange Online en 2022, y no se puede volver a activar. Un inicio de sesión con contraseña falla de una forma idéntica a una contraseña incorrecta, por eso hay quien restablece credenciales que siempre fueron correctas. mcpemails no usa IMAP para Microsoft 365: inicia sesión con Microsoft y habla con Microsoft Graph, así que no hay contraseña que escribir ni ajuste de servidor que equivocar."
+      "p": "Microsoft eliminó la autenticación básica para IMAP y POP en todos los inquilinos de Exchange Online en 2022, y no se puede volver a activar. Un inicio de sesión con contraseña falla de una forma idéntica a una contraseña incorrecta, por eso hay quien restablece credenciales que siempre fueron correctas. MCP Emails no usa IMAP para Microsoft 365: inicia sesión con Microsoft y habla con Microsoft Graph, así que no hay contraseña que escribir ni ajuste de servidor que equivocar."
     },
     {
       "h": "La aprobación del administrador la fija tu organización, y un editor verificado no la evita",
@@ -58,7 +58,7 @@
     },
     {
       "h": "Se rechaza una cuenta sin buzón de Exchange Online",
-      "p": "Algunas cuentas de Microsoft 365 no tienen buzón de Exchange Online, por ejemplo una cuenta de administrador sin licencia de Exchange o una organización cuyo correo está alojado en otro lugar. Microsoft Graph no tiene entonces nada que abrir, así que mcpemails rechaza la conexión y lo indica. Si tu correo está en otro servidor, conecta la dirección por IMAP."
+      "p": "Algunas cuentas de Microsoft 365 no tienen buzón de Exchange Online, por ejemplo una cuenta de administrador sin licencia de Exchange o una organización cuyo correo está alojado en otro lugar. Microsoft Graph no tiene entonces nada que abrir, así que MCP Emails rechaza la conexión y lo indica. Si tu correo está en otro servidor, conecta la dirección por IMAP."
     },
     {
       "h": "Si la aprobación no se completó, el administrador vuelve a abrir el enlace",
@@ -74,7 +74,7 @@
   "faq": [
     {
       "q": "¿Funciona Claude con el correo de Microsoft 365?",
-      "a": "Sí. Conecta tu buzón del trabajo o del centro educativo a mcpemails iniciando sesión con Microsoft, pega una URL MCP en Claude y Claude podrá leer, buscar, enviar, responder, reenviar, programar y archivar tu correo. Si tu organización exige la aprobación de un administrador, tu administrador de TI aprueba MCP Emails una vez primero, con el enlace que te da el panel."
+      "a": "Sí. Conecta tu buzón del trabajo o del centro educativo a MCP Emails iniciando sesión con Microsoft, pega una URL MCP en Claude y Claude podrá leer, buscar, enviar, responder, reenviar, programar y archivar tu correo. Si tu organización exige la aprobación de un administrador, tu administrador de TI aprueba MCP Emails una vez primero, con el enlace que te da el panel."
     },
     {
       "q": "¿Por qué se me pide la aprobación de un administrador?",
@@ -86,7 +86,7 @@
     },
     {
       "q": "¿Necesito una contraseña de aplicación o ajustes IMAP?",
-      "a": "No. mcpemails conecta Microsoft 365 a través de Microsoft Graph después de que inicias sesión con Microsoft, así que no hay contraseña de aplicación que crear ni servidor IMAP o SMTP que introducir. De todos modos, una contraseña no funcionaría: la autenticación básica se eliminó de Exchange Online en 2022 y no se puede volver a activar."
+      "a": "No. MCP Emails conecta Microsoft 365 a través de Microsoft Graph después de que inicias sesión con Microsoft, así que no hay contraseña de aplicación que crear ni servidor IMAP o SMTP que introducir. De todos modos, una contraseña no funcionaría: la autenticación básica se eliminó de Exchange Online en 2022 y no se puede volver a activar."
     },
     {
       "q": "¿Qué puede hacer mi IA en Microsoft 365?",
@@ -94,7 +94,7 @@
     },
     {
       "q": "¿Se almacena mi correo en sus servidores?",
-      "a": "No. Los mensajes se obtienen en vivo de Microsoft en cada solicitud y se entregan a tu cliente de IA. El token OAuth de tu inicio de sesión con Microsoft se cifra en reposo y el cuerpo de los mensajes no se conserva. Eliminar la bandeja en mcpemails corta la conexión de inmediato."
+      "a": "No. Los mensajes se obtienen en vivo de Microsoft en cada solicitud y se entregan a tu cliente de IA. El token OAuth de tu inicio de sesión con Microsoft se cifra en reposo y el cuerpo de los mensajes no se conserva. Eliminar la bandeja en MCP Emails corta la conexión de inmediato."
     }
   ],
   "ctaBand": {

@@ -27,7 +27,7 @@
  */
 
 import type Stripe from 'stripe';
-import { getPlanByStripePriceId, planDisplayName } from '@/lib/stripe/plans';
+import { basePlanItem, getPlanByStripePriceId, planDisplayName } from '@/lib/stripe/plans';
 import { isInternalAccount } from '@/lib/analytics/internal-accounts';
 import { GROWTH_TAGS, cachedSection, type GrowthResult } from '@/lib/analytics/growth-queries';
 import { monthlyFromInterval, netMonthlyMinor, scheduledToStop, type SubscriptionFacts } from '@/lib/analytics/revenue-math';
@@ -162,7 +162,9 @@ export async function fetchRevenueDetail(): Promise<GrowthResult<RevenueDetail>>
 /** Reduce one Stripe subscription to the named row the table renders. */
 function toCustomerRow(subscription: Stripe.Subscription): RevenueCustomerRow {
   const items = subscription.items.data;
-  const price = items[0]?.price;
+  // The plan's own item, not whichever comes first: a Business subscription
+  // also carries the per-mailbox add-on, which is not a plan.
+  const price = basePlanItem(items)?.price;
   const interval = price?.recurring?.interval ?? 'month';
   const intervalCount = price?.recurring?.interval_count ?? 1;
 

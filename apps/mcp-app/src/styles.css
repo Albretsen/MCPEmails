@@ -1122,14 +1122,6 @@ body {
 
 .chip-x:hover { color: var(--fg); }
 
-/* Where a chip removed with the pointer stood, until the pointer leaves the
-   field (Recipients.tsx). Its own size, so nothing after it moves. */
-.chip-ghost {
-  flex: none;
-  display: inline-block;
-  visibility: hidden;
-}
-
 /* A folded list (Recipients.tsx): the input takes what is left of the first
    row, however little, so the field stays one row tall. */
 .fld[data-folded="true"] > input {

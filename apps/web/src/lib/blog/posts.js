@@ -14,9 +14,9 @@ export const AUTHORS = {
   asgeir: {
     id: 'asgeir',
     name: 'Asgeir Albretsen',
-    role: 'Founder & Engineer, MCPEmails',
+    role: 'Founder & Engineer, MCP Emails',
     avatar: '/blog/author-asgeir.svg',
-    bio: 'Asgeir builds MCPEmails — the bridge that lets AI agents read, search, and send real email over the Model Context Protocol. He writes about agents, email infrastructure, and developer experience.',
+    bio: 'Asgeir builds MCP Emails — the bridge that lets AI agents read, search, and send real email over the Model Context Protocol. He writes about agents, email infrastructure, and developer experience.',
     url: 'https://mcpemails.com/blog',
     // No `twitter` handle: @mcpemails does not exist on X, so the
     // author-card link is intentionally omitted rather than pointing at a
@@ -101,7 +101,7 @@ export const POSTS = [
     description:
       'Why connecting email to your AI agent is harder than it looks — and how the Model Context Protocol makes Gmail, Outlook, and IMAP a single, secure endpoint your agent can actually use.',
     cover: '/blog/cover-agent-inbox.svg',
-    coverAlt: 'Give your AI agent an inbox — MCPEmails',
+    coverAlt: 'Give your AI agent an inbox — MCP Emails',
     authorId: 'asgeir',
     publishedAt: '2026-06-01T09:00:00.000Z',
     updatedAt: '2026-06-01T09:00:00.000Z',
@@ -115,7 +115,7 @@ This post walks through why that last mile is deceptively hard, and how the [Mod
 
 Email looks like a solved problem. It is not — at least not for an autonomous agent. Three things get in the way:
 
-1. **Auth is provider-specific.** Gmail wants OAuth with the right scopes. Outlook wants Microsoft identity. Fastmail wants an app password. Each has its own token lifecycle and failure modes.
+1. **Auth is provider-specific.** Gmail wants an app password and 2-Step Verification. Outlook wants Microsoft identity. Fastmail wants an app password. Each has its own token lifecycle and failure modes.
 2. **Credentials are radioactive.** You do not want a mailbox password sitting in a chat transcript, a log line, or a vector store. Ever.
 3. **The "shape" of email is messy.** MIME, threading, HTML vs. plain text, attachments, folders that are really labels. An agent needs a clean, predictable interface — not raw RFC 5322.
 
@@ -182,15 +182,25 @@ Give your agent verbs, not passwords — and let it get to work.`,
 ];
 
 /**
- * Display order for the blog index — most relevant and useful to MCPEmails
+ * Display order for the blog index — most relevant and useful to MCP Emails
  * first. High-intent, on-product, conversion-driving content (core setup →
  * the pillar → the top buyer objection → the bottom-funnel comparison) leads;
  * top-of-funnel definitions and use-case inspiration trail. Edit this list to
  * reorder; any post not listed falls to the end (newest publishedAt first).
  */
 const RELEVANCE_ORDER = [
-  'approve-ai-agent-email-sends',
-  'ai-agent-email-workflows-and-prompts',
+  // The three posts search actually sends people to lead (GSC, 28 days to
+  // 2026-10-17: 79, 42 and 20 clicks, together 58% of blog clicks), and the
+  // first one turns signups into payers better than any provider page (5 of
+  // 42 in 90 days). Before 2026-10-20 they sat 10th to 12th, behind posts with
+  // no clicks. blog-order.test.mjs pins the first three.
+  'connect-claude-to-email',
+  'claude-imap-connector',
+  // `openai-mcp` is the best-converting MCP client we have (16% of those
+  // workspaces pay, against 8% for claude-code).
+  'connect-chatgpt-to-email',
+  'multiple-email-accounts-in-claude-and-chatgpt',
+  'connect-email-to-ai-agent-under-2-minutes',
   // Multi-mailbox is the buyer profile: every paying workspace to date runs two
   // or more inboxes, and inbox COUNT is the value metric the plans are priced
   // on, so this is the highest-intent page on the blog.
@@ -202,16 +212,12 @@ const RELEVANCE_ORDER = [
   // Agencies are the multi-mailbox buyer at its most extreme: a workspace per
   // client, and the only segment that needs Team.
   'ai-email-for-agencies-and-client-work',
+  // Led the index until 2026-10-20 with no search clicks and no signups.
+  'approve-ai-agent-email-sends',
+  'ai-agent-email-workflows-and-prompts',
   'extract-email-attachments-for-ai',
   'prevent-duplicate-ai-agent-email-sends',
   'gmail-labels-vs-imap-folders-ai-agents',
-  'connect-email-to-ai-agent-under-2-minutes',
-  'connect-claude-to-email',
-  // Sits beside the Claude setup guide because `openai-mcp` is the
-  // best-converting MCP client we have (16% of those workspaces pay, against
-  // 8% for claude-code), and until now nothing on the blog served it.
-  'connect-chatgpt-to-email',
-  'claude-imap-connector',
   // Retention content for the heaviest free users: the two largest free
   // workspaces run 70 and 57 standing triage rules between them.
   'automated-email-triage-rules',
@@ -234,7 +240,7 @@ const RELEVANCE_ORDER = [
   'build-email-auto-responder-mcp-agent',
 ];
 
-/** All posts, sorted by relevance to MCPEmails (see RELEVANCE_ORDER). */
+/** All posts, sorted by relevance to MCP Emails (see RELEVANCE_ORDER). */
 export function getAllPosts() {
   const rank = (slug) => {
     const i = RELEVANCE_ORDER.indexOf(slug);

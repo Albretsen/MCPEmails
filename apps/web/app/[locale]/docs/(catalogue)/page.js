@@ -1,0 +1,52 @@
+import { setRequestLocale, getTranslations } from 'next-intl/server';
+import { metaAlternates, localePath, OG_LOCALE, OG_IMAGE, docsJsonLd } from '@/i18n/seo';
+import DocsClient from '../../../../components/marketing/DocsClient';
+
+export async function generateMetadata({ params }) {
+  const { locale } = await params;
+  const t = await getTranslations({ locale, namespace: 'docs' });
+  const title = t.has('meta.title') ? t('meta.title') : 'Docs';
+  const description = t.has('meta.description')
+    ? t('meta.description')
+    : 'Get started with MCP Emails in minutes. Quick-start guide, tool reference, and example responses for Gmail, Outlook and IMAP agents.';
+  return {
+    title,
+    description,
+    alternates: metaAlternates(locale, '/docs'),
+    openGraph: {
+      type: 'website',
+      url: localePath(locale, '/docs'),
+      title: `${title} · MCP Emails`,
+      description,
+      locale: OG_LOCALE[locale],
+      images: [OG_IMAGE],
+    },
+    twitter: {
+      card: 'summary_large_image',
+      title: `${title} · MCP Emails`,
+      description,
+      images: [OG_IMAGE.url],
+    },
+  };
+}
+
+export default async function DocsPage({ params }) {
+  const { locale } = await params;
+  setRequestLocale(locale);
+  const t = await getTranslations({ locale, namespace: 'docs' });
+  const title = t.has('meta.title') ? t('meta.title') : 'Docs';
+  const description = t.has('meta.description')
+    ? t('meta.description')
+    : 'Get started with MCP Emails in minutes. Quick-start guide, tool reference, and example responses for Gmail, Outlook and IMAP agents.';
+  const jsonLd = docsJsonLd(locale, { title, description });
+
+  return (
+    <>
+      <script
+        type="application/ld+json"
+        dangerouslySetInnerHTML={{ __html: JSON.stringify(jsonLd) }}
+      />
+      <DocsClient />
+    </>
+  );
+}

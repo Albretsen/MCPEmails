@@ -295,7 +295,8 @@ async function main() {
   {
     const c = await editor(formatted());
     expect("nothing before an edit", WARNING.test(c.text()), false);
-    c.input("d-body", FORMATTED_TEXT + "\n\nOne more thing.");
+    // A paragraph added in the middle (one added at the end merges since 2026-10-19).
+    c.input("d-body", FORMATTED_TEXT.replace("after the review.", "after the review.\n\nOne more thing."));
     await settle();
     expect("the warning shows", WARNING.test(c.text()), true);
     expect("as a warning notice", !!c.root.querySelector('.notice[data-tone="warning"]'), true);
@@ -323,6 +324,22 @@ async function main() {
     c.input("d-body", "Hi,\nsee you.\n\nA new paragraph.");
     await settle();
     expect("no warning", WARNING.test(c.text()), false);
+    await c.done();
+  }
+
+  group("W4. a draft whose text writes a link as 'label (url)': a word at the end, no warning");
+  {
+    // Live claude.ai, v264: Claude's own text carried the address; drafts stored
+    // that way before the fix must still merge an edit after it.
+    const html = "<h2>Quick update</h2>\n<p>Learn more at <a href=\"https://mcpemails.com\">mcpemails.com</a>.</p>";
+    const text = "Quick update\n\nLearn more at mcpemails.com (https://mcpemails.com).";
+    const c = await editor({ body: { text, html } });
+    c.input("d-body", text + " Pineapple");
+    await settle();
+    expect("no warning after the address", WARNING.test(c.text()), false);
+    c.input("d-body", text.replace("mcpemails.com)", "mcpemails.com/x)"));
+    await settle();
+    expect("an edit inside the address: warned", WARNING.test(c.text()), true);
     await c.done();
   }
 

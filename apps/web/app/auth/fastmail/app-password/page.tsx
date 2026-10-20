@@ -22,7 +22,7 @@ import { FastmailAppPasswordForm } from '../../../../components/auth/FastmailApp
  */
 
 export const metadata = {
-  title: 'Connect Fastmail · mcpemails',
+  title: 'Connect Fastmail · MCP Emails',
   description: 'Connect your Fastmail account with an app password',
 };
 

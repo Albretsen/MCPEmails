@@ -3,7 +3,7 @@ import { AdminConsentResult } from '../../../../../components/dashboard/AdminCon
 import { isAdminConsentResultStatus } from '@/lib/email-providers/outlook-admin-link';
 
 export const metadata: Metadata = {
-  title: 'Microsoft 365 approval · mcpemails',
+  title: 'Microsoft 365 approval · MCP Emails',
   description: 'The result of approving MCP Emails for a Microsoft 365 organisation',
   robots: { index: false, follow: false },
 };

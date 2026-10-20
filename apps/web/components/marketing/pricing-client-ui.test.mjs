@@ -87,11 +87,11 @@ const PLAN_KEYS = ['free', 'personal', 'solo', 'pro'];
 const checkout = (plan, interval) => `/api/stripe/checkout/start?plan=${plan}&interval=${interval}`;
 const viaSignup = (plan, interval) => `/signup?redirect=${encodeURIComponent(checkout(plan, interval))}`;
 
-function tree() {
-  return createElement(NextIntlClientProvider, { locale: 'en', messages }, createElement(PricingClient, { stripePrices: undefined }));
+function tree(locale = 'en') {
+  return createElement(NextIntlClientProvider, { locale, messages }, createElement(PricingClient, { stripePrices: undefined }));
 }
 
-async function renderPricing(t, { user = null, gate = null } = {}) {
+async function renderPricing(t, { user = null, gate = null, locale = 'en' } = {}) {
   session = { user };
   calls = [];
   listeners = [];
@@ -103,7 +103,7 @@ async function renderPricing(t, { user = null, gate = null } = {}) {
     beacons.push({ url: String(url), body: init.body ? JSON.parse(init.body) : null });
     return { ok: true, status: 204, json: async () => ({}) };
   };
-  const view = await mount(tree());
+  const view = await mount(tree(locale));
   let unmounted = false;
   const unmount = async () => { if (!unmounted) { unmounted = true; await view.unmount(); } };
   t.after(async () => {
@@ -328,4 +328,32 @@ test('the pricing-view beacon is still sent, once, for the pricing page', async 
   await waitFor(() => view.beacons.length > 0, { message: 'the analytics beacon' });
   await flush(() => new Promise((resolve) => setTimeout(resolve, 20)));
   assert.deepEqual(view.beacons, [{ url: '/api/analytics/pricing-view', body: { surface: 'pricing_page' } }]);
+});
+
+// ===========================================================================
+// German page: the language reaches checkout
+// ===========================================================================
+
+// /de/pricing's buttons must tell the checkout route the page was German, so
+// Stripe shows the German page and its "Zahlungspflichtig abonnieren" button.
+// The English messages are enough here: only the hrefs are under test.
+const deCheckout = (plan, interval) => `${checkout(plan, interval)}&lang=de`;
+
+test('German page, logged in: paid buttons carry lang=de to checkout', async (t) => {
+  const view = await renderPricing(t, { user: USER, locale: 'de' });
+  await waitFor(() => view.container.querySelector('.nav-signed-in'), { message: 'the signed-in nav' });
+  assert.deepEqual(view.cardCtas().slice(1).map(([, href]) => href), [
+    deCheckout('personal', 'year'),
+    deCheckout('solo', 'year'),
+    deCheckout('pro', 'year'),
+  ]);
+});
+
+test('German page, logged out: lang=de is inside the post-signup destination, and on /signup', async (t) => {
+  const view = await renderPricing(t, { locale: 'de' });
+  await waitFor(() => calls.includes('getUser'), { message: 'the session check' });
+  const hrefs = view.cardCtas().slice(1).map(([, href]) => href);
+  assert.deepEqual(hrefs, ['personal', 'solo', 'pro'].map(
+    (plan) => `/signup?redirect=${encodeURIComponent(deCheckout(plan, 'year'))}&lang=de`,
+  ));
 });

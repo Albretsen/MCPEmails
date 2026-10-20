@@ -90,11 +90,13 @@ import { isAccountDeletionCancellation } from '@/lib/stripe/cancel-on-account-de
 import { accountState } from '@/lib/billing/deleted-account';
 import { createServiceRoleClient } from '@/lib/supabase/service';
 import {
+  basePlanItem,
   getPlanByStripePriceId,
   PLANS,
   type BillingInterval,
   type PlanId,
 } from '@/lib/stripe/plans';
+import { syncMailboxAddon } from '@/lib/stripe/mailbox-addon';
 import { sendPurchaseConfirmationEmail } from '@/lib/email/purchase-confirmation';
 import {
   cancelDunningForCustomer,
@@ -502,13 +504,13 @@ async function handleCheckoutSessionCompleted(
       const subscription = await stripe.subscriptions.retrieve(subscriptionId);
       subscriptionStatus = subscription.status;
       currentPeriodEnd =
-        subscription.items.data[0]?.current_period_end ?? null;
+        basePlanItem(subscription.items.data)?.current_period_end ?? null;
       currentPeriodStart =
-        subscription.items.data[0]?.current_period_start ?? null;
+        basePlanItem(subscription.items.data)?.current_period_start ?? null;
 
       // Prefer the price the customer actually subscribed to over the metadata
       // plan_id (they should agree, but the subscription is authoritative).
-      const priceId = subscription.items.data[0]?.price?.id;
+      const priceId = basePlanItem(subscription.items.data)?.price?.id;
       const resolved = getPlanByStripePriceId(priceId);
       if (resolved) {
         resolvedPlan = resolved.plan.id;
@@ -618,6 +620,14 @@ async function handleCheckoutSessionCompleted(
         interval,
         amountTotalCents: session.amount_total ?? null,
         currency: session.currency ?? null,
+        // Set when Adaptive Pricing charged the buyer in their local currency;
+        // amount_total/currency above stay in our USD integration currency.
+        presentment: session.presentment_details
+          ? {
+            amountCents: session.presentment_details.presentment_amount,
+            currency: session.presentment_details.presentment_currency,
+          }
+          : null,
         sessionId: session.id,
       }),
     );
@@ -662,10 +672,10 @@ async function handleSubscriptionUpserted(
   }
 
   // Entitled — resolve which paid plan from the price ID.
-  const priceId = subscription.items.data[0]?.price?.id;
+  const priceId = basePlanItem(subscription.items.data)?.price?.id;
   if (!priceId) {
     console.error(
-      '[stripe-webhook] subscription has no price ID on first item:',
+      '[stripe-webhook] subscription has no price ID on its plan item:',
       subscription.id,
     );
     return;
@@ -689,8 +699,8 @@ async function handleSubscriptionUpserted(
       subscriptionId: subscription.id,
       newPlan: null, // sentinel: keep the current plan, only sync linkage/status
       subscriptionStatus: status,
-      currentPeriodStart: subscription.items.data[0]?.current_period_start ?? null,
-      currentPeriodEnd: subscription.items.data[0]?.current_period_end ?? null,
+      currentPeriodStart: basePlanItem(subscription.items.data)?.current_period_start ?? null,
+      currentPeriodEnd: basePlanItem(subscription.items.data)?.current_period_end ?? null,
       source: `customer.subscription.upserted (unmapped price ${priceId})`,
     });
     return;
@@ -702,10 +712,23 @@ async function handleSubscriptionUpserted(
     subscriptionId: subscription.id,
     newPlan: resolved.plan.id,
     subscriptionStatus: status,
-    currentPeriodStart: subscription.items.data[0]?.current_period_start ?? null,
-    currentPeriodEnd: subscription.items.data[0]?.current_period_end ?? null,
+    currentPeriodStart: basePlanItem(subscription.items.data)?.current_period_start ?? null,
+    currentPeriodEnd: basePlanItem(subscription.items.data)?.current_period_end ?? null,
     source: 'customer.subscription.upserted',
   });
+
+  // Business bills mailboxes past ten as a second item. Re-sync it on every
+  // Business subscription event: it covers a mailbox connected while a plan
+  // change was in flight, and the update this may make comes back here as a
+  // no-op (the sync compares before it writes). After the response, and it
+  // cannot throw, so the plan write above keeps its ledger row.
+  if (resolved.plan.id === 'pro') {
+    const ownerId = userId;
+    after(async () => {
+      const owner = ownerId ?? (await resolveUserId(createServiceRoleClient(), customerId, null));
+      if (owner) await syncMailboxAddon(owner);
+    });
+  }
 
   // ── Cancellation save + win-back ─────────────────────────────────────────
   //
@@ -792,7 +815,7 @@ async function maybeQueueCancellation(
       return;
     }
 
-    const item = subscription.items.data[0];
+    const item = basePlanItem(subscription.items.data);
     const periodEnd = item?.current_period_end ?? subscription.cancel_at ?? null;
 
     const payload: LifecyclePayload = {
@@ -916,7 +939,7 @@ async function maybeQueueCancellationOnDelete(
       return;
     }
 
-    const item = subscription.items.data[0];
+    const item = basePlanItem(subscription.items.data);
     const resolved = item?.price?.id ? getPlanByStripePriceId(item.price.id) : null;
 
     // The period they paid for. `ended_at` is when the subscription actually

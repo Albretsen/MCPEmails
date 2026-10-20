@@ -39,12 +39,13 @@
 //         still win: checkout about 7 x 114 - 2 x 100 = +600 ms, the portal
 //         +480 ms, the Stripe webhook +500 ms (and its caller is a machine).
 //
-//   iad1  app/api/mcp: a pure proxy to the Supabase edge function, which runs
-//         in the Supabase region nearest its caller. From arn1 that is
-//         Frankfurt, 700 to 1,000 ms further from the US mail hosts per cold
-//         IMAP session. Pinned so a change of the project default cannot move
-//         it. app/api/automations/preview proxies to the same edge function
-//         (it opens an IMAP session there) and stays for the same reason.
+//   iad1  app/api/automations/preview: a proxy to the Supabase edge function,
+//         which runs in the Supabase region nearest its caller. From arn1
+//         that is Frankfurt, 700 to 1,000 ms further from the US mail hosts
+//         per cold IMAP session (it opens an IMAP session there). Pinned so a
+//         change of the project default cannot move it. /api/mcp is no longer
+//         a function: vercel.json rewrites it to the edge function with
+//         forceFunctionRegion=us-east-1, for the same reason.
 //
 //   iad1  The routes that log in to a mail host from this function:
 //         inboxes/imap, inboxes/app-password, inboxes/fastmail-app-password
@@ -106,7 +107,6 @@ export const ROUTE_MAX_DURATIONS = {
   'app/api/inboxes/imap/route.ts': 90, // relay retry after direct detection (relay-fallback.ts)
   'app/api/internal/billing-lifecycle/dispatch/route.ts': 60,
   'app/api/internal/paywall-followup/dispatch/route.ts': 60,
-  'app/api/mcp/route.ts': 300,
   'app/api/stripe/webhook/route.ts': 30,
   'app/api/webhooks/resend/route.ts': 30,
   'app/auth/callback/route.ts': 15,
@@ -134,8 +134,8 @@ export const ROUTES = [
   ['app/[locale]/connect/page.js', 'iad1', '0', '-'],
   ['app/[locale]/docs/[client]/page.js', 'iad1', '0', '-'],
   ['app/[locale]/docs/clients/page.js', 'iad1', '0', '-'],
-  ['app/[locale]/docs/page.js', 'iad1', '0', '-'],
-  ['app/[locale]/docs/providers/page.js', 'iad1', '0', '-'],
+  ['app/[locale]/docs/(catalogue)/page.js', 'iad1', '0', '-'],
+  ['app/[locale]/docs/(catalogue)/providers/page.js', 'iad1', '0', '-'],
   ['app/[locale]/docs/read-only-access/page.js', 'iad1', '0', '-'],
   ['app/[locale]/email-mcp-servers-compared/page.js', 'iad1', '0', '-'],
   ['app/[locale]/for/business/page.js', 'iad1', '0', '-'],
@@ -149,6 +149,8 @@ export const ROUTES = [
   ['app/[locale]/self-hosting/page.js', 'iad1', '0', '-'],
   ['app/[locale]/status/page.js', 'iad1', '0 (snapshot cached 5 min)', '-'],
   ['app/[locale]/terms/page.js', 'iad1', '0', '-'],
+  ['app/[locale]/cancel/page.js', 'iad1', '0', '-'],
+  ['app/[locale]/withdrawal/page.js', 'iad1', '0', '-'],
   ['app/admin/growth/dunning/page.tsx', 'arn1', '2+', '-'],
   ['app/admin/growth/experiments/[key]/update/route.ts', 'arn1', '2+', '-'],
   ['app/admin/growth/experiments/create/route.ts', 'arn1', '2+', '-'],
@@ -168,7 +170,8 @@ export const ROUTES = [
   ['app/api/analytics/checkout-feedback/route.ts', 'arn1', '~6', '-'],
   ['app/api/analytics/first-tool-reported/route.ts', 'arn1', '2', '-'],
   ['app/api/analytics/multi-inbox-prompt/route.ts', 'arn1', '1', '-'],
-  ['app/api/analytics/paywall/route.ts', 'arn1', '1', '-'],
+  ['app/api/analytics/paywall-click/route.ts', 'arn1', '1', '-'],
+  ['app/api/analytics/paywall/route.ts', 'arn1', '~3', '-'],
   ['app/api/analytics/pricing-view/route.ts', 'arn1', '1', '-'],
   ['app/api/api-keys/[id]/revoke/route.ts', 'arn1', '3', '-'],
   ['app/api/api-keys/[id]/route.ts', 'arn1', '5', '-'],
@@ -193,7 +196,6 @@ export const ROUTES = [
   ['app/api/internal/paywall-followup/dispatch/route.ts', 'arn1', '2', 'Stripe API + Resend per queued email; caller is the scheduler'],
   ['app/api/kiosk/health/route.ts', 'arn1', '1+', '-'],
   ['app/api/kiosk/version/route.ts', 'arn1', '1+', '-'],
-  ['app/api/mcp/route.ts', 'iad1', '0', 'Supabase edge function mcp-server (proxy only)'],
   ['app/api/oauth/authorize/route.ts', 'arn1', '10-11', 'CIMD fetch (client-hosted, memoised)'],
   ['app/api/oauth/register/route.ts', 'arn1', '2', '-'],
   ['app/api/oauth/revoke/route.ts', 'arn1', '1-2', '-'],
@@ -208,6 +210,7 @@ export const ROUTES = [
   ['app/api/stripe/webhook/route.ts', 'arn1', '7+', 'Stripe API, Resend; caller is Stripe (US)'],
   ['app/api/support/preview/route.ts', 'arn1', '1 (session)', '-'],
   ['app/api/support/tickets/route.ts', 'arn1', '4-8', 'Resend x2'],
+  ['app/api/legal/contract-request/route.ts', 'arn1', '4-8', 'Resend x2'],
   ['app/api/support/visibility/route.ts', 'arn1', '1 (session)', '-'],
   ['app/api/usage/route.ts', 'arn1', '2', '-'],
   ['app/api/user/delete-account/route.ts', 'arn1', '11', '-'],
@@ -242,7 +245,7 @@ export const ROUTES = [
   ['app/authorize/page.js', 'arn1', '8', 'CIMD fetch (client-hosted, memoised)'],
   ['app/dashboard/[[...section]]/page.js', 'arn1', '5 serial stages', '-'],
   ['app/invite/[token]/page.js', 'arn1', '4', '-'],
-  ['app/opengraph-image.tsx', 'edge', '0', '-'],
+  ['app/opengraph-image.tsx', 'iad1', '0', 'prerendered at build; static'],
   ['app/robots.ts', 'iad1', '0', '-'],
   ['app/signup/page.js', 'arn1', '0', '-'],
   ['app/sitemap.ts', 'iad1', '0', '-'],

@@ -26,7 +26,7 @@
   "setup": [
     {
       "h": "Crea una cuenta gratis y conecta un buzón",
-      "p": "Regístrate en mcpemails.com, sin tarjeta, y luego ve a Dashboard, Inboxes, Connect Inbox. Outlook y Microsoft 365 se conectan con el inicio de sesión de Microsoft; Gmail, iCloud, Fastmail, Yahoo, Zoho y Yandex requieren una contraseña de aplicación, y Gmail también admite el inicio de sesión de Google; cualquier otro se conecta por IMAP y SMTP estándar. El plan gratuito incluye una bandeja, para siempre."
+      "p": "Regístrate en mcpemails.com, sin tarjeta, y luego ve a Dashboard, Inboxes, Connect Inbox. Outlook y Microsoft 365 se conectan con el inicio de sesión de Microsoft; Gmail, iCloud, Fastmail, Yahoo, Zoho y Yandex requieren una contraseña de aplicación; cualquier otro se conecta por IMAP y SMTP estándar. El plan gratuito incluye una bandeja, para siempre."
     },
     {
       "h": "Abre tu settings.json",
@@ -71,18 +71,18 @@
     },
     {
       "q": "¿Es lo mismo que el servidor MCP de Gmail que publica Google?",
-      "a": "No. Google publica un servidor MCP de Workspace que cubre Gmail junto con sus otros servicios, y para Gmail solo, en un flujo de trabajo exclusivamente de Google, ese es el camino más corto. mcpemails existe para el caso en que no todos los buzones son de Google, y en que la misma URL tiene que funcionar también en Claude, Cursor y ChatGPT."
+      "a": "No. Google publica un servidor MCP de Workspace que cubre Gmail junto con sus otros servicios, y para Gmail solo, en un flujo de trabajo exclusivamente de Google, ese es el camino más corto. MCP Emails existe para el caso en que no todos los buzones son de Google, y en que la misma URL tiene que funcionar también en Claude, Cursor y ChatGPT."
     },
     {
       "q": "¿Qué buzones puede alcanzar Gemini CLI de esta forma?",
-      "a": "Outlook.com y Microsoft 365 con el inicio de sesión de Microsoft, donde una cuenta del trabajo puede necesitar que un administrador de TI apruebe la aplicación una vez; Gmail, iCloud, Fastmail, Yahoo, Zoho y Yandex con una contraseña de aplicación, con el inicio de sesión de Google como segunda opción para Gmail; y cualquier otro buzón que hable IMAP y SMTP en los puertos estándar. El cliente los ve todos a través de la misma conexión: tu agente llama primero a inbox_list para descubrir cada buzón conectado y su id, así que no hay UUID que pegar en ningún sitio."
+      "a": "Outlook.com y Microsoft 365 con el inicio de sesión de Microsoft, donde una cuenta del trabajo puede necesitar que un administrador de TI apruebe la aplicación una vez; Gmail, iCloud, Fastmail, Yahoo, Zoho y Yandex con una contraseña de aplicación; y cualquier otro buzón que hable IMAP y SMTP en los puertos estándar. El cliente los ve todos a través de la misma conexión: tu agente llama primero a inbox_list para descubrir cada buzón conectado y su id, así que no hay UUID que pegar en ningún sitio."
     },
     {
       "q": "¿Puede Gemini CLI enviar correo sin que yo lo vea?",
       "a": "Solo si tú lo permites. El envío depende del permiso send:email, así que una clave o un token sin ese permiso no puede enviar nada. Además, el propietario de una bandeja puede exigir aprobación humana en el panel, que retiene cada envío, respuesta, reenvío, envío de borrador y envío programado hasta que una persona lo libera."
     },
     {
-      "q": "¿Se guarda mi correo en los servidores de mcpemails?",
+      "q": "¿Se guarda mi correo en los servidores de MCP Emails?",
       "a": "No. Cada mensaje se obtiene en vivo de tu proveedor para la solicitud que lo pidió y se entrega directamente a tu cliente. Solo se guarda el token OAuth o la contraseña de aplicación cifrados, para que las llamadas futuras puedan autenticarse. Eliminar la bandeja en el panel, o revocar el acceso en tu proveedor, corta la conexión al instante."
     }
   ],

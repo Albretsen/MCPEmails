@@ -2,7 +2,7 @@ const translation = {
   title: 'Gi AI-agenten din en innboks: en praktisk guide til e-post over MCP',
   description:
     'Hvorfor det er vanskeligere enn det ser ut til å koble e-post til AI-agenten din – og hvordan Model Context Protocol gjør Gmail, Outlook og IMAP til ett sikkert endepunkt agenten faktisk kan bruke.',
-  coverAlt: 'Gi AI-agenten din en innboks — MCPEmails',
+  coverAlt: 'Gi AI-agenten din en innboks — MCP Emails',
   content: `De fleste demoer av «AI-e-post» stopper ved et skjermbilde. Agenten skriver et utkast til svar, alle klapper, og ingen stiller det ubehagelige spørsmålet: **hvordan når modellen egentlig en ekte innboks** — sikkert, på tvers av leverandører, uten at du limer inn et app-passord i en ledetekst?
 
 Dette innlegget går gjennom hvorfor den siste biten er villedende vanskelig, og hvordan [Model Context Protocol](https://modelcontextprotocol.io) (MCP) gjør Gmail, Outlook, Fastmail og generisk IMAP til ett endepunkt agenten din kan kalle som et hvilket som helst annet verktøy.
@@ -11,7 +11,7 @@ Dette innlegget går gjennom hvorfor den siste biten er villedende vanskelig, og
 
 E-post ser ut som et løst problem. Det er det ikke — i hvert fall ikke for en autonom agent. Tre ting står i veien:
 
-1. **Autentisering er leverandørspesifikk.** Gmail vil ha OAuth med riktige scopes. Outlook vil ha Microsoft-identitet. Fastmail vil ha et app-passord. Hver av dem har sin egen token-livssyklus og sine egne feilmoduser.
+1. **Autentisering er leverandørspesifikk.** Gmail vil ha et app-passord og totrinnsbekreftelse. Outlook vil ha Microsoft-identitet. Fastmail vil ha et app-passord. Hver av dem har sin egen token-livssyklus og sine egne feilmoduser.
 2. **Innloggingsdetaljer er radioaktive.** Du vil aldri ha et postboks-passord liggende i en chat-logg, en loggføringslinje eller et vektorlager. Aldri.
 3. **«Formen» på e-post er rotete.** MIME, tråding, HTML kontra ren tekst, vedlegg, mapper som egentlig er etiketter. En agent trenger et rent, forutsigbart grensesnitt — ikke rå RFC 5322.
 

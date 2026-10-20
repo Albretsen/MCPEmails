@@ -64,8 +64,8 @@ export const USAGE_CAP_OFFER = 'usage_cap';
  * Must be rendered as a plain <a>, never a next/link <Link>: the router would
  * prefetch it and manufacture Stripe sessions.
  */
-export function usageCapCheckoutHref(planId, annual) {
-  return `${checkoutStartHref(planId, annual)}&offer=${USAGE_CAP_OFFER}`;
+export function usageCapCheckoutHref(planId, annual, locale) {
+  return `${checkoutStartHref(planId, annual, locale)}&offer=${USAGE_CAP_OFFER}`;
 }
 
 /**

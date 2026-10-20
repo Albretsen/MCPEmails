@@ -20,7 +20,7 @@
     "titleLine1": "Koble AT&T Mail til Claude,",
     "titleLine2": "Cursor, ChatGPT og enhver MCP-klient",
     "lead": "Gi AI-agenten din en ekte att.net- eller sbcglobal.net-innboks. Les, søk, send, svar, planlegg og organiser e-post over IMAP med en AT&T secure mail key, i alle MCP-klienter i stedet for bare én.",
-    "answer": "Claude kan ikke nå en AT&T Mail-innboks på egen hånd. mcpemails er en hostet MCP-server som kobler til att.net, sbcglobal.net, bellsouth.net og de andre AT&T-domenene over IMAP på imap.mail.att.net, port 993, og autentiserer med en secure mail key på 16 tegn som du oppretter i myAT&T, i stedet for med AT&T-passordet ditt. Når den er koblet til, kan Claude, Cursor eller enhver annen MCP-klient lese, søke i, sende, svare på og organisere den e-posten. Én innboks er gratis, for alltid.",
+    "answer": "Claude kan ikke nå en AT&T Mail-innboks på egen hånd. MCP Emails er en hostet MCP-server som kobler til att.net, sbcglobal.net, bellsouth.net og de andre AT&T-domenene over IMAP på imap.mail.att.net, port 993, og autentiserer med en secure mail key på 16 tegn som du oppretter i myAT&T, i stedet for med AT&T-passordet ditt. Når den er koblet til, kan Claude, Cursor eller enhver annen MCP-klient lese, søke i, sende, svare på og organisere den e-posten. Én innboks er gratis, for alltid.",
     "meta0": "1 innboks gratis, for alltid",
     "meta1": "Secure mail key, ikke passordet ditt",
     "meta2": "E-post hentes direkte, lagres aldri"
@@ -31,7 +31,7 @@
   },
   "setup": [
     {
-      "h": "Opprett en gratis mcpemails-konto",
+      "h": "Opprett en gratis MCP Emails-konto",
       "p": "Registrer deg på mcpemails.com. Gratisplanen kobler til én innboks og ber ikke om kort."
     },
     {
@@ -40,7 +40,7 @@
     },
     {
       "h": "Skriv inn nøkkelen, ikke AT&T-passordet ditt",
-      "p": "I mcpemails velger du IMAP / SMTP, skriver inn hele AT&T-adressen din og limer inn secure mail key i passordfeltet. Alle AT&T-domener bruker <code>imap.mail.att.net</code> og <code>smtp.mail.att.net</code>, så vertene er forhåndsutfylt for deg."
+      "p": "I MCP Emails velger du IMAP / SMTP, skriver inn hele AT&T-adressen din og limer inn secure mail key i passordfeltet. Alle AT&T-domener bruker <code>imap.mail.att.net</code> og <code>smtp.mail.att.net</code>, så vertene er forhåndsutfylt for deg."
     },
     {
       "h": "Lim MCP-URL-en inn i AI-en",
@@ -50,7 +50,7 @@
   "gotchas": [
     {
       "h": "AT&T-passordet ditt blir ikke avvist fordi det er feil",
-      "p": "AT&T deler e-postklienter i to grupper. Apper som AT&T har integrert med sin OAuth-pålogging, får en nettleserforespørsel og ser aldri et passord. Alt annet, også mcpemails, må oppgi en secure mail key. Limer du inn AT&T-kontopassordet, får du en autentiseringsfeil som ser helt lik ut som en skrivefeil, og ingen mengde tilbakestillinger av kontopassordet løser det."
+      "p": "AT&T deler e-postklienter i to grupper. Apper som AT&T har integrert med sin OAuth-pålogging, får en nettleserforespørsel og ser aldri et passord. Alt annet, også MCP Emails, må oppgi en secure mail key. Limer du inn AT&T-kontopassordet, får du en autentiseringsfeil som ser helt lik ut som en skrivefeil, og ingen mengde tilbakestillinger av kontopassordet løser det."
     },
     {
       "h": "Postkassen ligger hos Yahoo, men Yahoos side for app-passord er feil side",
@@ -62,17 +62,17 @@
     },
     {
       "h": "Port 465 er her implisitt TLS, ikke STARTTLS",
-      "p": "SMTP-verten vi bekreftet, åpner TLS-økten umiddelbart på port 465 og annonserer ikke STARTTLS på den porten. Eldre oppsettsguider fra AT&T som ber deg krysse av for <b>STARTTLS</b> sammen med port 465, beskriver en kombinasjon denne verten ikke vil fullføre. mcpemails bruker implisitt TLS på 465, som er det serveren faktisk tilbyr."
+      "p": "SMTP-verten vi bekreftet, åpner TLS-økten umiddelbart på port 465 og annonserer ikke STARTTLS på den porten. Eldre oppsettsguider fra AT&T som ber deg krysse av for <b>STARTTLS</b> sammen med port 465, beskriver en kombinasjon denne verten ikke vil fullføre. MCP Emails bruker implisitt TLS på 465, som er det serveren faktisk tilbyr."
     }
   ],
   "limits": [
     "AT&Ts SMTP-vert oppgir en maksimal meldingsstørrelse på omtrent 39 MB, så en sending med store vedlegg avvises av AT&T før den går ut.",
-    "mcpemails autentiserer med secure mail key og ikke med mekanismene OAUTHBEARER og XOAUTH2 som denne verten også annonserer. Det er med vilje: OAuth-veien er bare åpen for apper som AT&T har registrert."
+    "MCP Emails autentiserer med secure mail key og ikke med mekanismene OAUTHBEARER og XOAUTH2 som denne verten også annonserer. Det er med vilje: OAuth-veien er bare åpen for apper som AT&T har registrert."
   ],
   "faq": [
     {
       "q": "Fungerer Claude med AT&T Mail?",
-      "a": "Ikke direkte. Claude har ingen innebygd AT&T-kobling. Kobler du en MCP-server som mcpemails til postkassen over IMAP, får Claude tilgang til å lese, søke, sende, svare, planlegge og organisere i att.net- eller sbcglobal.net-e-posten din, og den samme tilkoblingen fungerer i Cursor, ChatGPT og andre MCP-klienter."
+      "a": "Ikke direkte. Claude har ingen innebygd AT&T-kobling. Kobler du en MCP-server som MCP Emails til postkassen over IMAP, får Claude tilgang til å lese, søke, sende, svare, planlegge og organisere i att.net- eller sbcglobal.net-e-posten din, og den samme tilkoblingen fungerer i Cursor, ChatGPT og andre MCP-klienter."
     },
     {
       "q": "Hva er IMAP- og SMTP-innstillingene for AT&T?",
