@@ -239,7 +239,6 @@ flowchart LR
 ├── supabase/
 │   ├── functions/
 │   │   ├── mcp-server/          # the MCP server (tools, auth, scopes)
-│   │   ├── gmail-token-refresh/
 │   │   └── outlook-token-refresh/
 │   └── migrations/              # SQL migrations (schema + RLS)
 └── package.json                 # npm workspaces (apps/*)
