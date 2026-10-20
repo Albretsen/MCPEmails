@@ -336,7 +336,7 @@ test('the address is the one on the marketing site, character for character', ()
   // reader who checks two of them sees two different registered addresses.
   assert.equal(
     POSTAL_ADDRESS_LINE,
-    'MCPEmails is a service of Albretsen Consulting (enkeltpersonforetak), organisation number 926 646 753, Håsteins gate 9, 5160 Laksevåg, Norway.',
+    'MCPEmails is a service of Albretsen AS, organisation number 938 702 373, Håsteins gate 9, 5160 Laksevåg, Norway.',
   );
 });
 

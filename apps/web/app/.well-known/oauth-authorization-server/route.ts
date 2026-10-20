@@ -28,9 +28,9 @@
  *   endpoint stays because every client that already registered through it
  *   keeps working, and clients that do not implement CIMD still need it.
  *
- * No authentication required. Cached for 1 hour.
+ * No authentication required. Cached for 1 hour by clients, 1 day by the CDN.
  */
-import { authorizationServerMetadata } from '@/lib/oauth/metadata';
+import { authorizationServerMetadata, DISCOVERY_CACHE_CONTROL } from '@/lib/oauth/metadata';
 
 // CORS — discovery documents must be readable cross-origin by browser-based
 // MCP clients during the OAuth flow. Unauthenticated, no cookies → wildcard.
@@ -50,7 +50,7 @@ export async function GET() {
   return Response.json(authorizationServerMetadata(), {
     headers: {
       ...CORS_HEADERS,
-      'Cache-Control': 'max-age=3600',
+      'Cache-Control': DISCOVERY_CACHE_CONTROL,
     },
   });
 }

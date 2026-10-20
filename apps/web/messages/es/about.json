@@ -36,14 +36,14 @@
     "intro": "En tres cosas:",
     "points": [
       "<b>Una persona con nombre y apellidos.</b> Yo, no un alias de soporte. Si algo sale mal, sabes quién da la cara.",
-      "<b>Una empresa registrada.</b> MCPEmails lo opera Albretsen Consulting, una empresa individual noruega inscrita en Enhetsregisteret, en Brønnøysundregistrene. Una empresa individual implica responsabilidad personal.",
+      "<b>Una sociedad registrada.</b> MCPEmails lo opera Albretsen AS, una sociedad de responsabilidad limitada noruega inscrita en Foretaksregisteret, en Brønnøysundregistrene. Soy el propietario de la sociedad y presido su consejo de administración.",
       "<b>Código que puedes leer.</b> El servidor es público en GitHub bajo AGPL-3.0, y el servicio alojado ejecuta ese mismo código."
     ],
     "entityTitle": "Entidad legal",
-    "entityName": "Albretsen Consulting (enkeltpersonforetak)",
-    "entityOrgNo": "Número de organización 926 646 753",
+    "entityName": "Albretsen AS (aksjeselskap)",
+    "entityOrgNo": "Número de organización 938 702 373",
     "entityAddress": "Håsteins gate 9, 5160 Laksevåg, Noruega",
-    "entityRegistry": "Inscrita en Enhetsregisteret, Brønnøysundregistrene",
+    "entityRegistry": "Inscrita en Foretaksregisteret, Brønnøysundregistrene",
     "entityNote": "Tienes todos los datos legales en los <terms>términos del servicio</terms> y en la <privacy>política de privacidad</privacy>."
   },
   "busFactor": {
