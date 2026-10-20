@@ -37,7 +37,7 @@
     },
     {
       "h": "Autorisieren",
-      "p": "Cursor fordert Sie zur Anmeldung per OAuth auf. Autorisieren Sie mit mcpemails und geben Sie die Scopes frei, die der Editor erhalten soll."
+      "p": "Cursor fordert Sie zur Anmeldung per OAuth auf. Autorisieren Sie mit MCP Emails und geben Sie die Scopes frei, die der Editor erhalten soll."
     }
   ],
   "gotchas": [

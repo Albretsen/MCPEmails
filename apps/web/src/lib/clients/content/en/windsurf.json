@@ -37,7 +37,7 @@
     },
     {
       "h": "Refresh and authorize",
-      "p": "Refresh MCP servers in Cascade and authorize with mcpemails when prompted. Approve the scopes you want Cascade to hold."
+      "p": "Refresh MCP servers in Cascade and authorize with MCP Emails when prompted. Approve the scopes you want Cascade to hold."
     }
   ],
   "gotchas": [

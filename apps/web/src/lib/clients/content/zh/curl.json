@@ -7,7 +7,7 @@
   ],
   "meta": {
     "title": "邮件 MCP 服务器 API：curl、JSON-RPC 与 Bearer 认证",
-    "description": "通过 HTTP 直接调用 mcpemails MCP 服务器。一个 Streamable HTTP 端点、JSON-RPC 2.0、一个限定范围的 bearer 密钥，以及完整的工具目录。1 个收件箱免费。"
+    "description": "通过 HTTP 直接调用 MCP Emails MCP 服务器。一个 Streamable HTTP 端点、JSON-RPC 2.0、一个限定范围的 bearer 密钥，以及完整的工具目录。1 个收件箱免费。"
   },
   "hero": {
     "eyebrow": "HTTP + 邮件",

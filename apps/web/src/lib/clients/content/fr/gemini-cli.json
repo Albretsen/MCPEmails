@@ -71,7 +71,7 @@
     },
     {
       "q": "Est-ce la même chose que le serveur MCP Gmail publié par Google ?",
-      "a": "Non. Google publie un serveur MCP Workspace qui couvre Gmail en plus de ses autres services, et pour Gmail seul dans un workflow entièrement Google, c'est le chemin le plus court. mcpemails existe pour le cas où toutes les boîtes ne sont pas chez Google, et où la même URL doit aussi fonctionner dans Claude, Cursor et ChatGPT."
+      "a": "Non. Google publie un serveur MCP Workspace qui couvre Gmail en plus de ses autres services, et pour Gmail seul dans un workflow entièrement Google, c'est le chemin le plus court. MCP Emails existe pour le cas où toutes les boîtes ne sont pas chez Google, et où la même URL doit aussi fonctionner dans Claude, Cursor et ChatGPT."
     },
     {
       "q": "Quelles boîtes Gemini CLI peut-il atteindre ainsi ?",

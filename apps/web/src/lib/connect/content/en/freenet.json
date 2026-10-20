@@ -18,8 +18,8 @@
     "eyebrow": "freenet Mail + AI",
     "titleLine1": "Connect your freenet.de inbox",
     "titleLine2": "to Claude, Cursor, any MCP client",
-    "lead": "freenet supports IMAP but keeps it behind a switch it would rather you left alone. Flip it once and mcpemails connects the mailbox so your AI agent can read, search, send, reply and file that mail.",
-    "answer": "Claude cannot reach a freenet.de mailbox on its own. mcpemails is a hosted MCP server that connects it over IMAP at mx.freenet.de on port 993, authenticating with your full address and your freenet Mail password. The one thing you must do first is tick POP3, IMAP und SMTP aktivieren in the mailbox settings, because freenet gates all client access behind that checkbox and recommends leaving it off. Once it is on, Claude, Cursor or any other MCP client can read, search, send and organise that mail, and one inbox is free, forever.",
+    "lead": "freenet supports IMAP but keeps it behind a switch it would rather you left alone. Flip it once and MCP Emails connects the mailbox so your AI agent can read, search, send, reply and file that mail.",
+    "answer": "Claude cannot reach a freenet.de mailbox on its own. MCP Emails is a hosted MCP server that connects it over IMAP at mx.freenet.de on port 993, authenticating with your full address and your freenet Mail password. The one thing you must do first is tick POP3, IMAP und SMTP aktivieren in the mailbox settings, because freenet gates all client access behind that checkbox and recommends leaving it off. Once it is on, Claude, Cursor or any other MCP client can read, search, send and organise that mail, and one inbox is free, forever.",
     "meta0": "1 inbox free, forever",
     "meta1": "Client access must be switched on",
     "meta2": "Email fetched live, never stored"
@@ -30,7 +30,7 @@
   },
   "setup": [
     {
-      "h": "Create a free mcpemails account",
+      "h": "Create a free MCP Emails account",
       "p": "Sign up at mcpemails.com. The free plan connects one inbox and does not ask for a card."
     },
     {
@@ -39,7 +39,7 @@
     },
     {
       "h": "Enter the address and the freenet Mail password",
-      "p": "In mcpemails choose IMAP / SMTP and enter the full address as <code>name@freenet.de</code> with the password for that mailbox. Both directions use <code>mx.freenet.de</code>, which is prefilled here and was verified from a live TLS connection."
+      "p": "In MCP Emails choose IMAP / SMTP and enter the full address as <code>name@freenet.de</code> with the password for that mailbox. Both directions use <code>mx.freenet.de</code>, which is prefilled here and was verified from a live TLS connection."
     },
     {
       "h": "Paste the MCP URL into your AI",
@@ -71,7 +71,7 @@
   "faq": [
     {
       "q": "Does Claude work with freenet.de email?",
-      "a": "Not directly. Claude has no built-in freenet connector. Connecting an MCP server such as mcpemails to the mailbox over IMAP gives Claude read, search, send, reply, schedule and organise access to your freenet.de mail, and the same connection works in Cursor, ChatGPT and other MCP clients. Client access has to be enabled in the mailbox first."
+      "a": "Not directly. Claude has no built-in freenet connector. Connecting an MCP server such as MCP Emails to the mailbox over IMAP gives Claude read, search, send, reply, schedule and organise access to your freenet.de mail, and the same connection works in Cursor, ChatGPT and other MCP clients. Client access has to be enabled in the mailbox first."
     },
     {
       "q": "Which server does freenet use for IMAP and SMTP?",

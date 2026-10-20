@@ -16,7 +16,7 @@
     "meta0": "1 inbox free, forever",
     "meta1": "OAuth, no API key needed",
     "meta2": "Email fetched live, never stored",
-    "answer": "Run the Install MCP Server command in Raycast, set Transport to HTTP, paste https://mcpemails.com/api/mcp, install it, then click Sign In to authorize with mcpemails."
+    "answer": "Run the Install MCP Server command in Raycast, set Transport to HTTP, paste https://mcpemails.com/api/mcp, install it, then click Sign In to authorize with MCP Emails."
   },
   "method": {
     "title": "How Raycast connects: OAuth, no API key",
@@ -37,7 +37,7 @@
     },
     {
       "h": "Install and sign in",
-      "p": "Press <b>Install MCP Server</b>, then click <b>Sign In</b> to authorize with mcpemails. Approve the scopes you want Raycast to hold."
+      "p": "Press <b>Install MCP Server</b>, then click <b>Sign In</b> to authorize with MCP Emails. Approve the scopes you want Raycast to hold."
     }
   ],
   "gotchas": [
@@ -62,7 +62,7 @@
   "faq": [
     {
       "q": "How do I connect email to Raycast?",
-      "a": "Run the Install MCP Server command, set Transport to HTTP, paste https://mcpemails.com/api/mcp, install it, then click Sign In and authorize with mcpemails. Raycast AI then has tools for reading, searching, sending, replying, forwarding, organizing and scheduling mail."
+      "a": "Run the Install MCP Server command, set Transport to HTTP, paste https://mcpemails.com/api/mcp, install it, then click Sign In and authorize with MCP Emails. Raycast AI then has tools for reading, searching, sending, replying, forwarding, organizing and scheduling mail."
     },
     {
       "q": "Do I need an API key for Raycast?",

@@ -22,7 +22,7 @@
     "titleLine1": "将你的 T-Online 邮箱连接到",
     "titleLine2": "Claude、Cursor、任意 MCP 客户端",
     "lead": "为你的 AI 代理接入一个真正的 Telekom 收件箱。使用 Telekom 为邮件程序签发的专用密码，通过 IMAP 读取、搜索、发送、回复、定时与整理邮件。",
-    "answer": "Claude 无法自行连接 T-Online 邮箱。mcpemails 是一个托管 MCP 服务器，通过 IMAP 连接 secureimap.t-online.de 的 993 端口，使用 Telekom 为邮件客户端签发的单独 Passwort für E-Mail-Programme（邮件程序密码）而不是 Telekom 登录密码认证，让 Claude、Cursor 或任意 MCP 客户端都能读取、搜索、发送并整理邮件。如果你从未创建过这个密码，那么从来没有任何客户端能登录这个邮箱，而失败看起来就像输错了字。一个收件箱永久免费。",
+    "answer": "Claude 无法自行连接 T-Online 邮箱。MCP Emails 是一个托管 MCP 服务器，通过 IMAP 连接 secureimap.t-online.de 的 993 端口，使用 Telekom 为邮件客户端签发的单独 Passwort für E-Mail-Programme（邮件程序密码）而不是 Telekom 登录密码认证，让 Claude、Cursor 或任意 MCP 客户端都能读取、搜索、发送并整理邮件。如果你从未创建过这个密码，那么从来没有任何客户端能登录这个邮箱，而失败看起来就像输错了字。一个收件箱永久免费。",
     "meta0": "1 个收件箱永久免费",
     "meta1": "需要 Telekom 邮件程序密码",
     "meta2": "邮件实时获取，绝不存储"
@@ -33,7 +33,7 @@
   },
   "setup": [
     {
-      "h": "创建免费 mcpemails 账户",
+      "h": "创建免费 MCP Emails 账户",
       "p": "在 mcpemails.com 注册。免费套餐可永久连接一个收件箱，无需信用卡。"
     },
     {
@@ -41,7 +41,7 @@
       "p": "在 email.t-online.de 的 E-Mail Center 中，点击齿轮图标（<b>Einstellungen</b>），然后依次进入 <b>Alle Einstellungen anzeigen</b>、<b>Passwörter</b>、<b>Passwort für E-Mail-Programme</b>，设置一个新密码。另一条路径是 Kundencenter：<b>Profil verwalten</b>，然后 <b>Login-Daten</b>，再到 <b>Weitere Passwörter</b>。Telekom 建议它与 Telekom Login 密码不同。"
     },
     {
-      "h": "粘贴到 mcpemails",
+      "h": "粘贴到 MCP Emails",
       "p": "选择 IMAP / SMTP，输入完整地址（例如 name@t-online.de），粘贴邮件程序密码。Telekom 的服务器和端口已自动填好，并已通过实时 TLS 连接验证。"
     },
     {
@@ -56,7 +56,7 @@
     },
     {
       "h": "IMAP 代理在登录前完全不声明任何 AUTH 机制",
-      "p": "Telekom 返回的能力列表是 <code>IMAP4 IMAP4rev1 QUOTA LITERAL+ NAMESPACE UIDPLUS IDLE SORT</code>。其中没有 <code>AUTH=PLAIN</code>，没有 <code>AUTH=LOGIN</code>，也没有 <code>SASL-IR</code>。实际上服务器期望的是普通的 IMAP <code>LOGIN</code> 命令，而不是 SASL <code>AUTHENTICATE</code> 交换。那些枚举声明的 SASL 机制、在列表为空时拒绝继续的客户端库，在发送凭据之前就放弃了，这就是为什么有些 IMAP 工具报告 T-Online 无法访问，而 Thunderbird 却能毫无怨言地连接同一个邮箱。mcpemails 支持纯 LOGIN 路径，所以这个问题已经替你处理好了。"
+      "p": "Telekom 返回的能力列表是 <code>IMAP4 IMAP4rev1 QUOTA LITERAL+ NAMESPACE UIDPLUS IDLE SORT</code>。其中没有 <code>AUTH=PLAIN</code>，没有 <code>AUTH=LOGIN</code>，也没有 <code>SASL-IR</code>。实际上服务器期望的是普通的 IMAP <code>LOGIN</code> 命令，而不是 SASL <code>AUTHENTICATE</code> 交换。那些枚举声明的 SASL 机制、在列表为空时拒绝继续的客户端库，在发送凭据之前就放弃了，这就是为什么有些 IMAP 工具报告 T-Online 无法访问，而 Thunderbird 却能毫无怨言地连接同一个邮箱。MCP Emails 支持纯 LOGIN 路径，所以这个问题已经替你处理好了。"
     },
     {
       "h": "德语文件夹名的邮箱，没有 MOVE 也没有 SPECIAL-USE",
@@ -78,7 +78,7 @@
   "faq": [
     {
       "q": "Claude 能用 T-Online 邮箱吗？",
-      "a": "不能单独使用。Claude 没有内置的 Telekom 或 T-Online 连接器。通过 IMAP 将 mcpemails 这样的 MCP 服务器指向该邮箱后，Claude 就能读取、搜索、发送、回复、定时和整理其中的邮件，同一个连接也可在 Cursor、ChatGPT 和其他 MCP 客户端中使用。"
+      "a": "不能单独使用。Claude 没有内置的 Telekom 或 T-Online 连接器。通过 IMAP 将 MCP Emails 这样的 MCP 服务器指向该邮箱后，Claude 就能读取、搜索、发送、回复、定时和整理其中的邮件，同一个连接也可在 Cursor、ChatGPT 和其他 MCP 客户端中使用。"
     },
     {
       "q": "T-Online 的 IMAP 和 SMTP 设置是什么？",

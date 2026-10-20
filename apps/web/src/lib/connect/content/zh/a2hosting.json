@@ -20,7 +20,7 @@
     "titleLine1": "将 A2 Hosting 邮箱连接到 Claude，",
     "titleLine2": "以及 Cursor、ChatGPT、任意 MCP 客户端",
     "lead": "为你的 AI 代理接入一个真正的 A2 Hosting 邮箱。使用你在 cPanel 中为邮箱设置的密码，通过 IMAP 读取、搜索、发送、回复、定时与整理邮件，可在所有 MCP 客户端中使用而不止一个。",
-    "answer": "Claude 无法自行访问 A2 Hosting 邮箱。mcpemails 是一个托管 MCP 服务器，通过端口 993 的标准 IMAP 与之连接，使用你账户所在的邮件服务器，而不是某个共用的 a2hosting.com 地址，让 Claude、Cursor 或任意 MCP 客户端都能读取、搜索、发送并整理这些邮件。A2 Hosting 已于 2025 年 4 月更名为 hosting.com，但邮件平台没有变化：cPanel 会在 Email Accounts 下的 Connect Devices 中列出你的准确服务器地址。认证使用邮箱本身设置的密码，而不是控制面板的登录密码，1 个收件箱免费。",
+    "answer": "Claude 无法自行访问 A2 Hosting 邮箱。MCP Emails 是一个托管 MCP 服务器，通过端口 993 的标准 IMAP 与之连接，使用你账户所在的邮件服务器，而不是某个共用的 a2hosting.com 地址，让 Claude、Cursor 或任意 MCP 客户端都能读取、搜索、发送并整理这些邮件。A2 Hosting 已于 2025 年 4 月更名为 hosting.com，但邮件平台没有变化：cPanel 会在 Email Accounts 下的 Connect Devices 中列出你的准确服务器地址。认证使用邮箱本身设置的密码，而不是控制面板的登录密码，1 个收件箱免费。",
     "meta0": "1 个收件箱永久免费",
     "meta1": "来自 cPanel 的邮箱密码",
     "meta2": "邮件实时获取，绝不存储"
@@ -31,7 +31,7 @@
   },
   "setup": [
     {
-      "h": "创建免费的 mcpemails 账户",
+      "h": "创建免费的 MCP Emails 账户",
       "p": "在 mcpemails.com 注册。免费套餐可连接一个收件箱，无需信用卡。"
     },
     {
@@ -62,13 +62,13 @@
     }
   ],
   "limits": [
-    "mcpemails 作用于邮箱，而不是主机账户。别名、转发器、自动回复和垃圾邮件过滤器仍在 cPanel 中管理，你的 AI 客户端看不到它们。",
+    "MCP Emails 作用于邮箱，而不是主机账户。别名、转发器、自动回复和垃圾邮件过滤器仍在 cPanel 中管理，你的 AI 客户端看不到它们。",
     "经销商和 VPS 账户可能位于 A2 在知识库中从未公布过的主机名上。该账户自己 cPanel 里的 Connect Devices 面板是唯一权威的来源。"
   ],
   "faq": [
     {
       "q": "Claude 能用于 A2 Hosting 邮箱吗？",
-      "a": "不能直接使用。Claude 没有针对 cPanel 邮件主机的内置连接器。通过 IMAP 将 mcpemails 这样的 MCP 服务器连接到你的 A2 Hosting 邮箱后，Claude 就能读取、搜索、发送、回复、定时和整理其中的邮件，所用凭据与任何桌面邮件客户端相同。"
+      "a": "不能直接使用。Claude 没有针对 cPanel 邮件主机的内置连接器。通过 IMAP 将 MCP Emails 这样的 MCP 服务器连接到你的 A2 Hosting 邮箱后，Claude 就能读取、搜索、发送、回复、定时和整理其中的邮件，所用凭据与任何桌面邮件客户端相同。"
     },
     {
       "q": "A2 Hosting 的 IMAP 和 SMTP 设置是什么？",

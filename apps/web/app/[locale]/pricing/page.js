@@ -17,14 +17,14 @@ export async function generateMetadata({ params }) {
     openGraph: {
       type: 'website',
       url: localePath(locale, '/pricing'),
-      title: `${title} · mcpemails`,
+      title: `${title} · MCP Emails`,
       description,
       locale: OG_LOCALE[locale],
       images: [OG_IMAGE],
     },
     twitter: {
       card: 'summary_large_image',
-      title: `${title} · mcpemails`,
+      title: `${title} · MCP Emails`,
       description,
       images: [OG_IMAGE.url],
     },
@@ -42,7 +42,7 @@ export default async function PricingPage({ params }) {
     ? t('meta.description')
     : 'Simple, transparent pricing for AI agents that read and send email. Free plan available. No card required.';
   // Emits the real plan catalogue as Product + Offers, so an assistant asked
-  // what mcpemails costs reads the same four tiers a visitor sees.
+  // what MCP Emails costs reads the same four tiers a visitor sees.
   const jsonLd = pricingJsonLd(locale, { title, description });
 
   return (

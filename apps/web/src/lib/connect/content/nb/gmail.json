@@ -23,20 +23,20 @@
     "meta0": "1 innboks gratis, for alltid",
     "meta1": "Kobles til med et Google-app-passord",
     "meta2": "E-post hentes direkte, lagres aldri",
-    "answer": "Claude kan ikke nå Gmail på egen hånd. mcpemails er en driftet MCP-server som står mellom dem: du lager et Google-app-passord én gang, limer én URL inn i MCP-klienten din, og så kan Claude, Cursor eller ChatGPT lese, søke i, sende, svare på og planlegge Gmail-e-posten din. Én innboks er gratis, for alltid."
+    "answer": "Claude kan ikke nå Gmail på egen hånd. MCP Emails er en driftet MCP-server som står mellom dem: du lager et Google-app-passord én gang, limer én URL inn i MCP-klienten din, og så kan Claude, Cursor eller ChatGPT lese, søke i, sende, svare på og planlegge Gmail-e-posten din. Én innboks er gratis, for alltid."
   },
   "method": {
     "title": "Slik kobles Gmail til: et Google-app-passord",
-    "body": "Gmail kobles til med et <b>Google-app-passord</b> over IMAP og SMTP. Google tilbyr bare app-passord på kontoer der <b>totrinnsbekreftelse er slått på</b>, så slå det på først, og lag deretter et på <b>myaccount.google.com/apppasswords</b>. Det består av 16 små bokstaver i fire grupper, og du limer det inn i stedet for det vanlige Google-passordet ditt, som ikke fungerer. Du kan tilbakekalle det når som helst fra den samme Google-siden, eller slette innboksen i mcpemails."
+    "body": "Gmail kobles til med et <b>Google-app-passord</b> over IMAP og SMTP. Google tilbyr bare app-passord på kontoer der <b>totrinnsbekreftelse er slått på</b>, så slå det på først, og lag deretter et på <b>myaccount.google.com/apppasswords</b>. Det består av 16 små bokstaver i fire grupper, og du limer det inn i stedet for det vanlige Google-passordet ditt, som ikke fungerer. Du kan tilbakekalle det når som helst fra den samme Google-siden, eller slette innboksen i MCP Emails."
   },
   "setup": [
     {
       "h": "Opprett en gratis konto",
-      "p": "Registrer deg hos mcpemails, uten kort. Gratisplanen kobler til én innboks, for alltid."
+      "p": "Registrer deg hos MCP Emails, uten kort. Gratisplanen kobler til én innboks, for alltid."
     },
     {
       "h": "Lag et Google-app-passord",
-      "p": "Slå på totrinnsbekreftelse i Google-kontoen din hvis det ikke allerede er på, gå så til myaccount.google.com/apppasswords og lag et. Lim de 16 tegnene inn i mcpemails sammen med hele Gmail-adressen din. Mellomrom i koden spiller ingen rolle."
+      "p": "Slå på totrinnsbekreftelse i Google-kontoen din hvis det ikke allerede er på, gå så til myaccount.google.com/apppasswords og lag et. Lim de 16 tegnene inn i MCP Emails sammen med hele Gmail-adressen din. Mellomrom i koden spiller ingen rolle."
     },
     {
       "h": "Lim MCP-URL-en inn i AI-en",
@@ -46,7 +46,7 @@
   "gotchas": [
     {
       "h": "Google publiserer sin egen Gmail MCP-server, og for Gmail alene er den den korteste veien",
-      "p": "Google har annonsert offisiell MCP-støtte for tjenestene sine, blant annet en Workspace MCP-server som dekker Gmail sammen med Drive, Calendar og Chat. Vi skal ikke late som noe annet. Hvis Gmail er den eneste postkassen du vil at en assistent skal røre, og klienten din snakker med Googles server, så bruk den. Grunnen til å peke mcpemails mot Gmail i stedet er at den samme serveren også rommer iCloud-, Fastmail-, Zoho-, Yahoo- eller bedrifts-IMAP-postkassen din, eksponerer hver eneste av dem gjennom <b>én</b> MCP-URL, og oppfører seg likt i Claude, Cursor og ChatGPT. Én kobling per leverandør, hver med sin egen autentisering og sine egne verktøynavn, er nettopp det dette unngår."
+      "p": "Google har annonsert offisiell MCP-støtte for tjenestene sine, blant annet en Workspace MCP-server som dekker Gmail sammen med Drive, Calendar og Chat. Vi skal ikke late som noe annet. Hvis Gmail er den eneste postkassen du vil at en assistent skal røre, og klienten din snakker med Googles server, så bruk den. Grunnen til å peke MCP Emails mot Gmail i stedet er at den samme serveren også rommer iCloud-, Fastmail-, Zoho-, Yahoo- eller bedrifts-IMAP-postkassen din, eksponerer hver eneste av dem gjennom <b>én</b> MCP-URL, og oppfører seg likt i Claude, Cursor og ChatGPT. Én kobling per leverandør, hver med sin egen autentisering og sine egne verktøynavn, er nettopp det dette unngår."
     },
     {
       "h": "Å sende fra en annen adresse krever en bekreftet Send som-adresse",
@@ -62,18 +62,18 @@
     }
   ],
   "limits": [
-    "mcpemails når bare e-post: et app-passord brukes kun til IMAP og SMTP. Drive, Kalender, Chat og Dokumenter nås ikke.",
+    "MCP Emails når bare e-post: et app-passord brukes kun til IMAP og SMTP. Drive, Kalender, Chat og Dokumenter nås ikke.",
     "En Google Workspace-administrator kan slå av app-passord for domenet i Admin-konsollen. Bare en administrator kan endre den avgjørelsen.",
     "Sletting flytter en melding til Gmails papirkurv. En permanent sletting følger Gmails IMAP-innstillinger: som standard fjerner den bare etiketten meldingen ble slettet fra, og en sletting fra papirkurven fjerner den for godt."
   ],
   "faq": [
     {
       "q": "Fungerer Claude med Gmail?",
-      "a": "Ja, så snart det står noe mellom dem som snakker Gmail på vegne av Claude. mcpemails er én slik løsning: du lager et Google-app-passord, limer inn én MCP-URL, og Claude kan lese, søke, sende, svare på, videresende og planlegge e-post. Google publiserer også en offisiell Workspace MCP-server som dekker Gmail. Den praktiske forskjellen er at mcpemails ikke bare er for Google, så den samme URL-en betjener også de andre postkassene dine."
+      "a": "Ja, så snart det står noe mellom dem som snakker Gmail på vegne av Claude. MCP Emails er én slik løsning: du lager et Google-app-passord, limer inn én MCP-URL, og Claude kan lese, søke, sende, svare på, videresende og planlegge e-post. Google publiserer også en offisiell Workspace MCP-server som dekker Gmail. Den praktiske forskjellen er at MCP Emails ikke bare er for Google, så den samme URL-en betjener også de andre postkassene dine."
     },
     {
       "q": "Finnes det en offisiell Gmail MCP-server fra Google?",
-      "a": "Ja. Google har annonsert offisiell MCP-støtte for tjenestene sine, med en Workspace MCP-server som dekker Gmail, Drive, Calendar og Chat. Bruk den når Gmail er den eneste postkassen det gjelder og klienten din støtter den. Velg en tredjepartsserver som mcpemails når du vil ha flere leverandører bak én MCP-URL, eller når du vil ha lik oppførsel i Claude, Cursor og ChatGPT."
+      "a": "Ja. Google har annonsert offisiell MCP-støtte for tjenestene sine, med en Workspace MCP-server som dekker Gmail, Drive, Calendar og Chat. Bruk den når Gmail er den eneste postkassen det gjelder og klienten din støtter den. Velg en tredjepartsserver som MCP Emails når du vil ha flere leverandører bak én MCP-URL, eller når du vil ha lik oppførsel i Claude, Cursor og ChatGPT."
     },
     {
       "q": "Trenger jeg et app-passord for Gmail?",
@@ -89,7 +89,7 @@
     },
     {
       "q": "Lagres Gmail-e-posten min på serverne deres?",
-      "a": "Nei. Meldinger hentes direkte fra Google for hver forespørsel og sendes videre til AI-klienten din. App-passordet ditt er kryptert ved lagring, og meldingsinnhold beholdes ikke. Tilbakekaller du app-passordet i Google-kontoen din, eller sletter innboksen i mcpemails, avsluttes tilkoblingen umiddelbart."
+      "a": "Nei. Meldinger hentes direkte fra Google for hver forespørsel og sendes videre til AI-klienten din. App-passordet ditt er kryptert ved lagring, og meldingsinnhold beholdes ikke. Tilbakekaller du app-passordet i Google-kontoen din, eller sletter innboksen i MCP Emails, avsluttes tilkoblingen umiddelbart."
     }
   ],
   "ctaBand": {

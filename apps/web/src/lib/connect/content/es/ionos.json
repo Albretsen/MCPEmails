@@ -26,7 +26,7 @@
     "meta0": "Primer buzón gratis, planes para el resto",
     "meta1": "La contraseña de tu buzón, sin configurar OAuth",
     "meta2": "El correo se obtiene en vivo, nunca se almacena",
-    "answer": "Claude no puede acceder por sí solo a IONOS. mcpemails es un servidor MCP alojado que lo conecta por IMAP con la contraseña de tu buzón, para que Claude, Cursor o cualquier cliente MCP pueda leer, buscar, enviar y organizar ese correo. La configuración lleva un par de minutos. Cada dirección de la empresa, como info@ o ventas@, se conecta como un buzón propio: un buzón es gratis, Personal conecta tres, Pro hasta 10 y Business todos los que necesites."
+    "answer": "Claude no puede acceder por sí solo a IONOS. MCP Emails es un servidor MCP alojado que lo conecta por IMAP con la contraseña de tu buzón, para que Claude, Cursor o cualquier cliente MCP pueda leer, buscar, enviar y organizar ese correo. La configuración lleva un par de minutos. Cada dirección de la empresa, como info@ o ventas@, se conecta como un buzón propio: un buzón es gratis, Personal conecta tres, Pro hasta 10 y Business todos los que necesites."
   },
   "persona": {
     "intro": "¿Varios buzones de empresa en IONOS?",
@@ -40,14 +40,14 @@
   "setup": [
     {
       "h": "Crea una cuenta gratis",
-      "p": "Regístrate en mcpemails, sin tarjeta. El plan gratuito conecta una bandeja, para siempre."
+      "p": "Regístrate en MCP Emails, sin tarjeta. El plan gratuito conecta una bandeja, para siempre."
     },
     {
       "h": "Consigue la contraseña de tu buzón de IONOS",
       "p": "En el panel de control de IONOS, abre Email, elige la dirección y define o restablece su contraseña. No es la contraseña con la que inicias sesión en IONOS."
     },
     {
-      "h": "Pégala en mcpemails",
+      "h": "Pégala en MCP Emails",
       "p": "Elige IMAP / SMTP y añade tu dirección de IONOS y la contraseña del buzón. Los servidores que se muestran arriba son los de ionos.com: para un buzón comprado en ionos.de, usa imap.ionos.de y smtp.ionos.de, y para ionos.co.uk los nombres .co.uk."
     },
     {
@@ -75,12 +75,12 @@
   ],
   "limits": [
     "Los buzones de Microsoft 365 comprados a través de IONOS no están en imap.ionos.com. Conéctalos con Outlook (inicio de sesión con Microsoft); puede que un administrador de TI tenga que aprobar la aplicación una vez.",
-    "mcpemails conecta un buzón. Los alias, reenviadores, reglas catch-all y ajustes de spam de IONOS se quedan en el panel de control de IONOS y no son visibles para tu cliente de IA."
+    "MCP Emails conecta un buzón. Los alias, reenviadores, reglas catch-all y ajustes de spam de IONOS se quedan en el panel de control de IONOS y no son visibles para tu cliente de IA."
   ],
   "faq": [
     {
       "q": "¿Funciona Claude con el correo de IONOS?",
-      "a": "Funciona con un buzón de IONOS, del tipo que sirve imap.ionos.com, una vez que un servidor MCP como mcpemails se conecta a él por IMAP. Claude no tiene un conector integrado para IONOS. Un buzón de Microsoft 365 comprado a través de IONOS también funciona, pero se conecta con Outlook (inicio de sesión con Microsoft) y no por IMAP, y puede que un administrador de TI tenga que aprobar MCP Emails una vez primero."
+      "a": "Funciona con un buzón de IONOS, del tipo que sirve imap.ionos.com, una vez que un servidor MCP como MCP Emails se conecta a él por IMAP. Claude no tiene un conector integrado para IONOS. Un buzón de Microsoft 365 comprado a través de IONOS también funciona, pero se conecta con Outlook (inicio de sesión con Microsoft) y no por IMAP, y puede que un administrador de TI tenga que aprobar MCP Emails una vez primero."
     },
     {
       "q": "¿Cuáles son los ajustes IMAP y SMTP de IONOS?",

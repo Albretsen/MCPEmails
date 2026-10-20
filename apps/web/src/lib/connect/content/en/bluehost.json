@@ -20,7 +20,7 @@
     "titleLine1": "MCP server for Bluehost mail:",
     "titleLine2": "every company mailbox, in Claude and ChatGPT",
     "lead": "Running info@, sales@, support@ and invoices@ on your own domain at Bluehost? Connect each mailbox to one workspace and your AI agent works across all of them. Read, search, send, reply, schedule and organize mail over IMAP, whether the mailbox is a cPanel Email account or a Professional Email box.",
-    "answer": "Claude cannot reach a Bluehost mailbox on its own. mcpemails is a hosted MCP server that connects it over plain IMAP on port 993, so Claude, Cursor or any MCP client can read, search, send and organize that mail. The first thing to establish is which of Bluehost's three email products you have, because cPanel Email answers on a host built from your own domain while Professional Email answers on Titan's servers, and the two sets of settings are not interchangeable. Either way you authenticate with the password set on the mailbox, never your Bluehost portal password. Each company address, such as info@ or sales@, connects as its own mailbox: one mailbox is free, Personal connects three, Pro up to 10, and Business as many as you need.",
+    "answer": "Claude cannot reach a Bluehost mailbox on its own. MCP Emails is a hosted MCP server that connects it over plain IMAP on port 993, so Claude, Cursor or any MCP client can read, search, send and organize that mail. The first thing to establish is which of Bluehost's three email products you have, because cPanel Email answers on a host built from your own domain while Professional Email answers on Titan's servers, and the two sets of settings are not interchangeable. Either way you authenticate with the password set on the mailbox, never your Bluehost portal password. Each company address, such as info@ or sales@, connects as its own mailbox: one mailbox is free, Personal connects three, Pro up to 10, and Business as many as you need.",
     "meta0": "First mailbox free, plans for the rest",
     "meta1": "Mailbox password, not portal login",
     "meta2": "Email fetched live, never stored"
@@ -36,7 +36,7 @@
   },
   "setup": [
     {
-      "h": "Create a free mcpemails account",
+      "h": "Create a free MCP Emails account",
       "p": "Sign up at mcpemails.com. The free plan connects one inbox and needs no card."
     },
     {
@@ -68,12 +68,12 @@
   ],
   "limits": [
     "A Google Workspace mailbox bought through Bluehost is a Google mailbox. Connect it as Gmail, with a Google app password, not with Bluehost credentials.",
-    "mcpemails connects mailboxes, not the hosting account. Forwarders, aliases and filters stay in the Bluehost portal."
+    "MCP Emails connects mailboxes, not the hosting account. Forwarders, aliases and filters stay in the Bluehost portal."
   ],
   "faq": [
     {
       "q": "Does Claude work with Bluehost email?",
-      "a": "Not directly. Claude has no built-in Bluehost connector. Connecting an MCP server such as mcpemails to the mailbox over IMAP gives Claude read, search, send, reply, schedule and organize access to it. This works for both cPanel Email accounts and Professional Email accounts, once you use the right host for the product you have."
+      "a": "Not directly. Claude has no built-in Bluehost connector. Connecting an MCP server such as MCP Emails to the mailbox over IMAP gives Claude read, search, send, reply, schedule and organize access to it. This works for both cPanel Email accounts and Professional Email accounts, once you use the right host for the product you have."
     },
     {
       "q": "What are the Bluehost IMAP and SMTP settings?",

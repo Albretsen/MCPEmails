@@ -2,7 +2,7 @@ const translation = {
   title: 'Cómo dar acceso al correo a tu agente de IA (la guía completa de 2026)',
   description:
     'Da a tu agente de IA acceso de lectura y envío a una bandeja real por MCP: Gmail, Outlook, iCloud, Fastmail o IMAP. Cómo funciona, las herramientas, la seguridad y la configuración.',
-  coverAlt: 'Cómo dar a tu agente de IA acceso al correo por MCP — MCPEmails',
+  coverAlt: 'Cómo dar a tu agente de IA acceso al correo por MCP — MCP Emails',
   content: `Para dar a un agente de IA acceso al correo, conectas tu bandeja a un servidor MCP y apuntas tu agente a una única URL de endpoint. El agente obtiene entonces un pequeño conjunto de herramientas para leer, buscar y enviar correo. Lo difícil no es el agente: es hacer esto sin filtrar tu contraseña a un prompt, a un log o a un almacén vectorial. Esa última milla es de lo que trata esta guía.
 
 Si solo quieres el camino rápido: conecta una bandeja en el panel, pega el endpoint de MCP en [claude.ai](https://claude.ai), Claude Desktop, Cursor o tu propio agente, y llama a \`inbox_list\` primero. El resto de este artículo explica qué ocurre en realidad, por qué importa el modelo de seguridad y cómo conectar cada proveedor compatible.

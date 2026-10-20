@@ -16,7 +16,7 @@
     "meta0": "1 bandeja gratis, para siempre",
     "meta1": "OAuth, sin clave de API",
     "meta2": "Correo obtenido en vivo, nunca almacenado",
-    "answer": "Ejecuta el comando Install MCP Server en Raycast, pon Transport en HTTP, pega https://mcpemails.com/api/mcp, instálalo y luego haz clic en Sign In para autorizar con mcpemails."
+    "answer": "Ejecuta el comando Install MCP Server en Raycast, pon Transport en HTTP, pega https://mcpemails.com/api/mcp, instálalo y luego haz clic en Sign In para autorizar con MCP Emails."
   },
   "method": {
     "title": "Cómo se conecta Raycast: OAuth, sin clave de API",
@@ -37,7 +37,7 @@
     },
     {
       "h": "Instala e inicia sesión",
-      "p": "Pulsa <b>Install MCP Server</b> y luego haz clic en <b>Sign In</b> para autorizar con mcpemails. Aprueba los permisos que quieres que tenga Raycast."
+      "p": "Pulsa <b>Install MCP Server</b> y luego haz clic en <b>Sign In</b> para autorizar con MCP Emails. Aprueba los permisos que quieres que tenga Raycast."
     }
   ],
   "gotchas": [
@@ -62,7 +62,7 @@
   "faq": [
     {
       "q": "¿Cómo conecto el correo a Raycast?",
-      "a": "Ejecuta el comando Install MCP Server, pon Transport en HTTP, pega https://mcpemails.com/api/mcp, instálalo y luego haz clic en Sign In y autoriza con mcpemails. A partir de ahí Raycast AI tiene herramientas para leer, buscar, enviar, responder, reenviar, organizar y programar correo."
+      "a": "Ejecuta el comando Install MCP Server, pon Transport en HTTP, pega https://mcpemails.com/api/mcp, instálalo y luego haz clic en Sign In y autoriza con MCP Emails. A partir de ahí Raycast AI tiene herramientas para leer, buscar, enviar, responder, reenviar, organizar y programar correo."
     },
     {
       "q": "¿Necesito una clave de API para Raycast?",
@@ -77,7 +77,7 @@
       "a": "Solo si tú lo permites. El envío depende del permiso send:email, así que una clave o un token sin ese permiso no puede enviar nada. Además, el propietario de una bandeja puede exigir aprobación humana en el panel, que retiene cada envío, respuesta, reenvío, envío de borrador y envío programado hasta que una persona lo libera."
     },
     {
-      "q": "¿Se guarda mi correo en los servidores de mcpemails?",
+      "q": "¿Se guarda mi correo en los servidores de MCP Emails?",
       "a": "No. Cada mensaje se obtiene en vivo de tu proveedor para la solicitud que lo pidió y se entrega directamente a tu cliente. Solo se guarda el token OAuth o la contraseña de aplicación cifrados, para que las llamadas futuras puedan autenticarse. Eliminar la bandeja en el panel, o revocar el acceso en tu proveedor, corta la conexión al instante."
     }
   ],

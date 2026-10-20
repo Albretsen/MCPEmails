@@ -193,7 +193,7 @@ export async function POST(request: NextRequest): Promise<NextResponse> {
       return NextResponse.json(
         {
           error:
-            `The ${field} server is set to ${host}, which is MCPEmails itself, not your mail server. ` +
+            `The ${field} server is set to ${host}, which is MCP Emails itself, not your mail server. ` +
             'A browser or password manager may have filled it in. Enter the server name your email provider gave you.',
           error_code: 'own_site_host',
         },

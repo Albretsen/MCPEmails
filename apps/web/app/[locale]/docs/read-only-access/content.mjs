@@ -41,7 +41,7 @@ const en = {
   meta: {
     title: 'Read-only email access for AI agents',
     description:
-      'What a read-only mcpemails connection can and cannot do, how writes are refused by both our server and your mail provider, why reading never marks mail as read, and what happens when you connect.',
+      'What a read-only MCP Emails connection can and cannot do, how writes are refused by both our server and your mail provider, why reading never marks mail as read, and what happens when you connect.',
   },
   breadcrumb: 'Read-only access',
   eyebrow: 'Docs',
@@ -100,7 +100,7 @@ const en = {
   ],
   evidence: {
     h: 'Check it yourself',
-    intro: 'mcpemails is open source. These files implement and test what this page describes:',
+    intro: 'MCP Emails is open source. These files implement and test what this page describes:',
     labels: {
       examine: 'EXAMINE for read-only connections',
       examineTests: 'Tests for EXAMINE, including the provider refusing a flag change',
@@ -175,7 +175,7 @@ const nb = {
   ],
   evidence: {
     h: 'Sjekk selv',
-    intro: 'mcpemails er åpen kildekode. Disse filene implementerer og tester det denne siden beskriver:',
+    intro: 'MCP Emails er åpen kildekode. Disse filene implementerer og tester det denne siden beskriver:',
     labels: {
       examine: 'EXAMINE for skrivebeskyttede tilkoblinger',
       examineTests: 'Tester for EXAMINE, blant annet at leverandøren avviser en flaggendring',
@@ -191,7 +191,7 @@ const es = {
   meta: {
     title: 'Acceso de solo lectura al correo para agentes de IA',
     description:
-      'Qué puede y qué no puede hacer una conexión de solo lectura de mcpemails, cómo nuestro servidor y tu proveedor de correo rechazan los cambios, por qué leer nunca marca el correo como leído y qué ocurre al conectarte.',
+      'Qué puede y qué no puede hacer una conexión de solo lectura de MCP Emails, cómo nuestro servidor y tu proveedor de correo rechazan los cambios, por qué leer nunca marca el correo como leído y qué ocurre al conectarte.',
   },
   breadcrumb: 'Acceso de solo lectura',
   eyebrow: 'Documentación',
@@ -250,7 +250,7 @@ const es = {
   ],
   evidence: {
     h: 'Compruébalo tú mismo',
-    intro: 'mcpemails es de código abierto. Estos archivos implementan y prueban lo que describe esta página:',
+    intro: 'MCP Emails es de código abierto. Estos archivos implementan y prueban lo que describe esta página:',
     labels: {
       examine: 'EXAMINE para conexiones de solo lectura',
       examineTests: 'Pruebas de EXAMINE, incluido el proveedor rechazando un cambio de indicador',
@@ -266,7 +266,7 @@ const fr = {
   meta: {
     title: 'Accès en lecture seule aux e-mails pour les agents IA',
     description:
-      'Ce qu\'une connexion mcpemails en lecture seule peut et ne peut pas faire, comment notre serveur et votre fournisseur de messagerie refusent les modifications, pourquoi la lecture ne marque jamais un e-mail comme lu, et ce qui se passe à la connexion.',
+      'Ce qu\'une connexion MCP Emails en lecture seule peut et ne peut pas faire, comment notre serveur et votre fournisseur de messagerie refusent les modifications, pourquoi la lecture ne marque jamais un e-mail comme lu, et ce qui se passe à la connexion.',
   },
   breadcrumb: 'Accès en lecture seule',
   eyebrow: 'Documentation',
@@ -325,7 +325,7 @@ const fr = {
   ],
   evidence: {
     h: 'Vérifiez par vous-même',
-    intro: 'mcpemails est open source. Ces fichiers implémentent et testent ce que décrit cette page :',
+    intro: 'MCP Emails est open source. Ces fichiers implémentent et testent ce que décrit cette page :',
     labels: {
       examine: 'EXAMINE pour les connexions en lecture seule',
       examineTests: 'Les tests d\'EXAMINE, dont le refus d\'un changement d\'indicateur par le fournisseur',
@@ -341,7 +341,7 @@ const zh = {
   meta: {
     title: 'AI 代理的只读邮件访问',
     description:
-      'mcpemails 只读连接能做什么、不能做什么；我们的服务器和您的邮件服务商如何拒绝写入；为什么读取永远不会把邮件标为已读；以及连接时会发生什么。',
+      'MCP Emails 只读连接能做什么、不能做什么；我们的服务器和您的邮件服务商如何拒绝写入；为什么读取永远不会把邮件标为已读；以及连接时会发生什么。',
   },
   breadcrumb: '只读访问',
   eyebrow: '文档',
@@ -399,7 +399,7 @@ const zh = {
   ],
   evidence: {
     h: '自行核实',
-    intro: 'mcpemails 是开源的。以下文件实现并测试了本页所述内容：',
+    intro: 'MCP Emails 是开源的。以下文件实现并测试了本页所述内容：',
     labels: {
       examine: '只读连接使用 EXAMINE',
       examineTests: 'EXAMINE 的测试，包括服务商拒绝旗标更改',

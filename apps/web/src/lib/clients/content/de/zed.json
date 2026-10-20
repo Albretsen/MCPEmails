@@ -37,7 +37,7 @@
     },
     {
       "h": "Autorisieren",
-      "p": "Zed startet den OAuth-Ablauf, wenn kein Authorization-Header gesetzt ist. Melden Sie sich bei mcpemails an und geben Sie die Scopes frei, die Zed erhalten soll."
+      "p": "Zed startet den OAuth-Ablauf, wenn kein Authorization-Header gesetzt ist. Melden Sie sich bei MCP Emails an und geben Sie die Scopes frei, die Zed erhalten soll."
     }
   ],
   "gotchas": [

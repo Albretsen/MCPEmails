@@ -2,7 +2,7 @@ const translation = {
   title: 'Hva er en MCP-e-postserver? En forklaring i klartekst',
   description:
     'En MCP-e-postserver lar en AI-agent lese og sende e-post via rene verb i stedet for rå IMAP og passord. Her er hva det egentlig betyr.',
-  coverAlt: 'Hva er en MCP-e-postserver — en forklaring i klartekst fra MCPEmails',
+  coverAlt: 'Hva er en MCP-e-postserver — en forklaring i klartekst fra MCP Emails',
   content: `En MCP-e-postserver er en liten tjeneste som gir en AI-agent som Claude eller Cursor direkte les- og send-tilgang til en ekte innboks, ved hjelp av Model Context Protocol. I stedet for å gi agenten et e-postpassord og et IMAP-bibliotek, gir den agenten en kort liste med handlinger: list opp meldingene mine, les denne, søk etter det, send et svar. Agenten kaller disse handlingene som et hvilket som helst annet verktøy, og serveren tar seg av det rotete leverandørarbeidet bak kulissene.
 
 Hvis du har hørt begrepet «MCP» bli kastet rundt og vil ha versjonen uten sjargong av hva en MCP-*e-postserver* faktisk gjør, så er dette den. La oss bygge det opp én bit om gangen.

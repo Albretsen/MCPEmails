@@ -23,7 +23,7 @@
     "meta0": "First mailbox free, plans for the rest",
     "meta1": "Your mailbox password, no OAuth setup",
     "meta2": "Email fetched live, never stored",
-    "answer": "Claude cannot reach Namecheap Private Email on its own. mcpemails is a hosted MCP server that connects it over IMAP using your mailbox password, so Claude, Cursor or any MCP client can read, search, send and organize that mail. Setup takes a couple of minutes. Each company address, such as info@ or sales@, connects as its own mailbox: one mailbox is free, Personal connects three, Pro up to 10, and Business as many as you need."
+    "answer": "Claude cannot reach Namecheap Private Email on its own. MCP Emails is a hosted MCP server that connects it over IMAP using your mailbox password, so Claude, Cursor or any MCP client can read, search, send and organize that mail. Setup takes a couple of minutes. Each company address, such as info@ or sales@, connects as its own mailbox: one mailbox is free, Personal connects three, Pro up to 10, and Business as many as you need."
   },
   "persona": {
     "intro": "Several company mailboxes at Namecheap?",
@@ -37,14 +37,14 @@
   "setup": [
     {
       "h": "Create a free account",
-      "p": "Sign up for mcpemails, no card required. The free plan connects one inbox, forever."
+      "p": "Sign up for MCP Emails, no card required. The free plan connects one inbox, forever."
     },
     {
       "h": "Find your Private Email mailbox password",
       "p": "Use the password for the mailbox itself, not your Namecheap account password. You can reset it from the Private Email control panel at any time."
     },
     {
-      "h": "Paste it into mcpemails",
+      "h": "Paste it into MCP Emails",
       "p": "Choose IMAP / SMTP, add your Namecheap Private Email address, the hosts above and the password to connect the inbox securely."
     },
     {
@@ -59,7 +59,7 @@
     },
     {
       "h": "Two-factor authentication on Private Email is webmail only, and it locks out every mail client",
-      "p": "Namecheap documents 2FA for Private Email as protecting the web interface. The moment you enable it, your ordinary mailbox password stops authenticating over IMAP and SMTP, and the refusal arrives as a plain login failure with no mention of the second factor. The fix is an <b>application-specific password</b>: in the Private Email webmail open <b>Settings</b>, then <b>Security</b>, then <b>Application Passwords</b>, pick the client type from the drop-down and generate one. Paste that into mcpemails in place of the mailbox password. If you have never enabled 2FA, no application password exists and none is needed."
+      "p": "Namecheap documents 2FA for Private Email as protecting the web interface. The moment you enable it, your ordinary mailbox password stops authenticating over IMAP and SMTP, and the refusal arrives as a plain login failure with no mention of the second factor. The fix is an <b>application-specific password</b>: in the Private Email webmail open <b>Settings</b>, then <b>Security</b>, then <b>Application Passwords</b>, pick the client type from the drop-down and generate one. Paste that into MCP Emails in place of the mailbox password. If you have never enabled 2FA, no application password exists and none is needed."
     },
     {
       "h": "The host is mail.privateemail.com for every customer, and Namecheap says not to change it",
@@ -73,12 +73,12 @@
   "limits": [
     "Because the server does not advertise MOVE, a move is not atomic. If a connection drops part way through, a message can exist briefly in both folders.",
     "Private Email is a subscription separate from the domain. Owning a Namecheap domain does not mean you have a Namecheap mailbox to connect.",
-    "mcpemails connects the mailbox. Aliases, forwarders, catch-all rules and mailbox creation stay in the Namecheap Private Email control panel."
+    "MCP Emails connects the mailbox. Aliases, forwarders, catch-all rules and mailbox creation stay in the Namecheap Private Email control panel."
   ],
   "faq": [
     {
       "q": "Does Claude work with Namecheap Private Email?",
-      "a": "Not on its own. Claude has no built-in Namecheap connector. Connecting an MCP server such as mcpemails to the mailbox over IMAP gives Claude read, search, send, reply, schedule and organize access to it, and the same connection then works from Cursor, ChatGPT and other MCP clients rather than one."
+      "a": "Not on its own. Claude has no built-in Namecheap connector. Connecting an MCP server such as MCP Emails to the mailbox over IMAP gives Claude read, search, send, reply, schedule and organize access to it, and the same connection then works from Cursor, ChatGPT and other MCP clients rather than one."
     },
     {
       "q": "What are the Namecheap Private Email IMAP and SMTP settings?",
@@ -90,7 +90,7 @@
     },
     {
       "q": "How do I create a Namecheap application password?",
-      "a": "Sign in to the Private Email webmail at privateemail.com, open Settings, then Security, then Application Passwords. Choose the application or client type from the drop-down and generate a password. Copy it immediately and paste it into mcpemails in place of the mailbox password. You only need one if two-factor authentication is enabled."
+      "a": "Sign in to the Private Email webmail at privateemail.com, open Settings, then Security, then Application Passwords. Choose the application or client type from the drop-down and generate a password. Copy it immediately and paste it into MCP Emails in place of the mailbox password. You only need one if two-factor authentication is enabled."
     },
     {
       "q": "Can I use mail.mydomain.com instead of mail.privateemail.com?",

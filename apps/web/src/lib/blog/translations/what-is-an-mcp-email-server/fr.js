@@ -2,7 +2,7 @@ const translation = {
   title: 'Qu’est-ce qu’un serveur e-mail MCP ? Une explication en clair',
   description:
     'Un serveur e-mail MCP est un outil qui permet à un agent IA de lire et d’envoyer des e-mails via des verbes simples, plutôt que de l’IMAP brut et des mots de passe. Voici ce que cela signifie.',
-  coverAlt: 'Qu’est-ce qu’un serveur e-mail MCP — une explication en clair par MCPEmails',
+  coverAlt: 'Qu’est-ce qu’un serveur e-mail MCP — une explication en clair par MCP Emails',
   content: `Un serveur e-mail MCP est un petit service qui donne à un agent IA comme Claude ou Cursor un accès en direct, en lecture et en envoi, à une vraie boîte mail, grâce au Model Context Protocol. Au lieu de confier à votre agent un mot de passe e-mail et une bibliothèque IMAP, il lui remet une courte liste d’actions : lister mes messages, lire celui-ci, rechercher cela, envoyer une réponse. L’agent appelle ces actions comme n’importe quel autre outil, et le serveur s’occupe du travail laborieux côté fournisseur en coulisses.
 
 Si vous avez entendu parler de « MCP » un peu partout et que vous voulez la version sans jargon de ce que fait réellement un serveur e-mail *MCP*, c’est ici. Construisons-la pièce par pièce.

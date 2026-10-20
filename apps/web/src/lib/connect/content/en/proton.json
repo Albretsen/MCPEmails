@@ -21,7 +21,7 @@
     "titleLine1": "Proton Mail cannot be",
     "titleLine2": "connected to a hosted MCP server",
     "lead": "Proton has no IMAP server on the internet. The only IMAP that exists for a Proton mailbox runs on your own computer, inside Proton Mail Bridge, which is why every hosted tool hits the same wall.",
-    "answer": "No. Proton Mail exposes no IMAP, POP or SMTP endpoint that a client elsewhere can log into. The only way a mail client ever reaches Proton is Proton Mail Bridge, a desktop application available on paid Proton plans that decrypts your mail locally and serves IMAP and SMTP on localhost, meaning the loopback address of the machine it runs on. A hosted MCP server such as mcpemails runs on our infrastructure, not on your desk, and nothing on the internet can route to your localhost, so the connection is impossible rather than unimplemented. If you want an AI agent working on mail that reaches your Proton address, the honest options are Proton's paid auto-forwarding into a mailbox that does speak IMAP, which mcpemails connects free for one inbox, or Proton's send-only SMTP submission for outbound alone."
+    "answer": "No. Proton Mail exposes no IMAP, POP or SMTP endpoint that a client elsewhere can log into. The only way a mail client ever reaches Proton is Proton Mail Bridge, a desktop application available on paid Proton plans that decrypts your mail locally and serves IMAP and SMTP on localhost, meaning the loopback address of the machine it runs on. A hosted MCP server such as MCP Emails runs on our infrastructure, not on your desk, and nothing on the internet can route to your localhost, so the connection is impossible rather than unimplemented. If you want an AI agent working on mail that reaches your Proton address, the honest options are Proton's paid auto-forwarding into a mailbox that does speak IMAP, which MCP Emails connects free for one inbox, or Proton's send-only SMTP submission for outbound alone."
   },
   "method": {
     "title": "How Proton Mail connects: locally, through Bridge, or not at all",
@@ -29,12 +29,12 @@
   },
   "setup": [
     {
-      "h": "Create the free mcpemails account",
+      "h": "Create the free MCP Emails account",
       "p": "An email address, no card. One connected inbox is free forever, and the next two steps decide which inbox that is."
     },
     {
       "h": "Choose the mailbox that will carry the automated work",
-      "p": "Pick an address on a provider that runs a real IMAP server: a domain mailbox, a work account, Fastmail, Migadu, Gmail. That is the account mcpemails connects and the one your agent reads, sends, files and schedules from. Your Proton address stays exactly as it is."
+      "p": "Pick an address on a provider that runs a real IMAP server: a domain mailbox, a work account, Fastmail, Migadu, Gmail. That is the account MCP Emails connects and the one your agent reads, sends, files and schedules from. Your Proton address stays exactly as it is."
     },
     {
       "h": "Add a forwarding rule in Proton settings",
@@ -90,7 +90,7 @@
     },
     {
       "q": "Is my email stored on your servers?",
-      "a": "No. For the mailboxes mcpemails does connect, messages are fetched live over IMAP for each request and passed to your AI client, with credentials encrypted at rest and message bodies not retained. We never hold Proton credentials at all, because there is no Proton connection to make."
+      "a": "No. For the mailboxes MCP Emails does connect, messages are fetched live over IMAP for each request and passed to your AI client, with credentials encrypted at rest and message bodies not retained. We never hold Proton credentials at all, because there is no Proton connection to make."
     }
   ],
   "ctaBand": {

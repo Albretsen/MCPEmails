@@ -4,7 +4,7 @@ const post = {
   description:
     'Give your AI agent read and send access to a real inbox over MCP — Gmail, Outlook, iCloud, Fastmail, or IMAP. How it works, the tools, security, and setup.',
   cover: '/blog/cover-how-to-give-your-ai-agent-email-access.svg',
-  coverAlt: 'How to give your AI agent access to email over MCP — MCPEmails',
+  coverAlt: 'How to give your AI agent access to email over MCP — MCP Emails',
   authorId: 'asgeir',
   publishedAt: "2026-06-02T09:00:00.000Z",
   updatedAt: "2026-09-25T09:00:00.000Z",

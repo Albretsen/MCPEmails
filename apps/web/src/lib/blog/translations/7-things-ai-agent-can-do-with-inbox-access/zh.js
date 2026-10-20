@@ -2,7 +2,7 @@ const translation = {
   title: 'AI 智能体拿到收件箱访问权限后能做的 7 件事',
   description:
     '收件箱接入后，AI 智能体能做的七件实事：整理未读邮件、总结长邮件串、起草回复、翻找附件、追踪跟进，以及分流邮件。',
-  coverAlt: '你的 AI 智能体通过 MCP 拿到收件箱访问权限后能做的七件事 — MCPEmails',
+  coverAlt: '你的 AI 智能体通过 MCP 拿到收件箱访问权限后能做的七件事 — MCP Emails',
   content: `一旦你的智能体能真正读邮件、发邮件，演示阶段就结束了，真正的活儿才开始。下面是七件你今天就能让它做的事：整理未读堆、总结一条长邮件串、用你的口吻起草回复、翻出那一份附件、追踪悬而未决的跟进、把邮件分流到该去的地方，再给你发一份每周摘要。
 
 下面每个例子都对应你现在就能调用的真实 MCP 工具。无论你连接的是 Gmail、Outlook、iCloud、Fastmail，还是普通的 IMAP 邮箱，工具都一样。如果你还没把智能体接到收件箱上，[给 AI 智能体接入邮件的完整指南](/blog/how-to-give-your-ai-agent-email-access)讲了配置过程；[2 分钟接入演示](/blog/connect-email-to-ai-agent-under-2-minutes)则是最快的路径。

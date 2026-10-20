@@ -22,7 +22,7 @@
     "meta0": "Primer buzón gratis, planes para el resto",
     "meta1": "La contraseña de tu buzón, sin configurar OAuth",
     "meta2": "El correo se obtiene en vivo, nunca se almacena",
-    "answer": "Claude no puede acceder por sí solo a cPanel. mcpemails es un servidor MCP alojado que lo conecta por IMAP con la contraseña de tu buzón, para que Claude, Cursor o cualquier cliente MCP pueda leer, buscar, enviar y organizar ese correo. La configuración lleva un par de minutos. Cada dirección de la empresa, como info@ o ventas@, se conecta como un buzón propio: un buzón es gratis, Personal conecta tres, Pro hasta 10 y Business todos los que necesites."
+    "answer": "Claude no puede acceder por sí solo a cPanel. MCP Emails es un servidor MCP alojado que lo conecta por IMAP con la contraseña de tu buzón, para que Claude, Cursor o cualquier cliente MCP pueda leer, buscar, enviar y organizar ese correo. La configuración lleva un par de minutos. Cada dirección de la empresa, como info@ o ventas@, se conecta como un buzón propio: un buzón es gratis, Personal conecta tres, Pro hasta 10 y Business todos los que necesites."
   },
   "persona": {
     "intro": "¿Varios buzones de empresa en un alojamiento con cPanel?",
@@ -36,14 +36,14 @@
   "setup": [
     {
       "h": "Crea una cuenta gratis",
-      "p": "Regístrate en mcpemails, sin tarjeta. El plan gratuito conecta una bandeja, para siempre."
+      "p": "Regístrate en MCP Emails, sin tarjeta. El plan gratuito conecta una bandeja, para siempre."
     },
     {
       "h": "Consulta tus ajustes en cPanel",
       "p": "En cPanel, abre Email Accounts y haz clic en Connect Devices para el buzón. Copia los servidores y puertos IMAP y SMTP seguros de Mail Client Manual Settings. Si no sabes la contraseña del buzón, define una nueva en esa misma pantalla."
     },
     {
-      "h": "Pégalo en mcpemails",
+      "h": "Pégalo en MCP Emails",
       "p": "Elige IMAP / SMTP y añade tu dirección de cPanel, los servidores de arriba y la contraseña para conectar la bandeja de forma segura."
     },
     {
@@ -72,12 +72,12 @@
   "limits": [
     "No podemos rellenar de antemano los servidores de un buzón de cPanel, porque el nombre de servidor pertenece a tu servidor y no a un servicio compartido. Tienes que pegarlo desde Connect Devices.",
     "Algunas empresas de hosting bloquean con cortafuegos el envío saliente o desactivan el IMAP externo en los planes compartidos. cPanel sigue mostrando los ajustes en ese caso, así que un rechazo ahí es una cuestión para tu proveedor, no un problema de ajustes.",
-    "mcpemails conecta el buzón. Los reenviadores, alias, respuestas automáticas, filtros y cuotas se quedan en cPanel y no son visibles para tu cliente de IA."
+    "MCP Emails conecta el buzón. Los reenviadores, alias, respuestas automáticas, filtros y cuotas se quedan en cPanel y no son visibles para tu cliente de IA."
   ],
   "faq": [
     {
       "q": "¿Funciona Claude con el correo de cPanel?",
-      "a": "No directamente. Claude no tiene un conector integrado para servidores de correo cPanel. Conectar un servidor MCP como mcpemails al buzón por IMAP le da a Claude acceso para leer, buscar, enviar, responder, programar y organizar, con las mismas credenciales que usaría un cliente de correo de escritorio, y la misma conexión funciona también desde Cursor y ChatGPT."
+      "a": "No directamente. Claude no tiene un conector integrado para servidores de correo cPanel. Conectar un servidor MCP como MCP Emails al buzón por IMAP le da a Claude acceso para leer, buscar, enviar, responder, programar y organizar, con las mismas credenciales que usaría un cliente de correo de escritorio, y la misma conexión funciona también desde Cursor y ChatGPT."
     },
     {
       "q": "¿Cuáles son los ajustes IMAP y SMTP de cPanel?",

@@ -23,20 +23,20 @@
     "meta0": "1 个收件箱永久免费",
     "meta1": "用 Google 应用专用密码连接",
     "meta2": "邮件实时获取，绝不存储",
-    "answer": "Claude 无法自行访问 Gmail。mcpemails 是位于两者之间的托管 MCP 服务器：你只需创建一次 Google 应用专用密码，把一个 URL 粘贴到你的 MCP 客户端，Claude、Cursor 或 ChatGPT 就能读取、搜索、发送、回复和定时你的 Gmail 邮件。1 个收件箱永久免费。"
+    "answer": "Claude 无法自行访问 Gmail。MCP Emails 是位于两者之间的托管 MCP 服务器：你只需创建一次 Google 应用专用密码，把一个 URL 粘贴到你的 MCP 客户端，Claude、Cursor 或 ChatGPT 就能读取、搜索、发送、回复和定时你的 Gmail 邮件。1 个收件箱永久免费。"
   },
   "method": {
     "title": "Gmail 如何连接：Google 应用专用密码",
-    "body": "Gmail 使用 <b>Google 应用专用密码</b>通过 IMAP 和 SMTP 连接。Google 只为<b>已开启两步验证</b>的账户提供应用专用密码，所以请先开启两步验证，然后在 <b>myaccount.google.com/apppasswords</b> 创建一个。它由 16 个小写字母组成，分为四组，用来代替你的普通 Google 密码粘贴进去，普通密码是无法使用的。你可以随时在同一个 Google 页面撤销它，或者在 mcpemails 中删除该收件箱。"
+    "body": "Gmail 使用 <b>Google 应用专用密码</b>通过 IMAP 和 SMTP 连接。Google 只为<b>已开启两步验证</b>的账户提供应用专用密码，所以请先开启两步验证，然后在 <b>myaccount.google.com/apppasswords</b> 创建一个。它由 16 个小写字母组成，分为四组，用来代替你的普通 Google 密码粘贴进去，普通密码是无法使用的。你可以随时在同一个 Google 页面撤销它，或者在 MCP Emails 中删除该收件箱。"
   },
   "setup": [
     {
       "h": "创建免费账户",
-      "p": "注册 mcpemails，无需信用卡。免费套餐可永久连接一个收件箱。"
+      "p": "注册 MCP Emails，无需信用卡。免费套餐可永久连接一个收件箱。"
     },
     {
       "h": "创建 Google 应用专用密码",
-      "p": "如果你的 Google 账户尚未开启两步验证，请先开启，然后前往 myaccount.google.com/apppasswords 创建一个。把这 16 个字符连同你的完整 Gmail 地址一起粘贴到 mcpemails。代码中的空格无关紧要。"
+      "p": "如果你的 Google 账户尚未开启两步验证，请先开启，然后前往 myaccount.google.com/apppasswords 创建一个。把这 16 个字符连同你的完整 Gmail 地址一起粘贴到 MCP Emails。代码中的空格无关紧要。"
     },
     {
       "h": "将 MCP URL 粘贴到你的 AI",
@@ -46,7 +46,7 @@
   "gotchas": [
     {
       "h": "Google 发布了自己的 Gmail MCP 服务器，如果只用 Gmail，那是更短的路径",
-      "p": "Google 宣布为其服务提供官方 MCP 支持，其中包括一个覆盖 Gmail 以及 Drive、Calendar 和 Chat 的 Workspace MCP 服务器。我们不会假装没有这回事。如果 Gmail 是你唯一想让助手接触的邮箱，而且你的客户端能连接 Google 的服务器，那就用它。把 mcpemails 指向 Gmail 的理由在于，同一台服务器还能容纳你的 iCloud、Fastmail、Zoho、Yahoo 或公司 IMAP 邮箱，通过<b>一个</b> MCP URL 提供所有这些邮箱，并且在 Claude、Cursor 和 ChatGPT 中表现一致。它要避免的，正是每家服务商一个连接器、各自有各自的认证和工具名称的局面。"
+      "p": "Google 宣布为其服务提供官方 MCP 支持，其中包括一个覆盖 Gmail 以及 Drive、Calendar 和 Chat 的 Workspace MCP 服务器。我们不会假装没有这回事。如果 Gmail 是你唯一想让助手接触的邮箱，而且你的客户端能连接 Google 的服务器，那就用它。把 MCP Emails 指向 Gmail 的理由在于，同一台服务器还能容纳你的 iCloud、Fastmail、Zoho、Yahoo 或公司 IMAP 邮箱，通过<b>一个</b> MCP URL 提供所有这些邮箱，并且在 Claude、Cursor 和 ChatGPT 中表现一致。它要避免的，正是每家服务商一个连接器、各自有各自的认证和工具名称的局面。"
     },
     {
       "h": "从其他地址发信需要先验证发件地址",
@@ -62,18 +62,18 @@
     }
   ],
   "limits": [
-    "mcpemails 只访问邮件：应用专用密码仅用于 IMAP 和 SMTP。不会访问 Drive、Calendar、Chat 和 Docs。",
+    "MCP Emails 只访问邮件：应用专用密码仅用于 IMAP 和 SMTP。不会访问 Drive、Calendar、Chat 和 Docs。",
     "Google Workspace 管理员可以在 Admin console 中为整个域关闭应用专用密码。只有管理员能更改这一决定。",
     "删除会把邮件移入 Gmail 的 Trash。永久删除遵循 Gmail 的 IMAP 设置：默认只会移除邮件被删除时所在的标签，从 Trash 中清除才会彻底删除。"
   ],
   "faq": [
     {
       "q": "Claude 能用于 Gmail 吗？",
-      "a": "能，只要在两者之间有一个替 Claude 与 Gmail 通信的东西。mcpemails 就是其中之一：你创建一个 Google 应用专用密码，粘贴一个 MCP URL，Claude 就能读取、搜索、发送、回复、转发和定时邮件。Google 也发布了覆盖 Gmail 的官方 Workspace MCP 服务器。实际的区别在于，mcpemails 不限于 Google，所以同一个 URL 也能为你的其他邮箱服务。"
+      "a": "能，只要在两者之间有一个替 Claude 与 Gmail 通信的东西。MCP Emails 就是其中之一：你创建一个 Google 应用专用密码，粘贴一个 MCP URL，Claude 就能读取、搜索、发送、回复、转发和定时邮件。Google 也发布了覆盖 Gmail 的官方 Workspace MCP 服务器。实际的区别在于，MCP Emails 不限于 Google，所以同一个 URL 也能为你的其他邮箱服务。"
     },
     {
       "q": "Google 有官方的 Gmail MCP 服务器吗？",
-      "a": "有。Google 宣布为其服务提供官方 MCP 支持，其中的 Workspace MCP 服务器涵盖 Gmail、Drive、Calendar 和 Chat。如果只涉及 Gmail 一个邮箱，而且你的客户端支持它，就用它。如果你想在一个 MCP URL 后面接入多家服务商，或者希望在 Claude、Cursor 和 ChatGPT 中获得完全一致的表现，就选择 mcpemails 这样的第三方服务器。"
+      "a": "有。Google 宣布为其服务提供官方 MCP 支持，其中的 Workspace MCP 服务器涵盖 Gmail、Drive、Calendar 和 Chat。如果只涉及 Gmail 一个邮箱，而且你的客户端支持它，就用它。如果你想在一个 MCP URL 后面接入多家服务商，或者希望在 Claude、Cursor 和 ChatGPT 中获得完全一致的表现，就选择 MCP Emails 这样的第三方服务器。"
     },
     {
       "q": "Gmail 需要应用专用密码吗？",
@@ -89,7 +89,7 @@
     },
     {
       "q": "我的 Gmail 邮件会存储在你们的服务器上吗？",
-      "a": "不会。每次请求都从 Google 实时获取邮件，并交给你的 AI 客户端。你的应用专用密码静态加密存储，邮件正文不会保留。在你的 Google 账户中撤销应用专用密码，或在 mcpemails 中删除该收件箱，都会立即终止连接。"
+      "a": "不会。每次请求都从 Google 实时获取邮件，并交给你的 AI 客户端。你的应用专用密码静态加密存储，邮件正文不会保留。在你的 Google 账户中撤销应用专用密码，或在 MCP Emails 中删除该收件箱，都会立即终止连接。"
     }
   ],
   "ctaBand": {

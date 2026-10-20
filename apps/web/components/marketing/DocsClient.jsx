@@ -43,7 +43,7 @@ mcpe_live_AbCdEfGhIjKlMnOpQrStUvWxYz123456`,
     id: 'firstcall',
     code: `# The agent calls inbox_list first, so no hardcoded UUIDs.
 # System prompt (optional, for multi-inbox setups):
-You have access to email via MCPEmails.
+You have access to email via MCP Emails.
 Start by calling inbox_list to discover available inboxes.`,
     cta: null,
   },
@@ -59,7 +59,7 @@ const CLIENT_SNIPPETS = {
 #
 #        https://mcpemails.com/api/mcp
 #
-#   3. Click Connect and sign in with your mcpemails account.
+#   3. Click Connect and sign in with your MCP Emails account.
 #   4. Every tool your approved scopes allow is live immediately.
 #
 # Claude Desktop and Cursor follow the same OAuth flow when

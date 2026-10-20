@@ -19,7 +19,7 @@
     "titleLine1": "Connectez la messagerie Comcast Xfinity",
     "titleLine2": "à Claude, Cursor, tout client MCP",
     "lead": "Donnez à votre agent IA une vraie boîte comcast.net. Lisez, recherchez, envoyez, répondez, planifiez et organisez le courrier en IMAP avec votre Xfinity ID, dans tous les clients MCP et pas un seul.",
-    "answer": "Claude ne peut pas accéder seul à une boîte Comcast Xfinity. mcpemails est un serveur MCP hébergé qui s'y connecte en IMAP sur imap.comcast.net, port 993, avec votre adresse comcast.net complète et le mot de passe de votre Xfinity ID. Xfinity bloque tous les clients de messagerie externes tant que vous n'avez pas coché Third Party Access Security dans les paramètres d'Xfinity Email : activez-le d'abord, sinon même le bon mot de passe est refusé. La configuration prend quelques minutes et une boîte est gratuite, pour toujours.",
+    "answer": "Claude ne peut pas accéder seul à une boîte Comcast Xfinity. MCP Emails est un serveur MCP hébergé qui s'y connecte en IMAP sur imap.comcast.net, port 993, avec votre adresse comcast.net complète et le mot de passe de votre Xfinity ID. Xfinity bloque tous les clients de messagerie externes tant que vous n'avez pas coché Third Party Access Security dans les paramètres d'Xfinity Email : activez-le d'abord, sinon même le bon mot de passe est refusé. La configuration prend quelques minutes et une boîte est gratuite, pour toujours.",
     "meta0": "1 boîte gratuite, pour toujours",
     "meta1": "L'accès tiers doit être activé",
     "meta2": "E-mails récupérés en direct, jamais stockés"
@@ -30,7 +30,7 @@
   },
   "setup": [
     {
-      "h": "Créez un compte mcpemails gratuit",
+      "h": "Créez un compte MCP Emails gratuit",
       "p": "Inscrivez-vous sur mcpemails.com. L'offre gratuite connecte une boîte et ne demande pas de carte."
     },
     {
@@ -38,7 +38,7 @@
       "p": "Connectez-vous à Xfinity Email sur connect.xfinity.com, cliquez sur l'icône d'engrenage, choisissez <b>Settings</b> (Paramètres), puis <b>Security</b> (Sécurité), et cochez la case sous <b>Third Party Access Security</b>. Xfinity vous avertit alors des risques liés aux clients externes. Rien d'autre sur cette page ne fonctionne tant que cette case n'est pas cochée."
     },
     {
-      "h": "Saisissez votre Xfinity ID et votre mot de passe dans mcpemails",
+      "h": "Saisissez votre Xfinity ID et votre mot de passe dans MCP Emails",
       "p": "Choisissez IMAP / SMTP, saisissez votre adresse <code>@comcast.net</code> complète et le mot de passe de cet Xfinity ID. Les serveurs Comcast sont préremplis. Si votre compte utilise la validation en deux étapes, terminez-la d'abord dans le webmail pour que la connexion ne reste pas en attente."
     },
     {
@@ -57,11 +57,11 @@
     },
     {
       "h": "Ni SPECIAL-USE ni MOVE sur le frontal Comcast",
-      "p": "Le frontal Dovecot d'imap.comcast.net n'annonce pas SPECIAL-USE : un client ne peut donc pas demander quel dossier correspond aux Envoyés et lequel à la Corbeille, et doit les identifier par leur nom. Il omet aussi MOVE et UIDPLUS : classer un message s'effectue par COPY, puis STORE de l'indicateur de suppression, puis EXPUNGE, et le serveur ne communique pas l'identifiant de la nouvelle copie. mcpemails fait tout cela pour vous ; c'est pourquoi un déplacement chez Comcast n'est pas une opération atomique unique."
+      "p": "Le frontal Dovecot d'imap.comcast.net n'annonce pas SPECIAL-USE : un client ne peut donc pas demander quel dossier correspond aux Envoyés et lequel à la Corbeille, et doit les identifier par leur nom. Il omet aussi MOVE et UIDPLUS : classer un message s'effectue par COPY, puis STORE de l'indicateur de suppression, puis EXPUNGE, et le serveur ne communique pas l'identifiant de la nouvelle copie. MCP Emails fait tout cela pour vous ; c'est pourquoi un déplacement chez Comcast n'est pas une opération atomique unique."
     },
     {
       "h": "Le serveur annonce des mécanismes OAuth que vous ne pouvez pas utiliser",
-      "p": "imap.comcast.net propose OAUTHBEARER et XOAUTH2 à côté de PLAIN et LOGIN. Ces mécanismes OAuth sont réservés aux partenaires de Comcast et non à quiconque en fait la demande, et il n'existe aucune page en libre-service où un client pourrait obtenir un jeton. L'authentification par mot de passe avec l'accès tiers activé est la voie qui vous est ouverte, et c'est celle qu'utilise mcpemails."
+      "p": "imap.comcast.net propose OAUTHBEARER et XOAUTH2 à côté de PLAIN et LOGIN. Ces mécanismes OAuth sont réservés aux partenaires de Comcast et non à quiconque en fait la demande, et il n'existe aucune page en libre-service où un client pourrait obtenir un jeton. L'authentification par mot de passe avec l'accès tiers activé est la voie qui vous est ouverte, et c'est celle qu'utilise MCP Emails."
     }
   ],
   "limits": [
@@ -71,7 +71,7 @@
   "faq": [
     {
       "q": "Claude fonctionne-t-il avec l'e-mail Comcast Xfinity ?",
-      "a": "Pas directement. Claude n'a pas de connecteur Comcast intégré. Connecter un serveur MCP comme mcpemails à la boîte en IMAP donne à Claude un accès en lecture, recherche, envoi, réponse, planification et organisation à votre courrier comcast.net, et la même connexion fonctionne dans Cursor, ChatGPT et d'autres clients MCP."
+      "a": "Pas directement. Claude n'a pas de connecteur Comcast intégré. Connecter un serveur MCP comme MCP Emails à la boîte en IMAP donne à Claude un accès en lecture, recherche, envoi, réponse, planification et organisation à votre courrier comcast.net, et la même connexion fonctionne dans Cursor, ChatGPT et d'autres clients MCP."
     },
     {
       "q": "Quels sont les réglages IMAP et SMTP de Comcast ?",

@@ -10,7 +10,7 @@ export async function generateMetadata({ params }) {
   const title = t.has('meta.title') ? t('meta.title') : 'Terms of Service';
   const description = t.has('meta.description')
     ? t('meta.description')
-    : 'The terms governing your use of MCPEmails: acceptable use, liability, account termination, and governing law.';
+    : 'The terms governing your use of MCP Emails: acceptable use, liability, account termination, and governing law.';
   return {
     title,
     description,
@@ -18,14 +18,14 @@ export async function generateMetadata({ params }) {
     openGraph: {
       type: 'website',
       url: localePath(locale, '/terms'),
-      title: `${title} · mcpemails`,
+      title: `${title} · MCP Emails`,
       description,
       locale: OG_LOCALE[locale],
       images: [OG_IMAGE],
     },
     twitter: {
       card: 'summary_large_image',
-      title: `${title} · mcpemails`,
+      title: `${title} · MCP Emails`,
       description,
       images: [OG_IMAGE.url],
     },
@@ -39,10 +39,10 @@ const CONTACT_EMAIL = 'legal@mcpemails.com';
 /* Service-provider identification required by the Norwegian ehandelsloven § 8:
    legal name, geographic address, the register we are enrolled in, and our
    organisation number. These values must match our entry in Foretaksregisteret
-   (brreg.no), so do not edit them without checking there first. "MCPEmails" is
+   (brreg.no), so do not edit them without checking there first. "MCP Emails" is
    only the trading name of the service; the contracting legal person is
    Albretsen AS (aksjeselskap, registered 2026-10-19), which takes over
-   MCPEmails from the founder's former sole proprietorship, Albretsen
+   MCP Emails from the founder's former sole proprietorship, Albretsen
    Consulting (926 646 753), on 2026-11-01. */
 const COMPANY_NAME = 'Albretsen AS';
 const COMPANY_OWNER = 'Asgeir Albretsen';

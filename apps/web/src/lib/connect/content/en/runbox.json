@@ -21,7 +21,7 @@
     "titleLine1": "Connect Runbox to Claude,",
     "titleLine2": "Cursor, ChatGPT, any MCP client",
     "lead": "Give your AI agent a real Runbox inbox. Read, search, send, reply, schedule and organize mail over IMAP, in every MCP client rather than one, with the App Password rule and the silent authentication failure both covered.",
-    "answer": "Claude cannot reach Runbox on its own. mcpemails is a hosted MCP server that connects it over IMAP at mail.runbox.com on port 993, and SMTP at the same host on port 465, so Claude, Cursor or any MCP client can read, search, send and organize that mail. Log in with your primary Runbox address, never an alias. If two-factor authentication is enabled on the account, your normal Runbox password no longer authenticates IMAP, POP, SMTP or CalDAV at all and you must use an App Password created in your Runbox account instead. One inbox is free, forever.",
+    "answer": "Claude cannot reach Runbox on its own. MCP Emails is a hosted MCP server that connects it over IMAP at mail.runbox.com on port 993, and SMTP at the same host on port 465, so Claude, Cursor or any MCP client can read, search, send and organize that mail. Log in with your primary Runbox address, never an alias. If two-factor authentication is enabled on the account, your normal Runbox password no longer authenticates IMAP, POP, SMTP or CalDAV at all and you must use an App Password created in your Runbox account instead. One inbox is free, forever.",
     "meta0": "1 inbox free, forever",
     "meta1": "App Password once 2FA is on",
     "meta2": "Email fetched live, never stored"
@@ -32,7 +32,7 @@
   },
   "setup": [
     {
-      "h": "Create your free mcpemails account",
+      "h": "Create your free MCP Emails account",
       "p": "Sign up at mcpemails.com. The free plan connects one inbox, forever, with no card. You get an MCP URL and a key at the end of it."
     },
     {
@@ -40,7 +40,7 @@
       "p": "Sign in to Runbox on the web and open the App Passwords screen in your account settings. Name it for this connection, submit, and copy the value. Do this whether or not you use two-factor authentication: an App Password can be revoked on its own, and Runbox blocks App Passwords from webmail login, so the credential stored here cannot be used to sign in and change your account."
     },
     {
-      "h": "Add the mailbox in mcpemails with your primary address",
+      "h": "Add the mailbox in MCP Emails with your primary address",
       "p": "Choose IMAP / SMTP. Enter your <b>primary</b> Runbox address as the username, which is the address shown at the top right of Runbox webmail when you are logged in, and paste the App Password. The host is prefilled as <code>mail.runbox.com</code> for both directions and was verified from a live TLS connection."
     },
     {
@@ -51,7 +51,7 @@
   "gotchas": [
     {
       "h": "Runbox does not advertise SASL-IR, and most client libraries assume it",
-      "p": "The server answers with a bare <code>* OK IMAP4 ready</code> and offers <code>AUTH=PLAIN</code> with no SASL-IR capability, so it rejects the one-step authentication that sends credentials along with the AUTHENTICATE command. A client that assumes SASL-IR receives a naked BAD with no explanation, and every layer above it reports that as a login failure, so you go looking for a password problem that does not exist. mcpemails detects the BAD and falls back to the two-step exchange, so the connection completes here. It is why a lot of otherwise sound IMAP tooling fails against Runbox while working everywhere else."
+      "p": "The server answers with a bare <code>* OK IMAP4 ready</code> and offers <code>AUTH=PLAIN</code> with no SASL-IR capability, so it rejects the one-step authentication that sends credentials along with the AUTHENTICATE command. A client that assumes SASL-IR receives a naked BAD with no explanation, and every layer above it reports that as a login failure, so you go looking for a password problem that does not exist. MCP Emails detects the BAD and falls back to the two-step exchange, so the connection completes here. It is why a lot of otherwise sound IMAP tooling fails against Runbox while working everywhere else."
     },
     {
       "h": "Turning on 2FA breaks every protocol at once, not just mail",
@@ -67,14 +67,14 @@
     }
   ],
   "limits": [
-    "Connecting a Runbox mailbox to an AI client means that AI provider reads the content of the messages it works with. mcpemails fetches mail live from mail.runbox.com for each request and does not store message bodies, and credentials are encrypted at rest, but the text still reaches Claude, Cursor or whichever client you connect. Runbox's Norwegian jurisdiction and its privacy commitments cover Runbox. They do not extend to an AI vendor you attach to the mailbox yourself.",
+    "Connecting a Runbox mailbox to an AI client means that AI provider reads the content of the messages it works with. MCP Emails fetches mail live from mail.runbox.com for each request and does not store message bodies, and credentials are encrypted at rest, but the text still reaches Claude, Cursor or whichever client you connect. Runbox's Norwegian jurisdiction and its privacy commitments cover Runbox. They do not extend to an AI vendor you attach to the mailbox yourself.",
     "The server does not advertise SPECIAL-USE, so nothing on the wire says which folder is Sent, Drafts, Trash or Spam and the roles are inferred from names. If you renamed folders in Runbox 7, or have more than one Sent folder from an old import, name the folder explicitly when you ask an agent to file something.",
     "Because MOVE is absent, a move is not atomic. If a connection drops partway through, a message can briefly exist in both the source and destination folders."
   ],
   "faq": [
     {
       "q": "Does Claude work with Runbox?",
-      "a": "Not directly. Claude has no built-in Runbox connector. Connecting an MCP server such as mcpemails to your Runbox mailbox over IMAP gives Claude read, search, send, reply, schedule and organize access to it, and the same connection then works in Cursor, ChatGPT and other MCP clients without setting anything up again."
+      "a": "Not directly. Claude has no built-in Runbox connector. Connecting an MCP server such as MCP Emails to your Runbox mailbox over IMAP gives Claude read, search, send, reply, schedule and organize access to it, and the same connection then works in Cursor, ChatGPT and other MCP clients without setting anything up again."
     },
     {
       "q": "What are the Runbox IMAP and SMTP settings?",
@@ -86,7 +86,7 @@
     },
     {
       "q": "Why does my Runbox login fail with no useful error?",
-      "a": "Usually because the client assumed the SASL-IR capability, which Runbox does not advertise. The server replies with a bare BAD to the one-step authentication attempt and the client reports it as a credential failure. mcpemails retries with the two-step exchange, so the connection works here. The other common cause is entering an alias rather than your primary address."
+      "a": "Usually because the client assumed the SASL-IR capability, which Runbox does not advertise. The server replies with a bare BAD to the one-step authentication attempt and the client reports it as a credential failure. MCP Emails retries with the two-step exchange, so the connection works here. The other common cause is entering an alias rather than your primary address."
     },
     {
       "q": "Can I log in with a Runbox alias address?",

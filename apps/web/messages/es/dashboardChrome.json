@@ -91,7 +91,7 @@
     "densityLabel": "Densidad",
     "densityCompact": "Compacta",
     "densitySpacious": "Espaciosa",
-    "firstRunTitle": "Te damos la bienvenida a mcpemails",
+    "firstRunTitle": "Te damos la bienvenida a MCP Emails",
     "firstRunBody": "Conecta tu primera bandeja de entrada para obtener un endpoint MCP funcional en menos de un minuto.",
     "firstRunCta": "Conectar bandeja de entrada",
     "inviteSentNotDelivered": "Se creó la invitación para {email}, pero no se pudo enviar el correo. Usa Reenviar en la invitación pendiente.",

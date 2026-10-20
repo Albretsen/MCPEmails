@@ -18,8 +18,8 @@
     "eyebrow": "freenet Mail + IA",
     "titleLine1": "Connectez votre boîte freenet.de",
     "titleLine2": "à Claude, Cursor, tout client MCP",
-    "lead": "freenet prend en charge IMAP mais le cache derrière une option qu'il préférerait que vous ne touchiez pas. Activez-la une fois et mcpemails connecte la boîte pour que votre agent IA puisse lire, rechercher, envoyer, répondre et classer ce courrier.",
-    "answer": "Claude ne peut pas accéder seul à une boîte freenet.de. mcpemails est un serveur MCP hébergé qui la connecte via IMAP sur mx.freenet.de, port 993, en s'authentifiant avec votre adresse complète et votre mot de passe freenet Mail. La seule chose à faire d'abord est de cocher POP3, IMAP und SMTP aktivieren dans les réglages de la boîte, car freenet conditionne tout accès client à cette case et recommande de la laisser décochée. Une fois l'option activée, Claude, Cursor ou tout autre client MCP peut lire, rechercher, envoyer et organiser ce courrier, et une boîte est gratuite, pour toujours.",
+    "lead": "freenet prend en charge IMAP mais le cache derrière une option qu'il préférerait que vous ne touchiez pas. Activez-la une fois et MCP Emails connecte la boîte pour que votre agent IA puisse lire, rechercher, envoyer, répondre et classer ce courrier.",
+    "answer": "Claude ne peut pas accéder seul à une boîte freenet.de. MCP Emails est un serveur MCP hébergé qui la connecte via IMAP sur mx.freenet.de, port 993, en s'authentifiant avec votre adresse complète et votre mot de passe freenet Mail. La seule chose à faire d'abord est de cocher POP3, IMAP und SMTP aktivieren dans les réglages de la boîte, car freenet conditionne tout accès client à cette case et recommande de la laisser décochée. Une fois l'option activée, Claude, Cursor ou tout autre client MCP peut lire, rechercher, envoyer et organiser ce courrier, et une boîte est gratuite, pour toujours.",
     "meta0": "1 boîte gratuite, pour toujours",
     "meta1": "L'accès client doit être activé",
     "meta2": "E-mails récupérés en direct, jamais stockés"
@@ -30,7 +30,7 @@
   },
   "setup": [
     {
-      "h": "Créez un compte mcpemails gratuit",
+      "h": "Créez un compte MCP Emails gratuit",
       "p": "Inscrivez-vous sur mcpemails.com. L'offre gratuite connecte une boîte et ne demande pas de carte bancaire."
     },
     {
@@ -39,7 +39,7 @@
     },
     {
       "h": "Saisissez l'adresse et le mot de passe freenet Mail",
-      "p": "Dans mcpemails, choisissez IMAP / SMTP et saisissez l'adresse complète sous la forme <code>name@freenet.de</code> avec le mot de passe de cette boîte. Les deux sens utilisent <code>mx.freenet.de</code>, prérempli ici et vérifié par une connexion TLS réelle."
+      "p": "Dans MCP Emails, choisissez IMAP / SMTP et saisissez l'adresse complète sous la forme <code>name@freenet.de</code> avec le mot de passe de cette boîte. Les deux sens utilisent <code>mx.freenet.de</code>, prérempli ici et vérifié par une connexion TLS réelle."
     },
     {
       "h": "Collez l'URL MCP dans votre IA",
@@ -71,7 +71,7 @@
   "faq": [
     {
       "q": "Claude fonctionne-t-il avec l'e-mail freenet.de ?",
-      "a": "Pas directement. Claude n'a pas de connecteur freenet intégré. Connecter un serveur MCP comme mcpemails à la boîte via IMAP donne à Claude un accès en lecture, recherche, envoi, réponse, planification et organisation à votre courrier freenet.de, et la même connexion fonctionne dans Cursor, ChatGPT et d'autres clients MCP. L'accès client doit d'abord être activé dans la boîte."
+      "a": "Pas directement. Claude n'a pas de connecteur freenet intégré. Connecter un serveur MCP comme MCP Emails à la boîte via IMAP donne à Claude un accès en lecture, recherche, envoi, réponse, planification et organisation à votre courrier freenet.de, et la même connexion fonctionne dans Cursor, ChatGPT et d'autres clients MCP. L'accès client doit d'abord être activé dans la boîte."
     },
     {
       "q": "Quel serveur freenet utilise-t-il pour l'IMAP et le SMTP ?",

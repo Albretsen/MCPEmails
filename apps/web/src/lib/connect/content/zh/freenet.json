@@ -18,8 +18,8 @@
     "eyebrow": "freenet Mail + AI",
     "titleLine1": "将你的 freenet.de 收件箱连接到",
     "titleLine2": "Claude、Cursor 及任意 MCP 客户端",
-    "lead": "freenet 支持 IMAP，但把它放在一个它更希望你别碰的开关后面。打开一次，mcpemails 就能连接这个邮箱，让你的 AI 代理读取、搜索、发送、回复和归档邮件。",
-    "answer": "Claude 无法自行访问 freenet.de 邮箱。mcpemails 是一个托管 MCP 服务器，通过 mx.freenet.de 端口 993 的 IMAP 与之连接，使用你的完整地址和 freenet Mail 密码进行认证。你必须先做的一件事，是在邮箱设置中勾选 POP3, IMAP und SMTP aktivieren，因为 freenet 把所有客户端访问都放在这个复选框后面，并建议保持关闭。开启后，Claude、Cursor 或任何其他 MCP 客户端都能读取、搜索、发送和整理这些邮件，1 个收件箱永久免费。",
+    "lead": "freenet 支持 IMAP，但把它放在一个它更希望你别碰的开关后面。打开一次，MCP Emails 就能连接这个邮箱，让你的 AI 代理读取、搜索、发送、回复和归档邮件。",
+    "answer": "Claude 无法自行访问 freenet.de 邮箱。MCP Emails 是一个托管 MCP 服务器，通过 mx.freenet.de 端口 993 的 IMAP 与之连接，使用你的完整地址和 freenet Mail 密码进行认证。你必须先做的一件事，是在邮箱设置中勾选 POP3, IMAP und SMTP aktivieren，因为 freenet 把所有客户端访问都放在这个复选框后面，并建议保持关闭。开启后，Claude、Cursor 或任何其他 MCP 客户端都能读取、搜索、发送和整理这些邮件，1 个收件箱永久免费。",
     "meta0": "1 个收件箱永久免费",
     "meta1": "必须开启客户端访问",
     "meta2": "邮件实时获取，绝不存储"
@@ -30,7 +30,7 @@
   },
   "setup": [
     {
-      "h": "创建免费的 mcpemails 账户",
+      "h": "创建免费的 MCP Emails 账户",
       "p": "在 mcpemails.com 注册。免费套餐可连接一个收件箱，无需信用卡。"
     },
     {
@@ -39,7 +39,7 @@
     },
     {
       "h": "输入地址和 freenet Mail 密码",
-      "p": "在 mcpemails 中选择 IMAP / SMTP，以 <code>name@freenet.de</code> 的形式输入完整地址和该邮箱的密码。收发两个方向都使用 <code>mx.freenet.de</code>，此处已预填，并经实时 TLS 连接验证。"
+      "p": "在 MCP Emails 中选择 IMAP / SMTP，以 <code>name@freenet.de</code> 的形式输入完整地址和该邮箱的密码。收发两个方向都使用 <code>mx.freenet.de</code>，此处已预填，并经实时 TLS 连接验证。"
     },
     {
       "h": "将 MCP URL 粘贴到你的 AI",
@@ -71,7 +71,7 @@
   "faq": [
     {
       "q": "Claude 能用于 freenet.de 邮箱吗？",
-      "a": "不能直接使用。Claude 没有内置的 freenet 连接器。通过 IMAP 将 mcpemails 这样的 MCP 服务器连接到邮箱后，Claude 就能读取、搜索、发送、回复、定时和整理你的 freenet.de 邮件，而且同一个连接也可在 Cursor、ChatGPT 和其他 MCP 客户端中使用。必须先在邮箱中启用客户端访问。"
+      "a": "不能直接使用。Claude 没有内置的 freenet 连接器。通过 IMAP 将 MCP Emails 这样的 MCP 服务器连接到邮箱后，Claude 就能读取、搜索、发送、回复、定时和整理你的 freenet.de 邮件，而且同一个连接也可在 Cursor、ChatGPT 和其他 MCP 客户端中使用。必须先在邮箱中启用客户端访问。"
     },
     {
       "q": "freenet 的 IMAP 和 SMTP 用哪个服务器？",

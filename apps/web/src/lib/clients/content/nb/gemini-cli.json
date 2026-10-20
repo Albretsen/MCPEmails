@@ -71,7 +71,7 @@
     },
     {
       "q": "Er dette det samme som Gmail-MCP-serveren Google publiserer?",
-      "a": "Nei. Google publiserer en Workspace-MCP-server som dekker Gmail sammen med de andre tjenestene deres, og for bare Gmail i en arbeidsflyt som kun bruker Google er det den korteste veien. mcpemails finnes for tilfellene der ikke alle postkassene er hos Google, og der den samme URL-en også må fungere i Claude, Cursor og ChatGPT."
+      "a": "Nei. Google publiserer en Workspace-MCP-server som dekker Gmail sammen med de andre tjenestene deres, og for bare Gmail i en arbeidsflyt som kun bruker Google er det den korteste veien. MCP Emails finnes for tilfellene der ikke alle postkassene er hos Google, og der den samme URL-en også må fungere i Claude, Cursor og ChatGPT."
     },
     {
       "q": "Hvilke postkasser kan Gemini CLI nå på denne måten?",

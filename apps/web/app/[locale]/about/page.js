@@ -24,14 +24,14 @@ export async function generateMetadata({ params }) {
     openGraph: {
       type: 'website',
       url: localePath(locale, '/about'),
-      title: `${title} · mcpemails`,
+      title: `${title} · MCP Emails`,
       description,
       locale: OG_LOCALE[locale],
       images: [OG_IMAGE],
     },
     twitter: {
       card: 'summary_large_image',
-      title: `${title} · mcpemails`,
+      title: `${title} · MCP Emails`,
       description,
       images: [OG_IMAGE.url],
     },
@@ -96,7 +96,7 @@ function aboutJsonLd(locale, { title, description }) {
       {
         '@type': 'Organization',
         '@id': orgId,
-        name: 'mcpemails',
+        name: 'MCP Emails',
         legalName: 'Albretsen AS',
         url: APP_URL,
         logo: `${APP_URL}/favicon.svg`,

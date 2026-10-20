@@ -2,10 +2,10 @@ const translation = {
   title: 'Claude IMAP-kobling: Koble en hvilken som helst IMAP-innboks til Claude',
   description:
     'Sett opp en Claude IMAP-kobling med IMAP/SMTP, app-passord og TLS. Få sikkerhetsråd, forstå begrensninger og løs vanlige tilkoblingsfeil.',
-  coverAlt: 'Claude koblet til en IMAP- og SMTP-postkasse gjennom MCPEmails',
+  coverAlt: 'Claude koblet til en IMAP- og SMTP-postkasse gjennom MCP Emails',
   content: `En **Claude IMAP-kobling** lar Claude arbeide med postkasser som ikke har en innebygd Claude-integrasjon: Fastmail, iCloud Mail, Yahoo, Zoho, Yandex, en postkasse på ditt eget domene eller nesten enhver leverandør som tilbyr IMAP og SMTP.
 
-Claude logger ikke inn på e-postserveren eller håndterer postkassepassordet ditt direkte. MCPEmails står mellom dem. Tjenesten kobler seg til leverandøren over IMAP for innkommende e-post og SMTP for utgående e-post, og gir deretter Claude et enhetlig sett med [Model Context Protocol](https://modelcontextprotocol.io)-verktøy. Dette skillet er viktig: IMAP og SMTP håndterer postkassen, mens MCP gir Claude trygge, strukturerte handlinger som å lese, søke, svare og flytte.
+Claude logger ikke inn på e-postserveren eller håndterer postkassepassordet ditt direkte. MCP Emails står mellom dem. Tjenesten kobler seg til leverandøren over IMAP for innkommende e-post og SMTP for utgående e-post, og gir deretter Claude et enhetlig sett med [Model Context Protocol](https://modelcontextprotocol.io)-verktøy. Dette skillet er viktig: IMAP og SMTP håndterer postkassen, mens MCP gir Claude trygge, strukturerte handlinger som å lese, søke, svare og flytte.
 
 Denne veiledningen dekker den generiske koblingen og Claude-delen av oppsettet. Hvis du bruker iCloud eller Fastmail og vil se de nøyaktige skjermbildene for app-passord og servernavnene deres, kan du ha den [leverandørspesifikke veiledningen for iCloud, Fastmail og IMAP](/blog/connect-icloud-fastmail-imap-to-claude) åpen ved siden av.
 
@@ -14,7 +14,7 @@ Denne veiledningen dekker den generiske koblingen og Claude-delen av oppsettet. 
 Tilkoblingen består av tre deler:
 
 1. **E-postleverandøren din** tilbyr IMAP for å lese og organisere meldinger, samt SMTP for å sende.
-2. **MCPEmails** oppbevarer e-postlegitimasjonen i kryptert form, kommuniserer med disse serverne og gjør svarene om til forutsigbare e-postverktøy.
+2. **MCP Emails** oppbevarer e-postlegitimasjonen i kryptert form, kommuniserer med disse serverne og gjør svarene om til forutsigbare e-postverktøy.
 3. **Claude** kobler seg til MCP-endepunktet og kaller bare verktøyene som tilgangene du godkjenner, tillater.
 
 Claude trenger derfor aldri et IMAP-bibliotek, en SMTP-konfigurasjon eller et passord i prompten. Når tilkoblingen er på plass, kan den bruke \`inbox_list\` til å finne postkassen, \`email_read\` til å liste, lese, søke eller hente vedlegg, \`email_compose\` til å sende, svare og videresende, og \`email_organize\` til å flytte, kopiere, flagge eller arkivere meldinger. Egne verktøy dekker mapper, utkast, planlegging, kontakter og sletting. Hele listen finner du i [verktøyreferansen](/docs#tools).
@@ -33,24 +33,24 @@ Ikke gjett servernavnene ut fra domenet dersom leverandøren publiserer innstill
 
 Bruk et **app-passord** når leverandøren støtter det. Det er atskilt fra hovedpassordet til kontoen og kan tilbakekalles uten å endre passordet du logger inn med. Leverandører krever ofte tofaktorautentisering før du kan opprette et. Noen krever også at du først aktiverer IMAP-tilgang i e-postinnstillingene.
 
-MCPEmails har forhåndsinnstillinger for [iCloud](/connect/icloud), [Yahoo](/connect/yahoo), [Zoho](/connect/zoho) og [Yandex](/connect/yandex), samt en egen app-passordflyt for [Fastmail](/connect/fastmail). Disse valgene fyller inn kjente verter og porter for deg. Velg **Generic IMAP** for en annen leverandør eller din egen e-postserver, og skriv inn verdiene selv. Se [oppsettsiden for generisk IMAP](/connect/imap).
+MCP Emails har forhåndsinnstillinger for [iCloud](/connect/icloud), [Yahoo](/connect/yahoo), [Zoho](/connect/zoho) og [Yandex](/connect/yandex), samt en egen app-passordflyt for [Fastmail](/connect/fastmail). Disse valgene fyller inn kjente verter og porter for deg. Velg **Generic IMAP** for en annen leverandør eller din egen e-postserver, og skriv inn verdiene selv. Se [oppsettsiden for generisk IMAP](/connect/imap).
 
 ## Steg 1: Koble til IMAP-/SMTP-postkassen
 
-1. [Opprett eller logg inn på MCPEmails-kontoen din](/signup), og åpne deretter **Dashboard → Inboxes → Connect Inbox**.
+1. [Opprett eller logg inn på MCP Emails-kontoen din](/signup), og åpne deretter **Dashboard → Inboxes → Connect Inbox**.
 2. Velg den navngitte leverandøren hvis den finnes. Ellers velger du **IMAP / SMTP**.
 3. Skriv inn e-postadressen og app-passordet. For den generiske koblingen oppgir du også IMAP-vert og -port, SMTP-vert og -port, samt et eget brukernavn hvis verten har gitt deg et.
-4. Lagre tilkoblingen. MCPEmails validerer legitimasjonen mot IMAP-serveren før innboksen lagres, slik at en avvist innlogging eller et utilgjengelig TLS-endepunkt feiler her i stedet for å dukke opp senere i Claude.
+4. Lagre tilkoblingen. MCP Emails validerer legitimasjonen mot IMAP-serveren før innboksen lagres, slik at en avvist innlogging eller et utilgjengelig TLS-endepunkt feiler her i stedet for å dukke opp senere i Claude.
 
-De vanlige sikre standardene er IMAP \`993\`, deretter SMTP \`465\` eller \`587\`. De kan ikke brukes om hverandre: bruk porten og sikkerhetsmodusen som leverandøren har dokumentert. MCPEmails behandler SMTP-port \`587\` som STARTTLS og andre konfigurerte SMTP-porter som implisitt TLS. Tilkoblinger uten TLS-støtte avvises.
+De vanlige sikre standardene er IMAP \`993\`, deretter SMTP \`465\` eller \`587\`. De kan ikke brukes om hverandre: bruk porten og sikkerhetsmodusen som leverandøren har dokumentert. MCP Emails behandler SMTP-port \`587\` som STARTTLS og andre konfigurerte SMTP-porter som implisitt TLS. Tilkoblinger uten TLS-støtte avvises.
 
-## Steg 2: Legg til MCPEmails som en Claude-kobling
+## Steg 2: Legg til MCP Emails som en Claude-kobling
 
-Når postkassen er tilkoblet, peker du Claude mot MCPEmails:
+Når postkassen er tilkoblet, peker du Claude mot MCP Emails:
 
 1. Åpne **Customize → Connectors** i claude.ai.
 2. Velg **Add connector** og skriv inn \`https://www.mcpemails.com/api/mcp\`.
-3. Velg **Connect**, logg inn på MCPEmails og godkjenn bare tillatelsene arbeidsflyten trenger.
+3. Velg **Connect**, logg inn på MCP Emails og godkjenn bare tillatelsene arbeidsflyten trenger.
 
 En oppsummeringsflyt trenger for eksempel lese- og søketilgang, men ikke sende- eller slettetilgang. En svarflyt trenger sendetilgang. Mappehåndtering og permanent sletting har egne tilganger, slik at du kan holde destruktive handlinger utilgjengelige til de faktisk er nyttige. Se [veiledningen for å koble Claude til e-post](/blog/connect-claude-to-email) for en mer detaljert gjennomgang på klientsiden.
 
@@ -74,13 +74,13 @@ Når tilkoblingen fungerer, kan Claude:
 - Opprette og administrere utkast, planlegge meldinger og søke i kontakter der verktøyet støtter handlingen.
 - Flytte e-post til papirkurven eller, med eksplisitt slettetillatelse og \`permanent: true\`, slette den permanent fra IMAP.
 
-Den siste funksjonen krever omtanke. Permanent IMAP-sletting omgår papirkurven og kan være ugjenkallelig. MCPEmails eksponerer sletting som et eget destruktivt verktøy, og MCP-klienten styrer bekreftelsesadferden, men du bør likevel bare gi \`delete:email\` til arbeidsflyter som trenger det.
+Den siste funksjonen krever omtanke. Permanent IMAP-sletting omgår papirkurven og kan være ugjenkallelig. MCP Emails eksponerer sletting som et eget destruktivt verktøy, og MCP-klienten styrer bekreftelsesadferden, men du bør likevel bare gi \`delete:email\` til arbeidsflyter som trenger det.
 
 ## Viktige IMAP-begrensninger
 
 En IMAP-kobling har bred støtte, men gjør ikke alle leverandører identiske.
 
-- **Ingen push for innkommende e-post:** MCPEmails er kun basert på forespørsel og svar. Tjenesten sender ikke webhooks eller utløser Claude når en melding kommer inn. En automatisert arbeidsflyt må sjekke etter nye meldinger etter en tidsplan, for eksempel ved å liste ulest e-post.
+- **Ingen push for innkommende e-post:** MCP Emails er kun basert på forespørsel og svar. Tjenesten sender ikke webhooks eller utløser Claude når en melding kommer inn. En automatisert arbeidsflyt må sjekke etter nye meldinger etter en tidsplan, for eksempel ved å liste ulest e-post.
 - **Søk varierer etter transport:** Strukturerte filtre for avsender, emne, tekst og dato fungerer på tvers av leverandører, men generisk IMAP støtter ikke søkefilteret \`has_attachment\`. Leverandørspesifikk søkesyntaks kan ikke flyttes mellom tjenester.
 - **Mapper er ikke Gmail-etiketter:** IMAP flytter en melding mellom mapper, mens Gmail kan knytte flere etiketter til én melding. Den praktiske forskjellen forklares i [Gmail-etiketter kontra IMAP-mapper](/blog/gmail-labels-vs-imap-folders-ai-agents).
 - **SMTP kreves for sending:** En fungerende IMAP-innlogging beviser at Claude når innkommende e-post, ikke at SMTP-verten, porten eller sendetillatelsen er riktig. Test én ufarlig utgående melding før du stoler på en svarflyt.
@@ -102,7 +102,7 @@ IMAP-innstillingene fungerer, men SMTP er separat. Kontroller SMTP-vertsnavnet o
 
 ### Claude finner ikke postkassen
 
-Be Claude kalle \`inbox_list\` på nytt. Hvis innboksen ikke vises, sjekk statusen i MCPEmails-dashbordet og koble den til på nytt hvis app-passordet er tilbakekalt eller rotert. Hvis innboksen vises, men en handling avvises, kobler du Claude-koblingen til på nytt eller oppdaterer API-nøkkelen med nødvendig tilgang.
+Be Claude kalle \`inbox_list\` på nytt. Hvis innboksen ikke vises, sjekk statusen i MCP Emails-dashbordet og koble den til på nytt hvis app-passordet er tilbakekalt eller rotert. Hvis innboksen vises, men en handling avvises, kobler du Claude-koblingen til på nytt eller oppdaterer API-nøkkelen med nødvendig tilgang.
 
 ### Søkeresultatene er smalere enn forventet
 
@@ -110,13 +110,13 @@ Start med strukturerte felt som \`from\`, \`subject\`, \`text\`, \`since\` og \`
 
 ## Sikkerhet: Legitimasjonen holdes utenfor Claude
 
-MCPEmails lagrer OAuth-tokenet eller IMAP-app-passordet som trengs for fremtidige kall, kryptert med AES-256-GCM i hvile. Vanlig postkasseinnhold hentes direkte når et verktøy kjører, og lagres ikke mellom kall. Trafikken bruker TLS, og du kan tilbakekalle et app-passord hos leverandøren eller koble fra innboksen i dashbordet.
+MCP Emails lagrer OAuth-tokenet eller IMAP-app-passordet som trengs for fremtidige kall, kryptert med AES-256-GCM i hvile. Vanlig postkasseinnhold hentes direkte når et verktøy kjører, og lagres ikke mellom kall. Trafikken bruker TLS, og du kan tilbakekalle et app-passord hos leverandøren eller koble fra innboksen i dashbordet.
 
 Det tydelige skillet er hovedgrunnen til å bruke en MCP-bro i stedet for å lime inn e-postlegitimasjon i en chat eller lokal konfigurasjon: Claude får avgrensede e-postfunksjoner, ikke nøklene til postkassen. For detaljer om lagring og trusselmodellen kan du lese [hvorfor «e-post lagres aldri» er viktig](/blog/why-email-never-stored-matters) og [sikkerhetsoversikten](/security).
 
 ## Kortversjonen
 
-En Claude IMAP-kobling er en IMAP-/SMTP-postkassetilkobling som presenteres for Claude som MCP-verktøy. Finn de sikre serverinnstillingene, opprett et tilbakekallbart app-passord, koble innboksen til i MCPEmails og legg til \`https://www.mcpemails.com/api/mcp\` i Claude. Test skrivebeskyttet tilgang først, legg til sende- eller destruktive tilganger med omtanke, og bruk feilsøkingssjekklisten ovenfor hvis leverandøren avviser tilkoblingen.
+En Claude IMAP-kobling er en IMAP-/SMTP-postkassetilkobling som presenteres for Claude som MCP-verktøy. Finn de sikre serverinnstillingene, opprett et tilbakekallbart app-passord, koble innboksen til i MCP Emails og legg til \`https://www.mcpemails.com/api/mcp\` i Claude. Test skrivebeskyttet tilgang først, legg til sende- eller destruktive tilganger med omtanke, og bruk feilsøkingssjekklisten ovenfor hvis leverandøren avviser tilkoblingen.
 
 Klar til å prøve? [Koble til en IMAP-innboks](/signup), eller bruk den [leverandørspesifikke oppsettsveiledningen](/blog/connect-icloud-fastmail-imap-to-claude) for detaljer om iCloud og Fastmail.`,
 };

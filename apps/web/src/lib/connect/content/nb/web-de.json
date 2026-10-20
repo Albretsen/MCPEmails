@@ -26,23 +26,23 @@
     "meta0": "1 innboks gratis, for alltid",
     "meta1": "Kontopassordet ditt, ingen OAuth-oppsett",
     "meta2": "E-post hentes direkte, lagres aldri",
-    "answer": "Claude når ikke WEB.DE på egen hånd. mcpemails er en hostet MCP-server som kobler til via IMAP med kontopassordet ditt, slik at Claude, Cursor eller enhver MCP-klient kan lese, søke, sende og organisere den e-posten. Oppsettet tar et par minutter, og én innboks er gratis."
+    "answer": "Claude når ikke WEB.DE på egen hånd. MCP Emails er en hostet MCP-server som kobler til via IMAP med kontopassordet ditt, slik at Claude, Cursor eller enhver MCP-klient kan lese, søke, sende og organisere den e-posten. Oppsettet tar et par minutter, og én innboks er gratis."
   },
   "method": {
     "title": "Slik kobler WEB.DE seg til: IMAP og kontopassordet ditt",
-    "body": "WEB.DE kobles til via IMAP/SMTP, men <b>POP3- og IMAP-tilgang er slått av som standard</b>. Slå det på i WEB.DE under E-Mail-Einstellungen (e-postinnstillinger), E-Mail empfangen, POP3/IMAP, og koble så til med WEB.DE-adressen og passordet ditt. WEB.DE svarer på begge standard utgående transporter, implisitt TLS på port 465 og STARTTLS på port 587, så porten er nesten aldri grunnen til at en sending feiler. mcpemails bruker 465-paret under og faller tilbake til det andre av seg selv."
+    "body": "WEB.DE kobles til via IMAP/SMTP, men <b>POP3- og IMAP-tilgang er slått av som standard</b>. Slå det på i WEB.DE under E-Mail-Einstellungen (e-postinnstillinger), E-Mail empfangen, POP3/IMAP, og koble så til med WEB.DE-adressen og passordet ditt. WEB.DE svarer på begge standard utgående transporter, implisitt TLS på port 465 og STARTTLS på port 587, så porten er nesten aldri grunnen til at en sending feiler. MCP Emails bruker 465-paret under og faller tilbake til det andre av seg selv."
   },
   "setup": [
     {
       "h": "Opprett en gratis konto",
-      "p": "Registrer deg på mcpemails, uten kort. Gratisplanen kobler til én innboks, for alltid."
+      "p": "Registrer deg på MCP Emails, uten kort. Gratisplanen kobler til én innboks, for alltid."
     },
     {
       "h": "Slå på IMAP-tilgang i WEB.DE",
       "p": "I WEB.DE åpner du E-Mail-Einstellungen (e-postinnstillinger), velger POP3/IMAP under E-Mail empfangen og setter glidebryteren på POP3- und IMAP-Zugriff erlauben (tillat POP3- og IMAP-tilgang)."
     },
     {
-      "h": "Legg til postkassen i mcpemails",
+      "h": "Legg til postkassen i MCP Emails",
       "p": "Velg IMAP / SMTP, legg til WEB.DE-adressen din, vertene over og passordet for å koble til innboksen trygt."
     },
     {
@@ -69,14 +69,14 @@
     }
   ],
   "limits": [
-    "mcpemails kobler bare til WEB.DE-postkassen. WEB.DE Online-Speicher, adresseboken og kalenderen er separate produkter og eksponeres ikke for AI-klienten din.",
+    "MCP Emails kobler bare til WEB.DE-postkassen. WEB.DE Online-Speicher, adresseboken og kalenderen er separate produkter og eksponeres ikke for AI-klienten din.",
     "Glidebryteren for POP3/IMAP er WEB.DE sin å styre, ikke vår. Deaktiverer WEB.DE henting etter en lang periode uten aktivitet, må tilkoblingen slås på igjen i WEB.DE før den virker igjen.",
     "WEB.DE er en forbrukerpostkasse med egne sendegrenser mot misbruk. Bruk den til vanlig korrespondanse, ikke til masse- eller kampanjeutsending."
   ],
   "faq": [
     {
       "q": "Fungerer Claude med WEB.DE?",
-      "a": "Ikke på egen hånd. Claude har ingen innebygd WEB.DE-kobling. Peker du en MCP-server som mcpemails mot WEB.DE-postkassen din via IMAP, får Claude tilgang til å lese, søke, sende, svare, planlegge og organisere, og samme tilkobling fungerer da fra Cursor, ChatGPT og andre MCP-klienter i stedet for bare én."
+      "a": "Ikke på egen hånd. Claude har ingen innebygd WEB.DE-kobling. Peker du en MCP-server som MCP Emails mot WEB.DE-postkassen din via IMAP, får Claude tilgang til å lese, søke, sende, svare, planlegge og organisere, og samme tilkobling fungerer da fra Cursor, ChatGPT og andre MCP-klienter i stedet for bare én."
     },
     {
       "q": "Hva er IMAP- og SMTP-innstillingene for WEB.DE?",

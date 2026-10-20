@@ -33,14 +33,14 @@ export async function generateMetadata({ params }) {
     openGraph: {
       type: 'article',
       url: localePath(locale, PATH),
-      title: `${meta.title} · mcpemails`,
+      title: `${meta.title} · MCP Emails`,
       description: meta.description,
       locale: OG_LOCALE[locale],
       images: [OG_IMAGE],
     },
     twitter: {
       card: 'summary_large_image',
-      title: `${meta.title} · mcpemails`,
+      title: `${meta.title} · MCP Emails`,
       description: meta.description,
       images: [OG_IMAGE.url],
     },
@@ -83,7 +83,7 @@ export default async function ReadOnlyAccessPage({ params }) {
         '@type': 'BreadcrumbList',
         '@id': `${url}#breadcrumb`,
         itemListElement: [
-          { '@type': 'ListItem', position: 1, name: 'mcpemails', item: localePath(locale, '') },
+          { '@type': 'ListItem', position: 1, name: 'MCP Emails', item: localePath(locale, '') },
           { '@type': 'ListItem', position: 2, name: 'Docs', item: localePath(locale, '/docs') },
           { '@type': 'ListItem', position: 3, name: copy.breadcrumb },
         ],

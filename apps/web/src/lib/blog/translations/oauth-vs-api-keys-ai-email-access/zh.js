@@ -1,7 +1,7 @@
 const translation = {
   title: 'AI 邮箱访问该用 OAuth 还是 API 密钥？该怎么选',
   description: 'AI 邮箱访问选 OAuth 还是 API 密钥：claude.ai、Claude Desktop、Cursor 用 OAuth；Cline、JetBrains 和脚本用受限 API 密钥。',
-  coverAlt: '连接 AI 智能体到邮箱时的 OAuth 与 API 密钥对比 — MCPEmails',
+  coverAlt: '连接 AI 智能体到邮箱时的 OAuth 与 API 密钥对比 — MCP Emails',
   content: `当你通过 MCP Emails 把 AI 智能体连接到邮箱时，有两种认证方式可选：OAuth 或 API 密钥。简短的答案是：如果你的客户端支持 OAuth（claude.ai、Claude Desktop、Cursor），就用 OAuth；如果不支持（Cline、JetBrains、脚本、cURL），就用受限的 API 密钥。两者访问的是同一个端点，暴露的是同一套工具。区别在于由谁来管理这个密钥，以及你能多容易地随时断开它。
 
 这并不是一个用安全换便利、必须牺牲其中一方的权衡。两条路径都被严格限定在 \`read:email\`、\`send:email\` 或两者之内，而且都能在仪表盘上一键撤销。真正的问题是哪一种更适合你实际在用的客户端。想了解这一切如何连成一体的全貌，可以先看支柱指南：[如何让你的 AI 智能体访问邮箱](/blog/how-to-give-your-ai-agent-email-access)。

@@ -2,7 +2,7 @@ const translation = {
   title: '7 ting AI-agenten din kan gjøre når den har tilgang til innboksen',
   description:
     'Sju konkrete ting en AI-agent kan gjøre med innbokstilgang: sortere ulest post, oppsummere tråder, skrive utkast til svar, finne vedlegg, følge opp og rute e-post.',
-  coverAlt: 'Sju ting AI-agenten din kan gjøre med innbokstilgang via MCP — MCPEmails',
+  coverAlt: 'Sju ting AI-agenten din kan gjøre med innbokstilgang via MCP — MCP Emails',
   content: `Når agenten din kan lese og sende ekte e-post, stopper demoteateret og det faktiske arbeidet begynner. Her er sju ting du kan få den til å gjøre i dag: rydde i den uleste haugen, oppsummere en lang tråd, skrive utkast til svar i din stil, grave frem det ene vedlegget, følge opp ubesvarte tråder, rute post til rett sted og sende deg et ukentlig sammendrag.
 
 Hvert eksempel under bygger på ekte MCP-verktøy du kan kalle akkurat nå. Verktøyene er de samme enten du kobler til Gmail, Outlook, iCloud, Fastmail eller en vanlig IMAP-konto. Hvis du ennå ikke har koblet en agent til innboksen din, dekker [den komplette guiden til å gi AI-agenten din e-posttilgang](/blog/how-to-give-your-ai-agent-email-access) oppsettet; [gjennomgangen for å koble til på 2 minutter](/blog/connect-email-to-ai-agent-under-2-minutes) er den raske veien.

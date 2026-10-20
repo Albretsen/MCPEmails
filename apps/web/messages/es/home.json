@@ -35,10 +35,10 @@
       "providerSub": "Gmail · Outlook · iCloud · IMAP",
       "logCalls": "el agente llama a",
       "logReturns": "devuelve los IDs de la bandeja, sin copiar y pegar del panel",
-      "logFetches": "mcpemails obtiene en vivo de tu proveedor",
+      "logFetches": "MCP Emails obtiene en vivo de tu proveedor",
       "logResult": "20 mensajes devueltos",
       "logNothing": "nada almacenado",
-      "legendPipe": "mcpemails (la tubería)",
+      "legendPipe": "MCP Emails (la tubería)",
       "legendLive": "petición en vivo",
       "legendData": "tus datos, tu proveedor"
     }
@@ -110,7 +110,7 @@
       },
       "2": {
         "h": "Tu agente trabaja la bandeja",
-        "p": "El agente llama a herramientas como <code>email_read()</code> o <code>email_compose()</code>. MCPEmails obtiene en vivo desde tu proveedor y devuelve el resultado. Nada se almacena en caché entre llamadas."
+        "p": "El agente llama a herramientas como <code>email_read()</code> o <code>email_compose()</code>. MCP Emails obtiene en vivo desde tu proveedor y devuelve el resultado. Nada se almacena en caché entre llamadas."
       }
     },
     "tools": {
@@ -128,17 +128,17 @@
     "eyebrow": "Peticiones reales",
     "titleLine1": "Solo pídelo.",
     "titleLine2": "Lee, escribe y organiza.",
-    "sub": "No hay paneles que aprender. Dile a tu asistente de IA lo que quieres en lenguaje natural y usará mcpemails para hacerlo."
+    "sub": "No hay paneles que aprender. Dile a tu asistente de IA lo que quieres en lenguaje natural y usará MCP Emails para hacerlo."
   },
   "quote": {
     "text": "Quería que mis agentes trabajaran mi bandeja de entrada, pero cada opción implicaba entregar a un tercero una copia de mi correo. Así que construí la tubería que deseaba que existiera: conéctate una vez, tu bandeja de entrada se obtiene en vivo y nunca se almacena, y puedes cortarle el acceso a cualquier agente con un clic. Ese es el producto en el que confío con mi propia bandeja.",
-    "role": "fundador, mcpemails"
+    "role": "fundador, MCP Emails"
   },
   "reviews": {
     "eyebrow": "Opiniones",
     "titleLine1": "No lo decimos nosotros.",
     "titleLine2": "Lo dicen ellos.",
-    "sub": "Opiniones reales de quienes usan mcpemails con su propia bandeja de entrada, publicadas con su nombre.",
+    "sub": "Opiniones reales de quienes usan MCP Emails con su propia bandeja de entrada, publicadas con su nombre.",
     "ratingLabel": "Valorado con {rating} de 5",
     "count": "{count, plural, one {# opinión} other {# opiniones}}",
     "via": "Opinión publicada en {source}",
@@ -279,9 +279,9 @@
     "linkWithdrawal": "Derecho de desistimiento",
     "linkCancel": "Cancelar contratos aquí",
     "linkImpressum": "Impressum",
-    "copyright": "© 2026 mcpemails.",
+    "copyright": "© 2026 MCP Emails.",
     "legal": "El correo se obtiene en vivo, nunca se almacena · Credenciales cifradas en reposo",
-    "legalEntity": "MCPEmails es un servicio de Albretsen AS, número de organización 938 702 373, Håsteins gate 9, 5160 Laksevåg, Noruega.",
+    "legalEntity": "MCP Emails es un servicio de Albretsen AS, número de organización 938 702 373, Håsteins gate 9, 5160 Laksevåg, Noruega.",
     "contactLabel": "Contacto",
     "mcpLabel": "Endpoint MCP",
     "copy": "Copiar",

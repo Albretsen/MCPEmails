@@ -1,7 +1,7 @@
 {
   "meta": {
     "title": "Dokumentasjon for e-post-MCP-server: Gmail, Outlook, IMAP og OAuth",
-    "description": "Kom i gang med MCPEmails på minutter. Hurtigstartveiledning, verktøyreferanse og eksempelsvar for Gmail-, Outlook- og IMAP-agenter."
+    "description": "Kom i gang med MCP Emails på minutter. Hurtigstartveiledning, verktøyreferanse og eksempelsvar for Gmail-, Outlook- og IMAP-agenter."
   },
   "hero": {
     "eyebrow": "Dokumentasjon",
@@ -17,7 +17,7 @@
   "quickstart": {
     "eyebrow": "Hurtigstart",
     "heading": "Oppe og kjører på minutter.",
-    "sub": "Ingen SDK kreves. MCPEmails snakker standard MCP over HTTP, så det passer rett inn i enhver MCP-kompatibel agent.",
+    "sub": "Ingen SDK kreves. MCP Emails snakker standard MCP over HTTP, så det passer rett inn i enhver MCP-kompatibel agent.",
     "steps": {
       "signup": {
         "label": "Registrer deg og koble til en innboks",
@@ -31,7 +31,7 @@
         "body": "I Dashbord → API-nøkler klikker du «Opprett nøkkel». Gi den navn, velg omfangene agenten din trenger (read:email, search:email, send:email, manage:folders, delete:email, manage:drafts, manage:contacts, schedule:email og manage:automations), og kopier nøkkelen. Den vises bare én gang."
       },
       "addclient": {
-        "label": "Legg MCPEmails til i agenten din",
+        "label": "Legg MCP Emails til i agenten din",
         "heading": "Lim MCP-endepunktet inn i klienten din",
         "body": "Velg fanen for klienten din nedenfor. MCP-klienter med OAuth 2.0-støtte (claude.ai, Claude Desktop, Cursor og andre) limer bare inn URL-en og godkjenner, ingen API-nøkkel nødvendig. Klienter uten OAuth, samt skriptbasert tilgang, bruker API-nøkkelen fra steg 02."
       },
@@ -63,7 +63,7 @@
     "infoFormat": "Responsformat: <b>JSON-RPC 2.0</b>. Vellykkede resultater bærer også et typet <code>structuredContent</code>-objekt",
     "handshakeLabel": "Initialize-håndtrykk",
     "pollingHeading": "Polling, ikke push",
-    "pollingBody": "MCPEmails er kun forespørsel/svar: hvert resultat kommer fra et verktøykall agenten din gjør. Det finnes <b>ingen webhooks, push-varsler eller hendelser initiert av serveren</b>. En innkommende e-post utløser aldri et agentkall av seg selv. For å reagere på ny e-post bør agenten din <b>polle</b> etter en tidsplan, f.eks. kalle <code>email_read</code> med <code>action: \"list\"</code> og <code>unread: true</code> med intervallet arbeidsflyten din trenger (vær oppmerksom på rategrensene over)."
+    "pollingBody": "MCP Emails er kun forespørsel/svar: hvert resultat kommer fra et verktøykall agenten din gjør. Det finnes <b>ingen webhooks, push-varsler eller hendelser initiert av serveren</b>. En innkommende e-post utløser aldri et agentkall av seg selv. For å reagere på ny e-post bør agenten din <b>polle</b> etter en tidsplan, f.eks. kalle <code>email_read</code> med <code>action: \"list\"</code> og <code>unread: true</code> med intervallet arbeidsflyten din trenger (vær oppmerksom på rategrensene over)."
   },
   "operations": {
     "eyebrow": "Bygget for ekte innboksarbeid",
@@ -100,8 +100,8 @@
     "sub": "MCP-klienter som støtter OAuth 2.0 (claude.ai, Claude Desktop, Cursor og andre) kobler til automatisk via authorization code + PKCE. Ingen API-nøkkel, ingen konfigurasjonsfil. Lim inn URL-en og klikk Connect.",
     "step1": "<b>Steg 1:</b> Gå til claude.ai → Customize → Connectors → Add connector",
     "step2": "<b>Steg 2:</b> Lim inn <code>https://mcpemails.com/api/mcp</code> som server-URL",
-    "step3": "<b>Steg 3:</b> Klikk Connect. MCPEmails åpner et godkjenningsskjermbilde",
-    "step4": "<b>Steg 4:</b> Logg inn med mcpemails-kontoen din og godkjenn tilgang",
+    "step3": "<b>Steg 3:</b> Klikk Connect. MCP Emails åpner et godkjenningsskjermbilde",
+    "step4": "<b>Steg 4:</b> Logg inn med MCP Emails-kontoen din og godkjenn tilgang",
     "stepDone": "<b>Ferdig:</b> Alle verktøyene som de godkjente omfangene dine tillater, er aktive. claude.ai fornyer tokens automatisk",
     "howTitle": "Hvordan det fungerer under panseret",
     "howP1": "claude.ai registrerer seg selv via <b>RFC 7591 Dynamic Client Registration</b>, så du forhåndsregistrerer aldri en client-ID.",

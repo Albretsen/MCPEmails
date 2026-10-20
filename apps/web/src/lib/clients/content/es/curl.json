@@ -7,7 +7,7 @@
   ],
   "meta": {
     "title": "API del servidor MCP de correo: curl, JSON-RPC y Bearer",
-    "description": "Llama al servidor MCP de mcpemails por HTTP. Un endpoint Streamable HTTP, JSON-RPC 2.0, una clave bearer limitada y todas las herramientas. Una bandeja gratis."
+    "description": "Llama al servidor MCP de MCP Emails por HTTP. Un endpoint Streamable HTTP, JSON-RPC 2.0, una clave bearer limitada y todas las herramientas. Una bandeja gratis."
   },
   "hero": {
     "eyebrow": "HTTP + correo",
@@ -82,7 +82,7 @@
       "a": "100 solicitudes por minuto, 1.000 por hora y 10.000 al día por clave, además del tope de acciones facturables de tu plan. Las llamadas fallidas e inbox_list no se facturan."
     },
     {
-      "q": "¿Se guarda mi correo en los servidores de mcpemails?",
+      "q": "¿Se guarda mi correo en los servidores de MCP Emails?",
       "a": "No. Cada mensaje se obtiene en vivo de tu proveedor para la solicitud que lo pidió y se entrega directamente a tu cliente. Solo se guarda el token OAuth o la contraseña de aplicación cifrados, para que las llamadas futuras puedan autenticarse. Eliminar la bandeja en el panel, o revocar el acceso en tu proveedor, corta la conexión al instante."
     }
   ],

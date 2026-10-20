@@ -1,7 +1,7 @@
 {
   "meta": {
     "title": "邮件 MCP 服务器文档：Gmail、Outlook、IMAP 与 OAuth",
-    "description": "几分钟内开始使用 MCPEmails。面向 Gmail、Outlook 和 IMAP 智能体的快速入门指南、工具参考和示例响应。"
+    "description": "几分钟内开始使用 MCP Emails。面向 Gmail、Outlook 和 IMAP 智能体的快速入门指南、工具参考和示例响应。"
   },
   "hero": {
     "eyebrow": "文档",
@@ -17,7 +17,7 @@
   "quickstart": {
     "eyebrow": "快速开始",
     "heading": "几分钟内即可上手运行。",
-    "sub": "无需 SDK。MCPEmails 通过 HTTP 讲标准 MCP，因此可接入任何兼容 MCP 的智能体。",
+    "sub": "无需 SDK。MCP Emails 通过 HTTP 讲标准 MCP，因此可接入任何兼容 MCP 的智能体。",
     "steps": {
       "signup": {
         "label": "注册并连接收件箱",
@@ -31,7 +31,7 @@
         "body": "在 仪表板 → API 密钥 中，点击「创建密钥」。为其命名，选择你的智能体所需的范围（read:email、search:email、send:email、manage:folders、delete:email、manage:drafts、manage:contacts、schedule:email 和 manage:automations），并复制该密钥。它只显示一次。"
       },
       "addclient": {
-        "label": "将 MCPEmails 添加到你的智能体",
+        "label": "将 MCP Emails 添加到你的智能体",
         "heading": "把 MCP 端点粘贴到你的客户端中",
         "body": "在下方选择你的客户端对应的标签页。支持 OAuth 2.0 的 MCP 客户端（claude.ai、Claude Desktop、Cursor 等）只需粘贴 URL 并授权，无需 API 密钥。不支持 OAuth 的客户端以及脚本化访问，则使用第 02 步中的 API 密钥。"
       },
@@ -63,7 +63,7 @@
     "infoFormat": "响应格式：<b>JSON-RPC 2.0</b>，成功的结果还会携带一个带类型的 <code>structuredContent</code> 对象",
     "handshakeLabel": "初始化握手",
     "pollingHeading": "轮询，而非推送",
-    "pollingBody": "MCPEmails 仅采用请求/响应模式：每个结果都来自你的智能体发起的工具调用。<b>没有 webhook、推送通知或由服务器发起的事件</b>，收到新邮件本身绝不会触发智能体调用。要对新邮件作出响应，请让你的智能体按计划<b>轮询</b>，例如按工作流所需的间隔调用 <code>email_read</code> 并设置 <code>action: \"list\"</code> 和 <code>unread: true</code>（注意上面的速率限制）。"
+    "pollingBody": "MCP Emails 仅采用请求/响应模式：每个结果都来自你的智能体发起的工具调用。<b>没有 webhook、推送通知或由服务器发起的事件</b>，收到新邮件本身绝不会触发智能体调用。要对新邮件作出响应，请让你的智能体按计划<b>轮询</b>，例如按工作流所需的间隔调用 <code>email_read</code> 并设置 <code>action: \"list\"</code> 和 <code>unread: true</code>（注意上面的速率限制）。"
   },
   "operations": {
     "eyebrow": "为真实的收件箱工作而建",
@@ -100,8 +100,8 @@
     "sub": "支持 OAuth 2.0 的 MCP 客户端（claude.ai、Claude Desktop、Cursor 等）会通过授权码 + PKCE 自动连接。无需 API 密钥，无需配置文件。粘贴 URL 并点击连接。",
     "step1": "<b>第 1 步：</b>前往 claude.ai → 自定义 → 连接器 → 添加连接器",
     "step2": "<b>第 2 步：</b>把 <code>https://mcpemails.com/api/mcp</code> 粘贴为服务器 URL",
-    "step3": "<b>第 3 步：</b>点击连接。MCPEmails 会打开一个授权界面",
-    "step4": "<b>第 4 步：</b>用你的 mcpemails 账户登录并批准访问",
+    "step3": "<b>第 3 步：</b>点击连接。MCP Emails 会打开一个授权界面",
+    "step4": "<b>第 4 步：</b>用你的 MCP Emails 账户登录并批准访问",
     "stepDone": "<b>完成：</b>你所批准的权限范围允许的每一个工具均已上线。claude.ai 会自动刷新令牌",
     "howTitle": "底层工作原理",
     "howP1": "claude.ai 通过 <b>RFC 7591 动态客户端注册</b>自行注册，因此你永远不必预先注册客户端 ID。",

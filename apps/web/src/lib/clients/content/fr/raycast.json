@@ -16,7 +16,7 @@
     "meta0": "1 boîte gratuite, pour toujours",
     "meta1": "OAuth, aucune clé API requise",
     "meta2": "E-mails récupérés en direct, jamais stockés",
-    "answer": "Lancez la commande Install MCP Server dans Raycast, réglez Transport sur HTTP, collez https://mcpemails.com/api/mcp, installez-le, puis cliquez sur Sign In pour autoriser avec mcpemails."
+    "answer": "Lancez la commande Install MCP Server dans Raycast, réglez Transport sur HTTP, collez https://mcpemails.com/api/mcp, installez-le, puis cliquez sur Sign In pour autoriser avec MCP Emails."
   },
   "method": {
     "title": "Comment Raycast se connecte : OAuth, sans clé API",
@@ -37,7 +37,7 @@
     },
     {
       "h": "Installez et connectez-vous",
-      "p": "Appuyez sur <b>Install MCP Server</b>, puis cliquez sur <b>Sign In</b> pour autoriser avec mcpemails. Approuvez les autorisations que Raycast doit détenir."
+      "p": "Appuyez sur <b>Install MCP Server</b>, puis cliquez sur <b>Sign In</b> pour autoriser avec MCP Emails. Approuvez les autorisations que Raycast doit détenir."
     }
   ],
   "gotchas": [
@@ -62,7 +62,7 @@
   "faq": [
     {
       "q": "Comment connecter l'e-mail à Raycast ?",
-      "a": "Lancez la commande Install MCP Server, réglez Transport sur HTTP, collez https://mcpemails.com/api/mcp, installez-le, puis cliquez sur Sign In et autorisez avec mcpemails. Raycast AI dispose alors d'outils pour lire, rechercher, envoyer, répondre, transférer, organiser et planifier des e-mails."
+      "a": "Lancez la commande Install MCP Server, réglez Transport sur HTTP, collez https://mcpemails.com/api/mcp, installez-le, puis cliquez sur Sign In et autorisez avec MCP Emails. Raycast AI dispose alors d'outils pour lire, rechercher, envoyer, répondre, transférer, organiser et planifier des e-mails."
     },
     {
       "q": "Ai-je besoin d'une clé API pour Raycast ?",

@@ -20,8 +20,8 @@
     "eyebrow": "Poste.io + AI",
     "titleLine1": "Connect Poste.io to Claude,",
     "titleLine2": "Cursor, ChatGPT and any MCP client",
-    "lead": "One container, one hostname, a full mail server. Point mcpemails at it and an AI agent can read, search, send, reply, schedule and file mail in the mailboxes you created in the Poste.io admin interface.",
-    "answer": "Claude cannot reach a Poste.io server on its own. mcpemails is a hosted MCP server that connects to yours over IMAP on port 993, at the hostname you gave the container when you started it, using the password of a mailbox created in the Poste.io admin interface, so Claude, Cursor or any MCP client can read, search, send and organize that mail. Poste.io runs Dovecot for IMAP inside the container, so the protocol behaviour is ordinary Dovecot. The container has to publish 993 to the internet and to be serving a certificate that validates for the hostname you connect to. One inbox is free.",
+    "lead": "One container, one hostname, a full mail server. Point MCP Emails at it and an AI agent can read, search, send, reply, schedule and file mail in the mailboxes you created in the Poste.io admin interface.",
+    "answer": "Claude cannot reach a Poste.io server on its own. MCP Emails is a hosted MCP server that connects to yours over IMAP on port 993, at the hostname you gave the container when you started it, using the password of a mailbox created in the Poste.io admin interface, so Claude, Cursor or any MCP client can read, search, send and organize that mail. Poste.io runs Dovecot for IMAP inside the container, so the protocol behaviour is ordinary Dovecot. The container has to publish 993 to the internet and to be serving a certificate that validates for the hostname you connect to. One inbox is free.",
     "meta0": "1 inbox free, forever",
     "meta1": "Mailbox password from the admin UI",
     "meta2": "Email fetched live, never stored"
@@ -32,7 +32,7 @@
   },
   "setup": [
     {
-      "h": "Create your free mcpemails account",
+      "h": "Create your free MCP Emails account",
       "p": "Sign up at mcpemails.com. One inbox is free forever and no card is required."
     },
     {
@@ -41,7 +41,7 @@
     },
     {
       "h": "Check the certificate, then add the mailbox",
-      "p": "In the Poste.io admin interface, open the TLS certificate settings and confirm a Let's Encrypt certificate was actually issued rather than the self-signed one still being served. Then add the inbox in mcpemails: choose IMAP / SMTP, enter the container hostname, the full mailbox address and its password from the admin interface."
+      "p": "In the Poste.io admin interface, open the TLS certificate settings and confirm a Let's Encrypt certificate was actually issued rather than the self-signed one still being served. Then add the inbox in MCP Emails: choose IMAP / SMTP, enter the container hostname, the full mailbox address and its password from the admin interface."
     },
     {
       "h": "Paste the MCP URL into your AI",
@@ -63,14 +63,14 @@
     }
   ],
   "limits": [
-    "The container has to accept inbound connections on 993 from the internet for a hosted MCP server to reach it. A Poste.io running on a home server or a private network cannot be connected this way. mcpemails is self-hostable, so if you would rather nothing external touched the mail server you can run both inside the same network.",
+    "The container has to accept inbound connections on 993 from the internet for a hosted MCP server to reach it. A Poste.io running on a home server or a private network cannot be connected this way. MCP Emails is self-hostable, so if you would rather nothing external touched the mail server you can run both inside the same network.",
     "TLS validation is strict and cannot be bypassed. The self-signed certificate a fresh Poste.io generates will be refused, which is why provisioning a real one is a setup step rather than an optional polish.",
     "Sending goes out through Haraka on your own IP address, so SPF, DKIM and DMARC records and your address reputation govern whether mail is accepted downstream."
   ],
   "faq": [
     {
       "q": "Does Claude work with Poste.io?",
-      "a": "Not on its own. Claude has no Poste.io connector and cannot open an IMAP session to a container you run. Connecting an MCP server such as mcpemails to your Poste.io hostname gives Claude read, search, send, reply, schedule and organize access to a mailbox on it, and the same inbox then works from Cursor or ChatGPT."
+      "a": "Not on its own. Claude has no Poste.io connector and cannot open an IMAP session to a container you run. Connecting an MCP server such as MCP Emails to your Poste.io hostname gives Claude read, search, send, reply, schedule and organize access to a mailbox on it, and the same inbox then works from Cursor or ChatGPT."
     },
     {
       "q": "What are the Poste.io IMAP and SMTP settings?",

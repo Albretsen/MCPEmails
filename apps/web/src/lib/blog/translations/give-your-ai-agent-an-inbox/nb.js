@@ -2,7 +2,7 @@ const translation = {
   title: 'Gi AI-agenten din en innboks: en praktisk guide til e-post over MCP',
   description:
     'Hvorfor det er vanskeligere enn det ser ut til å koble e-post til AI-agenten din – og hvordan Model Context Protocol gjør Gmail, Outlook og IMAP til ett sikkert endepunkt agenten faktisk kan bruke.',
-  coverAlt: 'Gi AI-agenten din en innboks — MCPEmails',
+  coverAlt: 'Gi AI-agenten din en innboks — MCP Emails',
   content: `De fleste demoer av «AI-e-post» stopper ved et skjermbilde. Agenten skriver et utkast til svar, alle klapper, og ingen stiller det ubehagelige spørsmålet: **hvordan når modellen egentlig en ekte innboks** — sikkert, på tvers av leverandører, uten at du limer inn et app-passord i en ledetekst?
 
 Dette innlegget går gjennom hvorfor den siste biten er villedende vanskelig, og hvordan [Model Context Protocol](https://modelcontextprotocol.io) (MCP) gjør Gmail, Outlook, Fastmail og generisk IMAP til ett endepunkt agenten din kan kalle som et hvilket som helst annet verktøy.

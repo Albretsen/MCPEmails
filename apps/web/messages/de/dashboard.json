@@ -22,20 +22,20 @@
       "step1": "Öffnen Sie in claude.ai oder Claude Desktop „Einstellungen“ → „Konnektoren“.",
       "step2": "Klicken Sie auf „Benutzerdefinierten Konnektor hinzufügen“.",
       "step3": "Fügen Sie die obige URL als Konnektor-URL ein und klicken Sie auf „Hinzufügen“.",
-      "step4": "Klicken Sie auf „Verbinden“ und melden Sie sich zur Autorisierung bei mcpemails an. Kein API-Schlüssel nötig."
+      "step4": "Klicken Sie auf „Verbinden“ und melden Sie sich zur Autorisierung bei MCP Emails an. Kein API-Schlüssel nötig."
     },
     "chatgpt": {
       "step1": "Öffnen Sie „Einstellungen“ → „Apps und Konnektoren“ → „Erweiterte Einstellungen“ und aktivieren Sie den Entwicklermodus.",
       "step2": "Klicken Sie zurück unter „Apps und Konnektoren“ auf „Erstellen“.",
       "step3": "Geben Sie einen Namen ein und fügen Sie die obige URL als Konnektor-URL ein.",
-      "step4": "Wählen Sie OAuth, klicken Sie auf „Erstellen“ und autorisieren Sie dann mit mcpemails.",
-      "step5": "Klicken Sie in einem Chat auf chatgpt.com auf + → Entwicklermodus und wählen Sie die App mcpemails. Wiederholen Sie das in jedem neuen Chat, sonst sieht ChatGPT die Tools nicht.",
+      "step4": "Wählen Sie OAuth, klicken Sie auf „Erstellen“ und autorisieren Sie dann mit MCP Emails.",
+      "step5": "Klicken Sie in einem Chat auf chatgpt.com auf + → Entwicklermodus und wählen Sie die App MCP Emails. Wiederholen Sie das in jedem neuen Chat, sonst sieht ChatGPT die Tools nicht.",
       "note": "Funktioniert auf chatgpt.com (nur im Web) mit Plus, Pro, Business, Enterprise und Edu. Free- und Go-Konten können keine benutzerdefinierten Konnektoren hinzufügen. Bei Business und Enterprise muss ein Admin den Entwicklermodus eventuell erst freigeben."
     },
     "cursor": {
       "step1": "Bearbeiten Sie ~/.cursor/mcp.json (global) oder .cursor/mcp.json (Projekt).",
       "step2": "Fügen Sie den unten stehenden Server unter „mcpServers“ hinzu.",
-      "step3": "Cursor fordert Sie zur Anmeldung per OAuth auf. Autorisieren Sie mit mcpemails."
+      "step3": "Cursor fordert Sie zur Anmeldung per OAuth auf. Autorisieren Sie mit MCP Emails."
     },
     "vscode": {
       "step1": "Öffnen Sie die Befehlspalette (⇧⌘P) und führen Sie „MCP: Add Server“ aus.",
@@ -51,7 +51,7 @@
     "windsurf": {
       "step1": "Öffnen Sie die MCP-Einstellungen von Cascade oder bearbeiten Sie ~/.codeium/windsurf/mcp_config.json.",
       "step2": "Fügen Sie den unten stehenden Server hinzu. Das Feld heißt „serverUrl“, nicht „url“.",
-      "step3": "Aktualisieren Sie die MCP-Server in Cascade und autorisieren Sie mit mcpemails, wenn Sie dazu aufgefordert werden."
+      "step3": "Aktualisieren Sie die MCP-Server in Cascade und autorisieren Sie mit MCP Emails, wenn Sie dazu aufgefordert werden."
     },
     "gemini": {
       "step1": "Bearbeiten Sie ~/.gemini/settings.json (global) oder .gemini/settings.json (Projekt).",
@@ -61,7 +61,7 @@
     "zed": {
       "step1": "Klicken Sie in den Einstellungen des Agent Panel auf „Add Custom Server“ oder bearbeiten Sie settings.json.",
       "step2": "Fügen Sie den unten stehenden Server unter „context_servers“ hinzu.",
-      "step3": "Ohne Authorization-Header startet Zed den OAuth-Ablauf. Melden Sie sich mit mcpemails an."
+      "step3": "Ohne Authorization-Header startet Zed den OAuth-Ablauf. Melden Sie sich mit MCP Emails an."
     },
     "jetbrains": {
       "step1": "Öffnen Sie Settings → Tools → AI Assistant → Model Context Protocol (MCP).",
@@ -71,7 +71,7 @@
     "raycast": {
       "step1": "Führen Sie den Befehl „Install MCP Server“ (oder „Manage MCP Servers“) aus.",
       "step2": "Geben Sie einen Namen ein, setzen Sie „Transport“ auf „HTTP“ und fügen Sie die obige URL ein.",
-      "step3": "Klicken Sie auf „Install MCP Server“ und dann auf „Sign In“, um mit mcpemails zu autorisieren."
+      "step3": "Klicken Sie auf „Install MCP Server“ und dann auf „Sign In“, um mit MCP Emails zu autorisieren."
     },
     "warp": {
       "step1": "Öffnen Sie Settings → Agents → MCP servers und klicken Sie auf „+ Add“.",

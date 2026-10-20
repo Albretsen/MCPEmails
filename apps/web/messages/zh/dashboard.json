@@ -22,20 +22,20 @@
       "step1": "在 claude.ai 或 Claude Desktop 中，打开 设置 → Connectors。",
       "step2": "点击 \"Add custom connector\"。",
       "step3": "将上方的 URL 粘贴为 connector URL，然后点击 \"Add\"。",
-      "step4": "点击 \"Connect\" 并使用 mcpemails 登录以授权。无需 API 密钥。"
+      "step4": "点击 \"Connect\" 并使用 MCP Emails 登录以授权。无需 API 密钥。"
     },
     "chatgpt": {
       "step1": "打开 设置 → Apps & Connectors → Advanced settings 并开启 Developer mode。",
       "step2": "返回 Apps & Connectors，点击 \"Create\"。",
       "step3": "输入名称并将上方的 URL 粘贴为 Connector URL。",
-      "step4": "选择 OAuth，点击 \"Create\"，然后使用 mcpemails 授权。",
-      "step5": "在 chatgpt.com 的对话中，点击 + → Developer mode 并选择 mcpemails 应用。每个新对话都要重复这一步，否则 ChatGPT 看不到这些工具。",
+      "step4": "选择 OAuth，点击 \"Create\"，然后使用 MCP Emails 授权。",
+      "step5": "在 chatgpt.com 的对话中，点击 + → Developer mode 并选择 MCP Emails 应用。每个新对话都要重复这一步，否则 ChatGPT 看不到这些工具。",
       "note": "仅限 chatgpt.com 网页版，适用于 Plus、Pro、Business、Enterprise 和 Edu。Free 和 Go 账户无法添加自定义连接器。在 Business 和 Enterprise 上，可能需要管理员先允许 Developer mode。"
     },
     "cursor": {
       "step1": "编辑 ~/.cursor/mcp.json（全局）或 .cursor/mcp.json（项目）。",
       "step2": "在 \"mcpServers\" 下添加下方的服务器。",
-      "step3": "Cursor 会提示你通过 OAuth 登录。使用 mcpemails 授权。"
+      "step3": "Cursor 会提示你通过 OAuth 登录。使用 MCP Emails 授权。"
     },
     "vscode": {
       "step1": "打开命令面板（⇧⌘P）并运行 \"MCP: Add Server\"。",
@@ -51,7 +51,7 @@
     "windsurf": {
       "step1": "打开 Cascade 的 MCP 设置，或编辑 ~/.codeium/windsurf/mcp_config.json。",
       "step2": "添加下方的服务器。注意该字段为 \"serverUrl\"，而非 \"url\"。",
-      "step3": "在 Cascade 中刷新 MCP 服务器，并在提示时使用 mcpemails 授权。"
+      "step3": "在 Cascade 中刷新 MCP 服务器，并在提示时使用 MCP Emails 授权。"
     },
     "gemini": {
       "step1": "编辑 ~/.gemini/settings.json（全局）或 .gemini/settings.json（项目）。",
@@ -61,7 +61,7 @@
     "zed": {
       "step1": "在 Agent Panel 设置中点击 \"Add Custom Server\"，或编辑 settings.json。",
       "step2": "在 \"context_servers\" 下添加下方的服务器。",
-      "step3": "当未设置 Authorization 标头时，Zed 会提示 OAuth 流程。使用 mcpemails 登录。"
+      "step3": "当未设置 Authorization 标头时，Zed 会提示 OAuth 流程。使用 MCP Emails 登录。"
     },
     "jetbrains": {
       "step1": "打开 Settings → Tools → AI Assistant → Model Context Protocol (MCP)。",
@@ -71,7 +71,7 @@
     "raycast": {
       "step1": "运行 \"Install MCP Server\" 命令（或 \"Manage MCP Servers\"）。",
       "step2": "输入名称，将 Transport 设置为 \"HTTP\"，并粘贴上方的 URL。",
-      "step3": "按 \"Install MCP Server\"，然后点击 \"Sign In\" 以使用 mcpemails 授权。"
+      "step3": "按 \"Install MCP Server\"，然后点击 \"Sign In\" 以使用 MCP Emails 授权。"
     },
     "warp": {
       "step1": "打开 Settings → Agents → MCP servers 并点击 \"+ Add\"。",

@@ -37,7 +37,7 @@
     },
     {
       "h": "Authorize",
-      "p": "Cursor prompts you to sign in through OAuth. Authorize with mcpemails and approve the scopes you want the editor to hold."
+      "p": "Cursor prompts you to sign in through OAuth. Authorize with MCP Emails and approve the scopes you want the editor to hold."
     }
   ],
   "gotchas": [

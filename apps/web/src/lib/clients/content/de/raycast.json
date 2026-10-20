@@ -16,7 +16,7 @@
     "meta0": "1 Postfach kostenlos, dauerhaft",
     "meta1": "OAuth, kein API-Schlüssel nötig",
     "meta2": "E-Mails werden live abgerufen, nie gespeichert",
-    "answer": "Führen Sie in Raycast den Befehl Install MCP Server aus, setzen Sie Transport auf HTTP, fügen Sie https://mcpemails.com/api/mcp ein, installieren Sie den Server und klicken Sie dann auf Sign In, um mit mcpemails zu autorisieren."
+    "answer": "Führen Sie in Raycast den Befehl Install MCP Server aus, setzen Sie Transport auf HTTP, fügen Sie https://mcpemails.com/api/mcp ein, installieren Sie den Server und klicken Sie dann auf Sign In, um mit MCP Emails zu autorisieren."
   },
   "method": {
     "title": "So verbindet sich Raycast: OAuth, kein API-Schlüssel",
@@ -37,7 +37,7 @@
     },
     {
       "h": "Installieren und anmelden",
-      "p": "Klicken Sie auf <b>Install MCP Server</b> und dann auf <b>Sign In</b>, um mit mcpemails zu autorisieren. Geben Sie die Scopes frei, die Raycast erhalten soll."
+      "p": "Klicken Sie auf <b>Install MCP Server</b> und dann auf <b>Sign In</b>, um mit MCP Emails zu autorisieren. Geben Sie die Scopes frei, die Raycast erhalten soll."
     }
   ],
   "gotchas": [
@@ -62,7 +62,7 @@
   "faq": [
     {
       "q": "Wie verbinde ich meine E-Mails mit Raycast?",
-      "a": "Führen Sie den Befehl Install MCP Server aus, setzen Sie Transport auf HTTP, fügen Sie https://mcpemails.com/api/mcp ein, installieren Sie den Server, klicken Sie dann auf Sign In und autorisieren Sie mit mcpemails. Danach hat Raycast AI Tools zum Lesen, Suchen, Senden, Beantworten, Weiterleiten, Organisieren und Planen von E-Mails."
+      "a": "Führen Sie den Befehl Install MCP Server aus, setzen Sie Transport auf HTTP, fügen Sie https://mcpemails.com/api/mcp ein, installieren Sie den Server, klicken Sie dann auf Sign In und autorisieren Sie mit MCP Emails. Danach hat Raycast AI Tools zum Lesen, Suchen, Senden, Beantworten, Weiterleiten, Organisieren und Planen von E-Mails."
     },
     {
       "q": "Brauche ich für Raycast einen API-Schlüssel?",

@@ -20,7 +20,7 @@
     "titleLine1": "面向 SiteGround 邮箱的 MCP 服务器：",
     "titleLine2": "在 Claude 和 ChatGPT 中使用公司的每一个邮箱",
     "lead": "在 SiteGround 用自己的域名开设了 info@、sales@、support@ 和 invoices@？把每个邮箱都连接到同一个工作区，你的 AI 代理就能处理所有邮箱。使用 Site Tools 为你的账户列出的设置，通过 IMAP 读取、搜索、发送、回复、定时与整理邮件。",
-    "answer": "Claude 无法自行连接 SiteGround 邮箱。mcpemails 是一个托管 MCP 服务器，通过 993 端口的标准 IMAP 与之连接，让 Claude、Cursor 或任意 MCP 客户端都能读取、搜索、发送并整理邮件。SiteGround 没有共享的邮件主机名：你的主机是 mail.yourdomain.com，或形如 secureNNN.sgcpanel.com 的安全服务器名称，Site Tools 会在 Email、Accounts、Mail Configuration 中列出正确的那个。认证使用为邮箱设置的密码，绝不是你的 SiteGround Client Area 登录密码。公司的每个地址（如 info@ 或 sales@）都作为独立邮箱连接：一个邮箱免费，Personal 连接三个，Pro 最多连接 10 个，Business 按需连接更多。",
+    "answer": "Claude 无法自行连接 SiteGround 邮箱。MCP Emails 是一个托管 MCP 服务器，通过 993 端口的标准 IMAP 与之连接，让 Claude、Cursor 或任意 MCP 客户端都能读取、搜索、发送并整理邮件。SiteGround 没有共享的邮件主机名：你的主机是 mail.yourdomain.com，或形如 secureNNN.sgcpanel.com 的安全服务器名称，Site Tools 会在 Email、Accounts、Mail Configuration 中列出正确的那个。认证使用为邮箱设置的密码，绝不是你的 SiteGround Client Area 登录密码。公司的每个地址（如 info@ 或 sales@）都作为独立邮箱连接：一个邮箱免费，Personal 连接三个，Pro 最多连接 10 个，Business 按需连接更多。",
     "meta0": "第一个邮箱免费，其余按套餐连接",
     "meta1": "Site Tools 中的邮箱密码",
     "meta2": "邮件实时获取，绝不存储"
@@ -36,7 +36,7 @@
   },
   "setup": [
     {
-      "h": "创建免费 mcpemails 账户",
+      "h": "创建免费 MCP Emails 账户",
       "p": "在 mcpemails.com 注册。免费套餐可连接一个收件箱，无需信用卡。"
     },
     {
@@ -45,7 +45,7 @@
     },
     {
       "h": "使用安全服务器名称，而不只是 mail.yourdomain.com",
-      "p": "记下为你账户显示的 <code>secureNNN.sgcpanel.com</code> 值，并将其同时用于 IMAP 和 SMTP。如果你没有邮箱密码，可在同一个 Accounts 页面中设置；它不是你的 Client Area 密码。然后在 mcpemails 中输入地址、主机和密码。"
+      "p": "记下为你账户显示的 <code>secureNNN.sgcpanel.com</code> 值，并将其同时用于 IMAP 和 SMTP。如果你没有邮箱密码，可在同一个 Accounts 页面中设置；它不是你的 Client Area 密码。然后在 MCP Emails 中输入地址、主机和密码。"
     },
     {
       "h": "将 MCP URL 粘贴到你的 AI",
@@ -68,12 +68,12 @@
   ],
   "limits": [
     "SiteGround 按套餐设置每小时外发邮件限额。自动发送短时间内集中爆发可能会被限流，表现为邮件被拒绝或延迟，而不是连接失败。",
-    "mcpemails 只连接邮箱。过滤器、转发器、自动回复和垃圾邮件防护仍在 Site Tools 中管理。"
+    "MCP Emails 只连接邮箱。过滤器、转发器、自动回复和垃圾邮件防护仍在 Site Tools 中管理。"
   ],
   "faq": [
     {
       "q": "Claude 能用 SiteGround 邮箱吗？",
-      "a": "不能直接使用。Claude 没有 SiteGround 连接器。通过 IMAP 将 mcpemails 这样的 MCP 服务器连接到你的 SiteGround 邮箱后，Claude 就能读取、搜索、发送、回复、定时和整理其中的邮件，所用的凭据与你给 Apple Mail 或 Thunderbird 的相同。"
+      "a": "不能直接使用。Claude 没有 SiteGround 连接器。通过 IMAP 将 MCP Emails 这样的 MCP 服务器连接到你的 SiteGround 邮箱后，Claude 就能读取、搜索、发送、回复、定时和整理其中的邮件，所用的凭据与你给 Apple Mail 或 Thunderbird 的相同。"
     },
     {
       "q": "SiteGround 的 IMAP 和 SMTP 设置是什么？",

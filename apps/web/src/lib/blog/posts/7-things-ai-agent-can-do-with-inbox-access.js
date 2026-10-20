@@ -4,7 +4,7 @@ const post = {
   description:
     'Seven concrete things an AI agent can do with inbox access: triage unread mail, summarize threads, draft replies, find attachments, chase follow-ups, and route mail.',
   cover: '/blog/cover-7-things-ai-agent-can-do-with-inbox-access.svg',
-  coverAlt: 'Seven things your AI agent can do with inbox access over MCP — MCPEmails',
+  coverAlt: 'Seven things your AI agent can do with inbox access over MCP — MCP Emails',
   authorId: 'asgeir',
   publishedAt: "2026-04-18T09:00:00.000Z",
   updatedAt: "2026-04-18T09:00:00.000Z",

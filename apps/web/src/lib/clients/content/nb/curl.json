@@ -7,7 +7,7 @@
   ],
   "meta": {
     "title": "API for e-post-MCP-server: curl, JSON-RPC og Bearer-auth",
-    "description": "Kall mcpemails sin MCP-server direkte over HTTP. Ett Streamable HTTP-endepunkt, JSON-RPC 2.0, en avgrenset bearer-nøkkel og hele verktøykatalogen. Én innboks gratis."
+    "description": "Kall MCP Emails sin MCP-server direkte over HTTP. Ett Streamable HTTP-endepunkt, JSON-RPC 2.0, en avgrenset bearer-nøkkel og hele verktøykatalogen. Én innboks gratis."
   },
   "hero": {
     "eyebrow": "HTTP + e-post",

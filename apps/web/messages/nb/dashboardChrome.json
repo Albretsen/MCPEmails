@@ -91,7 +91,7 @@
     "densityLabel": "Tetthet",
     "densityCompact": "Kompakt",
     "densitySpacious": "Romslig",
-    "firstRunTitle": "Velkommen til mcpemails",
+    "firstRunTitle": "Velkommen til MCP Emails",
     "firstRunBody": "Koble til din første innboks for å få et fungerende MCP-endepunkt på under ett minutt.",
     "firstRunCta": "Koble til innboks",
     "inviteSentNotDelivered": "Invitasjonen til {email} ble opprettet, men e-posten kunne ikke sendes. Bruk Send på nytt på den ventende invitasjonen.",

@@ -1,12 +1,12 @@
 {
   "meta": {
     "title": "Sikkerhet og tillit",
-    "description": "Slik beskytter MCPEmails e-posten din: hentet i sanntid og aldri lagret, legitimasjon kryptert i hvile, avgrenset og tilbakekallbar tilgang, og åpen kildekode du kan lese eller drifte selv."
+    "description": "Slik beskytter MCP Emails e-posten din: hentet i sanntid og aldri lagret, legitimasjon kryptert i hvile, avgrenset og tilbakekallbar tilgang, og åpen kildekode du kan lese eller drifte selv."
   },
   "hero": {
     "eyebrow": "Sikkerhet og tillit",
     "title": "Du burde ikke trenge å bare ta meg på ordet",
-    "lead": "MCPEmails kobler en KI-agent til innboksen din, så den må fortjene reell tillit. Dette er den ærlige versjonen: hva tjenesten berører, hva den beholder, hva den aldri kan gjøre, og hvordan du kan verifisere alt selv."
+    "lead": "MCP Emails kobler en KI-agent til innboksen din, så den må fortjene reell tillit. Dette er den ærlige versjonen: hva tjenesten berører, hva den beholder, hva den aldri kan gjøre, og hvordan du kan verifisere alt selv."
   },
   "tldr": {
     "title": "1. Den korte versjonen",
@@ -68,7 +68,7 @@
     "title": "3. Du trenger ikke å stole på meg, du kan sjekke",
     "p1": "\"En tilfeldig person vibe-kodet dette\" er en rimelig bekymring for ethvert driftet verktøy som berører e-posten din. Det riktige svaret er ikke et større løfte. Det er å fjerne behovet for å ta meg på ordet.",
     "points": [
-      "<b>Les koden.</b> Serveren som driver MCPEmails er åpen på GitHub. Du kan se nøyaktig hva den beholder (et kryptert token) og hva den ikke beholder (e-posten din).",
+      "<b>Les koden.</b> Serveren som driver MCP Emails er åpen på GitHub. Du kan se nøyaktig hva den beholder (et kryptert token) og hva den ikke beholder (e-posten din).",
       "<selfhost><b>Drift den selv.</b></selfhost> Hvis du heller ikke vil bruke den driftede tjenesten i det hele tatt, kan du kjøre den samme koden på din egen infrastruktur med dine egne nøkler: en Docker-oppsett med én kommando ligger i <selfhost>self-host/</selfhost>.",
       "<b>Bruk en avgrenset, tilbakekallbar tilkobling.</b> Du kobler til med OAuth eller et app-passord som kun gir tilgang til e-post, og du kan tilbakekalle den med ett klikk hos leverandøren din, uten at jeg er involvert.",
       "<b>Se hva den gjør.</b> Hvert verktøykall agenten din gjør registreres i en aktivitetslogg du kan lese, så du ser nøyaktig hva som ble lest og når."
@@ -100,12 +100,12 @@
   "google": {
     "title": "6. Google-, Microsoft- og leverandørverifisering",
     "p1": "Tilgang til Gmail bruker Googles begrensede omfang (restricted scopes), nivået Google gransker tettest.",
-    "p2": "MCPEmails' bruk og overføring av informasjon mottatt fra Google APIs til enhver annen app følger <link>Google API Services User Data Policy</link>, inkludert kravene om Limited Use.",
+    "p2": "MCP Emails' bruk og overføring av informasjon mottatt fra Google APIs til enhver annen app følger <link>Google API Services User Data Policy</link>, inkludert kravene om Limited Use.",
     "p3": "Tilgang til Outlook og Microsoft 365 går gjennom Microsoft Graph, fra en app med utgiver verifisert av Microsoft, og ber bare om et navngitt sett med tillatelser som vises på Microsofts samtykkeskjerm: Mail.ReadWrite, Mail.Send, offline_access, openid, profile og email. For Fastmail, iCloud, Yahoo, Zoho, Yandex og andre IMAP-leverandører kobler du til med et app-passord utstedt av leverandøren som du kan tilbakekalle når som helst, uten brede OAuth-omfang for oss å be om for mye av."
   },
   "subprocessors": {
     "title": "7. Underleverandører",
-    "intro": "Vi holder listen over selskaper som berører data kort, og hvert er bundet av en databehandleravtale. Legg merke til hva som mangler: ingen KI-leverandør står på denne listen. MCPEmails sender ikke e-posten din til noen egen modell. Agenten din gjør det, under din kontroll og leverandørens datapolicy.",
+    "intro": "Vi holder listen over selskaper som berører data kort, og hvert er bundet av en databehandleravtale. Legg merke til hva som mangler: ingen KI-leverandør står på denne listen. MCP Emails sender ikke e-posten din til noen egen modell. Agenten din gjør det, under din kontroll og leverandørens datapolicy.",
     "thProvider": "Leverandør",
     "thPurpose": "Formål",
     "thLocation": "Plassering",
@@ -156,8 +156,8 @@
   },
   "operator": {
     "title": "Hvem som driver dette",
-    "p1": "Én person: meg. Jeg heter Asgeir Albretsen og driver MCPEmails gjennom Albretsen AS, et norsk aksjeselskap som jeg eier, med organisasjonsnummer 938 702 373 og adresse i Bergen. Commitene er også mine, under <gh>github.com/Albretsen</gh>, så navnet på denne siden og navnet på koden er det samme. Mer om dette finner du på <about>om-siden</about>, og den fullstendige juridiske identifikasjonen står i <terms>vilkårene</terms>.",
-    "p2": "At alt hviler på én person, er en reell risiko, og svaret er ikke et løfte om at jeg alltid kommer til å være her. MCPEmails er offentlig tilgjengelig under AGPL-3.0, og den hostede tjenesten kjører nøyaktig den samme koden, så hvis jeg slutter, eller du rett og slett slutter å stole på meg, kan du klone repoet og kjøre det på din egen infrastruktur med dine egne nøkler. <selfhostpage>Selvhosting-guiden</selfhostpage> er hele fremgangsmåten. Jeg vil heller være en navngitt person du kan nå og gå fra, enn en anonym leverandør du bare kan stole på.",
+    "p1": "Én person: meg. Jeg heter Asgeir Albretsen og driver MCP Emails gjennom Albretsen AS, et norsk aksjeselskap som jeg eier, med organisasjonsnummer 938 702 373 og adresse i Bergen. Commitene er også mine, under <gh>github.com/Albretsen</gh>, så navnet på denne siden og navnet på koden er det samme. Mer om dette finner du på <about>om-siden</about>, og den fullstendige juridiske identifikasjonen står i <terms>vilkårene</terms>.",
+    "p2": "At alt hviler på én person, er en reell risiko, og svaret er ikke et løfte om at jeg alltid kommer til å være her. MCP Emails er offentlig tilgjengelig under AGPL-3.0, og den hostede tjenesten kjører nøyaktig den samme koden, så hvis jeg slutter, eller du rett og slett slutter å stole på meg, kan du klone repoet og kjøre det på din egen infrastruktur med dine egne nøkler. <selfhostpage>Selvhosting-guiden</selfhostpage> er hele fremgangsmåten. Jeg vil heller være en navngitt person du kan nå og gå fra, enn en anonym leverandør du bare kan stole på.",
     "p3": "Support- og sikkerhetshenvendelser går ikke gjennom en kø. De kommer til meg, og jeg svarer på hver melding selv."
   }
 }

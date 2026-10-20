@@ -2,7 +2,7 @@ const translation = {
   title: '如何让 AI 智能体访问邮箱（2026 完整指南）',
   description:
     '通过 MCP 让你的 AI 智能体读取并发送真实邮箱的邮件——支持 Gmail、Outlook、iCloud、Fastmail 或 IMAP。原理、工具、安全机制与配置一文讲清。',
-  coverAlt: '如何通过 MCP 让你的 AI 智能体访问邮箱——MCPEmails',
+  coverAlt: '如何通过 MCP 让你的 AI 智能体访问邮箱——MCP Emails',
   content: `要让 AI 智能体访问邮箱，你需要把邮箱连接到一台 MCP 服务器，再把智能体指向一个端点 URL。智能体随后就能拿到一小组工具，用来读取、搜索和发送邮件。难点其实不在智能体本身——而在于如何做到这一点，又不让你的密码泄露到提示词、日志或向量库里。这"最后一公里"正是本指南要讲的内容。
 
 如果你只想走最快的路径：在仪表盘里连接一个邮箱，把 MCP 端点粘贴到 [claude.ai](https://claude.ai)、Claude Desktop、Cursor 或你自己的智能体里，然后先调用一次 \`inbox_list\`。本文余下部分会解释背后实际发生了什么、为什么安全模型至关重要，以及如何接入每一个受支持的服务商。

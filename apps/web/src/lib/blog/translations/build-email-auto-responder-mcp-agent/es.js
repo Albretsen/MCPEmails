@@ -1,7 +1,7 @@
 const translation = {
   title: 'Cómo crear un autorrespondedor de correo con un agente conectado por MCP',
   description: 'Crea un autorrespondedor de correo con un agente de IA conectado por MCP: sondea el correo sin leer, redacta y responde con seguridad usando scopes, límites y guardarraíles.',
-  coverAlt: 'Cómo crear un autorrespondedor de correo con un agente conectado por MCP — MCPEmails',
+  coverAlt: 'Cómo crear un autorrespondedor de correo con un agente conectado por MCP — MCP Emails',
   content: `Un autorrespondedor de correo construido sobre MCP Emails es un bucle, no un webhook. No hay eventos iniciados por el servidor, así que tu agente **sondea** el correo sin leer según una programación con \`email_read\` (acción \`list\`), lee cada mensaje con \`email_read\` (acción \`read\`), redacta una respuesta y llama a \`email_compose\` (acción \`reply\`). Este artículo recorre la construcción completa: el bucle de sondeo, los scopes que necesitas, cómo sobrevivir a los límites de tasa y los guardarraíles que evitan que un agente bombardee a tus contactos con respuestas alucinadas.
 
 Esto es el extremo avanzado de la historia de [dale acceso al correo a tu agente de IA](/blog/how-to-give-your-ai-agent-email-access). Si solo quieres triaje y resúmenes matutinos sin enviar nada, lee antes [triaje y resumen de bandeja con un agente de IA](/blog/ai-agent-triage-summarize-inbox): es el sitio más seguro para empezar. Vuelve aquí cuando de verdad quieras que el agente le dé a enviar.

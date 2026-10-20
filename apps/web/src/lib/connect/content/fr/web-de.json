@@ -26,23 +26,23 @@
     "meta0": "1 boîte gratuite, pour toujours",
     "meta1": "Le mot de passe de votre compte, sans configuration OAuth",
     "meta2": "E-mails récupérés en direct, jamais stockés",
-    "answer": "Claude ne peut pas accéder seul à WEB.DE. mcpemails est un serveur MCP hébergé qui le connecte en IMAP avec le mot de passe de votre compte, pour que Claude, Cursor ou tout client MCP puisse lire, rechercher, envoyer et organiser ce courrier. La configuration prend quelques minutes et une boîte est gratuite."
+    "answer": "Claude ne peut pas accéder seul à WEB.DE. MCP Emails est un serveur MCP hébergé qui le connecte en IMAP avec le mot de passe de votre compte, pour que Claude, Cursor ou tout client MCP puisse lire, rechercher, envoyer et organiser ce courrier. La configuration prend quelques minutes et une boîte est gratuite."
   },
   "method": {
     "title": "Comment WEB.DE se connecte : IMAP et le mot de passe de votre compte",
-    "body": "WEB.DE se connecte en IMAP/SMTP, mais <b>l'accès POP3 et IMAP est désactivé par défaut</b>. Activez-le dans WEB.DE sous E-Mail-Einstellungen (réglages e-mail), E-Mail empfangen (réception), POP3/IMAP, puis connectez-vous avec votre adresse et votre mot de passe WEB.DE. WEB.DE répond sur les deux transports sortants standard, TLS implicite sur le port 465 et STARTTLS sur le port 587 : le port n'est donc presque jamais la raison d'un échec d'envoi. mcpemails utilise la paire en 465 ci-dessous et bascule seul sur l'autre si besoin."
+    "body": "WEB.DE se connecte en IMAP/SMTP, mais <b>l'accès POP3 et IMAP est désactivé par défaut</b>. Activez-le dans WEB.DE sous E-Mail-Einstellungen (réglages e-mail), E-Mail empfangen (réception), POP3/IMAP, puis connectez-vous avec votre adresse et votre mot de passe WEB.DE. WEB.DE répond sur les deux transports sortants standard, TLS implicite sur le port 465 et STARTTLS sur le port 587 : le port n'est donc presque jamais la raison d'un échec d'envoi. MCP Emails utilise la paire en 465 ci-dessous et bascule seul sur l'autre si besoin."
   },
   "setup": [
     {
       "h": "Créez un compte gratuit",
-      "p": "Inscrivez-vous sur mcpemails, sans carte bancaire. L'offre gratuite connecte une boîte, pour toujours."
+      "p": "Inscrivez-vous sur MCP Emails, sans carte bancaire. L'offre gratuite connecte une boîte, pour toujours."
     },
     {
       "h": "Activez l'accès IMAP dans WEB.DE",
       "p": "Dans WEB.DE, ouvrez E-Mail-Einstellungen (réglages e-mail), choisissez POP3/IMAP sous E-Mail empfangen, et placez le curseur sur POP3- und IMAP-Zugriff erlauben (autoriser l'accès POP3 et IMAP)."
     },
     {
-      "h": "Ajoutez la boîte dans mcpemails",
+      "h": "Ajoutez la boîte dans MCP Emails",
       "p": "Choisissez IMAP / SMTP, ajoutez votre adresse WEB.DE, les serveurs ci-dessus et le mot de passe pour connecter la boîte de façon sécurisée."
     },
     {
@@ -69,14 +69,14 @@
     }
   ],
   "limits": [
-    "mcpemails connecte uniquement la boîte WEB.DE. WEB.DE Online-Speicher, le carnet d'adresses et le calendrier sont des produits distincts et ne sont pas exposés à votre client IA.",
+    "MCP Emails connecte uniquement la boîte WEB.DE. WEB.DE Online-Speicher, le carnet d'adresses et le calendrier sont des produits distincts et ne sont pas exposés à votre client IA.",
     "Le curseur POP3/IMAP est contrôlé par WEB.DE, pas par nous. Si WEB.DE désactive la récupération après une longue période d'inactivité, la connexion doit être réactivée dans WEB.DE avant de fonctionner de nouveau.",
     "WEB.DE est une boîte grand public avec ses propres limites d'envoi anti-abus. Utilisez-la pour une correspondance ordinaire, pas pour des envois en masse ou des campagnes."
   ],
   "faq": [
     {
       "q": "Claude fonctionne-t-il avec WEB.DE ?",
-      "a": "Pas seul. Claude n'a pas de connecteur WEB.DE intégré. Brancher un serveur MCP comme mcpemails sur votre boîte WEB.DE en IMAP donne à Claude un accès en lecture, recherche, envoi, réponse, planification et organisation, et la même connexion fonctionne ensuite depuis Cursor, ChatGPT et les autres clients MCP, pas un seul."
+      "a": "Pas seul. Claude n'a pas de connecteur WEB.DE intégré. Brancher un serveur MCP comme MCP Emails sur votre boîte WEB.DE en IMAP donne à Claude un accès en lecture, recherche, envoi, réponse, planification et organisation, et la même connexion fonctionne ensuite depuis Cursor, ChatGPT et les autres clients MCP, pas un seul."
     },
     {
       "q": "Quels sont les réglages IMAP et SMTP de WEB.DE ?",

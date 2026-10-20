@@ -18,8 +18,8 @@
     "eyebrow": "EarthLink Mail + IA",
     "titleLine1": "Conecta una bandeja de EarthLink",
     "titleLine2": "a Claude, Cursor y cualquier cliente MCP",
-    "lead": "EarthLink sigue gestionando sus propios servidores de correo, más antiguos que buena parte de internet y todavía en marcha. mcpemails conecta uno por IMAP para que tu agente de IA pueda leer, buscar, enviar, responder y archivar ese correo.",
-    "answer": "Claude no puede acceder por sí solo a un buzón de EarthLink. mcpemails es un servidor MCP alojado que lo conecta por IMAP en imap.earthlink.net en el puerto 993, iniciando sesión con tu dirección de correo completa y tu contraseña de correo normal. EarthLink no emite contraseñas específicas de aplicación ni tiene ningún interruptor de acceso de clientes que activar, así que la credencial que ya usas es la que funciona, y los mismos ajustes sirven para las direcciones mindspring.com, peoplepc.com e ix.netcom.com que EarthLink sigue alojando. El correo saliente usa otro nombre de servidor, smtpauth.earthlink.net en el puerto 587. Una bandeja es gratis, para siempre.",
+    "lead": "EarthLink sigue gestionando sus propios servidores de correo, más antiguos que buena parte de internet y todavía en marcha. MCP Emails conecta uno por IMAP para que tu agente de IA pueda leer, buscar, enviar, responder y archivar ese correo.",
+    "answer": "Claude no puede acceder por sí solo a un buzón de EarthLink. MCP Emails es un servidor MCP alojado que lo conecta por IMAP en imap.earthlink.net en el puerto 993, iniciando sesión con tu dirección de correo completa y tu contraseña de correo normal. EarthLink no emite contraseñas específicas de aplicación ni tiene ningún interruptor de acceso de clientes que activar, así que la credencial que ya usas es la que funciona, y los mismos ajustes sirven para las direcciones mindspring.com, peoplepc.com e ix.netcom.com que EarthLink sigue alojando. El correo saliente usa otro nombre de servidor, smtpauth.earthlink.net en el puerto 587. Una bandeja es gratis, para siempre.",
     "meta0": "1 bandeja gratis, para siempre",
     "meta1": "Tu contraseña de correo, sin contraseña de aplicación",
     "meta2": "El correo se obtiene en vivo, nunca se almacena"
@@ -30,7 +30,7 @@
   },
   "setup": [
     {
-      "h": "Crea una cuenta gratis en mcpemails",
+      "h": "Crea una cuenta gratis en MCP Emails",
       "p": "Regístrate en mcpemails.com. El plan gratuito conecta una bandeja y no pide tarjeta."
     },
     {
@@ -39,7 +39,7 @@
     },
     {
       "h": "Introduce la dirección completa y esa contraseña",
-      "p": "En mcpemails elige IMAP / SMTP e introduce la dirección exactamente como está escrita, incluida <code>name@mindspring.com</code>. Los servidores y puertos de EarthLink de arriba ya vienen rellenados y se verificaron con una conexión TLS real, incluido el servidor de salida aparte en el puerto 587."
+      "p": "En MCP Emails elige IMAP / SMTP e introduce la dirección exactamente como está escrita, incluida <code>name@mindspring.com</code>. Los servidores y puertos de EarthLink de arriba ya vienen rellenados y se verificaron con una conexión TLS real, incluido el servidor de salida aparte en el puerto 587."
     },
     {
       "h": "Pega la URL MCP en tu IA",
@@ -48,8 +48,8 @@
   ],
   "gotchas": [
     {
-      "h": "EarthLink no anuncia ni PLAIN ni LOGIN, así que mcpemails inicia sesión con el comando LOGIN de IMAP",
-      "p": "La lista de capacidades que EarthLink devuelve antes del inicio de sesión ofrece <code>AUTH=CRAM-MD5</code>, <code>AUTH=EL-TAC</code> y <code>AUTH=EL-VOICE</code>, sin <code>AUTH=PLAIN</code> y sin <code>AUTH=LOGIN</code>. Los dos últimos son mecanismos propios de EarthLink y ningún cliente de correo normal los implementa. mcpemails lee esa lista antes de iniciar sesión. Cuando un servidor ofrece mecanismos pero no PLAIN, y no anuncia <code>LOGINDISABLED</code>, mcpemails usa el comando <code>LOGIN</code> de IMAP, que forma parte del IMAP básico y no necesita anunciarse. Envía la misma dirección y contraseña que enviaría PLAIN, dentro de la misma conexión TLS. Probamos EarthLink con una cuenta inventada, un intento por mecanismo: <code>LOGIN</code> respondió \"Login incorrect\", la respuesta de un servidor que sí comprobó la credencial, mientras que PLAIN y CRAM-MD5 respondieron ambos \"Server(s) unavailable to complete operation\". mcpemails también implementa CRAM-MD5, pero solo lo usa con servidores que desactivan LOGIN. Lo que aún no se ha probado es un inicio de sesión con un buzón real de EarthLink, así que esta vía está verificada frente a las respuestas del servidor, no de extremo a extremo."
+      "h": "EarthLink no anuncia ni PLAIN ni LOGIN, así que MCP Emails inicia sesión con el comando LOGIN de IMAP",
+      "p": "La lista de capacidades que EarthLink devuelve antes del inicio de sesión ofrece <code>AUTH=CRAM-MD5</code>, <code>AUTH=EL-TAC</code> y <code>AUTH=EL-VOICE</code>, sin <code>AUTH=PLAIN</code> y sin <code>AUTH=LOGIN</code>. Los dos últimos son mecanismos propios de EarthLink y ningún cliente de correo normal los implementa. MCP Emails lee esa lista antes de iniciar sesión. Cuando un servidor ofrece mecanismos pero no PLAIN, y no anuncia <code>LOGINDISABLED</code>, MCP Emails usa el comando <code>LOGIN</code> de IMAP, que forma parte del IMAP básico y no necesita anunciarse. Envía la misma dirección y contraseña que enviaría PLAIN, dentro de la misma conexión TLS. Probamos EarthLink con una cuenta inventada, un intento por mecanismo: <code>LOGIN</code> respondió \"Login incorrect\", la respuesta de un servidor que sí comprobó la credencial, mientras que PLAIN y CRAM-MD5 respondieron ambos \"Server(s) unavailable to complete operation\". MCP Emails también implementa CRAM-MD5, pero solo lo usa con servidores que desactivan LOGIN. Lo que aún no se ha probado es un inicio de sesión con un buzón real de EarthLink, así que esta vía está verificada frente a las respuestas del servidor, no de extremo a extremo."
     },
     {
       "h": "El servidor de salida no es imap ni smtp punto earthlink punto net",
@@ -57,7 +57,7 @@
     },
     {
       "h": "Un inicio de sesión fallido cierra la conexión",
-      "p": "EarthLink no anuncia SASL-IR y, tras un inicio de sesión rechazado, cierra la conexión en lugar de dejar que el cliente pruebe otra vía. Por eso mcpemails elige el mecanismo a partir de la lista de capacidades antes de enviar nada, en lugar de probar PLAIN primero y recurrir a otro después: una primera suposición errónea gastaría el intento, y conviene evitar fallos repetidos contra un buzón. El comando <code>LOGIN</code> es un solo paso, así que la falta de SASL-IR no le afecta."
+      "p": "EarthLink no anuncia SASL-IR y, tras un inicio de sesión rechazado, cierra la conexión en lugar de dejar que el cliente pruebe otra vía. Por eso MCP Emails elige el mecanismo a partir de la lista de capacidades antes de enviar nada, en lugar de probar PLAIN primero y recurrir a otro después: una primera suposición errónea gastaría el intento, y conviene evitar fallos repetidos contra un buzón. El comando <code>LOGIN</code> es un solo paso, así que la falta de SASL-IR no le afecta."
     },
     {
       "h": "Sin IDLE, sin MOVE y sin SPECIAL-USE en este servidor",
@@ -72,7 +72,7 @@
   "faq": [
     {
       "q": "¿Funciona Claude con el correo de EarthLink?",
-      "a": "No directamente. Claude no tiene un conector integrado para EarthLink. Conectar un servidor MCP como mcpemails al buzón por IMAP le da a Claude acceso para leer, buscar, enviar, responder, programar y organizar tu correo de earthlink.net o mindspring.com, y la misma conexión funciona en Cursor, ChatGPT y otros clientes MCP."
+      "a": "No directamente. Claude no tiene un conector integrado para EarthLink. Conectar un servidor MCP como MCP Emails al buzón por IMAP le da a Claude acceso para leer, buscar, enviar, responder, programar y organizar tu correo de earthlink.net o mindspring.com, y la misma conexión funciona en Cursor, ChatGPT y otros clientes MCP."
     },
     {
       "q": "¿Cuáles son los ajustes IMAP y SMTP de EarthLink?",
@@ -84,7 +84,7 @@
     },
     {
       "q": "¿Necesita EarthLink una contraseña de aplicación?",
-      "a": "No. EarthLink no emite contraseñas específicas de aplicación ni tiene una página para crearlas. Un cliente de correo inicia sesión con la contraseña de ese buzón. Antes del inicio de sesión, EarthLink solo anuncia CRAM-MD5 y dos mecanismos propios, no PLAIN ni LOGIN, y por eso algunos clientes ni siquiera llegan a enviar una contraseña correcta. mcpemails inicia sesión en su lugar con el comando LOGIN de IMAP, que el servidor de EarthLink responde como una comprobación normal de credenciales. Esto se ha confirmado solo con una cuenta inventada, todavía no con un buzón real de EarthLink."
+      "a": "No. EarthLink no emite contraseñas específicas de aplicación ni tiene una página para crearlas. Un cliente de correo inicia sesión con la contraseña de ese buzón. Antes del inicio de sesión, EarthLink solo anuncia CRAM-MD5 y dos mecanismos propios, no PLAIN ni LOGIN, y por eso algunos clientes ni siquiera llegan a enviar una contraseña correcta. MCP Emails inicia sesión en su lugar con el comando LOGIN de IMAP, que el servidor de EarthLink responde como una comprobación normal de credenciales. Esto se ha confirmado solo con una cuenta inventada, todavía no con un buzón real de EarthLink."
     },
     {
       "q": "¿Se almacena mi correo de EarthLink en sus servidores?",
