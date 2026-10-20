@@ -472,7 +472,7 @@ export function validateTriageAction(raw: unknown): TriageValidation<TriageActio
       if (isForbiddenMoveDestination(folder)) {
         return fail(
           `action.folder '${folder}' is not available to automations. Every provider ` +
-            "empties its trash and junk folders on a timer, so moving mail there " +
+            "empties its trash on a timer, so moving mail there " +
             "unattended is a delete with a delayed fuse, and automations do not delete " +
             "mail. Move it to a folder you own and review it there.",
         );
@@ -926,12 +926,12 @@ export interface TriageFolderTarget {
    */
   verified: boolean;
   /**
-   * Set when the provider says the resolved folder IS its trash or junk, even
-   * though the rule's name for it passed validateTriageAction: an IMAP mailbox
-   * flagged \\Trash or \\Junk under a name nobody listed ("Müll"). The run
+   * Set when the provider says the resolved folder IS its trash, even though
+   * the rule's name for it passed validateTriageAction: an IMAP mailbox flagged
+   * \\Trash under a name nobody listed ("Müll"). The run
    * refuses the move, for the reason TRIAGE_FORBIDDEN_MOVE_DESTINATIONS gives.
    */
-  forbiddenRole?: "trash" | "junk" | null;
+  forbiddenRole?: "trash" | null;
 }
 
 export interface TriageDeps {
@@ -1603,8 +1603,8 @@ export async function runTriageRule(
         return await failRun(
           "invalid_action",
           `action.folder '${action.folder}' resolves to this mailbox's ` +
-            `${target.forbiddenRole ?? "trash or junk"} folder. Every provider empties ` +
-            "its trash and junk folders on a timer, so automations do not move mail there.",
+            "trash folder. Every provider empties its trash on a timer, so automations " +
+            "do not move mail there.",
           "Point the rule at a folder you own.",
         );
       }

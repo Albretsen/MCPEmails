@@ -73,10 +73,10 @@ export const MAX_MESSAGES_PER_RUN = 200;
 const DELETE_SHAPED = ['delete', 'trash', 'purge', 'remove', 'destroy', 'erase', 'expunge'];
 
 // Move destinations refused because moving mail there is deletion wearing a
-// different hat: every provider auto-purges trash and junk on a timer, so an
-// unattended move to Trash is a delete with a delayed fuse. IMPORTED from the
-// edge function rather than copied: the refused names are derived from the
-// folder resolver's localized trash and junk names (Papierkorb, Корзина,
+// different hat: every provider auto-purges trash on a timer, so an unattended
+// move to Trash is a delete with a delayed fuse. Junk and spam are allowed.
+// IMPORTED from the edge function rather than copied: the refused names are
+// derived from the folder resolver's localized trash names (Papierkorb, Корзина,
 // Éléments supprimés, ...), and a copy here is how this list stayed English
 // while the resolver learned 42 languages. Pure and import-free apart from
 // imap-folder-target.ts, for the reason given above unrunnableFilterFields.
@@ -245,8 +245,8 @@ export function validateAction(raw: unknown): ValidationResult<StoredAction> {
     if (folder.length > 200) return fail('A folder name can be at most 200 characters.');
     if (isForbiddenMoveDestination(folder)) {
       return fail(
-        'Automations cannot move mail into trash or junk. Those folders are emptied '
-        + 'automatically, so it would be a delete on a timer. Choose a folder you own.',
+        'Automations cannot move mail into the trash. It is emptied automatically, '
+        + 'so it would be a delete on a timer. Choose a folder you own.',
       );
     }
     return { ok: true, value: { type: 'move', folder } };

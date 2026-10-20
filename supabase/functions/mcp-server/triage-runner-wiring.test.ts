@@ -124,7 +124,7 @@ Deno.test("the move destination is resolved strictly first, so 'verified' means 
   assertStringIncludes(deps, "verified: true", "and a strict hit is what verified means");
 });
 
-Deno.test("the resolved destination carries the trash or junk role its SPECIAL-USE flags give it", () => {
+Deno.test("the resolved destination carries the trash role its SPECIAL-USE flags give it", () => {
   // A mailbox flagged \\Trash under a name no list knows ("Müll") passes
   // validateTriageAction; this is the only place the run can still see it.
   const deps = triageDepsSource();

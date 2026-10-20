@@ -58,18 +58,21 @@ test('the two copies of the automation filter field lists agree', () => {
   }
 });
 
-test('a move into trash or junk is refused in any language', () => {
+test('a move into trash is refused in any language, and junk is allowed', () => {
   // The dashboard and REST write path refuse the same names the runner does,
   // because both call the edge function's isForbiddenMoveDestination. Until
   // 2026-10-20 this side held its own English-only copy, so "Papierkorb" saved.
   for (const folder of [
     'Trash', '[Gmail]/Trash', 'INBOX.Deleted Items', 'Papierkorb', 'INBOX/Корзина',
-    'Éléments supprimés', 'ごみ箱', 'Correo no deseado', 'INBOX.Nepageidaujamas el. paštas',
+    'Éléments supprimés', 'ごみ箱', 'INBOX.Gelöschte Elemente',
   ]) {
     const result = validateAction({ type: 'move', folder });
     assert.equal(result.ok, false, `move to '${folder}' must be refused`);
   }
-  for (const folder of ['Archive', 'Archiv', 'Clients', 'Trashed drafts', 'Junk mail leads']) {
+  for (const folder of [
+    'Archive', 'Archiv', 'Clients', 'Trashed drafts', 'Junk', 'Spam', 'Junk Email', 'Bulk',
+    'Correo no deseado',
+  ]) {
     const result = validateAction({ type: 'move', folder });
     assert.equal(result.ok, true, `move to '${folder}' must stay allowed`);
   }
