@@ -253,8 +253,9 @@ Deno.test({
   sanitizeOps: false,
   sanitizeResources: false,
 }, async () => {
-  // No database is reached: every request here is refused before the key
-  // lookup. The URL is a closed local port so a regression fails fast.
+  // Only requests answered before any database or mode-dependent path, so
+  // the result does not depend on which suite imported index.ts first (the
+  // module is cached per process, with that suite's environment).
   Deno.env.set("MCP_SERVER_NO_LISTEN", "1");
   if (!Deno.env.get("SUPABASE_URL")) Deno.env.set("SUPABASE_URL", "http://127.0.0.1:9");
   if (!Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")) Deno.env.set("SUPABASE_SERVICE_ROLE_KEY", "placeholder");
@@ -265,21 +266,16 @@ Deno.test({
   assertEquals(noAuth.status, 401);
   assertEquals(noAuth.headers.get("www-authenticate"), NO_TOKEN_CHALLENGE);
   assertEquals((await noAuth.json()).error, "unauthorized");
-  const badShape = await handleRequest(
-    new Request(`${URL_WEB}?key=mcpe_short`, { method: "POST", body: '{"jsonrpc":"2.0","id":4,"method":"tools/list"}' }),
+  const get = await handleRequest(new Request(URL_WEB, { method: "GET" }));
+  assertEquals(get.status, 405);
+  assertEquals(get.headers.get("allow"), "POST, OPTIONS");
+  // The bare URL keeps the server's own preflight (its wider header list and
+  // Max-Age, no Expose-Headers).
+  const barePre = await handleRequest(
+    new Request("https://x.supabase.co/functions/v1/mcp-server", { method: "OPTIONS" }),
   );
-  assertEquals(badShape.status, 401);
-  assertEquals(badShape.headers.get("www-authenticate"), BAD_TOKEN_CHALLENGE);
-  assertEquals((await badShape.json()).error.message, "Invalid or revoked API key.");
-  const bare = await handleRequest(
-    new Request("https://x.supabase.co/functions/v1/mcp-server", {
-      method: "POST",
-      body: '{"jsonrpc":"2.0","id":4,"method":"tools/list"}',
-    }),
-  );
-  assertEquals(bare.status, 401);
-  assertEquals(bare.headers.get("www-authenticate"), null);
-  await bare.body?.cancel();
+  assertEquals(barePre.headers.get("access-control-max-age"), "86400");
+  assertEquals(barePre.headers.get("access-control-expose-headers"), null);
 });
 
 Deno.test("WEB_CORS_HEADERS is exactly the old route's set", () => {
