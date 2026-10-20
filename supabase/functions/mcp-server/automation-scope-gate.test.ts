@@ -67,7 +67,7 @@ async function createRule(scopes: string[], ruleAction: Record<string, unknown>)
     },
     1,
     oauthToken(scopes),
-    { ipAddress: null, userAgent: null },
+    { userAgent: null },
   ) as CallResponse;
 }
 
