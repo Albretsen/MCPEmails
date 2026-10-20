@@ -11,7 +11,7 @@ export async function generateMetadata({ params }) {
   await params;
   // Don't expose workspace name in the title before the user has been verified.
   return {
-    title: 'Accept invite · MCP Emails',
+    title: 'Accept invite',
     // Prevent invite pages from being indexed.
     robots: { index: false, follow: false },
   };

@@ -63,7 +63,7 @@ const ACTION_METER_VERSION = 1;
 export const dynamic = 'force-dynamic';
 
 export const metadata = {
-  title: 'Dashboard · MCP Emails',
+  title: 'Dashboard',
   description: 'Manage your MCP Emails inboxes and API keys',
 };
 
