@@ -6,7 +6,7 @@
   "homepage": "https://mcpemails.com/docs/clients?utm_source=lobehub&utm_medium=directory&utm_campaign=listing",
   "icon": "https://mcpemails.com/icon.png",
   "identifier": "albretsen-mcpemails",
-  "name": "MCP Emails",
+  "name": "MCPEmails",
   "prompts": [
     {
       "arguments": [
@@ -2566,5 +2566,5 @@
       "title": "Hide the draft editor card"
     }
   ],
-  "version": "1.0.4"
+  "version": "1.0.5"
 }
