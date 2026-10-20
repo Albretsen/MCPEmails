@@ -44,6 +44,13 @@ export const KINDS = ['added', 'improved', 'fixed', 'changed'];
 export const ENTRIES = [
   /* ── October 2026 ──────────────────────────────────────────── */
   {
+    date: '2026-10-21',
+    kind: 'added',
+    title: 'Free IMAP and SMTP settings lookup',
+    body:
+      'Type an email address or domain at mcpemails.com/tools/email-settings-lookup to see its incoming and outgoing server, port and security setting. For a company domain it reads the MX records to show which provider runs the mailbox.',
+  },
+  {
     date: '2026-10-20',
     kind: 'fixed',
     title: 'Approved scheduled sends go out on time',

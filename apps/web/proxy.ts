@@ -44,6 +44,9 @@ const MARKETING_PATHS = new Set([
   '/status',
   '/about',
   '/native-connectors-vs-mcp',
+  // The free IMAP/SMTP settings lookup. en, nb, es, fr and de; the route
+  // itself 404s zh, which has no content file.
+  '/tools/email-settings-lookup',
   // The ranked field of email MCP servers. English only, so it is a flat entry
   // rather than a prefix; the route itself 404s the other locales.
   '/best-email-mcp-servers',

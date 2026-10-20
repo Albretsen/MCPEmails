@@ -145,7 +145,11 @@ export async function buildContentSecurityPolicy(nonce: string): Promise<string>
     `script-src ${scriptSrc.join(' ')}`,
     "style-src 'self' 'unsafe-inline' https://fonts.googleapis.com",
     "img-src 'self' data: blob: https://*.supabase.co https://lh3.googleusercontent.com https://avatars.githubusercontent.com",
-    "connect-src 'self' https://*.supabase.co wss://*.supabase.co https://api.stripe.com",
+    // cloudflare-dns.com and autoconfig.thunderbird.net: the free settings
+    // lookup at /tools/email-settings-lookup resolves MX records and reads
+    // Mozilla's ISPDB from the visitor's browser. Both answer with
+    // Access-Control-Allow-Origin: *.
+    "connect-src 'self' https://*.supabase.co wss://*.supabase.co https://api.stripe.com https://cloudflare-dns.com https://autoconfig.thunderbird.net",
     "font-src 'self' https://fonts.gstatic.com",
     'frame-src https://js.stripe.com https://hooks.stripe.com',
     "frame-ancestors 'none'",

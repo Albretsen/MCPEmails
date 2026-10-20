@@ -150,6 +150,7 @@ export const ROUTES = [
   ['app/[locale]/self-hosting/page.js', 'iad1', '0', '-'],
   ['app/[locale]/status/page.js', 'iad1', '0 (snapshot cached 5 min)', '-'],
   ['app/[locale]/terms/page.js', 'iad1', '0', '-'],
+  ['app/[locale]/tools/email-settings-lookup/page.js', 'iad1', '0', '-'],
   ['app/[locale]/cancel/page.js', 'iad1', '0', '-'],
   ['app/[locale]/withdrawal/page.js', 'iad1', '0', '-'],
   ['app/admin/growth/dunning/page.tsx', 'arn1', '2+', '-'],

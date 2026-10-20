@@ -16,7 +16,7 @@
 //     VS Code, Windsurf, Gemini CLI, Zed, Raycast and Warp run the OAuth 2.1
 //     browser flow against /.well-known/oauth-authorization-server (RFC 7591
 //     dynamic registration, authorization code + PKCE with S256, public
-//     clients only). Cline, JetBrains and raw HTTP callers do not, and paste a
+//     clients only). Cline, JetBrains, n8n and raw HTTP callers do not, and paste a
 //     scoped API key into an Authorization header instead. Publishing the
 //     wrong one of those two for a client sends the reader down a path that
 //     cannot complete.
@@ -28,7 +28,7 @@
 //
 // Prose lives in src/lib/clients/content/<locale>/<slug>.json, deliberately
 // NOT in a next-intl namespace: src/i18n/request.ts hands every marketing
-// namespace to every marketing page, so putting thirteen clients' copy there
+// namespace to every marketing page, so putting every client's copy there
 // would put all of it in the bundle of the home page too.
 
 /** The endpoint every one of these pages tells the reader to paste. */
@@ -233,6 +233,19 @@ export const CLIENTS = [
     config: null,
     guide: 'https://docs.warp.dev/agent-platform/capabilities/mcp/',
     locales: ['en', 'nb', 'es', 'fr', 'zh', 'de'],
+  },
+  {
+    slug: 'n8n',
+    name: 'n8n',
+    surface: 'the AI Agent node in n8n workflows',
+    category: 'terminal',
+    logo: 'n8n',
+    color: '#EA4B71',
+    auth: 'apikey',
+    configFile: null,
+    config: null,
+    guide: 'https://docs.n8n.io/integrations/builtin/cluster-nodes/sub-nodes/n8n-nodes-langchain.toolmcp/',
+    locales: ['en', 'nb', 'es', 'fr', 'de'],
   },
   {
     slug: 'curl',

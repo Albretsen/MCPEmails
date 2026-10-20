@@ -1,0 +1,102 @@
+{
+  "_sources": [
+    "apps/web/src/lib/api-keys/generate.ts + apps/web/src/lib/api-keys/scopes.ts",
+    "supabase/functions/mcp-server/web-ingress.ts",
+    "supabase/functions/mcp-server/index.ts (RATE_LIMIT_WINDOWS, search_and_move partial output schema)",
+    "apps/web/messages/en/docs.json (approval, automation)",
+    "https://docs.n8n.io/integrations/builtin/cluster-nodes/sub-nodes/n8n-nodes-langchain.toolmcp/",
+    "https://docs.n8n.io/integrations/builtin/core-nodes/n8n-nodes-langchain.mcpclient/",
+    "https://docs.n8n.io/integrations/builtin/credentials/mcp/",
+    "https://github.com/n8n-io/n8n/blob/master/packages/@n8n/nodes-langchain/nodes/mcp/McpClientTool/McpClientTool.node.ts",
+    "https://github.com/n8n-io/n8n/blob/master/packages/nodes-base/credentials/HttpBearerAuth.credentials.ts"
+  ],
+  "meta": {
+    "title": "Conecta el correo a n8n: MCP Client Tool para el AI Agent",
+    "description": "Conecta el correo a un AI Agent de n8n con el nodo MCP Client Tool: HTTP Streamable, Bearer Auth y una clave de API con permisos. Lee, busca, redacta y envía correo."
+  },
+  "hero": {
+    "eyebrow": "n8n + correo",
+    "titleLine1": "Conecta tu bandeja a n8n",
+    "titleLine2": "con el MCP Client Tool",
+    "lead": "Dale un buzón real al AI Agent de tu flujo de trabajo de n8n. Puede leer, buscar, redactar, enviar, responder, reenviar y organizar correo en carpetas a través de un único endpoint MCP, con una clave limitada exactamente a lo que debe hacer el flujo.",
+    "meta0": "Funciona con el nodo MCP Client Tool integrado",
+    "meta1": "Clave de API con permisos, revocable con un clic",
+    "meta2": "Correo obtenido en vivo, nunca almacenado",
+    "answer": "En tu flujo de trabajo de n8n, añade un nodo MCP Client Tool a la entrada Tool del AI Agent. Pon https://mcpemails.com/api/mcp en Endpoint, HTTP Streamable en Server Transport y Bearer Auth en Authentication, y pega como Bearer Token una clave de API de tu panel de MCPEmails."
+  },
+  "method": {
+    "title": "Cómo se conecta n8n: una credencial Bearer Auth con una clave limitada",
+    "body": "El nodo MCP Client Tool envía la credencial que le adjuntes. Esta guía usa la credencial <b>Bearer Auth</b> de n8n, que pone tu clave en la cabecera <code>Authorization</code> de cada solicitud. Crea la clave en tu panel y marca solo los permisos que necesita el flujo. Un flujo de trabajo suele ejecutarse de forma programada, sin nadie pendiente, así que esos permisos son el límite que importa. Las conexiones con clave y las conexiones OAuth usan el mismo endpoint y reciben el mismo catálogo de herramientas."
+  },
+  "setup": [
+    {
+      "h": "Crea una cuenta gratis y conecta un buzón",
+      "p": "Regístrate en mcpemails.com, sin tarjeta, y luego ve a Dashboard, Inboxes, Connect Inbox. Outlook y Microsoft 365 se conectan con el inicio de sesión de Microsoft; Gmail, iCloud, Fastmail, Yahoo, Zoho y Yandex requieren una contraseña de aplicación; cualquier otro se conecta por IMAP y SMTP estándar."
+    },
+    {
+      "h": "Crea una clave de API con permisos",
+      "p": "En Dashboard, API Keys, haz clic en Create key. Ponle el nombre del flujo y marca solo los permisos que necesita: <code>read:email</code>, <code>search:email</code>, <code>send:email</code>, <code>manage:folders</code>, <code>delete:email</code>, <code>manage:drafts</code>, <code>manage:contacts</code>, <code>schedule:email</code> y <code>manage:automations</code>. La clave tiene la forma <code>mcpe_</code> seguida de 64 caracteres hexadecimales y solo se muestra una vez, así que cópiala antes de cerrar el diálogo."
+    },
+    {
+      "h": "Añade el MCP Client Tool a tu AI Agent",
+      "p": "Abre el flujo de trabajo, haz clic en el + que hay bajo la entrada <b>Tool</b> del nodo AI Agent y elige <b>MCP Client Tool</b>. Pega <code>https://mcpemails.com/api/mcp</code> en <b>Endpoint</b> y pon <b>Server Transport</b> en <b>HTTP Streamable</b>."
+    },
+    {
+      "h": "Adjunta una credencial Bearer Auth",
+      "p": "Pon <b>Authentication</b> en <b>Bearer Auth</b>, crea una credencial nueva y pega la clave en <b>Bearer Token</b>, sin nada delante. Deja <b>Tools to Include</b> en All, o cámbialo a Selected y elige solo las herramientas que debe ver este flujo."
+    }
+  ],
+  "gotchas": [
+    {
+      "h": "Pega la clave sin la palabra Bearer",
+      "p": "La credencial Bearer Auth de n8n añade <code>Bearer</code> y un espacio por ti. Si lo escribes tú, la palabra se envía dos veces y la llamada falla con un 401. Si usas <b>Header Auth</b>, es al revés: Name es <code>Authorization</code> y Value es <code>Bearer</code>, un espacio y después la clave."
+    },
+    {
+      "h": "Un campo llamado SSE Endpoint indica un nodo antiguo",
+      "p": "La versión 1 del nodo MCP Client Tool tenía un único campo <b>SSE Endpoint</b> y no permitía elegir transporte. Las versiones actuales muestran <b>Endpoint</b> y <b>Server Transport</b>. Este servidor habla Streamable HTTP, así que si solo ves SSE Endpoint, añade un nodo nuevo o actualiza n8n. Si Server Transport indica Server Sent Events (Deprecated), cámbialo a HTTP Streamable."
+    },
+    {
+      "h": "Mantén el tiempo de espera predeterminado",
+      "p": "El nodo espera 60.000 ms por cada llamada a una herramienta, valor que se ajusta en Options, <b>Timeout</b>. Basta incluso para trabajo masivo: mover o eliminar en una carpeta grande se detiene antes al llegar al límite de tiempo del propio servidor y devuelve un resultado marcado como <code>partial</code>, con los mensajes sin procesar listados en <code>remaining_message_ids</code>, para que el agente vuelva a llamar con esos ids. Si bajas mucho el Timeout, la llamada puede cortarse antes de que llegue ese resultado, y el agente se queda sin saber qué se hizo."
+    },
+    {
+      "h": "Tools to Include oculta herramientas; los permisos de la clave las prohíben",
+      "p": "El nodo solo lista las herramientas para las que tu clave tiene permiso, porque el servidor deja el resto fuera de <code>tools/list</code>. Elegir un subconjunto en Tools to Include lo reduce aún más, lo que ayuda al modelo a elegir, pero no cambia lo que la clave puede hacer. Pon el límite en la clave y usa Tools to Include para que el agente no se disperse."
+    }
+  ],
+  "limits": [
+    "Las solicitudes están limitadas a 100 por minuto, 1.000 por hora y 10.000 al día por clave. Un flujo que recorre muchos elementos debe espaciar sus llamadas o repartir el trabajo entre claves distintas.",
+    "El servidor funciona solo por petición y respuesta. No hay webhooks ni eventos iniciados por el servidor, así que el correo nuevo nunca inicia un flujo por sí solo. Para reaccionar al correo entrante, inicia el flujo con un Schedule Trigger y haz que el agente compruebe si hay mensajes sin leer.",
+    "El correo se obtiene en vivo de tu proveedor en cada llamada y nunca se almacena. Solo se guarda el token OAuth o la contraseña de aplicación cifrados, así que un token revocado o un cambio de contraseña del buzón corta el acceso de inmediato."
+  ],
+  "faq": [
+    {
+      "q": "¿Cómo conecto el correo a un AI Agent de n8n?",
+      "a": "Añade un nodo MCP Client Tool a la entrada Tool del AI Agent. Pon https://mcpemails.com/api/mcp en Endpoint y HTTP Streamable en Server Transport, elige Bearer Auth y pega como Bearer Token una clave de API de Dashboard, API Keys. A partir de ahí el agente tiene herramientas para leer, buscar, redactar, enviar, responder, reenviar, organizar y programar correo."
+    },
+    {
+      "q": "¿Puedo llamar a una herramienta de correo sin un AI Agent?",
+      "a": "Sí. El nodo independiente MCP Client de n8n ejecuta una herramienta MCP como un paso normal del flujo, sin que ningún modelo decida a qué herramienta llamar. Apunta su MCP Endpoint URL a la misma dirección, adjunta la misma credencial Bearer Auth, elige una herramienta y rellena sus parámetros, por ejemplo email_read con action en list y unread en true. Encaja en flujos fijos cuyos pasos no cambian nunca."
+    },
+    {
+      "q": "¿Por qué Bearer Auth y no la credencial MCP OAuth2?",
+      "a": "n8n también ofrece una credencial MCP OAuth2. Esta guía usa Bearer Auth porque los permisos de una clave quedan fijados al crearla y se ven en tu panel, lo que facilita entender qué puede hacer un flujo que se ejecuta sin supervisión. Revocar la clave en Dashboard, API Keys detiene el flujo en su siguiente llamada."
+    },
+    {
+      "q": "¿Puede el flujo enviar correo sin que nadie lo revise?",
+      "a": "Solo si tú lo permites. Enviar requiere el permiso send:email, así que una clave sin él no puede enviar nada. También puedes activar la aprobación para una bandeja en el panel: los envíos, respuestas, reenvíos, envíos de borradores y envíos programados quedan retenidos, el agente recibe un resultado pendiente y un miembro del espacio de trabajo aprueba o rechaza cada uno antes de que salga nada."
+    },
+    {
+      "q": "¿A qué buzones puede acceder un flujo de n8n?",
+      "a": "Outlook.com y Microsoft 365 con el inicio de sesión de Microsoft, donde una cuenta del trabajo puede necesitar que un administrador de TI apruebe la aplicación una vez; Gmail, iCloud, Fastmail, Yahoo, Zoho y Yandex con una contraseña de aplicación; y cualquier otro buzón que hable IMAP y SMTP en los puertos estándar. Con varias bandejas conectadas, el agente llama a inbox_list para obtener el id de cada una, así que no hay UUID que escribir a mano en el flujo."
+    },
+    {
+      "q": "¿Se guarda mi correo en los servidores de MCPEmails?",
+      "a": "No. Cada mensaje se obtiene en vivo de tu proveedor para la solicitud que lo pidió y se entrega directamente a n8n. Solo se guarda el token OAuth o la contraseña de aplicación cifrados, para que las llamadas futuras puedan autenticarse. Eliminar la bandeja en el panel, o revocar el acceso en tu proveedor, corta la conexión al instante."
+    }
+  ],
+  "ctaBand": {
+    "title": "Dale a tu agente de n8n una bandeja real",
+    "sub": "Un endpoint, una credencial Bearer Auth, una clave con permisos. Sin tarjeta."
+  }
+}

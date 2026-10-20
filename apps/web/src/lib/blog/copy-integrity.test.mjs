@@ -188,11 +188,16 @@ test('the Outlook guide is indexable now that the connector is live', () => {
  * this pins the slugs that have been swept. Add a slug here as it is cleaned.
  */
 const EM_DASH_CLEAN_SLUGS = [
+  'can-claude-read-my-email',
+  'claude-custom-connectors-explained',
   'connect-chatgpt-to-email',
   'connect-claude-to-email',
+  'connect-claude-to-outlook-com-hotmail',
   'connect-gmail-to-claude',
   'connect-outlook-microsoft-365-ai-agent-mcp',
   'manage-multiple-email-accounts-with-ai',
+  'schedule-email-with-claude-and-chatgpt',
+  'what-is-an-app-password',
 ];
 
 for (const slug of EM_DASH_CLEAN_SLUGS) {
