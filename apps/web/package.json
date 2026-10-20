@@ -34,6 +34,7 @@
     "test:home-guides": "node --test --experimental-strip-types --experimental-test-module-mocks --import ./scripts/register-dom-tests.mjs components/marketing/home-guides.test.mjs",
     "test:acquisition": "node --test components/analytics/acquisition-capture.test.mjs",
     "test:connect-release": "node --test src/lib/connect/release.test.mjs",
+    "test:connect-dataset": "node --test src/lib/connect/provider-dataset.test.mjs",
     "test:connect-translations": "node --test src/lib/connect/translation-parity.test.mjs",
     "test:connect-intent": "node --test src/lib/connect/intent.test.mjs",
     "test:connect-guides": "node --test --experimental-strip-types --experimental-test-module-mocks --import ./scripts/register-dom-tests.mjs components/marketing/connect-provider-guides.test.mjs",

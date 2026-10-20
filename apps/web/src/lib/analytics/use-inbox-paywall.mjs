@@ -2,6 +2,7 @@
 
 import { useEffect, useRef } from 'react';
 import { createInboxPaywallReporter } from './inbox-paywall.mjs';
+import { parseConnectEntryPoint } from './connect-entry-point.mjs';
 
 /**
  * Fire-and-forget beacon recording that the inbox-cap upgrade panel was shown.
@@ -12,8 +13,10 @@ import { createInboxPaywallReporter } from './inbox-paywall.mjs';
  * `usePricingView`: a POST to a small authenticated endpoint that resolves the
  * workspace itself, rather than a second analytics mechanism.
  *
- * The endpoint takes no body at all, so nothing about the mailbox the user was
- * trying to connect can leak into the funnel. `keepalive` lets the request
+ * The body is one optional word, `entry_point`: which control opened the
+ * modal, from the closed list in connect-entry-point.mjs, which the endpoint
+ * checks again. Nothing about the mailbox the user was trying to connect is
+ * sent, so none of it can leak into the funnel. `keepalive` lets the request
  * survive the navigation to Stripe when someone reads the panel and clicks
  * upgrade immediately.
  *
@@ -21,26 +24,14 @@ import { createInboxPaywallReporter } from './inbox-paywall.mjs';
  * @param {boolean} state.isReconnect
  * @param {boolean} state.atInboxLimit
  * @param {boolean} state.serverLimitReached
+ * @param {string|null} [state.entryPoint] - Which control opened the modal.
  */
-/**
- * Fire-and-forget beacon: a buy button on the inbox-cap offer was clicked.
- *
- * The second half of the shown beacon above. `keepalive` because the click is
- * a navigation to Stripe, and the request has to outlive the page. No body,
- * for the same reason as the shown beacon: nothing about the mailbox or the
- * plan comes from the browser.
- */
-export function reportInboxPaywallClick() {
-  try {
-    fetch('/api/analytics/paywall-click', { method: 'POST', keepalive: true }).catch(() => {
-      // Analytics is never worth a console error in a user's browser.
-    });
-  } catch {
-    // A missing fetch (tests, very old browsers) must never block the click.
-  }
-}
+export function useInboxPaywallView({ isReconnect, atInboxLimit, serverLimitReached, entryPoint = null }) {
+  // Read at send time through a ref: the entry point belongs to the modal-open
+  // and must never be a reason for the effect below to run again.
+  const entry = useRef(entryPoint);
+  useEffect(() => { entry.current = entryPoint; }, [entryPoint]);
 
-export function useInboxPaywallView({ isReconnect, atInboxLimit, serverLimitReached }) {
   // One reporter per mount. The modal is conditionally rendered, so a mount is
   // exactly one modal-open and the dedupe guard resets when it should.
   const reporter = useRef(null);
@@ -53,7 +44,14 @@ export function useInboxPaywallView({ isReconnect, atInboxLimit, serverLimitReac
     // about measuring it may compete with rendering it.
     const id = setTimeout(() => {
       if (cancelled) return;
-      fetch('/api/analytics/paywall', { method: 'POST', keepalive: true }).catch(() => {
+      const entryPointValue = parseConnectEntryPoint(entry.current);
+      fetch('/api/analytics/paywall', {
+        method: 'POST',
+        keepalive: true,
+        ...(entryPointValue
+          ? { headers: { 'content-type': 'application/json' }, body: JSON.stringify({ entry_point: entryPointValue }) }
+          : {}),
+      }).catch(() => {
         // Analytics is never worth a console error in a user's browser.
       });
     }, 0);
@@ -62,4 +60,21 @@ export function useInboxPaywallView({ isReconnect, atInboxLimit, serverLimitReac
       clearTimeout(id);
     };
   }, [isReconnect, atInboxLimit, serverLimitReached]);
+}
+
+/**
+ * Fire-and-forget beacon: a buy button on the inbox-cap offer was clicked.
+ *
+ * The second half of the shown beacon above. `keepalive` because the click is
+ * a navigation to Stripe, and the request has to outlive the page. No body:
+ * nothing about the mailbox or the plan comes from the browser.
+ */
+export function reportInboxPaywallClick() {
+  try {
+    fetch('/api/analytics/paywall-click', { method: 'POST', keepalive: true }).catch(() => {
+      // Analytics is never worth a console error in a user's browser.
+    });
+  } catch {
+    // A missing fetch (tests, very old browsers) must never block the click.
+  }
 }

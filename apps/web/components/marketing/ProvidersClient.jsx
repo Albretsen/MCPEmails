@@ -508,6 +508,15 @@ export default function ProvidersClient() {
             <p style={{ margin: 0 }}>{t.rich('providers.connection.notes.autodetect', RICH)}</p>
             <p style={{ margin: 0 }}>{t.rich('providers.connection.notes.authMechanism', RICH)}</p>
             <p style={{ margin: 0 }}>{t.rich('providers.connection.notes.otherHosts', RICH)}</p>
+            {/* The dataset page is English only, so this is a plain <a> to the
+                unprefixed path: the locale-aware Link would send /es readers to
+                /es/docs/providers/data, which 404s by design. */}
+            <p style={{ margin: 0 }}>
+              {t.rich('providers.connection.notes.dataset', {
+                ...RICH,
+                data: (chunks) => <a href="/docs/providers/data">{chunks}</a>,
+              })}
+            </p>
           </div>
         </div>
       </section>

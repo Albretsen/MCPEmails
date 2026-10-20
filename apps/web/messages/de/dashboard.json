@@ -99,6 +99,8 @@
     "multiInboxOptional": "Optional",
     "multiInboxDesc": "Verbinden Sie info@, sales@, invoices@ und die übrigen Adressen. Ihr Agent bearbeitet dann jedes Firmenpostfach in einer Unterhaltung und antwortet von der richtigen Adresse.",
     "multiInboxDescUpgrade": "Verbinden Sie info@, sales@, invoices@ und die übrigen Adressen. Ihr Agent bearbeitet dann jedes Firmenpostfach in einer Unterhaltung und antwortet von der richtigen Adresse. Free umfasst ein Postfach, Pro bis zu 10.",
+    "multiInboxCompact": "Betreiben Sie auch info@, sales@ oder invoices@? Verbinden Sie diese Postfächer, und Ihr Agent bearbeitet jedes Firmenpostfach in einer Unterhaltung.",
+    "multiInboxCompactUpgrade": "Betreiben Sie auch info@, sales@ oder invoices@? Ihr Agent kann jedes Firmenpostfach in einer Unterhaltung bearbeiten. Ein zweites Postfach erfordert einen kostenpflichtigen Plan.",
     "multiInboxCta": "Postfach hinzufügen"
   },
   "overview": {

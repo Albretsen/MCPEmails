@@ -156,6 +156,9 @@ export default function sitemap(): MetadataRoute.Sitemap {
       priority: 0.8,
       locales: ['en'],
     },
+    // The open provider dataset, English only. Its rows come from the same
+    // probe as the /connect pages; move this date when the probe is re-run.
+    { path: '/docs/providers/data', lastModified: '2026-10-20', priority: 0.7, locales: ['en'] },
   ].map(({ path, lastModified, priority, locales }) => ({
     url: localePath('en', path),
     lastModified: new Date(`${lastModified}T00:00:00.000Z`),
