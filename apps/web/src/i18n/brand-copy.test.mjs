@@ -11,6 +11,9 @@
 // - the npm package (npx -y mcpemails), the registry id com.mcpemails/...
 // - the GitHub repo Albretsen/MCPEmails
 // - the CLI server name in "claude mcp add --transport http mcpemails https://..."
+// - the legal trading name "MCPEmails" in the trading-as clause of the terms
+//   and privacy policy (LEGAL_TRADING_NAME_KEYS). That is a legal name, and
+//   the owner decides when it changes.
 //
 // To allow a new technical use, add a pattern to ALLOWED below with a comment.
 
@@ -32,6 +35,9 @@ const ALLOWED = [
   /\bAlbretsen\/MCPEmails\b/g, // GitHub repo
   /--transport http mcpemails\b/g, // CLI server name
 ];
+
+// Values that state the legal trading name. "MCPEmails" is allowed here only.
+const LEGAL_TRADING_NAME_KEYS = new Set(['privacy.json whoWeAre.p1', 'terms.json agreement.p1']);
 
 const BAD = /MCPEmails|(?<![\w./@-])[Mm]cpemails(?![\w/@]|\.\w)/g;
 
@@ -70,7 +76,8 @@ test('messages/*/*.json say "MCP Emails", never "MCPEmails" or bare "mcpemails"'
       const json = JSON.parse(readFileSync(path.join(dir, file), 'utf8'));
       for (const [key, value] of strings(json, '')) {
         checked++;
-        for (const hit of brandProblems(value)) problems.push(`${locale}/${file} ${key}: "${hit}"`);
+        const checkedValue = LEGAL_TRADING_NAME_KEYS.has(`${file} ${key}`) ? value.replace(/MCPEmails/g, ' ') : value;
+        for (const hit of brandProblems(checkedValue)) problems.push(`${locale}/${file} ${key}: "${hit}"`);
       }
     }
   }

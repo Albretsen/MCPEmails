@@ -11,7 +11,7 @@
   },
   "whoWeAre": {
     "title": "1. Who We Are",
-    "p1": "The MCP Emails service at <b>mcpemails.com</b> is operated by {companyName}, a Norwegian private limited company (aksjeselskap) owned and run by {ownerName}, trading as \"MCP Emails\". In this policy, \"MCP Emails\", \"we\", \"us\", and \"our\" all mean {companyName}. The service includes all dashboard pages, API endpoints, and the Model Context Protocol (MCP) server that AI agents use to access connected email accounts.",
+    "p1": "The MCPEmails service at <b>mcpemails.com</b> is operated by {companyName}, a Norwegian private limited company (aksjeselskap) owned and run by {ownerName}, trading as \"MCPEmails\". In this policy, \"MCPEmails\", \"we\", \"us\", and \"our\" all mean {companyName}. The service includes all dashboard pages, API endpoints, and the Model Context Protocol (MCP) server that AI agents use to access connected email accounts.",
     "p2": "For the purposes of applicable data protection law (including the EU General Data Protection Regulation, \"GDPR\"), MCP Emails is the data controller for account and usage data. For email content, we act as a data processor on your behalf: we transmit content you authorise us to retrieve, and we do not store it.",
     "p3": "Service provider identification: {companyName} is a private limited company (aksjeselskap) established in Norway, owned by {ownerName}, who also chairs its board. It is registered in {register}, the Norwegian Register of Business Enterprises operated by Brønnøysundregistrene, under organisation number <b>{orgNumber}</b>. Our registered address is {companyAddress}.",
     "p4": "You can reach us about privacy at <email></email>."

@@ -11,7 +11,7 @@
   },
   "agreement": {
     "title": "1. 对本条款的同意",
-    "p1": "本服务条款（“条款”）构成你（“你”或“用户”）与 {company} 之间具有法律约束力的协议。该公司是一家挪威有限责任公司（aksjeselskap），组织机构号为 <b>{orgNumber}</b>，由 {owner} 拥有并经营，以“MCP Emails”作为商号开展业务（“MCP Emails”、“我们”或“我们的”）。本条款管辖你对 MCP Emails 服务的访问和使用，包括位于 <b>mcpemails.com</b> 的网站、仪表盘、Model Context Protocol（MCP）API 端点，以及所有相关软件和文档（统称为“服务”）。你的合同相对方是 {company}；“MCP Emails”是商号，而非独立的法律实体。",
+    "p1": "本服务条款（“条款”）构成你（“你”或“用户”）与 {company} 之间具有法律约束力的协议。该公司是一家挪威有限责任公司（aksjeselskap），组织机构号为 <b>{orgNumber}</b>，由 {owner} 拥有并经营，以“MCPEmails”作为商号开展业务（“MCPEmails”、“我们”或“我们的”）。本条款管辖你对 MCP Emails 服务的访问和使用，包括位于 <b>mcpemails.com</b> 的网站、仪表盘、Model Context Protocol（MCP）API 端点，以及所有相关软件和文档（统称为“服务”）。你的合同相对方是 {company}；“MCPEmails”是商号，而非独立的法律实体。",
     "p1b": "服务提供者标识：{company}，组织机构号 {orgNumber}，已在 {register}（由 Brønnøysundregistrene 运营的挪威企业登记册）登记。注册地址：{companyAddress}。法务咨询：<email></email>。",
     "p2": "通过创建账户、接受本条款或使用本服务的任何部分，你确认你已年满 16 周岁（如你所在司法管辖区的数字同意最低年龄更高，则为该年龄）、你具有订立有约束力协议的法律行为能力，并且你同意受本条款及我们的<privacy>隐私政策</privacy>的约束，该隐私政策以引用方式并入本条款。",
     "p3": "如果你代表公司或其他法律实体接受本条款，你声明并保证你有权约束该实体，在此情况下“你”指代该实体。",

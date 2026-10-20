@@ -11,7 +11,7 @@
   },
   "whoWeAre": {
     "title": "1. Hvem vi er",
-    "p1": "MCP Emails-tjenesten på <b>mcpemails.com</b> drives av {companyName}, et norsk aksjeselskap eid og drevet av {ownerName}, som tilbyr tjenesten under navnet «MCP Emails». I denne erklæringen viser «MCP Emails», «vi», «oss» og «vår» alle til {companyName}. Tjenesten omfatter alle dashbordsider, API-endepunkter og Model Context Protocol (MCP)-serveren som AI-agenter bruker for å få tilgang til tilkoblede e-postkontoer.",
+    "p1": "MCP Emails-tjenesten på <b>mcpemails.com</b> drives av {companyName}, et norsk aksjeselskap eid og drevet av {ownerName}, som tilbyr tjenesten under navnet «MCPEmails». I denne erklæringen viser «MCPEmails», «vi», «oss» og «vår» alle til {companyName}. Tjenesten omfatter alle dashbordsider, API-endepunkter og Model Context Protocol (MCP)-serveren som AI-agenter bruker for å få tilgang til tilkoblede e-postkontoer.",
     "p2": "I henhold til gjeldende personvernlovgivning (inkludert EUs personvernforordning, \"GDPR\") er MCP Emails behandlingsansvarlig for konto- og bruksdata. For e-postinnhold opptrer vi som databehandler på dine vegne: vi overfører innhold du gir oss tillatelse til å hente, og vi lagrer det ikke.",
     "p3": "Opplysninger om tjenesteyteren: {companyName} er et aksjeselskap etablert i Norge, eid av {ownerName}, som også er styreleder. Selskapet er registrert i {register}, som drives av Brønnøysundregistrene, med organisasjonsnummer <b>{orgNumber}</b>. Forretningsadressen vår er {companyAddress}.",
     "p4": "Du kan kontakte oss om personvern på <email></email>."
