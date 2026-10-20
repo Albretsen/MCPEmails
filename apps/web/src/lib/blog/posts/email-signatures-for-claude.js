@@ -79,7 +79,7 @@ Two ways: edit it per inbox in the dashboard, or ask Claude — e.g. "set my sig
 
 Set your signature once, per inbox, and every email Claude sends from that mailbox — new, reply, forward, draft, or scheduled — goes out signed like you wrote it. It works on every provider, places itself correctly in threads, and gets out of the way with \`include_signature\` when you want a bare reply.
 
-[Open your dashboard](/dashboard) to set a signature, or just tell Claude what yours should be. Not connected yet? [Start free](/signup) and connect an inbox in about two minutes.`,
+[Open your dashboard](/dashboard) to set a signature, or just tell Claude what yours should be. Not connected yet? [Start free](/signup) and connect an inbox in about two minutes. The [guide to connecting Claude to your inbox](/blog/connect-claude-to-email) walks through each step.`,
 };
 
 export default post;

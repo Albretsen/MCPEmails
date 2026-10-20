@@ -21,7 +21,7 @@
     "titleLine1": "将 mailbox.org 连接到 Claude，",
     "titleLine2": "以及 Cursor、ChatGPT、任意 MCP 客户端",
     "lead": "为你的 AI 代理接入一个真正的 mailbox.org 收件箱。通过 IMAP 在所有 MCP 客户端（而不只是一个）中读取、搜索、发送、回复、定时与整理邮件，并把加密方面的取舍讲清楚，而不是一笔带过。",
-    "answer": "Claude 无法自行访问 mailbox.org。mcpemails 是一个托管 MCP 服务器，通过 imap.mailbox.org 端口 993 的 IMAP 以及 smtp.mailbox.org 端口 465 的 SMTP 与之连接，让 Claude、Cursor 或任意 MCP 客户端都能读取、搜索、发送并整理这些邮件。你用 mailbox.org 主地址登录；开启双重身份验证后，你必须使用在 All settings、Security、Email app-passwords 下创建的邮件应用专用密码，而不是邮箱密码。如果你开启了收件箱加密，收到的邮件在任何 IMAP 客户端中都是 PGP 密文，代理将无法读取。1 个收件箱永久免费。",
+    "answer": "Claude 无法自行访问 mailbox.org。MCP Emails 是一个托管 MCP 服务器，通过 imap.mailbox.org 端口 993 的 IMAP 以及 smtp.mailbox.org 端口 465 的 SMTP 与之连接，让 Claude、Cursor 或任意 MCP 客户端都能读取、搜索、发送并整理这些邮件。你用 mailbox.org 主地址登录；开启双重身份验证后，你必须使用在 All settings、Security、Email app-passwords 下创建的邮件应用专用密码，而不是邮箱密码。如果你开启了收件箱加密，收到的邮件在任何 IMAP 客户端中都是 PGP 密文，代理将无法读取。1 个收件箱永久免费。",
     "meta0": "1 个收件箱永久免费",
     "meta1": "开启 2FA 时使用邮件应用专用密码",
     "meta2": "邮件实时获取，绝不存储"
@@ -32,7 +32,7 @@
   },
   "setup": [
     {
-      "h": "创建免费的 mcpemails 账户",
+      "h": "创建免费的 MCP Emails 账户",
       "p": "在 mcpemails.com 注册。免费套餐可永久连接一个收件箱，无需信用卡。完成后你会得到一个 MCP URL 和一个密钥。"
     },
     {
@@ -40,7 +40,7 @@
       "p": "在网页界面中依次打开 <b>All settings</b>、<b>Security</b>、<b>Email app-passwords</b>。为这个连接命名，在协议列表中<b>同时</b>勾选 IMAP 和 SMTP，然后点击 Generate password。请立即复制该值。如果未开启双重身份验证，你也可以改用邮箱密码，但交给第三方的，最好是一个可以单独撤销、权限受限的凭据。"
     },
     {
-      "h": "在 mcpemails 中添加邮箱",
+      "h": "在 MCP Emails 中添加邮箱",
       "p": "选择 IMAP / SMTP，以你的 mailbox.org <b>主</b>地址作为用户名，然后填入应用专用密码。服务器已预填为 <code>imap.mailbox.org</code> 和 <code>smtp.mailbox.org</code>，并经实时 TLS 连接验证。凭据静态加密存储，邮件本身按请求获取，而不是复制保存。"
     },
     {
@@ -59,7 +59,7 @@
     },
     {
       "h": "收件箱加密会让新邮件在所有客户端中都变成密文，包括本服务",
-      "p": "在 <b>All settings</b>、<b>Read and write e-mail</b>、<b>Inbox encryption</b> 下，mailbox.org 可以通过服务器端的 Sieve 规则，用你的公钥对每封到达的邮件进行 PGP 加密，无论发件人是否加密过。这是一项真正的保护，而且完全如其所述地工作：IMAP 客户端（包括本服务）收到的是 ASCII 封装的加密块而不是正文。mcpemails 不持有你的私钥，所以代理能看到发件人、主题和日期，也能归档或标记邮件，但无法阅读。需要知道的不对称之处是：mailbox.org 目前不会加密存储你的 Sent 文件夹，所以即使代理读不了你收到的邮件，仍能读到你发出的邮件。"
+      "p": "在 <b>All settings</b>、<b>Read and write e-mail</b>、<b>Inbox encryption</b> 下，mailbox.org 可以通过服务器端的 Sieve 规则，用你的公钥对每封到达的邮件进行 PGP 加密，无论发件人是否加密过。这是一项真正的保护，而且完全如其所述地工作：IMAP 客户端（包括本服务）收到的是 ASCII 封装的加密块而不是正文。MCP Emails 不持有你的私钥，所以代理能看到发件人、主题和日期，也能归档或标记邮件，但无法阅读。需要知道的不对称之处是：mailbox.org 目前不会加密存储你的 Sent 文件夹，所以即使代理读不了你收到的邮件，仍能读到你发出的邮件。"
     },
     {
       "h": "没有 MOVE 和 SPECIAL-USE，但有 UIDPLUS",
@@ -67,14 +67,14 @@
     }
   ],
   "limits": [
-    "将任何邮箱连接到 AI 客户端，都意味着该 AI 服务商会读取它被要求处理的邮件内容。mcpemails 按请求从 mailbox.org 实时获取邮件，不存储邮件正文，凭据也静态加密存储，但文本仍会到达 Claude、Cursor 或你所指向的任何客户端。mailbox.org 的德国托管和数据保护立场涵盖的是 mailbox.org，并不延伸到你自己连接的 AI 厂商。",
+    "将任何邮箱连接到 AI 客户端，都意味着该 AI 服务商会读取它被要求处理的邮件内容。MCP Emails 按请求从 mailbox.org 实时获取邮件，不存储邮件正文，凭据也静态加密存储，但文本仍会到达 Claude、Cursor 或你所指向的任何客户端。mailbox.org 的德国托管和数据保护立场涵盖的是 mailbox.org，并不延伸到你自己连接的 AI 厂商。",
     "任何用你的 OpenPGP 密钥加密的内容，无论是发件人加密的，还是 mailbox.org 自己的收件箱加密所加密的，代理都无法通过 IMAP 读取。这些会话必须在网页界面中，或在持有你私钥的客户端中阅读。",
     "由于服务器不声明 MOVE，移动操作不是原子的。如果连接在操作中途断开，邮件可能会短暂地同时存在于两个文件夹中。"
   ],
   "faq": [
     {
       "q": "Claude 能用于 mailbox.org 吗？",
-      "a": "不能单独使用。Claude 没有内置的 mailbox.org 连接器，也无法使用 IMAP。将 mcpemails 这样的 MCP 服务器指向该邮箱后，Claude 就能通过 IMAP 读取、搜索、发送、回复、定时和整理邮件，而且同一个连接随后无需重新设置，即可在 Cursor、ChatGPT 和其他 MCP 客户端中使用。"
+      "a": "不能单独使用。Claude 没有内置的 mailbox.org 连接器，也无法使用 IMAP。将 MCP Emails 这样的 MCP 服务器指向该邮箱后，Claude 就能通过 IMAP 读取、搜索、发送、回复、定时和整理邮件，而且同一个连接随后无需重新设置，即可在 Cursor、ChatGPT 和其他 MCP 客户端中使用。"
     },
     {
       "q": "mailbox.org 的 IMAP 和 SMTP 设置是什么？",
@@ -90,7 +90,7 @@
     },
     {
       "q": "我的 AI 能读取加密的 mailbox.org 邮件吗？",
-      "a": "不能。用你的 OpenPGP 密钥加密的邮件，通过 IMAP 到达时是 ASCII 封装的密文块，而 mcpemails 从不持有你的私钥。这既适用于发件人加密的邮件，也适用于 mailbox.org 收件箱加密在到达时加密的邮件。代理能看到邮件头，也能移动或标记邮件；正文始终是封存的。"
+      "a": "不能。用你的 OpenPGP 密钥加密的邮件，通过 IMAP 到达时是 ASCII 封装的密文块，而 MCP Emails 从不持有你的私钥。这既适用于发件人加密的邮件，也适用于 mailbox.org 收件箱加密在到达时加密的邮件。代理能看到邮件头，也能移动或标记邮件；正文始终是封存的。"
     },
     {
       "q": "我的 mailbox.org 邮件会存储在你们的服务器上吗？",

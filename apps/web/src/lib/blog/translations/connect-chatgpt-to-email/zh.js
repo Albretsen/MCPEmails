@@ -22,7 +22,7 @@ const translation = {
 
 ### Gmail 与 Google Workspace
 
-Gmail 默认通过 Google 应用专用密码以 IMAP 方式连接，同时也支持 Google OAuth 登录。如果 Workspace 管理员限制了第三方应用访问，请使用应用专用密码。[Gmail 操作指南](/blog/connect-gmail-to-claude)列出了具体步骤。
+Gmail 通过 IMAP 使用 Google 应用专用密码连接。开启两步验证，在 myaccount.google.com/apppasswords 创建应用专用密码，然后把这 16 个字母连同完整的 Gmail 地址一起填入；常规 Google 密码无法使用。Google Workspace 管理员可以为整个域名关闭应用专用密码，如果找不到该选项，请询问管理员。[Gmail 操作指南](/blog/connect-gmail-to-claude)列出了具体步骤。
 
 ### iCloud、Fastmail、Yahoo 与 Zoho
 
@@ -77,7 +77,7 @@ ChatGPT 会先找到收件箱，然后只读取它需要的邮件。这一步跑
 
 MCP Emails 交给 ChatGPT 的是一组聚焦的邮件工具，而不是一个密码或一条原始的 IMAP 连接：
 
-- **读取与搜索：** \`email_read\` 涵盖 list、read、read_batch、search 和 attachment。Gmail 搜索支持 \`from:\`、\`is:unread\` 等操作符。
+- **读取与搜索：** \`email_read\` 涵盖 list、read、read_batch、search 和 attachment。搜索使用发件人、主题、日期、未读状态等结构化字段，Gmail 标签显示为文件夹。
 - **发送、回复与转发：** \`email_compose\` 通过你自己的服务商和地址发送。
 - **整理：** \`email_organize\`、\`email_search_and_move\` 和 \`email_delete\`。
 - **草稿、文件夹与定时：** \`draft\`、\`draft_list\`、\`folder\`、\`folder_list\`、\`schedule\` 和 \`schedule_list\`。
@@ -121,7 +121,7 @@ Codex 与 ChatGPT 连接器是不同的平台，浏览器 OAuth 流程在这里�
 不会。每封邮件都是为发起该请求的那次调用从你的服务商实时获取，随后即被丢弃。只有加密后的服务商凭据会被保留。[为什么"不存储邮件"很重要](/blog/why-email-never-stored-matters)解释了背后的理由。
 
 **价格是多少？**
-免费方案包含一个已连接收件箱，以及每个 UTC 自然月 150 次计费邮件操作，前 3 天不计入。该月度上限适用于 2026 年 9 月 13 日及之后创建的工作区，更早创建的工作区不受此限制。Personal 每月 $9，可连接 3 个收件箱，没有月度操作上限；Pro 每月 $15，收件箱数量不限。详见[价格](/pricing)。
+免费方案包含一个已连接收件箱，以及每个 UTC 自然月 150 次计费邮件操作，前 3 天不计入。该月度上限适用于 2026 年 9 月 13 日及之后创建的工作区，更早创建的工作区不受此限制。Personal 每月 $9，可连接 3 个收件箱，没有月度操作上限；Pro 每月 $15，最多 10 个收件箱。详见[价格](/pricing)。
 
 ## 下一步
 

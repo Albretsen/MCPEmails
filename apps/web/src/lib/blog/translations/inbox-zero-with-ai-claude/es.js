@@ -5,7 +5,7 @@ const translation = {
   coverAlt: 'Llega al inbox zero con IA — Claude clasifica, archiva y redacta respuestas en tu bandeja real a través de MCP',
   content: `El inbox zero siempre ha tenido el mismo problema: alcanzarlo te cuesta una hora que no tienes, y mañana vuelves a tener cincuenta sin leer. Un agente de IA cambia las cuentas. En lugar de ordenar tú los mensajes uno a uno, le dices a Claude qué significa "gestionado" y trabaja toda la bandeja a la vez — clasificando, archivando, etiquetando y redactando respuestas sobre tu correo *real*, en directo.
 
-Esta guía es la rutina: un bucle repetible que puedes ejecutar cada mañana, los prompts exactos que lo impulsan y la única regla que lo mantiene seguro (nunca se almacena nada). Da por hecho que Claude ya puede ver tu bandeja de entrada. Si todavía no puede, empieza por [cómo conectar Gmail con Claude](/blog/connect-gmail-to-claude) (o la [guía de Outlook y Microsoft 365](/blog/connect-outlook-microsoft-365-ai-agent-mcp)) — lleva unos dos minutos — y luego vuelve.
+Esta guía es la rutina: un bucle repetible que puedes ejecutar cada mañana, los prompts exactos que lo impulsan y la única regla que lo mantiene seguro (nunca se almacena nada). Da por hecho que Claude ya puede ver tu bandeja de entrada. Si todavía no puede, empieza por [cómo conectar Gmail con Claude](/blog/connect-gmail-to-claude) (o la [guía de Outlook y Microsoft 365](/blog/connect-outlook-microsoft-365-ai-agent-mcp)) — lleva unos dos minutos — y luego vuelve. Si usas iCloud, Fastmail u otro servidor IMAP, sigue en su lugar la [guía para conectar el correo a Claude](/blog/connect-claude-to-email).
 
 ## Por qué el "inbox zero" por fin es realista con IA
 

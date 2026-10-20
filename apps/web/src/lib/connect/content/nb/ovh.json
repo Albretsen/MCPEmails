@@ -24,7 +24,7 @@
     "meta0": "Første postkasse gratis, planer for resten",
     "meta1": "Postkassepassordet ditt, ingen OAuth-oppsett",
     "meta2": "E-post hentes direkte, lagres aldri",
-    "answer": "Claude når ikke OVH på egen hånd. mcpemails er en hostet MCP-server som kobler til via IMAP med postkassepassordet ditt, slik at Claude, Cursor eller enhver MCP-klient kan lese, søke, sende og organisere den e-posten. Oppsettet tar et par minutter. Hver firmaadresse, som post@ eller salg@, kobles til som sin egen postkasse: én postkasse er gratis, Personal kobler til tre og Pro alle postkassene du har."
+    "answer": "Claude når ikke OVH på egen hånd. MCP Emails er en hostet MCP-server som kobler til via IMAP med postkassepassordet ditt, slik at Claude, Cursor eller enhver MCP-klient kan lese, søke, sende og organisere den e-posten. Oppsettet tar et par minutter. Hver firmaadresse, som post@ eller salg@, kobles til som sin egen postkasse: én postkasse er gratis, Personal kobler til tre, Pro opptil 10 og Business så mange du trenger."
   },
   "persona": {
     "intro": "Flere bedriftspostkasser hos OVH?",
@@ -33,19 +33,19 @@
   },
   "method": {
     "title": "Slik kobler OVH seg til: IMAP og postkassepassordet ditt",
-    "body": "En OVH MX Plan-postkasse kobles til via IMAP/SMTP med postkassepassordet fra OVHs kontrollpanel, og begge vertene er <code>ssl0.ovh.net</code>. OVH Hosted Exchange er en annen tjeneste: vertene ser ut som <code>ex4.mail.ovh.net</code>, og utgående e-post går over STARTTLS på port 587, aldri 465, og derfor henger standardinnstillingene for delt hosting rett og slett mot den. mcpemails gjenkjenner begge og velger riktig par."
+    "body": "En OVH MX Plan-postkasse kobles til via IMAP/SMTP med postkassepassordet fra OVHs kontrollpanel, og begge vertene er <code>ssl0.ovh.net</code>. OVH Hosted Exchange er en annen tjeneste: vertene ser ut som <code>ex4.mail.ovh.net</code>, og utgående e-post går over STARTTLS på port 587, aldri 465, og derfor henger standardinnstillingene for delt hosting rett og slett mot den. MCP Emails gjenkjenner begge og velger riktig par."
   },
   "setup": [
     {
       "h": "Opprett en gratis konto",
-      "p": "Registrer deg på mcpemails, uten kort. Gratisplanen kobler til én innboks, for alltid."
+      "p": "Registrer deg på MCP Emails, uten kort. Gratisplanen kobler til én innboks, for alltid."
     },
     {
       "h": "Hent OVH-postkassepassordet ditt",
       "p": "I OVHs kontrollpanel åpner du e-posttjenesten, velger adressen og endrer passordet. Kopier e-postverten OVH viser for den postkassen hvis den ikke er ssl0.ovh.net."
     },
     {
-      "h": "Lim det inn i mcpemails",
+      "h": "Lim det inn i MCP Emails",
       "p": "Velg IMAP / SMTP, legg til OVH-adressen din, vertene over og passordet for å koble til innboksen trygt."
     },
     {
@@ -79,7 +79,7 @@
   "faq": [
     {
       "q": "Fungerer Claude med OVH-e-post?",
-      "a": "Ikke på egen hånd. Claude har ingen innebygd OVHcloud-kobling. Kobler du en MCP-server som mcpemails til postkassen via IMAP, får Claude tilgang til å lese, søke, sende, svare, planlegge og organisere. Det ene du må finne ut først, er hvilket OVH-e-postprodukt adressen tilhører, fordi vertsnavnene er helt forskjellige mellom dem."
+      "a": "Ikke på egen hånd. Claude har ingen innebygd OVHcloud-kobling. Kobler du en MCP-server som MCP Emails til postkassen via IMAP, får Claude tilgang til å lese, søke, sende, svare, planlegge og organisere. Det ene du må finne ut først, er hvilket OVH-e-postprodukt adressen tilhører, fordi vertsnavnene er helt forskjellige mellom dem."
     },
     {
       "q": "Hva er IMAP- og SMTP-innstillingene for OVH?",
@@ -104,7 +104,7 @@
   ],
   "ctaBand": {
     "title": "Samle alle OVH-postkassene på én agent",
-    "sub": "Koble til den første OVH-postkassen gratis, uten kort. Personal kobler til tre, Pro alle postkassene du har."
+    "sub": "Koble til den første OVH-postkassen gratis, uten kort. Personal kobler til tre, Pro opptil 10 og Business så mange du trenger."
   },
   "seeAlso": {
     "intro": "Microsoft 365-postkasse fra OVHcloud?",

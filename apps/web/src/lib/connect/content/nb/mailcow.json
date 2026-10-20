@@ -20,7 +20,7 @@
     "titleLine1": "Koble mailcow til Claude,",
     "titleLine2": "Cursor, ChatGPT og enhver MCP-klient",
     "lead": "mailcow gir deg allerede Dovecot, Postfix og SOGo i én stack. Legg en MCP-server på toppen, så kan agenten din lese, søke, sende, svare, planlegge og arkivere e-post i postkassene du drifter selv.",
-    "answer": "Claude kan ikke nå en mailcow-server på egen hånd. mcpemails er en driftet MCP-server som kobler til mailcow-installasjonen din over IMAP på port 993, på vertsnavnet du satte som MAILCOW_HOSTNAME i mailcow.conf, med postkassepassordet fra Mailboxes-listen, slik at Claude, Cursor eller enhver MCP-klient kan lese, søke i, sende og organisere e-posten. Det finnes ingen felles vert: det er din server, den må være tilgjengelig fra internett, og du må koble til med nøyaktig det vertsnavnet som står på sertifikatet acme-mailcow utstedte. Én innboks er gratis.",
+    "answer": "Claude kan ikke nå en mailcow-server på egen hånd. MCP Emails er en driftet MCP-server som kobler til mailcow-installasjonen din over IMAP på port 993, på vertsnavnet du satte som MAILCOW_HOSTNAME i mailcow.conf, med postkassepassordet fra Mailboxes-listen, slik at Claude, Cursor eller enhver MCP-klient kan lese, søke i, sende og organisere e-posten. Det finnes ingen felles vert: det er din server, den må være tilgjengelig fra internett, og du må koble til med nøyaktig det vertsnavnet som står på sertifikatet acme-mailcow utstedte. Én innboks er gratis.",
     "meta0": "1 innboks gratis, for alltid",
     "meta1": "Postkassepassord fra mailcow-grensesnittet",
     "meta2": "E-post hentes direkte, lagres aldri"
@@ -32,7 +32,7 @@
   "setup": [
     {
       "h": "Opprett en gratis konto",
-      "p": "Registrer deg hos mcpemails, uten kort. Gratisplanen kobler til én innboks, for alltid."
+      "p": "Registrer deg hos MCP Emails, uten kort. Gratisplanen kobler til én innboks, for alltid."
     },
     {
       "h": "Les MAILCOW_HOSTNAME ut av mailcow.conf",
@@ -40,7 +40,7 @@
     },
     {
       "h": "Bekreft postkassen og passordet",
-      "p": "I mailcow-grensesnittet åpner du Configuration og deretter Mailboxes. Bekreft at adressen er aktiv, og hvis du ikke kjenner passordet, angi et nytt der. Legg deretter til innboksen i mcpemails: velg IMAP / SMTP, skriv inn MAILCOW_HOSTNAME-verten og påloggingsopplysningene for postkassen."
+      "p": "I mailcow-grensesnittet åpner du Configuration og deretter Mailboxes. Bekreft at adressen er aktiv, og hvis du ikke kjenner passordet, angi et nytt der. Legg deretter til innboksen i MCP Emails: velg IMAP / SMTP, skriv inn MAILCOW_HOSTNAME-verten og påloggingsopplysningene for postkassen."
     },
     {
       "h": "Lim MCP-URL-en inn i AI-en",
@@ -66,13 +66,13 @@
     }
   ],
   "limits": [
-    "En driftet MCP-server må åpne en innkommende IMAP-tilkobling til stacken din, så en mailcow som bare er publisert på et privat grensesnitt eller bare kan nås via VPN, kan ikke kobles til på denne måten. mcpemails kan driftes selv ved siden av mailcow hvis du helst vil at ingenting eksternt skal røre 993.",
+    "En driftet MCP-server må åpne en innkommende IMAP-tilkobling til stacken din, så en mailcow som bare er publisert på et privat grensesnitt eller bare kan nås via VPN, kan ikke kobles til på denne måten. MCP Emails kan driftes selv ved siden av mailcow hvis du helst vil at ingenting eksternt skal røre 993.",
     "Sending håndteres av din egen Postfix, så om meldinger blir godtatt videre, avhenger helt av SPF-, DKIM- og DMARC-postene dine og av om IP-adressen din er svartelistet noe sted."
   ],
   "faq": [
     {
       "q": "Fungerer Claude med mailcow?",
-      "a": "Ikke på egen hånd. Claude har ingen mailcow-kobling og kan ikke åpne en IMAP-økt mot en server du drifter. Ved å koble en MCP-server som mcpemails til mailcow-installasjonen din får Claude tilgang til å lese, søke, sende, svare, planlegge og organisere i postkassene på den, i hvilken MCP-klient du enn bruker."
+      "a": "Ikke på egen hånd. Claude har ingen mailcow-kobling og kan ikke åpne en IMAP-økt mot en server du drifter. Ved å koble en MCP-server som MCP Emails til mailcow-installasjonen din får Claude tilgang til å lese, søke, sende, svare, planlegge og organisere i postkassene på den, i hvilken MCP-klient du enn bruker."
     },
     {
       "q": "Hva er IMAP- og SMTP-innstillingene for mailcow?",

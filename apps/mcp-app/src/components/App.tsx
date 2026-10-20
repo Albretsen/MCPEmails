@@ -658,8 +658,13 @@ export function App(props: { bridge: HostBridge }) {
       if (id && !heldIds.current.includes(id)) heldIds.current.push(id);
     }
   }
-  /** Tell every other card for this draft that this one is current now. */
-  const claim = () => {
+  /**
+   * Tell every other card for this draft that this one is current now.
+   * `pending`: Save was just pressed and has not answered; `release`: that
+   * save did not store, so the pending claim is withdrawn (draft-signal.ts,
+   * "AT THE PRESS").
+   */
+  const claim = (opts: { pending?: boolean; release?: boolean } = {}) => {
     const s = getState();
     const d = s.envelope?.draft;
     if (!d || s.envelope?.card !== "draft_editor") return;
@@ -668,8 +673,14 @@ export function App(props: { bridge: HostBridge }) {
       revision: d.revision ?? null,
       mounted: s.mountedRevision,
       inbox_id: d.identity?.inbox_id ?? null,
+      ...opts,
     });
   };
+  /**
+   * The frame whose PENDING claim folded this card, while that fold stands.
+   * Only its release unfolds the card; any later fold clears it.
+   */
+  const takenBy = useRef<string | null>(null);
   /**
    * "Open here" on a folded card: read the draft as the mailbox holds it now,
    * then make this card the current one and fold the others. The flag is
@@ -721,8 +732,20 @@ export function App(props: { bridge: HostBridge }) {
       // A claim folds this card at once, with no read: another card is the
       // current one now. The live review's bug was the ~5 s between an older
       // card's Save and this card noticing, with Send on in both.
+      if (sig.kind === "release") {
+        // The pending claim that folded this card ended in no save, so what
+        // this card holds is still the current draft.
+        if (takenBy.current === null || takenBy.current !== sig.from) return;
+        takenBy.current = null;
+        if (st.draftSuperseded && st.supersededAt.why === "taken") setState({ draftSuperseded: false });
+        return;
+      }
       if (sig.kind === "claim") {
         if (!sameDraft || isRestoreStub(st.envelope)) return;
+        // Both carriers deliver one claim, so the second copy keeps the mark.
+        takenBy.current = sig.pending && (!st.draftSuperseded || takenBy.current === sig.from)
+          ? sig.from
+          : null;
         const mounted = st.mountedRevision;
         const where = sig.mounted === null || mounted === null || sig.mounted === mounted
           ? "other" as const
@@ -791,6 +814,8 @@ export function App(props: { bridge: HostBridge }) {
       : "still_there";
     setFailure({ action, code, settled });
     if (settled === "landed") tellSaved(env.draft, patch);
+    // Settles the pending claim sent at the press (draft-signal.ts).
+    if (action === "save") claim(settled === "landed" ? {} : { release: true });
   };
 
   /**
@@ -1426,6 +1451,9 @@ export function App(props: { bridge: HostBridge }) {
 
       const save = async (patch: DraftPatch): Promise<boolean> => {
         if (Object.keys(patch).length === 0) return true;
+        // Every other card for the draft folds NOW, not when the save answers
+        // (re-test 2026-10-17: ~3.5 to 5 s of Send on in the newer card).
+        claim({ pending: true });
         const r = await callDraft("save", "draft_editor_save", {
           ...writeTarget(),
           ...patch,
@@ -1437,7 +1465,10 @@ export function App(props: { bridge: HostBridge }) {
           void reconcile("save", r.lost, patch);
           return false;
         }
-        if (!draftStored(r.env)) return false;
+        if (!draftStored(r.env)) {
+          claim({ release: true });
+          return false;
+        }
         tellSaved(r.env!.draft!, patch);
         // A save makes this card the current one (store.ts#adoptOwnAnswer
         // unfolds it); every other card for the draft folds at once.
@@ -1491,6 +1522,7 @@ export function App(props: { bridge: HostBridge }) {
               // wire when the user is looking at a newer one.
               if (sendDoubt) return;
               if (patch && Object.keys(patch).length > 0) {
+                claim({ pending: true });
                 const saved = await callDraft(
                   "send",
                   "draft_editor_save",
@@ -1501,7 +1533,10 @@ export function App(props: { bridge: HostBridge }) {
                   void reconcile("save", saved.lost, patch);
                   return;
                 }
-                if (!draftStored(saved.env)) return;
+                if (!draftStored(saved.env)) {
+                  claim({ release: true });
+                  return;
+                }
                 tellSaved(saved.env!.draft!, patch);
                 claim();
                 // No "the save followed an older id" stop here any more: the

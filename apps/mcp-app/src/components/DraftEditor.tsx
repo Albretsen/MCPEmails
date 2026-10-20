@@ -10,6 +10,7 @@ import {
   formatWhen,
   joinBody,
   normalizeEol,
+  quoteBody,
   quotePreview,
   repeatsSignOff,
   splitBody,
@@ -1550,23 +1551,27 @@ export function DraftEditor(props: Props) {
     flush();
   };
 
-  /** Typing in an address field: keep the warning about it current. */
+  /**
+   * Typing in an address field. A warning about the field goes while it is
+   * being corrected and comes back, if still due, on the next commit (comma,
+   * semicolon, Enter, blur, Save): "ex is not a complete email address yet"
+   * under a half-typed word was a warning about typing (live re-test,
+   * 2026-10-17). The note about the address just added stays until real text
+   * is typed: the space people type after a comma used to erase "X is already
+   * in To." the moment it appeared, so the address vanished without a word.
+   */
   const onAddrInput = (field: Field, value: string) => {
     update({ typed: { ...editRef.current.typed, [field]: value } });
-    setAddrNote(null);
-    setAddrWarning((w) => {
-      if (!w || w.field !== field) return w;
-      const bad = value.trim() ? firstInvalid(value) : null;
-      if (!bad) return null;
-      return { field, text: `${bad} is not a complete email address yet.` };
-    });
+    if (value.trim()) setAddrNote(null);
+    setAddrWarning((w) => (w && w.field === field ? null : w));
   };
 
   /**
    * The people the recipient fields suggest (contacts.ts says why these and
    * not the server's `contact_search`): the person this draft answers, its
-   * recipients as stored, addresses removed in this card, and the sender.
-   * Never one already on the draft, in any field.
+   * recipients as stored, and addresses removed in this card. Never one
+   * already on the draft, in any field, and never the address the draft is
+   * sent from (live re-test, 2026-10-17: it offered the sender's own inbox).
    */
   const removedHere = useRef<string[]>([]);
   const knownNow = useRef<() => ContactSuggestion[]>(() => []);
@@ -1577,10 +1582,8 @@ export function DraftEditor(props: Props) {
       ...FIELDS.flatMap((f) => server[f]),
       ...removedHere.current,
     ];
+    if (d.identity?.email_address) onDraft.add(addressKey(d.identity.email_address));
     const list = raw.map(parseNamedAddress).filter((s): s is ContactSuggestion => s !== null);
-    if (d.identity?.email_address) {
-      list.push({ address: d.identity.email_address, name: d.identity.display_name ?? null });
-    }
     return list.filter((s) => !onDraft.has(addressKey(s.address)));
   };
   const suggest = useRef<ContactSource>(localContactSource(() => knownNow.current()));
@@ -1856,9 +1859,19 @@ export function DraftEditor(props: Props) {
   // byte and no box can reach it. When the text in the editor does not end in
   // that tail (unsaved edits from before this existed), there is no tail and
   // the editor behaves exactly as it did.
+  //
+  // Every quote this editor has been handed is remembered too (live re-test,
+  // 2026-10-17): a folded card's kept edits sit over the NEWER version Claude
+  // wrote, whose quote may differ by a byte or be missing, and then the edits
+  // no longer ended in "the server's" quote, so the whole quote fell back into
+  // the Signature row. The edits still end in the quote they were made over.
   const serverQuote = splitQuote(server.bodyText, d.body?.quoted);
+  const heldQuotes = useRef<string[]>([]);
+  if (serverQuote && !heldQuotes.current.includes(serverQuote.quote)) {
+    heldQuotes.current = [serverQuote.quote, ...heldQuotes.current].slice(0, 4);
+  }
   const quoteTail =
-    serverQuote && edit.bodyText.endsWith(serverQuote.quote) ? serverQuote.quote : "";
+    [serverQuote?.quote, ...heldQuotes.current].find((q) => !!q && edit.bodyText.endsWith(q)) ?? "";
   const headText = quoteTail
     ? edit.bodyText.slice(0, edit.bodyText.length - quoteTail.length)
     : edit.bodyText;
@@ -1877,7 +1890,13 @@ export function DraftEditor(props: Props) {
   // with no warning (2026-10-13). So the card warns as soon as the signature box
   // opens, and once the signature differs locally the old formatted preview is
   // no longer offered: it would show a signature that saving is about to drop.
-  const storedSplit = splitBody(serverQuote ? serverQuote.head : server.bodyText);
+  const storedSplit = splitBody(
+    serverQuote
+      ? serverQuote.head
+      : quoteTail && server.bodyText.endsWith(quoteTail)
+      ? server.bodyText.slice(0, server.bodyText.length - quoteTail.length)
+      : server.bodyText,
+  );
   const sigEdited =
     storedSplit.signature !== null &&
     (split.signature === null ||
@@ -2306,7 +2325,7 @@ export function DraftEditor(props: Props) {
         <div class="hdr ed-hdr">
           <div class="hdr-l">
             <b>Draft</b>
-            <span class="muted hdr-from">{edit.subject.trim() || "No subject"}</span>
+            <span class="muted hdr-from" dir="auto">{edit.subject.trim() || "No subject"}</span>
             {unsaved && <span class="hdr-status">Unsaved changes</span>}
           </div>
           <div class="hdr-r">
@@ -2370,7 +2389,15 @@ export function DraftEditor(props: Props) {
         <p class="line">
           Replying to {d.in_reply_to.from || "an earlier message"}
           {d.in_reply_to.subject ? ` · ${d.in_reply_to.subject}` : ""}
-          {d.in_reply_to.date ? ` · ${formatDateTime(d.in_reply_to.date)}` : ""}
+          {/* The date in one piece: at 360px it broke as "Sep" / "15, 2026". */}
+          {d.in_reply_to.date ? (
+            <>
+              {" · "}
+              <span class="nowrap">{formatDateTime(d.in_reply_to.date)}</span>
+            </>
+          ) : (
+            ""
+          )}
         </p>
       )}
 
@@ -2407,6 +2434,7 @@ export function DraftEditor(props: Props) {
           <input
             id="d-subject"
             class="subj grow"
+            dir="auto"
             aria-label="Subject"
             placeholder="No subject"
             value={edit.subject}
@@ -2525,7 +2553,7 @@ export function DraftEditor(props: Props) {
             onClick={() => canEdit && startEditingSig()}
           >
             <span class="lbl">Signature</span>
-            <span class="sig-text">{signaturePreview(split.signature)}</span>
+            <span class="sig-text" dir="auto">{signaturePreview(split.signature)}</span>
             {canEdit && (
               <TextLink
                 btnRef={sigEditLink}
@@ -2567,7 +2595,7 @@ export function DraftEditor(props: Props) {
             }}
           >
             <span class="lbl">Quoted</span>
-            <span class="sig-text">{quotePreview(quoteTail)}</span>
+            <span class="sig-text" dir="auto">{quotePreview(quoteTail)}</span>
             <TextLink
               onClick={() => setShowQuote((v) => !v)}
               expanded={showQuote}
@@ -2580,8 +2608,8 @@ export function DraftEditor(props: Props) {
             </TextLink>
           </div>
           {showQuote && (
-            <div id="d-quoted" class="quote-text" role="region" aria-label="Quoted message, read only">
-              {quoteTail.replace(/^(?:[ \t]*\r?\n)+/, "")}
+            <div id="d-quoted" class="quote-text" dir="auto" role="region" aria-label="Quoted message, read only">
+              {quoteBody(quoteTail)}
             </div>
           )}
         </>

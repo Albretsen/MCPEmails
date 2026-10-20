@@ -42,17 +42,17 @@ const translation = {
 下面是单次 \`email_read\` 调用（动作 \`read\`）在 MCP Emails 中走过的路径：
 
 \`\`\`
-agent  →  MCP server  →  isolated Edge Function
+agent  →  MCP server  →  provider connection
                               ↓ decrypt token (in memory)
                          your provider (Gmail / Graph / IMAP)
                               ↓ message body
-agent  ←  parsed result  ←  Edge Function
+agent  ←  parsed result  ←  MCP server
                          (body discarded, nothing written)
 \`\`\`
 
-唯一处于静态存储中的就是那份凭据，而它用 **AES-256-GCM** 加密。解密只发生在调用时、在一个隔离的 Edge Function 内部，而加密密钥是一个与数据库分开存放的环境密钥——所以单凭一份数据库转储毫无用处。邮件本身从不触及持久化存储。它被解析、返回给你的智能体，然后消失。
+唯一处于静态存储中的就是那份凭据，而它用 **AES-256-GCM** 加密。只有在请求需要时，它才会在我们的服务器上解密，而且从不发送给你的智能体；加密密钥作为服务器密钥保存，与数据库分开，所以单凭一份数据库转储毫无用处。邮件本身从不触及持久化存储。它被解析、返回给你的智能体，然后消失。
 
-发送邮件以同样的方式运作，并且多了一重保证：外发邮件经由*你自己的*服务商——Gmail API、Microsoft Graph，或你自己的 SMTP。我们绝不从我们自己的域名转发，所以你的送达率和域名信誉完全归你所有。这里没有共享的发送池，不会把你拖进别人的垃圾邮件信誉里。
+发送邮件以同样的方式运作，并且多了一重保证：外发邮件经由*你自己的*服务商：Gmail 或其他服务商走 SMTP，Outlook 走 Microsoft Graph。我们绝不从我们自己的域名转发，所以你的送达率和域名信誉完全归你所有。这里没有共享的发送池，不会把你拖进别人的垃圾邮件信誉里。
 
 如果你想深入了解凭据模型的内部机制——OAuth 令牌与应用专用密码的对比，以及为什么两者都保持加密——我在 [面向 AI 邮件访问的 OAuth 与 API 密钥之争](/blog/oauth-vs-api-keys-ai-email-access) 一文里写过这个。
 

@@ -418,6 +418,23 @@ export function quotePreview(quote: string): string {
 }
 
 /**
+ * The opened quote: the quote without its leading blank lines, and without its
+ * attribution line when the collapsed row already shows it ("On ..., Dana
+ * wrote:" read twice, one under the other; live re-test, 2026-10-17). Only a
+ * line ending in ":" is dropped: Outlook's "From: Dana" opens a header block
+ * that reads wrong without its first line.
+ */
+export function quoteBody(quote: string): string {
+  const text = quote.replace(/^(?:[ \t]*\r?\n)+/, "");
+  const preview = quotePreview(quote);
+  const nl = text.search(/\r?\n/);
+  const first = (nl === -1 ? text : text.slice(0, nl)).trim();
+  if (first !== preview || !first.endsWith(":") || nl === -1) return text;
+  const rest = text.slice(nl).replace(/^(?:[ \t]*\r?\n)+/, "");
+  return rest.length > 0 ? rest : text;
+}
+
+/**
  * True when the message already signs off with the name the signature starts
  * with: "Best regards,\nAsgeir" over a signature that opens "Asgeir
  * Albretsen". One of the last two non-empty lines, short enough to be a

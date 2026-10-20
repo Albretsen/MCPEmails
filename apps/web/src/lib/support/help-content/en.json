@@ -103,8 +103,8 @@
       "keywords": "no tools nothing empty connector not working claude chatgpt cursor developer mode scope inbox_list",
       "steps": [
         "Open Inboxes in the dashboard and check that the mailbox is listed without an error. If it shows one, reconnect it.",
-        "Start a new chat after adding the connector. In ChatGPT, also choose Developer mode and the mcpemails app from the + menu in every new chat.",
-        "Authorize the connector with the same mcpemails account that holds the mailbox.",
+        "Start a new chat after adding the connector. In ChatGPT, also choose Developer mode and the MCP Emails app from the + menu in every new chat.",
+        "Authorize the connector with the same MCP Emails account that holds the mailbox.",
         "Your assistant only sees the tools your connector or API key is scoped for. If you left a scope unticked, remove the connector and add it again.",
         "Ask the assistant to list your inboxes first. Mail is fetched when the assistant asks for it, so nothing arrives on its own."
       ],

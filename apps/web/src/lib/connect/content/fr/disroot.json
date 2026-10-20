@@ -20,7 +20,7 @@
     "titleLine1": "Connectez Disroot à Claude,",
     "titleLine2": "Cursor, ChatGPT, tout client MCP",
     "lead": "Offrez à votre agent IA une vraie boîte Disroot. Lisez, recherchez, envoyez, répondez, planifiez et organisez le courrier via IMAP, dans tous les clients MCP et pas un seul, avec le compromis en matière de confidentialité clairement exposé.",
-    "answer": "Claude ne peut pas accéder seul à une boîte Disroot. mcpemails est un serveur MCP hébergé qui la connecte via IMAP sur disroot.org, port 993, et SMTP sur le port 465, en s'authentifiant avec le même mot de passe Disroot que pour le webmail et le Cloud, pour que Claude, Cursor ou tout client MCP puisse lire, rechercher, envoyer et organiser ce courrier. Disroot ne délivre aucun mot de passe d'application : sachez donc que l'identifiant que vous enregistrez est celui de votre compte. Une boîte est gratuite, pour toujours.",
+    "answer": "Claude ne peut pas accéder seul à une boîte Disroot. MCP Emails est un serveur MCP hébergé qui la connecte via IMAP sur disroot.org, port 993, et SMTP sur le port 465, en s'authentifiant avec le même mot de passe Disroot que pour le webmail et le Cloud, pour que Claude, Cursor ou tout client MCP puisse lire, rechercher, envoyer et organiser ce courrier. Disroot ne délivre aucun mot de passe d'application : sachez donc que l'identifiant que vous enregistrez est celui de votre compte. Une boîte est gratuite, pour toujours.",
     "meta0": "1 boîte gratuite, pour toujours",
     "meta1": "Le mot de passe de votre compte Disroot",
     "meta2": "E-mails récupérés en direct, jamais stockés"
@@ -31,7 +31,7 @@
   },
   "setup": [
     {
-      "h": "Créez votre compte mcpemails gratuit",
+      "h": "Créez votre compte MCP Emails gratuit",
       "p": "Inscrivez-vous sur mcpemails.com. L'offre gratuite connecte une boîte, pour toujours, sans carte bancaire. Vous obtenez à la fin une URL MCP et une clé."
     },
     {
@@ -39,7 +39,7 @@
       "p": "La FAQ de Disroot le dit explicitement : l'identifiant du compte est votre nom d'utilisateur <b>sans</b> le domaine. La plupart des clients de messagerie s'authentifient sans problème avec l'adresse complète <code>name@disroot.org</code>, mais si le serveur vous refuse alors que le mot de passe est sûrement correct, réessayez avec le seul nom d'utilisateur. Ce détail explique à lui seul la plupart des échecs de connexion de clients à Disroot."
     },
     {
-      "h": "Ajoutez la boîte dans mcpemails",
+      "h": "Ajoutez la boîte dans MCP Emails",
       "p": "Choisissez IMAP / SMTP, saisissez votre adresse Disroot et votre mot de passe Disroot. Les serveurs sont préremplis avec <code>disroot.org</code> dans les deux sens. Les identifiants sont chiffrés au repos ; le courrier lui-même est récupéré en direct à chaque requête et n'est pas conservé."
     },
     {
@@ -66,14 +66,14 @@
     }
   ],
   "limits": [
-    "Connecter une boîte à un client IA signifie que ce fournisseur d'IA lit le contenu de vos messages. Disroot ne peut pas l'empêcher, et nous non plus. mcpemails récupère le courrier en direct chez Disroot à chaque requête et ne stocke pas le contenu des messages, et les identifiants sont chiffrés au repos, mais le texte parvient quand même à Claude, Cursor ou au client que vous utilisez. Si une boîte Disroot contient une correspondance que vous ne voulez pas voir traitée par un grand fournisseur d'IA, ne la connectez pas.",
-    "Le courrier qui arrive chiffré avec GPG, ce que Disroot encourage activement, parvient à un client IMAP sous forme de bloc chiffré en armure ASCII. mcpemails ne détient pas votre clé privée : un agent voit donc l'enveloppe et le contenu chiffré, pas le message. Ces fils doivent être lus dans un client qui possède votre clé.",
-    "Il n'existe pas d'identifiant à portée limitée. Disroot ne propose pas de mots de passe d'application, donc mcpemails stocke le même mot de passe que celui qui ouvre vos fichiers du Cloud."
+    "Connecter une boîte à un client IA signifie que ce fournisseur d'IA lit le contenu de vos messages. Disroot ne peut pas l'empêcher, et nous non plus. MCP Emails récupère le courrier en direct chez Disroot à chaque requête et ne stocke pas le contenu des messages, et les identifiants sont chiffrés au repos, mais le texte parvient quand même à Claude, Cursor ou au client que vous utilisez. Si une boîte Disroot contient une correspondance que vous ne voulez pas voir traitée par un grand fournisseur d'IA, ne la connectez pas.",
+    "Le courrier qui arrive chiffré avec GPG, ce que Disroot encourage activement, parvient à un client IMAP sous forme de bloc chiffré en armure ASCII. MCP Emails ne détient pas votre clé privée : un agent voit donc l'enveloppe et le contenu chiffré, pas le message. Ces fils doivent être lus dans un client qui possède votre clé.",
+    "Il n'existe pas d'identifiant à portée limitée. Disroot ne propose pas de mots de passe d'application, donc MCP Emails stocke le même mot de passe que celui qui ouvre vos fichiers du Cloud."
   ],
   "faq": [
     {
       "q": "Claude fonctionne-t-il avec Disroot ?",
-      "a": "Pas directement. Claude n'a pas de connecteur Disroot intégré et ne sait pas parler IMAP. Connecter un serveur MCP comme mcpemails à votre boîte Disroot donne à Claude un accès en lecture, recherche, envoi, réponse, planification et organisation, et la même connexion fonctionne dans Cursor et d'autres clients MCP sans avoir à la reconfigurer."
+      "a": "Pas directement. Claude n'a pas de connecteur Disroot intégré et ne sait pas parler IMAP. Connecter un serveur MCP comme MCP Emails à votre boîte Disroot donne à Claude un accès en lecture, recherche, envoi, réponse, planification et organisation, et la même connexion fonctionne dans Cursor et d'autres clients MCP sans avoir à la reconfigurer."
     },
     {
       "q": "Quels sont les réglages IMAP et SMTP de Disroot ?",
@@ -89,7 +89,7 @@
     },
     {
       "q": "Mon IA peut-elle lire mon courrier Disroot chiffré avec PGP ?",
-      "a": "Non. Un message chiffré avec votre clé OpenPGP arrive via IMAP sous forme de texte chiffré, et mcpemails ne détient jamais votre clé privée. L'agent peut voir l'expéditeur, l'objet et la date, et peut déplacer ou marquer le message, mais le corps reste illisible. C'est le comportement voulu, et c'est ce qui garde les fils chiffrés de bout en bout à l'abri d'un client IA."
+      "a": "Non. Un message chiffré avec votre clé OpenPGP arrive via IMAP sous forme de texte chiffré, et MCP Emails ne détient jamais votre clé privée. L'agent peut voir l'expéditeur, l'objet et la date, et peut déplacer ou marquer le message, mais le corps reste illisible. C'est le comportement voulu, et c'est ce qui garde les fils chiffrés de bout en bout à l'abri d'un client IA."
     },
     {
       "q": "Mon courrier Disroot est-il stocké sur vos serveurs ?",

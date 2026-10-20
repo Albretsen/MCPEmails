@@ -2,7 +2,11 @@ import { NextRequest, NextResponse } from 'next/server';
 import { runCheckout, type CheckoutReason } from '@/lib/stripe/checkout-core';
 
 /**
- * GET /api/stripe/checkout/start?plan=<planId>&interval=<month|year>
+ * GET /api/stripe/checkout/start?plan=<planId>&interval=<month|year>[&lang=<locale>]
+ *
+ * `lang` is the language the buyer was reading (the marketing page's locale,
+ * or the dashboard's). Only 'de' changes anything: it shows the hosted page in
+ * German. It survives the /login bounce below with the rest of the query.
  *
  * The buy button's destination. One request in, a 303 to Stripe out.
  *
@@ -77,8 +81,9 @@ function noStore(response: NextResponse): NextResponse {
 export async function GET(request: NextRequest): Promise<NextResponse> {
   const planId = request.nextUrl.searchParams.get('plan');
   const interval = request.nextUrl.searchParams.get('interval') ?? 'month';
+  const locale = request.nextUrl.searchParams.get('lang');
 
-  const outcome = await runCheckout({ planId, interval });
+  const outcome = await runCheckout({ planId, interval, locale });
 
   if (outcome.kind === 'checkout') {
     // Straight to Stripe. 303 rather than 302 so the redirect is unambiguously

@@ -20,7 +20,7 @@
     "titleLine1": "将 Telstra BigPond 邮箱连接到",
     "titleLine2": "Claude、Cursor 及任意 MCP 客户端",
     "lead": "为你的 AI 代理接入一个真正的 bigpond.com 收件箱。使用你的 Telstra 邮箱密码，通过 IMAP 读取、搜索、发送、回复、定时与整理邮件，可在所有 MCP 客户端中使用而不止一个。",
-    "answer": "Claude 无法自行访问 Telstra BigPond 邮箱。mcpemails 是一个托管 MCP 服务器，通过 imap.telstra.com 端口 993 的 IMAP 与之连接，使用你完整的 bigpond.com、bigpond.net.au 或 telstra.com 地址和 Telstra 邮箱密码登录，让 Claude、Cursor 或任意 MCP 客户端都能读取、搜索、发送并整理这些邮件。Bigpond 邮箱已并入 Telstra Mail 平台，所以客户端不应再使用旧的 bigpond 主机名。1 个收件箱永久免费。",
+    "answer": "Claude 无法自行访问 Telstra BigPond 邮箱。MCP Emails 是一个托管 MCP 服务器，通过 imap.telstra.com 端口 993 的 IMAP 与之连接，使用你完整的 bigpond.com、bigpond.net.au 或 telstra.com 地址和 Telstra 邮箱密码登录，让 Claude、Cursor 或任意 MCP 客户端都能读取、搜索、发送并整理这些邮件。Bigpond 邮箱已并入 Telstra Mail 平台，所以客户端不应再使用旧的 bigpond 主机名。1 个收件箱永久免费。",
     "meta0": "1 个收件箱永久免费",
     "meta1": "Telstra 邮箱密码即可使用",
     "meta2": "邮件实时获取，绝不存储"
@@ -31,7 +31,7 @@
   },
   "setup": [
     {
-      "h": "创建免费的 mcpemails 账户",
+      "h": "创建免费的 MCP Emails 账户",
       "p": "在 mcpemails.com 注册。免费套餐可连接一个收件箱，无需信用卡。"
     },
     {
@@ -39,7 +39,7 @@
       "p": "在浏览器中用你要连接的地址登录 Telstra Mail。Telstra 自己的文档指出密码区分大小写，在网页邮箱中确认密码，可以在继续之前把真正的凭据问题和设置问题区分开来。"
     },
     {
-      "h": "在 mcpemails 中输入完整地址",
+      "h": "在 MCP Emails 中输入完整地址",
       "p": "选择 IMAP / SMTP，输入完整地址，包括 <code>@bigpond.com</code>、<code>@bigpond.net.au</code> 或 <code>@telstra.com</code>。Telstra 的服务器地址已预填。不要换成你可能仍保存在其他邮件应用里的旧 bigpond 服务器名称。"
     },
     {
@@ -54,7 +54,7 @@
     },
     {
       "h": "该服务器不支持 MOVE，所以整理邮件需要三条命令",
-      "p": "Telstra 的 IMAP 服务器不声明 MOVE 扩展，因此归档一封邮件要依次执行 COPY、STORE 删除标记、EXPUNGE。mcpemails 会替你完成，结果完全相同，但这里的移动不是原子操作：如果连接在中途断开，邮件可能会同时留在两个文件夹中，这就是为什么在这家服务商上重复整理有时需要再检查一遍。"
+      "p": "Telstra 的 IMAP 服务器不声明 MOVE 扩展，因此归档一封邮件要依次执行 COPY、STORE 删除标记、EXPUNGE。MCP Emails 会替你完成，结果完全相同，但这里的移动不是原子操作：如果连接在中途断开，邮件可能会同时留在两个文件夹中，这就是为什么在这家服务商上重复整理有时需要再检查一遍。"
     },
     {
       "h": "没有 UIDPLUS，服务器不会告诉我们新的邮件 ID",
@@ -62,7 +62,7 @@
     },
     {
       "h": "把账户从 POP 切换到 IMAP 会清除 POP 文件夹",
-      "p": "Telstra 警告说，把账户从 POP 切换到 IMAP 时，所有 POP 文件夹和邮件都会丢失。如果你要连接的邮箱一直使用 POP 并在本地归档了邮件，请在把账户改为 IMAP 之前先下载或导出。mcpemails 只支持 IMAP，所以这是一个需要在连接之前慎重做出的一次性决定。"
+      "p": "Telstra 警告说，把账户从 POP 切换到 IMAP 时，所有 POP 文件夹和邮件都会丢失。如果你要连接的邮箱一直使用 POP 并在本地归档了邮件，请在把账户改为 IMAP 之前先下载或导出。MCP Emails 只支持 IMAP，所以这是一个需要在连接之前慎重做出的一次性决定。"
     }
   ],
   "limits": [
@@ -72,7 +72,7 @@
   "faq": [
     {
       "q": "Claude 能用于 Telstra BigPond 邮箱吗？",
-      "a": "不能直接使用。Claude 没有内置的 Telstra 连接器。通过 IMAP 将 mcpemails 这样的 MCP 服务器连接到邮箱后，Claude 就能读取、搜索、发送、回复、定时和整理你的 BigPond 邮件，而且同一个连接也可在 Cursor、ChatGPT 和其他 MCP 客户端中使用。"
+      "a": "不能直接使用。Claude 没有内置的 Telstra 连接器。通过 IMAP 将 MCP Emails 这样的 MCP 服务器连接到邮箱后，Claude 就能读取、搜索、发送、回复、定时和整理你的 BigPond 邮件，而且同一个连接也可在 Cursor、ChatGPT 和其他 MCP 客户端中使用。"
     },
     {
       "q": "BigPond 的 IMAP 和 SMTP 设置是什么？",

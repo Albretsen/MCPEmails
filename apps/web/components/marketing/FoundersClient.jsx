@@ -1,10 +1,11 @@
 'use client';
 
 import { useState } from 'react';
-import { useTranslations } from 'next-intl';
+import { useTranslations, useLocale } from 'next-intl';
 import { Link } from '@/i18n/navigation';
 import { Nav, Footer } from './Sections';
 import { MIcon } from '../MarketingPrimitives';
+import { withReadingLang } from '@/i18n/reading-lang.mjs';
 
 const RICH = {
   code: (chunks) => <code className="t-code-inline">{chunks}</code>,
@@ -33,6 +34,7 @@ const DOES_ICONS = { read: 'inbox', send: 'mail', schedule: 'refresh', organize:
 
 export default function FoundersClient() {
   const t = useTranslations('forFounders');
+  const locale = useLocale();
   const prompts = Array.isArray(t.raw('day.prompts')) ? t.raw('day.prompts') : [];
   const faqItems = Array.isArray(t.raw('faq.items')) ? t.raw('faq.items') : [];
 
@@ -49,7 +51,7 @@ export default function FoundersClient() {
           </h1>
           <p className="pricing-page-lead">{t('hero.lead')}</p>
           <div className="hero-cta" style={{ justifyContent: 'center', marginTop: 24 }}>
-            <a className="btn btn-primary btn-lg" href="/signup">{t('hero.ctaPrimary')}</a>
+            <a className="btn btn-primary btn-lg" href={withReadingLang('/signup', locale)}>{t('hero.ctaPrimary')}</a>
             <a className="btn btn-secondary btn-lg" href="#day">{t('hero.ctaSecondary')}</a>
           </div>
         </div>
@@ -172,7 +174,7 @@ export default function FoundersClient() {
           <h2 className="pricing-cta-h">{t('ctaBand.title')}</h2>
           <p className="pricing-cta-sub">{t('ctaBand.sub')}</p>
           <div className="pricing-cta-btns">
-            <a className="btn btn-primary btn-lg" href="/signup">{t('ctaBand.ctaPrimary')}</a>
+            <a className="btn btn-primary btn-lg" href={withReadingLang('/signup', locale)}>{t('ctaBand.ctaPrimary')}</a>
             <Link className="btn btn-on-dark btn-lg" href="/docs">{t('ctaBand.ctaSecondary')}</Link>
           </div>
         </div>

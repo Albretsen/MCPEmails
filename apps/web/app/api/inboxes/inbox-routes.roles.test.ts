@@ -200,6 +200,9 @@ nodeMock.module('next/server', {
   namedExports: {
     NextRequest: Request,
     NextResponse: { json: (body: unknown, init?: ResponseInit) => Response.json(body, init) },
+    // The DELETE route schedules the Business mailbox add-on sync after the
+    // response; outside a request there is no "after", so run nothing.
+    after: () => {},
   },
 });
 nodeMock.module('@/lib/crypto', {

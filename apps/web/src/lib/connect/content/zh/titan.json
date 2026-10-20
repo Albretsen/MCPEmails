@@ -23,7 +23,7 @@
     "titleLine1": "将 Titan Email 连接到 Claude，",
     "titleLine2": "以及 Cursor、ChatGPT、任意 MCP 客户端",
     "lead": "为你的 AI 代理接入一个真正的 Titan 收件箱。通过 IMAP 读取、搜索、发送、回复、定时与整理邮件，可在所有 MCP 客户端中使用，而不止一个。",
-    "answer": "Claude 无法自行连接 Titan Email。mcpemails 是一个托管 MCP 服务器，通过 IMAP 连接 imap.titan.email 的 993 端口，让 Claude、Cursor 或任意 MCP 客户端都能读取、搜索、发送并整理邮件。在你于网页邮箱设置中开启 Enable Titan on Other Apps 之前，Titan 会拒绝所有第三方客户端；开启了双重认证的邮箱需要 Titan 应用密码而不是普通密码。一个收件箱永久免费。",
+    "answer": "Claude 无法自行连接 Titan Email。MCP Emails 是一个托管 MCP 服务器，通过 IMAP 连接 imap.titan.email 的 993 端口，让 Claude、Cursor 或任意 MCP 客户端都能读取、搜索、发送并整理邮件。在你于网页邮箱设置中开启 Enable Titan on Other Apps 之前，Titan 会拒绝所有第三方客户端；开启了双重认证的邮箱需要 Titan 应用密码而不是普通密码。一个收件箱永久免费。",
     "meta0": "1 个收件箱永久免费",
     "meta1": "必须开启第三方访问",
     "meta2": "邮件实时获取，绝不存储"
@@ -34,7 +34,7 @@
   },
   "setup": [
     {
-      "h": "创建免费 mcpemails 账户",
+      "h": "创建免费 MCP Emails 账户",
       "p": "在 mcpemails.com 注册。无需信用卡，免费套餐可一直连接一个收件箱。"
     },
     {
@@ -42,8 +42,8 @@
       "p": "登录 app.titan.email 上的 Titan 网页邮箱，点击右上角的 <b>Settings</b> 图标，然后点击 <b>Enable Titan on Other Apps</b>。会打开一个简短的功能介绍；再次点击该按钮确认。如果找不到该项，而是看到 <b>Configure 3rd party apps</b>，说明该邮箱的第三方访问已经开启。"
     },
     {
-      "h": "确认主机名，然后把所有信息粘贴到 mcpemails",
-      "p": "大多数 Titan 邮箱使用上方自动填好的服务器。如果你的域名通过 GoDaddy 管理，GoDaddy 的文档给出的则是 993 端口的 <code>imap.secureserver.net</code> 和 465 端口的 <code>smtpout.secureserver.net</code>。如果你是从 Blacknight、MonoVM、DomainDiscount24、Fluccs 或 Domain Central 购买的 Titan，Titan 文档给出的是 <code>imap0101.titan.email</code> 和 <code>smtp0101.titan.email</code>。在 mcpemails 中选择 IMAP / SMTP，输入你完整的 Titan 地址及其密码。"
+      "h": "确认主机名，然后把所有信息粘贴到 MCP Emails",
+      "p": "大多数 Titan 邮箱使用上方自动填好的服务器。如果你的域名通过 GoDaddy 管理，GoDaddy 的文档给出的则是 993 端口的 <code>imap.secureserver.net</code> 和 465 端口的 <code>smtpout.secureserver.net</code>。如果你是从 Blacknight、MonoVM、DomainDiscount24、Fluccs 或 Domain Central 购买的 Titan，Titan 文档给出的是 <code>imap0101.titan.email</code> 和 <code>smtp0101.titan.email</code>。在 MCP Emails 中选择 IMAP / SMTP，输入你完整的 Titan 地址及其密码。"
     },
     {
       "h": "将 MCP URL 粘贴到你的 AI",
@@ -65,7 +65,7 @@
     },
     {
       "h": "Titan 的 IMAP 服务器异常精简，这会改变行为",
-      "p": "Titan 的能力列表除了 IMAP4rev1、AUTH=PLAIN 和 SASL-IR 之外几乎没有别的。它不提供 MOVE，所以移动邮件变成复制、标记再删除，而不是一条原子命令，中断的移动可能会把原邮件留在原处。它不提供 IDLE，所以任何客户端都无法保持连接等待新邮件；mcpemails 每次请求都实时获取，但同一邮箱上的桌面客户端只能轮询。UIDPLUS 和 SPECIAL-USE 也都缺失，这就是为什么这里的文件夹按名称匹配。"
+      "p": "Titan 的能力列表除了 IMAP4rev1、AUTH=PLAIN 和 SASL-IR 之外几乎没有别的。它不提供 MOVE，所以移动邮件变成复制、标记再删除，而不是一条原子命令，中断的移动可能会把原邮件留在原处。它不提供 IDLE，所以任何客户端都无法保持连接等待新邮件；MCP Emails 每次请求都实时获取，但同一邮箱上的桌面客户端只能轮询。UIDPLUS 和 SPECIAL-USE 也都缺失，这就是为什么这里的文件夹按名称匹配。"
     }
   ],
   "limits": [
@@ -76,7 +76,7 @@
   "faq": [
     {
       "q": "Claude 能用 Titan Email 吗？",
-      "a": "不能直接使用。Claude 没有内置的 Titan 连接器，也无法自行打开 IMAP 会话。将 mcpemails 这样的 MCP 服务器连接到你的 Titan 邮箱后，Claude 就能读取、搜索、发送、回复、定时和整理其中的邮件，同一个连接也可在 Cursor 和任何其他 MCP 客户端中使用，而不局限于一个应用。"
+      "a": "不能直接使用。Claude 没有内置的 Titan 连接器，也无法自行打开 IMAP 会话。将 MCP Emails 这样的 MCP 服务器连接到你的 Titan 邮箱后，Claude 就能读取、搜索、发送、回复、定时和整理其中的邮件，同一个连接也可在 Cursor 和任何其他 MCP 客户端中使用，而不局限于一个应用。"
     },
     {
       "q": "我怎么知道我的邮箱到底是不是 Titan？",

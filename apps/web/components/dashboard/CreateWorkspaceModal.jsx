@@ -12,9 +12,9 @@ import { Icon, Btn } from '../Primitives';
  * we do a full reload so the dashboard re-fetches scoped to it.
  *
  * @param {() => void} onClose
- * @param {string}     planLabel  - The plan the new workspace inherits (e.g. "Team").
+ * @param {string}     planLabel  - The plan the new workspace inherits (e.g. "Business").
  */
-export function CreateWorkspaceModal({ onClose, planLabel = 'Team' }) {
+export function CreateWorkspaceModal({ onClose, planLabel = 'Business' }) {
   const tr = useTranslations('dashboardChrome');
   const [name, setName] = useState('');
   const [submitting, setSubmitting] = useState(false);

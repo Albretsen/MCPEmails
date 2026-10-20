@@ -22,23 +22,23 @@
     "meta0": "1 boîte gratuite, pour toujours",
     "meta1": "Mot de passe d'application, sans configuration OAuth",
     "meta2": "E-mails récupérés en direct, jamais stockés",
-    "answer": "Claude ne peut pas accéder seul à Mail.ru. mcpemails est un serveur MCP hébergé qui s'y connecte en IMAP avec un mot de passe d'application, pour que Claude, Cursor ou tout client MCP puisse lire, rechercher, envoyer et organiser ce courrier. La configuration prend quelques minutes et une boîte est gratuite."
+    "answer": "Claude ne peut pas accéder seul à Mail.ru. MCP Emails est un serveur MCP hébergé qui s'y connecte en IMAP avec un mot de passe d'application, pour que Claude, Cursor ou tout client MCP puisse lire, rechercher, envoyer et organiser ce courrier. La configuration prend quelques minutes et une boîte est gratuite."
   },
   "method": {
     "title": "Comment Mail.ru se connecte : IMAP et un mot de passe d'application",
-    "body": "Mail.ru se connecte en IMAP/SMTP avec un <b>mot de passe pour applications externes</b>. Le mot de passe avec lequel vous vous connectez au site ne fonctionne pas depuis un logiciel de messagerie. Créez-en un dans Mail.ru sous Security, Passwords for external applications (Sécurité, mots de passe pour applications externes), puis collez-le dans mcpemails avec votre adresse Mail.ru. Mail.ru exige un numéro de téléphone sur le compte avant d'en délivrer un."
+    "body": "Mail.ru se connecte en IMAP/SMTP avec un <b>mot de passe pour applications externes</b>. Le mot de passe avec lequel vous vous connectez au site ne fonctionne pas depuis un logiciel de messagerie. Créez-en un dans Mail.ru sous Security, Passwords for external applications (Sécurité, mots de passe pour applications externes), puis collez-le dans MCP Emails avec votre adresse Mail.ru. Mail.ru exige un numéro de téléphone sur le compte avant d'en délivrer un."
   },
   "setup": [
     {
       "h": "Créez un compte gratuit",
-      "p": "Inscrivez-vous sur mcpemails, sans carte bancaire. L'offre gratuite connecte une boîte, pour toujours."
+      "p": "Inscrivez-vous sur MCP Emails, sans carte bancaire. L'offre gratuite connecte une boîte, pour toujours."
     },
     {
       "h": "Créez un mot de passe pour applications externes",
-      "p": "Dans Mail.ru, ouvrez Security (Sécurité) et créez un mot de passe pour applications externes. C'est ce mot de passe dont mcpemails a besoin, pas celui que vous utilisez sur le site."
+      "p": "Dans Mail.ru, ouvrez Security (Sécurité) et créez un mot de passe pour applications externes. C'est ce mot de passe dont MCP Emails a besoin, pas celui que vous utilisez sur le site."
     },
     {
-      "h": "Collez-le dans mcpemails",
+      "h": "Collez-le dans MCP Emails",
       "p": "Choisissez IMAP / SMTP, ajoutez votre adresse Mail.ru, les serveurs du tableau des réglages ci-dessus et le mot de passe pour connecter la boîte en toute sécurité."
     },
     {
@@ -66,12 +66,12 @@
   ],
   "limits": [
     "Mail.ru ne prend pas en charge IDLE : le nouveau courrier est trouvé quand votre agent va voir, et non poussé dès son arrivée.",
-    "Le serveur d'envoi de Mail.ru annonce une taille maximale de message d'environ 70 Mo. La lecture des pièces jointes via mcpemails est plafonnée à 25 Mo par requête."
+    "Le serveur d'envoi de Mail.ru annonce une taille maximale de message d'environ 70 Mo. La lecture des pièces jointes via MCP Emails est plafonnée à 25 Mo par requête."
   ],
   "faq": [
     {
       "q": "Claude fonctionne-t-il avec Mail.ru ?",
-      "a": "Pas tout seul. Claude n'a pas de connecteur Mail.ru intégré. Relier un serveur MCP comme mcpemails à la boîte en IMAP, avec un mot de passe pour applications externes, donne à Claude un accès en lecture, recherche, envoi, réponse, planification et organisation, et la même connexion fonctionne depuis Cursor, ChatGPT et d'autres clients MCP."
+      "a": "Pas tout seul. Claude n'a pas de connecteur Mail.ru intégré. Relier un serveur MCP comme MCP Emails à la boîte en IMAP, avec un mot de passe pour applications externes, donne à Claude un accès en lecture, recherche, envoi, réponse, planification et organisation, et la même connexion fonctionne depuis Cursor, ChatGPT et d'autres clients MCP."
     },
     {
       "q": "Quels sont les réglages IMAP et SMTP de Mail.ru ?",

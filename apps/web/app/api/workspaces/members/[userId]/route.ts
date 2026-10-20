@@ -198,7 +198,7 @@ export async function PATCH(
   if (!memberLimit.teamRolesEnabled && newRole !== 'member') {
     return NextResponse.json(
       {
-        error: 'The Admin and Viewer roles need the Team plan. On this plan everyone is a Member.',
+        error: 'The Admin and Viewer roles need the Business plan. On this plan everyone is a Member.',
         error_code: 'team_roles_not_available',
         upgrade_url: '/pricing',
       },

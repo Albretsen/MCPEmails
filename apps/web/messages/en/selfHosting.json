@@ -1,7 +1,7 @@
 {
   "meta": {
     "title": "Self-Host an Open-Source Email MCP Server",
-    "description": "Run the open-source mcpemails server for IMAP and SMTP on your own infrastructure. Keep your encryption key, fetch email live, and never store mailbox content."
+    "description": "Run the open-source MCP Emails server for IMAP and SMTP on your own infrastructure. Keep your encryption key, fetch email live, and never store mailbox content."
   },
   "hero": {
     "eyebrow": "Open source, AGPL-3.0",
@@ -20,7 +20,7 @@
   },
   "compare": {
     "title": "Self-host vs hosted",
-    "intro": "The full MCP server and all 23 tools are in both. Self-hosting trades managed convenience for total control.",
+    "intro": "The full MCP server and all 19 tools are in both. Self-hosting trades managed convenience for total control.",
     "thFeature": "",
     "thSelf": "Self-host",
     "thHosted": "Hosted",
@@ -28,10 +28,10 @@
       {
         "feature": "Price",
         "self": "Free, you run it",
-        "hosted": "Free, $9, $15, or $79"
+        "hosted": "Free, $9, $15, or $39"
       },
       {
-        "feature": "The MCP server and all 23 tools",
+        "feature": "The MCP server and all 19 tools",
         "self": "Yes",
         "hosted": "Yes"
       },
@@ -51,9 +51,9 @@
         "hosted": "Yes"
       },
       {
-        "feature": "Gmail / Outlook sign-in (OAuth)",
+        "feature": "Outlook sign-in (OAuth)",
         "self": "Not included",
-        "hosted": "Gmail: yes; Outlook: yes (work accounts may need IT admin approval)"
+        "hosted": "Yes (work accounts may need IT admin approval)"
       },
       {
         "feature": "Web dashboard (connect, keys, activity)",
@@ -71,14 +71,14 @@
         "hosted": "Managed"
       },
       {
-        "feature": "Team workspaces, roles, SSO, audit log",
+        "feature": "Members, roles and several workspaces",
         "self": "Not included",
-        "hosted": "Team plan"
+        "hosted": "Business plan"
       },
       {
         "feature": "Support",
         "self": "Community and GitHub",
-        "hosted": "Email and priority"
+        "hosted": "Email on paid plans"
       },
       {
         "feature": "Setup",

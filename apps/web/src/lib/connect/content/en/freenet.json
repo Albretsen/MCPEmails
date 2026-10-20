@@ -18,8 +18,8 @@
     "eyebrow": "freenet Mail + AI",
     "titleLine1": "Connect your freenet.de inbox",
     "titleLine2": "to Claude, Cursor, any MCP client",
-    "lead": "freenet supports IMAP but keeps it behind a switch it would rather you left alone. Flip it once and mcpemails connects the mailbox so your AI agent can read, search, send, reply and file that mail.",
-    "answer": "Claude cannot reach a freenet.de mailbox on its own. mcpemails is a hosted MCP server that connects it over IMAP at mx.freenet.de on port 993, authenticating with your full address and your freenet Mail password. The one thing you must do first is tick POP3, IMAP und SMTP aktivieren in the mailbox settings, because freenet gates all client access behind that checkbox and recommends leaving it off. Once it is on, Claude, Cursor or any other MCP client can read, search, send and organise that mail, and one inbox is free, forever.",
+    "lead": "freenet supports IMAP but keeps it behind a switch it would rather you left alone. Flip it once and MCP Emails connects the mailbox so your AI agent can read, search, send, reply and file that mail.",
+    "answer": "Claude cannot reach a freenet.de mailbox on its own. MCP Emails is a hosted MCP server that connects it over IMAP at mx.freenet.de on port 993, authenticating with your full address and your freenet Mail password. The one thing you must do first is tick POP3, IMAP und SMTP aktivieren in the mailbox settings, because freenet gates all client access behind that checkbox and recommends leaving it off. Once it is on, Claude, Cursor or any other MCP client can read, search, send and organise that mail, and one inbox is free, forever.",
     "meta0": "1 inbox free, forever",
     "meta1": "Client access must be switched on",
     "meta2": "Email fetched live, never stored"
@@ -30,7 +30,7 @@
   },
   "setup": [
     {
-      "h": "Create a free mcpemails account",
+      "h": "Create a free MCP Emails account",
       "p": "Sign up at mcpemails.com. The free plan connects one inbox and does not ask for a card."
     },
     {
@@ -39,7 +39,7 @@
     },
     {
       "h": "Enter the address and the freenet Mail password",
-      "p": "In mcpemails choose IMAP / SMTP and enter the full address as <code>name@freenet.de</code> with the password for that mailbox. Both directions use <code>mx.freenet.de</code>, which is prefilled here and was verified from a live TLS connection."
+      "p": "In MCP Emails choose IMAP / SMTP and enter the full address as <code>name@freenet.de</code> with the password for that mailbox. Both directions use <code>mx.freenet.de</code>, which is prefilled here and was verified from a live TLS connection."
     },
     {
       "h": "Paste the MCP URL into your AI",
@@ -53,7 +53,7 @@
     },
     {
       "h": "One hostname for both directions, and freenet means it literally",
-      "p": "There is no <code>imap.freenet.de</code> and no <code>smtp.freenet.de</code>. Incoming and outgoing both use <code>mx.freenet.de</code>, which looks wrong to anyone used to the usual prefixes and gets silently corrected by people setting things up from memory. freenet also states in the same table that you should not substitute IP addresses or alternative names, because doing so causes problems in use."
+      "p": "There is no <code>imap.freenet.de</code> and no <code>smtp.freenet.de</code>. Incoming and outgoing both use <code>mx.freenet.de</code>, which looks wrong to anyone used to the usual prefixes and gets silently corrected by people setting things up from memory. freenet also states in the same table that you should not substitute IP addresses or alternative names, and that encryption is required on every connection, so an unencrypted login is refused even with the right password."
     },
     {
       "h": "The folders are called inbox, sent and drafts, in lower case",
@@ -71,11 +71,11 @@
   "faq": [
     {
       "q": "Does Claude work with freenet.de email?",
-      "a": "Not directly. Claude has no built-in freenet connector. Connecting an MCP server such as mcpemails to the mailbox over IMAP gives Claude read, search, send, reply, schedule and organise access to your freenet.de mail, and the same connection works in Cursor, ChatGPT and other MCP clients. Client access has to be enabled in the mailbox first."
+      "a": "Not directly. Claude has no built-in freenet connector. Connecting an MCP server such as MCP Emails to the mailbox over IMAP gives Claude read, search, send, reply, schedule and organise access to your freenet.de mail, and the same connection works in Cursor, ChatGPT and other MCP clients. Client access has to be enabled in the mailbox first."
     },
     {
-      "q": "What are the freenet IMAP and SMTP settings?",
-      "a": "Both are mx.freenet.de. IMAP is port 993 with implicit TLS or 143 with STARTTLS, and SMTP is port 465 with implicit TLS or 587 with STARTTLS, with SMTP authentication enabled. The username is your full address. The hosts were verified from a live TLS connection on the date shown on this page."
+      "q": "Which server does freenet use for IMAP and SMTP?",
+      "a": "Both are mx.freenet.de. freenet lists two combinations: SSL/TLS, with IMAP on port 993 and SMTP on port 465, or STARTTLS, with IMAP on port 143 and SMTP on port 587. Encryption is required and SMTP authentication must be on. The username is your full address, such as name@freenet.de. MCP Emails uses 993 and 465, and the hosts were verified from a live TLS connection on the date shown on this page."
     },
     {
       "q": "Why does freenet reject my password in a mail client?",
@@ -83,7 +83,7 @@
     },
     {
       "q": "Does freenet issue app passwords?",
-      "a": "No. There is no app-specific password to create. A client authenticates with the password of the freenet Mail mailbox itself, once client access is enabled. If you want to revoke a connection, clear the activation checkbox or change the mailbox password."
+      "a": "freenet's instructions for mail programs mention no app password. A client signs in with your full address and the password of the freenet Mail mailbox itself, once client access is enabled. If you want to revoke a connection, clear the activation checkbox or change the mailbox password."
     },
     {
       "q": "Is my freenet mail stored on your servers?",

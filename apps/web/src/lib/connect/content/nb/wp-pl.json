@@ -19,8 +19,8 @@
     "eyebrow": "WP.pl Poczta + AI",
     "titleLine1": "Koble WP.pl-postkassen din",
     "titleLine2": "til Claude, Cursor, enhver MCP-klient",
-    "lead": "WP Poczta snakker IMAP når du slår det på. mcpemails kobler til postkassen, slik at AI-agenten din kan lese, søke, sende, svare og arkivere e-post fra alle MCP-klienter i stedet for én app.",
-    "answer": "Claude når ikke en WP.pl-postkasse på egen hånd. mcpemails er en hostet MCP-server som kobler til via IMAP på imap.wp.pl port 993 og logger inn med hele adressen din. To ting avgjør om innloggingen virker: IMAP må være slått på i webmailen under Opcje, på fanen IMAP/POP, og bruker du totrinnsinnlogging, avvises det vanlige passordet ditt, og du må opprette et e-postprogrampassord i stedet. Når det er på plass, kan Claude, Cursor eller enhver annen MCP-klient lese, søke, sende og organisere den e-posten, og én innboks er gratis, for alltid.",
+    "lead": "WP Poczta snakker IMAP når du slår det på. MCP Emails kobler til postkassen, slik at AI-agenten din kan lese, søke, sende, svare og arkivere e-post fra alle MCP-klienter i stedet for én app.",
+    "answer": "Claude når ikke en WP.pl-postkasse på egen hånd. MCP Emails er en hostet MCP-server som kobler til via IMAP på imap.wp.pl port 993 og logger inn med hele adressen din. To ting avgjør om innloggingen virker: IMAP må være slått på i webmailen under Opcje, på fanen IMAP/POP, og bruker du totrinnsinnlogging, avvises det vanlige passordet ditt, og du må opprette et e-postprogrampassord i stedet. Når det er på plass, kan Claude, Cursor eller enhver annen MCP-klient lese, søke, sende og organisere den e-posten, og én innboks er gratis, for alltid.",
     "meta0": "1 innboks gratis, for alltid",
     "meta1": "Slå på IMAP i Opcje først",
     "meta2": "E-post hentes direkte, lagres aldri"
@@ -31,7 +31,7 @@
   },
   "setup": [
     {
-      "h": "Opprett en gratis mcpemails-konto",
+      "h": "Opprett en gratis MCP Emails-konto",
       "p": "Registrer deg på mcpemails.com. Gratisplanen kobler til én innboks og ber ikke om kort."
     },
     {
@@ -44,7 +44,7 @@
     },
     {
       "h": "Lim MCP-URL-en inn i AI-en",
-      "p": "Skriv inn adressen og passordet i mcpemails under IMAP / SMTP, med WP-vertene forhåndsutfylt, lim så https://mcpemails.com/api/mcp inn i Claude, Cursor eller ChatGPT og autoriser."
+      "p": "Skriv inn adressen og passordet i MCP Emails under IMAP / SMTP, med WP-vertene forhåndsutfylt, lim så https://mcpemails.com/api/mcp inn i Claude, Cursor eller ChatGPT og autoriser."
     }
   ],
   "gotchas": [
@@ -58,7 +58,7 @@
     },
     {
       "h": "Bare AUTH=PLAIN, og ingen SASL-IR",
-      "p": "<code>imap.wp.pl</code> annonserer <code>AUTH=PLAIN</code> og annonserer ikke SASL-IR, så den avviser autentisering i ett steg, der påloggingsdetaljene sendes med AUTHENTICATE-kommandoen, og den tilbyr ingenting til klienter som er hardkodet til LOGIN-mekanismen. Begge feilene kommer tilbake som en naken avvisning som ser ut som feil påloggingsdetaljer. mcpemails prøver utvekslingen i to steg på nytt, og derfor kobler en WP-postkasse til her etter å ha feilet i andre IMAP-verktøy."
+      "p": "<code>imap.wp.pl</code> annonserer <code>AUTH=PLAIN</code> og annonserer ikke SASL-IR, så den avviser autentisering i ett steg, der påloggingsdetaljene sendes med AUTHENTICATE-kommandoen, og den tilbyr ingenting til klienter som er hardkodet til LOGIN-mekanismen. Begge feilene kommer tilbake som en naken avvisning som ser ut som feil påloggingsdetaljer. MCP Emails prøver utvekslingen i to steg på nytt, og derfor kobler en WP-postkasse til her etter å ha feilet i andre IMAP-verktøy."
     },
     {
       "h": "MOVE og UIDPLUS finnes, men SPECIAL-USE gjør ikke",
@@ -72,7 +72,7 @@
   "faq": [
     {
       "q": "Fungerer Claude med WP.pl-e-post?",
-      "a": "Ikke direkte. Claude har ingen innebygd WP-kobling. Kobler du en MCP-server som mcpemails til postkassen via IMAP, får Claude tilgang til å lese, søke, sende, svare, planlegge og organisere wp.pl-e-posten din, og samme tilkobling fungerer i Cursor, ChatGPT og andre MCP-klienter. IMAP må først være slått på for postkassen."
+      "a": "Ikke direkte. Claude har ingen innebygd WP-kobling. Kobler du en MCP-server som MCP Emails til postkassen via IMAP, får Claude tilgang til å lese, søke, sende, svare, planlegge og organisere wp.pl-e-posten din, og samme tilkobling fungerer i Cursor, ChatGPT og andre MCP-klienter. IMAP må først være slått på for postkassen."
     },
     {
       "q": "Hva er IMAP- og SMTP-innstillingene for WP.pl?",

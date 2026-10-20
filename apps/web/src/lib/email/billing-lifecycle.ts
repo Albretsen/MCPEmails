@@ -94,7 +94,7 @@ import { Resend } from 'resend';
 import { PLANS, planDisplayName, type PlanId } from '@/lib/stripe/plans';
 import { formatAmount } from '@/lib/email/purchase-confirmation';
 import { lifecycleFrom, unsubscribeUrl } from '@/lib/email/lifecycle';
-import { POSTAL_ADDRESS_LINE } from '@/lib/email/legal';
+import { POSTAL_ADDRESS_LINE, WITHDRAWAL_PATH } from '@/lib/email/legal';
 
 // ---------------------------------------------------------------------------
 // Configuration
@@ -1023,6 +1023,12 @@ export function composeBillingEmail(
       const lead = `You cancelled ${yourPlan}, and that is fine. I am not going to try to talk you out of it.`;
       const ask =
         'I would like to know one thing though: what stopped working for you? One line is plenty. Reply straight to this email and it comes to me.';
+      // This email is also the customer's written confirmation that the
+      // cancellation went through, so it says so, and it points a customer
+      // still inside the 14-day window at the stronger remedy.
+      const withdrawalUrl = `${base}${WITHDRAWAL_PATH}`;
+      const withdrawal =
+        `If your first charge was less than 14 days ago, you can also withdraw from the contract and we refund that charge in full: ${withdrawalUrl}`;
 
       const body = [
         lead,
@@ -1031,6 +1037,8 @@ export function composeBillingEmail(
         '',
         until,
         NOTHING_DELETED,
+        '',
+        withdrawal,
         '',
         CANCEL_FOOTER,
         '',
@@ -1046,7 +1054,15 @@ export function composeBillingEmail(
         body,
         htmlBody: shell({
           title: 'What stopped working for you?',
-          html: p(lead) + p(ask) + p(until) + p(NOTHING_DELETED),
+          html:
+            p(lead) +
+            p(ask) +
+            p(until) +
+            p(NOTHING_DELETED) +
+            pLink(
+              'If your first charge was less than 14 days ago, you can also withdraw from the contract and we refund that charge in full.',
+              withdrawalUrl,
+            ),
           footerNote: escapeHtml(CANCEL_FOOTER),
         }),
       };

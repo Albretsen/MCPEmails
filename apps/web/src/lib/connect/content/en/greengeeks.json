@@ -20,7 +20,7 @@
     "titleLine1": "Connect GreenGeeks email to Claude,",
     "titleLine2": "Cursor, ChatGPT, any MCP client",
     "lead": "Give your AI agent a real GreenGeeks mailbox. Read, search, send, reply, schedule and organize mail over IMAP with the password you set when the address was created.",
-    "answer": "Claude cannot reach a GreenGeeks mailbox on its own. mcpemails is a hosted MCP server that connects it over plain IMAP on port 993, so Claude, Cursor or any MCP client can read, search, send and organize that mail. GreenGeeks runs standard cPanel and does not operate a shared mail hostname: your host is built from your own domain or from the server your account sits on, and cPanel prints the exact value under Email Accounts, then Connect Devices, in the Mail Client Manual Settings block. You authenticate with the mailbox password rather than your GreenGeeks dashboard login, and one inbox is free.",
+    "answer": "Claude cannot reach a GreenGeeks mailbox on its own. MCP Emails is a hosted MCP server that connects it over plain IMAP on port 993, so Claude, Cursor or any MCP client can read, search, send and organize that mail. GreenGeeks runs standard cPanel and does not operate a shared mail hostname: your host is built from your own domain or from the server your account sits on, and cPanel prints the exact value under Email Accounts, then Connect Devices, in the Mail Client Manual Settings block. You authenticate with the mailbox password rather than your GreenGeeks dashboard login, and one inbox is free.",
     "meta0": "1 inbox free, forever",
     "meta1": "Mailbox password from cPanel",
     "meta2": "Email fetched live, never stored"
@@ -31,7 +31,7 @@
   },
   "setup": [
     {
-      "h": "Create a free mcpemails account",
+      "h": "Create a free MCP Emails account",
       "p": "Sign up at mcpemails.com. The free plan connects one inbox and needs no card."
     },
     {
@@ -40,7 +40,7 @@
     },
     {
       "h": "Set or confirm the mailbox password",
-      "p": "IMAP checks the password attached to the email address, which is separate from your GreenGeeks dashboard password and separate from the cPanel login. If you do not have it, use <b>Manage</b> on the address row in Email Accounts to set a new one, then paste it into mcpemails with the full address as the username."
+      "p": "IMAP checks the password attached to the email address, which is separate from your GreenGeeks dashboard password and separate from the cPanel login. If you do not have it, use <b>Manage</b> on the address row in Email Accounts to set a new one, then paste it into MCP Emails with the full address as the username."
     },
     {
       "h": "Paste the MCP URL into your AI",
@@ -63,12 +63,12 @@
   ],
   "limits": [
     "GreenGeeks applies per-hour outbound sending limits on shared plans. High-volume automated sending from an AI agent can hit them, and the failure appears as a deferred or rejected send rather than a connection error.",
-    "mcpemails connects the mailbox only. Aliases, forwarders, autoresponders and spam settings stay in cPanel."
+    "MCP Emails connects the mailbox only. Aliases, forwarders, autoresponders and spam settings stay in cPanel."
   ],
   "faq": [
     {
       "q": "Does Claude work with GreenGeeks email?",
-      "a": "Not directly. Claude ships no connector for cPanel mail hosts. Connecting an MCP server such as mcpemails to your GreenGeeks mailbox over IMAP gives Claude read, search, send, reply, schedule and organize access, using the same credentials you would put into Thunderbird or Apple Mail."
+      "a": "Not directly. Claude ships no connector for cPanel mail hosts. Connecting an MCP server such as MCP Emails to your GreenGeeks mailbox over IMAP gives Claude read, search, send, reply, schedule and organize access, using the same credentials you would put into Thunderbird or Apple Mail."
     },
     {
       "q": "What are the GreenGeeks IMAP and SMTP settings?",

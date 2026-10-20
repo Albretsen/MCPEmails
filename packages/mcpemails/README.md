@@ -9,7 +9,7 @@ Email for AI agents. Read, search, send, organize, draft and schedule email acro
 
 This package is a **stdio bridge**. [MCP Emails](https://mcpemails.com) is a hosted MCP server that speaks JSON-RPC over HTTPS, and many MCP clients can only launch a local command and talk over stdin/stdout. `mcpemails` sits between the two: it forwards every JSON-RPC message from your client to `https://mcpemails.com/api/mcp` and writes every response straight back. It adds nothing to the protocol.
 
-Works with Gmail, Fastmail, iCloud, Yahoo, Zoho, Yandex, and any IMAP/SMTP mailbox you connect at [mcpemails.com](https://mcpemails.com).
+Works with Gmail, Outlook / Microsoft 365, Fastmail, iCloud, Yahoo, Zoho, Yandex, and any IMAP/SMTP mailbox you connect at [mcpemails.com](https://mcpemails.com).
 
 ## Quick start
 
@@ -138,7 +138,7 @@ with an `Authorization: Bearer mcpe_...` header, or let it run the OAuth flow. C
 
 ## Tools
 
-17 tools you call directly. Most take an `action` argument that selects the specific operation:
+19 tools you call directly. Most take an `action` argument that selects the specific operation:
 
 - `inbox_list` - Lists the inboxes the key can reach, with each one's provider capabilities.
 - `email_read` - Lists, reads and searches messages, plus attachments and the original `.eml` (`list`, `read`, `read_batch`, `search`, `attachment`, `extract`, `original`).
@@ -157,8 +157,10 @@ with an `Authorization: Bearer mcpe_...` header, or let it run the OAuth flow. C
 - `automation_read` - Lists triage rules, reads one, shows run history, dry-runs a filter (`list`, `get`, `runs`, `preview`). Read-only.
 - `automation` - Creates and manages unattended triage rules, with no model in the loop (`create`, `update`, `enable`, `disable`, `delete`).
 - `contact_search` - Looks up contacts by scanning recent mail live, with no stored address book.
+- `draft_read` - Reads one unsent draft in full, for example after the user edited it in the draft editor card. Read-only.
+- `draft_editor_hide` - Hides or shows the in-chat draft editor card for one inbox or the whole workspace. A display preference only.
 
-A full-scope key sees 23 tools in `tools/list`: the 17 above plus six app-only tools that drive the review card your MCP client renders for a held send or a previewed bulk operation.
+A full-scope key sees 26 tools in `tools/list`: the 19 above plus seven app-only tools (`approval_*`, `bulk_*`, `draft_editor_save`) that drive the cards your MCP client renders for a held send, a previewed bulk operation or a draft being edited. There are also 7 workflow prompts in `prompts/list`.
 
 Each tool is gated by the scopes on your API key, so a key issued with read scopes only cannot send or delete anything no matter what the agent asks for. Full reference at [mcpemails.com/docs](https://mcpemails.com/docs).
 

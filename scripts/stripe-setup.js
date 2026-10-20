@@ -74,7 +74,7 @@ const PRODUCTS = [
   {
     // Sold as "Pro"; internal plan id `solo`, hence the SOLO env vars.
     name: 'MCPEmails Pro',
-    description: 'Every mailbox you own, in one agent. Unlimited connected inboxes, one person.',
+    description: 'Up to 10 connected inboxes, one person.',
     prices: [
       { unit_amount: 2900,  currency: 'usd', interval: 'month', envVar: 'STRIPE_PRICE_SOLO_MONTHLY' },
       { unit_amount: 27600, currency: 'usd', interval: 'year',  envVar: 'STRIPE_PRICE_SOLO_YEARLY' },

@@ -29,6 +29,7 @@ import {
   applyFlags,
   findRow,
   findRows,
+  gmailInboxCopies,
   listShows,
   originOf,
   refreshFolders,
@@ -38,6 +39,7 @@ import {
   snapshotMail,
 } from "./cache";
 import { blobToBase64 } from "../lib/base64";
+import { withGmailInboxMessages } from "./conversation-scope";
 import { keys } from "./keys";
 import { queryClient } from "./query-client";
 import { applyKeyRemap } from "./remap";
@@ -82,6 +84,9 @@ interface RelocateOptions {
   label: string;
   failure: string;
   call: () => Promise<MoveResult>;
+  /** Rows to take out of the lists with `all` that are not sent to the server
+   *  (the Inbox rows of Gmail messages archived by another id). */
+  hide?: readonly MessageKey[];
 }
 
 /** A scheduled send sits in a list like an email but is not one: it has no
@@ -103,7 +108,7 @@ async function relocate(all: MessageKey[], o: RelocateOptions): Promise<void> {
   const next = hitSelected ? neighbourAfterRemoval(target, prevSelected) : prevSelected;
 
   // 1. Optimistic, synchronous.
-  removeMovedRows(target, o.destination);
+  removeMovedRows(o.hide?.length ? [...target, ...o.hide] : target, o.destination);
   adjustFolderCounts(rows, o.destination);
   if (hitSelected) selection.select(isPhone() ? null : next);
   else selection.clearMulti();
@@ -181,12 +186,15 @@ async function relocate(all: MessageKey[], o: RelocateOptions): Promise<void> {
   }
 }
 
-export function archive(target: MessageKey[]): Promise<void> {
+export function archive(selected: MessageKey[]): Promise<void> {
+  // Gmail: the conversation leaves the Inbox from whatever folder it is archived in.
+  const target = mailOnly(withGmailInboxMessages(selected));
   return relocate(target, {
     destination: { role: "archive" },
     label: countLabel(target.length, "Archived"),
     failure: "Could not archive. Nothing was changed.",
     call: () => getMailApi().archiveMessages(target),
+    hide: gmailInboxCopies(findRows(target)),
   });
 }
 

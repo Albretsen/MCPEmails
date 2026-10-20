@@ -70,11 +70,13 @@
     },
     "pricing": {
       "ceiling": {
-        "raw": 858182,
-        "gzip": 248337,
-        "brotli": 212207
+        "raw": 606872,
+        "gzip": 184432,
+        "brotli": 158553
       },
-      "absent": []
+      "absent": [
+        "supabase-js"
+      ]
     },
     "home": {
       "ceiling": {

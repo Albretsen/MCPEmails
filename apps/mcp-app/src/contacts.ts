@@ -25,9 +25,9 @@
 //
 // So the card suggests from what it already holds (`localContactSource`): the
 // person this draft answers, the draft's own recipients as the server has
-// them (which brings back one removed by mistake), the sender's own address,
-// and addresses removed in this card. Nothing is fetched and nothing is
-// stored.
+// them (which brings back one removed by mistake), and addresses removed in
+// this card. Never the address the draft is sent from. Nothing is fetched and
+// nothing is stored.
 //
 // `contactSearchSource` is the adapter for the server tool, written and tested
 // so that turning it on is one line in DraftEditor.tsx. It should be turned on

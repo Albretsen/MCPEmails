@@ -141,7 +141,7 @@ Deno.test("a reader scanning prose still gets the note as its own block", () => 
 });
 
 Deno.test("a pretty-printed payload keeps its formatting when regenerated", () => {
-  // jsonOk offers exactly two styles and the replay path uses the pretty one.
+  // jsonOk is compact now, but a hand-built text block may still be indented.
   const payload = { operation: "email_move_batch", succeeded: 2, failed: 0 };
   const response = {
     jsonrpc: "2.0" as const,

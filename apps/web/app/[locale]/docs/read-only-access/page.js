@@ -5,6 +5,7 @@ import { routing } from '@/i18n/routing';
 import { metaAlternates, localePath, APP_URL, OG_LOCALE, OG_IMAGE } from '@/i18n/seo';
 import { Nav, Footer } from '../../../../components/marketing/Sections';
 import { EVIDENCE_LINKS, readOnlyAccessCopy } from './content.mjs';
+import { withReadingLang } from '@/i18n/reading-lang.mjs';
 
 /**
  * What a read-only connection can and cannot do, and how each limit is
@@ -32,14 +33,14 @@ export async function generateMetadata({ params }) {
     openGraph: {
       type: 'article',
       url: localePath(locale, PATH),
-      title: `${meta.title} · mcpemails`,
+      title: `${meta.title} · MCP Emails`,
       description: meta.description,
       locale: OG_LOCALE[locale],
       images: [OG_IMAGE],
     },
     twitter: {
       card: 'summary_large_image',
-      title: `${meta.title} · mcpemails`,
+      title: `${meta.title} · MCP Emails`,
       description: meta.description,
       images: [OG_IMAGE.url],
     },
@@ -82,7 +83,7 @@ export default async function ReadOnlyAccessPage({ params }) {
         '@type': 'BreadcrumbList',
         '@id': `${url}#breadcrumb`,
         itemListElement: [
-          { '@type': 'ListItem', position: 1, name: 'mcpemails', item: localePath(locale, '') },
+          { '@type': 'ListItem', position: 1, name: 'MCP Emails', item: localePath(locale, '') },
           { '@type': 'ListItem', position: 2, name: 'Docs', item: localePath(locale, '/docs') },
           { '@type': 'ListItem', position: 3, name: copy.breadcrumb },
         ],
@@ -139,7 +140,7 @@ export default async function ReadOnlyAccessPage({ params }) {
             <h2>{copy.cta.title}</h2>
             <p className="sub">{copy.cta.sub}</p>
             <div className="hero-cta" style={{ justifyContent: 'center' }}>
-              <Link className="btn btn-primary btn-lg" href="/signup">{copy.cta.button}</Link>
+              <a className="btn btn-primary btn-lg" href={withReadingLang('/signup', locale)}>{copy.cta.button}</a>
               <Link className="btn btn-secondary btn-lg" href="/docs/providers">{copy.cta.providers}</Link>
             </div>
           </div>

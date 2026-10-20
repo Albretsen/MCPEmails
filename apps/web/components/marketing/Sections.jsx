@@ -12,6 +12,9 @@ import { pricingUpgradeHref } from '@/lib/billing/upgrade-intent.mjs';
 import { PLANS as CATALOGUE } from '@/lib/stripe/plans';
 import { formatPriceCents } from '@/lib/stripe/annual-offer';
 import { SupportHelpLink } from '../support/SupportHelpLink';
+import { withReadingLang } from '@/i18n/reading-lang.mjs';
+import { routing } from '@/i18n/routing';
+import { languageSwitcherLinks } from '@/i18n/language-switcher.mjs';
 
 // Rich-text tag handlers shared across sections (inline code + bold).
 const RICH = {
@@ -22,6 +25,9 @@ const RICH = {
 export function Nav({ onSignIn, onGetStarted, user }) {
   const t = useTranslations('home');
   const tc = useTranslations('compare');
+  // /signup and /login are not localized by URL: say which language this page
+  // was in, so the form and the dashboard after it open in that language.
+  const locale = useLocale();
   const [mobileOpen, setMobileOpen] = useState(false);
   const menuId = 'mobile-nav-menu';
 
@@ -40,7 +46,7 @@ export function Nav({ onSignIn, onGetStarted, user }) {
   return (
     <header className="nav">
       <div className="container nav-row">
-        <Link className="brand" href="/" onClick={closeMenu}><img className="logo-light" src="/logo-wordmark.svg" width="280" height="48" alt="mcpemails" /><img className="logo-dark" src="/logo-wordmark-dark.svg" width="280" height="48" alt="mcpemails" /></Link>
+        <Link className="brand" href="/" onClick={closeMenu}><img className="logo-light" src="/logo-wordmark.svg" width="280" height="48" alt="MCP Emails" /><img className="logo-dark" src="/logo-wordmark-dark.svg" width="280" height="48" alt="MCP Emails" /></Link>
         <nav className="nav-links" aria-label="Primary navigation">
           <Link href="/#features">{t('nav.features')}</Link>
           <Link href="/#how">{t('nav.how')}</Link>
@@ -59,8 +65,8 @@ export function Nav({ onSignIn, onGetStarted, user }) {
             </>
           ) : (
             <>
-              <a className="btn btn-ghost" onClick={onSignIn} href="/login">{t('nav.signIn')}</a>
-              <a className="btn btn-primary" onClick={onGetStarted} href="/signup">{t('nav.getStarted')}</a>
+              <a className="btn btn-ghost" onClick={onSignIn} href={withReadingLang('/login', locale)}>{t('nav.signIn')}</a>
+              <a className="btn btn-primary" onClick={onGetStarted} href={withReadingLang('/signup', locale)}>{t('nav.getStarted')}</a>
             </>
           )}
         </div>
@@ -97,8 +103,8 @@ export function Nav({ onSignIn, onGetStarted, user }) {
               <a className="btn btn-primary" href="/dashboard" onClick={closeMenu}>{t('nav.dashboard')}</a>
             ) : (
               <>
-                <a className="btn btn-ghost" href="/login" onClick={() => { onSignIn?.(); closeMenu(); }}>{t('nav.signIn')}</a>
-                <a className="btn btn-primary" href="/signup" onClick={() => { onGetStarted?.(); closeMenu(); }}>{t('nav.getStarted')}</a>
+                <a className="btn btn-ghost" href={withReadingLang('/login', locale)} onClick={() => { onSignIn?.(); closeMenu(); }}>{t('nav.signIn')}</a>
+                <a className="btn btn-primary" href={withReadingLang('/signup', locale)} onClick={() => { onGetStarted?.(); closeMenu(); }}>{t('nav.getStarted')}</a>
               </>
             )}
           </div>
@@ -112,6 +118,7 @@ export function Nav({ onSignIn, onGetStarted, user }) {
 
 export function HeroTextBlock({ onGetStarted }) {
   const t = useTranslations('home');
+  const locale = useLocale();
   return (
     <div>
       {/* The kicker is part of the H1 on purpose: it is the one place the page
@@ -125,7 +132,7 @@ export function HeroTextBlock({ onGetStarted }) {
       </h1>
       <p className="lead">{t('hero.lead')}</p>
       <div className="hero-cta">
-        <MBtn variant="primary" size="lg" icon="arrow" href="/signup" onClick={onGetStarted}>{t('hero.ctaPrimary')}</MBtn>
+        <MBtn variant="primary" size="lg" icon="arrow" href={withReadingLang('/signup', locale)} onClick={onGetStarted}>{t('hero.ctaPrimary')}</MBtn>
         <Link className="btn btn-secondary btn-lg" href="/docs">{t('hero.ctaSecondary')}</Link>
       </div>
       <div className="hero-meta">
@@ -228,7 +235,7 @@ Token:  mcpe_live_••••`,
   );
 }
 
-/* Variant B: Agent -> mcpemails -> Provider pipe diagram (canonical, default hero) */
+/* Variant B: Agent -> MCP Emails -> Provider pipe diagram (canonical, default hero) */
 export function HeroPipeDiagram() {
   const t = useTranslations('home');
   return (
@@ -253,7 +260,7 @@ export function HeroPipeDiagram() {
         </div>
         <div className="pipe-node brand">
           <MIcon name="server" size={22} color="#fff"/>
-          <div className="h">mcpemails</div>
+          <div className="h">MCP Emails</div>
           <div className="s">{t('hero.pipe.serverSub')}</div>
         </div>
         <div className="pipe-arrow-wrap">
@@ -320,7 +327,7 @@ export function HeroMcpTerminal() {
     <div className="mcp-terminal">
       <div className="term-bar">
         <div className="dots"><span/><span/><span/></div>
-        <span className="title">mcpemails · live tool log</span>
+        <span className="title">MCP Emails · live tool log</span>
         <span className="pill"><span className="d"/>connected</span>
       </div>
       <div className="term-body">
@@ -427,6 +434,17 @@ export function WhatIs() {
             <Link href="/best-email-mcp-servers">Best email MCP servers compared</Link>
           )}
         </p>
+        {/*
+          The setup guides search sends people to, which the home page did not
+          link at all until 2026-10-20. /blog/connect-claude-to-email turns
+          more of its signups into payers than any provider page. All three
+          posts are translated into every locale, so the Link stays in-locale.
+        */}
+        <p className="whatis-links">
+          <Link href="/blog/connect-claude-to-email">{t('whatIs.guideClaude')}</Link>
+          <Link href="/blog/connect-chatgpt-to-email">{t('whatIs.guideChatgpt')}</Link>
+          <Link href="/blog/claude-imap-connector">{t('whatIs.guideImap')}</Link>
+        </p>
       </div>
     </section>
   );
@@ -467,7 +485,7 @@ export function Features() {
 /**
  * A self-consistent, on-brand mockup of the dashboard so prospects can see the
  * product before signing up. Rendered in HTML/CSS (not a screenshot) so it
- * never drifts from the real naming (note the "Team" plan and the real tool names)
+ * never drifts from the real naming (note the "Business" plan and the real tool names)
  * (email_read, email_compose, email_organize).
  */
 export function DashboardPreview() {
@@ -483,7 +501,7 @@ export function DashboardPreview() {
     { label: 'Inboxes connected', value: '4' },
     { label: 'MCP calls (30d)', value: '12,484' },
     { label: 'Avg. response', value: '214ms' },
-    { label: 'Plan', value: 'Team' },
+    { label: 'Plan', value: 'Business' },
   ];
   const activity = [
     { tool: 'email_read', inbox: 'work-gmail', time: 'just now' },
@@ -534,7 +552,7 @@ export function DashboardPreview() {
             <div className="dash-preview-aside" style={{ width: 210, flexShrink: 0, borderRight: '1px solid var(--border-1)', padding: '16px 12px', display: 'flex', flexDirection: 'column', gap: 4, background: 'var(--bg-page)' }}>
               <div style={{ display: 'flex', alignItems: 'center', gap: 8, padding: '4px 8px 14px' }}>
                 <MIcon name="mail" size={18} color="var(--cobalt-600)" />
-                <span style={{ fontFamily: 'var(--font-sans)', fontWeight: 700, fontSize: 15, color: 'var(--fg-1)' }}>mcpemails</span>
+                <span style={{ fontFamily: 'var(--font-sans)', fontWeight: 700, fontSize: 15, color: 'var(--fg-1)' }}>MCP Emails</span>
               </div>
               {navItems.map(it => (
                 <div key={it.label} style={{
@@ -1102,8 +1120,9 @@ export function Quote() {
  */
 export function Pricing({ onGetStarted, stripePrices }) {
   const t = useTranslations('home');
+  const locale = useLocale();
   // Static, non-translated attributes per tier. `msgKey` indexes the message
-  // bundle; `priceKey` indexes the live Stripe prices map (Team is `pro` there).
+  // bundle; `priceKey` indexes the live Stripe prices map (Business is `pro` there).
   // Paid links intentionally go through /signup even for signed-in visitors.
   // Auth middleware immediately forwards an existing session to the preserved
   // checkout intent, while new visitors keep that intent through Google,
@@ -1115,18 +1134,18 @@ export function Pricing({ onGetStarted, stripePrices }) {
   // could even begin checkout. These must stay plain <a> hrefs: a next/link
   // <Link> would prefetch the checkout route.
   //
-  // Pro carries the accent: unlimited inboxes for one person is the upgrade
-  // almost everyone actually wants, and Team only pays off once other people
-  // are involved. Personal sits between Free and Pro for the large group who
+  // Pro carries the accent: up to 10 inboxes for one person is the upgrade
+  // almost everyone actually wants, and Business pays off past 10 mailboxes or
+  // once other people are involved. Personal sits between Free and Pro for the large group who
   // need two or three mailboxes and nothing else.
   //
-  // Watch the ids: `solo` is sold as "Pro" and `pro` is sold as "Team".
+  // Watch the ids: `solo` is sold as "Pro" and `pro` is sold as "Business".
   // `personal` is the only id that matches its own display name.
   const allTiers = [
-    { msgKey: 'free',     priceKey: 'free',     per: t('pricing.perForever'), accent: false, ctaHref: '/signup' },
-    { msgKey: 'personal', priceKey: 'personal', per: t('pricing.perMonth'),   accent: false, ctaHref: pricingUpgradeHref('personal', false, false) },
-    { msgKey: 'solo',     priceKey: 'solo',     per: t('pricing.perMonth'),   accent: true,  ctaHref: pricingUpgradeHref('solo', false, false) },
-    { msgKey: 'team',     priceKey: 'pro',      per: t('pricing.perMonth'),   accent: false, ctaHref: pricingUpgradeHref('pro', false, false) },
+    { msgKey: 'free',     priceKey: 'free',     per: t('pricing.perForever'), accent: false, ctaHref: withReadingLang('/signup', locale) },
+    { msgKey: 'personal', priceKey: 'personal', per: t('pricing.perMonth'),   accent: false, ctaHref: withReadingLang(pricingUpgradeHref('personal', false, false, locale), locale) },
+    { msgKey: 'solo',     priceKey: 'solo',     per: t('pricing.perMonth'),   accent: true,  ctaHref: withReadingLang(pricingUpgradeHref('solo', false, false, locale), locale) },
+    { msgKey: 'business', priceKey: 'pro',      per: t('pricing.perMonth'),   accent: false, ctaHref: withReadingLang(pricingUpgradeHref('pro', false, false, locale), locale) },
   ];
 
   const tiers = allTiers;
@@ -1258,36 +1277,37 @@ export function Faq() {
  * five links on ~110 pages meant 317 of 560 internal links landed on just
  * four translated home pages, starving every other page of internal signal.
  *
- * Each option now points at the CURRENT page in that locale, which is also
+ * Each option points at the CURRENT page in that locale, which is also
  * exactly the URL the page already declares as its hreflang alternate.
  * `usePathname` here is next-intl's, so it returns the path with the locale
  * prefix already stripped ("/pricing" on both / and /es/pricing).
+ *
+ * Not every page exists in every locale (src/i18n/locale-policy.mjs): pass the
+ * page's real list as `locales`. An option for a locale the page is missing in
+ * goes to that locale's home page instead of a 404 or an English fallback URL
+ * (see src/i18n/language-switcher.mjs). Pages translated five ways can leave
+ * `locales` out.
+ *
+ * Hrefs are built by hand rather than with next-intl's `locale` prop, which
+ * always emits the prefix: under localePrefix 'as-needed' that produced
+ * /en/pricing, a 307 to /pricing.
  */
-function LanguageSwitcher() {
+function LanguageSwitcher({ locales = routing.locales }) {
   const t = useTranslations('home');
   const locale = useLocale();
   // Falls back to the home path if the router has not resolved a pathname,
   // so the statically rendered HTML never ships an empty href.
   const pathname = usePathname() || '/';
-  const codes = ['en', 'nb', 'es', 'fr', 'zh'];
-  /*
-    Built by hand rather than with next-intl's `locale` prop, which always
-    emits the prefix: under localePrefix 'as-needed' that produced /en/pricing,
-    a 307 to /pricing. A redirect hop on every page, on a URL that does not
-    match the hreflang the page declares for itself, is the thing this change
-    exists to avoid.
-  */
-  const hrefFor = (code) =>
-    code === 'en' ? pathname : `/${code}${pathname === '/' ? '' : pathname}`;
+  const links = languageSwitcherLinks(pathname, locales, routing.locales);
   return (
     <div className="lang-switch" aria-label={t('languageSwitcher.label')}>
       <MIcon name="globe" size={13} color="var(--fg-3)" />
-      {codes.map((code) => (
+      {links.map(({ code, href, samePage }) => (
         <a
           key={code}
-          href={hrefFor(code)}
+          href={href}
           className={"lang-opt" + (locale === code ? " active" : "")}
-          aria-current={locale === code ? 'true' : undefined}
+          aria-current={locale === code && samePage ? 'true' : undefined}
           hrefLang={code}
         >
           {t(`languageSwitcher.${code}`)}
@@ -1337,27 +1357,31 @@ function FooterCopy({ icon, label, value, href }) {
   );
 }
 
-export function Footer() {
+/**
+ * @param {{ locales?: readonly string[] }} props  the locales the current page
+ *   exists in, for the language switcher; omit on pages present in all five.
+ */
+export function Footer({ locales } = {}) {
   const t = useTranslations('home');
   const tc = useTranslations('compare');
-  // The footer renders on every locale, but three of its links point at
-  // English-only routes that deliberately 404 elsewhere (the per-client setup
-  // silo and the comparison against other MCP servers). Linking them
-  // unconditionally would put a guaranteed 404 in the footer of every /nb,
+  // The footer renders on every locale, but the comparison against other MCP
+  // servers is an English-only route that deliberately 404s elsewhere. Linking
+  // it unconditionally would put a guaranteed 404 in the footer of every /nb,
   // /es, /fr and /zh page, which is worse than the link being absent there.
+  // The per-client setup pages exist in every locale, so that link always shows.
   const isEnglish = useLocale() === 'en';
   return (
     <footer className="footer">
       <div className="container">
         <div className="footer-grid">
           <div className="brand-cell">
-            <img src="/logo-mark-dark.svg" width="48" height="48" alt="mcpemails" />
+            <img src="/logo-mark-dark.svg" width="48" height="48" alt="MCP Emails" />
             <p>{t('footer.tagline')}</p>
             <div className="footer-contact">
               <FooterCopy icon="mail" label={t('footer.contactLabel')} value={FOOTER_CONTACT_EMAIL} href={`mailto:${FOOTER_CONTACT_EMAIL}`} />
               <FooterCopy icon="server" label={t('footer.mcpLabel')} value={FOOTER_MCP_URL} />
             </div>
-            <LanguageSwitcher />
+            <LanguageSwitcher locales={locales} />
           </div>
           <div>
             <p className="footer-heading">{t('footer.productHeading')}</p>
@@ -1376,7 +1400,7 @@ export function Footer() {
             <Link href="/docs#oauth">{t('footer.linkOauth')}</Link>
             <Link href="/docs/providers">{t('footer.linkProviders')}</Link>
             <Link href="/docs/read-only-access">{t('footer.linkReadOnly')}</Link>
-            {isEnglish && <Link href="/docs/clients">MCP client setup</Link>}
+            <Link href="/docs/clients">{t('footer.linkClients')}</Link>
             <Link href="/blog">Blog</Link>
             <Link href="/changelog">Changelog</Link>
           </div>
@@ -1413,6 +1437,14 @@ export function Footer() {
             <SupportHelpLink label={t('footer.linkHelp')} LinkComponent={Link} />
             <Link href="/privacy">{t('footer.linkPrivacy')}</Link>
             <Link href="/terms">{t('footer.linkTerms')}</Link>
+            <Link href="/withdrawal">{t('footer.linkWithdrawal')}</Link>
+            {/* The §312k BGB entry point: reachable from every page, no login. */}
+            <Link href="/cancel">{t('footer.linkCancel')}</Link>
+            {/* The provider identification an Impressum asks for already sits
+                in section 1 of the terms (name, address, register, org and VAT
+                number, contact), so the link points there rather than at a
+                second copy that could drift. */}
+            <Link href="/terms#agreement">{t('footer.linkImpressum')}</Link>
           </div>
         </div>
         <div className="legal">

@@ -22,23 +22,23 @@
     "meta0": "1 个收件箱永久免费",
     "meta1": "应用专用密码，无需 OAuth 配置",
     "meta2": "邮件实时获取，绝不存储",
-    "answer": "Claude 无法自行访问 AOL Mail。mcpemails 是一个托管 MCP 服务器，使用应用专用密码通过 IMAP 与之连接，让 Claude、Cursor 或任意 MCP 客户端都能读取、搜索、发送并整理这些邮件。设置只需几分钟，1 个收件箱免费。"
+    "answer": "Claude 无法自行访问 AOL Mail。MCP Emails 是一个托管 MCP 服务器，使用应用专用密码通过 IMAP 与之连接，让 Claude、Cursor 或任意 MCP 客户端都能读取、搜索、发送并整理这些邮件。设置只需几分钟，1 个收件箱免费。"
   },
   "method": {
     "title": "AOL Mail 如何连接：IMAP 与应用专用密码",
-    "body": "AOL Mail 通过 IMAP/SMTP 连接，需要一个 <b>AOL 应用专用密码</b>。普通的 AOL 密码无法让邮件客户端通过认证，所以这里登录被拒绝几乎总是因为缺少应用专用密码。请先开启两步验证，在 Account Info、Account Security（账户信息、账户安全）中生成一个应用专用密码，再连同完整的 AOL 地址粘贴到 mcpemails。"
+    "body": "AOL Mail 通过 IMAP/SMTP 连接，需要一个 <b>AOL 应用专用密码</b>。普通的 AOL 密码无法让邮件客户端通过认证，所以这里登录被拒绝几乎总是因为缺少应用专用密码。请先开启两步验证，在 Account Info、Account Security（账户信息、账户安全）中生成一个应用专用密码，再连同完整的 AOL 地址粘贴到 MCP Emails。"
   },
   "setup": [
     {
       "h": "创建免费账户",
-      "p": "注册 mcpemails，无需信用卡。免费套餐可永久连接一个收件箱。"
+      "p": "注册 MCP Emails，无需信用卡。免费套餐可永久连接一个收件箱。"
     },
     {
       "h": "生成 AOL 应用专用密码",
       "p": "在 AOL Mail 中打开 Account Info、Account Security，如果两步验证尚未开启，请先开启，然后生成一个应用专用密码。请立即复制，AOL 只显示一次。"
     },
     {
-      "h": "粘贴到 mcpemails",
+      "h": "粘贴到 MCP Emails",
       "p": "选择 IMAP / SMTP，填入你的 AOL Mail 地址、上方的服务器地址和密码，安全地连接收件箱。"
     },
     {
@@ -65,13 +65,13 @@
     }
   ],
   "limits": [
-    "AOL 的提交服务器声明的单封邮件大小上限约为 41 MB。通过 mcpemails 读取附件时，每次请求上限为 25 MB。",
+    "AOL 的提交服务器声明的单封邮件大小上限约为 41 MB。通过 MCP Emails 读取附件时，每次请求上限为 25 MB。",
     "修改 AOL 密码后，应用专用密码依然有效。在 AOL 的 Account Security 页面将其删除，是切断访问的唯一方法。"
   ],
   "faq": [
     {
       "q": "Claude 能用于 AOL Mail 吗？",
-      "a": "不能单独使用。Claude 没有内置的 AOL 连接器。使用 AOL 应用专用密码，通过 IMAP 将 mcpemails 这样的 MCP 服务器连接到你的 AOL 邮箱后，Claude 就能读取、搜索、发送、回复、定时和整理其中的邮件，而且同一个连接也可在 Cursor、ChatGPT 和其他 MCP 客户端中使用。"
+      "a": "不能单独使用。Claude 没有内置的 AOL 连接器。使用 AOL 应用专用密码，通过 IMAP 将 MCP Emails 这样的 MCP 服务器连接到你的 AOL 邮箱后，Claude 就能读取、搜索、发送、回复、定时和整理其中的邮件，而且同一个连接也可在 Cursor、ChatGPT 和其他 MCP 客户端中使用。"
     },
     {
       "q": "AOL Mail 的 IMAP 和 SMTP 设置是什么？",

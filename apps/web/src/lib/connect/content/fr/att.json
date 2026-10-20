@@ -20,7 +20,7 @@
     "titleLine1": "Connectez AT&T Mail à Claude,",
     "titleLine2": "Cursor, ChatGPT, tout client MCP",
     "lead": "Donnez à votre agent IA une vraie boîte att.net ou sbcglobal.net. Lisez, recherchez, envoyez, répondez, planifiez et organisez le courrier en IMAP avec une secure mail key AT&T, dans tous les clients MCP et pas un seul.",
-    "answer": "Claude ne peut pas accéder seul à une boîte AT&T Mail. mcpemails est un serveur MCP hébergé qui connecte att.net, sbcglobal.net, bellsouth.net et les autres domaines AT&T en IMAP sur imap.mail.att.net, port 993, en s'authentifiant avec une secure mail key de 16 caractères que vous créez dans myAT&T plutôt qu'avec votre mot de passe AT&T. Une fois la connexion établie, Claude, Cursor ou tout autre client MCP peut lire, rechercher, envoyer, répondre et organiser ce courrier. Une boîte est gratuite, pour toujours.",
+    "answer": "Claude ne peut pas accéder seul à une boîte AT&T Mail. MCP Emails est un serveur MCP hébergé qui connecte att.net, sbcglobal.net, bellsouth.net et les autres domaines AT&T en IMAP sur imap.mail.att.net, port 993, en s'authentifiant avec une secure mail key de 16 caractères que vous créez dans myAT&T plutôt qu'avec votre mot de passe AT&T. Une fois la connexion établie, Claude, Cursor ou tout autre client MCP peut lire, rechercher, envoyer, répondre et organiser ce courrier. Une boîte est gratuite, pour toujours.",
     "meta0": "1 boîte gratuite, pour toujours",
     "meta1": "Secure mail key, pas votre mot de passe",
     "meta2": "E-mails récupérés en direct, jamais stockés"
@@ -31,7 +31,7 @@
   },
   "setup": [
     {
-      "h": "Créez un compte mcpemails gratuit",
+      "h": "Créez un compte MCP Emails gratuit",
       "p": "Inscrivez-vous sur mcpemails.com. L'offre gratuite connecte une boîte et ne demande pas de carte."
     },
     {
@@ -40,7 +40,7 @@
     },
     {
       "h": "Saisissez la clé, pas votre mot de passe AT&T",
-      "p": "Dans mcpemails, choisissez IMAP / SMTP, saisissez votre adresse AT&T complète et collez la secure mail key dans le champ du mot de passe. Tous les domaines AT&T utilisent <code>imap.mail.att.net</code> et <code>smtp.mail.att.net</code>, les serveurs sont donc préremplis pour vous."
+      "p": "Dans MCP Emails, choisissez IMAP / SMTP, saisissez votre adresse AT&T complète et collez la secure mail key dans le champ du mot de passe. Tous les domaines AT&T utilisent <code>imap.mail.att.net</code> et <code>smtp.mail.att.net</code>, les serveurs sont donc préremplis pour vous."
     },
     {
       "h": "Collez l'URL MCP dans votre IA",
@@ -50,7 +50,7 @@
   "gotchas": [
     {
       "h": "Votre mot de passe AT&T n'est pas refusé parce qu'il est faux",
-      "p": "AT&T répartit les clients de messagerie en deux groupes. Les applications qu'AT&T a intégrées à sa connexion OAuth affichent une invite dans le navigateur et ne voient jamais de mot de passe. Toutes les autres, mcpemails compris, doivent présenter une secure mail key. Si vous collez le mot de passe de votre compte AT&T, vous obtenez un échec d'authentification identique à celui d'une faute de frappe, et aucune réinitialisation du mot de passe du compte n'y changera rien."
+      "p": "AT&T répartit les clients de messagerie en deux groupes. Les applications qu'AT&T a intégrées à sa connexion OAuth affichent une invite dans le navigateur et ne voient jamais de mot de passe. Toutes les autres, MCP Emails compris, doivent présenter une secure mail key. Si vous collez le mot de passe de votre compte AT&T, vous obtenez un échec d'authentification identique à celui d'une faute de frappe, et aucune réinitialisation du mot de passe du compte n'y changera rien."
     },
     {
       "h": "La boîte est hébergée chez Yahoo, mais la page des mots de passe d'application Yahoo n'est pas la bonne",
@@ -62,17 +62,17 @@
     },
     {
       "h": "Le port 465 est ici en TLS implicite, pas en STARTTLS",
-      "p": "Le serveur SMTP que nous avons vérifié ouvre la session TLS immédiatement sur le port 465 et n'annonce pas STARTTLS sur ce port. Les anciens guides de configuration AT&T qui vous disent de cocher <b>STARTTLS</b> avec le port 465 décrivent une combinaison que ce serveur ne mènera pas à bien. mcpemails utilise le TLS implicite sur le 465, ce que le serveur propose réellement."
+      "p": "Le serveur SMTP que nous avons vérifié ouvre la session TLS immédiatement sur le port 465 et n'annonce pas STARTTLS sur ce port. Les anciens guides de configuration AT&T qui vous disent de cocher <b>STARTTLS</b> avec le port 465 décrivent une combinaison que ce serveur ne mènera pas à bien. MCP Emails utilise le TLS implicite sur le 465, ce que le serveur propose réellement."
     }
   ],
   "limits": [
     "Le serveur SMTP d'AT&T annonce une taille maximale de message d'environ 39 Mo : un envoi avec de grosses pièces jointes est donc refusé par AT&T avant de partir.",
-    "mcpemails s'authentifie avec la secure mail key plutôt qu'avec les mécanismes OAUTHBEARER et XOAUTH2 que ce serveur annonce aussi. C'est voulu : la voie OAuth n'est ouverte qu'aux applications enregistrées par AT&T."
+    "MCP Emails s'authentifie avec la secure mail key plutôt qu'avec les mécanismes OAUTHBEARER et XOAUTH2 que ce serveur annonce aussi. C'est voulu : la voie OAuth n'est ouverte qu'aux applications enregistrées par AT&T."
   ],
   "faq": [
     {
       "q": "Claude fonctionne-t-il avec AT&T Mail ?",
-      "a": "Pas directement. Claude n'a pas de connecteur AT&T intégré. Connecter un serveur MCP comme mcpemails à la boîte en IMAP donne à Claude un accès en lecture, recherche, envoi, réponse, planification et organisation à votre courrier att.net ou sbcglobal.net, et la même connexion fonctionne dans Cursor, ChatGPT et d'autres clients MCP."
+      "a": "Pas directement. Claude n'a pas de connecteur AT&T intégré. Connecter un serveur MCP comme MCP Emails à la boîte en IMAP donne à Claude un accès en lecture, recherche, envoi, réponse, planification et organisation à votre courrier att.net ou sbcglobal.net, et la même connexion fonctionne dans Cursor, ChatGPT et d'autres clients MCP."
     },
     {
       "q": "Quels sont les réglages IMAP et SMTP d'AT&T ?",

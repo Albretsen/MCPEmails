@@ -23,7 +23,7 @@
     "meta0": "1 个收件箱永久免费",
     "meta1": "使用邮箱密码，无需 OAuth 配置",
     "meta2": "邮件实时获取，绝不存储",
-    "answer": "Claude 无法自行访问 Hostinger。mcpemails 是一个托管 MCP 服务器，使用你的邮箱密码通过 IMAP 与之连接，让 Claude、Cursor 或任意 MCP 客户端都能读取、搜索、发送并整理这些邮件。设置只需几分钟，1 个收件箱免费。"
+    "answer": "Claude 无法自行访问 Hostinger。MCP Emails 是一个托管 MCP 服务器，使用你的邮箱密码通过 IMAP 与之连接，让 Claude、Cursor 或任意 MCP 客户端都能读取、搜索、发送并整理这些邮件。设置只需几分钟，1 个收件箱免费。"
   },
   "method": {
     "title": "Hostinger 如何连接：IMAP 与你的邮箱密码",
@@ -32,14 +32,14 @@
   "setup": [
     {
       "h": "创建免费账户",
-      "p": "注册 mcpemails，无需信用卡。免费套餐可永久连接一个收件箱。"
+      "p": "注册 MCP Emails，无需信用卡。免费套餐可永久连接一个收件箱。"
     },
     {
       "h": "获取你的 Hostinger 邮箱密码",
-      "p": "在 hPanel 中打开 Emails，选择该地址，设置或重置其密码。mcpemails 就用这个密码进行认证。"
+      "p": "在 hPanel 中打开 Emails，选择该地址，设置或重置其密码。MCP Emails 就用这个密码进行认证。"
     },
     {
-      "h": "粘贴到 mcpemails",
+      "h": "粘贴到 MCP Emails",
       "p": "选择 IMAP / SMTP，填入你的 Hostinger 地址、上方的服务器地址和密码，安全地连接收件箱。"
     },
     {
@@ -73,7 +73,7 @@
   "faq": [
     {
       "q": "Claude 能用于 Hostinger 邮箱吗？",
-      "a": "不能单独使用。Claude 没有内置的 Hostinger 连接器。通过 IMAP 将 mcpemails 这样的 MCP 服务器连接到邮箱后，Claude 就能读取、搜索、发送、回复、定时和整理其中的邮件，而且同一个连接随后也可在 Cursor、ChatGPT 和其他 MCP 客户端中使用，而不止一个。"
+      "a": "不能单独使用。Claude 没有内置的 Hostinger 连接器。通过 IMAP 将 MCP Emails 这样的 MCP 服务器连接到邮箱后，Claude 就能读取、搜索、发送、回复、定时和整理其中的邮件，而且同一个连接随后也可在 Cursor、ChatGPT 和其他 MCP 客户端中使用，而不止一个。"
     },
     {
       "q": "Hostinger 的 IMAP 和 SMTP 设置是什么？",
