@@ -23,7 +23,10 @@ export function LoginApp({ redirectTo = null, connectProvider = null, initialMod
   const [password, setPassword] = useState('');
   const [emailError, setEmailError] = useState('');
   const [passwordError, setPasswordError] = useState('');
-  const [mode, setMode] = useState(initialMode === 'sso' ? 'sso' : 'password'); // 'password' | 'magic-link' | 'sso'
+  // The SSO form (and /login?sso=1) exist only once SSO is released
+  // (NEXT_PUBLIC_SSO_ENABLED); until then the page is exactly as before.
+  const ssoOn = ssoUiEnabled();
+  const [mode, setMode] = useState(ssoOn && initialMode === 'sso' ? 'sso' : 'password'); // 'password' | 'magic-link' | 'sso'
   const [step, setStep] = useState('form'); // 'form' | 'submitting' | 'error' | 'sending' | 'sent' | 'redirecting'
   const [serverError, setServerError] = useState('');
   const [socialLoading, setSocialLoading] = useState(null); // null | 'google' | 'microsoft' | 'github'
@@ -363,11 +366,13 @@ export function LoginApp({ redirectTo = null, connectProvider = null, initialMod
                 {t('login.switchToMagicLink')}
               </button>
             </div>
-            <div style={{ textAlign: 'center', marginTop: 8 }}>
-              <button onClick={() => switchMode('sso')} style={{ background: 'none', border: 'none', padding: 0, cursor: 'pointer', fontFamily: 'var(--font-sans)', fontSize: 13, color: 'var(--fg-3)', textDecoration: 'underline' }}>
-                {t('login.ssoLink')}
-              </button>
-            </div>
+            {ssoOn && (
+              <div style={{ textAlign: 'center', marginTop: 8 }}>
+                <button onClick={() => switchMode('sso')} style={{ background: 'none', border: 'none', padding: 0, cursor: 'pointer', fontFamily: 'var(--font-sans)', fontSize: 13, color: 'var(--fg-3)', textDecoration: 'underline' }}>
+                  {t('login.ssoLink')}
+                </button>
+              </div>
+            )}
             <div className="auth-footer">
               {t('login.noAccountPrefix')}<a href={signupHref()}>{t('login.createWorkspace')}</a>
             </div>
@@ -405,11 +410,13 @@ export function LoginApp({ redirectTo = null, connectProvider = null, initialMod
                 {t('login.switchToPassword')}
               </button>
             </div>
-            <div style={{ textAlign: 'center', marginTop: 8 }}>
-              <button onClick={() => switchMode('sso')} style={{ background: 'none', border: 'none', padding: 0, cursor: 'pointer', fontFamily: 'var(--font-sans)', fontSize: 13, color: 'var(--fg-3)', textDecoration: 'underline' }}>
-                {t('login.ssoLink')}
-              </button>
-            </div>
+            {ssoOn && (
+              <div style={{ textAlign: 'center', marginTop: 8 }}>
+                <button onClick={() => switchMode('sso')} style={{ background: 'none', border: 'none', padding: 0, cursor: 'pointer', fontFamily: 'var(--font-sans)', fontSize: 13, color: 'var(--fg-3)', textDecoration: 'underline' }}>
+                  {t('login.ssoLink')}
+                </button>
+              </div>
+            )}
             <div className="auth-footer">
               {t('login.noAccountPrefix')}<a href={signupHref()}>{t('login.createWorkspace')}</a>
             </div>

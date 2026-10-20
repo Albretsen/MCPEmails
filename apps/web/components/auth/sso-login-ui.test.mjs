@@ -20,6 +20,9 @@ import { installDom, mount, flush, waitFor } from '../../scripts/test-dom.mjs';
 
 const window = installDom();
 
+// SSO ships dark behind NEXT_PUBLIC_SSO_ENABLED; most tests run with it on.
+process.env.NEXT_PUBLIC_SSO_ENABLED = 'true';
+
 const { NextIntlClientProvider } = await import('next-intl');
 const { LoginApp } = await import('./LoginApp.jsx');
 const auth = (await import('../../messages/en/auth.json', { with: { type: 'json' } })).default;
@@ -58,6 +61,16 @@ async function submitSso(container, email) {
     container.querySelector('form').dispatchEvent(new window.Event('submit', { bubbles: true, cancelable: true }));
   });
 }
+
+test('flag off: no SSO link on either form, and ?sso=1 opens the password form', async (t) => {
+  process.env.NEXT_PUBLIC_SSO_ENABLED = '';
+  t.after(() => { process.env.NEXT_PUBLIC_SSO_ENABLED = 'true'; });
+  const { container } = await render(t, { initialMode: 'sso' });
+  assert.equal(container.querySelector('#login-email-sso'), null);
+  assert.equal(buttonByText(container, auth.login.ssoLink), null, 'link on the password form');
+  await flush(() => buttonByText(container, auth.login.switchToMagicLink).click());
+  assert.equal(buttonByText(container, auth.login.ssoLink), null, 'link on the magic-link form');
+});
 
 test('the SSO form is reachable from the password form and from the magic-link form', async (t) => {
   const { container } = await render(t);
