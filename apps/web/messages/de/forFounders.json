@@ -49,7 +49,7 @@
   "does": {
     "eyebrow": "Was es tatsächlich kann",
     "title": "Ein echtes Postfach, kein reiner Lesezugriff",
-    "sub": "Siebzehn aktionsbasierte Tools, die Ihr Agent durchgängig nutzen kann.",
+    "sub": "Neunzehn aktionsbasierte Tools, die Ihr Agent durchgängig nutzen kann.",
     "items": {
       "read": {
         "h": "Lesen & suchen",
@@ -76,7 +76,7 @@
   "providers": {
     "eyebrow": "Jedes Postfach, jede KI",
     "title": "Verbinden Sie das Postfach, aus dem Sie schon Support machen",
-    "sub": "Outlook per Anmeldung mit Microsoft, Gmail per App-Passwort oder Anmeldung mit Google, alle anderen per App-Passwort. Dasselbe Postfach funktioniert dann in Claude, Cursor, VS Code, ChatGPT und jedem MCP-Client. Sie sind nie an eine App gebunden.",
+    "sub": "Outlook per Anmeldung mit Microsoft, Gmail per Google-App-Passwort, alle anderen per App-Passwort. Dasselbe Postfach funktioniert dann in Claude, Cursor, VS Code, ChatGPT und jedem MCP-Client. Sie sind nie an eine App gebunden.",
     "ctaGmail": "Gmail verbinden",
     "ctaOutlook": "Outlook verbinden",
     "ctaFastmail": "Fastmail verbinden",

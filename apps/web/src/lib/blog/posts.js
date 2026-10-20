@@ -14,9 +14,9 @@ export const AUTHORS = {
   asgeir: {
     id: 'asgeir',
     name: 'Asgeir Albretsen',
-    role: 'Founder & Engineer, MCPEmails',
+    role: 'Founder & Engineer, MCP Emails',
     avatar: '/blog/author-asgeir.svg',
-    bio: 'Asgeir builds MCPEmails — the bridge that lets AI agents read, search, and send real email over the Model Context Protocol. He writes about agents, email infrastructure, and developer experience.',
+    bio: 'Asgeir builds MCP Emails — the bridge that lets AI agents read, search, and send real email over the Model Context Protocol. He writes about agents, email infrastructure, and developer experience.',
     url: 'https://mcpemails.com/blog',
     // No `twitter` handle: @mcpemails does not exist on X, so the
     // author-card link is intentionally omitted rather than pointing at a
@@ -101,7 +101,7 @@ export const POSTS = [
     description:
       'Why connecting email to your AI agent is harder than it looks — and how the Model Context Protocol makes Gmail, Outlook, and IMAP a single, secure endpoint your agent can actually use.',
     cover: '/blog/cover-agent-inbox.svg',
-    coverAlt: 'Give your AI agent an inbox — MCPEmails',
+    coverAlt: 'Give your AI agent an inbox — MCP Emails',
     authorId: 'asgeir',
     publishedAt: '2026-06-01T09:00:00.000Z',
     updatedAt: '2026-06-01T09:00:00.000Z',
@@ -115,7 +115,7 @@ This post walks through why that last mile is deceptively hard, and how the [Mod
 
 Email looks like a solved problem. It is not — at least not for an autonomous agent. Three things get in the way:
 
-1. **Auth is provider-specific.** Gmail wants OAuth with the right scopes. Outlook wants Microsoft identity. Fastmail wants an app password. Each has its own token lifecycle and failure modes.
+1. **Auth is provider-specific.** Gmail wants an app password and 2-Step Verification. Outlook wants Microsoft identity. Fastmail wants an app password. Each has its own token lifecycle and failure modes.
 2. **Credentials are radioactive.** You do not want a mailbox password sitting in a chat transcript, a log line, or a vector store. Ever.
 3. **The "shape" of email is messy.** MIME, threading, HTML vs. plain text, attachments, folders that are really labels. An agent needs a clean, predictable interface — not raw RFC 5322.
 
@@ -182,7 +182,7 @@ Give your agent verbs, not passwords — and let it get to work.`,
 ];
 
 /**
- * Display order for the blog index — most relevant and useful to MCPEmails
+ * Display order for the blog index — most relevant and useful to MCP Emails
  * first. High-intent, on-product, conversion-driving content (core setup →
  * the pillar → the top buyer objection → the bottom-funnel comparison) leads;
  * top-of-funnel definitions and use-case inspiration trail. Edit this list to
@@ -240,7 +240,7 @@ const RELEVANCE_ORDER = [
   'build-email-auto-responder-mcp-agent',
 ];
 
-/** All posts, sorted by relevance to MCPEmails (see RELEVANCE_ORDER). */
+/** All posts, sorted by relevance to MCP Emails (see RELEVANCE_ORDER). */
 export function getAllPosts() {
   const rank = (slug) => {
     const i = RELEVANCE_ORDER.indexOf(slug);

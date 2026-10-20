@@ -30,9 +30,9 @@ Den klassiske tabben er å gi full postkassetilgang når oppgaven trenger «les 
 
 Slik håndterer MCP Emails hver enkelt risiko. Jeg er partisk — jeg bygde det — men designvalgene er etterprøvbare, og du bør holde et hvilket som helst verktøy du velger, til samme standard.
 
-**E-posten din lagres aldri.** Hvert verktøykall treffer leverandøren din i sanntid, gjennom Gmail API, Microsoft Graph eller IMAP/SMTP. Meldingstekster, emner og vedlegg passerer gjennom til agenten og forkastes umiddelbart. Det eneste vi beholder per innboks, er én kryptert påloggingsopplysning slik at neste kall kan gjøres. Det finnes ingen innbokskopi å bryte seg inn i, fordi kopien ikke eksisterer.
+**E-posten din lagres aldri.** Hvert verktøykall treffer leverandøren din i sanntid, over IMAP/SMTP for Gmail og de fleste andre leverandører, eller Microsoft Graph for Outlook. Meldingstekster, emner og vedlegg passerer gjennom til agenten og forkastes umiddelbart. Det eneste vi beholder per innboks, er én kryptert påloggingsopplysning slik at neste kall kan gjøres. Det finnes ingen innbokskopi å bryte seg inn i, fordi kopien ikke eksisterer.
 
-**Påloggingsdata er AES-256-GCM-kryptert i ro.** OAuth-tokenet eller app-passordet ditt krypteres før det berører databasen, og dekryptering skjer kun inne i en isolert edge-funksjon ved kalltidspunktet. Krypteringsnøkkelen er en miljøhemmelighet som lagres atskilt fra databasen, så en database-dump alene er ubrukelig. Dette er den ene biten av dataene dine vi beholder, og det er biten vi behandler mest forsiktig.
+**Påloggingsdata er AES-256-GCM-kryptert i ro.** App-passordet eller OAuth-tokenet ditt krypteres før det berører databasen. Det dekrypteres på serverne våre bare når en forespørsel trenger det, og det sendes aldri til agenten din. Krypteringsnøkkelen oppbevares som en serverhemmelighet, atskilt fra databasen, så en database-dump alene er ubrukelig. Dette er den ene biten av dataene dine vi beholder, og det er biten vi behandler mest forsiktig.
 
 **Tilganger er minimale av design.** Når du kobler til en agent, godkjenner du nøyaktig to mulige tillatelser: \`read:email\` og \`send:email\`. Vil du ha en agent som oppsummerer, men aldri kan sende? Gi kun \`read:email\`. Systemet har ingen slegge for «full tilgang», fordi det ikke er noe å vinne på en slik. Vurderer du hvordan agenter skal autentisere seg, bryter [OAuth vs. API-nøkler for AI-e-posttilgang](/blog/oauth-vs-api-keys-ai-email-access) ned hva du skal bruke når.
 
@@ -47,7 +47,7 @@ Gå gjennom denne før du kobler til noe, vårt eller noen andres:
 1. **Lagrer den e-posten din, eller henter den den i sanntid?** Sanntidshenting er det eneste svaret som holder nedslagsfeltet ditt på null. Lagrede kopier er en stående risiko.
 2. **Hvordan er påloggingsdata kryptert, og hvor er nøkkelen?** «Kryptert i ro» betyr lite hvis nøkkelen ligger rett ved databasen. Du vil ha sterk kryptering (AES-256-GCM) og nøkkelen oppbevart atskilt.
 3. **Kan du begrense ned til kun lesing?** Hvis det eneste alternativet er alt-eller-ingenting-tilgang, gå din vei. Du bør kunne gi lesetilgang uten sendetilgang.
-4. **Hvem sender posten?** Å sende gjennom din egen leverandør holder leveringsevne og omdømme under din kontroll. Sending videreformidlet fra leverandør gjør det ikke.
+4. **Hvem sender posten?** Å sende gjennom din egen leverandør holder leveringsevne og omdømme under din kontroll. Sending fra tjenesteleverandørens eget domene gjør det ikke.
 5. **Kan du tilbakekalle med ett klikk?** Umiddelbar, selvbetjent tilbakekalling er forskjellen mellom en skremmel og en hendelse.
 6. **Er det et menneske involvert ved sending?** For alt som ikke kan angres, bør agenten lage utkast og du godkjenne. Dette er ditt beste forsvar mot prompt injection.
 

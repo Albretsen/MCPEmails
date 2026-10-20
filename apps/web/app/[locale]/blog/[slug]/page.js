@@ -57,7 +57,7 @@ export async function generateMetadata({ params }) {
     openGraph: {
       type: 'article',
       url: canonical,
-      title: `${post.title} · mcpemails`,
+      title: `${post.title} · MCP Emails`,
       description: post.description,
       locale: OG_LOCALE[canonicalLocale],
       publishedTime: post.publishedAt,
@@ -68,7 +68,7 @@ export async function generateMetadata({ params }) {
     },
     twitter: {
       card: 'summary_large_image',
-      title: `${post.title} · mcpemails`,
+      title: `${post.title} · MCP Emails`,
       description: post.description,
       images: [post.cover],
     },
@@ -122,7 +122,7 @@ export default async function BlogPostPage({ params }) {
     },
     publisher: {
       '@type': 'Organization',
-      name: 'mcpemails',
+      name: 'MCP Emails',
       url: APP_URL,
       logo: { '@type': 'ImageObject', url: `${APP_URL}/logo-mark.svg` },
     },

@@ -42,7 +42,7 @@ dig +short SRV _imaps._tcp.yourcompany.com
 
 ### Google Workspace
 
-Workspace 默认通过 **Google 应用专用密码** 以 IMAP 连接（\`imap.gmail.com\` 端口 993，\`smtp.gmail.com\` 端口 465），也可以使用 OAuth。只有开启两步验证后才会出现应用专用密码，而管理员可以为整个域名关闭它，那样 Google 的相应页面对你就是不存在的。管理员还可以在"安全性 → API 控制"中限制第三方 OAuth 应用，这会在 Google 自己的授权页面就拦下这条路。如果两条路都被关闭，请联系管理员。[Google Workspace 设置页面](/connect/google-workspace)列出了同样的参数。
+Workspace 通过 **Google 应用专用密码** 以 IMAP 连接（\`imap.gmail.com\` 端口 993，\`smtp.gmail.com\` 端口 465）。只有开启两步验证后才会出现应用专用密码，而管理员可以为整个域名关闭它，那样 Google 的相应页面对你就是不存在的。遇到这种情况，请联系管理员。[Google Workspace 设置页面](/connect/google-workspace)列出了同样的参数。
 
 ### Zoho Mail
 
@@ -105,7 +105,7 @@ IONOS 为**每个地址单独设置邮箱密码**，在控制面板的 Email 中
 查询域名的 MX 记录，或者把地址输入连接表单，让自动识别替你检查 MX 和服务记录。
 
 **可以连接 Google Workspace 地址吗？**
-可以，用 Google 应用专用密码走 IMAP，或者用 OAuth。两条路管理员都能封：应用专用密码可按域名整体关闭，第三方 OAuth 应用可在 API 控制中受限。
+可以，用 Google 应用专用密码走 IMAP。创建应用专用密码前必须开启两步验证，而且管理员可以为整个域名关闭应用专用密码，如果找不到该选项，请询问管理员。
 
 **如果我的主机商没有公布 IMAP 设置怎么办？**
 自己填：主机、端口、安全模式，以及作为用户名的完整邮箱地址。如果第一种传输方式没有响应，系统会自动尝试其他标准组合。

@@ -42,7 +42,7 @@ En el panel, abre **Inboxes → Connect Inbox** y elige la ruta que te correspon
 
 ### Google Workspace
 
-Workspace se conecta por defecto con una **contraseña de aplicación de Google** sobre IMAP (\`imap.gmail.com\` en el 993, \`smtp.gmail.com\` en el 465); OAuth también está disponible. Las contraseñas de aplicación solo existen con la Verificación en dos pasos activada, y un administrador puede desactivarlas para todo el dominio, en cuyo caso la página de Google simplemente no está disponible para ti. Los administradores también pueden restringir las aplicaciones OAuth de terceros en Seguridad → Controles de API, lo que bloquea esa vía en la propia pantalla de consentimiento de Google. Si ambas están cerradas, habla con tu administrador. La [página de ajustes de Google Workspace](/connect/google-workspace) recoge los mismos valores.
+Workspace se conecta con una **contraseña de aplicación de Google** sobre IMAP (\`imap.gmail.com\` en el 993, \`smtp.gmail.com\` en el 465). Las contraseñas de aplicación solo existen con la Verificación en dos pasos activada, y un administrador puede desactivarlas para todo el dominio, en cuyo caso la página de Google simplemente no está disponible para ti. Si es así, habla con tu administrador. La [página de ajustes de Google Workspace](/connect/google-workspace) recoge los mismos valores.
 
 ### Zoho Mail
 
@@ -105,7 +105,7 @@ La [matriz de proveedores](/docs/providers) y las [páginas de proveedor](/conne
 Consulta el registro MX de tu dominio, o escribe tu dirección en el formulario de conexión y deja que la detección automática revise el MX y los registros de servicio por ti.
 
 **¿Puedo conectar una dirección de Google Workspace?**
-Sí, con una contraseña de aplicación de Google sobre IMAP, o con OAuth. Tu administrador puede bloquear cualquiera de las dos: las contraseñas de aplicación se pueden desactivar para todo el dominio y las aplicaciones OAuth de terceros se pueden restringir en los controles de API.
+Sí, con una contraseña de aplicación de Google sobre IMAP. Necesitas la Verificación en dos pasos activada para crearla, y tu administrador puede desactivar las contraseñas de aplicación para todo el dominio, así que pregúntale si no ves la opción.
 
 **¿Y si mi proveedor no publica los ajustes IMAP?**
 Introdúcelos tú: host, puerto, modo de seguridad y tu dirección completa como usuario. Si el primer transporte no responde, se prueban automáticamente las alternativas estándar.

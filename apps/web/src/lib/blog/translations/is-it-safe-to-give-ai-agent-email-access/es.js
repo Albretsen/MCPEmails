@@ -30,9 +30,9 @@ El error clásico es conceder acceso total al buzón cuando la tarea necesita "l
 
 Así gestiona MCP Emails cada riesgo. Tengo sesgo —lo construí yo—, pero las decisiones de diseño son comprobables, y deberías exigir a cualquier herramienta que elijas el mismo listón.
 
-**Tu correo nunca se almacena.** Cada llamada de herramienta accede a tu proveedor en tiempo real, a través de la Gmail API, Microsoft Graph o IMAP/SMTP. Los cuerpos de los mensajes, los asuntos y los adjuntos pasan al agente y se descartan de inmediato. Lo único que guardamos por bandeja de entrada es una credencial cifrada para poder hacer la siguiente llamada. No hay ningún espejo del buzón que vulnerar, porque el espejo no existe.
+**Tu correo nunca se almacena.** Cada llamada de herramienta accede a tu proveedor en tiempo real, por IMAP/SMTP para Gmail y la mayoría de los demás proveedores, o por Microsoft Graph para Outlook. Los cuerpos de los mensajes, los asuntos y los adjuntos pasan al agente y se descartan de inmediato. Lo único que guardamos por bandeja de entrada es una credencial cifrada para poder hacer la siguiente llamada. No hay ningún espejo del buzón que vulnerar, porque el espejo no existe.
 
-**Las credenciales se cifran en reposo con AES-256-GCM.** Tu token de OAuth o tu contraseña de aplicación se cifra antes de tocar la base de datos, y el descifrado solo ocurre dentro de una edge function aislada en el momento de la llamada. La clave de cifrado es un secreto de entorno almacenado por separado de la base de datos, así que un volcado de la base de datos por sí solo es inútil. Esta es la única pieza de tus datos que persistimos, y es la que tratamos con más cuidado.
+**Las credenciales se cifran en reposo con AES-256-GCM.** Tu contraseña de aplicación o tu token de OAuth se cifra antes de tocar la base de datos. Se descifra en nuestros servidores solo cuando una petición lo necesita, y nunca se envía a tu agente. La clave de cifrado se guarda como secreto del servidor, separada de la base de datos, así que un volcado de la base de datos por sí solo es inútil. Esta es la única pieza de tus datos que persistimos, y es la que tratamos con más cuidado.
 
 **Los permisos son mínimos por diseño.** Cuando conectas un agente, apruebas exactamente dos permisos posibles: \`read:email\` y \`send:email\`. ¿Quieres un agente que resuma pero que nunca pueda enviar? Concede solo \`read:email\`. El sistema no tiene un mazo de "acceso total", porque no hay nada que ganar con uno. Si estás sopesando cómo se autentican los agentes, [OAuth frente a claves de API para el acceso al correo con IA](/blog/oauth-vs-api-keys-ai-email-access) desglosa cuál usar y cuándo.
 
@@ -47,7 +47,7 @@ Repasa esto antes de conectar nada, ya sea nuestro o de cualquier otro:
 1. **¿Almacena tu correo o lo obtiene en vivo?** La obtención en vivo es la única respuesta que mantiene tu radio de explosión en cero. Las copias almacenadas son una responsabilidad permanente.
 2. **¿Cómo se cifran las credenciales y dónde está la clave?** "Cifrado en reposo" significa poco si la clave está justo al lado de la base de datos. Quieres un cifrado fuerte (AES-256-GCM) y que la clave se guarde por separado.
 3. **¿Puedes reducir el permiso a solo lectura?** Si la única opción es acceso de todo o nada, aléjate. Deberías poder conceder lectura sin envío.
-4. **¿Quién envía el correo?** Enviar a través de tu propio proveedor mantiene la entregabilidad y la reputación bajo tu control. El envío retransmitido desde el proveedor, no.
+4. **¿Quién envía el correo?** Enviar a través de tu propio proveedor mantiene la entregabilidad y la reputación bajo tu control. El envío desde el propio dominio del proveedor del servicio, no.
 5. **¿Puedes revocar con un clic?** La revocación instantánea y autoservicio es la diferencia entre un susto y un incidente.
 6. **¿Hay una persona en el bucle para los envíos?** Para cualquier cosa irreversible, el agente debería redactar y tú deberías aprobar. Esta es tu mejor defensa contra la inyección de prompts.
 

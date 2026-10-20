@@ -5,6 +5,7 @@ import { CLIENTS } from '@/lib/clients/clients.mjs';
 import { clientHubLocales } from '@/lib/clients/content.mjs';
 import { getAllPosts, getPostLocales } from '@/lib/blog/posts';
 import { blogPostLanguageAlternates } from '@/lib/blog/seo.mjs';
+import { PATH as COMPARE_PATH, PAGE_UPDATED as COMPARE_UPDATED } from '@/lib/compare/email-mcp-servers.mjs';
 import { DATE_MODIFIED as NATIVE_MODIFIED } from '@/lib/compare/native-connectors.mjs';
 
 /**
@@ -33,7 +34,7 @@ const MARKETING_PAGES: {
   priority: number;
 }[] = [
   { path: '', lastModified: '2026-09-20', changeFrequency: 'weekly', priority: 1.0 },
-  { path: '/pricing', lastModified: '2026-09-20', changeFrequency: 'monthly', priority: 0.9 },
+  { path: '/pricing', lastModified: '2026-10-20', changeFrequency: 'monthly', priority: 0.9 },
   { path: '/docs', lastModified: '2026-08-27', changeFrequency: 'weekly', priority: 0.8 },
   // The provider compatibility matrix: the page written to be cited, and the
   // one whose value depends on being re-verified, hence the higher priority
@@ -42,7 +43,7 @@ const MARKETING_PAGES: {
   { path: '/docs/read-only-access', lastModified: '2026-10-16', changeFrequency: 'monthly', priority: 0.7 },
   { path: '/native-connectors-vs-mcp', lastModified: NATIVE_MODIFIED, changeFrequency: 'monthly', priority: 0.7 },
   { path: '/self-hosting', lastModified: '2026-08-27', changeFrequency: 'monthly', priority: 0.7 },
-  { path: '/security', lastModified: '2026-08-27', changeFrequency: 'monthly', priority: 0.6 },
+  { path: '/security', lastModified: '2026-10-20', changeFrequency: 'monthly', priority: 0.6 },
   { path: '/about', lastModified: '2026-08-29', changeFrequency: 'yearly', priority: 0.5 },
   { path: '/for/founders', lastModified: '2026-08-27', changeFrequency: 'monthly', priority: 0.8 },
   { path: '/for/business', lastModified: '2026-09-20', changeFrequency: 'monthly', priority: 0.8 },
@@ -144,13 +145,14 @@ export default function sitemap(): MetadataRoute.Sitemap {
       priority: 0.8,
       locales: c.locales,
     })),
-    // Dated factual claims about named competitors. Re-verify the sources on
-    // the page before moving this date. The old /email-mcp-servers-compared
+    // Dated factual claims about named competitors. The date is the page's own
+    // PAGE_UPDATED, the same constant behind its visible "Updated" line and its
+    // JSON-LD dateModified. The old /email-mcp-servers-compared
     // slug is deliberately absent: it is a 308 to this one, and a redirect in
     // a sitemap is an instruction to crawl a URL we have just said is wrong.
     {
-      path: '/best-email-mcp-servers',
-      lastModified: '2026-09-12',
+      path: COMPARE_PATH,
+      lastModified: COMPARE_UPDATED,
       priority: 0.8,
       locales: ['en'],
     },

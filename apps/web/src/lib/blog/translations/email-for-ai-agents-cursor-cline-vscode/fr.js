@@ -12,7 +12,7 @@ Le serveur MCP ne possède pas votre courrier. Il établit une connexion en dire
 
 Allez dans **Dashboard → Inboxes → Connect Inbox** et choisissez un fournisseur :
 
-- **Gmail** → un mot de passe d'application Google en IMAP par défaut (votre compte Google doit avoir la validation en deux étapes), ou la connexion avec Google si vous préférez.
+- **Gmail** → un mot de passe d'application Google en IMAP. Activez la validation en deux étapes, créez-en un sur myaccount.google.com/apppasswords et collez les 16 lettres avec votre adresse Gmail complète. Un administrateur Google Workspace peut désactiver les mots de passe d'application pour le domaine.
 - **Outlook / Microsoft 365** → OAuth avec la connexion Microsoft, sans mot de passe d’application. Les comptes personnels Outlook.com, Hotmail, Live et MSN se connectent directement. Un compte professionnel ou scolaire Microsoft 365 peut d’abord nécessiter qu’un administrateur informatique approuve l’application une seule fois pour toute l’organisation ; le tableau de bord vous donne un lien à lui envoyer.
 - **iCloud, Fastmail, Yahoo, Zoho, ou n’importe quel hôte IMAP générique** → un mot de passe spécifique à l’application. Générez-le dans les paramètres du fournisseur (pour iCloud, c’est appleid.apple.com) et collez-le.
 
@@ -81,7 +81,7 @@ Les deux chemins exposent la même surface. Une poignée d’outils consolidés,
 - \`inbox_list\` — appelez toujours celui-ci en premier pour découvrir les boîtes de réception connectées et leurs ID.
 - \`email_read\` (action \`list\`) — paginé, du plus récent au plus ancien.
 - \`email_read\` (action \`read\`) — texte brut analysé, HTML assaini en option, pièces jointes.
-- \`email_read\` (action \`search\`) — recherche native du fournisseur (opérateurs Gmail, KQL Outlook, texte IMAP).
+- \`email_read\` (action \`search\`) : recherche par expéditeur, objet, date, statut non lu et d'autres champs structurés, traduite dans la recherche propre à chaque fournisseur.
 - \`email_compose\` (action \`send\`) — composez avec CC/BCC, HTML, pièces jointes jusqu’à 10 MB.
 - \`email_compose\` (action \`reply\`) — définit pour vous les en-têtes In-Reply-To et References pour que le fil reste intact.
 
@@ -99,7 +99,7 @@ L’agent exécute \`inbox_list\`, puis \`email_read\` avec l’action \`list\` 
 
 > Réponds au message du prestataire en design pour confirmer que jeudi 14h convient, fais court.
 
-Il appelle \`email_compose\` avec l’action \`reply\`, le fil est géré, et la réponse part via mon propre Gmail — elle arrive donc depuis mon adresse avec la réputation de mon domaine, pas un relais quelconque. Pour un traitement plus poussé des prompts de tri, voyez [comment faire trier et résumer votre boîte de réception par un agent IA](/blog/ai-agent-triage-summarize-inbox).
+Il appelle \`email_compose\` avec l’action \`reply\`, le fil est géré, et la réponse part via mon propre Gmail : elle arrive donc depuis mon adresse avec la réputation de mon domaine. Pour un traitement plus poussé des prompts de tri, voyez [comment faire trier et résumer votre boîte de réception par un agent IA](/blog/ai-agent-triage-summarize-inbox).
 
 Une limitation honnête : il n’y a pas de webhooks. Le serveur ne vous pousse pas de nouveau courrier. Si vous voulez que l’agent réagisse aux messages entrants, vous interrogez le serveur — \`email_read\` avec l’action \`list\` et \`unread: true\` selon un planning. C’est un choix de conception délibéré, et il façonne la manière dont vous construisez tout ce qui est réactif, comme un [répondeur automatique via MCP](/blog/build-email-auto-responder-mcp-agent).
 

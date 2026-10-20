@@ -35,10 +35,10 @@
       "providerSub": "Gmail · Outlook · iCloud · IMAP",
       "logCalls": "Agent ruft auf",
       "logReturns": "liefert Postfach-IDs, kein Kopieren aus dem Dashboard",
-      "logFetches": "mcpemails ruft über die Gmail API ab (Token rotiert)",
+      "logFetches": "MCP Emails ruft live bei Ihrem Anbieter ab",
       "logResult": "20 Nachrichten zurückgegeben",
       "logNothing": "nichts gespeichert",
-      "legendPipe": "mcpemails (die Leitung)",
+      "legendPipe": "MCP Emails (die Leitung)",
       "legendLive": "Live-Anfrage",
       "legendData": "Ihre Daten, Ihr Anbieter"
     }
@@ -65,23 +65,23 @@
     "items": {
       "0": {
         "tag": "Umfang",
-        "h": "Siebzehn fokussierte Tools. Das Wesentliche, abgedeckt.",
+        "h": "Neunzehn fokussierte Tools. Das Wesentliche, abgedeckt.",
         "p": "Die Tools decken die tägliche Arbeit ab: <code>inbox_list</code>, <code>email_read</code> (auflisten, lesen, suchen) und <code>email_compose</code> (senden, antworten), dazu gezielte Tools zum Organisieren, Löschen, für Ordner, Entwürfe, geplantes Senden, Kontakte, Signaturen und unbeaufsichtigte Automatisierungen. Fügen Sie die MCP-Endpunkt-URL in claude.ai, Claude Desktop, Cursor oder einen beliebigen MCP-kompatiblen Agenten ein."
       },
       "1": {
         "tag": "Speicherung",
         "h": "E-Mails werden live abgerufen. Nie gespeichert.",
-        "p": "Jeder Tool-Aufruf geht in Echtzeit an Ihren Anbieter: Gmail API, Microsoft Graph oder IMAP. Nachrichtentexte, Betreffzeilen und Anhänge gehen an den Agenten und werden sofort verworfen. Pro Postfach speichern wir genau eine Sache, einen verschlüsselten Token oder ein App-Passwort, damit der nächste Aufruf funktioniert. Einzige Ausnahme ist eine Nachricht, die Sie für später planen: Wir halten sie bis zum Sendezeitpunkt vor und bewahren danach einen Eintrag für Ihren Verlauf auf."
+        "p": "Jeder Tool-Aufruf geht in Echtzeit an Ihren Anbieter: Gmail API, Microsoft Graph oder IMAP. Nachrichtentexte, Betreffzeilen und Anhänge gehen an den Agenten und werden sofort verworfen. Pro Postfach speichern wir genau eine Sache, einen verschlüsselten Token oder ein App-Passwort, damit der nächste Aufruf funktioniert. Ausnahmen sind ausgehende Nachrichten, die warten müssen: Eine Nachricht, die Sie für später planen, oder eine Sendung, die auf Ihre Freigabe wartet, wird verschlüsselt gespeichert, und ihr Eintrag bleibt für Ihren Verlauf erhalten."
       },
       "2": {
         "tag": "Senden",
         "h": "Sie behalten jeden Versand im Griff.",
-        "p": "Nachrichten laufen über Gmail, Outlook, Fastmail oder Ihren eigenen SMTP-Server, nie über unser Mail-Relay. Aktivieren Sie die Freigabe pro Postfach, um Sendungen, Antworten, Weiterleitungen, Entwurfsversand und geplante Sendungen zur Prüfung im Dashboard zurückzuhalten. Automatische Wiederholungen können einen Idempotenzschlüssel 24 Stunden lang wiederverwenden, und Gmail sendet nur von einer vom Anbieter verifizierten „Senden als“-Identität."
+        "p": "Jede Nachricht verschickt Ihr eigener Anbieter, von Ihrer Adresse: Gmail, Outlook, Fastmail oder Ihr eigener SMTP-Server. Lehnt ein Anbieter Verbindungen von Cloud-Adressen ab, läuft die Verbindung über unser Relay, einen reinen Tunnel mit durchgehendem TLS, sodass das Relay weder Ihre E-Mails noch Ihr Passwort sieht. Aktivieren Sie die Freigabe pro Postfach, um Sendungen, Antworten, Weiterleitungen, Entwurfsversand und geplante Sendungen zur Prüfung im Dashboard zurückzuhalten. Automatische Wiederholungen können einen Idempotenzschlüssel 24 Stunden lang wiederverwenden, und eine andere Absenderadresse funktioniert nur, wenn sie für dieses Postfach als „Senden als“-Adresse verifiziert ist."
       },
       "3": {
         "tag": "Anbieter",
         "h": "Gmail, Outlook, iCloud, Fastmail und jedes IMAP-Postfach.",
-        "p": "Ein App-Passwort oder die Google-Anmeldung (OAuth 2.0) für Gmail; die Microsoft-Anmeldung (OAuth 2.0) für Outlook / Microsoft 365 (bei Arbeits- oder Schulkonten muss die IT-Administration die App eventuell einmal freigeben); app-spezifische Passwörter für Fastmail, iCloud, Yahoo, Zoho und Yandex; ein generischer IMAP- / SMTP-Konnektor für alles andere. Jedes Postfach meldet ein versioniertes Kompatibilitätsprofil, sodass ein Agent portable Aktionen nutzen kann und trotzdem sieht, wo sich ein Anbieter anders verhält oder eine Operation nicht unterstützt."
+        "p": "Ein Google-App-Passwort über IMAP für Gmail; die Microsoft-Anmeldung (OAuth 2.0) für Outlook / Microsoft 365 (bei Arbeits- oder Schulkonten muss die IT-Administration die App eventuell einmal freigeben); app-spezifische Passwörter für Fastmail, iCloud, Yahoo, Zoho und Yandex; ein generischer IMAP- / SMTP-Konnektor für alles andere. Jedes Postfach meldet ein versioniertes Kompatibilitätsprofil, sodass ein Agent portable Aktionen nutzen kann und trotzdem sieht, wo sich ein Anbieter anders verhält oder eine Operation nicht unterstützt."
       },
       "4": {
         "tag": "Zugriff",
@@ -91,7 +91,7 @@
       "5": {
         "tag": "Sicherheit",
         "h": "Zugangsdaten werden verschlüsselt gespeichert.",
-        "p": "OAuth-Tokens und App-Passwörter werden mit AES-256-GCM verschlüsselt, bevor sie in die Datenbank geschrieben werden. Entschlüsselt wird nur innerhalb einer isolierten Edge Function zum Zeitpunkt des Aufrufs. Der Schlüssel liegt als Umgebungs-Secret getrennt von der Datenbank."
+        "p": "OAuth-Tokens und App-Passwörter werden mit AES-256-GCM verschlüsselt, bevor sie in die Datenbank geschrieben werden. Entschlüsselt werden sie auf unseren Servern nur für die Anfrage, die sie braucht. Der Schlüssel liegt als Umgebungs-Secret getrennt von der Datenbank."
       }
     }
   },
@@ -215,7 +215,7 @@
     "items": [
       {
         "q": "Ist MCP Emails ein IMAP-MCP-Server?",
-        "a": "Ja. Neben der Gmail- und Outlook-Anmeldung gibt es einen generischen IMAP- und SMTP-Konnektor, also funktioniert jedes Postfach mit IMAP-Zugang: Ihre eigene Domain, ein Hosting-Anbieter, ein regionaler Provider. Sie geben die Serverdaten und ein App-Passwort einmal ein, und Ihr Agent liest über IMAP und sendet über Ihren eigenen SMTP-Server."
+        "a": "Ja. Neben Gmail und Outlook gibt es einen generischen IMAP- und SMTP-Konnektor, also funktioniert jedes Postfach mit IMAP-Zugang: Ihre eigene Domain, ein Hosting-Anbieter, ein regionaler Provider. Sie geben die Serverdaten und ein App-Passwort einmal ein, und Ihr Agent liest über IMAP und sendet über Ihren eigenen SMTP-Server."
       },
       {
         "q": "Kann ein Agent mehrere Postfächer gleichzeitig bearbeiten?",
@@ -235,11 +235,11 @@
       },
       {
         "q": "Welche E-Mail-Anbieter kann ich verbinden?",
-        "a": "Gmail mit App-Passwort oder per Google-Anmeldung, Outlook und Microsoft 365 per Microsoft-Anmeldung (bei Arbeits- oder Schulkonten muss die IT-Administration die App eventuell einmal freigeben), Fastmail, iCloud, Yahoo, Zoho und Yandex mit app-spezifischem Passwort und jedes andere Postfach über eine generische IMAP/SMTP-Verbindung. Verbinden Sie so viele Postfächer, wie Sie möchten, und benennen Sie sie nach Einsatzzweck."
+        "a": "Gmail und Google Workspace mit einem Google-App-Passwort über IMAP, Outlook und Microsoft 365 per Microsoft-Anmeldung (bei Arbeits- oder Schulkonten muss die IT-Administration die App eventuell einmal freigeben), Fastmail, iCloud, Yahoo, Zoho und Yandex mit app-spezifischem Passwort und jedes andere Postfach über eine generische IMAP/SMTP-Verbindung. Verbinden Sie so viele Postfächer, wie Sie möchten, und benennen Sie sie nach Einsatzzweck."
       },
       {
         "q": "Werden meine E-Mails irgendwo gespeichert?",
-        "a": "Nein. Die E-Mails, die Ihr Agent liest, werden bei jeder Anfrage live von Ihrem Anbieter abgerufen und nie auf unseren Servern gespeichert. Einzige Ausnahme ist eine Nachricht, die Sie ausdrücklich für später planen: Sie wird bis zum Versand verschlüsselt vorgehalten."
+        "a": "Nein. Die E-Mails, die Ihr Agent liest, werden bei jeder Anfrage live von Ihrem Anbieter abgerufen und nie auf unseren Servern gespeichert. Ausnahmen sind ausgehende Nachrichten, die warten müssen: Eine Nachricht, die Sie für später planen, oder eine Sendung, die auf Ihre Freigabe wartet, wird verschlüsselt gespeichert."
       },
       {
         "q": "Ist es wirklich kostenlos?",
@@ -247,11 +247,11 @@
       },
       {
         "q": "Was kann die KI mit meinem Postfach tatsächlich tun?",
-        "a": "E-Mails lesen und durchsuchen, echte Nachrichten senden, beantworten und weiterleiten, den Versand für später planen und Ihr Postfach organisieren: verschieben, kopieren, markieren, archivieren und löschen. Siebzehn aktionsbasierte Tools, sodass der Agent die Aufgabe direkt im Postfach erledigt, statt nur Entwürfe zu schreiben."
+        "a": "E-Mails lesen und durchsuchen, echte Nachrichten senden, beantworten und weiterleiten, den Versand für später planen und Ihr Postfach organisieren: verschieben, kopieren, markieren, archivieren und löschen. Neunzehn aktionsbasierte Tools, sodass der Agent die Aufgabe direkt im Postfach erledigt, statt nur Entwürfe zu schreiben."
       },
       {
         "q": "Wie verbinde ich ein Postfach?",
-        "a": "Erstellen Sie ein kostenloses Konto, verbinden Sie Ihr Postfach (App-Passwort oder Google-Anmeldung für Gmail, Microsoft-Anmeldung für Outlook, App-Passwort für die anderen) und tragen Sie dann https://mcpemails.com/api/mcp in Ihren KI-Client ein und autorisieren Sie. Nach wenigen Minuten hat Ihr Agent Zugriff auf das Postfach."
+        "a": "Erstellen Sie ein kostenloses Konto, verbinden Sie Ihr Postfach (Google-App-Passwort für Gmail, Microsoft-Anmeldung für Outlook, App-Passwort für die anderen) und tragen Sie dann https://mcpemails.com/api/mcp in Ihren KI-Client ein und autorisieren Sie. Nach wenigen Minuten hat Ihr Agent Zugriff auf das Postfach."
       },
       {
         "q": "Kann ich es selbst hosten?",
@@ -279,7 +279,7 @@
     "linkWithdrawal": "Widerrufsrecht",
     "linkCancel": "Verträge hier kündigen",
     "linkImpressum": "Impressum",
-    "copyright": "© 2026 mcpemails.",
+    "copyright": "© 2026 MCP Emails.",
     "legal": "E-Mails live abgerufen, nie gespeichert · Zugangsdaten verschlüsselt gespeichert",
     "legalEntity": "MCP Emails ist ein Dienst der Albretsen AS, Organisationsnummer 938 702 373, Håsteins gate 9, 5160 Laksevåg, Norwegen.",
     "contactLabel": "Kontakt",

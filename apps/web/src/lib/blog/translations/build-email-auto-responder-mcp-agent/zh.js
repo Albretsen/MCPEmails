@@ -1,7 +1,7 @@
 const translation = {
   title: '用 MCP 连接的智能体搭建邮件自动回复器',
   description: '用 MCP 连接的 AI 智能体搭建邮件自动回复器：轮询未读邮件、起草并安全回复，配合权限、速率限制与护栏。',
-  coverAlt: '用 MCP 连接的智能体搭建邮件自动回复器 — MCPEmails',
+  coverAlt: '用 MCP 连接的智能体搭建邮件自动回复器 — MCP Emails',
   content: `基于 MCP Emails 搭建的邮件自动回复器是一个循环，而不是 webhook。这里没有服务端主动触发的事件，所以你的智能体按计划用 \`email_read\`（动作 \`list\`）**轮询**未读邮件，用 \`email_read\`（动作 \`read\`）读取每一封消息，起草回复，然后调用 \`email_compose\`（动作 \`reply\`）。本文带你走完整个搭建过程：轮询循环、你需要的权限、如何熬过速率限制，以及那些能防止智能体用胡编的回复轰炸你联系人的护栏。
 
 这是[给你的 AI 智能体邮件访问权限](/blog/how-to-give-your-ai-agent-email-access)这条线索里偏进阶的一端。如果你只想做分拣和晨间摘要、不想发送任何东西，先读[AI 智能体的收件箱分拣与摘要](/blog/ai-agent-triage-summarize-inbox)——那是更安全的起点。等你真的想让智能体按下发送键时，再回到这里。

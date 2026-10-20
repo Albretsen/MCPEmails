@@ -49,7 +49,7 @@ In the dashboard, open **Inboxes → Connect Inbox** and pick the route that mat
 
 ### Google Workspace
 
-Workspace connects with a **Google app password** over IMAP by default (\`imap.gmail.com\` on 993, \`smtp.gmail.com\` on 465); OAuth is also available. App passwords only exist once 2-Step Verification is on, and an administrator can disable them domain-wide, in which case the Google page is simply unavailable to you. Admins can also restrict third-party OAuth apps under Security → API controls, which blocks that path at Google's consent screen. If both are shut, ask your admin. The [Google Workspace settings page](/connect/google-workspace) lists the same values.
+Workspace connects with a **Google app password** over IMAP (\`imap.gmail.com\` on 993, \`smtp.gmail.com\` on 465). App passwords only exist once 2-Step Verification is on, and an administrator can disable them domain-wide, in which case the Google page is simply unavailable to you. If so, ask your admin. The [Google Workspace settings page](/connect/google-workspace) lists the same values.
 
 ### Zoho Mail
 
@@ -112,7 +112,7 @@ The [provider matrix](/docs/providers) and the [provider pages](/connect) carry 
 Look up your domain's MX record, or type your address into the connect form and let autodiscovery check the MX and service records for you.
 
 **Can I connect a Google Workspace address?**
-Yes, with a Google app password over IMAP, or with OAuth. Your administrator can block either: app passwords can be disabled domain-wide, and third-party OAuth apps restricted under API controls.
+Yes, with a Google app password over IMAP. 2-Step Verification must be on to create one, and your administrator can disable app passwords domain-wide, so ask them if the option is missing.
 
 **What if my host publishes no IMAP settings?**
 Supply them yourself: host, port, security mode, and your full address as the username. If the first transport does not answer, the standard alternatives are tried automatically.

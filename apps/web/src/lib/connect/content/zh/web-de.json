@@ -26,23 +26,23 @@
     "meta0": "1 个收件箱永久免费",
     "meta1": "你的账户密码，无需 OAuth 配置",
     "meta2": "邮件实时获取，绝不存储",
-    "answer": "Claude 无法自行连接 WEB.DE。mcpemails 是一个托管 MCP 服务器，用你的账户密码通过 IMAP 与之连接，让 Claude、Cursor 或任意 MCP 客户端都能读取、搜索、发送并整理这些邮件。设置只需几分钟，一个收件箱免费。"
+    "answer": "Claude 无法自行连接 WEB.DE。MCP Emails 是一个托管 MCP 服务器，用你的账户密码通过 IMAP 与之连接，让 Claude、Cursor 或任意 MCP 客户端都能读取、搜索、发送并整理这些邮件。设置只需几分钟，一个收件箱免费。"
   },
   "method": {
     "title": "WEB.DE 如何连接：IMAP 与账户密码",
-    "body": "WEB.DE 通过 IMAP/SMTP 连接，但 <b>POP3 和 IMAP 访问默认是关闭的</b>。请在 WEB.DE 的 E-Mail-Einstellungen（邮件设置）、E-Mail empfangen（接收邮件）、POP3/IMAP 中开启，然后用 WEB.DE 地址和密码连接。WEB.DE 在两种标准发信传输方式上都会响应，即 465 端口的隐式 TLS 和 587 端口的 STARTTLS，所以端口几乎从来不是发信失败的原因。mcpemails 使用下方的 465 组合，并会自动回退到另一种。"
+    "body": "WEB.DE 通过 IMAP/SMTP 连接，但 <b>POP3 和 IMAP 访问默认是关闭的</b>。请在 WEB.DE 的 E-Mail-Einstellungen（邮件设置）、E-Mail empfangen（接收邮件）、POP3/IMAP 中开启，然后用 WEB.DE 地址和密码连接。WEB.DE 在两种标准发信传输方式上都会响应，即 465 端口的隐式 TLS 和 587 端口的 STARTTLS，所以端口几乎从来不是发信失败的原因。MCP Emails 使用下方的 465 组合，并会自动回退到另一种。"
   },
   "setup": [
     {
       "h": "创建免费账户",
-      "p": "注册 mcpemails，无需信用卡。免费套餐可永久连接一个收件箱。"
+      "p": "注册 MCP Emails，无需信用卡。免费套餐可永久连接一个收件箱。"
     },
     {
       "h": "在 WEB.DE 中开启 IMAP 访问",
       "p": "在 WEB.DE 中打开 E-Mail-Einstellungen（邮件设置），在 E-Mail empfangen 下选择 POP3/IMAP，然后把滑块拨到 POP3- und IMAP-Zugriff erlauben（允许 POP3 和 IMAP 访问）。"
     },
     {
-      "h": "在 mcpemails 中添加邮箱",
+      "h": "在 MCP Emails 中添加邮箱",
       "p": "选择 IMAP / SMTP，填入你的 WEB.DE 地址、上方的服务器地址和密码，安全连接收件箱。"
     },
     {
@@ -69,14 +69,14 @@
     }
   ],
   "limits": [
-    "mcpemails 只连接 WEB.DE 邮箱。WEB.DE Online-Speicher（在线存储）、通讯录和日历是独立的产品，不会开放给你的 AI 客户端。",
+    "MCP Emails 只连接 WEB.DE 邮箱。WEB.DE Online-Speicher（在线存储）、通讯录和日历是独立的产品，不会开放给你的 AI 客户端。",
     "POP3/IMAP 滑块由 WEB.DE 控制，而不是我们。如果 WEB.DE 在长时间空闲后停用了收取，必须在 WEB.DE 中重新开启，连接才能恢复。",
     "WEB.DE 是有自身反滥用发信限额的消费者邮箱。请用它处理普通往来邮件，而不是批量或营销发送。"
   ],
   "faq": [
     {
       "q": "Claude 能用 WEB.DE 吗？",
-      "a": "不能单独使用。Claude 没有内置的 WEB.DE 连接器。通过 IMAP 将 mcpemails 这样的 MCP 服务器指向你的 WEB.DE 邮箱后，Claude 就能读取、搜索、发送、回复、定时和整理其中的邮件，同一个连接也可在 Cursor、ChatGPT 和其他 MCP 客户端中使用，而不止一个。"
+      "a": "不能单独使用。Claude 没有内置的 WEB.DE 连接器。通过 IMAP 将 MCP Emails 这样的 MCP 服务器指向你的 WEB.DE 邮箱后，Claude 就能读取、搜索、发送、回复、定时和整理其中的邮件，同一个连接也可在 Cursor、ChatGPT 和其他 MCP 客户端中使用，而不止一个。"
     },
     {
       "q": "WEB.DE 的 IMAP 和 SMTP 设置是什么？",

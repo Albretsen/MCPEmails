@@ -27,7 +27,7 @@
     "meta0": "1 bandeja gratis, para siempre",
     "meta1": "La contraseña de tu cuenta, sin configurar OAuth",
     "meta2": "El correo se obtiene en vivo, nunca se almacena",
-    "answer": "Claude no puede acceder por sí solo a GMX. mcpemails es un servidor MCP alojado que lo conecta por IMAP con la contraseña de tu cuenta, para que Claude, Cursor o cualquier cliente MCP pueda leer, buscar, enviar y organizar ese correo. La configuración lleva un par de minutos y una bandeja es gratis."
+    "answer": "Claude no puede acceder por sí solo a GMX. MCP Emails es un servidor MCP alojado que lo conecta por IMAP con la contraseña de tu cuenta, para que Claude, Cursor o cualquier cliente MCP pueda leer, buscar, enviar y organizar ese correo. La configuración lleva un par de minutos y una bandeja es gratis."
   },
   "method": {
     "title": "Cómo se conecta GMX: IMAP y la contraseña de tu cuenta",
@@ -36,14 +36,14 @@
   "setup": [
     {
       "h": "Crea una cuenta gratis",
-      "p": "Regístrate en mcpemails, sin tarjeta. El plan gratuito conecta una bandeja, para siempre."
+      "p": "Regístrate en MCP Emails, sin tarjeta. El plan gratuito conecta una bandeja, para siempre."
     },
     {
       "h": "Activa el acceso IMAP en GMX",
       "p": "Inicia sesión en GMX desde un navegador, haz clic en el círculo con tus iniciales, abre E-Mail-Einstellungen, elige POP3/IMAP en E-Mail empfangen y mueve el interruptor a POP3- und IMAP-Zugriff erlauben (permitir el acceso POP3 e IMAP). En gmx.com: pestaña Email, luego Settings, luego POP3 & IMAP."
     },
     {
-      "h": "Añade el buzón en mcpemails",
+      "h": "Añade el buzón en MCP Emails",
       "p": "Elige IMAP / SMTP y añade tu dirección de GMX, los servidores de arriba y la contraseña para conectar la bandeja de forma segura."
     },
     {
@@ -80,7 +80,7 @@
   "faq": [
     {
       "q": "¿Funciona Claude con GMX Mail?",
-      "a": "No por sí solo. Claude no tiene un conector integrado para GMX. Conectar un servidor MCP como mcpemails a tu buzón de GMX por IMAP le da a Claude acceso para leer, buscar, enviar, responder, programar y organizar, y la misma conexión funciona desde Cursor, ChatGPT y otros clientes MCP. Antes tienes que activar el acceso POP3 e IMAP en GMX."
+      "a": "No por sí solo. Claude no tiene un conector integrado para GMX. Conectar un servidor MCP como MCP Emails a tu buzón de GMX por IMAP le da a Claude acceso para leer, buscar, enviar, responder, programar y organizar, y la misma conexión funciona desde Cursor, ChatGPT y otros clientes MCP. Antes tienes que activar el acceso POP3 e IMAP en GMX."
     },
     {
       "q": "¿Cuáles son los ajustes IMAP y SMTP de GMX Mail?",

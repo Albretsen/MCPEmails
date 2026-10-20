@@ -45,11 +45,12 @@ Un seul champ remplit trois rôles. Chaque boîte a un nom affiché : c'est le *
 
 « work2 » est donc un mauvais nom à double titre : l'agent ne peut pas deviner à quoi sert la boîte, et un client mail finira par afficher « work2 » à côté de votre adresse. Utilisez quelque chose qu'un inconnu peut lire, par exemple « Jane Doe (Acme) » ou « Northside Studio ». Définissez-le dans le tableau de bord sous le **Nom d'expéditeur** (Sender name) de la boîte, ou avec \`signature_set\`, et relisez-le avec \`signature_get\`. Les noms sont limités à 100 caractères.
 
-Envoyer depuis un alias est plus restreint qu'on ne le croit :
+Envoyer depuis un alias fonctionne, mais seulement depuis des adresses dont vous avez prouvé qu'elles sont à vous :
 
 - Votre propre adresse connectée fonctionne toujours comme valeur de From, chez tous les fournisseurs.
-- Une adresse **différente** doit être une identité Gmail Send As vérifiée, listée sous \`sender_identities\` dans l'entrée \`inbox_list\` de cette boîte.
-- Chez un fournisseur autre que Gmail, une adresse From qui n'est pas celle de la boîte est refusée plutôt que réécrite en silence.
+- Sur une boîte IMAP (iCloud, Yahoo, Gmail connecté par mot de passe d'application, tout serveur SMTP), une adresse **différente** fonctionne dès qu'elle est vérifiée. Ajoutez-la dans les réglages de cette boîte dans le tableau de bord, puis saisissez le code que MCP Emails envoie à cette adresse. Les adresses vérifiées sont listées sous \`sender_identities\` dans l'entrée \`inbox_list\` de cette boîte.
+- Outlook envoie depuis l'adresse connectée.
+- Une adresse From qui n'est pas vérifiée pour la boîte est refusée plutôt que réécrite en silence.
 
 Les signatures sont elles aussi propres à chaque boîte : une signature formelle sur l'adresse professionnelle, rien sur l'adresse personnelle. Voir [les signatures e-mail pour Claude](/blog/email-signatures-for-claude).
 
@@ -102,7 +103,7 @@ Une routine multi-boîtes coûte une action par boîte, donc votre nombre de bo�
 Par \`inbox_list\`, qui renvoie l'adresse et le nom affiché de chaque boîte qu'il peut utiliser. Nommez l'adresse dans votre demande. Un identifiant de boîte et une adresse qui se contredisent sont refusés, pas devinés.
 
 **Les réponses partiront-elles de la bonne adresse ?**
-Oui, quand vous envoyez depuis la boîte propriétaire de l'adresse : chaque boîte envoie via son propre fournisseur, son nom affiché et sa signature. Une adresse From différente exige une identité Gmail Send As vérifiée, et elle est refusée chez les autres fournisseurs.
+Oui, quand vous envoyez depuis la boîte propriétaire de l'adresse : chaque boîte envoie via son propre fournisseur, son nom affiché et sa signature. Une adresse From différente fonctionne sur une boîte IMAP une fois vérifiée avec un code envoyé à cette adresse. Outlook envoie depuis l'adresse connectée, et une adresse From non vérifiée est refusée.
 
 **Puis-je laisser l'agent envoyer librement depuis une boîte et en retenir une autre ?**
 Oui. La vérification avant envoi est un réglage par boîte, donc une boîte peut envoyer immédiatement pendant qu'une autre attend votre approbation dans un navigateur connecté.

@@ -2,7 +2,7 @@ const translation = {
   title: 'Slik gir du AI-agenten din tilgang til e-post (den komplette 2026-guiden)',
   description:
     'Gi AI-agenten din lese- og sendetilgang til en ekte innboks over MCP — Gmail, Outlook, iCloud, Fastmail eller IMAP. Slik fungerer det: verktøyene, sikkerheten og oppsettet.',
-  coverAlt: 'Slik gir du AI-agenten din tilgang til e-post over MCP — MCPEmails',
+  coverAlt: 'Slik gir du AI-agenten din tilgang til e-post over MCP — MCP Emails',
   content: `For å gi en AI-agent tilgang til e-post kobler du innboksen din til en MCP-server og peker agenten mot én endepunkt-URL. Agenten får da et lite sett med verktøy for å lese, søke og sende e-post. Det vanskelige er ikke agenten — det er å gjøre dette uten å lekke passordet ditt inn i en prompt, en logg eller et vektorlager. Den siste biten er det denne guiden handler om.
 
 Hvis du bare vil ha den raske veien: koble til en innboks i dashbordet, lim MCP-endepunktet inn i [claude.ai](https://claude.ai), Claude Desktop, Cursor eller din egen agent, og kall \`inbox_list\` først. Resten av dette innlegget forklarer hva som faktisk skjer, hvorfor sikkerhetsmodellen er viktig, og hvordan du kobler opp hver støttede leverandør.
@@ -17,7 +17,7 @@ Det er hele ideen bak [MCP Emails](/). Ett endepunkt, ett sett med verktøy, hvi
 
 Å koble en modell til e-post ser trivielt ut helt til du prøver det på ordentlig. Tre ting biter:
 
-1. **Autentisering er ulik for hver leverandør.** Gmail vil ha OAuth med bestemte scopes. Outlook vil ha Microsoft-identitet. iCloud og Fastmail vil ha et app-spesifikt passord. Hver har sin egen syklus for token-fornyelse og sine egne feilmoduser.
+1. **Autentisering er ulik for hver leverandør.** Outlook og Microsoft 365 vil ha OAuth via Microsoft-identitet. Gmail vil ha et app-passord fra Google, som Google bare lar deg lage når totrinnsbekreftelse er slått på. iCloud og Fastmail vil ha et app-spesifikt passord. Hver har sin egen syklus for token-fornyelse og sine egne feilmoduser.
 2. **Legitimasjon er radioaktiv.** Et innbokspassord som ligger i en chat-transkripsjon eller en loggsetning er et brudd som bare venter på å skje. Du kan ikke la modellen holde hemmeligheten.
 3. **E-post har et dårlig format for agenter.** MIME, tråd-headere, HTML kontra ren tekst, vedlegg, mapper som egentlig er etiketter. Modellen trenger et rent svar, ikke RFC 5322.
 
@@ -29,11 +29,11 @@ Fire designvalg gjør det tunge løftet. De er grunnen til at jeg stoler på det
 
 ### E-post hentes live og lagres aldri
 
-Hvert verktøykall treffer leverandøren din i sanntid: Gmail API, Microsoft Graph eller IMAP/SMTP. Meldingstekster, emnefelt og vedlegg overleveres til agenten og forkastes umiddelbart. Ingenting bufres, indekseres eller lagres. Det eneste som beholdes per innboks er legitimasjonen som trengs for å gjøre neste kall. Vil du ha den lange versjonen av hvorfor dette betyr noe, les [hvorfor "e-post lagres aldri" er viktig](/blog/why-email-never-stored-matters).
+Hvert verktøykall treffer leverandøren din i sanntid: IMAP/SMTP for Gmail, iCloud, Fastmail og resten, eller Microsoft Graph for Outlook. Meldingstekster, emnefelt og vedlegg overleveres til agenten og forkastes umiddelbart. Ingenting bufres, indekseres eller lagres. Det eneste som beholdes per innboks er legitimasjonen som trengs for å gjøre neste kall. Vil du ha den lange versjonen av hvorfor dette betyr noe, les [hvorfor "e-post lagres aldri" er viktig](/blog/why-email-never-stored-matters).
 
 ### Legitimasjon er AES-256-GCM-kryptert i hvile
 
-OAuth-tokenet eller app-passordet for hver innboks krypteres før det skrives til databasen. Dekryptering skjer kun inne i en isolert Edge Function, ved kalltidspunktet, med en nøkkel som lever som en miljøhemmelighet adskilt fra databasen. Så selv en databaselekkasje gir en angriper kryptert tekst, ikke innboksen din.
+App-passordet eller OAuth-tokenet for hver innboks krypteres før det skrives til databasen. Det dekrypteres på serverne våre bare når en forespørsel trenger det, og det sendes aldri til agenten din. Krypteringsnøkkelen oppbevares som en serverhemmelighet, adskilt fra databasen. Så selv en databaselekkasje gir en angriper kryptert tekst, ikke innboksen din.
 
 ### Sending går gjennom din egen leverandør
 
@@ -76,12 +76,11 @@ Du kobler til en innboks én gang i **Dashboard → Inboxes → Connect Inbox**.
 
 ### OAuth-leverandører (logg inn, uten passord)
 
-- **Gmail** — OAuth 2.0 via Google-innlogging.
 - **Outlook / Microsoft 365**: OAuth 2.0 via Logg inn med Microsoft, over Microsoft Graph og ikke IMAP. Personlige Outlook.com-, Hotmail-, Live- og MSN-kontoer kobles til med en gang. Jobb- eller skolekontoer i Microsoft 365 kan trenge at en IT-ansvarlig først godkjenner appen én gang for hele organisasjonen; dashbordet gir deg en lenke du kan sende dem. Oppsettsdetaljer i [koble Outlook og Microsoft 365 til en AI-agent](/blog/connect-outlook-microsoft-365-ai-agent-mcp).
 
 ### App-passord-leverandører
 
-iCloud, Fastmail, Yahoo, Zoho, Yandex og enhver generisk IMAP-innboks kobles til med et app-spesifikt passord i stedet for OAuth. Du genererer passordet i leverandørens sikkerhetsinnstillinger og limer det inn i MCP Emails. iCloud-passord kommer fra appleid.apple.com; Fastmail er **kun app-passord** (lag ett i Fastmail-innstillingene). De kjører alle på samme IMAP/SMTP-transport og deler et identisk funksjonssett. Den fullstendige gjennomgangen ligger i [koble iCloud, Fastmail eller en hvilken som helst IMAP-innboks til Claude](/blog/connect-icloud-fastmail-imap-to-claude).
+Gmail, iCloud, Fastmail, Yahoo, Zoho, Yandex og enhver generisk IMAP-innboks kobles til med et app-spesifikt passord i stedet for OAuth. Du genererer passordet i leverandørens sikkerhetsinnstillinger og limer det inn i MCP Emails. App-passord for Gmail lager du i Google-kontoen din, og Google krever totrinnsbekreftelse før du kan lage et. iCloud-passord kommer fra appleid.apple.com; Fastmail er **kun app-passord** (lag ett i Fastmail-innstillingene). De kjører alle på samme IMAP/SMTP-transport og deler et identisk funksjonssett. Den fullstendige gjennomgangen ligger i [koble iCloud, Fastmail eller en hvilken som helst IMAP-innboks til Claude](/blog/connect-icloud-fastmail-imap-to-claude).
 
 ## Koble til AI-klienten din
 
@@ -108,8 +107,8 @@ Når det gjelder rate-grenser, er hver API-nøkkel begrenset til 100 forespørsl
 Planene prises etter antall tilkoblede innbokser. API-nøkler er ubegrenset på alle nivåer, og nivåene skiller seg ellers på burst-grense, analyselagring, teamfunksjoner og støtte.
 
 - **Gratis, $0 for alltid.** Ingen kort. Én tilkoblet innboks, 60 req/min, 30-dagers analyser, fellesskapsstøtte.
-- **Personal, $9 per måned** (eller $86,40 per år, $7,20 per måned). Opptil tre tilkoblede innbokser, 120 req/min, 30-dagers analyser, e-poststøtte.
-- **Pro, $15 per måned** (eller $144 per år, $12 per måned). Opptil 10 tilkoblede innbokser, 300 req/min, 90-dagers analyser, e-poststøtte.
+- **Personal, $9 per måned** (eller $86,40 per år, $7,20 per måned). Opptil tre tilkoblede innbokser, 120 req/min, 90-dagers analyser, e-poststøtte.
+- **Pro, $15 per måned** (eller $144 per år, $12 per måned). Opptil 10 tilkoblede innbokser, 300 req/min, 2 års analyser, e-poststøtte.
 - **Business, $39 per måned** (eller $374,40 per år, $31,20 per måned). Alt i Pro, pluss 10 postkasser inkludert og $3 per måned for hver ekstra, ubegrenset antall medlemmer med roller, administratorer som godkjenner tilbakeholdte sendinger, et eget arbeidsområde per kunde eller virksomhet, 1 000 req/min.
 
 Full oversikt på [prissiden](/pricing).

@@ -1,12 +1,12 @@
 {
   "meta": {
     "title": "AI Email Agent Security: OAuth, Encryption & Privacy",
-    "description": "Learn how mcpemails protects AI email access: live retrieval instead of email storage, encrypted credentials, scoped and revocable permissions, prompt-injection safeguards, and open-source code."
+    "description": "Learn how MCP Emails protects AI email access: live retrieval instead of email storage, encrypted credentials, scoped and revocable permissions, prompt-injection safeguards, and open-source code."
   },
   "hero": {
     "eyebrow": "Security & trust",
     "title": "You shouldn't have to take my word for it",
-    "lead": "MCPEmails connects an AI agent to your inbox, so it has to earn real trust. This is the honest version: what the service touches, what it keeps, what it can never do, and how you can verify all of it yourself."
+    "lead": "MCP Emails connects an AI agent to your inbox, so it has to earn real trust. This is the honest version: what the service touches, what it keeps, what it can never do, and how you can verify all of it yourself."
   },
   "tldr": {
     "title": "1. The short version",
@@ -38,7 +38,7 @@
       },
       {
         "data": "OAuth token or app password",
-        "accessed": "Decrypted only inside an isolated function at call time",
+        "accessed": "Decrypted on our servers only for the request that needs it",
         "stored": "Yes, encrypted at rest with AES-256-GCM; key held separately"
       },
       {
@@ -52,18 +52,23 @@
         "stored": "Yes, encrypted at rest until sent, then kept as your history"
       },
       {
+        "data": "Sends held for your approval",
+        "accessed": "Held until a reviewer approves or rejects it, or it expires after 24 hours",
+        "stored": "Yes, encrypted at rest, then kept as your approval history"
+      },
+      {
         "data": "Tool-call activity (metadata)",
         "accessed": "Recorded for your own audit log",
         "stored": "Tool name, inbox, timestamp, and status only. No email content"
       }
     ],
-    "outro": "The one deliberate exception is a message you ask the agent to schedule for later. We have to hold it until the send time, so we store it encrypted in the meantime, then keep a record afterwards for your history."
+    "outro": "The deliberate exceptions are outgoing messages that have to wait: a message you ask the agent to schedule for later, and a send held for your approval. We have to hold them until they go out, so we store them encrypted in the meantime, then keep a record afterwards for your history."
   },
   "verify": {
     "title": "3. You don't have to trust me, you can check",
     "p1": "\"A random person vibe-coded this\" is a fair worry for any hosted tool that touches your email. The right answer is not a bigger promise. It is removing the need to take me at my word.",
     "points": [
-      "<b>Read the code.</b> The server that runs MCPEmails is public on GitHub. You can see exactly what it keeps (an encrypted token) and what it doesn't (your mail).",
+      "<b>Read the code.</b> The server that runs MCP Emails is public on GitHub. You can see exactly what it keeps (an encrypted token) and what it doesn't (your mail).",
       "<selfhost><b>Self-host it.</b></selfhost> If you would rather not use the hosted service at all, you can run the same code on your own infrastructure with your own keys: a one-command Docker stack lives in <selfhost>self-host/</selfhost>.",
       "<b>Use a scoped, revocable connection.</b> You connect with OAuth or an app password that grants only mail access, and you can revoke it in one click from your provider, with no involvement from me.",
       "<b>Watch what it does.</b> Every tool call your agent makes is recorded in an activity log you can read, so you can see precisely what was accessed and when."
@@ -95,12 +100,12 @@
   "google": {
     "title": "6. Google, Microsoft and provider verification",
     "p1": "Gmail access uses Google's restricted scopes, the tier Google scrutinises most closely.",
-    "p2": "MCPEmails' use and transfer of information received from Google APIs to any other app adheres to the <link>Google API Services User Data Policy</link>, including the Limited Use requirements.",
+    "p2": "MCP Emails' use and transfer of information received from Google APIs to any other app adheres to the <link>Google API Services User Data Policy</link>, including the Limited Use requirements.",
     "p3": "Outlook and Microsoft 365 access goes through Microsoft Graph, from an app whose publisher is verified by Microsoft, and asks only for a named set of permissions shown on Microsoft's consent screen: Mail.ReadWrite, Mail.Send, offline_access, openid, profile and email. For Fastmail, iCloud, Yahoo, Zoho, Yandex, and other IMAP providers, you connect with a provider-issued app password that you can revoke at any time, with no broad OAuth scopes for us to over-request."
   },
   "subprocessors": {
     "title": "7. Subprocessors",
-    "intro": "We keep the list of companies that touch any data short, and each is bound by a data processing agreement. Note what is absent: no AI provider is on this list. MCPEmails does not send your email to any model of its own. Your agent does that, under your control and its provider's data policy.",
+    "intro": "We keep the list of companies that touch any data short, and each is bound by a data processing agreement. Note what is absent: no AI provider is on this list. MCP Emails does not send your email to any model of its own. Your agent does that, under your control and its provider's data policy.",
     "thProvider": "Provider",
     "thPurpose": "Purpose",
     "thLocation": "Location",
@@ -114,6 +119,11 @@
         "provider": "Vercel",
         "purpose": "Website, dashboard and MCP endpoint hosting",
         "location": "Global CDN; servers in the US (East) and the EU (Stockholm)"
+      },
+      {
+        "provider": "Hetzner",
+        "purpose": "Mail relay for the few providers that refuse connections from cloud addresses (a TLS tunnel: it cannot read mail or passwords)",
+        "location": "Germany (EU)"
       },
       {
         "provider": "Stripe",
@@ -146,8 +156,8 @@
   },
   "operator": {
     "title": "Who runs this",
-    "p1": "One person: me. I'm Asgeir Albretsen, and I run MCPEmails through Albretsen AS, a Norwegian private limited company (aksjeselskap) that I own, organisation number 938 702 373, based in Bergen, Norway. The commits are mine too, under <gh>github.com/Albretsen</gh>, so the name on this page and the name on the code are the same one. There is more detail on the <about>about page</about>, and the full legal identification is in the <terms>terms</terms>.",
-    "p2": "Everything resting on one person is a real risk, and the answer is not a promise that I will always be here. MCPEmails is public under AGPL-3.0 and the hosted service runs that same code, so if I stop, or you simply stop trusting me, you can clone the repository and run it on your own infrastructure with your own keys. <selfhostpage>The self-hosting guide</selfhostpage> is the whole procedure. I would rather be a named person you can reach and can leave than an anonymous vendor you can only trust.",
+    "p1": "One person: me. I'm Asgeir Albretsen, and I run MCP Emails through Albretsen AS, a Norwegian private limited company (aksjeselskap) that I own, organisation number 938 702 373, based in Bergen, Norway. The commits are mine too, under <gh>github.com/Albretsen</gh>, so the name on this page and the name on the code are the same one. There is more detail on the <about>about page</about>, and the full legal identification is in the <terms>terms</terms>.",
+    "p2": "Everything resting on one person is a real risk, and the answer is not a promise that I will always be here. MCP Emails is public under AGPL-3.0 and the hosted service runs that same code, so if I stop, or you simply stop trusting me, you can clone the repository and run it on your own infrastructure with your own keys. <selfhostpage>The self-hosting guide</selfhostpage> is the whole procedure. I would rather be a named person you can reach and can leave than an anonymous vendor you can only trust.",
     "p3": "Support and security mail does not go through a queue. It comes to me, and I answer every message myself."
   }
 }

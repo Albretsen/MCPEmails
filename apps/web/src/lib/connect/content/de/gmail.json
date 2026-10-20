@@ -49,12 +49,12 @@
       "p": "Google hat offizielle MCP-Unterstützung für seine Dienste angekündigt, darunter einen Workspace MCP-Server, der Gmail zusammen mit Drive, Calendar und Chat abdeckt. Das wollen wir nicht verschweigen. Wenn Gmail das einzige Postfach ist, auf das ein Assistent zugreifen soll, und Ihr Client mit Googles Server spricht, nutzen Sie ihn. Der Grund, MCP Emails stattdessen mit Gmail zu verbinden: Derselbe Server hält auch Ihr iCloud-, Fastmail-, Zoho-, Yahoo- oder Firmen-IMAP-Postfach, stellt alle über <b>eine</b> MCP-URL bereit und verhält sich in Claude, Cursor und ChatGPT gleich. Ein eigener Konnektor pro Anbieter, jeder mit eigener Anmeldung und eigenen Tool-Namen, entfällt damit."
     },
     {
-      "h": "Bei einem geschäftlichen Gmail kann Ihr Workspace-Administrator die Google-Anmeldung sperren",
-      "p": "Das betrifft nur die Anmeldung mit Google, nicht das App-Passwort. Google Workspace-Administratoren steuern den API-Zugriff von Drittanbietern in der Admin-Konsole im Bereich Sicherheit, unter den API-Einstellungen zum App-Zugriff. Ein Administrator kann alle Drittanbieter-Apps komplett sperren oder eine App nur für bestimmte OAuth-Bereiche zulassen. Ist das aktiv, lehnt Google schon auf dem eigenen Zustimmungsbildschirm mit <code>Error 400: admin_policy_enforced</code> ab, und die Anfrage erreicht uns nie. Wir können das nicht umgehen: Ein Administrator muss die App für die Gmail-Bereiche freigeben. Private Konten mit <code>@gmail.com</code> haben keine solche Richtlinie und sind nicht betroffen."
+      "h": "Für das Senden von einer anderen Adresse braucht es eine bestätigte Senden-als-Adresse",
+      "p": "Ein Postfach, das mit einem App-Passwort verbunden ist, sendet von seiner eigenen Adresse. Soll Ihr Agent von einem Alias oder einer anderen Adresse senden, die Ihnen gehört, fügen Sie diese in den Postfach-Einstellungen von MCP Emails unter <b>Senden-als-Adressen</b> hinzu. Wir senden an diese Adresse einen 6-stelligen Code, und sobald Sie ihn eingeben, ist sie nutzbar. Auch Gmail muss die Adresse akzeptieren, richten Sie sie also zuerst in Gmail als <b>Senden als</b>-Adresse ein. Eine Absenderadresse, die weder die eigene Adresse des Postfachs noch bestätigt ist, wird abgelehnt und nicht stillschweigend umgeschrieben."
     },
     {
       "h": "Gmail kennt Labels statt Ordner, deshalb ist Verschieben kein echtes Verschieben",
-      "p": "Gmail speichert Labels, keine Ordner. Über IMAP erscheint jedes Label als Ordner, und die Google-Anmeldung arbeitet direkt mit den Labels. In beiden Fällen kann eine Nachricht mehrere Labels tragen und in mehreren Ordnern auftauchen. Verschieben heißt, ein Label hinzuzufügen und ein anderes zu entfernen, und Archivieren heißt einfach, <code>INBOX</code> zu entfernen. Löschen legt die Nachricht in Gmails Papierkorb, statt sie zu vernichten. Soll ein Agent E-Mails in einen Ordner ablegen, den es noch nicht gibt, muss das Label zuerst erstellt werden. Es erscheint danach in Gmail auf jedem Gerät."
+      "p": "Gmail speichert Labels, keine Ordner. Über IMAP erscheint jedes Label als Ordner, deshalb kann eine Nachricht mehrere Labels tragen und in mehreren Ordnern auftauchen. Verschieben heißt, ein Label hinzuzufügen und ein anderes zu entfernen, und Archivieren heißt einfach, <code>INBOX</code> zu entfernen. Löschen legt die Nachricht in Gmails Papierkorb, statt sie zu vernichten. Soll ein Agent E-Mails in einen Ordner ablegen, den es noch nicht gibt, muss das Label zuerst erstellt werden. Es erscheint danach in Gmail auf jedem Gerät."
     },
     {
       "h": "Ein Google Workspace-Administrator kann App-Passwörter abschalten",
@@ -62,9 +62,9 @@
     }
   ],
   "limits": [
-    "In beiden Fällen greift MCP Emails nur auf E-Mails zu: Ein App-Passwort wird ausschließlich für IMAP und SMTP genutzt, und die Google-Anmeldung fordert nur die Gmail-Bereiche für Lesen, Senden, Ändern und grundlegende Einstellungen an. Drive, Calendar, Chat und Docs bleiben unberührt.",
-    "Ein Google Workspace-Administrator kann beide Wege in der Admin-Konsole schließen: App-Passwörter lassen sich für die Domain abschalten, und der API-Zugriff von Drittanbietern lässt sich für die Google-Anmeldung sperren. Nur ein Administrator kann diese Entscheidungen ändern.",
-    "Löschen verschiebt eine Nachricht in Gmails Papierkorb. Endgültig gelöscht wird in Gmail selbst."
+    "MCP Emails greift nur auf E-Mails zu: Ein App-Passwort wird ausschließlich für IMAP und SMTP genutzt. Drive, Calendar, Chat und Docs bleiben unberührt.",
+    "Ein Google Workspace-Administrator kann App-Passwörter für die Domain in der Admin-Konsole abschalten. Nur ein Administrator kann diese Entscheidung ändern.",
+    "Löschen verschiebt eine Nachricht in Gmails Papierkorb. Ein endgültiges Löschen folgt Gmails IMAP-Einstellungen: Standardmäßig entfernt es nur das Label, aus dem die Nachricht gelöscht wurde, und ein Expunge aus dem Papierkorb löscht sie endgültig."
   ],
   "faq": [
     {
@@ -77,19 +77,19 @@
     },
     {
       "q": "Brauche ich für Gmail ein App-Passwort?",
-      "a": "Ja. Gmail verbindet sich über IMAP und SMTP mit einem Google App-Passwort, nicht mit Ihrem normalen Google-Passwort. Google zeigt App-Passwörter nur bei Konten mit aktivierter Bestätigung in zwei Schritten an. Schalten Sie diese zuerst ein und erstellen Sie dann ein App-Passwort unter myaccount.google.com/apppasswords. Das dauert etwa eine Minute. Die Anmeldung mit Google gibt es weiterhin als Alternative, sie zeigt aber eine Warnung zu einer nicht verifizierten App, die Sie wegklicken müssen."
+      "a": "Ja. Gmail verbindet sich über IMAP und SMTP mit einem Google App-Passwort, nicht mit Ihrem normalen Google-Passwort. Google zeigt App-Passwörter nur bei Konten mit aktivierter Bestätigung in zwei Schritten an. Schalten Sie diese zuerst ein und erstellen Sie dann ein App-Passwort unter myaccount.google.com/apppasswords. Das dauert etwa eine Minute."
     },
     {
-      "q": "Warum lehnt Google die Google-Anmeldung bei meinem Arbeitskonto ab?",
-      "a": "Fast immer wegen einer Administrator-Richtlinie. Google Workspace-Administratoren legen in der Admin-Konsole unter Sicherheit fest, welche Drittanbieter-Apps Gmail-Bereiche nutzen dürfen. Ist die App nicht zugelassen, stoppt Google den Ablauf mit Error 400: admin_policy_enforced, bevor uns irgendetwas erreicht. Ihr Administrator muss die App freigeben, oder Sie verbinden sich stattdessen mit einem App-Passwort, sofern Ihre Domain das erlaubt. Ein privates Gmail-Konto ist davon nicht betroffen."
+      "q": "Warum kann ich bei meinem Arbeitskonto kein App-Passwort erstellen?",
+      "a": "Google bietet App-Passwörter nur bei Konten mit aktivierter Bestätigung in zwei Schritten an, prüfen Sie das also zuerst. Bei einem Google Workspace-Konto kann ein Administrator App-Passwörter außerdem für die gesamte Domain abschalten. Dann bleibt myaccount.google.com/apppasswords nicht verfügbar, egal was Sie im Postfach einstellen. Nur Ihr Administrator kann das ändern. Ein privates Gmail-Konto braucht nur die Bestätigung in zwei Schritten."
     },
     {
       "q": "Funktioniert es mit einer eigenen Domain in Google Workspace?",
-      "a": "Ja. Ein Workspace-Postfach mit eigener Domain verbindet sich per App-Passwort genau wie eine gmail.com-Adresse und verhält sich danach identisch. Einzige Bedingung ist die Administrator-Richtlinie: Die Domain muss App-Passwörter erlauben, oder bei der Google-Anmeldung muss der API-Zugriff von Drittanbietern für das Konto zugelassen sein. Sonst sperrt Google den Zustimmungsbildschirm."
+      "a": "Ja. Ein Workspace-Postfach mit eigener Domain verbindet sich per App-Passwort genau wie eine gmail.com-Adresse und verhält sich danach identisch. Einzige Bedingung ist die Administrator-Richtlinie: Die Domain muss App-Passwörter und IMAP-Zugriff erlauben."
     },
     {
       "q": "Wird mein Gmail auf Ihren Servern gespeichert?",
-      "a": "Nein. Nachrichten werden bei jeder Anfrage live von Google abgerufen und an Ihren KI-Client übergeben. Ihr App-Passwort, oder das OAuth-Token bei der Google-Anmeldung, wird verschlüsselt gespeichert, und Nachrichteninhalte werden nicht aufbewahrt. Wenn Sie das App-Passwort oder den Zugriff in Ihrem Google-Konto widerrufen oder das Postfach in MCP Emails löschen, endet die Verbindung sofort."
+      "a": "Nein. Nachrichten werden bei jeder Anfrage live von Google abgerufen und an Ihren KI-Client übergeben. Ihr App-Passwort wird verschlüsselt gespeichert, und Nachrichteninhalte werden nicht aufbewahrt. Wenn Sie das App-Passwort in Ihrem Google-Konto widerrufen oder das Postfach in MCP Emails löschen, endet die Verbindung sofort."
     }
   ],
   "ctaBand": {

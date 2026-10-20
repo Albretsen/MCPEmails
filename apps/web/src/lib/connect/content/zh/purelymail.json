@@ -24,7 +24,7 @@
     "titleLine1": "将 Purelymail 连接到 Claude，",
     "titleLine2": "以及 Cursor、ChatGPT、任意 MCP 客户端",
     "lead": "为你的 AI 代理接入一个真正的 Purelymail 收件箱。用邮箱自己的密码通过 IMAP 读取、搜索、发送、回复、定时与整理邮件，可在所有 MCP 客户端中使用，而不止一个。",
-    "answer": "Claude 无法自行连接 Purelymail。mcpemails 是一个托管 MCP 服务器，通过 IMAP 连接 imap.purelymail.com 的 993 端口，让 Claude、Cursor 或任意 MCP 客户端都能读取、搜索、发送并整理邮件。Purelymail 没有需要寻找的 IMAP 开关：你用邮箱的完整地址和该邮箱自己的密码认证；如果该邮箱开启了双重认证，则使用应用密码。一个收件箱永久免费。",
+    "answer": "Claude 无法自行连接 Purelymail。MCP Emails 是一个托管 MCP 服务器，通过 IMAP 连接 imap.purelymail.com 的 993 端口，让 Claude、Cursor 或任意 MCP 客户端都能读取、搜索、发送并整理邮件。Purelymail 没有需要寻找的 IMAP 开关：你用邮箱的完整地址和该邮箱自己的密码认证；如果该邮箱开启了双重认证，则使用应用密码。一个收件箱永久免费。",
     "meta0": "1 个收件箱永久免费",
     "meta1": "邮箱密码，或应用密码",
     "meta2": "邮件实时获取，绝不存储"
@@ -35,7 +35,7 @@
   },
   "setup": [
     {
-      "h": "创建免费 mcpemails 账户",
+      "h": "创建免费 MCP Emails 账户",
       "p": "在 mcpemails.com 注册。无需信用卡，免费套餐可一直连接一个收件箱。"
     },
     {
@@ -44,7 +44,7 @@
     },
     {
       "h": "如果该用户开启了两步验证，添加应用密码，然后连接",
-      "p": "如果该用户开启了多重身份验证，打开该用户，滚动到 <b>App Passwords</b>，点击 <b>Add New</b>，命名后复制该代码。Purelymail 只显示一次。然后在 mcpemails 中选择 IMAP / SMTP，输入完整地址和该密码。上方的服务器已自动填好。"
+      "p": "如果该用户开启了多重身份验证，打开该用户，滚动到 <b>App Passwords</b>，点击 <b>Add New</b>，命名后复制该代码。Purelymail 只显示一次。然后在 MCP Emails 中选择 IMAP / SMTP，输入完整地址和该密码。上方的服务器已自动填好。"
     },
     {
       "h": "将 MCP URL 粘贴到你的 AI",
@@ -72,7 +72,7 @@
   "faq": [
     {
       "q": "Claude 能用 Purelymail 吗？",
-      "a": "不能直接使用。Claude 没有内置的 Purelymail 连接器，也无法自行打开 IMAP 会话。将 mcpemails 这样的 MCP 服务器连接到你的 Purelymail 邮箱后，Claude 就能读取、搜索、发送、回复、定时和整理其中的邮件，同一个连接也可在 Cursor、ChatGPT 和任何其他 MCP 客户端中使用，而不局限于一个应用。"
+      "a": "不能直接使用。Claude 没有内置的 Purelymail 连接器，也无法自行打开 IMAP 会话。将 MCP Emails 这样的 MCP 服务器连接到你的 Purelymail 邮箱后，Claude 就能读取、搜索、发送、回复、定时和整理其中的邮件，同一个连接也可在 Cursor、ChatGPT 和任何其他 MCP 客户端中使用，而不局限于一个应用。"
     },
     {
       "q": "Purelymail 的 IMAP 和 SMTP 设置是什么？",

@@ -26,7 +26,7 @@
     "meta0": "First mailbox free, plans for the rest",
     "meta1": "Your mailbox password, no OAuth setup",
     "meta2": "Email fetched live, never stored",
-    "answer": "Claude cannot reach IONOS on its own. mcpemails is a hosted MCP server that connects it over IMAP using your mailbox password, so Claude, Cursor or any MCP client can read, search, send and organize that mail. Setup takes a couple of minutes. Each company address, such as info@ or sales@, connects as its own mailbox: one mailbox is free, Personal connects three, Pro up to 10, and Business as many as you need."
+    "answer": "Claude cannot reach IONOS on its own. MCP Emails is a hosted MCP server that connects it over IMAP using your mailbox password, so Claude, Cursor or any MCP client can read, search, send and organize that mail. Setup takes a couple of minutes. Each company address, such as info@ or sales@, connects as its own mailbox: one mailbox is free, Personal connects three, Pro up to 10, and Business as many as you need."
   },
   "persona": {
     "intro": "Several company mailboxes at IONOS?",
@@ -40,14 +40,14 @@
   "setup": [
     {
       "h": "Create a free account",
-      "p": "Sign up for mcpemails, no card required. The free plan connects one inbox, forever."
+      "p": "Sign up for MCP Emails, no card required. The free plan connects one inbox, forever."
     },
     {
       "h": "Get your IONOS mailbox password",
       "p": "In the IONOS control panel, open Email, pick the address and set or reset its password. It is not the password you use to sign in to IONOS itself."
     },
     {
-      "h": "Paste it into mcpemails",
+      "h": "Paste it into MCP Emails",
       "p": "Choose IMAP / SMTP and add your IONOS address and the mailbox password. The hosts shown above are the ionos.com ones: for a mailbox from ionos.de, use imap.ionos.de and smtp.ionos.de instead, and for ionos.co.uk the .co.uk names."
     },
     {
@@ -75,12 +75,12 @@
   ],
   "limits": [
     "Microsoft 365 mailboxes bought through IONOS are not on imap.ionos.com. Connect them with Outlook (Sign in with Microsoft); an IT admin may need to approve the app once.",
-    "mcpemails connects a mailbox. IONOS aliases, forwarders, catch-all rules and spam settings stay in the IONOS control panel and are not visible to your AI client."
+    "MCP Emails connects a mailbox. IONOS aliases, forwarders, catch-all rules and spam settings stay in the IONOS control panel and are not visible to your AI client."
   ],
   "faq": [
     {
       "q": "Does Claude work with IONOS email?",
-      "a": "It works with an IONOS mailbox, the kind served by imap.ionos.com, once an MCP server such as mcpemails is connected to it over IMAP. Claude has no built-in IONOS connector. A Microsoft 365 mailbox bought through IONOS works too, but it connects with Outlook (Sign in with Microsoft) rather than IMAP, and an IT admin may need to approve MCP Emails once first."
+      "a": "It works with an IONOS mailbox, the kind served by imap.ionos.com, once an MCP server such as MCP Emails is connected to it over IMAP. Claude has no built-in IONOS connector. A Microsoft 365 mailbox bought through IONOS works too, but it connects with Outlook (Sign in with Microsoft) rather than IMAP, and an IT admin may need to approve MCP Emails once first."
     },
     {
       "q": "What are the IONOS IMAP and SMTP settings?",

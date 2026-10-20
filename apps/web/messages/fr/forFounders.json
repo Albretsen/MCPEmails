@@ -7,7 +7,7 @@
     "eyebrow": "Conçu pour les fondateurs",
     "titleLine1": "Répondez à chaque client",
     "titleLine2": "depuis votre IA",
-    "lead": "Vous êtes à la fois l'équipe support, l'équipe commerciale et le fondateur. mcpemails connecte votre boîte de réception à Claude pour que vous puissiez trier, rédiger des réponses avec votre propre voix, envoyer et planifier des relances sans quitter la conversation. Notre utilisateur le plus actif fait exactement cela, chaque jour.",
+    "lead": "Vous êtes à la fois l'équipe support, l'équipe commerciale et le fondateur. MCP Emails connecte votre boîte de réception à Claude pour que vous puissiez trier, rédiger des réponses avec votre propre voix, envoyer et planifier des relances sans quitter la conversation. Notre utilisateur le plus actif fait exactement cela, chaque jour.",
     "ctaPrimary": "Connectez votre boîte gratuitement",
     "ctaSecondary": "Voir comment ça marche"
   },
@@ -49,7 +49,7 @@
   "does": {
     "eyebrow": "Ce qu'il fait vraiment",
     "title": "Une vraie boîte de réception, pas un simple aperçu en lecture seule",
-    "sub": "Dix-sept outils orientés action que votre agent peut utiliser de bout en bout.",
+    "sub": "Dix-neuf outils orientés action que votre agent peut utiliser de bout en bout.",
     "items": {
       "read": {
         "h": "Lire et chercher",
@@ -70,13 +70,13 @@
     }
   },
   "proof": {
-    "quote": "Le fondateur qui utilise mcpemails le plus ouvre Claude chaque matin, vide la file des clients et a fini avant son café. C'est tout l'argumentaire.",
+    "quote": "Le fondateur qui utilise MCP Emails le plus ouvre Claude chaque matin, vide la file des clients et a fini avant son café. C'est tout l'argumentaire.",
     "label": "Notre workflow le plus actif, en une ligne"
   },
   "providers": {
     "eyebrow": "N'importe quelle boîte, n'importe quelle IA",
     "title": "Connectez la boîte depuis laquelle vous gérez déjà votre support",
-    "sub": "Outlook via la connexion Microsoft, Gmail via un mot de passe d'application ou la connexion Google, le reste via un mot de passe d'application. La même boîte fonctionne ensuite dans Claude, Cursor, VS Code, ChatGPT et tout client MCP, pour que vous ne soyez jamais enfermé dans une seule application.",
+    "sub": "Outlook via la connexion Microsoft, Gmail via un mot de passe d'application Google, le reste via un mot de passe d'application. La même boîte fonctionne ensuite dans Claude, Cursor, VS Code, ChatGPT et tout client MCP, pour que vous ne soyez jamais enfermé dans une seule application.",
     "ctaGmail": "Connecter Gmail",
     "ctaOutlook": "Connecter Outlook",
     "ctaFastmail": "Connecter Fastmail",
@@ -89,7 +89,7 @@
     "items": [
       {
         "q": "Je suis un fondateur solo qui gère son propre support. N'est-ce pas surdimensionné ?",
-        "a": "C'est tout le contraire. Moins vous êtes nombreux, plus un retard de support fait mal. mcpemails transforme les réponses aux clients en un passage quotidien rapide dans Claude au lieu d'une heure de changements de contexte, et c'est gratuit pour démarrer, sans carte bancaire."
+        "a": "C'est tout le contraire. Moins vous êtes nombreux, plus un retard de support fait mal. MCP Emails transforme les réponses aux clients en un passage quotidien rapide dans Claude au lieu d'une heure de changements de contexte, et c'est gratuit pour démarrer, sans carte bancaire."
       },
       {
         "q": "Les réponses auront-elles l'air génériques ?",

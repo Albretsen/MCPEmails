@@ -82,3 +82,34 @@ test('an unsellable plan degrades to plain /pricing rather than a dead query', (
   assert.equal(pricingCompareHref('enterprise', true), '/pricing');
   assert.equal(pricingCompareHref(undefined, false), '/pricing');
 });
+
+test('the buyer language rides on the checkout link, and English links are unchanged', () => {
+  // German is the one language that changes the hosted page (the button reads
+  // "Zahlungspflichtig abonnieren"); the route allow-lists it, so the link
+  // just reports what the buyer was reading.
+  assert.equal(
+    checkoutStartHref('personal', true, 'de'),
+    '/api/stripe/checkout/start?plan=personal&interval=year&lang=de',
+  );
+  assert.equal(
+    checkoutStartHref('solo', false, 'nb'),
+    '/api/stripe/checkout/start?plan=solo&interval=month&lang=nb',
+  );
+  for (const locale of [undefined, null, 'en', 'xx', 'DE', '<script>']) {
+    assert.equal(
+      checkoutStartHref('pro', false, locale),
+      '/api/stripe/checkout/start?plan=pro&interval=month',
+      String(locale),
+    );
+  }
+});
+
+test('a signed-out German buyer keeps the language inside the post-signup destination', () => {
+  // Signup stores the language in the browser, which the checkout route
+  // cannot read, so it has to be in the redirect itself.
+  const href = pricingUpgradeHref('solo', true, false, 'de');
+  const redirect = new URL(href, 'https://mcpemails.test').searchParams.get('redirect');
+  assert.equal(redirect, '/api/stripe/checkout/start?plan=solo&interval=year&lang=de');
+  assert.equal(pricingUpgradeHref('solo', true, true, 'de'), redirect);
+  assert.equal(pricingUpgradeHref('solo', true, true, 'en'), checkoutStartHref('solo', true));
+});

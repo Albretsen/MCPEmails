@@ -7,7 +7,7 @@
     "eyebrow": "For den som tar seg av firmaets e-post",
     "titleLine1": "Alle firmaets postkasser,",
     "titleLine2": "én person, én agent",
-    "lead": "post@, salg@, faktura@, support@ og din egen adresse havner som regel hos den samme personen. mcpemails kobler alle sammen til Claude, Cursor, ChatGPT eller en annen MCP-klient, så du kan lese, svare, videresende og rydde i hver adresse fra én samtale. Det fungerer uansett hvem som drifter e-posten, og du kan holde tilbake hver utgående melding til du har godkjent den.",
+    "lead": "post@, salg@, faktura@, support@ og din egen adresse havner som regel hos den samme personen. MCP Emails kobler alle sammen til Claude, Cursor, ChatGPT eller en annen MCP-klient, så du kan lese, svare, videresende og rydde i hver adresse fra én samtale. Det fungerer uansett hvem som drifter e-posten, og du kan holde tilbake hver utgående melding til du har godkjent den.",
     "ctaPrimary": "Koble til den første postkassen gratis",
     "ctaSecondary": "Se hva den gjør"
   },
@@ -96,7 +96,7 @@
   "providers": {
     "eyebrow": "Enhver vert",
     "title": "Koble til alle postkassene firmaet har, uansett hvem som drifter dem",
-    "sub": "Det meste av firma-e-post ligger hos webhotellet eller domeneregistraren, og det er helt greit. Enhver postkasse som snakker IMAP og SMTP på standardportene, kobles til med adresse, vert og passord. IONOS, Hostinger, OVH, Namecheap og andre vanlige verter gjenkjennes ut fra adressen og fylles ut for deg. Gmail og Google Workspace kobles til med et app-passord eller ved å logge inn med Google. Microsoft 365 og Outlook kobles til ved å logge inn med Microsoft; på en Microsoft 365-konto i firmaet kan IT-administratoren måtte godkjenne mcpemails én gang for hele organisasjonen. iCloud, Fastmail, Yahoo, Zoho og Yandex kobles til med et app-passord.",
+    "sub": "Det meste av firma-e-post ligger hos webhotellet eller domeneregistraren, og det er helt greit. Enhver postkasse som snakker IMAP og SMTP på standardportene, kobles til med adresse, vert og passord. IONOS, Hostinger, OVH, Namecheap og andre vanlige verter gjenkjennes ut fra adressen og fylles ut for deg. Gmail og Google Workspace kobles til med et Google-app-passord. Microsoft 365 og Outlook kobles til ved å logge inn med Microsoft; på en Microsoft 365-konto i firmaet kan IT-administratoren måtte godkjenne MCP Emails én gang for hele organisasjonen. iCloud, Fastmail, Yahoo, Zoho og Yandex kobles til med et app-passord.",
     "ctaImap": "Koble til enhver IMAP-postkasse",
     "ctaGmail": "Koble til Gmail eller Google Workspace",
     "ctaMicrosoft": "Koble til Microsoft 365",
@@ -135,7 +135,7 @@
       },
       {
         "q": "E-posten vår ligger hos webhotellet, ikke Gmail. Vil det fungere?",
-        "a": "Nesten helt sikkert. Enhver postkasse som snakker IMAP og SMTP på standardportene, kobles til med adresse, vert og passord, og vanlige verter gjenkjennes ut fra adressen slik at innstillingene fyller seg ut selv. Serveren må være tilgjengelig fra det åpne internett, og en postkasse som bare godtar OAuth-innlogging over IMAP, kan ikke kobles til på denne måten. Ligger firmaets e-post i Microsoft 365, kobler du den heller til som Outlook: du logger inn med Microsoft, og IT-administratoren kan måtte godkjenne mcpemails én gang for hele organisasjonen."
+        "a": "Nesten helt sikkert. Enhver postkasse som snakker IMAP og SMTP på standardportene, kobles til med adresse, vert og passord, og vanlige verter gjenkjennes ut fra adressen slik at innstillingene fyller seg ut selv. Serveren må være tilgjengelig fra det åpne internett, og en postkasse som bare godtar OAuth-innlogging over IMAP, kan ikke kobles til på denne måten. Ligger firmaets e-post i Microsoft 365, kobler du den heller til som Outlook: du logger inn med Microsoft, og IT-administratoren kan måtte godkjenne MCP Emails én gang for hele organisasjonen."
       },
       {
         "q": "Sender agenten fra riktig adresse?",

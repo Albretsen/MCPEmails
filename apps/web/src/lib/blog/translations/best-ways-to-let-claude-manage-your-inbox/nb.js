@@ -1,7 +1,7 @@
 const translation = {
   title: 'De beste måtene å la Claude styre innboksen din på i 2026',
   description: 'En ærlig gjennomgang av de beste måtene å la Claude styre innboksen din på i 2026: native integrasjoner, egne MCP-servere, kopier-og-lim-inn, nettleserutvidelser og hostet MCP.',
-  coverAlt: 'De beste måtene å la Claude styre innboksen din på i 2026 — MCPEmails',
+  coverAlt: 'De beste måtene å la Claude styre innboksen din på i 2026 — MCP Emails',
   content: `Hvis du vil at Claude faktisk skal lese, sortere og svare på e-posten din, har du fem reelle alternativer i 2026: en hostet MCP-e-postserver, en egen MCP-server du kjører selv, å kopiere og lime inn tråder i chatten, en nettleserutvidelse, eller en native klientintegrasjon. For de fleste er en hostet MCP-server det riktige valget, fordi den fungerer på sekunder og aldri lagrer e-posten din. Resten har hver sin nisje, og et par av dem er dårligere enn de ser ut.
 
 Dette er en gjennomgang, ikke en reklame. Jeg går gjennom hver tilnærming, hvor den skinner, hvor den faller fra hverandre, og hvilken jeg ville valgt i hvilken situasjon. Vil du ha hele bakgrunnen for hva som skjer under panseret, start med hovedguiden: [hvordan gi AI-agenten din tilgang til e-post](/blog/how-to-give-your-ai-agent-email-access).
@@ -19,9 +19,9 @@ Hold disse fire opp mot hvert alternativ. Forskjellene blir raskt tydelige.
 
 ## Alternativ 1: En hostet MCP-e-postserver
 
-Dette er [Model Context Protocol](https://modelcontextprotocol.io)-tilnærmingen, driftet for deg. Du kobler til innboksen din én gang i et dashbord, limer inn én endepunkt-URL i Claude, og agenten får et ryddig sett med e-postverktøy. Claude kaller dem som ethvert annet verktøy: \`inbox_list\` for å se kontoene dine, \`email_read\` for å liste, lese eller søke i meldinger, \`email_compose\` for å sende, svare eller videresende, pluss \`email_organize\`, \`folder\`, \`draft\`, \`schedule\` og \`contact_search\` for flagg, mapper, utkast, planlegging og kontakter — åtte verktøy til sammen, hvert med en \`action\`-parameter som velger operasjonen.
+Dette er [Model Context Protocol](https://modelcontextprotocol.io)-tilnærmingen, driftet for deg. Du kobler til innboksen din én gang i et dashbord, limer inn én endepunkt-URL i Claude, og agenten får et ryddig sett med e-postverktøy. Claude kaller dem som ethvert annet verktøy: \`inbox_list\` for å se kontoene dine, \`email_read\` for å liste, lese eller søke i meldinger, \`email_compose\` for å sende, svare eller videresende, pluss \`email_organize\`, \`folder\`, \`draft\`, \`schedule\` og \`contact_search\` for flagg, mapper, utkast, planlegging og kontakter. Dette er kjernen av de 19 verktøyene, og de fleste velger operasjonen med en \`action\`-parameter.
 
-MCP Emails er den jeg bygger, så ta anbefalingen med det i bakhodet — men det er arkitekturen som gjør at den vinner for de fleste, ikke markedsføringen. Hvert verktøykall treffer leverandøren din live (Gmail API, Microsoft Graph eller IMAP/SMTP), gir meldingen til Claude, og forkaster den. **E-postteksten lagres aldri.** Det eneste som lagres per innboks er et kryptert OAuth-token eller app-passord, AES-256-GCM-kryptert i ro, dekryptert kun inne i en isolert edge-funksjon i det øyeblikket kallet skjer. Vil du ha den lange versjonen av hvorfor det er viktig, les [hvorfor «e-post lagres aldri» er viktig](/blog/why-email-never-stored-matters).
+MCP Emails er den jeg bygger, så ta anbefalingen med det i bakhodet, men det er arkitekturen som gjør at den vinner for de fleste, ikke markedsføringen. Hvert verktøykall treffer leverandøren din live (IMAP/SMTP for Gmail og de fleste leverandører, Microsoft Graph for Outlook), gir meldingen til Claude, og forkaster den. **E-postteksten lagres aldri.** Det eneste som lagres per innboks er et kryptert OAuth-token eller app-passord, AES-256-GCM-kryptert i ro, dekryptert på våre servere bare når en forespørsel trenger det, og aldri sendt til Claude. Vil du ha den lange versjonen av hvorfor det er viktig, les [hvorfor «e-post lagres aldri» er viktig](/blog/why-email-never-stored-matters).
 
 Oppsettet er virkelig kjapt. I claude.ai går du til **Customize → Connectors → Add connector**, limer inn \`https://www.mcpemails.com/api/mcp\`, klikker Connect, logger inn på MCP Emails-kontoen din, og godkjenner tilgangene du vil ha (\`read:email\`, \`send:email\`, eller begge). Ingen API-nøkkel, ingen SDK, ingen konfigurasjonsfil. Det finnes en [tominutters tilkoblingsguide](/blog/connect-email-to-ai-agent-under-2-minutes) hvis du vil ha det klikk for klikk. Den [komplette guiden til å koble Claude til e-posten din](/blog/connect-claude-to-email) går deretter gjennom hver leverandør for seg.
 
@@ -75,7 +75,7 @@ Her er min klare mening.
 
 **Hopp over nettleserutvidelsen** med mindre du lever i Gmail på nett og har lest datapolicyen nøye. **Hopp over native integrasjoner** med mindre din allerede leverer funksjonen og du er en person med én klient og én leverandør.
 
-En siste ting som skiller de seriøse alternativene fra lekene: sending. Med MCP Emails går \`email_compose\` (action send eller reply) gjennom din egen leverandør — Gmail API, Microsoft Graph eller din SMTP — slik at domeneomdømmet ditt forblir ditt og tråde-headere settes automatisk. E-post som videresendes fra et annet domene, er et leveringsproblem som bare venter på å skje.
+En siste ting som skiller de seriøse alternativene fra lekene: sending. Med MCP Emails går \`email_compose\` (action send eller reply) gjennom din egen leverandør (Gmails SMTP, Microsoft Graph eller leverandørens SMTP), slik at domeneomdømmet ditt forblir ditt og tråde-headere settes automatisk. E-post som videresendes fra et annet domene, er et leveringsproblem som bare venter på å skje.
 
 ## Kom i gang
 

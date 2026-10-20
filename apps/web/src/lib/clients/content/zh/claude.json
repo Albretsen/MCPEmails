@@ -14,11 +14,11 @@
     "eyebrow": "Claude + 邮件",
     "titleLine1": "把你的收件箱连接到 Claude",
     "titleLine2": "作为自定义连接器",
-    "lead": "Claude 没有自己的邮件客户端。mcpemails 就是为它提供邮件能力的托管 MCP 服务器：在 claude.ai 或 Claude Desktop 中读取、搜索、发送、回复、转发、定时发送和整理真实邮件。",
+    "lead": "Claude 没有自己的邮件客户端。MCP Emails 就是为它提供邮件能力的托管 MCP 服务器：在 claude.ai 或 Claude Desktop 中读取、搜索、发送、回复、转发、定时发送和整理真实邮件。",
     "meta0": "1 个收件箱永久免费",
     "meta1": "OAuth，无需 API 密钥",
     "meta2": "邮件实时获取，从不存储",
-    "answer": "在 Claude 中把 https://mcpemails.com/api/mcp 添加为自定义连接器，点击 Connect，然后用你的 mcpemails 账户登录。Claude 会自动注册，并申请你批准的权限范围。不需要创建 API 密钥，也不需要编辑配置文件。"
+    "answer": "在 Claude 中把 https://mcpemails.com/api/mcp 添加为自定义连接器，点击 Connect，然后用你的 MCP Emails 账户登录。Claude 会自动注册，并申请你批准的权限范围。不需要创建 API 密钥，也不需要编辑配置文件。"
   },
   "method": {
     "title": "Claude 如何连接：OAuth，无需 API 密钥",
@@ -27,7 +27,7 @@
   "setup": [
     {
       "h": "创建免费账户并连接邮箱",
-      "p": "在 mcpemails.com 注册，无需绑卡，然后前往 Dashboard、Inboxes、Connect Inbox。Outlook 和 Microsoft 365 通过 Microsoft 登录连接；Gmail、iCloud、Fastmail、Yahoo、Zoho 和 Yandex 需要应用专用密码，Gmail 也可以使用 Google 登录；其他邮箱都可通过标准 IMAP 与 SMTP 连接。免费版包含 1 个收件箱，永久有效。"
+      "p": "在 mcpemails.com 注册，无需绑卡，然后前往 Dashboard、Inboxes、Connect Inbox。Outlook 和 Microsoft 365 通过 Microsoft 登录连接；Gmail、iCloud、Fastmail、Yahoo、Zoho 和 Yandex 需要应用专用密码；其他邮箱都可通过标准 IMAP 与 SMTP 连接。免费版包含 1 个收件箱，永久有效。"
     },
     {
       "h": "打开连接器设置",
@@ -39,7 +39,7 @@
     },
     {
       "h": "连接并授权",
-      "p": "点击 Connect，并用 mcpemails 登录以完成授权。批准你希望 Claude 拥有的权限范围。无需 API 密钥。"
+      "p": "点击 Connect，并用 MCP Emails 登录以完成授权。批准你希望 Claude 拥有的权限范围。无需 API 密钥。"
     }
   ],
   "gotchas": [
@@ -64,7 +64,7 @@
   "faq": [
     {
       "q": "Claude 能读取我的邮件吗？",
-      "a": "它自己不能。Claude 只能通过连接器访问邮箱，而指向 mcpemails 的自定义连接器就是为它提供连接器的一种方式。连接之后，Claude 可以在你接入的所有收件箱中列出、读取、搜索、发送、回复、转发、整理和定时发送邮件，并仅限于你批准的权限范围。"
+      "a": "它自己不能。Claude 只能通过连接器访问邮箱，而指向 MCP Emails 的自定义连接器就是为它提供连接器的一种方式。连接之后，Claude 可以在你接入的所有收件箱中列出、读取、搜索、发送、回复、转发、整理和定时发送邮件，并仅限于你批准的权限范围。"
     },
     {
       "q": "Claude 需要 API 密钥吗？",
@@ -72,7 +72,7 @@
     },
     {
       "q": "Claude 通过这种方式能访问哪些邮箱？",
-      "a": "Outlook.com 和 Microsoft 365 通过 Microsoft 登录（工作账户可能需要 IT 管理员批准一次该应用）；Gmail、iCloud、Fastmail、Yahoo、Zoho 和 Yandex 使用应用专用密码，Gmail 也可改用 Google 登录；以及任何在标准端口上支持 IMAP 与 SMTP 的其他邮箱。客户端通过同一个连接看到所有邮箱：你的智能体会先调用 inbox_list 来发现每个已连接的邮箱及其 id，所以不需要在任何地方粘贴 UUID。"
+      "a": "Outlook.com 和 Microsoft 365 通过 Microsoft 登录（工作账户可能需要 IT 管理员批准一次该应用）；Gmail、iCloud、Fastmail、Yahoo、Zoho 和 Yandex 使用应用专用密码；以及任何在标准端口上支持 IMAP 与 SMTP 的其他邮箱。客户端通过同一个连接看到所有邮箱：你的智能体会先调用 inbox_list 来发现每个已连接的邮箱及其 id，所以不需要在任何地方粘贴 UUID。"
     },
     {
       "q": "Claude 会在我不知情的情况下发送邮件吗？",

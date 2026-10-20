@@ -21,7 +21,7 @@
     "titleLine1": "Conecta Terra Mail a Claude,",
     "titleLine2": "Cursor, ChatGPT, cualquier cliente MCP",
     "lead": "Dale a tu agente de IA una bandeja real de Terra. Lee, busca, envía, responde, programa y organiza correo por IMAP, en un buzón brasileño terra.com.br con un plan de pago activo.",
-    "answer": "Claude no puede acceder a Terra Mail por sí solo. mcpemails es un servidor MCP alojado que lo conecta por IMAP en imap.terra.com.br en el puerto 993, autenticándose con tu dirección completa y tu contraseña de Terra Mail, para que Claude, Cursor o cualquier cliente MCP pueda leer, buscar, enviar y organizar ese correo. Terra retiró sus buzones gratuitos, así que una dirección sin un paquete de pago de Terra Mail activo queda bloqueada, no simplemente limitada, y los dominios de Terra fuera de Brasil se cerraron hace años y no tienen ningún servidor. Solo terra.com.br sigue activo. Una bandeja es gratis en mcpemails.",
+    "answer": "Claude no puede acceder a Terra Mail por sí solo. MCP Emails es un servidor MCP alojado que lo conecta por IMAP en imap.terra.com.br en el puerto 993, autenticándose con tu dirección completa y tu contraseña de Terra Mail, para que Claude, Cursor o cualquier cliente MCP pueda leer, buscar, enviar y organizar ese correo. Terra retiró sus buzones gratuitos, así que una dirección sin un paquete de pago de Terra Mail activo queda bloqueada, no simplemente limitada, y los dominios de Terra fuera de Brasil se cerraron hace años y no tienen ningún servidor. Solo terra.com.br sigue activo. Una bandeja es gratis en MCP Emails.",
     "meta0": "1 bandeja gratis, para siempre",
     "meta1": "Paquete de pago de Terra Mail activo",
     "meta2": "El correo se obtiene en vivo, nunca se almacena"
@@ -32,7 +32,7 @@
   },
   "setup": [
     {
-      "h": "Crea tu cuenta gratis de mcpemails",
+      "h": "Crea tu cuenta gratis de MCP Emails",
       "p": "Regístrate en mcpemails.com. El plan gratuito conecta una bandeja y sigue siendo gratis, sin tarjeta."
     },
     {
@@ -40,7 +40,7 @@
       "p": "Inicia sesión en el webmail de Terra. Si el propio webmail te rechaza o te dice que hay que actualizar el paquete, el buzón es una de las cuentas afectadas por el fin del nivel gratuito de Terra y ningún cliente de correo se conectará hasta que tenga activo un paquete de pago de Terra Mail. Si el webmail se abre con normalidad, la cuenta está activa y puedes seguir."
     },
     {
-      "h": "Introduce tu dirección y tu contraseña en mcpemails",
+      "h": "Introduce tu dirección y tu contraseña en MCP Emails",
       "p": "Elige IMAP / SMTP y escribe la dirección completa, como <code>nome@terra.com.br</code>, con la contraseña del buzón. Los servidores y puertos de Terra vienen rellenados y se confirmaron mediante una conexión TLS real. Terra no emite contraseñas específicas de aplicación, así que si has estado buscando una en los ajustes, no hay nada que encontrar."
     },
     {
@@ -63,14 +63,14 @@
     }
   ],
   "limits": [
-    "Se requiere un paquete de pago de Terra Mail. Ya no queda ningún buzón gratuito terra.com.br que conectar, y mcpemails no puede sortear un bloqueo aplicado en el propio servidor de Terra.",
+    "Se requiere un paquete de pago de Terra Mail. Ya no queda ningún buzón gratuito terra.com.br que conectar, y MCP Emails no puede sortear un bloqueo aplicado en el propio servidor de Terra.",
     "Como faltan tanto MOVE como UIDPLUS, archivar un mensaje no es atómico y el resultado tiene que confirmarse con una búsqueda. Una operación interrumpida puede dejar un mensaje brevemente presente en dos carpetas.",
     "Falta SPECIAL-USE, así que las carpetas se identifican por nombre y no por función. En un buzón en portugués los nombres suelen ser Enviados, Rascunhos, Lixeira y Spam."
   ],
   "faq": [
     {
       "q": "¿Funciona Claude con Terra Mail?",
-      "a": "No directamente. Claude no tiene un conector de Terra integrado y no puede abrir una conexión IMAP por sí mismo. Conectar un servidor MCP como mcpemails a tu buzón terra.com.br le da a Claude acceso para leer, buscar, enviar, responder, reenviar, programar y organizar, y la misma conexión funciona desde Cursor y otros clientes MCP."
+      "a": "No directamente. Claude no tiene un conector de Terra integrado y no puede abrir una conexión IMAP por sí mismo. Conectar un servidor MCP como MCP Emails a tu buzón terra.com.br le da a Claude acceso para leer, buscar, enviar, responder, reenviar, programar y organizar, y la misma conexión funciona desde Cursor y otros clientes MCP."
     },
     {
       "q": "¿Cuáles son los ajustes IMAP y SMTP de Terra?",
@@ -95,6 +95,6 @@
   ],
   "ctaBand": {
     "title": "Dale a tu IA una bandeja de Terra",
-    "sub": "Conecta un buzón terra.com.br activo en minutos. Una bandeja gratis para siempre en mcpemails, sin tarjeta."
+    "sub": "Conecta un buzón terra.com.br activo en minutos. Una bandeja gratis para siempre en MCP Emails, sin tarjeta."
   }
 }

@@ -81,7 +81,7 @@ Rehearse this before you need it. Each is one action in the dashboard.
 - **Remove a member.** That also revokes the API keys they created in the workspace, and the same teardown runs when someone leaves on their own.
 - **Demote to viewer.** Demotion revokes their keys holding scopes beyond read-only, rather than silently weakening a credential someone still relies on.
 - **Disconnect the inbox.** The stored credential is the only inbox data ever retained, and disconnecting removes it.
-- **Revoke at the provider.** Have the client delete the app password or revoke the Google grant. That path does not involve you, which is why it reassures them.
+- **Revoke at the provider.** Have the client delete the app password or revoke the Microsoft grant. That path does not involve you, which is why it reassures them.
 
 There is no ownership transfer, so you cannot hand a workspace over at the end of a project. A client taking mail in-house opens their own account and connects their own inboxes.
 

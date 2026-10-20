@@ -26,7 +26,7 @@
     "meta0": "Première boîte gratuite, offres pour les autres",
     "meta1": "Le mot de passe de votre boîte mail, sans configuration OAuth",
     "meta2": "E-mails récupérés en direct, jamais stockés",
-    "answer": "Claude ne peut pas accéder seul à IONOS. mcpemails est un serveur MCP hébergé qui s'y connecte en IMAP avec le mot de passe de votre boîte mail, pour que Claude, Cursor ou tout client MCP puisse lire, rechercher, envoyer et organiser ce courrier. La configuration prend quelques minutes. Chaque adresse de l'entreprise, comme info@ ou ventes@, se connecte comme une boîte à part : une boîte est gratuite, Personal en connecte trois, Pro jusqu'à 10 et Business autant qu'il vous en faut."
+    "answer": "Claude ne peut pas accéder seul à IONOS. MCP Emails est un serveur MCP hébergé qui s'y connecte en IMAP avec le mot de passe de votre boîte mail, pour que Claude, Cursor ou tout client MCP puisse lire, rechercher, envoyer et organiser ce courrier. La configuration prend quelques minutes. Chaque adresse de l'entreprise, comme info@ ou ventes@, se connecte comme une boîte à part : une boîte est gratuite, Personal en connecte trois, Pro jusqu'à 10 et Business autant qu'il vous en faut."
   },
   "persona": {
     "intro": "Plusieurs boîtes d'entreprise chez IONOS ?",
@@ -40,14 +40,14 @@
   "setup": [
     {
       "h": "Créez un compte gratuit",
-      "p": "Inscrivez-vous sur mcpemails, sans carte bancaire. L'offre gratuite connecte une boîte, pour toujours."
+      "p": "Inscrivez-vous sur MCP Emails, sans carte bancaire. L'offre gratuite connecte une boîte, pour toujours."
     },
     {
       "h": "Récupérez le mot de passe de votre boîte mail IONOS",
       "p": "Dans l'espace client IONOS, ouvrez Email, choisissez l'adresse et définissez ou réinitialisez son mot de passe. Ce n'est pas le mot de passe avec lequel vous vous connectez à IONOS lui-même."
     },
     {
-      "h": "Collez-le dans mcpemails",
+      "h": "Collez-le dans MCP Emails",
       "p": "Choisissez IMAP / SMTP et ajoutez votre adresse IONOS et le mot de passe de la boîte. Les serveurs affichés ci-dessus sont ceux d'ionos.com : pour une boîte achetée sur ionos.de, utilisez plutôt imap.ionos.de et smtp.ionos.de, et pour ionos.co.uk les noms en .co.uk."
     },
     {
@@ -75,12 +75,12 @@
   ],
   "limits": [
     "Les boîtes Microsoft 365 achetées via IONOS ne sont pas sur imap.ionos.com. Connectez-les avec Outlook (connexion avec Microsoft) ; un administrateur informatique devra peut-être approuver l'application une fois.",
-    "mcpemails connecte une boîte mail. Les alias, redirections, règles catch-all et réglages antispam d'IONOS restent dans l'espace client IONOS et ne sont pas visibles pour votre client IA."
+    "MCP Emails connecte une boîte mail. Les alias, redirections, règles catch-all et réglages antispam d'IONOS restent dans l'espace client IONOS et ne sont pas visibles pour votre client IA."
   ],
   "faq": [
     {
       "q": "Claude fonctionne-t-il avec l'e-mail IONOS ?",
-      "a": "Il fonctionne avec une boîte mail IONOS, celles servies par imap.ionos.com, dès qu'un serveur MCP comme mcpemails y est connecté en IMAP. Claude n'a pas de connecteur IONOS intégré. Une boîte Microsoft 365 achetée via IONOS fonctionne aussi, mais elle se connecte avec Outlook (connexion avec Microsoft) et non en IMAP, et un administrateur informatique devra peut-être d'abord approuver MCP Emails une fois."
+      "a": "Il fonctionne avec une boîte mail IONOS, celles servies par imap.ionos.com, dès qu'un serveur MCP comme MCP Emails y est connecté en IMAP. Claude n'a pas de connecteur IONOS intégré. Une boîte Microsoft 365 achetée via IONOS fonctionne aussi, mais elle se connecte avec Outlook (connexion avec Microsoft) et non en IMAP, et un administrateur informatique devra peut-être d'abord approuver MCP Emails une fois."
     },
     {
       "q": "Quels sont les paramètres IMAP et SMTP d'IONOS ?",

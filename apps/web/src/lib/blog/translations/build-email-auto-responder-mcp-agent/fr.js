@@ -1,7 +1,7 @@
 const translation = {
   title: 'Créer un répondeur automatique d’e-mails avec un agent connecté en MCP',
   description: 'Créez un répondeur automatique d’e-mails avec un agent IA connecté en MCP : interroger les non lus, rédiger et répondre en toute sécurité avec scopes, limites de débit et garde-fous.',
-  coverAlt: 'Créer un répondeur automatique d’e-mails avec un agent connecté en MCP — MCPEmails',
+  coverAlt: 'Créer un répondeur automatique d’e-mails avec un agent connecté en MCP — MCP Emails',
   content: `Un répondeur automatique d’e-mails bâti sur MCP Emails est une boucle, pas un webhook. Il n’y a aucun événement initié par le serveur : votre agent **interroge** (poll) les e-mails non lus selon une planification avec \`email_read\` (action \`list\`), lit chaque message avec \`email_read\` (action \`read\`), rédige une réponse et appelle \`email_compose\` (action \`reply\`). Cet article déroule toute la construction : la boucle d’interrogation, les scopes dont vous avez besoin, comment encaisser les limites de débit, et les garde-fous qui empêchent un agent d’inonder vos contacts de réponses hallucinées.
 
 C’est l’extrémité avancée de l’histoire racontée dans [donnez à votre agent IA un accès à l’e-mail](/blog/how-to-give-your-ai-agent-email-access). Si vous voulez simplement du tri et des résumés matinaux sans rien envoyer, lisez d’abord [tri et résumé de boîte de réception par un agent IA](/blog/ai-agent-triage-summarize-inbox) — c’est l’endroit le plus sûr pour commencer. Revenez ici quand vous voudrez vraiment que l’agent appuie sur envoyer.

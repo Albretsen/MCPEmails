@@ -7,7 +7,7 @@
     "eyebrow": "为负责公司邮件的那个人而做",
     "titleLine1": "公司的每个邮箱，",
     "titleLine2": "一个人，一个智能体",
-    "lead": "info@、sales@、invoices@、support@，再加上你自己的地址，最后往往都落在同一个人手里。mcpemails 把它们全部连接到 Claude、Cursor、ChatGPT 或任意 MCP 客户端，让你在一次对话里就能读取、回复、转发和归档每个地址的邮件。无论邮件托管在哪里都能用，你还可以让每一封外发邮件先等你审批。",
+    "lead": "info@、sales@、invoices@、support@，再加上你自己的地址，最后往往都落在同一个人手里。MCP Emails 把它们全部连接到 Claude、Cursor、ChatGPT 或任意 MCP 客户端，让你在一次对话里就能读取、回复、转发和归档每个地址的邮件。无论邮件托管在哪里都能用，你还可以让每一封外发邮件先等你审批。",
     "ctaPrimary": "免费连接第一个邮箱",
     "ctaSecondary": "看看它能做什么"
   },
@@ -96,7 +96,7 @@
   "providers": {
     "eyebrow": "任意服务商",
     "title": "连接公司的每个邮箱，无论由谁托管",
-    "sub": "大多数公司邮箱都放在网站主机商或域名注册商那里，这完全没问题。任何在标准端口上支持 IMAP 和 SMTP 的邮箱，都可以用地址、服务器和密码连接。IONOS、Hostinger、OVH、Namecheap 等常见主机商会根据地址自动识别并替你填好设置。Gmail 和 Google Workspace 通过应用密码或 Google 登录连接。Microsoft 365 和 Outlook 通过 Microsoft 登录连接；如果是公司的 Microsoft 365 账户，可能需要你的 IT 管理员为整个组织一次性批准 mcpemails。iCloud、Fastmail、Yahoo、Zoho 和 Yandex 通过应用密码连接。",
+    "sub": "大多数公司邮箱都放在网站主机商或域名注册商那里，这完全没问题。任何在标准端口上支持 IMAP 和 SMTP 的邮箱，都可以用地址、服务器和密码连接。IONOS、Hostinger、OVH、Namecheap 等常见主机商会根据地址自动识别并替你填好设置。Gmail 和 Google Workspace 通过 Google 应用密码连接。Microsoft 365 和 Outlook 通过 Microsoft 登录连接；如果是公司的 Microsoft 365 账户，可能需要你的 IT 管理员为整个组织一次性批准 MCP Emails。iCloud、Fastmail、Yahoo、Zoho 和 Yandex 通过应用密码连接。",
     "ctaImap": "连接任意 IMAP 邮箱",
     "ctaGmail": "连接 Gmail 或 Google Workspace",
     "ctaMicrosoft": "连接 Microsoft 365",
@@ -135,7 +135,7 @@
       },
       {
         "q": "我们的邮箱在网站主机商那里，不是 Gmail。能用吗？",
-        "a": "几乎可以肯定能用。任何在标准端口上支持 IMAP 和 SMTP 的邮箱，都可以用地址、服务器和密码连接，常见主机商还会根据地址自动识别，设置会自动填好。服务器必须能从公共互联网访问；只接受通过 IMAP 进行 OAuth 登录的邮箱无法用这种方式连接。如果公司邮箱在 Microsoft 365 上，请改为以 Outlook 方式连接：使用 Microsoft 登录，可能还需要你的 IT 管理员为整个组织一次性批准 mcpemails。"
+        "a": "几乎可以肯定能用。任何在标准端口上支持 IMAP 和 SMTP 的邮箱，都可以用地址、服务器和密码连接，常见主机商还会根据地址自动识别，设置会自动填好。服务器必须能从公共互联网访问；只接受通过 IMAP 进行 OAuth 登录的邮箱无法用这种方式连接。如果公司邮箱在 Microsoft 365 上，请改为以 Outlook 方式连接：使用 Microsoft 登录，可能还需要你的 IT 管理员为整个组织一次性批准 MCP Emails。"
       },
       {
         "q": "智能体会从正确的地址发信吗？",

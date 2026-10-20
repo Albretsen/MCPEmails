@@ -1,17 +1,17 @@
 {
   "meta": {
     "title": "Conditions d'utilisation",
-    "description": "Les conditions régissant votre utilisation de MCPEmails : usage acceptable, responsabilité, résiliation de compte et droit applicable."
+    "description": "Les conditions régissant votre utilisation de MCP Emails : usage acceptable, responsabilité, résiliation de compte et droit applicable."
   },
   "hero": {
     "eyebrow": "Mentions légales",
     "title": "Conditions d'utilisation",
-    "lead": "Les présentes conditions régissent votre accès à MCPEmails et votre utilisation du service. En créant un compte ou en utilisant le service, vous acceptez d'être lié par celles-ci. Veuillez les lire attentivement.",
+    "lead": "Les présentes conditions régissent votre accès à MCP Emails et votre utilisation du service. En créant un compte ou en utilisant le service, vous acceptez d'être lié par celles-ci. Veuillez les lire attentivement.",
     "dates": "Dernière mise à jour : {lastUpdated}  ·  Entrée en vigueur : {effective}"
   },
   "agreement": {
     "title": "1. Acceptation des présentes conditions",
-    "p1": "Les présentes conditions d'utilisation (« Conditions ») constituent un accord juridiquement contraignant entre vous (« vous » ou l'« Utilisateur ») et {company}, une société à responsabilité limitée de droit norvégien (aksjeselskap) portant le numéro d'organisation <b>{orgNumber}</b>, détenue et dirigée par {owner} et exerçant sous le nom commercial « MCPEmails » (« MCPEmails », « nous » ou « notre »). Elles régissent votre accès au service MCPEmails et votre utilisation de celui-ci, y compris le site web à l'adresse <b>mcpemails.com</b>, le tableau de bord, le point de terminaison de l'API Model Context Protocol (MCP), ainsi que tous les logiciels et la documentation associés (collectivement, le « Service »). Votre contrat est conclu avec {company} ; « MCPEmails » est un nom commercial et non une entité juridique distincte.",
+    "p1": "Les présentes conditions d'utilisation (« Conditions ») constituent un accord juridiquement contraignant entre vous (« vous » ou l'« Utilisateur ») et {company}, une société à responsabilité limitée de droit norvégien (aksjeselskap) portant le numéro d'organisation <b>{orgNumber}</b>, détenue et dirigée par {owner} et exerçant sous le nom commercial « MCPEmails » (« MCPEmails », « nous » ou « notre »). Elles régissent votre accès au service MCP Emails et votre utilisation de celui-ci, y compris le site web à l'adresse <b>mcpemails.com</b>, le tableau de bord, le point de terminaison de l'API Model Context Protocol (MCP), ainsi que tous les logiciels et la documentation associés (collectivement, le « Service »). Votre contrat est conclu avec {company} ; « MCPEmails » est un nom commercial et non une entité juridique distincte.",
     "p1b": "Identification du prestataire de services : {company}, numéro d'organisation {orgNumber}, immatriculée au {register} (le registre norvégien des entreprises, tenu par Brønnøysundregistrene). Siège social : {companyAddress}. Demandes juridiques : <email></email>.",
     "p2": "En créant un compte, en acceptant les présentes Conditions ou en utilisant toute partie du Service, vous confirmez que vous êtes âgé d'au moins 16 ans (ou de l'âge minimum du consentement numérique dans votre juridiction, s'il est supérieur), que vous avez la capacité juridique de conclure un accord contraignant, et que vous acceptez d'être lié par les présentes Conditions et par notre <privacy>Politique de confidentialité</privacy>, qui est intégrée aux présentes Conditions par référence.",
     "p3": "Si vous acceptez les présentes Conditions au nom d'une société ou d'une autre entité juridique, vous déclarez et garantissez que vous avez le pouvoir d'engager cette entité, auquel cas « vous » désigne cette entité.",
@@ -19,15 +19,15 @@
   },
   "serviceDescription": {
     "title": "2. Description du Service",
-    "p1": "MCPEmails fournit une plateforme de logiciel en tant que service qui vous permet de connecter des comptes de messagerie (Gmail, Microsoft Outlook / Microsoft 365, Fastmail et comptes IMAP compatibles) et d'exposer ces comptes à des agents IA via le Model Context Protocol (MCP). Le Service comprend :",
+    "p1": "MCP Emails fournit une plateforme de logiciel en tant que service qui vous permet de connecter des comptes de messagerie (Gmail, Microsoft Outlook / Microsoft 365, Fastmail et comptes IMAP compatibles) et d'exposer ces comptes à des agents IA via le Model Context Protocol (MCP). Le Service comprend :",
     "list": [
       "Un tableau de bord web pour gérer les comptes de messagerie connectés, les clés d'API et le suivi de l'utilisation.",
       "Un point de terminaison HTTP conforme à MCP auprès duquel les agents IA s'authentifient à l'aide de clés d'API que vous générez.",
       "Une intégration OAuth avec les fournisseurs de messagerie pris en charge pour obtenir et gérer un accès délégué à vos boîtes aux lettres.",
       "Un journal d'utilisation et d'audit indiquant quels outils vos agents ont appelés et à quel moment."
     ],
-    "p2": "MCPEmails agit comme un pont de protocole. Nous ne stockons pas le contenu des e-mails que votre agent lit sur nos serveurs ; nous le récupérons en direct auprès de votre fournisseur de messagerie au moment où un agent le demande et le renvoyons dans la même réponse HTTP. L'exception est un message que vous programmez pour un envoi ultérieur, que nous stockons uniquement jusqu'à sa remise. Consultez notre <privacy>Politique de confidentialité</privacy> pour une description complète des données que nous conservons et de celles que nous ne conservons pas.",
-    "p2b": "Le contenu des e-mails n'est transmis qu'au client MCP ou à l'agent IA que vous avez connecté et que vous choisissez d'utiliser. Une fois le contenu parvenu à ce client, il est régi par la politique de confidentialité et les conditions propres à ce client ou à ce fournisseur d'IA, qu'il vous appartient de consulter. MCPEmails ne sélectionne pas de fournisseur d'IA en votre nom et ne conserve aucune copie du contenu de vos e-mails.",
+    "p2": "MCP Emails agit comme un pont de protocole. Nous ne stockons pas le contenu des e-mails que votre agent lit sur nos serveurs ; nous le récupérons en direct auprès de votre fournisseur de messagerie au moment où un agent le demande et le renvoyons dans la même réponse HTTP. L'exception est un message que vous programmez pour un envoi ultérieur, que nous stockons uniquement jusqu'à sa remise. Consultez notre <privacy>Politique de confidentialité</privacy> pour une description complète des données que nous conservons et de celles que nous ne conservons pas.",
+    "p2b": "Le contenu des e-mails n'est transmis qu'au client MCP ou à l'agent IA que vous avez connecté et que vous choisissez d'utiliser. Une fois le contenu parvenu à ce client, il est régi par la politique de confidentialité et les conditions propres à ce client ou à ce fournisseur d'IA, qu'il vous appartient de consulter. MCP Emails ne sélectionne pas de fournisseur d'IA en votre nom et ne conserve aucune copie du contenu de vos e-mails.",
     "p3": "Nous nous réservons le droit de modifier, suspendre ou interrompre toute partie du Service à tout moment. Dans la mesure du possible, nous donnerons un préavis d'au moins 30 jours en cas de modifications substantielles affectant les utilisateurs payants."
   },
   "accountRegistration": {
@@ -37,7 +37,7 @@
     "h32": "3.2 Un compte par personne",
     "p32": "Chaque compte est destiné à l'usage d'un seul individu ou d'une seule entité juridique. Vous ne pouvez pas partager vos identifiants de connexion avec d'autres personnes ni créer plusieurs comptes pour contourner les limites du plan ou d'autres restrictions.",
     "h33": "3.3 Sécurité du compte",
-    "p33": "Vous êtes responsable du maintien de la sécurité des identifiants de votre compte, y compris votre mot de passe et toute clé d'API que vous générez. Vous devez nous informer immédiatement à l'adresse <email></email> si vous soupçonnez un accès non autorisé à votre compte. MCPEmails n'est pas responsable des pertes ou dommages résultant de votre manquement à maintenir la sécurité de vos identifiants.",
+    "p33": "Vous êtes responsable du maintien de la sécurité des identifiants de votre compte, y compris votre mot de passe et toute clé d'API que vous générez. Vous devez nous informer immédiatement à l'adresse <email></email> si vous soupçonnez un accès non autorisé à votre compte. MCP Emails n'est pas responsable des pertes ou dommages résultant de votre manquement à maintenir la sécurité de vos identifiants.",
     "h34": "3.4 Clés d'API",
     "p34": "Les clés d'API que vous générez accordent l'accès au point de terminaison MCP pour votre compte. Vous êtes seul responsable de toutes les actions effectuées au moyen des clés que vous avez générées, y compris les actions effectuées par les agents IA auxquels vous avez fourni ces clés. Traitez les clés d'API comme des secrets. Révoquez toute clé que vous soupçonnez d'avoir été compromise."
   },
@@ -63,7 +63,7 @@
     "h43": "4.3 Responsabilité des agents",
     "p43": "Vous êtes responsable des actions de tout agent IA ou système automatisé qui accède au Service au moyen d'une clé d'API que vous avez générée. Cela inclut les actions que l'agent entreprend de manière autonome. Vous devez veiller à ce que les agents opérant sous vos clés d'API respectent les présentes Conditions et la loi applicable.",
     "h44": "4.4 Conformité aux conditions des fournisseurs de messagerie",
-    "p44": "Vous devez respecter les conditions d'utilisation et les politiques d'API de tout fournisseur de messagerie dont vous connectez le compte à MCPEmails (y compris Google, Microsoft et Fastmail). MCPEmails n'est pas responsable de toute suspension ou restriction de votre compte de messagerie par un fournisseur tiers.",
+    "p44": "Vous devez respecter les conditions d'utilisation et les politiques d'API de tout fournisseur de messagerie dont vous connectez le compte à MCP Emails (y compris Google, Microsoft et Fastmail). MCP Emails n'est pas responsable de toute suspension ou restriction de votre compte de messagerie par un fournisseur tiers.",
     "h45": "4.5 Application",
     "p45": "Nous nous réservons le droit d'enquêter sur les violations présumées de ces règles. Si nous déterminons, à notre seule discrétion, que vous avez enfreint la présente section, nous pouvons suspendre ou résilier votre compte, supprimer ou désactiver l'accès à des clés d'API ou des boîtes de réception connectées spécifiques, et signaler les violations aux autorités chargées de l'application de la loi lorsque la loi l'exige ou lorsque nous l'estimons approprié pour protéger autrui."
   },
@@ -88,10 +88,10 @@
   },
   "intellectualProperty": {
     "title": "6. Propriété intellectuelle",
-    "h61": "6.1 Propriété intellectuelle de MCPEmails",
-    "p61": "Tous les droits de propriété intellectuelle sur le Service, y compris les logiciels, les conceptions, les logos, les marques et la documentation, appartiennent à MCPEmails ou à ses concédants de licence. Rien dans les présentes Conditions ne vous accorde de droit, titre ou intérêt sur la propriété intellectuelle de MCPEmails, à l'exception de la licence limitée d'utilisation du Service décrite dans les présentes Conditions.",
+    "h61": "6.1 Propriété intellectuelle de MCP Emails",
+    "p61": "Tous les droits de propriété intellectuelle sur le Service, y compris les logiciels, les conceptions, les logos, les marques et la documentation, appartiennent à MCP Emails ou à ses concédants de licence. Rien dans les présentes Conditions ne vous accorde de droit, titre ou intérêt sur la propriété intellectuelle de MCP Emails, à l'exception de la licence limitée d'utilisation du Service décrite dans les présentes Conditions.",
     "h62": "6.2 Vos données et contenus",
-    "p62": "Vous conservez tous les droits sur le contenu de vos e-mails et vos données de compte. En utilisant le Service, vous accordez à MCPEmails une licence limitée, non exclusive et libre de redevances pour traiter et transmettre vos données uniquement dans la mesure nécessaire à la fourniture du Service. Nous n'acquérons pas la propriété de vos données, et nous n'utiliserons jamais le contenu de vos e-mails à des fins autres que l'exécution de l'appel d'outil de votre agent.",
+    "p62": "Vous conservez tous les droits sur le contenu de vos e-mails et vos données de compte. En utilisant le Service, vous accordez à MCP Emails une licence limitée, non exclusive et libre de redevances pour traiter et transmettre vos données uniquement dans la mesure nécessaire à la fourniture du Service. Nous n'acquérons pas la propriété de vos données, et nous n'utiliserons jamais le contenu de vos e-mails à des fins autres que l'exécution de l'appel d'outil de votre agent.",
     "h63": "6.3 Retours d'information",
     "p63": "Si vous nous fournissez des retours, suggestions ou idées concernant le Service, vous nous accordez une licence illimitée, perpétuelle, irrévocable et libre de redevances pour utiliser et intégrer ces retours dans le Service, sans compensation ni attribution à votre égard."
   },
@@ -102,20 +102,20 @@
     "h72": "7.2 Services tiers",
     "p72": "Le Service s'intègre à des fournisseurs de messagerie tiers (Google Gmail, Microsoft Outlook / Microsoft 365, Fastmail, serveurs IMAP). Nous ne sommes pas responsables de la disponibilité, de la fiabilité ou des performances de ces services, des modifications de leurs API ou politiques OAuth, ni de toute perte d'accès à la messagerie résultant des actions d'un fournisseur tiers.",
     "h73": "7.3 Actions des agents IA",
-    "p73": "MCPEmails est un pont de protocole. Nous transmettons les instructions des agents IA à vos fournisseurs de messagerie et renvoyons les résultats. Nous ne sommes pas responsables du contenu des e-mails envoyés, transférés ou auxquels il est répondu par des agents IA agissant sous vos clés d'API, ni des conséquences des actions autonomes des agents, y compris la suppression accidentelle d'e-mails, les messages mal dirigés ou les fuites de données résultant d'erreurs de logique des agents.",
+    "p73": "MCP Emails est un pont de protocole. Nous transmettons les instructions des agents IA à vos fournisseurs de messagerie et renvoyons les résultats. Nous ne sommes pas responsables du contenu des e-mails envoyés, transférés ou auxquels il est répondu par des agents IA agissant sous vos clés d'API, ni des conséquences des actions autonomes des agents, y compris la suppression accidentelle d'e-mails, les messages mal dirigés ou les fuites de données résultant d'erreurs de logique des agents.",
     "h74": "7.4 Limitation de responsabilité",
-    "p74a": "Dans toute la mesure permise par la loi applicable, MCPEmails, ses dirigeants, employés, agents ou fournisseurs ne pourront en aucun cas être tenus responsables de tout dommage indirect, accessoire, spécial, consécutif, punitif ou exemplaire, y compris la perte de bénéfices, la perte de données, la perte de clientèle ou l'interruption d'activité, découlant de ou en lien avec votre utilisation ou votre incapacité à utiliser le Service, même si MCPEmails a été informé de la possibilité de tels dommages.",
-    "p74b": "Dans toute la mesure permise par la loi applicable, la responsabilité totale cumulée de MCPEmails envers vous pour toutes les réclamations découlant de ou liées aux présentes Conditions ou au Service, qu'elles soient de nature contractuelle, délictuelle (y compris la négligence), légale ou autre, est limitée au plus élevé des montants suivants : (a) le montant que vous avez versé à MCPEmails au cours des 12 mois précédant l'événement à l'origine de la réclamation ; ou (b) 100 USD.",
+    "p74a": "Dans toute la mesure permise par la loi applicable, MCP Emails, ses dirigeants, employés, agents ou fournisseurs ne pourront en aucun cas être tenus responsables de tout dommage indirect, accessoire, spécial, consécutif, punitif ou exemplaire, y compris la perte de bénéfices, la perte de données, la perte de clientèle ou l'interruption d'activité, découlant de ou en lien avec votre utilisation ou votre incapacité à utiliser le Service, même si MCP Emails a été informé de la possibilité de tels dommages.",
+    "p74b": "Dans toute la mesure permise par la loi applicable, la responsabilité totale cumulée de MCP Emails envers vous pour toutes les réclamations découlant de ou liées aux présentes Conditions ou au Service, qu'elles soient de nature contractuelle, délictuelle (y compris la négligence), légale ou autre, est limitée au plus élevé des montants suivants : (a) le montant que vous avez versé à MCP Emails au cours des 12 mois précédant l'événement à l'origine de la réclamation ; ou (b) 100 USD.",
     "p74c": "Certaines juridictions n'autorisent pas l'exclusion ou la limitation de certains dommages. Dans ces juridictions, les limitations ci-dessus s'appliquent dans toute la mesure permise par la loi.",
     "h75": "7.5 Indemnisation",
-    "p75": "Vous acceptez d'indemniser, de défendre et de dégager de toute responsabilité MCPEmails ainsi que ses cadres, dirigeants, employés et agents, contre toute réclamation, responsabilité, dommage, perte, coût et dépense (y compris les frais juridiques raisonnables) découlant de ou liés à : (a) votre utilisation du Service en violation des présentes Conditions ou de la loi applicable ; (b) tout e-mail que vous ou vos agents envoyez à l'aide du Service ; (c) votre violation de droits de tiers, y compris les droits de propriété intellectuelle ou les droits relatifs à la vie privée ; ou (d) tout litige entre vous et un tiers (y compris vos destinataires d'e-mails)."
+    "p75": "Vous acceptez d'indemniser, de défendre et de dégager de toute responsabilité MCP Emails ainsi que ses cadres, dirigeants, employés et agents, contre toute réclamation, responsabilité, dommage, perte, coût et dépense (y compris les frais juridiques raisonnables) découlant de ou liés à : (a) votre utilisation du Service en violation des présentes Conditions ou de la loi applicable ; (b) tout e-mail que vous ou vos agents envoyez à l'aide du Service ; (c) votre violation de droits de tiers, y compris les droits de propriété intellectuelle ou les droits relatifs à la vie privée ; ou (d) tout litige entre vous et un tiers (y compris vos destinataires d'e-mails)."
   },
   "accountTermination": {
     "title": "8. Résiliation du compte",
     "h81": "8.1 Résiliation par vous",
     "p81a": "Vous pouvez fermer votre compte à tout moment en accédant à <b>Tableau de bord → Paramètres → Supprimer le compte</b> et en suivant les étapes de confirmation. La suppression du compte est définitive. Toutes les configurations de boîtes de réception connectées, les clés d'API et les journaux d'audit associés à votre espace de travail seront supprimés dans un délai de 30 jours suivant la demande de suppression.",
     "p81b": "Si vous êtes sur un plan payant, la fermeture de votre compte met fin à la facturation future mais ne vous donne pas droit au remboursement des montants déjà débités, sauf dans les cas décrits à la section 5.4.",
-    "h82": "8.2 Résiliation par MCPEmails pour motif valable",
+    "h82": "8.2 Résiliation par MCP Emails pour motif valable",
     "p82": "Nous pouvons suspendre ou résilier votre compte immédiatement, sans préavis ni responsabilité, si :",
     "list82": [
       "Vous enfreignez la section 4 (Usage acceptable) ou toute autre disposition substantielle des présentes Conditions.",
@@ -125,7 +125,7 @@
       "Le paiement d'un plan payant reste en souffrance pendant plus de 30 jours après la date d'échéance."
     ],
     "p82after": "Lorsqu'une résiliation pour motif valable entraîne la suppression de votre compte, nous ne fournirons aucun remboursement pour la partie non utilisée d'un abonnement payant.",
-    "h83": "8.3 Résiliation par MCPEmails pour convenance",
+    "h83": "8.3 Résiliation par MCP Emails pour convenance",
     "p83": "Nous pouvons résilier votre compte pour tout motif non couvert par la section 8.2 moyennant un préavis écrit d'au moins 30 jours envoyé à votre adresse e-mail enregistrée. En cas d'une telle résiliation, nous fournirons un remboursement au prorata pour toute partie non utilisée d'un abonnement annuel prépayé.",
     "h84": "8.4 Suspension",
     "p84": "Au lieu d'une résiliation immédiate, nous pouvons, à notre discrétion, suspendre temporairement votre accès au Service pendant que nous enquêtons sur une violation présumée. Nous nous efforcerons de vous notifier la suspension, sauf si cela compromettait une enquête en cours ou est interdit par la loi.",
@@ -134,7 +134,7 @@
     "list85": [
       "Votre droit d'accéder au Service et de l'utiliser cesse immédiatement.",
       "Toutes les clés d'API associées à votre compte sont immédiatement révoquées.",
-      "Les autorisations de jetons OAuth accordées à MCPEmails par votre fournisseur de messagerie sont révoquées lorsque le fournisseur le permet ; sinon, les jetons stockés sont supprimés et vous pouvez retirer l'application dans votre compte chez le fournisseur. Votre fournisseur de messagerie peut prendre jusqu'à 24 heures pour tenir compte d'une révocation.",
+      "Les autorisations de jetons OAuth accordées à MCP Emails par votre fournisseur de messagerie sont révoquées lorsque le fournisseur le permet ; sinon, les jetons stockés sont supprimés et vous pouvez retirer l'application dans votre compte chez le fournisseur. Votre fournisseur de messagerie peut prendre jusqu'à 24 heures pour tenir compte d'une révocation.",
       "Vos données seront supprimées conformément à notre calendrier de conservation décrit dans la Politique de confidentialité."
     ],
     "p85after": "Les dispositions suivantes survivent à la résiliation : section 6 (Propriété intellectuelle), section 7 (Avertissements et limitation de responsabilité), section 8.5 (Effets de la résiliation), section 9 (Droit applicable et litiges), ainsi que toute autre disposition qui, de par sa nature, devrait survivre."
@@ -150,26 +150,26 @@
     "h94": "9.4 Résolution informelle",
     "p94": "Avant d'engager toute procédure judiciaire formelle, nous vous encourageons à nous contacter à l'adresse <email></email> afin que nous puissions tenter de résoudre le litige à l'amiable. Nous répondrons dans un délai de 14 jours ouvrables et œuvrerons de bonne foi en vue d'une résolution.",
     "h95": "9.5 Renonciation aux actions collectives (clients professionnels)",
-    "p95": "Si vous utilisez le Service à titre professionnel, vous acceptez, dans la mesure permise par la loi applicable, que toute procédure de résolution des litiges soit menée sur une base individuelle uniquement, et vous renoncez à tout droit d'intenter ou de participer à une action de groupe, collective ou représentative contre MCPEmails. Cette section ne s'applique pas aux consommateurs."
+    "p95": "Si vous utilisez le Service à titre professionnel, vous acceptez, dans la mesure permise par la loi applicable, que toute procédure de résolution des litiges soit menée sur une base individuelle uniquement, et vous renoncez à tout droit d'intenter ou de participer à une action de groupe, collective ou représentative contre MCP Emails. Cette section ne s'applique pas aux consommateurs."
   },
   "general": {
     "title": "10. Dispositions générales",
     "h101": "10.1 Intégralité de l'accord",
-    "p101": "Les présentes Conditions, ainsi que la Politique de confidentialité et toute condition supplémentaire applicable à des fonctionnalités ou plans spécifiques, constituent l'intégralité de l'accord entre vous et MCPEmails concernant le Service et remplacent tous les accords, déclarations et ententes antérieurs.",
+    "p101": "Les présentes Conditions, ainsi que la Politique de confidentialité et toute condition supplémentaire applicable à des fonctionnalités ou plans spécifiques, constituent l'intégralité de l'accord entre vous et MCP Emails concernant le Service et remplacent tous les accords, déclarations et ententes antérieurs.",
     "h102": "10.2 Modifications",
     "p102": "Nous pouvons mettre à jour les présentes Conditions de temps à autre. Lorsque nous apportons des modifications substantielles, nous mettrons à jour la date de « Dernière mise à jour » en haut de cette page et enverrons une notification par e-mail à votre adresse enregistrée au moins 14 jours avant l'entrée en vigueur des modifications. Votre utilisation continue du Service après la date d'entrée en vigueur vaut acceptation des Conditions révisées. Si vous n'êtes pas d'accord avec une modification substantielle, vous pouvez fermer votre compte avant la date d'entrée en vigueur.",
     "h103": "10.3 Divisibilité",
     "p103": "Si une disposition des présentes Conditions est jugée invalide, illégale ou inapplicable par un tribunal compétent, cette disposition sera modifiée dans la mesure minimale nécessaire pour la rendre applicable, et les dispositions restantes resteront pleinement en vigueur.",
     "h104": "10.4 Renonciation",
-    "p104": "Notre incapacité à faire valoir un droit ou une disposition des présentes Conditions ne constitue pas une renonciation à ce droit ou à cette disposition. Toute renonciation doit être faite par écrit et signée par un représentant autorisé de MCPEmails.",
+    "p104": "Notre incapacité à faire valoir un droit ou une disposition des présentes Conditions ne constitue pas une renonciation à ce droit ou à cette disposition. Toute renonciation doit être faite par écrit et signée par un représentant autorisé de MCP Emails.",
     "h105": "10.5 Cession",
     "p105": "Vous ne pouvez pas céder ou transférer les présentes Conditions ni aucun droit ou obligation en découlant sans notre consentement écrit préalable. Nous pouvons céder les présentes Conditions à une société affiliée ou dans le cadre d'une fusion, d'une acquisition ou d'une cession d'actifs, à condition que le cessionnaire assume toutes les obligations au titre des présentes Conditions.",
     "h106": "10.6 Force majeure",
-    "p106": "MCPEmails n'est pas responsable de tout retard ou manquement dans l'exécution de ses obligations au titre des présentes Conditions lorsque ce retard ou manquement résulte de circonstances échappant à notre contrôle raisonnable, y compris les catastrophes naturelles, les actions gouvernementales, les défaillances de l'infrastructure Internet ou les pannes de services tiers.",
+    "p106": "MCP Emails n'est pas responsable de tout retard ou manquement dans l'exécution de ses obligations au titre des présentes Conditions lorsque ce retard ou manquement résulte de circonstances échappant à notre contrôle raisonnable, y compris les catastrophes naturelles, les actions gouvernementales, les défaillances de l'infrastructure Internet ou les pannes de services tiers.",
     "h107": "10.7 Notifications",
-    "p107": "Les notifications de MCPEmails à votre intention seront envoyées à l'adresse e-mail enregistrée sur votre compte. Les notifications de votre part à MCPEmails doivent être envoyées à <email></email>. Les notifications sont réputées reçues 24 heures après leur envoi, sauf si l'expéditeur reçoit un avis d'échec de remise.",
+    "p107": "Les notifications de MCP Emails à votre intention seront envoyées à l'adresse e-mail enregistrée sur votre compte. Les notifications de votre part à MCP Emails doivent être envoyées à <email></email>. Les notifications sont réputées reçues 24 heures après leur envoi, sauf si l'expéditeur reçoit un avis d'échec de remise.",
     "h108": "10.8 Absence de partenariat",
-    "p108": "Rien dans les présentes Conditions ne crée de partenariat, de coentreprise, de mandat, de franchise ou de relation d'emploi entre vous et MCPEmails."
+    "p108": "Rien dans les présentes Conditions ne crée de partenariat, de coentreprise, de mandat, de franchise ou de relation d'emploi entre vous et MCP Emails."
   },
   "contact": {
     "title": "11. Nous contacter",

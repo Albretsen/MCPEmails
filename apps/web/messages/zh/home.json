@@ -35,10 +35,10 @@
       "providerSub": "Gmail · Outlook · iCloud · IMAP",
       "logCalls": "智能体调用",
       "logReturns": "返回收件箱 ID，无需在仪表盘里复制粘贴",
-      "logFetches": "mcpemails 通过 Gmail API 获取（令牌已轮换）",
+      "logFetches": "MCP Emails 从你的服务商实时获取",
       "logResult": "返回 20 封邮件",
       "logNothing": "不存储任何内容",
-      "legendPipe": "mcpemails（管道）",
+      "legendPipe": "MCP Emails（管道）",
       "legendLive": "实时请求",
       "legendData": "你的数据，你的服务商"
     }
@@ -65,13 +65,13 @@
     "items": {
       "0": {
         "tag": "范围",
-        "h": "十七个专注工具，覆盖日常所需。",
+        "h": "十九个专注工具，覆盖日常所需。",
         "p": "工具覆盖日常工作：<code>inbox_list</code>、<code>email_read</code>（list、read、search）和 <code>email_compose</code>（send、reply）。另有专门用于整理、删除、文件夹、草稿、定时发送、联系人、签名和无人值守自动化规则的工具。把 MCP 端点 URL 粘贴到 claude.ai、Claude Desktop、Cursor 或任何兼容 MCP 的智能体中。"
       },
       "1": {
         "tag": "存储",
         "h": "邮件实时获取，从不存储。",
-        "p": "每一次工具调用都会实时访问你的服务商：Gmail API、Microsoft Graph 或 IMAP。邮件正文、主题和附件会发送给智能体，并随即被丢弃。我们每个收件箱只持久化一样东西，即一个加密的令牌或应用专用密码，以便进行下一次调用。唯一的例外是你安排在稍后发送的邮件：我们会保留它直到发送时间，然后为你的历史记录留存一份记录。"
+        "p": "每一次工具调用都会实时访问你的服务商：Gmail API、Microsoft Graph 或 IMAP。邮件正文、主题和附件会发送给智能体，并随即被丢弃。我们每个收件箱只持久化一样东西，即一个加密的令牌或应用专用密码，以便进行下一次调用。例外是需要等待的外发邮件：你安排稍后发送的邮件，或等待你批准的发送，会被加密存储，其记录会保留在你的历史中。"
       },
       "2": {
         "tag": "发送",
@@ -81,7 +81,7 @@
       "3": {
         "tag": "服务商",
         "h": "Gmail、Outlook、iCloud、Fastmail 及任何 IMAP 收件箱。",
-        "p": "Gmail 使用应用密码或 Google 登录（OAuth 2.0）；Outlook / Microsoft 365 使用 Microsoft 登录（OAuth 2.0；工作或学校账户可能需要其 IT 管理员先一次性批准该应用）；Fastmail、iCloud、Yahoo、Zoho 和 Yandex 使用应用专用密码；其余一切则通过通用 IMAP / SMTP 连接器。连接多个收件箱，按用途为它们打标签（work-gmail、ops-fastmail、support-imap），并将每个 API 密钥的权限范围限定到你希望该智能体访问的收件箱。团队和代理机构可以在一个共享工作区中管理所有客户的收件箱，并配有角色和审计日志。"
+        "p": "Gmail 通过 IMAP 使用 Google 应用密码；Outlook / Microsoft 365 使用 Microsoft 登录（OAuth 2.0；工作或学校账户可能需要其 IT 管理员先一次性批准该应用）；Fastmail、iCloud、Yahoo、Zoho 和 Yandex 使用应用专用密码；其余一切则通过通用 IMAP / SMTP 连接器。连接多个收件箱，按用途为它们打标签（work-gmail、ops-fastmail、support-imap），并将每个 API 密钥的权限范围限定到你希望该智能体访问的收件箱。团队和代理机构可以在一个共享工作区中管理所有客户的收件箱，并配有角色和审计日志。"
       },
       "4": {
         "tag": "访问",
@@ -91,7 +91,7 @@
       "5": {
         "tag": "安全",
         "h": "凭据在静态时加密。",
-        "p": "OAuth 令牌和应用密码在写入数据库前会经过 AES-256-GCM 加密。解密只在调用时于一个隔离的 Edge Function 内部进行。加密密钥作为环境密钥存储，与数据库分离。"
+        "p": "OAuth 令牌和应用密码在写入数据库前会经过 AES-256-GCM 加密。它们只在我们的服务器上、为需要它们的请求解密。加密密钥作为环境密钥存储，与数据库分离。"
       }
     }
   },
@@ -110,7 +110,7 @@
       },
       "2": {
         "h": "你的智能体处理收件箱",
-        "p": "智能体调用诸如 <code>email_read()</code> 或 <code>email_compose()</code> 之类的工具。MCPEmails 从你的服务商实时获取并返回结果。两次调用之间不会缓存任何内容。"
+        "p": "智能体调用诸如 <code>email_read()</code> 或 <code>email_compose()</code> 之类的工具。MCP Emails 从你的服务商实时获取并返回结果。两次调用之间不会缓存任何内容。"
       }
     },
     "tools": {
@@ -128,17 +128,17 @@
     "eyebrow": "真实的提示词",
     "titleLine1": "开口就行。",
     "titleLine2": "它会读、会写、会归档。",
-    "sub": "无需学习任何仪表板。用日常语言告诉你的 AI 助手你想做什么，它就会通过 mcpemails 完成。"
+    "sub": "无需学习任何仪表板。用日常语言告诉你的 AI 助手你想做什么，它就会通过 MCP Emails 完成。"
   },
   "quote": {
     "text": "我希望我的智能体能处理我的收件箱，但每一个方案都意味着把我的邮件副本交给第三方。于是我打造了一直渴望存在的那条管道：连接一次，你的收件箱实时获取且从不存储，并且你可以一键切断任何智能体。这就是我敢用自己收件箱去信任的产品。",
-    "role": "创始人，mcpemails"
+    "role": "创始人，MCP Emails"
   },
   "reviews": {
     "eyebrow": "用户评价",
     "titleLine1": "不必听我们说。",
     "titleLine2": "听他们说。",
-    "sub": "来自真实用户的评价，他们用 mcpemails 连接自己的收件箱，并以实名公开发表。",
+    "sub": "来自真实用户的评价，他们用 MCP Emails 连接自己的收件箱，并以实名公开发表。",
     "ratingLabel": "评分 {rating} 分（满分 5 分）",
     "count": "{count, plural, other {# 条评价}}",
     "via": "发表于 {source}",
@@ -215,7 +215,7 @@
     "items": [
       {
         "q": "MCP Emails 是 IMAP MCP 服务器吗？",
-        "a": "是的。除了 Gmail 和 Outlook 登录之外，还有通用的 IMAP 和 SMTP 连接器，因此任何提供 IMAP 访问的邮箱都可以使用：你自己的域名、主机服务商或本地运营商的邮箱。只需填写一次服务器信息和应用密码，你的智能体就会通过 IMAP 读取邮件，并通过你自己的 SMTP 服务器发送。"
+        "a": "是的。除了 Gmail 和 Outlook 之外，还有通用的 IMAP 和 SMTP 连接器，因此任何提供 IMAP 访问的邮箱都可以使用：你自己的域名、主机服务商或本地运营商的邮箱。只需填写一次服务器信息和应用密码，你的智能体就会通过 IMAP 读取邮件，并通过你自己的 SMTP 服务器发送。"
       },
       {
         "q": "一个智能体可以同时处理多个邮箱吗？",
@@ -235,11 +235,11 @@
       },
       {
         "q": "我可以连接哪些邮箱服务商？",
-        "a": "通过应用密码或 Google 登录连接 Gmail，通过 Microsoft 登录连接 Outlook 和 Microsoft 365（工作或学校账户可能需要其 IT 管理员先一次性批准该应用），通过应用专用密码连接 Fastmail、iCloud、Yahoo、Zoho 和 Yandex，以及通过通用 IMAP/SMTP 连接任何其他邮箱。想连接多少个收件箱都可以，并按用途为它们打上标签。"
+        "a": "通过 IMAP 和 Google 应用密码连接 Gmail 和 Google Workspace，通过 Microsoft 登录连接 Outlook 和 Microsoft 365（工作或学校账户可能需要其 IT 管理员先一次性批准该应用），通过应用专用密码连接 Fastmail、iCloud、Yahoo、Zoho 和 Yandex，以及通过通用 IMAP/SMTP 连接任何其他邮箱。想连接多少个收件箱都可以，并按用途为它们打上标签。"
       },
       {
         "q": "我的邮件会被存储在任何地方吗？",
-        "a": "不会。你的智能体读取的邮件在每次请求时都从你的服务商实时获取，从不存储在我们的服务器上。唯一的例外是你明确安排稍后发送的邮件，它会被加密保存直到发出。"
+        "a": "不会。你的智能体读取的邮件在每次请求时都从你的服务商实时获取，从不存储在我们的服务器上。例外是需要等待的外发邮件：你安排稍后发送的邮件，或等待你批准的发送，会被加密存储。"
       },
       {
         "q": "真的免费吗？",
@@ -247,11 +247,11 @@
       },
       {
         "q": "AI 实际上能用我的收件箱做什么？",
-        "a": "读取和搜索邮件，发送、回复和转发真实邮件，安排稍后发送，以及整理你的收件箱：移动、复制、标记、归档和删除。十七个基于操作的工具，让智能体在你的收件箱内完成整件事，而不只是起草。"
+        "a": "读取和搜索邮件，发送、回复和转发真实邮件，安排稍后发送，以及整理你的收件箱：移动、复制、标记、归档和删除。十九个基于操作的工具，让智能体在你的收件箱内完成整件事，而不只是起草。"
       },
       {
         "q": "我该如何连接收件箱？",
-        "a": "创建一个免费账户，连接你的邮箱（Gmail 使用应用密码或 Google 登录，Outlook 用 Microsoft 登录，其他邮箱粘贴应用密码即可），然后将 https://mcpemails.com/api/mcp 填入你的 AI 客户端并授权。几分钟后，你的智能体就能用上这个收件箱。"
+        "a": "创建一个免费账户，连接你的邮箱（Gmail 使用 Google 应用密码，Outlook 用 Microsoft 登录，其他邮箱粘贴应用密码即可），然后将 https://mcpemails.com/api/mcp 填入你的 AI 客户端并授权。几分钟后，你的智能体就能用上这个收件箱。"
       },
       {
         "q": "我可以自托管吗？",
@@ -279,9 +279,9 @@
     "linkWithdrawal": "撤回权",
     "linkCancel": "在此取消合同",
     "linkImpressum": "Impressum",
-    "copyright": "© 2026 mcpemails.",
+    "copyright": "© 2026 MCP Emails.",
     "legal": "邮件实时获取，从不存储 · 凭据静态加密",
-    "legalEntity": "MCPEmails 由 Albretsen AS 运营，组织机构号 938 702 373，地址：Håsteins gate 9, 5160 Laksevåg, 挪威。",
+    "legalEntity": "MCP Emails 由 Albretsen AS 运营，组织机构号 938 702 373，地址：Håsteins gate 9, 5160 Laksevåg, 挪威。",
     "contactLabel": "联系",
     "mcpLabel": "MCP 端点",
     "copy": "复制",
