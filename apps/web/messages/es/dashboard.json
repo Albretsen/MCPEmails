@@ -593,7 +593,7 @@
     "confirmNoteInterval": "Se cobra ahora en la tarjeta guardada, con un abono por el tiempo restante del periodo actual. Tu periodo de facturación empieza de nuevo hoy, así que tu próxima fecha de renovación cambia.",
     "confirmNoteIntervalNoPreview": "No pudimos calcular este cambio por adelantado. Se cobra la diferencia en la tarjeta guardada, con un abono por el tiempo restante del periodo actual, y el importe exacto aparece en tu factura. Tu periodo de facturación empieza de nuevo hoy, así que tu próxima fecha de renovación cambia.",
     "confirmPay": "Confirmar y pagar {amount}",
-    "confirmChange": "Confirmar cambio",
+    "confirmChange": "Confirmar y pagar",
     "confirmCancel": "Cancelar",
     "confirming": "Cobrando…",
     "planChangedCharged": "Ya estás en {plan}. Se han cobrado {amount} a tu tarjeta.",

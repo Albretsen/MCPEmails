@@ -5,6 +5,7 @@ import { getProvider, providerLocales } from '@/lib/connect/providers.mjs';
 import { isViewable } from '@/lib/connect/release.mjs';
 import { getProviderContent, providerParams } from '@/lib/connect/content.mjs';
 import { getMultiMailboxCopy, multiMailboxFaq, showsMultiMailbox } from '@/lib/connect/multi-mailbox.mjs';
+import { getGuideCopy } from '@/lib/connect/guides.mjs';
 import { stripTags } from '../../../../components/marketing/RichText';
 import ConnectProviderView from '../../../../components/marketing/ConnectProviderView';
 
@@ -70,6 +71,7 @@ export default async function ConnectProviderPage({ params }) {
     ...(content.faq ?? []),
     ...(multiMailbox ? [multiMailboxFaq(multiMailbox, provider.name)] : []),
   ];
+  const guides = await getGuideCopy(locale);
   const jsonLd = connectJsonLd(locale, {
     path: `/connect/${slug}`,
     title: content.meta.title,
@@ -86,7 +88,7 @@ export default async function ConnectProviderPage({ params }) {
         type="application/ld+json"
         dangerouslySetInnerHTML={{ __html: JSON.stringify(jsonLd) }}
       />
-      <ConnectProviderView locale={locale} provider={provider} content={content} multiMailbox={multiMailbox} />
+      <ConnectProviderView locale={locale} provider={provider} content={content} multiMailbox={multiMailbox} guides={guides} />
     </>
   );
 }

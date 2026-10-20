@@ -52,7 +52,10 @@
     "p2": "MCP Emails er en vertsbasert en. Den fungerer med Gmail, Outlook og Microsoft 365, iCloud, Fastmail og alle postkasser som støtter IMAP, og én agent kan jobbe i flere postkasser samtidig. E-posten hentes direkte fra leverandøren din ved hvert kall og lagres aldri på serverne våre.",
     "linkImap": "Sett opp MCP-serveren for IMAP",
     "linkBusiness": "E-post-MCP for firmaets postkasser",
-    "linkProviders": "Alle støttede e-postleverandører"
+    "linkProviders": "Alle støttede e-postleverandører",
+    "guideClaude": "Slik kobler du Claude til e-posten din",
+    "guideChatgpt": "Slik kobler du ChatGPT til e-posten din",
+    "guideImap": "Guide til Claude IMAP-koblingen"
   },
   "features": {
     "eyebrow": "Prinsipper",
@@ -273,6 +276,9 @@
     "linkClients": "Oppsett av MCP-klienter",
     "linkPrivacy": "Personvern",
     "linkTerms": "Vilkår",
+    "linkWithdrawal": "Angrerett",
+    "linkCancel": "Si opp avtaler her",
+    "linkImpressum": "Impressum",
     "copyright": "© 2026 mcpemails.",
     "legal": "E-post hentes i sanntid, lagres aldri · Legitimasjon kryptert ved lagring",
     "legalEntity": "MCPEmails er en tjeneste fra Albretsen Consulting (enkeltpersonforetak), organisasjonsnummer 926 646 753, Håsteins gate 9, 5160 Laksevåg, Norge.",

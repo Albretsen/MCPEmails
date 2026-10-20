@@ -72,7 +72,7 @@ De deux façons : modifiez-la par boîte dans le tableau de bord, ou demandez-le
 
 Définissez votre signature une fois, par boîte, et chaque e-mail que Claude envoie depuis cette boîte (nouveau, réponse, transfert, brouillon ou programmé) part signé comme si vous l'aviez écrit. Cela fonctionne sur tous les fournisseurs, se place correctement dans les fils et s'efface avec \`include_signature\` quand vous voulez une réponse dépouillée.
 
-[Ouvrez votre tableau de bord](/dashboard) pour définir une signature, ou dites simplement à Claude ce que devrait être la vôtre. Pas encore connecté ? [Commencez gratuitement](/signup) et connectez une boîte en environ deux minutes.`,
+[Ouvrez votre tableau de bord](/dashboard) pour définir une signature, ou dites simplement à Claude ce que devrait être la vôtre. Pas encore connecté ? [Commencez gratuitement](/signup) et connectez une boîte en environ deux minutes. Le [guide pour connecter Claude à votre boîte](/blog/connect-claude-to-email) détaille chaque étape.`,
 };
 
 export default translation;
