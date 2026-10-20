@@ -42,7 +42,7 @@ MCPEmails
 You are getting this because you asked for product tips and offers when you signed up. Unsubscribe: https://mcpemails.com/api/email/unsubscribe?token=UNSUBSCRIBE-TOKEN&c=lifecycle
 Billing and account notices are separate and are not affected.
 
-MCPEmails is a service of Albretsen Consulting (enkeltpersonforetak), organisation number 926 646 753, Håsteins gate 9, 5160 Laksevåg, Norway.
+MCPEmails is a service of Albretsen AS, organisation number 938 702 373, Håsteins gate 9, 5160 Laksevåg, Norway.
 ```
 
 ## Step 2
@@ -74,7 +74,7 @@ MCPEmails
 You are getting this because you asked for product tips and offers when you signed up. Unsubscribe: https://mcpemails.com/api/email/unsubscribe?token=UNSUBSCRIBE-TOKEN&c=lifecycle
 Billing and account notices are separate and are not affected.
 
-MCPEmails is a service of Albretsen Consulting (enkeltpersonforetak), organisation number 926 646 753, Håsteins gate 9, 5160 Laksevåg, Norway.
+MCPEmails is a service of Albretsen AS, organisation number 938 702 373, Håsteins gate 9, 5160 Laksevåg, Norway.
 ```
 
 ## Step 3
@@ -107,6 +107,6 @@ MCPEmails
 You are getting this because you asked for product tips and offers when you signed up. Unsubscribe: https://mcpemails.com/api/email/unsubscribe?token=UNSUBSCRIBE-TOKEN&c=lifecycle
 Billing and account notices are separate and are not affected.
 
-MCPEmails is a service of Albretsen Consulting (enkeltpersonforetak), organisation number 926 646 753, Håsteins gate 9, 5160 Laksevåg, Norway.
+MCPEmails is a service of Albretsen AS, organisation number 938 702 373, Håsteins gate 9, 5160 Laksevåg, Norway.
 ```
 

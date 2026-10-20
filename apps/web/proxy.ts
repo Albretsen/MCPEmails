@@ -275,7 +275,21 @@ export const config = {
      *  - video and caption files (the demo cut lives at /demo/*.mp4 and is
      *    fetched with Range requests; running the auth round trip on each of
      *    those byte-range requests is pure latency for no decision)
+     *  - machine routes, which no browser session ever drives and which read
+     *    nothing this proxy produces (no nonce, no subject id, no locale, no
+     *    refreshed Supabase session). Running the proxy on them minted a
+     *    visitor-id Set-Cookie and a Supabase getUser round trip on every MCP
+     *    call: ~1.18M of 1.24M proxy runs a week (measured 2026-10-20).
+     *      api/mcp                       Bearer key or OAuth token only
+     *      api/oauth/token|register|revoke|userinfo
+     *                                    client credentials / Bearer only.
+     *                                    api/oauth/authorize is NOT excluded:
+     *                                    the consent POST reads the session.
+     *      .well-known/*                 static discovery documents
+     *      sitemap.xml, robots.txt, opengraph-image
+     *    None of these is a protected path in updateSession, so the dashboard
+     *    guard is untouched by this list.
      */
-    '/((?!_next/static|_next/image|favicon\\.ico|.*\\.(?:svg|png|jpg|jpeg|gif|webp|woff|woff2|ttf|otf|mp4|webm|mov|vtt)$).*)',
+    '/((?!_next/static|_next/image|favicon\\.ico|api/mcp/?$|api/oauth/(?:token|register|revoke|userinfo)/?$|\\.well-known/|sitemap\\.xml$|robots\\.txt$|opengraph-image|.*\\.(?:svg|png|jpg|jpeg|gif|webp|woff|woff2|ttf|otf|mp4|webm|mov|vtt)$).*)',
   ],
 };

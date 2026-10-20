@@ -11,7 +11,7 @@ This repo is public. Never commit customer email addresses, customer or company 
 - `apps/web`: Next.js 16 site, dashboard and API routes (mcpemails.com), deployed by Vercel.
 - `apps/client`: Vite + React web mail client (app.mcpemails.com).
 - `apps/mcp-app`: the in-chat draft card. Its build is generated into `supabase/functions/mcp-server/ui/review-card.html.ts`.
-- `supabase/functions`: Deno edge functions. `mcp-server` is the product; also `client-api`, `system-notify`, `synthetic-monitor`, `gmail-token-refresh`, `outlook-token-refresh`.
+- `supabase/functions`: Deno edge functions. `mcp-server` is the product; also `client-api`, `system-notify`, `synthetic-monitor`, `outlook-token-refresh`.
 - `supabase/migrations`, `supabase/tests`: schema, RLS and pgTAP tests.
 - `self-host/`: Docker self-host stack. `self-host/db/00-schema.sql` must keep up with what mcp-server queries (a test enforces it).
 - `packages/mcpemails`: the npm package. `tools/video-studio`: video pipeline (read its `AGENTS.md`).
