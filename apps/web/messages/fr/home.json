@@ -1,7 +1,7 @@
 {
   "meta": {
     "title": "Serveur MCP e-mail : Gmail, Outlook et IMAP",
-    "description": "Serveur MCP e-mail hébergé pour Claude, ChatGPT et Cursor. Connectez Gmail, Outlook ou toute boîte IMAP, plusieurs à la fois. Courrier lu en direct, jamais stocké."
+    "description": "Serveur MCP e-mail hébergé et connecteur pour Claude et ChatGPT. Connectez Gmail, Outlook ou toute boîte IMAP, plusieurs à la fois. Le courrier n'est jamais stocké."
   },
   "nav": {
     "features": "Fonctionnalités",
@@ -48,7 +48,7 @@
   },
   "whatIs": {
     "title": "Qu'est-ce qu'un serveur MCP e-mail ?",
-    "p1": "Un serveur MCP e-mail (email MCP server) est le pont entre un assistant IA et une vraie boîte mail. Il parle le Model Context Protocol, si bien que Claude, ChatGPT, Cursor ou tout autre client MCP peut lire, rechercher, rédiger et envoyer des e-mails via un seul point de terminaison, sans intégration distincte pour chaque application.",
+    "p1": "Un serveur MCP e-mail (email MCP server), aussi appelé connecteur MCP e-mail, est le pont entre un assistant IA et une vraie boîte mail. Il parle le Model Context Protocol, si bien que Claude, ChatGPT, Cursor ou tout autre client MCP peut lire, rechercher, rédiger et envoyer des e-mails via un seul point de terminaison, sans intégration distincte pour chaque application.",
     "p2": "MCP Emails en est un, hébergé. Il fonctionne avec Gmail, Outlook et Microsoft 365, iCloud, Fastmail et toute boîte compatible IMAP, et un même agent peut travailler sur plusieurs boîtes à la fois. Le courrier est récupéré en direct auprès de votre fournisseur à chaque appel et n'est jamais stocké sur nos serveurs.",
     "linkImap": "Configurer le serveur MCP pour IMAP",
     "linkBusiness": "MCP e-mail pour les boîtes de l'entreprise",

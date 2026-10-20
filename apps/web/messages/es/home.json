@@ -1,7 +1,7 @@
 {
   "meta": {
     "title": "Servidor MCP de correo: Gmail, Outlook e IMAP",
-    "description": "Servidor MCP de correo alojado para Claude, ChatGPT y Cursor. Conecta Gmail, Outlook o cualquier buzón IMAP, varios a la vez. Correo en vivo, nunca almacenado."
+    "description": "Servidor MCP de correo alojado y conector para Claude y ChatGPT. Conecta Gmail, Outlook o cualquier buzón IMAP, varios a la vez. El correo nunca se almacena."
   },
   "nav": {
     "features": "Características",
@@ -48,7 +48,7 @@
   },
   "whatIs": {
     "title": "¿Qué es un servidor MCP de correo?",
-    "p1": "Un servidor MCP de correo electrónico (email MCP server) es el puente entre un asistente de IA y un buzón real. Habla el Model Context Protocol, de modo que Claude, ChatGPT, Cursor o cualquier otro cliente MCP puede leer, buscar, redactar y enviar correo a través de un único endpoint, sin una integración aparte para cada aplicación.",
+    "p1": "Un servidor MCP de correo electrónico (email MCP server), también llamado conector MCP de correo, es el puente entre un asistente de IA y un buzón real. Habla el Model Context Protocol, de modo que Claude, ChatGPT, Cursor o cualquier otro cliente MCP puede leer, buscar, redactar y enviar correo a través de un único endpoint, sin una integración aparte para cada aplicación.",
     "p2": "MCP Emails es uno alojado. Funciona con Gmail, Outlook y Microsoft 365, iCloud, Fastmail y cualquier buzón compatible con IMAP, y un mismo agente puede trabajar con varios buzones a la vez. El correo se obtiene en vivo de tu proveedor en cada llamada y nunca se almacena en nuestros servidores.",
     "linkImap": "Configura el servidor MCP para IMAP",
     "linkBusiness": "MCP de correo para los buzones de tu empresa",

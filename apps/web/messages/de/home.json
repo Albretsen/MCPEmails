@@ -1,7 +1,7 @@
 {
   "meta": {
     "title": "E-Mail-MCP-Server: Gmail, Outlook, IMAP & Claude",
-    "description": "Gehosteter E-Mail-MCP-Server für Claude, ChatGPT und Cursor. Verbinden Sie Gmail, Outlook oder jedes IMAP-Postfach, auch mehrere gleichzeitig. E-Mails werden live abgerufen und nie gespeichert."
+    "description": "Gehosteter E-Mail-MCP-Server und Konnektor für Claude und ChatGPT. Verbinden Sie Gmail, Outlook oder jedes IMAP-Postfach, auch mehrere gleichzeitig. E-Mails werden nie gespeichert."
   },
   "nav": {
     "features": "Funktionen",
@@ -48,7 +48,7 @@
   },
   "whatIs": {
     "title": "Was ist ein E-Mail-MCP-Server?",
-    "p1": "Ein E-Mail-MCP-Server verbindet einen KI-Assistenten mit einem echten Postfach. Er spricht das Model Context Protocol, sodass Claude, ChatGPT, Cursor oder jeder andere MCP-Client über einen einzigen Endpunkt E-Mails lesen, suchen, entwerfen und senden kann, ohne eigene Integration für jede App.",
+    "p1": "Ein E-Mail-MCP-Server, auch E-Mail-MCP-Konnektor genannt, verbindet einen KI-Assistenten mit einem echten Postfach. Er spricht das Model Context Protocol, sodass Claude, ChatGPT, Cursor oder jeder andere MCP-Client über einen einzigen Endpunkt E-Mails lesen, suchen, entwerfen und senden kann, ohne eigene Integration für jede App.",
     "p2": "MCP Emails ist ein gehosteter E-Mail-MCP-Server. Er funktioniert mit Gmail, Outlook und Microsoft 365, iCloud, Fastmail und jedem Postfach mit IMAP, und ein Agent kann mehrere Postfächer gleichzeitig bearbeiten. E-Mails werden bei jedem Aufruf live von Ihrem Anbieter abgerufen und nie auf unseren Servern gespeichert.",
     "linkImap": "IMAP-MCP-Server einrichten",
     "linkBusiness": "E-Mail-MCP für Firmenpostfächer",

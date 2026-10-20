@@ -1,7 +1,7 @@
 {
   "meta": {
     "title": "邮件 MCP 服务器：连接 Gmail、Outlook、IMAP 与 Claude",
-    "description": "面向 Claude、ChatGPT 和 Cursor 的托管邮件 MCP 服务器。连接 Gmail、Outlook 或任何 IMAP 邮箱，可同时接入多个。邮件实时读取，从不存储。"
+    "description": "面向 Claude 和 ChatGPT 的托管邮件 MCP 服务器与连接器。连接 Gmail、Outlook 或任何 IMAP 邮箱，可同时接入多个。邮件从不存储。"
   },
   "nav": {
     "features": "功能",
@@ -48,7 +48,7 @@
   },
   "whatIs": {
     "title": "什么是邮件 MCP 服务器？",
-    "p1": "邮件 MCP 服务器（email MCP server）是 AI 助手与真实邮箱之间的桥梁。它使用 Model Context Protocol，因此 Claude、ChatGPT、Cursor 或任何其他 MCP 客户端都能通过同一个端点读取、搜索、起草和发送邮件，无需为每个应用单独做集成。",
+    "p1": "邮件 MCP 服务器（email MCP server），也称邮件 MCP 连接器，是 AI 助手与真实邮箱之间的桥梁。它使用 Model Context Protocol，因此 Claude、ChatGPT、Cursor 或任何其他 MCP 客户端都能通过同一个端点读取、搜索、起草和发送邮件，无需为每个应用单独做集成。",
     "p2": "MCP Emails 就是一个托管的邮件 MCP 服务器。它支持 Gmail、Outlook 和 Microsoft 365、iCloud、Fastmail 以及任何支持 IMAP 的邮箱，同一个智能体可以同时处理多个邮箱。每次调用时，邮件都从你的服务商实时获取，从不存储在我们的服务器上。",
     "linkImap": "设置 IMAP MCP 服务器",
     "linkBusiness": "面向公司邮箱的邮件 MCP",

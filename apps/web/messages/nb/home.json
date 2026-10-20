@@ -1,7 +1,7 @@
 {
   "meta": {
     "title": "MCP-server for e-post: Gmail, Outlook og IMAP",
-    "description": "Vertsbasert MCP-server for e-post til Claude, ChatGPT og Cursor. Koble til Gmail, Outlook eller IMAP, flere postkasser samtidig. E-post hentes direkte, lagres aldri."
+    "description": "Vertsbasert MCP-server og kobling for e-post til Claude og ChatGPT. Koble til Gmail, Outlook eller IMAP, flere postkasser samtidig. E-post lagres aldri."
   },
   "nav": {
     "features": "Funksjoner",
@@ -48,7 +48,7 @@
   },
   "whatIs": {
     "title": "Hva er en MCP-server for e-post?",
-    "p1": "En MCP-server for e-post (email MCP server) er broen mellom en AI-assistent og en ekte postkasse. Den snakker Model Context Protocol, slik at Claude, ChatGPT, Cursor eller en annen MCP-klient kan lese, søke, skrive utkast og sende e-post gjennom ett endepunkt, uten en egen integrasjon for hver app.",
+    "p1": "En MCP-server for e-post (email MCP server), også kalt en MCP-kobling for e-post, er broen mellom en AI-assistent og en ekte postkasse. Den snakker Model Context Protocol, slik at Claude, ChatGPT, Cursor eller en annen MCP-klient kan lese, søke, skrive utkast og sende e-post gjennom ett endepunkt, uten en egen integrasjon for hver app.",
     "p2": "MCP Emails er en vertsbasert en. Den fungerer med Gmail, Outlook og Microsoft 365, iCloud, Fastmail og alle postkasser som støtter IMAP, og én agent kan jobbe i flere postkasser samtidig. E-posten hentes direkte fra leverandøren din ved hvert kall og lagres aldri på serverne våre.",
     "linkImap": "Sett opp MCP-serveren for IMAP",
     "linkBusiness": "E-post-MCP for firmaets postkasser",
