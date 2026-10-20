@@ -257,7 +257,7 @@ async function PulseBoard({ days }: { days: number }) {
           breakfast still reads 99% on it, in calm grey, because twenty eight
           days of history cannot move in a morning. The long-run figure is
           still worth having and is now a fact under the headline; the headline
-          is the last hour, refreshed on its own 45 second clock rather than the
+          is the last hour, refreshed on its own two minute clock rather than the
           board's five minute one. */}
       <KioskHealthTile baselineRate={attemptRate(successes, calls, throttled)} baselineDays={days} />
 
