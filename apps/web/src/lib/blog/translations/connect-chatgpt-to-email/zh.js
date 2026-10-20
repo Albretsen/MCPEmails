@@ -1,5 +1,5 @@
 const translation = {
-  title: '用 MCP 把 ChatGPT 连接到你的邮箱（Gmail、Outlook、iCloud 和 IMAP）',
+  title: '将 ChatGPT 连接到你的邮箱：Yahoo、iCloud、Outlook 与 IMAP',
   description:
     '分步指南：用自定义 MCP 连接器把 Gmail、Outlook、iCloud、Fastmail 或任意 IMAP 收件箱接入 ChatGPT，并用受限密钥接入 OpenAI Codex。不存储任何邮件。',
   coverAlt:

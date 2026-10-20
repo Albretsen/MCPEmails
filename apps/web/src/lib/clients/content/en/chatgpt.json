@@ -5,8 +5,8 @@
     "https://help.openai.com/en/articles/12584461"
   ],
   "meta": {
-    "title": "Connect Email to ChatGPT: MCP Connector Setup",
-    "description": "Add a real inbox to ChatGPT with developer mode and a custom MCP connector. OAuth, no API key, then read, search, send and schedule mail. One inbox free."
+    "title": "ChatGPT Developer Mode: Add an Email MCP Connector",
+    "description": "Add a custom MCP connector in ChatGPT developer mode and give it a real inbox: Yahoo, iCloud, Outlook or any IMAP mailbox. OAuth, no API key. One inbox free."
   },
   "hero": {
     "eyebrow": "ChatGPT + email",
