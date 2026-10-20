@@ -59,6 +59,13 @@ export const ENTRIES = [
   },
   {
     date: '2026-10-20',
+    kind: 'fixed',
+    title: 'Sent, Trash and Spam in your language',
+    body:
+      'On mail servers whose folders use localized names, such as "Éléments envoyés", "Gesendete Objekte" or "Отправленные", Sent copies are now saved and Trash, Spam, Drafts and Archive are recognised. Before, a copy of mail sent from these mailboxes was not saved to Sent.',
+  },
+  {
+    date: '2026-10-20',
     kind: 'added',
     title: 'MCP Emails in German',
     body:

@@ -141,27 +141,184 @@ export const IMAP_ALIAS_SPECIAL_USE: Record<string, string> = {
  * The role existed on those mailboxes. It was just not called the one English
  * word the matcher knew.
  *
- * English: the names Outlook/Exchange, Apple Mail, Thunderbird and the common
- * webmail suites create. Localized: German, French and Simplified Chinese
- * only, and only the names that can mean nothing but the role. A mailbox called
- * "Papierkorb" is the trash; nobody files project mail there. Chinese is here
- * because QQ Mail (and the other Tencent/NetEase hosts) do not advertise
- * SPECIAL-USE at all and name their roles 已发送, 草稿箱, 已删除 and 垃圾邮件,
- * so without these the flag tier has nothing to match on those accounts. Other
- * languages are left out on purpose rather than guessed at: a wrong entry here
- * is a wrong DESTINATION for a move or a soft delete, and the flag already
- * covers every server that sets it, in any language.
+ * WHICH NAMES. English: the names Outlook/Exchange, Apple Mail, Thunderbird and
+ * the common webmail suites create. Localized: the defaults those clients and
+ * the big national providers create in each language, because many hosts that
+ * do not set SPECIAL-USE (OVH MX Plan, Strato, QQ Mail, plenty of cPanel and
+ * Courier servers) keep whatever the first client to connect named the folder.
+ * An OVH mailbox whose Sent is "INBOX.Éléments envoyés" (Outlook's French
+ * name) saved no Sent copy at all until that name was here.
+ *
+ * Every name has to pass all four of these rules. A wrong entry is a wrong
+ * DESTINATION for a move, a soft delete or a Sent copy, so when in doubt a name
+ * stays out: the flag already covers every server that sets it, in any
+ * language.
+ *   1. It is the default folder name a real client or server creates in that
+ *      language: Outlook/Exchange, Apple Mail, Thunderbird, Roundcube, Gmail's
+ *      localized labels, Dovecot/cPanel/Plesk, or a big national provider
+ *      (GMX/Web.de, Orange, Libero, Seznam, WP, Yandex/Mail.ru, Naver, Daum,
+ *      QQ). Documented or widely attested, not translated by us.
+ *   2. After nameKey (NFC, lower case) it belongs to exactly ONE role across
+ *      all languages. A string that means two roles in two languages is
+ *      dropped from both ("Lixo" is trash in Thunderbird pt-PT and close to
+ *      junk elsewhere; "Sampah" is Gmail's Indonesian trash and part of
+ *      Outlook's Indonesian junk; "垃圾箱" is trash on some Chinese hosts and
+ *      spam on others). The same string meaning the same role in several
+ *      languages is fine ("Poslano", "Arkiv", "Koncepty").
+ *   3. It is not a word a user would plausibly give a folder of their own.
+ *      Bare "Mail", "Items", "Old", "Other", "Notes" never; nor drafts names
+ *      that also mean "sketches" ("Skice", "Szkice", "Schițe"), nor names that
+ *      collide with Outbox ("寄件匣", "Вихідні").
+ *   4. It is not another role's canonical name (`CanonicalFolderAlias.imap`).
+ * imap-folder-target.test.ts enforces 2 and 4 over the whole map, so a later
+ * cross-role duplicate fails CI. Rules 1 and 3 are on the person adding a name.
+ *
+ * Variant spellings that NFC does not unify are listed separately: Romanian
+ * comma-below and cedilla (ș/ş), Vietnamese tone-mark placement (xóa/xoá), the
+ * Russian ё/е, the Persian zero-width non-joiner.
+ */
+/**
+ * The alternate names as they stood before the localized names were added,
+ * frozen. {@link resolveImapAlias} runs every tier it always ran with ONLY
+ * these, and returns that answer whenever it is a match or an ambiguity. The
+ * localized names are consulted only when this pass finds nothing, so a layout
+ * that resolved before resolves to the same mailbox now: an account holding
+ * both "Gesendet" and "Gesendete Objekte" still gets "Gesendet", and
+ * "INBOX.Sent" is not pre-empted by a top-level "Enviados". Do not add names
+ * here; add them to IMAP_ALIAS_ALTERNATE_NAMES.
+ */
+export const IMAP_ALIAS_LEGACY_ALTERNATE_NAMES: Readonly<Record<string, readonly string[]>> = Object.freeze({
+  sent: Object.freeze(["Sent Items", "Sent Messages", "Sent Mail", "Gesendet", "Envoyés", "已发送"]),
+  drafts: Object.freeze(["Draft", "Entwürfe", "Brouillons", "草稿箱"]),
+  trash: Object.freeze(["Deleted Items", "Deleted Messages", "Bin", "Papierkorb", "Corbeille", "已删除"]),
+  archive: Object.freeze(["Archives"]),
+  spam: Object.freeze(["Spam", "Bulk", "Junk E-mail", "Junk Email", "Bulk Mail", "垃圾邮件"]),
+});
+
+/**
+ * Every alternate name a role answers to: the legacy names above plus the
+ * localized ones. The legacy names must stay in here too (a test checks it), so
+ * this is the one list the collision rules are enforced over.
  */
 export const IMAP_ALIAS_ALTERNATE_NAMES: Record<string, readonly string[]> = {
-  sent: ["Sent Items", "Sent Messages", "Sent Mail", "Gesendet", "Envoyés", "已发送"],
-  drafts: ["Draft", "Entwürfe", "Brouillons", "草稿箱"],
-  trash: ["Deleted Items", "Deleted Messages", "Bin", "Papierkorb", "Corbeille", "已删除"],
-  archive: ["Archives"],
-  spam: ["Spam", "Bulk", "Junk E-mail", "Junk Email", "Bulk Mail", "垃圾邮件"],
+  sent: [
+    // English
+    "Sent Items", "Sent Messages", "Sent Mail",
+    // German
+    "Gesendet", "Gesendete Objekte", "Gesendete Elemente", "Gesendete Nachrichten",
+    // French
+    "Envoyés", "Éléments envoyés", "Messages envoyés",
+    // Spanish, Portuguese (PT, BR)
+    "Enviados", "Elementos enviados", "Mensajes enviados", "Itens Enviados", "Mensagens Enviadas",
+    "E-mails enviados",
+    // Italian, Catalan
+    "Posta inviata", "Inviata", "Inviati", "Messaggi inviati", "Enviats", "Elements enviats",
+    "Missatges enviats",
+    // Dutch
+    "Verzonden", "Verzonden items", "Verzonden berichten",
+    // Norwegian, Danish, Swedish, Finnish, Icelandic
+    "Sendt", "Sendte elementer", "Sendte meldinger", "Sendt post", "Sendte meddelelser", "Skickat",
+    "Skickade", "Skickade objekt", "Skickade meddelanden", "Lähetetyt", "Lähetetyt kohteet",
+    "Lähetetyt viestit", "Sendir hlutir",
+    // Polish, Czech, Slovak, Hungarian, Romanian
+    "Wysłane", "Elementy wysłane", "Odeslané", "Odeslaná pošta", "Odoslané", "Odoslaná pošta",
+    "Elküldött", "Elküldött elemek", "Elküldött üzenetek", "Trimise", "Elemente trimise",
+    "Mesaje trimise",
+    // Croatian, Serbian, Slovenian, Bosnian (Latin)
+    "Poslano", "Poslane stavke", "Poslato", "Poslate stavke", "Poslana pošta",
+    // Bulgarian, Russian, Ukrainian, Greek
+    "Изпратени", "Отправленные", "Надіслані", "Відправлені", "Απεσταλμένα",
+    // Turkish, Lithuanian, Latvian, Estonian
+    "Gönderilmiş Öğeler", "Gönderilenler", "Išsiųsti", "Išsiųsti elementai", "Nosūtītie",
+    "Nosūtītie vienumi", "Saadetud", "Saadetud üksused", "Saadetud kirjad",
+    // Japanese, Korean, Chinese (Simplified, Traditional)
+    "送信済み", "送信済みアイテム", "送信済みメール", "送信済みトレイ", "보낸 편지함", "보낸편지함",
+    "보낸 메일함", "보낸메일함", "已发送", "已发送邮件", "已發送", "寄件備份", "已傳送", "已傳送郵件",
+    // Vietnamese, Indonesian, Malay, Thai
+    "Đã gửi", "Thư đã gửi", "Mục đã gửi", "Terkirim", "Item Terkirim", "Item Dihantar",
+    "รายการที่ส่ง", "ส่งแล้ว",
+    // Hebrew, Arabic, Persian, Hindi
+    "פריטים שנשלחו", "נשלחו", "العناصر المرسلة", "المرسلة", "البريد المرسل", "ارسال شده",
+    "ارسال‌شده", "موارد ارسال شده", "भेजे गए", "भेजे गए आइटम",
+  ],
+  drafts: [
+    "Draft",
+    "Entwürfe",
+    "Brouillons",
+    "Borradores", "Rascunhos",
+    "Bozze", "Esborranys",
+    "Concepten",
+    "Utkast", "Kladder", "Luonnokset", "Drög",
+    "Wersje robocze", "Kopie robocze", "Koncepty", "Rozepsané", "Piszkozatok", "Ciorne",
+    "Nacrti", "Radne verzije", "Osnutki",
+    "Чернови", "Черновики", "Чернетки", "Πρόχειρα",
+    "Taslaklar", "Juodraščiai", "Melnraksti", "Mustandid",
+    "下書き", "임시 보관함", "임시보관함", "草稿箱", "草稿", "草稿匣",
+    "Thư nháp", "Bản nháp", "Draf", "แบบร่าง", "ฉบับร่าง",
+    "טיוטות", "المسودات", "پیش‌نویس‌ها", "پیش نویس ها", "ड्राफ़्ट",
+  ],
+  trash: [
+    "Deleted Items", "Deleted Messages", "Bin",
+    "Papierkorb", "Gelöschte Objekte", "Gelöschte Elemente", "Gelöschte Nachrichten",
+    "Corbeille", "Éléments supprimés", "Messages supprimés",
+    "Papelera", "Elementos eliminados", "Mensajes eliminados", "Lixeira", "Itens Excluídos",
+    "Itens Eliminados",
+    "Cestino", "Posta eliminata", "Elementi eliminati", "Paperera", "Elements suprimits",
+    "Prullenbak", "Prullenmand", "Verwijderde items", "Verwijderde berichten",
+    "Papirkurv", "Slettede elementer", "Slettede meldinger", "Slettet post", "Papperskorgen",
+    "Borttaget", "Borttagna objekt", "Poistetut", "Poistetut kohteet", "Roskakori",
+    "Eyddir hlutir",
+    "Kosz", "Elementy usunięte", "Koš", "Odstraněná pošta", "Kôš", "Odstránená pošta", "Kuka",
+    "Törölt elemek", "Törölt üzenetek", "Elemente șterse", "Elemente şterse", "Coș de gunoi",
+    "Coş de gunoi",
+    "Izbrisane stavke", "Smeće", "Izbrisano", "Izbrisani elementi",
+    "Кошче", "Изтрити", "Изтрити елементи", "Корзина", "Удаленные", "Удалённые", "Кошик",
+    "Видалені", "Διαγραμμένα", "Διαγραμμένα στοιχεία", "Κάδος απορριμμάτων",
+    "Silinmiş Öğeler", "Çöp Kutusu", "Çöp", "Šiukšlinė", "Panaikinti elementai", "Atkritne",
+    "Izdzēstie vienumi", "Prügikast", "Kustutatud üksused",
+    "ごみ箱", "ゴミ箱", "削除済みアイテム", "削除済みメール", "휴지통", "지운 편지함", "삭제된 항목",
+    "已删除", "已删除邮件", "已刪除", "已刪除郵件", "刪除的郵件", "垃圾桶",
+    "Thùng rác", "Mục đã xóa", "Mục đã xoá", "Tong Sampah", "Item yang Dihapus", "Item Terhapus",
+    "Item Dipadam", "ถังขยะ", "รายการที่ถูกลบ",
+    "פריטים שנמחקו", "אשפה", "العناصر المحذوفة", "المهملات", "سلة المهملات", "موارد حذف شده",
+    "سطل زباله", "हटाए गए आइटम", "ट्रैश",
+  ],
+  archive: [
+    "Archives",
+    "Archiv", "Archivio", "Archivi", "Archivo", "Arquivo", "Arquivo Morto", "Arxiu", "Archief",
+    "Arkiv", "Arkisto",
+    "Archiwum", "Archív", "Archívum", "Arhivă", "Arhiva", "Arhiv",
+    "Архив", "Архів", "Αρχειοθέτηση",
+    "Arşiv", "Arşivler", "Archyvas", "Arhīvs", "Arhiiv",
+    "アーカイブ", "存档", "归档", "封存",
+    "Lưu trữ", "Arsip", "Arkib", "เก็บถาวร",
+    "ארכיון", "الأرشيف", "بایگانی",
+  ],
+  spam: [
+    "Spam", "Bulk", "Junk E-mail", "Junk Email", "Bulk Mail",
+    "Junk-E-Mail", "Spamverdacht",
+    "Courrier indésirable", "Courriers indésirables", "Indésirables", "Pourriel",
+    "Correo no deseado", "Correo basura", "Lixo Eletrônico",
+    "Posta indesiderata", "Indesiderata", "Correu brossa", "Correu no desitjat",
+    "Ongewenste e-mail",
+    "Søppelpost", "Uønsket mail", "Uønsket e-mail", "Uønsket post", "Skräppost", "Roskaposti",
+    "Ruslpóstur",
+    "Wiadomości-śmieci", "Nevyžádaná pošta", "Nevyžiadaná pošta", "Levélszemét", "E-mail nedorit",
+    "Neželjena pošta", "Neželjena e-pošta", "Neželena pošta", "Neželena e-pošta",
+    "Нежелана поща", "Спам", "Нежелательная почта", "Небажана пошта",
+    "Ανεπιθύμητη αλληλογραφία", "Ανεπιθύμητα",
+    "Gereksiz E-posta", "Nepageidaujamas el. paštas", "Nevēlamais e-pasts", "Rämpspost",
+    "迷惑メール", "정크 메일", "스팸메일함", "스팸 메일함", "스팸편지함", "垃圾邮件", "垃圾郵件",
+    "Thư rác", "Email Rác", "Email Sampah", "E-mel Remeh", "อีเมลขยะ", "จดหมายขยะ",
+    "דואר זבל", "البريد العشوائي", "البريد الإلكتروني العمومي", "هرزنامه", "जंक ईमेल", "स्पैम",
+  ],
 };
 
 /** SPECIAL-USE flag of the mailbox that holds every message (Gmail's All Mail). */
 const IMAP_ALL_MAIL_FLAG = "\\all";
+
+/** Every SPECIAL-USE flag that gives a mailbox a role, lower-cased. */
+const IMAP_ROLE_FLAGS = new Set([...Object.values(IMAP_ALIAS_SPECIAL_USE), IMAP_ALL_MAIL_FLAG]);
 
 /** LIST attributes of a name that exists in the hierarchy but cannot be opened. */
 const IMAP_UNSELECTABLE_FLAGS = new Set(["\\noselect", "\\nonexistent"]);
@@ -211,10 +368,12 @@ export type ImapAliasMatchTier =
   | "alternate_name"
   | "namespaced_canonical_name"
   | "namespaced_alternate_name"
-  | "all_mail";
+  | "all_mail"
+  | "localized_name"
+  | "namespaced_localized_name";
 
 /** Case- and normalization-insensitive key for comparing mailbox names. */
-function nameKey(name: string): string {
+export function nameKey(name: string): string {
   return name.normalize("NFC").toLowerCase();
 }
 
@@ -226,13 +385,22 @@ function nameKey(name: string): string {
  *   2. SPECIAL-USE flag match (\\Archive, \\Trash, \\Sent, \\Drafts, \\Junk).
  *   3. Case-insensitive match against the canonical English name (e.g.
  *      a mailbox literally named "Archive").
- *   4. One of the role's {@link IMAP_ALIAS_ALTERNATE_NAMES} ("Sent Items",
+ *   4. One of the role's {@link IMAP_ALIAS_LEGACY_ALTERNATE_NAMES} ("Sent Items",
  *      "Deleted Items", "Papierkorb").
  *   5. The canonical name under the personal namespace: "INBOX" + the mailbox's
  *      own hierarchy delimiter + the name ("INBOX.Sent", "INBOX/Trash"), which
  *      is how Courier and many Dovecot/cPanel hosts lay an account out.
  *   6. An alternate name under that same prefix ("INBOX.Sent Items").
  *   7. `archive` only, and only with `forRead`: the mailbox flagged \\All.
+ *   8. Only when 1 to 7 found nothing: one of the localized names in
+ *      {@link IMAP_ALIAS_ALTERNATE_NAMES} that is not a legacy name
+ *      ("Éléments envoyés", "Отправленные").
+ *   9. A localized name under the INBOX + delimiter prefix
+ *      ("INBOX.Éléments envoyés").
+ *
+ * Tiers 4 to 6 use only {@link IMAP_ALIAS_LEGACY_ALTERNATE_NAMES}, so adding a
+ * localized name can never change the answer for a layout tiers 1 to 7 already
+ * resolve (or already refuse as ambiguous).
  *
  * Every name tier is a match on the WHOLE name (for 5 and 6, the whole name
  * after the "INBOX" + delimiter prefix), never on a path segment or a suffix,
@@ -244,7 +412,7 @@ function nameKey(name: string): string {
  * endsWith().
  *
  * AMBIGUITY. Tiers 2 and 3 take the first hit, as they always have. Tiers 4 to
- * 6 are new and do not guess: when two mailboxes qualify at the same tier (an
+ * 6 and 8 to 9 do not guess: when two mailboxes qualify at the same tier (an
  * account with both "Sent Items" and "Sent Messages" and no flag on either),
  * the answer is `ambiguous`, and the caller refuses with both names.
  *
@@ -277,9 +445,9 @@ export function resolveImapAlias(
   const byName = selectable.find((mb) => mb.name.toLowerCase() === wantName);
   if (byName) return { kind: "matched", name: byName.name, how: "canonical_name" };
 
-  // (4)-(6) The new name tiers. Each is unique-or-refuse.
+  // (4)-(6) The alternate-name tiers, legacy names only. Each is unique-or-refuse.
   const canonical = new Set([nameKey(alias.imap)]);
-  const alternates = new Set((IMAP_ALIAS_ALTERNATE_NAMES[canonicalToken] ?? []).map(nameKey));
+  const legacy = new Set((IMAP_ALIAS_LEGACY_ALTERNATE_NAMES[canonicalToken] ?? []).map(nameKey));
   /** The part of a name after "INBOX" + its own delimiter, or null. */
   const underInbox = (mb: MailboxListEntry): string | null => {
     if (!mb.delimiter) return null;
@@ -289,22 +457,28 @@ export function resolveImapAlias(
       ? mb.name.slice(prefix.length)
       : null;
   };
-  const tiers: [ImapAliasMatchTier, (mb: MailboxListEntry) => boolean][] = [
-    ["alternate_name", (mb) => alternates.has(nameKey(mb.name))],
+  const uniqueOrRefuse = (
+    tiers: [ImapAliasMatchTier, (mb: MailboxListEntry) => boolean][],
+  ): ImapAliasMatch | null => {
+    for (const [how, qualifies] of tiers) {
+      const hits = selectable.filter(qualifies);
+      if (hits.length === 1) return { kind: "matched", name: hits[0].name, how };
+      if (hits.length > 1) return { kind: "ambiguous", candidates: hits.map((mb) => mb.name) };
+    }
+    return null;
+  };
+  const legacyAnswer = uniqueOrRefuse([
+    ["alternate_name", (mb) => legacy.has(nameKey(mb.name))],
     ["namespaced_canonical_name", (mb) => {
       const rest = underInbox(mb);
       return rest !== null && canonical.has(nameKey(rest));
     }],
     ["namespaced_alternate_name", (mb) => {
       const rest = underInbox(mb);
-      return rest !== null && alternates.has(nameKey(rest));
+      return rest !== null && legacy.has(nameKey(rest));
     }],
-  ];
-  for (const [how, qualifies] of tiers) {
-    const hits = selectable.filter(qualifies);
-    if (hits.length === 1) return { kind: "matched", name: hits[0].name, how };
-    if (hits.length > 1) return { kind: "ambiguous", candidates: hits.map((mb) => mb.name) };
-  }
+  ]);
+  if (legacyAnswer) return legacyAnswer;
 
   // (7) Reads only: the archive role on a mailbox with no archive is All Mail.
   if (canonicalToken === "archive" && opts.forRead) {
@@ -313,6 +487,24 @@ export function resolveImapAlias(
     );
     if (allMail.length === 1) return { kind: "matched", name: allMail[0].name, how: "all_mail" };
   }
+
+  // (8)-(9) Only when everything above found nothing: the localized names, as a
+  // whole name and then under INBOX + delimiter. Same unique-or-refuse rule; two
+  // localized names in one tier are ambiguous, never ranked. A mailbox the
+  // server flags for a role (\\Sent, \\Trash, ..., \\All) already belongs to that
+  // role, so a localized name never hands it to a second one.
+  const localized = new Set(
+    (IMAP_ALIAS_ALTERNATE_NAMES[canonicalToken] ?? []).map(nameKey).filter((k) => !legacy.has(k)),
+  );
+  const unflagged = (mb: MailboxListEntry) => !mb.flags.some((f) => IMAP_ROLE_FLAGS.has(f.toLowerCase()));
+  const localizedAnswer = uniqueOrRefuse([
+    ["localized_name", (mb) => unflagged(mb) && localized.has(nameKey(mb.name))],
+    ["namespaced_localized_name", (mb) => {
+      const rest = underInbox(mb);
+      return unflagged(mb) && rest !== null && localized.has(nameKey(rest));
+    }],
+  ]);
+  if (localizedAnswer) return localizedAnswer;
 
   return { kind: "none" };
 }
