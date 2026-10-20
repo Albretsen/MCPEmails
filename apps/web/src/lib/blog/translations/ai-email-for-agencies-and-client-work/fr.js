@@ -74,7 +74,7 @@ Répétez-le avant d'en avoir besoin. Chaque point est une action dans le tablea
 - **Retirer un membre.** Cela révoque aussi les clés API que cette personne avait créées dans l'espace, et le même démontage a lieu quand quelqu'un part de lui-même.
 - **Rétrograder en viewer.** La rétrogradation révoque ses clés qui portent plus que la lecture, plutôt que d'affaiblir en silence un identifiant sur lequel quelqu'un compte encore.
 - **Déconnecter la boîte.** L'identifiant stocké est la seule donnée de boîte jamais conservée, et la déconnexion le supprime.
-- **Révoquer aussi chez le fournisseur.** Demandez au client de supprimer le mot de passe d'application ou de retirer l'autorisation Google. Ce chemin ne passe pas par vous, et c'est précisément ce qui rassure.
+- **Révoquer aussi chez le fournisseur.** Demandez au client de supprimer le mot de passe d'application ou de retirer l'autorisation Microsoft. Ce chemin ne passe pas par vous, et c'est précisément ce qui rassure.
 
 Il n'existe pas de transfert de propriété : vous ne pouvez donc pas remettre un espace de travail à la fin d'un projet. Un client qui reprend son courrier en interne ouvre son propre compte et connecte ses propres boîtes.
 

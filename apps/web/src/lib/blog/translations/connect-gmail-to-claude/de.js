@@ -1,7 +1,7 @@
 const translation = {
   title: 'Gmail mit Claude verbinden: in 2 Minuten, ohne Code',
   description:
-    'Gmail in etwa zwei Minuten über MCP mit Claude verbinden: ein Google-App-Passwort (oder „Mit Google anmelden“), eine Endpunkt-URL, kein API-Schlüssel, kein Code. Claude liest, durchsucht und sendet Ihre E-Mails live, und Ihre E-Mails werden nie gespeichert.',
+    'Gmail in etwa zwei Minuten über MCP mit Claude verbinden: ein Google-App-Passwort, eine Endpunkt-URL, kein API-Schlüssel, kein Code. Claude liest, durchsucht und sendet Ihre E-Mails live, und Ihre E-Mails werden nie gespeichert.',
   coverAlt:
     'Gmail in zwei Minuten über MCP mit Claude verbinden: ein Google-App-Passwort, eine Endpunkt-URL, keine E-Mail gespeichert',
   content: `Um Gmail mit Claude zu verbinden, erledigen Sie zwei Dinge: Sie verbinden Ihr Gmail-Postfach einmal im Dashboard von MCP Emails mit einem Google-App-Passwort, dann fügen Sie eine einzige Endpunkt-URL in die Konnektor-Einstellungen von Claude ein und bestätigen eine Anmeldung. Das ist alles: kein Code, kein SDK, kein API-Schlüssel. Es dauert etwa zwei Minuten, und Ihre E-Mails werden nie gespeichert: Jeder Lese- und Sendevorgang geht live an Gmail und wird verworfen, sobald Claude die Daten hat.
@@ -14,7 +14,7 @@ Dies ist die Anleitung nur für Gmail. Wenn Sie mehrere Postfächer oder einen a
 - Eine Version von **Claude, die benutzerdefinierte Konnektoren unterstützt**: claude.ai mit einem kostenpflichtigen Tarif oder Claude Desktop. (Über Konnektoren spricht Claude mit MCP-Servern.)
 - Ein kostenloses **MCP Emails**-Konto. Keine Kreditkarte, ein verbundenes Postfach, dauerhaft. [Kostenlos starten](/signup) und diesen Tab geöffnet lassen.
 
-MCP Emails ist die Brücke dazwischen: Auf der einen Seite spricht es das Model Context Protocol mit Claude, auf der anderen spricht es mit Gmail, standardmäßig über IMAP oder über die Gmail API, wenn Sie sich mit Google anmelden. Wenn Sie den Hintergrund dazu wissen möchten, lesen Sie, [was ein MCP-E-Mail-Server eigentlich ist](/blog/what-is-an-mcp-email-server).
+MCP Emails ist die Brücke dazwischen: Auf der einen Seite spricht es das Model Context Protocol mit Claude, auf der anderen spricht es mit Gmail über IMAP und SMTP. Wenn Sie den Hintergrund dazu wissen möchten, lesen Sie, [was ein MCP-E-Mail-Server eigentlich ist](/blog/what-is-an-mcp-email-server).
 
 ## Schritt 1: Gmail-Postfach verbinden
 
@@ -26,18 +26,9 @@ MCP Emails ist die Brücke dazwischen: Auf der einen Seite spricht es das Model 
 
 Ihr normales Google-Passwort wird nie verwendet. Das App-Passwort ist eine separate Zugangsberechtigung, MCP Emails verschlüsselt es mit AES-256-GCM, und Sie können es jederzeit auf derselben Google-Seite widerrufen. Technisch verbindet sich das Postfach über IMAP und SMTP (\`imap.gmail.com\`).
 
-### Lieber mit Google anmelden?
+### Bei einem Google-Workspace-Konto
 
-Das Verbindungsfenster bietet noch einen zweiten Weg: Öffnen Sie **Lieber mit Google anmelden?** und klicken Sie auf **Mit Google verbinden**. Sie wählen Ihr Konto auf der Seite von Google und genehmigen Lese- und Sendezugriff. Google zeigt zuerst einen Warnhinweis, weil Google die App nicht überprüft hat. Um fortzufahren, klicken Sie auf **Erweitert** und dann auf den Link, der zu mcpemails.com weiterführt.
-
-### Welchen Weg Sie wählen sollten
-
-Beide Wege funktionieren weiterhin, und Ihre Wahl entscheidet, was Claude danach kann:
-
-- **App-Passwort (IMAP):** Gmail-Labels erscheinen als Ordner, die Suche nutzt die IMAP-Textsuche, und Claude kann Nachrichten kopieren und endgültig löschen.
-- **Mit Google anmelden (Gmail API):** Claude arbeitet mit echten Gmail-Labels und kann mit Gmail-Operatoren wie \`from:\`, \`is:unread\` und \`after:\` suchen. Löschen verschiebt E-Mails in den Papierkorb.
-
-Bei einem Google-Workspace-Konto kann ein Administrator App-Passwörter für die gesamte Domain abschalten oder Drittanbieter-Apps beim Weg über die Google-Anmeldung blockieren. Ist ein Weg gesperrt, versuchen Sie den anderen oder fragen Sie Ihren Administrator. Auf der Seite [Gmail-Einstellungen und -Limits](/connect/gmail) finden Sie alle Gmail-spezifischen Details an einem Ort.
+Ein Google-Workspace-Administrator kann App-Passwörter für die gesamte Domain abschalten. Ist **myaccount.google.com/apppasswords** für Sie nicht verfügbar, bitten Sie Ihren Administrator, App-Passwörter einzuschalten. Auf der Seite [Gmail-Einstellungen und -Limits](/connect/gmail) finden Sie alle Gmail-spezifischen Details an einem Ort.
 
 ## Schritt 2: MCP Emails zu Claude hinzufügen
 
@@ -74,9 +65,9 @@ Für weitere Muster (tägliche Triage, automatische Zusammenfassungen und Aufrä
 
 Nach der Verbindung arbeitet Claude mit einer kleinen Zahl zusammengefasster Tools und kann deshalb weit mehr als nur lesen:
 
-- **Lesen und suchen:** \`email_read\` (auflisten, lesen, Volltextsuche, mit Gmail-Operatoren, wenn Sie sich mit Google angemeldet haben).
+- **Lesen und suchen:** \`email_read\` (auflisten, lesen und suchen nach Absender, Empfänger, Betreff, Ungelesen-Status oder Zeitraum).
 - **Senden und antworten:** \`email_compose\` (senden, antworten, weiterleiten). Nachrichten gehen über Gmail als normale E-Mails von Ihrer eigenen Adresse hinaus, die Reputation Ihrer Domain bleibt also Ihre.
-- **Organisieren:** \`email_organize\` (verschieben, markieren, archivieren und Labels beim Weg über die Google-Anmeldung).
+- **Organisieren:** \`email_organize\` (verschieben, kopieren, markieren, archivieren). Gmail-Labels erscheinen als Ordner: Eine Nachricht mit mehreren Labels taucht in mehreren Ordnern auf, Verschieben ändert ihre Labels, und Archivieren entfernt sie aus dem Posteingang.
 - **Entwürfe, Ordner, Planung, Kontakte:** \`draft\`, \`folder\`, \`schedule\` und \`contact_search\` runden das Set ab.
 
 Eines sollten Sie vorab wissen: MCP Emails arbeitet mit Abfragen. Es gibt keine Push-Webhooks, Claude reagiert also auf neue E-Mails, wenn Sie es zum Nachsehen auffordern, nicht in dem Moment, in dem eine Nachricht eintrifft. Für fast jeden Assistenten-Workflow ist das genau das richtige Modell.
@@ -85,9 +76,9 @@ Eines sollten Sie vorab wissen: MCP Emails arbeitet mit Abfragen. Es gibt keine 
 
 Kurz gesagt: ja, und das Design ist darauf ausgelegt.
 
-- **Ihre E-Mails werden nie gespeichert.** Texte, Betreffzeilen und Anhänge werden bei jedem Aufruf live abgerufen, an Claude übergeben und sofort verworfen. Pro Postfach bleibt nur die verschlüsselte Zugangsberechtigung gespeichert: Ihr App-Passwort oder das OAuth-Token, wenn Sie sich mit Google angemeldet haben. Hier steht, [warum „E-Mails werden nie gespeichert“ wirklich zählt](/blog/why-email-never-stored-matters).
+- **Ihre E-Mails werden nie gespeichert.** Texte, Betreffzeilen und Anhänge werden bei jedem Aufruf live abgerufen, an Claude übergeben und sofort verworfen. Pro Postfach bleibt nur die verschlüsselte Zugangsberechtigung gespeichert, Ihr App-Passwort. Hier steht, [warum „E-Mails werden nie gespeichert“ wirklich zählt](/blog/why-email-never-stored-matters).
 - **Sie bestimmen die Berechtigungen.** Genehmigen Sie nur Lesezugriff, kann Claude schlicht nicht senden. Genehmigen Sie beides, können Sie trotzdem jeden Zugriff jederzeit widerrufen.
-- **Kein Teilen von Passwörtern.** Ihr normales Google-Passwort erreicht MCP Emails nie. Ein App-Passwort ist eine separate Zugangsberechtigung, die Sie unter myaccount.google.com/apppasswords widerrufen können, die Google-Anmeldung nutzt OAuth, und in beiden Fällen können Sie das Postfach im Dashboard trennen.
+- **Kein Teilen von Passwörtern.** Ihr normales Google-Passwort erreicht MCP Emails nie. Ein App-Passwort ist eine separate Zugangsberechtigung, die Sie jederzeit unter myaccount.google.com/apppasswords widerrufen können, oder Sie löschen das Postfach in MCP Emails.
 
 Das vollständige Bedrohungsmodell (was verschlüsselt ist, was ein Angreifer sehen würde und was nicht) steht in [Ist es sicher, einem KI-Agenten E-Mail-Zugriff zu geben?](/blog/is-it-safe-to-give-ai-agent-email-access)
 
@@ -97,7 +88,7 @@ Das vollständige Bedrohungsmodell (was verschlüsselt ist, was ein Angreifer se
 Nein. Claude unterstützt OAuth, Sie fügen also die Endpunkt-URL ein und bestätigen eine Anmeldung. API-Schlüssel sind nur für Clients ohne eingebautes OAuth gedacht.
 
 **Speichert Claude meine Gmail-Nachrichten?**
-Nein. E-Mails werden bei jeder Anfrage live von Gmail abgerufen und direkt verworfen, nachdem Claude sie gelesen hat. Gespeichert bleibt nur Ihre verschlüsselte Zugangsberechtigung (das App-Passwort oder das Zugriffstoken, wenn Sie sich mit Google angemeldet haben).
+Nein. E-Mails werden bei jeder Anfrage live von Gmail abgerufen und direkt verworfen, nachdem Claude sie gelesen hat. Gespeichert bleibt nur Ihre verschlüsselte Zugangsberechtigung (das App-Passwort).
 
 **Kann Claude E-Mails von meinem Gmail senden?**
 Ja, wenn Sie die Berechtigung \`send:email\` gewähren. Gesendet wird über Gmail als normale Nachricht von Ihrem eigenen Konto. Gewähren Sie nur Lesezugriff, wenn Claude nie senden soll.
@@ -106,7 +97,7 @@ Ja, wenn Sie die Berechtigung \`send:email\` gewähren. Gesendet wird über Gmai
 Benutzerdefinierte Konnektoren erfordern einen Claude-Tarif, der sie unterstützt (claude.ai kostenpflichtig oder Claude Desktop). Die Seite von MCP Emails ist kostenlos und ohne Karte.
 
 **Sieht MCP Emails mein Google-Passwort?**
-Nein. Sie fügen ein App-Passwort ein, eine separate Zugangsberechtigung, die Google erzeugt und die Sie widerrufen können, oder Sie melden sich per OAuth mit Google an. Ihr normales Google-Passwort wird nirgends in MCP Emails eingegeben.
+Nein. Sie fügen ein App-Passwort ein, eine separate Zugangsberechtigung, die Google erzeugt und die Sie jederzeit widerrufen können. Ihr normales Google-Passwort wird nirgends in MCP Emails eingegeben.
 
 ## Fazit
 

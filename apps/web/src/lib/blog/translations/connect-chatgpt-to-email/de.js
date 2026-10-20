@@ -24,7 +24,7 @@ Wenn Sie Free oder Go nutzen, funktionieren dasselbe Postfach und dieselbe URL b
 
 ### Gmail und Google Workspace
 
-Gmail verbindet sich standardmäßig mit einem Google-App-Passwort über IMAP, die Anmeldung über Google OAuth ist ebenfalls möglich. Verwenden Sie das App-Passwort, wenn ein Workspace-Administrator den Zugriff von Drittanbieter-Apps einschränkt. Die [Gmail-Anleitung](/blog/connect-gmail-to-claude) enthält die Schritte.
+Gmail verbindet sich mit einem Google-App-Passwort über IMAP. Aktivieren Sie die Bestätigung in zwei Schritten, erstellen Sie das App-Passwort unter myaccount.google.com/apppasswords und fügen Sie die 16 Buchstaben zusammen mit Ihrer vollständigen Gmail-Adresse ein; Ihr normales Google-Passwort funktioniert nicht. Ein Google-Workspace-Administrator kann App-Passwörter für die Domain abschalten, fragen Sie ihn also, wenn die Option fehlt. Die [Gmail-Anleitung](/blog/connect-gmail-to-claude) enthält die Schritte.
 
 ### iCloud, Fastmail, Yahoo und Zoho
 
@@ -79,7 +79,7 @@ Für wiederkehrende Abläufe beginnen Sie mit dem [Playbook zur Posteingangs-Tri
 
 MCP Emails gibt ChatGPT gezielte Tools statt eines Passworts oder einer rohen IMAP-Verbindung:
 
-- **Lesen und suchen:** \`email_read\` umfasst list, read, read_batch, search und attachment. Gmail-Suchen akzeptieren Operatoren wie \`from:\` und \`is:unread\`.
+- **Lesen und suchen:** \`email_read\` umfasst list, read, read_batch, search und attachment. Die Suche nutzt strukturierte Felder wie Absender, Betreff, Datum und Ungelesen-Status, und Gmail-Labels erscheinen als Ordner.
 - **Senden, antworten und weiterleiten:** \`email_compose\` sendet über Ihren eigenen Anbieter und Ihre eigene Adresse.
 - **Organisieren:** \`email_organize\`, \`email_search_and_move\` und \`email_delete\`.
 - **Entwürfe, Ordner und Planung:** \`draft\`, \`draft_list\`, \`folder\`, \`folder_list\`, \`schedule\` und \`schedule_list\`.

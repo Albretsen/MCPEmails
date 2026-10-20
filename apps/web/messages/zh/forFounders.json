@@ -49,7 +49,7 @@
   "does": {
     "eyebrow": "它实际能做什么",
     "title": "一个真实的收件箱，而非只读的偷瞄",
-    "sub": "十七个基于操作的工具，让你的智能体从头到尾全程处理。",
+    "sub": "十九个基于操作的工具，让你的智能体从头到尾全程处理。",
     "items": {
       "read": {
         "h": "阅读与搜索",
@@ -76,7 +76,7 @@
   "providers": {
     "eyebrow": "任意收件箱，任意 AI",
     "title": "连接你本就用来做客服的那个收件箱",
-    "sub": "Outlook 通过 Microsoft 登录连接，Gmail 通过应用密码或 Google 登录连接，其余的通过应用专用密码连接。同一个收件箱随后就能在 Claude、Cursor、VS Code、ChatGPT 以及任何 MCP 客户端中使用，所以你永远不会被锁死在一个应用里。",
+    "sub": "Outlook 通过 Microsoft 登录连接，Gmail 通过 Google 应用密码连接，其余的通过应用专用密码连接。同一个收件箱随后就能在 Claude、Cursor、VS Code、ChatGPT 以及任何 MCP 客户端中使用，所以你永远不会被锁死在一个应用里。",
     "ctaGmail": "连接 Gmail",
     "ctaOutlook": "连接 Outlook",
     "ctaFastmail": "连接 Fastmail",

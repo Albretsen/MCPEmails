@@ -23,7 +23,7 @@ MCP Emails 是一个托管 MCP 服务器。你把每个邮箱连接到它一次�
 https://mcpemails.com/api/mcp
 \`\`\`
 
-- **服务商可以任意组合。** Gmail 和 Google Workspace（应用专用密码或使用 Google 登录）、Outlook 和 Microsoft 365（使用 Microsoft 登录）、iCloud、Fastmail、Yahoo、Zoho、Yandex，以及任何支持 IMAP 和 SMTP 的邮箱。[connect](/connect) 下每家服务商都有独立页面，包括 [IONOS](/connect/ionos)、[Zoho Mail](/connect/zoho)、[Namecheap](/connect/namecheap)、[STRATO](/connect/strato)、[Migadu](/connect/migadu)、[Google Workspace](/connect/google-workspace) 和 [Microsoft 365](/connect/office365)。
+- **服务商可以任意组合。** Gmail 和 Google Workspace（Google 应用专用密码）、Outlook 和 Microsoft 365（使用 Microsoft 登录）、iCloud、Fastmail、Yahoo、Zoho、Yandex，以及任何支持 IMAP 和 SMTP 的邮箱。[connect](/connect) 下每家服务商都有独立页面，包括 [IONOS](/connect/ionos)、[Zoho Mail](/connect/zoho)、[Namecheap](/connect/namecheap)、[STRATO](/connect/strato)、[Migadu](/connect/migadu)、[Google Workspace](/connect/google-workspace) 和 [Microsoft 365](/connect/office365)。
 - **两个助手用的是同一批邮箱。** 它是标准的 MCP 服务器，所以同一个连接既能在 Claude 中使用，也能在 ChatGPT 中使用，Cursor、VS Code 和其他 MCP 客户端同样可以。邮箱只需添加一次，每个客户端都能看到。
 - **智能体知道哪个邮箱是哪个。** 它会调用 \`inbox_list\`，拿到每个已连接地址及其显示名称。其他每个工具都会指明它操作的是哪个邮箱，所以你只需用日常语言说“在 sales@ 里”就行。
 - **回复从正确的地址发出。** 每个邮箱都通过自己的服务商或 SMTP 服务器发信，使用自己的发件人名称和签名。在 support@ 里回复一个邮件线程，回复就从 support@ 发出。
@@ -35,7 +35,7 @@ https://mcpemails.com/api/mcp
 在 MCP Emails 控制台中，打开 **Inboxes**，再点 **Connect Inbox**，每个邮箱操作一次：
 
 - **使用自己域名的公司邮箱。** 选择 **IMAP** 并输入地址。常见的主机会根据地址自动识别，Google Workspace 域名则通过它的邮件记录识别，所以设置会自动填好。请使用你的主机要求的密码或应用专用密码。
-- **Gmail 或 Google Workspace。** 使用应用专用密码，或使用 Google 登录。在 Workspace 上，是否允许应用专用密码和 IMAP 由你的管理员决定。
+- **Gmail 或 Google Workspace。** 通过 IMAP 使用 Google 应用专用密码。只有开启两步验证后 Google 才会提供应用专用密码；在 Workspace 上，管理员可以关闭应用专用密码和 IMAP。
 - **Outlook 或 Microsoft 365。** 使用 Microsoft 登录。工作或学校账户可能需要 IT 管理员为整个组织批准一次该应用。
 
 给每个邮箱起一个清楚的显示名称，比如“Acme Sales”，而不是“work2”。智能体靠它区分各个邮箱，收件人看到的也是这个名称。
@@ -95,7 +95,7 @@ https://mcpemails.com/api/mcp
 不需要。一个连接器 URL 就能覆盖你 MCP Emails 工作区中的所有邮箱，同一个 URL 也适用于 Claude、ChatGPT 和其他 MCP 客户端。
 
 **回复会从正确的地址发出吗？**
-会。每个邮箱都通过自己的服务商或邮件服务器发信，使用自己的显示名称和签名。要用邮箱自身以外的地址发信，只有在通过使用 Google 登录连接的邮箱上、使用已验证的 Gmail Send As 地址时才可行，其他情况一律拒绝。
+会。每个邮箱都通过自己的服务商或邮件服务器发信，使用自己的显示名称和签名。要在 IMAP 邮箱上用另一个地址发信，请在控制台中该邮箱的设置里添加这个地址，并用发送到该地址的验证码完成验证。Outlook 从已连接的地址发信，未验证的 From 地址会被拒绝。
 
 **所有这些账户的邮件会被存储吗？**
 不会。每次请求都会从你的服务商实时获取邮件内容，用完即丢弃。保留的只是每个邮箱加密后的凭据。参见[安全](/security)。

@@ -12,7 +12,7 @@ Der MCP-Server besitzt Ihre E-Mails nicht. Er vermittelt eine Live-Verbindung zu
 
 Öffnen Sie **Dashboard → Postfächer → Postfach verbinden** und wählen Sie einen Anbieter:
 
-- **Gmail** → standardmäßig ein Google-App-Passwort über IMAP (dafür braucht Ihr Google-Konto die Bestätigung in zwei Schritten) oder, wenn Sie möchten, „Mit Google anmelden“.
+- **Gmail** → ein Google-App-Passwort über IMAP. Aktivieren Sie die Bestätigung in zwei Schritten, erstellen Sie unter myaccount.google.com/apppasswords ein App-Passwort und fügen Sie die 16 Buchstaben zusammen mit Ihrer vollständigen Gmail-Adresse ein. Ein Google-Workspace-Administrator kann App-Passwörter für die Domain abschalten.
 - **Outlook / Microsoft 365** → OAuth über „Mit Microsoft anmelden“, kein App-Passwort. Private Konten bei Outlook.com, Hotmail, Live und MSN verbinden sich sofort. Bei einem Microsoft-365-Konto von Arbeit oder Schule muss eventuell zuerst ein IT-Administrator die App einmal für die ganze Organisation freigeben. Das Dashboard gibt Ihnen einen Link, den Sie weiterleiten können.
 - **iCloud, Fastmail, Yahoo, Zoho oder ein beliebiger IMAP-Host** → ein app-spezifisches Passwort. Erstellen Sie es in den Einstellungen des Anbieters (bei iCloud unter appleid.apple.com) und fügen Sie es ein.
 
@@ -81,7 +81,7 @@ Beide Wege bieten dieselben Funktionen. Eine Handvoll zusammengefasster, aktions
 - \`inbox_list\`: immer zuerst aufrufen, um verbundene Postfächer und ihre IDs zu ermitteln.
 - \`email_read\` (Aktion \`list\`): seitenweise, neueste zuerst.
 - \`email_read\` (Aktion \`read\`): geparster Klartext, optional bereinigtes HTML, Anhänge.
-- \`email_read\` (Aktion \`search\`): native Suche des Anbieters (Gmail-Operatoren, Outlook-KQL, IMAP-Textsuche).
+- \`email_read\` (Aktion \`search\`): Suche nach Absender, Betreff, Datum, Ungelesen-Status und weiteren strukturierten Feldern, übersetzt in die eigene Suche des jeweiligen Anbieters.
 - \`email_compose\` (Aktion \`send\`): Verfassen mit CC/BCC, HTML und Anhängen bis 10 MB.
 - \`email_compose\` (Aktion \`reply\`): setzt die Header In-Reply-To und References für Sie, damit der Verlauf erhalten bleibt.
 
@@ -99,7 +99,7 @@ Der Agent führt \`inbox_list\` aus, dann \`email_read\` mit der Aktion \`list\`
 
 > Antworte auf die Nachricht der Design-Agentur und bestätige, dass Donnerstag um 14 Uhr passt. Halte es kurz.
 
-Er ruft \`email_compose\` mit der Aktion \`reply\` auf, der Verlauf bleibt erhalten, und die Antwort geht über mein eigenes Gmail hinaus. Sie kommt also von meiner Adresse mit der Reputation meiner Domain an, nicht über irgendein Relay. Mehr zu Triage-Prompts lesen Sie unter [wie ein KI-Agent Ihr Postfach sortiert und zusammenfasst](/blog/ai-agent-triage-summarize-inbox).
+Er ruft \`email_compose\` mit der Aktion \`reply\` auf, der Verlauf bleibt erhalten, und die Antwort geht über mein eigenes Gmail hinaus. Sie kommt also von meiner Adresse mit der Reputation meiner Domain an. Mehr zu Triage-Prompts lesen Sie unter [wie ein KI-Agent Ihr Postfach sortiert und zusammenfasst](/blog/ai-agent-triage-summarize-inbox).
 
 Eine Einschränkung gibt es: Es gibt keine Webhooks. Der Server schickt Ihnen neue E-Mails nicht von selbst. Soll der Agent auf eingehende Nachrichten reagieren, fragen Sie regelmäßig ab: \`email_read\` mit der Aktion \`list\` und \`unread: true\` nach Zeitplan. Das ist eine bewusste Designentscheidung, und sie bestimmt, wie Sie alles Reaktive bauen, etwa einen [automatischen Antwortdienst über MCP](/blog/build-email-auto-responder-mcp-agent).
 

@@ -25,7 +25,7 @@ MCP Emails ist ein gehosteter MCP-Server. Sie verbinden jedes Postfach einmal da
 https://mcpemails.com/api/mcp
 \`\`\`
 
-- **Beliebige Mischung von Anbietern.** Gmail und Google Workspace (App-Passwort oder „Mit Google anmelden“), Outlook und Microsoft 365 („Mit Microsoft anmelden“), iCloud, Fastmail, Yahoo, Zoho, Yandex und jedes Postfach, das IMAP und SMTP spricht. Unter [connect](/connect) gibt es eine Seite pro Hoster, darunter [IONOS](/connect/ionos), [Zoho Mail](/connect/zoho), [Namecheap](/connect/namecheap), [STRATO](/connect/strato), [Migadu](/connect/migadu), [Google Workspace](/connect/google-workspace) und [Microsoft 365](/connect/office365).
+- **Beliebige Mischung von Anbietern.** Gmail und Google Workspace (Google-App-Passwort), Outlook und Microsoft 365 („Mit Microsoft anmelden“), iCloud, Fastmail, Yahoo, Zoho, Yandex und jedes Postfach, das IMAP und SMTP spricht. Unter [connect](/connect) gibt es eine Seite pro Hoster, darunter [IONOS](/connect/ionos), [Zoho Mail](/connect/zoho), [Namecheap](/connect/namecheap), [STRATO](/connect/strato), [Migadu](/connect/migadu), [Google Workspace](/connect/google-workspace) und [Microsoft 365](/connect/office365).
 - **Dieselben Postfächer in beiden Assistenten.** Es ist ein Standard-MCP-Server, die eine Verbindung funktioniert also in Claude und in ChatGPT, ebenso in Cursor, VS Code und anderen MCP-Clients. Fügen Sie ein Postfach einmal hinzu, und jeder Client sieht es.
 - **Der Agent weiß, welches Postfach welches ist.** Er ruft \`inbox_list\` auf und erhält jede verbundene Adresse mit ihrem Anzeigenamen. Jedes andere Tool nennt das Postfach, mit dem es arbeitet, Sie sagen also einfach „in vertrieb@“.
 - **Antworten gehen von der richtigen Adresse raus.** Jedes Postfach sendet über seinen eigenen Anbieter oder SMTP-Server, mit eigenem Absendernamen und eigener Signatur. Eine Antwort in einem Verlauf in support@ geht von support@ raus.
@@ -37,7 +37,7 @@ E-Mails werden für jede Anfrage live abgerufen und nicht gespeichert. Die einzi
 Öffnen Sie im Dashboard von MCP Emails **Postfächer**, dann **Postfach verbinden**, einmal pro Postfach:
 
 - **Firmenpostfach auf eigener Domain.** Wählen Sie **IMAP** und geben Sie die Adresse ein. Gängige Hoster werden an der Adresse erkannt, eine Google-Workspace-Domain an ihren Mail-Einträgen, die Einstellungen füllen sich also selbst aus. Verwenden Sie das Passwort oder App-Passwort, das Ihr Hoster verlangt.
-- **Gmail oder Google Workspace.** Ein App-Passwort oder „Mit Google anmelden“. Bei Workspace entscheidet Ihr Administrator, ob App-Passwörter und IMAP erlaubt sind.
+- **Gmail oder Google Workspace.** Ein Google-App-Passwort über IMAP. Google bietet es erst an, wenn die Bestätigung in zwei Schritten aktiv ist, und bei Workspace kann Ihr Administrator App-Passwörter und IMAP abschalten.
 - **Outlook oder Microsoft 365.** „Mit Microsoft anmelden“. Bei einem Arbeits- oder Schulkonto muss unter Umständen der IT-Administrator die App einmal für die gesamte Organisation freigeben.
 
 Geben Sie jedem Postfach einen klaren Anzeigenamen, etwa „Acme Vertrieb“ statt „arbeit2“. Daran unterscheidet der Agent die Postfächer, und diesen Namen sehen die Empfänger.
@@ -97,7 +97,7 @@ Das eigene Gmail-Plugin kann inzwischen mehrere Google-Konten halten. Für Postf
 Nein. Eine Konnektor-URL deckt alle Postfächer in Ihrem MCP-Emails-Workspace ab, und dieselbe URL funktioniert in Claude, ChatGPT und anderen MCP-Clients.
 
 **Geht eine Antwort von der richtigen Adresse raus?**
-Ja. Jedes Postfach sendet über seinen eigenen Anbieter oder Mailserver mit eigenem Anzeigenamen und eigener Signatur. Von einer anderen Adresse als der des Postfachs zu senden, funktioniert nur mit einer bestätigten Gmail-Adresse unter „Senden als“ bei einem Postfach, das über „Mit Google anmelden“ verbunden ist, und wird sonst abgelehnt.
+Ja. Jedes Postfach sendet über seinen eigenen Anbieter oder Mailserver mit eigenem Anzeigenamen und eigener Signatur. Um bei einem IMAP-Postfach von einer anderen Adresse zu senden, fügen Sie diese in den Einstellungen des Postfachs im Dashboard hinzu und bestätigen sie mit dem Code, der an diese Adresse gesendet wird. Outlook sendet von der verbundenen Adresse, und eine nicht bestätigte Absenderadresse wird abgelehnt.
 
 **Werden die E-Mails aus all diesen Konten gespeichert?**
 Nein. Nachrichteninhalte werden bei jeder Anfrage live von Ihrem Anbieter abgerufen und verworfen. Gespeichert wird die verschlüsselte Zugangsberechtigung für jedes Postfach. Siehe [Sicherheit](/security).

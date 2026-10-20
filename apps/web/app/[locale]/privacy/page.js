@@ -300,6 +300,12 @@ export default async function PrivacyPage({ params }) {
                       <td>{t('thirdParties.vercelLocation')}</td>
                     </tr>
                     <tr>
+                      <td><strong>Hetzner</strong></td>
+                      <td>{t('thirdParties.relayPurpose')}</td>
+                      <td>{t('thirdParties.relayData')}</td>
+                      <td>{t('thirdParties.relayLocation')}</td>
+                    </tr>
+                    <tr>
                       <td><strong>Stripe</strong> {t('thirdParties.stripeProvider')}</td>
                       <td>{t('thirdParties.stripePurpose')}</td>
                       <td>{t('thirdParties.stripeData')}</td>

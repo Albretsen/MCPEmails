@@ -20,7 +20,7 @@
   },
   "compare": {
     "title": "Self-Hosting oder gehostet",
-    "intro": "Der vollständige MCP-Server und alle 23 Tools sind in beiden enthalten. Self-Hosting tauscht verwalteten Komfort gegen volle Kontrolle.",
+    "intro": "Der vollständige MCP-Server und alle 19 Tools sind in beiden enthalten. Self-Hosting tauscht verwalteten Komfort gegen volle Kontrolle.",
     "thFeature": "",
     "thSelf": "Self-Hosting",
     "thHosted": "Gehostet",
@@ -31,7 +31,7 @@
         "hosted": "Kostenlos, $9, $15 oder $39"
       },
       {
-        "feature": "Der MCP-Server und alle 23 Tools",
+        "feature": "Der MCP-Server und alle 19 Tools",
         "self": "Ja",
         "hosted": "Ja"
       },
@@ -51,9 +51,9 @@
         "hosted": "Ja"
       },
       {
-        "feature": "Gmail- / Outlook-Anmeldung (OAuth)",
+        "feature": "Outlook-Anmeldung (OAuth)",
         "self": "Nicht enthalten",
-        "hosted": "Gmail: ja; Outlook: ja (Arbeitskonten brauchen eventuell eine Freigabe durch die IT-Administration)"
+        "hosted": "Ja (Arbeitskonten brauchen eventuell eine Freigabe durch die IT-Administration)"
       },
       {
         "feature": "Web-Dashboard (Verbindungen, Schlüssel, Aktivität)",

@@ -27,6 +27,7 @@
     "test:brand-name": "node --test --experimental-strip-types src/i18n/brand-name.test.ts",
     "test:seo": "node --test src/lib/compare/native-connectors.test.mjs src/lib/compare/email-mcp-servers.test.mjs scripts/compare-freshness.test.mjs src/lib/blog/seo.test.mjs src/lib/blog/links.test.mjs src/lib/acquisition-context.test.mjs scripts/gsc-indexing-report.test.mjs scripts/indexnow-submit.test.mjs",
     "test:blog-copy": "node --test src/lib/blog/copy-integrity.test.mjs src/lib/blog/anchors.test.mjs",
+    "test:public-facts": "node --test src/lib/public-facts.test.mjs",
     "test:blog-links": "node --test src/lib/blog/internal-links.test.mjs",
     "test:reviews": "node --test components/marketing/reviews.test.mjs",
     "test:home-guides": "node --test --experimental-strip-types --experimental-test-module-mocks --import ./scripts/register-dom-tests.mjs components/marketing/home-guides.test.mjs",

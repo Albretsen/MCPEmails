@@ -25,7 +25,7 @@ MCP Emails er en driftet MCP-server. Du kobler hver postkasse til den én gang, 
 https://mcpemails.com/api/mcp
 \`\`\`
 
-- **Hvilken som helst blanding av leverandører.** Gmail og Google Workspace (app-passord eller Logg inn med Google), Outlook og Microsoft 365 (Logg inn med Microsoft), iCloud, Fastmail, Yahoo, Zoho, Yandex og enhver postkasse som snakker IMAP og SMTP. Det finnes en side per leverandør under [connect](/connect), blant annet [IONOS](/connect/ionos), [Zoho Mail](/connect/zoho), [Namecheap](/connect/namecheap), [STRATO](/connect/strato), [Migadu](/connect/migadu), [Google Workspace](/connect/google-workspace) og [Microsoft 365](/connect/office365).
+- **Hvilken som helst blanding av leverandører.** Gmail og Google Workspace (app-passord fra Google), Outlook og Microsoft 365 (Logg inn med Microsoft), iCloud, Fastmail, Yahoo, Zoho, Yandex og enhver postkasse som snakker IMAP og SMTP. Det finnes en side per leverandør under [connect](/connect), blant annet [IONOS](/connect/ionos), [Zoho Mail](/connect/zoho), [Namecheap](/connect/namecheap), [STRATO](/connect/strato), [Migadu](/connect/migadu), [Google Workspace](/connect/google-workspace) og [Microsoft 365](/connect/office365).
 - **De samme postkassene i begge assistentene.** Det er en vanlig MCP-server, så den ene tilkoblingen fungerer i Claude og i ChatGPT, og også i Cursor, VS Code og andre MCP-klienter. Legg til en postkasse én gang, så ser alle klientene den.
 - **Agenten vet hvilken postkasse som er hvilken.** Den kaller \`inbox_list\` og får hver tilkoblede adresse med visningsnavnet. Alle andre verktøy oppgir hvilken postkasse de jobber i, så du sier bare «i salg@» med vanlige ord.
 - **Svarene går ut fra riktig adresse.** Hver postkasse sender gjennom sin egen leverandør eller SMTP-server, med sitt eget avsendernavn og sin egen signatur. Et svar i en tråd i support@ sendes fra support@.
@@ -37,7 +37,7 @@ E-post hentes direkte ved hver forespørsel og lagres ikke. Det eneste unntaket 
 I MCP Emails-dashbordet åpner du **Inboxes** og deretter **Connect Inbox**, én gang per postkasse:
 
 - **Firmapostkasse på eget domene.** Velg **IMAP** og skriv inn adressen. Vanlige leverandører gjenkjennes ut fra adressen, og et Google Workspace-domene gjenkjennes ut fra e-postoppføringene i DNS, så innstillingene fyller seg inn selv. Bruk passordet eller app-passordet leverandøren din krever.
-- **Gmail eller Google Workspace.** Et app-passord, eller Logg inn med Google. I Workspace er det administratoren din som avgjør om app-passord og IMAP er tillatt.
+- **Gmail eller Google Workspace.** Et app-passord fra Google, over IMAP. Google tilbyr det først når totrinnsbekreftelse er slått på, og i Workspace kan administratoren din slå av app-passord og IMAP.
 - **Outlook eller Microsoft 365.** Logg inn med Microsoft. En jobb- eller skolekonto kan trenge at en IT-ansvarlig først godkjenner appen én gang for hele organisasjonen.
 
 Gi hver postkasse et tydelig visningsnavn, for eksempel «Acme Salg» i stedet for «work2». Det er det agenten leser for å skille dem fra hverandre, og det er navnet mottakerne ser.
@@ -97,7 +97,7 @@ ChatGPTs eget Gmail-programtillegg kan nå ha flere Google-kontoer. For postkass
 Nei. Én koblings-URL dekker alle postkassene i MCP Emails-arbeidsområdet ditt, og den samme URL-en fungerer i Claude, ChatGPT og andre MCP-klienter.
 
 **Går svaret ut fra riktig adresse?**
-Ja. Hver postkasse sender gjennom sin egen leverandør eller e-postserver, med sitt eget visningsnavn og sin egen signatur. Å sende fra en adresse som ikke er postkassens egen, fungerer bare for en bekreftet Gmail Send As-adresse på en postkasse som er koblet til med Logg inn med Google, og avvises ellers.
+Ja. Hver postkasse sender gjennom sin egen leverandør eller e-postserver, med sitt eget visningsnavn og sin egen signatur. For å sende fra en annen adresse på en IMAP-postkasse legger du den til i postkassens innstillinger i dashbordet og verifiserer den med koden som sendes til den adressen. Outlook sender fra den tilkoblede adressen, og en From-adresse som ikke er verifisert, blir avvist.
 
 **Lagres e-posten fra alle disse kontoene?**
 Nei. Meldingsinnholdet hentes direkte fra leverandøren din ved hver forespørsel og forkastes. Det som beholdes, er den krypterte påloggingen for hver postkasse. Se [sikkerhet](/security).

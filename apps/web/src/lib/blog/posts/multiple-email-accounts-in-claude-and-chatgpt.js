@@ -43,7 +43,7 @@ MCP Emails is a hosted MCP server. You connect each mailbox to it once, and your
 https://mcpemails.com/api/mcp
 \`\`\`
 
-- **Any mix of providers.** Gmail and Google Workspace (app password or Sign in with Google), Outlook and Microsoft 365 (Sign in with Microsoft), iCloud, Fastmail, Yahoo, Zoho, Yandex, and any mailbox that speaks IMAP and SMTP. There is a page per host under [connect](/connect), including [IONOS](/connect/ionos), [Zoho Mail](/connect/zoho), [Namecheap](/connect/namecheap), [STRATO](/connect/strato), [Migadu](/connect/migadu), [Google Workspace](/connect/google-workspace) and [Microsoft 365](/connect/office365).
+- **Any mix of providers.** Gmail and Google Workspace (Google app password), Outlook and Microsoft 365 (Sign in with Microsoft), iCloud, Fastmail, Yahoo, Zoho, Yandex, and any mailbox that speaks IMAP and SMTP. There is a page per host under [connect](/connect), including [IONOS](/connect/ionos), [Zoho Mail](/connect/zoho), [Namecheap](/connect/namecheap), [STRATO](/connect/strato), [Migadu](/connect/migadu), [Google Workspace](/connect/google-workspace) and [Microsoft 365](/connect/office365).
 - **The same mailboxes in both assistants.** It is a standard MCP server, so the one connection works in Claude and in ChatGPT, and in Cursor, VS Code and other MCP clients too. Add a mailbox once and every client sees it.
 - **The agent knows which mailbox is which.** It calls \`inbox_list\` and gets every connected address with its display name. Every other tool names the mailbox it acts on, so you just say "in sales@" in plain language.
 - **Replies leave from the right address.** Each mailbox sends through its own provider or SMTP server, with its own sender name and signature. A reply to a thread in support@ goes out from support@.
@@ -55,7 +55,7 @@ Mail is fetched live for each request and not stored. The one exception is a mes
 In the MCP Emails dashboard, open **Inboxes**, then **Connect Inbox**, once per mailbox:
 
 - **Company mailbox on its own domain.** Choose **IMAP** and type the address. Common hosts are recognised from the address, and a Google Workspace domain is recognised from its mail records, so the settings fill themselves in. Use the password or app password your host requires.
-- **Gmail or Google Workspace.** An app password, or Sign in with Google. On Workspace, your administrator decides whether app passwords and IMAP are allowed.
+- **Gmail or Google Workspace.** A Google app password over IMAP. Google offers one only after 2-Step Verification is on, and on Workspace your administrator can switch app passwords and IMAP off.
 - **Outlook or Microsoft 365.** Sign in with Microsoft. A work or school account may need its IT admin to approve the app once for the whole organisation.
 
 Give each mailbox a clear display name, such as "Acme Sales" rather than "work2". It is what the agent reads to tell them apart, and it is the name recipients see.
@@ -115,7 +115,7 @@ Its own Gmail plugin can now hold several Google accounts. For mailboxes that ar
 No. One connector URL covers every mailbox in your MCP Emails workspace, and the same URL works in Claude, ChatGPT and other MCP clients.
 
 **Will a reply go out from the right address?**
-Yes. Each mailbox sends through its own provider or mail server with its own display name and signature. Sending from an address that is not the mailbox's own works only for a verified Gmail Send As address on a mailbox connected with Sign in with Google, and is refused elsewhere.
+Yes. Each mailbox sends through its own provider or mail server with its own display name and signature. To send from another address on an IMAP mailbox, add it in that mailbox's settings in the dashboard and verify it with the code emailed to that address. Outlook sends from the connected address, and a From address that is not verified is refused.
 
 **Is the mail from all those accounts stored?**
 No. Message content is fetched live from your provider on each request and discarded. The encrypted credential for each mailbox is what is kept. See [security](/security).

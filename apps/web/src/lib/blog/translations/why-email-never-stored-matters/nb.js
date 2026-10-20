@@ -42,17 +42,17 @@ Et lagret korpus med ekte e-post er uimotståelig. Det er fristende å bruke det
 Her er veien et enkelt \`email_read\`-kall (handling \`read\`) tar gjennom MCP Emails:
 
 \`\`\`
-agent  →  MCP-server  →  isolert Edge Function
+agent  →  MCP-server  →  leverandørtilkobling
                               ↓ dekrypter token (i minne)
                          leverandøren din (Gmail / Graph / IMAP)
                               ↓ meldingsbrødtekst
-agent  ←  tolket resultat  ←  Edge Function
+agent  ←  tolket resultat  ←  MCP-server
                          (brødtekst kastet, ingenting skrevet)
 \`\`\`
 
-Legitimasjonen er det eneste som ligger lagret, og den er kryptert med **AES-256-GCM**. Dekryptering skjer kun inne i en isolert Edge Function ved kalltidspunktet, og krypteringsnøkkelen er en miljøhemmelighet lagret separat fra databasen — så en database-dump alene er ubrukelig. Selve meldingen rører aldri varig lagring. Den tolkes, returneres til agenten din og er borte.
+Legitimasjonen er det eneste som ligger lagret, og den er kryptert med **AES-256-GCM**. Den dekrypteres på serverne våre bare når en forespørsel trenger den og sendes aldri til agenten din, og krypteringsnøkkelen oppbevares som en serverhemmelighet, adskilt fra databasen, så en database-dump alene er ubrukelig. Selve meldingen rører aldri varig lagring. Den tolkes, returneres til agenten din og er borte.
 
-Sending fungerer på samme måte og legger til én garanti til: utgående post går gjennom *din* leverandør — Gmail API, Microsoft Graph eller din egen SMTP. Vi videresender aldri fra vårt eget domene, så leveringsdyktigheten og domeneomdømmet ditt forblir helt og holdent dine. Det finnes ingen delt sendepool som kan lande deg i en annens spam-omdømme.
+Sending fungerer på samme måte og legger til én garanti til: utgående post går gjennom *din* leverandør: Gmail eller en annen leverandør over SMTP, eller Microsoft Graph for Outlook. Vi videresender aldri fra vårt eget domene, så leveringsdyktigheten og domeneomdømmet ditt forblir helt og holdent dine. Det finnes ingen delt sendepool som kan lande deg i en annens spam-omdømme.
 
 Vil du ha den dypere mekanikken bak legitimasjonsmodellen — OAuth-tokens kontra app-passord og hvorfor begge forblir krypterte — skrev jeg om det i [OAuth vs. API-nøkler for AI-tilgang til e-post](/blog/oauth-vs-api-keys-ai-email-access).
 

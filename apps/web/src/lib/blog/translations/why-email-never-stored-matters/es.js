@@ -42,17 +42,17 @@ Un corpus almacenado de correo real es irresistible. Resulta tentador usarlo par
 Este es el recorrido que hace una sola llamada \`email_read\` (acción \`read\`) a través de MCP Emails:
 
 \`\`\`
-agente  →  servidor MCP  →  Edge Function aislada
+agente  →  servidor MCP  →  conexión con el proveedor
                               ↓ descifra el token (en memoria)
                          tu proveedor (Gmail / Graph / IMAP)
                               ↓ cuerpo del mensaje
-agente  ←  resultado analizado  ←  Edge Function
+agente  ←  resultado analizado  ←  servidor MCP
                          (cuerpo descartado, nada escrito)
 \`\`\`
 
-La credencial es lo único que queda en reposo, y está cifrada con **AES-256-GCM**. El descifrado ocurre solo dentro de una Edge Function aislada en el momento de la llamada, y la clave de cifrado es un secreto de entorno almacenado por separado de la base de datos, de modo que un volcado de la base de datos por sí solo no sirve de nada. El mensaje en sí nunca toca el almacenamiento duradero. Se analiza, se devuelve a tu agente y desaparece.
+La credencial es lo único que queda en reposo, y está cifrada con **AES-256-GCM**. Se descifra en nuestros servidores solo cuando una petición lo necesita y nunca se envía a tu agente, y la clave de cifrado se guarda como secreto del servidor, separada de la base de datos, de modo que un volcado de la base de datos por sí solo no sirve de nada. El mensaje en sí nunca toca el almacenamiento duradero. Se analiza, se devuelve a tu agente y desaparece.
 
-El envío funciona igual y añade una garantía más: el correo saliente pasa por *tu* proveedor: la API de Gmail, Microsoft Graph o tu propio SMTP. Nunca lo retransmitimos desde nuestro propio dominio, así que tu entregabilidad y la reputación de tu dominio siguen siendo enteramente tuyas. No hay ningún grupo de envío compartido que te haga caer en la reputación de spam de otra persona.
+El envío funciona igual y añade una garantía más: el correo saliente pasa por *tu* proveedor: Gmail u otro proveedor por SMTP, o Microsoft Graph para Outlook. Nunca lo retransmitimos desde nuestro propio dominio, así que tu entregabilidad y la reputación de tu dominio siguen siendo enteramente tuyas. No hay ningún grupo de envío compartido que te haga caer en la reputación de spam de otra persona.
 
 Si quieres la mecánica más profunda del modelo de credenciales —tokens de OAuth frente a contraseñas de aplicación y por qué ambos siguen cifrados—, lo expliqué en [OAuth frente a claves API para el acceso de la IA al correo](/blog/oauth-vs-api-keys-ai-email-access).
 

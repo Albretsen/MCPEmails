@@ -17,7 +17,7 @@ const translation = {
 
 把模型接到邮箱看上去稀松平常，真正动手做时才会发现没那么简单。有三件事会让你头疼：
 
-1. **每个服务商的鉴权方式都不一样。** Gmail 需要带特定 scope 的 OAuth。Outlook 需要 Microsoft 身份认证。iCloud 和 Fastmail 需要专用应用密码。每一种都有自己的 token 刷新周期，也有各自的失败模式。
+1. **每个服务商的鉴权方式都不一样。** Outlook 和 Microsoft 365 需要通过 Microsoft 身份认证走 OAuth。Gmail 需要 Google 应用密码，而 Google 只有在开启两步验证后才允许你创建。iCloud 和 Fastmail 需要专用应用密码。每一种都有自己的 token 刷新周期，也有各自的失败模式。
 2. **凭据是高危品。** 一个躺在聊天记录或日志行里的邮箱密码，就是一次随时会引爆的数据泄露。你不能让模型持有这个密钥。
 3. **邮件的结构对智能体很不友好。** MIME、线程头、HTML 与纯文本之争、附件、其实是标签的文件夹。模型需要的是干净的响应，而不是 RFC 5322。
 
@@ -29,11 +29,11 @@ const translation = {
 
 ### 邮件实时拉取，从不存储
 
-每一次工具调用都会实时打到你的服务商：Gmail API、Microsoft Graph 或 IMAP/SMTP。邮件正文、主题和附件交给智能体后即刻丢弃。没有任何东西被缓存、建索引或落库存档。每个邮箱唯一被持久化的，只有发起下一次调用所需的凭据。如果你想看为什么这一点很重要的详细版本，请读 [为什么"邮件从不存储"很重要](/blog/why-email-never-stored-matters)。
+每一次工具调用都会实时打到你的服务商：Gmail、iCloud、Fastmail 等走 IMAP/SMTP，Outlook 走 Microsoft Graph。邮件正文、主题和附件交给智能体后即刻丢弃。没有任何东西被缓存、建索引或落库存档。每个邮箱唯一被持久化的，只有发起下一次调用所需的凭据。如果你想看为什么这一点很重要的详细版本，请读 [为什么"邮件从不存储"很重要](/blog/why-email-never-stored-matters)。
 
 ### 凭据以 AES-256-GCM 静态加密
 
-每个邮箱的 OAuth token 或应用密码在写入数据库之前都会先加密。解密只在一个隔离的 Edge Function 内部、于调用时进行，使用的密钥作为环境密钥存放，与数据库相互独立。所以即便数据库泄露，攻击者拿到的也只是密文，而不是你的邮箱。
+每个邮箱的应用密码或 OAuth token 在写入数据库之前都会先加密。只有在请求需要时，它才会在我们的服务器上解密，而且从不发送给你的智能体。加密密钥作为服务器密钥保存，与数据库相互独立。所以即便数据库泄露，攻击者拿到的也只是密文，而不是你的邮箱。
 
 ### 发送走你自己的服务商
 
@@ -76,12 +76,11 @@ const translation = {
 
 ### OAuth 服务商（登录即可，无需密码）
 
-- **Gmail** —— 通过 Google 登录走 OAuth 2.0。
 - **Outlook / Microsoft 365**：通过使用 Microsoft 登录走 OAuth 2.0，经由 Microsoft Graph 而不是 IMAP。个人 Outlook.com、Hotmail、Live 和 MSN 账户可以直接连接。工作或学校的 Microsoft 365 账户可能需要 IT 管理员先为整个组织一次性批准该应用；控制台会给你一个可以发给管理员的链接。配置细节见 [将 Outlook 和 Microsoft 365 连接到 AI 智能体](/blog/connect-outlook-microsoft-365-ai-agent-mcp)。
 
 ### 应用密码服务商
 
-iCloud、Fastmail、Yahoo、Zoho、Yandex 以及任何通用 IMAP 邮箱，都用专用应用密码而非 OAuth 来连接。你在服务商的安全设置里生成密码，再粘贴到 MCP Emails 中。iCloud 密码来自 appleid.apple.com；Fastmail **只支持应用密码**（在 Fastmail 设置里创建一个）。它们都跑在同一套 IMAP/SMTP 传输之上，共享一套完全相同的功能集。完整教程见 [将 iCloud、Fastmail 或任意 IMAP 邮箱连接到 Claude](/blog/connect-icloud-fastmail-imap-to-claude)。
+Gmail、iCloud、Fastmail、Yahoo、Zoho、Yandex 以及任何通用 IMAP 邮箱，都用专用应用密码而非 OAuth 来连接。你在服务商的安全设置里生成密码，再粘贴到 MCP Emails 中。Gmail 应用密码在你的 Google 账号里创建，Google 要求先开启两步验证才能创建。iCloud 密码来自 appleid.apple.com；Fastmail **只支持应用密码**（在 Fastmail 设置里创建一个）。它们都跑在同一套 IMAP/SMTP 传输之上，共享一套完全相同的功能集。完整教程见 [将 iCloud、Fastmail 或任意 IMAP 邮箱连接到 Claude](/blog/connect-icloud-fastmail-imap-to-claude)。
 
 ## 连接你的 AI 客户端
 

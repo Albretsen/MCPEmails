@@ -25,7 +25,7 @@ MCP Emails est un serveur MCP hébergé. Vous y connectez chaque boîte une fois
 https://mcpemails.com/api/mcp
 \`\`\`
 
-- **N'importe quel mélange de fournisseurs.** Gmail et Google Workspace (mot de passe d'application ou connexion avec Google), Outlook et Microsoft 365 (connexion avec Microsoft), iCloud, Fastmail, Yahoo, Zoho, Yandex, et toute boîte qui parle IMAP et SMTP. Il existe une page par hébergeur dans [connect](/connect), dont [IONOS](/connect/ionos), [Zoho Mail](/connect/zoho), [Namecheap](/connect/namecheap), [STRATO](/connect/strato), [Migadu](/connect/migadu), [Google Workspace](/connect/google-workspace) et [Microsoft 365](/connect/office365).
+- **N'importe quel mélange de fournisseurs.** Gmail et Google Workspace (mot de passe d'application Google), Outlook et Microsoft 365 (connexion avec Microsoft), iCloud, Fastmail, Yahoo, Zoho, Yandex, et toute boîte qui parle IMAP et SMTP. Il existe une page par hébergeur dans [connect](/connect), dont [IONOS](/connect/ionos), [Zoho Mail](/connect/zoho), [Namecheap](/connect/namecheap), [STRATO](/connect/strato), [Migadu](/connect/migadu), [Google Workspace](/connect/google-workspace) et [Microsoft 365](/connect/office365).
 - **Les mêmes boîtes dans les deux assistants.** C'est un serveur MCP standard : la même connexion fonctionne dans Claude et dans ChatGPT, ainsi que dans Cursor, VS Code et d'autres clients MCP. Ajoutez une boîte une fois, et tous les clients la voient.
 - **L'agent sait quelle boîte est laquelle.** Il appelle \`inbox_list\` et obtient chaque adresse connectée avec son nom affiché. Tous les autres outils nomment la boîte sur laquelle ils agissent : il vous suffit de dire « dans ventes@ », en langage courant.
 - **Les réponses partent de la bonne adresse.** Chaque boîte envoie via son propre fournisseur ou serveur SMTP, avec son propre nom d'expéditeur et sa propre signature. Une réponse à un fil de support@ part de support@.
@@ -37,7 +37,7 @@ Le courrier est récupéré en direct à chaque requête et n'est pas stocké. L
 Dans le tableau de bord MCP Emails, ouvrez **Inboxes**, puis **Connect Inbox**, une fois par boîte :
 
 - **Boîte d'entreprise sur son propre domaine.** Choisissez **IMAP** et saisissez l'adresse. Les hébergeurs courants sont reconnus à partir de l'adresse, et un domaine Google Workspace est reconnu grâce à ses enregistrements de messagerie : les réglages se remplissent donc tout seuls. Utilisez le mot de passe ou le mot de passe d'application exigé par votre hébergeur.
-- **Gmail ou Google Workspace.** Un mot de passe d'application, ou la connexion avec Google. Sur Workspace, c'est votre administrateur qui décide si les mots de passe d'application et l'IMAP sont autorisés.
+- **Gmail ou Google Workspace.** Un mot de passe d'application Google, en IMAP. Google n'en propose qu'une fois la validation en deux étapes activée, et sur Workspace votre administrateur peut désactiver les mots de passe d'application et l'IMAP.
 - **Outlook ou Microsoft 365.** Connexion avec Microsoft. Un compte professionnel ou scolaire peut nécessiter qu'un administrateur informatique approuve l'application une seule fois pour toute l'organisation.
 
 Donnez à chaque boîte un nom affiché clair, par exemple « Acme Ventes » plutôt que « travail2 ». C'est ce que l'agent lit pour les distinguer, et c'est le nom que voient les destinataires.
@@ -97,7 +97,7 @@ Son propre plugin Gmail peut désormais accueillir plusieurs comptes Google. Pou
 Non. Une seule URL de connecteur couvre toutes les boîtes de votre espace de travail MCP Emails, et la même URL fonctionne dans Claude, ChatGPT et les autres clients MCP.
 
 **Une réponse partira-t-elle de la bonne adresse ?**
-Oui. Chaque boîte envoie via son propre fournisseur ou serveur de messagerie, avec son propre nom affiché et sa propre signature. Envoyer depuis une adresse qui n'est pas celle de la boîte ne fonctionne que pour une adresse Gmail Send As vérifiée, sur une boîte connectée avec Google, et c'est refusé partout ailleurs.
+Oui. Chaque boîte envoie via son propre fournisseur ou serveur de messagerie, avec son propre nom affiché et sa propre signature. Pour envoyer depuis une autre adresse sur une boîte IMAP, ajoutez-la dans les réglages de cette boîte dans le tableau de bord et vérifiez-la avec le code envoyé à cette adresse. Outlook envoie depuis l'adresse connectée, et une adresse From non vérifiée est refusée.
 
 **Le courrier de tous ces comptes est-il stocké ?**
 Non. Le contenu des messages est récupéré en direct chez votre fournisseur à chaque requête, puis supprimé. Ce qui est conservé, c'est l'identifiant chiffré de chaque boîte. Voir [sécurité](/security).

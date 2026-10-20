@@ -29,7 +29,7 @@ On vous ajoute à un fil de 40 messages au message 38. Personne ne va tout relir
 
 > Lis le fil dont l’objet est « Q3 vendor migration » et dis-moi où ça a réellement abouti : ce qui a été décidé, qui est responsable de quoi et toute question ouverte à laquelle je dois répondre.
 
-\`email_read\` avec l’action search trouve le fil (il utilise la syntaxe de recherche native de votre fournisseur, donc les opérateurs Gmail, le KQL d’Outlook et la recherche textuelle IMAP fonctionnent tous), puis \`email_read\` avec l’action read récupère le texte brut analysé de chaque message. Cette action read peut aussi renvoyer du HTML assaini et des pièces jointes si vous le demandez, mais pour un résumé le texte brut est plus rapide et moins coûteux.
+\`email_read\` avec l’action search trouve le fil (il reçoit des champs structurés comme l’expéditeur, l’objet, le texte et une plage de dates, et MCP Emails les traduit dans la recherche propre à chaque fournisseur), puis \`email_read\` avec l’action read récupère le texte brut analysé de chaque message. Cette action read peut aussi renvoyer du HTML assaini et des pièces jointes si vous le demandez, mais pour un résumé le texte brut est plus rapide et moins coûteux.
 
 ### 3. Rédiger des réponses dans votre style
 

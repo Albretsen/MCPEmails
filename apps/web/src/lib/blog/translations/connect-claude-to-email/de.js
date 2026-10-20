@@ -14,7 +14,7 @@ Sie schreiben keinen Code, installieren kein SDK und brauchen keinen API-Schlüs
 
 - Einen **Claude-Tarif oder eine Claude-App, die benutzerdefinierte Konnektoren unterstützt**.
 - Ein kostenloses **MCP Emails**-Konto: [hier erstellen](/signup).
-- Ein E-Mail-Postfach. Outlook verbindet sich über „Mit Microsoft anmelden“. Gmail, iCloud, Fastmail, Yahoo, Zoho und die meisten anderen Anbieter nutzen ein App-Passwort, und Gmail bietet zusätzlich „Mit Google anmelden“ an.
+- Ein E-Mail-Postfach. Outlook verbindet sich über „Mit Microsoft anmelden“. Gmail, iCloud, Fastmail, Yahoo, Zoho und die meisten anderen Anbieter nutzen ein App-Passwort.
 
 ## Schritt 1: Postfach mit MCP Emails verbinden
 
@@ -22,7 +22,7 @@ Sie schreiben keinen Code, installieren kein SDK und brauchen keinen API-Schlüs
 
 ### Gmail und Google Workspace
 
-Wählen Sie **Gmail**, erstellen Sie ein Google-App-Passwort (dafür braucht Ihr Google-Konto die Bestätigung in zwei Schritten) und fügen Sie es zusammen mit Ihrer Gmail-Adresse ein. Alternativ können Sie „Mit Google anmelden“ wählen. In beiden Fällen erhält MCP Emails nie Ihr normales Google-Passwort. Folgen Sie der [Gmail-Anleitung](/blog/connect-gmail-to-claude), wenn ein Workspace-Administrator den App-Zugriff steuert. Siehe auch [Gmail-Einstellungen und -Limits](/connect/gmail) und die [Einrichtungsseite für Google Workspace](/connect/google-workspace).
+Wählen Sie **Gmail**, erstellen Sie unter myaccount.google.com/apppasswords ein Google-App-Passwort (Google bietet es erst an, wenn die Bestätigung in zwei Schritten aktiv ist) und fügen Sie die 16 Buchstaben zusammen mit Ihrer vollständigen Gmail-Adresse ein. Ihr normales Google-Passwort funktioniert hier nicht, und Sie können das App-Passwort jederzeit widerrufen. Folgen Sie der [Gmail-Anleitung](/blog/connect-gmail-to-claude), wenn ein Workspace-Administrator App-Passwörter für Ihre Domain abgeschaltet hat. Siehe auch [Gmail-Einstellungen und -Limits](/connect/gmail) und die [Einrichtungsseite für Google Workspace](/connect/google-workspace).
 
 ### iCloud Mail
 
@@ -79,7 +79,7 @@ Für wiederkehrende Abläufe nutzen Sie das [Playbook zur Posteingangs-Triage](/
 
 MCP Emails gibt Claude gezielte E-Mail-Tools statt eines Passworts oder einer rohen IMAP-Verbindung:
 
-- **Lesen und suchen:** \`email_read\` listet Nachrichten auf, liest vollständige Nachrichten und durchsucht E-Mails. Gmail-Suchen unterstützen auch Gmail-Operatoren wie \`from:\` und \`is:unread\`.
+- **Lesen und suchen:** \`email_read\` listet Nachrichten auf, liest vollständige Nachrichten und durchsucht E-Mails nach Absender, Betreff, Datum, Ungelesen-Status und weiteren strukturierten Feldern. Bei Gmail erscheinen Labels als Ordner.
 - **Senden, antworten und weiterleiten:** \`email_compose\` sendet über Ihren eigenen Anbieter und Ihre eigene Adresse.
 - **Organisieren:** \`email_organize\` verschiebt, labelt, markiert und archiviert Nachrichten.
 - **Entwürfe, Ordner, Planung und Kontakte:** \`draft\`, \`folder\`, \`schedule\` und \`contact_search\` decken den Rest eines praktischen E-Mail-Workflows ab.
@@ -100,7 +100,7 @@ Kommen Sie immer noch nicht weiter? Prüfen Sie in der [Anbieter-Übersicht](/do
 Ja, sofern Sie der Verbindung nur den Zugriff geben, den sie braucht, und ein Mensch bei ausgehenden Aktionen beteiligt bleibt.
 
 - **E-Mails werden nicht gespeichert.** MCP Emails ruft Nachrichteninhalte bei jedem Aufruf live ab und verwirft sie nach der Übergabe. Gespeichert bleibt nur die verschlüsselte Zugangsberechtigung, die für die erneute Verbindung zu Ihrem Anbieter nötig ist.
-- **Ihr Anbieter behält die Kontrolle über die Authentifizierung.** Outlook und die Option „Mit Google anmelden“ bei Gmail nutzen OAuth, MCP Emails erhält also nie Ihr Passwort. Für das App-Passwort bei Gmail und andere IMAP-Anbieter verwenden Sie ein widerrufbares app-spezifisches Passwort statt Ihres normalen Passworts.
+- **Ihr Anbieter behält die Kontrolle über die Authentifizierung.** Outlook nutzt OAuth, MCP Emails sieht also nie Ihr Microsoft-Passwort. Bei Gmail und anderen Anbietern mit App-Passwort ist das App-Passwort eine separate Zugangsberechtigung, nicht Ihr Kontopasswort, und Sie können es jederzeit widerrufen.
 - **Berechtigungen sind ausdrücklich.** Geben Sie Nur-Lese-Zugriff, wenn Claude nie senden soll. Fügen Sie Sendezugriff nur hinzu, wenn Sie ihn brauchen, und widerrufen Sie jeden Zugriffsweg jederzeit.
 
 Behandeln Sie jeden E-Mail-Text als nicht vertrauenswürdige Eingabe. Lassen Sie Claude erst einen Entwurf schreiben, bevor es sendet, prüfen Sie Nachrichten an Externe, und lassen Sie Anweisungen in einer E-Mail nie Ihre eigene Absicht übersteuern. Der [Sicherheitsleitfaden zum E-Mail-Zugriff](/blog/is-it-safe-to-give-ai-agent-email-access) erklärt das Bedrohungsmodell ausführlicher.
@@ -108,7 +108,7 @@ Behandeln Sie jeden E-Mail-Text als nicht vertrauenswürdige Eingabe. Lassen Sie
 ## FAQ
 
 **Kann sich Claude mit Gmail, Outlook oder iCloud verbinden?**
-Gmail verbindet sich mit einem Google-App-Passwort oder über „Mit Google anmelden“, Outlook über „Mit Microsoft anmelden“ und iCloud über ein app-spezifisches Passwort. Bei einem Arbeits- oder Schulkonto von Microsoft 365 muss unter Umständen zuerst ein IT-Administrator die App einmal freigeben. MCP Emails unterstützt außerdem Fastmail und allgemeines IMAP, womit auch Dienste wie Yahoo und Zoho abgedeckt sind.
+Gmail verbindet sich mit einem Google-App-Passwort, Outlook über „Mit Microsoft anmelden“ und iCloud über ein app-spezifisches Passwort. Bei einem Arbeits- oder Schulkonto von Microsoft 365 muss unter Umständen zuerst ein IT-Administrator die App einmal freigeben. MCP Emails unterstützt außerdem Fastmail und allgemeines IMAP, womit auch Dienste wie Yahoo und Zoho abgedeckt sind.
 
 **Brauche ich einen API-Schlüssel?**
 Nein, nicht für den OAuth-Konnektor von Claude. Fügen Sie die Endpunkt-URL ein und melden Sie sich an. API-Schlüssel sind für MCP-Clients ohne eingebautes OAuth gedacht.
