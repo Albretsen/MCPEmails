@@ -26,19 +26,23 @@
 // outright is reported as a crash and does not stop the next one — the crash is
 // itself a finding, and it is now a finding you get to read alongside the
 // others rather than instead of them.
+//
+// IN PARALLEL (2026-10-20). Run one after another the suites took ~144 s of
+// the card job, almost all of it esbuild bundling and jsdom start-up, on a
+// four-CPU runner. They now run CARD_TEST_CONCURRENCY at a time (default 4;
+// 1 is the old serial run). Each suite still bundles to its own
+// dist/<name>.bundle.mjs and owns its own fake host, so nothing is shared.
+// Output is buffered per suite and printed whole, in the order below, so the
+// log reads exactly as it did serially.
 // ---------------------------------------------------------------------------
 
-import { spawnSync } from "node:child_process";
+import { spawn } from "node:child_process";
 import { dirname, resolve } from "node:path";
 import { fileURLToPath } from "node:url";
 
 const here = dirname(fileURLToPath(import.meta.url));
+const concurrency = Math.max(1, Number.parseInt(process.env.CARD_TEST_CONCURRENCY ?? "", 10) || 4);
 
-/**
- * In order, because the later ones are cheaper to read once the earlier ones
- * have printed. The order carries no dependency: each one builds its own
- * esbuild bundle from src/ and owns its own fake host.
- */
 const SUITES = [
   ["state machine", "state-machine.mjs"],
   ["hardening", "hardening.mjs"],
@@ -125,24 +129,50 @@ const SUITES = [
   ["sanitize layer 1", "sanitize.test.mjs"],
 ];
 
-const outcomes = [];
-
-for (const [label, file] of SUITES) {
-  console.log(`\n──── ${label} ${"─".repeat(Math.max(0, 60 - label.length))}`);
-  const run = spawnSync(process.execPath, [resolve(here, file)], {
-    stdio: "inherit",
+function runSuite([label, file]) {
+  return new Promise((done) => {
+    const chunks = [];
+    const child = spawn(process.execPath, [resolve(here, file)], { stdio: ["ignore", "pipe", "pipe"] });
+    child.stdout.on("data", (c) => chunks.push(c));
+    child.stderr.on("data", (c) => chunks.push(c));
+    let error = null;
+    child.on("error", (err) => {
+      error = err;
+    });
+    child.on("close", (status, signal) => {
+      // Three distinct endings, and they are not the same finding: a clean
+      // pass, a suite that ran and failed checks, and a suite that never got
+      // to say anything. The third is the one `&&` used to turn into silence.
+      const outcome =
+        error || signal
+          ? { label, state: "crashed", detail: String(error?.message ?? signal) }
+          : status === 0
+            ? { label, state: "passed", detail: "" }
+            : { label, state: "failed", detail: `exit ${status}` };
+      done({ ...outcome, output: Buffer.concat(chunks) });
+    });
   });
-  // Three distinct endings, and they are not the same finding: a clean pass, a
-  // suite that ran and failed checks, and a suite that never got to say
-  // anything. The third is the one `&&` used to turn into silence.
-  const outcome =
-    run.error || run.signal
-      ? { label, state: "crashed", detail: String(run.error?.message ?? run.signal) }
-      : run.status === 0
-        ? { label, state: "passed", detail: "" }
-        : { label, state: "failed", detail: `exit ${run.status}` };
-  outcomes.push(outcome);
 }
+
+const outcomes = new Array(SUITES.length);
+let printed = 0;
+function flush() {
+  while (printed < SUITES.length && outcomes[printed]) {
+    const o = outcomes[printed++];
+    console.log(`\n──── ${o.label} ${"─".repeat(Math.max(0, 60 - o.label.length))}`);
+    process.stdout.write(o.output);
+  }
+}
+
+let next = 0;
+async function worker() {
+  while (next < SUITES.length) {
+    const i = next++;
+    outcomes[i] = await runSuite(SUITES[i]);
+    flush();
+  }
+}
+await Promise.all(Array.from({ length: Math.min(concurrency, SUITES.length) }, worker));
 
 console.log(`\n──── verify ${"─".repeat(56)}`);
 for (const o of outcomes) {
@@ -152,4 +182,5 @@ for (const o of outcomes) {
 
 const bad = outcomes.filter((o) => o.state !== "passed");
 console.log(`${outcomes.length - bad.length}/${outcomes.length} suites passed`);
-process.exit(bad.length ? 1 : 0);
+// exitCode, not exit(): a pipe may still be draining the buffered output.
+process.exitCode = bad.length ? 1 : 0;
