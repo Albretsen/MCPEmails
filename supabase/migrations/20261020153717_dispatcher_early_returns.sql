@@ -96,7 +96,7 @@ REVOKE ALL ON FUNCTION public.dispatch_scheduled_sends() FROM PUBLIC, anon, auth
 GRANT EXECUTE ON FUNCTION public.dispatch_scheduled_sends() TO service_role;
 
 
-CREATE OR REPLACE FUNCTION public.dispatch_billing_lifecycle(p_mode text)
+CREATE OR REPLACE FUNCTION public.dispatch_billing_lifecycle(p_mode text DEFAULT 'send')
 RETURNS void
 LANGUAGE plpgsql
 SECURITY DEFINER
