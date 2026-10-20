@@ -1,5 +1,6 @@
 import { setRequestLocale, getTranslations } from 'next-intl/server';
 import { metaAlternates, localePath, OG_LOCALE, OG_IMAGE } from '@/i18n/seo';
+import { Link } from '@/i18n/navigation';
 import { Nav, Footer } from '../../../components/marketing/Sections';
 import { PRIVACY_LAST_UPDATED, EFFECTIVE_DATE } from '@/lib/legal-config';
 
@@ -45,6 +46,10 @@ const COMPANY_OWNER = 'Asgeir Albretsen';
 const COMPANY_ORG_NUMBER = '926 646 753';
 const COMPANY_REGISTER = 'Enhetsregisteret';
 const COMPANY_ADDRESS = 'Håsteins gate 9, 5160 Laksevåg, Norway';
+/* MVA-registered from 2026-10-14. A Norwegian VAT number is the organisation
+   number followed by "MVA"; ASGEIR: confirm this string against the
+   registration letter from Skatteetaten before merging. */
+const COMPANY_VAT_NUMBER = 'NO 926 646 753 MVA';
 
 /* ─── Page ───────────────────────────────────────────────────── */
 
@@ -104,6 +109,7 @@ export default async function PrivacyPage({ params }) {
               <p>
                 {t.rich('whoWeAre.p4', {
                   companyName: COMPANY_NAME,
+                  vatNumber: COMPANY_VAT_NUMBER,
                   email: () => <a href={`mailto:${CONTACT_EMAIL}`}>{CONTACT_EMAIL}</a>,
                 })}
               </p>
@@ -419,9 +425,9 @@ export default async function PrivacyPage({ params }) {
             <a className="btn btn-primary btn-lg" href={`mailto:${CONTACT_EMAIL}`}>
               {t('cta.contactBtn')}
             </a>
-            <a className="btn btn-on-dark btn-lg" href="/terms">
+            <Link className="btn btn-on-dark btn-lg" href="/terms">
               {t('cta.termsBtn')}
-            </a>
+            </Link>
           </div>
         </div>
       </section>

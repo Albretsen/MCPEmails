@@ -72,7 +72,7 @@ På to måter: rediger den per innboks i dashbordet, eller spør Claude — for 
 
 Sett signaturen din én gang, per innboks, så går hver e-post Claude sender fra den postkassen (ny, svar, videresending, utkast eller planlagt) ut signert som om du skrev den. Den fungerer hos alle leverandører, plasserer seg riktig i tråder og holder seg unna med \`include_signature\` når du vil ha et bart svar.
 
-[Åpne dashbordet ditt](/dashboard) for å sette en signatur, eller bare fortell Claude hva din skal være. Ikke tilkoblet ennå? [Kom i gang gratis](/signup) og koble til en innboks på rundt to minutter.`,
+[Åpne dashbordet ditt](/dashboard) for å sette en signatur, eller bare fortell Claude hva din skal være. Ikke tilkoblet ennå? [Kom i gang gratis](/signup) og koble til en innboks på rundt to minutter. [Guiden til å koble Claude til innboksen din](/blog/connect-claude-to-email) går gjennom hvert steg.`,
 };
 
 export default translation;

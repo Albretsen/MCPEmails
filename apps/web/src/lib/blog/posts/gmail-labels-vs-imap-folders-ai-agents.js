@@ -57,7 +57,7 @@ The preview is useful whether you use Gmail labels or IMAP folders. It also prev
 
 MCP Emails supports Gmail (with a Google app password or Sign in with Google), Outlook and Microsoft 365 over Microsoft Graph, and IMAP/SMTP mailboxes through app passwords, including Fastmail, iCloud, Yahoo, Zoho, Yandex, and generic providers. Outlook sits on the folder side of this divide, with nested folders and no labels. Connect the account you have; your agent discovers its capabilities instead of assuming every inbox behaves like Gmail.
 
-For a provider-specific setup guide, see [Connect iCloud or Fastmail IMAP to Claude](/blog/connect-icloud-fastmail-imap-to-claude). For Gmail, start with [How to Connect Gmail to Claude](/blog/connect-gmail-to-claude).`,
+For a provider-specific setup guide, see [Connect iCloud or Fastmail IMAP to Claude](/blog/connect-icloud-fastmail-imap-to-claude). For Gmail, start with [How to Connect Gmail to Claude](/blog/connect-gmail-to-claude). For any other IMAP mailbox, the [IMAP connector guide](/blog/claude-imap-connector) covers server settings and troubleshooting.`,
 };
 
 export default post;

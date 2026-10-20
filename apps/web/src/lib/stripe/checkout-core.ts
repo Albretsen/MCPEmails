@@ -975,10 +975,24 @@ export async function runCheckout(input: {
       // are plain sentences in the same register as the pricing page: no
       // exclamation marks, no urgency, no upsell.
       custom_text: {
-        // Sits directly above the subscribe button, where the hesitation is.
+        // Sits directly above the subscribe button, where the hesitation is,
+        // and is also the closest we can put consumer-law text to it. Stripe
+        // renders Markdown links here (checked in test mode 2026-10-20).
+        //
+        // THE BUTTON LABEL IS STRIPE'S, and in subscription mode it cannot be
+        // changed: `submit_type: 'pay'` is rejected ("You can not pass
+        // submit_type: 'pay' in subscription mode"), and the label follows
+        // `locale`. Under `locale: 'en'` it reads "Subscribe"; under 'de' it
+        // reads "Zahlungspflichtig abonnieren", which is the wording §312j
+        // BGB asks for. The first sentence below states the payment
+        // obligation in words next to the button; it does not replace a
+        // compliant label. See the PR that added it for the options.
         submit: {
           message:
-            'Cancel any time from your dashboard. Questions before you buy: hello@mcpemails.com',
+            'By subscribing you agree to pay the price shown, every billing period until you cancel. ' +
+            `Cancel any time from your dashboard or at [mcpemails.com/cancel](${appUrl}/cancel). ` +
+            `Consumers can withdraw within 14 days: [right of withdrawal](${appUrl}/withdrawal). ` +
+            'Questions before you buy: hello@mcpemails.com',
         },
         // Shown while Stripe hands the buyer back to us, covering the redirect.
         after_submit: {

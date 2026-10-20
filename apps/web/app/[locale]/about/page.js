@@ -7,6 +7,7 @@ import {
   pageJsonLd,
   APP_URL,
 } from '@/i18n/seo';
+import { Link } from '@/i18n/navigation';
 import { Nav, Footer } from '../../../components/marketing/Sections';
 
 export async function generateMetadata({ params }) {
@@ -136,9 +137,9 @@ export default async function AboutPage({ params }) {
   const richTags = {
     b: (c) => <strong>{c}</strong>,
     c: (c) => <code>{c}</code>,
-    terms: (c) => <a href="/terms">{c}</a>,
-    privacy: (c) => <a href="/privacy">{c}</a>,
-    security: (c) => <a href="/security">{c}</a>,
+    terms: (c) => <Link href="/terms">{c}</Link>,
+    privacy: (c) => <Link href="/privacy">{c}</Link>,
+    security: (c) => <Link href="/security">{c}</Link>,
     hello: (c) => <a href={`mailto:${CONTACT_EMAIL}`}>{c}</a>,
     securityEmail: (c) => <a href={`mailto:${SECURITY_EMAIL}`}>{c}</a>,
     github: extLink(GITHUB_URL),
@@ -259,9 +260,9 @@ export default async function AboutPage({ params }) {
               <p>{t('busFactor.p2')}</p>
               <p>{t('busFactor.p3')}</p>
               <div className="ab-btns">
-                <a className="btn btn-primary" href="/self-hosting">
+                <Link className="btn btn-primary" href="/self-hosting">
                   {t('busFactor.ctaSelfHost')}
-                </a>
+                </Link>
                 <a className="btn btn-secondary" href={REPO_URL} target="_blank" rel="noopener noreferrer">
                   {t('busFactor.ctaSource')}
                 </a>
@@ -289,9 +290,9 @@ export default async function AboutPage({ params }) {
           <h2 className="pricing-cta-h">{t('cta.title')}</h2>
           <p className="pricing-cta-sub">{t('cta.sub')}</p>
           <div className="pricing-cta-btns">
-            <a className="btn btn-primary btn-lg" href="/security">
+            <Link className="btn btn-primary btn-lg" href="/security">
               {t('cta.primary')}
-            </a>
+            </Link>
             <a className="btn btn-on-dark btn-lg" href={SELFHOST_GUIDE_URL} target="_blank" rel="noopener noreferrer">
               {t('cta.secondary')}
             </a>

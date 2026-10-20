@@ -16,7 +16,7 @@ const translation = {
 2. 粘贴 endpoint：\`https://www.mcpemails.com/api/mcp\`
 3. 点击 **Connect**，登录你的 MCP Emails 账户，并批准你想要的权限范围（\`read:email\`、\`send:email\`，或者两者都要）。
 
-客户端这边就这些了。令牌严格限定在你批准的范围内，而且你可以在控制台一键撤销连接。如果想把利弊讲清楚，请看 [OAuth 与 API 密钥在 AI 邮件访问中的对比](/blog/oauth-vs-api-keys-ai-email-access)。
+客户端这边就这些了。令牌严格限定在你批准的范围内，而且你可以在控制台一键撤销连接。如果想把利弊讲清楚，请看 [OAuth 与 API 密钥在 AI 邮件访问中的对比](/blog/oauth-vs-api-keys-ai-email-access)。如果想看针对具体客户端的教程，请参阅[把 Claude 连接到你的邮箱](/blog/connect-claude-to-email)或[把 ChatGPT 连接到你的邮箱](/blog/connect-chatgpt-to-email)。
 
 **路径 B——API 密钥客户端（Cline、JetBrains、cURL、自定义智能体）。** 适用于任何不内置 OAuth 的工具：
 

@@ -28,7 +28,7 @@ Claude therefore never needs an IMAP library, an SMTP configuration, or a passwo
 
 ## What you need before setup
 
-Collect these values from your email provider's help page or administrator:
+Collect these values from your email provider's help page or administrator. You can also check the [verified IMAP and SMTP settings for each provider](/connect):
 
 - **Email address:** for example, \`you@example.com\`. This is the address shown on the connected inbox.
 - **Login username:** usually the full email address. Some custom-domain hosts issue a different IMAP/SMTP username.
@@ -40,7 +40,7 @@ Do not guess the server names from the domain if your provider publishes setting
 
 Use an **app password** whenever the provider supports one. It is separate from your primary account password and can be revoked without changing the password you use to sign in. Providers commonly require two-factor authentication before they let you create one. Some also require you to enable IMAP access in mail settings first.
 
-MCPEmails includes presets for iCloud, Yahoo, Zoho, and Yandex, plus a dedicated Fastmail app-password flow. Those choices fill the known hosts and ports for you. Choose **Generic IMAP** for another provider or your own mail server and enter the values yourself.
+MCPEmails includes presets for [iCloud](/connect/icloud), [Yahoo](/connect/yahoo), [Zoho](/connect/zoho), and [Yandex](/connect/yandex), plus a dedicated [Fastmail](/connect/fastmail) app-password flow. Those choices fill the known hosts and ports for you. Choose **Generic IMAP** for another provider or your own mail server and enter the values yourself. See the [generic IMAP setup page](/connect/imap).
 
 ## Step 1: connect the IMAP/SMTP mailbox
 

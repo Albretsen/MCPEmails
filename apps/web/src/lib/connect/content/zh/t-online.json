@@ -1,9 +1,10 @@
 {
   "_sources": [
-    "https://www.telekom.de/hilfe/apps-dienste/e-mail/programme/passwort-definition",
     "https://www.telekom.de/hilfe/apps-dienste/e-mail/programm-passwort-verwalten",
-    "https://www.telekom.de/hilfe/vertrag-meine-daten/login-daten-passwoerter/welche-passwoerter-fuer-welchen-zweck",
-    "https://www.netzwelt.de/galerie/19784-e-mail-passwort-e-mail-adressen-t-online-einrichten.html"
+    "https://www.telekom.de/hilfe/apps-dienste/e-mail/app-programm-passwort",
+    "https://www.telekom.de/hilfe/apps-dienste/e-mail/posteingang-postausgang-server",
+    "https://www.telekom.de/hilfe/apps-dienste/e-mail/versand-blockiert",
+    "https://www.telekom.de/hilfe/vertrag-meine-daten/login-daten-passwoerter/welche-passwoerter-fuer-welchen-zweck"
   ],
   "auth": {
     "method": "mail-password",
@@ -28,7 +29,7 @@
   },
   "method": {
     "title": "T-Online 如何连接：IMAP 与第二个单独的密码",
-    "body": "Telekom 在 <code>secureimap.t-online.de</code> 的 993 端口通过隐式 TLS 提供 IMAP，在 <code>securesmtp.t-online.de</code> 的 465 端口提供 SMTP 提交。这两个名称背后都是 IMAP 代理，而不是你直接对话的邮箱服务器，这解释了下文的几个怪癖。几乎所有人都会弄错的是凭据。Telekom 在一个账户上保存两个密码：用于 Kundencenter 和 telekom.de 的 <b>Telekom Login</b> 密码，以及第二个 <b>Passwort für E-Mail-Programme</b>，按 Telekom 自己的说法，它是 <b>für das Verwenden eines E-Mail-Programms</b>（用于使用邮件程序）。只有第二个能在 <code>secureimap.t-online.de</code> 上通过认证。Telekom 建议两者永远不要相同，而在很多账户上，邮件程序密码在有人创建之前根本不存在。"
+    "body": "Telekom 为所有 @t-online.de 和 @magenta.de 地址提供相同的服务器：IMAP 是 <code>secureimap.t-online.de</code>，端口 993，使用 SSL；SMTP 是 <code>securesmtp.t-online.de</code>，端口 465 或 587。这两个名称背后是一个 IMAP 代理，而不是你直接对话的邮箱服务器，这解释了下面的几个怪癖。几乎所有人都会搞错的是凭据。Telekom 在同一个账户上有两个密码：<b>Telekom Login</b> 密码，用于 E-Mail Center、Kundencenter 和 MeinMagenta 应用；以及另一个 <b>Passwort für E-Mail-Programme</b>，Telekom 说只要你用 Outlook、Thunderbird 等程序而不是 E-Mail Center 收信，就需要它。只有后者能通过 <code>secureimap.t-online.de</code> 的验证，Telekom 建议两者设为不同的密码。"
   },
   "setup": [
     {
@@ -37,7 +38,7 @@
     },
     {
       "h": "创建 Passwort für E-Mail-Programme",
-      "p": "在 email.t-online.de 的 E-Mail Center 中，打开 <b>Menü</b>，然后是 <b>Einstellungen</b>，再点击左栏的 <b>Passwörter</b>。在 <b>E-Mail-Passwort, für das Verwenden eines E-Mail-Programms</b> 标题下，选择 <b>E-Mail-Passwort ändern</b>，输入两次新密码并保存。同一凭据也可以在 Kundencenter 中通过 <b>Profil</b>、<b>Login-Daten und Passwörter</b>、<b>weitere Passwörter</b> 找到。即使你以为已经有了，也请重新设置：很多账户从未创建过它。"
+      "p": "在 email.t-online.de 的 E-Mail Center 中，点击齿轮图标（<b>Einstellungen</b>），然后依次进入 <b>Alle Einstellungen anzeigen</b>、<b>Passwörter</b>、<b>Passwort für E-Mail-Programme</b>，设置一个新密码。另一条路径是 Kundencenter：<b>Profil verwalten</b>，然后 <b>Login-Daten</b>，再到 <b>Weitere Passwörter</b>。Telekom 建议它与 Telekom Login 密码不同。"
     },
     {
       "h": "粘贴到 mcpemails",
@@ -64,6 +65,10 @@
     {
       "h": "发信上限为每封 50 MB",
       "p": "<code>securesmtp.t-online.de</code> 声明的最大邮件大小为 52,428,800 字节。这是整封邮件编码后的大小，所以 base64 附件大约比其磁盘大小多出三分之一。被要求转发大附件的代理会收到明确的 SMTP 拒绝，而不是慢慢发送。"
+    },
+    {
+      "h": "Telekom 可能会拦截来自陌生网络连接的发信",
+      "p": "Telekom 会检查发信所用的网络连接。其帮助页面说明，当邮件程序从未知或未放行的 IP 地址发信时，邮件不会发出，程序会收到错误提示，常见原因包括换了 Wi-Fi、移动网络、VPN 或在国外上网。你的智能体通过 MCP Emails 发出的邮件来自 MCP Emails 的服务器，而不是你家里的网络，因此也可能这样被拦截。Telekom 说，如果发信确实是你本人所为，可以放行（<b>freischalten</b>）该 IP 地址。如果不是，就不要放行，并修改你的 Telekom Login 密码。"
     }
   ],
   "limits": [
@@ -77,19 +82,19 @@
     },
     {
       "q": "T-Online 的 IMAP 和 SMTP 设置是什么？",
-      "a": "IMAP 为 secureimap.t-online.de，端口 993，隐式 TLS。SMTP 为 securesmtp.t-online.de，端口 465，同样是隐式 TLS。使用完整的 t-online.de 地址和 Passwort für E-Mail-Programme 登录。两台服务器均已通过实时 TLS 连接确认，由所有 T-Online 邮箱共享。"
+      "a": "IMAP 是 secureimap.t-online.de，端口 993，使用 SSL。SMTP 是 securesmtp.t-online.de，端口 465 或 587，同样使用 SSL；MCP Emails 使用 465。用完整地址和 Passwort für E-Mail-Programme 登录。Telekom 为 @t-online.de 和 @magenta.de 地址列出的是相同的服务器，两个服务器都已通过真实 TLS 连接确认。"
     },
     {
       "q": "为什么邮件程序拒绝我的 T-Online 密码？",
-      "a": "几乎总是因为你输入的是 Telekom 登录密码。Telekom 签发了第二个凭据 Passwort für E-Mail-Programme，只有它能在邮件服务器上认证。请在 E-Mail Center 的 Einstellungen、Passwörter 中，或在 Kundencenter 的 Profil、Login-Daten und Passwörter、weitere Passwörter 中创建或重置它。"
+      "a": "几乎都是因为你输入的是 Telekom Login 密码。Telekom 另外发放一个凭据，即 Passwort für E-Mail-Programme，只有它能通过邮件服务器的验证。可以在 E-Mail Center 中通过齿轮图标、Alle Einstellungen anzeigen、Passwörter 创建或重置，也可以在 Kundencenter 中通过 Profil verwalten、Login-Daten、Weitere Passwörter 操作。"
     },
     {
       "q": "在哪里创建 Passwort für E-Mail-Programme？",
-      "a": "登录 email.t-online.de 的 E-Mail Center，打开 Menü，然后是 Einstellungen，再到 Passwörter。标题为 E-Mail-Passwort, für das Verwenden eines E-Mail-Programms 的区块中有一个修改按钮。输入两次新密码并保存。在你的邮件客户端和 mcpemails 中，收信和发信服务器都使用这个值。"
+      "a": "有两个地方。在 email.t-online.de 的 E-Mail Center 中，点击齿轮图标（Einstellungen），然后依次进入 Alle Einstellungen anzeigen、Passwörter、Passwort für E-Mail-Programme。在 Kundencenter 中，打开 Profil verwalten，然后 Login-Daten，再到 Weitere Passwörter。在 MCP Emails 中使用新密码，收信和发信服务器都用它。"
     },
     {
-      "q": "这适用于 magenta.de 和其他 Telekom 邮件域名吗？",
-      "a": "任何位于 Telekom E-Mail Center 中的邮箱，都使用同一个邮件程序密码，在同样的 secureimap.t-online.de 和 securesmtp.t-online.de 上认证。关键在于该邮箱是否是 Telekom E-Mail Center 邮箱，而不在于 @ 后面的文字。"
+      "q": "magenta.de 地址也能用吗？",
+      "a": "可以。Telekom 为 @magenta.de 和 @t-online.de 地址提供相同的服务器：IMAP 是 secureimap.t-online.de，SMTP 是 securesmtp.t-online.de，密码使用 Passwort für E-Mail-Programme，用户名是完整地址。"
     },
     {
       "q": "我的 T-Online 邮件会存储在你们的服务器上吗？",
