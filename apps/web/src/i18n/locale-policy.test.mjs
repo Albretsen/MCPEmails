@@ -7,7 +7,7 @@ import { readdirSync, readFileSync } from 'node:fs';
 import { fileURLToPath } from 'node:url';
 import path from 'node:path';
 import {
-  FULL_LOCALES, FROZEN_LOCALES, FALLBACK_LOCALE, deepMergeMessages, withEnglishFallback,
+  FULL_LOCALES, FROZEN_LOCALES, SCOPED_LOCALES, isScopedLocale, FALLBACK_LOCALE, deepMergeMessages, withEnglishFallback,
   isFullLocale, isFrozenLocale,
 } from './locale-policy.mjs';
 import { languageSwitcherLinks, localizedHref } from './language-switcher.mjs';
@@ -29,11 +29,12 @@ function leafPaths(value, prefix = '', out = []) {
 test('the policy covers every routed locale exactly once, and English is full', async () => {
   const source = readFileSync(path.join(webRoot, 'src/i18n/routing.ts'), 'utf8');
   const routed = JSON.parse(/locales:\s*(\[[^\]]*\])/.exec(source)[1].replace(/'/g, '"'));
-  assert.deepEqual([...FULL_LOCALES, ...FROZEN_LOCALES].sort(), [...routed].sort());
-  assert.equal(FULL_LOCALES.filter((l) => FROZEN_LOCALES.includes(l)).length, 0);
+  assert.deepEqual([...FULL_LOCALES, ...SCOPED_LOCALES, ...FROZEN_LOCALES].sort(), [...routed].sort());
+  assert.equal(new Set([...FULL_LOCALES, ...SCOPED_LOCALES, ...FROZEN_LOCALES]).size, routed.length);
   assert.ok(isFullLocale(FALLBACK_LOCALE));
   assert.ok(isFrozenLocale('zh') && !isFullLocale('zh'));
   assert.ok(isFullLocale('nb') && !isFrozenLocale('nb'));
+  assert.ok(isScopedLocale('de') && !isFullLocale('de') && !isFrozenLocale('de'));
 });
 
 // ---------------------------------------------------------------------------

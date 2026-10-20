@@ -1,0 +1,10 @@
+{
+  "eyebrow": "Mehrere Postfächer",
+  "title": "Alle {provider}-Postfächer Ihrer Firma an einem Agenten",
+  "body": "Wenn Ihre Firma mehr als eine Adresse bei {provider} nutzt, etwa info@, vertrieb@ und rechnungen@, verbinden Sie jede davon mit demselben MCP Emails Workspace. Ihr KI-Client erreicht dann alle über die eine MCP-URL, in Claude, ChatGPT, Cursor oder jedem anderen MCP-Client. Jeder Tool-Aufruf nennt das Postfach, auf das er sich bezieht, jedes Postfach behält seinen eigenen Absendernamen und seine Signatur, und eine Antwort geht über das Postfach hinaus, zu dem sie gehört.",
+  "plans": "Free verbindet ein Postfach, Personal drei, Pro bis zu 10 und Business so viele, wie Sie brauchen, alle mit einem Login.",
+  "pricingLink": "Tarife vergleichen und sehen, wie viele Postfächer jeder verbindet",
+  "link": "Wie eine Person alle Firmenpostfächer über einen Agenten führt",
+  "faqQ": "Kann ich mehrere {provider}-Postfächer mit demselben KI-Agenten verbinden?",
+  "faqA": "Ja. Verbinden Sie jede {provider}-Adresse mit einem MCP Emails Workspace, und Ihr KI-Client erreicht alle über dieselbe MCP-URL. Jeder Tool-Aufruf nennt das Postfach, auf das er sich bezieht, eine Antwort auf eine Nachricht in vertrieb@ geht also von vertrieb@ aus. Free verbindet ein Postfach, Personal drei, Pro bis zu 10 und Business so viele, wie Sie brauchen."
+}

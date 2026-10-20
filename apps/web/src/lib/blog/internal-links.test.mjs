@@ -38,7 +38,7 @@ const { getAllPosts, getLocalizedPost, getPost, getPostLocales } = await import(
 const { renderMarkdown } = await import('./markdown.js');
 const { localizeHref } = await import('./links.mjs');
 
-const LOCALES = ['en', 'nb', 'es', 'fr', 'zh'];
+const LOCALES = ['en', 'nb', 'es', 'fr', 'zh', 'de'];
 const postLocales = (slug) => {
   const p = getPost(slug);
   return p ? getPostLocales(p) : [];

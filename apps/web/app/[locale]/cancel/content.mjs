@@ -373,7 +373,79 @@ const zh = {
   },
 };
 
-export const CANCEL_COPY = { en, nb, es, fr, zh };
+const de = {
+  meta: {
+    title: 'Verträge hier kündigen',
+    description:
+      'Kündigen Sie Ihr Abonnement für MCP Emails oder widerrufen Sie es innerhalb von 14 Tagen, ohne Anmeldung. Sie erhalten eine Bestätigung per E-Mail.',
+  },
+  eyebrow: 'Rechtliches',
+  title: 'Verträge hier kündigen',
+  lead:
+    'Kündigen Sie Ihr Abonnement für MCP Emails oder widerrufen Sie es innerhalb von 14 Tagen nach dem Kauf. Eine Anmeldung ist nicht nötig, und Sie erhalten eine Bestätigung per E-Mail. Wenn Sie angemeldet sind, können Sie auch im Dashboard kündigen.',
+  withdrawalLink: 'So funktioniert das Widerrufsrecht',
+  form: {
+    kindLegend: 'Was möchten Sie tun?',
+    kindCancel: 'Mein Abonnement kündigen',
+    kindCancelHint: 'Beendet die nächste Verlängerung. Ihr Tarif bleibt bis zum Ende des bereits bezahlten Zeitraums aktiv.',
+    kindWithdraw: 'Meinen Vertrag widerrufen',
+    kindWithdrawHint: 'Innerhalb von 14 Tagen nach dem Kauf. Wir erstatten die erste Zahlung vollständig.',
+    name: 'Ihr Name',
+    email: 'E-Mail-Adresse Ihres Kontos bei MCP Emails',
+    contract: 'Tarif oder Rechnungsnummer (optional)',
+    contractHint: 'Hilft uns, das richtige Abonnement zu finden, wenn Sie mehrere haben.',
+    typeLegend: 'Art der Kündigung',
+    typeOrdinary: 'Ordentliche Kündigung zum nächstmöglichen Zeitpunkt',
+    typeExtraordinary: 'Außerordentliche Kündigung, fristlos aus wichtigem Grund',
+    reason: 'Grund für die außerordentliche Kündigung',
+    continue: 'Weiter',
+    reviewHeading: 'Prüfen und bestätigen',
+    reviewLead: 'Es wurde noch nichts gesendet. Prüfen Sie die Angaben und bestätigen Sie dann.',
+    labels: {
+      kind: 'Anliegen',
+      name: 'Name',
+      email: 'E-Mail-Adresse des Kontos',
+      contract: 'Tarif oder Rechnungsnummer',
+      type: 'Art',
+      effective: 'Wirksam ab',
+      reason: 'Grund',
+    },
+    kindValueCancel: 'Kündigung',
+    kindValueWithdraw: 'Widerruf',
+    typeValueOrdinary: 'Ordentliche Kündigung',
+    typeValueExtraordinary: 'Außerordentliche Kündigung',
+    effectiveOrdinary: 'Zum nächstmöglichen Zeitpunkt: zum Ende des bereits bezahlten Zeitraums',
+    effectiveImmediate: 'Sofort',
+    none: 'Keine Angabe',
+    back: 'Angaben ändern',
+    submitCancel: 'Jetzt kündigen',
+    submitWithdraw: 'Widerruf bestätigen',
+    sending: 'Wird gesendet…',
+    doneCancel: 'Ihre Kündigung ist eingegangen',
+    doneWithdraw: 'Ihr Widerruf ist eingegangen',
+    doneRef: 'Referenz {ref}, eingegangen am {time}.',
+    doneEmail: 'Wir haben eine Kopie dieser Bestätigung an {email} gesendet. Falls sie nicht innerhalb einer Stunde ankommt, schreiben Sie an {support}.',
+    doneNextCancel: 'Wir beenden Ihr Abonnement in unserem Abrechnungssystem innerhalb von zwei Werktagen und informieren Sie per E-Mail, sobald das erledigt ist.',
+    doneNextWithdraw: 'Wir erstatten die erste Zahlung innerhalb von 14 Tagen vollständig auf die Karte, mit der Sie bezahlt haben, und informieren Sie per E-Mail, sobald das erledigt ist.',
+    doneNoRef: 'Ihr Anliegen ist bei uns eingegangen.',
+    print: 'Diese Bestätigung drucken oder speichern',
+  },
+  errors: {
+    invalid_email: 'Geben Sie die E-Mail-Adresse Ihres Kontos bei MCP Emails ein.',
+    name_required: 'Geben Sie Ihren Namen ein.',
+    name_too_long: 'Der Name darf höchstens 100 Zeichen lang sein.',
+    contract_too_long: 'Tarif oder Rechnungsnummer dürfen höchstens 100 Zeichen lang sein.',
+    reason_required: 'Geben Sie einen Grund für die außerordentliche Kündigung an.',
+    reason_too_long: 'Der Grund darf höchstens 2000 Zeichen lang sein.',
+    invalid_form_token: 'Diese Seite ist abgelaufen. Laden Sie sie neu und versuchen Sie es erneut.',
+    rate_limited: 'Zu viele Anfragen von hier. Versuchen Sie es in einer Stunde erneut oder schreiben Sie an {support}.',
+    server_error: 'Bei uns ist ein Fehler aufgetreten. Versuchen Sie es erneut oder schreiben Sie an {support}.',
+    network: 'Keine Verbindung. Prüfen Sie Ihre Netzwerkverbindung und versuchen Sie es erneut.',
+    unknown: 'Etwas ist schiefgelaufen. Versuchen Sie es erneut oder schreiben Sie an {support}.',
+  },
+};
+
+export const CANCEL_COPY = { en, nb, es, fr, zh, de };
 
 export function cancelCopy(locale) {
   return CANCEL_COPY[locale] ?? en;

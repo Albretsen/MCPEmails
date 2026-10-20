@@ -138,7 +138,7 @@ test('a hand edited value cannot inject a category outside the allowlist', () =>
         source: 'partner-kickback',
         landing: 'checkout',
         landingPath: '/dashboard/inboxes?token=secret',
-        locale: 'de',
+        locale: 'it',
         referrer: 'evil.example',
         utmMedium: 'billboard',
         utmCampaign: 'user-42',

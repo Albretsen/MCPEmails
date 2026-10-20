@@ -34,7 +34,7 @@ export const GUIDE_POSTS = Object.freeze({
 
 const PASSWORD_METHODS = new Set(['app-password', 'mail-password', 'account-password']);
 
-const LOCALES = ['en', 'nb', 'es', 'fr', 'zh'];
+const LOCALES = ['en', 'nb', 'es', 'fr', 'zh', 'de'];
 
 /**
  * The guide links for one provider page, in display order, as

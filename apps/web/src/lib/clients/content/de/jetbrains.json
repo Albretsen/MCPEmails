@@ -1,0 +1,92 @@
+{
+  "_sources": [
+    "apps/web/components/dashboard/Pages.jsx (MCP_CLIENTS) + apps/web/messages/en/dashboard.json (clients.*)",
+    "apps/web/src/lib/api-keys/generate.ts + apps/web/src/lib/api-keys/scopes.ts",
+    "https://www.jetbrains.com/help/ai-assistant/configure-an-mcp-server.html"
+  ],
+  "meta": {
+    "title": "E-Mail mit JetBrains AI Assistant verbinden: MCP-Setup",
+    "description": "Fügen Sie AI Assistant in IntelliJ, PyCharm oder WebStorm ein echtes Postfach hinzu. Streamable HTTP plus ein API-Schlüssel mit Scopes im Authorization-Header. Ein Postfach kostenlos."
+  },
+  "hero": {
+    "eyebrow": "JetBrains + E-Mail",
+    "titleLine1": "Verbinden Sie Ihr Postfach mit JetBrains",
+    "titleLine2": "AI Assistant",
+    "lead": "Fügen Sie AI Assistant in jeder JetBrains-IDE, die ihn unterstützt, ein echtes Postfach hinzu. E-Mails lesen, suchen, senden, beantworten, weiterleiten, planen und organisieren, ohne die IDE zu verlassen.",
+    "meta0": "1 Postfach kostenlos, dauerhaft",
+    "meta1": "API-Schlüssel mit Scopes, mit einem Klick widerrufbar",
+    "meta2": "E-Mails werden live abgerufen, nie gespeichert",
+    "answer": "Öffnen Sie Settings, Tools, AI Assistant, Model Context Protocol. Fügen Sie einen Server hinzu, wählen Sie Streamable HTTP als Verbindungstyp, fügen Sie https://mcpemails.com/api/mcp ein und ergänzen Sie einen Authorization-Bearer-Header mit einem API-Schlüssel aus Ihrem Dashboard."
+  },
+  "method": {
+    "title": "So verbindet sich JetBrains AI Assistant: ein API-Schlüssel mit Scopes",
+    "body": "JetBrains AI Assistant durchläuft bei einem entfernten MCP-Server keinen OAuth-Ablauf im Browser und authentifiziert sich deshalb mit einem Bearer-Token. Erstellen Sie im Dashboard einen API-Schlüssel, aktivieren Sie nur die Scopes, die der Agent braucht, und tragen Sie ihn in JetBrains AI Assistant als Header <code>Authorization: Bearer</code> ein. Verbindungen per Schlüssel und per OAuth nutzen denselben Endpunkt und denselben Tool-Katalog; sie unterscheiden sich nur darin, wie das Token zustande kommt."
+  },
+  "setup": [
+    {
+      "h": "Kostenloses Konto erstellen und Postfach verbinden",
+      "p": "Registrieren Sie sich auf mcpemails.com, ohne Kreditkarte, und öffnen Sie dann Dashboard, Postfächer, Postfach verbinden. Outlook und Microsoft 365 verbinden Sie über „Mit Microsoft anmelden“; Gmail, iCloud, Fastmail, Yahoo, Zoho und Yandex nutzen ein App-Passwort, Gmail alternativ auch die Google-Anmeldung; alle anderen Postfächer verbinden sich ganz normal per IMAP und SMTP. Der Free-Tarif umfasst ein Postfach, dauerhaft."
+    },
+    {
+      "h": "API-Schlüssel mit Scopes erstellen",
+      "p": "Klicken Sie unter Dashboard, API-Schlüssel auf „Schlüssel erstellen“. Geben Sie ihm einen Namen und aktivieren Sie nur die Scopes, die dieser Agent braucht: <code>read:email</code>, <code>search:email</code>, <code>send:email</code>, <code>manage:folders</code>, <code>delete:email</code>, <code>manage:drafts</code>, <code>manage:contacts</code>, <code>schedule:email</code> und <code>manage:automations</code>. Der Schlüssel besteht aus <code>mcpe_</code> und 64 Hex-Zeichen und wird nur einmal angezeigt. Kopieren Sie ihn also, bevor Sie den Dialog schließen."
+    },
+    {
+      "h": "MCP-Einstellungen öffnen",
+      "p": "Öffnen Sie <b>Settings</b>, dann <b>Tools</b>, dann <b>AI Assistant</b>, dann <b>Model Context Protocol (MCP)</b>."
+    },
+    {
+      "h": "Server hinzufügen",
+      "p": "Klicken Sie auf Add und wählen Sie <b>Streamable HTTP</b> als Verbindungstyp. Fügen Sie <code>https://mcpemails.com/api/mcp</code> ein und ergänzen Sie dann einen Header namens <code>Authorization</code> mit dem Wert <code>Bearer</code>, einem Leerzeichen und Ihrem Schlüssel."
+    }
+  ],
+  "gotchas": [
+    {
+      "h": "Streamable HTTP, weder stdio noch SSE",
+      "p": "Die Liste der Verbindungstypen bietet zuerst einen lokalen, befehlsbasierten Server an, weil die meisten MCP-Server so funktionieren. Dieser hier ist entfernt und gehostet, es gibt also keinen Befehl zum Ausführen. Wählen Sie Streamable HTTP, den Transport, den dieser Server nach der Revision 2025-06-18 spricht."
+    },
+    {
+      "h": "Der Schlüssel ist hier das ganze Berechtigungsmodell",
+      "p": "AI Assistant durchläuft keinen OAuth-Zustimmungsablauf, es gibt also keinen zweiten Bildschirm, auf dem Sie einschränken, was die Verbindung darf. Was Sie beim Erstellen des Schlüssels aktivieren, hat die IDE, bis Sie den Schlüssel widerrufen. Für eine IDE decken Scopes zum Lesen, Suchen und für Entwürfe fast alles Sinnvolle ab."
+    },
+    {
+      "h": "IDE-Einstellungen werden synchronisiert, und ein Bearer-Token ist ein Zugangsdatum",
+      "p": "Wenn Sie die Einstellungssynchronisierung zwischen Rechnern nutzen, behandeln Sie den Schlüssel wie jedes andere Zugangsdatum, das mitreist. Schlüssel kosten nichts: Stellen Sie einen pro Rechner aus, benennen Sie sie so, dass die Liste lesbar bleibt, und widerrufen Sie den, den Sie nicht mehr zuordnen können. Bei uns wird nur ein SHA-256-Hash gespeichert, der reine Schlüssel ist also nicht wiederherstellbar, und verlorene Schlüssel werden ersetzt statt abgerufen."
+    }
+  ],
+  "limits": [
+    "Anfragen sind auf 100 pro Minute, 1.000 pro Stunde und 10.000 pro Tag je Schlüssel begrenzt, dazu kommt die Obergrenze Ihres Tarifs für abrechenbare Aktionen.",
+    "Der Server arbeitet rein nach Anfrage und Antwort. Es gibt keine Webhooks und keine vom Server ausgelösten Ereignisse, neue E-Mails wecken Ihren Agenten also nie von selbst. Um auf eingehende E-Mails zu reagieren, fragen Sie in festen Abständen ab.",
+    "E-Mails werden bei jedem Aufruf live von Ihrem Anbieter abgerufen und nie gespeichert. Gespeichert wird nur das verschlüsselte OAuth-Token oder App-Passwort. Ein widerrufenes Token oder ein geändertes Postfachpasswort beendet den Zugriff deshalb sofort."
+  ],
+  "faq": [
+    {
+      "q": "Wie verbinde ich meine E-Mails mit JetBrains AI Assistant?",
+      "a": "Öffnen Sie Settings, Tools, AI Assistant, Model Context Protocol, fügen Sie einen Server mit dem Verbindungstyp Streamable HTTP hinzu, fügen Sie https://mcpemails.com/api/mcp ein und ergänzen Sie einen Authorization-Bearer-Header mit einem API-Schlüssel aus Ihrem Dashboard. Danach hat AI Assistant Tools zum Lesen, Suchen, Senden, Beantworten, Weiterleiten, Organisieren und Planen von E-Mails."
+    },
+    {
+      "q": "In welchen JetBrains-IDEs funktioniert das?",
+      "a": "In jeder JetBrains-IDE, in der AI Assistant einen MCP-Server konfigurieren kann. Der Einstellungspfad und der Verbindungstyp Streamable HTTP gehören zu AI Assistant und nicht zu einer bestimmten IDE, das Setup ist also überall gleich, wo das Plugin verfügbar ist. Fehlt der Bildschirm Model Context Protocol in Ihren Settings, liegt das am Plugin, nicht an diesem Server."
+    },
+    {
+      "q": "Warum ein API-Schlüssel statt OAuth?",
+      "a": "Weil AI Assistant einen entfernten MCP-Server über einen konfigurierten Header authentifiziert statt über einen OAuth-Ablauf im Browser. Ein Bearer-Schlüssel ist dort der Weg, der funktioniert. Endpunkt und Tools sind dieselben wie bei den OAuth-Clients; nur der Weg zum Token unterscheidet sich."
+    },
+    {
+      "q": "Welche Postfächer erreicht AI Assistant auf diesem Weg?",
+      "a": "Outlook.com und Microsoft 365 über „Mit Microsoft anmelden“, wobei bei einem Arbeitskonto eventuell einmalig die IT-Administration die App freigeben muss; Gmail, iCloud, Fastmail, Yahoo, Zoho und Yandex mit einem App-Passwort, bei Gmail alternativ über die Google-Anmeldung; und jedes andere Postfach, das IMAP und SMTP auf den Standardports spricht. Der Client sieht alle über dieselbe Verbindung: Ihr Agent ruft zuerst inbox_list auf und findet so jedes verbundene Postfach samt ID. Sie müssen also nirgends UUIDs einfügen."
+    },
+    {
+      "q": "Kann AI Assistant E-Mails senden, ohne dass ich es mitbekomme?",
+      "a": "Nur wenn Sie es zulassen. Senden erfordert den Scope send:email, ein Schlüssel oder Token ohne diesen Scope kann also überhaupt nicht senden. Zusätzlich kann der Inhaber eines Postfachs im Dashboard eine menschliche Freigabe verlangen. Dann wartet jedes Senden, Antworten, Weiterleiten, Senden eines Entwurfs und geplante Senden, bis eine Person es freigibt."
+    },
+    {
+      "q": "Werden meine E-Mails auf Ihren Servern gespeichert?",
+      "a": "Nein. Jede Nachricht wird für die Anfrage, die sie anfordert, live von Ihrem Anbieter abgerufen und direkt an Ihren Client übergeben. Gespeichert wird nur das verschlüsselte OAuth-Token oder App-Passwort, damit spätere Aufrufe sich authentifizieren können. Wenn Sie das Postfach im Dashboard löschen oder den Zugriff bei Ihrem Anbieter widerrufen, endet die Verbindung sofort."
+    }
+  ],
+  "ctaBand": {
+    "title": "Geben Sie Ihrer IDE ein echtes Postfach",
+    "sub": "Ein MCP-Server, ein Schlüssel mit Scopes. Ein Postfach dauerhaft kostenlos, keine Kreditkarte nötig."
+  }
+}

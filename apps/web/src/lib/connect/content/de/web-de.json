@@ -1,0 +1,106 @@
+{
+  "_sources": [
+    "https://hilfe.web.de/pop-imap/einschalten.html",
+    "https://hilfe.web.de/pop-imap/index.html",
+    "https://hilfe.web.de/pop-imap/imap/index.html",
+    "https://hilfe.web.de/sicherheit/2fa/anwendungsspezifisches-passwort.html",
+    "https://hilfe.web.de/pop-imap/einrichtung-mailprogramm-scheitert.html",
+    "https://hilfe.web.de/pop-imap/imap/imap-serverdaten.html"
+  ],
+  "auth": {
+    "method": "account-password",
+    "label": "WEB.DE-Passwort, mit 2FA ein anwendungsspezifisches Passwort",
+    "helpUrl": "https://hilfe.web.de/pop-imap/einschalten.html",
+    "usernameForm": "Ihre vollständige WEB.DE-Adresse mit Domain: name@web.de.",
+    "status": "active"
+  },
+  "meta": {
+    "title": "WEB.DE mit Claude, Cursor & MCP verbinden (IMAP)",
+    "description": "WEB.DE mit Claude, Cursor und jedem MCP-Client verbinden, per IMAP über imap.web.de:993. POP3- und IMAP-Zugriff ist standardmäßig aus und muss zuerst eingeschaltet werden."
+  },
+  "hero": {
+    "eyebrow": "WEB.DE + KI",
+    "titleLine1": "WEB.DE mit Claude verbinden,",
+    "titleLine2": "und mit Cursor, ChatGPT und jedem MCP-Client",
+    "lead": "Geben Sie Ihrem KI-Agenten in wenigen Minuten Zugriff auf Ihr echtes WEB.DE-Postfach. E-Mails lesen, suchen, senden, beantworten, planen und ordnen, per IMAP mit Ihrem Kontopasswort. Dasselbe Postfach funktioniert in jedem MCP-Client, nicht nur in einem.",
+    "meta0": "1 Postfach dauerhaft kostenlos",
+    "meta1": "Ihr Kontopasswort, keine OAuth-Einrichtung",
+    "meta2": "E-Mails live abgerufen, nie gespeichert",
+    "answer": "Claude kann WEB.DE nicht von sich aus erreichen. MCP Emails ist ein gehosteter MCP-Server, der das Postfach per IMAP mit Ihrem Kontopasswort anbindet. Danach können Claude, Cursor oder jeder MCP-Client diese E-Mails lesen, suchen, senden und ordnen. Die Einrichtung dauert ein paar Minuten, ein Postfach ist kostenlos."
+  },
+  "method": {
+    "title": "So verbindet sich WEB.DE: IMAP und Ihr Kontopasswort",
+    "body": "WEB.DE verbindet sich über IMAP/SMTP, aber <b>der Zugriff per POP3 und IMAP ist standardmäßig deaktiviert</b>. Schalten Sie ihn bei WEB.DE unter E-Mail-Einstellungen, E-Mail empfangen, POP3/IMAP ein und verbinden Sie dann mit Ihrer WEB.DE-Adresse und Ihrem Passwort. WEB.DE antwortet auf beiden üblichen Versandwegen, implizites TLS auf Port 465 und STARTTLS auf Port 587. Am Port scheitert ein Versand also fast nie. MCP Emails nutzt das 465-Paar unten und wechselt bei Bedarf selbst auf den anderen Port."
+  },
+  "setup": [
+    {
+      "h": "Kostenloses Konto erstellen",
+      "p": "Registrieren Sie sich bei MCP Emails, ohne Kreditkarte. Der Free-Tarif verbindet ein Postfach, dauerhaft."
+    },
+    {
+      "h": "IMAP-Zugriff bei WEB.DE einschalten",
+      "p": "Öffnen Sie bei WEB.DE die E-Mail-Einstellungen, wählen Sie unter E-Mail empfangen den Punkt POP3/IMAP und stellen Sie den Schieberegler auf POP3- und IMAP-Zugriff erlauben."
+    },
+    {
+      "h": "Postfach in MCP Emails hinzufügen",
+      "p": "Wählen Sie IMAP / SMTP, geben Sie Ihre WEB.DE-Adresse, die oben genannten Hosts und das Passwort ein, und das Postfach ist sicher verbunden."
+    },
+    {
+      "h": "MCP-URL in Ihre KI einfügen",
+      "p": "Fügen Sie https://mcpemails.com/api/mcp in Claude, Cursor oder ChatGPT ein, autorisieren Sie den Zugriff, und Ihr Agent hat das Postfach."
+    }
+  ],
+  "gotchas": [
+    {
+      "h": "Der Abruf per POP3 und IMAP ist aus, bis Sie ihn einschalten",
+      "p": "WEB.DE liefert jedes FreeMail-Postfach mit deaktiviertem externem Abruf aus, und genau daran scheitern die meisten Einrichtungen beim ersten Versuch. Melden Sie sich auf web.de an, klicken Sie oben auf den Kreis mit Ihren Initialen, öffnen Sie <b>E-Mail-Einstellungen</b> und wählen Sie unter <b>E-Mail empfangen</b> den Punkt <b>POP3/IMAP</b>. Stellen Sie den Schieberegler auf <b>POP3- und IMAP-Zugriff erlauben</b> und lösen Sie das kleine Puzzle, bei dem Sie zwei Symbole übereinanderziehen. Solange der Regler aus ist, lehnt <code>imap.web.de</code> jede Anmeldung mit einem Authentifizierungsfehler ab, der sich von einem falschen Passwort nicht unterscheidet."
+    },
+    {
+      "h": "WEB.DE schaltet den Zugriff wieder ab, wenn sich eine Weile nichts verbindet",
+      "p": "Das trifft viele erst Monate später. WEB.DE dokumentiert: Wenn Sie das Programm oder die App längere Zeit nicht nutzen, wird der Abruf per POP3 und IMAP automatisch wieder abgeschaltet. Eine Verbindung, die das ganze Jahr lief, kann also nach einer ruhigen Phase ausfallen, ohne Benachrichtigung und ohne Änderung auf Ihrer Seite. Wenn ein Postfach plötzlich nicht mehr geht, prüfen Sie zuerst den Schieberegler, bevor Sie das Passwort anfassen. Ein Agent, der das Postfach regelmäßig liest, hält den Zugriff von selbst aktiv."
+    },
+    {
+      "h": "Mit Zwei-Faktor-Authentifizierung gilt Ihr Passwort nicht mehr für Mailprogramme",
+      "p": "WEB.DE führt das App-Passwort unter der Zwei-Faktor-Authentifizierung und beschreibt es als Passwort für externe Mailprogramme per POP3 und IMAP. Sobald 2FA Ihr Konto schützt, erstellen Sie eines im Browser: Klicken Sie auf Ihre Initialen, dann <b>Account verwalten</b>, dann <b>Login & Sicherheit</b>, dann <b>App-Passwörter (für externe Apps)</b>, dann <b>Neues App-Passwort erstellen</b>. Geben Sie ihm einen Namen, etwa MCP Emails, und kopieren Sie es sofort, denn WEB.DE zeigt es nur einmal an. Fügen Sie es statt Ihres normalen Passworts in MCP Emails ein und nutzen Sie das normale Passwort weiter für die Website. Ohne 2FA ist das Kontopasswort richtig."
+    },
+    {
+      "h": "Beide SMTP-Ports funktionieren, ein Versandfehler liegt selten am Port",
+      "p": "Die WEB.DE-Hilfe nennt <code>smtp.web.de</code> auf Port 587 mit STARTTLS, Port 465 mit SSL als Alternative, und akzeptiert nur TLS 1.2 oder 1.3. Beide Ports funktionieren, und unser Test hat auf 465 einen TLS-Handshake abgeschlossen, wobei der Server PLAIN und LOGIN anbot. Zwischen den Ports zu wechseln bringt also nichts. Wird der Versand abgelehnt, liegt es am Schieberegler für den Abruf, am fehlenden App-Passwort oder an der Absenderadresse: WEB.DE bittet darum, nur von Adressen zu senden, die nachweislich zu Ihrem Postfach gehören."
+    }
+  ],
+  "limits": [
+    "MCP Emails verbindet nur das WEB.DE-Postfach. WEB.DE Online-Speicher, Adressbuch und Kalender sind eigene Produkte und für Ihren KI-Client nicht zugänglich.",
+    "Den POP3/IMAP-Schieberegler steuert WEB.DE, nicht wir. Deaktiviert WEB.DE den Abruf nach längerer Inaktivität, muss die Verbindung bei WEB.DE wieder eingeschaltet werden, bevor sie funktioniert.",
+    "WEB.DE ist ein Postfach für Privatkunden mit eigenen Versandlimits gegen Missbrauch. Nutzen Sie es für normale Korrespondenz, nicht für Massen- oder Kampagnenversand."
+  ],
+  "faq": [
+    {
+      "q": "Funktioniert Claude mit WEB.DE?",
+      "a": "Nicht von sich aus. Claude hat keinen eingebauten WEB.DE-Konnektor. Wenn Sie einen MCP-Server wie MCP Emails per IMAP mit Ihrem WEB.DE-Postfach verbinden, kann Claude E-Mails lesen, suchen, senden, beantworten, planen und ordnen. Dieselbe Verbindung funktioniert dann auch in Cursor, ChatGPT und anderen MCP-Clients, nicht nur in einem."
+    },
+    {
+      "q": "Wie lauten die IMAP- und SMTP-Einstellungen von WEB.DE?",
+      "a": "IMAP ist imap.web.de auf Port 993 mit SSL. SMTP ist smtp.web.de, laut WEB.DE auf Port 587 mit STARTTLS, oder auf Port 465 mit SSL, den MCP Emails nutzt. Der Benutzername ist Ihre vollständige WEB.DE-Adresse mit Domain. Beide Hosts wurden am auf dieser Seite angegebenen Datum über eine echte TLS-Verbindung bestätigt."
+    },
+    {
+      "q": "Wie aktiviere ich IMAP bei WEB.DE?",
+      "a": "Melden Sie sich auf web.de an, klicken Sie oben auf Ihre Initialen und öffnen Sie die E-Mail-Einstellungen. Wählen Sie unter E-Mail empfangen den Punkt POP3/IMAP, stellen Sie den Schieberegler auf POP3- und IMAP-Zugriff erlauben und lösen Sie das Puzzle, das WEB.DE anzeigt. Der Abruf ist bei jedem Postfach standardmäßig aus, dieser Schritt ist also nötig, bevor sich irgendein Client anmelden kann."
+    },
+    {
+      "q": "Warum wird mein WEB.DE-Passwort abgelehnt?",
+      "a": "Fast immer aus einem von zwei Gründen. Entweder ist der Abruf per POP3 und IMAP in Ihren WEB.DE-Einstellungen ausgeschaltet, was einen schlichten Authentifizierungsfehler ohne Hinweis auf die Ursache erzeugt, oder Sie haben die Zwei-Faktor-Authentifizierung aktiviert und brauchen ein anwendungsspezifisches Passwort statt Ihres Kontopassworts. Prüfen Sie zuerst den Schieberegler, das ist der häufigere Fall."
+    },
+    {
+      "q": "Braucht WEB.DE ein App-Passwort?",
+      "a": "Nur wenn die Zwei-Faktor-Authentifizierung eingeschaltet ist. Ohne 2FA meldet Ihr normales WEB.DE-Passwort Mailprogramme an, sobald der Abruf aktiviert ist. Mit 2FA erstellen Sie unter Account verwalten, Login & Sicherheit, App-Passwörter (für externe Apps) ein App-Passwort und verwenden es in MCP Emails. WEB.DE zeigt es nur einmal an; wenn Sie es verlieren, löschen Sie es und erstellen ein neues."
+    },
+    {
+      "q": "Werden meine WEB.DE-E-Mails auf Ihren Servern gespeichert?",
+      "a": "Nein. Nachrichten werden bei jeder Anfrage live per IMAP von WEB.DE abgerufen und an Ihren KI-Client übergeben. Zugangsdaten sind im Ruhezustand verschlüsselt, Nachrichteninhalte werden nicht aufbewahrt."
+    }
+  ],
+  "ctaBand": {
+    "title": "Geben Sie Ihrer KI ein WEB.DE-Postfach",
+    "sub": "WEB.DE in wenigen Minuten verbinden. Ein Postfach dauerhaft kostenlos, ohne Kreditkarte."
+  }
+}

@@ -1,0 +1,104 @@
+{
+  "_sources": [
+    "https://kb.mailbox.org/en/private/e-mail/e-mail-configuration/",
+    "https://kb.mailbox.org/en/private/security-and-privacy/e-mail-password/",
+    "https://kb.mailbox.org/en/private/security-and-privacy/access-security-for-mailbox-2fa-app-passwords-and-e-mail-passwords/",
+    "https://kb.mailbox.org/en/private/encryption/your-encrypted-mailbox/"
+  ],
+  "auth": {
+    "method": "app-password",
+    "label": "E-Mail-App-Passwort (mit 2FA) oder Ihr Postfach-Passwort",
+    "helpUrl": "https://kb.mailbox.org/en/private/security-and-privacy/e-mail-password/",
+    "usernameForm": "Ihre vollständige Haupt-Adresse bei mailbox.org. Kein Alias, keine Mail-Extension, keine Wegwerfadresse.",
+    "status": "active"
+  },
+  "meta": {
+    "title": "mailbox.org mit Claude und jedem MCP-Client verbinden",
+    "description": "mailbox.org mit Claude, Cursor und jedem MCP-Client verbinden, per IMAP über imap.mailbox.org:993. Mit Zwei-Faktor-Authentifizierung braucht ein Client ein E-Mail-App-Passwort."
+  },
+  "hero": {
+    "eyebrow": "mailbox.org + KI",
+    "titleLine1": "mailbox.org mit Claude verbinden,",
+    "titleLine2": "mit Cursor, ChatGPT und jedem MCP-Client",
+    "lead": "Geben Sie Ihrem KI-Agenten Zugriff auf Ihr echtes mailbox.org-Postfach. E-Mails lesen, suchen, senden, beantworten, planen und ordnen, per IMAP und in jedem MCP-Client statt nur in einem. Den Zielkonflikt mit der Verschlüsselung erklären wir offen, statt ihn zu überspielen.",
+    "answer": "Claude kann mailbox.org nicht von sich aus erreichen. MCP Emails ist ein gehosteter MCP-Server, der das Postfach per IMAP über imap.mailbox.org auf Port 993 und per SMTP über smtp.mailbox.org auf Port 465 anbindet. Danach können Claude, Cursor oder jeder MCP-Client diese E-Mails lesen, suchen, senden und ordnen. Sie melden sich mit Ihrer Haupt-Adresse bei mailbox.org an. Mit eingeschalteter Zwei-Faktor-Authentifizierung brauchen Sie statt Ihres Postfach-Passworts ein E-Mail-App-Passwort, das Sie in den Sicherheitseinstellungen anlegen. Haben Sie die Postfach-Verschlüsselung aktiviert, erreichen eingehende E-Mails jeden IMAP-Client als PGP-Chiffretext, und ein Agent kann sie nicht lesen. Ein Postfach ist dauerhaft kostenlos.",
+    "meta0": "1 Postfach dauerhaft kostenlos",
+    "meta1": "E-Mail-App-Passwort, wenn 2FA aktiv ist",
+    "meta2": "E-Mails live abgerufen, nie gespeichert"
+  },
+  "method": {
+    "title": "So verbindet sich mailbox.org: IMAP, Ihre Haupt-Adresse und ein App-Passwort pro Protokoll",
+    "body": "mailbox.org stellt IMAP unter <code>imap.mailbox.org</code> auf Port 993 mit SSL/TLS bereit, POP3 unter <code>pop3.mailbox.org</code> auf 995 und SMTP unter <code>smtp.mailbox.org</code> auf 465, dazu Port 587 für STARTTLS. Der Benutzername ist Ihre <b>Haupt</b>-Adresse, mit der das Konto eröffnet wurde. mailbox.org vergibt Aliase, Mail-Extensions, Wegwerfadressen und Varianten mit <code>@secure.mailbox.org</code>, und keine davon funktioniert bei der Anmeldung. Ohne Zwei-Faktor-Authentifizierung funktioniert Ihr normales Postfach-Passwort. Ist sie aktiv, akzeptiert mailbox.org dieses Passwort über IMAP und SMTP nicht mehr und erwartet stattdessen ein <b>E-Mail-App-Passwort</b>, das pro Client erzeugt wird und nur für die Protokolle gilt, die Sie beim Anlegen auswählen. Das Banner kündigt außerdem <code>AUTH=OAUTHBEARER</code> und <code>AUTH=XOAUTH2</code> an. Diese gehören zu den eigenen App-Suite-Integrationen von mailbox.org und sind für Dritte nicht nutzbar. Der Weg führt hier über die Anmeldung per Passwort."
+  },
+  "setup": [
+    {
+      "h": "Kostenloses MCP Emails Konto erstellen",
+      "p": "Registrieren Sie sich auf mcpemails.com. Der Free-Tarif verbindet ein Postfach dauerhaft, ohne Kreditkarte. Am Ende erhalten Sie eine MCP-URL und einen Schlüssel."
+    },
+    {
+      "h": "E-Mail-App-Passwort bei mailbox.org erzeugen",
+      "p": "Öffnen Sie in der Weboberfläche <b>Alle Einstellungen</b>, dann <b>Sicherheit</b>, dann den Bereich für <b>E-Mail-App-Passwörter</b>. Benennen Sie das Passwort nach dieser Verbindung, wählen Sie in der Protokollliste <b>sowohl</b> IMAP als auch SMTP aus und lassen Sie das Passwort erzeugen. Kopieren Sie den Wert sofort. Ist die Zwei-Faktor-Authentifizierung aus, können Sie stattdessen Ihr Postfach-Passwort verwenden, aber eingeschränkte Zugangsdaten, die sich einzeln widerrufen lassen, gibt man einem Dritten lieber."
+    },
+    {
+      "h": "Postfach in MCP Emails hinzufügen",
+      "p": "Wählen Sie IMAP / SMTP und geben Sie Ihre <b>Haupt</b>-Adresse bei mailbox.org als Benutzernamen ein, dann das App-Passwort. Die Hosts <code>imap.mailbox.org</code> und <code>smtp.mailbox.org</code> sind vorausgefüllt und wurden über eine echte TLS-Verbindung geprüft. Zugangsdaten sind im Ruhezustand verschlüsselt, E-Mails selbst werden pro Anfrage abgerufen statt kopiert."
+    },
+    {
+      "h": "MCP-URL in Ihre KI einfügen",
+      "p": "Fügen Sie https://mcpemails.com/api/mcp in Claude, Cursor oder ChatGPT ein, autorisieren Sie den Zugriff, und Ihr Agent hat das Postfach."
+    }
+  ],
+  "gotchas": [
+    {
+      "h": "Ein Alias im Benutzerfeld scheitert mit einem Passwortfehler",
+      "p": "mailbox.org fördert Aliase, Mail-Extensions und Wegwerfadressen, und die eigene Konfigurationsanleitung sagt klar, dass der Benutzername im Client Ihre Haupt-E-Mail-Adresse ist. Tragen Sie dort einen Alias ein, weist der Server Sie genauso ab wie bei einem falschen Passwort, und viele setzen dann ein Passwort zurück, das nie das Problem war. Wenn Sie nicht mehr wissen, welche Adresse die Haupt-Adresse ist: Es ist die, die in der Weboberfläche als primäre Adresse des Kontos angezeigt wird, nicht der Alias, den Sie tatsächlich weitergeben."
+    },
+    {
+      "h": "Das App-Passwort gilt pro Protokoll, eine halbe Einrichtung ist also möglich",
+      "p": "Beim Erzeugen eines E-Mail-App-Passworts wählen Sie aus, welche Protokolle es nutzen darf. Wählen Sie IMAP und vergessen SMTP, liest das Postfach einwandfrei und kann keine einzige Nachricht senden. Der Fehler zeigt sich erst, wenn Ihr Agent antworten will. Umgekehrt passiert dasselbe. Wählen Sie beide aus, oder erzeugen Sie zwei und tragen Sie sie in die richtigen Felder ein. Darüber widerrufen Sie später auch den Zugriff: Wenn Sie dieses eine App-Passwort löschen, ist dieser Client getrennt, und Telefon und Desktop bleiben unberührt."
+    },
+    {
+      "h": "Die Postfach-Verschlüsselung macht neue E-Mails für jeden Client zu Chiffretext, auch für diesen",
+      "p": "Unter <b>Alle Einstellungen</b> bietet mailbox.org die <b>Postfach-Verschlüsselung</b> an: Sie verschlüsselt jede eingehende Nachricht über eine serverseitige Sieve-Regel per PGP mit Ihrem <b>öffentlichen Schlüssel</b>, egal ob der Absender verschlüsselt hat. Das ist ein echter Schutz und funktioniert genau wie beschrieben: Ein IMAP-Client, dieser eingeschlossen, erhält einen ASCII-armored Block statt eines Inhalts. MCP Emails besitzt Ihren privaten Schlüssel nicht. Ein Agent sieht also Absender, Betreff und Datum und kann die Nachricht ablegen oder markieren, aber nicht lesen. Die Asymmetrie, die Sie kennen sollten: mailbox.org speichert Ihren Gesendet-Ordner derzeit nicht verschlüsselt. Ein Agent kann also lesen, was Sie gesendet haben, auch wenn er nicht lesen kann, was Sie erhalten haben."
+    },
+    {
+      "h": "Kein MOVE und kein SPECIAL-USE, aber UIDPLUS ist da",
+      "p": "Der Dovecot-Server kündigt IDLE, SASL-IR und UIDPLUS an, aber weder MOVE noch SPECIAL-USE. Ein Verschieben ist daher ein COPY, ein STORE des \\Deleted-Flags und ein EXPUNGE statt eines atomaren Befehls. Dank UIDPLUS kommt die Ziel-UID immerhin ohne zweite Suche zurück. Im Alltag wichtiger ist das fehlende SPECIAL-USE: Nichts im Protokoll sagt, welcher Ordner Gesendet oder Papierkorb ist, die Rollen werden also aus den Namen abgeleitet. Deutschsprachige Postfächer zeigen meist Gesendete Objekte, Entwürfe und Papierkorb. Nennen Sie den Ordner ausdrücklich, wenn ein Agent etwas am falschen Ort ablegt."
+    }
+  ],
+  "limits": [
+    "Wenn Sie ein Postfach mit einem KI-Client verbinden, liest dieser KI-Anbieter den Inhalt der Nachrichten, mit denen er arbeiten soll. MCP Emails ruft E-Mails bei jeder Anfrage live von mailbox.org ab, speichert keine Nachrichteninhalte und verschlüsselt Zugangsdaten im Ruhezustand, aber der Text erreicht trotzdem Claude, Cursor oder den Client, den Sie anbinden. Das Hosting in Deutschland und der Datenschutz von mailbox.org gelten für mailbox.org, nicht für einen KI-Anbieter, den Sie selbst verbinden.",
+    "Alles, was mit Ihrem OpenPGP-Schlüssel verschlüsselt ist, ob vom Absender oder durch die Postfach-Verschlüsselung von mailbox.org, ist für einen Agenten über IMAP unlesbar. Diese Nachrichten müssen in der Weboberfläche oder in einem Client mit Ihrem privaten Schlüssel gelesen werden.",
+    "Weil der Server kein MOVE ankündigt, ist ein Verschieben nicht atomar. Bricht die Verbindung mittendrin ab, kann eine Nachricht kurz in beiden Ordnern liegen."
+  ],
+  "faq": [
+    {
+      "q": "Funktioniert Claude mit mailbox.org?",
+      "a": "Nicht von sich aus. Claude hat keinen eingebauten mailbox.org-Konnektor und spricht kein IMAP. Wenn Sie einen MCP-Server wie MCP Emails mit dem Postfach verbinden, kann Claude per IMAP E-Mails lesen, suchen, senden, beantworten, planen und ordnen. Dieselbe Verbindung funktioniert dann auch in Cursor, ChatGPT und anderen MCP-Clients, ohne erneute Einrichtung."
+    },
+    {
+      "q": "Wie lauten die IMAP- und SMTP-Einstellungen von mailbox.org?",
+      "a": "IMAP ist imap.mailbox.org auf Port 993 mit SSL/TLS. SMTP ist smtp.mailbox.org auf Port 465, mit Port 587 als dokumentierter STARTTLS-Alternative, und POP3 ist pop3.mailbox.org auf 995. Der Benutzername ist in jedem Fall Ihre Haupt-Adresse bei mailbox.org. Beide Hosts hier wurden über eine echte TLS-Verbindung bestätigt."
+    },
+    {
+      "q": "Wo lege ich ein App-Passwort bei mailbox.org an?",
+      "a": "Öffnen Sie in der Weboberfläche Alle Einstellungen, dann Sicherheit, dann den Bereich für E-Mail-App-Passwörter. Geben Sie einen Namen für den Client ein, wählen Sie die erlaubten Protokolle aus und erzeugen Sie das Passwort. mailbox.org zeigt es zum Kopieren an. Jedes App-Passwort lässt sich einzeln löschen. Damit widerrufen Sie genau diesen Client, ohne Ihre anderen Geräte oder Ihr Hauptpasswort zu berühren."
+    },
+    {
+      "q": "Warum lehnt mailbox.org mein Passwort im Mailprogramm ab?",
+      "a": "Zwei Ursachen erklären fast alles. Entweder haben Sie im Benutzerfeld einen Alias statt Ihrer Haupt-Adresse eingetragen, oder die Zwei-Faktor-Authentifizierung ist aktiv und Ihr Postfach-Passwort wird über IMAP und SMTP nicht mehr akzeptiert. Legen Sie unter Sicherheit ein E-Mail-App-Passwort an und verwenden Sie dieses. Prüfen Sie zuerst den Benutzernamen, das lässt sich schneller ausschließen."
+    },
+    {
+      "q": "Kann meine KI meine verschlüsselten mailbox.org-E-Mails lesen?",
+      "a": "Nein. Eine mit Ihrem OpenPGP-Schlüssel verschlüsselte Nachricht kommt über IMAP als Chiffretext-Block an, und MCP Emails besitzt Ihren privaten Schlüssel nie. Das gilt für E-Mails, die ein Absender verschlüsselt hat, und für E-Mails, die die Postfach-Verschlüsselung von mailbox.org beim Eingang verschlüsselt hat. Der Agent sieht die Kopfzeilen und kann die Nachricht verschieben oder markieren, der Inhalt bleibt verschlossen."
+    },
+    {
+      "q": "Werden meine mailbox.org-E-Mails auf Ihren Servern gespeichert?",
+      "a": "Nein. Nachrichten werden bei jeder Anfrage live von imap.mailbox.org abgerufen und an Ihren KI-Client übergeben. Zugangsdaten sind im Ruhezustand verschlüsselt, Nachrichteninhalte werden nicht aufbewahrt. Der KI-Client, den Sie verbinden, erhält allerdings den Inhalt von allem, was er liest. Das ist eine eigene Entscheidung, unabhängig davon, wo die E-Mails gespeichert sind, und sie sollte bewusst getroffen werden."
+    }
+  ],
+  "ctaBand": {
+    "title": "Geben Sie Ihrer KI ein mailbox.org-Postfach",
+    "sub": "mailbox.org in wenigen Minuten verbinden. Ein Postfach dauerhaft kostenlos, ohne Kreditkarte."
+  }
+}

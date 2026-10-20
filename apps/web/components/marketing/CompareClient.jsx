@@ -2,6 +2,7 @@ import { Link } from '@/i18n/navigation';
 import { Nav, Footer } from './Sections';
 import { MIcon } from '../MarketingPrimitives';
 import { TABLE_ROWS, NOT_STATED, SOURCES } from '@/lib/compare/native-connectors.mjs';
+import { withReadingLang } from '@/i18n/reading-lang.mjs';
 
 /*
  * /native-connectors-vs-mcp. A server component: the copy arrives as `c` (one
@@ -32,7 +33,7 @@ function Cell({ value, c }) {
   return <td className="tbl-val">{text}</td>;
 }
 
-export default function CompareClient({ c, checkedOn, isEnglish }) {
+export default function CompareClient({ c, checkedOn, isEnglish, locale }) {
   const fill = (s) => s.replace('{date}', checkedOn);
 
   return (
@@ -51,7 +52,7 @@ export default function CompareClient({ c, checkedOn, isEnglish }) {
             {fill(c.hero.updated)}
           </p>
           <div className="hero-cta" style={{ justifyContent: 'center', marginTop: 24 }}>
-            <a className="btn btn-primary btn-lg" href="/signup">{c.hero.ctaPrimary}</a>
+            <a className="btn btn-primary btn-lg" href={withReadingLang('/signup', locale)}>{c.hero.ctaPrimary}</a>
             <Link className="btn btn-secondary btn-lg" href="/docs">{c.hero.ctaSecondary}</Link>
           </div>
         </div>
@@ -233,7 +234,7 @@ export default function CompareClient({ c, checkedOn, isEnglish }) {
           <h2 className="pricing-cta-h">{c.ctaBand.title}</h2>
           <p className="pricing-cta-sub">{c.ctaBand.sub}</p>
           <div className="pricing-cta-btns">
-            <a className="btn btn-primary btn-lg" href="/signup">{c.ctaBand.ctaPrimary}</a>
+            <a className="btn btn-primary btn-lg" href={withReadingLang('/signup', locale)}>{c.ctaBand.ctaPrimary}</a>
             <Link className="btn btn-on-dark btn-lg" href="/docs">{c.ctaBand.ctaSecondary}</Link>
           </div>
         </div>

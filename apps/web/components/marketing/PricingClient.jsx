@@ -8,6 +8,7 @@ import { Nav, Footer } from './Sections';
 import { MIcon } from '../MarketingPrimitives';
 import { createClient } from '@/lib/supabase/client';
 import { parseUpgradeIntent, pricingUpgradeHref } from '@/lib/billing/upgrade-intent.mjs';
+import { withReadingLang } from '@/i18n/reading-lang.mjs';
 import { usePricingView } from '@/lib/analytics/use-pricing-view.mjs';
 import { PLANS as CATALOGUE } from '@/lib/stripe/plans';
 import { formatAmountCents, formatPriceCents } from '@/lib/stripe/annual-offer';
@@ -297,7 +298,7 @@ function PlanCards({ annual, stripePrices, user, highlightPlan }) {
             {plan.key === 'free' ? (
               <a
                 className={'btn btn-lg ' + (ctaPrimary ? 'btn-primary' : 'btn-secondary')}
-                href={user ? '/dashboard' : plan.ctaHref}
+                href={user ? '/dashboard' : withReadingLang(plan.ctaHref, locale)}
                 style={{ textAlign: 'center', justifyContent: 'center' }}
               >
                 {t(`plans.${plan.key}.cta`)}
@@ -311,7 +312,7 @@ function PlanCards({ annual, stripePrices, user, highlightPlan }) {
                  prefetch the checkout route. */
               <a
                 className={'btn btn-lg ' + (ctaPrimary ? 'btn-primary' : 'btn-secondary')}
-                href={pricingUpgradeHref(plan.key, annual, Boolean(user))}
+                href={withReadingLang(pricingUpgradeHref(plan.key, annual, Boolean(user)), locale)}
                 style={{ textAlign: 'center', justifyContent: 'center' }}
               >
                 {t(`plans.${plan.key}.cta`)}
@@ -432,6 +433,7 @@ export default function PricingClient({ stripePrices }) {
     setHighlightPlan(planId);
   }, []);
   const t = useTranslations('pricing');
+  const locale = useLocale();
   const faqItems = t.raw('faq.items');
 
   // Billing funnel. The endpoint ignores anonymous callers, so this records
@@ -544,7 +546,7 @@ export default function PricingClient({ stripePrices }) {
             {t('ctaBand.sub')}
           </p>
           <div className="pricing-cta-btns">
-            <a className="btn btn-primary btn-lg" href="/signup">{t('ctaBand.ctaPrimary')}</a>
+            <a className="btn btn-primary btn-lg" href={withReadingLang('/signup', locale)}>{t('ctaBand.ctaPrimary')}</a>
             <Link className="btn btn-on-dark btn-lg" href="/docs">{t('ctaBand.ctaSecondary')}</Link>
           </div>
         </div>

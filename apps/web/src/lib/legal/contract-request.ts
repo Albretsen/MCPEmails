@@ -49,7 +49,7 @@ export type ContractRequestKind = (typeof CONTRACT_REQUEST_KINDS)[number];
 export const CANCEL_TYPES = ['ordinary', 'extraordinary'] as const;
 export type CancelType = (typeof CANCEL_TYPES)[number];
 
-const LOCALES = ['en', 'nb', 'es', 'fr', 'zh'] as const;
+const LOCALES = ['en', 'nb', 'es', 'fr', 'zh', 'de'] as const;
 
 export const CONTRACT_REQUEST_LIMITS = {
   name: 100,

@@ -16,7 +16,7 @@ import { WITHDRAWAL_COPY } from '../../../app/[locale]/withdrawal/content.mjs';
 
 const here = dirname(fileURLToPath(import.meta.url));
 const messagesDir = join(here, '../../../messages');
-const LOCALES = ['en', 'nb', 'es', 'fr', 'zh'];
+const LOCALES = ['en', 'nb', 'es', 'fr', 'zh', 'de'];
 
 function leaves(value, path = '', out = new Map()) {
   if (Array.isArray(value)) value.forEach((v, i) => leaves(v, `${path}[${i}]`, out));
@@ -105,7 +105,7 @@ test('the legal entity is Albretsen AS everywhere, with no sole-proprietorship w
 });
 
 test('the in-app plan change button states the obligation to pay in every locale', () => {
-  const pay = { en: /pay/i, nb: /betal/i, es: /pagar/i, fr: /payer/i, zh: /付款/ };
+  const pay = { en: /pay/i, nb: /betal/i, es: /pagar/i, fr: /payer/i, zh: /付款/, de: /zahlungspflichtig|bezahlen/i };
   for (const locale of LOCALES) {
     assert.match(messages(locale, 'dashboard').billing.confirmChange, pay[locale], locale);
   }

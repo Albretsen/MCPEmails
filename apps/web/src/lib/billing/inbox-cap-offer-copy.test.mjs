@@ -18,7 +18,7 @@ import { readFileSync } from 'node:fs';
 import { PLANS, PRO_INBOX_CAP } from '../stripe/plans.ts';
 import { inboxCapOffer } from './inbox-cap-offer.mjs';
 
-const LOCALES = ['en', 'es', 'fr', 'nb', 'zh'];
+const LOCALES = ['en', 'es', 'fr', 'nb', 'zh', 'de'];
 
 /** Every key this change added, by file. */
 const NEW_KEYS = {

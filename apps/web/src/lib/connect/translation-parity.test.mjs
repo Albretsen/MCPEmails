@@ -5,7 +5,7 @@ import { dirname, join } from 'node:path';
 import { fileURLToPath } from 'node:url';
 import { PROVIDERS } from './providers.mjs';
 import { CLIENTS } from '../clients/clients.mjs';
-import { FULL_LOCALES, FROZEN_LOCALES } from '../../i18n/locale-policy.mjs';
+import { FULL_LOCALES, FROZEN_LOCALES, SCOPED_LOCALES } from '../../i18n/locale-policy.mjs';
 
 /**
  * A translated provider or client page must be the SAME page as its English
@@ -88,10 +88,10 @@ for (const { name, dir, registry } of SETS) {
   });
 
   // The locale policy (src/i18n/locale-policy.mjs): every page ships in every
-  // full locale, and may leave out a frozen one (zh), which then has no page,
+  // full locale, and may leave out a scoped (de) or frozen (zh) one, which then has no page,
   // no hreflang and no switcher link for it. Nothing outside the two lists.
   test(`${name}: every entry lists every full locale, and only known locales`, () => {
-    const known = new Set([...FULL_LOCALES, ...FROZEN_LOCALES]);
+    const known = new Set([...FULL_LOCALES, ...SCOPED_LOCALES, ...FROZEN_LOCALES]);
     for (const entry of registry) {
       for (const locale of FULL_LOCALES) {
         assert.ok(entry.locales.includes(locale), `${name} ${entry.slug} is missing the full locale ${locale}`);
