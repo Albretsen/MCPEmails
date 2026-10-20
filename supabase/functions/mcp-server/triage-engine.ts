@@ -85,6 +85,21 @@ import { classifyProviderError, providerErrorLogCode } from "./provider-error.ts
 export const MAX_RULES_PER_INVOCATION = 20;
 
 /**
+ * How many /triage-dispatch invocations pg_cron may fire in the same minute.
+ * Keep in step with c_max_requests in public.dispatch_triage_rules().
+ *
+ * One invocation is time-bound, not count-bound: at 3 to 5 seconds a rule it
+ * gets through about ten inside TRIAGE_TIME_BUDGET_MS, while the enabled rules
+ * ask for about 1,500 runs an hour. So the cron function fans out when the
+ * backlog is deep, and each invocation lists a window this many batches wide.
+ * Invocations that start in the same second all list the same oldest rules; a
+ * window only one batch wide would have them fight over the same twenty and
+ * cap the whole fleet at twenty a minute. The CAS sorts out who runs what, and
+ * MAX_RULES_PER_INVOCATION still bounds what any one invocation claims.
+ */
+export const TRIAGE_DISPATCH_FANOUT = 4;
+
+/**
  * Hard wall-clock budget. The Edge Function has its own execution ceiling, and
  * being killed mid-rule is precisely the situation that produces a stale lease
  * and a fail-forward run. Returning cleanly at 40 seconds trades a little
@@ -773,7 +788,13 @@ export interface TriageStore {
   /** Rules whose lease is older than the cutoff. Global, as befits a cron sweep. */
   listStaleLeases(cutoffIso: string): Promise<{ id: string }[]>;
   /** Release a stale lease and fail its open run. Never re-queues the run. */
-  reclaimStaleLease(ruleId: string, nowIso: string): Promise<void>;
+  /**
+   * Both writes are conditioned on the cutoff, so a reclaim that loses a race
+   * is a no-op. Several invocations can sweep at once: if one releases a stale
+   * lease and another claims the rule afresh, a third still holding the stale
+   * listing must not fail that new run or drop its lease.
+   */
+  reclaimStaleLease(ruleId: string, nowIso: string, cutoffIso: string): Promise<void>;
   /** Due, enabled, undeleted, unleased rules, oldest first. */
   listDueRules(nowIso: string, limit: number): Promise<TriageRuleRow[]>;
   /**
@@ -786,6 +807,22 @@ export interface TriageStore {
    * -> executing), and a zero-row update is an unambiguous "somebody else got it".
    */
   claimRule(ruleId: string, nowIso: string): Promise<boolean>;
+  /**
+   * True when some OTHER rule on this inbox holds a lease right now.
+   *
+   * One mailbox, one scheduled run at a time. With a single invocation per
+   * minute that held by construction; with several in flight it has to be
+   * checked, because a mailbox with forty rules would otherwise have up to
+   * TRIAGE_DISPATCH_FANOUT IMAP sessions opened against it at once, which is
+   * exactly what trips Yahoo's per-account connection limit.
+   */
+  inboxLeaseHeld(inboxId: string, exceptRuleId: string): Promise<boolean>;
+  /**
+   * Give back a lease this caller won but must not use. Matches on the claim
+   * timestamp so it can only ever undo its own claim, and writes nothing else:
+   * the rule stays due and the next tick picks it up.
+   */
+  abandonClaim(ruleId: string, claimedAtIso: string): Promise<void>;
   /**
    * Release the lease and write the post-run scheduling state.
    *
@@ -2002,7 +2039,7 @@ export async function handleTriageDispatch(deps: TriageDeps): Promise<Response> 
   try {
     const stale = await store.listStaleLeases(staleCutoff);
     for (const row of stale) {
-      await store.reclaimStaleLease(row.id, nowIso);
+      await store.reclaimStaleLease(row.id, nowIso, staleCutoff);
       reclaimed++;
     }
   } catch (error) {
@@ -2013,7 +2050,7 @@ export async function handleTriageDispatch(deps: TriageDeps): Promise<Response> 
 
   let due: TriageRuleRow[];
   try {
-    due = await store.listDueRules(nowIso, MAX_RULES_PER_INVOCATION);
+    due = await store.listDueRules(nowIso, MAX_RULES_PER_INVOCATION * TRIAGE_DISPATCH_FANOUT);
   } catch (error) {
     console.error("[triage-dispatch] failed to list due rules:", redactErrorDetail(error));
     return new Response(
@@ -2026,9 +2063,14 @@ export async function handleTriageDispatch(deps: TriageDeps): Promise<Response> 
   let failedRuns = 0;
   let contended = 0;
   let paused = 0;
+  let inboxBusy = 0;
+  let claimedCount = 0;
   let budgetExhausted = false;
 
   for (const rule of due) {
+    // The window is wider than one batch (see TRIAGE_DISPATCH_FANOUT); what
+    // one invocation may hold is not.
+    if (claimedCount >= MAX_RULES_PER_INVOCATION) break;
     if (nowMs(deps) - startedMs >= TRIAGE_TIME_BUDGET_MS) {
       // Return cleanly rather than being killed mid-rule. pg_cron re-invokes in
       // under a minute and the remaining rules are still due, so nothing is lost.
@@ -2036,11 +2078,24 @@ export async function handleTriageDispatch(deps: TriageDeps): Promise<Response> 
       break;
     }
 
+    // One mailbox, one scheduled run at a time. A cheap look first, so a busy
+    // mailbox costs one read rather than a claim and an undo.
+    try {
+      if (await store.inboxLeaseHeld(rule.inbox_id, rule.id)) {
+        inboxBusy++;
+        continue;
+      }
+    } catch (error) {
+      console.warn("[triage-dispatch] inbox lease check failed for rule", rule.id, redactErrorDetail(error));
+      continue;
+    }
+
     // Optimistic CAS. A zero-row update means a concurrent invocation claimed it
     // first; skip without touching the mailbox and without counting it.
+    const claimedAtIso = new Date(nowMs(deps)).toISOString();
     let claimed = false;
     try {
-      claimed = await store.claimRule(rule.id, new Date(nowMs(deps)).toISOString());
+      claimed = await store.claimRule(rule.id, claimedAtIso);
     } catch (error) {
       console.warn("[triage-dispatch] could not claim rule", rule.id, redactErrorDetail(error));
       continue;
@@ -2049,6 +2104,31 @@ export async function handleTriageDispatch(deps: TriageDeps): Promise<Response> 
       contended++;
       continue;
     }
+
+    // The look above is not atomic with the claim: two invocations can each see
+    // the mailbox idle and each claim a different rule on it. So look again now
+    // that our claim is committed. Of two such claims, whichever looks second
+    // is bound to see the other and backs off; if both see each other, both
+    // back off and the rules wait a minute. Never both run. A failed look is
+    // treated as a collision: skipping a rule for a minute is cheap.
+    let collision = true;
+    try {
+      collision = await store.inboxLeaseHeld(rule.inbox_id, rule.id);
+    } catch (error) {
+      console.warn("[triage-dispatch] inbox lease re-check failed for rule", rule.id, redactErrorDetail(error));
+    }
+    if (collision) {
+      inboxBusy++;
+      try {
+        await store.abandonClaim(rule.id, claimedAtIso);
+      } catch (error) {
+        // The lease stays until the stale sweep releases it. No run was
+        // created, so the sweep has nothing to fail forward.
+        console.warn("[triage-dispatch] could not abandon claim on rule", rule.id, redactErrorDetail(error));
+      }
+      continue;
+    }
+    claimedCount++;
 
     // THE ALLOWANCE, BEFORE THE MAILBOX. A workspace with nothing left this
     // period gets its rule paused here, holding the lease we just won, rather
@@ -2100,6 +2180,7 @@ export async function handleTriageDispatch(deps: TriageDeps): Promise<Response> 
 
   console.log(
     `[triage-dispatch] Done: ran=${ran} failed=${failedRuns} contended=${contended} paused=${paused} ` +
+      `inbox_busy=${inboxBusy} ` +
       `reclaimed=${reclaimed} due=${due.length} budget_exhausted=${budgetExhausted}`,
   );
   return new Response(
@@ -2108,6 +2189,7 @@ export async function handleTriageDispatch(deps: TriageDeps): Promise<Response> 
       failed: failedRuns,
       contended,
       paused,
+      inbox_busy: inboxBusy,
       reclaimed,
       due: due.length,
       budget_exhausted: budgetExhausted,
