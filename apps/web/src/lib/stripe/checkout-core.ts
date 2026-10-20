@@ -4,6 +4,7 @@ import { createClient } from '@/lib/supabase/server';
 import { createServiceRoleClient } from '@/lib/supabase/service';
 import { stripe } from '@/lib/stripe/client';
 import { getOrCreateStripeCustomer } from '@/lib/stripe/customer';
+import { adaptivePricingParam } from '@/lib/stripe/adaptive-pricing';
 import {
   PLANS,
   basePlanItem,
@@ -949,6 +950,10 @@ export async function runCheckout(input: {
       allow_promotion_codes: true,
       // Billing address is collected by Stripe: required for tax calculation.
       billing_address_collection: 'auto',
+      // Local-currency checkout for buyers outside the US. Prices stay USD and
+      // every amount Stripe hands back to us stays USD; see adaptive-pricing.ts.
+      // It converts the amount only, so the English pin below is unaffected.
+      adaptive_pricing: adaptivePricingParam(),
       // ── Presentation ────────────────────────────────────────────────────
       //
       // ENGLISH IS PINNED, deliberately. Left to itself Stripe localises its

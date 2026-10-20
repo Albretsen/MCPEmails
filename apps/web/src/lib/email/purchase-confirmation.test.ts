@@ -183,6 +183,47 @@ test('formatAmount degrades gracefully rather than throwing', () => {
   assert.equal(formatAmount(500, ''), '$5.00');
 });
 
+test('formatAmount reads Stripe minor units for zero- and three-decimal currencies', () => {
+  // Adaptive Pricing can hand us JPY or KRW: Stripe sends those as whole units.
+  assert.equal(formatAmount(1500, 'jpy'), '¥1,500');
+  assert.equal(formatAmount(1500, 'JPY'), '¥1,500');
+  assert.equal(formatAmount(13000, 'krw'), '₩13,000');
+  assert.match(formatAmount(5000, 'kwd'), /KWD\s5\.000/);
+  assert.equal(formatAmount(862, 'eur'), '€8.62');
+});
+
+test('a local-currency charge (Adaptive Pricing) is shown next to the USD price', () => {
+  const email = buildPurchaseConfirmationEmail({
+    planId: 'personal',
+    interval: 'month',
+    amountTotalCents: 900,
+    currency: 'usd',
+    presentment: { amountCents: 862, currency: 'eur' },
+  });
+  // The plan price stays the USD catalogue figure...
+  assert.match(email.body, /Price: \$9\.00 per month/);
+  // ...and the figure on the card statement is stated as well.
+  assert.match(email.body, /Charged today: €8\.62/);
+  assert.match(email.body, /You paid in EUR\. Each renewal is the USD price above/);
+  assert.match(email.htmlBody, /Charged today/);
+  assert.match(email.htmlBody, /€8\.62/);
+  assert.ok(!email.body.includes('—') && !email.htmlBody.includes('—'));
+});
+
+test('no local-currency row when the buyer paid in USD or Stripe sent nothing', () => {
+  for (const presentment of [undefined, null, { amountCents: 900, currency: 'usd' }, { amountCents: 900, currency: 'USD' }]) {
+    const email = buildPurchaseConfirmationEmail({
+      planId: 'personal',
+      interval: 'month',
+      amountTotalCents: 900,
+      currency: 'usd',
+      presentment,
+    });
+    assert.ok(!email.body.includes('Charged today'), JSON.stringify(presentment));
+    assert.ok(!email.htmlBody.includes('Charged today'), JSON.stringify(presentment));
+  }
+});
+
 // ---------------------------------------------------------------------------
 // Transport (Resend) - stubbed, never reaches the network
 // ---------------------------------------------------------------------------

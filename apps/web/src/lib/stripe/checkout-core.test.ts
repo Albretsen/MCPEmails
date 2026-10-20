@@ -1387,3 +1387,52 @@ test('a Business subscriber asking for Business at the same interval is a no-op,
   assert.equal(outcome.kind === 'error' ? outcome.reason : null, 'already_on_plan_interval');
   assert.equal(subscriptionsUpdated.length, 0);
 });
+
+// ---------------------------------------------------------------------------
+// Adaptive Pricing: local-currency checkout, prices still in USD.
+// ---------------------------------------------------------------------------
+
+const { adaptivePricingEnabled, adaptivePricingParam } = await import('./adaptive-pricing.ts');
+
+test('every new checkout session asks Stripe for Adaptive Pricing by default', async () => {
+  const previous = process.env.STRIPE_ADAPTIVE_PRICING;
+  delete process.env.STRIPE_ADAPTIVE_PRICING;
+  try {
+    const { outcome, sessionsCreated } = await checkout({ planId: 'personal', entitlement: null });
+    assert.equal(outcome.kind, 'checkout');
+    assert.equal(sessionsCreated.length, 1);
+    assert.deepEqual(sessionsCreated[0].adaptive_pricing, { enabled: true });
+    // Converting the amount must not change the presentation language or the
+    // subscription mode; both are pinned for their own reasons.
+    assert.equal(sessionsCreated[0].locale, 'en');
+    assert.equal(sessionsCreated[0].mode, 'subscription');
+  } finally {
+    if (previous === undefined) delete process.env.STRIPE_ADAPTIVE_PRICING;
+    else process.env.STRIPE_ADAPTIVE_PRICING = previous;
+  }
+});
+
+test('STRIPE_ADAPTIVE_PRICING=false sends an explicit opt-out, not the dashboard default', async () => {
+  const previous = process.env.STRIPE_ADAPTIVE_PRICING;
+  process.env.STRIPE_ADAPTIVE_PRICING = 'false';
+  try {
+    const { sessionsCreated } = await checkout({ planId: 'solo', entitlement: null });
+    assert.equal(sessionsCreated.length, 1);
+    assert.deepEqual(sessionsCreated[0].adaptive_pricing, { enabled: false });
+  } finally {
+    if (previous === undefined) delete process.env.STRIPE_ADAPTIVE_PRICING;
+    else process.env.STRIPE_ADAPTIVE_PRICING = previous;
+  }
+});
+
+test('the Adaptive Pricing flag defaults on and only explicit off-values disable it', () => {
+  assert.equal(adaptivePricingEnabled({}), true);
+  assert.equal(adaptivePricingEnabled({ STRIPE_ADAPTIVE_PRICING: 'true' }), true);
+  assert.equal(adaptivePricingEnabled({ STRIPE_ADAPTIVE_PRICING: '' }), true);
+  assert.equal(adaptivePricingEnabled({ STRIPE_ADAPTIVE_PRICING: 'yes' }), true);
+  for (const off of ['false', 'FALSE', ' off ', '0', 'no']) {
+    assert.equal(adaptivePricingEnabled({ STRIPE_ADAPTIVE_PRICING: off }), false, off);
+  }
+  assert.deepEqual(adaptivePricingParam({}), { enabled: true });
+  assert.deepEqual(adaptivePricingParam({ STRIPE_ADAPTIVE_PRICING: 'off' }), { enabled: false });
+});
