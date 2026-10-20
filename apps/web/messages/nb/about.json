@@ -36,14 +36,14 @@
     "intro": "Tre ting:",
     "points": [
       "<b>En navngitt person.</b> Meg, ikke en supportadresse. Går noe galt, vet du hvem som har ansvaret.",
-      "<b>Et registrert foretak.</b> MCPEmails drives av Albretsen Consulting, et norsk enkeltpersonforetak registrert i Enhetsregisteret hos Brønnøysundregistrene. Det betyr at jeg hefter personlig.",
+      "<b>Et registrert selskap.</b> MCPEmails drives av Albretsen AS, et norsk aksjeselskap registrert i Foretaksregisteret hos Brønnøysundregistrene. Jeg eier selskapet og er styreleder.",
       "<b>Kode du kan lese.</b> Serveren ligger åpent på GitHub under AGPL-3.0, og tjenesten på mcpemails.com kjører den samme koden."
     ],
     "entityTitle": "Foretaksopplysninger",
-    "entityName": "Albretsen Consulting (enkeltpersonforetak)",
-    "entityOrgNo": "Organisasjonsnummer 926 646 753",
+    "entityName": "Albretsen AS",
+    "entityOrgNo": "Organisasjonsnummer 938 702 373",
     "entityAddress": "Håsteins gate 9, 5160 Laksevåg, Norge",
-    "entityRegistry": "Registrert i Enhetsregisteret, Brønnøysundregistrene",
+    "entityRegistry": "Registrert i Foretaksregisteret, Brønnøysundregistrene",
     "entityNote": "Fullstendige juridiske opplysninger står i <terms>vilkårene</terms> og <privacy>personvernerklæringen</privacy>."
   },
   "busFactor": {
