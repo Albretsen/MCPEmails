@@ -52,7 +52,10 @@
     "p2": "MCP Emails es uno alojado. Funciona con Gmail, Outlook y Microsoft 365, iCloud, Fastmail y cualquier buzón compatible con IMAP, y un mismo agente puede trabajar con varios buzones a la vez. El correo se obtiene en vivo de tu proveedor en cada llamada y nunca se almacena en nuestros servidores.",
     "linkImap": "Configura el servidor MCP para IMAP",
     "linkBusiness": "MCP de correo para los buzones de tu empresa",
-    "linkProviders": "Todos los proveedores de correo compatibles"
+    "linkProviders": "Todos los proveedores de correo compatibles",
+    "guideClaude": "Cómo conectar Claude a tu correo",
+    "guideChatgpt": "Cómo conectar ChatGPT a tu correo",
+    "guideImap": "Guía del conector IMAP para Claude"
   },
   "features": {
     "eyebrow": "Principios",
