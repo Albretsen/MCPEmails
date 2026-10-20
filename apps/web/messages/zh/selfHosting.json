@@ -1,11 +1,11 @@
 {
   "meta": {
-    "title": "自托管 MCP Emails",
+    "title": "自托管 MCPEmails",
     "description": "在你自己的机器上运行驱动 mcpemails.com 的同一个 MCP 邮件服务器。采用 AGPL-3.0 开源，凭据用只有你持有的密钥加密，邮件实时获取、绝不存储。"
   },
   "hero": {
     "eyebrow": "开源，AGPL-3.0",
-    "title": "自己运行 MCP Emails。",
+    "title": "自己运行 MCPEmails。",
     "lead": "驱动 mcpemails.com 的同一个 MCP 服务器，运行在你自己的机器上，对接你自己的数据库。你的邮箱凭据绝不会离开你所掌控的基础设施。它们用只有你持有的密钥加密，仅在工具调用需要时才在你的容器内解密。"
   },
   "proof": {

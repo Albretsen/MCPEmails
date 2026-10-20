@@ -1,10 +1,10 @@
-# Prompt: cut the MCP Emails product demo video
+# Prompt: cut the MCPEmails product demo video
 
 Paste everything below the line into a fresh agent session in this repo.
 
 ---
 
-You are cutting the product demo video for MCP Emails. A working video pipeline
+You are cutting the product demo video for MCPEmails. A working video pipeline
 already exists in this repo. Use it. Do not build another one, and do not reach
 for an external video tool.
 
@@ -43,7 +43,7 @@ cut.
 Do not trust this section, and do not write a single line of voiceover from
 memory. Verify each claim against the code and the live service:
 
-- MCP Emails is an MCP server. It gives any MCP client (Claude Desktop, Claude
+- MCPEmails is an MCP server. It gives any MCP client (Claude Desktop, Claude
   Code, Cursor, and others) read and write access to real mailboxes over
   IMAP/SMTP, plus Gmail OAuth. It is not an email client and has no chat UI of
   its own.
@@ -81,7 +81,7 @@ Rules that come from how these actually perform:
 
 - **Lead with the pain, not the product.** The first six seconds decide whether
   the rest is watched. "Your agent can write you an email. It cannot read the
-  one your customer just sent." is a hook. "MCP Emails is a platform for..." is
+  one your customer just sent." is a hook. "MCPEmails is a platform for..." is
   not.
 - **One workflow, followed all the way through.** Connect a mailbox, then use
   it. Do not tour the dashboard, do not show settings, do not show the pricing
@@ -137,7 +137,7 @@ It needs:
 
 ## The payoff beat, and the trap in it
 
-MCP Emails has no chat surface. The agent side is a `chat` scene, drawn. Two
+MCPEmails has no chat surface. The agent side is a `chat` scene, drawn. Two
 rules:
 
 1. **Do not reproduce another company's interface.** The instinct is to make it

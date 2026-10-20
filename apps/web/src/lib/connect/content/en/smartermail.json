@@ -22,7 +22,7 @@
     "titleLine1": "Connect SmarterMail to Claude,",
     "titleLine2": "Cursor, ChatGPT and any MCP client",
     "lead": "SmarterMail already gives your users webmail, calendars and chat. An MCP server adds the one thing it cannot: an AI agent that reads, searches, sends, replies, schedules and files mail in the mailbox itself.",
-    "answer": "Claude cannot reach a SmarterMail server on its own. MCP Emails is a hosted MCP server that connects to yours over IMAP at your own hostname, normally on port 993 with implicit TLS, using the mailbox password, so Claude, Cursor or any MCP client can read, search, send and organize that mail. SmarterMail is software you or your host runs, so there is no shared hostname: the server must be reachable from the internet, the mailbox must have IMAP in its Service Access settings, and SmarterMail's abuse detection must not be blocking the connecting address. One inbox is free.",
+    "answer": "Claude cannot reach a SmarterMail server on its own. MCPEmails is a hosted MCP server that connects to yours over IMAP at your own hostname, normally on port 993 with implicit TLS, using the mailbox password, so Claude, Cursor or any MCP client can read, search, send and organize that mail. SmarterMail is software you or your host runs, so there is no shared hostname: the server must be reachable from the internet, the mailbox must have IMAP in its Service Access settings, and SmarterMail's abuse detection must not be blocking the connecting address. One inbox is free.",
     "meta0": "1 inbox free, forever",
     "meta1": "Mailbox password, IMAP in Service Access",
     "meta2": "Email fetched live, never stored"
@@ -33,7 +33,7 @@
   },
   "setup": [
     {
-      "h": "Create your free MCP Emails account",
+      "h": "Create your free MCPEmails account",
       "p": "Sign up at mcpemails.com. One inbox is free forever and no card is required."
     },
     {
@@ -42,7 +42,7 @@
     },
     {
       "h": "Check Service Access on the mailbox, then add it",
-      "p": "Open the user and confirm IMAP is enabled in its Service Access settings. Then add the inbox in MCP Emails: choose IMAP / SMTP, enter your SmarterMail hostname, the full mailbox address and its password. If you are a domain administrator rather than the system administrator, this is the screen you can reach yourself."
+      "p": "Open the user and confirm IMAP is enabled in its Service Access settings. Then add the inbox in MCPEmails: choose IMAP / SMTP, enter your SmarterMail hostname, the full mailbox address and its password. If you are a domain administrator rather than the system administrator, this is the screen you can reach yourself."
     },
     {
       "h": "Paste the MCP URL into your AI",
@@ -64,14 +64,14 @@
     }
   ],
   "limits": [
-    "A hosted MCP server has to reach your SmarterMail box from outside. A server bound to an internal address only, or published just to your office range, cannot be connected this way. MCP Emails is self-hostable if you would rather the IMAP session never left your network.",
+    "A hosted MCP server has to reach your SmarterMail box from outside. A server bound to an internal address only, or published just to your office range, cannot be connected this way. MCPEmails is self-hostable if you would rather the IMAP session never left your network.",
     "Certificate validation is strict, so the binding on 993 needs a certificate valid for the hostname you enter. SmarterMail on Windows commonly uses a certificate from the Windows certificate store, and one issued for the machine name rather than the mail hostname will be refused.",
     "Only mail crosses this connection. SmarterMail's calendars, contacts, tasks and chat are served by its own web interface and by Exchange ActiveSync or EWS, not by IMAP."
   ],
   "faq": [
     {
       "q": "Does Claude work with SmarterMail?",
-      "a": "Not on its own. Claude has no SmarterMail connector and cannot open an IMAP session to a server you or your host runs. Connecting an MCP server such as MCP Emails to your SmarterMail hostname gives Claude read, search, send, reply, schedule and organize access to a mailbox on it, and the same inbox then works from Cursor or ChatGPT."
+      "a": "Not on its own. Claude has no SmarterMail connector and cannot open an IMAP session to a server you or your host runs. Connecting an MCP server such as MCPEmails to your SmarterMail hostname gives Claude read, search, send, reply, schedule and organize access to a mailbox on it, and the same inbox then works from Cursor or ChatGPT."
     },
     {
       "q": "What are the SmarterMail IMAP and SMTP settings?",

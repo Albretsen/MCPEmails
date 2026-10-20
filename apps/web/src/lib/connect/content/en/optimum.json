@@ -20,8 +20,8 @@
     "eyebrow": "Optimum Email + AI",
     "titleLine1": "Connect your Optimum inbox",
     "titleLine2": "to Claude, Cursor, any MCP client",
-    "lead": "Optimum stopped handing out addresses years ago, but the mailboxes that exist still speak IMAP. MCP Emails connects one so your AI agent can read, search, send, reply and file that mail.",
-    "answer": "Claude cannot reach an Optimum mailbox on its own. MCP Emails is a hosted MCP server that connects it over IMAP at mail.optimum.net on port 993, signing in with your full optimum.net, optonline.net or Suddenlink address and your Optimum ID password. There is no app password to generate and no toggle to switch on, because Optimum never built either. Note that Optimum stopped letting anyone create new email accounts on 4 May 2021, so this works for an address you already have rather than a new one. One inbox is free, forever.",
+    "lead": "Optimum stopped handing out addresses years ago, but the mailboxes that exist still speak IMAP. MCPEmails connects one so your AI agent can read, search, send, reply and file that mail.",
+    "answer": "Claude cannot reach an Optimum mailbox on its own. MCPEmails is a hosted MCP server that connects it over IMAP at mail.optimum.net on port 993, signing in with your full optimum.net, optonline.net or Suddenlink address and your Optimum ID password. There is no app password to generate and no toggle to switch on, because Optimum never built either. Note that Optimum stopped letting anyone create new email accounts on 4 May 2021, so this works for an address you already have rather than a new one. One inbox is free, forever.",
     "meta0": "1 inbox free, forever",
     "meta1": "Optimum ID password, no app password",
     "meta2": "Email fetched live, never stored"
@@ -32,7 +32,7 @@
   },
   "setup": [
     {
-      "h": "Create a free MCP Emails account",
+      "h": "Create a free MCPEmails account",
       "p": "Sign up at mcpemails.com. The free plan connects one inbox and does not ask for a card."
     },
     {
@@ -41,7 +41,7 @@
     },
     {
       "h": "Enter the address and the Optimum ID password",
-      "p": "In MCP Emails choose IMAP / SMTP, put the whole address in the username field, such as <code>name@optonline.net</code>, and use the password for that Optimum ID. The host is prefilled and was verified from a live TLS connection."
+      "p": "In MCPEmails choose IMAP / SMTP, put the whole address in the username field, such as <code>name@optonline.net</code>, and use the password for that Optimum ID. The host is prefilled and was verified from a live TLS connection."
     },
     {
       "h": "Paste the MCP URL into your AI",
@@ -51,7 +51,7 @@
   "gotchas": [
     {
       "h": "Optimum does not advertise SASL-IR, and most clients assume it",
-      "p": "The Optimum IMAP server omits the SASL-IR capability, so it rejects the one-step authentication that sends the credentials along with the AUTHENTICATE command. A client that assumes SASL-IR gets a bare <code>BAD</code> with no explanation, which reads exactly like a wrong password and sends people off resetting an Optimum ID that was fine. MCP Emails detects that reply and retries the two-step exchange, so it is handled here, but it is why other IMAP tooling fails against Optimum while working elsewhere."
+      "p": "The Optimum IMAP server omits the SASL-IR capability, so it rejects the one-step authentication that sends the credentials along with the AUTHENTICATE command. A client that assumes SASL-IR gets a bare <code>BAD</code> with no explanation, which reads exactly like a wrong password and sends people off resetting an Optimum ID that was fine. MCPEmails detects that reply and retries the two-step exchange, so it is handled here, but it is why other IMAP tooling fails against Optimum while working elsewhere."
     },
     {
       "h": "Junk and Deleted empty themselves, and on non-Optimum domains it happens in three days",
@@ -74,7 +74,7 @@
   "faq": [
     {
       "q": "Does Claude work with Optimum email?",
-      "a": "Not directly. Claude has no built-in Optimum connector. Connecting an MCP server such as MCP Emails to the mailbox over IMAP gives Claude read, search, send, reply, schedule and organise access to your optimum.net, optonline.net or Suddenlink mail, and the same connection works in Cursor, ChatGPT and other MCP clients."
+      "a": "Not directly. Claude has no built-in Optimum connector. Connecting an MCP server such as MCPEmails to the mailbox over IMAP gives Claude read, search, send, reply, schedule and organise access to your optimum.net, optonline.net or Suddenlink mail, and the same connection works in Cursor, ChatGPT and other MCP clients."
     },
     {
       "q": "What are the Optimum IMAP settings?",

@@ -5,7 +5,7 @@ const post = {
     'Run work, personal, and side-business mailboxes through one AI agent: how it discovers inboxes, how to scope a request, sender names that stay correct, and per-inbox send review.',
   cover: '/blog/cover-agent-inbox.svg',
   coverAlt:
-    'One AI agent connected to work, personal, and side-business email accounts with MCP Emails',
+    'One AI agent connected to work, personal, and side-business email accounts with MCPEmails',
   authorId: 'asgeir',
   publishedAt: '2026-09-15T09:00:00.000Z',
   updatedAt: '2026-09-26T09:00:00.000Z',
@@ -55,7 +55,7 @@ One field does three jobs. Each inbox has a display name: it is the **Label** in
 Sending from an alias works, but only from addresses you have proved are yours:
 
 - Your own connected address always works as the From value, on every provider.
-- On an IMAP inbox (iCloud, Yahoo, Gmail connected by app password, any SMTP host), a **different** address works once it is verified. Add it in that inbox's settings in the dashboard, then enter the code MCP Emails emails to that address. Verified addresses are listed under \`sender_identities\` in that inbox's \`inbox_list\` entry.
+- On an IMAP inbox (iCloud, Yahoo, Gmail connected by app password, any SMTP host), a **different** address works once it is verified. Add it in that inbox's settings in the dashboard, then enter the code MCPEmails emails to that address. Verified addresses are listed under \`sender_identities\` in that inbox's \`inbox_list\` entry.
 - Outlook sends from the connected address.
 - A From address that is not verified for the inbox is refused rather than silently rewritten.
 

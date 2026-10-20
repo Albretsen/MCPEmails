@@ -20,7 +20,7 @@
     "titleLine1": "Conecta el correo de CenturyLink",
     "titleLine2": "a Claude, Cursor y cualquier cliente MCP",
     "lead": "Dale a tu agente de IA una bandeja real de centurylink.net. Lee, busca, envía, responde, programa y organiza correo por IMAP con tu contraseña de correo de CenturyLink, en todos los clientes MCP y no solo en uno.",
-    "answer": "Claude no puede acceder por sí solo a un buzón de CenturyLink. MCP Emails es un servidor MCP alojado que lo conecta por IMAP en mail.centurylink.net en el puerto 993, con el correo saliente en smtp.centurylink.net en el puerto 587 con STARTTLS, iniciando sesión con tu dirección completa y tu contraseña de correo de CenturyLink. Una vez conectada, Claude, Cursor o cualquier otro cliente MCP puede leer, buscar, enviar, responder y organizar ese correo. Una bandeja es gratis, para siempre.",
+    "answer": "Claude no puede acceder por sí solo a un buzón de CenturyLink. MCPEmails es un servidor MCP alojado que lo conecta por IMAP en mail.centurylink.net en el puerto 993, con el correo saliente en smtp.centurylink.net en el puerto 587 con STARTTLS, iniciando sesión con tu dirección completa y tu contraseña de correo de CenturyLink. Una vez conectada, Claude, Cursor o cualquier otro cliente MCP puede leer, buscar, enviar, responder y organizar ese correo. Una bandeja es gratis, para siempre.",
     "meta0": "1 bandeja gratis, para siempre",
     "meta1": "Tu contraseña de correo de CenturyLink funciona",
     "meta2": "El correo se obtiene en vivo, nunca se almacena"
@@ -31,7 +31,7 @@
   },
   "setup": [
     {
-      "h": "Crea una cuenta gratis en MCP Emails",
+      "h": "Crea una cuenta gratis en MCPEmails",
       "p": "Regístrate en mcpemails.com. El plan gratuito conecta una bandeja y no pide tarjeta."
     },
     {
@@ -39,7 +39,7 @@
       "p": "Abre la página principal de CenturyLink e inicia sesión en el webmail con la dirección que vas a conectar. Así confirmas la contraseña y además reinicias el contador de inactividad: CenturyLink desactiva las cuentas que llevan un año sin usarse y borra su contenido."
     },
     {
-      "h": "Introduce la dirección completa en MCP Emails",
+      "h": "Introduce la dirección completa en MCPEmails",
       "p": "Elige IMAP / SMTP e introduce la dirección entera, incluido <code>@centurylink.net</code>, <code>@centurytel.net</code> o <code>@embarqmail.com</code>, con tu contraseña de correo. Los servidores y la combinación mixta de TLS en el 993 y STARTTLS en el 587 ya vienen rellenados."
     },
     {
@@ -50,7 +50,7 @@
   "gotchas": [
     {
       "h": "Este servidor ofrece AUTH=LOGIN y nada más",
-      "p": "El servidor IMAP de CenturyLink anuncia un único mecanismo SASL, LOGIN, y no anuncia SASL-IR. La mayoría de los clientes modernos recurren a PLAIN enviando las credenciales junto con el comando AUTHENTICATE, no encuentran el mecanismo que esperaban y o bien se caen o devuelven un error que parece de credenciales incorrectas. MCP Emails usa el intercambio LOGIN paso a paso que este servidor admite de verdad. Por eso herramientas IMAP genéricas que funcionan en cualquier otro sitio pueden fallar aquí en el primer comando."
+      "p": "El servidor IMAP de CenturyLink anuncia un único mecanismo SASL, LOGIN, y no anuncia SASL-IR. La mayoría de los clientes modernos recurren a PLAIN enviando las credenciales junto con el comando AUTHENTICATE, no encuentran el mecanismo que esperaban y o bien se caen o devuelven un error que parece de credenciales incorrectas. MCPEmails usa el intercambio LOGIN paso a paso que este servidor admite de verdad. Por eso herramientas IMAP genéricas que funcionan en cualquier otro sitio pueden fallar aquí en el primer comando."
     },
     {
       "h": "Un año sin iniciar sesión borra el buzón y todo lo que contiene",
@@ -73,7 +73,7 @@
   "faq": [
     {
       "q": "¿Funciona Claude con el correo de CenturyLink?",
-      "a": "No directamente. Claude no tiene un conector integrado para CenturyLink. Conectar un servidor MCP como MCP Emails al buzón por IMAP le da a Claude acceso para leer, buscar, enviar, responder, programar y organizar tu correo de centurylink.net, y la misma conexión funciona en Cursor, ChatGPT y otros clientes MCP."
+      "a": "No directamente. Claude no tiene un conector integrado para CenturyLink. Conectar un servidor MCP como MCPEmails al buzón por IMAP le da a Claude acceso para leer, buscar, enviar, responder, programar y organizar tu correo de centurylink.net, y la misma conexión funciona en Cursor, ChatGPT y otros clientes MCP."
     },
     {
       "q": "¿Cuáles son los ajustes IMAP y SMTP de CenturyLink?",

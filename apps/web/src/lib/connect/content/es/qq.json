@@ -20,7 +20,7 @@
     "titleLine1": "Conecta QQ Mail a Claude,",
     "titleLine2": "Cursor, ChatGPT, cualquier cliente MCP",
     "lead": "Dale a tu agente de IA un buzón de QQ real. Lee, busca, envía, responde, programa y organiza correo por IMAP con un código de autorización de Tencent, en todos los clientes MCP y no solo en uno.",
-    "answer": "Claude no puede llegar a QQ Mail por su cuenta. MCP Emails es un servidor MCP alojado que lo conecta por IMAP en imap.qq.com, puerto 993, autenticándose con el código de autorización de 16 caracteres (授权码) que Tencent emite para clientes de terceros, y no con tu contraseña de QQ. Tienes que activar el servicio POP3/IMAP/SMTP dentro de QQ Mail y generar ese código antes de que ningún cliente pueda iniciar sesión, y el mismo código sirve tanto para tu dirección @qq.com como para tu alias @foxmail.com. Una bandeja es gratis.",
+    "answer": "Claude no puede llegar a QQ Mail por su cuenta. MCPEmails es un servidor MCP alojado que lo conecta por IMAP en imap.qq.com, puerto 993, autenticándose con el código de autorización de 16 caracteres (授权码) que Tencent emite para clientes de terceros, y no con tu contraseña de QQ. Tienes que activar el servicio POP3/IMAP/SMTP dentro de QQ Mail y generar ese código antes de que ningún cliente pueda iniciar sesión, y el mismo código sirve tanto para tu dirección @qq.com como para tu alias @foxmail.com. Una bandeja es gratis.",
     "meta0": "1 bandeja gratis, para siempre",
     "meta1": "Código de autorización de 16 caracteres, no tu contraseña",
     "meta2": "El correo se obtiene en vivo, nunca se almacena"
@@ -31,7 +31,7 @@
   },
   "setup": [
     {
-      "h": "Crea tu cuenta gratis de MCP Emails",
+      "h": "Crea tu cuenta gratis de MCPEmails",
       "p": "Regístrate en mcpemails.com. El plan gratuito conecta una bandeja y sigue siendo gratis, sin tarjeta. Deja la pestaña abierta; dentro de dos pasos pegarás en ella el código de autorización de QQ."
     },
     {
@@ -39,8 +39,8 @@
       "p": "Abre QQ Mail en la web y ve a 设置 (Configuración), luego a 账号与安全 (Cuenta y seguridad) y a 安全设置 (Ajustes de seguridad). Las versiones antiguas de la interfaz ponen el mismo control en 设置 y luego 账户, en la línea que empieza por POP3/IMAP/SMTP. Activa el servicio. Mientras no esté activado, imap.qq.com rechaza cualquier intento de inicio de sesión, envíes la contraseña que envíes."
     },
     {
-      "h": "Genera el 授权码 y pégalo en MCP Emails",
-      "p": "Con el servicio activado, haz clic en 生成授权码 (generar código de autorización) y completa la verificación de identidad que pide Tencent, que es tu contraseña de QQ o un escaneo desde la app de QQ o de WeChat. Tencent muestra el código de 16 caracteres una sola vez y no vuelve a mostrarlo. Cópialo, elige IMAP / SMTP en MCP Emails, introduce tu dirección de QQ completa y pega el código en el campo de contraseña. Los servidores ya vienen rellenados."
+      "h": "Genera el 授权码 y pégalo en MCPEmails",
+      "p": "Con el servicio activado, haz clic en 生成授权码 (generar código de autorización) y completa la verificación de identidad que pide Tencent, que es tu contraseña de QQ o un escaneo desde la app de QQ o de WeChat. Tencent muestra el código de 16 caracteres una sola vez y no vuelve a mostrarlo. Cópialo, elige IMAP / SMTP en MCPEmails, introduce tu dirección de QQ completa y pega el código en el campo de contraseña. Los servidores ya vienen rellenados."
     },
     {
       "h": "Pega la URL MCP en tu cliente de IA",
@@ -69,7 +69,7 @@
   "faq": [
     {
       "q": "¿Claude funciona con QQ Mail?",
-      "a": "No directamente. Claude no tiene un conector integrado para QQ Mail y no puede abrir una conexión IMAP por sí mismo. Conectar un servidor MCP como MCP Emails a tu buzón de QQ le da a Claude acceso para leer, buscar, enviar, responder, reenviar, programar y organizar, y la misma conexión funciona en Cursor y otros clientes MCP."
+      "a": "No directamente. Claude no tiene un conector integrado para QQ Mail y no puede abrir una conexión IMAP por sí mismo. Conectar un servidor MCP como MCPEmails a tu buzón de QQ le da a Claude acceso para leer, buscar, enviar, responder, reenviar, programar y organizar, y la misma conexión funciona en Cursor y otros clientes MCP."
     },
     {
       "q": "¿Cuál es la configuración IMAP y SMTP de QQ Mail?",

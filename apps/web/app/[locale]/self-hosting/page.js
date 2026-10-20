@@ -6,7 +6,7 @@ import { withReadingLang } from '@/i18n/reading-lang.mjs';
 export async function generateMetadata({ params }) {
   const { locale } = await params;
   const t = await getTranslations({ locale, namespace: 'selfHosting' });
-  const title = t.has('meta.title') ? t('meta.title') : 'Self-host MCP Emails';
+  const title = t.has('meta.title') ? t('meta.title') : 'Self-host MCPEmails';
   const description = t.has('meta.description')
     ? t('meta.description')
     : 'Run the same MCP email server that powers mcpemails.com on your own machine. Open source under AGPL-3.0.';
@@ -17,14 +17,14 @@ export async function generateMetadata({ params }) {
     openGraph: {
       type: 'website',
       url: localePath(locale, '/self-hosting'),
-      title: `${title} · MCP Emails`,
+      title: `${title} · MCPEmails`,
       description,
       locale: OG_LOCALE[locale],
       images: [OG_IMAGE],
     },
     twitter: {
       card: 'summary_large_image',
-      title: `${title} · MCP Emails`,
+      title: `${title} · MCPEmails`,
       description,
       images: [OG_IMAGE.url],
     },

@@ -38,7 +38,7 @@
 //                               (those are refused outright in
 //                               redirect-scheme.ts; this is the backstop).
 //   impersonates  the self-asserted name uses a known vendor's name (Claude,
-//                 ChatGPT, Cursor, MCP Emails, ...; Google and Grok only as the
+//                 ChatGPT, Cursor, MCPEmails, ...; Google and Grok only as the
 //                 whole name) while the code goes to a
 //                 web host or app scheme that is NOT that vendor's. Not raised
 //                 when the destination is a known vendor HOST (the code goes
@@ -136,7 +136,7 @@ const VENDORS: readonly Vendor[] = [
   },
   {
     id: 'mcpemails',
-    label: 'MCP Emails',
+    label: 'MCPEmails',
     substrings: ['mcpemail'],
     words: [],
     hosts: new Set(['mcpemails.com', 'www.mcpemails.com']),
@@ -457,7 +457,7 @@ export function describeClientIdentity({
 
   // A known vendor's own https host, or one of the known native-app schemes.
   // On a vendor HOST the code goes to that vendor whatever the name says:
-  // Claude and ChatGPT put the user's own connector name ("MCP Emails") in
+  // Claude and ChatGPT put the user's own connector name ("MCPEmails") in
   // client_name, so no impersonation alert there. The name keeps the heading
   // and is labelled as self-reported.
   if (destination.kind === 'web' && destinationVendor) {

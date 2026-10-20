@@ -1,13 +1,13 @@
 {
   "meta": {
     "title": "Claude 和 ChatGPT 的邮箱连接器与 MCP 服务器对比",
-    "description": "Claude 和 ChatGPT 内置邮箱连接器、Fastmail 和 Zoho 自家 MCP 服务器能做什么，与 MCP Emails 的对比。每条信息都注明来源和日期。"
+    "description": "Claude 和 ChatGPT 内置邮箱连接器、Fastmail 和 Zoho 自家 MCP 服务器能做什么，与 MCPEmails 的对比。每条信息都注明来源和日期。"
   },
   "hero": {
     "eyebrow": "内置连接器与 MCP",
     "titleLine1": "内置连接器现在能发邮件了。",
     "titleLine2": "它们的边界在这里。",
-    "lead": "Claude 和 ChatGPT 可以读取和发送 Gmail 及 Microsoft 邮件，Fastmail 和 Zoho 也推出了自家的 MCP 服务器。但每一个只覆盖一家邮件服务商，或只能在一个应用里使用。MCP Emails 把你所有的邮箱放在同一个连接后面，可在任何 MCP 客户端中使用。",
+    "lead": "Claude 和 ChatGPT 可以读取和发送 Gmail 及 Microsoft 邮件，Fastmail 和 Zoho 也推出了自家的 MCP 服务器。但每一个只覆盖一家邮件服务商，或只能在一个应用里使用。MCPEmails 把你所有的邮箱放在同一个连接后面，可在任何 MCP 客户端中使用。",
     "updated": "第三方信息核实于 {date}。每条说法都附有来源链接。",
     "ctaPrimary": "免费连接邮箱",
     "ctaSecondary": "阅读文档"
@@ -31,17 +31,17 @@
       "coverage": {
         "tag": "覆盖范围",
         "h": "所有邮箱，一个连接",
-        "p": "MCP Emails 可连接 Gmail、Outlook（包括个人 Outlook.com 账户）、iCloud、Yahoo、Fastmail、Zoho、Yandex 以及任何 IMAP 邮箱，多个邮箱可同时放在同一个 MCP URL 后面。内置连接器只能连接 Gmail 和 Microsoft 邮件，服务商自家的服务器只能连接该服务商。"
+        "p": "MCPEmails 可连接 Gmail、Outlook（包括个人 Outlook.com 账户）、iCloud、Yahoo、Fastmail、Zoho、Yandex 以及任何 IMAP 邮箱，多个邮箱可同时放在同一个 MCP URL 后面。内置连接器只能连接 Gmail 和 Microsoft 邮件，服务商自家的服务器只能连接该服务商。"
       },
       "actions": {
         "tag": "掌控",
         "h": "定时、暂扣与整理",
-        "p": "内置连接器可以发送、回复和转发。MCP Emails 还能定时发送，可按邮箱设置在你批准前暂扣外发邮件，并在所有已连接邮箱中移动、复制、标记、归档和删除邮件。"
+        "p": "内置连接器可以发送、回复和转发。MCPEmails 还能定时发送，可按邮箱设置在你批准前暂扣外发邮件，并在所有已连接邮箱中移动、复制、标记、归档和删除邮件。"
       },
       "portable": {
         "tag": "可迁移",
         "h": "一次设置，所有 AI 应用通用",
-        "p": "Claude 和 ChatGPT 的连接器只能在各自的应用里使用。MCP Emails 是标准的 streamable-http MCP 服务器，支持 OAuth 2.1、动态客户端注册和 PKCE，同一批邮箱可在 Claude、ChatGPT、Cursor、VS Code、n8n 及任何其他 MCP 客户端中使用。"
+        "p": "Claude 和 ChatGPT 的连接器只能在各自的应用里使用。MCPEmails 是标准的 streamable-http MCP 服务器，支持 OAuth 2.1、动态客户端注册和 PKCE，同一批邮箱可在 Claude、ChatGPT、Cursor、VS Code、n8n 及任何其他 MCP 客户端中使用。"
       }
     }
   },
@@ -50,7 +50,7 @@
     "featureCol": "功能",
     "appsCol": "Claude 和 ChatGPT 连接器",
     "providerCol": "服务商自家 MCP 服务器",
-    "usCol": "MCP Emails",
+    "usCol": "MCPEmails",
     "notStated": "未说明",
     "rows": {
       "reach": "可连接的邮箱",
@@ -83,18 +83,18 @@
       },
       {
         "q": "我的邮件服务商有自己的 MCP 服务器，我还需要别的吗？",
-        "a": "也许不需要。Fastmail 和 Zoho Mail 都有官方 MCP 服务器，可在任何 MCP 客户端中使用；Google 的 Gmail MCP 服务器处于开发者预览阶段。它们各自只能连接自家服务商。MCP Emails 适合把多个邮箱放在同一个连接后面，适合 iCloud、Yahoo、Yandex 及其他 IMAP 服务，也适合个人 Outlook.com 账户，而这类账户无法通过 Claude 的 Microsoft 365 连接器连接。"
+        "a": "也许不需要。Fastmail 和 Zoho Mail 都有官方 MCP 服务器，可在任何 MCP 客户端中使用；Google 的 Gmail MCP 服务器处于开发者预览阶段。它们各自只能连接自家服务商。MCPEmails 适合把多个邮箱放在同一个连接后面，适合 iCloud、Yahoo、Yandex 及其他 IMAP 服务，也适合个人 Outlook.com 账户，而这类账户无法通过 Claude 的 Microsoft 365 连接器连接。"
       },
       {
-        "q": "MCP Emails 能做哪些内置连接器做不到的事？",
+        "q": "MCPEmails 能做哪些内置连接器做不到的事？",
         "a": "通过一个 MCP URL 连接多家服务商的邮箱，定时发送邮件，按邮箱设置在有人批准前暂扣外发邮件，并且在 Claude、ChatGPT、Cursor、VS Code 和 n8n 中用法一致。我们查阅的内置方案都没有提到定时发送。"
       },
       {
         "q": "如果我为 Claude 设置好了，在 Cursor 或 ChatGPT 中也能用吗？",
-        "a": "能。MCP Emails 是标准的 streamable-http MCP 服务器，支持 OAuth 2.1、动态客户端注册和 PKCE，一次设置即可在 Claude、ChatGPT、Cursor、VS Code、Windsurf、n8n 及任何其他 MCP 客户端中使用。Claude 和 ChatGPT 的内置连接器只能在各自的应用里使用。"
+        "a": "能。MCPEmails 是标准的 streamable-http MCP 服务器，支持 OAuth 2.1、动态客户端注册和 PKCE，一次设置即可在 Claude、ChatGPT、Cursor、VS Code、Windsurf、n8n 及任何其他 MCP 客户端中使用。Claude 和 ChatGPT 的内置连接器只能在各自的应用里使用。"
       },
       {
-        "q": "MCP Emails 连接我的邮箱后，会存储我的邮件吗？",
+        "q": "MCPEmails 连接我的邮箱后，会存储我的邮件吗？",
         "a": "不会。每次请求时都直接从你的邮件服务商实时获取邮件，响应发出后即丢弃。我们只保存加密的 OAuth 令牌或应用专用密码，以便后续请求登录；另外，你设置了定时发送的邮件会加密保存到发送为止。你可以随时撤销访问权限。"
       }
     ]

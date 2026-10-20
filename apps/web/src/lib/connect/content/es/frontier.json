@@ -18,8 +18,8 @@
     "eyebrow": "Frontier Mail + IA",
     "titleLine1": "Conecta una bandeja de Frontier",
     "titleLine2": "a Claude, Cursor y cualquier cliente MCP",
-    "lead": "Frontier dejó de gestionar su propio correo y traspasó el servicio a Yahoo. La dirección frontier.com sigue funcionando por IMAP, y MCP Emails la conecta para que tu agente de IA pueda leer, buscar, enviar, responder y archivar ese correo.",
-    "answer": "Claude no puede acceder por sí solo a un buzón de Frontier. MCP Emails es un servidor MCP alojado que lo conecta por IMAP en imap.frontier.com en el puerto 993, que sigue respondiendo aunque el servicio de correo y el soporte de Frontier los gestiona Yahoo desde el 20 de marzo de 2024. Como la cuenta detrás de la dirección es una cuenta de Yahoo, la credencial es una contraseña de aplicación de Yahoo generada desde la página de seguridad de la cuenta, no la contraseña que usas en el webmail. Una vez conectada, Claude, Cursor o cualquier otro cliente MCP puede leer, buscar, enviar y organizar ese correo, y una bandeja es gratis, para siempre.",
+    "lead": "Frontier dejó de gestionar su propio correo y traspasó el servicio a Yahoo. La dirección frontier.com sigue funcionando por IMAP, y MCPEmails la conecta para que tu agente de IA pueda leer, buscar, enviar, responder y archivar ese correo.",
+    "answer": "Claude no puede acceder por sí solo a un buzón de Frontier. MCPEmails es un servidor MCP alojado que lo conecta por IMAP en imap.frontier.com en el puerto 993, que sigue respondiendo aunque el servicio de correo y el soporte de Frontier los gestiona Yahoo desde el 20 de marzo de 2024. Como la cuenta detrás de la dirección es una cuenta de Yahoo, la credencial es una contraseña de aplicación de Yahoo generada desde la página de seguridad de la cuenta, no la contraseña que usas en el webmail. Una vez conectada, Claude, Cursor o cualquier otro cliente MCP puede leer, buscar, enviar y organizar ese correo, y una bandeja es gratis, para siempre.",
     "meta0": "1 bandeja gratis, para siempre",
     "meta1": "Contraseña de aplicación de Yahoo, no la del webmail",
     "meta2": "El correo se obtiene en vivo, nunca se almacena"
@@ -30,7 +30,7 @@
   },
   "setup": [
     {
-      "h": "Crea una cuenta gratis en MCP Emails",
+      "h": "Crea una cuenta gratis en MCPEmails",
       "p": "Regístrate en mcpemails.com. El plan gratuito conecta una bandeja y no pide tarjeta."
     },
     {
@@ -39,7 +39,7 @@
     },
     {
       "h": "Crea una contraseña de aplicación en External connections",
-      "p": "En la página de seguridad de la cuenta de Yahoo, busca <b>External connections</b> y elige <b>Create app password</b>. Llámala <code>mcpemails</code>, copia el código que aparece y pégalo en MCP Emails junto con tu dirección frontier.com completa. Los servidores de Frontier de arriba ya vienen rellenados."
+      "p": "En la página de seguridad de la cuenta de Yahoo, busca <b>External connections</b> y elige <b>Create app password</b>. Llámala <code>mcpemails</code>, copia el código que aparece y pégalo en MCPEmails junto con tu dirección frontier.com completa. Los servidores de Frontier de arriba ya vienen rellenados."
     },
     {
       "h": "Pega la URL MCP en tu IA",
@@ -53,7 +53,7 @@
     },
     {
       "h": "El proxy de Frontier es más limitado que el servidor de Yahoo que reciben otros socios",
-      "p": "AT&T, Cox y Rogers presentan el servidor IMAP propio de Yahoo, que anuncia MOVE, SPECIAL-USE, IDLE y UIDPLUS. El proxy de Frontier anuncia SASL-IR, UIDPLUS y poco más: sin MOVE, sin IDLE, sin SPECIAL-USE. En la práctica, archivar un mensaje se ejecuta como COPY, luego STORE de la marca de borrado y luego EXPUNGE en lugar de un solo comando, las funciones de carpeta como Enviados y Papelera se identifican por nombre en lugar de anunciarlas el servidor, y no hay push por IDLE, así que el correo nuevo se detecta consultando periódicamente. MCP Emails se encarga de todo eso, pero por eso Frontier parece reaccionar más despacio que otras cuentas respaldadas por Yahoo."
+      "p": "AT&T, Cox y Rogers presentan el servidor IMAP propio de Yahoo, que anuncia MOVE, SPECIAL-USE, IDLE y UIDPLUS. El proxy de Frontier anuncia SASL-IR, UIDPLUS y poco más: sin MOVE, sin IDLE, sin SPECIAL-USE. En la práctica, archivar un mensaje se ejecuta como COPY, luego STORE de la marca de borrado y luego EXPUNGE en lugar de un solo comando, las funciones de carpeta como Enviados y Papelera se identifican por nombre en lugar de anunciarlas el servidor, y no hay push por IDLE, así que el correo nuevo se detecta consultando periódicamente. MCPEmails se encarga de todo eso, pero por eso Frontier parece reaccionar más despacio que otras cuentas respaldadas por Yahoo."
     },
     {
       "h": "Yahoo decide si puedes crear una contraseña de aplicación",
@@ -72,7 +72,7 @@
   "faq": [
     {
       "q": "¿Funciona Claude con el correo de Frontier?",
-      "a": "No directamente. Claude no tiene un conector integrado para Frontier, y Frontier ya no gestiona el servicio de correo. Conectar un servidor MCP como MCP Emails al buzón por IMAP le da a Claude acceso para leer, buscar, enviar, responder, programar y organizar tu correo de frontier.com, y la misma conexión funciona en Cursor, ChatGPT y otros clientes MCP."
+      "a": "No directamente. Claude no tiene un conector integrado para Frontier, y Frontier ya no gestiona el servicio de correo. Conectar un servidor MCP como MCPEmails al buzón por IMAP le da a Claude acceso para leer, buscar, enviar, responder, programar y organizar tu correo de frontier.com, y la misma conexión funciona en Cursor, ChatGPT y otros clientes MCP."
     },
     {
       "q": "¿Cuáles son los ajustes IMAP de Frontier?",

@@ -13,10 +13,10 @@ import { Nav, Footer } from '../../../components/marketing/Sections';
 export async function generateMetadata({ params }) {
   const { locale } = await params;
   const t = await getTranslations({ locale, namespace: 'about' });
-  const title = t.has('meta.title') ? t('meta.title') : 'About MCP Emails';
+  const title = t.has('meta.title') ? t('meta.title') : 'About MCPEmails';
   const description = t.has('meta.description')
     ? t('meta.description')
-    : 'MCP Emails is built and run by Asgeir Albretsen, a software developer in Bergen, Norway.';
+    : 'MCPEmails is built and run by Asgeir Albretsen, a software developer in Bergen, Norway.';
   return {
     title,
     description,
@@ -24,14 +24,14 @@ export async function generateMetadata({ params }) {
     openGraph: {
       type: 'website',
       url: localePath(locale, '/about'),
-      title: `${title} · MCP Emails`,
+      title: `${title} · MCPEmails`,
       description,
       locale: OG_LOCALE[locale],
       images: [OG_IMAGE],
     },
     twitter: {
       card: 'summary_large_image',
-      title: `${title} · MCP Emails`,
+      title: `${title} · MCPEmails`,
       description,
       images: [OG_IMAGE.url],
     },
@@ -96,7 +96,7 @@ function aboutJsonLd(locale, { title, description }) {
       {
         '@type': 'Organization',
         '@id': orgId,
-        name: 'MCP Emails',
+        name: 'MCPEmails',
         legalName: 'Albretsen AS',
         url: APP_URL,
         logo: `${APP_URL}/favicon.svg`,
@@ -124,7 +124,7 @@ export default async function AboutPage({ params }) {
   const { locale } = await params;
   setRequestLocale(locale);
   const t = await getTranslations('about');
-  const title = t.has('meta.title') ? t('meta.title') : 'About MCP Emails';
+  const title = t.has('meta.title') ? t('meta.title') : 'About MCPEmails';
   const description = t.has('meta.description') ? t('meta.description') : '';
   const jsonLd = aboutJsonLd(locale, { title, description });
 

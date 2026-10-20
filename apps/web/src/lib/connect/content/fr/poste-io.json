@@ -20,8 +20,8 @@
     "eyebrow": "Poste.io + IA",
     "titleLine1": "Connectez Poste.io à Claude,",
     "titleLine2": "Cursor, ChatGPT et tout client MCP",
-    "lead": "Un conteneur, un nom d'hôte, un serveur de messagerie complet. Pointez MCP Emails dessus et un agent IA peut lire, rechercher, envoyer, répondre, planifier et classer le courrier dans les boîtes que vous avez créées dans l'interface d'administration de Poste.io.",
-    "answer": "Claude ne peut pas accéder seul à un serveur Poste.io. MCP Emails est un serveur MCP hébergé qui se connecte au vôtre en IMAP sur le port 993, au nom d'hôte donné au conteneur lors de son lancement, avec le mot de passe d'une boîte créée dans l'interface d'administration de Poste.io, pour que Claude, Cursor ou tout client MCP puisse lire, rechercher, envoyer et organiser ce courrier. Poste.io utilise Dovecot pour l'IMAP à l'intérieur du conteneur : le comportement du protocole est donc celui d'un Dovecot ordinaire. Le conteneur doit publier le port 993 sur Internet et servir un certificat valide pour le nom d'hôte auquel vous vous connectez. Une boîte est gratuite.",
+    "lead": "Un conteneur, un nom d'hôte, un serveur de messagerie complet. Pointez MCPEmails dessus et un agent IA peut lire, rechercher, envoyer, répondre, planifier et classer le courrier dans les boîtes que vous avez créées dans l'interface d'administration de Poste.io.",
+    "answer": "Claude ne peut pas accéder seul à un serveur Poste.io. MCPEmails est un serveur MCP hébergé qui se connecte au vôtre en IMAP sur le port 993, au nom d'hôte donné au conteneur lors de son lancement, avec le mot de passe d'une boîte créée dans l'interface d'administration de Poste.io, pour que Claude, Cursor ou tout client MCP puisse lire, rechercher, envoyer et organiser ce courrier. Poste.io utilise Dovecot pour l'IMAP à l'intérieur du conteneur : le comportement du protocole est donc celui d'un Dovecot ordinaire. Le conteneur doit publier le port 993 sur Internet et servir un certificat valide pour le nom d'hôte auquel vous vous connectez. Une boîte est gratuite.",
     "meta0": "1 boîte gratuite, pour toujours",
     "meta1": "Mot de passe de la boîte depuis l'interface d'admin",
     "meta2": "E-mails récupérés en direct, jamais stockés"
@@ -33,7 +33,7 @@
   "setup": [
     {
       "h": "Créez un compte gratuit",
-      "p": "Inscrivez-vous sur MCP Emails, sans carte bancaire. L'offre gratuite connecte une boîte, pour toujours."
+      "p": "Inscrivez-vous sur MCPEmails, sans carte bancaire. L'offre gratuite connecte une boîte, pour toujours."
     },
     {
       "h": "Vérifiez le nom d'hôte du conteneur et la publication du port 993",
@@ -41,7 +41,7 @@
     },
     {
       "h": "Vérifiez le certificat, puis ajoutez la boîte",
-      "p": "Dans l'interface d'administration de Poste.io, ouvrez les réglages du certificat TLS et confirmez qu'un certificat Let's Encrypt a bien été émis et que ce n'est pas encore le certificat autosigné qui est servi. Ajoutez ensuite la boîte dans MCP Emails : choisissez IMAP / SMTP, saisissez le nom d'hôte du conteneur, l'adresse complète de la boîte et son mot de passe défini dans l'interface d'administration."
+      "p": "Dans l'interface d'administration de Poste.io, ouvrez les réglages du certificat TLS et confirmez qu'un certificat Let's Encrypt a bien été émis et que ce n'est pas encore le certificat autosigné qui est servi. Ajoutez ensuite la boîte dans MCPEmails : choisissez IMAP / SMTP, saisissez le nom d'hôte du conteneur, l'adresse complète de la boîte et son mot de passe défini dans l'interface d'administration."
     },
     {
       "h": "Collez l'URL MCP dans votre IA",
@@ -63,14 +63,14 @@
     }
   ],
   "limits": [
-    "Le conteneur doit accepter les connexions entrantes sur 993 depuis Internet pour qu'un serveur MCP hébergé puisse l'atteindre. Un Poste.io tournant sur un serveur domestique ou un réseau privé ne peut pas être connecté ainsi. MCP Emails peut être autohébergé : si vous préférez que rien d'externe ne touche au serveur de messagerie, vous pouvez faire tourner les deux dans le même réseau.",
+    "Le conteneur doit accepter les connexions entrantes sur 993 depuis Internet pour qu'un serveur MCP hébergé puisse l'atteindre. Un Poste.io tournant sur un serveur domestique ou un réseau privé ne peut pas être connecté ainsi. MCPEmails peut être autohébergé : si vous préférez que rien d'externe ne touche au serveur de messagerie, vous pouvez faire tourner les deux dans le même réseau.",
     "La validation TLS est stricte et ne peut pas être contournée. Le certificat autosigné qu'un Poste.io fraîchement installé génère sera refusé, c'est pourquoi obtenir un vrai certificat est une étape de configuration et non une finition facultative.",
     "L'envoi part via Haraka depuis votre propre adresse IP : ce sont donc vos enregistrements SPF, DKIM et DMARC et la réputation de votre adresse qui déterminent si le courrier est accepté en aval."
   ],
   "faq": [
     {
       "q": "Claude fonctionne-t-il avec Poste.io ?",
-      "a": "Pas seul. Claude n'a pas de connecteur Poste.io et ne peut pas ouvrir de session IMAP vers un conteneur que vous gérez. Connecter un serveur MCP comme MCP Emails à votre nom d'hôte Poste.io donne à Claude un accès en lecture, recherche, envoi, réponse, planification et organisation à une boîte de ce serveur, et la même boîte fonctionne ensuite depuis Cursor ou ChatGPT."
+      "a": "Pas seul. Claude n'a pas de connecteur Poste.io et ne peut pas ouvrir de session IMAP vers un conteneur que vous gérez. Connecter un serveur MCP comme MCPEmails à votre nom d'hôte Poste.io donne à Claude un accès en lecture, recherche, envoi, réponse, planification et organisation à une boîte de ce serveur, et la même boîte fonctionne ensuite depuis Cursor ou ChatGPT."
     },
     {
       "q": "Quels sont les paramètres IMAP et SMTP de Poste.io ?",

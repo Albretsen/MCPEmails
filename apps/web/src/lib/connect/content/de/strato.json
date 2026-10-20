@@ -19,7 +19,7 @@
     "titleLine1": "MCP-Server für STRATO E-Mail:",
     "titleLine2": "jedes Firmenpostfach, in Claude und ChatGPT",
     "lead": "Sie betreiben info@, vertrieb@, support@ und rechnungen@ auf Ihrer eigenen Domain bei STRATO? Verbinden Sie jedes Postfach mit einem Workspace, und Ihr KI-Agent arbeitet mit allen. E-Mails lesen, suchen, senden, beantworten, planen und ordnen, per IMAP mit dem Postfach-Passwort, nicht mit Ihrem STRATO Kundenlogin.",
-    "answer": "Claude kann ein STRATO-Postfach nicht von sich aus erreichen. MCP Emails ist ein gehosteter MCP-Server, der es per IMAP über imap.strato.de auf Port 993 anbindet. Die Anmeldung läuft mit Ihrer vollständigen E-Mail-Adresse und dem Passwort dieses Postfachs, nicht mit Ihrem STRATO Kundenlogin. Danach können Claude, Cursor oder jeder MCP-Client die E-Mails lesen, suchen, senden und ordnen. STRATO akzeptiert nur die normale Passwort-Authentifizierung über eine verschlüsselte Verbindung, das ältere Challenge-Response-Verfahren ist abgeschaltet. Jede Firmenadresse, etwa info@ oder vertrieb@, wird als eigenes Postfach verbunden: Ein Postfach ist kostenlos, Personal verbindet drei, Pro bis zu 10 und Business so viele, wie Sie brauchen.",
+    "answer": "Claude kann ein STRATO-Postfach nicht von sich aus erreichen. MCPEmails ist ein gehosteter MCP-Server, der es per IMAP über imap.strato.de auf Port 993 anbindet. Die Anmeldung läuft mit Ihrer vollständigen E-Mail-Adresse und dem Passwort dieses Postfachs, nicht mit Ihrem STRATO Kundenlogin. Danach können Claude, Cursor oder jeder MCP-Client die E-Mails lesen, suchen, senden und ordnen. STRATO akzeptiert nur die normale Passwort-Authentifizierung über eine verschlüsselte Verbindung, das ältere Challenge-Response-Verfahren ist abgeschaltet. Jede Firmenadresse, etwa info@ oder vertrieb@, wird als eigenes Postfach verbunden: Ein Postfach ist kostenlos, Personal verbindet drei, Pro bis zu 10 und Business so viele, wie Sie brauchen.",
     "meta0": "Erstes Postfach kostenlos, Tarife für weitere",
     "meta1": "Postfach-Passwort, nicht der Kundenlogin",
     "meta2": "E-Mails live abgerufen, nie gespeichert"
@@ -35,7 +35,7 @@
   },
   "setup": [
     {
-      "h": "Kostenloses MCP Emails Konto erstellen",
+      "h": "Kostenloses MCPEmails Konto erstellen",
       "p": "Registrieren Sie sich auf mcpemails.com. Der Free-Tarif verbindet ein Postfach dauerhaft und fragt nicht nach einer Kreditkarte."
     },
     {
@@ -43,7 +43,7 @@
       "p": "Melden Sie sich im STRATO Kundenlogin an, öffnen Sie Ihr Paket und gehen Sie zu E-Mail, dann E-Mail-Adressen verwalten. Wählen Sie die Adresse und legen Sie dort ein neues Passwort fest. Dieses Passwort gehört nur zum Postfach und ist nicht das, mit dem Sie sich gerade im Kundenlogin angemeldet haben."
     },
     {
-      "h": "In MCP Emails einfügen",
+      "h": "In MCPEmails einfügen",
       "p": "Wählen Sie IMAP / SMTP, geben Sie die vollständige Adresse ein und fügen Sie das Postfach-Passwort ein. Die Hosts imap.strato.de und smtp.strato.de sowie die Ports 993 und 465 sind vorausgefüllt und wurden über eine echte TLS-Verbindung geprüft."
     },
     {
@@ -58,7 +58,7 @@
     },
     {
       "h": "STRATO kündigt kein SASL-IR an",
-      "p": "Dem IMAP-Server fehlt die Fähigkeit SASL-IR. Er lehnt also die einstufige Authentifizierung ab, bei der die Zugangsdaten in derselben Zeile wie der AUTHENTICATE-Befehl stehen. Ein Client, der SASL-IR voraussetzt, bekommt ein nacktes <code>BAD</code> ohne Erklärung, was wieder wie ein Passwortproblem aussieht. MCP Emails erkennt diese Antwort und wiederholt den Austausch in zwei Schritten, die Verbindung klappt also. Zusammen mit der Abschaltung von CRAM-MD5 erklärt das aber, warum es bei STRATO so viele falsche Meldungen über ein angeblich falsches Passwort gibt."
+      "p": "Dem IMAP-Server fehlt die Fähigkeit SASL-IR. Er lehnt also die einstufige Authentifizierung ab, bei der die Zugangsdaten in derselben Zeile wie der AUTHENTICATE-Befehl stehen. Ein Client, der SASL-IR voraussetzt, bekommt ein nacktes <code>BAD</code> ohne Erklärung, was wieder wie ein Passwortproblem aussieht. MCPEmails erkennt diese Antwort und wiederholt den Austausch in zwei Schritten, die Verbindung klappt also. Zusammen mit der Abschaltung von CRAM-MD5 erklärt das aber, warum es bei STRATO so viele falsche Meldungen über ein angeblich falsches Passwort gibt."
     },
     {
       "h": "STRATO hat den am besten ausgestatteten IMAP-Server seiner Preisklasse",
@@ -76,7 +76,7 @@
   "faq": [
     {
       "q": "Funktioniert Claude mit STRATO E-Mail?",
-      "a": "Nicht von sich aus. Claude hat keinen eingebauten STRATO-Konnektor. Wenn Sie einen MCP-Server wie MCP Emails per IMAP mit Ihrem STRATO-Postfach verbinden, kann Claude E-Mails lesen, suchen, senden, beantworten, planen und ordnen. Dieselbe Verbindung funktioniert in Cursor, ChatGPT und anderen MCP-Clients."
+      "a": "Nicht von sich aus. Claude hat keinen eingebauten STRATO-Konnektor. Wenn Sie einen MCP-Server wie MCPEmails per IMAP mit Ihrem STRATO-Postfach verbinden, kann Claude E-Mails lesen, suchen, senden, beantworten, planen und ordnen. Dieselbe Verbindung funktioniert in Cursor, ChatGPT und anderen MCP-Clients."
     },
     {
       "q": "Wie lauten die IMAP- und SMTP-Einstellungen von STRATO?",

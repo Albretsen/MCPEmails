@@ -24,7 +24,7 @@
     "meta0": "Primer buzón gratis, planes para el resto",
     "meta1": "La contraseña de tu buzón, sin configurar OAuth",
     "meta2": "El correo se obtiene en vivo, nunca se almacena",
-    "answer": "Claude no puede llegar a OVH por su cuenta. MCP Emails es un servidor MCP alojado que lo conecta por IMAP con la contraseña de tu buzón, para que Claude, Cursor o cualquier cliente MCP pueda leer, buscar, enviar y organizar ese correo. La configuración lleva un par de minutos. Cada dirección de la empresa, como info@ o ventas@, se conecta como un buzón propio: un buzón es gratis, Personal conecta tres, Pro hasta 10 y Business todos los que necesites."
+    "answer": "Claude no puede llegar a OVH por su cuenta. MCPEmails es un servidor MCP alojado que lo conecta por IMAP con la contraseña de tu buzón, para que Claude, Cursor o cualquier cliente MCP pueda leer, buscar, enviar y organizar ese correo. La configuración lleva un par de minutos. Cada dirección de la empresa, como info@ o ventas@, se conecta como un buzón propio: un buzón es gratis, Personal conecta tres, Pro hasta 10 y Business todos los que necesites."
   },
   "persona": {
     "intro": "¿Varios buzones de empresa en OVH?",
@@ -33,19 +33,19 @@
   },
   "method": {
     "title": "Cómo se conecta OVH: IMAP y la contraseña de tu buzón",
-    "body": "Un buzón MX Plan de OVH se conecta por IMAP/SMTP con la contraseña del buzón del panel de control de OVH, y ambos servidores son <code>ssl0.ovh.net</code>. OVH Hosted Exchange es un servicio distinto: sus servidores tienen nombres como <code>ex4.mail.ovh.net</code> y el correo saliente va por STARTTLS en el puerto 587, nunca en el 465, y por eso los valores por defecto del alojamiento compartido simplemente se quedan colgados con él. MCP Emails reconoce ambos y elige el par correcto."
+    "body": "Un buzón MX Plan de OVH se conecta por IMAP/SMTP con la contraseña del buzón del panel de control de OVH, y ambos servidores son <code>ssl0.ovh.net</code>. OVH Hosted Exchange es un servicio distinto: sus servidores tienen nombres como <code>ex4.mail.ovh.net</code> y el correo saliente va por STARTTLS en el puerto 587, nunca en el 465, y por eso los valores por defecto del alojamiento compartido simplemente se quedan colgados con él. MCPEmails reconoce ambos y elige el par correcto."
   },
   "setup": [
     {
       "h": "Crea una cuenta gratis",
-      "p": "Regístrate en MCP Emails, sin tarjeta. El plan gratuito conecta una bandeja, para siempre."
+      "p": "Regístrate en MCPEmails, sin tarjeta. El plan gratuito conecta una bandeja, para siempre."
     },
     {
       "h": "Obtén la contraseña de tu buzón de OVH",
       "p": "En el panel de control de OVH, abre el servicio de correo, elige la dirección y cambia su contraseña. Copia el servidor de correo que OVH muestra para ese buzón si no es ssl0.ovh.net."
     },
     {
-      "h": "Pégala en MCP Emails",
+      "h": "Pégala en MCPEmails",
       "p": "Elige IMAP / SMTP, añade tu dirección de OVH, los servidores de arriba y la contraseña para conectar la bandeja de forma segura."
     },
     {
@@ -64,7 +64,7 @@
     },
     {
       "h": "Nada en tu dirección indica qué producto de OVH tienes",
-      "p": "Los tres productos sirven correo en tu propio dominio, así que <code>you@yourdomain.fr</code> tiene el mismo aspecto esté en el que esté. La respuesta está en el OVHcloud Control Panel, en Web Cloud, donde MX Plan aparece en Emails, Email Pro tiene su propia sección y Hosted Exchange otra. Compruébalo primero, porque todos los demás ajustes dependen de ello. Si lo que contrataste en OVH fue Microsoft 365 y no el Hosted Exchange propio de OVH, el buzón está en los servidores de Microsoft, así que conéctalo con la opción Outlook (inicio de sesión con Microsoft) en lugar de por IMAP. Puede que un administrador de TI tenga que aprobar MCP Emails una vez primero, y el panel te da un enlace de aprobación para enviárselo."
+      "p": "Los tres productos sirven correo en tu propio dominio, así que <code>you@yourdomain.fr</code> tiene el mismo aspecto esté en el que esté. La respuesta está en el OVHcloud Control Panel, en Web Cloud, donde MX Plan aparece en Emails, Email Pro tiene su propia sección y Hosted Exchange otra. Compruébalo primero, porque todos los demás ajustes dependen de ello. Si lo que contrataste en OVH fue Microsoft 365 y no el Hosted Exchange propio de OVH, el buzón está en los servidores de Microsoft, así que conéctalo con la opción Outlook (inicio de sesión con Microsoft) en lugar de por IMAP. Puede que un administrador de TI tenga que aprobar MCPEmails una vez primero, y el panel te da un enlace de aprobación para enviárselo."
     },
     {
       "h": "MX Plan usa Dovecot sin MOVE, UIDPLUS ni SPECIAL-USE",
@@ -79,7 +79,7 @@
   "faq": [
     {
       "q": "¿Claude funciona con el correo de OVH?",
-      "a": "No por sí solo. Claude no tiene un conector integrado para OVHcloud. Conectar un servidor MCP como MCP Emails al buzón por IMAP le da a Claude acceso para leer, buscar, enviar, responder, programar y organizar. Lo único que tienes que averiguar antes es a qué producto de correo de OVH pertenece la dirección, porque los nombres de servidor son totalmente distintos entre ellos."
+      "a": "No por sí solo. Claude no tiene un conector integrado para OVHcloud. Conectar un servidor MCP como MCPEmails al buzón por IMAP le da a Claude acceso para leer, buscar, enviar, responder, programar y organizar. Lo único que tienes que averiguar antes es a qué producto de correo de OVH pertenece la dirección, porque los nombres de servidor son totalmente distintos entre ellos."
     },
     {
       "q": "¿Cuál es la configuración IMAP y SMTP de OVH?",

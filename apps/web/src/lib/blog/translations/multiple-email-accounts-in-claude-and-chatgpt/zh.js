@@ -17,7 +17,7 @@ const translation = {
 
 ## 一个连接器，接入所有邮箱
 
-MCP Emails 是一个托管 MCP 服务器。你把每个邮箱连接到它一次，你的 AI 客户端就能通过一个 URL 访问所有邮箱：
+MCPEmails 是一个托管 MCP 服务器。你把每个邮箱连接到它一次，你的 AI 客户端就能通过一个 URL 访问所有邮箱：
 
 \`\`\`
 https://mcpemails.com/api/mcp
@@ -32,7 +32,7 @@ https://mcpemails.com/api/mcp
 
 ## 连接邮箱
 
-在 MCP Emails 控制台中，打开 **Inboxes**，再点 **Connect Inbox**，每个邮箱操作一次：
+在 MCPEmails 控制台中，打开 **Inboxes**，再点 **Connect Inbox**，每个邮箱操作一次：
 
 - **使用自己域名的公司邮箱。** 选择 **IMAP** 并输入地址。常见的主机会根据地址自动识别，Google Workspace 域名则通过它的邮件记录识别，所以设置会自动填好。请使用你的主机要求的密码或应用专用密码。
 - **Gmail 或 Google Workspace。** 通过 IMAP 使用 Google 应用专用密码。只有开启两步验证后 Google 才会提供应用专用密码；在 Workspace 上，管理员可以关闭应用专用密码和 IMAP。
@@ -46,7 +46,7 @@ https://mcpemails.com/api/mcp
 
 1. 打开 **Settings**，再打开 **Connectors**。
 2. 选择 **Add custom connector**，粘贴 \`https://mcpemails.com/api/mcp\`。
-3. 选择 **Connect**，登录 MCP Emails 并批准。
+3. 选择 **Connect**，登录 MCPEmails 并批准。
 
 你连接的每个邮箱现在都可以使用了。详细步骤见 [Claude 指南](/blog/connect-claude-to-email)。
 
@@ -55,8 +55,8 @@ https://mcpemails.com/api/mcp
 自定义连接器需要网页版的 ChatGPT Plus、Pro、Business、Enterprise 或 Edu，并开启开发者模式。在 Business 和 Enterprise 上，可能需要管理员先允许。
 
 1. 在 ChatGPT 设置中打开**开发者模式**，位置在应用与连接器的高级设置里。
-2. 新建一个连接器，粘贴 \`https://mcpemails.com/api/mcp\`，认证方式选择 **OAuth**，然后用 MCP Emails 完成授权。
-3. 在每个新对话中，点击 **+**，选择 **Developer mode** 并选中 MCP Emails 应用。
+2. 新建一个连接器，粘贴 \`https://mcpemails.com/api/mcp\`，认证方式选择 **OAuth**，然后用 MCPEmails 完成授权。
+3. 在每个新对话中，点击 **+**，选择 **Developer mode** 并选中 MCPEmails 应用。
 
 [ChatGPT 指南](/blog/connect-chatgpt-to-email)介绍了各个菜单和常见错误。
 
@@ -81,18 +81,18 @@ https://mcpemails.com/api/mcp
 - **Pro：** 最多 10 个邮箱，只需一个登录账号。
 - **Business：** 含 10 个邮箱，每多一个每月 $3，也适用于第二个人需要自己的登录账号的情况。
 
-一家公司有 info@、sales@ 和 invoices@，再加上你自己的地址，就是四个邮箱，对应 Pro。当前价格见[价格页面](/pricing)，[面向企业的 MCP Emails](/for/business) 介绍了一个人如何用一个智能体管理公司的所有邮箱。
+一家公司有 info@、sales@ 和 invoices@，再加上你自己的地址，就是四个邮箱，对应 Pro。当前价格见[价格页面](/pricing)，[面向企业的 MCPEmails](/for/business) 介绍了一个人如何用一个智能体管理公司的所有邮箱。
 
 ## 常见问题
 
 **Claude 能同时使用多个邮箱账户吗？**
-能，通过 MCP 服务器。把每个邮箱连接到 MCP Emails，在 Claude 中添加一个自定义连接器，Claude 就能看到所有邮箱，并在每次调用时指明所用的邮箱。
+能，通过 MCP 服务器。把每个邮箱连接到 MCPEmails，在 Claude 中添加一个自定义连接器，Claude 就能看到所有邮箱，并在每次调用时指明所用的邮箱。
 
 **ChatGPT 能使用多个邮箱账户吗？**
-它自己的 Gmail 插件现在可以添加多个 Google 账户。对于不在 Google 上的邮箱，例如放在 IONOS、Zoho 或 cPanel 主机上的公司地址，把 MCP Emails 添加为自定义连接器，所有已连接的邮箱就都能使用。
+它自己的 Gmail 插件现在可以添加多个 Google 账户。对于不在 Google 上的邮箱，例如放在 IONOS、Zoho 或 cPanel 主机上的公司地址，把 MCPEmails 添加为自定义连接器，所有已连接的邮箱就都能使用。
 
 **每个邮箱都需要单独的连接器吗？**
-不需要。一个连接器 URL 就能覆盖你 MCP Emails 工作区中的所有邮箱，同一个 URL 也适用于 Claude、ChatGPT 和其他 MCP 客户端。
+不需要。一个连接器 URL 就能覆盖你 MCPEmails 工作区中的所有邮箱，同一个 URL 也适用于 Claude、ChatGPT 和其他 MCP 客户端。
 
 **回复会从正确的地址发出吗？**
 会。每个邮箱都通过自己的服务商或邮件服务器发信，使用自己的显示名称和签名。要在 IMAP 邮箱上用另一个地址发信，请在控制台中该邮箱的设置里添加这个地址，并用发送到该地址的验证码完成验证。Outlook 从已连接的地址发信，未验证的 From 地址会被拒绝。
@@ -102,7 +102,7 @@ https://mcpemails.com/api/mcp
 
 ## 下一步
 
-[免费开始](/signup)，先连接你最繁忙的邮箱，把 MCP Emails 连接器添加到 Claude 或 ChatGPT，然后问问今天有哪些邮件需要回复。当你想要一个答案而不是好几个时，再添加其他邮箱。`,
+[免费开始](/signup)，先连接你最繁忙的邮箱，把 MCPEmails 连接器添加到 Claude 或 ChatGPT，然后问问今天有哪些邮件需要回复。当你想要一个答案而不是好几个时，再添加其他邮箱。`,
 };
 
 export default translation;

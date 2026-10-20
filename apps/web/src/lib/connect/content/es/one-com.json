@@ -20,7 +20,7 @@
     "titleLine1": "Servidor MCP para el correo de one.com:",
     "titleLine2": "todos los buzones de tu empresa, en Claude y ChatGPT",
     "lead": "¿Llevas info@, ventas@, soporte@ y facturas@ en tu propio dominio en one.com? Conecta cada buzón al mismo espacio de trabajo y tu agente de IA trabaja en todos ellos. Lee, busca, envía, responde, programa y organiza el correo por IMAP con la contraseña que estableciste al crear la dirección.",
-    "answer": "Claude no puede acceder a un buzón de one.com por sí solo. MCP Emails es un servidor MCP alojado que lo conecta por IMAP en imap.one.com, puerto 993, y envía a través de send.one.com, puerto 465, autenticándose con tu dirección de correo completa y la contraseña que estableciste para esa cuenta en el Control Panel de one.com. Así Claude, Cursor o cualquier cliente MCP pueden leer, buscar, enviar y organizar el correo. No hay que generar ninguna contraseña de aplicación. Cada dirección de la empresa, como info@ o ventas@, se conecta como un buzón propio: un buzón es gratis, Personal conecta tres, Pro hasta 10 y Business todos los que necesites.",
+    "answer": "Claude no puede acceder a un buzón de one.com por sí solo. MCPEmails es un servidor MCP alojado que lo conecta por IMAP en imap.one.com, puerto 993, y envía a través de send.one.com, puerto 465, autenticándose con tu dirección de correo completa y la contraseña que estableciste para esa cuenta en el Control Panel de one.com. Así Claude, Cursor o cualquier cliente MCP pueden leer, buscar, enviar y organizar el correo. No hay que generar ninguna contraseña de aplicación. Cada dirección de la empresa, como info@ o ventas@, se conecta como un buzón propio: un buzón es gratis, Personal conecta tres, Pro hasta 10 y Business todos los que necesites.",
     "meta0": "Primer buzón gratis, planes para el resto",
     "meta1": "Contraseña de la cuenta de correo del Control Panel",
     "meta2": "El correo se obtiene en vivo, nunca se almacena"
@@ -36,7 +36,7 @@
   },
   "setup": [
     {
-      "h": "Crea tu cuenta gratis de MCP Emails",
+      "h": "Crea tu cuenta gratis de MCPEmails",
       "p": "Regístrate en mcpemails.com. El plan gratuito conecta una bandeja para siempre y no pide tarjeta."
     },
     {
@@ -44,7 +44,7 @@
       "p": "Inicia sesión en el Control Panel de one.com y abre el mosaico Email. La dirección tiene que crearse allí antes de que un cliente pueda acceder a ella. Haz clic en la dirección para editarla y establece una contraseña, o cambia la actual. También puedes cambiar la contraseña de un correo desde one.com Webmail una vez que hayas iniciado sesión."
     },
     {
-      "h": "Pégala en MCP Emails",
+      "h": "Pégala en MCPEmails",
       "p": "Elige IMAP / SMTP, escribe la dirección completa y pega la contraseña de la cuenta de correo. Los servidores imap.one.com y send.one.com y los puertos 993 y 465 vienen rellenados y se verificaron con una conexión TLS real."
     },
     {
@@ -59,11 +59,11 @@
     },
     {
       "h": "one.com también revende Microsoft 365, y ese buzón se conecta con Outlook",
-      "p": "El mosaico del Control Panel se llama Email and Microsoft 365, y one.com vende ambos en la misma cuenta. Una cuenta de correo de one.com, creada en ese mosaico con su propia contraseña, es un buzón IMAP normal en los servidores de one.com y se conecta sin problemas. Una licencia de Microsoft 365 comprada a través de one.com es un buzón de Microsoft en los servidores de Microsoft, así que conéctalo con la opción Outlook (inicio de sesión con Microsoft) y no por IMAP. Puede que un administrador de TI tenga que aprobar MCP Emails una vez primero, y el panel te da un enlace de aprobación para enviárselo. Si tu webmail es Outlook en la web y no la interfaz propia de one.com, tienes el producto de Microsoft."
+      "p": "El mosaico del Control Panel se llama Email and Microsoft 365, y one.com vende ambos en la misma cuenta. Una cuenta de correo de one.com, creada en ese mosaico con su propia contraseña, es un buzón IMAP normal en los servidores de one.com y se conecta sin problemas. Una licencia de Microsoft 365 comprada a través de one.com es un buzón de Microsoft en los servidores de Microsoft, así que conéctalo con la opción Outlook (inicio de sesión con Microsoft) y no por IMAP. Puede que un administrador de TI tenga que aprobar MCPEmails una vez primero, y el panel te da un enlace de aprobación para enviárselo. Si tu webmail es Outlook en la web y no la interfaz propia de one.com, tienes el producto de Microsoft."
     },
     {
       "h": "La verificación en dos pasos del Control Panel no llega a tu buzón",
-      "p": "one.com ofrece verificación en dos pasos para el inicio de sesión en el Control Panel. Protege el panel, donde están tus dominios y tu facturación, y no afecta a IMAP ni a SMTP, que siguen aceptando por sí solos la contraseña de la cuenta de correo. Activarla no romperá MCP Emails, pero tampoco protegerá el buzón. Si quieres proteger el propio buzón, lo que cuenta es una contraseña fuerte y única en esa dirección, no la 2FA del panel."
+      "p": "one.com ofrece verificación en dos pasos para el inicio de sesión en el Control Panel. Protege el panel, donde están tus dominios y tu facturación, y no afecta a IMAP ni a SMTP, que siguen aceptando por sí solos la contraseña de la cuenta de correo. Activarla no romperá MCPEmails, pero tampoco protegerá el buzón. Si quieres proteger el propio buzón, lo que cuenta es una contraseña fuerte y única en esa dirección, no la 2FA del panel."
     }
   ],
   "limits": [
@@ -74,7 +74,7 @@
   "faq": [
     {
       "q": "¿Funciona Claude con el correo de one.com?",
-      "a": "No por sí solo. Claude no tiene un conector integrado para one.com. Apuntar un servidor MCP como MCP Emails a tu buzón de one.com por IMAP le da a Claude acceso para leer, buscar, enviar, responder, programar y organizar, y la misma conexión funciona desde Cursor, ChatGPT y otros clientes MCP."
+      "a": "No por sí solo. Claude no tiene un conector integrado para one.com. Apuntar un servidor MCP como MCPEmails a tu buzón de one.com por IMAP le da a Claude acceso para leer, buscar, enviar, responder, programar y organizar, y la misma conexión funciona desde Cursor, ChatGPT y otros clientes MCP."
     },
     {
       "q": "¿Cuál es la configuración IMAP y SMTP de one.com?",

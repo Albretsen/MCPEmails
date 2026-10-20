@@ -21,7 +21,7 @@
     "titleLine1": "Connect Gandi Mail to Claude,",
     "titleLine2": "Cursor, ChatGPT, any MCP client",
     "lead": "Give your AI agent a real Gandi inbox. Read, search, send, reply, schedule and organize mail over IMAP with the password set on the mailbox itself, not on your Gandi account.",
-    "answer": "Claude cannot reach a Gandi mailbox on its own. MCP Emails is a hosted MCP server that connects it over IMAP at mail.gandi.net on port 993, authenticating with the entire email address and the password defined on that mailbox, which Gandi keeps separate from your gandi.net account password. Claude, Cursor or any MCP client can then read, search, send and organize the mail. There is no app password to generate and no per-mailbox IMAP toggle to find. One inbox is free, forever.",
+    "answer": "Claude cannot reach a Gandi mailbox on its own. MCPEmails is a hosted MCP server that connects it over IMAP at mail.gandi.net on port 993, authenticating with the entire email address and the password defined on that mailbox, which Gandi keeps separate from your gandi.net account password. Claude, Cursor or any MCP client can then read, search, send and organize the mail. There is no app password to generate and no per-mailbox IMAP toggle to find. One inbox is free, forever.",
     "meta0": "1 inbox free, forever",
     "meta1": "Mailbox password, not the account login",
     "meta2": "Email fetched live, never stored"
@@ -32,7 +32,7 @@
   },
   "setup": [
     {
-      "h": "Create your free MCP Emails account",
+      "h": "Create your free MCPEmails account",
       "p": "Sign up at mcpemails.com. The free plan connects one inbox forever and does not ask for a card."
     },
     {
@@ -40,7 +40,7 @@
       "p": "Log in at gandi.net, choose Domains in the left menu, select the domain the address belongs to, and open its Email tab. Click the mailbox, or its three-dot menu, then Manage, and use Change next to Password in the Configuration section. You can also change it from Settings, Password inside Gandi's Roundcube webmail."
     },
     {
-      "h": "Paste it into MCP Emails",
+      "h": "Paste it into MCPEmails",
       "p": "Choose IMAP / SMTP, enter the complete address, and paste the mailbox password. The host mail.gandi.net and ports 993 and 465 are prefilled and were verified from a live TLS connection."
     },
     {
@@ -51,7 +51,7 @@
   "gotchas": [
     {
       "h": "Gandi's email 2FA covers webmail only, and cannot cover IMAP",
-      "p": "If you turned on two-factor authentication for a Gandi mailbox, it applies to the SOGo and Roundcube webmail portals and nowhere else. Gandi's documentation says directly that 2FA can only be used through its webmail portals and that email clients such as Thunderbird or Outlook are not supported, and that disabling POP, IMAP and SMTP is the only way to fully secure the mailbox with 2FA. Two practical consequences. First, having 2FA on does not stop MCP Emails connecting: the mailbox password still authenticates over IMAP. Second, if you have deliberately disabled the IMAP protocol on the mailbox in order to make that 2FA meaningful, no client can connect until you re-enable it."
+      "p": "If you turned on two-factor authentication for a Gandi mailbox, it applies to the SOGo and Roundcube webmail portals and nowhere else. Gandi's documentation says directly that 2FA can only be used through its webmail portals and that email clients such as Thunderbird or Outlook are not supported, and that disabling POP, IMAP and SMTP is the only way to fully secure the mailbox with 2FA. Two practical consequences. First, having 2FA on does not stop MCPEmails connecting: the mailbox password still authenticates over IMAP. Second, if you have deliberately disabled the IMAP protocol on the mailbox in order to make that 2FA meaningful, no client can connect until you re-enable it."
     },
     {
       "h": "Free mailboxes ended in 2023, and old addresses may simply be gone",
@@ -69,7 +69,7 @@
   "faq": [
     {
       "q": "Does Claude work with Gandi Mail?",
-      "a": "Not on its own. Claude has no built-in Gandi connector. Pointing an MCP server such as MCP Emails at your Gandi mailbox over IMAP gives Claude read, search, send, reply, schedule and organize access to it, and the same connection works from Cursor, ChatGPT and other MCP clients."
+      "a": "Not on its own. Claude has no built-in Gandi connector. Pointing an MCP server such as MCPEmails at your Gandi mailbox over IMAP gives Claude read, search, send, reply, schedule and organize access to it, and the same connection works from Cursor, ChatGPT and other MCP clients."
     },
     {
       "q": "What are the Gandi IMAP and SMTP settings?",

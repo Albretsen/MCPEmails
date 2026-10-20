@@ -3,7 +3,7 @@ const translation = {
   description:
     'Kjør postkassene for jobb, privat og bijobb gjennom én AI-agent: hvordan den finner postkassene, hvordan du avgrenser en forespørsel, avsendernavn som forblir riktige, og godkjenning av sending per postkasse.',
   coverAlt:
-    'Én AI-agent koblet til e-postkontoer for jobb, privat og bijobb med MCP Emails',
+    'Én AI-agent koblet til e-postkontoer for jobb, privat og bijobb med MCPEmails',
   content: `Nesten ingen har bare én postkasse. Du har en jobbadresse, en privat adresse og minst én til for en bijobb eller et domene du fortsatt eier. Hvert spørsmål som krysser to kontoer, blir et manuelt søk to steder.
 
 Én AI-agent på tvers av alle sammen fjerner vekslingen, men bare hvis agenten vet hvilken postkasse som er hvilken, og svarene går ut fra riktig adresse.
@@ -48,7 +48,7 @@ Ett felt gjør tre jobber. Hver postkasse har et visningsnavn: det er **Etikette
 Du kan sende fra et alias, men bare fra adresser du har vist at er dine:
 
 - Din egen tilkoblede adresse fungerer alltid som From-verdi, hos alle leverandører.
-- På en IMAP-postkasse (iCloud, Yahoo, Gmail tilkoblet med app-passord, hvilken som helst SMTP-server) fungerer en **annen** adresse så snart den er verifisert. Legg den til i postkassens innstillinger i dashbordet, og skriv inn koden MCP Emails sender til den adressen. Verifiserte adresser er oppført under \`sender_identities\` i den postkassens \`inbox_list\`-oppføring.
+- På en IMAP-postkasse (iCloud, Yahoo, Gmail tilkoblet med app-passord, hvilken som helst SMTP-server) fungerer en **annen** adresse så snart den er verifisert. Legg den til i postkassens innstillinger i dashbordet, og skriv inn koden MCPEmails sender til den adressen. Verifiserte adresser er oppført under \`sender_identities\` i den postkassens \`inbox_list\`-oppføring.
 - Outlook sender fra den tilkoblede adressen.
 - En From-adresse som ikke er verifisert for postkassen, blir avvist i stedet for stilltiende omskrevet.
 

@@ -20,7 +20,7 @@
     "titleLine1": "Connect DreamHost email to Claude,",
     "titleLine2": "Cursor, ChatGPT, any MCP client",
     "lead": "Give your AI agent a real DreamHost inbox. Read, search, send, reply, schedule and organize mail over IMAP with the mail user password from the DreamHost panel.",
-    "answer": "Claude cannot reach a DreamHost mailbox on its own. MCP Emails is a hosted MCP server that connects it over IMAP at imap.dreamhost.com on port 993, authenticating with your full email address and that address's mail user password, which DreamHost keeps separate from the panel password you log in with. Claude, Cursor or any MCP client can then read, search, send and organize the mail. There is no app password and no IMAP switch to enable. One inbox is free, forever.",
+    "answer": "Claude cannot reach a DreamHost mailbox on its own. MCPEmails is a hosted MCP server that connects it over IMAP at imap.dreamhost.com on port 993, authenticating with your full email address and that address's mail user password, which DreamHost keeps separate from the panel password you log in with. Claude, Cursor or any MCP client can then read, search, send and organize the mail. There is no app password and no IMAP switch to enable. One inbox is free, forever.",
     "meta0": "1 inbox free, forever",
     "meta1": "Mail user password, not the panel login",
     "meta2": "Email fetched live, never stored"
@@ -31,7 +31,7 @@
   },
   "setup": [
     {
-      "h": "Create your free MCP Emails account",
+      "h": "Create your free MCPEmails account",
       "p": "Sign up at mcpemails.com. The free plan connects one inbox forever and does not ask for a card."
     },
     {
@@ -39,7 +39,7 @@
       "p": "Sign in to the DreamHost panel, open Mail, then Manage Email, find the address and click Manage. Scroll to the Change Password section and either generate one or set your own. DreamHost documents that this cannot be done from inside webmail: you must use the panel or the separate mailboxes interface."
     },
     {
-      "h": "Paste it into MCP Emails",
+      "h": "Paste it into MCPEmails",
       "p": "Choose IMAP / SMTP, enter the full address, and paste the mail user password. The hosts imap.dreamhost.com and smtp.dreamhost.com and ports 993 and 465 are prefilled and were verified from a live TLS connection."
     },
     {
@@ -58,7 +58,7 @@
     },
     {
       "h": "The short username works often enough to be a trap",
-      "p": "DreamHost's own guidance notes that a client may need the full email address to connect but that very often only the part before the at sign is needed. That ambiguity is fine on a single-domain account and becomes a problem the moment two of your domains have an address with the same local part, since the short form no longer identifies one mailbox. Always enter the complete address. MCP Emails sends the full address."
+      "p": "DreamHost's own guidance notes that a client may need the full email address to connect but that very often only the part before the at sign is needed. That ambiguity is fine on a single-domain account and becomes a problem the moment two of your domains have an address with the same local part, since the short form no longer identifies one mailbox. Always enter the complete address. MCPEmails sends the full address."
     }
   ],
   "limits": [
@@ -69,7 +69,7 @@
   "faq": [
     {
       "q": "Does Claude work with DreamHost email?",
-      "a": "Not on its own. Claude has no built-in DreamHost connector. Pointing an MCP server such as MCP Emails at your DreamHost mailbox over IMAP gives Claude read, search, send, reply, schedule and organize access to it, and the same connection works from Cursor, ChatGPT and other MCP clients."
+      "a": "Not on its own. Claude has no built-in DreamHost connector. Pointing an MCP server such as MCPEmails at your DreamHost mailbox over IMAP gives Claude read, search, send, reply, schedule and organize access to it, and the same connection works from Cursor, ChatGPT and other MCP clients."
     },
     {
       "q": "What are the DreamHost IMAP and SMTP settings?",

@@ -11,7 +11,7 @@ const post = {
   updatedAt: '2026-06-23T12:00:00.000Z',
   tags: ['Feature', 'Email', 'Claude', 'MCP'],
   featured: false,
-  content: `When Claude sends an email for you, it should look like you sent it. That includes the sign-off — your name, your title, your company line, that link to your booking page. Until now you either typed your signature into every prompt or accepted mail that ended a little abruptly. Today that changes: **MCP Emails now applies your signature automatically to every message Claude sends.**
+  content: `When Claude sends an email for you, it should look like you sent it. That includes the sign-off — your name, your title, your company line, that link to your booking page. Until now you either typed your signature into every prompt or accepted mail that ended a little abruptly. Today that changes: **MCPEmails now applies your signature automatically to every message Claude sends.**
 
 Signatures are **per-inbox**. Each connected mailbox keeps its own, so the founder hat goes on your work address and a plain "— Sam" goes on your personal one. Once it's set, you never think about it again.
 
@@ -28,17 +28,17 @@ There's nothing extra to say in your prompt. "Reply to Dana and tell her the dec
 
 ## Replies and forwards get it right
 
-The fiddly part of signatures is placement, and that's where most tools fall down. On a reply or forward, MCP Emails puts your signature **after your new text and before the quoted thread** — exactly where a person would put it — instead of stranding it at the very bottom under pages of history.
+The fiddly part of signatures is placement, and that's where most tools fall down. On a reply or forward, MCPEmails puts your signature **after your new text and before the quoted thread** — exactly where a person would put it — instead of stranding it at the very bottom under pages of history.
 
 It's also smart about back-and-forth. There's a **reply mode** so the signature isn't repeated every time Claude answers within the same thread. The first reply is signed; the rapid follow-ups in that conversation aren't stacked with duplicate sign-offs. You get clean threads, not a wall of repeated names.
 
 ## Works on every provider
 
-This isn't a Gmail-only nicety. Signatures apply on **all** connected providers — Gmail, Outlook, Fastmail, iCloud, and any other IMAP account. Because MCP Emails composes the outgoing message itself, the behavior is identical no matter where the mailbox lives. Connect a new inbox of any kind and signatures just work.
+This isn't a Gmail-only nicety. Signatures apply on **all** connected providers — Gmail, Outlook, Fastmail, iCloud, and any other IMAP account. Because MCPEmails composes the outgoing message itself, the behavior is identical no matter where the mailbox lives. Connect a new inbox of any kind and signatures just work.
 
 ## Two ways to set it up
 
-**1. The signature editor in the dashboard.** Open an inbox in the MCP Emails dashboard and edit its signature inline. Each inbox has its own, so you can give every address the right voice.
+**1. The signature editor in the dashboard.** Open an inbox in the MCPEmails dashboard and edit its signature inline. Each inbox has its own, so you can give every address the right voice.
 
 **2. Just ask Claude.** There's a new \`signature\` tool, so you can set or change your signature in plain language without leaving the chat:
 
@@ -67,7 +67,7 @@ Per inbox. Every connected mailbox has its own signature, so you can sign your w
 Yes. It's placed after your new text and before the quoted thread, and reply mode keeps it from repeating across a back-and-forth in the same thread.
 
 **Which providers support signatures?**
-All of them — Gmail, Outlook, Fastmail, iCloud, and any other IMAP account. MCP Emails composes the outgoing message, so behavior is the same everywhere.
+All of them — Gmail, Outlook, Fastmail, iCloud, and any other IMAP account. MCPEmails composes the outgoing message, so behavior is the same everywhere.
 
 **Can I send a message without my signature?**
 Yes. Use the \`include_signature\` option (just tell Claude to skip the signature) for a one-off terse message. Your saved signature stays put for everything else.

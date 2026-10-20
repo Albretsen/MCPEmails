@@ -2,10 +2,10 @@ const translation = {
   title: 'Cómo hacer que tu agente de IA clasifique y resuma tu bandeja de entrada',
   description:
     'Guía práctica para clasificar la bandeja de entrada con un agente de IA: prompts listos para copiar que listan el correo no leído, leen lo importante, resumen y priorizan, y consultan según un horario.',
-  coverAlt: 'Un agente de IA clasifica y resume una bandeja de entrada a través de MCP — MCP Emails',
+  coverAlt: 'Un agente de IA clasifica y resume una bandeja de entrada a través de MCP — MCPEmails',
   content: `La forma más rápida de que un agente de IA clasifique tu bandeja de entrada es apoyarte en dos herramientas en orden: \`inbox_list\` para encontrar tu buzón, y luego \`email_read\` — con \`action: list\` y \`unread: true\` para sacar lo nuevo, y después \`action: read\` para los pocos que parezcan importantes — y luego una instrucción en lenguaje natural para que los resuma y los ordene por prioridad. Ese es todo el bucle. Si quieres que redacte o envíe respuestas, añades \`email_compose\` con \`action: reply\` al final.
 
-Este artículo te da los prompts exactos que uso, qué aspecto tiene un buen resultado y cómo ejecutar el mismo bucle según un horario para que tu clasificación matinal ocurra antes de que te sientes. Da por hecho que tu agente ya tiene acceso al correo a través de [MCP Emails](/blog/how-to-give-your-ai-agent-email-access). Si todavía no has conectado una bandeja de entrada, la [guía de conexión en menos de dos minutos](/blog/connect-email-to-ai-agent-under-2-minutes) te pone al día primero.
+Este artículo te da los prompts exactos que uso, qué aspecto tiene un buen resultado y cómo ejecutar el mismo bucle según un horario para que tu clasificación matinal ocurra antes de que te sientes. Da por hecho que tu agente ya tiene acceso al correo a través de [MCPEmails](/blog/how-to-give-your-ai-agent-email-access). Si todavía no has conectado una bandeja de entrada, la [guía de conexión en menos de dos minutos](/blog/connect-email-to-ai-agent-under-2-minutes) te pone al día primero.
 
 ## El bucle de clasificación, en una imagen
 
@@ -21,7 +21,7 @@ Los pasos del 1 al 4 son de solo lectura. Si conectaste con una [concesión OAut
 
 ## Prompt 1: el resumen matinal
 
-Empieza sencillo. Este es el que ejecuto casi todos los días. Pégalo en Claude (o en cualquier cliente MCP conectado a MCP Emails) y déjalo trabajar:
+Empieza sencillo. Este es el que ejecuto casi todos los días. Pégalo en Claude (o en cualquier cliente MCP conectado a MCPEmails) y déjalo trabajar:
 
 > Mira mi bandeja de entrada principal. Saca todo lo no leído y dame un resumen agrupado en tres categorías: necesita respuesta hoy, para tu información / puede esperar, y probablemente ruido. Para cada elemento de las dos primeras categorías, dame una línea: de quién viene y qué quiere. No abras nada que no necesite — repasa primero los asuntos y los remitentes, y lee el cuerpo solo cuando el asunto sea ambiguo.
 
@@ -64,7 +64,7 @@ La frase "no según lo escandaloso que sea el remitente" importa. Sin ella, los 
 ...
 \`\`\`
 
-Para este prompt el agente llamará a \`email_read\` con \`action: read\` ocho veces, una por cada elemento del top, porque le pediste que dejara de adivinar. Es el compromiso correcto: unas pocas llamadas extra a cambio de un orden sobre el que puedes actuar. Si el agente sí choca con un límite a mitad de ejecución, MCP Emails devuelve un error reintentable con un valor \`retry_after\` en segundos — un cliente que se porta bien espera ese tiempo y retoma en lugar de aporrear el servidor.
+Para este prompt el agente llamará a \`email_read\` con \`action: read\` ocho veces, una por cada elemento del top, porque le pediste que dejara de adivinar. Es el compromiso correcto: unas pocas llamadas extra a cambio de un orden sobre el que puedes actuar. Si el agente sí choca con un límite a mitad de ejecución, MCPEmails devuelve un error reintentable con un valor \`retry_after\` en segundos — un cliente que se porta bien espera ese tiempo y retoma en lugar de aporrear el servidor.
 
 ## Prompt 3: clasificación que termina en una respuesta
 
@@ -72,13 +72,13 @@ La clasificación vale más cuando cierra asuntos. En cuanto te fíes de los res
 
 > La misma clasificación de siempre. Para cualquier cosa de "necesita respuesta hoy" que pueda responder en dos frases, redacta la respuesta y enséñamela. No la envíes todavía — yo diré "envía la 1 y la 3" o las editaré. Imita mi tono habitual: corto, directo, sin relleno corporativo.
 
-El agente ejecuta el bucle de solo lectura y luego escribe los borradores en línea. Cuando dices "envía la 1 y la 3", llama a \`email_compose\` con \`action: reply\` para esas dos. Las respuestas se encadenan automáticamente: MCP Emails pone por ti las cabeceras \`In-Reply-To\` y \`References\`, así que tu respuesta aterriza en la conversación correcta en vez de empezar una nueva. El correo sale a través de tu propio proveedor (el SMTP de Gmail, Microsoft Graph o el SMTP de tu proveedor), de modo que la entregabilidad y la reputación de tu dominio siguen siendo tuyas. Nada se reenvía desde un dominio de envío compartido.
+El agente ejecuta el bucle de solo lectura y luego escribe los borradores en línea. Cuando dices "envía la 1 y la 3", llama a \`email_compose\` con \`action: reply\` para esas dos. Las respuestas se encadenan automáticamente: MCPEmails pone por ti las cabeceras \`In-Reply-To\` y \`References\`, así que tu respuesta aterriza en la conversación correcta en vez de empezar una nueva. El correo sale a través de tu propio proveedor (el SMTP de Gmail, Microsoft Graph o el SMTP de tu proveedor), de modo que la entregabilidad y la reputación de tu dominio siguen siendo tuyas. Nada se reenvía desde un dominio de envío compartido.
 
 Si quieres dar el siguiente paso y salirte del bucle por completo, eso es otra forma de automatización — consulta [cómo construir un autorespondedor de correo con un agente MCP](/blog/build-email-auto-responder-mcp-agent) para ver las salvaguardas que yo le pondría antes de dejar que un agente envíe sin supervisión.
 
 ## Ejecutar la clasificación según un horario
 
-Aquí está la limitación honesta: MCP es **consulta, no inserción.** MCP Emails no tiene webhooks ni envía eventos iniciados por el servidor. Tu agente no recibe un aviso cuando llega correo. Para hacer clasificación continua, algo tiene que llamar a \`email_read\` con \`action: list\` y \`unread: true\` con un temporizador.
+Aquí está la limitación honesta: MCP es **consulta, no inserción.** MCPEmails no tiene webhooks ni envía eventos iniciados por el servidor. Tu agente no recibe un aviso cuando llega correo. Para hacer clasificación continua, algo tiene que llamar a \`email_read\` con \`action: list\` y \`unread: true\` con un temporizador.
 
 En la práctica eso significa una de dos configuraciones:
 

@@ -21,7 +21,7 @@
     "titleLine1": "Conecta StartMail a Claude,",
     "titleLine2": "Cursor, ChatGPT, cualquier cliente MCP",
     "lead": "Dale a tu agente de IA una bandeja real de StartMail. Lee, busca, envía, responde, programa y organiza correo por IMAP, en todos los clientes MCP y no solo en uno, con una contraseña de dispositivo que puedes revocar por separado.",
-    "answer": "Claude no puede acceder a StartMail por sí solo. MCP Emails es un servidor MCP alojado que lo conecta por IMAP en imap.startmail.com en el puerto 993, y por SMTP en smtp.startmail.com en el puerto 465, para que Claude, Cursor o cualquier cliente MCP pueda leer, buscar, enviar y organizar ese correo. La contraseña de tu cuenta de StartMail no autentica en absoluto un cliente de correo: StartMail emite una contraseña generada distinta para cada dispositivo conectado, desde la sección de dispositivos de confianza de tus ajustes, y la muestra una sola vez. Usa tu dirección de StartMail completa como nombre de usuario y ese valor generado como contraseña. Una bandeja es gratis, para siempre.",
+    "answer": "Claude no puede acceder a StartMail por sí solo. MCPEmails es un servidor MCP alojado que lo conecta por IMAP en imap.startmail.com en el puerto 993, y por SMTP en smtp.startmail.com en el puerto 465, para que Claude, Cursor o cualquier cliente MCP pueda leer, buscar, enviar y organizar ese correo. La contraseña de tu cuenta de StartMail no autentica en absoluto un cliente de correo: StartMail emite una contraseña generada distinta para cada dispositivo conectado, desde la sección de dispositivos de confianza de tus ajustes, y la muestra una sola vez. Usa tu dirección de StartMail completa como nombre de usuario y ese valor generado como contraseña. Una bandeja es gratis, para siempre.",
     "meta0": "1 bandeja gratis, para siempre",
     "meta1": "Contraseña de dispositivo generada, se muestra una vez",
     "meta2": "El correo se obtiene en vivo, nunca se almacena"
@@ -32,7 +32,7 @@
   },
   "setup": [
     {
-      "h": "Crea tu cuenta gratis de MCP Emails",
+      "h": "Crea tu cuenta gratis de MCPEmails",
       "p": "Regístrate en mcpemails.com. El plan gratuito conecta una bandeja, para siempre, sin tarjeta. Al final obtienes una URL MCP y una clave."
     },
     {
@@ -40,7 +40,7 @@
       "p": "Inicia sesión en StartMail en un navegador, abre <b>Settings</b> (ajustes) y ve a la sección <b>trusted devices</b> (dispositivos de confianza), que es donde se gestiona el acceso IMAP. Elige <b>Add device</b> (añadir dispositivo) y ponle un nombre que identifique esta conexión. StartMail genera una contraseña aleatoria y la muestra una vez, así que cópiala antes de cerrar el cuadro de diálogo. Esa sección también controla el acceso IMAP de la cuenta, así que si un inicio de sesión se rechaza antes incluso de haber usado la contraseña, comprueba ahí que IMAP está activado."
     },
     {
-      "h": "Añade el buzón en MCP Emails",
+      "h": "Añade el buzón en MCPEmails",
       "p": "Elige IMAP / SMTP, escribe tu dirección de StartMail completa como nombre de usuario y pega la contraseña de dispositivo generada. Usa el mismo valor para el correo saliente: StartMail autentica el envío con la credencial del dispositivo, no con la contraseña de tu cuenta. Los servidores vienen rellenados como <code>imap.startmail.com</code> y <code>smtp.startmail.com</code> y se verificaron mediante una conexión TLS real."
     },
     {
@@ -67,14 +67,14 @@
     }
   ],
   "limits": [
-    "Conectar un buzón de StartMail a un cliente de IA implica que ese proveedor de IA lee el contenido de los mensajes con los que trabaja. MCP Emails obtiene el correo en vivo de imap.startmail.com en cada solicitud y no almacena el cuerpo de los mensajes, y las credenciales se cifran en reposo, pero el texto sigue llegando a Claude, Cursor o el cliente que conectes. El alojamiento en Países Bajos de StartMail y su postura contra el rastreo describen a StartMail, y no acompañan a un mensaje cuando llega a un proveedor de IA que conectas tú mismo. Tómalo como una decisión sobre qué correspondencia estás dispuesto a exponer, no como una extensión de la privacidad que contrataste.",
-    "Los mensajes cifrados con PGP son ilegibles para un agente. La gestión de claves de StartMail está en tu cuenta de StartMail y sirve a su propia interfaz web; un cliente IMAP recibe un bloque de texto cifrado armado, y MCP Emails no tiene ninguna clave privada tuya. El agente puede ver el remitente, el asunto y la fecha, y puede archivar o marcar esos hilos, pero no leerlos.",
+    "Conectar un buzón de StartMail a un cliente de IA implica que ese proveedor de IA lee el contenido de los mensajes con los que trabaja. MCPEmails obtiene el correo en vivo de imap.startmail.com en cada solicitud y no almacena el cuerpo de los mensajes, y las credenciales se cifran en reposo, pero el texto sigue llegando a Claude, Cursor o el cliente que conectes. El alojamiento en Países Bajos de StartMail y su postura contra el rastreo describen a StartMail, y no acompañan a un mensaje cuando llega a un proveedor de IA que conectas tú mismo. Tómalo como una decisión sobre qué correspondencia estás dispuesto a exponer, no como una extensión de la privacidad que contrataste.",
+    "Los mensajes cifrados con PGP son ilegibles para un agente. La gestión de claves de StartMail está en tu cuenta de StartMail y sirve a su propia interfaz web; un cliente IMAP recibe un bloque de texto cifrado armado, y MCPEmails no tiene ninguna clave privada tuya. El agente puede ver el remitente, el asunto y la fecha, y puede archivar o marcar esos hilos, pero no leerlos.",
     "El servidor SMTP de StartMail anuncia un límite de tamaño de mensaje de unos 37 MB, inferior al de la mayoría de los proveedores de aquí. Un adjunto grande que un agente intente enviar se rechaza en el envío en lugar de devolverse más tarde, así que usa un enlace para cualquier cosa de cierto tamaño."
   ],
   "faq": [
     {
       "q": "¿Funciona Claude con StartMail?",
-      "a": "No directamente. Claude no tiene un conector de StartMail integrado y no puede hablar IMAP por sí mismo. Conectar un servidor MCP como MCP Emails a tu buzón de StartMail le da a Claude acceso por IMAP para leer, buscar, enviar, responder, programar y organizar, y la misma conexión funciona después en Cursor, ChatGPT y otros clientes MCP sin volver a configurarla."
+      "a": "No directamente. Claude no tiene un conector de StartMail integrado y no puede hablar IMAP por sí mismo. Conectar un servidor MCP como MCPEmails a tu buzón de StartMail le da a Claude acceso por IMAP para leer, buscar, enviar, responder, programar y organizar, y la misma conexión funciona después en Cursor, ChatGPT y otros clientes MCP sin volver a configurarla."
     },
     {
       "q": "¿Cuáles son los ajustes IMAP y SMTP de StartMail?",
@@ -90,7 +90,7 @@
     },
     {
       "q": "¿Puede mi IA leer mis mensajes de StartMail cifrados con PGP?",
-      "a": "No. Un mensaje cifrado con tu clave OpenPGP llega por IMAP como texto cifrado, y MCP Emails nunca recibe tu clave privada. Esos mensajes siguen siendo legibles en la propia interfaz de StartMail, donde está la gestión de claves. Tu agente puede ordenarlos, marcarlos y archivarlos, y puede leer todo lo que llegó sin cifrar."
+      "a": "No. Un mensaje cifrado con tu clave OpenPGP llega por IMAP como texto cifrado, y MCPEmails nunca recibe tu clave privada. Esos mensajes siguen siendo legibles en la propia interfaz de StartMail, donde está la gestión de claves. Tu agente puede ordenarlos, marcarlos y archivarlos, y puede leer todo lo que llegó sin cifrar."
     },
     {
       "q": "¿Se almacena mi correo de StartMail en sus servidores?",

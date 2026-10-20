@@ -212,7 +212,7 @@
       },
       {
         "q": "Kan jeg selvhoste den i stedet for å betale?",
-        "a": "Ja. MCP Emails er åpen kildekode under AGPL-3.0 og gratis å selvhoste. En docker-compose-stack kjører den samme MCP-serveren, med legitimasjonen til postkassen din kryptert under en nøkkel bare du har. Selvhosting dekker IMAP- og SMTP-postkasser. Gmail- og Outlook-innlogging (OAuth) og dashboardet finnes på den hostede tjenesten, der de fungerer på alle planer, også Gratis; medlemmer og roller hører til Business, og e-poststøtte følger med alle betalte planer."
+        "a": "Ja. MCPEmails er åpen kildekode under AGPL-3.0 og gratis å selvhoste. En docker-compose-stack kjører den samme MCP-serveren, med legitimasjonen til postkassen din kryptert under en nøkkel bare du har. Selvhosting dekker IMAP- og SMTP-postkasser. Gmail- og Outlook-innlogging (OAuth) og dashboardet finnes på den hostede tjenesten, der de fungerer på alle planer, også Gratis; medlemmer og roller hører til Business, og e-poststøtte følger med alle betalte planer."
       }
     ]
   },

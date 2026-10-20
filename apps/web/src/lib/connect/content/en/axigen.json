@@ -21,8 +21,8 @@
     "eyebrow": "Axigen + AI",
     "titleLine1": "Connect an Axigen mailbox",
     "titleLine2": "to Claude, Cursor and ChatGPT",
-    "lead": "You run the mail server, so the settings are yours to check rather than to look up. Point MCP Emails at your Axigen host and Claude can read, search, send, reply, schedule and file mail in the accounts you already administer.",
-    "answer": "Claude cannot reach an Axigen server on its own. MCP Emails is a hosted MCP server that connects to your Axigen install over IMAP at your own hostname, normally on port 993 with implicit TLS, authenticating with the account password Axigen already accepts from any mail client, so Claude, Cursor or any MCP client can read, search, send and organize that mail. There is no shared hostname to publish: the host is whatever your server answers to, it has to be reachable from the public internet, and the listener on 993 has to be serving a certificate that validates for that name. One inbox is free.",
+    "lead": "You run the mail server, so the settings are yours to check rather than to look up. Point MCPEmails at your Axigen host and Claude can read, search, send, reply, schedule and file mail in the accounts you already administer.",
+    "answer": "Claude cannot reach an Axigen server on its own. MCPEmails is a hosted MCP server that connects to your Axigen install over IMAP at your own hostname, normally on port 993 with implicit TLS, authenticating with the account password Axigen already accepts from any mail client, so Claude, Cursor or any MCP client can read, search, send and organize that mail. There is no shared hostname to publish: the host is whatever your server answers to, it has to be reachable from the public internet, and the listener on 993 has to be serving a certificate that validates for that name. One inbox is free.",
     "meta0": "1 inbox free, forever",
     "meta1": "The account password from WebAdmin",
     "meta2": "Email fetched live, never stored"
@@ -33,7 +33,7 @@
   },
   "setup": [
     {
-      "h": "Create your free MCP Emails account",
+      "h": "Create your free MCPEmails account",
       "p": "Sign up at mcpemails.com. The free plan connects one inbox forever and does not ask for a card, which is enough to test this against a real account on your own server."
     },
     {
@@ -42,7 +42,7 @@
     },
     {
       "h": "Confirm the account may use IMAP, then add it",
-      "p": "Under Domains and Accounts, open the account or the account class it belongs to and check that IMAP is among the services it is allowed. Then add the inbox in MCP Emails: choose IMAP / SMTP, enter your Axigen hostname, the full account address and its password."
+      "p": "Under Domains and Accounts, open the account or the account class it belongs to and check that IMAP is among the services it is allowed. Then add the inbox in MCPEmails: choose IMAP / SMTP, enter your Axigen hostname, the full account address and its password."
     },
     {
       "h": "Paste the MCP URL into your AI",
@@ -64,14 +64,14 @@
     }
   ],
   "limits": [
-    "Axigen binds each listener to an address, so reaching the server from a hosted MCP service means having an IMAP listener on an address the internet can route to. Where policy says mail never leaves the internal network, that policy wins and this hosted service is the wrong shape for you. MCP Emails can be self-hosted instead, connecting to the same internal listener your desktop clients already use.",
+    "Axigen binds each listener to an address, so reaching the server from a hosted MCP service means having an IMAP listener on an address the internet can route to. Where policy says mail never leaves the internal network, that policy wins and this hosted service is the wrong shape for you. MCPEmails can be self-hosted instead, connecting to the same internal listener your desktop clients already use.",
     "TLS validation is strict and there is no override. A self-signed certificate, an expired one, or one issued for a different name than the host you enter will be refused.",
     "Outbound mail leaves through your own Axigen SMTP service, so deliverability is governed by your SPF, DKIM and DMARC records and the reputation of your sending address."
   ],
   "faq": [
     {
       "q": "Does Claude work with Axigen?",
-      "a": "Not on its own. Claude has no Axigen connector and cannot open an IMAP socket to a server you operate. Connecting an MCP server such as MCP Emails to your Axigen host gives Claude read, search, send, reply, schedule and organize access to an account on it, and the same inbox then works from Cursor or ChatGPT as well."
+      "a": "Not on its own. Claude has no Axigen connector and cannot open an IMAP socket to a server you operate. Connecting an MCP server such as MCPEmails to your Axigen host gives Claude read, search, send, reply, schedule and organize access to an account on it, and the same inbox then works from Cursor or ChatGPT as well."
     },
     {
       "q": "What are the Axigen IMAP and SMTP settings?",
@@ -96,6 +96,6 @@
   ],
   "ctaBand": {
     "title": "Give your AI an Axigen inbox",
-    "sub": "Point MCP Emails at your own Axigen host. One inbox free forever, no card required."
+    "sub": "Point MCPEmails at your own Axigen host. One inbox free forever, no card required."
   }
 }

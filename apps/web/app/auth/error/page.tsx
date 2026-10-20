@@ -2,7 +2,7 @@ import type { Metadata } from 'next';
 import { AuthErrorApp } from '../../../components/auth/AuthErrorApp';
 
 export const metadata: Metadata = {
-  title: 'Sign-in error · MCP Emails',
+  title: 'Sign-in error',
   description: 'Something went wrong during sign-in',
 };
 

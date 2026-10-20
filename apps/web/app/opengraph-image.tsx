@@ -2,7 +2,7 @@ import { ImageResponse } from 'next/og';
 
 // Route segment config. No `runtime = 'edge'`: on the edge runtime the image
 // rendered on every request (643 ms, max-age=0). On Node it prerenders at build.
-export const alt = 'MCP Emails: Give your AI agent an inbox';
+export const alt = 'MCPEmails: Give your AI agent an inbox';
 export const size = { width: 1200, height: 630 };
 export const contentType = 'image/png';
 
@@ -16,7 +16,7 @@ const INK_700 = '#2F3447'; // --fg-2
 const INK_200 = '#DEE1EB'; // dot-grid color
 const SURFACE = '#FFFFFF'; // --bg-surface
 
-// The MCP Emails envelope mark (matches public/logo-mark.svg) sized for the card.
+// The MCPEmails envelope mark (matches public/logo-mark.svg) sized for the card.
 function LogoMark({ scale = 1 }: { scale?: number }) {
   const s = 48 * scale;
   return (

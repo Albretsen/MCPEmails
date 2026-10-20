@@ -19,7 +19,7 @@
     "titleLine1": "Connectez votre boîte o2.pl",
     "titleLine2": "à Claude, Cursor, tout client MCP",
     "lead": "Offrez à votre agent IA une vraie boîte o2.pl. Lisez, recherchez, envoyez, répondez, planifiez et organisez le courrier en IMAP, une fois IMAP activé dans les options de la boîte.",
-    "answer": "Claude ne peut pas atteindre une boîte o2.pl tout seul. MCP Emails est un serveur MCP hébergé qui s'y connecte en IMAP sur poczta.o2.pl, port 993, pour que Claude, Cursor ou tout client MCP puisse lire, rechercher, envoyer et organiser le courrier. o2.pl est livré avec l'accès des programmes de messagerie fermé : vous l'ouvrez dans le webmail sous Opcje, onglet IMAP/POP. Si la connexion en deux étapes est activée sur le compte, vous vous authentifiez avec un hasło do programu pocztowego créé à cet effet plutôt qu'avec votre mot de passe du navigateur. Une boîte est gratuite, pour toujours.",
+    "answer": "Claude ne peut pas atteindre une boîte o2.pl tout seul. MCPEmails est un serveur MCP hébergé qui s'y connecte en IMAP sur poczta.o2.pl, port 993, pour que Claude, Cursor ou tout client MCP puisse lire, rechercher, envoyer et organiser le courrier. o2.pl est livré avec l'accès des programmes de messagerie fermé : vous l'ouvrez dans le webmail sous Opcje, onglet IMAP/POP. Si la connexion en deux étapes est activée sur le compte, vous vous authentifiez avec un hasło do programu pocztowego créé à cet effet plutôt qu'avec votre mot de passe du navigateur. Une boîte est gratuite, pour toujours.",
     "meta0": "1 boîte gratuite, pour toujours",
     "meta1": "Activez d'abord IMAP sous Opcje",
     "meta2": "E-mails récupérés en direct, jamais stockés"
@@ -30,7 +30,7 @@
   },
   "setup": [
     {
-      "h": "Créez votre compte MCP Emails gratuit",
+      "h": "Créez votre compte MCPEmails gratuit",
       "p": "Inscrivez-vous sur mcpemails.com. L'offre gratuite connecte une boîte pour toujours et ne demande pas de carte bancaire."
     },
     {
@@ -39,10 +39,10 @@
     },
     {
       "h": "Si la connexion en deux étapes est activée, créez un mot de passe de programme de messagerie",
-      "p": "o2 indique qu'avec la double authentification activée, vous ne devez pas utiliser le mot de passe saisi dans le navigateur. Vous créez à la place un <b>hasło do programu pocztowego</b>, un mot de passe dédié pour chaque client externe utilisant IMAP ou POP3. C'est la valeur dont MCP Emails a besoin. Si la connexion en deux étapes est désactivée, votre mot de passe de compte habituel fonctionne tel quel."
+      "p": "o2 indique qu'avec la double authentification activée, vous ne devez pas utiliser le mot de passe saisi dans le navigateur. Vous créez à la place un <b>hasło do programu pocztowego</b>, un mot de passe dédié pour chaque client externe utilisant IMAP ou POP3. C'est la valeur dont MCPEmails a besoin. Si la connexion en deux étapes est désactivée, votre mot de passe de compte habituel fonctionne tel quel."
     },
     {
-      "h": "Collez-le dans MCP Emails, puis collez l'URL MCP dans votre IA",
+      "h": "Collez-le dans MCPEmails, puis collez l'URL MCP dans votre IA",
       "p": "Choisissez IMAP / SMTP, saisissez l'adresse complète, par exemple nazwa@o2.pl, et collez le mot de passe. Les serveurs et ports sont préremplis et ont été vérifiés par une connexion TLS réelle. Mettez ensuite https://mcpemails.com/api/mcp dans Claude, Cursor ou ChatGPT, autorisez, et votre agent a la boîte."
     }
   ],
@@ -57,7 +57,7 @@
     },
     {
       "h": "Pas de SASL-IR : un client qui le suppose reçoit un BAD inexpliqué",
-      "p": "La bannière IMAP d'o2 est minimale (<code>* OK IMAP4 ready</code>) et annonce <code>AUTH=PLAIN</code> sans <code>SASL-IR</code>. Les clients qui envoient l'identifiant en une seule étape avec <code>AUTHENTICATE</code> sont refusés avec un simple <code>BAD</code> qui ressemble à de mauvais identifiants. MCP Emails bascule automatiquement sur l'échange en deux étapes. Bon à savoir, car c'est la raison pour laquelle des outils IMAP génériques signalent parfois o2.pl comme injoignable alors que le compte fonctionne parfaitement."
+      "p": "La bannière IMAP d'o2 est minimale (<code>* OK IMAP4 ready</code>) et annonce <code>AUTH=PLAIN</code> sans <code>SASL-IR</code>. Les clients qui envoient l'identifiant en une seule étape avec <code>AUTHENTICATE</code> sont refusés avec un simple <code>BAD</code> qui ressemble à de mauvais identifiants. MCPEmails bascule automatiquement sur l'échange en deux étapes. Bon à savoir, car c'est la raison pour laquelle des outils IMAP génériques signalent parfois o2.pl comme injoignable alors que le compte fonctionne parfaitement."
     },
     {
       "h": "MOVE fonctionne ici, mais les dossiers sont toujours reconnus par leur nom",
@@ -71,7 +71,7 @@
   "faq": [
     {
       "q": "Claude fonctionne-t-il avec la messagerie o2.pl ?",
-      "a": "Pas tout seul. Claude n'a pas de connecteur o2.pl intégré. Pointer un serveur MCP comme MCP Emails vers la boîte en IMAP donne à Claude un accès en lecture, recherche, envoi, réponse, planification et organisation, et la même connexion fonctionne ensuite depuis Cursor, ChatGPT et d'autres clients MCP."
+      "a": "Pas tout seul. Claude n'a pas de connecteur o2.pl intégré. Pointer un serveur MCP comme MCPEmails vers la boîte en IMAP donne à Claude un accès en lecture, recherche, envoi, réponse, planification et organisation, et la même connexion fonctionne ensuite depuis Cursor, ChatGPT et d'autres clients MCP."
     },
     {
       "q": "Quels sont les réglages IMAP et SMTP d'o2.pl ?",

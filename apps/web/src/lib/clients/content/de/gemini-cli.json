@@ -71,7 +71,7 @@
     },
     {
       "q": "Ist das derselbe Gmail-MCP-Server, den Google veröffentlicht?",
-      "a": "Nein. Google veröffentlicht einen Workspace-MCP-Server, der Gmail neben seinen anderen Diensten abdeckt, und für Gmail allein in einem reinen Google-Workflow ist das der kürzere Weg. MCP Emails ist für den Fall gedacht, dass nicht alle Postfächer bei Google liegen und dieselbe URL auch in Claude, Cursor und ChatGPT funktionieren muss."
+      "a": "Nein. Google veröffentlicht einen Workspace-MCP-Server, der Gmail neben seinen anderen Diensten abdeckt, und für Gmail allein in einem reinen Google-Workflow ist das der kürzere Weg. MCPEmails ist für den Fall gedacht, dass nicht alle Postfächer bei Google liegen und dieselbe URL auch in Claude, Cursor und ChatGPT funktionieren muss."
     },
     {
       "q": "Welche Postfächer erreicht Gemini CLI auf diesem Weg?",

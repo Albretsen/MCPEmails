@@ -1,11 +1,11 @@
 {
   "meta": {
-    "title": "Kjør MCP Emails selv",
+    "title": "Kjør MCPEmails selv",
     "description": "Kjør den samme MCP-e-postserveren som driver mcpemails.com på din egen maskin. Åpen kildekode under AGPL-3.0, legitimasjon kryptert med en nøkkel bare du har, e-post hentet i sanntid og aldri lagret."
   },
   "hero": {
     "eyebrow": "Åpen kildekode, AGPL-3.0",
-    "title": "Kjør MCP Emails selv.",
+    "title": "Kjør MCPEmails selv.",
     "lead": "Den samme MCP-serveren som driver mcpemails.com, på din egen maskin, mot din egen database. Legitimasjonen til postkassen din forlater aldri infrastruktur du kontrollerer. Den krypteres med en nøkkel bare du har, og dekrypteres kun i din egen container, i det øyeblikket et verktøykall trenger den."
   },
   "proof": {

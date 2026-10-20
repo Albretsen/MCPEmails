@@ -84,7 +84,7 @@ test('every locale has the same keys, filled, and actually translated', () => {
         assert.ok(v.trim().length > 0, `${locale} ${key} is empty`);
         assert.ok(!EM_DASH.test(v), `${locale} ${key} has an em dash`);
         assert.ok(!/</.test(stripTags(v)), `${locale} ${key} has a stray angle bracket`);
-        assert.ok(!/mcpemails(?!\.com)/i.test(v), `${locale} ${key}: the brand is "MCP Emails"`);
+        assert.ok(!/[Mm]cpemails(?!\.com)|MCP[ -]Emails/.test(v), `${locale} ${key}: the brand is "MCPEmails"`);
         assert.ok(!/\{(?!provider\})/.test(v), `${locale} ${key}: unexpected brace`);
       }
       if (locale !== 'en' && key !== 'eyebrow') {

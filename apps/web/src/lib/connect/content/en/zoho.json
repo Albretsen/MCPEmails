@@ -23,23 +23,23 @@
     "meta0": "1 inbox free, forever",
     "meta1": "Account or app password, no OAuth setup",
     "meta2": "Email fetched live, never stored",
-    "answer": "Claude cannot reach Zoho Mail on its own. MCP Emails is a hosted MCP server that connects it over IMAP at imap.zoho.com on port 993, so Claude, Cursor or any MCP client can read, search, send and organize that mail. Two things have to be right first: IMAP access is switched off on a new Zoho mailbox until you enable it, and the hostname follows your Zoho data centre, so an account created in the EU or India uses a different one. One inbox is free, forever."
+    "answer": "Claude cannot reach Zoho Mail on its own. MCPEmails is a hosted MCP server that connects it over IMAP at imap.zoho.com on port 993, so Claude, Cursor or any MCP client can read, search, send and organize that mail. Two things have to be right first: IMAP access is switched off on a new Zoho mailbox until you enable it, and the hostname follows your Zoho data centre, so an account created in the EU or India uses a different one. One inbox is free, forever."
   },
   "method": {
     "title": "How Zoho connects: IMAP and a password",
-    "body": "Zoho Mail connects over IMAP/SMTP. Enable IMAP access in Zoho first (it is off by default), then paste your Zoho address and password into MCP Emails. If you use two-factor authentication, federated sign-in or SAML, generate an application-specific password and use that instead. MCP Emails supports every Zoho data-center region."
+    "body": "Zoho Mail connects over IMAP/SMTP. Enable IMAP access in Zoho first (it is off by default), then paste your Zoho address and password into MCPEmails. If you use two-factor authentication, federated sign-in or SAML, generate an application-specific password and use that instead. MCPEmails supports every Zoho data-center region."
   },
   "setup": [
     {
       "h": "Create a free account",
-      "p": "Sign up for MCP Emails, no card required. The free plan connects one inbox, forever."
+      "p": "Sign up for MCPEmails, no card required. The free plan connects one inbox, forever."
     },
     {
       "h": "Enable IMAP, and create an app password if needed",
       "p": "In Zoho Mail, turn on IMAP access (Settings, Mail Accounts, IMAP Access). If you use two-factor authentication, federated sign-in or SAML, generate an application-specific password in Zoho Account, Security."
     },
     {
-      "h": "Paste it into MCP Emails",
+      "h": "Paste it into MCPEmails",
       "p": "Add your Zoho address and the password, and pick your Zoho region if asked, to connect the inbox securely."
     },
     {
@@ -73,7 +73,7 @@
   "faq": [
     {
       "q": "Does Claude work with Zoho Mail?",
-      "a": "Not on its own. Claude has no built-in Zoho connector. Connecting an MCP server such as MCP Emails to your Zoho mailbox over IMAP gives Claude read, search, send, reply, schedule and organize access to it, and the same connection works from Cursor, ChatGPT and other MCP clients. You have to enable IMAP access on the mailbox first."
+      "a": "Not on its own. Claude has no built-in Zoho connector. Connecting an MCP server such as MCPEmails to your Zoho mailbox over IMAP gives Claude read, search, send, reply, schedule and organize access to it, and the same connection works from Cursor, ChatGPT and other MCP clients. You have to enable IMAP access on the mailbox first."
     },
     {
       "q": "What are the Zoho Mail IMAP and SMTP settings?",

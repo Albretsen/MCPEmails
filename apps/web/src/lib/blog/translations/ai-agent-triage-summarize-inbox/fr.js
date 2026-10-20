@@ -2,10 +2,10 @@ const translation = {
   title: 'Comment faire trier et résumer votre boîte de réception par votre agent IA',
   description:
     'Un guide pratique pour le tri de la boîte de réception par un agent IA : des prompts prêts à copier-coller pour lister le courrier non lu, lire l’essentiel, résumer, prioriser et interroger à intervalle régulier.',
-  coverAlt: 'Un agent IA trie et résume une boîte de réception via MCP — MCP Emails',
+  coverAlt: 'Un agent IA trie et résume une boîte de réception via MCP — MCPEmails',
   content: `Le moyen le plus rapide d’amener un agent IA à trier votre boîte de réception est de vous appuyer sur deux outils dans l’ordre : \`inbox_list\` pour trouver votre boîte aux lettres, puis \`email_read\` — avec \`action: list\` et \`unread: true\` pour récupérer les nouveautés, puis \`action: read\` pour la poignée de messages qui semblent importants — puis une instruction en langage clair pour les résumer et les classer. Voilà toute la boucle. Si vous voulez qu’il rédige ou envoie des réponses, vous ajoutez \`email_compose\` avec \`action: reply\` à la fin.
 
-Cet article vous donne les prompts exacts que j’utilise, ce à quoi ressemble une bonne sortie, et comment exécuter la même boucle de façon planifiée pour que votre tri matinal soit fait avant même que vous ne vous installiez. Il suppose que votre agent a déjà accès à votre messagerie via [MCP Emails](/blog/how-to-give-your-ai-agent-email-access). Si vous n’avez pas encore connecté de boîte, le [guide de connexion en moins de deux minutes](/blog/connect-email-to-ai-agent-under-2-minutes) vous y amène d’abord.
+Cet article vous donne les prompts exacts que j’utilise, ce à quoi ressemble une bonne sortie, et comment exécuter la même boucle de façon planifiée pour que votre tri matinal soit fait avant même que vous ne vous installiez. Il suppose que votre agent a déjà accès à votre messagerie via [MCPEmails](/blog/how-to-give-your-ai-agent-email-access). Si vous n’avez pas encore connecté de boîte, le [guide de connexion en moins de deux minutes](/blog/connect-email-to-ai-agent-under-2-minutes) vous y amène d’abord.
 
 ## La boucle de tri, en une image
 
@@ -21,7 +21,7 @@ Les étapes 1 à 4 sont en lecture seule. Si vous vous êtes connecté avec [une
 
 ## Prompt 1 : le résumé du matin
 
-Commencez simple. C’est celui que je lance la plupart des jours. Collez-le dans Claude (ou n’importe quel client MCP connecté à MCP Emails) et laissez-le travailler :
+Commencez simple. C’est celui que je lance la plupart des jours. Collez-le dans Claude (ou n’importe quel client MCP connecté à MCPEmails) et laissez-le travailler :
 
 > Regarde ma boîte de réception principale. Récupère tout ce qui n’est pas lu, puis donne-moi un résumé réparti en trois catégories : à répondre aujourd’hui, pour info / peut attendre, et probablement du bruit. Pour chaque élément des deux premières catégories, donne-moi une ligne : de qui ça vient et ce qu’ils veulent. N’ouvre rien dont je n’ai pas besoin — survole d’abord les objets et les expéditeurs, ne lis le corps que quand l’objet est ambigu.
 
@@ -64,7 +64,7 @@ La phrase « pas selon le volume sonore de l’expéditeur » a son importance. 
 ...
 \`\`\`
 
-Pour ce prompt, l’agent appellera \`email_read\` avec \`action: read\` huit fois, une fois par élément du top, parce que vous lui avez demandé d’arrêter de deviner. C’est le bon compromis : quelques appels supplémentaires pour des classements sur lesquels vous pouvez agir. Si l’agent atteint effectivement une limite en cours d’exécution, MCP Emails renvoie une erreur réessayable avec une valeur \`retry_after\` en secondes — un client bien élevé attend ce délai et reprend plutôt que de marteler le serveur.
+Pour ce prompt, l’agent appellera \`email_read\` avec \`action: read\` huit fois, une fois par élément du top, parce que vous lui avez demandé d’arrêter de deviner. C’est le bon compromis : quelques appels supplémentaires pour des classements sur lesquels vous pouvez agir. Si l’agent atteint effectivement une limite en cours d’exécution, MCPEmails renvoie une erreur réessayable avec une valeur \`retry_after\` en secondes — un client bien élevé attend ce délai et reprend plutôt que de marteler le serveur.
 
 ## Prompt 3 : un tri qui se termine par une réponse
 
@@ -72,13 +72,13 @@ Le tri prend plus de valeur quand il boucle les choses. Une fois que vous faites
 
 > Même tri que d’habitude. Pour tout ce qui est dans « à répondre aujourd’hui » et que je peux régler en deux phrases, rédige la réponse et montre-la-moi. N’envoie pas encore — je dirai « envoie 1 et 3 » ou je les modifierai. Reprends mon ton habituel : court, direct, sans remplissage corporate.
 
-L’agent exécute la boucle en lecture seule, puis écrit les brouillons en ligne. Quand vous dites « envoie 1 et 3 », il appelle \`email_compose\` avec \`action: reply\` pour ces deux-là. Les réponses s’insèrent automatiquement dans le fil : MCP Emails définit pour vous les en-têtes \`In-Reply-To\` et \`References\`, de sorte que votre réponse atterrit dans la bonne conversation au lieu d’en démarrer une nouvelle. Le courrier part via votre propre fournisseur (le SMTP de Gmail, Microsoft Graph ou le SMTP de votre fournisseur), de sorte que la délivrabilité et la réputation de votre domaine restent les vôtres. Rien n’est relayé depuis un quelconque domaine d’envoi partagé.
+L’agent exécute la boucle en lecture seule, puis écrit les brouillons en ligne. Quand vous dites « envoie 1 et 3 », il appelle \`email_compose\` avec \`action: reply\` pour ces deux-là. Les réponses s’insèrent automatiquement dans le fil : MCPEmails définit pour vous les en-têtes \`In-Reply-To\` et \`References\`, de sorte que votre réponse atterrit dans la bonne conversation au lieu d’en démarrer une nouvelle. Le courrier part via votre propre fournisseur (le SMTP de Gmail, Microsoft Graph ou le SMTP de votre fournisseur), de sorte que la délivrabilité et la réputation de votre domaine restent les vôtres. Rien n’est relayé depuis un quelconque domaine d’envoi partagé.
 
 Si vous voulez aller plus loin et vous retirer complètement de la boucle, c’est une autre forme d’automatisation — voyez [construire un répondeur automatique avec un agent MCP](/blog/build-email-auto-responder-mcp-agent) pour les garde-fous que je mettrais en place avant de laisser un agent envoyer sans surveillance.
 
 ## Exécuter le tri de façon planifiée
 
-Voici la limite, en toute honnêteté : MCP fonctionne en **interrogation, pas en notification poussée.** MCP Emails n’a pas de webhooks et n’envoie aucun événement initié par le serveur. Votre agent n’est pas prévenu quand un courrier arrive. Pour faire du tri en continu, quelque chose doit appeler \`email_read\` avec \`action: list\` et \`unread: true\` sur une minuterie.
+Voici la limite, en toute honnêteté : MCP fonctionne en **interrogation, pas en notification poussée.** MCPEmails n’a pas de webhooks et n’envoie aucun événement initié par le serveur. Votre agent n’est pas prévenu quand un courrier arrive. Pour faire du tri en continu, quelque chose doit appeler \`email_read\` avec \`action: list\` et \`unread: true\` sur une minuterie.
 
 En pratique, cela signifie l’une de deux configurations :
 

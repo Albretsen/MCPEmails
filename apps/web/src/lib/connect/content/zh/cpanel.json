@@ -22,7 +22,7 @@
     "meta0": "第一个邮箱免费，其余按套餐连接",
     "meta1": "使用邮箱密码，无需 OAuth 配置",
     "meta2": "邮件实时获取，绝不存储",
-    "answer": "Claude 无法自行访问 cPanel 邮箱。MCP Emails 是一个托管 MCP 服务器，使用你的邮箱密码通过 IMAP 与之连接，让 Claude、Cursor 或任意 MCP 客户端都能读取、搜索、发送并整理这些邮件。设置只需几分钟。公司的每个地址（如 info@ 或 sales@）都作为独立邮箱连接：一个邮箱免费，Personal 连接三个，Pro 最多连接 10 个，Business 按需连接更多。"
+    "answer": "Claude 无法自行访问 cPanel 邮箱。MCPEmails 是一个托管 MCP 服务器，使用你的邮箱密码通过 IMAP 与之连接，让 Claude、Cursor 或任意 MCP 客户端都能读取、搜索、发送并整理这些邮件。设置只需几分钟。公司的每个地址（如 info@ 或 sales@）都作为独立邮箱连接：一个邮箱免费，Personal 连接三个，Pro 最多连接 10 个，Business 按需连接更多。"
   },
   "persona": {
     "intro": "在 cPanel 主机上有好几个公司邮箱？",
@@ -36,14 +36,14 @@
   "setup": [
     {
       "h": "创建免费账户",
-      "p": "注册 MCP Emails，无需信用卡。免费套餐可永久连接一个收件箱。"
+      "p": "注册 MCPEmails，无需信用卡。免费套餐可永久连接一个收件箱。"
     },
     {
       "h": "从 cPanel 读取你的设置",
       "p": "在 cPanel 中打开 Email Accounts，点击该邮箱的 Connect Devices。从 Mail Client Manual Settings 中复制安全的 IMAP 和 SMTP 服务器及端口。如果你不知道邮箱密码，可以在同一页面设置一个新密码。"
     },
     {
-      "h": "粘贴到 MCP Emails",
+      "h": "粘贴到 MCPEmails",
       "p": "选择 IMAP / SMTP，填入你的 cPanel 邮箱地址、上方的服务器地址和密码，安全地连接收件箱。"
     },
     {
@@ -72,12 +72,12 @@
   "limits": [
     "我们无法为 cPanel 邮箱预填服务器地址，因为主机名属于你的服务器，而不是某项共用服务。你需要从 Connect Devices 中复制粘贴。",
     "有些主机商在共享套餐上会用防火墙拦截外发提交，或禁用外部 IMAP。即便如此，cPanel 仍会显示这些设置，所以在这种情况下被拒绝，需要去问主机商，而不是设置问题。",
-    "MCP Emails 连接的是邮箱。转发器、别名、自动回复、过滤器和配额仍在 cPanel 中管理，你的 AI 客户端看不到它们。"
+    "MCPEmails 连接的是邮箱。转发器、别名、自动回复、过滤器和配额仍在 cPanel 中管理，你的 AI 客户端看不到它们。"
   ],
   "faq": [
     {
       "q": "Claude 能用于 cPanel 邮箱吗？",
-      "a": "不能直接使用。Claude 没有针对 cPanel 邮件服务器的内置连接器。通过 IMAP 将 MCP Emails 这样的 MCP 服务器连接到邮箱后，Claude 就能读取、搜索、发送、回复、定时和整理其中的邮件，所用凭据与桌面邮件客户端相同，而且同一个连接也可在 Cursor 和 ChatGPT 中使用。"
+      "a": "不能直接使用。Claude 没有针对 cPanel 邮件服务器的内置连接器。通过 IMAP 将 MCPEmails 这样的 MCP 服务器连接到邮箱后，Claude 就能读取、搜索、发送、回复、定时和整理其中的邮件，所用凭据与桌面邮件客户端相同，而且同一个连接也可在 Cursor 和 ChatGPT 中使用。"
     },
     {
       "q": "cPanel 的 IMAP 和 SMTP 设置是什么？",

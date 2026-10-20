@@ -21,7 +21,7 @@
     "titleLine1": "Koble GoDaddy-e-post til Claude,",
     "titleLine2": "Cursor, ChatGPT og enhver MCP-klient",
     "lead": "Gi AI-agenten din en ekte GoDaddy-innboks. Les, søk, send, svar, planlegg og organiser e-post over IMAP, så snart du vet hvilket av GoDaddys mange e-postprodukter adressen din faktisk ligger på.",
-    "answer": "Claude kan ikke nå en GoDaddy-postkasse på egen hånd. MCP Emails er en driftet MCP-server som kobler til GoDaddy Professional Email over IMAP på imap.secureserver.net, port 993, og autentiserer med hele adressen din og postkassens eget e-postpassord, slik at Claude, Cursor eller enhver MCP-klient kan lese, søke i, sende og organisere e-posten. GoDaddy selger mer enn ett e-postprodukt under det samme merkenavnet, og en Microsoft 365-postkasse kjøpt via GoDaddy er en Microsoft-postkasse, som kobles til med Outlook (innlogging med Microsoft) og ikke over IMAP, så sjekk først hvilken du har. Én innboks er gratis, for alltid.",
+    "answer": "Claude kan ikke nå en GoDaddy-postkasse på egen hånd. MCPEmails er en driftet MCP-server som kobler til GoDaddy Professional Email over IMAP på imap.secureserver.net, port 993, og autentiserer med hele adressen din og postkassens eget e-postpassord, slik at Claude, Cursor eller enhver MCP-klient kan lese, søke i, sende og organisere e-posten. GoDaddy selger mer enn ett e-postprodukt under det samme merkenavnet, og en Microsoft 365-postkasse kjøpt via GoDaddy er en Microsoft-postkasse, som kobles til med Outlook (innlogging med Microsoft) og ikke over IMAP, så sjekk først hvilken du har. Én innboks er gratis, for alltid.",
     "meta0": "1 innboks gratis, for alltid",
     "meta1": "Postkassens eget e-postpassord",
     "meta2": "E-post hentes direkte, lagres aldri"
@@ -32,7 +32,7 @@
   },
   "setup": [
     {
-      "h": "Opprett en gratis MCP Emails-konto",
+      "h": "Opprett en gratis MCPEmails-konto",
       "p": "Registrer deg på mcpemails.com. Gratisplanen kobler til én innboks for alltid og krever ikke kort."
     },
     {
@@ -45,13 +45,13 @@
     },
     {
       "h": "Lim MCP-URL-en inn i AI-en",
-      "p": "Legg inn adressen og passordet ditt i MCP Emails, og lim deretter https://mcpemails.com/api/mcp inn i Claude, Cursor eller ChatGPT, autoriser, så har agenten innboksen."
+      "p": "Legg inn adressen og passordet ditt i MCPEmails, og lim deretter https://mcpemails.com/api/mcp inn i Claude, Cursor eller ChatGPT, autoriser, så har agenten innboksen."
     }
   ],
   "gotchas": [
     {
       "h": "En Microsoft 365-postkasse kjøpt fra GoDaddy kobles til med Outlook, ikke IMAP",
-      "p": "GoDaddy videreselger Microsoft 365 og har flyttet sine gamle Workspace Email-kunder over dit, så en stor andel av dem som tror de har «en GoDaddy-e-post», har nå en Microsoft-postkasse med en faktura fra GoDaddy. Disse postkassene ligger ikke på <code>imap.secureserver.net</code>; de ligger på Microsofts servere, så koble dem til med Outlook-valget (innlogging med Microsoft) i stedet for med innstillingene på denne siden. Fordi det er en Microsoft 365-jobbkonto, kan IT-administratoren i organisasjonen din måtte godkjenne MCP Emails én gang først, og dashbordet gir deg en godkjenningslenke du kan sende til vedkommende. Kjennetegnet er enkelt: havner du i Outlook på nettet når du logger inn på webmailen din, er det Microsoft-produktet."
+      "p": "GoDaddy videreselger Microsoft 365 og har flyttet sine gamle Workspace Email-kunder over dit, så en stor andel av dem som tror de har «en GoDaddy-e-post», har nå en Microsoft-postkasse med en faktura fra GoDaddy. Disse postkassene ligger ikke på <code>imap.secureserver.net</code>; de ligger på Microsofts servere, så koble dem til med Outlook-valget (innlogging med Microsoft) i stedet for med innstillingene på denne siden. Fordi det er en Microsoft 365-jobbkonto, kan IT-administratoren i organisasjonen din måtte godkjenne MCPEmails én gang først, og dashbordet gir deg en godkjenningslenke du kan sende til vedkommende. Kjennetegnet er enkelt: havner du i Outlook på nettet når du logger inn på webmailen din, er det Microsoft-produktet."
     },
     {
       "h": "Halvparten av IMAP-veiledningene for GoDaddy på nettet gjelder et produkt som ikke finnes lenger",
@@ -63,7 +63,7 @@
     },
     {
       "h": "GoDaddys IMAP-server annonserer ikke SASL-IR",
-      "p": "IMAP-serveren bak <code>imap.secureserver.net</code> presenterer seg som Fenix og utelater SASL-IR-funksjonen, så den avviser ettrinnsautentiseringen som sender påloggingsopplysningene på samme linje som AUTHENTICATE-kommandoen. Klienter som forutsetter SASL-IR, får et nakent <code>BAD</code> uten forklaring, som ser nøyaktig ut som feil påloggingsopplysninger. MCP Emails oppdager dette og prøver på nytt med totrinnsutvekslingen, så tilkoblingen lykkes, men det er grunnen til at annet IMAP-verktøy feiler mot GoDaddy mens det fungerer andre steder."
+      "p": "IMAP-serveren bak <code>imap.secureserver.net</code> presenterer seg som Fenix og utelater SASL-IR-funksjonen, så den avviser ettrinnsautentiseringen som sender påloggingsopplysningene på samme linje som AUTHENTICATE-kommandoen. Klienter som forutsetter SASL-IR, får et nakent <code>BAD</code> uten forklaring, som ser nøyaktig ut som feil påloggingsopplysninger. MCPEmails oppdager dette og prøver på nytt med totrinnsutvekslingen, så tilkoblingen lykkes, men det er grunnen til at annet IMAP-verktøy feiler mot GoDaddy mens det fungerer andre steder."
     }
   ],
   "limits": [
@@ -74,7 +74,7 @@
   "faq": [
     {
       "q": "Fungerer Claude med GoDaddy-e-post?",
-      "a": "Det fungerer med GoDaddy Professional Email, det Titan-baserte produktet, så snart en MCP-server som MCP Emails er koblet til postkassen over IMAP. Claude har ingen innebygd GoDaddy-kobling. En Microsoft 365-postkasse kjøpt via GoDaddy fungerer også, men den kobles til med Outlook (innlogging med Microsoft) og ikke over IMAP, og en IT-administrator kan måtte godkjenne MCP Emails én gang først."
+      "a": "Det fungerer med GoDaddy Professional Email, det Titan-baserte produktet, så snart en MCP-server som MCPEmails er koblet til postkassen over IMAP. Claude har ingen innebygd GoDaddy-kobling. En Microsoft 365-postkasse kjøpt via GoDaddy fungerer også, men den kobles til med Outlook (innlogging med Microsoft) og ikke over IMAP, og en IT-administrator kan måtte godkjenne MCPEmails én gang først."
     },
     {
       "q": "Hva er IMAP- og SMTP-innstillingene for GoDaddy?",

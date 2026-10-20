@@ -1,14 +1,14 @@
 const translation = {
   title: 'Cómo crear un autorrespondedor de correo con un agente conectado por MCP',
   description: 'Crea un autorrespondedor de correo con un agente de IA conectado por MCP: sondea el correo sin leer, redacta y responde con seguridad usando scopes, límites y guardarraíles.',
-  coverAlt: 'Cómo crear un autorrespondedor de correo con un agente conectado por MCP — MCP Emails',
-  content: `Un autorrespondedor de correo construido sobre MCP Emails es un bucle, no un webhook. No hay eventos iniciados por el servidor, así que tu agente **sondea** el correo sin leer según una programación con \`email_read\` (acción \`list\`), lee cada mensaje con \`email_read\` (acción \`read\`), redacta una respuesta y llama a \`email_compose\` (acción \`reply\`). Este artículo recorre la construcción completa: el bucle de sondeo, los scopes que necesitas, cómo sobrevivir a los límites de tasa y los guardarraíles que evitan que un agente bombardee a tus contactos con respuestas alucinadas.
+  coverAlt: 'Cómo crear un autorrespondedor de correo con un agente conectado por MCP — MCPEmails',
+  content: `Un autorrespondedor de correo construido sobre MCPEmails es un bucle, no un webhook. No hay eventos iniciados por el servidor, así que tu agente **sondea** el correo sin leer según una programación con \`email_read\` (acción \`list\`), lee cada mensaje con \`email_read\` (acción \`read\`), redacta una respuesta y llama a \`email_compose\` (acción \`reply\`). Este artículo recorre la construcción completa: el bucle de sondeo, los scopes que necesitas, cómo sobrevivir a los límites de tasa y los guardarraíles que evitan que un agente bombardee a tus contactos con respuestas alucinadas.
 
 Esto es el extremo avanzado de la historia de [dale acceso al correo a tu agente de IA](/blog/how-to-give-your-ai-agent-email-access). Si solo quieres triaje y resúmenes matutinos sin enviar nada, lee antes [triaje y resumen de bandeja con un agente de IA](/blog/ai-agent-triage-summarize-inbox): es el sitio más seguro para empezar. Vuelve aquí cuando de verdad quieras que el agente le dé a enviar.
 
 ## La parte honesta: no hay webhook
 
-La mayoría de los tutoriales de «autorrespondedor» dan por hecho que un evento push se dispara en el momento en que llega el correo. MCP Emails no funciona así, y tampoco ningún servidor MCP que yo conozca. MCP es un protocolo de herramientas de petición/respuesta. El servidor responde cuando tu agente pregunta; nunca te llama a ti.
+La mayoría de los tutoriales de «autorrespondedor» dan por hecho que un evento push se dispara en el momento en que llega el correo. MCPEmails no funciona así, y tampoco ningún servidor MCP que yo conozca. MCP es un protocolo de herramientas de petición/respuesta. El servidor responde cuando tu agente pregunta; nunca te llama a ti.
 
 Así que un autorrespondedor de verdad es un programador más un sondeo. Ejecutas un tick cada N segundos o minutos, pides los mensajes sin leer y procesas lo que sea nuevo. Eso es todo. Es menos elegante que un webhook, pero es predecible, y significa que *tú* controlas la cadencia y el radio de impacto.
 
@@ -125,7 +125,7 @@ No respondas a todos. Empieza con una lista de permitidos estrecha: un alias de 
 
 ### Mantén a una persona en el bucle, al menos al principio
 
-La versión más segura de esto no es un autorrespondedor en absoluto: es un auto-*redactor*. El agente lee, redacta y prepara la respuesta, pero una persona aprueba el envío. MCP Emails admite borradores, así que puedes hacer que el bucle llame a \`draft\` (acción \`create\`) en lugar de \`email_compose\`, y luego enviar tú mismo los buenos. Ejecútalo en modo borrador durante una semana. Lee lo que habría enviado. Solo entonces pon en envío automático los que te merezcan confianza.
+La versión más segura de esto no es un autorrespondedor en absoluto: es un auto-*redactor*. El agente lee, redacta y prepara la respuesta, pero una persona aprueba el envío. MCPEmails admite borradores, así que puedes hacer que el bucle llame a \`draft\` (acción \`create\`) en lugar de \`email_compose\`, y luego enviar tú mismo los buenos. Ejecútalo en modo borrador durante una semana. Lee lo que habría enviado. Solo entonces pon en envío automático los que te merezcan confianza.
 
 ### Detén bucles y autorrespuestas a ti mismo
 

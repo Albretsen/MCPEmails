@@ -20,7 +20,7 @@
     "titleLine1": "Koble Loopia-e-post til Claude,",
     "titleLine2": "Cursor, ChatGPT og enhver MCP-klient",
     "lead": "Gi AI-agenten din en ekte Loopia-innboks. Les, søk, send, svar, planlegg og organiser e-post over IMAP med passordet som er satt på kontoen i Loopia Kundzon.",
-    "answer": "Claude kan ikke nå en Loopia-postkasse på egen hånd. MCP Emails er en driftet MCP-server som kobler den til over IMAP på mailcluster.loopia.se port 993, og autentiserer med hele e-postadressen din og passordet som er satt for den kontoen i Loopia Kundzon, slik at Claude, Cursor eller enhver MCP-klient kan lese, søke i, sende og organisere e-posten. Loopia bruker ett felles klyngevertsnavn for alle kunder, så det finnes ingen egen server per domene å slå opp og ikke noe app-passord å generere. Én innboks er gratis, for alltid.",
+    "answer": "Claude kan ikke nå en Loopia-postkasse på egen hånd. MCPEmails er en driftet MCP-server som kobler den til over IMAP på mailcluster.loopia.se port 993, og autentiserer med hele e-postadressen din og passordet som er satt for den kontoen i Loopia Kundzon, slik at Claude, Cursor eller enhver MCP-klient kan lese, søke i, sende og organisere e-posten. Loopia bruker ett felles klyngevertsnavn for alle kunder, så det finnes ingen egen server per domene å slå opp og ikke noe app-passord å generere. Én innboks er gratis, for alltid.",
     "meta0": "1 innboks gratis, for alltid",
     "meta1": "Kontopassord satt i Loopia Kundzon",
     "meta2": "E-post hentes direkte, lagres aldri"
@@ -31,7 +31,7 @@
   },
   "setup": [
     {
-      "h": "Opprett din gratis MCP Emails-konto",
+      "h": "Opprett din gratis MCPEmails-konto",
       "p": "Registrer deg på mcpemails.com. Gratisplanen kobler til én innboks for alltid og ber ikke om kort."
     },
     {
@@ -39,7 +39,7 @@
       "p": "Logg inn i Loopia Kundzon, åpne listen over e-postadresser for domenet ditt, klikk på adressen og velg Edit. Et passordfelt vises ved siden av Password: skriv inn et nytt og lagre. Den samme endringen kan gjøres på mailadmin.loopia.se hvis du administrerer e-post uten full tilgang til Kundzon."
     },
     {
-      "h": "Lim det inn i MCP Emails",
+      "h": "Lim det inn i MCPEmails",
       "p": "Velg IMAP / SMTP, skriv inn hele adressen og lim inn kontopassordet. Verten mailcluster.loopia.se og portene 993 og 465 er fylt inn på forhånd og ble verifisert fra en direkte TLS-tilkobling."
     },
     {
@@ -68,7 +68,7 @@
   "faq": [
     {
       "q": "Fungerer Claude med Loopia-e-post?",
-      "a": "Ikke på egen hånd. Claude har ingen innebygd Loopia-kobling. Ved å peke en MCP-server som MCP Emails mot Loopia-postkassen din over IMAP får Claude tilgang til å lese, søke, sende, svare, planlegge og organisere i den, og den samme tilkoblingen fungerer fra Cursor, ChatGPT og andre MCP-klienter."
+      "a": "Ikke på egen hånd. Claude har ingen innebygd Loopia-kobling. Ved å peke en MCP-server som MCPEmails mot Loopia-postkassen din over IMAP får Claude tilgang til å lese, søke, sende, svare, planlegge og organisere i den, og den samme tilkoblingen fungerer fra Cursor, ChatGPT og andre MCP-klienter."
     },
     {
       "q": "Hva er IMAP- og SMTP-innstillingene for Loopia?",

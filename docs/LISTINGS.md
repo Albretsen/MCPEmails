@@ -4,7 +4,7 @@ The one source every external listing is synced from. Each fact below was read f
 
 ## Name
 
-- Default: **MCP Emails**
+- Default: **MCPEmails** (one word, camel case; owner decision 2026-10-20)
 - Where a title may not contain "MCP" or "Server" (Docker MCP catalog, Claude Directory slug): **Emails**
 - Registry id: `com.mcpemails/emails`. npm package: `mcpemails`.
 - Transport: **remote, Streamable HTTP** at `https://mcpemails.com/api/mcp` (OAuth 2.0 + PKCE, or a `mcpe_` API key as a bearer token). Optional: the `mcpemails` npm package, a **stdio bridge** to that same endpoint for clients that can only spawn a local command. Any listing that says "stdio" only is wrong. Never use the connect URL as a website link: a browser GET is a 405.
@@ -23,7 +23,7 @@ Published to the registry as 1.0.7 on 2026-10-19 (`isLatest: true`), so the regi
 
 ## Long description
 
-> MCP Emails is a hosted MCP server that gives your AI agent your real inbox. Connect Gmail, Outlook / Microsoft 365, Fastmail, iCloud, Yahoo, Zoho or any IMAP/SMTP mailbox once, add https://mcpemails.com/api/mcp to Claude, ChatGPT, Cursor, VS Code or any MCP client, and your agent can read, search, send, reply, forward, organize, draft, schedule and auto-triage email.
+> MCPEmails is a hosted MCP server that gives your AI agent your real inbox. Connect Gmail, Outlook / Microsoft 365, Fastmail, iCloud, Yahoo, Zoho or any IMAP/SMTP mailbox once, add https://mcpemails.com/api/mcp to Claude, ChatGPT, Cursor, VS Code or any MCP client, and your agent can read, search, send, reply, forward, organize, draft, schedule and auto-triage email.
 >
 > Email is fetched live from your provider on every call and never stored. Outbound mail is sent by your own provider from your real address. If a provider refuses connections from cloud addresses, the connection goes through our own relay instead, a plain tunnel; TLS still runs end to end to your provider, so the relay never sees your mail or password. Credentials are encrypted at rest. Permissions are scoped per API key and per inbox, so a key can be read-only, or allowed to send but never delete. Clients that support MCP Apps get in-chat cards to review a held send, preview a bulk move or delete before it runs, and edit a draft.
 >

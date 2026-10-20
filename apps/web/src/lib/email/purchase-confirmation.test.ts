@@ -290,7 +290,7 @@ test('sends from the brand address with a support reply-to, exactly once', async
 
   assert.equal(calls.length, 1, 'exactly one send attempt: a retry could duplicate the email');
   assert.match(calls[0].url, /resend\.com/);
-  assert.equal(calls[0].payload.from, 'MCP Emails <hello@mcpemails.com>');
+  assert.equal(calls[0].payload.from, 'MCPEmails <hello@mcpemails.com>');
   assert.equal(calls[0].payload.reply_to, 'hello@mcpemails.com');
   assert.equal(calls[0].payload.to, 'buyer@example.com');
   assert.match(String(calls[0].payload.subject), /Personal subscription is active/);
@@ -306,7 +306,7 @@ test('sends from the brand address with a support reply-to, exactly once', async
 
 test('the sender is overridable, but works with nothing set', async () => {
   process.env.RESEND_API_KEY = 're_stub_key_not_a_real_credential';
-  process.env.PURCHASE_EMAIL_FROM = 'MCP Emails <billing@mcpemails.com>';
+  process.env.PURCHASE_EMAIL_FROM = 'MCPEmails <billing@mcpemails.com>';
 
   const calls = await withStubbedFetch(
     async () => json(200, { id: 'stubbed-message-id' }),
@@ -314,7 +314,7 @@ test('the sender is overridable, but works with nothing set', async () => {
   );
   delete process.env.PURCHASE_EMAIL_FROM;
 
-  assert.equal(calls[0].payload.from, 'MCP Emails <billing@mcpemails.com>');
+  assert.equal(calls[0].payload.from, 'MCPEmails <billing@mcpemails.com>');
   // The override must not touch the reply-to: support still reads the replies.
   assert.equal(calls[0].payload.reply_to, 'hello@mcpemails.com');
 });

@@ -585,7 +585,7 @@ test('a workspace-keyed row sends on the transactional path: hello@, no List-Uns
     assert.deepEqual(result, { ok: true, resendId: 'msg_ws_1' });
     assert.equal(calls.length, 1, 'one attempt, never a retry');
     const [call] = calls;
-    assert.equal(call.body.from, 'MCP Emails <hello@mcpemails.com>');
+    assert.equal(call.body.from, 'MCPEmails <hello@mcpemails.com>');
     assert.equal(call.body.reply_to, 'hello@mcpemails.com');
     assert.equal(call.body.to, TO);
     assert.equal(call.body.subject, '150 of 150 email actions used, paused until 2026-10-01');

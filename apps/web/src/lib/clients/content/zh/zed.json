@@ -37,7 +37,7 @@
     },
     {
       "h": "授权",
-      "p": "在未设置 Authorization 标头时，Zed 会发起 OAuth 流程。用 MCP Emails 登录，并批准你希望 Zed 拥有的权限范围。"
+      "p": "在未设置 Authorization 标头时，Zed 会发起 OAuth 流程。用 MCPEmails 登录，并批准你希望 Zed 拥有的权限范围。"
     }
   ],
   "gotchas": [

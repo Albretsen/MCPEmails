@@ -3,7 +3,7 @@
 **Owner: the orchestrating session. Every phase agent reads this file and does not change it
 unilaterally.** If you need a shape changed, say so in your report and stop; do not fork the shape.
 
-This defines the wire payloads exchanged between the MCP Emails server and the single `ui://` review-card
+This defines the wire payloads exchanged between the MCPEmails server and the single `ui://` review-card
 resource. It is deliberately narrow: the card renders exactly these fields and nothing else.
 
 Related: `phase-0-protocol-findings.md` (protocol-level facts) and the plan at
@@ -217,7 +217,7 @@ Three consequences, all of them things a future change must not quietly undo:
 
 * **A quiet line, never a warning.** These states are not failures and must not be dressed as ones. The
   shape is the same one-line header every other nothing-to-show state uses, with a neutral dot and the
-  dashboard link when one is known: `MCP Emails: no preview for this result.`, `… cancelled.`,
+  dashboard link when one is known: `MCPEmails: no preview for this result.`, `… cancelled.`,
   `… not shown here.`, `… nothing to show here.` The label is the dispatched tool name when the host
   sends `toolInfo` and the product name when it does not, which in Claude is always.
 * **`observeSize()` starts at mount, not after the handshake.** It used to start inside connect()'s
@@ -290,7 +290,7 @@ Returned **by the gated send itself** (`email_compose` / `draft` / `schedule`, w
   "signature": {                         // what will be appended at send time
     "will_append": true,
     "source": "manual" | "gmail_import" | null,
-    "preview_text": "—\nAsgeir, MCP Emails"
+    "preview_text": "—\nAsgeir, MCPEmails"
   },
 
   "requested_by": {                      // provenance of the agent that asked
@@ -791,7 +791,7 @@ the current fingerprint and the bare legacy URI, so a host renders an old bundle
 not at all.
 
 Every bundle ever shipped answers an unknown `schema_version` the same way: `isSupportedVersion`
-is an equality test against `"review-card-v1"`, and a miss renders "Update the MCP Emails
+is an equality test against `"review-card-v1"`, and a miss renders "Update the MCPEmails
 connector" with the envelope-level `dashboard_url` (§1) before any editor is drawn. So the deferred
 envelope is published under a version old bundles do not know, and the unsafe rendering becomes
 that screen. Bumping the shared constant instead would put that screen over every held send and
@@ -1015,7 +1015,7 @@ is true with the editor off ("Where the draft editor card is on, …"), and both
 **What the card tells the model.** After a successful save the card calls `ui/update-model-context` with a complete, body-free
 statement of the draft's current state (the spec says each call overwrites the last):
 
-> The user saved edits to a draft in the MCP Emails card at 2026-10-13T10:04:00Z. Its current
+> The user saved edits to a draft in the MCPEmails card at 2026-10-13T10:04:00Z. Its current
 > draft_id is Drafts:3. Subject: "…". To 1, cc 1, bcc 0. Body 412 words. The body now differs
 > from the text the agent last wrote, and draft_read returns the current text.
 
@@ -1085,7 +1085,7 @@ is the one thing every host shows the model. So:
   id of the line into "this draft", names no id, and quotes the subject the current result
   already carries, e.g.:
 
-  > Before this call, the MCP Emails draft editor (the card in which the user can edit, save and
+  > Before this call, the MCPEmails draft editor (the card in which the user can edit, save and
   > send a draft) recorded changes to this draft ("Q3 numbers") that may not appear in this
   > conversation. It was saved there 2 times, last at 2026-10-15T11:59:30Z, changing the
   > subject, To and Cc. After that save it had To 1, Cc 2, Bcc 0. draft_read returns its current

@@ -2,28 +2,28 @@ const post = {
   slug: 'extract-email-attachments-for-ai',
   title: 'How AI Agents Can Read Email Attachments Without Storing Them',
   description:
-    'Use MCP Emails to extract text from PDF, CSV, JSON, HTML, and text email attachments so an AI agent can summarize what matters without keeping the file.',
+    'Use MCPEmails to extract text from PDF, CSV, JSON, HTML, and text email attachments so an AI agent can summarize what matters without keeping the file.',
   cover: '/blog/cover-ai-agent-triage-summarize-inbox.svg',
-  coverAlt: 'AI agent extracting text from an email attachment — MCP Emails',
+  coverAlt: 'AI agent extracting text from an email attachment — MCPEmails',
   authorId: 'asgeir',
   publishedAt: '2026-08-02T09:05:00.000Z',
   updatedAt: '2026-08-02T09:05:00.000Z',
   tags: ['Email attachments', 'AI agents', 'PDF extraction', 'MCP'],
   featured: false,
-  content: `The important part of an email is often in the attachment: a quote, an invoice, a CSV export, a contract, or a PDF report. MCP Emails lets an AI agent extract readable text from a selected attachment so it can answer the question at hand without downloading the entire inbox or retaining attachment bytes.
+  content: `The important part of an email is often in the attachment: a quote, an invoice, a CSV export, a contract, or a PDF report. MCPEmails lets an AI agent extract readable text from a selected attachment so it can answer the question at hand without downloading the entire inbox or retaining attachment bytes.
 
 The feature is intentionally narrow. First, the agent reads the email’s attachment list. Then it selects one file and extracts its text. The result is useful context for the conversation, not a new file repository.
 
 ## What an agent can extract
 
-MCP Emails supports readable-text extraction for common working formats:
+MCPEmails supports readable-text extraction for common working formats:
 
 - Plain-text files and structured text such as JSON
 - CSV and TSV spreadsheets
 - HTML documents
 - PDFs with an extractable text layer
 
-For a PDF, “extractable text layer” matters. A normal exported PDF can usually be read directly. A scan that is only an image may need OCR before it becomes searchable text. MCP Emails reports what it can read rather than pretending every document has perfect machine-readable content.
+For a PDF, “extractable text layer” matters. A normal exported PDF can usually be read directly. A scan that is only an image may need OCR before it becomes searchable text. MCPEmails reports what it can read rather than pretending every document has perfect machine-readable content.
 
 ## A practical attachment workflow
 
@@ -38,7 +38,7 @@ This keeps the request proportional. It does not pull every attachment from ever
 
 ## Why extraction is better than indiscriminate downloading
 
-An agent does not need raw bytes to summarize a table, find a deadline, or compare two line items. Extracting text from one selected attachment keeps the email workflow focused on the user’s task. MCP Emails does not persist message bodies or attachments; extraction happens transiently for the request.
+An agent does not need raw bytes to summarize a table, find a deadline, or compare two line items. Extracting text from one selected attachment keeps the email workflow focused on the user’s task. MCPEmails does not persist message bodies or attachments; extraction happens transiently for the request.
 
 When the original file itself matters, you can download a single attachment instead. That is useful when a person wants to save a document or when a client can preview the file. But for most AI-assisted questions, text extraction gives the agent exactly what it needs and no more.
 
@@ -60,7 +60,7 @@ Attachment extraction shines when the question has a clear answer:
 
 It is less useful as a blanket “read every attachment” instruction. Start with a search, choose the relevant message, and open only the file that advances the work. That keeps your agent effective without creating an oversized attachment-processing workflow.
 
-To get started, connect your inbox with [MCP Emails](/blog/connect-email-to-ai-agent-under-2-minutes), then ask an agent to inspect one known message and summarize its attachment.`,
+To get started, connect your inbox with [MCPEmails](/blog/connect-email-to-ai-agent-under-2-minutes), then ask an agent to inspect one known message and summarize its attachment.`,
 };
 
 export default post;

@@ -19,8 +19,8 @@
     "eyebrow": "Dovecot + AI",
     "titleLine1": "Koble Dovecot-serveren din",
     "titleLine2": "til Claude, Cursor og enhver MCP-klient",
-    "lead": "Du drifter IMAP-serveren, så du bestemmer hva en agent kan nå. Pek MCP Emails mot din egen Dovecot-vert og la Claude lese, søke i, sende, svare på, planlegge og arkivere e-post i postkassene du allerede drifter.",
-    "answer": "Claude kan ikke nå en Dovecot-server på egen hånd. MCP Emails er en hostet MCP-server som kobler seg til Dovecot-installasjonen din over IMAP på ditt eget vertsnavn, vanligvis mail.yourdomain.com på port 993, med postkassepassordet din passdb allerede godtar, slik at Claude, Cursor eller enhver MCP-klient kan lese, søke i, sende og organisere e-posten. Det finnes ikke noe felles vertsnavn å slå opp: verten er det serveren din heter, den må kunne nås fra internett, og TLS-sertifikatet må være gyldig for navnet du kobler til. Én innboks er gratis.",
+    "lead": "Du drifter IMAP-serveren, så du bestemmer hva en agent kan nå. Pek MCPEmails mot din egen Dovecot-vert og la Claude lese, søke i, sende, svare på, planlegge og arkivere e-post i postkassene du allerede drifter.",
+    "answer": "Claude kan ikke nå en Dovecot-server på egen hånd. MCPEmails er en hostet MCP-server som kobler seg til Dovecot-installasjonen din over IMAP på ditt eget vertsnavn, vanligvis mail.yourdomain.com på port 993, med postkassepassordet din passdb allerede godtar, slik at Claude, Cursor eller enhver MCP-klient kan lese, søke i, sende og organisere e-posten. Det finnes ikke noe felles vertsnavn å slå opp: verten er det serveren din heter, den må kunne nås fra internett, og TLS-sertifikatet må være gyldig for navnet du kobler til. Én innboks er gratis.",
     "meta0": "1 innboks gratis, for alltid",
     "meta1": "Det eksisterende Dovecot-postkassepassordet ditt",
     "meta2": "E-post hentes direkte, lagres aldri"
@@ -32,7 +32,7 @@
   "setup": [
     {
       "h": "Opprett en gratis konto",
-      "p": "Registrer deg hos MCP Emails, uten kort. Gratisplanen kobler til én innboks, for alltid, som er nok til å prøve dette mot en ekte postkasse på din egen server."
+      "p": "Registrer deg hos MCPEmails, uten kort. Gratisplanen kobler til én innboks, for alltid, som er nok til å prøve dette mot en ekte postkasse på din egen server."
     },
     {
       "h": "Bekreft hva Dovecot lytter på",
@@ -40,7 +40,7 @@
     },
     {
       "h": "Sjekk sertifikatet på 993 utenfra",
-      "p": "Kjør <code>openssl s_client -connect mail.yourdomain.com:993</code> fra en maskin som ikke er e-postserveren din. Du vil ha en kjede som verifiseres og et subjektnavn som samsvarer med verten du skal skrive inn i MCP Emails. Legg så til innboksen: velg IMAP / SMTP, skriv inn vertsnavnet, postkassepåloggingen og passordet."
+      "p": "Kjør <code>openssl s_client -connect mail.yourdomain.com:993</code> fra en maskin som ikke er e-postserveren din. Du vil ha en kjede som verifiseres og et subjektnavn som samsvarer med verten du skal skrive inn i MCPEmails. Legg så til innboksen: velg IMAP / SMTP, skriv inn vertsnavnet, postkassepåloggingen og passordet."
     },
     {
       "h": "Lim MCP-URL-en inn i AI-en",
@@ -50,7 +50,7 @@
   "gotchas": [
     {
       "h": "Uten special_use-oppføringer leverer Dovecot ingen mapperoller",
-      "p": "Dovecot annonserer bare SPECIAL-USE-utvidelsen for postkasser du har deklarert. Med mindre <code>15-mailboxes.conf</code> har oppføringer som <code>mailbox Sent { special_use = \\Sent }</code>, får en IMAP-klient en flat liste med navn og må gjette hvilken mappe som er Sendt, Utkast, Søppelpost eller Papirkurv. MCP Emails faller tilbake på navnematching, så på en server der mappene heter Sent Items, Gesendet eller Papierkorb, kan det hende mappen må velges manuelt én gang. Å legge til special_use-linjene løser det permanent for alle klientene dine."
+      "p": "Dovecot annonserer bare SPECIAL-USE-utvidelsen for postkasser du har deklarert. Med mindre <code>15-mailboxes.conf</code> har oppføringer som <code>mailbox Sent { special_use = \\Sent }</code>, får en IMAP-klient en flat liste med navn og må gjette hvilken mappe som er Sendt, Utkast, Søppelpost eller Papirkurv. MCPEmails faller tilbake på navnematching, så på en server der mappene heter Sent Items, Gesendet eller Papierkorb, kan det hende mappen må velges manuelt én gang. Å legge til special_use-linjene løser det permanent for alle klientene dine."
     },
     {
       "h": "Et navneromsprefiks skriver om hvert mappenavn du ser",
@@ -66,14 +66,14 @@
     }
   ],
   "limits": [
-    "Dovecot-serveren din må godta tilkoblinger fra det åpne internettet for at en hostet MCP-server skal kunne nå den. Hvis policyen din er at IMAP aldri forlater LAN-et eller VPN-et, er det et legitimt svar, og dette produktet kan ikke betjene deg som hostet tjeneste. MCP Emails kan i stedet driftes selv, som holder IMAP-tilkoblingen inne i ditt eget nettverk.",
+    "Dovecot-serveren din må godta tilkoblinger fra det åpne internettet for at en hostet MCP-server skal kunne nå den. Hvis policyen din er at IMAP aldri forlater LAN-et eller VPN-et, er det et legitimt svar, og dette produktet kan ikke betjene deg som hostet tjeneste. MCPEmails kan i stedet driftes selv, som holder IMAP-tilkoblingen inne i ditt eget nettverk.",
     "Streng TLS-validering er ikke valgfritt her. Et selvsignert sertifikat, et utløpt sertifikat eller et som er utstedt for et annet vertsnavn, blir avvist, og det finnes ingen avkrysningsboks for å godta det likevel.",
     "Sending går ut gjennom din egen innsendingstjeneste, så SPF-, DKIM- og DMARC-postene dine styrer leveringsevnen akkurat som for alle andre klienter på den serveren."
   ],
   "faq": [
     {
       "q": "Fungerer Claude med Dovecot?",
-      "a": "Ikke direkte. Claude har ingen måte å åpne en IMAP-socket mot en server du drifter. Kobler du en MCP-server som MCP Emails til Dovecot-verten din, får Claude tilgang til å lese, søke, sende, svare, planlegge og organisere i postkassene der, med de samme påloggingsopplysningene som en hvilken som helst annen IMAP-klient ville brukt."
+      "a": "Ikke direkte. Claude har ingen måte å åpne en IMAP-socket mot en server du drifter. Kobler du en MCP-server som MCPEmails til Dovecot-verten din, får Claude tilgang til å lese, søke, sende, svare, planlegge og organisere i postkassene der, med de samme påloggingsopplysningene som en hvilken som helst annen IMAP-klient ville brukt."
     },
     {
       "q": "Hva er IMAP- og SMTP-innstillingene for Dovecot?",
@@ -85,7 +85,7 @@
     },
     {
       "q": "Må Dovecot-serveren min kunne nås fra internett?",
-      "a": "Ja, for den hostede tjenesten. MCP Emails kobler seg inn til IMAP-porten din, så en server som er bundet til loopback, brannmurbeskyttet til kontorets adresseområde eller bare kan nås over VPN, kan ikke kobles til. Vil du heller ikke eksponere IMAP offentlig, kan MCP Emails driftes selv og kjøre i samme nettverk som e-postserveren."
+      "a": "Ja, for den hostede tjenesten. MCPEmails kobler seg inn til IMAP-porten din, så en server som er bundet til loopback, brannmurbeskyttet til kontorets adresseområde eller bare kan nås over VPN, kan ikke kobles til. Vil du heller ikke eksponere IMAP offentlig, kan MCPEmails driftes selv og kjøre i samme nettverk som e-postserveren."
     },
     {
       "q": "Hvilke produkter er bygget på Dovecot?",
@@ -98,6 +98,6 @@
   ],
   "ctaBand": {
     "title": "Gi AI-en din en Dovecot-innboks",
-    "sub": "Pek MCP Emails mot din egen server. Én innboks gratis for alltid, uten kort."
+    "sub": "Pek MCPEmails mot din egen server. Én innboks gratis for alltid, uten kort."
   }
 }

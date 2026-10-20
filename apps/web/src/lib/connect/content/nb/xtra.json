@@ -18,8 +18,8 @@
     "eyebrow": "Spark Xtra Mail + AI",
     "titleLine1": "Koble Xtra Mail-innboksen din",
     "titleLine2": "til Claude, Cursor, enhver MCP-klient",
-    "lead": "Xtra Mail tar et vanlig passord via IMAP, uten app-passord å generere og uten noen andre faktor i veien. MCP Emails kobler den til, slik at AI-agenten din kan lese, søke, sende, svare og arkivere den e-posten.",
-    "answer": "Claude når ikke en Xtra Mail-innboks på egen hånd. MCP Emails er en hostet MCP-server som kobler til via IMAP på imap.xtra.co.nz port 993 og logger inn med hele xtra.co.nz-adressen din og det vanlige Xtra Mail-passordet ditt. Spark utsteder ingen programspesifikke passord for Xtra Mail og sier at totrinnsbekreftelsen deres bare gjelder i webmail-portalen og ikke for e-postklienter, så et riktig passord autentiserer direkte selv med totrinnsbekreftelse på. Når den er koblet til, kan Claude, Cursor eller enhver annen MCP-klient lese, søke, sende og organisere den e-posten. Én innboks er gratis, for alltid.",
+    "lead": "Xtra Mail tar et vanlig passord via IMAP, uten app-passord å generere og uten noen andre faktor i veien. MCPEmails kobler den til, slik at AI-agenten din kan lese, søke, sende, svare og arkivere den e-posten.",
+    "answer": "Claude når ikke en Xtra Mail-innboks på egen hånd. MCPEmails er en hostet MCP-server som kobler til via IMAP på imap.xtra.co.nz port 993 og logger inn med hele xtra.co.nz-adressen din og det vanlige Xtra Mail-passordet ditt. Spark utsteder ingen programspesifikke passord for Xtra Mail og sier at totrinnsbekreftelsen deres bare gjelder i webmail-portalen og ikke for e-postklienter, så et riktig passord autentiserer direkte selv med totrinnsbekreftelse på. Når den er koblet til, kan Claude, Cursor eller enhver annen MCP-klient lese, søke, sende og organisere den e-posten. Én innboks er gratis, for alltid.",
     "meta0": "1 innboks gratis, for alltid",
     "meta1": "Xtra-passordet ditt, ikke app-passord",
     "meta2": "E-post hentes direkte, lagres aldri"
@@ -30,7 +30,7 @@
   },
   "setup": [
     {
-      "h": "Opprett en gratis MCP Emails-konto",
+      "h": "Opprett en gratis MCPEmails-konto",
       "p": "Registrer deg på mcpemails.com. Gratisplanen kobler til én innboks og ber ikke om kort."
     },
     {
@@ -39,7 +39,7 @@
     },
     {
       "h": "Skriv inn hele adressen og Xtra Mail-passordet ditt",
-      "p": "I MCP Emails velger du IMAP / SMTP og skriver inn adressen nøyaktig slik Spark skriver den, for eksempel <code>joe.bloggs@xtra.co.nz</code>, med passordet du bruker til å logge inn i Xtra-webmail. Vertene og portene over er forhåndsutfylt og ble verifisert via en direkte TLS-tilkobling."
+      "p": "I MCPEmails velger du IMAP / SMTP og skriver inn adressen nøyaktig slik Spark skriver den, for eksempel <code>joe.bloggs@xtra.co.nz</code>, med passordet du bruker til å logge inn i Xtra-webmail. Vertene og portene over er forhåndsutfylt og ble verifisert via en direkte TLS-tilkobling."
     },
     {
       "h": "Lim MCP-URL-en inn i AI-en",
@@ -72,7 +72,7 @@
   "faq": [
     {
       "q": "Fungerer Claude med Xtra Mail?",
-      "a": "Ikke direkte. Claude har ingen innebygd Spark- eller Xtra-kobling. Kobler du en MCP-server som MCP Emails til postkassen via IMAP, får Claude tilgang til å lese, søke, sende, svare, planlegge og organisere xtra.co.nz-e-posten din, og samme tilkobling fungerer i Cursor, ChatGPT og andre MCP-klienter."
+      "a": "Ikke direkte. Claude har ingen innebygd Spark- eller Xtra-kobling. Kobler du en MCP-server som MCPEmails til postkassen via IMAP, får Claude tilgang til å lese, søke, sende, svare, planlegge og organisere xtra.co.nz-e-posten din, og samme tilkobling fungerer i Cursor, ChatGPT og andre MCP-klienter."
     },
     {
       "q": "Hva er IMAP- og SMTP-innstillingene for Xtra Mail?",

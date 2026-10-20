@@ -20,7 +20,7 @@
     "titleLine1": "Connect CenturyLink email",
     "titleLine2": "to Claude, Cursor, any MCP client",
     "lead": "Give your AI agent a real centurylink.net inbox. Read, search, send, reply, schedule and organise mail over IMAP with your CenturyLink email password, in every MCP client rather than one.",
-    "answer": "Claude cannot reach a CenturyLink mailbox on its own. MCP Emails is a hosted MCP server that connects it over IMAP at mail.centurylink.net on port 993, with outgoing mail on smtp.centurylink.net port 587 using STARTTLS, signing in with your full address and your CenturyLink email password. Once it is connected, Claude, Cursor or any other MCP client can read, search, send, reply and organise that mail. One inbox is free, forever.",
+    "answer": "Claude cannot reach a CenturyLink mailbox on its own. MCPEmails is a hosted MCP server that connects it over IMAP at mail.centurylink.net on port 993, with outgoing mail on smtp.centurylink.net port 587 using STARTTLS, signing in with your full address and your CenturyLink email password. Once it is connected, Claude, Cursor or any other MCP client can read, search, send, reply and organise that mail. One inbox is free, forever.",
     "meta0": "1 inbox free, forever",
     "meta1": "Your CenturyLink email password works",
     "meta2": "Email fetched live, never stored"
@@ -31,7 +31,7 @@
   },
   "setup": [
     {
-      "h": "Create a free MCP Emails account",
+      "h": "Create a free MCPEmails account",
       "p": "Sign up at mcpemails.com. The free plan connects one inbox and does not ask for a card."
     },
     {
@@ -39,7 +39,7 @@
       "p": "Open the CenturyLink home page and sign in to webmail with the address you are connecting. This confirms the password, and it also resets the inactivity clock: CenturyLink deactivates accounts that have gone unused for a year and deletes their contents."
     },
     {
-      "h": "Enter the full address in MCP Emails",
+      "h": "Enter the full address in MCPEmails",
       "p": "Choose IMAP / SMTP and enter the whole address, including <code>@centurylink.net</code>, <code>@centurytel.net</code> or <code>@embarqmail.com</code>, with your email password. The hosts and the mixed 993 TLS plus 587 STARTTLS pairing are prefilled."
     },
     {
@@ -50,7 +50,7 @@
   "gotchas": [
     {
       "h": "This server offers AUTH=LOGIN and nothing else",
-      "p": "The CenturyLink IMAP host advertises a single SASL mechanism, LOGIN, and does not advertise SASL-IR. Most modern clients reach for PLAIN with the credentials sent alongside the AUTHENTICATE command, find no mechanism they were expecting, and either fall over or return an error that reads like bad credentials. MCP Emails uses the step by step LOGIN exchange this server actually supports. It is why generic IMAP tooling that works everywhere else can fail here on the first command."
+      "p": "The CenturyLink IMAP host advertises a single SASL mechanism, LOGIN, and does not advertise SASL-IR. Most modern clients reach for PLAIN with the credentials sent alongside the AUTHENTICATE command, find no mechanism they were expecting, and either fall over or return an error that reads like bad credentials. MCPEmails uses the step by step LOGIN exchange this server actually supports. It is why generic IMAP tooling that works everywhere else can fail here on the first command."
     },
     {
       "h": "A year without signing in deletes the mailbox and everything in it",
@@ -73,7 +73,7 @@
   "faq": [
     {
       "q": "Does Claude work with CenturyLink email?",
-      "a": "Not directly. Claude has no built-in CenturyLink connector. Connecting an MCP server such as MCP Emails to the mailbox over IMAP gives Claude read, search, send, reply, schedule and organise access to your centurylink.net mail, and the same connection works in Cursor, ChatGPT and other MCP clients."
+      "a": "Not directly. Claude has no built-in CenturyLink connector. Connecting an MCP server such as MCPEmails to the mailbox over IMAP gives Claude read, search, send, reply, schedule and organise access to your centurylink.net mail, and the same connection works in Cursor, ChatGPT and other MCP clients."
     },
     {
       "q": "What are the CenturyLink IMAP and SMTP settings?",

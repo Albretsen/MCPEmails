@@ -5,13 +5,13 @@ const post = {
     'Step by step: connect Gmail, Outlook, iCloud, Fastmail or any IMAP inbox to ChatGPT with a custom MCP connector, and to OpenAI Codex with a scoped key. No email stored.',
   cover: '/blog/cover-email-for-ai-agents-cursor-cline-vscode.svg',
   coverAlt:
-    'Connect ChatGPT and OpenAI Codex to Gmail, Outlook, iCloud, Fastmail and IMAP email with MCP Emails',
+    'Connect ChatGPT and OpenAI Codex to Gmail, Outlook, iCloud, Fastmail and IMAP email with MCPEmails',
   authorId: 'asgeir',
   publishedAt: '2026-09-15T09:00:00.000Z',
   updatedAt: '2026-09-26T09:00:00.000Z',
   tags: ['ChatGPT', 'Codex', 'MCP', 'Email', 'Tutorial'],
   featured: false,
-  content: `ChatGPT cannot reach a mailbox on its own. It needs an MCP server in front of your email, and MCP Emails is that server: connect an inbox once, point ChatGPT at a single URL, and it gets the same email tools whether the mail lives in Gmail, Outlook or Microsoft 365, iCloud, Fastmail, Yahoo, Zoho or a self-hosted IMAP server.
+  content: `ChatGPT cannot reach a mailbox on its own. It needs an MCP server in front of your email, and MCPEmails is that server: connect an inbox once, point ChatGPT at a single URL, and it gets the same email tools whether the mail lives in Gmail, Outlook or Microsoft 365, iCloud, Fastmail, Yahoo, Zoho or a self-hosted IMAP server.
 
 Two OpenAI surfaces are involved, and they authenticate differently. ChatGPT runs an OAuth flow in the browser, so there is no API key to paste. OpenAI Codex runs in your terminal and uses a scoped bearer key instead. Same endpoint, same tools.
 
@@ -20,14 +20,14 @@ Two OpenAI surfaces are involved, and they authenticate differently. ChatGPT run
 ## What you need
 
 - **ChatGPT Plus, Pro, Business, Enterprise or Edu, on the web.** Custom MCP connectors live behind developer mode, which OpenAI offers on chatgpt.com to those plans. Free and Go accounts cannot add one, and the mobile and desktop apps do not show the option. On Business and Enterprise an admin may need to allow developer mode first.
-- **A free MCP Emails account.** [Create one here](/signup). The free plan holds one connected inbox and needs no card.
+- **A free MCPEmails account.** [Create one here](/signup). The free plan holds one connected inbox and needs no card.
 - **One mailbox.** Gmail, Outlook or Microsoft 365, iCloud, Fastmail, Yahoo, Zoho, Yandex, or anything that speaks IMAP and SMTP.
 
 If you are on Free or Go, the same inbox and URL already work in [Claude](/docs/claude), [Cursor](/docs/cursor), [VS Code](/docs/vscode) and the other [supported clients](/docs/clients).
 
-## Step 1: Connect your inbox to MCP Emails
+## Step 1: Connect your inbox to MCPEmails
 
-In the MCP Emails dashboard, open **Inboxes**, then **Connect Inbox**, then pick your provider.
+In the MCPEmails dashboard, open **Inboxes**, then **Connect Inbox**, then pick your provider.
 
 ### Gmail and Google Workspace
 
@@ -35,7 +35,7 @@ Gmail connects with a Google app password over IMAP. Turn on 2-Step Verification
 
 ### iCloud, Fastmail, Yahoo and Zoho
 
-These want an app-specific password, not the password you type on the web. Create one at the provider, pick the provider in MCP Emails, and paste it in. The [iCloud, Fastmail and IMAP guide](/blog/connect-icloud-fastmail-imap-to-claude) has the exact steps.
+These want an app-specific password, not the password you type on the web. Create one at the provider, pick the provider in MCPEmails, and paste it in. The [iCloud, Fastmail and IMAP guide](/blog/connect-icloud-fastmail-imap-to-claude) has the exact steps.
 
 ### Outlook and Microsoft 365
 
@@ -57,8 +57,8 @@ Connect more than one mailbox if your plan allows it. ChatGPT discovers them wit
 https://mcpemails.com/api/mcp
 \`\`\`
 
-4. Choose **OAuth** as the authentication method, create the connector, then authorize with MCP Emails.
-5. Open a new chat, click **+**, choose **Developer mode** and select the MCP Emails app. ChatGPT only sees the tools in a chat where you have done this, so repeat it in every new conversation.
+4. Choose **OAuth** as the authentication method, create the connector, then authorize with MCPEmails.
+5. Open a new chat, click **+**, choose **Developer mode** and select the MCPEmails app. ChatGPT only sees the tools in a chat where you have done this, so repeat it in every new conversation.
 
 Pick OAuth, not "no authentication". This server refuses anonymous calls, so a connector created without authentication looks fine at setup and then fails on its first tool call, which is the confusing way round. With OAuth, ChatGPT registers itself and completes an authorization code flow with PKCE: no client id to create, no client secret anywhere. The menu wording moves as OpenAI iterates on the beta, so check the [ChatGPT setup page](/docs/chatgpt) for the current path.
 
@@ -84,7 +84,7 @@ For repeatable routines, start from the [inbox triage playbook](/blog/ai-agent-t
 
 ## What ChatGPT can do once it is connected
 
-MCP Emails hands ChatGPT focused tools rather than a password or a raw IMAP socket:
+MCPEmails hands ChatGPT focused tools rather than a password or a raw IMAP socket:
 
 - **Read and search:** \`email_read\` covers list, read, read_batch, search and attachment. Search uses structured fields such as sender, subject, date and unread state, and Gmail labels show up as folders.
 - **Send, reply and forward:** \`email_compose\` sends through your own provider and address.
@@ -92,7 +92,7 @@ MCP Emails hands ChatGPT focused tools rather than a password or a raw IMAP sock
 - **Drafts, folders and scheduling:** \`draft\`, \`draft_list\`, \`folder\`, \`folder_list\`, \`schedule\` and \`schedule_list\`.
 - **The rest:** \`contact_search\`, \`signature_get\`, \`signature_set\`, plus \`automation\` and \`automation_read\` for recurring rules.
 
-One limit to plan around: MCP Emails is poll-based. There are no webhooks and no server-initiated events, so ChatGPT checks for new mail when you ask it to rather than the moment a message lands.
+One limit to plan around: MCPEmails is poll-based. There are no webhooks and no server-initiated events, so ChatGPT checks for new mail when you ask it to rather than the moment a message lands.
 
 ## OpenAI Codex in the terminal
 
@@ -110,7 +110,7 @@ Scope the key tightly. Read-only is usually correct for a coding agent: one that
 
 - **No option to create a custom connector.** Developer mode needs Plus, Pro, Business, Enterprise or Edu, on chatgpt.com in a browser. Free and Go accounts do not have it. On a Business or Enterprise workspace, an admin has to allow it.
 - **The connector fails on its first tool call.** It was probably created with no authentication. Delete it and recreate it with OAuth.
-- **The connector is created, but ChatGPT answers without touching your mail.** It is not switched on in this chat. Click **+**, choose **Developer mode** and select the MCP Emails app, then ask again.
+- **The connector is created, but ChatGPT answers without touching your mail.** It is not switched on in this chat. Click **+**, choose **Developer mode** and select the MCPEmails app, then ask again.
 - **The provider rejects your password.** Use a provider-generated app password, not your web sign-in password. Some providers only issue one once two-factor authentication is on.
 - **A custom IMAP connection times out.** Confirm the host, port and TLS mode. Port 993 normally uses implicit TLS; port 143 normally uses STARTTLS.
 - **ChatGPT connects but sees no mail.** Check the inbox is active in the dashboard, confirm the connection holds \`read:email\`, and ask ChatGPT to call \`inbox_list\` first.

@@ -119,7 +119,7 @@ export async function GET(request: Request): Promise<NextResponse> {
 
   const message = ok
     ? category === 'all'
-      ? 'Done. You will not get any more email from MCP Emails that is not a receipt or a security notice.'
+      ? 'Done. You will not get any more email from MCPEmails that is not a receipt or a security notice.'
       : 'Done. You will not get any more email like that one. Receipts, invites and security notices still work.'
     : 'That link has expired or was already used. Nothing was changed. If you are still getting email you do not want, reply to any of it and it will be stopped by hand.';
 
@@ -133,7 +133,7 @@ export async function GET(request: Request): Promise<NextResponse> {
 </head>
 <body style="margin:0;background:#f9fafb;font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',sans-serif;">
   <div style="max-width:520px;margin:80px auto;padding:0 24px;">
-    <p style="font-size:18px;font-weight:700;color:#0f172a;margin:0 0 12px;">MCP Emails</p>
+    <p style="font-size:18px;font-weight:700;color:#0f172a;margin:0 0 12px;">MCPEmails</p>
     <p style="font-size:16px;color:#334155;line-height:1.6;margin:0 0 24px;">${message}</p>
     <p style="font-size:13px;color:#94a3b8;line-height:1.6;margin:0;">
       ${POSTAL_ADDRESS_LINE}

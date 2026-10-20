@@ -21,7 +21,7 @@
     "titleLine1": "Koble Runbox til Claude,",
     "titleLine2": "Cursor, ChatGPT, enhver MCP-klient",
     "lead": "Gi AI-agenten din en ekte Runbox-innboks. Les, søk, send, svar, planlegg og organiser e-post via IMAP, i alle MCP-klienter i stedet for én, med både regelen om app-passord og den stille autentiseringsfeilen dekket.",
-    "answer": "Claude når ikke Runbox på egen hånd. MCP Emails er en hostet MCP-server som kobler til via IMAP på mail.runbox.com port 993, og SMTP på samme vert port 465, slik at Claude, Cursor eller enhver MCP-klient kan lese, søke, sende og organisere den e-posten. Logg inn med den primære Runbox-adressen din, aldri et alias. Er tofaktorautentisering slått på for kontoen, autentiserer det vanlige Runbox-passordet ditt ikke lenger IMAP, POP, SMTP eller CalDAV i det hele tatt, og du må bruke et app-passord opprettet i Runbox-kontoen i stedet. Én innboks er gratis, for alltid.",
+    "answer": "Claude når ikke Runbox på egen hånd. MCPEmails er en hostet MCP-server som kobler til via IMAP på mail.runbox.com port 993, og SMTP på samme vert port 465, slik at Claude, Cursor eller enhver MCP-klient kan lese, søke, sende og organisere den e-posten. Logg inn med den primære Runbox-adressen din, aldri et alias. Er tofaktorautentisering slått på for kontoen, autentiserer det vanlige Runbox-passordet ditt ikke lenger IMAP, POP, SMTP eller CalDAV i det hele tatt, og du må bruke et app-passord opprettet i Runbox-kontoen i stedet. Én innboks er gratis, for alltid.",
     "meta0": "1 innboks gratis, for alltid",
     "meta1": "App-passord når 2FA er på",
     "meta2": "E-post hentes direkte, lagres aldri"
@@ -32,7 +32,7 @@
   },
   "setup": [
     {
-      "h": "Opprett din gratis MCP Emails-konto",
+      "h": "Opprett din gratis MCPEmails-konto",
       "p": "Registrer deg på mcpemails.com. Gratisplanen kobler til én innboks, for alltid, uten kort. Til slutt får du en MCP-URL og en nøkkel."
     },
     {
@@ -40,7 +40,7 @@
       "p": "Logg inn i Runbox på nettet og åpne skjermen App Passwords i kontoinnstillingene. Gi det et navn etter denne tilkoblingen, send inn og kopier verdien. Gjør dette uansett om du bruker tofaktorautentisering eller ikke: et app-passord kan trekkes tilbake for seg selv, og Runbox blokkerer app-passord fra webmail-innlogging, så påloggingen som lagres her, kan ikke brukes til å logge inn og endre kontoen din."
     },
     {
-      "h": "Legg til postkassen i MCP Emails med den primære adressen din",
+      "h": "Legg til postkassen i MCPEmails med den primære adressen din",
       "p": "Velg IMAP / SMTP. Skriv inn den <b>primære</b> Runbox-adressen din som brukernavn, som er adressen som vises øverst til høyre i Runbox-webmail når du er logget inn, og lim inn app-passordet. Verten er forhåndsutfylt som <code>mail.runbox.com</code> for begge retninger og ble verifisert via en direkte TLS-tilkobling."
     },
     {
@@ -51,7 +51,7 @@
   "gotchas": [
     {
       "h": "Runbox annonserer ikke SASL-IR, og de fleste klientbiblioteker antar det",
-      "p": "Serveren svarer med et naket <code>* OK IMAP4 ready</code> og tilbyr <code>AUTH=PLAIN</code> uten SASL-IR-funksjonen, så den avviser autentisering i ett steg, der påloggingsdetaljene sendes sammen med AUTHENTICATE-kommandoen. En klient som antar SASL-IR, får en naken BAD uten forklaring, og alle lag over den rapporterer det som en innloggingsfeil, så du leter etter et passordproblem som ikke finnes. MCP Emails oppdager BAD-svaret og faller tilbake til utvekslingen i to steg, så tilkoblingen fullføres her. Det er grunnen til at mange ellers solide IMAP-verktøy feiler mot Runbox mens de virker overalt ellers."
+      "p": "Serveren svarer med et naket <code>* OK IMAP4 ready</code> og tilbyr <code>AUTH=PLAIN</code> uten SASL-IR-funksjonen, så den avviser autentisering i ett steg, der påloggingsdetaljene sendes sammen med AUTHENTICATE-kommandoen. En klient som antar SASL-IR, får en naken BAD uten forklaring, og alle lag over den rapporterer det som en innloggingsfeil, så du leter etter et passordproblem som ikke finnes. MCPEmails oppdager BAD-svaret og faller tilbake til utvekslingen i to steg, så tilkoblingen fullføres her. Det er grunnen til at mange ellers solide IMAP-verktøy feiler mot Runbox mens de virker overalt ellers."
     },
     {
       "h": "Å slå på 2FA ødelegger alle protokoller på én gang, ikke bare e-post",
@@ -67,14 +67,14 @@
     }
   ],
   "limits": [
-    "Å koble en Runbox-postkasse til en AI-klient betyr at den AI-leverandøren leser innholdet i meldingene den jobber med. MCP Emails henter e-post direkte fra mail.runbox.com for hver forespørsel og lagrer ikke meldingsinnhold, og påloggingsdetaljer krypteres ved lagring, men teksten når likevel Claude, Cursor eller hvilken klient du kobler til. Runboxs norske jurisdiksjon og personvernforpliktelser gjelder Runbox. De strekker seg ikke til en AI-leverandør du selv kobler til postkassen.",
+    "Å koble en Runbox-postkasse til en AI-klient betyr at den AI-leverandøren leser innholdet i meldingene den jobber med. MCPEmails henter e-post direkte fra mail.runbox.com for hver forespørsel og lagrer ikke meldingsinnhold, og påloggingsdetaljer krypteres ved lagring, men teksten når likevel Claude, Cursor eller hvilken klient du kobler til. Runboxs norske jurisdiksjon og personvernforpliktelser gjelder Runbox. De strekker seg ikke til en AI-leverandør du selv kobler til postkassen.",
     "Serveren annonserer ikke SPECIAL-USE, så ingenting på linjen sier hvilken mappe som er Sent, Drafts, Trash eller Spam, og rollene utledes fra navn. Har du omdøpt mapper i Runbox 7, eller har mer enn én Sent-mappe fra en gammel import, oppgi mappen eksplisitt når du ber en agent arkivere noe.",
     "Fordi MOVE mangler, er en flytting ikke atomisk. Hvis en tilkobling brytes underveis, kan en melding kortvarig finnes i både kilde- og målmappen."
   ],
   "faq": [
     {
       "q": "Fungerer Claude med Runbox?",
-      "a": "Ikke direkte. Claude har ingen innebygd Runbox-kobling. Kobler du en MCP-server som MCP Emails til Runbox-postkassen din via IMAP, får Claude tilgang til å lese, søke, sende, svare, planlegge og organisere, og samme tilkobling fungerer da i Cursor, ChatGPT og andre MCP-klienter uten at noe må settes opp på nytt."
+      "a": "Ikke direkte. Claude har ingen innebygd Runbox-kobling. Kobler du en MCP-server som MCPEmails til Runbox-postkassen din via IMAP, får Claude tilgang til å lese, søke, sende, svare, planlegge og organisere, og samme tilkobling fungerer da i Cursor, ChatGPT og andre MCP-klienter uten at noe må settes opp på nytt."
     },
     {
       "q": "Hva er IMAP- og SMTP-innstillingene for Runbox?",
@@ -86,7 +86,7 @@
     },
     {
       "q": "Hvorfor feiler Runbox-innloggingen min uten noen nyttig feilmelding?",
-      "a": "Som regel fordi klienten antok SASL-IR-funksjonen, som Runbox ikke annonserer. Serveren svarer med en naken BAD på autentiseringsforsøket i ett steg, og klienten rapporterer det som en feil med påloggingsdetaljene. MCP Emails prøver på nytt med utvekslingen i to steg, så tilkoblingen virker her. Den andre vanlige årsaken er å skrive inn et alias i stedet for den primære adressen."
+      "a": "Som regel fordi klienten antok SASL-IR-funksjonen, som Runbox ikke annonserer. Serveren svarer med en naken BAD på autentiseringsforsøket i ett steg, og klienten rapporterer det som en feil med påloggingsdetaljene. MCPEmails prøver på nytt med utvekslingen i to steg, så tilkoblingen virker her. Den andre vanlige årsaken er å skrive inn et alias i stedet for den primære adressen."
     },
     {
       "q": "Kan jeg logge inn med en Runbox-aliasadresse?",

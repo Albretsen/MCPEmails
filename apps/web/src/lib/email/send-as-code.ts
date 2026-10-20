@@ -12,7 +12,7 @@ import { Resend } from 'resend';
  * Requires RESEND_API_KEY; sends from RESEND_FROM_EMAIL like the invite mail.
  */
 
-const FROM = process.env.RESEND_FROM_EMAIL ?? 'MCP Emails <invites@mcpemails.com>';
+const FROM = process.env.RESEND_FROM_EMAIL ?? 'MCPEmails <invites@mcpemails.com>';
 
 export interface SendAsCodeEmail {
   subject: string;
@@ -26,9 +26,9 @@ function escapeHtml(value: string): string {
 
 export function buildSendAsCodeEmail(params: { to: string; inboxAddress: string; code: string }): SendAsCodeEmail {
   const { to, inboxAddress, code } = params;
-  const subject = `${code} is your MCP Emails verification code`;
+  const subject = `${code} is your MCPEmails verification code`;
   const text = [
-    `Someone asked to send email as ${to} from the mailbox ${inboxAddress} on MCP Emails.`,
+    `Someone asked to send email as ${to} from the mailbox ${inboxAddress} on MCPEmails.`,
     '',
     `Your code: ${code}`,
     '',
@@ -44,7 +44,7 @@ export function buildSendAsCodeEmail(params: { to: string; inboxAddress: string;
   <div style="max-width:480px;margin:0 auto;background:#ffffff;border-radius:12px;padding:32px;">
     <p style="margin:0 0 16px;font-size:15px;line-height:1.5;">
       Someone asked to send email as <strong>${escapeHtml(to)}</strong> from the mailbox
-      <strong>${escapeHtml(inboxAddress)}</strong> on MCP Emails.
+      <strong>${escapeHtml(inboxAddress)}</strong> on MCPEmails.
     </p>
     <p style="margin:0 0 16px;font-size:32px;font-weight:700;letter-spacing:6px;font-family:ui-monospace,Menlo,monospace;">${escapeHtml(code)}</p>
     <p style="margin:0 0 16px;font-size:15px;line-height:1.5;">Enter it in the dashboard to finish. It expires in 15 minutes.</p>

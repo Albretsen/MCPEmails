@@ -1,12 +1,12 @@
 const translation = {
   title: 'Automatiske triageregler for e-post som kjører uten en modell i løkka',
   description:
-    'Slik fungerer automasjoner i MCP Emails: et lagret søk pluss én fast handling, på et intervall, uten at en modell tolker e-posten din. Forhåndsvis, opprett, aktiver og les kjøreloggen.',
+    'Slik fungerer automasjoner i MCPEmails: et lagret søk pluss én fast handling, på et intervall, uten at en modell tolker e-posten din. Forhåndsvis, opprett, aktiver og les kjøreloggen.',
   coverAlt:
-    'Uovervåkede triageregler for e-post i MCP Emails: et lagret søk pluss én fast handling på et fast intervall',
+    'Uovervåkede triageregler for e-post i MCPEmails: et lagret søk pluss én fast handling på et fast intervall',
   content: `Hver morgen ber du agenten rydde bort støyen: arkiver byggevarslene, marker kvitteringene som lest, videresend fakturaene til regnskapsføreren. Det virker. Det koster også et modellkall hver gang, og tirsdag gjør det noe litt annet enn det gjorde mandag.
 
-MCP Emails har en egen flate for akkurat den e-posten. En **automasjon** er et lagret søk pluss én fast handling, vurdert på et intervall, uten modell i løkka. E-post matches, aldri tolkes.
+MCPEmails har en egen flate for akkurat den e-posten. En **automasjon** er et lagret søk pluss én fast handling, vurdert på et intervall, uten modell i løkka. E-post matches, aldri tolkes.
 
 **Hopp til:** [Hva en regel er](#hva-en-automasjon-egentlig-er) · [Lag en](#lag-en-forhåndsvis-opprett-aktiver) · [Hva den kan og ikke kan](#hva-en-regel-kan-og-ikke-kan-gjøre) · [Når du bør la være](#når-du-ikke-bør-skrive-en-regel)
 
@@ -25,7 +25,7 @@ Sett også \`max_messages_per_run\` (25 som standard, 200 som maksimum): det er 
 - **Kostnad.** En regel bruker ingen tokens. Morgensamtalen bruker dem daglig, på e-post du bestemte behandlingen av for måneder siden.
 - **Gjentakbarhet.** Samme filter gir samme handling. Det finnes ingen «i dag valgte den annerledes», fordi den ikke velger noe.
 - **Ingen hallusinerte trekk.** En regel kan ikke finne på en mappe, improvisere en mottaker eller handle på en instruksjon den fant inne i en e-posttekst.
-- **Den kjører mens du sover.** MCP Emails er ellers basert på polling: agenten sjekker etter ny e-post når du ber den om det. Regelen er den delen som ikke må bes om noe.
+- **Den kjører mens du sover.** MCPEmails er ellers basert på polling: agenten sjekker etter ny e-post når du ber den om det. Regelen er den delen som ikke må bes om noe.
 
 ## Agenttriage og uovervåkede regler gjør ulike jobber
 

@@ -19,8 +19,8 @@
     "eyebrow": "Verizon.net + IA",
     "titleLine1": "Verizon a fermé son service e-mail.",
     "titleLine2": "Votre boîte verizon.net se connecte toujours",
-    "lead": "Verizon n'héberge plus de boîtes. Une adresse verizon.net encore active est un compte AOL, et MCP Emails la connecte en IMAP pour que votre agent IA puisse lire, rechercher, envoyer, répondre et classer ce courrier.",
-    "answer": "Claude ne peut pas accéder seul à une boîte verizon.net, et Verizon non plus : l'opérateur a fermé son service e-mail grand public et transféré les boîtes vers AOL Mail et Yahoo Mail. Si votre adresse a survécu à cette migration, c'est un compte AOL avec un nom d'utilisateur verizon.net, et MCP Emails est un serveur MCP hébergé qui le connecte en IMAP sur imap.aol.com, port 993, avec un mot de passe d'application AOL plutôt que le mot de passe que vous tapez dans le webmail. Une fois la boîte connectée, Claude, Cursor ou tout autre client MCP peut lire, rechercher, envoyer, répondre et organiser ce courrier. Une boîte est gratuite, pour toujours.",
+    "lead": "Verizon n'héberge plus de boîtes. Une adresse verizon.net encore active est un compte AOL, et MCPEmails la connecte en IMAP pour que votre agent IA puisse lire, rechercher, envoyer, répondre et classer ce courrier.",
+    "answer": "Claude ne peut pas accéder seul à une boîte verizon.net, et Verizon non plus : l'opérateur a fermé son service e-mail grand public et transféré les boîtes vers AOL Mail et Yahoo Mail. Si votre adresse a survécu à cette migration, c'est un compte AOL avec un nom d'utilisateur verizon.net, et MCPEmails est un serveur MCP hébergé qui le connecte en IMAP sur imap.aol.com, port 993, avec un mot de passe d'application AOL plutôt que le mot de passe que vous tapez dans le webmail. Une fois la boîte connectée, Claude, Cursor ou tout autre client MCP peut lire, rechercher, envoyer, répondre et organiser ce courrier. Une boîte est gratuite, pour toujours.",
     "meta0": "1 boîte gratuite, pour toujours",
     "meta1": "Mot de passe d'application AOL, pas celui du webmail",
     "meta2": "E-mails récupérés en direct, jamais stockés"
@@ -31,7 +31,7 @@
   },
   "setup": [
     {
-      "h": "Créez un compte MCP Emails gratuit",
+      "h": "Créez un compte MCPEmails gratuit",
       "p": "Inscrivez-vous sur mcpemails.com. L'offre gratuite connecte une boîte et ne demande pas de carte bancaire."
     },
     {
@@ -40,7 +40,7 @@
     },
     {
       "h": "Générez un mot de passe d'application AOL sous Account Security",
-      "p": "Ouvrez Account Info, puis <b>Account Security</b>. Activez la validation en deux étapes si elle est désactivée, puis générez un mot de passe d'application et donnez-lui un nom, par exemple <code>mcpemails</code>. AOL ne l'affiche qu'une fois. Collez-le dans MCP Emails avec l'adresse verizon.net complète ; les serveurs AOL ci-dessus sont préremplis."
+      "p": "Ouvrez Account Info, puis <b>Account Security</b>. Activez la validation en deux étapes si elle est désactivée, puis générez un mot de passe d'application et donnez-lui un nom, par exemple <code>mcpemails</code>. AOL ne l'affiche qu'une fois. Collez-le dans MCPEmails avec l'adresse verizon.net complète ; les serveurs AOL ci-dessus sont préremplis."
     },
     {
       "h": "Collez l'URL MCP dans votre IA",
@@ -67,12 +67,12 @@
   ],
   "limits": [
     "Le serveur SMTP d'AOL annonce une taille maximale de message d'environ 39 MB : un envoi avec de grosses pièces jointes est donc refusé avant de partir.",
-    "Seule une boîte verizon.net existante et déjà migrée peut être connectée. Verizon n'en crée plus de nouvelles et MCP Emails ne peut pas ranimer un compte supprimé."
+    "Seule une boîte verizon.net existante et déjà migrée peut être connectée. Verizon n'en crée plus de nouvelles et MCPEmails ne peut pas ranimer un compte supprimé."
   ],
   "faq": [
     {
       "q": "Claude fonctionne-t-il avec l'e-mail Verizon ?",
-      "a": "Pas directement, et pas via Verizon, qui n'exploite plus de messagerie. Si votre adresse verizon.net est active chez AOL, y connecter un serveur MCP comme MCP Emails en IMAP donne à Claude un accès en lecture, recherche, envoi, réponse, planification et organisation, et la même connexion fonctionne dans Cursor, ChatGPT et les autres clients MCP."
+      "a": "Pas directement, et pas via Verizon, qui n'exploite plus de messagerie. Si votre adresse verizon.net est active chez AOL, y connecter un serveur MCP comme MCPEmails en IMAP donne à Claude un accès en lecture, recherche, envoi, réponse, planification et organisation, et la même connexion fonctionne dans Cursor, ChatGPT et les autres clients MCP."
     },
     {
       "q": "Quels sont les réglages IMAP et SMTP de verizon.net ?",

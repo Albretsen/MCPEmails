@@ -2,10 +2,10 @@ const post = {
   slug: 'automated-email-triage-rules',
   title: 'Automated Email Triage Rules That Run Without a Model in the Loop',
   description:
-    'How MCP Emails automations work: a stored search plus one fixed action, on a cadence, with no model interpreting your mail. Preview, create, enable, read the run log.',
+    'How MCPEmails automations work: a stored search plus one fixed action, on a cadence, with no model interpreting your mail. Preview, create, enable, read the run log.',
   cover: '/blog/cover-ai-agent-triage-summarize-inbox.svg',
   coverAlt:
-    'Unattended email triage rules in MCP Emails: a stored search plus one fixed action on a schedule',
+    'Unattended email triage rules in MCPEmails: a stored search plus one fixed action on a schedule',
   authorId: 'asgeir',
   publishedAt: '2026-09-15T09:00:00.000Z',
   updatedAt: '2026-09-15T09:00:00.000Z',
@@ -13,7 +13,7 @@ const post = {
   featured: false,
   content: `Every morning you ask your agent to clear the noise: file the build notifications, mark the receipts read, forward invoices to your bookkeeper. It works. It also costs a model call every time, and it does something slightly different on Tuesday than it did on Monday.
 
-MCP Emails has a second surface for exactly that mail. An **automation** is a stored search plus one fixed action, evaluated on a cadence, with no model in the loop. Mail is matched, never interpreted.
+MCPEmails has a second surface for exactly that mail. An **automation** is a stored search plus one fixed action, evaluated on a cadence, with no model in the loop. Mail is matched, never interpreted.
 
 **Jump to:** [What a rule is](#what-an-automation-actually-is) · [Build one](#build-one-preview-create-enable) · [What it can and cannot do](#what-a-rule-can-and-cannot-do) · [When not to write one](#when-not-to-write-a-rule)
 
@@ -32,7 +32,7 @@ Set \`max_messages_per_run\` too (default 25, maximum 200): it is the per-run bl
 - **Cost.** A rule spends no tokens. The morning conversation spends them daily, on mail whose handling you decided months ago.
 - **Repeatability.** The same filter produces the same action. There is no "it decided differently today" because there is no deciding.
 - **No hallucinated moves.** A rule cannot invent a folder, improvise a recipient, or act on an instruction it found inside an email body.
-- **It runs while you sleep.** MCP Emails is otherwise poll-based: the agent checks for new mail when you ask it to. A rule is the part that needs no asking.
+- **It runs while you sleep.** MCPEmails is otherwise poll-based: the agent checks for new mail when you ask it to. A rule is the part that needs no asking.
 
 ## Agent triage and unattended rules do different jobs
 

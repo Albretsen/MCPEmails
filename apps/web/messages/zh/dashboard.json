@@ -22,20 +22,20 @@
       "step1": "在 claude.ai 或 Claude Desktop 中，打开 设置 → Connectors。",
       "step2": "点击 \"Add custom connector\"。",
       "step3": "将上方的 URL 粘贴为 connector URL，然后点击 \"Add\"。",
-      "step4": "点击 \"Connect\" 并使用 MCP Emails 登录以授权。无需 API 密钥。"
+      "step4": "点击 \"Connect\" 并使用 MCPEmails 登录以授权。无需 API 密钥。"
     },
     "chatgpt": {
       "step1": "打开 设置 → Apps & Connectors → Advanced settings 并开启 Developer mode。",
       "step2": "返回 Apps & Connectors，点击 \"Create\"。",
       "step3": "输入名称并将上方的 URL 粘贴为 Connector URL。",
-      "step4": "选择 OAuth，点击 \"Create\"，然后使用 MCP Emails 授权。",
-      "step5": "在 chatgpt.com 的对话中，点击 + → Developer mode 并选择 MCP Emails 应用。每个新对话都要重复这一步，否则 ChatGPT 看不到这些工具。",
+      "step4": "选择 OAuth，点击 \"Create\"，然后使用 MCPEmails 授权。",
+      "step5": "在 chatgpt.com 的对话中，点击 + → Developer mode 并选择 MCPEmails 应用。每个新对话都要重复这一步，否则 ChatGPT 看不到这些工具。",
       "note": "仅限 chatgpt.com 网页版，适用于 Plus、Pro、Business、Enterprise 和 Edu。Free 和 Go 账户无法添加自定义连接器。在 Business 和 Enterprise 上，可能需要管理员先允许 Developer mode。"
     },
     "cursor": {
       "step1": "编辑 ~/.cursor/mcp.json（全局）或 .cursor/mcp.json（项目）。",
       "step2": "在 \"mcpServers\" 下添加下方的服务器。",
-      "step3": "Cursor 会提示你通过 OAuth 登录。使用 MCP Emails 授权。"
+      "step3": "Cursor 会提示你通过 OAuth 登录。使用 MCPEmails 授权。"
     },
     "vscode": {
       "step1": "打开命令面板（⇧⌘P）并运行 \"MCP: Add Server\"。",
@@ -51,7 +51,7 @@
     "windsurf": {
       "step1": "打开 Cascade 的 MCP 设置，或编辑 ~/.codeium/windsurf/mcp_config.json。",
       "step2": "添加下方的服务器。注意该字段为 \"serverUrl\"，而非 \"url\"。",
-      "step3": "在 Cascade 中刷新 MCP 服务器，并在提示时使用 MCP Emails 授权。"
+      "step3": "在 Cascade 中刷新 MCP 服务器，并在提示时使用 MCPEmails 授权。"
     },
     "gemini": {
       "step1": "编辑 ~/.gemini/settings.json（全局）或 .gemini/settings.json（项目）。",
@@ -61,7 +61,7 @@
     "zed": {
       "step1": "在 Agent Panel 设置中点击 \"Add Custom Server\"，或编辑 settings.json。",
       "step2": "在 \"context_servers\" 下添加下方的服务器。",
-      "step3": "当未设置 Authorization 标头时，Zed 会提示 OAuth 流程。使用 MCP Emails 登录。"
+      "step3": "当未设置 Authorization 标头时，Zed 会提示 OAuth 流程。使用 MCPEmails 登录。"
     },
     "jetbrains": {
       "step1": "打开 Settings → Tools → AI Assistant → Model Context Protocol (MCP)。",
@@ -71,7 +71,7 @@
     "raycast": {
       "step1": "运行 \"Install MCP Server\" 命令（或 \"Manage MCP Servers\"）。",
       "step2": "输入名称，将 Transport 设置为 \"HTTP\"，并粘贴上方的 URL。",
-      "step3": "按 \"Install MCP Server\"，然后点击 \"Sign In\" 以使用 MCP Emails 授权。"
+      "step3": "按 \"Install MCP Server\"，然后点击 \"Sign In\" 以使用 MCPEmails 授权。"
     },
     "warp": {
       "step1": "打开 Settings → Agents → MCP servers 并点击 \"+ Add\"。",
@@ -738,7 +738,7 @@
       "bodyTitle": "正文",
       "bodyTruncated": "这封邮件超过 64 KB，此处已截断。请在控制台中查看完整内容。",
       "bodyWithheldRole": "邮件正文仅向工作区的所有者、管理员和成员显示。你的角色只能查看投递信息。",
-      "bodyStoredWithProvider": "此请求是在 MCP Emails 保存草稿副本之前创建的，因此这里无法显示其正文，即使批准也不会发送。请拒绝它，并让你的助手重新发送该草稿。",
+      "bodyStoredWithProvider": "此请求是在 MCPEmails 保存草稿副本之前创建的，因此这里无法显示其正文，即使批准也不会发送。请拒绝它，并让你的助手重新发送该草稿。",
       "bodyDecryptFailed": "无法解密已存储的邮件，因此无法显示。请拒绝此请求，并让助手重新起草。",
       "bodyAbsent": "此请求没有邮件正文。",
       "bodyHtmlShow": "显示 HTML 源码",
@@ -848,7 +848,7 @@
       "bannerAlsoFailing": "{count, plural, other {另有 # 个仍在失败。}}",
       "bannerFix": "修复原因后再重新开启。",
       "rowFailing": "{count, plural, =0 {上一次运行失败。} other {已连续 # 次运行失败，达到 5 次将自动关闭。}}",
-      "causeConnectionEnded": "此自动化所用的连接已结束。请在 MCP 客户端中重新连接 MCP Emails。",
+      "causeConnectionEnded": "此自动化所用的连接已结束。请在 MCP 客户端中重新连接 MCPEmails。",
       "causeKeyRevoked": "此自动化所用的 API 密钥已被撤销。请改用有效的密钥。",
       "causeScopeDenied": "该 API 密钥已不再具备此自动化所需操作的权限。",
       "causeInboxNotPermitted": "该 API 密钥已不再允许使用此自动化的收件箱。",

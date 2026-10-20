@@ -91,7 +91,7 @@
     "densityLabel": "Dichte",
     "densityCompact": "Kompakt",
     "densitySpacious": "Großzügig",
-    "firstRunTitle": "Willkommen bei MCP Emails",
+    "firstRunTitle": "Willkommen bei MCPEmails",
     "firstRunBody": "Verbinden Sie Ihr erstes Postfach und erhalten Sie in unter einer Minute einen funktionierenden MCP-Endpunkt.",
     "firstRunCta": "Postfach verbinden",
     "inviteSentNotDelivered": "Einladung für {email} erstellt, aber die E-Mail konnte nicht gesendet werden. Nutzen Sie bei der offenen Einladung „Erneut senden“.",
@@ -135,7 +135,7 @@
   },
   "connect": {
     "subOutlook": "Outlook.com · Microsoft 365",
-    "hintOutlook": "Konten von Outlook.com, Hotmail, Live und MSN melden sich sofort an. Bei einem Microsoft 365-Konto von Arbeit oder Hochschule muss Ihre IT-Abteilung MCP Emails eventuell einmal genehmigen. Dafür braucht sie kein eigenes MCP Emails Konto.",
+    "hintOutlook": "Konten von Outlook.com, Hotmail, Live und MSN melden sich sofort an. Bei einem Microsoft 365-Konto von Arbeit oder Hochschule muss Ihre IT-Abteilung MCPEmails eventuell einmal genehmigen. Dafür braucht sie kein eigenes MCPEmails Konto.",
     "subFastmail": "App-Passwort",
     "subAppPassword": "App-Passwort",
     "subGeneric": "Jedes Postfach · empfohlen",
@@ -398,7 +398,7 @@
   },
   "adminConsentLink": {
     "title": "Senden Sie diesen Link an Ihre IT-Abteilung",
-    "body": "Senden Sie diesen Link an Ihre Administration für Microsoft 365. Sie meldet sich mit ihrem Microsoft-Admin-Konto an und genehmigt einmal. Ein MCP Emails Konto ist dafür nicht nötig. Danach können alle in Ihrer Organisation Outlook verbinden.",
+    "body": "Senden Sie diesen Link an Ihre Administration für Microsoft 365. Sie meldet sich mit ihrem Microsoft-Admin-Konto an und genehmigt einmal. Ein MCPEmails Konto ist dafür nicht nötig. Danach können alle in Ihrer Organisation Outlook verbinden.",
     "label": "Genehmigungslink",
     "loading": "Link wird erstellt…",
     "copy": "Kopieren",
@@ -411,20 +411,20 @@
   },
   "adminConsentResult": {
     "grantedTitle": "Genehmigt",
-    "grantedBody": "Ihr Team kann Outlook jetzt in MCP Emails verbinden. Weitere Genehmigungen sind nicht nötig: Jede Person meldet sich mit Microsoft an, wenn sie ihr eigenes Postfach verbindet.",
+    "grantedBody": "Ihr Team kann Outlook jetzt in MCPEmails verbinden. Weitere Genehmigungen sind nicht nötig: Jede Person meldet sich mit Microsoft an, wenn sie ihr eigenes Postfach verbindet.",
     "cancelledTitle": "Nicht genehmigt",
     "cancelledBody": "Die Genehmigung wurde auf dem Bildschirm von Microsoft abgebrochen, es hat sich also nichts geändert. Öffnen Sie den Link erneut, sobald Sie bereit sind.",
     "failedTitle": "Die Genehmigung hat nicht geklappt",
     "failedBody": "Microsoft hat die Genehmigung nicht bestätigt. Dafür ist ein Administratorkonto für Microsoft 365 nötig, etwa ein Globaler Administrator oder ein Cloudanwendungsadministrator. Melden Sie sich mit einem solchen Konto an und öffnen Sie den Link erneut.",
     "link_invalidTitle": "Dieser Link ist ungültig",
-    "link_invalidBody": "Der Genehmigungslink ist unvollständig oder wurde verändert. Bitten Sie die Person, die ihn gesendet hat, in ihrem MCP Emails Dashboard einen neuen zu erstellen.",
+    "link_invalidBody": "Der Genehmigungslink ist unvollständig oder wurde verändert. Bitten Sie die Person, die ihn gesendet hat, in ihrem MCPEmails Dashboard einen neuen zu erstellen.",
     "link_expiredTitle": "Dieser Link ist abgelaufen",
-    "link_expiredBody": "Genehmigungslinks sind 7 Tage gültig. Bitten Sie die Person, die ihn gesendet hat, in ihrem MCP Emails Dashboard einen neuen zu erstellen.",
+    "link_expiredBody": "Genehmigungslinks sind 7 Tage gültig. Bitten Sie die Person, die ihn gesendet hat, in ihrem MCPEmails Dashboard einen neuen zu erstellen.",
     "timed_outTitle": "Bitte beginnen Sie erneut",
     "timed_outBody": "Die Genehmigung hat zu lange gedauert oder wurde in einem anderen Browser abgeschlossen. Öffnen Sie den Genehmigungslink erneut in diesem Browser.",
     "unavailableTitle": "Etwas ist schiefgelaufen",
     "unavailableBody": "Wir konnten die Genehmigung nicht starten. Bitte versuchen Sie es in ein paar Minuten erneut.",
     "closeHint": "Fragen? Schreiben Sie an hello@mcpemails.com.",
-    "openApp": "MCP Emails öffnen"
+    "openApp": "MCPEmails öffnen"
   }
 }

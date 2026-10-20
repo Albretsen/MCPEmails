@@ -1,9 +1,9 @@
 #!/usr/bin/env node
 /**
- * mcpemails - stdio bridge to the hosted MCP Emails server.
+ * mcpemails - stdio bridge to the hosted MCPEmails server.
  *
  * Many MCP clients (Claude Desktop, Cursor, Cline, Windsurf) can only launch a
- * local subprocess and talk JSON-RPC over stdin/stdout. MCP Emails is a hosted
+ * local subprocess and talk JSON-RPC over stdin/stdout. MCPEmails is a hosted
  * server that speaks JSON-RPC over HTTPS. This bridge sits between the two and
  * does nothing else: every message read from stdin is POSTed verbatim to the
  * server, and every response is written back to stdout verbatim.
@@ -18,7 +18,7 @@
  * hangs forever waiting on an id that will never come back.
  *
  * The API key is read from the environment or a CLI flag, sent only in the
- * Authorization header to the configured MCP Emails endpoint, and never
+ * Authorization header to the configured MCPEmails endpoint, and never
  * written to disk, to stdout, or to the diagnostic log on stderr.
  *
  * Requires Node 18+ for global fetch. No dependencies.
@@ -38,7 +38,7 @@ const KEY_PATTERN = /^mcpe_[0-9a-f]{64}$/;
 
 const USAGE = `mcpemails ${PACKAGE_VERSION}
 
-  Bridges a stdio MCP client to the hosted MCP Emails server.
+  Bridges a stdio MCP client to the hosted MCPEmails server.
 
 Usage
   npx -y mcpemails [options]
@@ -318,7 +318,7 @@ function main() {
             id,
             error: {
               code: -32603,
-              message: `MCP Emails returned HTTP ${response.status} with no response body.`,
+              message: `MCPEmails returned HTTP ${response.status} with no response body.`,
             },
           });
         }
@@ -332,7 +332,7 @@ function main() {
           id,
           // -32603 Internal error: the request was well-formed and the failure
           // is on the transport, which is exactly what the client should retry.
-          error: { code: -32603, message: `Could not reach MCP Emails: ${detail}` },
+          error: { code: -32603, message: `Could not reach MCPEmails: ${detail}` },
         });
       }
       // A failed notification has no id to answer on. Report it on stderr so it

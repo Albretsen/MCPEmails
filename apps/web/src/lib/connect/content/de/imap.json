@@ -26,7 +26,7 @@
     "meta0": "1 Postfach dauerhaft kostenlos",
     "meta1": "Jeder IMAP-Host, keine OAuth-Einrichtung",
     "meta2": "E-Mails werden live abgerufen, nie gespeichert",
-    "answer": "Claude hat keinen eigenen IMAP-Client. MCP Emails ist ein gehosteter MCP-Server, der sich per IMAP und SMTP an Ihrem Mailserver anmeldet, mit der Adresse, dem Host und dem Passwort, die Sie von Ihrem Anbieter ohnehin haben. So können Claude, Cursor oder jeder MCP-Client diese E-Mails lesen, suchen, senden und sortieren. Jeder Host, der IMAP spricht, funktioniert, Funktionsadressen eines Unternehmens verbinden sich genauso wie eine private, und ein Postfach ist kostenlos."
+    "answer": "Claude hat keinen eigenen IMAP-Client. MCPEmails ist ein gehosteter MCP-Server, der sich per IMAP und SMTP an Ihrem Mailserver anmeldet, mit der Adresse, dem Host und dem Passwort, die Sie von Ihrem Anbieter ohnehin haben. So können Claude, Cursor oder jeder MCP-Client diese E-Mails lesen, suchen, senden und sortieren. Jeder Host, der IMAP spricht, funktioniert, Funktionsadressen eines Unternehmens verbinden sich genauso wie eine private, und ein Postfach ist kostenlos."
   },
   "persona": {
     "intro": "Sie betreuen mehrere Firmenpostfächer?",
@@ -35,19 +35,19 @@
   },
   "method": {
     "title": "So verbindet sich ein beliebiges IMAP-Postfach",
-    "body": "Sie brauchen vier Dinge: Ihre Adresse, Ihren Mailserver, Ihr Passwort und, falls Ihr Anbieter es verlangt, ein App-Passwort. Geben Sie zuerst Ihre Adresse ein: MCP Emails erkennt die gängigen Hosting-Anbieter und trägt beide Hosts, beide Ports und die Verschlüsselungsart für Sie ein. Antwortet die gewählte Verbindungsart nicht, probiert es von selbst die andere Standardvariante, <b>993 oder 143</b> für IMAP und <b>465 oder 587</b> für SMTP. Niemand muss also bei STARTTLS raten."
+    "body": "Sie brauchen vier Dinge: Ihre Adresse, Ihren Mailserver, Ihr Passwort und, falls Ihr Anbieter es verlangt, ein App-Passwort. Geben Sie zuerst Ihre Adresse ein: MCPEmails erkennt die gängigen Hosting-Anbieter und trägt beide Hosts, beide Ports und die Verschlüsselungsart für Sie ein. Antwortet die gewählte Verbindungsart nicht, probiert es von selbst die andere Standardvariante, <b>993 oder 143</b> für IMAP und <b>465 oder 587</b> für SMTP. Niemand muss also bei STARTTLS raten."
   },
   "setup": [
     {
       "h": "Kostenloses Konto erstellen",
-      "p": "Registrieren Sie sich bei MCP Emails, ohne Kreditkarte. Der Free-Tarif verbindet ein Postfach, dauerhaft. Bezahlte Tarife bieten mehr: drei Postfächer mit Personal, bis zu 10 mit Pro und so viele, wie Sie brauchen, mit Business."
+      "p": "Registrieren Sie sich bei MCPEmails, ohne Kreditkarte. Der Free-Tarif verbindet ein Postfach, dauerhaft. Bezahlte Tarife bieten mehr: drei Postfächer mit Personal, bis zu 10 mit Pro und so viele, wie Sie brauchen, mit Business."
     },
     {
       "h": "IMAP- und SMTP-Einstellungen heraussuchen",
       "p": "Ihr Anbieter veröffentlicht sie, meist als imap.yourdomain.com und smtp.yourdomain.com auf den Ports 993 und 465. Verlangt Ihr Anbieter ein App-Passwort für Mail-Clients, erstellen Sie jetzt eines."
     },
     {
-      "h": "In MCP Emails einfügen",
+      "h": "In MCPEmails einfügen",
       "p": "Wählen Sie IMAP / SMTP und tragen Sie Ihre Adresse, die beiden Hosts und das Passwort ein. Ports und Verschlüsselungsart finden Sie unter Erweitert, vorausgefüllt mit den Standardwerten."
     },
     {
@@ -66,11 +66,11 @@
     },
     {
       "h": "993 oder 143, 465 oder 587, und was ein Anbieter mit „SSL“ oder „TLS“ meint",
-      "p": "RFC 8314 empfiehlt Anbietern implizites TLS, die Verbindung ist also ab dem ersten Byte verschlüsselt: Port <code>993</code> für IMAP und <code>465</code> für den Versand. Ältere Konfigurationen nutzen <code>143</code> und <code>587</code>. Diese starten unverschlüsselt und werden per STARTTLS hochgestuft. Anbieter beschriften das uneinheitlich, und genau diese Beschriftungen sorgen für die meiste Verwirrung: „SSL/TLS“ in einer Einstellungstabelle bedeutet fast immer implizites TLS auf 993 oder 465, „TLS“ oder „STARTTLS“ fast immer 143 oder 587. Sie müssen das nicht selbst herausfinden. Geben Sie Ihre Adresse ein, und MCP Emails trägt bei den Hosts, die es kennt, beide Hosts, beide Ports und beide Verschlüsselungsarten ein. Antwortet die gewählte Verbindungsart nicht, versucht es von selbst die andere Standardvariante."
+      "p": "RFC 8314 empfiehlt Anbietern implizites TLS, die Verbindung ist also ab dem ersten Byte verschlüsselt: Port <code>993</code> für IMAP und <code>465</code> für den Versand. Ältere Konfigurationen nutzen <code>143</code> und <code>587</code>. Diese starten unverschlüsselt und werden per STARTTLS hochgestuft. Anbieter beschriften das uneinheitlich, und genau diese Beschriftungen sorgen für die meiste Verwirrung: „SSL/TLS“ in einer Einstellungstabelle bedeutet fast immer implizites TLS auf 993 oder 465, „TLS“ oder „STARTTLS“ fast immer 143 oder 587. Sie müssen das nicht selbst herausfinden. Geben Sie Ihre Adresse ein, und MCPEmails trägt bei den Hosts, die es kennt, beide Hosts, beide Ports und beide Verschlüsselungsarten ein. Antwortet die gewählte Verbindungsart nicht, versucht es von selbst die andere Standardvariante."
     },
     {
       "h": "Drei Serverfähigkeiten bestimmen, wie sich Ihr Postfach verhält, und keine zwei Server sind sich einig",
-      "p": "<b>SASL-IR</b> (RFC 4959): Ein Server, der das nicht meldet, lehnt Zugangsdaten ab, die in derselben Zeile wie der Befehl <code>AUTHENTICATE</code> gesendet werden, und antwortet mit einem bloßen <code>BAD</code> ohne Erklärung. Das sieht genau aus wie ein falsches Passwort. MCP Emails erkennt das und wiederholt die Anmeldung in zwei Schritten. Deshalb funktionieren manche Hosts hier und scheitern in anderen Werkzeugen. <b>MOVE</b> (RFC 6851): Ohne diese Fähigkeit lässt sich eine Nachricht nicht atomar verschieben. Verschieben wird dann zu Kopieren, Setzen eines Flags und Expunge, und eine mittendrin abgebrochene Verbindung kann die Nachricht in beiden Ordnern hinterlassen. <b>SPECIAL-USE</b> (RFC 6154): Ohne diese Fähigkeit kennzeichnet der Server Gesendet, Entwürfe, Papierkorb und Spam nicht nach ihrer Rolle, Ordner werden also über den Namen zugeordnet. Bei einem Postfach, das auf Deutsch, Norwegisch oder Russisch angelegt wurde, erkennt Ihr Agent die Systemordner dann nur, wenn Sie sie benennen. Verhält sich ein Ordnervorgang seltsam, ist meist eine dieser drei Fähigkeiten der Grund."
+      "p": "<b>SASL-IR</b> (RFC 4959): Ein Server, der das nicht meldet, lehnt Zugangsdaten ab, die in derselben Zeile wie der Befehl <code>AUTHENTICATE</code> gesendet werden, und antwortet mit einem bloßen <code>BAD</code> ohne Erklärung. Das sieht genau aus wie ein falsches Passwort. MCPEmails erkennt das und wiederholt die Anmeldung in zwei Schritten. Deshalb funktionieren manche Hosts hier und scheitern in anderen Werkzeugen. <b>MOVE</b> (RFC 6851): Ohne diese Fähigkeit lässt sich eine Nachricht nicht atomar verschieben. Verschieben wird dann zu Kopieren, Setzen eines Flags und Expunge, und eine mittendrin abgebrochene Verbindung kann die Nachricht in beiden Ordnern hinterlassen. <b>SPECIAL-USE</b> (RFC 6154): Ohne diese Fähigkeit kennzeichnet der Server Gesendet, Entwürfe, Papierkorb und Spam nicht nach ihrer Rolle, Ordner werden also über den Namen zugeordnet. Bei einem Postfach, das auf Deutsch, Norwegisch oder Russisch angelegt wurde, erkennt Ihr Agent die Systemordner dann nur, wenn Sie sie benennen. Verhält sich ein Ordnervorgang seltsam, ist meist eine dieser drei Fähigkeiten der Grund."
     }
   ],
   "limits": [
@@ -81,7 +81,7 @@
   "faq": [
     {
       "q": "Funktioniert Claude mit jedem IMAP-Postfach?",
-      "a": "Claude hat keinen eigenen IMAP-Client, also nicht direkt. Richten Sie einen MCP-Server wie MCP Emails mit Ihrer Adresse, Ihrem Host und Ihrem Passwort auf das Postfach ein, dann kann Claude diese E-Mails lesen, suchen, senden, beantworten, planen und sortieren. Jeder Server, der IMAP und SMTP auf den Standardports spricht, funktioniert, egal wer ihn hostet, und dieselbe Verbindung klappt dann auch in Cursor und ChatGPT."
+      "a": "Claude hat keinen eigenen IMAP-Client, also nicht direkt. Richten Sie einen MCP-Server wie MCPEmails mit Ihrer Adresse, Ihrem Host und Ihrem Passwort auf das Postfach ein, dann kann Claude diese E-Mails lesen, suchen, senden, beantworten, planen und sortieren. Jeder Server, der IMAP und SMTP auf den Standardports spricht, funktioniert, egal wer ihn hostet, und dieselbe Verbindung klappt dann auch in Cursor und ChatGPT."
     },
     {
       "q": "Wie finde ich meine IMAP-Servereinstellungen?",
@@ -89,7 +89,7 @@
     },
     {
       "q": "Soll ich Port 993 oder 143 verwenden?",
-      "a": "Verwenden Sie 993, sofern Ihr Anbieter nichts anderes sagt. Port 993 ist implizites TLS, ab dem ersten Byte verschlüsselt, und wird von den aktuellen Standards empfohlen. Port 143 startet unverschlüsselt und wird per STARTTLS hochgestuft. Das funktioniert weiterhin, ist aber das ältere Muster. Beim Senden gilt dieselbe Unterscheidung: 465 für implizites TLS und 587 für STARTTLS. MCP Emails probiert das Standardpaar und weicht von selbst auf das andere aus."
+      "a": "Verwenden Sie 993, sofern Ihr Anbieter nichts anderes sagt. Port 993 ist implizites TLS, ab dem ersten Byte verschlüsselt, und wird von den aktuellen Standards empfohlen. Port 143 startet unverschlüsselt und wird per STARTTLS hochgestuft. Das funktioniert weiterhin, ist aber das ältere Muster. Beim Senden gilt dieselbe Unterscheidung: 465 für implizites TLS und 587 für STARTTLS. MCPEmails probiert das Standardpaar und weicht von selbst auf das andere aus."
     },
     {
       "q": "Warum verbindet sich mein Mail-Client, aber diese Anmeldung scheitert?",

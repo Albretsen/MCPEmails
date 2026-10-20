@@ -1,16 +1,16 @@
 {
   "meta": {
-    "title": "Om MCP Emails og Asgeir Albretsen",
-    "description": "MCP Emails lages og drives av Asgeir Albretsen, utvikler i Bergen: én person, et registrert norsk foretak og åpen kildekode."
+    "title": "Om MCPEmails og Asgeir Albretsen",
+    "description": "MCPEmails lages og drives av Asgeir Albretsen, utvikler i Bergen: én person, et registrert norsk foretak og åpen kildekode."
   },
   "hero": {
     "eyebrow": "Om",
-    "title": "Hvem står bak MCP Emails",
+    "title": "Hvem står bak MCPEmails",
     "lead": "Du gir en AI-agent tilgang til e-posten din. Da bør du vite hva som står mellom agenten og innboksen: én person, et registrert foretak og kode du kan lese."
   },
   "who": {
     "title": "Om meg",
-    "p1": "Jeg heter Asgeir Albretsen. Jeg er utvikler, bor i Bergen og har en bachelorgrad i datateknologi fra Universitetet i Bergen. MCP Emails bygger og drifter jeg alene.",
+    "p1": "Jeg heter Asgeir Albretsen. Jeg er utvikler, bor i Bergen og har en bachelorgrad i datateknologi fra Universitetet i Bergen. MCPEmails bygger og drifter jeg alene.",
     "p2": "Arbeidserfaring:",
     "thPeriod": "Periode",
     "thRole": "Stilling",
@@ -20,14 +20,14 @@
       { "period": "jan. 2023 til sep. 2024", "role": "IT-konsulent ved Handelshøyskolen BI" },
       { "period": "sep. 2024 til i dag", "role": "Utvikler i full stilling" }
     ],
-    "p3": "Jeg har fortsatt full stilling som utvikler hos en annen arbeidsgiver. MCP Emails er et uavhengig og selvfinansiert prosjekt som jeg lager på fritiden.",
+    "p3": "Jeg har fortsatt full stilling som utvikler hos en annen arbeidsgiver. MCPEmails er et uavhengig og selvfinansiert prosjekt som jeg lager på fritiden.",
     "linksIntro": "Du finner meg også her:",
-    "linkGithubNote": "kode, blant annet MCP Emails",
+    "linkGithubNote": "kode, blant annet MCPEmails",
     "linkSiteNote": "personlig nettside",
     "linkLinkedinNote": "arbeidserfaring"
   },
   "why": {
-    "title": "Hvorfor jeg laget MCP Emails",
+    "title": "Hvorfor jeg laget MCPEmails",
     "p1": "Jeg ville at mine egne agenter skulle ta seg av innboksen min. Alle løsningene jeg fant, ville først ha en kopi av e-posten min: synkronisere den, indeksere den og lagre den i noen andres database så lenge kontoen finnes. En innboks full av fakturaer, kontrakter og e-poster om nytt passord er mye å gi fra seg for noe jeg bare trengte av og til.",
     "p2": "Så jeg laget en versjon jeg selv ville bruke. E-posten hentes først når agenten ber om den, og kastes så snart svaret er sendt. Det finnes ingen lagret kopi. Det eneste som lagres, er innloggingsopplysningene til e-postkontoen. De er kryptert og trengs til neste kall. Min egen e-post går gjennom tjenesten hver dag."
   },
@@ -36,7 +36,7 @@
     "intro": "Tre ting:",
     "points": [
       "<b>En navngitt person.</b> Meg, ikke en supportadresse. Går noe galt, vet du hvem som har ansvaret.",
-      "<b>Et registrert selskap.</b> MCP Emails drives av Albretsen AS, et norsk aksjeselskap registrert i Foretaksregisteret hos Brønnøysundregistrene. Jeg eier selskapet og er styreleder.",
+      "<b>Et registrert selskap.</b> MCPEmails drives av Albretsen AS, et norsk aksjeselskap registrert i Foretaksregisteret hos Brønnøysundregistrene. Jeg eier selskapet og er styreleder.",
       "<b>Kode du kan lese.</b> Serveren ligger åpent på GitHub under AGPL-3.0, og tjenesten på mcpemails.com kjører den samme koden."
     ],
     "entityTitle": "Foretaksopplysninger",
@@ -49,7 +49,7 @@
   "busFactor": {
     "title": "Hvis jeg blir påkjørt av en buss",
     "p1": "En e-posttjeneste som drives av én person, er en reell risiko. Jeg kan bli syk, miste interessen eller bli påkjørt av en buss. Var tjenesten lukket, ville agentene dine vært koblet til noe ingen vedlikeholder.",
-    "p2": "Det er nettopp det lisensen skal løse. MCP Emails er åpen kildekode under AGPL-3.0, og tjenesten på mcpemails.com kjører den samme serveren som du kan klone. Hvis jeg gir meg, kloner du repoet, starter alt med én kommando, peker agenten mot din egen instans og fortsetter som før. Verktøyene heter det samme. Innloggingsopplysningene har du selv, og e-posten din ble aldri lagret hos meg.",
+    "p2": "Det er nettopp det lisensen skal løse. MCPEmails er åpen kildekode under AGPL-3.0, og tjenesten på mcpemails.com kjører den samme serveren som du kan klone. Hvis jeg gir meg, kloner du repoet, starter alt med én kommando, peker agenten mot din egen instans og fortsetter som før. Verktøyene heter det samme. Innloggingsopplysningene har du selv, og e-posten din ble aldri lagret hos meg.",
     "p3": "Prøv selvhosting én gang mens alt fungerer, så vet du at det virker før du trenger det.",
     "ctaSelfHost": "Veiledning for selvhosting",
     "ctaSource": "Kildekode"

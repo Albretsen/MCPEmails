@@ -1,9 +1,9 @@
 const translation = {
   title: 'Por qué importa que «el correo nunca se almacene» al conectar la IA a tu bandeja',
   description:
-    'Que el correo nunca se almacene significa que MCP Emails obtiene tu correo en vivo y lo descarta, guardando solo un token cifrado. Mira por qué supera a las herramientas que copian toda tu bandeja.',
+    'Que el correo nunca se almacene significa que MCPEmails obtiene tu correo en vivo y lo descarta, guardando solo un token cifrado. Mira por qué supera a las herramientas que copian toda tu bandeja.',
   coverAlt: 'Correo obtenido en vivo y descartado frente a una segunda copia almacenada en la base de datos de un proveedor',
-  content: `Cuando conectas un agente de IA a tu bandeja de entrada, la pregunta más importante de todas es dónde acaba tu correo. Con MCP Emails la respuesta es: en ningún sitio. Cada llamada a una herramienta obtiene tu correo en vivo desde Gmail, Microsoft Graph o tu servidor IMAP, se lo entrega al agente y lo desecha. Lo único que conservamos es un token cifrado para que la siguiente llamada pueda producirse.
+  content: `Cuando conectas un agente de IA a tu bandeja de entrada, la pregunta más importante de todas es dónde acaba tu correo. Con MCPEmails la respuesta es: en ningún sitio. Cada llamada a una herramienta obtiene tu correo en vivo desde Gmail, Microsoft Graph o tu servidor IMAP, se lo entrega al agente y lo desecha. Lo único que conservamos es un token cifrado para que la siguiente llamada pueda producirse.
 
 Eso suena a un detalle de implementación menor. No lo es. Es la diferencia entre darle a un agente una *llave de tu casa* y darle una *fotocopia de todo lo que hay en tu casa*, guardada para siempre en el archivador de otra persona. Muchas herramientas de «IA para el correo» hacen lo segundo sin decirlo. Esta publicación trata de por qué eso importa y de cómo difiere de verdad la arquitectura.
 
@@ -13,7 +13,7 @@ En realidad solo hay dos diseños, y la mayoría de los productos encajan claram
 
 **Copiarlo todo (sincronizar y almacenar).** La herramienta se conecta a tu buzón una vez y luego vuelca tus mensajes en su propia base de datos, a menudo de forma continua. Tu bandeja queda reflejada en su infraestructura para poder indexarse, incrustarse en un almacén vectorial, alimentar a un modelo o servirse de vuelta con rapidez. El agente lee de *su* copia, no de tu proveedor.
 
-**Obtención en vivo (nunca almacenado).** La herramienta solo guarda una credencial. Cuando el agente necesita un mensaje, el servidor llama a tu proveedor en tiempo real, devuelve el resultado y descarta el cuerpo. No se retiene nada del contenido. Así funciona MCP Emails.
+**Obtención en vivo (nunca almacenado).** La herramienta solo guarda una credencial. Cuando el agente necesita un mensaje, el servidor llama a tu proveedor en tiempo real, devuelve el resultado y descarta el cuerpo. No se retiene nada del contenido. Así funciona MCPEmails.
 
 El modelo de copiarlo todo es popular porque es fácil de construir y hace que la búsqueda parezca instantánea. Pero cambia lo que realmente aceptas cuando haces clic en «Connect». No estás concediendo acceso. Estás autorizando un duplicado.
 
@@ -39,7 +39,7 @@ Un corpus almacenado de correo real es irresistible. Resulta tentador usarlo par
 
 ## Cómo funciona de verdad la obtención en vivo
 
-Este es el recorrido que hace una sola llamada \`email_read\` (acción \`read\`) a través de MCP Emails:
+Este es el recorrido que hace una sola llamada \`email_read\` (acción \`read\`) a través de MCPEmails:
 
 \`\`\`
 agente  →  servidor MCP  →  conexión con el proveedor

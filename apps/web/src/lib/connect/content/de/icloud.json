@@ -22,23 +22,23 @@
     "meta0": "1 Postfach dauerhaft kostenlos",
     "meta1": "App-spezifisches Passwort, kein OAuth",
     "meta2": "E-Mails werden live abgerufen, nie gespeichert",
-    "answer": "Apple bietet für iCloud Mail kein OAuth an, deshalb kann Claude sich nicht direkt damit verbinden. MCP Emails verbindet Ihr iCloud-Postfach per IMAP mit einem App-spezifischen Passwort von Apple. So können Claude, Cursor oder jeder MCP-Client diese E-Mails lesen, suchen, senden und sortieren. Die Einrichtung dauert etwa zwei Minuten, und ein Postfach ist kostenlos."
+    "answer": "Apple bietet für iCloud Mail kein OAuth an, deshalb kann Claude sich nicht direkt damit verbinden. MCPEmails verbindet Ihr iCloud-Postfach per IMAP mit einem App-spezifischen Passwort von Apple. So können Claude, Cursor oder jeder MCP-Client diese E-Mails lesen, suchen, senden und sortieren. Die Einrichtung dauert etwa zwei Minuten, und ein Postfach ist kostenlos."
   },
   "method": {
     "title": "So verbindet sich iCloud: mit einem App-spezifischen Passwort",
-    "body": "iCloud Mail verbindet sich über IMAP/SMTP mit einem <b>App-spezifischen Passwort von Apple</b>. Erstellen Sie eines auf account.apple.com unter Anmeldung und Sicherheit → App-spezifische Passwörter (Zwei-Faktor-Authentifizierung erforderlich) und fügen Sie es zusammen mit Ihrer iCloud-Adresse in MCP Emails ein."
+    "body": "iCloud Mail verbindet sich über IMAP/SMTP mit einem <b>App-spezifischen Passwort von Apple</b>. Erstellen Sie eines auf account.apple.com unter Anmeldung und Sicherheit → App-spezifische Passwörter (Zwei-Faktor-Authentifizierung erforderlich) und fügen Sie es zusammen mit Ihrer iCloud-Adresse in MCPEmails ein."
   },
   "setup": [
     {
       "h": "Kostenloses Konto erstellen",
-      "p": "Registrieren Sie sich bei MCP Emails, ohne Kreditkarte. Der Free-Tarif verbindet ein Postfach, dauerhaft."
+      "p": "Registrieren Sie sich bei MCPEmails, ohne Kreditkarte. Der Free-Tarif verbindet ein Postfach, dauerhaft."
     },
     {
       "h": "App-spezifisches Passwort erstellen",
       "p": "Öffnen Sie auf account.apple.com Anmeldung und Sicherheit → App-spezifische Passwörter und erstellen Sie eines (die Zwei-Faktor-Authentifizierung muss aktiv sein)."
     },
     {
-      "h": "In MCP Emails einfügen",
+      "h": "In MCPEmails einfügen",
       "p": "Tragen Sie Ihre iCloud-Adresse und das App-spezifische Passwort ein, um das Postfach sicher zu verbinden."
     },
     {
@@ -72,7 +72,7 @@
   "faq": [
     {
       "q": "Funktioniert Claude mit iCloud Mail?",
-      "a": "Nicht von allein. Claude hat keinen eingebauten iCloud-Konnektor, und Apple bietet für iCloud Mail keine OAuth-Schnittstelle an. Verbinden Sie einen MCP-Server wie MCP Emails per IMAP und mit einem App-spezifischen Passwort von Apple mit dem Postfach. Dann kann Claude E-Mails lesen, suchen, senden, beantworten, planen und sortieren, und dieselbe Verbindung funktioniert in Cursor und ChatGPT."
+      "a": "Nicht von allein. Claude hat keinen eingebauten iCloud-Konnektor, und Apple bietet für iCloud Mail keine OAuth-Schnittstelle an. Verbinden Sie einen MCP-Server wie MCPEmails per IMAP und mit einem App-spezifischen Passwort von Apple mit dem Postfach. Dann kann Claude E-Mails lesen, suchen, senden, beantworten, planen und sortieren, und dieselbe Verbindung funktioniert in Cursor und ChatGPT."
     },
     {
       "q": "Wie lauten die IMAP- und SMTP-Einstellungen für iCloud Mail?",

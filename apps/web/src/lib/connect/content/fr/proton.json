@@ -21,7 +21,7 @@
     "titleLine1": "Proton Mail ne peut pas être",
     "titleLine2": "connecté à un serveur MCP hébergé",
     "lead": "Proton n'a pas de serveur IMAP sur Internet. Le seul IMAP qui existe pour une boîte Proton tourne sur votre propre ordinateur, dans Proton Mail Bridge, et c'est pourquoi tous les outils hébergés se heurtent au même mur.",
-    "answer": "Non. Proton Mail n'expose aucun point d'accès IMAP, POP ou SMTP auquel un client situé ailleurs pourrait se connecter. La seule façon pour un logiciel de messagerie d'atteindre Proton est Proton Mail Bridge, une application de bureau disponible avec les offres Proton payantes, qui déchiffre votre courrier en local et sert l'IMAP et le SMTP sur localhost, c'est-à-dire l'adresse de bouclage de la machine où elle tourne. Un serveur MCP hébergé comme MCP Emails fonctionne sur notre infrastructure, pas sur votre bureau, et rien sur Internet ne peut être acheminé vers votre localhost : la connexion est donc impossible, et pas simplement non implémentée. Si vous voulez qu'un agent IA travaille sur le courrier qui arrive à votre adresse Proton, les options honnêtes sont le transfert automatique payant de Proton vers une boîte qui parle l'IMAP, que MCP Emails connecte gratuitement pour une boîte, ou la soumission SMTP de Proton, en envoi uniquement, pour le seul courrier sortant."
+    "answer": "Non. Proton Mail n'expose aucun point d'accès IMAP, POP ou SMTP auquel un client situé ailleurs pourrait se connecter. La seule façon pour un logiciel de messagerie d'atteindre Proton est Proton Mail Bridge, une application de bureau disponible avec les offres Proton payantes, qui déchiffre votre courrier en local et sert l'IMAP et le SMTP sur localhost, c'est-à-dire l'adresse de bouclage de la machine où elle tourne. Un serveur MCP hébergé comme MCPEmails fonctionne sur notre infrastructure, pas sur votre bureau, et rien sur Internet ne peut être acheminé vers votre localhost : la connexion est donc impossible, et pas simplement non implémentée. Si vous voulez qu'un agent IA travaille sur le courrier qui arrive à votre adresse Proton, les options honnêtes sont le transfert automatique payant de Proton vers une boîte qui parle l'IMAP, que MCPEmails connecte gratuitement pour une boîte, ou la soumission SMTP de Proton, en envoi uniquement, pour le seul courrier sortant."
   },
   "method": {
     "title": "Comment Proton Mail se connecte : en local, via Bridge, ou pas du tout",
@@ -34,7 +34,7 @@
     },
     {
       "h": "Choisissez la boîte qui portera le travail automatisé",
-      "p": "Prenez une adresse chez un fournisseur qui exploite un vrai serveur IMAP : une boîte sur votre domaine, un compte professionnel, Fastmail, Migadu, Gmail. C'est le compte que MCP Emails connecte, et celui depuis lequel votre agent lit, envoie, classe et planifie. Votre adresse Proton reste exactement telle qu'elle est."
+      "p": "Prenez une adresse chez un fournisseur qui exploite un vrai serveur IMAP : une boîte sur votre domaine, un compte professionnel, Fastmail, Migadu, Gmail. C'est le compte que MCPEmails connecte, et celui depuis lequel votre agent lit, envoie, classe et planifie. Votre adresse Proton reste exactement telle qu'elle est."
     },
     {
       "h": "Ajoutez une règle de transfert dans les réglages Proton",
@@ -90,7 +90,7 @@
     },
     {
       "q": "Mes e-mails sont-ils stockés sur vos serveurs ?",
-      "a": "Non. Pour les boîtes que MCP Emails connecte, les messages sont récupérés en direct en IMAP à chaque requête et transmis à votre client IA, avec des identifiants chiffrés au repos et sans conservation du corps des messages. Nous ne détenons jamais d'identifiants Proton, puisqu'il n'y a aucune connexion Proton à établir."
+      "a": "Non. Pour les boîtes que MCPEmails connecte, les messages sont récupérés en direct en IMAP à chaque requête et transmis à votre client IA, avec des identifiants chiffrés au repos et sans conservation du corps des messages. Nous ne détenons jamais d'identifiants Proton, puisqu'il n'y a aucune connexion Proton à établir."
     }
   ],
   "ctaBand": {

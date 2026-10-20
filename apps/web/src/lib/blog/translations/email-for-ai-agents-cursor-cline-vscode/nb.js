@@ -26,7 +26,7 @@ Cursor støtter OAuth 2.0 for MCP-servere, som er den smertefrie løypen. Det fi
 
 1. Åpne Cursor-innstillingene og finn seksjonen for MCP-servere.
 2. Legg til en ny server med URL-en \`https://www.mcpemails.com/api/mcp\`.
-3. Cursor åpner et nettleservindu. Logg inn på MCP Emails-kontoen din og godkjenn omfangene du vil at agenten skal ha — \`read:email\`, \`send:email\`, eller begge.
+3. Cursor åpner et nettleservindu. Logg inn på MCPEmails-kontoen din og godkjenn omfangene du vil at agenten skal ha — \`read:email\`, \`send:email\`, eller begge.
 4. Tilkoblingen blir grønn og e-postverktøyene dukker opp i Cursors verktøyliste.
 
 Under panseret er det OAuth 2.0 authorization code med PKCE, og tokenet Cursor holder er avgrenset til nøyaktig det du godkjente. Ga du bare \`read:email\`, kan agenten bokstavelig talt ikke sende. Når du er ferdig, kan du tilbakekalle tilkoblingen fra **Dashboard → API Keys** (OAuth-tildelinger bor der også) med ett klikk, og Cursors tilgang dør umiddelbart.

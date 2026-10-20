@@ -19,8 +19,8 @@
     "eyebrow": "Dovecot + IA",
     "titleLine1": "Conecta tu servidor Dovecot",
     "titleLine2": "a Claude, Cursor y cualquier cliente MCP",
-    "lead": "Tú gestionas el servidor IMAP, así que tú decides a qué puede llegar un agente. Apunta MCP Emails a tu propio servidor Dovecot y deja que Claude lea, busque, envíe, responda, programe y archive correo en los buzones que ya gestionas.",
-    "answer": "Claude no puede acceder por sí solo a un servidor Dovecot. MCP Emails es un servidor MCP alojado que se conecta a tu instalación de Dovecot por IMAP en tu propio nombre de servidor, normalmente mail.yourdomain.com en el puerto 993, con la contraseña del buzón que tu passdb ya acepta, para que Claude, Cursor o cualquier cliente MCP pueda leer, buscar, enviar y organizar ese correo. No hay un nombre de servidor compartido que consultar: el servidor es como se llame el tuyo, tiene que ser accesible desde internet y su certificado TLS tiene que ser válido para el nombre al que te conectas. Una bandeja es gratis.",
+    "lead": "Tú gestionas el servidor IMAP, así que tú decides a qué puede llegar un agente. Apunta MCPEmails a tu propio servidor Dovecot y deja que Claude lea, busque, envíe, responda, programe y archive correo en los buzones que ya gestionas.",
+    "answer": "Claude no puede acceder por sí solo a un servidor Dovecot. MCPEmails es un servidor MCP alojado que se conecta a tu instalación de Dovecot por IMAP en tu propio nombre de servidor, normalmente mail.yourdomain.com en el puerto 993, con la contraseña del buzón que tu passdb ya acepta, para que Claude, Cursor o cualquier cliente MCP pueda leer, buscar, enviar y organizar ese correo. No hay un nombre de servidor compartido que consultar: el servidor es como se llame el tuyo, tiene que ser accesible desde internet y su certificado TLS tiene que ser válido para el nombre al que te conectas. Una bandeja es gratis.",
     "meta0": "1 bandeja gratis, para siempre",
     "meta1": "La contraseña de tu buzón de Dovecot actual",
     "meta2": "El correo se obtiene en vivo, nunca se almacena"
@@ -32,7 +32,7 @@
   "setup": [
     {
       "h": "Crea una cuenta gratis",
-      "p": "Regístrate en MCP Emails, sin tarjeta. El plan gratuito conecta una bandeja, para siempre, lo que basta para probarlo con un buzón real de tu propio servidor."
+      "p": "Regístrate en MCPEmails, sin tarjeta. El plan gratuito conecta una bandeja, para siempre, lo que basta para probarlo con un buzón real de tu propio servidor."
     },
     {
       "h": "Confirma en qué escucha Dovecot",
@@ -40,7 +40,7 @@
     },
     {
       "h": "Comprueba el certificado del 993 desde fuera",
-      "p": "Desde una máquina que no sea tu servidor de correo, ejecuta <code>openssl s_client -connect mail.yourdomain.com:993</code>. Quieres una cadena que se verifique y un nombre de sujeto que coincida con el servidor que vas a escribir en MCP Emails. Después añade la bandeja: elige IMAP / SMTP e introduce tu nombre de servidor, el usuario del buzón y su contraseña."
+      "p": "Desde una máquina que no sea tu servidor de correo, ejecuta <code>openssl s_client -connect mail.yourdomain.com:993</code>. Quieres una cadena que se verifique y un nombre de sujeto que coincida con el servidor que vas a escribir en MCPEmails. Después añade la bandeja: elige IMAP / SMTP e introduce tu nombre de servidor, el usuario del buzón y su contraseña."
     },
     {
       "h": "Pega la URL MCP en tu IA",
@@ -50,7 +50,7 @@
   "gotchas": [
     {
       "h": "Sin entradas special_use, Dovecot no define funciones de carpeta",
-      "p": "Dovecot solo anuncia la extensión SPECIAL-USE para los buzones que hayas declarado. Salvo que <code>15-mailboxes.conf</code> tenga entradas como <code>mailbox Sent { special_use = \\Sent }</code>, un cliente IMAP recibe una lista plana de nombres y tiene que adivinar qué carpeta es Enviados, Borradores, Correo no deseado o Papelera. MCP Emails recurre a identificarlas por nombre, así que en un servidor cuyas carpetas se llamen Sent Items, Gesendet o Papierkorb puede que haya que elegir la carpeta a mano una vez. Añadir las líneas special_use lo arregla para siempre en todos tus clientes."
+      "p": "Dovecot solo anuncia la extensión SPECIAL-USE para los buzones que hayas declarado. Salvo que <code>15-mailboxes.conf</code> tenga entradas como <code>mailbox Sent { special_use = \\Sent }</code>, un cliente IMAP recibe una lista plana de nombres y tiene que adivinar qué carpeta es Enviados, Borradores, Correo no deseado o Papelera. MCPEmails recurre a identificarlas por nombre, así que en un servidor cuyas carpetas se llamen Sent Items, Gesendet o Papierkorb puede que haya que elegir la carpeta a mano una vez. Añadir las líneas special_use lo arregla para siempre en todos tus clientes."
     },
     {
       "h": "Un prefijo de namespace reescribe todos los nombres de carpeta que ves",
@@ -66,14 +66,14 @@
     }
   ],
   "limits": [
-    "Tu servidor Dovecot tiene que aceptar conexiones desde internet para que un servidor MCP alojado pueda alcanzarlo. Si tu política es que IMAP nunca sale de la LAN o de la VPN, es una respuesta legítima y este producto no puede servirte como servicio alojado. En su lugar puedes alojar tú mismo MCP Emails, lo que mantiene la conexión IMAP dentro de tu propia red.",
+    "Tu servidor Dovecot tiene que aceptar conexiones desde internet para que un servidor MCP alojado pueda alcanzarlo. Si tu política es que IMAP nunca sale de la LAN o de la VPN, es una respuesta legítima y este producto no puede servirte como servicio alojado. En su lugar puedes alojar tú mismo MCPEmails, lo que mantiene la conexión IMAP dentro de tu propia red.",
     "Aquí la validación TLS estricta no es opcional. Se rechazará un certificado autofirmado, uno caducado o uno emitido para otro nombre de servidor, y no hay ninguna casilla para aceptarlo igualmente.",
     "Los envíos salen por tu propio servicio de envío, así que tus registros SPF, DKIM y DMARC determinan la entregabilidad exactamente igual que para cualquier otro cliente de ese servidor."
   ],
   "faq": [
     {
       "q": "¿Funciona Claude con Dovecot?",
-      "a": "No directamente. Claude no tiene forma de abrir un socket IMAP hacia un servidor que gestionas tú. Conectar un servidor MCP como MCP Emails a tu servidor Dovecot le da a Claude acceso para leer, buscar, enviar, responder, programar y organizar los buzones que hay en él, con las mismas credenciales que usaría cualquier otro cliente IMAP."
+      "a": "No directamente. Claude no tiene forma de abrir un socket IMAP hacia un servidor que gestionas tú. Conectar un servidor MCP como MCPEmails a tu servidor Dovecot le da a Claude acceso para leer, buscar, enviar, responder, programar y organizar los buzones que hay en él, con las mismas credenciales que usaría cualquier otro cliente IMAP."
     },
     {
       "q": "¿Cuáles son los ajustes IMAP y SMTP de Dovecot?",
@@ -85,7 +85,7 @@
     },
     {
       "q": "¿Tiene que ser accesible mi servidor Dovecot desde internet?",
-      "a": "Sí, para el servicio alojado. MCP Emails se conecta hacia dentro a tu puerto IMAP, así que un servidor vinculado a loopback, limitado por cortafuegos al rango de tu oficina o accesible solo por VPN no se puede conectar. Si prefieres no exponer IMAP públicamente, MCP Emails se puede alojar por tu cuenta y ejecutarse dentro de la misma red que el servidor de correo."
+      "a": "Sí, para el servicio alojado. MCPEmails se conecta hacia dentro a tu puerto IMAP, así que un servidor vinculado a loopback, limitado por cortafuegos al rango de tu oficina o accesible solo por VPN no se puede conectar. Si prefieres no exponer IMAP públicamente, MCPEmails se puede alojar por tu cuenta y ejecutarse dentro de la misma red que el servidor de correo."
     },
     {
       "q": "¿Qué productos están construidos sobre Dovecot?",
@@ -98,6 +98,6 @@
   ],
   "ctaBand": {
     "title": "Dale a tu IA una bandeja de Dovecot",
-    "sub": "Apunta MCP Emails a tu propio servidor. Una bandeja gratis para siempre, sin tarjeta."
+    "sub": "Apunta MCPEmails a tu propio servidor. Una bandeja gratis para siempre, sin tarjeta."
   }
 }

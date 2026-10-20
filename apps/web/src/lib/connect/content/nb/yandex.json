@@ -18,7 +18,7 @@
     "titleLine1": "Koble Yandex Mail til Claude,",
     "titleLine2": "og Cursor, ChatGPT, enhver MCP-klient",
     "lead": "Gi AI-agenten din en ekte Yandex-innboks. Les, søk, send, svar, planlegg og organiser e-post via IMAP med et Yandex-app-passord, i alle MCP-klienter i stedet for bare én.",
-    "answer": "Claude når ikke Yandex Mail på egen hånd. MCP Emails er en hostet MCP-server som kobler til via IMAP på imap.yandex.com port 993 og autentiserer med et Yandex-app-passord i stedet for kontopassordet ditt, slik at Claude, Cursor eller enhver MCP-klient kan lese, søke, sende og organisere den e-posten. Yandex krever at du setter postkassen over på tilgang med app-passord før noen e-postklient kan logge inn; oppsettet tar et par minutter, og én innboks er gratis.",
+    "answer": "Claude når ikke Yandex Mail på egen hånd. MCPEmails er en hostet MCP-server som kobler til via IMAP på imap.yandex.com port 993 og autentiserer med et Yandex-app-passord i stedet for kontopassordet ditt, slik at Claude, Cursor eller enhver MCP-klient kan lese, søke, sende og organisere den e-posten. Yandex krever at du setter postkassen over på tilgang med app-passord før noen e-postklient kan logge inn; oppsettet tar et par minutter, og én innboks er gratis.",
     "meta0": "1 innboks gratis, for alltid",
     "meta1": "App-passord, ikke kontopassordet ditt",
     "meta2": "E-post hentes direkte, lagres aldri"
@@ -37,7 +37,7 @@
       "p": "På id.yandex.com åpner du Security, så App passwords, og oppretter et av typen Mail. Yandex viser passordet én gang. Kopier det nå; det vanlige kontopassordet ditt virker ikke her."
     },
     {
-      "h": "Lim det inn i MCP Emails",
+      "h": "Lim det inn i MCPEmails",
       "p": "Velg IMAP / SMTP, skriv inn hele Yandex-adressen din og lim inn app-passordet. Vertene over er forhåndsutfylt."
     },
     {
@@ -48,7 +48,7 @@
   "gotchas": [
     {
       "h": "Yandex annonserer ikke SASL-IR, og de fleste klienter antar det",
-      "p": "Yandex' IMAP-server mangler SASL-IR-funksjonen, så den avviser autentisering i ett steg, der påloggingsdetaljene sendes sammen med AUTHENTICATE-kommandoen. Klienter som antar SASL-IR, får en naken BAD uten forklaring, som ser ut som feil påloggingsdetaljer. MCP Emails oppdager BAD-svaret og prøver utvekslingen i to steg på nytt, så denne er allerede håndtert for deg, men det er grunnen til at andre IMAP-verktøy feiler mot Yandex mens de virker overalt ellers."
+      "p": "Yandex' IMAP-server mangler SASL-IR-funksjonen, så den avviser autentisering i ett steg, der påloggingsdetaljene sendes sammen med AUTHENTICATE-kommandoen. Klienter som antar SASL-IR, får en naken BAD uten forklaring, som ser ut som feil påloggingsdetaljer. MCPEmails oppdager BAD-svaret og prøver utvekslingen i to steg på nytt, så denne er allerede håndtert for deg, men det er grunnen til at andre IMAP-verktøy feiler mot Yandex mens de virker overalt ellers."
     },
     {
       "h": "Kontopassordet virker aldri, selv uten 2FA",
@@ -65,7 +65,7 @@
   "faq": [
     {
       "q": "Fungerer Claude med Yandex Mail?",
-      "a": "Ikke direkte. Claude har ingen innebygd Yandex-kobling. Kobler du en MCP-server som MCP Emails til Yandex-postkassen din via IMAP, får Claude tilgang til å lese, søke, sende, svare, planlegge og organisere."
+      "a": "Ikke direkte. Claude har ingen innebygd Yandex-kobling. Kobler du en MCP-server som MCPEmails til Yandex-postkassen din via IMAP, får Claude tilgang til å lese, søke, sende, svare, planlegge og organisere."
     },
     {
       "q": "Hva er IMAP- og SMTP-innstillingene for Yandex?",

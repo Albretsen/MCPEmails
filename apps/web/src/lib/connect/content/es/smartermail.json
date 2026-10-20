@@ -22,7 +22,7 @@
     "titleLine1": "Conecta SmarterMail a Claude,",
     "titleLine2": "Cursor, ChatGPT y cualquier cliente MCP",
     "lead": "SmarterMail ya da a tus usuarios webmail, calendarios y chat. Un servidor MCP añade lo único que no puede ofrecer: un agente de IA que lee, busca, envía, responde, programa y archiva correo en el propio buzón.",
-    "answer": "Claude no puede acceder a un servidor SmarterMail por sí solo. MCP Emails es un servidor MCP alojado que se conecta al tuyo por IMAP en tu propio nombre de servidor, normalmente en el puerto 993 con TLS implícito, usando la contraseña del buzón, para que Claude, Cursor o cualquier cliente MCP pueda leer, buscar, enviar y organizar ese correo. SmarterMail es software que ejecutas tú o tu proveedor, así que no hay un nombre de servidor compartido: el servidor debe ser accesible desde internet, el buzón debe tener IMAP en sus ajustes de Service Access y la detección de abusos de SmarterMail no debe estar bloqueando la dirección que se conecta. Una bandeja es gratis.",
+    "answer": "Claude no puede acceder a un servidor SmarterMail por sí solo. MCPEmails es un servidor MCP alojado que se conecta al tuyo por IMAP en tu propio nombre de servidor, normalmente en el puerto 993 con TLS implícito, usando la contraseña del buzón, para que Claude, Cursor o cualquier cliente MCP pueda leer, buscar, enviar y organizar ese correo. SmarterMail es software que ejecutas tú o tu proveedor, así que no hay un nombre de servidor compartido: el servidor debe ser accesible desde internet, el buzón debe tener IMAP en sus ajustes de Service Access y la detección de abusos de SmarterMail no debe estar bloqueando la dirección que se conecta. Una bandeja es gratis.",
     "meta0": "1 bandeja gratis, para siempre",
     "meta1": "Contraseña del buzón, IMAP en Service Access",
     "meta2": "El correo se obtiene en vivo, nunca se almacena"
@@ -33,7 +33,7 @@
   },
   "setup": [
     {
-      "h": "Crea tu cuenta gratis de MCP Emails",
+      "h": "Crea tu cuenta gratis de MCPEmails",
       "p": "Regístrate en mcpemails.com. Una bandeja es gratis para siempre y no se pide tarjeta."
     },
     {
@@ -42,7 +42,7 @@
     },
     {
       "h": "Comprueba Service Access en el buzón y luego añádelo",
-      "p": "Abre el usuario y confirma que IMAP está activado en sus ajustes de Service Access. Después añade la bandeja en MCP Emails: elige IMAP / SMTP y escribe tu nombre de servidor de SmarterMail, la dirección completa del buzón y su contraseña. Si eres administrador de dominio y no administrador del sistema, esta es la pantalla a la que puedes llegar tú mismo."
+      "p": "Abre el usuario y confirma que IMAP está activado en sus ajustes de Service Access. Después añade la bandeja en MCPEmails: elige IMAP / SMTP y escribe tu nombre de servidor de SmarterMail, la dirección completa del buzón y su contraseña. Si eres administrador de dominio y no administrador del sistema, esta es la pantalla a la que puedes llegar tú mismo."
     },
     {
       "h": "Pega la URL MCP en tu IA",
@@ -64,14 +64,14 @@
     }
   ],
   "limits": [
-    "Un servidor MCP alojado tiene que llegar a tu máquina SmarterMail desde fuera. Un servidor vinculado solo a una dirección interna, o publicado únicamente para el rango de tu oficina, no se puede conectar así. MCP Emails se puede autoalojar si prefieres que la sesión IMAP nunca salga de tu red.",
+    "Un servidor MCP alojado tiene que llegar a tu máquina SmarterMail desde fuera. Un servidor vinculado solo a una dirección interna, o publicado únicamente para el rango de tu oficina, no se puede conectar así. MCPEmails se puede autoalojar si prefieres que la sesión IMAP nunca salga de tu red.",
     "La validación de certificados es estricta, así que el binding en el 993 necesita un certificado válido para el nombre de servidor que introduzcas. SmarterMail en Windows suele usar un certificado del almacén de certificados de Windows, y uno emitido para el nombre de la máquina en lugar del nombre del servidor de correo será rechazado.",
     "Por esta conexión solo pasa el correo. Los calendarios, contactos, tareas y chat de SmarterMail se sirven desde su propia interfaz web y por Exchange ActiveSync o EWS, no por IMAP."
   ],
   "faq": [
     {
       "q": "¿Funciona Claude con SmarterMail?",
-      "a": "No por sí solo. Claude no tiene conector de SmarterMail y no puede abrir una sesión IMAP con un servidor que ejecutas tú o tu proveedor. Conectar un servidor MCP como MCP Emails a tu nombre de servidor de SmarterMail le da a Claude acceso para leer, buscar, enviar, responder, programar y organizar un buzón alojado en él, y la misma bandeja funciona después desde Cursor o ChatGPT."
+      "a": "No por sí solo. Claude no tiene conector de SmarterMail y no puede abrir una sesión IMAP con un servidor que ejecutas tú o tu proveedor. Conectar un servidor MCP como MCPEmails a tu nombre de servidor de SmarterMail le da a Claude acceso para leer, buscar, enviar, responder, programar y organizar un buzón alojado en él, y la misma bandeja funciona después desde Cursor o ChatGPT."
     },
     {
       "q": "¿Cuáles son los ajustes IMAP y SMTP de SmarterMail?",

@@ -21,8 +21,8 @@
     "eyebrow": "MDaemon + AI",
     "titleLine1": "将 MDaemon 连接到 Claude，",
     "titleLine2": "以及 Cursor、ChatGPT 和任意 MCP 客户端",
-    "lead": "多年来，MDaemon 一直在你自己的 Windows 服务器上运行邮件，从不需要征得任何人的许可。给它加上 AI 代理也不必改变这一点：MCP Emails 通过普通的 IMAP 连接，实时获取每封邮件。",
-    "answer": "Claude 无法自行访问 MDaemon 服务器。MCP Emails 是一个托管 MCP 服务器，通过 IMAP 连接你自己主机名上的服务器，使用 IMAP SSL 端口（MDaemon 默认设为 993），并以 Account Manager 中的账户密码进行认证。这样 Claude、Cursor 或任意 MCP 客户端就能读取、搜索、发送并整理该邮箱中的邮件。MDaemon 是由你运行的软件，所以没有可查的共用主机：服务器必须能从互联网访问，账户必须启用 IMAP 访问，而且 MDaemon 的筛选功能必须放行该连接。1 个收件箱免费。",
+    "lead": "多年来，MDaemon 一直在你自己的 Windows 服务器上运行邮件，从不需要征得任何人的许可。给它加上 AI 代理也不必改变这一点：MCPEmails 通过普通的 IMAP 连接，实时获取每封邮件。",
+    "answer": "Claude 无法自行访问 MDaemon 服务器。MCPEmails 是一个托管 MCP 服务器，通过 IMAP 连接你自己主机名上的服务器，使用 IMAP SSL 端口（MDaemon 默认设为 993），并以 Account Manager 中的账户密码进行认证。这样 Claude、Cursor 或任意 MCP 客户端就能读取、搜索、发送并整理该邮箱中的邮件。MDaemon 是由你运行的软件，所以没有可查的共用主机：服务器必须能从互联网访问，账户必须启用 IMAP 访问，而且 MDaemon 的筛选功能必须放行该连接。1 个收件箱免费。",
     "meta0": "1 个收件箱永久免费",
     "meta1": "账户密码，开启 IMAP 访问",
     "meta2": "邮件实时获取，绝不存储"
@@ -33,7 +33,7 @@
   },
   "setup": [
     {
-      "h": "创建免费的 MCP Emails 账户",
+      "h": "创建免费的 MCPEmails 账户",
       "p": "在 mcpemails.com 注册。1 个收件箱永久免费，无需信用卡，所以你可以先用一个真实的 MDaemon 邮箱来测试。"
     },
     {
@@ -42,7 +42,7 @@
     },
     {
       "h": "在账户上启用 IMAP 访问",
-      "p": "打开 Account Manager，找到该邮箱，在其 Mail Services 页面上确认已勾选 <b>Enable IMAP access</b>。然后在 MCP Emails 中添加收件箱：选择 IMAP / SMTP，输入你的 MDaemon 主机名、完整地址和账户密码。"
+      "p": "打开 Account Manager，找到该邮箱，在其 Mail Services 页面上确认已勾选 <b>Enable IMAP access</b>。然后在 MCPEmails 中添加收件箱：选择 IMAP / SMTP，输入你的 MDaemon 主机名、完整地址和账户密码。"
     },
     {
       "h": "将 MCP URL 粘贴到你的 AI",
@@ -64,14 +64,14 @@
     }
   ],
   "limits": [
-    "MDaemon 服务器通常位于公司防火墙之内，只发布了端口 25，而这里还需要一个入站 IMAP 连接。是否向互联网开放 993，要由防火墙的负责人决定，而不是 MDaemon 中的某项设置。如果答案是否定的，MCP Emails 可以自托管在同一个内部网络中，像局域网内的桌面客户端那样访问 MDaemon。",
+    "MDaemon 服务器通常位于公司防火墙之内，只发布了端口 25，而这里还需要一个入站 IMAP 连接。是否向互联网开放 993，要由防火墙的负责人决定，而不是 MDaemon 中的某项设置。如果答案是否定的，MCPEmails 可以自托管在同一个内部网络中，像局域网内的桌面客户端那样访问 MDaemon。",
     "TLS 校验是严格的。MDaemon 默认的自签名证书或过期的证书会被拒绝，没有“仍然继续”的选项。",
     "发信通过你自己的 MDaemon SMTP 服务发出，因此送达率取决于你的 SPF、DKIM 和 DMARC 记录，以及你服务器发信地址的信誉。"
   ],
   "faq": [
     {
       "q": "Claude 能用于 MDaemon 吗？",
-      "a": "不能直接使用。Claude 没有 MDaemon 连接器，也无法向你托管的服务器打开 IMAP 套接字。将 MCP Emails 这样的 MCP 服务器连接到你的 MDaemon 主机后，Claude 就能读取、搜索、发送、回复、定时和整理其上某个邮箱中的邮件，所用凭据与任何桌面客户端相同。"
+      "a": "不能直接使用。Claude 没有 MDaemon 连接器，也无法向你托管的服务器打开 IMAP 套接字。将 MCPEmails 这样的 MCP 服务器连接到你的 MDaemon 主机后，Claude 就能读取、搜索、发送、回复、定时和整理其上某个邮箱中的邮件，所用凭据与任何桌面客户端相同。"
     },
     {
       "q": "MDaemon 的 IMAP 和 SMTP 设置是什么？",

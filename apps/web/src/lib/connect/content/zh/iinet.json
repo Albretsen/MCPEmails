@@ -18,7 +18,7 @@
     "titleLine1": "iiNet 已停止运营邮箱。",
     "titleLine2": "以下是仍然可以连接的部分",
     "lead": "iiNet 已把邮箱交给另一家公司，并停止发放地址。这改变的是你设置的来源，而不是 AI 代理能否在邮箱中工作。",
-    "answer": "iiNet 已退出邮箱业务。它把 iinet.net.au 地址转移给了另一家澳大利亚服务商 The Messaging Company，关闭了选择加入期，删除了所有未选择加入的地址，并声明无法再在 iinet.net.au 域名下创建新的邮箱地址。所以问题不在于 Claude 能否访问 iiNet，而在于你的邮箱如今位于哪台服务器上。MCP Emails 是一个可以连接任何 IMAP 邮箱的托管 MCP 服务器，包括位于新服务商处的原 iiNet 地址，让 Claude、Cursor 或任意 MCP 客户端都能读取、搜索、发送和整理这些邮件。1 个收件箱永久免费。",
+    "answer": "iiNet 已退出邮箱业务。它把 iinet.net.au 地址转移给了另一家澳大利亚服务商 The Messaging Company，关闭了选择加入期，删除了所有未选择加入的地址，并声明无法再在 iinet.net.au 域名下创建新的邮箱地址。所以问题不在于 Claude 能否访问 iiNet，而在于你的邮箱如今位于哪台服务器上。MCPEmails 是一个可以连接任何 IMAP 邮箱的托管 MCP 服务器，包括位于新服务商处的原 iiNet 地址，让 Claude、Cursor 或任意 MCP 客户端都能读取、搜索、发送和整理这些邮件。1 个收件箱永久免费。",
     "meta0": "1 个收件箱永久免费",
     "meta1": "设置来自你的新服务商",
     "meta2": "邮件实时获取，绝不存储"
@@ -29,7 +29,7 @@
   },
   "setup": [
     {
-      "h": "创建免费的 MCP Emails 账户",
+      "h": "创建免费的 MCPEmails 账户",
       "p": "在 mcpemails.com 注册。免费套餐可连接一个收件箱，无需信用卡。"
     },
     {
@@ -38,7 +38,7 @@
     },
     {
       "h": "输入当前服务商提供的设置",
-      "p": "在 MCP Emails 中选择 IMAP / SMTP，完全按照你的服务商文档填写服务器、端口和密码，用户名为完整地址。我们只公布自己实际连接过的设置，所以这里不列出 The Messaging Company 的主机名。请从他们的支持资料中获取，而不要从第三方博客上抄。"
+      "p": "在 MCPEmails 中选择 IMAP / SMTP，完全按照你的服务商文档填写服务器、端口和密码，用户名为完整地址。我们只公布自己实际连接过的设置，所以这里不列出 The Messaging Company 的主机名。请从他们的支持资料中获取，而不要从第三方博客上抄。"
     },
     {
       "h": "将 MCP URL 粘贴到你的 AI",
@@ -70,7 +70,7 @@
   "faq": [
     {
       "q": "Claude 能用于 iiNet 邮箱吗？",
-      "a": "Claude 没有针对它的内置连接器，而 iiNet 也已不再运营该服务。如果你的 iinet.net.au 地址在转移到 The Messaging Company 后得以保留，通过 IMAP 将 MCP Emails 这样的 MCP 服务器连接到它，并使用你当前服务商提供的服务器设置，Claude 就能读取、搜索、发送、回复、定时和整理邮件。"
+      "a": "Claude 没有针对它的内置连接器，而 iiNet 也已不再运营该服务。如果你的 iinet.net.au 地址在转移到 The Messaging Company 后得以保留，通过 IMAP 将 MCPEmails 这样的 MCP 服务器连接到它，并使用你当前服务商提供的服务器设置，Claude 就能读取、搜索、发送、回复、定时和整理邮件。"
     },
     {
       "q": "iiNet 邮箱怎么了？",
@@ -82,7 +82,7 @@
     },
     {
       "q": "我还能获得新的 iinet.net.au 邮箱地址吗？",
-      "a": "不能。iiNet 的帮助页面直接说明，无法再使用 iinet.net.au 域名创建新的邮箱地址。如果你需要一个新邮箱供助手使用，它必须来自仍在发放地址的服务商，而 MCP Emails 可以通过 IMAP 连接其中任何一家。"
+      "a": "不能。iiNet 的帮助页面直接说明，无法再使用 iinet.net.au 域名创建新的邮箱地址。如果你需要一个新邮箱供助手使用，它必须来自仍在发放地址的服务商，而 MCPEmails 可以通过 IMAP 连接其中任何一家。"
     },
     {
       "q": "我的邮件会存储在你们的服务器上吗？",

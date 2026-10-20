@@ -22,7 +22,7 @@
     "titleLine1": "Ihr T-Online-Postfach verbinden",
     "titleLine2": "mit Claude, Cursor und jedem MCP-Client",
     "lead": "Geben Sie Ihrem KI-Agenten Zugriff auf Ihr echtes Telekom-Postfach. E-Mails lesen, suchen, senden, beantworten, planen und ordnen, per IMAP mit dem eigenen Passwort, das die Telekom für E-Mail-Programme vergibt.",
-    "answer": "Claude kann ein T-Online-Postfach nicht von sich aus erreichen. MCP Emails ist ein gehosteter MCP-Server, der es per IMAP über secureimap.t-online.de auf Port 993 anbindet. Die Anmeldung läuft über das separate E-Mail-Passwort für E-Mail-Programme, nicht über Ihr Telekom-Login-Passwort. Danach können Claude, Cursor oder jeder MCP-Client die E-Mails lesen, suchen, senden und ordnen. Haben Sie dieses Passwort nie angelegt, konnte sich noch nie ein Client am Postfach anmelden, und der Fehler sieht aus wie ein Tippfehler. Ein Postfach ist dauerhaft kostenlos.",
+    "answer": "Claude kann ein T-Online-Postfach nicht von sich aus erreichen. MCPEmails ist ein gehosteter MCP-Server, der es per IMAP über secureimap.t-online.de auf Port 993 anbindet. Die Anmeldung läuft über das separate E-Mail-Passwort für E-Mail-Programme, nicht über Ihr Telekom-Login-Passwort. Danach können Claude, Cursor oder jeder MCP-Client die E-Mails lesen, suchen, senden und ordnen. Haben Sie dieses Passwort nie angelegt, konnte sich noch nie ein Client am Postfach anmelden, und der Fehler sieht aus wie ein Tippfehler. Ein Postfach ist dauerhaft kostenlos.",
     "meta0": "1 Postfach dauerhaft kostenlos",
     "meta1": "Telekom E-Mail-Passwort für Programme nötig",
     "meta2": "E-Mails live abgerufen, nie gespeichert"
@@ -33,7 +33,7 @@
   },
   "setup": [
     {
-      "h": "Kostenloses MCP Emails Konto erstellen",
+      "h": "Kostenloses MCPEmails Konto erstellen",
       "p": "Registrieren Sie sich auf mcpemails.com. Der Free-Tarif verbindet ein Postfach dauerhaft und fragt nicht nach einer Kreditkarte."
     },
     {
@@ -41,7 +41,7 @@
       "p": "Klicken Sie im E-Mail Center unter email.t-online.de auf das Zahnrad (<b>Einstellungen</b>), dann auf <b>Alle Einstellungen anzeigen</b>, dann <b>Passwörter</b>, dann <b>Passwort für E-Mail-Programme</b>, und legen Sie ein neues fest. Der andere Weg führt über das Kundencenter: <b>Profil verwalten</b>, dann <b>Login-Daten</b>, dann <b>Weitere Passwörter</b>. Die Telekom rät, es anders als Ihr Telekom Login-Passwort zu wählen."
     },
     {
-      "h": "In MCP Emails einfügen",
+      "h": "In MCPEmails einfügen",
       "p": "Wählen Sie IMAP / SMTP, geben Sie die vollständige Adresse ein, etwa name@t-online.de, und fügen Sie das E-Mail-Passwort ein. Hosts und Ports der Telekom sind vorausgefüllt und wurden über eine echte TLS-Verbindung geprüft."
     },
     {
@@ -56,7 +56,7 @@
     },
     {
       "h": "Der IMAP-Proxy kündigt vor der Anmeldung gar kein AUTH-Verfahren an",
-      "p": "Das Capability-Banner der Telekom lautet <code>IMAP4 IMAP4rev1 QUOTA LITERAL+ NAMESPACE UIDPLUS IDLE SORT</code>. Darin stehen kein <code>AUTH=PLAIN</code>, kein <code>AUTH=LOGIN</code> und kein <code>SASL-IR</code>. In der Praxis erwartet der Server den einfachen IMAP-Befehl <code>LOGIN</code> statt eines SASL-Austauschs per <code>AUTHENTICATE</code>. Client-Bibliotheken, die die angekündigten SASL-Verfahren auflisten und bei leerer Liste abbrechen, geben auf, bevor sie überhaupt Zugangsdaten senden. Deshalb melden manche IMAP-Tools T-Online als unerreichbar, während Thunderbird sich problemlos mit demselben Postfach verbindet. MCP Emails beherrscht den einfachen LOGIN-Weg, dieses Problem ist für Sie also bereits gelöst."
+      "p": "Das Capability-Banner der Telekom lautet <code>IMAP4 IMAP4rev1 QUOTA LITERAL+ NAMESPACE UIDPLUS IDLE SORT</code>. Darin stehen kein <code>AUTH=PLAIN</code>, kein <code>AUTH=LOGIN</code> und kein <code>SASL-IR</code>. In der Praxis erwartet der Server den einfachen IMAP-Befehl <code>LOGIN</code> statt eines SASL-Austauschs per <code>AUTHENTICATE</code>. Client-Bibliotheken, die die angekündigten SASL-Verfahren auflisten und bei leerer Liste abbrechen, geben auf, bevor sie überhaupt Zugangsdaten senden. Deshalb melden manche IMAP-Tools T-Online als unerreichbar, während Thunderbird sich problemlos mit demselben Postfach verbindet. MCPEmails beherrscht den einfachen LOGIN-Weg, dieses Problem ist für Sie also bereits gelöst."
     },
     {
       "h": "Kein MOVE und kein SPECIAL-USE, bei deutschen Ordnernamen",
@@ -68,7 +68,7 @@
     },
     {
       "h": "Die Telekom kann einen Versand von einer unbekannten Internetverbindung zurückhalten",
-      "p": "Die Telekom prüft, von welcher Internetverbindung eine Nachricht gesendet wird. Laut ihrer Hilfe wird eine Nachricht nicht gesendet und das Programm erhält eine Fehlermeldung, wenn ein Mailprogramm von einer unbekannten oder nicht freigegebenen IP-Adresse sendet. Als häufige Ursachen nennt sie ein anderes WLAN, das Mobilfunknetz, ein VPN oder eine Verbindung im Ausland. E-Mails, die Ihr Agent über MCP Emails sendet, gehen von den Servern von MCP Emails aus, nicht von Ihrem Anschluss zu Hause, und können deshalb ebenso zurückgehalten werden. Laut Telekom können Sie die IP-Adresse <b>freischalten</b>, wenn der Versuch von Ihnen stammt. Stammt er nicht von Ihnen, schalten Sie sie nicht frei und ändern Sie Ihr Telekom Login-Passwort."
+      "p": "Die Telekom prüft, von welcher Internetverbindung eine Nachricht gesendet wird. Laut ihrer Hilfe wird eine Nachricht nicht gesendet und das Programm erhält eine Fehlermeldung, wenn ein Mailprogramm von einer unbekannten oder nicht freigegebenen IP-Adresse sendet. Als häufige Ursachen nennt sie ein anderes WLAN, das Mobilfunknetz, ein VPN oder eine Verbindung im Ausland. E-Mails, die Ihr Agent über MCPEmails sendet, gehen von den Servern von MCPEmails aus, nicht von Ihrem Anschluss zu Hause, und können deshalb ebenso zurückgehalten werden. Laut Telekom können Sie die IP-Adresse <b>freischalten</b>, wenn der Versuch von Ihnen stammt. Stammt er nicht von Ihnen, schalten Sie sie nicht frei und ändern Sie Ihr Telekom Login-Passwort."
     }
   ],
   "limits": [
@@ -78,11 +78,11 @@
   "faq": [
     {
       "q": "Funktioniert Claude mit T-Online E-Mail?",
-      "a": "Nicht von sich aus. Claude hat keinen eingebauten Telekom- oder T-Online-Konnektor. Wenn Sie einen MCP-Server wie MCP Emails per IMAP mit dem Postfach verbinden, kann Claude E-Mails lesen, suchen, senden, beantworten, planen und ordnen. Dieselbe Verbindung funktioniert dann auch in Cursor, ChatGPT und anderen MCP-Clients."
+      "a": "Nicht von sich aus. Claude hat keinen eingebauten Telekom- oder T-Online-Konnektor. Wenn Sie einen MCP-Server wie MCPEmails per IMAP mit dem Postfach verbinden, kann Claude E-Mails lesen, suchen, senden, beantworten, planen und ordnen. Dieselbe Verbindung funktioniert dann auch in Cursor, ChatGPT und anderen MCP-Clients."
     },
     {
       "q": "Wie lauten die IMAP- und SMTP-Einstellungen von T-Online?",
-      "a": "IMAP ist secureimap.t-online.de auf Port 993 mit SSL. SMTP ist securesmtp.t-online.de auf Port 465 oder 587, ebenfalls mit SSL; MCP Emails nutzt 465. Melden Sie sich mit Ihrer vollständigen Adresse und dem Passwort für E-Mail-Programme an. Die Telekom nennt dieselben Server für Adressen mit @t-online.de und @magenta.de, und beide Hosts wurden über eine echte TLS-Verbindung bestätigt."
+      "a": "IMAP ist secureimap.t-online.de auf Port 993 mit SSL. SMTP ist securesmtp.t-online.de auf Port 465 oder 587, ebenfalls mit SSL; MCPEmails nutzt 465. Melden Sie sich mit Ihrer vollständigen Adresse und dem Passwort für E-Mail-Programme an. Die Telekom nennt dieselben Server für Adressen mit @t-online.de und @magenta.de, und beide Hosts wurden über eine echte TLS-Verbindung bestätigt."
     },
     {
       "q": "Warum wird mein T-Online-Passwort im E-Mail-Programm abgelehnt?",
@@ -90,7 +90,7 @@
     },
     {
       "q": "Wo lege ich das Passwort für E-Mail-Programme an?",
-      "a": "An zwei Stellen. Im E-Mail Center unter email.t-online.de klicken Sie auf das Zahnrad (Einstellungen), dann Alle Einstellungen anzeigen, dann Passwörter, dann Passwort für E-Mail-Programme. Im Kundencenter öffnen Sie Profil verwalten, dann Login-Daten, dann Weitere Passwörter. Verwenden Sie das neue Passwort in MCP Emails, für den Posteingangs- und den Postausgangsserver."
+      "a": "An zwei Stellen. Im E-Mail Center unter email.t-online.de klicken Sie auf das Zahnrad (Einstellungen), dann Alle Einstellungen anzeigen, dann Passwörter, dann Passwort für E-Mail-Programme. Im Kundencenter öffnen Sie Profil verwalten, dann Login-Daten, dann Weitere Passwörter. Verwenden Sie das neue Passwort in MCPEmails, für den Posteingangs- und den Postausgangsserver."
     },
     {
       "q": "Funktioniert das auch mit magenta.de-Adressen?",

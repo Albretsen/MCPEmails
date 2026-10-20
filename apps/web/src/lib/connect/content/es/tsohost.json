@@ -21,7 +21,7 @@
     "titleLine1": "Conecta el correo de Tsohost a Claude,",
     "titleLine2": "Cursor, ChatGPT, cualquier cliente MCP",
     "lead": "Dale a tu agente de IA un buzón real de Tsohost. Lee, busca, envía, responde, programa y organiza correo por IMAP, con los ajustes tomados de la única pantalla que sigue siendo fiable tras dos migraciones.",
-    "answer": "Claude no puede acceder a un buzón de Tsohost por sí solo. MCP Emails es un servidor MCP alojado que lo conecta por IMAP estándar en el puerto 993 y SMTP en el 465, para que Claude, Cursor o cualquier cliente MCP pueda leer, buscar, enviar y organizar ese correo. No hay un servidor de correo compartido de tsohost.com al que apuntar un cliente: el servidor se construye a partir de tu propio dominio o del nombre de tu servidor de alojamiento, y la copia fiable está en cPanel, en Email Accounts y luego Connect Devices. La autenticación es con la contraseña establecida en ese buzón concreto, nunca con tu acceso al panel de control. La marca tsoHost se ha integrado en 123 Reg, así que empieza por el Control Panel de 123 Reg. Una bandeja es gratis, para siempre.",
+    "answer": "Claude no puede acceder a un buzón de Tsohost por sí solo. MCPEmails es un servidor MCP alojado que lo conecta por IMAP estándar en el puerto 993 y SMTP en el 465, para que Claude, Cursor o cualquier cliente MCP pueda leer, buscar, enviar y organizar ese correo. No hay un servidor de correo compartido de tsohost.com al que apuntar un cliente: el servidor se construye a partir de tu propio dominio o del nombre de tu servidor de alojamiento, y la copia fiable está en cPanel, en Email Accounts y luego Connect Devices. La autenticación es con la contraseña establecida en ese buzón concreto, nunca con tu acceso al panel de control. La marca tsoHost se ha integrado en 123 Reg, así que empieza por el Control Panel de 123 Reg. Una bandeja es gratis, para siempre.",
     "meta0": "1 bandeja gratis, para siempre",
     "meta1": "Contraseña del buzón desde cPanel",
     "meta2": "El correo se obtiene en vivo, nunca se almacena"
@@ -32,7 +32,7 @@
   },
   "setup": [
     {
-      "h": "Crea una cuenta gratis de MCP Emails",
+      "h": "Crea una cuenta gratis de MCPEmails",
       "p": "Regístrate en mcpemails.com. El plan gratuito conecta una bandeja para siempre y no pide tarjeta."
     },
     {
@@ -45,7 +45,7 @@
     },
     {
       "h": "Pega la URL MCP en tu IA",
-      "p": "Añade el buzón en MCP Emails con la dirección completa y esa contraseña, y luego pon https://mcpemails.com/api/mcp en Claude, Cursor o ChatGPT, autoriza, y tu agente tendrá la bandeja."
+      "p": "Añade el buzón en MCPEmails con la dirección completa y esa contraseña, y luego pon https://mcpemails.com/api/mcp en Claude, Cursor o ChatGPT, autoriza, y tu agente tendrá la bandeja."
     }
   ],
   "gotchas": [
@@ -67,14 +67,14 @@
     }
   ],
   "limits": [
-    "MCP Emails conecta el buzón, no la cuenta de alojamiento. Los reenvíos, alias, respuestas automáticas, filtros de spam y el DNS siguen en cPanel y en el Control Panel de 123 Reg, y tu cliente de IA no puede verlos ni cambiarlos.",
+    "MCPEmails conecta el buzón, no la cuenta de alojamiento. Los reenvíos, alias, respuestas automáticas, filtros de spam y el DNS siguen en cPanel y en el Control Panel de 123 Reg, y tu cliente de IA no puede verlos ni cambiarlos.",
     "Si la dirección resulta ser un buzón de Titan y no de cPanel, ninguno de estos ajustes se aplica. Conéctala como Titan, con los servidores propios de Titan y la contraseña del buzón del panel de control de Titan.",
     "Esta página describe el correo de cPanel tal como existe después de la migración. Los nombres de servidor de la plataforma heredada de tsoHost, anteriores al paso a cPanel, ya no describen dónde está tu buzón y no resolverán a él."
   ],
   "faq": [
     {
       "q": "¿Funciona Claude con el correo de Tsohost?",
-      "a": "No directamente. Claude no tiene un conector integrado para servidores de correo cPanel. Conectar un servidor MCP como MCP Emails a tu buzón de Tsohost por IMAP le da a Claude acceso para leer, buscar, enviar, responder, programar y organizar, con las credenciales que usaría un cliente de correo de escritorio, y la misma conexión funciona desde Cursor y ChatGPT."
+      "a": "No directamente. Claude no tiene un conector integrado para servidores de correo cPanel. Conectar un servidor MCP como MCPEmails a tu buzón de Tsohost por IMAP le da a Claude acceso para leer, buscar, enviar, responder, programar y organizar, con las credenciales que usaría un cliente de correo de escritorio, y la misma conexión funciona desde Cursor y ChatGPT."
     },
     {
       "q": "¿Cuáles son los ajustes IMAP y SMTP de Tsohost?",

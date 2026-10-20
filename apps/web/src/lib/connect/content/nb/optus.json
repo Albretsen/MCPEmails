@@ -19,7 +19,7 @@
     "titleLine1": "Koble OptusNet-innboksen din",
     "titleLine2": "til Claude, Cursor, enhver MCP-klient",
     "lead": "Til tross for hva halve internett sier, ble ikke OptusNet-e-post stengt. Den ble flyttet over på et nytt abonnement med nye vilkår i 2025 og stengt for nye registreringer. Postkassen du har, snakker fortsatt IMAP.",
-    "answer": "Claude når ikke en OptusNet-postkasse på egen hånd. MCP Emails er en hostet MCP-server som kobler til via IMAP på mail.optusnet.com.au port 993 og logger inn med hele adressen din og passordet for OptusNet-e-posten. Det er ikke noe app-passord å generere. To fakta betyr noe før du bygger på det: Optus flyttet tjenesten over på et nytt abonnement med nye vilkår fra mai 2025 og krever at e-postabonnementet er knyttet til en kvalifiserende Optus-tjeneste, og de tar ikke imot registreringer for ny OptusNet-e-post. For en adresse du allerede har, er én innboks gratis, for alltid.",
+    "answer": "Claude når ikke en OptusNet-postkasse på egen hånd. MCPEmails er en hostet MCP-server som kobler til via IMAP på mail.optusnet.com.au port 993 og logger inn med hele adressen din og passordet for OptusNet-e-posten. Det er ikke noe app-passord å generere. To fakta betyr noe før du bygger på det: Optus flyttet tjenesten over på et nytt abonnement med nye vilkår fra mai 2025 og krever at e-postabonnementet er knyttet til en kvalifiserende Optus-tjeneste, og de tar ikke imot registreringer for ny OptusNet-e-post. For en adresse du allerede har, er én innboks gratis, for alltid.",
     "meta0": "1 innboks gratis, for alltid",
     "meta1": "E-postpassord, ikke app-passord",
     "meta2": "E-post hentes direkte, lagres aldri"
@@ -30,7 +30,7 @@
   },
   "setup": [
     {
-      "h": "Opprett en gratis MCP Emails-konto",
+      "h": "Opprett en gratis MCPEmails-konto",
       "p": "Registrer deg på mcpemails.com. Gratisplanen kobler til én innboks og ber ikke om kort."
     },
     {
@@ -39,7 +39,7 @@
     },
     {
       "h": "Skriv inn hele adressen og e-postpassordet",
-      "p": "I MCP Emails velger du IMAP / SMTP og skriver hele adressen i brukernavnfeltet, i Optus' eget format <code>username@optusnet.com.au</code>. Bruk passordet for den postkassen. Vert og porter over er forhåndsutfylt og ble verifisert via en direkte TLS-tilkobling."
+      "p": "I MCPEmails velger du IMAP / SMTP og skriver hele adressen i brukernavnfeltet, i Optus' eget format <code>username@optusnet.com.au</code>. Bruk passordet for den postkassen. Vert og porter over er forhåndsutfylt og ble verifisert via en direkte TLS-tilkobling."
     },
     {
       "h": "Lim MCP-URL-en inn i AI-en",
@@ -57,7 +57,7 @@
     },
     {
       "h": "Gamle e-postklienter ble droppet med vilje",
-      "p": "Optus sier at de fleste kunder ikke merker noen endring, men at eldre versjoner av noen tredjepartsklienter, med Outlook 2010 nevnt ved navn, ikke lenger støttes fordi de ikke lenger får oppdateringer og kanskje ikke oppfyller dagens standarder for kryptering og sikkerhet. Et oppsett som sluttet å virke rundt endringen og har fått skylden lagt på serveren, skyldes derfor mer sannsynlig klienten. MCP Emails kobler til med moderne TLS, som er den siden av den grensen du vil være på."
+      "p": "Optus sier at de fleste kunder ikke merker noen endring, men at eldre versjoner av noen tredjepartsklienter, med Outlook 2010 nevnt ved navn, ikke lenger støttes fordi de ikke lenger får oppdateringer og kanskje ikke oppfyller dagens standarder for kryptering og sikkerhet. Et oppsett som sluttet å virke rundt endringen og har fått skylden lagt på serveren, skyldes derfor mer sannsynlig klienten. MCPEmails kobler til med moderne TLS, som er den siden av den grensen du vil være på."
     },
     {
       "h": "SPECIAL-USE og IDLE finnes, MOVE og UIDPLUS gjør ikke",
@@ -72,7 +72,7 @@
   "faq": [
     {
       "q": "Fungerer Claude med OptusNet-e-post?",
-      "a": "Ikke direkte. Claude har ingen innebygd Optus-kobling. Kobler du en MCP-server som MCP Emails til postkassen via IMAP, får Claude tilgang til å lese, søke, sende, svare, planlegge og organisere optusnet.com.au-e-posten din, og samme tilkobling fungerer i Cursor, ChatGPT og andre MCP-klienter."
+      "a": "Ikke direkte. Claude har ingen innebygd Optus-kobling. Kobler du en MCP-server som MCPEmails til postkassen via IMAP, får Claude tilgang til å lese, søke, sende, svare, planlegge og organisere optusnet.com.au-e-posten din, og samme tilkobling fungerer i Cursor, ChatGPT og andre MCP-klienter."
     },
     {
       "q": "Hva er IMAP- og SMTP-innstillingene for OptusNet?",

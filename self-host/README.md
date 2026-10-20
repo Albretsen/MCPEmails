@@ -1,4 +1,4 @@
-# Self-host MCP Emails
+# Self-host MCPEmails
 
 Run the **exact MCP server that powers [mcpemails.com](https://mcpemails.com)** on your own
 machine, against your own database. Your mailbox credentials never leave infrastructure you

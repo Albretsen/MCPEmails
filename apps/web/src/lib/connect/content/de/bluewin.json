@@ -19,7 +19,7 @@
     "titleLine1": "Bluewin E-Mail mit Claude verbinden,",
     "titleLine2": "mit Cursor, ChatGPT und jedem MCP-Client",
     "lead": "Geben Sie Ihrem KI-Agenten ein echtes bluewin.ch-Postfach. Lesen, suchen, senden, beantworten, planen und sortieren Sie E-Mails per IMAP mit Ihrem E-Mail-Passwort von Swisscom, in jedem MCP-Client statt nur in einem.",
-    "answer": "Claude kann ein Bluewin-Postfach nicht selbst erreichen. MCP Emails ist ein gehosteter MCP-Server, der es per IMAP über imaps.bluewin.ch auf Port 993 verbindet. Die Anmeldung erfolgt mit Ihrer vollständigen bluewin.ch-Adresse und Ihrem Bluewin E-Mail-Passwort, das Swisscom getrennt von Ihrem Passwort für das My Swisscom Login führt. Danach können Claude, Cursor oder jeder andere MCP-Client diese E-Mails lesen, suchen, senden, beantworten und sortieren. Ein Postfach ist dauerhaft kostenlos.",
+    "answer": "Claude kann ein Bluewin-Postfach nicht selbst erreichen. MCPEmails ist ein gehosteter MCP-Server, der es per IMAP über imaps.bluewin.ch auf Port 993 verbindet. Die Anmeldung erfolgt mit Ihrer vollständigen bluewin.ch-Adresse und Ihrem Bluewin E-Mail-Passwort, das Swisscom getrennt von Ihrem Passwort für das My Swisscom Login führt. Danach können Claude, Cursor oder jeder andere MCP-Client diese E-Mails lesen, suchen, senden, beantworten und sortieren. Ein Postfach ist dauerhaft kostenlos.",
     "meta0": "1 Postfach dauerhaft kostenlos",
     "meta1": "E-Mail-Passwort, nicht das Swisscom Login",
     "meta2": "E-Mails werden live abgerufen, nie gespeichert"
@@ -30,7 +30,7 @@
   },
   "setup": [
     {
-      "h": "Kostenloses MCP Emails-Konto erstellen",
+      "h": "Kostenloses MCPEmails-Konto erstellen",
       "p": "Registrieren Sie sich auf mcpemails.com. Der Free-Tarif verbindet ein Postfach und fragt nicht nach einer Kreditkarte."
     },
     {
@@ -38,7 +38,7 @@
       "p": "Melden Sie sich bei My Swisscom an und öffnen Sie den Bereich, in dem Sie das E-Mail-Passwort für die Bluewin-Adresse ändern, die Sie verbinden möchten. Das ist ein anderes Passwort als das, mit dem Sie sich bei My Swisscom angemeldet haben. Haben Sie es noch nie festgelegt, tun Sie es jetzt; der hier gewählte Wert ist der, den ein Mail-Client verwendet."
     },
     {
-      "h": "Adresse und E-Mail-Passwort in MCP Emails eingeben",
+      "h": "Adresse und E-Mail-Passwort in MCPEmails eingeben",
       "p": "Wählen Sie IMAP / SMTP, geben Sie Ihre vollständige <code>@bluewin.ch</code>-Adresse ein und fügen Sie das E-Mail-Passwort ein, nicht Ihr Passwort für das Swisscom Login. Die Bluewin-Hosts sind vorausgefüllt, samt der Buchstaben am Ende, bei denen man sich leicht vertippt."
     },
     {
@@ -61,7 +61,7 @@
     },
     {
       "h": "MOVE und UIDPLUS fehlen beide",
-      "p": "Dieser Server unterstützt weder MOVE noch UIDPLUS. Das Ablegen einer Nachricht läuft deshalb als COPY, dann STORE mit dem Gelöscht-Flag, dann EXPUNGE, und der Server meldet nie die ID, die er der neuen Kopie zugewiesen hat. MCP Emails übernimmt diese Abfolge, aber ein Verschieben ist hier nicht atomar, und eine abgelegte Nachricht wird durch eine Suche im Zielordner bestätigt statt über ihre ID."
+      "p": "Dieser Server unterstützt weder MOVE noch UIDPLUS. Das Ablegen einer Nachricht läuft deshalb als COPY, dann STORE mit dem Gelöscht-Flag, dann EXPUNGE, und der Server meldet nie die ID, die er der neuen Kopie zugewiesen hat. MCPEmails übernimmt diese Abfolge, aber ein Verschieben ist hier nicht atomar, und eine abgelegte Nachricht wird durch eine Suche im Zielordner bestätigt statt über ihre ID."
     }
   ],
   "limits": [
@@ -71,7 +71,7 @@
   "faq": [
     {
       "q": "Funktioniert Claude mit Bluewin E-Mail?",
-      "a": "Nicht direkt. Claude hat keinen eingebauten Konnektor für Bluewin oder Swisscom. Verbinden Sie einen MCP-Server wie MCP Emails per IMAP mit dem Postfach, dann kann Claude Ihre bluewin.ch-E-Mails lesen, suchen, senden, beantworten, planen und sortieren. Dieselbe Verbindung funktioniert in Cursor, ChatGPT und anderen MCP-Clients."
+      "a": "Nicht direkt. Claude hat keinen eingebauten Konnektor für Bluewin oder Swisscom. Verbinden Sie einen MCP-Server wie MCPEmails per IMAP mit dem Postfach, dann kann Claude Ihre bluewin.ch-E-Mails lesen, suchen, senden, beantworten, planen und sortieren. Dieselbe Verbindung funktioniert in Cursor, ChatGPT und anderen MCP-Clients."
     },
     {
       "q": "Wie lauten die IMAP- und SMTP-Einstellungen für Bluewin?",

@@ -3,7 +3,7 @@ const translation = {
   description:
     'Oppsettsguide for deg@dittfirma.no: finn ut hvem som faktisk drifter e-posten din, koble til Google Workspace, Zoho, Fastmail, Migadu, Titan, Rackspace, IONOS eller cPanel, og fiks avsendernavnet før agenten svarer.',
   coverAlt:
-    'Koble en bedrifts-e-post på eget domene til en AI-agent med MCP Emails',
+    'Koble en bedrifts-e-post på eget domene til en AI-agent med MCPEmails',
   content: `> **På Microsoft 365?** Hvis bedriftspostkassen din viser seg å være en Microsoft-tenant, hjelper denne guiden deg med å bekrefte det. Koble den til med **Outlook** og Logg inn med Microsoft i stedet for IMAP; IT-ansvarlig må kanskje først godkjenne appen én gang for hele organisasjonen. [Guiden for Outlook og Microsoft 365](/blog/connect-outlook-microsoft-365-ai-agent-mcp) viser stegene.
 
 Nesten alle guider for å koble e-post til en AI-agent tar for gitt at adressen din slutter på gmail.com. Bedrifts-e-post er noe annet: domenet sier ingenting om hvem som drifter postkassen, noen andre kan styre om e-postklienter i det hele tatt får logge inn, og det agenten sender går til kundene dine i ditt navn. Dette er guiden for deg@dittfirma.no.
@@ -19,7 +19,7 @@ Nesten alle guider for å koble e-post til en AI-agent tar for gitt at adressen 
 
 ## Steg 1: Finn ut hvem som faktisk drifter e-posten din
 
-MCP Emails prøver å svare på dette for deg. Skriv adressen din i IMAP-skjemaet, vent et halvt sekund, så sjekkes fire kilder i rekkefølge: en tabell over leverandørene som har forårsaket reelle tilkoblingsfeil, domenets RFC 6186-tjenesteoppføringer, MX-oppføringen din matchet mot den samme tabellen, og Mozillas autokonfigurasjonsdatabase. Ingenting fylles ut med mindre begge halvdelene løser seg.
+MCPEmails prøver å svare på dette for deg. Skriv adressen din i IMAP-skjemaet, vent et halvt sekund, så sjekkes fire kilder i rekkefølge: en tabell over leverandørene som har forårsaket reelle tilkoblingsfeil, domenets RFC 6186-tjenesteoppføringer, MX-oppføringen din matchet mot den samme tabellen, og Mozillas autokonfigurasjonsdatabase. Ingenting fylles ut med mindre begge halvdelene løser seg.
 
 Vil du sjekke selv først:
 
@@ -48,7 +48,7 @@ Workspace kobles til med et **Google-apppassord** over IMAP (\`imap.gmail.com\` 
 
 **Slå på IMAP-tilgang** først, under Innstillinger → E-postkontoer → adressen → IMAP-tilgang. Den er av som standard og settes per postkasse, så å slå den på for deg selv gjør ingenting for en kollega. Lag også et **applikasjonsspesifikt passord** hvis tofaktorautentisering er på.
 
-Verten din avhenger av to ting Zoho aldri viser samtidig: hvilket av de seks regionale datasentrene kontoen ligger i (\`.com\`, \`.eu\`, \`.in\`, \`.com.au\`, \`.jp\`, \`zohocloud.ca\`), og om det er en betalt organisasjonskonto på eget domene, som bruker \`imappro\` og \`smtppro\` for den regionen. MCP Emails spør om begge og bygger vertsnavnet.
+Verten din avhenger av to ting Zoho aldri viser samtidig: hvilket av de seks regionale datasentrene kontoen ligger i (\`.com\`, \`.eu\`, \`.in\`, \`.com.au\`, \`.jp\`, \`zohocloud.ca\`), og om det er en betalt organisasjonskonto på eget domene, som bruker \`imappro\` og \`smtppro\` for den regionen. MCPEmails spør om begge og bygger vertsnavnet.
 
 ### Fastmail og Migadu
 
@@ -74,14 +74,14 @@ Det finnes ingen cPanel-e-posttjeneste, bare webhotellets egen server, så panel
 
 ## Når ingenting oppdages og du må fylle inn selv
 
-Gi MCP Emails fire ting per protokoll: vert, port, sikkerhetsmodus og hele adressen din som brukernavn. Konvensjonene er faste, og skjemaet holder port og sikkerhet i takt så de ikke kommer i utakt:
+Gi MCPEmails fire ting per protokoll: vert, port, sikkerhetsmodus og hele adressen din som brukernavn. Konvensjonene er faste, og skjemaet holder port og sikkerhet i takt så de ikke kommer i utakt:
 
 - IMAP **993** er implisitt TLS; IMAP **143** er STARTTLS.
 - SMTP **465** er implisitt TLS; SMTP **587** er STARTTLS, og **25** er STARTTLS hos små verter som ikke tilbyr annet.
 
 Å blande disse var den klart største årsaken til mislykkede generiske tilkoblinger: STARTTLS på 993 blir stående og vente på en hilsen en ren TLS-lytter aldri sender, og implisitt TLS på 143 feiler i håndtrykket. Du trenger ikke lenger treffe på første forsøk. En tilkobling som aldri fikk en brukbar økt, prøves på nytt over de andre standardtransportene, opptil tre forsøk per protokoll, med det du ba om først. Et passord serveren avviste, prøves aldri på nytt: å sende det igjen ville bare tredoble antallet feilede innlogginger leverandøren din bruker til å låse kontoen. Se også [siden for generisk IMAP-tilkobling](/connect/imap).
 
-Sending forhandler om én ting til som du aldri ser. Exchange-liknende verter annonserer **LOGIN** uten PLAIN, så MCP Emails leser hva serveren tilbyr, prøver PLAIN først når begge finnes, og faller tilbake på LOGIN. En avvist mekanisme rapporteres aldri som feil passord.
+Sending forhandler om én ting til som du aldri ser. Exchange-liknende verter annonserer **LOGIN** uten PLAIN, så MCPEmails leser hva serveren tilbyr, prøver PLAIN først når begge finnes, og faller tilbake på LOGIN. En avvist mekanisme rapporteres aldri som feil passord.
 
 ## Sett avsendernavnet før agenten svarer
 
@@ -110,7 +110,7 @@ Ja, med et Google-apppassord over IMAP. Totrinnsbekreftelse må være på for å
 **Hva om webhotellet mitt ikke publiserer IMAP-innstillinger?**
 Fyll dem inn selv: vert, port, sikkerhetsmodus og hele adressen din som brukernavn. Svarer ikke den første transporten, prøves standardalternativene automatisk.
 
-**Lagrer MCP Emails bedriftens e-post?**
+**Lagrer MCPEmails bedriftens e-post?**
 Nei. Innholdet i meldingene hentes live fra leverandøren din ved hver forespørsel og forkastes. Bare den krypterte legitimasjonen til leverandøren beholdes.
 
 **Er én postkasse nok på gratisplanen?**

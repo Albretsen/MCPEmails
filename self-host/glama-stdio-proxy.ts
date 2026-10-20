@@ -1,5 +1,5 @@
 /**
- * Stdio bridge for MCP Emails.
+ * Stdio bridge for MCPEmails.
  *
  * Two jobs, picked automatically:
  *
@@ -123,7 +123,7 @@ async function startLocalServer(): Promise<void> {
     }
     await new Promise((resolve) => setTimeout(resolve, 250));
   }
-  throw new Error(`Local MCP Emails server did not start in time: ${lastError}`);
+  throw new Error(`Local MCPEmails server did not start in time: ${lastError}`);
 }
 
 /** Best effort teardown. A child that is already gone is the desired state. */
@@ -168,7 +168,7 @@ async function postUpstream(request: JsonRpcRequest) {
   }
 
   const body = await response.text();
-  if (!response.ok) throw new Error(`MCP Emails returned ${response.status}: ${body}`);
+  if (!response.ok) throw new Error(`MCPEmails returned ${response.status}: ${body}`);
   return JSON.parse(body);
 }
 

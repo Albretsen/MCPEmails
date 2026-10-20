@@ -35,10 +35,10 @@
       "providerSub": "Gmail · Outlook · iCloud · IMAP",
       "logCalls": "agent calls",
       "logReturns": "returns inbox IDs, no dashboard copy-paste",
-      "logFetches": "MCP Emails fetches live from your provider",
+      "logFetches": "MCPEmails fetches live from your provider",
       "logResult": "20 messages returned",
       "logNothing": "nothing stored",
-      "legendPipe": "MCP Emails (the pipe)",
+      "legendPipe": "MCPEmails (the pipe)",
       "legendLive": "live request",
       "legendData": "your data, your provider"
     }
@@ -49,7 +49,7 @@
   "whatIs": {
     "title": "What is an email MCP server?",
     "p1": "An email MCP server is the bridge between an AI assistant and a real mailbox. It speaks the Model Context Protocol, so Claude, ChatGPT, Cursor or any other MCP client can read, search, draft and send email through one endpoint, with no separate integration for each app.",
-    "p2": "MCP Emails is a hosted one. It works with Gmail, Outlook and Microsoft 365, iCloud, Fastmail and any mailbox that speaks IMAP, and one agent can work several mailboxes at once. Mail is fetched live from your provider on each call and never stored on our servers.",
+    "p2": "MCPEmails is a hosted one. It works with Gmail, Outlook and Microsoft 365, iCloud, Fastmail and any mailbox that speaks IMAP, and one agent can work several mailboxes at once. Mail is fetched live from your provider on each call and never stored on our servers.",
     "linkImap": "Set up the IMAP MCP server",
     "linkBusiness": "Email MCP for company mailboxes",
     "linkProviders": "All supported email providers",
@@ -110,7 +110,7 @@
       },
       "2": {
         "h": "Your agent works the inbox",
-        "p": "The agent calls tools like <code>email_read()</code> or <code>email_compose()</code>. MCP Emails fetches live from your provider and returns the result. Nothing is cached between calls."
+        "p": "The agent calls tools like <code>email_read()</code> or <code>email_compose()</code>. MCPEmails fetches live from your provider and returns the result. Nothing is cached between calls."
       }
     },
     "tools": {
@@ -128,17 +128,17 @@
     "eyebrow": "Real prompts",
     "titleLine1": "Just ask.",
     "titleLine2": "It reads, writes, and files.",
-    "sub": "No dashboards to learn. Tell your AI assistant what you want in plain English, and it uses MCP Emails to get it done."
+    "sub": "No dashboards to learn. Tell your AI assistant what you want in plain English, and it uses MCPEmails to get it done."
   },
   "quote": {
     "text": "I wanted my agents to work my inbox, but every option meant handing a third party a copy of my email. So I built the pipe I wished existed: connect once, your inbox is fetched live and never stored, and you can cut off any agent in a click. That's the product I trust with my own inbox.",
-    "role": "founder, MCP Emails"
+    "role": "founder, MCPEmails"
   },
   "reviews": {
     "eyebrow": "Reviews",
     "titleLine1": "Not our word for it.",
     "titleLine2": "Theirs.",
-    "sub": "Real reviews from people running MCP Emails against their own inbox, published under their own names.",
+    "sub": "Real reviews from people running MCPEmails against their own inbox, published under their own names.",
     "ratingLabel": "Rated {rating} out of 5",
     "count": "{count, plural, one {# review} other {# reviews}}",
     "via": "Reviewed on {source}",
@@ -214,7 +214,7 @@
     "sub": "Everything you need to know before connecting your first inbox.",
     "items": [
       {
-        "q": "Is MCP Emails an IMAP MCP server?",
+        "q": "Is MCPEmails an IMAP MCP server?",
         "a": "Yes. Alongside Gmail and Outlook there is a generic IMAP and SMTP connector, so any mailbox with IMAP access works: your own domain, a hosting provider, a regional ISP. You enter the server details and an app password once, and your agent reads over IMAP and sends through your own SMTP server."
       },
       {
@@ -255,7 +255,7 @@
       },
       {
         "q": "Can I self-host it?",
-        "a": "Yes. MCP Emails is open source under AGPL-3.0, and the hosted service runs the same server you can run yourself. A docker-compose stack gets the full MCP server and all its tools running against your own database in about five minutes, for any IMAP or SMTP mailbox. Gmail and Outlook sign-in (OAuth) and the dashboard stay on the hosted plan."
+        "a": "Yes. MCPEmails is open source under AGPL-3.0, and the hosted service runs the same server you can run yourself. A docker-compose stack gets the full MCP server and all its tools running against your own database in about five minutes, for any IMAP or SMTP mailbox. Gmail and Outlook sign-in (OAuth) and the dashboard stay on the hosted plan."
       }
     ]
   },
@@ -279,9 +279,9 @@
     "linkWithdrawal": "Right of withdrawal",
     "linkCancel": "Cancel contracts here",
     "linkImpressum": "Impressum",
-    "copyright": "© 2026 MCP Emails.",
+    "copyright": "© 2026 MCPEmails.",
     "legal": "Email fetched live, never stored · Credentials encrypted at rest",
-    "legalEntity": "MCP Emails is a service of Albretsen AS, organisation number 938 702 373, Håsteins gate 9, 5160 Laksevåg, Norway.",
+    "legalEntity": "MCPEmails is a service of Albretsen AS, organisation number 938 702 373, Håsteins gate 9, 5160 Laksevåg, Norway.",
     "contactLabel": "Contact",
     "mcpLabel": "MCP endpoint",
     "copy": "Copy",

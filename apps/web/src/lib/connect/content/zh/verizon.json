@@ -19,8 +19,8 @@
     "eyebrow": "Verizon.net + AI",
     "titleLine1": "Verizon 已停止其邮件服务。",
     "titleLine2": "你的 verizon.net 收件箱仍可连接",
-    "lead": "Verizon 已不再运营邮箱。仍然存在的 verizon.net 地址是一个 AOL 账户，MCP Emails 通过 IMAP 连接它，让你的 AI 代理可以读取、搜索、发送、回复和归档邮件。",
-    "answer": "Claude 无法自行连接 verizon.net 邮箱，Verizon 自己也不行：它已停止消费者邮箱服务，并把邮箱迁移到了 AOL Mail 和 Yahoo Mail。如果你的地址在那次迁移中保留了下来，它就是一个以 verizon.net 为用户名的 AOL 账户，MCP Emails 这个托管 MCP 服务器会通过 IMAP 连接 imap.aol.com 的 993 端口，使用 AOL 应用密码而不是你在网页邮箱中输入的密码。连接后，Claude、Cursor 或任何其他 MCP 客户端都能读取、搜索、发送、回复和整理邮件。一个收件箱永久免费。",
+    "lead": "Verizon 已不再运营邮箱。仍然存在的 verizon.net 地址是一个 AOL 账户，MCPEmails 通过 IMAP 连接它，让你的 AI 代理可以读取、搜索、发送、回复和归档邮件。",
+    "answer": "Claude 无法自行连接 verizon.net 邮箱，Verizon 自己也不行：它已停止消费者邮箱服务，并把邮箱迁移到了 AOL Mail 和 Yahoo Mail。如果你的地址在那次迁移中保留了下来，它就是一个以 verizon.net 为用户名的 AOL 账户，MCPEmails 这个托管 MCP 服务器会通过 IMAP 连接 imap.aol.com 的 993 端口，使用 AOL 应用密码而不是你在网页邮箱中输入的密码。连接后，Claude、Cursor 或任何其他 MCP 客户端都能读取、搜索、发送、回复和整理邮件。一个收件箱永久免费。",
     "meta0": "1 个收件箱永久免费",
     "meta1": "AOL 应用密码，而不是网页邮箱密码",
     "meta2": "邮件实时获取，绝不存储"
@@ -31,7 +31,7 @@
   },
   "setup": [
     {
-      "h": "创建免费 MCP Emails 账户",
+      "h": "创建免费 MCPEmails 账户",
       "p": "在 mcpemails.com 注册。免费套餐可连接一个收件箱，无需信用卡。"
     },
     {
@@ -40,7 +40,7 @@
     },
     {
       "h": "在 Account Security 下生成 AOL 应用密码",
-      "p": "打开 Account Info，然后是 <b>Account Security</b>。如果两步验证未开启，请先开启，然后生成一个应用密码，命名为 <code>mcpemails</code> 之类的名称。AOL 只显示一次。把它连同完整的 verizon.net 地址一起粘贴到 MCP Emails；上方的 AOL 服务器已自动填好。"
+      "p": "打开 Account Info，然后是 <b>Account Security</b>。如果两步验证未开启，请先开启，然后生成一个应用密码，命名为 <code>mcpemails</code> 之类的名称。AOL 只显示一次。把它连同完整的 verizon.net 地址一起粘贴到 MCPEmails；上方的 AOL 服务器已自动填好。"
     },
     {
       "h": "将 MCP URL 粘贴到你的 AI",
@@ -67,12 +67,12 @@
   ],
   "limits": [
     "AOL 的 SMTP 主机声明的最大邮件大小约为 39 MB，因此带大附件的邮件在发出之前就会被拒绝。",
-    "只能连接已经存在并完成迁移的 verizon.net 邮箱。Verizon 不再发放新邮箱，MCP Emails 也无法恢复已删除的账户。"
+    "只能连接已经存在并完成迁移的 verizon.net 邮箱。Verizon 不再发放新邮箱，MCPEmails 也无法恢复已删除的账户。"
   ],
   "faq": [
     {
       "q": "Claude 能用 Verizon 邮箱吗？",
-      "a": "不能直接使用，也不能通过已不再运营邮件的 Verizon 使用。如果你的 verizon.net 地址在 AOL 上仍然有效，通过 IMAP 将 MCP Emails 这样的 MCP 服务器连接到它，Claude 就能读取、搜索、发送、回复、定时和整理其中的邮件，同一个连接也可在 Cursor、ChatGPT 和其他 MCP 客户端中使用。"
+      "a": "不能直接使用，也不能通过已不再运营邮件的 Verizon 使用。如果你的 verizon.net 地址在 AOL 上仍然有效，通过 IMAP 将 MCPEmails 这样的 MCP 服务器连接到它，Claude 就能读取、搜索、发送、回复、定时和整理其中的邮件，同一个连接也可在 Cursor、ChatGPT 和其他 MCP 客户端中使用。"
     },
     {
       "q": "verizon.net 的 IMAP 和 SMTP 设置是什么？",

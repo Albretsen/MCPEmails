@@ -23,7 +23,7 @@
     "meta0": "Première boîte gratuite, offres pour les autres",
     "meta1": "Le mot de passe de votre boîte, pas de configuration OAuth",
     "meta2": "E-mails récupérés en direct, jamais stockés",
-    "answer": "Claude ne peut pas atteindre Namecheap Private Email tout seul. MCP Emails est un serveur MCP hébergé qui s'y connecte en IMAP avec le mot de passe de votre boîte, pour que Claude, Cursor ou tout client MCP puisse lire, rechercher, envoyer et organiser ce courrier. La configuration prend deux minutes. Chaque adresse de l'entreprise, comme info@ ou ventes@, se connecte comme une boîte à part : une boîte est gratuite, Personal en connecte trois, Pro jusqu'à 10 et Business autant qu'il vous en faut."
+    "answer": "Claude ne peut pas atteindre Namecheap Private Email tout seul. MCPEmails est un serveur MCP hébergé qui s'y connecte en IMAP avec le mot de passe de votre boîte, pour que Claude, Cursor ou tout client MCP puisse lire, rechercher, envoyer et organiser ce courrier. La configuration prend deux minutes. Chaque adresse de l'entreprise, comme info@ ou ventes@, se connecte comme une boîte à part : une boîte est gratuite, Personal en connecte trois, Pro jusqu'à 10 et Business autant qu'il vous en faut."
   },
   "persona": {
     "intro": "Plusieurs boîtes d'entreprise chez Namecheap ?",
@@ -37,14 +37,14 @@
   "setup": [
     {
       "h": "Créez un compte gratuit",
-      "p": "Inscrivez-vous sur MCP Emails, sans carte bancaire. L'offre gratuite connecte une boîte, pour toujours."
+      "p": "Inscrivez-vous sur MCPEmails, sans carte bancaire. L'offre gratuite connecte une boîte, pour toujours."
     },
     {
       "h": "Retrouvez le mot de passe de votre boîte Private Email",
       "p": "Utilisez le mot de passe de la boîte elle-même, pas celui de votre compte Namecheap. Vous pouvez le réinitialiser à tout moment depuis le panneau de contrôle Private Email."
     },
     {
-      "h": "Collez-le dans MCP Emails",
+      "h": "Collez-le dans MCPEmails",
       "p": "Choisissez IMAP / SMTP, ajoutez votre adresse Namecheap Private Email, les serveurs ci-dessus et le mot de passe pour connecter la boîte en toute sécurité."
     },
     {
@@ -59,7 +59,7 @@
     },
     {
       "h": "La double authentification de Private Email ne protège que le webmail, et elle bloque tous les clients de messagerie",
-      "p": "Namecheap décrit la 2FA de Private Email comme une protection de l'interface web. Dès que vous l'activez, votre mot de passe de boîte habituel ne permet plus de s'authentifier en IMAP et SMTP, et le refus se présente comme un simple échec de connexion, sans mention du second facteur. La solution est un <b>mot de passe spécifique à l'application</b> : dans le webmail Private Email, ouvrez <b>Settings</b>, puis <b>Security</b>, puis <b>Application Passwords</b>, choisissez le type de client dans la liste déroulante et générez-en un. Collez-le dans MCP Emails à la place du mot de passe de la boîte. Si vous n'avez jamais activé la 2FA, aucun mot de passe d'application n'existe et vous n'en avez pas besoin."
+      "p": "Namecheap décrit la 2FA de Private Email comme une protection de l'interface web. Dès que vous l'activez, votre mot de passe de boîte habituel ne permet plus de s'authentifier en IMAP et SMTP, et le refus se présente comme un simple échec de connexion, sans mention du second facteur. La solution est un <b>mot de passe spécifique à l'application</b> : dans le webmail Private Email, ouvrez <b>Settings</b>, puis <b>Security</b>, puis <b>Application Passwords</b>, choisissez le type de client dans la liste déroulante et générez-en un. Collez-le dans MCPEmails à la place du mot de passe de la boîte. Si vous n'avez jamais activé la 2FA, aucun mot de passe d'application n'existe et vous n'en avez pas besoin."
     },
     {
       "h": "Le serveur est mail.privateemail.com pour tous les clients, et Namecheap demande de ne pas le changer",
@@ -73,12 +73,12 @@
   "limits": [
     "Comme le serveur n'annonce pas MOVE, un déplacement n'est pas atomique. Si une connexion tombe en cours de route, un message peut brièvement se trouver dans les deux dossiers.",
     "Private Email est un abonnement distinct du domaine. Posséder un domaine Namecheap ne signifie pas que vous avez une boîte Namecheap à connecter.",
-    "MCP Emails connecte la boîte. Les alias, les redirections, les règles fourre-tout (catch-all) et la création de boîtes restent dans le panneau de contrôle Namecheap Private Email."
+    "MCPEmails connecte la boîte. Les alias, les redirections, les règles fourre-tout (catch-all) et la création de boîtes restent dans le panneau de contrôle Namecheap Private Email."
   ],
   "faq": [
     {
       "q": "Claude fonctionne-t-il avec Namecheap Private Email ?",
-      "a": "Pas tout seul. Claude n'a pas de connecteur Namecheap intégré. Connecter un serveur MCP comme MCP Emails à la boîte en IMAP donne à Claude un accès en lecture, recherche, envoi, réponse, planification et organisation, et la même connexion fonctionne ensuite depuis Cursor, ChatGPT et d'autres clients MCP, pas un seul."
+      "a": "Pas tout seul. Claude n'a pas de connecteur Namecheap intégré. Connecter un serveur MCP comme MCPEmails à la boîte en IMAP donne à Claude un accès en lecture, recherche, envoi, réponse, planification et organisation, et la même connexion fonctionne ensuite depuis Cursor, ChatGPT et d'autres clients MCP, pas un seul."
     },
     {
       "q": "Quels sont les réglages IMAP et SMTP de Namecheap Private Email ?",
@@ -90,7 +90,7 @@
     },
     {
       "q": "Comment créer un mot de passe d'application Namecheap ?",
-      "a": "Connectez-vous au webmail Private Email sur privateemail.com, ouvrez Settings, puis Security, puis Application Passwords. Choisissez l'application ou le type de client dans la liste déroulante et générez un mot de passe. Copiez-le immédiatement et collez-le dans MCP Emails à la place du mot de passe de la boîte. Vous n'en avez besoin que si la double authentification est activée."
+      "a": "Connectez-vous au webmail Private Email sur privateemail.com, ouvrez Settings, puis Security, puis Application Passwords. Choisissez l'application ou le type de client dans la liste déroulante et générez un mot de passe. Copiez-le immédiatement et collez-le dans MCPEmails à la place du mot de passe de la boîte. Vous n'en avez besoin que si la double authentification est activée."
     },
     {
       "q": "Puis-je utiliser mail.mydomain.com au lieu de mail.privateemail.com ?",

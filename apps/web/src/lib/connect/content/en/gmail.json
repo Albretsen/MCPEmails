@@ -23,20 +23,20 @@
     "meta0": "1 inbox free, forever",
     "meta1": "Connects with a Google app password",
     "meta2": "Email fetched live, never stored",
-    "answer": "Claude cannot reach Gmail on its own. MCP Emails is a hosted MCP server that sits between them: you create a Google app password once, paste one URL into your MCP client, and Claude, Cursor or ChatGPT can then read, search, send, reply to and schedule your Gmail. One inbox is free, forever."
+    "answer": "Claude cannot reach Gmail on its own. MCPEmails is a hosted MCP server that sits between them: you create a Google app password once, paste one URL into your MCP client, and Claude, Cursor or ChatGPT can then read, search, send, reply to and schedule your Gmail. One inbox is free, forever."
   },
   "method": {
     "title": "How Gmail connects: a Google app password",
-    "body": "Gmail connects with a <b>Google app password</b> over IMAP and SMTP. Google only offers app passwords on accounts with <b>2-Step Verification switched on</b>, so turn that on first, then create one at <b>myaccount.google.com/apppasswords</b>. It is 16 lowercase letters in four groups, and you paste it in place of your normal Google password, which will not work. Revoke it anytime from the same Google page, or delete the inbox in MCP Emails."
+    "body": "Gmail connects with a <b>Google app password</b> over IMAP and SMTP. Google only offers app passwords on accounts with <b>2-Step Verification switched on</b>, so turn that on first, then create one at <b>myaccount.google.com/apppasswords</b>. It is 16 lowercase letters in four groups, and you paste it in place of your normal Google password, which will not work. Revoke it anytime from the same Google page, or delete the inbox in MCPEmails."
   },
   "setup": [
     {
       "h": "Create a free account",
-      "p": "Sign up for MCP Emails, no card required. The free plan connects one inbox, forever."
+      "p": "Sign up for MCPEmails, no card required. The free plan connects one inbox, forever."
     },
     {
       "h": "Create a Google app password",
-      "p": "Switch on 2-Step Verification in your Google account if it is not already on, then go to myaccount.google.com/apppasswords and create one. Paste the 16 characters into MCP Emails with your full Gmail address. Spaces in the code do not matter."
+      "p": "Switch on 2-Step Verification in your Google account if it is not already on, then go to myaccount.google.com/apppasswords and create one. Paste the 16 characters into MCPEmails with your full Gmail address. Spaces in the code do not matter."
     },
     {
       "h": "Paste the MCP URL into your AI",
@@ -46,11 +46,11 @@
   "gotchas": [
     {
       "h": "Google publishes its own Gmail MCP server, and for Gmail alone it is the shorter path",
-      "p": "Google announced official MCP support for its services, including a Workspace MCP server that covers Gmail alongside Drive, Calendar and Chat. We are not going to pretend otherwise. If Gmail is the only mailbox you want an assistant to touch, and your client speaks to Google's server, use it. The reason to point MCP Emails at Gmail instead is that the same server also holds your iCloud, Fastmail, Zoho, Yahoo or company IMAP mailbox, exposes every one of them through <b>one</b> MCP URL, and behaves the same way in Claude, Cursor and ChatGPT. One connector per provider, each with its own auth and its own tool names, is the thing this avoids."
+      "p": "Google announced official MCP support for its services, including a Workspace MCP server that covers Gmail alongside Drive, Calendar and Chat. We are not going to pretend otherwise. If Gmail is the only mailbox you want an assistant to touch, and your client speaks to Google's server, use it. The reason to point MCPEmails at Gmail instead is that the same server also holds your iCloud, Fastmail, Zoho, Yahoo or company IMAP mailbox, exposes every one of them through <b>one</b> MCP URL, and behaves the same way in Claude, Cursor and ChatGPT. One connector per provider, each with its own auth and its own tool names, is the thing this avoids."
     },
     {
       "h": "Sending from another address takes a verified Send As address",
-      "p": "A mailbox connected with an app password sends from its own address. To let your agent send from an alias or another address you own, add it under <b>Send As addresses</b> in the inbox settings in MCP Emails. We email that address a 6-digit code, and it becomes usable once you enter the code. Gmail has to accept the address too, so set it up as a <b>Send mail as</b> address in Gmail first. A From address that is neither the mailbox's own nor verified is refused, not silently rewritten."
+      "p": "A mailbox connected with an app password sends from its own address. To let your agent send from an alias or another address you own, add it under <b>Send As addresses</b> in the inbox settings in MCPEmails. We email that address a 6-digit code, and it becomes usable once you enter the code. Gmail has to accept the address too, so set it up as a <b>Send mail as</b> address in Gmail first. A From address that is neither the mailbox's own nor verified is refused, not silently rewritten."
     },
     {
       "h": "Gmail has labels, not folders, so a move is not a move",
@@ -62,18 +62,18 @@
     }
   ],
   "limits": [
-    "MCP Emails reaches mail only: an app password is used for IMAP and SMTP alone. Drive, Calendar, Chat and Docs are not reached.",
+    "MCPEmails reaches mail only: an app password is used for IMAP and SMTP alone. Drive, Calendar, Chat and Docs are not reached.",
     "A Google Workspace administrator can switch app passwords off for the domain from the Admin console. Only an administrator can change that decision.",
     "Delete moves a message into Gmail's Trash. A permanent delete follows Gmail's IMAP settings: by default it only removes the label the message was deleted from, and an expunge from Trash erases it."
   ],
   "faq": [
     {
       "q": "Does Claude work with Gmail?",
-      "a": "Yes, once something stands between them that speaks Gmail on Claude's behalf. MCP Emails is one such thing: you create a Google app password, paste one MCP URL, and Claude can read, search, send, reply, forward and schedule mail. Google also publishes an official Workspace MCP server covering Gmail. The practical difference is that MCP Emails is not Google-only, so the same URL serves your other mailboxes too."
+      "a": "Yes, once something stands between them that speaks Gmail on Claude's behalf. MCPEmails is one such thing: you create a Google app password, paste one MCP URL, and Claude can read, search, send, reply, forward and schedule mail. Google also publishes an official Workspace MCP server covering Gmail. The practical difference is that MCPEmails is not Google-only, so the same URL serves your other mailboxes too."
     },
     {
       "q": "Is there an official Gmail MCP server from Google?",
-      "a": "Yes. Google announced official MCP support for its services, with a Workspace MCP server spanning Gmail, Drive, Calendar and Chat. Use it when Gmail is the only mailbox involved and your client supports it. Choose a third-party server such as MCP Emails when you want several providers behind a single MCP URL, or when you want identical behaviour across Claude, Cursor and ChatGPT."
+      "a": "Yes. Google announced official MCP support for its services, with a Workspace MCP server spanning Gmail, Drive, Calendar and Chat. Use it when Gmail is the only mailbox involved and your client supports it. Choose a third-party server such as MCPEmails when you want several providers behind a single MCP URL, or when you want identical behaviour across Claude, Cursor and ChatGPT."
     },
     {
       "q": "Do I need an app password for Gmail?",
@@ -89,7 +89,7 @@
     },
     {
       "q": "Is my Gmail stored on your servers?",
-      "a": "No. Messages are fetched live from Google for each request and handed to your AI client. Your app password is encrypted at rest and message bodies are not retained. Revoking the app password in your Google Account, or deleting the inbox in MCP Emails, ends the connection straight away."
+      "a": "No. Messages are fetched live from Google for each request and handed to your AI client. Your app password is encrypted at rest and message bodies are not retained. Revoking the app password in your Google Account, or deleting the inbox in MCPEmails, ends the connection straight away."
     }
   ],
   "ctaBand": {

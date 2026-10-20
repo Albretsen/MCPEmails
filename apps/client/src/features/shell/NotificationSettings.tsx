@@ -43,7 +43,7 @@ function DeviceNote({ state }: { state: PushState }) {
       return (
         <p className={s.dialogNote}>
           On iPhone and iPad, notifications only work for apps on the Home Screen. Tap{" "}
-          <Share size={13} aria-label="Share" className={s.noticeGlyph} /> in Safari, then <strong>Add to Home Screen</strong>, open mcpemails
+          <Share size={13} aria-label="Share" className={s.noticeGlyph} /> in Safari, then <strong>Add to Home Screen</strong>, open MCPEmails
           from there and come back to this screen.
         </p>
       );

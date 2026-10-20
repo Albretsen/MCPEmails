@@ -26,23 +26,23 @@
     "meta0": "1 Postfach dauerhaft kostenlos",
     "meta1": "Ihr Kontopasswort, keine OAuth-Einrichtung",
     "meta2": "E-Mails live abgerufen, nie gespeichert",
-    "answer": "Claude kann WEB.DE nicht von sich aus erreichen. MCP Emails ist ein gehosteter MCP-Server, der das Postfach per IMAP mit Ihrem Kontopasswort anbindet. Danach können Claude, Cursor oder jeder MCP-Client diese E-Mails lesen, suchen, senden und ordnen. Die Einrichtung dauert ein paar Minuten, ein Postfach ist kostenlos."
+    "answer": "Claude kann WEB.DE nicht von sich aus erreichen. MCPEmails ist ein gehosteter MCP-Server, der das Postfach per IMAP mit Ihrem Kontopasswort anbindet. Danach können Claude, Cursor oder jeder MCP-Client diese E-Mails lesen, suchen, senden und ordnen. Die Einrichtung dauert ein paar Minuten, ein Postfach ist kostenlos."
   },
   "method": {
     "title": "So verbindet sich WEB.DE: IMAP und Ihr Kontopasswort",
-    "body": "WEB.DE verbindet sich über IMAP/SMTP, aber <b>der Zugriff per POP3 und IMAP ist standardmäßig deaktiviert</b>. Schalten Sie ihn bei WEB.DE unter E-Mail-Einstellungen, E-Mail empfangen, POP3/IMAP ein und verbinden Sie dann mit Ihrer WEB.DE-Adresse und Ihrem Passwort. WEB.DE antwortet auf beiden üblichen Versandwegen, implizites TLS auf Port 465 und STARTTLS auf Port 587. Am Port scheitert ein Versand also fast nie. MCP Emails nutzt das 465-Paar unten und wechselt bei Bedarf selbst auf den anderen Port."
+    "body": "WEB.DE verbindet sich über IMAP/SMTP, aber <b>der Zugriff per POP3 und IMAP ist standardmäßig deaktiviert</b>. Schalten Sie ihn bei WEB.DE unter E-Mail-Einstellungen, E-Mail empfangen, POP3/IMAP ein und verbinden Sie dann mit Ihrer WEB.DE-Adresse und Ihrem Passwort. WEB.DE antwortet auf beiden üblichen Versandwegen, implizites TLS auf Port 465 und STARTTLS auf Port 587. Am Port scheitert ein Versand also fast nie. MCPEmails nutzt das 465-Paar unten und wechselt bei Bedarf selbst auf den anderen Port."
   },
   "setup": [
     {
       "h": "Kostenloses Konto erstellen",
-      "p": "Registrieren Sie sich bei MCP Emails, ohne Kreditkarte. Der Free-Tarif verbindet ein Postfach, dauerhaft."
+      "p": "Registrieren Sie sich bei MCPEmails, ohne Kreditkarte. Der Free-Tarif verbindet ein Postfach, dauerhaft."
     },
     {
       "h": "IMAP-Zugriff bei WEB.DE einschalten",
       "p": "Öffnen Sie bei WEB.DE die E-Mail-Einstellungen, wählen Sie unter E-Mail empfangen den Punkt POP3/IMAP und stellen Sie den Schieberegler auf POP3- und IMAP-Zugriff erlauben."
     },
     {
-      "h": "Postfach in MCP Emails hinzufügen",
+      "h": "Postfach in MCPEmails hinzufügen",
       "p": "Wählen Sie IMAP / SMTP, geben Sie Ihre WEB.DE-Adresse, die oben genannten Hosts und das Passwort ein, und das Postfach ist sicher verbunden."
     },
     {
@@ -61,7 +61,7 @@
     },
     {
       "h": "Mit Zwei-Faktor-Authentifizierung gilt Ihr Passwort nicht mehr für Mailprogramme",
-      "p": "WEB.DE führt das App-Passwort unter der Zwei-Faktor-Authentifizierung und beschreibt es als Passwort für externe Mailprogramme per POP3 und IMAP. Sobald 2FA Ihr Konto schützt, erstellen Sie eines im Browser: Klicken Sie auf Ihre Initialen, dann <b>Account verwalten</b>, dann <b>Login & Sicherheit</b>, dann <b>App-Passwörter (für externe Apps)</b>, dann <b>Neues App-Passwort erstellen</b>. Geben Sie ihm einen Namen, etwa MCP Emails, und kopieren Sie es sofort, denn WEB.DE zeigt es nur einmal an. Fügen Sie es statt Ihres normalen Passworts in MCP Emails ein und nutzen Sie das normale Passwort weiter für die Website. Ohne 2FA ist das Kontopasswort richtig."
+      "p": "WEB.DE führt das App-Passwort unter der Zwei-Faktor-Authentifizierung und beschreibt es als Passwort für externe Mailprogramme per POP3 und IMAP. Sobald 2FA Ihr Konto schützt, erstellen Sie eines im Browser: Klicken Sie auf Ihre Initialen, dann <b>Account verwalten</b>, dann <b>Login & Sicherheit</b>, dann <b>App-Passwörter (für externe Apps)</b>, dann <b>Neues App-Passwort erstellen</b>. Geben Sie ihm einen Namen, etwa MCPEmails, und kopieren Sie es sofort, denn WEB.DE zeigt es nur einmal an. Fügen Sie es statt Ihres normalen Passworts in MCPEmails ein und nutzen Sie das normale Passwort weiter für die Website. Ohne 2FA ist das Kontopasswort richtig."
     },
     {
       "h": "Beide SMTP-Ports funktionieren, ein Versandfehler liegt selten am Port",
@@ -69,18 +69,18 @@
     }
   ],
   "limits": [
-    "MCP Emails verbindet nur das WEB.DE-Postfach. WEB.DE Online-Speicher, Adressbuch und Kalender sind eigene Produkte und für Ihren KI-Client nicht zugänglich.",
+    "MCPEmails verbindet nur das WEB.DE-Postfach. WEB.DE Online-Speicher, Adressbuch und Kalender sind eigene Produkte und für Ihren KI-Client nicht zugänglich.",
     "Den POP3/IMAP-Schieberegler steuert WEB.DE, nicht wir. Deaktiviert WEB.DE den Abruf nach längerer Inaktivität, muss die Verbindung bei WEB.DE wieder eingeschaltet werden, bevor sie funktioniert.",
     "WEB.DE ist ein Postfach für Privatkunden mit eigenen Versandlimits gegen Missbrauch. Nutzen Sie es für normale Korrespondenz, nicht für Massen- oder Kampagnenversand."
   ],
   "faq": [
     {
       "q": "Funktioniert Claude mit WEB.DE?",
-      "a": "Nicht von sich aus. Claude hat keinen eingebauten WEB.DE-Konnektor. Wenn Sie einen MCP-Server wie MCP Emails per IMAP mit Ihrem WEB.DE-Postfach verbinden, kann Claude E-Mails lesen, suchen, senden, beantworten, planen und ordnen. Dieselbe Verbindung funktioniert dann auch in Cursor, ChatGPT und anderen MCP-Clients, nicht nur in einem."
+      "a": "Nicht von sich aus. Claude hat keinen eingebauten WEB.DE-Konnektor. Wenn Sie einen MCP-Server wie MCPEmails per IMAP mit Ihrem WEB.DE-Postfach verbinden, kann Claude E-Mails lesen, suchen, senden, beantworten, planen und ordnen. Dieselbe Verbindung funktioniert dann auch in Cursor, ChatGPT und anderen MCP-Clients, nicht nur in einem."
     },
     {
       "q": "Wie lauten die IMAP- und SMTP-Einstellungen von WEB.DE?",
-      "a": "IMAP ist imap.web.de auf Port 993 mit SSL. SMTP ist smtp.web.de, laut WEB.DE auf Port 587 mit STARTTLS, oder auf Port 465 mit SSL, den MCP Emails nutzt. Der Benutzername ist Ihre vollständige WEB.DE-Adresse mit Domain. Beide Hosts wurden am auf dieser Seite angegebenen Datum über eine echte TLS-Verbindung bestätigt."
+      "a": "IMAP ist imap.web.de auf Port 993 mit SSL. SMTP ist smtp.web.de, laut WEB.DE auf Port 587 mit STARTTLS, oder auf Port 465 mit SSL, den MCPEmails nutzt. Der Benutzername ist Ihre vollständige WEB.DE-Adresse mit Domain. Beide Hosts wurden am auf dieser Seite angegebenen Datum über eine echte TLS-Verbindung bestätigt."
     },
     {
       "q": "Wie aktiviere ich IMAP bei WEB.DE?",
@@ -92,7 +92,7 @@
     },
     {
       "q": "Braucht WEB.DE ein App-Passwort?",
-      "a": "Nur wenn die Zwei-Faktor-Authentifizierung eingeschaltet ist. Ohne 2FA meldet Ihr normales WEB.DE-Passwort Mailprogramme an, sobald der Abruf aktiviert ist. Mit 2FA erstellen Sie unter Account verwalten, Login & Sicherheit, App-Passwörter (für externe Apps) ein App-Passwort und verwenden es in MCP Emails. WEB.DE zeigt es nur einmal an; wenn Sie es verlieren, löschen Sie es und erstellen ein neues."
+      "a": "Nur wenn die Zwei-Faktor-Authentifizierung eingeschaltet ist. Ohne 2FA meldet Ihr normales WEB.DE-Passwort Mailprogramme an, sobald der Abruf aktiviert ist. Mit 2FA erstellen Sie unter Account verwalten, Login & Sicherheit, App-Passwörter (für externe Apps) ein App-Passwort und verwenden es in MCPEmails. WEB.DE zeigt es nur einmal an; wenn Sie es verlieren, löschen Sie es und erstellen ein neues."
     },
     {
       "q": "Werden meine WEB.DE-E-Mails auf Ihren Servern gespeichert?",

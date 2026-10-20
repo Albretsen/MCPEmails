@@ -21,18 +21,18 @@
     "titleLine1": "将你的 Online.no 邮箱连接到",
     "titleLine2": "Claude、Cursor、任意 MCP 客户端",
     "lead": "为你的 AI 代理接入一个真正的 Telenor Online 收件箱。在 Mine Sider 中允许第三方客户端访问后，即可通过 IMAP 读取、搜索、发送、回复、定时与整理邮件。",
-    "answer": "Claude 无法自行连接 Telenor Online.no 邮箱。MCP Emails 是一个托管 MCP 服务器，通过 IMAP 连接 imap.online.no 的 993 端口，让 Claude、Cursor 或任意 MCP 客户端都能读取、搜索、发送并整理邮件。能否成功取决于 Telenor 的两个特殊之处：在第三方邮件程序中使用 Online e-post 的权限是 Mine Sider 中的一个开关；用户名不是你的地址，而是 @online.no 之前的部分，最多八个字符。密码是在 Mine Sider 中设置的 e-post 密码，而不是你的 TelenorID。MCP Emails 上一个收件箱永久免费。",
+    "answer": "Claude 无法自行连接 Telenor Online.no 邮箱。MCPEmails 是一个托管 MCP 服务器，通过 IMAP 连接 imap.online.no 的 993 端口，让 Claude、Cursor 或任意 MCP 客户端都能读取、搜索、发送并整理邮件。能否成功取决于 Telenor 的两个特殊之处：在第三方邮件程序中使用 Online e-post 的权限是 Mine Sider 中的一个开关；用户名不是你的地址，而是 @online.no 之前的部分，最多八个字符。密码是在 Mine Sider 中设置的 e-post 密码，而不是你的 TelenorID。MCPEmails 上一个收件箱永久免费。",
     "meta0": "1 个收件箱永久免费",
     "meta1": "在 Mine Sider 中允许第三方客户端",
     "meta2": "邮件实时获取，绝不存储"
   },
   "method": {
     "title": "Online.no 如何连接：一项权限、一个短用户名和一个单独的密码",
-    "body": "Telenor 在 <code>imap.online.no</code> 的 993 端口通过隐式 TLS 提供 IMAP，在 <code>smtp.online.no</code> 的 465 端口提供 SMTP 提交。Telenor 当前的设置页面为两种用途都给出 <code>mail.online.no</code>，并说明较早的 <code>imap.online.no</code> 和 <code>smtp.online.no</code> 同样可用；两者都在实时 TLS 连接中响应，MCP Emails 自动填入的是较早的那一对。其余配置则是 Online.no 与其他服务商截然不同的地方。Telenor 规定用户名为 <b>det som er før @online.no, maks 8 tegn</b>（@online.no 之前的部分，最多 8 个字符），也就是本地部分而不是完整地址。凭据是 e-post 密码，Telenor 自己的条款写道 <b>om kunden bruker et e-postprogram settes passordet til e-postkontoen opp på Mine Sider</b>（客户使用邮件程序时，邮箱账户的密码在 Mine Sider 中设置）。而允许第三方程序使用该邮箱，本身也是需要在那里开启的一项设置。Online e-post 是 Telenor 的付费服务，而不是宽带线路附送的免费功能。"
+    "body": "Telenor 在 <code>imap.online.no</code> 的 993 端口通过隐式 TLS 提供 IMAP，在 <code>smtp.online.no</code> 的 465 端口提供 SMTP 提交。Telenor 当前的设置页面为两种用途都给出 <code>mail.online.no</code>，并说明较早的 <code>imap.online.no</code> 和 <code>smtp.online.no</code> 同样可用；两者都在实时 TLS 连接中响应，MCPEmails 自动填入的是较早的那一对。其余配置则是 Online.no 与其他服务商截然不同的地方。Telenor 规定用户名为 <b>det som er før @online.no, maks 8 tegn</b>（@online.no 之前的部分，最多 8 个字符），也就是本地部分而不是完整地址。凭据是 e-post 密码，Telenor 自己的条款写道 <b>om kunden bruker et e-postprogram settes passordet til e-postkontoen opp på Mine Sider</b>（客户使用邮件程序时，邮箱账户的密码在 Mine Sider 中设置）。而允许第三方程序使用该邮箱，本身也是需要在那里开启的一项设置。Online e-post 是 Telenor 的付费服务，而不是宽带线路附送的免费功能。"
   },
   "setup": [
     {
-      "h": "创建免费 MCP Emails 账户",
+      "h": "创建免费 MCPEmails 账户",
       "p": "在 mcpemails.com 注册。免费套餐可永久连接一个收件箱，无需信用卡。"
     },
     {
@@ -44,7 +44,7 @@
       "p": "仍在 Mine Sider 中，为邮件账户本身设置密码。Telenor 的 Online e-post 条款规定，客户使用邮件程序时，e-post 账户的密码在 Mine Sider 中设置。这与你的 TelenorID 登录凭据不同，也是登录被拒最常见的原因。"
     },
     {
-      "h": "粘贴到 MCP Emails，再把 MCP URL 粘贴到你的 AI",
+      "h": "粘贴到 MCPEmails，再把 MCP URL 粘贴到你的 AI",
       "p": "选择 IMAP / SMTP，用户名填 <code>@online.no</code> 之前的部分，并粘贴 e-post 密码。Telenor 的服务器和端口已自动填好，并已通过实时 TLS 连接验证。然后把 https://mcpemails.com/api/mcp 粘贴到 Claude、Cursor 或 ChatGPT 中，完成授权，代理便拥有该收件箱。"
     }
   ],
@@ -59,7 +59,7 @@
     },
     {
       "h": "服务器只提供 AUTH=LOGIN，没有 AUTH=PLAIN",
-      "p": "Online.no 的响应是 <code>* OK [CAPABILITY IMAP4REV1 LITERAL+ UTF8=ALL STATUS=SIZE STARTTLS SASL-IR AUTH=LOGIN ID] Bigfoot</code>。声明的列表中有 <code>AUTH=LOGIN</code>，没有 <code>AUTH=PLAIN</code>，这与这里几乎所有其他服务商正好相反。现代客户端库通常默认使用 PLAIN，把 LOGIN 当作旧式备选；而在 Online.no 上，缺席的恰恰是 PLAIN。不会回退的工具会收到一个看起来像密码错误的认证拒绝。MCP Emails 会根据服务器实际声明的内容进行协商。"
+      "p": "Online.no 的响应是 <code>* OK [CAPABILITY IMAP4REV1 LITERAL+ UTF8=ALL STATUS=SIZE STARTTLS SASL-IR AUTH=LOGIN ID] Bigfoot</code>。声明的列表中有 <code>AUTH=LOGIN</code>，没有 <code>AUTH=PLAIN</code>，这与这里几乎所有其他服务商正好相反。现代客户端库通常默认使用 PLAIN，把 LOGIN 当作旧式备选；而在 Online.no 上，缺席的恰恰是 PLAIN。不会回退的工具会收到一个看起来像密码错误的认证拒绝。MCPEmails 会根据服务器实际声明的内容进行协商。"
     },
     {
       "h": "Telenor 的条款限制了发件人一栏可以填什么",
@@ -74,7 +74,7 @@
   "faq": [
     {
       "q": "Claude 能用 Online.no 邮箱吗？",
-      "a": "不能单独使用。Claude 没有内置的 Telenor 或 Online.no 连接器。通过 IMAP 将 MCP Emails 这样的 MCP 服务器指向该邮箱后，Claude 就能读取、搜索、发送、回复、定时和整理其中的邮件，同一个连接也可在 Cursor、ChatGPT 和其他 MCP 客户端中使用。"
+      "a": "不能单独使用。Claude 没有内置的 Telenor 或 Online.no 连接器。通过 IMAP 将 MCPEmails 这样的 MCP 服务器指向该邮箱后，Claude 就能读取、搜索、发送、回复、定时和整理其中的邮件，同一个连接也可在 Cursor、ChatGPT 和其他 MCP 客户端中使用。"
     },
     {
       "q": "Online.no 的 IMAP 和 SMTP 设置是什么？",

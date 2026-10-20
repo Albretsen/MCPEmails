@@ -76,7 +76,7 @@ export const OG_IMAGE = {
   url: `${APP_URL}/opengraph-image`,
   width: 1200,
   height: 630,
-  alt: 'MCP Emails: Give your AI agent an inbox',
+  alt: 'MCPEmails: Give your AI agent an inbox',
 } as const;
 
 export const OG_LOCALE: Record<string, string> = {
@@ -209,8 +209,8 @@ export function homeJsonLd(
       {
         '@type': 'Organization',
         '@id': orgId,
-        name: 'MCP Emails',
-        alternateName: ['mcpemails', 'mcpemails.com', 'MCPEmails'],
+        name: 'MCPEmails',
+        alternateName: ['MCP Emails', 'mcpemails', 'mcpemails.com'],
         url: APP_URL,
         logo: `${APP_URL}/favicon.svg`,
         // No `sameAs` entry: @mcpemails does not exist on X. Add the real
@@ -219,15 +219,15 @@ export function homeJsonLd(
       {
         '@type': 'WebSite',
         '@id': siteId,
-        name: 'MCP Emails',
-        alternateName: ['mcpemails', 'mcpemails.com', 'MCPEmails'],
+        name: 'MCPEmails',
+        alternateName: ['MCP Emails', 'mcpemails', 'mcpemails.com'],
         url: APP_URL,
         inLanguage: locale,
         publisher: { '@id': orgId },
       },
       {
         '@type': 'SoftwareApplication',
-        name: 'MCP Emails',
+        name: 'MCPEmails',
         url: home,
         description,
         applicationCategory: 'BusinessApplication',
@@ -312,14 +312,14 @@ export function pricingJsonLd(
       {
         '@type': 'Product',
         '@id': `${url}#plans`,
-        name: 'MCP Emails',
+        name: 'MCPEmails',
         description,
         url,
         image: [OG_IMAGE.url],
         brand: {
           '@type': 'Organization',
           '@id': `${APP_URL}/#organization`,
-          name: 'MCP Emails',
+          name: 'MCPEmails',
           url: APP_URL,
         },
         offers: planOffers(url),
@@ -366,7 +366,7 @@ export function docsJsonLd(
         '@type': 'BreadcrumbList',
         '@id': `${url}#breadcrumb`,
         itemListElement: [
-          { '@type': 'ListItem', position: 1, name: 'MCP Emails', item: localePath(locale, '') },
+          { '@type': 'ListItem', position: 1, name: 'MCPEmails', item: localePath(locale, '') },
           { '@type': 'ListItem', position: 2, name: title, item: url },
         ],
       },
@@ -436,7 +436,7 @@ export function connectJsonLd(
       '@type': 'BreadcrumbList',
       '@id': `${url}#breadcrumb`,
       itemListElement: [
-        { '@type': 'ListItem', position: 1, name: 'MCP Emails', item: localePath(locale, '') },
+        { '@type': 'ListItem', position: 1, name: 'MCPEmails', item: localePath(locale, '') },
         // The hub is a real, crawlable page, so it belongs in the trail. A
         // two-item breadcrumb on a page that sits three levels down is the
         // kind of mismatch that gets the whole block ignored.
@@ -485,7 +485,7 @@ export function pageJsonLd(
         '@type': 'BreadcrumbList',
         '@id': `${url}#breadcrumb`,
         itemListElement: [
-          { '@type': 'ListItem', position: 1, name: 'MCP Emails', item: localePath(locale, '') },
+          { '@type': 'ListItem', position: 1, name: 'MCPEmails', item: localePath(locale, '') },
           { '@type': 'ListItem', position: 2, name: title },
         ],
       },

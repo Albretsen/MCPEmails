@@ -19,7 +19,7 @@
     "titleLine1": "MCP-Server für Hetzner E-Mail:",
     "titleLine2": "jedes Firmenpostfach, in Claude und ChatGPT",
     "lead": "Sie betreiben info@, vertrieb@, support@ und rechnungen@ auf Ihrer eigenen Domain bei Hetzner? Verbinden Sie jedes Postfach mit einem Workspace, und Ihr KI-Agent arbeitet mit allen. E-Mails lesen, suchen, senden, beantworten, planen und ordnen, per IMAP über mail.your-server.de mit dem Postfach-Passwort, das Sie in der konsoleH festgelegt haben.",
-    "answer": "Claude kann ein Hetzner-Postfach nicht von sich aus erreichen. MCP Emails ist ein gehosteter MCP-Server, der E-Mail bei Hetzner Webhosting per IMAP über mail.your-server.de auf Port 993 anbindet. Die Anmeldung läuft mit Ihrer vollständigen E-Mail-Adresse und dem Postfach-Passwort, das Sie beim Anlegen des Postfachs in der konsoleH festgelegt haben. Danach können Claude, Cursor oder jeder MCP-Client die E-Mails lesen, suchen, senden und ordnen. Der Hostname lautet für jeden Kunden wörtlich mail.your-server.de, nicht eine Variante Ihrer eigenen Domain. Jede Firmenadresse, etwa info@ oder vertrieb@, wird als eigenes Postfach verbunden: Ein Postfach ist kostenlos, Personal verbindet drei, Pro bis zu 10 und Business so viele, wie Sie brauchen.",
+    "answer": "Claude kann ein Hetzner-Postfach nicht von sich aus erreichen. MCPEmails ist ein gehosteter MCP-Server, der E-Mail bei Hetzner Webhosting per IMAP über mail.your-server.de auf Port 993 anbindet. Die Anmeldung läuft mit Ihrer vollständigen E-Mail-Adresse und dem Postfach-Passwort, das Sie beim Anlegen des Postfachs in der konsoleH festgelegt haben. Danach können Claude, Cursor oder jeder MCP-Client die E-Mails lesen, suchen, senden und ordnen. Der Hostname lautet für jeden Kunden wörtlich mail.your-server.de, nicht eine Variante Ihrer eigenen Domain. Jede Firmenadresse, etwa info@ oder vertrieb@, wird als eigenes Postfach verbunden: Ein Postfach ist kostenlos, Personal verbindet drei, Pro bis zu 10 und Business so viele, wie Sie brauchen.",
     "meta0": "Erstes Postfach kostenlos, Tarife für weitere",
     "meta1": "Postfach-Passwort aus der konsoleH",
     "meta2": "E-Mails live abgerufen, nie gespeichert"
@@ -35,7 +35,7 @@
   },
   "setup": [
     {
-      "h": "Kostenloses MCP Emails Konto erstellen",
+      "h": "Kostenloses MCPEmails Konto erstellen",
       "p": "Registrieren Sie sich auf mcpemails.com. Der Free-Tarif verbindet ein Postfach dauerhaft und fragt nicht nach einer Kreditkarte."
     },
     {
@@ -43,7 +43,7 @@
       "p": "Melden Sie sich in der konsoleH an, wählen Sie die Domain und öffnen Sie den Bereich E-Mail und dort die Postfächer. Wählen Sie die Adresse und geben Sie in beide Passwortfelder ein neues Passwort ein, wenn Sie das aktuelle nicht haben. Das Postfach wird nur mit dem Teil vor dem @-Zeichen angelegt, als Benutzername tragen Sie in jedem Client aber die vollständige Adresse ein."
     },
     {
-      "h": "In MCP Emails einfügen",
+      "h": "In MCPEmails einfügen",
       "p": "Wählen Sie IMAP / SMTP, geben Sie die vollständige Adresse ein und fügen Sie das Postfach-Passwort ein. Der Host mail.your-server.de und die Ports 993 und 465 sind vorausgefüllt und wurden über eine echte TLS-Verbindung geprüft."
     },
     {
@@ -72,7 +72,7 @@
   "faq": [
     {
       "q": "Funktioniert Claude mit Hetzner E-Mail?",
-      "a": "Nicht von sich aus. Claude hat keinen eingebauten Konnektor für Hetzner. Wenn Sie einen MCP-Server wie MCP Emails per IMAP mit Ihrem Hetzner-Postfach verbinden, kann Claude E-Mails lesen, suchen, senden, beantworten, planen und ordnen. Dieselbe Verbindung funktioniert in Cursor, ChatGPT und anderen MCP-Clients."
+      "a": "Nicht von sich aus. Claude hat keinen eingebauten Konnektor für Hetzner. Wenn Sie einen MCP-Server wie MCPEmails per IMAP mit Ihrem Hetzner-Postfach verbinden, kann Claude E-Mails lesen, suchen, senden, beantworten, planen und ordnen. Dieselbe Verbindung funktioniert in Cursor, ChatGPT und anderen MCP-Clients."
     },
     {
       "q": "Wie lauten die IMAP- und SMTP-Einstellungen von Hetzner?",

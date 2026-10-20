@@ -22,7 +22,7 @@ export function buildSystemPrompt(user: { email: string }, inboxes: Inbox[], lim
     const name = i.display_name && i.display_name !== i.email_address ? `, name "${oneLine(i.display_name, 80)}"` : "";
     return `- inbox_id ${i.inbox_id}: ${oneLine(i.email_address, 200)}${name} (${i.provider})`;
   });
-  return `You are the assistant built into MCP Emails, a web mail client. You work directly on the user's mailbox through tools. The user watches every tool call in their inbox as it happens.
+  return `You are the assistant built into MCPEmails, a web mail client. You work directly on the user's mailbox through tools. The user watches every tool call in their inbox as it happens.
 
 # Mailboxes
 The user signed in as ${oneLine(user.email, 200)}. Connected inboxes:

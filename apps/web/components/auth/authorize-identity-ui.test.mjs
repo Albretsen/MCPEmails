@@ -195,16 +195,16 @@ test('"Google" on an attacker host reads as that host, Unverified, with the red 
   assert.match(q(container, 'az-impersonation').textContent, /uses the name Google, but access would be sent to oauth-redirect\.googleusercontent\.com\.attacker\.example/);
 });
 
-test('"MCP Emails" on a non-pinned path of Google\'s shared redirect host is Unverified with the red alert', async (t) => {
+test('"MCPEmails" on a non-pinned path of Google\'s shared redirect host is Unverified with the red alert', async (t) => {
   const host = 'oauth-redirect.googleusercontent.com';
   const { container } = await render(t, propsFor({
     clientId: 'dyn_0123456789abcdef01234567',
-    clientName: 'MCP Emails',
+    clientName: 'MCPEmails',
     redirectUri: `https://${host}/r/some-other-project`,
   }));
   assert.equal(container.querySelector('h1').textContent, `Authorize ${host}?`);
   assert.equal(q(container, 'az-destination-badge').textContent, 'Unverified');
-  assert.match(q(container, 'az-impersonation').textContent, /uses the name MCP Emails, but access would be sent to oauth-redirect\.googleusercontent\.com/);
+  assert.match(q(container, 'az-impersonation').textContent, /uses the name MCPEmails, but access would be sent to oauth-redirect\.googleusercontent\.com/);
 });
 
 test('"Google Sheets MCP" on its own host is Unverified with no red alert', async (t) => {

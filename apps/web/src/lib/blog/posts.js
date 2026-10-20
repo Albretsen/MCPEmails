@@ -14,9 +14,9 @@ export const AUTHORS = {
   asgeir: {
     id: 'asgeir',
     name: 'Asgeir Albretsen',
-    role: 'Founder & Engineer, MCP Emails',
+    role: 'Founder & Engineer, MCPEmails',
     avatar: '/blog/author-asgeir.svg',
-    bio: 'Asgeir builds MCP Emails — the bridge that lets AI agents read, search, and send real email over the Model Context Protocol. He writes about agents, email infrastructure, and developer experience.',
+    bio: 'Asgeir builds MCPEmails — the bridge that lets AI agents read, search, and send real email over the Model Context Protocol. He writes about agents, email infrastructure, and developer experience.',
     url: 'https://mcpemails.com/blog',
     // No `twitter` handle: @mcpemails does not exist on X, so the
     // author-card link is intentionally omitted rather than pointing at a
@@ -101,7 +101,7 @@ export const POSTS = [
     description:
       'Why connecting email to your AI agent is harder than it looks — and how the Model Context Protocol makes Gmail, Outlook, and IMAP a single, secure endpoint your agent can actually use.',
     cover: '/blog/cover-agent-inbox.svg',
-    coverAlt: 'Give your AI agent an inbox — MCP Emails',
+    coverAlt: 'Give your AI agent an inbox — MCPEmails',
     authorId: 'asgeir',
     publishedAt: '2026-06-01T09:00:00.000Z',
     updatedAt: '2026-06-01T09:00:00.000Z',
@@ -182,7 +182,7 @@ Give your agent verbs, not passwords — and let it get to work.`,
 ];
 
 /**
- * Display order for the blog index — most relevant and useful to MCP Emails
+ * Display order for the blog index — most relevant and useful to MCPEmails
  * first. High-intent, on-product, conversion-driving content (core setup →
  * the pillar → the top buyer objection → the bottom-funnel comparison) leads;
  * top-of-funnel definitions and use-case inspiration trail. Edit this list to
@@ -240,7 +240,7 @@ const RELEVANCE_ORDER = [
   'build-email-auto-responder-mcp-agent',
 ];
 
-/** All posts, sorted by relevance to MCP Emails (see RELEVANCE_ORDER). */
+/** All posts, sorted by relevance to MCPEmails (see RELEVANCE_ORDER). */
 export function getAllPosts() {
   const rank = (slug) => {
     const i = RELEVANCE_ORDER.indexOf(slug);

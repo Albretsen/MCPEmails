@@ -22,7 +22,7 @@
     "titleLine1": "Connect Naver Mail to Claude,",
     "titleLine2": "Cursor, ChatGPT, any MCP client",
     "lead": "Give your AI agent a real Naver inbox. Read, search, send, reply, schedule and organize mail over IMAP with a Naver application password, in every MCP client rather than just one.",
-    "answer": "Claude cannot reach Naver Mail on its own. MCP Emails is a hosted MCP server that connects it over IMAP at imap.naver.com on port 993, authenticating with a Naver application password (애플리케이션 비밀번호) rather than your account password. Since 24 June 2025 Naver has required two-step verification on the account plus an application password for every POP3, IMAP and SMTP connection, so the account password no longer authenticates any mail client at all. You also have to switch IMAP on inside Naver Mail settings, which is a separate control from the password. One inbox is free.",
+    "answer": "Claude cannot reach Naver Mail on its own. MCPEmails is a hosted MCP server that connects it over IMAP at imap.naver.com on port 993, authenticating with a Naver application password (애플리케이션 비밀번호) rather than your account password. Since 24 June 2025 Naver has required two-step verification on the account plus an application password for every POP3, IMAP and SMTP connection, so the account password no longer authenticates any mail client at all. You also have to switch IMAP on inside Naver Mail settings, which is a separate control from the password. One inbox is free.",
     "meta0": "1 inbox free, forever",
     "meta1": "Two-step verification plus app password",
     "meta2": "Email fetched live, never stored"
@@ -33,7 +33,7 @@
   },
   "setup": [
     {
-      "h": "Create your free MCP Emails account",
+      "h": "Create your free MCPEmails account",
       "p": "Sign up at mcpemails.com. The free plan connects one inbox and stays free, with no card required. Two things get generated in the next steps: keep the tab open for the last one."
     },
     {
@@ -42,7 +42,7 @@
     },
     {
       "h": "Turn on two-step verification and generate an application password",
-      "p": "Go to nid.naver.com, open 보안설정 (Security settings), and set up 2단계 인증 (two-step verification) if it is not already on, then click 관리 (manage). Inside, open 애플리케이션 비밀번호 관리 (application password management) and click 생성하기 (generate). Choose the direct-input option, name it something like MCP Emails, and copy the password Naver shows you. In MCP Emails, choose IMAP / SMTP, enter your full Naver address, and paste that application password rather than your Naver password."
+      "p": "Go to nid.naver.com, open 보안설정 (Security settings), and set up 2단계 인증 (two-step verification) if it is not already on, then click 관리 (manage). Inside, open 애플리케이션 비밀번호 관리 (application password management) and click 생성하기 (generate). Choose the direct-input option, name it something like MCPEmails, and copy the password Naver shows you. In MCPEmails, choose IMAP / SMTP, enter your full Naver address, and paste that application password rather than your Naver password."
     },
     {
       "h": "Paste the MCP URL into your AI client",
@@ -64,7 +64,7 @@
     },
     {
       "h": "Naver Works is a different service and these settings do not apply",
-      "p": "Naver Works, the business suite sold to Korean companies, is not the same product as a personal <code>@naver.com</code> mailbox. It has its own administration, its own protocol controls and its own server names. If your address is on a company domain administered through Naver Works, take the hosts from that console rather than from this page, then connect the mailbox in MCP Emails as a normal IMAP and SMTP account."
+      "p": "Naver Works, the business suite sold to Korean companies, is not the same product as a personal <code>@naver.com</code> mailbox. It has its own administration, its own protocol controls and its own server names. If your address is on a company domain administered through Naver Works, take the hosts from that console rather than from this page, then connect the mailbox in MCPEmails as a normal IMAP and SMTP account."
     }
   ],
   "limits": [
@@ -75,7 +75,7 @@
   "faq": [
     {
       "q": "Does Claude work with Naver Mail?",
-      "a": "Not directly. Claude has no built-in Naver connector and cannot open an IMAP connection by itself. Connecting an MCP server such as MCP Emails to your Naver mailbox gives Claude read, search, send, reply, forward, schedule and organize access to it, and the same connection works from Cursor and other MCP clients."
+      "a": "Not directly. Claude has no built-in Naver connector and cannot open an IMAP connection by itself. Connecting an MCP server such as MCPEmails to your Naver mailbox gives Claude read, search, send, reply, forward, schedule and organize access to it, and the same connection works from Cursor and other MCP clients."
     },
     {
       "q": "What are the Naver IMAP and SMTP settings?",
@@ -87,7 +87,7 @@
     },
     {
       "q": "How do I create a Naver application password?",
-      "a": "Sign in at nid.naver.com, open 보안설정, and enable 2단계 인증 if it is off. Click 관리 beside it, then open 애플리케이션 비밀번호 관리 and click 생성하기. Give the password a name so you can revoke it separately later, then copy it into the password field of your mail client or of MCP Emails."
+      "a": "Sign in at nid.naver.com, open 보안설정, and enable 2단계 인증 if it is off. Click 관리 beside it, then open 애플리케이션 비밀번호 관리 and click 생성하기. Give the password a name so you can revoke it separately later, then copy it into the password field of your mail client or of MCPEmails."
     },
     {
       "q": "Do I still need to enable IMAP in Naver Mail settings?",

@@ -26,7 +26,7 @@ Cursor 为 MCP 服务器支持 OAuth 2.0，这是最省心的路径。没有 API
 
 1. 打开 Cursor 设置，找到 MCP servers 部分。
 2. 添加一个新服务器，URL 填 \`https://www.mcpemails.com/api/mcp\`。
-3. Cursor 会打开一个浏览器窗口。登录你的 MCP Emails 账号，并批准你想让智能体拥有的权限范围——\`read:email\`、\`send:email\`，或两者都给。
+3. Cursor 会打开一个浏览器窗口。登录你的 MCPEmails 账号，并批准你想让智能体拥有的权限范围——\`read:email\`、\`send:email\`，或两者都给。
 4. 连接变为绿色，邮件工具出现在 Cursor 的工具列表中。
 
 在底层，这是带 PKCE 的 OAuth 2.0 授权码流程，而 Cursor 持有的令牌的权限范围正好就是你批准的那些。如果你只授予了 \`read:email\`，智能体就根本无法发送。用完之后，从 **Dashboard → API Keys** 一键撤销该连接（OAuth 授权也在那里管理），Cursor 的访问权限会立即失效。

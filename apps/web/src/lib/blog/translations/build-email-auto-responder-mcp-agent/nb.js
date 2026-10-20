@@ -1,14 +1,14 @@
 const translation = {
   title: 'Bygg en automatisk e-postsvarer med en MCP-tilkoblet agent',
   description: 'Bygg en automatisk e-postsvarer med en MCP-tilkoblet AI-agent: poll etter ulest e-post, lag utkast og svar trygt med scopes, ratebegrensninger og sikringer.',
-  coverAlt: 'Bygg en automatisk e-postsvarer med en MCP-tilkoblet agent — MCP Emails',
-  content: `En automatisk e-postsvarer bygget på MCP Emails er en løkke, ikke en webhook. Det finnes ingen server-initierte hendelser, så agenten din **poller** etter ulest e-post på et tidsskjema med \`email_read\` (action \`list\`), leser hver melding med \`email_read\` (action \`read\`), lager et svarutkast og kaller \`email_compose\` (action \`reply\`). Dette innlegget går gjennom hele byggingen: polleløkken, scopene du trenger, hvordan du overlever ratebegrensninger, og sikringene som hindrer en agent i å spamme kontaktene dine med hallusinerte svar.
+  coverAlt: 'Bygg en automatisk e-postsvarer med en MCP-tilkoblet agent — MCPEmails',
+  content: `En automatisk e-postsvarer bygget på MCPEmails er en løkke, ikke en webhook. Det finnes ingen server-initierte hendelser, så agenten din **poller** etter ulest e-post på et tidsskjema med \`email_read\` (action \`list\`), leser hver melding med \`email_read\` (action \`read\`), lager et svarutkast og kaller \`email_compose\` (action \`reply\`). Dette innlegget går gjennom hele byggingen: polleløkken, scopene du trenger, hvordan du overlever ratebegrensninger, og sikringene som hindrer en agent i å spamme kontaktene dine med hallusinerte svar.
 
 Dette er den avanserte enden av historien om å [gi AI-agenten din e-posttilgang](/blog/how-to-give-your-ai-agent-email-access). Hvis du bare vil ha triagering og morgensammendrag uten å sende noe, les [Triagering og oppsummering av innboks med en AI-agent](/blog/ai-agent-triage-summarize-inbox) først — det er et tryggere sted å starte. Kom tilbake hit når du faktisk vil at agenten skal trykke send.
 
 ## Den ærlige delen: det finnes ingen webhook
 
-De fleste «autosvar»-veiledninger antar at en push-hendelse utløses i det øyeblikket e-post lander. MCP Emails fungerer ikke slik, og det gjør heller ingen MCP-server jeg kjenner til. MCP er en forespørsel/svar-verktøyprotokoll. Serveren svarer når agenten din spør; den ringer aldri deg.
+De fleste «autosvar»-veiledninger antar at en push-hendelse utløses i det øyeblikket e-post lander. MCPEmails fungerer ikke slik, og det gjør heller ingen MCP-server jeg kjenner til. MCP er en forespørsel/svar-verktøyprotokoll. Serveren svarer når agenten din spør; den ringer aldri deg.
 
 Så en ekte automatisk e-postsvarer er en planlegger pluss en poll. Du kjører et tikk hvert N-te sekund eller minutt, ber om uleste meldinger, og behandler det som er nytt. Det er alt. Det er mindre elegant enn en webhook, men det er forutsigbart, og det betyr at *du* styrer takten og rekkevidden.
 
@@ -125,7 +125,7 @@ Ikke svar alle. Start med en smal tillatelsesliste — et support-alias, et best
 
 ### Hold et menneske i løkken, i hvert fall i starten
 
-Den tryggeste versjonen av dette er egentlig ikke en automatisk svarer i det hele tatt — det er en automatisk *utkast-skriver*. Agenten leser, lager utkast og klargjør svaret, men en person godkjenner sendingen. MCP Emails støtter utkast, så du kan la løkken kalle \`draft\` (action \`create\`) i stedet for \`email_compose\`, og deretter sende de gode selv. Kjør i utkastmodus i en uke. Les hva den ville ha sendt. Først da slår du på automatisk sending for dem du stoler på.
+Den tryggeste versjonen av dette er egentlig ikke en automatisk svarer i det hele tatt — det er en automatisk *utkast-skriver*. Agenten leser, lager utkast og klargjør svaret, men en person godkjenner sendingen. MCPEmails støtter utkast, så du kan la løkken kalle \`draft\` (action \`create\`) i stedet for \`email_compose\`, og deretter sende de gode selv. Kjør i utkastmodus i en uke. Les hva den ville ha sendt. Først da slår du på automatisk sending for dem du stoler på.
 
 ### Stopp løkker og selvsvar
 

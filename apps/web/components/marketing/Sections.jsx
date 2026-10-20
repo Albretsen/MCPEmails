@@ -46,7 +46,7 @@ export function Nav({ onSignIn, onGetStarted, user }) {
   return (
     <header className="nav">
       <div className="container nav-row">
-        <Link className="brand" href="/" onClick={closeMenu}><img className="logo-light" src="/logo-wordmark.svg" width="280" height="48" alt="MCP Emails" /><img className="logo-dark" src="/logo-wordmark-dark.svg" width="280" height="48" alt="MCP Emails" /></Link>
+        <Link className="brand" href="/" onClick={closeMenu}><img className="logo-light" src="/logo-wordmark.svg" width="280" height="48" alt="MCPEmails" /><img className="logo-dark" src="/logo-wordmark-dark.svg" width="280" height="48" alt="MCPEmails" /></Link>
         <nav className="nav-links" aria-label="Primary navigation">
           <Link href="/#features">{t('nav.features')}</Link>
           <Link href="/#how">{t('nav.how')}</Link>
@@ -235,7 +235,7 @@ Token:  mcpe_live_••••`,
   );
 }
 
-/* Variant B: Agent -> MCP Emails -> Provider pipe diagram (canonical, default hero) */
+/* Variant B: Agent -> MCPEmails -> Provider pipe diagram (canonical, default hero) */
 export function HeroPipeDiagram() {
   const t = useTranslations('home');
   return (
@@ -260,7 +260,7 @@ export function HeroPipeDiagram() {
         </div>
         <div className="pipe-node brand">
           <MIcon name="server" size={22} color="#fff"/>
-          <div className="h">MCP Emails</div>
+          <div className="h">MCPEmails</div>
           <div className="s">{t('hero.pipe.serverSub')}</div>
         </div>
         <div className="pipe-arrow-wrap">
@@ -327,7 +327,7 @@ export function HeroMcpTerminal() {
     <div className="mcp-terminal">
       <div className="term-bar">
         <div className="dots"><span/><span/><span/></div>
-        <span className="title">MCP Emails · live tool log</span>
+        <span className="title">MCPEmails · live tool log</span>
         <span className="pill"><span className="d"/>connected</span>
       </div>
       <div className="term-body">
@@ -552,7 +552,7 @@ export function DashboardPreview() {
             <div className="dash-preview-aside" style={{ width: 210, flexShrink: 0, borderRight: '1px solid var(--border-1)', padding: '16px 12px', display: 'flex', flexDirection: 'column', gap: 4, background: 'var(--bg-page)' }}>
               <div style={{ display: 'flex', alignItems: 'center', gap: 8, padding: '4px 8px 14px' }}>
                 <MIcon name="mail" size={18} color="var(--cobalt-600)" />
-                <span style={{ fontFamily: 'var(--font-sans)', fontWeight: 700, fontSize: 15, color: 'var(--fg-1)' }}>MCP Emails</span>
+                <span style={{ fontFamily: 'var(--font-sans)', fontWeight: 700, fontSize: 15, color: 'var(--fg-1)' }}>MCPEmails</span>
               </div>
               {navItems.map(it => (
                 <div key={it.label} style={{
@@ -1375,7 +1375,7 @@ export function Footer({ locales } = {}) {
       <div className="container">
         <div className="footer-grid">
           <div className="brand-cell">
-            <img src="/logo-mark-dark.svg" width="48" height="48" alt="MCP Emails" />
+            <img src="/logo-mark-dark.svg" width="48" height="48" alt="MCPEmails" />
             <p>{t('footer.tagline')}</p>
             <div className="footer-contact">
               <FooterCopy icon="mail" label={t('footer.contactLabel')} value={FOOTER_CONTACT_EMAIL} href={`mailto:${FOOTER_CONTACT_EMAIL}`} />

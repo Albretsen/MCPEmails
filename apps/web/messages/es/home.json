@@ -35,10 +35,10 @@
       "providerSub": "Gmail · Outlook · iCloud · IMAP",
       "logCalls": "el agente llama a",
       "logReturns": "devuelve los IDs de la bandeja, sin copiar y pegar del panel",
-      "logFetches": "MCP Emails obtiene en vivo de tu proveedor",
+      "logFetches": "MCPEmails obtiene en vivo de tu proveedor",
       "logResult": "20 mensajes devueltos",
       "logNothing": "nada almacenado",
-      "legendPipe": "MCP Emails (la tubería)",
+      "legendPipe": "MCPEmails (la tubería)",
       "legendLive": "petición en vivo",
       "legendData": "tus datos, tu proveedor"
     }
@@ -49,7 +49,7 @@
   "whatIs": {
     "title": "¿Qué es un servidor MCP de correo?",
     "p1": "Un servidor MCP de correo electrónico (email MCP server) es el puente entre un asistente de IA y un buzón real. Habla el Model Context Protocol, de modo que Claude, ChatGPT, Cursor o cualquier otro cliente MCP puede leer, buscar, redactar y enviar correo a través de un único endpoint, sin una integración aparte para cada aplicación.",
-    "p2": "MCP Emails es uno alojado. Funciona con Gmail, Outlook y Microsoft 365, iCloud, Fastmail y cualquier buzón compatible con IMAP, y un mismo agente puede trabajar con varios buzones a la vez. El correo se obtiene en vivo de tu proveedor en cada llamada y nunca se almacena en nuestros servidores.",
+    "p2": "MCPEmails es uno alojado. Funciona con Gmail, Outlook y Microsoft 365, iCloud, Fastmail y cualquier buzón compatible con IMAP, y un mismo agente puede trabajar con varios buzones a la vez. El correo se obtiene en vivo de tu proveedor en cada llamada y nunca se almacena en nuestros servidores.",
     "linkImap": "Configura el servidor MCP para IMAP",
     "linkBusiness": "MCP de correo para los buzones de tu empresa",
     "linkProviders": "Todos los proveedores de correo compatibles",
@@ -110,7 +110,7 @@
       },
       "2": {
         "h": "Tu agente trabaja la bandeja",
-        "p": "El agente llama a herramientas como <code>email_read()</code> o <code>email_compose()</code>. MCP Emails obtiene en vivo desde tu proveedor y devuelve el resultado. Nada se almacena en caché entre llamadas."
+        "p": "El agente llama a herramientas como <code>email_read()</code> o <code>email_compose()</code>. MCPEmails obtiene en vivo desde tu proveedor y devuelve el resultado. Nada se almacena en caché entre llamadas."
       }
     },
     "tools": {
@@ -128,17 +128,17 @@
     "eyebrow": "Peticiones reales",
     "titleLine1": "Solo pídelo.",
     "titleLine2": "Lee, escribe y organiza.",
-    "sub": "No hay paneles que aprender. Dile a tu asistente de IA lo que quieres en lenguaje natural y usará MCP Emails para hacerlo."
+    "sub": "No hay paneles que aprender. Dile a tu asistente de IA lo que quieres en lenguaje natural y usará MCPEmails para hacerlo."
   },
   "quote": {
     "text": "Quería que mis agentes trabajaran mi bandeja de entrada, pero cada opción implicaba entregar a un tercero una copia de mi correo. Así que construí la tubería que deseaba que existiera: conéctate una vez, tu bandeja de entrada se obtiene en vivo y nunca se almacena, y puedes cortarle el acceso a cualquier agente con un clic. Ese es el producto en el que confío con mi propia bandeja.",
-    "role": "fundador, MCP Emails"
+    "role": "fundador, MCPEmails"
   },
   "reviews": {
     "eyebrow": "Opiniones",
     "titleLine1": "No lo decimos nosotros.",
     "titleLine2": "Lo dicen ellos.",
-    "sub": "Opiniones reales de quienes usan MCP Emails con su propia bandeja de entrada, publicadas con su nombre.",
+    "sub": "Opiniones reales de quienes usan MCPEmails con su propia bandeja de entrada, publicadas con su nombre.",
     "ratingLabel": "Valorado con {rating} de 5",
     "count": "{count, plural, one {# opinión} other {# opiniones}}",
     "via": "Opinión publicada en {source}",
@@ -214,7 +214,7 @@
     "sub": "Todo lo que necesitas saber antes de conectar tu primera bandeja de entrada.",
     "items": [
       {
-        "q": "¿MCP Emails es un servidor MCP para IMAP?",
+        "q": "¿MCPEmails es un servidor MCP para IMAP?",
         "a": "Sí. Además de Gmail y Outlook hay un conector genérico de IMAP y SMTP, así que funciona cualquier buzón con acceso IMAP: tu propio dominio, un proveedor de hosting o un ISP regional. Introduces los datos del servidor y una contraseña de aplicación una sola vez, y tu agente lee por IMAP y envía a través de tu propio servidor SMTP."
       },
       {
@@ -255,7 +255,7 @@
       },
       {
         "q": "¿Puedo auto-alojarlo?",
-        "a": "Sí. MCP Emails es código abierto bajo AGPL-3.0, y el servicio alojado ejecuta el mismo servidor que tú puedes ejecutar. Un stack de docker-compose pone en marcha el servidor MCP completo y todas sus herramientas contra tu propia base de datos en unos cinco minutos, para cualquier buzón IMAP o SMTP. El inicio de sesión con Gmail y Outlook (OAuth) y el panel permanecen en el plan alojado."
+        "a": "Sí. MCPEmails es código abierto bajo AGPL-3.0, y el servicio alojado ejecuta el mismo servidor que tú puedes ejecutar. Un stack de docker-compose pone en marcha el servidor MCP completo y todas sus herramientas contra tu propia base de datos en unos cinco minutos, para cualquier buzón IMAP o SMTP. El inicio de sesión con Gmail y Outlook (OAuth) y el panel permanecen en el plan alojado."
       }
     ]
   },
@@ -279,9 +279,9 @@
     "linkWithdrawal": "Derecho de desistimiento",
     "linkCancel": "Cancelar contratos aquí",
     "linkImpressum": "Impressum",
-    "copyright": "© 2026 MCP Emails.",
+    "copyright": "© 2026 MCPEmails.",
     "legal": "El correo se obtiene en vivo, nunca se almacena · Credenciales cifradas en reposo",
-    "legalEntity": "MCP Emails es un servicio de Albretsen AS, número de organización 938 702 373, Håsteins gate 9, 5160 Laksevåg, Noruega.",
+    "legalEntity": "MCPEmails es un servicio de Albretsen AS, número de organización 938 702 373, Håsteins gate 9, 5160 Laksevåg, Noruega.",
     "contactLabel": "Contacto",
     "mcpLabel": "Endpoint MCP",
     "copy": "Copiar",

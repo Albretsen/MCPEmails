@@ -2,10 +2,10 @@ const translation = {
   title: 'Claude IMAP-Konnektor: jedes IMAP-Postfach mit Claude verbinden',
   description:
     'Einen IMAP-Konnektor für Claude einrichten, für jedes Postfach mit IMAP/SMTP: Servereinstellungen, App-Passwörter, TLS-Ports, Sicherheitshinweise, Grenzen und Fehlerbehebung.',
-  coverAlt: 'Claude über MCP Emails mit einem IMAP- und SMTP-Postfach verbunden',
+  coverAlt: 'Claude über MCPEmails mit einem IMAP- und SMTP-Postfach verbunden',
   content: `Ein **Claude IMAP-Konnektor** lässt Claude mit Postfächern arbeiten, für die es keine native Claude-Integration gibt: Fastmail, iCloud Mail, Yahoo, Zoho, Yandex, ein Postfach auf Ihrer eigenen Domain oder fast jeder Anbieter, der IMAP und SMTP bereitstellt.
 
-Claude meldet sich nicht selbst am Mailserver an und bekommt Ihr Postfach-Passwort nicht direkt in die Hand. MCP Emails sitzt dazwischen. Es verbindet sich mit dem Anbieter über IMAP für eingehende und SMTP für ausgehende E-Mails und stellt Claude einheitliche Tools des [Model Context Protocol](https://modelcontextprotocol.io) bereit. Dieser Unterschied ist wichtig: IMAP und SMTP kümmern sich um das Postfach, MCP gibt Claude sichere, strukturierte Aktionen wie Lesen, Suchen, Antworten und Verschieben.
+Claude meldet sich nicht selbst am Mailserver an und bekommt Ihr Postfach-Passwort nicht direkt in die Hand. MCPEmails sitzt dazwischen. Es verbindet sich mit dem Anbieter über IMAP für eingehende und SMTP für ausgehende E-Mails und stellt Claude einheitliche Tools des [Model Context Protocol](https://modelcontextprotocol.io) bereit. Dieser Unterschied ist wichtig: IMAP und SMTP kümmern sich um das Postfach, MCP gibt Claude sichere, strukturierte Aktionen wie Lesen, Suchen, Antworten und Verschieben.
 
 Diese Anleitung behandelt den allgemeinen Konnektor und die Einrichtung auf der Claude-Seite. Wenn Sie iCloud oder Fastmail nutzen und die genauen Bildschirme für App-Passwörter und Servernamen brauchen, halten Sie die [Anleitung für iCloud, Fastmail und IMAP](/blog/connect-icloud-fastmail-imap-to-claude) daneben offen.
 
@@ -14,7 +14,7 @@ Diese Anleitung behandelt den allgemeinen Konnektor und die Einrichtung auf der 
 Die Verbindung hat drei Teile:
 
 1. **Ihr E-Mail-Anbieter** stellt IMAP zum Lesen und Organisieren von Nachrichten bereit, dazu SMTP zum Senden.
-2. **MCP Emails** hält die Zugangsdaten verschlüsselt, spricht mit diesen Servern und macht aus deren Antworten berechenbare E-Mail-Tools.
+2. **MCPEmails** hält die Zugangsdaten verschlüsselt, spricht mit diesen Servern und macht aus deren Antworten berechenbare E-Mail-Tools.
 3. **Claude** verbindet sich mit dem MCP-Endpunkt und ruft nur die Tools auf, die die von Ihnen genehmigten Berechtigungen erlauben.
 
 Claude braucht also keine IMAP-Bibliothek, keine SMTP-Konfiguration und kein Passwort im Prompt. Nach der Verbindung findet es mit \`inbox_list\` das Postfach, mit \`email_read\` listet, liest und durchsucht es Nachrichten oder ruft Anhänge ab, mit \`email_compose\` sendet, beantwortet und leitet es weiter, und mit \`email_organize\` verschiebt, kopiert, markiert oder archiviert es Nachrichten. Eigene Tools decken Ordner, Entwürfe, Planung, Kontakte und Löschen ab; die vollständige Liste steht in der [Tool-Referenz](/docs#tools).
@@ -33,24 +33,24 @@ Raten Sie die Servernamen nicht aus der Domain, wenn Ihr Anbieter Einstellungen 
 
 Verwenden Sie ein **App-Passwort**, wann immer der Anbieter eines anbietet. Es ist von Ihrem Hauptpasswort getrennt und lässt sich widerrufen, ohne das Passwort zu ändern, mit dem Sie sich anmelden. Anbieter verlangen oft die Zwei-Faktor-Authentifizierung, bevor Sie eines erstellen können. Manche verlangen außerdem, dass Sie zuerst den IMAP-Zugriff in den E-Mail-Einstellungen aktivieren.
 
-MCP Emails enthält Vorlagen für [iCloud](/connect/icloud), [Yahoo](/connect/yahoo), [Zoho](/connect/zoho) und [Yandex](/connect/yandex) sowie einen eigenen Ablauf für [Fastmail](/connect/fastmail)-App-Passwörter. Diese Auswahl füllt die bekannten Hosts und Ports für Sie aus. Wählen Sie **Generic IMAP** für einen anderen Anbieter oder Ihren eigenen Mailserver und geben Sie die Werte selbst ein. Siehe die [Einrichtungsseite für allgemeines IMAP](/connect/imap).
+MCPEmails enthält Vorlagen für [iCloud](/connect/icloud), [Yahoo](/connect/yahoo), [Zoho](/connect/zoho) und [Yandex](/connect/yandex) sowie einen eigenen Ablauf für [Fastmail](/connect/fastmail)-App-Passwörter. Diese Auswahl füllt die bekannten Hosts und Ports für Sie aus. Wählen Sie **Generic IMAP** für einen anderen Anbieter oder Ihren eigenen Mailserver und geben Sie die Werte selbst ein. Siehe die [Einrichtungsseite für allgemeines IMAP](/connect/imap).
 
 ## Schritt 1: das IMAP/SMTP-Postfach verbinden
 
-1. [Erstellen Sie Ihr MCP-Emails-Konto oder melden Sie sich an](/signup) und öffnen Sie dann **Dashboard → Postfächer → Postfach verbinden**.
+1. [Erstellen Sie Ihr MCPEmails-Konto oder melden Sie sich an](/signup) und öffnen Sie dann **Dashboard → Postfächer → Postfach verbinden**.
 2. Wählen Sie den Anbieter mit Namen, wenn es ihn in der Liste gibt. Sonst wählen Sie **IMAP / SMTP**.
 3. Geben Sie E-Mail-Adresse und App-Passwort ein. Beim allgemeinen Konnektor tragen Sie außerdem IMAP-Host und Port, SMTP-Host und Port sowie einen abweichenden Benutzernamen ein, falls Ihr Hoster Ihnen einen gegeben hat.
-4. Speichern Sie die Verbindung. MCP Emails prüft die Zugangsdaten gegen den IMAP-Server, bevor das Postfach gespeichert wird. Eine abgelehnte Anmeldung oder ein nicht erreichbarer TLS-Endpunkt fällt also hier auf und nicht erst später in Claude.
+4. Speichern Sie die Verbindung. MCPEmails prüft die Zugangsdaten gegen den IMAP-Server, bevor das Postfach gespeichert wird. Eine abgelehnte Anmeldung oder ein nicht erreichbarer TLS-Endpunkt fällt also hier auf und nicht erst später in Claude.
 
-Die üblichen sicheren Standardwerte sind IMAP \`993\`, dazu SMTP \`465\` oder \`587\`. Sie sind nicht austauschbar: Verwenden Sie den Port und den Sicherheitsmodus, die Ihr Anbieter dokumentiert. MCP Emails behandelt SMTP-Port \`587\` als STARTTLS und alle anderen eingetragenen SMTP-Ports als implizites TLS. Verbindungen ohne TLS-Unterstützung werden abgelehnt.
+Die üblichen sicheren Standardwerte sind IMAP \`993\`, dazu SMTP \`465\` oder \`587\`. Sie sind nicht austauschbar: Verwenden Sie den Port und den Sicherheitsmodus, die Ihr Anbieter dokumentiert. MCPEmails behandelt SMTP-Port \`587\` als STARTTLS und alle anderen eingetragenen SMTP-Ports als implizites TLS. Verbindungen ohne TLS-Unterstützung werden abgelehnt.
 
-## Schritt 2: MCP Emails als Claude-Konnektor hinzufügen
+## Schritt 2: MCPEmails als Claude-Konnektor hinzufügen
 
-Wenn das Postfach verbunden ist, richten Sie Claude auf MCP Emails aus:
+Wenn das Postfach verbunden ist, richten Sie Claude auf MCPEmails aus:
 
 1. Öffnen Sie in claude.ai **Anpassen → Konnektoren**.
 2. Wählen Sie **Konnektor hinzufügen** und geben Sie \`https://www.mcpemails.com/api/mcp\` ein.
-3. Wählen Sie **Verbinden**, melden Sie sich bei MCP Emails an und genehmigen Sie nur die Berechtigungen, die der Workflow braucht.
+3. Wählen Sie **Verbinden**, melden Sie sich bei MCPEmails an und genehmigen Sie nur die Berechtigungen, die der Workflow braucht.
 
 Ein Zusammenfassungs-Workflow braucht zum Beispiel Lese- und Suchzugriff, aber keinen Sende- oder Löschzugriff. Ein Antwort-Workflow braucht Sendezugriff. Ordnerverwaltung und endgültiges Löschen haben eigene Berechtigungen, sodass destruktive Aktionen gesperrt bleiben, bis Sie sie wirklich brauchen. Der Ablauf auf der Client-Seite steht ausführlicher in der [Anleitung zur Verbindung von Claude mit E-Mail](/blog/connect-claude-to-email).
 
@@ -74,13 +74,13 @@ Sobald die Verbindung steht, kann Claude:
 - Entwürfe erstellen und verwalten, Nachrichten planen und Kontakte durchsuchen, wo das Tool den Vorgang unterstützt.
 - E-Mails in den Papierkorb verschieben oder, mit ausdrücklicher Löschberechtigung und \`permanent: true\`, über IMAP endgültig entfernen.
 
-Mit dieser letzten Fähigkeit sollten Sie vorsichtig sein. Endgültiges Löschen über IMAP umgeht den Papierkorb und lässt sich unter Umständen nicht rückgängig machen. MCP Emails stellt das Löschen als eigenes destruktives Tool bereit, und der MCP-Client steuert das Bestätigungsverhalten. Gewähren Sie \`delete:email\` trotzdem nur Workflows, die es brauchen.
+Mit dieser letzten Fähigkeit sollten Sie vorsichtig sein. Endgültiges Löschen über IMAP umgeht den Papierkorb und lässt sich unter Umständen nicht rückgängig machen. MCPEmails stellt das Löschen als eigenes destruktives Tool bereit, und der MCP-Client steuert das Bestätigungsverhalten. Gewähren Sie \`delete:email\` trotzdem nur Workflows, die es brauchen.
 
 ## Wichtige Grenzen von IMAP
 
 Ein IMAP-Konnektor deckt viel ab, macht aber nicht jeden Anbieter gleich.
 
-- **Kein Push bei eingehenden E-Mails:** MCP Emails arbeitet nur nach dem Anfrage-Antwort-Prinzip. Es sendet keine Webhooks und stößt Claude nicht an, wenn eine Nachricht eintrifft. Ein automatisierter Workflow muss in festen Abständen abfragen, zum Beispiel indem er ungelesene E-Mails auflistet.
+- **Kein Push bei eingehenden E-Mails:** MCPEmails arbeitet nur nach dem Anfrage-Antwort-Prinzip. Es sendet keine Webhooks und stößt Claude nicht an, wenn eine Nachricht eintrifft. Ein automatisierter Workflow muss in festen Abständen abfragen, zum Beispiel indem er ungelesene E-Mails auflistet.
 - **Die Suche hängt vom Übertragungsweg ab:** Strukturierte Filter für Absender, Betreff, Text und Datum funktionieren bei allen Anbietern, aber allgemeines IMAP unterstützt den Suchfilter \`has_attachment\` nicht. Die eigene Suchsyntax eines Anbieters lässt sich nicht übertragen.
 - **Ordner sind keine Gmail-Labels:** IMAP verschiebt eine Nachricht zwischen Ordnern, während Gmail einer Nachricht mehrere Labels geben kann. Den praktischen Unterschied erklärt [Gmail-Labels und IMAP-Ordner](/blog/gmail-labels-vs-imap-folders-ai-agents).
 - **Zum Senden ist SMTP nötig:** Eine funktionierende IMAP-Anmeldung beweist, dass Claude eingehende E-Mails erreicht, nicht dass SMTP-Host, Port oder Sendeberechtigung stimmen. Testen Sie eine harmlose ausgehende Nachricht, bevor Sie sich auf einen Antwort-Workflow verlassen.
@@ -102,7 +102,7 @@ Die IMAP-Einstellungen funktionieren, aber SMTP ist davon getrennt. Prüfen Sie 
 
 ### Claude findet das Postfach nicht
 
-Bitten Sie Claude, \`inbox_list\` erneut aufzurufen. Erscheint das Postfach nicht, prüfen Sie seinen Status im Dashboard von MCP Emails und verbinden Sie es neu, falls das App-Passwort widerrufen oder ausgetauscht wurde. Erscheint das Postfach, wird eine Aktion aber verweigert, verbinden Sie den Claude-Konnektor neu oder ergänzen Sie den API-Schlüssel um die nötige Berechtigung.
+Bitten Sie Claude, \`inbox_list\` erneut aufzurufen. Erscheint das Postfach nicht, prüfen Sie seinen Status im Dashboard von MCPEmails und verbinden Sie es neu, falls das App-Passwort widerrufen oder ausgetauscht wurde. Erscheint das Postfach, wird eine Aktion aber verweigert, verbinden Sie den Claude-Konnektor neu oder ergänzen Sie den API-Schlüssel um die nötige Berechtigung.
 
 ### Die Suchergebnisse sind enger als erwartet
 
@@ -110,13 +110,13 @@ Beginnen Sie mit strukturierten Feldern wie \`from\`, \`subject\`, \`text\`, \`s
 
 ## Sicherheit: Zugangsdaten bleiben außerhalb von Claude
 
-MCP Emails speichert das OAuth-Token oder IMAP-App-Passwort, das für künftige Aufrufe nötig ist, im Ruhezustand verschlüsselt mit AES-256-GCM. Gewöhnliche Postfachinhalte werden live abgerufen, wenn ein Tool läuft, und zwischen den Aufrufen nicht gespeichert. Der Datenverkehr nutzt TLS, und Sie können ein App-Passwort beim Anbieter widerrufen oder das Postfach im Dashboard trennen.
+MCPEmails speichert das OAuth-Token oder IMAP-App-Passwort, das für künftige Aufrufe nötig ist, im Ruhezustand verschlüsselt mit AES-256-GCM. Gewöhnliche Postfachinhalte werden live abgerufen, wenn ein Tool läuft, und zwischen den Aufrufen nicht gespeichert. Der Datenverkehr nutzt TLS, und Sie können ein App-Passwort beim Anbieter widerrufen oder das Postfach im Dashboard trennen.
 
 Diese klare Grenze ist der Hauptgrund, eine MCP-Brücke zu nutzen, statt Zugangsdaten in einen Chat oder eine lokale Konfiguration einzufügen: Claude erhält eingeschränkte E-Mail-Fähigkeiten, nicht die Schlüssel zum Postfach. Details zu Speicherung und Bedrohungsmodell finden Sie unter [warum „E-Mails werden nie gespeichert“ zählt](/blog/why-email-never-stored-matters) und in der [Sicherheitsübersicht](/security).
 
 ## Kurz zusammengefasst
 
-Ein Claude IMAP-Konnektor ist eine IMAP/SMTP-Verbindung zu einem Postfach, die Claude als MCP-Tools angeboten wird. Sammeln Sie die sicheren Servereinstellungen, erstellen Sie ein widerrufbares App-Passwort, verbinden Sie das Postfach in MCP Emails und fügen Sie \`https://www.mcpemails.com/api/mcp\` in Claude hinzu. Testen Sie zuerst den Lesezugriff, fügen Sie Sende- oder destruktive Berechtigungen bewusst hinzu, und nutzen Sie die Checkliste zur Fehlerbehebung oben, wenn der Anbieter die Verbindung ablehnt.
+Ein Claude IMAP-Konnektor ist eine IMAP/SMTP-Verbindung zu einem Postfach, die Claude als MCP-Tools angeboten wird. Sammeln Sie die sicheren Servereinstellungen, erstellen Sie ein widerrufbares App-Passwort, verbinden Sie das Postfach in MCPEmails und fügen Sie \`https://www.mcpemails.com/api/mcp\` in Claude hinzu. Testen Sie zuerst den Lesezugriff, fügen Sie Sende- oder destruktive Berechtigungen bewusst hinzu, und nutzen Sie die Checkliste zur Fehlerbehebung oben, wenn der Anbieter die Verbindung ablehnt.
 
 Bereit für einen Versuch? [Verbinden Sie ein IMAP-Postfach](/signup) oder nutzen Sie die [Anleitung für einzelne Anbieter](/blog/connect-icloud-fastmail-imap-to-claude) für Details zu iCloud und Fastmail.`,
 };

@@ -19,13 +19,13 @@ export async function generateMetadata({ params }) {
     openGraph: {
       type: 'website',
       url: localePath(locale, '/blog'),
-      title: `${title} · MCP Emails`,
+      title: `${title} · MCPEmails`,
       description,
       locale: OG_LOCALE[locale],
     },
     twitter: {
       card: 'summary_large_image',
-      title: `${title} · MCP Emails`,
+      title: `${title} · MCPEmails`,
       description,
     },
   };
@@ -66,7 +66,7 @@ export default async function BlogIndexPage({ params }) {
     inLanguage: locale,
     publisher: {
       '@type': 'Organization',
-      name: 'MCP Emails',
+      name: 'MCPEmails',
       url: APP_URL,
       logo: { '@type': 'ImageObject', url: `${APP_URL}/logo-mark.svg` },
     },

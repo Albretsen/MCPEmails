@@ -22,23 +22,23 @@
     "meta0": "1 bandeja gratis, para siempre",
     "meta1": "Contraseña de aplicación, sin configurar OAuth",
     "meta2": "El correo se obtiene en vivo, nunca se almacena",
-    "answer": "Claude no puede acceder por sí solo a AOL Mail. MCP Emails es un servidor MCP alojado que lo conecta por IMAP con una contraseña de aplicación, para que Claude, Cursor o cualquier cliente MCP pueda leer, buscar, enviar y organizar ese correo. La configuración lleva un par de minutos y una bandeja es gratis."
+    "answer": "Claude no puede acceder por sí solo a AOL Mail. MCPEmails es un servidor MCP alojado que lo conecta por IMAP con una contraseña de aplicación, para que Claude, Cursor o cualquier cliente MCP pueda leer, buscar, enviar y organizar ese correo. La configuración lleva un par de minutos y una bandeja es gratis."
   },
   "method": {
     "title": "Cómo se conecta AOL Mail: IMAP y una contraseña de aplicación",
-    "body": "AOL Mail se conecta por IMAP/SMTP con una <b>contraseña de aplicación de AOL</b>. Tu contraseña normal de AOL no autentica un cliente de correo, así que un inicio de sesión rechazado aquí casi siempre significa que falta la contraseña de aplicación. Activa la verificación en dos pasos (2-Step Verification), genera una contraseña de aplicación en Account Info, Account Security, y pégala en MCP Emails junto con tu dirección de AOL completa."
+    "body": "AOL Mail se conecta por IMAP/SMTP con una <b>contraseña de aplicación de AOL</b>. Tu contraseña normal de AOL no autentica un cliente de correo, así que un inicio de sesión rechazado aquí casi siempre significa que falta la contraseña de aplicación. Activa la verificación en dos pasos (2-Step Verification), genera una contraseña de aplicación en Account Info, Account Security, y pégala en MCPEmails junto con tu dirección de AOL completa."
   },
   "setup": [
     {
       "h": "Crea una cuenta gratis",
-      "p": "Regístrate en MCP Emails, sin tarjeta. El plan gratuito conecta una bandeja, para siempre."
+      "p": "Regístrate en MCPEmails, sin tarjeta. El plan gratuito conecta una bandeja, para siempre."
     },
     {
       "h": "Genera una contraseña de aplicación de AOL",
       "p": "En AOL Mail, abre Account Info, Account Security, activa 2-Step Verification si está desactivada y genera una contraseña de aplicación. Cópiala enseguida: AOL la muestra una sola vez."
     },
     {
-      "h": "Pégala en MCP Emails",
+      "h": "Pégala en MCPEmails",
       "p": "Elige IMAP / SMTP y añade tu dirección de AOL Mail, los servidores de arriba y la contraseña para conectar la bandeja de forma segura."
     },
     {
@@ -65,13 +65,13 @@
     }
   ],
   "limits": [
-    "El servidor de envío de AOL anuncia un tamaño máximo de mensaje de unos 41 MB. La lectura de adjuntos a través de MCP Emails está limitada a 25 MB por solicitud.",
+    "El servidor de envío de AOL anuncia un tamaño máximo de mensaje de unos 41 MB. La lectura de adjuntos a través de MCPEmails está limitada a 25 MB por solicitud.",
     "Una contraseña de aplicación sigue siendo válida después de cambiar tu contraseña de AOL. Eliminarla en la página Account Security de AOL es la única forma de cortar el acceso."
   ],
   "faq": [
     {
       "q": "¿Funciona Claude con AOL Mail?",
-      "a": "No por sí solo. Claude no tiene un conector integrado para AOL. Conectar un servidor MCP como MCP Emails a tu buzón de AOL por IMAP, con una contraseña de aplicación de AOL, le da a Claude acceso para leer, buscar, enviar, responder, programar y organizar, y la misma conexión funciona desde Cursor, ChatGPT y otros clientes MCP."
+      "a": "No por sí solo. Claude no tiene un conector integrado para AOL. Conectar un servidor MCP como MCPEmails a tu buzón de AOL por IMAP, con una contraseña de aplicación de AOL, le da a Claude acceso para leer, buscar, enviar, responder, programar y organizar, y la misma conexión funciona desde Cursor, ChatGPT y otros clientes MCP."
     },
     {
       "q": "¿Cuáles son los ajustes IMAP y SMTP de AOL Mail?",

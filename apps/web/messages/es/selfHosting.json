@@ -1,11 +1,11 @@
 {
   "meta": {
-    "title": "Auto-aloja MCP Emails",
+    "title": "Auto-aloja MCPEmails",
     "description": "Ejecuta el mismo servidor de correo MCP que impulsa mcpemails.com en tu propia máquina. Código abierto bajo AGPL-3.0, credenciales cifradas con una clave que solo tú posees, correo obtenido en vivo y nunca almacenado."
   },
   "hero": {
     "eyebrow": "Código abierto, AGPL-3.0",
-    "title": "Ejecuta MCP Emails tú mismo.",
+    "title": "Ejecuta MCPEmails tú mismo.",
     "lead": "El mismo servidor MCP que impulsa mcpemails.com, en tu propia máquina, contra tu propia base de datos. Las credenciales de tu buzón nunca salen de una infraestructura que tú controlas. Se cifran con una clave que solo tú posees y se descifran únicamente en tu contenedor, en el momento en que una llamada a una herramienta las necesita."
   },
   "proof": {

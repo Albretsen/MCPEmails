@@ -35,10 +35,10 @@
       "providerSub": "Gmail · Outlook · iCloud · IMAP",
       "logCalls": "l'agent appelle",
       "logReturns": "renvoie les ID de boîtes, sans copier-coller depuis le tableau de bord",
-      "logFetches": "MCP Emails récupère en direct chez votre fournisseur",
+      "logFetches": "MCPEmails récupère en direct chez votre fournisseur",
       "logResult": "20 messages renvoyés",
       "logNothing": "rien n'est stocké",
-      "legendPipe": "MCP Emails (le tuyau)",
+      "legendPipe": "MCPEmails (le tuyau)",
       "legendLive": "requête en direct",
       "legendData": "vos données, votre fournisseur"
     }
@@ -49,7 +49,7 @@
   "whatIs": {
     "title": "Qu'est-ce qu'un serveur MCP e-mail ?",
     "p1": "Un serveur MCP e-mail (email MCP server) est le pont entre un assistant IA et une vraie boîte mail. Il parle le Model Context Protocol, si bien que Claude, ChatGPT, Cursor ou tout autre client MCP peut lire, rechercher, rédiger et envoyer des e-mails via un seul point de terminaison, sans intégration distincte pour chaque application.",
-    "p2": "MCP Emails en est un, hébergé. Il fonctionne avec Gmail, Outlook et Microsoft 365, iCloud, Fastmail et toute boîte compatible IMAP, et un même agent peut travailler sur plusieurs boîtes à la fois. Le courrier est récupéré en direct auprès de votre fournisseur à chaque appel et n'est jamais stocké sur nos serveurs.",
+    "p2": "MCPEmails en est un, hébergé. Il fonctionne avec Gmail, Outlook et Microsoft 365, iCloud, Fastmail et toute boîte compatible IMAP, et un même agent peut travailler sur plusieurs boîtes à la fois. Le courrier est récupéré en direct auprès de votre fournisseur à chaque appel et n'est jamais stocké sur nos serveurs.",
     "linkImap": "Configurer le serveur MCP pour IMAP",
     "linkBusiness": "MCP e-mail pour les boîtes de l'entreprise",
     "linkProviders": "Tous les fournisseurs e-mail pris en charge",
@@ -110,7 +110,7 @@
       },
       "2": {
         "h": "Votre agent travaille la boîte de réception",
-        "p": "L'agent appelle des outils comme <code>email_read()</code> ou <code>email_compose()</code>. MCP Emails récupère en direct depuis votre fournisseur et renvoie le résultat. Rien n'est mis en cache entre les appels."
+        "p": "L'agent appelle des outils comme <code>email_read()</code> ou <code>email_compose()</code>. MCPEmails récupère en direct depuis votre fournisseur et renvoie le résultat. Rien n'est mis en cache entre les appels."
       }
     },
     "tools": {
@@ -128,17 +128,17 @@
     "eyebrow": "De vraies demandes",
     "titleLine1": "Demandez, simplement.",
     "titleLine2": "Il lit, écrit et classe.",
-    "sub": "Aucun tableau de bord à apprendre. Dites à votre assistant IA ce que vous voulez en langage courant, et il utilise MCP Emails pour le faire."
+    "sub": "Aucun tableau de bord à apprendre. Dites à votre assistant IA ce que vous voulez en langage courant, et il utilise MCPEmails pour le faire."
   },
   "quote": {
     "text": "Je voulais que mes agents travaillent ma boîte de réception, mais chaque option impliquait de confier une copie de mes e-mails à un tiers. Alors j'ai construit le tuyau dont je rêvais : connectez-vous une fois, votre boîte de réception est récupérée en direct et jamais stockée, et vous pouvez couper l'accès à n'importe quel agent en un clic. C'est le produit auquel je confie ma propre boîte de réception.",
-    "role": "fondateur, MCP Emails"
+    "role": "fondateur, MCPEmails"
   },
   "reviews": {
     "eyebrow": "Avis",
     "titleLine1": "Ne nous croyez pas.",
     "titleLine2": "Croyez-les.",
-    "sub": "De vrais avis de personnes qui utilisent MCP Emails sur leur propre boîte mail, publiés sous leur nom.",
+    "sub": "De vrais avis de personnes qui utilisent MCPEmails sur leur propre boîte mail, publiés sous leur nom.",
     "ratingLabel": "Noté {rating} sur 5",
     "count": "{count, plural, one {# avis} other {# avis}}",
     "via": "Avis publié sur {source}",
@@ -214,7 +214,7 @@
     "sub": "Tout ce qu'il faut savoir avant de connecter votre première boîte de réception.",
     "items": [
       {
-        "q": "MCP Emails est-il un serveur MCP pour IMAP ?",
+        "q": "MCPEmails est-il un serveur MCP pour IMAP ?",
         "a": "Oui. En plus de Gmail et Outlook, il existe un connecteur IMAP et SMTP générique : toute boîte accessible en IMAP fonctionne, qu'elle soit sur votre propre domaine, chez un hébergeur ou chez un FAI régional. Vous saisissez les paramètres du serveur et un mot de passe d'application une seule fois, puis votre agent lit en IMAP et envoie via votre propre serveur SMTP."
       },
       {
@@ -255,7 +255,7 @@
       },
       {
         "q": "Puis-je l'héberger moi-même ?",
-        "a": "Oui. MCP Emails est open source sous AGPL-3.0, et le service hébergé exécute le même serveur que vous pouvez exécuter vous-même. Une stack docker-compose met en route le serveur MCP complet et tous ses outils sur votre propre base de données en environ cinq minutes, pour n'importe quelle boîte mail IMAP ou SMTP. La connexion Gmail et Outlook (OAuth) ainsi que le tableau de bord restent sur le forfait hébergé."
+        "a": "Oui. MCPEmails est open source sous AGPL-3.0, et le service hébergé exécute le même serveur que vous pouvez exécuter vous-même. Une stack docker-compose met en route le serveur MCP complet et tous ses outils sur votre propre base de données en environ cinq minutes, pour n'importe quelle boîte mail IMAP ou SMTP. La connexion Gmail et Outlook (OAuth) ainsi que le tableau de bord restent sur le forfait hébergé."
       }
     ]
   },
@@ -279,9 +279,9 @@
     "linkWithdrawal": "Droit de rétractation",
     "linkCancel": "Résilier des contrats ici",
     "linkImpressum": "Impressum",
-    "copyright": "© 2026 MCP Emails.",
+    "copyright": "© 2026 MCPEmails.",
     "legal": "E-mails récupérés en direct, jamais stockés · Identifiants chiffrés au repos",
-    "legalEntity": "MCP Emails est un service d'Albretsen AS, numéro d'organisation 938 702 373, Håsteins gate 9, 5160 Laksevåg, Norvège.",
+    "legalEntity": "MCPEmails est un service d'Albretsen AS, numéro d'organisation 938 702 373, Håsteins gate 9, 5160 Laksevåg, Norvège.",
     "contactLabel": "Contact",
     "mcpLabel": "Point de terminaison MCP",
     "copy": "Copier",

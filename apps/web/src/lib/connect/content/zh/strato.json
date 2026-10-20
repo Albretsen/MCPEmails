@@ -19,7 +19,7 @@
     "titleLine1": "面向 STRATO 邮箱的 MCP 服务器：",
     "titleLine2": "在 Claude 和 ChatGPT 中使用公司的每一个邮箱",
     "lead": "在 STRATO 用自己的域名开设了 info@、sales@、support@ 和 invoices@？把每个邮箱都连接到同一个工作区，你的 AI 代理就能处理所有邮箱。用邮箱密码（而不是你的 STRATO 客户登录密码）通过 IMAP 读取、搜索、发送、回复、定时与整理邮件。",
-    "answer": "Claude 无法自行连接 STRATO 邮箱。MCP Emails 是一个托管 MCP 服务器，通过 IMAP 连接 imap.strato.de 的 993 端口，用你的完整邮箱地址和为该邮箱设置的密码（而不是 STRATO 客户登录密码）认证，让 Claude、Cursor 或任意 MCP 客户端都能读取、搜索、发送并整理邮件。STRATO 只接受在加密连接上进行的普通密码认证，旧的质询响应方式已被关闭。公司的每个地址（如 info@ 或 sales@）都作为独立邮箱连接：一个邮箱免费，Personal 连接三个，Pro 最多连接 10 个，Business 按需连接更多。",
+    "answer": "Claude 无法自行连接 STRATO 邮箱。MCPEmails 是一个托管 MCP 服务器，通过 IMAP 连接 imap.strato.de 的 993 端口，用你的完整邮箱地址和为该邮箱设置的密码（而不是 STRATO 客户登录密码）认证，让 Claude、Cursor 或任意 MCP 客户端都能读取、搜索、发送并整理邮件。STRATO 只接受在加密连接上进行的普通密码认证，旧的质询响应方式已被关闭。公司的每个地址（如 info@ 或 sales@）都作为独立邮箱连接：一个邮箱免费，Personal 连接三个，Pro 最多连接 10 个，Business 按需连接更多。",
     "meta0": "第一个邮箱免费，其余按套餐连接",
     "meta1": "邮箱密码，而不是客户登录密码",
     "meta2": "邮件实时获取，绝不存储"
@@ -35,7 +35,7 @@
   },
   "setup": [
     {
-      "h": "创建免费 MCP Emails 账户",
+      "h": "创建免费 MCPEmails 账户",
       "p": "在 mcpemails.com 注册。免费套餐可永久连接一个收件箱，无需信用卡。"
     },
     {
@@ -43,7 +43,7 @@
       "p": "登录 STRATO Kundenlogin，打开你的套餐，进入 E-Mail，然后是 E-Mail-Adressen verwalten。选择该地址并在那里设置新密码。这个密码只属于该邮箱，而不是你刚才用来进入 Kundenlogin 的那个。"
     },
     {
-      "h": "粘贴到 MCP Emails",
+      "h": "粘贴到 MCPEmails",
       "p": "选择 IMAP / SMTP，输入完整地址，粘贴邮箱密码。服务器 imap.strato.de 和 smtp.strato.de 以及端口 993 和 465 已自动填好，并已通过实时 TLS 连接验证。"
     },
     {
@@ -58,7 +58,7 @@
     },
     {
       "h": "STRATO 不声明 SASL-IR",
-      "p": "IMAP 服务器省略了 SASL-IR 能力，因此会拒绝在 AUTHENTICATE 命令同一行携带凭据的一步认证。默认支持 SASL-IR 的客户端会收到一个没有任何解释的 <code>BAD</code>，看起来又像是密码问题。MCP Emails 会识别这个响应并用两步交换重试，所以连接能够成功，但它与移除 CRAM-MD5 一起，正是 STRATO 产生这么多虚假密码错误报告的原因。"
+      "p": "IMAP 服务器省略了 SASL-IR 能力，因此会拒绝在 AUTHENTICATE 命令同一行携带凭据的一步认证。默认支持 SASL-IR 的客户端会收到一个没有任何解释的 <code>BAD</code>，看起来又像是密码问题。MCPEmails 会识别这个响应并用两步交换重试，所以连接能够成功，但它与移除 CRAM-MD5 一起，正是 STRATO 产生这么多虚假密码错误报告的原因。"
     },
     {
       "h": "STRATO 是同价位中配置最完善的 IMAP 服务器",
@@ -76,7 +76,7 @@
   "faq": [
     {
       "q": "Claude 能用 STRATO 邮箱吗？",
-      "a": "不能单独使用。Claude 没有内置的 STRATO 连接器。通过 IMAP 将 MCP Emails 这样的 MCP 服务器指向你的 STRATO 邮箱后，Claude 就能读取、搜索、发送、回复、定时和整理其中的邮件，同一个连接也可在 Cursor、ChatGPT 和其他 MCP 客户端中使用。"
+      "a": "不能单独使用。Claude 没有内置的 STRATO 连接器。通过 IMAP 将 MCPEmails 这样的 MCP 服务器指向你的 STRATO 邮箱后，Claude 就能读取、搜索、发送、回复、定时和整理其中的邮件，同一个连接也可在 Cursor、ChatGPT 和其他 MCP 客户端中使用。"
     },
     {
       "q": "STRATO 的 IMAP 和 SMTP 设置是什么？",

@@ -41,7 +41,7 @@ CLI's stored live key is read-only). All prices `tax_behavior=exclusive`, USD.
 
 | Object | Amount | Interval | Nickname | Metadata |
 |---|---|---|---|---|
-| Product "MCP Emails Business" | | | | `plan_id=pro` |
+| Product "MCPEmails Business" | | | | `plan_id=pro` |
 | Base price | 3900 | month | `Business-Monthly` | `plan_id=pro`, `value_metric=base` |
 | Base price | 37440 | year | `Business-Yearly` | `plan_id=pro`, `value_metric=base` |
 | Per-mailbox price | 300 | month | `Business-Mailbox-Monthly` | `plan_id=pro`, `value_metric=mailbox` |
@@ -52,7 +52,7 @@ each extra. Unlimited members with roles, admins approve held sends, several
 workspaces on one subscription."
 
 ```bash
-stripe products create --live --name "MCP Emails Business" \
+stripe products create --live --name "MCPEmails Business" \
   --description "10 mailboxes included, \$3 a month for each extra. Unlimited members with roles, admins approve held sends, several workspaces on one subscription." \
   -d "metadata[plan_id]=pro"
 # PROD=prod_...

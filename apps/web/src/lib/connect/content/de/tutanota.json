@@ -21,7 +21,7 @@
     "titleLine1": "Tuta Mail hat kein IMAP",
     "titleLine2": "und kein SMTP, und es gibt keine Bridge",
     "lead": "Tuta, früher Tutanota, betreibt keines der Protokolle, die ein Mail-Client oder ein MCP-Server braucht, und anders als Proton bietet es auch keine lokale Bridge, die eines nachbildet. Diese Seite erklärt, warum, und was Ihnen tatsächlich zur Verfügung steht.",
-    "answer": "Nein, und es gibt keinen Umweg. Tuta bietet überhaupt keinen Zugang per IMAP, POP oder SMTP, deshalb kann MCP Emails ein Tuta-Postfach nicht verbinden, und Thunderbird, Apple Mail oder ein anderer Client ebenso wenig. Das folgt aus der Art, wie Tuta verschlüsselt: Betreffzeilen, Inhalte, Anhänge, Kontakte und Kalendereinträge werden mit einem Schlüssel verschlüsselt, der Ihr Gerät nie verlässt, und Tutas Server halten nur Geheimtext. Standard-IMAP setzt einen Server voraus, der Betreffzeilen lesen, sortieren, suchen und einem Client Klartext liefern kann, und genau diese Fähigkeit hat Tuta entfernt. Anders als bei Proton gibt es auch keine Bridge-Anwendung für den lokalen Betrieb. Soll ein KI-Agent mit E-Mails arbeiten, muss es also ein Postfach bei einem Anbieter mit IMAP sein, und MCP Emails verbindet ein solches kostenlos."
+    "answer": "Nein, und es gibt keinen Umweg. Tuta bietet überhaupt keinen Zugang per IMAP, POP oder SMTP, deshalb kann MCPEmails ein Tuta-Postfach nicht verbinden, und Thunderbird, Apple Mail oder ein anderer Client ebenso wenig. Das folgt aus der Art, wie Tuta verschlüsselt: Betreffzeilen, Inhalte, Anhänge, Kontakte und Kalendereinträge werden mit einem Schlüssel verschlüsselt, der Ihr Gerät nie verlässt, und Tutas Server halten nur Geheimtext. Standard-IMAP setzt einen Server voraus, der Betreffzeilen lesen, sortieren, suchen und einem Client Klartext liefern kann, und genau diese Fähigkeit hat Tuta entfernt. Anders als bei Proton gibt es auch keine Bridge-Anwendung für den lokalen Betrieb. Soll ein KI-Agent mit E-Mails arbeiten, muss es also ein Postfach bei einem Anbieter mit IMAP sein, und MCPEmails verbindet ein solches kostenlos."
   },
   "method": {
     "title": "So verbindet sich Tuta: nur über die eigenen Apps",
@@ -29,7 +29,7 @@
   },
   "setup": [
     {
-      "h": "Kostenloses MCP Emails-Konto erstellen",
+      "h": "Kostenloses MCPEmails-Konto erstellen",
       "p": "Eine E-Mail-Adresse genügt, ohne Kreditkarte. Ein verbundenes Postfach ist dauerhaft kostenlos, und die nächsten beiden Schritte entscheiden, was hineinkommt."
     },
     {
@@ -90,7 +90,7 @@
     },
     {
       "q": "Was soll ich tun, wenn ein KI-Agent meine E-Mails bearbeiten soll?",
-      "a": "Nutzen Sie bewusst zwei Adressen. Behalten Sie private Korrespondenz in Tuta, wo nichts Automatisiertes sie erreicht, und nutzen Sie ein separates IMAP-Postfach für die E-Mails, die ein Agent sortieren, beantworten, planen und ablegen soll. MCP Emails verbindet dieses zweite Postfach mit Claude, Cursor oder ChatGPT, ein Postfach kostenlos, und sieht das Tuta-Postfach nie."
+      "a": "Nutzen Sie bewusst zwei Adressen. Behalten Sie private Korrespondenz in Tuta, wo nichts Automatisiertes sie erreicht, und nutzen Sie ein separates IMAP-Postfach für die E-Mails, die ein Agent sortieren, beantworten, planen und ablegen soll. MCPEmails verbindet dieses zweite Postfach mit Claude, Cursor oder ChatGPT, ein Postfach kostenlos, und sieht das Tuta-Postfach nie."
     }
   ],
   "ctaBand": {

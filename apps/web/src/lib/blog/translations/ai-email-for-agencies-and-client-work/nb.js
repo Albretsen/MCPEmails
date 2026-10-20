@@ -3,7 +3,7 @@ const translation = {
   description:
     'Slik gir et byrå eller en frilanser en AI-agent tilgang til flere kundepostkasser uten å blande kundene: ett arbeidsområde per kunde, avgrensede nøkler, lesetilgang først og en godkjenning før hver utsending.',
   coverAlt:
-    'Én AI-agent som jobber på tvers av adskilte kundepostkasser med avgrenset tilgang, MCP Emails',
+    'Én AI-agent som jobber på tvers av adskilte kundepostkasser med avgrenset tilgang, MCPEmails',
   content: `Driver du e-post for mer enn én kunde, lever du med én regel: ingenting fra kunde A skal dukke opp i en tråd hos kunde B. En AI-agent endrer ikke regelen, den gjør det bare lettere å bryte den. Én agent med én legitimasjon som når hver eneste postkasse du forvalter, er én uforsiktig instruksjon unna å sitere feil faktura til feil person.
 
 Tre feil er verdt å designe mot: **lekkasje mellom kunder**, der en for vid legitimasjon lar et søk treffe feil postkasse; **konsulenten som slutter**, som fortsatt har en fungerende API-nøkkel på maskinen sin; og **utsendingen ingen leste**, der en agent svarer kundens kunde høflig og feil. Bygger du skillet inn i selve tilgangen, kan ikke agenten krysse en grense selv når en instruksjon ber den om det.
@@ -64,7 +64,7 @@ Delte adresser er helt vanlige postkasser her. Koble til support@ eller billing@
 
 Agenten finner postkasser med \`inbox_list\` og henvender seg til dem ved navn, så du limer aldri inn postkasse-ID-er i en instruksjon. Derfra er settet lite: \`email_read\` og \`email_compose\`, \`email_organize\` og \`email_search_and_move\` til triagering, og \`draft\` og \`schedule\` til alt som bør vente på et menneske.
 
-Sett én forventning tidlig: MCP Emails spør, den blir ikke varslet. Agenten sjekker ny e-post når du ber den om det, eller når en planlagt automasjon kjører, så "vi svarer innen 60 sekunder" er ikke et løfte denne arkitekturen gir.
+Sett én forventning tidlig: MCPEmails spør, den blir ikke varslet. Agenten sjekker ny e-post når du ber den om det, eller når en planlagt automasjon kjører, så "vi svarer innen 60 sekunder" er ikke et løfte denne arkitekturen gir.
 
 ## Overlevering og avslutning av tilgang
 
@@ -85,14 +85,14 @@ Påstander du trygt kan skrive i en avtale:
 - Meldingsinnhold lagres aldri. Det hentes live fra kundens leverandør ved hver forespørsel og forkastes etterpå.
 - Den eneste postkassedataen som beholdes, er leverandørlegitimasjonen, kryptert i ro med AES-256-GCM og med nøkkelen oppbevart separat.
 - Aktivitet logges kun som metadata: verktøynavn, postkasse, tidsstempel og status, aldri innhold.
-- Ingen AI-leverandør er underleverandør. MCP Emails sender verken e-posten din til en egen modell eller trener på den. Underleverandørene er Supabase, Vercel og Stripe.
+- Ingen AI-leverandør er underleverandør. MCPEmails sender verken e-posten din til en egen modell eller trener på den. Underleverandørene er Supabase, Vercel og Stripe.
 - Det ene unntaket fra "lagres aldri" er en melding som planlegges for senere, som holdes kryptert fram til sendetidspunktet.
 
 Ikke lov at instruksjonsinjeksjon er løst. Den er begrenset, ikke løst, og nettopp derfor finnes lesetilgangsnøkler, begrensede postkasser og godkjenningssperren. Ikke lov øyeblikkelig reaksjon, og ikke lov sertifiseringer produktet aldri har hevdet. Send kundens sikkerhetsansvarlige til [/security](/security) og skriv avtalen slik at den passer til den siden, ikke foran den. Koden er offentlig og kan driftes selv, noe som besvarer en sikkerhetsgjennomgang bedre enn et løfte.
 
 ## Ofte stilte spørsmål
 
-**Trenger jeg en egen MCP Emails-konto per kunde?**  
+**Trenger jeg en egen MCPEmails-konto per kunde?**  
 Nei. Én konto, ett Business-abonnement og ett arbeidsområde per kunde. Abonnementet følger brukeren din, så hvert arbeidsområde arver planen.
 
 **Kan én kunde se en annen kundes e-post?**  

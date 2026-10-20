@@ -23,20 +23,20 @@
     "meta0": "1 Postfach dauerhaft kostenlos",
     "meta1": "Verbindung per Google App-Passwort",
     "meta2": "E-Mails werden live abgerufen, nie gespeichert",
-    "answer": "Claude kann Gmail nicht selbst erreichen. MCP Emails ist ein gehosteter MCP-Server, der dazwischen sitzt: Sie erstellen einmal ein Google App-Passwort, fügen eine URL in Ihren MCP-Client ein, und Claude, Cursor oder ChatGPT können Ihr Gmail lesen, durchsuchen, E-Mails senden, beantworten und planen. Ein Postfach ist dauerhaft kostenlos."
+    "answer": "Claude kann Gmail nicht selbst erreichen. MCPEmails ist ein gehosteter MCP-Server, der dazwischen sitzt: Sie erstellen einmal ein Google App-Passwort, fügen eine URL in Ihren MCP-Client ein, und Claude, Cursor oder ChatGPT können Ihr Gmail lesen, durchsuchen, E-Mails senden, beantworten und planen. Ein Postfach ist dauerhaft kostenlos."
   },
   "method": {
     "title": "So verbindet sich Gmail: mit einem Google App-Passwort",
-    "body": "Gmail verbindet sich mit einem <b>Google App-Passwort</b> über IMAP und SMTP. Google bietet App-Passwörter nur für Konten mit <b>aktivierter Bestätigung in zwei Schritten</b> an. Schalten Sie diese also zuerst ein und erstellen Sie dann ein App-Passwort unter <b>myaccount.google.com/apppasswords</b>. Es besteht aus 16 Kleinbuchstaben in vier Gruppen und ersetzt Ihr normales Google-Passwort, das hier nicht funktioniert. Sie können es jederzeit auf derselben Google-Seite widerrufen oder das Postfach in MCP Emails löschen."
+    "body": "Gmail verbindet sich mit einem <b>Google App-Passwort</b> über IMAP und SMTP. Google bietet App-Passwörter nur für Konten mit <b>aktivierter Bestätigung in zwei Schritten</b> an. Schalten Sie diese also zuerst ein und erstellen Sie dann ein App-Passwort unter <b>myaccount.google.com/apppasswords</b>. Es besteht aus 16 Kleinbuchstaben in vier Gruppen und ersetzt Ihr normales Google-Passwort, das hier nicht funktioniert. Sie können es jederzeit auf derselben Google-Seite widerrufen oder das Postfach in MCPEmails löschen."
   },
   "setup": [
     {
       "h": "Kostenloses Konto erstellen",
-      "p": "Registrieren Sie sich bei MCP Emails, ohne Kreditkarte. Der Free-Tarif verbindet ein Postfach, dauerhaft."
+      "p": "Registrieren Sie sich bei MCPEmails, ohne Kreditkarte. Der Free-Tarif verbindet ein Postfach, dauerhaft."
     },
     {
       "h": "Google App-Passwort erstellen",
-      "p": "Aktivieren Sie in Ihrem Google-Konto die Bestätigung in zwei Schritten, falls sie noch nicht aktiv ist. Öffnen Sie dann myaccount.google.com/apppasswords und erstellen Sie ein App-Passwort. Fügen Sie die 16 Zeichen zusammen mit Ihrer vollständigen Gmail-Adresse in MCP Emails ein. Leerzeichen im Code spielen keine Rolle."
+      "p": "Aktivieren Sie in Ihrem Google-Konto die Bestätigung in zwei Schritten, falls sie noch nicht aktiv ist. Öffnen Sie dann myaccount.google.com/apppasswords und erstellen Sie ein App-Passwort. Fügen Sie die 16 Zeichen zusammen mit Ihrer vollständigen Gmail-Adresse in MCPEmails ein. Leerzeichen im Code spielen keine Rolle."
     },
     {
       "h": "MCP-URL in Ihre KI einfügen",
@@ -46,11 +46,11 @@
   "gotchas": [
     {
       "h": "Google bietet einen eigenen Gmail MCP-Server an, und nur für Gmail ist das der kürzere Weg",
-      "p": "Google hat offizielle MCP-Unterstützung für seine Dienste angekündigt, darunter einen Workspace MCP-Server, der Gmail zusammen mit Drive, Calendar und Chat abdeckt. Das wollen wir nicht verschweigen. Wenn Gmail das einzige Postfach ist, auf das ein Assistent zugreifen soll, und Ihr Client mit Googles Server spricht, nutzen Sie ihn. Der Grund, MCP Emails stattdessen mit Gmail zu verbinden: Derselbe Server hält auch Ihr iCloud-, Fastmail-, Zoho-, Yahoo- oder Firmen-IMAP-Postfach, stellt alle über <b>eine</b> MCP-URL bereit und verhält sich in Claude, Cursor und ChatGPT gleich. Ein eigener Konnektor pro Anbieter, jeder mit eigener Anmeldung und eigenen Tool-Namen, entfällt damit."
+      "p": "Google hat offizielle MCP-Unterstützung für seine Dienste angekündigt, darunter einen Workspace MCP-Server, der Gmail zusammen mit Drive, Calendar und Chat abdeckt. Das wollen wir nicht verschweigen. Wenn Gmail das einzige Postfach ist, auf das ein Assistent zugreifen soll, und Ihr Client mit Googles Server spricht, nutzen Sie ihn. Der Grund, MCPEmails stattdessen mit Gmail zu verbinden: Derselbe Server hält auch Ihr iCloud-, Fastmail-, Zoho-, Yahoo- oder Firmen-IMAP-Postfach, stellt alle über <b>eine</b> MCP-URL bereit und verhält sich in Claude, Cursor und ChatGPT gleich. Ein eigener Konnektor pro Anbieter, jeder mit eigener Anmeldung und eigenen Tool-Namen, entfällt damit."
     },
     {
       "h": "Für das Senden von einer anderen Adresse braucht es eine bestätigte Senden-als-Adresse",
-      "p": "Ein Postfach, das mit einem App-Passwort verbunden ist, sendet von seiner eigenen Adresse. Soll Ihr Agent von einem Alias oder einer anderen Adresse senden, die Ihnen gehört, fügen Sie diese in den Postfach-Einstellungen von MCP Emails unter <b>Senden-als-Adressen</b> hinzu. Wir senden an diese Adresse einen 6-stelligen Code, und sobald Sie ihn eingeben, ist sie nutzbar. Auch Gmail muss die Adresse akzeptieren, richten Sie sie also zuerst in Gmail als <b>Senden als</b>-Adresse ein. Eine Absenderadresse, die weder die eigene Adresse des Postfachs noch bestätigt ist, wird abgelehnt und nicht stillschweigend umgeschrieben."
+      "p": "Ein Postfach, das mit einem App-Passwort verbunden ist, sendet von seiner eigenen Adresse. Soll Ihr Agent von einem Alias oder einer anderen Adresse senden, die Ihnen gehört, fügen Sie diese in den Postfach-Einstellungen von MCPEmails unter <b>Senden-als-Adressen</b> hinzu. Wir senden an diese Adresse einen 6-stelligen Code, und sobald Sie ihn eingeben, ist sie nutzbar. Auch Gmail muss die Adresse akzeptieren, richten Sie sie also zuerst in Gmail als <b>Senden als</b>-Adresse ein. Eine Absenderadresse, die weder die eigene Adresse des Postfachs noch bestätigt ist, wird abgelehnt und nicht stillschweigend umgeschrieben."
     },
     {
       "h": "Gmail kennt Labels statt Ordner, deshalb ist Verschieben kein echtes Verschieben",
@@ -62,18 +62,18 @@
     }
   ],
   "limits": [
-    "MCP Emails greift nur auf E-Mails zu: Ein App-Passwort wird ausschließlich für IMAP und SMTP genutzt. Drive, Calendar, Chat und Docs bleiben unberührt.",
+    "MCPEmails greift nur auf E-Mails zu: Ein App-Passwort wird ausschließlich für IMAP und SMTP genutzt. Drive, Calendar, Chat und Docs bleiben unberührt.",
     "Ein Google Workspace-Administrator kann App-Passwörter für die Domain in der Admin-Konsole abschalten. Nur ein Administrator kann diese Entscheidung ändern.",
     "Löschen verschiebt eine Nachricht in Gmails Papierkorb. Ein endgültiges Löschen folgt Gmails IMAP-Einstellungen: Standardmäßig entfernt es nur das Label, aus dem die Nachricht gelöscht wurde, und ein Expunge aus dem Papierkorb löscht sie endgültig."
   ],
   "faq": [
     {
       "q": "Funktioniert Claude mit Gmail?",
-      "a": "Ja, sobald etwas dazwischen sitzt, das für Claude mit Gmail spricht. MCP Emails ist so ein Dienst: Sie erstellen ein Google App-Passwort, fügen eine MCP-URL ein, und Claude kann E-Mails lesen, suchen, senden, beantworten, weiterleiten und planen. Google bietet außerdem einen offiziellen Workspace MCP-Server an, der Gmail abdeckt. Der praktische Unterschied: MCP Emails ist nicht auf Google beschränkt, dieselbe URL bedient also auch Ihre anderen Postfächer."
+      "a": "Ja, sobald etwas dazwischen sitzt, das für Claude mit Gmail spricht. MCPEmails ist so ein Dienst: Sie erstellen ein Google App-Passwort, fügen eine MCP-URL ein, und Claude kann E-Mails lesen, suchen, senden, beantworten, weiterleiten und planen. Google bietet außerdem einen offiziellen Workspace MCP-Server an, der Gmail abdeckt. Der praktische Unterschied: MCPEmails ist nicht auf Google beschränkt, dieselbe URL bedient also auch Ihre anderen Postfächer."
     },
     {
       "q": "Gibt es einen offiziellen Gmail MCP-Server von Google?",
-      "a": "Ja. Google hat offizielle MCP-Unterstützung für seine Dienste angekündigt, mit einem Workspace MCP-Server für Gmail, Drive, Calendar und Chat. Nutzen Sie ihn, wenn nur Gmail beteiligt ist und Ihr Client ihn unterstützt. Wählen Sie einen Drittanbieter-Server wie MCP Emails, wenn Sie mehrere Anbieter hinter einer einzigen MCP-URL möchten oder dasselbe Verhalten in Claude, Cursor und ChatGPT."
+      "a": "Ja. Google hat offizielle MCP-Unterstützung für seine Dienste angekündigt, mit einem Workspace MCP-Server für Gmail, Drive, Calendar und Chat. Nutzen Sie ihn, wenn nur Gmail beteiligt ist und Ihr Client ihn unterstützt. Wählen Sie einen Drittanbieter-Server wie MCPEmails, wenn Sie mehrere Anbieter hinter einer einzigen MCP-URL möchten oder dasselbe Verhalten in Claude, Cursor und ChatGPT."
     },
     {
       "q": "Brauche ich für Gmail ein App-Passwort?",
@@ -89,7 +89,7 @@
     },
     {
       "q": "Wird mein Gmail auf Ihren Servern gespeichert?",
-      "a": "Nein. Nachrichten werden bei jeder Anfrage live von Google abgerufen und an Ihren KI-Client übergeben. Ihr App-Passwort wird verschlüsselt gespeichert, und Nachrichteninhalte werden nicht aufbewahrt. Wenn Sie das App-Passwort in Ihrem Google-Konto widerrufen oder das Postfach in MCP Emails löschen, endet die Verbindung sofort."
+      "a": "Nein. Nachrichten werden bei jeder Anfrage live von Google abgerufen und an Ihren KI-Client übergeben. Ihr App-Passwort wird verschlüsselt gespeichert, und Nachrichteninhalte werden nicht aufbewahrt. Wenn Sie das App-Passwort in Ihrem Google-Konto widerrufen oder das Postfach in MCPEmails löschen, endet die Verbindung sofort."
     }
   ],
   "ctaBand": {

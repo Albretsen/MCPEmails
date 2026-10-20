@@ -60,7 +60,7 @@ const IMAP_INBOX: DraftEditorProviderInbox = {
   service: null,
   // A signature is configured, so a path that applied one would show it.
   signature_enabled: true,
-  signature_text: "--\nAsgeir, MCP Emails",
+  signature_text: "--\nAsgeir, MCPEmails",
 };
 
 /** One stored message and the real read/write pair over it. */
@@ -91,7 +91,7 @@ function mailbox(initial: string) {
 
 // ── Fixtures: messages as other mail clients store them ────────────────────
 
-const BODY_TEXT = "Hei Åse,\r\n\r\nTakk for sist. Prisen er 1 250 kr.  \r\n\r\n-- \r\nAsgeir, MCP Emails\r\n";
+const BODY_TEXT = "Hei Åse,\r\n\r\nTakk for sist. Prisen er 1 250 kr.  \r\n\r\n-- \r\nAsgeir, MCPEmails\r\n";
 const BODY_HTML = '<div dir="ltr">Hei <b>Åse</b>,<br><br>Takk for sist. Prisen er 1&nbsp;250 kr.</div>';
 
 function quotedPrintable(text: string): string {
@@ -230,7 +230,7 @@ Deno.test("round trip: a subject-only patch keeps the body text, the HTML, Reply
   assertEquals(after.html, BODY_HTML);
   // NO SIGNATURE APPLIED: the inbox has one configured and the stored text
   // already ends in it. Exactly one copy after the write.
-  assertEquals(after.text!.split("Asgeir, MCP Emails").length - 1, 1);
+  assertEquals(after.text!.split("Asgeir, MCPEmails").length - 1, 1);
   // KEPT: who it goes to, who a reply goes to, and where it sits in the thread.
   const reread = draftContentFromRaw(box.raw(), undefined);
   assertEquals(reread.to, ["Åse <ase@example.com>", "Ola Nordmann <ola@example.com>"]);

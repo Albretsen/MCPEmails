@@ -8,8 +8,8 @@ import { Icon, Btn } from '../Primitives';
  * AdminConsentLinkDialog: the shareable Microsoft 365 approval link.
  *
  * A work or school account on Microsoft's default consent policy cannot
- * approve mail access itself; an IT administrator has to approve MCP Emails
- * once for the organisation. That admin usually has no MCP Emails account, so
+ * approve mail access itself; an IT administrator has to approve MCPEmails
+ * once for the organisation. That admin usually has no MCPEmails account, so
  * "send to your IT admin" has to mean an actual link the user can paste into
  * an email or a chat. The link is minted by /auth/outlook/admin-consent/link
  * (a signed, seven-day token, see lib/email-providers/outlook-admin-link.ts)

@@ -41,7 +41,7 @@ const en = {
   meta: {
     title: 'Read-only email access for AI agents',
     description:
-      'What a read-only MCP Emails connection can and cannot do, how writes are refused by both our server and your mail provider, why reading never marks mail as read, and what happens when you connect.',
+      'What a read-only MCPEmails connection can and cannot do, how writes are refused by both our server and your mail provider, why reading never marks mail as read, and what happens when you connect.',
   },
   breadcrumb: 'Read-only access',
   eyebrow: 'Docs',
@@ -100,7 +100,7 @@ const en = {
   ],
   evidence: {
     h: 'Check it yourself',
-    intro: 'MCP Emails is open source. These files implement and test what this page describes:',
+    intro: 'MCPEmails is open source. These files implement and test what this page describes:',
     labels: {
       examine: 'EXAMINE for read-only connections',
       examineTests: 'Tests for EXAMINE, including the provider refusing a flag change',
@@ -116,7 +116,7 @@ const nb = {
   meta: {
     title: 'Skrivebeskyttet e-posttilgang for AI-agenter',
     description:
-      'Hva en skrivebeskyttet mcpemails-tilkobling kan og ikke kan gjøre, hvordan endringer avvises både av vår server og av e-postleverandøren din, hvorfor lesing aldri markerer e-post som lest, og hva som skjer når du kobler til.',
+      'Hva en skrivebeskyttet MCPEmails-tilkobling kan og ikke kan gjøre, hvordan endringer avvises både av vår server og av e-postleverandøren din, hvorfor lesing aldri markerer e-post som lest, og hva som skjer når du kobler til.',
   },
   breadcrumb: 'Skrivebeskyttet tilgang',
   eyebrow: 'Dokumentasjon',
@@ -175,7 +175,7 @@ const nb = {
   ],
   evidence: {
     h: 'Sjekk selv',
-    intro: 'MCP Emails er åpen kildekode. Disse filene implementerer og tester det denne siden beskriver:',
+    intro: 'MCPEmails er åpen kildekode. Disse filene implementerer og tester det denne siden beskriver:',
     labels: {
       examine: 'EXAMINE for skrivebeskyttede tilkoblinger',
       examineTests: 'Tester for EXAMINE, blant annet at leverandøren avviser en flaggendring',
@@ -191,7 +191,7 @@ const es = {
   meta: {
     title: 'Acceso de solo lectura al correo para agentes de IA',
     description:
-      'Qué puede y qué no puede hacer una conexión de solo lectura de MCP Emails, cómo nuestro servidor y tu proveedor de correo rechazan los cambios, por qué leer nunca marca el correo como leído y qué ocurre al conectarte.',
+      'Qué puede y qué no puede hacer una conexión de solo lectura de MCPEmails, cómo nuestro servidor y tu proveedor de correo rechazan los cambios, por qué leer nunca marca el correo como leído y qué ocurre al conectarte.',
   },
   breadcrumb: 'Acceso de solo lectura',
   eyebrow: 'Documentación',
@@ -250,7 +250,7 @@ const es = {
   ],
   evidence: {
     h: 'Compruébalo tú mismo',
-    intro: 'MCP Emails es de código abierto. Estos archivos implementan y prueban lo que describe esta página:',
+    intro: 'MCPEmails es de código abierto. Estos archivos implementan y prueban lo que describe esta página:',
     labels: {
       examine: 'EXAMINE para conexiones de solo lectura',
       examineTests: 'Pruebas de EXAMINE, incluido el proveedor rechazando un cambio de indicador',
@@ -266,7 +266,7 @@ const fr = {
   meta: {
     title: 'Accès en lecture seule aux e-mails pour les agents IA',
     description:
-      'Ce qu\'une connexion MCP Emails en lecture seule peut et ne peut pas faire, comment notre serveur et votre fournisseur de messagerie refusent les modifications, pourquoi la lecture ne marque jamais un e-mail comme lu, et ce qui se passe à la connexion.',
+      'Ce qu\'une connexion MCPEmails en lecture seule peut et ne peut pas faire, comment notre serveur et votre fournisseur de messagerie refusent les modifications, pourquoi la lecture ne marque jamais un e-mail comme lu, et ce qui se passe à la connexion.',
   },
   breadcrumb: 'Accès en lecture seule',
   eyebrow: 'Documentation',
@@ -325,7 +325,7 @@ const fr = {
   ],
   evidence: {
     h: 'Vérifiez par vous-même',
-    intro: 'MCP Emails est open source. Ces fichiers implémentent et testent ce que décrit cette page :',
+    intro: 'MCPEmails est open source. Ces fichiers implémentent et testent ce que décrit cette page :',
     labels: {
       examine: 'EXAMINE pour les connexions en lecture seule',
       examineTests: 'Les tests d\'EXAMINE, dont le refus d\'un changement d\'indicateur par le fournisseur',
@@ -341,7 +341,7 @@ const zh = {
   meta: {
     title: 'AI 代理的只读邮件访问',
     description:
-      'MCP Emails 只读连接能做什么、不能做什么；我们的服务器和您的邮件服务商如何拒绝写入；为什么读取永远不会把邮件标为已读；以及连接时会发生什么。',
+      'MCPEmails 只读连接能做什么、不能做什么；我们的服务器和您的邮件服务商如何拒绝写入；为什么读取永远不会把邮件标为已读；以及连接时会发生什么。',
   },
   breadcrumb: '只读访问',
   eyebrow: '文档',
@@ -399,7 +399,7 @@ const zh = {
   ],
   evidence: {
     h: '自行核实',
-    intro: 'MCP Emails 是开源的。以下文件实现并测试了本页所述内容：',
+    intro: 'MCPEmails 是开源的。以下文件实现并测试了本页所述内容：',
     labels: {
       examine: '只读连接使用 EXAMINE',
       examineTests: 'EXAMINE 的测试，包括服务商拒绝旗标更改',
@@ -415,7 +415,7 @@ const de = {
   meta: {
     title: 'Nur-Lese-Zugriff auf E-Mails für KI-Agenten',
     description:
-      'Was eine MCP Emails Verbindung mit Nur-Lese-Zugriff kann und was nicht, wie unser Server und Ihr E-Mail-Anbieter Schreibzugriffe ablehnen, warum Lesen E-Mails nie als gelesen markiert und was beim Verbinden passiert.',
+      'Was eine MCPEmails Verbindung mit Nur-Lese-Zugriff kann und was nicht, wie unser Server und Ihr E-Mail-Anbieter Schreibzugriffe ablehnen, warum Lesen E-Mails nie als gelesen markiert und was beim Verbinden passiert.',
   },
   breadcrumb: 'Nur-Lese-Zugriff',
   eyebrow: 'Dokumentation',
@@ -474,7 +474,7 @@ const de = {
   ],
   evidence: {
     h: 'Prüfen Sie es selbst',
-    intro: 'MCP Emails ist Open Source. Diese Dateien setzen um und testen, was diese Seite beschreibt:',
+    intro: 'MCPEmails ist Open Source. Diese Dateien setzen um und testen, was diese Seite beschreibt:',
     labels: {
       examine: 'EXAMINE für Verbindungen mit Nur-Lese-Zugriff',
       examineTests: 'Tests für EXAMINE, einschließlich der Ablehnung einer Markierungsänderung durch den Anbieter',

@@ -4,7 +4,7 @@ const translation = {
     'Définissez votre signature une fois par boîte et Claude l\'ajoute automatiquement à chaque e-mail envoyé, sur Gmail, Outlook, Fastmail, iCloud et tout compte IMAP.',
   coverAlt:
     'Signatures e-mail pour Claude : définissez une signature par boîte une seule fois et Claude signe chaque message qu\'il envoie, sur tous les fournisseurs',
-  content: `Quand Claude envoie un e-mail à votre place, il devrait avoir l'air d'avoir été envoyé par vous. Cela inclut la formule de fin : votre nom, votre fonction, la ligne de votre entreprise, ce lien vers votre page de réservation. Jusqu'à présent, soit vous tapiez votre signature dans chaque prompt, soit vous acceptiez des e-mails qui se terminaient un peu abruptement. Aujourd'hui, cela change : **MCP Emails applique désormais votre signature automatiquement à chaque message que Claude envoie.**
+  content: `Quand Claude envoie un e-mail à votre place, il devrait avoir l'air d'avoir été envoyé par vous. Cela inclut la formule de fin : votre nom, votre fonction, la ligne de votre entreprise, ce lien vers votre page de réservation. Jusqu'à présent, soit vous tapiez votre signature dans chaque prompt, soit vous acceptiez des e-mails qui se terminaient un peu abruptement. Aujourd'hui, cela change : **MCPEmails applique désormais votre signature automatiquement à chaque message que Claude envoie.**
 
 Les signatures sont **par boîte de réception**. Chaque boîte connectée conserve la sienne, ainsi la casquette de fondateur va sur votre adresse professionnelle et un simple "— Sam" va sur la personnelle. Une fois définie, vous n'y pensez plus.
 
@@ -21,17 +21,17 @@ Rien de plus à préciser dans votre prompt. "Réponds à Dana et dis-lui que le
 
 ## Les réponses et transferts la placent correctement
 
-La partie délicate des signatures, c'est le placement, et c'est là que la plupart des outils échouent. Dans une réponse ou un transfert, MCP Emails place votre signature **après votre nouveau texte et avant le fil cité**, exactement là où une personne la mettrait, au lieu de l'abandonner tout en bas sous des pages d'historique.
+La partie délicate des signatures, c'est le placement, et c'est là que la plupart des outils échouent. Dans une réponse ou un transfert, MCPEmails place votre signature **après votre nouveau texte et avant le fil cité**, exactement là où une personne la mettrait, au lieu de l'abandonner tout en bas sous des pages d'historique.
 
 Il est aussi malin quant aux échanges. Il existe un **mode réponse** pour que la signature ne se répète pas chaque fois que Claude répond au sein du même fil. La première réponse est signée ; les relances rapides de cette conversation ne sont pas empilées avec des formules de fin en double. Vous obtenez des fils propres, pas un mur de noms répétés.
 
 ## Fonctionne sur tous les fournisseurs
 
-Ce n'est pas une commodité réservée à Gmail. Les signatures s'appliquent sur **tous** les fournisseurs connectés : Gmail, Outlook, Fastmail, iCloud et tout autre compte IMAP. Comme MCP Emails compose lui-même le message sortant, le comportement est identique quel que soit l'emplacement de la boîte. Connectez une nouvelle boîte de n'importe quel type et les signatures fonctionnent tout simplement.
+Ce n'est pas une commodité réservée à Gmail. Les signatures s'appliquent sur **tous** les fournisseurs connectés : Gmail, Outlook, Fastmail, iCloud et tout autre compte IMAP. Comme MCPEmails compose lui-même le message sortant, le comportement est identique quel que soit l'emplacement de la boîte. Connectez une nouvelle boîte de n'importe quel type et les signatures fonctionnent tout simplement.
 
 ## Deux façons de la configurer
 
-**1. L'éditeur de signature dans le tableau de bord.** Ouvrez une boîte dans le tableau de bord de MCP Emails et modifiez sa signature en ligne. Chaque boîte a la sienne, vous pouvez donc donner à chaque adresse le ton approprié.
+**1. L'éditeur de signature dans le tableau de bord.** Ouvrez une boîte dans le tableau de bord de MCPEmails et modifiez sa signature en ligne. Chaque boîte a la sienne, vous pouvez donc donner à chaque adresse le ton approprié.
 
 **2. Demandez-le simplement à Claude.** Il existe un nouvel outil \`signature\`, vous pouvez donc définir ou modifier votre signature en langage naturel sans quitter la conversation :
 
@@ -60,7 +60,7 @@ Par boîte. Chaque boîte connectée a sa propre signature, vous pouvez donc sig
 Oui. Elle est placée après votre nouveau texte et avant le fil cité, et le mode réponse l'empêche de se répéter au fil d'un échange dans le même fil.
 
 **Quels fournisseurs prennent en charge les signatures ?**
-Tous : Gmail, Outlook, Fastmail, iCloud et tout autre compte IMAP. MCP Emails compose le message sortant, donc le comportement est le même partout.
+Tous : Gmail, Outlook, Fastmail, iCloud et tout autre compte IMAP. MCPEmails compose le message sortant, donc le comportement est le même partout.
 
 **Puis-je envoyer un message sans ma signature ?**
 Oui. Utilisez l'option \`include_signature\` (dites simplement à Claude d'ignorer la signature) pour un message concis ponctuel. Votre signature enregistrée reste en place pour tout le reste.

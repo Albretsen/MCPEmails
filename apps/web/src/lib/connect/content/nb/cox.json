@@ -19,8 +19,8 @@
     "eyebrow": "Cox Email + AI",
     "titleLine1": "Koble cox.net-innboksen din",
     "titleLine2": "til Claude, Cursor og enhver MCP-klient",
-    "lead": "Cox har lagt ned e-posttjenesten sin, og Yahoo driver nå cox.net-postkassene. Adressen fungerer fortsatt, og MCP Emails kobler den til over IMAP slik at AI-agenten din kan lese, søke i, sende, svare på og arkivere e-posten.",
-    "answer": "Claude kan ikke nå en cox.net-postkasse på egen hånd. MCP Emails er en hostet MCP-server som kobler den til over IMAP på port 993 mot Yahoo-verten i tabellen nedenfor, fordi Cox overlot e-posttjenesten sin til Yahoo, og cox.net-e-post leveres nå fra Yahoos infrastruktur i stedet for fra Cox sin. Påloggingsopplysningen er et Yahoo-app-passord som du lager på siden for kontosikkerhet, ikke det gamle Cox-passordet og ikke passordet du skriver inn i webmail. Når den er koblet til, kan Claude, Cursor eller en hvilken som helst annen MCP-klient lese, søke i, sende, svare på og organisere e-posten, og én innboks er gratis, for alltid.",
+    "lead": "Cox har lagt ned e-posttjenesten sin, og Yahoo driver nå cox.net-postkassene. Adressen fungerer fortsatt, og MCPEmails kobler den til over IMAP slik at AI-agenten din kan lese, søke i, sende, svare på og arkivere e-posten.",
+    "answer": "Claude kan ikke nå en cox.net-postkasse på egen hånd. MCPEmails er en hostet MCP-server som kobler den til over IMAP på port 993 mot Yahoo-verten i tabellen nedenfor, fordi Cox overlot e-posttjenesten sin til Yahoo, og cox.net-e-post leveres nå fra Yahoos infrastruktur i stedet for fra Cox sin. Påloggingsopplysningen er et Yahoo-app-passord som du lager på siden for kontosikkerhet, ikke det gamle Cox-passordet og ikke passordet du skriver inn i webmail. Når den er koblet til, kan Claude, Cursor eller en hvilken som helst annen MCP-klient lese, søke i, sende, svare på og organisere e-posten, og én innboks er gratis, for alltid.",
     "meta0": "1 innboks gratis, for alltid",
     "meta1": "Yahoo-app-passord, ikke Cox-passordet",
     "meta2": "E-post hentes direkte, lagres aldri"
@@ -31,7 +31,7 @@
   },
   "setup": [
     {
-      "h": "Opprett en gratis MCP Emails-konto",
+      "h": "Opprett en gratis MCPEmails-konto",
       "p": "Registrer deg på mcpemails.com. Gratisplanen kobler til én innboks og ber ikke om kort."
     },
     {
@@ -40,7 +40,7 @@
     },
     {
       "h": "Skriv inn cox.net-adressen og app-passordet",
-      "p": "Velg IMAP / SMTP i MCP Emails, skriv hele cox.net-adressen i brukernavnfeltet og lim inn app-passordet i stedet for passordet til Cox-kontoen. Vertene og portene ovenfor er forhåndsutfylt og ble bekreftet via en faktisk TLS-tilkobling."
+      "p": "Velg IMAP / SMTP i MCPEmails, skriv hele cox.net-adressen i brukernavnfeltet og lim inn app-passordet i stedet for passordet til Cox-kontoen. Vertene og portene ovenfor er forhåndsutfylt og ble bekreftet via en faktisk TLS-tilkobling."
     },
     {
       "h": "Lim MCP-URL-en inn i AI-en",
@@ -72,7 +72,7 @@
   "faq": [
     {
       "q": "Fungerer Claude med Cox-e-post?",
-      "a": "Ikke direkte. Claude har ingen innebygd Cox-kobling, og Cox driver ikke lenger e-posttjenesten selv. Kobler du en MCP-server som MCP Emails til postkassen over IMAP, får Claude tilgang til å lese, søke, sende, svare, planlegge og organisere cox.net-e-posten din, og den samme tilkoblingen fungerer i Cursor, ChatGPT og andre MCP-klienter."
+      "a": "Ikke direkte. Claude har ingen innebygd Cox-kobling, og Cox driver ikke lenger e-posttjenesten selv. Kobler du en MCP-server som MCPEmails til postkassen over IMAP, får Claude tilgang til å lese, søke, sende, svare, planlegge og organisere cox.net-e-posten din, og den samme tilkoblingen fungerer i Cursor, ChatGPT og andre MCP-klienter."
     },
     {
       "q": "Hva er IMAP- og SMTP-innstillingene for Cox nå?",

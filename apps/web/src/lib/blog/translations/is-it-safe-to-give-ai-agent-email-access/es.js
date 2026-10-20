@@ -1,7 +1,7 @@
 const translation = {
   title: '¿Es seguro dar acceso a tu correo a un agente de IA? Lo que debes saber',
   description: '¿Es seguro dar acceso al correo a un agente de IA? La respuesta honesta: depende de la arquitectura. Estos son los riesgos reales y la checklist que lo hace seguro.',
-  coverAlt: '¿Es seguro dar acceso al correo a un agente de IA? — riesgos y salvaguardas explicados — MCP Emails',
+  coverAlt: '¿Es seguro dar acceso al correo a un agente de IA? — riesgos y salvaguardas explicados — MCPEmails',
   content: `Respuesta corta: puede serlo, pero la seguridad vive en la arquitectura, no en el marketing. Dar a un agente de IA acceso al correo es seguro cuando el servicio obtiene tu correo en vivo en lugar de copiarlo, cifra tus credenciales como es debido, funciona con permisos mínimos y te deja cortar el acceso con un clic. Es arriesgado cuando falta cualquiera de esas cuatro cosas. El truco está en saber qué preguntas hacer antes de conectar una bandeja de entrada.
 
 Es la objeción que más escucho, y es justa. Tu bandeja de entrada es tu centro de restablecimiento de contraseñas, tu archivo de contratos, tu vida privada. Entregar las llaves a un modelo de lenguaje suena temerario. Así que seamos honestos sobre lo que puede salir mal de verdad y luego repasemos cómo es una configuración cuidadosa. Si primero quieres el panorama general, la guía pilar sobre [cómo dar acceso al correo a tu agente de IA](/blog/how-to-give-your-ai-agent-email-access) cubre la configuración completa; este artículo trata específicamente la cuestión de la confianza.
@@ -28,7 +28,7 @@ El error clásico es conceder acceso total al buzón cuando la tarea necesita "l
 
 ## Cómo es de verdad una configuración segura
 
-Así gestiona MCP Emails cada riesgo. Tengo sesgo —lo construí yo—, pero las decisiones de diseño son comprobables, y deberías exigir a cualquier herramienta que elijas el mismo listón.
+Así gestiona MCPEmails cada riesgo. Tengo sesgo —lo construí yo—, pero las decisiones de diseño son comprobables, y deberías exigir a cualquier herramienta que elijas el mismo listón.
 
 **Tu correo nunca se almacena.** Cada llamada de herramienta accede a tu proveedor en tiempo real, por IMAP/SMTP para Gmail y la mayoría de los demás proveedores, o por Microsoft Graph para Outlook. Los cuerpos de los mensajes, los asuntos y los adjuntos pasan al agente y se descartan de inmediato. Lo único que guardamos por bandeja de entrada es una credencial cifrada para poder hacer la siguiente llamada. No hay ningún espejo del buzón que vulnerar, porque el espejo no existe.
 

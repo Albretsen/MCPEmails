@@ -21,7 +21,7 @@
     "titleLine1": "Connectez Soverin à Claude,",
     "titleLine2": "Cursor, ChatGPT, tout client MCP",
     "lead": "Offrez à votre agent IA une vraie boîte Soverin. Lisez, recherchez, envoyez, répondez, planifiez et organisez le courrier via IMAP, dans tout client MCP, y compris pour les boîtes sur votre propre domaine, avec un état des lieux honnête de ce qui protège la connexion et de ce qui ne la protège pas.",
-    "answer": "Claude ne peut pas accéder seul à une boîte Soverin. MCP Emails est un serveur MCP hébergé qui la connecte via IMAP sur imap.soverin.net, port 993, et SMTP sur smtp.soverin.net, port 465, pour que Claude, Cursor ou tout client MCP puisse lire, rechercher, envoyer et organiser ce courrier. Soverin documente votre adresse e-mail comme nom d'utilisateur et le mot de passe de votre compte comme mot de passe, et ces deux mêmes serveurs servent les boîtes sur domaine personnalisé comme celles en soverin.net. Soverin ne délivre pas de mots de passe d'application, et sa double authentification protège le tableau de bord et le webmail plutôt qu'IMAP : l'identifiant que vous enregistrez ici est donc le mot de passe du compte. Une boîte est gratuite, pour toujours.",
+    "answer": "Claude ne peut pas accéder seul à une boîte Soverin. MCPEmails est un serveur MCP hébergé qui la connecte via IMAP sur imap.soverin.net, port 993, et SMTP sur smtp.soverin.net, port 465, pour que Claude, Cursor ou tout client MCP puisse lire, rechercher, envoyer et organiser ce courrier. Soverin documente votre adresse e-mail comme nom d'utilisateur et le mot de passe de votre compte comme mot de passe, et ces deux mêmes serveurs servent les boîtes sur domaine personnalisé comme celles en soverin.net. Soverin ne délivre pas de mots de passe d'application, et sa double authentification protège le tableau de bord et le webmail plutôt qu'IMAP : l'identifiant que vous enregistrez ici est donc le mot de passe du compte. Une boîte est gratuite, pour toujours.",
     "meta0": "1 boîte gratuite, pour toujours",
     "meta1": "Le mot de passe de votre compte Soverin",
     "meta2": "E-mails récupérés en direct, jamais stockés"
@@ -33,14 +33,14 @@
   "setup": [
     {
       "h": "Créez un compte gratuit",
-      "p": "Inscrivez-vous sur MCP Emails, sans carte bancaire. L'offre gratuite connecte une boîte, pour toujours. Vous obtenez à la fin une URL MCP et une clé."
+      "p": "Inscrivez-vous sur MCPEmails, sans carte bancaire. L'offre gratuite connecte une boîte, pour toujours. Vous obtenez à la fin une URL MCP et une clé."
     },
     {
       "h": "Vérifiez l'adresse avec laquelle la boîte s'authentifie",
       "p": "Dans le Soverin Dashboard, ouvrez la boîte à connecter. Le nom d'utilisateur est l'adresse de la boîte elle-même, et non l'un des alias que vous avez fait pointer vers elle. Soverin donne à chaque boîte des alias illimités, donc il est facile d'avoir cessé d'utiliser l'adresse d'origine il y a des années et de ne plus la considérer comme l'identifiant."
     },
     {
-      "h": "Ajoutez la boîte dans MCP Emails",
+      "h": "Ajoutez la boîte dans MCPEmails",
       "p": "Choisissez IMAP / SMTP, saisissez cette adresse complète et le mot de passe de votre compte Soverin. Les serveurs sont préremplis avec <code>imap.soverin.net</code> et <code>smtp.soverin.net</code> et ont été vérifiés via une connexion TLS réelle. Ne les remplacez pas par un nom d'hôte construit à partir de votre propre domaine : le certificat est émis pour le nom de Soverin, et un client qui valide strictement le refusera."
     },
     {
@@ -67,14 +67,14 @@
     }
   ],
   "limits": [
-    "Connecter une boîte Soverin à un client IA signifie que ce fournisseur d'IA lit le contenu des messages qu'il traite. MCP Emails récupère le courrier en direct depuis imap.soverin.net à chaque requête et ne stocke pas le corps des messages, et les identifiants sont chiffrés au repos, mais le texte parvient tout de même à Claude, Cursor ou au client que vous connectez. L'hébergement exclusivement dans l'UE de Soverin, son financement par abonnement et son engagement à ne pas analyser ni profiler votre courrier décrivent Soverin. Aucun de ces engagements ne suit un message chez un fournisseur d'IA que vous branchez vous-même.",
+    "Connecter une boîte Soverin à un client IA signifie que ce fournisseur d'IA lit le contenu des messages qu'il traite. MCPEmails récupère le courrier en direct depuis imap.soverin.net à chaque requête et ne stocke pas le corps des messages, et les identifiants sont chiffrés au repos, mais le texte parvient tout de même à Claude, Cursor ou au client que vous connectez. L'hébergement exclusivement dans l'UE de Soverin, son financement par abonnement et son engagement à ne pas analyser ni profiler votre courrier décrivent Soverin. Aucun de ces engagements ne suit un message chez un fournisseur d'IA que vous branchez vous-même.",
     "Il n'existe pas d'identifiant à portée limitée. Soverin n'a pas de mots de passe d'application, donc ce qui est enregistré ici est le mot de passe de votre compte, celui-là même qui ouvre le Soverin Dashboard. Retirer cette connexion implique de changer ce mot de passe plutôt que de supprimer un simple jeton.",
-    "MCP Emails connecte la boîte, pas le compte. Alias, boîtes supplémentaires, paramètres de domaine et redirections restent dans le Soverin Dashboard et ne sont ni visibles ni modifiables par votre client IA."
+    "MCPEmails connecte la boîte, pas le compte. Alias, boîtes supplémentaires, paramètres de domaine et redirections restent dans le Soverin Dashboard et ne sont ni visibles ni modifiables par votre client IA."
   ],
   "faq": [
     {
       "q": "Claude fonctionne-t-il avec Soverin ?",
-      "a": "Pas directement. Claude n'a pas de connecteur Soverin et ne parle pas IMAP par lui-même. Connecter un serveur MCP comme MCP Emails à votre boîte Soverin donne à Claude un accès en lecture, recherche, envoi, réponse, planification et organisation via IMAP, et la même connexion fonctionne ensuite dans Cursor, ChatGPT et les autres clients MCP sans refaire la configuration."
+      "a": "Pas directement. Claude n'a pas de connecteur Soverin et ne parle pas IMAP par lui-même. Connecter un serveur MCP comme MCPEmails à votre boîte Soverin donne à Claude un accès en lecture, recherche, envoi, réponse, planification et organisation via IMAP, et la même connexion fonctionne ensuite dans Cursor, ChatGPT et les autres clients MCP sans refaire la configuration."
     },
     {
       "q": "Quels sont les paramètres IMAP et SMTP de Soverin ?",

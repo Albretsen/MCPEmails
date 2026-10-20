@@ -23,7 +23,7 @@ import type { Json } from '@/types/database.types';
  *   are NOT trusted. The consent screen shows the redirect_uri host as the
  *   party receiving access and labels the name as self-reported unless the
  *   host belongs to a known vendor (lib/oauth/client-identity.ts). A name
- *   that imitates a known vendor (Claude, ChatGPT, Cursor, MCP Emails, ...)
+ *   that imitates a known vendor (Claude, ChatGPT, Cursor, MCPEmails, ...)
  *   while redirecting elsewhere is warned about on that screen and flagged in
  *   the audit log below. It is deliberately not refused here: a vendor host
  *   missing from the list must degrade to a warning, not a broken connector.

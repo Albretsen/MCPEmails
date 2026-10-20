@@ -1,7 +1,7 @@
 {
   "meta": {
     "title": "Dokumentation zum MCP-E-Mail-Server: Gmail, Outlook, IMAP & OAuth",
-    "description": "Richten Sie MCP Emails mit Gmail, Outlook oder IMAP ein, verbinden Sie Claude und andere MCP-Clients per OAuth oder API-Schlüssel, und nutzen Sie die vollständige Referenz der E-Mail-Tools."
+    "description": "Richten Sie MCPEmails mit Gmail, Outlook oder IMAP ein, verbinden Sie Claude und andere MCP-Clients per OAuth oder API-Schlüssel, und nutzen Sie die vollständige Referenz der E-Mail-Tools."
   },
   "hero": {
     "eyebrow": "Dokumentation",
@@ -17,7 +17,7 @@
   "quickstart": {
     "eyebrow": "Schnellstart",
     "heading": "In wenigen Minuten startklar.",
-    "sub": "Kein SDK nötig. MCP Emails spricht Standard-MCP über HTTP und passt deshalb in jeden MCP-kompatiblen Agenten.",
+    "sub": "Kein SDK nötig. MCPEmails spricht Standard-MCP über HTTP und passt deshalb in jeden MCP-kompatiblen Agenten.",
     "steps": {
       "signup": {
         "label": "Registrieren und Postfach verbinden",
@@ -31,7 +31,7 @@
         "body": "Klicken Sie unter Dashboard → API-Schlüssel auf „Schlüssel erstellen“. Vergeben Sie einen Namen, wählen Sie die Scopes, die Ihr Agent braucht (read:email, search:email, send:email, manage:folders, delete:email, manage:drafts, manage:contacts, schedule:email und manage:automations), und kopieren Sie dann den Schlüssel. Er wird nur einmal angezeigt."
       },
       "addclient": {
-        "label": "MCP Emails zum Agenten hinzufügen",
+        "label": "MCPEmails zum Agenten hinzufügen",
         "heading": "MCP-Endpunkt in Ihren Client einfügen",
         "body": "Wählen Sie unten den Tab für Ihren Client. MCP-Clients mit OAuth-2.0-Unterstützung (claude.ai, Claude Desktop, Cursor und andere) brauchen nur die URL und Ihre Freigabe, kein API-Schlüssel nötig. Clients ohne OAuth sowie Skripte nutzen den API-Schlüssel aus Schritt 02."
       },
@@ -63,7 +63,7 @@
     "infoFormat": "Antwortformat: <b>JSON-RPC 2.0</b>. Erfolgreiche Ergebnisse enthalten zusätzlich ein typisiertes <code>structuredContent</code>-Objekt",
     "handshakeLabel": "Initialize-Handshake",
     "pollingHeading": "Abfragen statt Push",
-    "pollingBody": "MCP Emails arbeitet rein nach Anfrage und Antwort: Jedes Ergebnis stammt aus einem Tool-Aufruf Ihres Agenten. Es gibt <b>keine Webhooks, Push-Benachrichtigungen oder vom Server ausgelösten Ereignisse</b>, eine eingehende E-Mail löst also nie von selbst einen Agentenaufruf aus. Um auf neue E-Mails zu reagieren, lassen Sie Ihren Agenten in festen Abständen <b>abfragen</b>, z. B. <code>email_read</code> mit <code>action: \"list\"</code> und <code>unread: true</code> in dem Intervall, das Ihr Workflow braucht (beachten Sie die Ratenlimits oben)."
+    "pollingBody": "MCPEmails arbeitet rein nach Anfrage und Antwort: Jedes Ergebnis stammt aus einem Tool-Aufruf Ihres Agenten. Es gibt <b>keine Webhooks, Push-Benachrichtigungen oder vom Server ausgelösten Ereignisse</b>, eine eingehende E-Mail löst also nie von selbst einen Agentenaufruf aus. Um auf neue E-Mails zu reagieren, lassen Sie Ihren Agenten in festen Abständen <b>abfragen</b>, z. B. <code>email_read</code> mit <code>action: \"list\"</code> und <code>unread: true</code> in dem Intervall, das Ihr Workflow braucht (beachten Sie die Ratenlimits oben)."
   },
   "operations": {
     "eyebrow": "Gebaut für echte Postfach-Arbeit",
@@ -100,8 +100,8 @@
     "sub": "MCP-Clients mit OAuth-2.0-Unterstützung (claude.ai, Claude Desktop, Cursor und andere) verbinden sich automatisch per Authorization Code + PKCE. Kein API-Schlüssel, keine Konfigurationsdatei. URL einfügen und auf Verbinden klicken.",
     "step1": "<b>Schritt 1:</b> Öffnen Sie claude.ai → Anpassen → Konnektoren → Konnektor hinzufügen",
     "step2": "<b>Schritt 2:</b> Fügen Sie <code>https://mcpemails.com/api/mcp</code> als Server-URL ein",
-    "step3": "<b>Schritt 3:</b> Klicken Sie auf Verbinden. MCP Emails öffnet eine Autorisierungsseite",
-    "step4": "<b>Schritt 4:</b> Melden Sie sich mit Ihrem MCP-Emails-Konto an und erteilen Sie den Zugriff",
+    "step3": "<b>Schritt 3:</b> Klicken Sie auf Verbinden. MCPEmails öffnet eine Autorisierungsseite",
+    "step4": "<b>Schritt 4:</b> Melden Sie sich mit Ihrem MCPEmails-Konto an und erteilen Sie den Zugriff",
     "stepDone": "<b>Fertig:</b> Jedes Tool, das Ihre genehmigten Scopes erlauben, ist aktiv. claude.ai erneuert die Tokens automatisch",
     "howTitle": "Wie es technisch funktioniert",
     "howP1": "claude.ai registriert sich selbst per <b>RFC 7591 Dynamic Client Registration</b>, Sie müssen also nie vorab eine Client-ID anlegen.",
@@ -553,7 +553,7 @@
     },
     "profiles": {
       "title": "Kompatibilitätsprofile",
-      "body": "Jedes Postfach meldet einem MCP-Agenten ein versioniertes Profil: <code>exact</code> bedeutet, dass die normalisierte Operation ihre Bedeutung behält, <code>different</code>, dass der Anbieter eine dokumentierte abweichende Semantik nutzt, und <code>unavailable</code>, dass MCP Emails die Anfrage nicht stillschweigend abschwächt. Profile beschreiben das Verhalten der Konnektoren, ohne E-Mails einzusehen oder zu speichern."
+      "body": "Jedes Postfach meldet einem MCP-Agenten ein versioniertes Profil: <code>exact</code> bedeutet, dass die normalisierte Operation ihre Bedeutung behält, <code>different</code>, dass der Anbieter eine dokumentierte abweichende Semantik nutzt, und <code>unavailable</code>, dass MCPEmails die Anfrage nicht stillschweigend abschwächt. Profile beschreiben das Verhalten der Konnektoren, ohne E-Mails einzusehen oder zu speichern."
     },
     "ariaSupported": "Unterstützt",
     "ariaNotSupported": "Nicht unterstützt",
@@ -608,7 +608,7 @@
         "yahoo": "Yahoo akzeptiert höchstens 5 gleichzeitige Verbindungen. Die Ablehnungsmeldung „Incorrect username or password“ nennt absichtlich beide Hälften und verrät nicht, welche falsch war.",
         "zoho": "Der IMAP-Zugriff ist ab Werk ausgeschaltet und muss zuerst aktiviert werden. Zoho betreibt außerdem sechs regionale Rechenzentren, und kostenpflichtige Postfächer mit eigener Domain liegen auf imappro/smtppro statt imap/smtp. Der richtige Host hängt also von Region und Kontotyp ab.",
         "yandex": "Yandex implementiert RFC 4959 SASL-IR nicht, daher kommt die Inline-Anmeldung als Syntaxfehler des Befehls zurück statt als Fehler bei den Zugangsdaten. Sowohl „IMAP“ als auch „App passwords and OAuth tokens“ müssen eingeschaltet sein, und Yandex-360-Konten mit eigener Domain melden sich eventuell mit einem Login-Namen an, der nicht die Adresse ist.",
-        "outlook": "Private Microsoft-Konten (outlook.com, hotmail.com, live.com, msn.com) verbinden sich direkt. Geschäfts- und Schulkonten sind anders: Die Standard-Einwilligungsrichtlinie von Microsoft hindert Mitarbeitende daran, E-Mail-Berechtigungen selbst zu genehmigen. Deshalb bietet das Dashboard einen teilbaren Freigabelink, den Sie an Ihre IT-Administration senden. Diese genehmigt die App einmal für die ganze Organisation und braucht dafür kein MCP-Emails-Konto; danach verbinden sich alle wie gewohnt. Ein Microsoft-Konto ohne Exchange-Online-Postfach wird abgelehnt, mit dem Hinweis, die Adresse stattdessen über IMAP zu verbinden. Microsoft kann das Senden von einem ganz neuen outlook.com-Konto, das stoßweise sendet, im Rahmen eigener Missbrauchsprüfungen vorübergehend sperren.",
+        "outlook": "Private Microsoft-Konten (outlook.com, hotmail.com, live.com, msn.com) verbinden sich direkt. Geschäfts- und Schulkonten sind anders: Die Standard-Einwilligungsrichtlinie von Microsoft hindert Mitarbeitende daran, E-Mail-Berechtigungen selbst zu genehmigen. Deshalb bietet das Dashboard einen teilbaren Freigabelink, den Sie an Ihre IT-Administration senden. Diese genehmigt die App einmal für die ganze Organisation und braucht dafür kein MCPEmails-Konto; danach verbinden sich alle wie gewohnt. Ein Microsoft-Konto ohne Exchange-Online-Postfach wird abgelehnt, mit dem Hinweis, die Adresse stattdessen über IMAP zu verbinden. Microsoft kann das Senden von einem ganz neuen outlook.com-Konto, das stoßweise sendet, im Rahmen eigener Missbrauchsprüfungen vorübergehend sperren.",
         "generic": "Ein Port und ein Sicherheitsmodus, die nicht zusammenpassen. Wer STARTTLS wählt, während der Port auf 993 bleibt, öffnet einen Klartext-Socket zu einem reinen TLS-Listener, und die Verbindung läuft einfach in ein Timeout. Fehlgeschlagene Transporte werden jetzt automatisch mit der anderen Standardkombination wiederholt."
       },
       "notes": {

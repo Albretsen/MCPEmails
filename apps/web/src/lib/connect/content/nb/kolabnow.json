@@ -19,7 +19,7 @@
     "titleLine1": "Koble Kolab Now til Claude,",
     "titleLine2": "Cursor, ChatGPT og enhver MCP-klient",
     "lead": "Gi AI-agenten din en ekte Kolab Now-innboks. Les, søk, send, svar, planlegg og organiser e-post over IMAP fra Sveits, i alle MCP-klienter i stedet for bare én.",
-    "answer": "Claude kan ikke nå Kolab Now på egen hånd. MCP Emails er en driftet MCP-server som kobler til over IMAP på imap.kolabnow.com på port 993, og SMTP på smtp.kolabnow.com på port 465, og autentiserer med den primære Kolab Now-adressen din og kontopassordet ditt, slik at Claude, Cursor eller enhver MCP-klient kan lese, søke i, sende og organisere den e-posten. De to vertsnavnene brukes uansett hvilket domene adressen din ligger på, også ditt eget. Én innboks er gratis, for alltid.",
+    "answer": "Claude kan ikke nå Kolab Now på egen hånd. MCPEmails er en driftet MCP-server som kobler til over IMAP på imap.kolabnow.com på port 993, og SMTP på smtp.kolabnow.com på port 465, og autentiserer med den primære Kolab Now-adressen din og kontopassordet ditt, slik at Claude, Cursor eller enhver MCP-klient kan lese, søke i, sende og organisere den e-posten. De to vertsnavnene brukes uansett hvilket domene adressen din ligger på, også ditt eget. Én innboks er gratis, for alltid.",
     "meta0": "1 innboks gratis, for alltid",
     "meta1": "Primæradresse og kontopassord",
     "meta2": "E-post hentes direkte, lagres aldri"
@@ -30,7 +30,7 @@
   },
   "setup": [
     {
-      "h": "Opprett en gratis MCP Emails-konto",
+      "h": "Opprett en gratis MCPEmails-konto",
       "p": "Registrer deg på mcpemails.com. Gratisplanen kobler til én innboks, for alltid, uten kort. Til slutt får du en MCP-URL og en nøkkel."
     },
     {
@@ -38,7 +38,7 @@
       "p": "Kolab Now autentiserer mot kontoens primære e-postadresse. Hvis e-posten din kommer inn på flere adresser, eller postkassen ligger på ditt eget domene, er det bare den primære som kan logge inn. Den vises i kontoinnstillingene dine hos Kolab Now; et alias i brukernavnfeltet gir en helt vanlig autentiseringsfeil uten noe hint om hvorfor."
     },
     {
-      "h": "Legg til postkassen i MCP Emails",
+      "h": "Legg til postkassen i MCPEmails",
       "p": "Velg IMAP / SMTP, og skriv inn primæradressen og Kolab Now-passordet ditt. Vertene er forhåndsutfylt som <code>imap.kolabnow.com</code> og <code>smtp.kolabnow.com</code>, som er riktige uansett hvilket domene adressen din har. Påloggingsopplysninger er kryptert ved lagring; e-post hentes direkte per forespørsel og beholdes ikke."
     },
     {
@@ -65,14 +65,14 @@
     }
   ],
   "limits": [
-    "Å koble en Kolab Now-postkasse til en AI-klient betyr at AI-leverandøren leser innholdet i meldingene dine. Kolab Nows sveitsiske drift og Kolabs fri programvare-plattform strekker seg ikke til AI-klienten i den andre enden av tilkoblingen. MCP Emails henter e-post direkte fra Kolab Now per forespørsel og lagrer ikke meldingsinnhold, og påloggingsopplysninger er kryptert ved lagring, men teksten når likevel Claude, Cursor eller hvilken klient du peker den mot. Hvis en postkasse ligger hos Kolab Now nettopp for å holde innholdet i én jurisdiksjon, oppheves det når du kobler den til en stor AI-leverandør.",
-    "Meldinger som er kryptert til OpenPGP- eller S/MIME-nøkkelen din, kommer over IMAP som chiffertekst. MCP Emails har ingen privat nøkkel, så en agent kan lese headerne og sortere meldingen, men ikke innholdet.",
-    "Kolab Now har ikke app-passord eller enhetspassord, så påloggingsopplysningen MCP Emails lagrer, er kontopassordet ditt. Å tilbakekalle én enkelt tilkobling betyr å endre kontopassordet."
+    "Å koble en Kolab Now-postkasse til en AI-klient betyr at AI-leverandøren leser innholdet i meldingene dine. Kolab Nows sveitsiske drift og Kolabs fri programvare-plattform strekker seg ikke til AI-klienten i den andre enden av tilkoblingen. MCPEmails henter e-post direkte fra Kolab Now per forespørsel og lagrer ikke meldingsinnhold, og påloggingsopplysninger er kryptert ved lagring, men teksten når likevel Claude, Cursor eller hvilken klient du peker den mot. Hvis en postkasse ligger hos Kolab Now nettopp for å holde innholdet i én jurisdiksjon, oppheves det når du kobler den til en stor AI-leverandør.",
+    "Meldinger som er kryptert til OpenPGP- eller S/MIME-nøkkelen din, kommer over IMAP som chiffertekst. MCPEmails har ingen privat nøkkel, så en agent kan lese headerne og sortere meldingen, men ikke innholdet.",
+    "Kolab Now har ikke app-passord eller enhetspassord, så påloggingsopplysningen MCPEmails lagrer, er kontopassordet ditt. Å tilbakekalle én enkelt tilkobling betyr å endre kontopassordet."
   ],
   "faq": [
     {
       "q": "Fungerer Claude med Kolab Now?",
-      "a": "Ikke direkte. Claude har ingen innebygd Kolab Now-kobling og kan ikke snakke IMAP selv. Kobler du en MCP-server som MCP Emails til Kolab Now-postkassen din, får Claude tilgang til å lese, søke, sende, svare, planlegge og organisere, og den samme tilkoblingen kan gjenbrukes fra Cursor og andre MCP-klienter."
+      "a": "Ikke direkte. Claude har ingen innebygd Kolab Now-kobling og kan ikke snakke IMAP selv. Kobler du en MCP-server som MCPEmails til Kolab Now-postkassen din, får Claude tilgang til å lese, søke, sende, svare, planlegge og organisere, og den samme tilkoblingen kan gjenbrukes fra Cursor og andre MCP-klienter."
     },
     {
       "q": "Hva er IMAP- og SMTP-innstillingene for Kolab Now?",

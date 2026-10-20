@@ -37,7 +37,7 @@
     },
     {
       "h": "Autoriser",
-      "p": "Zed starter OAuth-flyten når ingen Authorization-header er satt. Logg inn med MCP Emails og godkjenn tilgangene du vil at Zed skal ha."
+      "p": "Zed starter OAuth-flyten når ingen Authorization-header er satt. Logg inn med MCPEmails og godkjenn tilgangene du vil at Zed skal ha."
     }
   ],
   "gotchas": [

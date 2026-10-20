@@ -21,7 +21,7 @@
     "titleLine1": "Koble UOL Mail til Claude,",
     "titleLine2": "Cursor, ChatGPT, enhver MCP-klient",
     "lead": "Gi AI-agenten din en ekte UOL-innboks. Les, søk, send, svar, planlegg og organiser e-post via IMAP, i alle MCP-klienter i stedet for bare én.",
-    "answer": "Claude når ikke UOL Mail på egen hånd. MCP Emails er en hostet MCP-server som kobler til via IMAP på imap.uol.com.br port 993 og autentiserer med UOL-passordet ditt, slik at Claude, Cursor eller enhver MCP-klient kan lese, søke, sende og organisere den e-posten. UOL leverer postkasser med IMAP slått av: du må åpne innstillingene i webmailen og bruke Ativar IMAP før noen klient kan logge inn, og til du gjør det, avvises et riktig passord. Utgående e-post går gjennom smtps.uol.com.br på port 587 med STARTTLS, til tross for vertsnavnet. Én innboks er gratis.",
+    "answer": "Claude når ikke UOL Mail på egen hånd. MCPEmails er en hostet MCP-server som kobler til via IMAP på imap.uol.com.br port 993 og autentiserer med UOL-passordet ditt, slik at Claude, Cursor eller enhver MCP-klient kan lese, søke, sende og organisere den e-posten. UOL leverer postkasser med IMAP slått av: du må åpne innstillingene i webmailen og bruke Ativar IMAP før noen klient kan logge inn, og til du gjør det, avvises et riktig passord. Utgående e-post går gjennom smtps.uol.com.br på port 587 med STARTTLS, til tross for vertsnavnet. Én innboks er gratis.",
     "meta0": "1 innboks gratis, for alltid",
     "meta1": "UOL-passord, IMAP aktivert først",
     "meta2": "E-post hentes direkte, lagres aldri"
@@ -32,7 +32,7 @@
   },
   "setup": [
     {
-      "h": "Opprett din gratis MCP Emails-konto",
+      "h": "Opprett din gratis MCPEmails-konto",
       "p": "Registrer deg på mcpemails.com. Gratisplanen kobler til én innboks og forblir gratis, uten kort. La den stå åpen; UOL-delen tar omtrent ett minutt."
     },
     {
@@ -40,7 +40,7 @@
       "p": "Logg inn i UOL-webmailen, åpne Configurações (innstillinger) og bruk alternativet Ativar IMAP, og lagre endringen. Dette er steget nesten alle mislykkede UOL-tilkoblinger mangler. Ingenting i innloggingsfeilen som følger, nevner at IMAP er av, så folk bruker tiden sin på passordet og portene i stedet."
     },
     {
-      "h": "Skriv inn adressen og passordet ditt i MCP Emails",
+      "h": "Skriv inn adressen og passordet ditt i MCPEmails",
       "p": "Velg IMAP / SMTP, og skriv så inn postkasseadressen og UOL-passordet ditt. Vertene og portene er forhåndsutfylt og ble bekreftet via en direkte TLS-tilkobling. Avvises hele adressen ved innlogging, prøv innloggingsnavnet alene uten <code>@uol.com.br</code>: UOL dokumenterer brukernavnet i den kortere formen, og noen av postkassene deres godtar det bare slik."
     },
     {
@@ -51,7 +51,7 @@
   "gotchas": [
     {
       "h": "Den utgående verten heter smtps, og den er ikke implisitt TLS",
-      "p": "Alt ved navnet <code>smtps.uol.com.br</code> antyder SMTP over implisitt TLS på port 465, som er det bokstaven s i <code>smtps</code> vanligvis betyr og det mange kopierte konfigurasjoner antar. UOLs fungerende innsendingstjeneste er på port <b>587 med STARTTLS</b>: tilkoblingen åpnes ukryptert og oppgraderes før autentisering. En klient pekt mot 465 med implisitt TLS henger typisk til den tidsavbrytes i stedet for å gi en nyttig feilmelding, som er en langt verre feil enn en avvisning. Bruk 587 og STARTTLS. MCP Emails forhåndsutfyller det riktig."
+      "p": "Alt ved navnet <code>smtps.uol.com.br</code> antyder SMTP over implisitt TLS på port 465, som er det bokstaven s i <code>smtps</code> vanligvis betyr og det mange kopierte konfigurasjoner antar. UOLs fungerende innsendingstjeneste er på port <b>587 med STARTTLS</b>: tilkoblingen åpnes ukryptert og oppgraderes før autentisering. En klient pekt mot 465 med implisitt TLS henger typisk til den tidsavbrytes i stedet for å gi en nyttig feilmelding, som er en langt verre feil enn en avvisning. Bruk 587 og STARTTLS. MCPEmails forhåndsutfyller det riktig."
     },
     {
       "h": "IMAP er av til du aktiverer det, og feilen legger skylden på passordet ditt",
@@ -74,7 +74,7 @@
   "faq": [
     {
       "q": "Fungerer Claude med UOL Mail?",
-      "a": "Ikke direkte. Claude har ingen innebygd UOL-kobling og kan ikke åpne en IMAP-tilkobling selv. Kobler du en MCP-server som MCP Emails til UOL-postkassen din, får Claude tilgang til å lese, søke, sende, svare, videresende, planlegge og organisere, og samme tilkobling fungerer fra Cursor og andre MCP-klienter."
+      "a": "Ikke direkte. Claude har ingen innebygd UOL-kobling og kan ikke åpne en IMAP-tilkobling selv. Kobler du en MCP-server som MCPEmails til UOL-postkassen din, får Claude tilgang til å lese, søke, sende, svare, videresende, planlegge og organisere, og samme tilkobling fungerer fra Cursor og andre MCP-klienter."
     },
     {
       "q": "Hva er IMAP- og SMTP-innstillingene for UOL?",

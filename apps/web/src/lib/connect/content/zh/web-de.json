@@ -26,23 +26,23 @@
     "meta0": "1 个收件箱永久免费",
     "meta1": "你的账户密码，无需 OAuth 配置",
     "meta2": "邮件实时获取，绝不存储",
-    "answer": "Claude 无法自行连接 WEB.DE。MCP Emails 是一个托管 MCP 服务器，用你的账户密码通过 IMAP 与之连接，让 Claude、Cursor 或任意 MCP 客户端都能读取、搜索、发送并整理这些邮件。设置只需几分钟，一个收件箱免费。"
+    "answer": "Claude 无法自行连接 WEB.DE。MCPEmails 是一个托管 MCP 服务器，用你的账户密码通过 IMAP 与之连接，让 Claude、Cursor 或任意 MCP 客户端都能读取、搜索、发送并整理这些邮件。设置只需几分钟，一个收件箱免费。"
   },
   "method": {
     "title": "WEB.DE 如何连接：IMAP 与账户密码",
-    "body": "WEB.DE 通过 IMAP/SMTP 连接，但 <b>POP3 和 IMAP 访问默认是关闭的</b>。请在 WEB.DE 的 E-Mail-Einstellungen（邮件设置）、E-Mail empfangen（接收邮件）、POP3/IMAP 中开启，然后用 WEB.DE 地址和密码连接。WEB.DE 在两种标准发信传输方式上都会响应，即 465 端口的隐式 TLS 和 587 端口的 STARTTLS，所以端口几乎从来不是发信失败的原因。MCP Emails 使用下方的 465 组合，并会自动回退到另一种。"
+    "body": "WEB.DE 通过 IMAP/SMTP 连接，但 <b>POP3 和 IMAP 访问默认是关闭的</b>。请在 WEB.DE 的 E-Mail-Einstellungen（邮件设置）、E-Mail empfangen（接收邮件）、POP3/IMAP 中开启，然后用 WEB.DE 地址和密码连接。WEB.DE 在两种标准发信传输方式上都会响应，即 465 端口的隐式 TLS 和 587 端口的 STARTTLS，所以端口几乎从来不是发信失败的原因。MCPEmails 使用下方的 465 组合，并会自动回退到另一种。"
   },
   "setup": [
     {
       "h": "创建免费账户",
-      "p": "注册 MCP Emails，无需信用卡。免费套餐可永久连接一个收件箱。"
+      "p": "注册 MCPEmails，无需信用卡。免费套餐可永久连接一个收件箱。"
     },
     {
       "h": "在 WEB.DE 中开启 IMAP 访问",
       "p": "在 WEB.DE 中打开 E-Mail-Einstellungen（邮件设置），在 E-Mail empfangen 下选择 POP3/IMAP，然后把滑块拨到 POP3- und IMAP-Zugriff erlauben（允许 POP3 和 IMAP 访问）。"
     },
     {
-      "h": "在 MCP Emails 中添加邮箱",
+      "h": "在 MCPEmails 中添加邮箱",
       "p": "选择 IMAP / SMTP，填入你的 WEB.DE 地址、上方的服务器地址和密码，安全连接收件箱。"
     },
     {
@@ -61,7 +61,7 @@
     },
     {
       "h": "开启两步验证会让你的密码在邮件客户端中失效",
-      "p": "WEB.DE 把应用专用密码放在双重身份验证之下，并将其描述为通过 POP3 和 IMAP 使用外部邮件程序时的密码。账户开启 2FA 后，请在浏览器中创建：点击你的姓名首字母，然后依次进入 <b>Account verwalten</b>、<b>Login & Sicherheit</b>、<b>App-Passwörter (für externe Apps)</b>、<b>Neues App-Passwort erstellen</b>。给它起个名字，例如 MCP Emails，并立即复制，因为 WEB.DE 只显示一次。把它粘贴到 MCP Emails 中代替平时的密码，平时的密码留给网页登录。未开启 2FA 时，账户密码就是正确的凭据。"
+      "p": "WEB.DE 把应用专用密码放在双重身份验证之下，并将其描述为通过 POP3 和 IMAP 使用外部邮件程序时的密码。账户开启 2FA 后，请在浏览器中创建：点击你的姓名首字母，然后依次进入 <b>Account verwalten</b>、<b>Login & Sicherheit</b>、<b>App-Passwörter (für externe Apps)</b>、<b>Neues App-Passwort erstellen</b>。给它起个名字，例如 MCPEmails，并立即复制，因为 WEB.DE 只显示一次。把它粘贴到 MCPEmails 中代替平时的密码，平时的密码留给网页登录。未开启 2FA 时，账户密码就是正确的凭据。"
     },
     {
       "h": "两个 SMTP 端口都可用，所以发送失败很少是端口问题",
@@ -69,18 +69,18 @@
     }
   ],
   "limits": [
-    "MCP Emails 只连接 WEB.DE 邮箱。WEB.DE Online-Speicher（在线存储）、通讯录和日历是独立的产品，不会开放给你的 AI 客户端。",
+    "MCPEmails 只连接 WEB.DE 邮箱。WEB.DE Online-Speicher（在线存储）、通讯录和日历是独立的产品，不会开放给你的 AI 客户端。",
     "POP3/IMAP 滑块由 WEB.DE 控制，而不是我们。如果 WEB.DE 在长时间空闲后停用了收取，必须在 WEB.DE 中重新开启，连接才能恢复。",
     "WEB.DE 是有自身反滥用发信限额的消费者邮箱。请用它处理普通往来邮件，而不是批量或营销发送。"
   ],
   "faq": [
     {
       "q": "Claude 能用 WEB.DE 吗？",
-      "a": "不能单独使用。Claude 没有内置的 WEB.DE 连接器。通过 IMAP 将 MCP Emails 这样的 MCP 服务器指向你的 WEB.DE 邮箱后，Claude 就能读取、搜索、发送、回复、定时和整理其中的邮件，同一个连接也可在 Cursor、ChatGPT 和其他 MCP 客户端中使用，而不止一个。"
+      "a": "不能单独使用。Claude 没有内置的 WEB.DE 连接器。通过 IMAP 将 MCPEmails 这样的 MCP 服务器指向你的 WEB.DE 邮箱后，Claude 就能读取、搜索、发送、回复、定时和整理其中的邮件，同一个连接也可在 Cursor、ChatGPT 和其他 MCP 客户端中使用，而不止一个。"
     },
     {
       "q": "WEB.DE 的 IMAP 和 SMTP 设置是什么？",
-      "a": "IMAP 是 imap.web.de，端口 993，使用 SSL。SMTP 是 smtp.web.de，按 WEB.DE 文档使用 587 端口加 STARTTLS，或使用 465 端口加 SSL，MCP Emails 用的是后者。用户名是包含域名的完整 WEB.DE 地址。两个服务器都已在本页显示的日期通过真实 TLS 连接确认。"
+      "a": "IMAP 是 imap.web.de，端口 993，使用 SSL。SMTP 是 smtp.web.de，按 WEB.DE 文档使用 587 端口加 STARTTLS，或使用 465 端口加 SSL，MCPEmails 用的是后者。用户名是包含域名的完整 WEB.DE 地址。两个服务器都已在本页显示的日期通过真实 TLS 连接确认。"
     },
     {
       "q": "如何在 WEB.DE 中开启 IMAP？",
@@ -92,7 +92,7 @@
     },
     {
       "q": "WEB.DE 需要应用密码吗？",
-      "a": "只有开启了双重身份验证时才需要。未开启 2FA 时，启用收取后，平时的 WEB.DE 密码即可让邮件客户端通过验证。开启 2FA 后，请在 Account verwalten、Login & Sicherheit、App-Passwörter (für externe Apps) 中创建一个 App-Passwort，并在 MCP Emails 中使用。WEB.DE 只显示一次；如果丢失，删除后重新创建即可。"
+      "a": "只有开启了双重身份验证时才需要。未开启 2FA 时，启用收取后，平时的 WEB.DE 密码即可让邮件客户端通过验证。开启 2FA 后，请在 Account verwalten、Login & Sicherheit、App-Passwörter (für externe Apps) 中创建一个 App-Passwort，并在 MCPEmails 中使用。WEB.DE 只显示一次；如果丢失，删除后重新创建即可。"
     },
     {
       "q": "我的 WEB.DE 邮件会存储在你们的服务器上吗？",

@@ -1,8 +1,8 @@
 const translation = {
   title: 'OAuth vs. API-nøkler for AI-e-posttilgang: Hva bør du bruke?',
   description: 'OAuth vs. API-nøkler for AI-e-posttilgang: bruk OAuth for claude.ai, Claude Desktop og Cursor; bruk en scopet API-nøkkel for Cline, JetBrains og skript.',
-  coverAlt: 'OAuth versus API-nøkler for å koble AI-agenter til e-post — MCP Emails',
-  content: `Når du kobler en AI-agent til e-posten din gjennom MCP Emails, autentiserer du på én av to måter: OAuth eller en API-nøkkel. Det korte svaret er OAuth hvis klienten din støtter det (claude.ai, Claude Desktop, Cursor), og en scopet API-nøkkel hvis den ikke gjør det (Cline, JetBrains, skript, cURL). Begge treffer samme endepunkt og eksponerer de samme verktøyene. Forskjellen er hvem som forvalter hemmeligheten og hvor enkelt du kan trekke ut støpselet.
+  coverAlt: 'OAuth versus API-nøkler for å koble AI-agenter til e-post — MCPEmails',
+  content: `Når du kobler en AI-agent til e-posten din gjennom MCPEmails, autentiserer du på én av to måter: OAuth eller en API-nøkkel. Det korte svaret er OAuth hvis klienten din støtter det (claude.ai, Claude Desktop, Cursor), og en scopet API-nøkkel hvis den ikke gjør det (Cline, JetBrains, skript, cURL). Begge treffer samme endepunkt og eksponerer de samme verktøyene. Forskjellen er hvem som forvalter hemmeligheten og hvor enkelt du kan trekke ut støpselet.
 
 Dette er ikke en avveining mellom sikkerhet og bekvemmelighet der du ofrer det ene for det andre. Begge veiene er scopet til nøyaktig \`read:email\`, \`send:email\`, eller begge, og begge kan tilbakekalles fra dashbordet med ett klikk. Det egentlige spørsmålet er hva som passer klienten du faktisk bruker. For det store bildet av hvordan alt dette henger sammen, start med pilarguiden, [hvordan du gir AI-agenten din tilgang til e-post](/blog/how-to-give-your-ai-agent-email-access).
 

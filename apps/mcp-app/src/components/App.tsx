@@ -176,9 +176,9 @@ function closedHow(headline: string | null | undefined): "sent" | "discarded" | 
 
 /** `email_compose` -> `Email compose`. Falls back to the product name. */
 function toolLabel(tool: string | null | undefined): string {
-  if (!tool) return "MCP Emails";
+  if (!tool) return "MCPEmails";
   const words = tool.replace(/_/g, " ").trim();
-  return words ? words.charAt(0).toUpperCase() + words.slice(1) : "MCP Emails";
+  return words ? words.charAt(0).toUpperCase() + words.slice(1) : "MCPEmails";
 }
 
 /**
@@ -204,8 +204,8 @@ export function turnOnUrl(scope: "inbox" | "workspace", dashboardUrl: string | n
  */
 export function hiddenDetail(scope: "inbox" | "workspace"): string {
   return scope === "workspace"
-    ? 'The card will not appear for any inbox in this workspace. Drafts still work as before. To bring it back, turn on "Show the draft editor card" in the MCP Emails dashboard, under Settings.'
-    : 'The card will not appear for this inbox. Drafts still work as before. To bring it back, turn on "Show the draft editor card" in the MCP Emails dashboard, under Inboxes, in this inbox\'s details.';
+    ? 'The card will not appear for any inbox in this workspace. Drafts still work as before. To bring it back, turn on "Show the draft editor card" in the MCPEmails dashboard, under Settings.'
+    : 'The card will not appear for this inbox. Drafts still work as before. To bring it back, turn on "Show the draft editor card" in the MCPEmails dashboard, under Inboxes, in this inbox\'s details.';
 }
 
 export function App(props: { bridge: HostBridge }) {
@@ -1190,7 +1190,7 @@ export function App(props: { bridge: HostBridge }) {
           <div class="hdr">
             <div class="hdr-l">
               <span class="dot" data-tone="neutral" aria-hidden="true" />
-              <b>Update the MCP Emails connector</b>
+              <b>Update the MCPEmails connector</b>
             </div>
             <div class="hdr-r">
               <TextLink onClick={() => openDashboard(envelope.dashboard_url)}>
@@ -1595,8 +1595,8 @@ export function App(props: { bridge: HostBridge }) {
                 const id = held.draft_id || "unknown";
                 void bridge.updateModelContext(
                   how === "sent"
-                    ? `The user pressed Delete draft on draft ${id} in the MCP Emails card, but that draft had already been sent. Nothing was deleted, and that draft_id no longer resolves.`
-                    : `The user pressed Delete draft on draft ${id} in the MCP Emails card. It was already gone from Drafts, so that draft_id no longer resolves.`,
+                    ? `The user pressed Delete draft on draft ${id} in the MCPEmails card, but that draft had already been sent. Nothing was deleted, and that draft_id no longer resolves.`
+                    : `The user pressed Delete draft on draft ${id} in the MCPEmails card. It was already gone from Drafts, so that draft_id no longer resolves.`,
                 );
                 return;
               }

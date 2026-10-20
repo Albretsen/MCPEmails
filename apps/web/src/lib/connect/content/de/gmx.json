@@ -27,7 +27,7 @@
     "meta0": "1 Postfach dauerhaft kostenlos",
     "meta1": "Ihr Kontopasswort, keine OAuth-Einrichtung",
     "meta2": "E-Mails live abgerufen, nie gespeichert",
-    "answer": "Claude kann GMX nicht von sich aus erreichen. MCP Emails ist ein gehosteter MCP-Server, der das Postfach per IMAP mit Ihrem Kontopasswort anbindet. Danach können Claude, Cursor oder jeder MCP-Client diese E-Mails lesen, suchen, senden und ordnen. Die Einrichtung dauert ein paar Minuten, ein Postfach ist kostenlos."
+    "answer": "Claude kann GMX nicht von sich aus erreichen. MCPEmails ist ein gehosteter MCP-Server, der das Postfach per IMAP mit Ihrem Kontopasswort anbindet. Danach können Claude, Cursor oder jeder MCP-Client diese E-Mails lesen, suchen, senden und ordnen. Die Einrichtung dauert ein paar Minuten, ein Postfach ist kostenlos."
   },
   "method": {
     "title": "So verbindet sich GMX: IMAP und Ihr Kontopasswort",
@@ -36,14 +36,14 @@
   "setup": [
     {
       "h": "Kostenloses Konto erstellen",
-      "p": "Registrieren Sie sich bei MCP Emails, ohne Kreditkarte. Der Free-Tarif verbindet ein Postfach, dauerhaft."
+      "p": "Registrieren Sie sich bei MCPEmails, ohne Kreditkarte. Der Free-Tarif verbindet ein Postfach, dauerhaft."
     },
     {
       "h": "IMAP-Zugriff bei GMX aktivieren",
       "p": "Melden Sie sich im Browser bei GMX an, klicken Sie auf den Kreis mit Ihren Initialen, öffnen Sie E-Mail-Einstellungen, wählen Sie unter E-Mail empfangen den Punkt POP3/IMAP und stellen Sie den Schieberegler auf POP3- und IMAP-Zugriff erlauben. Auf gmx.com: Email, dann Settings, dann POP3 & IMAP."
     },
     {
-      "h": "Postfach in MCP Emails hinzufügen",
+      "h": "Postfach in MCPEmails hinzufügen",
       "p": "Wählen Sie IMAP / SMTP, geben Sie Ihre GMX-Adresse, die oben genannten Hosts und das Passwort ein, und das Postfach ist sicher verbunden."
     },
     {
@@ -58,7 +58,7 @@
     },
     {
       "h": "Ausgehende E-Mails gehen an mail.gmx.net, auf Port 587 oder 465",
-      "p": "GMX nennt seinen Postausgangsserver <code>mail.gmx.net</code>, wo die meisten Anbieter ein smtp-Präfix verwenden. Die GMX-Hilfe nennt Port 587 mit STARTTLS, Port 465 mit SSL als Alternative und nur TLS 1.2 oder 1.3: Ältere TLS-Versionen und SMTP nach POP werden nicht mehr unterstützt. <code>smtp.gmx.net</code> gibt es ebenfalls, als Alias für denselben Server, abgedeckt von dessen Zertifikat. Beide Namen funktionieren also. MCP Emails trägt <code>mail.gmx.net</code> ein, den Namen, den GMX dokumentiert, auf Port 465."
+      "p": "GMX nennt seinen Postausgangsserver <code>mail.gmx.net</code>, wo die meisten Anbieter ein smtp-Präfix verwenden. Die GMX-Hilfe nennt Port 587 mit STARTTLS, Port 465 mit SSL als Alternative und nur TLS 1.2 oder 1.3: Ältere TLS-Versionen und SMTP nach POP werden nicht mehr unterstützt. <code>smtp.gmx.net</code> gibt es ebenfalls, als Alias für denselben Server, abgedeckt von dessen Zertifikat. Beide Namen funktionieren also. MCPEmails trägt <code>mail.gmx.net</code> ein, den Namen, den GMX dokumentiert, auf Port 465."
     },
     {
       "h": "GMX nimmt eine 135-MB-Nachricht an, die der Empfänger dann ablehnt",
@@ -66,7 +66,7 @@
     },
     {
       "h": "Mit Zwei-Faktor-Authentifizierung brauchen Mailprogramme ein App-Passwort",
-      "p": "GMX führt das App-Passwort unter der Zwei-Faktor-Authentifizierung und beschreibt es als Passwort für externe Mailprogramme per POP3 und IMAP. Erstellen Sie es im Browser: Klicken Sie auf Ihre Initialen, dann <b>Account verwalten</b>, dann <b>Login & Sicherheit</b>, dann <b>App-Passwörter (für externe Apps)</b>, dann <b>Neues App-Passwort erstellen</b>. Geben Sie ihm einen Namen wie MCP Emails und kopieren Sie es sofort, denn GMX zeigt es nur einmal an. Wenn Sie es verlieren, löschen Sie es und erstellen ein neues. Der IMAP-Server von GMX bietet nur die Verfahren <code>PLAIN</code> und <code>LOGIN</code> an, ohne OAuth. Die Zugangsdaten sind also immer ein Passwort, so oder so."
+      "p": "GMX führt das App-Passwort unter der Zwei-Faktor-Authentifizierung und beschreibt es als Passwort für externe Mailprogramme per POP3 und IMAP. Erstellen Sie es im Browser: Klicken Sie auf Ihre Initialen, dann <b>Account verwalten</b>, dann <b>Login & Sicherheit</b>, dann <b>App-Passwörter (für externe Apps)</b>, dann <b>Neues App-Passwort erstellen</b>. Geben Sie ihm einen Namen wie MCPEmails und kopieren Sie es sofort, denn GMX zeigt es nur einmal an. Wenn Sie es verlieren, löschen Sie es und erstellen ein neues. Der IMAP-Server von GMX bietet nur die Verfahren <code>PLAIN</code> und <code>LOGIN</code> an, ohne OAuth. Die Zugangsdaten sind also immer ein Passwort, so oder so."
     },
     {
       "h": "Ein Mailprogramm sagt Ihnen nicht, warum GMX es abweist, der Browser schon",
@@ -80,11 +80,11 @@
   "faq": [
     {
       "q": "Funktioniert Claude mit GMX?",
-      "a": "Nicht von sich aus. Claude hat keinen eingebauten GMX-Konnektor. Wenn Sie einen MCP-Server wie MCP Emails per IMAP mit Ihrem GMX-Postfach verbinden, kann Claude E-Mails lesen, suchen, senden, beantworten, planen und ordnen. Dieselbe Verbindung funktioniert in Cursor, ChatGPT und anderen MCP-Clients. Zuerst müssen Sie bei GMX den Zugriff per POP3 und IMAP aktivieren."
+      "a": "Nicht von sich aus. Claude hat keinen eingebauten GMX-Konnektor. Wenn Sie einen MCP-Server wie MCPEmails per IMAP mit Ihrem GMX-Postfach verbinden, kann Claude E-Mails lesen, suchen, senden, beantworten, planen und ordnen. Dieselbe Verbindung funktioniert in Cursor, ChatGPT und anderen MCP-Clients. Zuerst müssen Sie bei GMX den Zugriff per POP3 und IMAP aktivieren."
     },
     {
       "q": "Wie lauten die IMAP- und SMTP-Einstellungen von GMX?",
-      "a": "Bei einem deutschen GMX-Konto ist IMAP imap.gmx.net auf Port 993 mit SSL. Ausgehende E-Mails gehen an mail.gmx.net, auf Port 587 mit STARTTLS oder Port 465 mit SSL; MCP Emails nutzt 465. smtp.gmx.net ist ein Alias für denselben Postausgangsserver. Der Benutzername ist Ihre vollständige GMX-Adresse. Die internationale GMX-Hilfe nennt für gmx.com-Konten imap.gmx.com und mail.gmx.com."
+      "a": "Bei einem deutschen GMX-Konto ist IMAP imap.gmx.net auf Port 993 mit SSL. Ausgehende E-Mails gehen an mail.gmx.net, auf Port 587 mit STARTTLS oder Port 465 mit SSL; MCPEmails nutzt 465. smtp.gmx.net ist ein Alias für denselben Postausgangsserver. Der Benutzername ist Ihre vollständige GMX-Adresse. Die internationale GMX-Hilfe nennt für gmx.com-Konten imap.gmx.com und mail.gmx.com."
     },
     {
       "q": "Wie aktiviere ich IMAP bei GMX?",
@@ -96,7 +96,7 @@
     },
     {
       "q": "Braucht GMX ein App-Passwort?",
-      "a": "Nur bei eingeschalteter Zwei-Faktor-Authentifizierung. Dann erstellen Sie im Browser unter Account verwalten, Login & Sicherheit, App-Passwörter (für externe Apps) ein App-Passwort und verwenden es in MCP Emails statt Ihres GMX-Passworts. GMX zeigt es nur einmal an; wenn Sie es verlieren, löschen Sie es und erstellen ein neues."
+      "a": "Nur bei eingeschalteter Zwei-Faktor-Authentifizierung. Dann erstellen Sie im Browser unter Account verwalten, Login & Sicherheit, App-Passwörter (für externe Apps) ein App-Passwort und verwenden es in MCPEmails statt Ihres GMX-Passworts. GMX zeigt es nur einmal an; wenn Sie es verlieren, löschen Sie es und erstellen ein neues."
     },
     {
       "q": "Werden meine GMX-E-Mails auf Ihren Servern gespeichert?",

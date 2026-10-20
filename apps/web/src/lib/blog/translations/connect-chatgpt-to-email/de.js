@@ -3,8 +3,8 @@ const translation = {
   description:
     'Schritt für Schritt: Gmail, Outlook, iCloud, Fastmail oder jedes IMAP-Postfach über einen benutzerdefinierten MCP-Konnektor mit ChatGPT verbinden, und mit OpenAI Codex über einen eingeschränkten Schlüssel. Keine E-Mail wird gespeichert.',
   coverAlt:
-    'ChatGPT und OpenAI Codex mit Gmail, Outlook, iCloud, Fastmail und IMAP-E-Mail verbinden, mit MCP Emails',
-  content: `ChatGPT kann ein Postfach nicht von sich aus erreichen. Es braucht einen MCP-Server vor Ihren E-Mails, und MCP Emails ist dieser Server: Sie verbinden ein Postfach einmal, geben ChatGPT eine einzige URL, und es erhält dieselben E-Mail-Tools, egal ob Ihre E-Mails bei Gmail, Outlook oder Microsoft 365, iCloud, Fastmail, Yahoo, Zoho oder auf einem selbst betriebenen IMAP-Server liegen.
+    'ChatGPT und OpenAI Codex mit Gmail, Outlook, iCloud, Fastmail und IMAP-E-Mail verbinden, mit MCPEmails',
+  content: `ChatGPT kann ein Postfach nicht von sich aus erreichen. Es braucht einen MCP-Server vor Ihren E-Mails, und MCPEmails ist dieser Server: Sie verbinden ein Postfach einmal, geben ChatGPT eine einzige URL, und es erhält dieselben E-Mail-Tools, egal ob Ihre E-Mails bei Gmail, Outlook oder Microsoft 365, iCloud, Fastmail, Yahoo, Zoho oder auf einem selbst betriebenen IMAP-Server liegen.
 
 Zwei Oberflächen von OpenAI sind beteiligt, und sie authentifizieren sich unterschiedlich. ChatGPT durchläuft einen OAuth-Ablauf im Browser, Sie müssen also keinen API-Schlüssel einfügen. OpenAI Codex läuft in Ihrem Terminal und nutzt stattdessen einen Bearer-Schlüssel mit eingeschränkten Berechtigungen. Gleicher Endpunkt, gleiche Tools.
 
@@ -13,14 +13,14 @@ Zwei Oberflächen von OpenAI sind beteiligt, und sie authentifizieren sich unter
 ## Was Sie brauchen
 
 - **ChatGPT Plus, Pro, Business, Enterprise oder Edu, im Web.** Benutzerdefinierte MCP-Konnektoren liegen hinter dem Entwicklermodus, den OpenAI diesen Tarifen auf chatgpt.com anbietet. Mit Free- und Go-Konten lässt sich keiner hinzufügen, und die Mobil- und Desktop-Apps zeigen die Option nicht. Bei Business und Enterprise muss unter Umständen zuerst ein Admin den Entwicklermodus erlauben.
-- **Ein kostenloses MCP-Emails-Konto.** [Hier erstellen](/signup). Der kostenlose Tarif umfasst ein verbundenes Postfach und braucht keine Karte.
+- **Ein kostenloses MCPEmails-Konto.** [Hier erstellen](/signup). Der kostenlose Tarif umfasst ein verbundenes Postfach und braucht keine Karte.
 - **Ein Postfach.** Gmail, Outlook oder Microsoft 365, iCloud, Fastmail, Yahoo, Zoho, Yandex oder alles, was IMAP und SMTP spricht.
 
 Wenn Sie Free oder Go nutzen, funktionieren dasselbe Postfach und dieselbe URL bereits in [Claude](/docs/claude), [Cursor](/docs/cursor), [VS Code](/docs/vscode) und den anderen [unterstützten Clients](/docs/clients).
 
-## Schritt 1: Postfach mit MCP Emails verbinden
+## Schritt 1: Postfach mit MCPEmails verbinden
 
-Öffnen Sie im Dashboard von MCP Emails **Postfächer**, dann **Postfach verbinden**, und wählen Sie Ihren Anbieter.
+Öffnen Sie im Dashboard von MCPEmails **Postfächer**, dann **Postfach verbinden**, und wählen Sie Ihren Anbieter.
 
 ### Gmail und Google Workspace
 
@@ -28,7 +28,7 @@ Gmail verbindet sich mit einem Google-App-Passwort über IMAP. Aktivieren Sie di
 
 ### iCloud, Fastmail, Yahoo und Zoho
 
-Diese Anbieter verlangen ein app-spezifisches Passwort, nicht das Passwort, das Sie im Web eingeben. Erstellen Sie eines beim Anbieter, wählen Sie den Anbieter in MCP Emails und fügen Sie es ein. Die [Anleitung für iCloud, Fastmail und IMAP](/blog/connect-icloud-fastmail-imap-to-claude) enthält die genauen Schritte.
+Diese Anbieter verlangen ein app-spezifisches Passwort, nicht das Passwort, das Sie im Web eingeben. Erstellen Sie eines beim Anbieter, wählen Sie den Anbieter in MCPEmails und fügen Sie es ein. Die [Anleitung für iCloud, Fastmail und IMAP](/blog/connect-icloud-fastmail-imap-to-claude) enthält die genauen Schritte.
 
 ### Outlook und Microsoft 365
 
@@ -50,8 +50,8 @@ Verbinden Sie mehr als ein Postfach, wenn Ihr Tarif das erlaubt. ChatGPT findet 
 https://mcpemails.com/api/mcp
 \`\`\`
 
-4. Wählen Sie **OAuth** als Authentifizierungsmethode, erstellen Sie den Konnektor und autorisieren Sie ihn dann bei MCP Emails.
-5. Öffnen Sie einen neuen Chat, klicken Sie auf **+**, wählen Sie **Entwicklermodus** und dann die App MCP Emails. ChatGPT sieht die Tools nur in einem Chat, in dem Sie das getan haben, wiederholen Sie es also in jeder neuen Unterhaltung.
+4. Wählen Sie **OAuth** als Authentifizierungsmethode, erstellen Sie den Konnektor und autorisieren Sie ihn dann bei MCPEmails.
+5. Öffnen Sie einen neuen Chat, klicken Sie auf **+**, wählen Sie **Entwicklermodus** und dann die App MCPEmails. ChatGPT sieht die Tools nur in einem Chat, in dem Sie das getan haben, wiederholen Sie es also in jeder neuen Unterhaltung.
 
 Wählen Sie OAuth, nicht „keine Authentifizierung“. Dieser Server lehnt anonyme Aufrufe ab. Ein Konnektor ohne Authentifizierung sieht bei der Einrichtung also gut aus und scheitert dann beim ersten Tool-Aufruf, was verwirrend ist. Mit OAuth registriert sich ChatGPT selbst und durchläuft einen Authorization-Code-Ablauf mit PKCE: keine Client-ID zu erstellen, nirgends ein Client-Secret. Die Menübezeichnungen ändern sich, während OpenAI an der Beta arbeitet. Den aktuellen Weg finden Sie auf der [Einrichtungsseite für ChatGPT](/docs/chatgpt).
 
@@ -77,7 +77,7 @@ Für wiederkehrende Abläufe beginnen Sie mit dem [Playbook zur Posteingangs-Tri
 
 ## Was ChatGPT nach der Verbindung kann
 
-MCP Emails gibt ChatGPT gezielte Tools statt eines Passworts oder einer rohen IMAP-Verbindung:
+MCPEmails gibt ChatGPT gezielte Tools statt eines Passworts oder einer rohen IMAP-Verbindung:
 
 - **Lesen und suchen:** \`email_read\` umfasst list, read, read_batch, search und attachment. Die Suche nutzt strukturierte Felder wie Absender, Betreff, Datum und Ungelesen-Status, und Gmail-Labels erscheinen als Ordner.
 - **Senden, antworten und weiterleiten:** \`email_compose\` sendet über Ihren eigenen Anbieter und Ihre eigene Adresse.
@@ -85,7 +85,7 @@ MCP Emails gibt ChatGPT gezielte Tools statt eines Passworts oder einer rohen IM
 - **Entwürfe, Ordner und Planung:** \`draft\`, \`draft_list\`, \`folder\`, \`folder_list\`, \`schedule\` und \`schedule_list\`.
 - **Der Rest:** \`contact_search\`, \`signature_get\`, \`signature_set\`, dazu \`automation\` und \`automation_read\` für wiederkehrende Regeln.
 
-Eine Grenze sollten Sie einplanen: MCP Emails arbeitet mit Abfragen. Es gibt keine Webhooks und keine vom Server ausgelösten Ereignisse, ChatGPT prüft also auf neue E-Mails, wenn Sie darum bitten, und nicht in dem Moment, in dem eine Nachricht eintrifft.
+Eine Grenze sollten Sie einplanen: MCPEmails arbeitet mit Abfragen. Es gibt keine Webhooks und keine vom Server ausgelösten Ereignisse, ChatGPT prüft also auf neue E-Mails, wenn Sie darum bitten, und nicht in dem Moment, in dem eine Nachricht eintrifft.
 
 ## OpenAI Codex im Terminal
 
@@ -103,7 +103,7 @@ Schränken Sie den Schlüssel eng ein. Für einen Coding-Agenten ist Nur-Lese-Zu
 
 - **Keine Option, einen benutzerdefinierten Konnektor zu erstellen.** Der Entwicklermodus erfordert Plus, Pro, Business, Enterprise oder Edu, auf chatgpt.com im Browser. Free- und Go-Konten haben ihn nicht. In einem Business- oder Enterprise-Workspace muss ein Admin ihn erlauben.
 - **Der Konnektor scheitert beim ersten Tool-Aufruf.** Er wurde vermutlich ohne Authentifizierung erstellt. Löschen Sie ihn und erstellen Sie ihn mit OAuth neu.
-- **Der Konnektor ist erstellt, aber ChatGPT antwortet, ohne Ihre E-Mails anzufassen.** Er ist in diesem Chat nicht eingeschaltet. Klicken Sie auf **+**, wählen Sie **Entwicklermodus** und die App MCP Emails, und fragen Sie dann erneut.
+- **Der Konnektor ist erstellt, aber ChatGPT antwortet, ohne Ihre E-Mails anzufassen.** Er ist in diesem Chat nicht eingeschaltet. Klicken Sie auf **+**, wählen Sie **Entwicklermodus** und die App MCPEmails, und fragen Sie dann erneut.
 - **Der Anbieter lehnt Ihr Passwort ab.** Verwenden Sie ein vom Anbieter erzeugtes App-Passwort, nicht Ihr Passwort für die Anmeldung im Web. Manche Anbieter stellen eines erst aus, wenn die Zwei-Faktor-Authentifizierung aktiv ist.
 - **Eine eigene IMAP-Verbindung läuft in ein Timeout.** Prüfen Sie Host, Port und TLS-Modus. Port 993 nutzt normalerweise implizites TLS, Port 143 normalerweise STARTTLS.
 - **ChatGPT ist verbunden, sieht aber keine E-Mails.** Prüfen Sie, ob das Postfach im Dashboard aktiv ist, ob die Verbindung \`read:email\` hat, und bitten Sie ChatGPT, zuerst \`inbox_list\` aufzurufen.

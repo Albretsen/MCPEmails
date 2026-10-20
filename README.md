@@ -173,7 +173,7 @@ Notes:
 
 > Mail on your own domain at a web host connects like any IMAP mailbox, and one workspace can hold several of them (info@, sales@, support@). Per-host settings and known pitfalls for 100 providers are at [mcpemails.com/connect](https://mcpemails.com/connect).
 
-> Outlook uses Microsoft Graph with "Sign in with Microsoft", not IMAP. Personal Microsoft accounts (outlook.com, hotmail.com, live.com, msn.com) connect directly. On work or school Microsoft 365 tenants, Microsoft's default consent policy stops employees approving mail permissions themselves, so an IT admin approves the app once for the organisation; the dashboard gives the user a shareable approval link to send them (`/auth/outlook/admin-consent`), and the admin needs no MCP Emails account. A Microsoft account with no Exchange Online mailbox is refused, with a pointer to IMAP. The label tools are Gmail-only (Outlook uses folders), except that an automation's label action applies an Outlook category; and Graph cannot combine a text search with the unread, attachment, flagged or date filters.
+> Outlook uses Microsoft Graph with "Sign in with Microsoft", not IMAP. Personal Microsoft accounts (outlook.com, hotmail.com, live.com, msn.com) connect directly. On work or school Microsoft 365 tenants, Microsoft's default consent policy stops employees approving mail permissions themselves, so an IT admin approves the app once for the organisation; the dashboard gives the user a shareable approval link to send them (`/auth/outlook/admin-consent`), and the admin needs no MCPEmails account. A Microsoft account with no Exchange Online mailbox is refused, with a pointer to IMAP. The label tools are Gmail-only (Outlook uses folders), except that an automation's label action applies an Outlook category; and Graph cannot combine a text search with the unread, attachment, flagged or date filters.
 
 ## Pricing
 
@@ -444,7 +444,7 @@ Supported locales: **English, Norwegian Bokmål, Spanish, French, Chinese (Simpl
 
 ## License
 
-MCP Emails is open source under the [GNU Affero General Public License v3.0](LICENSE) (AGPL‑3.0). The hosted service at [mcpemails.com](https://mcpemails.com) runs the same server you can [self-host](self-host/), so you can read the code, verify it, and run it yourself. See [`/security`](https://mcpemails.com/security) for the trust model.
+MCPEmails is open source under the [GNU Affero General Public License v3.0](LICENSE) (AGPL‑3.0). The hosted service at [mcpemails.com](https://mcpemails.com) runs the same server you can [self-host](self-host/), so you can read the code, verify it, and run it yourself. See [`/security`](https://mcpemails.com/security) for the trust model.
 
 ---
 

@@ -23,7 +23,7 @@
     "meta0": "1 inbox free, forever",
     "meta1": "Your mailbox password, no OAuth setup",
     "meta2": "Email fetched live, never stored",
-    "answer": "Claude cannot reach Hostinger on its own. MCP Emails is a hosted MCP server that connects it over IMAP using your mailbox password, so Claude, Cursor or any MCP client can read, search, send and organize that mail. Setup takes a couple of minutes and one inbox is free."
+    "answer": "Claude cannot reach Hostinger on its own. MCPEmails is a hosted MCP server that connects it over IMAP using your mailbox password, so Claude, Cursor or any MCP client can read, search, send and organize that mail. Setup takes a couple of minutes and one inbox is free."
   },
   "method": {
     "title": "How Hostinger connects: IMAP and your mailbox password",
@@ -32,14 +32,14 @@
   "setup": [
     {
       "h": "Create a free account",
-      "p": "Sign up for MCP Emails, no card required. The free plan connects one inbox, forever."
+      "p": "Sign up for MCPEmails, no card required. The free plan connects one inbox, forever."
     },
     {
       "h": "Get your Hostinger mailbox password",
-      "p": "In hPanel, open Emails, pick the address and set or reset its password. That password is what MCP Emails authenticates with."
+      "p": "In hPanel, open Emails, pick the address and set or reset its password. That password is what MCPEmails authenticates with."
     },
     {
-      "h": "Paste it into MCP Emails",
+      "h": "Paste it into MCPEmails",
       "p": "Choose IMAP / SMTP, add your Hostinger address, the hosts above and the password to connect the inbox securely."
     },
     {
@@ -73,7 +73,7 @@
   "faq": [
     {
       "q": "Does Claude work with Hostinger email?",
-      "a": "Not on its own. Claude has no built-in Hostinger connector. Connecting an MCP server such as MCP Emails to the mailbox over IMAP gives Claude read, search, send, reply, schedule and organize access to it, and the same connection then works from Cursor, ChatGPT and other MCP clients rather than just one."
+      "a": "Not on its own. Claude has no built-in Hostinger connector. Connecting an MCP server such as MCPEmails to the mailbox over IMAP gives Claude read, search, send, reply, schedule and organize access to it, and the same connection then works from Cursor, ChatGPT and other MCP clients rather than just one."
     },
     {
       "q": "What are the Hostinger IMAP and SMTP settings?",

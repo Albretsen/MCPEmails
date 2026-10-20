@@ -1,7 +1,7 @@
 {
   "meta": {
     "title": "Documentación del servidor MCP de correo: Gmail, Outlook, IMAP y OAuth",
-    "description": "Empieza con MCP Emails en minutos. Guía de inicio rápido, referencia de herramientas y respuestas de ejemplo para agentes de Gmail, Outlook e IMAP."
+    "description": "Empieza con MCPEmails en minutos. Guía de inicio rápido, referencia de herramientas y respuestas de ejemplo para agentes de Gmail, Outlook e IMAP."
   },
   "hero": {
     "eyebrow": "Documentación",
@@ -17,7 +17,7 @@
   "quickstart": {
     "eyebrow": "Inicio rápido",
     "heading": "En marcha en minutos.",
-    "sub": "No se requiere SDK. MCP Emails habla MCP estándar sobre HTTP, así que encaja en cualquier agente compatible con MCP.",
+    "sub": "No se requiere SDK. MCPEmails habla MCP estándar sobre HTTP, así que encaja en cualquier agente compatible con MCP.",
     "steps": {
       "signup": {
         "label": "Regístrate y conecta una bandeja",
@@ -31,7 +31,7 @@
         "body": "En Panel → Claves de API, haz clic en «Crear clave». Ponle nombre, selecciona los ámbitos que tu agente necesita (read:email, search:email, send:email, manage:folders, delete:email, manage:drafts, manage:contacts, schedule:email y manage:automations) y copia la clave. Solo se muestra una vez."
       },
       "addclient": {
-        "label": "Añade MCP Emails a tu agente",
+        "label": "Añade MCPEmails a tu agente",
         "heading": "Pega el endpoint MCP en tu cliente",
         "body": "Elige la pestaña de tu cliente más abajo. Los clientes MCP con soporte de OAuth 2.0 (claude.ai, Claude Desktop, Cursor y otros) solo pegan la URL y autorizan, sin necesidad de clave de API. Los clientes sin OAuth, además del acceso por scripts, usan la clave de API del paso 02."
       },
@@ -63,7 +63,7 @@
     "infoFormat": "Formato de respuesta: <b>JSON-RPC 2.0</b>. Los resultados correctos también incluyen un objeto tipado <code>structuredContent</code>",
     "handshakeLabel": "Handshake de inicialización",
     "pollingHeading": "Sondeo, no push",
-    "pollingBody": "MCP Emails es solo de petición/respuesta: cada resultado proviene de una llamada a una herramienta que hace tu agente. <b>No hay webhooks, notificaciones push ni eventos iniciados por el servidor</b>: un correo entrante nunca activa por sí solo una llamada del agente. Para reaccionar al correo nuevo, haz que tu agente <b>sondee</b> de forma periódica, p. ej. llamando a <code>email_read</code> con <code>action: \"list\"</code> y <code>unread: true</code> al intervalo que necesite tu flujo (ten en cuenta los límites de tasa anteriores)."
+    "pollingBody": "MCPEmails es solo de petición/respuesta: cada resultado proviene de una llamada a una herramienta que hace tu agente. <b>No hay webhooks, notificaciones push ni eventos iniciados por el servidor</b>: un correo entrante nunca activa por sí solo una llamada del agente. Para reaccionar al correo nuevo, haz que tu agente <b>sondee</b> de forma periódica, p. ej. llamando a <code>email_read</code> con <code>action: \"list\"</code> y <code>unread: true</code> al intervalo que necesite tu flujo (ten en cuenta los límites de tasa anteriores)."
   },
   "operations": {
     "eyebrow": "Diseñado para el trabajo real con el correo",
@@ -100,8 +100,8 @@
     "sub": "Los clientes MCP que admiten OAuth 2.0 (claude.ai, Claude Desktop, Cursor y otros) se conectan automáticamente mediante código de autorización + PKCE. Sin clave de API, sin archivo de configuración. Pega la URL y haz clic en Conectar.",
     "step1": "<b>Paso 1:</b> Ve a claude.ai → Personalizar → Conectores → Añadir conector",
     "step2": "<b>Paso 2:</b> Pega <code>https://mcpemails.com/api/mcp</code> como la URL del servidor",
-    "step3": "<b>Paso 3:</b> Haz clic en Conectar. MCP Emails abre una pantalla de autorización",
-    "step4": "<b>Paso 4:</b> Inicia sesión con tu cuenta de MCP Emails y aprueba el acceso",
+    "step3": "<b>Paso 3:</b> Haz clic en Conectar. MCPEmails abre una pantalla de autorización",
+    "step4": "<b>Paso 4:</b> Inicia sesión con tu cuenta de MCPEmails y aprueba el acceso",
     "stepDone": "<b>Listo:</b> Todas las herramientas que permiten los alcances aprobados están activas. claude.ai actualiza los tokens automáticamente",
     "howTitle": "Cómo funciona internamente",
     "howP1": "claude.ai se registra a sí mismo mediante el <b>Registro dinámico de clientes RFC 7591</b>, así que nunca pre-registras un ID de cliente.",
@@ -553,7 +553,7 @@
     },
     "profiles": {
       "title": "Perfiles de compatibilidad",
-      "body": "Cada bandeja de entrada informa de un perfil versionado a un agente MCP: <code>exact</code> significa que la operación normalizada conserva su significado, <code>different</code> significa que el proveedor usa una semántica alternativa documentada y <code>unavailable</code> significa que MCP Emails no debilitará la petición en silencio. Los perfiles describen el comportamiento del conector sin inspeccionar ni almacenar el correo."
+      "body": "Cada bandeja de entrada informa de un perfil versionado a un agente MCP: <code>exact</code> significa que la operación normalizada conserva su significado, <code>different</code> significa que el proveedor usa una semántica alternativa documentada y <code>unavailable</code> significa que MCPEmails no debilitará la petición en silencio. Los perfiles describen el comportamiento del conector sin inspeccionar ni almacenar el correo."
     },
     "ariaSupported": "Compatible",
     "ariaNotSupported": "No compatible",
@@ -608,7 +608,7 @@
         "yahoo": "Yahoo acepta como máximo 5 conexiones simultáneas. Su texto de rechazo, “Incorrect username or password”, nombra las dos mitades a propósito y no dice cuál de ellas estaba mal.",
         "zoho": "El acceso IMAP viene desactivado y hay que habilitarlo primero. Zoho además opera seis centros de datos regionales, y los buzones de pago con dominio propio viven en imappro/smtppro en lugar de imap/smtp, así que el servidor correcto depende de la región y del tipo de cuenta.",
         "yandex": "Yandex no implementa RFC 4959 SASL-IR, así que la forma de acceso en línea vuelve como un error de sintaxis de comando y no como un error de credenciales. Hay que activar tanto “IMAP” como “contraseñas de aplicación y tokens OAuth”, y las cuentas de Yandex 360 con dominio propio pueden acceder con un nombre de usuario distinto de la dirección.",
-        "outlook": "Las cuentas personales de Microsoft (outlook.com, hotmail.com, live.com, msn.com) se conectan directamente. Las cuentas profesionales y educativas son distintas: la política de consentimiento predeterminada de Microsoft impide que los empleados aprueben ellos mismos los permisos de correo, así que el panel te da un enlace de aprobación para compartir con tu administrador de TI, que aprueba la aplicación una sola vez para toda la organización y no necesita una cuenta de MCP Emails; después, todos se conectan con normalidad. Una cuenta de Microsoft sin buzón de Exchange Online se rechaza, con una indicación para conectar la dirección por IMAP. Microsoft puede bloquear temporalmente el envío desde una cuenta de outlook.com recién creada que envía en ráfagas, como parte de sus propios controles contra abusos.",
+        "outlook": "Las cuentas personales de Microsoft (outlook.com, hotmail.com, live.com, msn.com) se conectan directamente. Las cuentas profesionales y educativas son distintas: la política de consentimiento predeterminada de Microsoft impide que los empleados aprueben ellos mismos los permisos de correo, así que el panel te da un enlace de aprobación para compartir con tu administrador de TI, que aprueba la aplicación una sola vez para toda la organización y no necesita una cuenta de MCPEmails; después, todos se conectan con normalidad. Una cuenta de Microsoft sin buzón de Exchange Online se rechaza, con una indicación para conectar la dirección por IMAP. Microsoft puede bloquear temporalmente el envío desde una cuenta de outlook.com recién creada que envía en ráfagas, como parte de sus propios controles contra abusos.",
         "generic": "Un puerto y un modo de seguridad que no concuerdan. Elegir STARTTLS mientras el puerto sigue en 993 abre una conexión sin cifrar contra un servicio que solo habla TLS, y la conexión se queda esperando hasta agotar el tiempo. Los transportes fallidos ahora se reintentan automáticamente con la otra combinación estándar."
       },
       "notes": {

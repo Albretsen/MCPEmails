@@ -22,7 +22,7 @@
     "titleLine1": "Koble Zimbra til Claude,",
     "titleLine2": "Cursor, ChatGPT og enhver MCP-klient",
     "lead": "Zimbra har holdt organisasjonens e-post i årevis, og den snakker helt vanlig IMAP. Det er alt en AI-agent trenger for å lese, søke, sende, svare, planlegge og arkivere i en ekte postkasse.",
-    "answer": "Claude når ikke en Zimbra-server på egen hånd. MCP Emails er en hostet MCP-server som kobler til din via IMAP på ditt eget vertsnavn, på port 993 der Zimbra-proxyen er installert, med postkassepassordet, slik at Claude, Cursor eller enhver MCP-klient kan lese, søke, sende og organisere den e-posten. Zimbra er programvare organisasjonen din kjører, så det finnes ikke noe felles vertsnavn å publisere, og porten er verdt å sjekke i stedet for å anta: 993 og 143 tilhører Zimbra-proxyen, mens mailboxd selv lytter på 7993 og 7143. Serveren må kunne nås fra internett, og sertifikatet må valideres. Én innboks er gratis.",
+    "answer": "Claude når ikke en Zimbra-server på egen hånd. MCPEmails er en hostet MCP-server som kobler til din via IMAP på ditt eget vertsnavn, på port 993 der Zimbra-proxyen er installert, med postkassepassordet, slik at Claude, Cursor eller enhver MCP-klient kan lese, søke, sende og organisere den e-posten. Zimbra er programvare organisasjonen din kjører, så det finnes ikke noe felles vertsnavn å publisere, og porten er verdt å sjekke i stedet for å anta: 993 og 143 tilhører Zimbra-proxyen, mens mailboxd selv lytter på 7993 og 7143. Serveren må kunne nås fra internett, og sertifikatet må valideres. Én innboks er gratis.",
     "meta0": "1 innboks gratis, for alltid",
     "meta1": "Postkassepassord, IMAP slått på i COS",
     "meta2": "E-post hentes direkte, lagres aldri"
@@ -33,7 +33,7 @@
   },
   "setup": [
     {
-      "h": "Opprett din gratis MCP Emails-konto",
+      "h": "Opprett din gratis MCPEmails-konto",
       "p": "Registrer deg på mcpemails.com. Én innboks er gratis for alltid, og det kreves ikke kort, som er nok til å prøve dette mot en ekte Zimbra-konto."
     },
     {
@@ -42,7 +42,7 @@
     },
     {
       "h": "Sjekk class of service, og legg så til kontoen",
-      "p": "Åpne Configure, så Class of Service, så klassen kontoen tilhører, og se på POP/IMAP-alternativene under Preferences. En klasse med IMAP slått av avviser alle kontoer i den. Legg så til innboksen i MCP Emails: velg IMAP / SMTP, skriv inn Zimbra-vertsnavnet ditt, hele adressen og postkassepassordet."
+      "p": "Åpne Configure, så Class of Service, så klassen kontoen tilhører, og se på POP/IMAP-alternativene under Preferences. En klasse med IMAP slått av avviser alle kontoer i den. Legg så til innboksen i MCPEmails: velg IMAP / SMTP, skriv inn Zimbra-vertsnavnet ditt, hele adressen og postkassepassordet."
     },
     {
       "h": "Lim MCP-URL-en inn i AI-en",
@@ -64,14 +64,14 @@
     }
   ],
   "limits": [
-    "Zimbra-serveren din må godta en innkommende IMAP-tilkobling fra internett. En installasjon som bare er publisert inne i bedriftsnettet eller bak en VPN, kan ikke nås av en hostet tjeneste. MCP Emails kan i stedet selvhostes inne i samme nettverk, noe som ofte er en enklere samtale å ta med et sikkerhetsteam enn å åpne en port.",
+    "Zimbra-serveren din må godta en innkommende IMAP-tilkobling fra internett. En installasjon som bare er publisert inne i bedriftsnettet eller bak en VPN, kan ikke nås av en hostet tjeneste. MCPEmails kan i stedet selvhostes inne i samme nettverk, noe som ofte er en enklere samtale å ta med et sikkerhetsteam enn å åpne en port.",
     "Bare e-post går over en IMAP-tilkobling. Zimbras kalendere, kontakter, oppgaver og briefcase betjenes gjennom egen webklient og gjennom CalDAV, CardDAV eller Zimbra-API-et, så en agent koblet til på denne måten jobber bare med e-post.",
     "Sending går ut gjennom din egen Zimbra-MTA, så leveringsevnen styres av SPF-, DKIM- og DMARC-oppføringene dine nøyaktig som for alle andre klienter på serveren."
   ],
   "faq": [
     {
       "q": "Fungerer Claude med Zimbra?",
-      "a": "Ikke direkte. Claude har ingen Zimbra-kobling og kan ikke åpne en IMAP-økt mot en server organisasjonen din kjører. Kobler du en MCP-server som MCP Emails til Zimbra-verten din, får Claude tilgang til å lese, søke, sende, svare, planlegge og organisere i en postkasse der, med de samme påloggingsdetaljene som Zimbra Web Client bruker, og samme innboks fungerer da i Cursor eller ChatGPT."
+      "a": "Ikke direkte. Claude har ingen Zimbra-kobling og kan ikke åpne en IMAP-økt mot en server organisasjonen din kjører. Kobler du en MCP-server som MCPEmails til Zimbra-verten din, får Claude tilgang til å lese, søke, sende, svare, planlegge og organisere i en postkasse der, med de samme påloggingsdetaljene som Zimbra Web Client bruker, og samme innboks fungerer da i Cursor eller ChatGPT."
     },
     {
       "q": "Hva er IMAP- og SMTP-innstillingene for Zimbra?",

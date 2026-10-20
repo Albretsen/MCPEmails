@@ -3,19 +3,19 @@ const post = {
   title: 'Building an Email Auto-Responder With an MCP-Connected Agent',
   description: 'Build an email auto-responder with an MCP-connected AI agent: poll for unread mail, draft, and reply safely with scopes, rate limits, and guardrails.',
   cover: '/blog/cover-build-email-auto-responder-mcp-agent.svg',
-  coverAlt: 'Building an email auto-responder with an MCP-connected agent — MCP Emails',
+  coverAlt: 'Building an email auto-responder with an MCP-connected agent — MCPEmails',
   authorId: 'asgeir',
   publishedAt: "2026-05-03T09:00:00.000Z",
   updatedAt: "2026-05-03T09:00:00.000Z",
   tags: ['Workflows', 'Tutorial', 'MCP', 'AI agents'],
   featured: false,
-  content: `An email auto-responder built on MCP Emails is a loop, not a webhook. There are no server-initiated events, so your agent **polls** for unread mail on a schedule with \`email_read\` (action \`list\`), reads each message with \`email_read\` (action \`read\`), drafts a reply, and calls \`email_compose\` (action \`reply\`). This post walks the full build: the polling loop, the scopes you need, how to survive rate limits, and the guardrails that keep an agent from blasting your contacts with hallucinated replies.
+  content: `An email auto-responder built on MCPEmails is a loop, not a webhook. There are no server-initiated events, so your agent **polls** for unread mail on a schedule with \`email_read\` (action \`list\`), reads each message with \`email_read\` (action \`read\`), drafts a reply, and calls \`email_compose\` (action \`reply\`). This post walks the full build: the polling loop, the scopes you need, how to survive rate limits, and the guardrails that keep an agent from blasting your contacts with hallucinated replies.
 
 This is the advanced end of the [give your AI agent email access](/blog/how-to-give-your-ai-agent-email-access) story. If you just want triage and morning summaries without sending anything, read [AI agent inbox triage and summarize](/blog/ai-agent-triage-summarize-inbox) first — it's the safer place to start. Come back here when you actually want the agent to hit send.
 
 ## The honest part: there is no webhook
 
-Most "auto-responder" tutorials assume a push event fires the moment mail lands. MCP Emails doesn't work that way, and neither does any MCP server I know of. MCP is a request/response tool protocol. The server answers when your agent asks; it never calls you.
+Most "auto-responder" tutorials assume a push event fires the moment mail lands. MCPEmails doesn't work that way, and neither does any MCP server I know of. MCP is a request/response tool protocol. The server answers when your agent asks; it never calls you.
 
 So a real auto-responder is a scheduler plus a poll. You run a tick every N seconds or minutes, ask for unread messages, and process whatever's new. That's it. It's less elegant than a webhook, but it's predictable, and it means *you* control the cadence and the blast radius.
 
@@ -132,7 +132,7 @@ Don't reply to everyone. Start with a narrow allowlist — a support alias, a sp
 
 ### Keep a human in the loop, at least at first
 
-The safest version of this isn't an auto-responder at all — it's an auto-*drafter*. The agent reads, drafts, and stages the reply, but a person approves the send. MCP Emails supports drafts, so you can have the loop call \`draft\` (action \`create\`) instead of \`email_compose\`, then send the good ones yourself. Run in draft mode for a week. Read what it would have sent. Only then flip the ones you trust to auto-send.
+The safest version of this isn't an auto-responder at all — it's an auto-*drafter*. The agent reads, drafts, and stages the reply, but a person approves the send. MCPEmails supports drafts, so you can have the loop call \`draft\` (action \`create\`) instead of \`email_compose\`, then send the good ones yourself. Run in draft mode for a week. Read what it would have sent. Only then flip the ones you trust to auto-send.
 
 ### Stop loops and self-replies
 

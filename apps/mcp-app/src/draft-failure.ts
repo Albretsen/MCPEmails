@@ -208,7 +208,7 @@ export function failureNotice(f: DraftFailure): FailureNotice {
       return {
         ...base,
         copy: true,
-        text: `${lead(f)} This mailbox needs to be reconnected in MCP Emails first. ${KEEP}`,
+        text: `${lead(f)} This mailbox needs to be reconnected in MCPEmails first. ${KEEP}`,
       };
     case "approval_unavailable":
       return {

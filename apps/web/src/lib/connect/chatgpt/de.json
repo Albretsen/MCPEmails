@@ -3,22 +3,22 @@
   "title": "{provider} in ChatGPT nutzen",
   "sub": "ChatGPT erreicht {provider} über einen benutzerdefinierten MCP-Konnektor. Dafür braucht es den Entwicklermodus, der auf chatgpt.com mit Plus, Pro, Business, Enterprise und Edu funktioniert.",
   "steps": [
-    "Verbinden Sie {provider} mit den Schritten oben mit MCP Emails.",
+    "Verbinden Sie {provider} mit den Schritten oben mit MCPEmails.",
     "Öffnen Sie in ChatGPT Einstellungen, Apps und Konnektoren, Erweiterte Einstellungen und schalten Sie den Entwicklermodus ein.",
-    "Klicken Sie unter Apps und Konnektoren auf „Erstellen“, fügen Sie <code>https://mcpemails.com/api/mcp</code> als Konnektor-URL ein, wählen Sie OAuth und melden Sie sich bei MCP Emails an.",
+    "Klicken Sie unter Apps und Konnektoren auf „Erstellen“, fügen Sie <code>https://mcpemails.com/api/mcp</code> als Konnektor-URL ein, wählen Sie OAuth und melden Sie sich bei MCPEmails an.",
     "Klicken Sie in jedem neuen Chat auf <b>+</b>, wählen Sie den Entwicklermodus und dann Ihren Konnektor."
   ],
   "docsLink": "Vollständige Anleitung für ChatGPT",
   "blogLink": "So verbinden Sie ChatGPT mit Ihrem E-Mail-Postfach",
   "faqQ": "Kann ChatGPT meine E-Mails bei {provider} lesen?",
   "faqQMailName": "Kann ChatGPT meine E-Mails bei {provider} lesen?",
-  "faqA": "Ja, sobald {provider} mit MCP Emails verbunden ist. Fügen Sie in ChatGPT einen benutzerdefinierten MCP-Konnektor mit der URL https://mcpemails.com/api/mcp und OAuth-Anmeldung hinzu. Benutzerdefinierte Konnektoren brauchen den Entwicklermodus, der auf chatgpt.com mit Plus, Pro, Business, Enterprise und Edu funktioniert. ChatGPT erhält nur den Zugriff, den Sie freigeben, und Ihre E-Mails werden live abgerufen und nie gespeichert.",
-  "directorySub": "ChatGPT erreicht {provider} über die App Any Mailbox von MCP Emails.",
+  "faqA": "Ja, sobald {provider} mit MCPEmails verbunden ist. Fügen Sie in ChatGPT einen benutzerdefinierten MCP-Konnektor mit der URL https://mcpemails.com/api/mcp und OAuth-Anmeldung hinzu. Benutzerdefinierte Konnektoren brauchen den Entwicklermodus, der auf chatgpt.com mit Plus, Pro, Business, Enterprise und Edu funktioniert. ChatGPT erhält nur den Zugriff, den Sie freigeben, und Ihre E-Mails werden live abgerufen und nie gespeichert.",
+  "directorySub": "ChatGPT erreicht {provider} über die App Any Mailbox von MCPEmails.",
   "directorySteps": [
-    "Verbinden Sie {provider} mit den Schritten oben mit MCP Emails.",
+    "Verbinden Sie {provider} mit den Schritten oben mit MCPEmails.",
     "Öffnen Sie Any Mailbox im App-Verzeichnis von ChatGPT und klicken Sie auf „Verbinden“.",
-    "Melden Sie sich bei MCP Emails an und geben Sie den Zugriff frei, den ChatGPT erhalten soll."
+    "Melden Sie sich bei MCPEmails an und geben Sie den Zugriff frei, den ChatGPT erhalten soll."
   ],
   "directoryLink": "Any Mailbox im App-Verzeichnis von ChatGPT",
-  "directoryFaqA": "Ja, sobald {provider} mit MCP Emails verbunden ist. Installieren Sie Any Mailbox aus dem App-Verzeichnis von ChatGPT und melden Sie sich bei MCP Emails an. ChatGPT erhält nur den Zugriff, den Sie freigeben, und Ihre E-Mails werden live abgerufen und nie gespeichert."
+  "directoryFaqA": "Ja, sobald {provider} mit MCPEmails verbunden ist. Installieren Sie Any Mailbox aus dem App-Verzeichnis von ChatGPT und melden Sie sich bei MCPEmails an. ChatGPT erhält nur den Zugriff, den Sie freigeben, und Ihre E-Mails werden live abgerufen und nie gespeichert."
 }

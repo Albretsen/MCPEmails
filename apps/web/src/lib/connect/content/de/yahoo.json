@@ -22,23 +22,23 @@
     "meta0": "1 Postfach dauerhaft kostenlos",
     "meta1": "App-Passwort, keine OAuth-Einrichtung",
     "meta2": "E-Mails werden live abgerufen, nie gespeichert",
-    "answer": "Claude kann Yahoo Mail nicht selbst erreichen. MCP Emails ist ein gehosteter MCP-Server, der das Postfach per IMAP auf Port 993 verbindet. Die Anmeldung erfolgt mit einem Yahoo App-Passwort, das Sie auf der Seite zur Kontosicherheit im Bereich für externe Verbindungen erstellen. Danach können Claude, Cursor oder jeder MCP-Client diese E-Mails lesen, suchen, senden und sortieren. Ihr normales Yahoo-Passwort wird von einem Mail-Client nie akzeptiert. Die Einrichtung dauert ein paar Minuten, und ein Postfach ist dauerhaft kostenlos."
+    "answer": "Claude kann Yahoo Mail nicht selbst erreichen. MCPEmails ist ein gehosteter MCP-Server, der das Postfach per IMAP auf Port 993 verbindet. Die Anmeldung erfolgt mit einem Yahoo App-Passwort, das Sie auf der Seite zur Kontosicherheit im Bereich für externe Verbindungen erstellen. Danach können Claude, Cursor oder jeder MCP-Client diese E-Mails lesen, suchen, senden und sortieren. Ihr normales Yahoo-Passwort wird von einem Mail-Client nie akzeptiert. Die Einrichtung dauert ein paar Minuten, und ein Postfach ist dauerhaft kostenlos."
   },
   "method": {
     "title": "So verbindet sich Yahoo: mit einem App-Passwort",
-    "body": "Yahoo Mail verbindet sich über IMAP/SMTP mit einem <b>Yahoo App-Passwort</b>. Erstellen Sie es in den Yahoo-Einstellungen zur Kontosicherheit im Bereich für externe Verbindungen und fügen Sie es zusammen mit Ihrer Yahoo-Adresse in MCP Emails ein. Ist die Option nicht sichtbar, aktivieren Sie die Bestätigung in zwei Schritten und sehen Sie erneut nach. Kein OAuth-Ablauf, keine Browser-Pop-ups."
+    "body": "Yahoo Mail verbindet sich über IMAP/SMTP mit einem <b>Yahoo App-Passwort</b>. Erstellen Sie es in den Yahoo-Einstellungen zur Kontosicherheit im Bereich für externe Verbindungen und fügen Sie es zusammen mit Ihrer Yahoo-Adresse in MCPEmails ein. Ist die Option nicht sichtbar, aktivieren Sie die Bestätigung in zwei Schritten und sehen Sie erneut nach. Kein OAuth-Ablauf, keine Browser-Pop-ups."
   },
   "setup": [
     {
       "h": "Kostenloses Konto erstellen",
-      "p": "Registrieren Sie sich bei MCP Emails, ohne Kreditkarte. Der Free-Tarif verbindet ein Postfach, dauerhaft."
+      "p": "Registrieren Sie sich bei MCPEmails, ohne Kreditkarte. Der Free-Tarif verbindet ein Postfach, dauerhaft."
     },
     {
       "h": "Yahoo App-Passwort erstellen",
       "p": "Erstellen Sie in den Yahoo-Einstellungen zur Kontosicherheit, im Bereich für externe Verbindungen, ein App-Passwort. Fehlt die Option, aktivieren Sie zuerst die Bestätigung in zwei Schritten."
     },
     {
-      "h": "In MCP Emails einfügen",
+      "h": "In MCPEmails einfügen",
       "p": "Tragen Sie Ihre Yahoo-Adresse und das App-Passwort ein, um das Postfach sicher zu verbinden."
     },
     {
@@ -65,13 +65,13 @@
     }
   ],
   "limits": [
-    "Yahoos Server für ausgehende E-Mails gibt eine maximale Nachrichtengröße von etwa 41 MB an. Anhänge lassen sich über MCP Emails mit bis zu 25 MB pro Anfrage lesen, größere müssen Sie in Yahoo Mail selbst abrufen.",
+    "Yahoos Server für ausgehende E-Mails gibt eine maximale Nachrichtengröße von etwa 41 MB an. Anhänge lassen sich über MCPEmails mit bis zu 25 MB pro Anfrage lesen, größere müssen Sie in Yahoo Mail selbst abrufen.",
     "App-Passwörter laufen nicht ab und überstehen eine Änderung Ihres Yahoo-Passworts. Nur wenn Sie das App-Passwort in der Kontosicherheit löschen, wird der Zugriff entzogen."
   ],
   "faq": [
     {
       "q": "Funktioniert Claude mit Yahoo Mail?",
-      "a": "Nicht direkt. Claude hat keinen eingebauten Yahoo-Konnektor. Verbinden Sie einen MCP-Server wie MCP Emails per IMAP und mit einem Yahoo App-Passwort mit Ihrem Yahoo-Postfach. Dann kann Claude E-Mails lesen, suchen, senden, beantworten, planen und sortieren. Dieselbe Verbindung funktioniert danach unverändert in Cursor, ChatGPT und anderen MCP-Clients."
+      "a": "Nicht direkt. Claude hat keinen eingebauten Yahoo-Konnektor. Verbinden Sie einen MCP-Server wie MCPEmails per IMAP und mit einem Yahoo App-Passwort mit Ihrem Yahoo-Postfach. Dann kann Claude E-Mails lesen, suchen, senden, beantworten, planen und sortieren. Dieselbe Verbindung funktioniert danach unverändert in Cursor, ChatGPT und anderen MCP-Clients."
     },
     {
       "q": "Wie lauten die IMAP- und SMTP-Einstellungen für Yahoo Mail?",

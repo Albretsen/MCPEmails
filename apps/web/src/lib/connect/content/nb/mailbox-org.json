@@ -21,7 +21,7 @@
     "titleLine1": "Koble mailbox.org til Claude,",
     "titleLine2": "Cursor, ChatGPT og enhver MCP-klient",
     "lead": "Gi AI-agenten din en ekte mailbox.org-innboks. Les, søk, send, svar, planlegg og organiser e-post over IMAP, i alle MCP-klienter og ikke bare én, med avveiningen rundt kryptering forklart i stedet for glattet over.",
-    "answer": "Claude kan ikke nå mailbox.org på egen hånd. MCP Emails er en driftet MCP-server som kobler den til over IMAP på imap.mailbox.org port 993 og SMTP på smtp.mailbox.org port 465, slik at Claude, Cursor eller enhver MCP-klient kan lese, søke i, sende og organisere e-posten. Du logger inn med hovedadressen din hos mailbox.org, og med tofaktorautentisering slått på må du bruke et e-post-app-passord opprettet under All settings, Security, Email app-passwords i stedet for postkassepassordet. Hvis du har slått på innbokskryptering, kommer innkommende e-post til enhver IMAP-klient som PGP-chiffertekst, og en agent vil ikke kunne lese den. Én innboks er gratis, for alltid.",
+    "answer": "Claude kan ikke nå mailbox.org på egen hånd. MCPEmails er en driftet MCP-server som kobler den til over IMAP på imap.mailbox.org port 993 og SMTP på smtp.mailbox.org port 465, slik at Claude, Cursor eller enhver MCP-klient kan lese, søke i, sende og organisere e-posten. Du logger inn med hovedadressen din hos mailbox.org, og med tofaktorautentisering slått på må du bruke et e-post-app-passord opprettet under All settings, Security, Email app-passwords i stedet for postkassepassordet. Hvis du har slått på innbokskryptering, kommer innkommende e-post til enhver IMAP-klient som PGP-chiffertekst, og en agent vil ikke kunne lese den. Én innboks er gratis, for alltid.",
     "meta0": "1 innboks gratis, for alltid",
     "meta1": "E-post-app-passord når 2FA er på",
     "meta2": "E-post hentes direkte, lagres aldri"
@@ -32,7 +32,7 @@
   },
   "setup": [
     {
-      "h": "Opprett din gratis MCP Emails-konto",
+      "h": "Opprett din gratis MCPEmails-konto",
       "p": "Registrer deg på mcpemails.com. Gratisplanen kobler til én innboks, for alltid, uten kort. Til slutt får du en MCP-URL og en nøkkel."
     },
     {
@@ -40,7 +40,7 @@
       "p": "I nettgrensesnittet åpner du <b>All settings</b>, deretter <b>Security</b>, deretter <b>Email app-passwords</b>. Gi det et navn for denne tilkoblingen, huk av for <b>både</b> IMAP og SMTP i protokollisten, og klikk Generate password. Kopier verdien med en gang. Hvis tofaktorautentisering er av, kan du bruke postkassepassordet i stedet, men en avgrenset påloggingsopplysning som du kan tilbakekalle for seg, er det bedre å gi til en tredjepart."
     },
     {
-      "h": "Legg til postkassen i MCP Emails",
+      "h": "Legg til postkassen i MCPEmails",
       "p": "Velg IMAP / SMTP og skriv inn <b>hovedadressen</b> din hos mailbox.org som brukernavn, deretter app-passordet. Vertene er fylt inn på forhånd som <code>imap.mailbox.org</code> og <code>smtp.mailbox.org</code> og ble verifisert fra en direkte TLS-tilkobling. Påloggingsopplysninger er kryptert ved lagring, og selve e-posten hentes per forespørsel i stedet for å kopieres."
     },
     {
@@ -59,7 +59,7 @@
     },
     {
       "h": "Innbokskryptering gjør ny e-post om til chiffertekst for alle klienter, også denne",
-      "p": "Under <b>All settings</b>, <b>Read and write e-mail</b>, <b>Inbox encryption</b> kan mailbox.org PGP-kryptere hver innkommende melding til den offentlige nøkkelen din med en Sieve-regel på serveren, enten avsenderen krypterte den eller ikke. Det er en reell beskyttelse, og den fungerer nøyaktig som lovet: en IMAP-klient, denne inkludert, mottar en armert blokk i stedet for meldingsinnhold. MCP Emails har ikke den private nøkkelen din, så en agent kan se avsender, emne og dato og kan arkivere eller flagge meldingen, men ikke lese den. Asymmetrien du bør kjenne til, er at mailbox.org for øyeblikket ikke lagrer Sendt-mappen din kryptert, så en agent kan fortsatt lese det du har sendt, selv når den ikke kan lese det du har mottatt."
+      "p": "Under <b>All settings</b>, <b>Read and write e-mail</b>, <b>Inbox encryption</b> kan mailbox.org PGP-kryptere hver innkommende melding til den offentlige nøkkelen din med en Sieve-regel på serveren, enten avsenderen krypterte den eller ikke. Det er en reell beskyttelse, og den fungerer nøyaktig som lovet: en IMAP-klient, denne inkludert, mottar en armert blokk i stedet for meldingsinnhold. MCPEmails har ikke den private nøkkelen din, så en agent kan se avsender, emne og dato og kan arkivere eller flagge meldingen, men ikke lese den. Asymmetrien du bør kjenne til, er at mailbox.org for øyeblikket ikke lagrer Sendt-mappen din kryptert, så en agent kan fortsatt lese det du har sendt, selv når den ikke kan lese det du har mottatt."
     },
     {
       "h": "Ingen MOVE og ingen SPECIAL-USE, men UIDPLUS finnes",
@@ -67,14 +67,14 @@
     }
   ],
   "limits": [
-    "Å koble en hvilken som helst postkasse til en AI-klient betyr at AI-leverandøren leser meldingsinnholdet den blir bedt om å jobbe med. MCP Emails henter e-post direkte fra mailbox.org for hver forespørsel og lagrer ikke meldingsinnhold, og påloggingsopplysninger er kryptert ved lagring, men teksten når likevel Claude, Cursor eller hvilken klient du peker mot den. mailbox.org sin tyske drift og personvernprofil dekker mailbox.org, og strekker seg ikke til en AI-leverandør du kobler til selv.",
+    "Å koble en hvilken som helst postkasse til en AI-klient betyr at AI-leverandøren leser meldingsinnholdet den blir bedt om å jobbe med. MCPEmails henter e-post direkte fra mailbox.org for hver forespørsel og lagrer ikke meldingsinnhold, og påloggingsopplysninger er kryptert ved lagring, men teksten når likevel Claude, Cursor eller hvilken klient du peker mot den. mailbox.org sin tyske drift og personvernprofil dekker mailbox.org, og strekker seg ikke til en AI-leverandør du kobler til selv.",
     "Alt som er kryptert til OpenPGP-nøkkelen din, enten av en avsender eller av mailbox.org sin egen innbokskryptering, er uleselig for en agent over IMAP. Slike tråder må leses i nettgrensesnittet eller i en klient som har den private nøkkelen din.",
     "Fordi serveren ikke annonserer MOVE, er en flytting ikke atomisk. Hvis tilkoblingen brytes midt i operasjonen, kan en melding en kort stund finnes i begge mappene."
   ],
   "faq": [
     {
       "q": "Fungerer Claude med mailbox.org?",
-      "a": "Ikke på egen hånd. Claude har ingen innebygd mailbox.org-kobling og kan ikke snakke IMAP. Ved å peke en MCP-server som MCP Emails mot postkassen får Claude tilgang til å lese, søke, sende, svare, planlegge og organisere over IMAP, og den samme tilkoblingen fungerer deretter fra Cursor, ChatGPT og andre MCP-klienter uten at noe må settes opp på nytt."
+      "a": "Ikke på egen hånd. Claude har ingen innebygd mailbox.org-kobling og kan ikke snakke IMAP. Ved å peke en MCP-server som MCPEmails mot postkassen får Claude tilgang til å lese, søke, sende, svare, planlegge og organisere over IMAP, og den samme tilkoblingen fungerer deretter fra Cursor, ChatGPT og andre MCP-klienter uten at noe må settes opp på nytt."
     },
     {
       "q": "Hva er IMAP- og SMTP-innstillingene for mailbox.org?",
@@ -90,7 +90,7 @@
     },
     {
       "q": "Kan AI-en min lese kryptert e-post hos mailbox.org?",
-      "a": "Nei. En melding som er kryptert til OpenPGP-nøkkelen din, kommer over IMAP som en armert chiffertekstblokk, og MCP Emails har aldri den private nøkkelen din. Det gjelder både e-post en avsender har kryptert, og e-post som mailbox.org sin innbokskryptering krypterte ved mottak. Agenten ser hodefeltene og kan flytte eller flagge meldingen; innholdet forblir forseglet."
+      "a": "Nei. En melding som er kryptert til OpenPGP-nøkkelen din, kommer over IMAP som en armert chiffertekstblokk, og MCPEmails har aldri den private nøkkelen din. Det gjelder både e-post en avsender har kryptert, og e-post som mailbox.org sin innbokskryptering krypterte ved mottak. Agenten ser hodefeltene og kan flytte eller flagge meldingen; innholdet forblir forseglet."
     },
     {
       "q": "Lagres mailbox.org-e-posten min på serverne deres?",

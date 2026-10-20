@@ -24,23 +24,23 @@
     "meta0": "1 innboks gratis, for alltid",
     "meta1": "App-passord, uten OAuth-oppsett",
     "meta2": "E-post hentes direkte, lagres aldri",
-    "answer": "Claude kan ikke nå Fastmail på egen hånd. MCP Emails er en hostet MCP-server som kobler den til over IMAP på imap.fastmail.com, port 993, og autentiserer med et Fastmail-app-passord i stedet for kontopassordet ditt, slik at Claude, Cursor eller enhver MCP-klient kan lese, søke i, sende og organisere e-posten. Fastmail har en egen MCP-server bare for Fastmail; grunnen til å bruke denne i stedet er at én enkelt URL også dekker de andre postkassene dine. Én innboks er gratis, for alltid."
+    "answer": "Claude kan ikke nå Fastmail på egen hånd. MCPEmails er en hostet MCP-server som kobler den til over IMAP på imap.fastmail.com, port 993, og autentiserer med et Fastmail-app-passord i stedet for kontopassordet ditt, slik at Claude, Cursor eller enhver MCP-klient kan lese, søke i, sende og organisere e-posten. Fastmail har en egen MCP-server bare for Fastmail; grunnen til å bruke denne i stedet er at én enkelt URL også dekker de andre postkassene dine. Én innboks er gratis, for alltid."
   },
   "method": {
     "title": "Slik kobles Fastmail til: et app-passord",
-    "body": "Fastmail kobles til over IMAP/SMTP med et <b>Fastmail-app-passord</b>. Lag et i Fastmail under Settings → Privacy & Security → Connected apps & API tokens → Manage app passwords and access → New app password, lim det inn i MCP Emails, så er du koblet til. Ingen OAuth-runddans, ingen popup-vinduer i nettleseren."
+    "body": "Fastmail kobles til over IMAP/SMTP med et <b>Fastmail-app-passord</b>. Lag et i Fastmail under Settings → Privacy & Security → Connected apps & API tokens → Manage app passwords and access → New app password, lim det inn i MCPEmails, så er du koblet til. Ingen OAuth-runddans, ingen popup-vinduer i nettleseren."
   },
   "setup": [
     {
       "h": "Opprett en gratis konto",
-      "p": "Registrer deg hos MCP Emails, uten kort. Gratisplanen kobler til én innboks, for alltid."
+      "p": "Registrer deg hos MCPEmails, uten kort. Gratisplanen kobler til én innboks, for alltid."
     },
     {
       "h": "Lag et Fastmail-app-passord",
       "p": "Gå til Settings → Privacy & Security → Connected apps & API tokens → Manage app passwords and access → New app password i Fastmail og lag et for e-post (IMAP/SMTP)."
     },
     {
-      "h": "Lim det inn i MCP Emails",
+      "h": "Lim det inn i MCPEmails",
       "p": "Legg inn Fastmail-adressen din og app-passordet for å koble til innboksen på en sikker måte."
     },
     {
@@ -51,7 +51,7 @@
   "gotchas": [
     {
       "h": "Fastmail leverer sin egen MCP-server, og den er god",
-      "p": "I april 2026 lanserte Fastmail en egen MCP-server på <code>https://api.fastmail.com/mcp</code>, autentisert med OAuth, med tilgang til bare lesing, skriving eller sending, og som dekker e-post, kalender og kontakter. Hvis Fastmail er den eneste postkassen du vil at en assistent skal nå, er det den mest direkte veien som finnes, og det sier vi rett ut. MCP Emails svarer på et annet spørsmål: <b>én</b> MCP-URL som rommer Fastmail-kontoen din og iCloud-, Zoho-, Yahoo-, GMX- eller jobb-IMAP-postkassen din samtidig, med de samme verktøyene over alle, slik at en agent kan søke på tvers av postkasser og du setter opp én server i stedet for fem. Det viktigste her er å være nyttig for deg, ikke å fremstille oss selv i best mulig lys."
+      "p": "I april 2026 lanserte Fastmail en egen MCP-server på <code>https://api.fastmail.com/mcp</code>, autentisert med OAuth, med tilgang til bare lesing, skriving eller sending, og som dekker e-post, kalender og kontakter. Hvis Fastmail er den eneste postkassen du vil at en assistent skal nå, er det den mest direkte veien som finnes, og det sier vi rett ut. MCPEmails svarer på et annet spørsmål: <b>én</b> MCP-URL som rommer Fastmail-kontoen din og iCloud-, Zoho-, Yahoo-, GMX- eller jobb-IMAP-postkassen din samtidig, med de samme verktøyene over alle, slik at en agent kan søke på tvers av postkasser og du setter opp én server i stedet for fem. Det viktigste her er å være nyttig for deg, ikke å fremstille oss selv i best mulig lys."
     },
     {
       "h": "Fastmail Basic-kontoer kan ikke bruke IMAP i det hele tatt",
@@ -64,16 +64,16 @@
   ],
   "limits": [
     "Fastmail Basic inkluderer ikke IMAP eller SMTP, så en Basic-postkasse kan ikke kobles til. Standard og Professional kan.",
-    "Fastmails innsendingsserver oppgir et tak på omtrent 71 MB per melding. Lesing av vedlegg via MCP Emails er begrenset til 25 MB per forespørsel, så alt som er større, må hentes i Fastmail selv."
+    "Fastmails innsendingsserver oppgir et tak på omtrent 71 MB per melding. Lesing av vedlegg via MCPEmails er begrenset til 25 MB per forespørsel, så alt som er større, må hentes i Fastmail selv."
   ],
   "faq": [
     {
       "q": "Fungerer Claude med Fastmail?",
-      "a": "Ja, på to forskjellige måter. Fastmail har sin egen MCP-server som Claude kan pekes direkte mot med OAuth. Alternativt kobler MCP Emails den samme postkassen til over IMAP med et app-passord og eksponerer den, sammen med alle andre postkasser du legger til, gjennom én enkelt MCP-URL som også fungerer i Cursor og ChatGPT. Uansett kan Claude lese, søke i, sende, svare på og organisere e-posten."
+      "a": "Ja, på to forskjellige måter. Fastmail har sin egen MCP-server som Claude kan pekes direkte mot med OAuth. Alternativt kobler MCPEmails den samme postkassen til over IMAP med et app-passord og eksponerer den, sammen med alle andre postkasser du legger til, gjennom én enkelt MCP-URL som også fungerer i Cursor og ChatGPT. Uansett kan Claude lese, søke i, sende, svare på og organisere e-posten."
     },
     {
       "q": "Bør jeg bruke Fastmails egen MCP-server eller denne?",
-      "a": "Bruk Fastmails hvis Fastmail er den eneste postkassen din og klienten din støtter den: den er førstepartsløsningen, bruker OAuth og lar deg velge tilgang til bare lesing, skriving eller sending. Bruk MCP Emails hvis du vil ha mer enn én leverandør bak én URL, hvis du også har en iCloud-, Zoho- eller jobb-IMAP-postkasse, eller hvis du vil at de samme verktøyene skal oppføre seg likt i flere MCP-klienter."
+      "a": "Bruk Fastmails hvis Fastmail er den eneste postkassen din og klienten din støtter den: den er førstepartsløsningen, bruker OAuth og lar deg velge tilgang til bare lesing, skriving eller sending. Bruk MCPEmails hvis du vil ha mer enn én leverandør bak én URL, hvis du også har en iCloud-, Zoho- eller jobb-IMAP-postkasse, eller hvis du vil at de samme verktøyene skal oppføre seg likt i flere MCP-klienter."
     },
     {
       "q": "Hva er IMAP- og SMTP-innstillingene for Fastmail?",

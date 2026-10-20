@@ -1,11 +1,11 @@
 {
   "meta": {
-    "title": "Héberger MCP Emails vous-même",
+    "title": "Héberger MCPEmails vous-même",
     "description": "Exécutez le même serveur d'e-mails MCP qui propulse mcpemails.com sur votre propre machine. Open source sous AGPL-3.0, identifiants chiffrés avec une clé que vous seul détenez, e-mails récupérés en direct et jamais stockés."
   },
   "hero": {
     "eyebrow": "Open source, AGPL-3.0",
-    "title": "Exécutez MCP Emails vous-même.",
+    "title": "Exécutez MCPEmails vous-même.",
     "lead": "Le même serveur MCP qui propulse mcpemails.com, sur votre propre machine, avec votre propre base de données. Les identifiants de votre boîte mail ne quittent jamais une infrastructure que vous contrôlez. Ils sont chiffrés avec une clé que vous seul détenez et déchiffrés uniquement dans votre conteneur, au moment précis où un appel d'outil en a besoin."
   },
   "proof": {

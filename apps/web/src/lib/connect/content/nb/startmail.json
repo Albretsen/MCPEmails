@@ -21,7 +21,7 @@
     "titleLine1": "Koble StartMail til Claude,",
     "titleLine2": "Cursor, ChatGPT, enhver MCP-klient",
     "lead": "Gi AI-agenten din en ekte StartMail-innboks. Les, søk, send, svar, planlegg og organiser e-post via IMAP, i alle MCP-klienter i stedet for én, med et enhetspassord du kan trekke tilbake for seg selv.",
-    "answer": "Claude når ikke StartMail på egen hånd. MCP Emails er en hostet MCP-server som kobler til via IMAP på imap.startmail.com port 993, og SMTP på smtp.startmail.com port 465, slik at Claude, Cursor eller enhver MCP-klient kan lese, søke, sende og organisere den e-posten. StartMail-kontopassordet ditt autentiserer ikke en e-postklient i det hele tatt: StartMail utsteder et eget generert passord per tilkoblet enhet, fra delen for klarerte enheter i innstillingene, og viser det én gang. Bruk hele StartMail-adressen din som brukernavn og den genererte verdien som passord. Én innboks er gratis, for alltid.",
+    "answer": "Claude når ikke StartMail på egen hånd. MCPEmails er en hostet MCP-server som kobler til via IMAP på imap.startmail.com port 993, og SMTP på smtp.startmail.com port 465, slik at Claude, Cursor eller enhver MCP-klient kan lese, søke, sende og organisere den e-posten. StartMail-kontopassordet ditt autentiserer ikke en e-postklient i det hele tatt: StartMail utsteder et eget generert passord per tilkoblet enhet, fra delen for klarerte enheter i innstillingene, og viser det én gang. Bruk hele StartMail-adressen din som brukernavn og den genererte verdien som passord. Én innboks er gratis, for alltid.",
     "meta0": "1 innboks gratis, for alltid",
     "meta1": "Generert enhetspassord, vist én gang",
     "meta2": "E-post hentes direkte, lagres aldri"
@@ -32,7 +32,7 @@
   },
   "setup": [
     {
-      "h": "Opprett din gratis MCP Emails-konto",
+      "h": "Opprett din gratis MCPEmails-konto",
       "p": "Registrer deg på mcpemails.com. Gratisplanen kobler til én innboks, for alltid, uten kort. Til slutt får du en MCP-URL og en nøkkel."
     },
     {
@@ -40,7 +40,7 @@
       "p": "Logg inn i StartMail i en nettleser, åpne <b>Settings</b>, og gå til delen <b>trusted devices</b>, der IMAP-tilgang administreres. Velg <b>Add device</b> og gi den et navn etter denne tilkoblingen. StartMail genererer et tilfeldig passord og viser det én gang, så kopier det før du lukker dialogen. Den delen styrer også IMAP-tilgangen for kontoen, så hvis en innlogging avvises før du i det hele tatt har brukt passordet, sjekk at IMAP er slått på der."
     },
     {
-      "h": "Legg til postkassen i MCP Emails",
+      "h": "Legg til postkassen i MCPEmails",
       "p": "Velg IMAP / SMTP, skriv inn hele StartMail-adressen din som brukernavn, og lim inn det genererte enhetspassordet. Bruk samme verdi for utgående e-post: StartMail autentiserer innsending med enhetspåloggingen, ikke med kontopassordet ditt. Vertene er forhåndsutfylt som <code>imap.startmail.com</code> og <code>smtp.startmail.com</code> og ble verifisert via en direkte TLS-tilkobling."
     },
     {
@@ -67,14 +67,14 @@
     }
   ],
   "limits": [
-    "Å koble en StartMail-postkasse til en AI-klient betyr at den AI-leverandøren leser innholdet i meldingene den jobber med. MCP Emails henter e-post direkte fra imap.startmail.com for hver forespørsel og lagrer ikke meldingsinnhold, og påloggingsdetaljer krypteres ved lagring, men teksten når likevel Claude, Cursor eller hvilken klient du kobler til. StartMails nederlandske hosting og holdning mot sporing beskriver StartMail, og følger ikke en melding inn til en AI-leverandør du selv kobler til. Se på dette som en beslutning om hvilken korrespondanse du er villig til å eksponere, ikke en forlengelse av personvernet du kjøpte.",
-    "PGP-krypterte meldinger er uleselige for en agent. StartMails nøkkelhåndtering ligger i StartMail-kontoen din og betjener deres eget webgrensesnitt; en IMAP-klient mottar en armert chiffertekstblokk, og MCP Emails har ingen privat nøkkel av deg. Agenten kan se avsender, emne og dato, og kan arkivere eller flagge de trådene, men ikke lese dem.",
+    "Å koble en StartMail-postkasse til en AI-klient betyr at den AI-leverandøren leser innholdet i meldingene den jobber med. MCPEmails henter e-post direkte fra imap.startmail.com for hver forespørsel og lagrer ikke meldingsinnhold, og påloggingsdetaljer krypteres ved lagring, men teksten når likevel Claude, Cursor eller hvilken klient du kobler til. StartMails nederlandske hosting og holdning mot sporing beskriver StartMail, og følger ikke en melding inn til en AI-leverandør du selv kobler til. Se på dette som en beslutning om hvilken korrespondanse du er villig til å eksponere, ikke en forlengelse av personvernet du kjøpte.",
+    "PGP-krypterte meldinger er uleselige for en agent. StartMails nøkkelhåndtering ligger i StartMail-kontoen din og betjener deres eget webgrensesnitt; en IMAP-klient mottar en armert chiffertekstblokk, og MCPEmails har ingen privat nøkkel av deg. Agenten kan se avsender, emne og dato, og kan arkivere eller flagge de trådene, men ikke lese dem.",
     "StartMails SMTP-server annonserer et tak for meldingsstørrelse rundt 37 MB, som er lavere enn hos de fleste leverandørene her. Et stort vedlegg en agent prøver å sende, avvises ved innsending i stedet for å komme i retur senere, så bruk en lenke for alt av en viss størrelse."
   ],
   "faq": [
     {
       "q": "Fungerer Claude med StartMail?",
-      "a": "Ikke direkte. Claude har ingen innebygd StartMail-kobling og kan ikke snakke IMAP selv. Kobler du en MCP-server som MCP Emails til StartMail-postkassen din, får Claude tilgang til å lese, søke, sende, svare, planlegge og organisere via IMAP, og samme tilkobling fungerer da i Cursor, ChatGPT og andre MCP-klienter uten at den må settes opp på nytt."
+      "a": "Ikke direkte. Claude har ingen innebygd StartMail-kobling og kan ikke snakke IMAP selv. Kobler du en MCP-server som MCPEmails til StartMail-postkassen din, får Claude tilgang til å lese, søke, sende, svare, planlegge og organisere via IMAP, og samme tilkobling fungerer da i Cursor, ChatGPT og andre MCP-klienter uten at den må settes opp på nytt."
     },
     {
       "q": "Hva er IMAP- og SMTP-innstillingene for StartMail?",
@@ -90,7 +90,7 @@
     },
     {
       "q": "Kan AI-en min lese de PGP-krypterte StartMail-meldingene mine?",
-      "a": "Nei. En melding kryptert til OpenPGP-nøkkelen din kommer over IMAP som chiffertekst, og MCP Emails mottar aldri den private nøkkelen din. De meldingene forblir lesbare i StartMails eget grensesnitt, der nøkkelhåndteringen ligger. Agenten din kan fortsatt sortere, flagge og arkivere dem, og kan lese alt som kom inn ukryptert."
+      "a": "Nei. En melding kryptert til OpenPGP-nøkkelen din kommer over IMAP som chiffertekst, og MCPEmails mottar aldri den private nøkkelen din. De meldingene forblir lesbare i StartMails eget grensesnitt, der nøkkelhåndteringen ligger. Agenten din kan fortsatt sortere, flagge og arkivere dem, og kan lese alt som kom inn ukryptert."
     },
     {
       "q": "Lagres StartMail-e-posten min på serverne deres?",

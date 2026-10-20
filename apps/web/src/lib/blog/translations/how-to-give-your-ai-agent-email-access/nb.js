@@ -2,7 +2,7 @@ const translation = {
   title: 'Slik gir du AI-agenten din tilgang til e-post (den komplette 2026-guiden)',
   description:
     'Gi AI-agenten din lese- og sendetilgang til en ekte innboks over MCP — Gmail, Outlook, iCloud, Fastmail eller IMAP. Slik fungerer det: verktøyene, sikkerheten og oppsettet.',
-  coverAlt: 'Slik gir du AI-agenten din tilgang til e-post over MCP — MCP Emails',
+  coverAlt: 'Slik gir du AI-agenten din tilgang til e-post over MCP — MCPEmails',
   content: `For å gi en AI-agent tilgang til e-post kobler du innboksen din til en MCP-server og peker agenten mot én endepunkt-URL. Agenten får da et lite sett med verktøy for å lese, søke og sende e-post. Det vanskelige er ikke agenten — det er å gjøre dette uten å lekke passordet ditt inn i en prompt, en logg eller et vektorlager. Den siste biten er det denne guiden handler om.
 
 Hvis du bare vil ha den raske veien: koble til en innboks i dashbordet, lim MCP-endepunktet inn i [claude.ai](https://claude.ai), Claude Desktop, Cursor eller din egen agent, og kall \`inbox_list\` først. Resten av dette innlegget forklarer hva som faktisk skjer, hvorfor sikkerhetsmodellen er viktig, og hvordan du kobler opp hver støttede leverandør.
@@ -11,7 +11,7 @@ Hvis du bare vil ha den raske veien: koble til en innboks i dashbordet, lim MCP-
 
 [Model Context Protocol](https://modelcontextprotocol.io) er en standard måte å eksponere verktøy for en språkmodell over HTTP. En MCP-e-postserver presenterer innboksen din ikke som rå IMAP, men som en håndfull typede verb agenten kan kalle: list opp meldinger, les én, søk, send, svar. Agenten resonnerer over disse verbene. Den berører aldri den underliggende e-postprotokollen, og den ser aldri legitimasjonen din.
 
-Det er hele ideen bak [MCP Emails](/). Ett endepunkt, ett sett med verktøy, hvilken som helst MCP-kompatibel klient. Vil du ha forklaringen på arkitekturen helt fra bunnen, dekker følgeinnlegget [hva er en MCP-e-postserver](/blog/what-is-an-mcp-email-server) det på klart språk.
+Det er hele ideen bak [MCPEmails](/). Ett endepunkt, ett sett med verktøy, hvilken som helst MCP-kompatibel klient. Vil du ha forklaringen på arkitekturen helt fra bunnen, dekker følgeinnlegget [hva er en MCP-e-postserver](/blog/what-is-an-mcp-email-server) det på klart språk.
 
 ## Hvorfor den siste biten er vanskelig
 
@@ -23,7 +23,7 @@ Det er hele ideen bak [MCP Emails](/). Ett endepunkt, ett sett med verktøy, hvi
 
 Den naive gjør-det-selv-løsningen — gi modellen et IMAP-bibliotek og passordet ditt — feiler på alle tre samtidig. De fleste "Gmail MCP server"-repoene på GitHub stopper akkurat der.
 
-## Hvordan MCP Emails løser det
+## Hvordan MCPEmails løser det
 
 Fire designvalg gjør det tunge løftet. De er grunnen til at jeg stoler på dette med min egen innboks.
 
@@ -37,7 +37,7 @@ App-passordet eller OAuth-tokenet for hver innboks krypteres før det skrives ti
 
 ### Sending går gjennom din egen leverandør
 
-Når agenten sender eller svarer, går e-posten ut gjennom din Gmail, ditt Microsoft 365 eller din SMTP-server. MCP Emails videreformidler aldri fra sitt eget domene. Leveringsdyktigheten og domenets omdømme forblir helt dine egne — ingen spam-mappe-rulett med delt IP.
+Når agenten sender eller svarer, går e-posten ut gjennom din Gmail, ditt Microsoft 365 eller din SMTP-server. MCPEmails videreformidler aldri fra sitt eget domene. Leveringsdyktigheten og domenets omdømme forblir helt dine egne — ingen spam-mappe-rulett med delt IP.
 
 ### Det er standard MCP over HTTP
 
@@ -80,7 +80,7 @@ Du kobler til en innboks én gang i **Dashboard → Inboxes → Connect Inbox**.
 
 ### App-passord-leverandører
 
-Gmail, iCloud, Fastmail, Yahoo, Zoho, Yandex og enhver generisk IMAP-innboks kobles til med et app-spesifikt passord i stedet for OAuth. Du genererer passordet i leverandørens sikkerhetsinnstillinger og limer det inn i MCP Emails. App-passord for Gmail lager du i Google-kontoen din, og Google krever totrinnsbekreftelse før du kan lage et. iCloud-passord kommer fra appleid.apple.com; Fastmail er **kun app-passord** (lag ett i Fastmail-innstillingene). De kjører alle på samme IMAP/SMTP-transport og deler et identisk funksjonssett. Den fullstendige gjennomgangen ligger i [koble iCloud, Fastmail eller en hvilken som helst IMAP-innboks til Claude](/blog/connect-icloud-fastmail-imap-to-claude).
+Gmail, iCloud, Fastmail, Yahoo, Zoho, Yandex og enhver generisk IMAP-innboks kobles til med et app-spesifikt passord i stedet for OAuth. Du genererer passordet i leverandørens sikkerhetsinnstillinger og limer det inn i MCPEmails. App-passord for Gmail lager du i Google-kontoen din, og Google krever totrinnsbekreftelse før du kan lage et. iCloud-passord kommer fra appleid.apple.com; Fastmail er **kun app-passord** (lag ett i Fastmail-innstillingene). De kjører alle på samme IMAP/SMTP-transport og deler et identisk funksjonssett. Den fullstendige gjennomgangen ligger i [koble iCloud, Fastmail eller en hvilken som helst IMAP-innboks til Claude](/blog/connect-icloud-fastmail-imap-to-claude).
 
 ## Koble til AI-klienten din
 
@@ -88,7 +88,7 @@ Samme endepunkt, samme verktøy, to veier inn avhengig av om klienten din snakke
 
 ### OAuth-kompatible klienter (ingen API-nøkkel)
 
-claude.ai, Claude Desktop, Cursor og lignende klienter kobler til med OAuth 2.0 Authorization Code + PKCE og RFC 7591 Dynamic Client Registration. I claude.ai er det **Customize → Connectors → Add connector**, lim inn MCP-endepunkt-URL-en, klikk Connect, logg inn på MCP Emails-kontoen din og godkjenn. Tokens er begrenset til nøyaktig det du godkjenner: \`read:email\`, \`send:email\` eller begge. Steg-for-steg-guider finner du i [sett opp Claude med innboksen din](/blog/connect-claude-to-email) og [legg til e-posten din i ChatGPT](/blog/connect-chatgpt-to-email).
+claude.ai, Claude Desktop, Cursor og lignende klienter kobler til med OAuth 2.0 Authorization Code + PKCE og RFC 7591 Dynamic Client Registration. I claude.ai er det **Customize → Connectors → Add connector**, lim inn MCP-endepunkt-URL-en, klikk Connect, logg inn på MCPEmails-kontoen din og godkjenn. Tokens er begrenset til nøyaktig det du godkjenner: \`read:email\`, \`send:email\` eller begge. Steg-for-steg-guider finner du i [sett opp Claude med innboksen din](/blog/connect-claude-to-email) og [legg til e-posten din i ChatGPT](/blog/connect-chatgpt-to-email).
 
 ### Klienter uten OAuth (API-nøkkel)
 

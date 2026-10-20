@@ -10,7 +10,7 @@ export async function generateMetadata({ params }) {
   const title = t.has('meta.title') ? t('meta.title') : 'Privacy Policy';
   const description = t.has('meta.description')
     ? t('meta.description')
-    : 'How MCP Emails collects, uses, and protects your data. Our privacy policy for users, workspace owners, and AI agents.';
+    : 'How MCPEmails collects, uses, and protects your data. Our privacy policy for users, workspace owners, and AI agents.';
   return {
     title,
     description,
@@ -18,14 +18,14 @@ export async function generateMetadata({ params }) {
     openGraph: {
       type: 'website',
       url: localePath(locale, '/privacy'),
-      title: `${title} · MCP Emails`,
+      title: `${title} · MCPEmails`,
       description,
       locale: OG_LOCALE[locale],
       images: [OG_IMAGE],
     },
     twitter: {
       card: 'summary_large_image',
-      title: `${title} · MCP Emails`,
+      title: `${title} · MCPEmails`,
       description,
       images: [OG_IMAGE.url],
     },

@@ -22,7 +22,7 @@
     "titleLine1": "Koble Alibaba Mail til Claude,",
     "titleLine2": "Cursor, ChatGPT og enhver MCP-klient",
     "lead": "Gi AI-agenten din en ekte Aliyun-postkasse. Les, søk, send, svar, planlegg og organiser e-post over IMAP, i alle MCP-klienter i stedet for bare én.",
-    "answer": "Claude kan ikke nå Alibaba Mail på egen hånd. MCP Emails er en hostet MCP-server som kobler den til over IMAP på imap.aliyun.com, port 993, slik at Claude, Cursor eller enhver MCP-klient kan lese, søke i, sende og organisere den e-posten. Alibaba er den ene store kinesiske leverandøren som ikke tvinger deg til å bruke en autorisasjonskode: det vanlige postkassepassordet ditt fungerer, så lenge POP/IMAP-innhenting er slått på i postkasseinnstillingene. Hvis du eller domeneadministratoren din har slått på sikkerhetspassordet for tredjepartsklienter (三方客户端安全密码), erstatter det 16 tegn lange passordet postkassepassordet overalt der en klient ber om et. Én innboks er gratis.",
+    "answer": "Claude kan ikke nå Alibaba Mail på egen hånd. MCPEmails er en hostet MCP-server som kobler den til over IMAP på imap.aliyun.com, port 993, slik at Claude, Cursor eller enhver MCP-klient kan lese, søke i, sende og organisere den e-posten. Alibaba er den ene store kinesiske leverandøren som ikke tvinger deg til å bruke en autorisasjonskode: det vanlige postkassepassordet ditt fungerer, så lenge POP/IMAP-innhenting er slått på i postkasseinnstillingene. Hvis du eller domeneadministratoren din har slått på sikkerhetspassordet for tredjepartsklienter (三方客户端安全密码), erstatter det 16 tegn lange passordet postkassepassordet overalt der en klient ber om et. Én innboks er gratis.",
     "meta0": "1 innboks gratis, for alltid",
     "meta1": "Postkassepassord eller sikkerhetspassord for klienter",
     "meta2": "E-post hentes direkte, lagres aldri"
@@ -33,7 +33,7 @@
   },
   "setup": [
     {
-      "h": "Opprett en gratis MCP Emails-konto",
+      "h": "Opprett en gratis MCPEmails-konto",
       "p": "Registrer deg på mcpemails.com. Gratisplanen kobler til én innboks og forblir gratis, uten kort. La fanen være åpen: du limer inn Aliyun-påloggingsopplysningene dine der i trinn tre."
     },
     {
@@ -42,7 +42,7 @@
     },
     {
       "h": "Finn ut hvilket passord kontoen din faktisk vil ha",
-      "p": "Åpne 设置, deretter 查看更多设置 (view more settings), så 账户与安全 (Account and security) og 账户安全 (Account safety), og se på 三方客户端登录安全管理, delen for påloggingssikkerhet for tredjepartsklienter. Hvis 三方客户端安全密码 er av, er postkassepassordet ditt påloggingsopplysningen, og du trenger ikke gjøre noe mer. Hvis det er på, eller hvis du slår det på her, klikker du 生成新密码 (generate new password), fullfører mobilbekreftelsen og kopierer passordet på 16 tegn. Alibaba viser det bare én gang. Lim inn hele adressen din og det av de to passordene som gjelder, i MCP Emails; vertene er forhåndsutfylt."
+      "p": "Åpne 设置, deretter 查看更多设置 (view more settings), så 账户与安全 (Account and security) og 账户安全 (Account safety), og se på 三方客户端登录安全管理, delen for påloggingssikkerhet for tredjepartsklienter. Hvis 三方客户端安全密码 er av, er postkassepassordet ditt påloggingsopplysningen, og du trenger ikke gjøre noe mer. Hvis det er på, eller hvis du slår det på her, klikker du 生成新密码 (generate new password), fullfører mobilbekreftelsen og kopierer passordet på 16 tegn. Alibaba viser det bare én gang. Lim inn hele adressen din og det av de to passordene som gjelder, i MCPEmails; vertene er forhåndsutfylt."
     },
     {
       "h": "Lim MCP-URL-en inn i AI-klienten",
@@ -60,7 +60,7 @@
     },
     {
       "h": "Sikkerhetspassordet utstedes per enhet, opptil ti, og vises én gang",
-      "p": "Alibaba behandler disse som enhetspassord snarere enn som én felles påloggingsopplysning for kontoen. Du kan ha opptil ti samtidig, og anbefalt praksis er ett eget per enhet. Hvert passord vises én gang når det opprettes og aldri igjen, så et passord du har mistet, erstattes i stedet for å gjenopprettes. Generer et eget passord for MCP Emails i stedet for å gjenbruke det som allerede ligger i telefonen din: da påvirker tilbakekalling av ett passord bare det det ble utstedt til."
+      "p": "Alibaba behandler disse som enhetspassord snarere enn som én felles påloggingsopplysning for kontoen. Du kan ha opptil ti samtidig, og anbefalt praksis er ett eget per enhet. Hvert passord vises én gang når det opprettes og aldri igjen, så et passord du har mistet, erstattes i stedet for å gjenopprettes. Generer et eget passord for MCPEmails i stedet for å gjenbruke det som allerede ligger i telefonen din: da påvirker tilbakekalling av ett passord bare det det ble utstedt til."
     }
   ],
   "limits": [
@@ -71,7 +71,7 @@
   "faq": [
     {
       "q": "Fungerer Claude med Alibaba Mail?",
-      "a": "Ikke direkte. Claude har ingen innebygd Aliyun-kobling og kan ikke åpne en IMAP-tilkobling på egen hånd. Kobler du en MCP-server som MCP Emails til Alibaba-postkassen din, får Claude tilgang til å lese, søke, sende, svare, videresende, planlegge og organisere i den, og den samme tilkoblingen fungerer fra Cursor og andre MCP-klienter."
+      "a": "Ikke direkte. Claude har ingen innebygd Aliyun-kobling og kan ikke åpne en IMAP-tilkobling på egen hånd. Kobler du en MCP-server som MCPEmails til Alibaba-postkassen din, får Claude tilgang til å lese, søke, sende, svare, videresende, planlegge og organisere i den, og den samme tilkoblingen fungerer fra Cursor og andre MCP-klienter."
     },
     {
       "q": "Hva er IMAP- og SMTP-innstillingene for Alibaba Mail?",
@@ -87,7 +87,7 @@
     },
     {
       "q": "Kan jeg koble til Alibaba Mail på mitt eget domene?",
-      "a": "Ja, men ikke med vertsnavnene på denne siden. Alibaba Mail for bedrifter kjører på egne servernavn, som står i administrasjonskonsollen for domenet ditt. Hent inngående og utgående vert derfra, og koble dem til i MCP Emails som en vanlig IMAP- og SMTP-postkasse. Reglene for sikkerhetspassord som beskrives her, gjelder også for de kontoene."
+      "a": "Ja, men ikke med vertsnavnene på denne siden. Alibaba Mail for bedrifter kjører på egne servernavn, som står i administrasjonskonsollen for domenet ditt. Hent inngående og utgående vert derfra, og koble dem til i MCPEmails som en vanlig IMAP- og SMTP-postkasse. Reglene for sikkerhetspassord som beskrives her, gjelder også for de kontoene."
     },
     {
       "q": "Lagres Alibaba-e-posten min på serverne deres?",

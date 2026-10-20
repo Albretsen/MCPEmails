@@ -21,7 +21,7 @@
     "titleLine1": "Proton Mail kan ikke",
     "titleLine2": "kobles til en hostet MCP-server",
     "lead": "Proton har ingen IMAP-server på internett. Den eneste IMAP-en som finnes for en Proton-postkasse, kjører på din egen datamaskin, inne i Proton Mail Bridge, og derfor treffer alle hostede verktøy den samme veggen.",
-    "answer": "Nei. Proton Mail eksponerer ikke noe IMAP-, POP- eller SMTP-endepunkt som en klient et annet sted kan logge inn på. Den eneste måten en e-postklient noen gang når Proton på, er Proton Mail Bridge, en skrivebordsapplikasjon på betalte Proton-abonnement som dekrypterer e-posten din lokalt og leverer IMAP og SMTP på localhost, altså loopback-adressen til maskinen den kjører på. En hostet MCP-server som MCP Emails kjører på vår infrastruktur, ikke på pulten din, og ingenting på internett kan rutes til din localhost, så tilkoblingen er umulig, ikke bare uimplementert. Vil du ha en AI-agent som jobber med e-post som kommer til Proton-adressen din, er de ærlige alternativene Protons betalte automatiske videresending til en postkasse som snakker IMAP, som MCP Emails kobler til gratis for én innboks, eller Protons SMTP-innsending, som bare kan sende, for utgående e-post alene."
+    "answer": "Nei. Proton Mail eksponerer ikke noe IMAP-, POP- eller SMTP-endepunkt som en klient et annet sted kan logge inn på. Den eneste måten en e-postklient noen gang når Proton på, er Proton Mail Bridge, en skrivebordsapplikasjon på betalte Proton-abonnement som dekrypterer e-posten din lokalt og leverer IMAP og SMTP på localhost, altså loopback-adressen til maskinen den kjører på. En hostet MCP-server som MCPEmails kjører på vår infrastruktur, ikke på pulten din, og ingenting på internett kan rutes til din localhost, så tilkoblingen er umulig, ikke bare uimplementert. Vil du ha en AI-agent som jobber med e-post som kommer til Proton-adressen din, er de ærlige alternativene Protons betalte automatiske videresending til en postkasse som snakker IMAP, som MCPEmails kobler til gratis for én innboks, eller Protons SMTP-innsending, som bare kan sende, for utgående e-post alene."
   },
   "method": {
     "title": "Slik kobler Proton Mail seg til: lokalt, gjennom Bridge, eller ikke i det hele tatt",
@@ -29,12 +29,12 @@
   },
   "setup": [
     {
-      "h": "Opprett den gratis MCP Emails-kontoen",
+      "h": "Opprett den gratis MCPEmails-kontoen",
       "p": "En e-postadresse, ingen kort. Én tilkoblet innboks er gratis for alltid, og de neste to stegene avgjør hvilken innboks det blir."
     },
     {
       "h": "Velg postkassen som skal bære det automatiserte arbeidet",
-      "p": "Velg en adresse hos en leverandør som kjører en ekte IMAP-server: en domenepostkasse, en jobbkonto, Fastmail, Migadu, Gmail. Det er kontoen MCP Emails kobler til, og den agenten din leser, sender, arkiverer og planlegger fra. Proton-adressen din forblir nøyaktig som den er."
+      "p": "Velg en adresse hos en leverandør som kjører en ekte IMAP-server: en domenepostkasse, en jobbkonto, Fastmail, Migadu, Gmail. Det er kontoen MCPEmails kobler til, og den agenten din leser, sender, arkiverer og planlegger fra. Proton-adressen din forblir nøyaktig som den er."
     },
     {
       "h": "Legg til en videresendingsregel i Proton-innstillingene",
@@ -90,7 +90,7 @@
     },
     {
       "q": "Lagres e-posten min på serverne deres?",
-      "a": "Nei. For postkassene MCP Emails faktisk kobler til, hentes meldinger direkte via IMAP for hver forespørsel og sendes videre til AI-klienten din, med påloggingsdetaljer kryptert ved lagring og meldingsinnhold som ikke beholdes. Vi har aldri Proton-påloggingsdetaljer i det hele tatt, fordi det ikke finnes noen Proton-tilkobling å opprette."
+      "a": "Nei. For postkassene MCPEmails faktisk kobler til, hentes meldinger direkte via IMAP for hver forespørsel og sendes videre til AI-klienten din, med påloggingsdetaljer kryptert ved lagring og meldingsinnhold som ikke beholdes. Vi har aldri Proton-påloggingsdetaljer i det hele tatt, fordi det ikke finnes noen Proton-tilkobling å opprette."
     }
   ],
   "ctaBand": {

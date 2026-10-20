@@ -20,7 +20,7 @@
     "titleLine1": "将 ScalaHosting 邮箱连接到 Claude，",
     "titleLine2": "Cursor、ChatGPT、任意 MCP 客户端",
     "lead": "为你的 AI 代理接入一个真正的 ScalaHosting 邮箱。无论你的账户运行 SPanel 还是 cPanel，都能通过 IMAP 读取、搜索、发送、回复、定时与整理邮件。",
-    "answer": "Claude 无法自行连接 ScalaHosting 邮箱。MCP Emails 是一个托管 MCP 服务器，通过 993 端口的标准 IMAP 与之连接，让 Claude、Cursor 或任意 MCP 客户端都能读取、搜索、发送并整理邮件。ScalaHosting 没有共享的邮件主机名：你的邮件服务器是你自己的域名或托管服务器的名称，两种面板都会在该地址的 Connect device 下列出。你用的是哪种面板取决于套餐，因为 SPanel 和 cPanel 都在使用中。认证使用邮箱密码。一个收件箱免费。",
+    "answer": "Claude 无法自行连接 ScalaHosting 邮箱。MCPEmails 是一个托管 MCP 服务器，通过 993 端口的标准 IMAP 与之连接，让 Claude、Cursor 或任意 MCP 客户端都能读取、搜索、发送并整理邮件。ScalaHosting 没有共享的邮件主机名：你的邮件服务器是你自己的域名或托管服务器的名称，两种面板都会在该地址的 Connect device 下列出。你用的是哪种面板取决于套餐，因为 SPanel 和 cPanel 都在使用中。认证使用邮箱密码。一个收件箱免费。",
     "meta0": "1 个收件箱永久免费",
     "meta1": "SPanel 中的邮箱密码",
     "meta2": "邮件实时获取，绝不存储"
@@ -31,7 +31,7 @@
   },
   "setup": [
     {
-      "h": "创建免费 MCP Emails 账户",
+      "h": "创建免费 MCPEmails 账户",
       "p": "在 mcpemails.com 注册。免费套餐可连接一个收件箱，无需信用卡。"
     },
     {
@@ -40,7 +40,7 @@
     },
     {
       "h": "设置或找回邮箱密码",
-      "p": "IMAP 检查的是该地址的密码，而不是你的 ScalaHosting 客户区登录密码。在 SPanel 中，于 Email Accounts 下创建或编辑该地址，如需强密码可使用 Generate 按钮。然后把它粘贴到 MCP Emails，以完整地址作为用户名，并填入你复制的主机名。"
+      "p": "IMAP 检查的是该地址的密码，而不是你的 ScalaHosting 客户区登录密码。在 SPanel 中，于 Email Accounts 下创建或编辑该地址，如需强密码可使用 Generate 按钮。然后把它粘贴到 MCPEmails，以完整地址作为用户名，并填入你复制的主机名。"
     },
     {
       "h": "将 MCP URL 粘贴到你的 AI",
@@ -62,13 +62,13 @@
     }
   ],
   "limits": [
-    "MCP Emails 连接的是邮箱，而不是服务器。SPanel 自己的工具、备份和安全功能保持原样。",
+    "MCPEmails 连接的是邮箱，而不是服务器。SPanel 自己的工具、备份和安全功能保持原样。",
     "在托管 VPS 上，你可能在开通后更改过邮件系统。如果是这样，Connect device 弹窗报告的仍是 SPanel 当初配置的内容，可能已不再是实际在监听的服务。"
   ],
   "faq": [
     {
       "q": "Claude 能用 ScalaHosting 邮箱吗？",
-      "a": "不能直接使用。Claude 没有 ScalaHosting 连接器。通过 IMAP 将 MCP Emails 这样的 MCP 服务器连接到该邮箱后，Claude 就能读取、搜索、发送、回复、定时和整理其中的邮件。这在 SPanel 账户和 cPanel 账户上完全一样，因为两者提供的都是普通 IMAP。"
+      "a": "不能直接使用。Claude 没有 ScalaHosting 连接器。通过 IMAP 将 MCPEmails 这样的 MCP 服务器连接到该邮箱后，Claude 就能读取、搜索、发送、回复、定时和整理其中的邮件。这在 SPanel 账户和 cPanel 账户上完全一样，因为两者提供的都是普通 IMAP。"
     },
     {
       "q": "ScalaHosting 的 IMAP 和 SMTP 设置是什么？",

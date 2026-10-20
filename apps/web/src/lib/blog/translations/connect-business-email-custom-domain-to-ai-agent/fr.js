@@ -3,7 +3,7 @@ const translation = {
   description:
     'Guide de configuration pour vous@votreentreprise.com : identifier qui héberge vraiment vos e-mails, connecter Google Workspace, Zoho, Fastmail, Migadu, Titan, Rackspace, IONOS ou cPanel, et corriger le nom de l\'expéditeur avant que votre agent ne réponde.',
   coverAlt:
-    'Connecter une messagerie professionnelle sur domaine propre à un agent IA avec MCP Emails',
+    'Connecter une messagerie professionnelle sur domaine propre à un agent IA avec MCPEmails',
   content: `> **Sous Microsoft 365 ?** Si votre boîte professionnelle se révèle être un tenant Microsoft, ce guide vous aidera à le confirmer. Connectez-la avec **Outlook** et la connexion Microsoft plutôt qu'en IMAP ; votre administrateur informatique devra peut-être d'abord approuver l'application une seule fois pour toute l'organisation. Le [guide Outlook et Microsoft 365](/blog/connect-outlook-microsoft-365-ai-agent-mcp) détaille les étapes.
 
 Presque tous les guides pour connecter une messagerie à un agent IA supposent que votre adresse se termine par gmail.com. La messagerie professionnelle, c'est autre chose : le domaine ne dit pas qui héberge la boîte, quelqu'un d'autre contrôle peut-être la possibilité même pour un client de messagerie de se connecter, et ce que votre agent envoie arrive chez vos clients à votre nom. Voici le guide pour vous@votreentreprise.com.
@@ -19,7 +19,7 @@ Presque tous les guides pour connecter une messagerie à un agent IA supposent q
 
 ## Étape 1 : identifier qui héberge vraiment vos e-mails
 
-MCP Emails essaie de répondre à votre place. Saisissez votre adresse dans le formulaire IMAP, marquez une demi-seconde de pause, et quatre sources sont consultées dans l'ordre : une table des fournisseurs qui ont provoqué de vraies pannes de connexion, les enregistrements de service RFC 6186 de votre domaine, votre enregistrement MX comparé à cette table, et la base d'autoconfiguration de Mozilla. Rien n'est prérempli tant que les deux moitiés ne sont pas résolues.
+MCPEmails essaie de répondre à votre place. Saisissez votre adresse dans le formulaire IMAP, marquez une demi-seconde de pause, et quatre sources sont consultées dans l'ordre : une table des fournisseurs qui ont provoqué de vraies pannes de connexion, les enregistrements de service RFC 6186 de votre domaine, votre enregistrement MX comparé à cette table, et la base d'autoconfiguration de Mozilla. Rien n'est prérempli tant que les deux moitiés ne sont pas résolues.
 
 Pour vérifier vous-même au préalable :
 
@@ -48,7 +48,7 @@ Workspace se connecte avec un **mot de passe d'application Google** en IMAP (\`i
 
 **Activez l'accès IMAP** d'abord, sous Paramètres → Comptes de messagerie → l'adresse → Accès IMAP. Il est désactivé par défaut et se règle boîte par boîte : l'activer pour vous ne fait rien pour un collègue. Générez également un **mot de passe spécifique à l'application** si l'authentification à deux facteurs est active.
 
-Votre hôte dépend de deux choses que Zoho ne montre jamais ensemble : dans lequel de ses six centres de données régionaux vit le compte (\`.com\`, \`.eu\`, \`.in\`, \`.com.au\`, \`.jp\`, \`zohocloud.ca\`), et s'il s'agit d'un compte d'organisation payant sur domaine propre, qui utilise \`imappro\` et \`smtppro\` de cette région. MCP Emails demande les deux et construit le nom d'hôte.
+Votre hôte dépend de deux choses que Zoho ne montre jamais ensemble : dans lequel de ses six centres de données régionaux vit le compte (\`.com\`, \`.eu\`, \`.in\`, \`.com.au\`, \`.jp\`, \`zohocloud.ca\`), et s'il s'agit d'un compte d'organisation payant sur domaine propre, qui utilise \`imappro\` et \`smtppro\` de cette région. MCPEmails demande les deux et construit le nom d'hôte.
 
 ### Fastmail et Migadu
 
@@ -74,14 +74,14 @@ Il n'existe pas de service de messagerie cPanel, seulement le serveur de votre h
 
 ## Quand rien n'est détecté et que vous saisissez les réglages
 
-Donnez quatre choses à MCP Emails par protocole : hôte, port, mode de sécurité et votre adresse complète comme nom d'utilisateur. Les conventions sont fixes, et le formulaire garde le port et la sécurité synchronisés pour qu'ils ne divergent pas :
+Donnez quatre choses à MCPEmails par protocole : hôte, port, mode de sécurité et votre adresse complète comme nom d'utilisateur. Les conventions sont fixes, et le formulaire garde le port et la sécurité synchronisés pour qu'ils ne divergent pas :
 
 - IMAP **993**, c'est du TLS implicite ; IMAP **143**, du STARTTLS.
 - SMTP **465**, c'est du TLS implicite ; SMTP **587**, du STARTTLS, et le **25** du STARTTLS chez les petits hôtes qui n'offrent rien d'autre.
 
 Les confondre était la première cause d'échec des connexions génériques : STARTTLS sur le 993 attend une salutation qu'un serveur TLS uniquement n'enverra jamais, et le TLS implicite sur le 143 rate la négociation. Vous n'avez plus à viser juste du premier coup. Une connexion qui n'a jamais établi de session utilisable est réessayée sur les autres transports standard, jusqu'à trois tentatives par protocole, en commençant par celui que vous avez demandé. Un mot de passe refusé par le serveur n'est jamais réessayé : le renvoyer ne ferait que tripler le compteur d'échecs de connexion que votre fournisseur utilise pour verrouiller le compte. Voir aussi la [page de connexion IMAP générique](/connect/imap).
 
-L'envoi négocie encore une chose que vous ne verrez jamais. Les hôtes de type Exchange annoncent **LOGIN** sans PLAIN : MCP Emails lit ce que le serveur propose, essaie PLAIN en premier quand les deux sont là, et bascule sur LOGIN. Un mécanisme refusé n'est jamais signalé comme un mauvais mot de passe.
+L'envoi négocie encore une chose que vous ne verrez jamais. Les hôtes de type Exchange annoncent **LOGIN** sans PLAIN : MCPEmails lit ce que le serveur propose, essaie PLAIN en premier quand les deux sont là, et bascule sur LOGIN. Un mécanisme refusé n'est jamais signalé comme un mauvais mot de passe.
 
 ## Définir le nom d'expéditeur avant que votre agent réponde
 
@@ -110,7 +110,7 @@ Oui, avec un mot de passe d'application Google en IMAP. La validation en deux é
 **Et si mon hébergeur ne publie aucun réglage IMAP ?**
 Saisissez-les vous-même : hôte, port, mode de sécurité et votre adresse complète comme nom d'utilisateur. Si le premier transport ne répond pas, les alternatives standard sont essayées automatiquement.
 
-**MCP Emails stocke-t-il les e-mails de mon entreprise ?**
+**MCPEmails stocke-t-il les e-mails de mon entreprise ?**
 Non. Le contenu des messages est récupéré en direct auprès de votre fournisseur à chaque requête puis supprimé. Seule la clé d'accès chiffrée du fournisseur est conservée.
 
 **Une seule boîte suffit-elle sur le plan gratuit ?**

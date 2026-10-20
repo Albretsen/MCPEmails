@@ -20,7 +20,7 @@
     "titleLine1": "Connectez Interia Poczta à Claude,",
     "titleLine2": "Cursor, ChatGPT, tout client MCP",
     "lead": "Donnez à votre agent IA une vraie boîte Interia. Lisez, recherchez, envoyez, répondez, planifiez et organisez vos e-mails en IMAP, une fois le canal des programmes de messagerie activé dans les paramètres de votre compte.",
-    "answer": "Claude ne peut pas accéder seul à une boîte mail Interia. MCP Emails est un serveur MCP hébergé qui s'y connecte en IMAP sur poczta.interia.pl, port 993, en s'authentifiant avec votre adresse complète et votre mot de passe Interia habituel, pour que Claude, Cursor ou tout client MCP puisse lire, rechercher, envoyer et organiser le courrier. Interia garde les canaux POP3 et IMAP fermés tant que vous n'avez pas réglé korzystam z programu pocztowego sur TAK dans les paramètres de votre compte, et une boîte mail avec la connexion en deux étapes activée ne peut être utilisée depuis aucun programme de messagerie. Une boîte est gratuite, pour toujours.",
+    "answer": "Claude ne peut pas accéder seul à une boîte mail Interia. MCPEmails est un serveur MCP hébergé qui s'y connecte en IMAP sur poczta.interia.pl, port 993, en s'authentifiant avec votre adresse complète et votre mot de passe Interia habituel, pour que Claude, Cursor ou tout client MCP puisse lire, rechercher, envoyer et organiser le courrier. Interia garde les canaux POP3 et IMAP fermés tant que vous n'avez pas réglé korzystam z programu pocztowego sur TAK dans les paramètres de votre compte, et une boîte mail avec la connexion en deux étapes activée ne peut être utilisée depuis aucun programme de messagerie. Une boîte est gratuite, pour toujours.",
     "meta0": "1 boîte gratuite, pour toujours",
     "meta1": "Activez d'abord le canal des programmes de messagerie",
     "meta2": "E-mails récupérés en direct, jamais stockés"
@@ -31,7 +31,7 @@
   },
   "setup": [
     {
-      "h": "Créez votre compte MCP Emails gratuit",
+      "h": "Créez votre compte MCPEmails gratuit",
       "p": "Inscrivez-vous sur mcpemails.com. L'offre gratuite connecte une boîte pour toujours et ne demande pas de carte bancaire."
     },
     {
@@ -43,7 +43,7 @@
       "p": "La connexion en deux étapes d'Interia (<b>logowanie dwuetapowe</b>) et les programmes de messagerie s'excluent mutuellement. Interia l'indique sur l'écran même où vous l'activez : avec la connexion en deux étapes, le compte ne peut pas être utilisé dans un programme de messagerie. Interia ne fournit aucun mot de passe d'application pour contourner cela, donc si la boîte l'a activée, vous avez un choix à faire avant d'aller plus loin."
     },
     {
-      "h": "Ajoutez la boîte dans MCP Emails",
+      "h": "Ajoutez la boîte dans MCPEmails",
       "p": "Choisissez IMAP / SMTP, saisissez l'adresse complète, par exemple nazwa@interia.pl, puis votre mot de passe Interia. Les serveurs et les ports sont préremplis et ont été vérifiés par une vraie connexion TLS. Ajoutez ensuite https://mcpemails.com/api/mcp dans Claude, Cursor ou ChatGPT, autorisez l'accès, et votre agent dispose de la boîte."
     }
   ],
@@ -58,7 +58,7 @@
     },
     {
       "h": "Pas de SASL-IR, et les clients qui le supposent reçoivent un simple BAD",
-      "p": "La bannière d'Interia annonce <code>AUTH=PLAIN</code> mais pas <code>SASL-IR</code> : le serveur rejette donc l'authentification en une étape qui envoie l'identifiant avec la commande <code>AUTHENTICATE</code>. Les clients qui supposent la prise en charge de SASL-IR reçoivent un <code>BAD</code> sans explication, impossible à distinguer d'un mauvais mot de passe. MCP Emails le détecte et relance l'échange en deux étapes, donc c'est déjà géré, mais cela explique pourquoi certains outils IMAP considèrent Interia comme défaillant alors que Thunderbird s'y connecte sans problème."
+      "p": "La bannière d'Interia annonce <code>AUTH=PLAIN</code> mais pas <code>SASL-IR</code> : le serveur rejette donc l'authentification en une étape qui envoie l'identifiant avec la commande <code>AUTHENTICATE</code>. Les clients qui supposent la prise en charge de SASL-IR reçoivent un <code>BAD</code> sans explication, impossible à distinguer d'un mauvais mot de passe. MCPEmails le détecte et relance l'échange en deux étapes, donc c'est déjà géré, mais cela explique pourquoi certains outils IMAP considèrent Interia comme défaillant alors que Thunderbird s'y connecte sans problème."
     },
     {
       "h": "Envoi et réception passent par le même nom d'hôte, et seul PLAIN est proposé en IMAP",
@@ -67,12 +67,12 @@
   ],
   "limits": [
     "Interia n'annonce ni MOVE ni SPECIAL-USE : le classement passe donc par un déplacement par copie, marquage et purge, et les dossiers Envoyés, Brouillons et Corbeille sont identifiés par leur nom. Sur une boîte polonaise, ils s'appellent généralement Wysłane, Kopie robocze et Kosz, alors nommez le dossier si un agent ne le trouve pas.",
-    "Activer la connexion en deux étapes sur le compte Interia déconnecte la boîte de tous les clients de messagerie, MCP Emails compris, et aucun mot de passe d'application n'existe pour rétablir l'accès."
+    "Activer la connexion en deux étapes sur le compte Interia déconnecte la boîte de tous les clients de messagerie, MCPEmails compris, et aucun mot de passe d'application n'existe pour rétablir l'accès."
   ],
   "faq": [
     {
       "q": "Claude fonctionne-t-il avec Interia Poczta ?",
-      "a": "Pas seul. Claude n'a pas de connecteur Interia intégré. Brancher un serveur MCP comme MCP Emails sur la boîte en IMAP donne à Claude un accès en lecture, recherche, envoi, réponse, planification et organisation, et la même connexion fonctionne ensuite depuis Cursor, ChatGPT et d'autres clients MCP."
+      "a": "Pas seul. Claude n'a pas de connecteur Interia intégré. Brancher un serveur MCP comme MCPEmails sur la boîte en IMAP donne à Claude un accès en lecture, recherche, envoi, réponse, planification et organisation, et la même connexion fonctionne ensuite depuis Cursor, ChatGPT et d'autres clients MCP."
     },
     {
       "q": "Quels sont les paramètres IMAP et SMTP d'Interia ?",

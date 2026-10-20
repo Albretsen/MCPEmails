@@ -140,7 +140,7 @@ export default async function GrowthKioskPage({
         <header className="kiosk-head">
           <div className="kiosk-head-top">
             <h1 className="kiosk-wordmark">
-              MCP Emails <em>{meta.question} · {windowLabel(reportWindow.days)}</em>
+              MCPEmails <em>{meta.question} · {windowLabel(reportWindow.days)}</em>
             </h1>
             {/* The switch sits between the wordmark and the clock so the two
                 things that never move on this board stay at the two edges,

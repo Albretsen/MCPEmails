@@ -3,7 +3,7 @@ const post = {
   title: 'The Best Ways to Let Claude Manage Your Inbox in 2026',
   description: 'A frank roundup of the best ways to let Claude manage your inbox in 2026: native integrations, DIY MCP servers, copy-paste, browser extensions, and hosted MCP.',
   cover: '/blog/cover-best-ways-to-let-claude-manage-your-inbox.svg',
-  coverAlt: 'The best ways to let Claude manage your inbox in 2026 — MCP Emails',
+  coverAlt: 'The best ways to let Claude manage your inbox in 2026 — MCPEmails',
   authorId: 'asgeir',
   publishedAt: "2026-04-28T09:00:00.000Z",
   updatedAt: "2026-04-28T09:00:00.000Z",
@@ -28,9 +28,9 @@ Hold those four against each option. The differences get obvious fast.
 
 This is the [Model Context Protocol](https://modelcontextprotocol.io) approach, run for you. You connect your inbox once in a dashboard, paste one endpoint URL into Claude, and the agent gets a clean set of email tools. Claude calls them like any other tool: \`inbox_list\` to see your accounts, \`email_read\` to list, read, or search messages, \`email_compose\` to send, reply, or forward, plus \`email_organize\`, \`folder\`, \`draft\`, \`schedule\`, and \`contact_search\` for flags, folders, drafts, scheduling, and contacts. These are the core of the 19 tools, and most of them pick their operation with an \`action\` parameter.
 
-MCP Emails is the one I build, so take the recommendation with that in mind, but the architecture is the reason it wins for most people, not the marketing. Every tool call hits your provider live (IMAP/SMTP for Gmail and most providers, Microsoft Graph for Outlook), hands the message to Claude, and discards it. **The email body is never stored.** The only thing persisted per inbox is an encrypted OAuth token or app password, AES-256-GCM encrypted at rest, decrypted on our servers only when a request needs it, and never sent to Claude. If you want the long version of why that matters, read [why "email is never stored" matters](/blog/why-email-never-stored-matters).
+MCPEmails is the one I build, so take the recommendation with that in mind, but the architecture is the reason it wins for most people, not the marketing. Every tool call hits your provider live (IMAP/SMTP for Gmail and most providers, Microsoft Graph for Outlook), hands the message to Claude, and discards it. **The email body is never stored.** The only thing persisted per inbox is an encrypted OAuth token or app password, AES-256-GCM encrypted at rest, decrypted on our servers only when a request needs it, and never sent to Claude. If you want the long version of why that matters, read [why "email is never stored" matters](/blog/why-email-never-stored-matters).
 
-Setup is genuinely quick. In claude.ai you go to **Customize → Connectors → Add connector**, paste \`https://www.mcpemails.com/api/mcp\`, click Connect, sign in to your MCP Emails account, and approve the scopes you want (\`read:email\`, \`send:email\`, or both). No API key, no SDK, no config file. There's a [two-minute connect guide](/blog/connect-email-to-ai-agent-under-2-minutes) if you want the click-by-click. The [complete guide to connecting Claude to your email](/blog/connect-claude-to-email) then walks through each provider in turn.
+Setup is genuinely quick. In claude.ai you go to **Customize → Connectors → Add connector**, paste \`https://www.mcpemails.com/api/mcp\`, click Connect, sign in to your MCPEmails account, and approve the scopes you want (\`read:email\`, \`send:email\`, or both). No API key, no SDK, no config file. There's a [two-minute connect guide](/blog/connect-email-to-ai-agent-under-2-minutes) if you want the click-by-click. The [complete guide to connecting Claude to your email](/blog/connect-claude-to-email) then walks through each provider in turn.
 
 **Good for:** almost everyone — non-technical users, people with Gmail and Outlook and IMAP all at once, anyone who cares that the body isn't stored.
 
@@ -82,7 +82,7 @@ Here's my opinionated take.
 
 **Skip the browser extension** unless you live in Gmail web and have read its data policy carefully. **Skip native integrations** unless yours already ships the feature and you're a single-client, single-provider person.
 
-One more thing that separates the serious options from the toys: sending. With MCP Emails, \`email_compose\` (action send or reply) goes through your own provider (Gmail's SMTP, Microsoft Graph, or your provider's SMTP), so your domain reputation stays yours and threading headers are set automatically. Mail that relays from someone else's domain is a deliverability problem waiting to happen.
+One more thing that separates the serious options from the toys: sending. With MCPEmails, \`email_compose\` (action send or reply) goes through your own provider (Gmail's SMTP, Microsoft Graph, or your provider's SMTP), so your domain reputation stays yours and threading headers are set automatically. Mail that relays from someone else's domain is a deliverability problem waiting to happen.
 
 ## Get started
 

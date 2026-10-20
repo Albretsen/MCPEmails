@@ -3,7 +3,7 @@ const translation = {
   description:
     'Gestiona los buzones de trabajo, personales y de tu negocio paralelo con un solo agente de IA: cómo descubre los buzones, cómo acotar una solicitud, nombres de remitente que siguen siendo correctos y revisión de envíos por buzón.',
   coverAlt:
-    'Un agente de IA conectado a cuentas de correo de trabajo, personales y de negocio paralelo con MCP Emails',
+    'Un agente de IA conectado a cuentas de correo de trabajo, personales y de negocio paralelo con MCPEmails',
   content: `Casi nadie tiene un solo buzón. Tienes una dirección de trabajo, una personal y al menos una más para un negocio paralelo o para un dominio que todavía conservas. Cada pregunta que cruza dos cuentas se convierte en una búsqueda manual en dos sitios.
 
 Un solo agente de IA sobre todas ellas elimina el cambio constante, pero solo si el agente sabe qué buzón es cuál y si las respuestas salen desde la dirección correcta.
@@ -48,7 +48,7 @@ Por eso «work2» es un mal nombre por partida doble: el agente no puede saber p
 Enviar desde un alias funciona, pero solo desde direcciones que hayas demostrado que son tuyas:
 
 - Tu propia dirección conectada siempre funciona como valor de From, en todos los proveedores.
-- En un buzón IMAP (iCloud, Yahoo, Gmail conectado con contraseña de aplicación, cualquier servidor SMTP), una dirección **distinta** funciona en cuanto se verifica. Añádela en los ajustes de ese buzón en el panel y luego introduce el código que MCP Emails envía a esa dirección. Las direcciones verificadas aparecen en \`sender_identities\` dentro de la entrada de ese buzón en \`inbox_list\`.
+- En un buzón IMAP (iCloud, Yahoo, Gmail conectado con contraseña de aplicación, cualquier servidor SMTP), una dirección **distinta** funciona en cuanto se verifica. Añádela en los ajustes de ese buzón en el panel y luego introduce el código que MCPEmails envía a esa dirección. Las direcciones verificadas aparecen en \`sender_identities\` dentro de la entrada de ese buzón en \`inbox_list\`.
 - Outlook envía desde la dirección conectada.
 - Una dirección From que no esté verificada para el buzón se rechaza en lugar de reescribirse en silencio.
 

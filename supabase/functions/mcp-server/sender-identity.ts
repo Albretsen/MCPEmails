@@ -96,7 +96,7 @@ export function unauthorizedSenderIdentityText(tool: string, provider: string): 
   const base = `${tool}: the requested From address is not a verified Send As identity for this inbox. ` +
     "Call inbox_list and use one of its sender_identities.";
   return provider === "imap"
-    ? `${base} For an IMAP inbox the user adds and verifies addresses in the MCP Emails dashboard, ` +
+    ? `${base} For an IMAP inbox the user adds and verifies addresses in the MCPEmails dashboard, ` +
       "in the inbox's Send As settings."
     : base;
 }

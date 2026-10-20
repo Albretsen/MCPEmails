@@ -14,11 +14,11 @@
     "eyebrow": "Claude + e-post",
     "titleLine1": "Koble innboksen din til Claude",
     "titleLine2": "som en egendefinert kobling",
-    "lead": "Claude har ingen e-postklient av sitt eget. MCP Emails er den hostede MCP-serveren som gir den en: les, søk i, send, svar på, videresend, planlegg og organiser ekte e-post fra claude.ai eller Claude Desktop.",
+    "lead": "Claude har ingen e-postklient av sitt eget. MCPEmails er den hostede MCP-serveren som gir den en: les, søk i, send, svar på, videresend, planlegg og organiser ekte e-post fra claude.ai eller Claude Desktop.",
     "meta0": "1 innboks gratis, for alltid",
     "meta1": "OAuth, ingen API-nøkkel nødvendig",
     "meta2": "E-post hentes direkte, lagres aldri",
-    "answer": "Legg til https://mcpemails.com/api/mcp som en egendefinert kobling i Claude, klikk Connect og logg inn med MCP Emails-kontoen din. Claude registrerer seg selv automatisk og ber om tilgangene du godkjenner. Det er ingen API-nøkkel å opprette og ingen konfigurasjonsfil å redigere."
+    "answer": "Legg til https://mcpemails.com/api/mcp som en egendefinert kobling i Claude, klikk Connect og logg inn med MCPEmails-kontoen din. Claude registrerer seg selv automatisk og ber om tilgangene du godkjenner. Det er ingen API-nøkkel å opprette og ingen konfigurasjonsfil å redigere."
   },
   "method": {
     "title": "Slik kobler Claude seg til: OAuth, ingen API-nøkkel",
@@ -39,7 +39,7 @@
     },
     {
       "h": "Koble til og autoriser",
-      "p": "Klikk Connect og logg inn med MCP Emails for å autorisere. Godkjenn tilgangene du vil at Claude skal ha. Ingen API-nøkkel nødvendig."
+      "p": "Klikk Connect og logg inn med MCPEmails for å autorisere. Godkjenn tilgangene du vil at Claude skal ha. Ingen API-nøkkel nødvendig."
     }
   ],
   "gotchas": [
@@ -64,7 +64,7 @@
   "faq": [
     {
       "q": "Kan Claude lese e-posten min?",
-      "a": "Ikke av seg selv. Claude kan bare nå en postkasse gjennom en kobling, og en egendefinert kobling som peker mot MCP Emails er én måte å gi den det på. Når den er koblet til, kan Claude liste opp, lese, søke i, sende, svare på, videresende, organisere og planlegge e-post på tvers av alle innboksene du har koblet til, begrenset til tilgangene du godkjente."
+      "a": "Ikke av seg selv. Claude kan bare nå en postkasse gjennom en kobling, og en egendefinert kobling som peker mot MCPEmails er én måte å gi den det på. Når den er koblet til, kan Claude liste opp, lese, søke i, sende, svare på, videresende, organisere og planlegge e-post på tvers av alle innboksene du har koblet til, begrenset til tilgangene du godkjente."
     },
     {
       "q": "Trenger jeg en API-nøkkel for Claude?",

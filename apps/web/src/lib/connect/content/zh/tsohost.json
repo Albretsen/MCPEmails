@@ -21,7 +21,7 @@
     "titleLine1": "将 Tsohost 邮箱连接到 Claude，",
     "titleLine2": "Cursor、ChatGPT、任意 MCP 客户端",
     "lead": "为你的 AI 代理接入一个真正的 Tsohost 邮箱。通过 IMAP 读取、搜索、发送、回复、定时与整理邮件，所用设置取自经历两次迁移后唯一仍然权威的那个页面。",
-    "answer": "Claude 无法自行连接 Tsohost 邮箱。MCP Emails 是一个托管 MCP 服务器，通过 993 端口的标准 IMAP 和 465 端口的 SMTP 与之连接，让 Claude、Cursor 或任意 MCP 客户端都能读取、搜索、发送并整理邮件。没有可以让客户端指向的共享 tsohost.com 邮件服务器：主机名由你自己的域名或托管服务器的名称构成，其权威版本列在 cPanel 的 Email Accounts、Connect Devices 中。认证使用为该邮箱单独设置的密码，绝不是控制面板登录密码。tsoHost 品牌已并入 123 Reg，所以请从 123 Reg Control Panel 开始。一个收件箱永久免费。",
+    "answer": "Claude 无法自行连接 Tsohost 邮箱。MCPEmails 是一个托管 MCP 服务器，通过 993 端口的标准 IMAP 和 465 端口的 SMTP 与之连接，让 Claude、Cursor 或任意 MCP 客户端都能读取、搜索、发送并整理邮件。没有可以让客户端指向的共享 tsohost.com 邮件服务器：主机名由你自己的域名或托管服务器的名称构成，其权威版本列在 cPanel 的 Email Accounts、Connect Devices 中。认证使用为该邮箱单独设置的密码，绝不是控制面板登录密码。tsoHost 品牌已并入 123 Reg，所以请从 123 Reg Control Panel 开始。一个收件箱永久免费。",
     "meta0": "1 个收件箱永久免费",
     "meta1": "cPanel 中的邮箱密码",
     "meta2": "邮件实时获取，绝不存储"
@@ -32,7 +32,7 @@
   },
   "setup": [
     {
-      "h": "创建免费 MCP Emails 账户",
+      "h": "创建免费 MCPEmails 账户",
       "p": "在 mcpemails.com 注册。免费套餐可永久连接一个收件箱，无需信用卡。"
     },
     {
@@ -45,7 +45,7 @@
     },
     {
       "h": "将 MCP URL 粘贴到你的 AI",
-      "p": "在 MCP Emails 中用完整地址和该密码添加邮箱，然后把 https://mcpemails.com/api/mcp 粘贴到 Claude、Cursor 或 ChatGPT 中，完成授权，代理便拥有该收件箱。"
+      "p": "在 MCPEmails 中用完整地址和该密码添加邮箱，然后把 https://mcpemails.com/api/mcp 粘贴到 Claude、Cursor 或 ChatGPT 中，完成授权，代理便拥有该收件箱。"
     }
   ],
   "gotchas": [
@@ -67,14 +67,14 @@
     }
   ],
   "limits": [
-    "MCP Emails 连接的是邮箱，而不是托管账户。转发器、别名、自动回复、垃圾邮件过滤器和 DNS 都留在 cPanel 和 123 Reg Control Panel 中，你的 AI 客户端既看不到也无法更改。",
+    "MCPEmails 连接的是邮箱，而不是托管账户。转发器、别名、自动回复、垃圾邮件过滤器和 DNS 都留在 cPanel 和 123 Reg Control Panel 中，你的 AI 客户端既看不到也无法更改。",
     "如果该地址其实是 Titan 邮箱而不是 cPanel 邮箱，这里的所有设置都不适用。请改为按 Titan 连接，使用 Titan 自己的主机和 Titan 控制面板中的邮箱密码。",
     "本页描述的是迁移之后的 cPanel 邮件。旧 tsoHost 平台（迁移到 cPanel 之前）的主机名已不再对应你邮箱的所在位置，也不会解析到它。"
   ],
   "faq": [
     {
       "q": "Claude 能用 Tsohost 邮箱吗？",
-      "a": "不能直接使用。Claude 没有针对 cPanel 邮件主机的内置连接器。通过 IMAP 将 MCP Emails 这样的 MCP 服务器连接到你的 Tsohost 邮箱后，Claude 就能用桌面邮件客户端会用的凭据读取、搜索、发送、回复、定时和整理邮件，同一个连接也可在 Cursor 和 ChatGPT 中使用。"
+      "a": "不能直接使用。Claude 没有针对 cPanel 邮件主机的内置连接器。通过 IMAP 将 MCPEmails 这样的 MCP 服务器连接到你的 Tsohost 邮箱后，Claude 就能用桌面邮件客户端会用的凭据读取、搜索、发送、回复、定时和整理邮件，同一个连接也可在 Cursor 和 ChatGPT 中使用。"
     },
     {
       "q": "Tsohost 的 IMAP 和 SMTP 设置是什么？",

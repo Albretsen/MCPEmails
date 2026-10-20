@@ -20,7 +20,7 @@
     "titleLine1": "Koble Seznam Email til Claude,",
     "titleLine2": "og Cursor, ChatGPT, enhver MCP-klient",
     "lead": "Gi AI-agenten din en ekte Seznam-postkasse. Les, søk, send, svar, planlegg og organiser e-post via IMAP med passordet du allerede bruker, i alle MCP-klienter i stedet for bare én.",
-    "answer": "Claude når ikke Seznam Email på egen hånd. MCP Emails er en hostet MCP-server som kobler til via IMAP på imap.seznam.cz port 993 og logger inn med hele adressen din og det vanlige Seznam-passordet, slik at Claude, Cursor eller enhver MCP-klient kan lese, søke, sende og organisere den e-posten. Har du slått på tofaktorautentisering, slutter kontopassordet å virke for e-postprotokoller, og du setter i stedet et eget Heslo pro aplikace. Én innboks er gratis, for alltid.",
+    "answer": "Claude når ikke Seznam Email på egen hånd. MCPEmails er en hostet MCP-server som kobler til via IMAP på imap.seznam.cz port 993 og logger inn med hele adressen din og det vanlige Seznam-passordet, slik at Claude, Cursor eller enhver MCP-klient kan lese, søke, sende og organisere den e-posten. Har du slått på tofaktorautentisering, slutter kontopassordet å virke for e-postprotokoller, og du setter i stedet et eget Heslo pro aplikace. Én innboks er gratis, for alltid.",
     "meta0": "1 innboks gratis, for alltid",
     "meta1": "Kontopassord, med mindre tofaktor er på",
     "meta2": "E-post hentes direkte, lagres aldri"
@@ -31,7 +31,7 @@
   },
   "setup": [
     {
-      "h": "Opprett din gratis MCP Emails-konto",
+      "h": "Opprett din gratis MCPEmails-konto",
       "p": "Registrer deg på mcpemails.com. Gratisplanen kobler til én innboks, for alltid, og ber ikke om kort."
     },
     {
@@ -39,7 +39,7 @@
       "p": "Logg inn på Seznam-kontoen din og åpne <b>Zabezpečení účtu</b> (kontosikkerhet). Er <b>Dvoufázové ověření</b> av, er det vanlige Seznam-passordet det du skal bruke, og det er ingenting mer å gjøre her. Er det på, finner du raden <b>Heslo pro aplikace</b> (app-passord), klikker <b>Nastavit</b> (sett opp), skriver et nytt passord to ganger og klikker <b>Uložit změny</b> (lagre endringer). Seznam avviser en verdi som er identisk med innloggingspassordet ditt."
     },
     {
-      "h": "Lim adressen og passordet inn i MCP Emails",
+      "h": "Lim adressen og passordet inn i MCPEmails",
       "p": "Velg IMAP / SMTP, skriv inn hele adressen, inkludert delen etter krøllalfa, og lim inn det passordet som gjelder. Vertene og portene er forhåndsutfylt med de verifiserte verdiene på denne siden."
     },
     {
@@ -58,7 +58,7 @@
     },
     {
       "h": "Seznam annonserer ikke IDLE, så ingenting blir pushet",
-      "p": "IMAP-serveren mangler IDLE-funksjonen, som betyr at en klient ikke kan holde en tilkobling åpen og få beskjed når e-post kommer. Den må polle. For en agent er dette et ikke-problem, fordi MCP Emails åpner en tilkobling og henter når AI-en din stiller et spørsmål i stedet for å sitte på en socket. Det er likevel verdt å vite, fordi det forklarer hvorfor en skrivebordsklient på en Seznam-konto merker ny e-post senere enn webmailen gjør, og hvorfor et verktøy som er avhengig av IDLE, ser ødelagt ut her mens det virker andre steder."
+      "p": "IMAP-serveren mangler IDLE-funksjonen, som betyr at en klient ikke kan holde en tilkobling åpen og få beskjed når e-post kommer. Den må polle. For en agent er dette et ikke-problem, fordi MCPEmails åpner en tilkobling og henter når AI-en din stiller et spørsmål i stedet for å sitte på en socket. Det er likevel verdt å vite, fordi det forklarer hvorfor en skrivebordsklient på en Seznam-konto merker ny e-post senere enn webmailen gjør, og hvorfor et verktøy som er avhengig av IDLE, ser ødelagt ut her mens det virker andre steder."
     }
   ],
   "limits": [
@@ -68,7 +68,7 @@
   "faq": [
     {
       "q": "Fungerer Claude med Seznam Email?",
-      "a": "Ikke direkte. Claude har ingen innebygd Seznam-kobling og kan ikke åpne en IMAP-tilkobling selv. Kobler du en MCP-server som MCP Emails til seznam.cz- eller email.cz-postkassen din, får Claude tilgang til å lese, søke, sende, svare, planlegge og organisere, og samme tilkobling fungerer i Cursor og andre MCP-klienter."
+      "a": "Ikke direkte. Claude har ingen innebygd Seznam-kobling og kan ikke åpne en IMAP-tilkobling selv. Kobler du en MCP-server som MCPEmails til seznam.cz- eller email.cz-postkassen din, får Claude tilgang til å lese, søke, sende, svare, planlegge og organisere, og samme tilkobling fungerer i Cursor og andre MCP-klienter."
     },
     {
       "q": "Hva er IMAP- og SMTP-innstillingene for Seznam?",

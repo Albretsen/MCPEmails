@@ -212,7 +212,7 @@
       },
       {
         "q": "Puis-je l'héberger moi-même plutôt que de payer ?",
-        "a": "Oui. MCP Emails est open source sous AGPL-3.0 et gratuit à héberger soi-même. Une stack docker-compose exécute le même serveur MCP, avec les identifiants de votre boîte mail chiffrés sous une clé que vous seul détenez. L'auto-hébergement couvre les boîtes mail IMAP et SMTP. La connexion Gmail et Outlook (OAuth) et le tableau de bord restent sur le service hébergé, où ils fonctionnent avec tous les forfaits, Gratuit compris ; les membres et rôles sont sur Business, et le support par e-mail sur tous les forfaits payants."
+        "a": "Oui. MCPEmails est open source sous AGPL-3.0 et gratuit à héberger soi-même. Une stack docker-compose exécute le même serveur MCP, avec les identifiants de votre boîte mail chiffrés sous une clé que vous seul détenez. L'auto-hébergement couvre les boîtes mail IMAP et SMTP. La connexion Gmail et Outlook (OAuth) et le tableau de bord restent sur le service hébergé, où ils fonctionnent avec tous les forfaits, Gratuit compris ; les membres et rôles sont sur Business, et le support par e-mail sur tous les forfaits payants."
       }
     ]
   },

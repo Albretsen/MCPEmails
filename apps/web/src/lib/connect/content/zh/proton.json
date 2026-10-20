@@ -21,7 +21,7 @@
     "titleLine1": "Proton Mail 无法",
     "titleLine2": "连接到托管 MCP 服务器",
     "lead": "Proton 在互联网上没有 IMAP 服务器。Proton 邮箱唯一存在的 IMAP 运行在你自己的电脑上，位于 Proton Mail Bridge 内部，这就是为什么每个托管工具都会撞上同一堵墙。",
-    "answer": "不能。Proton Mail 不提供任何可供其他地方的客户端登录的 IMAP、POP 或 SMTP 端点。邮件客户端访问 Proton 的唯一途径是 Proton Mail Bridge，这是一款面向 Proton 付费套餐的桌面应用，它在本地解密你的邮件，并在 localhost（即运行它的那台机器的回环地址）上提供 IMAP 和 SMTP。MCP Emails 这样的托管 MCP 服务器运行在我们的基础设施上，而不是你的桌面上，互联网上的任何东西都无法路由到你的 localhost，所以这个连接是不可能实现的，而不是尚未实现。如果你想让 AI 代理处理发到你 Proton 地址的邮件，诚实的选择有两个：使用 Proton 的付费自动转发，把邮件转到一个真正支持 IMAP 的邮箱（MCP Emails 可免费连接一个收件箱）；或者只用 Proton 仅限发信的 SMTP 提交来处理外发邮件。"
+    "answer": "不能。Proton Mail 不提供任何可供其他地方的客户端登录的 IMAP、POP 或 SMTP 端点。邮件客户端访问 Proton 的唯一途径是 Proton Mail Bridge，这是一款面向 Proton 付费套餐的桌面应用，它在本地解密你的邮件，并在 localhost（即运行它的那台机器的回环地址）上提供 IMAP 和 SMTP。MCPEmails 这样的托管 MCP 服务器运行在我们的基础设施上，而不是你的桌面上，互联网上的任何东西都无法路由到你的 localhost，所以这个连接是不可能实现的，而不是尚未实现。如果你想让 AI 代理处理发到你 Proton 地址的邮件，诚实的选择有两个：使用 Proton 的付费自动转发，把邮件转到一个真正支持 IMAP 的邮箱（MCPEmails 可免费连接一个收件箱）；或者只用 Proton 仅限发信的 SMTP 提交来处理外发邮件。"
   },
   "method": {
     "title": "Proton Mail 如何连接：通过 Bridge 在本地连接，否则无法连接",
@@ -29,12 +29,12 @@
   },
   "setup": [
     {
-      "h": "创建免费 MCP Emails 账户",
+      "h": "创建免费 MCPEmails 账户",
       "p": "只需一个邮箱地址，无需信用卡。连接一个收件箱永久免费，接下来两步决定连接哪个收件箱。"
     },
     {
       "h": "选择承担自动化工作的邮箱",
-      "p": "选择一家运行真正 IMAP 服务器的服务商上的地址：域名邮箱、工作账户、Fastmail、Migadu、Gmail。MCP Emails 连接的就是这个账户，代理也从这里读取、发送、归档和定时邮件。你的 Proton 地址保持原样。"
+      "p": "选择一家运行真正 IMAP 服务器的服务商上的地址：域名邮箱、工作账户、Fastmail、Migadu、Gmail。MCPEmails 连接的就是这个账户，代理也从这里读取、发送、归档和定时邮件。你的 Proton 地址保持原样。"
     },
     {
       "h": "在 Proton 设置中添加转发规则",
@@ -90,7 +90,7 @@
     },
     {
       "q": "我的邮件会存储在你们的服务器上吗？",
-      "a": "不会。对于 MCP Emails 能连接的邮箱，每次请求时都通过 IMAP 实时获取邮件并交给你的 AI 客户端，凭据经过静态加密，邮件正文不会被保留。我们从不持有任何 Proton 凭据，因为根本没有 Proton 连接可建立。"
+      "a": "不会。对于 MCPEmails 能连接的邮箱，每次请求时都通过 IMAP 实时获取邮件并交给你的 AI 客户端，凭据经过静态加密，邮件正文不会被保留。我们从不持有任何 Proton 凭据，因为根本没有 Proton 连接可建立。"
     }
   ],
   "ctaBand": {

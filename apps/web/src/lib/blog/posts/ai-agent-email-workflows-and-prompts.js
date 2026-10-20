@@ -2,9 +2,9 @@ const post = {
   slug: 'ai-agent-email-workflows-and-prompts',
   title: 'Reusable AI Agent Email Workflows: Inbox Triage Prompts That Stay Useful',
   description:
-    'Start reliable inbox triage, follow-up, cleanup, and draft-review routines with MCP Emails workflow prompts—without building a separate tool for every email habit.',
+    'Start reliable inbox triage, follow-up, cleanup, and draft-review routines with MCPEmails workflow prompts—without building a separate tool for every email habit.',
   cover: '/blog/cover-ai-agent-triage-summarize-inbox.svg',
-  coverAlt: 'Reusable AI agent inbox workflow prompts — MCP Emails',
+  coverAlt: 'Reusable AI agent inbox workflow prompts — MCPEmails',
   authorId: 'asgeir',
   publishedAt: '2026-08-02T09:10:00.000Z',
   updatedAt: '2026-08-02T09:10:00.000Z',
@@ -12,13 +12,13 @@ const post = {
   featured: false,
   content: `The best AI email workflow is usually not an autonomous robot with a dozen special-purpose commands. It is a repeatable routine that starts from a clear goal: triage what is new, find the follow-ups, clean up a category, review drafts, or check scheduled sends.
 
-MCP Emails includes user-invoked workflow prompts for those routines. They are starting points an MCP client can show and run; they do not grant permissions, send mail automatically, or turn your inbox into a black box. You remain in charge of the scope and the final action.
+MCPEmails includes user-invoked workflow prompts for those routines. They are starting points an MCP client can show and run; they do not grant permissions, send mail automatically, or turn your inbox into a black box. You remain in charge of the scope and the final action.
 
 ## Why reusable prompts beat a growing tool list
 
 Email has many small habits: “show me what needs a response,” “find invoices,” “clean up newsletters,” “review tomorrow’s scheduled messages.” It would be easy to create one tool for each habit. That makes an agent harder to guide and harder for a person to understand.
 
-Instead, MCP Emails keeps a compact set of core capabilities—read, search, organize, compose, draft, and schedule—and uses prompts to express the routine. A prompt tells the agent how to combine the existing capabilities thoughtfully. The product stays learnable, while your workflows stay flexible.
+Instead, MCPEmails keeps a compact set of core capabilities—read, search, organize, compose, draft, and schedule—and uses prompts to express the routine. A prompt tells the agent how to combine the existing capabilities thoughtfully. The product stays learnable, while your workflows stay flexible.
 
 ## The workflows worth starting with
 

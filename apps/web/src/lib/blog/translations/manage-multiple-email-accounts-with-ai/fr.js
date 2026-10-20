@@ -3,7 +3,7 @@ const translation = {
   description:
     'Faites passer vos boîtes professionnelle, personnelle et secondaire par un seul agent IA : comment il découvre les boîtes, comment cadrer une demande, des noms d\'expéditeur toujours justes et la validation des envois boîte par boîte.',
   coverAlt:
-    'Un agent IA connecté aux comptes e-mail professionnel, personnel et secondaire avec MCP Emails',
+    'Un agent IA connecté aux comptes e-mail professionnel, personnel et secondaire avec MCPEmails',
   content: `Presque personne n'a une seule boîte aux lettres. Vous avez une adresse professionnelle, une adresse personnelle et au moins une autre pour une activité secondaire ou pour un domaine que vous possédez toujours. Chaque question qui traverse deux comptes devient une recherche manuelle à deux endroits.
 
 Un seul agent IA sur l'ensemble supprime ces allers-retours, mais seulement si l'agent sait quelle boîte est laquelle et si les réponses partent de la bonne adresse.
@@ -48,7 +48,7 @@ Un seul champ remplit trois rôles. Chaque boîte a un nom affiché : c'est le *
 Envoyer depuis un alias fonctionne, mais seulement depuis des adresses dont vous avez prouvé qu'elles sont à vous :
 
 - Votre propre adresse connectée fonctionne toujours comme valeur de From, chez tous les fournisseurs.
-- Sur une boîte IMAP (iCloud, Yahoo, Gmail connecté par mot de passe d'application, tout serveur SMTP), une adresse **différente** fonctionne dès qu'elle est vérifiée. Ajoutez-la dans les réglages de cette boîte dans le tableau de bord, puis saisissez le code que MCP Emails envoie à cette adresse. Les adresses vérifiées sont listées sous \`sender_identities\` dans l'entrée \`inbox_list\` de cette boîte.
+- Sur une boîte IMAP (iCloud, Yahoo, Gmail connecté par mot de passe d'application, tout serveur SMTP), une adresse **différente** fonctionne dès qu'elle est vérifiée. Ajoutez-la dans les réglages de cette boîte dans le tableau de bord, puis saisissez le code que MCPEmails envoie à cette adresse. Les adresses vérifiées sont listées sous \`sender_identities\` dans l'entrée \`inbox_list\` de cette boîte.
 - Outlook envoie depuis l'adresse connectée.
 - Une adresse From qui n'est pas vérifiée pour la boîte est refusée plutôt que réécrite en silence.
 

@@ -19,7 +19,7 @@
     "titleLine1": "Connect your Orange mailbox",
     "titleLine2": "to Claude, Cursor, any MCP client",
     "lead": "Give your AI agent a real Orange inbox. Read, search, send, reply, schedule and organize mail over IMAP, once you have turned on the POP/IMAP access Orange keeps switched off.",
-    "answer": "Claude cannot reach an Orange mailbox on its own. MCP Emails is a hosted MCP server that connects it over IMAP at imap.orange.fr on port 993, so Claude, Cursor or any MCP client can read, search, send and organize the mail. Two things have to be right first: Orange disables POP and IMAP access on the mailbox for security reasons, so you switch it on in the webmail under Sécurité, and Orange recommends authenticating with the mot de passe dédié from your Espace client rather than your ordinary Orange password. One inbox is free, forever.",
+    "answer": "Claude cannot reach an Orange mailbox on its own. MCPEmails is a hosted MCP server that connects it over IMAP at imap.orange.fr on port 993, so Claude, Cursor or any MCP client can read, search, send and organize the mail. Two things have to be right first: Orange disables POP and IMAP access on the mailbox for security reasons, so you switch it on in the webmail under Sécurité, and Orange recommends authenticating with the mot de passe dédié from your Espace client rather than your ordinary Orange password. One inbox is free, forever.",
     "meta0": "1 inbox free, forever",
     "meta1": "Enable POP/IMAP, use the dedicated password",
     "meta2": "Email fetched live, never stored"
@@ -30,7 +30,7 @@
   },
   "setup": [
     {
-      "h": "Create your free MCP Emails account",
+      "h": "Create your free MCPEmails account",
       "p": "Sign up at mcpemails.com. The free plan connects one inbox forever and does not ask for a card."
     },
     {
@@ -42,7 +42,7 @@
       "p": "Sign in to your Espace client on orange.fr and open the <b>Connexion et sécurité</b> section. The dedicated password shown there is the one Orange intends you to use for POP, IMAP and SMTP. It is a separate value from the password you use to sign in to orange.fr, and Orange recommends it specifically for mail software."
     },
     {
-      "h": "Paste it into MCP Emails, then paste the MCP URL into your AI",
+      "h": "Paste it into MCPEmails, then paste the MCP URL into your AI",
       "p": "Choose IMAP / SMTP, enter the full address such as nom@orange.fr, and paste the dedicated password. The Orange hosts and ports are prefilled. Then drop https://mcpemails.com/api/mcp into Claude, Cursor or ChatGPT, authorize, and your agent has the inbox."
     }
   ],
@@ -71,7 +71,7 @@
   "faq": [
     {
       "q": "Does Claude work with Orange mail?",
-      "a": "Not directly. Claude ships no Orange connector. Connecting an MCP server such as MCP Emails to the mailbox over IMAP gives Claude read, search, send, reply, schedule and organize access, and the same connection works from Cursor, ChatGPT and other MCP clients afterwards."
+      "a": "Not directly. Claude ships no Orange connector. Connecting an MCP server such as MCPEmails to the mailbox over IMAP gives Claude read, search, send, reply, schedule and organize access, and the same connection works from Cursor, ChatGPT and other MCP clients afterwards."
     },
     {
       "q": "What are the Orange IMAP and SMTP settings?",

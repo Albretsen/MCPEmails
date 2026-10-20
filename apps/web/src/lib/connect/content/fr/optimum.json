@@ -20,8 +20,8 @@
     "eyebrow": "Optimum Email + IA",
     "titleLine1": "Connectez votre boîte Optimum",
     "titleLine2": "à Claude, Cursor, tout client MCP",
-    "lead": "Optimum ne distribue plus d'adresses depuis des années, mais les boîtes existantes parlent toujours IMAP. MCP Emails en connecte une pour que votre agent IA puisse lire, rechercher, envoyer, répondre et classer ce courrier.",
-    "answer": "Claude ne peut pas atteindre une boîte Optimum tout seul. MCP Emails est un serveur MCP hébergé qui s'y connecte en IMAP sur mail.optimum.net, port 993, avec votre adresse optimum.net, optonline.net ou Suddenlink complète et le mot de passe de votre Optimum ID. Il n'y a pas de mot de passe d'application à générer ni d'interrupteur à activer, car Optimum n'a jamais créé ni l'un ni l'autre. Notez qu'Optimum ne permet plus à personne de créer de nouveaux comptes e-mail depuis le 4 mai 2021 : cela fonctionne donc pour une adresse que vous avez déjà, pas pour une nouvelle. Une boîte est gratuite, pour toujours.",
+    "lead": "Optimum ne distribue plus d'adresses depuis des années, mais les boîtes existantes parlent toujours IMAP. MCPEmails en connecte une pour que votre agent IA puisse lire, rechercher, envoyer, répondre et classer ce courrier.",
+    "answer": "Claude ne peut pas atteindre une boîte Optimum tout seul. MCPEmails est un serveur MCP hébergé qui s'y connecte en IMAP sur mail.optimum.net, port 993, avec votre adresse optimum.net, optonline.net ou Suddenlink complète et le mot de passe de votre Optimum ID. Il n'y a pas de mot de passe d'application à générer ni d'interrupteur à activer, car Optimum n'a jamais créé ni l'un ni l'autre. Notez qu'Optimum ne permet plus à personne de créer de nouveaux comptes e-mail depuis le 4 mai 2021 : cela fonctionne donc pour une adresse que vous avez déjà, pas pour une nouvelle. Une boîte est gratuite, pour toujours.",
     "meta0": "1 boîte gratuite, pour toujours",
     "meta1": "Mot de passe de l'Optimum ID, pas de mot de passe d'application",
     "meta2": "E-mails récupérés en direct, jamais stockés"
@@ -32,7 +32,7 @@
   },
   "setup": [
     {
-      "h": "Créez un compte MCP Emails gratuit",
+      "h": "Créez un compte MCPEmails gratuit",
       "p": "Inscrivez-vous sur mcpemails.com. L'offre gratuite connecte une boîte et ne demande pas de carte bancaire."
     },
     {
@@ -41,7 +41,7 @@
     },
     {
       "h": "Saisissez l'adresse et le mot de passe de l'Optimum ID",
-      "p": "Dans MCP Emails, choisissez IMAP / SMTP, mettez l'adresse entière dans le champ identifiant, par exemple <code>name@optonline.net</code>, et utilisez le mot de passe de cet Optimum ID. Le serveur est prérempli et a été vérifié par une connexion TLS réelle."
+      "p": "Dans MCPEmails, choisissez IMAP / SMTP, mettez l'adresse entière dans le champ identifiant, par exemple <code>name@optonline.net</code>, et utilisez le mot de passe de cet Optimum ID. Le serveur est prérempli et a été vérifié par une connexion TLS réelle."
     },
     {
       "h": "Collez l'URL MCP dans votre IA",
@@ -51,7 +51,7 @@
   "gotchas": [
     {
       "h": "Optimum n'annonce pas SASL-IR, et la plupart des clients le supposent",
-      "p": "Le serveur IMAP d'Optimum omet la capacité SASL-IR : il rejette donc l'authentification en une étape qui envoie les identifiants avec la commande AUTHENTICATE. Un client qui suppose SASL-IR reçoit un simple <code>BAD</code> sans explication, qui ressemble exactement à un mauvais mot de passe et pousse à réinitialiser un Optimum ID qui était correct. MCP Emails détecte cette réponse et réessaie avec l'échange en deux étapes : c'est donc géré ici, mais c'est pour cela que d'autres outils IMAP échouent avec Optimum alors qu'ils fonctionnent ailleurs."
+      "p": "Le serveur IMAP d'Optimum omet la capacité SASL-IR : il rejette donc l'authentification en une étape qui envoie les identifiants avec la commande AUTHENTICATE. Un client qui suppose SASL-IR reçoit un simple <code>BAD</code> sans explication, qui ressemble exactement à un mauvais mot de passe et pousse à réinitialiser un Optimum ID qui était correct. MCPEmails détecte cette réponse et réessaie avec l'échange en deux étapes : c'est donc géré ici, mais c'est pour cela que d'autres outils IMAP échouent avec Optimum alors qu'ils fonctionnent ailleurs."
     },
     {
       "h": "Junk et Deleted se vident tout seuls, et sur les domaines non Optimum, en trois jours",
@@ -74,7 +74,7 @@
   "faq": [
     {
       "q": "Claude fonctionne-t-il avec la messagerie Optimum ?",
-      "a": "Pas directement. Claude n'a pas de connecteur Optimum intégré. Connecter un serveur MCP comme MCP Emails à la boîte en IMAP donne à Claude un accès en lecture, recherche, envoi, réponse, planification et organisation à votre courrier optimum.net, optonline.net ou Suddenlink, et la même connexion fonctionne dans Cursor, ChatGPT et d'autres clients MCP."
+      "a": "Pas directement. Claude n'a pas de connecteur Optimum intégré. Connecter un serveur MCP comme MCPEmails à la boîte en IMAP donne à Claude un accès en lecture, recherche, envoi, réponse, planification et organisation à votre courrier optimum.net, optonline.net ou Suddenlink, et la même connexion fonctionne dans Cursor, ChatGPT et d'autres clients MCP."
     },
     {
       "q": "Quels sont les réglages IMAP d'Optimum ?",

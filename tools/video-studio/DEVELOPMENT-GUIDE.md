@@ -28,7 +28,7 @@ A three stage pipeline with a declarative contract in the middle.
 The design target is the request "make a demo video of adding an inbox, then talking to an agent about that inbox." That splits cleanly:
 
 - **Adding an inbox** is real software. It must be captured, not drawn. A drawn version of a connect flow is a lie, and this product asks sceptics for mailbox credentials, so the video has to survive scepticism.
-- **Talking to an agent** is not our UI at all. MCP Emails is an MCP server consumed by Claude Desktop, Claude Code, Cursor and others. There is no first party chat surface to record. That scene is built, not captured. See section 6 for the honesty rules that apply to it.
+- **Talking to an agent** is not our UI at all. MCPEmails is an MCP server consumed by Claude Desktop, Claude Code, Cursor and others. There is no first party chat surface to record. That scene is built, not captured. See section 6 for the honesty rules that apply to it.
 
 ### The central idea
 

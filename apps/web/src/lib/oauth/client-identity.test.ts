@@ -99,7 +99,7 @@ test('vendorForName sees through case, spacing, accents, full-width and Cyrillic
   for (const name of ['ChatGPT', 'Chat GPT', 'OpenAI', 'Codex', 'codex-cli']) assert.equal(vendorForName(name), 'openai', name);
   for (const name of ['Cursor', 'cursor-mcp', 'Anysphere']) assert.equal(vendorForName(name), 'cursor', name);
   for (const name of ['VS Code', 'Visual Studio Code']) assert.equal(vendorForName(name), 'vscode', name);
-  for (const name of ['MCP Emails', 'mcpemails', 'MCP-Email']) assert.equal(vendorForName(name), 'mcpemails', name);
+  for (const name of ['MCPEmails', 'mcpemails', 'MCP-Email']) assert.equal(vendorForName(name), 'mcpemails', name);
 });
 
 test('vendorForName does not flag unrelated names', () => {
@@ -204,8 +204,8 @@ test('LEGIT: loopback clients (Claude Code, Codex, VS Code) keep their name and 
 test('on a known vendor HOST no impersonation alert is raised: the code goes to that vendor anyway', () => {
   // ChatGPT and Claude put the user's own connector name in client_name.
   for (const [clientName, redirectUri] of [
-    ['MCP Emails', 'https://chatgpt.com/connector/oauth/abc_123'],
-    ['MCP Emails', 'https://claude.ai/api/mcp/auth_callback'],
+    ['MCPEmails', 'https://chatgpt.com/connector/oauth/abc_123'],
+    ['MCPEmails', 'https://claude.ai/api/mcp/auth_callback'],
     ['ChatGPT', 'https://claude.ai/api/mcp/auth_callback'],
   ]) {
     const id = describeClientIdentity({ clientId: DYN, clientName, isCimd: false, redirectUri });
@@ -445,7 +445,7 @@ test('LEGIT: Grok via DCR on grok.com is verified, heading "Grok", no alert', ()
 
 test('a user-chosen connector name on a Google or Grok host is still verified with no alert', () => {
   for (const redirectUri of [`https://${GOOGLE_HOSTS[0]}${GOOGLE_PATH}`, 'https://grok.com/cb']) {
-    for (const clientName of ['MCP Emails', 'Claude', 'Grok', 'Google']) {
+    for (const clientName of ['MCPEmails', 'Claude', 'Grok', 'Google']) {
       const id = describeClientIdentity({ clientId: DYN, clientName, isCimd: false, redirectUri });
       assert.equal(id.verification, 'verified', `${clientName} -> ${redirectUri}`);
       assert.equal(id.impersonates, null, `${clientName} -> ${redirectUri}`);
@@ -577,7 +577,7 @@ test('the existing Claude / ChatGPT / Cursor / VS Code matrix is unchanged by th
   }
 });
 
-// ── Google's shared redirect host: only the pinned MCP Emails path ──────────
+// ── Google's shared redirect host: only the pinned MCPEmails path ──────────
 // oauth-redirect*.googleusercontent.com is Google's SHARED account-linking
 // redirect: /r/<project-id> delivers the code to ANY Google developer
 // project's fulfillment. Only /{r|a}/user_bound_custom-mcp-<digits>-
@@ -649,7 +649,7 @@ test('THE SHARED-HOST ATTACK: any other path on a Google redirect host is Unveri
       assert.equal(vendorForHost(host), 'google', 'the host itself is still known');
       for (const [clientName, alert] of [
         ['Claude', 'Claude (Anthropic)'],
-        ['MCP Emails', 'MCP Emails'],
+        ['MCPEmails', 'MCPEmails'],
         ['ChatGPT', 'ChatGPT (OpenAI)'],
         ['Google', 'Google'],
         ['Gemini', 'Google'],

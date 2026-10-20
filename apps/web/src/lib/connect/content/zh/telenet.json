@@ -21,18 +21,18 @@
     "titleLine1": "将你的 Telenet 邮箱连接到",
     "titleLine2": "Claude、Cursor、任意 MCP 客户端",
     "lead": "为你的 AI 代理接入一个真正的 Telenet 收件箱。用你在 MyTelenet 中设置的邮箱密码，通过 IMAP 读取、搜索、发送、回复、定时与整理邮件。",
-    "answer": "Claude 无法自行连接 Telenet 邮箱。MCP Emails 是一个托管 MCP 服务器，通过 IMAP 连接 imap.telenet.be 的 993 端口，用你完整的 telenet.be 地址和在 MyTelenet 中为该邮箱设置的密码认证，让 Claude、Cursor 或任意 MCP 客户端都能读取、搜索、发送并整理邮件。Telenet 不签发应用专用密码，也没有客户端访问开关：每个邮箱都是在 MyTelenet 的 Je mailbox 页面中创建并设置密码的。一个收件箱永久免费。",
+    "answer": "Claude 无法自行连接 Telenet 邮箱。MCPEmails 是一个托管 MCP 服务器，通过 IMAP 连接 imap.telenet.be 的 993 端口，用你完整的 telenet.be 地址和在 MyTelenet 中为该邮箱设置的密码认证，让 Claude、Cursor 或任意 MCP 客户端都能读取、搜索、发送并整理邮件。Telenet 不签发应用专用密码，也没有客户端访问开关：每个邮箱都是在 MyTelenet 的 Je mailbox 页面中创建并设置密码的。一个收件箱永久免费。",
     "meta0": "1 个收件箱永久免费",
     "meta1": "MyTelenet 中的邮箱密码",
     "meta2": "邮件实时获取，绝不存储"
   },
   "method": {
     "title": "Telenet 如何连接：面向代理的 IMAP，每个邮箱一个密码",
-    "body": "Telenet 在 <code>imap.telenet.be</code> 的 993 端口通过隐式 TLS 提供 IMAP。对于发信，Telenet 自己的设置页面给出的是 <code>smtp.telenet.be</code>，587 端口，使用 TLS 和认证 SMTP；同一主机也在 465 端口以隐式 TLS 响应，MCP Emails 自动填入的就是后者。Telenet 对用户名形式说得很明确：<b>Gebruikersnaam: je volledige e-mailadres</b>（用户名：你的完整邮箱地址）。密码是附属于单个邮箱的密码，而不是单独的应用凭据，邮箱在 MyTelenet 中创建和管理：账户的 <b>beheerder</b>（管理员）最多可创建十个邮箱，普通 <b>gebruiker</b>（用户）可创建一个。在这些主机名上响应的是位于邮件存储之前的代理（<code>* OK IMAP4rev1 proxy server ready</code>），这解释了下文所述的精简能力集。"
+    "body": "Telenet 在 <code>imap.telenet.be</code> 的 993 端口通过隐式 TLS 提供 IMAP。对于发信，Telenet 自己的设置页面给出的是 <code>smtp.telenet.be</code>，587 端口，使用 TLS 和认证 SMTP；同一主机也在 465 端口以隐式 TLS 响应，MCPEmails 自动填入的就是后者。Telenet 对用户名形式说得很明确：<b>Gebruikersnaam: je volledige e-mailadres</b>（用户名：你的完整邮箱地址）。密码是附属于单个邮箱的密码，而不是单独的应用凭据，邮箱在 MyTelenet 中创建和管理：账户的 <b>beheerder</b>（管理员）最多可创建十个邮箱，普通 <b>gebruiker</b>（用户）可创建一个。在这些主机名上响应的是位于邮件存储之前的代理（<code>* OK IMAP4rev1 proxy server ready</code>），这解释了下文所述的精简能力集。"
   },
   "setup": [
     {
-      "h": "创建免费 MCP Emails 账户",
+      "h": "创建免费 MCPEmails 账户",
       "p": "在 mcpemails.com 注册。免费套餐可永久连接一个收件箱，无需信用卡。"
     },
     {
@@ -44,14 +44,14 @@
       "p": "账户管理员最多可创建十个 Telenet 邮箱，普通用户可创建一个。如果你不想把用了十五年的地址交给代理，可以在同一账户下再创建一个邮箱并连接它。服务器相同、端口相同，密码可以单独更换而不影响其他任何东西。"
     },
     {
-      "h": "在 MCP Emails 中添加邮箱",
+      "h": "在 MCPEmails 中添加邮箱",
       "p": "选择 IMAP / SMTP，输入完整地址（例如 naam@telenet.be），粘贴邮箱密码。Telenet 的服务器和端口已自动填好，并已通过实时 TLS 连接验证。然后把 https://mcpemails.com/api/mcp 粘贴到 Claude、Cursor 或 ChatGPT 中，完成授权，代理便拥有该收件箱。"
     }
   ],
   "gotchas": [
     {
       "h": "修改 Telenet 密码会悄无声息地让所有已连接的客户端失效",
-      "p": "Telenet 在自己的设置指南中说得很明白：如果你修改了 Telenet 用户名或邮箱地址的密码，<b>verander dan ook het wachtwoord in je e-mailprogramma</b>（也要修改邮件程序中的密码）。没有应用密码把客户端与账户隔开，所以在 MyTelenet 中例行更换密码，代理也会随之掉线。故障会在几小时后以认证错误的形式出现，那时早已没人把它和自己在门户中做的事联系起来。如果你更换了 Telenet 密码，请同时更新 MCP Emails。"
+      "p": "Telenet 在自己的设置指南中说得很明白：如果你修改了 Telenet 用户名或邮箱地址的密码，<b>verander dan ook het wachtwoord in je e-mailprogramma</b>（也要修改邮件程序中的密码）。没有应用密码把客户端与账户隔开，所以在 MyTelenet 中例行更换密码，代理也会随之掉线。故障会在几小时后以认证错误的形式出现，那时早已没人把它和自己在门户中做的事联系起来。如果你更换了 Telenet 密码，请同时更新 MCPEmails。"
     },
     {
       "h": "你连接的是代理，它不声明 MOVE 也不声明 SPECIAL-USE",
@@ -69,16 +69,16 @@
   "limits": [
     "由于服务器不支持 MOVE，移动操作不是原子的。如果连接在操作中途断开，一封邮件可能会短暂同时存在于两个文件夹中。",
     "20 MB 的提交上限，是代理从该邮箱发出任何内容的实际上限。",
-    "Telenet 不签发应用专用密码，所以你交给 MCP Emails 的凭据就是邮箱密码本身。在 MyTelenet 中更换它时，请同时在这里更新。"
+    "Telenet 不签发应用专用密码，所以你交给 MCPEmails 的凭据就是邮箱密码本身。在 MyTelenet 中更换它时，请同时在这里更新。"
   ],
   "faq": [
     {
       "q": "Claude 能用 Telenet 邮箱吗？",
-      "a": "不能单独使用。Claude 没有内置的 Telenet 连接器。通过 IMAP 将 MCP Emails 这样的 MCP 服务器指向该邮箱后，Claude 就能读取、搜索、发送、回复、定时和整理其中的邮件，同一个连接也可在 Cursor、ChatGPT 和其他 MCP 客户端中使用。"
+      "a": "不能单独使用。Claude 没有内置的 Telenet 连接器。通过 IMAP 将 MCPEmails 这样的 MCP 服务器指向该邮箱后，Claude 就能读取、搜索、发送、回复、定时和整理其中的邮件，同一个连接也可在 Cursor、ChatGPT 和其他 MCP 客户端中使用。"
     },
     {
       "q": "Telenet 的 IMAP 和 SMTP 设置是什么？",
-      "a": "IMAP 为 imap.telenet.be，端口 993，使用 SSL。对于发信，Telenet 文档给出的是 smtp.telenet.be，587 端口，使用 TLS 和认证 SMTP；同一主机也在 465 端口以隐式 TLS 响应，MCP Emails 使用的是后者。用户名是你完整的 telenet.be 地址。"
+      "a": "IMAP 为 imap.telenet.be，端口 993，使用 SSL。对于发信，Telenet 文档给出的是 smtp.telenet.be，587 端口，使用 TLS 和认证 SMTP；同一主机也在 465 端口以隐式 TLS 响应，MCPEmails 使用的是后者。用户名是你完整的 telenet.be 地址。"
     },
     {
       "q": "Telenet 需要应用密码吗？",
@@ -86,7 +86,7 @@
     },
     {
       "q": "为什么修改密码后我的 Telenet 邮件客户端停止工作了？",
-      "a": "因为客户端直接使用的是账户密码。Telenet 自己的建议是，每当你修改 Telenet 用户名或地址的密码时，也要修改邮件程序中的密码。把 MCP Emails 中保存的密码更新为新值，连接会立即恢复。"
+      "a": "因为客户端直接使用的是账户密码。Telenet 自己的建议是，每当你修改 Telenet 用户名或地址的密码时，也要修改邮件程序中的密码。把 MCPEmails 中保存的密码更新为新值，连接会立即恢复。"
     },
     {
       "q": "我能创建多少个 Telenet 邮箱？",

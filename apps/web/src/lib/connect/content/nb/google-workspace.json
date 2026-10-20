@@ -28,23 +28,23 @@
     "meta0": "1 innboks gratis, for alltid",
     "meta1": "Kobles til med et Google-app-passord",
     "meta2": "E-post hentes direkte, lagres aldri",
-    "answer": "En Google Workspace-postkasse på ditt eget domene er egentlig en Gmail-postkasse, så den kobles til MCP Emails på samme måte som Gmail: med et Google-app-passord over IMAP og SMTP på imap.gmail.com og smtp.gmail.com. MCP Emails er en driftet MCP-server, så når postkassen er koblet til, kan Claude, ChatGPT, Cursor eller enhver MCP-klient lese, søke i, sende og organisere e-posten. Det er innstillingene til Workspace-administratoren din som avgjør om app-passord er tilgjengelig og om IMAP er tillatt."
+    "answer": "En Google Workspace-postkasse på ditt eget domene er egentlig en Gmail-postkasse, så den kobles til MCPEmails på samme måte som Gmail: med et Google-app-passord over IMAP og SMTP på imap.gmail.com og smtp.gmail.com. MCPEmails er en driftet MCP-server, så når postkassen er koblet til, kan Claude, ChatGPT, Cursor eller enhver MCP-klient lese, søke i, sende og organisere e-posten. Det er innstillingene til Workspace-administratoren din som avgjør om app-passord er tilgjengelig og om IMAP er tillatt."
   },
   "method": {
     "title": "Slik kobles Google Workspace til: et app-passord over IMAP",
-    "body": "Skriv inn adressen din i IMAP-skjemaet, så leser MCP Emails MX-oppføringene til domenet ditt: et domene der e-posten går til Google (<code>aspmx.l.google.com</code> eller <code>smtp.google.com</code>), gjenkjennes som Google Workspace, og skjemaet fyller inn <b>imap.gmail.com</b> på 993 og <b>smtp.gmail.com</b> på 465 og forteller deg at det kreves et app-passord. Velger du Gmail-kortet, skjer det samme. Google slo av passordinnlogging for Workspace-apper i 2025, med unntak av app-passord, så kontopassordet vil aldri fungere her."
+    "body": "Skriv inn adressen din i IMAP-skjemaet, så leser MCPEmails MX-oppføringene til domenet ditt: et domene der e-posten går til Google (<code>aspmx.l.google.com</code> eller <code>smtp.google.com</code>), gjenkjennes som Google Workspace, og skjemaet fyller inn <b>imap.gmail.com</b> på 993 og <b>smtp.gmail.com</b> på 465 og forteller deg at det kreves et app-passord. Velger du Gmail-kortet, skjer det samme. Google slo av passordinnlogging for Workspace-apper i 2025, med unntak av app-passord, så kontopassordet vil aldri fungere her."
   },
   "setup": [
     {
       "h": "Opprett en gratis konto",
-      "p": "Registrer deg hos MCP Emails, uten kort. Gratisplanen kobler til én innboks, for alltid."
+      "p": "Registrer deg hos MCPEmails, uten kort. Gratisplanen kobler til én innboks, for alltid."
     },
     {
       "h": "Lag et Google-app-passord",
       "p": "Logg inn som postkassen du vil koble til, slå på totrinnsbekreftelse hvis det ikke allerede er på, og lag deretter et app-passord på myaccount.google.com/apppasswords. Mangler valget, er administratorinnstillingene sannsynligvis grunnen (se nedenfor)."
     },
     {
-      "h": "Lim det inn i MCP Emails",
+      "h": "Lim det inn i MCPEmails",
       "p": "Velg IMAP / SMTP eller Gmail, skriv inn hele adressen på domenet ditt, og lim inn app-passordet på 16 tegn. Vertene fylles inn ut fra domenet ditt."
     },
     {
@@ -67,22 +67,22 @@
     },
     {
       "h": "Svar fra et alias fungerer så snart aliaset er bekreftet",
-      "p": "Med et app-passord sender en postkasse fra sin egen adresse som standard. For å svare fra et alias, for eksempel et som er satt opp som en <b>Send e-post som</b>-adresse i Gmail, legger du det til under <b>Send som-adresser</b> i innboksinnstillingene i MCP Emails. Vi sender en sekssifret kode til aliaset, og når du har skrevet den inn, kan agenten sende fra den adressen. En From-adresse som verken er postkassens egen eller en bekreftet Send som-adresse, blir avvist, ikke stille skrevet om."
+      "p": "Med et app-passord sender en postkasse fra sin egen adresse som standard. For å svare fra et alias, for eksempel et som er satt opp som en <b>Send e-post som</b>-adresse i Gmail, legger du det til under <b>Send som-adresser</b> i innboksinnstillingene i MCPEmails. Vi sender en sekssifret kode til aliaset, og når du har skrevet den inn, kan agenten sende fra den adressen. En From-adresse som verken er postkassens egen eller en bekreftet Send som-adresse, blir avvist, ikke stille skrevet om."
     }
   ],
   "limits": [
-    "MCP Emails når bare e-post: et app-passord brukes bare til IMAP og SMTP. Drive, Calendar, Chat og Docs nås ikke.",
+    "MCPEmails når bare e-post: et app-passord brukes bare til IMAP og SMTP. Drive, Calendar, Chat og Docs nås ikke.",
     "En Google Workspace-administrator kan stenge denne veien: app-passord kan være utilgjengelige for kontoen din, og IMAP kan være slått av eller begrenset til navngitte OAuth-klienter. Bare en administrator kan endre disse innstillingene.",
     "Gmail lagrer etiketter, ikke mapper, så en flytting legger til én etikett og fjerner en annen, og sletting flytter en melding til Gmails papirkurv."
   ],
   "faq": [
     {
       "q": "Fungerer Claude med e-post i Google Workspace?",
-      "a": "Ja, så snart en MCP-server som MCP Emails kobler til postkassen. En Workspace-postkasse på ditt eget domene kobles til med et Google-app-passord over IMAP, akkurat som en gmail.com-adresse, og deretter kan Claude lese, søke i, sende, svare på og organisere e-posten. Den samme tilkoblingen fungerer i ChatGPT, Cursor og enhver annen MCP-klient."
+      "a": "Ja, så snart en MCP-server som MCPEmails kobler til postkassen. En Workspace-postkasse på ditt eget domene kobles til med et Google-app-passord over IMAP, akkurat som en gmail.com-adresse, og deretter kan Claude lese, søke i, sende, svare på og organisere e-posten. Den samme tilkoblingen fungerer i ChatGPT, Cursor og enhver annen MCP-klient."
     },
     {
       "q": "Hva er IMAP- og SMTP-innstillingene for Google Workspace?",
-      "a": "IMAP er imap.gmail.com på port 993 med SSL/TLS, og SMTP er smtp.gmail.com på port 465 med SSL/TLS. Brukernavnet er hele adressen din på ditt eget domene, og passordet er et Google-app-passord. MCP Emails fyller inn dette når MX-oppføringene til domenet ditt peker mot Google."
+      "a": "IMAP er imap.gmail.com på port 993 med SSL/TLS, og SMTP er smtp.gmail.com på port 465 med SSL/TLS. Brukernavnet er hele adressen din på ditt eget domene, og passordet er et Google-app-passord. MCPEmails fyller inn dette når MX-oppføringene til domenet ditt peker mot Google."
     },
     {
       "q": "Hvorfor får jeg ikke laget et app-passord på Workspace-kontoen min?",
@@ -98,7 +98,7 @@
     },
     {
       "q": "Lagres Google Workspace-e-posten min på serverne deres?",
-      "a": "Nei. Meldinger hentes direkte fra Google for hver forespørsel og sendes videre til AI-klienten din. App-passordet er kryptert ved lagring, og meldingsinnhold beholdes ikke. Tilbakekaller du app-passordet i Google-kontoen din, eller sletter innboksen i MCP Emails, avsluttes tilkoblingen."
+      "a": "Nei. Meldinger hentes direkte fra Google for hver forespørsel og sendes videre til AI-klienten din. App-passordet er kryptert ved lagring, og meldingsinnhold beholdes ikke. Tilbakekaller du app-passordet i Google-kontoen din, eller sletter innboksen i MCPEmails, avsluttes tilkoblingen."
     }
   ],
   "ctaBand": {

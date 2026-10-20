@@ -21,8 +21,8 @@
     "eyebrow": "MDaemon + IA",
     "titleLine1": "Conecta MDaemon a Claude,",
     "titleLine2": "Cursor, ChatGPT y cualquier cliente MCP",
-    "lead": "MDaemon lleva años gestionando el correo en tu propio servidor Windows sin pedir permiso a nadie. Poner un agente de IA encima no tiene por qué cambiar eso: MCP Emails se conecta por IMAP normal y obtiene cada mensaje en vivo.",
-    "answer": "Claude no puede acceder por sí solo a un servidor MDaemon. MCP Emails es un servidor MCP alojado que se conecta al tuyo por IMAP en tu propio nombre de servidor, en el puerto IMAP SSL, que MDaemon fija por defecto en el 993, con la contraseña de la cuenta del Account Manager. Eso permite a Claude, Cursor o cualquier cliente MCP leer, buscar, enviar y organizar el correo de ese buzón. MDaemon es software que gestionas tú, así que no hay un servidor compartido que consultar: el servidor tiene que ser accesible desde internet, la cuenta tiene que tener el acceso IMAP activado y las funciones de filtrado de MDaemon tienen que dejar pasar la conexión. Una bandeja es gratis.",
+    "lead": "MDaemon lleva años gestionando el correo en tu propio servidor Windows sin pedir permiso a nadie. Poner un agente de IA encima no tiene por qué cambiar eso: MCPEmails se conecta por IMAP normal y obtiene cada mensaje en vivo.",
+    "answer": "Claude no puede acceder por sí solo a un servidor MDaemon. MCPEmails es un servidor MCP alojado que se conecta al tuyo por IMAP en tu propio nombre de servidor, en el puerto IMAP SSL, que MDaemon fija por defecto en el 993, con la contraseña de la cuenta del Account Manager. Eso permite a Claude, Cursor o cualquier cliente MCP leer, buscar, enviar y organizar el correo de ese buzón. MDaemon es software que gestionas tú, así que no hay un servidor compartido que consultar: el servidor tiene que ser accesible desde internet, la cuenta tiene que tener el acceso IMAP activado y las funciones de filtrado de MDaemon tienen que dejar pasar la conexión. Una bandeja es gratis.",
     "meta0": "1 bandeja gratis, para siempre",
     "meta1": "Contraseña de la cuenta, acceso IMAP activado",
     "meta2": "El correo se obtiene en vivo, nunca se almacena"
@@ -33,7 +33,7 @@
   },
   "setup": [
     {
-      "h": "Crea tu cuenta gratis en MCP Emails",
+      "h": "Crea tu cuenta gratis en MCPEmails",
       "p": "Regístrate en mcpemails.com. Una bandeja es gratis para siempre y no se pide tarjeta, así que puedes probarlo primero con un buzón real de MDaemon."
     },
     {
@@ -42,7 +42,7 @@
     },
     {
       "h": "Activa el acceso IMAP en la cuenta",
-      "p": "Abre el Account Manager, busca el buzón y, en su pantalla Mail Services, asegúrate de que <b>Enable IMAP access</b> está marcado. Después añade la bandeja en MCP Emails: elige IMAP / SMTP e introduce el nombre de tu servidor MDaemon, la dirección completa y la contraseña de la cuenta."
+      "p": "Abre el Account Manager, busca el buzón y, en su pantalla Mail Services, asegúrate de que <b>Enable IMAP access</b> está marcado. Después añade la bandeja en MCPEmails: elige IMAP / SMTP e introduce el nombre de tu servidor MDaemon, la dirección completa y la contraseña de la cuenta."
     },
     {
       "h": "Pega la URL MCP en tu IA",
@@ -64,14 +64,14 @@
     }
   ],
   "limits": [
-    "Los servidores MDaemon suelen estar dentro del cortafuegos de una empresa con solo el puerto 25 publicado, y esto necesita además una conexión IMAP entrante. Abrir el 993 a internet es una decisión de quien controle ese cortafuegos, no un ajuste de MDaemon. Si la respuesta es no, MCP Emails se puede alojar por tu cuenta en la misma red interna, desde donde llega a MDaemon igual que ya lo hace un cliente de escritorio en la LAN.",
+    "Los servidores MDaemon suelen estar dentro del cortafuegos de una empresa con solo el puerto 25 publicado, y esto necesita además una conexión IMAP entrante. Abrir el 993 a internet es una decisión de quien controle ese cortafuegos, no un ajuste de MDaemon. Si la respuesta es no, MCPEmails se puede alojar por tu cuenta en la misma red interna, desde donde llega a MDaemon igual que ya lo hace un cliente de escritorio en la LAN.",
     "La validación TLS es estricta. El certificado autofirmado predeterminado de MDaemon, o uno caducado, se rechazará sin opción de continuar igualmente.",
     "Los envíos salen por tu propio servicio SMTP de MDaemon, así que la entregabilidad depende de tus registros SPF, DKIM y DMARC y de la reputación de la dirección desde la que envía tu servidor."
   ],
   "faq": [
     {
       "q": "¿Funciona Claude con MDaemon?",
-      "a": "No directamente. Claude no tiene un conector para MDaemon y no puede abrir un socket IMAP hacia un servidor que alojas tú. Conectar un servidor MCP como MCP Emails a tu servidor MDaemon le da a Claude acceso para leer, buscar, enviar, responder, programar y organizar un buzón en él, con las mismas credenciales que usaría cualquier cliente de escritorio."
+      "a": "No directamente. Claude no tiene un conector para MDaemon y no puede abrir un socket IMAP hacia un servidor que alojas tú. Conectar un servidor MCP como MCPEmails a tu servidor MDaemon le da a Claude acceso para leer, buscar, enviar, responder, programar y organizar un buzón en él, con las mismas credenciales que usaría cualquier cliente de escritorio."
     },
     {
       "q": "¿Cuáles son los ajustes IMAP y SMTP de MDaemon?",

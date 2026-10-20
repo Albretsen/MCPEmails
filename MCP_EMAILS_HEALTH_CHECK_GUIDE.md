@@ -1,6 +1,6 @@
-# MCP Emails connector health check (bjellanda inbox)
+# MCPEmails connector health check (bjellanda inbox)
 
-A repeatable, end-to-end functional check of the MCP Emails connector, run against the
+A repeatable, end-to-end functional check of the MCPEmails connector, run against the
 `bjellanda@gmail.com` mailbox. Hand this file to an agent whenever you want to know that
 the live connector still does what it claims: after an edge-function deploy, after a
 provider or dependency change, before a launch, or on a routine cadence.

@@ -21,7 +21,7 @@
     "titleLine1": "将 GoDaddy 邮箱连接到 Claude，",
     "titleLine2": "以及 Cursor、ChatGPT、任意 MCP 客户端",
     "lead": "为你的 AI 代理接入一个真正的 GoDaddy 收件箱。弄清你的地址实际属于 GoDaddy 多款邮箱产品中的哪一款后，即可通过 IMAP 读取、搜索、发送、回复、定时与整理邮件。",
-    "answer": "Claude 无法自行访问 GoDaddy 邮箱。MCP Emails 是一个托管 MCP 服务器，通过 imap.secureserver.net 端口 993 的 IMAP 连接 GoDaddy Professional Email，使用你的完整地址和该邮箱自己的邮箱密码进行认证，让 Claude、Cursor 或任意 MCP 客户端都能读取、搜索、发送并整理这些邮件。GoDaddy 以同一品牌销售不止一款邮箱产品，而通过 GoDaddy 购买的 Microsoft 365 邮箱是微软的邮箱，要用 Outlook（使用 Microsoft 登录）而不是 IMAP 连接，所以请先确认你用的是哪一款。1 个收件箱永久免费。",
+    "answer": "Claude 无法自行访问 GoDaddy 邮箱。MCPEmails 是一个托管 MCP 服务器，通过 imap.secureserver.net 端口 993 的 IMAP 连接 GoDaddy Professional Email，使用你的完整地址和该邮箱自己的邮箱密码进行认证，让 Claude、Cursor 或任意 MCP 客户端都能读取、搜索、发送并整理这些邮件。GoDaddy 以同一品牌销售不止一款邮箱产品，而通过 GoDaddy 购买的 Microsoft 365 邮箱是微软的邮箱，要用 Outlook（使用 Microsoft 登录）而不是 IMAP 连接，所以请先确认你用的是哪一款。1 个收件箱永久免费。",
     "meta0": "1 个收件箱永久免费",
     "meta1": "该邮箱自己的邮箱密码",
     "meta2": "邮件实时获取，绝不存储"
@@ -32,7 +32,7 @@
   },
   "setup": [
     {
-      "h": "创建免费的 MCP Emails 账户",
+      "h": "创建免费的 MCPEmails 账户",
       "p": "在 mcpemails.com 注册。免费套餐可永久连接一个收件箱，无需信用卡。"
     },
     {
@@ -45,13 +45,13 @@
     },
     {
       "h": "将 MCP URL 粘贴到你的 AI",
-      "p": "在 MCP Emails 中添加你的地址和密码，然后把 https://mcpemails.com/api/mcp 粘贴到 Claude、Cursor 或 ChatGPT 中，完成授权，代理便拥有该收件箱。"
+      "p": "在 MCPEmails 中添加你的地址和密码，然后把 https://mcpemails.com/api/mcp 粘贴到 Claude、Cursor 或 ChatGPT 中，完成授权，代理便拥有该收件箱。"
     }
   ],
   "gotchas": [
     {
       "h": "从 GoDaddy 购买的 Microsoft 365 邮箱要用 Outlook 连接，而不是 IMAP",
-      "p": "GoDaddy 转售 Microsoft 365，并一直在把旧的 Workspace Email 客户迁移过去，所以很大一部分自认为拥有“GoDaddy 邮箱”的人，现在拥有的其实是开着 GoDaddy 发票的微软邮箱。这些邮箱不在 <code>imap.secureserver.net</code> 上，而是在微软的服务器上，所以请用 Outlook 选项（使用 Microsoft 登录）连接，而不是本页的设置。由于这是工作用的 Microsoft 365 账户，你所在组织的 IT 管理员可能需要先批准一次 MCP Emails，控制台会给你一个审批链接，供你发给管理员。判断方法很简单：如果登录网页邮箱后进入的是 Outlook 网页版，那就是微软的产品。"
+      "p": "GoDaddy 转售 Microsoft 365，并一直在把旧的 Workspace Email 客户迁移过去，所以很大一部分自认为拥有“GoDaddy 邮箱”的人，现在拥有的其实是开着 GoDaddy 发票的微软邮箱。这些邮箱不在 <code>imap.secureserver.net</code> 上，而是在微软的服务器上，所以请用 Outlook 选项（使用 Microsoft 登录）连接，而不是本页的设置。由于这是工作用的 Microsoft 365 账户，你所在组织的 IT 管理员可能需要先批准一次 MCPEmails，控制台会给你一个审批链接，供你发给管理员。判断方法很简单：如果登录网页邮箱后进入的是 Outlook 网页版，那就是微软的产品。"
     },
     {
       "h": "网上一半的 GoDaddy IMAP 指南针对的是已不存在的产品",
@@ -63,7 +63,7 @@
     },
     {
       "h": "GoDaddy 的 IMAP 服务器不声明 SASL-IR",
-      "p": "<code>imap.secureserver.net</code> 背后的 IMAP 服务器自称 Fenix，且不声明 SASL-IR 能力，因此会拒绝与 AUTHENTICATE 命令在同一行发送凭据的一步式认证。默认假设支持 SASL-IR 的客户端会收到一个光秃秃的 <code>BAD</code>，没有任何解释，看起来与凭据错误一模一样。MCP Emails 会检测到这一点并改用两步交互重试，所以连接能够成功，但这正是其他 IMAP 工具在别处都能用、却在 GoDaddy 上失败的原因。"
+      "p": "<code>imap.secureserver.net</code> 背后的 IMAP 服务器自称 Fenix，且不声明 SASL-IR 能力，因此会拒绝与 AUTHENTICATE 命令在同一行发送凭据的一步式认证。默认假设支持 SASL-IR 的客户端会收到一个光秃秃的 <code>BAD</code>，没有任何解释，看起来与凭据错误一模一样。MCPEmails 会检测到这一点并改用两步交互重试，所以连接能够成功，但这正是其他 IMAP 工具在别处都能用、却在 GoDaddy 上失败的原因。"
     }
   ],
   "limits": [
@@ -74,7 +74,7 @@
   "faq": [
     {
       "q": "Claude 能用于 GoDaddy 邮箱吗？",
-      "a": "只要将 MCP Emails 这样的 MCP 服务器通过 IMAP 连接到邮箱，就能用于 GoDaddy Professional Email（基于 Titan 的产品）。Claude 没有内置的 GoDaddy 连接器。通过 GoDaddy 购买的 Microsoft 365 邮箱同样可以使用，但要用 Outlook（使用 Microsoft 登录）而不是 IMAP 连接，并且可能需要 IT 管理员先批准一次 MCP Emails。"
+      "a": "只要将 MCPEmails 这样的 MCP 服务器通过 IMAP 连接到邮箱，就能用于 GoDaddy Professional Email（基于 Titan 的产品）。Claude 没有内置的 GoDaddy 连接器。通过 GoDaddy 购买的 Microsoft 365 邮箱同样可以使用，但要用 Outlook（使用 Microsoft 登录）而不是 IMAP 连接，并且可能需要 IT 管理员先批准一次 MCPEmails。"
     },
     {
       "q": "GoDaddy 的 IMAP 和 SMTP 设置是什么？",

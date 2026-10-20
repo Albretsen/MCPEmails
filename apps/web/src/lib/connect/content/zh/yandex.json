@@ -18,7 +18,7 @@
     "titleLine1": "将 Yandex Mail 连接到 Claude，",
     "titleLine2": "以及 Cursor、ChatGPT、任意 MCP 客户端",
     "lead": "为你的 AI 代理接入一个真正的 Yandex 收件箱。用 Yandex 应用密码通过 IMAP 读取、搜索、发送、回复、定时与整理邮件，可在所有 MCP 客户端中使用，而不止一个。",
-    "answer": "Claude 无法自行连接 Yandex Mail。MCP Emails 是一个托管 MCP 服务器，通过 IMAP 连接 imap.yandex.com 的 993 端口，使用 Yandex 应用密码而不是账户密码认证，让 Claude、Cursor 或任意 MCP 客户端都能读取、搜索、发送并整理邮件。Yandex 要求你先将邮箱切换为应用密码访问，任何邮件客户端才能登录；设置只需几分钟，一个收件箱免费。",
+    "answer": "Claude 无法自行连接 Yandex Mail。MCPEmails 是一个托管 MCP 服务器，通过 IMAP 连接 imap.yandex.com 的 993 端口，使用 Yandex 应用密码而不是账户密码认证，让 Claude、Cursor 或任意 MCP 客户端都能读取、搜索、发送并整理邮件。Yandex 要求你先将邮箱切换为应用密码访问，任何邮件客户端才能登录；设置只需几分钟，一个收件箱免费。",
     "meta0": "1 个收件箱永久免费",
     "meta1": "应用密码，而不是账户密码",
     "meta2": "邮件实时获取，绝不存储"
@@ -37,7 +37,7 @@
       "p": "在 id.yandex.com 上打开 Security，然后是 App passwords，创建一个类型为 Mail 的应用密码。Yandex 只显示一次。请立即复制；你普通的账户密码在这里无效。"
     },
     {
-      "h": "粘贴到 MCP Emails",
+      "h": "粘贴到 MCPEmails",
       "p": "选择 IMAP / SMTP，输入完整的 Yandex 地址，粘贴应用密码。上方的服务器已自动填好。"
     },
     {
@@ -48,7 +48,7 @@
   "gotchas": [
     {
       "h": "Yandex 不声明 SASL-IR，而大多数客户端默认它存在",
-      "p": "Yandex 的 IMAP 服务器省略了 SASL-IR 能力，因此会拒绝在 AUTHENTICATE 命令中一并发送凭据的一步认证。默认支持 SASL-IR 的客户端会收到一个没有任何解释的 BAD，看起来像是凭据错误。MCP Emails 会识别这个 BAD 并用两步交换重试，所以这个问题已经替你处理好了，但这正是其他 IMAP 工具在别处都正常、唯独连不上 Yandex 的原因。"
+      "p": "Yandex 的 IMAP 服务器省略了 SASL-IR 能力，因此会拒绝在 AUTHENTICATE 命令中一并发送凭据的一步认证。默认支持 SASL-IR 的客户端会收到一个没有任何解释的 BAD，看起来像是凭据错误。MCPEmails 会识别这个 BAD 并用两步交换重试，所以这个问题已经替你处理好了，但这正是其他 IMAP 工具在别处都正常、唯独连不上 Yandex 的原因。"
     },
     {
       "h": "即使没有开启两步验证，账户密码也永远无效",
@@ -65,7 +65,7 @@
   "faq": [
     {
       "q": "Claude 能用 Yandex Mail 吗？",
-      "a": "不能直接使用。Claude 没有内置的 Yandex 连接器。通过 IMAP 将 MCP Emails 这样的 MCP 服务器连接到你的 Yandex 邮箱后，Claude 就能读取、搜索、发送、回复、定时和整理其中的邮件。"
+      "a": "不能直接使用。Claude 没有内置的 Yandex 连接器。通过 IMAP 将 MCPEmails 这样的 MCP 服务器连接到你的 Yandex 邮箱后，Claude 就能读取、搜索、发送、回复、定时和整理其中的邮件。"
     },
     {
       "q": "Yandex 的 IMAP 和 SMTP 设置是什么？",

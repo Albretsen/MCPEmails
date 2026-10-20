@@ -11,7 +11,7 @@ later without a rewrite.
 
 People still do email in a normal client. When they want AI help, they copy an email
 into Claude or ChatGPT, get a reply, copy it back, and send. That round trip is the
-friction. MCP Emails already gives the AI access to the mailbox. The client brings
+friction. MCPEmails already gives the AI access to the mailbox. The client brings
 the AI to where the email work already happens.
 
 ## Principles
@@ -83,7 +83,7 @@ the AI to where the email work already happens.
   not count toward the action cap.
 - The unified inbox follows the existing inbox limits per plan.
 - The AI assistant has its own monthly allowance per plan, separate from the action
-  cap, because MCP Emails pays for inference here. It applies to every workspace,
+  cap, because MCPEmails pays for inference here. It applies to every workspace,
   including those exempt from the cap.
 
 ## Out of scope for now

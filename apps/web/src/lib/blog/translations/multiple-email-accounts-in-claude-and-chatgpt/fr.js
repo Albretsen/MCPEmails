@@ -19,7 +19,7 @@ Ce qu'aucun des deux ne sait faire, c'est atteindre la boîte qu'une entreprise 
 
 ## Un seul connecteur pour toutes les boîtes
 
-MCP Emails est un serveur MCP hébergé. Vous y connectez chaque boîte une fois, et votre client IA les atteint toutes via une seule URL :
+MCPEmails est un serveur MCP hébergé. Vous y connectez chaque boîte une fois, et votre client IA les atteint toutes via une seule URL :
 
 \`\`\`
 https://mcpemails.com/api/mcp
@@ -34,7 +34,7 @@ Le courrier est récupéré en direct à chaque requête et n'est pas stocké. L
 
 ## Connecter les boîtes
 
-Dans le tableau de bord MCP Emails, ouvrez **Inboxes**, puis **Connect Inbox**, une fois par boîte :
+Dans le tableau de bord MCPEmails, ouvrez **Inboxes**, puis **Connect Inbox**, une fois par boîte :
 
 - **Boîte d'entreprise sur son propre domaine.** Choisissez **IMAP** et saisissez l'adresse. Les hébergeurs courants sont reconnus à partir de l'adresse, et un domaine Google Workspace est reconnu grâce à ses enregistrements de messagerie : les réglages se remplissent donc tout seuls. Utilisez le mot de passe ou le mot de passe d'application exigé par votre hébergeur.
 - **Gmail ou Google Workspace.** Un mot de passe d'application Google, en IMAP. Google n'en propose qu'une fois la validation en deux étapes activée, et sur Workspace votre administrateur peut désactiver les mots de passe d'application et l'IMAP.
@@ -48,7 +48,7 @@ Dans claude.ai ou Claude Desktop :
 
 1. Ouvrez **Settings**, puis **Connectors**.
 2. Choisissez **Add custom connector** et collez \`https://mcpemails.com/api/mcp\`.
-3. Sélectionnez **Connect**, connectez-vous à MCP Emails et approuvez.
+3. Sélectionnez **Connect**, connectez-vous à MCPEmails et approuvez.
 
 Toutes les boîtes que vous avez connectées sont maintenant disponibles. Le [guide Claude](/blog/connect-claude-to-email) donne les détails.
 
@@ -57,8 +57,8 @@ Toutes les boîtes que vous avez connectées sont maintenant disponibles. Le [gu
 Les connecteurs personnalisés exigent ChatGPT Plus, Pro, Business, Enterprise ou Edu, sur le web, avec le mode développeur activé. Sur Business et Enterprise, un administrateur doit parfois d'abord l'autoriser.
 
 1. Activez le **mode développeur** dans les réglages de ChatGPT, sous les paramètres avancés des applications et connecteurs.
-2. Créez un connecteur, collez \`https://mcpemails.com/api/mcp\`, choisissez **OAuth** et autorisez avec MCP Emails.
-3. Dans chaque nouvelle conversation, cliquez sur **+**, choisissez **Developer mode** et sélectionnez l'app MCP Emails.
+2. Créez un connecteur, collez \`https://mcpemails.com/api/mcp\`, choisissez **OAuth** et autorisez avec MCPEmails.
+3. Dans chaque nouvelle conversation, cliquez sur **+**, choisissez **Developer mode** et sélectionnez l'app MCPEmails.
 
 Le [guide ChatGPT](/blog/connect-chatgpt-to-email) détaille les menus et les erreurs courantes.
 
@@ -83,18 +83,18 @@ Activez **Vérifier avant d'envoyer** (Review before sending) sur n'importe quel
 - **Pro :** jusqu'à 10 boîtes, avec un seul identifiant.
 - **Business :** 10 boîtes incluses et 3 $ par mois pour chaque boîte en plus, et quand une deuxième personne a besoin de son propre identifiant.
 
-Une entreprise avec info@, ventes@ et factures@ plus votre propre adresse, cela fait quatre boîtes, donc Pro. Les prix actuels figurent sur la [page des tarifs](/pricing), et [MCP Emails pour les entreprises](/for/business) montre comment une seule personne gère toutes les boîtes de l'entreprise depuis un seul agent.
+Une entreprise avec info@, ventes@ et factures@ plus votre propre adresse, cela fait quatre boîtes, donc Pro. Les prix actuels figurent sur la [page des tarifs](/pricing), et [MCPEmails pour les entreprises](/for/business) montre comment une seule personne gère toutes les boîtes de l'entreprise depuis un seul agent.
 
 ## FAQ
 
 **Claude peut-il utiliser plusieurs comptes e-mail à la fois ?**
-Oui, via un serveur MCP. Connectez chaque boîte à MCP Emails, ajoutez un seul connecteur personnalisé à Claude, et Claude les voit toutes et nomme la boîte à chaque appel.
+Oui, via un serveur MCP. Connectez chaque boîte à MCPEmails, ajoutez un seul connecteur personnalisé à Claude, et Claude les voit toutes et nomme la boîte à chaque appel.
 
 **ChatGPT peut-il utiliser plusieurs comptes e-mail ?**
-Son propre plugin Gmail peut désormais accueillir plusieurs comptes Google. Pour les boîtes qui ne sont pas chez Google, comme une adresse d'entreprise chez IONOS, Zoho ou un hébergeur cPanel, ajoutez MCP Emails comme connecteur personnalisé, et toutes les boîtes connectées sont disponibles.
+Son propre plugin Gmail peut désormais accueillir plusieurs comptes Google. Pour les boîtes qui ne sont pas chez Google, comme une adresse d'entreprise chez IONOS, Zoho ou un hébergeur cPanel, ajoutez MCPEmails comme connecteur personnalisé, et toutes les boîtes connectées sont disponibles.
 
 **Faut-il un connecteur distinct par boîte ?**
-Non. Une seule URL de connecteur couvre toutes les boîtes de votre espace de travail MCP Emails, et la même URL fonctionne dans Claude, ChatGPT et les autres clients MCP.
+Non. Une seule URL de connecteur couvre toutes les boîtes de votre espace de travail MCPEmails, et la même URL fonctionne dans Claude, ChatGPT et les autres clients MCP.
 
 **Une réponse partira-t-elle de la bonne adresse ?**
 Oui. Chaque boîte envoie via son propre fournisseur ou serveur de messagerie, avec son propre nom affiché et sa propre signature. Pour envoyer depuis une autre adresse sur une boîte IMAP, ajoutez-la dans les réglages de cette boîte dans le tableau de bord et vérifiez-la avec le code envoyé à cette adresse. Outlook envoie depuis l'adresse connectée, et une adresse From non vérifiée est refusée.
@@ -104,7 +104,7 @@ Non. Le contenu des messages est récupéré en direct chez votre fournisseur à
 
 ## Étape suivante
 
-[Commencez gratuitement](/signup) avec votre boîte la plus chargée, ajoutez le connecteur MCP Emails à Claude ou ChatGPT, et demandez ce qui attend une réponse aujourd'hui. Ajoutez les autres boîtes quand vous voudrez une seule réponse au lieu de plusieurs.`,
+[Commencez gratuitement](/signup) avec votre boîte la plus chargée, ajoutez le connecteur MCPEmails à Claude ou ChatGPT, et demandez ce qui attend une réponse aujourd'hui. Ajoutez les autres boîtes quand vous voudrez une seule réponse au lieu de plusieurs.`,
 };
 
 export default translation;

@@ -19,9 +19,9 @@ import {
 const APP = "https://mcpemails.com";
 const URL_WEB = "https://x.supabase.co/functions/v1/mcp-server/web";
 const NO_TOKEN_CHALLENGE =
-  'Bearer realm="MCP Emails", resource_metadata="https://mcpemails.com/.well-known/oauth-protected-resource", scope="read:email"';
+  'Bearer realm="MCPEmails", resource_metadata="https://mcpemails.com/.well-known/oauth-protected-resource", scope="read:email"';
 const BAD_TOKEN_CHALLENGE =
-  'Bearer realm="MCP Emails", error="invalid_token", resource_metadata="https://mcpemails.com/.well-known/oauth-protected-resource", scope="read:email"';
+  'Bearer realm="MCPEmails", error="invalid_token", resource_metadata="https://mcpemails.com/.well-known/oauth-protected-resource", scope="read:email"';
 const CORS = {
   "access-control-allow-origin": "*",
   "access-control-allow-methods": "POST, OPTIONS",

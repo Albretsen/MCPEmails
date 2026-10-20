@@ -1168,7 +1168,7 @@ export function checkTriageAuthority(
         error_code: "api_key_expired",
         error_detail:
           "The connection this automation runs as has been disconnected or has expired. " +
-          "Reconnect MCP Emails in your MCP client, then switch the automation back on.",
+          "Reconnect MCPEmails in your MCP client, then switch the automation back on.",
       };
     }
     // Live grant, stale access token: this is rotation, not revocation. Fall

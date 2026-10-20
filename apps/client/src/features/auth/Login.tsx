@@ -31,7 +31,7 @@ export function LoginScreen() {
   const messageId = useId();
 
   useEffect(() => {
-    document.title = "Sign in · mcpemails";
+    document.title = "Sign in · MCPEmails";
     emailRef.current?.focus();
   }, []);
 
@@ -108,7 +108,7 @@ export function LoginScreen() {
     <div className={s.page}>
       <main className={s.center}>
         <div className={s.brand}>
-          <img className={s.wordmark} src="/logo-wordmark.svg" alt="mcpemails" />
+          <img className={s.wordmark} src="/logo-wordmark.svg" alt="MCPEmails" />
         </div>
 
         <div className={s.card}>
@@ -204,7 +204,7 @@ export function LoginScreen() {
         </div>
 
         <p className={s.foot}>
-          New to mcpemails? <a href={SIGNUP_URL}>Create an account</a>
+          New to MCPEmails? <a href={SIGNUP_URL}>Create an account</a>
         </p>
       </main>
     </div>

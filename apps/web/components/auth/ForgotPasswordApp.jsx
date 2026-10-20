@@ -157,8 +157,8 @@ export function ForgotPasswordApp() {
         </a>
 
         <div className="auth-brand">
-          <img className="logo-light" src="/logo-wordmark.svg" width="280" height="48" alt="MCP Emails" />
-          <img className="logo-dark" src="/logo-wordmark-dark.svg" width="280" height="48" alt="MCP Emails" />
+          <img className="logo-light" src="/logo-wordmark.svg" width="280" height="48" alt="MCPEmails" />
+          <img className="logo-dark" src="/logo-wordmark-dark.svg" width="280" height="48" alt="MCPEmails" />
         </div>
 
         {/* ── Form state ──────────────────────────────────────────── */}

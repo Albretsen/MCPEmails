@@ -19,8 +19,8 @@
     "eyebrow": "Mail-in-a-Box + AI",
     "titleLine1": "Connect Mail-in-a-Box to Claude,",
     "titleLine2": "Cursor, ChatGPT and any MCP client",
-    "lead": "You set up your own box so nobody else would hold your mail. Adding an AI agent does not have to change that: MCP Emails connects to your box over IMAP and fetches each message live, without storing any of it.",
-    "answer": "Claude cannot reach a Mail-in-a-Box server on its own. MCP Emails is a hosted MCP server that connects to yours over IMAP on port 993, at the box hostname the setup guide tells you to use, which is normally box.yourdomain.com, authenticating with the password of a mail user created in the admin control panel. That lets Claude, Cursor or any MCP client read, search, send and organize the mail on your box. The box has to be reachable from the internet and holding a valid Let's Encrypt certificate, which the control panel provisions for you. One inbox is free.",
+    "lead": "You set up your own box so nobody else would hold your mail. Adding an AI agent does not have to change that: MCPEmails connects to your box over IMAP and fetches each message live, without storing any of it.",
+    "answer": "Claude cannot reach a Mail-in-a-Box server on its own. MCPEmails is a hosted MCP server that connects to yours over IMAP on port 993, at the box hostname the setup guide tells you to use, which is normally box.yourdomain.com, authenticating with the password of a mail user created in the admin control panel. That lets Claude, Cursor or any MCP client read, search, send and organize the mail on your box. The box has to be reachable from the internet and holding a valid Let's Encrypt certificate, which the control panel provisions for you. One inbox is free.",
     "meta0": "1 inbox free, forever",
     "meta1": "Mail user password from the control panel",
     "meta2": "Email fetched live, never stored"
@@ -32,7 +32,7 @@
   "setup": [
     {
       "h": "Create a free account",
-      "p": "Sign up for MCP Emails, no card required. The free plan connects one inbox, forever."
+      "p": "Sign up for MCPEmails, no card required. The free plan connects one inbox, forever."
     },
     {
       "h": "Get a real certificate from the control panel",
@@ -40,7 +40,7 @@
     },
     {
       "h": "Confirm the mail user and its password",
-      "p": "Under Mail then Users, confirm the address exists and set a password you know. Then add the inbox in MCP Emails: choose IMAP / SMTP, use <code>box.yourdomain.com</code> as the host, and enter the full address and that password."
+      "p": "Under Mail then Users, confirm the address exists and set a password you know. Then add the inbox in MCPEmails: choose IMAP / SMTP, use <code>box.yourdomain.com</code> as the host, and enter the full address and that password."
     },
     {
       "h": "Paste the MCP URL into your AI",
@@ -62,13 +62,13 @@
     }
   ],
   "limits": [
-    "Your box has to accept inbound connections on 993 from outside for a hosted MCP server to reach it. A Mail-in-a-Box on a home connection behind NAT, or one restricted by a cloud security group to your own address, cannot be connected. MCP Emails is self-hostable if you would rather keep the IMAP session inside your own network.",
+    "Your box has to accept inbound connections on 993 from outside for a hosted MCP server to reach it. A Mail-in-a-Box on a home connection behind NAT, or one restricted by a cloud security group to your own address, cannot be connected. MCPEmails is self-hostable if you would rather keep the IMAP session inside your own network.",
     "Mail-in-a-Box expects to own DNS and TLS for the box hostname, so this works best on the standard, unmodified install. A heavily customised box may not present the certificate the control panel thinks it does."
   ],
   "faq": [
     {
       "q": "Does Claude work with Mail-in-a-Box?",
-      "a": "Not directly. Claude has no connector for a mail server you run yourself. Connecting an MCP server such as MCP Emails to your box over IMAP gives Claude read, search, send, reply, schedule and organize access to the mailboxes on it, and the same inbox then works in Cursor or ChatGPT too."
+      "a": "Not directly. Claude has no connector for a mail server you run yourself. Connecting an MCP server such as MCPEmails to your box over IMAP gives Claude read, search, send, reply, schedule and organize access to the mailboxes on it, and the same inbox then works in Cursor or ChatGPT too."
     },
     {
       "q": "What are the Mail-in-a-Box IMAP and SMTP settings?",
@@ -80,7 +80,7 @@
     },
     {
       "q": "Do I have to expose my box to the internet?",
-      "a": "For the hosted service, yes: MCP Emails connects inbound to port 993. That is the normal state for a Mail-in-a-Box anyway, since it has to accept mail on port 25 from the world. If you have deliberately restricted access to your own addresses, self-host MCP Emails instead so the IMAP connection never leaves your network."
+      "a": "For the hosted service, yes: MCPEmails connects inbound to port 993. That is the normal state for a Mail-in-a-Box anyway, since it has to accept mail on port 25 from the world. If you have deliberately restricted access to your own addresses, self-host MCPEmails instead so the IMAP connection never leaves your network."
     },
     {
       "q": "Is my mail stored on your servers?",

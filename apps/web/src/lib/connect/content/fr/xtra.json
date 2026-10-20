@@ -18,8 +18,8 @@
     "eyebrow": "Spark Xtra Mail + IA",
     "titleLine1": "Connectez votre boîte Xtra Mail",
     "titleLine2": "à Claude, Cursor, tout client MCP",
-    "lead": "Xtra Mail accepte un simple mot de passe en IMAP, sans mot de passe d'application à générer ni second facteur pour vous gêner. MCP Emails la connecte pour que votre agent IA puisse lire, rechercher, envoyer, répondre et classer ce courrier.",
-    "answer": "Claude ne peut pas accéder seul à une boîte Xtra Mail. MCP Emails est un serveur MCP hébergé qui la connecte en IMAP sur imap.xtra.co.nz, port 993, en se connectant avec votre adresse xtra.co.nz complète et votre mot de passe Xtra Mail habituel. Spark n'émet aucun mot de passe spécifique aux applications pour Xtra Mail et indique que sa vérification en deux étapes ne s'applique qu'au portail webmail et non aux clients de messagerie : un mot de passe correct s'authentifie donc directement, même avec la vérification en deux étapes activée. Une fois la connexion établie, Claude, Cursor ou tout autre client MCP peut lire, rechercher, envoyer et organiser ce courrier. Une boîte est gratuite, pour toujours.",
+    "lead": "Xtra Mail accepte un simple mot de passe en IMAP, sans mot de passe d'application à générer ni second facteur pour vous gêner. MCPEmails la connecte pour que votre agent IA puisse lire, rechercher, envoyer, répondre et classer ce courrier.",
+    "answer": "Claude ne peut pas accéder seul à une boîte Xtra Mail. MCPEmails est un serveur MCP hébergé qui la connecte en IMAP sur imap.xtra.co.nz, port 993, en se connectant avec votre adresse xtra.co.nz complète et votre mot de passe Xtra Mail habituel. Spark n'émet aucun mot de passe spécifique aux applications pour Xtra Mail et indique que sa vérification en deux étapes ne s'applique qu'au portail webmail et non aux clients de messagerie : un mot de passe correct s'authentifie donc directement, même avec la vérification en deux étapes activée. Une fois la connexion établie, Claude, Cursor ou tout autre client MCP peut lire, rechercher, envoyer et organiser ce courrier. Une boîte est gratuite, pour toujours.",
     "meta0": "1 boîte gratuite, pour toujours",
     "meta1": "Votre mot de passe Xtra, sans mot de passe d'application",
     "meta2": "E-mails récupérés en direct, jamais stockés"
@@ -30,7 +30,7 @@
   },
   "setup": [
     {
-      "h": "Créez un compte MCP Emails gratuit",
+      "h": "Créez un compte MCPEmails gratuit",
       "p": "Inscrivez-vous sur mcpemails.com. L'offre gratuite connecte une boîte et ne demande pas de carte bancaire."
     },
     {
@@ -39,7 +39,7 @@
     },
     {
       "h": "Saisissez l'adresse complète et votre mot de passe Xtra Mail",
-      "p": "Dans MCP Emails, choisissez IMAP / SMTP et saisissez l'adresse exactement comme Spark l'écrit, par exemple <code>joe.bloggs@xtra.co.nz</code>, avec le mot de passe que vous utilisez pour vous connecter au webmail Xtra. Les serveurs et ports ci-dessus sont préremplis et ont été vérifiés par une connexion TLS réelle."
+      "p": "Dans MCPEmails, choisissez IMAP / SMTP et saisissez l'adresse exactement comme Spark l'écrit, par exemple <code>joe.bloggs@xtra.co.nz</code>, avec le mot de passe que vous utilisez pour vous connecter au webmail Xtra. Les serveurs et ports ci-dessus sont préremplis et ont été vérifiés par une connexion TLS réelle."
     },
     {
       "h": "Collez l'URL MCP dans votre IA",
@@ -72,7 +72,7 @@
   "faq": [
     {
       "q": "Claude fonctionne-t-il avec Xtra Mail ?",
-      "a": "Pas directement. Claude n'a pas de connecteur Spark ou Xtra intégré. Connecter un serveur MCP comme MCP Emails à la boîte en IMAP donne à Claude un accès en lecture, recherche, envoi, réponse, planification et organisation à votre courrier xtra.co.nz, et la même connexion fonctionne dans Cursor, ChatGPT et les autres clients MCP."
+      "a": "Pas directement. Claude n'a pas de connecteur Spark ou Xtra intégré. Connecter un serveur MCP comme MCPEmails à la boîte en IMAP donne à Claude un accès en lecture, recherche, envoi, réponse, planification et organisation à votre courrier xtra.co.nz, et la même connexion fonctionne dans Cursor, ChatGPT et les autres clients MCP."
     },
     {
       "q": "Quels sont les paramètres IMAP et SMTP d'Xtra Mail ?",

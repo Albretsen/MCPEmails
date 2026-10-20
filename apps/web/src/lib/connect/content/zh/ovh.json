@@ -24,7 +24,7 @@
     "meta0": "第一个邮箱免费，其余按套餐连接",
     "meta1": "使用邮箱密码，无需 OAuth 配置",
     "meta2": "邮件实时获取，绝不存储",
-    "answer": "Claude 无法自行连接 OVH。MCP Emails 是一个托管 MCP 服务器，用你的邮箱密码通过 IMAP 与之连接，让 Claude、Cursor 或任意 MCP 客户端都能读取、搜索、发送并整理这些邮件。设置只需几分钟。公司的每个地址（如 info@ 或 sales@）都作为独立邮箱连接：一个邮箱免费，Personal 连接三个，Pro 最多连接 10 个，Business 按需连接更多。"
+    "answer": "Claude 无法自行连接 OVH。MCPEmails 是一个托管 MCP 服务器，用你的邮箱密码通过 IMAP 与之连接，让 Claude、Cursor 或任意 MCP 客户端都能读取、搜索、发送并整理这些邮件。设置只需几分钟。公司的每个地址（如 info@ 或 sales@）都作为独立邮箱连接：一个邮箱免费，Personal 连接三个，Pro 最多连接 10 个，Business 按需连接更多。"
   },
   "persona": {
     "intro": "在 OVH 有好几个公司邮箱？",
@@ -33,19 +33,19 @@
   },
   "method": {
     "title": "OVH 如何连接：IMAP 与邮箱密码",
-    "body": "OVH MX Plan 邮箱通过 IMAP/SMTP 使用 OVH 控制面板中的邮箱密码连接，两台服务器都是 <code>ssl0.ovh.net</code>。OVH Hosted Exchange 是另一项服务：它的主机名形如 <code>ex4.mail.ovh.net</code>，发信通过 587 端口的 STARTTLS 进行，从不使用 465，这就是为什么共享主机的默认设置对它只会一直挂起。MCP Emails 能识别这两种情况，并选择正确的一对服务器。"
+    "body": "OVH MX Plan 邮箱通过 IMAP/SMTP 使用 OVH 控制面板中的邮箱密码连接，两台服务器都是 <code>ssl0.ovh.net</code>。OVH Hosted Exchange 是另一项服务：它的主机名形如 <code>ex4.mail.ovh.net</code>，发信通过 587 端口的 STARTTLS 进行，从不使用 465，这就是为什么共享主机的默认设置对它只会一直挂起。MCPEmails 能识别这两种情况，并选择正确的一对服务器。"
   },
   "setup": [
     {
       "h": "创建免费账户",
-      "p": "注册 MCP Emails，无需信用卡。免费套餐可永久连接一个收件箱。"
+      "p": "注册 MCPEmails，无需信用卡。免费套餐可永久连接一个收件箱。"
     },
     {
       "h": "获取你的 OVH 邮箱密码",
       "p": "在 OVH 控制面板中打开邮件服务，选择该地址并修改其密码。如果 OVH 为该邮箱显示的邮件主机不是 ssl0.ovh.net，请一并复制。"
     },
     {
-      "h": "粘贴到 MCP Emails",
+      "h": "粘贴到 MCPEmails",
       "p": "选择 IMAP / SMTP，填入你的 OVH 地址、上方的服务器地址和密码，安全连接收件箱。"
     },
     {
@@ -64,7 +64,7 @@
     },
     {
       "h": "从地址上看不出你用的是哪款 OVH 产品",
-      "p": "三款产品都在你自己的域名下提供邮件服务，所以无论位于哪一款，<code>you@yourdomain.fr</code> 看起来都一模一样。答案在 OVHcloud Control Panel 的 Web Cloud 中：MX Plan 位于 Emails 下，Email Pro 有自己的栏目，Hosted Exchange 又有另一个栏目。请先确认这一点，因为其他所有设置都取决于它。如果你在 OVH 订购的是 Microsoft 365 而不是 OVH 自己的 Hosted Exchange，那么邮箱位于 Microsoft 的服务器上，请用 Outlook 选项（使用 Microsoft 登录）而不是 IMAP 连接。可能需要 IT 管理员先批准一次 MCP Emails，控制台会给你一个审批链接，供你发给管理员。"
+      "p": "三款产品都在你自己的域名下提供邮件服务，所以无论位于哪一款，<code>you@yourdomain.fr</code> 看起来都一模一样。答案在 OVHcloud Control Panel 的 Web Cloud 中：MX Plan 位于 Emails 下，Email Pro 有自己的栏目，Hosted Exchange 又有另一个栏目。请先确认这一点，因为其他所有设置都取决于它。如果你在 OVH 订购的是 Microsoft 365 而不是 OVH 自己的 Hosted Exchange，那么邮箱位于 Microsoft 的服务器上，请用 Outlook 选项（使用 Microsoft 登录）而不是 IMAP 连接。可能需要 IT 管理员先批准一次 MCPEmails，控制台会给你一个审批链接，供你发给管理员。"
     },
     {
       "h": "MX Plan 运行的是 Dovecot，没有 MOVE、UIDPLUS 或 SPECIAL-USE",
@@ -79,7 +79,7 @@
   "faq": [
     {
       "q": "Claude 能用 OVH 邮箱吗？",
-      "a": "不能单独使用。Claude 没有内置的 OVHcloud 连接器。通过 IMAP 将 MCP Emails 这样的 MCP 服务器连接到该邮箱后，Claude 就能读取、搜索、发送、回复、定时和整理其中的邮件。你必须首先确定该地址属于哪款 OVH 邮件产品，因为它们的主机名完全不同。"
+      "a": "不能单独使用。Claude 没有内置的 OVHcloud 连接器。通过 IMAP 将 MCPEmails 这样的 MCP 服务器连接到该邮箱后，Claude 就能读取、搜索、发送、回复、定时和整理其中的邮件。你必须首先确定该地址属于哪款 OVH 邮件产品，因为它们的主机名完全不同。"
     },
     {
       "q": "OVH 的 IMAP 和 SMTP 设置是什么？",

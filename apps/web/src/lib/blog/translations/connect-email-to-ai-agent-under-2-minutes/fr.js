@@ -2,19 +2,19 @@ const translation = {
   title: 'Comment connecter votre e-mail à un agent IA en moins de 2 minutes (Gmail, Outlook, iCloud, Fastmail et IMAP)',
   description: 'Connectez votre e-mail à un agent IA en moins de 2 minutes. Configuration pas à pas pour Gmail, Outlook, iCloud, Fastmail et n’importe quelle boîte IMAP via MCP — aucun e-mail n’est jamais stocké.',
   coverAlt: 'Connectez votre e-mail à un agent IA en moins de 2 minutes — Gmail, Outlook, iCloud, Fastmail et IMAP via MCP',
-  content: `Vous connectez votre e-mail à un agent IA en deux gestes : connectez la boîte de réception dans le tableau de bord MCP Emails, puis pointez votre agent vers une seule URL d’endpoint. Avec un client compatible OAuth comme claude.ai, c’est tout. Pas de code, pas de SDK, et votre e-mail n’est stocké nulle part — chaque lecture et chaque envoi interroge votre fournisseur en direct, puis est aussitôt jeté dès que l’agent l’a reçu.
+  content: `Vous connectez votre e-mail à un agent IA en deux gestes : connectez la boîte de réception dans le tableau de bord MCPEmails, puis pointez votre agent vers une seule URL d’endpoint. Avec un client compatible OAuth comme claude.ai, c’est tout. Pas de code, pas de SDK, et votre e-mail n’est stocké nulle part — chaque lecture et chaque envoi interroge votre fournisseur en direct, puis est aussitôt jeté dès que l’agent l’a reçu.
 
 C’est le guide rapide. Choisissez votre fournisseur ci-dessous, suivez les quatre ou cinq étapes, et vous aurez Claude (ou Cursor, ou un script maison) en train de lire et d’envoyer de vrais e-mails à peu près le temps qu’il faut pour relire ce paragraphe deux fois. Pour la version plus approfondie « qu’est-ce que c’est et est-ce sûr », commencez par le [guide complet pour donner à votre agent IA un accès à l’e-mail](/blog/how-to-give-your-ai-agent-email-access).
 
 ## L’étape commune à tous les fournisseurs : connectez votre client
 
-Avant de toucher au moindre fournisseur, décidez comment votre agent IA va dialoguer avec MCP Emails. Il y a deux chemins, et tous deux utilisent le même endpoint et les mêmes outils.
+Avant de toucher au moindre fournisseur, décidez comment votre agent IA va dialoguer avec MCPEmails. Il y a deux chemins, et tous deux utilisent le même endpoint et les mêmes outils.
 
 **Chemin A — client OAuth (claude.ai, Claude Desktop, Cursor).** Pas de clé d’API. Vous collez une URL et approuvez une connexion :
 
 1. Dans claude.ai, allez dans **Customize → Connectors → Add connector**.
 2. Collez l’endpoint : \`https://www.mcpemails.com/api/mcp\`
-3. Cliquez sur **Connect**, connectez-vous à votre compte MCP Emails et approuvez les portées souhaitées (\`read:email\`, \`send:email\`, ou les deux).
+3. Cliquez sur **Connect**, connectez-vous à votre compte MCPEmails et approuvez les portées souhaitées (\`read:email\`, \`send:email\`, ou les deux).
 
 C’est tout pour le côté client. Les jetons sont limités exactement à ce que vous avez approuvé, et vous pouvez révoquer la connexion depuis le tableau de bord en un clic. Si vous voulez voir les compromis détaillés, lisez [OAuth ou clés d’API pour l’accès à l’e-mail par l’IA](/blog/oauth-vs-api-keys-ai-email-access). Pour un guide propre à un client, voyez comment [connecter Claude à vos e-mails](/blog/connect-claude-to-email) ou [connecter ChatGPT à vos e-mails](/blog/connect-chatgpt-to-email).
 
@@ -39,7 +39,7 @@ Par défaut, Gmail se connecte avec un mot de passe d’application Google, en I
 3. Saisissez votre adresse Gmail complète, collez le mot de passe d’application et cliquez sur **Connecter la boîte**.
 4. La connexion est testée auprès de Gmail et la boîte apparaît connectée. Terminé.
 
-Votre mot de passe Google habituel ne fonctionne pas ici et n’est jamais nécessaire. En IMAP, les libellés Gmail apparaissent comme des dossiers, et les recherches utilisent les champs structurés de MCP Emails (expéditeur, objet, date, non lus, etc.) plutôt que les opérateurs de recherche de Gmail. Vous pouvez révoquer le mot de passe d’application à tout moment depuis la même page Google. Si vous êtes sur Google Workspace et que la page des mots de passe d’application n’apparaît pas, votre administrateur les a peut-être désactivés pour le domaine. Le [guide Gmail](/blog/connect-gmail-to-claude) donne les détails.
+Votre mot de passe Google habituel ne fonctionne pas ici et n’est jamais nécessaire. En IMAP, les libellés Gmail apparaissent comme des dossiers, et les recherches utilisent les champs structurés de MCPEmails (expéditeur, objet, date, non lus, etc.) plutôt que les opérateurs de recherche de Gmail. Vous pouvez révoquer le mot de passe d’application à tout moment depuis la même page Google. Si vous êtes sur Google Workspace et que la page des mots de passe d’application n’apparaît pas, votre administrateur les a peut-être désactivés pour le domaine. Le [guide Gmail](/blog/connect-gmail-to-claude) donne les détails.
 
 ### Outlook / Microsoft 365 (connexion avec Microsoft)
 
@@ -57,7 +57,7 @@ Les comptes personnels Outlook.com, Hotmail, Live et MSN se connectent ainsi, sa
 iCloud ne propose pas d’OAuth aux tiers, vous générez donc un mot de passe d’application. Cela prend une minute de plus.
 
 1. Allez sur [appleid.apple.com](https://appleid.apple.com), connectez-vous et ouvrez la section **Sign-In and Security**.
-2. Sous **App-Specific Passwords**, créez-en un nouveau et nommez-le « MCP Emails ».
+2. Sous **App-Specific Passwords**, créez-en un nouveau et nommez-le « MCPEmails ».
 3. Copiez le mot de passe généré (il ressemble à \`xxxx-xxxx-xxxx-xxxx\`).
 4. Dans **Dashboard → Inboxes → Connect Inbox → iCloud**, saisissez votre adresse iCloud et collez ce mot de passe d’application.
 
@@ -68,7 +68,7 @@ iCloud fonctionne sur IMAP/SMTP en coulisses, vous disposez donc du même jeu d�
 Une rapide mise au point si vous avez lu d’anciennes docs : **Fastmail se connecte avec un mot de passe d’application, pas avec OAuth.** Ne cherchez pas de bouton « Se connecter avec Fastmail » : il n’y en a pas ici.
 
 1. Dans Fastmail, ouvrez **Settings → Privacy & Security → Integrations** (ou **App Passwords**).
-2. Créez un nouveau mot de passe d’application. Donnez-lui l’accès au courrier (IMAP/SMTP) et nommez-le « MCP Emails ».
+2. Créez un nouveau mot de passe d’application. Donnez-lui l’accès au courrier (IMAP/SMTP) et nommez-le « MCPEmails ».
 3. Copiez le mot de passe que Fastmail génère.
 4. Dans **Dashboard → Inboxes → Connect Inbox → Fastmail**, saisissez votre adresse Fastmail et collez-le.
 
@@ -80,7 +80,7 @@ Tout ce qui parle IMAP/SMTP fonctionne via un seul connecteur. Le principe est i
 
 1. Dans les paramètres de sécurité de votre fournisseur, créez un **mot de passe d’application** (Yahoo, Zoho et Yandex le cachent tous dans la sécurité du compte). Utilisez un vrai mot de passe d’application, pas votre mot de passe de connexion — la plupart des fournisseurs bloquent de toute façon désormais l’IMAP avec mot de passe simple.
 2. **Dashboard → Inboxes → Connect Inbox → IMAP.**
-3. Saisissez votre adresse e-mail et le mot de passe d’application. MCP Emails détecte automatiquement les serveurs courants ; si le vôtre est inhabituel, indiquez l’hôte et le port IMAP et SMTP que votre fournisseur précise.
+3. Saisissez votre adresse e-mail et le mot de passe d’application. MCPEmails détecte automatiquement les serveurs courants ; si le vôtre est inhabituel, indiquez l’hôte et le port IMAP et SMTP que votre fournisseur précise.
 4. Enregistrez. La boîte de réception se connecte et est prête.
 
 Pour les particularités de chaque fournisseur sur iCloud, Fastmail et la longue traîne des hôtes IMAP, l’[analyse approfondie d’iCloud, Fastmail et IMAP](/blog/connect-icloud-fastmail-imap-to-claude) est la référence de dépannage.
@@ -102,7 +102,7 @@ Quel que soit le fournisseur choisi, le premier geste de l’agent est toujours 
 
 Un bon test rapide : demandez à votre agent « résume mes trois e-mails non lus les plus récents ». Il exécutera \`inbox_list\`, puis \`email_read\` avec \`action: "list"\` et \`unread: true\`, puis \`email_read\` avec \`action: "read"\` sur chacun. Si cela fonctionne, votre connexion est active.
 
-Une réserve honnête à poser d’emblée : MCP Emails fonctionne par sondage. Il n’y a pas de webhooks ni d’événements push, un agent réagit donc au nouveau courrier en le vérifiant selon une planification plutôt qu’en recevant une notification. C’est le bon modèle pour la plupart des flux de travail, et c’est ainsi que fonctionnent les modèles de [tri et résumé de la boîte de réception](/blog/ai-agent-triage-summarize-inbox).
+Une réserve honnête à poser d’emblée : MCPEmails fonctionne par sondage. Il n’y a pas de webhooks ni d’événements push, un agent réagit donc au nouveau courrier en le vérifiant selon une planification plutôt qu’en recevant une notification. C’est le bon modèle pour la plupart des flux de travail, et c’est ainsi que fonctionnent les modèles de [tri et résumé de la boîte de réception](/blog/ai-agent-triage-summarize-inbox).
 
 ## Pourquoi c’est sûr de le faire rapidement
 

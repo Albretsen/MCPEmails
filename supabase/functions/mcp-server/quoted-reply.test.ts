@@ -38,11 +38,11 @@ const INBOX: DraftEditorProviderInbox = {
   provider: "imap",
   service: null,
   signature_enabled: true,
-  signature_text: "Asgeir Albretsen\nFounder, MCP Emails\nmcpemails.com",
+  signature_text: "Asgeir Albretsen\nFounder, MCPEmails\nmcpemails.com",
 };
 
 /** The shape QA found: message, signature, then our own attribution and quote. */
-const REPLY_TEXT = "Thanks, that works for me.\n\n-- \nAsgeir Albretsen\nFounder, MCP Emails\nmcpemails.com" +
+const REPLY_TEXT = "Thanks, that works for me.\n\n-- \nAsgeir Albretsen\nFounder, MCPEmails\nmcpemails.com" +
   "\n\nOn Mon, 7 Sep 2026 17:32:55 +0000, Asgeir Albretsen <a@example.com> wrote:\n" +
   "> Can we move the call to Friday?\n>\n> -- \n> Dana\n> Unsubscribe: https://x.example/u";
 
@@ -53,7 +53,7 @@ const REPLY_TEXT = "Thanks, that works for me.\n\n-- \nAsgeir Albretsen\nFounder
 Deno.test("text: our own reply attribution starts the quote, not the signature", () => {
   const split = splitQuotedText(REPLY_TEXT);
   assert(split);
-  assertEquals(split.head, "Thanks, that works for me.\n\n-- \nAsgeir Albretsen\nFounder, MCP Emails\nmcpemails.com");
+  assertEquals(split.head, "Thanks, that works for me.\n\n-- \nAsgeir Albretsen\nFounder, MCPEmails\nmcpemails.com");
   assert(split.quote.startsWith("\n\nOn Mon, 7 Sep 2026"));
   assertEquals(split.head + split.quote, REPLY_TEXT, "byte for byte");
   // The line is counted in "\n", which is what survives the card's boundary.

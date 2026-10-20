@@ -63,7 +63,7 @@
  *
  * ENVIRONMENT (all read at call time, never at module load):
  *   RESEND_API_KEY        Resend API key. Missing = no send, logged, not thrown.
- *   BILLING_EMAIL_FROM    OPTIONAL. Default: MCP Emails <hello@mcpemails.com>.
+ *   BILLING_EMAIL_FROM    OPTIONAL. Default: MCPEmails <hello@mcpemails.com>.
  *   LIFECYCLE_EMAIL_FROM  OPTIONAL, read via lifecycleFrom() in
  *                         src/lib/email/lifecycle.ts. The win-back sender.
  *   CANCEL_REPLY_TO       OPTIONAL. Where "what stopped working for you?" lands.
@@ -101,7 +101,7 @@ import { POSTAL_ADDRESS_LINE, WITHDRAWAL_PATH } from '@/lib/email/legal';
 // ---------------------------------------------------------------------------
 
 const SUPPORT_ADDRESS = 'hello@mcpemails.com';
-const DEFAULT_BILLING_FROM = `MCP Emails <${SUPPORT_ADDRESS}>`;
+const DEFAULT_BILLING_FROM = `MCPEmails <${SUPPORT_ADDRESS}>`;
 const DEFAULT_APP_URL = 'https://mcpemails.com';
 
 function appUrl(): string {

@@ -33,7 +33,7 @@ Cursor supports OAuth 2.0 for MCP servers, which is the painless path. There's n
 
 1. Open Cursor settings and find the MCP servers section.
 2. Add a new server with the URL \`https://www.mcpemails.com/api/mcp\`.
-3. Cursor opens a browser window. Sign in to your MCP Emails account and approve the scopes you want the agent to have — \`read:email\`, \`send:email\`, or both.
+3. Cursor opens a browser window. Sign in to your MCPEmails account and approve the scopes you want the agent to have — \`read:email\`, \`send:email\`, or both.
 4. The connection goes green and the email tools appear in Cursor's tool list.
 
 Under the hood that's OAuth 2.0 authorization code with PKCE, and the token Cursor holds is scoped to exactly what you approved. If you only granted \`read:email\`, the agent literally cannot send. When you're done, revoke the connection from **Dashboard → API Keys** (OAuth grants live there too) in one click, and Cursor's access dies immediately.

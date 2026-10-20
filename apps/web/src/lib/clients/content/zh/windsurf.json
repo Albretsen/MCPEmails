@@ -37,7 +37,7 @@
     },
     {
       "h": "刷新并授权",
-      "p": "在 Cascade 中刷新 MCP 服务器，并在提示时通过 MCP Emails 授权。批准你希望 Cascade 拥有的权限范围。"
+      "p": "在 Cascade 中刷新 MCP 服务器，并在提示时通过 MCPEmails 授权。批准你希望 Cascade 拥有的权限范围。"
     }
   ],
   "gotchas": [

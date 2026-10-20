@@ -175,7 +175,7 @@ describe("gate", () => {
   it("not known yet shows a neutral frame, never the app", async () => {
     useAuthStore.setState({ status: "loading" });
     await render(<Gate>{app}</Gate>);
-    expect(shown()).toBe("Loading mcpemails");
+    expect(shown()).toBe("Loading MCPEmails");
   });
 
   it("signed in shows the app while /session is still loading", async () => {

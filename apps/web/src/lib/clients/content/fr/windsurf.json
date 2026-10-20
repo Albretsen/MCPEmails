@@ -37,7 +37,7 @@
     },
     {
       "h": "Rafraîchissez et autorisez",
-      "p": "Rafraîchissez les serveurs MCP dans Cascade et autorisez avec MCP Emails quand on vous le demande. Approuvez les autorisations que Cascade doit détenir."
+      "p": "Rafraîchissez les serveurs MCP dans Cascade et autorisez avec MCPEmails quand on vous le demande. Approuvez les autorisations que Cascade doit détenir."
     }
   ],
   "gotchas": [

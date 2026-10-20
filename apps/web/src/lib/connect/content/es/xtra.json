@@ -18,8 +18,8 @@
     "eyebrow": "Spark Xtra Mail + IA",
     "titleLine1": "Conecta tu bandeja de Xtra Mail",
     "titleLine2": "a Claude, Cursor y cualquier cliente MCP",
-    "lead": "Xtra Mail acepta una contraseña normal por IMAP, sin contraseña de aplicación que generar y sin un segundo factor de por medio. MCP Emails la conecta para que tu agente de IA pueda leer, buscar, enviar, responder y archivar ese correo.",
-    "answer": "Claude no puede acceder por sí solo a una bandeja de Xtra Mail. MCP Emails es un servidor MCP alojado que la conecta por IMAP en imap.xtra.co.nz en el puerto 993, iniciando sesión con tu dirección xtra.co.nz completa y tu contraseña normal de Xtra Mail. Spark no emite contraseñas específicas de aplicación para Xtra Mail e indica que su verificación en dos pasos solo se aplica en el portal de webmail y no a los clientes de correo, así que una contraseña correcta autentica directamente incluso con la verificación en dos pasos activada. Una vez conectada, Claude, Cursor o cualquier otro cliente MCP puede leer, buscar, enviar y organizar ese correo. Una bandeja es gratis, para siempre.",
+    "lead": "Xtra Mail acepta una contraseña normal por IMAP, sin contraseña de aplicación que generar y sin un segundo factor de por medio. MCPEmails la conecta para que tu agente de IA pueda leer, buscar, enviar, responder y archivar ese correo.",
+    "answer": "Claude no puede acceder por sí solo a una bandeja de Xtra Mail. MCPEmails es un servidor MCP alojado que la conecta por IMAP en imap.xtra.co.nz en el puerto 993, iniciando sesión con tu dirección xtra.co.nz completa y tu contraseña normal de Xtra Mail. Spark no emite contraseñas específicas de aplicación para Xtra Mail e indica que su verificación en dos pasos solo se aplica en el portal de webmail y no a los clientes de correo, así que una contraseña correcta autentica directamente incluso con la verificación en dos pasos activada. Una vez conectada, Claude, Cursor o cualquier otro cliente MCP puede leer, buscar, enviar y organizar ese correo. Una bandeja es gratis, para siempre.",
     "meta0": "1 bandeja gratis, para siempre",
     "meta1": "Tu contraseña de Xtra, sin contraseña de aplicación",
     "meta2": "El correo se obtiene en vivo, nunca se almacena"
@@ -30,7 +30,7 @@
   },
   "setup": [
     {
-      "h": "Crea una cuenta gratis en MCP Emails",
+      "h": "Crea una cuenta gratis en MCPEmails",
       "p": "Regístrate en mcpemails.com. El plan gratuito conecta una bandeja y no pide tarjeta."
     },
     {
@@ -39,7 +39,7 @@
     },
     {
       "h": "Introduce la dirección completa y tu contraseña de Xtra Mail",
-      "p": "En MCP Emails elige IMAP / SMTP e introduce la dirección exactamente como la escribe Spark, por ejemplo <code>joe.bloggs@xtra.co.nz</code>, con la contraseña que usas para iniciar sesión en el webmail de Xtra. Los servidores y puertos indicados arriba ya vienen rellenados y se verificaron con una conexión TLS real."
+      "p": "En MCPEmails elige IMAP / SMTP e introduce la dirección exactamente como la escribe Spark, por ejemplo <code>joe.bloggs@xtra.co.nz</code>, con la contraseña que usas para iniciar sesión en el webmail de Xtra. Los servidores y puertos indicados arriba ya vienen rellenados y se verificaron con una conexión TLS real."
     },
     {
       "h": "Pega la URL MCP en tu IA",
@@ -72,7 +72,7 @@
   "faq": [
     {
       "q": "¿Funciona Claude con Xtra Mail?",
-      "a": "No directamente. Claude no tiene un conector integrado para Spark ni para Xtra. Conectar un servidor MCP como MCP Emails al buzón por IMAP le da a Claude acceso para leer, buscar, enviar, responder, programar y organizar tu correo de xtra.co.nz, y la misma conexión funciona en Cursor, ChatGPT y otros clientes MCP."
+      "a": "No directamente. Claude no tiene un conector integrado para Spark ni para Xtra. Conectar un servidor MCP como MCPEmails al buzón por IMAP le da a Claude acceso para leer, buscar, enviar, responder, programar y organizar tu correo de xtra.co.nz, y la misma conexión funciona en Cursor, ChatGPT y otros clientes MCP."
     },
     {
       "q": "¿Cuáles son los ajustes IMAP y SMTP de Xtra Mail?",

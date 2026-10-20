@@ -22,7 +22,7 @@
     "titleLine1": "Koble Riseup-e-post til Claude,",
     "titleLine2": "Cursor, ChatGPT, enhver MCP-klient",
     "lead": "Gi AI-agenten din en ekte Riseup-innboks. Les, søk, send, svar, planlegg og organiser e-post via IMAP, med innloggingsdetaljen som ødelegger de fleste oppsett forklart, og avveiningen sagt høyt i stedet for hoppet over.",
-    "answer": "Claude når ikke en Riseup-postkasse på egen hånd. MCP Emails er en hostet MCP-server som kobler til via IMAP på mail.riseup.net port 993, og SMTP på port 465, slik at Claude, Cursor eller enhver MCP-klient kan lese, søke, sende og organisere den e-posten. Detaljen som avgjør om innloggingen lykkes, er brukernavnet: Riseup forventer kontonavnet ditt alene, for eksempel joehill, og ikke hele adressen joehill@riseup.net. Riseup utsteder ingen app-passord for e-post, så påloggingen du lagrer, er passordet til Riseup-kontoen din. Én innboks er gratis, for alltid.",
+    "answer": "Claude når ikke en Riseup-postkasse på egen hånd. MCPEmails er en hostet MCP-server som kobler til via IMAP på mail.riseup.net port 993, og SMTP på port 465, slik at Claude, Cursor eller enhver MCP-klient kan lese, søke, sende og organisere den e-posten. Detaljen som avgjør om innloggingen lykkes, er brukernavnet: Riseup forventer kontonavnet ditt alene, for eksempel joehill, og ikke hele adressen joehill@riseup.net. Riseup utsteder ingen app-passord for e-post, så påloggingen du lagrer, er passordet til Riseup-kontoen din. Én innboks er gratis, for alltid.",
     "meta0": "1 innboks gratis, for alltid",
     "meta1": "Kontonavn, ikke hele adressen",
     "meta2": "E-post hentes direkte, lagres aldri"
@@ -33,7 +33,7 @@
   },
   "setup": [
     {
-      "h": "Opprett din gratis MCP Emails-konto",
+      "h": "Opprett din gratis MCPEmails-konto",
       "p": "Registrer deg på mcpemails.com. Gratisplanen kobler til én innboks, for alltid, uten kort. Til slutt får du en MCP-URL og en nøkkel."
     },
     {
@@ -41,7 +41,7 @@
       "p": "Riseups side om e-postpassord påpeker at et passord med spesialtegn kan virke på <code>mail.riseup.net</code> i nettleseren og likevel feile i en e-postklient. Har ditt uvanlige tegn og innloggingen avvises, endre det på account.riseup.net til noe langt men enkelt før du antar at noe annet er galt. Riseup tilbyr for tiden ikke tofaktorautentisering for webmailen sin, så det er ingen andre faktor å omgå."
     },
     {
-      "h": "Legg til postkassen i MCP Emails med det nakne kontonavnet",
+      "h": "Legg til postkassen i MCPEmails med det nakne kontonavnet",
       "p": "Velg IMAP / SMTP. I brukernavnfeltet skriver du Riseup-kontonavnet ditt <b>uten</b> <code>@riseup.net</code>, og skriver inn kontopassordet. Verten er forhåndsutfylt som <code>mail.riseup.net</code> for begge retninger og ble verifisert via en direkte TLS-tilkobling. La alternativer merket sikker autentisering, kryptert passord eller CRAM-MD5 stå avslått; Riseup ber deg ikke bruke dem."
     },
     {
@@ -68,14 +68,14 @@
     }
   ],
   "limits": [
-    "Å koble en hvilken som helst postkasse til en AI-klient betyr at den AI-leverandøren leser innholdet i meldingene den jobber med. MCP Emails henter e-post direkte fra mail.riseup.net for hver forespørsel og lagrer ikke meldingsinnhold, og påloggingsdetaljer krypteres ved lagring, men teksten når likevel Claude, Cursor eller hvilken klient du kobler til. Mange har en Riseup-konto nettopp for å holde korrespondanse unna store kommersielle teknologiselskaper, og å koble den til her går imot det. Det er en vurdering av din egen trusselmodell, ikke en teknisk begrensning, og den er verdt å gjøre før du kobler til, ikke etterpå.",
+    "Å koble en hvilken som helst postkasse til en AI-klient betyr at den AI-leverandøren leser innholdet i meldingene den jobber med. MCPEmails henter e-post direkte fra mail.riseup.net for hver forespørsel og lagrer ikke meldingsinnhold, og påloggingsdetaljer krypteres ved lagring, men teksten når likevel Claude, Cursor eller hvilken klient du kobler til. Mange har en Riseup-konto nettopp for å holde korrespondanse unna store kommersielle teknologiselskaper, og å koble den til her går imot det. Det er en vurdering av din egen trusselmodell, ikke en teknisk begrensning, og den er verdt å gjøre før du kobler til, ikke etterpå.",
     "Det finnes ingen avgrenset pålogging for e-post. Riseup lar deg sette egne passord for VPN og chat på account.riseup.net, men e-post har ikke app-passord, så hemmeligheten som lagres her, er kontopassordet. Å trekke tilbake denne tilkoblingen betyr å endre det passordet og legge det inn på nytt alle andre steder.",
-    "E-post som kommer OpenPGP-kryptert, når en IMAP-klient som en armert chiffertekstblokk. MCP Emails har ingen privat nøkkel av deg, så en agent ser headere og kan arkivere eller flagge de meldingene, men ikke lese dem."
+    "E-post som kommer OpenPGP-kryptert, når en IMAP-klient som en armert chiffertekstblokk. MCPEmails har ingen privat nøkkel av deg, så en agent ser headere og kan arkivere eller flagge de meldingene, men ikke lese dem."
   ],
   "faq": [
     {
       "q": "Fungerer Claude med Riseup-e-post?",
-      "a": "Ikke direkte. Claude har ingen Riseup-kobling og kan ikke snakke IMAP selv. Kobler du en MCP-server som MCP Emails til Riseup-postkassen din, får Claude tilgang til å lese, søke, sende, svare, planlegge og organisere via IMAP, og samme tilkobling fungerer i Cursor, ChatGPT og andre MCP-klienter uten at oppsettet må gjentas."
+      "a": "Ikke direkte. Claude har ingen Riseup-kobling og kan ikke snakke IMAP selv. Kobler du en MCP-server som MCPEmails til Riseup-postkassen din, får Claude tilgang til å lese, søke, sende, svare, planlegge og organisere via IMAP, og samme tilkobling fungerer i Cursor, ChatGPT og andre MCP-klienter uten at oppsettet må gjentas."
     },
     {
       "q": "Hva er IMAP- og SMTP-innstillingene for Riseup?",

@@ -91,7 +91,7 @@
     "densityLabel": "Tetthet",
     "densityCompact": "Kompakt",
     "densitySpacious": "Romslig",
-    "firstRunTitle": "Velkommen til MCP Emails",
+    "firstRunTitle": "Velkommen til MCPEmails",
     "firstRunBody": "Koble til din første innboks for å få et fungerende MCP-endepunkt på under ett minutt.",
     "firstRunCta": "Koble til innboks",
     "inviteSentNotDelivered": "Invitasjonen til {email} ble opprettet, men e-posten kunne ikke sendes. Bruk Send på nytt på den ventende invitasjonen.",
@@ -135,7 +135,7 @@
   },
   "connect": {
     "subOutlook": "Outlook.com · Microsoft 365",
-    "hintOutlook": "Outlook.com-, Hotmail-, Live- og MSN-kontoer logger på med en gang. En Microsoft 365-konto fra jobb eller skole kan trenge at IT-administratoren godkjenner MCP Emails én gang; de trenger ikke en MCP Emails-konto for å gjøre det.",
+    "hintOutlook": "Outlook.com-, Hotmail-, Live- og MSN-kontoer logger på med en gang. En Microsoft 365-konto fra jobb eller skole kan trenge at IT-administratoren godkjenner MCPEmails én gang; de trenger ikke en MCPEmails-konto for å gjøre det.",
     "subFastmail": "App-passord",
     "subAppPassword": "App-passord",
     "subGeneric": "Alle postkasser · anbefalt",
@@ -398,7 +398,7 @@
   },
   "adminConsentLink": {
     "title": "Send denne lenken til IT-ansvarlig",
-    "body": "Send denne lenken til Microsoft 365-administratoren din. De logger på med administratorkontoen sin hos Microsoft og godkjenner én gang; de trenger ikke en MCP Emails-konto. Etter det kan alle i organisasjonen din koble til Outlook.",
+    "body": "Send denne lenken til Microsoft 365-administratoren din. De logger på med administratorkontoen sin hos Microsoft og godkjenner én gang; de trenger ikke en MCPEmails-konto. Etter det kan alle i organisasjonen din koble til Outlook.",
     "label": "Godkjenningslenke",
     "loading": "Lager lenke...",
     "copy": "Kopier",
@@ -411,20 +411,20 @@
   },
   "adminConsentResult": {
     "grantedTitle": "Godkjent",
-    "grantedBody": "Teamet ditt kan nå koble til Outlook i MCP Emails. Ingen trenger å godkjenne noe mer: hver person logger på med Microsoft når de kobler til sin egen postkasse.",
+    "grantedBody": "Teamet ditt kan nå koble til Outlook i MCPEmails. Ingen trenger å godkjenne noe mer: hver person logger på med Microsoft når de kobler til sin egen postkasse.",
     "cancelledTitle": "Ikke godkjent",
     "cancelledBody": "Godkjenningen ble avbrutt i Microsofts vindu, så ingenting er endret. Åpne lenken igjen når du er klar.",
     "failedTitle": "Godkjenningen gikk ikke gjennom",
     "failedBody": "Microsoft bekreftet ikke godkjenningen. Det krever en administratorkonto i Microsoft 365, for eksempel global administrator eller administrator for skyprogrammer. Logg på med en slik konto og åpne lenken igjen.",
     "link_invalidTitle": "Denne lenken er ikke gyldig",
-    "link_invalidBody": "Godkjenningslenken er ufullstendig eller har blitt endret. Be personen som sendte den om en ny fra MCP Emails-dashbordet sitt.",
+    "link_invalidBody": "Godkjenningslenken er ufullstendig eller har blitt endret. Be personen som sendte den om en ny fra MCPEmails-dashbordet sitt.",
     "link_expiredTitle": "Denne lenken har utløpt",
-    "link_expiredBody": "Godkjenningslenker virker i 7 dager. Be personen som sendte den om en ny fra MCP Emails-dashbordet sitt.",
+    "link_expiredBody": "Godkjenningslenker virker i 7 dager. Be personen som sendte den om en ny fra MCPEmails-dashbordet sitt.",
     "timed_outTitle": "Start på nytt",
     "timed_outBody": "Godkjenningen tok for lang tid eller ble fullført i en annen nettleser. Åpne godkjenningslenken igjen i denne nettleseren.",
     "unavailableTitle": "Noe gikk galt",
     "unavailableBody": "Vi kunne ikke starte godkjenningen. Prøv igjen om noen minutter.",
     "closeHint": "Spørsmål? Skriv til hello@mcpemails.com.",
-    "openApp": "Åpne MCP Emails"
+    "openApp": "Åpne MCPEmails"
   }
 }

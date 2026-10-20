@@ -68,7 +68,7 @@ const IMAP_INBOX: DraftEditorProviderInbox = {
   provider: "imap",
   service: null,
   signature_enabled: true,
-  signature_text: "--\nAsgeir, MCP Emails",
+  signature_text: "--\nAsgeir, MCPEmails",
 };
 
 const GMAIL_INBOX: DraftEditorProviderInbox = {
@@ -379,7 +379,7 @@ Deno.test("an update or read of a reply draft says who it answers, like the repl
       canSend: true,
     }).draft as Record<string, unknown>);
   // The text a reply is stored with (index.ts#buildReplyTextBody), signed.
-  const replyText = "Friday works.\n\n-- \nAsgeir, MCP Emails\n\n" +
+  const replyText = "Friday works.\n\n-- \nAsgeir, MCPEmails\n\n" +
     "On Mon, 7 Sep 2026 17:32:55 +0000, Dana Example <dana@x.example> wrote:\n> Can we move the call?";
   for (const origin of ["update", "read", "save"] as const) {
     const d = build(
@@ -742,7 +742,7 @@ Deno.test("readStoredDraft normalises a provider draft and reports nothing extra
       to: ["a@x.com"],
       cc: ["c@x.com"],
       bcc: ["b@x.com"],
-      bodyText: "Here they are.\n--\nAsgeir, MCP Emails",
+      bodyText: "Here they are.\n--\nAsgeir, MCPEmails",
       bodyHtml: "<p>Here they are.</p>",
       attachments: [{ filename: "q3.pdf", size_bytes: 184320, mime_type: "application/pdf" }],
       inReplyTo: "<abc@mail>",
@@ -1014,16 +1014,16 @@ Deno.test("RULE: no signature is ever applied", async () => {
       to: ["a@x.com"],
       cc: [],
       bcc: [],
-      bodyText: "Body.\n--\nAsgeir, MCP Emails",
+      bodyText: "Body.\n--\nAsgeir, MCPEmails",
       bodyHtml: null,
       attachments: [],
     },
   });
-  const edited = "Edited body.\n--\nAsgeir, MCP Emails";
+  const edited = "Edited body.\n--\nAsgeir, MCPEmails";
   await runDraftEditorSave(deps, caller(), { draft_id: "Drafts:2", body_text: edited });
   assertEquals(writes[0].params.body, edited, "the text is written exactly as given");
   assertEquals(
-    writes[0].params.body.split("Asgeir, MCP Emails").length - 1,
+    writes[0].params.body.split("Asgeir, MCPEmails").length - 1,
     1,
     "the signature must appear exactly once",
   );
@@ -2578,7 +2578,7 @@ Deno.test("no editor: signature_embedded reports the stored signature", async ()
       to: ["a@example.com"],
       cc: [],
       bcc: [],
-      bodyText: "Hello.\n\n--\nAsgeir, MCP Emails",
+      bodyText: "Hello.\n\n--\nAsgeir, MCPEmails",
       bodyHtml: null,
       attachments: [],
     },
@@ -2959,8 +2959,8 @@ const SIGNED_REPLY: ProviderDraft = {
   // Text the USER typed in the card after the model wrote the draft, with the
   // inbox signature already on it, CRLF line endings and trailing whitespace:
   // everything a "helpful" rewrite would normalise.
-  bodyText: "Edited by the user.\r\n\r\n--\nAsgeir, MCP Emails  \n",
-  bodyHtml: "<p>Edited by the user.</p><p><b>Asgeir</b>, MCP Emails</p>",
+  bodyText: "Edited by the user.\r\n\r\n--\nAsgeir, MCPEmails  \n",
+  bodyHtml: "<p>Edited by the user.</p><p><b>Asgeir</b>, MCPEmails</p>",
   attachments: [],
 };
 
@@ -3003,7 +3003,7 @@ Deno.test("body-less update: no signature is applied, so one already in the text
   assert(out.ok);
   const written = writes[0].params.body;
   assertEquals(written, SIGNED_REPLY.bodyText);
-  assertEquals(written.split("Asgeir, MCP Emails").length - 1, 1, "exactly one signature");
+  assertEquals(written.split("Asgeir, MCPEmails").length - 1, 1, "exactly one signature");
   assertEquals(writes[0].params.to, ["new@example.com"]);
   assertEquals(writes[0].params.cc, [], "an explicit [] clears; an omitted list is kept");
   assertEquals(writes[0].params.bcc, []);

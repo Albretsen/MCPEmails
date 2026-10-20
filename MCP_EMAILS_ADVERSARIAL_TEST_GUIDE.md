@@ -1,8 +1,8 @@
-# MCP Emails adversarial test guide
+# MCPEmails adversarial test guide
 
 ## Mission and safety boundary
 
-Find defects, unsafe behavior, confusing tool behavior, and misleading errors in MCP Emails. Test as the `bjellanda` mailbox. You may send mail **only when every To, Cc, Bcc, Reply-To, and forwarded recipient is the exact `bjellanda` email address**. Never reply to, forward, move, flag, delete, or otherwise alter an existing non-test message.
+Find defects, unsafe behavior, confusing tool behavior, and misleading errors in MCPEmails. Test as the `bjellanda` mailbox. You may send mail **only when every To, Cc, Bcc, Reply-To, and forwarded recipient is the exact `bjellanda` email address**. Never reply to, forward, move, flag, delete, or otherwise alter an existing non-test message.
 
 Treat every successful self-send as a test fixture. Use this unique prefix in every test subject:
 

@@ -1,12 +1,12 @@
 const translation = {
   title: 'Reglas automáticas de triaje de correo que funcionan sin un modelo de por medio',
   description:
-    'Cómo funcionan las automatizaciones de MCP Emails: una búsqueda guardada más una acción fija, con una cadencia y sin que ningún modelo interprete tu correo. Previsualiza, crea, activa y lee el registro de ejecuciones.',
+    'Cómo funcionan las automatizaciones de MCPEmails: una búsqueda guardada más una acción fija, con una cadencia y sin que ningún modelo interprete tu correo. Previsualiza, crea, activa y lee el registro de ejecuciones.',
   coverAlt:
-    'Reglas de triaje de correo desatendidas en MCP Emails: una búsqueda guardada más una acción fija según un calendario',
+    'Reglas de triaje de correo desatendidas en MCPEmails: una búsqueda guardada más una acción fija según un calendario',
   content: `Cada mañana le pides a tu agente que despeje el ruido: archivar las notificaciones de compilación, marcar los recibos como leídos, reenviar las facturas a tu contable. Funciona. También cuesta una llamada al modelo cada vez, y el martes hace algo ligeramente distinto de lo que hizo el lunes.
 
-MCP Emails tiene una segunda superficie para exactamente ese correo. Una **automatización** es una búsqueda guardada más una acción fija, evaluada con una cadencia y sin ningún modelo de por medio. El correo se compara, nunca se interpreta.
+MCPEmails tiene una segunda superficie para exactamente ese correo. Una **automatización** es una búsqueda guardada más una acción fija, evaluada con una cadencia y sin ningún modelo de por medio. El correo se compara, nunca se interpreta.
 
 **Ir a:** [Qué es una regla](#qué-es-realmente-una-automatización) · [Crea una](#crea-una-previsualiza-crea-activa) · [Qué puede y qué no](#lo-que-una-regla-puede-y-no-puede-hacer) · [Cuándo no escribirla](#cuándo-no-escribir-una-regla)
 
@@ -25,7 +25,7 @@ Define también \`max_messages_per_run\` (25 por defecto, 200 como máximo): es 
 - **Coste.** Una regla no gasta tokens. La conversación matutina los gasta a diario, sobre correo cuyo tratamiento decidiste hace meses.
 - **Repetibilidad.** El mismo filtro produce la misma acción. No hay un «hoy decidió otra cosa» porque no hay ninguna decisión.
 - **Sin movimientos alucinados.** Una regla no puede inventarse una carpeta, improvisar un destinatario ni actuar según una instrucción encontrada dentro del cuerpo de un correo.
-- **Se ejecuta mientras duermes.** MCP Emails funciona por lo demás con sondeo: el agente comprueba si hay correo nuevo cuando se lo pides. La regla es la parte que no hay que pedir.
+- **Se ejecuta mientras duermes.** MCPEmails funciona por lo demás con sondeo: el agente comprueba si hay correo nuevo cuando se lo pides. La regla es la parte que no hay que pedir.
 
 ## El triaje con agente y las reglas desatendidas hacen cosas distintas
 

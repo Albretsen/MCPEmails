@@ -19,7 +19,7 @@
     "titleLine1": "将你的 o2.pl 邮箱连接到",
     "titleLine2": "Claude、Cursor、任意 MCP 客户端",
     "lead": "为你的 AI 代理接入一个真正的 o2.pl 收件箱。在邮箱选项中开启 IMAP 后，即可通过 IMAP 读取、搜索、发送、回复、定时与整理邮件。",
-    "answer": "Claude 无法自行连接 o2.pl 邮箱。MCP Emails 是一个托管 MCP 服务器，通过 IMAP 连接 poczta.o2.pl 的 993 端口，让 Claude、Cursor 或任意 MCP 客户端都能读取、搜索、发送并整理邮件。o2.pl 默认关闭邮件程序访问：你需要在网页邮箱的 Opcje 中，于 IMAP/POP 标签下开启。如果账户开启了两步登录，就要使用为此创建的 hasło do programu pocztowego（邮件程序密码）认证，而不是浏览器登录密码。一个收件箱永久免费。",
+    "answer": "Claude 无法自行连接 o2.pl 邮箱。MCPEmails 是一个托管 MCP 服务器，通过 IMAP 连接 poczta.o2.pl 的 993 端口，让 Claude、Cursor 或任意 MCP 客户端都能读取、搜索、发送并整理邮件。o2.pl 默认关闭邮件程序访问：你需要在网页邮箱的 Opcje 中，于 IMAP/POP 标签下开启。如果账户开启了两步登录，就要使用为此创建的 hasło do programu pocztowego（邮件程序密码）认证，而不是浏览器登录密码。一个收件箱永久免费。",
     "meta0": "1 个收件箱永久免费",
     "meta1": "先在 Opcje 中开启 IMAP",
     "meta2": "邮件实时获取，绝不存储"
@@ -30,7 +30,7 @@
   },
   "setup": [
     {
-      "h": "创建免费 MCP Emails 账户",
+      "h": "创建免费 MCPEmails 账户",
       "p": "在 mcpemails.com 注册。免费套餐可永久连接一个收件箱，无需信用卡。"
     },
     {
@@ -39,10 +39,10 @@
     },
     {
       "h": "如果开启了两步登录，请创建邮件程序密码",
-      "p": "o2 在文档中说明，开启双重认证后不应使用你在浏览器中输入的密码，而是创建一个 <b>hasło do programu pocztowego</b>，即为每个使用 IMAP 或 POP3 的外部客户端单独设置的专用密码。MCP Emails 需要的就是它。如果未开启两步登录，普通账户密码即可直接使用。"
+      "p": "o2 在文档中说明，开启双重认证后不应使用你在浏览器中输入的密码，而是创建一个 <b>hasło do programu pocztowego</b>，即为每个使用 IMAP 或 POP3 的外部客户端单独设置的专用密码。MCPEmails 需要的就是它。如果未开启两步登录，普通账户密码即可直接使用。"
     },
     {
-      "h": "粘贴到 MCP Emails，再把 MCP URL 粘贴到你的 AI",
+      "h": "粘贴到 MCPEmails，再把 MCP URL 粘贴到你的 AI",
       "p": "选择 IMAP / SMTP，输入完整地址（例如 nazwa@o2.pl）并粘贴密码。服务器和端口已自动填好，并已通过实时 TLS 连接验证。然后把 https://mcpemails.com/api/mcp 粘贴到 Claude、Cursor 或 ChatGPT 中，完成授权，代理便拥有该收件箱。"
     }
   ],
@@ -57,7 +57,7 @@
     },
     {
       "h": "不支持 SASL-IR，默认它存在的客户端会收到一个无法解释的 BAD",
-      "p": "o2 的 IMAP 问候语非常简短（<code>* OK IMAP4 ready</code>），声明了 <code>AUTH=PLAIN</code>，但没有 <code>SASL-IR</code>。在 <code>AUTHENTICATE</code> 中一步发送凭据的客户端会被一个光秃秃的 <code>BAD</code> 拒绝，看起来像是凭据错误。MCP Emails 会自动回退到两步交换。了解这一点很有用，因为这正是通用 IMAP 工具有时会报告 o2.pl 无法连接、而账户其实完全正常的原因。"
+      "p": "o2 的 IMAP 问候语非常简短（<code>* OK IMAP4 ready</code>），声明了 <code>AUTH=PLAIN</code>，但没有 <code>SASL-IR</code>。在 <code>AUTHENTICATE</code> 中一步发送凭据的客户端会被一个光秃秃的 <code>BAD</code> 拒绝，看起来像是凭据错误。MCPEmails 会自动回退到两步交换。了解这一点很有用，因为这正是通用 IMAP 工具有时会报告 o2.pl 无法连接、而账户其实完全正常的原因。"
     },
     {
       "h": "这里支持 MOVE，但文件夹仍按名称匹配",
@@ -71,7 +71,7 @@
   "faq": [
     {
       "q": "Claude 能用 o2.pl 邮箱吗？",
-      "a": "不能单独使用。Claude 没有内置的 o2.pl 连接器。通过 IMAP 将 MCP Emails 这样的 MCP 服务器指向该邮箱后，Claude 就能读取、搜索、发送、回复、定时和整理其中的邮件，同一个连接也可在 Cursor、ChatGPT 和其他 MCP 客户端中使用。"
+      "a": "不能单独使用。Claude 没有内置的 o2.pl 连接器。通过 IMAP 将 MCPEmails 这样的 MCP 服务器指向该邮箱后，Claude 就能读取、搜索、发送、回复、定时和整理其中的邮件，同一个连接也可在 Cursor、ChatGPT 和其他 MCP 客户端中使用。"
     },
     {
       "q": "o2.pl 的 IMAP 和 SMTP 设置是什么？",

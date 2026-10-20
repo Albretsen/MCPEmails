@@ -20,7 +20,7 @@
     "titleLine1": "MCP-Server für one.com E-Mail:",
     "titleLine2": "jedes Firmenpostfach, in Claude und ChatGPT",
     "lead": "Sie betreiben info@, vertrieb@, support@ und rechnungen@ auf Ihrer eigenen Domain bei one.com? Verbinden Sie jedes Postfach mit einem Workspace, und Ihr KI-Agent arbeitet mit allen. Lesen, suchen, senden, beantworten, planen und sortieren Sie E-Mails per IMAP mit dem Passwort, das Sie beim Anlegen der Adresse festgelegt haben.",
-    "answer": "Claude kann ein one.com-Postfach nicht selbst erreichen. MCP Emails ist ein gehosteter MCP-Server, der es per IMAP über imap.one.com auf Port 993 verbindet und über send.one.com auf Port 465 sendet. Die Anmeldung erfolgt mit Ihrer vollständigen E-Mail-Adresse und dem Passwort, das Sie für dieses Konto im one.com Control Panel festgelegt haben. Danach können Claude, Cursor oder jeder MCP-Client die E-Mails lesen, suchen, senden und sortieren. Ein App-Passwort ist nicht nötig. Jede Firmenadresse, etwa info@ oder vertrieb@, wird als eigenes Postfach verbunden: Ein Postfach ist kostenlos, Personal verbindet drei, Pro bis zu 10 und Business so viele, wie Sie brauchen.",
+    "answer": "Claude kann ein one.com-Postfach nicht selbst erreichen. MCPEmails ist ein gehosteter MCP-Server, der es per IMAP über imap.one.com auf Port 993 verbindet und über send.one.com auf Port 465 sendet. Die Anmeldung erfolgt mit Ihrer vollständigen E-Mail-Adresse und dem Passwort, das Sie für dieses Konto im one.com Control Panel festgelegt haben. Danach können Claude, Cursor oder jeder MCP-Client die E-Mails lesen, suchen, senden und sortieren. Ein App-Passwort ist nicht nötig. Jede Firmenadresse, etwa info@ oder vertrieb@, wird als eigenes Postfach verbunden: Ein Postfach ist kostenlos, Personal verbindet drei, Pro bis zu 10 und Business so viele, wie Sie brauchen.",
     "meta0": "Erstes Postfach kostenlos, Tarife für die weiteren",
     "meta1": "Passwort des E-Mail-Kontos aus dem Control Panel",
     "meta2": "E-Mails werden live abgerufen, nie gespeichert"
@@ -36,7 +36,7 @@
   },
   "setup": [
     {
-      "h": "Kostenloses MCP Emails-Konto erstellen",
+      "h": "Kostenloses MCPEmails-Konto erstellen",
       "p": "Registrieren Sie sich auf mcpemails.com. Der Free-Tarif verbindet ein Postfach dauerhaft und fragt nicht nach einer Kreditkarte."
     },
     {
@@ -44,7 +44,7 @@
       "p": "Melden Sie sich im one.com Control Panel an und öffnen Sie die Kachel für E-Mail. Die Adresse muss dort angelegt sein, bevor ein Client sie erreichen kann. Klicken Sie auf die Adresse, um sie zu bearbeiten, und legen Sie ein Passwort fest oder ändern Sie das bestehende. Sie können ein E-Mail-Passwort auch im one.com Webmail ändern, wenn Sie dort bereits angemeldet sind."
     },
     {
-      "h": "In MCP Emails einfügen",
+      "h": "In MCPEmails einfügen",
       "p": "Wählen Sie IMAP / SMTP, geben Sie die vollständige Adresse ein und fügen Sie das Passwort des E-Mail-Kontos ein. Die Hosts imap.one.com und send.one.com sowie die Ports 993 und 465 sind vorausgefüllt und wurden über eine echte TLS-Verbindung geprüft."
     },
     {
@@ -59,11 +59,11 @@
     },
     {
       "h": "one.com verkauft auch Microsoft 365, und dieses Postfach verbinden Sie mit Outlook",
-      "p": "Die Kachel im Control Panel umfasst E-Mail und Microsoft 365, und one.com verkauft beides unter demselben Konto. Ein one.com-E-Mail-Konto, das in dieser Kachel mit eigenem Passwort angelegt wurde, ist ein gewöhnliches IMAP-Postfach auf den Servern von one.com und lässt sich problemlos verbinden. Eine über one.com gekaufte Microsoft 365-Lizenz ist ein Microsoft-Postfach auf Servern von Microsoft. Verbinden Sie es daher mit der Outlook-Option (Anmeldung mit Microsoft) statt per IMAP. Eventuell muss ein IT-Administrator MCP Emails zuerst einmalig freigeben, und das Dashboard gibt Ihnen dafür einen Freigabelink. Ist Ihr Webmail Outlook im Web statt der eigenen Oberfläche von one.com, haben Sie das Microsoft-Produkt."
+      "p": "Die Kachel im Control Panel umfasst E-Mail und Microsoft 365, und one.com verkauft beides unter demselben Konto. Ein one.com-E-Mail-Konto, das in dieser Kachel mit eigenem Passwort angelegt wurde, ist ein gewöhnliches IMAP-Postfach auf den Servern von one.com und lässt sich problemlos verbinden. Eine über one.com gekaufte Microsoft 365-Lizenz ist ein Microsoft-Postfach auf Servern von Microsoft. Verbinden Sie es daher mit der Outlook-Option (Anmeldung mit Microsoft) statt per IMAP. Eventuell muss ein IT-Administrator MCPEmails zuerst einmalig freigeben, und das Dashboard gibt Ihnen dafür einen Freigabelink. Ist Ihr Webmail Outlook im Web statt der eigenen Oberfläche von one.com, haben Sie das Microsoft-Produkt."
     },
     {
       "h": "Die Zwei-Faktor-Authentifizierung des Control Panels gilt nicht für Ihr Postfach",
-      "p": "one.com bietet eine Zwei-Faktor-Authentifizierung für die Anmeldung am Control Panel. Sie schützt das Panel, in dem Ihre Domains und Ihre Abrechnung liegen, hat aber keinen Einfluss auf IMAP oder SMTP. Diese akzeptieren weiterhin allein das Passwort des E-Mail-Kontos. Wenn Sie sie einschalten, funktioniert MCP Emails weiter, das Postfach ist dadurch aber auch nicht besser geschützt. Um das Postfach selbst abzusichern, verwenden Sie für diese Adresse ein starkes, einmaliges Passwort, die Zwei-Faktor-Authentifizierung des Panels hilft hier nicht."
+      "p": "one.com bietet eine Zwei-Faktor-Authentifizierung für die Anmeldung am Control Panel. Sie schützt das Panel, in dem Ihre Domains und Ihre Abrechnung liegen, hat aber keinen Einfluss auf IMAP oder SMTP. Diese akzeptieren weiterhin allein das Passwort des E-Mail-Kontos. Wenn Sie sie einschalten, funktioniert MCPEmails weiter, das Postfach ist dadurch aber auch nicht besser geschützt. Um das Postfach selbst abzusichern, verwenden Sie für diese Adresse ein starkes, einmaliges Passwort, die Zwei-Faktor-Authentifizierung des Panels hilft hier nicht."
     }
   ],
   "limits": [
@@ -74,7 +74,7 @@
   "faq": [
     {
       "q": "Funktioniert Claude mit one.com E-Mail?",
-      "a": "Nicht von allein. Claude hat keinen eingebauten Konnektor für one.com. Verbinden Sie einen MCP-Server wie MCP Emails per IMAP mit Ihrem one.com-Postfach, dann kann Claude E-Mails lesen, suchen, senden, beantworten, planen und sortieren. Dieselbe Verbindung funktioniert in Cursor, ChatGPT und anderen MCP-Clients."
+      "a": "Nicht von allein. Claude hat keinen eingebauten Konnektor für one.com. Verbinden Sie einen MCP-Server wie MCPEmails per IMAP mit Ihrem one.com-Postfach, dann kann Claude E-Mails lesen, suchen, senden, beantworten, planen und sortieren. Dieselbe Verbindung funktioniert in Cursor, ChatGPT und anderen MCP-Clients."
     },
     {
       "q": "Wie lauten die IMAP- und SMTP-Einstellungen für one.com?",

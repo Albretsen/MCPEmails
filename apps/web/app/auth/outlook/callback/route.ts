@@ -61,7 +61,7 @@ export const maxDuration = 15;
  * URI. Those responses carry `admin_consent=True&tenant=...` (or an error)
  * and a state with ADMIN_CONSENT_STATE_PREFIX, never a code, and are handled
  * by `handleAdminConsent` before anything below runs. That branch needs no
- * MCP Emails session: the admin usually has none.
+ * MCPEmails session: the admin usually has none.
  *
  * Token security:
  *   - Tokens are never logged.
@@ -95,7 +95,7 @@ async function recordDeniedAuthorization(state: string | null): Promise<void> {
  * lives inside Microsoft.
  *
  * The person here is usually an administrator who opened a shared link and
- * has no MCP Emails session, so nothing below may depend on one. Integrity
+ * has no MCPEmails session, so nothing below may depend on one. Integrity
  * comes from two things instead: the state must be an unexpired, single-use
  * oauth_states row (minted when the link was opened), AND it must equal the
  * HttpOnly cookie set on the same browser at that moment. Without the cookie

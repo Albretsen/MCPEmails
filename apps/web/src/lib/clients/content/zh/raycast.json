@@ -16,7 +16,7 @@
     "meta0": "1 个收件箱永久免费",
     "meta1": "OAuth，无需 API 密钥",
     "meta2": "邮件实时获取，从不存储",
-    "answer": "在 Raycast 中运行 Install MCP Server 命令，将 Transport 设为 HTTP，粘贴 https://mcpemails.com/api/mcp 并安装，然后点击 Sign In，通过 MCP Emails 授权。"
+    "answer": "在 Raycast 中运行 Install MCP Server 命令，将 Transport 设为 HTTP，粘贴 https://mcpemails.com/api/mcp 并安装，然后点击 Sign In，通过 MCPEmails 授权。"
   },
   "method": {
     "title": "Raycast 如何连接：OAuth，无需 API 密钥",
@@ -37,7 +37,7 @@
     },
     {
       "h": "安装并登录",
-      "p": "按下 <b>Install MCP Server</b>，然后点击 <b>Sign In</b>，通过 MCP Emails 授权。批准你希望 Raycast 拥有的权限范围。"
+      "p": "按下 <b>Install MCP Server</b>，然后点击 <b>Sign In</b>，通过 MCPEmails 授权。批准你希望 Raycast 拥有的权限范围。"
     }
   ],
   "gotchas": [
@@ -62,7 +62,7 @@
   "faq": [
     {
       "q": "如何将邮箱连接到 Raycast？",
-      "a": "运行 Install MCP Server 命令，将 Transport 设为 HTTP，粘贴 https://mcpemails.com/api/mcp 并安装，然后点击 Sign In，通过 MCP Emails 授权。之后 Raycast AI 就拥有了读取、搜索、发送、回复、转发、整理和定时发送邮件的工具。"
+      "a": "运行 Install MCP Server 命令，将 Transport 设为 HTTP，粘贴 https://mcpemails.com/api/mcp 并安装，然后点击 Sign In，通过 MCPEmails 授权。之后 Raycast AI 就拥有了读取、搜索、发送、回复、转发、整理和定时发送邮件的工具。"
     },
     {
       "q": "Raycast 需要 API 密钥吗？",

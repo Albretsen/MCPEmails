@@ -20,7 +20,7 @@
     "titleLine1": "Conecta Interia Poczta a Claude,",
     "titleLine2": "Cursor, ChatGPT y cualquier cliente MCP",
     "lead": "Dale a tu agente de IA una bandeja real de Interia. Lee, busca, envía, responde, programa y organiza correo por IMAP, una vez activado el canal para programas de correo en los ajustes de tu cuenta.",
-    "answer": "Claude no puede acceder por sí solo a un buzón de Interia. MCP Emails es un servidor MCP alojado que lo conecta por IMAP en poczta.interia.pl en el puerto 993, autenticándose con tu dirección completa y tu contraseña normal de Interia, para que Claude, Cursor o cualquier cliente MCP pueda leer, buscar, enviar y organizar el correo. Interia mantiene cerrados los canales POP3 e IMAP hasta que pones korzystam z programu pocztowego en TAK en los parámetros de tu cuenta, y un buzón con el inicio de sesión en dos pasos activado no se puede usar desde ningún programa de correo. Una bandeja es gratis, para siempre.",
+    "answer": "Claude no puede acceder por sí solo a un buzón de Interia. MCPEmails es un servidor MCP alojado que lo conecta por IMAP en poczta.interia.pl en el puerto 993, autenticándose con tu dirección completa y tu contraseña normal de Interia, para que Claude, Cursor o cualquier cliente MCP pueda leer, buscar, enviar y organizar el correo. Interia mantiene cerrados los canales POP3 e IMAP hasta que pones korzystam z programu pocztowego en TAK en los parámetros de tu cuenta, y un buzón con el inicio de sesión en dos pasos activado no se puede usar desde ningún programa de correo. Una bandeja es gratis, para siempre.",
     "meta0": "1 bandeja gratis, para siempre",
     "meta1": "Activa primero el canal para programas de correo",
     "meta2": "El correo se obtiene en vivo, nunca se almacena"
@@ -31,7 +31,7 @@
   },
   "setup": [
     {
-      "h": "Crea tu cuenta gratis en MCP Emails",
+      "h": "Crea tu cuenta gratis en MCPEmails",
       "p": "Regístrate en mcpemails.com. El plan gratuito conecta una bandeja para siempre y no pide tarjeta."
     },
     {
@@ -43,7 +43,7 @@
       "p": "El inicio de sesión en dos pasos de Interia (<b>logowanie dwuetapowe</b>) y los programas de correo son mutuamente excluyentes. Interia lo dice en la pantalla donde lo activas: con el inicio de sesión en dos pasos activado, la cuenta no se puede usar en un programa de correo. Interia no emite ninguna contraseña de aplicación para sortearlo, así que si el buzón lo tiene activado tienes que decidir antes de seguir."
     },
     {
-      "h": "Añade el buzón en MCP Emails",
+      "h": "Añade el buzón en MCPEmails",
       "p": "Elige IMAP / SMTP, introduce la dirección completa, como nazwa@interia.pl, y tu contraseña de Interia. Los servidores y puertos ya vienen rellenados y se verificaron con una conexión TLS real. Después pon https://mcpemails.com/api/mcp en Claude, Cursor o ChatGPT, autoriza, y tu agente tendrá la bandeja."
     }
   ],
@@ -58,7 +58,7 @@
     },
     {
       "h": "Sin SASL-IR, y los clientes que lo dan por hecho reciben un BAD seco",
-      "p": "El banner de Interia anuncia <code>AUTH=PLAIN</code> pero no <code>SASL-IR</code>, así que rechaza la autenticación de un solo paso que envía la credencial junto con el comando <code>AUTHENTICATE</code>. Los clientes que dan por hecho SASL-IR reciben un <code>BAD</code> sin explicación, indistinguible de una contraseña incorrecta. MCP Emails lo detecta y reintenta con el intercambio en dos pasos, así que esto ya está resuelto, pero explica por qué algunas herramientas IMAP dan Interia por roto mientras Thunderbird se conecta sin problema."
+      "p": "El banner de Interia anuncia <code>AUTH=PLAIN</code> pero no <code>SASL-IR</code>, así que rechaza la autenticación de un solo paso que envía la credencial junto con el comando <code>AUTHENTICATE</code>. Los clientes que dan por hecho SASL-IR reciben un <code>BAD</code> sin explicación, indistinguible de una contraseña incorrecta. MCPEmails lo detecta y reintenta con el intercambio en dos pasos, así que esto ya está resuelto, pero explica por qué algunas herramientas IMAP dan Interia por roto mientras Thunderbird se conecta sin problema."
     },
     {
       "h": "El envío y la recepción van por el mismo nombre de servidor, y en IMAP solo se ofrece PLAIN",
@@ -67,12 +67,12 @@
   ],
   "limits": [
     "Interia no anuncia MOVE ni SPECIAL-USE, así que archivar se ejecuta como copia más marca más expunge, y Enviados, Borradores y Papelera se identifican por nombre. En un buzón en polaco suelen ser Wysłane, Kopie robocze y Kosz, así que indica la carpeta si un agente no la encuentra.",
-    "Activar el inicio de sesión en dos pasos en la cuenta de Interia desconecta el buzón de todos los clientes de correo, MCP Emails incluido, y no existe ninguna contraseña de aplicación para restablecerlo."
+    "Activar el inicio de sesión en dos pasos en la cuenta de Interia desconecta el buzón de todos los clientes de correo, MCPEmails incluido, y no existe ninguna contraseña de aplicación para restablecerlo."
   ],
   "faq": [
     {
       "q": "¿Funciona Claude con Interia Poczta?",
-      "a": "No por sí solo. Claude no tiene un conector integrado para Interia. Apuntar un servidor MCP como MCP Emails al buzón por IMAP le da a Claude acceso para leer, buscar, enviar, responder, programar y organizar, y la misma conexión funciona después desde Cursor, ChatGPT y otros clientes MCP."
+      "a": "No por sí solo. Claude no tiene un conector integrado para Interia. Apuntar un servidor MCP como MCPEmails al buzón por IMAP le da a Claude acceso para leer, buscar, enviar, responder, programar y organizar, y la misma conexión funciona después desde Cursor, ChatGPT y otros clientes MCP."
     },
     {
       "q": "¿Cuáles son los ajustes IMAP y SMTP de Interia?",

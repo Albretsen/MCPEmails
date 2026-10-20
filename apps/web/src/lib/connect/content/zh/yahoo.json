@@ -22,23 +22,23 @@
     "meta0": "1 个收件箱永久免费",
     "meta1": "应用密码，无需 OAuth 配置",
     "meta2": "邮件实时获取，绝不存储",
-    "answer": "Claude 无法自行连接 Yahoo Mail。MCP Emails 是一个托管 MCP 服务器，通过 993 端口的 IMAP 连接它，使用在 Account Security 页面 External connections 下创建的 Yahoo 应用密码认证，让 Claude、Cursor 或任意 MCP 客户端都能读取、搜索、发送并整理邮件。邮件客户端永远无法使用你普通的 Yahoo 密码。设置只需几分钟，一个收件箱永久免费。"
+    "answer": "Claude 无法自行连接 Yahoo Mail。MCPEmails 是一个托管 MCP 服务器，通过 993 端口的 IMAP 连接它，使用在 Account Security 页面 External connections 下创建的 Yahoo 应用密码认证，让 Claude、Cursor 或任意 MCP 客户端都能读取、搜索、发送并整理邮件。邮件客户端永远无法使用你普通的 Yahoo 密码。设置只需几分钟，一个收件箱永久免费。"
   },
   "method": {
     "title": "Yahoo 如何连接：应用密码",
-    "body": "Yahoo Mail 通过 IMAP/SMTP 使用 <b>Yahoo 应用密码</b>连接。在 Yahoo Account Security 的 External connections 下生成应用密码，然后连同 Yahoo 地址一起粘贴到 MCP Emails。如果看不到这个选项，请开启两步验证后再查看。没有 OAuth 流程，也没有浏览器弹窗。"
+    "body": "Yahoo Mail 通过 IMAP/SMTP 使用 <b>Yahoo 应用密码</b>连接。在 Yahoo Account Security 的 External connections 下生成应用密码，然后连同 Yahoo 地址一起粘贴到 MCPEmails。如果看不到这个选项，请开启两步验证后再查看。没有 OAuth 流程，也没有浏览器弹窗。"
   },
   "setup": [
     {
       "h": "创建免费账户",
-      "p": "注册 MCP Emails，无需信用卡。免费套餐可永久连接一个收件箱。"
+      "p": "注册 MCPEmails，无需信用卡。免费套餐可永久连接一个收件箱。"
     },
     {
       "h": "生成 Yahoo 应用密码",
       "p": "在 Yahoo Account Security 的 External connections 下生成应用密码。如果那里没有这个选项，请先开启两步验证。"
     },
     {
-      "h": "粘贴到 MCP Emails",
+      "h": "粘贴到 MCPEmails",
       "p": "填入你的 Yahoo 地址和应用密码，安全连接收件箱。"
     },
     {
@@ -65,13 +65,13 @@
     }
   ],
   "limits": [
-    "Yahoo 的提交服务器声明的最大邮件大小约为 41 MB。通过 MCP Emails 读取附件每次请求上限为 25 MB，更大的附件需要在 Yahoo Mail 中直接获取。",
+    "Yahoo 的提交服务器声明的最大邮件大小约为 41 MB。通过 MCPEmails 读取附件每次请求上限为 25 MB，更大的附件需要在 Yahoo Mail 中直接获取。",
     "应用密码不会过期，修改 Yahoo 密码后仍然有效。在 Account Security 中删除应用密码是撤销访问的唯一方式。"
   ],
   "faq": [
     {
       "q": "Claude 能用 Yahoo Mail 吗？",
-      "a": "不能直接使用。Claude 没有内置的 Yahoo 连接器。使用 Yahoo 应用密码，通过 IMAP 将 MCP Emails 这样的 MCP 服务器连接到你的 Yahoo 邮箱后，Claude 就能读取、搜索、发送、回复、定时和整理其中的邮件。同一个连接无需任何改动，也可在 Cursor、ChatGPT 和其他 MCP 客户端中使用。"
+      "a": "不能直接使用。Claude 没有内置的 Yahoo 连接器。使用 Yahoo 应用密码，通过 IMAP 将 MCPEmails 这样的 MCP 服务器连接到你的 Yahoo 邮箱后，Claude 就能读取、搜索、发送、回复、定时和整理其中的邮件。同一个连接无需任何改动，也可在 Cursor、ChatGPT 和其他 MCP 客户端中使用。"
     },
     {
       "q": "Yahoo Mail 的 IMAP 和 SMTP 设置是什么？",

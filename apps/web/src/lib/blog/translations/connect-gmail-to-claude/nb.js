@@ -3,7 +3,7 @@ const translation = {
   description:
     'Koble Gmail til Claude over MCP på cirka to minutter: et Google-apppassord, én endepunkt-URL, ingen API-nøkkel, ingen kode. Claude leser, søker og sender e-posten din live, og e-posten din lagres aldri.',
   coverAlt: 'Slik kobler du Gmail til Claude på to minutter over MCP: et Google-apppassord, én endepunkt-URL, ingen e-post lagret',
-  content: `For å koble Gmail til Claude gjør du to ting: koble til Gmail-innboksen din én gang i MCP Emails-dashbordet med et Google-apppassord, lim deretter inn én enkelt endepunkt-URL i Claudes connector-innstillinger og godkjenn en innlogging. Det er hele jobben: ingen kode, ingen SDK, ingen API-nøkkel. Det tar cirka to minutter, og Claude lagrer aldri e-posten din: hver lesing og sending går live til Gmail og forkastes i det øyeblikket Claude har den.
+  content: `For å koble Gmail til Claude gjør du to ting: koble til Gmail-innboksen din én gang i MCPEmails-dashbordet med et Google-apppassord, lim deretter inn én enkelt endepunkt-URL i Claudes connector-innstillinger og godkjenn en innlogging. Det er hele jobben: ingen kode, ingen SDK, ingen API-nøkkel. Det tar cirka to minutter, og Claude lagrer aldri e-posten din: hver lesing og sending går live til Gmail og forkastes i det øyeblikket Claude har den.
 
 Dette er den fokuserte gjennomgangen kun for Gmail. Hvis du kjører flere postkasser eller en annen leverandør enn Gmail, dekker guiden [koble til hvilken som helst e-post på under to minutter](/blog/connect-email-to-ai-agent-under-2-minutes) også Outlook, iCloud, Fastmail og IMAP.
 
@@ -11,25 +11,25 @@ Dette er den fokuserte gjennomgangen kun for Gmail. Hvis du kjører flere postka
 
 - En **Gmail- eller Google Workspace**-konto.
 - En versjon av **Claude som støtter egendefinerte connectors**: claude.ai på et betalt abonnement, eller Claude Desktop. (Connectors er måten Claude snakker med MCP-servere på.)
-- En gratis **MCP Emails**-konto. Ingen kredittkort, én tilkoblet innboks for alltid. [Start gratis](/signup) og hold denne fanen åpen.
+- En gratis **MCPEmails**-konto. Ingen kredittkort, én tilkoblet innboks for alltid. [Start gratis](/signup) og hold denne fanen åpen.
 
-MCP Emails er broen i midten: den snakker Model Context Protocol til Claude på den ene siden og snakker med Gmail på den andre over IMAP og SMTP. Hvis du vil ha bakgrunnen for hva det betyr, se [hva en MCP-e-postserver faktisk er](/blog/what-is-an-mcp-email-server).
+MCPEmails er broen i midten: den snakker Model Context Protocol til Claude på den ene siden og snakker med Gmail på den andre over IMAP og SMTP. Hvis du vil ha bakgrunnen for hva det betyr, se [hva en MCP-e-postserver faktisk er](/blog/what-is-an-mcp-email-server).
 
 ## Steg 1: Koble til Gmail-innboksen din
 
-I MCP Emails-dashbordet åpner du **Inboxes → Connect Inbox** og velger **Gmail**. Gmail kobles til med et Google-apppassord som standard:
+I MCPEmails-dashbordet åpner du **Inboxes → Connect Inbox** og velger **Gmail**. Gmail kobles til med et Google-apppassord som standard:
 
 1. Slå på totrinnsbekreftelse i Google-kontoen din hvis den ikke allerede er på. Google tilbyr bare apppassord på kontoer som har det.
 2. Gå til **myaccount.google.com/apppasswords** og lag et. Det er 16 små bokstaver i fire grupper, og mellomrommene spiller ingen rolle.
-3. Tilbake i MCP Emails skriver du inn hele Gmail-adressen din, limer inn apppassordet og klikker **Koble til innboks**. Tilkoblingen testes mot Gmail før den lagres. Ferdig.
+3. Tilbake i MCPEmails skriver du inn hele Gmail-adressen din, limer inn apppassordet og klikker **Koble til innboks**. Tilkoblingen testes mot Gmail før den lagres. Ferdig.
 
-Det vanlige Google-passordet ditt brukes aldri. Apppassordet er en egen legitimasjon, MCP Emails krypterer det med AES-256-GCM, og du kan tilbakekalle det fra den samme Google-siden når som helst. Under panseret kobles innboksen til over IMAP og SMTP (\`imap.gmail.com\`).
+Det vanlige Google-passordet ditt brukes aldri. Apppassordet er en egen legitimasjon, MCPEmails krypterer det med AES-256-GCM, og du kan tilbakekalle det fra den samme Google-siden når som helst. Under panseret kobles innboksen til over IMAP og SMTP (\`imap.gmail.com\`).
 
 ### På en Google Workspace-konto
 
 En Google Workspace-administrator kan slå av apppassord for hele domenet. Hvis **myaccount.google.com/apppasswords** ikke er tilgjengelig for deg, be administratoren din om å slå dem på. Siden om [Gmail-innstillinger og begrensninger](/connect/gmail) samler de Gmail-spesifikke detaljene på ett sted.
 
-## Steg 2: Legg til MCP Emails i Claude
+## Steg 2: Legg til MCPEmails i Claude
 
 Nå peker du Claude mot det samme endepunktet. Fordi Claude er en OAuth-klient, trenger du ikke en API-nøkkel i det hele tatt: du limer inn én URL og godkjenner en innlogging.
 
@@ -41,7 +41,7 @@ Nå peker du Claude mot det samme endepunktet. Fordi Claude er en OAuth-klient, 
 https://mcpemails.com/api/mcp
 \`\`\`
 
-4. Klikk **Connect**, logg inn med MCP Emails-kontoen din, og godkjenn scopene du ønsker: \`read:email\`, \`send:email\`, eller begge.
+4. Klikk **Connect**, logg inn med MCPEmails-kontoen din, og godkjenn scopene du ønsker: \`read:email\`, \`send:email\`, eller begge.
 
 Det er hele klientsiden. Tilkoblingen er begrenset til nøyaktig det du godkjente, og du kan tilbakekalle den fra dashbordet med ett klikk. Hvis du heller vil forstå API-nøkkel-veien (for klienter uten innebygd OAuth, som Cline eller et egendefinert skript), les [OAuth vs. API-nøkler for AI-e-posttilgang](/blog/oauth-vs-api-keys-ai-email-access). Skal du koble til en annen innboks også? [Steg-for-steg-oppsettet for e-post i Claude](/blog/connect-claude-to-email) dekker Outlook, iCloud, Fastmail og IMAP.
 
@@ -69,7 +69,7 @@ Når den er tilkoblet, jobber Claude gjennom et lite sett med konsoliderte verkt
 - **Organisere:** \`email_organize\` (flytte, kopiere, flagge, arkivere). Gmail-etiketter vises som mapper, så en melding med flere etiketter ligger i flere mapper, flytting endrer etikettene, og arkivering fjerner den fra innboksen.
 - **Utkast, mapper, planlegging, kontakter:** \`draft\`, \`folder\`, \`schedule\` og \`contact_search\` fullfører settet.
 
-Én ting å forvente på forhånd: MCP Emails er poll-basert. Det finnes ingen push-webhooks, så Claude reagerer på ny post når du ber den sjekke, ikke i det øyeblikket en melding kommer inn. For nesten alle assistent-arbeidsflyter er det akkurat den riktige modellen.
+Én ting å forvente på forhånd: MCPEmails er poll-basert. Det finnes ingen push-webhooks, så Claude reagerer på ny post når du ber den sjekke, ikke i det øyeblikket en melding kommer inn. For nesten alle assistent-arbeidsflyter er det akkurat den riktige modellen.
 
 ## Er det trygt å koble Gmail til Claude?
 
@@ -77,7 +77,7 @@ Kortversjonen: ja, og designet er bygget rundt det.
 
 - **E-posten din lagres aldri.** Innhold, emner og vedlegg hentes live ved hvert kall, overleveres til Claude og slippes umiddelbart. Det eneste som lagres per innboks, er den krypterte legitimasjonen, apppassordet ditt. Her er [hvorfor «e-post lagres aldri» faktisk betyr noe](/blog/why-email-never-stored-matters).
 - **Du kontrollerer scope.** Godkjenn kun lesing, og Claude kan bokstavelig talt ikke sende. Godkjenn begge, og du kan fortsatt tilbakekalle hvilken som helst av dem når som helst.
-- **Ingen passorddeling.** Det vanlige Google-passordet ditt når aldri MCP Emails. Et apppassord er en egen legitimasjon du kan tilbakekalle på myaccount.google.com/apppasswords når som helst, eller du kan slette innboksen i MCP Emails.
+- **Ingen passorddeling.** Det vanlige Google-passordet ditt når aldri MCPEmails. Et apppassord er en egen legitimasjon du kan tilbakekalle på myaccount.google.com/apppasswords når som helst, eller du kan slette innboksen i MCPEmails.
 
 Hele trusselmodellen (hva som er kryptert, hva en angriper ville og ikke ville se) er beskrevet i [er det trygt å gi en AI-agent e-posttilgang?](/blog/is-it-safe-to-give-ai-agent-email-access)
 
@@ -93,10 +93,10 @@ Nei. E-post hentes live fra Gmail ved hver forespørsel og forkastes rett etter 
 Ja, hvis du gir \`send:email\`-scopet. Sendinger går ut gjennom Gmail som vanlige meldinger fra din egen konto. Gi kun lesetilgang hvis du heller vil at Claude aldri skal sende.
 
 **Fungerer dette med det gratis Claude-abonnementet?**
-Egendefinerte connectors krever et Claude-abonnement som støtter dem (betalt claude.ai eller Claude Desktop). MCP Emails-siden er gratis uten kort.
+Egendefinerte connectors krever et Claude-abonnement som støtter dem (betalt claude.ai eller Claude Desktop). MCPEmails-siden er gratis uten kort.
 
-**Vil MCP Emails se Google-passordet mitt?**
-Nei. Du limer inn et apppassord, en egen legitimasjon som Google genererer og som du kan tilbakekalle når som helst. Det vanlige Google-passordet ditt skrives aldri inn noe sted i MCP Emails.
+**Vil MCPEmails se Google-passordet mitt?**
+Nei. Du limer inn et apppassord, en egen legitimasjon som Google genererer og som du kan tilbakekalle når som helst. Det vanlige Google-passordet ditt skrives aldri inn noe sted i MCPEmails.
 
 ## Oppsummering
 
