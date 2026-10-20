@@ -41,7 +41,7 @@ test('the app: the analysis actually saw the routes and their reads', () => {
   assert.deepEqual(byFile.get('app/dashboard/[[...section]]/page.js')?.needs, ['dashboard', 'dashboardChrome']);
   assert.deepEqual(byFile.get('app/[locale]/page.tsx')?.needs, ['compare', 'home']);
   assert.deepEqual(byFile.get('app/[locale]/pricing/page.js')?.needs, ['compare', 'home', 'pricing']);
-  assert.deepEqual(byFile.get('app/[locale]/docs/page.js')?.needs, ['compare', 'docs', 'home']);
+  assert.deepEqual(byFile.get('app/[locale]/docs/(catalogue)/page.js')?.needs, ['compare', 'docs', 'home']);
   assert.deepEqual(byFile.get('app/[locale]/blog/[slug]/page.js')?.needs, ['blog', 'compare', 'home']);
   assert.deepEqual(byFile.get('app/[locale]/for/founders/page.js')?.needs, ['compare', 'forFounders', 'home']);
   assert.ok(byFile.get('app/dashboard/[[...section]]/page.js').keyCount > 500, 'dashboard literal keys were not collected');
