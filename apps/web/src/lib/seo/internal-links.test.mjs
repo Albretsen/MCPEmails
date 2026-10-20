@@ -8,8 +8,9 @@
 // incoming links. This pins the links that fixed that, so a later edit cannot
 // drop them quietly:
 //
-//   - every provider page that can connect links the Claude and ChatGPT
-//     guides, and password-login pages also link the IMAP connector guide;
+//   - every provider page that can connect links the Claude guide, and
+//     password-login pages also link the IMAP connector guide (the ChatGPT
+//     guide is linked by the page's ChatGPT section instead);
 //   - every link target is a real post, translated into every locale the
 //     linking page is published in (a locale Link to an untranslated post
 //     lands on an English fallback);
@@ -65,7 +66,7 @@ test('every guide post exists and is translated into every locale', () => {
 
 test('guide copy has the same keys in every locale, all non-empty, no angle brackets', () => {
   const en = Object.keys(guideCopy('en')).sort();
-  assert.deepEqual(en, ['chatgpt', 'claude', 'imap', 'intro']);
+  assert.deepEqual(en, ['claude', 'imap', 'intro']);
   for (const locale of LOCALES) {
     const copy = guideCopy(locale);
     assert.deepEqual(Object.keys(copy).sort(), en, locale);
@@ -78,15 +79,15 @@ test('guide copy has the same keys in every locale, all non-empty, no angle brac
 
 test('guideLinksFor: which pages get which guides', () => {
   const slugs = (c) => guideLinksFor(c).map((g) => g.key);
-  assert.deepEqual(slugs({ auth: { method: 'app-password' } }), ['claude', 'chatgpt', 'imap']);
-  assert.deepEqual(slugs({ auth: { method: 'mail-password' } }), ['claude', 'chatgpt', 'imap']);
-  assert.deepEqual(slugs({ auth: { method: 'account-password' } }), ['claude', 'chatgpt', 'imap']);
-  assert.deepEqual(slugs({ auth: { method: 'oauth' } }), ['claude', 'chatgpt']);
+  assert.deepEqual(slugs({ auth: { method: 'app-password' } }), ['claude', 'imap']);
+  assert.deepEqual(slugs({ auth: { method: 'mail-password' } }), ['claude', 'imap']);
+  assert.deepEqual(slugs({ auth: { method: 'account-password' } }), ['claude', 'imap']);
+  assert.deepEqual(slugs({ auth: { method: 'oauth' } }), ['claude']);
   assert.deepEqual(slugs({ auth: { method: 'none' } }), []);
   // A page whose own `guide` is already the IMAP post does not link it twice.
   assert.deepEqual(
     slugs({ auth: { method: 'mail-password' }, guide: { href: GUIDE_POSTS.imap } }),
-    ['claude', 'chatgpt'],
+    ['claude'],
   );
 });
 

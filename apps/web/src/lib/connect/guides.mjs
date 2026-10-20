@@ -11,13 +11,15 @@
  * compete for the provider query.
  *
  * WHICH LINKS.
- *   - the Claude guide and the ChatGPT guide on every page where the mailbox
- *     can connect at all (auth method other than 'none');
+ *   - the Claude guide on every page where the mailbox can connect at all
+ *     (auth method other than 'none');
  *   - the Claude IMAP connector guide where the reader logs in with a password
  *     over IMAP (app, mail or account password), unless the page's own `guide`
  *     already points there.
- * All three posts are translated into every locale a provider page exists in,
- * which guides.test.mjs pins, so the locale-aware Link never lands on an
+ * The ChatGPT guide is not here: the "Use it in ChatGPT" section on the same
+ * page links /blog/connect-chatgpt-to-email, and one link to it is enough.
+ * Both posts are translated into every locale a provider page exists in,
+ * which seo/internal-links.test.mjs pins, so the locale-aware Link never lands on an
  * English fallback.
  *
  * WHERE THE COPY LIVES. src/lib/connect/guides/<locale>.json, loaded on the
@@ -27,7 +29,6 @@
 
 export const GUIDE_POSTS = Object.freeze({
   claude: '/blog/connect-claude-to-email',
-  chatgpt: '/blog/connect-chatgpt-to-email',
   imap: '/blog/claude-imap-connector',
 });
 
@@ -44,7 +45,7 @@ export function guideLinksFor(content) {
   const method = content?.auth?.method;
   if (!method || method === 'none') return [];
   const own = content.guide?.href;
-  const keys = ['claude', 'chatgpt'];
+  const keys = ['claude'];
   if (PASSWORD_METHODS.has(method)) keys.push('imap');
   return keys
     .filter((k) => GUIDE_POSTS[k] !== own)
