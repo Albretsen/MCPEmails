@@ -281,6 +281,12 @@ export default function EmailMcpServersView({ locales }) {
             {C.hero.titleLine1}<br />{C.hero.titleLine2}
           </h1>
           <p className="pricing-page-lead">{C.hero.lead}</p>
+          {/* The visible half of the page's date. JSON-LD dateModified and the
+              sitemap read the same constant, so the three cannot disagree. */}
+          <p style={{ margin: '0 0 20px', color: 'var(--fg-3)', fontSize: 14 }}>
+            {`${C.hero.updatedLabel} `}
+            <time dateTime={C.PAGE_UPDATED}>{C.formatDate(C.PAGE_UPDATED)}</time>
+          </p>
           <div className="hero-cta">
             <a className="btn btn-primary btn-lg" href="/signup">{C.ctaBand.ctaPrimary}</a>
             <a className="btn btn-secondary btn-lg" href="#ranked">See the ranking</a>
@@ -363,7 +369,7 @@ export default function EmailMcpServersView({ locales }) {
         </div>
       </section>
 
-      {/* The summary table. The one block that gets the full container: five
+      {/* The summary table. The one block that gets the full container: six
           columns do not fit in the reading measure, and it scrolls on its own. */}
       <section
         className="section"
@@ -372,9 +378,7 @@ export default function EmailMcpServersView({ locales }) {
       >
         <div className="container">
           <h2 className="providers-h2">Side by side</h2>
-          <p className="providers-sub">
-            Two hosted services, an agent tool platform, and running it yourself.
-          </p>
+          <p className="providers-sub">{C.tableSub}</p>
           <div className="comparison-wrap">
             <table className="comparison-tbl">
               <thead>
@@ -475,6 +479,7 @@ export default function EmailMcpServersView({ locales }) {
               <li key={s.url} style={{ overflowWrap: 'anywhere' }}>
                 <span>{s.label}: </span>
                 <a href={s.url} rel="nofollow noopener noreferrer" target="_blank">{s.url}</a>
+                <span>{', read '}<time dateTime={s.checkedOn}>{C.formatDate(s.checkedOn)}</time></span>
               </li>
             ))}
           </ul>
