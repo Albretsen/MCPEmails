@@ -1,9 +1,10 @@
 {
   "_sources": [
-    "https://www.telekom.de/hilfe/apps-dienste/e-mail/programme/passwort-definition",
     "https://www.telekom.de/hilfe/apps-dienste/e-mail/programm-passwort-verwalten",
-    "https://www.telekom.de/hilfe/vertrag-meine-daten/login-daten-passwoerter/welche-passwoerter-fuer-welchen-zweck",
-    "https://www.netzwelt.de/galerie/19784-e-mail-passwort-e-mail-adressen-t-online-einrichten.html"
+    "https://www.telekom.de/hilfe/apps-dienste/e-mail/app-programm-passwort",
+    "https://www.telekom.de/hilfe/apps-dienste/e-mail/posteingang-postausgang-server",
+    "https://www.telekom.de/hilfe/apps-dienste/e-mail/versand-blockiert",
+    "https://www.telekom.de/hilfe/vertrag-meine-daten/login-daten-passwoerter/welche-passwoerter-fuer-welchen-zweck"
   ],
   "auth": {
     "method": "mail-password",
@@ -21,26 +22,26 @@
     "titleLine1": "Koble T-Online-postkassen din",
     "titleLine2": "til Claude, Cursor, enhver MCP-klient",
     "lead": "Gi AI-agenten din en ekte Telekom-innboks. Les, søk, send, svar, planlegg og organiser e-post via IMAP med det egne passordet Telekom utsteder for e-postprogrammer.",
-    "answer": "Claude når ikke en T-Online-postkasse på egen hånd. mcpemails er en hostet MCP-server som kobler til via IMAP på secureimap.t-online.de port 993 og autentiserer med det separate Passwort für E-Mail-Programme som Telekom utsteder for e-postklienter, i stedet for Telekom-innloggingspassordet ditt, slik at Claude, Cursor eller enhver MCP-klient kan lese, søke, sende og organisere e-posten. Har du aldri opprettet det passordet, har ingen klient noen gang kunnet logge inn på postkassen, og feilen ser ut som en skrivefeil. Én innboks er gratis, for alltid.",
+    "answer": "Claude når ikke en T-Online-postkasse på egen hånd. MCP Emails er en hostet MCP-server som kobler til via IMAP på secureimap.t-online.de port 993 og autentiserer med det separate Passwort für E-Mail-Programme som Telekom utsteder for e-postklienter, i stedet for Telekom-innloggingspassordet ditt, slik at Claude, Cursor eller enhver MCP-klient kan lese, søke, sende og organisere e-posten. Har du aldri opprettet det passordet, har ingen klient noen gang kunnet logge inn på postkassen, og feilen ser ut som en skrivefeil. Én innboks er gratis, for alltid.",
     "meta0": "1 innboks gratis, for alltid",
     "meta1": "Telekoms passord for e-postprogrammer kreves",
     "meta2": "E-post hentes direkte, lagres aldri"
   },
   "method": {
     "title": "Slik kobler T-Online seg til: IMAP og et andre, separat passord",
-    "body": "Telekom tilbyr IMAP på <code>secureimap.t-online.de</code> port 993 over implisitt TLS, og SMTP-innsending på <code>securesmtp.t-online.de</code> port 465. Begge navnene står foran en IMAP-proxy og ikke en postkasseserver du snakker direkte med, noe som forklarer flere av særtrekkene under. Delen nesten alle gjør feil, er påloggingen. Telekom har to passord på én konto: passordet for <b>Telekom Login</b>, brukt for Kundencenter og telekom.de, og et andre <b>Passwort für E-Mail-Programme</b>, med Telekoms egne ord beregnet <b>für das Verwenden eines E-Mail-Programms</b>. Bare det andre autentiserer mot <code>secureimap.t-online.de</code>. Telekom anbefaler at de to aldri er like, og på mange kontoer finnes passordet for e-postprogrammer rett og slett ikke før noen oppretter det."
+    "body": "Telekom dokumenterer de samme serverne for alle @t-online.de- og @magenta.de-adresser: IMAP på <code>secureimap.t-online.de</code>, port 993 med SSL, og SMTP på <code>securesmtp.t-online.de</code>, port 465 eller 587. Begge navnene står foran en IMAP-proxy og ikke foran en postkasseserver du snakker direkte med, noe som forklarer flere av særhetene nedenfor. Det nesten alle gjør feil, er legitimasjonen. Telekom har to passord på samme konto: passordet til <b>Telekom Login</b>, som brukes i E-Mail Center, Kundencenter og MeinMagenta-appen, og et eget <b>Passwort für E-Mail-Programme</b>, som Telekom sier du trenger så snart du leser e-posten i et program som Outlook eller Thunderbird i stedet for i E-Mail Center. Bare det andre autentiserer mot <code>secureimap.t-online.de</code>, og Telekom anbefaler at de to er forskjellige."
   },
   "setup": [
     {
-      "h": "Opprett din gratis mcpemails-konto",
+      "h": "Opprett din gratis MCP Emails-konto",
       "p": "Registrer deg på mcpemails.com. Gratisplanen kobler til én innboks for alltid og ber ikke om kort."
     },
     {
       "h": "Opprett Passwort für E-Mail-Programme",
-      "p": "I E-Mail Center på email.t-online.de åpner du <b>Menü</b>, så <b>Einstellungen</b>, så <b>Passwörter</b> i venstre kolonne. Under overskriften <b>E-Mail-Passwort, für das Verwenden eines E-Mail-Programms</b> velger du <b>E-Mail-Passwort ändern</b>, skriver det nye passordet to ganger og lagrer. Den samme påloggingen kan nås fra Kundencenter under <b>Profil</b>, så <b>Login-Daten und Passwörter</b>, så <b>weitere Passwörter</b>. Sett det selv om du tror du allerede har et: på mange kontoer er det aldri blitt opprettet."
+      "p": "I E-Mail Center på email.t-online.de klikker du på tannhjulet (<b>Einstellungen</b>), så <b>Alle Einstellungen anzeigen</b>, så <b>Passwörter</b>, så <b>Passwort für E-Mail-Programme</b>, og setter et nytt. Den andre veien går via Kundencenter: <b>Profil verwalten</b>, så <b>Login-Daten</b>, så <b>Weitere Passwörter</b>. Telekom anbefaler at det er forskjellig fra passordet til Telekom Login."
     },
     {
-      "h": "Lim det inn i mcpemails",
+      "h": "Lim det inn i MCP Emails",
       "p": "Velg IMAP / SMTP, skriv inn hele adressen, for eksempel name@t-online.de, og lim inn passordet for e-postprogrammer. Telekom-vertene og -portene er forhåndsutfylt og ble verifisert via en direkte TLS-tilkobling."
     },
     {
@@ -55,7 +56,7 @@
     },
     {
       "h": "IMAP-proxyen annonserer ingen AUTH-mekanisme i det hele tatt før innlogging",
-      "p": "Funksjonsbanneret Telekom returnerer, er <code>IMAP4 IMAP4rev1 QUOTA LITERAL+ NAMESPACE UIDPLUS IDLE SORT</code>. Det er ingen <code>AUTH=PLAIN</code>, ingen <code>AUTH=LOGIN</code> og ingen <code>SASL-IR</code> i det. I praksis forventer serveren den vanlige IMAP-kommandoen <code>LOGIN</code> i stedet for en SASL <code>AUTHENTICATE</code>-utveksling. Klientbiblioteker som lister annonserte SASL-mekanismer og nekter å fortsette når listen er tom, gir opp før de i det hele tatt sender påloggingsdetaljer, og derfor melder noen IMAP-verktøy at T-Online ikke kan nås, mens Thunderbird kobler til samme postkasse uten problemer. mcpemails håndterer den nakne LOGIN-veien, så denne er allerede tatt hånd om for deg."
+      "p": "Funksjonsbanneret Telekom returnerer, er <code>IMAP4 IMAP4rev1 QUOTA LITERAL+ NAMESPACE UIDPLUS IDLE SORT</code>. Det er ingen <code>AUTH=PLAIN</code>, ingen <code>AUTH=LOGIN</code> og ingen <code>SASL-IR</code> i det. I praksis forventer serveren den vanlige IMAP-kommandoen <code>LOGIN</code> i stedet for en SASL <code>AUTHENTICATE</code>-utveksling. Klientbiblioteker som lister annonserte SASL-mekanismer og nekter å fortsette når listen er tom, gir opp før de i det hele tatt sender påloggingsdetaljer, og derfor melder noen IMAP-verktøy at T-Online ikke kan nås, mens Thunderbird kobler til samme postkasse uten problemer. MCP Emails håndterer den nakne LOGIN-veien, så denne er allerede tatt hånd om for deg."
     },
     {
       "h": "Ingen MOVE og ingen SPECIAL-USE, på en postkasse med tyske mappenavn",
@@ -64,6 +65,10 @@
     {
       "h": "Sending er begrenset til 50 MB per melding",
       "p": "<code>securesmtp.t-online.de</code> annonserer en maksimal meldingsstørrelse på 52 428 800 byte. Det er størrelsen på hele den kodede meldingen, så base64-vedlegg teller omtrent en tredjedel mer enn størrelsen på disk. En agent som blir bedt om å videresende et stort vedlegg, får en hard SMTP-avvisning i stedet for en treg sending."
+    },
+    {
+      "h": "Telekom kan holde tilbake en sending fra en internettforbindelse den ikke kjenner",
+      "p": "Telekom sjekker internettforbindelsen en melding sendes fra. Hjelpesidene sier at når et e-postprogram sender fra en ukjent eller ikke godkjent IP-adresse, blir meldingen ikke sendt og programmet får en feil, og nevner et annet Wi-Fi-nett, mobilnett, VPN eller en forbindelse i utlandet som vanlige årsaker. E-post agenten din sender gjennom MCP Emails, går ut fra MCP Emails sine servere og ikke fra forbindelsen din hjemme, så den kan bli holdt tilbake på samme måte. Telekom sier at du kan godkjenne (<b>freischalten</b>) IP-adressen hvis forsøket var ditt. Var det ikke det, skal du ikke godkjenne den, og du bør bytte passordet til Telekom Login."
     }
   ],
   "limits": [
@@ -73,23 +78,23 @@
   "faq": [
     {
       "q": "Fungerer Claude med T-Online-e-post?",
-      "a": "Ikke på egen hånd. Claude har ingen innebygd Telekom- eller T-Online-kobling. Peker du en MCP-server som mcpemails mot postkassen via IMAP, får Claude tilgang til å lese, søke, sende, svare, planlegge og organisere, og samme tilkobling fungerer da fra Cursor, ChatGPT og andre MCP-klienter."
+      "a": "Ikke på egen hånd. Claude har ingen innebygd Telekom- eller T-Online-kobling. Peker du en MCP-server som MCP Emails mot postkassen via IMAP, får Claude tilgang til å lese, søke, sende, svare, planlegge og organisere, og samme tilkobling fungerer da fra Cursor, ChatGPT og andre MCP-klienter."
     },
     {
       "q": "Hva er IMAP- og SMTP-innstillingene for T-Online?",
-      "a": "IMAP er secureimap.t-online.de på port 993 med implisitt TLS. SMTP er securesmtp.t-online.de på port 465, også med implisitt TLS. Logg inn med hele t-online.de-adressen din og Passwort für E-Mail-Programme. Begge vertene ble bekreftet via en direkte TLS-tilkobling og er felles for alle T-Online-postkasser."
+      "a": "IMAP er secureimap.t-online.de på port 993 med SSL. SMTP er securesmtp.t-online.de på port 465 eller 587, også med SSL; MCP Emails bruker 465. Logg inn med hele adressen og Passwort für E-Mail-Programme. Telekom oppgir de samme serverne for @t-online.de- og @magenta.de-adresser, og begge vertene ble bekreftet med en ekte TLS-tilkobling."
     },
     {
       "q": "Hvorfor blir T-Online-passordet mitt avvist i et e-postprogram?",
-      "a": "Nesten alltid fordi du skrev inn Telekom-innloggingspassordet. Telekom utsteder en andre pålogging, Passwort für E-Mail-Programme, og bare den autentiserer mot e-postserverne. Opprett eller tilbakestill det i E-Mail Center under Einstellungen, så Passwörter, eller i Kundencenter under Profil, så Login-Daten und Passwörter, så weitere Passwörter."
+      "a": "Nesten alltid fordi du skrev inn passordet til Telekom Login. Telekom utsteder en egen legitimasjon, Passwort für E-Mail-Programme, og bare den autentiserer mot e-postserverne. Opprett eller tilbakestill det i E-Mail Center via tannhjulet, Alle Einstellungen anzeigen, Passwörter, eller i Kundencenter under Profil verwalten, Login-Daten, Weitere Passwörter."
     },
     {
       "q": "Hvor oppretter jeg Passwort für E-Mail-Programme?",
-      "a": "Logg inn i E-Mail Center på email.t-online.de, åpne Menü, så Einstellungen, så Passwörter. Blokken med overskriften E-Mail-Passwort, für das Verwenden eines E-Mail-Programms har en knapp for å endre. Skriv det nye passordet to ganger og lagre det. Bruk den verdien i e-postklienten din og i mcpemails, for både innkommende og utgående server."
+      "a": "Det finnes to steder. I E-Mail Center på email.t-online.de klikker du på tannhjulet (Einstellungen), så Alle Einstellungen anzeigen, så Passwörter, så Passwort für E-Mail-Programme. I Kundencenter åpner du Profil verwalten, så Login-Daten, så Weitere Passwörter. Bruk den nye verdien i MCP Emails, både for innkommende og utgående server."
     },
     {
-      "q": "Virker dette med magenta.de og andre Telekom-e-postdomener?",
-      "a": "Enhver postkasse som ligger i Telekom E-Mail Center, autentiserer mot de samme vertene secureimap.t-online.de og securesmtp.t-online.de med det samme passordet for e-postprogrammer. Det som teller, er at postkassen er en Telekom E-Mail Center-postkasse, ikke teksten etter krøllalfa."
+      "q": "Virker dette med magenta.de-adresser?",
+      "a": "Ja. Telekom dokumenterer de samme serverne for @magenta.de- og @t-online.de-adresser: secureimap.t-online.de for IMAP og securesmtp.t-online.de for SMTP, med Passwort für E-Mail-Programme som passord og hele adressen som brukernavn."
     },
     {
       "q": "Lagres T-Online-e-posten min på serverne deres?",

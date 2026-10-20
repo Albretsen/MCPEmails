@@ -20,7 +20,7 @@
     "titleLine1": "将 CenturyLink 邮箱连接到",
     "titleLine2": "Claude、Cursor 及任意 MCP 客户端",
     "lead": "为你的 AI 代理接入一个真正的 centurylink.net 收件箱。使用你的 CenturyLink 邮箱密码，通过 IMAP 读取、搜索、发送、回复、定时与整理邮件，可在所有 MCP 客户端中使用而不止一个。",
-    "answer": "Claude 无法自行访问 CenturyLink 邮箱。mcpemails 是一个托管 MCP 服务器，通过 mail.centurylink.net 端口 993 的 IMAP 与之连接，外发邮件经由 smtp.centurylink.net 端口 587 并使用 STARTTLS，以你的完整地址和 CenturyLink 邮箱密码登录。连接后，Claude、Cursor 或任何其他 MCP 客户端都能读取、搜索、发送、回复和整理这些邮件。1 个收件箱永久免费。",
+    "answer": "Claude 无法自行访问 CenturyLink 邮箱。MCP Emails 是一个托管 MCP 服务器，通过 mail.centurylink.net 端口 993 的 IMAP 与之连接，外发邮件经由 smtp.centurylink.net 端口 587 并使用 STARTTLS，以你的完整地址和 CenturyLink 邮箱密码登录。连接后，Claude、Cursor 或任何其他 MCP 客户端都能读取、搜索、发送、回复和整理这些邮件。1 个收件箱永久免费。",
     "meta0": "1 个收件箱永久免费",
     "meta1": "CenturyLink 邮箱密码即可使用",
     "meta2": "邮件实时获取，绝不存储"
@@ -31,7 +31,7 @@
   },
   "setup": [
     {
-      "h": "创建免费的 mcpemails 账户",
+      "h": "创建免费的 MCP Emails 账户",
       "p": "在 mcpemails.com 注册。免费套餐可连接一个收件箱，无需信用卡。"
     },
     {
@@ -39,7 +39,7 @@
       "p": "打开 CenturyLink 主页，用你要连接的地址登录网页邮箱。这样可以确认密码，同时也会重置闲置计时：CenturyLink 会停用一年未使用的账户并删除其内容。"
     },
     {
-      "h": "在 mcpemails 中输入完整地址",
+      "h": "在 MCP Emails 中输入完整地址",
       "p": "选择 IMAP / SMTP，输入完整地址（包括 <code>@centurylink.net</code>、<code>@centurytel.net</code> 或 <code>@embarqmail.com</code>）和你的邮箱密码。服务器地址以及 993 TLS 加 587 STARTTLS 的混合组合都已预填。"
     },
     {
@@ -50,7 +50,7 @@
   "gotchas": [
     {
       "h": "该服务器只提供 AUTH=LOGIN，别无其他",
-      "p": "CenturyLink 的 IMAP 服务器只声明了一种 SASL 机制，即 LOGIN，并且不声明 SASL-IR。大多数现代客户端会选择 PLAIN，并随 AUTHENTICATE 命令一起发送凭据，结果找不到预期的机制，要么直接崩溃，要么返回看起来像凭据错误的报错。mcpemails 使用这台服务器实际支持的分步 LOGIN 交互。这就是为什么在别处都能用的通用 IMAP 工具，在这里第一条命令就可能失败。"
+      "p": "CenturyLink 的 IMAP 服务器只声明了一种 SASL 机制，即 LOGIN，并且不声明 SASL-IR。大多数现代客户端会选择 PLAIN，并随 AUTHENTICATE 命令一起发送凭据，结果找不到预期的机制，要么直接崩溃，要么返回看起来像凭据错误的报错。MCP Emails 使用这台服务器实际支持的分步 LOGIN 交互。这就是为什么在别处都能用的通用 IMAP 工具，在这里第一条命令就可能失败。"
     },
     {
       "h": "一年不登录，邮箱及其全部内容就会被删除",
@@ -73,7 +73,7 @@
   "faq": [
     {
       "q": "Claude 能用于 CenturyLink 邮箱吗？",
-      "a": "不能直接使用。Claude 没有内置的 CenturyLink 连接器。通过 IMAP 将 mcpemails 这样的 MCP 服务器连接到邮箱后，Claude 就能读取、搜索、发送、回复、定时和整理你的 centurylink.net 邮件，而且同一个连接也可在 Cursor、ChatGPT 和其他 MCP 客户端中使用。"
+      "a": "不能直接使用。Claude 没有内置的 CenturyLink 连接器。通过 IMAP 将 MCP Emails 这样的 MCP 服务器连接到邮箱后，Claude 就能读取、搜索、发送、回复、定时和整理你的 centurylink.net 邮件，而且同一个连接也可在 Cursor、ChatGPT 和其他 MCP 客户端中使用。"
     },
     {
       "q": "CenturyLink 的 IMAP 和 SMTP 设置是什么？",

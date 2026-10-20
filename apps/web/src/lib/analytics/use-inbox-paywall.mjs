@@ -22,6 +22,24 @@ import { createInboxPaywallReporter } from './inbox-paywall.mjs';
  * @param {boolean} state.atInboxLimit
  * @param {boolean} state.serverLimitReached
  */
+/**
+ * Fire-and-forget beacon: a buy button on the inbox-cap offer was clicked.
+ *
+ * The second half of the shown beacon above. `keepalive` because the click is
+ * a navigation to Stripe, and the request has to outlive the page. No body,
+ * for the same reason as the shown beacon: nothing about the mailbox or the
+ * plan comes from the browser.
+ */
+export function reportInboxPaywallClick() {
+  try {
+    fetch('/api/analytics/paywall-click', { method: 'POST', keepalive: true }).catch(() => {
+      // Analytics is never worth a console error in a user's browser.
+    });
+  } catch {
+    // A missing fetch (tests, very old browsers) must never block the click.
+  }
+}
+
 export function useInboxPaywallView({ isReconnect, atInboxLimit, serverLimitReached }) {
   // One reporter per mount. The modal is conditionally rendered, so a mount is
   // exactly one modal-open and the dedupe guard resets when it should.

@@ -20,7 +20,7 @@
     "titleLine1": "Conecta Seznam Email a Claude,",
     "titleLine2": "y a Cursor, ChatGPT, cualquier cliente MCP",
     "lead": "Dale a tu agente de IA un buzón real de Seznam. Lee, busca, envía, responde, programa y organiza correo por IMAP con la contraseña que ya usas, en todos los clientes MCP y no solo en uno.",
-    "answer": "Claude no puede acceder a Seznam Email por sí solo. mcpemails es un servidor MCP alojado que lo conecta por IMAP en imap.seznam.cz en el puerto 993, iniciando sesión con tu dirección completa y tu contraseña normal de Seznam, para que Claude, Cursor o cualquier cliente MCP pueda leer, buscar, enviar y organizar ese correo. Si has activado la autenticación de dos factores, la contraseña de la cuenta deja de funcionar para los protocolos de correo y en su lugar configuras una Heslo pro aplikace (contraseña de aplicación) aparte. Una bandeja es gratis, para siempre.",
+    "answer": "Claude no puede acceder a Seznam Email por sí solo. MCP Emails es un servidor MCP alojado que lo conecta por IMAP en imap.seznam.cz en el puerto 993, iniciando sesión con tu dirección completa y tu contraseña normal de Seznam, para que Claude, Cursor o cualquier cliente MCP pueda leer, buscar, enviar y organizar ese correo. Si has activado la autenticación de dos factores, la contraseña de la cuenta deja de funcionar para los protocolos de correo y en su lugar configuras una Heslo pro aplikace (contraseña de aplicación) aparte. Una bandeja es gratis, para siempre.",
     "meta0": "1 bandeja gratis, para siempre",
     "meta1": "Contraseña de la cuenta, salvo con dos factores",
     "meta2": "El correo se obtiene en vivo, nunca se almacena"
@@ -31,7 +31,7 @@
   },
   "setup": [
     {
-      "h": "Crea tu cuenta gratis de mcpemails",
+      "h": "Crea tu cuenta gratis de MCP Emails",
       "p": "Regístrate en mcpemails.com. El plan gratuito conecta una bandeja, para siempre, y no pide tarjeta."
     },
     {
@@ -39,7 +39,7 @@
       "p": "Inicia sesión en tu cuenta de Seznam y abre <b>Zabezpečení účtu</b> (seguridad de la cuenta). Si <b>Dvoufázové ověření</b> está desactivado, la contraseña que debes usar es tu contraseña normal de Seznam y aquí no hay nada más que hacer. Si está activado, busca la fila <b>Heslo pro aplikace</b> (contraseña de aplicación), pulsa <b>Nastavit</b> (configurar), escribe una contraseña nueva dos veces y pulsa <b>Uložit změny</b> (guardar cambios). Seznam rechaza un valor idéntico a tu contraseña de inicio de sesión."
     },
     {
-      "h": "Pega la dirección y la contraseña en mcpemails",
+      "h": "Pega la dirección y la contraseña en MCP Emails",
       "p": "Elige IMAP / SMTP, escribe la dirección completa, incluida la parte que va después de la arroba, y pega la contraseña que corresponda. Los servidores y puertos vienen rellenados con los valores verificados de esta página."
     },
     {
@@ -58,7 +58,7 @@
     },
     {
       "h": "Seznam no anuncia IDLE, así que no se envía nada en tiempo real",
-      "p": "El servidor IMAP omite la capacidad IDLE, lo que significa que un cliente no puede mantener una conexión abierta y recibir aviso cuando llega correo. Tiene que consultar periódicamente. Para un agente no es un problema, porque mcpemails abre una conexión y obtiene el correo cuando tu IA hace una pregunta, en lugar de quedarse esperando en un socket. Aun así conviene saberlo, porque explica por qué un cliente de escritorio con una cuenta de Seznam detecta el correo nuevo más tarde que el webmail, y por qué una herramienta que depende de IDLE parecerá rota aquí aunque funcione en otros sitios."
+      "p": "El servidor IMAP omite la capacidad IDLE, lo que significa que un cliente no puede mantener una conexión abierta y recibir aviso cuando llega correo. Tiene que consultar periódicamente. Para un agente no es un problema, porque MCP Emails abre una conexión y obtiene el correo cuando tu IA hace una pregunta, en lugar de quedarse esperando en un socket. Aun así conviene saberlo, porque explica por qué un cliente de escritorio con una cuenta de Seznam detecta el correo nuevo más tarde que el webmail, y por qué una herramienta que depende de IDLE parecerá rota aquí aunque funcione en otros sitios."
     }
   ],
   "limits": [
@@ -68,7 +68,7 @@
   "faq": [
     {
       "q": "¿Funciona Claude con Seznam Email?",
-      "a": "No directamente. Claude no tiene un conector de Seznam integrado y no puede abrir una conexión IMAP por sí mismo. Conectar un servidor MCP como mcpemails a tu buzón seznam.cz o email.cz le da a Claude acceso para leer, buscar, enviar, responder, programar y organizar, y la misma conexión funciona en Cursor y otros clientes MCP."
+      "a": "No directamente. Claude no tiene un conector de Seznam integrado y no puede abrir una conexión IMAP por sí mismo. Conectar un servidor MCP como MCP Emails a tu buzón seznam.cz o email.cz le da a Claude acceso para leer, buscar, enviar, responder, programar y organizar, y la misma conexión funciona en Cursor y otros clientes MCP."
     },
     {
       "q": "¿Cuáles son los ajustes IMAP y SMTP de Seznam?",

@@ -103,8 +103,8 @@
       "keywords": "no tools nothing empty connector not working claude chatgpt cursor developer mode scope inbox_list",
       "steps": [
         "Open Inboxes in the dashboard and check that the mailbox is listed without an error. If it shows one, reconnect it.",
-        "Start a new chat after adding the connector. In ChatGPT, also choose Developer mode and the mcpemails app from the + menu in every new chat.",
-        "Authorize the connector with the same mcpemails account that holds the mailbox.",
+        "Start a new chat after adding the connector. In ChatGPT, also choose Developer mode and the MCP Emails app from the + menu in every new chat.",
+        "Authorize the connector with the same MCP Emails account that holds the mailbox.",
         "Your assistant only sees the tools your connector or API key is scoped for. If you left a scope unticked, remove the connector and add it again.",
         "Ask the assistant to list your inboxes first. Mail is fetched when the assistant asks for it, so nothing arrives on its own."
       ],
@@ -120,7 +120,7 @@
       "keywords": "usage limit allowance cap 150 actions free plan refused reset quota",
       "steps": [
         "See how many actions you have used under Usage in the dashboard.",
-        "Listing your inboxes and anything you do in the dashboard are never counted, and nothing is counted in your first 7 days after signup.",
+        "Listing your inboxes and anything you do in the dashboard are never counted, and nothing is counted in your first 3 days after signup.",
         "Retrying does not help. The allowance resets on the 1st of the next month (UTC), and paused automations resume on their own.",
         "Personal, Pro and Team have no monthly cap, subject to fair use.",
         "Workspaces created before 2026-09-12 are not metered. If you see the limit on one of those, write to us."

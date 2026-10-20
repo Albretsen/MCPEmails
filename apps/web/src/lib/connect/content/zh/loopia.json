@@ -20,7 +20,7 @@
     "titleLine1": "将 Loopia 邮箱连接到 Claude，",
     "titleLine2": "以及 Cursor、ChatGPT、任意 MCP 客户端",
     "lead": "为你的 AI 代理接入一个真正的 Loopia 收件箱。使用在 Loopia Kundzon 中为该账户设置的密码，通过 IMAP 读取、搜索、发送、回复、定时与整理邮件。",
-    "answer": "Claude 无法自行访问 Loopia 邮箱。mcpemails 是一个托管 MCP 服务器，通过 mailcluster.loopia.se 端口 993 的 IMAP 与之连接，使用你的完整邮箱地址和在 Loopia Kundzon 中为该账户设置的密码进行认证，让 Claude、Cursor 或任意 MCP 客户端都能读取、搜索、发送并整理这些邮件。Loopia 为所有客户使用同一个集群主机名，所以没有需要按域名查找的服务器，也没有需要生成的应用专用密码。1 个收件箱永久免费。",
+    "answer": "Claude 无法自行访问 Loopia 邮箱。MCP Emails 是一个托管 MCP 服务器，通过 mailcluster.loopia.se 端口 993 的 IMAP 与之连接，使用你的完整邮箱地址和在 Loopia Kundzon 中为该账户设置的密码进行认证，让 Claude、Cursor 或任意 MCP 客户端都能读取、搜索、发送并整理这些邮件。Loopia 为所有客户使用同一个集群主机名，所以没有需要按域名查找的服务器，也没有需要生成的应用专用密码。1 个收件箱永久免费。",
     "meta0": "1 个收件箱永久免费",
     "meta1": "在 Loopia Kundzon 中设置的账户密码",
     "meta2": "邮件实时获取，绝不存储"
@@ -31,7 +31,7 @@
   },
   "setup": [
     {
-      "h": "创建免费的 mcpemails 账户",
+      "h": "创建免费的 MCP Emails 账户",
       "p": "在 mcpemails.com 注册。免费套餐可永久连接一个收件箱，无需信用卡。"
     },
     {
@@ -39,7 +39,7 @@
       "p": "登录 Loopia Kundzon，打开你域名下的邮箱地址列表，点击该地址并选择 Edit。Password 旁会出现一个密码字段：输入新密码并保存。如果你在没有完整 Kundzon 访问权限的情况下管理邮箱，也可以在 mailadmin.loopia.se 进行同样的修改。"
     },
     {
-      "h": "粘贴到 mcpemails",
+      "h": "粘贴到 MCP Emails",
       "p": "选择 IMAP / SMTP，输入完整地址，并粘贴账户密码。服务器 mailcluster.loopia.se 以及端口 993 和 465 已预填，并经实时 TLS 连接验证。"
     },
     {
@@ -68,7 +68,7 @@
   "faq": [
     {
       "q": "Claude 能用于 Loopia 邮箱吗？",
-      "a": "不能单独使用。Claude 没有内置的 Loopia 连接器。通过 IMAP 将 mcpemails 这样的 MCP 服务器指向你的 Loopia 邮箱后，Claude 就能读取、搜索、发送、回复、定时和整理其中的邮件，而且同一个连接也可在 Cursor、ChatGPT 和其他 MCP 客户端中使用。"
+      "a": "不能单独使用。Claude 没有内置的 Loopia 连接器。通过 IMAP 将 MCP Emails 这样的 MCP 服务器指向你的 Loopia 邮箱后，Claude 就能读取、搜索、发送、回复、定时和整理其中的邮件，而且同一个连接也可在 Cursor、ChatGPT 和其他 MCP 客户端中使用。"
     },
     {
       "q": "Loopia 的 IMAP 和 SMTP 设置是什么？",

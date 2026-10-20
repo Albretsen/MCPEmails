@@ -22,20 +22,20 @@
       "step1": "在 claude.ai 或 Claude Desktop 中，打开 设置 → Connectors。",
       "step2": "点击 \"Add custom connector\"。",
       "step3": "将上方的 URL 粘贴为 connector URL，然后点击 \"Add\"。",
-      "step4": "点击 \"Connect\" 并使用 mcpemails 登录以授权。无需 API 密钥。"
+      "step4": "点击 \"Connect\" 并使用 MCP Emails 登录以授权。无需 API 密钥。"
     },
     "chatgpt": {
       "step1": "打开 设置 → Apps & Connectors → Advanced settings 并开启 Developer mode。",
       "step2": "返回 Apps & Connectors，点击 \"Create\"。",
       "step3": "输入名称并将上方的 URL 粘贴为 Connector URL。",
-      "step4": "选择 OAuth，点击 \"Create\"，然后使用 mcpemails 授权。",
-      "step5": "在 chatgpt.com 的对话中，点击 + → Developer mode 并选择 mcpemails 应用。每个新对话都要重复这一步，否则 ChatGPT 看不到这些工具。",
+      "step4": "选择 OAuth，点击 \"Create\"，然后使用 MCP Emails 授权。",
+      "step5": "在 chatgpt.com 的对话中，点击 + → Developer mode 并选择 MCP Emails 应用。每个新对话都要重复这一步，否则 ChatGPT 看不到这些工具。",
       "note": "仅限 chatgpt.com 网页版，适用于 Plus、Pro、Business、Enterprise 和 Edu。Free 和 Go 账户无法添加自定义连接器。在 Business 和 Enterprise 上，可能需要管理员先允许 Developer mode。"
     },
     "cursor": {
       "step1": "编辑 ~/.cursor/mcp.json（全局）或 .cursor/mcp.json（项目）。",
       "step2": "在 \"mcpServers\" 下添加下方的服务器。",
-      "step3": "Cursor 会提示你通过 OAuth 登录。使用 mcpemails 授权。"
+      "step3": "Cursor 会提示你通过 OAuth 登录。使用 MCP Emails 授权。"
     },
     "vscode": {
       "step1": "打开命令面板（⇧⌘P）并运行 \"MCP: Add Server\"。",
@@ -51,7 +51,7 @@
     "windsurf": {
       "step1": "打开 Cascade 的 MCP 设置，或编辑 ~/.codeium/windsurf/mcp_config.json。",
       "step2": "添加下方的服务器。注意该字段为 \"serverUrl\"，而非 \"url\"。",
-      "step3": "在 Cascade 中刷新 MCP 服务器，并在提示时使用 mcpemails 授权。"
+      "step3": "在 Cascade 中刷新 MCP 服务器，并在提示时使用 MCP Emails 授权。"
     },
     "gemini": {
       "step1": "编辑 ~/.gemini/settings.json（全局）或 .gemini/settings.json（项目）。",
@@ -61,7 +61,7 @@
     "zed": {
       "step1": "在 Agent Panel 设置中点击 \"Add Custom Server\"，或编辑 settings.json。",
       "step2": "在 \"context_servers\" 下添加下方的服务器。",
-      "step3": "当未设置 Authorization 标头时，Zed 会提示 OAuth 流程。使用 mcpemails 登录。"
+      "step3": "当未设置 Authorization 标头时，Zed 会提示 OAuth 流程。使用 MCP Emails 登录。"
     },
     "jetbrains": {
       "step1": "打开 Settings → Tools → AI Assistant → Model Context Protocol (MCP)。",
@@ -71,7 +71,7 @@
     "raycast": {
       "step1": "运行 \"Install MCP Server\" 命令（或 \"Manage MCP Servers\"）。",
       "step2": "输入名称，将 Transport 设置为 \"HTTP\"，并粘贴上方的 URL。",
-      "step3": "按 \"Install MCP Server\"，然后点击 \"Sign In\" 以使用 mcpemails 授权。"
+      "step3": "按 \"Install MCP Server\"，然后点击 \"Sign In\" 以使用 MCP Emails 授权。"
     },
     "warp": {
       "step1": "打开 Settings → Agents → MCP servers 并点击 \"+ Add\"。",
@@ -98,7 +98,7 @@
     "multiInboxTitle": "添加你的其他工作邮箱",
     "multiInboxOptional": "可选",
     "multiInboxDesc": "连接 info@、sales@、invoices@ 等其余地址，智能体就能在同一个对话中处理公司的每一个邮箱，并从正确的地址回复。",
-    "multiInboxDescUpgrade": "连接 info@、sales@、invoices@ 等其余地址，智能体就能在同一个对话中处理公司的每一个邮箱，并从正确的地址回复。免费版包含一个邮箱；Pro 包含公司使用的所有邮箱。",
+    "multiInboxDescUpgrade": "连接 info@、sales@、invoices@ 等其余地址，智能体就能在同一个对话中处理公司的每一个邮箱，并从正确的地址回复。免费版包含一个邮箱；Pro 最多包含 10 个。",
     "multiInboxCta": "添加邮箱"
   },
   "overview": {
@@ -119,7 +119,7 @@
     "actionsThisMonth": "本月邮件操作",
     "actionsOfCap": "共 {cap} 次 · {date} 重置",
     "actionsCapReached": "已达上限 · 拒绝至 {date}",
-    "actionsGrace": "试用周：{date} 之前无上限",
+    "actionsGrace": "试用期：{date} 之前无上限",
     "actionsExempt": "无月度上限（早期成员）",
     "teamMembers": "团队成员",
     "ofSeats": "／共 {cap} 个席位 · 剩余 {remaining} 个",
@@ -129,7 +129,7 @@
     "goToMembers": "前往成员页",
     "callsPerDayTitle": "每日调用量",
     "callsPerDaySub": "最近 {days} 天 · 所有工具",
-    "pro": "Team",
+    "pro": "Business",
     "recentActivityTitle": "近期活动",
     "recentActivitySub": "实时 MCP 工具调用",
     "noActivityTitle": "暂无活动",
@@ -146,8 +146,8 @@
     "usedSingular": "已使用 {count}／{max} 个收件箱",
     "capTitle": "你已达到收件箱数量上限",
     "capBodyPersonal": "免费版可连接一个邮箱。Personal 每月 9 美元，可连接三个，让工作与私人邮箱共用同一个智能体。",
-    "capBodyPro": "Personal 可连接三个邮箱。Pro 每月 15 美元，取消上限，让你所有的邮箱都在同一个智能体上运行。",
-    "capBodyBusiness": "你在管理不止一个公司邮箱吗？免费版只能连接一个。Personal 每月 9 美元，可连接三个，足够覆盖 info@、sales@ 和你自己的邮箱。Pro 每月 15 美元，覆盖公司使用的每一个邮箱：财务、销售、客服、info，还有你自己的邮箱。",
+    "capBodyPro": "Personal 可连接三个邮箱。Pro 每月 15 美元，可连接 10 个，全部在同一个智能体上运行。",
+    "capBodyBusiness": "你在管理不止一个公司邮箱吗？免费版只能连接一个。Personal 每月 9 美元，可连接三个，足够覆盖 info@、sales@ 和你自己的邮箱。Pro 每月 15 美元，最多覆盖 10 个：财务、销售、客服、info，还有你自己的邮箱。",
     "capCtaPersonal": "升级到 Personal，每月 9 美元",
     "capCtaPro": "升级到 Pro，每月 15 美元",
     "capCompare": "比较所有方案",
@@ -206,6 +206,38 @@
         "saving": "保存中…",
         "tooLong": "发件人名称过长（最多 100 个字符）。"
       },
+      "sendAs": {
+        "title": "发件地址",
+        "help": "使用另一个投递到此邮箱的地址发信，例如 iCloud 别名。我们会向该地址发送验证码，确认它属于你。你的邮件服务商也必须允许用它发信。",
+        "placeholder": "alias@example.com",
+        "add": "添加地址",
+        "adding": "正在发送验证码…",
+        "loading": "加载中…",
+        "verified": "已验证",
+        "pending": "验证码已发送",
+        "unverified": "未验证",
+        "codePlaceholder": "6 位验证码",
+        "codeLabel": "{address} 的验证码",
+        "verify": "验证",
+        "resend": "重新发送验证码",
+        "remove": "移除",
+        "errors": {
+          "invalid_address": "请输入有效的邮箱地址。",
+          "own_address": "这是此邮箱自己的地址。",
+          "connected_inbox": "该地址已作为独立邮箱连接，请直接从那个邮箱发信。",
+          "already_verified": "该地址已验证。",
+          "too_many_aliases": "此邮箱无法再添加地址，请先移除一个。",
+          "rate_limited": "发送的验证码过多，请稍后再试。",
+          "cooldown": "请等待一分钟再发送新的验证码。",
+          "code_expired": "验证码已过期，请重新发送。",
+          "too_many_attempts": "错误次数过多，请重新发送验证码。",
+          "wrong_code": "验证码不正确。",
+          "invalid_code": "请输入 6 位验证码。",
+          "mail_failed": "验证码发送失败，请重试。",
+          "unsupported_provider": "此邮箱不支持使用其他地址发信。",
+          "generic": "出现问题，请重试。"
+        }
+      },
       "signature": {
         "title": "邮件签名",
         "enabled": "已启用",
@@ -234,7 +266,9 @@
     },
     "emptyAltLead": "还不想现在连接邮箱？",
     "emptyViewKeys": "获取你的 MCP URL 和 API 密钥",
-    "emptyReadDocs": "阅读客户端配置指南"
+    "emptyReadDocs": "阅读客户端配置指南",
+    "capBodyProCap": "Pro 可连接 10 个邮箱。Business 每月 39 美元，包含 10 个邮箱，每增加一个邮箱每月 3 美元，成员数量不限且不额外收费。",
+    "capCtaBusiness": "升级到 Business，每月 39 美元"
   },
   "apiKeys": {
     "title": "API 密钥",
@@ -368,7 +402,7 @@
     "colAddress": "地址",
     "allowanceCounting": "本月已用 {used} / {cap} 次邮件操作 · {date} 重置",
     "allowanceReached": "{cap} 次邮件操作已全部用完 · 读取和写入将被拒绝至 {date}",
-    "allowanceGrace": "试用周：{date} 之前无上限",
+    "allowanceGrace": "试用期：{date} 之前无上限",
     "allowanceExempt": "无月度上限（早期成员）",
     "capTitleNear": "你即将用完本月额度",
     "capBodyNear": "已使用 {used} / {cap} 次邮件操作。达到 {cap} 次后，智能体的读取和写入将被拒绝至 {date}。Personal 每月 9 美元，取消月度上限。",
@@ -520,16 +554,15 @@
       "personalFeature2": "120 次请求／分钟（2× 突发）",
       "personalFeatureActions": "无月度操作上限",
       "personalFeature4": "电子邮件支持",
-      "soloFeature1": "无限量连接收件箱",
+      "soloFeature1": "可连接 10 个收件箱",
       "soloFeature2": "300 次请求／分钟（5× 突发）",
       "soloFeature3": "更长的分析历史",
       "soloFeature4": "电子邮件支持",
-      "teamFeature1": "包含 Pro 的全部功能",
-      "teamFeature2": "无限量成员与角色",
-      "teamFeature3": "每个客户或业务一个独立工作区",
-      "teamFeature4": "SSO（SAML／OIDC）+ 审计日志",
-      "teamFeature5": "最长的分析历史",
-      "teamFeature6": "优先支持"
+      "businessFeature1": "包含 Pro 的全部功能",
+      "businessFeature2": "包含 10 个邮箱，每多一个每月 3 美元",
+      "businessFeature3": "成员数量不限，可分配角色，不额外收费",
+      "businessFeature4": "由管理员审批暂缓发送的邮件",
+      "businessFeature5": "一个订阅即可使用多个工作区"
     },
     "planIncludes": "你的套餐包含",
     "inboxesOne": "1 个已连接收件箱",
@@ -560,7 +593,7 @@
     "confirmNoteInterval": "立即从你已保存的卡片扣款，并抵扣当前周期剩余时间的费用。计费周期将从今天重新开始，因此下次续费日期会变。",
     "confirmNoteIntervalNoPreview": "我们无法提前计算这次变更的金额。差额将从你已保存的卡片扣款，并抵扣当前周期剩余时间的费用，准确金额会显示在账单上。计费周期将从今天重新开始，因此下次续费日期会变。",
     "confirmPay": "确认并支付 {amount}",
-    "confirmChange": "确认变更",
+    "confirmChange": "确认并付款",
     "confirmCancel": "取消",
     "confirming": "扣款中…",
     "planChangedCharged": "你已切换到 {plan}。已从你的银行卡扣款 {amount}。",
@@ -569,7 +602,10 @@
     "paymentRequiredBody": "你的银行需要验证这笔支付，或银行卡被拒绝。你当前的套餐没有变化，也没有扣款。支付这张未结账单后，变更会自动生效。",
     "paymentRequiredPay": "支付账单",
     "paymentRequiredClose": "关闭",
-    "paymentRequiredToast": "支付未完成，你仍在 {plan}。打开账单门户支付未结账单。"
+    "paymentRequiredToast": "支付未完成，你仍在 {plan}。打开账单门户支付未结账单。",
+    "proInboxesKept": "你的 Pro 套餐继续享有无限量连接收件箱。",
+    "businessMailboxRate": "所有工作区共包含 10 个邮箱。每个额外邮箱随套餐计费：每月 3 美元，或每年 28.80 美元。",
+    "confirmExtraMailboxes": "包含超出 10 个之外的 {count} 个额外邮箱。"
   },
   "security": {
     "title": "安全",
@@ -633,8 +669,8 @@
     "roleOwner": "所有者",
     "sending": "正在发送…",
     "sendInvite": "发送邀请",
-    "rolesLockedHint": "受邀者以成员身份加入。升级到 Team 即可分配管理员和查看者角色。",
-    "inviteUpgradeHint": "邀请协作者需要 Team 套餐。升级到 Team 后即可向此工作区添加成员。",
+    "rolesLockedHint": "受邀者以成员身份加入。升级到 Business 即可分配管理员和查看者角色。",
+    "inviteUpgradeHint": "邀请协作者需要 Business 套餐。升级到 Business 后即可向此工作区添加成员。",
     "errInviteFailed": "发送邀请失败。",
     "errRemoveFailed": "移除成员失败。",
     "errRoleFailed": "更新角色失败。",

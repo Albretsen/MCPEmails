@@ -35,10 +35,10 @@
       "providerSub": "Gmail · Outlook · iCloud · IMAP",
       "logCalls": "el agente llama a",
       "logReturns": "devuelve los IDs de la bandeja, sin copiar y pegar del panel",
-      "logFetches": "mcpemails obtiene vía la API de Gmail (token rotado)",
+      "logFetches": "MCP Emails obtiene en vivo de tu proveedor",
       "logResult": "20 mensajes devueltos",
       "logNothing": "nada almacenado",
-      "legendPipe": "mcpemails (la tubería)",
+      "legendPipe": "MCP Emails (la tubería)",
       "legendLive": "petición en vivo",
       "legendData": "tus datos, tu proveedor"
     }
@@ -52,7 +52,10 @@
     "p2": "MCP Emails es uno alojado. Funciona con Gmail, Outlook y Microsoft 365, iCloud, Fastmail y cualquier buzón compatible con IMAP, y un mismo agente puede trabajar con varios buzones a la vez. El correo se obtiene en vivo de tu proveedor en cada llamada y nunca se almacena en nuestros servidores.",
     "linkImap": "Configura el servidor MCP para IMAP",
     "linkBusiness": "MCP de correo para los buzones de tu empresa",
-    "linkProviders": "Todos los proveedores de correo compatibles"
+    "linkProviders": "Todos los proveedores de correo compatibles",
+    "guideClaude": "Cómo conectar Claude a tu correo",
+    "guideChatgpt": "Cómo conectar ChatGPT a tu correo",
+    "guideImap": "Guía del conector IMAP para Claude"
   },
   "features": {
     "eyebrow": "Principios",
@@ -62,13 +65,13 @@
     "items": {
       "0": {
         "tag": "Alcance",
-        "h": "Diecisiete herramientas enfocadas. Lo esencial, cubierto.",
+        "h": "Diecinueve herramientas enfocadas. Lo esencial, cubierto.",
         "p": "Las herramientas cubren el trabajo diario: <code>inbox_list</code>, <code>email_read</code> (list, read, search) y <code>email_compose</code> (send, reply), además de herramientas específicas para organizar, eliminar, carpetas, borradores, programación, contactos, firmas y automatizaciones desatendidas. Pega la URL del endpoint MCP en claude.ai, Claude Desktop, Cursor o cualquier agente compatible con MCP."
       },
       "1": {
         "tag": "Almacenamiento",
         "h": "El correo se obtiene en vivo. Nunca se almacena.",
-        "p": "Cada llamada a una herramienta consulta tu proveedor en tiempo real: la API de Gmail, Microsoft Graph o IMAP. Los cuerpos de los mensajes, los asuntos y los adjuntos van al agente y se descartan de inmediato. Persistimos una sola cosa por bandeja, un token cifrado o una contraseña de aplicación, para poder hacer la siguiente llamada. La única excepción es un mensaje que programas para enviar más tarde: lo conservamos hasta la hora de envío y luego guardamos un registro para tu historial."
+        "p": "Cada llamada a una herramienta consulta tu proveedor en tiempo real: la API de Gmail, Microsoft Graph o IMAP. Los cuerpos de los mensajes, los asuntos y los adjuntos van al agente y se descartan de inmediato. Persistimos una sola cosa por bandeja, un token cifrado o una contraseña de aplicación, para poder hacer la siguiente llamada. Las excepciones son los mensajes salientes que tienen que esperar: un mensaje que programas para más tarde, o un envío retenido para tu aprobación, se guarda cifrado, y su registro se conserva para tu historial."
       },
       "2": {
         "tag": "Envío",
@@ -78,7 +81,7 @@
       "3": {
         "tag": "Proveedores",
         "h": "Gmail, Outlook, iCloud, Fastmail y cualquier bandeja IMAP.",
-        "p": "Una contraseña de aplicación o el inicio de sesión de Google (OAuth 2.0) para Gmail; el inicio de sesión de Microsoft (OAuth 2.0) para Outlook / Microsoft 365 (una cuenta profesional o educativa puede necesitar que su administrador de TI apruebe la aplicación una vez); contraseñas específicas de aplicación para Fastmail, iCloud, Yahoo, Zoho y Yandex; un conector IMAP / SMTP genérico para todo lo demás. Conecta varias bandejas, etiquétalas por caso de uso (work-gmail, ops-fastmail, support-imap) y limita cada clave de API a las bandejas que quieras que ese agente alcance. Los equipos y agencias pueden gestionar todas las bandejas de sus clientes en un espacio de trabajo compartido con roles y registro de auditoría."
+        "p": "Una contraseña de aplicación de Google por IMAP para Gmail; el inicio de sesión de Microsoft (OAuth 2.0) para Outlook / Microsoft 365 (una cuenta profesional o educativa puede necesitar que su administrador de TI apruebe la aplicación una vez); contraseñas específicas de aplicación para Fastmail, iCloud, Yahoo, Zoho y Yandex; un conector IMAP / SMTP genérico para todo lo demás. Conecta varias bandejas, etiquétalas por caso de uso (work-gmail, ops-fastmail, support-imap) y limita cada clave de API a las bandejas que quieras que ese agente alcance. Los equipos y agencias pueden gestionar todas las bandejas de sus clientes en un espacio de trabajo compartido con roles y registro de auditoría."
       },
       "4": {
         "tag": "Acceso",
@@ -88,7 +91,7 @@
       "5": {
         "tag": "Seguridad",
         "h": "Las credenciales se cifran en reposo.",
-        "p": "Los tokens de OAuth y las contraseñas de aplicación se cifran con AES-256-GCM antes de escribirse en la base de datos. El descifrado ocurre solo dentro de una Edge Function aislada en el momento de la llamada. La clave de cifrado se guarda como un secreto de entorno, separada de la base de datos."
+        "p": "Los tokens de OAuth y las contraseñas de aplicación se cifran con AES-256-GCM antes de escribirse en la base de datos. Solo se descifran en nuestros servidores, para la petición que los necesita. La clave de cifrado se guarda como un secreto de entorno, separada de la base de datos."
       }
     }
   },
@@ -107,7 +110,7 @@
       },
       "2": {
         "h": "Tu agente trabaja la bandeja",
-        "p": "El agente llama a herramientas como <code>email_read()</code> o <code>email_compose()</code>. MCPEmails obtiene en vivo desde tu proveedor y devuelve el resultado. Nada se almacena en caché entre llamadas."
+        "p": "El agente llama a herramientas como <code>email_read()</code> o <code>email_compose()</code>. MCP Emails obtiene en vivo desde tu proveedor y devuelve el resultado. Nada se almacena en caché entre llamadas."
       }
     },
     "tools": {
@@ -125,17 +128,17 @@
     "eyebrow": "Peticiones reales",
     "titleLine1": "Solo pídelo.",
     "titleLine2": "Lee, escribe y organiza.",
-    "sub": "No hay paneles que aprender. Dile a tu asistente de IA lo que quieres en lenguaje natural y usará mcpemails para hacerlo."
+    "sub": "No hay paneles que aprender. Dile a tu asistente de IA lo que quieres en lenguaje natural y usará MCP Emails para hacerlo."
   },
   "quote": {
     "text": "Quería que mis agentes trabajaran mi bandeja de entrada, pero cada opción implicaba entregar a un tercero una copia de mi correo. Así que construí la tubería que deseaba que existiera: conéctate una vez, tu bandeja de entrada se obtiene en vivo y nunca se almacena, y puedes cortarle el acceso a cualquier agente con un clic. Ese es el producto en el que confío con mi propia bandeja.",
-    "role": "fundador, mcpemails"
+    "role": "fundador, MCP Emails"
   },
   "reviews": {
     "eyebrow": "Opiniones",
     "titleLine1": "No lo decimos nosotros.",
     "titleLine2": "Lo dicen ellos.",
-    "sub": "Opiniones reales de quienes usan mcpemails con su propia bandeja de entrada, publicadas con su nombre.",
+    "sub": "Opiniones reales de quienes usan MCP Emails con su propia bandeja de entrada, publicadas con su nombre.",
     "ratingLabel": "Valorado con {rating} de 5",
     "count": "{count, plural, one {# opinión} other {# opiniones}}",
     "via": "Opinión publicada en {source}",
@@ -148,7 +151,7 @@
   "pricing": {
     "eyebrow": "Precios",
     "title": "Precio por bandeja. Sin medición en los planes de pago.",
-    "sub": "Gratis conecta una bandeja con 150 acciones de correo al mes. Personal conecta tres. Pro conecta todos los buzones que lleva tu negocio. Team añade personas, roles y un espacio de trabajo separado por cliente.",
+    "sub": "Gratis conecta una bandeja con 150 acciones de correo al mes. Personal conecta tres. Pro conecta hasta 10 para una persona que lleva un negocio. Business incluye 10 buzones, suma $3 al mes por cada uno extra y tiene sitio para todo tu equipo.",
     "perForever": "/para siempre",
     "perMonth": "/mes",
     "tiers": {
@@ -180,27 +183,26 @@
       },
       "solo": {
         "name": "Pro",
-        "desc": "Todos los buzones que lleva tu negocio, en un solo agente: finanzas, ventas, soporte, info y el tuyo.",
+        "desc": "Para una persona que lleva un negocio: hasta 10 buzones en un solo agente, desde finanzas y ventas hasta soporte y el tuyo.",
         "features": [
           "Todo lo de Personal",
-          "Bandejas conectadas ilimitadas",
+          "10 bandejas conectadas",
           "Límite de ráfaga 5x más alto",
           "Más historial de analíticas"
         ],
         "cta": "Obtener Pro"
       },
-      "team": {
-        "name": "Team",
-        "desc": "Bandejas compartidas para un equipo, con un espacio de trabajo separado por cliente o negocio.",
+      "business": {
+        "name": "Business",
+        "desc": "Para un negocio con muchos buzones o varias personas: 10 buzones incluidos y más a un precio fijo por buzón.",
         "features": [
           "Todo lo de Pro",
-          "Miembros ilimitados con roles",
-          "Un espacio de trabajo separado por cliente o negocio",
-          "SSO (SAML / OIDC) y registro de auditoría",
-          "El mayor historial de analíticas",
-          "Soporte prioritario"
+          "10 buzones incluidos, $3 al mes por cada buzón extra",
+          "Miembros ilimitados con roles, sin coste adicional",
+          "Los administradores aprueban los envíos en espera",
+          "Varios espacios de trabajo en una sola suscripción, uno por empresa o cliente"
         ],
-        "cta": "Obtener Team"
+        "cta": "Obtener Business"
       }
     },
     "footnote": "Todos los planes: el correo que lee tu agente se obtiene en vivo y nunca se almacena. Tokens de OAuth cifrados en reposo. ¿Necesitas algo a medida? <contact>Contáctanos</contact>. <comparison>Ver la comparación completa de funciones →</comparison>",
@@ -213,7 +215,7 @@
     "items": [
       {
         "q": "¿MCP Emails es un servidor MCP para IMAP?",
-        "a": "Sí. Además del inicio de sesión con Gmail y Outlook hay un conector genérico de IMAP y SMTP, así que funciona cualquier buzón con acceso IMAP: tu propio dominio, un proveedor de hosting o un ISP regional. Introduces los datos del servidor y una contraseña de aplicación una sola vez, y tu agente lee por IMAP y envía a través de tu propio servidor SMTP."
+        "a": "Sí. Además de Gmail y Outlook hay un conector genérico de IMAP y SMTP, así que funciona cualquier buzón con acceso IMAP: tu propio dominio, un proveedor de hosting o un ISP regional. Introduces los datos del servidor y una contraseña de aplicación una sola vez, y tu agente lee por IMAP y envía a través de tu propio servidor SMTP."
       },
       {
         "q": "¿Puede un mismo agente trabajar con varios buzones a la vez?",
@@ -233,23 +235,23 @@
       },
       {
         "q": "¿Qué proveedores de correo puedo conectar?",
-        "a": "Gmail con una contraseña de aplicación o iniciando sesión con Google, Outlook y Microsoft 365 iniciando sesión con Microsoft (una cuenta profesional o educativa puede necesitar que su administrador de TI apruebe la aplicación una vez), Fastmail, iCloud, Yahoo, Zoho y Yandex con una contraseña de aplicación, y cualquier otra bandeja mediante una conexión IMAP/SMTP genérica. Conecta tantas bandejas como quieras y etiquétalas por caso de uso."
+        "a": "Gmail y Google Workspace con una contraseña de aplicación de Google por IMAP, Outlook y Microsoft 365 iniciando sesión con Microsoft (una cuenta profesional o educativa puede necesitar que su administrador de TI apruebe la aplicación una vez), Fastmail, iCloud, Yahoo, Zoho y Yandex con una contraseña de aplicación, y cualquier otra bandeja mediante una conexión IMAP/SMTP genérica. Conecta tantas bandejas como quieras y etiquétalas por caso de uso."
       },
       {
         "q": "¿Se almacena mi correo en algún sitio?",
-        "a": "No. El correo que lee tu agente se obtiene en vivo de tu proveedor en cada petición y nunca se almacena en nuestros servidores. La única excepción es un mensaje que programes explícitamente para enviar más tarde, que se guarda cifrado hasta que sale."
+        "a": "No. El correo que lee tu agente se obtiene en vivo de tu proveedor en cada petición y nunca se almacena en nuestros servidores. Las excepciones son los mensajes salientes que tienen que esperar: un mensaje que programas para más tarde, o un envío retenido para tu aprobación, se guarda cifrado."
       },
       {
         "q": "¿Es realmente gratis?",
-        "a": "Sí. El plan Gratis conecta una bandeja, para siempre y sin tarjeta, y tu agente dispone de todas las herramientas que publicamos sobre ella: leer, buscar, enviar, responder, programar y organizar. Personal cuesta $9 al mes por un segundo y un tercer buzón en el mismo agente, Pro elimina el límite de bandejas por completo, y Team es para cuando otras personas necesiten acceso."
+        "a": "Sí. El plan Gratis conecta una bandeja, para siempre y sin tarjeta, y tu agente dispone de todas las herramientas que publicamos sobre ella: leer, buscar, enviar, responder, programar y organizar. Personal cuesta $9 al mes por un segundo y un tercer buzón en el mismo agente, Pro cubre hasta 10 por $15, y Business es para más buzones o para cuando otras personas necesiten acceso."
       },
       {
         "q": "¿Qué puede hacer realmente la IA con mi bandeja de entrada?",
-        "a": "Leer y buscar correo, enviar, responder y reenviar mensajes reales, programar envíos para más tarde y organizar tu bandeja: mover, copiar, marcar, archivar y eliminar. Diecisiete herramientas basadas en acciones, para que el agente termine el trabajo dentro de tu bandeja en lugar de solo redactar."
+        "a": "Leer y buscar correo, enviar, responder y reenviar mensajes reales, programar envíos para más tarde y organizar tu bandeja: mover, copiar, marcar, archivar y eliminar. Diecinueve herramientas basadas en acciones, para que el agente termine el trabajo dentro de tu bandeja en lugar de solo redactar."
       },
       {
         "q": "¿Cómo conecto una bandeja de entrada?",
-        "a": "Crea una cuenta gratuita, conecta tu bandeja (con una contraseña de aplicación o el inicio de sesión de Google para Gmail, iniciando sesión con Microsoft para Outlook, o pega una contraseña de aplicación para las demás) y luego pega https://mcpemails.com/api/mcp en tu cliente de IA y autoriza. Tu agente tendrá la bandeja en un par de minutos."
+        "a": "Crea una cuenta gratuita, conecta tu bandeja (con una contraseña de aplicación de Google para Gmail, iniciando sesión con Microsoft para Outlook, o pega una contraseña de aplicación para las demás) y luego pega https://mcpemails.com/api/mcp en tu cliente de IA y autoriza. Tu agente tendrá la bandeja en un par de minutos."
       },
       {
         "q": "¿Puedo auto-alojarlo?",
@@ -271,11 +273,15 @@
     "linkOauth": "Conexión OAuth",
     "linkProviders": "Soporte de proveedores",
     "linkReadOnly": "Acceso de solo lectura",
+    "linkClients": "Configuración de clientes MCP",
     "linkPrivacy": "Privacidad",
     "linkTerms": "Términos",
-    "copyright": "© 2026 mcpemails.",
+    "linkWithdrawal": "Derecho de desistimiento",
+    "linkCancel": "Cancelar contratos aquí",
+    "linkImpressum": "Impressum",
+    "copyright": "© 2026 MCP Emails.",
     "legal": "El correo se obtiene en vivo, nunca se almacena · Credenciales cifradas en reposo",
-    "legalEntity": "MCPEmails es un servicio de Albretsen Consulting (enkeltpersonforetak, empresa individual noruega), número de organización 926 646 753, Håsteins gate 9, 5160 Laksevåg, Noruega.",
+    "legalEntity": "MCP Emails es un servicio de Albretsen AS, número de organización 938 702 373, Håsteins gate 9, 5160 Laksevåg, Noruega.",
     "contactLabel": "Contacto",
     "mcpLabel": "Endpoint MCP",
     "copy": "Copiar",
@@ -295,7 +301,8 @@
     "nb": "Norsk",
     "es": "Español",
     "fr": "Français",
-    "zh": "中文"
+    "zh": "中文",
+    "de": "Deutsch"
   },
   "preview": {
     "eyebrow": "Vista del producto",

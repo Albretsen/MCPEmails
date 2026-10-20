@@ -8,6 +8,8 @@ import { linkExperimentSubjectForRequest } from '@/lib/experiments/link-request'
 import { stampAcquisitionSegment } from '@/lib/segment/record-segment';
 import { deviceClassFromHeaders } from '@/lib/acquisition-device.mjs';
 import { shouldStampDeviceOnDashboard, stampAcquisitionDevice } from '@/lib/acquisition-device-stamp';
+import { countryFromHeaders } from '@/lib/acquisition-country.mjs';
+import { stampAcquisitionCountry } from '@/lib/acquisition-country-stamp';
 import { PENDING_INBOX_COLUMNS, selectTolerantly } from '@/lib/approvals/columns';
 import { DashboardApp } from '../../../components/dashboard/App';
 import { pathSegmentToSection } from '../../../components/dashboard/routes';
@@ -44,7 +46,7 @@ import '../../../styles/theme.css';
  * Fallback activity window, in UTC days, for a caller that passes none.
  *
  * The real window is the workspace's `analyticsRetentionDays` (Free 30,
- * Personal 30, Pro 90, Team 365), resolved once in the page component and
+ * Personal 90, Pro and Business 730), resolved once in the page component and
  * threaded into every history fetcher below. This constant only keeps those
  * fetchers callable on their own; it is not the product's answer to "how much
  * history do I get". See src/lib/analytics/retention.ts.
@@ -63,7 +65,7 @@ const ACTION_METER_VERSION = 1;
 export const dynamic = 'force-dynamic';
 
 export const metadata = {
-  title: 'Dashboard · MCP Emails',
+  title: 'Dashboard',
   description: 'Manage your MCP Emails inboxes and API keys',
 };
 
@@ -521,6 +523,11 @@ async function fetchAuditLog(supabase, workspaceId) {
   // down hard by tier, Auth0 at 1-30 days, is publicly complained about for it.
   // Nobody ships a 7-day audit log. Do not re-add a window here without a
   // reason that is about storage, not packaging.
+  //
+  // What it can show is bounded by storage, not by this query: the per-plan
+  // activity_log job (migration 20261020153742) never deletes a
+  // mailbox-changing call before 90 days on any plan, and keeps read-only
+  // calls at least as long as the plan's Usage window.
 
   const [countResult, rowsResult] = await Promise.all([
     supabase
@@ -706,9 +713,14 @@ export default async function DashboardPage({ params }) {
   // instead and are skipped here. The class is read before the response and
   // written after it; the User-Agent itself is never kept. Gated on an account
   // that is minutes old, owner's workspace only, never overwrites.
+  // The signup country rides along on the same gate and the same request:
+  // Vercel's x-vercel-ip-country, two letters, never the IP itself.
   if (shouldStampDeviceOnDashboard({ provider: user.app_metadata?.provider, userCreatedAt: user.created_at })) {
-    const device = deviceClassFromHeaders(await headers());
+    const requestHeaders = await headers();
+    const device = deviceClassFromHeaders(requestHeaders);
+    const country = countryFromHeaders(requestHeaders);
     after(() => stampAcquisitionDevice(createServiceRoleClient(), { ownerId: user.id, device }));
+    after(() => stampAcquisitionCountry(createServiceRoleClient(), { ownerId: user.id, country }));
   }
 
   // The calling user's role in the ACTIVE workspace (drives role-gated UI).
@@ -765,6 +777,10 @@ export default async function DashboardPage({ params }) {
   // show a grandfathered free account a 1-inbox cap and a scarcity bar for a
   // limit the server would never actually enforce against them.
   const unlimitedInboxes = effectiveWorkspacePlan?.unlimited_inboxes ?? false;
+  // The 2026-10 Pro cap: a workspace on Pro at the cutover keeps unlimited
+  // inboxes (or every Pro workspace does, while the cap's kill switch is off).
+  // Read here for the same reason as the grandfather above.
+  const proUnlimitedInboxes = effectiveWorkspacePlan?.pro_unlimited_inboxes ?? false;
   const plan = effectiveWorkspacePlan?.plan ?? workspace?.plan ?? 'free';
   // The period the usage-summary RPC scopes its (undisplayed) action meter to:
   // the allowance's own window, or the UTC month when that call failed.
@@ -802,7 +818,7 @@ export default async function DashboardPage({ params }) {
   // history this workspace may see is one of them. Both protections are
   // user-level and must be passed together: `compedScale` grants Team
   // features, `unlimitedInboxes` is the repricing grandfather.
-  const rawLimits = resolvePlanLimits(plan, { compedScale, unlimitedInboxes });
+  const rawLimits = resolvePlanLimits(plan, { compedScale, unlimitedInboxes, proUnlimitedInboxes });
   // The window the Usage page, the per-inbox activity counts and the audit log
   // are all bounded by. Free and Personal buy 30 days, Pro 90, Team a year;
   // those numbers are published copy, so they are read from the plan rather
@@ -850,6 +866,10 @@ export default async function DashboardPage({ params }) {
     // label their figures with it, so the number on screen always matches the
     // window the queries above actually used.
     historyDays,
+    // A Pro workspace from before the 2026-10 inbox cap, told on the billing
+    // panel that it keeps unlimited inboxes. Not for a grandfathered user,
+    // whose unlimited inboxes come from the older promise.
+    proInboxesKept: plan === 'solo' && proUnlimitedInboxes && !unlimitedInboxes && !compedScale,
   };
 
   // True only when the unlimited inboxes come from the grandfather rather than

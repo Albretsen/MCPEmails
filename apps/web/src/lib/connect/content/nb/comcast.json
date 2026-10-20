@@ -19,7 +19,7 @@
     "titleLine1": "Koble Comcast Xfinity-e-post",
     "titleLine2": "til Claude, Cursor og enhver MCP-klient",
     "lead": "Gi AI-agenten din en ekte comcast.net-innboks. Les, søk, send, svar, planlegg og organiser e-post over IMAP med Xfinity ID-en din, i alle MCP-klienter i stedet for bare én.",
-    "answer": "Claude kan ikke nå en Comcast Xfinity-postkasse på egen hånd. mcpemails er en hostet MCP-server som kobler den til over IMAP på imap.comcast.net, port 993, og logger inn med hele comcast.net-adressen din og passordet for Xfinity ID-en din. Xfinity blokkerer alle eksterne e-postklienter til du krysser av for Third Party Access Security i innstillingene for Xfinity Email, så slå det på først, ellers blir selv riktig passord avvist. Oppsettet tar et par minutter, og én innboks er gratis, for alltid.",
+    "answer": "Claude kan ikke nå en Comcast Xfinity-postkasse på egen hånd. MCP Emails er en hostet MCP-server som kobler den til over IMAP på imap.comcast.net, port 993, og logger inn med hele comcast.net-adressen din og passordet for Xfinity ID-en din. Xfinity blokkerer alle eksterne e-postklienter til du krysser av for Third Party Access Security i innstillingene for Xfinity Email, så slå det på først, ellers blir selv riktig passord avvist. Oppsettet tar et par minutter, og én innboks er gratis, for alltid.",
     "meta0": "1 innboks gratis, for alltid",
     "meta1": "Tredjepartstilgang må være på",
     "meta2": "E-post hentes direkte, lagres aldri"
@@ -30,7 +30,7 @@
   },
   "setup": [
     {
-      "h": "Opprett en gratis mcpemails-konto",
+      "h": "Opprett en gratis MCP Emails-konto",
       "p": "Registrer deg på mcpemails.com. Gratisplanen kobler til én innboks og ber ikke om kort."
     },
     {
@@ -38,7 +38,7 @@
       "p": "Logg inn i Xfinity Email på connect.xfinity.com, klikk tannhjulikonet, velg <b>Settings</b>, deretter <b>Security</b>, og kryss av i boksen under <b>Third Party Access Security</b>. Xfinity advarer deg om risikoen ved eksterne klienter mens du gjør det. Ingenting annet på denne siden fungerer før den boksen er krysset av."
     },
     {
-      "h": "Skriv inn Xfinity ID-en og passordet ditt i mcpemails",
+      "h": "Skriv inn Xfinity ID-en og passordet ditt i MCP Emails",
       "p": "Velg IMAP / SMTP, skriv inn hele <code>@comcast.net</code>-adressen din og passordet for den Xfinity ID-en. Comcast-vertene er forhåndsutfylt. Hvis kontoen din bruker totrinnsbekreftelse, fullfører du den i webmailen først, slik at påloggingen ikke fortsatt venter."
     },
     {
@@ -57,11 +57,11 @@
     },
     {
       "h": "Ingen SPECIAL-USE og ingen MOVE i Comcasts frontend",
-      "p": "Dovecot-frontenden på imap.comcast.net annonserer ikke SPECIAL-USE, så en klient kan ikke spørre hvilken mappe som er Sendt og hvilken som er Papirkurv, og må i stedet matche dem etter navn. Den mangler også MOVE og UIDPLUS, så å flytte en melding til en mappe skjer som COPY, deretter STORE av slettet-flagget, deretter EXPUNGE, og serveren oppgir ikke ID-en til den nye kopien. mcpemails gjør alt dette for deg; det er derfor en flytting hos Comcast ikke er én atomisk operasjon."
+      "p": "Dovecot-frontenden på imap.comcast.net annonserer ikke SPECIAL-USE, så en klient kan ikke spørre hvilken mappe som er Sendt og hvilken som er Papirkurv, og må i stedet matche dem etter navn. Den mangler også MOVE og UIDPLUS, så å flytte en melding til en mappe skjer som COPY, deretter STORE av slettet-flagget, deretter EXPUNGE, og serveren oppgir ikke ID-en til den nye kopien. MCP Emails gjør alt dette for deg; det er derfor en flytting hos Comcast ikke er én atomisk operasjon."
     },
     {
       "h": "Serveren annonserer OAuth-mekanismer du ikke kan bruke",
-      "p": "imap.comcast.net tilbyr OAUTHBEARER og XOAUTH2 sammen med PLAIN og LOGIN. Disse OAuth-mekanismene er for Comcasts egne partnere og ikke for hvem som helst som spør, og det finnes ingen selvbetjeningsside der en kunde kan skaffe et token. Passordautentisering med tredjepartstilgang slått på er veien som er tilgjengelig for deg, og det er den mcpemails bruker."
+      "p": "imap.comcast.net tilbyr OAUTHBEARER og XOAUTH2 sammen med PLAIN og LOGIN. Disse OAuth-mekanismene er for Comcasts egne partnere og ikke for hvem som helst som spør, og det finnes ingen selvbetjeningsside der en kunde kan skaffe et token. Passordautentisering med tredjepartstilgang slått på er veien som er tilgjengelig for deg, og det er den MCP Emails bruker."
     }
   ],
   "limits": [
@@ -71,7 +71,7 @@
   "faq": [
     {
       "q": "Fungerer Claude med Comcast Xfinity-e-post?",
-      "a": "Ikke direkte. Claude har ingen innebygd Comcast-kobling. Kobler du en MCP-server som mcpemails til postkassen over IMAP, får Claude tilgang til å lese, søke, sende, svare, planlegge og organisere i comcast.net-e-posten din, og den samme tilkoblingen fungerer i Cursor, ChatGPT og andre MCP-klienter."
+      "a": "Ikke direkte. Claude har ingen innebygd Comcast-kobling. Kobler du en MCP-server som MCP Emails til postkassen over IMAP, får Claude tilgang til å lese, søke, sende, svare, planlegge og organisere i comcast.net-e-posten din, og den samme tilkoblingen fungerer i Cursor, ChatGPT og andre MCP-klienter."
     },
     {
       "q": "Hva er IMAP- og SMTP-innstillingene for Comcast?",

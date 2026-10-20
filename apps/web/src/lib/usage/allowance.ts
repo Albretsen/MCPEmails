@@ -6,7 +6,7 @@ import type { Database } from '@/types/database.types';
  *
  * ONE DEFINITION. The SQL function `workspace_action_allowance(uuid)`
  * (supabase/migrations/20260912200000_free_action_cap_150.sql) is the only
- * place that knows the Free cap, the 7-day grace, the per-workspace exemption
+ * place that knows the Free cap, the 3-day grace, the per-workspace exemption
  * and the billing window. The MCP edge function enforces off that row, and
  * /api/usage and the dashboard display off the same row through this module,
  * so the number a customer reads is the number that blocks them. Nothing here

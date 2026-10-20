@@ -1,7 +1,7 @@
 const translation = {
   title: '2026 年让 Claude 管理收件箱的最佳方式',
   description: '坦诚盘点 2026 年让 Claude 管理收件箱的几种最佳方式：原生集成、自建 MCP 服务器、复制粘贴、浏览器扩展，以及托管 MCP。',
-  coverAlt: '2026 年让 Claude 管理收件箱的最佳方式 — MCPEmails',
+  coverAlt: '2026 年让 Claude 管理收件箱的最佳方式 — MCP Emails',
   content: `如果你想让 Claude 真正读取、整理并回复你的邮件，2026 年你有五种实际可选的方案：托管式 MCP 邮件服务器、自己运行的自建 MCP 服务器、把邮件会话复制粘贴进聊天框、浏览器扩展，或者邮件客户端的原生集成。对大多数人来说，托管式 MCP 服务器是正确的选择，因为它几秒钟就能用起来，而且从不存储你的邮件。其余方案各有适用的小众场景，其中有几个其实比看上去要差。
 
 这是一篇盘点，不是广告。我会逐一讲清每种方案：它在哪里出彩，在哪里崩盘，以及在什么情况下我会选哪一个。如果你想完整了解底层到底发生了什么，先从这篇支柱指南开始：[如何让你的 AI 智能体访问邮件](/blog/how-to-give-your-ai-agent-email-access)。
@@ -19,17 +19,17 @@ const translation = {
 
 ## 方案一：托管式 MCP 邮件服务器
 
-这就是 [Model Context Protocol](https://modelcontextprotocol.io) 的思路，只不过由别人替你运行。你在控制台里把收件箱连接一次，把一个端点 URL 粘贴进 Claude，智能体就获得了一套干净的邮件工具。Claude 像调用任何其他工具一样调用它们：\`inbox_list\` 查看你的账户，\`email_read\` 列出、读取或搜索邮件，\`email_compose\` 发送、回复或转发，外加 \`email_organize\`、\`folder\`、\`draft\`、\`schedule\` 和 \`contact_search\` 用于标记、文件夹、草稿、定时和联系人——一共八个工具，每个都用一个 \`action\` 参数来选择具体操作。
+这就是 [Model Context Protocol](https://modelcontextprotocol.io) 的思路，只不过由别人替你运行。你在控制台里把收件箱连接一次，把一个端点 URL 粘贴进 Claude，智能体就获得了一套干净的邮件工具。Claude 像调用任何其他工具一样调用它们：\`inbox_list\` 查看你的账户，\`email_read\` 列出、读取或搜索邮件，\`email_compose\` 发送、回复或转发，外加 \`email_organize\`、\`folder\`、\`draft\`、\`schedule\` 和 \`contact_search\` 用于标记、文件夹、草稿、定时和联系人。它们是全部 19 个工具中的核心，其中大多数都用一个 \`action\` 参数来选择具体操作。
 
-MCP Emails 是我自己做的产品，所以这条推荐请你带着这一点来看——但它对大多数人胜出的原因是架构，而不是营销。每一次工具调用都会实时打到你的服务商（Gmail API、Microsoft Graph 或 IMAP/SMTP），把邮件交给 Claude，然后丢弃。**邮件正文从不被存储。** 每个收件箱唯一持久化的东西，是一个加密的 OAuth 令牌或应用专用密码，以 AES-256-GCM 在静态时加密，仅在调用时于一个隔离的 edge function 内部解密。如果你想看看为什么这一点很重要的详细版本，读读[为什么“邮件从不存储”很重要](/blog/why-email-never-stored-matters)。
+MCP Emails 是我自己做的产品，所以这条推荐请你带着这一点来看，但它对大多数人胜出的原因是架构，而不是营销。每一次工具调用都会实时打到你的服务商（Gmail 和大多数服务商走 IMAP/SMTP，Outlook 走 Microsoft Graph），把邮件交给 Claude，然后丢弃。**邮件正文从不被存储。** 每个收件箱唯一持久化的东西，是一个加密的 OAuth 令牌或应用专用密码，以 AES-256-GCM 在静态时加密，只在请求需要时才在我们的服务器上解密，并且从不发送给 Claude。如果你想看看为什么这一点很重要的详细版本，读读[为什么“邮件从不存储”很重要](/blog/why-email-never-stored-matters)。
 
-设置过程是真的快。在 claude.ai 里，你进入 **Customize → Connectors → Add connector**，粘贴 \`https://www.mcpemails.com/api/mcp\`，点击 Connect，登录你的 MCP Emails 账户，并批准你想要的权限范围（\`read:email\`、\`send:email\`，或两者都要）。不用 API key，不用 SDK，不用配置文件。如果你想要逐步点击的说明，这里有一篇[两分钟连接指南](/blog/connect-email-to-ai-agent-under-2-minutes)。
+设置过程是真的快。在 claude.ai 里，你进入 **Customize → Connectors → Add connector**，粘贴 \`https://www.mcpemails.com/api/mcp\`，点击 Connect，登录你的 MCP Emails 账户，并批准你想要的权限范围（\`read:email\`、\`send:email\`，或两者都要）。不用 API key，不用 SDK，不用配置文件。如果你想要逐步点击的说明，这里有一篇[两分钟连接指南](/blog/connect-email-to-ai-agent-under-2-minutes)。[将 Claude 连接到邮箱的完整指南](/blog/connect-claude-to-email)则会逐一讲解每个服务商。
 
 **适合：** 几乎所有人——非技术用户、同时拥有 Gmail、Outlook 和 IMAP 的人，以及任何在意正文不被存储的人。
 
 **诚实的取舍：** 它是你认证链路里的一个第三方服务（你可以在控制台里一键吊销，但你是在信任托管方的安全模型）。而且没有 webhook。要对新邮件做出反应，Claude 必须轮询——按计划定期以 \`action: list\` 和 \`unread: true\` 去调用 \`email_read\`。推送通知在 MCP 里并不存在。任何声称能实时响应邮件的工具，要么是在底层偷偷轮询，要么是在存储你的邮件。
 
-免费档永远是 $0，可连接一个收件箱，上限为每分钟 60 个请求。Personal（每月 9 美元）最多可连接三个收件箱并提高突发上限；Pro（每月 15 美元）可连接你拥有的每一个邮箱；Team 再加上成员与角色。在这里成本很少是决定性因素。
+免费档永远是 $0，可连接一个收件箱，上限为每分钟 60 个请求。Personal（每月 9 美元）最多可连接三个收件箱并提高突发上限；Pro（每月 15 美元）最多可连接 10 个；Business 再加上成员与角色。在这里成本很少是决定性因素。
 
 ## 方案二：自建 / 自托管 MCP 服务器
 
@@ -75,7 +75,7 @@ MCP Emails 是我自己做的产品，所以这条推荐请你带着这一点来
 
 **跳过浏览器扩展**，除非你常驻 Gmail 网页端，并且仔细读过它的数据政策。**跳过原生集成**，除非你那个客户端已经自带该功能，而且你是个单客户端、单服务商的人。
 
-还有一件事，把认真的方案和玩具区分开来：发送。在 MCP Emails 里，\`email_compose\`（action 为 send 或 reply）都经由你自己的服务商发出——Gmail API、Microsoft Graph 或你的 SMTP——所以你的域名信誉仍归你所有，会话关联头也会自动设置好。从别人域名中转出去的邮件，是一场迟早要爆发的送达性问题。
+还有一件事，把认真的方案和玩具区分开来：发送。在 MCP Emails 里，\`email_compose\`（action 为 send 或 reply）都经由你自己的服务商发出（Gmail 的 SMTP、Microsoft Graph 或你的服务商的 SMTP），所以你的域名信誉仍归你所有，会话关联头也会自动设置好。从别人域名中转出去的邮件，是一场迟早要爆发的送达性问题。
 
 ## 开始上手
 

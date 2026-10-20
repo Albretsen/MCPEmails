@@ -8,7 +8,7 @@ import { ApprovalNotFound } from '../../../components/approvals/ApprovalNotFound
  * outbound mail.
  */
 export const metadata = {
-  title: 'Review unavailable · MCP Emails',
+  title: 'Review unavailable',
   robots: { index: false, follow: false },
 };
 

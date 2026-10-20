@@ -31,12 +31,13 @@ import {
   draftActionContextLine,
   draftCallOutcome,
   draftSavedContextLine,
+  modelContextCapability,
   outboundApproveOpenedContextLine,
   outboundRejectContextLine,
   type DraftCall as ModelDraftCall,
 } from "../model-context";
 import { cardKey, isRestoreStub, lastDashboardUrl } from "../persist";
-import { onDraftSignal, SIGNAL_GAP_MS, signalTag } from "../draft-signal";
+import { claimDraft, onDraftSignal, SIGNAL_GAP_MS, signalTag } from "../draft-signal";
 import {
   acceptDeferredBody,
   acceptRehydration,
@@ -57,6 +58,7 @@ import {
   REPLAY_AGE_MS,
   setState,
   subscribe,
+  supersededBy,
 } from "../store";
 import { BulkPlan } from "./BulkPlan";
 import { DraftEditor, type DraftPatch } from "./DraftEditor";
@@ -102,6 +104,11 @@ function absoluteUrl(url: string | null | undefined): string | null {
  * the answer is known.
  */
 function Diagnostics(props: { bridge: HostBridge }) {
+  // The model-context counters live on the bridge, not in the store, so a
+  // reply landing re-rendered nothing: QA 2026-10-17 read 0/0/0 right after a
+  // save. Subscribe to them directly.
+  const [, bump] = useState(0);
+  useEffect(() => props.bridge.onModelContextChange(() => bump((n) => n + 1)), [props.bridge]);
   const s = getState();
   const h = props.bridge.hostInfo ?? {};
   const line = [
@@ -126,9 +133,14 @@ function Diagnostics(props: { bridge: HostBridge }) {
     // ui/update-model-context: whether the host advertised it at initialize,
     // then answered ok / answered with an error / sent. The question QA
     // 2026-10-15 could not answer about Claude, written down where it shows.
-    `mctx ${props.bridge.hostCapabilities.updateModelContext ? "cap" : "nocap"} ${
+    // The capability is shown with the modalities it listed (QA 2026-10-17:
+    // "cap" alone could not say whether Claude takes text or only structured
+    // content), and the last refusal's code when there was one.
+    `mctx ${modelContextCapability(props.bridge.hostCapabilities.updateModelContext)} ${
       props.bridge.modelContext.ok
-    }/${props.bridge.modelContext.failed}/${props.bridge.modelContext.sent}`,
+    }/${props.bridge.modelContext.failed}/${props.bridge.modelContext.sent}${
+      props.bridge.modelContextLastError ? ` err ${props.bridge.modelContextLastError.slice(0, 40)}` : ""
+    }`,
     // Expected to be 0 forever. A non-zero count means the host pushed a
     // result belonging to a different call into this card (store.ts).
     ...(s.uncorrelatedResults ? [`xcall ${s.uncorrelatedResults}`] : []),
@@ -589,12 +601,20 @@ export function App(props: { bridge: HostBridge }) {
   // inbox (draft-signal.ts). That is a reason to look NOW rather than after
   // `REPLAY_AGE_MS`, so the age test is skipped; `SIGNAL_GAP_MS` still keeps a
   // burst of hints (both carriers, several cards) to one read.
+  //
+  // `foldedFor`: the hint itself already folded this card, naming that revision
+  // of the same draft (see the listener below). This read lays the newer
+  // version under any unsaved edits the fold keeps, so "Show" and Save work
+  // against it, and it is what keeps the hint a hint: a read that finds no
+  // such revision and nothing newer from the assistant unfolds the card again.
+  // The only read a folded card makes.
   const lastHinted = useRef(0);
-  const attentionCheck = async (hinted = false) => {
+  const attentionCheck = async (hinted = false, foldedFor: number | null = null) => {
     const s = getState();
     const d = s.envelope?.draft;
     if (!d || s.envelope?.card !== "draft_editor" || isRestoreStub(s.envelope)) return;
-    if (s.draftCheck !== "trusted" || s.draftSuperseded || busyNow.current !== null) return;
+    const folding = foldedFor !== null;
+    if (s.draftCheck !== "trusted" || (s.draftSuperseded && !folding) || busyNow.current !== null) return;
     if (hinted) {
       if (Date.now() - lastHinted.current < SIGNAL_GAP_MS) return;
       lastHinted.current = Date.now();
@@ -615,13 +635,65 @@ export function App(props: { bridge: HostBridge }) {
       if (!draftStored(next) || isFailure(next)) return;
       const got = next!.draft!;
       if (got.draft_id !== asked && got.resolved_from !== asked) return;
+      const newer = supersededBy(d, got) ||
+        (typeof got.revision === "number" && foldedFor !== null && got.revision >= foldedFor);
       adoptOwnAnswer(next!);
+      if (folding && !newer) setState({ draftSuperseded: false });
     } catch {
       /* a check nobody asked for: the next action will say what is wrong */
     }
   };
   const onAttention = useRef(attentionCheck);
   onAttention.current = attentionCheck;
+
+  // ---- one current card per draft (2026-10-17) -----------------------------
+  //
+  // Every id this card has held for its draft, oldest first: on IMAP each save
+  // retires the id, and another card may hold any of them. A claim names them
+  // all (draft-signal.ts#claimDraft).
+  const heldIds = useRef<string[]>([]);
+  {
+    const d = store.envelope?.card === "draft_editor" ? store.envelope.draft : null;
+    for (const id of [d?.resolved_from, d?.draft_id]) {
+      if (id && !heldIds.current.includes(id)) heldIds.current.push(id);
+    }
+  }
+  /**
+   * Tell every other card for this draft that this one is current now.
+   * `pending`: Save was just pressed and has not answered; `release`: that
+   * save did not store, so the pending claim is withdrawn (draft-signal.ts,
+   * "AT THE PRESS").
+   */
+  const claim = (opts: { pending?: boolean; release?: boolean } = {}) => {
+    const s = getState();
+    const d = s.envelope?.draft;
+    if (!d || s.envelope?.card !== "draft_editor") return;
+    claimDraft({
+      ids: [...heldIds.current, d.resolved_from, d.draft_id],
+      revision: d.revision ?? null,
+      mounted: s.mountedRevision,
+      inbox_id: d.identity?.inbox_id ?? null,
+      ...opts,
+    });
+  };
+  /**
+   * The frame whose PENDING claim folded this card, while that fold stands.
+   * Only its release unfolds the card; any later fold clears it.
+   */
+  const takenBy = useRef<string | null>(null);
+  /**
+   * "Open here" on a folded card: read the draft as the mailbox holds it now,
+   * then make this card the current one and fold the others. The flag is
+   * cleared only AFTER the read is adopted: `adoptOwnAnswer` would otherwise
+   * find the newer agent revision again and fold this card straight back.
+   */
+  const takeOver = async (): Promise<boolean> => {
+    const env = await readDraft();
+    if (!env) return false;
+    setState({ draftSuperseded: false });
+    claim();
+    return true;
+  };
   useEffect(() => {
     const onFocus = () => void onAttention.current();
     // Becoming visible again (the chat's tab came back) is the same moment as
@@ -647,17 +719,60 @@ export function App(props: { bridge: HostBridge }) {
     } catch {
       io = null;
     }
-    // Another card frame mounted this draft (or one in the same inbox).
+    // Another card frame mounted this draft (or one in the same inbox), or
+    // took it over.
     const off = onDraftSignal((sig) => {
       const st = getState();
       const d = st.envelope?.draft;
       if (!d || st.envelope?.card !== "draft_editor") return;
-      const mine = [d.draft_id, d.resolved_from, st.draftIdHint]
+      const mine = [d.draft_id, d.resolved_from, st.draftIdHint, ...heldIds.current]
         .map((id) => signalTag(id))
         .filter((t): t is string => !!t);
       const sameDraft = sig.ids.some((t) => mine.includes(t));
+      // A claim folds this card at once, with no read: another card is the
+      // current one now. The live review's bug was the ~5 s between an older
+      // card's Save and this card noticing, with Send on in both.
+      if (sig.kind === "release") {
+        // The pending claim that folded this card ended in no save, so what
+        // this card holds is still the current draft.
+        if (takenBy.current === null || takenBy.current !== sig.from) return;
+        takenBy.current = null;
+        if (st.draftSuperseded && st.supersededAt.why === "taken") setState({ draftSuperseded: false });
+        return;
+      }
+      if (sig.kind === "claim") {
+        if (!sameDraft || isRestoreStub(st.envelope)) return;
+        // Both carriers deliver one claim, so the second copy keeps the mark.
+        takenBy.current = sig.pending && (!st.draftSuperseded || takenBy.current === sig.from)
+          ? sig.from
+          : null;
+        const mounted = st.mountedRevision;
+        const where = sig.mounted === null || mounted === null || sig.mounted === mounted
+          ? "other" as const
+          : sig.mounted < mounted
+          ? "above" as const
+          : "below" as const;
+        setState({ draftSuperseded: true, supersededAt: { why: "taken", where } });
+        return;
+      }
       const sameInbox = sig.inbox !== null && sig.inbox === signalTag(d.identity?.inbox_id);
       if (!sameDraft && !sameInbox) return;
+      // A fresh card for the same draft at a revision above this card's is a
+      // newer card, by construction (only a tool call that wrote the draft
+      // announces). Fold NOW, so there is never a moment with Send on in
+      // both, then read once so the fold's kept edits sit on the newer text.
+      if (
+        sameDraft && typeof sig.revision === "number" && typeof d.revision === "number" &&
+        sig.revision > d.revision && !st.draftSuperseded && !isRestoreStub(st.envelope) &&
+        st.draftCheck === "trusted" && busyNow.current === null
+      ) {
+        // Inside the gap the read would be skipped, and a fold must always
+        // come with its read (above). A real newer card is heard on the first.
+        if (Date.now() - lastHinted.current < SIGNAL_GAP_MS) return;
+        setState({ draftSuperseded: true, supersededAt: { why: "newer", where: "below" } });
+        void onAttention.current(true, sig.revision);
+        return;
+      }
       // The same draft at a revision this card already holds is nothing new.
       if (
         sameDraft && typeof sig.revision === "number" && typeof d.revision === "number" &&
@@ -699,6 +814,8 @@ export function App(props: { bridge: HostBridge }) {
       : "still_there";
     setFailure({ action, code, settled });
     if (settled === "landed") tellSaved(env.draft, patch);
+    // Settles the pending claim sent at the press (draft-signal.ts).
+    if (action === "save") claim(settled === "landed" ? {} : { release: true });
   };
 
   /**
@@ -1334,6 +1451,9 @@ export function App(props: { bridge: HostBridge }) {
 
       const save = async (patch: DraftPatch): Promise<boolean> => {
         if (Object.keys(patch).length === 0) return true;
+        // Every other card for the draft folds NOW, not when the save answers
+        // (re-test 2026-10-17: ~3.5 to 5 s of Send on in the newer card).
+        claim({ pending: true });
         const r = await callDraft("save", "draft_editor_save", {
           ...writeTarget(),
           ...patch,
@@ -1345,8 +1465,14 @@ export function App(props: { bridge: HostBridge }) {
           void reconcile("save", r.lost, patch);
           return false;
         }
-        if (!draftStored(r.env)) return false;
+        if (!draftStored(r.env)) {
+          claim({ release: true });
+          return false;
+        }
         tellSaved(r.env!.draft!, patch);
+        // A save makes this card the current one (store.ts#adoptOwnAnswer
+        // unfolds it); every other card for the draft folds at once.
+        claim();
         return true;
       };
 
@@ -1386,6 +1512,7 @@ export function App(props: { bridge: HostBridge }) {
           scope={draftScope}
           sendDoubt={sendDoubt}
           superseded={store.draftSuperseded}
+          supersededAt={store.supersededAt}
           actions={{
             save,
             allowSend: () => setSendDoubt(false),
@@ -1395,6 +1522,7 @@ export function App(props: { bridge: HostBridge }) {
               // wire when the user is looking at a newer one.
               if (sendDoubt) return;
               if (patch && Object.keys(patch).length > 0) {
+                claim({ pending: true });
                 const saved = await callDraft(
                   "send",
                   "draft_editor_save",
@@ -1405,8 +1533,12 @@ export function App(props: { bridge: HostBridge }) {
                   void reconcile("save", saved.lost, patch);
                   return;
                 }
-                if (!draftStored(saved.env)) return;
+                if (!draftStored(saved.env)) {
+                  claim({ release: true });
+                  return;
+                }
                 tellSaved(saved.env!.draft!, patch);
+                claim();
                 // No "the save followed an older id" stop here any more: the
                 // server refuses such a save as `draft_changed` (contract §8),
                 // so a stored save never carries `resolved_from`.
@@ -1463,8 +1595,8 @@ export function App(props: { bridge: HostBridge }) {
                 const id = held.draft_id || "unknown";
                 void bridge.updateModelContext(
                   how === "sent"
-                    ? `The user pressed Discard on draft ${id} in the MCP Emails card, but that draft had already been sent. Nothing was deleted, and that draft_id no longer resolves.`
-                    : `The user pressed Discard on draft ${id} in the MCP Emails card. It was already gone from Drafts, so that draft_id no longer resolves.`,
+                    ? `The user pressed Delete draft on draft ${id} in the MCP Emails card, but that draft had already been sent. Nothing was deleted, and that draft_id no longer resolves.`
+                    : `The user pressed Delete draft on draft ${id} in the MCP Emails card. It was already gone from Drafts, so that draft_id no longer resolves.`,
                 );
                 return;
               }
@@ -1478,6 +1610,7 @@ export function App(props: { bridge: HostBridge }) {
             },
             refresh: () => void readDraft(),
             loadCurrent: () => readDraft().then((env) => !!env),
+            takeOver,
             // The opt-out. `scope` is passed through from the card's confirm
             // row rather than defaulted here, because "hide this" is ambiguous
             // between this mailbox and every mailbox and the two are different

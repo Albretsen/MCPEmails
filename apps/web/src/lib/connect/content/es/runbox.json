@@ -21,7 +21,7 @@
     "titleLine1": "Conecta Runbox a Claude,",
     "titleLine2": "Cursor, ChatGPT, cualquier cliente MCP",
     "lead": "Dale a tu agente de IA una bandeja real de Runbox. Lee, busca, envía, responde, programa y organiza correo por IMAP, en todos los clientes MCP y no solo en uno, con la regla de la App Password y el fallo de autenticación silencioso explicados.",
-    "answer": "Claude no puede acceder a Runbox por sí solo. mcpemails es un servidor MCP alojado que lo conecta por IMAP en mail.runbox.com en el puerto 993, y por SMTP en el mismo servidor en el puerto 465, para que Claude, Cursor o cualquier cliente MCP pueda leer, buscar, enviar y organizar ese correo. Inicia sesión con tu dirección principal de Runbox, nunca con un alias. Si la cuenta tiene activada la autenticación de dos factores, tu contraseña normal de Runbox deja de autenticar IMAP, POP, SMTP o CalDAV por completo y tienes que usar una App Password (contraseña de aplicación) creada en tu cuenta de Runbox. Una bandeja es gratis, para siempre.",
+    "answer": "Claude no puede acceder a Runbox por sí solo. MCP Emails es un servidor MCP alojado que lo conecta por IMAP en mail.runbox.com en el puerto 993, y por SMTP en el mismo servidor en el puerto 465, para que Claude, Cursor o cualquier cliente MCP pueda leer, buscar, enviar y organizar ese correo. Inicia sesión con tu dirección principal de Runbox, nunca con un alias. Si la cuenta tiene activada la autenticación de dos factores, tu contraseña normal de Runbox deja de autenticar IMAP, POP, SMTP o CalDAV por completo y tienes que usar una App Password (contraseña de aplicación) creada en tu cuenta de Runbox. Una bandeja es gratis, para siempre.",
     "meta0": "1 bandeja gratis, para siempre",
     "meta1": "App Password cuando la 2FA está activa",
     "meta2": "El correo se obtiene en vivo, nunca se almacena"
@@ -32,7 +32,7 @@
   },
   "setup": [
     {
-      "h": "Crea tu cuenta gratis de mcpemails",
+      "h": "Crea tu cuenta gratis de MCP Emails",
       "p": "Regístrate en mcpemails.com. El plan gratuito conecta una bandeja, para siempre, sin tarjeta. Al final obtienes una URL MCP y una clave."
     },
     {
@@ -40,7 +40,7 @@
       "p": "Inicia sesión en Runbox en la web y abre la pantalla App Passwords en los ajustes de tu cuenta. Ponle un nombre que identifique esta conexión, envía el formulario y copia el valor. Hazlo tanto si usas autenticación de dos factores como si no: una App Password se puede revocar por separado, y Runbox no permite usar App Passwords para entrar al webmail, así que la credencial guardada aquí no sirve para iniciar sesión y modificar tu cuenta."
     },
     {
-      "h": "Añade el buzón en mcpemails con tu dirección principal",
+      "h": "Añade el buzón en MCP Emails con tu dirección principal",
       "p": "Elige IMAP / SMTP. Escribe tu dirección <b>principal</b> de Runbox como nombre de usuario, que es la dirección que aparece arriba a la derecha en el webmail de Runbox cuando has iniciado sesión, y pega la App Password. El servidor viene rellenado como <code>mail.runbox.com</code> para ambos sentidos y se verificó mediante una conexión TLS real."
     },
     {
@@ -51,7 +51,7 @@
   "gotchas": [
     {
       "h": "Runbox no anuncia SASL-IR, y la mayoría de las bibliotecas cliente lo dan por hecho",
-      "p": "El servidor responde con un simple <code>* OK IMAP4 ready</code> y ofrece <code>AUTH=PLAIN</code> sin la capacidad SASL-IR, así que rechaza la autenticación en un solo paso que envía las credenciales junto con el comando AUTHENTICATE. Un cliente que da por hecho SASL-IR recibe un BAD a secas sin explicación, y todas las capas superiores lo presentan como un fallo de inicio de sesión, así que acabas buscando un problema de contraseña que no existe. mcpemails detecta el BAD y recurre al intercambio en dos pasos, de modo que aquí la conexión se completa. Por eso muchas herramientas IMAP por lo demás sólidas fallan con Runbox y funcionan en todas partes."
+      "p": "El servidor responde con un simple <code>* OK IMAP4 ready</code> y ofrece <code>AUTH=PLAIN</code> sin la capacidad SASL-IR, así que rechaza la autenticación en un solo paso que envía las credenciales junto con el comando AUTHENTICATE. Un cliente que da por hecho SASL-IR recibe un BAD a secas sin explicación, y todas las capas superiores lo presentan como un fallo de inicio de sesión, así que acabas buscando un problema de contraseña que no existe. MCP Emails detecta el BAD y recurre al intercambio en dos pasos, de modo que aquí la conexión se completa. Por eso muchas herramientas IMAP por lo demás sólidas fallan con Runbox y funcionan en todas partes."
     },
     {
       "h": "Activar la 2FA rompe todos los protocolos a la vez, no solo el correo",
@@ -67,14 +67,14 @@
     }
   ],
   "limits": [
-    "Conectar un buzón de Runbox a un cliente de IA implica que ese proveedor de IA lee el contenido de los mensajes con los que trabaja. mcpemails obtiene el correo en vivo de mail.runbox.com en cada solicitud y no almacena el cuerpo de los mensajes, y las credenciales se cifran en reposo, pero el texto sigue llegando a Claude, Cursor o el cliente que conectes. La jurisdicción noruega de Runbox y sus compromisos de privacidad cubren a Runbox. No se extienden a un proveedor de IA que tú mismo conectes al buzón.",
+    "Conectar un buzón de Runbox a un cliente de IA implica que ese proveedor de IA lee el contenido de los mensajes con los que trabaja. MCP Emails obtiene el correo en vivo de mail.runbox.com en cada solicitud y no almacena el cuerpo de los mensajes, y las credenciales se cifran en reposo, pero el texto sigue llegando a Claude, Cursor o el cliente que conectes. La jurisdicción noruega de Runbox y sus compromisos de privacidad cubren a Runbox. No se extienden a un proveedor de IA que tú mismo conectes al buzón.",
     "El servidor no anuncia SPECIAL-USE, así que nada en el protocolo indica qué carpeta es Sent, Drafts, Trash o Spam, y las funciones se deducen de los nombres. Si renombraste carpetas en Runbox 7, o tienes más de una carpeta Sent de una importación antigua, indica la carpeta explícitamente cuando pidas a un agente que archive algo.",
     "Como falta MOVE, mover un mensaje no es atómico. Si la conexión se corta a mitad, un mensaje puede existir brevemente tanto en la carpeta de origen como en la de destino."
   ],
   "faq": [
     {
       "q": "¿Funciona Claude con Runbox?",
-      "a": "No directamente. Claude no tiene un conector de Runbox integrado. Conectar un servidor MCP como mcpemails a tu buzón de Runbox por IMAP le da a Claude acceso para leer, buscar, enviar, responder, programar y organizar, y la misma conexión funciona después en Cursor, ChatGPT y otros clientes MCP sin volver a configurar nada."
+      "a": "No directamente. Claude no tiene un conector de Runbox integrado. Conectar un servidor MCP como MCP Emails a tu buzón de Runbox por IMAP le da a Claude acceso para leer, buscar, enviar, responder, programar y organizar, y la misma conexión funciona después en Cursor, ChatGPT y otros clientes MCP sin volver a configurar nada."
     },
     {
       "q": "¿Cuáles son los ajustes IMAP y SMTP de Runbox?",
@@ -86,7 +86,7 @@
     },
     {
       "q": "¿Por qué falla mi inicio de sesión en Runbox sin un error útil?",
-      "a": "Normalmente porque el cliente dio por hecha la capacidad SASL-IR, que Runbox no anuncia. El servidor responde con un BAD a secas al intento de autenticación en un solo paso y el cliente lo presenta como un fallo de credenciales. mcpemails reintenta con el intercambio en dos pasos, así que aquí la conexión funciona. La otra causa habitual es escribir un alias en lugar de tu dirección principal."
+      "a": "Normalmente porque el cliente dio por hecha la capacidad SASL-IR, que Runbox no anuncia. El servidor responde con un BAD a secas al intento de autenticación en un solo paso y el cliente lo presenta como un fallo de credenciales. MCP Emails reintenta con el intercambio en dos pasos, así que aquí la conexión funciona. La otra causa habitual es escribir un alias en lugar de tu dirección principal."
     },
     {
       "q": "¿Puedo iniciar sesión con una dirección alias de Runbox?",

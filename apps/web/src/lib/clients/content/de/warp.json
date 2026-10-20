@@ -1,0 +1,88 @@
+{
+  "_sources": [
+    "apps/web/components/dashboard/Pages.jsx (MCP_CLIENTS) + apps/web/messages/en/dashboard.json (clients.*)",
+    "apps/web/app/.well-known/oauth-authorization-server/route.ts",
+    "https://docs.warp.dev/agent-platform/capabilities/mcp/"
+  ],
+  "meta": {
+    "title": "E-Mail mit Warp verbinden: MCP-Server-Setup für Agenten",
+    "description": "Fügen Sie Warp-Agenten ein echtes Postfach hinzu. Settings, Agents, MCP servers, einen Streamable-HTTP-Server per URL hinzufügen und OAuth im Browser abschließen. Kein API-Schlüssel. Ein Postfach kostenlos."
+  },
+  "hero": {
+    "eyebrow": "Warp + E-Mail",
+    "titleLine1": "Verbinden Sie Ihr Postfach mit Warp",
+    "titleLine2": "und seinen Agenten",
+    "lead": "Geben Sie dem Terminal ein echtes Postfach. E-Mails aus einem Warp-Agenten lesen, suchen, senden, beantworten, weiterleiten, planen und organisieren, über alle verbundenen Postfächer hinweg.",
+    "meta0": "1 Postfach kostenlos, dauerhaft",
+    "meta1": "OAuth, kein API-Schlüssel nötig",
+    "meta2": "E-Mails werden live abgerufen, nie gespeichert",
+    "answer": "Öffnen Sie Settings, Agents, MCP servers, klicken Sie auf Add, wählen Sie den Tab Streamable HTTP or SSE Server (URL), fügen Sie https://mcpemails.com/api/mcp ein und bestätigen Sie. Warp schließt den OAuth-Ablauf im Browser ab, sobald Sie dazu aufgefordert werden."
+  },
+  "method": {
+    "title": "So verbindet sich Warp: OAuth, kein API-Schlüssel",
+    "body": "Warp durchläuft mit diesem Server den standardmäßigen MCP-OAuth-Ablauf. Der Client registriert sich selbst per <b>dynamischer Client-Registrierung nach RFC 7591</b>, Sie müssen also keine Client-ID anlegen, und autorisiert sich per <b>Autorisierungscode mit PKCE</b> (S256). Ein Client-Secret wird nie übertragen, und das Token enthält nur die Scopes, die Sie auf unserem Zustimmungsbildschirm freigeben. Das Zugriffstoken gilt eine Stunde und erneuert sich selbst. Sie finden es unter Dashboard, API-Schlüssel als <code>OAuth:</code> mit dem Namen des Clients dahinter, und dort widerrufen Sie die Verbindung auch."
+  },
+  "setup": [
+    {
+      "h": "Kostenloses Konto erstellen und Postfach verbinden",
+      "p": "Registrieren Sie sich auf mcpemails.com, ohne Kreditkarte, und öffnen Sie dann Dashboard, Postfächer, Postfach verbinden. Outlook und Microsoft 365 verbinden Sie über „Mit Microsoft anmelden“; Gmail, iCloud, Fastmail, Yahoo, Zoho und Yandex nutzen ein App-Passwort; alle anderen Postfächer verbinden sich ganz normal per IMAP und SMTP. Der Free-Tarif umfasst ein Postfach, dauerhaft."
+    },
+    {
+      "h": "MCP-Einstellungen öffnen",
+      "p": "Öffnen Sie <b>Settings</b>, dann <b>Agents</b>, dann <b>MCP servers</b>, und klicken Sie auf <b>+ Add</b>."
+    },
+    {
+      "h": "URL-Tab wählen",
+      "p": "Wählen Sie den Tab <b>Streamable HTTP or SSE Server (URL)</b>, nicht den befehlsbasierten."
+    },
+    {
+      "h": "Einfügen und autorisieren",
+      "p": "Fügen Sie <code>https://mcpemails.com/api/mcp</code> ein, bestätigen Sie und schließen Sie den OAuth-Ablauf im Browser ab, wenn Sie dazu aufgefordert werden. Geben Sie die Scopes frei, die der Agent erhalten soll."
+    }
+  ],
+  "gotchas": [
+    {
+      "h": "Wählen Sie den URL-Tab, nicht den Befehls-Tab",
+      "p": "Warp bietet einen befehlsbasierten und einen URL-basierten Server an. Dieser Server ist gehostet, es gibt also keinen Befehl zum Ausführen und kein Paket zum Installieren. Nur der URL-Tab kann funktionieren, und mit dem anderen entsteht ein Server, der nie startet."
+    },
+    {
+      "h": "Ein Terminal-Agent läuft lange und unbeaufsichtigt",
+      "p": "Das ist der Reiz, und genau deshalb zählt hier die Entscheidung über die Scopes. Ein Agent, der mit <code>send:email</code> eine Aufgabenliste abarbeitet, kann an jeder Stelle dieser Liste jemandem eine E-Mail schicken. Lassen Sie den Scope weg oder schalten Sie die menschliche Freigabe ein, damit Sendungen auf eine Person warten. So bleibt der Nutzen, ohne die Überraschung."
+    },
+    {
+      "h": "Nichts kommt von selbst",
+      "p": "Der Server arbeitet rein nach Anfrage und Antwort, ohne Webhooks und ohne Push. Ein Warp-Agent sieht E-Mails, wenn er nachsieht, und erst eine geplante oder ausdrücklich angeforderte Prüfung macht daraus eine Überwachung. Achten Sie auf die Ratenlimits, wenn Sie häufig abfragen."
+    }
+  ],
+  "limits": [
+    "Anfragen sind auf 100 pro Minute, 1.000 pro Stunde und 10.000 pro Tag je Schlüssel begrenzt, dazu kommt die Obergrenze Ihres Tarifs für abrechenbare Aktionen.",
+    "Der Server arbeitet rein nach Anfrage und Antwort. Es gibt keine Webhooks und keine vom Server ausgelösten Ereignisse, neue E-Mails wecken Ihren Agenten also nie von selbst. Um auf eingehende E-Mails zu reagieren, fragen Sie in festen Abständen ab.",
+    "E-Mails werden bei jedem Aufruf live von Ihrem Anbieter abgerufen und nie gespeichert. Gespeichert wird nur das verschlüsselte OAuth-Token oder App-Passwort. Ein widerrufenes Token oder ein geändertes Postfachpasswort beendet den Zugriff deshalb sofort."
+  ],
+  "faq": [
+    {
+      "q": "Wie verbinde ich meine E-Mails mit Warp?",
+      "a": "Öffnen Sie Settings, Agents, MCP servers, klicken Sie auf Add, wählen Sie den Tab Streamable HTTP or SSE Server (URL), fügen Sie https://mcpemails.com/api/mcp ein, bestätigen Sie und schließen Sie dann den OAuth-Ablauf im Browser ab. Danach haben Warp-Agenten Tools zum Lesen, Suchen, Senden, Beantworten, Weiterleiten, Organisieren und Planen von E-Mails."
+    },
+    {
+      "q": "Brauche ich für Warp einen API-Schlüssel?",
+      "a": "Nein. Warp schließt mit diesem Server einen OAuth-Ablauf im Browser ab, es landet also nichts Geheimes in den Einstellungen. Für Skripte und Rechner ohne Oberfläche bleibt ein Bearer-Schlüssel verfügbar."
+    },
+    {
+      "q": "Welche Postfächer erreicht Warp auf diesem Weg?",
+      "a": "Outlook.com und Microsoft 365 über „Mit Microsoft anmelden“, wobei bei einem Arbeitskonto eventuell einmalig die IT-Administration die App freigeben muss; Gmail, iCloud, Fastmail, Yahoo, Zoho und Yandex mit einem App-Passwort; und jedes andere Postfach, das IMAP und SMTP auf den Standardports spricht. Der Client sieht alle über dieselbe Verbindung: Ihr Agent ruft zuerst inbox_list auf und findet so jedes verbundene Postfach samt ID. Sie müssen also nirgends UUIDs einfügen."
+    },
+    {
+      "q": "Kann ein Warp-Agent E-Mails senden, ohne dass ich es mitbekomme?",
+      "a": "Nur wenn Sie es zulassen. Senden erfordert den Scope send:email, ein Schlüssel oder Token ohne diesen Scope kann also überhaupt nicht senden. Zusätzlich kann der Inhaber eines Postfachs im Dashboard eine menschliche Freigabe verlangen. Dann wartet jedes Senden, Antworten, Weiterleiten, Senden eines Entwurfs und geplante Senden, bis eine Person es freigibt."
+    },
+    {
+      "q": "Werden meine E-Mails auf Ihren Servern gespeichert?",
+      "a": "Nein. Jede Nachricht wird für die Anfrage, die sie anfordert, live von Ihrem Anbieter abgerufen und direkt an Ihren Client übergeben. Gespeichert wird nur das verschlüsselte OAuth-Token oder App-Passwort, damit spätere Aufrufe sich authentifizieren können. Wenn Sie das Postfach im Dashboard löschen oder den Zugriff bei Ihrem Anbieter widerrufen, endet die Verbindung sofort."
+    }
+  ],
+  "ctaBand": {
+    "title": "Geben Sie Ihrem Terminal ein echtes Postfach",
+    "sub": "Eine URL, eine Anmeldung. Ein Postfach dauerhaft kostenlos, keine Kreditkarte nötig."
+  }
+}

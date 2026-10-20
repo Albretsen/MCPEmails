@@ -343,6 +343,10 @@ export function AutoTextarea(props: {
       id={props.id}
       ref={ref}
       class="textarea"
+      // Each box picks its direction from its first strong character, and
+      // `.textarea`'s `unicode-bidi: plaintext` does it per line, so an Arabic
+      // line in a Norwegian message sits on the right (styles.css).
+      dir="auto"
       rows={1}
       aria-label={props.ariaLabel}
       value={props.value}
@@ -393,5 +397,5 @@ export function HtmlBody(props: { html: string; preview?: boolean }) {
       for (const img of Array.from(node.querySelectorAll(".img-placeholder"))) img.remove();
     }
   }, [props.html, props.preview]);
-  return <div class="body-full body-html" ref={ref} />;
+  return <div class="body-full body-html" dir="auto" ref={ref} />;
 }

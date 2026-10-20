@@ -24,7 +24,7 @@ En el panel de MCP Emails, abre **Inboxes**, luego **Connect Inbox**, y elige tu
 
 ### Gmail y Google Workspace
 
-Gmail se conecta de forma predeterminada con una contraseña de aplicación de Google sobre IMAP, y también está disponible el inicio de sesión con OAuth de Google. Usa la contraseña de aplicación si un administrador de Workspace restringe el acceso de aplicaciones de terceros. La [guía de Gmail](/blog/connect-gmail-to-claude) tiene los pasos.
+Gmail se conecta con una contraseña de aplicación de Google sobre IMAP. Activa la verificación en dos pasos, crea la contraseña de aplicación en myaccount.google.com/apppasswords y pega las 16 letras con tu dirección de Gmail completa; tu contraseña normal de Google no funciona. Un administrador de Google Workspace puede desactivar las contraseñas de aplicación para el dominio, así que pregúntale si no ves la opción. La [guía de Gmail](/blog/connect-gmail-to-claude) tiene los pasos.
 
 ### iCloud, Fastmail, Yahoo y Zoho
 
@@ -79,7 +79,7 @@ Para rutinas repetibles, empieza por la [guía de triaje de la bandeja de entrad
 
 MCP Emails entrega a ChatGPT herramientas concretas en vez de una contraseña o una conexión IMAP en bruto:
 
-- **Leer y buscar:** \`email_read\` cubre list, read, read_batch, search y attachment. Las búsquedas de Gmail admiten operadores como \`from:\` e \`is:unread\`.
+- **Leer y buscar:** \`email_read\` cubre list, read, read_batch, search y attachment. La búsqueda usa campos estructurados como remitente, asunto, fecha y estado de no leído, y las etiquetas de Gmail aparecen como carpetas.
 - **Enviar, responder y reenviar:** \`email_compose\` envía a través de tu propio proveedor y tu propia dirección.
 - **Organizar:** \`email_organize\`, \`email_search_and_move\` y \`email_delete\`.
 - **Borradores, carpetas y programación:** \`draft\`, \`draft_list\`, \`folder\`, \`folder_list\`, \`schedule\` y \`schedule_list\`.
@@ -123,7 +123,7 @@ No. Codex es una superficie de terminal, así que usa una clave de API limitada 
 No. Cada mensaje se obtiene en tiempo real de tu proveedor para la petición que lo pidió y después se descarta. Solo se conserva la credencial cifrada del proveedor. [Por qué importa no almacenar correo](/blog/why-email-never-stored-matters) explica el razonamiento.
 
 **¿Cuánto cuesta?**
-El plan gratuito incluye un buzón conectado y 150 acciones de correo facturables por mes natural UTC, con los primeros 7 días sin contar. Ese límite mensual se aplica a los espacios de trabajo creados a partir del 2026-09-13; los creados antes están exentos. Los planes de pago añaden buzones y quitan el límite: consulta [precios](/pricing).
+El plan gratuito incluye un buzón conectado y 150 acciones de correo facturables por mes natural UTC, con los primeros 3 días sin contar. Ese límite mensual se aplica a los espacios de trabajo creados a partir del 2026-09-13; los creados antes están exentos. Los planes de pago añaden buzones y quitan el límite: consulta [precios](/pricing).
 
 ## Siguiente paso
 

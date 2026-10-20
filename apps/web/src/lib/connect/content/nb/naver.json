@@ -22,7 +22,7 @@
     "titleLine1": "Koble Naver Mail til Claude,",
     "titleLine2": "Cursor, ChatGPT, enhver MCP-klient",
     "lead": "Gi AI-agenten din en ekte Naver-innboks. Les, søk, send, svar, planlegg og organiser e-post via IMAP med et Naver-programpassord, i alle MCP-klienter i stedet for bare én.",
-    "answer": "Claude når ikke Naver Mail på egen hånd. mcpemails er en hostet MCP-server som kobler til via IMAP på imap.naver.com port 993 og autentiserer med et Naver-programpassord (애플리케이션 비밀번호) i stedet for kontopassordet ditt. Siden 24. juni 2025 har Naver krevd totrinnsbekreftelse på kontoen pluss et programpassord for hver POP3-, IMAP- og SMTP-tilkobling, så kontopassordet autentiserer ikke lenger noen e-postklient i det hele tatt. Du må også slå på IMAP i innstillingene i Naver Mail, som er en egen bryter, adskilt fra passordet. Én innboks er gratis.",
+    "answer": "Claude når ikke Naver Mail på egen hånd. MCP Emails er en hostet MCP-server som kobler til via IMAP på imap.naver.com port 993 og autentiserer med et Naver-programpassord (애플리케이션 비밀번호) i stedet for kontopassordet ditt. Siden 24. juni 2025 har Naver krevd totrinnsbekreftelse på kontoen pluss et programpassord for hver POP3-, IMAP- og SMTP-tilkobling, så kontopassordet autentiserer ikke lenger noen e-postklient i det hele tatt. Du må også slå på IMAP i innstillingene i Naver Mail, som er en egen bryter, adskilt fra passordet. Én innboks er gratis.",
     "meta0": "1 innboks gratis, for alltid",
     "meta1": "Totrinnsbekreftelse pluss app-passord",
     "meta2": "E-post hentes direkte, lagres aldri"
@@ -33,7 +33,7 @@
   },
   "setup": [
     {
-      "h": "Opprett din gratis mcpemails-konto",
+      "h": "Opprett din gratis MCP Emails-konto",
       "p": "Registrer deg på mcpemails.com. Gratisplanen kobler til én innboks og forblir gratis, uten kort. To ting genereres i de neste stegene: hold fanen åpen til det siste."
     },
     {
@@ -42,7 +42,7 @@
     },
     {
       "h": "Slå på totrinnsbekreftelse og generer et programpassord",
-      "p": "Gå til nid.naver.com, åpne 보안설정 (sikkerhetsinnstillinger), og sett opp 2단계 인증 (totrinnsbekreftelse) hvis den ikke allerede er på, og klikk så 관리 (administrer). Der inne åpner du 애플리케이션 비밀번호 관리 (administrasjon av programpassord) og klikker 생성하기 (generer). Velg alternativet for direkte inntasting, gi det et navn som mcpemails, og kopier passordet Naver viser deg. I mcpemails velger du IMAP / SMTP, skriver inn hele Naver-adressen din og limer inn programpassordet i stedet for Naver-passordet."
+      "p": "Gå til nid.naver.com, åpne 보안설정 (sikkerhetsinnstillinger), og sett opp 2단계 인증 (totrinnsbekreftelse) hvis den ikke allerede er på, og klikk så 관리 (administrer). Der inne åpner du 애플리케이션 비밀번호 관리 (administrasjon av programpassord) og klikker 생성하기 (generer). Velg alternativet for direkte inntasting, gi det et navn som MCP Emails, og kopier passordet Naver viser deg. I MCP Emails velger du IMAP / SMTP, skriver inn hele Naver-adressen din og limer inn programpassordet i stedet for Naver-passordet."
     },
     {
       "h": "Lim MCP-URL-en inn i AI-klienten",
@@ -64,7 +64,7 @@
     },
     {
       "h": "Naver Works er en annen tjeneste, og disse innstillingene gjelder ikke",
-      "p": "Naver Works, forretningspakken som selges til koreanske selskaper, er ikke samme produkt som en personlig <code>@naver.com</code>-postkasse. Den har egen administrasjon, egne protokollinnstillinger og egne servernavn. Hvis adressen din er på et firmadomene administrert gjennom Naver Works, henter du vertene fra den konsollen i stedet for fra denne siden, og kobler så postkassen til i mcpemails som en vanlig IMAP- og SMTP-konto."
+      "p": "Naver Works, forretningspakken som selges til koreanske selskaper, er ikke samme produkt som en personlig <code>@naver.com</code>-postkasse. Den har egen administrasjon, egne protokollinnstillinger og egne servernavn. Hvis adressen din er på et firmadomene administrert gjennom Naver Works, henter du vertene fra den konsollen i stedet for fra denne siden, og kobler så postkassen til i MCP Emails som en vanlig IMAP- og SMTP-konto."
     }
   ],
   "limits": [
@@ -75,7 +75,7 @@
   "faq": [
     {
       "q": "Fungerer Claude med Naver Mail?",
-      "a": "Ikke direkte. Claude har ingen innebygd Naver-kobling og kan ikke åpne en IMAP-tilkobling selv. Kobler du en MCP-server som mcpemails til Naver-postkassen din, får Claude tilgang til å lese, søke, sende, svare, videresende, planlegge og organisere, og samme tilkobling fungerer fra Cursor og andre MCP-klienter."
+      "a": "Ikke direkte. Claude har ingen innebygd Naver-kobling og kan ikke åpne en IMAP-tilkobling selv. Kobler du en MCP-server som MCP Emails til Naver-postkassen din, får Claude tilgang til å lese, søke, sende, svare, videresende, planlegge og organisere, og samme tilkobling fungerer fra Cursor og andre MCP-klienter."
     },
     {
       "q": "Hva er IMAP- og SMTP-innstillingene for Naver?",
@@ -87,7 +87,7 @@
     },
     {
       "q": "Hvordan oppretter jeg et Naver-programpassord?",
-      "a": "Logg inn på nid.naver.com, åpne 보안설정, og slå på 2단계 인증 hvis den er av. Klikk 관리 ved siden av, åpne så 애플리케이션 비밀번호 관리 og klikk 생성하기. Gi passordet et navn så du kan trekke det tilbake separat senere, og kopier det inn i passordfeltet i e-postklienten din eller i mcpemails."
+      "a": "Logg inn på nid.naver.com, åpne 보안설정, og slå på 2단계 인증 hvis den er av. Klikk 관리 ved siden av, åpne så 애플리케이션 비밀번호 관리 og klikk 생성하기. Gi passordet et navn så du kan trekke det tilbake separat senere, og kopier det inn i passordfeltet i e-postklienten din eller i MCP Emails."
     },
     {
       "q": "Må jeg fortsatt slå på IMAP i innstillingene i Naver Mail?",

@@ -14,7 +14,7 @@ Du trenger ikke skrive kode, installere en SDK eller bruke en API-nøkkel når d
 
 - Et **Claude-abonnement eller en app som støtter egendefinerte connectors**.
 - En gratis **MCP Emails**-konto: [opprett en her](/signup).
-- En e-postinnboks. Outlook kobles til med Logg inn med Microsoft. Gmail, iCloud, Fastmail, Yahoo, Zoho og de fleste andre leverandører bruker et appspesifikt passord, og Gmail tilbyr også Logg inn med Google.
+- En e-postinnboks. Outlook kobles til med Logg inn med Microsoft. Gmail, iCloud, Fastmail, Yahoo, Zoho og de fleste andre leverandører bruker et appspesifikt passord.
 
 ## Steg 1: Koble innboksen til MCP Emails
 
@@ -22,23 +22,23 @@ Du trenger ikke skrive kode, installere en SDK eller bruke en API-nøkkel når d
 
 ### Gmail og Google Workspace
 
-Velg **Gmail**, lag et Google-apppassord (Google-kontoen din må ha totrinnsbekreftelse for det), og lim det inn sammen med Gmail-adressen din. Du kan velge Logg inn med Google i stedet. Uansett deles det vanlige Google-passordet ditt aldri med MCP Emails. Følg den [egne Gmail-guiden](/blog/connect-gmail-to-claude) hvis en Workspace-administrator styrer apptilgangen.
+Velg **Gmail**, lag et Google-apppassord på myaccount.google.com/apppasswords (Google tilbyr det bare når totrinnsbekreftelse er slått på), og lim inn de 16 bokstavene sammen med hele Gmail-adressen din. Det vanlige Google-passordet ditt fungerer ikke her, og du kan tilbakekalle apppassordet når som helst. Følg den [egne Gmail-guiden](/blog/connect-gmail-to-claude) hvis en Workspace-administrator har slått av apppassord for domenet ditt. Se [Gmail-innstillinger og begrensninger](/connect/gmail) og [oppsettsiden for Google Workspace](/connect/google-workspace).
 
 ### iCloud Mail
 
-Opprett et appspesifikt passord i Apple-kontoen din, velg **iCloud**, og bruk dette passordet, ikke det vanlige Apple-passordet. [Guiden for iCloud og IMAP](/blog/connect-icloud-fastmail-imap-to-claude) viser de nøyaktige stegene.
+Opprett et appspesifikt passord i Apple-kontoen din, velg **iCloud**, og bruk dette passordet, ikke det vanlige Apple-passordet. [Guiden for iCloud og IMAP](/blog/connect-icloud-fastmail-imap-to-claude) viser de nøyaktige stegene. Se også [Koble iCloud Mail til Claude](/connect/icloud).
 
 ### Fastmail
 
-Opprett et app-passord med Mail-tilgang i Fastmail, velg **Fastmail**, og lim det inn i MCP Emails. Ta vare på passordet til tilkoblingstesten lykkes.
+Opprett et app-passord med Mail-tilgang i Fastmail, velg **Fastmail**, og lim det inn i MCP Emails. Ta vare på passordet til tilkoblingstesten lykkes. Se [Fastmail-innstillinger for Claude](/connect/fastmail).
 
 ### Outlook og Microsoft 365
 
-Outlook kobles til med Logg inn med Microsoft, ikke et app-passord: velg **Outlook**, klikk **Koble til med Microsoft** og godkjenn. Personlige Outlook.com-, Hotmail-, Live- og MSN-kontoer kobles til med en gang. Jobb- eller skolekontoer i Microsoft 365 kan trenge at en IT-ansvarlig først godkjenner appen én gang for hele organisasjonen; dashbordet gir deg en lenke du kan sende dem. [Guiden for Outlook og Microsoft 365](/blog/connect-outlook-microsoft-365-ai-agent-mcp) har detaljene.
+Outlook kobles til med Logg inn med Microsoft, ikke et app-passord: velg **Outlook**, klikk **Koble til med Microsoft** og godkjenn. Personlige Outlook.com-, Hotmail-, Live- og MSN-kontoer kobles til med en gang. Jobb- eller skolekontoer i Microsoft 365 kan trenge at en IT-ansvarlig først godkjenner appen én gang for hele organisasjonen; dashbordet gir deg en lenke du kan sende dem. [Guiden for Outlook og Microsoft 365](/blog/connect-outlook-microsoft-365-ai-agent-mcp) har detaljene. Se [oppsettsiden for Outlook](/connect/outlook) eller [oppsettsiden for Microsoft 365](/connect/office365).
 
 ### Yahoo, Zoho, Yandex og egendefinert IMAP
 
-Opprett et app-passord, velg **IMAP**, og skriv inn adresse og passord. Vanlige innstillinger oppdages automatisk; et egendefinert domene kan kreve IMAP/SMTP-vert, port og sikkerhetsmodus fra leverandøren.
+Opprett et app-passord, velg **IMAP**, og skriv inn adresse og passord. Vanlige innstillinger oppdages automatisk; et egendefinert domene kan kreve IMAP/SMTP-vert, port og sikkerhetsmodus fra leverandøren. Innstillingene for hver av dem står på sidene for [Yahoo Mail](/connect/yahoo), [Zoho Mail](/connect/zoho), [Yandex Mail](/connect/yandex) og [egendefinert IMAP](/connect/imap). Du kan også se [alle støttede leverandører](/connect).
 
 Du kan koble til flere enn én innboks. Claude finner dem med \`inbox_list\`, så du trenger ikke lime inn postkasse-ID-er i en prompt.
 
@@ -58,7 +58,7 @@ https://mcpemails.com/api/mcp
 
 4. Velg **Connect**, logg inn på MCP Emails og godkjenn scopene du ønsker: \`read:email\`, \`send:email\` eller begge.
 
-Det er hele oppsettet i Claude. OAuth begrenser tilkoblingen til scopene du godkjenner, og du kan tilbakekalle den fra MCP Emails når som helst. Hvis du bruker en klient uten OAuth-støtte, bruker du en begrenset API-nøkkel i stedet; [OAuth vs. API-nøkler](/blog/oauth-vs-api-keys-ai-email-access) forklarer den veien.
+Det er hele oppsettet i Claude. OAuth begrenser tilkoblingen til scopene du godkjenner, og du kan tilbakekalle den fra MCP Emails når som helst. Hvis du bruker en klient uten OAuth-støtte, bruker du en begrenset API-nøkkel i stedet; [OAuth vs. API-nøkler](/blog/oauth-vs-api-keys-ai-email-access) forklarer den veien. Ved problemer som gjelder Claude, se [oppsettsiden for Claude](/docs/claude).
 
 ## Steg 3: Gi Claude en trygg første oppgave
 
@@ -79,7 +79,7 @@ For gjentakende rutiner kan du bruke [spilleboken for innbokstriering](/blog/ai-
 
 MCP Emails gir Claude fokuserte e-postverktøy i stedet for et passord eller en rå IMAP-tilkobling:
 
-- **Lese og søke:** \`email_read\` lister meldinger, leser hele meldinger og søker i e-post. Gmail-søk støtter også Gmail-operatorer som \`from:\` og \`is:unread\`.
+- **Lese og søke:** \`email_read\` lister meldinger, leser hele meldinger og søker i e-post etter avsender, emne, dato, ulest-status og andre strukturerte felt. I Gmail vises etiketter som mapper.
 - **Sende, svare og videresende:** \`email_compose\` sender gjennom din egen leverandør og adresse.
 - **Organisere:** \`email_organize\` flytter, merker, flagger og arkiverer meldinger.
 - **Jobbe med utkast, mapper, planlegging og kontakter:** \`draft\`, \`folder\`, \`schedule\` og \`contact_search\` dekker resten av en praktisk e-postflyt.
@@ -100,7 +100,7 @@ Hvis du fortsatt står fast, kan du sjekke [leverandørmatrisen](/docs/providers
 Ja, så lenge du gir tilkoblingen bare den tilgangen den trenger og holder et menneske involvert ved utgående handlinger.
 
 - **E-post lagres ikke.** MCP Emails henter meldingsinnhold live ved hvert kall og forkaster det etter levering. Den krypterte legitimasjonen som trengs for å koble til leverandøren igjen, er de eneste innboksdataene som beholdes.
-- **Leverandøren din beholder kontroll over autentisering.** Outlook, og Gmails valg Logg inn med Google, bruker OAuth, så MCP Emails mottar aldri passordet ditt. For Gmails apppassord og IMAP-leverandører bruker du et tilbakekallbart appspesifikt passord i stedet for det vanlige passordet.
+- **Leverandøren din beholder kontroll over autentisering.** Outlook bruker OAuth, så MCP Emails ser aldri Microsoft-passordet ditt. For Gmail og andre leverandører med apppassord er apppassordet en egen innloggingsnøkkel, ikke kontopassordet ditt, og du kan tilbakekalle det når som helst.
 - **Scopes er eksplisitte.** Gi skrivebeskyttet tilgang hvis Claude aldri skal kunne sende. Legg bare til sendetilgang når du trenger det, og tilbakekall tilgangen når som helst.
 
 Behandle hver e-posttekst som upålitelig inndata. Be Claude lage et utkast før den sender, gjennomgå meldinger til eksterne, og ikke la instrukser inne i en e-post overstyre det du faktisk vil. [Sikkerhetsguiden for e-posttilgang](/blog/is-it-safe-to-give-ai-agent-email-access) forklarer trusselmodellen mer detaljert.
@@ -108,7 +108,7 @@ Behandle hver e-posttekst som upålitelig inndata. Be Claude lage et utkast før
 ## Vanlige spørsmål
 
 **Kan Claude koble til Gmail, Outlook eller iCloud?**  
-Gmail kobles til med et Google-apppassord eller Logg inn med Google, Outlook med Logg inn med Microsoft, og iCloud med et appspesifikt passord. En jobb- eller skolekonto i Microsoft 365 kan trenge at en IT-ansvarlig først godkjenner appen én gang. MCP Emails støtter også Fastmail og generisk IMAP, som dekker tjenester som Yahoo og Zoho.
+Gmail kobles til med et Google-apppassord, Outlook med Logg inn med Microsoft, og iCloud med et appspesifikt passord. En jobb- eller skolekonto i Microsoft 365 kan trenge at en IT-ansvarlig først godkjenner appen én gang. MCP Emails støtter også Fastmail og generisk IMAP, som dekker tjenester som Yahoo og Zoho.
 
 **Trenger jeg en API-nøkkel?**  
 Nei, ikke for Claudes OAuth-baserte connector-flyt. Lim inn endepunkt-URL-en og logg inn. API-nøkler er for MCP-klienter uten innebygd OAuth.

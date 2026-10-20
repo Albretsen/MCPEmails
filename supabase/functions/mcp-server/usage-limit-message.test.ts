@@ -135,7 +135,7 @@ Deno.test("Free states the number exactly as passed, with no thousands noise", (
 Deno.test("Free says the first seven days were not counted", () => {
   const text = buildUsageLimitText("free", FREE_ALLOWANCE, FREE_ALLOWANCE, RESET, ORIGIN);
   assertIncludes(text, `first ${FREE_ACTION_GRACE_DAYS} days after signup are not counted`, "the grace sentence");
-  assert(FREE_ACTION_GRACE_DAYS === 7, "the grace constant mirrors c_grace in workspace_action_allowance()");
+  assert(FREE_ACTION_GRACE_DAYS === 3, "the grace constant mirrors free_action_grace_ends_at() for new workspaces");
 });
 
 Deno.test("Free says what keeps working", () => {
@@ -231,10 +231,10 @@ Deno.test("paid plans never mention the Free grace week", () => {
 
 Deno.test("messages use the plan name the pricing page sells", () => {
   // The internal ids drifted from the marketing names twice: `solo` is now sold
-  // as Pro and `pro` as Team. Naming the internal id would send the user looking
+  // as Pro and `pro` as Business. Naming the internal id would send the user looking
   // for a product that does not exist on the pricing page.
   assertIncludes(buildUsageLimitText("solo", 1, 2, RESET, ORIGIN), "Pro plan", "solo renders as Pro");
-  assertIncludes(buildUsageLimitText("pro", 1, 2, RESET, ORIGIN), "Team plan", "pro renders as Team");
+  assertIncludes(buildUsageLimitText("pro", 1, 2, RESET, ORIGIN), "Business plan", "pro renders as Business");
   assertIncludes(buildUsageLimitText("free", 1, 2, RESET, ORIGIN), "Free plan", "free renders as Free");
 });
 
@@ -267,5 +267,5 @@ Deno.test("Personal is named by the name it is sold under", () => {
   assert(PLAN_DISPLAY_NAMES.personal === "Personal", "Personal needs its own display name entry");
   // Mirror of planDisplayName in apps/web/src/lib/stripe/plans.ts. Both halves
   // of the product show a plan name; they must show the same one.
-  assert(PLAN_DISPLAY_NAMES.solo === "Pro" && PLAN_DISPLAY_NAMES.pro === "Team", "the two drifted ids must keep their sold names");
+  assert(PLAN_DISPLAY_NAMES.solo === "Pro" && PLAN_DISPLAY_NAMES.pro === "Business", "the two drifted ids must keep their sold names");
 });

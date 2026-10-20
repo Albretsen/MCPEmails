@@ -1,5 +1,6 @@
 import { setRequestLocale, getTranslations } from 'next-intl/server';
 import { metaAlternates, localePath, OG_LOCALE, OG_IMAGE, pageJsonLd } from '@/i18n/seo';
+import { Link } from '@/i18n/navigation';
 import { Nav, Footer } from '../../../components/marketing/Sections';
 
 export async function generateMetadata({ params }) {
@@ -8,7 +9,7 @@ export async function generateMetadata({ params }) {
   const title = t.has('meta.title') ? t('meta.title') : 'Security & Trust';
   const description = t.has('meta.description')
     ? t('meta.description')
-    : 'How MCPEmails protects your email: fetched live and never stored, credentials encrypted, and code you can read or self-host.';
+    : 'How MCP Emails protects your email: fetched live and never stored, credentials encrypted, and code you can read or self-host.';
   return {
     title,
     description,
@@ -16,14 +17,14 @@ export async function generateMetadata({ params }) {
     openGraph: {
       type: 'website',
       url: localePath(locale, '/security'),
-      title: `${title} · mcpemails`,
+      title: `${title} · MCP Emails`,
       description,
       locale: OG_LOCALE[locale],
       images: [OG_IMAGE],
     },
     twitter: {
       card: 'summary_large_image',
-      title: `${title} · mcpemails`,
+      title: `${title} · MCP Emails`,
       description,
       images: [OG_IMAGE.url],
     },
@@ -155,7 +156,7 @@ export default async function SecurityPage({ params }) {
               <p>{t('selfhost.p1')}</p>
               <p>{t('selfhost.p2')}</p>
               <p style={{ margin: 0 }}>
-                <a href="/self-hosting">{t('selfhost.cta')}</a>
+                <Link href="/self-hosting">{t('selfhost.cta')}</Link>
                 {' · '}
                 <a href={LICENSE_URL} target="_blank" rel="noopener noreferrer">AGPL-3.0</a>
               </p>
@@ -246,14 +247,14 @@ export default async function SecurityPage({ params }) {
                       <code>{c}</code>
                     </a>
                   ),
-                  about: (c) => <a href="/about">{c}</a>,
-                  terms: (c) => <a href="/terms">{c}</a>,
+                  about: (c) => <Link href="/about">{c}</Link>,
+                  terms: (c) => <Link href="/terms">{c}</Link>,
                 })}
               </p>
               <p>
                 {t.rich('operator.p2', {
                   ...richTags,
-                  selfhostpage: (c) => <a href="/self-hosting">{c}</a>,
+                  selfhostpage: (c) => <Link href="/self-hosting">{c}</Link>,
                 })}
               </p>
               <p style={{ margin: 0 }}>{t('operator.p3')}</p>
@@ -272,9 +273,9 @@ export default async function SecurityPage({ params }) {
             <a className="btn btn-primary btn-lg" href={`mailto:${SECURITY_EMAIL}`}>
               {t('cta.contactBtn')}
             </a>
-            <a className="btn btn-on-dark btn-lg" href="/privacy">
+            <Link className="btn btn-on-dark btn-lg" href="/privacy">
               {t('cta.privacyBtn')}
-            </a>
+            </Link>
           </div>
         </div>
       </section>

@@ -346,3 +346,38 @@ describe("the unified inbox filling in, and new mail, with conversations", () =>
     expect(backend.calls("thread").length).toBeGreaterThanOrEqual(before);
   });
 });
+
+describe("Archive of a conversation opened outside the Inbox", () => {
+  /** Maya's conversation: her mail in the Inbox, our answer in Sent, her reply in the Inbox. */
+  function seedThread(threadKey: (key: string) => string): void {
+    const t1 = fakeThreadMessage("t1", day(1), null, { subject: "Roadmap", is_read: true, from: MAYA });
+    const t2 = fakeThreadMessage("t2", day(2), t1, { subject: "Re: Roadmap", is_read: true, folder: "Sent", from: ME, to: [MAYA] });
+    const t3 = fakeThreadMessage("t3", day(3), t2, { subject: "Re: Roadmap", is_read: true, from: MAYA });
+    for (const m of [t1, t2, t3]) m.thread_key = threadKey(m.thread_key!);
+    backend.add("a", t1, t2, t3);
+  }
+  const openFromSentAndArchive = async () => {
+    useSelectionStore.setState({ scope: "a", folder: { role: "sent" } });
+    await mount();
+    expect(shown()).toEqual(["a:t2"]);
+    await select("a:t2");
+    expect(backend.calls("thread")).toHaveLength(1);
+    await click(tool("Archive"));
+    await settle();
+  };
+  const inboxIds = () => backend.messages.get("a")!.filter((m) => m.folder === "INBOX").map((m) => m.id).sort();
+
+  it("Gmail (a g: conversation): its Inbox messages are archived with it, so the conversation leaves the Inbox", async () => {
+    seedThread(() => "g:77");
+    await openFromSentAndArchive();
+    expect([...(backend.calls("archive")[0]!.args.message_ids as string[])].sort()).toEqual(["t1", "t2", "t3"]);
+    expect(inboxIds()).toEqual([]);
+  });
+
+  it("any other server (an m: conversation): only the messages in the folder on screen, as before", async () => {
+    seedThread((key) => key);
+    await openFromSentAndArchive();
+    expect(backend.calls("archive").map((c) => c.args.message_ids)).toEqual([["t2"]]);
+    expect(inboxIds()).toEqual(["t1", "t3"]);
+  });
+});

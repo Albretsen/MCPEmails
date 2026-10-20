@@ -75,10 +75,20 @@ import { neutralizeList, neutralizeMaybe, neutralizeText } from "./text-safety.t
 import { preferredBodyText } from "./text-extract.ts";
 import {
   bodyCarriesSignature,
+  composeSignatureBlocks,
   htmlCarriesSignatureBlock,
   plainTextBodyToHtml,
   rebuildHtmlKeepingSignature,
+  type SignatureInbox,
+  textCarriesOwnSignature,
 } from "./signature-compose.ts";
+import {
+  attributionSender,
+  comparableQuote,
+  quotedHtmlStart,
+  quotedTextLine,
+  splitQuotedText,
+} from "./quoted-reply.ts";
 import {
   cardWriteConflict,
   type DraftWriter,
@@ -90,9 +100,11 @@ import {
   type ResolvedDraft,
 } from "./draft-lineage.ts";
 import { EMAIL_HTML_MAX_LENGTH } from "./signature-sanitizer.ts";
+import { htmlHasFormatting, mergeTextEditIntoHtml } from "./html-text-merge.ts";
 import { CARD_SCHEMA_VERSION } from "./mcp-app-approvals.ts";
 import { buildDraftMutationEnvelope } from "./untrusted-envelope.ts";
 import { decodedBase64ByteLength } from "./attachment-validation.ts";
+import { parseAttachmentInputs } from "./attachment-reference.ts";
 import {
   type CarriedAttachments,
   DRAFT_REBUILD_MAX_BYTES,
@@ -764,7 +776,12 @@ export function draftContentVersion(
 export function buildDraftEditorEnvelope(input: {
   appUrl: string;
   draft: NormalizedDraft;
-  inbox: DraftEditorInbox;
+  /**
+   * The signature columns are optional: when present they let the envelope
+   * name the inbox's signature for a draft that does not carry it
+   * (`signature.first_line`). Every caller passes the full inbox row.
+   */
+  inbox: DraftEditorInbox & SignatureInbox;
   origin: DraftEditorOrigin;
   /**
    * Who wrote the stored draft last. "user" when it was `draft_editor_save`,
@@ -786,6 +803,10 @@ export function buildDraftEditorEnvelope(input: {
   const { draft, inbox } = input;
   const text = clipDraftBody(draft.body_text);
   const html = clipDraftBody(draft.body_html);
+  // Where the quoted original of a reply starts in the text the card is given
+  // (the CLIPPED text, so the line is one the card can find). quoted-reply.ts.
+  const quotedLine = quotedTextLine(text.value);
+  const signatureFirstLine = draft.signature_embedded ? null : inboxSignatureFirstLine(inbox);
 
   return {
     schema_version: CARD_SCHEMA_VERSION,
@@ -848,6 +869,9 @@ export function buildDraftEditorEnvelope(input: {
         // this says it was REMOVED, so the card can tell the person why the
         // formatted view is gone instead of silently dropping the link.
         ...(draft.formatting_removed === true ? { formatting_removed: true } : {}),
+        // Only when the text has one. Additive: a card that predates it reads
+        // the quote as part of the text, which is what it always did.
+        ...(quotedLine >= 0 ? { quoted: { line: quotedLine } } : {}),
       },
       attachments: draft.attachments.slice(0, MAX_LISTED_ATTACHMENTS).map((entry) => ({
         // The headline case for neutralisation: `invoice<U+202E> fdp.exe`
@@ -862,6 +886,10 @@ export function buildDraftEditorEnvelope(input: {
       signature: {
         embedded: draft.signature_embedded,
         ...(draft.signature_rich === true ? { rich: true } : {}),
+        // Only when the draft does NOT carry the signature and the inbox has
+        // one: the card names it in its "not in this draft" line, and shows no
+        // such line at all for an inbox without a signature.
+        ...(signatureFirstLine ? { first_line: signatureFirstLine } : {}),
       },
       // Populated on the reply path only. A stored draft carries the RFC
       // `In-Reply-To` header rather than a server message id, and §8 specifies
@@ -869,13 +897,22 @@ export function buildDraftEditorEnvelope(input: {
       // rather than a value the card would offer as openable and could not
       // open. Threading itself is preserved on every save regardless — see
       // `runDraftEditorSave`, which carries the headers through untouched.
-      in_reply_to: draft.in_reply_to
-        ? {
-          message_id: draft.in_reply_to.message_id,
-          subject: neutralizeMaybe(draft.in_reply_to.subject),
-          from: neutralizeMaybe(draft.in_reply_to.from),
-        }
-        : null,
+      //
+      // Off the reply path, a draft that still carries its In-Reply-To header
+      // gets the context read back from the draft itself (`storedReplyContext`)
+      // with `message_id: null`, which the card never offers to open. Without
+      // it the newer card a `draft{action:"update"}` mounts had no "Replying
+      // to" line while the older one above it did (live test, 2026-10-19).
+      in_reply_to: (() => {
+        const ctx = draft.in_reply_to ?? storedReplyContext(draft);
+        return ctx
+          ? {
+            message_id: ctx.message_id,
+            subject: neutralizeMaybe(ctx.subject),
+            from: neutralizeMaybe(ctx.from),
+          }
+          : null;
+      })(),
       // Whether this draft answers a message, whatever the path. `in_reply_to`
       // above is null on every path but reply, so on its own it reads as
       // "threading lost" after an update or a read, when the headers were in
@@ -893,6 +930,43 @@ export function buildDraftEditorEnvelope(input: {
       reason: input.editReason ?? null,
     },
   };
+}
+
+/**
+ * The "Replying to" context of a stored reply draft, for the envelopes that are
+ * not the reply itself: who from the attribution above the quoted original
+ * (quoted-reply.ts#attributionSender), what from the draft's own subject with
+ * its "Re:" taken off. Null unless the draft carries an In-Reply-To header, so
+ * a new message never claims to answer one. `message_id` is null: no server id
+ * of the original is known here, and nothing may offer it as openable.
+ */
+export function storedReplyContext(
+  draft: Pick<NormalizedDraft, "in_reply_to_header" | "subject" | "body_text">,
+): { message_id: string | null; subject: string | null; from: string | null } | null {
+  if (typeof draft.in_reply_to_header !== "string" || draft.in_reply_to_header.trim().length === 0) {
+    return null;
+  }
+  const subject = (draft.subject ?? "").replace(/^\s*re\s*:\s*/i, "").trim();
+  return {
+    message_id: null,
+    subject: subject.length > 0 ? subject : null,
+    from: attributionSender(draft.body_text),
+  };
+}
+
+/**
+ * The first line of the inbox's signature, for the card's "your signature is
+ * not in this draft" line. Null when the inbox has no signature turned on.
+ * Neutralised and bounded like every other short string a person scans.
+ */
+function inboxSignatureFirstLine(inbox: SignatureInbox): string | null {
+  if (inbox.signature_enabled !== true) return null;
+  const sig = composeSignatureBlocks(inbox);
+  if (!sig) return null;
+  const first = sig.text.split(/\r\n|\n|\r/).map((l) => l.trim()).find((l) => l.length > 0);
+  if (!first) return null;
+  const safe = neutralizeText(first);
+  return safe.length > 80 ? `${safe.slice(0, 79)}…` : safe;
 }
 
 /**
@@ -1010,6 +1084,8 @@ export function draftCardToolResult(
         text: typeof body["text"] === "string" ? body["text"] : null,
         html: typeof body["html"] === "string" ? body["html"] : null,
         truncated,
+        // Rides with the body it describes, never on the placeholder.
+        ...(body["quoted"] && typeof body["quoted"] === "object" ? { quoted: body["quoted"] } : {}),
       },
     },
   };
@@ -1548,11 +1624,15 @@ function computeCanSend(
  */
 function draftSummaryText(lead: string, draft: NormalizedDraft): string {
   const words = draft.body_text ? draft.body_text.trim().split(/\s+/).filter(Boolean).length : 0;
-  return `${lead} Draft ${draft.draft_id}. ` +
+  // The id is a labelled handle at the end, not part of a sentence: written
+  // into the prose ("Draft [Gmail]/Drafts:9019.") the model repeated it to
+  // the user as if it were the draft's name.
+  return `${lead} ` +
     `To ${draft.to.length}, cc ${draft.cc.length}, bcc ${draft.bcc.length}. ` +
     `Subject: ${neutralizeText(draft.subject) || "(none)"}. ` +
     `Body ${words} words, ${draft.attachments.length} attachment(s). ` +
-    `The body is shown in the draft editor and is not repeated here.`;
+    `The body is shown in the draft editor and is not repeated here. ` +
+    `draft_id: ${JSON.stringify(draft.draft_id)}`;
 }
 
 function cardResult(
@@ -1761,10 +1841,28 @@ export interface DraftPatch {
   subject?: string;
   bodyText?: string;
   /**
-   * Files to ADD, already resolved to bytes. The stored ones are kept. Only a
-   * body-less `draft{action:"update"}` passes this; the editor card adds none.
+   * Files to ADD, already resolved to bytes. The stored ones are kept. A
+   * body-less `draft{action:"update"}` passes this, and since 2026-10-17 so
+   * does the editor card's "Attach file" (`draft_editor_save`'s
+   * `add_attachments`).
    */
   addAttachments?: OutgoingAttachment[];
+  /**
+   * Stored files to REMOVE, by their position in the stored draft's attachment
+   * list (the order the card was shown). Each names the file it means, and a
+   * position whose file no longer matches is refused as `attachments_changed`
+   * rather than removing whatever moved into that place. Every file not named
+   * here is carried byte for byte. The editor card's remove, 2026-10-17.
+   */
+  removeAttachments?: AttachmentRef[];
+}
+
+/** One stored file, as the card names it for removal. */
+export interface AttachmentRef {
+  index: number;
+  filename: string;
+  /** Null when the card was shown no size. Compared only when both are known. */
+  size_bytes: number | null;
 }
 
 export type DraftPatchResult =
@@ -1776,6 +1874,10 @@ export type DraftPatchResult =
   | { ok: true; saved: NormalizedDraft; written: boolean }
   | { ok: false; kind: "not_found" }
   | { ok: false; kind: "has_attachments"; attachmentCount: number }
+  /** A file named for removal is not the stored file at that position. */
+  | { ok: false; kind: "attachments_changed" }
+  /** Outlook: its PATCH cannot remove a file, and nothing was changed. */
+  | { ok: false; kind: "remove_unsupported" }
   /** Stored plus added files exceed what a rebuild may hold. */
   | { ok: false; kind: "attachments_too_large"; bytes: number; maxBytes: number }
   /** The stored message has parts a rebuild would drop. `parts` are labels. */
@@ -1878,18 +1980,58 @@ export async function applyDraftPatch(
   // fields and leaves attachments alone, so it may proceed.
   const rebuilds = inbox.provider !== "outlook";
   const added = patch.addAttachments ?? [];
+
+  // ── REMOVING A FILE (the editor card, 2026-10-17) ────────────────────────
+  // By position, checked against the name (and the size, when both sides know
+  // it) of the stored file there: a draft rewritten since the card loaded it
+  // may hold a different file in that place, and removing THAT would delete a
+  // file nobody chose. Refused as a whole, before anything is written.
+  //
+  // Only a rebuild can leave a file out. Outlook's PATCH keeps every stored
+  // attachment and removing one is a separate Graph call this path does not
+  // make, so it is refused there rather than reported as done.
+  const removeRefs = patch.removeAttachments ?? [];
+  const removed = new Set<number>();
+  for (const ref of removeRefs) {
+    const at = stored.attachments[ref.index];
+    if (
+      !at || at.filename !== ref.filename ||
+      (typeof at.size_bytes === "number" && typeof ref.size_bytes === "number" &&
+        at.size_bytes !== ref.size_bytes)
+    ) {
+      return { ok: false, kind: "attachments_changed" };
+    }
+    removed.add(ref.index);
+  }
+  if (removed.size > 0 && !rebuilds) return { ok: false, kind: "remove_unsupported" };
+
   let carriedFiles: OutgoingAttachment[] = [];
   if (rebuilds && (stored.attachments.length > 0 || added.length > 0)) {
     const carried = stored.carried;
     if (stored.attachments.length > 0 && !carried) {
       return { ok: false, kind: "has_attachments", attachmentCount: stored.attachments.length };
     }
+    // The positions the card names are positions in `stored.attachments`, and
+    // `carried` lists the same files in the same order whenever a rebuild is
+    // allowed at all: the only parts it leaves out are inline images, and a
+    // stored draft with one is refused below as `not_rebuildable`. Should the
+    // two ever disagree, removing by position would remove the wrong file, so
+    // that is refused too.
+    if (removed.size > 0 && carried && carried.count !== stored.attachments.length) {
+      const blockers = stored.rebuild_blockers ?? [];
+      return blockers.length > 0
+        ? { ok: false, kind: "not_rebuildable", parts: blockers }
+        : { ok: false, kind: "attachments_changed" };
+    }
     const addedBytes = added.reduce((total, a) => total + (decodedBase64ByteLength(a.data) ?? 0), 0);
-    const total = (carried?.bytes ?? 0) + addedBytes;
+    const removedBytes = carried
+      ? carried.sizes.reduce((total, size, i) => total + (removed.has(i) ? size : 0), 0)
+      : 0;
+    const total = (carried?.bytes ?? 0) - removedBytes + addedBytes;
     if (total > DRAFT_REBUILD_MAX_BYTES) {
       return { ok: false, kind: "attachments_too_large", bytes: total, maxBytes: DRAFT_REBUILD_MAX_BYTES };
     }
-    carriedFiles = carried ? carried.encode() : [];
+    carriedFiles = carried ? carried.encode(removed) : [];
   }
 
   // ── AND REFUSE RATHER THAN DROP ANYTHING ELSE (2026-10-13) ───────────────
@@ -2016,22 +2158,36 @@ export async function applyDraftPatch(
   //
   // The over-long and the cleared body also end with no part rather than a
   // stale or an empty one, and are reported the same way.
-  let nextHtml: string | undefined;
-  let formattingRemoved = false;
-  if (stored.body_html !== null) {
-    if (bodyTextChanged) {
-      const regenerated = htmlCarriesSignatureBlock(stored.body_html)
-        ? rebuildHtmlKeepingSignature(bodyText as string, inbox, stored.body_html, stored.body_text)
-        : plainTextBodyToHtml(bodyText as string);
-      nextHtml = regenerated === null || regenerated.length === 0 ||
-          regenerated.length > EMAIL_HTML_MAX_LENGTH
-        ? undefined
-        : regenerated;
-      formattingRemoved = nextHtml === undefined;
-    } else {
-      nextHtml = stored.body_html;
-    }
-  }
+  //
+  // ── AND A FORMATTED BODY IS EDITED IN PLACE, OR SAID TO BE LOST (2026-10-17)
+  // A stored HTML part with formatting of its own (a heading, a list, a link)
+  // was regenerated like any other: one typed word and Save turned it into
+  // text with line breaks, the result was still an HTML part, so
+  // `formatting_removed` stayed unset and the card said nothing (QA,
+  // 2026-10-17). Now, first, the edit is made inside the stored HTML when every
+  // changed line can be placed there with certainty (html-text-merge.ts), which
+  // keeps every tag. When it cannot, formatted HTML is not regenerated at all:
+  // a generated part would pass for the original in "Show formatting" and in
+  // the recipient's client. It is dropped and reported like the signature case
+  // above. The card runs the same two functions to warn before the save.
+  //
+  // ── AND SO DOES THE QUOTED ORIGINAL (2026-10-17) ─────────────────────────
+  // A reply's HTML part may end in the original as the mail client quoted it
+  // (Gmail's `gmail_quote`, Apple's `<blockquote type="cite">`, Outlook's
+  // header block). Regenerating from the text turned that into escaped `> `
+  // lines. The card never edits the quote (it is a read-only section there),
+  // so when the text's quote is the stored one, line endings aside, only the
+  // part above it is regenerated, by the rules above, and the stored quote
+  // markup follows it byte for byte (`htmlKeepingQuote`). A quote that did
+  // change, or HTML with no recognisable quote block, takes the rules above
+  // over the whole text, unchanged.
+  //
+  // The two meet in one place: a client quote block counts as formatting to
+  // `htmlHasFormatting`, so when the quote is kept byte for byte only the part
+  // above it is checked. Otherwise every reply edit would drop the quote.
+  const { html: nextHtml, formattingRemoved } = stored.body_html !== null && bodyTextChanged
+    ? htmlForEditedText(bodyText as string, inbox, stored.body_text, stored.body_html)
+    : { html: stored.body_html ?? undefined, formattingRemoved: false };
 
 
   // ── NOTHING CHANGED, NOTHING WRITTEN ─────────────────────────────────────
@@ -2041,7 +2197,7 @@ export async function applyDraftPatch(
   const sameList = (a: string[], b: string[]) =>
     a.length === b.length && a.every((v, i) => v === b[i]);
   if (
-    !bodyTextChanged && nextSubject === stored.subject && added.length === 0 &&
+    !bodyTextChanged && nextSubject === stored.subject && added.length === 0 && removed.size === 0 &&
     sameList(nextTo, stored.to) && sameList(nextCc, stored.cc) && sameList(nextBcc, stored.bcc)
   ) {
     return { ok: true, saved: stored, written: false };
@@ -2112,7 +2268,7 @@ export async function applyDraftPatch(
     body_text: nextText,
     body_html: nextHtml ?? null,
     attachments: [
-      ...stored.attachments,
+      ...stored.attachments.filter((_, i) => !removed.has(i)),
       ...added.map((a) => ({
         filename: a.filename,
         size_bytes: decodedBase64ByteLength(a.data),
@@ -2128,6 +2284,126 @@ export async function applyDraftPatch(
   };
 
   return { ok: true, saved, written: true };
+}
+
+/**
+ * The HTML part a draft keeps when its TEXT is replaced, by the rules in
+ * `applyDraftPatch` (merged in place, the quote and the signature block kept,
+ * or regenerated from the text), or `html: undefined` with
+ * `formattingRemoved: true` when its formatting cannot be kept honestly.
+ *
+ * Shared with `draft{action:"update"}` (index.ts), whose plain-text body used
+ * to drop a stored HTML part outright whenever no signature was appended
+ * (`include_signature: false`, or an inbox without one): the newer card then
+ * had no "Show formatting" and the recipient got text/plain (live claude.ai
+ * test, 2026-10-19).
+ */
+export function htmlForEditedText(
+  bodyText: string,
+  inbox: SignatureInbox,
+  storedText: string | null,
+  storedHtml: string,
+): { html: string | undefined; formattingRemoved: boolean } {
+  const keptQuote = htmlKeepingQuote(bodyText, storedText, storedHtml);
+  const merged = mergeTextEditIntoHtml(storedHtml, storedText, bodyText);
+  if (merged !== null && merged.length <= EMAIL_HTML_MAX_LENGTH) {
+    return { html: merged, formattingRemoved: false };
+  }
+  if (htmlHasFormatting(keptQuote ? keptQuote.storedHtmlHead : storedHtml)) {
+    return { html: undefined, formattingRemoved: true };
+  }
+  const regenerated = keptQuote
+    ? regenerateHtml(keptQuote.head, inbox, keptQuote.storedHtmlHead, keptQuote.storedTextHead, keptQuote.quoteHtml)
+    : regenerateHtml(bodyText, inbox, storedHtml, storedText, "");
+  const html = regenerated === null || regenerated.length === 0 ||
+      regenerated.length > EMAIL_HTML_MAX_LENGTH
+    ? undefined
+    : regenerated;
+  return { html, formattingRemoved: html === undefined };
+}
+
+/**
+ * The HTML part `draft{action:"update"}` (index.ts#executeUpdateDraft) writes
+ * for a plain-text body, given what `bodyKeepingQuote` composed.
+ *
+ * The stored HTML part is kept by the card save's rules (`htmlForEditedText`)
+ * whenever the caller sent no HTML of its own and no signature was appended on
+ * this write: either nothing was to be signed (`include_signature: false`, an
+ * inbox with none), or the body already carried the signature and
+ * `applySignatureOnce` left it alone. In that second case `applySignatureOnce`
+ * hands back an HTML part rebuilt from the text, which would replace the
+ * stored formatting without saying so; it is used only when the stored part
+ * cannot be kept (2026-10-19, card-header-chips + draft-tool-quote-wording).
+ * A freshly appended signature rebuilt the HTML part already: used as is.
+ */
+export function htmlPartForDraftUpdate(input: {
+  composed: { textBody: string; htmlBody?: string; signed: boolean };
+  callerHtml: string | undefined;
+  storedText: string | null | undefined;
+  storedHtml: string | null | undefined;
+  inbox: SignatureInbox;
+  includeSignature: boolean;
+}): { html: string | undefined; formattingRemoved: boolean } {
+  const { composed, storedHtml } = input;
+  const composedOnly = { html: composed.htmlBody, formattingRemoved: false };
+  if (input.callerHtml !== undefined || composed.signed) return composedOnly;
+  if (typeof storedHtml !== "string" || storedHtml.trim().length === 0) return composedOnly;
+  const rebuiltOverOwnSignature = input.includeSignature &&
+    textCarriesOwnSignature(composed.textBody, input.inbox);
+  if (composed.htmlBody !== undefined && !rebuiltOverOwnSignature) return composedOnly;
+  const kept = htmlForEditedText(composed.textBody, input.inbox, input.storedText ?? null, storedHtml);
+  return { html: kept.html ?? composed.htmlBody, formattingRemoved: kept.formattingRemoved };
+}
+
+/**
+ * The HTML part for an edited text, by the rules in `applyDraftPatch`: the
+ * stored signature block kept when the HTML carries one, otherwise the text
+ * escaped. `quoteHtml` (the stored quote markup, or "") follows verbatim. Null
+ * when the formatting cannot be kept.
+ */
+function regenerateHtml(
+  text: string,
+  inbox: SignatureInbox,
+  storedHtml: string,
+  storedText: string | null,
+  quoteHtml: string,
+): string | null {
+  const head = htmlCarriesSignatureBlock(storedHtml)
+    ? rebuildHtmlKeepingSignature(text, inbox, storedHtml, storedText)
+    : plainTextBodyToHtml(text);
+  if (head === null) return null;
+  return quoteHtml ? `${head}\n${quoteHtml}` : head;
+}
+
+/**
+ * The pieces `applyDraftPatch` needs to keep a reply's quoted HTML through a
+ * body edit, or null when it cannot: the edited text and the stored text must
+ * both have a quoted original, the two quotes must be the same text (line
+ * endings and trailing blanks aside), and the stored HTML must have a quote
+ * block of its own (quoted-reply.ts#quotedHtmlStart).
+ *
+ * `head` is the edited text above its quote; `storedHtmlHead` and
+ * `storedTextHead` are the stored parts above theirs, so a signature block
+ * inside the quote (someone quoting a message signed by this server) is never
+ * mistaken for the draft's own.
+ */
+export function htmlKeepingQuote(
+  text: string,
+  storedText: string | null,
+  storedHtml: string,
+): { head: string; storedTextHead: string; storedHtmlHead: string; quoteHtml: string } | null {
+  const edited = splitQuotedText(text);
+  const stored = splitQuotedText(storedText);
+  if (!edited || !stored) return null;
+  if (comparableQuote(edited.quote) !== comparableQuote(stored.quote)) return null;
+  const at = quotedHtmlStart(storedHtml);
+  if (at < 0) return null;
+  return {
+    head: edited.head,
+    storedTextHead: stored.head,
+    storedHtmlHead: storedHtml.slice(0, at),
+    quoteHtml: storedHtml.slice(at),
+  };
 }
 
 /**
@@ -2161,7 +2437,10 @@ export type BodylessDraftUpdateOutcome =
       _meta?: Record<string, unknown>;
     };
   }
-  | Exclude<DraftPatchResult, { ok: true } | { kind: "vetoed" }>;
+  | Exclude<
+    DraftPatchResult,
+    { ok: true } | { kind: "vetoed" } | { kind: "attachments_changed" } | { kind: "remove_unsupported" }
+  >;
 
 /**
  * The whole of a body-less `draft{action:"update"}` after the inbox has been
@@ -2219,7 +2498,13 @@ export async function runBodylessDraftUpdate(
   const patched = await applyDraftPatch(deps, inbox, draftId, patch);
   if (!patched.ok) {
     // No hook is passed, so nothing can veto; narrowed for the type only.
-    return patched.kind === "vetoed" ? { ok: false, kind: "not_found" } : patched;
+    if (patched.kind === "vetoed") return { ok: false, kind: "not_found" };
+    // Nor is a removal ever passed (only the editor card removes files), so
+    // these two cannot happen here either; narrowed the same way.
+    if (patched.kind === "attachments_changed" || patched.kind === "remove_unsupported") {
+      return { ok: false, kind: "write_failed", error: new Error(patched.kind) };
+    }
+    return patched;
   }
   const saved = patched.saved;
   let revision: number | null = line ? lineRevision(line) : null;
@@ -2295,6 +2580,80 @@ export async function runBodylessDraftUpdate(
 // draft_editor_save
 // ---------------------------------------------------------------------------
 
+/**
+ * At most this much, decoded, may be added to a draft in one editor save: the
+ * same 10 MB every other tool takes inline (index.ts SEND_MAX_ATTACHMENT_BYTES).
+ * The card holds itself to less (apps/mcp-app/src/attachments.ts), because
+ * its upload travels through the host's own message channel first.
+ */
+export const EDITOR_ADD_MAX_BYTES = 10 * 1024 * 1024;
+/** At most this many files added, or removed, in one editor save. */
+export const EDITOR_ATTACHMENT_MAX_ITEMS = 20;
+
+/**
+ * `add_attachments` and `remove_attachments`, checked before anything is read.
+ *
+ * Adding takes the inline shape only, `{ filename, mime_type, data }`, through
+ * the same parser as every other tool's `attachments` (attachment-reference.ts:
+ * canonical base64, measured without decoding, a linear scan rather than the
+ * regex that overflowed from 3 MB). A reference to a file in the inbox is
+ * refused: the card never makes one, and resolving it needs a provider
+ * connection this module does not have.
+ */
+export function parseEditorAttachmentArgs(
+  args: Record<string, unknown>,
+):
+  | { ok: true; add: OutgoingAttachment[]; remove: AttachmentRef[] }
+  | { ok: false; message: string } {
+  const parsed = parseAttachmentInputs("draft_editor_save", args["add_attachments"], {
+    maxItems: EDITOR_ATTACHMENT_MAX_ITEMS,
+    maxInlineBytes: EDITOR_ADD_MAX_BYTES,
+  });
+  if (!parsed.ok) {
+    return { ok: false, message: parsed.message.replace("attachments", "add_attachments") };
+  }
+  const add: OutgoingAttachment[] = [];
+  for (const spec of parsed.specs) {
+    if (spec.kind !== "inline") {
+      return { ok: false, message: "add_attachments takes inline files only: { filename, mime_type, data }." };
+    }
+    add.push({ ...spec.attachment });
+  }
+  const rawRemove = args["remove_attachments"];
+  const remove: AttachmentRef[] = [];
+  if (rawRemove !== undefined) {
+    if (!Array.isArray(rawRemove) || rawRemove.length > EDITOR_ATTACHMENT_MAX_ITEMS) {
+      return {
+        ok: false,
+        message: `remove_attachments must be an array of at most ${EDITOR_ATTACHMENT_MAX_ITEMS} items.`,
+      };
+    }
+    const seen = new Set<number>();
+    for (const entry of rawRemove) {
+      const e = entry as Record<string, unknown> | null;
+      const index = e?.["index"];
+      const filename = e?.["filename"];
+      const size = e?.["size_bytes"] ?? null;
+      if (
+        typeof e !== "object" || e === null || Array.isArray(e) ||
+        typeof index !== "number" || !Number.isInteger(index) || index < 0 || seen.has(index) ||
+        typeof filename !== "string" ||
+        (size !== null && (typeof size !== "number" || !Number.isInteger(size) || size < 0))
+      ) {
+        return {
+          ok: false,
+          message:
+            "Each remove_attachments entry is { index, filename, size_bytes } naming one stored " +
+            "file by its position, once.",
+        };
+      }
+      seen.add(index);
+      remove.push({ index, filename, size_bytes: size as number | null });
+    }
+  }
+  return { ok: true, add, remove };
+}
+
 export async function runDraftEditorSave(
   deps: DraftEditorDeps,
   caller: DraftEditorCaller,
@@ -2311,12 +2670,16 @@ export async function runDraftEditorSave(
   const toGiven = Array.isArray(args["to"]);
   const ccGiven = Array.isArray(args["cc"]);
   const bccGiven = Array.isArray(args["bcc"]);
+  const files = parseEditorAttachmentArgs(args);
+  if (!files.ok) return invalidArgs(deps.appUrl, files.message);
   if (
-    subject === undefined && bodyText === undefined && !toGiven && !ccGiven && !bccGiven
+    subject === undefined && bodyText === undefined && !toGiven && !ccGiven && !bccGiven &&
+    files.add.length === 0 && files.remove.length === 0
   ) {
     return invalidArgs(
       deps.appUrl,
-      "Pass at least one of to, cc, bcc, subject or body_text. An omitted field is left as stored.",
+      "Pass at least one of to, cc, bcc, subject, body_text, add_attachments or remove_attachments. " +
+        "An omitted field is left as stored.",
     );
   }
   if (subject !== undefined && (typeof subject !== "string" || subject.length > MAX_SUBJECT_LENGTH)) {
@@ -2390,6 +2753,8 @@ export async function runDraftEditorSave(
     ...(bccGiven ? { bcc: stringList(args["bcc"]) } : {}),
     ...(typeof subject === "string" ? { subject } : {}),
     ...(typeof bodyText === "string" ? { bodyText } : {}),
+    ...(files.add.length > 0 ? { addAttachments: files.add } : {}),
+    ...(files.remove.length > 0 ? { removeAttachments: files.remove } : {}),
   }, {
     vetoAfterRead: () => {
       if (!cardWriteConflict(line, baseRevision)) return false;
@@ -2431,6 +2796,27 @@ export async function runDraftEditorSave(
           detail: n === 1
             ? "Saving here would remove its attachment, so nothing was changed. Edit it in your mail app instead."
             : `Saving here would remove its ${n} attachments, so nothing was changed. Edit it in your mail app instead.`,
+        },
+      );
+    }
+    if (patched.kind === "attachments_changed") {
+      // The file named for removal is not the one stored at that place any
+      // more: the draft was rewritten since the card loaded it.
+      return draftChanged(deps.appUrl);
+    }
+    if (patched.kind === "remove_unsupported") {
+      return draftFailure(
+        deps.appUrl,
+        "failed",
+        "Attachments cannot be removed from this draft here.",
+        "This mailbox does not let a save remove an attachment, so nothing was changed. " +
+          "Remove it in the mail client instead.",
+        "attachment_remove_unsupported",
+        "attachment_remove_unsupported",
+        null,
+        {
+          headline: "This attachment cannot be removed here.",
+          detail: "Nothing was changed. Remove it in your mail app instead.",
         },
       );
     }
@@ -2748,8 +3134,10 @@ export const DRAFT_EDITOR_TOOL_DEFINITIONS: DraftEditorToolDefinition[] = [
           maxLength: MAX_BODY_LENGTH,
           description:
             "Replacement plain-text body, written exactly as given. When the draft has an " +
-            "HTML part it is regenerated from this text, so both parts of the message say " +
-            "the same thing. Omit to keep the stored body.",
+            "HTML part, the edit is made inside it when it can be placed exactly; otherwise " +
+            "a formatted HTML part is dropped (body.formatting_removed) and a plain one is " +
+            "regenerated, so both parts of the message say the same thing. Omit to keep " +
+            "the stored body.",
         },
         base_revision: {
           type: "integer",
@@ -2757,6 +3145,39 @@ export const DRAFT_EDITOR_TOOL_DEFINITIONS: DraftEditorToolDefinition[] = [
           description:
             "The draft.revision of the copy being edited (0 when it had none). When the " +
             "draft has been rewritten since, the save is refused as draft_changed.",
+        },
+        add_attachments: {
+          type: "array",
+          maxItems: EDITOR_ATTACHMENT_MAX_ITEMS,
+          description: "Files to add, base64. The stored files are kept. 10 MB in all per save.",
+          items: {
+            type: "object",
+            properties: {
+              filename: { type: "string" },
+              mime_type: { type: "string" },
+              data: { type: "string", description: "Standard base64." },
+            },
+            required: ["filename", "mime_type", "data"],
+            additionalProperties: false,
+          },
+        },
+        remove_attachments: {
+          type: "array",
+          maxItems: EDITOR_ATTACHMENT_MAX_ITEMS,
+          description:
+            "Stored files to remove, by position in draft.attachments, each naming the file it " +
+            "means. Every other file is kept byte for byte. Refused as draft_changed when the " +
+            "file at that position is another one, and on Outlook, where a save cannot remove one.",
+          items: {
+            type: "object",
+            properties: {
+              index: { type: "integer", minimum: 0 },
+              filename: { type: "string" },
+              size_bytes: { type: ["integer", "null"], minimum: 0 },
+            },
+            required: ["index", "filename"],
+            additionalProperties: false,
+          },
         },
       },
       required: ["draft_id"],

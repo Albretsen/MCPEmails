@@ -103,8 +103,8 @@
       "keywords": "ingen verktøy ingenting tom connector virker ikke claude chatgpt cursor utviklermodus tilgang inbox_list",
       "steps": [
         "Åpne Innbokser i dashbordet og sjekk at postkassen står oppført uten feil. Viser den en feil, koble den til på nytt.",
-        "Start en ny chat etter at du har lagt til connectoren. I ChatGPT må du også velge Utviklermodus og mcpemails-appen fra +-menyen i hver nye chat.",
-        "Godkjenn connectoren med den samme mcpemails-kontoen som har postkassen.",
+        "Start en ny chat etter at du har lagt til connectoren. I ChatGPT må du også velge Utviklermodus og MCP Emails-appen fra +-menyen i hver nye chat.",
+        "Godkjenn connectoren med den samme MCP Emails-kontoen som har postkassen.",
         "Assistenten ser bare verktøyene connectoren eller API-nøkkelen har tilgang til. Lot du en tilgang stå uten hake, fjern connectoren og legg den til på nytt.",
         "Be assistenten liste innboksene dine først. E-post hentes når assistenten ber om den, så ingenting kommer av seg selv."
       ],
@@ -120,7 +120,7 @@
       "keywords": "bruksgrense kvote tak 150 handlinger gratis free avvist nullstilles",
       "steps": [
         "Se hvor mange handlinger du har brukt under Bruk i dashbordet.",
-        "Å liste innboksene dine og alt du gjør i dashbordet telles aldri, og ingenting telles de første 7 dagene etter registrering.",
+        "Å liste innboksene dine og alt du gjør i dashbordet telles aldri, og ingenting telles de første 3 dagene etter registrering.",
         "Å prøve på nytt hjelper ikke. Kvoten nullstilles den 1. i neste måned (UTC), og pausede automatiseringer fortsetter av seg selv.",
         "Personal, Pro og Team har ingen månedlig grense, innenfor rimelig bruk.",
         "Arbeidsområder opprettet før 2026-09-12 måles ikke. Ser du grensen på et slikt, skriv til oss."

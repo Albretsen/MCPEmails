@@ -33,7 +33,7 @@
 import assert from 'node:assert/strict';
 import { test } from 'node:test';
 import { SOURCES } from '../../../src/lib/acquisition-context.mjs';
-import { attemptRate, calendarWeekBuckets, mondayOf, prettyChannel, projectToday, projectWeek, signupDayColumns } from './shared.ts';
+import { attemptRate, calendarWeekBuckets, mondayOf, prettyChannel, projectToday, projectWeek, revenueTone, signupDayColumns } from './shared.ts';
 
 /** `days` complete days of `perDay` signups, `byNow` of each in before the cutoff, then today. */
 function paceRows(days: number, perDay: number, byNow: number, today: number) {
@@ -270,6 +270,15 @@ const EXPECTED_LABELS: Record<string, string> = {
   mcpservers: 'mcpservers.org',
   mcp_so: 'mcp.so',
   freemcp: 'freemcp',
+  npm: 'npm',
+  mcp_registry: 'MCP Registry',
+  docker: 'Docker MCP Catalog',
+  github_punkpeye: 'awesome-mcp-servers (punkpeye)',
+  github_tensorblock: 'awesome-mcp-servers (TensorBlock)',
+  github_bestof: 'best-of-mcp-servers',
+  claude_directory: 'Claude Directory',
+  chatgpt_directory: 'ChatGPT app directory',
+  cursor_directory: 'Cursor Directory',
   other: 'Other',
 };
 
@@ -287,4 +296,15 @@ test('an id the map has never seen is still printed, not dropped', () => {
   assert.equal(prettyChannel('producthunt'), 'Product Hunt');
   assert.equal(prettyChannel('some_new_directory'), 'Some new directory');
   assert.equal(prettyChannel('unattributed'), 'Unknown');
+});
+
+test('revenueTone follows the window, not a single failing card or cancel', () => {
+  // Grew in the window: green, whatever else is going on with individual subs.
+  assert.equal(revenueTone({ mrrMinor: 80_000, netNewMrrMinor: 2_400 }), 'good');
+  // Flat window is not a fall.
+  assert.equal(revenueTone({ mrrMinor: 80_000, netNewMrrMinor: 0 }), 'good');
+  // Fell in the window: amber.
+  assert.equal(revenueTone({ mrrMinor: 80_000, netNewMrrMinor: -900 }), 'warn');
+  // Nothing yet is a milestone, not a fall.
+  assert.equal(revenueTone({ mrrMinor: 0, netNewMrrMinor: -900 }), 'goal');
 });

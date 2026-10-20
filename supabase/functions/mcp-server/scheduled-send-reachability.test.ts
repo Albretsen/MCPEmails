@@ -486,6 +486,8 @@ function triageHarness(inboxes: Row[], overrides: Partial<TriageDeps> = {}) {
       reclaimStaleLease: () => Promise.resolve(),
       listDueRules: () => Promise.resolve([]),
       claimRule: () => Promise.resolve(true),
+      inboxLeaseHeld: () => Promise.resolve(false),
+      abandonClaim: () => Promise.resolve(),
       releaseRule: (_id: string, update: Record<string, unknown>) => {
         released.push(update);
         return Promise.resolve();

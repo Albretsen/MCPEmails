@@ -26,19 +26,33 @@
 // outright is reported as a crash and does not stop the next one — the crash is
 // itself a finding, and it is now a finding you get to read alongside the
 // others rather than instead of them.
+//
+// IN PARALLEL, EXCEPT THE DOM SUITES (2026-10-20). Run one after another the
+// suites took ~144 s of the card job. A third of that is the state machine
+// sleeping through its real 9 s watchdogs, using no CPU. Suites now run in
+// lanes: the DOM suites (DOM_LANE below) one after another in a lane of their
+// own, everything else alongside them, CARD_TEST_CONCURRENCY lanes in all
+// (default 4; 1 is the old fully serial run). Each suite bundles to its own
+// dist/<name>.bundle.mjs and owns its own fake host, so nothing is shared.
+// Output is buffered per suite and printed whole, in the order below, so the
+// log reads exactly as it did serially.
+//
+// WHY THE DOM SUITES STAY SERIAL. Every one of them waits for the card with a
+// fixed `settle = () => after(40)` (50 in draft-sync, 30 in card-render), not
+// for a condition. With three of them sharing a 4-CPU runner, one CI run
+// failed "L. fullscreen ... got inline, want fullscreen" in draft polish: the
+// card's chain of timers had not finished inside 40 ms of a busier CPU. Run
+// one at a time, as they always were, they have no such failure on record. Do
+// not move a suite out of DOM_LANE unless its waits are on conditions.
 // ---------------------------------------------------------------------------
 
-import { spawnSync } from "node:child_process";
+import { spawn } from "node:child_process";
 import { dirname, resolve } from "node:path";
 import { fileURLToPath } from "node:url";
 
 const here = dirname(fileURLToPath(import.meta.url));
+const concurrency = Math.max(1, Number.parseInt(process.env.CARD_TEST_CONCURRENCY ?? "", 10) || 4);
 
-/**
- * In order, because the later ones are cheaper to read once the earlier ones
- * have printed. The order carries no dependency: each one builds its own
- * esbuild bundle from src/ and owns its own fake host.
- */
 const SUITES = [
   ["state machine", "state-machine.mjs"],
   ["hardening", "hardening.mjs"],
@@ -95,6 +109,27 @@ const SUITES = [
   // cancel), Enter on a recipient that is not an address, and an older card
   // that folds when a newer one mounts, without being touched.
   ["draft send safety", "draft-send-safety.test.mjs"],
+  // The ninth DOM suite: a formatted draft (heading, list, link) under the
+  // plain-text box (QA, 2026-10-17). The warning before a save that would turn
+  // it into plain text and its undo, the notice after one, and focus kept in
+  // the frame when switching between the formatted view and the box.
+  ["draft formatting", "draft-formatting.test.mjs"],
+  // The tenth DOM suite: a reply's quoted original (release review,
+  // 2026-10-17). The Signature row is the signature, the quote is a read-only
+  // section of its own, and every save hands the quote back byte for byte.
+  ["draft quote", "draft-quote.test.mjs"],
+  // The eleventh DOM suite: the layout review of 2026-10-17 in claude.ai. Nothing
+  // moves under the pointer (header status, the ⋯ overlay, the delete confirm
+  // on the left), one status said one way, Send off during a save, "Delete
+  // draft" vs "Undo my edits", the empty-subject question, narrow widths.
+  // footer-geometry.mjs measures the same promises in real Chrome.
+  ["draft layout", "draft-layout.test.mjs"],
+  // The twelfth DOM suite: the recipient fields and files of the 2026-10-17
+  // live review. Rows and chips that stay put under the pointer, duplicates
+  // across fields, separators and pasted lists, suggestions (and the server
+  // adapter that is not wired), and files as chips that can be removed and
+  // attached.
+  ["draft fields", "draft-fields.test.mjs"],
   // DOM-free, and last only because it was merged last: the exact text of every
   // sentence the card sends the model, and the decisions behind a deferred
   // draft body (where it comes from, and which `draft_read` answer is adopted).
@@ -104,31 +139,82 @@ const SUITES = [
   ["sanitize layer 1", "sanitize.test.mjs"],
 ];
 
-const outcomes = [];
-
-for (const [label, file] of SUITES) {
-  console.log(`\n──── ${label} ${"─".repeat(Math.max(0, 60 - label.length))}`);
-  const run = spawnSync(process.execPath, [resolve(here, file)], {
-    stdio: "inherit",
+function runSuite([label, file]) {
+  return new Promise((done) => {
+    const started = Date.now();
+    const chunks = [];
+    const child = spawn(process.execPath, [resolve(here, file)], { stdio: ["ignore", "pipe", "pipe"] });
+    child.stdout.on("data", (c) => chunks.push(c));
+    child.stderr.on("data", (c) => chunks.push(c));
+    let error = null;
+    child.on("error", (err) => {
+      error = err;
+    });
+    child.on("close", (status, signal) => {
+      // Three distinct endings, and they are not the same finding: a clean
+      // pass, a suite that ran and failed checks, and a suite that never got
+      // to say anything. The third is the one `&&` used to turn into silence.
+      const outcome =
+        error || signal
+          ? { label, state: "crashed", detail: String(error?.message ?? signal) }
+          : status === 0
+            ? { label, state: "passed", detail: "" }
+            : { label, state: "failed", detail: `exit ${status}` };
+      done({ ...outcome, seconds: (Date.now() - started) / 1000, output: Buffer.concat(chunks) });
+    });
   });
-  // Three distinct endings, and they are not the same finding: a clean pass, a
-  // suite that ran and failed checks, and a suite that never got to say
-  // anything. The third is the one `&&` used to turn into silence.
-  const outcome =
-    run.error || run.signal
-      ? { label, state: "crashed", detail: String(run.error?.message ?? run.signal) }
-      : run.status === 0
-        ? { label, state: "passed", detail: "" }
-        : { label, state: "failed", detail: `exit ${run.status}` };
-  outcomes.push(outcome);
+}
+
+/** Suites that wait on fixed timers inside jsdom: run one at a time. */
+const DOM_LANE = new Set([
+  "draft-sync.test.mjs",
+  "card-render.test.mjs",
+  "draft-qa.test.mjs",
+  "draft-polish.test.mjs",
+  "draft-state.test.mjs",
+  "draft-ux.test.mjs",
+  "draft-ended.test.mjs",
+  "draft-send-safety.test.mjs",
+  "draft-formatting.test.mjs",
+  "draft-quote.test.mjs",
+  "draft-layout.test.mjs",
+  "draft-fields.test.mjs",
+]);
+
+const outcomes = new Array(SUITES.length);
+let printed = 0;
+function flush() {
+  while (printed < SUITES.length && outcomes[printed]) {
+    const o = outcomes[printed++];
+    console.log(`\n──── ${o.label} ${"─".repeat(Math.max(0, 60 - o.label.length))}`);
+    process.stdout.write(o.output);
+  }
+}
+
+/** One lane: takes the next suite from `queue` (indexes into SUITES) until it is empty. */
+async function lane(queue) {
+  while (queue.length) {
+    const i = queue.shift();
+    outcomes[i] = await runSuite(SUITES[i]);
+    flush();
+  }
+}
+const all = SUITES.map((_, i) => i);
+if (concurrency === 1) {
+  await lane(all);
+} else {
+  const dom = all.filter((i) => DOM_LANE.has(SUITES[i][1]));
+  const rest = all.filter((i) => !DOM_LANE.has(SUITES[i][1]));
+  await Promise.all([lane(dom), ...Array.from({ length: concurrency - 1 }, () => lane(rest))]);
 }
 
 console.log(`\n──── verify ${"─".repeat(56)}`);
 for (const o of outcomes) {
   const mark = o.state === "passed" ? "ok  " : "FAIL";
-  console.log(`${mark}  ${o.label}${o.detail ? `  (${o.detail})` : ""}`);
+  console.log(`${mark}  ${o.label}${o.detail ? `  (${o.detail})` : ""}  ${o.seconds.toFixed(1)}s`);
 }
 
 const bad = outcomes.filter((o) => o.state !== "passed");
 console.log(`${outcomes.length - bad.length}/${outcomes.length} suites passed`);
-process.exit(bad.length ? 1 : 0);
+// exitCode, not exit(): a pipe may still be draining the buffered output.
+process.exitCode = bad.length ? 1 : 0;

@@ -103,8 +103,8 @@
       "keywords": "aucun outil rien vide connecteur ne marche pas claude chatgpt cursor mode développeur portée inbox_list",
       "steps": [
         "Ouvrez Boîtes dans le tableau de bord et vérifiez que la boîte apparaît sans erreur. Si elle en affiche une, reconnectez-la.",
-        "Ouvrez une nouvelle conversation après avoir ajouté le connecteur. Dans ChatGPT, choisissez aussi Mode développeur et l’application mcpemails dans le menu + de chaque nouvelle conversation.",
-        "Autorisez le connecteur avec le même compte mcpemails que celui qui détient la boîte.",
+        "Ouvrez une nouvelle conversation après avoir ajouté le connecteur. Dans ChatGPT, choisissez aussi Mode développeur et l’application MCP Emails dans le menu + de chaque nouvelle conversation.",
+        "Autorisez le connecteur avec le même compte MCP Emails que celui qui détient la boîte.",
         "Votre assistant ne voit que les outils autorisés pour le connecteur ou la clé d’API. Si vous avez laissé une portée décochée, retirez le connecteur et ajoutez-le de nouveau.",
         "Demandez d’abord à l’assistant de lister vos boîtes. Les e-mails sont récupérés quand l’assistant les demande, rien n’arrive tout seul."
       ],
@@ -120,7 +120,7 @@
       "keywords": "limite d’utilisation quota plafond 150 actions gratuit free refusé réinitialisation",
       "steps": [
         "Consultez le nombre d’actions utilisées dans Usage, dans le tableau de bord.",
-        "Lister vos boîtes et tout ce que vous faites dans le tableau de bord ne compte jamais, et rien n’est compté pendant les 7 premiers jours après l’inscription.",
+        "Lister vos boîtes et tout ce que vous faites dans le tableau de bord ne compte jamais, et rien n’est compté pendant les 3 premiers jours après l’inscription.",
         "Réessayer ne sert à rien. Le quota se réinitialise le 1er du mois suivant (UTC), et les automatisations en pause reprennent seules.",
         "Personal, Pro et Team n’ont pas de plafond mensuel, dans la limite d’un usage raisonnable.",
         "Les espaces créés avant le 2026-09-12 ne sont pas décomptés. Si vous voyez la limite sur l’un d’eux, écrivez-nous."

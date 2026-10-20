@@ -20,8 +20,8 @@
     "eyebrow": "Poste.io + AI",
     "titleLine1": "Koble Poste.io til Claude,",
     "titleLine2": "Cursor, ChatGPT og enhver MCP-klient",
-    "lead": "Én container, ett vertsnavn, en komplett e-postserver. Pek mcpemails mot den, så kan en AI-agent lese, søke, sende, svare, planlegge og arkivere e-post i postkassene du opprettet i Poste.io-admingrensesnittet.",
-    "answer": "Claude når ikke en Poste.io-server på egen hånd. mcpemails er en hostet MCP-server som kobler til din via IMAP på port 993, på vertsnavnet du ga containeren da du startet den, med passordet til en postkasse opprettet i Poste.io-admingrensesnittet, slik at Claude, Cursor eller enhver MCP-klient kan lese, søke, sende og organisere den e-posten. Poste.io kjører Dovecot for IMAP inne i containeren, så protokolloppførselen er vanlig Dovecot. Containeren må publisere 993 mot internett og levere et sertifikat som er gyldig for vertsnavnet du kobler til. Én innboks er gratis.",
+    "lead": "Én container, ett vertsnavn, en komplett e-postserver. Pek MCP Emails mot den, så kan en AI-agent lese, søke, sende, svare, planlegge og arkivere e-post i postkassene du opprettet i Poste.io-admingrensesnittet.",
+    "answer": "Claude når ikke en Poste.io-server på egen hånd. MCP Emails er en hostet MCP-server som kobler til din via IMAP på port 993, på vertsnavnet du ga containeren da du startet den, med passordet til en postkasse opprettet i Poste.io-admingrensesnittet, slik at Claude, Cursor eller enhver MCP-klient kan lese, søke, sende og organisere den e-posten. Poste.io kjører Dovecot for IMAP inne i containeren, så protokolloppførselen er vanlig Dovecot. Containeren må publisere 993 mot internett og levere et sertifikat som er gyldig for vertsnavnet du kobler til. Én innboks er gratis.",
     "meta0": "1 innboks gratis, for alltid",
     "meta1": "Postkassepassord fra admingrensesnittet",
     "meta2": "E-post hentes direkte, lagres aldri"
@@ -32,7 +32,7 @@
   },
   "setup": [
     {
-      "h": "Opprett din gratis mcpemails-konto",
+      "h": "Opprett din gratis MCP Emails-konto",
       "p": "Registrer deg på mcpemails.com. Én innboks er gratis for alltid, og det kreves ikke kort."
     },
     {
@@ -41,7 +41,7 @@
     },
     {
       "h": "Sjekk sertifikatet, og legg så til postkassen",
-      "p": "I Poste.io-admingrensesnittet åpner du TLS-sertifikatinnstillingene og bekrefter at et Let's Encrypt-sertifikat faktisk ble utstedt, i stedet for at det selvsignerte fortsatt leveres. Legg så til innboksen i mcpemails: velg IMAP / SMTP, skriv inn containerens vertsnavn, hele postkasseadressen og passordet fra admingrensesnittet."
+      "p": "I Poste.io-admingrensesnittet åpner du TLS-sertifikatinnstillingene og bekrefter at et Let's Encrypt-sertifikat faktisk ble utstedt, i stedet for at det selvsignerte fortsatt leveres. Legg så til innboksen i MCP Emails: velg IMAP / SMTP, skriv inn containerens vertsnavn, hele postkasseadressen og passordet fra admingrensesnittet."
     },
     {
       "h": "Lim MCP-URL-en inn i AI-en",
@@ -63,14 +63,14 @@
     }
   ],
   "limits": [
-    "Containeren må godta innkommende tilkoblinger på 993 fra internett for at en hostet MCP-server skal nå den. En Poste.io som kjører på en hjemmeserver eller et privat nettverk, kan ikke kobles til på denne måten. mcpemails kan selvhostes, så vil du heller at ingenting eksternt rører e-postserveren, kan du kjøre begge i samme nettverk.",
+    "Containeren må godta innkommende tilkoblinger på 993 fra internett for at en hostet MCP-server skal nå den. En Poste.io som kjører på en hjemmeserver eller et privat nettverk, kan ikke kobles til på denne måten. MCP Emails kan selvhostes, så vil du heller at ingenting eksternt rører e-postserveren, kan du kjøre begge i samme nettverk.",
     "TLS-validering er streng og kan ikke omgås. Det selvsignerte sertifikatet en ny Poste.io genererer, blir avvist, og derfor er det å skaffe et ekte sertifikat et oppsettssteg og ikke valgfri finpuss.",
     "Sending går ut gjennom Haraka på din egen IP-adresse, så SPF-, DKIM- og DMARC-oppføringer og adressens omdømme avgjør om e-posten godtas videre."
   ],
   "faq": [
     {
       "q": "Fungerer Claude med Poste.io?",
-      "a": "Ikke på egen hånd. Claude har ingen Poste.io-kobling og kan ikke åpne en IMAP-økt mot en container du kjører. Kobler du en MCP-server som mcpemails til Poste.io-vertsnavnet ditt, får Claude tilgang til å lese, søke, sende, svare, planlegge og organisere i en postkasse der, og samme innboks fungerer da fra Cursor eller ChatGPT."
+      "a": "Ikke på egen hånd. Claude har ingen Poste.io-kobling og kan ikke åpne en IMAP-økt mot en container du kjører. Kobler du en MCP-server som MCP Emails til Poste.io-vertsnavnet ditt, får Claude tilgang til å lese, søke, sende, svare, planlegge og organisere i en postkasse der, og samme innboks fungerer da fra Cursor eller ChatGPT."
     },
     {
       "q": "Hva er IMAP- og SMTP-innstillingene for Poste.io?",

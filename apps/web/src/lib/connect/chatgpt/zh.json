@@ -1,0 +1,24 @@
+{
+  "eyebrow": "ChatGPT",
+  "title": "在 ChatGPT 中使用 {provider}",
+  "sub": "ChatGPT 通过自定义 MCP 连接器访问 {provider}。这需要开发者模式，适用于 chatgpt.com 上的 Plus、Pro、Business、Enterprise 和 Edu。",
+  "steps": [
+    "按照上面的步骤将 {provider} 连接到 MCP Emails。",
+    "在 ChatGPT 中打开 Settings、Apps and Connectors、Advanced settings，开启开发者模式。",
+    "在 Apps and Connectors 中点击 Create，将 <code>https://mcpemails.com/api/mcp</code> 粘贴为连接器 URL，选择 OAuth 并登录 MCP Emails。",
+    "在每个新对话中点击 <b>+</b>，选择开发者模式并选中你的连接器。"
+  ],
+  "docsLink": "完整的 ChatGPT 设置指南",
+  "blogLink": "如何将 ChatGPT 连接到你的邮箱",
+  "faqQ": "ChatGPT 能读取我的 {provider} 邮件吗？",
+  "faqQMailName": "ChatGPT 能读取我的 {provider} 邮件吗？",
+  "faqA": "可以，只要先将 {provider} 连接到 MCP Emails。在 ChatGPT 中添加一个自定义 MCP 连接器，URL 填 https://mcpemails.com/api/mcp，并使用 OAuth 登录。自定义连接器需要开发者模式，适用于 chatgpt.com 上的 Plus、Pro、Business、Enterprise 和 Edu。ChatGPT 只获得你批准的权限，邮件实时读取，从不存储。",
+  "directorySub": "ChatGPT 通过 MCP Emails 的 Any Mailbox 应用访问 {provider}。",
+  "directorySteps": [
+    "按照上面的步骤将 {provider} 连接到 MCP Emails。",
+    "在 ChatGPT 应用目录中打开 Any Mailbox，点击 Connect。",
+    "登录 MCP Emails，并批准你想授予 ChatGPT 的权限。"
+  ],
+  "directoryLink": "ChatGPT 应用目录中的 Any Mailbox",
+  "directoryFaqA": "可以，只要先将 {provider} 连接到 MCP Emails。从 ChatGPT 应用目录安装 Any Mailbox 并登录 MCP Emails。ChatGPT 只获得你批准的权限，邮件实时读取，从不存储。"
+}

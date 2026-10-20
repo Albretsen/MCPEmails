@@ -21,7 +21,7 @@
     "titleLine1": "Koble IceWarp til Claude,",
     "titleLine2": "Cursor, ChatGPT og enhver MCP-klient",
     "lead": "IceWarp kjører allerede e-posten, kalenderne og chatten din. Legger du en MCP-server oppå, kan en AI-agent jobbe direkte i postkassen: lese, søke, sende, svare, planlegge og sortere, med de samme påloggingsopplysningene som enhver e-postklient på datamaskinen bruker.",
-    "answer": "Claude kan ikke nå en IceWarp-server på egen hånd. mcpemails er en driftet MCP-server som kobler seg til IceWarp-installasjonen din over IMAP på ditt eget vertsnavn, på port 993 med implisitt TLS, med postkassepassordet som ligger i IceWarps administrasjonskonsoll, slik at Claude, Cursor eller enhver MCP-klient kan lese, søke i, sende og organisere den e-posten. IceWarp er programvare du drifter selv, så det finnes ikke noe felles vertsnavn å oppgi: serveren må kunne slås opp og nås fra internett, og sertifikatet på 993 må være gyldig for navnet du kobler til. Én innboks er gratis.",
+    "answer": "Claude kan ikke nå en IceWarp-server på egen hånd. MCP Emails er en driftet MCP-server som kobler seg til IceWarp-installasjonen din over IMAP på ditt eget vertsnavn, på port 993 med implisitt TLS, med postkassepassordet som ligger i IceWarps administrasjonskonsoll, slik at Claude, Cursor eller enhver MCP-klient kan lese, søke i, sende og organisere den e-posten. IceWarp er programvare du drifter selv, så det finnes ikke noe felles vertsnavn å oppgi: serveren må kunne slås opp og nås fra internett, og sertifikatet på 993 må være gyldig for navnet du kobler til. Én innboks er gratis.",
     "meta0": "1 innboks gratis, for alltid",
     "meta1": "Postkassepassord fra konsollen",
     "meta2": "E-post hentes direkte, lagres aldri"
@@ -32,16 +32,16 @@
   },
   "setup": [
     {
-      "h": "Opprett en gratis mcpemails-konto",
+      "h": "Opprett en gratis MCP Emails-konto",
       "p": "Registrer deg på mcpemails.com. Én innboks er gratis for alltid, og du blir ikke bedt om kort, så det holder for å teste mot en ekte IceWarp-konto."
     },
     {
       "h": "Åpne IMAP-tjenesten i administrasjonskonsollen",
-      "p": "Gå til System-noden, deretter Services, og dobbeltklikk på IMAP. Bekreft at tjenesten kjører, og at den sikre porten er 993. Mens du er i System, åpner du Certificates og sjekker hvilket sertifikat som er knyttet til vertsnavnet du har tenkt å gi til mcpemails."
+      "p": "Gå til System-noden, deretter Services, og dobbeltklikk på IMAP. Bekreft at tjenesten kjører, og at den sikre porten er 993. Mens du er i System, åpner du Certificates og sjekker hvilket sertifikat som er knyttet til vertsnavnet du har tenkt å gi til MCP Emails."
     },
     {
       "h": "Sjekk kontoens Mailbox Type, og legg så til innboksen",
-      "p": "Under Domains and Accounts åpner du brukeren og ser på fanen Options. Innstillingen <code>Mailbox: Type</code> må ha den kombinerte verdien for IMAP og POP3, ikke bare POP3. Legg deretter til innboksen i mcpemails: velg IMAP / SMTP, og skriv inn IceWarp-vertsnavnet, den fullstendige adressen og postkassepassordet."
+      "p": "Under Domains and Accounts åpner du brukeren og ser på fanen Options. Innstillingen <code>Mailbox: Type</code> må ha den kombinerte verdien for IMAP og POP3, ikke bare POP3. Legg deretter til innboksen i MCP Emails: velg IMAP / SMTP, og skriv inn IceWarp-vertsnavnet, den fullstendige adressen og postkassepassordet."
     },
     {
       "h": "Lim MCP-URL-en inn i AI-en",
@@ -63,14 +63,14 @@
     }
   ],
   "limits": [
-    "En driftet MCP-server må åpne en innkommende tilkobling til IceWarp-verten din, så en server som bare er publisert på et internt nettverk, eller som bare kan nås via en bedrifts-VPN, kan ikke kobles til på denne måten. mcpemails kan driftes selv hvis du vil at IMAP-økten skal holde seg innenfor perimeteren.",
+    "En driftet MCP-server må åpne en innkommende tilkobling til IceWarp-verten din, så en server som bare er publisert på et internt nettverk, eller som bare kan nås via en bedrifts-VPN, kan ikke kobles til på denne måten. MCP Emails kan driftes selv hvis du vil at IMAP-økten skal holde seg innenfor perimeteren.",
     "Sertifikatvalideringen er streng og kan ikke fravikes, så et utløpt sertifikat eller et som er utstedt for et annet navn, blir avvist i stedet for godtatt med en advarsel.",
-    "IceWarps kalendere, kontakter og chat er ikke en del av dette. mcpemails snakker IMAP og SMTP, så det fungerer med e-post, ikke med groupware-funksjonene som ligger ved siden av."
+    "IceWarps kalendere, kontakter og chat er ikke en del av dette. MCP Emails snakker IMAP og SMTP, så det fungerer med e-post, ikke med groupware-funksjonene som ligger ved siden av."
   ],
   "faq": [
     {
       "q": "Fungerer Claude med IceWarp?",
-      "a": "Ikke på egen hånd. Claude har ingen IceWarp-kobling og kan ikke åpne en IMAP-økt mot en server du drifter. Kobler du en MCP-server som mcpemails til IceWarp-verten din, får Claude tilgang til å lese, søke, sende, svare, planlegge og organisere i en postkasse der, og den samme innboksen er da også tilgjengelig i Cursor og ChatGPT."
+      "a": "Ikke på egen hånd. Claude har ingen IceWarp-kobling og kan ikke åpne en IMAP-økt mot en server du drifter. Kobler du en MCP-server som MCP Emails til IceWarp-verten din, får Claude tilgang til å lese, søke, sende, svare, planlegge og organisere i en postkasse der, og den samme innboksen er da også tilgjengelig i Cursor og ChatGPT."
     },
     {
       "q": "Hva er IMAP- og SMTP-innstillingene for IceWarp?",

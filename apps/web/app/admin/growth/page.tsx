@@ -70,7 +70,7 @@
  * THE ACTION CAP IS BACK, AS ONE BAND. Four panels of it were cut on
  * 2026-09-07 because the cap was a silent abuse ceiling nobody could reach
  * and they reported a structural zero. Since 2026-09-12 Free is 150 email
- * actions a month with the first 7 days uncounted (docs/PLAN-free-action-cap-150.md),
+ * actions a month with the first 3 days uncounted (docs/PLAN-free-action-cap-150.md),
  * which makes it a paywall with a funnel, two emails and an automation pause
  * behind it, and that is what the "Usage cap" band measures. Connected
  * inboxes remain the other value metric and keep their own tiles.
@@ -108,7 +108,7 @@ import '../../../styles/admin-board-parts.css';
 import '../../../styles/admin-kiosk.css';
 import '../../../styles/admin-growth.css';
 
-export const metadata = { title: 'Growth analytics · MCP Emails', robots: { index: false, follow: false } };
+export const metadata = { title: 'Growth analytics', robots: { index: false, follow: false } };
 
 /**
  * Windows for the figures that are genuinely windowed: MRR movements,
@@ -262,6 +262,7 @@ export default async function GrowthBoardPage({
           <Suspense
             fallback={
               <>
+                <Skeleton span={12} tall={2} />
                 <Skeleton span={6} tall={2} />
                 <Skeleton span={6} tall={2} />
                 <Skeleton span={8} tall={2} />

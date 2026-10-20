@@ -84,7 +84,7 @@ export type UsageCapStateTile = {
 
 export function usageCapStateTiles(row: GrowthUsageCapOverviewRow): UsageCapStateTile[] {
   return [
-    { key: 'grace', label: 'In grace', value: row.in_grace, note: 'first 7 days, uncounted' },
+    { key: 'grace', label: 'In grace', value: row.in_grace, note: 'first 3 days, uncounted' },
     { key: 'under_half', label: 'Under 50%', value: row.under_half, note: 'counting, no signal yet' },
     { key: 'half', label: '50 to 79%', value: row.half, note: 'on course for the email' },
     { key: 'warn', label: '80 to 99%', value: row.warn, note: 'warned, still working' },
@@ -156,7 +156,7 @@ export const USAGE_CAP_STATE_WORDS: Record<GrowthUsageCapState, string> = {
   exempt_early: 'Early member, never metered',
   exempt_support: 'Exempt by support or a comp',
   paid: 'Paid plan, no monthly cap',
-  grace: 'In the grace week',
+  grace: 'In the trial period',
   under_half: 'Under half',
   half: '50 to 79%',
   warn: '80 to 99%, warned',

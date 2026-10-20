@@ -19,8 +19,8 @@
     "eyebrow": "Mail-in-a-Box + AI",
     "titleLine1": "Koble Mail-in-a-Box til Claude,",
     "titleLine2": "Cursor, ChatGPT og enhver MCP-klient",
-    "lead": "Du satte opp din egen boks for at ingen andre skulle ha e-posten din. Å legge til en AI-agent trenger ikke endre det: mcpemails kobler til boksen din over IMAP og henter hver melding direkte, uten å lagre noe av den.",
-    "answer": "Claude kan ikke nå en Mail-in-a-Box-server på egen hånd. mcpemails er en driftet MCP-server som kobler til din over IMAP på port 993, på bokse-vertsnavnet som oppsettsveiledningen ber deg bruke, vanligvis box.yourdomain.com, og autentiserer med passordet til en e-postbruker opprettet i administrasjonspanelet. Det lar Claude, Cursor eller enhver MCP-klient lese, søke i, sende og organisere e-posten på boksen din. Boksen må være tilgjengelig fra internett og ha et gyldig Let's Encrypt-sertifikat, som administrasjonspanelet ordner for deg. Én innboks er gratis.",
+    "lead": "Du satte opp din egen boks for at ingen andre skulle ha e-posten din. Å legge til en AI-agent trenger ikke endre det: MCP Emails kobler til boksen din over IMAP og henter hver melding direkte, uten å lagre noe av den.",
+    "answer": "Claude kan ikke nå en Mail-in-a-Box-server på egen hånd. MCP Emails er en driftet MCP-server som kobler til din over IMAP på port 993, på bokse-vertsnavnet som oppsettsveiledningen ber deg bruke, vanligvis box.yourdomain.com, og autentiserer med passordet til en e-postbruker opprettet i administrasjonspanelet. Det lar Claude, Cursor eller enhver MCP-klient lese, søke i, sende og organisere e-posten på boksen din. Boksen må være tilgjengelig fra internett og ha et gyldig Let's Encrypt-sertifikat, som administrasjonspanelet ordner for deg. Én innboks er gratis.",
     "meta0": "1 innboks gratis, for alltid",
     "meta1": "Passord for e-postbrukeren fra administrasjonspanelet",
     "meta2": "E-post hentes direkte, lagres aldri"
@@ -32,7 +32,7 @@
   "setup": [
     {
       "h": "Opprett en gratis konto",
-      "p": "Registrer deg hos mcpemails, uten kort. Gratisplanen kobler til én innboks, for alltid."
+      "p": "Registrer deg hos MCP Emails, uten kort. Gratisplanen kobler til én innboks, for alltid."
     },
     {
       "h": "Skaff et ekte sertifikat fra administrasjonspanelet",
@@ -40,7 +40,7 @@
     },
     {
       "h": "Bekreft e-postbrukeren og passordet",
-      "p": "Under Mail og deretter Users bekrefter du at adressen finnes, og angir et passord du kjenner. Legg deretter til innboksen i mcpemails: velg IMAP / SMTP, bruk <code>box.yourdomain.com</code> som vert, og skriv inn hele adressen og det passordet."
+      "p": "Under Mail og deretter Users bekrefter du at adressen finnes, og angir et passord du kjenner. Legg deretter til innboksen i MCP Emails: velg IMAP / SMTP, bruk <code>box.yourdomain.com</code> som vert, og skriv inn hele adressen og det passordet."
     },
     {
       "h": "Lim MCP-URL-en inn i AI-en",
@@ -62,13 +62,13 @@
     }
   ],
   "limits": [
-    "Boksen din må godta innkommende tilkoblinger på 993 utenfra for at en driftet MCP-server skal nå den. En Mail-in-a-Box på en hjemmelinje bak NAT, eller en som er begrenset av en sikkerhetsgruppe i skyen til din egen adresse, kan ikke kobles til. mcpemails kan driftes selv hvis du heller vil holde IMAP-økten innenfor ditt eget nettverk.",
+    "Boksen din må godta innkommende tilkoblinger på 993 utenfra for at en driftet MCP-server skal nå den. En Mail-in-a-Box på en hjemmelinje bak NAT, eller en som er begrenset av en sikkerhetsgruppe i skyen til din egen adresse, kan ikke kobles til. MCP Emails kan driftes selv hvis du heller vil holde IMAP-økten innenfor ditt eget nettverk.",
     "Mail-in-a-Box forventer å eie DNS og TLS for boksens vertsnavn, så dette fungerer best på en standard, uendret installasjon. En kraftig tilpasset boks viser kanskje ikke det sertifikatet administrasjonspanelet tror den gjør."
   ],
   "faq": [
     {
       "q": "Fungerer Claude med Mail-in-a-Box?",
-      "a": "Ikke direkte. Claude har ingen kobling for en e-postserver du drifter selv. Ved å koble en MCP-server som mcpemails til boksen din over IMAP får Claude tilgang til å lese, søke, sende, svare, planlegge og organisere i postkassene på den, og den samme innboksen fungerer da også i Cursor eller ChatGPT."
+      "a": "Ikke direkte. Claude har ingen kobling for en e-postserver du drifter selv. Ved å koble en MCP-server som MCP Emails til boksen din over IMAP får Claude tilgang til å lese, søke, sende, svare, planlegge og organisere i postkassene på den, og den samme innboksen fungerer da også i Cursor eller ChatGPT."
     },
     {
       "q": "Hva er IMAP- og SMTP-innstillingene for Mail-in-a-Box?",
@@ -80,7 +80,7 @@
     },
     {
       "q": "Må jeg eksponere boksen min mot internett?",
-      "a": "For den driftede tjenesten, ja: mcpemails kobler innkommende til port 993. Det er uansett den normale tilstanden for en Mail-in-a-Box, siden den må ta imot e-post på port 25 fra hele verden. Hvis du bevisst har begrenset tilgangen til dine egne adresser, drift mcpemails selv i stedet, så IMAP-tilkoblingen aldri forlater nettverket ditt."
+      "a": "For den driftede tjenesten, ja: MCP Emails kobler innkommende til port 993. Det er uansett den normale tilstanden for en Mail-in-a-Box, siden den må ta imot e-post på port 25 fra hele verden. Hvis du bevisst har begrenset tilgangen til dine egne adresser, drift MCP Emails selv i stedet, så IMAP-tilkoblingen aldri forlater nettverket ditt."
     },
     {
       "q": "Lagres e-posten min på serverne deres?",

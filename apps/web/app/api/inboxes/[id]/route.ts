@@ -1,4 +1,5 @@
-import { NextRequest, NextResponse } from 'next/server';
+import { NextRequest, NextResponse, after } from 'next/server';
+import { syncMailboxAddonForWorkspace } from '@/lib/stripe/mailbox-addon';
 import { createClient } from '@/lib/supabase/server';
 import { createServiceRoleClient } from '@/lib/supabase/service';
 import { decryptToken } from '@/lib/crypto';
@@ -193,6 +194,11 @@ export async function DELETE(
     console.error('[disconnect-inbox] Failed to disconnect inbox:', updateError.message);
     return NextResponse.json({ error: 'Failed to disconnect inbox.' }, { status: 500 });
   }
+
+  // One mailbox fewer on a Business bill from the next renewal (no credit for
+  // the current period; see src/lib/stripe/mailbox-addon.ts). After the
+  // response, never awaited by it.
+  after(() => syncMailboxAddonForWorkspace(workspaceId).then(() => undefined));
 
   // 5. Audit log: best-effort (a logging failure does not fail the request).
   const { error: auditError } = await service.from('auth_logs').insert({

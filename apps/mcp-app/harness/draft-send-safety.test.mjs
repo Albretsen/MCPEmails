@@ -20,6 +20,10 @@
 //   4. An older card notices a newer one without being touched: a hint from
 //      another card frame (BroadcastChannel or a storage event), or the card
 //      becoming visible again, re-reads the draft once and folds it.
+//      Since 2026-10-17 (4f-4k): one current card per draft. A newer card's
+//      hint folds the older card at once, unsaved edits and all (kept behind
+//      "Show", Send never offered); a Save or "Open here" makes a card current
+//      and its claim folds every other card for the draft at once.
 //
 // DEPENDENCIES: esbuild and jsdom, resolved as in draft-qa.test.mjs.
 // ---------------------------------------------------------------------------
@@ -635,9 +639,9 @@ async function main() {
     d.tools.draft = () => sentResult();
     d.press(d.slot());
     await settle();
-    d.press(d.btn(/^Discard$/));
+    d.press(d.btn(/^Delete draft$/));
     await settle();
-    d.press(d.btn(/^No$/));
+    d.press(d.btn(/^Keep draft$/));
     await settle();
     expect("Discard confirm: the countdown is over", d.slot()?.textContent.trim(), "Send");
     await pastUndo();
@@ -706,7 +710,7 @@ async function main() {
     await settle();
     await settle();
     expectJson("one silent read of its own draft", c.calls.map((x) => [x.name, x.args.draft_id]), [["draft_read", "Drafts:102"]]);
-    expect("folded to one line", /A newer version of this draft is below\./.test(c.text()), true);
+    expect("folded to one line", /Newer version below/.test(c.text()), true);
     expect("no Send on screen", !!c.btn(/^Send$/), false);
     // The same hint again, over the other carrier: no second read, no loop.
     storageHint(c, { ids: [c.mod.signalTag("Drafts:103")], inbox: c.mod.signalTag(INBOX), revision: 2 });
@@ -724,7 +728,7 @@ async function main() {
     await settle();
     await settle();
     expect("one read", c.calls.length, 1);
-    expect("folded", /A newer version of this draft is below\./.test(c.text()), true);
+    expect("folded", /Newer version below/.test(c.text()), true);
     await c.done();
   }
 
@@ -822,26 +826,227 @@ async function main() {
     });
     await settle();
     expect("visible: one read", c.calls.length, 1);
-    expect("and the card folds", /A newer version of this draft is below\./.test(c.text()), true);
+    expect("and the card folds", /Newer version below/.test(c.text()), true);
     await c.done();
   }
 
-  group("4f. an older card kept open by unsaved edits does not offer Send");
+  // ── 4f-4l. One current card per draft (live review, 2026-10-17) ──────────
+  //
+  // The assistant rewrote a draft while the older card held unsaved Cc edits.
+  // The older card stayed open, took in the new body under the edits without
+  // a word, and after a Save there BOTH cards showed Send until the newer one
+  // caught up about five seconds later. Now: the older card folds at once
+  // (edits kept, "Show"), never offers Send while another card is current, and
+  // a Save or "Open here" makes it current and folds the other one at once.
+
+  /** Everything this card broadcasts, from a listener on the same bus. */
+  const listen = () => {
+    const heard = [];
+    const ch = new Bus("mcpemails-draft-cards");
+    ch.onmessage = (e) => heard.push(e.data);
+    return { heard, claims: () => heard.filter((m) => m.kind === "claim"), close: () => ch.close() };
+  };
+  const claimFrom = (c, ids, mounted, revision = null) =>
+    storageHint(c, { kind: "claim", ids: ids.map((id) => c.mod.signalTag(id)), inbox: c.mod.signalTag(INBOX), revision, mounted });
+
+  group("4f. an older card with unsaved edits folds at once, keeps them, and never offers Send");
   {
-    const c = await card({ revision: 1 });
+    const c = await card({ revision: 1, recipients: { cc: [] } });
+    let answer;
+    c.tools.draft_read = () => new Promise((r) => { answer = r; });
+    c.input("d-subject", "My own subject");
+    await settle();
+    storageHint(c, { ids: [c.mod.signalTag("Drafts:103"), c.mod.signalTag("Drafts:102")], inbox: c.mod.signalTag(INBOX), revision: 2 });
+    await settle();
+    // Before the verifying read has answered: the fold is immediate.
+    expect("folded before the read answers", c.isEditor(), false);
+    expect("the line says where and that the edits are kept", /Newer version below.*Your unsaved edits are kept here/.test(c.text()), true);
+    expect("no Send on screen", !!c.btn(/^Send$/), false);
+    expect("Show, not Open here", !!c.btn(/^Show$/) && !c.btn(/^Open here$/), true);
+    expectJson("one read, to lay the newer text under the edits", c.calls.map((x) => x.name), ["draft_read"]);
+    answer(draftResult(newer));
+    await settle();
+    await settle();
+    expect("still folded after the read", c.isEditor(), false);
+    c.press(c.btn(/^Show$/));
+    await settle();
+    expect("Show opens the editor", c.isEditor(), true);
+    expect("with the edit", c.value("d-subject"), "My own subject");
+    expect("over the newer body, not merged silently", c.value("d-body"), "The assistant's rewrite.");
+    expect("and the card says so", /Newer version below\. Your unsaved edits are shown on top of the current version\. Save here/.test(c.text()), true);
+    expect("Send is off", c.softOff(c.btn(/^Send$/)), true);
+    c.input("d-subject", "My own subject, edited again");
+    await settle();
+    expect("editing here does NOT turn Send on", c.softOff(c.btn(/^Send$/)), true);
+    expectJson("nothing was written", c.writes(), []);
+    await c.done();
+  }
+
+  group("4g. a Save in the older card makes it current and claims the draft at once");
+  {
+    const bus = listen();
+    const c = await card({ revision: 1 }, { channel: true });
+    bus.heard.length = 0; // the card's own mount hint
     c.tools.draft_read = () => draftResult(newer);
     c.input("d-subject", "My own subject");
     await settle();
-    storageHint(c, { ids: [c.mod.signalTag("Drafts:102")], inbox: null, revision: 2 });
+    storageHint(c, { ids: [c.mod.signalTag("Drafts:103")], inbox: c.mod.signalTag(INBOX), revision: 2 });
     await settle();
     await settle();
-    expect("the editor stays for the edit", c.isEditor(), true);
-    expect("the edit is kept", c.value("d-subject"), "My own subject");
-    expect("Send is off", c.softOff(c.btn(/^Send$/)), true);
-    expect("and the card says why", /A newer version of this draft is below\. Sending from this card is off/.test(c.text()), true);
-    c.input("d-subject", "My own subject, edited here");
+    c.press(c.btn(/^Show$/));
     await settle();
-    expect("editing here turns Send back on", c.softOff(c.btn(/^Send$/)), false);
+    c.tools.draft_editor_save = (args) =>
+      draftResult({ draft_id: "Drafts:104", resolved_from: "Drafts:103", origin: "save", last_saved_by: "user", revision: 3, subject: args.subject, body: { text: "The assistant's rewrite." } });
+    c.press(c.btn(/^Save$/));
+    await settle();
+    await settle();
+    expectJson("the save was made against the newer revision", c.writes().map((w) => [w.name, w.args.base_revision]), [["draft_editor_save", 2]]);
+    expect("current again: Send on", c.softOff(c.btn(/^Send$/)), false);
+    expect("no fold notice", /Newer version below|kept here/.test(c.text()), false);
+    const claims = bus.claims();
+    expect("two claims: one at the press, one at the answer", claims.length, 2);
+    expect("the first is pending", claims[0]?.pending, true);
+    expect("and already names the newer card's id, so that card folds", claims[0]?.ids?.includes(c.mod.signalTag("Drafts:103")), true);
+    expect("the second is settled", claims[1]?.pending, undefined);
+    expect("naming the newer card's id, so that card folds", claims[1]?.ids?.includes(c.mod.signalTag("Drafts:103")), true);
+    expect("and the id it holds now", claims[1]?.ids?.includes(c.mod.signalTag("Drafts:104")), true);
+    expect("with the revision it was mounted with", claims[1]?.mounted, 1);
+    expect("and no draft text", /My own|rewrite|Quarterly|dana@|Drafts:/.test(JSON.stringify(claims)), false);
+    bus.close();
+    await c.done();
+  }
+
+  group("4h. a claim from another card folds this card at once, with no read");
+  {
+    const c = await card({ revision: 2, draft_id: "Drafts:103", resolved_from: "Drafts:102" });
+    c.tools.draft_read = () => draftResult({ ...newer, revision: 3, last_saved_by: "user" });
+    expect("before: Send on", c.softOff(c.btn(/^Send$/)), false);
+    claimFrom(c, ["Drafts:102", "Drafts:103", "Drafts:104"], 1, 3);
+    await settle();
+    expect("folded", c.isEditor(), false);
+    expect("toward the card above (mounted earlier)", /Now edited in the card above/.test(c.text()), true);
+    expect("no Send", !!c.btn(/^Send$/), false);
+    expectJson("no read", c.calls, []);
+    // A claim for another draft does nothing.
+    const o = await card({ revision: 2 });
+    claimFrom(o, ["Drafts:999"], 1, 3);
+    await settle();
+    expect("another draft's claim: still the editor", o.isEditor(), true);
+    await o.done();
+    await c.done();
+  }
+
+  group("4i. Open here takes the draft back: one read, then current, then a claim");
+  {
+    const bus = listen();
+    const c = await card({ revision: 2, draft_id: "Drafts:103" }, { channel: true });
+    bus.heard.length = 0;
+    c.tools.draft_read = () => draftResult({ draft_id: "Drafts:104", resolved_from: "Drafts:103", origin: "read", revision: 3, last_saved_by: "user", body: { text: "Saved in the other card." } });
+    claimFrom(c, ["Drafts:103", "Drafts:104"], 3, 3);
+    await settle();
+    expect("folded toward the card below", /Now edited in the card below/.test(c.text()), true);
+    c.press(c.btn(/^Open here$/));
+    await settle();
+    await settle();
+    expectJson("one read", c.calls.map((x) => x.name), ["draft_read"]);
+    expect("the editor, on the current text", c.value("d-body"), "Saved in the other card.");
+    expect("Send on", c.softOff(c.btn(/^Send$/)), false);
+    expect("claimed", bus.claims().length, 1);
+    bus.close();
+    await c.done();
+  }
+
+  group("4j. a hint the server does not bear out unfolds the card again");
+  {
+    const c = await card({ revision: 1 });
+    c.tools.draft_read = () => draftResult({ origin: "read", revision: 1 });
+    storageHint(c, { ids: [c.mod.signalTag("Drafts:102")], inbox: null, revision: 5 });
+    await settle();
+    await settle();
+    expect("one read", c.calls.length, 1);
+    expect("back to the editor", c.isEditor(), true);
+    expect("Send on", c.softOff(c.btn(/^Send$/)), false);
+    await c.done();
+  }
+
+  // ── 4l-4m. The claim goes out at the PRESS of Save (re-test 2026-10-17) ──
+  //
+  // Live, the newer card kept Send on for ~3.5 s (Outlook) to ~5 s (Gmail)
+  // after Save was pressed in the older card, folding only when the save's
+  // answer landed. Now a pending claim goes out at the press, and a save that
+  // does not store withdraws it.
+
+  group("4l. Save sends a pending claim before its answer, and a failed save releases it");
+  {
+    const bus = listen();
+    const c = await card({ revision: 1 }, { channel: true });
+    bus.heard.length = 0;
+    let answer;
+    c.tools.draft_editor_save = () => new Promise((r) => { answer = r; });
+    c.input("d-subject", "My own subject");
+    await settle();
+    c.press(c.btn(/^Save$/));
+    await settle();
+    const early = bus.claims();
+    expect("a claim is out while the save is in flight", early.length, 1);
+    expect("marked pending", early[0]?.pending, true);
+    expect("naming this draft", early[0]?.ids?.includes(c.mod.signalTag("Drafts:102")), true);
+    answer(failedResult("draft_changed", "This draft changed somewhere else."));
+    await settle();
+    await settle();
+    const after2 = bus.heard.filter((m) => m.kind === "release");
+    expect("a refused save releases the claim", after2.length, 1);
+    expect("from the same frame", after2[0]?.from, early[0]?.from);
+    expect("no settled claim follows", bus.claims().length, 1);
+    expect("and no draft text", /My own|Quarterly|dana@|Drafts:/.test(JSON.stringify(bus.heard)), false);
+    bus.close();
+    await c.done();
+  }
+
+  group("4m. a pending claim folds this card at once; only its own release unfolds it");
+  {
+    const c = await card({ revision: 2, draft_id: "Drafts:103", resolved_from: "Drafts:102" });
+    const pendingFrom = (from, kind = "claim") =>
+      c.w.dispatchEvent(new c.w.StorageEvent("storage", {
+        key: c.mod.SIGNAL_KEY,
+        newValue: JSON.stringify({
+          t: "mcpemails-draft/1", from, kind, ...(kind === "claim" ? { pending: true } : {}),
+          ids: [c.mod.signalTag("Drafts:102")], inbox: c.mod.signalTag(INBOX), revision: 1, mounted: 1,
+        }),
+      }));
+    expect("before: Send on", c.softOff(c.btn(/^Send$/)), false);
+    pendingFrom("frame-a");
+    await settle();
+    expect("folded at the press, before any save answers", c.isEditor(), false);
+    expect("no Send", !!c.btn(/^Send$/), false);
+    pendingFrom("frame-a"); // the second carrier's copy of the same claim
+    await settle();
+    pendingFrom("frame-b", "release");
+    await settle();
+    expect("another frame's release does nothing", c.isEditor(), false);
+    pendingFrom("frame-a", "release");
+    await settle();
+    expect("its own release unfolds it", c.isEditor(), true);
+    expect("Send on again", c.softOff(c.btn(/^Send$/)), false);
+    expectJson("no read at any point", c.calls, []);
+    // A settled claim after a pending one: a later release changes nothing.
+    pendingFrom("frame-a");
+    await settle();
+    claimFrom(c, ["Drafts:102", "Drafts:104"], 1, 3);
+    await settle();
+    pendingFrom("frame-a", "release");
+    await settle();
+    expect("after a settled claim, a release leaves it folded", c.isEditor(), false);
+    await c.done();
+  }
+
+  group("4k. a model's draft_read mount announces nothing");
+  {
+    const bus = listen();
+    const c = await card({ origin: "read", revision: 4 }, { channel: true });
+    await settle();
+    expect("no hint for a read", bus.heard.length, 0);
+    bus.close();
     await c.done();
   }
 

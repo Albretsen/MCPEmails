@@ -192,8 +192,8 @@ curl -fsS -X POST -H "X-Dispatch-Secret: $DISPATCH_SECRET" http://localhost:8787
   and do not publish or port-forward the plaintext MCP port.
 - **No outbound calls to us.** The only network the server makes is to your mail provider and your
   own Postgres. Verify it: `make logs S=mcp-server` and watch.
-- **Single-tenant.** One workspace, one operator, is seeded for you. Multi-user workspaces, roles,
-  SSO, and audit-log retention are hosted-only features.
+- **Single-tenant.** One workspace, one operator, is seeded for you. Multi-user workspaces, roles and
+  the web dashboard (with its activity log) are hosted-only features.
 
 ## How it maps to the hosted product
 

@@ -19,8 +19,8 @@
     "eyebrow": "Cox Email + IA",
     "titleLine1": "Connectez votre boîte cox.net",
     "titleLine2": "à Claude, Cursor, tout client MCP",
-    "lead": "Cox a quitté le secteur de l'e-mail et c'est Yahoo qui gère désormais les boîtes cox.net. L'adresse fonctionne toujours, et mcpemails la connecte via IMAP pour que votre agent IA puisse lire, rechercher, envoyer, répondre et classer ce courrier.",
-    "answer": "Claude ne peut pas accéder seul à une boîte cox.net. mcpemails est un serveur MCP hébergé qui la connecte via IMAP sur le port 993, sur le serveur Yahoo indiqué dans le tableau ci-dessous, car Cox a confié son service de messagerie à Yahoo et le courrier cox.net est désormais servi par l'infrastructure de Yahoo et non plus par celle de Cox. L'identifiant à utiliser est un mot de passe d'application Yahoo généré depuis la page de sécurité du compte, pas votre ancien mot de passe Cox ni celui que vous saisissez dans le webmail. Une fois la boîte connectée, Claude, Cursor ou tout autre client MCP peut lire, rechercher, envoyer, répondre et organiser ce courrier, et une boîte est gratuite, pour toujours.",
+    "lead": "Cox a quitté le secteur de l'e-mail et c'est Yahoo qui gère désormais les boîtes cox.net. L'adresse fonctionne toujours, et MCP Emails la connecte via IMAP pour que votre agent IA puisse lire, rechercher, envoyer, répondre et classer ce courrier.",
+    "answer": "Claude ne peut pas accéder seul à une boîte cox.net. MCP Emails est un serveur MCP hébergé qui la connecte via IMAP sur le port 993, sur le serveur Yahoo indiqué dans le tableau ci-dessous, car Cox a confié son service de messagerie à Yahoo et le courrier cox.net est désormais servi par l'infrastructure de Yahoo et non plus par celle de Cox. L'identifiant à utiliser est un mot de passe d'application Yahoo généré depuis la page de sécurité du compte, pas votre ancien mot de passe Cox ni celui que vous saisissez dans le webmail. Une fois la boîte connectée, Claude, Cursor ou tout autre client MCP peut lire, rechercher, envoyer, répondre et organiser ce courrier, et une boîte est gratuite, pour toujours.",
     "meta0": "1 boîte gratuite, pour toujours",
     "meta1": "Mot de passe d'application Yahoo, pas celui de Cox",
     "meta2": "E-mails récupérés en direct, jamais stockés"
@@ -31,7 +31,7 @@
   },
   "setup": [
     {
-      "h": "Créez un compte mcpemails gratuit",
+      "h": "Créez un compte MCP Emails gratuit",
       "p": "Inscrivez-vous sur mcpemails.com. L'offre gratuite connecte une boîte et ne demande pas de carte bancaire."
     },
     {
@@ -40,7 +40,7 @@
     },
     {
       "h": "Saisissez l'adresse cox.net et le mot de passe d'application",
-      "p": "Dans mcpemails, choisissez IMAP / SMTP, indiquez votre adresse cox.net complète dans le champ identifiant et collez le mot de passe d'application plutôt que le mot de passe de votre compte Cox. Les serveurs et ports ci-dessus sont préremplis et ont été vérifiés par une connexion TLS réelle."
+      "p": "Dans MCP Emails, choisissez IMAP / SMTP, indiquez votre adresse cox.net complète dans le champ identifiant et collez le mot de passe d'application plutôt que le mot de passe de votre compte Cox. Les serveurs et ports ci-dessus sont préremplis et ont été vérifiés par une connexion TLS réelle."
     },
     {
       "h": "Collez l'URL MCP dans votre IA",
@@ -72,7 +72,7 @@
   "faq": [
     {
       "q": "Claude fonctionne-t-il avec l'e-mail de Cox ?",
-      "a": "Pas directement. Claude n'a pas de connecteur Cox intégré, et Cox ne gère plus lui-même le service de messagerie. Connecter un serveur MCP comme mcpemails à la boîte via IMAP donne à Claude un accès en lecture, recherche, envoi, réponse, planification et organisation à votre courrier cox.net, et la même connexion fonctionne dans Cursor, ChatGPT et d'autres clients MCP."
+      "a": "Pas directement. Claude n'a pas de connecteur Cox intégré, et Cox ne gère plus lui-même le service de messagerie. Connecter un serveur MCP comme MCP Emails à la boîte via IMAP donne à Claude un accès en lecture, recherche, envoi, réponse, planification et organisation à votre courrier cox.net, et la même connexion fonctionne dans Cursor, ChatGPT et d'autres clients MCP."
     },
     {
       "q": "Quels sont désormais les réglages IMAP et SMTP de Cox ?",

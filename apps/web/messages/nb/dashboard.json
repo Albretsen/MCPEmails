@@ -22,20 +22,20 @@
       "step1": "I claude.ai eller Claude Desktop, åpne Innstillinger → Connectors.",
       "step2": "Klikk «Add custom connector».",
       "step3": "Lim inn URL-en over som connector-URL, og klikk deretter «Add».",
-      "step4": "Klikk «Connect» og logg inn med mcpemails for å autorisere. Ingen API-nøkkel nødvendig."
+      "step4": "Klikk «Connect» og logg inn med MCP Emails for å autorisere. Ingen API-nøkkel nødvendig."
     },
     "chatgpt": {
       "step1": "Åpne Settings → Apps & Connectors → Advanced settings og slå på Developer mode.",
       "step2": "Tilbake i Apps & Connectors, klikk «Create».",
       "step3": "Skriv inn et navn og lim inn URL-en over som Connector URL.",
-      "step4": "Velg OAuth, klikk «Create», og autoriser deretter med mcpemails.",
-      "step5": "I en samtale på chatgpt.com, klikk + → Developer mode og velg mcpemails-appen. Gjør dette i hver nye samtale, ellers ser ikke ChatGPT verktøyene.",
+      "step4": "Velg OAuth, klikk «Create», og autoriser deretter med MCP Emails.",
+      "step5": "I en samtale på chatgpt.com, klikk + → Developer mode og velg MCP Emails-appen. Gjør dette i hver nye samtale, ellers ser ikke ChatGPT verktøyene.",
       "note": "Fungerer på chatgpt.com (kun nett) med Plus, Pro, Business, Enterprise og Edu. Free- og Go-kontoer kan ikke legge til egne connectors. På Business og Enterprise må en administrator kanskje tillate Developer mode først."
     },
     "cursor": {
       "step1": "Rediger ~/.cursor/mcp.json (global) eller .cursor/mcp.json (prosjekt).",
       "step2": "Legg til serveren nedenfor under «mcpServers».",
-      "step3": "Cursor ber deg logge inn via OAuth. Autoriser med mcpemails."
+      "step3": "Cursor ber deg logge inn via OAuth. Autoriser med MCP Emails."
     },
     "vscode": {
       "step1": "Åpne kommandopaletten (⇧⌘P) og kjør «MCP: Add Server».",
@@ -51,7 +51,7 @@
     "windsurf": {
       "step1": "Åpne Cascades MCP-innstillinger, eller rediger ~/.codeium/windsurf/mcp_config.json.",
       "step2": "Legg til serveren nedenfor. Merk at feltet heter «serverUrl», ikke «url».",
-      "step3": "Oppdater MCP-servere i Cascade og autoriser med mcpemails når du blir bedt om det."
+      "step3": "Oppdater MCP-servere i Cascade og autoriser med MCP Emails når du blir bedt om det."
     },
     "gemini": {
       "step1": "Rediger ~/.gemini/settings.json (global) eller .gemini/settings.json (prosjekt).",
@@ -61,7 +61,7 @@
     "zed": {
       "step1": "I innstillingene for Agent Panel, klikk «Add Custom Server», eller rediger settings.json.",
       "step2": "Legg til serveren nedenfor under «context_servers».",
-      "step3": "Zed starter OAuth-flyten når ingen Authorization-header er satt. Logg inn med mcpemails."
+      "step3": "Zed starter OAuth-flyten når ingen Authorization-header er satt. Logg inn med MCP Emails."
     },
     "jetbrains": {
       "step1": "Åpne Settings → Tools → AI Assistant → Model Context Protocol (MCP).",
@@ -71,7 +71,7 @@
     "raycast": {
       "step1": "Kjør kommandoen «Install MCP Server» (eller «Manage MCP Servers»).",
       "step2": "Skriv inn et navn, sett Transport til «HTTP», og lim inn URL-en over.",
-      "step3": "Trykk «Install MCP Server», og klikk deretter «Sign In» for å autorisere med mcpemails."
+      "step3": "Trykk «Install MCP Server», og klikk deretter «Sign In» for å autorisere med MCP Emails."
     },
     "warp": {
       "step1": "Åpne Settings → Agents → MCP servers og klikk «+ Add».",
@@ -98,7 +98,7 @@
     "multiInboxTitle": "Legg til de andre jobbpostkassene dine",
     "multiInboxOptional": "Valgfritt",
     "multiInboxDesc": "Koble til post@, salg@, faktura@ og resten, så jobber agenten med alle firmaets postkasser fra én samtale og svarer fra riktig adresse.",
-    "multiInboxDescUpgrade": "Koble til post@, salg@, faktura@ og resten, så jobber agenten med alle firmaets postkasser fra én samtale og svarer fra riktig adresse. Gratis dekker én postkasse; Pro dekker alle postkassene bedriften din bruker.",
+    "multiInboxDescUpgrade": "Koble til post@, salg@, faktura@ og resten, så jobber agenten med alle firmaets postkasser fra én samtale og svarer fra riktig adresse. Gratis dekker én postkasse; Pro dekker opptil 10.",
     "multiInboxCta": "Legg til en postkasse"
   },
   "overview": {
@@ -119,7 +119,7 @@
     "actionsThisMonth": "E-posthandlinger denne måneden",
     "actionsOfCap": "av {cap} · nullstilles {date}",
     "actionsCapReached": "Grensen er nådd · avvises til {date}",
-    "actionsGrace": "Prøveuke: ingen grense før {date}",
+    "actionsGrace": "Prøveperiode: ingen grense før {date}",
     "actionsExempt": "Ingen månedlig grense (tidlig medlem)",
     "teamMembers": "Teammedlemmer",
     "ofSeats": "av {cap} plasser · {remaining} igjen",
@@ -129,7 +129,7 @@
     "goToMembers": "Gå til Medlemmer",
     "callsPerDayTitle": "Kall per dag",
     "callsPerDaySub": "Siste {days} dager · på tvers av alle verktøy",
-    "pro": "Team",
+    "pro": "Business",
     "recentActivityTitle": "Nylig aktivitet",
     "recentActivitySub": "Direkte MCP-verktøykall",
     "noActivityTitle": "Ingen aktivitet ennå",
@@ -146,8 +146,8 @@
     "usedSingular": "{count} av {max} innboks brukt",
     "capTitle": "Du har nådd innboksgrensen",
     "capBodyPersonal": "Gratis kobler til én postkasse. Personal tar deg til tre for 9 dollar i måneden, så jobb og privat kan dele samme agent.",
-    "capBodyPro": "Personal kobler til tre postkasser. Pro fjerner grensen for 15 dollar i måneden, så alle postkassene dine kjører på én agent.",
-    "capBodyBusiness": "Håndterer du flere bedriftspostkasser? Gratis kobler til én. Personal dekker tre for 9 dollar i måneden, nok til post@, salg@ og din egen. Pro dekker alle postkassene bedriften din bruker for 15 dollar i måneden: økonomi, salg, support, post og din egen.",
+    "capBodyPro": "Personal kobler til tre postkasser. Pro tar deg til 10 for 15 dollar i måneden, alle på én agent.",
+    "capBodyBusiness": "Håndterer du flere bedriftspostkasser? Gratis kobler til én. Personal dekker tre for 9 dollar i måneden, nok til post@, salg@ og din egen. Pro dekker opptil 10 for 15 dollar i måneden: økonomi, salg, support, post og din egen.",
     "capCtaPersonal": "Oppgrader til Personal, 9 $/md",
     "capCtaPro": "Oppgrader til Pro, 15 $/md",
     "capCompare": "Sammenlign alle planer",
@@ -206,6 +206,38 @@
         "saving": "Lagrer…",
         "tooLong": "Avsendernavnet er for langt (maks 100 tegn)."
       },
+      "sendAs": {
+        "title": "Send som-adresser",
+        "help": "Send fra en annen adresse som leverer til denne innboksen, for eksempel et iCloud-alias. Vi sender en kode til adressen for å bekrefte at den er din. E-postleverandøren din må også tillate sending fra den.",
+        "placeholder": "alias@eksempel.no",
+        "add": "Legg til adresse",
+        "adding": "Sender kode…",
+        "loading": "Laster…",
+        "verified": "Bekreftet",
+        "pending": "Kode sendt",
+        "unverified": "Ikke bekreftet",
+        "codePlaceholder": "6-sifret kode",
+        "codeLabel": "Bekreftelseskode for {address}",
+        "verify": "Bekreft",
+        "resend": "Send ny kode",
+        "remove": "Fjern",
+        "errors": {
+          "invalid_address": "Skriv inn en gyldig e-postadresse.",
+          "own_address": "Det er innboksens egen adresse.",
+          "connected_inbox": "Den adressen er koblet til som en egen innboks. Send fra den innboksen i stedet.",
+          "already_verified": "Den adressen er allerede bekreftet.",
+          "too_many_aliases": "Denne innboksen har ikke plass til flere adresser. Fjern en først.",
+          "rate_limited": "For mange koder sendt. Prøv igjen senere.",
+          "cooldown": "Vent ett minutt før du sender en ny kode.",
+          "code_expired": "Koden har utløpt. Send en ny.",
+          "too_many_attempts": "For mange feil koder. Send en ny.",
+          "wrong_code": "Koden stemmer ikke.",
+          "invalid_code": "Skriv inn den 6-sifrede koden.",
+          "mail_failed": "Vi klarte ikke å sende koden. Prøv igjen.",
+          "unsupported_provider": "Send som er ikke tilgjengelig for denne innboksen.",
+          "generic": "Noe gikk galt. Prøv igjen."
+        }
+      },
       "signature": {
         "title": "E-postsignatur",
         "enabled": "På",
@@ -234,7 +266,9 @@
     },
     "emptyAltLead": "Ikke klar til å koble til en postkasse ennå?",
     "emptyViewKeys": "Hent MCP-URL-en og API-nøkkelen din",
-    "emptyReadDocs": "Les oppsettsveiledningene"
+    "emptyReadDocs": "Les oppsettsveiledningene",
+    "capBodyProCap": "Pro kobler til 10 postkasser. Business inkluderer 10 for 39 dollar i måneden og legger til hver ekstra postkasse for 3 dollar i måneden, med ubegrenset antall medlemmer uten ekstra kostnad.",
+    "capCtaBusiness": "Oppgrader til Business, 39 $/md"
   },
   "apiKeys": {
     "title": "API-nøkler",
@@ -368,7 +402,7 @@
     "colAddress": "Adresse",
     "allowanceCounting": "{used} av {cap} e-posthandlinger brukt denne måneden · nullstilles {date}",
     "allowanceReached": "Alle {cap} e-posthandlinger er brukt · lesing og skriving avvises til {date}",
-    "allowanceGrace": "Prøveuke: ingen grense før {date}",
+    "allowanceGrace": "Prøveperiode: ingen grense før {date}",
     "allowanceExempt": "Ingen månedlig grense (tidlig medlem)",
     "capTitleNear": "Du nærmer deg månedens grense",
     "capBodyNear": "{used} av {cap} e-posthandlinger brukt. Ved {cap} avvises agentens lesing og skriving til {date}. Personal fjerner månedsgrensen for 9 dollar i måneden.",
@@ -520,16 +554,15 @@
       "personalFeature2": "120 forespørsler / minutt (2× burst)",
       "personalFeatureActions": "Ingen månedlig grense for handlinger",
       "personalFeature4": "E-poststøtte",
-      "soloFeature1": "Ubegrenset antall tilkoblede innbokser",
+      "soloFeature1": "10 tilkoblede innbokser",
       "soloFeature2": "300 forespørsler / minutt (5× burst)",
       "soloFeature3": "Lengre analysehistorikk",
       "soloFeature4": "E-poststøtte",
-      "teamFeature1": "Alt i Pro",
-      "teamFeature2": "Ubegrenset antall medlemmer med roller",
-      "teamFeature3": "Et eget arbeidsområde per kunde eller virksomhet",
-      "teamFeature4": "SSO (SAML / OIDC) + revisjonslogg",
-      "teamFeature5": "Lengst analysehistorikk",
-      "teamFeature6": "Prioritert støtte"
+      "businessFeature1": "Alt i Pro",
+      "businessFeature2": "10 postkasser inkludert, 3 dollar i måneden for hver ekstra",
+      "businessFeature3": "Ubegrenset antall medlemmer med roller, uten ekstra kostnad",
+      "businessFeature4": "Administratorer godkjenner tilbakeholdte sendinger",
+      "businessFeature5": "Flere arbeidsområder på ett abonnement"
     },
     "planIncludes": "Hva planen din inkluderer",
     "inboxesOne": "1 tilkoblet innboks",
@@ -560,7 +593,7 @@
     "confirmNoteInterval": "Belastes nå på kortet du har lagret, med fradrag for tiden som gjenstår av inneværende periode. Faktureringsperioden starter på nytt i dag, så neste fornyelsesdato flyttes.",
     "confirmNoteIntervalNoPreview": "Vi klarte ikke å prise endringen på forhånd. Kortet du har lagret belastes differansen, med fradrag for tiden som gjenstår av inneværende periode, og det eksakte beløpet står på fakturaen. Faktureringsperioden starter på nytt i dag, så neste fornyelsesdato flyttes.",
     "confirmPay": "Bekreft og betal {amount}",
-    "confirmChange": "Bekreft endring",
+    "confirmChange": "Bekreft og betal",
     "confirmCancel": "Avbryt",
     "confirming": "Belaster…",
     "planChangedCharged": "Du er nå på {plan}. {amount} ble belastet kortet ditt.",
@@ -569,7 +602,10 @@
     "paymentRequiredBody": "Banken din må godkjenne betalingen, eller kortet ble avvist. Planen din er uendret, og du er ikke belastet. Betal den åpne fakturaen, så gjennomføres endringen automatisk.",
     "paymentRequiredPay": "Betal faktura",
     "paymentRequiredClose": "Lukk",
-    "paymentRequiredToast": "Betalingen ble ikke fullført, så du er fortsatt på {plan}. Åpne faktureringsportalen for å betale den utestående fakturaen."
+    "paymentRequiredToast": "Betalingen ble ikke fullført, så du er fortsatt på {plan}. Åpne faktureringsportalen for å betale den utestående fakturaen.",
+    "proInboxesKept": "Pro-abonnementet ditt beholder ubegrenset antall tilkoblede innbokser.",
+    "businessMailboxRate": "10 postkasser inkludert på tvers av alle arbeidsområdene dine. Hver ekstra postkasse faktureres med abonnementet: 3 dollar i måneden eller 28,80 dollar i året.",
+    "confirmExtraMailboxes": "Inkluderer {count, plural, one {# ekstra postkasse} other {# ekstra postkasser}} utover de 10 som er inkludert."
   },
   "security": {
     "title": "Sikkerhet",
@@ -633,8 +669,8 @@
     "roleOwner": "Eier",
     "sending": "Sender…",
     "sendInvite": "Send invitasjon",
-    "rolesLockedHint": "Inviterte blir med som Medlem. Oppgrader til Team for å tildele Administrator- og Visningsroller.",
-    "inviteUpgradeHint": "Å invitere samarbeidspartnere krever Team-planen. Oppgrader til Team for å legge til medlemmer i dette arbeidsområdet.",
+    "rolesLockedHint": "Inviterte blir med som Medlem. Oppgrader til Business for å tildele Administrator- og Visningsroller.",
+    "inviteUpgradeHint": "Å invitere samarbeidspartnere krever Business-planen. Oppgrader til Business for å legge til medlemmer i dette arbeidsområdet.",
     "errInviteFailed": "Kunne ikke sende invitasjon.",
     "errRemoveFailed": "Kunne ikke fjerne medlem.",
     "errRoleFailed": "Kunne ikke oppdatere rolle.",

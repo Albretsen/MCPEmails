@@ -160,6 +160,31 @@ export function removeMovedRows(target: readonly MessageKey[], destination: Fold
   dropThreadsWith(target);
 }
 
+/** Gmail: the keys of OTHER cached list rows that are the same message as one
+ *  of `rows` and sit in the Inbox. A Gmail message is one message under
+ *  several ids (over IMAP, one per label folder), so archiving it by its All
+ *  Mail id takes its Inbox row away too. Only rows of a `g:` conversation are
+ *  matched (by mailbox and Message-ID): on every other provider two ids are two
+ *  messages. */
+export function gmailInboxCopies(rows: readonly MessageRow[]): MessageKey[] {
+  const own = new Set(rows.map((r) => r.key));
+  const wanted = new Set<string>();
+  for (const r of rows) {
+    if (r.thread_key?.startsWith("g:") && r.message_id_header) wanted.add(`${r.inbox_id}\u0001${r.message_id_header}`);
+  }
+  if (!wanted.size) return [];
+  const out = new Set<MessageKey>();
+  for (const [, data] of lists()) {
+    for (const page of data?.pages ?? []) {
+      for (const r of page.rows) {
+        if (own.has(r.key) || r.folder_role !== "inbox" || !r.thread_key?.startsWith("g:") || !r.message_id_header) continue;
+        if (wanted.has(`${r.inbox_id}\u0001${r.message_id_header}`)) out.add(r.key);
+      }
+    }
+  }
+  return [...out];
+}
+
 /** Puts new rows at the top of every inbox list they belong to. */
 export function insertInboxRows(rows: readonly MessageRow[]): void {
   if (!rows.length) return;

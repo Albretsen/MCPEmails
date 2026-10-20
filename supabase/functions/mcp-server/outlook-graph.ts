@@ -1833,6 +1833,19 @@ export async function graphDeleteDraftQuietly(accessToken: string, draftId: stri
 }
 
 /**
+ * A Graph recipient's display name, or "" when it is only the address again.
+ * Graph fills `name` with the address for a recipient saved without one, and
+ * passing that on made every chip read "a@example.com <a@example.com>".
+ */
+export function graphRecipientName(
+  emailAddress: { name?: string | null; address?: string | null } | null | undefined,
+): string {
+  const name = emailAddress?.name ?? "";
+  const address = emailAddress?.address ?? "";
+  return name.trim().toLowerCase() === address.trim().toLowerCase() ? "" : name;
+}
+
+/**
  * `createReply` / `createReplyAll` / `createForward` on `messageId`: a draft
  * that Graph threads natively (its own In-Reply-To / References, conversation
  * id, and the quoted original in the body).
@@ -1872,7 +1885,7 @@ export async function graphCreateResponseDraft(
   };
   return {
     toRecipients: (data.toRecipients ?? []).map((r) => ({
-      name: r.emailAddress?.name ?? "",
+      name: graphRecipientName(r.emailAddress),
       email: r.emailAddress?.address ?? "",
     })),
     id: data.id,
@@ -2084,6 +2097,55 @@ export async function graphListAttachmentMeta(
     url = data["@odata.nextLink"];
   }
   return out;
+}
+
+/**
+ * Up to this many bytes in all (Graph's `size`), a draft's attachment list is
+ * read a second time with `contentBytes` so each file reports its real size.
+ */
+export const GRAPH_DRAFT_EXACT_SIZE_MAX_BYTES = 1024 * 1024;
+
+/**
+ * A draft's attachments as the editor card and draft_read list them.
+ *
+ * Graph's `size` is the attachment ITEM, property overhead included: a 19-byte
+ * notes.txt reads as 183 bytes, while draft_create reported the 19 it wrote.
+ * So a small list is read again without `$select`, which returns each
+ * fileAttachment's `contentBytes`, and the size is the decoded length of that.
+ * Past the ceiling, or for an item/reference attachment (no bytes), Graph's
+ * size stands: the overhead is noise there. Any failed read throws.
+ */
+export async function graphDraftAttachmentList(
+  accessToken: string,
+  draftId: string,
+): Promise<{ filename: string; size_bytes: number | null; mime_type: string | null }[]> {
+  type Row = { name?: string; size?: number; contentType?: string; contentBytes?: string };
+  const read = async (query: string): Promise<Row[]> => {
+    const resp = await graphFetch(
+      accessToken,
+      `/me/messages/${encodeURIComponent(draftId)}/attachments${query}`,
+      { headers: {} },
+    );
+    if (!resp.ok) {
+      await resp.body?.cancel().catch(() => {});
+      throw new Error(`Outlook attachment list error: ${resp.status}`);
+    }
+    return ((await resp.json()) as { value?: Row[] }).value ?? [];
+  };
+  let rows = await read("?$select=name,size,contentType");
+  const total = rows.reduce((sum, a) => sum + (typeof a.size === "number" ? a.size : 0), 0);
+  // The second read only sharpens sizes; if it fails, Graph's sizes from the
+  // first read are still a usable list, so the card does not fail over it.
+  if (rows.length > 0 && total <= GRAPH_DRAFT_EXACT_SIZE_MAX_BYTES) {
+    rows = await read("").catch(() => rows);
+  }
+  return rows.map((a) => ({
+    filename: typeof a.name === "string" ? a.name : "attachment",
+    size_bytes: typeof a.contentBytes === "string"
+      ? base64DecodedLength(a.contentBytes)
+      : typeof a.size === "number" ? a.size : null,
+    mime_type: typeof a.contentType === "string" ? a.contentType : null,
+  }));
 }
 
 /**

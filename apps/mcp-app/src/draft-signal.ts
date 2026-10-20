@@ -30,6 +30,36 @@
 // equal across frames of one browser; they are not a secret, and they are
 // never stored (the storage carrier removes its key in the same tick).
 //
+// ── A CLAIM: "this card is the current one now" (2026-10-17) ──────────────
+// Live review in claude.ai: an older card that SAVED became live again, and the
+// newer card below kept Send on for about five seconds until its own re-read
+// caught up, so two cards could send one draft. So a card that takes the draft
+// over (a successful Save, or "Open here" on a folded card) sends a claim, and
+// every other card holding any id of the same draft folds AT ONCE, with no
+// read: folding only takes Send away and offers "Open here", so a forged or
+// stale claim costs one click. A claim carries the digests of every id the
+// claiming card has held (`ids`, newest last, at most four) and the revision
+// it was MOUNTED with, which tells a receiver whether the claimer sits above
+// or below it in the chat (a later tool call has a higher revision).
+//
+// A claim never answers a claim and never causes a read, so it cannot loop
+// either. A frame running an older bundle reads a claim as a hint: one read.
+//
+// ── AT THE PRESS, NOT AT THE ANSWER (re-test 2026-10-17) ──────────────────
+// The claim used to go out when the save's answer landed, and a save is one
+// to five seconds of provider round trip. In that window the newer card kept
+// Send on over content the save was about to make stale (live: folded at
+// ~3.5 s on Outlook, ~5 s on Gmail). So Save now sends a PENDING claim the
+// moment it is pressed, and every other card for the draft folds on it. Then:
+//   * the save stored: the usual claim follows, with the new id;
+//   * the save did not store: a RELEASE from the same frame, and a card that
+//     a pending claim from THAT frame folded (and nothing since) unfolds,
+//     since what it holds is still the current draft;
+//   * the answer was lost: App.tsx#reconcile reads, then claims or releases.
+// A frame running an older bundle folds on the pending claim exactly as on a
+// claim, and reads a release as a hint (one read, which it skips while
+// folded); it unfolds through "Open here" as before.
+//
 // ── WHY THIS CANNOT LOOP ───────────────────────────────────────────────────
 // A hint is sent ONLY when a card accepts a fresh pushed result, i.e. a tool
 // call the assistant made (store.ts#wireResultHandlers). A replayed result, a
@@ -55,6 +85,15 @@ export interface DraftSignal {
   /** Digest of the inbox id. */
   inbox: string | null;
   revision: number | null;
+  /**
+   * "hint" (a card mounted), "claim" (a card took the draft over) or
+   * "release" (that card's pending claim did not come to anything).
+   */
+  kind: "hint" | "claim" | "release";
+  /** On a claim: sent at the press of Save, before the save has answered. */
+  pending: boolean;
+  /** The revision the sending card was mounted with, on a claim. */
+  mounted: number | null;
 }
 
 /** This frame's own name. Random per load, never stored. */
@@ -98,31 +137,20 @@ function parse(raw: unknown): DraftSignal | null {
   if (!v || typeof v !== "object") return null;
   const o = v as Record<string, unknown>;
   if (o.t !== SIGNAL_TYPE || typeof o.from !== "string" || o.from === self) return null;
-  const ids = Array.isArray(o.ids) ? o.ids.filter((x): x is string => typeof x === "string").slice(0, 4) : [];
+  const ids = Array.isArray(o.ids) ? o.ids.filter((x): x is string => typeof x === "string").slice(-4) : [];
   return {
     from: o.from,
     ids,
     inbox: typeof o.inbox === "string" ? o.inbox : null,
     revision: typeof o.revision === "number" ? o.revision : null,
+    kind: o.kind === "claim" ? "claim" : o.kind === "release" ? "release" : "hint",
+    pending: o.pending === true,
+    mounted: typeof o.mounted === "number" ? o.mounted : null,
   };
 }
 
-/** Tell the other card frames that this one just mounted a draft. Never throws. */
-export function announceDraft(d: {
-  draft_id?: string | null;
-  resolved_from?: string | null;
-  revision?: number | null;
-  identity?: { inbox_id?: string | null } | null;
-}): void {
-  const ids = [signalTag(d.draft_id), signalTag(d.resolved_from)].filter((x): x is string => !!x);
-  if (ids.length === 0) return;
-  const msg = {
-    t: SIGNAL_TYPE,
-    from: self,
-    ids,
-    inbox: signalTag(d.identity?.inbox_id ?? null),
-    revision: typeof d.revision === "number" ? d.revision : null,
-  };
+/** Post one message on both carriers. Never throws. */
+function post(msg: Record<string, unknown>): void {
   const Ctor = channelCtor();
   if (Ctor) {
     try {
@@ -140,6 +168,53 @@ export function announceDraft(d: {
   } catch {
     /* storage blocked: the focus and visibility re-checks still apply */
   }
+}
+
+/**
+ * Tell the other card frames that THIS card is now the current one for the
+ * draft (see "A CLAIM" above). `ids` is every id this card has held for it.
+ * Never throws.
+ */
+export function claimDraft(d: {
+  ids: Array<string | null | undefined>;
+  revision?: number | null;
+  mounted?: number | null;
+  inbox_id?: string | null;
+  /** Sent at the press of Save, before its answer (see "AT THE PRESS"). */
+  pending?: boolean;
+  /** Withdraw this frame's pending claim: the save did not store. */
+  release?: boolean;
+}): void {
+  const ids = [...new Set(d.ids.map((id) => signalTag(id)).filter((x): x is string => !!x))].slice(-4);
+  if (ids.length === 0) return;
+  post({
+    t: SIGNAL_TYPE,
+    kind: d.release ? "release" : "claim",
+    ...(d.pending && !d.release ? { pending: true } : {}),
+    from: self,
+    ids,
+    inbox: signalTag(d.inbox_id ?? null),
+    revision: typeof d.revision === "number" ? d.revision : null,
+    mounted: typeof d.mounted === "number" ? d.mounted : null,
+  });
+}
+
+/** Tell the other card frames that this one just mounted a draft. Never throws. */
+export function announceDraft(d: {
+  draft_id?: string | null;
+  resolved_from?: string | null;
+  revision?: number | null;
+  identity?: { inbox_id?: string | null } | null;
+}): void {
+  const ids = [signalTag(d.draft_id), signalTag(d.resolved_from)].filter((x): x is string => !!x);
+  if (ids.length === 0) return;
+  post({
+    t: SIGNAL_TYPE,
+    from: self,
+    ids,
+    inbox: signalTag(d.identity?.inbox_id ?? null),
+    revision: typeof d.revision === "number" ? d.revision : null,
+  });
 }
 
 /**

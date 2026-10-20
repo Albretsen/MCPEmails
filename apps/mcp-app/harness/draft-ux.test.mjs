@@ -273,7 +273,7 @@ async function main() {
       contents:
         'import "./src/main";\n' +
         'export { getState, setState, disarmResultWatchdog } from "./src/store";\n' +
-        'export { splitAddresses, parseRecipients, keyEndsAddress, ADDR_NOTE_MS, FLASH_MS } from "./src/components/DraftEditor";\n' +
+        'export { splitAddresses, parseRecipients, keyEndsAddress, ADDR_NOTE_MS, FLASH_MS, REFRESH_NOTE_MS } from "./src/components/DraftEditor";\n' +
         'export { render } from "preact";\n',
       resolveDir: appRoot,
       sourcefile: "draft-ux-entry.ts",
@@ -437,7 +437,9 @@ async function main() {
     const c = await editor({ recipients: { to: ["a@x.example", "b@x.example", "c@x.example"] } });
     const to = c.root.querySelector("#d-to");
     const box = c.root.querySelector("#d-to-box");
-    const tabbable = [...box.querySelectorAll("button, input, [tabindex]")].filter((el) => el.getAttribute("tabindex") !== "-1");
+    // The "Cc Bcc" link sits inside the To box (2026-10-17) and is a control of
+    // its own, not a recipient: it is left out here.
+    const tabbable = [...box.querySelectorAll("button, input, [tabindex]")].filter((el) => el.getAttribute("tabindex") !== "-1" && !el.matches(".link"));
     expectJson("the input is the only Tab stop in the box", tabbable.map((el) => el.id), ["d-to"]);
     expectJson("every remove button is out of the tab order", [...box.querySelectorAll(".chip-x")].map((b) => b.getAttribute("tabindex")), ["-1", "-1", "-1"]);
     expectJson("and still named for a screen reader", [...box.querySelectorAll(".chip-x")].map((b) => b.getAttribute("aria-label")), ["Remove a@x.example", "Remove b@x.example", "Remove c@x.example"]);
@@ -586,26 +588,30 @@ async function main() {
 
   // ── R. Refresh ────────────────────────────────────────────────────────────
 
-  group("R1. a Refresh that finds nothing new says Up to date, then reverts");
+  // Since 2026-10-17 the answer is in the status line, not on the link: the
+  // link's changing label was easy to miss and changed its width, moving the
+  // links beside it (live QA). The link always reads "Refresh".
+  group("R1. a Refresh that finds nothing new says Up to date in the status line, then reverts");
   {
     const c = await editor();
     const link = c.btn(/^Refresh$/);
-    const rowBefore = [...c.root.querySelector(".acts-l").children].filter((el) => !el.classList.contains("sr-only")).length;
+    const rowBefore = [...c.root.querySelector(".acts-l").children].length;
     c.tools.draft_read = () => draftResult();
     c.press(link);
     await settle();
     expect("one read", c.calls.filter((x) => x.name === "draft_read").length, 1);
-    expect("the link answers", link.textContent.trim(), "Up to date");
-    expect("and a live region says it", c.root.querySelector('.acts-l [role="status"]')?.textContent, "This draft is up to date.");
-    expect("nothing is added to the row's layout", [...c.root.querySelector(".acts-l").children].filter((el) => !el.classList.contains("sr-only")).length, rowBefore);
+    expect("the link keeps its label", link.textContent.trim(), "Refresh");
+    expect("the status line answers", /^Up to date · Saved to Drafts$/.test(c.root.querySelector("#d-status")?.textContent ?? ""), true);
+    expect("and a live region says it", c.root.querySelector(".refresh-status")?.textContent, "This draft is up to date.");
+    expect("nothing is added to the row", [...c.root.querySelector(".acts-l").children].length, rowBefore);
     expect("the same button, so focus is kept", c.active(), link);
-    await after(c.mod.FLASH_MS + 150);
-    expect("it goes back to Refresh", link.textContent.trim(), "Refresh");
-    expect("and the live region empties", c.root.querySelector('.acts-l [role="status"]')?.textContent, "");
+    await after(c.mod.REFRESH_NOTE_MS + 150);
+    expect("the line goes back to the word count", /^\d+ words · Saved to Drafts$/.test(c.root.querySelector("#d-status")?.textContent ?? ""), true);
+    expect("and the live region empties", c.root.querySelector(".refresh-status")?.textContent, "");
     await c.done();
   }
 
-  group("R2. a Refresh that brings a newer copy says Updated");
+  group("R2. a Refresh that brings a newer copy says Updated from your mailbox");
   {
     const c = await editor();
     c.tools.draft_read = () => draftResult({ body: { text: "Changed in the mail client." } });
@@ -613,8 +619,25 @@ async function main() {
     c.press(link);
     await settle();
     expect("the new text is on screen", c.value("d-body"), "Changed in the mail client.");
-    expect("the link says Updated", link.textContent.trim(), "Updated");
-    expect("and the live region", c.root.querySelector('.acts-l [role="status"]')?.textContent, "Updated from your Drafts folder.");
+    expect("the link keeps its label", link.textContent.trim(), "Refresh");
+    expect("the status line says Updated", /^Updated from your mailbox · /.test(c.root.querySelector("#d-status")?.textContent ?? ""), true);
+    expect("and the live region", c.root.querySelector(".refresh-status")?.textContent, "Updated from your mailbox.");
+    await c.done();
+  }
+
+  group("R2b. while a Refresh runs, the link keeps its label and the line says Refreshing");
+  {
+    const c = await editor();
+    let answer;
+    c.tools.draft_read = () => new Promise((r) => { answer = r; });
+    const link = c.btn(/^Refresh$/);
+    c.press(link);
+    await settle();
+    expect("the link still reads Refresh", link.textContent.trim(), "Refresh");
+    expect("it is off while it runs", link.getAttribute("aria-disabled"), "true");
+    expect("the line says Refreshing", /^Refreshing… · /.test(c.root.querySelector("#d-status")?.textContent ?? ""), true);
+    answer(draftResult());
+    await settle();
     await c.done();
   }
 
@@ -663,10 +686,10 @@ async function main() {
     );
     expect("the action row is outside it", !!c.root.querySelector(":scope > .acts") && !main?.querySelector(".acts"), true);
     expect("and so is the provider line", !!c.root.querySelector(":scope > .prov") && !main?.querySelector(".prov"), true);
-    c.press(c.btn(/^Discard$/));
+    c.press(c.btn(/^Delete draft$/));
     await settle();
     expect("a confirm is an action row too", !!c.root.querySelector(":scope > .acts") && !main?.querySelector(".acts"), true);
-    c.press(c.btn(/^No$/));
+    c.press(c.btn(/^Keep draft$/));
     await settle();
 
     const rule = (selector) => {

@@ -3,7 +3,9 @@
     "https://www.ionos.com/help/email/general-topics/ionos-mail-server-details-for-imap-pop3-and-smtp/",
     "https://www.ionos.com/help/email/other-email-programs/setting-up-an-ionos-email-account-in-apple-mail/",
     "https://www.ionos.com/help/office/setting-up-microsoft-365/migrating-emails-from-11-ionos-mail-accounts-to-office-365/",
-    "https://www.ionos.co.uk/help/email/mail-basic/"
+    "https://www.ionos.co.uk/help/email/mail-basic/",
+    "https://www.ionos.de/hilfe/e-mail/allgemeine-themen/serverinformationen-fuer-imap-pop3-und-smtp/",
+    "https://www.ionos.co.uk/help/email/general-topics/ionos-mail-server-details-for-imap-pop3-and-smtp/"
   ],
   "auth": {
     "method": "mail-password",
@@ -24,7 +26,7 @@
     "meta0": "Primer buzón gratis, planes para el resto",
     "meta1": "La contraseña de tu buzón, sin configurar OAuth",
     "meta2": "El correo se obtiene en vivo, nunca se almacena",
-    "answer": "Claude no puede acceder por sí solo a IONOS. mcpemails es un servidor MCP alojado que lo conecta por IMAP con la contraseña de tu buzón, para que Claude, Cursor o cualquier cliente MCP pueda leer, buscar, enviar y organizar ese correo. La configuración lleva un par de minutos. Cada dirección de la empresa, como info@ o ventas@, se conecta como un buzón propio: un buzón es gratis, Personal conecta tres y Pro todos los que llevas."
+    "answer": "Claude no puede acceder por sí solo a IONOS. MCP Emails es un servidor MCP alojado que lo conecta por IMAP con la contraseña de tu buzón, para que Claude, Cursor o cualquier cliente MCP pueda leer, buscar, enviar y organizar ese correo. La configuración lleva un par de minutos. Cada dirección de la empresa, como info@ o ventas@, se conecta como un buzón propio: un buzón es gratis, Personal conecta tres, Pro hasta 10 y Business todos los que necesites."
   },
   "persona": {
     "intro": "¿Varios buzones de empresa en IONOS?",
@@ -33,20 +35,20 @@
   },
   "method": {
     "title": "Cómo se conecta IONOS: IMAP y la contraseña de tu buzón",
-    "body": "IONOS se conecta por IMAP/SMTP con la <b>contraseña de correo</b> que defines en el panel de control de IONOS, en Email, que es distinta de tu acceso a IONOS. IONOS responde en los dos transportes estándar, 993 con TLS y 143 con STARTTLS, así que el puerto rara vez es lo que hace fallar un inicio de sesión en IONOS. mcpemails rellena una pareja que funciona y prueba la otra si la primera no responde, así que un inicio de sesión rechazado aquí es de verdad la contraseña."
+    "body": "IONOS se conecta por IMAP/SMTP con la <b>contraseña de correo</b> que defines en el panel de control de IONOS, en Correo, y que es distinta de tu acceso a IONOS. Los nombres de servidor dependen del sitio de IONOS que te vendió el buzón: IONOS Alemania documenta <code>imap.ionos.de</code> y <code>smtp.ionos.de</code>, IONOS Reino Unido <code>imap.ionos.co.uk</code> y <code>smtp.ionos.co.uk</code>, e ionos.com <code>imap.ionos.com</code> y <code>smtp.ionos.com</code>. IONOS responde en los dos transportes estándar, 993 con TLS y 143 con STARTTLS, así que el puerto rara vez es lo que hace fallar un inicio de sesión en IONOS, y MCP Emails prueba el otro transporte si el primero no responde."
   },
   "setup": [
     {
       "h": "Crea una cuenta gratis",
-      "p": "Regístrate en mcpemails, sin tarjeta. El plan gratuito conecta una bandeja, para siempre."
+      "p": "Regístrate en MCP Emails, sin tarjeta. El plan gratuito conecta una bandeja, para siempre."
     },
     {
       "h": "Consigue la contraseña de tu buzón de IONOS",
       "p": "En el panel de control de IONOS, abre Email, elige la dirección y define o restablece su contraseña. No es la contraseña con la que inicias sesión en IONOS."
     },
     {
-      "h": "Pégala en mcpemails",
-      "p": "Elige IMAP / SMTP y añade tu dirección de IONOS, los servidores de arriba y la contraseña para conectar la bandeja de forma segura."
+      "h": "Pégala en MCP Emails",
+      "p": "Elige IMAP / SMTP y añade tu dirección de IONOS y la contraseña del buzón. Los servidores que se muestran arriba son los de ionos.com: para un buzón comprado en ionos.de, usa imap.ionos.de y smtp.ionos.de, y para ionos.co.uk los nombres .co.uk."
     },
     {
       "h": "Pega la URL MCP en tu IA",
@@ -67,22 +69,22 @@
       "p": "IONOS revende Microsoft 365 junto a sus propios productos Mail Basic y Mail Business, y muchísimos clientes que creen tener correo de IONOS tienen en realidad un tenant de Microsoft con factura de IONOS. Nada de <code>imap.ionos.com</code> se aplica a esos buzones: están en los servidores de Microsoft y se administran desde el Microsoft 365 Admin Center, no desde el panel de control de IONOS. Conéctalos con la opción Outlook (inicio de sesión con Microsoft) en lugar de por IMAP. Puede que el administrador de TI de tu organización tenga que aprobar MCP Emails una vez primero, y el panel te da un enlace de aprobación para enviárselo. La señal es adónde te lleva tu webmail: Outlook en la web significa Microsoft."
     },
     {
-      "h": "Todas las marcas de país de IONOS, y todas las direcciones heredadas de 1&1, usan los mismos dos servidores",
-      "p": "IONOS tiene tiendas separadas en ionos.de, ionos.co.uk, ionos.fr, ionos.es, ionos.it e ionos.com, que existen para la facturación y el marketing y no porque la plataforma de correo sea regional. IMAP es <code>imap.ionos.com</code> y SMTP es <code>smtp.ionos.com</code> sea cual sea la tienda que te vendió el buzón. Las guías de terceros que siguen insistiendo en nombres regionales construidos con la antigua marca 1&1 son anteriores al cambio de marca, y seguirlas te lleva a un nombre de servidor que no responde. No hay ningún servidor regional que buscar."
+      "h": "IONOS Alemania, IONOS Reino Unido e ionos.com documentan nombres de servidor distintos",
+      "p": "IONOS tiene tiendas en ionos.de, ionos.co.uk, ionos.fr, ionos.es, ionos.it e ionos.com, y sus páginas de ayuda dan a cada una sus propios nombres de servidor. La ayuda alemana indica <code>imap.ionos.de</code> en el puerto 993 y <code>smtp.ionos.de</code> en el 465, con 587 y STARTTLS si el 465 está bloqueado; la ayuda británica indica <code>imap.ionos.co.uk</code> y <code>smtp.ionos.co.uk</code>; ionos.com indica <code>imap.ionos.com</code> y <code>smtp.ionos.com</code>. No son etiquetas intercambiables para un mismo servidor. Los servidores .com presentan un certificado emitido a IONOS Inc. en Estados Unidos, mientras que los servidores .de y .co.uk presentan uno emitido a IONOS SE en Alemania, que también cubre los nombres antiguos de 1&1 como <code>imap.1und1.de</code>. Usa los nombres del sitio de IONOS donde compraste el buzón."
     }
   ],
   "limits": [
     "Los buzones de Microsoft 365 comprados a través de IONOS no están en imap.ionos.com. Conéctalos con Outlook (inicio de sesión con Microsoft); puede que un administrador de TI tenga que aprobar la aplicación una vez.",
-    "mcpemails conecta un buzón. Los alias, reenviadores, reglas catch-all y ajustes de spam de IONOS se quedan en el panel de control de IONOS y no son visibles para tu cliente de IA."
+    "MCP Emails conecta un buzón. Los alias, reenviadores, reglas catch-all y ajustes de spam de IONOS se quedan en el panel de control de IONOS y no son visibles para tu cliente de IA."
   ],
   "faq": [
     {
       "q": "¿Funciona Claude con el correo de IONOS?",
-      "a": "Funciona con un buzón de IONOS, del tipo que sirve imap.ionos.com, una vez que un servidor MCP como mcpemails se conecta a él por IMAP. Claude no tiene un conector integrado para IONOS. Un buzón de Microsoft 365 comprado a través de IONOS también funciona, pero se conecta con Outlook (inicio de sesión con Microsoft) y no por IMAP, y puede que un administrador de TI tenga que aprobar MCP Emails una vez primero."
+      "a": "Funciona con un buzón de IONOS, del tipo que sirve imap.ionos.com, una vez que un servidor MCP como MCP Emails se conecta a él por IMAP. Claude no tiene un conector integrado para IONOS. Un buzón de Microsoft 365 comprado a través de IONOS también funciona, pero se conecta con Outlook (inicio de sesión con Microsoft) y no por IMAP, y puede que un administrador de TI tenga que aprobar MCP Emails una vez primero."
     },
     {
       "q": "¿Cuáles son los ajustes IMAP y SMTP de IONOS?",
-      "a": "IMAP es imap.ionos.com en el puerto 993 con SSL/TLS y SMTP es smtp.ionos.com en el puerto 465, también con SSL/TLS. IONOS documenta el puerto 587 con STARTTLS como alternativa de salida si tu red bloquea el 465. El nombre de usuario es tu dirección de correo completa. Ambos servidores se confirmaron con una conexión TLS real en la fecha que indica esta página."
+      "a": "Depende de dónde compraste el buzón. IONOS Alemania documenta imap.ionos.de en el puerto 993 y smtp.ionos.de en el 465, ambos con SSL/TLS, con 587 y STARTTLS como alternativa de salida. IONOS Reino Unido documenta imap.ionos.co.uk y smtp.ionos.co.uk, e ionos.com documenta imap.ionos.com y smtp.ionos.com, en los mismos puertos. El usuario es tu dirección de correo completa."
     },
     {
       "q": "¿Uso el puerto 993 o el 143 de IONOS?",
@@ -93,8 +95,8 @@
       "a": "Porque IONOS da a cada dirección de correo su propia contraseña y probablemente estás usando el acceso a tu cuenta de IONOS. Abre el panel de control de IONOS, ve a Email, selecciona la dirección, define una contraseña nueva para ella y usa esa. Si la dirección se migró a Microsoft 365, ya no existe en los servidores de correo de IONOS; en ese caso, conéctala con Outlook."
     },
     {
-      "q": "¿Usan servidores distintos las cuentas de IONOS de Reino Unido, Alemania y Francia?",
-      "a": "No. Las tiendas regionales de IONOS comparten una plataforma de correo, y todos los buzones usan imap.ionos.com y smtp.ionos.com sea cual sea el sitio de país que lo vendió. Las guías que muestran nombres de servidor regionales construidos con la antigua marca 1&1 están desactualizadas y esos nombres no se conectarán."
+      "q": "¿Los buzones de IONOS de Alemania, Reino Unido y Estados Unidos usan servidores distintos?",
+      "a": "Sí. La ayuda alemana de IONOS da imap.ionos.de y smtp.ionos.de, su ayuda británica imap.ionos.co.uk y smtp.ionos.co.uk, e ionos.com da imap.ionos.com y smtp.ionos.com. Los servidores .com pertenecen a IONOS Inc. en Estados Unidos y los europeos a IONOS SE, así que usa los nombres del sitio de IONOS donde compraste el buzón. Los nombres antiguos de 1&1, como imap.1und1.de, los atienden los servidores europeos."
     },
     {
       "q": "¿Se almacena mi correo de IONOS en sus servidores?",
@@ -103,7 +105,7 @@
   ],
   "ctaBand": {
     "title": "Todos tus buzones de IONOS en un solo agente",
-    "sub": "Conecta tu primer buzón de IONOS gratis, sin tarjeta. Personal conecta tres y Pro todos los que llevas."
+    "sub": "Conecta tu primer buzón de IONOS gratis, sin tarjeta. Personal conecta tres, Pro hasta 10 y Business todos los que necesites."
   },
   "seeAlso": {
     "intro": "¿Un buzón de Microsoft 365 contratado con IONOS?",

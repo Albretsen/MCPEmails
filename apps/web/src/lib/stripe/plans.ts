@@ -18,9 +18,9 @@
  * abuse ceiling that never appears in customer-facing copy. See
  * docs/PLAN-free-action-cap-150.md.
  *
- * Four tiers: Free (1 inbox), Personal (3 inboxes, one person), Pro (unlimited
- * inboxes, one person), Team (unlimited inboxes, several people, separate
- * workspaces per client).
+ * Four tiers: Free (1 inbox), Personal (3 inboxes, one person), Pro (10
+ * inboxes, one person running a business), Business (10 inboxes included plus
+ * a per-mailbox price above that, unlimited people, several workspaces).
  *
  * The internal ids stay `free` / `solo` / `pro` so `workspaces.plan` needs no
  * data migration, and `personal` was added later as the only id whose display
@@ -28,8 +28,8 @@
  *
  *   free     -> "Free"
  *   personal -> "Personal"
- *   solo     -> "Pro"    (was "Agent", before that "Solo")
- *   pro      -> "Team"   (was "Scale", before that "Team")
+ *   solo     -> "Pro"      (was "Agent", before that "Solo")
+ *   pro      -> "Business" (was "Team", before that "Scale", before that "Team")
  *
  * Price IDs come from environment variables so test and production can differ:
  *
@@ -39,8 +39,12 @@
  *   STRIPE_PRICE_PERSONAL_YEARLY=price_...     (RETIRED Personal $48, still billing)
  *   STRIPE_PRICE_SOLO_MONTHLY=price_...       (Pro monthly)
  *   STRIPE_PRICE_SOLO_YEARLY=price_...        (Pro yearly)
- *   STRIPE_PRICE_PRO_MONTHLY=price_...        (Team monthly)
- *   STRIPE_PRICE_PRO_YEARLY=price_...         (Team yearly)
+ *   STRIPE_PRICE_BUSINESS_MONTHLY=price_...          (Business monthly, $39)
+ *   STRIPE_PRICE_BUSINESS_YEARLY=price_...           (Business yearly, $374.40)
+ *   STRIPE_PRICE_BUSINESS_MAILBOX_MONTHLY=price_...  (extra mailbox, $3/mo)
+ *   STRIPE_PRICE_BUSINESS_MAILBOX_YEARLY=price_...   (extra mailbox, $28.80/yr)
+ *   STRIPE_PRICE_PRO_MONTHLY=price_...        (RETIRED Team $79, legacy only)
+ *   STRIPE_PRICE_PRO_YEARLY=price_...         (RETIRED Team $756, legacy only)
  *
  * PRO REPRICED 2026-09-01: $29 -> $15/mo, $276 -> $144/yr.
  *
@@ -80,6 +84,23 @@
  * inboxes at no cost, permanently. That protection is user-level and lives in
  * `user_usage_entitlements.unlimited_inboxes`, so it follows an owner into any
  * workspace they create later. It is resolved through `resolvePlanLimits`.
+ *
+ * PRO CAPPED AT 10, TEAM REPLACED BY BUSINESS (2026-10-19). Pro sold unlimited
+ * mailboxes for $15, which made it the right plan for the heaviest operators
+ * and left Team ($79, priced per person) with nothing to sell: the business
+ * buyer is one person running many mailboxes, not a team. So:
+ *
+ *   - Pro is capped at PRO_INBOX_CAP for new customers. Every workspace on Pro
+ *     at the cutover holds `workspaces.pro_unlimited_inboxes_exempt` and keeps
+ *     unlimited; it arrives here as `proUnlimitedInboxes`. The same value is
+ *     the kill switch: `pricing_switches.pro_inbox_cap = false` makes it true
+ *     for every workspace (see effective_workspace_plan, 20261019150000).
+ *   - Business (slug `pro`) is $39 with BUSINESS_INCLUDED_INBOXES included and
+ *     BUSINESS_EXTRA_INBOX_* per mailbox above that, billed as a second
+ *     subscription item kept in sync by src/lib/stripe/mailbox-addon.ts. It is
+ *     never capped: more mailboxes cost more, they are never refused.
+ *   - The retired $79 / $756 Team prices stay resolvable as Business legacy
+ *     ids, so a stray subscription on them still maps.
  */
 
 // ---------------------------------------------------------------------------
@@ -157,15 +178,29 @@ export interface PlanLimits {
 // The Free action allowance, for copy.
 //
 // The SQL function `workspace_action_allowance` (migration
-// 20260912200000_free_action_cap_150) holds the enforced values as
-// c_free_cap and c_grace. These two are the copy-side mirror: every sentence
+// 20260912200000_free_action_cap_150) holds the enforced cap as c_free_cap,
+// and free_action_grace_ends_at() (20261017160000) the grace: 3 days for
+// workspaces created from 2026-10-17 16:00 UTC, 7 before. These two are the copy-side mirror: every sentence
 // that quotes the allowance derives from them, and plans-copy-parity.test.ts
 // checks that the pricing page's translated copy agrees. Change all three
 // together or the number a customer reads stops being the number that blocks
 // them.
 // ---------------------------------------------------------------------------
 export const FREE_ACTION_ALLOWANCE = 150;
-export const FREE_ACTION_GRACE_DAYS = 7;
+export const FREE_ACTION_GRACE_DAYS = 3;
+
+// ---------------------------------------------------------------------------
+// Mailbox numbers quoted in copy. plans-copy-parity.test.ts pins the pricing
+// page's translated copy to these, as it does for the Free allowance.
+// ---------------------------------------------------------------------------
+/** Pro's connected-inbox cap for workspaces without the cutover exemption. */
+export const PRO_INBOX_CAP = 10;
+/** Mailboxes the Business base price includes. */
+export const BUSINESS_INCLUDED_INBOXES = 10;
+/** Each Business mailbox above the included ones, per month, in USD cents. */
+export const BUSINESS_EXTRA_INBOX_MONTHLY_CENTS = 300;
+/** The same, per year: 12 x $3 less the 20% every annual price carries. */
+export const BUSINESS_EXTRA_INBOX_YEARLY_CENTS = 2880;
 
 // ---------------------------------------------------------------------------
 // Plan definition
@@ -235,7 +270,11 @@ export const PLANS: Record<PlanId, Plan> = {
       // and cutting a live tier down to make a blog sentence true would be
       // taking something away from users to win an argument about copy. The
       // sentence was changed instead. 30 is the floor every tier starts from;
-      // Pro and Team buy MORE history, they do not buy back the default.
+      // the paid tiers buy MORE history, they do not buy back the default.
+      // Storage follows these windows through the pg_cron job
+      // `activity-log-retention` (migration 20261020153742), which keeps every
+      // row at least 90 days for now, so Free rows past 30 days are hidden by
+      // the dashboard rather than deleted.
       analyticsRetentionDays: 30,
       teamRolesEnabled: false,
       ssoEnabled: false,
@@ -281,7 +320,9 @@ export const PLANS: Record<PlanId, Plan> = {
       billingPortalEnabled: true,
       analyticsEnabled: true,
       maxRequestsPerMinute: 120,
-      analyticsRetentionDays: 30,
+      // 30 -> 90 on 2026-10-20 (owner decision). Personal had always stored 90
+      // days, so the longer view is backed by data from day one.
+      analyticsRetentionDays: 90,
       teamRolesEnabled: false,
       ssoEnabled: false,
       auditLogEnabled: false,
@@ -309,9 +350,11 @@ export const PLANS: Record<PlanId, Plan> = {
     // 1 -> 3, the monthly action cap (Free's public 150 -> none that a
     // customer can reach; the paid ceiling stays a silent abuse guard and is
     // never quoted as a number), maxRequestsPerMinute 60 -> 120, supportTier
-    // community -> email, and billingPortalEnabled. Nothing else differs, so
-    // nothing else may be listed. Pro and Team inherit "no cap" through
-    // "Everything in Personal" and must not restate it.
+    // community -> email, billingPortalEnabled, and analyticsRetentionDays
+    // 30 -> 90. The history window is left out on purpose: this array ships in
+    // the purchase confirmation email, which nothing re-checks when a window
+    // moves; the pricing page's comparison table carries it. Pro and Business
+    // inherit "no cap" through "Everything in Personal" and must not restate it.
     features: [
       'Everything in Free',
       '3 connected inboxes',
@@ -326,9 +369,11 @@ export const PLANS: Record<PlanId, Plan> = {
   solo: {
     id: 'solo',
     name: 'Pro',
-    description: 'Every mailbox your business runs, on one agent: finance, sales, support, info, and your own.',
+    description: 'For one person running a business: up to 10 mailboxes on one agent, from finance and sales to support and your own.',
     limits: {
-      maxInboxes: Infinity,
+      // New customers only. A workspace on Pro at the 2026-10 cutover keeps
+      // unlimited through `proUnlimitedInboxes` in resolvePlanLimits.
+      maxInboxes: PRO_INBOX_CAP,
       maxDailyBurstCalls: Infinity,
       maxMonthlyToolCalls: 100_000,
       maxApiKeys: Infinity,
@@ -336,7 +381,10 @@ export const PLANS: Record<PlanId, Plan> = {
       billingPortalEnabled: true,
       analyticsEnabled: true,
       maxRequestsPerMinute: 300,
-      analyticsRetentionDays: 90,
+      // 90 -> 730 on 2026-10-20 (owner decision). Rows older than 90 days were
+      // deleted on every plan until that date, so the two years build up from
+      // then: copy promises the window, never history that already exists.
+      analyticsRetentionDays: 730,
       teamRolesEnabled: false,
       ssoEnabled: false,
       auditLogEnabled: false,
@@ -354,9 +402,9 @@ export const PLANS: Record<PlanId, Plan> = {
     ],
     features: [
       'Everything in Personal',
-      'Unlimited connected inboxes',
+      `${PRO_INBOX_CAP} connected inboxes`,
       '5x higher burst rate limit',
-      // analyticsRetentionDays 30 -> 90. Deliberately unnumbered: a window
+      // Longer than Personal's 90 days (730). Deliberately unnumbered: a window
       // quoted in a feature list is quoted in the purchase confirmation email,
       // which nothing re-checks when the window moves. The pricing page's
       // comparison table carries the exact days.
@@ -365,12 +413,14 @@ export const PLANS: Record<PlanId, Plan> = {
     highlighted: true,
   },
 
-  // "Team" tier; internal id stays `pro`.
+  // "Business" tier; internal id stays `pro` (sold as "Team" until 2026-10-19).
   pro: {
     id: 'pro',
-    name: 'Team',
-    description: 'Shared inboxes for a team, with a separate workspace per client or business.',
+    name: 'Business',
+    description: 'For a business with many mailboxes or several people: 10 mailboxes included, more at a fixed price each.',
     limits: {
+      // Never capped. Mailboxes above BUSINESS_INCLUDED_INBOXES are billed per
+      // mailbox (src/lib/stripe/mailbox-addon.ts), not refused.
       maxInboxes: Infinity,
       maxDailyBurstCalls: Infinity,
       maxMonthlyToolCalls: 500_000,
@@ -379,29 +429,51 @@ export const PLANS: Record<PlanId, Plan> = {
       billingPortalEnabled: true,
       analyticsEnabled: true,
       maxRequestsPerMinute: 1000,
-      analyticsRetentionDays: 365,
+      // 730, the same as Pro (owner decision 2026-10-20). Team said 365, but a
+      // pg_cron job deleted activity_log after 90 days on every plan until
+      // that date, so 365 was never delivered; the per-plan job that replaced
+      // it keeps this plan's rows for 730 days. Comped workspaces resolve to
+      // this plan, so they get 730 too.
+      analyticsRetentionDays: 730,
       teamRolesEnabled: true,
-      ssoEnabled: true,
-      auditLogEnabled: true,
-      supportTier: 'priority',
+      // Nothing reads either flag and neither feature exists. They stay false
+      // until the feature does, so no copy can be generated from them.
+      ssoEnabled: false,
+      auditLogEnabled: false,
+      // There is no priority queue behind "priority"; email support is what
+      // every paid plan actually gets.
+      supportTier: 'email',
     },
-    monthlyPriceCents: 7900,
-    yearlyPriceCents: 75600,
-    stripePriceIdMonthly: process.env.STRIPE_PRICE_PRO_MONTHLY ?? null,
-    stripePriceIdYearly: process.env.STRIPE_PRICE_PRO_YEARLY ?? null,
+    monthlyPriceCents: 3900,
+    yearlyPriceCents: 37440,
+    // New variables rather than overwritten STRIPE_PRICE_PRO_*: those hold the
+    // retired $79 / $756 Team prices and are read below as legacy, so the day
+    // this deploys a stray Team subscription still resolves to this plan.
+    stripePriceIdMonthly: process.env.STRIPE_PRICE_BUSINESS_MONTHLY ?? null,
+    stripePriceIdYearly: process.env.STRIPE_PRICE_BUSINESS_YEARLY ?? null,
     legacyStripePriceIds: [
       'price_1TcQBFARrgumc6cqmaRTXJ5Q', // Scale monthly, $49
       'price_1TcQBGARrgumc6cqmy0LeLSL', // Scale yearly, $490
       'price_1Tb0HfARrgumc6cqMeQSsMNr', // Team monthly, $19 (archived)
       'price_1Tb0HfARrgumc6cqQR33xYAN', // Team yearly, $152 (archived)
+      // Team $79 / $756, retired 2026-10-19.
+      ...legacyPricePair(
+        process.env.STRIPE_PRICE_PRO_MONTHLY,
+        process.env.STRIPE_PRICE_PRO_YEARLY,
+      ),
     ],
+    // Only what works today, each checked against the code on 2026-10-19:
+    // members and roles (invite + members routes, teamRolesEnabled), admins
+    // approving held sends (send_approvals, approve is admin-gated), several
+    // workspaces on one subscription (create_workspace requires this plan and
+    // the webhook projects the plan onto every owned workspace), and the
+    // per-mailbox price. No SSO, no audit export, no longer history.
     features: [
       'Everything in Pro',
-      'Unlimited members with roles',
-      'A separate workspace per client or business',
-      'SSO (SAML / OIDC) and audit log',
-      'Longest analytics history',
-      'Priority support',
+      `${BUSINESS_INCLUDED_INBOXES} connected inboxes included, $${BUSINESS_EXTRA_INBOX_MONTHLY_CENTS / 100} a month for each extra mailbox`,
+      'Unlimited members with roles, at no extra cost',
+      'Admins approve held sends',
+      'Several workspaces on one subscription',
     ],
     highlighted: false,
   },
@@ -420,7 +492,7 @@ export function getPlanLimits(planId: string): PlanLimits {
 // ---------------------------------------------------------------------------
 // Helper: user-facing display name for a plan slug stored in `workspaces.plan`.
 // The DB stores internal ids ('free' | 'personal' | 'solo' | 'pro'); customers
-// only ever see "Free", "Personal", "Pro", and "Team". Use this everywhere a
+// only ever see "Free", "Personal", "Pro", and "Business". Use this everywhere a
 // plan is shown to a user so the dashboard never leaks an internal id.
 // ---------------------------------------------------------------------------
 export function planDisplayName(planId: string | null | undefined): string {
@@ -441,16 +513,31 @@ export function planDisplayName(planId: string | null | undefined): string {
 //                     existed before the change keeps unlimited inboxes for
 //                     free, permanently, on whatever plan they are on.
 //
+// And one workspace-level protection that applies to Pro only:
+//
+//   proUnlimitedInboxes  the 2026-10 Pro cap cutover: a workspace on Pro at the
+//                        cutover keeps unlimited inboxes while it stays on Pro
+//                        (effective_workspace_plan().pro_unlimited_inboxes,
+//                        which is also true for everyone when the kill switch
+//                        is off). It does nothing on any other plan, so it
+//                        cannot widen Free or Personal.
+//
 // The historical `workspaces.grandfathered` flag is deliberately not consulted:
 // it marks only the 7 accounts from the August 3rd migration, not this cohort.
 // ---------------------------------------------------------------------------
 export function resolvePlanLimits(
   planId: string,
-  opts?: { compedScale?: boolean; unlimitedInboxes?: boolean },
+  opts?: {
+    compedScale?: boolean;
+    unlimitedInboxes?: boolean;
+    proUnlimitedInboxes?: boolean;
+  },
 ): PlanLimits {
   const base = getPlanLimits(opts?.compedScale ? 'pro' : planId);
   const needsComp = Boolean(opts?.compedScale);
-  const needsInboxes = Boolean(opts?.unlimitedInboxes);
+  const needsInboxes =
+    Boolean(opts?.unlimitedInboxes) ||
+    (planId === 'solo' && !needsComp && Boolean(opts?.proUnlimitedInboxes));
   if (!needsComp && !needsInboxes) return base;
   return {
     ...base,
@@ -492,6 +579,72 @@ export function getPlanByStripePriceId(
     }
   }
   return null;
+}
+
+// ---------------------------------------------------------------------------
+// The Business per-mailbox add-on.
+//
+// A Business subscription carries TWO items: the plan's base price (quantity
+// 1) and, once the owner connects more than BUSINESS_INCLUDED_INBOXES
+// mailboxes across their workspaces, the per-mailbox price with quantity =
+// the mailboxes above that. The add-on is not a plan: getPlanByStripePriceId
+// returns null for it, and every reader that used to take `items.data[0]` as
+// "the plan" must take `basePlanItem(items)` instead, because Stripe does not
+// promise the base item comes first.
+//
+// The ids are read at call time rather than at module load, so a test can set
+// them after import.
+// ---------------------------------------------------------------------------
+export function mailboxAddonPriceId(interval: BillingInterval): string | null {
+  const raw =
+    interval === 'year'
+      ? process.env.STRIPE_PRICE_BUSINESS_MAILBOX_YEARLY
+      : process.env.STRIPE_PRICE_BUSINESS_MAILBOX_MONTHLY;
+  return raw?.trim() || null;
+}
+
+/** The interval of an add-on price id, or null when the id is not one. */
+export function mailboxAddonInterval(
+  priceId: string | null | undefined,
+): BillingInterval | null {
+  if (!priceId) return null;
+  if (priceId === mailboxAddonPriceId('month')) return 'month';
+  if (priceId === mailboxAddonPriceId('year')) return 'year';
+  return null;
+}
+
+export function isMailboxAddonPriceId(priceId: string | null | undefined): boolean {
+  return mailboxAddonInterval(priceId) !== null;
+}
+
+/** Mailboxes billed on top of the Business base price. Never negative. */
+export function extraMailboxQuantity(connectedInboxes: number): number {
+  const count = Number.isFinite(connectedInboxes) ? Math.floor(connectedInboxes) : 0;
+  return Math.max(0, count - BUSINESS_INCLUDED_INBOXES);
+}
+
+/**
+ * The subscription item that carries the PLAN: the first item whose price maps
+ * to a catalogue plan, else the first item that is not the mailbox add-on,
+ * else the first item. The fallbacks keep an unmapped legacy price behaving
+ * exactly as `items[0]` did before the add-on existed.
+ */
+export function basePlanItem<T extends { price?: { id?: string | null } | null }>(
+  items: readonly T[] | null | undefined,
+): T | undefined {
+  const list = items ?? [];
+  return (
+    list.find((item) => getPlanByStripePriceId(item.price?.id ?? null) !== null) ??
+    list.find((item) => !isMailboxAddonPriceId(item.price?.id ?? null)) ??
+    list[0]
+  );
+}
+
+/** The add-on item, when the subscription has one. */
+export function mailboxAddonItem<T extends { price?: { id?: string | null } | null }>(
+  items: readonly T[] | null | undefined,
+): T | undefined {
+  return (items ?? []).find((item) => isMailboxAddonPriceId(item.price?.id ?? null));
 }
 
 // ---------------------------------------------------------------------------

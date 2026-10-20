@@ -22,20 +22,20 @@
       "step1": "En claude.ai o Claude Desktop, abre Configuración → Conectores.",
       "step2": "Haz clic en «Añadir conector personalizado».",
       "step3": "Pega la URL de arriba como la URL del conector, luego haz clic en «Añadir».",
-      "step4": "Haz clic en «Conectar» e inicia sesión con mcpemails para autorizar. No se necesita clave de API."
+      "step4": "Haz clic en «Conectar» e inicia sesión con MCP Emails para autorizar. No se necesita clave de API."
     },
     "chatgpt": {
       "step1": "Abre Configuración → Apps y conectores → Configuración avanzada y activa el modo de desarrollador.",
       "step2": "De vuelta en Apps y conectores, haz clic en «Crear».",
       "step3": "Introduce un nombre y pega la URL de arriba como la URL del conector.",
-      "step4": "Elige OAuth, haz clic en «Crear» y luego autoriza con mcpemails.",
-      "step5": "En un chat de chatgpt.com, haz clic en + → modo de desarrollador y selecciona la app de mcpemails. Repítelo en cada chat nuevo; si no, ChatGPT no verá las herramientas.",
+      "step4": "Elige OAuth, haz clic en «Crear» y luego autoriza con MCP Emails.",
+      "step5": "En un chat de chatgpt.com, haz clic en + → modo de desarrollador y selecciona la app de MCP Emails. Repítelo en cada chat nuevo; si no, ChatGPT no verá las herramientas.",
       "note": "Funciona en chatgpt.com (solo web) con Plus, Pro, Business, Enterprise y Edu. Las cuentas Free y Go no pueden añadir conectores personalizados. En Business y Enterprise, puede que un administrador tenga que permitir antes el modo de desarrollador."
     },
     "cursor": {
       "step1": "Edita ~/.cursor/mcp.json (global) o .cursor/mcp.json (proyecto).",
       "step2": "Añade el servidor de abajo bajo «mcpServers».",
-      "step3": "Cursor te pide iniciar sesión vía OAuth. Autoriza con mcpemails."
+      "step3": "Cursor te pide iniciar sesión vía OAuth. Autoriza con MCP Emails."
     },
     "vscode": {
       "step1": "Abre la Paleta de comandos (⇧⌘P) y ejecuta «MCP: Add Server».",
@@ -51,7 +51,7 @@
     "windsurf": {
       "step1": "Abre la configuración de MCP de Cascade, o edita ~/.codeium/windsurf/mcp_config.json.",
       "step2": "Añade el servidor de abajo. Nota que el campo es «serverUrl», no «url».",
-      "step3": "Actualiza los servidores MCP en Cascade y autoriza con mcpemails cuando se te solicite."
+      "step3": "Actualiza los servidores MCP en Cascade y autoriza con MCP Emails cuando se te solicite."
     },
     "gemini": {
       "step1": "Edita ~/.gemini/settings.json (global) o .gemini/settings.json (proyecto).",
@@ -61,7 +61,7 @@
     "zed": {
       "step1": "En la configuración del Panel de agentes haz clic en «Add Custom Server», o edita settings.json.",
       "step2": "Añade el servidor de abajo bajo «context_servers».",
-      "step3": "Zed solicita el flujo de OAuth cuando no hay un encabezado Authorization. Inicia sesión con mcpemails."
+      "step3": "Zed solicita el flujo de OAuth cuando no hay un encabezado Authorization. Inicia sesión con MCP Emails."
     },
     "jetbrains": {
       "step1": "Abre Configuración → Herramientas → AI Assistant → Model Context Protocol (MCP).",
@@ -71,7 +71,7 @@
     "raycast": {
       "step1": "Ejecuta el comando «Install MCP Server» (o «Manage MCP Servers»).",
       "step2": "Introduce un nombre, establece el transporte en «HTTP» y pega la URL de arriba.",
-      "step3": "Pulsa «Install MCP Server», luego haz clic en «Sign In» para autorizar con mcpemails."
+      "step3": "Pulsa «Install MCP Server», luego haz clic en «Sign In» para autorizar con MCP Emails."
     },
     "warp": {
       "step1": "Abre Configuración → Agentes → Servidores MCP y haz clic en «+ Add».",
@@ -98,7 +98,7 @@
     "multiInboxTitle": "Añade tus otros buzones de trabajo",
     "multiInboxOptional": "Opcional",
     "multiInboxDesc": "Conecta info@, ventas@, facturas@ y los demás, y tu agente trabaja con todos los buzones de la empresa desde una sola conversación, respondiendo desde la dirección correcta.",
-    "multiInboxDescUpgrade": "Conecta info@, ventas@, facturas@ y los demás, y tu agente trabaja con todos los buzones de la empresa desde una sola conversación, respondiendo desde la dirección correcta. El plan gratuito cubre un buzón; Pro cubre todos los buzones de tu empresa.",
+    "multiInboxDescUpgrade": "Conecta info@, ventas@, facturas@ y los demás, y tu agente trabaja con todos los buzones de la empresa desde una sola conversación, respondiendo desde la dirección correcta. El plan gratuito cubre un buzón; Pro cubre hasta 10.",
     "multiInboxCta": "Añadir un buzón"
   },
   "overview": {
@@ -119,7 +119,7 @@
     "actionsThisMonth": "Acciones de correo este mes",
     "actionsOfCap": "de {cap} · se reinicia el {date}",
     "actionsCapReached": "Límite alcanzado · rechazadas hasta el {date}",
-    "actionsGrace": "Semana de prueba: sin límite hasta el {date}",
+    "actionsGrace": "Periodo de prueba: sin límite hasta el {date}",
     "actionsExempt": "Sin límite mensual (miembro temprano)",
     "teamMembers": "Miembros del equipo",
     "ofSeats": "de {cap} puestos · {remaining} restantes",
@@ -129,7 +129,7 @@
     "goToMembers": "Ir a Miembros",
     "callsPerDayTitle": "Llamadas por día",
     "callsPerDaySub": "Últimos {days} días · en todas las herramientas",
-    "pro": "Team",
+    "pro": "Business",
     "recentActivityTitle": "Actividad reciente",
     "recentActivitySub": "Llamadas a herramientas MCP en vivo",
     "noActivityTitle": "Aún no hay actividad",
@@ -146,8 +146,8 @@
     "usedSingular": "{count} de {max} bandeja usada",
     "capTitle": "Has alcanzado tu límite de bandejas",
     "capBodyPersonal": "El plan gratuito conecta un buzón. Personal te lleva a tres por 9 $ al mes, para que el trabajo y lo personal compartan el mismo agente.",
-    "capBodyPro": "Personal conecta tres buzones. Pro elimina el límite por 15 $ al mes, para reunir todos tus buzones en un solo agente.",
-    "capBodyBusiness": "¿Gestionas más de un buzón de empresa? El plan gratuito conecta uno. Personal cubre tres por 9 $ al mes, suficiente para info@, ventas@ y el tuyo. Pro cubre todos los buzones de tu empresa por 15 $ al mes: finanzas, ventas, soporte, info y el tuyo.",
+    "capBodyPro": "Personal conecta tres buzones. Pro te lleva a 10 por 15 $ al mes, todos en un solo agente.",
+    "capBodyBusiness": "¿Gestionas más de un buzón de empresa? El plan gratuito conecta uno. Personal cubre tres por 9 $ al mes, suficiente para info@, ventas@ y el tuyo. Pro cubre hasta 10 por 15 $ al mes: finanzas, ventas, soporte, info y el tuyo.",
     "capCtaPersonal": "Mejorar a Personal, 9 $/mes",
     "capCtaPro": "Mejorar a Pro, 15 $/mes",
     "capCompare": "Comparar todos los planes",
@@ -206,6 +206,38 @@
         "saving": "Guardando…",
         "tooLong": "El nombre del remitente es demasiado largo (máx. 100 caracteres)."
       },
+      "sendAs": {
+        "title": "Direcciones de envío",
+        "help": "Envía desde otra dirección que llega a este buzón, como un alias de iCloud. Le enviamos un código para confirmar que es tuya. Tu proveedor de correo también debe permitir enviar desde ella.",
+        "placeholder": "alias@ejemplo.com",
+        "add": "Añadir dirección",
+        "adding": "Enviando código…",
+        "loading": "Cargando…",
+        "verified": "Verificada",
+        "pending": "Código enviado",
+        "unverified": "Sin verificar",
+        "codePlaceholder": "Código de 6 dígitos",
+        "codeLabel": "Código de verificación para {address}",
+        "verify": "Verificar",
+        "resend": "Reenviar código",
+        "remove": "Quitar",
+        "errors": {
+          "invalid_address": "Introduce una dirección de correo válida.",
+          "own_address": "Esa es la dirección de este buzón.",
+          "connected_inbox": "Esa dirección está conectada como buzón propio. Envía desde ese buzón.",
+          "already_verified": "Esa dirección ya está verificada.",
+          "too_many_aliases": "Este buzón no admite más direcciones. Quita una primero.",
+          "rate_limited": "Se han enviado demasiados códigos. Inténtalo más tarde.",
+          "cooldown": "Espera un minuto antes de pedir otro código.",
+          "code_expired": "El código ha caducado. Pide uno nuevo.",
+          "too_many_attempts": "Demasiados códigos incorrectos. Pide uno nuevo.",
+          "wrong_code": "El código no es correcto.",
+          "invalid_code": "Introduce el código de 6 dígitos.",
+          "mail_failed": "No pudimos enviar el código. Inténtalo de nuevo.",
+          "unsupported_provider": "El envío con otra dirección no está disponible para este buzón.",
+          "generic": "Algo salió mal. Inténtalo de nuevo."
+        }
+      },
       "signature": {
         "title": "Firma de correo",
         "enabled": "Activada",
@@ -234,7 +266,9 @@
     },
     "emptyAltLead": "¿Todavía no quieres conectar un buzón?",
     "emptyViewKeys": "Obtén tu URL de MCP y tu clave de API",
-    "emptyReadDocs": "Lee las guías de configuración"
+    "emptyReadDocs": "Lee las guías de configuración",
+    "capBodyProCap": "Pro conecta 10 buzones. Business incluye 10 por 39 $ al mes y añade cada buzón adicional por 3 $ al mes, con miembros ilimitados sin coste extra.",
+    "capCtaBusiness": "Mejorar a Business, 39 $/mes"
   },
   "apiKeys": {
     "title": "Claves de API",
@@ -368,7 +402,7 @@
     "colAddress": "Dirección",
     "allowanceCounting": "{used} de {cap} acciones de correo usadas este mes · se reinicia el {date}",
     "allowanceReached": "Las {cap} acciones de correo ya se han usado · lecturas y escrituras rechazadas hasta el {date}",
-    "allowanceGrace": "Semana de prueba: sin límite hasta el {date}",
+    "allowanceGrace": "Periodo de prueba: sin límite hasta el {date}",
     "allowanceExempt": "Sin límite mensual (miembro temprano)",
     "capTitleNear": "Te acercas al límite de este mes",
     "capBodyNear": "{used} de {cap} acciones de correo usadas. Al llegar a {cap}, las lecturas y escrituras de tu agente se rechazan hasta el {date}. Personal elimina el límite mensual por 9 $ al mes.",
@@ -520,16 +554,15 @@
       "personalFeature2": "120 peticiones / minuto (ráfaga 2×)",
       "personalFeatureActions": "Sin límite mensual de acciones",
       "personalFeature4": "Soporte por correo",
-      "soloFeature1": "Bandejas conectadas ilimitadas",
+      "soloFeature1": "10 bandejas conectadas",
       "soloFeature2": "300 peticiones / minuto (ráfaga 5×)",
       "soloFeature3": "Más historial de analíticas",
       "soloFeature4": "Soporte por correo",
-      "teamFeature1": "Todo lo de Pro",
-      "teamFeature2": "Miembros ilimitados con roles",
-      "teamFeature3": "Un espacio de trabajo separado por cliente o negocio",
-      "teamFeature4": "SSO (SAML / OIDC) + registro de auditoría",
-      "teamFeature5": "El mayor historial de analíticas",
-      "teamFeature6": "Soporte prioritario"
+      "businessFeature1": "Todo lo de Pro",
+      "businessFeature2": "10 buzones incluidos, 3 $ al mes por cada uno adicional",
+      "businessFeature3": "Miembros ilimitados con roles, sin coste extra",
+      "businessFeature4": "Los administradores aprueban los envíos retenidos",
+      "businessFeature5": "Varios espacios de trabajo con una sola suscripción"
     },
     "planIncludes": "Qué incluye tu plan",
     "inboxesOne": "1 bandeja conectada",
@@ -560,7 +593,7 @@
     "confirmNoteInterval": "Se cobra ahora en la tarjeta guardada, con un abono por el tiempo restante del periodo actual. Tu periodo de facturación empieza de nuevo hoy, así que tu próxima fecha de renovación cambia.",
     "confirmNoteIntervalNoPreview": "No pudimos calcular este cambio por adelantado. Se cobra la diferencia en la tarjeta guardada, con un abono por el tiempo restante del periodo actual, y el importe exacto aparece en tu factura. Tu periodo de facturación empieza de nuevo hoy, así que tu próxima fecha de renovación cambia.",
     "confirmPay": "Confirmar y pagar {amount}",
-    "confirmChange": "Confirmar cambio",
+    "confirmChange": "Confirmar y pagar",
     "confirmCancel": "Cancelar",
     "confirming": "Cobrando…",
     "planChangedCharged": "Ya estás en {plan}. Se han cobrado {amount} a tu tarjeta.",
@@ -569,7 +602,10 @@
     "paymentRequiredBody": "Tu banco necesita autorizar el pago, o la tarjeta ha sido rechazada. Tu plan actual no ha cambiado y no se te ha cobrado nada. Paga la factura pendiente y el cambio se aplicará automáticamente.",
     "paymentRequiredPay": "Pagar factura",
     "paymentRequiredClose": "Cerrar",
-    "paymentRequiredToast": "El pago no se ha completado, así que sigues en {plan}. Abre el portal de facturación para pagar la factura pendiente."
+    "paymentRequiredToast": "El pago no se ha completado, así que sigues en {plan}. Abre el portal de facturación para pagar la factura pendiente.",
+    "proInboxesKept": "Tu plan Pro conserva las bandejas conectadas ilimitadas.",
+    "businessMailboxRate": "10 buzones incluidos entre todos tus espacios de trabajo. Cada buzón adicional se factura con tu plan: 3 $ al mes o 28,80 $ al año.",
+    "confirmExtraMailboxes": "Incluye {count, plural, one {# buzón adicional} other {# buzones adicionales}} además de los 10 incluidos."
   },
   "security": {
     "title": "Seguridad",
@@ -633,8 +669,8 @@
     "roleOwner": "Propietario",
     "sending": "Enviando…",
     "sendInvite": "Enviar invitación",
-    "rolesLockedHint": "Las invitaciones se unen como Miembro. Mejora a Team para asignar roles de Administrador y Visor.",
-    "inviteUpgradeHint": "Invitar colaboradores requiere el plan Team. Mejora tu plan para añadir miembros a este espacio de trabajo.",
+    "rolesLockedHint": "Las invitaciones se unen como Miembro. Mejora a Business para asignar roles de Administrador y Visor.",
+    "inviteUpgradeHint": "Invitar colaboradores requiere el plan Business. Mejora tu plan para añadir miembros a este espacio de trabajo.",
     "errInviteFailed": "No se pudo enviar la invitación.",
     "errRemoveFailed": "No se pudo eliminar al miembro.",
     "errRoleFailed": "No se pudo actualizar el rol.",
