@@ -52,6 +52,13 @@ export const ENTRIES = [
   },
   {
     date: '2026-10-20',
+    kind: 'fixed',
+    title: 'Drafts to international addresses send again',
+    body:
+      'On IMAP inboxes, a draft written in another mail app to an address with a non-Latin domain such as münchen.de or пример.рф, or with a quoted name before the @, now sends. Before, sending it stopped with an invalid recipient error.',
+  },
+  {
+    date: '2026-10-20',
     kind: 'added',
     title: 'Free IMAP and SMTP settings lookup',
     body:

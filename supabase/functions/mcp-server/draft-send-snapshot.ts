@@ -173,6 +173,15 @@ export type ApprovedDraftCheck = "match" | "changed" | "unverified";
  * `unverified`: the approval carries no digest (queued before this check
  * existed, or written by something else). Refused: the reviewer approved a
  * draft whose content nobody recorded, which is the exact hole this closes.
+ *
+ * Legacy rows, checked in production on 2026-10-20 (read-only): the only
+ * draft_send approvals created before #126 deployed (2026-10-16 19:00 UTC)
+ * that were still `pending` had all lapsed past their 24h `expires_at` before
+ * #126 shipped, so no decide path can approve them, and none was approved and
+ * still undispatched; activity_log had no `approved_draft_unverified` row. No
+ * approval can reach `unverified` any more except one written by something
+ * other than queueSendApproval, so there is deliberately no re-approval path:
+ * refusing stays the only safe answer, and it never sends unverified content.
  */
 export function checkApprovedDraft(
   approvedDigest: unknown,
