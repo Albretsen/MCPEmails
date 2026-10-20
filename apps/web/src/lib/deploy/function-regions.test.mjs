@@ -232,9 +232,12 @@ test('vercel.json region config stays inside what this test can model', () => {
   // it was added the project had no vercel.json at all, so ANY other top-level
   // key (trailingSlash, cleanUrls, crons, headers, redirects, rewrites, ...)
   // is new platform behaviour arriving through a file whose only reviewer is
-  // this test. Headers and redirects live in next.config.js.
+  // this test. Headers and redirects live in next.config.js. One exception
+  // is `ignoreCommand` (build skipping, no runtime effect): previews stay
+  // skipped, and production skips only when nothing the web build reads
+  // changed since the first parent; a failing diff (no HEAD^) builds.
   //
-  // One exception, pinned value for value: /api/mcp is an external rewrite to
+  // The other, pinned value for value: /api/mcp is an external rewrite to
   // the mcp-server edge function (2026-10-20), so no Vercel function runs per
   // MCP call. It lives here because a vercel.json rewrite is applied by the
   // platform router; the response contract it relies on is
@@ -242,8 +245,8 @@ test('vercel.json region config stays inside what this test can model', () => {
   // next to the US mail hosts, as the iad1 route it replaced did.
   assert.deepEqual(
     Object.keys(config).sort(),
-    ['$schema', 'functions', 'headers', 'rewrites'],
-    'apps/web/vercel.json may contain only "$schema", "functions" and the pinned /api/mcp rewrite',
+    ['$schema', 'functions', 'headers', 'ignoreCommand', 'rewrites'],
+    'apps/web/vercel.json may contain only "$schema", "functions", "ignoreCommand" and the pinned /api/mcp rewrite',
   );
   assert.deepEqual(config.rewrites, [
     {

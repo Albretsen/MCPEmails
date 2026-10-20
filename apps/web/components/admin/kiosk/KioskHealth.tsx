@@ -19,31 +19,35 @@
  * WHY IT POLLS ON ITS OWN CLOCK. The board refreshes every five minutes and
  * its numbers are cached for ten, both of which are right for growth metrics
  * and both of which are wrong for an outage. This asks a dedicated uncached
- * endpoint every 45 seconds, so the worst case between the synthetic monitor
- * recording a failed check and the wall turning red is one poll.
+ * endpoint every two minutes, so the worst case between the synthetic monitor
+ * recording a failed check and the wall turning red is one poll. It was 45
+ * seconds until 2026-10-20; at about 50 ms of CPU a call it was the costliest
+ * hot route, and two minutes is still shorter than the monitor's own five minute cadence.
+ * The poll pauses while the page is hidden and checks at once when shown.
  *
  * A FAILED POLL IS ITSELF A SIGNAL, and it is the signal the board has never
  * had. If `fetch` cannot reach production, either the site is down or the Pi
  * has lost its network, and until now both looked identical from the room: a
  * board full of numbers, refreshing into nothing, pulsing a green dot. One
  * failure is ignored, because a five minute deploy window or a wifi hiccup
- * must not paint the wall amber. Two in a row (about a minute and a half) says
- * so in words.
+ * must not paint the wall amber. Two in a row (about four minutes) says so
+ * in words.
  */
 
 import { createContext, useContext, useEffect, useMemo, useState, type ReactNode } from 'react';
+import { startVisiblePoll } from '@/lib/polling/visible-poll';
 import type { HealthLevel, SystemHealth } from '@/lib/analytics/health-math';
 import { NO_DATA, formatCount, formatPercent } from '../charts/format';
 import { BigNumber, FactRow, Tile } from './primitives';
 
 /** How often the board asks. See the module note on why this is not the board's own tick. */
-const POLL_MS = 45_000;
+export const POLL_MS = 120_000;
 
 /**
  * Consecutive failed polls before the board says it cannot reach the site.
  *
  * Two, not one. A production deploy briefly refuses connections and the panel
- * is on office wifi; a single miss is noise. Two misses is 90 seconds, which
+ * is on office wifi; a single miss is noise. Two misses is four minutes, which
  * is short enough to be useful and long enough to have never been a blip.
  */
 const UNREACHABLE_AFTER = 2;
@@ -120,11 +124,13 @@ export function KioskHealthProvider({
     }
 
     // Not called immediately: the server already handed us a fresh snapshot,
-    // and polling on mount would double every reload for nothing.
-    const timer = setInterval(poll, POLL_MS);
+    // and polling on mount would double every reload for nothing. Paused while
+    // hidden; becoming visible polls at once, so a returning tab is never
+    // judged on a snapshot that aged while nobody was looking.
+    const loop = startVisiblePoll({ poll, intervalMs: () => POLL_MS });
     return () => {
       cancelled = true;
-      clearInterval(timer);
+      loop.stop();
     };
   }, []);
 

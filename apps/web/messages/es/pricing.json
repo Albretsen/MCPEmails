@@ -154,7 +154,8 @@
       "burstSolo": "300 / min",
       "burstPro": "1.000 / min",
       "history30": "30 días",
-      "history90": "90 días"
+      "history90": "90 días",
+      "history2y": "2 años"
     }
   },
   "faq": {
@@ -167,7 +168,7 @@
       },
       {
         "q": "¿Qué añade Personal sobre Free?",
-        "a": "Dos bandejas conectadas más, ningún tope mensual de acciones de correo (con uso justo), el doble de techo de ráfaga (120 peticiones por minuto en lugar de 60) y soporte por correo en lugar del foro de la comunidad. Esa es toda la lista. Todo lo demás ya está en Free: todas las herramientas MCP, incluidos los envíos programados, la aprobación antes de enviar configurable por bandeja y el panel de analíticas de uso. No retenemos funciones en Free para que los planes de pago parezcan más grandes."
+        "a": "Dos bandejas conectadas más, ningún tope mensual de acciones de correo (con uso justo), el doble de techo de ráfaga (120 peticiones por minuto en lugar de 60), 90 días de historial de analíticas en lugar de 30 y soporte por correo en lugar del foro de la comunidad. Esa es toda la lista. Todo lo demás ya está en Free: todas las herramientas MCP, incluidos los envíos programados, la aprobación antes de enviar configurable por bandeja y el panel de analíticas de uso. No retenemos funciones en Free para que los planes de pago parezcan más grandes."
       },
       {
         "q": "¿Qué cuenta como una acción de correo?",
@@ -183,7 +184,7 @@
       },
       {
         "q": "¿Cuál es la diferencia entre Personal, Pro y Business?",
-        "a": "Personal es un solo usuario con tres bandejas conectadas, un techo de 120 peticiones por minuto y soporte por correo. Pro sigue siendo un solo usuario y un solo inicio de sesión, con hasta 10 buzones conectados, así que una persona puede llevar los buzones de una empresa (ventas, facturas, soporte, info). Además tiene un techo de 300 peticiones por minuto, 90 días de historial de analíticas en lugar de 30 y soporte por correo. Business es para más buzones o más personas: 10 buzones incluidos y $3 al mes por cada uno adicional, miembros ilimitados con roles (lector, miembro, administrador) sin coste extra, administradores que aprueban los envíos en espera, varios espacios de trabajo en una sola suscripción y un techo de 1.000 peticiones por minuto."
+        "a": "Personal es un solo usuario con tres bandejas conectadas, un techo de 120 peticiones por minuto, 90 días de historial de analíticas y soporte por correo. Pro sigue siendo un solo usuario y un solo inicio de sesión, con hasta 10 buzones conectados, así que una persona puede llevar los buzones de una empresa (ventas, facturas, soporte, info). Además tiene un techo de 300 peticiones por minuto, dos años de historial de analíticas en lugar de 90 días y soporte por correo. Business es para más buzones o más personas: 10 buzones incluidos y $3 al mes por cada uno adicional, miembros ilimitados con roles (lector, miembro, administrador) sin coste extra, administradores que aprueban los envíos en espera, varios espacios de trabajo en una sola suscripción y un techo de 1.000 peticiones por minuto."
       },
       {
         "q": "Somos una empresa con varios buzones. ¿Qué plan necesitamos?",

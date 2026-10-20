@@ -57,7 +57,7 @@ export const ROUTES = {
   invite: '/invite/[token]/page',
   pricing: '/[locale]/pricing/page',
   home: '/[locale]/page',
-  docs: '/[locale]/docs/page',
+  docs: '/[locale]/docs/(catalogue)/page',
 };
 
 /** One long sentence per language that exists only in that language's catalog. */
