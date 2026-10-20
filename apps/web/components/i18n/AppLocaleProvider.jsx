@@ -1,6 +1,6 @@
 'use client';
 
-import { LocaleRoot, prefetchPreferredLocale, useAppLocale } from './LocaleCore';
+import { LocaleRoot, prefetchPreferredLocale, preferredAppLocale, useAppLocale } from './LocaleCore';
 
 import enDashboard from '../../messages/en/dashboard.json';
 import enDashboardChrome from '../../messages/en/dashboardChrome.json';
@@ -45,7 +45,7 @@ const ENGLISH = { dashboard: enDashboard, dashboardChrome: enDashboardChrome, au
 
 prefetchPreferredLocale(NAMESPACES, ENGLISH);
 
-export { useAppLocale };
+export { preferredAppLocale, useAppLocale };
 
 export default function AppLocaleProvider({ children, initialLocale = null, readLangParam = false }) {
   return (

@@ -311,7 +311,7 @@ function PlanCards({ annual, stripePrices, user, highlightPlan }) {
                  prefetch the checkout route. */
               <a
                 className={'btn btn-lg ' + (ctaPrimary ? 'btn-primary' : 'btn-secondary')}
-                href={withReadingLang(pricingUpgradeHref(plan.key, annual, Boolean(user)), locale)}
+                href={withReadingLang(pricingUpgradeHref(plan.key, annual, Boolean(user), locale), locale)}
                 style={{ textAlign: 'center', justifyContent: 'center' }}
               >
                 {t(`plans.${plan.key}.cta`)}
