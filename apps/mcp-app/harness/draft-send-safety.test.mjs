@@ -295,14 +295,19 @@ async function boot(opts = {}) {
       local: Object.entries({ ...host.w.localStorage }),
       session: Object.entries({ ...host.w.sessionStorage }),
     }),
-    kill: () => {
+    // Preact 11 runs useEffect cleanups on unmount after paint (rAF, or a 35 ms
+    // timeout), not synchronously. Wait for them, or the old card's unmount
+    // cleanup (clearUnsaved) runs against the NEXT card's window and storage.
+    kill: async () => {
       mod.disarmResultWatchdog();
       mod.render(null, root);
+      await new Promise((r) => setTimeout(r, 60));
     },
     done: async () => {
       mod.disarmResultWatchdog();
       host.w.dispatchEvent(new host.w.Event("pagehide"));
       mod.render(null, root);
+      await new Promise((r) => setTimeout(r, 60));
     },
   };
 }
@@ -605,7 +610,7 @@ async function main() {
     u.tools.draft = () => sentResult();
     u.press(u.slot());
     await settle();
-    u.kill();
+    await u.kill();
     await pastUndo();
     expectJson("unmount: nothing was called", u.calls, []);
 

@@ -254,14 +254,19 @@ async function boot(opts = {}) {
       local: Object.entries({ ...host.w.localStorage }),
       session: Object.entries({ ...host.w.sessionStorage }),
     }),
-    kill: () => {
+    // Preact 11 runs useEffect cleanups on unmount after paint (rAF, or a 35 ms
+    // timeout), not synchronously. Wait for them, or the old card's unmount
+    // cleanup (clearUnsaved) runs against the NEXT card's window and storage.
+    kill: async () => {
       mod.disarmResultWatchdog();
       mod.render(null, root);
+      await new Promise((r) => setTimeout(r, 60));
     },
     done: async () => {
       mod.disarmResultWatchdog();
       host.w.dispatchEvent(new host.w.Event("pagehide"));
       mod.render(null, root);
+      await new Promise((r) => setTimeout(r, 60));
     },
   };
 }
@@ -327,7 +332,7 @@ async function main() {
     await settle();
     c.w.dispatchEvent(new c.w.Event("pagehide"));
     const s = c.storage();
-    c.kill();
+    await c.kill();
     return s;
   }
 
@@ -728,7 +733,7 @@ async function main() {
     c.press(c.btn(/^Yes, delete$/));
     await settle();
     const s = c.storage();
-    c.kill();
+    await c.kill();
 
     // The reopened chat: the host replays the ORIGINAL result, and the server
     // (with lineage) says the draft's line was closed by a delete.
@@ -820,7 +825,7 @@ async function main() {
     await after(400);
     c.w.dispatchEvent(new c.w.Event("pagehide"));
     const s = c.storage();
-    c.kill();
+    await c.kill();
 
     const r = await boot({ storage: s });
     // With lineage, either id answers with the current draft.

@@ -255,14 +255,19 @@ async function boot(opts = {}) {
       local: Object.entries({ ...host.w.localStorage }),
       session: Object.entries({ ...host.w.sessionStorage }),
     }),
-    kill: () => {
+    // Preact 11 runs useEffect cleanups on unmount after paint (rAF, or a 35 ms
+    // timeout), not synchronously. Wait for them, or the old card's unmount
+    // cleanup (clearUnsaved) runs against the NEXT card's window and storage.
+    kill: async () => {
       mod.disarmResultWatchdog();
       mod.render(null, root);
+      await new Promise((r) => setTimeout(r, 60));
     },
     done: async () => {
       mod.disarmResultWatchdog();
       host.w.dispatchEvent(new host.w.Event("pagehide"));
       mod.render(null, root);
+      await new Promise((r) => setTimeout(r, 60));
     },
   };
 }
@@ -481,7 +486,7 @@ async function main() {
     await sendEdited(c, "Edited before sending.");
     expect("(setup) the send happened", /Edited before sending\./.test(c.text()), true);
     const s = c.storage();
-    c.kill();
+    await c.kill();
     return s;
   }
 
@@ -561,7 +566,7 @@ async function main() {
     await settle();
     await discard(c);
     const s = c.storage();
-    c.kill();
+    await c.kill();
 
     const r = await boot({ storage: s });
     r.tools.draft_read = () => failedResult("draft_not_found", "This draft was discarded.");

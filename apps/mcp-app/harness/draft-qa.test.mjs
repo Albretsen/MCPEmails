@@ -274,14 +274,19 @@ async function boot(opts = {}) {
      * The frame goes away. Its timers must not outlive it: they would write to
      * the NEXT scenario's storage, because the globals now point there.
      */
-    kill: () => {
+    // Preact 11 runs useEffect cleanups on unmount after paint (rAF, or a 35 ms
+    // timeout), not synchronously. Wait for them, or the old card's unmount
+    // cleanup (clearUnsaved) runs against the NEXT card's window and storage.
+    kill: async () => {
       mod.disarmResultWatchdog();
       mod.render(null, root);
+      await new Promise((r) => setTimeout(r, 60));
     },
     done: async () => {
       mod.disarmResultWatchdog();
       host.w.dispatchEvent(new host.w.Event("pagehide"));
       mod.render(null, root);
+      await new Promise((r) => setTimeout(r, 60));
     },
   };
 }
@@ -742,7 +747,7 @@ async function main() {
       s.local.some(([, v]) => v.includes("Half-typed") || v.includes("Quarterly")),
       false,
     );
-    c.kill();
+    await c.kill();
 
     // The reload: a new frame with the same tab storage, handed the ORIGINAL
     // result by the host. The re-read answers with the stored draft unchanged.
@@ -794,7 +799,7 @@ async function main() {
     a.w.dispatchEvent(new a.w.Event("pagehide"));
     const s = a.storage();
     expect("card A's edit is stashed", (s.session.find(([k]) => k === UNSAVED_KEY)?.[1] ?? "").includes("Card A's"), true);
-    a.kill();
+    await a.kill();
 
     // Card B: same tab, same Gmail draft id, a different tool call.
     const b = await boot({ storage: s });
@@ -804,7 +809,7 @@ async function main() {
     await settle();
     expect("card B shows the stored body, not card A's edit", b.value("d-body"), "Here they are.");
     expect("and says nothing was put back", /put back/.test(b.text()), false);
-    b.kill();
+    await b.kill();
 
     // Card A reloaded: the same call, so its edit comes back.
     const r = await boot({ storage: s });
@@ -818,7 +823,7 @@ async function main() {
     await settle();
     expect("card A's reload gets its edit back", r.value("d-body"), "Card A's half-typed edit.");
     expect("and says so", /put back/.test(r.text()), true);
-    r.kill();
+    await r.kill();
   }
 
   group("3c. restored edits over a draft that changed since: the conflict notice, against the verified copy");
@@ -839,7 +844,7 @@ async function main() {
     await settle();
     c.w.dispatchEvent(new c.w.Event("pagehide"));
     const s = c.storage();
-    c.kill();
+    await c.kill();
 
     // Reload: the replayed result is verified, and the verified copy has a
     // subject somebody else changed meanwhile.
@@ -857,7 +862,7 @@ async function main() {
     await r.mod.runTeardownSaver();
     await settle();
     expect("nothing is written unattended over it", r.calls.length, before);
-    r.kill();
+    await r.kill();
 
     // The re-read answering AFTER the editor is up with the restored edit:
     // the edit is rebased onto the verified copy, and the conflict is found
@@ -876,7 +881,7 @@ async function main() {
     await settle();
     expect("late re-read: the edit is kept", late.value("d-subject"), "My subject");
     expect("late re-read: the conflict is shown", /This draft was changed somewhere else/.test(late.text()), true);
-    late.kill();
+    await late.kill();
 
     // The same reload against a verified copy nobody touched: no conflict.
     const q = await boot({ storage: s });
@@ -889,7 +894,7 @@ async function main() {
     expect("unchanged copy: the edit is back", q.value("d-subject"), "My subject");
     expect("unchanged copy: no conflict claimed", /changed somewhere else/.test(q.text()), false);
     expect("unchanged copy: the put-back notice", /put back/.test(q.text()), true);
-    q.kill();
+    await q.kill();
 
     // A restore whose verified copy changed a DIFFERENT field than the one
     // edited is not a conflict either.
@@ -903,7 +908,7 @@ async function main() {
     expect("other field changed: the server's body is shown", o.value("d-body"), "Body changed elsewhere.");
     expect("other field changed: the edit is kept", o.value("d-subject"), "My subject");
     expect("other field changed: no conflict claimed", /changed somewhere else/.test(o.text()), false);
-    o.kill();
+    await o.kill();
   }
 
   // ── 4. Confirms: focus and Escape ────────────────────────────────────────

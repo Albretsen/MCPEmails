@@ -270,14 +270,19 @@ async function boot(opts = {}) {
      * The frame goes away. Its timers must not outlive it: they would write to
      * the NEXT scenario's storage, because the globals now point there.
      */
-    kill: () => {
+    // Preact 11 runs useEffect cleanups on unmount after paint (rAF, or a 35 ms
+    // timeout), not synchronously. Wait for them, or the old card's unmount
+    // cleanup (clearUnsaved) runs against the NEXT card's window and storage.
+    kill: async () => {
       mod.disarmResultWatchdog();
       mod.render(null, root);
+      await new Promise((r) => setTimeout(r, 60));
     },
     done: async () => {
       mod.disarmResultWatchdog();
       host.w.dispatchEvent(new host.w.Event("pagehide"));
       mod.render(null, root);
+      await new Promise((r) => setTimeout(r, 60));
     },
   };
 }
@@ -362,7 +367,7 @@ async function main() {
     expect("no sign-off: Best regards alone", c.mod.repeatsSignOff("Hi.\n\nBest regards,", "Asgeir Albretsen"), false);
     expect("no sign-off: the name inside a sentence", c.mod.repeatsSignOff("Asgeir will call you.", "Asgeir Albretsen"), false);
     expect("no sign-off: a different name", c.mod.repeatsSignOff("Thanks,\nDana", "Asgeir Albretsen"), false);
-    c.kill();
+    await c.kill();
   }
 
   // ── Q. rendering ──────────────────────────────────────────────────────────
