@@ -12,7 +12,7 @@
     "status": "active"
   },
   "meta": {
-    "title": "将 mailcow 连接到 Claude、Cursor 与 MCP 客户端",
+    "title": "将 mailcow 连接到 Claude、ChatGPT 与 MCP 客户端",
     "description": "通过端口 993 的 IMAP 将 mailcow 邮箱连接到 Claude、Cursor 和 ChatGPT。为什么 acme-mailcow 只为 MAILCOW_HOSTNAME 签发证书，以及 SKIP_LETS_ENCRYPT 会破坏什么。"
   },
   "hero": {

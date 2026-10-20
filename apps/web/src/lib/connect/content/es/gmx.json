@@ -16,7 +16,7 @@
     "status": "active"
   },
   "meta": {
-    "title": "Conecta GMX a Claude, Cursor y clientes MCP",
+    "title": "Conecta GMX a Claude, ChatGPT y clientes MCP",
     "description": "Conecta GMX Mail a Claude, Cursor y cualquier cliente MCP por IMAP en imap.gmx.net:993. POP3 e IMAP están desactivados por defecto en GMX y hay que activarlos primero."
   },
   "hero": {

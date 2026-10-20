@@ -12,7 +12,7 @@
     "status": "active"
   },
   "meta": {
-    "title": "Connect Rackspace Email to Claude, Cursor & MCP Clients",
+    "title": "Connect Rackspace Email to Claude, ChatGPT & MCP Clients",
     "description": "Connect Rackspace Email to Claude, Cursor and any MCP client over IMAP at secure.emailsrvr.com:993. The host is shared, never built from your own domain."
   },
   "hero": {

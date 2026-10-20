@@ -11,7 +11,7 @@
     "status": "active"
   },
   "meta": {
-    "title": "Koble Mail.ru til Claude, Cursor og MCP-klienter",
+    "title": "Koble Mail.ru til Claude, ChatGPT og MCP-klienter",
     "description": "Koble Mail.ru til Claude, Cursor og enhver MCP-klient over IMAP på imap.mail.ru:993 med et passord for eksterne applikasjoner. Nettstedspassordet fungerer ikke."
   },
   "hero": {

@@ -12,7 +12,7 @@
     "status": "active"
   },
   "meta": {
-    "title": "Connect Hushmail to Claude, Cursor and MCP Clients",
+    "title": "Connect Hushmail to Claude, ChatGPT and MCP Clients",
     "description": "Connect Hushmail to Claude, Cursor and any MCP client over IMAP. Verified settings, and the password-plus-security-code login explained. One inbox free."
   },
   "hero": {

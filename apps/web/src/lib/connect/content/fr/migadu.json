@@ -12,7 +12,7 @@
     "status": "active"
   },
   "meta": {
-    "title": "Connecter Migadu à Claude, Cursor et aux clients MCP",
+    "title": "Connecter Migadu à Claude, ChatGPT et aux clients MCP",
     "description": "Connectez Migadu à Claude, Cursor et tout client MCP en IMAP sur imap.migadu.com:993 avec le mot de passe de la boîte défini dans l'admin, pas celui du compte."
   },
   "hero": {

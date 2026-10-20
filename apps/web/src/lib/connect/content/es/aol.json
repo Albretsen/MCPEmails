@@ -11,7 +11,7 @@
     "status": "active"
   },
   "meta": {
-    "title": "Conecta AOL Mail a Claude, Cursor y clientes MCP",
+    "title": "Conecta AOL Mail a Claude, ChatGPT y clientes MCP",
     "description": "Conecta AOL Mail a Claude, Cursor y cualquier cliente MCP por IMAP en imap.aol.com:993 con una contraseña de aplicación de AOL. Tu contraseña de AOL sola no funciona."
   },
   "hero": {

@@ -15,7 +15,7 @@
     "status": "active"
   },
   "meta": {
-    "title": "Koble Titan Email til Claude, Cursor og MCP-klienter",
+    "title": "Koble Titan Email til Claude, ChatGPT og MCP-klienter",
     "description": "Koble Titan Email til Claude, Cursor, ChatGPT og enhver MCP-klient via IMAP på imap.titan.email:993. Slå på Titan i andre apper først. Én innboks gratis, for alltid."
   },
   "hero": {

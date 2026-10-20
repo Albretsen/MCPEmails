@@ -13,7 +13,7 @@
     "status": "active"
   },
   "meta": {
-    "title": "Koble Fastmail til Claude, Cursor og MCP-klienter",
+    "title": "Koble Fastmail til Claude, ChatGPT og MCP-klienter",
     "description": "Koble Fastmail til Claude, Cursor, ChatGPT og enhver MCP-klient over IMAP på imap.fastmail.com:993 med et Fastmail-app-passord. Én innboks gratis, for alltid."
   },
   "hero": {

@@ -15,7 +15,7 @@
     "status": "active"
   },
   "meta": {
-    "title": "将 WEB.DE 连接到 Claude、Cursor 与 MCP 客户端",
+    "title": "将 WEB.DE 连接到 Claude、ChatGPT 与 MCP 客户端",
     "description": "通过 IMAP（imap.web.de:993）将 WEB.DE 连接到 Claude、Cursor 及任意 MCP 客户端。POP3 和 IMAP 访问默认关闭，必须先开启。"
   },
   "hero": {
