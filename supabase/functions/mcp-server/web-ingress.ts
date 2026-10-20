@@ -146,7 +146,7 @@ export async function handleWebIngress(
   }
 
   const upgradeAfter = opts.sseUpgradeAfterMs ?? SSE_UPGRADE_AFTER_MS;
-  let timer: number | undefined;
+  let timer: ReturnType<typeof setTimeout> | undefined;
   const late = new Promise<"late">((resolve) => {
     timer = setTimeout(() => resolve("late"), upgradeAfter);
   });
@@ -178,7 +178,7 @@ function upgradeToStream(
   heartbeatMs: number,
 ): Response {
   const encoder = new TextEncoder();
-  let interval: number | undefined;
+  let interval: ReturnType<typeof setInterval> | undefined;
   const stream = new ReadableStream<Uint8Array>({
     async start(controller) {
       const send = (text: string) => {
