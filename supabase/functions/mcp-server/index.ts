@@ -34614,21 +34614,19 @@ function triageDeps(): TriageDeps {
 // named function, so `Deno.serve(handleRequest)` at the bottom stays a bare
 // reference and the tests drive the entry point production serves.
 function handleRequest(req: Request): Promise<Response> {
+  // The reservation mcp_tools_call_gate may make for this request. Any that
+  // the allowance gate did not take is released before the response leaves,
+  // on every path including a throw.
+  const slot: GateReservationSlot = { reservationId: null, reservation: null, settled: false };
   return requestMeterStore.run(
     { dbCalls: 0 },
     () =>
-      imapTimingStore.run(new ImapCallTimings(), () => {
-        // The reservation mcp_tools_call_gate may make for this request. Any
-        // that the allowance gate did not take is released before the
-        // response leaves, on every path including a throw.
-        const slot: GateReservationSlot = { reservationId: null, reservation: null, settled: false };
-        return gateReservationStore.run(slot, async () => {
-          try {
-            return await handleMeteredRequest(req);
-          } finally {
-            await releaseGateReservation(slot, "request_end");
-          }
-        });
+      gateReservationStore.run(slot, async () => {
+        try {
+          return await imapTimingStore.run(new ImapCallTimings(), () => handleMeteredRequest(req));
+        } finally {
+          await releaseGateReservation(slot, "request_end");
+        }
       }),
   );
 }
