@@ -230,6 +230,7 @@ import {
   TOOLS_LIST_CHANGED_NOTIFICATION,
 } from "./card-build-notify.ts";
 import { handleWebIngress, isWebIngress } from "./web-ingress.ts";
+import { clientLabel } from "./client-label.ts";
 import {
   cardEnvelopeIn,
   stampDiagnostics,
@@ -1386,9 +1387,11 @@ type JsonRpcResponse = JsonRpcSuccessResponse | JsonRpcErrorResponse;
  * individual handlers do not need access to the raw `Request` object.
  */
 interface RequestContext {
-  /** Client IP, resolved from X-Forwarded-For → X-Real-IP → null. */
-  ipAddress: string | null;
-  /** Raw User-Agent header value, or null if absent. */
+  /**
+   * Raw User-Agent header value, or null if absent. In memory only: never
+   * stored or logged, only reduced to a fixed label (client-label.ts). The
+   * client IP is not read at all (2026-10-20).
+   */
   userAgent: string | null;
   /** When handleRequest started on this request. Feeds `pre_ms` in the log. */
   startedAtMs?: number;
@@ -3399,10 +3402,13 @@ interface ActivityLogParams {
    * Null for rate-limited entries (no tool was executed).
    */
   durationMs: number | null;
-  /** Client IP address. Stored as text; Postgres casts to `inet`. */
-  ipAddress: string | null;
-  /** Raw User-Agent header string from the HTTP request. */
-  userAgent: string | null;
+  /**
+   * A fixed marker for rows this server writes on its own behalf (the triage
+   * runner), stored in `user_agent`. Never a client header: since 2026-10-20
+   * the client's IP and User-Agent reach this function unproxied, and neither
+   * is stored. `ip_address` is always written NULL.
+   */
+  serverAgent?: "mcp-emails-triage-runner";
   /**
    * Value-free diagnostics for an error. Never pass raw arguments, error text,
    * message content, recipient addresses, or search terms here.
@@ -3450,11 +3456,10 @@ async function writeActivityLog(params: ActivityLogParams): Promise<void> {
     status: params.status,
     error_code: params.errorCode,
     duration_ms: params.durationMs,
-    // ip_address is an `inet` column in Postgres. Supabase accepts a text
-    // value and the DB driver casts it automatically. A null value is stored
-    // as SQL NULL — no special handling needed.
-    ip_address: params.ipAddress,
-    user_agent: params.userAgent,
+    // Client IP and User-Agent are not stored (2026-10-20). The columns stay
+    // for older rows; nothing reads them.
+    ip_address: null,
+    user_agent: params.serverAgent ?? null,
     ...(params.errorDetails ? { error_details: params.errorDetails } : {}),
     // created_at defaults to now() — omitted to let the DB set it precisely.
   };
@@ -3901,13 +3906,8 @@ async function actionLimitResponse(
 }
 
 /** Records the first server-confirmed successful MCP tool call per workspace.
- * It is an aggregate funnel marker, never analytics request data. */
-function analyticsClient(userAgent: string | null): string {
-  const ua = (userAgent ?? "").toLowerCase();
-  for (const [needle, client] of [["claude", "claude"], ["chatgpt", "chatgpt"], ["cursor", "cursor"], ["vscode", "vscode"], ["cline", "cline"], ["windsurf", "windsurf"], ["gemini", "gemini"], ["zed", "zed"], ["jetbrains", "jetbrains"], ["raycast", "raycast"], ["warp", "warp"], ["curl", "curl"]]) if (ua.includes(needle)) return client;
-  return "unknown";
-}
-
+ * It is an aggregate funnel marker, never analytics request data. The client
+ * is a fixed label (client-label.ts), never the User-Agent itself. */
 async function markFirstProductUse(workspaceId: string, apiKeyId: string, inboxId: string | null, toolName: string, userAgent: string | null): Promise<void> {
   const { data: inbox } = inboxId ? await supabase.from("inboxes").select("provider, service").eq("id", inboxId).maybeSingle() : { data: null };
   const rawProvider = inbox?.service && inbox.service !== "generic" ? inbox.service : inbox?.provider ?? "unknown";
@@ -3920,7 +3920,7 @@ async function markFirstProductUse(workspaceId: string, apiKeyId: string, inboxI
   // .limit(1) keeps it to a single indexed row; this runs on every tool call.
   const { data: oauthToken } = await supabase.from("oauth_refresh_tokens").select("id").eq("api_key_id", apiKeyId).limit(1).maybeSingle();
   const occurredAt = new Date().toISOString();
-  const client = analyticsClient(userAgent);
+  const client = clientLabel(userAgent);
   const { data: claimed, error } = await supabase.from("workspaces")
     .update({ analytics_first_tool_name: toolName, analytics_first_tool_provider: provider, analytics_first_tool_client: client, analytics_first_tool_path: oauthToken ? "oauth" : "api_key", analytics_first_tool_used_at: occurredAt, onboarding_technical_activated_at: occurredAt, onboarding_client: client, onboarding_stage: "technical_activation" })
     .eq("id", workspaceId)
@@ -4062,8 +4062,8 @@ async function recordClientCapabilities(
  * insufficient-scope refusal, and that of the tool listing (an OpenAI key is
  * listed one tool per operation; see PER_OPERATION_LISTING). The key name and
  * this table are the only per-key client signals that survive past
- * `initialize` — the server is stateless, and the User-Agent it sees is the
- * /api/mcp proxy's own (`node`), not the client's.
+ * `initialize` — the server is stateless, and the User-Agent is never stored
+ * (it was the /api/mcp proxy's own `node` until 2026-10-20).
  * Latest `last_seen` wins, which settles the few dashboard keys shared between
  * clients; no OAuth key has been seen from both an OpenAI and another client.
  *
@@ -32114,8 +32114,6 @@ async function handleToolsCall(
       status: "error",
       errorCode: String(-32602),
       durationMs: null,
-      ipAddress: ctx.ipAddress,
-      userAgent: ctx.userAgent,
     });
 
     console.warn("[mcp-server] tools/call: unknown_tool", {
@@ -32291,8 +32289,6 @@ async function handleToolsCall(
         status: "error",
         errorCode: String(-32602),
         durationMs: null,
-        ipAddress: ctx.ipAddress,
-        userAgent: ctx.userAgent,
         // This branch wrote no details until now, which is why the reject
         // bucket was unreadable: an unresolved action logs under the
         // CONSOLIDATED name (email_compose) while every resolved call logs
@@ -32457,8 +32453,6 @@ async function handleToolsCall(
       // the full history unions the two.
       errorCode: String(RPC_INSUFFICIENT_SCOPE),
       durationMs: null,
-      ipAddress: ctx.ipAddress,
-      userAgent: ctx.userAgent,
     });
 
     console.warn("[mcp-server] tools/call: insufficient_scope", {
@@ -32603,8 +32597,6 @@ async function handleToolsCall(
       status: "error",
       errorCode: String(-32602),
       durationMs: null,
-      ipAddress: ctx.ipAddress,
-      userAgent: ctx.userAgent,
       // errorCode stays the numeric -32602 even though the response is no
       // longer a JSON-RPC error: activity_log.error_code is a stable internal
       // taxonomy, and renaming the largest signature in the table would split
@@ -32646,8 +32638,6 @@ async function handleToolsCall(
       status: "rate_limited",
       errorCode: "usage_limit_reached",
       durationMs: null,
-      ipAddress: ctx.ipAddress,
-      userAgent: ctx.userAgent,
     });
     return actionLimit.response;
   }
@@ -32988,8 +32978,6 @@ async function handleToolsCall(
     status: logStatus,
     errorCode: logErrorCode,
     durationMs,
-    ipAddress: ctx.ipAddress,
-    userAgent: ctx.userAgent,
     // Only on a failure that produced one. A successful call has nothing to
     // diagnose, and writing an empty object would make the column's presence
     // useless as a filter for operators asking "which errors can I read?".
@@ -34643,8 +34631,7 @@ function triageDeps(): TriageDeps {
         errorCode: input.errorCode,
         durationMs: input.durationMs,
         // No client to attribute: this request came from pg_cron, not a browser.
-        ipAddress: null,
-        userAgent: "mcp-emails-triage-runner",
+        serverAgent: "mcp-emails-triage-runner",
       });
       await writeActionUsage(input.workspaceId, input.operation, input.status, input.reservationId ?? null);
     },
@@ -34844,16 +34831,10 @@ async function handleMeteredRequest(req: Request): Promise<Response> {
   }
 
   // ── Extract request context ───────────────────────────────────────────────
-  // IP and User-Agent are extracted once here and threaded through to the
-  // activity log. X-Forwarded-For is the standard header set by Supabase's
-  // edge proxy; fall back to X-Real-IP for other proxy configurations.
-  const forwardedFor = req.headers.get("x-forwarded-for");
-  const ipAddress = forwardedFor
-    ? forwardedFor.split(",")[0].trim()
-    : req.headers.get("x-real-ip");
-
+  // The client IP is deliberately not read, and the User-Agent is kept in
+  // memory only, reduced to a fixed label where one is needed (client-label.ts).
+  // Since /api/mcp became a rewrite (2026-10-20) both are the real client's.
   const ctx: RequestContext = {
-    ipAddress: ipAddress ?? null,
     userAgent: req.headers.get("user-agent"),
     startedAtMs: Date.now(),
   };
@@ -34920,7 +34901,7 @@ async function handleMeteredRequest(req: Request): Promise<Response> {
       received: protocolHeader.received,
       well_formed: protocolHeader.wellFormed,
       method: rpcRequest.method,
-      user_agent: ctx.userAgent,
+      client: clientLabel(ctx.userAgent),
     });
     return jsonResponse(
       jsonRpcErrorBody(
@@ -34940,7 +34921,7 @@ async function handleMeteredRequest(req: Request): Promise<Response> {
     console.log("[mcp-server] protocol_version_header", {
       version: protocolHeader.version,
       method: rpcRequest.method,
-      user_agent: ctx.userAgent,
+      client: clientLabel(ctx.userAgent),
     });
   }
 
@@ -35201,8 +35182,6 @@ async function handleMeteredRequest(req: Request): Promise<Response> {
         status: "rate_limited",
         errorCode: String(RPC_RATE_LIMIT_EXCEEDED),
         durationMs: null,
-        ipAddress: ctx.ipAddress,
-        userAgent: ctx.userAgent,
       }).catch((logErr) => {
         console.error("[mcp-server] rate_limited_log_write_failed", {
           error: logErr instanceof Error ? logErr.message : String(logErr),
@@ -35255,8 +35234,6 @@ async function handleMeteredRequest(req: Request): Promise<Response> {
         status: "rate_limited",
         errorCode: "rate_limit_exceeded",
         durationMs: null,
-        ipAddress: ctx.ipAddress,
-        userAgent: ctx.userAgent,
       }).catch((logErr) => {
         console.error("[mcp-server] quota_exceeded_log_write_failed", {
           error: logErr instanceof Error ? logErr.message : String(logErr),

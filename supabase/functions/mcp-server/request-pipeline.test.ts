@@ -1294,8 +1294,10 @@ Deno.test("without EdgeRuntime the writes are awaited: the row exists when the r
     status: "success",
     error_code: null,
     duration_ms: 0,
-    ip_address: "203.0.113.7",
-    user_agent: "pipeline-test/1.0",
+    // The request carried x-forwarded-for 203.0.113.7 and a User-Agent;
+    // neither is stored (2026-10-20).
+    ip_address: null,
+    user_agent: null,
   });
   const finalize = calls.find((call) => call.label === FINALIZE)!;
   assertEquals(finalize.body, { p_reservation_id: GATE_RESERVATION, p_succeeded: true });
