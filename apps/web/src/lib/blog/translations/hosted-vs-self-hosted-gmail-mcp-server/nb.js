@@ -61,11 +61,11 @@ En hostet MCP-server snur byttehandelen. Du gir opp å kjøre koden; du får til
 
 ### Oppsett er minutter, ikke en ettermiddag
 
-Du registrerer deg, går til **Dashboard → Inboxes → Connect Inbox**, velger Gmail og limer inn et Google-apppassord, eller velger Logg inn med Google i stedet. Ingen egen Cloud-prosjekt, ingen samtykkeskjerm å sette opp, ingen verifiseringskø. Deretter kobler du til agenten din. For [claude.ai eller Claude Desktop](/blog/connect-email-to-ai-agent-under-2-minutes) limer du inn MCP-endepunkt-URL-en, logger inn og godkjenner scopene — ingen API-nøkkel. For en klient uten OAuth, som [Cursor, Cline eller et rått skript](/blog/email-for-ai-agents-cursor-cline-vscode), lager du en scopet API-nøkkel i **Dashboard → API Keys** og sender den som en bearer-token.
+Du registrerer deg, går til **Dashboard → Inboxes → Connect Inbox**, velger Gmail og limer inn et Google-apppassord (Google ber deg slå på totrinnsbekreftelse før du kan lage et). Ingen egen Cloud-prosjekt, ingen samtykkeskjerm å sette opp, ingen verifiseringskø. Deretter kobler du til agenten din. For [claude.ai eller Claude Desktop](/blog/connect-email-to-ai-agent-under-2-minutes) limer du inn MCP-endepunkt-URL-en, logger inn og godkjenner scopene, uten API-nøkkel. For en klient uten OAuth, som [Cursor, Cline eller et rått skript](/blog/email-for-ai-agents-cursor-cline-vscode), lager du en scopet API-nøkkel i **Dashboard → API Keys** og sender den som en bearer-token.
 
 ### Legitimasjon er kryptert og e-post lagres aldri
 
-Innbokslegitimasjonen (apppassordet eller OAuth-tokenet) er det eneste som lagres per innboks, og det er kryptert med AES-256-GCM i ro. Nøkkelen lever som en miljøhemmelighet, atskilt fra databasen, og dekryptering skjer kun inne i en isolert Edge Function ved kalltidspunkt. Selve e-posten lagres aldri i det hele tatt — hvert \`email_read\`-kall (enten du lister, leser eller søker) treffer Gmail live, gir resultatet til agenten din og forkaster det. Det er krypteringsarbeidet fra selvhosting-delen, gjort og vedlikeholdt. [Er det trygt å gi en AI-agent tilgang til e-post](/blog/is-it-safe-to-give-ai-agent-email-access) går gjennom hele sikkerhetsmodellen.
+Innbokslegitimasjonen (apppassordet eller OAuth-tokenet) er det eneste som lagres per innboks, og det er kryptert med AES-256-GCM i ro. Nøkkelen oppbevares som en serverhemmelighet, atskilt fra databasen, og legitimasjonen dekrypteres på serverne våre bare når en forespørsel trenger den. Den sendes aldri til agenten din. Selve e-posten lagres aldri i det hele tatt. Hvert \`email_read\`-kall (enten du lister, leser eller søker) treffer Gmail live, gir resultatet til agenten din og forkaster det. Det er krypteringsarbeidet fra selvhosting-delen, gjort og vedlikeholdt. [Er det trygt å gi en AI-agent tilgang til e-post](/blog/is-it-safe-to-give-ai-agent-email-access) går gjennom hele sikkerhetsmodellen.
 
 ### Multi-leverandør følger med gratis
 
@@ -73,15 +73,15 @@ Det samme endepunktet og de samme kjerneverktøyene — \`inbox_list\`, \`email_
 
 ### Sending forblir hos din leverandør
 
-MCP Emails videresender aldri e-post fra sitt eget domene. \`email_compose\` (med \`send\`-handlingen) går ut gjennom din Gmail (eller Microsoft Graph, eller din egen SMTP), så domenets omdømme og leveringsevne forblir dine. Det er den samme egenskapen du ville fått med selvhosting, uten å bygge den.
+MCP Emails videresender aldri e-post fra sitt eget domene. \`email_compose\` (med \`send\`-handlingen) går ut gjennom leverandøren din (Gmail eller en annen leverandør over SMTP, eller Microsoft Graph for Outlook), så domenets omdømme og leveringsevne forblir dine. Det er den samme egenskapen du ville fått med selvhosting, uten å bygge den.
 
 ### Den ærlige kostnaden: du stoler på en leverandør
 
-Dette er den reelle byttehandelen, og jeg skal ikke pynte på den. Med en hostet server ligger det krypterte tokenet ditt i noen andres database, og agentens kall rutes gjennom noen andres kode. Du stoler på at krypteringen er ekte, at isolasjonen holder, og at selskapet ikke gjør noe dumt. For de fleste er den tilliten velplassert og sparer enormt med tid. Hvis trusselmodellen din forbyr det helt, selvhost — det er den legitime grunnen til å gjøre det.
+Dette er den reelle byttehandelen, og jeg skal ikke pynte på den. Med en hostet server ligger det krypterte tokenet ditt i noen andres database, og agentens kall rutes gjennom noen andres kode. Du stoler på at krypteringen er ekte, at tilgangskontrollen holder, og at selskapet ikke gjør noe dumt. For de fleste er den tilliten velplassert og sparer enormt med tid. Hvis trusselmodellen din forbyr det helt, selvhost. Det er den legitime grunnen til å gjøre det.
 
 ## Hva det koster i kroner
 
-MCP Emails er gratis å komme i gang med: én tilkoblet innboks, ubegrenset antall API-nøkler, uten kredittkort. Gratisnivået kjører på 60 forespørsler per minutt med 30-dagers analyse og fellesskapsstøtte. [Personal koster $9 per måned](/pricing) (opptil tre tilkoblede innbokser, 120 req/min, 30-dagers analyse, e-poststøtte), Pro koster $15 per måned (opptil 10 tilkoblede innbokser, 300 req/min, 90-dagers analyse), og Business koster $39 per måned (10 postkasser inkludert pluss $3 per måned for hver ekstra, medlemmer med roller, et eget arbeidsområde per kunde). Selvhosting er $0 i abonnement pluss hva enn VPS-en din og timene dine koster. Vær ærlig om timene.
+MCP Emails er gratis å komme i gang med: én tilkoblet innboks, ubegrenset antall API-nøkler, uten kredittkort. Gratisnivået kjører på 60 forespørsler per minutt med 30-dagers analyse og fellesskapsstøtte. [Personal koster $9 per måned](/pricing) (opptil tre tilkoblede innbokser, 120 req/min, 90-dagers analyse, e-poststøtte), Pro koster $15 per måned (opptil 10 tilkoblede innbokser, 300 req/min, 2 års analyse), og Business koster $39 per måned (10 postkasser inkludert pluss $3 per måned for hver ekstra, medlemmer med roller, et eget arbeidsområde per kunde). Selvhosting er $0 i abonnement pluss hva enn VPS-en din og timene dine koster. Vær ærlig om timene.
 
 ## Så hva bør du velge?
 

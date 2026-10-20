@@ -74,7 +74,7 @@
     }
   },
   "cardsFootnote": {
-    "all": "Toutes les formules incluent : e-mails récupérés en direct, jamais stockés · identifiants chiffrés au repos · hébergement UE et US",
+    "all": "Toutes les formules incluent : e-mails récupérés en direct, jamais stockés · identifiants chiffrés au repos · données stockées dans l'UE (Stockholm)",
     "business": "Une seule personne gère plusieurs boîtes d'entreprise ? C'est Pro, jusqu'à 10. <business>Voyez comment toutes les boîtes professionnelles tournent sur un seul agent</business>."
   },
   "enterprise": {
@@ -104,7 +104,7 @@
       "providers": {
         "label": "Fournisseurs d'e-mail",
         "rows": {
-          "gmail": "Gmail (mot de passe d'application ou connexion avec Google)",
+          "gmail": "Gmail (mot de passe d'application Google)",
           "outlook": "Outlook / Microsoft 365 (connexion avec Microsoft)",
           "fastmail": "Fastmail (mot de passe d'application)",
           "appPassword": "iCloud, Yahoo, Zoho, Yandex (mot de passe d'application)",
@@ -154,7 +154,8 @@
       "burstSolo": "300 / min",
       "burstPro": "1 000 / min",
       "history30": "30 jours",
-      "history90": "90 jours"
+      "history90": "90 jours",
+      "history2y": "2 ans"
     }
   },
   "faq": {
@@ -167,7 +168,7 @@
       },
       {
         "q": "Qu'apporte Personal par rapport à Free ?",
-        "a": "Deux boîtes connectées de plus, aucun plafond mensuel d'actions e-mail (usage équitable), un plafond de pointe doublé (120 requêtes par minute au lieu de 60) et le support par e-mail à la place du forum communautaire. C'est toute la liste. Le reste est déjà inclus dans Free : tous les outils MCP, y compris les envois programmés, la validation avant envoi réglable par boîte, et le tableau de bord d'analytique d'usage. Nous ne retenons pas de fonctionnalités sur Free pour faire paraître les formules payantes plus riches."
+        "a": "Deux boîtes connectées de plus, aucun plafond mensuel d'actions e-mail (usage équitable), un plafond de pointe doublé (120 requêtes par minute au lieu de 60), 90 jours d'historique d'analytique au lieu de 30 et le support par e-mail à la place du forum communautaire. C'est toute la liste. Le reste est déjà inclus dans Free : tous les outils MCP, y compris les envois programmés, la validation avant envoi réglable par boîte, et le tableau de bord d'analytique d'usage. Nous ne retenons pas de fonctionnalités sur Free pour faire paraître les formules payantes plus riches."
       },
       {
         "q": "Qu'est-ce qui compte comme une action e-mail ?",
@@ -179,11 +180,11 @@
       },
       {
         "q": "Le contenu de mes e-mails est-il stocké quelque part ?",
-        "a": "Le courrier que votre agent lit n'est jamais stocké : les corps d'e-mails, les objets, les pièces jointes et le contenu des fils sont récupérés en direct depuis votre fournisseur et renvoyés directement à l'agent, sans rien conserver entre les appels. Nous stockons votre jeton OAuth chiffré ou votre mot de passe d'application afin de pouvoir authentifier les requêtes futures. La seule exception est un message que vous nous demandez de programmer pour plus tard : nous le stockons jusqu'à son envoi, puis en gardons une trace pour votre historique."
+        "a": "Le courrier que votre agent lit n'est jamais stocké : les corps d'e-mails, les objets, les pièces jointes et le contenu des fils sont récupérés en direct depuis votre fournisseur et renvoyés directement à l'agent, sans rien conserver entre les appels. Nous stockons votre jeton OAuth chiffré ou votre mot de passe d'application afin de pouvoir authentifier les requêtes futures. Les exceptions sont les messages sortants qui doivent attendre : un message que vous nous demandez de programmer pour plus tard, ou un envoi retenu pour votre approbation. Nous les stockons chiffrés, puis en gardons une trace pour votre historique."
       },
       {
         "q": "Quelle est la différence entre Personal, Pro et Business ?",
-        "a": "Personal, c'est un seul utilisateur avec trois boîtes connectées, un plafond de 120 requêtes par minute et le support par e-mail. Pro, c'est toujours un seul utilisateur et une seule connexion, avec jusqu'à 10 boîtes connectées : une personne peut donc gérer les boîtes d'une entreprise (ventes, factures, support, info). S'y ajoutent un plafond de 300 requêtes par minute, 90 jours d'historique d'analytique au lieu de 30, et le support par e-mail. Business, c'est pour plus de boîtes ou plus de personnes : 10 boîtes incluses et 3 $ par mois pour chaque boîte en plus, des membres illimités avec rôles (observateur, membre, administrateur) sans surcoût, des administrateurs qui valident les envois en attente, plusieurs espaces de travail sur un seul abonnement et un plafond de 1 000 requêtes par minute."
+        "a": "Personal, c'est un seul utilisateur avec trois boîtes connectées, un plafond de 120 requêtes par minute, 90 jours d'historique d'analytique et le support par e-mail. Pro, c'est toujours un seul utilisateur et une seule connexion, avec jusqu'à 10 boîtes connectées : une personne peut donc gérer les boîtes d'une entreprise (ventes, factures, support, info). S'y ajoutent un plafond de 300 requêtes par minute, deux ans d'historique d'analytique au lieu de 90 jours, et le support par e-mail. Business, c'est pour plus de boîtes ou plus de personnes : 10 boîtes incluses et 3 $ par mois pour chaque boîte en plus, des membres illimités avec rôles (observateur, membre, administrateur) sans surcoût, des administrateurs qui valident les envois en attente, plusieurs espaces de travail sur un seul abonnement et un plafond de 1 000 requêtes par minute."
       },
       {
         "q": "Nous sommes une entreprise avec plusieurs boîtes. Quelle formule nous faut-il ?",
@@ -203,7 +204,7 @@
       },
       {
         "q": "Quels fournisseurs d'e-mail sont pris en charge ?",
-        "a": "Gmail se connecte par défaut avec un mot de passe d'application, ou via la connexion avec Google (OAuth). Outlook et Microsoft 365 se connectent via la connexion avec Microsoft (OAuth) : les comptes personnels se connectent directement, et un compte professionnel ou scolaire peut nécessiter que son administrateur informatique approuve l'application une fois. Fastmail se connecte avec un mot de passe d'application. iCloud, Yahoo, Zoho et Yandex se connectent avec un mot de passe d'application, et toute autre boîte fonctionne via le connecteur IMAP / SMTP générique."
+        "a": "Gmail et Google Workspace se connectent avec un mot de passe d'application Google via IMAP. Outlook et Microsoft 365 se connectent via la connexion avec Microsoft (OAuth) : les comptes personnels se connectent directement, et un compte professionnel ou scolaire peut nécessiter que son administrateur informatique approuve l'application une fois. Fastmail se connecte avec un mot de passe d'application. iCloud, Yahoo, Zoho et Yandex se connectent avec un mot de passe d'application, et toute autre boîte fonctionne via le connecteur IMAP / SMTP générique."
       },
       {
         "q": "Existe-t-il une politique de remboursement ?",

@@ -6,7 +6,7 @@
   "hero": {
     "eyebrow": "Legal",
     "title": "Privacy Policy",
-    "lead": "We built MCPEmails with privacy as a first principle. The email content your agent reads is never stored on our servers; it passes through to your agent and disappears. The one exception is a message you schedule to send later, which we hold only until it is delivered. This policy explains what we do collect, and why.",
+    "lead": "We built MCPEmails with privacy as a first principle. The email content your agent reads is never stored on our servers; it passes through to your agent and disappears. The exceptions are outgoing messages that have to wait: a message you schedule to send later, or a send held for your approval, which we store encrypted. This policy explains what we do collect, and why.",
     "dates": "Last updated: {lastUpdated}  ·  Effective: {effectiveDate}"
   },
   "whoWeAre": {
@@ -27,7 +27,7 @@
     "logsTitle": "2.4 Usage and audit logs",
     "logsP": "For every MCP tool call your agent makes, we record: the tool name (e.g. <c>email_read</c>), the API key that made the call, the inbox that was accessed, the timestamp, and whether the call succeeded. We do<b> not</b> record email subjects, bodies, recipients, or any other email content in these logs.",
     "emailContentTitle": "2.5 Email content: not stored",
-    "emailContentP": "When your agent calls <c>email_read</c> (to list, read, or search) or any other read tool, we fetch the requested content live from your email provider and return it to your agent in the same HTTP response. That content is never written to disk, cached, or logged. Once the HTTP response is sent, we hold no copy of any email body, subject, attachment, or contact detail. The one exception is scheduled sends: when you ask your agent to schedule a message for future delivery, we store that outgoing message (its recipients, subject, body, and any attachments) in our database until it is sent, and we retain the record afterwards for audit and troubleshooting. This applies only to messages you explicitly schedule; mail your agent reads or sends immediately is never stored.",
+    "emailContentP": "When your agent calls <c>email_read</c> (to list, read, or search) or any other read tool, we fetch the requested content live from your email provider and return it to your agent in the same HTTP response. That content is never written to disk, cached, or logged. Once the HTTP response is sent, we hold no copy of any email body, subject, attachment, or contact detail. There are two exceptions, both outgoing messages that have to wait. Scheduled sends: when you ask your agent to schedule a message for future delivery, we store that outgoing message (its recipients, subject, body, and any attachments) in our database until it is sent, and we retain the record afterwards for audit and troubleshooting. Sends held for approval: when an inbox requires approval, a send, reply, forward, or draft send your agent requests is stored encrypted in our database until a workspace member approves or rejects it, or until it expires after 24 hours, and the record is kept afterwards as your approval history. Mail your agent reads, and mail it sends immediately without an approval hold, is never stored.",
     "emailContentAgentP": "Your email content is only ever sent to the MCP client or AI agent that <b>you</b> have connected and are operating (for example Claude, Cursor, or another MCP client of your choosing). When you invoke a tool, MCPEmails transmits the requested content to that client so it can fulfil your request. MCPEmails does not send your email content to any AI provider of its own choosing. Once the content reaches your chosen client, it is governed by that client's or AI provider's own privacy policy and terms, which you are responsible for reviewing. MCPEmails acts only as a conduit and retains no copy of the content.",
     "technicalTitle": "2.6 Technical and operational data",
     "technicalP": "We collect standard server-side operational data including IP addresses (for rate limiting and abuse prevention), request timestamps, HTTP status codes, and error types. This data is retained in aggregated, anonymised form and is not linked to individual accounts after 30 days.",
@@ -114,7 +114,7 @@
       },
       {
         "category": "MCP tool call activity log",
-        "period": "90 days on every plan",
+        "period": "Up to 90 days on Free and Personal, up to 2 years on Pro and Business",
         "reason": "Security; usage history in your dashboard"
       },
       {
@@ -136,6 +136,11 @@
         "category": "Scheduled send messages",
         "period": "Until sent; record retained afterwards for audit",
         "reason": "Required to deliver messages you schedule"
+      },
+      {
+        "category": "Sends held for approval",
+        "period": "Encrypted while waiting for a decision (at most 24 hours); record kept afterwards as approval history",
+        "reason": "Required to show the message to a reviewer and send it once approved"
       }
     ],
     "outro": "When you delete your account, we initiate deletion of all personal data within 30 days. Aggregated, non-personal usage statistics derived from your account may be retained beyond this period in anonymised form."
@@ -154,6 +159,9 @@
     "vercelPurpose": "Web hosting, CDN, MCP endpoint",
     "vercelData": "HTTP request metadata; MCP requests and responses, including email content, pass through in transit and are not stored",
     "vercelLocation": "Global CDN; server functions in the US (East) and the EU (Stockholm, Sweden)",
+    "relayPurpose": "Mail relay for the few providers that refuse connections from cloud addresses",
+    "relayData": "The encrypted IMAP and SMTP connection to those providers, passed through as a tunnel with TLS end to end: the relay cannot read mail or passwords",
+    "relayLocation": "Germany (EU)",
     "stripeProvider": "(paid plans only)",
     "stripePurpose": "Payment processing",
     "stripeData": "Billing email, payment card data (stored by Stripe, not us)",

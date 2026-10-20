@@ -38,7 +38,7 @@
       },
       {
         "data": "OAuth-Token oder App-Passwort",
-        "accessed": "Nur beim Aufruf in einer isolierten Funktion entschlüsselt",
+        "accessed": "Auf unseren Servern nur für die Anfrage entschlüsselt, die es braucht",
         "stored": "Ja, verschlüsselt mit AES-256-GCM; Schlüssel getrennt aufbewahrt"
       },
       {
@@ -52,12 +52,17 @@
         "stored": "Ja, verschlüsselt bis zum Versand, danach als Ihr Verlauf"
       },
       {
+        "data": "Sendungen, die auf Ihre Freigabe warten",
+        "accessed": "Vorgehalten, bis jemand sie freigibt oder ablehnt, oder sie nach 24 Stunden ablaufen",
+        "stored": "Ja, verschlüsselt gespeichert, danach als Ihr Freigabeverlauf aufbewahrt"
+      },
+      {
         "data": "Tool-Aufrufe (Metadaten)",
         "accessed": "Für Ihr eigenes Audit-Log erfasst",
         "stored": "Nur Tool-Name, Postfach, Zeitstempel und Status. Kein E-Mail-Inhalt"
       }
     ],
-    "outro": "Die einzige bewusste Ausnahme ist eine Nachricht, die der Agent später senden soll. Wir müssen sie bis zum Sendezeitpunkt vorhalten, speichern sie so lange verschlüsselt und behalten danach einen Eintrag für Ihren Verlauf."
+    "outro": "Die bewussten Ausnahmen sind ausgehende Nachrichten, die warten müssen: eine Nachricht, die der Agent später senden soll, und eine Sendung, die auf Ihre Freigabe wartet. Wir müssen sie vorhalten, bis sie rausgehen, speichern sie so lange verschlüsselt und behalten danach einen Eintrag für Ihren Verlauf."
   },
   "verify": {
     "title": "3. Sie müssen mir nicht vertrauen, Sie können es prüfen",
@@ -114,6 +119,11 @@
         "provider": "Vercel",
         "purpose": "Hosting für Website, Dashboard und MCP-Endpunkt",
         "location": "Globales CDN; Server in den USA (Osten) und der EU (Stockholm)"
+      },
+      {
+        "provider": "Hetzner",
+        "purpose": "Mail-Relay für die wenigen Anbieter, die Verbindungen von Cloud-Adressen ablehnen (ein TLS-Tunnel: Es kann weder E-Mails noch Passwörter lesen)",
+        "location": "Deutschland (EU)"
       },
       {
         "provider": "Stripe",

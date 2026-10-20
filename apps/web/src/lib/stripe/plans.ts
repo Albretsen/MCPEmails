@@ -270,7 +270,11 @@ export const PLANS: Record<PlanId, Plan> = {
       // and cutting a live tier down to make a blog sentence true would be
       // taking something away from users to win an argument about copy. The
       // sentence was changed instead. 30 is the floor every tier starts from;
-      // Pro and Team buy MORE history, they do not buy back the default.
+      // the paid tiers buy MORE history, they do not buy back the default.
+      // Storage follows these windows through the pg_cron job
+      // `activity-log-retention` (migration 20261020153742), which keeps every
+      // row at least 90 days for now, so Free rows past 30 days are hidden by
+      // the dashboard rather than deleted.
       analyticsRetentionDays: 30,
       teamRolesEnabled: false,
       ssoEnabled: false,
@@ -316,7 +320,9 @@ export const PLANS: Record<PlanId, Plan> = {
       billingPortalEnabled: true,
       analyticsEnabled: true,
       maxRequestsPerMinute: 120,
-      analyticsRetentionDays: 30,
+      // 30 -> 90 on 2026-10-20 (owner decision). Personal had always stored 90
+      // days, so the longer view is backed by data from day one.
+      analyticsRetentionDays: 90,
       teamRolesEnabled: false,
       ssoEnabled: false,
       auditLogEnabled: false,
@@ -344,9 +350,11 @@ export const PLANS: Record<PlanId, Plan> = {
     // 1 -> 3, the monthly action cap (Free's public 150 -> none that a
     // customer can reach; the paid ceiling stays a silent abuse guard and is
     // never quoted as a number), maxRequestsPerMinute 60 -> 120, supportTier
-    // community -> email, and billingPortalEnabled. Nothing else differs, so
-    // nothing else may be listed. Pro and Team inherit "no cap" through
-    // "Everything in Personal" and must not restate it.
+    // community -> email, billingPortalEnabled, and analyticsRetentionDays
+    // 30 -> 90. The history window is left out on purpose: this array ships in
+    // the purchase confirmation email, which nothing re-checks when a window
+    // moves; the pricing page's comparison table carries it. Pro and Business
+    // inherit "no cap" through "Everything in Personal" and must not restate it.
     features: [
       'Everything in Free',
       '3 connected inboxes',
@@ -373,7 +381,10 @@ export const PLANS: Record<PlanId, Plan> = {
       billingPortalEnabled: true,
       analyticsEnabled: true,
       maxRequestsPerMinute: 300,
-      analyticsRetentionDays: 90,
+      // 90 -> 730 on 2026-10-20 (owner decision). Rows older than 90 days were
+      // deleted on every plan until that date, so the two years build up from
+      // then: copy promises the window, never history that already exists.
+      analyticsRetentionDays: 730,
       teamRolesEnabled: false,
       ssoEnabled: false,
       auditLogEnabled: false,
@@ -393,7 +404,7 @@ export const PLANS: Record<PlanId, Plan> = {
       'Everything in Personal',
       `${PRO_INBOX_CAP} connected inboxes`,
       '5x higher burst rate limit',
-      // analyticsRetentionDays 30 -> 90. Deliberately unnumbered: a window
+      // Longer than Personal's 90 days (730). Deliberately unnumbered: a window
       // quoted in a feature list is quoted in the purchase confirmation email,
       // which nothing re-checks when the window moves. The pricing page's
       // comparison table carries the exact days.
@@ -418,10 +429,12 @@ export const PLANS: Record<PlanId, Plan> = {
       billingPortalEnabled: true,
       analyticsEnabled: true,
       maxRequestsPerMinute: 1000,
-      // 90, the same as Pro. Team said 365, but a pg_cron job deletes
-      // activity_log after 90 days on every plan, so 365 was never delivered.
-      // Team had no paying subscriber, so nobody loses history by this.
-      analyticsRetentionDays: 90,
+      // 730, the same as Pro (owner decision 2026-10-20). Team said 365, but a
+      // pg_cron job deleted activity_log after 90 days on every plan until
+      // that date, so 365 was never delivered; the per-plan job that replaced
+      // it keeps this plan's rows for 730 days. Comped workspaces resolve to
+      // this plan, so they get 730 too.
+      analyticsRetentionDays: 730,
       teamRolesEnabled: true,
       // Nothing reads either flag and neither feature exists. They stay false
       // until the feature does, so no copy can be generated from them.

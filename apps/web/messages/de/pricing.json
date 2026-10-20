@@ -74,7 +74,7 @@
     }
   },
   "cardsFootnote": {
-    "all": "In allen Tarifen: E-Mails live abgerufen, nie gespeichert · Zugangsdaten verschlüsselt gespeichert · Hosting in EU und USA",
+    "all": "In allen Tarifen: E-Mails live abgerufen, nie gespeichert · Zugangsdaten verschlüsselt gespeichert · Daten in der EU gespeichert (Stockholm)",
     "business": "Eine Person mit mehreren Firmenpostfächern? Das ist Pro, für bis zu 10. <business>So läuft jedes Geschäftspostfach in einem Agenten</business>."
   },
   "enterprise": {
@@ -104,7 +104,7 @@
       "providers": {
         "label": "E-Mail-Anbieter",
         "rows": {
-          "gmail": "Gmail (App-Passwort oder Google-Anmeldung)",
+          "gmail": "Gmail (Google-App-Passwort)",
           "outlook": "Outlook / Microsoft 365 (Microsoft-Anmeldung)",
           "fastmail": "Fastmail (App-Passwort)",
           "appPassword": "iCloud, Yahoo, Zoho, Yandex (App-Passwort)",
@@ -154,7 +154,8 @@
       "burstSolo": "300 / Min.",
       "burstPro": "1.000 / Min.",
       "history30": "30 Tage",
-      "history90": "90 Tage"
+      "history90": "90 Tage",
+      "history2y": "2 Jahre"
     }
   },
   "faq": {
@@ -167,7 +168,7 @@
       },
       {
         "q": "Was bietet Personal zusätzlich zu Free?",
-        "a": "Zwei weitere verbundene Postfächer, kein monatliches Limit für E-Mail-Aktionen (Fair Use gilt), die doppelte Burst-Grenze (120 Anfragen pro Minute statt 60) und E-Mail-Support statt Community-Forum. Das ist die ganze Liste. Alles andere ist schon in Free enthalten: jedes MCP-Tool einschließlich geplanter Sendungen, die Versandprüfung und Freigabe pro Postfach und das Dashboard zur Nutzungsanalyse. Wir halten in Free keine Funktionen zurück, nur damit die bezahlten Tarife größer wirken."
+        "a": "Zwei weitere verbundene Postfächer, kein monatliches Limit für E-Mail-Aktionen (Fair Use gilt), die doppelte Burst-Grenze (120 Anfragen pro Minute statt 60), 90 statt 30 Tage Analyseverlauf und E-Mail-Support statt Community-Forum. Das ist die ganze Liste. Alles andere ist schon in Free enthalten: jedes MCP-Tool einschließlich geplanter Sendungen, die Versandprüfung und Freigabe pro Postfach und das Dashboard zur Nutzungsanalyse. Wir halten in Free keine Funktionen zurück, nur damit die bezahlten Tarife größer wirken."
       },
       {
         "q": "Was zählt als E-Mail-Aktion?",
@@ -179,11 +180,11 @@
       },
       {
         "q": "Werden meine E-Mail-Inhalte irgendwo gespeichert?",
-        "a": "Die E-Mails, die Ihr Agent liest, werden nie gespeichert: Texte, Betreffzeilen, Anhänge und Thread-Inhalte werden live von Ihrem Anbieter abgerufen und direkt an den Agenten zurückgegeben, zwischen den Aufrufen bleibt nichts liegen. Wir speichern Ihren verschlüsselten OAuth-Token oder Ihr App-Passwort, damit wir künftige Anfragen authentifizieren können. Einzige Ausnahme ist eine Nachricht, die Sie für später planen lassen. Wir speichern sie bis zum Versand und bewahren danach einen Eintrag für Ihren Verlauf auf."
+        "a": "Die E-Mails, die Ihr Agent liest, werden nie gespeichert: Texte, Betreffzeilen, Anhänge und Thread-Inhalte werden live von Ihrem Anbieter abgerufen und direkt an den Agenten zurückgegeben, zwischen den Aufrufen bleibt nichts liegen. Wir speichern Ihren verschlüsselten OAuth-Token oder Ihr App-Passwort, damit wir künftige Anfragen authentifizieren können. Ausnahmen sind ausgehende Nachrichten, die warten müssen: eine Nachricht, die Sie für später planen lassen, oder eine Sendung, die auf Ihre Freigabe wartet. Diese speichern wir verschlüsselt und bewahren danach einen Eintrag für Ihren Verlauf auf."
       },
       {
         "q": "Was ist der Unterschied zwischen Personal, Pro und Business?",
-        "a": "Personal ist ein Platz mit drei verbundenen Postfächern, einer Grenze von 120 Anfragen pro Minute und E-Mail-Support. Pro ist weiterhin ein Platz und ein Login, mit bis zu 10 verbundenen Postfächern, sodass eine Person alle Postfächer eines Unternehmens betreuen kann (Vertrieb, Rechnungen, Support, Info). Dazu kommen eine Grenze von 300 Anfragen pro Minute, 90 statt 30 Tage Analyseverlauf und E-Mail-Support. Business ist für mehr Postfächer oder mehr Personen: 10 Postfächer inklusive und $3 pro Monat für jedes weitere, unbegrenzt viele Mitglieder mit Rollen (Betrachter, Mitglied, Admin) ohne Aufpreis, Admins, die zurückgehaltene Sendungen freigeben, mehrere Workspaces in einem Abonnement und eine Grenze von 1.000 Anfragen pro Minute."
+        "a": "Personal ist ein Platz mit drei verbundenen Postfächern, einer Grenze von 120 Anfragen pro Minute, 90 Tagen Analyseverlauf und E-Mail-Support. Pro ist weiterhin ein Platz und ein Login, mit bis zu 10 verbundenen Postfächern, sodass eine Person alle Postfächer eines Unternehmens betreuen kann (Vertrieb, Rechnungen, Support, Info). Dazu kommen eine Grenze von 300 Anfragen pro Minute, zwei Jahre statt 90 Tage Analyseverlauf und E-Mail-Support. Business ist für mehr Postfächer oder mehr Personen: 10 Postfächer inklusive und $3 pro Monat für jedes weitere, unbegrenzt viele Mitglieder mit Rollen (Betrachter, Mitglied, Admin) ohne Aufpreis, Admins, die zurückgehaltene Sendungen freigeben, mehrere Workspaces in einem Abonnement und eine Grenze von 1.000 Anfragen pro Minute."
       },
       {
         "q": "Wir sind ein Unternehmen mit mehreren Postfächern. Welchen Tarif brauchen wir?",
@@ -203,7 +204,7 @@
       },
       {
         "q": "Welche E-Mail-Anbieter werden unterstützt?",
-        "a": "Gmail verbindet sich standardmäßig mit einem App-Passwort oder per Google-Anmeldung (OAuth). Outlook und Microsoft 365 verbinden sich per Microsoft-Anmeldung (OAuth): Private Konten direkt, bei Arbeits- oder Schulkonten muss die IT-Administration die App eventuell einmal freigeben. Fastmail verbindet sich mit einem App-Passwort. iCloud, Yahoo, Zoho und Yandex verbinden sich mit einem app-spezifischen Passwort, und jedes andere Postfach funktioniert über den generischen IMAP- / SMTP-Konnektor."
+        "a": "Gmail und Google Workspace verbinden sich mit einem Google-App-Passwort über IMAP. Outlook und Microsoft 365 verbinden sich per Microsoft-Anmeldung (OAuth): Private Konten direkt, bei Arbeits- oder Schulkonten muss die IT-Administration die App eventuell einmal freigeben. Fastmail verbindet sich mit einem App-Passwort. iCloud, Yahoo, Zoho und Yandex verbinden sich mit einem app-spezifischen Passwort, und jedes andere Postfach funktioniert über den generischen IMAP- / SMTP-Konnektor."
       },
       {
         "q": "Gibt es eine Rückerstattung?",

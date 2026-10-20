@@ -229,6 +229,7 @@ import {
   sseResponse,
   TOOLS_LIST_CHANGED_NOTIFICATION,
 } from "./card-build-notify.ts";
+import { handleWebIngress, isWebIngress } from "./web-ingress.ts";
 import {
   cardEnvelopeIn,
   stampDiagnostics,
@@ -459,6 +460,7 @@ import {
   type AllowanceGateIo,
   type BillableActionReservation,
   checkAutomationAllowance,
+  type PrereservedAction,
   planLimitOfRefusal,
   queueAutomationPausedNotice,
   reserveBillableAction as reserveAgainstAllowance,
@@ -470,10 +472,13 @@ import {
   settleAfterResponse,
 } from "./request-pipeline.ts";
 import {
+  GATE_RPC,
+  gateParams,
+  type GateReservation,
   notePreflightError,
   parsePreflight,
-  preflightParams,
   preflightSkipped,
+  reservationIdIn,
 } from "./tools-call-preflight.ts";
 import {
   buildUnappliedSearchNote,
@@ -652,6 +657,24 @@ const supabaseServiceKey = Deno.env.get("SUPABASE_SERVICE_ROLE_KEY") ??
 // or a body. Outside a request (module load) the store is absent and nothing
 // is counted.
 const requestMeterStore = new AsyncLocalStorage<{ dbCalls: number }>();
+
+/**
+ * The reservation mcp_tools_call_gate made for this request, from the moment
+ * its answer arrives until it is either handed to the allowance gate
+ * (`settled`) or released. handleRequest opens one per request and releases
+ * whatever is still unsettled before the response leaves, so a call that never
+ * reaches the cap check (a 429, a validation error, an unknown tool, a throw)
+ * gives its reservation back exactly as if it had never been made.
+ */
+interface GateReservationSlot {
+  /** The reservation id in the gate's answer, read before anything else was checked. */
+  reservationId: string | null;
+  /** The parsed reservation, when the answer was usable. */
+  reservation: GateReservation | null;
+  /** Handed over or released: nothing more for the slot to do. */
+  settled: boolean;
+}
+const gateReservationStore = new AsyncLocalStorage<GateReservationSlot>();
 
 const supabase = createClient(supabaseUrl, supabaseServiceKey, {
   auth: { persistSession: false },
@@ -1379,6 +1402,11 @@ interface RequestContext {
    * that read failed open; markFirstProductUse then runs as it always did.
    */
   firstUse?: FirstUseMarkers;
+  /**
+   * workspaces.card_diagnostics, already read by mcp_tools_call_gate. Absent
+   * on the per-query path; stampCardDiagnostics then reads it itself.
+   */
+  cardDiagnostics?: boolean;
 }
 
 // ---------------------------------------------------------------------------
@@ -2195,13 +2223,18 @@ function appendResultNote(
 async function stampCardDiagnostics(
   response: JsonRpcSuccessResponse | JsonRpcErrorResponse,
   workspaceId: string,
+  /**
+   * `workspaces.card_diagnostics` when mcp_tools_call_gate already read the
+   * workspace row for this request; undefined means read it here.
+   */
+  known?: boolean,
 ): Promise<void> {
   if (!("result" in response) || !response.result || typeof response.result !== "object") return;
   const envelope = cardEnvelopeIn(
     (response.result as { structuredContent?: unknown }).structuredContent,
   );
   if (!envelope) return;
-  if (await workspaceCardDiagnostics(workspaceId)) stampDiagnostics(envelope);
+  if (known ?? await workspaceCardDiagnostics(workspaceId)) stampDiagnostics(envelope);
 }
 
 /**
@@ -2370,13 +2403,16 @@ async function lookupApiKey(
 
 /**
  * Steps 5-6 of authenticateRequest, for a row however it was looked up (the
- * api_keys select above, or mcp_tools_call_preflight): null is the 401, a row
- * passes the constant-time comparison and has its last_used_at stamped.
+ * api_keys select above, or mcp_tools_call_gate): null is the 401, a row
+ * passes the constant-time comparison and has its last_used_at stamped, at
+ * most once a minute (see lastUsedStampDue).
  */
 function acceptKeyRow(
   row: Record<string, unknown> | null,
   incomingHash: string,
   requestId: string | number | null,
+  /** False when mcp_tools_call_gate already handled the stamp in its own round trip. */
+  stampLastUsed = true,
 ): { apiKey: ApiKeyRow } | Response {
   if (!row) {
     // Not found, expired, or revoked. 401 (not 403) so the proxy attaches
@@ -2415,56 +2451,86 @@ function acceptKeyRow(
   // ── Fire-and-forget: update last_used_at ─────────────────────────────────
   // Does not block the response. A failure here is non-fatal — the dashboard
   // "last seen" display may be stale, but authentication succeeded.
-  supabase
-    .from("api_keys")
-    .update({ last_used_at: new Date().toISOString() })
-    .eq("id", apiKey.id)
-    .then(({ error: updateError }) => {
-      if (updateError) {
-        console.warn("[mcp-server] last_used_at_update_failed", {
-          key_id: apiKey.id,
-          error: updateError.message,
-        });
-      }
-    });
+  // Throttled to once a minute per key: every request used to write the row.
+  if (stampLastUsed && lastUsedStampDue(apiKey.last_used_at)) {
+    supabase
+      .from("api_keys")
+      .update({ last_used_at: new Date().toISOString() })
+      .eq("id", apiKey.id)
+      .then(({ error: updateError }) => {
+        if (updateError) {
+          console.warn("[mcp-server] last_used_at_update_failed", {
+            key_id: apiKey.id,
+            error: updateError.message,
+          });
+        }
+      });
+  }
 
   return { apiKey };
 }
 
 /**
- * The gate inputs mcp_tools_call_preflight already read, in the shape
+ * How stale `api_keys.last_used_at` may get. Its readers are the dashboard and
+ * API key list ("2 minutes ago"), the admin directory, the 90-day dormant
+ * OAuth sweep and card-build-notify's null check; none needs better than a
+ * minute. mcp_tools_call_gate applies the same 60 s in SQL.
+ */
+const LAST_USED_STAMP_INTERVAL_MS = 60_000;
+
+/** True when the key has never been stamped or its stamp is over a minute old. */
+function lastUsedStampDue(lastUsedAt: string | null | undefined, nowMs = Date.now()): boolean {
+  if (!lastUsedAt) return true;
+  const stamped = Date.parse(lastUsedAt);
+  return !Number.isFinite(stamped) || nowMs - stamped >= LAST_USED_STAMP_INTERVAL_MS;
+}
+
+/**
+ * The gate inputs mcp_tools_call_gate already read, in the shape
  * checkRateLimit, checkPlanQuota and the allowance read take them. Absent
  * (null) whenever the per-query path ran instead.
  */
 interface PreloadedGateReads {
   rateLimit: PreloadedRateLimitCounts;
   planQuota: PreloadedPlanQuotaReads;
-  /** Present only when the RPC was asked for the allowance row. */
+  /**
+   * Present only when the RPC was asked for the allowance row. It carries the
+   * terms only: `used` and `remaining` are null, because nothing on the
+   * tools/call path reads them and the reservation counts for itself.
+   */
   allowance?: ActionAllowanceRow | null;
+  /** workspaces.card_diagnostics, when the workspace row was read. */
+  cardDiagnostics?: boolean;
 }
 
 /**
- * authenticateRequest for a tools/call, with the gate reads in the same round
- * trip.
+ * authenticateRequest for a tools/call, with the gate reads and the allowance
+ * reservation in the same round trip.
  *
- * mcp_tools_call_preflight (migration 20261020100000, tools-call-preflight.ts)
+ * mcp_tools_call_gate (migration 20261020214737, tools-call-preflight.ts)
  * looks the key up with the same three filters as lookupApiKey and, for a
  * live key, returns the per-key window counts, the workspace row, the owner's
  * entitlement, the workspace's minute count and (when the call may be metered)
- * the allowance row. That replaces three sequential round trips with one.
- * The decisions are untouched: the row goes through acceptKeyRow, and the
- * counts through checkRateLimit and checkPlanQuota, exactly as if each had
- * been queried on its own.
+ * the allowance terms. When `reserveToolName` is set and the workspace is
+ * metered it also reserves one action, and it stamps last_used_at at most
+ * once a minute. That replaces four sequential round trips with one.
+ *
+ * The decisions are untouched: the row goes through acceptKeyRow, the counts
+ * through checkRateLimit and checkPlanQuota, and the reservation is handed to
+ * the allowance gate only when the resolved tool and terms match exactly
+ * (claimGateReservation). Every other outcome releases it: see
+ * GateReservationSlot.
  *
  * Any RPC error, a missing function or an answer of the wrong shape falls
  * back to lookupApiKey and `preloaded: null`, i.e. the per-query path with all
  * of its per-check fail-open behaviour. So the RPC can only change latency:
- * never whether a key is accepted or a call is limited.
+ * never whether a key is accepted, a call is limited, or an action is counted.
  */
 async function authenticateToolsCall(
   req: Request,
   requestId: string | number | null,
   includeAllowance: boolean,
+  reserveToolName: string | null = null,
 ): Promise<{ apiKey: ApiKeyRow; preloaded: PreloadedGateReads | null } | Response> {
   const incomingHash = await bearerKeyHash(req, requestId);
   if (incomingHash instanceof Response) return incomingHash;
@@ -2482,8 +2548,15 @@ async function authenticateToolsCall(
   let data: unknown;
   try {
     const { data: answer, error } = await supabase.rpc(
-      "mcp_tools_call_preflight",
-      preflightParams(incomingHash, keyWindowStarts, workspaceWindowStart, includeAllowance),
+      GATE_RPC,
+      gateParams(
+        incomingHash,
+        keyWindowStarts,
+        workspaceWindowStart,
+        includeAllowance,
+        reserveToolName,
+        ACTION_METER_VERSION,
+      ),
     );
     if (error) {
       notePreflightError(error.code);
@@ -2501,6 +2574,13 @@ async function authenticateToolsCall(
     return await fallback();
   }
 
+  // A reservation that exists in the database is owned by this request from
+  // here on, whatever the rest of the answer looks like: the slot releases it
+  // unless the allowance gate takes it. Recorded BEFORE the answer is judged.
+  const slot = gateReservationStore.getStore();
+  const reservationId = reservationIdIn(data);
+  if (slot && reservationId) slot.reservationId = reservationId;
+
   const preflight = parsePreflight(data, keyWindowStarts.length, includeAllowance);
   if (preflight === null) {
     console.warn("[mcp-server] tools_call_preflight_malformed", {});
@@ -2508,8 +2588,10 @@ async function authenticateToolsCall(
   }
   // An unknown, revoked or expired key: the same 401 lookupApiKey gives.
   if (preflight.kind === "no_key") return acceptKeyRow(null, incomingHash, requestId) as Response;
-  const accepted = acceptKeyRow(preflight.key, incomingHash, requestId);
+  const accepted = acceptKeyRow(preflight.key, incomingHash, requestId, !preflight.lastUsedHandled);
   if (accepted instanceof Response) return accepted;
+  if (slot && preflight.reservation) slot.reservation = preflight.reservation;
+  const cardDiagnostics = preflight.workspace?.card_diagnostics;
 
   return {
     apiKey: accepted.apiKey,
@@ -2527,7 +2609,104 @@ async function authenticateToolsCall(
       ...(includeAllowance
         ? { allowance: preflight.allowance as ActionAllowanceRow | null }
         : {}),
+      ...(typeof cardDiagnostics === "boolean" ? { cardDiagnostics } : {}),
     },
+  };
+}
+
+/**
+ * The tool a tools/call will be metered under, if that can be told from the
+ * request alone, so mcp_tools_call_gate can reserve against it in the same
+ * round trip as authentication.
+ *
+ * Deliberately narrow: a billable tool called by its own name, or a
+ * consolidated tool whose `action` is EXACTLY one of its actions. Anything
+ * that needs the selector resolved (a misspelt or missing action, an alias, an
+ * inference) answers null and is reserved the ordinary way, after validation.
+ * A wrong guess is still safe, only slower: claimGateReservation compares the
+ * guess with the tool handleToolsCall actually resolved and releases it on a
+ * mismatch before reserving again.
+ */
+function gateReservationTool(params: unknown): string | null {
+  if (!params || typeof params !== "object") return null;
+  const name = (params as Record<string, unknown>)["name"];
+  if (typeof name !== "string" || !mayMeterToolCall(name)) return null;
+  const consolidated = CONSOLIDATED_BY_NAME[name];
+  if (!consolidated) return BILLABLE_TOOL_NAMES.has(name) ? name : null;
+  const args = (params as Record<string, unknown>)["arguments"];
+  if (!args || typeof args !== "object" || Array.isArray(args)) return null;
+  const action = (args as Record<string, unknown>)["action"];
+  if (typeof action !== "string" || !Object.hasOwn(consolidated.actions, action)) return null;
+  const legacy = consolidated.actions[action].legacy;
+  return BILLABLE_TOOL_NAMES.has(legacy) ? legacy : null;
+}
+
+/**
+ * Give back the gate's reservation if nobody took it. Idempotent; never
+ * throws. Called before any other reservation is made in this request, and
+ * once more by handleRequest before the response leaves.
+ */
+async function releaseGateReservation(slot: GateReservationSlot | undefined, reason: string): Promise<void> {
+  if (!slot || slot.settled) return;
+  slot.settled = true;
+  const reservationId = slot.reservationId;
+  if (!reservationId) return;
+  await releaseActionReservation(reservationId, reason);
+}
+
+/** `finalize_action_usage_reservation(id, false)`: no action_usage row, the slot freed. */
+async function releaseActionReservation(reservationId: string, reason: string): Promise<void> {
+  try {
+    const { error } = await supabase.rpc("finalize_action_usage_reservation", {
+      p_reservation_id: reservationId,
+      p_succeeded: false,
+    });
+    if (error) {
+      console.error("[mcp-server] gate_reservation_release_failed", {
+        reason,
+        error: error.message,
+        error_code: error.code,
+      });
+    }
+  } catch (err) {
+    console.error("[mcp-server] gate_reservation_release_failed", {
+      reason,
+      error: err instanceof Error ? err.message : String(err),
+    });
+  }
+}
+
+/**
+ * The gate's reservation, for the allowance gate deciding `toolName`.
+ *
+ * Handed over (and the slot settled) only when the call really is reaching
+ * the reservation for the tool the gate reserved against; the allowance gate
+ * then checks the cap and window as well (prereservationMatches). In every
+ * other case the reservation is released HERE, before the caller reserves on
+ * its own, so the two can never both count against the cap.
+ */
+async function claimGateReservation(toolName: string, willReserve: boolean): Promise<PrereservedAction | undefined> {
+  const slot = gateReservationStore.getStore();
+  if (!slot || slot.settled) return undefined;
+  const reservation = slot.reservation;
+  if (!willReserve || !reservation || reservation.toolName !== toolName) {
+    await releaseGateReservation(slot, willReserve ? "tool_mismatch" : "not_reserved");
+    return undefined;
+  }
+  slot.settled = true;
+  if (reservation.error) {
+    // The same line, and the same fail-open, as the separate reserve call.
+    console.error("[mcp-server] action_usage_reservation_failed", {
+      error: reservation.error.message,
+      error_code: reservation.error.code,
+    });
+  }
+  return {
+    toolName: reservation.toolName,
+    cap: reservation.cap,
+    periodStart: reservation.periodStart,
+    periodEnd: reservation.periodEnd,
+    outcome: reservation.error ? { ok: false } : { ok: true, row: reservation.row },
   };
 }
 
@@ -2628,7 +2807,7 @@ interface WindowCountResult {
 
 /**
  * The three reads checkPlanQuota makes, already made by
- * mcp_tools_call_preflight. `workspace` null is "no row", which fails open
+ * mcp_tools_call_gate. `workspace` null is "no row", which fails open
  * exactly like a failed lookup.
  */
 interface PreloadedPlanQuotaReads {
@@ -2907,7 +3086,7 @@ function rateLimitWindowStarts(nowMs = Date.now()): string[] {
 }
 
 /**
- * The per-key window counts, already read by mcp_tools_call_preflight: one
+ * The per-key window counts, already read by mcp_tools_call_gate: one
  * per RATE_LIMIT_WINDOWS entry, in table order, for these window starts.
  */
 interface PreloadedRateLimitCounts {
@@ -3576,6 +3755,7 @@ const allowanceGateIo: AllowanceGateIo = {
   limitEventRecorded: usageLimitEventRecorded,
   limitNoticeQueued: usageLimitNoticeQueued,
   queueEmail: queueUsageEmail,
+  release: (reservationId) => releaseActionReservation(reservationId, "terms_mismatch"),
 };
 
 /**
@@ -3589,8 +3769,9 @@ function reserveBillableAction(
   workspaceId: string,
   toolName: string,
   preloadedAllowance?: Promise<ActionAllowanceRow | null>,
+  prereserved?: PrereservedAction,
 ): Promise<BillableActionReservation> {
-  return reserveAgainstAllowance(allowanceGateIo, workspaceId, toolName, preloadedAllowance);
+  return reserveAgainstAllowance(allowanceGateIo, workspaceId, toolName, preloadedAllowance, prereserved);
 }
 
 /** The allowance applies to every workspace that is not exempt.
@@ -3699,8 +3880,12 @@ async function actionLimitResponse(
   // Kill switch, not a feature flag: enforcement is ON unless something says
   // otherwise, so a missing or mistyped variable cannot silently disable the
   // only thing standing between us and an unbounded provider bill.
-  if (Deno.env.get("USAGE_ENFORCEMENT_DISABLED") === "true" || !BILLABLE_TOOL_NAMES.has(toolName)) return { response: null, reservationId: null };
-  const reservation = await reserveBillableAction(workspaceId, toolName, preloadedAllowance);
+  const willReserve = Deno.env.get("USAGE_ENFORCEMENT_DISABLED") !== "true" && BILLABLE_TOOL_NAMES.has(toolName);
+  // The reservation mcp_tools_call_gate made up front, if it is for this tool;
+  // released here, before anything else is reserved, if it is not.
+  const prereserved = await claimGateReservation(toolName, willReserve);
+  if (!willReserve) return { response: null, reservationId: null };
+  const reservation = await reserveBillableAction(workspaceId, toolName, preloadedAllowance, prereserved);
   switch (reservation.outcome) {
     case "unmetered":
       return { response: null, reservationId: null };
@@ -32789,7 +32974,7 @@ async function handleToolsCall(
   // protocol diagnostics line. Deliberately after the audit log and the
   // idempotency snapshot, so a rendering hint can never appear in either.
   // See card-diagnostics.ts.
-  await stampCardDiagnostics(toolResult, apiKey.workspace_id);
+  await stampCardDiagnostics(toolResult, apiKey.workspace_id, ctx.cardDiagnostics);
 
   return toolResult;
 }
@@ -34470,9 +34655,30 @@ function triageDeps(): TriageDeps {
 // named function, so `Deno.serve(handleRequest)` at the bottom stays a bare
 // reference and the tests drive the entry point production serves.
 function handleRequest(req: Request): Promise<Response> {
+  // mcpemails.com/api/mcp arrives here through a Vercel rewrite to
+  // /mcp-server/web; that path keeps the old proxy route's contract (auth
+  // discovery, ?key=, CORS, SSE for calls past Vercel's 120 s). web-ingress.ts.
+  if (isWebIngress(req)) {
+    return handleWebIngress(req, serveMetered, { appUrl: APP_URL });
+  }
+  return serveMetered(req);
+}
+
+function serveMetered(req: Request): Promise<Response> {
+  // The reservation mcp_tools_call_gate may make for this request. Any that
+  // the allowance gate did not take is released before the response leaves,
+  // on every path including a throw.
+  const slot: GateReservationSlot = { reservationId: null, reservation: null, settled: false };
   return requestMeterStore.run(
     { dbCalls: 0 },
-    () => imapTimingStore.run(new ImapCallTimings(), () => handleMeteredRequest(req)),
+    () =>
+      gateReservationStore.run(slot, async () => {
+        try {
+          return await imapTimingStore.run(new ImapCallTimings(), () => handleMeteredRequest(req));
+        } finally {
+          await releaseGateReservation(slot, "request_end");
+        }
+      }),
   );
 }
 
@@ -34738,10 +34944,11 @@ async function handleMeteredRequest(req: Request): Promise<Response> {
   // is routed with the synthetic full-scope key. It reaches exactly the same
   // handlers and the same response post-processing as a real one.
   //
-  // A tools/call authenticates through mcp_tools_call_preflight, which also
+  // A tools/call authenticates through mcp_tools_call_gate, which also
   // returns every read the three gates below need, so they cost no further
-  // round trip (see authenticateToolsCall). `preloaded` is null whenever that
-  // RPC was unavailable and the per-query path ran instead.
+  // round trip, and may reserve the action too (see authenticateToolsCall).
+  // `preloaded` is null whenever that RPC was unavailable and the per-query
+  // path ran instead.
   let apiKey: ApiKeyRow;
   let preloaded: PreloadedGateReads | null = null;
   const callMayMeter = rpcRequest.method === "tools/call" &&
@@ -34751,7 +34958,12 @@ async function handleMeteredRequest(req: Request): Promise<Response> {
   } else {
     const authResult: { apiKey: ApiKeyRow; preloaded?: PreloadedGateReads | null } | Response =
       rpcRequest.method === "tools/call"
-        ? await authenticateToolsCall(req, requestId, callMayMeter)
+        ? await authenticateToolsCall(
+          req,
+          requestId,
+          callMayMeter,
+          callMayMeter ? gateReservationTool(rpcRequest.params) : null,
+        )
         : await authenticateRequest(req, requestId);
     if (authResult instanceof Response) {
       // Authentication failed — return the error response directly.
@@ -34759,6 +34971,7 @@ async function handleMeteredRequest(req: Request): Promise<Response> {
     }
     apiKey = authResult.apiKey;
     preloaded = authResult.preloaded ?? null;
+    if (preloaded?.cardDiagnostics !== undefined) ctx.cardDiagnostics = preloaded.cardDiagnostics;
   }
 
   // ── Cheap-method rate limit ───────────────────────────────────────────────
@@ -34834,13 +35047,17 @@ async function handleMeteredRequest(req: Request): Promise<Response> {
   // metered) the allowance row are independent READS, each a database round
   // trip or three, so they are issued together and only their answers are
   // taken in order: per-key limiter first, plan quota second, exactly the
-  // precedence the serial version had. Nothing is WRITTEN until both gates
-  // have passed. In particular the allowance RESERVATION is still made inside
-  // handleToolsCall, so a rate-limited call reserves nothing and consumes no
-  // allowance. A denied request leaves the other reads to finish unused.
+  // precedence the serial version had. A denied request leaves the other
+  // reads to finish unused.
   //
-  // After a preflight, all three reads are already answered and these are pure
-  // decisions over its values (see authenticateToolsCall).
+  // After the gate RPC, all three reads are already answered and these are
+  // pure decisions over its values (see authenticateToolsCall). The gate may
+  // also have RESERVED the action in that same round trip. It is used only
+  // once handleToolsCall reaches the cap check for the same tool; a call
+  // refused here (or anywhere before that check) gives it back before the
+  // response leaves (GateReservationSlot), so a rate-limited call still ends
+  // with nothing reserved and no allowance consumed. On the per-query path the
+  // reservation is made inside handleToolsCall, after both gates, as before.
   const quotaPending = isResourceMethod || !metered
     ? null
     : checkPlanQuota(apiKey.workspace_id, preloaded?.planQuota);

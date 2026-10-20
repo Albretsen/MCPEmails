@@ -96,7 +96,7 @@
   "providers": {
     "eyebrow": "任意服务商",
     "title": "连接公司的每个邮箱，无论由谁托管",
-    "sub": "大多数公司邮箱都放在网站主机商或域名注册商那里，这完全没问题。任何在标准端口上支持 IMAP 和 SMTP 的邮箱，都可以用地址、服务器和密码连接。IONOS、Hostinger、OVH、Namecheap 等常见主机商会根据地址自动识别并替你填好设置。Gmail 和 Google Workspace 通过应用密码或 Google 登录连接。Microsoft 365 和 Outlook 通过 Microsoft 登录连接；如果是公司的 Microsoft 365 账户，可能需要你的 IT 管理员为整个组织一次性批准 mcpemails。iCloud、Fastmail、Yahoo、Zoho 和 Yandex 通过应用密码连接。",
+    "sub": "大多数公司邮箱都放在网站主机商或域名注册商那里，这完全没问题。任何在标准端口上支持 IMAP 和 SMTP 的邮箱，都可以用地址、服务器和密码连接。IONOS、Hostinger、OVH、Namecheap 等常见主机商会根据地址自动识别并替你填好设置。Gmail 和 Google Workspace 通过 Google 应用密码连接。Microsoft 365 和 Outlook 通过 Microsoft 登录连接；如果是公司的 Microsoft 365 账户，可能需要你的 IT 管理员为整个组织一次性批准 mcpemails。iCloud、Fastmail、Yahoo、Zoho 和 Yandex 通过应用密码连接。",
     "ctaImap": "连接任意 IMAP 邮箱",
     "ctaGmail": "连接 Gmail 或 Google Workspace",
     "ctaMicrosoft": "连接 Microsoft 365",

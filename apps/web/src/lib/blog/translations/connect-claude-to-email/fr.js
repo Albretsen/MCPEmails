@@ -14,7 +14,7 @@ Vous n'avez aucun code à écrire, aucun SDK à installer et aucune clé API à 
 
 - D'un **forfait ou d'une application Claude qui prend en charge les connecteurs personnalisés**.
 - D'un compte gratuit **MCP Emails** : [créez-le ici](/signup).
-- D'une boîte e-mail. Outlook se connecte avec la connexion Microsoft. Gmail, iCloud, Fastmail, Yahoo, Zoho et la plupart des autres fournisseurs utilisent un mot de passe spécifique à l'application, et Gmail propose aussi la connexion avec Google.
+- D'une boîte e-mail. Outlook se connecte avec la connexion Microsoft. Gmail, iCloud, Fastmail, Yahoo, Zoho et la plupart des autres fournisseurs utilisent un mot de passe spécifique à l'application.
 
 ## Étape 1 : Connectez votre boîte à MCP Emails
 
@@ -22,7 +22,7 @@ Dans le tableau de bord MCP Emails, ouvrez **Inboxes → Connect Inbox**, puis c
 
 ### Gmail et Google Workspace
 
-Choisissez **Gmail**, créez un mot de passe d'application Google (votre compte Google doit avoir la validation en deux étapes activée) et collez-le avec votre adresse Gmail. Vous pouvez aussi choisir la connexion avec Google. Dans les deux cas, votre mot de passe Google habituel n'est jamais transmis à MCP Emails. Consultez le [guide Gmail détaillé](/blog/connect-gmail-to-claude) si un administrateur Workspace contrôle l'accès aux applications. Consultez les [réglages et limites de Gmail](/connect/gmail) et la [page de configuration Google Workspace](/connect/google-workspace).
+Choisissez **Gmail**, créez un mot de passe d'application Google sur myaccount.google.com/apppasswords (Google ne le propose que si la validation en deux étapes est activée) et collez les 16 lettres avec votre adresse Gmail complète. Votre mot de passe Google habituel ne fonctionne pas ici, et vous pouvez révoquer le mot de passe d'application à tout moment. Consultez le [guide Gmail détaillé](/blog/connect-gmail-to-claude) si un administrateur Workspace a désactivé les mots de passe d'application pour votre domaine. Consultez les [réglages et limites de Gmail](/connect/gmail) et la [page de configuration Google Workspace](/connect/google-workspace).
 
 ### iCloud Mail
 
@@ -79,7 +79,7 @@ Pour des routines réutilisables, utilisez le [guide de tri de boîte de récept
 
 MCP Emails donne à Claude des outils de messagerie ciblés, et non un mot de passe ou une connexion IMAP brute :
 
-- **Lire et rechercher :** \`email_read\` liste les messages, lit les messages complets et recherche les e-mails. Les recherches Gmail acceptent aussi des opérateurs tels que \`from:\` et \`is:unread\`.
+- **Lire et rechercher :** \`email_read\` liste les messages, lit les messages complets et recherche les e-mails par expéditeur, objet, date, statut non lu et d'autres champs structurés. Dans Gmail, les libellés apparaissent comme des dossiers.
 - **Envoyer, répondre et transférer :** \`email_compose\` envoie via votre propre fournisseur et votre propre adresse.
 - **Organiser :** \`email_organize\` déplace, étiquette, marque et archive les messages.
 - **Gérer brouillons, dossiers, planification et contacts :** \`draft\`, \`folder\`, \`schedule\` et \`contact_search\` couvrent le reste d'un flux de messagerie pratique.
@@ -100,7 +100,7 @@ Si le problème persiste, consultez la [matrice des fournisseurs](/docs/provider
 Oui, à condition de n'accorder que l'accès nécessaire et de garder une personne impliquée pour les actions sortantes.
 
 - **Les e-mails ne sont pas stockés.** MCP Emails récupère le contenu des messages en direct à chaque appel et le supprime après la livraison. L'identifiant chiffré nécessaire pour se reconnecter à votre fournisseur est la seule donnée de boîte conservée.
-- **Votre fournisseur garde le contrôle de l'authentification.** Outlook, ainsi que l'option de connexion avec Google de Gmail, utilisent OAuth, donc MCP Emails ne reçoit jamais votre mot de passe. Pour le mot de passe d'application Gmail et les fournisseurs IMAP, utilisez un mot de passe d'application révocable plutôt que votre mot de passe habituel.
+- **Votre fournisseur garde le contrôle de l'authentification.** Outlook utilise OAuth, donc MCP Emails ne voit jamais votre mot de passe Microsoft. Pour Gmail et les autres fournisseurs à mot de passe d'application, ce mot de passe est un identifiant distinct, pas celui de votre compte, et vous pouvez le révoquer à tout moment.
 - **Les scopes sont explicites.** Accordez un accès en lecture seule si Claude ne doit jamais envoyer. Ajoutez l'envoi uniquement lorsque nécessaire et révoquez-le à tout moment.
 
 Traitez le corps de chaque e-mail comme une entrée non fiable. Demandez à Claude de rédiger avant d'envoyer, relisez les messages externes et ne laissez pas des instructions présentes dans un e-mail remplacer votre intention. Le [guide de sécurité de l'accès e-mail](/blog/is-it-safe-to-give-ai-agent-email-access) détaille le modèle de menace.
@@ -108,7 +108,7 @@ Traitez le corps de chaque e-mail comme une entrée non fiable. Demandez à Clau
 ## FAQ
 
 **Claude peut-il se connecter à Gmail, Outlook ou iCloud ?**  
-Gmail se connecte avec un mot de passe d'application Google ou la connexion avec Google, Outlook avec la connexion Microsoft et iCloud avec un mot de passe spécifique à l'application. Un compte professionnel ou scolaire Microsoft 365 peut d'abord nécessiter qu'un administrateur informatique approuve l'application une seule fois. MCP Emails prend aussi en charge Fastmail et IMAP générique, ce qui couvre des services comme Yahoo et Zoho.
+Gmail se connecte avec un mot de passe d'application Google, Outlook avec la connexion Microsoft et iCloud avec un mot de passe spécifique à l'application. Un compte professionnel ou scolaire Microsoft 365 peut d'abord nécessiter qu'un administrateur informatique approuve l'application une seule fois. MCP Emails prend aussi en charge Fastmail et IMAP générique, ce qui couvre des services comme Yahoo et Zoho.
 
 **Ai-je besoin d'une clé API ?**  
 Non, pas pour le flux de connecteur OAuth de Claude. Collez l'URL de l'endpoint et connectez-vous. Les clés API servent aux clients MCP sans OAuth intégré.

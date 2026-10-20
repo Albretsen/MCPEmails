@@ -32,7 +32,7 @@ Jetzt das Postfach. Jeder Anbieter unten beginnt gleich: **Dashboard → Postfä
 
 ## Jeden Anbieter verbinden
 
-### Gmail (App-Passwort oder „Mit Google anmelden“)
+### Gmail (App-Passwort)
 
 Gmail verbindet sich standardmäßig mit einem Google-App-Passwort über IMAP.
 
@@ -41,7 +41,7 @@ Gmail verbindet sich standardmäßig mit einem Google-App-Passwort über IMAP.
 3. Geben Sie Ihre vollständige Gmail-Adresse ein, fügen Sie das App-Passwort ein und klicken Sie auf **Postfach verbinden**.
 4. Die Verbindung wird gegen Gmail getestet, und das Postfach erscheint als verbunden. Fertig.
 
-Ihr normales Google-Passwort funktioniert hier nicht und wird nie gebraucht. Wenn Sie sich lieber mit Google anmelden, öffnen Sie im selben Fenster **Lieber mit Google anmelden?** und klicken Sie auf **Mit Google verbinden**; Google zeigt zuerst einen Warnhinweis zu einer nicht überprüften App (klicken Sie auf **Erweitert** und dann auf den Link, der zu mcpemails.com weiterführt). Dieser Weg nutzt die Gmail API, Suchen können also die Gmail-eigenen Operatoren verwenden (\`from:\`, \`is:unread\`, \`after:\`), und Claude arbeitet mit echten Labels. Der Weg über das App-Passwort nutzt die IMAP-Textsuche, zeigt Labels als Ordner und kann endgültig löschen. Details stehen in der [Gmail-Anleitung](/blog/connect-gmail-to-claude).
+Ihr normales Google-Passwort funktioniert hier nicht und wird nie gebraucht. Über IMAP erscheinen Gmail-Labels als Ordner, und Suchen nutzen die strukturierten Felder von MCP Emails (Absender, Betreff, Datum, ungelesen und so weiter) statt der Gmail-eigenen Suchoperatoren. Sie können das App-Passwort jederzeit auf derselben Google-Seite widerrufen. Nutzen Sie Google Workspace und fehlt die Seite für App-Passwörter, hat Ihr Administrator App-Passwörter für die Domain womöglich abgeschaltet. Details stehen in der [Gmail-Anleitung](/blog/connect-gmail-to-claude).
 
 ### Outlook / Microsoft 365 („Mit Microsoft anmelden“)
 
@@ -108,7 +108,7 @@ Ein Hinweis, den Sie vorab kennen sollten: MCP Emails arbeitet mit Abfragen. Es 
 
 ## Warum das schnell und trotzdem sicher geht
 
-Die Geschwindigkeit entsteht nicht dadurch, dass bei der Sicherheit gespart wird. E-Mails werden bei jedem Aufruf live abgerufen und nie gespeichert: Texte, Betreffzeilen und Anhänge werden an den Agenten übergeben und sofort verworfen. Pro Postfach bleibt nur Ihr OAuth-Token oder App-Passwort gespeichert, verschlüsselt mit AES-256-GCM und nur zum Zeitpunkt des Aufrufs in einer isolierten Funktion entschlüsselt. Gesendet wird immer über Ihren eigenen Anbieter, die Reputation Ihrer Domain bleibt also Ihre. Die Architektur im Detail steht in [warum „E-Mails werden nie gespeichert“ wirklich zählt](/blog/why-email-never-stored-matters).
+Die Geschwindigkeit entsteht nicht dadurch, dass bei der Sicherheit gespart wird. E-Mails werden bei jedem Aufruf live abgerufen und nie gespeichert: Texte, Betreffzeilen und Anhänge werden an den Agenten übergeben und sofort verworfen. Pro Postfach bleibt nur Ihr OAuth-Token oder App-Passwort gespeichert, im Ruhezustand verschlüsselt mit AES-256-GCM und auf unseren Servern nur dann entschlüsselt, wenn eine Anfrage es braucht. An Ihren Agenten wird es nie gesendet. Gesendet wird immer über Ihren eigenen Anbieter, die Reputation Ihrer Domain bleibt also Ihre. Die Architektur im Detail steht in [warum „E-Mails werden nie gespeichert“ wirklich zählt](/blog/why-email-never-stored-matters).
 
 ## Fazit
 

@@ -6,7 +6,7 @@
   "hero": {
     "eyebrow": "Rechtliches",
     "title": "Datenschutzerklärung",
-    "lead": "Bei MCPEmails ist Datenschutz ein Grundprinzip. Die E-Mail-Inhalte, die Ihr Agent liest, werden nie auf unseren Servern gespeichert. Sie werden an Ihren Agenten durchgereicht und sind danach weg. Die einzige Ausnahme ist eine Nachricht, deren Versand Sie für später planen: Diese bewahren wir nur so lange auf, bis sie zugestellt ist. Diese Erklärung beschreibt, welche Daten wir erheben und warum.",
+    "lead": "Bei MCPEmails ist Datenschutz ein Grundprinzip. Die E-Mail-Inhalte, die Ihr Agent liest, werden nie auf unseren Servern gespeichert. Sie werden an Ihren Agenten durchgereicht und sind danach weg. Ausnahmen sind ausgehende Nachrichten, die warten müssen: eine Nachricht, deren Versand Sie für später planen, oder eine Sendung, die auf Ihre Freigabe wartet. Diese speichern wir verschlüsselt. Diese Erklärung beschreibt, welche Daten wir erheben und warum.",
     "dates": "Zuletzt aktualisiert: {lastUpdated}  ·  Gültig ab: {effectiveDate}"
   },
   "whoWeAre": {
@@ -27,7 +27,7 @@
     "logsTitle": "2.4 Nutzungs- und Audit-Protokolle",
     "logsP": "Für jeden MCP-Tool-Aufruf Ihres Agenten protokollieren wir: den Namen des Tools (z. B. <c>email_read</c>), den API-Schlüssel, der den Aufruf ausgeführt hat, das Postfach, auf das zugegriffen wurde, den Zeitpunkt und ob der Aufruf erfolgreich war. Betreffzeilen, Nachrichtentexte, Empfänger oder sonstige E-Mail-Inhalte erfassen wir in diesen Protokollen<b> nicht</b>.",
     "emailContentTitle": "2.5 E-Mail-Inhalte: keine Speicherung",
-    "emailContentP": "Wenn Ihr Agent <c>email_read</c> (zum Auflisten, Lesen oder Suchen) oder ein anderes Lese-Tool aufruft, rufen wir die angeforderten Inhalte live bei Ihrem E-Mail-Anbieter ab und geben sie Ihrem Agenten in derselben HTTP-Antwort zurück. Diese Inhalte werden nie auf einen Datenträger geschrieben, zwischengespeichert oder protokolliert. Sobald die HTTP-Antwort gesendet ist, besitzen wir keine Kopie eines Nachrichtentextes, Betreffs, Anhangs oder Kontaktdatums mehr. Die einzige Ausnahme sind geplante Sendungen: Wenn Sie Ihren Agenten bitten, eine Nachricht für eine spätere Zustellung zu planen, speichern wir diese ausgehende Nachricht (Empfänger, Betreff, Text und etwaige Anhänge) in unserer Datenbank, bis sie gesendet ist, und bewahren den Datensatz danach für Audit- und Fehlerbehebungszwecke auf. Dies gilt nur für Nachrichten, die Sie ausdrücklich planen. E-Mails, die Ihr Agent liest oder sofort sendet, werden nie gespeichert.",
+    "emailContentP": "Wenn Ihr Agent <c>email_read</c> (zum Auflisten, Lesen oder Suchen) oder ein anderes Lese-Tool aufruft, rufen wir die angeforderten Inhalte live bei Ihrem E-Mail-Anbieter ab und geben sie Ihrem Agenten in derselben HTTP-Antwort zurück. Diese Inhalte werden nie auf einen Datenträger geschrieben, zwischengespeichert oder protokolliert. Sobald die HTTP-Antwort gesendet ist, besitzen wir keine Kopie eines Nachrichtentextes, Betreffs, Anhangs oder Kontaktdatums mehr. Es gibt zwei Ausnahmen, beides ausgehende Nachrichten, die warten müssen. Geplante Sendungen: Wenn Sie Ihren Agenten bitten, eine Nachricht für eine spätere Zustellung zu planen, speichern wir diese ausgehende Nachricht (Empfänger, Betreff, Text und etwaige Anhänge) in unserer Datenbank, bis sie gesendet ist, und bewahren den Datensatz danach für Audit- und Fehlerbehebungszwecke auf. Sendungen, die auf Freigabe warten: Verlangt ein Postfach eine Freigabe, wird eine Sendung, Antwort, Weiterleitung oder ein Entwurfsversand, den Ihr Agent anfordert, verschlüsselt in unserer Datenbank gespeichert, bis ein Workspace-Mitglied sie freigibt oder ablehnt oder sie nach 24 Stunden abläuft, und der Datensatz bleibt danach als Ihr Freigabeverlauf erhalten. E-Mails, die Ihr Agent liest, und E-Mails, die er ohne Freigabe sofort sendet, werden nie gespeichert.",
     "emailContentAgentP": "Ihre E-Mail-Inhalte werden ausschließlich an den MCP-Client oder KI-Agenten gesendet, den <b>Sie</b> verbunden haben und bedienen (zum Beispiel Claude, Cursor oder einen anderen MCP-Client Ihrer Wahl). Wenn Sie ein Tool aufrufen, übermittelt MCPEmails die angeforderten Inhalte an diesen Client, damit er Ihre Anfrage ausführen kann. MCPEmails sendet Ihre E-Mail-Inhalte an keinen KI-Anbieter eigener Wahl. Sobald die Inhalte Ihren gewählten Client erreichen, gelten dafür die Datenschutzerklärung und die Bedingungen dieses Clients bzw. KI-Anbieters, deren Prüfung in Ihrer Verantwortung liegt. MCPEmails dient lediglich als Übermittlungsweg und behält keine Kopie der Inhalte.",
     "technicalTitle": "2.6 Technische und betriebliche Daten",
     "technicalP": "Wir erheben übliche serverseitige Betriebsdaten, darunter IP-Adressen (für Ratenlimits und zur Missbrauchsabwehr), Zeitpunkte von Anfragen, HTTP-Statuscodes und Fehlertypen. Diese Daten werden in aggregierter, anonymisierter Form aufbewahrt und nach 30 Tagen nicht mehr mit einzelnen Konten verknüpft.",
@@ -114,7 +114,7 @@
       },
       {
         "category": "Aktivitätsprotokoll der MCP-Tool-Aufrufe",
-        "period": "90 Tage in jedem Tarif",
+        "period": "Bis zu 90 Tage in Free und Personal, bis zu 2 Jahre in Pro und Business",
         "reason": "Sicherheit; Nutzungsverlauf in Ihrem Dashboard"
       },
       {
@@ -136,6 +136,11 @@
         "category": "Nachrichten mit geplantem Versand",
         "period": "Bis zum Versand; Datensatz wird danach für Audits aufbewahrt",
         "reason": "Erforderlich, um von Ihnen geplante Nachrichten zuzustellen"
+      },
+      {
+        "category": "Sendungen, die auf Freigabe warten",
+        "period": "Verschlüsselt, solange eine Entscheidung aussteht (höchstens 24 Stunden); der Datensatz bleibt danach als Freigabeverlauf erhalten",
+        "reason": "Erforderlich, um die Nachricht der prüfenden Person zu zeigen und sie nach der Freigabe zu senden"
       }
     ],
     "outro": "Wenn Sie Ihr Konto löschen, leiten wir innerhalb von 30 Tagen die Löschung aller personenbezogenen Daten ein. Aus Ihrem Konto abgeleitete aggregierte, nicht personenbezogene Nutzungsstatistiken können über diesen Zeitraum hinaus in anonymisierter Form aufbewahrt werden."
@@ -154,6 +159,9 @@
     "vercelPurpose": "Webhosting, CDN, MCP-Endpunkt",
     "vercelData": "Metadaten von HTTP-Anfragen; MCP-Anfragen und -Antworten, einschließlich E-Mail-Inhalten, werden bei der Übertragung durchgereicht und nicht gespeichert",
     "vercelLocation": "Globales CDN; Serverfunktionen in den USA (Osten) und in der EU (Stockholm, Schweden)",
+    "relayPurpose": "Mail-Relay für die wenigen Anbieter, die Verbindungen von Cloud-Adressen ablehnen",
+    "relayData": "Die verschlüsselte IMAP- und SMTP-Verbindung zu diesen Anbietern, als Tunnel mit durchgehendem TLS durchgereicht: Das Relay kann weder E-Mails noch Passwörter lesen",
+    "relayLocation": "Deutschland (EU)",
     "stripeProvider": "(nur kostenpflichtige Tarife)",
     "stripePurpose": "Zahlungsabwicklung",
     "stripeData": "E-Mail-Adresse für die Abrechnung, Zahlungskartendaten (von Stripe gespeichert, nicht von uns)",

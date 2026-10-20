@@ -38,7 +38,7 @@
       },
       {
         "data": "OAuth-token eller app-passord",
-        "accessed": "Dekrypteres kun inne i en isolert funksjon ved kalltidspunktet",
+        "accessed": "Dekrypteres på serverne våre bare for forespørselen som trenger det",
         "stored": "Ja, kryptert i hvile med AES-256-GCM; nøkkelen holdes adskilt"
       },
       {
@@ -52,12 +52,17 @@
         "stored": "Ja, kryptert i hvile til den er sendt, deretter beholdt som din historikk"
       },
       {
+        "data": "Sendinger som venter på godkjenning",
+        "accessed": "Holdes til noen godkjenner eller avviser dem, eller de utløper etter 24 timer",
+        "stored": "Ja, kryptert i hvile, deretter beholdt som godkjenningshistorikken din"
+      },
+      {
         "data": "Verktøykall-aktivitet (metadata)",
         "accessed": "Registreres for din egen revisjonslogg",
         "stored": "Kun verktøynavn, innboks, tidsstempel og status. Ikke noe e-postinnhold"
       }
     ],
-    "outro": "Det ene bevisste unntaket er en melding du ber agenten planlegge for senere. Vi må holde på den til sendetidspunktet, så vi lagrer den kryptert i mellomtiden, og beholder deretter en oppføring etterpå for historikken din."
+    "outro": "De bevisste unntakene er utgående meldinger som må vente: en melding du ber agenten planlegge for senere, og en sending som holdes tilbake for godkjenning. Vi må holde på dem til de sendes, så vi lagrer dem kryptert i mellomtiden, og beholder deretter en oppføring for historikken din."
   },
   "verify": {
     "title": "3. Du trenger ikke å stole på meg, du kan sjekke",
@@ -114,6 +119,11 @@
         "provider": "Vercel",
         "purpose": "Hosting av nettsted, dashbord og MCP-endepunkt",
         "location": "Globalt CDN; servere i USA (øst) og EU (Stockholm)"
+      },
+      {
+        "provider": "Hetzner",
+        "purpose": "E-postrelé for de få leverandørene som avviser tilkoblinger fra skyadresser (en TLS-tunnel: det kan ikke lese e-post eller passord)",
+        "location": "Tyskland (EU)"
       },
       {
         "provider": "Stripe",

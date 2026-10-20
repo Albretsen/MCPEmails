@@ -17,7 +17,7 @@ C'est toute l'idée derrière [MCP Emails](/). Un point de terminaison, un ensem
 
 Brancher un modèle sur la messagerie semble trivial jusqu'à ce que vous l'essayiez pour de vrai. Trois choses posent problème :
 
-1. **L'authentification diffère selon chaque fournisseur.** Gmail veut OAuth avec des scopes précis. Outlook veut l'identité Microsoft. iCloud et Fastmail veulent un mot de passe spécifique à l'application. Chacun a son propre cycle de rafraîchissement des jetons et ses propres modes de défaillance.
+1. **L'authentification diffère selon chaque fournisseur.** Outlook et Microsoft 365 veulent OAuth via l'identité Microsoft. Gmail veut un mot de passe d'application Google, que Google ne permet de créer qu'une fois la validation en deux étapes activée. iCloud et Fastmail veulent un mot de passe spécifique à l'application. Chacun a son propre cycle de rafraîchissement des jetons et ses propres modes de défaillance.
 2. **Les identifiants sont radioactifs.** Un mot de passe de boîte mail qui traîne dans une transcription de discussion ou une ligne de journal est une fuite qui ne demande qu'à arriver. Vous ne pouvez pas laisser le modèle détenir le secret.
 3. **L'e-mail est mal adapté aux agents.** MIME, en-têtes de fil de discussion, HTML contre texte brut, pièces jointes, dossiers qui sont en réalité des étiquettes. Le modèle a besoin d'une réponse propre, pas de RFC 5322.
 
@@ -29,11 +29,11 @@ Quatre décisions de conception font le gros du travail. Ce sont elles qui font 
 
 ### L'e-mail est récupéré en direct et jamais stocké
 
-Chaque appel d'outil contacte votre fournisseur en temps réel : l'API Gmail, Microsoft Graph ou IMAP/SMTP. Les corps de message, les objets et les pièces jointes sont remis à l'agent puis immédiatement écartés. Rien n'est mis en cache, indexé ou entreposé. La seule chose conservée par boîte mail est l'identifiant nécessaire pour effectuer l'appel suivant. Si vous voulez la version longue des raisons pour lesquelles cela compte, lisez [pourquoi « l'e-mail jamais stocké » est important](/blog/why-email-never-stored-matters).
+Chaque appel d'outil contacte votre fournisseur en temps réel : IMAP/SMTP pour Gmail, iCloud, Fastmail et les autres, ou Microsoft Graph pour Outlook. Les corps de message, les objets et les pièces jointes sont remis à l'agent puis immédiatement écartés. Rien n'est mis en cache, indexé ou entreposé. La seule chose conservée par boîte mail est l'identifiant nécessaire pour effectuer l'appel suivant. Si vous voulez la version longue des raisons pour lesquelles cela compte, lisez [pourquoi « l'e-mail jamais stocké » est important](/blog/why-email-never-stored-matters).
 
 ### Les identifiants sont chiffrés au repos en AES-256-GCM
 
-Le jeton OAuth ou le mot de passe d'application de chaque boîte mail est chiffré avant d'être écrit dans la base de données. Le déchiffrement n'a lieu qu'à l'intérieur d'une Edge Function isolée, au moment de l'appel, à l'aide d'une clé qui vit comme secret d'environnement séparé de la base de données. Ainsi, même une fuite de la base de données ne livre à un attaquant que du texte chiffré, pas votre boîte mail.
+Le mot de passe d'application ou le jeton OAuth de chaque boîte mail est chiffré avant d'être écrit dans la base de données. Il est déchiffré sur nos serveurs uniquement lorsqu'une requête en a besoin, et il n'est jamais envoyé à votre agent. La clé de chiffrement est conservée comme secret serveur, séparée de la base de données. Ainsi, même une fuite de la base de données ne livre à un attaquant que du texte chiffré, pas votre boîte mail.
 
 ### L'envoi passe par votre propre fournisseur
 
@@ -76,12 +76,11 @@ Vous connectez une boîte mail une seule fois dans **Dashboard → Inboxes → C
 
 ### Fournisseurs OAuth (connexion, sans mot de passe)
 
-- **Gmail** — OAuth 2.0 via la connexion Google.
 - **Outlook / Microsoft 365** : OAuth 2.0 via la connexion avec Microsoft, par Microsoft Graph et non par IMAP. Les comptes personnels Outlook.com, Hotmail, Live et MSN se connectent directement. Les comptes professionnels ou scolaires Microsoft 365 peuvent d'abord nécessiter qu'un administrateur informatique approuve l'application une seule fois pour toute l'organisation ; le tableau de bord vous donne un lien à lui envoyer. Détails de configuration dans [connecter Outlook et Microsoft 365 à un agent IA](/blog/connect-outlook-microsoft-365-ai-agent-mcp).
 
 ### Fournisseurs à mot de passe d'application
 
-iCloud, Fastmail, Yahoo, Zoho, Yandex et toute boîte mail IMAP générique se connectent avec un mot de passe spécifique à l'application plutôt qu'avec OAuth. Vous générez le mot de passe dans les paramètres de sécurité de votre fournisseur et le collez dans MCP Emails. Les mots de passe iCloud proviennent d'appleid.apple.com ; Fastmail fonctionne **uniquement avec un mot de passe d'application** (créez-en un dans les paramètres de Fastmail). Ils empruntent tous le même transport IMAP/SMTP et partagent un ensemble de fonctionnalités identique. Le parcours complet se trouve dans [connecter iCloud, Fastmail ou n'importe quelle boîte IMAP à Claude](/blog/connect-icloud-fastmail-imap-to-claude).
+Gmail, iCloud, Fastmail, Yahoo, Zoho, Yandex et toute boîte mail IMAP générique se connectent avec un mot de passe spécifique à l'application plutôt qu'avec OAuth. Vous générez le mot de passe dans les paramètres de sécurité de votre fournisseur et le collez dans MCP Emails. Les mots de passe d'application Gmail se créent dans votre compte Google, et Google exige la validation en deux étapes pour en créer un. Les mots de passe iCloud proviennent d'appleid.apple.com ; Fastmail fonctionne **uniquement avec un mot de passe d'application** (créez-en un dans les paramètres de Fastmail). Ils empruntent tous le même transport IMAP/SMTP et partagent un ensemble de fonctionnalités identique. Le parcours complet se trouve dans [connecter iCloud, Fastmail ou n'importe quelle boîte IMAP à Claude](/blog/connect-icloud-fastmail-imap-to-claude).
 
 ## Connexion de votre client IA
 
@@ -108,8 +107,8 @@ Côté limites de débit, chaque clé API est plafonnée à 100 requêtes/min, 1
 Les forfaits sont facturés au nombre de boîtes connectées. Les clés API sont illimitées à tous les niveaux, et les forfaits diffèrent aussi sur la limite de pointe, la rétention des analyses, les fonctionnalités d'équipe et le support.
 
 - **Gratuit, 0 $ pour toujours.** Sans carte. Une boîte connectée, 60 req/min, analyses sur 30 jours, support communautaire.
-- **Personal, 9 $/mois** (ou 86,40 $/an, soit 7,20 $/mois). Jusqu'à trois boîtes connectées, 120 req/min, analyses sur 30 jours, support par e-mail.
-- **Pro, 15 $/mois** (ou 144 $/an, soit 12 $/mois). Jusqu'à 10 boîtes connectées, 300 req/min, analyses sur 90 jours, support par e-mail.
+- **Personal, 9 $/mois** (ou 86,40 $/an, soit 7,20 $/mois). Jusqu'à trois boîtes connectées, 120 req/min, analyses sur 90 jours, support par e-mail.
+- **Pro, 15 $/mois** (ou 144 $/an, soit 12 $/mois). Jusqu'à 10 boîtes connectées, 300 req/min, analyses sur 2 ans, support par e-mail.
 - **Business, 39 $/mois** (ou 374,40 $/an, soit 31,20 $/mois). Tout ce que contient Pro, plus 10 boîtes incluses et 3 $/mois par boîte en plus, des membres illimités avec rôles, des administrateurs qui valident les envois retenus, un espace de travail distinct par client ou activité, 1 000 req/min.
 
 Détail complet sur la [page des tarifs](/pricing).

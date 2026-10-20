@@ -24,7 +24,7 @@
   "caps": {
     "eyebrow": "Was Ihre KI kann",
     "title": "Ein {provider}-Postfach, mit dem Ihr Agent wirklich arbeiten kann",
-    "sub": "Siebzehn aktionsbasierte MCP-Tools: senden, antworten, weiterleiten, planen und organisieren. Ihr Agent erledigt die Aufgabe direkt in {provider}."
+    "sub": "{toolCount} aktionsbasierte MCP-Tools: senden, antworten, weiterleiten, planen und organisieren. Ihr Agent erledigt die Aufgabe direkt in {provider}."
   },
   "capabilities": [
     {
@@ -66,7 +66,7 @@
   },
   "related": {
     "title": "Ein anderes Postfach verbinden",
-    "sub": "Derselbe MCP-Server, dieselben siebzehn Tools, ein anderer Anbieter.",
+    "sub": "Derselbe MCP-Server, dieselben {toolCount} Tools, ein anderer Anbieter.",
     "link": "{provider} verbinden",
     "all": "Alle unterstützten E-Mail-Anbieter ansehen"
   },

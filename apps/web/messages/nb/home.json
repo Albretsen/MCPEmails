@@ -35,7 +35,7 @@
       "providerSub": "Gmail · Outlook · iCloud · IMAP",
       "logCalls": "agenten kaller",
       "logReturns": "returnerer innboks-ID-er, ingen kopiering fra dashbordet",
-      "logFetches": "mcpemails henter via Gmail API (token rotert)",
+      "logFetches": "mcpemails henter direkte fra leverandøren din",
       "logResult": "20 meldinger returnert",
       "logNothing": "ingenting lagret",
       "legendPipe": "mcpemails (røret)",
@@ -65,13 +65,13 @@
     "items": {
       "0": {
         "tag": "Omfang",
-        "h": "Sytten fokuserte verktøy. Det essensielle, dekket.",
+        "h": "Nitten fokuserte verktøy. Det essensielle, dekket.",
         "p": "Verktøy dekker det daglige arbeidet: <code>inbox_list</code>, <code>email_read</code> (list, read, search) og <code>email_compose</code> (send, reply), pluss fokuserte verktøy for organisering, sletting, mapper, utkast, planlegging, kontakter, signaturer og automatiseringer som går uten tilsyn. Lim inn MCP-endepunkt-URL-en i claude.ai, Claude Desktop, Cursor eller en hvilken som helst MCP-kompatibel agent."
       },
       "1": {
         "tag": "Lagring",
         "h": "E-post hentes i sanntid. Lagres aldri.",
-        "p": "Hvert verktøykall treffer leverandøren din i sanntid: Gmail API, Microsoft Graph eller IMAP. Meldingsinnhold, emner og vedlegg går til agenten og forkastes umiddelbart. Vi lagrer én ting per innboks, et kryptert token eller app-passord, slik at vi kan gjøre neste kall. Det eneste unntaket er en melding du planlegger å sende senere: vi oppbevarer den frem til sendetidspunktet, og beholder deretter en oppføring for historikken din."
+        "p": "Hvert verktøykall treffer leverandøren din i sanntid: Gmail API, Microsoft Graph eller IMAP. Meldingsinnhold, emner og vedlegg går til agenten og forkastes umiddelbart. Vi lagrer én ting per innboks, et kryptert token eller app-passord, slik at vi kan gjøre neste kall. Unntakene er utgående meldinger som må vente: en melding du planlegger til senere, eller en sending som holdes tilbake for godkjenning, lagres kryptert, og oppføringen beholdes for historikken din."
       },
       "2": {
         "tag": "Sending",
@@ -81,7 +81,7 @@
       "3": {
         "tag": "Leverandører",
         "h": "Gmail, Outlook, iCloud, Fastmail og alle IMAP-innbokser.",
-        "p": "App-passord eller Google-innlogging (OAuth 2.0) for Gmail; Microsoft-innlogging (OAuth 2.0) for Outlook / Microsoft 365 (en jobb- eller skolekonto kan trenge at IT-administratoren godkjenner appen én gang); app-spesifikke passord for Fastmail, iCloud, Yahoo, Zoho og Yandex; en generisk IMAP-/SMTP-kobling for alt annet. Koble til flere innbokser, merk dem etter bruksområde (work-gmail, ops-fastmail, support-imap), og begrens hver API-nøkkel til innboksene du vil at agenten skal nå. Team og byråer kan administrere alle klientinnbokser i ett delt arbeidsområde med roller og revisjonslogg."
+        "p": "Google-app-passord over IMAP for Gmail; Microsoft-innlogging (OAuth 2.0) for Outlook / Microsoft 365 (en jobb- eller skolekonto kan trenge at IT-administratoren godkjenner appen én gang); app-spesifikke passord for Fastmail, iCloud, Yahoo, Zoho og Yandex; en generisk IMAP-/SMTP-kobling for alt annet. Koble til flere innbokser, merk dem etter bruksområde (work-gmail, ops-fastmail, support-imap), og begrens hver API-nøkkel til innboksene du vil at agenten skal nå. Team og byråer kan administrere alle klientinnbokser i ett delt arbeidsområde med roller og revisjonslogg."
       },
       "4": {
         "tag": "Tilgang",
@@ -91,7 +91,7 @@
       "5": {
         "tag": "Sikkerhet",
         "h": "Legitimasjon krypteres ved lagring.",
-        "p": "OAuth-tokens og app-passord krypteres med AES-256-GCM før de skrives til databasen. Dekryptering skjer kun inne i en isolert Edge Function ved kalltidspunktet. Krypteringsnøkkelen lagres som en miljøhemmelighet, atskilt fra databasen."
+        "p": "OAuth-tokens og app-passord krypteres med AES-256-GCM før de skrives til databasen. De dekrypteres bare på serverne våre, for forespørselen som trenger dem. Krypteringsnøkkelen lagres som en miljøhemmelighet, atskilt fra databasen."
       }
     }
   },
@@ -215,7 +215,7 @@
     "items": [
       {
         "q": "Er MCP Emails en MCP-server for IMAP?",
-        "a": "Ja. I tillegg til innlogging med Gmail og Outlook finnes det en generisk IMAP- og SMTP-kobling, så alle postkasser med IMAP-tilgang fungerer: ditt eget domene, et webhotell eller en lokal nettleverandør. Du legger inn serveropplysningene og et app-passord én gang, og agenten leser over IMAP og sender gjennom din egen SMTP-server."
+        "a": "Ja. I tillegg til Gmail og Outlook finnes det en generisk IMAP- og SMTP-kobling, så alle postkasser med IMAP-tilgang fungerer: ditt eget domene, et webhotell eller en lokal nettleverandør. Du legger inn serveropplysningene og et app-passord én gang, og agenten leser over IMAP og sender gjennom din egen SMTP-server."
       },
       {
         "q": "Kan én agent jobbe i flere postkasser samtidig?",
@@ -235,11 +235,11 @@
       },
       {
         "q": "Hvilke e-postleverandører kan jeg koble til?",
-        "a": "Gmail med et app-passord eller ved å logge inn med Google, Outlook og Microsoft 365 ved å logge inn med Microsoft (en jobb- eller skolekonto kan trenge at IT-administratoren godkjenner appen én gang), Fastmail, iCloud, Yahoo, Zoho og Yandex med et app-spesifikt passord, og enhver annen innboks via en generisk IMAP-/SMTP-kobling. Koble til så mange innbokser du vil, og merk dem etter bruksområde."
+        "a": "Gmail og Google Workspace med et Google-app-passord over IMAP, Outlook og Microsoft 365 ved å logge inn med Microsoft (en jobb- eller skolekonto kan trenge at IT-administratoren godkjenner appen én gang), Fastmail, iCloud, Yahoo, Zoho og Yandex med et app-spesifikt passord, og enhver annen innboks via en generisk IMAP-/SMTP-kobling. Koble til så mange innbokser du vil, og merk dem etter bruksområde."
       },
       {
         "q": "Lagres e-posten min noe sted?",
-        "a": "Nei. E-posten agenten din leser hentes i sanntid fra leverandøren din ved hvert kall, og lagres aldri på serverne våre. Det eneste unntaket er en melding du selv planlegger å sende senere, som oppbevares kryptert frem til sendetidspunktet."
+        "a": "Nei. E-posten agenten din leser hentes i sanntid fra leverandøren din ved hvert kall, og lagres aldri på serverne våre. Unntakene er utgående meldinger som må vente: en melding du planlegger til senere, eller en sending som holdes tilbake for godkjenning, lagres kryptert."
       },
       {
         "q": "Er det virkelig gratis?",
@@ -247,11 +247,11 @@
       },
       {
         "q": "Hva kan AI-en faktisk gjøre med innboksen min?",
-        "a": "Lese og søke i e-post, sende, svare på og videresende ekte meldinger, planlegge sendinger til senere, og organisere innboksen: flytte, kopiere, flagge, arkivere og slette. Sytten action-baserte verktøy, slik at agenten fullfører jobben inne i innboksen din i stedet for bare å lage utkast."
+        "a": "Lese og søke i e-post, sende, svare på og videresende ekte meldinger, planlegge sendinger til senere, og organisere innboksen: flytte, kopiere, flagge, arkivere og slette. Nitten action-baserte verktøy, slik at agenten fullfører jobben inne i innboksen din i stedet for bare å lage utkast."
       },
       {
         "q": "Hvordan kobler jeg til en innboks?",
-        "a": "Opprett en gratis konto, koble til innboksen din (app-passord eller Google-innlogging for Gmail, logg inn med Microsoft for Outlook, eller lim inn et app-passord for de andre), og lim deretter https://mcpemails.com/api/mcp inn i AI-klienten din og autoriser. Agenten din har innboksen i løpet av et par minutter."
+        "a": "Opprett en gratis konto, koble til innboksen din (Google-app-passord for Gmail, logg inn med Microsoft for Outlook, eller lim inn et app-passord for de andre), og lim deretter https://mcpemails.com/api/mcp inn i AI-klienten din og autoriser. Agenten din har innboksen i løpet av et par minutter."
       },
       {
         "q": "Kan jeg selvhoste den?",

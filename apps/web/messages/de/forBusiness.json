@@ -96,7 +96,7 @@
   "providers": {
     "eyebrow": "Jeder Hoster",
     "title": "Alle Firmenpostfächer verbinden, egal wo sie liegen",
-    "sub": "Die meisten Firmen-E-Mails liegen beim Webhoster oder Domain-Registrar, und das ist kein Problem. Jedes Postfach, das IMAP und SMTP auf den Standardports spricht, verbindet sich mit Adresse, Host und Passwort. IONOS, Hostinger, OVH, Namecheap und andere gängige Hoster werden an der Adresse erkannt und automatisch eingetragen. Gmail und Google Workspace verbinden sich per App-Passwort oder Anmeldung mit Google. Microsoft 365 und Outlook verbinden sich per Anmeldung mit Microsoft; bei einem Firmenkonto in Microsoft 365 muss Ihre IT-Administration MCP Emails eventuell einmal für die ganze Organisation freigeben. iCloud, Fastmail, Yahoo, Zoho und Yandex verbinden sich per App-Passwort.",
+    "sub": "Die meisten Firmen-E-Mails liegen beim Webhoster oder Domain-Registrar, und das ist kein Problem. Jedes Postfach, das IMAP und SMTP auf den Standardports spricht, verbindet sich mit Adresse, Host und Passwort. IONOS, Hostinger, OVH, Namecheap und andere gängige Hoster werden an der Adresse erkannt und automatisch eingetragen. Gmail und Google Workspace verbinden sich per Google-App-Passwort. Microsoft 365 und Outlook verbinden sich per Anmeldung mit Microsoft; bei einem Firmenkonto in Microsoft 365 muss Ihre IT-Administration MCP Emails eventuell einmal für die ganze Organisation freigeben. iCloud, Fastmail, Yahoo, Zoho und Yandex verbinden sich per App-Passwort.",
     "ctaImap": "Beliebiges IMAP-Postfach verbinden",
     "ctaGmail": "Gmail oder Google Workspace verbinden",
     "ctaMicrosoft": "Microsoft 365 verbinden",

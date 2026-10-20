@@ -2,7 +2,7 @@
   "_sources": [
     "apps/web/components/dashboard/Pages.jsx (MCP_CLIENTS) + apps/web/messages/en/dashboard.json (clients.*)",
     "apps/web/src/lib/api-keys/generate.ts + apps/web/src/lib/api-keys/scopes.ts",
-    "apps/web/app/api/mcp/route.ts",
+    "supabase/functions/mcp-server/web-ingress.ts",
     "https://docs.cline.bot/mcp/configuring-mcp-servers"
   ],
   "meta": {
@@ -26,7 +26,7 @@
   "setup": [
     {
       "h": "Kostenloses Konto erstellen und Postfach verbinden",
-      "p": "Registrieren Sie sich auf mcpemails.com, ohne Kreditkarte, und öffnen Sie dann Dashboard, Postfächer, Postfach verbinden. Outlook und Microsoft 365 verbinden Sie über „Mit Microsoft anmelden“; Gmail, iCloud, Fastmail, Yahoo, Zoho und Yandex nutzen ein App-Passwort, Gmail alternativ auch die Google-Anmeldung; alle anderen Postfächer verbinden sich ganz normal per IMAP und SMTP. Der Free-Tarif umfasst ein Postfach, dauerhaft."
+      "p": "Registrieren Sie sich auf mcpemails.com, ohne Kreditkarte, und öffnen Sie dann Dashboard, Postfächer, Postfach verbinden. Outlook und Microsoft 365 verbinden Sie über „Mit Microsoft anmelden“; Gmail, iCloud, Fastmail, Yahoo, Zoho und Yandex nutzen ein App-Passwort; alle anderen Postfächer verbinden sich ganz normal per IMAP und SMTP. Der Free-Tarif umfasst ein Postfach, dauerhaft."
     },
     {
       "h": "API-Schlüssel mit Scopes erstellen",
@@ -79,7 +79,7 @@
     },
     {
       "q": "Welche Postfächer erreicht Cline auf diesem Weg?",
-      "a": "Outlook.com und Microsoft 365 über „Mit Microsoft anmelden“, wobei bei einem Arbeitskonto eventuell einmalig die IT-Administration die App freigeben muss; Gmail, iCloud, Fastmail, Yahoo, Zoho und Yandex mit einem App-Passwort, bei Gmail alternativ über die Google-Anmeldung; und jedes andere Postfach, das IMAP und SMTP auf den Standardports spricht. Der Client sieht alle über dieselbe Verbindung: Ihr Agent ruft zuerst inbox_list auf und findet so jedes verbundene Postfach samt ID. Sie müssen also nirgends UUIDs einfügen."
+      "a": "Outlook.com und Microsoft 365 über „Mit Microsoft anmelden“, wobei bei einem Arbeitskonto eventuell einmalig die IT-Administration die App freigeben muss; Gmail, iCloud, Fastmail, Yahoo, Zoho und Yandex mit einem App-Passwort; und jedes andere Postfach, das IMAP und SMTP auf den Standardports spricht. Der Client sieht alle über dieselbe Verbindung: Ihr Agent ruft zuerst inbox_list auf und findet so jedes verbundene Postfach samt ID. Sie müssen also nirgends UUIDs einfügen."
     },
     {
       "q": "Kann Cline E-Mails senden, ohne dass ich es mitbekomme?",
