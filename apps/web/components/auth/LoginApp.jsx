@@ -12,6 +12,7 @@ import {
   withConnectIntent,
 } from '@/lib/connect/intent-carry.mjs';
 import { isSsoRequiredError } from '@/lib/sso/enforcement';
+import { ssoUiEnabled } from '@/lib/sso/ui-flag.mjs';
 import { MIcon, MBtn } from '../MarketingPrimitives';
 import { ThemeBtn, Spinner, GoogleIcon, GitHubIcon, MicrosoftIcon, SocialButton, OrDivider } from './AuthShared';
 import { microsoftSignInEnabled } from '@/lib/auth/microsoft-flag.mjs';
@@ -72,8 +73,10 @@ export function LoginApp({ redirectTo = null, connectProvider = null }) {
       url.searchParams.set('next', withConnectIntent('/dashboard', connectProvider));
     }
     // A typed work address lets the route say "use SSO" up front when the
-    // company enforces it, instead of after the provider round trip.
-    if (!validateEmail(email)) url.searchParams.set('email', email.trim());
+    // company enforces it, instead of after the provider round trip. Only
+    // once SSO is released (NEXT_PUBLIC_SSO_ENABLED): until then the OAuth
+    // URL stays exactly as before and carries no address.
+    if (ssoUiEnabled() && !validateEmail(email)) url.searchParams.set('email', email.trim());
     return url.toString();
   }
 
