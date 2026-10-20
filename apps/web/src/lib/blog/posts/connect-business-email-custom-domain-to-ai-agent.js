@@ -49,7 +49,7 @@ In the dashboard, open **Inboxes → Connect Inbox** and pick the route that mat
 
 ### Google Workspace
 
-Workspace connects with a **Google app password** over IMAP (\`imap.gmail.com\` on 993, \`smtp.gmail.com\` on 465). App passwords only exist once 2-Step Verification is on, and an administrator can disable them domain-wide, in which case the Google page is simply unavailable to you. If so, ask your admin.
+Workspace connects with a **Google app password** over IMAP (\`imap.gmail.com\` on 993, \`smtp.gmail.com\` on 465). App passwords only exist once 2-Step Verification is on, and an administrator can disable them domain-wide, in which case the Google page is simply unavailable to you. If so, ask your admin. The [Google Workspace settings page](/connect/google-workspace) lists the same values.
 
 ### Zoho Mail
 
@@ -86,7 +86,7 @@ Give MCP Emails four things per protocol: host, port, security mode, and your fu
 - IMAP **993** is implicit TLS; IMAP **143** is STARTTLS.
 - SMTP **465** is implicit TLS; SMTP **587** is STARTTLS, and **25** is STARTTLS on small hosts that offer nothing else.
 
-Mixing those up was the largest cause of failed generic connections: STARTTLS on 993 stalls waiting for a greeting a TLS-only listener never sends, and implicit TLS on 143 fails the handshake. You no longer have to get it right first time. A connection that never established a usable session is retried on the other standard transports, up to three attempts per protocol, starting with the one you asked for. A password the server refused is never retried: re-sending it would only triple the failed-login count your provider uses for lockout.
+Mixing those up was the largest cause of failed generic connections: STARTTLS on 993 stalls waiting for a greeting a TLS-only listener never sends, and implicit TLS on 143 fails the handshake. You no longer have to get it right first time. A connection that never established a usable session is retried on the other standard transports, up to three attempts per protocol, starting with the one you asked for. A password the server refused is never retried: re-sending it would only triple the failed-login count your provider uses for lockout. See also the [generic IMAP connection page](/connect/imap).
 
 Sending negotiates one more thing you will never see. Exchange-style hosts advertise **LOGIN** without PLAIN, so MCP Emails reads what the server offers, tries PLAIN first when both are there, and falls back to LOGIN. A refused mechanism is never reported as a bad password.
 
@@ -102,7 +102,7 @@ Set it per inbox on the inbox detail page, where a preview shows the header as r
 - **You are using the wrong password entirely.** Migadu, IONOS, Rackspace and cPanel all separate the control-panel login from the mailbox password, and both are usually email addresses.
 - **It times out instead of failing.** That is the host or the port, not the credential. Re-read the hostname from the provider's own panel.
 - **Mail reads but will not send.** The outgoing half is its own host, port and security mode, and some hosts do not listen on 465 at all. Confirm you granted \`send:email\`.
-- **It is a Microsoft 365 mailbox.** Bought direct or resold by GoDaddy, IONOS or Rackspace, it is still a Microsoft tenant. Connect it with **Outlook** and Sign in with Microsoft, not IMAP. If Microsoft says admin approval is required, send the link the dashboard shows to your IT admin.
+- **It is a Microsoft 365 mailbox.** Bought direct or resold by GoDaddy, IONOS or Rackspace, it is still a Microsoft tenant. Connect it with **Outlook** and Sign in with Microsoft, not IMAP. If Microsoft says admin approval is required, send the link the dashboard shows to your IT admin. The [Microsoft 365 connection page](/connect/office365) has the details.
 
 The [provider matrix](/docs/providers) and the [provider pages](/connect) carry the per-provider detail.
 

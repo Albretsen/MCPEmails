@@ -67,6 +67,7 @@ import {
   type BillingInterval,
   type PlanId,
 } from '@/lib/stripe/plans';
+import { withdrawalLine, WITHDRAWAL_PATH } from '@/lib/email/legal';
 
 // ---------------------------------------------------------------------------
 // Configuration
@@ -188,6 +189,8 @@ export function buildPurchaseConfirmationEmail(input: PurchaseConfirmationInput)
     'and cancelling takes effect at the end of the period you have already paid for:',
     billingUrl,
     '',
+    withdrawalLine(base),
+    '',
     `Questions, or something looks wrong? Reply to this email or write to ${SUPPORT_ADDRESS}.`,
     'A person reads it.',
     '',
@@ -260,6 +263,10 @@ export function buildPurchaseConfirmationEmail(input: PurchaseConfirmationInput)
                 Change plan, update your card, or cancel at any time from
                 <a href="${billingUrl}" style="color:#3b82f6;">your dashboard</a>.
                 Cancelling takes effect at the end of the period you have already paid for.
+              </p>
+              <p style="margin:0 0 28px;font-size:14px;color:#64748b;line-height:1.5;">
+                You can withdraw from this contract within 14 days without giving a reason, and we refund the first charge in full.
+                <a href="${base}${WITHDRAWAL_PATH}" style="color:#3b82f6;">How withdrawal works</a>.
               </p>
             </td>
           </tr>

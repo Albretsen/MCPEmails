@@ -22,7 +22,7 @@ La contraseña de aplicación se convierte en la única credencial que MCP Email
 3. Pulsa el **+** (Generate an app-specific password), ponle una etiqueta como \`MCP Emails\` y confirma con la contraseña de tu Apple Account.
 4. Apple te muestra una contraseña con el formato \`abcd-efgh-ijkl-mnop\`. Cópiala ahora. No podrás volver a verla más tarde.
 
-Necesitarás tener activada la autenticación de dos factores en tu Apple Account: las contraseñas específicas de aplicación no están disponibles sin ella. El host IMAP de iCloud es \`imap.mail.me.com\` y el SMTP es \`smtp.mail.me.com\`, pero MCP Emails los rellena por ti cuando eliges iCloud como proveedor, así que normalmente no tendrás que tocarlos.
+Necesitarás tener activada la autenticación de dos factores en tu Apple Account: las contraseñas específicas de aplicación no están disponibles sin ella. El host IMAP de iCloud es \`imap.mail.me.com\` y el SMTP es \`smtp.mail.me.com\`, pero MCP Emails los rellena por ti cuando eliges iCloud como proveedor, así que normalmente no tendrás que tocarlos. La [página de ajustes de iCloud Mail](/connect/icloud) recoge los mismos valores.
 
 ## Genera una contraseña de aplicación para Fastmail
 
@@ -31,7 +31,7 @@ Necesitarás tener activada la autenticación de dos factores en tu Apple Accoun
 3. Dale un nombre (\`MCP Emails\` sirve) y, para el acceso, elige **Mail (IMAP/SMTP)** para que pueda leer y enviar.
 4. Fastmail genera la contraseña una sola vez. Cópiala antes de cerrar el cuadro de diálogo.
 
-El host IMAP de Fastmail es \`imap.fastmail.com\` y el SMTP es \`smtp.fastmail.com\`. De nuevo, elegir Fastmail en MCP Emails los configura automáticamente.
+El host IMAP de Fastmail es \`imap.fastmail.com\` y el SMTP es \`smtp.fastmail.com\`. De nuevo, elegir Fastmail en MCP Emails los configura automáticamente. La [página de ajustes de Fastmail](/connect/fastmail) también los incluye.
 
 ## Conecta un buzón IMAP genérico (todo lo demás)
 
@@ -42,7 +42,7 @@ Para Yahoo, Zoho, Yandex, un servidor de correo autoalojado o cualquier otra cos
 - Tu **dirección de correo** como nombre de usuario
 - La **contraseña de aplicación** como contraseña
 
-Si de verdad solo tienes una contraseña normal y el proveedor no ofrece contraseñas de aplicación, eso también funcionará, pero la contraseña de aplicación es la opción correcta. Limita el radio de daño. Revócala y solo muere esta conexión, no toda tu cuenta.
+Si de verdad solo tienes una contraseña normal y el proveedor no ofrece contraseñas de aplicación, eso también funcionará, pero la contraseña de aplicación es la opción correcta. Limita el radio de daño. Revócala y solo muere esta conexión, no toda tu cuenta. Para puertos, modos TLS y solución de problemas en cualquier otro host, consulta la [guía completa del conector IMAP](/blog/claude-imap-connector).
 
 ## Conecta el buzón en MCP Emails
 

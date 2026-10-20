@@ -27,7 +27,7 @@ Tu contraseña normal de Google nunca se usa. La contraseña de aplicación es u
 
 ### En una cuenta de Google Workspace
 
-Un administrador de Google Workspace puede desactivar las contraseñas de aplicación en todo el dominio. Si **myaccount.google.com/apppasswords** no está disponible para ti, pide a tu administrador que las active.
+Un administrador de Google Workspace puede desactivar las contraseñas de aplicación en todo el dominio. Si **myaccount.google.com/apppasswords** no está disponible para ti, pide a tu administrador que las active. La página de [ajustes y límites de Gmail](/connect/gmail) reúne en un solo sitio los detalles específicos de Gmail.
 
 ## Paso 2: Añade MCP Emails a Claude
 
@@ -43,7 +43,7 @@ https://mcpemails.com/api/mcp
 
 4. Haz clic en **Connect**, inicia sesión con tu cuenta de MCP Emails y aprueba los scopes que quieras: \`read:email\`, \`send:email\`, o ambos.
 
-Eso es todo lo que hay del lado del cliente. La conexión queda limitada exactamente a lo que aprobaste, y puedes revocarla desde el panel con un solo clic. Si prefieres entender la ruta con API key (para clientes sin OAuth integrado, como Cline o un script personalizado), lee [OAuth frente a API keys para el acceso de la IA al correo](/blog/oauth-vs-api-keys-ai-email-access).
+Eso es todo lo que hay del lado del cliente. La conexión queda limitada exactamente a lo que aprobaste, y puedes revocarla desde el panel con un solo clic. Si prefieres entender la ruta con API key (para clientes sin OAuth integrado, como Cline o un script personalizado), lee [OAuth frente a API keys para el acceso de la IA al correo](/blog/oauth-vs-api-keys-ai-email-access). ¿También quieres conectar otro buzón? La [configuración del correo en Claude paso a paso](/blog/connect-claude-to-email) cubre Outlook, iCloud, Fastmail e IMAP.
 
 ## Paso 3: Pídele a Claude tu primer prompt
 

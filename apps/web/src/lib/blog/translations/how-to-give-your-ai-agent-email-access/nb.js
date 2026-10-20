@@ -88,7 +88,7 @@ Samme endepunkt, samme verktøy, to veier inn avhengig av om klienten din snakke
 
 ### OAuth-kompatible klienter (ingen API-nøkkel)
 
-claude.ai, Claude Desktop, Cursor og lignende klienter kobler til med OAuth 2.0 Authorization Code + PKCE og RFC 7591 Dynamic Client Registration. I claude.ai er det **Customize → Connectors → Add connector**, lim inn MCP-endepunkt-URL-en, klikk Connect, logg inn på MCP Emails-kontoen din og godkjenn. Tokens er begrenset til nøyaktig det du godkjenner: \`read:email\`, \`send:email\` eller begge.
+claude.ai, Claude Desktop, Cursor og lignende klienter kobler til med OAuth 2.0 Authorization Code + PKCE og RFC 7591 Dynamic Client Registration. I claude.ai er det **Customize → Connectors → Add connector**, lim inn MCP-endepunkt-URL-en, klikk Connect, logg inn på MCP Emails-kontoen din og godkjenn. Tokens er begrenset til nøyaktig det du godkjenner: \`read:email\`, \`send:email\` eller begge. Steg-for-steg-guider finner du i [sett opp Claude med innboksen din](/blog/connect-claude-to-email) og [legg til e-posten din i ChatGPT](/blog/connect-chatgpt-to-email).
 
 ### Klienter uten OAuth (API-nøkkel)
 

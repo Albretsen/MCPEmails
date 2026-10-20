@@ -22,7 +22,7 @@ Outlook 提供现代化的 OAuth API，所以 MCP Emails 通过**使用 Microsof
 3. 点击 **+**（Generate an app-specific password），起一个像 \`MCP Emails\` 这样的标签，并用你的 Apple Account 密码确认。
 4. Apple 会以 \`abcd-efgh-ijkl-mnop\` 的格式显示一个密码。现在就复制它，之后你无法再次查看。
 
-你需要为 Apple Account 开启双重认证——没有它就用不了应用专用密码。iCloud 的 IMAP 主机是 \`imap.mail.me.com\`，SMTP 是 \`smtp.mail.me.com\`，但当你选择 iCloud 作为服务商时，MCP Emails 会帮你自动填好，所以通常你不用碰它们。
+你需要为 Apple Account 开启双重认证——没有它就用不了应用专用密码。iCloud 的 IMAP 主机是 \`imap.mail.me.com\`，SMTP 是 \`smtp.mail.me.com\`，但当你选择 iCloud 作为服务商时，MCP Emails 会帮你自动填好，所以通常你不用碰它们。[iCloud Mail 设置页面](/connect/icloud)列出了同样的参数。
 
 ## 为 Fastmail 生成应用密码
 
@@ -31,7 +31,7 @@ Outlook 提供现代化的 OAuth API，所以 MCP Emails 通过**使用 Microsof
 3. 给它起个名字（\`MCP Emails\` 就行），访问权限选择 **Mail (IMAP/SMTP)**，这样它既能读取也能发送。
 4. Fastmail 只会生成密码一次。在关闭对话框之前复制它。
 
-Fastmail 的 IMAP 主机是 \`imap.fastmail.com\`，SMTP 是 \`smtp.fastmail.com\`。同样，在 MCP Emails 里选择 Fastmail 会自动设置好这些。
+Fastmail 的 IMAP 主机是 \`imap.fastmail.com\`，SMTP 是 \`smtp.fastmail.com\`。同样，在 MCP Emails 里选择 Fastmail 会自动设置好这些。[Fastmail 设置页面](/connect/fastmail)里也有这些信息。
 
 ## 连接通用 IMAP 邮箱（其余所有情况）
 
@@ -42,7 +42,7 @@ Fastmail 的 IMAP 主机是 \`imap.fastmail.com\`，SMTP 是 \`smtp.fastmail.com
 - 用你的**电子邮件地址**作为用户名
 - 用**应用密码**作为密码
 
-如果你确实只有一个普通密码，而且服务商不提供应用密码，那个也能用——但应用密码才是正确的选择。它能限制波及范围。吊销它，只有这个连接失效，而不会牵连你的整个账户。
+如果你确实只有一个普通密码，而且服务商不提供应用密码，那个也能用——但应用密码才是正确的选择。它能限制波及范围。吊销它，只有这个连接失效，而不会牵连你的整个账户。其他主机的端口、TLS 模式和故障排查，请参阅[完整的 IMAP 连接器指南](/blog/claude-imap-connector)。
 
 ## 在 MCP Emails 中连接邮箱
 

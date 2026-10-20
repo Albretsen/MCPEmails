@@ -95,7 +95,7 @@ Same endpoint, same tools, two ways in depending on whether your client speaks O
 
 ### OAuth-capable clients (no API key)
 
-claude.ai, Claude Desktop, Cursor, and similar clients connect with OAuth 2.0 Authorization Code + PKCE and RFC 7591 Dynamic Client Registration. In claude.ai it's **Customize → Connectors → Add connector**, paste the MCP endpoint URL, click Connect, sign in to your MCP Emails account, and approve. Tokens are scoped to exactly what you approve: \`read:email\`, \`send:email\`, or both.
+claude.ai, Claude Desktop, Cursor, and similar clients connect with OAuth 2.0 Authorization Code + PKCE and RFC 7591 Dynamic Client Registration. In claude.ai it's **Customize → Connectors → Add connector**, paste the MCP endpoint URL, click Connect, sign in to your MCP Emails account, and approve. Tokens are scoped to exactly what you approve: \`read:email\`, \`send:email\`, or both. For step-by-step walkthroughs, see [set up Claude with your inbox](/blog/connect-claude-to-email) and [add your email to ChatGPT](/blog/connect-chatgpt-to-email).
 
 ### Clients without OAuth (API key)
 

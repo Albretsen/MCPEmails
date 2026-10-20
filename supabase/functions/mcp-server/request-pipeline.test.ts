@@ -10,8 +10,12 @@
 // reorder a security check, so this file pins the ORDER as hard as the count:
 //
 //   * nothing at all happens before authentication has answered;
-//   * the per-key limiter, the plan quota and the allowance READ overlap, and
-//     no tool work and no reservation starts until both gates have passed;
+//   * a tools/call asks for the key and every gate read in ONE round trip
+//     (mcp_tools_call_preflight, 2026-10-20), and when that RPC fails the
+//     per-query path runs instead and decides exactly the same;
+//   * on that path the per-key limiter, the plan quota and the allowance READ
+//     overlap, and no tool work and no reservation starts until both gates
+//     have passed;
 //   * a rate-limited call reserves nothing and meters nothing;
 //   * a capped call records its refusal and never reaches the handler;
 //   * the idempotency ledger is claimed and settled in front of the response,
@@ -39,6 +43,7 @@
 
 import { assert, assertEquals } from "jsr:@std/assert@1";
 import { firstUseAlreadyRecorded, settleAfterResponse } from "./request-pipeline.ts";
+import { preflightAvailability } from "./tools-call-preflight.ts";
 
 const SUPABASE_URL = "http://postgrest.example.test";
 const WORKSPACE = "55555555-5555-4555-8555-555555555555";
@@ -68,6 +73,10 @@ interface World {
   /** null answers the key lookup with no row: unknown, revoked or expired. */
   key: Row | null;
   workspace: Row;
+  /** The workspace row is gone: both plan-quota paths fail open on it. */
+  workspaceMissing: boolean;
+  /** The owner's user_usage_entitlements row, if any. */
+  entitlement: Row | null;
   allowance: Row;
   inboxes: Row[];
   /** activity_log rows per key in the trailing minute / hour / day. */
@@ -79,8 +88,12 @@ interface World {
   hold: boolean;
   /** Withhold only these round trips, by label; everything else answers at once. */
   holdOnly: string[];
-  /** Make one target's round trip fail: an HTTP 500, or a rejected fetch. */
-  fail: Record<string, "http_500" | "reject">;
+  /**
+   * Make one target's round trip fail: an HTTP 500, a rejected fetch, a
+   * PostgREST "no such function" (the migration is not applied), or a 200
+   * whose body is not the shape the caller expects.
+   */
+  fail: Record<string, "http_500" | "reject" | "missing" | "malformed">;
   calls: Call[];
   held: Array<{ call: Call; open: () => void }>;
   inserted: Record<string, Row[]>;
@@ -106,6 +119,8 @@ function world(overrides: Partial<World> = {}): World {
       created_at: "2026-08-01T00:00:00.000Z",
     },
     workspace: activatedWorkspace(),
+    workspaceMissing: false,
+    entitlement: null,
     allowance: meteredAllowance(),
     inboxes: [{
       id: INBOX,
@@ -203,6 +218,12 @@ function labelOf(method: string, target: string, query: URLSearchParams): string
   return `${method} ${target}`;
 }
 
+/** activity_log rows for the key since `since`, bucketed the way World holds them. */
+function keyCountSince(w: World, since: string): number {
+  const age = Date.now() - Date.parse(since);
+  return age < 120_000 ? w.keyCounts.minute : age < 7_200_000 ? w.keyCounts.hour : w.keyCounts.day;
+}
+
 /** What PostgREST would answer. Applies the filters the pipeline depends on. */
 function answer(w: World, call: Call, wantsObject: boolean): Response {
   const { method, target, query, body } = call;
@@ -222,13 +243,33 @@ function answer(w: World, call: Call, wantsObject: boolean): Response {
     if (query.has("order")) return json([{ created_at: new Date(Date.now() - 30_000).toISOString() }]);
     let count = w.workspaceCount;
     if (query.has("api_key_id")) {
-      const since = Date.parse((query.get("created_at") ?? "").replace(/^gte\./, ""));
-      const age = Date.now() - since;
-      count = age < 120_000 ? w.keyCounts.minute : age < 7_200_000 ? w.keyCounts.hour : w.keyCounts.day;
+      count = keyCountSince(w, (query.get("created_at") ?? "").replace(/^gte\./, ""));
     }
     return new Response(null, { status: 200, headers: { "content-range": `*/${count}` } });
   }
-  if (target === "workspaces" && method === "GET") return one(w.workspace);
+  if (target === "workspaces" && method === "GET") return one(w.workspaceMissing ? null : w.workspace);
+  if (target === "user_usage_entitlements" && method === "GET") return one(w.entitlement);
+  if (target === "rpc/mcp_tools_call_preflight") {
+    // Migration 20261020100000: the same rows and counts the per-query path
+    // reads, from the same World, so the two paths answer identically.
+    const params = body ?? {};
+    if (!w.key) return json({ key: null });
+    const workspace = w.workspaceMissing ? null : {
+      plan: w.workspace.plan,
+      grandfathered: w.workspace.grandfathered,
+      owner_id: w.workspace.owner_id,
+      analytics_first_tool_used_at: w.workspace.analytics_first_tool_used_at,
+      onboarding_value_activated_at: w.workspace.onboarding_value_activated_at,
+    };
+    return json({
+      key: { ...w.key, key_hash: params.p_key_hash },
+      key_counts: (params.p_key_window_starts as string[]).map((since) => keyCountSince(w, since)),
+      workspace,
+      entitlement: workspace ? w.entitlement : null,
+      workspace_count: workspace ? w.workspaceCount : null,
+      allowance: params.p_include_allowance ? w.allowance : null,
+    });
+  }
   if (target === "workspaces" && method === "PATCH") {
     // The two marker claims are `... IS NULL` updates; honour the guard so a
     // second claim really is the no-op production sees.
@@ -290,6 +331,10 @@ function fakeFetch(input: RequestInfo | URL, init?: RequestInit): Promise<Respon
     if (failure === "http_500") {
       return Promise.resolve(json({ code: "XX000", message: "the database is on fire" }, 500));
     }
+    if (failure === "missing") {
+      return Promise.resolve(json({ code: "PGRST202", message: "Could not find the function" }, 404));
+    }
+    if (failure === "malformed") return Promise.resolve(json({ unexpected: true }));
     return Promise.resolve(
       answer(w, call, (headers.get("accept") ?? "").includes("vnd.pgrst.object")),
     );
@@ -385,6 +430,7 @@ interface Outcome {
 /** Drive one request to completion with the fake answering at once. */
 async function run(w: World, request: Request): Promise<Outcome> {
   current = w;
+  preflightAvailability.missingUntil = 0;
   const logs = captureConsole();
   try {
     const response = await handleRequest(request);
@@ -417,6 +463,7 @@ async function run(w: World, request: Request): Promise<Outcome> {
 async function runInWaves(w: World, request: Request): Promise<Outcome & { waves: string[][] }> {
   w.hold = true;
   current = w;
+  preflightAvailability.missingUntil = 0;
   const logs = captureConsole();
   const waves: string[][] = [];
   let finished = false;
@@ -471,6 +518,18 @@ const ALLOWANCE = "RPC workspace_action_allowance";
 const RESERVE = "RPC reserve_action_usage";
 const FINALIZE = "RPC finalize_action_usage_reservation";
 const FIRST_USE_ROUND_TRIPS = ["GET oauth_refresh_tokens", "PATCH workspaces", "POST product_funnel_events"];
+/** Migration 20261020100000: the key and every gate read, in one round trip. */
+const PREFLIGHT = "RPC mcp_tools_call_preflight";
+
+/**
+ * The same world with the preflight RPC failing, so the call takes the
+ * per-query path. Every gate decision must come out the same either way.
+ */
+function perQuery(w: World): World {
+  w.fail = { [PREFLIGHT]: "http_500", ...w.fail };
+  return w;
+}
+const MODES = [["preflight", (w: World) => w], ["per-query fallback", perQuery]] as const;
 
 /** Install `EdgeRuntime.waitUntil` for one test and hand back what it was given. */
 function withBackgroundHook(): { handed: Promise<unknown>[]; remove: () => void } {
@@ -499,8 +558,16 @@ Deno.test("an unknown or revoked key is refused after ONE lookup and nothing els
   assertEquals(status, 401);
   assertEquals(body.error.code, -32001);
   // No limiter read, no allowance read, no reservation, no tool work, no log row.
-  assertEquals(labels, ["GET api_keys"]);
+  assertEquals(labels, [PREFLIGHT]);
   assertEquals(w.inserted, {});
+});
+
+Deno.test("the preflight refuses a dead key with the per-query path's exact 401", async () => {
+  const viaPreflight = await run(world({ key: null }), rpcRequest("tools/call", SIGNATURE_GET));
+  const viaQuery = await run(perQuery(world({ key: null })), rpcRequest("tools/call", SIGNATURE_GET));
+  assertEquals(viaQuery.labels, [PREFLIGHT, "GET api_keys"]);
+  assertEquals(viaPreflight.status, viaQuery.status);
+  assertEquals(viaPreflight.body, viaQuery.body);
 });
 
 Deno.test("a malformed key is refused without touching the database at all", async () => {
@@ -511,19 +578,46 @@ Deno.test("a malformed key is refused without touching the database at all", asy
 
 Deno.test("nothing is issued alongside the key lookup: authentication is its own wave", async () => {
   const { waves } = await runInWaves(world(), rpcRequest("tools/call", SIGNATURE_GET));
-  assertEquals(waves[0], ["GET api_keys"], "the checks must not start before the key is known good");
+  assertEquals(waves[0], [PREFLIGHT], "the checks must not start before the key is known good");
+  const fallback = await runInWaves(perQuery(world()), rpcRequest("tools/call", SIGNATURE_GET));
+  assertEquals(fallback.waves[0], [PREFLIGHT]);
+  assertEquals(fallback.waves[1], ["GET api_keys"], "the fallback still authenticates alone");
 });
 
 // ═══════════════════════════════════════════════════════════════════════════
 // The pre-checks overlap, and gate the handler
 // ═══════════════════════════════════════════════════════════════════════════
 
-Deno.test("the limiter counts, the plan read and the allowance read are issued together", async () => {
-  const { waves, status, body } = await runInWaves(world(), rpcRequest("tools/call", SIGNATURE_GET));
+Deno.test("the key, the limiter counts, the plan row, the entitlement and the allowance are one round trip", async () => {
+  const { waves, status, body, calls, labels } = await runInWaves(world(), rpcRequest("tools/call", SIGNATURE_GET));
+  assertEquals(status, 200);
+  assert(!body.result.isError, JSON.stringify(body));
+  assertEquals(waves[0], [PREFLIGHT]);
+  for (const label of [KEY_COUNT, WORKSPACE_COUNT, "GET workspaces", "GET user_usage_entitlements", ALLOWANCE, "GET api_keys"]) {
+    assertEquals(count(labels, label), 0, `${label} is answered by the preflight`);
+  }
+
+  // The windows are the ones checkRateLimit and checkPlanQuota use, from the
+  // caller's clock, and the allowance is asked for because the tool is billable.
+  const params = calls.find((call) => call.label === PREFLIGHT)!.body!;
+  assertEquals(typeof params.p_key_hash, "string");
+  assertEquals((params.p_key_hash as string).length, 64);
+  const ages = (params.p_key_window_starts as string[]).map((start) => Date.now() - Date.parse(start));
+  assertEquals(ages.length, 3);
+  assert(Math.abs(ages[0] - 60_000) < 5_000, `per-minute window start ${ages[0]}`);
+  assert(Math.abs(ages[1] - 3_600_000) < 5_000, `per-hour window start ${ages[1]}`);
+  assert(Math.abs(ages[2] - 86_400_000) < 5_000, `per-day window start ${ages[2]}`);
+  const workspaceAge = Date.now() - Date.parse(params.p_workspace_window_start as string);
+  assert(Math.abs(workspaceAge - 60_000) < 5_000);
+  assertEquals(params.p_include_allowance, true);
+});
+
+Deno.test("on the per-query fallback the limiter counts, the plan read and the allowance read are issued together", async () => {
+  const { waves, status, body } = await runInWaves(perQuery(world()), rpcRequest("tools/call", SIGNATURE_GET));
   assertEquals(status, 200);
   assert(!body.result.isError, JSON.stringify(body));
 
-  assertEquals(waves[1], [
+  assertEquals(waves[2], [
     "GET workspaces",
     KEY_COUNT,
     KEY_COUNT,
@@ -535,48 +629,79 @@ Deno.test("the limiter counts, the plan read and the allowance read are issued t
   ], "one wave: three per-key windows, the workspace window, the plan row, the allowance row");
   // The entitlement is keyed by the owner id the workspace row carries, so it
   // is the one read that has to wait for another.
-  assertEquals(waves[2], ["GET user_usage_entitlements"]);
+  assertEquals(waves[3], ["GET user_usage_entitlements"]);
 });
 
-Deno.test("a metered call is four round trips deep before its handler, and none after", async () => {
+Deno.test("a metered call is two round trips deep before its handler, and none after", async () => {
   const { waves } = await runInWaves(world(), rpcRequest("tools/call", SIGNATURE_GET));
-  // auth, the overlapped checks, the entitlement, the reservation. It was nine
-  // in sequence before the handler and six more after it.
-  assertEquals(waves.findIndex((wave) => wave.includes(HANDLER_READ)), 4);
-  assertEquals(waves[3], [RESERVE], "the reservation is made alone, after both gates");
+  // The preflight, then the reservation. It was four (auth, the overlapped
+  // checks, the entitlement, the reservation) before 2026-10-20, and nine in
+  // sequence before 2026-10-02.
+  assertEquals(waves.findIndex((wave) => wave.includes(HANDLER_READ)), 2);
+  assertEquals(waves[1], ["PATCH api_keys", RESERVE], "the reservation is made after both gates");
   // No background hook in the test runner, so the writes are awaited: one
   // wave, both at once, and no first-use work for an activated workspace.
-  assertEquals(waves[5], ["POST activity_log", FINALIZE]);
-  assertEquals(waves.length, 6);
+  assertEquals(waves[3], ["POST activity_log", FINALIZE]);
+  assertEquals(waves.length, 4);
 });
 
-Deno.test("an unmetered call is three round trips deep before its handler", async () => {
+Deno.test("an unmetered call is one round trip deep before its handler", async () => {
   const { waves } = await runInWaves(
     world({ allowance: exemptAllowance() }),
     rpcRequest("tools/call", SIGNATURE_GET),
   );
-  assertEquals(waves.findIndex((wave) => wave.includes(HANDLER_READ)), 3);
-  assertEquals(waves[4], ["POST action_usage", "POST activity_log"]);
-  assertEquals(waves.length, 5);
+  assertEquals(waves.findIndex((wave) => wave.includes(HANDLER_READ)), 1);
+  assertEquals(waves[2], ["POST action_usage", "POST activity_log"]);
+  assertEquals(waves.length, 3);
 });
 
-Deno.test("no tool work and no reservation starts until every gate read has answered", async () => {
-  const { calls } = await runInWaves(world(), rpcRequest("tools/call", SIGNATURE_GET));
-  const gatesAnswered = Math.max(
-    lastFinish(calls, KEY_COUNT),
-    lastFinish(calls, WORKSPACE_COUNT),
-    lastFinish(calls, "GET workspaces"),
-    lastFinish(calls, "GET user_usage_entitlements"),
-  );
-  assert(Number.isFinite(gatesAnswered));
-  assert(firstStart(calls, RESERVE) > gatesAnswered, "reserved before the limiters answered");
-  assert(firstStart(calls, HANDLER_READ) > lastFinish(calls, RESERVE), "the handler ran before the cap check");
-  assert(firstStart(calls, "GET api_keys") < firstStart(calls, KEY_COUNT));
+Deno.test("the per-query fallback keeps its old depth behind the failed preflight", async () => {
+  const { waves } = await runInWaves(perQuery(world()), rpcRequest("tools/call", SIGNATURE_GET));
+  // The failed preflight, auth, the overlapped checks, the entitlement, the reservation.
+  assertEquals(waves.findIndex((wave) => wave.includes(HANDLER_READ)), 5);
+  assertEquals(waves[4], [RESERVE]);
 });
+
+for (const [mode, prepare] of MODES) {
+  Deno.test(`no tool work and no reservation starts until every gate read has answered (${mode})`, async () => {
+    const { calls } = await runInWaves(prepare(world()), rpcRequest("tools/call", SIGNATURE_GET));
+    const gatesAnswered = Math.max(
+      lastFinish(calls, PREFLIGHT),
+      lastFinish(calls, KEY_COUNT),
+      lastFinish(calls, WORKSPACE_COUNT),
+      lastFinish(calls, "GET workspaces"),
+      lastFinish(calls, "GET user_usage_entitlements"),
+    );
+    assert(Number.isFinite(gatesAnswered));
+    assert(firstStart(calls, RESERVE) > gatesAnswered, "reserved before the limiters answered");
+    assert(firstStart(calls, HANDLER_READ) > lastFinish(calls, RESERVE), "the handler ran before the cap check");
+    assert(firstStart(calls, PREFLIGHT) < firstStart(calls, RESERVE));
+    if (mode !== "preflight") assert(firstStart(calls, "GET api_keys") < firstStart(calls, KEY_COUNT));
+  });
+}
 
 Deno.test("round trips for one successful call on an activated workspace", async () => {
   const metered = await run(world(), rpcRequest("tools/call", SIGNATURE_GET));
   assertEquals(metered.labels.slice().sort(), [
+    "GET inboxes",
+    "PATCH api_keys",
+    "POST activity_log",
+    FINALIZE,
+    PREFLIGHT,
+    RESERVE,
+  ]);
+  const unmetered = await run(
+    world({ allowance: exemptAllowance() }),
+    rpcRequest("tools/call", SIGNATURE_GET),
+  );
+  assertEquals(count(unmetered.labels, RESERVE), 0);
+  assertEquals(count(unmetered.labels, FINALIZE), 0);
+  assertEquals(count(unmetered.labels, "POST action_usage"), 1);
+  assertEquals(unmetered.labels.length, 5);
+
+  // The fallback pays exactly what it always did, plus the failed attempt.
+  const fallback = await run(perQuery(world()), rpcRequest("tools/call", SIGNATURE_GET));
+  assertEquals(fallback.labels.slice().sort(), [
     "GET api_keys",
     "GET inboxes",
     "GET user_usage_entitlements",
@@ -588,45 +713,153 @@ Deno.test("round trips for one successful call on an activated workspace", async
     "PATCH api_keys",
     "POST activity_log",
     FINALIZE,
+    PREFLIGHT,
     RESERVE,
     ALLOWANCE,
   ]);
-  const unmetered = await run(
-    world({ allowance: exemptAllowance() }),
-    rpcRequest("tools/call", SIGNATURE_GET),
-  );
-  assertEquals(count(unmetered.labels, RESERVE), 0);
-  assertEquals(count(unmetered.labels, FINALIZE), 0);
-  assertEquals(count(unmetered.labels, "POST action_usage"), 1);
-  assertEquals(unmetered.labels.length, 12);
 });
+
+// ═══════════════════════════════════════════════════════════════════════════
+// The preflight can only change latency: every failure is the per-query path
+// ═══════════════════════════════════════════════════════════════════════════
+
+for (const failure of ["http_500", "reject", "missing", "malformed"] as const) {
+  Deno.test(`a preflight that fails (${failure}) falls back to the per-query path with the same answer`, async () => {
+    const viaPreflight = await run(world(), rpcRequest("tools/call", SIGNATURE_GET));
+    const fallback = await run(
+      world({ fail: { [PREFLIGHT]: failure } }),
+      rpcRequest("tools/call", SIGNATURE_GET),
+    );
+    assertEquals(fallback.status, 200);
+    assertEquals(fallback.body, viaPreflight.body);
+    assertEquals(count(fallback.labels, "GET api_keys"), 1);
+    assertEquals(count(fallback.labels, KEY_COUNT), 3);
+    assertEquals(count(fallback.labels, ALLOWANCE), 1);
+    assertEquals(count(fallback.labels, RESERVE), 1);
+    const warned = [
+      "[mcp-server] tools_call_preflight_failed",
+      "[mcp-server] tools_call_preflight_threw",
+      "[mcp-server] tools_call_preflight_malformed",
+    ].flatMap((message) => logged(fallback.logs, message));
+    assertEquals(warned.length, 1);
+  });
+}
+
+Deno.test("a missing preflight function is skipped for a while; any other error is retried next call", async () => {
+  // Not applied yet: the first call learns that and the next does not ask.
+  const w = world({ fail: { [PREFLIGHT]: "missing" } });
+  await run(w, rpcRequest("tools/call", SIGNATURE_GET));
+  current = w;
+  const logs = captureConsole();
+  try {
+    const before = w.calls.length;
+    const second = await handleRequest(rpcRequest("tools/call", SIGNATURE_GET));
+    assertEquals(second.status, 200);
+    const after = w.calls.slice(before).map((call) => call.label);
+    assertEquals(count(after, PREFLIGHT), 0, "skipped while it is known missing");
+    assertEquals(count(after, "GET api_keys"), 1);
+  } finally {
+    logs.restore();
+  }
+  assert(preflightAvailability.missingUntil > Date.now());
+  assert(preflightAvailability.missingUntil <= Date.now() + 60_000);
+
+  // A transient failure does not switch it off.
+  const transient = world({ fail: { [PREFLIGHT]: "http_500" } });
+  await run(transient, rpcRequest("tools/call", SIGNATURE_GET));
+  assertEquals(preflightAvailability.missingUntil, 0);
+});
+
+Deno.test("methods other than tools/call never use the preflight", async () => {
+  for (const method of ["ping", "tools/list", "initialize", "resources/list"]) {
+    const { labels } = await run(world(), rpcRequest(method));
+    assertEquals(count(labels, PREFLIGHT), 0, method);
+    assertEquals(count(labels, "GET api_keys"), 1, method);
+  }
+});
+
+/**
+ * One World per gate outcome. Each must give the same status and body down
+ * both paths: the preflight moves reads, never decisions.
+ */
+const PARITY_WORLDS: Array<[string, () => World]> = [
+  ["a plain metered call", () => world()],
+  ["an exempt workspace", () => world({ allowance: exemptAllowance() })],
+  ["a revoked key", () => world({ key: null })],
+  ["per-minute saturated", () => world({ keyCounts: { minute: 100, hour: 100, day: 100 } })],
+  ["per-hour saturated", () => world({ keyCounts: { minute: 3, hour: 1_000, day: 1_000 } })],
+  ["per-day saturated", () => world({ keyCounts: { minute: 3, hour: 40, day: 10_000 } })],
+  ["just under every window", () => world({ keyCounts: { minute: 99, hour: 999, day: 9_999 } })],
+  ["the plan ceiling", () => world({ workspaceCount: 120 })],
+  ["just under the plan ceiling", () => world({ workspaceCount: 119 })],
+  ["both saturated", () => world({ keyCounts: { minute: 100, hour: 100, day: 100 }, workspaceCount: 500 })],
+  ["a comped owner at 999", () => world({ workspaceCount: 999, entitlement: { kind: "comped_scale", expires_at: null } })],
+  ["a comped owner at 1000", () => world({ workspaceCount: 1_000, entitlement: { kind: "comped_scale", expires_at: null } })],
+  ["an expired comp", () => world({ workspaceCount: 120, entitlement: { kind: "comped_scale", expires_at: "2026-01-01T00:00:00.000Z" } })],
+  ["a grandfathered free workspace", () => world({ workspace: activatedWorkspace({ plan: "free", grandfathered: true }), workspaceCount: 60 })],
+  ["a missing workspace row", () => world({ workspaceMissing: true, workspaceCount: 10_000 })],
+  ["a capped workspace", () => world({
+    workspace: activatedWorkspace({ plan: "free" }),
+    allowance: meteredAllowance({ plan: "free", cap: 150, used: 150, remaining: 0 }),
+    reserve: { allowed: false, used_actions: 150 },
+  })],
+];
+
+/** The response with the one field that depends on the wall clock removed. */
+// deno-lint-ignore no-explicit-any
+function comparable(body: any): unknown {
+  const copy = structuredClone(body);
+  if (copy?.error?.data) delete copy.error.data.retry_after;
+  if (typeof copy?.error?.data?.human_message === "string") {
+    copy.error.data.human_message = copy.error.data.human_message.replace(/\d+ seconds/, "N seconds");
+  }
+  return copy;
+}
+
+for (const [name, make] of PARITY_WORLDS) {
+  Deno.test(`the preflight and the per-query path decide the same: ${name}`, async () => {
+    const viaPreflight = await run(make(), rpcRequest("tools/call", SIGNATURE_GET));
+    const viaQuery = await run(perQuery(make()), rpcRequest("tools/call", SIGNATURE_GET));
+    assertEquals(viaPreflight.status, viaQuery.status);
+    assertEquals(comparable(viaPreflight.body), comparable(viaQuery.body));
+    assertEquals(
+      (viaPreflight.w.inserted.activity_log ?? []).map((row) => [row.status, row.error_code]),
+      (viaQuery.w.inserted.activity_log ?? []).map((row) => [row.status, row.error_code]),
+    );
+    assertEquals(count(viaPreflight.labels, RESERVE), count(viaQuery.labels, RESERVE));
+    assertEquals(count(viaPreflight.labels, HANDLER_READ), count(viaQuery.labels, HANDLER_READ));
+    assertEquals(viaPreflight.w.inserted.action_usage, viaQuery.w.inserted.action_usage);
+  });
+}
 
 // ═══════════════════════════════════════════════════════════════════════════
 // Rate limiting still comes before the tool, and costs no allowance
 // ═══════════════════════════════════════════════════════════════════════════
 
-for (const [name, saturated, window, limit] of [
-  ["per-minute", { minute: 100, hour: 100, day: 100 }, "per_minute", 100],
-  ["per-hour", { minute: 3, hour: 1_000, day: 1_000 }, "per_hour", 1_000],
-  ["per-day", { minute: 3, hour: 40, day: 10_000 }, "per_day", 10_000],
-] as const) {
-  Deno.test(`a ${name} rate-limited call is refused before any tool work or reservation`, async () => {
-    const { status, body, labels, w } = await run(
-      world({ keyCounts: saturated }),
-      rpcRequest("tools/call", SIGNATURE_GET),
-    );
-    assertEquals(status, 429);
-    assertEquals(body.error.data.window, window);
-    assertEquals(body.error.data.limit, limit);
-    assertEquals(count(labels, RESERVE), 0, "a rate-limited call must not reserve allowance");
-    assertEquals(count(labels, FINALIZE), 0);
-    assertEquals(count(labels, HANDLER_READ), 0, "the tool must not run");
-    assertEquals(w.inserted.action_usage, undefined, "and must not be metered");
-    // Counted by the limiter it tripped: one row, status rate_limited.
-    assertEquals(w.inserted.activity_log?.length, 1);
-    assertEquals(w.inserted.activity_log[0].status, "rate_limited");
-    assertEquals(w.inserted.activity_log[0].tool_name, "signature_get");
-  });
+for (const [mode, prepare] of MODES) {
+  for (const [name, saturated, window, limit] of [
+    ["per-minute", { minute: 100, hour: 100, day: 100 }, "per_minute", 100],
+    ["per-hour", { minute: 3, hour: 1_000, day: 1_000 }, "per_hour", 1_000],
+    ["per-day", { minute: 3, hour: 40, day: 10_000 }, "per_day", 10_000],
+  ] as const) {
+    Deno.test(`a ${name} rate-limited call is refused before any tool work or reservation (${mode})`, async () => {
+      const { status, body, labels, w } = await run(
+        prepare(world({ keyCounts: saturated })),
+        rpcRequest("tools/call", SIGNATURE_GET),
+      );
+      assertEquals(status, 429);
+      assertEquals(body.error.data.window, window);
+      assertEquals(body.error.data.limit, limit);
+      assertEquals(count(labels, RESERVE), 0, "a rate-limited call must not reserve allowance");
+      assertEquals(count(labels, FINALIZE), 0);
+      assertEquals(count(labels, HANDLER_READ), 0, "the tool must not run");
+      assertEquals(w.inserted.action_usage, undefined, "and must not be metered");
+      // Counted by the limiter it tripped: one row, status rate_limited.
+      assertEquals(w.inserted.activity_log?.length, 1);
+      assertEquals(w.inserted.activity_log[0].status, "rate_limited");
+      assertEquals(w.inserted.activity_log[0].tool_name, "signature_get");
+    });
+  }
 }
 
 Deno.test("the narrowest saturated window still decides, with all three counted at once", async () => {
@@ -648,27 +881,48 @@ Deno.test("the limits themselves are unchanged: 99 / 999 / 9999 passes", async (
 
 Deno.test("a failed count fails open for that window only, as before", async () => {
   const { status, logs } = await run(
-    world({ fail: { [KEY_COUNT]: "http_500" } }),
+    perQuery(world({ fail: { [KEY_COUNT]: "http_500" } })),
     rpcRequest("tools/call", SIGNATURE_GET),
   );
   assertEquals(status, 200);
   assertEquals(logged(logs, "[mcp-server] rate_limit_db_error").length, 3);
 });
 
-Deno.test("the plan's per-minute ceiling is still enforced before the tool, with no reservation", async () => {
-  const { status, body, labels, w } = await run(
-    // Personal allows 120 a minute across the workspace.
-    world({ workspaceCount: 120 }),
+for (const [mode, prepare] of MODES) {
+  Deno.test(`the plan's per-minute ceiling is still enforced before the tool, with no reservation (${mode})`, async () => {
+    const { status, body, labels, w } = await run(
+      // Personal allows 120 a minute across the workspace.
+      prepare(world({ workspaceCount: 120 })),
+      rpcRequest("tools/call", SIGNATURE_GET),
+    );
+    assertEquals(status, 429);
+    assertEquals(body.error.data.plan, "personal");
+    assertEquals(body.error.data.limit, 120);
+    assertEquals(count(labels, RESERVE), 0);
+    assertEquals(count(labels, HANDLER_READ), 0);
+    assertEquals(w.inserted.action_usage, undefined);
+    const under = await run(prepare(world({ workspaceCount: 119 })), rpcRequest("tools/call", SIGNATURE_GET));
+    assertEquals(under.status, 200);
+  });
+}
+
+Deno.test("a comped owner gets the pro ceiling through the preflight's entitlement", async () => {
+  const comped = { kind: "comped_scale", expires_at: null };
+  const under = await run(world({ workspaceCount: 999, entitlement: comped }), rpcRequest("tools/call", SIGNATURE_GET));
+  assertEquals(under.status, 200);
+  const at = await run(world({ workspaceCount: 1_000, entitlement: comped }), rpcRequest("tools/call", SIGNATURE_GET));
+  assertEquals(at.status, 429);
+  assertEquals(at.body.error.data.plan, "pro");
+  assertEquals(at.body.error.data.limit, 1_000);
+});
+
+Deno.test("a missing workspace row still fails the plan ceiling open, and says so", async () => {
+  const { status, logs } = await run(
+    world({ workspaceMissing: true, workspaceCount: 10_000 }),
     rpcRequest("tools/call", SIGNATURE_GET),
   );
-  assertEquals(status, 429);
-  assertEquals(body.error.data.plan, "personal");
-  assertEquals(body.error.data.limit, 120);
-  assertEquals(count(labels, RESERVE), 0);
-  assertEquals(count(labels, HANDLER_READ), 0);
-  assertEquals(w.inserted.action_usage, undefined);
-  const under = await run(world({ workspaceCount: 119 }), rpcRequest("tools/call", SIGNATURE_GET));
-  assertEquals(under.status, 200);
+  assertEquals(status, 200);
+  assertEquals(logged(logs, "[mcp-server] plan_quota_workspace_lookup_failed").length, 1);
 });
 
 Deno.test("the per-key limiter outranks the plan ceiling when both are saturated", async () => {
@@ -728,7 +982,17 @@ Deno.test("the reservation is made with the cap and window from the allowance ro
     p_period_start: "2026-10-01T00:00:00.000Z",
     p_period_end: "2026-11-01T00:00:00.000Z",
   });
-  assertEquals(count(calls.map((call) => call.label), ALLOWANCE), 1, "read once, not once early and once late");
+  // Read once, by the preflight, and not again by the reservation.
+  assertEquals(count(calls.map((call) => call.label), ALLOWANCE), 0);
+  assertEquals(count(calls.map((call) => call.label), PREFLIGHT), 1);
+
+  const fallback = await run(
+    perQuery(world({ allowance: meteredAllowance({ plan: "free", cap: 150 }) })),
+    rpcRequest("tools/call", SIGNATURE_GET),
+  );
+  const fallbackReserve = fallback.calls.find((call) => call.label === RESERVE)!;
+  assertEquals(fallbackReserve.body, reserve.body);
+  assertEquals(count(fallback.labels, ALLOWANCE), 1, "read once, not once early and once late");
 });
 
 Deno.test("a reserved call that fails releases its reservation and still logs one row", async () => {
@@ -965,7 +1229,10 @@ Deno.test("an activated workspace costs zero first-use round trips", async () =>
   for (const label of FIRST_USE_ROUND_TRIPS) assertEquals(count(labels, label), 0, label);
   // The handler's own inbox read is the only one; the marker's provider lookup is gone.
   assertEquals(count(labels, "GET inboxes"), 1);
-  assertEquals(count(labels, "GET workspaces"), 1, "the markers ride on the plan check's read");
+  assertEquals(count(labels, "GET workspaces"), 0, "the markers ride on the preflight's workspace row");
+  const fallback = await run(perQuery(world()), rpcRequest("tools/call", SIGNATURE_GET));
+  for (const label of FIRST_USE_ROUND_TRIPS) assertEquals(count(fallback.labels, label), 0, label);
+  assertEquals(count(fallback.labels, "GET workspaces"), 1, "the markers ride on the plan check's read");
 });
 
 Deno.test("a brand new workspace is still marked, once, with both funnel stages", async () => {
@@ -1143,10 +1410,11 @@ Deno.test("the tools/call log line carries pre_ms, total_ms and the round-trip c
   assertEquals(typeof line.total_ms, "number");
   assertEquals(typeof line.duration_ms, "number");
   assert((line.total_ms as number) >= (line.pre_ms as number));
-  // auth + last_used_at + 3 key windows + workspace window + plan row +
-  // entitlement + allowance + reservation, then the handler's one read.
-  assertEquals(line.pre_db_calls, 10);
-  assertEquals(line.db_calls, 11);
+  // The preflight + last_used_at + reservation, then the handler's one read.
+  // It was 10 and 11 before the preflight (auth + last_used_at + 3 key windows
+  // + workspace window + plan row + entitlement + allowance + reservation).
+  assertEquals(line.pre_db_calls, 3);
+  assertEquals(line.db_calls, 4);
   // activity_log.duration_ms is still the handler's clock and nothing else.
   assertEquals(w.inserted.activity_log[0].duration_ms, line.duration_ms);
   // Value-free: ids, names, numbers. No argument, address or token.
@@ -1169,7 +1437,7 @@ Deno.test("round trips are counted per request, not per isolate", async () => {
   } finally {
     logs.restore();
   }
-  assertEquals(logged(logs, "[mcp-server] tools/call").map((line) => line.db_calls), [11, 11, 11]);
+  assertEquals(logged(logs, "[mcp-server] tools/call").map((line) => line.db_calls), [4, 4, 4]);
 });
 
 // ═══════════════════════════════════════════════════════════════════════════
@@ -1217,8 +1485,11 @@ Deno.test("resources/* is still exempt from both activity_log limiters", async (
 });
 
 Deno.test("a non-billable tool reads no allowance row and reserves nothing", async () => {
-  const { labels, body } = await run(world(), rpcRequest("tools/call", { name: "inbox_list", arguments: {} }));
+  const { labels, body, calls } = await run(world(), rpcRequest("tools/call", { name: "inbox_list", arguments: {} }));
   assert(!body.result.isError, JSON.stringify(body));
   assertEquals(count(labels, ALLOWANCE), 0);
   assertEquals(count(labels, RESERVE), 0);
+  assertEquals(calls.find((call) => call.label === PREFLIGHT)!.body!.p_include_allowance, false);
+  const fallback = await run(perQuery(world()), rpcRequest("tools/call", { name: "inbox_list", arguments: {} }));
+  assertEquals(count(fallback.labels, ALLOWANCE), 0);
 });

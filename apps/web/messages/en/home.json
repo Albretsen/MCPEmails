@@ -52,7 +52,10 @@
     "p2": "MCP Emails is a hosted one. It works with Gmail, Outlook and Microsoft 365, iCloud, Fastmail and any mailbox that speaks IMAP, and one agent can work several mailboxes at once. Mail is fetched live from your provider on each call and never stored on our servers.",
     "linkImap": "Set up the IMAP MCP server",
     "linkBusiness": "Email MCP for company mailboxes",
-    "linkProviders": "All supported email providers"
+    "linkProviders": "All supported email providers",
+    "guideClaude": "How to connect Claude to your email",
+    "guideChatgpt": "How to connect ChatGPT to your email",
+    "guideImap": "Claude IMAP connector guide"
   },
   "features": {
     "eyebrow": "Principles",
@@ -272,6 +275,9 @@
     "linkReadOnly": "Read-only access",
     "linkPrivacy": "Privacy",
     "linkTerms": "Terms",
+    "linkWithdrawal": "Right of withdrawal",
+    "linkCancel": "Cancel contracts here",
+    "linkImpressum": "Impressum",
     "copyright": "© 2026 mcpemails.",
     "legal": "Email fetched live, never stored · Credentials encrypted at rest",
     "legalEntity": "MCPEmails is a service of Albretsen Consulting (enkeltpersonforetak), organisation number 926 646 753, Håsteins gate 9, 5160 Laksevåg, Norway.",

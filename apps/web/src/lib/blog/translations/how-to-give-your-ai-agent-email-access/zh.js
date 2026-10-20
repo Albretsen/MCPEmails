@@ -88,7 +88,7 @@ Gmail、iCloud、Fastmail、Yahoo、Zoho、Yandex 以及任何通用 IMAP 邮箱
 
 ### 支持 OAuth 的客户端（无需 API key）
 
-claude.ai、Claude Desktop、Cursor 等同类客户端，通过 OAuth 2.0 授权码 + PKCE 以及 RFC 7591 动态客户端注册来连接。在 claude.ai 里依次是 **Customize → Connectors → Add connector**，粘贴 MCP 端点 URL，点击 Connect，登录你的 MCP Emails 账户，然后授权。Token 的范围严格限定在你所批准的内容上：\`read:email\`、\`send:email\` 或两者皆有。
+claude.ai、Claude Desktop、Cursor 等同类客户端，通过 OAuth 2.0 授权码 + PKCE 以及 RFC 7591 动态客户端注册来连接。在 claude.ai 里依次是 **Customize → Connectors → Add connector**，粘贴 MCP 端点 URL，点击 Connect，登录你的 MCP Emails 账户，然后授权。Token 的范围严格限定在你所批准的内容上：\`read:email\`、\`send:email\` 或两者皆有。分步教程请看[为 Claude 设置你的收件箱](/blog/connect-claude-to-email)和[把你的邮箱添加到 ChatGPT](/blog/connect-chatgpt-to-email)。
 
 ### 不支持 OAuth 的客户端（API key）
 

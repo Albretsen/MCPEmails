@@ -111,7 +111,7 @@ Quand vous atteignez une limite de débit, le serveur renvoie une erreur réessa
 
 ## Pour conclure
 
-Cursor vous connecte avec une URL et une connexion. Tout le reste demande une clé limitée et un en-tête porteur. Les deux frappent le même endpoint et les mêmes outils, et les deux gardent vos identifiants hors de votre dépôt et hors du contexte du modèle.
+Cursor vous connecte avec une URL et une connexion. Tout le reste demande une clé limitée et un en-tête porteur. Les deux frappent le même endpoint et les mêmes outils, et les deux gardent vos identifiants hors de votre dépôt et hors du contexte du modèle. Vous utilisez ChatGPT ou Codex hors de l’éditeur ? Le [guide de configuration des e-mails dans ChatGPT](/blog/connect-chatgpt-to-email) couvre les deux.
 
 [Commencez gratuitement](/signup) et connectez votre première boîte de réception, ou lisez la [documentation](/docs) pour la référence complète des outils.`,
 };

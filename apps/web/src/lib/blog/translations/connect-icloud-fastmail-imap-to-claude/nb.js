@@ -22,7 +22,7 @@ App-passordet blir den ene legitimasjonen MCP Emails lagrer for den innboksen, [
 3. Klikk på **+** (Generate an app-specific password), gi det en etikett som \`MCP Emails\`, og bekreft med passordet til Apple-kontoen din.
 4. Apple viser deg et passord i formatet \`abcd-efgh-ijkl-mnop\`. Kopier det nå. Du kan ikke se det igjen senere.
 
-Du må ha tofaktorautentisering slått på for Apple-kontoen din — app-spesifikke passord er ikke tilgjengelige uten det. IMAP-verten for iCloud er \`imap.mail.me.com\` og SMTP er \`smtp.mail.me.com\`, men MCP Emails fyller dem inn for deg når du velger iCloud som leverandør, så du trenger vanligvis ikke å røre dem.
+Du må ha tofaktorautentisering slått på for Apple-kontoen din — app-spesifikke passord er ikke tilgjengelige uten det. IMAP-verten for iCloud er \`imap.mail.me.com\` og SMTP er \`smtp.mail.me.com\`, men MCP Emails fyller dem inn for deg når du velger iCloud som leverandør, så du trenger vanligvis ikke å røre dem. [Innstillingssiden for iCloud Mail](/connect/icloud) viser de samme verdiene.
 
 ## Generer et app-passord for Fastmail
 
@@ -31,7 +31,7 @@ Du må ha tofaktorautentisering slått på for Apple-kontoen din — app-spesifi
 3. Gi det et navn (\`MCP Emails\` fungerer), og for tilgang velg **Mail (IMAP/SMTP)** slik at det både kan lese og sende.
 4. Fastmail genererer passordet kun én gang. Kopier det før du lukker dialogen.
 
-Fastmails IMAP-vert er \`imap.fastmail.com\` og SMTP er \`smtp.fastmail.com\`. Igjen, når du velger Fastmail i MCP Emails settes disse automatisk.
+Fastmails IMAP-vert er \`imap.fastmail.com\` og SMTP er \`smtp.fastmail.com\`. Igjen, når du velger Fastmail i MCP Emails settes disse automatisk. [Innstillingssiden for Fastmail](/connect/fastmail) har dem også.
 
 ## Koble til en generisk IMAP-innboks (alt annet)
 
@@ -42,7 +42,7 @@ For Yahoo, Zoho, Yandex, en selvhostet e-postserver eller noe annet med et IMAP-
 - **E-postadressen din** som brukernavn
 - **App-passordet** som passord
 
-Hvis du faktisk bare har et vanlig passord og leverandøren ikke tilbyr app-passord, fungerer det også — men et app-passord er det riktige valget. Det begrenser skadeomfanget. Tilbakekall det, og bare denne tilkoblingen dør, ikke hele kontoen din.
+Hvis du faktisk bare har et vanlig passord og leverandøren ikke tilbyr app-passord, fungerer det også — men et app-passord er det riktige valget. Det begrenser skadeomfanget. Tilbakekall det, og bare denne tilkoblingen dør, ikke hele kontoen din. For porter, TLS-moduser og feilsøking på andre verter, se den [fullstendige guiden til IMAP-koblingen](/blog/claude-imap-connector).
 
 ## Koble til innboksen i MCP Emails
 

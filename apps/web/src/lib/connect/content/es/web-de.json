@@ -4,7 +4,8 @@
     "https://hilfe.web.de/pop-imap/index.html",
     "https://hilfe.web.de/pop-imap/imap/index.html",
     "https://hilfe.web.de/sicherheit/2fa/anwendungsspezifisches-passwort.html",
-    "https://hilfe.web.de/pop-imap/einrichtung-mailprogramm-scheitert.html"
+    "https://hilfe.web.de/pop-imap/einrichtung-mailprogramm-scheitert.html",
+    "https://hilfe.web.de/pop-imap/imap/imap-serverdaten.html"
   ],
   "auth": {
     "method": "account-password",
@@ -60,11 +61,11 @@
     },
     {
       "h": "Activar la autenticación de dos factores retira tu contraseña para los clientes de correo",
-      "p": "La autenticación de dos factores de WEB.DE protege el inicio de sesión web y, una vez activada, tu contraseña normal de WEB.DE deja de funcionar en cualquier cosa que use IMAP o SMTP. Entonces necesitas un <b>anwendungsspezifisches Passwort</b> (contraseña específica de aplicación), que se genera en el buzón en Account verwalten, luego Login & Sicherheit, luego Anwendungsspezifische Passwörter verwalten. Crea una para el correo, pégala en mcpemails en lugar de tu contraseña normal y deja la contraseña normal para el sitio web. Sin 2FA, la contraseña de la cuenta es la credencial correcta y no existe ninguna contraseña de aplicación que crear."
+      "p": "WEB.DE coloca su contraseña de aplicación dentro de la autenticación en dos factores y la describe como la contraseña para programas de correo externos por POP3 e IMAP. Cuando la 2FA protege tu cuenta, crea una en un navegador: haz clic en tus iniciales, luego <b>Account verwalten</b>, luego <b>Login & Sicherheit</b>, luego <b>App-Passwörter (für externe Apps)</b> y luego <b>Neues App-Passwort erstellen</b>. Ponle un nombre, por ejemplo MCP Emails, y cópiala al momento, porque WEB.DE la muestra una sola vez. Pégala en MCP Emails en lugar de tu contraseña normal y guarda la normal para la web. Sin 2FA, la contraseña de la cuenta es la credencial correcta."
     },
     {
-      "h": "Los dos transportes SMTP responden, así que un fallo de envío rara vez es el puerto",
-      "p": "Las guías de WEB.DE no coinciden sobre el correo saliente: unas indican <code>smtp.web.de</code> en el puerto 465 con TLS implícito y otras el puerto 587 con STARTTLS. Ambos funcionan, y nuestra prueba completó un handshake TLS en el 465 con el servidor ofreciendo PLAIN y LOGIN. Alternar entre los dos puertos es, por tanto, un esfuerzo inútil. Si se rechaza el envío, la causa es el control deslizante de recuperación, la falta de una contraseña de aplicación o una dirección From que no es una de las direcciones registradas en la cuenta."
+      "h": "Los dos puertos SMTP funcionan, así que un fallo de envío rara vez es el puerto",
+      "p": "La ayuda de WEB.DE indica <code>smtp.web.de</code> en el puerto 587 con STARTTLS, con el puerto 465 y SSL como alternativa, y solo acepta TLS 1.2 o 1.3. Los dos puertos funcionan, y nuestra sonda completó un handshake TLS en el 465 con el servidor ofreciendo PLAIN y LOGIN, así que alternar entre ellos es esfuerzo perdido. Si se rechaza el envío, la causa es el interruptor de recuperación, la contraseña de aplicación que falta o la dirección del remitente: WEB.DE pide enviar solo desde direcciones que se pueda comprobar que pertenecen a tu buzón."
     }
   ],
   "limits": [
@@ -79,7 +80,7 @@
     },
     {
       "q": "¿Cuáles son los ajustes IMAP y SMTP de WEB.DE?",
-      "a": "IMAP es imap.web.de en el puerto 993 con TLS implícito, y SMTP es smtp.web.de en el puerto 465, también con TLS implícito. WEB.DE acepta además el 587 con STARTTLS para el correo saliente. El nombre de usuario es tu dirección completa de WEB.DE, incluido el dominio. Ambos servidores se confirmaron con una conexión TLS real en la fecha que figura en esta página."
+      "a": "El IMAP es imap.web.de en el puerto 993 con SSL. El SMTP es smtp.web.de, en el puerto 587 con STARTTLS tal como lo documenta WEB.DE, o en el 465 con SSL, que es el que usa MCP Emails. El usuario es tu dirección completa de WEB.DE con el dominio incluido. Ambos servidores se confirmaron con una conexión TLS real en la fecha indicada en esta página."
     },
     {
       "q": "¿Cómo activo IMAP en WEB.DE?",
@@ -91,7 +92,7 @@
     },
     {
       "q": "¿WEB.DE necesita una contraseña de aplicación?",
-      "a": "Solo si tienes activada la autenticación de dos factores. Con 2FA desactivada, tu contraseña normal de WEB.DE autentica los clientes de correo una vez habilitada la recuperación. Con 2FA activada, genera una contraseña específica de aplicación en Account verwalten, Login & Sicherheit, Anwendungsspezifische Passwörter verwalten, y úsala en mcpemails."
+      "a": "Solo si tienes activada la autenticación en dos factores. Sin 2FA, tu contraseña normal de WEB.DE autentica los clientes de correo una vez activada la recuperación. Con 2FA, crea un App-Passwort en Account verwalten, Login & Sicherheit, App-Passwörter (für externe Apps), y úsalo en MCP Emails. WEB.DE lo muestra una sola vez; si lo pierdes, bórralo y crea otro."
     },
     {
       "q": "¿Se almacena mi correo de WEB.DE en sus servidores?",

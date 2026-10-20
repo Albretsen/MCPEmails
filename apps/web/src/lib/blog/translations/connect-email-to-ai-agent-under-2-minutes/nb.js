@@ -16,7 +16,7 @@ Før du tar fatt på en leverandør, bestem deg for hvordan AI-agenten din skal 
 2. Lim inn endepunktet: \`https://www.mcpemails.com/api/mcp\`
 3. Klikk **Connect**, logg inn på MCP Emails-kontoen din, og godkjenn de scopene du vil ha (\`read:email\`, \`send:email\`, eller begge).
 
-Det er hele klientsiden. Tokens er begrenset til nøyaktig det du godkjente, og du kan tilbakekalle koblingen fra dashbordet med ett klikk. Vil du ha avveiningene forklart, se [OAuth kontra API-nøkler for AI-e-posttilgang](/blog/oauth-vs-api-keys-ai-email-access).
+Det er hele klientsiden. Tokens er begrenset til nøyaktig det du godkjente, og du kan tilbakekalle koblingen fra dashbordet med ett klikk. Vil du ha avveiningene forklart, se [OAuth kontra API-nøkler for AI-e-posttilgang](/blog/oauth-vs-api-keys-ai-email-access). Vil du ha en gjennomgang for én bestemt klient, se hvordan du [kobler Claude til e-posten din](/blog/connect-claude-to-email) eller [kobler ChatGPT til e-posten din](/blog/connect-chatgpt-to-email).
 
 **Vei B — API-nøkkelklient (Cline, JetBrains, cURL, egne agenter).** For alt uten innebygd OAuth:
 

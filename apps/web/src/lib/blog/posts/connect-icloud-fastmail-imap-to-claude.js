@@ -29,7 +29,7 @@ The app password becomes the one credential MCP Emails stores for that inbox, [e
 3. Click the **+** (Generate an app-specific password), give it a label like \`MCP Emails\`, and confirm with your Apple Account password.
 4. Apple shows you a password in the format \`abcd-efgh-ijkl-mnop\`. Copy it now. You can't view it again later.
 
-You'll need two-factor authentication turned on for your Apple Account — app-specific passwords aren't available without it. The IMAP host for iCloud is \`imap.mail.me.com\` and SMTP is \`smtp.mail.me.com\`, but MCP Emails fills those in for you when you pick iCloud as the provider, so you usually won't touch them.
+You'll need two-factor authentication turned on for your Apple Account — app-specific passwords aren't available without it. The IMAP host for iCloud is \`imap.mail.me.com\` and SMTP is \`smtp.mail.me.com\`, but MCP Emails fills those in for you when you pick iCloud as the provider, so you usually won't touch them. The [iCloud Mail settings page](/connect/icloud) lists the same values.
 
 ## Generate an app password for Fastmail
 
@@ -38,7 +38,7 @@ You'll need two-factor authentication turned on for your Apple Account — app-s
 3. Name it (\`MCP Emails\` works), and for access choose **Mail (IMAP/SMTP)** so it can both read and send.
 4. Fastmail generates the password once. Copy it before you close the dialog.
 
-Fastmail's IMAP host is \`imap.fastmail.com\` and SMTP is \`smtp.fastmail.com\`. Again, picking Fastmail in MCP Emails sets these automatically.
+Fastmail's IMAP host is \`imap.fastmail.com\` and SMTP is \`smtp.fastmail.com\`. Again, picking Fastmail in MCP Emails sets these automatically. The [Fastmail settings page](/connect/fastmail) has them too.
 
 ## Connect a generic IMAP inbox (everything else)
 
@@ -49,7 +49,7 @@ For Yahoo, Zoho, Yandex, a self-hosted mail server, or anything else with an IMA
 - Your **email address** as the username
 - The **app password** as the password
 
-If you genuinely have only a regular password and the provider doesn't offer app passwords, that will work too — but an app password is the right move. It limits blast radius. Revoke it and only this connection dies, not your whole account.
+If you genuinely have only a regular password and the provider doesn't offer app passwords, that will work too — but an app password is the right move. It limits blast radius. Revoke it and only this connection dies, not your whole account. For ports, TLS modes and troubleshooting on any other host, see the [full IMAP connector guide](/blog/claude-imap-connector).
 
 ## Connect the inbox in MCP Emails
 

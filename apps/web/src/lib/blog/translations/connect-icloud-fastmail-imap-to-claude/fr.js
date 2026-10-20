@@ -22,7 +22,7 @@ Le mot de passe d’application devient l’unique identifiant que MCP Emails co
 3. Cliquez sur le **+** (Generate an app-specific password), donnez-lui un libellé comme \`MCP Emails\`, puis confirmez avec le mot de passe de votre Apple Account.
 4. Apple vous affiche un mot de passe au format \`abcd-efgh-ijkl-mnop\`. Copiez-le maintenant. Vous ne pourrez pas le revoir plus tard.
 
-Vous aurez besoin de l’authentification à deux facteurs activée sur votre Apple Account — les mots de passe d’application ne sont pas disponibles sans elle. L’hôte IMAP d’iCloud est \`imap.mail.me.com\` et le SMTP est \`smtp.mail.me.com\`, mais MCP Emails les remplit pour vous lorsque vous choisissez iCloud comme fournisseur, vous n’aurez donc généralement pas à y toucher.
+Vous aurez besoin de l’authentification à deux facteurs activée sur votre Apple Account — les mots de passe d’application ne sont pas disponibles sans elle. L’hôte IMAP d’iCloud est \`imap.mail.me.com\` et le SMTP est \`smtp.mail.me.com\`, mais MCP Emails les remplit pour vous lorsque vous choisissez iCloud comme fournisseur, vous n’aurez donc généralement pas à y toucher. La [page des réglages iCloud Mail](/connect/icloud) reprend les mêmes valeurs.
 
 ## Générer un mot de passe d’application pour Fastmail
 
@@ -31,7 +31,7 @@ Vous aurez besoin de l’authentification à deux facteurs activée sur votre Ap
 3. Nommez-le (\`MCP Emails\` fait l’affaire) et, pour l’accès, choisissez **Mail (IMAP/SMTP)** afin qu’il puisse à la fois lire et envoyer.
 4. Fastmail génère le mot de passe une seule fois. Copiez-le avant de fermer la boîte de dialogue.
 
-L’hôte IMAP de Fastmail est \`imap.fastmail.com\` et le SMTP est \`smtp.fastmail.com\`. Là encore, choisir Fastmail dans MCP Emails les renseigne automatiquement.
+L’hôte IMAP de Fastmail est \`imap.fastmail.com\` et le SMTP est \`smtp.fastmail.com\`. Là encore, choisir Fastmail dans MCP Emails les renseigne automatiquement. La [page des réglages Fastmail](/connect/fastmail) les reprend aussi.
 
 ## Connecter une boîte IMAP générique (tout le reste)
 
@@ -42,7 +42,7 @@ Pour Yahoo, Zoho, Yandex, un serveur de messagerie auto-hébergé ou toute autre
 - Votre **adresse e-mail** comme nom d’utilisateur
 - Le **mot de passe d’application** comme mot de passe
 
-Si vous n’avez vraiment qu’un mot de passe classique et que le fournisseur ne propose pas de mots de passe d’application, cela fonctionnera aussi — mais le mot de passe d’application reste le bon choix. Il limite la zone d’impact. Révoquez-le et seule cette connexion s’arrête, pas tout votre compte.
+Si vous n’avez vraiment qu’un mot de passe classique et que le fournisseur ne propose pas de mots de passe d’application, cela fonctionnera aussi — mais le mot de passe d’application reste le bon choix. Il limite la zone d’impact. Révoquez-le et seule cette connexion s’arrête, pas tout votre compte. Pour les ports, les modes TLS et le dépannage sur tout autre hôte, consultez le [guide complet du connecteur IMAP](/blog/claude-imap-connector).
 
 ## Connecter la boîte dans MCP Emails
 

@@ -326,3 +326,15 @@ test('no API key and no usable recipient both skip silently, without sending', a
   if (savedKey === undefined) delete process.env.RESEND_API_KEY;
   else process.env.RESEND_API_KEY = savedKey;
 });
+
+test('carries the withdrawal information the contract confirmation owes a consumer', () => {
+  const email = buildPurchaseConfirmationEmail({
+    planId: 'personal',
+    interval: 'month',
+    amountTotalCents: 500,
+    currency: 'usd',
+  });
+  assert.match(email.body, /withdraw from this contract within 14 days/);
+  assert.match(email.body, /\/withdrawal\b/);
+  assert.match(email.htmlBody, /href="[^"]*\/withdrawal"/);
+});

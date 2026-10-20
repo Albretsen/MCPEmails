@@ -55,6 +55,10 @@ const MARKETING_PATHS = new Set([
   // admit, so listing it here exposes nothing; without it /help never reaches
   // the [locale] route and 404s even for staff. Stays at release.
   '/help',
+  // The public cancellation and withdrawal form, and the withdrawal notice.
+  // Both must open without a login (§312k BGB, Directive (EU) 2023/2673).
+  '/cancel',
+  '/withdrawal',
 ]);
 
 function isLocalizedRoute(pathname: string): boolean {

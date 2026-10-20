@@ -44,6 +44,13 @@ export const KINDS = ['added', 'improved', 'fixed', 'changed'];
 export const ENTRIES = [
   /* ── October 2026 ──────────────────────────────────────────── */
   {
+    date: '2026-10-20',
+    kind: 'fixed',
+    title: 'IONOS mailboxes outside the US get their own server settings',
+    body:
+      'Adding an address on your own domain hosted by IONOS in Germany or the UK filled in the US server imap.ionos.com, and France, Spain and Italy got no settings at all. The connect form now fills in the server for your region, such as imap.ionos.de, and the IONOS setup page lists each region\'s server names.',
+  },
+  {
     date: '2026-10-18',
     kind: 'added',
     title: 'Send As for IMAP inboxes',
