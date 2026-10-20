@@ -22,20 +22,20 @@
       "step1": "En claude.ai o Claude Desktop, abre Configuración → Conectores.",
       "step2": "Haz clic en «Añadir conector personalizado».",
       "step3": "Pega la URL de arriba como la URL del conector, luego haz clic en «Añadir».",
-      "step4": "Haz clic en «Conectar» e inicia sesión con mcpemails para autorizar. No se necesita clave de API."
+      "step4": "Haz clic en «Conectar» e inicia sesión con MCP Emails para autorizar. No se necesita clave de API."
     },
     "chatgpt": {
       "step1": "Abre Configuración → Apps y conectores → Configuración avanzada y activa el modo de desarrollador.",
       "step2": "De vuelta en Apps y conectores, haz clic en «Crear».",
       "step3": "Introduce un nombre y pega la URL de arriba como la URL del conector.",
-      "step4": "Elige OAuth, haz clic en «Crear» y luego autoriza con mcpemails.",
-      "step5": "En un chat de chatgpt.com, haz clic en + → modo de desarrollador y selecciona la app de mcpemails. Repítelo en cada chat nuevo; si no, ChatGPT no verá las herramientas.",
+      "step4": "Elige OAuth, haz clic en «Crear» y luego autoriza con MCP Emails.",
+      "step5": "En un chat de chatgpt.com, haz clic en + → modo de desarrollador y selecciona la app de MCP Emails. Repítelo en cada chat nuevo; si no, ChatGPT no verá las herramientas.",
       "note": "Funciona en chatgpt.com (solo web) con Plus, Pro, Business, Enterprise y Edu. Las cuentas Free y Go no pueden añadir conectores personalizados. En Business y Enterprise, puede que un administrador tenga que permitir antes el modo de desarrollador."
     },
     "cursor": {
       "step1": "Edita ~/.cursor/mcp.json (global) o .cursor/mcp.json (proyecto).",
       "step2": "Añade el servidor de abajo bajo «mcpServers».",
-      "step3": "Cursor te pide iniciar sesión vía OAuth. Autoriza con mcpemails."
+      "step3": "Cursor te pide iniciar sesión vía OAuth. Autoriza con MCP Emails."
     },
     "vscode": {
       "step1": "Abre la Paleta de comandos (⇧⌘P) y ejecuta «MCP: Add Server».",
@@ -51,7 +51,7 @@
     "windsurf": {
       "step1": "Abre la configuración de MCP de Cascade, o edita ~/.codeium/windsurf/mcp_config.json.",
       "step2": "Añade el servidor de abajo. Nota que el campo es «serverUrl», no «url».",
-      "step3": "Actualiza los servidores MCP en Cascade y autoriza con mcpemails cuando se te solicite."
+      "step3": "Actualiza los servidores MCP en Cascade y autoriza con MCP Emails cuando se te solicite."
     },
     "gemini": {
       "step1": "Edita ~/.gemini/settings.json (global) o .gemini/settings.json (proyecto).",
@@ -61,7 +61,7 @@
     "zed": {
       "step1": "En la configuración del Panel de agentes haz clic en «Add Custom Server», o edita settings.json.",
       "step2": "Añade el servidor de abajo bajo «context_servers».",
-      "step3": "Zed solicita el flujo de OAuth cuando no hay un encabezado Authorization. Inicia sesión con mcpemails."
+      "step3": "Zed solicita el flujo de OAuth cuando no hay un encabezado Authorization. Inicia sesión con MCP Emails."
     },
     "jetbrains": {
       "step1": "Abre Configuración → Herramientas → AI Assistant → Model Context Protocol (MCP).",
@@ -71,7 +71,7 @@
     "raycast": {
       "step1": "Ejecuta el comando «Install MCP Server» (o «Manage MCP Servers»).",
       "step2": "Introduce un nombre, establece el transporte en «HTTP» y pega la URL de arriba.",
-      "step3": "Pulsa «Install MCP Server», luego haz clic en «Sign In» para autorizar con mcpemails."
+      "step3": "Pulsa «Install MCP Server», luego haz clic en «Sign In» para autorizar con MCP Emails."
     },
     "warp": {
       "step1": "Abre Configuración → Agentes → Servidores MCP y haz clic en «+ Add».",
@@ -593,7 +593,7 @@
     "confirmNoteInterval": "Se cobra ahora en la tarjeta guardada, con un abono por el tiempo restante del periodo actual. Tu periodo de facturación empieza de nuevo hoy, así que tu próxima fecha de renovación cambia.",
     "confirmNoteIntervalNoPreview": "No pudimos calcular este cambio por adelantado. Se cobra la diferencia en la tarjeta guardada, con un abono por el tiempo restante del periodo actual, y el importe exacto aparece en tu factura. Tu periodo de facturación empieza de nuevo hoy, así que tu próxima fecha de renovación cambia.",
     "confirmPay": "Confirmar y pagar {amount}",
-    "confirmChange": "Confirmar cambio",
+    "confirmChange": "Confirmar y pagar",
     "confirmCancel": "Cancelar",
     "confirming": "Cobrando…",
     "planChangedCharged": "Ya estás en {plan}. Se han cobrado {amount} a tu tarjeta.",

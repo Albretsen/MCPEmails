@@ -1,0 +1,111 @@
+{
+  "meta": {
+    "title": "Open-Source-E-Mail-MCP-Server selbst hosten",
+    "description": "Betreiben Sie den Open-Source-Server von MCP Emails für IMAP und SMTP auf Ihrer eigenen Infrastruktur. Behalten Sie Ihren Schlüssel, rufen Sie E-Mails live ab, und speichern Sie nie Postfachinhalte."
+  },
+  "hero": {
+    "eyebrow": "Open Source, AGPL-3.0",
+    "title": "Betreiben Sie MCP Emails selbst.",
+    "lead": "Derselbe MCP-Server, der mcpemails.com antreibt, auf Ihrer eigenen Maschine, mit Ihrer eigenen Datenbank. Ihre Postfach-Zugangsdaten verlassen nie die Infrastruktur, die Sie kontrollieren. Sie werden mit einem Schlüssel verschlüsselt, den nur Sie besitzen, und nur in Ihrem Container entschlüsselt, in dem Moment, in dem ein Tool-Aufruf sie braucht."
+  },
+  "proof": {
+    "title": "Alles mit einem Befehl",
+    "caption": "Vier kleine Container (Postgres, PostgREST, nginx, der Deno-Server). Kein Konto, keine Schlüssel bei uns, keine Telemetrie. Es läuft <c>supabase/functions/mcp-server</c> unverändert: genau der Code hinter dem gehosteten Produkt.",
+    "ctaGuide": "Anleitung zum Self-Hosting lesen",
+    "ctaSource": "Quellcode ansehen"
+  },
+  "sovereignty": {
+    "title": "Ihr Postfach verlässt nie Ihren Server.",
+    "body": "Verbinden Sie Fastmail, iCloud, Yahoo, Zoho, Yandex oder jedes IMAP/SMTP-Postfach mit einem App-Passwort. E-Mails werden live abgerufen und nie gespeichert. Zugangsdaten werden mit AES-256-GCM verschlüsselt gespeichert, mit einem Schlüssel, den Sie erzeugen und behalten. Es gibt nichts, wohin Daten nach Hause telefonieren."
+  },
+  "compare": {
+    "title": "Self-Hosting oder gehostet",
+    "intro": "Der vollständige MCP-Server und alle 19 Tools sind in beiden enthalten. Self-Hosting tauscht verwalteten Komfort gegen volle Kontrolle.",
+    "thFeature": "",
+    "thSelf": "Self-Hosting",
+    "thHosted": "Gehostet",
+    "rows": [
+      {
+        "feature": "Preis",
+        "self": "Kostenlos, Sie betreiben es",
+        "hosted": "Kostenlos, $9, $15 oder $39"
+      },
+      {
+        "feature": "Der MCP-Server und alle 19 Tools",
+        "self": "Ja",
+        "hosted": "Ja"
+      },
+      {
+        "feature": "IMAP- / SMTP-Postfächer (App-Passwort)",
+        "self": "Ja",
+        "hosted": "Ja"
+      },
+      {
+        "feature": "E-Mails live abgerufen, nie gespeichert",
+        "self": "Ja",
+        "hosted": "Ja"
+      },
+      {
+        "feature": "Zugangsdaten verschlüsselt gespeichert",
+        "self": "Ja, mit Ihrem Schlüssel",
+        "hosted": "Ja"
+      },
+      {
+        "feature": "Outlook-Anmeldung (OAuth)",
+        "self": "Nicht enthalten",
+        "hosted": "Ja (Arbeitskonten brauchen eventuell eine Freigabe durch die IT-Administration)"
+      },
+      {
+        "feature": "Web-Dashboard (Verbindungen, Schlüssel, Aktivität)",
+        "self": "Stattdessen CLI",
+        "hosted": "Ja"
+      },
+      {
+        "feature": "Versand geplanter Nachrichten",
+        "self": "Eigener Cronjob",
+        "hosted": "Verwaltet"
+      },
+      {
+        "feature": "Automatische Updates, Backups, Verfügbarkeit",
+        "self": "Sie selbst",
+        "hosted": "Verwaltet"
+      },
+      {
+        "feature": "Mitglieder, Rollen und mehrere Workspaces",
+        "self": "Nicht enthalten",
+        "hosted": "Business-Tarif"
+      },
+      {
+        "feature": "Support",
+        "self": "Community und GitHub",
+        "hosted": "E-Mail in bezahlten Tarifen"
+      },
+      {
+        "feature": "Einrichtung",
+        "self": "Etwa 5 Minuten",
+        "hosted": "Etwa 2 Minuten"
+      }
+    ]
+  },
+  "security": {
+    "title": "Einer KI Ihr Postfach geben, aber sicher",
+    "intro": "Die Sorge ist berechtigt. So begrenzt das Design das Risiko, ob selbst gehostet oder nicht.",
+    "points": [
+      "<b>Minimale Rechte als Prinzip.</b> Jeder API-Schlüssel hat einen festen Umfang: nur Lesen erlauben oder Senden ohne Löschen. Destruktive Aktionen erfordern ausdrücklich einen Lösch-Scope.",
+      "<b>Prompt Injection wird begrenzt, nicht kleingeredet.</b> Eine bösartige E-Mail kann versuchen, dem Agenten Anweisungen zu geben. Scopes pro Schlüssel begrenzen den Schaden: Ein Schlüssel, der nicht senden darf, lässt sich auch nicht zum Senden verleiten.",
+      "<b>Zugangsdaten werden verschlüsselt gespeichert</b>, mit AES-256-GCM. Beim Self-Hosting gehört der Schlüssel Ihnen und niemandem sonst.",
+      "<b>Prüfen statt vertrauen.</b> Der Code ist öffentlich unter AGPL-3.0, und die gehostete Version läuft unverändert damit. Lesen Sie ihn, dann entscheiden Sie."
+    ]
+  },
+  "commitment": {
+    "title": "Self-Hosting ist eine echte Verpflichtung.",
+    "body": "Sie kümmern sich selbst um IMAP/SMTP-Konfiguration, Updates und Sicherheit, und Support gibt es nur über die Community. Gmail- und Outlook-Anmeldung (OAuth) und das Web-Dashboard bleiben im gehosteten Produkt. Diese Funktionen brauchen OAuth-Secrets und eine Sitzungsschicht, die eine Einzelinstallation nicht hat; für Outlook bräuchten Sie außerdem eine eigene App-Registrierung in Microsoft Entra. Wenn Sie keine Infrastruktur betreiben möchten: Der gehostete Tarif ist in zwei Minuten eingerichtet und kostenlos zum Start.",
+    "cta": "Gehostete Version nutzen"
+  },
+  "cta": {
+    "title": "Selbst betreiben oder uns betreiben lassen.",
+    "sub": "So oder so derselbe Server. Sie entscheiden, wer die Schlüssel hält.",
+    "primary": "Anleitung zum Self-Hosting lesen",
+    "secondary": "Gehostete Version nutzen"
+  }
+}

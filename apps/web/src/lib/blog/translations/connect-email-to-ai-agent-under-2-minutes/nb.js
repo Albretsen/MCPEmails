@@ -16,7 +16,7 @@ Før du tar fatt på en leverandør, bestem deg for hvordan AI-agenten din skal 
 2. Lim inn endepunktet: \`https://www.mcpemails.com/api/mcp\`
 3. Klikk **Connect**, logg inn på MCP Emails-kontoen din, og godkjenn de scopene du vil ha (\`read:email\`, \`send:email\`, eller begge).
 
-Det er hele klientsiden. Tokens er begrenset til nøyaktig det du godkjente, og du kan tilbakekalle koblingen fra dashbordet med ett klikk. Vil du ha avveiningene forklart, se [OAuth kontra API-nøkler for AI-e-posttilgang](/blog/oauth-vs-api-keys-ai-email-access).
+Det er hele klientsiden. Tokens er begrenset til nøyaktig det du godkjente, og du kan tilbakekalle koblingen fra dashbordet med ett klikk. Vil du ha avveiningene forklart, se [OAuth kontra API-nøkler for AI-e-posttilgang](/blog/oauth-vs-api-keys-ai-email-access). Vil du ha en gjennomgang for én bestemt klient, se hvordan du [kobler Claude til e-posten din](/blog/connect-claude-to-email) eller [kobler ChatGPT til e-posten din](/blog/connect-chatgpt-to-email).
 
 **Vei B — API-nøkkelklient (Cline, JetBrains, cURL, egne agenter).** For alt uten innebygd OAuth:
 
@@ -30,7 +30,7 @@ Så til innboksen. Hver leverandør nedenfor starter likt: **Dashboard → Inbox
 
 ## Koble til hver leverandør
 
-### Gmail (apppassord, eller Logg inn med Google)
+### Gmail (apppassord)
 
 Gmail kobles til med et Google-apppassord som standard, over IMAP.
 
@@ -39,7 +39,7 @@ Gmail kobles til med et Google-apppassord som standard, over IMAP.
 3. Skriv inn hele Gmail-adressen din, lim inn apppassordet og klikk **Koble til innboks**.
 4. Tilkoblingen testes mot Gmail, og innboksen vises som tilkoblet. Ferdig.
 
-Det vanlige Google-passordet ditt virker ikke her og trengs aldri. Vil du heller logge inn med Google, åpner du **Vil du heller logge inn med Google?** i det samme vinduet og klikker **Koble til med Google**; Google viser først en advarsel om at appen ikke er verifisert (klikk **Advanced**, deretter **Go to mcpemails.com**). Den veien bruker Gmail-APIet, så søk kan bruke Gmails egne operatorer (\`from:\`, \`is:unread\`, \`after:\`) og Claude jobber med ekte etiketter. Apppassord-veien bruker IMAP-tekstsøk, viser etiketter som mapper og kan slette permanent. [Gmail-guiden](/blog/connect-gmail-to-claude) har detaljene.
+Det vanlige Google-passordet ditt virker ikke her og trengs aldri. Over IMAP vises Gmail-etiketter som mapper, og søk bruker de strukturerte feltene i MCP Emails (avsender, emne, dato, ulest og så videre) i stedet for Gmails egne søkeoperatorer. Du kan tilbakekalle apppassordet når som helst fra den samme Google-siden. Bruker du Google Workspace og siden for apppassord mangler, kan administratoren ha slått av apppassord for domenet. [Gmail-guiden](/blog/connect-gmail-to-claude) har detaljene.
 
 ### Outlook / Microsoft 365 (Logg inn med Microsoft)
 
@@ -106,7 +106,7 @@ Ett ærlig forbehold det er verdt å avklare med en gang: MCP Emails er pollebas
 
 ## Hvorfor dette er trygt å gjøre raskt
 
-Farten her kommer ikke av å ta snarveier på sikkerhet. E-post hentes live ved hvert kall og lagres aldri — brødtekst, emner og vedlegg overleveres til agenten og forkastes umiddelbart. Det eneste som lagres per innboks er OAuth-tokenet ditt eller app-passordet, kryptert med AES-256-GCM og dekryptert kun inne i en isolert funksjon når kallet skjer. Sending går alltid gjennom din egen leverandør, så domeneomdømmet ditt forblir ditt. Vil du ha arkitekturen i detalj, les [hvorfor "e-post lagres aldri" faktisk betyr noe](/blog/why-email-never-stored-matters).
+Farten her kommer ikke av å ta snarveier på sikkerhet. E-post hentes live ved hvert kall og lagres aldri: brødtekst, emner og vedlegg overleveres til agenten og forkastes umiddelbart. Det eneste som lagres per innboks er OAuth-tokenet ditt eller app-passordet, kryptert i hvile med AES-256-GCM og dekryptert på serverne våre bare når en forespørsel trenger det. Det sendes aldri til agenten din. Sending går alltid gjennom din egen leverandør, så domeneomdømmet ditt forblir ditt. Vil du ha arkitekturen i detalj, les [hvorfor "e-post lagres aldri" faktisk betyr noe](/blog/why-email-never-stored-matters).
 
 ## Oppsummering
 

@@ -2,7 +2,7 @@ const translation = {
   title: 'Donnez une boîte mail à votre agent IA : guide pratique de l’email via MCP',
   description:
     'Pourquoi connecter l’email à votre agent IA est plus difficile qu’il n’y paraît, et comment le Model Context Protocol fait de Gmail, Outlook et IMAP un point d’accès unique et sécurisé que votre agent peut vraiment utiliser.',
-  coverAlt: 'Donnez une boîte mail à votre agent IA — MCPEmails',
+  coverAlt: 'Donnez une boîte mail à votre agent IA — MCP Emails',
   content: `La plupart des démos d’« email géré par l’IA » s’arrêtent à une capture d’écran. L’agent rédige une réponse, tout le monde applaudit, et personne ne pose la question qui dérange : **comment le modèle atteint-il réellement une vraie boîte mail** — de façon sécurisée, tous fournisseurs confondus, sans que vous colliez un mot de passe d’application dans un prompt ?
 
 Cet article explique pourquoi ce dernier kilomètre est trompeusement difficile, et comment le [Model Context Protocol](https://modelcontextprotocol.io) (MCP) transforme Gmail, Outlook, Fastmail et l’IMAP générique en un point d’accès unique que votre agent peut appeler comme n’importe quel autre outil.
@@ -11,7 +11,7 @@ Cet article explique pourquoi ce dernier kilomètre est trompeusement difficile,
 
 L’email a l’air d’un problème résolu. Il ne l’est pas — du moins pas pour un agent autonome. Trois obstacles se dressent :
 
-1. **L’authentification dépend du fournisseur.** Gmail veut OAuth avec les bons scopes. Outlook veut une identité Microsoft. Fastmail veut un mot de passe d’application. Chacun a son propre cycle de vie de jeton et ses propres modes de défaillance.
+1. **L’authentification dépend du fournisseur.** Gmail veut un mot de passe d’application et la validation en deux étapes. Outlook veut une identité Microsoft. Fastmail veut un mot de passe d’application. Chacun a son propre cycle de vie de jeton et ses propres modes de défaillance.
 2. **Les identifiants sont radioactifs.** Vous ne voulez pas qu’un mot de passe de boîte mail traîne dans une transcription de chat, une ligne de log ou un magasin de vecteurs. Jamais.
 3. **La « forme » de l’email est désordonnée.** MIME, threads, HTML contre texte brut, pièces jointes, dossiers qui sont en réalité des libellés. Un agent a besoin d’une interface propre et prévisible — pas de RFC 5322 brut.
 

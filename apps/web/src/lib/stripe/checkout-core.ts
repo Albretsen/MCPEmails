@@ -4,6 +4,7 @@ import { createClient } from '@/lib/supabase/server';
 import { createServiceRoleClient } from '@/lib/supabase/service';
 import { stripe } from '@/lib/stripe/client';
 import { getOrCreateStripeCustomer } from '@/lib/stripe/customer';
+import { adaptivePricingParam } from '@/lib/stripe/adaptive-pricing';
 import {
   PLANS,
   basePlanItem,
@@ -291,6 +292,74 @@ async function previewPlanChange(args: {
   }
 }
 
+/**
+ * The languages the hosted Checkout page is shown in. Deliberately two.
+ *
+ * German is the one exception to the English pin (see the session params
+ * below), for a legal reason rather than a cosmetic one: in subscription mode
+ * the button label follows `locale` and nothing else, and only under 'de' does
+ * Stripe render "Zahlungspflichtig abonnieren", the wording §312j BGB asks for
+ * on the button that commits a consumer to pay. Every other buyer keeps the
+ * English page, because the Product names on the line items are English and a
+ * page half in Norwegian and half in English reads worse than one in English.
+ */
+export type CheckoutLocale = 'en' | 'de';
+
+/**
+ * The buyer's language as it arrives from a request (a JSON body field or a
+ * `lang` query parameter), allow-listed down to a CheckoutLocale.
+ *
+ * Exact match only: 'de' is German, and anything else, including 'DE',
+ * 'de-AT', an array or a missing value, is English. The value is never passed
+ * to Stripe as given, so a caller cannot reach a Stripe locale this file has
+ * not written copy for.
+ */
+export function checkoutLocale(value: unknown): CheckoutLocale {
+  return value === 'de' ? 'de' : 'en';
+}
+
+/**
+ * The two messages the hosted page leaves room for, one deck per locale.
+ *
+ * Plain sentences in the same register as the pricing page: no exclamation
+ * marks, no urgency, no upsell. The German deck uses formal Sie and links the
+ * German cancellation and withdrawal pages, which serve the same content as
+ * the English ones under /de.
+ */
+function checkoutCustomText(
+  locale: CheckoutLocale,
+  appUrl: string,
+): Stripe.Checkout.SessionCreateParams.CustomText {
+  if (locale === 'de') {
+    return {
+      submit: {
+        message:
+          'Mit dem Abonnieren verpflichten Sie sich, den angezeigten Preis in jedem Abrechnungszeitraum zu zahlen, bis Sie kündigen. ' +
+          `Sie können jederzeit in Ihrem Dashboard oder unter [mcpemails.com/de/cancel](${appUrl}/de/cancel) kündigen. ` +
+          `Verbraucher können innerhalb von 14 Tagen widerrufen: [Widerrufsrecht](${appUrl}/de/withdrawal). ` +
+          'Fragen vor dem Kauf: hello@mcpemails.com',
+      },
+      after_submit: {
+        message:
+          'Sie werden zu mcpemails.com zurückgeleitet, um Ihre Postfächer zu verbinden.',
+      },
+    };
+  }
+  return {
+    submit: {
+      message:
+        'By subscribing you agree to pay the price shown, every billing period until you cancel. ' +
+        `Cancel any time from your dashboard or at [mcpemails.com/cancel](${appUrl}/cancel). ` +
+        `Consumers can withdraw within 14 days: [right of withdrawal](${appUrl}/withdrawal). ` +
+        'Questions before you buy: hello@mcpemails.com',
+    },
+    after_submit: {
+      message:
+        'Taking you back to mcpemails.com to connect your inboxes.',
+    },
+  };
+}
+
 function fail(
   reason: CheckoutReason,
   status: number,
@@ -312,11 +381,17 @@ function fail(
  * been updated cannot change anyone's billing by accident: the worst it can do
  * is ask for a quote. Only pass true in response to a person confirming the
  * amount they were shown.
+ *
+ * `locale` is the buyer's language (the app-realm choice from the dashboard,
+ * or the page's language on a marketing CTA). It only chooses the language of
+ * the hosted page, never what is sold or charged, and is allow-listed by
+ * `checkoutLocale` before Stripe sees it.
  */
 export async function runCheckout(input: {
   planId: unknown;
   interval: unknown;
   confirmChange?: unknown;
+  locale?: unknown;
 }): Promise<CheckoutOutcome> {
   // ── 1. Authenticate ────────────────────────────────────────────────────────
   const supabase = await createClient();
@@ -939,6 +1014,7 @@ export async function runCheckout(input: {
   const cancelUrl = `${appUrl}/dashboard?checkout=cancelled`;
 
   // ── 7. Create the Stripe Checkout session ─────────────────────────────────
+  const locale = checkoutLocale(input.locale);
   try {
     const session = await stripe.checkout.sessions.create({
       mode: 'subscription',
@@ -949,38 +1025,42 @@ export async function runCheckout(input: {
       allow_promotion_codes: true,
       // Billing address is collected by Stripe: required for tax calculation.
       billing_address_collection: 'auto',
+      // Local-currency checkout for buyers outside the US. Prices stay USD and
+      // every amount Stripe hands back to us stays USD; see adaptive-pricing.ts.
+      // It converts the amount only, so the language pin below is unaffected.
+      adaptive_pricing: adaptivePricingParam(),
       // ── Presentation ────────────────────────────────────────────────────
       //
-      // ENGLISH IS PINNED, deliberately. Left to itself Stripe localises its
-      // own chrome from the buyer's browser (Accept-Language), but the things
-      // it renders from OUR data cannot follow: the product name and
-      // description on the line item live once, in English, on the Stripe
-      // Product. A Norwegian browser therefore produced a page that said
-      // "Abonner pa MCPEmails Personal / 48,00 USD per ar" directly above an
-      // English sentence about connected inboxes, in two different voices.
+      // ENGLISH IS PINNED for everyone but German buyers, deliberately. Left
+      // to itself Stripe localises its own chrome from the buyer's browser
+      // (Accept-Language), but the things it renders from OUR data cannot
+      // follow: the product name and description on the line item live once,
+      // in English, on the Stripe Product. A Norwegian browser therefore
+      // produced a page that said "Abonner pa MCPEmails Personal / 48,00 USD
+      // per ar" directly above an English sentence about connected inboxes,
+      // in two different voices. One language beats a half-translated one.
       //
-      // One language beats a half-translated one. This is not a claim that the
-      // product is English-only: the marketing site is still served in five
-      // locales. It is a claim that the checkout page has one copy deck, and
-      // that deck is written in English. The day the Stripe Products carry
-      // translated names and descriptions, pass the site locale through here
-      // instead (Stripe accepts 'nb', 'de', 'fr', 'es' among others).
-      locale: 'en',
-      // The two moments the hosted page leaves room for our own voice. Both
-      // are plain sentences in the same register as the pricing page: no
-      // exclamation marks, no urgency, no upsell.
-      custom_text: {
-        // Sits directly above the subscribe button, where the hesitation is.
-        submit: {
-          message:
-            'Cancel any time from your dashboard. Questions before you buy: hello@mcpemails.com',
-        },
-        // Shown while Stripe hands the buyer back to us, covering the redirect.
-        after_submit: {
-          message:
-            'Taking you back to mcpemails.com to connect your inboxes.',
-        },
-      },
+      // German is the exception because the law makes it one: see
+      // CheckoutLocale above. A German buyer accepts English product names in
+      // exchange for a subscribe button that reads "Zahlungspflichtig
+      // abonnieren" and German text beside it. Pass another locale through
+      // the day the Stripe Products carry translated names and descriptions.
+      locale,
+      // The two moments the hosted page leaves room for our own voice.
+      //
+      // `submit` sits directly above the subscribe button, where the
+      // hesitation is, and is also the closest we can put consumer-law text to
+      // it. Stripe renders Markdown links there (checked in test mode
+      // 2026-10-20). `after_submit` covers the redirect back to us.
+      //
+      // THE BUTTON LABEL IS STRIPE'S, and in subscription mode it cannot be
+      // changed: `submit_type: 'pay'` is rejected ("You can not pass
+      // submit_type: 'pay' in subscription mode"), and the label follows
+      // `locale`. Under 'en' it reads "Subscribe"; under 'de' it reads
+      // "Zahlungspflichtig abonnieren". The first sentence of the message
+      // states the payment obligation in words next to the button; it does
+      // not replace a compliant label.
+      custom_text: checkoutCustomText(locale, appUrl),
       // Pass USER context through to the subscription for the webhook handler.
       // The subscription is tied to the user; the webhook resolves the owner
       // from user_id (or the customer) and propagates to all owned workspaces.

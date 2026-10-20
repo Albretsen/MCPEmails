@@ -22,23 +22,23 @@
     "meta0": "1 innboks gratis, for alltid",
     "meta1": "App-passord, ingen OAuth-oppsett",
     "meta2": "E-post hentes direkte, lagres aldri",
-    "answer": "Claude når ikke Yahoo Mail på egen hånd. mcpemails er en hostet MCP-server som kobler til via IMAP på port 993 og autentiserer med et Yahoo-app-passord opprettet under External connections på Account Security-siden din, slik at Claude, Cursor eller enhver MCP-klient kan lese, søke, sende og organisere den e-posten. Det vanlige Yahoo-passordet ditt godtas aldri fra en e-postklient. Oppsettet tar et par minutter, og én innboks er gratis, for alltid."
+    "answer": "Claude når ikke Yahoo Mail på egen hånd. MCP Emails er en hostet MCP-server som kobler til via IMAP på port 993 og autentiserer med et Yahoo-app-passord opprettet under External connections på Account Security-siden din, slik at Claude, Cursor eller enhver MCP-klient kan lese, søke, sende og organisere den e-posten. Det vanlige Yahoo-passordet ditt godtas aldri fra en e-postklient. Oppsettet tar et par minutter, og én innboks er gratis, for alltid."
   },
   "method": {
     "title": "Slik kobler Yahoo seg til: et app-passord",
-    "body": "Yahoo Mail kobles til via IMAP/SMTP med et <b>Yahoo-app-passord</b>. Generer et i Yahoo Account Security under External connections, og lim det så inn i mcpemails sammen med Yahoo-adressen din. Ser du ikke valget, slår du på totrinnsbekreftelse og ser etter igjen. Ingen OAuth-dans, ingen popup-vinduer i nettleseren."
+    "body": "Yahoo Mail kobles til via IMAP/SMTP med et <b>Yahoo-app-passord</b>. Generer et i Yahoo Account Security under External connections, og lim det så inn i MCP Emails sammen med Yahoo-adressen din. Ser du ikke valget, slår du på totrinnsbekreftelse og ser etter igjen. Ingen OAuth-dans, ingen popup-vinduer i nettleseren."
   },
   "setup": [
     {
       "h": "Opprett en gratis konto",
-      "p": "Registrer deg på mcpemails, uten kort. Gratisplanen kobler til én innboks, for alltid."
+      "p": "Registrer deg på MCP Emails, uten kort. Gratisplanen kobler til én innboks, for alltid."
     },
     {
       "h": "Generer et Yahoo-app-passord",
       "p": "Generer et app-passord i Yahoo Account Security, under External connections. Finnes ikke valget der, slår du på totrinnsbekreftelse først."
     },
     {
-      "h": "Lim det inn i mcpemails",
+      "h": "Lim det inn i MCP Emails",
       "p": "Legg til Yahoo-adressen din og app-passordet for å koble til innboksen trygt."
     },
     {
@@ -65,13 +65,13 @@
     }
   ],
   "limits": [
-    "Yahoos innsendingsserver annonserer en maksimal meldingsstørrelse på omtrent 41 MB. Lesing av vedlegg gjennom mcpemails er begrenset til 25 MB per forespørsel, så alt større må hentes i selve Yahoo Mail.",
+    "Yahoos innsendingsserver annonserer en maksimal meldingsstørrelse på omtrent 41 MB. Lesing av vedlegg gjennom MCP Emails er begrenset til 25 MB per forespørsel, så alt større må hentes i selve Yahoo Mail.",
     "App-passord utløper ikke og overlever at du endrer Yahoo-passordet. Å slette app-passordet i Account Security er den eneste måten å trekke tilbake tilgangen på."
   ],
   "faq": [
     {
       "q": "Fungerer Claude med Yahoo Mail?",
-      "a": "Ikke direkte. Claude har ingen innebygd Yahoo-kobling. Kobler du en MCP-server som mcpemails til Yahoo-postkassen din via IMAP, med et Yahoo-app-passord, får Claude tilgang til å lese, søke, sende, svare, planlegge og organisere. Samme tilkobling fungerer da uendret fra Cursor, ChatGPT og andre MCP-klienter."
+      "a": "Ikke direkte. Claude har ingen innebygd Yahoo-kobling. Kobler du en MCP-server som MCP Emails til Yahoo-postkassen din via IMAP, med et Yahoo-app-passord, får Claude tilgang til å lese, søke, sende, svare, planlegge og organisere. Samme tilkobling fungerer da uendret fra Cursor, ChatGPT og andre MCP-klienter."
     },
     {
       "q": "Hva er IMAP- og SMTP-innstillingene for Yahoo Mail?",

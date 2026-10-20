@@ -1,0 +1,103 @@
+{
+  "_sources": [
+    "https://www.zoho.com/mail/help/imap-access.html",
+    "https://www.zoho.com/mail/help/zoho-smtp.html",
+    "https://help.zoho.com/portal/en/kb/accounts/multi-factor-authentication/articles/application-specific-passwords"
+  ],
+  "auth": {
+    "method": "app-password",
+    "label": "Zoho-Passwort, oder ein anwendungsspezifisches Passwort bei 2FA oder SSO",
+    "helpUrl": "https://help.zoho.com/portal/en/kb/accounts/multi-factor-authentication/articles/application-specific-passwords",
+    "usernameForm": "Ihre vollständige Zoho-Adresse mit Domain: name@ihredomain.de bei einer eigenen Domain oder name@zohomail.com bei einem kostenlosen Privatkonto.",
+    "status": "active"
+  },
+  "meta": {
+    "title": "Zoho Mail mit Claude, Cursor und MCP-Clients verbinden",
+    "description": "Zoho Mail mit Claude, Cursor und jedem MCP-Client verbinden, per IMAP über imap.zoho.com:993. IMAP ist standardmäßig aus, und der Host richtet sich nach Ihrem Zoho-Rechenzentrum."
+  },
+  "hero": {
+    "eyebrow": "Zoho Mail + KI",
+    "titleLine1": "Zoho Mail mit Claude verbinden,",
+    "titleLine2": "und mit Cursor, ChatGPT und jedem MCP-Client",
+    "lead": "Geben Sie Ihrem KI-Agenten in wenigen Minuten ein echtes Zoho-Postfach. Lesen, suchen, senden, antworten, planen und sortieren Sie E-Mails per IMAP mit Ihrem Zoho-Passwort oder einem anwendungsspezifischen Passwort, und nutzen Sie dasselbe Postfach in jedem MCP-Client, nicht nur in einem.",
+    "meta0": "1 Postfach dauerhaft kostenlos",
+    "meta1": "Konto- oder App-Passwort, kein OAuth-Setup",
+    "meta2": "E-Mails werden live abgerufen, nie gespeichert",
+    "answer": "Claude erreicht Zoho Mail nicht von sich aus. MCP Emails ist ein gehosteter MCP-Server, der Zoho Mail per IMAP über imap.zoho.com auf Port 993 verbindet. So können Claude, Cursor oder jeder MCP-Client diese E-Mails lesen, suchen, senden und sortieren. Zwei Dinge müssen vorher stimmen: Der IMAP-Zugriff ist bei einem neuen Zoho-Postfach ausgeschaltet, bis Sie ihn aktivieren, und der Hostname richtet sich nach Ihrem Zoho-Rechenzentrum. Ein Konto, das in der EU oder in Indien angelegt wurde, nutzt also einen anderen. Ein Postfach ist dauerhaft kostenlos."
+  },
+  "method": {
+    "title": "So verbindet sich Zoho: IMAP und ein Passwort",
+    "body": "Zoho Mail verbindet sich über IMAP/SMTP. Aktivieren Sie zuerst den IMAP-Zugriff in Zoho (er ist standardmäßig aus) und fügen Sie dann Ihre Zoho-Adresse und Ihr Passwort in MCP Emails ein. Nutzen Sie Zwei-Faktor-Authentifizierung, föderierte Anmeldung oder SAML, erstellen Sie ein anwendungsspezifisches Passwort und verwenden Sie dieses. MCP Emails unterstützt jede Rechenzentrumsregion von Zoho."
+  },
+  "setup": [
+    {
+      "h": "Kostenloses Konto erstellen",
+      "p": "Registrieren Sie sich bei MCP Emails, ohne Kreditkarte. Der Free-Tarif verbindet ein Postfach, dauerhaft."
+    },
+    {
+      "h": "IMAP aktivieren und bei Bedarf ein App-Passwort erstellen",
+      "p": "Schalten Sie in den Einstellungen von Zoho Mail bei Ihrem E-Mail-Konto den IMAP-Zugriff ein. Nutzen Sie Zwei-Faktor-Authentifizierung, föderierte Anmeldung oder SAML, erstellen Sie im Sicherheitsbereich Ihres Zoho-Kontos ein anwendungsspezifisches Passwort."
+    },
+    {
+      "h": "In MCP Emails einfügen",
+      "p": "Geben Sie Ihre Zoho-Adresse und das Passwort ein und wählen Sie bei Nachfrage Ihre Zoho-Region, um das Postfach sicher zu verbinden."
+    },
+    {
+      "h": "MCP-URL in Ihre KI einfügen",
+      "p": "Fügen Sie https://mcpemails.com/api/mcp in Claude, Cursor oder ChatGPT ein, autorisieren Sie den Zugriff, und Ihr Agent hat das Postfach."
+    }
+  ],
+  "gotchas": [
+    {
+      "h": "Zoho betreibt sechs Rechenzentren, und Ihr Hostname richtet sich nach dem, in dem Sie sich registriert haben",
+      "p": "Zoho unterhält getrennte regionale Rechenzentren, erreichbar unter <code>zoho.com</code>, <code>zoho.eu</code>, <code>zoho.in</code>, <code>zoho.com.au</code>, <code>zoho.jp</code> und <code>zohocloud.ca</code>. Ein Postfach aus einem davon ist über den Hostnamen eines anderen nicht erreichbar, und die Einstellungen in der Tabelle auf dieser Seite sind die für die USA. Der Fünf-Sekunden-Test: Melden Sie sich bei mail.zoho.com an und beobachten Sie, was in der Adresszeile steht. Landet sie bei <code>zoho.eu</code>, enden auch Ihre IMAP- und SMTP-Hosts auf <code>.eu</code>. Zoho zeigt das genaue Paar für Ihr Konto außerdem in den Einstellungen bei Ihren E-Mail-Konten, in den Details zur Serverkonfiguration. <b>Eine falsche Region ist der häufigste Grund, warum eine Zoho-Verbindung scheitert</b>, und sie zeigt sich als Authentifizierungsfehler statt als falscher Server. Deshalb setzen viele das Passwort viermal zurück, bevor sie die Ursache finden."
+    },
+    {
+      "h": "IMAP ist ausgeschaltet, bis jemand es einschaltet, Postfach für Postfach",
+      "p": "Zoho liefert Postfächer mit deaktiviertem IMAP-Zugriff aus. Schalten Sie ihn in den Einstellungen bei Ihren E-Mail-Konten ein: Adresse anklicken, <b>IMAP-Zugriff</b> ankreuzen und speichern. Zwei Details überraschen oft. Die Einstellung gilt für jedes Postfach einzeln, Ihre eigene Adresse freizuschalten bringt also für die eines Kollegen nichts. Und solange sie aus ist, lehnt Zoho die Anmeldung rundweg ab, mit einem Fehler, der sich nicht von einem falschen Passwort unterscheiden lässt."
+    },
+    {
+      "h": "Kostenlose und kostenpflichtige Zoho-Konten sind mit unterschiedlichen Hostnamen dokumentiert",
+      "p": "Zohos eigene Konfigurationsseite nennt <code>imap.zoho.com</code> und <code>smtp.zoho.com</code> für private und kostenlose Konten sowie <code>imappro.zoho.com</code> und <code>smtppro.zoho.com</code> für kostenpflichtige Organisationskonten, jeweils zusätzlich mit der oben beschriebenen Regel für das regionale Suffix. Der für diese Seite verifizierte Host ist <code>imap.zoho.com</code>. Liegt Ihre Adresse auf einer eigenen Domain mit kostenpflichtigem Tarif, nehmen Sie das Paar, das Zoho in den Details zur Serverkonfiguration anzeigt, statt vom allgemeinen auszugehen. Das ist die verbindliche Antwort für genau Ihr Konto."
+    },
+    {
+      "h": "Kein SPECIAL-USE und kein AUTH=LOGIN",
+      "p": "Der IMAP-Server von Zoho meldet <code>MOVE</code>, <code>UIDPLUS</code>, <code>IDLE</code> und <code>SASL-IR</code>. Verschieben ist also atomar, und die Authentifizierung braucht nur einen Durchgang. <code>SPECIAL-USE</code> meldet er nicht. Gesendet, Entwürfe, Papierkorb und Spam werden daher über den Namen statt über ihre Rolle gefunden: Benennen Sie einen Systemordner um oder legen Sie das Postfach mit einer nicht englischen Oberfläche an, findet ein Agent, der nach „Sent“ sucht, den Ordner nur, wenn Sie ihn ausdrücklich angeben. Auch die Liste der Authentifizierungsverfahren ist kurz: <code>AUTH=PLAIN</code> und <code>AUTH=XOAUTH2</code>, ohne <code>AUTH=LOGIN</code>. Ein Client, der fest auf das LOGIN-Verfahren eingestellt ist, scheitert deshalb bei der Authentifizierung, obwohl das Passwort stimmt."
+    }
+  ],
+  "limits": [
+    "Der Versandserver von Zoho gibt eine maximale Nachrichtengröße von etwa 31 MB an, weniger als bei den meisten Anbietern für Privatkunden.",
+    "IMAP muss in jedem Zoho-Postfach in dessen eigenen Einstellungen aktiviert werden. Von außen kann es niemand für Sie einschalten.",
+    "Konten mit Zwei-Faktor-Authentifizierung, föderierter Anmeldung oder SAML brauchen ein anwendungsspezifisches Passwort. Das normale Kontopasswort funktioniert dort nicht."
+  ],
+  "faq": [
+    {
+      "q": "Funktioniert Claude mit Zoho Mail?",
+      "a": "Nicht von sich aus. Claude hat keinen eingebauten Zoho-Konnektor. Verbinden Sie einen MCP-Server wie MCP Emails per IMAP mit Ihrem Zoho-Postfach, kann Claude darin lesen, suchen, senden, antworten, planen und sortieren, und dieselbe Verbindung funktioniert in Cursor, ChatGPT und anderen MCP-Clients. Vorher müssen Sie den IMAP-Zugriff für das Postfach aktivieren."
+    },
+    {
+      "q": "Wie lauten die IMAP- und SMTP-Einstellungen für Zoho Mail?",
+      "a": "Für ein kostenloses US-Konto ist IMAP imap.zoho.com auf Port 993 mit implizitem TLS und SMTP smtp.zoho.com auf Port 465, ebenfalls mit implizitem TLS. Beides wurde über eine Live-TLS-Verbindung verifiziert. Kostenpflichtige Organisationskonten sind mit den Namen imappro und smtppro dokumentiert, und jedes regionale Rechenzentrum ändert das Domain-Suffix. Der Benutzername ist Ihre vollständige Adresse."
+    },
+    {
+      "q": "In welchem Zoho-Rechenzentrum liegt mein Konto?",
+      "a": "Melden Sie sich bei mail.zoho.com an und schauen Sie, wo der Browser landet. Eine Weiterleitung zu zoho.eu, zoho.in, zoho.com.au, zoho.jp oder zohocloud.ca verrät die Region, und Ihre Mail-Hostnamen tragen dasselbe Suffix. Für eine genaue Antwort öffnen Sie in den Einstellungen Ihre E-Mail-Konten und lesen die Details zur Serverkonfiguration. Dort stehen die Hosts und Ports, die Zoho für Ihren Client erwartet."
+    },
+    {
+      "q": "Warum wird mein Zoho-Passwort abgelehnt?",
+      "a": "Drei Ursachen, in dieser Reihenfolge. Der IMAP-Zugriff ist für dieses Postfach in den Einstellungen bei den E-Mail-Konten nicht aktiviert. Der Hostname gehört zu einem anderen Zoho-Rechenzentrum als dem, in dem Ihr Konto liegt. Oder das Konto nutzt Zwei-Faktor-Authentifizierung, föderierte Anmeldung oder SAML, und Zoho verlangt dann ein anwendungsspezifisches Passwort statt Ihres normalen."
+    },
+    {
+      "q": "Funktioniert das mit einer eigenen Domain bei Zoho oder mit Zoho Workplace?",
+      "a": "Ja. Ein Postfach auf Ihrer eigenen Domain verbindet sich genauso, mit der vollständigen Adresse als Benutzernamen, sobald der IMAP-Zugriff aktiviert ist. Nehmen Sie die Hostnamen aus den Details zur Serverkonfiguration in diesem Konto und nicht aus einer allgemeinen Anleitung, denn kostenpflichtige Organisationskonten und Regionen außerhalb der USA ändern die Namen."
+    },
+    {
+      "q": "Werden meine Zoho-E-Mails auf Ihren Servern gespeichert?",
+      "a": "Nein. Nachrichten werden bei jeder Anfrage live per IMAP von Zoho abgerufen und an Ihren KI-Client übergeben. Zugangsdaten werden verschlüsselt gespeichert, Nachrichteninhalte werden nicht aufbewahrt. Widerrufen Sie das anwendungsspezifische Passwort in Zoho oder schalten Sie den IMAP-Zugriff wieder aus, ist das Postfach sofort getrennt."
+    }
+  ],
+  "ctaBand": {
+    "title": "Geben Sie Ihrer KI ein Zoho-Postfach",
+    "sub": "Zoho Mail in wenigen Minuten verbinden. Ein Postfach dauerhaft kostenlos, ohne Kreditkarte."
+  }
+}

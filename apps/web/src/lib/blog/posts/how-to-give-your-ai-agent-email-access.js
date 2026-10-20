@@ -4,7 +4,7 @@ const post = {
   description:
     'Give your AI agent read and send access to a real inbox over MCP — Gmail, Outlook, iCloud, Fastmail, or IMAP. How it works, the tools, security, and setup.',
   cover: '/blog/cover-how-to-give-your-ai-agent-email-access.svg',
-  coverAlt: 'How to give your AI agent access to email over MCP — MCPEmails',
+  coverAlt: 'How to give your AI agent access to email over MCP — MCP Emails',
   authorId: 'asgeir',
   publishedAt: "2026-06-02T09:00:00.000Z",
   updatedAt: "2026-09-25T09:00:00.000Z",
@@ -24,7 +24,7 @@ That's the whole idea behind [MCP Emails](/). One endpoint, one set of tools, an
 
 Hooking a model up to email looks trivial until you try it for real. Three things bite:
 
-1. **Auth is different for every provider.** Gmail wants OAuth with specific scopes. Outlook wants Microsoft identity. iCloud and Fastmail want an app-specific password. Each has its own token refresh cycle and its own failure modes.
+1. **Auth is different for every provider.** Outlook and Microsoft 365 want OAuth through Microsoft identity. Gmail wants a Google app password, which Google only lets you create once 2-Step Verification is on. iCloud and Fastmail want an app-specific password. Each has its own token refresh cycle and its own failure modes.
 2. **Credentials are radioactive.** A mailbox password sitting in a chat transcript or a log line is a breach waiting to happen. You cannot let the model hold the secret.
 3. **Email is shaped badly for agents.** MIME, threading headers, HTML versus plain text, attachments, folders that are really labels. The model needs a clean response, not RFC 5322.
 
@@ -36,11 +36,11 @@ Four design decisions do the heavy lifting. They're the reason I trust this with
 
 ### Email is fetched live and never stored
 
-Every tool call hits your provider in real time: the Gmail API, Microsoft Graph, or IMAP/SMTP. Message bodies, subjects, and attachments are handed to the agent and discarded immediately. Nothing is cached, indexed, or warehoused. The only thing persisted per inbox is the credential needed to make the next call. If you want the long version of why this matters, read [why "email never stored" matters](/blog/why-email-never-stored-matters).
+Every tool call hits your provider in real time: IMAP/SMTP for Gmail, iCloud, Fastmail and the rest, or Microsoft Graph for Outlook. Message bodies, subjects, and attachments are handed to the agent and discarded immediately. Nothing is cached, indexed, or warehoused. The only thing persisted per inbox is the credential needed to make the next call. If you want the long version of why this matters, read [why "email never stored" matters](/blog/why-email-never-stored-matters).
 
 ### Credentials are AES-256-GCM encrypted at rest
 
-The OAuth token or app password for each inbox is encrypted before it's written to the database. Decryption happens only inside an isolated Edge Function, at call time, using a key that lives as an environment secret separate from the database. So even a database leak hands an attacker ciphertext, not your inbox.
+The app password or OAuth token for each inbox is encrypted before it's written to the database. It's decrypted on our servers only when a request needs it, and it's never sent to your agent. The encryption key is kept as a server secret, separate from the database. So even a database leak hands an attacker ciphertext, not your inbox.
 
 ### Sending goes through your own provider
 
@@ -83,12 +83,11 @@ You connect an inbox once in **Dashboard → Inboxes → Connect Inbox**. How yo
 
 ### OAuth providers (sign in, no password)
 
-- **Gmail** — OAuth 2.0 via Google sign-in.
 - **Outlook / Microsoft 365**: OAuth 2.0 via Sign in with Microsoft, over Microsoft Graph rather than IMAP. Personal Outlook.com, Hotmail, Live and MSN accounts connect straight away. Work or school Microsoft 365 accounts may need an IT admin to approve the app once for the whole organisation first; the dashboard gives you a link to send them. Setup details in [connect Outlook and Microsoft 365 to an AI agent](/blog/connect-outlook-microsoft-365-ai-agent-mcp).
 
 ### App-password providers
 
-iCloud, Fastmail, Yahoo, Zoho, Yandex, and any generic IMAP mailbox connect with an app-specific password rather than OAuth. You generate the password in your provider's security settings and paste it into MCP Emails. iCloud passwords come from appleid.apple.com; Fastmail is **app-password only** (create one in Fastmail settings). They all ride the same IMAP/SMTP transport and share an identical feature set. The full walkthrough lives in [connect iCloud, Fastmail, or any IMAP inbox to Claude](/blog/connect-icloud-fastmail-imap-to-claude).
+Gmail, iCloud, Fastmail, Yahoo, Zoho, Yandex, and any generic IMAP mailbox connect with an app-specific password rather than OAuth. You generate the password in your provider's security settings and paste it into MCP Emails. Gmail app passwords come from your Google Account, and Google requires 2-Step Verification before it will create one. iCloud passwords come from appleid.apple.com; Fastmail is **app-password only** (create one in Fastmail settings). They all ride the same IMAP/SMTP transport and share an identical feature set. The full walkthrough lives in [connect iCloud, Fastmail, or any IMAP inbox to Claude](/blog/connect-icloud-fastmail-imap-to-claude).
 
 ## Connecting your AI client
 
@@ -96,7 +95,7 @@ Same endpoint, same tools, two ways in depending on whether your client speaks O
 
 ### OAuth-capable clients (no API key)
 
-claude.ai, Claude Desktop, Cursor, and similar clients connect with OAuth 2.0 Authorization Code + PKCE and RFC 7591 Dynamic Client Registration. In claude.ai it's **Customize → Connectors → Add connector**, paste the MCP endpoint URL, click Connect, sign in to your MCP Emails account, and approve. Tokens are scoped to exactly what you approve: \`read:email\`, \`send:email\`, or both.
+claude.ai, Claude Desktop, Cursor, and similar clients connect with OAuth 2.0 Authorization Code + PKCE and RFC 7591 Dynamic Client Registration. In claude.ai it's **Customize → Connectors → Add connector**, paste the MCP endpoint URL, click Connect, sign in to your MCP Emails account, and approve. Tokens are scoped to exactly what you approve: \`read:email\`, \`send:email\`, or both. For step-by-step walkthroughs, see [set up Claude with your inbox](/blog/connect-claude-to-email) and [add your email to ChatGPT](/blog/connect-chatgpt-to-email).
 
 ### Clients without OAuth (API key)
 
@@ -115,8 +114,8 @@ On rate limits, each API key is capped at 100 requests/min, 1,000/hour, and 10,0
 Plans are priced by connected inboxes. API keys are unlimited on every tier, and tiers also differ on burst rate, analytics retention, team features, and support.
 
 - **Free, $0 forever.** No card. One connected inbox, 60 req/min, 30-day analytics, community support.
-- **Personal, $9/month** (or $86.40/year, $7.20/month). Up to three connected inboxes, 120 req/min, 30-day analytics, email support.
-- **Pro, $15/month** (or $144/year, $12/month). Up to 10 connected inboxes, 300 req/min, 90-day analytics, email support.
+- **Personal, $9/month** (or $86.40/year, $7.20/month). Up to three connected inboxes, 120 req/min, 90-day analytics, email support.
+- **Pro, $15/month** (or $144/year, $12/month). Up to 10 connected inboxes, 300 req/min, 2-year analytics, email support.
 - **Business, $39/month** (or $374.40/year, $31.20/month). Everything in Pro, plus 10 mailboxes included and $3/month for each extra, unlimited members with roles, admins who approve held sends, a separate workspace per client or business, 1,000 req/min.
 
 Full breakdown on the [pricing page](/pricing).

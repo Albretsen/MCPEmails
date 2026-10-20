@@ -20,7 +20,7 @@
     "titleLine1": "Serveur MCP pour la messagerie SiteGround :",
     "titleLine2": "toutes les boîtes de votre entreprise, dans Claude et ChatGPT",
     "lead": "Vous gérez info@, ventes@, support@ et factures@ sur votre propre domaine chez SiteGround ? Connectez chaque boîte au même espace de travail et votre agent IA travaille dans toutes. Lisez, recherchez, envoyez, répondez, planifiez et organisez le courrier via IMAP, avec les paramètres que Site Tools affiche pour votre compte.",
-    "answer": "Claude ne peut pas accéder seul à une boîte SiteGround. mcpemails est un serveur MCP hébergé qui la connecte en IMAP standard sur le port 993, pour que Claude, Cursor ou tout client MCP puisse lire, rechercher, envoyer et organiser ce courrier. SiteGround n'exploite aucun nom d'hôte de messagerie partagé : votre serveur est mail.yourdomain.com, ou le nom de serveur sécurisé de la forme secureNNN.sgcpanel.com, et Site Tools affiche le bon sous Email, Accounts, Mail Configuration. L'authentification se fait avec le mot de passe défini sur la boîte, jamais avec votre identifiant de la Client Area SiteGround. Chaque adresse de l'entreprise, comme info@ ou ventes@, se connecte comme une boîte à part : une boîte est gratuite, Personal en connecte trois, Pro jusqu'à 10 et Business autant qu'il vous en faut.",
+    "answer": "Claude ne peut pas accéder seul à une boîte SiteGround. MCP Emails est un serveur MCP hébergé qui la connecte en IMAP standard sur le port 993, pour que Claude, Cursor ou tout client MCP puisse lire, rechercher, envoyer et organiser ce courrier. SiteGround n'exploite aucun nom d'hôte de messagerie partagé : votre serveur est mail.yourdomain.com, ou le nom de serveur sécurisé de la forme secureNNN.sgcpanel.com, et Site Tools affiche le bon sous Email, Accounts, Mail Configuration. L'authentification se fait avec le mot de passe défini sur la boîte, jamais avec votre identifiant de la Client Area SiteGround. Chaque adresse de l'entreprise, comme info@ ou ventes@, se connecte comme une boîte à part : une boîte est gratuite, Personal en connecte trois, Pro jusqu'à 10 et Business autant qu'il vous en faut.",
     "meta0": "Première boîte gratuite, offres pour les autres",
     "meta1": "Mot de passe de la boîte depuis Site Tools",
     "meta2": "E-mails récupérés en direct, jamais stockés"
@@ -37,7 +37,7 @@
   "setup": [
     {
       "h": "Créez un compte gratuit",
-      "p": "Inscrivez-vous sur mcpemails, sans carte bancaire. L'offre gratuite connecte une boîte, pour toujours."
+      "p": "Inscrivez-vous sur MCP Emails, sans carte bancaire. L'offre gratuite connecte une boîte, pour toujours."
     },
     {
       "h": "Ouvrez Mail Configuration dans Site Tools",
@@ -45,7 +45,7 @@
     },
     {
       "h": "Prenez le nom de serveur sécurisé, pas seulement mail.yourdomain.com",
-      "p": "Notez la valeur <code>secureNNN.sgcpanel.com</code> affichée pour votre compte et utilisez-la pour IMAP comme pour SMTP. Définissez le mot de passe de la boîte depuis le même écran Accounts si vous ne l'avez pas ; ce n'est pas votre mot de passe de la Client Area. Saisissez ensuite l'adresse, le serveur et le mot de passe dans mcpemails."
+      "p": "Notez la valeur <code>secureNNN.sgcpanel.com</code> affichée pour votre compte et utilisez-la pour IMAP comme pour SMTP. Définissez le mot de passe de la boîte depuis le même écran Accounts si vous ne l'avez pas ; ce n'est pas votre mot de passe de la Client Area. Saisissez ensuite l'adresse, le serveur et le mot de passe dans MCP Emails."
     },
     {
       "h": "Collez l'URL MCP dans votre IA",
@@ -68,12 +68,12 @@
   ],
   "limits": [
     "SiteGround applique des limites d'envoi sortant par heure selon l'offre. Une rafale d'envois automatisés peut être freinée, ce qui se traduit par un message refusé ou différé plutôt que par un échec de connexion.",
-    "mcpemails connecte uniquement la boîte. Filtres, redirections, réponses automatiques et protection antispam restent dans Site Tools."
+    "MCP Emails connecte uniquement la boîte. Filtres, redirections, réponses automatiques et protection antispam restent dans Site Tools."
   ],
   "faq": [
     {
       "q": "Claude fonctionne-t-il avec l'e-mail SiteGround ?",
-      "a": "Pas directement. Claude n'a pas de connecteur SiteGround. Connecter un serveur MCP comme mcpemails à votre boîte SiteGround via IMAP donne à Claude un accès en lecture, recherche, envoi, réponse, planification et organisation, avec les mêmes identifiants que vous donneriez à Apple Mail ou Thunderbird."
+      "a": "Pas directement. Claude n'a pas de connecteur SiteGround. Connecter un serveur MCP comme MCP Emails à votre boîte SiteGround via IMAP donne à Claude un accès en lecture, recherche, envoi, réponse, planification et organisation, avec les mêmes identifiants que vous donneriez à Apple Mail ou Thunderbird."
     },
     {
       "q": "Quels sont les paramètres IMAP et SMTP de SiteGround ?",

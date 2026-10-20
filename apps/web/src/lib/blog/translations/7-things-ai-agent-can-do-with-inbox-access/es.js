@@ -2,7 +2,7 @@ const translation = {
   title: '7 cosas que tu agente de IA puede hacer en cuanto tiene acceso a la bandeja de entrada',
   description:
     'Siete cosas concretas que un agente de IA puede hacer con acceso a tu bandeja: clasificar correo sin leer, resumir hilos, redactar respuestas, encontrar adjuntos y hacer seguimientos.',
-  coverAlt: 'Siete cosas que tu agente de IA puede hacer con acceso a la bandeja de entrada a través de MCP — MCPEmails',
+  coverAlt: 'Siete cosas que tu agente de IA puede hacer con acceso a la bandeja de entrada a través de MCP — MCP Emails',
   content: `En cuanto tu agente puede leer y enviar correo de verdad, se acaban las demos de juguete y empieza el trabajo real. Aquí tienes siete cosas que puedes ponerle a hacer hoy mismo: clasificar el montón de correos sin leer, resumir un hilo largo, redactar respuestas con tu voz, rescatar ese adjunto concreto, perseguir seguimientos, dirigir el correo al sitio correcto y enviarte un resumen semanal.
 
 Cada ejemplo de abajo se corresponde con herramientas MCP reales que puedes invocar ahora mismo. Las herramientas son las mismas tanto si conectas Gmail, Outlook, iCloud, Fastmail o un buzón IMAP genérico. Si todavía no has conectado un agente a tu bandeja, la [guía completa para darle acceso al correo a tu agente de IA](/blog/how-to-give-your-ai-agent-email-access) cubre la configuración; el [tutorial de conexión en 2 minutos](/blog/connect-email-to-ai-agent-under-2-minutes) es el camino rápido.
@@ -29,7 +29,7 @@ Te añaden a un hilo de 40 mensajes en el mensaje 38. Nadie va a leerse lo anter
 
 > Lee el hilo con asunto "Q3 vendor migration" y dime en qué quedó realmente: qué se decidió, quién se encarga de qué y cualquier pregunta abierta que yo tenga que responder.
 
-\`email_read\` con la acción search encuentra el hilo (usa la sintaxis de búsqueda nativa de tu proveedor, así que los operadores de Gmail, KQL de Outlook y la búsqueda de texto de IMAP funcionan todos), y luego \`email_read\` con la acción read extrae el texto plano ya parseado de cada mensaje. Esa acción read también puede devolver HTML saneado y adjuntos cuando lo pides, pero para un resumen el texto plano es más rápido y más barato.
+\`email_read\` con la acción search encuentra el hilo (recibe campos estructurados como remitente, asunto, texto y rango de fechas, y MCP Emails los convierte en la búsqueda propia de cada proveedor), y luego \`email_read\` con la acción read extrae el texto plano ya parseado de cada mensaje. Esa acción read también puede devolver HTML saneado y adjuntos cuando lo pides, pero para un resumen el texto plano es más rápido y más barato.
 
 ### 3. Redactar respuestas con tu voz
 

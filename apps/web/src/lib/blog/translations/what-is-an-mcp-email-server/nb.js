@@ -2,7 +2,7 @@ const translation = {
   title: 'Hva er en MCP-e-postserver? En forklaring i klartekst',
   description:
     'En MCP-e-postserver lar en AI-agent lese og sende e-post via rene verb i stedet for rå IMAP og passord. Her er hva det egentlig betyr.',
-  coverAlt: 'Hva er en MCP-e-postserver — en forklaring i klartekst fra MCPEmails',
+  coverAlt: 'Hva er en MCP-e-postserver — en forklaring i klartekst fra MCP Emails',
   content: `En MCP-e-postserver er en liten tjeneste som gir en AI-agent som Claude eller Cursor direkte les- og send-tilgang til en ekte innboks, ved hjelp av Model Context Protocol. I stedet for å gi agenten et e-postpassord og et IMAP-bibliotek, gir den agenten en kort liste med handlinger: list opp meldingene mine, les denne, søk etter det, send et svar. Agenten kaller disse handlingene som et hvilket som helst annet verktøy, og serveren tar seg av det rotete leverandørarbeidet bak kulissene.
 
 Hvis du har hørt begrepet «MCP» bli kastet rundt og vil ha versjonen uten sjargong av hva en MCP-*e-postserver* faktisk gjør, så er dette den. La oss bygge det opp én bit om gangen.
@@ -19,7 +19,7 @@ Det som betyr noe her: en MCP-server trenger ikke å bo på maskinen din. MCP Em
 
 En MCP-e-postserver er en MCP-server hvis verktøy tilfeldigvis handler om e-post. Den sitter mellom AI-agenten din og en ekte postkasse, og oversetter «agentens intensjoner» til «leverandøroperasjoner».
 
-Her er den konkrete versjonen. Du kobler Gmail, Outlook, iCloud, Fastmail eller hvilken som helst IMAP-innboks til serveren én gang. Serveren eksponerer deretter e-post som en håndfull verktøy. Når agenten din vil håndtere e-post, kaller den ett av disse verktøyene, serveren snakker med Gmails API (eller Microsoft Graph, eller IMAP) på dine vegne, og den returnerer et rent resultat.
+Her er den konkrete versjonen. Du kobler Gmail, Outlook, iCloud, Fastmail eller hvilken som helst IMAP-innboks til serveren én gang. Serveren eksponerer deretter e-post som en håndfull verktøy. Når agenten din vil håndtere e-post, kaller den ett av disse verktøyene, serveren snakker med leverandøren din over IMAP og SMTP (eller Microsoft Graph for Outlook) på dine vegne, og den returnerer et rent resultat.
 
 En nyttig måte å se det på: MCP-e-postserveren er en **oversetter og en utkaster**. Oversetter-delen gjør agentens enkle forespørsel («les den siste meldingen fra utleieren min») om til riktig leverandørspesifikt API-kall, og gjør det rotete svaret (MIME-deler, koding, tråd-headere) om til noe lesbart igjen. Utkaster-delen avgjør hva agenten har lov til å gjøre — bare lese, eller lese og sende — og slipper den aldri i nærheten av det faktiske passordet ditt.
 
@@ -51,7 +51,7 @@ Den naive måten å gi en agent e-posttilgang på er å slippe postkassepassorde
 
 Verb er annerledes. Når agenten din kobler seg til MCP Emails, får den et token som er begrenset til nøyaktig det du godkjente: \`read:email\`, \`send:email\`, eller begge. Agenten holder en evne, ikke en legitimasjon. Hvis du bare ga lesetilgang, finnes det ikke noe send-verb i menyen dens — den kan fysisk ikke sende e-post til noen.
 
-Og selve hemmeligheten? Den blir liggende på serveren, kryptert. MCP Emails lagrer én ting per innboks: et OAuth-token eller app-passord, kryptert med AES-256-GCM, dekryptert bare inne i en isolert funksjon i det øyeblikket et kall skjer. E-posten din selv blir aldri lagret. Hvert verktøykall henter meldingen direkte fra leverandøren din og forkaster den i det øyeblikket agenten har den. Innholdet i e-posten din ligger ikke i en database et sted og venter på å lekke. Hvis du vil ha den lengre versjonen av hvorfor det designvalget betyr noe, skrev jeg om det i [hvorfor det er viktig at e-posten din aldri lagres](/blog/why-email-never-stored-matters).
+Og selve hemmeligheten? Den blir liggende på serveren, kryptert. MCP Emails lagrer én ting per innboks: et app-passord eller OAuth-token, kryptert med AES-256-GCM, dekryptert på serverne våre bare når en forespørsel trenger det, og aldri sendt til agenten din. E-posten din selv blir aldri lagret. Hvert verktøykall henter meldingen direkte fra leverandøren din og forkaster den i det øyeblikket agenten har den. Innholdet i e-posten din ligger ikke i en database et sted og venter på å lekke. Hvis du vil ha den lengre versjonen av hvorfor det designvalget betyr noe, skrev jeg om det i [hvorfor det er viktig at e-posten din aldri lagres](/blog/why-email-never-stored-matters).
 
 Evne-ikke-legitimasjon-modellen er også grunnen til at du kan [tilbakekalle en tilkobling med ett klikk](/blog/oauth-vs-api-keys-ai-email-access) fra dashbordet. Å tilbakekalle et verb er øyeblikkelig og kirurgisk. Å rotere et lekket passord er det ikke.
 

@@ -3,7 +3,7 @@ const post = {
   title: 'Building an Email Auto-Responder With an MCP-Connected Agent',
   description: 'Build an email auto-responder with an MCP-connected AI agent: poll for unread mail, draft, and reply safely with scopes, rate limits, and guardrails.',
   cover: '/blog/cover-build-email-auto-responder-mcp-agent.svg',
-  coverAlt: 'Building an email auto-responder with an MCP-connected agent — MCPEmails',
+  coverAlt: 'Building an email auto-responder with an MCP-connected agent — MCP Emails',
   authorId: 'asgeir',
   publishedAt: "2026-05-03T09:00:00.000Z",
   updatedAt: "2026-05-03T09:00:00.000Z",

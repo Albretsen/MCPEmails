@@ -357,6 +357,8 @@ async function checkout(opts: {
   addonQuantity?: number;
   /** Inboxes the buyer owns across workspaces. */
   inboxes?: number;
+  /** The buyer's language, as a caller hands it over. Omitted when undefined. */
+  locale?: unknown;
 }) {
   currentSupabase = fakeSupabase({
     entitlement: opts.entitlement,
@@ -380,6 +382,7 @@ async function checkout(opts: {
     planId: opts.planId,
     interval: opts.interval ?? 'month',
     confirmChange: opts.confirmChange,
+    ...('locale' in opts ? { locale: opts.locale } : {}),
   });
   return {
     outcome,
@@ -1385,5 +1388,134 @@ test('a Business subscriber asking for Business at the same interval is a no-op,
   });
   assert.equal(outcome.kind, 'error');
   assert.equal(outcome.kind === 'error' ? outcome.reason : null, 'already_on_plan_interval');
+  assert.equal(subscriptionsUpdated.length, 0);
+});
+
+// ---------------------------------------------------------------------------
+// Adaptive Pricing: local-currency checkout, prices still in USD.
+// ---------------------------------------------------------------------------
+
+const { adaptivePricingEnabled, adaptivePricingParam } = await import('./adaptive-pricing.ts');
+
+test('every new checkout session asks Stripe for Adaptive Pricing by default', async () => {
+  const previous = process.env.STRIPE_ADAPTIVE_PRICING;
+  delete process.env.STRIPE_ADAPTIVE_PRICING;
+  try {
+    const { outcome, sessionsCreated } = await checkout({ planId: 'personal', entitlement: null });
+    assert.equal(outcome.kind, 'checkout');
+    assert.equal(sessionsCreated.length, 1);
+    assert.deepEqual(sessionsCreated[0].adaptive_pricing, { enabled: true });
+    // Converting the amount must not change the presentation language or the
+    // subscription mode; both are pinned for their own reasons.
+    assert.equal(sessionsCreated[0].locale, 'en');
+    assert.equal(sessionsCreated[0].mode, 'subscription');
+  } finally {
+    if (previous === undefined) delete process.env.STRIPE_ADAPTIVE_PRICING;
+    else process.env.STRIPE_ADAPTIVE_PRICING = previous;
+  }
+});
+
+test('STRIPE_ADAPTIVE_PRICING=false sends an explicit opt-out, not the dashboard default', async () => {
+  const previous = process.env.STRIPE_ADAPTIVE_PRICING;
+  process.env.STRIPE_ADAPTIVE_PRICING = 'false';
+  try {
+    const { sessionsCreated } = await checkout({ planId: 'solo', entitlement: null });
+    assert.equal(sessionsCreated.length, 1);
+    assert.deepEqual(sessionsCreated[0].adaptive_pricing, { enabled: false });
+  } finally {
+    if (previous === undefined) delete process.env.STRIPE_ADAPTIVE_PRICING;
+    else process.env.STRIPE_ADAPTIVE_PRICING = previous;
+  }
+});
+
+test('the Adaptive Pricing flag defaults on and only explicit off-values disable it', () => {
+  assert.equal(adaptivePricingEnabled({}), true);
+  assert.equal(adaptivePricingEnabled({ STRIPE_ADAPTIVE_PRICING: 'true' }), true);
+  assert.equal(adaptivePricingEnabled({ STRIPE_ADAPTIVE_PRICING: '' }), true);
+  assert.equal(adaptivePricingEnabled({ STRIPE_ADAPTIVE_PRICING: 'yes' }), true);
+  for (const off of ['false', 'FALSE', ' off ', '0', 'no']) {
+    assert.equal(adaptivePricingEnabled({ STRIPE_ADAPTIVE_PRICING: off }), false, off);
+  }
+  assert.deepEqual(adaptivePricingParam({}), { enabled: true });
+  assert.deepEqual(adaptivePricingParam({ STRIPE_ADAPTIVE_PRICING: 'off' }), { enabled: false });
+});
+
+// ---------------------------------------------------------------------------
+// Checkout language: German buyers get Stripe's German page, everyone else
+// keeps the English pin.
+//
+// The point is the button. In subscription mode its label follows `locale`
+// and nothing else, and only under 'de' does Stripe write "Zahlungspflichtig
+// abonnieren", the wording §312j BGB asks for. The custom_text beside it must
+// be German too, or the page reads in two languages exactly where the buyer
+// commits to pay.
+// ---------------------------------------------------------------------------
+
+const { checkoutLocale } = await import('./checkout-core.ts');
+
+type SubmitText = { submit: { message: string }; after_submit: { message: string } };
+
+test('a German buyer gets a German hosted page with German text beside the button', async () => {
+  const { outcome, sessionsCreated } = await checkout({ planId: 'personal', entitlement: null, locale: 'de' });
+  assert.equal(outcome.kind, 'checkout');
+  assert.equal(sessionsCreated.length, 1);
+  assert.equal(sessionsCreated[0].locale, 'de');
+  const text = sessionsCreated[0].custom_text as SubmitText;
+  assert.match(text.submit.message, /^Mit dem Abonnieren verpflichten Sie sich, den angezeigten Preis/);
+  // Formal Sie, never du.
+  assert.doesNotMatch(text.submit.message, /\b(du|dich|dein)\b/i);
+  // The German consumer-law pages, still as working Markdown links.
+  assert.match(text.submit.message, /\[mcpemails\.com\/de\/cancel\]\(http[^)]*\/de\/cancel\)/);
+  assert.match(text.submit.message, /\[Widerrufsrecht\]\(http[^)]*\/de\/withdrawal\)/);
+  assert.match(text.submit.message, /14 Tagen/);
+  assert.match(text.submit.message, /hello@mcpemails\.com/);
+  assert.match(text.after_submit.message, /^Sie werden zu mcpemails\.com zurückgeleitet/);
+  for (const message of [text.submit.message, text.after_submit.message]) {
+    assert.doesNotMatch(message, /\u2014/, 'no em dashes');
+    assert.doesNotMatch(message, /[<>]/);
+  }
+});
+
+test('the language changes nothing about what is sold', async () => {
+  const en = await checkout({ planId: 'solo', interval: 'year', entitlement: null });
+  const de = await checkout({ planId: 'solo', interval: 'year', entitlement: null, locale: 'de' });
+  const strip = (params: Record<string, unknown>) => {
+    const { locale: _locale, custom_text: _text, ...rest } = params;
+    return rest;
+  };
+  assert.deepEqual(strip(de.sessionsCreated[0]), strip(en.sessionsCreated[0]));
+  assert.deepEqual(de.funnelRows, en.funnelRows);
+});
+
+test('a buyer with no language, or any other language, keeps the English page', async () => {
+  for (const locale of [undefined, null, 'en', 'nb', 'fr', 'es', 'zh', '', 'DE', 'de-AT', ['de'], 42]) {
+    const { sessionsCreated } = await checkout({ planId: 'personal', entitlement: null, locale });
+    assert.equal(sessionsCreated[0].locale, 'en', JSON.stringify(locale));
+    const text = sessionsCreated[0].custom_text as SubmitText;
+    assert.match(text.submit.message, /^By subscribing you agree to pay the price shown/);
+    assert.match(text.submit.message, /\(http[^)]*\/cancel\)/);
+    assert.doesNotMatch(text.submit.message, /\/de\//);
+    assert.equal(text.after_submit.message, 'Taking you back to mcpemails.com to connect your inboxes.');
+  }
+});
+
+test('the locale allow-list maps exactly "de" to German and everything else to English', () => {
+  assert.equal(checkoutLocale('de'), 'de');
+  for (const value of [undefined, null, 'en', 'nb', 'DE', ' de', 'de-DE', ['de'], { de: true }, 1]) {
+    assert.equal(checkoutLocale(value), 'en', JSON.stringify(value));
+  }
+});
+
+test('a German subscriber asking for a plan change still only gets a quote', async () => {
+  // The in-place swap creates no hosted page, so the language has nowhere to
+  // go; it must not open a checkout session or skip the consent gate either.
+  const { outcome, sessionsCreated, subscriptionsUpdated } = await checkout({
+    planId: 'solo',
+    entitlement: null,
+    billing: { plan: 'personal', subscription_status: 'active', stripe_subscription_id: SUBSCRIPTION_ID },
+    locale: 'de',
+  });
+  assert.equal(outcome.kind, 'confirmation_required');
+  assert.equal(sessionsCreated.length, 0);
   assert.equal(subscriptionsUpdated.length, 0);
 });

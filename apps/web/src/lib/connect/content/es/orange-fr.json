@@ -19,7 +19,7 @@
     "titleLine1": "Conecta tu buzón de Orange",
     "titleLine2": "a Claude, Cursor, cualquier cliente MCP",
     "lead": "Dale a tu agente de IA una bandeja de Orange real. Lee, busca, envía, responde, programa y organiza correo por IMAP, una vez que hayas activado el acceso POP/IMAP que Orange mantiene desactivado.",
-    "answer": "Claude no puede llegar a un buzón de Orange por su cuenta. mcpemails es un servidor MCP alojado que lo conecta por IMAP en imap.orange.fr, puerto 993, para que Claude, Cursor o cualquier cliente MCP pueda leer, buscar, enviar y organizar el correo. Antes tienen que estar bien dos cosas: Orange desactiva el acceso POP e IMAP del buzón por motivos de seguridad, así que lo activas en el webmail en Sécurité, y Orange recomienda autenticarse con el mot de passe dédié de tu Espace client en lugar de tu contraseña habitual de Orange. Una bandeja es gratis, para siempre.",
+    "answer": "Claude no puede llegar a un buzón de Orange por su cuenta. MCP Emails es un servidor MCP alojado que lo conecta por IMAP en imap.orange.fr, puerto 993, para que Claude, Cursor o cualquier cliente MCP pueda leer, buscar, enviar y organizar el correo. Antes tienen que estar bien dos cosas: Orange desactiva el acceso POP e IMAP del buzón por motivos de seguridad, así que lo activas en el webmail en Sécurité, y Orange recomienda autenticarse con el mot de passe dédié de tu Espace client en lugar de tu contraseña habitual de Orange. Una bandeja es gratis, para siempre.",
     "meta0": "1 bandeja gratis, para siempre",
     "meta1": "Activa POP/IMAP, usa la contraseña dedicada",
     "meta2": "El correo se obtiene en vivo, nunca se almacena"
@@ -30,7 +30,7 @@
   },
   "setup": [
     {
-      "h": "Crea tu cuenta gratis de mcpemails",
+      "h": "Crea tu cuenta gratis de MCP Emails",
       "p": "Regístrate en mcpemails.com. El plan gratuito conecta una bandeja para siempre y no pide tarjeta."
     },
     {
@@ -42,7 +42,7 @@
       "p": "Inicia sesión en tu Espace client en orange.fr y abre la sección <b>Connexion et sécurité</b>. La contraseña dedicada que aparece ahí es la que Orange quiere que uses para POP, IMAP y SMTP. Es un valor distinto de la contraseña con la que inicias sesión en orange.fr, y Orange la recomienda específicamente para programas de correo."
     },
     {
-      "h": "Pégala en mcpemails y luego pega la URL MCP en tu IA",
+      "h": "Pégala en MCP Emails y luego pega la URL MCP en tu IA",
       "p": "Elige IMAP / SMTP, escribe la dirección completa, por ejemplo nom@orange.fr, y pega la contraseña dedicada. Los servidores y puertos de Orange ya vienen rellenados. Después pon https://mcpemails.com/api/mcp en Claude, Cursor o ChatGPT, autoriza, y tu agente tendrá la bandeja."
     }
   ],
@@ -71,7 +71,7 @@
   "faq": [
     {
       "q": "¿Claude funciona con el correo de Orange?",
-      "a": "No directamente. Claude no incluye un conector para Orange. Conectar un servidor MCP como mcpemails al buzón por IMAP le da a Claude acceso para leer, buscar, enviar, responder, programar y organizar, y después la misma conexión funciona desde Cursor, ChatGPT y otros clientes MCP."
+      "a": "No directamente. Claude no incluye un conector para Orange. Conectar un servidor MCP como MCP Emails al buzón por IMAP le da a Claude acceso para leer, buscar, enviar, responder, programar y organizar, y después la misma conexión funciona desde Cursor, ChatGPT y otros clientes MCP."
     },
     {
       "q": "¿Cuál es la configuración IMAP y SMTP de Orange?",

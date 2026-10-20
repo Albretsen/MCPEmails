@@ -4,7 +4,7 @@ import { useState, useEffect, useRef } from 'react';
 import { useTranslations } from 'next-intl';
 import { trackProductEvent, scopeProfile } from '@/lib/analytics.mjs';
 import { Icon, Badge, Btn, Avatar, ProviderLogo } from '../Primitives';
-import { useAppLocale } from '../i18n/AppLocaleProvider';
+import { preferredAppLocale, useAppLocale } from '../i18n/AppLocaleProvider';
 import { routing } from '@/i18n/routing';
 import { Link } from '@/i18n/navigation';
 import { CLIENT_LOGOS } from './clientLogos';
@@ -14,6 +14,7 @@ import { normalizeSenderName } from '@/lib/inboxes/sender-name';
 import { canChangeApiKey, keyScopeCap } from '@/lib/api-keys/key-authority';
 import { VIEWER_SCOPES } from '@/lib/api-keys/scopes';
 import { canOperateWorkspace } from '@/lib/workspace/roles';
+import { startVisiblePoll } from '@/lib/polling/visible-poll';
 import {
   hiddenFromShown,
   inboxDraftEditorControl,
@@ -23,6 +24,7 @@ import { ApprovalsPanel } from './ApprovalsPanel';
 import { AutomationsPanel } from './AutomationsPanel';
 import { usePricingView } from '@/lib/analytics/use-pricing-view.mjs';
 import { PLANS as CATALOGUE } from '@/lib/stripe/plans';
+import { trimLeadingQuietDays } from '@/lib/analytics/retention';
 import { formatAmountCents, formatPriceCents } from '@/lib/stripe/annual-offer';
 import { pricingCompareHref } from '@/lib/billing/upgrade-intent.mjs';
 import { inboxCapOffer } from '@/lib/billing/inbox-cap-offer.mjs';
@@ -1124,11 +1126,12 @@ function UsageBars({ dailyCounts }) {
 }
 
 /**
- * 30-day bar chart that renders real daily call counts from `activity_log`.
+ * Daily bar chart that renders real call counts from `activity_log`.
  *
  * Props:
- *   dailyCounts: array of 30 { date: "YYYY-MM-DD", count: number } objects,
- *                 oldest first (index 0 = 29 days ago, index 29 = today).
+ *   dailyCounts: array of { date: "YYYY-MM-DD", count: number } objects,
+ *                 oldest first, last = today. At least 30 entries for a real
+ *                 workspace (see trimLeadingQuietDays), up to the plan window.
  */
 function UsageChart30({ dailyCounts }) {
   const t = useTranslations('dashboard');
@@ -1149,11 +1152,13 @@ function UsageChart30({ dailyCounts }) {
   }
 
   const max = Math.max(...dailyCounts.map((d) => d.count), 1);
-  const total = dailyCounts.length; // always 30
+  const total = dailyCounts.length; // 30 to 730 days, depending on plan and history
 
-  // Show a date label every 5 bars; always show the last bar's label.
+  // A date label every `step` bars (every 5 up to 40 days, then about eight in
+  // all so a long window does not print a hundred dates); always the last.
+  const step = Math.max(5, Math.ceil(total / 8));
   const labels = dailyCounts.map((d, i) => {
-    if (i === 0 || i % 5 === 4 || i === total - 1) return formatBarDate(d.date);
+    if (i === 0 || i % step === step - 1 || i === total - 1) return formatBarDate(d.date);
     return '';
   });
 
@@ -4342,6 +4347,10 @@ export function KeysPage({ keys, inboxes = [], mcpUrl, onCreate, onKeyCreated, o
 // Stop is an operator action (owner/admin/member). Viewers are read-only, and
 // PATCH /api/workflows/runs refuses them with a 403, so for a viewer the button
 // is shown disabled with the reason beside it instead of failing on click.
+export const BULK_RUNS_ACTIVE_POLL_MS = 5_000;
+export const BULK_RUNS_IDLE_POLL_MS = 60_000;
+const isActiveBulkRun = (run) => run.status === 'running' || run.status === 'cancelling';
+
 function BulkRunsPanel({ userRole }) {
   const t = useTranslations('dashboard');
   const canStop = canOperateWorkspace(userRole);
@@ -4350,22 +4359,33 @@ function BulkRunsPanel({ userRole }) {
   const [error, setError] = useState('');
   const [cancelling, setCancelling] = useState(null);
 
+  // Whether the last answer had a run in flight. Read by the poll clock, so a
+  // ref rather than state: changing it must not restart the effect.
+  const activeRef = useRef(false);
+
   const load = async () => {
     try {
       const response = await fetch('/api/workflows/runs', { cache: 'no-store' });
       const payload = await response.json();
       if (!response.ok) throw new Error(payload.error || 'Failed to load runs.');
-      setRuns(payload.runs || []); setError('');
+      const next = payload.runs || [];
+      activeRef.current = next.some(isActiveBulkRun);
+      setRuns(next); setError('');
     } catch (err) { setError(err instanceof Error ? err.message : 'Failed to load runs.'); }
     finally { setLoading(false); }
   };
 
   useEffect(() => {
-    // Initial load plus a 5s poll; the fetch it runs necessarily sets state.
-    // eslint-disable-next-line react-hooks/set-state-in-effect
-    load();
-    const id = window.setInterval(load, 5000);
-    return () => window.clearInterval(id);
+    // Initial load, then 5 s while a run is in flight and 60 s while idle,
+    // paused while the tab is hidden and refreshed the moment it is shown.
+    // Runs are started from an MCP client, not this page, so the idle poll is
+    // what notices a new one. The fetch it runs necessarily sets state.
+    const poll = startVisiblePoll({
+      poll: load,
+      intervalMs: () => (activeRef.current ? BULK_RUNS_ACTIVE_POLL_MS : BULK_RUNS_IDLE_POLL_MS),
+      immediate: true,
+    });
+    return () => poll.stop();
   }, []);
 
   const cancel = async (id) => {
@@ -4387,7 +4407,7 @@ function BulkRunsPanel({ userRole }) {
     <div className="card" style={{ overflowX: 'auto' }}>
       {loading ? <p style={{ color: 'var(--fg-3)' }}>Loading runs…</p> : runs.length === 0 ? <div className="empty-state"><Icon name="activity" size={24} /><h3>No large-work runs yet</h3><p>Bulk move and flag actions will appear here while they run.</p></div> :
         <table className="data-table"><thead><tr><th>Action</th><th>Inbox</th><th>Progress</th><th>Status</th><th>Started</th><th /></tr></thead><tbody>{runs.map((run) => {
-          const active = run.status === 'running' || run.status === 'cancelling';
+          const active = isActiveBulkRun(run);
           const label = run.operation.replaceAll('_', ' ');
           return <tr key={run.id}><td style={{ textTransform: 'capitalize' }}>{label}</td><td>{run.inbox}</td><td>{run.processed} / {run.total} processed · {run.succeeded} changed{run.failed ? ` · ${run.failed} failed` : ''}</td><td><Badge tone={run.status === 'completed' ? 'live' : run.status === 'cancelled_partial' ? 'warning' : active ? 'neutral' : 'danger'}>{run.status.replaceAll('_', ' ')}</Badge></td><td>{new Date(run.createdAt).toLocaleString()}</td><td className="right">{active && <Btn variant="secondary" size="sm" disabled={!canStop || run.status === 'cancelling' || cancelling === run.id} title={canStop ? undefined : t('workflows.bulkRuns.stopViewerTitle')} onClick={canStop ? () => cancel(run.id) : undefined}>{run.status === 'cancelling' ? 'Stopping…' : 'Stop'}</Btn>}</td></tr>;
         })}</tbody></table>}
@@ -4426,6 +4446,7 @@ export function UsagePage({ usageData, planLimits, actionAllowance = null, strip
   // in the banner can switch it. Hoisted here because the banner renders from
   // a conditional and hooks cannot live inside it.
   const [capInterval, setCapInterval] = useState('month');
+  const { locale } = useAppLocale();
   const allowanceState = allowanceTileState(actionAllowance);
   const allowance = allowanceProgress(actionAllowance);
   const {
@@ -4435,13 +4456,18 @@ export function UsagePage({ usageData, planLimits, actionAllowance = null, strip
     byInbox = [],
   } = usageData ?? {};
 
-  // The analytics window this plan buys (Free 7, Personal 30, Pro 90, Team
-  // 365). Every figure on this page comes from a query scoped to it, so the
-  // average has to divide by the same number and the copy has to quote it.
+  // The analytics window this plan buys (Free 30, Personal 90, Pro and
+  // Business 730). Every figure on this page comes from a query scoped to it.
   const historyDays = planLimits?.historyDays ?? 30;
+  // What is drawn: the window minus the quiet days before the first call, never
+  // under 30. Rows past 90 days were deleted on every plan until 2026-10-20, so
+  // a 730-day window would otherwise chart ~640 empty days and divide the
+  // average by days that never had data. The labels quote what is drawn.
+  const shownCounts = trimLeadingQuietDays(dailyCounts);
+  const shownDays = shownCounts.length || historyDays;
 
   // Derived stats
-  const avgPerDay = totalCalls > 0 ? Math.round(totalCalls / historyDays) : 0;
+  const avgPerDay = totalCalls > 0 ? Math.round(totalCalls / shownDays) : 0;
   const busiestDay = dailyCounts.reduce(
     (best, d) => (d.count > best.count ? d : best),
     { date: '', count: 0 },
@@ -4454,7 +4480,7 @@ export function UsagePage({ usageData, planLimits, actionAllowance = null, strip
     <div className="page">
       <PageHeader
         title={t('usage.title')}
-        sub={t('usage.sub', { days: historyDays })}
+        sub={t('usage.sub', { days: shownDays })}
       />
 
       {/* The allowance strip: bar plus one sentence for a metered Free
@@ -4572,7 +4598,7 @@ export function UsagePage({ usageData, planLimits, actionAllowance = null, strip
                 {t('usage.capCompare')}
               </Link>
               <a
-                href={usageCapCheckoutHref(offer.plan, capInterval === 'year')}
+                href={usageCapCheckoutHref(offer.plan, capInterval === 'year', locale)}
                 style={{
                   display: 'inline-flex',
                   alignItems: 'center',
@@ -4647,7 +4673,7 @@ export function UsagePage({ usageData, planLimits, actionAllowance = null, strip
           {/* Summary stats */}
           <div className="stat-grid usage-stat-grid">
             <div className="stat">
-              <div className="label">{t('usage.totalCalls', { days: historyDays })}</div>
+              <div className="label">{t('usage.totalCalls', { days: shownDays })}</div>
               <div className="value">{totalCalls.toLocaleString()}</div>
               <div className="delta">{t('usage.totalCallsDelta')}</div>
             </div>
@@ -4670,11 +4696,11 @@ export function UsagePage({ usageData, planLimits, actionAllowance = null, strip
             <div className="card-h">
               <div>
                 <div className="title">{t('usage.callsPerDayTitle')}</div>
-                <div className="sub">{t('usage.callsPerDaySub', { days: historyDays })}</div>
+                <div className="sub">{t('usage.callsPerDaySub', { days: shownDays })}</div>
               </div>
             </div>
             <div className="card-body">
-              <UsageChart30 dailyCounts={dailyCounts} />
+              <UsageChart30 dailyCounts={shownCounts} />
             </div>
           </div>
 
@@ -5667,7 +5693,11 @@ function BillingSection({
       const res = await fetch('/api/stripe/checkout', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ planId, interval: checkoutInterval }),
+        // The buyer's language picks the hosted page's (German is the only
+        // one that changes it, see checkout-core). Read at call time, not
+        // from `locale`: the ?upgrade= effect below calls this on mount,
+        // before the provider has resolved the stored choice into context.
+        body: JSON.stringify({ planId, interval: checkoutInterval, locale: preferredAppLocale() }),
       });
 
       const data = await res.json();
@@ -6651,7 +6681,7 @@ function LanguageSection() {
 
   // Each language is shown by its own native name (autonym) so the option is
   // recognizable regardless of the current interface language.
-  const LOCALE_LABELS = { en: 'English', nb: 'Norsk', es: 'Español', fr: 'Français', zh: '中文' };
+  const LOCALE_LABELS = { en: 'English', nb: 'Norsk', es: 'Español', fr: 'Français', zh: '中文', de: 'Deutsch' };
   const options = routing.locales.map((value) => ({ value, label: LOCALE_LABELS[value] || value }));
 
   return (

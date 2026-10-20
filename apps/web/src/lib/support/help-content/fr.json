@@ -103,8 +103,8 @@
       "keywords": "aucun outil rien vide connecteur ne marche pas claude chatgpt cursor mode développeur portée inbox_list",
       "steps": [
         "Ouvrez Boîtes dans le tableau de bord et vérifiez que la boîte apparaît sans erreur. Si elle en affiche une, reconnectez-la.",
-        "Ouvrez une nouvelle conversation après avoir ajouté le connecteur. Dans ChatGPT, choisissez aussi Mode développeur et l’application mcpemails dans le menu + de chaque nouvelle conversation.",
-        "Autorisez le connecteur avec le même compte mcpemails que celui qui détient la boîte.",
+        "Ouvrez une nouvelle conversation après avoir ajouté le connecteur. Dans ChatGPT, choisissez aussi Mode développeur et l’application MCP Emails dans le menu + de chaque nouvelle conversation.",
+        "Autorisez le connecteur avec le même compte MCP Emails que celui qui détient la boîte.",
         "Votre assistant ne voit que les outils autorisés pour le connecteur ou la clé d’API. Si vous avez laissé une portée décochée, retirez le connecteur et ajoutez-le de nouveau.",
         "Demandez d’abord à l’assistant de lister vos boîtes. Les e-mails sont récupérés quand l’assistant les demande, rien n’arrive tout seul."
       ],

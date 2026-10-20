@@ -1,3 +1,5 @@
+import { LANG_PARAM, readingLangFromParam } from '../../i18n/reading-lang.mjs';
+
 const PAID_PLANS = new Set(['personal', 'solo', 'pro']);
 const BILLING_INTERVALS = new Set(['month', 'year']);
 
@@ -27,9 +29,16 @@ export function upgradeDestination(planId, annual) {
  *
  * See app/api/stripe/checkout/start/route.ts. Must be rendered as a plain <a>,
  * never a next/link <Link>, so the router never prefetches it.
+ *
+ * `locale` is the language the buyer is reading. A supported locale other than
+ * English rides along as `&lang=`, and the route decides what to do with it
+ * (today only German changes the hosted page). English and anything unknown
+ * add nothing, so English links are unchanged.
  */
-export function checkoutStartHref(planId, annual) {
-  return `/api/stripe/checkout/start?plan=${planId}&interval=${annual ? 'year' : 'month'}`;
+export function checkoutStartHref(planId, annual, locale) {
+  const href = `/api/stripe/checkout/start?plan=${planId}&interval=${annual ? 'year' : 'month'}`;
+  const lang = readingLangFromParam(locale);
+  return lang && lang !== 'en' ? `${href}&${LANG_PARAM}=${lang}` : href;
 }
 
 /**
@@ -39,9 +48,13 @@ export function checkoutStartHref(planId, annual) {
  * through /signup carrying that same route as the post-signup destination, so
  * the first thing a new customer sees after authenticating is Stripe rather
  * than a dashboard they have to find the buy button on again.
+ *
+ * `locale` goes INTO the destination, not only onto /signup: signup stores the
+ * language in the browser, which the checkout route cannot read, so the route
+ * learns it from its own query string after the round trip.
  */
-export function pricingUpgradeHref(planId, annual, signedIn) {
-  const destination = checkoutStartHref(planId, annual);
+export function pricingUpgradeHref(planId, annual, signedIn, locale) {
+  const destination = checkoutStartHref(planId, annual, locale);
   return signedIn ? destination : `/signup?redirect=${encodeURIComponent(destination)}`;
 }
 

@@ -671,7 +671,7 @@ export function AuthorizeApp({
         </a>
 
         <div className="az-card">
-          {/* Header: client logo ↔ mcpemails logo */}
+          {/* Header: client logo ↔ MCP Emails logo */}
           {step !== 'done' && (
             <div className="az-head">
               <div className="blob">
@@ -683,7 +683,7 @@ export function AuthorizeApp({
               </div>
               <div className="arc" />
               <div className="blob brand">
-                <img src="/favicon.svg" alt="mcpemails" />
+                <img src="/favicon.svg" alt="MCP Emails" />
               </div>
             </div>
           )}

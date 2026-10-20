@@ -20,7 +20,7 @@
     "titleLine1": "面向 Bluehost 邮箱的 MCP 服务器：",
     "titleLine2": "在 Claude 和 ChatGPT 中使用公司的每一个邮箱",
     "lead": "在 Bluehost 用自己的域名开设了 info@、sales@、support@ 和 invoices@？把每个邮箱都连接到同一个工作区，你的 AI 代理就能处理所有邮箱。无论是 cPanel Email 账户还是 Professional Email 邮箱，都可以通过 IMAP 读取、搜索、发送、回复、定时与整理邮件。",
-    "answer": "Claude 无法自行访问 Bluehost 邮箱。mcpemails 是一个托管 MCP 服务器，通过端口 993 的标准 IMAP 与之连接，让 Claude、Cursor 或任意 MCP 客户端都能读取、搜索、发送并整理这些邮件。首先要弄清你用的是 Bluehost 三种邮箱产品中的哪一种，因为 cPanel Email 在由你自己域名构成的服务器上响应，而 Professional Email 在 Titan 的服务器上响应，两套设置不能互换。无论哪种，你都使用邮箱本身设置的密码进行认证，绝不是你的 Bluehost 门户密码。公司的每个地址（如 info@ 或 sales@）都作为独立邮箱连接：一个邮箱免费，Personal 连接三个，Pro 最多连接 10 个，Business 按需连接更多。",
+    "answer": "Claude 无法自行访问 Bluehost 邮箱。MCP Emails 是一个托管 MCP 服务器，通过端口 993 的标准 IMAP 与之连接，让 Claude、Cursor 或任意 MCP 客户端都能读取、搜索、发送并整理这些邮件。首先要弄清你用的是 Bluehost 三种邮箱产品中的哪一种，因为 cPanel Email 在由你自己域名构成的服务器上响应，而 Professional Email 在 Titan 的服务器上响应，两套设置不能互换。无论哪种，你都使用邮箱本身设置的密码进行认证，绝不是你的 Bluehost 门户密码。公司的每个地址（如 info@ 或 sales@）都作为独立邮箱连接：一个邮箱免费，Personal 连接三个，Pro 最多连接 10 个，Business 按需连接更多。",
     "meta0": "第一个邮箱免费，其余按套餐连接",
     "meta1": "邮箱密码，而非门户登录密码",
     "meta2": "邮件实时获取，绝不存储"
@@ -36,7 +36,7 @@
   },
   "setup": [
     {
-      "h": "创建免费的 mcpemails 账户",
+      "h": "创建免费的 MCP Emails 账户",
       "p": "在 mcpemails.com 注册。免费套餐可连接一个收件箱，无需信用卡。"
     },
     {
@@ -67,13 +67,13 @@
     }
   ],
   "limits": [
-    "通过 Bluehost 购买的 Google Workspace 邮箱是 Google 邮箱。请按 Gmail 连接，使用 Google 应用专用密码或 Google 登录选项，而不是使用 Bluehost 凭据。",
-    "mcpemails 连接的是邮箱，而不是主机账户。转发器、别名和过滤器仍在 Bluehost 门户中管理。"
+    "通过 Bluehost 购买的 Google Workspace 邮箱是 Google 邮箱。请按 Gmail 连接，使用 Google 应用专用密码，而不是使用 Bluehost 凭据。",
+    "MCP Emails 连接的是邮箱，而不是主机账户。转发器、别名和过滤器仍在 Bluehost 门户中管理。"
   ],
   "faq": [
     {
       "q": "Claude 能用于 Bluehost 邮箱吗？",
-      "a": "不能直接使用。Claude 没有内置的 Bluehost 连接器。通过 IMAP 将 mcpemails 这样的 MCP 服务器连接到邮箱后，Claude 就能读取、搜索、发送、回复、定时和整理其中的邮件。只要你为自己的产品使用正确的服务器，cPanel Email 账户和 Professional Email 账户都适用。"
+      "a": "不能直接使用。Claude 没有内置的 Bluehost 连接器。通过 IMAP 将 MCP Emails 这样的 MCP 服务器连接到邮箱后，Claude 就能读取、搜索、发送、回复、定时和整理其中的邮件。只要你为自己的产品使用正确的服务器，cPanel Email 账户和 Professional Email 账户都适用。"
     },
     {
       "q": "Bluehost 的 IMAP 和 SMTP 设置是什么？",

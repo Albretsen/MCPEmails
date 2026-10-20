@@ -7,7 +7,7 @@
 [![MCP registry](https://img.shields.io/badge/MCP%20registry-com.mcpemails%2Femails-blue)](https://registry.modelcontextprotocol.io/v0/servers?search=mcpemails)
 [![License: AGPL-3.0](https://img.shields.io/badge/license-AGPL--3.0-blue)](LICENSE)
 
-> Connect a mailbox once, paste one URL into your agent, and it can work your inbox live. Email is fetched on demand and never retained; credentials are encrypted at rest and decrypted only at call time inside an isolated edge function.
+> Connect a mailbox once, paste one URL into your agent, and it can work your inbox live. Email is fetched on demand and never retained; credentials are encrypted at rest and decrypted on our servers only for the request that needs them.
 
 🔗 **[mcpemails.com](https://mcpemails.com)** · 📚 **[Docs](https://mcpemails.com/docs)** · 💳 **[Pricing](https://mcpemails.com/pricing)**
 
@@ -36,7 +36,7 @@
 
 ## How it works
 
-1. **Connect a mailbox.** Sign in at [mcpemails.com](https://mcpemails.com) and connect Outlook / Microsoft 365 (Sign in with Microsoft, over Microsoft Graph), Gmail (a Google app password over IMAP by default, or Sign in with Google), or any IMAP/SMTP account (app password). Credentials are encrypted with AES‑256‑GCM before they touch the database.
+1. **Connect a mailbox.** Sign in at [mcpemails.com](https://mcpemails.com) and connect Outlook / Microsoft 365 (Sign in with Microsoft, over Microsoft Graph), Gmail (a Google app password over IMAP), or any IMAP/SMTP account (app password). Credentials are encrypted with AES‑256‑GCM before they touch the database.
 2. **Get access.** OAuth‑capable clients (claude.ai, Claude Desktop, Cursor) connect in one click via OAuth 2.0 + PKCE. Everything else uses a scoped API key (`mcpe_…`).
 3. **Point your client at the server.** The MCP endpoint is a single URL:
    ```
@@ -75,7 +75,7 @@ Copy‑paste instructions per client, including where each one keeps its config 
 ## Capabilities
 
 - **Live, never stored** — email is read straight from your provider on each call; no message bodies are persisted.
-- **Multi‑provider** — Outlook / Microsoft 365 via Microsoft Graph (Sign in with Microsoft), Gmail via a Google app password or Sign in with Google, plus any IMAP/SMTP mailbox (Fastmail, iCloud, Yahoo, Zoho, Yandex, self‑hosted…) via app password.
+- **Multi‑provider** — Outlook / Microsoft 365 via Microsoft Graph (Sign in with Microsoft), Gmail via a Google app password over IMAP, plus any IMAP/SMTP mailbox (Fastmail, iCloud, Yahoo, Zoho, Yandex, self‑hosted…) via app password.
 - **Your provider sends** — outbound mail is sent through *your* provider's SMTP/API, from your real address. When a provider refuses connections from cloud addresses, the IMAP/SMTP connection goes through our own tunnel (an HTTP CONNECT relay); TLS still runs end to end to the provider, so the relay never sees mail or credentials.
 - **Granular scopes** — eight permission scopes, grantable independently per API key and per inbox.
 - **Batch & search‑and‑act** — read, move, delete, or flag up to hundreds of messages in one call, including "search then move/delete" combinators.
@@ -163,13 +163,13 @@ Notes:
 
 | Provider | Connect via | Read/Search | Send | Folders | Permanent delete | Drafts |
 | --- | --- | --- | --- | --- | --- | --- |
-| **[Gmail](https://mcpemails.com/connect/gmail) / [Google Workspace](https://mcpemails.com/connect/google-workspace)** | App password (IMAP/SMTP) by default, or OAuth 2.0 (Sign in with Google) | ✅ | ✅ | Labels | Trash only | ✅ |
+| **[Gmail](https://mcpemails.com/connect/gmail) / [Google Workspace](https://mcpemails.com/connect/google-workspace)** | App password (IMAP/SMTP) | ✅ | ✅ | Labels | ✅ (follows Gmail's IMAP expunge settings) | ✅ |
 | **[Fastmail](https://mcpemails.com/connect/fastmail)** | App password (IMAP/SMTP) | ✅ | ✅ | ✅ | ✅ | ✅ |
-| **[iCloud Mail](https://mcpemails.com/connect/icloud), [Yahoo Mail](https://mcpemails.com/connect/yahoo), [AOL Mail](https://mcpemails.com/connect/aol), [GMX](https://mcpemails.com/connect/gmx), [Zoho Mail](https://mcpemails.com/connect/zoho), [Yandex](https://mcpemails.com/connect/yandex)** | App password (IMAP/SMTP) | ✅ | ✅ | ✅ | ✅ | ✅ |
+| **[iCloud](https://mcpemails.com/connect/icloud), [Yahoo](https://mcpemails.com/connect/yahoo), [AOL](https://mcpemails.com/connect/aol), [GMX](https://mcpemails.com/connect/gmx), [Zoho](https://mcpemails.com/connect/zoho), [Yandex](https://mcpemails.com/connect/yandex)** | App password (IMAP/SMTP) | ✅ | ✅ | ✅ | ✅ | ✅ |
 | **[IONOS](https://mcpemails.com/connect/ionos), [STRATO](https://mcpemails.com/connect/strato), [One.com](https://mcpemails.com/connect/one-com), [OVHcloud](https://mcpemails.com/connect/ovh), [Namecheap Private Email](https://mcpemails.com/connect/namecheap), [Hostinger](https://mcpemails.com/connect/hostinger), [Infomaniak](https://mcpemails.com/connect/infomaniak), [Hetzner](https://mcpemails.com/connect/hetzner)** | Mailbox password (IMAP/SMTP) | ✅ | ✅ | ✅ | ✅ | ✅ |
 | **[cPanel](https://mcpemails.com/connect/cpanel), [Plesk](https://mcpemails.com/connect/plesk), [SiteGround](https://mcpemails.com/connect/siteground), [Bluehost](https://mcpemails.com/connect/bluehost) and other shared hosts** | Mailbox password (IMAP/SMTP) | ✅ | ✅ | ✅ | ✅ | ✅ |
 | **[Any other IMAP/SMTP mailbox](https://mcpemails.com/connect/imap)** | App password or mailbox password | ✅ | ✅ | ✅ | ✅ | ✅ |
-| **[Outlook.com](https://mcpemails.com/connect/outlook) / [Microsoft 365](https://mcpemails.com/connect/office365)** | OAuth 2.0 (Microsoft Graph) | ✅ | ✅ | ✅ (nested) | ✅ | ✅ |
+| **[Outlook](https://mcpemails.com/connect/outlook) / [Microsoft 365](https://mcpemails.com/connect/office365)** | OAuth 2.0 (Microsoft Graph) | ✅ | ✅ | ✅ (nested) | ✅ | ✅ |
 
 > Mail on your own domain at a web host connects like any IMAP mailbox, and one workspace can hold several of them (info@, sales@, support@). Per-host settings and known pitfalls for 100 providers are at [mcpemails.com/connect](https://mcpemails.com/connect). Feature support per provider is in the [provider compatibility matrix](https://mcpemails.com/docs/providers), and the probed IMAP/SMTP hosts, login mechanisms and size limits are free to download as an [open provider dataset](https://mcpemails.com/docs/providers/data) (JSON and CSV, CC BY 4.0).
 
@@ -223,7 +223,7 @@ flowchart LR
 - **The Postgres database** stores workspaces, members, inboxes (encrypted tokens/passwords), hashed API keys, OAuth clients, scheduled sends, and an activity log — all guarded by Row‑Level Security.
 - **Cron edge functions** refresh Gmail/Outlook OAuth tokens before expiry.
 
-**Stack:** Next.js 16 (App Router) · React 19 · next‑intl 4 · Supabase (Auth, Postgres, Edge Functions) · Stripe · Resend · TypeScript. Email parsing/sanitization via `mailparser`, `jsdom`, and `isomorphic-dompurify`.
+**Stack:** Next.js 16 (App Router) · React 19 · next‑intl 4 · Supabase (Auth, Postgres, Edge Functions) · Stripe · Resend · TypeScript. Email parsing and sanitization run in the edge functions (`supabase/functions/mcp-server/mime.ts`); signature HTML is sanitized with DOMPurify in the browser and a dependency-free allow-list on the server.
 
 ## Repository layout
 
@@ -239,7 +239,6 @@ flowchart LR
 ├── supabase/
 │   ├── functions/
 │   │   ├── mcp-server/          # the MCP server (tools, auth, scopes)
-│   │   ├── gmail-token-refresh/
 │   │   └── outlook-token-refresh/
 │   └── migrations/              # SQL migrations (schema + RLS)
 └── package.json                 # npm workspaces (apps/*)
@@ -436,7 +435,7 @@ Supported locales: **English, Norwegian Bokmål, Spanish, French, Chinese (Simpl
 
 ## Security model
 
-- **Credentials encrypted at rest** with AES‑256‑GCM; decrypted only inside the edge function at call time.
+- **Credentials encrypted at rest** with AES‑256‑GCM; decrypted on the server only for the request that needs them (the `mcp-server` edge function, and the web API routes that check or test a connection).
 - **No message storage** — email bodies and attachments are fetched live and never persisted. Attachment text extraction runs transiently in the request and returns no raw attachment bytes.
 - **API keys are hashed** (only a prefix is stored for display) and scoped per permission and per inbox, with optional expiry.
 - **OAuth 2.0 + PKCE** for client authorization; **Dynamic Client Registration** (RFC 7591) for MCP clients.

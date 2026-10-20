@@ -21,7 +21,7 @@
     "titleLine1": "Koble Sina Mail til Claude,",
     "titleLine2": "Cursor, ChatGPT, enhver MCP-klient",
     "lead": "Gi AI-agenten din en ekte Sina-postkasse. Les, søk, send, svar, planlegg og organiser e-post via IMAP med en Sina-autorisasjonskode, i alle MCP-klienter i stedet for bare én.",
-    "answer": "Claude når ikke Sina Mail på egen hånd. mcpemails er en hostet MCP-server som kobler til via IMAP på imap.sina.com port 993 og autentiserer med klientautorisasjonskoden på 16 tegn (客户端授权码) som Sina utsteder, i stedet for postkassepassordet ditt. Koden og POP/IMAP/SMTP-tjenesten er to separate brytere i samme dialog, og å slå på bare den ene er den vanligste grunnen til at en Sina-tilkobling feiler. Sinas IMAP-server annonserer også nesten ingen funksjoner, noe som slår ut klienter som forhandler før de autentiserer. Én innboks er gratis.",
+    "answer": "Claude når ikke Sina Mail på egen hånd. MCP Emails er en hostet MCP-server som kobler til via IMAP på imap.sina.com port 993 og autentiserer med klientautorisasjonskoden på 16 tegn (客户端授权码) som Sina utsteder, i stedet for postkassepassordet ditt. Koden og POP/IMAP/SMTP-tjenesten er to separate brytere i samme dialog, og å slå på bare den ene er den vanligste grunnen til at en Sina-tilkobling feiler. Sinas IMAP-server annonserer også nesten ingen funksjoner, noe som slår ut klienter som forhandler før de autentiserer. Én innboks er gratis.",
     "meta0": "1 innboks gratis, for alltid",
     "meta1": "Kode på 16 tegn, tjenesten slått på",
     "meta2": "E-post hentes direkte, lagres aldri"
@@ -32,7 +32,7 @@
   },
   "setup": [
     {
-      "h": "Opprett din gratis mcpemails-konto",
+      "h": "Opprett din gratis MCP Emails-konto",
       "p": "Registrer deg på mcpemails.com. Gratisplanen kobler til én innboks og forblir gratis, uten kort. Ha telefonen som er knyttet til Sina-kontoen din i nærheten: neste steg sender den en bekreftelses-SMS."
     },
     {
@@ -41,7 +41,7 @@
     },
     {
       "h": "Ta koden og kryss av for tjenesten i samme dialog",
-      "p": "Etter bekreftelsen viser Sina autorisasjonskoden på 16 tegn én gang. Kopier den før du lukker noe. I samme dialog finnes en egen avkrysningsboks for 开启pop/imap/smtp服务, å slå på POP-, IMAP- og SMTP-tjenesten. Kryss av for den. Sinas egen hjelp sier eksplisitt at det å ha koden uten å slå på tjenesten ikke lar deg logge inn fra en tredjepartsklient. Velg så IMAP / SMTP i mcpemails, skriv inn hele Sina-adressen din og lim inn koden som passord."
+      "p": "Etter bekreftelsen viser Sina autorisasjonskoden på 16 tegn én gang. Kopier den før du lukker noe. I samme dialog finnes en egen avkrysningsboks for 开启pop/imap/smtp服务, å slå på POP-, IMAP- og SMTP-tjenesten. Kryss av for den. Sinas egen hjelp sier eksplisitt at det å ha koden uten å slå på tjenesten ikke lar deg logge inn fra en tredjepartsklient. Velg så IMAP / SMTP i MCP Emails, skriv inn hele Sina-adressen din og lim inn koden som passord."
     },
     {
       "h": "Lim MCP-URL-en inn i AI-klienten",
@@ -51,7 +51,7 @@
   "gotchas": [
     {
       "h": "Sinas IMAP-server annonserer to funksjoner og ingenting annet",
-      "p": "Hilsenen fra <code>imap.sina.com</code> er <code>[CAPABILITY IMAP4rev1 ID]</code>. Det er hele listen. Ingen autentiseringsmekanismer tilbys før innlogging, og <code>SASL-IR</code> mangler, så autentisering i ett steg, der påloggingen sendes sammen med <code>AUTHENTICATE</code>-kommandoen, avvises med en naken <code>BAD</code> uten forklaring. En klient som leser funksjonslinjen for å avgjøre hvordan den skal logge inn, konkluderer med at det ikke finnes noen støttet måte og stopper. Det som virker, er den vanlige IMAP-kommandoen <code>LOGIN</code> med autorisasjonskoden, og en utveksling i to steg der en mekanisme trengs. mcpemails oppdager den nakne <code>BAD</code> og prøver på nytt i to steg, så dette er håndtert, men det er grunnen til at andre IMAP-verktøy rapporterer en Sina-feil som ser ut som feil påloggingsdetaljer."
+      "p": "Hilsenen fra <code>imap.sina.com</code> er <code>[CAPABILITY IMAP4rev1 ID]</code>. Det er hele listen. Ingen autentiseringsmekanismer tilbys før innlogging, og <code>SASL-IR</code> mangler, så autentisering i ett steg, der påloggingen sendes sammen med <code>AUTHENTICATE</code>-kommandoen, avvises med en naken <code>BAD</code> uten forklaring. En klient som leser funksjonslinjen for å avgjøre hvordan den skal logge inn, konkluderer med at det ikke finnes noen støttet måte og stopper. Det som virker, er den vanlige IMAP-kommandoen <code>LOGIN</code> med autorisasjonskoden, og en utveksling i to steg der en mekanisme trengs. MCP Emails oppdager den nakne <code>BAD</code> og prøver på nytt i to steg, så dette er håndtert, men det er grunnen til at andre IMAP-verktøy rapporterer en Sina-feil som ser ut som feil påloggingsdetaljer."
     },
     {
       "h": "Å generere koden er ikke det samme som å slå på tjenesten",
@@ -74,7 +74,7 @@
   "faq": [
     {
       "q": "Fungerer Claude med Sina Mail?",
-      "a": "Ikke direkte. Claude har ingen innebygd Sina-kobling og kan ikke åpne en IMAP-tilkobling selv. Kobler du en MCP-server som mcpemails til Sina-postkassen din, får Claude tilgang til å lese, søke, sende, svare, videresende, planlegge og organisere, og samme tilkobling fungerer fra Cursor og andre MCP-klienter."
+      "a": "Ikke direkte. Claude har ingen innebygd Sina-kobling og kan ikke åpne en IMAP-tilkobling selv. Kobler du en MCP-server som MCP Emails til Sina-postkassen din, får Claude tilgang til å lese, søke, sende, svare, videresende, planlegge og organisere, og samme tilkobling fungerer fra Cursor og andre MCP-klienter."
     },
     {
       "q": "Hva er IMAP- og SMTP-innstillingene for Sina Mail?",
@@ -90,7 +90,7 @@
     },
     {
       "q": "Bruker en sina.cn-adresse disse innstillingene?",
-      "a": "Nei. Sina kjører egne servernavn for gratis sina.cn-postkasser og for betalte VIP-postkasser, som skiller seg fra sina.com-navnene med et suffiks. Hent de nøyaktige vertene for domenet ditt fra Sinas egne hjelpesider, og koble så postkassen til i mcpemails som en vanlig IMAP- og SMTP-konto. Kravet om autorisasjonskode er det samme på alle tre."
+      "a": "Nei. Sina kjører egne servernavn for gratis sina.cn-postkasser og for betalte VIP-postkasser, som skiller seg fra sina.com-navnene med et suffiks. Hent de nøyaktige vertene for domenet ditt fra Sinas egne hjelpesider, og koble så postkassen til i MCP Emails som en vanlig IMAP- og SMTP-konto. Kravet om autorisasjonskode er det samme på alle tre."
     },
     {
       "q": "Lagres Sina-e-posten min på serverne deres?",

@@ -3,7 +3,9 @@
     "https://www.ionos.com/help/email/general-topics/ionos-mail-server-details-for-imap-pop3-and-smtp/",
     "https://www.ionos.com/help/email/other-email-programs/setting-up-an-ionos-email-account-in-apple-mail/",
     "https://www.ionos.com/help/office/setting-up-microsoft-365/migrating-emails-from-11-ionos-mail-accounts-to-office-365/",
-    "https://www.ionos.co.uk/help/email/mail-basic/"
+    "https://www.ionos.co.uk/help/email/mail-basic/",
+    "https://www.ionos.de/hilfe/e-mail/allgemeine-themen/serverinformationen-fuer-imap-pop3-und-smtp/",
+    "https://www.ionos.co.uk/help/email/general-topics/ionos-mail-server-details-for-imap-pop3-and-smtp/"
   ],
   "auth": {
     "method": "mail-password",
@@ -24,7 +26,7 @@
     "meta0": "First mailbox free, plans for the rest",
     "meta1": "Your mailbox password, no OAuth setup",
     "meta2": "Email fetched live, never stored",
-    "answer": "Claude cannot reach IONOS on its own. mcpemails is a hosted MCP server that connects it over IMAP using your mailbox password, so Claude, Cursor or any MCP client can read, search, send and organize that mail. Setup takes a couple of minutes. Each company address, such as info@ or sales@, connects as its own mailbox: one mailbox is free, Personal connects three, Pro up to 10, and Business as many as you need."
+    "answer": "Claude cannot reach IONOS on its own. MCP Emails is a hosted MCP server that connects it over IMAP using your mailbox password, so Claude, Cursor or any MCP client can read, search, send and organize that mail. Setup takes a couple of minutes. Each company address, such as info@ or sales@, connects as its own mailbox: one mailbox is free, Personal connects three, Pro up to 10, and Business as many as you need."
   },
   "persona": {
     "intro": "Several company mailboxes at IONOS?",
@@ -33,20 +35,20 @@
   },
   "method": {
     "title": "How IONOS connects: IMAP and your mailbox password",
-    "body": "IONOS connects over IMAP/SMTP with the <b>email password</b> you set in the IONOS control panel under Email, which is separate from your IONOS login. IONOS answers on both standard transports, 993 with TLS and 143 with STARTTLS, so the port is rarely what makes an IONOS login fail. mcpemails fills in a working pair and retries the other if the first does not answer, so a rejected login here really is the password."
+    "body": "IONOS connects over IMAP/SMTP with the <b>email password</b> you set in the IONOS control panel under Email, which is separate from your IONOS login. The server names depend on the IONOS site that sold you the mailbox: IONOS Germany documents <code>imap.ionos.de</code> and <code>smtp.ionos.de</code>, IONOS UK <code>imap.ionos.co.uk</code> and <code>smtp.ionos.co.uk</code>, and ionos.com <code>imap.ionos.com</code> and <code>smtp.ionos.com</code>. IONOS answers on both standard transports, 993 with TLS and 143 with STARTTLS, so the port is rarely what makes an IONOS login fail, and MCP Emails retries the other transport if the first does not answer."
   },
   "setup": [
     {
       "h": "Create a free account",
-      "p": "Sign up for mcpemails, no card required. The free plan connects one inbox, forever."
+      "p": "Sign up for MCP Emails, no card required. The free plan connects one inbox, forever."
     },
     {
       "h": "Get your IONOS mailbox password",
       "p": "In the IONOS control panel, open Email, pick the address and set or reset its password. It is not the password you use to sign in to IONOS itself."
     },
     {
-      "h": "Paste it into mcpemails",
-      "p": "Choose IMAP / SMTP, add your IONOS address, the hosts above and the password to connect the inbox securely."
+      "h": "Paste it into MCP Emails",
+      "p": "Choose IMAP / SMTP and add your IONOS address and the mailbox password. The hosts shown above are the ionos.com ones: for a mailbox from ionos.de, use imap.ionos.de and smtp.ionos.de instead, and for ionos.co.uk the .co.uk names."
     },
     {
       "h": "Paste the MCP URL into your AI",
@@ -67,22 +69,22 @@
       "p": "IONOS resells Microsoft 365 alongside its own Mail Basic and Mail Business products, and a large number of customers who think they have IONOS email actually have a Microsoft tenant with an IONOS invoice. Nothing on <code>imap.ionos.com</code> applies to those mailboxes: they live on Microsoft's servers and are administered from the Microsoft 365 Admin Center rather than the IONOS control panel. Connect them with the Outlook option (Sign in with Microsoft) instead of IMAP. Your organisation's IT admin may need to approve MCP Emails once first, and the dashboard gives you an approval link to send them. The tell is where your webmail takes you: Outlook on the web means Microsoft."
     },
     {
-      "h": "Every IONOS country brand, and every legacy 1&1 address, uses the same two hosts",
-      "p": "IONOS runs separate storefronts on ionos.de, ionos.co.uk, ionos.fr, ionos.es, ionos.it and ionos.com, and those exist for billing and marketing rather than because the mail platform is regional. IMAP is <code>imap.ionos.com</code> and SMTP is <code>smtp.ionos.com</code> whatever storefront sold you the mailbox. Third-party guides that still insist on region-specific names built from the old 1&1 brand pre-date the rebrand, and following them puts you on a hostname that does not answer. There is no regional host to hunt for."
+      "h": "IONOS Germany, IONOS UK and ionos.com document different server names",
+      "p": "IONOS runs storefronts on ionos.de, ionos.co.uk, ionos.fr, ionos.es, ionos.it and ionos.com, and its help pages give each one its own host names. The German help lists <code>imap.ionos.de</code> on port 993 and <code>smtp.ionos.de</code> on port 465, with 587 and STARTTLS if 465 is blocked; the UK help lists <code>imap.ionos.co.uk</code> and <code>smtp.ionos.co.uk</code>; ionos.com lists <code>imap.ionos.com</code> and <code>smtp.ionos.com</code>. They are not interchangeable labels for one server. The .com servers present a certificate issued to IONOS Inc. in the United States, while the .de and .co.uk servers present one issued to IONOS SE in Germany, which also covers the old 1&1 names such as <code>imap.1und1.de</code>. Use the names from the IONOS site where you bought the mailbox."
     }
   ],
   "limits": [
     "Microsoft 365 mailboxes bought through IONOS are not on imap.ionos.com. Connect them with Outlook (Sign in with Microsoft); an IT admin may need to approve the app once.",
-    "mcpemails connects a mailbox. IONOS aliases, forwarders, catch-all rules and spam settings stay in the IONOS control panel and are not visible to your AI client."
+    "MCP Emails connects a mailbox. IONOS aliases, forwarders, catch-all rules and spam settings stay in the IONOS control panel and are not visible to your AI client."
   ],
   "faq": [
     {
       "q": "Does Claude work with IONOS email?",
-      "a": "It works with an IONOS mailbox, the kind served by imap.ionos.com, once an MCP server such as mcpemails is connected to it over IMAP. Claude has no built-in IONOS connector. A Microsoft 365 mailbox bought through IONOS works too, but it connects with Outlook (Sign in with Microsoft) rather than IMAP, and an IT admin may need to approve MCP Emails once first."
+      "a": "It works with an IONOS mailbox, the kind served by imap.ionos.com, once an MCP server such as MCP Emails is connected to it over IMAP. Claude has no built-in IONOS connector. A Microsoft 365 mailbox bought through IONOS works too, but it connects with Outlook (Sign in with Microsoft) rather than IMAP, and an IT admin may need to approve MCP Emails once first."
     },
     {
       "q": "What are the IONOS IMAP and SMTP settings?",
-      "a": "IMAP is imap.ionos.com on port 993 with SSL/TLS and SMTP is smtp.ionos.com on port 465, also SSL/TLS. IONOS documents port 587 with STARTTLS as an outgoing alternative if your network blocks 465. The username is your complete email address. Both hosts were confirmed from a live TLS connection on the date shown on this page."
+      "a": "It depends on where you bought the mailbox. IONOS Germany documents imap.ionos.de on port 993 and smtp.ionos.de on port 465, both SSL/TLS, with 587 and STARTTLS as the outgoing alternative. IONOS UK documents imap.ionos.co.uk and smtp.ionos.co.uk, and ionos.com documents imap.ionos.com and smtp.ionos.com, on the same ports. The username is your complete email address."
     },
     {
       "q": "Should I use IONOS port 993 or 143?",
@@ -93,8 +95,8 @@
       "a": "Because IONOS gives every email address its own password and you are probably using your IONOS account login instead. Open the IONOS control panel, go to Email, select the address and set a new password for it, then use that. If the address was migrated to Microsoft 365, it no longer exists on the IONOS mail servers at all; connect it with Outlook instead."
     },
     {
-      "q": "Do IONOS UK, German and French accounts use different servers?",
-      "a": "No. The regional IONOS storefronts share one mail platform, and every mailbox uses imap.ionos.com and smtp.ionos.com regardless of which country site sold it. Guides showing region-specific hostnames built from the old 1&1 brand are out of date and those names will not connect."
+      "q": "Do IONOS Germany, UK and US mailboxes use different servers?",
+      "a": "Yes. IONOS's German help gives imap.ionos.de and smtp.ionos.de, its UK help imap.ionos.co.uk and smtp.ionos.co.uk, and ionos.com gives imap.ionos.com and smtp.ionos.com. The .com servers belong to IONOS Inc. in the US and the European ones to IONOS SE, so use the names from the IONOS site where you bought the mailbox. Old 1&1 names such as imap.1und1.de are served by the European servers."
     },
     {
       "q": "Is my IONOS mail stored on your servers?",

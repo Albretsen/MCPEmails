@@ -1,16 +1,16 @@
 {
   "meta": {
-    "title": "关于 MCPEmails 与 Asgeir Albretsen",
-    "description": "MCPEmails 由挪威卑尔根的软件开发者 Asgeir Albretsen 一人开发和运营：一个人，一家已注册的挪威企业，一份开源代码。"
+    "title": "关于 MCP Emails 与 Asgeir Albretsen",
+    "description": "MCP Emails 由挪威卑尔根的软件开发者 Asgeir Albretsen 一人开发和运营：一个人，一家已注册的挪威企业，一份开源代码。"
   },
   "hero": {
     "eyebrow": "关于",
-    "title": "谁在运营 MCPEmails",
+    "title": "谁在运营 MCP Emails",
     "lead": "你要让 AI 智能体访问你的邮件。中间这层服务是谁在运营？一个人，一家已注册的企业，一份你能读的代码。"
   },
   "who": {
     "title": "我是谁",
-    "p1": "我叫 Asgeir Albretsen，是挪威卑尔根的一名软件开发者，拥有卑尔根大学计算机技术学士学位。MCPEmails 由我一个人开发和运营。",
+    "p1": "我叫 Asgeir Albretsen，是挪威卑尔根的一名软件开发者，拥有卑尔根大学计算机技术学士学位。MCP Emails 由我一个人开发和运营。",
     "p2": "工作经历：",
     "thPeriod": "时间",
     "thRole": "职位",
@@ -20,9 +20,9 @@
       { "period": "2023 年 1 月至 2024 年 9 月", "role": "BI 挪威商学院 IT 咨询" },
       { "period": "2024 年 9 月至今", "role": "全职软件开发" }
     ],
-    "p3": "我目前仍在别处全职做软件开发。MCPEmails 是独立项目，自筹资金，用我自己的时间开发。",
+    "p3": "我目前仍在别处全职做软件开发。MCP Emails 是独立项目，自筹资金，用我自己的时间开发。",
     "linksIntro": "其他链接：",
-    "linkGithubNote": "代码，包括 MCPEmails",
+    "linkGithubNote": "代码，包括 MCP Emails",
     "linkSiteNote": "个人网站",
     "linkLinkedinNote": "工作经历"
   },
@@ -36,20 +36,20 @@
     "intro": "三样东西：",
     "points": [
       "<b>一个有名有姓的人。</b>就是我，不是某个客服别名。出了问题，你知道该找谁负责。",
-      "<b>一家已注册的企业。</b>MCPEmails 由 Albretsen Consulting 运营，这是一家挪威个人独资企业，登记在 Brønnøysundregistrene 的 Enhetsregisteret（挪威企业统一登记册）中。个人独资企业意味着我本人承担责任。",
+      "<b>一家已注册的公司。</b>MCP Emails 由 Albretsen AS 运营，这是一家挪威有限责任公司，登记在 Brønnøysundregistrene 的 Foretaksregisteret（挪威企业登记册）中。公司归我所有，我同时担任董事会主席。",
       "<b>你能读的代码。</b>服务端以 AGPL-3.0 许可在 GitHub 上公开，托管服务运行的就是同一份代码。"
     ],
     "entityTitle": "法律实体",
-    "entityName": "Albretsen Consulting（enkeltpersonforetak，挪威个人独资企业）",
-    "entityOrgNo": "组织机构号 926 646 753",
+    "entityName": "Albretsen AS（aksjeselskap，挪威有限责任公司）",
+    "entityOrgNo": "组织机构号 938 702 373",
     "entityAddress": "Håsteins gate 9, 5160 Laksevåg, Norway",
-    "entityRegistry": "已在 Brønnøysundregistrene 的 Enhetsregisteret 登记",
+    "entityRegistry": "已在 Brønnøysundregistrene 的 Foretaksregisteret 登记",
     "entityNote": "完整的法律信息见<terms>服务条款</terms>和<privacy>隐私政策</privacy>。"
   },
   "busFactor": {
     "title": "如果我被车撞了",
     "p1": "一个人运营邮件服务，风险是实实在在的。我可能生病，可能没了兴趣，也可能被车撞了。如果服务是闭源的，你的智能体就会接在一个没人维护的东西上。",
-    "p2": "这正是许可证的用处。MCPEmails 以 AGPL-3.0 开源，托管服务运行的就是你能克隆的那个服务端。如果我不干了，你克隆仓库，一条命令把整套服务跑起来，把智能体指向你自己的实例，照常继续。工具名称不变。凭据是你的，你的邮件也从来没有存在这里。",
+    "p2": "这正是许可证的用处。MCP Emails 以 AGPL-3.0 开源，托管服务运行的就是你能克隆的那个服务端。如果我不干了，你克隆仓库，一条命令把整套服务跑起来，把智能体指向你自己的实例，照常继续。工具名称不变。凭据是你的，你的邮件也从来没有存在这里。",
     "p3": "趁一切正常，先把自托管流程走一遍。真到需要的时候，你已经知道它能用。",
     "ctaSelfHost": "自托管指南",
     "ctaSource": "源代码"

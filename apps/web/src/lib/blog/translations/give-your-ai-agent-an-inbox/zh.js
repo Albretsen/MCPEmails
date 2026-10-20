@@ -2,7 +2,7 @@ const translation = {
   title: '给你的 AI 智能体一个收件箱：通过 MCP 收发邮件的实用指南',
   description:
     '把邮件接入 AI 智能体，比看上去要难得多——而 Model Context Protocol 如何把 Gmail、Outlook 和 IMAP 变成一个安全、可被智能体真正调用的统一端点。',
-  coverAlt: '给你的 AI 智能体一个收件箱 — MCPEmails',
+  coverAlt: '给你的 AI 智能体一个收件箱 — MCP Emails',
   content: `大多数“AI 邮件”演示都止步于一张截图：智能体起草一封回复，大家鼓掌，然后没人去问那个尴尬的问题——**模型究竟是怎样真正连上一个真实收件箱的**？要做到跨服务商、安全无虞，还不用你把应用专用密码粘到提示词里。
 
 这篇文章会讲清楚为什么这“最后一公里”出乎意料地难，以及 [Model Context Protocol](https://modelcontextprotocol.io)（MCP）如何把 Gmail、Outlook、Fastmail 以及通用 IMAP 变成一个端点，让你的智能体能像调用任何其他工具一样去调用它。
@@ -11,7 +11,7 @@ const translation = {
 
 邮件看起来是个已解决的问题，其实不然——至少对一个自主智能体来说不是。有三件事横在中间：
 
-1. **认证方式因服务商而异。** Gmail 要用带正确 scope 的 OAuth。Outlook 要用 Microsoft 身份。Fastmail 要用应用专用密码。每一种都有自己的令牌生命周期和各式各样的失败情形。
+1. **认证方式因服务商而异。** Gmail 要用应用专用密码，还得先开启两步验证。Outlook 要用 Microsoft 身份。Fastmail 要用应用专用密码。每一种都有自己的令牌生命周期和各式各样的失败情形。
 2. **凭据是“放射性”的。** 你绝不会希望邮箱密码出现在聊天记录、日志行或向量库里。一次都不行。
 3. **邮件的“形态”很乱。** MIME、会话线程、HTML 与纯文本之分、附件、其实是标签的文件夹。智能体需要的是一个干净、可预测的接口——而不是原始的 RFC 5322。
 

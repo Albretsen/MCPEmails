@@ -57,8 +57,8 @@ const ABSENT = {
   '/': MARKETING.filter((n) => !['home', 'compare'].includes(n)),
   '/pricing': MARKETING.filter((n) => !['home', 'compare', 'pricing'].includes(n)),
   '/docs': MARKETING.filter((n) => !['home', 'compare', 'docs'].includes(n)),
-  // Under the docs layout, so it carries `docs` although it does not read it.
-  '/docs/claude': MARKETING.filter((n) => !['home', 'compare', 'docs'].includes(n)),
+  // Outside app/[locale]/docs/(catalogue), so the docs catalogue stays off it.
+  '/docs/claude': MARKETING.filter((n) => !['home', 'compare'].includes(n)),
   '/for/founders': MARKETING.filter((n) => !['home', 'compare', 'forFounders'].includes(n)),
   '/privacy': MARKETING.filter((n) => !['home', 'compare', 'privacy'].includes(n)),
   '/connect/yahoo': MARKETING.filter((n) => !['home', 'compare', 'connect'].includes(n)),
@@ -85,6 +85,8 @@ const MAX_BYTES = {
   '/this-page-does-not-exist': 80_000,
   '/': 240_000,
   '/pricing': 170_000,
+  // 92 KB today; 165 KB while it still carried the docs catalogue.
+  '/docs/claude': 130_000,
   '/privacy': 190_000,
 };
 

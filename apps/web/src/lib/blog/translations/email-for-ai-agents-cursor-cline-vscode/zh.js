@@ -12,7 +12,7 @@ MCP 服务器并不持有你的邮件。它代理一条到你已在使用的邮�
 
 进入 **Dashboard → Inboxes → Connect Inbox**，选择一个服务商：
 
-- **Gmail** → 默认通过 IMAP 使用 Google 应用专用密码（你的 Google 账户需要开启两步验证），也可以改用**使用 Google 登录**。
+- **Gmail** → 通过 IMAP 使用 Google 应用专用密码。开启两步验证，在 myaccount.google.com/apppasswords 创建一个，然后把这 16 个字母连同完整的 Gmail 地址一起填入。Google Workspace 管理员可以为整个域名关闭应用专用密码。
 - **Outlook / Microsoft 365** → 通过使用 Microsoft 登录完成 OAuth，无需应用专用密码。个人 Outlook.com、Hotmail、Live 和 MSN 账户可以直接连接。工作或学校的 Microsoft 365 账户可能需要 IT 管理员先为整个组织一次性批准该应用；控制台会给你一个可以发给管理员的链接。
 - **iCloud、Fastmail、Yahoo、Zoho，或任何通用 IMAP 主机** → 使用应用专用密码。在服务商的设置中生成它（iCloud 是在 appleid.apple.com），然后粘贴进去。
 
@@ -81,7 +81,7 @@ curl -s https://www.mcpemails.com/api/mcp \\
 - \`inbox_list\`——总是先调用它，以发现已连接的收件箱及其 ID。
 - \`email_read\`（动作 \`list\`）——分页，最新的在前。
 - \`email_read\`（动作 \`read\`）——解析后的纯文本、可选的经过净化的 HTML，以及附件。
-- \`email_read\`（动作 \`search\`）——服务商原生搜索（Gmail 操作符、Outlook KQL、IMAP 文本）。
+- \`email_read\`（动作 \`search\`）：按发件人、主题、日期、未读状态等结构化字段搜索，并转换为各服务商自己的搜索方式。
 - \`email_compose\`（动作 \`send\`）——撰写邮件，支持 CC/BCC、HTML，以及最大 10 MB 的附件。
 - \`email_compose\`（动作 \`reply\`）——为你设置 In-Reply-To 和 References 请求头，让邮件会话保持完整。
 
@@ -99,7 +99,7 @@ curl -s https://www.mcpemails.com/api/mcp \\
 
 > 回复那位设计外包人员的邮件，确认周四下午 2 点可以，写短一点。
 
-它会调用动作为 \`reply\` 的 \`email_compose\`，会话串联会被自动处理，回复通过我自己的 Gmail 发出——所以它从我的地址寄出，带着我自己域名的信誉，而不是经过某个中继。想要更深入地了解整理类提示词，请看[如何让 AI 智能体整理并总结你的收件箱](/blog/ai-agent-triage-summarize-inbox)。
+它会调用动作为 \`reply\` 的 \`email_compose\`，会话串联会被自动处理，回复通过我自己的 Gmail 发出，所以它从我的地址寄出，带着我自己域名的信誉。想要更深入地了解整理类提示词，请看[如何让 AI 智能体整理并总结你的收件箱](/blog/ai-agent-triage-summarize-inbox)。
 
 一个需要坦白的局限：没有 webhook。服务器不会主动把新邮件推送给你。如果你想让智能体对收到的邮件做出反应，就需要轮询——按计划周期性地调用动作 \`list\` 且带 \`unread: true\` 的 \`email_read\`。这是一个刻意的设计选择，它也决定了你如何构建任何带反应性的东西，比如一个[基于 MCP 的自动回复器](/blog/build-email-auto-responder-mcp-agent)。
 
@@ -111,7 +111,7 @@ curl -s https://www.mcpemails.com/api/mcp \\
 
 ## 小结
 
-Cursor 让你用一个 URL 和一次登录就连上。其余一切都需要一个带权限范围的密钥和一个 bearer 请求头。两者命中的是同一个端点和同一套工具，并且都让你的凭据远离代码库，也远离模型的上下文。
+Cursor 让你用一个 URL 和一次登录就连上。其余一切都需要一个带权限范围的密钥和一个 bearer 请求头。两者命中的是同一个端点和同一套工具，并且都让你的凭据远离代码库，也远离模型的上下文。在编辑器之外还用 ChatGPT 或 Codex？[ChatGPT 邮箱设置指南](/blog/connect-chatgpt-to-email)两者都有讲解。
 
 [免费开始](/signup)并连接你的第一个收件箱，或者阅读[文档](/docs)获取完整的工具参考。`,
 };

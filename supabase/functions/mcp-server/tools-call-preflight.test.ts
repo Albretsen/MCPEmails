@@ -7,11 +7,13 @@
 
 import { assert, assertEquals } from "jsr:@std/assert@1";
 import {
+  gateParams,
   notePreflightError,
   parsePreflight,
   preflightAvailability,
   preflightParams,
   preflightSkipped,
+  reservationIdIn,
 } from "./tools-call-preflight.ts";
 
 const KEY = { id: "k1", workspace_id: "w1", key_hash: "h".repeat(64), scopes: ["read:email"] };
@@ -93,4 +95,65 @@ Deno.test("only 'no such function' starts the backoff, and it ends", () => {
   assertEquals(preflightSkipped(1_001), true);
   assertEquals(preflightSkipped(61_000), false);
   preflightAvailability.missingUntil = 0;
+});
+
+// ── mcp_tools_call_gate (20261020214737) ───────────────────────────────────
+
+const RESERVED = {
+  tool_name: "email_list", meter_version: 1, cap: 150,
+  period_start: "2026-10-01T00:00:00+00:00", period_end: "2026-11-01T00:00:00+00:00",
+  row: { reservation_id: "r-1", allowed: true, used_actions: 12 },
+};
+
+Deno.test("the gate's reservation and last_used flag are parsed", () => {
+  const parsed = parsePreflight({ ...GOOD, reservation: RESERVED, last_used_stamped: false }, 3, true);
+  assert(parsed !== null && parsed.kind === "key");
+  assertEquals(parsed.reservation, {
+    toolName: "email_list", cap: 150,
+    periodStart: "2026-10-01T00:00:00+00:00", periodEnd: "2026-11-01T00:00:00+00:00",
+    row: { reservation_id: "r-1", allowed: true, used_actions: 12 }, error: null,
+  });
+  assertEquals(parsed.lastUsedHandled, true);
+  // The older preflight's answer: no reservation, and the edge function stamps.
+  const old = parsePreflight(GOOD, 3, true);
+  assert(old !== null && old.kind === "key");
+  assertEquals(old.reservation, null);
+  assertEquals(old.lastUsedHandled, false);
+});
+
+Deno.test("a refused and an errored reservation are both kept, distinctly", () => {
+  const refused = parsePreflight({
+    ...GOOD, reservation: { ...RESERVED, row: { reservation_id: null, allowed: false, used_actions: 150 } },
+  }, 3, true);
+  assert(refused !== null && refused.kind === "key");
+  assertEquals(refused.reservation?.row, { reservation_id: null, allowed: false, used_actions: 150 });
+  const errored = parsePreflight({
+    ...GOOD, reservation: { ...RESERVED, row: undefined, error: "boom", error_code: "XX000" },
+  }, 3, true);
+  assert(errored !== null && errored.kind === "key");
+  assertEquals(errored.reservation?.error, { message: "boom", code: "XX000" });
+  assertEquals(errored.reservation?.row, null);
+});
+
+Deno.test("a malformed reservation makes the whole answer unusable, but its id is still found", () => {
+  for (const reservation of [
+    { ...RESERVED, cap: "150" },
+    { ...RESERVED, tool_name: null },
+    { ...RESERVED, row: { reservation_id: 7, allowed: true, used_actions: 1 } },
+    { ...RESERVED, row: { reservation_id: "r-1", allowed: "yes", used_actions: 1 } },
+    "reserved",
+  ]) {
+    assertEquals(parsePreflight({ ...GOOD, reservation }, 3, true), null, JSON.stringify(reservation));
+  }
+  assertEquals(reservationIdIn({ key: { id: 5 }, reservation: RESERVED }), "r-1");
+  assertEquals(reservationIdIn({ reservation: { row: { reservation_id: null } } }), null);
+  assertEquals(reservationIdIn(null), null);
+});
+
+Deno.test("gate params add the tool to reserve against, never without the allowance", () => {
+  assertEquals(gateParams("h", ["a"], "d", true, "email_list", 1), {
+    p_key_hash: "h", p_key_window_starts: ["a"], p_workspace_window_start: "d",
+    p_include_allowance: true, p_reserve_tool_name: "email_list", p_meter_version: 1,
+  });
+  assertEquals(gateParams("h", ["a"], "d", false, "email_list", 1).p_reserve_tool_name, null);
 });

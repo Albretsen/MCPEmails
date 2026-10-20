@@ -5,15 +5,15 @@ const translation = {
   coverAlt: 'Connecter iCloud, Fastmail et n’importe quelle boîte IMAP à Claude via MCP',
   content: `Connecter iCloud, Fastmail ou n’importe quelle boîte IMAP à Claude demande une seule chose dont Outlook se passe : un **mot de passe d’application**. Vous le générez dans votre fournisseur de messagerie, vous le collez une fois dans MCP Emails, et Claude peut lire, rechercher et envoyer via cette boîte. Pas de chorégraphie OAuth, aucun réglage de serveur SMTP à mémoriser.
 
-C’est la voie à suivre pour tout fournisseur qui n’est ni Gmail ni Microsoft. iCloud, Fastmail, Yahoo, Zoho, Yandex et tout hôte IMAP générique passent par le même transport IMAP/SMTP, ils partagent donc un jeu de fonctionnalités identique. Si vous arrivez à obtenir un mot de passe d’application auprès du fournisseur, vous pouvez le connecter. Un bel avantage par rapport à Gmail : l’IMAP offre à Claude une vraie suppression définitive.
+C’est la voie à suivre pour tout fournisseur qui n’est ni Gmail ni Microsoft. iCloud, Fastmail, Yahoo, Zoho, Yandex et tout hôte IMAP générique passent par le même transport IMAP/SMTP, ils partagent donc un jeu de fonctionnalités identique. Si vous arrivez à obtenir un mot de passe d’application auprès du fournisseur, vous pouvez le connecter. Gmail se connecte de la même façon, avec un mot de passe d’application Google via IMAP.
 
 ## Pourquoi ces fournisseurs utilisent un mot de passe d’application, et non OAuth
 
-Outlook expose une API OAuth moderne, MCP Emails le connecte donc avec la connexion Microsoft plutôt que par un mot de passe. (Un compte professionnel ou scolaire Microsoft 365 peut d’abord nécessiter qu’un administrateur informatique approuve l’application une seule fois ; le [guide Outlook et Microsoft 365](/blog/connect-outlook-microsoft-365-ai-agent-mcp) l’explique.) Gmail propose les deux voies : par défaut, un mot de passe d’application Google en IMAP, comme les fournisseurs de ce guide, et la connexion avec Google en alternative. iCloud et Fastmail n’offrent pas cette voie aux outils de messagerie tiers. À la place, ils vous remettent un **mot de passe d’application** : un long mot de passe généré aléatoirement, limité à une seule application, distinct du mot de passe réel de votre compte et révocable indépendamment.
+Outlook expose une API OAuth moderne, MCP Emails le connecte donc avec la connexion Microsoft plutôt que par un mot de passe. (Un compte professionnel ou scolaire Microsoft 365 peut d’abord nécessiter qu’un administrateur informatique approuve l’application une seule fois ; le [guide Outlook et Microsoft 365](/blog/connect-outlook-microsoft-365-ai-agent-mcp) l’explique.) Gmail fonctionne comme les fournisseurs de ce guide : il se connecte avec un mot de passe d’application Google en IMAP, que Google ne permet de créer qu’une fois la validation en deux étapes activée. iCloud et Fastmail n’offrent pas cette voie aux outils de messagerie tiers. À la place, ils vous remettent un **mot de passe d’application** : un long mot de passe généré aléatoirement, limité à une seule application, distinct du mot de passe réel de votre compte et révocable indépendamment.
 
 Une mise au point qui s’impose, parce que d’anciens articles se trompent : **Fastmail fonctionne uniquement avec un mot de passe d’application.** Fastmail a déjà pris en charge un flux OAuth pour certaines intégrations, mais pour se connecter à MCP Emails aujourd’hui, vous générez un mot de passe d’application dans les réglages de Fastmail. Comme pour iCloud. Si un guide vous dit de « vous connecter avec Fastmail » via OAuth, il est dépassé.
 
-Le mot de passe d’application devient l’unique identifiant que MCP Emails conserve pour cette boîte, [chiffré avec AES-256-GCM au repos](/blog/why-email-never-stored-matters) et déchiffré uniquement à l’intérieur d’une Edge Function isolée au moment de l’appel. Vos e-mails réels ne sont jamais stockés — chaque appel d’outil les récupère en direct auprès du fournisseur, puis les supprime.
+Le mot de passe d’application devient l’unique identifiant que MCP Emails conserve pour cette boîte, [chiffré avec AES-256-GCM au repos](/blog/why-email-never-stored-matters) et déchiffré sur nos serveurs uniquement lorsqu’une requête en a besoin. Il n’est jamais envoyé à Claude. Vos e-mails réels ne sont jamais stockés : chaque appel d’outil les récupère en direct auprès du fournisseur, puis les supprime.
 
 ## Générer un mot de passe d’application pour iCloud
 
@@ -22,7 +22,7 @@ Le mot de passe d’application devient l’unique identifiant que MCP Emails co
 3. Cliquez sur le **+** (Generate an app-specific password), donnez-lui un libellé comme \`MCP Emails\`, puis confirmez avec le mot de passe de votre Apple Account.
 4. Apple vous affiche un mot de passe au format \`abcd-efgh-ijkl-mnop\`. Copiez-le maintenant. Vous ne pourrez pas le revoir plus tard.
 
-Vous aurez besoin de l’authentification à deux facteurs activée sur votre Apple Account — les mots de passe d’application ne sont pas disponibles sans elle. L’hôte IMAP d’iCloud est \`imap.mail.me.com\` et le SMTP est \`smtp.mail.me.com\`, mais MCP Emails les remplit pour vous lorsque vous choisissez iCloud comme fournisseur, vous n’aurez donc généralement pas à y toucher.
+Vous aurez besoin de l’authentification à deux facteurs activée sur votre Apple Account — les mots de passe d’application ne sont pas disponibles sans elle. L’hôte IMAP d’iCloud est \`imap.mail.me.com\` et le SMTP est \`smtp.mail.me.com\`, mais MCP Emails les remplit pour vous lorsque vous choisissez iCloud comme fournisseur, vous n’aurez donc généralement pas à y toucher. La [page des réglages iCloud Mail](/connect/icloud) reprend les mêmes valeurs.
 
 ## Générer un mot de passe d’application pour Fastmail
 
@@ -31,7 +31,7 @@ Vous aurez besoin de l’authentification à deux facteurs activée sur votre Ap
 3. Nommez-le (\`MCP Emails\` fait l’affaire) et, pour l’accès, choisissez **Mail (IMAP/SMTP)** afin qu’il puisse à la fois lire et envoyer.
 4. Fastmail génère le mot de passe une seule fois. Copiez-le avant de fermer la boîte de dialogue.
 
-L’hôte IMAP de Fastmail est \`imap.fastmail.com\` et le SMTP est \`smtp.fastmail.com\`. Là encore, choisir Fastmail dans MCP Emails les renseigne automatiquement.
+L’hôte IMAP de Fastmail est \`imap.fastmail.com\` et le SMTP est \`smtp.fastmail.com\`. Là encore, choisir Fastmail dans MCP Emails les renseigne automatiquement. La [page des réglages Fastmail](/connect/fastmail) les reprend aussi.
 
 ## Connecter une boîte IMAP générique (tout le reste)
 
@@ -42,7 +42,7 @@ Pour Yahoo, Zoho, Yandex, un serveur de messagerie auto-hébergé ou toute autre
 - Votre **adresse e-mail** comme nom d’utilisateur
 - Le **mot de passe d’application** comme mot de passe
 
-Si vous n’avez vraiment qu’un mot de passe classique et que le fournisseur ne propose pas de mots de passe d’application, cela fonctionnera aussi — mais le mot de passe d’application reste le bon choix. Il limite la zone d’impact. Révoquez-le et seule cette connexion s’arrête, pas tout votre compte.
+Si vous n’avez vraiment qu’un mot de passe classique et que le fournisseur ne propose pas de mots de passe d’application, cela fonctionnera aussi — mais le mot de passe d’application reste le bon choix. Il limite la zone d’impact. Révoquez-le et seule cette connexion s’arrête, pas tout votre compte. Pour les ports, les modes TLS et le dépannage sur tout autre hôte, consultez le [guide complet du connecteur IMAP](/blog/claude-imap-connector).
 
 ## Connecter la boîte dans MCP Emails
 
@@ -75,11 +75,11 @@ Un prompt pour confirmer que tout fonctionne :
 Use inbox_list to find my iCloud inbox, then summarize my 5 most recent unread messages.
 \`\`\`
 
-## La seule chose que l’IMAP fait et que Gmail ne peut pas
+## Comment fonctionne la suppression en IMAP
 
-Voici le point que les gens oublient. Quand Claude « supprime » un message sur Gmail, il part à la corbeille. C’est une limite stricte de l’API Gmail : elle n’expose pas de suppression définitive aux applications tierces. Le message reste dans la corbeille jusqu’à l’expiration de la fenêtre de rétention du fournisseur. (Outlook est différent : Microsoft Graph propose bien une suppression définitive, et MCP Emails la prend en charge.)
+Voici le point que les gens oublient. Une suppression normale envoie le message à la corbeille chez tous les fournisseurs. Avec \`permanent: true\`, MCP Emails marque le message comme supprimé et l’efface (expunge) en IMAP, et utilise la suppression définitive de Microsoft Graph sur Outlook. Gmail via IMAP suit ensuite ses propres réglages IMAP : par défaut, effacer un message de la boîte de réception ou d’un libellé retire seulement ce libellé et le message reste dans Tous les messages, alors que l’effacer depuis la corbeille le supprime pour de bon.
 
-L’IMAP aussi, c’est différent. Fastmail, iCloud, Yahoo, Zoho, Yandex et l’IMAP générique prennent tous en charge le **hard expunge** : Claude peut supprimer définitivement un message, et pas seulement le mettre à la corbeille. Si vous voulez un agent qui fait vraiment le ménage derrière lui, l’IMAP (ou Outlook) le permet. Pratique, et aussi une raison d’être réfléchi quant aux scopes que vous accordez. L’expunge est irréversible.
+Sur les autres hôtes IMAP, c’est plus simple. Fastmail, iCloud, Yahoo, Zoho, Yandex et l’IMAP générique prennent tous en charge le **hard expunge** : Claude peut supprimer définitivement un message, et pas seulement le mettre à la corbeille. Si vous voulez un agent qui fait vraiment le ménage derrière lui, l’IMAP (ou Outlook) le permet. Pratique, et aussi une raison d’être réfléchi quant aux scopes que vous accordez. L’expunge est irréversible.
 
 La recherche se comporte elle aussi un peu différemment. Gmail dispose de toute sa syntaxe d’opérateurs, Outlook utilise KQL et les fournisseurs IMAP utilisent la recherche textuelle IMAP — capable, mais pas aussi expressive que les opérateurs de Gmail. Bon à savoir si vous écrivez des prompts orientés recherche.
 
@@ -94,7 +94,7 @@ Si vous hésitez encore à brancher l’e-mail sur un agent tout court, commence
 
 ## Pour conclure
 
-iCloud, Fastmail et l’IMAP ne sont pas des citoyens de seconde zone ici. Générez un mot de passe d’application, collez-le dans **Inboxes → Connect Inbox**, pointez Claude vers l’[endpoint](/docs) et vous obtenez un agent avec un accès complet en lecture/envoi, plus la suppression définitive que Gmail ne peut pas offrir. C’est [gratuit pour démarrer](/signup), sans carte, avec une boîte pour toujours.`,
+iCloud, Fastmail et l’IMAP ne sont pas des citoyens de seconde zone ici. Générez un mot de passe d’application, collez-le dans **Inboxes → Connect Inbox**, pointez Claude vers l’[endpoint](/docs) et vous obtenez un agent avec un accès complet en lecture/envoi, plus une vraie suppression définitive. C’est [gratuit pour démarrer](/signup), sans carte, avec une boîte pour toujours.`,
 };
 
 export default translation;

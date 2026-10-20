@@ -22,16 +22,16 @@
     "meta0": "1 inbox free, forever",
     "meta1": "Sign in with Microsoft, no app password",
     "meta2": "Email fetched live, never stored",
-    "answer": "Yes. mcpemails is a hosted MCP server that connects a personal Microsoft account, an address ending in outlook.com, hotmail.com, live.com or msn.com, through Microsoft Graph. You click Connect with Microsoft, sign in, and approve access on Microsoft's consent screen, where MCP Emails appears as a verified publisher. There is no app password and no IMAP setting to enter, and no administrator is involved for a personal account. Paste one URL into Claude, ChatGPT, Cursor or any MCP client and the agent can read, search, send, reply, forward, schedule and file your mail. One inbox is free, forever."
+    "answer": "Yes. MCP Emails is a hosted MCP server that connects a personal Microsoft account, an address ending in outlook.com, hotmail.com, live.com or msn.com, through Microsoft Graph. You click Connect with Microsoft, sign in, and approve access on Microsoft's consent screen, where MCP Emails appears as a verified publisher. There is no app password and no IMAP setting to enter, and no administrator is involved for a personal account. Paste one URL into Claude, ChatGPT, Cursor or any MCP client and the agent can read, search, send, reply, forward, schedule and file your mail. One inbox is free, forever."
   },
   "method": {
     "title": "How Outlook.com connects: Sign in with Microsoft",
-    "body": "Outlook.com connects through <b>Microsoft Graph</b> with OAuth 2.0, not over IMAP. You sign in on Microsoft's own page and approve a short list of permissions: read and change mail (<b>Mail.ReadWrite</b>), send mail (<b>Mail.Send</b>), stay connected (<b>offline_access</b>) and your basic profile and email address. Your Microsoft password is typed only into Microsoft's page and never reaches us. To disconnect, delete the inbox in mcpemails, or remove MCP Emails from the apps that have access to your Microsoft account."
+    "body": "Outlook.com connects through <b>Microsoft Graph</b> with OAuth 2.0, not over IMAP. You sign in on Microsoft's own page and approve a short list of permissions: read and change mail (<b>Mail.ReadWrite</b>), send mail (<b>Mail.Send</b>), stay connected (<b>offline_access</b>) and your basic profile and email address. Your Microsoft password is typed only into Microsoft's page and never reaches us. To disconnect, delete the inbox in MCP Emails, or remove MCP Emails from the apps that have access to your Microsoft account."
   },
   "setup": [
     {
       "h": "Create a free account",
-      "p": "Sign up for mcpemails, no card required. The free plan connects one inbox, forever."
+      "p": "Sign up for MCP Emails, no card required. The free plan connects one inbox, forever."
     },
     {
       "h": "Choose Outlook and connect with Microsoft",
@@ -49,7 +49,7 @@
   "gotchas": [
     {
       "h": "App passwords and IMAP passwords do not work, which is why this uses Microsoft Graph",
-      "p": "Microsoft ended Basic authentication for personal accounts connecting from non-Microsoft apps from 16 September 2024, and the Outlook.com IMAP service now offers only OAuth. Many older guides still tell you to generate an app password; it cannot log in to mail any more. mcpemails does not use IMAP for Outlook.com at all: it signs in with Microsoft and talks to Microsoft Graph, so there is no password to create and no server setting to get wrong."
+      "p": "Microsoft ended Basic authentication for personal accounts connecting from non-Microsoft apps from 16 September 2024, and the Outlook.com IMAP service now offers only OAuth. Many older guides still tell you to generate an app password; it cannot log in to mail any more. MCP Emails does not use IMAP for Outlook.com at all: it signs in with Microsoft and talks to Microsoft Graph, so there is no password to create and no server setting to get wrong."
     },
     {
       "h": "hotmail.com, live.com and msn.com addresses are the same service",
@@ -57,7 +57,7 @@
     },
     {
       "h": "A Microsoft account without an Outlook mailbox is refused",
-      "p": "If the Microsoft account you sign in with has no Exchange Online mailbox behind it, Microsoft Graph has nothing to open, so mcpemails refuses the connection and tells you so. If that address's mail is hosted on another server, connect it with IMAP instead."
+      "p": "If the Microsoft account you sign in with has no Exchange Online mailbox behind it, Microsoft Graph has nothing to open, so MCP Emails refuses the connection and tells you so. If that address's mail is hosted on another server, connect it with IMAP instead."
     },
     {
       "h": "A brand-new Outlook.com account may be blocked from sending for a while",
@@ -73,7 +73,7 @@
   "faq": [
     {
       "q": "Does Claude work with Outlook.com?",
-      "a": "Yes. Connect your Outlook.com mailbox to mcpemails by signing in with Microsoft, paste one MCP URL into Claude, and Claude can read, search, send, reply, forward, schedule and file your mail. The same URL works in ChatGPT, Cursor and other MCP clients."
+      "a": "Yes. Connect your Outlook.com mailbox to MCP Emails by signing in with Microsoft, paste one MCP URL into Claude, and Claude can read, search, send, reply, forward, schedule and file your mail. The same URL works in ChatGPT, Cursor and other MCP clients."
     },
     {
       "q": "Does it work with Hotmail, Live and MSN addresses?",
@@ -81,7 +81,7 @@
     },
     {
       "q": "Do I need an app password or IMAP settings?",
-      "a": "No. mcpemails connects Outlook.com through Microsoft Graph after you sign in with Microsoft, so there is no app password to create and no IMAP or SMTP server to enter. An app password would not work anyway: Microsoft stopped accepting passwords from non-Microsoft mail apps on personal accounts in September 2024."
+      "a": "No. MCP Emails connects Outlook.com through Microsoft Graph after you sign in with Microsoft, so there is no app password to create and no IMAP or SMTP server to enter. An app password would not work anyway: Microsoft stopped accepting passwords from non-Microsoft mail apps on personal accounts in September 2024."
     },
     {
       "q": "What can my AI do in Outlook.com?",
@@ -93,7 +93,7 @@
     },
     {
       "q": "Is my email stored on your servers?",
-      "a": "No. Messages are fetched live from Microsoft for each request and handed to your AI client. The OAuth token from your Microsoft sign-in is encrypted at rest and message bodies are not retained. Deleting the inbox in mcpemails ends the connection straight away, and you can also remove MCP Emails from the apps that have access to your Microsoft account."
+      "a": "No. Messages are fetched live from Microsoft for each request and handed to your AI client. The OAuth token from your Microsoft sign-in is encrypted at rest and message bodies are not retained. Deleting the inbox in MCP Emails ends the connection straight away, and you can also remove MCP Emails from the apps that have access to your Microsoft account."
     }
   ],
   "ctaBand": {

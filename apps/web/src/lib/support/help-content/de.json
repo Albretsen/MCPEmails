@@ -1,0 +1,227 @@
+{
+  "meta": {
+    "title": "Hilfe & Support",
+    "description": "Antworten auf die häufigsten Fragen zu Verbindung, Clients und Abrechnung sowie ein Formular, um die Menschen hinter MCP Emails zu erreichen."
+  },
+  "hero": {
+    "eyebrow": "Hilfe",
+    "title": "Wie können wir helfen?",
+    "lead": "Durchsuchen Sie die Anleitungen, lesen Sie die kurzen Lösungen für die häufigsten Probleme oder schreiben Sie uns unten."
+  },
+  "search": {
+    "label": "Hilfe durchsuchen",
+    "placeholder": "Anbieter, Clients, Dokumentation und Fragen durchsuchen",
+    "empty": "Kein Treffer.",
+    "emptyLink": "Schreiben Sie uns unten",
+    "kinds": {
+      "provider": "Anbieter",
+      "client": "Client",
+      "docs": "Doku",
+      "faq": "FAQ",
+      "article": "Lösung"
+    }
+  },
+  "hints": {
+    "provider": "{category} · {domain}",
+    "providerNoDomain": "{category}",
+    "clientOauth": "Einrichtungsanleitung · Anmeldung per OAuth, kein API-Schlüssel",
+    "clientKey": "Einrichtungsanleitung · API-Schlüssel mit begrenzten Rechten",
+    "docs": "Dokumentation",
+    "docsProviders": "Einstellungen und Support für jeden Anbieter",
+    "docsClients": "Einrichtungsanleitungen für jeden MCP-Client",
+    "faq": "FAQ zu Preisen"
+  },
+  "providerCategories": {
+    "generic": "Beliebiges IMAP-Postfach",
+    "consumer": "Webmail",
+    "privacy": "Datenschutzorientierte E-Mail",
+    "business": "Geschäftliche E-Mail",
+    "hosting": "Webhoster mit E-Mail",
+    "cpanel": "cPanel und Shared Hosting",
+    "selfhost": "Selbst gehosteter Mailserver",
+    "isp": "Internetanbieter",
+    "regional": "Regionale E-Mail",
+    "blocked": "Eingeschränkt oder nicht unterstützt"
+  },
+  "articlesHeading": "Häufige Lösungen",
+  "articlesLead": "Die Probleme, zu denen uns am häufigsten geschrieben wird, und was sie behebt.",
+  "articles": [
+    {
+      "id": "imap-password-rejected",
+      "title": "Der Mailserver lehnt mein Passwort ab",
+      "summary": "Bei E-Mail auf Ihrer eigenen Domain oder bei einem Hoster liegt ein abgelehntes Passwort fast immer am falschen Passwort oder am falschen Benutzernamen.",
+      "keywords": "imap smtp passwort abgelehnt falsch login benutzername anmeldung cpanel plesk hosting eigene domain auth fehlgeschlagen password rejected wrong username",
+      "steps": [
+        "Verwenden Sie das Passwort des Postfachs selbst. Das Login für Ihr Hosting-Konto oder Ihr Control Panel ist ein anderes Passwort, auch bei derselben Adresse.",
+        "Verwenden Sie die vollständige E-Mail-Adresse als Benutzernamen. Wenn Sie einen separaten Benutzernamen eingegeben haben, leeren Sie das Feld, sofern Ihr Hoster Ihnen keinen genannt hat.",
+        "Ist für das Postfach Zwei-Faktor-Authentifizierung aktiv, brauchen Sie ein App-Passwort statt des Postfachpassworts.",
+        "Passwort unbekannt? Setzen Sie es dort zurück, wo Ihr Hoster Ihre E-Mail-Adressen auflistet. In cPanel unter E-Mail-Konten, dann Verwalten. In Plesk unter den Mail-Konten.",
+        "Gleichen Sie den Servernamen mit den Einstellungen Ihres Anbieters ab. Unsere Anbieter-Anleitungen nennen geprüfte IMAP- und SMTP-Hosts."
+      ],
+      "links": [
+        { "label": "Allgemeine IMAP-Anleitung", "href": "/connect/imap" },
+        { "label": "Kompatibilität der Anbieter", "href": "/docs/providers" }
+      ]
+    },
+    {
+      "id": "app-password-required",
+      "title": "App-Passwort erforderlich (Yahoo, iCloud, Gmail, Zoho)",
+      "summary": "Diese Anbieter akzeptieren Ihr normales Passwort nicht aus einer Mail-App. Erstellen Sie ein App-Passwort und fügen Sie stattdessen dieses ein.",
+      "keywords": "app-passwort app-spezifisches anwendungsspezifisches passwort yahoo icloud apple gmail google zoho bestätigung in zwei schritten 2-step app password",
+      "steps": [
+        "Yahoo: Öffnen Sie die Kontosicherheit und erstellen Sie dort ein App-Passwort. Es besteht aus 16 Kleinbuchstaben ohne Leerzeichen.",
+        "iCloud: Melden Sie sich bei account.apple.com an, öffnen Sie Anmeldung und Sicherheit, dann App-spezifische Passwörter. Es besteht aus 16 Kleinbuchstaben in vier Gruppen.",
+        "Gmail: Aktivieren Sie die Bestätigung in zwei Schritten und erstellen Sie dann eines unter myaccount.google.com/apppasswords. Ein Google-Workspace-Administrator kann App-Passwörter für die ganze Domain abschalten. Gmail lässt sich auch per Anmeldung mit Google verbinden.",
+        "Zoho: Erstellen Sie im Zoho-Konto unter Sicherheit ein anwendungsspezifisches Passwort und schalten Sie in den Einstellungen von Zoho Mail den IMAP-Zugriff ein. Er ist standardmäßig aus.",
+        "Fügen Sie das App-Passwort so ein, wie es angezeigt wird. Leerzeichen werden ignoriert."
+      ],
+      "links": [
+        { "label": "Anleitung für Yahoo Mail", "href": "/connect/yahoo" },
+        { "label": "Anleitung für iCloud Mail", "href": "/connect/icloud" },
+        { "label": "Anleitung für Gmail", "href": "/connect/gmail" },
+        { "label": "Anleitung für Zoho Mail", "href": "/connect/zoho" }
+      ]
+    },
+    {
+      "id": "yandex-imap-disabled",
+      "title": "Yandex: IMAP-Zugriff ist ausgeschaltet",
+      "summary": "Yandex lehnt jede Mail-App ab, bis der IMAP-Zugriff eingeschaltet ist, und die Ablehnung sieht genauso aus wie ein falsches Passwort.",
+      "keywords": "yandex imap deaktiviert aus app-passwort mail-programme yandex 360 disabled app password",
+      "steps": [
+        "Öffnen Sie in Yandex Mail die Einstellungen und dort den Bereich für Mail-Programme. Aktivieren Sie den IMAP-Zugriff sowie App-Passwörter und OAuth-Tokens. Beides ist nötig.",
+        "Öffnen Sie auf id.yandex.com den Bereich Sicherheit, dann App-Passwörter, und erstellen Sie eines vom Typ Mail. Yandex zeigt es nur einmal an.",
+        "Verbinden Sie sich mit Ihrer vollständigen Yandex-Adresse und diesem App-Passwort. Ihr Kontopasswort funktioniert hier nie, auch nicht ohne Zwei-Faktor-Authentifizierung."
+      ],
+      "links": [
+        { "label": "Anleitung für Yandex Mail", "href": "/connect/yandex" }
+      ]
+    },
+    {
+      "id": "assistant-sees-nothing",
+      "title": "Verbunden, aber der Assistent sieht keine E-Mails",
+      "summary": "Das Postfach ist verbunden, aber Ihr Assistent sagt, er habe keine E-Mail-Tools oder finde nichts.",
+      "keywords": "keine tools nichts leer konnektor funktioniert nicht claude chatgpt cursor entwicklermodus berechtigung scope inbox_list no tools developer mode",
+      "steps": [
+        "Öffnen Sie im Dashboard die Postfächer und prüfen Sie, ob das Postfach ohne Fehler aufgeführt ist. Zeigt es einen Fehler, verbinden Sie es neu.",
+        "Starten Sie nach dem Hinzufügen des Konnektors einen neuen Chat. Wählen Sie in ChatGPT außerdem in jedem neuen Chat über das Menü + den Entwicklermodus und die App MCP Emails.",
+        "Autorisieren Sie den Konnektor mit demselben MCP Emails-Konto, zu dem das Postfach gehört.",
+        "Ihr Assistent sieht nur die Tools, für die Ihr Konnektor oder API-Schlüssel freigegeben ist. Haben Sie eine Berechtigung nicht angehakt, entfernen Sie den Konnektor und fügen Sie ihn erneut hinzu.",
+        "Bitten Sie den Assistenten zuerst, Ihre Postfächer aufzulisten. E-Mails werden abgerufen, wenn der Assistent danach fragt. Von allein kommt nichts an."
+      ],
+      "links": [
+        { "label": "Einrichtungsanleitungen für Clients", "href": "/docs/clients" },
+        { "label": "Fehlercodes", "href": "/docs#errors" }
+      ]
+    },
+    {
+      "id": "usage-limit-reached",
+      "title": "Nutzungslimit erreicht",
+      "summary": "Ein Free-Workspace hat 150 E-Mail-Aktionen pro Kalendermonat. Sind sie aufgebraucht, werden E-Mail-Aktionen bis zum 1. des nächsten Monats (UTC) abgelehnt.",
+      "keywords": "nutzungslimit kontingent obergrenze 150 aktionen free tarif kostenlos abgelehnt zurückgesetzt usage limit quota",
+      "steps": [
+        "Wie viele Aktionen Sie verbraucht haben, sehen Sie im Dashboard unter Nutzung.",
+        "Das Auflisten Ihrer Postfächer und alles, was Sie im Dashboard tun, wird nie gezählt, und in den ersten 3 Tagen nach der Registrierung wird gar nichts gezählt.",
+        "Erneute Versuche helfen nicht. Das Kontingent wird am 1. des nächsten Monats (UTC) zurückgesetzt, und pausierte Automatisierungen laufen von selbst weiter.",
+        "Personal, Pro und Team haben keine monatliche Obergrenze, im Rahmen einer fairen Nutzung.",
+        "Workspaces, die vor dem 2026-09-12 erstellt wurden, werden nicht gezählt. Wenn Sie bei einem davon das Limit sehen, schreiben Sie uns."
+      ],
+      "links": [
+        { "label": "FAQ zu Preisen", "href": "/pricing#faq" },
+        { "label": "Ratenlimits", "href": "/docs#rate-limits" }
+      ]
+    },
+    {
+      "id": "change-or-cancel-plan",
+      "title": "Tarif wechseln oder kündigen",
+      "summary": "Upgraden, downgraden oder kündigen Sie jederzeit in den Einstellungen im Dashboard.",
+      "keywords": "tarif upgrade downgrade wechseln kündigen abonnement abrechnung rechnung rückerstattung stripe portal zahlung karte plan cancel",
+      "steps": [
+        "Öffnen Sie im Dashboard die Einstellungen. Der Bereich Abrechnung zeigt Ihren Tarif und die Tarife, zu denen Sie wechseln können.",
+        "Zum Kündigen, Ändern der Karte oder Herunterladen von Rechnungen öffnen Sie im selben Bereich das Abrechnungsportal. Es wird von Stripe betrieben.",
+        "Eine Kündigung beendet die nächste Verlängerung. Sie behalten, was Sie bezahlt haben, bis zum Ende des laufenden Zeitraums und wechseln dann zu Free mit einem verbundenen Postfach.",
+        "Wenn die erste Abbuchung eines neuen Abonnements nicht Ihren Erwartungen entsprach, schreiben Sie uns innerhalb von 14 Tagen, und wir erstatten sie vollständig. Angebrochene Zeiträume werden nicht erstattet."
+      ],
+      "links": [
+        { "label": "Einstellungen im Dashboard", "href": "/dashboard/settings" },
+        { "label": "Tarife und Preise", "href": "/pricing" }
+      ]
+    },
+    {
+      "id": "disconnect-or-delete",
+      "title": "Postfach trennen oder Konto löschen",
+      "summary": "Entfernen Sie ein Postfach, einen Workspace oder das ganze Konto im Dashboard.",
+      "keywords": "trennen entfernen postfach löschen konto workspace schließen gefahrenzone disconnect delete account danger zone",
+      "steps": [
+        "Um ein Postfach zu trennen, öffnen Sie im Dashboard die Postfächer, wählen es aus und klicken auf Trennen. Das gespeicherte Passwort oder Token wird entfernt.",
+        "Um einen Workspace zu schließen, öffnen Sie die Einstellungen, dann die Gefahrenbereich, und wählen Workspace löschen. Ihr Konto und Ihre anderen Workspaces bleiben erhalten.",
+        "Um alles zu löschen, öffnen Sie die Einstellungen, dann die Gefahrenbereich, und wählen Konto löschen. Sie bestätigen durch Eingabe Ihrer E-Mail-Adresse, und es lässt sich nicht rückgängig machen.",
+        "Das Löschen des Kontos kündigt einen bezahlten Tarif sofort, ohne Erstattung für den Rest des Zeitraums. Wenn Sie die bezahlte Zeit behalten möchten, kündigen Sie zuerst im Abrechnungsportal und löschen das Konto am Ende des Zeitraums."
+      ],
+      "links": [
+        { "label": "Postfächer im Dashboard", "href": "/dashboard/inboxes" },
+        { "label": "Einstellungen im Dashboard", "href": "/dashboard/settings" }
+      ]
+    }
+  ],
+  "contact": {
+    "heading": "Schreiben Sie uns",
+    "lead": "Jede Nachricht wird von einem Menschen gelesen und per E-Mail beantwortet.",
+    "emailAlt": "Lieber per E-Mail? Schreiben Sie an {email}."
+  },
+  "categories": {
+    "connect": "Ein Postfach verbinden",
+    "client": "Einen KI-Client einrichten",
+    "billing": "Abrechnung und Tarife",
+    "bug": "Etwas funktioniert nicht",
+    "feature": "Funktionswunsch",
+    "other": "Etwas anderes"
+  },
+  "form": {
+    "category": "Thema",
+    "subject": "Betreff",
+    "message": "Nachricht",
+    "email": "Ihre E-Mail-Adresse",
+    "emailSignedIn": "Wir antworten an",
+    "submit": "Nachricht senden",
+    "sending": "Wird gesendet…",
+    "subjectConnect": "Probleme beim Verbinden von {provider}",
+    "aboutProvider": "Betrifft: {provider}"
+  },
+  "attach": {
+    "summary": "Was wir Ihrer Nachricht beifügen",
+    "intro": "Damit wir ohne Rückfragen helfen können, wird Folgendes mit Ihrer Nachricht gesendet:",
+    "workspace": "Workspace",
+    "plan": "Tarif",
+    "mailboxes": "Postfächer",
+    "noMailboxes": "Keine Postfächer verbunden",
+    "lastError": "letzter Fehler: {code}",
+    "from": "Geöffnet von",
+    "provider": "Anbieter",
+    "code": "Fehlercode",
+    "never": "Nie beigefügt: Passwörter, Tokens oder der Inhalt Ihrer E-Mails."
+  },
+  "errors": {
+    "invalid_json": "Beim Senden des Formulars ist etwas schiefgegangen. Laden Sie die Seite neu und versuchen Sie es erneut.",
+    "invalid_email": "Geben Sie eine gültige E-Mail-Adresse ein, damit wir antworten können.",
+    "invalid_category": "Wählen Sie ein Thema.",
+    "subject_required": "Geben Sie einen Betreff ein.",
+    "subject_too_long": "Der Betreff ist zu lang. Bitte höchstens 150 Zeichen.",
+    "message_required": "Schreiben Sie eine Nachricht.",
+    "message_too_long": "Die Nachricht ist zu lang. Bitte höchstens 5.000 Zeichen.",
+    "invalid_form_token": "Diese Seite war zu lange geöffnet. Laden Sie sie neu und senden Sie erneut.",
+    "rate_limited": "Zu viele Nachrichten in kurzer Zeit. Warten Sie etwas oder schreiben Sie an support@mcpemails.com.",
+    "server_error": "Wir konnten Ihre Nachricht nicht speichern. Versuchen Sie es erneut oder schreiben Sie an support@mcpemails.com.",
+    "not_found": "Das Kontaktformular ist gerade nicht verfügbar. Schreiben Sie an support@mcpemails.com.",
+    "network": "Wir sind nicht erreichbar. Prüfen Sie Ihre Verbindung und versuchen Sie es erneut.",
+    "unknown": "Etwas ist schiefgegangen. Versuchen Sie es erneut oder schreiben Sie an support@mcpemails.com."
+  },
+  "success": {
+    "withRef": "Danke, Ihre Nachricht ist bei uns angekommen. Ihre Referenz lautet {ref}. Wir antworten per E-Mail.",
+    "noRef": "Danke, Ihre Nachricht ist bei uns angekommen. Wir antworten per E-Mail."
+  },
+  "preview": {
+    "link": "Formular im abgemeldeten Zustand testen",
+    "note": "Setzt ein Vorschau-Cookie für diesen Browser. Melden Sie sich ab und öffnen Sie diese Seite erneut.",
+    "clear": "Vorschau des abgemeldeten Formulars beenden"
+  }
+}

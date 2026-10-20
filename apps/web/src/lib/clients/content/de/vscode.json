@@ -1,0 +1,92 @@
+{
+  "_sources": [
+    "apps/web/components/dashboard/Pages.jsx (MCP_CLIENTS) + apps/web/messages/en/dashboard.json (clients.*)",
+    "apps/web/app/.well-known/oauth-authorization-server/route.ts",
+    "https://code.visualstudio.com/docs/copilot/customization/mcp-servers"
+  ],
+  "meta": {
+    "title": "E-Mail mit VS Code verbinden: MCP-Setup für den Copilot-Agentenmodus",
+    "description": "Fügen Sie dem Agentenmodus von GitHub Copilot in VS Code ein echtes Postfach hinzu. MCP: Add Server ausführen, HTTP wählen, per OAuth autorisieren. Kein API-Schlüssel. Ein Postfach kostenlos."
+  },
+  "hero": {
+    "eyebrow": "VS Code + E-Mail",
+    "titleLine1": "Verbinden Sie Ihr Postfach mit VS Code",
+    "titleLine2": "und den Copilot-Agentenmodus",
+    "lead": "Fügen Sie dem Editor, den Sie ohnehin offen haben, ein echtes Postfach hinzu. E-Mails im Copilot-Agentenmodus lesen, suchen, senden, beantworten, weiterleiten, planen und organisieren.",
+    "meta0": "1 Postfach kostenlos, dauerhaft",
+    "meta1": "OAuth, kein API-Schlüssel nötig",
+    "meta2": "E-Mails werden live abgerufen, nie gespeichert",
+    "answer": "Führen Sie in der Command Palette MCP: Add Server aus, wählen Sie HTTP und fügen Sie https://mcpemails.com/api/mcp ein. Starten Sie den Server in der MCP-Ansicht und autorisieren Sie, wenn Sie dazu aufgefordert werden. Ein API-Schlüssel ist nicht im Spiel."
+  },
+  "method": {
+    "title": "So verbindet sich VS Code: OAuth, kein API-Schlüssel",
+    "body": "VS Code durchläuft mit diesem Server den standardmäßigen MCP-OAuth-Ablauf. Der Client registriert sich selbst per <b>dynamischer Client-Registrierung nach RFC 7591</b>, Sie müssen also keine Client-ID anlegen, und autorisiert sich per <b>Autorisierungscode mit PKCE</b> (S256). Ein Client-Secret wird nie übertragen, und das Token enthält nur die Scopes, die Sie auf unserem Zustimmungsbildschirm freigeben. Das Zugriffstoken gilt eine Stunde und erneuert sich selbst. Sie finden es unter Dashboard, API-Schlüssel als <code>OAuth:</code> mit dem Namen des Clients dahinter, und dort widerrufen Sie die Verbindung auch."
+  },
+  "setup": [
+    {
+      "h": "Kostenloses Konto erstellen und Postfach verbinden",
+      "p": "Registrieren Sie sich auf mcpemails.com, ohne Kreditkarte, und öffnen Sie dann Dashboard, Postfächer, Postfach verbinden. Outlook und Microsoft 365 verbinden Sie über „Mit Microsoft anmelden“; Gmail, iCloud, Fastmail, Yahoo, Zoho und Yandex nutzen ein App-Passwort; alle anderen Postfächer verbinden sich ganz normal per IMAP und SMTP. Der Free-Tarif umfasst ein Postfach, dauerhaft."
+    },
+    {
+      "h": "MCP: Add Server ausführen",
+      "p": "Öffnen Sie die Command Palette mit Shift Cmd P, unter Windows und Linux mit Shift Ctrl P, und führen Sie <b>MCP: Add Server</b> aus."
+    },
+    {
+      "h": "HTTP wählen",
+      "p": "Wählen Sie <b>HTTP</b>, fügen Sie <code>https://mcpemails.com/api/mcp</code> ein und vergeben Sie einen Namen. VS Code schreibt den Eintrag unten in <code>.vscode/mcp.json</code>."
+    },
+    {
+      "h": "Starten und autorisieren",
+      "p": "Starten Sie den Server in der MCP-Ansicht und schließen Sie die Anmeldung ab, wenn VS Code Sie dazu auffordert. Geben Sie die Scopes frei, die Copilot erhalten soll."
+    }
+  ],
+  "gotchas": [
+    {
+      "h": "Der Transport ist wirklich HTTP, nicht stdio, und eine falsche Wahl scheitert lautlos",
+      "p": "Der Ablauf Add Server bietet zuerst einen befehlsbasierten stdio-Server an, weil die meisten MCP-Server so funktionieren. Dieser hier ist entfernt und gehostet, es gibt also keinen Befehl zum Ausführen. Wählen Sie HTTP und beachten Sie, dass der Konfigurationsschlüssel <code>type</code> auf <code>http</code> gesetzt ist. Ein stdio-Eintrag, der auf eine URL zeigt, ergibt einen Server, der nie startet, ohne erkennbaren Grund."
+    },
+    {
+      "h": "Tools erscheinen nur im Agentenmodus",
+      "p": "MCP-Tools stehen Copilot im Agentenmodus zur Verfügung. Fehlen die E-Mail-Tools nach erfolgreicher Verbindung in der Tool-Auswahl, ist meist der Ask- oder Edit-Modus statt des Agentenmodus aktiv. In der MCP-Ansicht prüfen Sie, ob der Server tatsächlich läuft."
+    },
+    {
+      "h": "Eine .vscode/mcp.json ist Repository-Konfiguration, achten Sie also darauf, was Sie committen",
+      "p": "Der Standardort liegt im Projekt, die Datei kann also committet und geteilt werden. Die URL ist öffentlich und OAuth-Tokens werden hier nicht gespeichert, der Standard ist also unbedenklich. Das ändert sich, sobald jemand stattdessen einen Bearer-API-Schlüssel direkt einträgt. Jeder Schlüssel, der in ein Repository gelangt, sollte unter Dashboard, API-Schlüssel widerrufen werden."
+    }
+  ],
+  "limits": [
+    "Anfragen sind auf 100 pro Minute, 1.000 pro Stunde und 10.000 pro Tag je Schlüssel begrenzt, dazu kommt die Obergrenze Ihres Tarifs für abrechenbare Aktionen.",
+    "Der Server arbeitet rein nach Anfrage und Antwort. Es gibt keine Webhooks und keine vom Server ausgelösten Ereignisse, neue E-Mails wecken Ihren Agenten also nie von selbst. Um auf eingehende E-Mails zu reagieren, fragen Sie in festen Abständen ab.",
+    "E-Mails werden bei jedem Aufruf live von Ihrem Anbieter abgerufen und nie gespeichert. Gespeichert wird nur das verschlüsselte OAuth-Token oder App-Passwort. Ein widerrufenes Token oder ein geändertes Postfachpasswort beendet den Zugriff deshalb sofort."
+  ],
+  "faq": [
+    {
+      "q": "Wie verbinde ich meine E-Mails mit VS Code?",
+      "a": "Führen Sie in der Command Palette MCP: Add Server aus, wählen Sie HTTP, fügen Sie https://mcpemails.com/api/mcp ein, starten Sie dann den Server und autorisieren Sie, wenn Sie dazu aufgefordert werden. Danach hat der Copilot-Agentenmodus Tools zum Lesen, Suchen, Senden, Beantworten, Weiterleiten, Organisieren und Planen von E-Mails."
+    },
+    {
+      "q": "Brauche ich für VS Code einen API-Schlüssel?",
+      "a": "Nein. VS Code durchläuft mit diesem Server den OAuth-Ablauf im Browser, es wird also kein Token in Ihre Konfiguration geschrieben. Für Nutzung ohne Oberfläche oder per Skript bleibt ein Bearer-API-Schlüssel verfügbar."
+    },
+    {
+      "q": "Funktioniert das mit Copilot in anderen Editoren?",
+      "a": "Diese Seite behandelt speziell VS Code, weil der Ablauf Add Server und das Schema der mcp.json Funktionen von VS Code sind. JetBrains AI Assistant ist ein eigenes Setup und nutzt statt OAuth einen Bearer-API-Schlüssel; dafür gibt es eine eigene Seite."
+    },
+    {
+      "q": "Welche Postfächer erreicht VS Code auf diesem Weg?",
+      "a": "Outlook.com und Microsoft 365 über „Mit Microsoft anmelden“, wobei bei einem Arbeitskonto eventuell einmalig die IT-Administration die App freigeben muss; Gmail, iCloud, Fastmail, Yahoo, Zoho und Yandex mit einem App-Passwort; und jedes andere Postfach, das IMAP und SMTP auf den Standardports spricht. Der Client sieht alle über dieselbe Verbindung: Ihr Agent ruft zuerst inbox_list auf und findet so jedes verbundene Postfach samt ID. Sie müssen also nirgends UUIDs einfügen."
+    },
+    {
+      "q": "Kann VS Code E-Mails senden, ohne dass ich es mitbekomme?",
+      "a": "Nur wenn Sie es zulassen. Senden erfordert den Scope send:email, ein Schlüssel oder Token ohne diesen Scope kann also überhaupt nicht senden. Zusätzlich kann der Inhaber eines Postfachs im Dashboard eine menschliche Freigabe verlangen. Dann wartet jedes Senden, Antworten, Weiterleiten, Senden eines Entwurfs und geplante Senden, bis eine Person es freigibt."
+    },
+    {
+      "q": "Werden meine E-Mails auf Ihren Servern gespeichert?",
+      "a": "Nein. Jede Nachricht wird für die Anfrage, die sie anfordert, live von Ihrem Anbieter abgerufen und direkt an Ihren Client übergeben. Gespeichert wird nur das verschlüsselte OAuth-Token oder App-Passwort, damit spätere Aufrufe sich authentifizieren können. Wenn Sie das Postfach im Dashboard löschen oder den Zugriff bei Ihrem Anbieter widerrufen, endet die Verbindung sofort."
+    }
+  ],
+  "ctaBand": {
+    "title": "Geben Sie VS Code ein echtes Postfach",
+    "sub": "Ein Befehl, eine Anmeldung. Ein Postfach dauerhaft kostenlos, keine Kreditkarte nötig."
+  }
+}

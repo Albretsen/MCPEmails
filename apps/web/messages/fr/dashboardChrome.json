@@ -91,7 +91,7 @@
     "densityLabel": "Densité",
     "densityCompact": "Compacte",
     "densitySpacious": "Spacieuse",
-    "firstRunTitle": "Bienvenue sur mcpemails",
+    "firstRunTitle": "Bienvenue sur MCP Emails",
     "firstRunBody": "Connectez votre première boîte pour obtenir un point de terminaison MCP fonctionnel en moins d'une minute.",
     "firstRunCta": "Connecter une boîte",
     "inviteSentNotDelivered": "Invitation créée pour {email}, mais l'e-mail n'a pas pu être envoyé. Utilisez Renvoyer sur l'invitation en attente.",

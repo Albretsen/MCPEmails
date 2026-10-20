@@ -42,7 +42,7 @@ En el panel, abre **Inboxes → Connect Inbox** y elige la ruta que te correspon
 
 ### Google Workspace
 
-Workspace se conecta por defecto con una **contraseña de aplicación de Google** sobre IMAP (\`imap.gmail.com\` en el 993, \`smtp.gmail.com\` en el 465); OAuth también está disponible. Las contraseñas de aplicación solo existen con la Verificación en dos pasos activada, y un administrador puede desactivarlas para todo el dominio, en cuyo caso la página de Google simplemente no está disponible para ti. Los administradores también pueden restringir las aplicaciones OAuth de terceros en Seguridad → Controles de API, lo que bloquea esa vía en la propia pantalla de consentimiento de Google. Si ambas están cerradas, habla con tu administrador.
+Workspace se conecta con una **contraseña de aplicación de Google** sobre IMAP (\`imap.gmail.com\` en el 993, \`smtp.gmail.com\` en el 465). Las contraseñas de aplicación solo existen con la Verificación en dos pasos activada, y un administrador puede desactivarlas para todo el dominio, en cuyo caso la página de Google simplemente no está disponible para ti. Si es así, habla con tu administrador. La [página de ajustes de Google Workspace](/connect/google-workspace) recoge los mismos valores.
 
 ### Zoho Mail
 
@@ -79,7 +79,7 @@ Da a MCP Emails cuatro cosas por protocolo: host, puerto, modo de seguridad y tu
 - IMAP **993** es TLS implícito; IMAP **143** es STARTTLS.
 - SMTP **465** es TLS implícito; SMTP **587** es STARTTLS, y el **25** es STARTTLS en los hosts pequeños que no ofrecen otra cosa.
 
-Confundirlos era la mayor causa de conexiones genéricas fallidas: STARTTLS en el 993 se queda esperando un saludo que un servidor solo TLS nunca envía, y TLS implícito en el 143 falla el handshake. Ya no tienes que acertar a la primera. Una conexión que nunca llegó a establecer una sesión utilizable se reintenta en los otros transportes estándar, hasta tres intentos por protocolo, empezando por el que pediste. Una contraseña rechazada por el servidor nunca se reintenta: reenviarla solo triplicaría el contador de inicios de sesión fallidos que tu proveedor usa para bloquear cuentas.
+Confundirlos era la mayor causa de conexiones genéricas fallidas: STARTTLS en el 993 se queda esperando un saludo que un servidor solo TLS nunca envía, y TLS implícito en el 143 falla el handshake. Ya no tienes que acertar a la primera. Una conexión que nunca llegó a establecer una sesión utilizable se reintenta en los otros transportes estándar, hasta tres intentos por protocolo, empezando por el que pediste. Una contraseña rechazada por el servidor nunca se reintenta: reenviarla solo triplicaría el contador de inicios de sesión fallidos que tu proveedor usa para bloquear cuentas. Consulta también la [página de conexión IMAP genérica](/connect/imap).
 
 El envío negocia una cosa más que nunca verás. Los hosts tipo Exchange anuncian **LOGIN** sin PLAIN, así que MCP Emails lee lo que ofrece el servidor, prueba PLAIN primero cuando están los dos y recurre a LOGIN. Un mecanismo rechazado nunca se comunica como contraseña incorrecta.
 
@@ -95,7 +95,7 @@ Defínelo por buzón en la página de detalle del buzón, donde una vista previa
 - **Estás usando otra contraseña.** Migadu, IONOS, Rackspace y cPanel separan el acceso al panel de control de la contraseña del buzón, y las dos suelen ser direcciones de correo.
 - **Da tiempo de espera en lugar de fallar.** Eso es el host o el puerto, no la credencial. Vuelve a leer el nombre del host en el panel del proveedor.
 - **Lee el correo pero no envía.** La mitad saliente tiene su propio host, puerto y modo de seguridad, y algunos hosts no escuchan en el 465. Confirma que concediste \`send:email\`.
-- **Es un buzón de Microsoft 365.** Comprado directamente o revendido por GoDaddy, IONOS o Rackspace, sigue siendo un tenant de Microsoft. Conéctalo con **Outlook** e Iniciar sesión con Microsoft, no por IMAP. Si Microsoft dice que hace falta la aprobación de un administrador, envía a tu administrador de TI el enlace que muestra el panel.
+- **Es un buzón de Microsoft 365.** Comprado directamente o revendido por GoDaddy, IONOS o Rackspace, sigue siendo un tenant de Microsoft. Conéctalo con **Outlook** e Iniciar sesión con Microsoft, no por IMAP. Si Microsoft dice que hace falta la aprobación de un administrador, envía a tu administrador de TI el enlace que muestra el panel. La [página de conexión de Microsoft 365](/connect/office365) tiene los detalles.
 
 La [matriz de proveedores](/docs/providers) y las [páginas de proveedor](/connect) recogen el detalle de cada uno.
 
@@ -105,7 +105,7 @@ La [matriz de proveedores](/docs/providers) y las [páginas de proveedor](/conne
 Consulta el registro MX de tu dominio, o escribe tu dirección en el formulario de conexión y deja que la detección automática revise el MX y los registros de servicio por ti.
 
 **¿Puedo conectar una dirección de Google Workspace?**
-Sí, con una contraseña de aplicación de Google sobre IMAP, o con OAuth. Tu administrador puede bloquear cualquiera de las dos: las contraseñas de aplicación se pueden desactivar para todo el dominio y las aplicaciones OAuth de terceros se pueden restringir en los controles de API.
+Sí, con una contraseña de aplicación de Google sobre IMAP. Necesitas la Verificación en dos pasos activada para crearla, y tu administrador puede desactivar las contraseñas de aplicación para todo el dominio, así que pregúntale si no ves la opción.
 
 **¿Y si mi proveedor no publica los ajustes IMAP?**
 Introdúcelos tú: host, puerto, modo de seguridad y tu dirección completa como usuario. Si el primer transporte no responde, se prueban automáticamente las alternativas estándar.

@@ -16,7 +16,7 @@ Avant de toucher au moindre fournisseur, décidez comment votre agent IA va dial
 2. Collez l’endpoint : \`https://www.mcpemails.com/api/mcp\`
 3. Cliquez sur **Connect**, connectez-vous à votre compte MCP Emails et approuvez les portées souhaitées (\`read:email\`, \`send:email\`, ou les deux).
 
-C’est tout pour le côté client. Les jetons sont limités exactement à ce que vous avez approuvé, et vous pouvez révoquer la connexion depuis le tableau de bord en un clic. Si vous voulez voir les compromis détaillés, lisez [OAuth ou clés d’API pour l’accès à l’e-mail par l’IA](/blog/oauth-vs-api-keys-ai-email-access).
+C’est tout pour le côté client. Les jetons sont limités exactement à ce que vous avez approuvé, et vous pouvez révoquer la connexion depuis le tableau de bord en un clic. Si vous voulez voir les compromis détaillés, lisez [OAuth ou clés d’API pour l’accès à l’e-mail par l’IA](/blog/oauth-vs-api-keys-ai-email-access). Pour un guide propre à un client, voyez comment [connecter Claude à vos e-mails](/blog/connect-claude-to-email) ou [connecter ChatGPT à vos e-mails](/blog/connect-chatgpt-to-email).
 
 **Chemin B — client à clé d’API (Cline, JetBrains, cURL, agents maison).** Pour tout ce qui n’a pas d’OAuth intégré :
 
@@ -30,7 +30,7 @@ Passons à la boîte de réception. Chaque fournisseur ci-dessous démarre de la
 
 ## Connectez chaque fournisseur
 
-### Gmail (mot de passe d’application, ou connexion avec Google)
+### Gmail (mot de passe d’application)
 
 Par défaut, Gmail se connecte avec un mot de passe d’application Google, en IMAP.
 
@@ -39,7 +39,7 @@ Par défaut, Gmail se connecte avec un mot de passe d’application Google, en I
 3. Saisissez votre adresse Gmail complète, collez le mot de passe d’application et cliquez sur **Connecter la boîte**.
 4. La connexion est testée auprès de Gmail et la boîte apparaît connectée. Terminé.
 
-Votre mot de passe Google habituel ne fonctionne pas ici et n’est jamais nécessaire. Si vous préférez vous connecter avec Google, ouvrez **Vous préférez vous connecter avec Google ?** dans la même fenêtre et cliquez sur **Se connecter avec Google** ; Google affiche d’abord un avertissement d’application non validée (cliquez sur **Paramètres avancés**, puis sur **Accéder à mcpemails.com**). Cette voie utilise l’API Gmail : les recherches peuvent utiliser les opérateurs propres à Gmail (\`from:\`, \`is:unread\`, \`after:\`) et Claude travaille avec de vrais libellés. La voie du mot de passe d’application utilise la recherche texte IMAP, affiche les libellés comme des dossiers et permet la suppression définitive. Le [guide Gmail](/blog/connect-gmail-to-claude) donne les détails.
+Votre mot de passe Google habituel ne fonctionne pas ici et n’est jamais nécessaire. En IMAP, les libellés Gmail apparaissent comme des dossiers, et les recherches utilisent les champs structurés de MCP Emails (expéditeur, objet, date, non lus, etc.) plutôt que les opérateurs de recherche de Gmail. Vous pouvez révoquer le mot de passe d’application à tout moment depuis la même page Google. Si vous êtes sur Google Workspace et que la page des mots de passe d’application n’apparaît pas, votre administrateur les a peut-être désactivés pour le domaine. Le [guide Gmail](/blog/connect-gmail-to-claude) donne les détails.
 
 ### Outlook / Microsoft 365 (connexion avec Microsoft)
 
@@ -106,7 +106,7 @@ Une réserve honnête à poser d’emblée : MCP Emails fonctionne par sondage. 
 
 ## Pourquoi c’est sûr de le faire rapidement
 
-Ici, la rapidité ne vient pas de raccourcis sur la sécurité. L’e-mail est récupéré en direct à chaque appel et n’est jamais stocké — les corps, les objets et les pièces jointes sont remis à l’agent puis abandonnés immédiatement. La seule chose conservée par boîte de réception est votre jeton OAuth ou votre mot de passe d’application, chiffré en AES-256-GCM et déchiffré uniquement à l’intérieur d’une fonction isolée au moment de l’appel. L’envoi passe toujours par votre propre fournisseur, donc la réputation de votre domaine reste la vôtre. Si vous voulez l’architecture en détail, lisez [pourquoi « l’e-mail n’est jamais stocké » compte vraiment](/blog/why-email-never-stored-matters).
+Ici, la rapidité ne vient pas de raccourcis sur la sécurité. L’e-mail est récupéré en direct à chaque appel et n’est jamais stocké : les corps, les objets et les pièces jointes sont remis à l’agent puis abandonnés immédiatement. La seule chose conservée par boîte de réception est votre jeton OAuth ou votre mot de passe d’application, chiffré au repos en AES-256-GCM et déchiffré sur nos serveurs uniquement lorsqu’une requête en a besoin. Il n’est jamais envoyé à votre agent. L’envoi passe toujours par votre propre fournisseur, donc la réputation de votre domaine reste la vôtre. Si vous voulez l’architecture en détail, lisez [pourquoi « l’e-mail n’est jamais stocké » compte vraiment](/blog/why-email-never-stored-matters).
 
 ## Pour conclure
 

@@ -4,7 +4,11 @@ import { metaAlternatesFor, localePath, OG_LOCALE, OG_IMAGE, connectJsonLd } fro
 import { getProvider, providerLocales } from '@/lib/connect/providers.mjs';
 import { isViewable } from '@/lib/connect/release.mjs';
 import { getProviderContent, providerParams } from '@/lib/connect/content.mjs';
-import { getMultiMailboxCopy, multiMailboxFaq, showsMultiMailbox } from '@/lib/connect/multi-mailbox.mjs';
+import { getMultiMailboxCopy, showsMultiMailbox } from '@/lib/connect/multi-mailbox.mjs';
+import { CHATGPT_BLOG_SLUG, chatgptBlogLink, getChatgptCopy, showsChatgpt } from '@/lib/connect/chatgpt.mjs';
+import { providerFaq } from '@/lib/connect/faq.mjs';
+import { getPost, getPostLocales } from '@/lib/blog/posts';
+import { getGuideCopy } from '@/lib/connect/guides.mjs';
 import { stripTags } from '../../../../components/marketing/RichText';
 import ConnectProviderView from '../../../../components/marketing/ConnectProviderView';
 
@@ -35,14 +39,14 @@ export async function generateMetadata({ params }) {
     openGraph: {
       type: 'website',
       url: localePath(locale, path),
-      title: `${title} · mcpemails`,
+      title: `${title} · MCP Emails`,
       description,
       locale: OG_LOCALE[locale],
       images: [OG_IMAGE],
     },
     twitter: {
       card: 'summary_large_image',
-      title: `${title} · mcpemails`,
+      title: `${title} · MCP Emails`,
       description,
       images: [OG_IMAGE.url],
     },
@@ -66,10 +70,17 @@ export default async function ConnectProviderPage({ params }) {
   // mailbox the company runs on this host connects to the same agent, plus a
   // matching FAQ entry (see lib/connect/multi-mailbox). Null everywhere else.
   const multiMailbox = showsMultiMailbox(provider) ? await getMultiMailboxCopy(locale) : null;
-  const faq = [
-    ...(content.faq ?? []),
-    ...(multiMailbox ? [multiMailboxFaq(multiMailbox, provider.name)] : []),
-  ];
+  // Every supported provider gets a "Use <provider> in ChatGPT" block and,
+  // except Yahoo, a matching FAQ entry (see lib/connect/chatgpt). Null on the
+  // limited pages.
+  const chatgpt = showsChatgpt(provider)
+    ? {
+        copy: await getChatgptCopy(locale),
+        blog: chatgptBlogLink(locale, getPostLocales(getPost(CHATGPT_BLOG_SLUG))),
+      }
+    : null;
+  const faq = providerFaq({ content, provider, multiMailbox, chatgptCopy: chatgpt?.copy });
+  const guides = await getGuideCopy(locale);
   const jsonLd = connectJsonLd(locale, {
     path: `/connect/${slug}`,
     title: content.meta.title,
@@ -86,7 +97,7 @@ export default async function ConnectProviderPage({ params }) {
         type="application/ld+json"
         dangerouslySetInnerHTML={{ __html: JSON.stringify(jsonLd) }}
       />
-      <ConnectProviderView locale={locale} provider={provider} content={content} multiMailbox={multiMailbox} />
+      <ConnectProviderView locale={locale} provider={provider} content={content} multiMailbox={multiMailbox} guides={guides} chatgpt={chatgpt} />
     </>
   );
 }

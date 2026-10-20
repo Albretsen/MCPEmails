@@ -21,7 +21,7 @@
     "titleLine1": "将 Mailfence 连接到 Claude，",
     "titleLine2": "以及 Cursor、ChatGPT、任意 MCP 客户端",
     "lead": "为你的 AI 代理接入一个真正的 Mailfence 收件箱。在任意 MCP 客户端中通过 IMAP 读取、搜索、发送、回复、定时与整理邮件，并把套餐要求和双重身份验证方面的注意事项提前讲清楚，而不是事后才发现。",
-    "answer": "Claude 无法自行访问 Mailfence。mcpemails 是一个托管 MCP 服务器，通过 imap.mailfence.com 端口 993 的 IMAP 以及 smtp.mailfence.com 端口 465 的 SMTP 与之连接，让 Claude、Cursor 或任意 MCP 客户端都能读取、搜索、发送并整理这些邮件。能否成功取决于两个条件：IMAP、POP 和 SMTP 仅在 Mailfence 的付费套餐上提供，免费账户没有；登录名必须是你的主地址或用户名，而不是别名。认证使用你的 Mailfence 密码，更好的做法是使用在 Settings、Account、Security 下生成的服务专用密码。我们这边 1 个收件箱永久免费。",
+    "answer": "Claude 无法自行访问 Mailfence。MCP Emails 是一个托管 MCP 服务器，通过 imap.mailfence.com 端口 993 的 IMAP 以及 smtp.mailfence.com 端口 465 的 SMTP 与之连接，让 Claude、Cursor 或任意 MCP 客户端都能读取、搜索、发送并整理这些邮件。能否成功取决于两个条件：IMAP、POP 和 SMTP 仅在 Mailfence 的付费套餐上提供，免费账户没有；登录名必须是你的主地址或用户名，而不是别名。认证使用你的 Mailfence 密码，更好的做法是使用在 Settings、Account、Security 下生成的服务专用密码。我们这边 1 个收件箱永久免费。",
     "meta0": "1 个收件箱永久免费",
     "meta1": "IMAP 需要付费 Mailfence 套餐",
     "meta2": "邮件实时获取，绝不存储"
@@ -32,7 +32,7 @@
   },
   "setup": [
     {
-      "h": "创建免费的 mcpemails 账户",
+      "h": "创建免费的 MCP Emails 账户",
       "p": "在 mcpemails.com 注册。免费套餐可永久连接一个收件箱，无需信用卡。完成后你会得到一个 MCP URL 和一个密钥。"
     },
     {
@@ -41,7 +41,7 @@
     },
     {
       "h": "生成服务专用密码，并关闭你不需要的功能",
-      "p": "在 <b>Settings</b>、<b>Account</b>、<b>Security</b>、<b>Services access</b> 下，分别创建一个限于 IMAP 的密码和一个用于 SMTP 的密码，而不是复用你的账户密码，并禁用 POP、xDAV 以及任何其他你不用的协议。Mailfence 自己的加固建议正是这样做。然后在 mcpemails 中用你的<b>主</b>地址或用户名以及该密码添加邮箱。"
+      "p": "在 <b>Settings</b>、<b>Account</b>、<b>Security</b>、<b>Services access</b> 下，分别创建一个限于 IMAP 的密码和一个用于 SMTP 的密码，而不是复用你的账户密码，并禁用 POP、xDAV 以及任何其他你不用的协议。Mailfence 自己的加固建议正是这样做。然后在 MCP Emails 中用你的<b>主</b>地址或用户名以及该密码添加邮箱。"
     },
     {
       "h": "将 MCP URL 粘贴到你的 AI",
@@ -67,14 +67,14 @@
     }
   ],
   "limits": [
-    "将 Mailfence 邮箱连接到 AI 客户端，意味着该 AI 服务商会读取它所处理的邮件内容。mcpemails 按请求从 Mailfence 实时获取邮件，不存储邮件正文，凭据也静态加密存储，但文本仍会到达 Claude、Cursor 或你所连接的任何客户端。Mailfence 的比利时司法管辖和不追踪立场适用于 Mailfence，并不会跟随邮件进入你自己接入的 AI 厂商。",
-    "对许多用户来说，Mailfence 的 OpenPGP 密钥库正是这款产品的意义所在，而用你的密钥加密的邮件通过 IMAP 到达时是密文。mcpemails 不持有你的任何私钥，所以代理可以对这些邮件进行排序、标记和归档，但无法阅读。它们在密钥所在的 Mailfence 网页界面中仍然可读。",
+    "将 Mailfence 邮箱连接到 AI 客户端，意味着该 AI 服务商会读取它所处理的邮件内容。MCP Emails 按请求从 Mailfence 实时获取邮件，不存储邮件正文，凭据也静态加密存储，但文本仍会到达 Claude、Cursor 或你所连接的任何客户端。Mailfence 的比利时司法管辖和不追踪立场适用于 Mailfence，并不会跟随邮件进入你自己接入的 AI 厂商。",
+    "对许多用户来说，Mailfence 的 OpenPGP 密钥库正是这款产品的意义所在，而用你的密钥加密的邮件通过 IMAP 到达时是密文。MCP Emails 不持有你的任何私钥，所以代理可以对这些邮件进行排序、标记和归档，但无法阅读。它们在密钥所在的 Mailfence 网页界面中仍然可读。",
     "免费的 Mailfence 账户根本无法在这里连接。这是 Mailfence 的套餐限制，而不是 MCP 服务器的局限，除了付费套餐之外没有任何变通办法。"
   ],
   "faq": [
     {
       "q": "Claude 能用于 Mailfence 吗？",
-      "a": "不能直接使用。Claude 没有内置的 Mailfence 连接器。通过 IMAP 将 mcpemails 这样的 MCP 服务器连接到付费 Mailfence 账户后，Claude 就能读取、搜索、发送、回复、定时和整理其中的邮件，而且同一个连接无需重复设置，即可在 Cursor 和其他 MCP 客户端中使用。"
+      "a": "不能直接使用。Claude 没有内置的 Mailfence 连接器。通过 IMAP 将 MCP Emails 这样的 MCP 服务器连接到付费 Mailfence 账户后，Claude 就能读取、搜索、发送、回复、定时和整理其中的邮件，而且同一个连接无需重复设置，即可在 Cursor 和其他 MCP 客户端中使用。"
     },
     {
       "q": "Mailfence 的 IMAP 和 SMTP 设置是什么？",
@@ -90,7 +90,7 @@
     },
     {
       "q": "我的 AI 能读取用 OpenPGP 加密的 Mailfence 邮件吗？",
-      "a": "不能。Mailfence 的加密依赖一把你的 AI 客户端没有、mcpemails 也从未收到的密钥，所以加密邮件通过 IMAP 到达时是 ASCII 封装的密文块。代理能看到发件人、主题和日期，也能移动或标记邮件，但正文在 Mailfence 界面之外无法阅读。"
+      "a": "不能。Mailfence 的加密依赖一把你的 AI 客户端没有、MCP Emails 也从未收到的密钥，所以加密邮件通过 IMAP 到达时是 ASCII 封装的密文块。代理能看到发件人、主题和日期，也能移动或标记邮件，但正文在 Mailfence 界面之外无法阅读。"
     },
     {
       "q": "我的 Mailfence 邮件会存储在你们的服务器上吗？",

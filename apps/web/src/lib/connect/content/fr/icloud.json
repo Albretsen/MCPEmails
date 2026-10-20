@@ -22,23 +22,23 @@
     "meta0": "1 boîte gratuite, pour toujours",
     "meta1": "Mot de passe pour app, sans OAuth",
     "meta2": "E-mails récupérés en direct, jamais stockés",
-    "answer": "Apple ne propose pas OAuth pour iCloud Mail : Claude ne peut donc pas s'y connecter directement. mcpemails connecte votre boîte iCloud en IMAP avec un mot de passe pour app Apple, ce qui permet à Claude, Cursor ou tout client MCP de lire, rechercher, envoyer et organiser ce courrier. La configuration prend environ deux minutes et une boîte est gratuite."
+    "answer": "Apple ne propose pas OAuth pour iCloud Mail : Claude ne peut donc pas s'y connecter directement. MCP Emails connecte votre boîte iCloud en IMAP avec un mot de passe pour app Apple, ce qui permet à Claude, Cursor ou tout client MCP de lire, rechercher, envoyer et organiser ce courrier. La configuration prend environ deux minutes et une boîte est gratuite."
   },
   "method": {
     "title": "Comment iCloud se connecte : un mot de passe pour app",
-    "body": "iCloud Mail se connecte en IMAP/SMTP avec un <b>mot de passe pour app Apple</b>. Générez-en un sur account.apple.com sous Sign-In and Security → App-Specific Passwords (identification à deux facteurs requise), puis collez-le dans mcpemails avec votre adresse iCloud."
+    "body": "iCloud Mail se connecte en IMAP/SMTP avec un <b>mot de passe pour app Apple</b>. Générez-en un sur account.apple.com sous Sign-In and Security → App-Specific Passwords (identification à deux facteurs requise), puis collez-le dans MCP Emails avec votre adresse iCloud."
   },
   "setup": [
     {
       "h": "Créez un compte gratuit",
-      "p": "Inscrivez-vous sur mcpemails, sans carte bancaire. L'offre gratuite connecte une boîte, pour toujours."
+      "p": "Inscrivez-vous sur MCP Emails, sans carte bancaire. L'offre gratuite connecte une boîte, pour toujours."
     },
     {
       "h": "Générez un mot de passe pour app",
       "p": "Sur account.apple.com, allez dans Sign-In and Security → App-Specific Passwords et créez-en un (l'identification à deux facteurs doit être activée)."
     },
     {
-      "h": "Collez-le dans mcpemails",
+      "h": "Collez-le dans MCP Emails",
       "p": "Ajoutez votre adresse iCloud et le mot de passe pour app pour connecter la boîte en toute sécurité."
     },
     {
@@ -72,7 +72,7 @@
   "faq": [
     {
       "q": "Claude fonctionne-t-il avec iCloud Mail ?",
-      "a": "Pas seul. Claude n'a pas de connecteur iCloud intégré et Apple ne publie aucune interface OAuth pour iCloud Mail. Connecter un serveur MCP comme mcpemails à la boîte en IMAP, avec un mot de passe pour app Apple, donne à Claude un accès en lecture, recherche, envoi, réponse, planification et organisation, et la même connexion fonctionne depuis Cursor et ChatGPT."
+      "a": "Pas seul. Claude n'a pas de connecteur iCloud intégré et Apple ne publie aucune interface OAuth pour iCloud Mail. Connecter un serveur MCP comme MCP Emails à la boîte en IMAP, avec un mot de passe pour app Apple, donne à Claude un accès en lecture, recherche, envoi, réponse, planification et organisation, et la même connexion fonctionne depuis Cursor et ChatGPT."
     },
     {
       "q": "Quels sont les réglages IMAP et SMTP d'iCloud Mail ?",
