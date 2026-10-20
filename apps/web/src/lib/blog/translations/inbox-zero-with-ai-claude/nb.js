@@ -5,7 +5,7 @@ const translation = {
   coverAlt: 'Nå inbox zero med AI — Claude sorterer, arkiverer og skriver svarutkast på tvers av din ekte innboks over MCP',
   content: `Inbox zero har alltid hatt det samme problemet: å komme dit tar en time du ikke har, og i morgen er du tilbake til femti uleste. En AI-agent endrer regnestykket. I stedet for at du sorterer én melding om gangen, forteller du Claude hva «håndtert» betyr, og den jobber gjennom hele innboksen på én gang — sorterer, arkiverer, merker og skriver svarutkast mot din *ekte* e-post, live.
 
-Denne guiden er rutinen: en sløyfe du kan gjenta hver morgen, de eksakte promptene som driver den, og den ene regelen som holder den trygg (ingenting lagres noensinne). Den forutsetter at Claude allerede kan se innboksen din. Hvis den ikke kan det ennå, start med [hvordan koble Gmail til Claude](/blog/connect-gmail-to-claude) (eller [guiden for Outlook og Microsoft 365](/blog/connect-outlook-microsoft-365-ai-agent-mcp)) — det tar omtrent to minutter — og kom så tilbake.
+Denne guiden er rutinen: en sløyfe du kan gjenta hver morgen, de eksakte promptene som driver den, og den ene regelen som holder den trygg (ingenting lagres noensinne). Den forutsetter at Claude allerede kan se innboksen din. Hvis den ikke kan det ennå, start med [hvordan koble Gmail til Claude](/blog/connect-gmail-to-claude) (eller [guiden for Outlook og Microsoft 365](/blog/connect-outlook-microsoft-365-ai-agent-mcp)) — det tar omtrent to minutter — og kom så tilbake. Bruker du iCloud, Fastmail eller en annen IMAP-vert, følg heller [guiden for å koble e-post til Claude](/blog/connect-claude-to-email).
 
 ## Hvorfor «inbox zero» endelig er realistisk med AI
 

@@ -42,7 +42,7 @@ Dans le tableau de bord, ouvrez **Inboxes → Connect Inbox** et choisissez la v
 
 ### Google Workspace
 
-Workspace se connecte par défaut avec un **mot de passe d'application Google** en IMAP (\`imap.gmail.com\` sur le 993, \`smtp.gmail.com\` sur le 465) ; OAuth reste disponible. Les mots de passe d'application n'existent que si la validation en deux étapes est activée, et un administrateur peut les désactiver pour tout le domaine, auquel cas la page Google vous est tout simplement inaccessible. Les administrateurs peuvent aussi restreindre les applications OAuth tierces sous Sécurité → Contrôles des API, ce qui bloque cette voie sur l'écran de consentement de Google. Si les deux sont fermées, adressez-vous à votre administrateur.
+Workspace se connecte par défaut avec un **mot de passe d'application Google** en IMAP (\`imap.gmail.com\` sur le 993, \`smtp.gmail.com\` sur le 465) ; OAuth reste disponible. Les mots de passe d'application n'existent que si la validation en deux étapes est activée, et un administrateur peut les désactiver pour tout le domaine, auquel cas la page Google vous est tout simplement inaccessible. Les administrateurs peuvent aussi restreindre les applications OAuth tierces sous Sécurité → Contrôles des API, ce qui bloque cette voie sur l'écran de consentement de Google. Si les deux sont fermées, adressez-vous à votre administrateur. La [page des réglages Google Workspace](/connect/google-workspace) reprend les mêmes valeurs.
 
 ### Zoho Mail
 
@@ -79,7 +79,7 @@ Donnez quatre choses à MCP Emails par protocole : hôte, port, mode de sécurit
 - IMAP **993**, c'est du TLS implicite ; IMAP **143**, du STARTTLS.
 - SMTP **465**, c'est du TLS implicite ; SMTP **587**, du STARTTLS, et le **25** du STARTTLS chez les petits hôtes qui n'offrent rien d'autre.
 
-Les confondre était la première cause d'échec des connexions génériques : STARTTLS sur le 993 attend une salutation qu'un serveur TLS uniquement n'enverra jamais, et le TLS implicite sur le 143 rate la négociation. Vous n'avez plus à viser juste du premier coup. Une connexion qui n'a jamais établi de session utilisable est réessayée sur les autres transports standard, jusqu'à trois tentatives par protocole, en commençant par celui que vous avez demandé. Un mot de passe refusé par le serveur n'est jamais réessayé : le renvoyer ne ferait que tripler le compteur d'échecs de connexion que votre fournisseur utilise pour verrouiller le compte.
+Les confondre était la première cause d'échec des connexions génériques : STARTTLS sur le 993 attend une salutation qu'un serveur TLS uniquement n'enverra jamais, et le TLS implicite sur le 143 rate la négociation. Vous n'avez plus à viser juste du premier coup. Une connexion qui n'a jamais établi de session utilisable est réessayée sur les autres transports standard, jusqu'à trois tentatives par protocole, en commençant par celui que vous avez demandé. Un mot de passe refusé par le serveur n'est jamais réessayé : le renvoyer ne ferait que tripler le compteur d'échecs de connexion que votre fournisseur utilise pour verrouiller le compte. Voir aussi la [page de connexion IMAP générique](/connect/imap).
 
 L'envoi négocie encore une chose que vous ne verrez jamais. Les hôtes de type Exchange annoncent **LOGIN** sans PLAIN : MCP Emails lit ce que le serveur propose, essaie PLAIN en premier quand les deux sont là, et bascule sur LOGIN. Un mécanisme refusé n'est jamais signalé comme un mauvais mot de passe.
 
@@ -95,7 +95,7 @@ Définissez-le boîte par boîte sur la page de détail de la boîte, où un ape
 - **Vous utilisez carrément le mauvais mot de passe.** Migadu, IONOS, Rackspace et cPanel séparent tous l'identifiant du panneau de configuration du mot de passe de la boîte, et les deux sont généralement des adresses e-mail.
 - **Ça expire au lieu d'échouer.** C'est l'hôte ou le port, pas l'identifiant. Relisez le nom d'hôte dans le panneau du fournisseur.
 - **La lecture marche mais pas l'envoi.** La moitié sortante a son propre hôte, port et mode de sécurité, et certains hôtes n'écoutent pas sur le 465. Vérifiez aussi que vous avez accordé \`send:email\`.
-- **C'est une boîte Microsoft 365.** Achetée en direct ou revendue par GoDaddy, IONOS ou Rackspace, elle reste un tenant Microsoft. Connectez-la avec **Outlook** et la connexion Microsoft, pas en IMAP. Si Microsoft indique qu'une approbation de l'administrateur est requise, envoyez le lien affiché dans le tableau de bord à votre administrateur informatique.
+- **C'est une boîte Microsoft 365.** Achetée en direct ou revendue par GoDaddy, IONOS ou Rackspace, elle reste un tenant Microsoft. Connectez-la avec **Outlook** et la connexion Microsoft, pas en IMAP. Si Microsoft indique qu'une approbation de l'administrateur est requise, envoyez le lien affiché dans le tableau de bord à votre administrateur informatique. La [page de connexion Microsoft 365](/connect/office365) donne les détails.
 
 La [matrice des fournisseurs](/docs/providers) et les [pages fournisseur](/connect) donnent le détail pour chacun.
 

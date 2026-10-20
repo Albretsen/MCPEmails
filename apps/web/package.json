@@ -24,6 +24,7 @@
     "test:invite-accept": "node --test --experimental-strip-types --import ./scripts/register-ts-alias.mjs src/lib/workspace/invite-accept-error.test.ts",
     "test:seo": "node --test src/lib/compare/native-connectors.test.mjs src/lib/blog/seo.test.mjs src/lib/blog/links.test.mjs src/lib/acquisition-context.test.mjs scripts/gsc-indexing-report.test.mjs scripts/indexnow-submit.test.mjs",
     "test:blog-copy": "node --test src/lib/blog/copy-integrity.test.mjs src/lib/blog/anchors.test.mjs",
+    "test:blog-links": "node --test src/lib/blog/internal-links.test.mjs",
     "test:reviews": "node --test components/marketing/reviews.test.mjs",
     "test:home-guides": "node --test --experimental-strip-types --experimental-test-module-mocks --import ./scripts/register-dom-tests.mjs components/marketing/home-guides.test.mjs",
     "test:acquisition": "node --test components/analytics/acquisition-capture.test.mjs",
