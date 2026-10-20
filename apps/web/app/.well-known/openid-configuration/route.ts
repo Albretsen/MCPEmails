@@ -14,9 +14,9 @@
  * signing key and publishes no JWKS. See lib/oauth/metadata.ts and the header
  * of /api/oauth/userinfo.
  *
- * No authentication required. Cached for 1 hour.
+ * No authentication required. Cached for 1 hour by clients, 1 day by the CDN.
  */
-import { openIdConfiguration } from '@/lib/oauth/metadata';
+import { DISCOVERY_CACHE_CONTROL, openIdConfiguration } from '@/lib/oauth/metadata';
 
 // Same reasoning as the RFC 8414 document: a discovery document is read
 // cross-origin by browser-based clients and carries nothing user-specific.
@@ -34,7 +34,7 @@ export async function GET() {
   return Response.json(openIdConfiguration(), {
     headers: {
       ...CORS_HEADERS,
-      'Cache-Control': 'max-age=3600',
+      'Cache-Control': DISCOVERY_CACHE_CONTROL,
     },
   });
 }
