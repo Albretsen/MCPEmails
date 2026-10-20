@@ -231,7 +231,7 @@ export default async function AuthorizePage({ searchParams }) {
   // selectable); it decides which card the screen OPENS on, and it feeds the
   // "previously approved" hint below.
   //
-  // Since 2026-09-09 the challenge in app/api/mcp/route.ts asks for
+  // Since 2026-09-09 the /api/mcp challenge (now mcp-server/web-ingress.ts) asks for
   // `read:email` alone rather than all nine scopes, so this is now a real
   // signal for the clients that send one: claude.ai's authorize request arrives
   // as `scope=read:email`, verified on the wire. The default-selection rule is

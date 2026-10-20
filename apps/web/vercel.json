@@ -2,7 +2,6 @@
   "$schema": "https://openapi.vercel.sh/vercel.json",
   "ignoreCommand": "if [ \"$VERCEL_ENV\" != \"production\" ]; then exit 0; fi; git diff --quiet HEAD^ HEAD -- . ../../packages ../../package.json ../../package-lock.json ../../supabase/functions/mcp-server/search-translate.ts",
   "functions": {
-    "app/api/mcp/route.ts": { "regions": ["iad1"] },
     "app/api/automations/preview/route.ts": { "regions": ["iad1"] },
     "app/api/inboxes/imap/route.ts": { "regions": ["iad1"] },
     "app/api/inboxes/app-password/route.ts": { "regions": ["iad1"] },
@@ -23,5 +22,17 @@
     "app/signup/**": { "regions": ["arn1"] },
     "app/(auth)/**": { "regions": ["arn1"] },
     "app/**": { "regions": ["iad1"] }
-  }
+  },
+  "rewrites": [
+    {
+      "source": "/api/mcp",
+      "destination": "https://swvaxorwumispmjaaszb.supabase.co/functions/v1/mcp-server/web?forceFunctionRegion=us-east-1"
+    }
+  ],
+  "headers": [
+    {
+      "source": "/api/mcp",
+      "headers": [{ "key": "x-vercel-enable-rewrite-caching", "value": "0" }]
+    }
+  ]
 }
