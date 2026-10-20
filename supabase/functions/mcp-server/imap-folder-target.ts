@@ -141,23 +141,154 @@ export const IMAP_ALIAS_SPECIAL_USE: Record<string, string> = {
  * The role existed on those mailboxes. It was just not called the one English
  * word the matcher knew.
  *
- * English: the names Outlook/Exchange, Apple Mail, Thunderbird and the common
- * webmail suites create. Localized: German, French and Simplified Chinese
- * only, and only the names that can mean nothing but the role. A mailbox called
- * "Papierkorb" is the trash; nobody files project mail there. Chinese is here
- * because QQ Mail (and the other Tencent/NetEase hosts) do not advertise
- * SPECIAL-USE at all and name their roles 已发送, 草稿箱, 已删除 and 垃圾邮件,
- * so without these the flag tier has nothing to match on those accounts. Other
- * languages are left out on purpose rather than guessed at: a wrong entry here
- * is a wrong DESTINATION for a move or a soft delete, and the flag already
- * covers every server that sets it, in any language.
+ * WHICH NAMES. English: the names Outlook/Exchange, Apple Mail, Thunderbird and
+ * the common webmail suites create. Localized: the defaults those clients and
+ * the big national providers create in each language, because many hosts that
+ * do not set SPECIAL-USE (OVH MX Plan, Strato, QQ Mail, plenty of cPanel and
+ * Courier servers) keep whatever the first client to connect named the folder.
+ * An OVH mailbox whose Sent is "INBOX.Éléments envoyés" (Outlook's French
+ * name) saved no Sent copy at all until that name was here.
+ *
+ * Every name has to pass all four of these rules. A wrong entry is a wrong
+ * DESTINATION for a move, a soft delete or a Sent copy, so when in doubt a name
+ * stays out: the flag already covers every server that sets it, in any
+ * language.
+ *   1. It is the default folder name a real client or server creates in that
+ *      language: Outlook/Exchange, Apple Mail, Thunderbird, Roundcube, Gmail's
+ *      localized labels, Dovecot/cPanel/Plesk, or a big national provider
+ *      (GMX/Web.de, Orange, Libero, Seznam, WP, Yandex/Mail.ru, Naver, Daum,
+ *      QQ). Documented or widely attested, not translated by us.
+ *   2. After nameKey (NFC, lower case) it belongs to exactly ONE role across
+ *      all languages. A string that means two roles in two languages is
+ *      dropped from both ("Lixo" is trash in Thunderbird pt-PT and close to
+ *      junk elsewhere; "Sampah" is Gmail's Indonesian trash and part of
+ *      Outlook's Indonesian junk; "垃圾箱" is trash on some Chinese hosts and
+ *      spam on others). The same string meaning the same role in several
+ *      languages is fine ("Poslano", "Arkiv", "Koncepty").
+ *   3. It is not a word a user would plausibly give a folder of their own.
+ *      Bare "Mail", "Items", "Old", "Other", "Notes" never; nor drafts names
+ *      that also mean "sketches" ("Skice", "Szkice", "Schițe"), nor names that
+ *      collide with Outbox ("寄件匣", "Вихідні").
+ *   4. It is not another role's canonical name (`CanonicalFolderAlias.imap`).
+ * imap-folder-target.test.ts enforces 2 and 4 over the whole map, so a later
+ * cross-role duplicate fails CI. Rules 1 and 3 are on the person adding a name.
+ *
+ * Variant spellings that NFC does not unify are listed separately: Romanian
+ * comma-below and cedilla (ș/ş), Vietnamese tone-mark placement (xóa/xoá), the
+ * Russian ё/е, the Persian zero-width non-joiner.
  */
 export const IMAP_ALIAS_ALTERNATE_NAMES: Record<string, readonly string[]> = {
-  sent: ["Sent Items", "Sent Messages", "Sent Mail", "Gesendet", "Envoyés", "已发送"],
-  drafts: ["Draft", "Entwürfe", "Brouillons", "草稿箱"],
-  trash: ["Deleted Items", "Deleted Messages", "Bin", "Papierkorb", "Corbeille", "已删除"],
-  archive: ["Archives"],
-  spam: ["Spam", "Bulk", "Junk E-mail", "Junk Email", "Bulk Mail", "垃圾邮件"],
+  sent: [
+    // English
+    "Sent Items", "Sent Messages", "Sent Mail",
+    // German
+    "Gesendet", "Gesendete Objekte", "Gesendete Elemente", "Gesendete Nachrichten",
+    // French
+    "Envoyés", "Éléments envoyés", "Messages envoyés",
+    // Spanish, Portuguese (PT, BR)
+    "Enviados", "Elementos enviados", "Mensajes enviados", "Itens Enviados", "Mensagens Enviadas",
+    "E-mails enviados",
+    // Italian, Catalan
+    "Posta inviata", "Inviata", "Inviati", "Messaggi inviati", "Enviats", "Elements enviats",
+    "Missatges enviats",
+    // Dutch
+    "Verzonden", "Verzonden items", "Verzonden berichten",
+    // Norwegian, Danish, Swedish, Finnish, Icelandic
+    "Sendt", "Sendte elementer", "Sendte meldinger", "Sendt post", "Sendte meddelelser", "Skickat",
+    "Skickade", "Skickade objekt", "Skickade meddelanden", "Lähetetyt", "Lähetetyt kohteet",
+    "Lähetetyt viestit", "Sendir hlutir",
+    // Polish, Czech, Slovak, Hungarian, Romanian
+    "Wysłane", "Elementy wysłane", "Odeslané", "Odeslaná pošta", "Odoslané", "Odoslaná pošta",
+    "Elküldött", "Elküldött elemek", "Elküldött üzenetek", "Trimise", "Elemente trimise",
+    "Mesaje trimise",
+    // Croatian, Serbian, Slovenian, Bosnian (Latin)
+    "Poslano", "Poslane stavke", "Poslato", "Poslate stavke", "Poslana pošta",
+    // Bulgarian, Russian, Ukrainian, Greek
+    "Изпратени", "Отправленные", "Надіслані", "Відправлені", "Απεσταλμένα",
+    // Turkish, Lithuanian, Latvian, Estonian
+    "Gönderilmiş Öğeler", "Gönderilenler", "Išsiųsti", "Išsiųsti elementai", "Nosūtītie",
+    "Nosūtītie vienumi", "Saadetud", "Saadetud üksused", "Saadetud kirjad",
+    // Japanese, Korean, Chinese (Simplified, Traditional)
+    "送信済み", "送信済みアイテム", "送信済みメール", "送信済みトレイ", "보낸 편지함", "보낸편지함",
+    "보낸 메일함", "보낸메일함", "已发送", "已发送邮件", "已發送", "寄件備份", "已傳送", "已傳送郵件",
+    // Vietnamese, Indonesian, Malay, Thai
+    "Đã gửi", "Thư đã gửi", "Mục đã gửi", "Terkirim", "Item Terkirim", "Item Dihantar",
+    "รายการที่ส่ง", "ส่งแล้ว",
+    // Hebrew, Arabic, Persian, Hindi
+    "פריטים שנשלחו", "נשלחו", "العناصر المرسلة", "المرسلة", "البريد المرسل", "ارسال شده",
+    "ارسال‌شده", "موارد ارسال شده", "भेजे गए", "भेजे गए आइटम",
+  ],
+  drafts: [
+    "Draft",
+    "Entwürfe",
+    "Brouillons",
+    "Borradores", "Rascunhos",
+    "Bozze", "Esborranys",
+    "Concepten",
+    "Utkast", "Kladder", "Luonnokset", "Drög",
+    "Wersje robocze", "Kopie robocze", "Koncepty", "Rozepsané", "Piszkozatok", "Ciorne",
+    "Nacrti", "Radne verzije", "Osnutki",
+    "Чернови", "Черновики", "Чернетки", "Πρόχειρα",
+    "Taslaklar", "Juodraščiai", "Melnraksti", "Mustandid",
+    "下書き", "임시 보관함", "임시보관함", "草稿箱", "草稿", "草稿匣",
+    "Thư nháp", "Bản nháp", "Draf", "แบบร่าง", "ฉบับร่าง",
+    "טיוטות", "المسودات", "پیش‌نویس‌ها", "پیش نویس ها", "ड्राफ़्ट",
+  ],
+  trash: [
+    "Deleted Items", "Deleted Messages", "Bin",
+    "Papierkorb", "Gelöschte Objekte", "Gelöschte Elemente", "Gelöschte Nachrichten",
+    "Corbeille", "Éléments supprimés", "Messages supprimés",
+    "Papelera", "Elementos eliminados", "Mensajes eliminados", "Lixeira", "Itens Excluídos",
+    "Itens Eliminados",
+    "Cestino", "Posta eliminata", "Elementi eliminati", "Paperera", "Elements suprimits",
+    "Prullenbak", "Prullenmand", "Verwijderde items", "Verwijderde berichten",
+    "Papirkurv", "Slettede elementer", "Slettede meldinger", "Slettet post", "Papperskorgen",
+    "Borttaget", "Borttagna objekt", "Poistetut", "Poistetut kohteet", "Roskakori",
+    "Eyddir hlutir",
+    "Kosz", "Elementy usunięte", "Koš", "Odstraněná pošta", "Kôš", "Odstránená pošta", "Kuka",
+    "Törölt elemek", "Törölt üzenetek", "Elemente șterse", "Elemente şterse", "Coș de gunoi",
+    "Coş de gunoi",
+    "Izbrisane stavke", "Smeće", "Izbrisano", "Izbrisani elementi",
+    "Кошче", "Изтрити", "Изтрити елементи", "Корзина", "Удаленные", "Удалённые", "Кошик",
+    "Видалені", "Διαγραμμένα", "Διαγραμμένα στοιχεία", "Κάδος απορριμμάτων",
+    "Silinmiş Öğeler", "Çöp Kutusu", "Çöp", "Šiukšlinė", "Panaikinti elementai", "Atkritne",
+    "Izdzēstie vienumi", "Prügikast", "Kustutatud üksused",
+    "ごみ箱", "ゴミ箱", "削除済みアイテム", "削除済みメール", "휴지통", "지운 편지함", "삭제된 항목",
+    "已删除", "已删除邮件", "已刪除", "已刪除郵件", "刪除的郵件", "垃圾桶",
+    "Thùng rác", "Mục đã xóa", "Mục đã xoá", "Tong Sampah", "Item yang Dihapus", "Item Terhapus",
+    "Item Dipadam", "ถังขยะ", "รายการที่ถูกลบ",
+    "פריטים שנמחקו", "אשפה", "العناصر المحذوفة", "المهملات", "سلة المهملات", "موارد حذف شده",
+    "سطل زباله", "हटाए गए आइटम", "ट्रैश",
+  ],
+  archive: [
+    "Archives",
+    "Archiv", "Archivio", "Archivi", "Archivo", "Arquivo", "Arquivo Morto", "Arxiu", "Archief",
+    "Arkiv", "Arkisto",
+    "Archiwum", "Archív", "Archívum", "Arhivă", "Arhiva", "Arhiv",
+    "Архив", "Архів", "Αρχειοθέτηση",
+    "Arşiv", "Arşivler", "Archyvas", "Arhīvs", "Arhiiv",
+    "アーカイブ", "存档", "归档", "封存",
+    "Lưu trữ", "Arsip", "Arkib", "เก็บถาวร",
+    "ארכיון", "الأرشيف", "بایگانی",
+  ],
+  spam: [
+    "Spam", "Bulk", "Junk E-mail", "Junk Email", "Bulk Mail",
+    "Junk-E-Mail", "Spamverdacht",
+    "Courrier indésirable", "Courriers indésirables", "Indésirables", "Pourriel",
+    "Correo no deseado", "Correo basura", "Lixo Eletrônico",
+    "Posta indesiderata", "Indesiderata", "Correu brossa", "Correu no desitjat",
+    "Ongewenste e-mail",
+    "Søppelpost", "Uønsket mail", "Uønsket e-mail", "Uønsket post", "Skräppost", "Roskaposti",
+    "Ruslpóstur",
+    "Wiadomości-śmieci", "Nevyžádaná pošta", "Nevyžiadaná pošta", "Levélszemét", "E-mail nedorit",
+    "Neželjena pošta", "Neželjena e-pošta", "Neželena pošta", "Neželena e-pošta",
+    "Нежелана поща", "Спам", "Нежелательная почта", "Небажана пошта",
+    "Ανεπιθύμητη αλληλογραφία", "Ανεπιθύμητα",
+    "Gereksiz E-posta", "Nepageidaujamas el. paštas", "Nevēlamais e-pasts", "Rämpspost",
+    "迷惑メール", "정크 메일", "스팸메일함", "스팸 메일함", "스팸편지함", "垃圾邮件", "垃圾郵件",
+    "Thư rác", "Email Rác", "Email Sampah", "E-mel Remeh", "อีเมลขยะ", "จดหมายขยะ",
+    "דואר זבל", "البريد العشوائي", "البريد الإلكتروني العمومي", "هرزنامه", "जंक ईमेल", "स्पैम",
+  ],
 };
 
 /** SPECIAL-USE flag of the mailbox that holds every message (Gmail's All Mail). */
@@ -214,7 +345,7 @@ export type ImapAliasMatchTier =
   | "all_mail";
 
 /** Case- and normalization-insensitive key for comparing mailbox names. */
-function nameKey(name: string): string {
+export function nameKey(name: string): string {
   return name.normalize("NFC").toLowerCase();
 }
 
