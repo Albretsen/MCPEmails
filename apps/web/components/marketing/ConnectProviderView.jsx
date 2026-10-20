@@ -5,7 +5,9 @@ import { MIcon } from '../MarketingPrimitives';
 import RichText from './RichText';
 import { relatedProviders } from '@/lib/connect/release.mjs';
 import { OAUTH_VERIFICATION_PENDING } from '@/lib/oauth/verification-status';
-import { multiMailboxFaq, withProvider } from '@/lib/connect/multi-mailbox.mjs';
+import { withProvider } from '@/lib/connect/multi-mailbox.mjs';
+import { chatgptSection } from '@/lib/connect/chatgpt.mjs';
+import { providerFaq } from '@/lib/connect/faq.mjs';
 import { MODEL_VISIBLE_TOOL_COUNT } from '@/lib/public-facts.mjs';
 
 /**
@@ -31,18 +33,17 @@ export function nameGrammar(name) {
  * src/lib/connect/content, where only this page loads it. Nav and Footer are
  * still client components; they are the only things on the page that hydrate.
  */
-export default async function ConnectProviderView({ locale, provider, content, multiMailbox = null }) {
+export default async function ConnectProviderView({ locale, provider, content, multiMailbox = null, chatgpt = null }) {
   const t = await getTranslations({ locale, namespace: 'connect' });
   const related = relatedProviders(provider.slug);
   const showGmailVerification = provider.slug === 'gmail' && OAUTH_VERIFICATION_PENDING;
   const ev = provider.evidence;
   const named = { provider: provider.name, ...nameGrammar(provider.name) };
-  // The page decides whether this host gets the several-mailboxes block and
-  // passes its copy; the FAQ entry it adds is the one the JSON-LD carries.
-  const faq = [
-    ...(content.faq ?? []),
-    ...(multiMailbox ? [multiMailboxFaq(multiMailbox, provider.name)] : []),
-  ];
+  // The page decides whether this host gets the several-mailboxes and ChatGPT
+  // blocks and passes their copy; the FAQ entries they add are the ones the
+  // JSON-LD carries, because both come from providerFaq.
+  const faq = providerFaq({ content, provider, multiMailbox, chatgptCopy: chatgpt?.copy });
+  const gpt = chatgpt ? chatgptSection(chatgpt.copy, provider.name) : null;
 
   return (
     <div>
@@ -246,6 +247,43 @@ export default async function ConnectProviderView({ locale, provider, content, m
           </p>
         </div>
       </section>
+
+      {/*
+        How to use this mailbox from ChatGPT, right after the setup steps. The
+        steps and the FAQ answer switch to the app-directory install when
+        CHATGPT_DIRECTORY_LISTING_URL is set (lib/connect/chatgpt.mjs). The
+        blog link is locale-aware only where the post is translated; anywhere
+        else it is the English post at its unprefixed URL.
+      */}
+      {gpt && (
+        <section className="section" id="chatgpt" style={{ paddingBottom: 0 }}>
+          <div className="container">
+            <div className="section-head">
+              <div className="eye-label">{gpt.eyebrow}</div>
+              <h2>{gpt.title}</h2>
+              <p className="sub">{gpt.sub}</p>
+            </div>
+            <ol className="connect-chatgpt-steps">
+              {gpt.steps.map((s, i) => (
+                <li key={i}><RichText>{s}</RichText></li>
+              ))}
+            </ol>
+            {gpt.listing && (
+              <p className="how-guide-link">
+                <a href={gpt.listing.href} rel="noopener">{gpt.listing.label}</a>
+              </p>
+            )}
+            <p className="how-guide-link">
+              <Link href={gpt.docs.href}>{gpt.docs.label}</Link>
+            </p>
+            <p className="how-guide-link">
+              {chatgpt.blog.localized
+                ? <Link href={chatgpt.blog.href}>{gpt.blogLabel}</Link>
+                : <a href={chatgpt.blog.href}>{gpt.blogLabel}</a>}
+            </p>
+          </div>
+        </section>
+      )}
 
       {/*
         Every mailbox the company runs on this host, on one agent. Only on
