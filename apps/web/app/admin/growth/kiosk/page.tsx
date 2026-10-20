@@ -53,7 +53,7 @@
  * number above is a business metric that moves in weeks, and a board made only
  * of those can sit on a wall looking immaculate while the product it reports on
  * has not answered a request since breakfast. The health provider wrapping
- * everything below polls a dedicated uncached endpoint every 45 seconds and
+ * everything below polls a dedicated uncached endpoint every two minutes and
  * owns three things: a banner across the top, a tile in the supporting strip,
  * and a state class on this root that tints the whole screen. It is the only
  * part of the board allowed to shout, and the only part that renders nothing
