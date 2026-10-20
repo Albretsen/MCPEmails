@@ -6,8 +6,8 @@ const post = {
   cover: '/blog/cover-is-it-safe-to-give-ai-agent-email-access.svg',
   coverAlt: 'An app password connecting an email inbox to an AI agent through MCPEmails',
   authorId: 'asgeir',
-  publishedAt: '2026-10-21T09:00:00.000Z',
-  updatedAt: '2026-10-21T09:00:00.000Z',
+  publishedAt: '2026-10-20T09:00:00.000Z',
+  updatedAt: '2026-10-20T09:00:00.000Z',
   tags: ['App passwords', 'IMAP', 'Security', 'Email'],
   featured: false,
   content: `An **app password** is a separate password that your email provider generates for one app, so that app can sign in to your mailbox without your real account password. You create it in your account's security settings, paste it into the mail client or connector once, and delete it whenever you want that one app cut off. Your normal password, and every other app, keeps working.

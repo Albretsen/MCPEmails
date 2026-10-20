@@ -39,8 +39,8 @@ const post = {
   coverAlt:
     'Claude reading and sending email from Gmail, Microsoft 365, Yahoo, iCloud and IMAP mailboxes',
   authorId: 'asgeir',
-  publishedAt: '2026-10-21T09:00:00.000Z',
-  updatedAt: '2026-10-21T09:00:00.000Z',
+  publishedAt: '2026-10-20T09:00:00.000Z',
+  updatedAt: '2026-10-20T09:00:00.000Z',
   tags: ['Claude', 'Gmail', 'Outlook', 'MCP'],
   featured: false,
   content: `**Yes, Claude can read your email and send emails, but only from a mailbox you have connected to it.** Claude has two email connectors of its own, one for Gmail and one for work Microsoft 365 accounts. The Gmail connector reads, searches and sends, and asks for your approval before each send by default. The Microsoft 365 connector reads and searches, and can send only after an administrator turns on its write tools. Yahoo, iCloud, a personal Outlook.com address, a company mailbox on an IMAP host, or several providers behind one connection need an MCP server such as MCPEmails.

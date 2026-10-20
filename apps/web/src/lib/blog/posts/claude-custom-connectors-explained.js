@@ -6,8 +6,8 @@ const post = {
   cover: '/blog/cover-claude-custom-connectors-explained.svg',
   coverAlt: 'Claude custom connectors explained: a remote MCP server added to Claude by URL',
   authorId: 'asgeir',
-  publishedAt: '2026-10-21T09:00:00.000Z',
-  updatedAt: '2026-10-21T09:00:00.000Z',
+  publishedAt: '2026-10-20T09:00:00.000Z',
+  updatedAt: '2026-10-20T09:00:00.000Z',
   tags: ['Claude', 'Connectors', 'MCP', 'OAuth'],
   featured: false,
   content: `**Claude custom connectors** let you add any remote [Model Context Protocol](https://modelcontextprotocol.io) server to Claude by pasting its URL. Once you add one, Claude can call that server's tools in your chats: read a database, file a ticket, or, in the worked example at the end of this guide, read and send your email.

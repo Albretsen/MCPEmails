@@ -31,10 +31,10 @@
 export const PATH = '/tools/email-settings-lookup';
 
 /** First published, for JSON-LD and the sitemap. */
-export const DATE_PUBLISHED = '2026-10-21';
+export const DATE_PUBLISHED = '2026-10-20';
 
 /** Last content change. */
-export const DATE_MODIFIED = '2026-10-21';
+export const DATE_MODIFIED = '2026-10-20';
 
 /** The date the third-party and standards claims were last read at their source. */
 export const CHECKED_ON = '2026-10-20';

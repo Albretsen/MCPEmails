@@ -44,7 +44,7 @@ export const KINDS = ['added', 'improved', 'fixed', 'changed'];
 export const ENTRIES = [
   /* ── October 2026 ──────────────────────────────────────────── */
   {
-    date: '2026-10-21',
+    date: '2026-10-20',
     kind: 'added',
     title: 'Free IMAP and SMTP settings lookup',
     body:

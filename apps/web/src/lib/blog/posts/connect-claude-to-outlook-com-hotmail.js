@@ -6,8 +6,8 @@ const post = {
   cover: '/blog/cover-connect-outlook-microsoft-365-ai-agent-mcp.svg',
   coverAlt: 'Claude connected to a personal Outlook.com or Hotmail inbox through MCPEmails',
   authorId: 'asgeir',
-  publishedAt: '2026-10-21T09:00:00.000Z',
-  updatedAt: '2026-10-21T09:00:00.000Z',
+  publishedAt: '2026-10-20T09:00:00.000Z',
+  updatedAt: '2026-10-20T09:00:00.000Z',
   tags: ['Claude', 'Outlook', 'Tutorial', 'MCP'],
   featured: false,
   content: `To connect Claude to a personal Outlook.com, Hotmail, Live or MSN address, you add the mailbox to MCPEmails with **Connect with Microsoft**, then add one URL to Claude as a custom connector. Claude's own Microsoft 365 connector requires a business Microsoft tenant, and Anthropic says personal Microsoft accounts can't be used with it. A custom connector has no such requirement, so an old hotmail.com address works the same way as a new outlook.com one.

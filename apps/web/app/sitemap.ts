@@ -51,7 +51,7 @@ const MARKETING_PAGES: {
   { path: '/connect', lastModified: '2026-09-26', changeFrequency: 'weekly', priority: 0.9 },
   { path: '/blog', lastModified: '2026-08-02', changeFrequency: 'weekly', priority: 0.7 },
   // Bump lastModified whenever a changelog entry is added.
-  { path: '/changelog', lastModified: '2026-10-21', changeFrequency: 'weekly', priority: 0.6 },
+  { path: '/changelog', lastModified: '2026-10-20', changeFrequency: 'weekly', priority: 0.6 },
   // The monitor writes a new run every five minutes, so the page's content
   // changes daily even when nothing ships.
   { path: '/status', lastModified: '2026-09-08', changeFrequency: 'daily', priority: 0.6 },

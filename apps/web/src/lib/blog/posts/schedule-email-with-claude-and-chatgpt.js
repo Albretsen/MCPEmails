@@ -34,8 +34,8 @@ const post = {
   coverAlt:
     'Claude and ChatGPT scheduling an email to send later from a connected mailbox with MCPEmails',
   authorId: 'asgeir',
-  publishedAt: '2026-10-21T09:00:00.000Z',
-  updatedAt: '2026-10-21T09:00:00.000Z',
+  publishedAt: '2026-10-20T09:00:00.000Z',
+  updatedAt: '2026-10-20T09:00:00.000Z',
   tags: ['Scheduled send', 'Claude', 'ChatGPT', 'MCP'],
   featured: false,
   content: `To schedule an email with Claude or ChatGPT, the assistant needs a mail tool that can hold a message and send it later. MCPEmails has one. Connect your mailbox, add MCPEmails as a connector, and say when: "Send this to Dana on Monday at 9:00, Oslo time." The message waits in a queue on the MCPEmails server and goes out from your own address at that time, whether or not the chat, the app or your computer is still open.
