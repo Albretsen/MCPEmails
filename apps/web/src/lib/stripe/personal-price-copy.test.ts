@@ -38,7 +38,7 @@ import { rows, entries } from '../compare/email-mcp-servers.mjs';
 
 const WEB = path.resolve(fileURLToPath(import.meta.url), '../../../..');
 const REPO = path.resolve(WEB, '../..');
-const LOCALES = ['en', 'es', 'fr', 'nb', 'zh'];
+const LOCALES = ['en', 'es', 'fr', 'nb', 'zh', 'de'];
 
 /** Every amount, in cents, that some tier is sold at today. */
 const SOLD_CENTS = new Set<number>();

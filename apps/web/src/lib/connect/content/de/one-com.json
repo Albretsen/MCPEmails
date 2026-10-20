@@ -1,0 +1,105 @@
+{
+  "_sources": [
+    "https://help.one.com/hc/en-us/articles/115005594285-How-to-set-an-email-account-in-for-example-Outlook",
+    "https://help.one.com/hc/en-us/articles/115005586289-Creating-a-new-email-account",
+    "https://help.one.com/hc/en-us/articles/115005586349-How-do-I-change-my-email-password"
+  ],
+  "auth": {
+    "method": "mail-password",
+    "label": "Passwort des E-Mail-Kontos",
+    "helpUrl": "https://help.one.com/hc/en-us/articles/115005586349-How-do-I-change-my-email-password",
+    "usernameForm": "Ihre vollständige Adresse mit Domain: name@ihredomain.de.",
+    "status": "active"
+  },
+  "meta": {
+    "title": "one.com E-Mail mit Claude verbinden: MCP-Server für one.com",
+    "description": "MCP-Server für one.com E-Mail. Verbinden Sie mehrere Firmenpostfächer Ihrer Domain (info@, vertrieb@) per IMAP über imap.one.com:993 mit Claude und ChatGPT."
+  },
+  "hero": {
+    "eyebrow": "one.com E-Mail + KI",
+    "titleLine1": "MCP-Server für one.com E-Mail:",
+    "titleLine2": "jedes Firmenpostfach, in Claude und ChatGPT",
+    "lead": "Sie betreiben info@, vertrieb@, support@ und rechnungen@ auf Ihrer eigenen Domain bei one.com? Verbinden Sie jedes Postfach mit einem Workspace, und Ihr KI-Agent arbeitet mit allen. Lesen, suchen, senden, beantworten, planen und sortieren Sie E-Mails per IMAP mit dem Passwort, das Sie beim Anlegen der Adresse festgelegt haben.",
+    "answer": "Claude kann ein one.com-Postfach nicht selbst erreichen. MCP Emails ist ein gehosteter MCP-Server, der es per IMAP über imap.one.com auf Port 993 verbindet und über send.one.com auf Port 465 sendet. Die Anmeldung erfolgt mit Ihrer vollständigen E-Mail-Adresse und dem Passwort, das Sie für dieses Konto im one.com Control Panel festgelegt haben. Danach können Claude, Cursor oder jeder MCP-Client die E-Mails lesen, suchen, senden und sortieren. Ein App-Passwort ist nicht nötig. Jede Firmenadresse, etwa info@ oder vertrieb@, wird als eigenes Postfach verbunden: Ein Postfach ist kostenlos, Personal verbindet drei, Pro bis zu 10 und Business so viele, wie Sie brauchen.",
+    "meta0": "Erstes Postfach kostenlos, Tarife für die weiteren",
+    "meta1": "Passwort des E-Mail-Kontos aus dem Control Panel",
+    "meta2": "E-Mails werden live abgerufen, nie gespeichert"
+  },
+  "persona": {
+    "intro": "Mehrere Firmenpostfächer bei one.com?",
+    "label": "Sehen Sie, wie viele Postfächer jeder Tarif verbindet",
+    "href": "/pricing"
+  },
+  "method": {
+    "title": "So verbindet sich one.com: IMAP für den Empfang, send.one.com für den Versand",
+    "body": "one.com teilt seine beiden Mail-Hostnamen auf eine Weise auf, die viele überrascht. Eingehende E-Mails laufen über <code>imap.one.com</code> auf Port 993 mit implizitem TLS. Ausgehende E-Mails laufen über <code>send.one.com</code> auf Port 465, ebenfalls mit implizitem TLS und mit Anmeldung über dieselben Zugangsdaten. Beide sind gemeinsame Hosts für alle Kunden von one.com, nichts wird also von Ihrer eigenen Domain abgeleitet. Die Zugangsdaten sind das Passwort, das Sie beim Anlegen der Adresse im Control Panel eingegeben haben, zusammen mit dem Teil der Adresse vor dem @-Zeichen. Dieses Passwort nutzen sowohl das Webmail als auch jeder Mail-Client, und es ist getrennt von der Anmeldung für das one.com Control Panel selbst."
+  },
+  "setup": [
+    {
+      "h": "Kostenloses MCP Emails-Konto erstellen",
+      "p": "Registrieren Sie sich auf mcpemails.com. Der Free-Tarif verbindet ein Postfach dauerhaft und fragt nicht nach einer Kreditkarte."
+    },
+    {
+      "h": "Prüfen, ob die Adresse existiert, und ihr Passwort festlegen",
+      "p": "Melden Sie sich im one.com Control Panel an und öffnen Sie die Kachel für E-Mail. Die Adresse muss dort angelegt sein, bevor ein Client sie erreichen kann. Klicken Sie auf die Adresse, um sie zu bearbeiten, und legen Sie ein Passwort fest oder ändern Sie das bestehende. Sie können ein E-Mail-Passwort auch im one.com Webmail ändern, wenn Sie dort bereits angemeldet sind."
+    },
+    {
+      "h": "In MCP Emails einfügen",
+      "p": "Wählen Sie IMAP / SMTP, geben Sie die vollständige Adresse ein und fügen Sie das Passwort des E-Mail-Kontos ein. Die Hosts imap.one.com und send.one.com sowie die Ports 993 und 465 sind vorausgefüllt und wurden über eine echte TLS-Verbindung geprüft."
+    },
+    {
+      "h": "MCP-URL in Ihre KI einfügen",
+      "p": "Fügen Sie https://mcpemails.com/api/mcp in Claude, Cursor oder ChatGPT ein, autorisieren Sie den Zugriff, und Ihr Agent hat das Postfach."
+    }
+  ],
+  "gotchas": [
+    {
+      "h": "Der Ausgangsserver ist send.one.com, smtp.one.com gibt es nicht",
+      "p": "Fast jeder andere Anbieter nennt seinen Versandserver <code>smtp.something</code>. Viele tragen dieses Muster deshalb aus Gewohnheit ein und erhalten einen Hostnamen, der nicht aufgelöst wird. one.com nutzt <code>send.one.com</code>. Die Asymmetrie zu <code>imap.one.com</code> sieht nach einem Tippfehler in der Dokumentation aus, ist aber keiner. Wenn das Lesen funktioniert, das Senden aber in eine Zeitüberschreitung läuft oder der Name nicht aufgelöst wird, ist das der Grund."
+    },
+    {
+      "h": "one.com verkauft auch Microsoft 365, und dieses Postfach verbinden Sie mit Outlook",
+      "p": "Die Kachel im Control Panel umfasst E-Mail und Microsoft 365, und one.com verkauft beides unter demselben Konto. Ein one.com-E-Mail-Konto, das in dieser Kachel mit eigenem Passwort angelegt wurde, ist ein gewöhnliches IMAP-Postfach auf den Servern von one.com und lässt sich problemlos verbinden. Eine über one.com gekaufte Microsoft 365-Lizenz ist ein Microsoft-Postfach auf Servern von Microsoft. Verbinden Sie es daher mit der Outlook-Option (Anmeldung mit Microsoft) statt per IMAP. Eventuell muss ein IT-Administrator MCP Emails zuerst einmalig freigeben, und das Dashboard gibt Ihnen dafür einen Freigabelink. Ist Ihr Webmail Outlook im Web statt der eigenen Oberfläche von one.com, haben Sie das Microsoft-Produkt."
+    },
+    {
+      "h": "Die Zwei-Faktor-Authentifizierung des Control Panels gilt nicht für Ihr Postfach",
+      "p": "one.com bietet eine Zwei-Faktor-Authentifizierung für die Anmeldung am Control Panel. Sie schützt das Panel, in dem Ihre Domains und Ihre Abrechnung liegen, hat aber keinen Einfluss auf IMAP oder SMTP. Diese akzeptieren weiterhin allein das Passwort des E-Mail-Kontos. Wenn Sie sie einschalten, funktioniert MCP Emails weiter, das Postfach ist dadurch aber auch nicht besser geschützt. Um das Postfach selbst abzusichern, verwenden Sie für diese Adresse ein starkes, einmaliges Passwort, die Zwei-Faktor-Authentifizierung des Panels hilft hier nicht."
+    }
+  ],
+  "limits": [
+    "Der Server meldet weder MOVE noch UIDPLUS. Verschieben läuft daher als Kopieren, Setzen eines Flags und Expunge, und die UID im Zielordner muss durch Suchen ermittelt werden.",
+    "SPECIAL-USE fehlt, deshalb werden Gesendet, Entwürfe, Papierkorb und Spam über ihren Namen zugeordnet. Dänische, schwedische und norwegische Postfächer bei one.com haben oft lokalisierte Ordnernamen.",
+    "Über one.com verkaufte Microsoft 365-Lizenzen liegen nicht auf imap.one.com. Verbinden Sie diese stattdessen mit Outlook (Anmeldung mit Microsoft)."
+  ],
+  "faq": [
+    {
+      "q": "Funktioniert Claude mit one.com E-Mail?",
+      "a": "Nicht von allein. Claude hat keinen eingebauten Konnektor für one.com. Verbinden Sie einen MCP-Server wie MCP Emails per IMAP mit Ihrem one.com-Postfach, dann kann Claude E-Mails lesen, suchen, senden, beantworten, planen und sortieren. Dieselbe Verbindung funktioniert in Cursor, ChatGPT und anderen MCP-Clients."
+    },
+    {
+      "q": "Wie lauten die IMAP- und SMTP-Einstellungen für one.com?",
+      "a": "IMAP ist imap.one.com auf Port 993 mit implizitem TLS. Ausgehende E-Mails gehen an send.one.com auf Port 465, ebenfalls mit implizitem TLS und mit Pflicht zur Anmeldung. Der Benutzername ist Ihre vollständige E-Mail-Adresse, das Passwort ist das im Control Panel für dieses Konto festgelegte. Beide Hosts wurden über eine echte TLS-Verbindung bestätigt."
+    },
+    {
+      "q": "Warum wird mein one.com-Passwort abgelehnt?",
+      "a": "Es gibt zwei übliche Ursachen. Sie geben Ihre Anmeldung für das one.com Control Panel ein statt des Passworts, das für das einzelne E-Mail-Konto festgelegt wurde, oder die Adresse wurde in der E-Mail-Kachel des Control Panels nie tatsächlich angelegt. Prüfen Sie das, indem Sie sich mit denselben Zugangsdaten im one.com Webmail anmelden: Scheitert auch das, liegt das Problem beim Postfach, nicht beim Client."
+    },
+    {
+      "q": "Braucht one.com ein App-Passwort?",
+      "a": "Nein. one.com vergibt keine App-spezifischen Passwörter für E-Mail, und es gibt keinen IMAP-Schalter pro Postfach, den Sie einschalten müssten. Das Passwort des E-Mail-Kontos gilt für IMAP und SMTP. Die Zwei-Faktor-Authentifizierung des Control Panels ändert daran nichts."
+    },
+    {
+      "q": "Werden meine one.com-E-Mails auf Ihren Servern gespeichert?",
+      "a": "Nein. Nachrichten werden bei jeder Anfrage live per IMAP von one.com abgerufen und an Ihren KI-Client übergeben. Zugangsdaten werden verschlüsselt gespeichert, und Nachrichteninhalte werden nicht aufbewahrt."
+    }
+  ],
+  "ctaBand": {
+    "title": "Alle one.com-Postfächer in einem Agenten",
+    "sub": "Verbinden Sie Ihr erstes one.com-Postfach kostenlos, ohne Kreditkarte. Personal verbindet drei, Pro bis zu 10 und Business so viele, wie Sie brauchen."
+  },
+  "seeAlso": {
+    "intro": "Microsoft 365-Postfach von one.com?",
+    "label": "Verbinden Sie es mit Outlook (Anmeldung mit Microsoft)",
+    "href": "/connect/office365"
+  }
+}

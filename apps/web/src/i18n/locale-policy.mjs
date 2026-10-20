@@ -20,6 +20,15 @@
 /** Kept fully translated. CI fails when a key or page is missing in one. */
 export const FULL_LOCALES = /** @type {const} */ (['en', 'nb', 'es', 'fr']);
 
+/**
+ * Every message key is required (CI: scripts/i18n-coverage and
+ * src/lib/i18n/german-parity.test.mjs), but pages are a chosen subset: a
+ * provider page, client page or blog post exists here only where its `locales`
+ * list or translations folder says so, and a missing page is not generated,
+ * not advertised in hreflang, and the switcher sends that option home.
+ */
+export const SCOPED_LOCALES = /** @type {const} */ (['de']);
+
 /** Still served, no longer required. Missing strings fall back to English. */
 export const FROZEN_LOCALES = /** @type {const} */ (['zh']);
 
@@ -29,6 +38,11 @@ export const FALLBACK_LOCALE = 'en';
 /** True when CI requires `locale` to be complete. */
 export function isFullLocale(locale) {
   return FULL_LOCALES.includes(locale);
+}
+
+/** True when `locale` needs every message but only some pages. */
+export function isScopedLocale(locale) {
+  return SCOPED_LOCALES.includes(locale);
 }
 
 /** True when `locale` is served but allowed to lag behind English. */

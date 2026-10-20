@@ -6651,7 +6651,7 @@ function LanguageSection() {
 
   // Each language is shown by its own native name (autonym) so the option is
   // recognizable regardless of the current interface language.
-  const LOCALE_LABELS = { en: 'English', nb: 'Norsk', es: 'Español', fr: 'Français', zh: '中文' };
+  const LOCALE_LABELS = { en: 'English', nb: 'Norsk', es: 'Español', fr: 'Français', zh: '中文', de: 'Deutsch' };
   const options = routing.locales.map((value) => ({ value, label: LOCALE_LABELS[value] || value }));
 
   return (

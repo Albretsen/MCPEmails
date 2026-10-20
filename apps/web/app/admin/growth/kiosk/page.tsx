@@ -77,7 +77,7 @@ import { KIOSK_VIEWS, resolveKioskView } from '../../../../components/admin/kios
 import '../../../../styles/admin-kiosk.css';
 
 export const metadata = {
-  title: 'Growth kiosk · MCP Emails',
+  title: 'Growth kiosk',
   robots: { index: false, follow: false },
 };
 

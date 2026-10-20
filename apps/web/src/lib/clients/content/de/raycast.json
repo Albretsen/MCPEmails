@@ -1,0 +1,88 @@
+{
+  "_sources": [
+    "apps/web/components/dashboard/Pages.jsx (MCP_CLIENTS) + apps/web/messages/en/dashboard.json (clients.*)",
+    "apps/web/app/.well-known/oauth-authorization-server/route.ts",
+    "https://manual.raycast.com/ai/model-context-protocol"
+  ],
+  "meta": {
+    "title": "E-Mail mit Raycast AI verbinden: MCP-Server-Setup",
+    "description": "Fügen Sie Raycast AI ein echtes Postfach hinzu. Install MCP Server ausführen, Transport auf HTTP setzen, eine URL einfügen und anmelden. Kein API-Schlüssel. Ein Postfach kostenlos."
+  },
+  "hero": {
+    "eyebrow": "Raycast + E-Mail",
+    "titleLine1": "Verbinden Sie Ihr Postfach mit Raycast AI",
+    "titleLine2": "aus der Befehlsleiste",
+    "lead": "Sichten, suchen und senden Sie E-Mails aus dem Launcher, zu dem Sie ohnehin greifen. E-Mails lesen, suchen, senden, beantworten, weiterleiten, planen und organisieren, über alle verbundenen Postfächer hinweg.",
+    "meta0": "1 Postfach kostenlos, dauerhaft",
+    "meta1": "OAuth, kein API-Schlüssel nötig",
+    "meta2": "E-Mails werden live abgerufen, nie gespeichert",
+    "answer": "Führen Sie in Raycast den Befehl Install MCP Server aus, setzen Sie Transport auf HTTP, fügen Sie https://mcpemails.com/api/mcp ein, installieren Sie den Server und klicken Sie dann auf Sign In, um mit mcpemails zu autorisieren."
+  },
+  "method": {
+    "title": "So verbindet sich Raycast: OAuth, kein API-Schlüssel",
+    "body": "Raycast durchläuft mit diesem Server den standardmäßigen MCP-OAuth-Ablauf. Der Client registriert sich selbst per <b>dynamischer Client-Registrierung nach RFC 7591</b>, Sie müssen also keine Client-ID anlegen, und autorisiert sich per <b>Autorisierungscode mit PKCE</b> (S256). Ein Client-Secret wird nie übertragen, und das Token enthält nur die Scopes, die Sie auf unserem Zustimmungsbildschirm freigeben. Das Zugriffstoken gilt eine Stunde und erneuert sich selbst. Sie finden es unter Dashboard, API-Schlüssel als <code>OAuth:</code> mit dem Namen des Clients dahinter, und dort widerrufen Sie die Verbindung auch."
+  },
+  "setup": [
+    {
+      "h": "Kostenloses Konto erstellen und Postfach verbinden",
+      "p": "Registrieren Sie sich auf mcpemails.com, ohne Kreditkarte, und öffnen Sie dann Dashboard, Postfächer, Postfach verbinden. Outlook und Microsoft 365 verbinden Sie über „Mit Microsoft anmelden“; Gmail, iCloud, Fastmail, Yahoo, Zoho und Yandex nutzen ein App-Passwort; alle anderen Postfächer verbinden sich ganz normal per IMAP und SMTP. Der Free-Tarif umfasst ein Postfach, dauerhaft."
+    },
+    {
+      "h": "Install MCP Server ausführen",
+      "p": "Führen Sie den Befehl <b>Install MCP Server</b> aus, oder <b>Manage MCP Servers</b>, wenn Sie schon welche haben."
+    },
+    {
+      "h": "Server eintragen",
+      "p": "Geben Sie einen Namen ein, setzen Sie Transport auf <b>HTTP</b> und fügen Sie <code>https://mcpemails.com/api/mcp</code> ein."
+    },
+    {
+      "h": "Installieren und anmelden",
+      "p": "Klicken Sie auf <b>Install MCP Server</b> und dann auf <b>Sign In</b>, um mit mcpemails zu autorisieren. Geben Sie die Scopes frei, die Raycast erhalten soll."
+    }
+  ],
+  "gotchas": [
+    {
+      "h": "Sign In ist ein eigener Schritt nach Install",
+      "p": "Installieren und Autorisieren sind in Raycast zwei Aktionen, und der Server erscheint schon nach der ersten in der Liste. Ein frisch installierter, aber nicht autorisierter Server liefert Tool-Aufrufe, die mit einer 401 scheitern. Das wirkt wie ein defekter Server statt wie ein unfertiges Setup. Klicken Sie auf Sign In."
+    },
+    {
+      "h": "Ein Launcher ist schnell, und das hat zwei Seiten",
+      "p": "Der Sinn von Raycast ist, dass eine Aktion zwei Tastendrücke nach dem Gedanken passiert. Für Suche und Sichtung ist das hervorragend, und genau deshalb verdient das Senden hier mehr Vorsicht als in einem langsameren Client. Lassen Sie <code>send:email</code> bei dieser Verbindung weg, oder schalten Sie die menschliche Freigabe ein, damit ein Senden auf eine Person wartet."
+    },
+    {
+      "h": "Nichts kommt von selbst",
+      "p": "Der Server arbeitet rein nach Anfrage und Antwort, ohne Webhooks und ohne Push. Raycast sieht E-Mails, wenn Sie es nachsehen lassen, und das passt zu einem Launcher: Sie öffnen ihn, Sie fragen, Sie bekommen eine Antwort. Es heißt aber auch, dass dies kein Benachrichtigungsdienst ist. Eine dauerhafte Anweisung wie „Bescheid geben, wenn X ankommt“ kann die Verbindung nicht umsetzen."
+    }
+  ],
+  "limits": [
+    "Anfragen sind auf 100 pro Minute, 1.000 pro Stunde und 10.000 pro Tag je Schlüssel begrenzt, dazu kommt die Obergrenze Ihres Tarifs für abrechenbare Aktionen.",
+    "Der Server arbeitet rein nach Anfrage und Antwort. Es gibt keine Webhooks und keine vom Server ausgelösten Ereignisse, neue E-Mails wecken Ihren Agenten also nie von selbst. Um auf eingehende E-Mails zu reagieren, fragen Sie in festen Abständen ab.",
+    "E-Mails werden bei jedem Aufruf live von Ihrem Anbieter abgerufen und nie gespeichert. Gespeichert wird nur das verschlüsselte OAuth-Token oder App-Passwort. Ein widerrufenes Token oder ein geändertes Postfachpasswort beendet den Zugriff deshalb sofort."
+  ],
+  "faq": [
+    {
+      "q": "Wie verbinde ich meine E-Mails mit Raycast?",
+      "a": "Führen Sie den Befehl Install MCP Server aus, setzen Sie Transport auf HTTP, fügen Sie https://mcpemails.com/api/mcp ein, installieren Sie den Server, klicken Sie dann auf Sign In und autorisieren Sie mit mcpemails. Danach hat Raycast AI Tools zum Lesen, Suchen, Senden, Beantworten, Weiterleiten, Organisieren und Planen von E-Mails."
+    },
+    {
+      "q": "Brauche ich für Raycast einen API-Schlüssel?",
+      "a": "Nein. Raycast durchläuft den OAuth-Ablauf über seine Aktion Sign In, es wird also nichts Geheimes in den Befehl eingetippt. Für andere Clients, die das nicht können, gibt es einen Bearer-Schlüssel."
+    },
+    {
+      "q": "Welche Postfächer erreicht Raycast auf diesem Weg?",
+      "a": "Outlook.com und Microsoft 365 über „Mit Microsoft anmelden“, wobei bei einem Arbeitskonto eventuell einmalig die IT-Administration die App freigeben muss; Gmail, iCloud, Fastmail, Yahoo, Zoho und Yandex mit einem App-Passwort; und jedes andere Postfach, das IMAP und SMTP auf den Standardports spricht. Der Client sieht alle über dieselbe Verbindung: Ihr Agent ruft zuerst inbox_list auf und findet so jedes verbundene Postfach samt ID. Sie müssen also nirgends UUIDs einfügen."
+    },
+    {
+      "q": "Kann Raycast E-Mails senden, ohne dass ich es mitbekomme?",
+      "a": "Nur wenn Sie es zulassen. Senden erfordert den Scope send:email, ein Schlüssel oder Token ohne diesen Scope kann also überhaupt nicht senden. Zusätzlich kann der Inhaber eines Postfachs im Dashboard eine menschliche Freigabe verlangen. Dann wartet jedes Senden, Antworten, Weiterleiten, Senden eines Entwurfs und geplante Senden, bis eine Person es freigibt."
+    },
+    {
+      "q": "Werden meine E-Mails auf Ihren Servern gespeichert?",
+      "a": "Nein. Jede Nachricht wird für die Anfrage, die sie anfordert, live von Ihrem Anbieter abgerufen und direkt an Ihren Client übergeben. Gespeichert wird nur das verschlüsselte OAuth-Token oder App-Passwort, damit spätere Aufrufe sich authentifizieren können. Wenn Sie das Postfach im Dashboard löschen oder den Zugriff bei Ihrem Anbieter widerrufen, endet die Verbindung sofort."
+    }
+  ],
+  "ctaBand": {
+    "title": "Holen Sie Ihr Postfach in die Befehlsleiste",
+    "sub": "Ein Server, eine Anmeldung. Ein Postfach dauerhaft kostenlos, keine Kreditkarte nötig."
+  }
+}

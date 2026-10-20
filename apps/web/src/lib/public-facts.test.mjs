@@ -108,13 +108,16 @@ test('llms.txt names every model-visible tool', () => {
 
 // ── What the copy says ────────────────────────────────────────────────────
 
-// Spelled-out numbers from 2 to 40 in the site's languages. A count of one
+// Spelled-out numbers from 2 to 30 in the site's languages. A new locale needs
+// its number words and its word for tools here; the files themselves are found
+// by walking the content directories, so a new locale's files are scanned anyway. A count of one
 // tool is never claimed, and "one" would match "one of the tools".
 const WORDS = {
   en: ['two', 'three', 'four', 'five', 'six', 'seven', 'eight', 'nine', 'ten', 'eleven', 'twelve', 'thirteen', 'fourteen', 'fifteen', 'sixteen', 'seventeen', 'eighteen', 'nineteen', 'twenty', 'twenty-one', 'twenty-two', 'twenty-three', 'twenty-four', 'twenty-five', 'twenty-six', 'twenty-seven', 'twenty-eight', 'twenty-nine', 'thirty'],
   es: ['dos', 'tres', 'cuatro', 'cinco', 'seis', 'siete', 'ocho', 'nueve', 'diez', 'once', 'doce', 'trece', 'catorce', 'quince', 'dieciséis', 'diecisiete', 'dieciocho', 'diecinueve', 'veinte', 'veintiuno', 'veintidós', 'veintitrés', 'veinticuatro', 'veinticinco', 'veintiséis', 'veintisiete', 'veintiocho', 'veintinueve', 'treinta'],
   fr: ['deux', 'trois', 'quatre', 'cinq', 'six', 'sept', 'huit', 'neuf', 'dix', 'onze', 'douze', 'treize', 'quatorze', 'quinze', 'seize', 'dix-sept', 'dix-huit', 'dix-neuf', 'vingt', 'vingt et un', 'vingt-deux', 'vingt-trois', 'vingt-quatre', 'vingt-cinq', 'vingt-six', 'vingt-sept', 'vingt-huit', 'vingt-neuf', 'trente'],
   nb: ['to', 'tre', 'fire', 'fem', 'seks', 'sju', 'åtte', 'ni', 'ti', 'elleve', 'tolv', 'tretten', 'fjorten', 'femten', 'seksten', 'sytten', 'atten', 'nitten', 'tjue', 'tjueen', 'tjueto', 'tjuetre', 'tjuefire', 'tjuefem', 'tjueseks', 'tjuesju', 'tjueåtte', 'tjueni', 'tretti'],
+  de: ['zwei', 'drei', 'vier', 'fünf', 'sechs', 'sieben', 'acht', 'neun', 'zehn', 'elf', 'zwölf', 'dreizehn', 'vierzehn', 'fünfzehn', 'sechzehn', 'siebzehn', 'achtzehn', 'neunzehn', 'zwanzig', 'einundzwanzig', 'zweiundzwanzig', 'dreiundzwanzig', 'vierundzwanzig', 'fünfundzwanzig', 'sechsundzwanzig', 'siebenundzwanzig', 'achtundzwanzig', 'neunundzwanzig', 'dreißig'],
   zh: ['二', '三', '四', '五', '六', '七', '八', '九', '十', '十一', '十二', '十三', '十四', '十五', '十六', '十七', '十八', '十九', '二十', '二十一', '二十二', '二十三', '二十四', '二十五', '二十六', '二十七', '二十八', '二十九', '三十'],
 };
 // Each list starts at 2. Aliases: Norwegian has two words for 7, Chinese two for 2.
@@ -140,6 +143,7 @@ const LANGS = [
   { words: WORDS.es, tool: 'herramientas?' },
   { words: WORDS.fr, tool: 'outils?' },
   { words: [...WORDS.nb, 'syv'], tool: 'verktøy(?:et|ene)?' },
+  { words: WORDS.de, tool: '(?:[\\p{L}-]*-)?(?:tools?|werkzeuge?)' },
 ];
 const LATIN = LANGS.map(
   ({ words, tool }) =>
@@ -187,10 +191,13 @@ const NOT_OUR_TOOLS = [
 
 export function toolCountClaims(text) {
   const claims = [];
+  // A digit count matches every language's pattern; report each position once.
+  const seen = new Set();
   for (const re of [...LATIN, ZH]) {
     for (const match of text.matchAll(re)) {
       const value = numberOf(match[1]);
-      if (value === undefined) continue;
+      if (value === undefined || seen.has(match.index)) continue;
+      seen.add(match.index);
       const after = text.slice(match.index, match.index + match[0].length + 40);
       claims.push({ phrase: match[0], value, namesToolsList: after.includes('tools/list') });
     }
@@ -207,6 +214,8 @@ test('the scanner finds counts in every language, spelled out or not', () => {
   assert.deepEqual(values('Samme MCP-server, samme sytten verktøy'), [17]);
   assert.deepEqual(values('同一个 MCP 服务器、同样十七个工具'), [17]);
   assert.deepEqual(values('全部 23 个工具'), [23]);
+  assert.deepEqual(values('Siebzehn aktionsbasierte MCP-Tools'), [17]);
+  assert.deepEqual(values('alle 23 Tools sind in beiden enthalten'), [23]);
   assert.deepEqual(values('19 tools you call directly'), [19]);
   assert.deepEqual(values('one of the tools, a {toolCount} tools heading'), []);
   assert.deepEqual(values('HTTP 200 with a normal tool result, lean on two tools'), [2]);

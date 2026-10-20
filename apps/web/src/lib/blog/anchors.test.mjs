@@ -27,7 +27,7 @@ const { getAllPosts, getLocalizedPost } = await import('./posts.js');
 
 // Mirrors routing.locales in src/i18n/routing.ts. Untranslated locales fall
 // back to English content, so every post renders in every locale.
-const LOCALES = ['en', 'nb', 'es', 'fr', 'zh'];
+const LOCALES = ['en', 'nb', 'es', 'fr', 'zh', 'de'];
 
 const attrs = (html, name) => [...html.matchAll(new RegExp(`\\s${name}="([^"]*)"`, 'g'))].map((m) => m[1]);
 

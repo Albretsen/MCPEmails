@@ -1,0 +1,88 @@
+{
+  "_sources": [
+    "apps/web/components/dashboard/Pages.jsx (MCP_CLIENTS) + apps/web/messages/en/dashboard.json (clients.*)",
+    "apps/web/app/.well-known/oauth-authorization-server/route.ts",
+    "https://zed.dev/docs/ai/mcp"
+  ],
+  "meta": {
+    "title": "E-Mail mit Zed verbinden: MCP-Setup im Agent Panel",
+    "description": "Fügen Sie dem Zed Agent Panel ein echtes Postfach als Context Server hinzu. Eine URL einfügen, per OAuth autorisieren, kein API-Schlüssel. E-Mails lesen, suchen, senden und planen. Ein Postfach kostenlos."
+  },
+  "hero": {
+    "eyebrow": "Zed + E-Mail",
+    "titleLine1": "Verbinden Sie Ihr Postfach mit Zed",
+    "titleLine2": "aus dem Agent Panel",
+    "lead": "Fügen Sie Zed ein echtes Postfach als Context Server hinzu. E-Mails lesen, suchen, senden, beantworten, weiterleiten, planen und organisieren, ohne den Editor zu verlassen.",
+    "meta0": "1 Postfach kostenlos, dauerhaft",
+    "meta1": "OAuth, kein API-Schlüssel nötig",
+    "meta2": "E-Mails werden live abgerufen, nie gespeichert",
+    "answer": "Klicken Sie in den Einstellungen des Agent Panel auf Add Custom Server oder fügen Sie in settings.json unter context_servers einen Eintrag mit der url https://mcpemails.com/api/mcp hinzu. Zed startet den OAuth-Ablauf, wenn kein Authorization-Header gesetzt ist."
+  },
+  "method": {
+    "title": "So verbindet sich Zed: OAuth, kein API-Schlüssel",
+    "body": "Zed durchläuft mit diesem Server den standardmäßigen MCP-OAuth-Ablauf. Der Client registriert sich selbst per <b>dynamischer Client-Registrierung nach RFC 7591</b>, Sie müssen also keine Client-ID anlegen, und autorisiert sich per <b>Autorisierungscode mit PKCE</b> (S256). Ein Client-Secret wird nie übertragen, und das Token enthält nur die Scopes, die Sie auf unserem Zustimmungsbildschirm freigeben. Das Zugriffstoken gilt eine Stunde und erneuert sich selbst. Sie finden es unter Dashboard, API-Schlüssel als <code>OAuth:</code> mit dem Namen des Clients dahinter, und dort widerrufen Sie die Verbindung auch."
+  },
+  "setup": [
+    {
+      "h": "Kostenloses Konto erstellen und Postfach verbinden",
+      "p": "Registrieren Sie sich auf mcpemails.com, ohne Kreditkarte, und öffnen Sie dann Dashboard, Postfächer, Postfach verbinden. Outlook und Microsoft 365 verbinden Sie über „Mit Microsoft anmelden“; Gmail, iCloud, Fastmail, Yahoo, Zoho und Yandex nutzen ein App-Passwort; alle anderen Postfächer verbinden sich ganz normal per IMAP und SMTP. Der Free-Tarif umfasst ein Postfach, dauerhaft."
+    },
+    {
+      "h": "Einstellungen des Agent Panel öffnen",
+      "p": "Klicken Sie in den Einstellungen des Agent Panel auf <b>Add Custom Server</b> oder bearbeiten Sie <code>settings.json</code> direkt."
+    },
+    {
+      "h": "Server hinzufügen",
+      "p": "Fügen Sie den Eintrag unten unter <code>context_servers</code> hinzu."
+    },
+    {
+      "h": "Autorisieren",
+      "p": "Zed startet den OAuth-Ablauf, wenn kein Authorization-Header gesetzt ist. Melden Sie sich bei mcpemails an und geben Sie die Scopes frei, die Zed erhalten soll."
+    }
+  ],
+  "gotchas": [
+    {
+      "h": "Lassen Sie den Authorization-Header bewusst leer",
+      "p": "Zed entscheidet anhand eines konfigurierten Authorization-Headers zwischen OAuth und einem statischen Token. Setzen Sie einen, nutzt Zed ihn und fragt nie nach; lassen Sie ihn leer, startet Zed den Ablauf im Browser. Wer das Feld nur halb ausfüllt, landet bei einem Server, der weder nachfragt noch sich authentifiziert."
+    },
+    {
+      "h": "Zed nennt sie Context Server, alle anderen MCP-Server",
+      "p": "Der Einstellungsschlüssel heißt <code>context_servers</code>. Es ist dasselbe MCP, und ein Snippet aus einem anderen Client stimmt bis auf den umschließenden Schlüssel, genau die Art Unterschied, die auch sorgfältiges Lesen übersteht."
+    },
+    {
+      "h": "Die Tools erscheinen im Agent Panel",
+      "p": "E-Mail-Tools sind Agenten-Tools. Eine erfolgreiche Verbindung ändert nichts an Inline-Vervollständigungen; ob es geklappt hat und welche Tools angekommen sind, sehen Sie im Agent Panel."
+    }
+  ],
+  "limits": [
+    "Anfragen sind auf 100 pro Minute, 1.000 pro Stunde und 10.000 pro Tag je Schlüssel begrenzt, dazu kommt die Obergrenze Ihres Tarifs für abrechenbare Aktionen.",
+    "Der Server arbeitet rein nach Anfrage und Antwort. Es gibt keine Webhooks und keine vom Server ausgelösten Ereignisse, neue E-Mails wecken Ihren Agenten also nie von selbst. Um auf eingehende E-Mails zu reagieren, fragen Sie in festen Abständen ab.",
+    "E-Mails werden bei jedem Aufruf live von Ihrem Anbieter abgerufen und nie gespeichert. Gespeichert wird nur das verschlüsselte OAuth-Token oder App-Passwort. Ein widerrufenes Token oder ein geändertes Postfachpasswort beendet den Zugriff deshalb sofort."
+  ],
+  "faq": [
+    {
+      "q": "Wie verbinde ich meine E-Mails mit Zed?",
+      "a": "Fügen Sie in den Einstellungen des Agent Panel einen benutzerdefinierten Server hinzu oder ergänzen Sie in settings.json unter context_servers einen Eintrag mit der url https://mcpemails.com/api/mcp. Lassen Sie den Authorization-Header leer, dann startet Zed den OAuth-Ablauf. Danach hat das Agent Panel Tools zum Lesen, Suchen, Senden, Beantworten, Weiterleiten, Organisieren und Planen von E-Mails."
+    },
+    {
+      "q": "Brauche ich für Zed einen API-Schlüssel?",
+      "a": "Nein, solange Sie den Authorization-Header nicht setzen, denn genau das bringt Zed dazu, den OAuth-Ablauf zu starten. Ein Bearer-Schlüssel ist die Alternative, wenn Sie das Token lieber selbst verwalten."
+    },
+    {
+      "q": "Welche Postfächer erreicht Zed auf diesem Weg?",
+      "a": "Outlook.com und Microsoft 365 über „Mit Microsoft anmelden“, wobei bei einem Arbeitskonto eventuell einmalig die IT-Administration die App freigeben muss; Gmail, iCloud, Fastmail, Yahoo, Zoho und Yandex mit einem App-Passwort; und jedes andere Postfach, das IMAP und SMTP auf den Standardports spricht. Der Client sieht alle über dieselbe Verbindung: Ihr Agent ruft zuerst inbox_list auf und findet so jedes verbundene Postfach samt ID. Sie müssen also nirgends UUIDs einfügen."
+    },
+    {
+      "q": "Kann Zed E-Mails senden, ohne dass ich es mitbekomme?",
+      "a": "Nur wenn Sie es zulassen. Senden erfordert den Scope send:email, ein Schlüssel oder Token ohne diesen Scope kann also überhaupt nicht senden. Zusätzlich kann der Inhaber eines Postfachs im Dashboard eine menschliche Freigabe verlangen. Dann wartet jedes Senden, Antworten, Weiterleiten, Senden eines Entwurfs und geplante Senden, bis eine Person es freigibt."
+    },
+    {
+      "q": "Werden meine E-Mails auf Ihren Servern gespeichert?",
+      "a": "Nein. Jede Nachricht wird für die Anfrage, die sie anfordert, live von Ihrem Anbieter abgerufen und direkt an Ihren Client übergeben. Gespeichert wird nur das verschlüsselte OAuth-Token oder App-Passwort, damit spätere Aufrufe sich authentifizieren können. Wenn Sie das Postfach im Dashboard löschen oder den Zugriff bei Ihrem Anbieter widerrufen, endet die Verbindung sofort."
+    }
+  ],
+  "ctaBand": {
+    "title": "Geben Sie Zed ein echtes Postfach",
+    "sub": "Ein Context Server, eine Anmeldung. Ein Postfach dauerhaft kostenlos, keine Kreditkarte nötig."
+  }
+}

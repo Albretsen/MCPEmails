@@ -1,0 +1,95 @@
+{
+  "_sources": [
+    "apps/web/components/dashboard/Pages.jsx (MCP_CLIENTS) + apps/web/messages/en/dashboard.json (clients.*)",
+    "apps/web/app/api/mcp/route.ts",
+    "apps/web/app/.well-known/oauth-authorization-server/route.ts",
+    "https://code.claude.com/docs/en/mcp",
+    "docs/token-cost/research-spec.md"
+  ],
+  "meta": {
+    "title": "E-Mail mit Claude Code verbinden: MCP-Setup mit einem Befehl",
+    "description": "Fügen Sie der Claude Code CLI mit claude mcp add ein echtes Postfach hinzu. OAuth im Terminal, kein API-Schlüssel, dann E-Mails aus der Shell lesen, suchen, senden und planen. Ein Postfach kostenlos."
+  },
+  "hero": {
+    "eyebrow": "Claude Code + E-Mail",
+    "titleLine1": "Verbinden Sie Ihr Postfach mit Claude Code",
+    "titleLine2": "mit einem einzigen Befehl",
+    "lead": "Geben Sie der CLI, in der Sie ohnehin arbeiten, ein echtes Postfach. Sichten Sie die E-Mails der Nacht vor dem Standup, verschicken Sie Release Notes oder machen Sie aus einem Thread ein Issue, ohne das Terminal zu verlassen.",
+    "meta0": "1 Postfach kostenlos, dauerhaft",
+    "meta1": "OAuth im Terminal, kein API-Schlüssel",
+    "meta2": "E-Mails werden live abgerufen, nie gespeichert",
+    "answer": "Führen Sie claude mcp add --transport http mcpemails https://mcpemails.com/api/mcp aus und authentifizieren Sie sich im Browser, wenn Claude Code Sie dazu auffordert. Das ist das ganze Setup: kein API-Schlüssel, keine Konfigurationsdatei zum Bearbeiten."
+  },
+  "method": {
+    "title": "So verbindet sich Claude Code: OAuth, kein API-Schlüssel",
+    "body": "Claude Code durchläuft mit diesem Server den standardmäßigen MCP-OAuth-Ablauf. Der Client registriert sich selbst per <b>dynamischer Client-Registrierung nach RFC 7591</b>, Sie müssen also keine Client-ID anlegen, und autorisiert sich per <b>Autorisierungscode mit PKCE</b> (S256). Ein Client-Secret wird nie übertragen, und das Token enthält nur die Scopes, die Sie auf unserem Zustimmungsbildschirm freigeben. Das Zugriffstoken gilt eine Stunde und erneuert sich selbst. Sie finden es unter Dashboard, API-Schlüssel als <code>OAuth:</code> mit dem Namen des Clients dahinter, und dort widerrufen Sie die Verbindung auch."
+  },
+  "setup": [
+    {
+      "h": "Kostenloses Konto erstellen und Postfach verbinden",
+      "p": "Registrieren Sie sich auf mcpemails.com, ohne Kreditkarte, und öffnen Sie dann Dashboard, Postfächer, Postfach verbinden. Outlook und Microsoft 365 verbinden Sie über „Mit Microsoft anmelden“; Gmail, iCloud, Fastmail, Yahoo, Zoho und Yandex nutzen ein App-Passwort; alle anderen Postfächer verbinden sich ganz normal per IMAP und SMTP. Der Free-Tarif umfasst ein Postfach, dauerhaft."
+    },
+    {
+      "h": "Server hinzufügen",
+      "p": "Führen Sie den Befehl unten aus. <code>--transport http</code> ist der Streamable-HTTP-Transport, den dieser Server spricht."
+    },
+    {
+      "h": "Authentifizieren",
+      "p": "Führen Sie in einer Claude-Code-Sitzung <code>/mcp</code> aus, wählen Sie diesen Server und folgen Sie dem Ablauf im Browser. Öffnet sich der Browser nicht von selbst, kopieren Sie die angezeigte URL."
+    },
+    {
+      "h": "Etwas fragen",
+      "p": "Versuchen Sie „alles Ungelesene von heute zusammenfassen“. Claude Code ruft zuerst <code>inbox_list</code> auf, um Ihre Postfächer zu finden, Sie müssen also keine IDs einfügen."
+    }
+  ],
+  "gotchas": [
+    {
+      "h": "Claude Code lädt MCP-Tooldefinitionen erst bei Bedarf, und das ist hier ein Vorteil",
+      "p": "Standardmäßig lädt Claude Code beim Start einer Sitzung nur Tool-Namen und Serveranweisungen und holt ein vollständiges Schema erst, wenn es gebraucht wird. In der Praxis kostet dieser Server damit nur einen Bruchteil des Kontexts, den ein naiver MCP-Server belegen würde, und ein Tool, das Sie nie nutzen, kostet Sie auch nie sein Schema."
+    },
+    {
+      "h": "Begrenzen Sie die Verbindung auf den Zweck der Sitzung",
+      "p": "Der OAuth-Zustimmungsbildschirm legt fest, was die CLI für die Lebensdauer des Tokens tun darf. Eine Coding-Sitzung, die E-Mails lesen, aber nie senden soll, bekommt ein Token ohne <code>send:email</code>. Brauchen Sie später mehr, verbinden Sie neu und geben die größere Auswahl frei; nichts erweitert sich von selbst."
+    },
+    {
+      "h": "Eine Agentenschleife plus Sende-Scope ist eine Kombination, die Überlegung verdient",
+      "p": "Claude Code läuft lange unbeaufsichtigt, und genau dann schadet ein versehentliches Senden am meisten. Dafür gibt es zwei Schalter: Lassen Sie <code>send:email</code> im Token weg, oder schalten Sie im Dashboard die menschliche Freigabe ein, damit jedes Senden, Antworten, Weiterleiten und geplante Senden auf eine Person wartet. Die Freigabe gilt pro Postfach, egal welcher Client den Aufruf macht."
+    }
+  ],
+  "limits": [
+    "Anfragen sind auf 100 pro Minute, 1.000 pro Stunde und 10.000 pro Tag je Schlüssel begrenzt, dazu kommt die Obergrenze Ihres Tarifs für abrechenbare Aktionen.",
+    "Der Server arbeitet rein nach Anfrage und Antwort. Es gibt keine Webhooks und keine vom Server ausgelösten Ereignisse, neue E-Mails wecken Ihren Agenten also nie von selbst. Um auf eingehende E-Mails zu reagieren, fragen Sie in festen Abständen ab.",
+    "E-Mails werden bei jedem Aufruf live von Ihrem Anbieter abgerufen und nie gespeichert. Gespeichert wird nur das verschlüsselte OAuth-Token oder App-Passwort. Ein widerrufenes Token oder ein geändertes Postfachpasswort beendet den Zugriff deshalb sofort.",
+    "Der OAuth-Ablauf braucht einmal einen Browser. Auf einem Rechner ohne Oberfläche fügen Sie den Server stattdessen mit einem API-Schlüssel im Authorization-Header hinzu und überspringen den Ablauf komplett. Wenn Sie dort doch OAuth möchten, legt <code>--callback-port</code> den Callback auf einen Port fest, den Sie weiterleiten können."
+  ],
+  "faq": [
+    {
+      "q": "Wie verbinde ich meine E-Mails mit Claude Code?",
+      "a": "Fügen Sie diesen MCP-Server per URL hinzu: claude mcp add --transport http mcpemails https://mcpemails.com/api/mcp. Führen Sie dann in einer Sitzung /mcp aus und schließen Sie die Anmeldung im Browser ab. Danach hat Claude Code Tools zum Lesen, Suchen, Senden, Beantworten, Weiterleiten, Organisieren und Planen von E-Mails."
+    },
+    {
+      "q": "Kann ich statt OAuth einen API-Schlüssel verwenden?",
+      "a": "Ja. Claude Code akzeptiert beim Befehl add einen Header. Übergeben Sie einen Authorization-Header mit einem Bearer-Schlüssel aus Dashboard, API-Schlüssel, dann entfällt der Browser ganz. Das ist die richtige Wahl auf einem Rechner ohne Oberfläche oder in CI, wo keine Anmeldung möglich ist."
+    },
+    {
+      "q": "Funktioniert das in einem Devcontainer oder über SSH?",
+      "a": "Ja, mit der Einschränkung, dass der OAuth-Ablauf einmal einen Browser braucht. Melden Sie sich entweder dort an, wo ein Browser vorhanden ist, oder fügen Sie den Server mit einem Bearer-API-Schlüssel im Header hinzu und überspringen Sie den Ablauf. Alles danach ist normales HTTPS zu einem Endpunkt."
+    },
+    {
+      "q": "Welche Postfächer erreicht Claude Code auf diesem Weg?",
+      "a": "Outlook.com und Microsoft 365 über „Mit Microsoft anmelden“, wobei bei einem Arbeitskonto eventuell einmalig die IT-Administration die App freigeben muss; Gmail, iCloud, Fastmail, Yahoo, Zoho und Yandex mit einem App-Passwort; und jedes andere Postfach, das IMAP und SMTP auf den Standardports spricht. Der Client sieht alle über dieselbe Verbindung: Ihr Agent ruft zuerst inbox_list auf und findet so jedes verbundene Postfach samt ID. Sie müssen also nirgends UUIDs einfügen."
+    },
+    {
+      "q": "Kann Claude Code E-Mails senden, ohne dass ich es mitbekomme?",
+      "a": "Nur wenn Sie es zulassen. Senden erfordert den Scope send:email, ein Schlüssel oder Token ohne diesen Scope kann also überhaupt nicht senden. Zusätzlich kann der Inhaber eines Postfachs im Dashboard eine menschliche Freigabe verlangen. Dann wartet jedes Senden, Antworten, Weiterleiten, Senden eines Entwurfs und geplante Senden, bis eine Person es freigibt."
+    },
+    {
+      "q": "Werden meine E-Mails auf Ihren Servern gespeichert?",
+      "a": "Nein. Jede Nachricht wird für die Anfrage, die sie anfordert, live von Ihrem Anbieter abgerufen und direkt an Ihren Client übergeben. Gespeichert wird nur das verschlüsselte OAuth-Token oder App-Passwort, damit spätere Aufrufe sich authentifizieren können. Wenn Sie das Postfach im Dashboard löschen oder den Zugriff bei Ihrem Anbieter widerrufen, endet die Verbindung sofort."
+    }
+  ],
+  "ctaBand": {
+    "title": "Holen Sie Ihr Postfach ins Terminal",
+    "sub": "Ein Befehl, eine Anmeldung im Browser. Ein Postfach dauerhaft kostenlos, keine Kreditkarte nötig."
+  }
+}

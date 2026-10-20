@@ -9,7 +9,7 @@ import { tmpdir } from 'node:os';
 import path from 'node:path';
 import { fileURLToPath } from 'node:url';
 import { analyze, importSpecifiers, translationUses, literalKeys } from './analyze.mjs';
-import { FULL_LOCALES } from '../../src/i18n/locale-policy.mjs';
+import { FULL_LOCALES, SCOPED_LOCALES } from '../../src/i18n/locale-policy.mjs';
 
 const webRoot = path.resolve(path.dirname(fileURLToPath(import.meta.url)), '../..');
 
@@ -45,13 +45,13 @@ test('the app: the analysis actually saw the routes and their reads', () => {
   assert.deepEqual(byFile.get('app/[locale]/blog/[slug]/page.js')?.needs, ['blog', 'compare', 'home']);
   assert.deepEqual(byFile.get('app/[locale]/for/founders/page.js')?.needs, ['compare', 'forFounders', 'home']);
   assert.ok(byFile.get('app/dashboard/[[...section]]/page.js').keyCount > 500, 'dashboard literal keys were not collected');
-  assert.deepEqual(real.locales.slice().sort(), ['en', 'es', 'fr', 'nb', 'zh']);
+  assert.deepEqual(real.locales.slice().sort(), ['de', 'en', 'es', 'fr', 'nb', 'zh']);
 });
 
 test('the app: every full locale is required, the frozen ones are not', () => {
   // The locale policy (src/i18n/locale-policy.mjs): en, nb, es and fr must hold
   // every key a route reads; zh falls back to English at runtime and may lag.
-  assert.deepEqual(real.requiredLocales.slice().sort(), FULL_LOCALES.slice().sort());
+  assert.deepEqual(real.requiredLocales.slice().sort(), [...FULL_LOCALES, ...SCOPED_LOCALES].sort());
 });
 
 test('the app: nothing outside app/[locale] reads a marketing namespace', () => {
