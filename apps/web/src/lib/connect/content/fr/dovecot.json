@@ -19,8 +19,8 @@
     "eyebrow": "Dovecot + IA",
     "titleLine1": "Connectez votre serveur Dovecot",
     "titleLine2": "à Claude, Cursor et tout client MCP",
-    "lead": "C'est vous qui gérez le serveur IMAP, c'est donc vous qui décidez de ce qu'un agent peut atteindre. Pointez mcpemails vers votre propre serveur Dovecot et laissez Claude lire, rechercher, envoyer, répondre, planifier et classer le courrier dans les boîtes que vous exploitez déjà.",
-    "answer": "Claude ne peut pas accéder seul à un serveur Dovecot. mcpemails est un serveur MCP hébergé qui se connecte à votre installation Dovecot via IMAP sur votre propre nom d'hôte, généralement mail.yourdomain.com sur le port 993, avec le mot de passe de boîte que votre passdb accepte déjà, pour que Claude, Cursor ou tout client MCP puisse lire, rechercher, envoyer et organiser ce courrier. Il n'y a pas de nom de serveur commun à chercher : le serveur est celui que vous avez nommé, il doit être joignable depuis Internet, et son certificat TLS doit être valide pour le nom auquel vous vous connectez. Une boîte est gratuite.",
+    "lead": "C'est vous qui gérez le serveur IMAP, c'est donc vous qui décidez de ce qu'un agent peut atteindre. Pointez MCP Emails vers votre propre serveur Dovecot et laissez Claude lire, rechercher, envoyer, répondre, planifier et classer le courrier dans les boîtes que vous exploitez déjà.",
+    "answer": "Claude ne peut pas accéder seul à un serveur Dovecot. MCP Emails est un serveur MCP hébergé qui se connecte à votre installation Dovecot via IMAP sur votre propre nom d'hôte, généralement mail.yourdomain.com sur le port 993, avec le mot de passe de boîte que votre passdb accepte déjà, pour que Claude, Cursor ou tout client MCP puisse lire, rechercher, envoyer et organiser ce courrier. Il n'y a pas de nom de serveur commun à chercher : le serveur est celui que vous avez nommé, il doit être joignable depuis Internet, et son certificat TLS doit être valide pour le nom auquel vous vous connectez. Une boîte est gratuite.",
     "meta0": "1 boîte gratuite, pour toujours",
     "meta1": "Le mot de passe de votre boîte Dovecot existante",
     "meta2": "E-mails récupérés en direct, jamais stockés"
@@ -32,7 +32,7 @@
   "setup": [
     {
       "h": "Créez un compte gratuit",
-      "p": "Inscrivez-vous sur mcpemails, sans carte bancaire. L'offre gratuite connecte une boîte, pour toujours, ce qui suffit pour tester sur une vraie boîte de votre propre serveur."
+      "p": "Inscrivez-vous sur MCP Emails, sans carte bancaire. L'offre gratuite connecte une boîte, pour toujours, ce qui suffit pour tester sur une vraie boîte de votre propre serveur."
     },
     {
       "h": "Vérifiez ce sur quoi Dovecot écoute",
@@ -40,7 +40,7 @@
     },
     {
       "h": "Vérifiez le certificat sur le 993 depuis l'extérieur",
-      "p": "Depuis une machine qui n'est pas votre serveur de messagerie, lancez <code>openssl s_client -connect mail.yourdomain.com:993</code>. Vous devez obtenir une chaîne qui se vérifie et un nom de sujet correspondant au serveur que vous saisirez dans mcpemails. Ajoutez ensuite la boîte : choisissez IMAP / SMTP, saisissez votre nom d'hôte, l'identifiant de la boîte et son mot de passe."
+      "p": "Depuis une machine qui n'est pas votre serveur de messagerie, lancez <code>openssl s_client -connect mail.yourdomain.com:993</code>. Vous devez obtenir une chaîne qui se vérifie et un nom de sujet correspondant au serveur que vous saisirez dans MCP Emails. Ajoutez ensuite la boîte : choisissez IMAP / SMTP, saisissez votre nom d'hôte, l'identifiant de la boîte et son mot de passe."
     },
     {
       "h": "Collez l'URL MCP dans votre IA",
@@ -50,7 +50,7 @@
   "gotchas": [
     {
       "h": "Sans entrées special_use, Dovecot ne fournit aucun rôle de dossier",
-      "p": "Dovecot n'annonce l'extension SPECIAL-USE que pour les dossiers que vous avez déclarés. Tant que <code>15-mailboxes.conf</code> ne contient pas d'entrées comme <code>mailbox Sent { special_use = \\Sent }</code>, un client IMAP reçoit une simple liste de noms et doit deviner quel dossier est Sent, Drafts, Junk ou Trash. mcpemails se rabat sur la correspondance par nom : sur un serveur dont les dossiers s'appellent Sent Items, Gesendet ou Papierkorb, il faudra peut-être choisir le dossier à la main une fois. Ajouter les lignes special_use règle le problème définitivement pour tous vos clients."
+      "p": "Dovecot n'annonce l'extension SPECIAL-USE que pour les dossiers que vous avez déclarés. Tant que <code>15-mailboxes.conf</code> ne contient pas d'entrées comme <code>mailbox Sent { special_use = \\Sent }</code>, un client IMAP reçoit une simple liste de noms et doit deviner quel dossier est Sent, Drafts, Junk ou Trash. MCP Emails se rabat sur la correspondance par nom : sur un serveur dont les dossiers s'appellent Sent Items, Gesendet ou Papierkorb, il faudra peut-être choisir le dossier à la main une fois. Ajouter les lignes special_use règle le problème définitivement pour tous vos clients."
     },
     {
       "h": "Un préfixe de namespace réécrit chaque nom de dossier que vous voyez",
@@ -66,14 +66,14 @@
     }
   ],
   "limits": [
-    "Votre serveur Dovecot doit accepter les connexions depuis l'Internet public pour qu'un serveur MCP hébergé puisse l'atteindre. Si votre politique veut qu'IMAP ne sorte jamais du réseau local ou du VPN, c'est une position légitime, et ce produit ne peut pas vous servir en tant que service hébergé. mcpemails peut en revanche être auto-hébergé, ce qui garde la connexion IMAP à l'intérieur de votre propre réseau.",
+    "Votre serveur Dovecot doit accepter les connexions depuis l'Internet public pour qu'un serveur MCP hébergé puisse l'atteindre. Si votre politique veut qu'IMAP ne sorte jamais du réseau local ou du VPN, c'est une position légitime, et ce produit ne peut pas vous servir en tant que service hébergé. MCP Emails peut en revanche être auto-hébergé, ce qui garde la connexion IMAP à l'intérieur de votre propre réseau.",
     "La validation TLS stricte n'est pas facultative ici. Un certificat auto-signé, expiré ou émis pour un autre nom d'hôte sera refusé, et aucune case ne permet de l'accepter malgré tout.",
     "L'envoi passe par votre propre service de soumission : vos enregistrements SPF, DKIM et DMARC déterminent donc la délivrabilité exactement comme pour tout autre client de ce serveur."
   ],
   "faq": [
     {
       "q": "Claude fonctionne-t-il avec Dovecot ?",
-      "a": "Pas directement. Claude n'a aucun moyen d'ouvrir une connexion IMAP vers un serveur que vous gérez. Connecter un serveur MCP comme mcpemails à votre serveur Dovecot donne à Claude un accès en lecture, recherche, envoi, réponse, planification et organisation aux boîtes qu'il héberge, avec les mêmes identifiants que n'importe quel autre client IMAP."
+      "a": "Pas directement. Claude n'a aucun moyen d'ouvrir une connexion IMAP vers un serveur que vous gérez. Connecter un serveur MCP comme MCP Emails à votre serveur Dovecot donne à Claude un accès en lecture, recherche, envoi, réponse, planification et organisation aux boîtes qu'il héberge, avec les mêmes identifiants que n'importe quel autre client IMAP."
     },
     {
       "q": "Quels sont les réglages IMAP et SMTP de Dovecot ?",
@@ -85,7 +85,7 @@
     },
     {
       "q": "Mon serveur Dovecot doit-il être joignable depuis Internet ?",
-      "a": "Oui, pour le service hébergé. mcpemails se connecte en entrée sur votre port IMAP : un serveur lié à la boucle locale, filtré par pare-feu sur la plage de votre bureau ou joignable uniquement par VPN ne peut pas être connecté. Si vous préférez ne pas exposer IMAP publiquement, mcpemails peut être auto-hébergé et tourner dans le même réseau que le serveur de messagerie."
+      "a": "Oui, pour le service hébergé. MCP Emails se connecte en entrée sur votre port IMAP : un serveur lié à la boucle locale, filtré par pare-feu sur la plage de votre bureau ou joignable uniquement par VPN ne peut pas être connecté. Si vous préférez ne pas exposer IMAP publiquement, MCP Emails peut être auto-hébergé et tourner dans le même réseau que le serveur de messagerie."
     },
     {
       "q": "Quels produits reposent sur Dovecot ?",
@@ -98,6 +98,6 @@
   ],
   "ctaBand": {
     "title": "Offrez une boîte Dovecot à votre IA",
-    "sub": "Pointez mcpemails vers votre propre serveur. Une boîte gratuite pour toujours, sans carte bancaire."
+    "sub": "Pointez MCP Emails vers votre propre serveur. Une boîte gratuite pour toujours, sans carte bancaire."
   }
 }

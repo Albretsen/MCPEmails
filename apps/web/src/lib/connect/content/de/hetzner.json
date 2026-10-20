@@ -1,0 +1,98 @@
+{
+  "_sources": [
+    "https://docs.hetzner.com/konsoleh/account-management/email/setting-up-an-email-account/",
+    "https://docs.hetzner.com/konsoleh/account-management/email/mailboxes/"
+  ],
+  "auth": {
+    "method": "mail-password",
+    "label": "Postfach-Passwort",
+    "helpUrl": "https://docs.hetzner.com/konsoleh/account-management/email/setting-up-an-email-account/",
+    "usernameForm": "Ihre vollständige Adresse mit Domain: info@ihre-domain.de.",
+    "status": "active"
+  },
+  "meta": {
+    "title": "Hetzner MCP-Server: Hetzner E-Mail mit Claude verbinden",
+    "description": "MCP-Server für E-Mail bei Hetzner Webhosting. Mehrere Firmenpostfächer (info@, vertrieb@) per IMAP über mail.your-server.de:993 mit Claude und ChatGPT verbinden."
+  },
+  "hero": {
+    "eyebrow": "Hetzner E-Mail + KI",
+    "titleLine1": "MCP-Server für Hetzner E-Mail:",
+    "titleLine2": "jedes Firmenpostfach, in Claude und ChatGPT",
+    "lead": "Sie betreiben info@, vertrieb@, support@ und rechnungen@ auf Ihrer eigenen Domain bei Hetzner? Verbinden Sie jedes Postfach mit einem Workspace, und Ihr KI-Agent arbeitet mit allen. E-Mails lesen, suchen, senden, beantworten, planen und ordnen, per IMAP über mail.your-server.de mit dem Postfach-Passwort, das Sie in der konsoleH festgelegt haben.",
+    "answer": "Claude kann ein Hetzner-Postfach nicht von sich aus erreichen. MCP Emails ist ein gehosteter MCP-Server, der E-Mail bei Hetzner Webhosting per IMAP über mail.your-server.de auf Port 993 anbindet. Die Anmeldung läuft mit Ihrer vollständigen E-Mail-Adresse und dem Postfach-Passwort, das Sie beim Anlegen des Postfachs in der konsoleH festgelegt haben. Danach können Claude, Cursor oder jeder MCP-Client die E-Mails lesen, suchen, senden und ordnen. Der Hostname lautet für jeden Kunden wörtlich mail.your-server.de, nicht eine Variante Ihrer eigenen Domain. Jede Firmenadresse, etwa info@ oder vertrieb@, wird als eigenes Postfach verbunden: Ein Postfach ist kostenlos, Personal verbindet drei, Pro bis zu 10 und Business so viele, wie Sie brauchen.",
+    "meta0": "Erstes Postfach kostenlos, Tarife für weitere",
+    "meta1": "Postfach-Passwort aus der konsoleH",
+    "meta2": "E-Mails live abgerufen, nie gespeichert"
+  },
+  "persona": {
+    "intro": "Mehrere Firmenpostfächer bei Hetzner?",
+    "label": "Sehen Sie, wie viele Postfächer jeder Tarif verbindet",
+    "href": "/pricing"
+  },
+  "method": {
+    "title": "So verbindet sich Hetzner E-Mail: IMAP über mail.your-server.de",
+    "body": "Hetzners gemeinsame Mailplattform, die hinter den Webhosting- und Managed-Server-Tarifen steckt und über die <b>konsoleH</b> verwaltet wird, stellt IMAP unter <code>mail.your-server.de</code> auf Port 993 mit implizitem TLS bereit und SMTP auf demselben Host auf Port 465. Dieser Hostname ist wörtlich gemeint, für jeden Hetzner-Hosting-Kunden gleich, und Hetzners eigene Dokumentation schreibt ihn genau so. Der Benutzername ist die vollständige Adresse, etwa <code>info@your-domain.de</code>, und das Passwort ist das, das beim Anlegen des Postfachs in der konsoleH in die beiden Passwortfelder eingegeben wurde. Dieses Postfach-Passwort ist etwas anderes als der konsoleH-Login, mit dem Sie das Konto verwalten. Diese Seite behandelt das gehostete Postfach. Ein Mailserver, den Sie selbst auf einem Hetzner Cloud Server oder einem dedizierten Server installiert haben und betreiben, ist eine ganz andere Situation, siehe unten."
+  },
+  "setup": [
+    {
+      "h": "Kostenloses MCP Emails Konto erstellen",
+      "p": "Registrieren Sie sich auf mcpemails.com. Der Free-Tarif verbindet ein Postfach dauerhaft und fragt nicht nach einer Kreditkarte."
+    },
+    {
+      "h": "Postfach-Passwort in der konsoleH festlegen oder zurücksetzen",
+      "p": "Melden Sie sich in der konsoleH an, wählen Sie die Domain und öffnen Sie den Bereich E-Mail und dort die Postfächer. Wählen Sie die Adresse und geben Sie in beide Passwortfelder ein neues Passwort ein, wenn Sie das aktuelle nicht haben. Das Postfach wird nur mit dem Teil vor dem @-Zeichen angelegt, als Benutzername tragen Sie in jedem Client aber die vollständige Adresse ein."
+    },
+    {
+      "h": "In MCP Emails einfügen",
+      "p": "Wählen Sie IMAP / SMTP, geben Sie die vollständige Adresse ein und fügen Sie das Postfach-Passwort ein. Der Host mail.your-server.de und die Ports 993 und 465 sind vorausgefüllt und wurden über eine echte TLS-Verbindung geprüft."
+    },
+    {
+      "h": "MCP-URL in Ihre KI einfügen",
+      "p": "Fügen Sie https://mcpemails.com/api/mcp in Claude, Cursor oder ChatGPT ein, autorisieren Sie den Zugriff, und Ihr Agent hat das Postfach."
+    }
+  ],
+  "gotchas": [
+    {
+      "h": "Der Hostname wird nicht aus Ihrer Domain gebildet",
+      "p": "Der häufigste Einrichtungsfehler bei Hetzner ist, <code>mail.your-domain.de</code> mit der eigenen Domain eingesetzt einzutragen, weil fast jeder andere Hoster es so macht. Hetzner nicht. Die Zeichenfolge <code>mail.your-server.de</code> ist der echte Hostname, gemeinsam für alle Hosting-Kunden. Wer stattdessen die eigene Domain eintippt, bekommt entweder einen DNS-Fehler oder landet bei einem fremden Server, der zufällig unter diesem Namen antwortet. Hetzners Dokumentation schreibt den Hostnamen wörtlich, und viele lesen ihn als Platzhalter."
+    },
+    {
+      "h": "Ein Hetzner Cloud Server oder dedizierter Server ist etwas anderes",
+      "p": "Hetzner verkauft zwei sehr verschiedene Dinge, die beide „Hetzner E-Mail“ genannt werden. Webhosting- und Managed-Server-Tarife enthalten Postfächer auf der hier beschriebenen gemeinsamen Plattform. Cloud- und dedizierte Server enthalten überhaupt kein Postfach: Wenn Sie dort E-Mail wollen, installieren und betreiben Sie selbst einen Mailserver, und Hostname, Ports und Zugangsdaten sind das, was Sie konfiguriert haben. Das ist ein selbst gehosteter Mailserver, der zufällig bei Hetzner steht, und er verbindet sich wie jeder andere selbst gehostete Server. Gut zu wissen, bevor Sie anfangen: Hetzner sperrt ausgehendes SMTP auf neuen Cloud Servern standardmäßig und gibt es nur auf Anfrage frei. Ein selbst betriebener Mailserver dort kann also nicht senden, bis Sie danach fragen."
+    },
+    {
+      "h": "Kein MOVE, kein UIDPLUS, und Ordner werden über den Namen erkannt",
+      "p": "Die Dovecot-Version hinter <code>mail.your-server.de</code> kündigt die MOVE-Erweiterung nicht an. Ein Verschieben läuft daher als Kopie mit anschließender Flag-Änderung und Expunge statt als ein atomarer Befehl. Auch UIDPLUS fehlt, die Ziel-UID einer kopierten Nachricht wird also nicht zurückgegeben und muss per Suche gefunden werden. Ebenso fehlt SPECIAL-USE, Gesendet, Entwürfe, Papierkorb und Spam werden also über ihre Namen erkannt. In einem deutschsprachigen Postfach heißen sie oft Gesendet, Entwuerfe, Papierkorb und Spam. Nennen Sie den Ordner ausdrücklich, wenn ein Agent ihn nicht findet."
+    }
+  ],
+  "limits": [
+    "Diese Seite behandelt nur Postfächer auf Hetzners gehosteter Mailplattform. Ein Mailserver, den Sie selbst auf einem Hetzner Cloud Server oder dedizierten Server betreiben, braucht eigenen Hostnamen und eigene Zugangsdaten.",
+    "Weil der Server kein MOVE unterstützt, ist ein Verschieben nicht atomar. Bricht die Verbindung mittendrin ab, kann eine Nachricht kurz in beiden Ordnern liegen."
+  ],
+  "faq": [
+    {
+      "q": "Funktioniert Claude mit Hetzner E-Mail?",
+      "a": "Nicht von sich aus. Claude hat keinen eingebauten Konnektor für Hetzner. Wenn Sie einen MCP-Server wie MCP Emails per IMAP mit Ihrem Hetzner-Postfach verbinden, kann Claude E-Mails lesen, suchen, senden, beantworten, planen und ordnen. Dieselbe Verbindung funktioniert in Cursor, ChatGPT und anderen MCP-Clients."
+    },
+    {
+      "q": "Wie lauten die IMAP- und SMTP-Einstellungen von Hetzner?",
+      "a": "Beide lauten mail.your-server.de. IMAP nutzt Port 993 mit implizitem TLS, SMTP Port 465, ebenfalls mit implizitem TLS. Der Benutzername ist Ihre vollständige E-Mail-Adresse, das Passwort ist das Postfach-Passwort aus der konsoleH. Dieser Host ist ein wörtlicher Name, gemeinsam für alle Hetzner-Hosting-Kunden, und wurde über eine echte TLS-Verbindung bestätigt."
+    },
+    {
+      "q": "Warum lehnt IMAP mein konsoleH-Passwort ab?",
+      "a": "Weil es die falschen Zugangsdaten sind. Mit dem konsoleH-Login verwalten Sie das Hosting-Konto, jedes Postfach hat dagegen ein eigenes Passwort, das beim Anlegen in der Postfachverwaltung festgelegt wurde. Hat es niemand notiert, öffnen Sie die Postfachverwaltung, geben Sie in beide Passwortfelder ein neues ein und verwenden Sie dieses im Client."
+    },
+    {
+      "q": "Kann ich einen Mailserver auf meinem Hetzner Cloud VPS verbinden?",
+      "a": "Ja, aber nicht mit den Einstellungen dieser Seite. Ein selbst betriebener Mailserver nutzt den Hostnamen und die Zugangsdaten, die Sie dafür konfiguriert haben, und mail.your-server.de ist es nicht. Verbinden Sie ihn als allgemeinen IMAP-Server. Denken Sie daran, dass Hetzner ausgehende SMTP-Ports auf neuen Cloud Servern sperrt, bis Sie den Support um Freigabe bitten."
+    },
+    {
+      "q": "Werden meine Hetzner-E-Mails auf Ihren Servern gespeichert?",
+      "a": "Nein. Nachrichten werden bei jeder Anfrage live per IMAP von Hetzner abgerufen und an Ihren KI-Client übergeben. Zugangsdaten sind im Ruhezustand verschlüsselt, Nachrichteninhalte werden nicht aufbewahrt."
+    }
+  ],
+  "ctaBand": {
+    "title": "Alle Hetzner-Postfächer an einem Agenten",
+    "sub": "Ihr erstes Hetzner-Postfach kostenlos verbinden, ohne Kreditkarte. Personal verbindet drei, Pro bis zu 10 und Business so viele, wie Sie brauchen."
+  }
+}

@@ -52,7 +52,8 @@ export const CLIENTS = [
     configFile: null,
     config: null,
     guide: 'https://support.claude.com/en/articles/11175166-get-started-with-custom-connectors-using-remote-mcp',
-    locales: ['en', 'nb', 'es', 'fr', 'zh'],
+    post: { key: 'claude', href: '/blog/connect-claude-to-email' },
+    locales: ['en', 'nb', 'es', 'fr', 'zh', 'de'],
   },
   {
     slug: 'claude-code',
@@ -65,7 +66,7 @@ export const CLIENTS = [
     configFile: 'terminal',
     config: (url) => `claude mcp add --transport http mcpemails ${url}`,
     guide: 'https://code.claude.com/docs/en/mcp',
-    locales: ['en', 'nb', 'es', 'fr', 'zh'],
+    locales: ['en', 'nb', 'es', 'fr', 'zh', 'de'],
   },
   {
     slug: 'chatgpt',
@@ -78,7 +79,8 @@ export const CLIENTS = [
     configFile: null,
     config: null,
     guide: 'https://help.openai.com/en/articles/12584461',
-    locales: ['en', 'nb', 'es', 'fr', 'zh'],
+    post: { key: 'chatgpt', href: '/blog/connect-chatgpt-to-email' },
+    locales: ['en', 'nb', 'es', 'fr', 'zh', 'de'],
   },
   {
     slug: 'cursor',
@@ -97,7 +99,8 @@ export const CLIENTS = [
   }
 }`,
     guide: 'https://cursor.com/docs/mcp',
-    locales: ['en', 'nb', 'es', 'fr', 'zh'],
+    post: { key: 'editors', href: '/blog/email-for-ai-agents-cursor-cline-vscode' },
+    locales: ['en', 'nb', 'es', 'fr', 'zh', 'de'],
   },
   {
     slug: 'vscode',
@@ -117,7 +120,8 @@ export const CLIENTS = [
   }
 }`,
     guide: 'https://code.visualstudio.com/docs/copilot/customization/mcp-servers',
-    locales: ['en', 'nb', 'es', 'fr', 'zh'],
+    post: { key: 'editors', href: '/blog/email-for-ai-agents-cursor-cline-vscode' },
+    locales: ['en', 'nb', 'es', 'fr', 'zh', 'de'],
   },
   {
     slug: 'cline',
@@ -130,7 +134,8 @@ export const CLIENTS = [
     configFile: null,
     config: null,
     guide: 'https://docs.cline.bot/mcp/configuring-mcp-servers',
-    locales: ['en', 'nb', 'es', 'fr', 'zh'],
+    post: { key: 'editors', href: '/blog/email-for-ai-agents-cursor-cline-vscode' },
+    locales: ['en', 'nb', 'es', 'fr', 'zh', 'de'],
   },
   {
     slug: 'windsurf',
@@ -149,7 +154,8 @@ export const CLIENTS = [
   }
 }`,
     guide: 'https://docs.windsurf.com/windsurf/cascade/mcp',
-    locales: ['en', 'nb', 'es', 'fr', 'zh'],
+    post: { key: 'editors', href: '/blog/email-for-ai-agents-cursor-cline-vscode' },
+    locales: ['en', 'nb', 'es', 'fr', 'zh', 'de'],
   },
   {
     slug: 'gemini-cli',
@@ -168,7 +174,7 @@ export const CLIENTS = [
   }
 }`,
     guide: 'https://github.com/google-gemini/gemini-cli/blob/main/docs/tools/mcp-server.md',
-    locales: ['en', 'nb', 'es', 'fr', 'zh'],
+    locales: ['en', 'nb', 'es', 'fr', 'zh', 'de'],
   },
   {
     slug: 'zed',
@@ -187,7 +193,7 @@ export const CLIENTS = [
   }
 }`,
     guide: 'https://zed.dev/docs/ai/mcp',
-    locales: ['en', 'nb', 'es', 'fr', 'zh'],
+    locales: ['en', 'nb', 'es', 'fr', 'zh', 'de'],
   },
   {
     slug: 'jetbrains',
@@ -200,7 +206,7 @@ export const CLIENTS = [
     configFile: null,
     config: null,
     guide: 'https://www.jetbrains.com/help/ai-assistant/configure-an-mcp-server.html',
-    locales: ['en', 'nb', 'es', 'fr', 'zh'],
+    locales: ['en', 'nb', 'es', 'fr', 'zh', 'de'],
   },
   {
     slug: 'raycast',
@@ -213,7 +219,7 @@ export const CLIENTS = [
     configFile: null,
     config: null,
     guide: 'https://manual.raycast.com/ai/model-context-protocol',
-    locales: ['en', 'nb', 'es', 'fr', 'zh'],
+    locales: ['en', 'nb', 'es', 'fr', 'zh', 'de'],
   },
   {
     slug: 'warp',
@@ -226,7 +232,7 @@ export const CLIENTS = [
     configFile: null,
     config: null,
     guide: 'https://docs.warp.dev/agent-platform/capabilities/mcp/',
-    locales: ['en', 'nb', 'es', 'fr', 'zh'],
+    locales: ['en', 'nb', 'es', 'fr', 'zh', 'de'],
   },
   {
     slug: 'curl',
@@ -243,7 +249,7 @@ export const CLIENTS = [
   -H "Content-Type: application/json" \\
   -d '{"jsonrpc":"2.0","id":1,"method":"tools/list"}'`,
     guide: null,
-    locales: ['en', 'nb', 'es', 'fr', 'zh'],
+    locales: ['en', 'nb', 'es', 'fr', 'zh', 'de'],
   },
 ];
 

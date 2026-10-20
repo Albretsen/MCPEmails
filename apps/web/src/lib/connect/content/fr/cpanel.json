@@ -22,7 +22,7 @@
     "meta0": "Première boîte gratuite, offres pour les autres",
     "meta1": "Le mot de passe de votre boîte, sans configuration OAuth",
     "meta2": "E-mails récupérés en direct, jamais stockés",
-    "answer": "Claude ne peut pas accéder seul à cPanel. mcpemails est un serveur MCP hébergé qui connecte la boîte via IMAP avec son mot de passe, pour que Claude, Cursor ou tout client MCP puisse lire, rechercher, envoyer et organiser ce courrier. La configuration prend quelques minutes. Chaque adresse de l'entreprise, comme info@ ou ventes@, se connecte comme une boîte à part : une boîte est gratuite, Personal en connecte trois et Pro toutes celles que vous gérez."
+    "answer": "Claude ne peut pas accéder seul à cPanel. MCP Emails est un serveur MCP hébergé qui connecte la boîte via IMAP avec son mot de passe, pour que Claude, Cursor ou tout client MCP puisse lire, rechercher, envoyer et organiser ce courrier. La configuration prend quelques minutes. Chaque adresse de l'entreprise, comme info@ ou ventes@, se connecte comme une boîte à part : une boîte est gratuite, Personal en connecte trois, Pro jusqu'à 10 et Business autant qu'il vous en faut."
   },
   "persona": {
     "intro": "Plusieurs boîtes d'entreprise chez un hébergeur cPanel ?",
@@ -36,14 +36,14 @@
   "setup": [
     {
       "h": "Créez un compte gratuit",
-      "p": "Inscrivez-vous sur mcpemails, sans carte bancaire. L'offre gratuite connecte une boîte, pour toujours."
+      "p": "Inscrivez-vous sur MCP Emails, sans carte bancaire. L'offre gratuite connecte une boîte, pour toujours."
     },
     {
       "h": "Relevez vos réglages dans cPanel",
       "p": "Dans cPanel, ouvrez Email Accounts et cliquez sur Connect Devices pour la boîte. Copiez les serveurs et ports IMAP et SMTP sécurisés depuis Mail Client Manual Settings. Si vous ne connaissez pas le mot de passe de la boîte, définissez-en un nouveau sur le même écran."
     },
     {
-      "h": "Collez-les dans mcpemails",
+      "h": "Collez-les dans MCP Emails",
       "p": "Choisissez IMAP / SMTP, ajoutez votre adresse cPanel, les serveurs ci-dessus et le mot de passe pour connecter la boîte en toute sécurité."
     },
     {
@@ -72,12 +72,12 @@
   "limits": [
     "Nous ne pouvons pas préremplir les serveurs d'une boîte cPanel, car le nom d'hôte appartient à votre serveur et non à un service partagé. Vous devez le coller depuis Connect Devices.",
     "Certains hébergeurs bloquent par pare-feu la soumission sortante ou désactivent l'IMAP externe sur les offres mutualisées. cPanel affiche quand même les réglages dans ce cas : un refus relève alors de votre hébergeur, pas d'un problème de réglages.",
-    "mcpemails connecte la boîte. Les redirections, alias, répondeurs automatiques, filtres et quotas restent dans cPanel et ne sont pas visibles par votre client IA."
+    "MCP Emails connecte la boîte. Les redirections, alias, répondeurs automatiques, filtres et quotas restent dans cPanel et ne sont pas visibles par votre client IA."
   ],
   "faq": [
     {
       "q": "Claude fonctionne-t-il avec l'e-mail cPanel ?",
-      "a": "Pas directement. Claude n'a pas de connecteur intégré pour les serveurs de messagerie cPanel. Connecter un serveur MCP comme mcpemails à la boîte via IMAP donne à Claude un accès en lecture, recherche, envoi, réponse, planification et organisation, avec les mêmes identifiants qu'un client de messagerie de bureau, et la même connexion fonctionne aussi depuis Cursor et ChatGPT."
+      "a": "Pas directement. Claude n'a pas de connecteur intégré pour les serveurs de messagerie cPanel. Connecter un serveur MCP comme MCP Emails à la boîte via IMAP donne à Claude un accès en lecture, recherche, envoi, réponse, planification et organisation, avec les mêmes identifiants qu'un client de messagerie de bureau, et la même connexion fonctionne aussi depuis Cursor et ChatGPT."
     },
     {
       "q": "Quels sont les réglages IMAP et SMTP de cPanel ?",
@@ -102,6 +102,6 @@
   ],
   "ctaBand": {
     "title": "Toutes vos boîtes cPanel sur un seul agent",
-    "sub": "Connectez votre première boîte cPanel gratuitement, sans carte bancaire. Personal en connecte trois, Pro toutes celles que vous gérez."
+    "sub": "Connectez votre première boîte cPanel gratuitement, sans carte bancaire. Personal en connecte trois, Pro jusqu'à 10 et Business autant qu'il vous en faut."
   }
 }

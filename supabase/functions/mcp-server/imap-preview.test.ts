@@ -107,15 +107,66 @@ Deno.test("preview (imap): an HTML-only message with a large <style> block previ
   assertClean(preview, "closed style");
 });
 
-Deno.test("preview (imap): a <style> block longer than the fetched prefix previews as nothing, never as CSS", async () => {
+Deno.test("preview (imap): a <style> block longer than the fetched prefix previews as the text after it", async () => {
+  // Until 2026-10-19 this was "": the 2 KB prefix is CSS end to end, and the
+  // listing did not look further. Every HTML-only newsletter showed a blank row.
   const rule = ".wrapper{margin:0;padding:0;} .x{color:#333;font-family:Arial,sans-serif;} ";
-  const preview = await previewOf(
+  const html = `<html><head><style>${rule.repeat(60)}</style></head><body><p>Visible, but past the first 2 KB.</p></body></html>`;
+  assert(html.indexOf("Visible") > 4096, "the text starts past 4 KB");
+  const preview = await previewOf(["Content-Type: text/html; charset=utf-8"], html);
+  assertEquals(preview, "Visible, but past the first 2 KB.");
+  assertClean(preview, "long style");
+});
+
+Deno.test("preview (imap): only rows whose prefix held no text get the second FETCH, all in one command", async () => {
+  const style = `<style>${".wrapper{margin:0;padding:0;} .x{color:#333;font-family:Arial,sans-serif;} ".repeat(80)}</style>`;
+  const partials: Array<[number, number, number]> = [];
+  const server = new FakeImapServer({
+    mailboxes: [{
+      name: "INBOX",
+      messages: [
+        message(1, ["Content-Type: text/html; charset=utf-8"], `<html><head>${style}</head><body><p>First newsletter.</p></body></html>`),
+        fakeTextMessage(2, { subject: "Plain", body: "Hello from a plain message." }),
+        message(3, ["Content-Type: text/html; charset=utf-8"], `<html><head>${style}</head><body><p>Second &amp; last.</p></body></html>`),
+        // A style block past even the widened window: no text, and never CSS.
+        message(4, ["Content-Type: text/html; charset=utf-8"], `<html><head><style>${"td{padding:0}".repeat(4000)}</style></head><body>Too far.</body></html>`),
+      ],
+    }],
+    onPartialFetch: (uid, offset, length) => partials.push([uid, offset, length]),
+  });
+  const client = server.client();
+  await client.selectMailbox("INBOX");
+  const summaries = await client.fetchSummaries([1, 2, 3, 4]);
+  const byUid = new Map(summaries.map((s) => [s.uid, s.preview]));
+  assertEquals(byUid.get(1), "First newsletter.");
+  assertEquals(byUid.get(2), "Hello from a plain message.");
+  assertEquals(byUid.get(3), "Second & last.");
+  assertEquals(byUid.get(4), "");
+  assertEquals(server.commands, [
+    "SELECT \"INBOX\"",
+    "UID FETCH 1,2,3,4 (UID FLAGS ENVELOPE BODYSTRUCTURE BODY.PEEK[1]<0.2048>)",
+    "UID FETCH 1,3,4 (UID BODY.PEEK[1]<2048.30720>)",
+  ]);
+  // Bounded: nothing past 32 KB of any part is ever asked for.
+  for (const [, offset, length] of partials) assert(offset + length <= 32 * 1024);
+});
+
+Deno.test("preview (imap): CSS with no <style> tag around it is never the preview", async () => {
+  // A list manager stripped the tag and left the stylesheet as text.
+  const css = "body{margin:0;padding:0} @media only screen and (max-width:600px){.col{width:100% !important}} " +
+    "/* layout */ .wrapper td , a:hover{color:#1a73e8;text-decoration:none;} ";
+  const short = await previewOf(
     ["Content-Type: text/html; charset=utf-8"],
-    `<html><head><style>${rule.repeat(60)}</style></head><body><p>Visible, but past the first 2 KB.</p></body></html>`,
+    `<html>${css}<body><p>Your invoice is ready.</p></body></html>`,
   );
-  // Honest emptiness: the text is beyond what the listing fetches, and the
-  // listing does not fetch more to find it.
-  assertEquals(preview, "");
+  assertEquals(short, "Your invoice is ready.");
+  // The same, long enough that the prefix ends inside a rule.
+  const long = await previewOf(
+    ["Content-Type: text/html; charset=utf-8"],
+    `<html>${css.repeat(40)}<body><p>Your invoice is ready.</p></body></html>`,
+  );
+  assertEquals(long, "Your invoice is ready.");
+  assertClean(long, "leaked css");
 });
 
 Deno.test("preview (imap): script, comments and a tag or entity cut by the fetch never leak", async () => {

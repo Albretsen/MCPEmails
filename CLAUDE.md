@@ -11,7 +11,7 @@ This repo is public. Never commit customer email addresses, customer or company 
 - `apps/web`: Next.js 16 site, dashboard and API routes (mcpemails.com), deployed by Vercel.
 - `apps/client`: Vite + React web mail client (app.mcpemails.com).
 - `apps/mcp-app`: the in-chat draft card. Its build is generated into `supabase/functions/mcp-server/ui/review-card.html.ts`.
-- `supabase/functions`: Deno edge functions. `mcp-server` is the product; also `client-api`, `system-notify`, `synthetic-monitor`, `gmail-token-refresh`, `outlook-token-refresh`.
+- `supabase/functions`: Deno edge functions. `mcp-server` is the product; also `client-api`, `system-notify`, `synthetic-monitor`, `outlook-token-refresh`.
 - `supabase/migrations`, `supabase/tests`: schema, RLS and pgTAP tests.
 - `self-host/`: Docker self-host stack. `self-host/db/00-schema.sql` must keep up with what mcp-server queries (a test enforces it).
 - `packages/mcpemails`: the npm package. `tools/video-studio`: video pipeline (read its `AGENTS.md`).
@@ -30,6 +30,18 @@ IMPORTANT: a push to `main` is a production deploy of the web app. Vercel promot
 - `functions deploy` uploads the working tree, not a commit. Deploy from a clean worktree at the pushed SHA, after checking `git rev-list --left-right --count HEAD...origin/main` is `0 0`.
 - After a web deploy, verify a route with `curl -sI <url> | grep -i x-matched-path`, not the status code: an unmatched route can still answer 200.
 - After any change in `apps/mcp-app/src`, run `cd apps/mcp-app && npm run build` and commit the regenerated `review-card.html.ts`, or CI fails.
+
+## Sessions and hand-off
+
+Asgeir runs many sessions at once and reads a twice-daily brief built by `scripts/state-snapshot.mjs`. These rules keep that brief accurate.
+
+- A session that starts more than 2 child sessions creates a sidebar group named after itself and moves its children into it.
+- WIP cap: at most 3 PR-producing sessions in flight, plus up to 2 read-only ones. Before starting another, count the open ones; if at the cap, propose instead of starting.
+- A large research fan-out ends in a ranked list for Asgeir to pick from. It does not auto-start the follow-up sessions.
+- Every session ends with one line per open or finished item, in its final message and in the relevant memory file:
+  - `OWED: <what> (due YYYY-MM-DD)` for anything still waiting on someone, including a read-out or a check in production.
+  - `DONE: <what> (PR #n)` for anything that shipped.
+- Use full dates (`2026-11-14`, not `11-14` or "next week") in those lines. The collector only picks up dated lines.
 
 ## Commands
 

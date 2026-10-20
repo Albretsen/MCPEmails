@@ -38,7 +38,7 @@ test('uses the display name, never the internal plan id', () => {
     amountTotalCents: 75600,
     currency: 'usd',
   });
-  assert.match(team.subject, /Your MCPEmails Team subscription is active/);
+  assert.match(team.subject, /Your MCPEmails Business subscription is active/);
   // "pro" appears legitimately inside "Everything in Pro"; the id must not
   // appear as the plan NAME anywhere.
   assert.ok(!/Your MCPEmails pro/i.test(team.subject));
@@ -109,7 +109,18 @@ test('names the concrete inbox entitlement, including the jump from Free', () =>
     amountTotalCents: 2900,
     currency: 'usd',
   });
-  assert.match(unlimited.body, /Unlimited connected inboxes, up from 1 on Free\./);
+  // Pro is ten for a new customer since 2026-10-19.
+  assert.match(unlimited.body, /10 connected inboxes, up from 1 on Free\./);
+
+  // Business is not "unlimited": it bills past ten, and the email must say so.
+  const business = buildPurchaseConfirmationEmail({
+    planId: 'pro',
+    interval: 'month',
+    amountTotalCents: 3900,
+    currency: 'usd',
+  });
+  assert.match(business.body, /10 connected inboxes included, up from 1 on Free\. Each extra mailbox is \$3 a month\./);
+  assert.ok(!/unlimited connected inboxes/i.test(business.body));
 });
 
 test('never leaks the silent monthly tool-call ceiling', () => {
@@ -170,6 +181,47 @@ test('formatAmount degrades gracefully rather than throwing', () => {
   // A malformed code makes Intl throw; composition must survive it.
   assert.equal(formatAmount(500, 'zz'), '5.00 ZZ');
   assert.equal(formatAmount(500, ''), '$5.00');
+});
+
+test('formatAmount reads Stripe minor units for zero- and three-decimal currencies', () => {
+  // Adaptive Pricing can hand us JPY or KRW: Stripe sends those as whole units.
+  assert.equal(formatAmount(1500, 'jpy'), '¥1,500');
+  assert.equal(formatAmount(1500, 'JPY'), '¥1,500');
+  assert.equal(formatAmount(13000, 'krw'), '₩13,000');
+  assert.match(formatAmount(5000, 'kwd'), /KWD\s5\.000/);
+  assert.equal(formatAmount(862, 'eur'), '€8.62');
+});
+
+test('a local-currency charge (Adaptive Pricing) is shown next to the USD price', () => {
+  const email = buildPurchaseConfirmationEmail({
+    planId: 'personal',
+    interval: 'month',
+    amountTotalCents: 900,
+    currency: 'usd',
+    presentment: { amountCents: 862, currency: 'eur' },
+  });
+  // The plan price stays the USD catalogue figure...
+  assert.match(email.body, /Price: \$9\.00 per month/);
+  // ...and the figure on the card statement is stated as well.
+  assert.match(email.body, /Charged today: €8\.62/);
+  assert.match(email.body, /You paid in EUR\. Each renewal is the USD price above/);
+  assert.match(email.htmlBody, /Charged today/);
+  assert.match(email.htmlBody, /€8\.62/);
+  assert.ok(!email.body.includes('—') && !email.htmlBody.includes('—'));
+});
+
+test('no local-currency row when the buyer paid in USD or Stripe sent nothing', () => {
+  for (const presentment of [undefined, null, { amountCents: 900, currency: 'usd' }, { amountCents: 900, currency: 'USD' }]) {
+    const email = buildPurchaseConfirmationEmail({
+      planId: 'personal',
+      interval: 'month',
+      amountTotalCents: 900,
+      currency: 'usd',
+      presentment,
+    });
+    assert.ok(!email.body.includes('Charged today'), JSON.stringify(presentment));
+    assert.ok(!email.htmlBody.includes('Charged today'), JSON.stringify(presentment));
+  }
 });
 
 // ---------------------------------------------------------------------------
@@ -314,4 +366,16 @@ test('no API key and no usable recipient both skip silently, without sending', a
 
   if (savedKey === undefined) delete process.env.RESEND_API_KEY;
   else process.env.RESEND_API_KEY = savedKey;
+});
+
+test('carries the withdrawal information the contract confirmation owes a consumer', () => {
+  const email = buildPurchaseConfirmationEmail({
+    planId: 'personal',
+    interval: 'month',
+    amountTotalCents: 500,
+    currency: 'usd',
+  });
+  assert.match(email.body, /withdraw from this contract within 14 days/);
+  assert.match(email.body, /\/withdrawal\b/);
+  assert.match(email.htmlBody, /href="[^"]*\/withdrawal"/);
 });

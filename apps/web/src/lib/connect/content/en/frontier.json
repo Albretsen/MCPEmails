@@ -18,8 +18,8 @@
     "eyebrow": "Frontier Mail + AI",
     "titleLine1": "Connect a Frontier inbox",
     "titleLine2": "to Claude, Cursor, any MCP client",
-    "lead": "Frontier stopped running its own mail and handed the service to Yahoo. The frontier.com address still works over IMAP, and mcpemails connects it so your AI agent can read, search, send, reply and file that mail.",
-    "answer": "Claude cannot reach a Frontier mailbox on its own. mcpemails is a hosted MCP server that connects it over IMAP at imap.frontier.com on port 993, which still answers even though Frontier's email service and support have been handled by Yahoo since 20 March 2024. Because the account behind the address is a Yahoo account, the credential is a Yahoo app password generated from the account security page rather than the password you use in webmail. Once it is connected, Claude, Cursor or any other MCP client can read, search, send and organise that mail, and one inbox is free, forever.",
+    "lead": "Frontier stopped running its own mail and handed the service to Yahoo. The frontier.com address still works over IMAP, and MCP Emails connects it so your AI agent can read, search, send, reply and file that mail.",
+    "answer": "Claude cannot reach a Frontier mailbox on its own. MCP Emails is a hosted MCP server that connects it over IMAP at imap.frontier.com on port 993, which still answers even though Frontier's email service and support have been handled by Yahoo since 20 March 2024. Because the account behind the address is a Yahoo account, the credential is a Yahoo app password generated from the account security page rather than the password you use in webmail. Once it is connected, Claude, Cursor or any other MCP client can read, search, send and organise that mail, and one inbox is free, forever.",
     "meta0": "1 inbox free, forever",
     "meta1": "Yahoo app password, not webmail password",
     "meta2": "Email fetched live, never stored"
@@ -30,7 +30,7 @@
   },
   "setup": [
     {
-      "h": "Create a free mcpemails account",
+      "h": "Create a free MCP Emails account",
       "p": "Sign up at mcpemails.com. The free plan connects one inbox and does not ask for a card."
     },
     {
@@ -39,7 +39,7 @@
     },
     {
       "h": "Create an app password under External connections",
-      "p": "On the Yahoo account security page, find <b>External connections</b> and choose <b>Create app password</b>. Name it <code>mcpemails</code>, copy the code that appears, and paste it into mcpemails together with your full frontier.com address. The Frontier hosts above are prefilled."
+      "p": "On the Yahoo account security page, find <b>External connections</b> and choose <b>Create app password</b>. Name it <code>mcpemails</code>, copy the code that appears, and paste it into MCP Emails together with your full frontier.com address. The Frontier hosts above are prefilled."
     },
     {
       "h": "Paste the MCP URL into your AI",
@@ -53,7 +53,7 @@
     },
     {
       "h": "The Frontier proxy is thinner than the Yahoo host other partners get",
-      "p": "AT&T, Cox and Rogers present Yahoo's own IMAP server, which advertises MOVE, SPECIAL-USE, IDLE and UIDPLUS. The Frontier proxy advertises SASL-IR, UIDPLUS and little else: no MOVE, no IDLE, no SPECIAL-USE. In practice that means filing a message runs as COPY, then STORE the deleted flag, then EXPUNGE instead of one command, folder roles like Sent and Trash are matched by name rather than announced by the server, and there is no idle push, so new mail is noticed by polling. mcpemails handles all of that, but it is why Frontier feels slower to react than other Yahoo-backed accounts."
+      "p": "AT&T, Cox and Rogers present Yahoo's own IMAP server, which advertises MOVE, SPECIAL-USE, IDLE and UIDPLUS. The Frontier proxy advertises SASL-IR, UIDPLUS and little else: no MOVE, no IDLE, no SPECIAL-USE. In practice that means filing a message runs as COPY, then STORE the deleted flag, then EXPUNGE instead of one command, folder roles like Sent and Trash are matched by name rather than announced by the server, and there is no idle push, so new mail is noticed by polling. MCP Emails handles all of that, but it is why Frontier feels slower to react than other Yahoo-backed accounts."
     },
     {
       "h": "Yahoo decides whether you may create an app password at all",
@@ -72,7 +72,7 @@
   "faq": [
     {
       "q": "Does Claude work with Frontier email?",
-      "a": "Not directly. Claude has no built-in Frontier connector, and Frontier does not run the mail service any more. Connecting an MCP server such as mcpemails to the mailbox over IMAP gives Claude read, search, send, reply, schedule and organise access to your frontier.com mail, and the same connection works in Cursor, ChatGPT and other MCP clients."
+      "a": "Not directly. Claude has no built-in Frontier connector, and Frontier does not run the mail service any more. Connecting an MCP server such as MCP Emails to the mailbox over IMAP gives Claude read, search, send, reply, schedule and organise access to your frontier.com mail, and the same connection works in Cursor, ChatGPT and other MCP clients."
     },
     {
       "q": "What are the Frontier IMAP settings?",

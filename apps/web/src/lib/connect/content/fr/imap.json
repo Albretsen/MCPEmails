@@ -26,7 +26,7 @@
     "meta0": "1 boîte gratuite, pour toujours",
     "meta1": "Tout serveur IMAP, sans configuration OAuth",
     "meta2": "E-mails récupérés en direct, jamais stockés",
-    "answer": "Claude n'a pas de client IMAP à lui. mcpemails est un serveur MCP hébergé qui se connecte à votre serveur mail en IMAP et SMTP avec l'adresse, le serveur et le mot de passe que votre fournisseur vous a déjà donnés, pour que Claude, Cursor ou tout client MCP puisse lire, rechercher, envoyer et organiser ce courrier. Tout serveur qui parle IMAP fonctionne, les adresses génériques d'une entreprise se connectent de la même façon qu'une adresse personnelle, et une boîte est gratuite."
+    "answer": "Claude n'a pas de client IMAP à lui. MCP Emails est un serveur MCP hébergé qui se connecte à votre serveur mail en IMAP et SMTP avec l'adresse, le serveur et le mot de passe que votre fournisseur vous a déjà donnés, pour que Claude, Cursor ou tout client MCP puisse lire, rechercher, envoyer et organiser ce courrier. Tout serveur qui parle IMAP fonctionne, les adresses génériques d'une entreprise se connectent de la même façon qu'une adresse personnelle, et une boîte est gratuite."
   },
   "persona": {
     "intro": "Vous gérez plusieurs boîtes d'entreprise ?",
@@ -35,19 +35,19 @@
   },
   "method": {
     "title": "Comment une boîte IMAP générique se connecte",
-    "body": "Il vous faut quatre choses : votre adresse, votre serveur mail, votre mot de passe et, si votre fournisseur l'exige, un mot de passe d'application. Saisissez d'abord votre adresse : mcpemails reconnaît les hébergeurs courants et remplit pour vous les deux serveurs, les deux ports et les modes de sécurité. Si le transport qu'il essaie ne répond pas, il essaie de lui-même l'autre transport standard, <b>993 ou 143</b> pour IMAP et <b>465 ou 587</b> pour SMTP : personne n'a à deviner s'il faut STARTTLS."
+    "body": "Il vous faut quatre choses : votre adresse, votre serveur mail, votre mot de passe et, si votre fournisseur l'exige, un mot de passe d'application. Saisissez d'abord votre adresse : MCP Emails reconnaît les hébergeurs courants et remplit pour vous les deux serveurs, les deux ports et les modes de sécurité. Si le transport qu'il essaie ne répond pas, il essaie de lui-même l'autre transport standard, <b>993 ou 143</b> pour IMAP et <b>465 ou 587</b> pour SMTP : personne n'a à deviner s'il faut STARTTLS."
   },
   "setup": [
     {
       "h": "Créez un compte gratuit",
-      "p": "Inscrivez-vous sur mcpemails, sans carte bancaire. L'offre gratuite connecte une boîte, pour toujours. Les offres payantes ajoutent le reste : trois boîtes avec Personal, toutes les boîtes de l'entreprise avec Pro."
+      "p": "Inscrivez-vous sur MCP Emails, sans carte bancaire. L'offre gratuite connecte une boîte, pour toujours. Les offres payantes ajoutent le reste : trois boîtes avec Personal, jusqu'à 10 avec Pro, et autant qu'il vous en faut avec Business."
     },
     {
       "h": "Rassemblez vos réglages IMAP et SMTP",
       "p": "Votre fournisseur les publie, le plus souvent sous la forme imap.yourdomain.com et smtp.yourdomain.com sur les ports 993 et 465. Si votre fournisseur exige un mot de passe d'application pour les clients mail, générez-en un maintenant."
     },
     {
-      "h": "Collez-les dans mcpemails",
+      "h": "Collez-les dans MCP Emails",
       "p": "Choisissez IMAP / SMTP, ajoutez votre adresse, les deux serveurs et le mot de passe. Les ports et les modes de sécurité se trouvent sous Advanced, préremplis avec les valeurs standard."
     },
     {
@@ -66,11 +66,11 @@
     },
     {
       "h": "993 ou 143, 465 ou 587, et ce qu'un fournisseur entend par « SSL » ou « TLS »",
-      "p": "La RFC 8314 demande aux fournisseurs de privilégier le TLS implicite, c'est-à-dire une connexion chiffrée dès le premier octet : port <code>993</code> pour IMAP et <code>465</code> pour la soumission. Les configurations plus anciennes utilisent <code>143</code> et <code>587</code>, qui démarrent en clair puis passent en chiffré avec STARTTLS. Les fournisseurs les étiquettent de façon incohérente, et ces étiquettes sont la principale source de confusion : « SSL/TLS » dans un tableau de réglages désigne presque toujours le TLS implicite sur le 993 ou le 465, tandis que « TLS » ou « STARTTLS » désigne presque toujours le 143 ou le 587. Vous n'avez pas à le déterminer vous-même. Saisissez votre adresse et mcpemails remplit les deux serveurs, les deux ports et les deux modes de sécurité pour les hébergeurs qu'il reconnaît, et si le transport qu'il essaie ne répond pas, il réessaie de lui-même avec l'autre transport standard."
+      "p": "La RFC 8314 demande aux fournisseurs de privilégier le TLS implicite, c'est-à-dire une connexion chiffrée dès le premier octet : port <code>993</code> pour IMAP et <code>465</code> pour la soumission. Les configurations plus anciennes utilisent <code>143</code> et <code>587</code>, qui démarrent en clair puis passent en chiffré avec STARTTLS. Les fournisseurs les étiquettent de façon incohérente, et ces étiquettes sont la principale source de confusion : « SSL/TLS » dans un tableau de réglages désigne presque toujours le TLS implicite sur le 993 ou le 465, tandis que « TLS » ou « STARTTLS » désigne presque toujours le 143 ou le 587. Vous n'avez pas à le déterminer vous-même. Saisissez votre adresse et MCP Emails remplit les deux serveurs, les deux ports et les deux modes de sécurité pour les hébergeurs qu'il reconnaît, et si le transport qu'il essaie ne répond pas, il réessaie de lui-même avec l'autre transport standard."
     },
     {
       "h": "Trois capacités du serveur déterminent le comportement de votre boîte, et aucun serveur ne ressemble à un autre",
-      "p": "<b>SASL-IR</b> (RFC 4959) : un serveur qui ne l'annonce pas rejette les identifiants envoyés sur la même ligne que la commande <code>AUTHENTICATE</code> et répond par un simple <code>BAD</code> sans explication, qui ressemble exactement à un mauvais mot de passe. mcpemails le détecte et relance l'échange en deux étapes, ce qui explique pourquoi certains hébergeurs fonctionnent ici et échouent avec d'autres outils. <b>MOVE</b> (RFC 6851) : sans lui, un message ne peut pas être déplacé de façon atomique ; un déplacement devient une copie, une mise à jour des indicateurs et une purge, et une connexion coupée au milieu peut laisser le message dans les deux dossiers. <b>SPECIAL-USE</b> (RFC 6154) : sans lui, le serveur n'étiquette pas Envoyés, Brouillons, Corbeille et Indésirables selon leur rôle ; les dossiers sont donc reconnus par leur nom, et une boîte créée en allemand, en norvégien ou en russe a des dossiers système sous des noms que votre agent ne reconnaîtra pas tant que vous ne les nommez pas. Quand une opération sur un dossier se comporte bizarrement, l'une de ces trois capacités en est généralement la cause."
+      "p": "<b>SASL-IR</b> (RFC 4959) : un serveur qui ne l'annonce pas rejette les identifiants envoyés sur la même ligne que la commande <code>AUTHENTICATE</code> et répond par un simple <code>BAD</code> sans explication, qui ressemble exactement à un mauvais mot de passe. MCP Emails le détecte et relance l'échange en deux étapes, ce qui explique pourquoi certains hébergeurs fonctionnent ici et échouent avec d'autres outils. <b>MOVE</b> (RFC 6851) : sans lui, un message ne peut pas être déplacé de façon atomique ; un déplacement devient une copie, une mise à jour des indicateurs et une purge, et une connexion coupée au milieu peut laisser le message dans les deux dossiers. <b>SPECIAL-USE</b> (RFC 6154) : sans lui, le serveur n'étiquette pas Envoyés, Brouillons, Corbeille et Indésirables selon leur rôle ; les dossiers sont donc reconnus par leur nom, et une boîte créée en allemand, en norvégien ou en russe a des dossiers système sous des noms que votre agent ne reconnaîtra pas tant que vous ne les nommez pas. Quand une opération sur un dossier se comporte bizarrement, l'une de ces trois capacités en est généralement la cause."
     }
   ],
   "limits": [
@@ -81,7 +81,7 @@
   "faq": [
     {
       "q": "Claude fonctionne-t-il avec n'importe quelle boîte IMAP ?",
-      "a": "Claude n'a pas de client IMAP à lui, donc pas directement. Dirigez un serveur MCP comme mcpemails vers la boîte avec votre adresse, votre serveur et votre mot de passe, et Claude peut lire, rechercher, envoyer, répondre, planifier et organiser ce courrier. Tout serveur qui parle IMAP et SMTP sur les ports standard fonctionne, quel que soit son hébergeur, et la même connexion fonctionne ensuite aussi depuis Cursor et ChatGPT."
+      "a": "Claude n'a pas de client IMAP à lui, donc pas directement. Dirigez un serveur MCP comme MCP Emails vers la boîte avec votre adresse, votre serveur et votre mot de passe, et Claude peut lire, rechercher, envoyer, répondre, planifier et organiser ce courrier. Tout serveur qui parle IMAP et SMTP sur les ports standard fonctionne, quel que soit son hébergeur, et la même connexion fonctionne ensuite aussi depuis Cursor et ChatGPT."
     },
     {
       "q": "Comment trouver les réglages de mon serveur IMAP ?",
@@ -89,7 +89,7 @@
     },
     {
       "q": "Dois-je utiliser le port 993 ou le 143 ?",
-      "a": "Utilisez le 993, sauf indication contraire de votre fournisseur. Le port 993 est en TLS implicite, chiffré dès le premier octet, et c'est ce que recommandent les normes actuelles. Le port 143 démarre sans chiffrement puis passe en chiffré avec STARTTLS, ce qui fonctionne toujours mais relève de l'ancienne méthode. Pour l'envoi, la même distinction oppose le 465 en TLS implicite au 587 en STARTTLS. mcpemails essaie la paire standard et se rabat de lui-même sur l'autre."
+      "a": "Utilisez le 993, sauf indication contraire de votre fournisseur. Le port 993 est en TLS implicite, chiffré dès le premier octet, et c'est ce que recommandent les normes actuelles. Le port 143 démarre sans chiffrement puis passe en chiffré avec STARTTLS, ce qui fonctionne toujours mais relève de l'ancienne méthode. Pour l'envoi, la même distinction oppose le 465 en TLS implicite au 587 en STARTTLS. MCP Emails essaie la paire standard et se rabat de lui-même sur l'autre."
     },
     {
       "q": "Pourquoi mon client mail se connecte-t-il alors que cette connexion échoue ?",

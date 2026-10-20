@@ -79,6 +79,18 @@ const COPY = {
     kinds: { added: '新增', improved: '改进', fixed: '修复', changed: '调整' },
     footnote: '有遗漏或发现问题？请联系',
   },
+  de: {
+    meta: {
+      title: 'Changelog',
+      description:
+        'Alles, was in MCP Emails veröffentlicht wurde, das Neueste zuerst: neue Funktionen, Korrekturen für einzelne Anbieter sowie Änderungen an Preisen und Abrechnung, jeweils mit dem Datum, an dem sie live gingen.',
+    },
+    eyebrow: 'Changelog',
+    title: 'Was neu ist',
+    lead: 'Jede für Nutzer sichtbare Änderung, das Neueste zuerst, datiert auf den Tag, an dem sie live ging. Interne Arbeit ist nicht aufgeführt.',
+    kinds: { added: 'Neu', improved: 'Verbessert', fixed: 'Behoben', changed: 'Geändert' },
+    footnote: 'Fehlt etwas oder funktioniert etwas nicht? Schreiben Sie an',
+  },
 };
 
 /** Chrome copy for a locale, falling back to English for anything unknown. */

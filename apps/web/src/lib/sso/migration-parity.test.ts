@@ -11,10 +11,14 @@ import { SSO_VERIFICATION_TXT_PREFIX } from './domains.ts';
 // two drift, the form accepts a domain the database refuses (or the reverse).
 
 const here = path.dirname(fileURLToPath(import.meta.url));
-const migration = readFileSync(
-  path.resolve(here, '../../../../../supabase/migrations/20261019140000_sso_connections.sql'),
-  'utf8',
-);
+// The data model is split in two files (2026-10-20): the additive half, and
+// the half that changes existing signup objects. Checked together.
+const migration = [
+  '20261019140000_sso_connections.sql',
+  '20261019140500_sso_user_signup_triggers.sql',
+]
+  .map((file) => readFileSync(path.resolve(here, '../../../../../supabase/migrations', file), 'utf8'))
+  .join('\n');
 
 const consumerFunction = migration.slice(
   migration.indexOf('CREATE OR REPLACE FUNCTION public.sso_is_consumer_domain'),

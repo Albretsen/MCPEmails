@@ -103,8 +103,8 @@
       "keywords": "sin herramientas nada vacío conector no funciona claude chatgpt cursor modo desarrollador permisos inbox_list",
       "steps": [
         "Abre Bandejas de entrada en el panel y comprueba que el buzón aparece sin errores. Si muestra uno, vuelve a conectarlo.",
-        "Empieza un chat nuevo después de añadir el conector. En ChatGPT, elige además Modo desarrollador y la app de mcpemails en el menú + de cada chat nuevo.",
-        "Autoriza el conector con la misma cuenta de mcpemails que tiene el buzón.",
+        "Empieza un chat nuevo después de añadir el conector. En ChatGPT, elige además Modo desarrollador y la app de MCP Emails en el menú + de cada chat nuevo.",
+        "Autoriza el conector con la misma cuenta de MCP Emails que tiene el buzón.",
         "Tu asistente solo ve las herramientas para las que tiene permiso el conector o la clave de API. Si dejaste un permiso sin marcar, quita el conector y vuelve a añadirlo.",
         "Pide al asistente que liste primero tus bandejas. El correo se obtiene cuando el asistente lo pide, así que nada llega por sí solo."
       ],

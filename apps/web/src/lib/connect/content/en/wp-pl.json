@@ -19,8 +19,8 @@
     "eyebrow": "WP.pl Poczta + AI",
     "titleLine1": "Connect your WP.pl mailbox",
     "titleLine2": "to Claude, Cursor, any MCP client",
-    "lead": "WP Poczta speaks IMAP once you turn it on. mcpemails connects the mailbox so your AI agent can read, search, send, reply and file mail from every MCP client rather than one app.",
-    "answer": "Claude cannot reach a WP.pl mailbox on its own. mcpemails is a hosted MCP server that connects it over IMAP at imap.wp.pl on port 993, signing in with your full address. Two things decide whether the login works: IMAP has to be enabled in the webmail under Opcje, on the IMAP/POP tab, and if you use two-step login then your ordinary password is refused and you have to create a mail program password instead. With those settled, Claude, Cursor or any other MCP client can read, search, send and organise that mail, and one inbox is free, forever.",
+    "lead": "WP Poczta speaks IMAP once you turn it on. MCP Emails connects the mailbox so your AI agent can read, search, send, reply and file mail from every MCP client rather than one app.",
+    "answer": "Claude cannot reach a WP.pl mailbox on its own. MCP Emails is a hosted MCP server that connects it over IMAP at imap.wp.pl on port 993, signing in with your full address. Two things decide whether the login works: IMAP has to be enabled in the webmail under Opcje, on the IMAP/POP tab, and if you use two-step login then your ordinary password is refused and you have to create a mail program password instead. With those settled, Claude, Cursor or any other MCP client can read, search, send and organise that mail, and one inbox is free, forever.",
     "meta0": "1 inbox free, forever",
     "meta1": "Enable IMAP in Opcje first",
     "meta2": "Email fetched live, never stored"
@@ -31,7 +31,7 @@
   },
   "setup": [
     {
-      "h": "Create a free mcpemails account",
+      "h": "Create a free MCP Emails account",
       "p": "Sign up at mcpemails.com. The free plan connects one inbox and does not ask for a card."
     },
     {
@@ -44,7 +44,7 @@
     },
     {
       "h": "Paste the MCP URL into your AI",
-      "p": "Enter the address and password in mcpemails under IMAP / SMTP, with the WP hosts prefilled, then drop https://mcpemails.com/api/mcp into Claude, Cursor or ChatGPT and authorise."
+      "p": "Enter the address and password in MCP Emails under IMAP / SMTP, with the WP hosts prefilled, then drop https://mcpemails.com/api/mcp into Claude, Cursor or ChatGPT and authorise."
     }
   ],
   "gotchas": [
@@ -58,7 +58,7 @@
     },
     {
       "h": "AUTH=PLAIN only, and no SASL-IR",
-      "p": "<code>imap.wp.pl</code> advertises <code>AUTH=PLAIN</code> and does not advertise SASL-IR, so it rejects the one-step authentication that sends credentials with the AUTHENTICATE command, and it offers nothing to clients hard-wired to the LOGIN mechanism. Both failures come back as a bare refusal that looks like bad credentials. mcpemails retries the two-step exchange, which is why a WP mailbox connects here after failing in other IMAP tooling."
+      "p": "<code>imap.wp.pl</code> advertises <code>AUTH=PLAIN</code> and does not advertise SASL-IR, so it rejects the one-step authentication that sends credentials with the AUTHENTICATE command, and it offers nothing to clients hard-wired to the LOGIN mechanism. Both failures come back as a bare refusal that looks like bad credentials. MCP Emails retries the two-step exchange, which is why a WP mailbox connects here after failing in other IMAP tooling."
     },
     {
       "h": "MOVE and UIDPLUS are there, but SPECIAL-USE is not",
@@ -72,7 +72,7 @@
   "faq": [
     {
       "q": "Does Claude work with WP.pl email?",
-      "a": "Not directly. Claude has no built-in WP connector. Connecting an MCP server such as mcpemails to the mailbox over IMAP gives Claude read, search, send, reply, schedule and organise access to your wp.pl mail, and the same connection works in Cursor, ChatGPT and other MCP clients. IMAP has to be enabled on the mailbox first."
+      "a": "Not directly. Claude has no built-in WP connector. Connecting an MCP server such as MCP Emails to the mailbox over IMAP gives Claude read, search, send, reply, schedule and organise access to your wp.pl mail, and the same connection works in Cursor, ChatGPT and other MCP clients. IMAP has to be enabled on the mailbox first."
     },
     {
       "q": "What are the WP.pl IMAP and SMTP settings?",

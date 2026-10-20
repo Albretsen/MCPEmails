@@ -19,7 +19,7 @@
     "titleLine1": "Koble o2.pl-postkassen din",
     "titleLine2": "til Claude, Cursor, enhver MCP-klient",
     "lead": "Gi AI-agenten din en ekte o2.pl-innboks. Les, søk, send, svar, planlegg og organiser e-post via IMAP, når IMAP er slått på i postkassealternativene.",
-    "answer": "Claude når ikke en o2.pl-postkasse på egen hånd. mcpemails er en hostet MCP-server som kobler til via IMAP på poczta.o2.pl port 993, slik at Claude, Cursor eller enhver MCP-klient kan lese, søke, sende og organisere e-posten. o2.pl leveres med tilgang for e-postprogrammer stengt: du åpner den i webmailen under Opcje, på fanen IMAP/POP. Hvis kontoen har totrinnsinnlogging på, autentiserer du med et hasło do programu pocztowego opprettet for formålet i stedet for nettleserpassordet. Én innboks er gratis, for alltid.",
+    "answer": "Claude når ikke en o2.pl-postkasse på egen hånd. MCP Emails er en hostet MCP-server som kobler til via IMAP på poczta.o2.pl port 993, slik at Claude, Cursor eller enhver MCP-klient kan lese, søke, sende og organisere e-posten. o2.pl leveres med tilgang for e-postprogrammer stengt: du åpner den i webmailen under Opcje, på fanen IMAP/POP. Hvis kontoen har totrinnsinnlogging på, autentiserer du med et hasło do programu pocztowego opprettet for formålet i stedet for nettleserpassordet. Én innboks er gratis, for alltid.",
     "meta0": "1 innboks gratis, for alltid",
     "meta1": "Slå på IMAP under Opcje først",
     "meta2": "E-post hentes direkte, lagres aldri"
@@ -30,7 +30,7 @@
   },
   "setup": [
     {
-      "h": "Opprett din gratis mcpemails-konto",
+      "h": "Opprett din gratis MCP Emails-konto",
       "p": "Registrer deg på mcpemails.com. Gratisplanen kobler til én innboks for alltid og ber ikke om kort."
     },
     {
@@ -39,10 +39,10 @@
     },
     {
       "h": "Hvis totrinnsinnlogging er på, opprett et e-postprogrampassord",
-      "p": "o2 dokumenterer at du med tofaktorautentisering på ikke skal bruke passordet du skriver i nettleseren. I stedet oppretter du et <b>hasło do programu pocztowego</b>, et eget passord for hver ekstern klient som bruker IMAP eller POP3. Det er verdien mcpemails trenger. Er totrinnsinnlogging av, fungerer det vanlige kontopassordet som det er."
+      "p": "o2 dokumenterer at du med tofaktorautentisering på ikke skal bruke passordet du skriver i nettleseren. I stedet oppretter du et <b>hasło do programu pocztowego</b>, et eget passord for hver ekstern klient som bruker IMAP eller POP3. Det er verdien MCP Emails trenger. Er totrinnsinnlogging av, fungerer det vanlige kontopassordet som det er."
     },
     {
-      "h": "Lim det inn i mcpemails, og lim så MCP-URL-en inn i AI-en",
+      "h": "Lim det inn i MCP Emails, og lim så MCP-URL-en inn i AI-en",
       "p": "Velg IMAP / SMTP, skriv inn hele adressen, for eksempel nazwa@o2.pl, og lim inn passordet. Verter og porter er forhåndsutfylt og ble verifisert via en direkte TLS-tilkobling. Lim så https://mcpemails.com/api/mcp inn i Claude, Cursor eller ChatGPT, autoriser, så har agenten innboksen."
     }
   ],
@@ -57,7 +57,7 @@
     },
     {
       "h": "Ingen SASL-IR, så en klient som antar det, får en uforklart BAD",
-      "p": "o2s IMAP-banner er minimalt (<code>* OK IMAP4 ready</code>) og annonserer <code>AUTH=PLAIN</code> uten <code>SASL-IR</code>. Klienter som sender påloggingen i ett steg sammen med <code>AUTHENTICATE</code>, avvises med en naken <code>BAD</code> som ser ut som feil påloggingsdetaljer. mcpemails faller automatisk tilbake til utvekslingen i to steg. Det er verdt å vite, fordi det er grunnen til at generelle IMAP-verktøy noen ganger melder at o2.pl ikke kan nås når kontoen er helt i orden."
+      "p": "o2s IMAP-banner er minimalt (<code>* OK IMAP4 ready</code>) og annonserer <code>AUTH=PLAIN</code> uten <code>SASL-IR</code>. Klienter som sender påloggingen i ett steg sammen med <code>AUTHENTICATE</code>, avvises med en naken <code>BAD</code> som ser ut som feil påloggingsdetaljer. MCP Emails faller automatisk tilbake til utvekslingen i to steg. Det er verdt å vite, fordi det er grunnen til at generelle IMAP-verktøy noen ganger melder at o2.pl ikke kan nås når kontoen er helt i orden."
     },
     {
       "h": "MOVE virker her, men mapper matches fortsatt etter navn",
@@ -71,7 +71,7 @@
   "faq": [
     {
       "q": "Fungerer Claude med o2.pl-e-post?",
-      "a": "Ikke på egen hånd. Claude har ingen innebygd o2.pl-kobling. Peker du en MCP-server som mcpemails mot postkassen via IMAP, får Claude tilgang til å lese, søke, sende, svare, planlegge og organisere, og samme tilkobling fungerer da fra Cursor, ChatGPT og andre MCP-klienter."
+      "a": "Ikke på egen hånd. Claude har ingen innebygd o2.pl-kobling. Peker du en MCP-server som MCP Emails mot postkassen via IMAP, får Claude tilgang til å lese, søke, sende, svare, planlegge og organisere, og samme tilkobling fungerer da fra Cursor, ChatGPT og andre MCP-klienter."
     },
     {
       "q": "Hva er IMAP- og SMTP-innstillingene for o2.pl?",

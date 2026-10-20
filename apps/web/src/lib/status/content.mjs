@@ -20,7 +20,7 @@
 
 import en from './content/en.json';
 
-const LOCALES = ['en', 'nb', 'es', 'fr', 'zh'];
+const LOCALES = ['en', 'nb', 'es', 'fr', 'zh', 'de'];
 
 export async function getStatusContent(locale) {
   if (locale === 'en' || !LOCALES.includes(locale)) return en;

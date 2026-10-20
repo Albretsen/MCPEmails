@@ -20,6 +20,6 @@
   </g>
   <text x="96" y="360" font-family="Inter, system-ui, sans-serif" font-size="68" font-weight="800" fill="#fff">Connect Gmail to Claude</text>
   <text x="96" y="442" font-family="Inter, system-ui, sans-serif" font-size="68" font-weight="800" fill="url(#accent)">in two minutes</text>
-  <text x="96" y="512" font-family="Inter, system-ui, sans-serif" font-size="28" font-weight="500" fill="#9fb3d1">One Google sign-in, one endpoint URL, over MCP</text>
+  <text x="96" y="512" font-family="Inter, system-ui, sans-serif" font-size="28" font-weight="500" fill="#9fb3d1">One app password, one endpoint URL, over MCP</text>
   <text x="96" y="566" font-family="Inter, system-ui, sans-serif" font-size="22" font-weight="600" fill="#22b8cf">mcpemails.com/blog</text>
 </svg>

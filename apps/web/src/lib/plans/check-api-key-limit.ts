@@ -61,6 +61,7 @@ export async function checkApiKeyLimit(
   const limits = resolvePlanLimits(plan, {
     compedScale: effectivePlan?.comped_scale ?? false,
     unlimitedInboxes: effectivePlan?.unlimited_inboxes ?? false,
+    proUnlimitedInboxes: effectivePlan?.pro_unlimited_inboxes ?? false,
   });
   const currentCount = keyCountResult.count ?? 0;
 

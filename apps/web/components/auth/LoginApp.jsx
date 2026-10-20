@@ -11,8 +11,11 @@ import {
   rememberConnectIntent,
   withConnectIntent,
 } from '@/lib/connect/intent-carry.mjs';
+import { isSsoRequiredError } from '@/lib/sso/enforcement';
+import { ssoUiEnabled } from '@/lib/sso/ui-flag.mjs';
 import { MIcon, MBtn } from '../MarketingPrimitives';
-import { ThemeBtn, Spinner, GoogleIcon, GitHubIcon, SocialButton, OrDivider } from './AuthShared';
+import { ThemeBtn, Spinner, GoogleIcon, GitHubIcon, MicrosoftIcon, SocialButton, OrDivider } from './AuthShared';
+import { microsoftSignInEnabled } from '@/lib/auth/microsoft-flag.mjs';
 
 export function LoginApp({ redirectTo = null, connectProvider = null, initialMode = 'password' }) {
   const t = useTranslations('auth');
@@ -23,7 +26,7 @@ export function LoginApp({ redirectTo = null, connectProvider = null, initialMod
   const [mode, setMode] = useState(initialMode === 'sso' ? 'sso' : 'password'); // 'password' | 'magic-link' | 'sso'
   const [step, setStep] = useState('form'); // 'form' | 'submitting' | 'error' | 'sending' | 'sent' | 'redirecting'
   const [serverError, setServerError] = useState('');
-  const [socialLoading, setSocialLoading] = useState(null); // null | 'google' | 'github'
+  const [socialLoading, setSocialLoading] = useState(null); // null | 'google' | 'microsoft' | 'github'
 
   // This page shows no marketing-consent checkbox, so an account it creates
   // (first OAuth login, magic link) must record none. Drop any tick the signup
@@ -69,6 +72,11 @@ export function LoginApp({ redirectTo = null, connectProvider = null, initialMod
       // set, exactly as before.
       url.searchParams.set('next', withConnectIntent('/dashboard', connectProvider));
     }
+    // A typed work address lets the route say "use SSO" up front when the
+    // company enforces it, instead of after the provider round trip. Only
+    // once SSO is released (NEXT_PUBLIC_SSO_ENABLED): until then the OAuth
+    // URL stays exactly as before and carries no address.
+    if (ssoUiEnabled() && !validateEmail(email)) url.searchParams.set('email', email.trim());
     return url.toString();
   }
 
@@ -88,6 +96,11 @@ export function LoginApp({ redirectTo = null, connectProvider = null, initialMod
   function handleGoogleSignIn() {
     setSocialLoading('google');
     window.location.href = buildOAuthUrl('google');
+  }
+
+  function handleMicrosoftSignIn() {
+    setSocialLoading('microsoft');
+    window.location.href = buildOAuthUrl('microsoft');
   }
 
   function handleGitHubSignIn() {
@@ -117,7 +130,11 @@ export function LoginApp({ redirectTo = null, connectProvider = null, initialMod
 
     if (error) {
       const isBanned = error.code === 'user_banned' || /banned/i.test(error.message ?? '');
-      setServerError(isBanned ? t('login.errorAccountClosed') : t('login.errorIncorrect'));
+      setServerError(
+        isSsoRequiredError(error) ? t('shared.ssoRequired')
+          : isBanned ? t('login.errorAccountClosed')
+          : t('login.errorIncorrect'),
+      );
       setStep('error');
     } else {
       window.location.href = getRedirectDestination();
@@ -139,7 +156,7 @@ export function LoginApp({ redirectTo = null, connectProvider = null, initialMod
     });
 
     if (error) {
-      setServerError(error.message ?? t('login.errorGeneric'));
+      setServerError(isSsoRequiredError(error) ? t('shared.ssoRequired') : (error.message ?? t('login.errorGeneric')));
       setStep('error');
     } else {
       setStep('sent');
@@ -217,6 +234,15 @@ export function LoginApp({ redirectTo = null, connectProvider = null, initialMod
         onClick={handleGoogleSignIn}
         disabled={anyBusy}
       />
+      {microsoftSignInEnabled() && (
+        <SocialButton
+          icon={<MicrosoftIcon />}
+          label={t('shared.signInWithMicrosoft')}
+          loading={socialLoading === 'microsoft'}
+          onClick={handleMicrosoftSignIn}
+          disabled={anyBusy}
+        />
+      )}
       <SocialButton
         icon={<GitHubIcon />}
         label={t('shared.continueWithGitHub')}
@@ -251,8 +277,8 @@ export function LoginApp({ redirectTo = null, connectProvider = null, initialMod
         </a>
 
         <div className="auth-brand">
-          <img className="logo-light" src="/logo-wordmark.svg" width="280" height="48" alt="mcpemails" />
-          <img className="logo-dark" src="/logo-wordmark-dark.svg" width="280" height="48" alt="mcpemails" />
+          <img className="logo-light" src="/logo-wordmark.svg" width="280" height="48" alt="MCP Emails" />
+          <img className="logo-dark" src="/logo-wordmark-dark.svg" width="280" height="48" alt="MCP Emails" />
         </div>
 
         {/* ── Full-page loading (password submit or magic link sending) ──── */}

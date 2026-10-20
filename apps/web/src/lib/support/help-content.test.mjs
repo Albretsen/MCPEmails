@@ -145,7 +145,7 @@ test('copy keeps the house facts: 14-day refund, no SOC 2, support address', () 
 });
 
 test('an unknown locale falls back to English', async () => {
-  assert.equal(await getHelpContent('de'), content.en);
+  assert.equal(await getHelpContent('it'), content.en);
 });
 
 test('helpHref prefixes marketing paths but never the dashboard', () => {

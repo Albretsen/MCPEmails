@@ -8,6 +8,7 @@
  */
 
 import type Stripe from 'stripe';
+import { isMailboxAddonPriceId } from '@/lib/stripe/plans';
 
 function idOf(value: unknown): string | null {
   if (typeof value === 'string') return value;
@@ -19,7 +20,7 @@ function idOf(value: unknown): string | null {
 }
 
 /**
- * The price id on the first line of an invoice, across API versions.
+ * The price id of the plan line of an invoice, across API versions.
  *
  * The live webhook endpoint is pinned to its own API version, which is not
  * necessarily the one src/lib/stripe/client.ts is pinned to, and the shape of a
@@ -31,8 +32,15 @@ function idOf(value: unknown): string | null {
  * wrong is naming the wrong plan in an email about money.
  */
 export function invoiceLinePriceId(invoice: Stripe.Invoice): string | null {
-  const line = invoice.lines?.data?.[0] as unknown as Record<string, unknown> | undefined;
-  if (!line) return null;
+  // A Business invoice can carry the per-mailbox add-on as a line of its own,
+  // and it is not a plan. Take the first line that is not the add-on, so the
+  // email names Business rather than nothing.
+  const lines = (invoice.lines?.data ?? []) as unknown as Record<string, unknown>[];
+  const ids = lines.map(lineId).filter((id): id is string => id !== null);
+  return ids.find((id) => !isMailboxAddonPriceId(id)) ?? ids[0] ?? null;
+}
+
+function lineId(line: Record<string, unknown>): string | null {
   const pricing = line.pricing as { price_details?: { price?: unknown } } | undefined;
   return idOf(pricing?.price_details?.price) ?? idOf(line.price) ?? idOf(line.plan) ?? null;
 }

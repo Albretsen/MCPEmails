@@ -40,14 +40,14 @@ export async function generateMetadata({ params }) {
     openGraph: {
       type: 'website',
       url: localePath(locale, '/docs/clients'),
-      title: `${title} · mcpemails`,
+      title: `${title} · MCP Emails`,
       description,
       locale: OG_LOCALE[locale],
       images: [OG_IMAGE],
     },
     twitter: {
       card: 'summary_large_image',
-      title: `${title} · mcpemails`,
+      title: `${title} · MCP Emails`,
       description,
       images: [OG_IMAGE.url],
     },
@@ -97,7 +97,7 @@ export default async function ClientHubPage({ params }) {
         '@type': 'BreadcrumbList',
         '@id': `${url}#breadcrumb`,
         itemListElement: [
-          { '@type': 'ListItem', position: 1, name: 'mcpemails', item: localePath(locale, '') },
+          { '@type': 'ListItem', position: 1, name: 'MCP Emails', item: localePath(locale, '') },
           { '@type': 'ListItem', position: 2, name: 'Docs', item: localePath(locale, '/docs') },
           { '@type': 'ListItem', position: 3, name: ui.breadcrumb },
         ],
@@ -168,7 +168,7 @@ export default async function ClientHubPage({ params }) {
           </div>
         </section>
 
-        <Footer />
+        <Footer locales={clientHubLocales()} />
       </div>
     </>
   );

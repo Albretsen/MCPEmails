@@ -53,6 +53,15 @@
   outline-offset: 2px;
   border-radius: 4px;
 }
+.phoneBell {
+  margin-left: auto;
+  flex: none;
+  /* The 44 px touch target, as the title beside it. */
+  min-width: 44px;
+  min-height: 44px;
+  margin-top: -6px;
+  margin-bottom: -6px;
+}
 .phoneChevron {
   position: absolute;
   right: 0;

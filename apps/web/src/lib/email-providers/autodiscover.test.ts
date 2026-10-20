@@ -157,6 +157,24 @@ test('Google Workspace and iCloud custom domains are found through mxSuffixes', 
   assert.equal(apple?.requiresAppPassword, true);
 });
 
+test('an IONOS custom domain gets the servers of the IONOS region its MX points at', () => {
+  // IONOS runs a US platform (.com names, IONOS Inc.) and a European one (.de,
+  // .co.uk, ... names, IONOS SE). A German domain used to be prefilled with
+  // imap.ionos.com, which is the US host. Checked live: mx00.ionos.de and
+  // mx00.ionos.com resolve to different networks.
+  const de = presetFromMxRecords([
+    { exchange: 'mx01.ionos.de', priority: 10 },
+    { exchange: 'mx00.ionos.de', priority: 10 },
+  ]);
+  assert.equal(de?.imapHost, 'imap.ionos.de');
+  assert.equal(de?.smtpHost, 'smtp.ionos.de');
+  assert.equal(de?.label, 'IONOS');
+  assert.equal(presetFromMxRecords([{ exchange: 'mx00.kundenserver.de', priority: 10 }])?.imapHost, 'imap.ionos.de');
+  assert.equal(presetFromMxRecords([{ exchange: 'mx00.ionos.co.uk', priority: 10 }])?.imapHost, 'imap.ionos.co.uk');
+  assert.equal(presetFromMxRecords([{ exchange: 'mx00.ionos.fr', priority: 10 }])?.imapHost, 'imap.ionos.fr');
+  assert.equal(presetFromMxRecords([{ exchange: 'mx00.ionos.com', priority: 10 }])?.imapHost, 'imap.ionos.com');
+});
+
 test('the primary MX is preferred, and a relay in front of it is skipped', () => {
   // A filtering relay at priority 10 with the real provider behind it at 20 is
   // a common setup; taking only the first record would resolve to nothing.

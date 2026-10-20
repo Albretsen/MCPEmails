@@ -1,8 +1,9 @@
 import type { Metadata } from 'next';
 import { AuthErrorApp } from '../../../components/auth/AuthErrorApp';
+import { SSO_REQUIRED_REASON } from '@/lib/sso/enforcement';
 
 export const metadata: Metadata = {
-  title: 'Sign-in error · mcpemails',
+  title: 'Sign-in error · MCP Emails',
   description: 'Something went wrong during sign-in',
 };
 
@@ -17,7 +18,21 @@ const ERROR_MESSAGE_KEYS: Record<string, string> = {
   'Auth session missing': 'sessionMissing',
   sso_not_configured: 'ssoNotConfigured',
   sso_join_failed: 'ssoJoinFailed',
+  oauth_cancelled: 'oauthCancelled',
+  microsoft_admin_approval: 'microsoftAdminApproval',
+  microsoft_email_unverified: 'microsoftEmailUnverified',
+  provider_email_unverified: 'providerEmailUnverified',
+  [SSO_REQUIRED_REASON]: 'ssoRequired',
 };
+
+/**
+ * Reason codes the Supabase auth hooks return as their error message. The
+ * callback forwards Supabase's error text, which may carry more than the bare
+ * code, so these match anywhere in the reason. 'sso_not_configured' is the
+ * SSO domain-binding refusal; its message key comes with the SAML sign-in
+ * change (PR #151), and until then it shows the generic message.
+ */
+const HOOK_REASONS = [SSO_REQUIRED_REASON, 'sso_not_configured', 'microsoft_email_unverified'];
 
 const GENERIC_MESSAGE_KEY = 'generic';
 
@@ -40,7 +55,8 @@ export default async function AuthErrorPage({ searchParams }: Props) {
   const params = await searchParams;
   const rawReason = params.reason ?? '';
 
-  const messageKey = ERROR_MESSAGE_KEYS[rawReason] ?? GENERIC_MESSAGE_KEY;
+  const hookReason = HOOK_REASONS.find((code) => rawReason.includes(code));
+  const messageKey = ERROR_MESSAGE_KEYS[rawReason] ?? (hookReason && ERROR_MESSAGE_KEYS[hookReason]) ?? GENERIC_MESSAGE_KEY;
 
   return <AuthErrorApp messageKey={messageKey} />;
 }

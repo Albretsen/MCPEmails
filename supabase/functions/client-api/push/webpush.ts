@@ -129,8 +129,35 @@ export function vapidFromEnv(env: (name: string) => string | undefined): VapidCo
   } catch {
     return null;
   }
-  if (!/^(mailto:[^\s@]+@[^\s@]+|https:\/\/\S+)$/.test(subject) || subject.length > 200) return null;
+  if (!isUsableVapidSubject(subject)) return null;
   return { publicKey, privateKey, subject };
+}
+
+/**
+ * RFC 8292 only asks for a `mailto:` or `https:` URI. Apple's push service is
+ * stricter: it answers 403 BadJwtToken for a contact it cannot reach, such as
+ * a localhost or `.local` address or a host without a dot. A subject Apple
+ * would refuse is treated as a misconfiguration here, not discovered one
+ * Safari subscriber at a time.
+ */
+export function isUsableVapidSubject(subject: string): boolean {
+  if (subject.length > 200) return false;
+  let host: string;
+  const mailto = /^mailto:[^\s@<>]+@([^\s@<>]+)$/.exec(subject);
+  if (mailto) {
+    host = mailto[1];
+  } else if (/^https:\/\/\S+$/.test(subject)) {
+    try {
+      host = new URL(subject).hostname;
+    } catch {
+      return false;
+    }
+  } else {
+    return false;
+  }
+  host = host.toLowerCase();
+  if (!host.includes(".") || host.endsWith(".")) return false;
+  return !/(^|\.)(localhost|local|localdomain|internal|invalid)$/.test(host);
 }
 
 async function importVapidKey(config: VapidConfig): Promise<CryptoKey> {

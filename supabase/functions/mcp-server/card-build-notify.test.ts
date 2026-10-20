@@ -1044,6 +1044,14 @@ const SQL_ALLOWED = new Set([
   // api_keys lookup works on a self-hosted install. It never writes a value;
   // the server does, through the constant. Issue #82.
   "self-host/db/00-schema.sql",
+  // mcp_tools_call_preflight returns the api_keys row for a tools/call, so it
+  // must hand back the same columns lookupApiKey selects, this one included.
+  // It READS the column and never writes it; the compare-and-swap stays in
+  // TypeScript through the constant.
+  "supabase/migrations/20261020100000_mcp_tools_call_preflight.sql",
+  // mcp_tools_call_gate, its successor, for the same reason: it reads the
+  // column into the key row and never writes it.
+  "supabase/migrations/20261020214737_mcp_tools_call_gate.sql",
 ]);
 
 /**
@@ -1406,7 +1414,6 @@ Deno.test("the file list is git's, not a hand-maintained root list", () => {
   for (
     const tree of [
       "apps/web/components/",
-      "supabase/functions/gmail-token-refresh/",
       "supabase/functions/outlook-token-refresh/",
       "supabase/functions/synthetic-monitor/",
       "supabase/functions/system-notify/",

@@ -21,7 +21,7 @@
     "titleLine1": "Proton Mail no se puede",
     "titleLine2": "conectar a un servidor MCP alojado",
     "lead": "Proton no tiene ningún servidor IMAP en internet. El único IMAP que existe para un buzón de Proton se ejecuta en tu propio ordenador, dentro de Proton Mail Bridge, y por eso todas las herramientas alojadas chocan con el mismo muro.",
-    "answer": "No. Proton Mail no expone ningún punto de acceso IMAP, POP ni SMTP en el que pueda iniciar sesión un cliente situado en otro lugar. La única forma en que un cliente de correo llega a Proton es Proton Mail Bridge, una aplicación de escritorio disponible en los planes de pago de Proton que descifra tu correo localmente y sirve IMAP y SMTP en localhost, es decir, en la dirección de loopback del equipo en el que se ejecuta. Un servidor MCP alojado como mcpemails funciona en nuestra infraestructura, no en tu escritorio, y nada en internet puede enrutar hasta tu localhost, así que la conexión es imposible, no algo pendiente de implementar. Si quieres un agente de IA trabajando con el correo que llega a tu dirección de Proton, las opciones honestas son el reenvío automático de pago de Proton hacia un buzón que sí hable IMAP, que mcpemails conecta gratis para una bandeja, o el envío SMTP de Proton, que solo sirve para el correo saliente."
+    "answer": "No. Proton Mail no expone ningún punto de acceso IMAP, POP ni SMTP en el que pueda iniciar sesión un cliente situado en otro lugar. La única forma en que un cliente de correo llega a Proton es Proton Mail Bridge, una aplicación de escritorio disponible en los planes de pago de Proton que descifra tu correo localmente y sirve IMAP y SMTP en localhost, es decir, en la dirección de loopback del equipo en el que se ejecuta. Un servidor MCP alojado como MCP Emails funciona en nuestra infraestructura, no en tu escritorio, y nada en internet puede enrutar hasta tu localhost, así que la conexión es imposible, no algo pendiente de implementar. Si quieres un agente de IA trabajando con el correo que llega a tu dirección de Proton, las opciones honestas son el reenvío automático de pago de Proton hacia un buzón que sí hable IMAP, que MCP Emails conecta gratis para una bandeja, o el envío SMTP de Proton, que solo sirve para el correo saliente."
   },
   "method": {
     "title": "Cómo se conecta Proton Mail: en local, a través de Bridge, o de ninguna manera",
@@ -29,12 +29,12 @@
   },
   "setup": [
     {
-      "h": "Crea la cuenta gratis de mcpemails",
+      "h": "Crea la cuenta gratis de MCP Emails",
       "p": "Una dirección de correo, sin tarjeta. Una bandeja conectada es gratis para siempre, y los dos pasos siguientes deciden qué bandeja será."
     },
     {
       "h": "Elige el buzón que se encargará del trabajo automatizado",
-      "p": "Elige una dirección en un proveedor que tenga un servidor IMAP de verdad: un buzón de dominio propio, una cuenta del trabajo, Fastmail, Migadu, Gmail. Esa es la cuenta que conecta mcpemails y desde la que tu agente lee, envía, archiva y programa. Tu dirección de Proton se queda exactamente como está."
+      "p": "Elige una dirección en un proveedor que tenga un servidor IMAP de verdad: un buzón de dominio propio, una cuenta del trabajo, Fastmail, Migadu, Gmail. Esa es la cuenta que conecta MCP Emails y desde la que tu agente lee, envía, archiva y programa. Tu dirección de Proton se queda exactamente como está."
     },
     {
       "h": "Añade una regla de reenvío en la configuración de Proton",
@@ -90,7 +90,7 @@
     },
     {
       "q": "¿Se almacena mi correo en sus servidores?",
-      "a": "No. En los buzones que mcpemails sí conecta, los mensajes se obtienen en vivo por IMAP en cada petición y se pasan a tu cliente de IA, con las credenciales cifradas en reposo y sin conservar el cuerpo de los mensajes. Nunca guardamos credenciales de Proton, porque no hay ninguna conexión con Proton que hacer."
+      "a": "No. En los buzones que MCP Emails sí conecta, los mensajes se obtienen en vivo por IMAP en cada petición y se pasan a tu cliente de IA, con las credenciales cifradas en reposo y sin conservar el cuerpo de los mensajes. Nunca guardamos credenciales de Proton, porque no hay ninguna conexión con Proton que hacer."
     }
   ],
   "ctaBand": {

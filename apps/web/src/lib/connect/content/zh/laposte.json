@@ -20,30 +20,30 @@
     "titleLine1": "将你的 laposte.net 收件箱连接到",
     "titleLine2": "Claude、Cursor 及任意 MCP 客户端",
     "lead": "为你的 AI 代理接入一个真正的 laposte.net 收件箱。使用你普通的 laposte.net 密码，通过 IMAP 读取、搜索、发送、回复、定时与整理邮件。",
-    "answer": "Claude 无法自行访问 laposte.net 邮箱。mcpemails 是一个托管 MCP 服务器，通过 imap.laposte.net 端口 993 的 IMAP 与之连接，使用你的完整地址和普通 laposte.net 密码进行认证，让 Claude、Cursor 或任意 MCP 客户端都能读取、搜索、发送并整理这些邮件。La Poste 不签发应用专用密码，也没有需要寻找的客户端访问开关，但该邮箱只接受加密端口，而且外发邮件的大小上限异常低。1 个收件箱永久免费。",
+    "answer": "Claude 无法自行访问 laposte.net 邮箱。MCP Emails 是一个托管 MCP 服务器，通过 imap.laposte.net 端口 993 的 IMAP 与之连接，使用你的完整地址和普通 laposte.net 密码进行认证，让 Claude、Cursor 或任意 MCP 客户端都能读取、搜索、发送并整理这些邮件。La Poste 不签发应用专用密码，也没有需要寻找的客户端访问开关，但该邮箱只接受加密端口，而且外发邮件的大小上限异常低。1 个收件箱永久免费。",
     "meta0": "1 个收件箱永久免费",
     "meta1": "你普通的 laposte.net 密码",
     "meta2": "邮件实时获取，绝不存储"
   },
   "method": {
     "title": "laposte.net 如何连接：使用账户密码的 TLS 加密 IMAP",
-    "body": "La Poste 在 <code>imap.laposte.net</code> 端口 993 上以隐式 TLS 提供 IMAP。对于外发邮件，La Poste 自己的帮助页面给出的是端口 587 上的 <code>smtp.laposte.net</code>，使用 TLS；同一台服务器上的端口 465 也以隐式 TLS 响应，mcpemails 预填的正是这一项，因为从服务器端维持单一的隐式加密连接更简单。认证使用你普通的 laposte.net 密码，用户名为<b>完整</b>地址。没有需要生成的应用专用密码，也没有需要寻找的 <b>autoriser les logiciels de messagerie</b>（允许邮件软件）开关，这让 laposte.net 成为较容易连接的法国邮箱之一。麻烦在别处：服务器被刻意设计得很精简，而 La Poste 一次性关闭了所有未加密协议，至今仍让多年前配置的客户端无法使用。"
+    "body": "La Poste 在 <code>imap.laposte.net</code> 端口 993 上以隐式 TLS 提供 IMAP。对于外发邮件，La Poste 自己的帮助页面给出的是端口 587 上的 <code>smtp.laposte.net</code>，使用 TLS；同一台服务器上的端口 465 也以隐式 TLS 响应，MCP Emails 预填的正是这一项，因为从服务器端维持单一的隐式加密连接更简单。认证使用你普通的 laposte.net 密码，用户名为<b>完整</b>地址。没有需要生成的应用专用密码，也没有需要寻找的 <b>autoriser les logiciels de messagerie</b>（允许邮件软件）开关，这让 laposte.net 成为较容易连接的法国邮箱之一。麻烦在别处：服务器被刻意设计得很精简，而 La Poste 一次性关闭了所有未加密协议，至今仍让多年前配置的客户端无法使用。"
   },
   "setup": [
     {
-      "h": "创建免费的 mcpemails 账户",
+      "h": "创建免费的 MCP Emails 账户",
       "p": "在 mcpemails.com 注册。免费套餐可永久连接一个收件箱，无需信用卡。"
     },
     {
       "h": "确认你的 laposte.net 密码在网页邮箱中仍然有效",
-      "p": "用你打算交给 mcpemails 的同一地址和密码登录 laposte.net。这值得花三十秒，因为如果失败，没有另一个邮件凭据可以怪罪：只要网页邮箱接受，IMAP 服务器也会接受。"
+      "p": "用你打算交给 MCP Emails 的同一地址和密码登录 laposte.net。这值得花三十秒，因为如果失败，没有另一个邮件凭据可以怪罪：只要网页邮箱接受，IMAP 服务器也会接受。"
     },
     {
       "h": "连接之前查看你的安全设置",
       "p": "在 laposte.net 网页邮箱中打开 <b>Paramètres</b>，然后打开 <b>Sécurité</b>。双重身份验证就在那里开启和关闭。La Poste 关于 laposte.net 双重身份验证的文档描述的是向已配对移动设备推送确认，并没有记载任何供邮件软件使用的应用密码机制，所以在排查登录被拒之前，请先弄清你的账户处于哪种状态。"
     },
     {
-      "h": "在 mcpemails 中添加邮箱",
+      "h": "在 MCP Emails 中添加邮箱",
       "p": "选择 IMAP / SMTP，输入完整地址（例如 prenom.nom@laposte.net）和密码。La Poste 的服务器地址和端口已预填，并经实时 TLS 连接验证。然后把 https://mcpemails.com/api/mcp 粘贴到 Claude、Cursor 或 ChatGPT 中，完成授权，代理便拥有该收件箱。"
     }
   ],
@@ -54,11 +54,11 @@
     },
     {
       "h": "所有未加密端口已于 2023 年 7 月 4 日关闭，而报错毫无帮助",
-      "p": "La Poste 在那一天停用了所有明文通信。仍指向旧明文端口的客户端，得到的是类似 <b>invalid command</b> 的错误，而不是任何与加密有关的信息，所以一个用了十年的配置，突然看起来像是账户坏了。现在唯一支持的组合是 IMAP 993、POP 995 和 SMTP 587，全部至少使用 SSL 或 TLS 1.2。如果你要把某个客户端的设置迁移到 mcpemails，请不要沿用旧端口。"
+      "p": "La Poste 在那一天停用了所有明文通信。仍指向旧明文端口的客户端，得到的是类似 <b>invalid command</b> 的错误，而不是任何与加密有关的信息，所以一个用了十年的配置，突然看起来像是账户坏了。现在唯一支持的组合是 IMAP 993、POP 995 和 SMTP 587，全部至少使用 SSL 或 TLS 1.2。如果你要把某个客户端的设置迁移到 MCP Emails，请不要沿用旧端口。"
     },
     {
       "h": "没有 SASL-IR，而大多数客户端库默认它支持",
-      "p": "laposte.net 的 IMAP 服务器不声明 <code>SASL-IR</code>，因此会拒绝随 <code>AUTHENTICATE</code> 命令一起发送凭据的一步式认证。默认假设支持 SASL-IR 的客户端会收到一个没有任何解释的 <code>BAD</code>，看起来与密码错误一模一样。mcpemails 会检测到这个 <code>BAD</code> 并改用两步交互重试，所以已经替你处理好了，但这正是其他 IMAP 工具在别处都能用、却在 laposte.net 上失败的原因。"
+      "p": "laposte.net 的 IMAP 服务器不声明 <code>SASL-IR</code>，因此会拒绝随 <code>AUTHENTICATE</code> 命令一起发送凭据的一步式认证。默认假设支持 SASL-IR 的客户端会收到一个没有任何解释的 <code>BAD</code>，看起来与密码错误一模一样。MCP Emails 会检测到这个 <code>BAD</code> 并改用两步交互重试，所以已经替你处理好了，但这正是其他 IMAP 工具在别处都能用、却在 laposte.net 上失败的原因。"
     },
     {
       "h": "法语命名的邮箱上没有 IDLE、没有 MOVE、也没有 SPECIAL-USE",
@@ -73,11 +73,11 @@
   "faq": [
     {
       "q": "Claude 能用于 laposte.net 邮箱吗？",
-      "a": "不能单独使用。Claude 没有内置的 La Poste 连接器。通过 IMAP 将 mcpemails 这样的 MCP 服务器指向该邮箱后，Claude 就能读取、搜索、发送、回复、定时和整理其中的邮件，而且同一个连接随后也可在 Cursor、ChatGPT 和其他 MCP 客户端中使用。"
+      "a": "不能单独使用。Claude 没有内置的 La Poste 连接器。通过 IMAP 将 MCP Emails 这样的 MCP 服务器指向该邮箱后，Claude 就能读取、搜索、发送、回复、定时和整理其中的邮件，而且同一个连接随后也可在 Cursor、ChatGPT 和其他 MCP 客户端中使用。"
     },
     {
       "q": "laposte.net 的 IMAP 和 SMTP 设置是什么？",
-      "a": "IMAP 为 imap.laposte.net，端口 993，使用隐式 TLS。对于外发邮件，La Poste 文档给出的是 smtp.laposte.net，端口 587，使用 TLS；同一台服务器上的端口 465 也以隐式 TLS 响应，mcpemails 使用的就是这一项。请用完整地址和 laposte.net 密码登录。两个服务器均经实时 TLS 连接确认。"
+      "a": "IMAP 为 imap.laposte.net，端口 993，使用隐式 TLS。对于外发邮件，La Poste 文档给出的是 smtp.laposte.net，端口 587，使用 TLS；同一台服务器上的端口 465 也以隐式 TLS 响应，MCP Emails 使用的就是这一项。请用完整地址和 laposte.net 密码登录。两个服务器均经实时 TLS 连接确认。"
     },
     {
       "q": "laposte.net 需要应用专用密码吗？",

@@ -7,7 +7,7 @@
     "eyebrow": "Laget for gründere",
     "titleLine1": "Svar hver eneste kunde",
     "titleLine2": "rett fra din AI",
-    "lead": "Du er supportavdelingen, salgsavdelingen og gründeren. mcpemails kobler innboksen din til Claude, så du kan sortere, skrive svarutkast i din egen stemme, sende og planlegge oppfølginger uten å forlate samtalen. Vår mest aktive bruker gjør akkurat dette, hver eneste dag.",
+    "lead": "Du er supportavdelingen, salgsavdelingen og gründeren. MCP Emails kobler innboksen din til Claude, så du kan sortere, skrive svarutkast i din egen stemme, sende og planlegge oppfølginger uten å forlate samtalen. Vår mest aktive bruker gjør akkurat dette, hver eneste dag.",
     "ctaPrimary": "Koble til innboksen gratis",
     "ctaSecondary": "Se hvordan det fungerer"
   },
@@ -49,7 +49,7 @@
   "does": {
     "eyebrow": "Hva det faktisk gjør",
     "title": "En ekte innboks, ikke et skrivebeskyttet glimt",
-    "sub": "Sytten handlingsbaserte verktøy agenten din kan bruke fra start til slutt.",
+    "sub": "Nitten handlingsbaserte verktøy agenten din kan bruke fra start til slutt.",
     "items": {
       "read": {
         "h": "Les og søk",
@@ -70,13 +70,13 @@
     }
   },
   "proof": {
-    "quote": "Gründeren som bruker mcpemails mest åpner Claude hver morgen, tømmer kundekøen, og er ferdig før kaffen. Det er hele poenget.",
+    "quote": "Gründeren som bruker MCP Emails mest åpner Claude hver morgen, tømmer kundekøen, og er ferdig før kaffen. Det er hele poenget.",
     "label": "Vår mest aktive arbeidsflyt, på én linje"
   },
   "providers": {
     "eyebrow": "Hvilken som helst innboks, hvilken som helst AI",
     "title": "Koble til innboksen du allerede driver support fra",
-    "sub": "Outlook via Microsoft-innlogging, Gmail via et app-passord eller Google-innlogging, resten via et app-passord. Den samme innboksen fungerer så i Claude, Cursor, VS Code, ChatGPT og en hvilken som helst MCP-klient, så du er aldri låst til én app.",
+    "sub": "Outlook via Microsoft-innlogging, Gmail via et Google-app-passord, resten via et app-passord. Den samme innboksen fungerer så i Claude, Cursor, VS Code, ChatGPT og en hvilken som helst MCP-klient, så du er aldri låst til én app.",
     "ctaGmail": "Koble til Gmail",
     "ctaOutlook": "Koble til Outlook",
     "ctaFastmail": "Koble til Fastmail",
@@ -89,7 +89,7 @@
     "items": [
       {
         "q": "Jeg er solo-gründer som gjør min egen support. Er dette overkill?",
-        "a": "Det er det motsatte. Jo færre folk du har, jo mer gjør en supportkø vondt. mcpemails gjør det å svare kunder om til en rask daglig gjennomgang i Claude i stedet for en time med kontekstbytting, og det er gratis å komme i gang uten kort."
+        "a": "Det er det motsatte. Jo færre folk du har, jo mer gjør en supportkø vondt. MCP Emails gjør det å svare kunder om til en rask daglig gjennomgang i Claude i stedet for en time med kontekstbytting, og det er gratis å komme i gang uten kort."
       },
       {
         "q": "Kommer svarene til å høres generiske ut?",
@@ -105,7 +105,7 @@
       },
       {
         "q": "Hva koster det mens jeg fortsatt er liten?",
-        "a": "Gratis, med én tilkoblet innboks og uten kort. Personal til $9 i måneden kobler til tre postkasser, Pro til $15 i måneden kobler til alle postkassene firmaet ditt har, og Team legger til medlemmer, roller og et eget arbeidsområde per kunde."
+        "a": "Gratis, med én tilkoblet innboks og uten kort. Personal til $9 i måneden kobler til tre postkasser, Pro til $15 i måneden kobler til opptil 10, og Business legger til medlemmer, roller og et eget arbeidsområde per kunde, med 10 postkasser inkludert."
       }
     ]
   },

@@ -23,7 +23,7 @@
     "meta0": "Første postkasse gratis, planer for resten",
     "meta1": "Postkassepassordet ditt, ingen OAuth-oppsett",
     "meta2": "E-post hentes direkte, lagres aldri",
-    "answer": "Claude når ikke Namecheap Private Email på egen hånd. mcpemails er en hostet MCP-server som kobler til via IMAP med postkassepassordet ditt, slik at Claude, Cursor eller enhver MCP-klient kan lese, søke, sende og organisere den e-posten. Oppsettet tar et par minutter. Hver firmaadresse, som post@ eller salg@, kobles til som sin egen postkasse: én postkasse er gratis, Personal kobler til tre og Pro alle postkassene du har."
+    "answer": "Claude når ikke Namecheap Private Email på egen hånd. MCP Emails er en hostet MCP-server som kobler til via IMAP med postkassepassordet ditt, slik at Claude, Cursor eller enhver MCP-klient kan lese, søke, sende og organisere den e-posten. Oppsettet tar et par minutter. Hver firmaadresse, som post@ eller salg@, kobles til som sin egen postkasse: én postkasse er gratis, Personal kobler til tre, Pro opptil 10 og Business så mange du trenger."
   },
   "persona": {
     "intro": "Flere bedriftspostkasser hos Namecheap?",
@@ -37,14 +37,14 @@
   "setup": [
     {
       "h": "Opprett en gratis konto",
-      "p": "Registrer deg på mcpemails, uten kort. Gratisplanen kobler til én innboks, for alltid."
+      "p": "Registrer deg på MCP Emails, uten kort. Gratisplanen kobler til én innboks, for alltid."
     },
     {
       "h": "Finn postkassepassordet for Private Email",
       "p": "Bruk passordet til selve postkassen, ikke passordet til Namecheap-kontoen. Du kan når som helst tilbakestille det fra kontrollpanelet for Private Email."
     },
     {
-      "h": "Lim det inn i mcpemails",
+      "h": "Lim det inn i MCP Emails",
       "p": "Velg IMAP / SMTP, legg til Namecheap Private Email-adressen din, vertene over og passordet for å koble til innboksen trygt."
     },
     {
@@ -59,7 +59,7 @@
     },
     {
       "h": "Tofaktorautentisering på Private Email gjelder bare webmail, og den stenger ute alle e-postklienter",
-      "p": "Namecheap dokumenterer 2FA for Private Email som en beskyttelse av webgrensesnittet. I det øyeblikket du slår det på, slutter det vanlige postkassepassordet å autentisere via IMAP og SMTP, og avvisningen kommer som en vanlig innloggingsfeil uten noen omtale av den andre faktoren. Løsningen er et <b>programspesifikt passord</b>: i Private Email-webmailen åpner du <b>Settings</b>, så <b>Security</b>, så <b>Application Passwords</b>, velger klienttype fra nedtrekkslisten og genererer et. Lim det inn i mcpemails i stedet for postkassepassordet. Har du aldri slått på 2FA, finnes det ikke noe programpassord, og du trenger heller ikke et."
+      "p": "Namecheap dokumenterer 2FA for Private Email som en beskyttelse av webgrensesnittet. I det øyeblikket du slår det på, slutter det vanlige postkassepassordet å autentisere via IMAP og SMTP, og avvisningen kommer som en vanlig innloggingsfeil uten noen omtale av den andre faktoren. Løsningen er et <b>programspesifikt passord</b>: i Private Email-webmailen åpner du <b>Settings</b>, så <b>Security</b>, så <b>Application Passwords</b>, velger klienttype fra nedtrekkslisten og genererer et. Lim det inn i MCP Emails i stedet for postkassepassordet. Har du aldri slått på 2FA, finnes det ikke noe programpassord, og du trenger heller ikke et."
     },
     {
       "h": "Verten er mail.privateemail.com for alle kunder, og Namecheap sier den ikke skal endres",
@@ -73,12 +73,12 @@
   "limits": [
     "Fordi serveren ikke annonserer MOVE, er en flytting ikke atomisk. Hvis en tilkobling brytes underveis, kan en melding kortvarig finnes i begge mapper.",
     "Private Email er et abonnement separat fra domenet. Å eie et Namecheap-domene betyr ikke at du har en Namecheap-postkasse å koble til.",
-    "mcpemails kobler til postkassen. Aliaser, videresendinger, catch-all-regler og oppretting av postkasser blir værende i kontrollpanelet for Namecheap Private Email."
+    "MCP Emails kobler til postkassen. Aliaser, videresendinger, catch-all-regler og oppretting av postkasser blir værende i kontrollpanelet for Namecheap Private Email."
   ],
   "faq": [
     {
       "q": "Fungerer Claude med Namecheap Private Email?",
-      "a": "Ikke på egen hånd. Claude har ingen innebygd Namecheap-kobling. Kobler du en MCP-server som mcpemails til postkassen via IMAP, får Claude tilgang til å lese, søke, sende, svare, planlegge og organisere, og samme tilkobling fungerer da fra Cursor, ChatGPT og andre MCP-klienter i stedet for bare én."
+      "a": "Ikke på egen hånd. Claude har ingen innebygd Namecheap-kobling. Kobler du en MCP-server som MCP Emails til postkassen via IMAP, får Claude tilgang til å lese, søke, sende, svare, planlegge og organisere, og samme tilkobling fungerer da fra Cursor, ChatGPT og andre MCP-klienter i stedet for bare én."
     },
     {
       "q": "Hva er IMAP- og SMTP-innstillingene for Namecheap Private Email?",
@@ -90,7 +90,7 @@
     },
     {
       "q": "Hvordan oppretter jeg et programpassord hos Namecheap?",
-      "a": "Logg inn på Private Email-webmailen på privateemail.com, åpne Settings, så Security, så Application Passwords. Velg program- eller klienttype fra nedtrekkslisten og generer et passord. Kopier det med en gang og lim det inn i mcpemails i stedet for postkassepassordet. Du trenger bare et hvis tofaktorautentisering er slått på."
+      "a": "Logg inn på Private Email-webmailen på privateemail.com, åpne Settings, så Security, så Application Passwords. Velg program- eller klienttype fra nedtrekkslisten og generer et passord. Kopier det med en gang og lim det inn i MCP Emails i stedet for postkassepassordet. Du trenger bare et hvis tofaktorautentisering er slått på."
     },
     {
       "q": "Kan jeg bruke mail.mydomain.com i stedet for mail.privateemail.com?",
@@ -103,6 +103,6 @@
   ],
   "ctaBand": {
     "title": "Samle alle Namecheap Private Email-postkassene på én agent",
-    "sub": "Koble til den første Namecheap Private Email-postkassen gratis, uten kort. Personal kobler til tre, Pro alle postkassene du har."
+    "sub": "Koble til den første Namecheap Private Email-postkassen gratis, uten kort. Personal kobler til tre, Pro opptil 10 og Business så mange du trenger."
   }
 }

@@ -4,10 +4,13 @@ import { createServiceRoleClient } from '@/lib/supabase/service';
 import { acquisitionFromParams, isNewAccountSignup } from '@/lib/acquisition-context.mjs';
 import { deviceClassFromHeaders } from '@/lib/acquisition-device.mjs';
 import { stampAcquisitionDevice } from '@/lib/acquisition-device-stamp';
+import { countryFromHeaders } from '@/lib/acquisition-country.mjs';
+import { stampAcquisitionCountry } from '@/lib/acquisition-country-stamp';
 import {
   clearConsentCookieString,
   consentVersionFromCookieHeader,
 } from '@/lib/marketing-consent.mjs';
+import { microsoftSignInRefusal, oauthErrorReason } from '@/lib/auth/microsoft-sign-in';
 import { ssoRouteForEmail, isSsoUser, type SsoLookupRpc } from '@/lib/sso/sign-in';
 import { completeSsoSignIn, findSsoConnectionVia } from '@/lib/sso/join';
 import { addWorkspaceMemberVia } from '@/lib/sso/workspace-member';
@@ -48,8 +51,12 @@ export async function GET(request: Request) {
   const acquisition = acquisitionFromParams(searchParams);
 
   if (!code) {
-    // No code means the link was malformed or already used.
-    return NextResponse.redirect(`${origin}/auth/error?reason=missing_code`);
+    // A failed OAuth sign-in comes back with `error` and `error_description`
+    // instead of a code: the user cancelled, or (Microsoft) their organization
+    // requires an admin to approve the app first. Name those; anything else is
+    // a malformed or already-used link.
+    const reason = oauthErrorReason(searchParams) ?? 'missing_code';
+    return NextResponse.redirect(`${origin}/auth/error?reason=${reason}`);
   }
 
   const supabase = await createClient();
@@ -61,6 +68,23 @@ export async function GET(request: Request) {
     return NextResponse.redirect(
       `${origin}/auth/error?reason=${encodeURIComponent(error.message)}`
     );
+  }
+
+  // Sign in with Microsoft: refuse the session unless Microsoft vouches for
+  // the email (`xms_edov`). An unverified Entra email claim is an account
+  // takeover path, because Supabase links identities by email. Runs before any
+  // write below, so a refused sign-in records no consent and no attribution.
+  // Scope 'local' ends only this session: if the identity was linked to an
+  // existing account, that account's other sessions belong to its owner.
+  const refusal = microsoftSignInRefusal(exchanged?.user);
+  if (refusal) {
+    await supabase.auth.signOut({ scope: 'local' });
+    const refused = NextResponse.redirect(`${origin}/auth/error?reason=${refusal}`);
+    refused.headers.append(
+      'set-cookie',
+      clearConsentCookieString({ secure: new URL(request.url).protocol === 'https:' }),
+    );
+    return refused;
   }
 
   // SAML SSO: the account has no personal workspace (the new-user trigger
@@ -156,6 +180,15 @@ export async function GET(request: Request) {
       await stampAcquisitionDevice(service, {
         ownerId: user.id,
         device: deviceClassFromHeaders(request.headers),
+      });
+
+      // The country, from Vercel's x-vercel-ip-country on this same request,
+      // for the same reason: it is the user's own browser, so the code places
+      // the person, not a server. Only the two letters are kept, never the IP.
+      // Its own statement, first write wins, never throws.
+      await stampAcquisitionCountry(service, {
+        ownerId: user.id,
+        country: countryFromHeaders(request.headers),
       });
     }
   }

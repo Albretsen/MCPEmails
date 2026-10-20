@@ -13,7 +13,9 @@ import {
   withConnectIntent,
 } from '@/lib/connect/intent-carry.mjs';
 import { MIcon, MBtn } from '../MarketingPrimitives';
-import { ThemeBtn, Spinner, GoogleIcon, GitHubIcon, SocialButton, OrDivider } from './AuthShared';
+import { isSsoRequiredError } from '@/lib/sso/enforcement';
+import { ThemeBtn, Spinner, GoogleIcon, GitHubIcon, MicrosoftIcon, SocialButton, OrDivider } from './AuthShared';
+import { microsoftSignInEnabled } from '@/lib/auth/microsoft-flag.mjs';
 
 export function SignupApp({ redirectTo = null, connectProvider = null }) {
   const t = useTranslations('auth');
@@ -31,7 +33,7 @@ export function SignupApp({ redirectTo = null, connectProvider = null }) {
   const [step, setStep] = useState('form'); // 'form' | 'submitting' | 'sent' | 'error'
   const [serverError, setServerError] = useState('');
   const [loadingMsg, setLoadingMsg] = useState(SIGNUP_LOADING_MESSAGES[0]);
-  const [socialLoading, setSocialLoading] = useState(null); // null | 'google' | 'github'
+  const [socialLoading, setSocialLoading] = useState(null); // null | 'google' | 'microsoft' | 'github'
   // Marketing email consent. UNTICKED by default and never pre-filled: consent
   // under markedsføringsloven § 15 / GDPR has to be an active choice. What the
   // box says is versioned in src/lib/marketing-consent.mjs.
@@ -122,6 +124,14 @@ export function SignupApp({ redirectTo = null, connectProvider = null }) {
     window.location.href = buildOAuthUrl('google');
   }
 
+  function handleMicrosoftSignIn() {
+    rememberOAuthConsent(marketingConsent);
+    // No signup_started event: its `method` enum (src/lib/analytics.mjs) has no
+    // 'microsoft' yet, and an unlisted value throws.
+    setSocialLoading('microsoft');
+    window.location.href = buildOAuthUrl('microsoft');
+  }
+
   function handleGitHubSignIn() {
     rememberOAuthConsent(marketingConsent);
     trackProductEvent('signup_started', { method: 'github' });
@@ -180,7 +190,7 @@ export function SignupApp({ redirectTo = null, connectProvider = null }) {
     });
 
     if (error) {
-      setServerError(error.message ?? t('signup.errorGeneric'));
+      setServerError(isSsoRequiredError(error) ? t('shared.ssoRequired') : (error.message ?? t('signup.errorGeneric')));
       setStep('error');
     } else if (data?.session) {
       // Email confirmation is disabled, so signUp returns an active session.
@@ -237,6 +247,15 @@ export function SignupApp({ redirectTo = null, connectProvider = null }) {
         onClick={handleGoogleSignIn}
         disabled={anyBusy}
       />
+      {microsoftSignInEnabled() && (
+        <SocialButton
+          icon={<MicrosoftIcon />}
+          label={t('shared.signInWithMicrosoft')}
+          loading={socialLoading === 'microsoft'}
+          onClick={handleMicrosoftSignIn}
+          disabled={anyBusy}
+        />
+      )}
       <SocialButton
         icon={<GitHubIcon />}
         label={t('shared.continueWithGitHub')}
@@ -258,8 +277,8 @@ export function SignupApp({ redirectTo = null, connectProvider = null }) {
         </a>
 
         <div className="auth-brand">
-          <img className="logo-light" src="/logo-wordmark.svg" width="280" height="48" alt="mcpemails" />
-          <img className="logo-dark" src="/logo-wordmark-dark.svg" width="280" height="48" alt="mcpemails" />
+          <img className="logo-light" src="/logo-wordmark.svg" width="280" height="48" alt="MCP Emails" />
+          <img className="logo-dark" src="/logo-wordmark-dark.svg" width="280" height="48" alt="MCP Emails" />
         </div>
 
         {/* ── Form ──────────────────────────────────────────────────── */}

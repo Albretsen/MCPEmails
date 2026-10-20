@@ -1,12 +1,12 @@
 {
   "meta": {
     "title": "Sécurité et confiance",
-    "description": "Comment MCPEmails protège vos e-mails : récupérés en direct et jamais stockés, identifiants chiffrés au repos, accès limité et révocable, et un code public que vous pouvez lire ou héberger vous-même."
+    "description": "Comment MCP Emails protège vos e-mails : récupérés en direct et jamais stockés, identifiants chiffrés au repos, accès limité et révocable, et un code public que vous pouvez lire ou héberger vous-même."
   },
   "hero": {
     "eyebrow": "Sécurité et confiance",
     "title": "Vous ne devriez pas avoir à me croire sur parole",
-    "lead": "MCPEmails connecte un agent IA à votre boîte de réception, il doit donc gagner une véritable confiance. Voici la version honnête : ce que le service touche, ce qu'il conserve, ce qu'il ne pourra jamais faire, et comment vous pouvez tout vérifier par vous-même."
+    "lead": "MCP Emails connecte un agent IA à votre boîte de réception, il doit donc gagner une véritable confiance. Voici la version honnête : ce que le service touche, ce qu'il conserve, ce qu'il ne pourra jamais faire, et comment vous pouvez tout vérifier par vous-même."
   },
   "tldr": {
     "title": "1. La version courte",
@@ -38,7 +38,7 @@
       },
       {
         "data": "Jeton OAuth ou mot de passe d'application",
-        "accessed": "Déchiffré uniquement à l'intérieur d'une fonction isolée, au moment de l'appel",
+        "accessed": "Déchiffré sur nos serveurs uniquement pour la requête qui en a besoin",
         "stored": "Oui, chiffré au repos avec AES-256-GCM ; la clé est conservée séparément"
       },
       {
@@ -52,18 +52,23 @@
         "stored": "Oui, chiffrés au repos jusqu'à l'envoi, puis conservés dans votre historique"
       },
       {
+        "data": "Envois retenus pour votre approbation",
+        "accessed": "Conservés jusqu'à ce qu'une personne les approuve ou les refuse, ou expirent au bout de 24 heures",
+        "stored": "Oui, chiffrés au repos, puis conservés dans votre historique des approbations"
+      },
+      {
         "data": "Activité des appels d'outils (métadonnées)",
         "accessed": "Enregistrée pour votre propre journal d'audit",
         "stored": "Nom de l'outil, boîte de réception, horodatage et statut uniquement. Aucun contenu d'e-mail"
       }
     ],
-    "outro": "La seule exception délibérée est un message que vous demandez à l'agent de programmer pour plus tard. Nous devons le conserver jusqu'à l'heure d'envoi, nous le stockons donc chiffré entre-temps, puis nous en gardons une trace ensuite pour votre historique."
+    "outro": "Les exceptions délibérées sont les messages sortants qui doivent attendre : un message que vous demandez à l'agent de programmer pour plus tard, et un envoi retenu pour votre approbation. Nous devons les conserver jusqu'à leur départ, nous les stockons donc chiffrés entre-temps, puis nous en gardons une trace pour votre historique."
   },
   "verify": {
     "title": "3. Vous n'avez pas à me faire confiance, vous pouvez vérifier",
     "p1": "« Une personne quelconque a bricolé ça » est une inquiétude légitime pour tout outil hébergé qui touche à vos e-mails. La bonne réponse n'est pas une promesse plus grande. C'est de supprimer le besoin de me croire sur parole.",
     "points": [
-      "<b>Lisez le code.</b> Le serveur qui fait tourner MCPEmails est public sur GitHub. Vous pouvez voir exactement ce qu'il conserve (un jeton chiffré) et ce qu'il ne conserve pas (vos e-mails).",
+      "<b>Lisez le code.</b> Le serveur qui fait tourner MCP Emails est public sur GitHub. Vous pouvez voir exactement ce qu'il conserve (un jeton chiffré) et ce qu'il ne conserve pas (vos e-mails).",
       "<selfhost><b>Hébergez-le vous-même.</b></selfhost> Si vous préférez ne pas utiliser du tout le service hébergé, vous pouvez exécuter le même code sur votre propre infrastructure, avec vos propres clés : une pile Docker en une seule commande se trouve dans <selfhost>self-host/</selfhost>.",
       "<b>Utilisez une connexion limitée et révocable.</b> Vous vous connectez avec OAuth ou un mot de passe d'application qui n'accorde qu'un accès au courrier, et vous pouvez le révoquer en un clic depuis votre fournisseur, sans aucune intervention de ma part.",
       "<b>Surveillez ce qu'il fait.</b> Chaque appel d'outil effectué par votre agent est enregistré dans un journal d'activité que vous pouvez consulter, pour voir précisément ce qui a été consulté et quand."
@@ -95,12 +100,12 @@
   "google": {
     "title": "6. Vérification Google, Microsoft et fournisseurs",
     "p1": "L'accès à Gmail utilise les portées restreintes de Google, le niveau que Google examine le plus minutieusement.",
-    "p2": "L'utilisation et le transfert par MCPEmails des informations reçues des API de Google vers toute autre application respectent la <link>Google API Services User Data Policy</link>, y compris les exigences Limited Use.",
+    "p2": "L'utilisation et le transfert par MCP Emails des informations reçues des API de Google vers toute autre application respectent la <link>Google API Services User Data Policy</link>, y compris les exigences Limited Use.",
     "p3": "L'accès à Outlook et Microsoft 365 passe par Microsoft Graph, depuis une application dont l'éditeur est vérifié par Microsoft, et ne demande qu'un ensemble nommé d'autorisations affiché sur l'écran de consentement de Microsoft : Mail.ReadWrite, Mail.Send, offline_access, openid, profile et email. Pour Fastmail, iCloud, Yahoo, Zoho, Yandex et les autres fournisseurs IMAP, vous vous connectez avec un mot de passe d'application délivré par le fournisseur, que vous pouvez révoquer à tout moment, sans aucune portée OAuth large que nous pourrions demander à l'excès."
   },
   "subprocessors": {
     "title": "7. Sous-traitants",
-    "intro": "Nous gardons courte la liste des entreprises qui touchent à des données, et chacune est liée par un accord de traitement des données. Notez ce qui est absent : aucun fournisseur d'IA ne figure sur cette liste. MCPEmails n'envoie vos e-mails à aucun modèle de son choix. C'est votre agent qui le fait, sous votre contrôle et selon la politique de données de son fournisseur.",
+    "intro": "Nous gardons courte la liste des entreprises qui touchent à des données, et chacune est liée par un accord de traitement des données. Notez ce qui est absent : aucun fournisseur d'IA ne figure sur cette liste. MCP Emails n'envoie vos e-mails à aucun modèle de son choix. C'est votre agent qui le fait, sous votre contrôle et selon la politique de données de son fournisseur.",
     "thProvider": "Fournisseur",
     "thPurpose": "Finalité",
     "thLocation": "Emplacement",
@@ -114,6 +119,11 @@
         "provider": "Vercel",
         "purpose": "Hébergement du site web, du tableau de bord et du point de terminaison MCP",
         "location": "CDN mondial ; serveurs aux États-Unis (Est) et dans l'UE (Stockholm)"
+      },
+      {
+        "provider": "Hetzner",
+        "purpose": "Relais de messagerie pour les rares fournisseurs qui refusent les connexions depuis des adresses cloud (un tunnel TLS : il ne peut lire ni le courrier ni les mots de passe)",
+        "location": "Allemagne (UE)"
       },
       {
         "provider": "Stripe",
@@ -146,8 +156,8 @@
   },
   "operator": {
     "title": "Qui est aux commandes",
-    "p1": "Une seule personne : moi. Je suis Asgeir Albretsen et j'opère sous le nom d'Albretsen Consulting, une entreprise individuelle norvégienne (enkeltpersonforetak), numéro d'organisation 926 646 753, basée à Bergen, en Norvège. Les commits sont les miens eux aussi, sous <gh>github.com/Albretsen</gh>, si bien que le nom affiché sur cette page et le nom associé au code ne sont qu'un seul et même nom. Vous trouverez plus de détails sur la <about>page « À propos »</about>, et l'identification juridique complète figure dans les <terms>conditions</terms>.",
-    "p2": "Que tout repose sur une seule personne est un risque réel, et la réponse n'est pas de promettre que je serai toujours là. MCPEmails est public sous AGPL-3.0 et le service hébergé exécute ce même code, donc si j'arrête, ou si vous cessez simplement de me faire confiance, vous pouvez cloner le dépôt et l'exécuter sur votre propre infrastructure avec vos propres clés. <selfhostpage>Le guide d'auto-hébergement</selfhostpage> décrit toute la procédure. Je préfère être une personne identifiée que vous pouvez joindre et que vous pouvez quitter, plutôt qu'un fournisseur anonyme à qui vous ne pouvez que faire confiance.",
+    "p1": "Une seule personne : moi. Je suis Asgeir Albretsen et j'exploite MCP Emails par l'intermédiaire d'Albretsen AS, une société à responsabilité limitée de droit norvégien (aksjeselskap) dont je suis propriétaire, numéro d'organisation 938 702 373, basée à Bergen, en Norvège. Les commits sont les miens eux aussi, sous <gh>github.com/Albretsen</gh>, si bien que le nom affiché sur cette page et le nom associé au code ne sont qu'un seul et même nom. Vous trouverez plus de détails sur la <about>page « À propos »</about>, et l'identification juridique complète figure dans les <terms>conditions</terms>.",
+    "p2": "Que tout repose sur une seule personne est un risque réel, et la réponse n'est pas de promettre que je serai toujours là. MCP Emails est public sous AGPL-3.0 et le service hébergé exécute ce même code, donc si j'arrête, ou si vous cessez simplement de me faire confiance, vous pouvez cloner le dépôt et l'exécuter sur votre propre infrastructure avec vos propres clés. <selfhostpage>Le guide d'auto-hébergement</selfhostpage> décrit toute la procédure. Je préfère être une personne identifiée que vous pouvez joindre et que vous pouvez quitter, plutôt qu'un fournisseur anonyme à qui vous ne pouvez que faire confiance.",
     "p3": "Les messages de support et de sécurité ne passent par aucune file d'attente. Ils arrivent chez moi, et je réponds moi-même à chaque message."
   }
 }

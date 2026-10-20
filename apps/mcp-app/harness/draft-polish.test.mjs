@@ -461,14 +461,17 @@ async function main() {
     await settle();
     expect("signature Edit: focus is in the signature box", c.active()?.id, "d-signature");
     const x = (addr) => c.root.querySelector(`[aria-label="Remove ${addr}"]`);
-    // Focus lands on the chip, not on its remove button: the buttons are out
-    // of the tab order (draft-ux.test.mjs).
+    // A remove button pressed with the pointer leaves focus in the field's
+    // input, never on the button or the document (since 2026-10-19: a chip
+    // focused there blurred the input and committed a partial address;
+    // draft-fields.test.mjs R5). The keyboard's Delete still moves to a chip
+    // (draft-ux.test.mjs).
     c.press(x("a@x.example"));
     await settle();
-    expect("removing the first chip focuses the one that took its place", c.active(), x("b@x.example").parentElement);
+    expect("removing the first chip focuses the field", c.active()?.id, "d-to");
     c.press(x("c@x.example"));
     await settle();
-    expect("removing the last chip focuses the one before", c.active(), x("b@x.example").parentElement);
+    expect("removing the last chip focuses the field", c.active()?.id, "d-to");
     c.press(x("b@x.example"));
     await settle();
     expect("removing the only chip focuses the field", c.active()?.id, "d-to");

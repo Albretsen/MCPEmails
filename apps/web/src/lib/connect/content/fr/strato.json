@@ -19,7 +19,7 @@
     "titleLine1": "Serveur MCP pour la messagerie STRATO :",
     "titleLine2": "toutes les boîtes de votre entreprise, dans Claude et ChatGPT",
     "lead": "Vous gérez info@, ventes@, support@ et factures@ sur votre propre domaine chez STRATO ? Connectez chaque boîte au même espace de travail et votre agent IA travaille dans toutes. Lisez, recherchez, envoyez, répondez, planifiez et organisez le courrier via IMAP avec le mot de passe de la boîte, et non votre identifiant client STRATO.",
-    "answer": "Claude ne peut pas accéder seul à une boîte STRATO. mcpemails est un serveur MCP hébergé qui la connecte via IMAP sur imap.strato.de, port 993, en s'authentifiant avec votre adresse e-mail complète et le mot de passe défini sur cette boîte plutôt qu'avec votre identifiant client STRATO, pour que Claude, Cursor ou tout client MCP puisse lire, rechercher, envoyer et organiser le courrier. STRATO n'accepte que l'authentification par mot de passe normal sur une connexion chiffrée, après avoir désactivé l'ancienne méthode challenge-response. Chaque adresse de l'entreprise, comme info@ ou ventes@, se connecte comme une boîte à part : une boîte est gratuite, Personal en connecte trois et Pro toutes celles que vous gérez.",
+    "answer": "Claude ne peut pas accéder seul à une boîte STRATO. MCP Emails est un serveur MCP hébergé qui la connecte via IMAP sur imap.strato.de, port 993, en s'authentifiant avec votre adresse e-mail complète et le mot de passe défini sur cette boîte plutôt qu'avec votre identifiant client STRATO, pour que Claude, Cursor ou tout client MCP puisse lire, rechercher, envoyer et organiser le courrier. STRATO n'accepte que l'authentification par mot de passe normal sur une connexion chiffrée, après avoir désactivé l'ancienne méthode challenge-response. Chaque adresse de l'entreprise, comme info@ ou ventes@, se connecte comme une boîte à part : une boîte est gratuite, Personal en connecte trois, Pro jusqu'à 10 et Business autant qu'il vous en faut.",
     "meta0": "Première boîte gratuite, offres pour les autres",
     "meta1": "Mot de passe de la boîte, pas l'identifiant client",
     "meta2": "E-mails récupérés en direct, jamais stockés"
@@ -36,14 +36,14 @@
   "setup": [
     {
       "h": "Créez un compte gratuit",
-      "p": "Inscrivez-vous sur mcpemails, sans carte bancaire. L'offre gratuite connecte une boîte, pour toujours."
+      "p": "Inscrivez-vous sur MCP Emails, sans carte bancaire. L'offre gratuite connecte une boîte, pour toujours."
     },
     {
       "h": "Définissez le mot de passe de la boîte dans le STRATO Kundenlogin",
       "p": "Connectez-vous au STRATO Kundenlogin, ouvrez votre pack et allez dans E-Mail, puis E-Mail-Adressen verwalten (gérer les adresses e-mail). Sélectionnez l'adresse et définissez-y un nouveau mot de passe. Ce mot de passe appartient à la seule boîte et n'est pas celui que vous venez d'utiliser pour accéder au Kundenlogin."
     },
     {
-      "h": "Collez-le dans mcpemails",
+      "h": "Collez-le dans MCP Emails",
       "p": "Choisissez IMAP / SMTP, saisissez l'adresse complète et collez le mot de passe de la boîte. Les serveurs imap.strato.de et smtp.strato.de et les ports 993 et 465 sont préremplis et ont été vérifiés via une connexion TLS réelle."
     },
     {
@@ -58,7 +58,7 @@
     },
     {
       "h": "STRATO n'annonce pas SASL-IR",
-      "p": "Le serveur IMAP omet la capacité SASL-IR, donc il refuse l'authentification en une étape qui transporte les identifiants sur la même ligne que la commande AUTHENTICATE. Un client qui suppose SASL-IR reçoit un <code>BAD</code> sec, sans explication, qui là encore ressemble à un problème de mot de passe. mcpemails détecte cette réponse et relance l'échange en deux étapes, donc la connexion réussit, mais avec la suppression de CRAM-MD5, c'est pour cela que STRATO produit tant de faux signalements de mot de passe erroné."
+      "p": "Le serveur IMAP omet la capacité SASL-IR, donc il refuse l'authentification en une étape qui transporte les identifiants sur la même ligne que la commande AUTHENTICATE. Un client qui suppose SASL-IR reçoit un <code>BAD</code> sec, sans explication, qui là encore ressemble à un problème de mot de passe. MCP Emails détecte cette réponse et relance l'échange en deux étapes, donc la connexion réussit, mais avec la suppression de CRAM-MD5, c'est pour cela que STRATO produit tant de faux signalements de mot de passe erroné."
     },
     {
       "h": "STRATO est le serveur IMAP le mieux équipé de sa gamme de prix",
@@ -76,7 +76,7 @@
   "faq": [
     {
       "q": "Claude fonctionne-t-il avec l'e-mail STRATO ?",
-      "a": "Pas seul. Claude n'a pas de connecteur STRATO intégré. Pointer un serveur MCP comme mcpemails vers votre boîte STRATO via IMAP donne à Claude un accès en lecture, recherche, envoi, réponse, planification et organisation, et la même connexion fonctionne depuis Cursor, ChatGPT et les autres clients MCP."
+      "a": "Pas seul. Claude n'a pas de connecteur STRATO intégré. Pointer un serveur MCP comme MCP Emails vers votre boîte STRATO via IMAP donne à Claude un accès en lecture, recherche, envoi, réponse, planification et organisation, et la même connexion fonctionne depuis Cursor, ChatGPT et les autres clients MCP."
     },
     {
       "q": "Quels sont les paramètres IMAP et SMTP de STRATO ?",
@@ -97,6 +97,6 @@
   ],
   "ctaBand": {
     "title": "Toutes vos boîtes STRATO sur un seul agent",
-    "sub": "Connectez votre première boîte STRATO gratuitement, sans carte bancaire. Personal en connecte trois, Pro toutes celles que vous gérez."
+    "sub": "Connectez votre première boîte STRATO gratuitement, sans carte bancaire. Personal en connecte trois, Pro jusqu'à 10 et Business autant qu'il vous en faut."
   }
 }

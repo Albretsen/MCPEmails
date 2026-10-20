@@ -108,14 +108,11 @@ const NOT_FOUND_ENTRY =
   "call email_list or email_search to get current message IDs.";
 
 /** A success result: the structured value AND the exact text, both. */
-function assertJsonResult(outcome: ToolOutcome, expected: Record<string, unknown>, pretty = false) {
+function assertJsonResult(outcome: ToolOutcome, expected: Record<string, unknown>) {
   assertEquals(outcome.result.structuredContent, expected);
   assertEquals(outcome.result.content.length, 1);
   assertEquals(outcome.result.content[0].type, "text");
-  assertEquals(
-    outcome.result.content[0].text,
-    pretty ? JSON.stringify(expected, null, 2) : JSON.stringify(expected),
-  );
+  assertEquals(outcome.result.content[0].text, JSON.stringify(expected));
   assertEquals(outcome.logStatus, "success");
   assertEquals(outcome.logErrorCode, null);
 }
@@ -246,7 +243,7 @@ Deno.test("draft_list (gmail): a typical page, every field, in drafts.list order
     ],
     untrusted_content: true,
   };
-  assertJsonResult(value, expected, true);
+  assertJsonResult(value, expected);
   assertEquals(
     requestMultiset(world),
     [DRAFT_LIST_URL(20), draftMetaUrl("dm01"), draftMetaUrl("dm02"), draftMetaUrl("dm03")].sort(),
@@ -258,7 +255,7 @@ Deno.test("draft_list (gmail): a typical page, every field, in drafts.list order
 
 Deno.test("draft_list (gmail): no drafts makes one request and returns an empty list", async () => {
   const { value, world } = await listDrafts([]);
-  assertJsonResult(value, { inbox_id: INBOX_ID, drafts: [], untrusted_content: true }, true);
+  assertJsonResult(value, { inbox_id: INBOX_ID, drafts: [], untrusted_content: true });
   assertEquals(requestSequence(world), [DRAFT_LIST_URL(20)]);
 
   // `drafts` absent altogether, which is how Gmail spells an empty mailbox.
@@ -268,7 +265,7 @@ Deno.test("draft_list (gmail): no drafts makes one request and returns an empty 
     () => json({ resultSizeEstimate: 0 }),
     () => executeListDrafts({ inbox_id: INBOX_ID }, API_KEY) as Promise<ToolOutcome>,
   );
-  assertJsonResult(bare.value, { inbox_id: INBOX_ID, drafts: [], untrusted_content: true }, true);
+  assertJsonResult(bare.value, { inbox_id: INBOX_ID, drafts: [], untrusted_content: true });
   assertEquals(requestSequence(bare.world), [DRAFT_LIST_URL(20)]);
 });
 
@@ -277,7 +274,7 @@ Deno.test("draft_list (gmail): the maximum page is 50, in order, one get per dra
   const expected = { inbox_id: INBOX_ID, drafts: drafts.map(expectedDraft), untrusted_content: true };
   for (const limit of [50, 999]) {
     const { value, world } = await listDrafts(drafts, { limit });
-    assertJsonResult(value, expected, true);
+    assertJsonResult(value, expected);
     assertEquals(
       requestMultiset(world),
       [DRAFT_LIST_URL(50), ...drafts.map((d) => draftMetaUrl(d.messageId))].sort(),
@@ -288,7 +285,6 @@ Deno.test("draft_list (gmail): the maximum page is 50, in order, one get per dra
   assertJsonResult(
     defaulted.value,
     { inbox_id: INBOX_ID, drafts: drafts.slice(0, 20).map(expectedDraft), untrusted_content: true },
-    true,
   );
   assertEquals(requestSequence(defaulted.world)[0], DRAFT_LIST_URL(20));
 });
@@ -300,7 +296,7 @@ Deno.test("draft_list (gmail): a draft whose get fails is LEFT OUT, wherever it 
       const drafts = Array.from({ length: 7 }, (_, i) => draftAt(i, i === position ? kind : undefined));
       const { value, world } = await listDrafts(drafts);
       const kept = drafts.map(expectedDraft).filter((_, i) => i !== position);
-      assertJsonResult(value, { inbox_id: INBOX_ID, drafts: kept, untrusted_content: true }, true);
+      assertJsonResult(value, { inbox_id: INBOX_ID, drafts: kept, untrusted_content: true });
       // The failing draft was still asked for, once, like every other.
       assertEquals(
         requestMultiset(world),
@@ -319,7 +315,7 @@ Deno.test("draft_list (gmail): several failures at once, including a 401 on a ge
   const { value, world } = await listDrafts(drafts);
   const kept = drafts.map(expectedDraft).filter((_, i) => !(i in fails));
   assertEquals(kept.map((d) => d.draft_id), ["draft-03", "draft-04", "draft-06", "draft-07", "draft-08"]);
-  assertJsonResult(value, { inbox_id: INBOX_ID, drafts: kept, untrusted_content: true }, true);
+  assertJsonResult(value, { inbox_id: INBOX_ID, drafts: kept, untrusted_content: true });
   assertEquals(
     requestMultiset(world),
     [DRAFT_LIST_URL(20), ...drafts.map((d) => draftMetaUrl(d.messageId))].sort(),
@@ -329,7 +325,7 @@ Deno.test("draft_list (gmail): several failures at once, including a 401 on a ge
 Deno.test("draft_list (gmail): every get failing returns an empty list, not an error", async () => {
   const drafts = Array.from({ length: 4 }, (_, i) => draftAt(i, "500"));
   const { value } = await listDrafts(drafts);
-  assertJsonResult(value, { inbox_id: INBOX_ID, drafts: [], untrusted_content: true }, true);
+  assertJsonResult(value, { inbox_id: INBOX_ID, drafts: [], untrusted_content: true });
 });
 
 Deno.test("draft_list (gmail): a listing entry with no message is left out without a request", async () => {
@@ -357,7 +353,7 @@ Deno.test("draft_list (gmail): a listing entry with no message is left out witho
       created_at: "2026-01-01T00:00:00.000Z",
     })),
     untrusted_content: true,
-  }, true);
+  });
   assertEquals(requestMultiset(world), [DRAFT_LIST_URL(20), draftMetaUrl("dm01"), draftMetaUrl("dm03")].sort());
 });
 
@@ -391,7 +387,7 @@ Deno.test("draft_list (gmail): an expired token is refreshed ONCE and every requ
     },
     () => executeListDrafts({ inbox_id: INBOX_ID }, API_KEY) as Promise<ToolOutcome>,
   );
-  assertJsonResult(value, { inbox_id: INBOX_ID, drafts: drafts.map(expectedDraft), untrusted_content: true }, true);
+  assertJsonResult(value, { inbox_id: INBOX_ID, drafts: drafts.map(expectedDraft), untrusted_content: true });
   assertEquals(
     requestMultiset(world),
     ["POST https://oauth2.googleapis.com/token", DRAFT_LIST_URL(20), ...drafts.map((d) => draftMetaUrl(d.messageId))].sort(),

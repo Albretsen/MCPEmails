@@ -187,7 +187,11 @@ export async function handlePushUserRoute(
     const subscription = parseSubscription(isRecord(body) ? body["subscription"] : undefined);
     const existing = await deps.store.subscriptionByEndpoint(subscription.endpoint);
     if (!existing || existing.user_id !== ctx.userId) {
-      const held = await deps.store.countSubscriptions(ctx.userId);
+      let held = await deps.store.countSubscriptions(ctx.userId);
+      // Dead browsers (disabled rows) give their slot back before anyone is refused.
+      if (held >= MAX_SUBSCRIPTIONS_PER_USER && await deps.store.purgeDisabledSubscriptions(ctx.userId) > 0) {
+        held = await deps.store.countSubscriptions(ctx.userId);
+      }
       if (held >= MAX_SUBSCRIPTIONS_PER_USER) {
         throw new ApiError(409, "conflict", "Too many devices have notifications on. Turn them off on one you no longer use.", {
           toolCode: "push_subscription_limit",

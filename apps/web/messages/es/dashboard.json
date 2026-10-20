@@ -22,20 +22,20 @@
       "step1": "En claude.ai o Claude Desktop, abre Configuración → Conectores.",
       "step2": "Haz clic en «Añadir conector personalizado».",
       "step3": "Pega la URL de arriba como la URL del conector, luego haz clic en «Añadir».",
-      "step4": "Haz clic en «Conectar» e inicia sesión con mcpemails para autorizar. No se necesita clave de API."
+      "step4": "Haz clic en «Conectar» e inicia sesión con MCP Emails para autorizar. No se necesita clave de API."
     },
     "chatgpt": {
       "step1": "Abre Configuración → Apps y conectores → Configuración avanzada y activa el modo de desarrollador.",
       "step2": "De vuelta en Apps y conectores, haz clic en «Crear».",
       "step3": "Introduce un nombre y pega la URL de arriba como la URL del conector.",
-      "step4": "Elige OAuth, haz clic en «Crear» y luego autoriza con mcpemails.",
-      "step5": "En un chat de chatgpt.com, haz clic en + → modo de desarrollador y selecciona la app de mcpemails. Repítelo en cada chat nuevo; si no, ChatGPT no verá las herramientas.",
+      "step4": "Elige OAuth, haz clic en «Crear» y luego autoriza con MCP Emails.",
+      "step5": "En un chat de chatgpt.com, haz clic en + → modo de desarrollador y selecciona la app de MCP Emails. Repítelo en cada chat nuevo; si no, ChatGPT no verá las herramientas.",
       "note": "Funciona en chatgpt.com (solo web) con Plus, Pro, Business, Enterprise y Edu. Las cuentas Free y Go no pueden añadir conectores personalizados. En Business y Enterprise, puede que un administrador tenga que permitir antes el modo de desarrollador."
     },
     "cursor": {
       "step1": "Edita ~/.cursor/mcp.json (global) o .cursor/mcp.json (proyecto).",
       "step2": "Añade el servidor de abajo bajo «mcpServers».",
-      "step3": "Cursor te pide iniciar sesión vía OAuth. Autoriza con mcpemails."
+      "step3": "Cursor te pide iniciar sesión vía OAuth. Autoriza con MCP Emails."
     },
     "vscode": {
       "step1": "Abre la Paleta de comandos (⇧⌘P) y ejecuta «MCP: Add Server».",
@@ -51,7 +51,7 @@
     "windsurf": {
       "step1": "Abre la configuración de MCP de Cascade, o edita ~/.codeium/windsurf/mcp_config.json.",
       "step2": "Añade el servidor de abajo. Nota que el campo es «serverUrl», no «url».",
-      "step3": "Actualiza los servidores MCP en Cascade y autoriza con mcpemails cuando se te solicite."
+      "step3": "Actualiza los servidores MCP en Cascade y autoriza con MCP Emails cuando se te solicite."
     },
     "gemini": {
       "step1": "Edita ~/.gemini/settings.json (global) o .gemini/settings.json (proyecto).",
@@ -61,7 +61,7 @@
     "zed": {
       "step1": "En la configuración del Panel de agentes haz clic en «Add Custom Server», o edita settings.json.",
       "step2": "Añade el servidor de abajo bajo «context_servers».",
-      "step3": "Zed solicita el flujo de OAuth cuando no hay un encabezado Authorization. Inicia sesión con mcpemails."
+      "step3": "Zed solicita el flujo de OAuth cuando no hay un encabezado Authorization. Inicia sesión con MCP Emails."
     },
     "jetbrains": {
       "step1": "Abre Configuración → Herramientas → AI Assistant → Model Context Protocol (MCP).",
@@ -71,7 +71,7 @@
     "raycast": {
       "step1": "Ejecuta el comando «Install MCP Server» (o «Manage MCP Servers»).",
       "step2": "Introduce un nombre, establece el transporte en «HTTP» y pega la URL de arriba.",
-      "step3": "Pulsa «Install MCP Server», luego haz clic en «Sign In» para autorizar con mcpemails."
+      "step3": "Pulsa «Install MCP Server», luego haz clic en «Sign In» para autorizar con MCP Emails."
     },
     "warp": {
       "step1": "Abre Configuración → Agentes → Servidores MCP y haz clic en «+ Add».",
@@ -98,7 +98,7 @@
     "multiInboxTitle": "Añade tus otros buzones de trabajo",
     "multiInboxOptional": "Opcional",
     "multiInboxDesc": "Conecta info@, ventas@, facturas@ y los demás, y tu agente trabaja con todos los buzones de la empresa desde una sola conversación, respondiendo desde la dirección correcta.",
-    "multiInboxDescUpgrade": "Conecta info@, ventas@, facturas@ y los demás, y tu agente trabaja con todos los buzones de la empresa desde una sola conversación, respondiendo desde la dirección correcta. El plan gratuito cubre un buzón; Pro cubre todos los buzones de tu empresa.",
+    "multiInboxDescUpgrade": "Conecta info@, ventas@, facturas@ y los demás, y tu agente trabaja con todos los buzones de la empresa desde una sola conversación, respondiendo desde la dirección correcta. El plan gratuito cubre un buzón; Pro cubre hasta 10.",
     "multiInboxCta": "Añadir un buzón"
   },
   "overview": {
@@ -129,7 +129,7 @@
     "goToMembers": "Ir a Miembros",
     "callsPerDayTitle": "Llamadas por día",
     "callsPerDaySub": "Últimos {days} días · en todas las herramientas",
-    "pro": "Team",
+    "pro": "Business",
     "recentActivityTitle": "Actividad reciente",
     "recentActivitySub": "Llamadas a herramientas MCP en vivo",
     "noActivityTitle": "Aún no hay actividad",
@@ -146,8 +146,8 @@
     "usedSingular": "{count} de {max} bandeja usada",
     "capTitle": "Has alcanzado tu límite de bandejas",
     "capBodyPersonal": "El plan gratuito conecta un buzón. Personal te lleva a tres por 9 $ al mes, para que el trabajo y lo personal compartan el mismo agente.",
-    "capBodyPro": "Personal conecta tres buzones. Pro elimina el límite por 15 $ al mes, para reunir todos tus buzones en un solo agente.",
-    "capBodyBusiness": "¿Gestionas más de un buzón de empresa? El plan gratuito conecta uno. Personal cubre tres por 9 $ al mes, suficiente para info@, ventas@ y el tuyo. Pro cubre todos los buzones de tu empresa por 15 $ al mes: finanzas, ventas, soporte, info y el tuyo.",
+    "capBodyPro": "Personal conecta tres buzones. Pro te lleva a 10 por 15 $ al mes, todos en un solo agente.",
+    "capBodyBusiness": "¿Gestionas más de un buzón de empresa? El plan gratuito conecta uno. Personal cubre tres por 9 $ al mes, suficiente para info@, ventas@ y el tuyo. Pro cubre hasta 10 por 15 $ al mes: finanzas, ventas, soporte, info y el tuyo.",
     "capCtaPersonal": "Mejorar a Personal, 9 $/mes",
     "capCtaPro": "Mejorar a Pro, 15 $/mes",
     "capCompare": "Comparar todos los planes",
@@ -266,7 +266,9 @@
     },
     "emptyAltLead": "¿Todavía no quieres conectar un buzón?",
     "emptyViewKeys": "Obtén tu URL de MCP y tu clave de API",
-    "emptyReadDocs": "Lee las guías de configuración"
+    "emptyReadDocs": "Lee las guías de configuración",
+    "capBodyProCap": "Pro conecta 10 buzones. Business incluye 10 por 39 $ al mes y añade cada buzón adicional por 3 $ al mes, con miembros ilimitados sin coste extra.",
+    "capCtaBusiness": "Mejorar a Business, 39 $/mes"
   },
   "apiKeys": {
     "title": "Claves de API",
@@ -552,16 +554,15 @@
       "personalFeature2": "120 peticiones / minuto (ráfaga 2×)",
       "personalFeatureActions": "Sin límite mensual de acciones",
       "personalFeature4": "Soporte por correo",
-      "soloFeature1": "Bandejas conectadas ilimitadas",
+      "soloFeature1": "10 bandejas conectadas",
       "soloFeature2": "300 peticiones / minuto (ráfaga 5×)",
       "soloFeature3": "Más historial de analíticas",
       "soloFeature4": "Soporte por correo",
-      "teamFeature1": "Todo lo de Pro",
-      "teamFeature2": "Miembros ilimitados con roles",
-      "teamFeature3": "Un espacio de trabajo separado por cliente o negocio",
-      "teamFeature4": "SSO (SAML / OIDC) + registro de auditoría",
-      "teamFeature5": "El mayor historial de analíticas",
-      "teamFeature6": "Soporte prioritario"
+      "businessFeature1": "Todo lo de Pro",
+      "businessFeature2": "10 buzones incluidos, 3 $ al mes por cada uno adicional",
+      "businessFeature3": "Miembros ilimitados con roles, sin coste extra",
+      "businessFeature4": "Los administradores aprueban los envíos retenidos",
+      "businessFeature5": "Varios espacios de trabajo con una sola suscripción"
     },
     "planIncludes": "Qué incluye tu plan",
     "inboxesOne": "1 bandeja conectada",
@@ -592,7 +593,7 @@
     "confirmNoteInterval": "Se cobra ahora en la tarjeta guardada, con un abono por el tiempo restante del periodo actual. Tu periodo de facturación empieza de nuevo hoy, así que tu próxima fecha de renovación cambia.",
     "confirmNoteIntervalNoPreview": "No pudimos calcular este cambio por adelantado. Se cobra la diferencia en la tarjeta guardada, con un abono por el tiempo restante del periodo actual, y el importe exacto aparece en tu factura. Tu periodo de facturación empieza de nuevo hoy, así que tu próxima fecha de renovación cambia.",
     "confirmPay": "Confirmar y pagar {amount}",
-    "confirmChange": "Confirmar cambio",
+    "confirmChange": "Confirmar y pagar",
     "confirmCancel": "Cancelar",
     "confirming": "Cobrando…",
     "planChangedCharged": "Ya estás en {plan}. Se han cobrado {amount} a tu tarjeta.",
@@ -601,7 +602,10 @@
     "paymentRequiredBody": "Tu banco necesita autorizar el pago, o la tarjeta ha sido rechazada. Tu plan actual no ha cambiado y no se te ha cobrado nada. Paga la factura pendiente y el cambio se aplicará automáticamente.",
     "paymentRequiredPay": "Pagar factura",
     "paymentRequiredClose": "Cerrar",
-    "paymentRequiredToast": "El pago no se ha completado, así que sigues en {plan}. Abre el portal de facturación para pagar la factura pendiente."
+    "paymentRequiredToast": "El pago no se ha completado, así que sigues en {plan}. Abre el portal de facturación para pagar la factura pendiente.",
+    "proInboxesKept": "Tu plan Pro conserva las bandejas conectadas ilimitadas.",
+    "businessMailboxRate": "10 buzones incluidos entre todos tus espacios de trabajo. Cada buzón adicional se factura con tu plan: 3 $ al mes o 28,80 $ al año.",
+    "confirmExtraMailboxes": "Incluye {count, plural, one {# buzón adicional} other {# buzones adicionales}} además de los 10 incluidos."
   },
   "security": {
     "title": "Seguridad",
@@ -665,8 +669,8 @@
     "roleOwner": "Propietario",
     "sending": "Enviando…",
     "sendInvite": "Enviar invitación",
-    "rolesLockedHint": "Las invitaciones se unen como Miembro. Mejora a Team para asignar roles de Administrador y Visor.",
-    "inviteUpgradeHint": "Invitar colaboradores requiere el plan Team. Mejora tu plan para añadir miembros a este espacio de trabajo.",
+    "rolesLockedHint": "Las invitaciones se unen como Miembro. Mejora a Business para asignar roles de Administrador y Visor.",
+    "inviteUpgradeHint": "Invitar colaboradores requiere el plan Business. Mejora tu plan para añadir miembros a este espacio de trabajo.",
     "errInviteFailed": "No se pudo enviar la invitación.",
     "errRemoveFailed": "No se pudo eliminar al miembro.",
     "errRoleFailed": "No se pudo actualizar el rol.",
@@ -1037,6 +1041,83 @@
     "bulkRuns": {
       "viewerNotice": "Puedes seguir aquí los trabajos grandes, pero solo un propietario, administrador o miembro del espacio puede detenerlos.",
       "stopViewerTitle": "Los lectores no pueden detener trabajos"
+    }
+  },
+  "sso": {
+    "title": "Inicio de sesión único (SAML)",
+    "sub": "Permite que tu equipo inicie sesión con Microsoft Entra ID.",
+    "statusRequired": "Obligatorio",
+    "statusActive": "Activado",
+    "statusDisabled": "Desactivado",
+    "statusDraft": "Sin configurar",
+    "loading": "Cargando la configuración de inicio de sesión único...",
+    "notAvailable": "La configuración del inicio de sesión único aún no está disponible. Contacta con soporte para activarla.",
+    "step1Title": "1. Crea la aplicación en Microsoft Entra",
+    "step1Hint": "En Entra, añade una Enterprise application, elige SAML y pega estos valores en Basic SAML Configuration. Usa la dirección de correo del usuario como identificador de nombre.",
+    "entityId": "Identifier (Entity ID)",
+    "acsUrl": "Reply URL (Assertion Consumer Service URL)",
+    "metadataUrl": "Nuestra URL de metadatos",
+    "step2Title": "2. Pega la URL de metadatos de Entra",
+    "step2Hint": "Copia la App Federation Metadata Url de la sección SAML Certificates de Entra.",
+    "step2Connected": "Conectado a Entra. Pega una URL nueva para reemplazarla.",
+    "metadataInputLabel": "App Federation Metadata Url",
+    "metadataSave": "Guardar",
+    "metadataUpdate": "Reemplazar",
+    "metadataSaved": "Conexión con Microsoft Entra guardada.",
+    "step3Title": "3. Verifica tus dominios de correo",
+    "step3Hint": "Añade cada dominio con el que inicia sesión tu equipo, publica su registro TXT en el DNS y compruébalo. Solo los dominios verificados usan el inicio de sesión único.",
+    "domainInputLabel": "Dominio de correo",
+    "domainAdd": "Añadir dominio",
+    "domainVerified": "Verificado",
+    "domainPending": "Sin verificar",
+    "checkNow": "Comprobar ahora",
+    "domainRemove": "Quitar",
+    "txtRecordLabel": "Registro TXT para {domain}",
+    "domainVerifiedToast": "{domain} está verificado.",
+    "step4Title": "4. Prueba y exige",
+    "testHint": "Abre una ventana privada, elige Iniciar sesión con SSO e inicia sesión con tu correo del trabajo. Podrás exigir el inicio de sesión único cuando un propietario o administrador lo haya hecho una vez.",
+    "testSeen": "Un propietario o administrador ha iniciado sesión con el inicio de sesión único.",
+    "defaultRole": "Rol para personas nuevas",
+    "roleMember": "Miembro",
+    "roleViewer": "Lector",
+    "enforceLabel": "Exigir inicio de sesión único",
+    "enforceHint": "Las personas de dominios verificados solo podrán iniciar sesión a través de Microsoft Entra.",
+    "enforceLocked": "Disponible cuando haya un dominio verificado y un propietario o administrador haya hecho un inicio de sesión de prueba.",
+    "enable": "Activar inicio de sesión único",
+    "disable": "Desactivar inicio de sesión único",
+    "historyTitle": "Cambios recientes",
+    "auditUnknownActor": "Desconocido",
+    "audit": {
+      "connection_created": "Inicio de sesión único configurado",
+      "connection_metadata_updated": "URL de metadatos de Entra guardada",
+      "connection_default_role_changed": "Rol para personas nuevas cambiado",
+      "connection_enforced": "Inicio de sesión único exigido",
+      "connection_enforcement_removed": "El inicio de sesión único ya no es obligatorio",
+      "connection_disabled": "Inicio de sesión único desactivado",
+      "connection_enabled": "Inicio de sesión único activado",
+      "domain_added": "Dominio {domain} añadido",
+      "domain_removed": "Dominio {domain} quitado",
+      "domain_verified": "Dominio {domain} verificado"
+    },
+    "errors": {
+      "generic": "Algo salió mal. Inténtalo de nuevo.",
+      "load": "No se pudo cargar la configuración del inicio de sesión único.",
+      "invalid_metadata_url": "Pega la App Federation Metadata Url de Microsoft Entra.",
+      "metadata_rejected": "No se pudieron leer los metadatos de Entra desde esa URL. Revísala e inténtalo de nuevo.",
+      "management_not_configured": "La configuración del inicio de sesión único aún no está disponible. Contacta con soporte.",
+      "management_unavailable": "No se pudo guardar en el servicio de inicio de sesión. Inténtalo más tarde.",
+      "invalid_domain": "Escribe un dominio como example.com.",
+      "consumer_domain": "Los dominios de correo públicos no pueden usar el inicio de sesión único.",
+      "domain_exists": "Ese dominio ya está en la lista.",
+      "domain_limit": "Has añadido el máximo de dominios permitido.",
+      "domain_taken": "Otro espacio de trabajo ya ha verificado este dominio. Contacta con soporte.",
+      "dns_record_missing": "Aún no se encuentra el registro TXT. Los cambios de DNS pueden tardar.",
+      "dns_lookup_failed": "La consulta DNS falló. Inténtalo de nuevo en un minuto.",
+      "rate_limited": "Demasiados intentos. Espera unos minutos e inténtalo de nuevo.",
+      "no_provider": "Primero pega la URL de metadatos de Entra.",
+      "enforce_needs_active": "Activa el inicio de sesión único antes de exigirlo.",
+      "enforce_needs_verified_domain": "Primero verifica al menos un dominio.",
+      "enforce_needs_test_sign_in": "Primero, un propietario o administrador debe iniciar sesión una vez con el inicio de sesión único."
     }
   }
 }

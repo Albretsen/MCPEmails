@@ -1,0 +1,93 @@
+{
+  "_sources": [
+    "apps/web/components/dashboard/Pages.jsx (MCP_CLIENTS) + apps/web/messages/en/dashboard.json (clients.*)",
+    "apps/web/src/lib/api-keys/generate.ts + apps/web/src/lib/api-keys/scopes.ts",
+    "supabase/functions/mcp-server/web-ingress.ts",
+    "apps/web/messages/en/docs.json"
+  ],
+  "meta": {
+    "title": "E-Mail-MCP-Server-API: curl, JSON-RPC und Bearer-Authentifizierung",
+    "description": "Rufen Sie den MCP-Server von MCP Emails direkt über HTTP auf. Ein Streamable-HTTP-Endpunkt, JSON-RPC 2.0, ein Bearer-Schlüssel mit Scopes und der vollständige Tool-Katalog. Ein Postfach kostenlos."
+  },
+  "hero": {
+    "eyebrow": "HTTP + E-Mail",
+    "titleLine1": "Rufen Sie den E-Mail-MCP-Server auf",
+    "titleLine2": "direkt aus curl oder einem Skript",
+    "lead": "Kein Client, kein SDK. Ein Streamable-HTTP-Endpunkt, der JSON-RPC 2.0 spricht, authentifiziert mit einem Bearer-Schlüssel mit Scopes, den Sie mit einem Klick widerrufen können.",
+    "meta0": "1 Postfach kostenlos, dauerhaft",
+    "meta1": "API-Schlüssel mit Scopes, mit einem Klick widerrufbar",
+    "meta2": "E-Mails werden live abgerufen, nie gespeichert",
+    "answer": "Senden Sie JSON-RPC 2.0 per POST an https://mcpemails.com/api/mcp, mit einem Authorization-Bearer-Header, der einen API-Schlüssel aus Ihrem Dashboard enthält. Unterstützt werden die Methoden initialize, tools/list, tools/call, prompts/list und prompts/get."
+  },
+  "method": {
+    "title": "So verbindet sich ein Skript oder HTTP-Client: ein API-Schlüssel mit Scopes",
+    "body": "Ein Skript oder reiner HTTP-Client durchläuft bei einem entfernten MCP-Server keinen OAuth-Ablauf im Browser und authentifiziert sich deshalb mit einem Bearer-Token. Erstellen Sie im Dashboard einen API-Schlüssel, aktivieren Sie nur die Scopes, die der Agent braucht, und senden Sie ihn aus Ihrem Skript oder HTTP-Client als Header <code>Authorization: Bearer</code>. Verbindungen per Schlüssel und per OAuth nutzen denselben Endpunkt und denselben Tool-Katalog; sie unterscheiden sich nur darin, wie das Token zustande kommt."
+  },
+  "setup": [
+    {
+      "h": "Kostenloses Konto erstellen und Postfach verbinden",
+      "p": "Registrieren Sie sich auf mcpemails.com, ohne Kreditkarte, und öffnen Sie dann Dashboard, Postfächer, Postfach verbinden. Outlook und Microsoft 365 verbinden Sie über „Mit Microsoft anmelden“; Gmail, iCloud, Fastmail, Yahoo, Zoho und Yandex nutzen ein App-Passwort; alle anderen Postfächer verbinden sich ganz normal per IMAP und SMTP. Der Free-Tarif umfasst ein Postfach, dauerhaft."
+    },
+    {
+      "h": "API-Schlüssel mit Scopes erstellen",
+      "p": "Klicken Sie unter Dashboard, API-Schlüssel auf „Schlüssel erstellen“. Geben Sie ihm einen Namen und aktivieren Sie nur die Scopes, die dieser Agent braucht: <code>read:email</code>, <code>search:email</code>, <code>send:email</code>, <code>manage:folders</code>, <code>delete:email</code>, <code>manage:drafts</code>, <code>manage:contacts</code>, <code>schedule:email</code> und <code>manage:automations</code>. Der Schlüssel besteht aus <code>mcpe_</code> und 64 Hex-Zeichen und wird nur einmal angezeigt. Kopieren Sie ihn also, bevor Sie den Dialog schließen."
+    },
+    {
+      "h": "Endpunkt aufrufen",
+      "p": "Senden Sie einen JSON-RPC-2.0-Body per POST an <code>https://mcpemails.com/api/mcp</code>, mit dem Schlüssel im Header <code>Authorization</code>. Beginnen Sie mit <code>tools/list</code>, um den Katalog zu sehen, und dann mit <code>inbox_list</code>, um die IDs Ihrer Postfächer zu erfahren."
+    },
+    {
+      "h": "Antwort verarbeiten",
+      "p": "Ergebnisse kommen als JSON-RPC 2.0 zurück. Erfolgreiche Ergebnisse enthalten außerdem ein typisiertes Objekt <code>structuredContent</code>, ein Skript muss also keinen Fließtext parsen."
+    }
+  ],
+  "gotchas": [
+    {
+      "h": "Senden Sie den Schlüssel im Header, nicht im Query-String",
+      "p": "Ein Schlüssel in <code>?key=</code> oder <code>?api_key=</code> wird für Integrationen, die älter als der Header sind, noch akzeptiert, sollte aber in nichts Neuem verwendet werden. Zugangsdaten in URLs landen im Browserverlauf, in Proxy-Logs, Referrer-Headern und Monitoring-Systemen, die Sie alle nicht kontrollieren. Der Header <code>Authorization</code> ist der unterstützte Weg."
+    },
+    {
+      "h": "Ausgehende Aufrufe nehmen einen Idempotenzschlüssel, und Wiederholungen ohne einen sind ein echtes Risiko",
+      "p": "Senden, Antworten, Weiterleiten, Senden eines Entwurfs und geplantes Senden akzeptieren einen optionalen Idempotenzschlüssel, der 24 Stunden lang gilt. Ein Netzwerk-Timeout beim Senden ist von Natur aus mehrdeutig: Die E-Mail kann durchaus raus sein. Mit Idempotenzschlüssel ist die Wiederholung sicher. Ohne ist eine Wiederholung eine zweite E-Mail."
+    },
+    {
+      "h": "Lange Operationen dauern wirklich lange",
+      "p": "Ein Suchen-und-Verschieben über ein großes Postfach hat in der Produktion schon rund 152 Sekunden gedauert, und der Proxy wartet bis zu 270 Sekunden, bevor er selbst aufgibt. Setzen Sie einen Client-Timeout, der das berücksichtigt, statt der üblichen paar Sekunden, sonst brechen Sie Operationen ab, die gleich erfolgreich gewesen wären."
+    },
+    {
+      "h": "Es gibt keinen Push, in keine Richtung",
+      "p": "Keine Webhooks, keine vom Server ausgelösten Ereignisse, keine Callback-URL zum Registrieren. Auf neue E-Mails reagieren heißt abfragen, zum Beispiel <code>email_read</code> mit <code>action: \"list\"</code> und nur ungelesenen Nachrichten, in dem Intervall, das Ihr Workflow braucht. Die Ratenlimits liegen bei 100 pro Minute, 1.000 pro Stunde und 10.000 pro Tag je Schlüssel."
+    }
+  ],
+  "limits": [
+    "Anfragen sind auf 100 pro Minute, 1.000 pro Stunde und 10.000 pro Tag je Schlüssel begrenzt, dazu kommt die Obergrenze Ihres Tarifs für abrechenbare Aktionen.",
+    "Der Server arbeitet rein nach Anfrage und Antwort. Es gibt keine Webhooks und keine vom Server ausgelösten Ereignisse, neue E-Mails wecken Ihren Agenten also nie von selbst. Um auf eingehende E-Mails zu reagieren, fragen Sie in festen Abständen ab.",
+    "E-Mails werden bei jedem Aufruf live von Ihrem Anbieter abgerufen und nie gespeichert. Gespeichert wird nur das verschlüsselte OAuth-Token oder App-Passwort. Ein widerrufenes Token oder ein geändertes Postfachpasswort beendet den Zugriff deshalb sofort."
+  ],
+  "faq": [
+    {
+      "q": "Kann ich das ohne MCP-Client nutzen?",
+      "a": "Ja. Es ist ein gewöhnlicher HTTPS-Endpunkt, der JSON-RPC 2.0 spricht, also können curl, ein Cronjob, ein Backend-Dienst oder jede HTTP-Bibliothek ihn aufrufen. Authentifizieren Sie sich mit einem Bearer-API-Schlüssel aus Dashboard, API-Schlüssel. Der Tool-Katalog ist derselbe, den ein MCP-Client sieht."
+    },
+    {
+      "q": "Welche JSON-RPC-Methoden werden unterstützt?",
+      "a": "initialize, tools/list, tools/call, prompts/list und prompts/get. Erfolgreiche Ergebnisse enthalten neben dem lesbaren Inhalt ein typisiertes Objekt structuredContent, und das sollte ein Skript lesen."
+    },
+    {
+      "q": "Wie mache ich Wiederholungen sicher?",
+      "a": "Übergeben Sie bei ausgehenden Operationen einen Idempotenzschlüssel. Senden, Antworten, Weiterleiten, Senden eines Entwurfs und geplantes Senden akzeptieren einen und beachten ihn 24 Stunden lang, sodass dieselbe Anfrage nach einem Timeout keine zweite E-Mail erzeugen kann. Lesezugriffe lassen sich ohnehin gefahrlos wiederholen."
+    },
+    {
+      "q": "Wie hoch sind die Ratenlimits?",
+      "a": "100 Anfragen pro Minute, 1.000 pro Stunde und 10.000 pro Tag je Schlüssel, dazu die Obergrenze Ihres Tarifs für abrechenbare Aktionen. Fehlgeschlagene Aufrufe und inbox_list werden nicht berechnet."
+    },
+    {
+      "q": "Werden meine E-Mails auf Ihren Servern gespeichert?",
+      "a": "Nein. Jede Nachricht wird für die Anfrage, die sie anfordert, live von Ihrem Anbieter abgerufen und direkt an Ihren Client übergeben. Gespeichert wird nur das verschlüsselte OAuth-Token oder App-Passwort, damit spätere Aufrufe sich authentifizieren können. Wenn Sie das Postfach im Dashboard löschen oder den Zugriff bei Ihrem Anbieter widerrufen, endet die Verbindung sofort."
+    }
+  ],
+  "ctaBand": {
+    "title": "Automatisieren Sie Ihr Postfach per Skript",
+    "sub": "Ein Endpunkt, ein Schlüssel mit Scopes. Ein Postfach dauerhaft kostenlos, keine Kreditkarte nötig."
+  }
+}

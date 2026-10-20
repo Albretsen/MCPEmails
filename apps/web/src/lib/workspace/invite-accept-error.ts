@@ -91,7 +91,7 @@ export function mapInviteAcceptError(message: string): InviteAcceptErrorResponse
     return {
       status: 403,
       body: {
-        error: 'This workspace has no seat available. Its owner needs the Team plan to add collaborators.',
+        error: 'This workspace has no seat available. Its owner needs the Business plan to add collaborators.',
         error_code: 'member_limit_reached',
         upgrade_url: '/pricing',
       },

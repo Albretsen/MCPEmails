@@ -9,10 +9,18 @@
  * marketing. This module is the single place that turns a plan into a window,
  * so the promise and the query cannot drift apart again.
  *
- * TWO THINGS THIS IS NOT.
+ * WINDOWS (owner decision 2026-10-20): Free 30 days, Personal 90, Pro and
+ * Business 730. Storage follows them: the pg_cron job `activity-log-retention`
+ * (supabase/migrations/20261020153742_activity_log_retention_per_plan.sql)
+ * deletes per plan and never deletes a row the Usage page could still show.
+ * It currently keeps every row at least 90 days (a storage floor, so the admin
+ * board keeps its 90 days of activity), so Free rows aged 31-90 days exist but
+ * are not shown. retention.test.ts holds the SQL windows to plans.ts. Until
+ * 2026-10-20 a flat job deleted everything past 90 days, so no workspace has
+ * more than about 90 days of rows yet: copy promises the window going
+ * forward, never history that already exists.
  *
- * It is not a hard delete. Rows stay in `activity_log`; what the plan buys is
- * how much of that history the Usage page will show.
+ * ONE THING THIS IS NOT.
  *
  * It is not applied to `/api/security/audit-log`. It was, briefly, and that was
  * wrong: an audit log is a security artifact rather than a usage metric, and
@@ -21,8 +29,8 @@
  *
  * NO TIER WAS EVER CUT to make a sentence true. Free showed 30 days before any
  * of this was enforced and still does; the copy that said 7 was corrected
- * instead. Pro and Team gained history. That is the only acceptable direction
- * for a change like this on a live product.
+ * instead. Personal, Pro and Business gained history. That is the only
+ * acceptable direction for a change like this on a live product.
  */
 
 import type { PlanLimits } from '@/lib/stripe/plans';
@@ -55,6 +63,28 @@ export function retentionDays(limits: Pick<PlanLimits, 'analyticsRetentionDays'>
  * is exactly seven whole UTC days, today included, which is what the daily
  * series the Usage page renders is bucketed by.
  */
+/**
+ * The daily series the Usage page should draw: the plan's window with the
+ * quiet days before the first call dropped, but never shorter than
+ * MIN_RETENTION_DAYS (or the series itself, if shorter).
+ *
+ * Pro and Business buy 730 days, but rows older than 90 days were deleted on
+ * every plan until 2026-10-20, so a full window would be ~640 empty bars
+ * before any data and an average divided by 730 days that never had a row.
+ * Trimming shows the history that exists, and the copy quotes the length of
+ * what is drawn. A quiet day after the first call is real data and is kept.
+ */
+export function trimLeadingQuietDays<T extends { count: number }>(
+  daily: readonly T[],
+  minDays: number = MIN_RETENTION_DAYS,
+): T[] {
+  if (!Array.isArray(daily) || daily.length === 0) return [];
+  const first = daily.findIndex((d) => (d?.count ?? 0) > 0);
+  const floorStart = Math.max(daily.length - Math.max(Math.floor(minDays), 1), 0);
+  const start = first === -1 ? floorStart : Math.min(first, floorStart);
+  return daily.slice(start);
+}
+
 export function retentionCutoffISO(days: number, now: Date = new Date()): string {
   const whole = Number.isFinite(days) && days > 0 ? Math.floor(days) : MIN_RETENTION_DAYS;
   return new Date(

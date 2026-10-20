@@ -20,7 +20,7 @@
     "titleLine1": "Connectez mailcow à Claude,",
     "titleLine2": "et à Cursor, ChatGPT, tout client MCP",
     "lead": "mailcow vous donne déjà Dovecot, Postfix et SOGo dans une seule pile. Ajoutez un serveur MCP par-dessus et votre agent peut lire, rechercher, envoyer, répondre, planifier et classer le courrier dans les boîtes que vous hébergez vous-même.",
-    "answer": "Claude ne peut pas accéder seul à un serveur mailcow. mcpemails est un serveur MCP hébergé qui se connecte à votre installation mailcow en IMAP sur le port 993, au nom d'hôte que vous avez défini comme MAILCOW_HOSTNAME dans mailcow.conf, avec le mot de passe de la boîte issu de la liste Mailboxes, pour que Claude, Cursor ou tout client MCP puisse lire, rechercher, envoyer et organiser ce courrier. Il n'y a pas de serveur partagé : c'est votre serveur, il doit être publié sur Internet, et vous devez vous connecter avec exactement le nom d'hôte figurant sur le certificat émis par acme-mailcow. Une boîte est gratuite.",
+    "answer": "Claude ne peut pas accéder seul à un serveur mailcow. MCP Emails est un serveur MCP hébergé qui se connecte à votre installation mailcow en IMAP sur le port 993, au nom d'hôte que vous avez défini comme MAILCOW_HOSTNAME dans mailcow.conf, avec le mot de passe de la boîte issu de la liste Mailboxes, pour que Claude, Cursor ou tout client MCP puisse lire, rechercher, envoyer et organiser ce courrier. Il n'y a pas de serveur partagé : c'est votre serveur, il doit être publié sur Internet, et vous devez vous connecter avec exactement le nom d'hôte figurant sur le certificat émis par acme-mailcow. Une boîte est gratuite.",
     "meta0": "1 boîte gratuite, pour toujours",
     "meta1": "Mot de passe de la boîte depuis l'interface mailcow",
     "meta2": "E-mails récupérés en direct, jamais stockés"
@@ -32,7 +32,7 @@
   "setup": [
     {
       "h": "Créez un compte gratuit",
-      "p": "Inscrivez-vous sur mcpemails, sans carte bancaire. L'offre gratuite connecte une boîte, pour toujours."
+      "p": "Inscrivez-vous sur MCP Emails, sans carte bancaire. L'offre gratuite connecte une boîte, pour toujours."
     },
     {
       "h": "Lisez MAILCOW_HOSTNAME dans mailcow.conf",
@@ -40,7 +40,7 @@
     },
     {
       "h": "Vérifiez la boîte et son mot de passe",
-      "p": "Dans l'interface mailcow, ouvrez Configuration puis Mailboxes. Vérifiez que l'adresse est active et, si vous ne connaissez pas son mot de passe, définissez-en un nouveau à cet endroit. Ajoutez ensuite la boîte dans mcpemails : choisissez IMAP / SMTP, saisissez le serveur MAILCOW_HOSTNAME et les identifiants de la boîte."
+      "p": "Dans l'interface mailcow, ouvrez Configuration puis Mailboxes. Vérifiez que l'adresse est active et, si vous ne connaissez pas son mot de passe, définissez-en un nouveau à cet endroit. Ajoutez ensuite la boîte dans MCP Emails : choisissez IMAP / SMTP, saisissez le serveur MAILCOW_HOSTNAME et les identifiants de la boîte."
     },
     {
       "h": "Collez l'URL MCP dans votre IA",
@@ -66,13 +66,13 @@
     }
   ],
   "limits": [
-    "Un serveur MCP hébergé doit ouvrir une connexion IMAP entrante vers votre pile : un mailcow publié uniquement sur une interface privée ou joignable seulement via un VPN ne peut pas être connecté de cette façon. mcpemails peut être auto-hébergé à côté de mailcow si vous préférez que rien d'extérieur ne touche au 993.",
+    "Un serveur MCP hébergé doit ouvrir une connexion IMAP entrante vers votre pile : un mailcow publié uniquement sur une interface privée ou joignable seulement via un VPN ne peut pas être connecté de cette façon. MCP Emails peut être auto-hébergé à côté de mailcow si vous préférez que rien d'extérieur ne touche au 993.",
     "L'envoi passe par votre propre Postfix : l'acceptation des messages en aval dépend donc entièrement de vos enregistrements SPF, DKIM et DMARC et de la présence éventuelle de votre IP sur une liste noire."
   ],
   "faq": [
     {
       "q": "Claude fonctionne-t-il avec mailcow ?",
-      "a": "Pas tout seul. Claude n'a pas de connecteur mailcow et ne peut pas ouvrir une session IMAP vers un serveur que vous gérez. Relier un serveur MCP comme mcpemails à votre installation mailcow donne à Claude un accès en lecture, recherche, envoi, réponse, planification et organisation aux boîtes qu'elle héberge, dans le client MCP de votre choix."
+      "a": "Pas tout seul. Claude n'a pas de connecteur mailcow et ne peut pas ouvrir une session IMAP vers un serveur que vous gérez. Relier un serveur MCP comme MCP Emails à votre installation mailcow donne à Claude un accès en lecture, recherche, envoi, réponse, planification et organisation aux boîtes qu'elle héberge, dans le client MCP de votre choix."
     },
     {
       "q": "Quels sont les réglages IMAP et SMTP de mailcow ?",
