@@ -270,6 +270,7 @@
     "linkOauth": "OAuth 连接",
     "linkProviders": "服务商支持",
     "linkReadOnly": "只读访问",
+    "linkClients": "MCP 客户端设置",
     "linkPrivacy": "隐私",
     "linkTerms": "条款",
     "copyright": "© 2026 mcpemails.",

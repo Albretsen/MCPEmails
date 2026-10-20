@@ -270,6 +270,7 @@
     "linkOauth": "Conexión OAuth",
     "linkProviders": "Soporte de proveedores",
     "linkReadOnly": "Acceso de solo lectura",
+    "linkClients": "Configuración de clientes MCP",
     "linkPrivacy": "Privacidad",
     "linkTerms": "Términos",
     "copyright": "© 2026 mcpemails.",

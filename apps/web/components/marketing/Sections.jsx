@@ -1347,11 +1347,11 @@ function FooterCopy({ icon, label, value, href }) {
 export function Footer({ locales } = {}) {
   const t = useTranslations('home');
   const tc = useTranslations('compare');
-  // The footer renders on every locale, but three of its links point at
-  // English-only routes that deliberately 404 elsewhere (the per-client setup
-  // silo and the comparison against other MCP servers). Linking them
-  // unconditionally would put a guaranteed 404 in the footer of every /nb,
+  // The footer renders on every locale, but the comparison against other MCP
+  // servers is an English-only route that deliberately 404s elsewhere. Linking
+  // it unconditionally would put a guaranteed 404 in the footer of every /nb,
   // /es, /fr and /zh page, which is worse than the link being absent there.
+  // The per-client setup pages exist in every locale, so that link always shows.
   const isEnglish = useLocale() === 'en';
   return (
     <footer className="footer">
@@ -1383,7 +1383,7 @@ export function Footer({ locales } = {}) {
             <Link href="/docs#oauth">{t('footer.linkOauth')}</Link>
             <Link href="/docs/providers">{t('footer.linkProviders')}</Link>
             <Link href="/docs/read-only-access">{t('footer.linkReadOnly')}</Link>
-            {isEnglish && <Link href="/docs/clients">MCP client setup</Link>}
+            <Link href="/docs/clients">{t('footer.linkClients')}</Link>
             <Link href="/blog">Blog</Link>
             <Link href="/changelog">Changelog</Link>
           </div>
