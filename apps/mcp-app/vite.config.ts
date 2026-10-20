@@ -13,7 +13,9 @@ export default defineConfig({
   build: {
     outDir: "dist",
     emptyOutDir: true,
-    minify: "esbuild",
+    // Oxc, Vite 8's native minifier: about 2.5 KB smaller than esbuild on
+    // this bundle (measured 2026-10-20), and every byte counts against the cap.
+    minify: "oxc",
     cssMinify: true,
     target: "es2022",
     rollupOptions: { input: "index.html" },

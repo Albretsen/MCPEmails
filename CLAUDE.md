@@ -29,7 +29,7 @@ IMPORTANT: a push to `main` is a production deploy of the web app. Vercel promot
 - Edge functions: apply migrations first, then deploy the function. Use the `deploy-edge-function.yml` workflow, or `npx supabase functions deploy <fn> --project-ref swvaxorwumispmjaaszb --no-verify-jwt --use-api`. Never use the Supabase MCP deploy tool, and never omit `--no-verify-jwt`.
 - `functions deploy` uploads the working tree, not a commit. Deploy from a clean worktree at the pushed SHA, after checking `git rev-list --left-right --count HEAD...origin/main` is `0 0`.
 - After a web deploy, verify a route with `curl -sI <url> | grep -i x-matched-path`, not the status code: an unmatched route can still answer 200.
-- After any change in `apps/mcp-app/src`, run `cd apps/mcp-app && npm run build` and commit the regenerated `review-card.html.ts`, or CI fails.
+- After any change in `apps/mcp-app/src`, or in `supabase/functions/mcp-server/html-text-merge.ts` or `quoted-reply.ts` (the card imports both), run `cd apps/mcp-app && npm run build` and commit the regenerated `review-card.html.ts`, or CI fails.
 
 ## Sessions and hand-off
 
