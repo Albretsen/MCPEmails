@@ -1,5 +1,6 @@
 import { setRequestLocale, getTranslations } from 'next-intl/server';
 import { metaAlternates, localePath, OG_LOCALE, OG_IMAGE } from '@/i18n/seo';
+import { Link } from '@/i18n/navigation';
 import { Nav, Footer } from '../../../components/marketing/Sections';
 import { LAST_UPDATED, EFFECTIVE_DATE } from '@/lib/legal-config';
 
@@ -46,6 +47,10 @@ const COMPANY_OWNER = 'Asgeir Albretsen';
 const COMPANY_ORG_NUMBER = '926 646 753';
 const COMPANY_REGISTER = 'Enhetsregisteret';
 const COMPANY_ADDRESS = 'Håsteins gate 9, 5160 Laksevåg, Norway';
+/* MVA-registered from 2026-10-14. A Norwegian VAT number is the organisation
+   number followed by "MVA"; ASGEIR: confirm this string against the
+   registration letter from Skatteetaten before merging. */
+const COMPANY_VAT_NUMBER = 'NO 926 646 753 MVA';
 
 /* ─── Page ───────────────────────────────────────────────────── */
 
@@ -58,11 +63,8 @@ export default async function TermsPage({ params }) {
     privacy: (c) => <a href="/privacy">{c}</a>,
     pricing: (c) => <a href="/pricing">{c}</a>,
     email: () => <a href={`mailto:${CONTACT_EMAIL}`}>{CONTACT_EMAIL}</a>,
-    odr: (c) => (
-      <a href="https://ec.europa.eu/consumers/odr" target="_blank" rel="noopener noreferrer">
-        {c}
-      </a>
-    ),
+    withdrawal: (c) => <Link href="/withdrawal">{c}</Link>,
+    cancel: (c) => <Link href="/cancel">{c}</Link>,
   };
   return (
     <div>
@@ -106,6 +108,7 @@ export default async function TermsPage({ params }) {
                   orgNumber: COMPANY_ORG_NUMBER,
                   register: COMPANY_REGISTER,
                   companyAddress: COMPANY_ADDRESS,
+                  vatNumber: COMPANY_VAT_NUMBER,
                 })}
               </p>
               <p>{t.rich('agreement.p2', richTags)}</p>
