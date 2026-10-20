@@ -32,6 +32,7 @@ test('the root layout sends no messages: a route outside app/[locale] gets only 
 const KNOWN_SURPLUS = {
   'app/[locale]/docs/[client]/page.js': ['docs'],
   'app/[locale]/docs/clients/page.js': ['docs'],
+  'app/[locale]/docs/providers/data/page.js': ['docs'],
   'app/[locale]/docs/read-only-access/page.js': ['docs'],
 };
 

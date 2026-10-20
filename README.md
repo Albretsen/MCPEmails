@@ -163,15 +163,15 @@ Notes:
 
 | Provider | Connect via | Read/Search | Send | Folders | Permanent delete | Drafts |
 | --- | --- | --- | --- | --- | --- | --- |
-| **Gmail / Google Workspace** | App password (IMAP/SMTP) by default, or OAuth 2.0 (Sign in with Google) | ✅ | ✅ | Labels | Trash only | ✅ |
-| **Fastmail** | App password (IMAP/SMTP) | ✅ | ✅ | ✅ | ✅ | ✅ |
-| **iCloud, Yahoo, AOL, GMX, Zoho, Yandex** | App password (IMAP/SMTP) | ✅ | ✅ | ✅ | ✅ | ✅ |
-| **IONOS, STRATO, One.com, OVHcloud, Namecheap Private Email, Hostinger, Infomaniak, Hetzner** | Mailbox password (IMAP/SMTP) | ✅ | ✅ | ✅ | ✅ | ✅ |
-| **cPanel, Plesk, SiteGround, Bluehost and other shared hosts** | Mailbox password (IMAP/SMTP) | ✅ | ✅ | ✅ | ✅ | ✅ |
-| **Any other IMAP/SMTP mailbox** | App password or mailbox password | ✅ | ✅ | ✅ | ✅ | ✅ |
-| **Outlook / Microsoft 365** | OAuth 2.0 (Microsoft Graph) | ✅ | ✅ | ✅ (nested) | ✅ | ✅ |
+| **[Gmail](https://mcpemails.com/connect/gmail) / [Google Workspace](https://mcpemails.com/connect/google-workspace)** | App password (IMAP/SMTP) by default, or OAuth 2.0 (Sign in with Google) | ✅ | ✅ | Labels | Trash only | ✅ |
+| **[Fastmail](https://mcpemails.com/connect/fastmail)** | App password (IMAP/SMTP) | ✅ | ✅ | ✅ | ✅ | ✅ |
+| **[iCloud Mail](https://mcpemails.com/connect/icloud), [Yahoo Mail](https://mcpemails.com/connect/yahoo), [AOL Mail](https://mcpemails.com/connect/aol), [GMX](https://mcpemails.com/connect/gmx), [Zoho Mail](https://mcpemails.com/connect/zoho), [Yandex](https://mcpemails.com/connect/yandex)** | App password (IMAP/SMTP) | ✅ | ✅ | ✅ | ✅ | ✅ |
+| **[IONOS](https://mcpemails.com/connect/ionos), [STRATO](https://mcpemails.com/connect/strato), [One.com](https://mcpemails.com/connect/one-com), [OVHcloud](https://mcpemails.com/connect/ovh), [Namecheap Private Email](https://mcpemails.com/connect/namecheap), [Hostinger](https://mcpemails.com/connect/hostinger), [Infomaniak](https://mcpemails.com/connect/infomaniak), [Hetzner](https://mcpemails.com/connect/hetzner)** | Mailbox password (IMAP/SMTP) | ✅ | ✅ | ✅ | ✅ | ✅ |
+| **[cPanel](https://mcpemails.com/connect/cpanel), [Plesk](https://mcpemails.com/connect/plesk), [SiteGround](https://mcpemails.com/connect/siteground), [Bluehost](https://mcpemails.com/connect/bluehost) and other shared hosts** | Mailbox password (IMAP/SMTP) | ✅ | ✅ | ✅ | ✅ | ✅ |
+| **[Any other IMAP/SMTP mailbox](https://mcpemails.com/connect/imap)** | App password or mailbox password | ✅ | ✅ | ✅ | ✅ | ✅ |
+| **[Outlook.com](https://mcpemails.com/connect/outlook) / [Microsoft 365](https://mcpemails.com/connect/office365)** | OAuth 2.0 (Microsoft Graph) | ✅ | ✅ | ✅ (nested) | ✅ | ✅ |
 
-> Mail on your own domain at a web host connects like any IMAP mailbox, and one workspace can hold several of them (info@, sales@, support@). Per-host settings and known pitfalls for 100 providers are at [mcpemails.com/connect](https://mcpemails.com/connect).
+> Mail on your own domain at a web host connects like any IMAP mailbox, and one workspace can hold several of them (info@, sales@, support@). Per-host settings and known pitfalls for 100 providers are at [mcpemails.com/connect](https://mcpemails.com/connect). Feature support per provider is in the [provider compatibility matrix](https://mcpemails.com/docs/providers), and the probed IMAP/SMTP hosts, login mechanisms and size limits are free to download as an [open provider dataset](https://mcpemails.com/docs/providers/data) (JSON and CSV, CC BY 4.0).
 
 > Outlook uses Microsoft Graph with "Sign in with Microsoft", not IMAP. Personal Microsoft accounts (outlook.com, hotmail.com, live.com, msn.com) connect directly. On work or school Microsoft 365 tenants, Microsoft's default consent policy stops employees approving mail permissions themselves, so an IT admin approves the app once for the organisation; the dashboard gives the user a shareable approval link to send them (`/auth/outlook/admin-consent`), and the admin needs no MCP Emails account. A Microsoft account with no Exchange Online mailbox is refused, with a pointer to IMAP. The label tools are Gmail-only (Outlook uses folders), except that an automation's label action applies an Outlook category; and Graph cannot combine a text search with the unread, attachment, flagged or date filters.
 
@@ -413,7 +413,7 @@ npx supabase functions deploy mcp-server --project-ref <your-project-ref> --no-v
 Don't want to trust the hosted service with your mail? Run the **same MCP server** on your own
 machine. [`self-host/`](self-host/) ships a containerized stack (Postgres + PostgREST + the Deno
 server, no Supabase/Stripe/dashboard), so your credentials are encrypted with a key only you hold
-and decrypted only inside your own container.
+and decrypted only inside your own container. The [self-hosting guide](https://mcpemails.com/self-hosting) compares it with the hosted service.
 
 ```bash
 cd self-host

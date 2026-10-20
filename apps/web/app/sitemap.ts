@@ -145,6 +145,9 @@ export default function sitemap(): MetadataRoute.Sitemap {
       lastModified: '2026-09-12',
       priority: 0.8,
     },
+    // The open provider dataset. Its rows come from the same probe as the
+    // /connect pages; move this date when the probe is re-run.
+    { path: '/docs/providers/data', lastModified: '2026-10-20', priority: 0.7 },
   ].map(({ path, lastModified, priority }) => ({
     url: localePath('en', path),
     lastModified: new Date(`${lastModified}T00:00:00.000Z`),

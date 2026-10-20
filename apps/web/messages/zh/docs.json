@@ -596,7 +596,8 @@
         "gmailTwoWays": "<b>Gmail 的两种连接方式：</b>Google 邮箱既可以用应用专用密码通过 <code>imap.gmail.com</code> 连接（默认方式），也可以用 Google 登录，走 Gmail API 而不是 IMAP。连接窗口里两种都提供，两种也都能继续使用。选哪一种决定了之后代理能做什么，所以下面的功能表为每一种各列一栏：<b>Gmail（IMAP）</b>对应应用专用密码，<b>Gmail（API）</b>对应 Google 登录。",
         "autodetect": "<b>传输自动检测：</b>若一次连接始终未能建立会话，会换到另一种标准传输重试（IMAP <code>993</code>/TLS 与 <code>143</code>/STARTTLS；SMTP <code>465</code>/TLS、<code>587</code>/STARTTLS 与 <code>25</code>）。被拒绝的密码从不重试，因为每次尝试都会计入服务商自己的锁定。",
         "authMechanism": "<b>登录机制：</b>大多数服务器可以一次往返完成 <code>AUTH PLAIN</code>。只声明 GSSAPI、NTLM 和 LOGIN 的服务器（最常见的是 Microsoft Exchange）会回应 <code>504 5.7.4</code>，客户端会自行回退到 <code>AUTH LOGIN</code>。",
-        "otherHosts": "<b>其他主机商：</b>IONOS、Hostinger、OVH、OVH Hosted Exchange、DreamHost、Titan Email、Namecheap Private Email、Migadu、InMotion Hosting、OpenSRS、GMX 和 mail.com 会根据你输入的地址或邮件主机自动识别，并为你填好主机、端口和传输安全性。"
+        "otherHosts": "<b>其他主机商：</b>IONOS、Hostinger、OVH、OVH Hosted Exchange、DreamHost、Titan Email、Namecheap Private Email、Migadu、InMotion Hosting、OpenSRS、GMX 和 mail.com 会根据你输入的地址或邮件主机自动识别，并为你填好主机、端口和传输安全性。",
+        "dataset": "<b>原始数据：</b>我们为每家服务商实测的服务器、端口、登录方式和邮件大小上限，已作为<data>开放数据集</data>发布，可免费下载 JSON 和 CSV。"
       }
     },
     "capabilities": {
