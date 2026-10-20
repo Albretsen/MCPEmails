@@ -75,9 +75,9 @@ En prompt for å bekrefte at det fungerer:
 Use inbox_list to find my iCloud inbox, then summarize my 5 most recent unread messages.
 \`\`\`
 
-## Den ene tingen IMAP gjør som Gmail ikke kan
+## Slik fungerer sletting på IMAP
 
-Her er delen folk overser. En vanlig sletting flytter meldingen til papirkurven hos alle leverandører. Med \`permanent: true\` merker MCP Emails meldingen som slettet og fjerner den (expunge) på IMAP, og bruker Microsoft Graphs permanente sletting på Outlook. Gmail over IMAP følger deretter Gmails egne IMAP-innstillinger: som standard fjerner en expunge fra innboksen eller en etikett bare den etiketten, og meldingen blir liggende i Alle e-poster, mens en expunge fra papirkurven sletter den for godt. (En Gmail-postkasse som er koblet til ved å logge inn med Google, går gjennom Gmail-API-et, og der havner en sletting alltid i papirkurven.)
+Her er delen folk overser. En vanlig sletting flytter meldingen til papirkurven hos alle leverandører. Med \`permanent: true\` merker MCP Emails meldingen som slettet og fjerner den (expunge) på IMAP, og bruker Microsoft Graphs permanente sletting på Outlook. Gmail over IMAP følger deretter Gmails egne IMAP-innstillinger: som standard fjerner en expunge fra innboksen eller en etikett bare den etiketten, og meldingen blir liggende i Alle e-poster, mens en expunge fra papirkurven sletter den for godt.
 
 På de andre IMAP-vertene er det enklere. Fastmail, iCloud, Yahoo, Zoho, Yandex og generisk IMAP støtter alle **hard expunge**: Claude kan fjerne en melding permanent, ikke bare kaste den i papirkurven. Hvis du vil ha en agent som faktisk rydder opp etter seg, lar IMAP (eller Outlook) den gjøre det. Nyttig, og også en grunn til å være bevisst på hvilke tilganger du gir. Expunge er ugjenkallelig.
 

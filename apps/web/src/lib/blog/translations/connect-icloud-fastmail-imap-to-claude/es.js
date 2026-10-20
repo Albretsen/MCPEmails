@@ -75,9 +75,9 @@ Un prompt para confirmar que funciona:
 Use inbox_list to find my iCloud inbox, then summarize my 5 most recent unread messages.
 \`\`\`
 
-## Lo único que IMAP hace y Gmail no puede
+## Cómo funciona el borrado en IMAP
 
-Aquí está la parte que se le escapa a la gente. Un borrado normal mueve el mensaje a la papelera en todos los proveedores. Con \`permanent: true\`, MCP Emails marca el mensaje como borrado y lo elimina (expunge) en IMAP, y usa el borrado permanente de Microsoft Graph en Outlook. Gmail por IMAP sigue después sus propios ajustes de IMAP: por defecto, eliminar un mensaje de la bandeja de entrada o de una etiqueta solo le quita esa etiqueta y el mensaje sigue en Todos, mientras que eliminarlo desde la papelera lo borra para siempre. (Un buzón de Gmail conectado iniciando sesión con Google pasa por la API de Gmail, y ahí un borrado siempre va a la papelera.)
+Aquí está la parte que se le escapa a la gente. Un borrado normal mueve el mensaje a la papelera en todos los proveedores. Con \`permanent: true\`, MCP Emails marca el mensaje como borrado y lo elimina (expunge) en IMAP, y usa el borrado permanente de Microsoft Graph en Outlook. Gmail por IMAP sigue después sus propios ajustes de IMAP: por defecto, eliminar un mensaje de la bandeja de entrada o de una etiqueta solo le quita esa etiqueta y el mensaje sigue en Todos, mientras que eliminarlo desde la papelera lo borra para siempre.
 
 En los demás hosts IMAP es más sencillo. Fastmail, iCloud, Yahoo, Zoho, Yandex e IMAP genérico admiten todos el **expunge definitivo** (hard expunge): Claude puede eliminar un mensaje de forma permanente, no solo enviarlo a la papelera. Si quieres un agente que de verdad recoja después de sí mismo, IMAP (u Outlook) se lo permite. Útil, y también una razón para ser deliberado sobre qué scopes concedes. El expunge es irreversible.
 

@@ -82,9 +82,9 @@ A prompt to confirm it works:
 Use inbox_list to find my iCloud inbox, then summarize my 5 most recent unread messages.
 \`\`\`
 
-## The one thing IMAP does that Gmail can't
+## How delete works on IMAP
 
-Here's the part people miss. A normal delete moves the message to Trash on every provider. With \`permanent: true\`, MCP Emails flags the message as deleted and expunges it on IMAP, and uses Microsoft Graph's permanent delete on Outlook. Gmail over IMAP then follows Gmail's own IMAP settings: by default, expunging a message from Inbox or a label only removes that label and the message stays in All Mail, while expunging it from Trash deletes it for good. (A Gmail mailbox connected by signing in with Google goes through the Gmail API instead, and there a delete always goes to Trash.)
+Here's the part people miss. A normal delete moves the message to Trash on every provider. With \`permanent: true\`, MCP Emails flags the message as deleted and expunges it on IMAP, and uses Microsoft Graph's permanent delete on Outlook. Gmail over IMAP then follows Gmail's own IMAP settings: by default, expunging a message from Inbox or a label only removes that label and the message stays in All Mail, while expunging it from Trash deletes it for good.
 
 On the other IMAP hosts it is simpler. Fastmail, iCloud, Yahoo, Zoho, Yandex, and generic IMAP all support **hard expunge**: Claude can permanently remove a message, not just trash it. If you want an agent that actually cleans up after itself, IMAP (or Outlook) lets it. Useful, and also a reason to be deliberate about which scopes you grant. Expunge is irreversible.
 

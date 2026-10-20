@@ -75,9 +75,9 @@ Un prompt pour confirmer que tout fonctionne :
 Use inbox_list to find my iCloud inbox, then summarize my 5 most recent unread messages.
 \`\`\`
 
-## La seule chose que l’IMAP fait et que Gmail ne peut pas
+## Comment fonctionne la suppression en IMAP
 
-Voici le point que les gens oublient. Une suppression normale envoie le message à la corbeille chez tous les fournisseurs. Avec \`permanent: true\`, MCP Emails marque le message comme supprimé et l’efface (expunge) en IMAP, et utilise la suppression définitive de Microsoft Graph sur Outlook. Gmail via IMAP suit ensuite ses propres réglages IMAP : par défaut, effacer un message de la boîte de réception ou d’un libellé retire seulement ce libellé et le message reste dans Tous les messages, alors que l’effacer depuis la corbeille le supprime pour de bon. (Une boîte Gmail connectée en se connectant avec Google passe par l’API Gmail, et là une suppression part toujours à la corbeille.)
+Voici le point que les gens oublient. Une suppression normale envoie le message à la corbeille chez tous les fournisseurs. Avec \`permanent: true\`, MCP Emails marque le message comme supprimé et l’efface (expunge) en IMAP, et utilise la suppression définitive de Microsoft Graph sur Outlook. Gmail via IMAP suit ensuite ses propres réglages IMAP : par défaut, effacer un message de la boîte de réception ou d’un libellé retire seulement ce libellé et le message reste dans Tous les messages, alors que l’effacer depuis la corbeille le supprime pour de bon.
 
 Sur les autres hôtes IMAP, c’est plus simple. Fastmail, iCloud, Yahoo, Zoho, Yandex et l’IMAP générique prennent tous en charge le **hard expunge** : Claude peut supprimer définitivement un message, et pas seulement le mettre à la corbeille. Si vous voulez un agent qui fait vraiment le ménage derrière lui, l’IMAP (ou Outlook) le permet. Pratique, et aussi une raison d’être réfléchi quant aux scopes que vous accordez. L’expunge est irréversible.
 

@@ -75,9 +75,9 @@ Fastmail 的 IMAP 主机是 \`imap.fastmail.com\`，SMTP 是 \`smtp.fastmail.com
 Use inbox_list to find my iCloud inbox, then summarize my 5 most recent unread messages.
 \`\`\`
 
-## IMAP 能做而 Gmail 做不到的那一件事
+## IMAP 上的删除如何运作
 
-这是大家容易忽略的地方。普通删除在所有服务商上都会把邮件移到回收站。设置 \`permanent: true\` 时，MCP Emails 在 IMAP 上会把邮件标记为已删除并清除（expunge），在 Outlook 上则使用 Microsoft Graph 的永久删除。通过 IMAP 连接的 Gmail 接下来遵循 Gmail 自己的 IMAP 设置：默认情况下，从收件箱或某个标签中清除邮件只会移除该标签，邮件仍保留在「所有邮件」中；而从回收站中清除则会彻底删除。（通过 Google 登录连接的 Gmail 邮箱走的是 Gmail API，在那里删除总是进入回收站。）
+这是大家容易忽略的地方。普通删除在所有服务商上都会把邮件移到回收站。设置 \`permanent: true\` 时，MCP Emails 在 IMAP 上会把邮件标记为已删除并清除（expunge），在 Outlook 上则使用 Microsoft Graph 的永久删除。通过 IMAP 连接的 Gmail 接下来遵循 Gmail 自己的 IMAP 设置：默认情况下，从收件箱或某个标签中清除邮件只会移除该标签，邮件仍保留在「所有邮件」中；而从回收站中清除则会彻底删除。
 
 在其他 IMAP 主机上更简单。Fastmail、iCloud、Yahoo、Zoho、Yandex 以及通用 IMAP 都支持**硬性清除（hard expunge）**：Claude 可以永久移除一封邮件，而不只是把它扔进回收站。如果你想要一个真正会替自己收拾干净的代理，IMAP（或 Outlook）可以做到。这很有用，同时也是一个理由，让你慎重对待自己授予了哪些权限。清除是不可逆的。
 
