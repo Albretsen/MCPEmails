@@ -95,6 +95,8 @@ interface World {
   gateTerms: Row | null;
   /** Make reserve_action_usage raise inside the gate. */
   gateReserveError: boolean;
+  /** Cheap-method buckets (`min`, `hr`) whose rate_limit_check answers false. */
+  bucketsOver: string[];
   /** Withhold every answer until the test opens it. */
   hold: boolean;
   /** Withhold only these round trips, by label; everything else answers at once. */
@@ -156,6 +158,7 @@ function world(overrides: Partial<World> = {}): World {
     ledger: [],
     gateTerms: null,
     gateReserveError: false,
+    bucketsOver: [],
     hold: false,
     holdOnly: [],
     fail: {},
@@ -349,6 +352,11 @@ function answer(w: World, call: Call, wantsObject: boolean): Response {
     });
   }
   if (target === "rpc/record_usage_limit_event") return json(true);
+  if (target === "rpc/rate_limit_check") {
+    // p_key is `mcp:<namespace>:<bucket>:<key id>`.
+    const bucket = String(body?.p_key ?? "").split(":")[2];
+    return json(!w.bucketsOver.includes(bucket));
+  }
   if (target.startsWith("rpc/")) return new Response(null, { status: 204 });
   if (method === "POST") {
     (w.inserted[target] ??= []).push(body ?? {});
@@ -1724,12 +1732,14 @@ Deno.test("ping is still checked against both limiters, and reads no allowance",
   assertEquals(limited.w.inserted.activity_log, undefined);
 });
 
-Deno.test("tools/list keeps its discovery bucket in front of the same two limiters", async () => {
+Deno.test("tools/list keeps its discovery bucket alongside the same two limiters", async () => {
   const { status, calls, labels } = await run(world(), rpcRequest("tools/list"));
   assertEquals(status, 200);
+  // Since 2026-10-20 the bucket is asked alongside the activity_log limiters
+  // (it still DECIDES first; see the handshake tests at the end of the file).
   assert(
-    lastFinish(calls, "RPC rate_limit_check") < firstStart(calls, KEY_COUNT),
-    "the discovery bucket is checked before the activity_log limiters start",
+    firstStart(calls, "RPC rate_limit_check") < lastFinish(calls, KEY_COUNT),
+    "the discovery bucket and the activity_log limiters overlap",
   );
   assertEquals(count(labels, "RPC rate_limit_check"), 2);
   assertEquals(count(labels, KEY_COUNT), 3);
@@ -1753,4 +1763,167 @@ Deno.test("a non-billable tool reads no allowance row and reserves nothing", asy
   assertEquals(calls.find((call) => call.label === PREFLIGHT)!.body!.p_include_allowance, false);
   const fallback = await run(perQuery(world()), rpcRequest("tools/call", { name: "inbox_list", arguments: {} }));
   assertEquals(count(fallback.labels, ALLOWANCE), 0);
+});
+
+// ═══════════════════════════════════════════════════════════════════════════
+// The handshake: initialize, notifications, tools/list (2026-10-20)
+//
+// Before this date each was, in round trips before the handler:
+//   initialize / tools/list  5  api_keys, discovery minute, discovery hour,
+//                               the three key counts + workspace count + plan
+//                               row, then the entitlement
+//   a notification           1  api_keys (plus a last_used_at write), for a 202
+// tools/list then read its card gates and its client identity one after the
+// other. Every round trip is ~124 ms (us-east-1 to eu-north-1).
+// ═══════════════════════════════════════════════════════════════════════════
+
+const RATE_LIMIT_CHECK = "RPC rate_limit_check";
+const CAPABILITIES = "GET mcp_client_capabilities";
+
+function notification(method: string, token: string | null = TOKEN): Request {
+  const headers: Record<string, string> = {
+    "content-type": "application/json",
+    "user-agent": "pipeline-test/1.0",
+  };
+  if (token !== null) headers["authorization"] = `Bearer ${token}`;
+  return new Request("http://edge.example.test/mcp-server", {
+    method: "POST",
+    headers,
+    body: JSON.stringify({ jsonrpc: "2.0", method }),
+  });
+}
+
+Deno.test("a notification with a well-formed key is a 202 with no database round trip", async () => {
+  for (const method of ["notifications/initialized", "notifications/cancelled"]) {
+    const { status, body, labels, logs } = await run(world(), notification(method));
+    assertEquals(status, 202);
+    assertEquals(body, null);
+    assertEquals(labels, [], `${method}: no key lookup and no last_used_at write`);
+    assertEquals(
+      logs.lines.filter((line) => line.args[0] === `[mcp-server] notification received: ${method}`).length,
+      1,
+    );
+  }
+});
+
+Deno.test("a notification without a usable bearer token is still the same 401", async () => {
+  for (const token of [null, "mcpe_short", `sk_${"a".repeat(66)}`]) {
+    const { status, body, labels } = await run(world(), notification("notifications/initialized", token));
+    assertEquals(status, 401, String(token));
+    assertEquals(body.error.code, -32001);
+    assertEquals(labels, []);
+  }
+  // A query-string credential is refused before anything else, as on every method.
+  const viaQuery = await run(
+    world(),
+    new Request(`http://edge.example.test/mcp-server?key=${TOKEN}`, {
+      method: "POST",
+      headers: { "content-type": "application/json" },
+      body: JSON.stringify({ jsonrpc: "2.0", method: "notifications/initialized" }),
+    }),
+  );
+  assertEquals(viaQuery.status, 401);
+});
+
+Deno.test("an unknown or revoked key is still refused with a 401 on initialize and tools/list", async () => {
+  for (const method of ["initialize", "tools/list"]) {
+    const { status, body, labels } = await run(world({ key: null }), rpcRequest(method));
+    assertEquals(status, 401, method);
+    assertEquals(body.error.code, -32001);
+    assertEquals(labels, ["GET api_keys"], `${method}: refused after the lookup and nothing else`);
+  }
+});
+
+Deno.test("initialize and tools/list ask every gate read in one wave after authentication", async () => {
+  for (const method of ["initialize", "tools/list"]) {
+    const { waves, status } = await runInWaves(world(), rpcRequest(method));
+    assertEquals(status, 200, method);
+    assertEquals(waves[0], ["GET api_keys"], `${method}: authentication is still its own wave`);
+    assertEquals(waves[1], [
+      "GET workspaces",
+      KEY_COUNT,
+      KEY_COUNT,
+      KEY_COUNT,
+      WORKSPACE_COUNT,
+      "PATCH api_keys",
+      RATE_LIMIT_CHECK,
+      RATE_LIMIT_CHECK,
+    ].sort(), `${method}: both discovery windows and both gates' reads overlap`);
+    assertEquals(waves[2], ["GET user_usage_entitlements"], method);
+  }
+});
+
+Deno.test("tools/list reads its card gates and its client identity in the same wave", async () => {
+  const { waves, status, body } = await runInWaves(world(), rpcRequest("tools/list"));
+  assertEquals(status, 200);
+  assert(body.result.tools.length > 0);
+  // Wave 3 holds the entitlement (the plan quota's second read); the handler
+  // starts once it has answered, and its reads all go out together: the card
+  // gates (inboxes, workspace flag) and the client identity. The wave after it
+  // is the card-build bookkeeping write, which is not the handler's.
+  assertEquals(waves.length, 5, JSON.stringify(waves));
+  assertEquals(waves[3], ["GET inboxes", "GET inboxes", CAPABILITIES, "GET workspaces"].sort());
+  assertEquals(waves[4], ["PATCH api_keys"]);
+});
+
+Deno.test("initialize still waits for its capabilities upsert before answering", async () => {
+  const { waves, status } = await runInWaves(
+    world(),
+    rpcRequest("initialize", {
+      protocolVersion: "2025-06-18",
+      capabilities: {},
+      clientInfo: { name: "pipeline-test", version: "1.0" },
+    }),
+  );
+  assertEquals(status, 200);
+  assertEquals(waves.length, 4, JSON.stringify(waves));
+  assert(waves[3].some((label) => label.includes("mcp_client_capabilities")), JSON.stringify(waves));
+});
+
+for (const bucket of ["min", "hr"]) {
+  Deno.test(`a refused discovery ${bucket} window is still the cheap-method 429, ahead of both gates`, async () => {
+    // The per-key limiter and the plan ceiling are saturated too: the
+    // discovery bucket must still be the one that answers.
+    const { status, body, labels, logs, w } = await run(
+      world({ bucketsOver: [bucket], keyCounts: { minute: 100, hour: 100, day: 100 }, workspaceCount: 500 }),
+      rpcRequest("tools/list"),
+    );
+    assertEquals(status, 429);
+    assertEquals(body.error.data.window, bucket === "min" ? "per_minute" : "per_hour");
+    // The discovery ceilings (250 / 2500), not the per-key limiter's 100.
+    assertEquals(body.error.data.limit, bucket === "min" ? 250 : 2_500);
+    assertEquals(logged(logs, "[mcp-server] cheap_method_rate_limit_exceeded").length, 1);
+    assertEquals(logged(logs, "[mcp-server] rate_limit_exceeded").length, 0);
+    assertEquals(logged(logs, "[mcp-server] plan_rate_limit_exceeded").length, 0);
+    // Nothing written for a refused discovery call, and the handler never ran.
+    assertEquals(w.inserted, {});
+    assertEquals(count(labels, CAPABILITIES), 0);
+    assertEquals(count(labels, "GET inboxes"), 0);
+  });
+}
+
+Deno.test("both discovery windows refused: the minute window decides, as before", async () => {
+  const { status, body } = await run(world({ bucketsOver: ["min", "hr"] }), rpcRequest("initialize"));
+  assertEquals(status, 429);
+  assertEquals(body.error.data.window, "per_minute");
+});
+
+Deno.test("a failed discovery window fails open for that window only", async () => {
+  const w = world({ bucketsOver: ["hr"], fail: { [RATE_LIMIT_CHECK]: "http_500" } });
+  const { status } = await run(w, rpcRequest("tools/list"));
+  // Both answers are the 500, so both windows fail open.
+  assertEquals(status, 200);
+});
+
+Deno.test("resources/* keeps its own bucket and is still refused by it", async () => {
+  const { status, calls } = await run(world({ bucketsOver: ["min"] }), rpcRequest("resources/list"));
+  assertEquals(status, 429);
+  const keys = calls.filter((call) => call.label === RATE_LIMIT_CHECK).map((call) => call.body!.p_key);
+  assertEquals(keys, [`mcp:resources:min:${KEY_ID}`, `mcp:resources:hr:${KEY_ID}`]);
+});
+
+Deno.test("ping still skips the discovery bucket", async () => {
+  const { status, labels } = await run(world({ bucketsOver: ["min", "hr"] }), rpcRequest("ping"));
+  assertEquals(status, 200);
+  assertEquals(count(labels, RATE_LIMIT_CHECK), 0);
 });

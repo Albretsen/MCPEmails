@@ -38,19 +38,22 @@ const CONTACT_EMAIL = 'legal@mcpemails.com';
 
 /* Service-provider identification required by the Norwegian ehandelsloven § 8:
    legal name, geographic address, the register we are enrolled in, and our
-   organisation number. These values must match our entry in Enhetsregisteret,
-   so do not edit them without checking brreg.no first. "MCPEmails" is only the
-   trading name of the service; the contracting legal person is Albretsen
-   Consulting. */
-const COMPANY_NAME = 'Albretsen Consulting';
+   organisation number. These values must match our entry in Foretaksregisteret
+   (brreg.no), so do not edit them without checking there first. "MCPEmails" is
+   only the trading name of the service; the contracting legal person is
+   Albretsen AS (aksjeselskap, registered 2026-10-19), which takes over
+   MCPEmails from the founder's former sole proprietorship, Albretsen
+   Consulting (926 646 753), on 2026-11-01. */
+const COMPANY_NAME = 'Albretsen AS';
 const COMPANY_OWNER = 'Asgeir Albretsen';
-const COMPANY_ORG_NUMBER = '926 646 753';
-const COMPANY_REGISTER = 'Enhetsregisteret';
+const COMPANY_ORG_NUMBER = '938 702 373';
+const COMPANY_REGISTER = 'Foretaksregisteret';
 const COMPANY_ADDRESS = 'Håsteins gate 9, 5160 Laksevåg, Norway';
-/* MVA-registered from 2026-10-14. A Norwegian VAT number is the organisation
-   number followed by "MVA"; ASGEIR: confirm this string against the
-   registration letter from Skatteetaten before merging. */
-const COMPANY_VAT_NUMBER = 'NO 926 646 753 MVA';
+/* No VAT number on purpose. Albretsen AS has applied for MVA registration but
+   it is not confirmed, so the page must not print a VAT number or claim VAT
+   registration. When Skatteetaten confirms it, add COMPANY_VAT_NUMBER back
+   (format "NO 938 702 373 MVA", checked against the registration letter) and
+   restore the VAT sentence in terms.agreement.p1b in every locale. */
 
 /* ─── Page ───────────────────────────────────────────────────── */
 
@@ -108,7 +111,6 @@ export default async function TermsPage({ params }) {
                   orgNumber: COMPANY_ORG_NUMBER,
                   register: COMPANY_REGISTER,
                   companyAddress: COMPANY_ADDRESS,
-                  vatNumber: COMPANY_VAT_NUMBER,
                 })}
               </p>
               <p>{t.rich('agreement.p2', richTags)}</p>

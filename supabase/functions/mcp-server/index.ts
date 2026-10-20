@@ -1206,12 +1206,13 @@ function preTransmissionResult(
  */
 function jsonOk(
   obj: Record<string, unknown>,
-  pretty = false,
 ): { content: { type: string; text: string }[]; structuredContent: Record<string, unknown> } {
+  // Always compact: this text block is what lands in the model's context, and
+  // indentation is whitespace it pays tokens for and learns nothing from.
   return {
     content: [{
       type: "text",
-      text: pretty ? JSON.stringify(obj, null, 2) : JSON.stringify(obj),
+      text: JSON.stringify(obj),
     }],
     structuredContent: obj,
   };
@@ -2291,6 +2292,24 @@ async function bearerKeyHash(
   req: Request,
   requestId: string | number | null,
 ): Promise<string | Response> {
+  const token = bearerToken(req, requestId);
+  if (token instanceof Response) return token;
+
+  // ── Hash the bearer token ─────────────────────────────────────────────────
+  // Only the SHA-256 hash of the key is stored in the database. The raw key
+  // is never logged or persisted after the user's initial key creation.
+  return await hashApiKey(token);
+}
+
+/**
+ * Steps 1-2 of authenticateRequest: the bearer token from the Authorization
+ * header, or the 401 for a missing, malformed or query-string credential. A
+ * format check only: no hashing and no database I/O. Notifications stop here.
+ */
+function bearerToken(
+  req: Request,
+  requestId: string | number | null,
+): string | Response {
   // ── Extract the API key ───────────────────────────────────────────────────
   // API keys and OAuth access tokens must be supplied in the Authorization
   // header. Query-string credentials are deliberately rejected: URLs are
@@ -2333,7 +2352,7 @@ async function bearerKeyHash(
       401,
     );
   }
-  const bearerToken = authHeader.slice(7).trim();
+  const token = authHeader.slice(7).trim();
 
   // ── Token format check → HTTP 401 ────────────────────────────────────────
   // MCPEmails keys are always exactly 69 characters: "mcpe_" (5) + 64 hex chars.
@@ -2343,7 +2362,7 @@ async function bearerKeyHash(
   // 401 (not 403) so the /api/mcp proxy attaches WWW-Authenticate. OAuth MCP
   // clients refresh their access token on 401 but treat 403 as a hard failure,
   // so an expired token must surface as 401 for the connection to auto-refresh.
-  if (!bearerToken.startsWith("mcpe_") || bearerToken.length !== 69) {
+  if (!token.startsWith("mcpe_") || token.length !== 69) {
     return jsonResponse(
       jsonRpcErrorBody(
         requestId,
@@ -2355,10 +2374,7 @@ async function bearerKeyHash(
     );
   }
 
-  // ── Hash the bearer token ─────────────────────────────────────────────────
-  // Only the SHA-256 hash of the key is stored in the database. The raw key
-  // is never logged or persisted after the user's initial key creation.
-  return await hashApiKey(bearerToken);
+  return token;
 }
 
 /** Step 4 of authenticateRequest: the api_keys lookup by hash, then acceptKeyRow. */
@@ -3232,8 +3248,8 @@ const RESOURCE_RATE_LIMITS: SlidingWindowLimit[] = [
  * Check per-key sliding-window limits for the cheap (non-`tools/call`) methods.
  *
  * Each window is an atomic UPSERT-and-count via the `rate_limit_check` RPC, so
- * concurrent isolates cannot race past the ceiling. The narrowest window is
- * checked first. Fail-open on a DB error — a transient RPC failure must never
+ * concurrent isolates cannot race past the ceiling. All windows are issued
+ * together; the narrowest refusing window decides. Fail-open on a DB error — a transient RPC failure must never
  * block a legitimate client's handshake.
  *
  * `rate_limit_check` returns only a boolean (within-limit), not the residual
@@ -3250,12 +3266,26 @@ async function checkDiscoveryRateLimit(
   limits: SlidingWindowLimit[] = DISCOVERY_RATE_LIMITS,
   namespace = "discovery",
 ): Promise<RateLimitResult> {
-  for (const w of limits) {
-    const { data, error } = await supabase.rpc("rate_limit_check", {
+  // Every window is asked at once: each is its own bucket and its own round
+  // trip, and none depends on another. The answers are still READ narrowest
+  // first, so the narrowest refusing window decides, as when they ran in turn.
+  //
+  // One deliberate difference from the serial loop: a request the minute
+  // window refuses now also counts in the hour bucket (rate_limit_check
+  // increments before it compares). Only a client already over the minute
+  // ceiling, which no legitimate session reaches (see DISCOVERY_RATE_LIMITS),
+  // can see it, and for that client the hour bucket now counts every request
+  // it actually made rather than only the admitted ones.
+  const answers = await Promise.all(limits.map((w) =>
+    supabase.rpc("rate_limit_check", {
       p_key: `mcp:${namespace}:${w.bucket}:${apiKeyId}`,
       p_max_count: w.max,
       p_window_ms: w.windowMs,
-    });
+    })
+  ));
+
+  for (const [index, w] of limits.entries()) {
+    const { data, error } = answers[index];
 
     if (error) {
       // Fail open: skip this window on a DB/RPC error and check the rest.
@@ -4548,10 +4578,11 @@ const INBOX_ID_PROPERTY = {
   format: "uuid",
   // One sentence on purpose: the full selection rules (omit both when the key
   // has one inbox, never guess, the error lists every inbox_id) live in
-  // SERVER_INSTRUCTIONS, and this property is advertised on nine tools.
-  description:
-    "Inbox UUID from inbox_list. Optional when the key has one inbox; pass " +
-    "this or `inbox`, not both — a pair naming different mailboxes is refused.",
+  // SERVER_INSTRUCTIONS, and this property is advertised on 13 tools (39 on
+  // the per-operation surface), so every character is paid that many times.
+  // `inbox` says it is the alternative; a conflicting pair is refused with an
+  // error that says so.
+  description: "Inbox UUID (inbox_list). Optional with one inbox.",
 } as const;
 
 /** Shared `inbox` property — the email-address alternative to `inbox_id`. */
@@ -4604,10 +4635,7 @@ const IDEMPOTENCY_KEY_PROPERTY = {
   maxLength: 200,
   // Advertised on several tools, so only the facts that change a caller's
   // behaviour: retry-only reuse, the window, and the conflict rule.
-  description:
-    "Reuse only when retrying the identical request within 24 hours; the " +
-    "retry is collapsed, not repeated. Reuse with different arguments is " +
-    "rejected.",
+  description: "Retry key: reuse only for the identical call within 24h; it runs once.",
 } as const;
 
 /**
@@ -6898,15 +6926,12 @@ const EMAIL_SUMMARY_SCHEMA = {
   additionalProperties: true,
 } as const;
 
-/** JSON-Schema fragment for a search result summary (email_search). */
-const SEARCH_EMAIL_SUMMARY_SCHEMA = {
-  type: "object",
-  properties: {
-    ...EMAIL_SUMMARY_SCHEMA.properties,
-    relevance_score: { type: ["number", "null"] },
-  },
-  additionalProperties: true,
-} as const;
+/**
+ * JSON-Schema fragment for a search result summary (email_search). The same
+ * shape as a list summary since `relevance_score` was dropped on 2026-10-20:
+ * no provider path ever set it to anything but null.
+ */
+const SEARCH_EMAIL_SUMMARY_SCHEMA = EMAIL_SUMMARY_SCHEMA;
 
 /** Output schema for tools returning `{ success, message_id, operation, inbox_id }`. */
 const FLAG_RESULT_SCHEMA = {
@@ -10624,7 +10649,7 @@ async function executeListInboxes(
         },
         available: report.available,
         message: report.message,
-      }, true),
+      }),
       logStatus: "success",
       logErrorCode: null,
     };
@@ -10657,14 +10682,14 @@ async function executeListInboxes(
           "iCloud, Yahoo and Zoho connect in about a minute; any other provider " +
           "takes IMAP and SMTP details. Once a mailbox is connected, call " +
           "inbox_list again.",
-      }, true),
+      }),
       logStatus: "success",
       logErrorCode: null,
     };
   }
 
   return {
-    result: jsonOk({ inboxes }, true),
+    result: jsonOk({ inboxes }),
     logStatus: "success",
     logErrorCode: null,
   };
@@ -12825,7 +12850,6 @@ async function searchImapMessages(
       has_attachments: s.hasAttachments,
       folder,
       thread_id: String(s.uid),
-      relevance_score: null,
       ...flaggedField(() => s.flags.includes("\\Flagged")),
       ...threadFields(() => ({ messageId: s.envelope.messageId, inReplyTo: s.envelope.inReplyTo, references: referencesOfHeaderBlock(s.referencesHeader) })),
       ...gmailThreadField(() => s.gmThreadId),
@@ -14279,9 +14303,8 @@ function neutralizeReadResult(result: ReadEmailResult): ReadEmailResult {
 /**
  * The list/search equivalent. `preview` is body content, so it is left alone.
  *
- * Generic over the summary shape because search returns a widened
- * `SearchEmailSummary` (it carries `relevance_score`), and the extra fields must
- * survive the pass untouched.
+ * Generic over the summary shape so any widened summary (extra thread or flag
+ * fields) survives the pass untouched.
  */
 function neutralizeSummary<T extends EmailSummary>(summary: T): T {
   return {
@@ -18936,17 +18959,10 @@ async function executeSendEmail(
 // ---------------------------------------------------------------------------
 
 /**
- * A single email summary in a `email_search` result.
- * Extends EmailSummary with an optional provider relevance score.
+ * A single email summary in a `email_search` result. It used to carry a
+ * `relevance_score` that every provider path set to null; dropped 2026-10-20.
  */
-interface SearchEmailSummary extends EmailSummary {
-  /**
-   * Provider relevance score, if available.
-   * Outlook Graph may return a score for $search results; Gmail and IMAP/JMAP
-   * providers do not expose one, so this is null for those providers.
-   */
-  relevance_score: number | null;
-}
+type SearchEmailSummary = EmailSummary;
 
 interface SearchEmailsResult {
   messages: SearchEmailSummary[];
@@ -19173,7 +19189,6 @@ async function searchGmailMessages(
       has_attachments: gmailHasAttachments(msg),
       folder,
       thread_id: msg.threadId ?? pageRefs[i].threadId,
-      relevance_score: null,
       ...flaggedField(() => labelIds.includes("STARRED")),
       ...threadFields(() => ({ messageId: hdrs["message-id"], inReplyTo: hdrs["in-reply-to"], references: hdrs["references"] })),
     };
@@ -19388,7 +19403,6 @@ async function searchOutlookMessages(
     has_attachments: msg.hasAttachments ?? false,
     folder: (msg.parentFolderId && folderLabels.get(msg.parentFolderId)) || folder,
     thread_id: msg.conversationId ?? msg.id,
-    relevance_score: null,
     ...flaggedField(() => msg.flag?.flagStatus === "flagged"),
     ...threadMessageIdField(() => msg.internetMessageId),
   }));
@@ -20863,7 +20877,6 @@ async function executeListFolders(
           inboxId: inbox.id,
           folders,
         }) as unknown as Record<string, unknown>,
-        true,
       ),
       isError: false,
     },
@@ -21479,7 +21492,7 @@ async function executeCreateFolder(
               note: `A ${itemType} with this name already existed, so nothing was created; ` +
                 `use this id.`,
             },
-          }, true),
+          }),
           isError: false,
         },
         logStatus: "success",
@@ -21504,7 +21517,7 @@ async function executeCreateFolder(
             }
             : {}),
         },
-      }, true),
+      }),
       isError: false,
     },
     logStatus: "success",
@@ -21592,7 +21605,7 @@ async function executeRenameFolder(
             note: folderNameTrimNote(newNameReq, organizationItemType(inbox)),
           }
           : {}),
-      }, true),
+      }),
       isError: false,
     },
     logStatus: "success",
@@ -21654,7 +21667,7 @@ async function executeDeleteFolder(
         folder_id: folderId,
         item_type: organizationItemType(inbox),
         status: "deleted",
-      }, true),
+      }),
       isError: false,
     },
     logStatus: "success",
@@ -28292,7 +28305,6 @@ async function executeListDrafts(
         inboxId: inbox.id,
         drafts,
       }) as unknown as Record<string, unknown>,
-      true,
     ),
     logStatus: "success", logErrorCode: null,
   };
@@ -30369,7 +30381,6 @@ async function executeSearchContacts(
           limit,
           scanTruncated: false,
         }) as unknown as Record<string, unknown>,
-        true,
       ),
       logStatus: "success", logErrorCode: null,
     };
@@ -30462,7 +30473,6 @@ async function executeSearchContacts(
         limit,
         scanTruncated,
       }) as unknown as Record<string, unknown>,
-      true,
     ),
     logStatus: "success", logErrorCode: null,
   };
@@ -30719,7 +30729,7 @@ async function executeScheduleSend(
       send_at: created.send_at,
       status: created.status,
       created_at: created.created_at,
-    }, true),
+    }),
     logStatus: "success", logErrorCode: null,
   };
 }
@@ -30826,7 +30836,7 @@ async function executeListScheduled(
   }));
 
   return {
-    result: jsonOk({ scheduled_sends: rows, total: rows.length }, true),
+    result: jsonOk({ scheduled_sends: rows, total: rows.length }),
     logStatus: "success", logErrorCode: null,
   };
 }
@@ -30978,7 +30988,7 @@ async function executeCancelScheduled(
       inbox_id: row.inbox_id,
       send_at: row.send_at,
       previous_status: "pending",
-    }, true),
+    }),
     logStatus: "success", logErrorCode: null,
   };
 }
@@ -31032,7 +31042,7 @@ async function executeGetSignature(
       signature_reply_mode: inbox.signature_reply_mode,
       signature_source: inbox.signature_source,
       signature_updated_at: inbox.signature_updated_at,
-    }, true),
+    }),
     logStatus: "success", logErrorCode: null,
   };
 }
@@ -31188,7 +31198,7 @@ async function executeSetSignature(
       signature_reply_mode: merged.signature_reply_mode,
       signature_source: merged.signature_source,
       signature_updated_at: merged.signature_updated_at,
-    }, true),
+    }),
     logStatus: "success", logErrorCode: null,
   };
 }
@@ -31400,7 +31410,12 @@ async function handleToolsList(
   // rather than merely any key — but it is the same gap. Fixing it properly
   // needs the card to fall back to the text result on a non-envelope payload,
   // which is a frontend change.
-  const uiGates = await keyReviewCardGates(apiKey);
+  // Both reads below are independent pure reads, so they share one round trip:
+  // `perOperation` is started here and only taken further down.
+  const [uiGates, perOperation] = await Promise.all([
+    keyReviewCardGates(apiKey),
+    isOpenAiClientKey(apiKey),
+  ]);
 
   // Which tools this credential is shown, and whether the scope filter applies
   // to it at all: a dashboard API key stays filtered to what its scopes allow,
@@ -31420,8 +31435,8 @@ async function handleToolsList(
   // `mcp-app-resources.test.ts` tests this composition instead.
   //
   // An OpenAI client (ChatGPT, Codex) is listed one tool per operation, which
-  // is what its plugin review requires; see PER_OPERATION_LISTING.
-  const perOperation = await isOpenAiClientKey(apiKey);
+  // is what its plugin review requires; see PER_OPERATION_LISTING. Read
+  // alongside the card gates above.
   const visibleTools = withListingCardMeta(
     toolsForListing(apiKey, perOperation),
     uiGates,
@@ -32661,7 +32676,7 @@ async function handleToolsCall(
       };
       logErrorCode = "idempotency_unavailable";
     }
-    toolResult = { jsonrpc: "2.0", id, result: { ...jsonOk(payload, true), isError: logStatus !== "success" } };
+    toolResult = { jsonrpc: "2.0", id, result: { ...jsonOk(payload), isError: logStatus !== "success" } };
   } else {
   // ── Byte-heavy concurrency guard ──────────────────────────────────────────
   // The request-rate limiter counts calls, not bytes, so a client making three
@@ -32696,7 +32711,7 @@ async function handleToolsCall(
             "so that no single client can exhaust the server's memory. Nothing was fetched. " +
             "Wait for the in-progress download to finish, then retry this exact request; " +
             "fetching messages and attachments one at a time avoids this entirely.",
-        }, true),
+        }),
         isError: true,
       },
     };
@@ -34826,12 +34841,22 @@ async function handleMeteredRequest(req: Request): Promise<Response> {
   // ── Notifications (no id) ─────────────────────────────────────────────────
   // MCP notifications are fire-and-forget: the Streamable HTTP transport says
   // to acknowledge with HTTP 202 Accepted and no body (it was 204 here until
-  // 2026-09-08). Notifications are still authenticated — an unauthenticated
-  // sender should not receive a 202 that implies the notification was accepted.
+  // 2026-09-08). A request with no bearer token, or one that is not shaped like
+  // a key, still gets the same 401 as any other method, so a client that has
+  // not authenticated never reads a 202 as acceptance.
+  //
+  // The key is NOT looked up (2026-10-20). A notification does nothing here:
+  // no handler, no row, no state; the only effect is the log line below. The
+  // api_keys round trip and the last_used_at write it used to cost (~23k
+  // notifications a day, each a full us-east-1 to eu-north-1 round trip in
+  // front of an empty 202) bought nothing, because a revoked key that sends one
+  // learns only that its notification was ignored, and is refused with a 401 on
+  // the very next request that carries an id. last_used_at is still stamped by
+  // the initialize that precedes every notifications/initialized.
   if (isNotification(rpcRequest)) {
-    const authResult = await authenticateRequest(req, null);
-    if (authResult instanceof Response) {
-      return authResult;
+    const malformed = bearerToken(req, null);
+    if (malformed instanceof Response) {
+      return malformed;
     }
     console.log(`[mcp-server] notification received: ${rpcRequest.method}`);
     return new Response(null, { status: 202, headers: CORS_HEADERS });
@@ -34943,22 +34968,24 @@ async function handleMeteredRequest(req: Request): Promise<Response> {
   // scanner on a private network; the metered surface it is exempt from is the
   // one it cannot reach (`tools/call` is not introspectable at all).
   const metered = !INTROSPECTION_ONLY;
-  if (metered && rpcRequest.method !== "tools/call" && rpcRequest.method !== "ping") {
-    const cheapMethodResult = isResourceMethod
-      ? await checkDiscoveryRateLimit(apiKey.id, RESOURCE_RATE_LIMITS, "resources")
-      : await checkDiscoveryRateLimit(apiKey.id);
-    if (!cheapMethodResult.allowed) {
-      console.warn("[mcp-server] cheap_method_rate_limit_exceeded", {
-        key_id: apiKey.id,
-        method: rpcRequest.method,
-        namespace: isResourceMethod ? "resources" : "discovery",
-        window: cheapMethodResult.windowLabel,
-        limit: cheapMethodResult.limit,
-        retry_after_seconds: cheapMethodResult.retryAfterSeconds,
-      });
-      return buildRateLimitResponse(requestId, cheapMethodResult);
-    }
-  }
+  //
+  // Started here and DECIDED first, below, but no longer waited on before the
+  // activity_log limiter and the plan quota are asked (2026-10-20): those are
+  // reads, and they need nothing from this answer. A request this bucket
+  // refuses still gets exactly this 429 and nothing else happens for it; the
+  // only cost is that the reads it no longer needs have been issued. Measured
+  // the same day: no discovery bucket in production was over either ceiling
+  // (highest minute 86 of 250, highest hour 1159 of 2500), so that is a cost
+  // paid by a runaway loop, while every initialize and tools/list saves the
+  // round trips this used to put in front of the other gates.
+  const cheapMethodPending = metered && rpcRequest.method !== "tools/call" && rpcRequest.method !== "ping"
+    ? (isResourceMethod
+      ? checkDiscoveryRateLimit(apiKey.id, RESOURCE_RATE_LIMITS, "resources")
+      : checkDiscoveryRateLimit(apiKey.id))
+    : null;
+  // Awaited below before anything else is; this only keeps a rejection that
+  // lands first from counting as unhandled.
+  cheapMethodPending?.catch(() => {});
 
   // ── Per-key rate limit check ──────────────────────────────────────────────
   // Runs after authentication and before routing to any tool handler. This
@@ -35006,9 +35033,31 @@ async function handleMeteredRequest(req: Request): Promise<Response> {
       : loadActionAllowance(apiKey.workspace_id);
     ctx.allowance.catch(() => {});
   }
-  const rateLimitResult = isResourceMethod || !metered
+  const rateLimitPending = isResourceMethod || !metered
+    ? null
+    : checkRateLimit(apiKey.id, preloaded?.rateLimit);
+  // Never awaited when the cheap-method bucket refuses first.
+  rateLimitPending?.catch(() => {});
+
+  // The cheap-method bucket outranks both gates below, as it always has.
+  if (cheapMethodPending !== null) {
+    const cheapMethodResult = await cheapMethodPending;
+    if (!cheapMethodResult.allowed) {
+      console.warn("[mcp-server] cheap_method_rate_limit_exceeded", {
+        key_id: apiKey.id,
+        method: rpcRequest.method,
+        namespace: isResourceMethod ? "resources" : "discovery",
+        window: cheapMethodResult.windowLabel,
+        limit: cheapMethodResult.limit,
+        retry_after_seconds: cheapMethodResult.retryAfterSeconds,
+      });
+      return buildRateLimitResponse(requestId, cheapMethodResult);
+    }
+  }
+
+  const rateLimitResult = rateLimitPending === null
     ? { allowed: true as const }
-    : await checkRateLimit(apiKey.id, preloaded?.rateLimit);
+    : await rateLimitPending;
   if (!rateLimitResult.allowed) {
     console.warn("[mcp-server] rate_limit_exceeded", {
       key_id: apiKey.id,
