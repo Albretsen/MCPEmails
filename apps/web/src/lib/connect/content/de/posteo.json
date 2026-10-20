@@ -1,0 +1,105 @@
+{
+  "_sources": [
+    "https://posteo.de/en/help/how-do-i-set-up-posteo-in-an-email-client-pop3-imap-and-smtp",
+    "https://posteo.de/en/help/activating-additional-email-account-protection",
+    "https://posteo.de/en/blog/how-to-use-app-passwords-with-posteo",
+    "https://posteo.de/en/help/how-do-i-activate-inbound-encryption-with-my-public-pgp-key",
+    "https://posteo.de/en/help/how-do-i-activate-posteo-crypto-mail-storage"
+  ],
+  "auth": {
+    "method": "account-password",
+    "label": "Posteo-Passwort oder App-Passwort",
+    "helpUrl": "https://posteo.de/en/blog/how-to-use-app-passwords-with-posteo",
+    "usernameForm": "Ihre vollständige Posteo-Adresse, egal auf welche Posteo-Domain sie endet: name@posteo.de, name@posteo.net, name@posteo.org und alle anderen melden sich am selben Server an.",
+    "status": "active"
+  },
+  "meta": {
+    "title": "Posteo mit Claude, Cursor & MCP verbinden (IMAP)",
+    "description": "Posteo mit Claude, Cursor und jedem MCP-Client verbinden, per IMAP über posteo.de:993. Mit zusätzlichem Postfachschutz ist für jedes Mailprogramm ein App-Passwort Pflicht."
+  },
+  "hero": {
+    "eyebrow": "Posteo + KI",
+    "titleLine1": "Posteo mit Claude verbinden,",
+    "titleLine2": "mit Cursor, ChatGPT und jedem MCP-Client",
+    "lead": "Geben Sie Ihrem KI-Agenten Zugriff auf Ihr echtes Posteo-Postfach. E-Mails lesen, suchen, senden, beantworten, planen und ordnen, per IMAP und in jedem MCP-Client statt nur in einem. Dazu eine klare Antwort, was Posteos Verschlüsselung vor einem Agenten verbirgt und was nicht.",
+    "answer": "Claude kann Posteo nicht von sich aus erreichen. MCP Emails ist ein gehosteter MCP-Server, der das Postfach per IMAP über posteo.de auf Port 993 und per SMTP über posteo.de auf Port 465 anbindet. Danach können Claude, Cursor oder jeder MCP-Client diese E-Mails lesen, suchen, senden und ordnen. Es gibt kein Präfix imap. oder smtp.: Die bloße Domain ist der Server für jede Posteo-Adresse, egal auf welche Posteo-Domain Ihre endet. Angemeldet wird mit Ihrem normalen Posteo-Passwort, außer Sie haben den zusätzlichen Postfachschutz eingeschaltet. Dann akzeptieren IMAP, POP3 und SMTP nur noch ein App-Passwort aus Ihren Posteo-Einstellungen. Ein Postfach ist dauerhaft kostenlos.",
+    "meta0": "1 Postfach dauerhaft kostenlos",
+    "meta1": "App-Passwort, sobald der Zusatzschutz aktiv ist",
+    "meta2": "E-Mails live abgerufen, nie gespeichert"
+  },
+  "method": {
+    "title": "So verbindet sich Posteo: ein bloßer Hostname und ein Passwort, das von einer Einstellung abhängt",
+    "body": "Posteo nennt einen einzigen Servernamen für alles. IMAP ist <code>posteo.de</code> auf Port 993 mit SSL/TLS oder 143 mit STARTTLS. POP3 ist derselbe Host auf 995 oder 110. SMTP ist <code>posteo.de</code> auf 465 oder 587. Posteo akzeptiert nur verschlüsselte Verbindungen und verlangt SMTP-Authentifizierung, auch wenn ein Client das Passwort für den Postausgang als optional markiert. Füllen Sie also beide Felder aus. Der Benutzername ist Ihre <b>vollständige</b> Adresse. Posteo bietet Adressen auf rund zwanzig Domains an, und <code>posteo.de</code> bleibt der Server für alle. Es gibt also nichts pro Domain nachzuschlagen und keinen <code>imap.</code>-Hostnamen zu raten. Welches Passwort Sie brauchen, entscheidet ein einziger Schalter. Standardmäßig funktioniert Ihr normales Posteo-Passwort. Schalten Sie in den Einstellungen zu Passwort und Sicherheit den <b>zusätzlichen Postfachschutz</b> ein, akzeptiert Posteo es über IMAP, POP3 und SMTP gar nicht mehr, und es bleiben nur <b>App-Passwörter</b>. Der Webmailer funktioniert in beiden Fällen weiter mit dem normalen Passwort."
+  },
+  "setup": [
+    {
+      "h": "Kostenloses MCP Emails Konto erstellen",
+      "p": "Registrieren Sie sich auf mcpemails.com. Der Free-Tarif verbindet ein Postfach dauerhaft, ohne Kreditkarte. Am Ende erhalten Sie eine MCP-URL und einen Schlüssel."
+    },
+    {
+      "h": "App-Passwort in den Posteo-Einstellungen anlegen",
+      "p": "Melden Sie sich im Posteo-Webmailer an und öffnen Sie die <b>Einstellungen</b>, dann den Bereich zu Passwort und Sicherheit, in dem <b>App-Passwörter</b> angelegt und verwaltet werden. Posteo verlangt mindestens 16 Zeichen mit mindestens einer Zahl und einem Großbuchstaben, und Sie können bis zu fünf gleichzeitig haben. Benennen Sie es nach dieser Verbindung, damit Sie später wissen, welches Sie löschen. Ist der Zusatzschutz aus, können Sie diesen Schritt überspringen, aber Zugangsdaten, die sich einzeln widerrufen lassen, gibt man einem Dritten lieber."
+    },
+    {
+      "h": "Postfach in MCP Emails hinzufügen",
+      "p": "Wählen Sie IMAP / SMTP und geben Sie Ihre vollständige Posteo-Adresse und dann das Passwort ein. Der Host ist für beide Richtungen als <code>posteo.de</code> vorausgefüllt und über eine echte TLS-Verbindung geprüft. Das Passwort für den Postausgang muss ebenso ausgefüllt werden wie das für den Posteingang, weil Posteo den Versand immer authentifiziert."
+    },
+    {
+      "h": "MCP-URL in Ihre KI einfügen",
+      "p": "Fügen Sie https://mcpemails.com/api/mcp in Claude, Cursor oder ChatGPT ein, autorisieren Sie den Zugriff, und Ihr Agent hat das Postfach."
+    }
+  ],
+  "gotchas": [
+    {
+      "h": "Der zusätzliche Postfachschutz sperrt das Kontopasswort, ohne dass ein Client gewarnt wird",
+      "p": "Das ist die Ursache der meisten Supportanfragen. Ist die Einstellung aktiv, ist der Zugriff per IMAP, POP3 und SMTP laut Posteo nur noch mit einem App-Passwort möglich, während der Webmailer Ihr normales Passwort weiter akzeptiert. Von außen sieht es aus, als sei der Client von selbst kaputtgegangen: Die Web-Anmeldung klappt, das Passwort ist also offensichtlich richtig, und trotzdem lehnt jedes Gerät ab. Die Lösung ist kein Zurücksetzen des Passworts, sondern ein App-Passwort aus dem Bereich Passwort und Sicherheit, eingetragen im Feld für den Posteingang und für den Postausgang."
+    },
+    {
+      "h": "Krypto-Mailspeicher und Eingangsverschlüsselung klingen ähnlich und verhalten sich über IMAP völlig verschieden",
+      "p": "Posteo bietet zwei Dinge an, die oft verwechselt werden. Der <b>Krypto-Mailspeicher</b> verschlüsselt Ihr Postfach im Ruhezustand auf Posteos Servern und ist für einen Client unsichtbar: Sie melden sich an, der Server entschlüsselt, und IMAP funktioniert wie zuvor. Ein Agent liest Ihre E-Mails also ganz normal. Die <b>Eingangsverschlüsselung</b> ist das Gegenteil. Sie nimmt Ihren öffentlichen PGP- oder S/MIME-Schlüssel und verschlüsselt jede neu eingehende Nachricht damit, egal ob der Absender verschlüsselt hat. Für jeden Client ohne Ihren privaten Schlüssel, diesen eingeschlossen, ist das Ergebnis Chiffretext. Posteo weist darauf hin, dass sie nur neue E-Mails betrifft, keine Kopfzeilen verschlüsselt und Sie mit S/MIME Ihre eigenen E-Mails im Webmailer nicht mehr lesen können. Wenn ein Agent Ihr Postfach lesen soll, passt der Krypto-Mailspeicher dazu, die Eingangsverschlüsselung nicht."
+    },
+    {
+      "h": "Es gibt kein imap.posteo.de und keinen Server pro Domain",
+      "p": "Posteo-Adressen gibt es auf rund zwanzig Domains, darunter posteo.net, posteo.org, posteo.eu, posteo.at und posteo.ch, und alle werden für IMAP, POP3 und SMTP vom bloßen Hostnamen <code>posteo.de</code> bedient. Clients, die einen Servernamen bilden, indem sie Ihrer eigenen Domain ein Präfix voranstellen, der übliche Versuch der automatischen Konfiguration, suchen nach etwas, das nicht der dokumentierte Server ist. Tragen Sie <code>posteo.de</code> von Hand ein und nutzen Sie die vollständige Adresse als Benutzernamen."
+    },
+    {
+      "h": "Kein MOVE und kein UIDPLUS, das Ablegen braucht also drei Schritte",
+      "p": "Posteos Dovecot-Server kündigt IDLE und SASL-IR an, aber weder MOVE noch UIDPLUS noch SPECIAL-USE. Ein Verschieben ist daher ein COPY, ein STORE des \\Deleted-Flags und ein EXPUNGE. Ohne UIDPLUS meldet der Server die neue UID nie zurück, die Kopie muss also per Suche im Zielordner wiedergefunden werden. Das ist korrekt, aber langsamer als auf einem Server mit MOVE, was sich zeigt, wenn ein Agent Hunderte Nachrichten auf einmal umsortiert. Ohne SPECIAL-USE ergeben sich Ordnerrollen aus den Namen, und Posteos Standardnamen sind die englischen Sent, Drafts und Trash."
+    }
+  ],
+  "limits": [
+    "Wenn Sie ein Posteo-Postfach mit einem KI-Client verbinden, liest dieser KI-Anbieter den Inhalt von allem, womit er arbeiten soll. MCP Emails ruft E-Mails bei jeder Anfrage live von Posteo ab, speichert keine Nachrichteninhalte und verschlüsselt Zugangsdaten im Ruhezustand, aber der Text erreicht trotzdem Claude, Cursor oder den Client, den Sie verbinden. Posteos anonyme Registrierung, anonyme Bezahlung und das Hosting in Deutschland schützen die Beziehung zwischen Ihnen und Posteo. Nichts davon begleitet eine Nachricht zu einem KI-Anbieter, den Sie selbst anbinden.",
+    "Mit eingeschalteter Eingangsverschlüsselung kann ein Agent Ihre E-Mails gar nicht lesen. Nachrichten kommen als PGP- oder S/MIME-Chiffretext an, MCP Emails besitzt keinen privaten Schlüssel von Ihnen, und es bleiben nur Kopfzeilen, Datumsangaben und Ordneroperationen.",
+    "Posteos Standardpostfach ist für heutige Verhältnisse klein, und ein volles Postfach weist eingehende E-Mails ab. Ein Agent, der ablegt und markiert, schafft keinen Platz, Löschen und Leeren des Papierkorbs schon."
+  ],
+  "faq": [
+    {
+      "q": "Funktioniert Claude mit Posteo?",
+      "a": "Nicht von sich aus. Claude hat keinen Posteo-Konnektor und spricht kein IMAP. Wenn Sie einen MCP-Server wie MCP Emails mit Ihrem Posteo-Postfach verbinden, kann Claude E-Mails lesen, suchen, senden, beantworten, planen und ordnen. Dieselbe Verbindung funktioniert dann auch in Cursor, ChatGPT und anderen MCP-Clients, ohne sie ein zweites Mal einzurichten."
+    },
+    {
+      "q": "Wie lauten die IMAP- und SMTP-Einstellungen von Posteo?",
+      "a": "IMAP ist posteo.de auf Port 993 mit SSL/TLS oder 143 mit STARTTLS. SMTP ist posteo.de auf Port 465 mit SSL/TLS oder 587 mit STARTTLS. POP3 ist derselbe Host auf 995 oder 110. Der Benutzername ist Ihre vollständige Posteo-Adresse auf jeder Posteo-Domain, und SMTP-Authentifizierung ist immer Pflicht. Beide Hosts wurden über eine echte TLS-Verbindung geprüft."
+    },
+    {
+      "q": "Braucht Posteo ein App-Passwort?",
+      "a": "Nur wenn Sie den zusätzlichen Postfachschutz aktiviert haben. Standardmäßig meldet Ihr normales Posteo-Passwort IMAP, POP3 und SMTP an. Mit diesem Schutz funktionieren für diese Protokolle nur App-Passwörter. Sie werden in den Einstellungen im Bereich Passwort und Sicherheit angelegt, brauchen mindestens 16 Zeichen mit einer Zahl und einem Großbuchstaben, und Sie können fünf gleichzeitig haben."
+    },
+    {
+      "q": "Warum funktioniert mein Posteo-Mailprogramm nicht mehr, obwohl der Webmailer sich anmeldet?",
+      "a": "Mit großer Sicherheit, weil der zusätzliche Postfachschutz eingeschaltet wurde. Diese Einstellung sperrt das Kontopasswort für IMAP, POP3 und SMTP und lässt den Webmailer unberührt, genau das Muster, das Sie sehen. Legen Sie in den Einstellungen unter Passwort und Sicherheit ein App-Passwort an und tragen Sie es in beide Passwortfelder ein, für Posteingang und Postausgang."
+    },
+    {
+      "q": "Hindert Posteos Krypto-Mailspeicher meine KI daran, meine E-Mails zu lesen?",
+      "a": "Nein. Der Krypto-Mailspeicher verschlüsselt Ihr Postfach im Ruhezustand bei Posteo und wird bei der Anmeldung transparent entschlüsselt. IMAP verhält sich also normal, und ein Agent liest Ihre E-Mails wie gewohnt. Unlesbar für einen Client macht E-Mails die Eingangsverschlüsselung, die jede neu eingehende Nachricht mit Ihrem eigenen öffentlichen PGP- oder S/MIME-Schlüssel verschlüsselt."
+    },
+    {
+      "q": "Werden meine Posteo-E-Mails auf Ihren Servern gespeichert?",
+      "a": "Nein. Nachrichten werden bei jeder Anfrage live per IMAP von posteo.de abgerufen und an Ihren KI-Client übergeben. Zugangsdaten sind im Ruhezustand verschlüsselt, Nachrichteninhalte werden nicht aufbewahrt. Der KI-Client, den Sie verbinden, erhält allerdings den Inhalt von allem, was er liest. Diese Frage sollten Sie bewusst entscheiden."
+    }
+  ],
+  "ctaBand": {
+    "title": "Geben Sie Ihrer KI ein Posteo-Postfach",
+    "sub": "Posteo in wenigen Minuten verbinden. Ein Postfach dauerhaft kostenlos, ohne Kreditkarte."
+  }
+}

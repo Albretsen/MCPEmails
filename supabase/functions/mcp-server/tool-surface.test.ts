@@ -1138,7 +1138,15 @@ Deno.test("draft: the description, the update hint and draft_list say what is tr
   // only the decoded text is guaranteed. See draft-rebuild.ts.
   assert(/'update' replaces only the fields passed: omit body and the stored body text is kept\./.test(description));
   // Live re-test 2026-10-17: a new body no longer drops a reply's quote.
-  assert(/A new body keeps a reply's quoted original \(quote_kept\) unless it includes one\./.test(description));
+  // Live claude.ai test 2026-10-19: the model read "replaces" as "drops the
+  // quote" and pasted it (and the signature) back. Say it stays, and that body
+  // is the model's own text only.
+  assert(/A new body replaces only your text: a reply's quoted original stays below it \(quote_kept\)\./.test(description));
+  assert(!/unless it includes one/.test(description), "no invitation to paste the quote back");
+  assertEquals(
+    draft.inputSchema.properties.body.description,
+    "Plain-text draft body. Your message text only: never paste the signature or quoted original; the server adds them.",
+  );
   assert(!/exactly/.test(description), "no description promises an exact copy");
   assert(/Any inbox signature is embedded on create and on an update that passes body/.test(description));
   // The card sentence is true with the editor off as well as on.

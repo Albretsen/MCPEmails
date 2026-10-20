@@ -14,11 +14,11 @@
     "eyebrow": "Claude + e-mail",
     "titleLine1": "Connectez votre boîte à Claude",
     "titleLine2": "comme connecteur personnalisé",
-    "lead": "Claude n'a pas de client mail à lui. mcpemails est le serveur MCP hébergé qui lui en donne un : lire, rechercher, envoyer, répondre, transférer, planifier et organiser de vrais e-mails depuis claude.ai ou Claude Desktop.",
+    "lead": "Claude n'a pas de client mail à lui. MCP Emails est le serveur MCP hébergé qui lui en donne un : lire, rechercher, envoyer, répondre, transférer, planifier et organiser de vrais e-mails depuis claude.ai ou Claude Desktop.",
     "meta0": "1 boîte gratuite, pour toujours",
     "meta1": "OAuth, aucune clé API requise",
     "meta2": "E-mails récupérés en direct, jamais stockés",
-    "answer": "Ajoutez https://mcpemails.com/api/mcp comme connecteur personnalisé dans Claude, cliquez sur Connect et connectez-vous avec votre compte mcpemails. Claude s'enregistre automatiquement et demande les autorisations que vous approuvez. Aucune clé API à créer, aucun fichier de configuration à modifier."
+    "answer": "Ajoutez https://mcpemails.com/api/mcp comme connecteur personnalisé dans Claude, cliquez sur Connect et connectez-vous avec votre compte MCP Emails. Claude s'enregistre automatiquement et demande les autorisations que vous approuvez. Aucune clé API à créer, aucun fichier de configuration à modifier."
   },
   "method": {
     "title": "Comment Claude se connecte : OAuth, sans clé API",
@@ -27,7 +27,7 @@
   "setup": [
     {
       "h": "Créez un compte gratuit et connectez une boîte",
-      "p": "Inscrivez-vous sur mcpemails.com, sans carte bancaire, puis allez dans Dashboard, Inboxes, Connect Inbox. Outlook et Microsoft 365 se connectent via la connexion Microsoft ; Gmail, iCloud, Fastmail, Yahoo, Zoho et Yandex demandent un mot de passe d'application, et Gmail accepte aussi la connexion Google ; tout le reste se connecte en IMAP et SMTP standard. Le plan gratuit inclut une boîte, pour toujours."
+      "p": "Inscrivez-vous sur mcpemails.com, sans carte bancaire, puis allez dans Dashboard, Inboxes, Connect Inbox. Outlook et Microsoft 365 se connectent via la connexion Microsoft ; Gmail, iCloud, Fastmail, Yahoo, Zoho et Yandex demandent un mot de passe d'application ; tout le reste se connecte en IMAP et SMTP standard. Le plan gratuit inclut une boîte, pour toujours."
     },
     {
       "h": "Ouvrez les réglages des connecteurs",
@@ -39,7 +39,7 @@
     },
     {
       "h": "Connectez et autorisez",
-      "p": "Cliquez sur Connect et connectez-vous avec mcpemails pour autoriser. Approuvez les autorisations que Claude doit détenir. Aucune clé API nécessaire."
+      "p": "Cliquez sur Connect et connectez-vous avec MCP Emails pour autoriser. Approuvez les autorisations que Claude doit détenir. Aucune clé API nécessaire."
     }
   ],
   "gotchas": [
@@ -64,7 +64,7 @@
   "faq": [
     {
       "q": "Claude peut-il lire mes e-mails ?",
-      "a": "Pas tout seul. Claude ne peut atteindre une boîte qu'à travers un connecteur, et un connecteur personnalisé pointé vers mcpemails est une façon de lui en donner un. Une fois connecté, Claude peut lister, lire, rechercher, envoyer, répondre, transférer, organiser et planifier des e-mails dans toutes les boîtes que vous avez rattachées, dans la limite des autorisations approuvées."
+      "a": "Pas tout seul. Claude ne peut atteindre une boîte qu'à travers un connecteur, et un connecteur personnalisé pointé vers MCP Emails est une façon de lui en donner un. Une fois connecté, Claude peut lister, lire, rechercher, envoyer, répondre, transférer, organiser et planifier des e-mails dans toutes les boîtes que vous avez rattachées, dans la limite des autorisations approuvées."
     },
     {
       "q": "Ai-je besoin d'une clé API pour Claude ?",
@@ -72,7 +72,7 @@
     },
     {
       "q": "Quelles boîtes Claude peut-il atteindre ainsi ?",
-      "a": "Outlook.com et Microsoft 365 via la connexion Microsoft, où un compte professionnel peut nécessiter qu'un administrateur informatique approuve l'application une fois ; Gmail, iCloud, Fastmail, Yahoo, Zoho et Yandex avec un mot de passe d'application, la connexion Google restant une seconde option pour Gmail ; et toute autre boîte qui parle IMAP et SMTP sur les ports standard. Le client les voit toutes par la même connexion : votre agent appelle d'abord inbox_list pour découvrir chaque boîte connectée et son identifiant, donc aucun UUID à coller nulle part."
+      "a": "Outlook.com et Microsoft 365 via la connexion Microsoft, où un compte professionnel peut nécessiter qu'un administrateur informatique approuve l'application une fois ; Gmail, iCloud, Fastmail, Yahoo, Zoho et Yandex avec un mot de passe d'application ; et toute autre boîte qui parle IMAP et SMTP sur les ports standard. Le client les voit toutes par la même connexion : votre agent appelle d'abord inbox_list pour découvrir chaque boîte connectée et son identifiant, donc aucun UUID à coller nulle part."
     },
     {
       "q": "Claude peut-il envoyer un e-mail sans que je le voie ?",

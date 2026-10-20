@@ -19,8 +19,8 @@
     "eyebrow": "Mail-in-a-Box + IA",
     "titleLine1": "Conecta Mail-in-a-Box a Claude,",
     "titleLine2": "Cursor, ChatGPT y cualquier cliente MCP",
-    "lead": "Montaste tu propia box para que nadie más tuviera tu correo. Añadir un agente de IA no tiene por qué cambiar eso: mcpemails se conecta a tu box por IMAP y obtiene cada mensaje en vivo, sin almacenar nada.",
-    "answer": "Claude no puede acceder por sí solo a un servidor Mail-in-a-Box. mcpemails es un servidor MCP alojado que se conecta al tuyo por IMAP en el puerto 993, en el nombre de servidor de la box que indica la guía de instalación, que normalmente es box.yourdomain.com, autenticándose con la contraseña de un usuario de correo creado en el panel de control de administración. Eso permite a Claude, Cursor o cualquier cliente MCP leer, buscar, enviar y organizar el correo de tu box. La box tiene que ser accesible desde internet y tener un certificado de Let's Encrypt válido, que el panel de control te proporciona. Una bandeja es gratis.",
+    "lead": "Montaste tu propia box para que nadie más tuviera tu correo. Añadir un agente de IA no tiene por qué cambiar eso: MCP Emails se conecta a tu box por IMAP y obtiene cada mensaje en vivo, sin almacenar nada.",
+    "answer": "Claude no puede acceder por sí solo a un servidor Mail-in-a-Box. MCP Emails es un servidor MCP alojado que se conecta al tuyo por IMAP en el puerto 993, en el nombre de servidor de la box que indica la guía de instalación, que normalmente es box.yourdomain.com, autenticándose con la contraseña de un usuario de correo creado en el panel de control de administración. Eso permite a Claude, Cursor o cualquier cliente MCP leer, buscar, enviar y organizar el correo de tu box. La box tiene que ser accesible desde internet y tener un certificado de Let's Encrypt válido, que el panel de control te proporciona. Una bandeja es gratis.",
     "meta0": "1 bandeja gratis, para siempre",
     "meta1": "Contraseña del usuario de correo desde el panel de control",
     "meta2": "El correo se obtiene en vivo, nunca se almacena"
@@ -32,7 +32,7 @@
   "setup": [
     {
       "h": "Crea una cuenta gratis",
-      "p": "Regístrate en mcpemails, sin tarjeta. El plan gratuito conecta una bandeja, para siempre."
+      "p": "Regístrate en MCP Emails, sin tarjeta. El plan gratuito conecta una bandeja, para siempre."
     },
     {
       "h": "Obtén un certificado real desde el panel de control",
@@ -40,7 +40,7 @@
     },
     {
       "h": "Confirma el usuario de correo y su contraseña",
-      "p": "En Mail y luego Users, confirma que la dirección existe y define una contraseña que conozcas. Después añade la bandeja en mcpemails: elige IMAP / SMTP, usa <code>box.yourdomain.com</code> como servidor e introduce la dirección completa y esa contraseña."
+      "p": "En Mail y luego Users, confirma que la dirección existe y define una contraseña que conozcas. Después añade la bandeja en MCP Emails: elige IMAP / SMTP, usa <code>box.yourdomain.com</code> como servidor e introduce la dirección completa y esa contraseña."
     },
     {
       "h": "Pega la URL MCP en tu IA",
@@ -62,13 +62,13 @@
     }
   ],
   "limits": [
-    "Tu box tiene que aceptar conexiones entrantes en el 993 desde fuera para que un servidor MCP alojado pueda llegar a ella. Un Mail-in-a-Box en una conexión doméstica detrás de NAT, o uno restringido por un grupo de seguridad en la nube a tu propia dirección, no se puede conectar. mcpemails se puede alojar por tu cuenta si prefieres mantener la sesión IMAP dentro de tu propia red.",
+    "Tu box tiene que aceptar conexiones entrantes en el 993 desde fuera para que un servidor MCP alojado pueda llegar a ella. Un Mail-in-a-Box en una conexión doméstica detrás de NAT, o uno restringido por un grupo de seguridad en la nube a tu propia dirección, no se puede conectar. MCP Emails se puede alojar por tu cuenta si prefieres mantener la sesión IMAP dentro de tu propia red.",
     "Mail-in-a-Box espera controlar el DNS y el TLS del nombre de la box, así que esto funciona mejor con la instalación estándar sin modificar. Una box muy personalizada puede no presentar el certificado que cree el panel de control."
   ],
   "faq": [
     {
       "q": "¿Funciona Claude con Mail-in-a-Box?",
-      "a": "No directamente. Claude no tiene un conector para un servidor de correo que gestionas tú. Conectar un servidor MCP como mcpemails a tu box por IMAP le da a Claude acceso para leer, buscar, enviar, responder, programar y organizar los buzones que hay en ella, y la misma bandeja funciona después también en Cursor o ChatGPT."
+      "a": "No directamente. Claude no tiene un conector para un servidor de correo que gestionas tú. Conectar un servidor MCP como MCP Emails a tu box por IMAP le da a Claude acceso para leer, buscar, enviar, responder, programar y organizar los buzones que hay en ella, y la misma bandeja funciona después también en Cursor o ChatGPT."
     },
     {
       "q": "¿Cuáles son los ajustes IMAP y SMTP de Mail-in-a-Box?",
@@ -80,7 +80,7 @@
     },
     {
       "q": "¿Tengo que exponer mi box a internet?",
-      "a": "Para el servicio alojado, sí: mcpemails se conecta hacia dentro al puerto 993. Es el estado normal de un Mail-in-a-Box de todos modos, ya que tiene que aceptar correo del mundo en el puerto 25. Si has restringido a propósito el acceso a tus propias direcciones, aloja tú mismo mcpemails para que la conexión IMAP nunca salga de tu red."
+      "a": "Para el servicio alojado, sí: MCP Emails se conecta hacia dentro al puerto 993. Es el estado normal de un Mail-in-a-Box de todos modos, ya que tiene que aceptar correo del mundo en el puerto 25. Si has restringido a propósito el acceso a tus propias direcciones, aloja tú mismo MCP Emails para que la conexión IMAP nunca salga de tu red."
     },
     {
       "q": "¿Se almacena mi correo en sus servidores?",

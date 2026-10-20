@@ -41,7 +41,7 @@ const en = {
   meta: {
     title: 'Read-only email access for AI agents',
     description:
-      'What a read-only mcpemails connection can and cannot do, how writes are refused by both our server and your mail provider, why reading never marks mail as read, and what happens when you connect.',
+      'What a read-only MCP Emails connection can and cannot do, how writes are refused by both our server and your mail provider, why reading never marks mail as read, and what happens when you connect.',
   },
   breadcrumb: 'Read-only access',
   eyebrow: 'Docs',
@@ -100,7 +100,7 @@ const en = {
   ],
   evidence: {
     h: 'Check it yourself',
-    intro: 'mcpemails is open source. These files implement and test what this page describes:',
+    intro: 'MCP Emails is open source. These files implement and test what this page describes:',
     labels: {
       examine: 'EXAMINE for read-only connections',
       examineTests: 'Tests for EXAMINE, including the provider refusing a flag change',
@@ -175,7 +175,7 @@ const nb = {
   ],
   evidence: {
     h: 'Sjekk selv',
-    intro: 'mcpemails er åpen kildekode. Disse filene implementerer og tester det denne siden beskriver:',
+    intro: 'MCP Emails er åpen kildekode. Disse filene implementerer og tester det denne siden beskriver:',
     labels: {
       examine: 'EXAMINE for skrivebeskyttede tilkoblinger',
       examineTests: 'Tester for EXAMINE, blant annet at leverandøren avviser en flaggendring',
@@ -191,7 +191,7 @@ const es = {
   meta: {
     title: 'Acceso de solo lectura al correo para agentes de IA',
     description:
-      'Qué puede y qué no puede hacer una conexión de solo lectura de mcpemails, cómo nuestro servidor y tu proveedor de correo rechazan los cambios, por qué leer nunca marca el correo como leído y qué ocurre al conectarte.',
+      'Qué puede y qué no puede hacer una conexión de solo lectura de MCP Emails, cómo nuestro servidor y tu proveedor de correo rechazan los cambios, por qué leer nunca marca el correo como leído y qué ocurre al conectarte.',
   },
   breadcrumb: 'Acceso de solo lectura',
   eyebrow: 'Documentación',
@@ -250,7 +250,7 @@ const es = {
   ],
   evidence: {
     h: 'Compruébalo tú mismo',
-    intro: 'mcpemails es de código abierto. Estos archivos implementan y prueban lo que describe esta página:',
+    intro: 'MCP Emails es de código abierto. Estos archivos implementan y prueban lo que describe esta página:',
     labels: {
       examine: 'EXAMINE para conexiones de solo lectura',
       examineTests: 'Pruebas de EXAMINE, incluido el proveedor rechazando un cambio de indicador',
@@ -266,7 +266,7 @@ const fr = {
   meta: {
     title: 'Accès en lecture seule aux e-mails pour les agents IA',
     description:
-      'Ce qu\'une connexion mcpemails en lecture seule peut et ne peut pas faire, comment notre serveur et votre fournisseur de messagerie refusent les modifications, pourquoi la lecture ne marque jamais un e-mail comme lu, et ce qui se passe à la connexion.',
+      'Ce qu\'une connexion MCP Emails en lecture seule peut et ne peut pas faire, comment notre serveur et votre fournisseur de messagerie refusent les modifications, pourquoi la lecture ne marque jamais un e-mail comme lu, et ce qui se passe à la connexion.',
   },
   breadcrumb: 'Accès en lecture seule',
   eyebrow: 'Documentation',
@@ -325,7 +325,7 @@ const fr = {
   ],
   evidence: {
     h: 'Vérifiez par vous-même',
-    intro: 'mcpemails est open source. Ces fichiers implémentent et testent ce que décrit cette page :',
+    intro: 'MCP Emails est open source. Ces fichiers implémentent et testent ce que décrit cette page :',
     labels: {
       examine: 'EXAMINE pour les connexions en lecture seule',
       examineTests: 'Les tests d\'EXAMINE, dont le refus d\'un changement d\'indicateur par le fournisseur',
@@ -341,7 +341,7 @@ const zh = {
   meta: {
     title: 'AI 代理的只读邮件访问',
     description:
-      'mcpemails 只读连接能做什么、不能做什么；我们的服务器和您的邮件服务商如何拒绝写入；为什么读取永远不会把邮件标为已读；以及连接时会发生什么。',
+      'MCP Emails 只读连接能做什么、不能做什么；我们的服务器和您的邮件服务商如何拒绝写入；为什么读取永远不会把邮件标为已读；以及连接时会发生什么。',
   },
   breadcrumb: '只读访问',
   eyebrow: '文档',
@@ -399,7 +399,7 @@ const zh = {
   ],
   evidence: {
     h: '自行核实',
-    intro: 'mcpemails 是开源的。以下文件实现并测试了本页所述内容：',
+    intro: 'MCP Emails 是开源的。以下文件实现并测试了本页所述内容：',
     labels: {
       examine: '只读连接使用 EXAMINE',
       examineTests: 'EXAMINE 的测试，包括服务商拒绝旗标更改',
@@ -411,7 +411,82 @@ const zh = {
   cta: { title: '以只读方式连接邮箱', sub: '一个收件箱永久免费。', button: '开始使用', providers: '支持的服务商' },
 };
 
-export const READ_ONLY_ACCESS = { en, nb, es, fr, zh };
+const de = {
+  meta: {
+    title: 'Nur-Lese-Zugriff auf E-Mails für KI-Agenten',
+    description:
+      'Was eine MCP Emails Verbindung mit Nur-Lese-Zugriff kann und was nicht, wie unser Server und Ihr E-Mail-Anbieter Schreibzugriffe ablehnen, warum Lesen E-Mails nie als gelesen markiert und was beim Verbinden passiert.',
+  },
+  breadcrumb: 'Nur-Lese-Zugriff',
+  eyebrow: 'Dokumentation',
+  title: 'Nur-Lese-Zugriff',
+  lead:
+    'Eine Verbindung mit Nur-Lese-Zugriff erlaubt einer KI, Ihre E-Mails zu lesen und zu durchsuchen, und sonst nichts. Diese Seite zeigt, was sie kann, was nicht und wie jede Grenze durchgesetzt wird.',
+  sections: [
+    {
+      id: 'what',
+      h: 'Was eine Verbindung mit Nur-Lese-Zugriff kann',
+      items: [
+        'Sie hat die Berechtigung `read:email` und optional `search:email`, die nichts hinzufügt.',
+        'Sie kann Nachrichten auflisten, lesen und durchsuchen, Anhänge herunterladen sowie Postfächer und Ordner auflisten.',
+        'Sie kann nicht senden, antworten, Entwürfe anlegen, verschieben, markieren, als gelesen markieren, löschen, zeitversetzt senden oder Automatisierungen erstellen.',
+      ],
+    },
+    {
+      id: 'choose',
+      h: 'So wählen Sie ihn aus',
+      items: [
+        'Wenn Sie einen KI-Client verbinden, bietet der Zustimmungsbildschirm Zugriffsstufen an. Wählen Sie **Nur-Lese-Zugriff** („E-Mails lesen und durchsuchen. Kann nichts senden, ändern oder löschen.“) oder öffnen Sie **Berechtigungen anpassen** und gewähren Sie nur Lesen. Sie können die Verbindung auch auf einige Ihrer Postfächer beschränken.',
+        'ChatGPT öffnet diesen Bildschirm mit **Vollzugriff**, weil es später nicht zurückkommen und mehr Zugriff anfragen kann. Wählen Sie **Nur-Lese-Zugriff**, bevor Sie auf **Zugriff erlauben** klicken.',
+        'API-Schlüssel, die Sie im Dashboard erstellen, lassen sich auf dieselben Berechtigungen beschränken.',
+      ],
+    },
+    {
+      id: 'enforced',
+      h: 'Wie die Grenzen durchgesetzt werden',
+      items: [
+        'Jeder Tool-Aufruf wird mit den Berechtigungen der Verbindung abgeglichen, bevor wir Ihren Mailserver kontaktieren. Ein Aufruf außerhalb der Freigabe wird mit `insufficient_scope` abgelehnt.',
+        'Bei IMAP-Postfächern öffnet eine Verbindung mit Nur-Lese-Zugriff jeden Ordner mit `EXAMINE`, der schreibgeschützten Form von `SELECT`. Ihr E-Mail-Anbieter lehnt dann in dieser Sitzung jede Änderung von Markierungen, jedes Verschieben und jedes Löschen selbst ab, egal was unser Code tut.',
+        'Nachrichten werden mit `BODY.PEEK` abgerufen. Das Lesen einer Nachricht markiert sie daher nie als gelesen. Das gilt für jede Verbindung, nicht nur für solche mit Nur-Lese-Zugriff.',
+        'Das Lese-Tool ändert Ihr Postfach nie. Seine frühere Option `mark_as_read` wurde entfernt. Als gelesen markieren ist eine eigene Aktion, die die Berechtigung `manage:folders` braucht.',
+        'KI-Clients, die sich per OAuth anmelden, sehen die vollständige Tool-Liste, damit sie Sie um mehr Zugriff bitten können. Diese Aufrufe scheitern trotzdem, bis Sie den Zugriff gewähren.',
+      ],
+    },
+    {
+      id: 'connect',
+      h: 'Was beim Verbinden passiert',
+      items: [
+        'Wir öffnen eine TLS-Verbindung, prüfen das Zertifikat des Servers, melden uns einmal an, um Ihr Passwort oder App-Passwort zu prüfen, und melden uns wieder ab.',
+        'Nichts wird heruntergeladen, kopiert oder indexiert. Nachrichten werden nur dann bei Ihrem Anbieter abgerufen, wenn ein Tool sie anfordert.',
+        'Im Hintergrund laufen nur Automatisierungen und zeitversetzte Sendungen, und beide brauchen Schreibrechte, die eine Verbindung mit Nur-Lese-Zugriff nicht hat.',
+        'Wenn Sie von der Adresse nie senden möchten, wählen Sie beim Verbinden **Erweiterte Einstellungen** → **Verbindungstyp** → **Nur empfangen (IMAP)**. Dann wird kein SMTP-Server eingerichtet oder kontaktiert.',
+      ],
+    },
+    {
+      id: 'search',
+      h: 'Große Postfächer durchsuchen',
+      items: [
+        'Bei IMAP-Postfächern läuft die Suche mit IMAP `SEARCH` auf dem Server Ihres Anbieters. Wir laden nur die angeforderte Ergebnisseite herunter, bis zu 100 Nachrichten, und die KI blättert durch den Rest.',
+        'Die Suche umfasst den Posteingang, sofern kein Ordner angegeben ist, denn alle Ordner eines großen Kontos zu durchsuchen ist langsam.',
+        'Jede Suche ist auf 30 Sekunden begrenzt. Grenzen Sie in einem Postfach mit Zehntausenden Nachrichten eine breite Suche nach Absender, Betreff oder Datum ein.',
+      ],
+    },
+  ],
+  evidence: {
+    h: 'Prüfen Sie es selbst',
+    intro: 'MCP Emails ist Open Source. Diese Dateien setzen um und testen, was diese Seite beschreibt:',
+    labels: {
+      examine: 'EXAMINE für Verbindungen mit Nur-Lese-Zugriff',
+      examineTests: 'Tests für EXAMINE, einschließlich der Ablehnung einer Markierungsänderung durch den Anbieter',
+      scopes: 'Die Liste der Berechtigungen',
+      markAsRead: 'Entfernung von mark_as_read aus dem Lese-Tool',
+      peek: 'Der IMAP-Client: Jeder Abruf von Inhalten nutzt BODY.PEEK',
+    },
+  },
+  cta: { title: 'Postfach mit Nur-Lese-Zugriff verbinden', sub: 'Ein Postfach ist kostenlos, für immer.', button: 'Jetzt starten', providers: 'Unterstützte Anbieter' },
+};
+
+export const READ_ONLY_ACCESS = { en, nb, es, fr, zh, de };
 
 export function readOnlyAccessCopy(locale) {
   return READ_ONLY_ACCESS[locale] ?? en;

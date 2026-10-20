@@ -701,7 +701,11 @@ function isLiveEditor(env: Envelope | null | undefined): env is Envelope {
 function keepReplyContext(current: Envelope | null | undefined, next: Envelope): Envelope {
   const held = current?.card === "draft_editor" ? current.draft?.in_reply_to : null;
   const n = next.card === "draft_editor" ? next.draft : null;
-  if (!held || !n || n.in_reply_to || n.threaded !== true) return next;
+  // Since 2026-10-19 those answers carry a context read back from the stored
+  // draft (`message_id: null`, mcp-app-drafts.ts#storedReplyContext). The one
+  // already held came from the reply itself and is the better copy, so it
+  // still wins: the line must not change wording under the person on a Save.
+  if (!held || !n || n.in_reply_to?.message_id || n.threaded !== true) return next;
   const was = current!.draft!;
   if (was.identity?.inbox_id !== n.identity?.inbox_id) return next;
   const same = n.draft_id === was.draft_id ||

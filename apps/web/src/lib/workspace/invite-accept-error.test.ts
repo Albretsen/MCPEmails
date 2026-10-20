@@ -69,7 +69,7 @@ test('seat limit is 403 and carries what the upgrade prompt needs', () => {
   assert.equal(mapped!.status, 403);
   assert.equal(mapped!.body.error_code, 'member_limit_reached');
   assert.equal(mapped!.body.upgrade_url, '/pricing');
-  assert.match(mapped!.body.error, /Team plan/);
+  assert.match(mapped!.body.error, /Business plan/);
 });
 
 test('a deleted workspace is 410 GONE, not 404', () => {

@@ -1,0 +1,16 @@
+{
+  "links": {
+    "compare": "Vergleichen",
+    "connectHeading": "Verbinden",
+    "connectAll": "Alle E-Mail-Anbieter",
+    "connectImap": "Beliebiges IMAP-Postfach verbinden",
+    "connectGmail": "Gmail verbinden",
+    "connectOutlook": "Outlook verbinden",
+    "connectFastmail": "Fastmail verbinden",
+    "connectIcloud": "iCloud verbinden",
+    "connectYahoo": "Yahoo verbinden",
+    "connectZoho": "Zoho verbinden",
+    "connectYandex": "Yandex verbinden",
+    "vsNative": "vs. native Konnektoren"
+  }
+}

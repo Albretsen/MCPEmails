@@ -1,6 +1,6 @@
 /**
  * Row shapes and enums for SAML SSO, as created by
- * supabase/migrations/20261019140000_sso_connections.sql.
+ * supabase/migrations/20261019140000_sso_connections.sql (and 20261019140500).
  *
  * Hand-written because the migration is not applied yet, so
  * src/types/database.types.ts does not know these tables. Once it is applied

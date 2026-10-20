@@ -20,7 +20,7 @@
   },
   "compare": {
     "title": "Selvhosting vs. hostet",
-    "intro": "Hele MCP-serveren og alle 23 verktøyene finnes i begge. Selvhosting bytter administrert bekvemmelighet mot full kontroll.",
+    "intro": "Hele MCP-serveren og alle 19 verktøyene finnes i begge. Selvhosting bytter administrert bekvemmelighet mot full kontroll.",
     "thFeature": "",
     "thSelf": "Selvhostet",
     "thHosted": "Hostet",
@@ -28,10 +28,10 @@
       {
         "feature": "Pris",
         "self": "Gratis, du kjører den",
-        "hosted": "Gratis, $9, $15 eller $79"
+        "hosted": "Gratis, $9, $15 eller $39"
       },
       {
-        "feature": "MCP-serveren og alle 23 verktøyene",
+        "feature": "MCP-serveren og alle 19 verktøyene",
         "self": "Ja",
         "hosted": "Ja"
       },
@@ -51,9 +51,9 @@
         "hosted": "Ja"
       },
       {
-        "feature": "Gmail- / Outlook-innlogging (OAuth)",
+        "feature": "Outlook-innlogging (OAuth)",
         "self": "Ikke inkludert",
-        "hosted": "Gmail: ja; Outlook: ja (jobbkontoer kan trenge godkjenning fra IT-administratoren)"
+        "hosted": "Ja (jobbkontoer kan trenge godkjenning fra IT-administratoren)"
       },
       {
         "feature": "Nettdashboard (tilkobling, nøkler, aktivitet)",
@@ -71,14 +71,14 @@
         "hosted": "Administrert"
       },
       {
-        "feature": "Teamarbeidsområder, roller, SSO, revisjonslogg",
+        "feature": "Medlemmer, roller og flere arbeidsområder",
         "self": "Ikke inkludert",
-        "hosted": "Team-plan"
+        "hosted": "Business-plan"
       },
       {
         "feature": "Support",
         "self": "Fellesskap og GitHub",
-        "hosted": "E-post og prioritet"
+        "hosted": "E-post på betalte planer"
       },
       {
         "feature": "Oppsett",

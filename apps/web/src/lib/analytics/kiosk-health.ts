@@ -16,7 +16,7 @@
  * calls are succeeding. health-math.ts holds the argument for why neither is
  * sufficient alone and where the thresholds come from.
  *
- * NOTHING HERE THROWS. The caller is a route handler polled every 45 seconds
+ * NOTHING HERE THROWS. The caller is a route handler polled every two minutes
  * by a display nobody is watching, and a rejected promise there would blank
  * the one panel whose whole job is to be believed. A failed read degrades to
  * an explicitly unknown snapshot, which the board paints amber and labels, so

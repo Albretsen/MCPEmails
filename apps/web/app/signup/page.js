@@ -5,8 +5,8 @@ import { SignupApp } from '../../components/auth/SignupApp';
 import { CONNECT_INTENT_PARAM, connectIntentSlugShape } from '@/lib/connect/intent-carry.mjs';
 
 export const metadata = {
-  title: 'Create your account · mcpemails',
-  description: 'Create your mcpemails account and connect your first inbox',
+  title: 'Create your account · MCP Emails',
+  description: 'Create your MCP Emails account and connect your first inbox',
 };
 
 /**

@@ -21,7 +21,7 @@ There is no code to write, no SDK to install, and no API key when you connect th
 
 - A **Claude plan or app that supports custom connectors**.
 - A free **MCP Emails** account: [create one here](/signup).
-- One email inbox. Outlook connects with Sign in with Microsoft. Gmail, iCloud, Fastmail, Yahoo, Zoho, and most other providers use an app-specific password, and Gmail also offers Sign in with Google.
+- One email inbox. Outlook connects with Sign in with Microsoft. Gmail, iCloud, Fastmail, Yahoo, Zoho, and most other providers use an app-specific password.
 
 ## Step 1: Connect your inbox to MCP Emails
 
@@ -29,23 +29,23 @@ In the MCP Emails dashboard, open **Inboxes → Connect Inbox**, then choose you
 
 ### Gmail and Google Workspace
 
-Choose **Gmail**, create a Google app password (your Google account needs 2-Step Verification for that), and paste it in with your Gmail address. You can pick Sign in with Google instead. Either way, your normal Google password is never shared with MCP Emails. Follow the [Gmail-specific walkthrough](/blog/connect-gmail-to-claude) if a Workspace administrator controls app access.
+Choose **Gmail**, create a Google app password at myaccount.google.com/apppasswords (Google only offers one once 2-Step Verification is on), and paste the 16 letters in with your full Gmail address. Your normal Google password will not work here, and you can revoke the app password anytime. Follow the [Gmail-specific walkthrough](/blog/connect-gmail-to-claude) if a Workspace administrator has switched app passwords off for your domain. See [Gmail settings and limits](/connect/gmail) and the [Google Workspace setup page](/connect/google-workspace).
 
 ### iCloud Mail
 
-Create an app-specific password in your Apple Account, choose **iCloud**, and enter that password, not your normal Apple Account password. The [iCloud and IMAP walkthrough](/blog/connect-icloud-fastmail-imap-to-claude) includes the exact provider steps.
+Create an app-specific password in your Apple Account, choose **iCloud**, and enter that password, not your normal Apple Account password. The [iCloud and IMAP walkthrough](/blog/connect-icloud-fastmail-imap-to-claude) includes the exact provider steps. See also [Connect iCloud Mail to Claude](/connect/icloud).
 
 ### Fastmail
 
-Create an app password with Mail access in Fastmail, choose **Fastmail**, and paste it into MCP Emails. Keep the generated password until the connection test succeeds.
+Create an app password with Mail access in Fastmail, choose **Fastmail**, and paste it into MCP Emails. Keep the generated password until the connection test succeeds. See [Fastmail settings for Claude](/connect/fastmail).
 
 ### Outlook and Microsoft 365
 
-Outlook connects with Sign in with Microsoft, not an app password: choose **Outlook**, click **Connect with Microsoft**, and approve. Personal Outlook.com, Hotmail, Live and MSN accounts connect straight away. Work or school Microsoft 365 accounts may need an IT admin to approve the app once for the whole organisation first; the dashboard gives you a link to send them. The [Outlook and Microsoft 365 guide](/blog/connect-outlook-microsoft-365-ai-agent-mcp) has the details.
+Outlook connects with Sign in with Microsoft, not an app password: choose **Outlook**, click **Connect with Microsoft**, and approve. Personal Outlook.com, Hotmail, Live and MSN accounts connect straight away. Work or school Microsoft 365 accounts may need an IT admin to approve the app once for the whole organisation first; the dashboard gives you a link to send them. The [Outlook and Microsoft 365 guide](/blog/connect-outlook-microsoft-365-ai-agent-mcp) has the details. See the [Outlook setup page](/connect/outlook) or the [Microsoft 365 setup page](/connect/office365).
 
 ### Yahoo, Zoho, Yandex, and custom IMAP
 
-Create an app password, choose **IMAP**, and enter the address and password. Common settings are detected automatically; custom domains may need the IMAP/SMTP host, port, and security mode supplied by the provider.
+Create an app password, choose **IMAP**, and enter the address and password. Common settings are detected automatically; custom domains may need the IMAP/SMTP host, port, and security mode supplied by the provider. Settings for each are on the [Yahoo Mail](/connect/yahoo), [Zoho Mail](/connect/zoho), [Yandex Mail](/connect/yandex), and [custom IMAP](/connect/imap) pages. You can also browse [every supported provider](/connect).
 
 You can connect more than one inbox. Claude discovers them with \`inbox_list\`, so you do not have to paste mailbox IDs into a prompt.
 
@@ -65,7 +65,7 @@ https://mcpemails.com/api/mcp
 
 4. Select **Connect**, sign in to MCP Emails, and approve the scopes you want: \`read:email\`, \`send:email\`, or both.
 
-That is the entire Claude setup. OAuth limits the connection to the scopes you approve, and you can revoke it from MCP Emails whenever you want. If you use a client without OAuth support, use a scoped API key instead; [OAuth vs. API keys](/blog/oauth-vs-api-keys-ai-email-access) explains that path.
+That is the entire Claude setup. OAuth limits the connection to the scopes you approve, and you can revoke it from MCP Emails whenever you want. If you use a client without OAuth support, use a scoped API key instead; [OAuth vs. API keys](/blog/oauth-vs-api-keys-ai-email-access) explains that path. For Claude-specific problems, see the [Claude setup page](/docs/claude).
 
 ## Step 3: Give Claude a safe first task
 
@@ -86,7 +86,7 @@ For repeatable routines, use the [inbox triage playbook](/blog/ai-agent-triage-s
 
 MCP Emails gives Claude focused email tools rather than a password or raw IMAP connection:
 
-- **Read and search:** \`email_read\` lists messages, reads full messages, and searches mail. Gmail searches also support Gmail operators such as \`from:\` and \`is:unread\`.
+- **Read and search:** \`email_read\` lists messages, reads full messages, and searches mail by sender, subject, date, unread state and other structured fields. On Gmail, labels show up as folders.
 - **Send, reply, and forward:** \`email_compose\` sends through your own provider and address.
 - **Organize:** \`email_organize\` moves, labels, flags, and archives messages.
 - **Work with drafts, folders, schedules, and contacts:** \`draft\`, \`folder\`, \`schedule\`, and \`contact_search\` cover the rest of a practical email workflow.
@@ -107,7 +107,7 @@ Still blocked? Use the [provider matrix](/docs/providers) to check capabilities,
 Yes, provided you give the connection only the access it needs and keep a person involved for outgoing actions.
 
 - **Email is not stored.** MCP Emails retrieves message content live for each call and discards it after delivery. The encrypted credential needed to reconnect to your provider is the only inbox data retained.
-- **Your provider keeps control of authentication.** Outlook, and Gmail's Sign in with Google option, use OAuth, so MCP Emails never receives your password. For Gmail's app password and other IMAP providers, use a revocable app-specific password rather than your normal password.
+- **Your provider keeps control of authentication.** Outlook uses OAuth, so MCP Emails never sees your Microsoft password. For Gmail and other app-password providers, the app password is a separate credential, not your account password, and you can revoke it anytime.
 - **Scopes are explicit.** Grant read-only access if Claude should never send. Add send access only when you need it, and revoke either access path at any time.
 
 Treat every email body as untrusted input. Ask Claude to draft before it sends, review external-facing messages, and do not let instructions inside an email override your intent. The [email-access safety guide](/blog/is-it-safe-to-give-ai-agent-email-access) explains the threat model in more detail.
@@ -115,7 +115,7 @@ Treat every email body as untrusted input. Ask Claude to draft before it sends, 
 ## FAQ
 
 **Can Claude connect to Gmail, Outlook, or iCloud?**  
-Gmail connects with a Google app password or Sign in with Google, Outlook connects with Sign in with Microsoft, and iCloud connects through an app-specific password. A work or school Microsoft 365 account may need an IT admin to approve the app once first. MCP Emails also supports Fastmail and generic IMAP, which covers services such as Yahoo and Zoho.
+Gmail connects with a Google app password, Outlook connects with Sign in with Microsoft, and iCloud connects through an app-specific password. A work or school Microsoft 365 account may need an IT admin to approve the app once first. MCP Emails also supports Fastmail and generic IMAP, which covers services such as Yahoo and Zoho.
 
 **Do I need an API key?**  
 No, not for Claude's OAuth connector flow. Paste the endpoint URL and sign in. API keys are for MCP clients that do not have built-in OAuth.

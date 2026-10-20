@@ -1,9 +1,11 @@
-import { NextRequest, NextResponse } from 'next/server';
+import { NextRequest, NextResponse, after } from 'next/server';
 import { createClient } from '@/lib/supabase/server';
 import { createServiceRoleClient } from '@/lib/supabase/service';
 import { resolveActiveWorkspaceId } from '@/lib/workspace/active';
 import { encryptToken } from '@/lib/crypto';
 import { checkInboxLimit, inboxExistsForEmail, inboxLimitErrorBody } from '@/lib/plans/check-inbox-limit';
+import { recordInboxCapHit } from '@/lib/plans/inbox-cap-events';
+import { syncMailboxAddonForWorkspace } from '@/lib/stripe/mailbox-addon';
 import { findOtherProviderInbox, otherProviderErrorBody } from '@/lib/inboxes/provider-conflict';
 import { validateImapCredential } from '@/lib/email/validate-imap';
 import { validateSmtpCredential } from '@/lib/email/validate-smtp';
@@ -178,6 +180,7 @@ export async function POST(request: NextRequest): Promise<NextResponse> {
     const inboxLimit = await checkInboxLimit(supabase, workspaceId);
     if (inboxLimit.atLimit) {
       await recordProductFunnelEvent(db, { workspaceId, stage: 'inbox_connection', outcome: 'failure', category: 'fastmail', errorCategory: 'plan_limit' });
+      await recordInboxCapHit(workspaceId, inboxLimit);
       // 402 with a stable machine-readable body; the dashboard owns the
       // localised sentence. See inboxLimitErrorBody for why nothing here
       // interpolates the internal plan slug.
@@ -396,6 +399,9 @@ export async function POST(request: NextRequest): Promise<NextResponse> {
   }
 
   await recordProductFunnelEvent(db, { workspaceId, stage: 'inbox_connection', outcome: 'success', category: 'fastmail', phase: 'complete', connectionType: alreadyConnected ? 'reconnect' : 'first_connect' });
+  // Business bills mailboxes past ten: bring the add-on quantity in step.
+  // After the response, never awaited by it (src/lib/stripe/mailbox-addon.ts).
+  if (!alreadyConnected) after(() => syncMailboxAddonForWorkspace(workspaceId).then(() => undefined));
   // The same success shape the other two connect routes answer with. Fastmail's
   // documented transport leads and the standard alternatives are only reached
   // when it never gets far enough to present the credential, so `adjusted` is

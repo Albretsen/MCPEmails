@@ -12,7 +12,7 @@ MCP-serveren eier ikke e-posten din. Den megler en levende tilkobling til hvilke
 
 Gå til **Dashboard → Inboxes → Connect Inbox** og velg en leverandør:
 
-- **Gmail** → et Google-apppassord over IMAP som standard (Google-kontoen din må ha totrinnsbekreftelse), eller Logg inn med Google hvis du foretrekker det.
+- **Gmail** → et Google-apppassord over IMAP. Slå på totrinnsbekreftelse, lag et på myaccount.google.com/apppasswords, og lim inn de 16 bokstavene sammen med hele Gmail-adressen din. En Google Workspace-administrator kan slå av apppassord for domenet.
 - **Outlook / Microsoft 365** → OAuth med Logg inn med Microsoft, uten app-passord. Personlige Outlook.com-, Hotmail-, Live- og MSN-kontoer kobles til med en gang. En jobb- eller skolekonto i Microsoft 365 kan trenge at en IT-ansvarlig først godkjenner appen én gang for hele organisasjonen; dashbordet gir deg en lenke du kan sende dem.
 - **iCloud, Fastmail, Yahoo, Zoho eller en hvilken som helst generisk IMAP-vert** → et app-spesifikt passord. Generer det i leverandørens innstillinger (for iCloud er det appleid.apple.com) og lim det inn.
 
@@ -81,7 +81,7 @@ Begge løypene eksponerer den samme flaten. En håndfull konsoliderte, handlings
 - \`inbox_list\` — kall alltid dette først for å oppdage tilkoblede innbokser og ID-ene deres.
 - \`email_read\` (handling \`list\`) — paginert, nyeste først.
 - \`email_read\` (handling \`read\`) — parset ren tekst, valgfri renset HTML, vedlegg.
-- \`email_read\` (handling \`search\`) — leverandørnativt søk (Gmail-operatorer, Outlook KQL, IMAP-tekst).
+- \`email_read\` (handling \`search\`): søk etter avsender, emne, dato, ulest-status og andre strukturerte felt, oversatt til hver leverandørs eget søk.
 - \`email_compose\` (handling \`send\`) — sett sammen med CC/BCC, HTML, vedlegg opptil 10 MB.
 - \`email_compose\` (handling \`reply\`) — setter In-Reply-To- og References-headere for deg slik at tråden holdes intakt.
 
@@ -99,19 +99,19 @@ Agenten kjører \`inbox_list\`, deretter \`email_read\` med handling \`list\` og
 
 > Svar på meldingen fra designkonsulenten og bekreft at torsdag klokken 14 fungerer, hold det kort.
 
-Den kaller \`email_compose\` med handling \`reply\`, trådingen er håndtert, og svaret går ut gjennom min egen Gmail — så det lander fra adressen min med domenets omdømme, ikke et eller annet relé. For en grundigere behandling av sorteringsledetekster, se [hvordan du får en AI-agent til å sortere og oppsummere innboksen din](/blog/ai-agent-triage-summarize-inbox).
+Den kaller \`email_compose\` med handling \`reply\`, trådingen er håndtert, og svaret går ut gjennom min egen Gmail, så det lander fra adressen min med domenets omdømme. For en grundigere behandling av sorteringsledetekster, se [hvordan du får en AI-agent til å sortere og oppsummere innboksen din](/blog/ai-agent-triage-summarize-inbox).
 
 En ærlig begrensning: det finnes ingen webhooks. Serveren dytter ikke ny post til deg. Vil du at agenten skal reagere på innkommende meldinger, må du polle — \`email_read\` med handling \`list\` og \`unread: true\` etter en plan. Det er et bevisst designvalg, og det former hvordan du bygger noe som helst reaktivt, som en [autosvarer over MCP](/blog/build-email-auto-responder-mcp-agent).
 
 ## Ratebegrensninger for skriptet tilgang
 
-Driver du serveren fra en cron-jobb eller en tett agentløkke, ta hensyn til grensene. Hver API-nøkkel er begrenset til **100 forespørsler per minutt, 1 000 per time og 10 000 per dag**, på alle planer. I tillegg finnes det et burst-tak per arbeidsområde satt av planen din: 60/min på Gratis, 120/min på Personal ($9 per måned), 300/min på Pro ($15 per måned), 1 000/min på Team ($79 per måned). Se [prissiden](/pricing) for hele oversikten.
+Driver du serveren fra en cron-jobb eller en tett agentløkke, ta hensyn til grensene. Hver API-nøkkel er begrenset til **100 forespørsler per minutt, 1 000 per time og 10 000 per dag**, på alle planer. I tillegg finnes det et burst-tak per arbeidsområde satt av planen din: 60/min på Gratis, 120/min på Personal ($9 per måned), 300/min på Pro ($15 per måned), 1 000/min på Business ($39 per måned). Se [prissiden](/pricing) for hele oversikten.
 
 Når du treffer en hastighetsgrense, returnerer serveren en gjentakbar feil (kode \`-32003\`) med \`data.retry_after\` i sekunder. Respekter den — bakk av så lenge og prøv igjen. Men ikke alt kan prøves på nytt: bruker du opp den månedlige handlingskvoten på planen din, returnerer kallet et vanlig verktøyresultat med \`isError: true\` og en \`_meta["com.mcpemails/usage_limit"]\`-blokk, uten \`retry_after\`, og ingen nye forsøk løser det før \`reset_at\`. Og prøv aldri blindt på nytt en \`email_compose\`-sending ved en generisk feil; du fyrer av duplikater. Sjekk om den faktisk ble sendt først.
 
 ## Oppsummering
 
-Cursor kobler deg opp med en URL og en innlogging. Alt annet krever en avgrenset nøkkel og en bearer-header. Begge treffer det samme endepunktet og de samme verktøyene, og begge holder legitimasjonen din utenfor repoet ditt og utenfor modellens kontekst.
+Cursor kobler deg opp med en URL og en innlogging. Alt annet krever en avgrenset nøkkel og en bearer-header. Begge treffer det samme endepunktet og de samme verktøyene, og begge holder legitimasjonen din utenfor repoet ditt og utenfor modellens kontekst. Bruker du ChatGPT eller Codex utenfor editoren? [Guiden for e-postoppsett i ChatGPT](/blog/connect-chatgpt-to-email) dekker begge.
 
 [Kom i gang gratis](/signup) og koble til din første innboks, eller les [dokumentasjonen](/docs) for den fullstendige verktøyreferansen.`,
 };

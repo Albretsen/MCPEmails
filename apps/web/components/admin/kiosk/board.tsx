@@ -96,6 +96,7 @@ import {
   projectToday,
   projectWeek,
   returningWorkspaces,
+  revenueTone,
   signupDayColumns,
   signupWeeks,
   stageOf,
@@ -256,7 +257,7 @@ async function PulseBoard({ days }: { days: number }) {
           breakfast still reads 99% on it, in calm grey, because twenty eight
           days of history cannot move in a morning. The long-run figure is
           still worth having and is now a fact under the headline; the headline
-          is the last hour, refreshed on its own 45 second clock rather than the
+          is the last hour, refreshed on its own two minute clock rather than the
           board's five minute one. */}
       <KioskHealthTile baselineRate={attemptRate(successes, calls, throttled)} baselineDays={days} />
 
@@ -1389,7 +1390,7 @@ const MONTH_LABEL = new Intl.DateTimeFormat('en-GB', { month: 'short', year: 'nu
 /* ---------------------------------------------------------------- helpers */
 
 /**
- * The tone and the aside of the money tile.
+ * The aside of the money tile (its tone is `revenueTone` in shared.ts).
  *
  * Ordered by what someone should do about it: a card that is failing outranks a
  * subscription winding down, which outranks the fact that the headline counts
@@ -1399,12 +1400,6 @@ const MONTH_LABEL = new Intl.DateTimeFormat('en-GB', { month: 'short', year: 'nu
  * nowrap` in a tile three of twelve columns wide, so a longer phrase does not
  * wrap, it eats the label: "Recurring revenue" becomes "Recurring rev...".
  */
-function revenueTone(mrr: RevenueSummary): 'good' | 'warn' | 'bad' | 'goal' {
-  if (mrr.atRiskCustomers > 0) return 'bad';
-  if (mrr.leavingCustomers > 0) return 'warn';
-  return mrr.mrrMinor > 0 ? 'good' : 'goal';
-}
-
 function revenueAside(mrr: RevenueSummary): string {
   if (mrr.atRiskCustomers > 0) return `${mrr.atRiskCustomers} failing`;
   if (mrr.leavingCustomers > 0) return `${mrr.leavingCustomers} leaving`;

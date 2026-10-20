@@ -20,7 +20,7 @@
     "titleLine1": "Connect Krystal email to Claude,",
     "titleLine2": "Cursor, ChatGPT, any MCP client",
     "lead": "Give your AI agent a real Krystal mailbox. Read, search, send, reply, schedule and organize mail over IMAP, on cPanel shared hosting or on the Onyx mail add-on.",
-    "answer": "Claude cannot reach a Krystal mailbox on its own. mcpemails is a hosted MCP server that connects it over plain IMAP on port 993, so Claude, Cursor or any MCP client can read, search, send and organize that mail. Krystal has no shared mail hostname: you use either mail.yourdomain.co.uk or your hosting server's own name, both of which are printed on the Connect Devices screen in cPanel. Before you start, check that the plan actually includes mail, because Krystal's Onyx managed WordPress platform ships without mailboxes unless you bought the add-on. Authentication is the mailbox password, and one inbox is free.",
+    "answer": "Claude cannot reach a Krystal mailbox on its own. MCP Emails is a hosted MCP server that connects it over plain IMAP on port 993, so Claude, Cursor or any MCP client can read, search, send and organize that mail. Krystal has no shared mail hostname: you use either mail.yourdomain.co.uk or your hosting server's own name, both of which are printed on the Connect Devices screen in cPanel. Before you start, check that the plan actually includes mail, because Krystal's Onyx managed WordPress platform ships without mailboxes unless you bought the add-on. Authentication is the mailbox password, and one inbox is free.",
     "meta0": "1 inbox free, forever",
     "meta1": "Mailbox password from cPanel",
     "meta2": "Email fetched live, never stored"
@@ -31,7 +31,7 @@
   },
   "setup": [
     {
-      "h": "Create a free mcpemails account",
+      "h": "Create a free MCP Emails account",
       "p": "Sign up at mcpemails.com. The free plan connects one inbox and needs no card."
     },
     {
@@ -40,7 +40,7 @@
     },
     {
       "h": "Set the mailbox password",
-      "p": "Krystal mailboxes authenticate with the password set on the address itself, not your Krystal client area login. On shared hosting use <b>Manage</b> on the address row in Email Accounts to set one. Then enter it in mcpemails with the full address as the username and the hostname you copied."
+      "p": "Krystal mailboxes authenticate with the password set on the address itself, not your Krystal client area login. On shared hosting use <b>Manage</b> on the address row in Email Accounts to set one. Then enter it in MCP Emails with the full address as the username and the hostname you copied."
     },
     {
       "h": "Paste the MCP URL into your AI",
@@ -63,12 +63,12 @@
   ],
   "limits": [
     "Mailbox size is capped by plan on Krystal shared hosting, at 5GB on the smaller tiers and 50GB on the larger ones. A full mailbox rejects new mail rather than degrading quietly.",
-    "mcpemails connects the mailbox only. Domain-level settings, forwarders and spam rules stay in cPanel or the Onyx portal."
+    "MCP Emails connects the mailbox only. Domain-level settings, forwarders and spam rules stay in cPanel or the Onyx portal."
   ],
   "faq": [
     {
       "q": "Does Claude work with Krystal email?",
-      "a": "Not directly. Claude has no Krystal connector. Connecting an MCP server such as mcpemails to your Krystal mailbox over IMAP gives Claude read, search, send, reply, schedule and organize access to it, whether the mailbox is on Krystal's cPanel shared hosting or on the Onyx mail add-on."
+      "a": "Not directly. Claude has no Krystal connector. Connecting an MCP server such as MCP Emails to your Krystal mailbox over IMAP gives Claude read, search, send, reply, schedule and organize access to it, whether the mailbox is on Krystal's cPanel shared hosting or on the Onyx mail add-on."
     },
     {
       "q": "What are the Krystal IMAP and SMTP settings?",

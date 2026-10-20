@@ -229,6 +229,7 @@ import {
   sseResponse,
   TOOLS_LIST_CHANGED_NOTIFICATION,
 } from "./card-build-notify.ts";
+import { handleWebIngress, isWebIngress } from "./web-ingress.ts";
 import {
   cardEnvelopeIn,
   stampDiagnostics,
@@ -259,6 +260,7 @@ import {
 import {
   buildDraftEditorEnvelope,
   describeParts,
+  htmlPartForDraftUpdate,
   DRAFT_EDITOR_TOOL_DEFINITIONS,
   type DraftPatch,
   runBodylessDraftUpdate,
@@ -327,6 +329,7 @@ import {
 } from "./signature-sanitizer.ts";
 import {
   applySignature,
+  applySignatureOnce,
   composeSignatureBlocks,
   heldSendSnapshot,
   includeSignatureForSend,
@@ -334,6 +337,7 @@ import {
   signatureHtmlToText,
   signatureOutcome,
   type SignatureOutcome,
+  textCarriesOwnSignature,
 } from "./signature-compose.ts";
 import { bodyKeepingQuote } from "./quoted-reply.ts";
 import {
@@ -456,6 +460,7 @@ import {
   type AllowanceGateIo,
   type BillableActionReservation,
   checkAutomationAllowance,
+  type PrereservedAction,
   planLimitOfRefusal,
   queueAutomationPausedNotice,
   reserveBillableAction as reserveAgainstAllowance,
@@ -466,6 +471,15 @@ import {
   firstUseAlreadyRecorded,
   settleAfterResponse,
 } from "./request-pipeline.ts";
+import {
+  GATE_RPC,
+  gateParams,
+  type GateReservation,
+  notePreflightError,
+  parsePreflight,
+  preflightSkipped,
+  reservationIdIn,
+} from "./tools-call-preflight.ts";
 import {
   buildUnappliedSearchNote,
   buildUnappliedSearchRefusal,
@@ -502,6 +516,7 @@ import {
 import { assertUidPresent, presentUids } from "./imap-uid-presence.ts";
 import { listImapFoldersWithCounts } from "./imap-folder-counts.ts";
 import { newMessageIdsFor, succeededBulkRow, unknownNewIdNote } from "./imap-copyuid.ts";
+import { relocateFromGmailAllMail } from "./imap-gmail-relocate.ts";
 import { dedupeMessageIds } from "./message-id-dedupe.ts";
 import { type ImapFetchedThisCall, imapRawMessageOnce } from "./imap-fetch-once.ts";
 import {
@@ -542,6 +557,7 @@ import {
   handlerValidationAuditDetails,
 } from "./validation-observability.ts";
 import { remediesFor, withSiblingOperations } from "./argument-remedies.ts";
+import { withGuessedArgumentHints } from "./argument-guesses.ts";
 import {
   closeDraftLine,
   draftIdIsRecordable,
@@ -642,6 +658,24 @@ const supabaseServiceKey = Deno.env.get("SUPABASE_SERVICE_ROLE_KEY") ??
 // or a body. Outside a request (module load) the store is absent and nothing
 // is counted.
 const requestMeterStore = new AsyncLocalStorage<{ dbCalls: number }>();
+
+/**
+ * The reservation mcp_tools_call_gate made for this request, from the moment
+ * its answer arrives until it is either handed to the allowance gate
+ * (`settled`) or released. handleRequest opens one per request and releases
+ * whatever is still unsettled before the response leaves, so a call that never
+ * reaches the cap check (a 429, a validation error, an unknown tool, a throw)
+ * gives its reservation back exactly as if it had never been made.
+ */
+interface GateReservationSlot {
+  /** The reservation id in the gate's answer, read before anything else was checked. */
+  reservationId: string | null;
+  /** The parsed reservation, when the answer was usable. */
+  reservation: GateReservation | null;
+  /** Handed over or released: nothing more for the slot to do. */
+  settled: boolean;
+}
+const gateReservationStore = new AsyncLocalStorage<GateReservationSlot>();
 
 const supabase = createClient(supabaseUrl, supabaseServiceKey, {
   auth: { persistSession: false },
@@ -1174,12 +1208,13 @@ function preTransmissionResult(
  */
 function jsonOk(
   obj: Record<string, unknown>,
-  pretty = false,
 ): { content: { type: string; text: string }[]; structuredContent: Record<string, unknown> } {
+  // Always compact: this text block is what lands in the model's context, and
+  // indentation is whitespace it pays tokens for and learns nothing from.
   return {
     content: [{
       type: "text",
-      text: pretty ? JSON.stringify(obj, null, 2) : JSON.stringify(obj),
+      text: JSON.stringify(obj),
     }],
     structuredContent: obj,
   };
@@ -1368,6 +1403,11 @@ interface RequestContext {
    * that read failed open; markFirstProductUse then runs as it always did.
    */
   firstUse?: FirstUseMarkers;
+  /**
+   * workspaces.card_diagnostics, already read by mcp_tools_call_gate. Absent
+   * on the per-query path; stampCardDiagnostics then reads it itself.
+   */
+  cardDiagnostics?: boolean;
 }
 
 // ---------------------------------------------------------------------------
@@ -2184,13 +2224,18 @@ function appendResultNote(
 async function stampCardDiagnostics(
   response: JsonRpcSuccessResponse | JsonRpcErrorResponse,
   workspaceId: string,
+  /**
+   * `workspaces.card_diagnostics` when mcp_tools_call_gate already read the
+   * workspace row for this request; undefined means read it here.
+   */
+  known?: boolean,
 ): Promise<void> {
   if (!("result" in response) || !response.result || typeof response.result !== "object") return;
   const envelope = cardEnvelopeIn(
     (response.result as { structuredContent?: unknown }).structuredContent,
   );
   if (!envelope) return;
-  if (await workspaceCardDiagnostics(workspaceId)) stampDiagnostics(envelope);
+  if (known ?? await workspaceCardDiagnostics(workspaceId)) stampDiagnostics(envelope);
 }
 
 /**
@@ -2236,6 +2281,37 @@ async function authenticateRequest(
   req: Request,
   requestId: string | number | null,
 ): Promise<{ apiKey: ApiKeyRow } | Response> {
+  const incomingHash = await bearerKeyHash(req, requestId);
+  if (incomingHash instanceof Response) return incomingHash;
+  return await lookupApiKey(incomingHash, requestId);
+}
+
+/**
+ * Steps 1-3 of authenticateRequest: the bearer token's SHA-256 hash, or the
+ * 401 for a missing, malformed or query-string credential. No database I/O.
+ */
+async function bearerKeyHash(
+  req: Request,
+  requestId: string | number | null,
+): Promise<string | Response> {
+  const token = bearerToken(req, requestId);
+  if (token instanceof Response) return token;
+
+  // ── Hash the bearer token ─────────────────────────────────────────────────
+  // Only the SHA-256 hash of the key is stored in the database. The raw key
+  // is never logged or persisted after the user's initial key creation.
+  return await hashApiKey(token);
+}
+
+/**
+ * Steps 1-2 of authenticateRequest: the bearer token from the Authorization
+ * header, or the 401 for a missing, malformed or query-string credential. A
+ * format check only: no hashing and no database I/O. Notifications stop here.
+ */
+function bearerToken(
+  req: Request,
+  requestId: string | number | null,
+): string | Response {
   // ── Extract the API key ───────────────────────────────────────────────────
   // API keys and OAuth access tokens must be supplied in the Authorization
   // header. Query-string credentials are deliberately rejected: URLs are
@@ -2278,7 +2354,7 @@ async function authenticateRequest(
       401,
     );
   }
-  const bearerToken = authHeader.slice(7).trim();
+  const token = authHeader.slice(7).trim();
 
   // ── Token format check → HTTP 401 ────────────────────────────────────────
   // MCPEmails keys are always exactly 69 characters: "mcpe_" (5) + 64 hex chars.
@@ -2288,7 +2364,7 @@ async function authenticateRequest(
   // 401 (not 403) so the /api/mcp proxy attaches WWW-Authenticate. OAuth MCP
   // clients refresh their access token on 401 but treat 403 as a hard failure,
   // so an expired token must surface as 401 for the connection to auto-refresh.
-  if (!bearerToken.startsWith("mcpe_") || bearerToken.length !== 69) {
+  if (!token.startsWith("mcpe_") || token.length !== 69) {
     return jsonResponse(
       jsonRpcErrorBody(
         requestId,
@@ -2300,11 +2376,14 @@ async function authenticateRequest(
     );
   }
 
-  // ── Hash the bearer token ─────────────────────────────────────────────────
-  // Only the SHA-256 hash of the key is stored in the database. The raw key
-  // is never logged or persisted after the user's initial key creation.
-  const incomingHash = await hashApiKey(bearerToken);
+  return token;
+}
 
+/** Step 4 of authenticateRequest: the api_keys lookup by hash, then acceptKeyRow. */
+async function lookupApiKey(
+  incomingHash: string,
+  requestId: string | number | null,
+): Promise<{ apiKey: ApiKeyRow } | Response> {
   // ── Database lookup ───────────────────────────────────────────────────────
   // Single query that simultaneously:
   //   • Authenticates (key_hash equality)
@@ -2320,7 +2399,23 @@ async function authenticateRequest(
     .or(`expires_at.is.null,expires_at.gt.${new Date().toISOString()}`)
     .maybeSingle();
 
-  if (error || !row) {
+  return acceptKeyRow(error ? null : row, incomingHash, requestId);
+}
+
+/**
+ * Steps 5-6 of authenticateRequest, for a row however it was looked up (the
+ * api_keys select above, or mcp_tools_call_gate): null is the 401, a row
+ * passes the constant-time comparison and has its last_used_at stamped, at
+ * most once a minute (see lastUsedStampDue).
+ */
+function acceptKeyRow(
+  row: Record<string, unknown> | null,
+  incomingHash: string,
+  requestId: string | number | null,
+  /** False when mcp_tools_call_gate already handled the stamp in its own round trip. */
+  stampLastUsed = true,
+): { apiKey: ApiKeyRow } | Response {
+  if (!row) {
     // Not found, expired, or revoked. 401 (not 403) so the proxy attaches
     // WWW-Authenticate and OAuth clients refresh. Message is identical to the
     // other failures to avoid an oracle that distinguishes the cases.
@@ -2352,25 +2447,268 @@ async function authenticateRequest(
     );
   }
 
-  const apiKey = row as ApiKeyRow;
+  const apiKey = row as unknown as ApiKeyRow;
 
   // ── Fire-and-forget: update last_used_at ─────────────────────────────────
   // Does not block the response. A failure here is non-fatal — the dashboard
   // "last seen" display may be stale, but authentication succeeded.
-  supabase
-    .from("api_keys")
-    .update({ last_used_at: new Date().toISOString() })
-    .eq("id", apiKey.id)
-    .then(({ error: updateError }) => {
-      if (updateError) {
-        console.warn("[mcp-server] last_used_at_update_failed", {
-          key_id: apiKey.id,
-          error: updateError.message,
-        });
-      }
-    });
+  // Throttled to once a minute per key: every request used to write the row.
+  if (stampLastUsed && lastUsedStampDue(apiKey.last_used_at)) {
+    supabase
+      .from("api_keys")
+      .update({ last_used_at: new Date().toISOString() })
+      .eq("id", apiKey.id)
+      .then(({ error: updateError }) => {
+        if (updateError) {
+          console.warn("[mcp-server] last_used_at_update_failed", {
+            key_id: apiKey.id,
+            error: updateError.message,
+          });
+        }
+      });
+  }
 
   return { apiKey };
+}
+
+/**
+ * How stale `api_keys.last_used_at` may get. Its readers are the dashboard and
+ * API key list ("2 minutes ago"), the admin directory, the 90-day dormant
+ * OAuth sweep and card-build-notify's null check; none needs better than a
+ * minute. mcp_tools_call_gate applies the same 60 s in SQL.
+ */
+const LAST_USED_STAMP_INTERVAL_MS = 60_000;
+
+/** True when the key has never been stamped or its stamp is over a minute old. */
+function lastUsedStampDue(lastUsedAt: string | null | undefined, nowMs = Date.now()): boolean {
+  if (!lastUsedAt) return true;
+  const stamped = Date.parse(lastUsedAt);
+  return !Number.isFinite(stamped) || nowMs - stamped >= LAST_USED_STAMP_INTERVAL_MS;
+}
+
+/**
+ * The gate inputs mcp_tools_call_gate already read, in the shape
+ * checkRateLimit, checkPlanQuota and the allowance read take them. Absent
+ * (null) whenever the per-query path ran instead.
+ */
+interface PreloadedGateReads {
+  rateLimit: PreloadedRateLimitCounts;
+  planQuota: PreloadedPlanQuotaReads;
+  /**
+   * Present only when the RPC was asked for the allowance row. It carries the
+   * terms only: `used` and `remaining` are null, because nothing on the
+   * tools/call path reads them and the reservation counts for itself.
+   */
+  allowance?: ActionAllowanceRow | null;
+  /** workspaces.card_diagnostics, when the workspace row was read. */
+  cardDiagnostics?: boolean;
+}
+
+/**
+ * authenticateRequest for a tools/call, with the gate reads and the allowance
+ * reservation in the same round trip.
+ *
+ * mcp_tools_call_gate (migration 20261020214737, tools-call-preflight.ts)
+ * looks the key up with the same three filters as lookupApiKey and, for a
+ * live key, returns the per-key window counts, the workspace row, the owner's
+ * entitlement, the workspace's minute count and (when the call may be metered)
+ * the allowance terms. When `reserveToolName` is set and the workspace is
+ * metered it also reserves one action, and it stamps last_used_at at most
+ * once a minute. That replaces four sequential round trips with one.
+ *
+ * The decisions are untouched: the row goes through acceptKeyRow, the counts
+ * through checkRateLimit and checkPlanQuota, and the reservation is handed to
+ * the allowance gate only when the resolved tool and terms match exactly
+ * (claimGateReservation). Every other outcome releases it: see
+ * GateReservationSlot.
+ *
+ * Any RPC error, a missing function or an answer of the wrong shape falls
+ * back to lookupApiKey and `preloaded: null`, i.e. the per-query path with all
+ * of its per-check fail-open behaviour. So the RPC can only change latency:
+ * never whether a key is accepted, a call is limited, or an action is counted.
+ */
+async function authenticateToolsCall(
+  req: Request,
+  requestId: string | number | null,
+  includeAllowance: boolean,
+  reserveToolName: string | null = null,
+): Promise<{ apiKey: ApiKeyRow; preloaded: PreloadedGateReads | null } | Response> {
+  const incomingHash = await bearerKeyHash(req, requestId);
+  if (incomingHash instanceof Response) return incomingHash;
+
+  const fallback = async () => {
+    const result = await lookupApiKey(incomingHash, requestId);
+    return result instanceof Response ? result : { apiKey: result.apiKey, preloaded: null };
+  };
+  // Deployed ahead of its migration: skip the RPC for a while (see preflightSkipped).
+  if (preflightSkipped()) return await fallback();
+
+  const now = Date.now();
+  const keyWindowStarts = rateLimitWindowStarts(now);
+  const workspaceWindowStart = planQuotaWindowStart(now);
+  let data: unknown;
+  try {
+    const { data: answer, error } = await supabase.rpc(
+      GATE_RPC,
+      gateParams(
+        incomingHash,
+        keyWindowStarts,
+        workspaceWindowStart,
+        includeAllowance,
+        reserveToolName,
+        ACTION_METER_VERSION,
+      ),
+    );
+    if (error) {
+      notePreflightError(error.code);
+      console.warn("[mcp-server] tools_call_preflight_failed", {
+        error: error.message,
+        error_code: error.code,
+      });
+      return await fallback();
+    }
+    data = answer;
+  } catch (err) {
+    console.warn("[mcp-server] tools_call_preflight_threw", {
+      error: err instanceof Error ? err.message : String(err),
+    });
+    return await fallback();
+  }
+
+  // A reservation that exists in the database is owned by this request from
+  // here on, whatever the rest of the answer looks like: the slot releases it
+  // unless the allowance gate takes it. Recorded BEFORE the answer is judged.
+  const slot = gateReservationStore.getStore();
+  const reservationId = reservationIdIn(data);
+  if (slot && reservationId) slot.reservationId = reservationId;
+
+  const preflight = parsePreflight(data, keyWindowStarts.length, includeAllowance);
+  if (preflight === null) {
+    console.warn("[mcp-server] tools_call_preflight_malformed", {});
+    return await fallback();
+  }
+  // An unknown, revoked or expired key: the same 401 lookupApiKey gives.
+  if (preflight.kind === "no_key") return acceptKeyRow(null, incomingHash, requestId) as Response;
+  const accepted = acceptKeyRow(preflight.key, incomingHash, requestId, !preflight.lastUsedHandled);
+  if (accepted instanceof Response) return accepted;
+  if (slot && preflight.reservation) slot.reservation = preflight.reservation;
+  const cardDiagnostics = preflight.workspace?.card_diagnostics;
+
+  return {
+    apiKey: accepted.apiKey,
+    preloaded: {
+      rateLimit: {
+        windowStarts: keyWindowStarts,
+        counts: preflight.keyCounts.map((count) => ({ count, error: null })),
+      },
+      planQuota: {
+        windowStart: workspaceWindowStart,
+        workspace: preflight.workspace,
+        entitlement: preflight.entitlement,
+        windowCount: { count: preflight.workspaceCount, error: null },
+      },
+      ...(includeAllowance
+        ? { allowance: preflight.allowance as ActionAllowanceRow | null }
+        : {}),
+      ...(typeof cardDiagnostics === "boolean" ? { cardDiagnostics } : {}),
+    },
+  };
+}
+
+/**
+ * The tool a tools/call will be metered under, if that can be told from the
+ * request alone, so mcp_tools_call_gate can reserve against it in the same
+ * round trip as authentication.
+ *
+ * Deliberately narrow: a billable tool called by its own name, or a
+ * consolidated tool whose `action` is EXACTLY one of its actions. Anything
+ * that needs the selector resolved (a misspelt or missing action, an alias, an
+ * inference) answers null and is reserved the ordinary way, after validation.
+ * A wrong guess is still safe, only slower: claimGateReservation compares the
+ * guess with the tool handleToolsCall actually resolved and releases it on a
+ * mismatch before reserving again.
+ */
+function gateReservationTool(params: unknown): string | null {
+  if (!params || typeof params !== "object") return null;
+  const name = (params as Record<string, unknown>)["name"];
+  if (typeof name !== "string" || !mayMeterToolCall(name)) return null;
+  const consolidated = CONSOLIDATED_BY_NAME[name];
+  if (!consolidated) return BILLABLE_TOOL_NAMES.has(name) ? name : null;
+  const args = (params as Record<string, unknown>)["arguments"];
+  if (!args || typeof args !== "object" || Array.isArray(args)) return null;
+  const action = (args as Record<string, unknown>)["action"];
+  if (typeof action !== "string" || !Object.hasOwn(consolidated.actions, action)) return null;
+  const legacy = consolidated.actions[action].legacy;
+  return BILLABLE_TOOL_NAMES.has(legacy) ? legacy : null;
+}
+
+/**
+ * Give back the gate's reservation if nobody took it. Idempotent; never
+ * throws. Called before any other reservation is made in this request, and
+ * once more by handleRequest before the response leaves.
+ */
+async function releaseGateReservation(slot: GateReservationSlot | undefined, reason: string): Promise<void> {
+  if (!slot || slot.settled) return;
+  slot.settled = true;
+  const reservationId = slot.reservationId;
+  if (!reservationId) return;
+  await releaseActionReservation(reservationId, reason);
+}
+
+/** `finalize_action_usage_reservation(id, false)`: no action_usage row, the slot freed. */
+async function releaseActionReservation(reservationId: string, reason: string): Promise<void> {
+  try {
+    const { error } = await supabase.rpc("finalize_action_usage_reservation", {
+      p_reservation_id: reservationId,
+      p_succeeded: false,
+    });
+    if (error) {
+      console.error("[mcp-server] gate_reservation_release_failed", {
+        reason,
+        error: error.message,
+        error_code: error.code,
+      });
+    }
+  } catch (err) {
+    console.error("[mcp-server] gate_reservation_release_failed", {
+      reason,
+      error: err instanceof Error ? err.message : String(err),
+    });
+  }
+}
+
+/**
+ * The gate's reservation, for the allowance gate deciding `toolName`.
+ *
+ * Handed over (and the slot settled) only when the call really is reaching
+ * the reservation for the tool the gate reserved against; the allowance gate
+ * then checks the cap and window as well (prereservationMatches). In every
+ * other case the reservation is released HERE, before the caller reserves on
+ * its own, so the two can never both count against the cap.
+ */
+async function claimGateReservation(toolName: string, willReserve: boolean): Promise<PrereservedAction | undefined> {
+  const slot = gateReservationStore.getStore();
+  if (!slot || slot.settled) return undefined;
+  const reservation = slot.reservation;
+  if (!willReserve || !reservation || reservation.toolName !== toolName) {
+    await releaseGateReservation(slot, willReserve ? "tool_mismatch" : "not_reserved");
+    return undefined;
+  }
+  slot.settled = true;
+  if (reservation.error) {
+    // The same line, and the same fail-open, as the separate reserve call.
+    console.error("[mcp-server] action_usage_reservation_failed", {
+      error: reservation.error.message,
+      error_code: reservation.error.code,
+    });
+  }
+  return {
+    toolName: reservation.toolName,
+    cap: reservation.cap,
+    periodStart: reservation.periodStart,
+    periodEnd: reservation.periodEnd,
+    outcome: reservation.error ? { ok: false } : { ok: true, row: reservation.row },
+  };
 }
 
 // ---------------------------------------------------------------------------
@@ -2457,28 +2795,58 @@ interface PlanQuotaResult {
  * Fail-open: any DB error allows the request through, matching the per-key
  * rolling-window limiter.
  */
+/** Start of the plan ceiling's trailing window, as an ISO timestamp. */
+function planQuotaWindowStart(nowMs = Date.now()): string {
+  return new Date(nowMs - PLAN_RPM_WINDOW_MS).toISOString();
+}
+
+/** A PostgREST `count=exact` answer, or the same values from the preflight RPC. */
+interface WindowCountResult {
+  count: number | null;
+  error: { message: string } | null;
+}
+
+/**
+ * The three reads checkPlanQuota makes, already made by
+ * mcp_tools_call_gate. `workspace` null is "no row", which fails open
+ * exactly like a failed lookup.
+ */
+interface PreloadedPlanQuotaReads {
+  windowStart: string;
+  // deno-lint-ignore no-explicit-any
+  workspace: Record<string, any> | null;
+  // deno-lint-ignore no-explicit-any
+  entitlement: Record<string, any> | null;
+  windowCount: WindowCountResult;
+}
+
 async function checkPlanQuota(
   workspaceId: string,
+  preloaded?: PreloadedPlanQuotaReads,
 ): Promise<PlanQuotaResult> {
   // The window count (step 2) needs nothing from the workspace row, so it is
   // issued first and overlaps the two lookups below instead of queueing behind
   // them. It is a read: when a lookup fails open the answer is simply unused.
-  const windowStart = new Date(Date.now() - PLAN_RPM_WINDOW_MS).toISOString();
-  const windowCount = Promise.resolve(
-    supabase
-      .from("activity_log")
-      .select("*", { count: "exact", head: true })
-      .eq("workspace_id", workspaceId)
-      .gte("created_at", windowStart),
-  );
+  const windowStart = preloaded?.windowStart ?? planQuotaWindowStart();
+  const windowCount: Promise<WindowCountResult> = preloaded
+    ? Promise.resolve(preloaded.windowCount)
+    : Promise.resolve(
+      supabase
+        .from("activity_log")
+        .select("*", { count: "exact", head: true })
+        .eq("workspace_id", workspaceId)
+        .gte("created_at", windowStart),
+    );
 
   // 1. Look up workspace plan. The two activation columns ride along for
   // markFirstProductUse (see PlanQuotaResult.firstUse); nothing here reads them.
-  const { data: workspace, error: wsError } = await supabase
-    .from("workspaces")
-    .select("plan, grandfathered, owner_id, analytics_first_tool_used_at, onboarding_value_activated_at")
-    .eq("id", workspaceId)
-    .maybeSingle();
+  const { data: workspace, error: wsError } = preloaded
+    ? { data: preloaded.workspace, error: null }
+    : await supabase
+      .from("workspaces")
+      .select("plan, grandfathered, owner_id, analytics_first_tool_used_at, onboarding_value_activated_at")
+      .eq("id", workspaceId)
+      .maybeSingle();
 
   if (wsError || !workspace) {
     console.error("[mcp-server] plan_quota_workspace_lookup_failed", {
@@ -2495,11 +2863,13 @@ async function checkPlanQuota(
     };
   }
 
-  const { data: entitlement, error: entitlementError } = await supabase
-    .from("user_usage_entitlements")
-    .select("kind, expires_at")
-    .eq("user_id", workspace.owner_id)
-    .maybeSingle();
+  const { data: entitlement, error: entitlementError } = preloaded
+    ? { data: preloaded.entitlement, error: null }
+    : await supabase
+      .from("user_usage_entitlements")
+      .select("kind, expires_at")
+      .eq("user_id", workspace.owner_id)
+      .maybeSingle();
   if (entitlementError) {
     console.error("[mcp-server] plan_quota_entitlement_lookup_failed", { error: entitlementError.message });
   }
@@ -2604,8 +2974,8 @@ async function checkPlanQuota(
  * What a plan is CALLED, which is not what its id is.
  *
  * The internal ids were never renamed as the pricing was: `solo` is sold as
- * "Pro" and `pro` is sold as "Team". Capitalising the id, which is what this
- * message used to do, therefore told a Team customer "Your Pro plan..." and a
+ * "Pro" and `pro` is sold as "Business" (Team until 2026-10-19). Capitalising
+ * the id, which is what this message used to do, therefore told a Team customer "Your Pro plan..." and a
  * Pro customer "Your Solo plan..." at the exact moment they hit a ceiling and
  * were deciding whether to pay us more.
  *
@@ -2618,7 +2988,7 @@ const PLAN_DISPLAY_NAMES: Record<string, string> = {
   free: "Free",
   personal: "Personal",
   solo: "Pro",
-  pro: "Team",
+  pro: "Business",
 };
 
 function buildQuotaExceededResponse(
@@ -2711,6 +3081,20 @@ interface RateLimitResult {
   retryAfterSeconds: number;
 }
 
+/** Start of each RATE_LIMIT_WINDOWS window, in table order, as ISO timestamps. */
+function rateLimitWindowStarts(nowMs = Date.now()): string[] {
+  return RATE_LIMIT_WINDOWS.map((window) => new Date(nowMs - window.intervalMs).toISOString());
+}
+
+/**
+ * The per-key window counts, already read by mcp_tools_call_gate: one
+ * per RATE_LIMIT_WINDOWS entry, in table order, for these window starts.
+ */
+interface PreloadedRateLimitCounts {
+  windowStarts: string[];
+  counts: WindowCountResult[];
+}
+
 /**
  * Check per-key rolling-window rate limits against the `activity_log` table.
  *
@@ -2732,17 +3116,17 @@ interface RateLimitResult {
  */
 async function checkRateLimit(
   apiKeyId: string,
+  preloaded?: PreloadedRateLimitCounts,
 ): Promise<RateLimitResult> {
-  const windowStarts = RATE_LIMIT_WINDOWS.map((window) =>
-    new Date(Date.now() - window.intervalMs).toISOString()
-  );
-  const windowCounts = await Promise.all(windowStarts.map((windowStart) =>
-    supabase
-      .from("activity_log")
-      .select("*", { count: "exact", head: true })
-      .eq("api_key_id", apiKeyId)
-      .gte("created_at", windowStart)
-  ));
+  const windowStarts = preloaded?.windowStarts ?? rateLimitWindowStarts();
+  const windowCounts: WindowCountResult[] = preloaded?.counts ??
+    await Promise.all(windowStarts.map((windowStart) =>
+      supabase
+        .from("activity_log")
+        .select("*", { count: "exact", head: true })
+        .eq("api_key_id", apiKeyId)
+        .gte("created_at", windowStart)
+    ));
 
   for (const [index, window] of RATE_LIMIT_WINDOWS.entries()) {
     const windowStart = windowStarts[index];
@@ -2866,8 +3250,8 @@ const RESOURCE_RATE_LIMITS: SlidingWindowLimit[] = [
  * Check per-key sliding-window limits for the cheap (non-`tools/call`) methods.
  *
  * Each window is an atomic UPSERT-and-count via the `rate_limit_check` RPC, so
- * concurrent isolates cannot race past the ceiling. The narrowest window is
- * checked first. Fail-open on a DB error — a transient RPC failure must never
+ * concurrent isolates cannot race past the ceiling. All windows are issued
+ * together; the narrowest refusing window decides. Fail-open on a DB error — a transient RPC failure must never
  * block a legitimate client's handshake.
  *
  * `rate_limit_check` returns only a boolean (within-limit), not the residual
@@ -2884,12 +3268,26 @@ async function checkDiscoveryRateLimit(
   limits: SlidingWindowLimit[] = DISCOVERY_RATE_LIMITS,
   namespace = "discovery",
 ): Promise<RateLimitResult> {
-  for (const w of limits) {
-    const { data, error } = await supabase.rpc("rate_limit_check", {
+  // Every window is asked at once: each is its own bucket and its own round
+  // trip, and none depends on another. The answers are still READ narrowest
+  // first, so the narrowest refusing window decides, as when they ran in turn.
+  //
+  // One deliberate difference from the serial loop: a request the minute
+  // window refuses now also counts in the hour bucket (rate_limit_check
+  // increments before it compares). Only a client already over the minute
+  // ceiling, which no legitimate session reaches (see DISCOVERY_RATE_LIMITS),
+  // can see it, and for that client the hour bucket now counts every request
+  // it actually made rather than only the admitted ones.
+  const answers = await Promise.all(limits.map((w) =>
+    supabase.rpc("rate_limit_check", {
       p_key: `mcp:${namespace}:${w.bucket}:${apiKeyId}`,
       p_max_count: w.max,
       p_window_ms: w.windowMs,
-    });
+    })
+  ));
+
+  for (const [index, w] of limits.entries()) {
+    const { data, error } = answers[index];
 
     if (error) {
       // Fail open: skip this window on a DB/RPC error and check the rest.
@@ -3294,11 +3692,14 @@ async function writeUsageLimitEvent(
  *
  * Asked only by the dispatcher's pre-run check, which records the cap once
  * per workspace per period rather than once per parked rule (allowance-gate.ts
- * says why). A failed read answers false, so the event is recorded anyway. */
+ * says why). A failed read answers false, so the event is recorded anyway.
+ * Action-cap rows only: the web app writes limit_kind 'inboxes' rows for the
+ * Pro inbox cap into the same table (migration 20261019150000). */
 async function usageLimitEventRecorded(workspaceId: string, periodStart: string): Promise<boolean> {
   const { data, error } = await supabase
     .from("usage_limit_events").select("id")
-    .eq("workspace_id", workspaceId).gte("occurred_at", periodStart).limit(1);
+    .eq("workspace_id", workspaceId).eq("limit_kind", "actions")
+    .gte("occurred_at", periodStart).limit(1);
   if (error) {
     console.error("[mcp-server] usage_limit_event_lookup_failed", {
       workspace_id: workspaceId, error: error.message, error_code: error.code,
@@ -3355,6 +3756,7 @@ const allowanceGateIo: AllowanceGateIo = {
   limitEventRecorded: usageLimitEventRecorded,
   limitNoticeQueued: usageLimitNoticeQueued,
   queueEmail: queueUsageEmail,
+  release: (reservationId) => releaseActionReservation(reservationId, "terms_mismatch"),
 };
 
 /**
@@ -3368,8 +3770,9 @@ function reserveBillableAction(
   workspaceId: string,
   toolName: string,
   preloadedAllowance?: Promise<ActionAllowanceRow | null>,
+  prereserved?: PrereservedAction,
 ): Promise<BillableActionReservation> {
-  return reserveAgainstAllowance(allowanceGateIo, workspaceId, toolName, preloadedAllowance);
+  return reserveAgainstAllowance(allowanceGateIo, workspaceId, toolName, preloadedAllowance, prereserved);
 }
 
 /** The allowance applies to every workspace that is not exempt.
@@ -3478,8 +3881,12 @@ async function actionLimitResponse(
   // Kill switch, not a feature flag: enforcement is ON unless something says
   // otherwise, so a missing or mistyped variable cannot silently disable the
   // only thing standing between us and an unbounded provider bill.
-  if (Deno.env.get("USAGE_ENFORCEMENT_DISABLED") === "true" || !BILLABLE_TOOL_NAMES.has(toolName)) return { response: null, reservationId: null };
-  const reservation = await reserveBillableAction(workspaceId, toolName, preloadedAllowance);
+  const willReserve = Deno.env.get("USAGE_ENFORCEMENT_DISABLED") !== "true" && BILLABLE_TOOL_NAMES.has(toolName);
+  // The reservation mcp_tools_call_gate made up front, if it is for this tool;
+  // released here, before anything else is reserved, if it is not.
+  const prereserved = await claimGateReservation(toolName, willReserve);
+  if (!willReserve) return { response: null, reservationId: null };
+  const reservation = await reserveBillableAction(workspaceId, toolName, preloadedAllowance, prereserved);
   switch (reservation.outcome) {
     case "unmetered":
       return { response: null, reservationId: null };
@@ -4173,10 +4580,11 @@ const INBOX_ID_PROPERTY = {
   format: "uuid",
   // One sentence on purpose: the full selection rules (omit both when the key
   // has one inbox, never guess, the error lists every inbox_id) live in
-  // SERVER_INSTRUCTIONS, and this property is advertised on nine tools.
-  description:
-    "Inbox UUID from inbox_list. Optional when the key has one inbox; pass " +
-    "this or `inbox`, not both — a pair naming different mailboxes is refused.",
+  // SERVER_INSTRUCTIONS, and this property is advertised on 13 tools (39 on
+  // the per-operation surface), so every character is paid that many times.
+  // `inbox` says it is the alternative; a conflicting pair is refused with an
+  // error that says so.
+  description: "Inbox UUID (inbox_list). Optional with one inbox.",
 } as const;
 
 /** Shared `inbox` property — the email-address alternative to `inbox_id`. */
@@ -4229,10 +4637,7 @@ const IDEMPOTENCY_KEY_PROPERTY = {
   maxLength: 200,
   // Advertised on several tools, so only the facts that change a caller's
   // behaviour: retry-only reuse, the window, and the conflict rule.
-  description:
-    "Reuse only when retrying the identical request within 24 hours; the " +
-    "retry is collapsed, not repeated. Reuse with different arguments is " +
-    "rejected.",
+  description: "Retry key: reuse only for the identical call within 24h; it runs once.",
 } as const;
 
 /**
@@ -4385,6 +4790,8 @@ const LEGACY_TOOLS: ToolDefinition[] = [
       "List email messages inside an inbox. Returns message summaries " +
       "(sender, subject, date, preview, read status, attachment flag) ordered " +
       "newest first. Supports filtering by folder, unread status, and pagination. " +
+      "It has no date filter and reads one folder: since, before and " +
+      "include_folders are email_search's, which needs no other criterion with them. " +
       "A response is only one page, not the complete result set: always inspect " +
       "has_more. When it is true, call email_list again with the returned " +
       "next_offset (and keep every other argument unchanged); only has_more: false " +
@@ -5697,7 +6104,8 @@ const LEGACY_TOOLS: ToolDefinition[] = [
         },
         body: {
           type: "string",
-          description: "Updated plain-text body. Omit to keep the stored body text.",
+          description: "Updated plain-text body, your text only: a reply's quoted original " +
+            "is kept and the signature added by the server. Omit to keep the stored body text.",
         },
         html_body: {
           type: "string",
@@ -6522,15 +6930,12 @@ const EMAIL_SUMMARY_SCHEMA = {
   additionalProperties: true,
 } as const;
 
-/** JSON-Schema fragment for a search result summary (email_search). */
-const SEARCH_EMAIL_SUMMARY_SCHEMA = {
-  type: "object",
-  properties: {
-    ...EMAIL_SUMMARY_SCHEMA.properties,
-    relevance_score: { type: ["number", "null"] },
-  },
-  additionalProperties: true,
-} as const;
+/**
+ * JSON-Schema fragment for a search result summary (email_search). The same
+ * shape as a list summary since `relevance_score` was dropped on 2026-10-20:
+ * no provider path ever set it to anything but null.
+ */
+const SEARCH_EMAIL_SUMMARY_SCHEMA = EMAIL_SUMMARY_SCHEMA;
 
 /** Output schema for tools returning `{ success, message_id, operation, inbox_id }`. */
 const FLAG_RESULT_SCHEMA = {
@@ -8064,8 +8469,8 @@ const CONSOLIDATED_SPECS: Record<string, ConsolidatedSpec> = {
       "email_compose sends now. On IMAP a " +
       "draft_id changes on every update, so always use the most recent one. " +
       "'update' replaces only the fields passed: omit body and the stored " +
-      "body text is kept. A new body keeps a reply's quoted original " +
-      "(quote_kept) unless it includes one. " +
+      "body text is kept. A new body replaces only your text: a reply's " +
+      "quoted original stays below it (quote_kept). " +
       "'create', 'reply' and 'update' take attachments as email_compose does; " +
       "'update' adds them and keeps the draft's existing files. " +
       "Any inbox signature is embedded on create and on an update that passes body " +
@@ -8089,6 +8494,9 @@ const CONSOLIDATED_SPECS: Record<string, ConsolidatedSpec> = {
         "Not for reply: a reply draft goes to the original sender, reply_all " +
         "adds its To and Cc, and an update can change it afterwards.",
       subject: "Not for reply: a reply draft reuses the original subject.",
+      // Live claude.ai test 2026-10-19: updating a reply, Claude pasted the
+      // signature and the whole quote back into body. The server adds both.
+      body: "Your message text only: never paste the signature or quoted original; the server adds them.",
     },
     // Same rule as `folder`: the 'delete' action permanently removes an unsent
     // draft, which the legacy draft_delete entry has always flagged as
@@ -9097,6 +9505,63 @@ function perOperationActionNote(toolName: string, args: unknown): string | undef
   const target = CONSOLIDATED_SPECS[parent.tool]?.actions[word]?.legacy;
   if (!target || target === toolName || !PER_OPERATION_LISTED_NAMES.has(target)) return undefined;
   return `'${word}' is the ${target} tool`;
+}
+
+/**
+ * How a refusal names the refused operation, every argument it takes, and
+ * where since/before live when it has no date filter, for
+ * withGuessedArgumentHints. On a consolidated tool the operation is the
+ * selected action and the place is another action; otherwise it is the tool
+ * and, for a per-operation tool, a listed sibling tool.
+ */
+function guessHintContext(
+  toolName: string,
+  tool: { inputSchema: Record<string, unknown> },
+  selectedAction: string | null,
+): {
+  subject: string;
+  allowed: string[];
+  elsewhere: (canonical: readonly string[]) => string | null;
+} {
+  const index = CONSOLIDATED_ARGUMENT_INDEX[toolName];
+  if (index && selectedAction) {
+    return {
+      subject: `action '${selectedAction}'`,
+      allowed: [...(index.allowedByAction[selectedAction] ?? [])],
+      elsewhere: (canonical) => {
+        const owners = Object.keys(index.allowedByAction).filter((action) =>
+          action !== selectedAction &&
+          canonical.every((name) => index.allowedByAction[action]?.includes(name))
+        );
+        if (owners.length === 0) return null;
+        const quoted = owners.map((owner) => `'${owner}'`);
+        const who = quoted.length === 1
+          ? `action ${quoted[0]} takes`
+          : `actions ${quoted.slice(0, -1).join(", ")} and ${quoted[quoted.length - 1]} take`;
+        return `${who} ${canonical.join(" and ")}`;
+      },
+    };
+  }
+  const properties = tool.inputSchema.properties;
+  const allowed = properties && typeof properties === "object" && !Array.isArray(properties)
+    ? Object.keys(properties)
+    : [];
+  return {
+    subject: toolName,
+    allowed,
+    elsewhere: (canonical) => {
+      if (!PER_OPERATION_ONLY_TOOLS.has(toolName)) return null;
+      const siblings = perOperationSiblings(toolName);
+      const tools = (siblings[canonical[0]] ?? []).filter((name) =>
+        canonical.every((property) => siblings[property]?.includes(name))
+      );
+      if (tools.length === 0) return null;
+      const who = tools.length === 1
+        ? `${tools[0]} takes`
+        : `${tools.slice(0, -1).join(", ")} and ${tools[tools.length - 1]} take`;
+      return `${who} ${canonical.join(" and ")}`;
+    },
+  };
 }
 
 // ---------------------------------------------------------------------------
@@ -10245,7 +10710,7 @@ async function executeListInboxes(
         },
         available: report.available,
         message: report.message,
-      }, true),
+      }),
       logStatus: "success",
       logErrorCode: null,
     };
@@ -10278,14 +10743,14 @@ async function executeListInboxes(
           "iCloud, Yahoo and Zoho connect in about a minute; any other provider " +
           "takes IMAP and SMTP details. Once a mailbox is connected, call " +
           "inbox_list again.",
-      }, true),
+      }),
       logStatus: "success",
       logErrorCode: null,
     };
   }
 
   return {
-    result: jsonOk({ inboxes }, true),
+    result: jsonOk({ inboxes }),
     logStatus: "success",
     logErrorCode: null,
   };
@@ -12446,7 +12911,6 @@ async function searchImapMessages(
       has_attachments: s.hasAttachments,
       folder,
       thread_id: String(s.uid),
-      relevance_score: null,
       ...flaggedField(() => s.flags.includes("\\Flagged")),
       ...threadFields(() => ({ messageId: s.envelope.messageId, inReplyTo: s.envelope.inReplyTo, references: referencesOfHeaderBlock(s.referencesHeader) })),
       ...gmailThreadField(() => s.gmThreadId),
@@ -13900,9 +14364,8 @@ function neutralizeReadResult(result: ReadEmailResult): ReadEmailResult {
 /**
  * The list/search equivalent. `preview` is body content, so it is left alone.
  *
- * Generic over the summary shape because search returns a widened
- * `SearchEmailSummary` (it carries `relevance_score`), and the extra fields must
- * survive the pass untouched.
+ * Generic over the summary shape so any widened summary (extra thread or flag
+ * fields) survives the pass untouched.
  */
 function neutralizeSummary<T extends EmailSummary>(summary: T): T {
   return {
@@ -18557,17 +19020,10 @@ async function executeSendEmail(
 // ---------------------------------------------------------------------------
 
 /**
- * A single email summary in a `email_search` result.
- * Extends EmailSummary with an optional provider relevance score.
+ * A single email summary in a `email_search` result. It used to carry a
+ * `relevance_score` that every provider path set to null; dropped 2026-10-20.
  */
-interface SearchEmailSummary extends EmailSummary {
-  /**
-   * Provider relevance score, if available.
-   * Outlook Graph may return a score for $search results; Gmail and IMAP/JMAP
-   * providers do not expose one, so this is null for those providers.
-   */
-  relevance_score: number | null;
-}
+type SearchEmailSummary = EmailSummary;
 
 interface SearchEmailsResult {
   messages: SearchEmailSummary[];
@@ -18794,7 +19250,6 @@ async function searchGmailMessages(
       has_attachments: gmailHasAttachments(msg),
       folder,
       thread_id: msg.threadId ?? pageRefs[i].threadId,
-      relevance_score: null,
       ...flaggedField(() => labelIds.includes("STARRED")),
       ...threadFields(() => ({ messageId: hdrs["message-id"], inReplyTo: hdrs["in-reply-to"], references: hdrs["references"] })),
     };
@@ -19009,7 +19464,6 @@ async function searchOutlookMessages(
     has_attachments: msg.hasAttachments ?? false,
     folder: (msg.parentFolderId && folderLabels.get(msg.parentFolderId)) || folder,
     thread_id: msg.conversationId ?? msg.id,
-    relevance_score: null,
     ...flaggedField(() => msg.flag?.flagStatus === "flagged"),
     ...threadMessageIdField(() => msg.internetMessageId),
   }));
@@ -20484,7 +20938,6 @@ async function executeListFolders(
           inboxId: inbox.id,
           folders,
         }) as unknown as Record<string, unknown>,
-        true,
       ),
       isError: false,
     },
@@ -21100,7 +21553,7 @@ async function executeCreateFolder(
               note: `A ${itemType} with this name already existed, so nothing was created; ` +
                 `use this id.`,
             },
-          }, true),
+          }),
           isError: false,
         },
         logStatus: "success",
@@ -21125,7 +21578,7 @@ async function executeCreateFolder(
             }
             : {}),
         },
-      }, true),
+      }),
       isError: false,
     },
     logStatus: "success",
@@ -21213,7 +21666,7 @@ async function executeRenameFolder(
             note: folderNameTrimNote(newNameReq, organizationItemType(inbox)),
           }
           : {}),
-      }, true),
+      }),
       isError: false,
     },
     logStatus: "success",
@@ -21275,7 +21728,7 @@ async function executeDeleteFolder(
         folder_id: folderId,
         item_type: organizationItemType(inbox),
         status: "deleted",
-      }, true),
+      }),
       isError: false,
     },
     logStatus: "success",
@@ -21351,6 +21804,11 @@ async function imapArchiveEmail(
     // against a UID nobody holds is a tagged OK, not an error. See
     // imap-uid-presence.ts.
     await assertUidPresent(client, uid);
+    // Gmail, a message addressed by its All Mail id: archived by taking the
+    // \\Inbox label off, and it keeps its id. See imap-gmail-relocate.ts.
+    if (await relocateFromGmailAllMail(client, folder, [uid], target, () => Promise.resolve(mailboxes))) {
+      return { newMessageId: messageId, destination: target };
+    }
     // uidMove falls back internally if MOVE is unsupported (COPY + \\Deleted +
     // EXPUNGE); the COPY runs before the destructive steps.
     const moved = await client.uidMove([uid], target);
@@ -22066,6 +22524,12 @@ async function imapMoveEmail(
     // against a UID nobody holds is a tagged OK, not an error. See
     // imap-uid-presence.ts.
     await assertUidPresent(client, uid);
+    // Gmail, a message addressed by its All Mail id: relocated with labels,
+    // never expunged from All Mail, and it keeps its id. See imap-gmail-relocate.ts.
+    const gmailClient = client;
+    if (await relocateFromGmailAllMail(client, folder, [uid], destinationFolderId, () => gmailClient.listMailboxes())) {
+      return messageId;
+    }
     // uidMove falls back to COPY + \\Deleted + EXPUNGE when RFC 6851 MOVE is
     // unsupported by the server.
     const moved = await client.uidMove([uid], destinationFolderId);
@@ -23326,8 +23790,18 @@ function imapBulkMove(
   // Filled per folder group as each UID MOVE reports COPYUID. A group whose
   // move throws records nothing, and its ids land in `failed` as before.
   const newMessageIds: Record<string, string> = {};
+  // Gmail only, and only when a group's folder could be All Mail: the folder
+  // list, asked for once per run (see imap-gmail-relocate.ts).
+  let mailboxes: Promise<ImapMailboxInfo[]> | null = null;
   return imapBulkByFolderGroup(inbox, messageIds, runId, opts, async (client, group) => {
-    const moved = await client.uidMove(group.items.map((i) => i.uid), destinationFolderId);
+    const uids = group.items.map((i) => i.uid);
+    // Gmail, messages addressed by their All Mail ids: relocated with labels,
+    // never expunged from All Mail, and they keep their ids.
+    if (await relocateFromGmailAllMail(client, group.folder, uids, destinationFolderId, () => (mailboxes ??= client.listMailboxes()))) {
+      for (const item of group.items) newMessageIds[item.messageId] = item.messageId;
+      return;
+    }
+    const moved = await client.uidMove(uids, destinationFolderId);
     Object.assign(
       newMessageIds,
       newMessageIdsFor(group.items, moved, destinationFolderId, encodeImapId),
@@ -27717,6 +28191,8 @@ async function draftEditorEnvelopeForWrite(
      * (an Outlook update, whose params carry only the files it added).
      */
     attachments?: { filename: string; size_bytes: number | null; mime_type: string | null }[];
+    /** The stored HTML part could not be kept under the new text (an update only). */
+    formattingRemoved?: boolean;
   },
 ): Promise<Record<string, unknown> | null> {
   try {
@@ -27756,6 +28232,7 @@ async function draftEditorEnvelopeForWrite(
       in_reply_to: input.inReplyTo ?? null,
       signature_embedded: input.signatureEmbedded,
       signature_rich: htmlCarriesSignatureBlock(input.params.htmlBody),
+      ...(input.formattingRemoved === true ? { formatting_removed: true } : {}),
       last_saved_at: input.lastSavedAt,
       // The headers the write carried. On an update they are the ones read off
       // the existing draft, and they are what makes the envelope say `threaded`
@@ -27889,7 +28366,6 @@ async function executeListDrafts(
         inboxId: inbox.id,
         drafts,
       }) as unknown as Record<string, unknown>,
-      true,
     ),
     logStatus: "success", logErrorCode: null,
   };
@@ -28048,7 +28524,7 @@ async function executeCreateReplyDraft(
   try {
     if (inbox.provider === "outlook") {
       const token = await withFreshOutlookToken(inbox);
-      const signed = applySignature({ textBody, htmlBody }, inbox, { include_signature: includeSignature });
+      const signed = applySignatureOnce({ textBody, htmlBody }, inbox, { include_signature: includeSignature });
       // createReply with a `message.body` REPLACES the body Graph generates,
       // quote and all. So: create the threaded draft as Graph builds it, then
       // put the caller's text above the quote it already holds.
@@ -28141,7 +28617,7 @@ async function executeCreateReplyDraft(
       } finally { await client.logout().catch(() => {}); }
     }
     if (!to.length) throw new Error("reply_recipients_not_found");
-    const signed = applySignature({ textBody, htmlBody }, inbox, { include_signature: includeSignature });
+    const signed = applySignatureOnce({ textBody, htmlBody }, inbox, { include_signature: includeSignature });
     // Extra Cc/Bcc (2026-09-23) are added to the derived recipients, exactly as
     // on email_compose reply.
     const params: DraftParams = { to, cc: replyExtraAddresses(args["cc"]), bcc: replyExtraAddresses(args["bcc"]), subject, body: buildReplyTextBody(signed.textBody, originalFrom, originalDate, originalBody), htmlBody: signed.htmlBody, threadId, inReplyTo: inReplyTo || undefined, references: references || undefined, ...(replyAttachments.length > 0 ? { attachments: replyAttachments } : {}) };
@@ -28160,7 +28636,7 @@ async function executeCreateReplyDraft(
       draftId: created.draft_id,
       origin: "reply",
       params,
-      signatureEmbedded: signed.textBody !== textBody,
+      signatureEmbedded: signed.textBody !== textBody || textCarriesOwnSignature(signed.textBody, inbox),
       lastSavedAt: created.created_at,
       revision: replyRevision,
       inReplyTo: {
@@ -28262,12 +28738,13 @@ async function executeCreateDraft(
   // in the provider's Drafts folder) already contains it. draft_send must NOT
   // re-append (see executeSendDraft) or the signature would double. Drafts are
   // new-message-shaped, so reuse applySignature (single source of signature
-  // strings). include_signature: false suppresses it for this draft.
+  // strings). include_signature: false suppresses it for this draft; a body
+  // the model signed itself is not signed again (applySignatureOnce).
   // The text part says what a formatted HTML part says, so the card can edit it
   // in place (html-text-merge.ts#textPartMatchingHtml, 2026-10-17).
   const textBody = textPartMatchingHtml(body, htmlBody);
   const includeSignature = args["include_signature"] === false ? false : undefined;
-  const signed = applySignature(
+  const signed = applySignatureOnce(
     { textBody, htmlBody },
     inbox,
     { include_signature: includeSignature },
@@ -28331,7 +28808,7 @@ async function executeCreateDraft(
       draftId: draftResult.draft_id,
       origin: "create",
       params: draftParams,
-      signatureEmbedded: signed.textBody !== textBody,
+      signatureEmbedded: signed.textBody !== textBody || textCarriesOwnSignature(signed.textBody, inbox),
       lastSavedAt: draftResult.created_at,
     }),
     recordDraftLine(apiKey, inbox, null, draftResult.draft_id, "agent", draftResult.created_at),
@@ -28601,7 +29078,8 @@ async function executeUpdateDraft(
   // Re-embed the inbox signature on update. This path was given a full body,
   // so we sign the new body just like draft_create (single source:
   // applySignature). A body-less update returned above and signs nothing. draft_send sends the stored body as-is and never re-appends
-  // (see executeSendDraft). include_signature: false suppresses it.
+  // (see executeSendDraft). include_signature: false suppresses it, and a body
+  // that already carries the signature is not signed twice (applySignatureOnce).
   //
   // A reply's quoted original is kept when the new body leaves it out, and the
   // signature goes above it, not under (quoted-reply.ts#bodyKeepingQuote).
@@ -28614,13 +29092,33 @@ async function executeUpdateDraft(
     textBody,
     htmlBody,
     storedBody,
-    (p) => applySignature(p, inbox, { include_signature: includeSignature }),
+    (p) => applySignatureOnce(p, inbox, { include_signature: includeSignature }),
     plainTextBodyToHtml,
   );
 
+  // A stored HTML part outlives a plain-text body that brought none of its own
+  // (live claude.ai test, 2026-10-19). With a signature appended the HTML part
+  // is rebuilt above; without one (`include_signature: false`, which a model
+  // passes over a body that already carries it, or an inbox with none) it was
+  // simply dropped, so the draft went text/plain, its formatted signature was
+  // lost, and the newer card had no "Show formatting". Kept by the rules a
+  // card save uses (mcp-app-drafts.ts#htmlForEditedText): merged, regenerated
+  // with the signature block and quote markup kept, or dropped and SAID to be
+  // (`body.formatting_removed`) when its own formatting cannot be kept.
+  // The same holds for a body that already carried the signature, which
+  // applySignatureOnce leaves unsigned (mcp-app-drafts.ts#htmlPartForDraftUpdate).
+  const { html: updateHtml, formattingRemoved: updateFormattingRemoved } = htmlPartForDraftUpdate({
+    composed: signed,
+    callerHtml: htmlBody,
+    storedText: storedBody?.text,
+    storedHtml: storedBody?.html,
+    inbox,
+    includeSignature: includeSignature !== false,
+  });
+
   const draftParams: DraftParams = {
     to: effectiveTo, cc: effectiveCc, bcc: effectiveBcc,
-    subject: effectiveSubject, body: signed.textBody, htmlBody: signed.htmlBody,
+    subject: effectiveSubject, body: signed.textBody, htmlBody: updateHtml,
     threadId, inReplyTo, references,
     // "Supplied" is `Array.isArray(args[field])` above and nothing else. The
     // server never injects the schema's `default: []`, so an omitted list is
@@ -28691,9 +29189,10 @@ async function executeUpdateDraft(
     draftId: updateResult.draft_id,
     origin: "update",
     params: draftParams,
-    signatureEmbedded: signed.signed,
+    signatureEmbedded: signed.signed || textCarriesOwnSignature(signed.textBody, inbox),
     lastSavedAt: updateResult.updated_at,
     revision: updateRevision,
+    formattingRemoved: updateFormattingRemoved,
   });
   return {
     result: draftCardToolResult(updatePayload, updateCard),
@@ -29943,7 +30442,6 @@ async function executeSearchContacts(
           limit,
           scanTruncated: false,
         }) as unknown as Record<string, unknown>,
-        true,
       ),
       logStatus: "success", logErrorCode: null,
     };
@@ -30036,7 +30534,6 @@ async function executeSearchContacts(
         limit,
         scanTruncated,
       }) as unknown as Record<string, unknown>,
-      true,
     ),
     logStatus: "success", logErrorCode: null,
   };
@@ -30293,7 +30790,7 @@ async function executeScheduleSend(
       send_at: created.send_at,
       status: created.status,
       created_at: created.created_at,
-    }, true),
+    }),
     logStatus: "success", logErrorCode: null,
   };
 }
@@ -30400,7 +30897,7 @@ async function executeListScheduled(
   }));
 
   return {
-    result: jsonOk({ scheduled_sends: rows, total: rows.length }, true),
+    result: jsonOk({ scheduled_sends: rows, total: rows.length }),
     logStatus: "success", logErrorCode: null,
   };
 }
@@ -30552,7 +31049,7 @@ async function executeCancelScheduled(
       inbox_id: row.inbox_id,
       send_at: row.send_at,
       previous_status: "pending",
-    }, true),
+    }),
     logStatus: "success", logErrorCode: null,
   };
 }
@@ -30606,7 +31103,7 @@ async function executeGetSignature(
       signature_reply_mode: inbox.signature_reply_mode,
       signature_source: inbox.signature_source,
       signature_updated_at: inbox.signature_updated_at,
-    }, true),
+    }),
     logStatus: "success", logErrorCode: null,
   };
 }
@@ -30762,7 +31259,7 @@ async function executeSetSignature(
       signature_reply_mode: merged.signature_reply_mode,
       signature_source: merged.signature_source,
       signature_updated_at: merged.signature_updated_at,
-    }, true),
+    }),
     logStatus: "success", logErrorCode: null,
   };
 }
@@ -30974,7 +31471,12 @@ async function handleToolsList(
   // rather than merely any key — but it is the same gap. Fixing it properly
   // needs the card to fall back to the text result on a non-envelope payload,
   // which is a frontend change.
-  const uiGates = await keyReviewCardGates(apiKey);
+  // Both reads below are independent pure reads, so they share one round trip:
+  // `perOperation` is started here and only taken further down.
+  const [uiGates, perOperation] = await Promise.all([
+    keyReviewCardGates(apiKey),
+    isOpenAiClientKey(apiKey),
+  ]);
 
   // Which tools this credential is shown, and whether the scope filter applies
   // to it at all: a dashboard API key stays filtered to what its scopes allow,
@@ -30994,8 +31496,8 @@ async function handleToolsList(
   // `mcp-app-resources.test.ts` tests this composition instead.
   //
   // An OpenAI client (ChatGPT, Codex) is listed one tool per operation, which
-  // is what its plugin review requires; see PER_OPERATION_LISTING.
-  const perOperation = await isOpenAiClientKey(apiKey);
+  // is what its plugin review requires; see PER_OPERATION_LISTING. Read
+  // alongside the card gates above.
   const visibleTools = withListingCardMeta(
     toolsForListing(apiKey, perOperation),
     uiGates,
@@ -32068,14 +32570,24 @@ async function handleToolsCall(
         perOperationActionNote(toolName, rawArgs),
       )
       : argumentErrors;
+    // A name that exists nowhere on the tool ("after", "criteria") is only
+    // "not allowed" to the validator; say which argument does exist, and for
+    // a missing message_id, where one comes from. See argument-guesses.ts.
+    const hint = guessHintContext(toolName, tool, consolidated ? selectedAction : null);
+    const hintedErrors = withGuessedArgumentHints(
+      validatedErrors,
+      hint.subject,
+      hint.allowed,
+      hint.elsewhere,
+    );
     // A per-operation tool is validated under its legacy argument names; say
     // the name it was listed with (`flag_action`, not `action`).
     const listedNames = PER_OPERATION_ONLY_TOOLS.has(toolName)
       ? Object.entries(PER_OPERATION_PARENT.get(toolName)?.action.renames ?? {})
       : [];
     const reportedErrors = listedNames.length === 0
-      ? validatedErrors
-      : validatedErrors.map((error) => {
+      ? hintedErrors
+      : hintedErrors.map((error) => {
         let { path, message } = error;
         for (const [legacyKey, exposedKey] of listedNames) {
           path = path.split(`arguments.${legacyKey}`).join(`arguments.${exposedKey}`);
@@ -32235,7 +32747,7 @@ async function handleToolsCall(
       };
       logErrorCode = "idempotency_unavailable";
     }
-    toolResult = { jsonrpc: "2.0", id, result: { ...jsonOk(payload, true), isError: logStatus !== "success" } };
+    toolResult = { jsonrpc: "2.0", id, result: { ...jsonOk(payload), isError: logStatus !== "success" } };
   } else {
   // ── Byte-heavy concurrency guard ──────────────────────────────────────────
   // The request-rate limiter counts calls, not bytes, so a client making three
@@ -32270,7 +32782,7 @@ async function handleToolsCall(
             "so that no single client can exhaust the server's memory. Nothing was fetched. " +
             "Wait for the in-progress download to finish, then retry this exact request; " +
             "fetching messages and attachments one at a time avoids this entirely.",
-        }, true),
+        }),
         isError: true,
       },
     };
@@ -32532,7 +33044,7 @@ async function handleToolsCall(
   // protocol diagnostics line. Deliberately after the audit log and the
   // idempotency snapshot, so a rendering hint can never appear in either.
   // See card-diagnostics.ts.
-  await stampCardDiagnostics(toolResult, apiKey.workspace_id);
+  await stampCardDiagnostics(toolResult, apiKey.workspace_id, ctx.cardDiagnostics);
 
   return toolResult;
 }
@@ -33303,7 +33815,7 @@ const triageStore: TriageStore = {
     return (data ?? []) as { id: string }[];
   },
 
-  async reclaimStaleLease(ruleId, nowIso) {
+  async reclaimStaleLease(ruleId, nowIso, cutoffIso) {
     // Fail the open run BEFORE releasing the lease. If this invocation dies
     // between the two writes, the rule keeps a stale lease and the next sweep
     // retries the pair; the reverse order would briefly present a runnable rule
@@ -33320,11 +33832,13 @@ const triageStore: TriageStore = {
           "have been acted on.",
       })
       .eq("rule_id", ruleId)
-      .eq("status", "running");
+      .eq("status", "running")
+      .lt("started_at", cutoffIso);
     await supabase
       .from("triage_rules")
       .update({ running_since: null })
-      .eq("id", ruleId);
+      .eq("id", ruleId)
+      .lt("running_since", cutoffIso);
   },
 
   async listDueRules(nowIso, limit) {
@@ -33367,6 +33881,29 @@ const triageStore: TriageStore = {
       .select("id");
     if (error) throw new Error(error.message);
     return Array.isArray(data) && data.length > 0;
+  },
+
+  async inboxLeaseHeld(inboxId, exceptRuleId) {
+    // Any lease, stale or not: a lease the stale sweep has not yet released
+    // may still belong to a run with a live IMAP session.
+    const { data, error } = await supabase
+      .from("triage_rules")
+      .select("id")
+      .eq("inbox_id", inboxId)
+      .neq("id", exceptRuleId)
+      .not("running_since", "is", null)
+      .limit(1);
+    if (error) throw new Error(error.message);
+    return Array.isArray(data) && data.length > 0;
+  },
+
+  async abandonClaim(ruleId, claimedAtIso) {
+    const { error } = await supabase
+      .from("triage_rules")
+      .update({ running_since: null })
+      .eq("id", ruleId)
+      .eq("running_since", claimedAtIso);
+    if (error) throw new Error(error.message);
   },
 
   async releaseRule(ruleId, update) {
@@ -34188,9 +34725,30 @@ function triageDeps(): TriageDeps {
 // named function, so `Deno.serve(handleRequest)` at the bottom stays a bare
 // reference and the tests drive the entry point production serves.
 function handleRequest(req: Request): Promise<Response> {
+  // mcpemails.com/api/mcp arrives here through a Vercel rewrite to
+  // /mcp-server/web; that path keeps the old proxy route's contract (auth
+  // discovery, ?key=, CORS, SSE for calls past Vercel's 120 s). web-ingress.ts.
+  if (isWebIngress(req)) {
+    return handleWebIngress(req, serveMetered, { appUrl: APP_URL });
+  }
+  return serveMetered(req);
+}
+
+function serveMetered(req: Request): Promise<Response> {
+  // The reservation mcp_tools_call_gate may make for this request. Any that
+  // the allowance gate did not take is released before the response leaves,
+  // on every path including a throw.
+  const slot: GateReservationSlot = { reservationId: null, reservation: null, settled: false };
   return requestMeterStore.run(
     { dbCalls: 0 },
-    () => imapTimingStore.run(new ImapCallTimings(), () => handleMeteredRequest(req)),
+    () =>
+      gateReservationStore.run(slot, async () => {
+        try {
+          return await imapTimingStore.run(new ImapCallTimings(), () => handleMeteredRequest(req));
+        } finally {
+          await releaseGateReservation(slot, "request_end");
+        }
+      }),
   );
 }
 
@@ -34389,12 +34947,22 @@ async function handleMeteredRequest(req: Request): Promise<Response> {
   // ── Notifications (no id) ─────────────────────────────────────────────────
   // MCP notifications are fire-and-forget: the Streamable HTTP transport says
   // to acknowledge with HTTP 202 Accepted and no body (it was 204 here until
-  // 2026-09-08). Notifications are still authenticated — an unauthenticated
-  // sender should not receive a 202 that implies the notification was accepted.
+  // 2026-09-08). A request with no bearer token, or one that is not shaped like
+  // a key, still gets the same 401 as any other method, so a client that has
+  // not authenticated never reads a 202 as acceptance.
+  //
+  // The key is NOT looked up (2026-10-20). A notification does nothing here:
+  // no handler, no row, no state; the only effect is the log line below. The
+  // api_keys round trip and the last_used_at write it used to cost (~23k
+  // notifications a day, each a full us-east-1 to eu-north-1 round trip in
+  // front of an empty 202) bought nothing, because a revoked key that sends one
+  // learns only that its notification was ignored, and is refused with a 401 on
+  // the very next request that carries an id. last_used_at is still stamped by
+  // the initialize that precedes every notifications/initialized.
   if (isNotification(rpcRequest)) {
-    const authResult = await authenticateRequest(req, null);
-    if (authResult instanceof Response) {
-      return authResult;
+    const malformed = bearerToken(req, null);
+    if (malformed instanceof Response) {
+      return malformed;
     }
     console.log(`[mcp-server] notification received: ${rpcRequest.method}`);
     return new Response(null, { status: 202, headers: CORS_HEADERS });
@@ -34445,16 +35013,35 @@ async function handleMeteredRequest(req: Request): Promise<Response> {
   // than a skip: there is no `api_keys` table to check against, so the request
   // is routed with the synthetic full-scope key. It reaches exactly the same
   // handlers and the same response post-processing as a real one.
+  //
+  // A tools/call authenticates through mcp_tools_call_gate, which also
+  // returns every read the three gates below need, so they cost no further
+  // round trip, and may reserve the action too (see authenticateToolsCall).
+  // `preloaded` is null whenever that RPC was unavailable and the per-query
+  // path ran instead.
   let apiKey: ApiKeyRow;
+  let preloaded: PreloadedGateReads | null = null;
+  const callMayMeter = rpcRequest.method === "tools/call" &&
+    mayMeterToolCall((rpcRequest.params as Record<string, unknown> | undefined)?.["name"]);
   if (INTROSPECTION_ONLY) {
     apiKey = INTROSPECTION_API_KEY;
   } else {
-    const authResult = await authenticateRequest(req, requestId);
+    const authResult: { apiKey: ApiKeyRow; preloaded?: PreloadedGateReads | null } | Response =
+      rpcRequest.method === "tools/call"
+        ? await authenticateToolsCall(
+          req,
+          requestId,
+          callMayMeter,
+          callMayMeter ? gateReservationTool(rpcRequest.params) : null,
+        )
+        : await authenticateRequest(req, requestId);
     if (authResult instanceof Response) {
       // Authentication failed — return the error response directly.
       return authResult;
     }
     apiKey = authResult.apiKey;
+    preloaded = authResult.preloaded ?? null;
+    if (preloaded?.cardDiagnostics !== undefined) ctx.cardDiagnostics = preloaded.cardDiagnostics;
   }
 
   // ── Cheap-method rate limit ───────────────────────────────────────────────
@@ -34487,22 +35074,24 @@ async function handleMeteredRequest(req: Request): Promise<Response> {
   // scanner on a private network; the metered surface it is exempt from is the
   // one it cannot reach (`tools/call` is not introspectable at all).
   const metered = !INTROSPECTION_ONLY;
-  if (metered && rpcRequest.method !== "tools/call" && rpcRequest.method !== "ping") {
-    const cheapMethodResult = isResourceMethod
-      ? await checkDiscoveryRateLimit(apiKey.id, RESOURCE_RATE_LIMITS, "resources")
-      : await checkDiscoveryRateLimit(apiKey.id);
-    if (!cheapMethodResult.allowed) {
-      console.warn("[mcp-server] cheap_method_rate_limit_exceeded", {
-        key_id: apiKey.id,
-        method: rpcRequest.method,
-        namespace: isResourceMethod ? "resources" : "discovery",
-        window: cheapMethodResult.windowLabel,
-        limit: cheapMethodResult.limit,
-        retry_after_seconds: cheapMethodResult.retryAfterSeconds,
-      });
-      return buildRateLimitResponse(requestId, cheapMethodResult);
-    }
-  }
+  //
+  // Started here and DECIDED first, below, but no longer waited on before the
+  // activity_log limiter and the plan quota are asked (2026-10-20): those are
+  // reads, and they need nothing from this answer. A request this bucket
+  // refuses still gets exactly this 429 and nothing else happens for it; the
+  // only cost is that the reads it no longer needs have been issued. Measured
+  // the same day: no discovery bucket in production was over either ceiling
+  // (highest minute 86 of 250, highest hour 1159 of 2500), so that is a cost
+  // paid by a runaway loop, while every initialize and tools/list saves the
+  // round trips this used to put in front of the other gates.
+  const cheapMethodPending = metered && rpcRequest.method !== "tools/call" && rpcRequest.method !== "ping"
+    ? (isResourceMethod
+      ? checkDiscoveryRateLimit(apiKey.id, RESOURCE_RATE_LIMITS, "resources")
+      : checkDiscoveryRateLimit(apiKey.id))
+    : null;
+  // Awaited below before anything else is; this only keeps a rejection that
+  // lands first from counting as unhandled.
+  cheapMethodPending?.catch(() => {});
 
   // ── Per-key rate limit check ──────────────────────────────────────────────
   // Runs after authentication and before routing to any tool handler. This
@@ -34528,25 +35117,53 @@ async function handleMeteredRequest(req: Request): Promise<Response> {
   // metered) the allowance row are independent READS, each a database round
   // trip or three, so they are issued together and only their answers are
   // taken in order: per-key limiter first, plan quota second, exactly the
-  // precedence the serial version had. Nothing is WRITTEN until both gates
-  // have passed. In particular the allowance RESERVATION is still made inside
-  // handleToolsCall, so a rate-limited call reserves nothing and consumes no
-  // allowance. A denied request leaves the other reads to finish unused.
+  // precedence the serial version had. A denied request leaves the other
+  // reads to finish unused.
+  //
+  // After the gate RPC, all three reads are already answered and these are
+  // pure decisions over its values (see authenticateToolsCall). The gate may
+  // also have RESERVED the action in that same round trip. It is used only
+  // once handleToolsCall reaches the cap check for the same tool; a call
+  // refused here (or anywhere before that check) gives it back before the
+  // response leaves (GateReservationSlot), so a rate-limited call still ends
+  // with nothing reserved and no allowance consumed. On the per-query path the
+  // reservation is made inside handleToolsCall, after both gates, as before.
   const quotaPending = isResourceMethod || !metered
     ? null
-    : checkPlanQuota(apiKey.workspace_id);
+    : checkPlanQuota(apiKey.workspace_id, preloaded?.planQuota);
   // Never awaited on a denial, so a rejection must not go unhandled.
   quotaPending?.catch(() => {});
-  if (
-    metered && rpcRequest.method === "tools/call" &&
-    mayMeterToolCall((rpcRequest.params as Record<string, unknown> | undefined)?.["name"])
-  ) {
-    ctx.allowance = loadActionAllowance(apiKey.workspace_id);
+  if (metered && callMayMeter) {
+    ctx.allowance = preloaded && "allowance" in preloaded
+      ? Promise.resolve(preloaded.allowance ?? null)
+      : loadActionAllowance(apiKey.workspace_id);
     ctx.allowance.catch(() => {});
   }
-  const rateLimitResult = isResourceMethod || !metered
+  const rateLimitPending = isResourceMethod || !metered
+    ? null
+    : checkRateLimit(apiKey.id, preloaded?.rateLimit);
+  // Never awaited when the cheap-method bucket refuses first.
+  rateLimitPending?.catch(() => {});
+
+  // The cheap-method bucket outranks both gates below, as it always has.
+  if (cheapMethodPending !== null) {
+    const cheapMethodResult = await cheapMethodPending;
+    if (!cheapMethodResult.allowed) {
+      console.warn("[mcp-server] cheap_method_rate_limit_exceeded", {
+        key_id: apiKey.id,
+        method: rpcRequest.method,
+        namespace: isResourceMethod ? "resources" : "discovery",
+        window: cheapMethodResult.windowLabel,
+        limit: cheapMethodResult.limit,
+        retry_after_seconds: cheapMethodResult.retryAfterSeconds,
+      });
+      return buildRateLimitResponse(requestId, cheapMethodResult);
+    }
+  }
+
+  const rateLimitResult = rateLimitPending === null
     ? { allowed: true as const }
-    : await checkRateLimit(apiKey.id);
+    : await rateLimitPending;
   if (!rateLimitResult.allowed) {
     console.warn("[mcp-server] rate_limit_exceeded", {
       key_id: apiKey.id,

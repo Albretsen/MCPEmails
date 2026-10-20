@@ -77,6 +77,7 @@ import {
   resolveRecipient,
   resolveUserId,
 } from '@/lib/billing/lifecycle-queue';
+import { ACCOUNT_DELETED_REASON, accountState } from '@/lib/billing/deleted-account';
 import { isSuppressed } from '@/lib/email/lifecycle';
 import { lifecycleMode } from '@/lib/billing/lifecycle-mode';
 import {
@@ -181,6 +182,27 @@ export async function POST(request: Request): Promise<Response> {
       // Leave the rest claimed; the lease expires and the next tick takes them.
       console.log('[lifecycle-dispatch] wall-clock budget reached; yielding.');
       break;
+    }
+
+    // ── Deleted account, EVERY template ──────────────────────────────────
+    //
+    // Someone who deleted their account gets nothing from this queue, not
+    // even transactional mail. The webhook skips queueing for a subscription
+    // that delete-account cancelled, but a subscription cancelled another way
+    // on an already-deleted account (the Stripe dashboard, or Stripe at the
+    // end of its retries) still queued cancel_ask and both win-backs. Asked
+    // here, at send time, because the account can also be deleted in the two
+    // weeks between queueing a win-back and sending it. A row queued without
+    // a user id is looked up through the Stripe customer it is keyed on.
+    const ownerId =
+      row.user_id ??
+      (row.stripe_customer_id ? await resolveUserId(db, row.stripe_customer_id, null) : null);
+    const account = await accountState(db, ownerId);
+    if (account === 'unknown') continue; // auth read failed; lease expires, next tick asks again
+    if (account === 'deleted') {
+      await finish(db, row.id, { cancelled: ACCOUNT_DELETED_REASON });
+      result.cancelled += 1;
+      continue;
     }
 
     // ── Suppression + opt-out link, MARKETING ONLY ────────────────────────

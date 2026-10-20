@@ -20,8 +20,8 @@
     "eyebrow": "Rogers Yahoo Mail + AI",
     "titleLine1": "将 Rogers Yahoo 收件箱连接到",
     "titleLine2": "Claude、Cursor、任意 MCP 客户端",
-    "lead": "Rogers 邮箱就是挂着 rogers.com 名字的 Yahoo 邮箱。mcpemails 通过 IMAP 连接它，让你的 AI 代理可以读取、搜索、发送、回复和归档邮件，前提是你的账户仍能生成应用密码。",
-    "answer": "Claude 无法自行连接 Rogers Yahoo 邮箱。mcpemails 是一个托管 MCP 服务器，通过 IMAP 连接 imap.broadband.rogers.com 的 993 端口，使用 Rogers Yahoo 应用密码而不是你在网页邮箱中输入的密码认证。有一个真正的陷阱需要先检查：Rogers 自己的设置文章现在声明已不再提供应用密码生成，而 Yahoo 的 Rogers 帮助页面仍在介绍 Create app password 按钮，所以在据此做计划之前，请先打开你的账户安全页面看看。如果已有应用密码或仍能创建，一个收件箱永久免费。",
+    "lead": "Rogers 邮箱就是挂着 rogers.com 名字的 Yahoo 邮箱。MCP Emails 通过 IMAP 连接它，让你的 AI 代理可以读取、搜索、发送、回复和归档邮件，前提是你的账户仍能生成应用密码。",
+    "answer": "Claude 无法自行连接 Rogers Yahoo 邮箱。MCP Emails 是一个托管 MCP 服务器，通过 IMAP 连接 imap.broadband.rogers.com 的 993 端口，使用 Rogers Yahoo 应用密码而不是你在网页邮箱中输入的密码认证。有一个真正的陷阱需要先检查：Rogers 自己的设置文章现在声明已不再提供应用密码生成，而 Yahoo 的 Rogers 帮助页面仍在介绍 Create app password 按钮，所以在据此做计划之前，请先打开你的账户安全页面看看。如果已有应用密码或仍能创建，一个收件箱永久免费。",
     "meta0": "1 个收件箱永久免费",
     "meta1": "应用密码（如果你的账户还能生成）",
     "meta2": "邮件实时获取，绝不存储"
@@ -32,7 +32,7 @@
   },
   "setup": [
     {
-      "h": "创建免费 mcpemails 账户",
+      "h": "创建免费 MCP Emails 账户",
       "p": "在 mcpemails.com 注册。免费套餐可连接一个收件箱，无需信用卡。"
     },
     {
@@ -41,7 +41,7 @@
     },
     {
       "h": "输入 rogers.com 地址和应用密码",
-      "p": "在 mcpemails 中选择 IMAP / SMTP，在用户名栏填写完整的 rogers.com 地址，粘贴应用密码。不要使用 Rogers Yahoo 网页邮箱密码，它会在 IMAP 层被拒绝。上方的服务器和端口已自动填好，并已通过实时 TLS 连接验证。"
+      "p": "在 MCP Emails 中选择 IMAP / SMTP，在用户名栏填写完整的 rogers.com 地址，粘贴应用密码。不要使用 Rogers Yahoo 网页邮箱密码，它会在 IMAP 层被拒绝。上方的服务器和端口已自动填好，并已通过实时 TLS 连接验证。"
     },
     {
       "h": "将 MCP URL 粘贴到你的 AI",
@@ -68,12 +68,12 @@
   ],
   "limits": [
     "Rogers 背后的 Yahoo SMTP 主机声明的最大邮件大小约为 39 MB，因此带大附件的邮件在发出之前就会被拒绝。",
-    "如果你的账户已无法生成应用密码，mcpemails 就无法连接它。没有仅凭密码的备选方案，我们也不是在 Rogers Yahoo OAuth 登录窗口中注册的应用之一。"
+    "如果你的账户已无法生成应用密码，MCP Emails 就无法连接它。没有仅凭密码的备选方案，我们也不是在 Rogers Yahoo OAuth 登录窗口中注册的应用之一。"
   ],
   "faq": [
     {
       "q": "Claude 能用 Rogers 邮箱吗？",
-      "a": "不能直接使用。Claude 没有内置的 Rogers 连接器。通过 IMAP 将 mcpemails 这样的 MCP 服务器连接到该邮箱后，Claude 就能对你的 rogers.com 邮件进行读取、搜索、发送、回复、定时和整理，同一个连接也可在 Cursor、ChatGPT 和其他 MCP 客户端中使用。前提是你的账户能够使用应用密码。"
+      "a": "不能直接使用。Claude 没有内置的 Rogers 连接器。通过 IMAP 将 MCP Emails 这样的 MCP 服务器连接到该邮箱后，Claude 就能对你的 rogers.com 邮件进行读取、搜索、发送、回复、定时和整理，同一个连接也可在 Cursor、ChatGPT 和其他 MCP 客户端中使用。前提是你的账户能够使用应用密码。"
     },
     {
       "q": "Rogers 的 IMAP 和 SMTP 设置是什么？",

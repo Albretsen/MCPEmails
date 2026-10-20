@@ -336,7 +336,7 @@ test('the address is the one on the marketing site, character for character', ()
   // reader who checks two of them sees two different registered addresses.
   assert.equal(
     POSTAL_ADDRESS_LINE,
-    'MCPEmails is a service of Albretsen Consulting (enkeltpersonforetak), organisation number 926 646 753, Håsteins gate 9, 5160 Laksevåg, Norway.',
+    'MCPEmails is a service of Albretsen AS, organisation number 938 702 373, Håsteins gate 9, 5160 Laksevåg, Norway.',
   );
 });
 
@@ -742,4 +742,12 @@ test('an unusable recipient is refused before any network call', async () => {
     globalThis.fetch = realFetch;
     delete process.env.RESEND_API_KEY;
   }
+});
+
+test('the cancellation email points a customer inside 14 days at withdrawal', () => {
+  const email = composeBillingEmail('cancel_ask', payload());
+  assert.ok(email);
+  assert.match(email.body, /withdraw from the contract/);
+  assert.match(email.body, /\/withdrawal\b/);
+  assert.match(email.htmlBody, /href="[^"]*\/withdrawal"/);
 });

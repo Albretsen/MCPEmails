@@ -2,12 +2,12 @@
   "_sources": [
     "apps/web/components/dashboard/Pages.jsx (MCP_CLIENTS) + apps/web/messages/en/dashboard.json (clients.*)",
     "apps/web/src/lib/api-keys/generate.ts + apps/web/src/lib/api-keys/scopes.ts",
-    "apps/web/app/api/mcp/route.ts",
+    "supabase/functions/mcp-server/web-ingress.ts",
     "apps/web/messages/en/docs.json"
   ],
   "meta": {
     "title": "API du serveur MCP e-mail : curl, JSON-RPC et Bearer",
-    "description": "Appelez le serveur MCP de mcpemails en HTTP. Un point de terminaison Streamable HTTP, JSON-RPC 2.0, une clé bearer limitée et tous les outils. 1 boîte gratuite."
+    "description": "Appelez le serveur MCP de MCP Emails en HTTP. Un point de terminaison Streamable HTTP, JSON-RPC 2.0, une clé bearer limitée et tous les outils. 1 boîte gratuite."
   },
   "hero": {
     "eyebrow": "HTTP + e-mail",
@@ -26,7 +26,7 @@
   "setup": [
     {
       "h": "Créez un compte gratuit et connectez une boîte",
-      "p": "Inscrivez-vous sur mcpemails.com, sans carte bancaire, puis allez dans Dashboard, Inboxes, Connect Inbox. Outlook et Microsoft 365 se connectent via la connexion Microsoft ; Gmail, iCloud, Fastmail, Yahoo, Zoho et Yandex demandent un mot de passe d'application, et Gmail accepte aussi la connexion Google ; tout le reste se connecte en IMAP et SMTP standard. Le plan gratuit inclut une boîte, pour toujours."
+      "p": "Inscrivez-vous sur mcpemails.com, sans carte bancaire, puis allez dans Dashboard, Inboxes, Connect Inbox. Outlook et Microsoft 365 se connectent via la connexion Microsoft ; Gmail, iCloud, Fastmail, Yahoo, Zoho et Yandex demandent un mot de passe d'application ; tout le reste se connecte en IMAP et SMTP standard. Le plan gratuit inclut une boîte, pour toujours."
     },
     {
       "h": "Créez une clé API à portée limitée",

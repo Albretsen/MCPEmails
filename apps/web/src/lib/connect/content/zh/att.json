@@ -20,7 +20,7 @@
     "titleLine1": "将 AT&T Mail 连接到 Claude，",
     "titleLine2": "以及 Cursor、ChatGPT、任意 MCP 客户端",
     "lead": "为你的 AI 代理接入一个真正的 att.net 或 sbcglobal.net 收件箱。使用 AT&T 安全邮件密钥，通过 IMAP 读取、搜索、发送、回复、定时与整理邮件，可在所有 MCP 客户端中使用而不止一个。",
-    "answer": "Claude 无法自行访问 AT&T Mail 收件箱。mcpemails 是一个托管 MCP 服务器，通过 imap.mail.att.net 端口 993 的 IMAP 连接 att.net、sbcglobal.net、bellsouth.net 及其他 AT&T 域名，认证使用你在 myAT&T 中创建的 16 位安全邮件密钥，而不是你的 AT&T 密码。连接后，Claude、Cursor 或任何其他 MCP 客户端都能读取、搜索、发送、回复和整理这些邮件。1 个收件箱永久免费。",
+    "answer": "Claude 无法自行访问 AT&T Mail 收件箱。MCP Emails 是一个托管 MCP 服务器，通过 imap.mail.att.net 端口 993 的 IMAP 连接 att.net、sbcglobal.net、bellsouth.net 及其他 AT&T 域名，认证使用你在 myAT&T 中创建的 16 位安全邮件密钥，而不是你的 AT&T 密码。连接后，Claude、Cursor 或任何其他 MCP 客户端都能读取、搜索、发送、回复和整理这些邮件。1 个收件箱永久免费。",
     "meta0": "1 个收件箱永久免费",
     "meta1": "安全邮件密钥，而非你的密码",
     "meta2": "邮件实时获取，绝不存储"
@@ -31,7 +31,7 @@
   },
   "setup": [
     {
-      "h": "创建免费的 mcpemails 账户",
+      "h": "创建免费的 MCP Emails 账户",
       "p": "在 mcpemails.com 注册。免费套餐可连接一个收件箱，无需信用卡。"
     },
     {
@@ -40,7 +40,7 @@
     },
     {
       "h": "输入密钥，而不是你的 AT&T 密码",
-      "p": "在 mcpemails 中选择 IMAP / SMTP，输入完整的 AT&T 地址，并把安全邮件密钥粘贴到密码字段。所有 AT&T 域名都使用 <code>imap.mail.att.net</code> 和 <code>smtp.mail.att.net</code>，因此服务器地址已为你预填。"
+      "p": "在 MCP Emails 中选择 IMAP / SMTP，输入完整的 AT&T 地址，并把安全邮件密钥粘贴到密码字段。所有 AT&T 域名都使用 <code>imap.mail.att.net</code> 和 <code>smtp.mail.att.net</code>，因此服务器地址已为你预填。"
     },
     {
       "h": "将 MCP URL 粘贴到你的 AI",
@@ -50,7 +50,7 @@
   "gotchas": [
     {
       "h": "你的 AT&T 密码被拒绝，并不是因为它错了",
-      "p": "AT&T 把邮件客户端分为两类。已接入 AT&T OAuth 登录的应用会弹出浏览器提示，从不接触密码。其他所有应用（包括 mcpemails）都必须提供安全邮件密钥。如果你粘贴的是 AT&T 账户密码，就会得到一个与输错密码完全一样的认证失败，而且无论怎么重置账户密码都解决不了。"
+      "p": "AT&T 把邮件客户端分为两类。已接入 AT&T OAuth 登录的应用会弹出浏览器提示，从不接触密码。其他所有应用（包括 MCP Emails）都必须提供安全邮件密钥。如果你粘贴的是 AT&T 账户密码，就会得到一个与输错密码完全一样的认证失败，而且无论怎么重置账户密码都解决不了。"
     },
     {
       "h": "邮箱在 Yahoo 上，但 Yahoo 的应用专用密码页面是错误的地方",
@@ -62,17 +62,17 @@
     },
     {
       "h": "这里的端口 465 是隐式 TLS，不是 STARTTLS",
-      "p": "我们验证过的 SMTP 服务器在端口 465 上会立即建立 TLS 会话，且不在该端口声明 STARTTLS。较旧的 AT&T 设置指南让你在端口 465 的同时勾选 <b>STARTTLS</b>，这种组合在该服务器上无法完成。mcpemails 在 465 上使用隐式 TLS，这正是服务器实际提供的方式。"
+      "p": "我们验证过的 SMTP 服务器在端口 465 上会立即建立 TLS 会话，且不在该端口声明 STARTTLS。较旧的 AT&T 设置指南让你在端口 465 的同时勾选 <b>STARTTLS</b>，这种组合在该服务器上无法完成。MCP Emails 在 465 上使用隐式 TLS，这正是服务器实际提供的方式。"
     }
   ],
   "limits": [
     "AT&T 的 SMTP 服务器声明的单封邮件大小上限约为 39 MB，因此带大附件的邮件在发出前就会被 AT&T 拒绝。",
-    "mcpemails 使用安全邮件密钥认证，而不是该服务器同样声明的 OAUTHBEARER 和 XOAUTH2 机制。这是有意为之：OAuth 通道只对 AT&T 注册过的应用开放。"
+    "MCP Emails 使用安全邮件密钥认证，而不是该服务器同样声明的 OAUTHBEARER 和 XOAUTH2 机制。这是有意为之：OAuth 通道只对 AT&T 注册过的应用开放。"
   ],
   "faq": [
     {
       "q": "Claude 能用于 AT&T Mail 吗？",
-      "a": "不能直接使用。Claude 没有内置的 AT&T 连接器。通过 IMAP 将 mcpemails 这样的 MCP 服务器连接到邮箱后，Claude 就能读取、搜索、发送、回复、定时和整理你的 att.net 或 sbcglobal.net 邮件，而且同一个连接也可在 Cursor、ChatGPT 和其他 MCP 客户端中使用。"
+      "a": "不能直接使用。Claude 没有内置的 AT&T 连接器。通过 IMAP 将 MCP Emails 这样的 MCP 服务器连接到邮箱后，Claude 就能读取、搜索、发送、回复、定时和整理你的 att.net 或 sbcglobal.net 邮件，而且同一个连接也可在 Cursor、ChatGPT 和其他 MCP 客户端中使用。"
     },
     {
       "q": "AT&T 的 IMAP 和 SMTP 设置是什么？",

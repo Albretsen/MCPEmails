@@ -14,6 +14,7 @@ import {
 import { isSsoRequiredError } from '@/lib/sso/enforcement';
 import { MIcon, MBtn } from '../MarketingPrimitives';
 import { ThemeBtn, Spinner, GoogleIcon, GitHubIcon, MicrosoftIcon, SocialButton, OrDivider } from './AuthShared';
+import { microsoftSignInEnabled } from '@/lib/auth/microsoft-flag.mjs';
 
 export function LoginApp({ redirectTo = null, connectProvider = null }) {
   const t = useTranslations('auth');
@@ -194,13 +195,15 @@ export function LoginApp({ redirectTo = null, connectProvider = null }) {
         onClick={handleGoogleSignIn}
         disabled={anyBusy}
       />
-      <SocialButton
-        icon={<MicrosoftIcon />}
-        label={t('shared.signInWithMicrosoft')}
-        loading={socialLoading === 'microsoft'}
-        onClick={handleMicrosoftSignIn}
-        disabled={anyBusy}
-      />
+      {microsoftSignInEnabled() && (
+        <SocialButton
+          icon={<MicrosoftIcon />}
+          label={t('shared.signInWithMicrosoft')}
+          loading={socialLoading === 'microsoft'}
+          onClick={handleMicrosoftSignIn}
+          disabled={anyBusy}
+        />
+      )}
       <SocialButton
         icon={<GitHubIcon />}
         label={t('shared.continueWithGitHub')}
@@ -235,8 +238,8 @@ export function LoginApp({ redirectTo = null, connectProvider = null }) {
         </a>
 
         <div className="auth-brand">
-          <img className="logo-light" src="/logo-wordmark.svg" width="280" height="48" alt="mcpemails" />
-          <img className="logo-dark" src="/logo-wordmark-dark.svg" width="280" height="48" alt="mcpemails" />
+          <img className="logo-light" src="/logo-wordmark.svg" width="280" height="48" alt="MCP Emails" />
+          <img className="logo-dark" src="/logo-wordmark-dark.svg" width="280" height="48" alt="MCP Emails" />
         </div>
 
         {/* ── Full-page loading (password submit or magic link sending) ──── */}

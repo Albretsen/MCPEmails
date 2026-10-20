@@ -51,7 +51,7 @@ const EXPECTED_GET_HEADERS: Array<[string, string]> = [
   ['access-control-allow-headers', 'Content-Type'],
   ['access-control-allow-methods', 'GET, OPTIONS'],
   ['access-control-allow-origin', '*'],
-  ['cache-control', 'max-age=3600'],
+  ['cache-control', 'public, max-age=3600, s-maxage=86400, stale-while-revalidate=604800'],
   ['content-type', 'application/json'],
 ];
 

@@ -22,20 +22,20 @@
       "step1": "In claude.ai or Claude Desktop, open Settings → Connectors.",
       "step2": "Click \"Add custom connector\".",
       "step3": "Paste the URL above as the connector URL, then click \"Add\".",
-      "step4": "Click \"Connect\" and sign in with mcpemails to authorize. No API key needed."
+      "step4": "Click \"Connect\" and sign in with MCP Emails to authorize. No API key needed."
     },
     "chatgpt": {
       "step1": "Open Settings → Apps & Connectors → Advanced settings and turn on Developer mode.",
       "step2": "Back in Apps & Connectors, click \"Create\".",
       "step3": "Enter a name and paste the URL above as the Connector URL.",
-      "step4": "Pick OAuth, click \"Create\", then authorize with mcpemails.",
-      "step5": "In a chat on chatgpt.com, click + → Developer mode and select the mcpemails app. Repeat this in every new chat, or ChatGPT will not see the tools.",
+      "step4": "Pick OAuth, click \"Create\", then authorize with MCP Emails.",
+      "step5": "In a chat on chatgpt.com, click + → Developer mode and select the MCP Emails app. Repeat this in every new chat, or ChatGPT will not see the tools.",
       "note": "Works on chatgpt.com (web only) with Plus, Pro, Business, Enterprise and Edu. Free and Go accounts cannot add custom connectors. On Business and Enterprise, an admin may need to allow developer mode first."
     },
     "cursor": {
       "step1": "Edit ~/.cursor/mcp.json (global) or .cursor/mcp.json (project).",
       "step2": "Add the server below under \"mcpServers\".",
-      "step3": "Cursor prompts you to sign in via OAuth. Authorize with mcpemails."
+      "step3": "Cursor prompts you to sign in via OAuth. Authorize with MCP Emails."
     },
     "vscode": {
       "step1": "Open the Command Palette (⇧⌘P) and run \"MCP: Add Server\".",
@@ -51,7 +51,7 @@
     "windsurf": {
       "step1": "Open Cascade’s MCP settings, or edit ~/.codeium/windsurf/mcp_config.json.",
       "step2": "Add the server below. Note the field is \"serverUrl\", not \"url\".",
-      "step3": "Refresh MCP servers in Cascade and authorize with mcpemails when prompted."
+      "step3": "Refresh MCP servers in Cascade and authorize with MCP Emails when prompted."
     },
     "gemini": {
       "step1": "Edit ~/.gemini/settings.json (global) or .gemini/settings.json (project).",
@@ -61,7 +61,7 @@
     "zed": {
       "step1": "In the Agent Panel settings click \"Add Custom Server\", or edit settings.json.",
       "step2": "Add the server below under \"context_servers\".",
-      "step3": "Zed prompts the OAuth flow when no Authorization header is set. Sign in with mcpemails."
+      "step3": "Zed prompts the OAuth flow when no Authorization header is set. Sign in with MCP Emails."
     },
     "jetbrains": {
       "step1": "Open Settings → Tools → AI Assistant → Model Context Protocol (MCP).",
@@ -71,7 +71,7 @@
     "raycast": {
       "step1": "Run the \"Install MCP Server\" command (or \"Manage MCP Servers\").",
       "step2": "Enter a name, set Transport to \"HTTP\", and paste the URL above.",
-      "step3": "Press \"Install MCP Server\", then click \"Sign In\" to authorize with mcpemails."
+      "step3": "Press \"Install MCP Server\", then click \"Sign In\" to authorize with MCP Emails."
     },
     "warp": {
       "step1": "Open Settings → Agents → MCP servers and click \"+ Add\".",
@@ -98,7 +98,7 @@
     "multiInboxTitle": "Add your other work mailboxes",
     "multiInboxOptional": "Optional",
     "multiInboxDesc": "Connect info@, sales@, invoices@ and the rest, and your agent works every company mailbox from one conversation, replying from the right address.",
-    "multiInboxDescUpgrade": "Connect info@, sales@, invoices@ and the rest, and your agent works every company mailbox from one conversation, replying from the right address. Free covers one mailbox; Pro covers every mailbox your business runs.",
+    "multiInboxDescUpgrade": "Connect info@, sales@, invoices@ and the rest, and your agent works every company mailbox from one conversation, replying from the right address. Free covers one mailbox; Pro covers up to 10.",
     "multiInboxCta": "Add a mailbox"
   },
   "overview": {
@@ -129,7 +129,7 @@
     "goToMembers": "Go to Members",
     "callsPerDayTitle": "Calls per day",
     "callsPerDaySub": "Last {days} days · across all tools",
-    "pro": "Team",
+    "pro": "Business",
     "recentActivityTitle": "Recent activity",
     "recentActivitySub": "Live MCP tool calls",
     "noActivityTitle": "No activity yet",
@@ -146,8 +146,8 @@
     "usedSingular": "{count} of {max} inbox used",
     "capTitle": "You're at your inbox limit",
     "capBodyPersonal": "Free connects one mailbox. Personal takes you to three for $9 a month, so work and personal can share the same agent.",
-    "capBodyPro": "Personal connects three mailboxes. Pro removes the limit for $15 a month, so every mailbox you own runs on one agent.",
-    "capBodyBusiness": "Running more than one company mailbox? Free connects one. Personal covers three for $9 a month, enough for info@, sales@ and your own. Pro covers every mailbox your business runs for $15 a month: finance, sales, support, info, and your own.",
+    "capBodyPro": "Personal connects three mailboxes. Pro takes you to 10 for $15 a month, all on one agent.",
+    "capBodyBusiness": "Running more than one company mailbox? Free connects one. Personal covers three for $9 a month, enough for info@, sales@ and your own. Pro covers up to 10 for $15 a month: finance, sales, support, info, and your own.",
     "capCtaPersonal": "Upgrade to Personal, $9/mo",
     "capCtaPro": "Upgrade to Pro, $15/mo",
     "capCompare": "Compare all plans",
@@ -266,7 +266,9 @@
     },
     "emptyAltLead": "Not ready to connect a mailbox yet?",
     "emptyViewKeys": "Get your MCP URL and API key",
-    "emptyReadDocs": "Read the client setup guides"
+    "emptyReadDocs": "Read the client setup guides",
+    "capBodyProCap": "Pro connects 10 mailboxes. Business includes 10 for $39 a month and adds each extra mailbox for $3 a month, with unlimited members at no extra cost.",
+    "capCtaBusiness": "Upgrade to Business, $39/mo"
   },
   "apiKeys": {
     "title": "API keys",
@@ -552,16 +554,15 @@
       "personalFeature2": "120 requests / minute (2× burst)",
       "personalFeatureActions": "No monthly action cap",
       "personalFeature4": "Email support",
-      "soloFeature1": "Unlimited connected inboxes",
+      "soloFeature1": "10 connected inboxes",
       "soloFeature2": "300 requests / minute (5× burst)",
       "soloFeature3": "Longer analytics history",
       "soloFeature4": "Email support",
-      "teamFeature1": "Everything in Pro",
-      "teamFeature2": "Unlimited members with roles",
-      "teamFeature3": "A separate workspace per client or business",
-      "teamFeature4": "SSO (SAML / OIDC) + audit log",
-      "teamFeature5": "Longest analytics history",
-      "teamFeature6": "Priority support"
+      "businessFeature1": "Everything in Pro",
+      "businessFeature2": "10 mailboxes included, $3 a month for each extra",
+      "businessFeature3": "Unlimited members with roles, at no extra cost",
+      "businessFeature4": "Admins approve held sends",
+      "businessFeature5": "Several workspaces on one subscription"
     },
     "planIncludes": "What your plan includes",
     "inboxesOne": "1 connected inbox",
@@ -592,7 +593,7 @@
     "confirmNoteInterval": "Charged now to your card on file, with credit for the time left in your current period. Your billing period restarts today, so your next renewal date moves.",
     "confirmNoteIntervalNoPreview": "We could not price this change in advance. Your card on file is charged the difference, credited for the time left in your current period, and the exact amount appears on your invoice. Your billing period restarts today, so your next renewal date moves.",
     "confirmPay": "Confirm and pay {amount}",
-    "confirmChange": "Confirm change",
+    "confirmChange": "Confirm and pay",
     "confirmCancel": "Cancel",
     "confirming": "Charging…",
     "planChangedCharged": "You are now on {plan}. {amount} was charged to your card.",
@@ -601,7 +602,10 @@
     "paymentRequiredBody": "Your bank needs to authorise the payment, or the card was declined. Your current plan is unchanged and you have not been charged. Pay the open invoice and the change is applied automatically.",
     "paymentRequiredPay": "Pay invoice",
     "paymentRequiredClose": "Close",
-    "paymentRequiredToast": "Payment was not completed, so you are still on {plan}. Open the billing portal to pay the outstanding invoice."
+    "paymentRequiredToast": "Payment was not completed, so you are still on {plan}. Open the billing portal to pay the outstanding invoice.",
+    "proInboxesKept": "Your Pro plan keeps unlimited connected inboxes.",
+    "businessMailboxRate": "10 mailboxes included across all your workspaces. Each extra mailbox is billed with your plan: $3 a month, or $28.80 a year.",
+    "confirmExtraMailboxes": "Includes {count, plural, one {# extra mailbox} other {# extra mailboxes}} above the 10 included."
   },
   "security": {
     "title": "Security",
@@ -665,8 +669,8 @@
     "roleOwner": "Owner",
     "sending": "Sending…",
     "sendInvite": "Send invite",
-    "rolesLockedHint": "Invites join as Member. Upgrade to Team to assign Admin and Viewer roles.",
-    "inviteUpgradeHint": "Inviting collaborators needs the Team plan. Upgrade to add members to this workspace.",
+    "rolesLockedHint": "Invites join as Member. Upgrade to Business to assign Admin and Viewer roles.",
+    "inviteUpgradeHint": "Inviting collaborators needs the Business plan. Upgrade to add members to this workspace.",
     "errInviteFailed": "Failed to send invite.",
     "errRemoveFailed": "Failed to remove member.",
     "errRoleFailed": "Failed to update role.",
@@ -1037,6 +1041,83 @@
     "bulkRuns": {
       "viewerNotice": "You can watch large-work runs here, but only a workspace owner, admin or member can stop one.",
       "stopViewerTitle": "Viewers cannot stop runs"
+    }
+  },
+  "sso": {
+    "title": "Single sign-on (SAML)",
+    "sub": "Let your team sign in with Microsoft Entra ID.",
+    "statusRequired": "Required",
+    "statusActive": "On",
+    "statusDisabled": "Off",
+    "statusDraft": "Not set up",
+    "loading": "Loading single sign-on settings...",
+    "notAvailable": "Single sign-on setup is not available yet. Contact support to turn it on.",
+    "step1Title": "1. Create the app in Microsoft Entra",
+    "step1Hint": "In Entra, add an Enterprise application, choose SAML, and paste these values into Basic SAML Configuration. Set the name identifier to the user's email address.",
+    "entityId": "Identifier (Entity ID)",
+    "acsUrl": "Reply URL (Assertion Consumer Service URL)",
+    "metadataUrl": "Our metadata URL",
+    "step2Title": "2. Paste the Entra metadata URL",
+    "step2Hint": "Copy the App Federation Metadata Url from the SAML Certificates section in Entra.",
+    "step2Connected": "Connected to Entra. Paste a new URL to replace it.",
+    "metadataInputLabel": "App Federation Metadata Url",
+    "metadataSave": "Save",
+    "metadataUpdate": "Replace",
+    "metadataSaved": "Microsoft Entra connection saved.",
+    "step3Title": "3. Verify your email domains",
+    "step3Hint": "Add each domain your team signs in with, publish its TXT record in DNS, then check it. Only verified domains use single sign-on.",
+    "domainInputLabel": "Email domain",
+    "domainAdd": "Add domain",
+    "domainVerified": "Verified",
+    "domainPending": "Not verified",
+    "checkNow": "Check now",
+    "domainRemove": "Remove",
+    "txtRecordLabel": "TXT record for {domain}",
+    "domainVerifiedToast": "{domain} is verified.",
+    "step4Title": "4. Test and require",
+    "testHint": "Open a private window, choose Sign in with SSO, and sign in with your work email. Requiring single sign-on unlocks after an owner or admin has done this once.",
+    "testSeen": "An owner or admin has signed in with single sign-on.",
+    "defaultRole": "Role for new people",
+    "roleMember": "Member",
+    "roleViewer": "Viewer",
+    "enforceLabel": "Require single sign-on",
+    "enforceHint": "People on verified domains can then only sign in through Microsoft Entra.",
+    "enforceLocked": "Available after a verified domain and a test sign-in by an owner or admin.",
+    "enable": "Turn on single sign-on",
+    "disable": "Turn off single sign-on",
+    "historyTitle": "Recent changes",
+    "auditUnknownActor": "Unknown",
+    "audit": {
+      "connection_created": "Single sign-on set up",
+      "connection_metadata_updated": "Entra metadata URL saved",
+      "connection_default_role_changed": "Role for new people changed",
+      "connection_enforced": "Single sign-on required",
+      "connection_enforcement_removed": "Single sign-on no longer required",
+      "connection_disabled": "Single sign-on turned off",
+      "connection_enabled": "Single sign-on turned on",
+      "domain_added": "Domain {domain} added",
+      "domain_removed": "Domain {domain} removed",
+      "domain_verified": "Domain {domain} verified"
+    },
+    "errors": {
+      "generic": "Something went wrong. Try again.",
+      "load": "Could not load single sign-on settings.",
+      "invalid_metadata_url": "Paste the App Federation Metadata Url from Microsoft Entra.",
+      "metadata_rejected": "Entra metadata could not be read from that URL. Check it and try again.",
+      "management_not_configured": "Single sign-on setup is not available yet. Contact support.",
+      "management_unavailable": "Saving to the sign-in service failed. Try again later.",
+      "invalid_domain": "Enter a domain like example.com.",
+      "consumer_domain": "Public email domains cannot use single sign-on.",
+      "domain_exists": "That domain is already on the list.",
+      "domain_limit": "You have added the most domains allowed.",
+      "domain_taken": "Another workspace has already verified this domain. Contact support.",
+      "dns_record_missing": "The TXT record was not found yet. DNS changes can take a while.",
+      "dns_lookup_failed": "The DNS lookup failed. Try again in a minute.",
+      "rate_limited": "Too many attempts. Wait a few minutes and try again.",
+      "no_provider": "Paste the Entra metadata URL first.",
+      "enforce_needs_active": "Turn on single sign-on before requiring it.",
+      "enforce_needs_verified_domain": "Verify at least one domain first.",
+      "enforce_needs_test_sign_in": "An owner or admin must sign in with single sign-on once first."
     }
   }
 }

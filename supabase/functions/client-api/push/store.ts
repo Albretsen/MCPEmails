@@ -90,6 +90,12 @@ export interface PushStore {
   }): Promise<void>;
   /** Rows of this user, in any workspace, disabled ones included (the cap counts them all). */
   countSubscriptions(userId: string): Promise<number>;
+  /**
+   * Delete this user's DISABLED rows (the push service said "gone", or ten
+   * failures in a row). Run when the cap is reached, so dead browsers do not
+   * hold device slots forever. Returns how many rows went.
+   */
+  purgeDisabledSubscriptions(userId: string): Promise<number>;
   /** Delete this user's row for the endpoint. Returns how many rows went. */
   deleteSubscription(userId: string, endpoint: string): Promise<number>;
   /** This user's active subscriptions in one workspace. */
@@ -160,6 +166,17 @@ export function supabasePushStore(db: Db): PushStore {
         .eq("user_id", userId);
       if (error) fail("push_count_failed", error);
       return count ?? 0;
+    },
+
+    async purgeDisabledSubscriptions(userId) {
+      const { data, error } = await db
+        .from("push_subscriptions")
+        .delete()
+        .eq("user_id", userId)
+        .not("disabled_at", "is", null)
+        .select("id");
+      if (error) fail("push_purge_failed", error);
+      return Array.isArray(data) ? data.length : 0;
     },
 
     async deleteSubscription(userId, endpoint) {
