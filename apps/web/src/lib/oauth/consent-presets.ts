@@ -12,7 +12,7 @@
 //
 // Both halves of that stopped being true on 2026-09-09:
 //
-//   1. app/api/mcp/route.ts now answers an unauthenticated call with
+//   1. /api/mcp (mcp-server/web-ingress.ts since 2026-10-20) answers an unauthenticated call with
 //      WWW-Authenticate scope="read:email" alone instead of all nine scopes, so
 //      the authorize request claude.ai actually sends is `scope=read:email`.
 //      Verified on the wire against real claude.ai.

@@ -248,7 +248,7 @@ test('vercel.json region config stays inside what this test can model', () => {
     assert.ok(pattern.startsWith('app/'), `"${pattern}" must name files under app/`);
     assert.doesNotThrow(() => compilePattern(pattern), `"${pattern}"`);
     // Regions only. maxDuration lives next to the handler as a route segment
-    // export (see app/api/mcp/route.ts); two places to set it is one too many.
+    // export (see app/api/stripe/webhook/route.ts); two places to set it is one too many.
     // PATTERNS_ALLOWED_MAX_DURATION is the pinned set of entries that may also
     // carry one, and it is empty.
     const allowedKeys = PATTERNS_ALLOWED_MAX_DURATION.includes(pattern) ? ['maxDuration', 'regions'] : ['regions'];

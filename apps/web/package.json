@@ -49,7 +49,6 @@
     "test:growth": "node --test --experimental-strip-types src/lib/analytics/growth-metrics.test.mjs src/lib/analytics/growth-records.test.ts src/lib/analytics/growth-attention.test.ts src/lib/analytics/growth-achievements.test.ts src/lib/analytics/signup-trend.test.ts src/lib/analytics/usage-cap.test.ts src/lib/analytics/user-table.test.ts",
     "test:health": "node --test --experimental-strip-types src/lib/analytics/health-math.test.ts",
     "test:card-listing": "node --test --experimental-strip-types src/lib/mcp/card-listing.test.ts",
-    "test:mcp-proxy": "node --test --experimental-strip-types src/lib/mcp/upstream-headers.test.ts",
     "test:sanitizer": "node --test src/lib/sanitizeSignatureHtml.test.mjs",
     "test:sender-name": "node --test --experimental-strip-types src/lib/inboxes/sender-name.test.ts",
     "test:send-as": "node --test --experimental-strip-types --experimental-test-module-mocks --import ./scripts/register-ts-alias.mjs src/lib/inboxes/send-as.test.ts app/api/inboxes/send-as-route.test.ts",
