@@ -107,14 +107,21 @@ async function worker() {
 }
 await Promise.all(Array.from({ length: Math.min(concurrency, suites.length) }, worker));
 
-const named = suites.map((name) => scripts[name]).join(' ');
+// Every whitespace-separated word of every suite's command, as an exact set.
+// A substring match counted `a/foo.test.ts` as run whenever a suite ran
+// `a/other-foo.test.ts` or `a/foo.test.tsx`, which hid real orphans.
+const named = new Set(
+  suites
+    .flatMap((name) => scripts[name].split(/\s+/))
+    .map((word) => word.replace(/^['"]|['"]$/g, '').replace(/^\.\//, '')),
+);
 const testFiles = execFileSync('git', ['ls-files', '--', '*.test.js', '*.test.mjs', '*.test.ts', '*.test.tsx', '*.test.jsx'], {
   cwd: webRoot,
   encoding: 'utf8',
 })
   .split('\n')
   .filter(Boolean);
-const orphans = testFiles.filter((file) => !named.includes(file));
+const orphans = testFiles.filter((file) => !named.has(file));
 
 console.log('\n--- summary ---');
 for (const r of results) console.log(`${r.ok ? 'PASS' : 'FAIL'}  ${r.name}  (${r.seconds.toFixed(1)}s)`);
