@@ -1,7 +1,8 @@
 -- ============================================================
 -- SAML SSO data model: sso_connections, sso_domains, signup triggers
 -- ============================================================
--- Covers 20261019140000_sso_connections.sql.
+-- Covers 20261019140000_sso_connections.sql and
+-- 20261019140500_sso_user_signup_triggers.sql.
 --
 -- A verified domain routes every sign-in for that domain to one company's
 -- identity provider, so a self-granted verification is an account takeover

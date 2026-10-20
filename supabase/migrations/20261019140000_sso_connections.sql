@@ -60,6 +60,15 @@
 --      public.users.sso_provider_id. Every current lookup of public.users by
 --      email tolerates two rows (invite route: limit(1); Resend webhook: IN).
 --
+-- SPLIT (2026-10-20). This file is the purely additive half: new functions,
+-- the two new tables with their RLS, the sign-in lookup, and one new nullable
+-- column on public.users. It changes nothing for existing users and was
+-- applied to production on its own. The half that changes existing signup
+-- objects (the public.users email uniqueness swap and the WHEN clause on
+-- on_auth_user_created) is 20261019140500_sso_user_signup_triggers.sql. It is
+-- only needed once an SSO provider exists, and the owner applies it before
+-- the first SAML sign-in.
+--
 -- RELEASE ORDER. Apply before any code that creates an SSO provider. Nothing
 -- reads these tables yet, so applying early is harmless.
 --
@@ -409,73 +418,6 @@ COMMENT ON COLUMN public.users.sso_provider_id IS
   'Supabase SSO provider this user signs in through (auth app_metadata.provider '
   '= ''sso:<id>''); NULL for every other user. Set once, by on_auth_sso_user_created.';
 
--- Same rule as before for every non-SSO user; per provider for SSO users.
-CREATE UNIQUE INDEX IF NOT EXISTS users_email_non_sso_key
-  ON public.users (email) WHERE sso_provider_id IS NULL;
-CREATE UNIQUE INDEX IF NOT EXISTS users_email_sso_provider_key
-  ON public.users (sso_provider_id, email) WHERE sso_provider_id IS NOT NULL;
-ALTER TABLE public.users DROP CONSTRAINT IF EXISTS users_email_key;
-
-
--- ── 8. Signup triggers: SSO users get no personal workspace ──────────────────
--- 'sso:<uuid>' is set by Supabase Auth before the INSERT, and app_metadata is
--- writable only by Auth and the service role, never by a user.
-CREATE OR REPLACE FUNCTION public.handle_new_sso_user()
-RETURNS trigger
-LANGUAGE plpgsql
-SECURITY DEFINER
-SET search_path = public, pg_temp
-AS $$
-DECLARE
-  v_provider_id uuid;
-BEGIN
-  BEGIN
-    v_provider_id := substring(NEW.raw_app_meta_data->>'provider' FROM 5)::uuid;
-  EXCEPTION WHEN invalid_text_representation THEN
-    v_provider_id := NULL;
-  END;
-
-  -- A provider string that is not 'sso:<uuid>' is not an SSO user we can
-  -- place; refuse the sign-in rather than create a user with no home.
-  IF v_provider_id IS NULL THEN
-    RAISE EXCEPTION 'unexpected SSO provider %', NEW.raw_app_meta_data->>'provider'
-      USING ERRCODE = '22023';
-  END IF;
-
-  INSERT INTO public.users (id, email, display_name, avatar_url, sso_provider_id)
-  VALUES (
-    NEW.id,
-    NEW.email,
-    COALESCE(
-      NULLIF(btrim(NEW.raw_user_meta_data->>'display_name'), ''),
-      NULLIF(btrim(NEW.raw_user_meta_data->>'name'), ''),
-      NULLIF(btrim(NEW.raw_user_meta_data->>'full_name'), ''),
-      SPLIT_PART(NEW.email, '@', 1)
-    ),
-    NEW.raw_user_meta_data->>'avatar_url',
-    v_provider_id
-  )
-  ON CONFLICT (id) DO NOTHING;
-
-  RETURN NEW;
-END;
-$$;
-
-REVOKE ALL ON FUNCTION public.handle_new_sso_user() FROM PUBLIC, anon, authenticated;
-
--- CREATE OR REPLACE, not DROP + CREATE: no moment without the trigger, even
--- when this file is applied statement by statement.
-CREATE OR REPLACE TRIGGER on_auth_user_created
-  AFTER INSERT ON auth.users
-  FOR EACH ROW
-  WHEN (COALESCE(NEW.raw_app_meta_data->>'provider', '') NOT LIKE 'sso:%')
-  EXECUTE FUNCTION public.handle_new_user();
-
-CREATE OR REPLACE TRIGGER on_auth_sso_user_created
-  AFTER INSERT ON auth.users
-  FOR EACH ROW
-  WHEN (NEW.raw_app_meta_data->>'provider' LIKE 'sso:%')
-  EXECUTE FUNCTION public.handle_new_sso_user();
 
 
 COMMENT ON TABLE public.sso_connections IS
