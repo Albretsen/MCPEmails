@@ -122,7 +122,7 @@ test('no localized marketing CTA links to a bare /signup or /login', () => {
 test('the signup and login layouts, and only they, read lang', () => {
   for (const file of ['../../app/signup/layout.js', '../../app/(auth)/login/layout.js']) {
     const src = readFileSync(new URL(file, import.meta.url), 'utf8');
-    assert.match(src, /<AppLocaleProvider readLangParam>/, file);
+    assert.match(src, /<AuthLocaleProvider readLangParam>/, file);
   }
   // Anywhere else, a stray lang must not override a choice made in Settings.
   for (const file of ['../../app/(auth)/layout.js', '../../app/dashboard/layout.js']) {

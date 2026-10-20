@@ -51,6 +51,7 @@ const { renderToString } = await import('react-dom/server');
 const { hydrateRoot } = await import('react-dom/client');
 const { useMessages, useLocale, useTranslations } = await import('next-intl');
 const { default: AppLocaleProvider, useAppLocale } = await import('./AppLocaleProvider.jsx');
+const { default: AuthLocaleProvider } = await import('./AuthLocaleProvider.jsx');
 const { DashboardApp } = await import('../dashboard/App.jsx');
 const { LoginApp } = await import('../auth/LoginApp.jsx');
 
@@ -190,6 +191,18 @@ function Probe({ seen }) {
   return createElement('p', { id: 'probe' }, t('settings.languageHeading'));
 }
 
+/**
+ * Resolves once `locale`'s catalog files are imported and the provider's own
+ * load of the same modules has had a task to finish. LocaleCore.jsx fetches a
+ * language on demand, so a test that counts console errors awaits this inside
+ * an `act`: the update that applies the language then lands inside it instead
+ * of being reported as an unwrapped update.
+ */
+async function catalogLoaded(locale) {
+  await Promise.all(NAMESPACES.map((ns) => import(`../../messages/${locale}/${ns}.json`, { with: { type: 'json' } })));
+  await new Promise((resolve) => setTimeout(resolve, 20));
+}
+
 function newSeen() {
   return { renders: [], messages: null, setLocale: null };
 }
@@ -243,6 +256,52 @@ async function settled(view, locale) {
 }
 
 // ===========================================================================
+// Catalogs on demand (LocaleCore.jsx): only English is bundled
+// ===========================================================================
+//
+// The cold server render (nothing loaded yet) is in locale-ssr-cold.test.mjs:
+// it needs a process of its own, both to start cold and because a streaming
+// render here would leave React's renderer marker on the shared contexts.
+
+test('bundle: only the English catalogs are imported statically', () => {
+  const STATIC_CATALOG = /^import\s+\w+\s+from\s+['"][^'"]*messages\/(\w+)\/(\w+)\.json['"]/gm;
+  const read = (file) => readFileSync(new URL(file, import.meta.url), 'utf8');
+  const staticImports = (file) => [...read(file).matchAll(STATIC_CATALOG)].map((m) => `${m[1]}/${m[2]}`);
+  assert.deepEqual(staticImports('./AppLocaleProvider.jsx'),
+    ['en/dashboard', 'en/dashboardChrome', 'en/auth', 'en/common']);
+  assert.deepEqual(staticImports('./AuthLocaleProvider.jsx'), ['en/auth', 'en/common']);
+  assert.deepEqual(staticImports('./LocaleCore.jsx'), []);
+  // Every other language is reachable on demand, all four files of it.
+  const lazy = new Set([...read('./LocaleCore.jsx').matchAll(/import\(['"][^'"]*messages\/(\w+)\/(\w+)\.json['"]\)/g)]
+    .map((m) => `${m[1]}/${m[2]}`));
+  for (const locale of LOCALES.filter((l) => l !== 'en')) {
+    for (const ns of NAMESPACES) assert.ok(lazy.has(`${locale}/${ns}`), `${locale}/${ns} has a loader`);
+  }
+});
+
+test('auth screens: AuthLocaleProvider carries auth and common only, and the login screen is complete in every language', async (t) => {
+  for (const locale of LOCALES) {
+    reset(t, { stored: locale });
+    const seen = newSeen();
+    function AuthProbe() {
+      seen.messages = useMessages();
+      seen.locale = useLocale();
+      return null;
+    }
+    const view = await mount(createElement(AuthLocaleProvider, null, [
+      createElement(AuthProbe, { key: 'probe' }),
+      createElement(LoginApp, { key: 'login' }),
+    ]));
+    await waitFor(() => view.container.querySelector('h1')?.textContent === CATALOG[locale].auth.login.title,
+      { message: `the login screen in ${locale}` });
+    assert.equal(seen.locale, locale);
+    assert.deepEqual(seen.messages, { auth: CATALOG[locale].auth, common: CATALOG[locale].common });
+    assert.deepEqual(keyPathsOnScreen(view.container), [], `${locale}: no key path on the login screen`);
+    await view.unmount();
+  }
+});
+
+// ===========================================================================
 // The first render is English
 // ===========================================================================
 
@@ -287,6 +346,8 @@ test('hydration: server HTML hydrates without a mismatch, then moves to the stor
   await act(async () => {
     root = hydrateRoot(container, tree(seen), { onRecoverableError: (err) => errors.push(String(err)) });
   });
+  // The provider's effect has asked for French; its catalog arrives on demand.
+  await act(async () => { await catalogLoaded('fr'); });
   t.after(async () => {
     console.error = previousError;
     await act(async () => { root.unmount(); });

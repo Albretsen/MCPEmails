@@ -108,7 +108,7 @@
     "test:fonts": "node --test scripts/fonts/font-roles.test.mjs scripts/fonts/self-hosted.test.mjs",
     "test:logo-dimensions": "node --test scripts/layout/logo-dimensions.test.mjs",
     "test:signature-editor-ui": "node --test --experimental-strip-types --experimental-test-module-mocks --import ./scripts/register-dom-tests.mjs components/dashboard/signature-editor-ui.test.mjs components/dashboard/signature-editor-lazy.test.mjs components/dashboard/signature-editor-loader.test.mjs components/dashboard/signature-editor-inbox-switch.test.mjs components/dashboard/signature-preview-sanitised.test.mjs",
-    "test:app-locale": "node --test --experimental-strip-types --experimental-test-module-mocks --import ./scripts/register-dom-tests.mjs components/i18n/app-locale-provider.test.mjs",
+    "test:app-locale": "node --test --experimental-strip-types --experimental-test-module-mocks --import ./scripts/register-dom-tests.mjs components/i18n/app-locale-provider.test.mjs components/i18n/locale-ssr-cold.test.mjs",
     "test:sidebar-signout": "node --test --experimental-strip-types --experimental-test-module-mocks --import ./scripts/register-dom-tests.mjs components/dashboard/sidebar-signout.test.mjs",
     "test:pricing-ui": "node --test --experimental-strip-types --experimental-test-module-mocks --import ./scripts/register-dom-tests.mjs components/marketing/pricing-client-ui.test.mjs",
     "test:acquisition-device": "node --test --experimental-strip-types --experimental-test-module-mocks --import ./scripts/register-ts-alias.mjs src/lib/acquisition-device.test.mjs src/lib/acquisition-device-stamp.test.ts app/auth/callback/route.device.test.ts",
