@@ -13,6 +13,7 @@ import {
   withConnectIntent,
 } from '@/lib/connect/intent-carry.mjs';
 import { MIcon, MBtn } from '../MarketingPrimitives';
+import { isSsoRequiredError } from '@/lib/sso/enforcement';
 import { ThemeBtn, Spinner, GoogleIcon, GitHubIcon, MicrosoftIcon, SocialButton, OrDivider } from './AuthShared';
 import { microsoftSignInEnabled } from '@/lib/auth/microsoft-flag.mjs';
 
@@ -189,7 +190,7 @@ export function SignupApp({ redirectTo = null, connectProvider = null }) {
     });
 
     if (error) {
-      setServerError(error.message ?? t('signup.errorGeneric'));
+      setServerError(isSsoRequiredError(error) ? t('shared.ssoRequired') : (error.message ?? t('signup.errorGeneric')));
       setStep('error');
     } else if (data?.session) {
       // Email confirmation is disabled, so signUp returns an active session.

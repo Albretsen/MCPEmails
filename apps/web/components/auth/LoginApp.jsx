@@ -11,6 +11,8 @@ import {
   rememberConnectIntent,
   withConnectIntent,
 } from '@/lib/connect/intent-carry.mjs';
+import { isSsoRequiredError } from '@/lib/sso/enforcement';
+import { ssoUiEnabled } from '@/lib/sso/ui-flag.mjs';
 import { MIcon, MBtn } from '../MarketingPrimitives';
 import { ThemeBtn, Spinner, GoogleIcon, GitHubIcon, MicrosoftIcon, SocialButton, OrDivider } from './AuthShared';
 import { microsoftSignInEnabled } from '@/lib/auth/microsoft-flag.mjs';
@@ -70,6 +72,11 @@ export function LoginApp({ redirectTo = null, connectProvider = null }) {
       // set, exactly as before.
       url.searchParams.set('next', withConnectIntent('/dashboard', connectProvider));
     }
+    // A typed work address lets the route say "use SSO" up front when the
+    // company enforces it, instead of after the provider round trip. Only
+    // once SSO is released (NEXT_PUBLIC_SSO_ENABLED): until then the OAuth
+    // URL stays exactly as before and carries no address.
+    if (ssoUiEnabled() && !validateEmail(email)) url.searchParams.set('email', email.trim());
     return url.toString();
   }
 
@@ -123,7 +130,11 @@ export function LoginApp({ redirectTo = null, connectProvider = null }) {
 
     if (error) {
       const isBanned = error.code === 'user_banned' || /banned/i.test(error.message ?? '');
-      setServerError(isBanned ? t('login.errorAccountClosed') : t('login.errorIncorrect'));
+      setServerError(
+        isSsoRequiredError(error) ? t('shared.ssoRequired')
+          : isBanned ? t('login.errorAccountClosed')
+          : t('login.errorIncorrect'),
+      );
       setStep('error');
     } else {
       window.location.href = getRedirectDestination();
@@ -145,7 +156,7 @@ export function LoginApp({ redirectTo = null, connectProvider = null }) {
     });
 
     if (error) {
-      setServerError(error.message ?? t('login.errorGeneric'));
+      setServerError(isSsoRequiredError(error) ? t('shared.ssoRequired') : (error.message ?? t('login.errorGeneric')));
       setStep('error');
     } else {
       setStep('sent');

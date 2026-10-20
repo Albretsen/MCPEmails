@@ -1,6 +1,7 @@
 'use client';
 
 import { useTranslations } from 'next-intl';
+import { SSO_SIGN_IN_PATH } from '@/lib/sso/enforcement';
 
 /**
  * AuthErrorApp: client component rendering the /auth/error screen UI.
@@ -12,6 +13,9 @@ import { useTranslations } from 'next-intl';
 export function AuthErrorApp({ messageKey }) {
   const t = useTranslations('auth');
   const message = t(`error.${messageKey}`);
+  // Told to use SSO: the button goes to SSO sign-in, not back to the method
+  // that was just refused.
+  const ssoRequired = messageKey === 'ssoRequired';
 
   return (
     <div className="auth-shell">
@@ -81,7 +85,7 @@ export function AuthErrorApp({ messageKey }) {
           </p>
 
           <a
-            href="/login"
+            href={ssoRequired ? SSO_SIGN_IN_PATH : '/login'}
             style={{
               display: 'flex',
               alignItems: 'center',
@@ -97,7 +101,7 @@ export function AuthErrorApp({ messageKey }) {
               letterSpacing: '0.01em',
             }}
           >
-            {t('error.tryAgain')}
+            {ssoRequired ? t('error.useSso') : t('error.tryAgain')}
           </a>
         </div>
       </div>
