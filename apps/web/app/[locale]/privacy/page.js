@@ -1,5 +1,6 @@
 import { setRequestLocale, getTranslations } from 'next-intl/server';
 import { metaAlternates, localePath, OG_LOCALE, OG_IMAGE } from '@/i18n/seo';
+import { Link } from '@/i18n/navigation';
 import { Nav, Footer } from '../../../components/marketing/Sections';
 import { PRIVACY_LAST_UPDATED, EFFECTIVE_DATE } from '@/lib/legal-config';
 
@@ -419,9 +420,9 @@ export default async function PrivacyPage({ params }) {
             <a className="btn btn-primary btn-lg" href={`mailto:${CONTACT_EMAIL}`}>
               {t('cta.contactBtn')}
             </a>
-            <a className="btn btn-on-dark btn-lg" href="/terms">
+            <Link className="btn btn-on-dark btn-lg" href="/terms">
               {t('cta.termsBtn')}
-            </a>
+            </Link>
           </div>
         </div>
       </section>
