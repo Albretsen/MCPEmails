@@ -46,7 +46,7 @@ import '../../../styles/theme.css';
  * Fallback activity window, in UTC days, for a caller that passes none.
  *
  * The real window is the workspace's `analyticsRetentionDays` (Free 30,
- * Personal 30, Pro 90, Team 365), resolved once in the page component and
+ * Personal 90, Pro and Business 730), resolved once in the page component and
  * threaded into every history fetcher below. This constant only keeps those
  * fetchers callable on their own; it is not the product's answer to "how much
  * history do I get". See src/lib/analytics/retention.ts.
@@ -523,6 +523,11 @@ async function fetchAuditLog(supabase, workspaceId) {
   // down hard by tier, Auth0 at 1-30 days, is publicly complained about for it.
   // Nobody ships a 7-day audit log. Do not re-add a window here without a
   // reason that is about storage, not packaging.
+  //
+  // What it can show is bounded by storage, not by this query: the per-plan
+  // activity_log job (migration 20261020153742) never deletes a
+  // mailbox-changing call before 90 days on any plan, and keeps read-only
+  // calls at least as long as the plan's Usage window.
 
   const [countResult, rowsResult] = await Promise.all([
     supabase

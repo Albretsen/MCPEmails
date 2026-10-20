@@ -38,7 +38,31 @@ export type ToolsCallPreflight =
     /** The workspace_action_allowance() row; null when not asked for or none. */
     allowance: Row | null;
     allowanceRequested: boolean;
+    /**
+     * mcp_tools_call_gate only: the reservation it made, if it made one. Null
+     * when none was asked for, the workspace is not metered, or the answer
+     * came from the older preflight.
+     */
+    reservation: GateReservation | null;
+    /** mcp_tools_call_gate only: true when it already handled last_used_at. */
+    lastUsedHandled: boolean;
   };
+
+/**
+ * A reservation mcp_tools_call_gate made with `reserve_action_usage()` before
+ * the edge function had decided anything. It is used only when the resolved
+ * tool, cap and window match what the edge function would have reserved
+ * itself, and released otherwise. `row` is that function's answer; `error` is
+ * set instead when it raised, which the separate call treated as fail-open.
+ */
+export interface GateReservation {
+  toolName: string;
+  cap: number;
+  periodStart: string;
+  periodEnd: string;
+  row: { reservation_id: string | null; allowed: boolean; used_actions: number } | null;
+  error: { message: string; code: string | null } | null;
+}
 
 /** The RPC's parameters. Window starts are ISO strings from the caller's clock. */
 export function preflightParams(
@@ -53,6 +77,64 @@ export function preflightParams(
     p_workspace_window_start: workspaceWindowStart,
     p_include_allowance: includeAllowance,
   };
+}
+
+/** The tools/call gate RPC (migration 20261020214737). */
+export const GATE_RPC = "mcp_tools_call_gate";
+
+/**
+ * mcp_tools_call_gate's parameters: the preflight's, plus the tool to reserve
+ * against (null: reserve nothing) and the meter version to reserve under.
+ */
+export function gateParams(
+  keyHash: string,
+  keyWindowStarts: string[],
+  workspaceWindowStart: string,
+  includeAllowance: boolean,
+  reserveToolName: string | null,
+  meterVersion: number,
+): Record<string, unknown> {
+  return {
+    ...preflightParams(keyHash, keyWindowStarts, workspaceWindowStart, includeAllowance),
+    p_reserve_tool_name: includeAllowance ? reserveToolName : null,
+    p_meter_version: meterVersion,
+  };
+}
+
+/**
+ * The reservation id inside a gate answer, read as leniently as possible.
+ *
+ * Called on ANY answer, including one parsePreflight rejects: a reservation
+ * that exists in the database must be released even when the rest of the
+ * answer is unusable, or it would hold one unit of the cap for 15 minutes.
+ */
+export function reservationIdIn(data: unknown): string | null {
+  if (!isRow(data) || !isRow(data.reservation) || !isRow(data.reservation.row)) return null;
+  const id = data.reservation.row.reservation_id;
+  return typeof id === "string" && id.length > 0 ? id : null;
+}
+
+/** undefined: present but not the expected shape. */
+function parseReservation(value: unknown): GateReservation | null | undefined {
+  if (value === null || value === undefined) return null;
+  if (!isRow(value)) return undefined;
+  const { tool_name, cap, period_start, period_end } = value;
+  if (typeof tool_name !== "string" || !isCount(cap)) return undefined;
+  if (typeof period_start !== "string" || typeof period_end !== "string") return undefined;
+  const terms = { toolName: tool_name, cap, periodStart: period_start, periodEnd: period_end };
+  if (typeof value.error === "string") {
+    return {
+      ...terms,
+      row: null,
+      error: { message: value.error, code: typeof value.error_code === "string" ? value.error_code : null },
+    };
+  }
+  const row = value.row ?? null;
+  if (row === null) return { ...terms, row: null, error: null };
+  if (!isRow(row) || typeof row.allowed !== "boolean" || !isCount(row.used_actions)) return undefined;
+  const id = row.reservation_id ?? null;
+  if (id !== null && typeof id !== "string") return undefined;
+  return { ...terms, row: { reservation_id: id, allowed: row.allowed, used_actions: row.used_actions }, error: null };
 }
 
 const isRow = (value: unknown): value is Row =>
@@ -94,6 +176,9 @@ export function parsePreflight(
   const allowance = data.allowance ?? null;
   if (allowance !== null && !isRow(allowance)) return null;
 
+  const reservation = parseReservation(data.reservation);
+  if (reservation === undefined) return null;
+
   return {
     kind: "key",
     key,
@@ -103,6 +188,8 @@ export function parsePreflight(
     workspaceCount: workspace === null ? null : workspaceCount as number,
     allowance: includeAllowance ? allowance : null,
     allowanceRequested: includeAllowance,
+    reservation,
+    lastUsedHandled: typeof data.last_used_stamped === "boolean",
   };
 }
 

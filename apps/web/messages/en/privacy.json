@@ -114,7 +114,7 @@
       },
       {
         "category": "MCP tool call activity log",
-        "period": "90 days on every plan",
+        "period": "Up to 90 days on Free and Personal, up to 2 years on Pro and Business",
         "reason": "Security; usage history in your dashboard"
       },
       {

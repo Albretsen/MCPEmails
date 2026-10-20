@@ -1049,6 +1049,9 @@ const SQL_ALLOWED = new Set([
   // It READS the column and never writes it; the compare-and-swap stays in
   // TypeScript through the constant.
   "supabase/migrations/20261020100000_mcp_tools_call_preflight.sql",
+  // mcp_tools_call_gate, its successor, for the same reason: it reads the
+  // column into the key row and never writes it.
+  "supabase/migrations/20261020214737_mcp_tools_call_gate.sql",
 ]);
 
 /**
@@ -1411,7 +1414,6 @@ Deno.test("the file list is git's, not a hand-maintained root list", () => {
   for (
     const tree of [
       "apps/web/components/",
-      "supabase/functions/gmail-token-refresh/",
       "supabase/functions/outlook-token-refresh/",
       "supabase/functions/synthetic-monitor/",
       "supabase/functions/system-notify/",

@@ -1,5 +1,5 @@
 import '../../styles/dashboard.css';
-import AppLocaleProvider from '../../components/i18n/AppLocaleProvider';
+import AuthLocaleProvider from '../../components/i18n/AuthLocaleProvider';
 
 /**
  * Auth route group layout.
@@ -12,9 +12,9 @@ import AppLocaleProvider from '../../components/i18n/AppLocaleProvider';
  * defined there. No session check: the proxy handles redirecting
  * already-authenticated users.
  *
- * Wrapped in AppLocaleProvider so auth screens follow the user's language
+ * Wrapped in AuthLocaleProvider so auth screens follow the user's language
  * preference (localStorage / browser) without a URL locale prefix.
  */
 export default function AuthLayout({ children }) {
-  return <AppLocaleProvider>{children}</AppLocaleProvider>;
+  return <AuthLocaleProvider>{children}</AuthLocaleProvider>;
 }

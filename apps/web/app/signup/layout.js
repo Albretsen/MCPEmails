@@ -1,5 +1,5 @@
 import '../../styles/dashboard.css';
-import AppLocaleProvider from '../../components/i18n/AppLocaleProvider';
+import AuthLocaleProvider from '../../components/i18n/AuthLocaleProvider';
 
 /**
  * Wraps /signup in the client-side locale provider (`?lang=` from a translated
@@ -7,5 +7,5 @@ import AppLocaleProvider from '../../components/i18n/AppLocaleProvider';
  * dashboard.css for the form design-system styles.
  */
 export default function SignupLayout({ children }) {
-  return <AppLocaleProvider readLangParam>{children}</AppLocaleProvider>;
+  return <AuthLocaleProvider readLangParam>{children}</AuthLocaleProvider>;
 }

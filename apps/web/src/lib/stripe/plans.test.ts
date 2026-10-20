@@ -246,7 +246,7 @@ test('Personal ships at the numbers it was signed off at', () => {
   assert.equal(personal.limits.maxInboxes, 3);
   assert.equal(personal.limits.maxMembers, 1);
   assert.equal(personal.limits.maxRequestsPerMinute, 120);
-  assert.equal(personal.limits.analyticsRetentionDays, 30);
+  assert.equal(personal.limits.analyticsRetentionDays, 90);
   assert.equal(personal.limits.maxMonthlyToolCalls, 100_000);
   // A paid plan the customer cannot cancel themselves is a support ticket
   // waiting to happen, and in several jurisdictions a legal problem.
@@ -302,7 +302,7 @@ test('a grandfathered user on Personal keeps unlimited inboxes', () => {
   // It lifts the inbox cap and nothing else: they are still a Personal account.
   assert.equal(grandfathered.maxMembers, 1);
   assert.equal(grandfathered.maxRequestsPerMinute, 120);
-  assert.equal(grandfathered.analyticsRetentionDays, 30);
+  assert.equal(grandfathered.analyticsRetentionDays, 90);
   assert.equal(grandfathered.maxMonthlyToolCalls, 100_000);
   assert.equal(grandfathered.supportTier, 'email');
   assert.equal(grandfathered.teamRolesEnabled, false);
@@ -511,8 +511,9 @@ test('Business claims only what exists', () => {
   assert.equal(limits.ssoEnabled, false);
   assert.equal(limits.auditLogEnabled, false);
   assert.equal(limits.supportTier, 'email');
-  // activity_log is deleted after 90 days on every plan.
-  assert.equal(limits.analyticsRetentionDays, 90);
+  // Two years, the same as Pro, kept by the per-plan activity_log job
+  // (migration 20261020153742) rather than the old flat 90-day delete.
+  assert.equal(limits.analyticsRetentionDays, 730);
   for (const plan of Object.values(PLANS)) {
     for (const feature of plan.features) {
       assert.ok(

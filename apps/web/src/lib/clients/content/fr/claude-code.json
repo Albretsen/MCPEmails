@@ -1,7 +1,7 @@
 {
   "_sources": [
     "apps/web/components/dashboard/Pages.jsx (MCP_CLIENTS) + apps/web/messages/en/dashboard.json (clients.*)",
-    "apps/web/app/api/mcp/route.ts",
+    "supabase/functions/mcp-server/web-ingress.ts",
     "apps/web/app/.well-known/oauth-authorization-server/route.ts",
     "https://code.claude.com/docs/en/mcp",
     "docs/token-cost/research-spec.md"

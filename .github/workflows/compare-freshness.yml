@@ -1,0 +1,58 @@
+name: Comparison sources freshness
+
+# Weekly reminder to re-read the sources behind the comparison pages
+# (/best-email-mcp-servers, /native-connectors-vs-mcp). Opens one issue when a
+# source is older than MAX_AGE_DAYS, updates that same issue on later runs, and
+# closes it once every source is fresh again.
+#
+# Deliberately a separate workflow and NOT a job in ci.yml: `CI passed` gates
+# every production deploy, and a check that fails because the calendar moved
+# would block unrelated deploys. See apps/web/scripts/compare-freshness.mjs.
+
+on:
+  schedule:
+    - cron: '0 6 * * 1' # Mondays 06:00 UTC
+  workflow_dispatch:
+
+permissions:
+  contents: read
+  issues: write
+
+concurrency:
+  group: compare-freshness
+  cancel-in-progress: false
+
+jobs:
+  freshness:
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    env:
+      MAX_AGE_DAYS: '45'
+      TITLE: 'Comparison pages: sources due for a re-read'
+      GH_TOKEN: ${{ github.token }}
+    steps:
+      - uses: actions/checkout@v7
+      - uses: actions/setup-node@v7
+        with:
+          node-version-file: .nvmrc
+      # Plain .mjs with no dependencies, so no npm ci.
+      - name: Check source dates
+        id: check
+        run: |
+          set +e
+          node apps/web/scripts/compare-freshness.mjs > report.md
+          echo "stale=$([ $? -ne 0 ] && echo true || echo false)" >> "$GITHUB_OUTPUT"
+          cat report.md
+      - name: Open, update or close the issue
+        run: |
+          existing=$(gh issue list --state open --search "\"$TITLE\" in:title" --json number --jq '.[0].number // empty')
+          if [ "${{ steps.check.outputs.stale }}" = "true" ]; then
+            if [ -n "$existing" ]; then
+              gh issue edit "$existing" --body-file report.md
+              gh issue comment "$existing" --body "Still due as of $(date -u +%F)."
+            else
+              gh issue create --title "$TITLE" --body-file report.md
+            fi
+          elif [ -n "$existing" ]; then
+            gh issue close "$existing" --comment "Every source re-read within $MAX_AGE_DAYS days as of $(date -u +%F)."
+          fi

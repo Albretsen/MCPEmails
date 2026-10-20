@@ -154,7 +154,8 @@
       "burstSolo": "300 / min",
       "burstPro": "1,000 / min",
       "history30": "30 days",
-      "history90": "90 days"
+      "history90": "90 days",
+      "history2y": "2 years"
     }
   },
   "faq": {
@@ -167,7 +168,7 @@
       },
       {
         "q": "What does Personal add over Free?",
-        "a": "Two more connected inboxes, no monthly cap on email actions (fair use applies), double the burst ceiling (120 requests a minute instead of 60), and email support instead of the community forum. That is the whole list. Everything else is already on Free: every MCP tool including scheduled sends, the per-inbox send review and approval hold, and the usage analytics dashboard. We do not hold features back from Free to make the paid tiers look bigger."
+        "a": "Two more connected inboxes, no monthly cap on email actions (fair use applies), double the burst ceiling (120 requests a minute instead of 60), 90 days of analytics history instead of 30, and email support instead of the community forum. That is the whole list. Everything else is already on Free: every MCP tool including scheduled sends, the per-inbox send review and approval hold, and the usage analytics dashboard. We do not hold features back from Free to make the paid tiers look bigger."
       },
       {
         "q": "What counts as an email action?",
@@ -183,7 +184,7 @@
       },
       {
         "q": "What's the difference between Personal, Pro and Business?",
-        "a": "Personal is one seat with three connected inboxes, a 120 requests/minute ceiling, and email support. Pro is still one seat and one login, with up to 10 connected mailboxes, so one person can run the mailboxes a company has (sales, invoices, support, info). It also has a 300 requests/minute ceiling, 90 days of analytics history instead of 30, and email support. Business is for more mailboxes or more people: 10 mailboxes included and $3 a month for each one after that, unlimited members with roles (viewer, member, admin) at no extra cost, admins who approve sends held for review, several workspaces on one subscription, and a 1,000 requests/minute ceiling."
+        "a": "Personal is one seat with three connected inboxes, a 120 requests/minute ceiling, 90 days of analytics history, and email support. Pro is still one seat and one login, with up to 10 connected mailboxes, so one person can run the mailboxes a company has (sales, invoices, support, info). It also has a 300 requests/minute ceiling, two years of analytics history instead of 90 days, and email support. Business is for more mailboxes or more people: 10 mailboxes included and $3 a month for each one after that, unlimited members with roles (viewer, member, admin) at no extra cost, admins who approve sends held for review, several workspaces on one subscription, and a 1,000 requests/minute ceiling."
       },
       {
         "q": "We are a company with several mailboxes. Which plan do we need?",

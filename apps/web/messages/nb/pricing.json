@@ -154,7 +154,8 @@
       "burstSolo": "300 / min",
       "burstPro": "1 000 / min",
       "history30": "30 dager",
-      "history90": "90 dager"
+      "history90": "90 dager",
+      "history2y": "2 år"
     }
   },
   "faq": {
@@ -167,7 +168,7 @@
       },
       {
         "q": "Hva gir Personal utover Free?",
-        "a": "To innbokser til, ingen månedlig grense på e-posthandlinger (rimelig bruk gjelder), dobbelt så høyt burst-tak (120 forespørsler per minutt i stedet for 60), og e-poststøtte i stedet for fellesskapsforumet. Det er hele listen. Alt annet ligger allerede i Free: alle MCP-verktøyene, inkludert planlagte sendinger, godkjenning før sending per innboks, og dashbordet for bruksanalyse. Vi holder ikke funksjoner tilbake fra Free for å få de betalte planene til å se større ut."
+        "a": "To innbokser til, ingen månedlig grense på e-posthandlinger (rimelig bruk gjelder), dobbelt så høyt burst-tak (120 forespørsler per minutt i stedet for 60), 90 dager analysehistorikk i stedet for 30, og e-poststøtte i stedet for fellesskapsforumet. Det er hele listen. Alt annet ligger allerede i Free: alle MCP-verktøyene, inkludert planlagte sendinger, godkjenning før sending per innboks, og dashbordet for bruksanalyse. Vi holder ikke funksjoner tilbake fra Free for å få de betalte planene til å se større ut."
       },
       {
         "q": "Hva regnes som en e-posthandling?",
@@ -183,7 +184,7 @@
       },
       {
         "q": "Hva er forskjellen mellom Personal, Pro og Business?",
-        "a": "Personal er én bruker med tre tilkoblede innbokser, et tak på 120 forespørsler per minutt og e-poststøtte. Pro er fortsatt én bruker og én innlogging, med opptil 10 tilkoblede postkasser, så én person kan håndtere postkassene et firma har (salg, faktura, support, post@). I tillegg kommer et tak på 300 forespørsler per minutt, 90 dager analysehistorikk i stedet for 30, og e-poststøtte. Business er for flere postkasser eller flere folk: 10 postkasser inkludert og $3 i måneden for hver ekstra, ubegrenset antall medlemmer med roller (leser, medlem, administrator) uten ekstra kostnad, administratorer som godkjenner sendinger som venter, flere arbeidsområder på ett abonnement og et tak på 1 000 forespørsler per minutt."
+        "a": "Personal er én bruker med tre tilkoblede innbokser, et tak på 120 forespørsler per minutt, 90 dager analysehistorikk og e-poststøtte. Pro er fortsatt én bruker og én innlogging, med opptil 10 tilkoblede postkasser, så én person kan håndtere postkassene et firma har (salg, faktura, support, post@). I tillegg kommer et tak på 300 forespørsler per minutt, to års analysehistorikk i stedet for 90 dager, og e-poststøtte. Business er for flere postkasser eller flere folk: 10 postkasser inkludert og $3 i måneden for hver ekstra, ubegrenset antall medlemmer med roller (leser, medlem, administrator) uten ekstra kostnad, administratorer som godkjenner sendinger som venter, flere arbeidsområder på ett abonnement og et tak på 1 000 forespørsler per minutt."
       },
       {
         "q": "Vi er et firma med flere postkasser. Hvilken plan trenger vi?",

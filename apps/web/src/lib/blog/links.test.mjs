@@ -91,7 +91,8 @@ function staticRoutes(dir = localeAppDir, prefix = '') {
   for (const entry of readdirSync(dir, { withFileTypes: true })) {
     if (!entry.isDirectory() || entry.name.startsWith('[')) continue;
     const sub = join(dir, entry.name);
-    const path = `${prefix}/${entry.name}`;
+    // A route group "(name)" adds no URL segment.
+    const path = /^\(.+\)$/.test(entry.name) ? prefix : `${prefix}/${entry.name}`;
     if (readdirSync(sub).some((f) => /^page\.(js|jsx|tsx)$/.test(f))) out.push(path);
     out.push(...staticRoutes(sub, path));
   }

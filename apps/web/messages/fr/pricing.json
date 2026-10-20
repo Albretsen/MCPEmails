@@ -154,7 +154,8 @@
       "burstSolo": "300 / min",
       "burstPro": "1 000 / min",
       "history30": "30 jours",
-      "history90": "90 jours"
+      "history90": "90 jours",
+      "history2y": "2 ans"
     }
   },
   "faq": {
@@ -167,7 +168,7 @@
       },
       {
         "q": "Qu'apporte Personal par rapport à Free ?",
-        "a": "Deux boîtes connectées de plus, aucun plafond mensuel d'actions e-mail (usage équitable), un plafond de pointe doublé (120 requêtes par minute au lieu de 60) et le support par e-mail à la place du forum communautaire. C'est toute la liste. Le reste est déjà inclus dans Free : tous les outils MCP, y compris les envois programmés, la validation avant envoi réglable par boîte, et le tableau de bord d'analytique d'usage. Nous ne retenons pas de fonctionnalités sur Free pour faire paraître les formules payantes plus riches."
+        "a": "Deux boîtes connectées de plus, aucun plafond mensuel d'actions e-mail (usage équitable), un plafond de pointe doublé (120 requêtes par minute au lieu de 60), 90 jours d'historique d'analytique au lieu de 30 et le support par e-mail à la place du forum communautaire. C'est toute la liste. Le reste est déjà inclus dans Free : tous les outils MCP, y compris les envois programmés, la validation avant envoi réglable par boîte, et le tableau de bord d'analytique d'usage. Nous ne retenons pas de fonctionnalités sur Free pour faire paraître les formules payantes plus riches."
       },
       {
         "q": "Qu'est-ce qui compte comme une action e-mail ?",
@@ -183,7 +184,7 @@
       },
       {
         "q": "Quelle est la différence entre Personal, Pro et Business ?",
-        "a": "Personal, c'est un seul utilisateur avec trois boîtes connectées, un plafond de 120 requêtes par minute et le support par e-mail. Pro, c'est toujours un seul utilisateur et une seule connexion, avec jusqu'à 10 boîtes connectées : une personne peut donc gérer les boîtes d'une entreprise (ventes, factures, support, info). S'y ajoutent un plafond de 300 requêtes par minute, 90 jours d'historique d'analytique au lieu de 30, et le support par e-mail. Business, c'est pour plus de boîtes ou plus de personnes : 10 boîtes incluses et 3 $ par mois pour chaque boîte en plus, des membres illimités avec rôles (observateur, membre, administrateur) sans surcoût, des administrateurs qui valident les envois en attente, plusieurs espaces de travail sur un seul abonnement et un plafond de 1 000 requêtes par minute."
+        "a": "Personal, c'est un seul utilisateur avec trois boîtes connectées, un plafond de 120 requêtes par minute, 90 jours d'historique d'analytique et le support par e-mail. Pro, c'est toujours un seul utilisateur et une seule connexion, avec jusqu'à 10 boîtes connectées : une personne peut donc gérer les boîtes d'une entreprise (ventes, factures, support, info). S'y ajoutent un plafond de 300 requêtes par minute, deux ans d'historique d'analytique au lieu de 90 jours, et le support par e-mail. Business, c'est pour plus de boîtes ou plus de personnes : 10 boîtes incluses et 3 $ par mois pour chaque boîte en plus, des membres illimités avec rôles (observateur, membre, administrateur) sans surcoût, des administrateurs qui valident les envois en attente, plusieurs espaces de travail sur un seul abonnement et un plafond de 1 000 requêtes par minute."
       },
       {
         "q": "Nous sommes une entreprise avec plusieurs boîtes. Quelle formule nous faut-il ?",
