@@ -37,7 +37,7 @@
 /** Null until OpenAI approves the listing. See the header comment. */
 export const CHATGPT_DIRECTORY_LISTING_URL = null;
 
-export const CHATGPT_LOCALES = Object.freeze(['en', 'es', 'fr', 'nb', 'zh']);
+export const CHATGPT_LOCALES = Object.freeze(['en', 'es', 'fr', 'nb', 'zh', 'de']);
 export const CHATGPT_BLOG_SLUG = 'connect-chatgpt-to-email';
 export const CHATGPT_DOCS_PATH = '/docs/chatgpt';
 

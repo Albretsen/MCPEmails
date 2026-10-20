@@ -21,6 +21,7 @@ import {
   showsChatgptFaq,
 } from './chatgpt.mjs';
 import { providerFaq } from './faq.mjs';
+import { routing } from '../../i18n/routing.ts';
 import { connectJsonLd } from '../../i18n/seo.ts';
 import { stripTags } from '../../../components/marketing/RichText.jsx';
 import { getPost, getPostLocales } from '../blog/posts.js';
@@ -31,8 +32,14 @@ const docs = (locale) =>
   JSON.parse(readFileSync(path.join(here, '../clients/content', locale, 'chatgpt.json'), 'utf8'));
 const EM_DASH = new RegExp('[' + String.fromCharCode(0x2014, 0x2015) + ']');
 const PLAN_LIST = /Plus.{1,3}Pro.{1,3}Business.{1,3}Enterprise.{1,6}Edu/;
-const MENU_PATH = /Settings[,、]\s*Apps and Connectors[,、]\s*Advanced settings/;
+// English UI labels in most locales, as /docs/chatgpt writes them; German
+// /docs/chatgpt uses the German labels, and so does this copy.
+const MENU_PATH = /Settings[,、]\s*Apps and Connectors[,、]\s*Advanced settings|Einstellungen, Apps und Konnektoren, Erweiterte Einstellungen/;
 const MCP_URL = 'https://mcpemails.com/api/mcp';
+
+test('the copy covers every routed locale', () => {
+  assert.deepEqual([...CHATGPT_LOCALES].sort(), [...routing.locales].sort());
+});
 
 test('the flag is off: OpenAI has not listed the app yet', () => {
   assert.equal(CHATGPT_DIRECTORY_LISTING_URL, null);
@@ -89,7 +96,7 @@ test('the claims match /docs/chatgpt in every locale', () => {
     assert.ok(c.steps.some((s) => s.includes(`<code>${MCP_URL}</code>`)), `${locale}: connector URL`);
     assert.ok(c.faqA.includes(MCP_URL), `${locale}: FAQ connector URL`);
     assert.ok(c.steps.some((s) => s.includes('OAuth')) && c.faqA.includes('OAuth'), `${locale}: OAuth`);
-    // The menu path is written in English in every locale, as /docs/chatgpt does.
+    // The menu path is written the way /docs/chatgpt writes it in that locale.
     assert.ok(c.steps.some((s) => MENU_PATH.test(s)), locale);
     assert.ok(MENU_PATH.test(answer), locale);
     assert.ok(c.steps.some((s) => s.includes('<b>+</b>')), `${locale}: the per-chat + menu step`);
@@ -128,7 +135,7 @@ test('the provider name is filled in, and the directory variant swaps the steps'
       c.directoryFaqA.replaceAll('{provider}', 'AOL Mail'));
   }
   // An unknown locale falls back to English rather than throwing.
-  assert.deepEqual(await getChatgptCopy('de'), copy('en'));
+  assert.deepEqual(await getChatgptCopy('xx'), copy('en'));
 });
 
 test('the blog link is locale-aware exactly where the post is translated', () => {
