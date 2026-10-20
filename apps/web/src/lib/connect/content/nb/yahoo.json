@@ -75,7 +75,7 @@
     },
     {
       "q": "Kan ChatGPT kobles til Yahoo Mail?",
-      "a": "Ja, ved å legge til MCP Emails som en egendefinert kobling. Slå på utviklermodus i ChatGPT (chatgpt.com, på Plus, Pro, Business, Enterprise og Edu), opprett en kobling med MCP Emails-URL-en, velg OAuth og logg inn. Yahoo-innboksen du koblet til her er da tilgjengelig i hver samtale der utviklermodus er slått på, og det samme app-passordet fungerer også for Claude."
+      "a": "Ja, ved å legge til MCPEmails som en egendefinert kobling. Slå på utviklermodus i ChatGPT (chatgpt.com, på Plus, Pro, Business, Enterprise og Edu), opprett en kobling med MCPEmails-URL-en, velg OAuth og logg inn. Yahoo-innboksen du koblet til her er da tilgjengelig i hver samtale der utviklermodus er slått på, og det samme app-passordet fungerer også for Claude."
     },
     {
       "q": "Hva er IMAP- og SMTP-innstillingene for Yahoo Mail?",

@@ -76,7 +76,7 @@
     },
     {
       "q": "Claude 能连接 Apple Mail 吗？",
-      "a": "不能连接这个应用本身，也不需要。Apple Mail 显示的是存放在邮件服务商那里的邮箱。如果你的是 iCloud 地址，在这里用 App 专用密码连接，Claude 或 ChatGPT 就能看到相同的文件夹和邮件，仅存放在“我的 Mac 上”的文件夹除外。如果 Apple Mail 里显示的是 Gmail、Outlook、Yahoo 或工作邮箱，请改为连接对应的服务商。MCP Emails 是托管服务，Mac 无需开机。"
+      "a": "不能连接这个应用本身，也不需要。Apple Mail 显示的是存放在邮件服务商那里的邮箱。如果你的是 iCloud 地址，在这里用 App 专用密码连接，Claude 或 ChatGPT 就能看到相同的文件夹和邮件，仅存放在“我的 Mac 上”的文件夹除外。如果 Apple Mail 里显示的是 Gmail、Outlook、Yahoo 或工作邮箱，请改为连接对应的服务商。MCPEmails 是托管服务，Mac 无需开机。"
     },
     {
       "q": "iCloud 邮件的 IMAP 和 SMTP 设置是什么？",
@@ -96,7 +96,7 @@
     },
     {
       "q": "能访问 iCloud 日历、通讯录、备忘录或云盘吗？",
-      "a": "不能。MCP Emails 只处理邮件：通过 IMAP 和 SMTP 访问你的 iCloud 收件箱及其文件夹。日历、通讯录、备忘录、提醒事项和 iCloud 云盘都不会被连接，App 专用密码只用于邮件。"
+      "a": "不能。MCPEmails 只处理邮件：通过 IMAP 和 SMTP 访问你的 iCloud 收件箱及其文件夹。日历、通讯录、备忘录、提醒事项和 iCloud 云盘都不会被连接，App 专用密码只用于邮件。"
     }
   ],
   "ctaBand": {

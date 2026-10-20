@@ -76,7 +76,7 @@
     },
     {
       "q": "¿Puede Claude conectarse a Apple Mail?",
-      "a": "A la app no, y no hace falta. Apple Mail muestra buzones que están en un proveedor. Si el tuyo es una dirección de iCloud, conéctala aquí con una contraseña de aplicación y Claude o ChatGPT verán las mismas carpetas y mensajes, salvo las carpetas guardadas solo En mi Mac. Si Apple Mail muestra una cuenta de Gmail, Outlook, Yahoo o del trabajo, conecta ese proveedor. MCP Emails es un servicio alojado, así que tu Mac no tiene que estar encendido."
+      "a": "A la app no, y no hace falta. Apple Mail muestra buzones que están en un proveedor. Si el tuyo es una dirección de iCloud, conéctala aquí con una contraseña de aplicación y Claude o ChatGPT verán las mismas carpetas y mensajes, salvo las carpetas guardadas solo En mi Mac. Si Apple Mail muestra una cuenta de Gmail, Outlook, Yahoo o del trabajo, conecta ese proveedor. MCPEmails es un servicio alojado, así que tu Mac no tiene que estar encendido."
     },
     {
       "q": "¿Cuáles son los ajustes IMAP y SMTP de iCloud Mail?",
@@ -96,7 +96,7 @@
     },
     {
       "q": "¿Llega a Calendario, Contactos, Notas o iCloud Drive?",
-      "a": "No. MCP Emails solo gestiona el correo: tu bandeja de iCloud y sus carpetas, por IMAP y SMTP. Calendario, Contactos, Notas, Recordatorios e iCloud Drive no se conectan, y la contraseña de aplicación solo se usa para el correo."
+      "a": "No. MCPEmails solo gestiona el correo: tu bandeja de iCloud y sus carpetas, por IMAP y SMTP. Calendario, Contactos, Notas, Recordatorios e iCloud Drive no se conectan, y la contraseña de aplicación solo se usa para el correo."
     }
   ],
   "ctaBand": {
