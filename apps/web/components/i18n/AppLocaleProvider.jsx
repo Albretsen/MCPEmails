@@ -3,6 +3,7 @@
 import { createContext, useContext, useEffect, useState, useMemo, useCallback } from 'react';
 import { NextIntlClientProvider } from 'next-intl';
 import { routing } from '@/i18n/routing';
+import { withEnglishFallback } from '@/i18n/locale-policy.mjs';
 
 import enDashboard from '../../messages/en/dashboard.json';
 import enDashboardChrome from '../../messages/en/dashboardChrome.json';
@@ -43,6 +44,19 @@ const MESSAGES = {
   fr: { dashboard: frDashboard, dashboardChrome: frDashboardChrome, auth: frAuth, common: frCommon },
   zh: { dashboard: zhDashboard, dashboardChrome: zhDashboardChrome, auth: zhAuth, common: zhCommon },
 };
+
+/**
+ * What each language actually renders: a frozen locale (zh, see
+ * src/i18n/locale-policy.mjs) is laid over English, so a key added after the
+ * freeze shows the English string rather than a raw key path. Computed once at
+ * module load; full locales are passed through untouched.
+ */
+const EFFECTIVE_MESSAGES = Object.fromEntries(
+  Object.entries(MESSAGES).map(([code, messages]) => [
+    code,
+    withEnglishFallback(code, messages, MESSAGES.en),
+  ]),
+);
 
 const STORAGE_KEY = 'mcpe-locale';
 
@@ -121,7 +135,7 @@ export default function AppLocaleProvider({ children }) {
 
   return (
     <AppLocaleContext.Provider value={ctx}>
-      <NextIntlClientProvider locale={locale} messages={MESSAGES[locale]}>
+      <NextIntlClientProvider locale={locale} messages={EFFECTIVE_MESSAGES[locale]}>
         {children}
       </NextIntlClientProvider>
     </AppLocaleContext.Provider>

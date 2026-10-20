@@ -273,6 +273,7 @@
     "linkOauth": "OAuth-tilkobling",
     "linkProviders": "Leverandørstøtte",
     "linkReadOnly": "Skrivebeskyttet tilgang",
+    "linkClients": "Oppsett av MCP-klienter",
     "linkPrivacy": "Personvern",
     "linkTerms": "Vilkår",
     "linkWithdrawal": "Angrerett",

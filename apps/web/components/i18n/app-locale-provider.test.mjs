@@ -40,6 +40,7 @@ import assert from 'node:assert/strict';
 import { readFileSync } from 'node:fs';
 import { createElement } from 'react';
 import { installDom, mount, flush, waitFor } from '../../scripts/test-dom.mjs';
+import { withEnglishFallback } from '../../src/i18n/locale-policy.mjs';
 
 const window = installDom();
 // installDom() does not expose storage, and the provider reads the bare global.
@@ -59,13 +60,22 @@ const STORAGE_KEY = 'mcpe-locale';
 /** The language buttons on the Settings page, by their own-language names. */
 const AUTONYM = { en: 'English', nb: 'Norsk', es: 'Español', fr: 'Français', zh: '中文' };
 
-/** The catalogs, read straight off disk: the reference everything is held to. */
-const CATALOG = Object.fromEntries(LOCALES.map((locale) => [
+/** The catalogs, read straight off disk. */
+const RAW_CATALOG = Object.fromEntries(LOCALES.map((locale) => [
   locale,
   Object.fromEntries(NAMESPACES.map((ns) => [
     ns,
     JSON.parse(readFileSync(new URL(`../../messages/${locale}/${ns}.json`, import.meta.url), 'utf8')),
   ])),
+]));
+/**
+ * What each language should render, the reference everything is held to: the
+ * file as it is for a full locale, and laid over English for a frozen one (zh),
+ * per src/i18n/locale-policy.mjs.
+ */
+const CATALOG = Object.fromEntries(LOCALES.map((locale) => [
+  locale,
+  withEnglishFallback(locale, RAW_CATALOG[locale], RAW_CATALOG.en),
 ]));
 
 // ---------------------------------------------------------------------------

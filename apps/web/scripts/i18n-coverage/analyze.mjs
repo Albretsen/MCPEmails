@@ -40,6 +40,7 @@
 
 import { readFileSync, readdirSync, statSync, existsSync } from 'node:fs';
 import path from 'node:path';
+import { FROZEN_LOCALES } from '../../src/i18n/locale-policy.mjs';
 
 const SOURCE_EXT = ['.js', '.jsx', '.ts', '.tsx', '.mjs'];
 const ROUTE_FILE = /^(page|layout|not-found|error|global-error|loading|template|default)\.(js|jsx|ts|tsx)$/;
@@ -132,9 +133,14 @@ export function hasKey(messages, dotted) {
 }
 
 /**
+ * Message keys and namespace files are required in every locale on disk except
+ * the frozen ones (src/i18n/locale-policy.mjs). A frozen locale is laid over
+ * English at runtime, so a key it lacks renders English and is not a violation.
+ *
  * @param {string} webRoot  the app root: holds app/, components/, src/, messages/
+ * @param {{ frozenLocales?: readonly string[] }} [options]
  */
-export function analyze(webRoot) {
+export function analyze(webRoot, { frozenLocales = FROZEN_LOCALES } = {}) {
   const appDir = path.join(webRoot, 'app');
   const rel = (file) => path.relative(webRoot, file).split(path.sep).join('/');
   const sources = new Map();
@@ -183,6 +189,7 @@ export function analyze(webRoot) {
 
   const localesDir = path.join(webRoot, 'messages');
   const locales = readdirSync(localesDir).filter((name) => statSync(path.join(localesDir, name)).isDirectory());
+  const requiredLocales = locales.filter((locale) => !frozenLocales.includes(locale));
   const messages = {};
   for (const locale of locales) {
     messages[locale] = {};
@@ -193,7 +200,7 @@ export function analyze(webRoot) {
     }
   }
   for (const namespace of requestNamespaces) {
-    for (const locale of locales) {
+    for (const locale of requiredLocales) {
       if (!(namespace in messages[locale])) {
         violations.push({ type: 'missing-file', detail: `messages/${locale}/${namespace}.json is loaded by src/i18n/request.ts but does not exist` });
       }
@@ -344,7 +351,7 @@ export function analyze(webRoot) {
     for (const [key, member] of keys) {
       const namespace = key.split('.')[0];
       const rest = key.slice(namespace.length + 1);
-      for (const locale of locales) {
+      for (const locale of requiredLocales) {
         const tree = messages[locale][namespace];
         if (tree === undefined || (rest && !hasKey(tree, rest))) {
           violations.push({ type: 'missing-key', route: rel(file), file: member, locale, key, detail: `${member} reads "${key}", which messages/${locale}/${namespace}.json does not define` });
@@ -363,5 +370,5 @@ export function analyze(webRoot) {
     return true;
   });
 
-  return { requestNamespaces, appNamespaces, locales, routes, violations: unique };
+  return { requestNamespaces, appNamespaces, locales, requiredLocales, routes, violations: unique };
 }

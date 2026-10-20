@@ -145,11 +145,19 @@ export const PINNED_RELATED = {
  * outbound links at all, and it is the highest-priority page here. Internal
  * links are the whole reason this set is crawlable, so running out of siblings
  * has to degrade into a wider net rather than into nothing.
+ *
+ * With `locale`, only providers whose page exists in that locale are linked.
+ * A frozen locale (zh, see src/i18n/locale-policy.mjs) may lack newer
+ * providers, and the page links its siblings with the locale prefix, so an
+ * unfiltered list would put a 404 on a localized page. Without `locale` the
+ * list is not filtered.
  */
-export function relatedProviders(slug, limit = 6, now = new Date()) {
+export function relatedProviders(slug, limit = 6, now = new Date(), locale = null) {
   const self = getProvider(slug);
   if (!self) return [];
-  const pool = releasedProviders(now).filter((p) => p.slug !== slug);
+  const pool = releasedProviders(now).filter(
+    (p) => p.slug !== slug && (!locale || p.locales.includes(locale)),
+  );
 
   // Rotate by slug so each page in a category seeds a different slice.
   const rotate = (list) => {

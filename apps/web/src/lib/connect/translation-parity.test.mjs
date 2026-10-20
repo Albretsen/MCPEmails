@@ -5,6 +5,7 @@ import { dirname, join } from 'node:path';
 import { fileURLToPath } from 'node:url';
 import { PROVIDERS } from './providers.mjs';
 import { CLIENTS } from '../clients/clients.mjs';
+import { FULL_LOCALES, FROZEN_LOCALES } from '../../i18n/locale-policy.mjs';
 
 /**
  * A translated provider or client page must be the SAME page as its English
@@ -82,6 +83,21 @@ for (const { name, dir, registry } of SETS) {
           assert.deepEqual(urls(value), urls(enValue), `${where} ${path}: URLs differ from English`);
         }
         assert.ok(changed > en.size / 3, `${where} looks untranslated (${changed} of ${en.size} strings differ)`);
+      }
+    }
+  });
+
+  // The locale policy (src/i18n/locale-policy.mjs): every page ships in every
+  // full locale, and may leave out a frozen one (zh), which then has no page,
+  // no hreflang and no switcher link for it. Nothing outside the two lists.
+  test(`${name}: every entry lists every full locale, and only known locales`, () => {
+    const known = new Set([...FULL_LOCALES, ...FROZEN_LOCALES]);
+    for (const entry of registry) {
+      for (const locale of FULL_LOCALES) {
+        assert.ok(entry.locales.includes(locale), `${name} ${entry.slug} is missing the full locale ${locale}`);
+      }
+      for (const locale of entry.locales) {
+        assert.ok(known.has(locale), `${name} ${entry.slug} lists ${locale}, which the locale policy does not know`);
       }
     }
   });
