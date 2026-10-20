@@ -29,6 +29,8 @@
     "test:connect-release": "node --test src/lib/connect/release.test.mjs",
     "test:connect-translations": "node --test src/lib/connect/translation-parity.test.mjs",
     "test:connect-intent": "node --test src/lib/connect/intent.test.mjs",
+    "test:connect-guides": "node --test --experimental-strip-types --experimental-test-module-mocks --import ./scripts/register-dom-tests.mjs components/marketing/connect-provider-guides.test.mjs",
+    "test:internal-links": "node --test src/lib/seo/internal-links.test.mjs",
     "test:connect-preselect-ui": "node --test --experimental-strip-types --experimental-test-module-mocks --import ./scripts/register-dom-tests.mjs components/dashboard/connect-preselect-ui.test.mjs",
     "test:connect-mode-ui": "node --test --experimental-strip-types --experimental-test-module-mocks --import ./scripts/register-dom-tests.mjs components/dashboard/connect-mode-ui.test.mjs",
     "test:connect-cta": "node --test --experimental-strip-types --experimental-test-module-mocks --import ./scripts/register-dom-tests.mjs components/marketing/connect-provider-cta.test.mjs",
