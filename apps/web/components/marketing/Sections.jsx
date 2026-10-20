@@ -12,6 +12,8 @@ import { pricingUpgradeHref } from '@/lib/billing/upgrade-intent.mjs';
 import { PLANS as CATALOGUE } from '@/lib/stripe/plans';
 import { formatPriceCents } from '@/lib/stripe/annual-offer';
 import { SupportHelpLink } from '../support/SupportHelpLink';
+import { routing } from '@/i18n/routing';
+import { languageSwitcherLinks } from '@/i18n/language-switcher.mjs';
 
 // Rich-text tag handlers shared across sections (inline code + bold).
 const RICH = {
@@ -1258,36 +1260,37 @@ export function Faq() {
  * five links on ~110 pages meant 317 of 560 internal links landed on just
  * four translated home pages, starving every other page of internal signal.
  *
- * Each option now points at the CURRENT page in that locale, which is also
+ * Each option points at the CURRENT page in that locale, which is also
  * exactly the URL the page already declares as its hreflang alternate.
  * `usePathname` here is next-intl's, so it returns the path with the locale
  * prefix already stripped ("/pricing" on both / and /es/pricing).
+ *
+ * Not every page exists in every locale (src/i18n/locale-policy.mjs): pass the
+ * page's real list as `locales`. An option for a locale the page is missing in
+ * goes to that locale's home page instead of a 404 or an English fallback URL
+ * (see src/i18n/language-switcher.mjs). Pages translated five ways can leave
+ * `locales` out.
+ *
+ * Hrefs are built by hand rather than with next-intl's `locale` prop, which
+ * always emits the prefix: under localePrefix 'as-needed' that produced
+ * /en/pricing, a 307 to /pricing.
  */
-function LanguageSwitcher() {
+function LanguageSwitcher({ locales = routing.locales }) {
   const t = useTranslations('home');
   const locale = useLocale();
   // Falls back to the home path if the router has not resolved a pathname,
   // so the statically rendered HTML never ships an empty href.
   const pathname = usePathname() || '/';
-  const codes = ['en', 'nb', 'es', 'fr', 'zh'];
-  /*
-    Built by hand rather than with next-intl's `locale` prop, which always
-    emits the prefix: under localePrefix 'as-needed' that produced /en/pricing,
-    a 307 to /pricing. A redirect hop on every page, on a URL that does not
-    match the hreflang the page declares for itself, is the thing this change
-    exists to avoid.
-  */
-  const hrefFor = (code) =>
-    code === 'en' ? pathname : `/${code}${pathname === '/' ? '' : pathname}`;
+  const links = languageSwitcherLinks(pathname, locales, routing.locales);
   return (
     <div className="lang-switch" aria-label={t('languageSwitcher.label')}>
       <MIcon name="globe" size={13} color="var(--fg-3)" />
-      {codes.map((code) => (
+      {links.map(({ code, href, samePage }) => (
         <a
           key={code}
-          href={hrefFor(code)}
+          href={href}
           className={"lang-opt" + (locale === code ? " active" : "")}
-          aria-current={locale === code ? 'true' : undefined}
+          aria-current={locale === code && samePage ? 'true' : undefined}
           hrefLang={code}
         >
           {t(`languageSwitcher.${code}`)}
@@ -1337,7 +1340,11 @@ function FooterCopy({ icon, label, value, href }) {
   );
 }
 
-export function Footer() {
+/**
+ * @param {{ locales?: readonly string[] }} props  the locales the current page
+ *   exists in, for the language switcher; omit on pages present in all five.
+ */
+export function Footer({ locales } = {}) {
   const t = useTranslations('home');
   const tc = useTranslations('compare');
   // The footer renders on every locale, but three of its links point at
@@ -1357,7 +1364,7 @@ export function Footer() {
               <FooterCopy icon="mail" label={t('footer.contactLabel')} value={FOOTER_CONTACT_EMAIL} href={`mailto:${FOOTER_CONTACT_EMAIL}`} />
               <FooterCopy icon="server" label={t('footer.mcpLabel')} value={FOOTER_MCP_URL} />
             </div>
-            <LanguageSwitcher />
+            <LanguageSwitcher locales={locales} />
           </div>
           <div>
             <p className="footer-heading">{t('footer.productHeading')}</p>

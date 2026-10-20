@@ -11,8 +11,10 @@ import type { NextRequest } from 'next/server';
  * Next.js proxy entry point (formerly middleware.ts; renamed in Next.js 16).
  * Composes two concerns:
  *
- *  - next-intl handles locale negotiation, prefixing, and hreflang headers for
- *    the public marketing routes (URL-based locale).
+ *  - next-intl handles locale negotiation and prefixing for the public
+ *    marketing routes (URL-based locale). Its hreflang `Link:` header is off
+ *    (alternateLinks: false in src/i18n/routing.ts); pages declare hreflang in
+ *    their own <link rel="alternate"> tags.
  *  - updateSession refreshes the Supabase session cookie and guards protected
  *    routes for everything else (dashboard, auth, api).
  *

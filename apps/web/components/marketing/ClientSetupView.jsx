@@ -274,7 +274,7 @@ export default function ClientSetupView({ locale, client, content }) {
         </div>
       </section>
 
-      <Footer />
+      <Footer locales={client.locales} />
     </div>
   );
 }

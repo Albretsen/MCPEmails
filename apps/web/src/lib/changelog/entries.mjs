@@ -44,6 +44,13 @@ export const KINDS = ['added', 'improved', 'fixed', 'changed'];
 export const ENTRIES = [
   /* ── October 2026 ──────────────────────────────────────────── */
   {
+    date: '2026-10-20',
+    kind: 'fixed',
+    title: 'Language menu always opens a real page',
+    body:
+      'On a page that is not available in every language, the language menu in the footer used to lead to a missing page. It now opens that language\'s home page instead.',
+  },
+  {
     date: '2026-10-18',
     kind: 'added',
     title: 'Send As for IMAP inboxes',

@@ -9,6 +9,7 @@ import { tmpdir } from 'node:os';
 import path from 'node:path';
 import { fileURLToPath } from 'node:url';
 import { analyze, importSpecifiers, translationUses, literalKeys } from './analyze.mjs';
+import { FULL_LOCALES } from '../../src/i18n/locale-policy.mjs';
 
 const webRoot = path.resolve(path.dirname(fileURLToPath(import.meta.url)), '../..');
 
@@ -45,6 +46,12 @@ test('the app: the analysis actually saw the routes and their reads', () => {
   assert.deepEqual(byFile.get('app/[locale]/for/founders/page.js')?.needs, ['compare', 'forFounders', 'home']);
   assert.ok(byFile.get('app/dashboard/[[...section]]/page.js').keyCount > 500, 'dashboard literal keys were not collected');
   assert.deepEqual(real.locales.slice().sort(), ['en', 'es', 'fr', 'nb', 'zh']);
+});
+
+test('the app: every full locale is required, the frozen ones are not', () => {
+  // The locale policy (src/i18n/locale-policy.mjs): en, nb, es and fr must hold
+  // every key a route reads; zh falls back to English at runtime and may lag.
+  assert.deepEqual(real.requiredLocales.slice().sort(), FULL_LOCALES.slice().sort());
 });
 
 test('the app: nothing outside app/[locale] reads a marketing namespace', () => {
@@ -91,10 +98,10 @@ function makeApp(files) {
   return root;
 }
 
-function run(files) {
+function run(files, options) {
   const root = makeApp(files);
   try {
-    return analyze(root);
+    return analyze(root, options);
   } finally {
     rmSync(root, { recursive: true, force: true });
   }
@@ -189,6 +196,28 @@ test('synthetic: a literal key missing from one locale is reported', () => {
   });
   const missing = result.violations.filter((v) => v.type === 'missing-key');
   assert.deepEqual(missing.map((v) => `${v.locale}:${v.key}`).sort(), ['en:home.hero.missing', 'nb:home.hero.missing']);
+});
+
+test('synthetic: a key missing only in a frozen locale is not reported, one missing in a full locale still is', () => {
+  const files = {
+    'app/layout.js': ROOT_ALL,
+    'app/page.js': "import A from '../components/A';\nexport default function Page() { return <A />; }\n",
+    'components/A.jsx': "'use client';\nimport { useTranslations } from 'next-intl';\nexport default function A() { const t = useTranslations('home'); return <>{t('hero.title')}{t('nav')}</>; }\n",
+    // zh has only the hero, and no pricing or docs file at all.
+    'messages/zh/home.json': JSON.stringify({ hero: { title: 'Ni hao' } }),
+    // nb loses `nav`.
+    'messages/nb/home.json': JSON.stringify({ hero: { title: 'Hei' } }),
+  };
+  const frozen = run(files, { frozenLocales: ['zh'] });
+  assert.deepEqual(frozen.requiredLocales.slice().sort(), ['en', 'nb']);
+  assert.deepEqual(frozen.violations.map((v) => `${v.type}:${v.locale ?? ''}:${v.key ?? ''}`), ['missing-key:nb:home.nav']);
+
+  // The same files with nothing frozen: zh's gaps are violations again.
+  const strict = run(files, { frozenLocales: [] });
+  assert.deepEqual(
+    strict.violations.map((v) => `${v.type}:${v.locale ?? ''}:${v.key ?? ''}`).sort(),
+    ['missing-file::', 'missing-file::', 'missing-key:nb:home.nav', 'missing-key:zh:home.nav'],
+  );
 });
 
 test('parsing helpers', () => {
