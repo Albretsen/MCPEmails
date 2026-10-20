@@ -138,7 +138,7 @@ const TABLE_SECTIONS = [
       // is on every plan, so listing "usage analytics" as a paid feature was
       // the claim this row replaces. Values mirror `analyticsRetentionDays` in
       // src/lib/stripe/plans.ts, enforced via src/lib/analytics/retention.ts.
-      { key: 'history',   free: 'values.history30', personal: 'values.history30',   solo: 'values.history90', pro: 'values.history90' },
+      { key: 'history',   free: 'values.history30', personal: 'values.history90',   solo: 'values.history2y', pro: 'values.history2y' },
     ],
   },
   {

@@ -4363,6 +4363,32 @@ export type Database = {
           workspace_slug: string
         }[]
       }
+      activity_log_retention_preview: {
+        Args: { p_min_days?: number }
+        Returns: {
+          plan: string
+          rows_kept_by_audit_floor: number
+          rows_to_delete: number
+          rows_total: number
+          window_days: number
+        }[]
+      }
+      activity_log_retention_window_days: {
+        Args: { p_plan: string }
+        Returns: number
+      }
+      activity_log_retention_workspace_windows: {
+        Args: never
+        Returns: {
+          days: number
+          plan: string
+          workspace_id: string
+        }[]
+      }
+      activity_log_tool_is_read_only: {
+        Args: { p_tool: string }
+        Returns: boolean
+      }
       claim_billing_emails: {
         Args: { p_limit?: number }
         Returns: {
@@ -5113,6 +5139,10 @@ export type Database = {
         Returns: Json
       }
       my_workspace_ids: { Args: never; Returns: string[] }
+      purge_activity_log_batch: {
+        Args: { p_limit?: number; p_min_days?: number }
+        Returns: number
+      }
       push_recipients: {
         Args: { p_inbox_id: string }
         Returns: {
