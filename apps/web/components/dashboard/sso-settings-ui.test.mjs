@@ -21,6 +21,9 @@ import { installDom, mount, flush, waitFor } from '../../scripts/test-dom.mjs';
 
 installDom();
 
+// The section ships dark behind NEXT_PUBLIC_SSO_ENABLED; most tests run with it on.
+process.env.NEXT_PUBLIC_SSO_ENABLED = 'true';
+
 const { default: AppLocaleProvider } = await import('../i18n/AppLocaleProvider.jsx');
 const { ToastProvider } = await import('./Toast.jsx');
 const { SsoSettingsSection } = await import('./SsoSettingsSection.jsx');
@@ -78,7 +81,7 @@ test('every locale has every SSO key, without < or an em dash', async () => {
   const keys = (obj, prefix = '') =>
     Object.entries(obj).flatMap(([k, v]) => (typeof v === 'object' ? keys(v, `${prefix}${k}.`) : [`${prefix}${k}`]));
   const want = keys(S).sort();
-  for (const locale of ['en', 'es', 'fr', 'nb', 'zh']) {
+  for (const locale of ['en', 'de', 'es', 'fr', 'nb', 'zh']) {
     const messages = (await import(`../../messages/${locale}/dashboard.json`, { with: { type: 'json' } })).default;
     assert.deepEqual(keys(messages.sso).sort(), want, `${locale} has the same keys`);
     const text = JSON.stringify(messages.sso);
@@ -96,6 +99,16 @@ for (const role of ['member', 'viewer']) {
     assert.equal(requests.length, 0);
   });
 }
+
+test('flag off: renders nothing for an owner and never calls the API', async (t) => {
+  process.env.NEXT_PUBLIC_SSO_ENABLED = '';
+  t.after(() => { process.env.NEXT_PUBLIC_SSO_ENABLED = 'true'; });
+  const requests = stubFetch(t);
+  const view = await render(t, 'owner');
+  await flush();
+  assert.equal(view.container.textContent, '');
+  assert.equal(requests.length, 0);
+});
 
 test('not entitled (403): renders nothing', async (t) => {
   stubFetch(t, { getStatus: 403 });

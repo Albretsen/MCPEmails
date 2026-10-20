@@ -4,6 +4,7 @@ import { useEffect, useState } from 'react';
 import { useTranslations } from 'next-intl';
 import { Badge, Btn, Icon } from '../Primitives';
 import { useToast } from './Toast';
+import { ssoUiEnabled } from '@/lib/sso/ui-flag.mjs';
 
 /**
  * SAML single sign-on settings, on the Security page.
@@ -91,7 +92,8 @@ const AUDIT_ACTIONS = new Set([
 export function SsoSettingsSection({ userRole }) {
   const t = useTranslations('dashboard');
   const { toast } = useToast();
-  const mayManage = userRole === 'owner' || userRole === 'admin';
+  // Dark until NEXT_PUBLIC_SSO_ENABLED=true: no card and no /api/sso request.
+  const mayManage = ssoUiEnabled() && (userRole === 'owner' || userRole === 'admin');
 
   // undefined = loading, null = hidden (not allowed / not entitled)
   const [state, setState] = useState(undefined);
