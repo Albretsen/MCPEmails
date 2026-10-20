@@ -57,7 +57,7 @@ test('the app: every full locale is required, the frozen ones are not', () => {
 test('the app: nothing outside app/[locale] reads a marketing namespace', () => {
   // The fact that makes it safe to stop sending marketing messages to the app
   // and auth routes: their client code reads only what AppLocaleProvider
-  // bundles, or nothing at all.
+  // bundles (AuthLocaleProvider's set is a subset of it), or nothing at all.
   const offenders = real.routes
     .filter((r) => !r.file.startsWith('app/[locale]/'))
     .filter((r) => r.needs.some((namespace) => !real.appNamespaces.includes(namespace)))
@@ -65,11 +65,23 @@ test('the app: nothing outside app/[locale] reads a marketing namespace', () => 
   assert.deepEqual(offenders, []);
 });
 
-test('the app: every route outside app/[locale] that reads messages sits under AppLocaleProvider', () => {
+test('the app: every route outside app/[locale] that reads messages sits under AppLocaleProvider or AuthLocaleProvider', () => {
   const offenders = real.routes
-    .filter((r) => !r.file.startsWith('app/[locale]/') && r.needs.length > 0 && r.provider !== 'AppLocaleProvider')
+    .filter((r) => !r.file.startsWith('app/[locale]/') && r.needs.length > 0)
+    .filter((r) => r.provider !== 'AppLocaleProvider' && r.provider !== 'AuthLocaleProvider')
     .map((r) => `${r.file} (${r.provider})`);
   assert.deepEqual(offenders, []);
+});
+
+test('the app: sign-up, login and OAuth consent get the auth-only provider, the dashboard the full one', () => {
+  // The auth screens are the first thing a new visitor downloads; the two
+  // dashboard namespaces (~82 KB a language) stay out of them.
+  const byFile = new Map(real.routes.map((r) => [r.file, r]));
+  assert.deepEqual(real.authNamespaces, ['auth', 'common']);
+  for (const file of ['app/signup/page.js', 'app/(auth)/login/page.js', 'app/(auth)/forgot-password/page.js', 'app/authorize/page.js', 'app/invite/[token]/page.js']) {
+    assert.equal(byFile.get(file)?.provider, 'AuthLocaleProvider', file);
+  }
+  assert.equal(byFile.get('app/dashboard/[[...section]]/page.js')?.provider, 'AppLocaleProvider');
 });
 
 // ---------------------------------------------------------------------------

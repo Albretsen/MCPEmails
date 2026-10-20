@@ -17,11 +17,12 @@ const marketingPages = real.routes.filter((route) => route.file.startsWith('app/
 // Read on the client by the nav and footer every marketing page renders.
 const SHARED = ['compare', 'home'];
 
-test('the root layout sends no messages: a route outside app/[locale] gets only what AppLocaleProvider bundles', () => {
+test('the root layout sends no messages: a route outside app/[locale] gets only what AppLocaleProvider or AuthLocaleProvider bundles', () => {
   const outside = real.routes.filter((route) => !route.file.startsWith('app/[locale]/') && route.file !== 'app/layout.js');
   assert.ok(outside.length > 20);
   for (const route of outside) {
     if (route.provider === 'AppLocaleProvider') assert.deepEqual(route.provided, real.appNamespaces, route.file);
+    else if (route.provider === 'AuthLocaleProvider') assert.deepEqual(route.provided, real.authNamespaces, route.file);
     else assert.deepEqual(route.provided, [], `${route.file} (${route.provider})`);
   }
 });

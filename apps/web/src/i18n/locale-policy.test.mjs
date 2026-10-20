@@ -91,9 +91,11 @@ test('the server and app providers both apply the fallback', () => {
   // would show raw key paths in zh the first time a key lands without one.
   const request = readFileSync(path.join(webRoot, 'src/i18n/request.ts'), 'utf8');
   assert.match(request, /withEnglishFallback\(/);
-  const app = readFileSync(path.join(webRoot, 'components/i18n/AppLocaleProvider.jsx'), 'utf8');
-  assert.match(app, /withEnglishFallback\(/);
-  assert.match(app, /messages=\{EFFECTIVE_MESSAGES\[locale\]\}/);
+  // AppLocaleProvider and AuthLocaleProvider both render through LocaleCore,
+  // which merges every catalog it loads before handing it on.
+  const app = readFileSync(path.join(webRoot, 'components/i18n/LocaleCore.jsx'), 'utf8');
+  assert.match(app, /const effective = withEnglishFallback\(locale, raw, english\);/);
+  assert.match(app, /<NextIntlClientProvider locale=\{shownLocale\} messages=\{messages\}>/);
 });
 
 // ---------------------------------------------------------------------------
