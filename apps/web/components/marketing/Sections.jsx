@@ -1424,6 +1424,14 @@ export function Footer() {
             <SupportHelpLink label={t('footer.linkHelp')} LinkComponent={Link} />
             <Link href="/privacy">{t('footer.linkPrivacy')}</Link>
             <Link href="/terms">{t('footer.linkTerms')}</Link>
+            <Link href="/withdrawal">{t('footer.linkWithdrawal')}</Link>
+            {/* The §312k BGB entry point: reachable from every page, no login. */}
+            <Link href="/cancel">{t('footer.linkCancel')}</Link>
+            {/* The provider identification an Impressum asks for already sits
+                in section 1 of the terms (name, address, register, org and VAT
+                number, contact), so the link points there rather than at a
+                second copy that could drift. */}
+            <Link href="/terms#agreement">{t('footer.linkImpressum')}</Link>
           </div>
         </div>
         <div className="legal">
