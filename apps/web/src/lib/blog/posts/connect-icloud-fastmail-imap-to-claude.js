@@ -12,7 +12,7 @@ const post = {
   featured: false,
   content: `Connecting iCloud, Fastmail, or any IMAP mailbox to Claude takes one thing Outlook doesn't need: an **app-specific password**. You generate it inside your email provider, paste it into MCP Emails once, and Claude can read, search, and send through that inbox. No OAuth dance, no SMTP server settings to memorize.
 
-This is the route for every provider that isn't Gmail or Microsoft. iCloud, Fastmail, Yahoo, Zoho, Yandex, and any generic IMAP host all run through the same IMAP/SMTP transport, so they share an identical feature set. If you can get an app password out of the provider, you can connect it. One nice bonus over Gmail: IMAP gives Claude real, permanent delete.
+This is the route for every provider that isn't Gmail or Microsoft. iCloud, Fastmail, Yahoo, Zoho, Yandex, and any generic IMAP host all run through the same IMAP/SMTP transport, so they share an identical feature set. If you can get an app password out of the provider, you can connect it. Gmail connects the same way, with a Google app password over IMAP.
 
 ## Why these providers use an app password, not OAuth
 
@@ -84,9 +84,9 @@ Use inbox_list to find my iCloud inbox, then summarize my 5 most recent unread m
 
 ## The one thing IMAP does that Gmail can't
 
-Here's the part people miss. When Claude "deletes" a message on Gmail, it goes to Trash. That's a hard limit of the Gmail API: it doesn't expose a permanent delete to third-party apps. The message lingers in Trash until the provider's retention window expires. (Outlook is different: Microsoft Graph does offer a permanent delete, and MCP Emails supports it.)
+Here's the part people miss. A normal delete moves the message to Trash on every provider. With \`permanent: true\`, MCP Emails flags the message as deleted and expunges it on IMAP, and uses Microsoft Graph's permanent delete on Outlook. Gmail over IMAP then follows Gmail's own IMAP settings: by default, expunging a message from Inbox or a label only removes that label and the message stays in All Mail, while expunging it from Trash deletes it for good. (A Gmail mailbox connected by signing in with Google goes through the Gmail API instead, and there a delete always goes to Trash.)
 
-IMAP is different too. Fastmail, iCloud, Yahoo, Zoho, Yandex, and generic IMAP all support **hard expunge**: Claude can permanently remove a message, not just trash it. If you want an agent that actually cleans up after itself, IMAP (or Outlook) lets it. Useful, and also a reason to be deliberate about which scopes you grant. Expunge is irreversible.
+On the other IMAP hosts it is simpler. Fastmail, iCloud, Yahoo, Zoho, Yandex, and generic IMAP all support **hard expunge**: Claude can permanently remove a message, not just trash it. If you want an agent that actually cleans up after itself, IMAP (or Outlook) lets it. Useful, and also a reason to be deliberate about which scopes you grant. Expunge is irreversible.
 
 Search behaves a little differently too. Gmail gets its full operator syntax, Outlook uses KQL, and IMAP providers use IMAP text search — capable, but not as expressive as Gmail's operators. Worth knowing if you're writing search-heavy prompts.
 
@@ -101,7 +101,7 @@ If you're still deciding whether to wire email into an agent at all, start with 
 
 ## Wrap-up
 
-iCloud, Fastmail, and IMAP aren't second-class here. Generate an app password, paste it into **Inboxes → Connect Inbox**, point Claude at the [endpoint](/docs), and you've got an agent with full read/send access plus the permanent delete Gmail can't offer. It's [free to start](/signup), no card, one inbox forever.`,
+iCloud, Fastmail, and IMAP aren't second-class here. Generate an app password, paste it into **Inboxes → Connect Inbox**, point Claude at the [endpoint](/docs), and you've got an agent with full read/send access plus a real permanent delete. It's [free to start](/signup), no card, one inbox forever.`,
 };
 
 export default post;

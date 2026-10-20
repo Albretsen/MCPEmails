@@ -5,7 +5,7 @@ const translation = {
   coverAlt: 'Koble iCloud, Fastmail og en hvilken som helst IMAP-innboks til Claude over MCP',
   content: `Å koble iCloud, Fastmail eller en hvilken som helst IMAP-postkasse til Claude krever én ting Outlook ikke trenger: et **app-spesifikt passord**. Du genererer det inne hos e-postleverandøren din, limer det inn i MCP Emails én gang, og Claude kan lese, søke og sende gjennom den innboksen. Ingen OAuth-dans, ingen SMTP-serverinnstillinger å pugge.
 
-Dette er ruten for alle leverandører som ikke er Gmail eller Microsoft. iCloud, Fastmail, Yahoo, Zoho, Yandex og enhver generisk IMAP-vert kjører alle gjennom den samme IMAP/SMTP-transporten, så de deler et identisk funksjonssett. Hvis du klarer å hente ut et app-passord fra leverandøren, kan du koble den til. En fin bonus over Gmail: IMAP gir Claude ekte, permanent sletting.
+Dette er ruten for alle leverandører som ikke er Gmail eller Microsoft. iCloud, Fastmail, Yahoo, Zoho, Yandex og enhver generisk IMAP-vert kjører alle gjennom den samme IMAP/SMTP-transporten, så de deler et identisk funksjonssett. Hvis du klarer å hente ut et app-passord fra leverandøren, kan du koble den til. Gmail kobles til på samme måte, med et Google-app-passord over IMAP.
 
 ## Hvorfor disse leverandørene bruker app-passord, ikke OAuth
 
@@ -77,9 +77,9 @@ Use inbox_list to find my iCloud inbox, then summarize my 5 most recent unread m
 
 ## Den ene tingen IMAP gjør som Gmail ikke kan
 
-Her er delen folk overser. Når Claude "sletter" en melding på Gmail, havner den i papirkurven. Det er en hard begrensning i Gmail-API-et: det eksponerer ikke en permanent sletting til tredjepartsapper. Meldingen blir liggende i papirkurven til leverandørens oppbevaringsvindu utløper. (Outlook er annerledes: Microsoft Graph tilbyr permanent sletting, og MCP Emails støtter det.)
+Her er delen folk overser. En vanlig sletting flytter meldingen til papirkurven hos alle leverandører. Med \`permanent: true\` merker MCP Emails meldingen som slettet og fjerner den (expunge) på IMAP, og bruker Microsoft Graphs permanente sletting på Outlook. Gmail over IMAP følger deretter Gmails egne IMAP-innstillinger: som standard fjerner en expunge fra innboksen eller en etikett bare den etiketten, og meldingen blir liggende i Alle e-poster, mens en expunge fra papirkurven sletter den for godt. (En Gmail-postkasse som er koblet til ved å logge inn med Google, går gjennom Gmail-API-et, og der havner en sletting alltid i papirkurven.)
 
-IMAP er også annerledes. Fastmail, iCloud, Yahoo, Zoho, Yandex og generisk IMAP støtter alle **hard expunge**: Claude kan fjerne en melding permanent, ikke bare kaste den i papirkurven. Hvis du vil ha en agent som faktisk rydder opp etter seg, lar IMAP (eller Outlook) den gjøre det. Nyttig, og også en grunn til å være bevisst på hvilke tilganger du gir. Expunge er ugjenkallelig.
+På de andre IMAP-vertene er det enklere. Fastmail, iCloud, Yahoo, Zoho, Yandex og generisk IMAP støtter alle **hard expunge**: Claude kan fjerne en melding permanent, ikke bare kaste den i papirkurven. Hvis du vil ha en agent som faktisk rydder opp etter seg, lar IMAP (eller Outlook) den gjøre det. Nyttig, og også en grunn til å være bevisst på hvilke tilganger du gir. Expunge er ugjenkallelig.
 
 Søk oppfører seg også litt annerledes. Gmail får hele operatorsyntaksen sin, Outlook bruker KQL, og IMAP-leverandører bruker IMAP-tekstsøk — kapabelt, men ikke like uttrykksfullt som Gmails operatorer. Verdt å vite hvis du skriver søketunge prompts.
 
@@ -94,7 +94,7 @@ Hvis du fortsatt vurderer om du i det hele tatt skal koble e-post til en agent, 
 
 ## Oppsummering
 
-iCloud, Fastmail og IMAP er ikke andrerangs her. Generer et app-passord, lim det inn i **Inboxes → Connect Inbox**, pek Claude mot [endepunktet](/docs), og du har en agent med full lese-/sendetilgang pluss den permanente slettingen Gmail ikke kan tilby. Det er [gratis å komme i gang](/signup), uten kort, én innboks for alltid.`,
+iCloud, Fastmail og IMAP er ikke andrerangs her. Generer et app-passord, lim det inn i **Inboxes → Connect Inbox**, pek Claude mot [endepunktet](/docs), og du har en agent med full lese-/sendetilgang pluss ekte permanent sletting. Det er [gratis å komme i gang](/signup), uten kort, én innboks for alltid.`,
 };
 
 export default translation;

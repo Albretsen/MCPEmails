@@ -5,7 +5,7 @@ const translation = {
   coverAlt: '通过 MCP 将 iCloud、Fastmail 及任意 IMAP 邮箱连接到 Claude',
   content: `把 iCloud、Fastmail 或任意 IMAP 邮箱连接到 Claude，只需要一样 Outlook 不需要的东西：**应用专用密码**。你在邮件服务商那里生成它，在 MCP Emails 里粘贴一次，Claude 就能读取、搜索并通过这个邮箱发信。没有 OAuth 的来回授权，也不用记一堆 SMTP 服务器设置。
 
-这条路适用于所有不是 Gmail 或 Microsoft 的服务商。iCloud、Fastmail、Yahoo、Zoho、Yandex，以及任何通用 IMAP 主机，都走相同的 IMAP/SMTP 传输方式，所以它们共享完全一致的功能集。只要你能从服务商那里拿到应用专用密码，就能连接它。相比 Gmail 还有一个不错的好处：IMAP 让 Claude 拥有真正的、永久的删除能力。
+这条路适用于所有不是 Gmail 或 Microsoft 的服务商。iCloud、Fastmail、Yahoo、Zoho、Yandex，以及任何通用 IMAP 主机，都走相同的 IMAP/SMTP 传输方式，所以它们共享完全一致的功能集。只要你能从服务商那里拿到应用专用密码，就能连接它。Gmail 也用同样的方式连接：通过 IMAP 使用 Google 应用密码。
 
 ## 为什么这些服务商用应用专用密码，而不是 OAuth
 
@@ -77,9 +77,9 @@ Use inbox_list to find my iCloud inbox, then summarize my 5 most recent unread m
 
 ## IMAP 能做而 Gmail 做不到的那一件事
 
-这是大家容易忽略的地方。当 Claude 在 Gmail 上「删除」一封邮件时，它会进入回收站。这是 Gmail API 的硬性限制：它不向第三方应用开放永久删除。邮件会一直留在回收站，直到服务商的保留期满。（Outlook 不同：Microsoft Graph 提供永久删除，MCP Emails 也支持。）
+这是大家容易忽略的地方。普通删除在所有服务商上都会把邮件移到回收站。设置 \`permanent: true\` 时，MCP Emails 在 IMAP 上会把邮件标记为已删除并清除（expunge），在 Outlook 上则使用 Microsoft Graph 的永久删除。通过 IMAP 连接的 Gmail 接下来遵循 Gmail 自己的 IMAP 设置：默认情况下，从收件箱或某个标签中清除邮件只会移除该标签，邮件仍保留在「所有邮件」中；而从回收站中清除则会彻底删除。（通过 Google 登录连接的 Gmail 邮箱走的是 Gmail API，在那里删除总是进入回收站。）
 
-IMAP 也不一样。Fastmail、iCloud、Yahoo、Zoho、Yandex 以及通用 IMAP 都支持**硬性清除（hard expunge）**：Claude 可以永久移除一封邮件，而不只是把它扔进回收站。如果你想要一个真正会替自己收拾干净的代理，IMAP（或 Outlook）可以做到。这很有用，同时也是一个理由，让你慎重对待自己授予了哪些权限。清除是不可逆的。
+在其他 IMAP 主机上更简单。Fastmail、iCloud、Yahoo、Zoho、Yandex 以及通用 IMAP 都支持**硬性清除（hard expunge）**：Claude 可以永久移除一封邮件，而不只是把它扔进回收站。如果你想要一个真正会替自己收拾干净的代理，IMAP（或 Outlook）可以做到。这很有用，同时也是一个理由，让你慎重对待自己授予了哪些权限。清除是不可逆的。
 
 搜索的行为也略有不同。Gmail 用的是它完整的操作符语法，Outlook 用 KQL，而 IMAP 服务商用 IMAP 文本搜索——能力够用，但不如 Gmail 的操作符那么富有表现力。如果你要写大量依赖搜索的提示词，这一点值得了解。
 
@@ -94,7 +94,7 @@ IMAP 也不一样。Fastmail、iCloud、Yahoo、Zoho、Yandex 以及通用 IMAP 
 
 ## 小结
 
-iCloud、Fastmail 和 IMAP 在这里绝非二等公民。生成一个应用密码，把它粘贴进 **Inboxes → Connect Inbox**，把 Claude 指向[端点](/docs)，你就拥有了一个具备完整读取/发送权限的代理，外加 Gmail 给不了的永久删除。它[免费起步](/signup)，无需信用卡，可永久连接一个邮箱。`,
+iCloud、Fastmail 和 IMAP 在这里绝非二等公民。生成一个应用密码，把它粘贴进 **Inboxes → Connect Inbox**，把 Claude 指向[端点](/docs)，你就拥有了一个具备完整读取/发送权限的代理，外加真正的永久删除。它[免费起步](/signup)，无需信用卡，可永久连接一个邮箱。`,
 };
 
 export default translation;

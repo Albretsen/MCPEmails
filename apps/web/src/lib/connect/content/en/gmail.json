@@ -64,7 +64,7 @@
   "limits": [
     "mcpemails reaches mail only: an app password is used for IMAP and SMTP alone. Drive, Calendar, Chat and Docs are not reached.",
     "A Google Workspace administrator can switch app passwords off for the domain from the Admin console. Only an administrator can change that decision.",
-    "Delete moves a message into Gmail's Trash. Permanently erasing mail is done in Gmail itself."
+    "Delete moves a message into Gmail's Trash. A permanent delete follows Gmail's IMAP settings: by default it only removes the label the message was deleted from, and an expunge from Trash erases it."
   ],
   "faq": [
     {

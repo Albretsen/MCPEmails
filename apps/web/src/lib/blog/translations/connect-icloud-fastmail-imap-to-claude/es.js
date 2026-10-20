@@ -5,7 +5,7 @@ const translation = {
   coverAlt: 'Conecta iCloud, Fastmail y cualquier buzón IMAP a Claude a través de MCP',
   content: `Conectar iCloud, Fastmail o cualquier buzón IMAP a Claude requiere algo que Outlook no necesita: una **contraseña específica de aplicación**. La generas dentro de tu proveedor de correo, la pegas una sola vez en MCP Emails y Claude puede leer, buscar y enviar a través de ese buzón. Sin el baile del OAuth, sin tener que memorizar la configuración del servidor SMTP.
 
-Esta es la vía para cualquier proveedor que no sea Gmail o Microsoft. iCloud, Fastmail, Yahoo, Zoho, Yandex y cualquier host IMAP genérico funcionan sobre el mismo transporte IMAP/SMTP, así que comparten un conjunto de funciones idéntico. Si puedes sacar una contraseña de aplicación del proveedor, puedes conectarlo. Un extra interesante frente a Gmail: IMAP le da a Claude un borrado real y permanente.
+Esta es la vía para cualquier proveedor que no sea Gmail o Microsoft. iCloud, Fastmail, Yahoo, Zoho, Yandex y cualquier host IMAP genérico funcionan sobre el mismo transporte IMAP/SMTP, así que comparten un conjunto de funciones idéntico. Si puedes sacar una contraseña de aplicación del proveedor, puedes conectarlo. Gmail se conecta de la misma forma, con una contraseña de aplicación de Google por IMAP.
 
 ## Por qué estos proveedores usan una contraseña de aplicación y no OAuth
 
@@ -77,9 +77,9 @@ Use inbox_list to find my iCloud inbox, then summarize my 5 most recent unread m
 
 ## Lo único que IMAP hace y Gmail no puede
 
-Aquí está la parte que se le escapa a la gente. Cuando Claude "borra" un mensaje en Gmail, va a la papelera. Es una limitación dura de la API de Gmail: no expone un borrado permanente a las aplicaciones de terceros. El mensaje permanece en la papelera hasta que vence la ventana de retención del proveedor. (Outlook es distinto: Microsoft Graph sí ofrece un borrado permanente, y MCP Emails lo admite.)
+Aquí está la parte que se le escapa a la gente. Un borrado normal mueve el mensaje a la papelera en todos los proveedores. Con \`permanent: true\`, MCP Emails marca el mensaje como borrado y lo elimina (expunge) en IMAP, y usa el borrado permanente de Microsoft Graph en Outlook. Gmail por IMAP sigue después sus propios ajustes de IMAP: por defecto, eliminar un mensaje de la bandeja de entrada o de una etiqueta solo le quita esa etiqueta y el mensaje sigue en Todos, mientras que eliminarlo desde la papelera lo borra para siempre. (Un buzón de Gmail conectado iniciando sesión con Google pasa por la API de Gmail, y ahí un borrado siempre va a la papelera.)
 
-IMAP también es distinto. Fastmail, iCloud, Yahoo, Zoho, Yandex e IMAP genérico admiten todos el **expunge definitivo** (hard expunge): Claude puede eliminar un mensaje de forma permanente, no solo enviarlo a la papelera. Si quieres un agente que de verdad recoja después de sí mismo, IMAP (u Outlook) se lo permite. Útil, y también una razón para ser deliberado sobre qué scopes concedes. El expunge es irreversible.
+En los demás hosts IMAP es más sencillo. Fastmail, iCloud, Yahoo, Zoho, Yandex e IMAP genérico admiten todos el **expunge definitivo** (hard expunge): Claude puede eliminar un mensaje de forma permanente, no solo enviarlo a la papelera. Si quieres un agente que de verdad recoja después de sí mismo, IMAP (u Outlook) se lo permite. Útil, y también una razón para ser deliberado sobre qué scopes concedes. El expunge es irreversible.
 
 La búsqueda también se comporta de forma un poco distinta. Gmail dispone de toda su sintaxis de operadores, Outlook usa KQL y los proveedores IMAP usan la búsqueda de texto de IMAP: capaz, pero no tan expresiva como los operadores de Gmail. Conviene saberlo si escribes prompts con mucha búsqueda.
 
@@ -94,7 +94,7 @@ Si todavía estás decidiendo si conectar el correo a un agente, empieza por el 
 
 ## Conclusión
 
-iCloud, Fastmail e IMAP no son ciudadanos de segunda aquí. Genera una contraseña de aplicación, pégala en **Inboxes → Connect Inbox**, apunta Claude al [endpoint](/docs) y tendrás un agente con acceso completo de lectura y envío, más el borrado permanente que Gmail no puede ofrecer. Es [gratis para empezar](/signup), sin tarjeta y con un buzón para siempre.`,
+iCloud, Fastmail e IMAP no son ciudadanos de segunda aquí. Genera una contraseña de aplicación, pégala en **Inboxes → Connect Inbox**, apunta Claude al [endpoint](/docs) y tendrás un agente con acceso completo de lectura y envío, más un borrado permanente de verdad. Es [gratis para empezar](/signup), sin tarjeta y con un buzón para siempre.`,
 };
 
 export default translation;
