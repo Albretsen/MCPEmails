@@ -67,7 +67,7 @@
   "faq": [
     {
       "q": "How do I connect email to Cline?",
-      "a": "Add mcpemails as a remote server: MCP Servers, Remote Servers, paste https://mcpemails.com/api/mcp, set Transport Type to Streamable HTTP, and add an Authorization Bearer header with an API key from your dashboard. Cline then has tools for reading, searching, sending, replying, forwarding, organizing and scheduling mail."
+      "a": "Add MCP Emails as a remote server: MCP Servers, Remote Servers, paste https://mcpemails.com/api/mcp, set Transport Type to Streamable HTTP, and add an Authorization Bearer header with an API key from your dashboard. Cline then has tools for reading, searching, sending, replying, forwarding, organizing and scheduling mail."
     },
     {
       "q": "Why does Cline need an API key when Cursor does not?",

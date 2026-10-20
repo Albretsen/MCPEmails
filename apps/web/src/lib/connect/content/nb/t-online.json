@@ -22,7 +22,7 @@
     "titleLine1": "Koble T-Online-postkassen din",
     "titleLine2": "til Claude, Cursor, enhver MCP-klient",
     "lead": "Gi AI-agenten din en ekte Telekom-innboks. Les, søk, send, svar, planlegg og organiser e-post via IMAP med det egne passordet Telekom utsteder for e-postprogrammer.",
-    "answer": "Claude når ikke en T-Online-postkasse på egen hånd. mcpemails er en hostet MCP-server som kobler til via IMAP på secureimap.t-online.de port 993 og autentiserer med det separate Passwort für E-Mail-Programme som Telekom utsteder for e-postklienter, i stedet for Telekom-innloggingspassordet ditt, slik at Claude, Cursor eller enhver MCP-klient kan lese, søke, sende og organisere e-posten. Har du aldri opprettet det passordet, har ingen klient noen gang kunnet logge inn på postkassen, og feilen ser ut som en skrivefeil. Én innboks er gratis, for alltid.",
+    "answer": "Claude når ikke en T-Online-postkasse på egen hånd. MCP Emails er en hostet MCP-server som kobler til via IMAP på secureimap.t-online.de port 993 og autentiserer med det separate Passwort für E-Mail-Programme som Telekom utsteder for e-postklienter, i stedet for Telekom-innloggingspassordet ditt, slik at Claude, Cursor eller enhver MCP-klient kan lese, søke, sende og organisere e-posten. Har du aldri opprettet det passordet, har ingen klient noen gang kunnet logge inn på postkassen, og feilen ser ut som en skrivefeil. Én innboks er gratis, for alltid.",
     "meta0": "1 innboks gratis, for alltid",
     "meta1": "Telekoms passord for e-postprogrammer kreves",
     "meta2": "E-post hentes direkte, lagres aldri"
@@ -33,7 +33,7 @@
   },
   "setup": [
     {
-      "h": "Opprett din gratis mcpemails-konto",
+      "h": "Opprett din gratis MCP Emails-konto",
       "p": "Registrer deg på mcpemails.com. Gratisplanen kobler til én innboks for alltid og ber ikke om kort."
     },
     {
@@ -41,7 +41,7 @@
       "p": "I E-Mail Center på email.t-online.de klikker du på tannhjulet (<b>Einstellungen</b>), så <b>Alle Einstellungen anzeigen</b>, så <b>Passwörter</b>, så <b>Passwort für E-Mail-Programme</b>, og setter et nytt. Den andre veien går via Kundencenter: <b>Profil verwalten</b>, så <b>Login-Daten</b>, så <b>Weitere Passwörter</b>. Telekom anbefaler at det er forskjellig fra passordet til Telekom Login."
     },
     {
-      "h": "Lim det inn i mcpemails",
+      "h": "Lim det inn i MCP Emails",
       "p": "Velg IMAP / SMTP, skriv inn hele adressen, for eksempel name@t-online.de, og lim inn passordet for e-postprogrammer. Telekom-vertene og -portene er forhåndsutfylt og ble verifisert via en direkte TLS-tilkobling."
     },
     {
@@ -56,7 +56,7 @@
     },
     {
       "h": "IMAP-proxyen annonserer ingen AUTH-mekanisme i det hele tatt før innlogging",
-      "p": "Funksjonsbanneret Telekom returnerer, er <code>IMAP4 IMAP4rev1 QUOTA LITERAL+ NAMESPACE UIDPLUS IDLE SORT</code>. Det er ingen <code>AUTH=PLAIN</code>, ingen <code>AUTH=LOGIN</code> og ingen <code>SASL-IR</code> i det. I praksis forventer serveren den vanlige IMAP-kommandoen <code>LOGIN</code> i stedet for en SASL <code>AUTHENTICATE</code>-utveksling. Klientbiblioteker som lister annonserte SASL-mekanismer og nekter å fortsette når listen er tom, gir opp før de i det hele tatt sender påloggingsdetaljer, og derfor melder noen IMAP-verktøy at T-Online ikke kan nås, mens Thunderbird kobler til samme postkasse uten problemer. mcpemails håndterer den nakne LOGIN-veien, så denne er allerede tatt hånd om for deg."
+      "p": "Funksjonsbanneret Telekom returnerer, er <code>IMAP4 IMAP4rev1 QUOTA LITERAL+ NAMESPACE UIDPLUS IDLE SORT</code>. Det er ingen <code>AUTH=PLAIN</code>, ingen <code>AUTH=LOGIN</code> og ingen <code>SASL-IR</code> i det. I praksis forventer serveren den vanlige IMAP-kommandoen <code>LOGIN</code> i stedet for en SASL <code>AUTHENTICATE</code>-utveksling. Klientbiblioteker som lister annonserte SASL-mekanismer og nekter å fortsette når listen er tom, gir opp før de i det hele tatt sender påloggingsdetaljer, og derfor melder noen IMAP-verktøy at T-Online ikke kan nås, mens Thunderbird kobler til samme postkasse uten problemer. MCP Emails håndterer den nakne LOGIN-veien, så denne er allerede tatt hånd om for deg."
     },
     {
       "h": "Ingen MOVE og ingen SPECIAL-USE, på en postkasse med tyske mappenavn",
@@ -78,7 +78,7 @@
   "faq": [
     {
       "q": "Fungerer Claude med T-Online-e-post?",
-      "a": "Ikke på egen hånd. Claude har ingen innebygd Telekom- eller T-Online-kobling. Peker du en MCP-server som mcpemails mot postkassen via IMAP, får Claude tilgang til å lese, søke, sende, svare, planlegge og organisere, og samme tilkobling fungerer da fra Cursor, ChatGPT og andre MCP-klienter."
+      "a": "Ikke på egen hånd. Claude har ingen innebygd Telekom- eller T-Online-kobling. Peker du en MCP-server som MCP Emails mot postkassen via IMAP, får Claude tilgang til å lese, søke, sende, svare, planlegge og organisere, og samme tilkobling fungerer da fra Cursor, ChatGPT og andre MCP-klienter."
     },
     {
       "q": "Hva er IMAP- og SMTP-innstillingene for T-Online?",

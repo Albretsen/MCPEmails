@@ -1,18 +1,18 @@
 {
   "meta": {
     "title": "Personvernerklæring",
-    "description": "Hvordan MCPEmails samler inn, bruker og beskytter dataene dine. Vår personvernerklæring for brukere, arbeidsområdeeiere og AI-agenter."
+    "description": "Hvordan MCP Emails samler inn, bruker og beskytter dataene dine. Vår personvernerklæring for brukere, arbeidsområdeeiere og AI-agenter."
   },
   "hero": {
     "eyebrow": "Juridisk",
     "title": "Personvernerklæring",
-    "lead": "Vi bygde MCPEmails med personvern som et grunnleggende prinsipp. E-postinnholdet agenten din leser lagres aldri på serverne våre; det sendes videre til agenten din og forsvinner. Unntakene er utgående meldinger som må vente: en melding du planlegger å sende senere, eller en sending som holdes tilbake for godkjenning, som vi lagrer kryptert. Denne erklæringen forklarer hva vi faktisk samler inn, og hvorfor.",
+    "lead": "Vi bygde MCP Emails med personvern som et grunnleggende prinsipp. E-postinnholdet agenten din leser lagres aldri på serverne våre; det sendes videre til agenten din og forsvinner. Unntakene er utgående meldinger som må vente: en melding du planlegger å sende senere, eller en sending som holdes tilbake for godkjenning, som vi lagrer kryptert. Denne erklæringen forklarer hva vi faktisk samler inn, og hvorfor.",
     "dates": "Sist oppdatert: {lastUpdated}  ·  Gjelder fra: {effectiveDate}"
   },
   "whoWeAre": {
     "title": "1. Hvem vi er",
-    "p1": "MCPEmails-tjenesten på <b>mcpemails.com</b> drives av {companyName}, et norsk aksjeselskap eid og drevet av {ownerName}, som tilbyr tjenesten under navnet «MCPEmails». I denne erklæringen viser «MCPEmails», «vi», «oss» og «vår» alle til {companyName}. Tjenesten omfatter alle dashbordsider, API-endepunkter og Model Context Protocol (MCP)-serveren som AI-agenter bruker for å få tilgang til tilkoblede e-postkontoer.",
-    "p2": "I henhold til gjeldende personvernlovgivning (inkludert EUs personvernforordning, \"GDPR\") er MCPEmails behandlingsansvarlig for konto- og bruksdata. For e-postinnhold opptrer vi som databehandler på dine vegne: vi overfører innhold du gir oss tillatelse til å hente, og vi lagrer det ikke.",
+    "p1": "MCP Emails-tjenesten på <b>mcpemails.com</b> drives av {companyName}, et norsk aksjeselskap eid og drevet av {ownerName}, som tilbyr tjenesten under navnet «MCPEmails». I denne erklæringen viser «MCPEmails», «vi», «oss» og «vår» alle til {companyName}. Tjenesten omfatter alle dashbordsider, API-endepunkter og Model Context Protocol (MCP)-serveren som AI-agenter bruker for å få tilgang til tilkoblede e-postkontoer.",
+    "p2": "I henhold til gjeldende personvernlovgivning (inkludert EUs personvernforordning, \"GDPR\") er MCP Emails behandlingsansvarlig for konto- og bruksdata. For e-postinnhold opptrer vi som databehandler på dine vegne: vi overfører innhold du gir oss tillatelse til å hente, og vi lagrer det ikke.",
     "p3": "Opplysninger om tjenesteyteren: {companyName} er et aksjeselskap etablert i Norge, eid av {ownerName}, som også er styreleder. Selskapet er registrert i {register}, som drives av Brønnøysundregistrene, med organisasjonsnummer <b>{orgNumber}</b>. Forretningsadressen vår er {companyAddress}.",
     "p4": "Du kan kontakte oss om personvern på <email></email>."
   },
@@ -28,7 +28,7 @@
     "logsP": "For hvert MCP-verktøykall agenten din gjør, registrerer vi: verktøyets navn (f.eks. <c>email_read</c>), API-nøkkelen som gjorde kallet, innboksen som ble aksessert, tidsstempelet, og om kallet lyktes. Vi registrerer<b> ikke</b> e-postemner, -innhold, -mottakere eller annet e-postinnhold i disse loggene.",
     "emailContentTitle": "2.5 E-postinnhold: ikke lagret",
     "emailContentP": "Når agenten din kaller <c>email_read</c> (for å liste, lese eller søke) eller et annet leseverktøy, henter vi det forespurte innholdet i sanntid fra e-postleverandøren din og returnerer det til agenten din i samme HTTP-svar. Innholdet skrives aldri til disk, mellomlagres eller logges. Når HTTP-svaret er sendt, beholder vi ingen kopi av noe e-postinnhold, emne, vedlegg eller kontaktopplysning. Det finnes to unntak, begge utgående meldinger som må vente. Planlagte sendinger: når du ber agenten din om å planlegge en melding for fremtidig levering, lagrer vi den utgående meldingen (mottakere, emne, brødtekst og eventuelle vedlegg) i databasen vår frem til den er sendt, og vi beholder oppføringen etterpå for revisjon og feilsøking. Sendinger som venter på godkjenning: når en innboks krever godkjenning, lagres en sending, et svar, en videresending eller en utkastsending agenten din ber om kryptert i databasen vår til et medlem av arbeidsområdet godkjenner eller avviser den, eller til den utløper etter 24 timer, og oppføringen beholdes etterpå som godkjenningshistorikken din. E-post agenten din leser, og e-post den sender umiddelbart uten å vente på godkjenning, lagres aldri.",
-    "emailContentAgentP": "E-postinnholdet ditt sendes kun til MCP-klienten eller AI-agenten som <b>du</b> har koblet til og selv bruker (for eksempel Claude, Cursor eller en annen MCP-klient du velger). Når du aktiverer et verktøy, overfører MCPEmails det forespurte innholdet til denne klienten slik at den kan utføre forespørselen din. MCPEmails sender ikke e-postinnholdet ditt til noen AI-leverandør vi selv velger. Når innholdet når klienten du har valgt, reguleres det av denne klientens eller AI-leverandørens egen personvernerklæring og vilkår, som du selv er ansvarlig for å gjennomgå. MCPEmails fungerer bare som et mellomledd og beholder ingen kopi av innholdet.",
+    "emailContentAgentP": "E-postinnholdet ditt sendes kun til MCP-klienten eller AI-agenten som <b>du</b> har koblet til og selv bruker (for eksempel Claude, Cursor eller en annen MCP-klient du velger). Når du aktiverer et verktøy, overfører MCP Emails det forespurte innholdet til denne klienten slik at den kan utføre forespørselen din. MCP Emails sender ikke e-postinnholdet ditt til noen AI-leverandør vi selv velger. Når innholdet når klienten du har valgt, reguleres det av denne klientens eller AI-leverandørens egen personvernerklæring og vilkår, som du selv er ansvarlig for å gjennomgå. MCP Emails fungerer bare som et mellomledd og beholder ingen kopi av innholdet.",
     "technicalTitle": "2.6 Tekniske og driftsmessige data",
     "technicalP": "Vi samler inn standard driftsdata på serversiden, inkludert IP-adresser (for hastighetsbegrensning og forebygging av misbruk), tidsstempler for forespørsler, HTTP-statuskoder og feiltyper. Disse dataene oppbevares i aggregert, anonymisert form og knyttes ikke til individuelle kontoer etter 30 dager.",
     "cookiesTitle": "2.7 Informasjonskapsler og lokal lagring",
@@ -57,12 +57,12 @@
       "Dele dataene dine med tredjeparter for deres egne markedsføringsformål."
     ],
     "googleTitle": "3.7 Google API-tjenester: Begrenset bruk",
-    "googleP1": "MCPEmails' bruk og overføring til enhver annen app av informasjon mottatt fra Google APIs (inkludert Gmail API) vil overholde <link>Google API Services User Data Policy</link>, inkludert kravene til <b>Begrenset bruk</b>.",
-    "googleP2": "Når du kobler til en Gmail-konto, gir du MCPEmails følgende Gmail-omfang. Vi ber om hvert omfang utelukkende for å levere funksjonene du aktiverer gjennom AI-agenten din, og vi bruker dem bare på dine vegne:",
+    "googleP1": "MCP Emails' bruk og overføring til enhver annen app av informasjon mottatt fra Google APIs (inkludert Gmail API) vil overholde <link>Google API Services User Data Policy</link>, inkludert kravene til <b>Begrenset bruk</b>.",
+    "googleP2": "Når du kobler til en Gmail-konto, gir du MCP Emails følgende Gmail-omfang. Vi ber om hvert omfang utelukkende for å levere funksjonene du aktiverer gjennom AI-agenten din, og vi bruker dem bare på dine vegne:",
     "googleScopeReadonly": "<c>gmail.readonly</c>: liste opp meldinger og lese meldingsinnhold slik at agenten din kan søke i, lese og oppsummere e-post på din forespørsel.",
     "googleScopeSend": "<c>gmail.send</c>: skrive og sende meldinger som agenten din oppretter på din forespørsel.",
     "googleScopeModify": "<c>gmail.modify</c>: organisere e-posten din etter dine instruksjoner, inkludert å legge til og fjerne etiketter, merke meldinger som lest eller ulest, arkivere meldinger, flytte meldinger mellom mapper og flytte meldinger til papirkurven.",
-    "googleLimitedIntro": "I samsvar med kravene til Begrenset bruk vil MCPEmails:",
+    "googleLimitedIntro": "I samsvar med kravene til Begrenset bruk vil MCP Emails:",
     "googleLimitedList": [
       "kun bruke Google-brukerdata til å levere og forbedre de brukervendte funksjonene beskrevet ovenfor;",
       "ikke overføre eller selge Google-brukerdata til tredjeparter, datameglere eller annonsenettverk;",
@@ -70,11 +70,11 @@
       "ikke bruke Google-brukerdata til å utvikle, forbedre eller trene generaliserte eller ikke-personaliserte AI- eller maskinlæringsmodeller;",
       "ikke tillate at mennesker leser Google-brukerdata med mindre (a) du gir uttrykkelig samtykke for spesifikke meldinger, (b) det er nødvendig av sikkerhetsmessige hensyn, slik som undersøkelse av misbruk, (c) det er påkrevd for å overholde gjeldende lov, eller (d) dataene er aggregert og anonymisert."
     ],
-    "googleP3": "Som beskrevet i avsnitt 2.5 strømmes e-postinnhold hentet fra Gmail API videre til agenten din i samme forespørsel, og lagres, mellomlagres eller logges aldri av MCPEmails.",
+    "googleP3": "Som beskrevet i avsnitt 2.5 strømmes e-postinnhold hentet fra Gmail API videre til agenten din i samme forespørsel, og lagres, mellomlagres eller logges aldri av MCP Emails.",
     "microsoftTitle": "3.8 Microsoft-API-er: postkassetilgang og hvordan du trekker den tilbake",
     "microsoftP1": "Når du kobler til en Outlook- eller Microsoft 365-postkasse, ber Microsoft deg godkjenne et bestemt, navngitt sett med tillatelser: å lese og organisere e-posten din, og å sende e-post på dine vegne. Vi bruker denne tilgangen bare til å utføre det du ber en KI-agent gjøre med postkassen din, som å lese, søke, organisere, skrive utkast og sende. Vi bruker den ikke til å bygge en kopi av postkassen din, og vi bruker aldri e-postinnhold, eller noe utledet av det, til annonsering eller markedsføring.",
-    "microsoftRevokeP": "Du kan trekke tilbake denne tilgangen når som helst, direkte hos Microsoft og uten å spørre oss. For en personlig Microsoft-konto, bruk <personal>Tillatelser for Microsoft-kontoen</personal>. For en jobb- eller skolekonto, bruk <work>Mine apper</work>. Når du trekker tilbake tilgangen der, mister vi umiddelbart tilgang til postkassen. Hvis IT-administratoren godkjente MCPEmails for hele organisasjonen, er det bare en administrator som kan fjerne den organisasjonsomfattende godkjenningen.",
-    "microsoftDisconnectP": "Å koble fra innboksen i MCPEmails-dashbordet har samme virkning fra vår side, og sletter i tillegg de lagrede påloggingsdetaljene for postkassen. Du kan gjøre hva som helst av dette først; du trenger ikke gjøre begge deler.",
+    "microsoftRevokeP": "Du kan trekke tilbake denne tilgangen når som helst, direkte hos Microsoft og uten å spørre oss. For en personlig Microsoft-konto, bruk <personal>Tillatelser for Microsoft-kontoen</personal>. For en jobb- eller skolekonto, bruk <work>Mine apper</work>. Når du trekker tilbake tilgangen der, mister vi umiddelbart tilgang til postkassen. Hvis IT-administratoren godkjente MCP Emails for hele organisasjonen, er det bare en administrator som kan fjerne den organisasjonsomfattende godkjenningen.",
+    "microsoftDisconnectP": "Å koble fra innboksen i MCP Emails-dashbordet har samme virkning fra vår side, og sletter i tillegg de lagrede påloggingsdetaljene for postkassen. Du kan gjøre hva som helst av dette først; du trenger ikke gjøre begge deler.",
     "marketingTitle": "3.9 Direkte markedsføring på e-post",
     "marketingP1": "Vi sender markedsføring på e-post (produkttips og tilbud, for eksempel om et betalt abonnement når arbeidsområdet ditt når en abonnementsgrense) bare hvis du har samtykket ved å krysse av i boksen på registreringsskjemaet. Boksen er ikke avkrysset på forhånd, og vi leser ikke samtykke ut av noe annet. Det rettslige grunnlaget er ditt <b>samtykke</b> (GDPR artikkel 6 nr. 1 bokstav a), som markedsføringsloven § 15 også krever for markedsføring på e-post.",
     "marketingP2": "For å velge hvilken av noen få meldinger vi sender, og når, bruker vi konto- og bruksdata: for eksempel at arbeidsområdet ditt har nådd en abonnementsgrense, hvor mange innbokser du har koblet til, abonnementet ditt og når du registrerte deg. Vi bruker aldri innholdet i e-postkassen din, eller noe som er avledet av det, til dette.",
@@ -167,17 +167,17 @@
     "stripeData": "Faktureringse-post, betalingskortdata (lagret av Stripe, ikke oss)",
     "stripeLocation": "USA (Stripe er PCI-DSS-sertifisert)",
     "emailProvidersTitle": "5.2 E-postleverandører (dine leverandører, ikke våre)",
-    "emailProvidersP": "Når du kobler til Gmail, Outlook / Microsoft 365, Fastmail eller en annen IMAP-konto, autentiserer MCPEmails seg mot den leverandøren med legitimasjon du oppgir. E-postleverandørens egen personvernerklæring regulerer dataene som oppbevares i postkassen din. MCPEmails får tilgang til postkassen din bare når agenten din gjør et verktøykall, og bare for de spesifikke meldingene eller mappene verktøyet ber om.",
+    "emailProvidersP": "Når du kobler til Gmail, Outlook / Microsoft 365, Fastmail eller en annen IMAP-konto, autentiserer MCP Emails seg mot den leverandøren med legitimasjon du oppgir. E-postleverandørens egen personvernerklæring regulerer dataene som oppbevares i postkassen din. MCP Emails får tilgang til postkassen din bare når agenten din gjør et verktøykall, og bare for de spesifikke meldingene eller mappene verktøyet ber om.",
     "noBrokersTitle": "5.3 Ingen datameglere eller annonsenettverk",
     "noBrokersP": "Vi deler ingen data med datameglere, annonsenettverk, sosiale medieplattformer eller analyseselskaper som bygger brukerprofiler.",
     "legalDisclosuresTitle": "5.4 Rettslige utleveringer",
-    "legalDisclosuresP": "Vi kan utlevere personopplysninger dersom det er påkrevd etter lov, gyldig rettslig prosess (slik som en rettskjennelse eller stevning), eller for å beskytte rettighetene, eiendommen eller sikkerheten til MCPEmails, brukerne våre eller offentligheten. Der loven tillater det, vil vi varsle berørte brukere før vi utleverer dataene deres.",
+    "legalDisclosuresP": "Vi kan utlevere personopplysninger dersom det er påkrevd etter lov, gyldig rettslig prosess (slik som en rettskjennelse eller stevning), eller for å beskytte rettighetene, eiendommen eller sikkerheten til MCP Emails, brukerne våre eller offentligheten. Der loven tillater det, vil vi varsle berørte brukere før vi utleverer dataene deres.",
     "businessTransfersTitle": "5.5 Virksomhetsoverdragelser",
     "businessTransfersP": "Ved en fusjon, et oppkjøp eller et salg av eiendeler kan personopplysninger bli overført som en del av den transaksjonen. Vi vil varsle brukere via e-postadressen på kontoen deres før en slik overføring finner sted og før dataene deres blir underlagt en annen personvernerklæring."
   },
   "internationalTransfers": {
     "title": "6. Internasjonale dataoverføringer",
-    "p1": "MCPEmails drives fra Norge, som er underlagt det europeiske økonomiske samarbeidsområdets (EØS) personvernrammeverk. Hvis du bruker tjenesten fra utenfor EØS, kan dataene dine bli overført til og behandlet i land innenfor EØS.",
+    "p1": "MCP Emails drives fra Norge, som er underlagt det europeiske økonomiske samarbeidsområdets (EØS) personvernrammeverk. Hvis du bruker tjenesten fra utenfor EØS, kan dataene dine bli overført til og behandlet i land innenfor EØS.",
     "p2": "Våre infrastruktur-underdatabehandlere (Supabase, Vercel) opererer under standardkontraktsbestemmelser (SCC) godkjent av Europakommisjonen for dataoverføringer til tredjeland. For Stripe er behandlingen dekket av deres EU-US Data Privacy Framework-sertifisering.",
     "p3": "Databasen vår, som inneholder konto- og konfigurasjonsdata, ligger i EU (Stockholm, Sverige) for alle kunder. Ingen plan eller innstilling flytter den til en annen region. Ikke alle serverne som håndterer forespørslene fra agenten din, står i EU: edge-funksjonene som kobler til innboksen din, kjører i USA (østkysten), og det samme gjør delen av nettstedet vårt som videresender disse forespørslene. E-postinnhold passerer gjennom dem direkte for å besvare forespørselen og lagres ikke der. Kryptert legitimasjon dekrypteres i det samme amerikanske miljøet mens forespørselen pågår."
   },
@@ -232,7 +232,7 @@
   },
   "children": {
     "title": "9. Barns personvern",
-    "p": "MCPEmails er ikke rettet mot barn under 16 år. Vi samler ikke bevisst inn personopplysninger fra noen under 16. Hvis du mener vi utilsiktet har samlet inn data fra et barn, vennligst kontakt oss på <email></email>, så sletter vi dem omgående."
+    "p": "MCP Emails er ikke rettet mot barn under 16 år. Vi samler ikke bevisst inn personopplysninger fra noen under 16. Hvis du mener vi utilsiktet har samlet inn data fra et barn, vennligst kontakt oss på <email></email>, så sletter vi dem omgående."
   },
   "changes": {
     "title": "10. Endringer i denne erklæringen",

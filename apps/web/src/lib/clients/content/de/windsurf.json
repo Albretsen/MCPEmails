@@ -37,7 +37,7 @@
     },
     {
       "h": "Aktualisieren und autorisieren",
-      "p": "Aktualisieren Sie die MCP-Server in Cascade und autorisieren Sie mit mcpemails, wenn Sie dazu aufgefordert werden. Geben Sie die Scopes frei, die Cascade erhalten soll."
+      "p": "Aktualisieren Sie die MCP-Server in Cascade und autorisieren Sie mit MCP Emails, wenn Sie dazu aufgefordert werden. Geben Sie die Scopes frei, die Cascade erhalten soll."
     }
   ],
   "gotchas": [

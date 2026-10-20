@@ -1,7 +1,7 @@
 const translation = {
   title: 'Las mejores formas de dejar que Claude gestione tu bandeja de entrada en 2026',
   description: 'Un repaso sin rodeos a las mejores formas de dejar que Claude gestione tu bandeja en 2026: integraciones nativas, servidores MCP propios, copiar y pegar, extensiones de navegador y MCP gestionado.',
-  coverAlt: 'Las mejores formas de dejar que Claude gestione tu bandeja de entrada en 2026 — MCPEmails',
+  coverAlt: 'Las mejores formas de dejar que Claude gestione tu bandeja de entrada en 2026 — MCP Emails',
   content: `Si quieres que Claude lea, clasifique y responda de verdad tu correo, en 2026 tienes cinco opciones reales: un servidor de correo MCP gestionado, un servidor MCP propio que tú mismo ejecutas, copiar y pegar hilos en el chat, una extensión de navegador o una integración nativa en el cliente. Para la mayoría de la gente, un servidor MCP gestionado es la decisión acertada, porque funciona en segundos y nunca almacena tu correo. El resto tiene cada uno su nicho, y un par son peores de lo que parecen.
 
 Esto es un repaso, no un anuncio. Voy a recorrer todos los enfoques: dónde brillan, dónde se desmoronan y cuál elegiría yo en cada situación. Si quieres el contexto completo de lo que ocurre por debajo, empieza por la guía base: [cómo darle a tu agente de IA acceso al correo](/blog/how-to-give-your-ai-agent-email-access).

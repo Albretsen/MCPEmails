@@ -14,11 +14,11 @@
     "eyebrow": "Claude + 邮件",
     "titleLine1": "把你的收件箱连接到 Claude",
     "titleLine2": "作为自定义连接器",
-    "lead": "Claude 没有自己的邮件客户端。mcpemails 就是为它提供邮件能力的托管 MCP 服务器：在 claude.ai 或 Claude Desktop 中读取、搜索、发送、回复、转发、定时发送和整理真实邮件。",
+    "lead": "Claude 没有自己的邮件客户端。MCP Emails 就是为它提供邮件能力的托管 MCP 服务器：在 claude.ai 或 Claude Desktop 中读取、搜索、发送、回复、转发、定时发送和整理真实邮件。",
     "meta0": "1 个收件箱永久免费",
     "meta1": "OAuth，无需 API 密钥",
     "meta2": "邮件实时获取，从不存储",
-    "answer": "在 Claude 中把 https://mcpemails.com/api/mcp 添加为自定义连接器，点击 Connect，然后用你的 mcpemails 账户登录。Claude 会自动注册，并申请你批准的权限范围。不需要创建 API 密钥，也不需要编辑配置文件。"
+    "answer": "在 Claude 中把 https://mcpemails.com/api/mcp 添加为自定义连接器，点击 Connect，然后用你的 MCP Emails 账户登录。Claude 会自动注册，并申请你批准的权限范围。不需要创建 API 密钥，也不需要编辑配置文件。"
   },
   "method": {
     "title": "Claude 如何连接：OAuth，无需 API 密钥",
@@ -39,7 +39,7 @@
     },
     {
       "h": "连接并授权",
-      "p": "点击 Connect，并用 mcpemails 登录以完成授权。批准你希望 Claude 拥有的权限范围。无需 API 密钥。"
+      "p": "点击 Connect，并用 MCP Emails 登录以完成授权。批准你希望 Claude 拥有的权限范围。无需 API 密钥。"
     }
   ],
   "gotchas": [
@@ -64,7 +64,7 @@
   "faq": [
     {
       "q": "Claude 能读取我的邮件吗？",
-      "a": "它自己不能。Claude 只能通过连接器访问邮箱，而指向 mcpemails 的自定义连接器就是为它提供连接器的一种方式。连接之后，Claude 可以在你接入的所有收件箱中列出、读取、搜索、发送、回复、转发、整理和定时发送邮件，并仅限于你批准的权限范围。"
+      "a": "它自己不能。Claude 只能通过连接器访问邮箱，而指向 MCP Emails 的自定义连接器就是为它提供连接器的一种方式。连接之后，Claude 可以在你接入的所有收件箱中列出、读取、搜索、发送、回复、转发、整理和定时发送邮件，并仅限于你批准的权限范围。"
     },
     {
       "q": "Claude 需要 API 密钥吗？",

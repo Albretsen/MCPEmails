@@ -20,7 +20,7 @@
     "titleLine1": "Koble QQ Mail til Claude,",
     "titleLine2": "Cursor, ChatGPT, enhver MCP-klient",
     "lead": "Gi AI-agenten din en ekte QQ-postkasse. Les, søk, send, svar, planlegg og organiser e-post via IMAP med en Tencent-autorisasjonskode, i alle MCP-klienter i stedet for bare én.",
-    "answer": "Claude når ikke QQ Mail på egen hånd. mcpemails er en hostet MCP-server som kobler til via IMAP på imap.qq.com port 993 og autentiserer med autorisasjonskoden på 16 tegn (授权码) som Tencent utsteder for tredjepartsklienter, i stedet for QQ-passordet ditt. Du må slå på POP3/IMAP/SMTP-tjenesten i QQ Mail og generere den koden før noen klient kan logge inn, og samme kode dekker både @qq.com-adressen og @foxmail.com-aliaset ditt. Én innboks er gratis.",
+    "answer": "Claude når ikke QQ Mail på egen hånd. MCP Emails er en hostet MCP-server som kobler til via IMAP på imap.qq.com port 993 og autentiserer med autorisasjonskoden på 16 tegn (授权码) som Tencent utsteder for tredjepartsklienter, i stedet for QQ-passordet ditt. Du må slå på POP3/IMAP/SMTP-tjenesten i QQ Mail og generere den koden før noen klient kan logge inn, og samme kode dekker både @qq.com-adressen og @foxmail.com-aliaset ditt. Én innboks er gratis.",
     "meta0": "1 innboks gratis, for alltid",
     "meta1": "Autorisasjonskode på 16 tegn, ikke passordet ditt",
     "meta2": "E-post hentes direkte, lagres aldri"
@@ -31,7 +31,7 @@
   },
   "setup": [
     {
-      "h": "Opprett din gratis mcpemails-konto",
+      "h": "Opprett din gratis MCP Emails-konto",
       "p": "Registrer deg på mcpemails.com. Gratisplanen kobler til én innboks og forblir gratis, uten kort. La fanen stå åpen; du skal lime inn QQ-autorisasjonskoden der om to steg."
     },
     {
@@ -39,8 +39,8 @@
       "p": "Åpne QQ Mail på nettet og gå til 设置 (innstillinger), så 账号与安全 (konto og sikkerhet) og 安全设置 (sikkerhetsinnstillinger). Eldre oppsett har den samme kontrollen under 设置 og så 账户, på linjen som starter med POP3/IMAP/SMTP. Slå på tjenesten. Før den er på, avviser imap.qq.com alle innloggingsforsøk, uansett hvilket passord du sender."
     },
     {
-      "h": "Generer 授权码 og lim den inn i mcpemails",
-      "p": "Med tjenesten på klikker du 生成授权码 (generer autorisasjonskode) og fullfører identitetssjekken Tencent ber om, som er enten QQ-passordet ditt eller en skanning fra QQ- eller WeChat-appen. Tencent viser koden på 16 tegn én gang og viser den ikke igjen. Kopier den, velg IMAP / SMTP i mcpemails, skriv inn hele QQ-adressen din og lim koden inn i passordfeltet. Vertene er forhåndsutfylt."
+      "h": "Generer 授权码 og lim den inn i MCP Emails",
+      "p": "Med tjenesten på klikker du 生成授权码 (generer autorisasjonskode) og fullfører identitetssjekken Tencent ber om, som er enten QQ-passordet ditt eller en skanning fra QQ- eller WeChat-appen. Tencent viser koden på 16 tegn én gang og viser den ikke igjen. Kopier den, velg IMAP / SMTP i MCP Emails, skriv inn hele QQ-adressen din og lim koden inn i passordfeltet. Vertene er forhåndsutfylt."
     },
     {
       "h": "Lim MCP-URL-en inn i AI-klienten",
@@ -69,7 +69,7 @@
   "faq": [
     {
       "q": "Fungerer Claude med QQ Mail?",
-      "a": "Ikke direkte. Claude har ingen innebygd QQ Mail-kobling og kan ikke åpne en IMAP-tilkobling selv. Kobler du en MCP-server som mcpemails til QQ-postkassen din, får Claude tilgang til å lese, søke, sende, svare, videresende, planlegge og organisere, og samme tilkobling fungerer i Cursor og andre MCP-klienter."
+      "a": "Ikke direkte. Claude har ingen innebygd QQ Mail-kobling og kan ikke åpne en IMAP-tilkobling selv. Kobler du en MCP-server som MCP Emails til QQ-postkassen din, får Claude tilgang til å lese, søke, sende, svare, videresende, planlegge og organisere, og samme tilkobling fungerer i Cursor og andre MCP-klienter."
     },
     {
       "q": "Hva er IMAP- og SMTP-innstillingene for QQ Mail?",

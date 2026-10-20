@@ -120,7 +120,7 @@ export async function POST(_request: NextRequest): Promise<NextResponse> {
   //
   // We pin our OWN portal configuration rather than the account default. The
   // same Stripe account bills another product, so the default configuration is
-  // shared and must not be reshaped around MCPEmails plans.
+  // shared and must not be reshaped around MCP Emails plans.
   //
   // Plan switching is deliberately NOT offered in the portal: the API silently
   // drops `features.subscription_update.products` on this account, so the

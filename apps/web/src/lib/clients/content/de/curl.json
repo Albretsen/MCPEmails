@@ -7,7 +7,7 @@
   ],
   "meta": {
     "title": "E-Mail-MCP-Server-API: curl, JSON-RPC und Bearer-Authentifizierung",
-    "description": "Rufen Sie den MCP-Server von mcpemails direkt über HTTP auf. Ein Streamable-HTTP-Endpunkt, JSON-RPC 2.0, ein Bearer-Schlüssel mit Scopes und der vollständige Tool-Katalog. Ein Postfach kostenlos."
+    "description": "Rufen Sie den MCP-Server von MCP Emails direkt über HTTP auf. Ein Streamable-HTTP-Endpunkt, JSON-RPC 2.0, ein Bearer-Schlüssel mit Scopes und der vollständige Tool-Katalog. Ein Postfach kostenlos."
   },
   "hero": {
     "eyebrow": "HTTP + E-Mail",

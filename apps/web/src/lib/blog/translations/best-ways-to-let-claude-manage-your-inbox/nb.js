@@ -1,7 +1,7 @@
 const translation = {
   title: 'De beste måtene å la Claude styre innboksen din på i 2026',
   description: 'En ærlig gjennomgang av de beste måtene å la Claude styre innboksen din på i 2026: native integrasjoner, egne MCP-servere, kopier-og-lim-inn, nettleserutvidelser og hostet MCP.',
-  coverAlt: 'De beste måtene å la Claude styre innboksen din på i 2026 — MCPEmails',
+  coverAlt: 'De beste måtene å la Claude styre innboksen din på i 2026 — MCP Emails',
   content: `Hvis du vil at Claude faktisk skal lese, sortere og svare på e-posten din, har du fem reelle alternativer i 2026: en hostet MCP-e-postserver, en egen MCP-server du kjører selv, å kopiere og lime inn tråder i chatten, en nettleserutvidelse, eller en native klientintegrasjon. For de fleste er en hostet MCP-server det riktige valget, fordi den fungerer på sekunder og aldri lagrer e-posten din. Resten har hver sin nisje, og et par av dem er dårligere enn de ser ut.
 
 Dette er en gjennomgang, ikke en reklame. Jeg går gjennom hver tilnærming, hvor den skinner, hvor den faller fra hverandre, og hvilken jeg ville valgt i hvilken situasjon. Vil du ha hele bakgrunnen for hva som skjer under panseret, start med hovedguiden: [hvordan gi AI-agenten din tilgang til e-post](/blog/how-to-give-your-ai-agent-email-access).

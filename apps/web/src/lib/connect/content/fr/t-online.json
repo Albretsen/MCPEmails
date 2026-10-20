@@ -22,7 +22,7 @@
     "titleLine1": "Connectez votre boîte T-Online",
     "titleLine2": "à Claude, Cursor, tout client MCP",
     "lead": "Offrez à votre agent IA une vraie boîte Telekom. Lisez, recherchez, envoyez, répondez, planifiez et organisez le courrier via IMAP avec le mot de passe dédié que Telekom délivre pour les logiciels de messagerie.",
-    "answer": "Claude ne peut pas accéder seul à une boîte T-Online. mcpemails est un serveur MCP hébergé qui la connecte via IMAP sur secureimap.t-online.de, port 993, en s'authentifiant avec le Passwort für E-Mail-Programme distinct que Telekom délivre pour les clients de messagerie, et non avec le mot de passe de votre identifiant Telekom, pour que Claude, Cursor ou tout client MCP puisse lire, rechercher, envoyer et organiser le courrier. Si vous n'avez jamais créé ce mot de passe, aucun client n'a jamais pu se connecter à la boîte, et l'échec ressemble à une faute de frappe. Une boîte est gratuite, pour toujours.",
+    "answer": "Claude ne peut pas accéder seul à une boîte T-Online. MCP Emails est un serveur MCP hébergé qui la connecte via IMAP sur secureimap.t-online.de, port 993, en s'authentifiant avec le Passwort für E-Mail-Programme distinct que Telekom délivre pour les clients de messagerie, et non avec le mot de passe de votre identifiant Telekom, pour que Claude, Cursor ou tout client MCP puisse lire, rechercher, envoyer et organiser le courrier. Si vous n'avez jamais créé ce mot de passe, aucun client n'a jamais pu se connecter à la boîte, et l'échec ressemble à une faute de frappe. Une boîte est gratuite, pour toujours.",
     "meta0": "1 boîte gratuite, pour toujours",
     "meta1": "Mot de passe Telekom pour logiciels de messagerie requis",
     "meta2": "E-mails récupérés en direct, jamais stockés"
@@ -34,14 +34,14 @@
   "setup": [
     {
       "h": "Créez un compte gratuit",
-      "p": "Inscrivez-vous sur mcpemails, sans carte bancaire. L'offre gratuite connecte une boîte, pour toujours."
+      "p": "Inscrivez-vous sur MCP Emails, sans carte bancaire. L'offre gratuite connecte une boîte, pour toujours."
     },
     {
       "h": "Créez le Passwort für E-Mail-Programme",
       "p": "Dans l'E-Mail Center sur email.t-online.de, cliquez sur la roue dentée (<b>Einstellungen</b>), puis <b>Alle Einstellungen anzeigen</b>, puis <b>Passwörter</b>, puis <b>Passwort für E-Mail-Programme</b>, et définissez-en un nouveau. L'autre chemin passe par le Kundencenter : <b>Profil verwalten</b>, puis <b>Login-Daten</b>, puis <b>Weitere Passwörter</b>. Telekom conseille de le choisir différent de votre mot de passe Telekom Login."
     },
     {
-      "h": "Collez-le dans mcpemails",
+      "h": "Collez-le dans MCP Emails",
       "p": "Choisissez IMAP / SMTP, saisissez l'adresse complète, par exemple name@t-online.de, et collez le mot de passe pour logiciels de messagerie. Les serveurs et ports Telekom sont préremplis et ont été vérifiés via une connexion TLS réelle."
     },
     {
@@ -56,7 +56,7 @@
     },
     {
       "h": "Le proxy IMAP n'annonce aucun mécanisme AUTH avant la connexion",
-      "p": "La bannière de capacités renvoyée par Telekom est <code>IMAP4 IMAP4rev1 QUOTA LITERAL+ NAMESPACE UIDPLUS IDLE SORT</code>. Elle ne contient ni <code>AUTH=PLAIN</code>, ni <code>AUTH=LOGIN</code>, ni <code>SASL-IR</code>. En pratique, le serveur attend la commande IMAP <code>LOGIN</code> simple plutôt qu'un échange SASL <code>AUTHENTICATE</code>. Les bibliothèques clientes qui énumèrent les mécanismes SASL annoncés et refusent de continuer quand la liste est vide abandonnent avant même d'envoyer les identifiants, ce qui explique pourquoi certains outils IMAP déclarent T-Online injoignable alors que Thunderbird se connecte à la même boîte sans difficulté. mcpemails gère la voie LOGIN simple, donc ce point est déjà réglé pour vous."
+      "p": "La bannière de capacités renvoyée par Telekom est <code>IMAP4 IMAP4rev1 QUOTA LITERAL+ NAMESPACE UIDPLUS IDLE SORT</code>. Elle ne contient ni <code>AUTH=PLAIN</code>, ni <code>AUTH=LOGIN</code>, ni <code>SASL-IR</code>. En pratique, le serveur attend la commande IMAP <code>LOGIN</code> simple plutôt qu'un échange SASL <code>AUTHENTICATE</code>. Les bibliothèques clientes qui énumèrent les mécanismes SASL annoncés et refusent de continuer quand la liste est vide abandonnent avant même d'envoyer les identifiants, ce qui explique pourquoi certains outils IMAP déclarent T-Online injoignable alors que Thunderbird se connecte à la même boîte sans difficulté. MCP Emails gère la voie LOGIN simple, donc ce point est déjà réglé pour vous."
     },
     {
       "h": "Ni MOVE ni SPECIAL-USE, sur une boîte aux dossiers en allemand",
@@ -78,7 +78,7 @@
   "faq": [
     {
       "q": "Claude fonctionne-t-il avec l'e-mail T-Online ?",
-      "a": "Pas seul. Claude n'a pas de connecteur Telekom ou T-Online intégré. Pointer un serveur MCP comme mcpemails vers la boîte via IMAP donne à Claude un accès en lecture, recherche, envoi, réponse, planification et organisation, et la même connexion fonctionne ensuite depuis Cursor, ChatGPT et les autres clients MCP."
+      "a": "Pas seul. Claude n'a pas de connecteur Telekom ou T-Online intégré. Pointer un serveur MCP comme MCP Emails vers la boîte via IMAP donne à Claude un accès en lecture, recherche, envoi, réponse, planification et organisation, et la même connexion fonctionne ensuite depuis Cursor, ChatGPT et les autres clients MCP."
     },
     {
       "q": "Quels sont les paramètres IMAP et SMTP de T-Online ?",

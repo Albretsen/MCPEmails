@@ -67,7 +67,7 @@
   "faq": [
     {
       "q": "如何将邮箱连接到 Cline？",
-      "a": "把 mcpemails 添加为远程服务器：MCP Servers、Remote Servers，粘贴 https://mcpemails.com/api/mcp ，将 Transport Type 设为 Streamable HTTP，并添加一个带有仪表盘中 API 密钥的 Authorization Bearer 标头。之后 Cline 就拥有了读取、搜索、发送、回复、转发、整理和定时发送邮件的工具。"
+      "a": "把 MCP Emails 添加为远程服务器：MCP Servers、Remote Servers，粘贴 https://mcpemails.com/api/mcp ，将 Transport Type 设为 Streamable HTTP，并添加一个带有仪表盘中 API 密钥的 Authorization Bearer 标头。之后 Cline 就拥有了读取、搜索、发送、回复、转发、整理和定时发送邮件的工具。"
     },
     {
       "q": "为什么 Cline 需要 API 密钥，而 Cursor 不需要？",

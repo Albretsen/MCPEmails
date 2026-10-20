@@ -2,7 +2,7 @@ const translation = {
   title: '7 cosas que tu agente de IA puede hacer en cuanto tiene acceso a la bandeja de entrada',
   description:
     'Siete cosas concretas que un agente de IA puede hacer con acceso a tu bandeja: clasificar correo sin leer, resumir hilos, redactar respuestas, encontrar adjuntos y hacer seguimientos.',
-  coverAlt: 'Siete cosas que tu agente de IA puede hacer con acceso a la bandeja de entrada a través de MCP — MCPEmails',
+  coverAlt: 'Siete cosas que tu agente de IA puede hacer con acceso a la bandeja de entrada a través de MCP — MCP Emails',
   content: `En cuanto tu agente puede leer y enviar correo de verdad, se acaban las demos de juguete y empieza el trabajo real. Aquí tienes siete cosas que puedes ponerle a hacer hoy mismo: clasificar el montón de correos sin leer, resumir un hilo largo, redactar respuestas con tu voz, rescatar ese adjunto concreto, perseguir seguimientos, dirigir el correo al sitio correcto y enviarte un resumen semanal.
 
 Cada ejemplo de abajo se corresponde con herramientas MCP reales que puedes invocar ahora mismo. Las herramientas son las mismas tanto si conectas Gmail, Outlook, iCloud, Fastmail o un buzón IMAP genérico. Si todavía no has conectado un agente a tu bandeja, la [guía completa para darle acceso al correo a tu agente de IA](/blog/how-to-give-your-ai-agent-email-access) cubre la configuración; el [tutorial de conexión en 2 minutos](/blog/connect-email-to-ai-agent-under-2-minutes) es el camino rápido.

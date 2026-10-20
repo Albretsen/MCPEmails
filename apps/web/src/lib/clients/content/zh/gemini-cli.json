@@ -71,7 +71,7 @@
     },
     {
       "q": "这和 Google 发布的 Gmail MCP 服务器是一回事吗？",
-      "a": "不是。Google 发布了一个 Workspace MCP 服务器，在其他服务之外也涵盖 Gmail；如果你只用 Gmail、并且完全在 Google 生态中工作，那是更直接的路径。mcpemails 面向的是邮箱并非全部来自 Google、并且同一个 URL 还要在 Claude、Cursor 和 ChatGPT 中使用的情况。"
+      "a": "不是。Google 发布了一个 Workspace MCP 服务器，在其他服务之外也涵盖 Gmail；如果你只用 Gmail、并且完全在 Google 生态中工作，那是更直接的路径。MCP Emails 面向的是邮箱并非全部来自 Google、并且同一个 URL 还要在 Claude、Cursor 和 ChatGPT 中使用的情况。"
     },
     {
       "q": "Gemini CLI 通过这种方式能访问哪些邮箱？",

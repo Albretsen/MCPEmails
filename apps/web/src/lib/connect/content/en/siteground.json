@@ -20,7 +20,7 @@
     "titleLine1": "MCP server for SiteGround mail:",
     "titleLine2": "every company mailbox, in Claude and ChatGPT",
     "lead": "Running info@, sales@, support@ and invoices@ on your own domain at SiteGround? Connect each mailbox to one workspace and your AI agent works across all of them. Read, search, send, reply, schedule and organize mail over IMAP, using the settings Site Tools prints for your account.",
-    "answer": "Claude cannot reach a SiteGround mailbox on its own. mcpemails is a hosted MCP server that connects it over plain IMAP on port 993, so Claude, Cursor or any MCP client can read, search, send and organize that mail. SiteGround runs no shared mail hostname: your host is mail.yourdomain.com, or the secure server name in the form secureNNN.sgcpanel.com, and Site Tools prints the right one under Email, Accounts, Mail Configuration. Authentication is the password set on the mailbox, never your SiteGround Client Area login. Each company address, such as info@ or sales@, connects as its own mailbox: one mailbox is free, Personal connects three, Pro up to 10, and Business as many as you need.",
+    "answer": "Claude cannot reach a SiteGround mailbox on its own. MCP Emails is a hosted MCP server that connects it over plain IMAP on port 993, so Claude, Cursor or any MCP client can read, search, send and organize that mail. SiteGround runs no shared mail hostname: your host is mail.yourdomain.com, or the secure server name in the form secureNNN.sgcpanel.com, and Site Tools prints the right one under Email, Accounts, Mail Configuration. Authentication is the password set on the mailbox, never your SiteGround Client Area login. Each company address, such as info@ or sales@, connects as its own mailbox: one mailbox is free, Personal connects three, Pro up to 10, and Business as many as you need.",
     "meta0": "First mailbox free, plans for the rest",
     "meta1": "Mailbox password from Site Tools",
     "meta2": "Email fetched live, never stored"
@@ -36,7 +36,7 @@
   },
   "setup": [
     {
-      "h": "Create a free mcpemails account",
+      "h": "Create a free MCP Emails account",
       "p": "Sign up at mcpemails.com. The free plan connects one inbox and needs no card."
     },
     {
@@ -45,7 +45,7 @@
     },
     {
       "h": "Take the secure server name, not just mail.yourdomain.com",
-      "p": "Note the <code>secureNNN.sgcpanel.com</code> value shown for your account and use it for both IMAP and SMTP. Set the mailbox password from the same Accounts screen if you do not have it; it is not your Client Area password. Then enter the address, the host and the password in mcpemails."
+      "p": "Note the <code>secureNNN.sgcpanel.com</code> value shown for your account and use it for both IMAP and SMTP. Set the mailbox password from the same Accounts screen if you do not have it; it is not your Client Area password. Then enter the address, the host and the password in MCP Emails."
     },
     {
       "h": "Paste the MCP URL into your AI",
@@ -68,12 +68,12 @@
   ],
   "limits": [
     "SiteGround applies per-hour outbound sending limits by plan. A burst of automated sends can be throttled, which appears as a rejected or deferred message rather than a connection failure.",
-    "mcpemails connects the mailbox only. Filters, forwarders, autoresponders and spam protection stay in Site Tools."
+    "MCP Emails connects the mailbox only. Filters, forwarders, autoresponders and spam protection stay in Site Tools."
   ],
   "faq": [
     {
       "q": "Does Claude work with SiteGround email?",
-      "a": "Not directly. Claude has no SiteGround connector. Connecting an MCP server such as mcpemails to your SiteGround mailbox over IMAP gives Claude read, search, send, reply, schedule and organize access to it, using the same credentials you would give Apple Mail or Thunderbird."
+      "a": "Not directly. Claude has no SiteGround connector. Connecting an MCP server such as MCP Emails to your SiteGround mailbox over IMAP gives Claude read, search, send, reply, schedule and organize access to it, using the same credentials you would give Apple Mail or Thunderbird."
     },
     {
       "q": "What are the SiteGround IMAP and SMTP settings?",

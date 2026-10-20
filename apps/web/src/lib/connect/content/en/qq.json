@@ -20,7 +20,7 @@
     "titleLine1": "Connect QQ Mail to Claude,",
     "titleLine2": "Cursor, ChatGPT, any MCP client",
     "lead": "Give your AI agent a real QQ mailbox. Read, search, send, reply, schedule and organize mail over IMAP with a Tencent authorization code, in every MCP client rather than just one.",
-    "answer": "Claude cannot reach QQ Mail on its own. mcpemails is a hosted MCP server that connects it over IMAP at imap.qq.com on port 993, authenticating with the 16-character authorization code (授权码) Tencent issues for third-party clients rather than your QQ password. You have to switch on the POP3/IMAP/SMTP service inside QQ Mail and generate that code before any client can log in, and the same code covers both your @qq.com address and your @foxmail.com alias. One inbox is free.",
+    "answer": "Claude cannot reach QQ Mail on its own. MCP Emails is a hosted MCP server that connects it over IMAP at imap.qq.com on port 993, authenticating with the 16-character authorization code (授权码) Tencent issues for third-party clients rather than your QQ password. You have to switch on the POP3/IMAP/SMTP service inside QQ Mail and generate that code before any client can log in, and the same code covers both your @qq.com address and your @foxmail.com alias. One inbox is free.",
     "meta0": "1 inbox free, forever",
     "meta1": "16-character authorization code, not your password",
     "meta2": "Email fetched live, never stored"
@@ -31,7 +31,7 @@
   },
   "setup": [
     {
-      "h": "Create your free mcpemails account",
+      "h": "Create your free MCP Emails account",
       "p": "Sign up at mcpemails.com. The free plan connects one inbox and stays free, with no card required. Leave the tab open; you will paste the QQ authorization code into it two steps from now."
     },
     {
@@ -39,8 +39,8 @@
       "p": "Open QQ Mail on the web and go to 设置 (Settings), then 账号与安全 (Account and security) and 安全设置 (Security settings). Older layouts put the same control under 设置 then 账户, on the line that starts POP3/IMAP/SMTP. Turn the service on. Until it is on, imap.qq.com refuses every login attempt, whatever password you send."
     },
     {
-      "h": "Generate the 授权码 and paste it into mcpemails",
-      "p": "With the service on, click 生成授权码 (generate authorization code) and complete the identity check Tencent asks for, which is either your QQ password or a scan from the QQ or WeChat app. Tencent shows the 16-character code once and does not show it again. Copy it, choose IMAP / SMTP in mcpemails, enter your full QQ address, and paste the code into the password field. The hosts are prefilled."
+      "h": "Generate the 授权码 and paste it into MCP Emails",
+      "p": "With the service on, click 生成授权码 (generate authorization code) and complete the identity check Tencent asks for, which is either your QQ password or a scan from the QQ or WeChat app. Tencent shows the 16-character code once and does not show it again. Copy it, choose IMAP / SMTP in MCP Emails, enter your full QQ address, and paste the code into the password field. The hosts are prefilled."
     },
     {
       "h": "Paste the MCP URL into your AI client",
@@ -69,7 +69,7 @@
   "faq": [
     {
       "q": "Does Claude work with QQ Mail?",
-      "a": "Not directly. Claude has no built-in QQ Mail connector and cannot open an IMAP connection by itself. Connecting an MCP server such as mcpemails to your QQ mailbox gives Claude read, search, send, reply, forward, schedule and organize access to it, and the same connection works in Cursor and other MCP clients."
+      "a": "Not directly. Claude has no built-in QQ Mail connector and cannot open an IMAP connection by itself. Connecting an MCP server such as MCP Emails to your QQ mailbox gives Claude read, search, send, reply, forward, schedule and organize access to it, and the same connection works in Cursor and other MCP clients."
     },
     {
       "q": "What are the QQ Mail IMAP and SMTP settings?",

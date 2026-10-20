@@ -21,7 +21,7 @@
     "titleLine1": "Conecta Mailfence a Claude,",
     "titleLine2": "Cursor, ChatGPT y cualquier cliente MCP",
     "lead": "Dale a tu agente de IA una bandeja real de Mailfence. Lee, busca, envía, responde, programa y organiza correo por IMAP, en cualquier cliente MCP, con el requisito de plan y la salvedad de la autenticación en dos factores explicados desde el principio en lugar de descubrirlos después.",
-    "answer": "Claude no puede acceder por sí solo a Mailfence. mcpemails es un servidor MCP alojado que lo conecta por IMAP en imap.mailfence.com en el puerto 993, y por SMTP en smtp.mailfence.com en el puerto 465, para que Claude, Cursor o cualquier cliente MCP pueda leer, buscar, enviar y organizar ese correo. Dos condiciones deciden si funcionará: IMAP, POP y SMTP solo están disponibles en los planes de pago de Mailfence, no en la cuenta gratuita, y el inicio de sesión tiene que ser tu dirección principal o tu nombre de usuario y no un alias. La autenticación usa tu contraseña de Mailfence o, mejor aún, una contraseña específica de servicio generada en Settings, Account, Security. Una bandeja es gratis por nuestra parte, para siempre.",
+    "answer": "Claude no puede acceder por sí solo a Mailfence. MCP Emails es un servidor MCP alojado que lo conecta por IMAP en imap.mailfence.com en el puerto 993, y por SMTP en smtp.mailfence.com en el puerto 465, para que Claude, Cursor o cualquier cliente MCP pueda leer, buscar, enviar y organizar ese correo. Dos condiciones deciden si funcionará: IMAP, POP y SMTP solo están disponibles en los planes de pago de Mailfence, no en la cuenta gratuita, y el inicio de sesión tiene que ser tu dirección principal o tu nombre de usuario y no un alias. La autenticación usa tu contraseña de Mailfence o, mejor aún, una contraseña específica de servicio generada en Settings, Account, Security. Una bandeja es gratis por nuestra parte, para siempre.",
     "meta0": "1 bandeja gratis, para siempre",
     "meta1": "IMAP requiere un plan de pago de Mailfence",
     "meta2": "El correo se obtiene en vivo, nunca se almacena"
@@ -32,7 +32,7 @@
   },
   "setup": [
     {
-      "h": "Crea tu cuenta gratis en mcpemails",
+      "h": "Crea tu cuenta gratis en MCP Emails",
       "p": "Regístrate en mcpemails.com. El plan gratuito conecta una bandeja, para siempre, sin tarjeta. Al final obtienes una URL MCP y una clave."
     },
     {
@@ -41,7 +41,7 @@
     },
     {
       "h": "Genera una contraseña específica de servicio y desactiva lo que no necesites",
-      "p": "En <b>Settings</b>, <b>Account</b>, <b>Security</b>, <b>Services access</b>, crea una contraseña limitada a IMAP y otra para SMTP en lugar de reutilizar la contraseña de tu cuenta, y desactiva POP, xDAV y cualquier otro protocolo que no uses. Es exactamente lo que aconseja Mailfence para reforzar la seguridad. Después añade el buzón en mcpemails con tu dirección <b>principal</b> o tu nombre de usuario y esa contraseña."
+      "p": "En <b>Settings</b>, <b>Account</b>, <b>Security</b>, <b>Services access</b>, crea una contraseña limitada a IMAP y otra para SMTP en lugar de reutilizar la contraseña de tu cuenta, y desactiva POP, xDAV y cualquier otro protocolo que no uses. Es exactamente lo que aconseja Mailfence para reforzar la seguridad. Después añade el buzón en MCP Emails con tu dirección <b>principal</b> o tu nombre de usuario y esa contraseña."
     },
     {
       "h": "Pega la URL MCP en tu IA",
@@ -67,14 +67,14 @@
     }
   ],
   "limits": [
-    "Conectar un buzón de Mailfence a un cliente de IA significa que ese proveedor de IA lee el contenido de los mensajes con los que trabaja. mcpemails obtiene el correo en vivo de Mailfence en cada solicitud y no almacena el cuerpo de los mensajes, y las credenciales se cifran en reposo, pero el texto sigue llegando a Claude, Cursor o el cliente que conectes. La jurisdicción belga de Mailfence y su postura contra el rastreo se aplican a Mailfence, y no acompañan a un mensaje que llega a un proveedor de IA que vinculas tú.",
-    "El almacén de claves OpenPGP de Mailfence es la razón de ser del producto para muchos de sus usuarios, y un mensaje cifrado con tu clave llega por IMAP como texto cifrado. mcpemails no tiene ninguna clave privada tuya, así que un agente puede ordenar, marcar y archivar esos mensajes, pero no leerlos. Siguen siendo legibles en la interfaz web de Mailfence, donde está la clave.",
+    "Conectar un buzón de Mailfence a un cliente de IA significa que ese proveedor de IA lee el contenido de los mensajes con los que trabaja. MCP Emails obtiene el correo en vivo de Mailfence en cada solicitud y no almacena el cuerpo de los mensajes, y las credenciales se cifran en reposo, pero el texto sigue llegando a Claude, Cursor o el cliente que conectes. La jurisdicción belga de Mailfence y su postura contra el rastreo se aplican a Mailfence, y no acompañan a un mensaje que llega a un proveedor de IA que vinculas tú.",
+    "El almacén de claves OpenPGP de Mailfence es la razón de ser del producto para muchos de sus usuarios, y un mensaje cifrado con tu clave llega por IMAP como texto cifrado. MCP Emails no tiene ninguna clave privada tuya, así que un agente puede ordenar, marcar y archivar esos mensajes, pero no leerlos. Siguen siendo legibles en la interfaz web de Mailfence, donde está la clave.",
     "Una cuenta gratuita de Mailfence no se puede conectar aquí en absoluto. Es una restricción del plan de Mailfence y no una limitación del servidor MCP, y no hay más solución que un plan de pago."
   ],
   "faq": [
     {
       "q": "¿Funciona Claude con Mailfence?",
-      "a": "No directamente. Claude no tiene un conector integrado para Mailfence. Conectar un servidor MCP como mcpemails a una cuenta de pago de Mailfence por IMAP le da a Claude acceso para leer, buscar, enviar, responder, programar y organizar, y la misma conexión funciona en Cursor y otros clientes MCP sin repetir la configuración."
+      "a": "No directamente. Claude no tiene un conector integrado para Mailfence. Conectar un servidor MCP como MCP Emails a una cuenta de pago de Mailfence por IMAP le da a Claude acceso para leer, buscar, enviar, responder, programar y organizar, y la misma conexión funciona en Cursor y otros clientes MCP sin repetir la configuración."
     },
     {
       "q": "¿Cuáles son los ajustes IMAP y SMTP de Mailfence?",
@@ -90,7 +90,7 @@
     },
     {
       "q": "¿Puede mi IA leer mi correo de Mailfence cifrado con OpenPGP?",
-      "a": "No. El cifrado de Mailfence depende de una clave que tu cliente de IA no tiene y que mcpemails nunca recibe, así que un mensaje cifrado llega por IMAP como un bloque de texto cifrado con armadura. El agente puede ver el remitente, el asunto y la fecha y puede mover o marcar el mensaje, pero el cuerpo es ilegible fuera de la interfaz de Mailfence."
+      "a": "No. El cifrado de Mailfence depende de una clave que tu cliente de IA no tiene y que MCP Emails nunca recibe, así que un mensaje cifrado llega por IMAP como un bloque de texto cifrado con armadura. El agente puede ver el remitente, el asunto y la fecha y puede mover o marcar el mensaje, pero el cuerpo es ilegible fuera de la interfaz de Mailfence."
     },
     {
       "q": "¿Se almacena mi correo de Mailfence en sus servidores?",

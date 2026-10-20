@@ -3,7 +3,7 @@ const post = {
   title: 'OAuth vs. API Keys for AI Email Access: Which Should You Use?',
   description: 'OAuth vs. API keys for AI email access: use OAuth for claude.ai, Claude Desktop, and Cursor; use a scoped API key for Cline, JetBrains, and scripts.',
   cover: '/blog/cover-oauth-vs-api-keys-ai-email-access.svg',
-  coverAlt: 'OAuth versus API keys for connecting AI agents to email — MCPEmails',
+  coverAlt: 'OAuth versus API keys for connecting AI agents to email — MCP Emails',
   authorId: 'asgeir',
   publishedAt: "2026-06-12T09:00:00.000Z",
   updatedAt: "2026-06-21T09:00:00.000Z",

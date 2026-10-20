@@ -1,7 +1,7 @@
 {
   "meta": {
     "title": "Documentation du serveur MCP e-mail : Gmail, Outlook, IMAP et OAuth",
-    "description": "Démarrez avec MCPEmails en quelques minutes. Guide de démarrage rapide, référence des outils et exemples de réponses pour les agents Gmail, Outlook et IMAP."
+    "description": "Démarrez avec MCP Emails en quelques minutes. Guide de démarrage rapide, référence des outils et exemples de réponses pour les agents Gmail, Outlook et IMAP."
   },
   "hero": {
     "eyebrow": "Documentation",
@@ -17,7 +17,7 @@
   "quickstart": {
     "eyebrow": "Démarrage rapide",
     "heading": "Opérationnel en quelques minutes.",
-    "sub": "Aucun SDK requis. MCPEmails parle le MCP standard via HTTP, donc il s'intègre dans tout agent compatible MCP.",
+    "sub": "Aucun SDK requis. MCP Emails parle le MCP standard via HTTP, donc il s'intègre dans tout agent compatible MCP.",
     "steps": {
       "signup": {
         "label": "Inscrivez-vous et connectez une boîte",
@@ -31,7 +31,7 @@
         "body": "Dans Tableau de bord → Clés d'API, cliquez sur « Créer une clé ». Nommez-la, sélectionnez les portées dont votre agent a besoin (read:email, search:email, send:email, manage:folders, delete:email, manage:drafts, manage:contacts, schedule:email ) et copiez la clé. Elle n'est affichée qu'une seule fois."
       },
       "addclient": {
-        "label": "Ajoutez MCPEmails à votre agent",
+        "label": "Ajoutez MCP Emails à votre agent",
         "heading": "Collez le point de terminaison MCP dans votre client",
         "body": "Choisissez l'onglet de votre client ci-dessous. Les clients MCP qui prennent en charge OAuth 2.0 (claude.ai, Claude Desktop, Cursor et autres) n'ont qu'à coller l'URL et autoriser, aucune clé API nécessaire. Les clients sans OAuth, ainsi que l'accès par script, utilisent la clé API de l'étape 02."
       },
@@ -63,7 +63,7 @@
     "infoFormat": "Format de réponse : <b>JSON-RPC 2.0</b> : les résultats réussis comportent aussi un objet typé <code>structuredContent</code>",
     "handshakeLabel": "Handshake d'initialisation",
     "pollingHeading": "Interrogation, pas push",
-    "pollingBody": "MCPEmails fonctionne uniquement en requête/réponse : chaque résultat provient d'un appel d'outil effectué par votre agent. <b>Il n'y a ni webhooks, ni notifications push, ni événements initiés par le serveur</b> : un e-mail entrant ne déclenche jamais un appel d'agent de lui-même. Pour réagir aux nouveaux messages, faites <b>interroger</b> votre agent périodiquement, p. ex. en appelant <code>email_read</code> avec <code>action: \"list\"</code> et <code>unread: true</code> à l'intervalle dont votre flux a besoin (attention aux limites de débit ci-dessus)."
+    "pollingBody": "MCP Emails fonctionne uniquement en requête/réponse : chaque résultat provient d'un appel d'outil effectué par votre agent. <b>Il n'y a ni webhooks, ni notifications push, ni événements initiés par le serveur</b> : un e-mail entrant ne déclenche jamais un appel d'agent de lui-même. Pour réagir aux nouveaux messages, faites <b>interroger</b> votre agent périodiquement, p. ex. en appelant <code>email_read</code> avec <code>action: \"list\"</code> et <code>unread: true</code> à l'intervalle dont votre flux a besoin (attention aux limites de débit ci-dessus)."
   },
   "operations": {
     "eyebrow": "Conçu pour le vrai travail de boîte mail",
@@ -100,8 +100,8 @@
     "sub": "Les clients MCP qui prennent en charge OAuth 2.0 (claude.ai, Claude Desktop, Cursor et autres) se connectent automatiquement via le code d'autorisation + PKCE. Aucune clé API, aucun fichier de configuration. Collez l'URL et cliquez sur Connecter.",
     "step1": "<b>Étape 1 :</b> Allez dans claude.ai → Customize → Connectors → Add connector",
     "step2": "<b>Étape 2 :</b> Collez <code>https://mcpemails.com/api/mcp</code> comme URL du serveur",
-    "step3": "<b>Étape 3 :</b> Cliquez sur Connect. MCPEmails ouvre un écran d'autorisation",
-    "step4": "<b>Étape 4 :</b> Connectez-vous avec votre compte mcpemails et approuvez l'accès",
+    "step3": "<b>Étape 3 :</b> Cliquez sur Connect. MCP Emails ouvre un écran d'autorisation",
+    "step4": "<b>Étape 4 :</b> Connectez-vous avec votre compte MCP Emails et approuvez l'accès",
     "stepDone": "<b>Terminé :</b> Chaque outil autorisé par vos portées approuvées est actif. claude.ai renouvelle les jetons automatiquement",
     "howTitle": "Comment ça fonctionne en coulisses",
     "howP1": "claude.ai s'enregistre via <b>RFC 7591 Dynamic Client Registration</b>, donc vous ne préenregistrez jamais d'ID client.",

@@ -14,11 +14,11 @@
     "eyebrow": "Claude + email",
     "titleLine1": "Connect your inbox to Claude",
     "titleLine2": "as a custom connector",
-    "lead": "Claude has no mail client of its own. mcpemails is the hosted MCP server that gives it one: read, search, send, reply, forward, schedule and organize real mail from claude.ai or Claude Desktop.",
+    "lead": "Claude has no mail client of its own. MCP Emails is the hosted MCP server that gives it one: read, search, send, reply, forward, schedule and organize real mail from claude.ai or Claude Desktop.",
     "meta0": "1 inbox free, forever",
     "meta1": "OAuth, no API key needed",
     "meta2": "Email fetched live, never stored",
-    "answer": "Add https://mcpemails.com/api/mcp as a custom connector in Claude, click Connect, and sign in with your mcpemails account. Claude registers itself automatically and asks for the scopes you approve. There is no API key to create and no config file to edit."
+    "answer": "Add https://mcpemails.com/api/mcp as a custom connector in Claude, click Connect, and sign in with your MCP Emails account. Claude registers itself automatically and asks for the scopes you approve. There is no API key to create and no config file to edit."
   },
   "method": {
     "title": "How Claude connects: OAuth, no API key",
@@ -39,7 +39,7 @@
     },
     {
       "h": "Connect and authorize",
-      "p": "Click Connect and sign in with mcpemails to authorize. Approve the scopes you want Claude to hold. No API key needed."
+      "p": "Click Connect and sign in with MCP Emails to authorize. Approve the scopes you want Claude to hold. No API key needed."
     }
   ],
   "gotchas": [
@@ -64,7 +64,7 @@
   "faq": [
     {
       "q": "Can Claude read my email?",
-      "a": "Not by itself. Claude can reach a mailbox only through a connector, and a custom connector pointed at mcpemails is one way to give it one. Once connected, Claude can list, read, search, send, reply, forward, organize and schedule mail across every inbox you have attached, limited to the scopes you approved."
+      "a": "Not by itself. Claude can reach a mailbox only through a connector, and a custom connector pointed at MCP Emails is one way to give it one. Once connected, Claude can list, read, search, send, reply, forward, organize and schedule mail across every inbox you have attached, limited to the scopes you approved."
     },
     {
       "q": "Do I need an API key for Claude?",

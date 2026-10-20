@@ -37,7 +37,7 @@
     },
     {
       "h": "授权",
-      "p": "Cursor 会提示你通过 OAuth 登录。通过 mcpemails 授权，并批准你希望编辑器拥有的权限范围。"
+      "p": "Cursor 会提示你通过 OAuth 登录。通过 MCP Emails 授权，并批准你希望编辑器拥有的权限范围。"
     }
   ],
   "gotchas": [

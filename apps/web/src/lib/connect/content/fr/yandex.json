@@ -18,7 +18,7 @@
     "titleLine1": "Connectez Yandex Mail à Claude,",
     "titleLine2": "et à Cursor, ChatGPT, tout client MCP",
     "lead": "Offrez à votre agent IA une vraie boîte Yandex. Lisez, recherchez, envoyez, répondez, planifiez et organisez le courrier en IMAP avec un mot de passe d'application Yandex, dans tous vos clients MCP plutôt qu'un seul.",
-    "answer": "Claude ne peut pas accéder seul à Yandex Mail. mcpemails est un serveur MCP hébergé qui le connecte en IMAP sur imap.yandex.com, port 993, en s'authentifiant avec un mot de passe d'application Yandex plutôt qu'avec le mot de passe de votre compte, pour que Claude, Cursor ou tout client MCP puisse lire, rechercher, envoyer et organiser ce courrier. Yandex exige de passer la boîte en accès par mot de passe d'application avant qu'un client de messagerie puisse se connecter ; la configuration prend quelques minutes et une boîte est gratuite.",
+    "answer": "Claude ne peut pas accéder seul à Yandex Mail. MCP Emails est un serveur MCP hébergé qui le connecte en IMAP sur imap.yandex.com, port 993, en s'authentifiant avec un mot de passe d'application Yandex plutôt qu'avec le mot de passe de votre compte, pour que Claude, Cursor ou tout client MCP puisse lire, rechercher, envoyer et organiser ce courrier. Yandex exige de passer la boîte en accès par mot de passe d'application avant qu'un client de messagerie puisse se connecter ; la configuration prend quelques minutes et une boîte est gratuite.",
     "meta0": "1 boîte gratuite, pour toujours",
     "meta1": "Mot de passe d'application, pas celui du compte",
     "meta2": "E-mails récupérés en direct, jamais stockés"
@@ -37,7 +37,7 @@
       "p": "Sur id.yandex.com, ouvrez Security, puis App passwords, et créez-en un de type Mail. Yandex n'affiche le mot de passe qu'une fois. Copiez-le tout de suite ; le mot de passe habituel de votre compte ne fonctionnera pas ici."
     },
     {
-      "h": "Collez-le dans mcpemails",
+      "h": "Collez-le dans MCP Emails",
       "p": "Choisissez IMAP / SMTP, saisissez votre adresse Yandex complète et collez le mot de passe d'application. Les serveurs ci-dessus sont préremplis."
     },
     {
@@ -48,7 +48,7 @@
   "gotchas": [
     {
       "h": "Yandex n'annonce pas SASL-IR, alors que la plupart des clients le supposent",
-      "p": "Le serveur IMAP de Yandex omet la capacité SASL-IR : il rejette donc l'authentification en une étape qui envoie les identifiants avec la commande AUTHENTICATE. Les clients qui supposent SASL-IR reçoivent un simple BAD sans explication, qui ressemble à de mauvais identifiants. mcpemails détecte le BAD et relance l'échange en deux étapes : ce cas est donc déjà géré pour vous, mais c'est la raison pour laquelle d'autres outils IMAP échouent face à Yandex alors qu'ils fonctionnent partout ailleurs."
+      "p": "Le serveur IMAP de Yandex omet la capacité SASL-IR : il rejette donc l'authentification en une étape qui envoie les identifiants avec la commande AUTHENTICATE. Les clients qui supposent SASL-IR reçoivent un simple BAD sans explication, qui ressemble à de mauvais identifiants. MCP Emails détecte le BAD et relance l'échange en deux étapes : ce cas est donc déjà géré pour vous, mais c'est la raison pour laquelle d'autres outils IMAP échouent face à Yandex alors qu'ils fonctionnent partout ailleurs."
     },
     {
       "h": "Le mot de passe du compte ne fonctionne jamais, même sans 2FA",
@@ -65,7 +65,7 @@
   "faq": [
     {
       "q": "Claude fonctionne-t-il avec Yandex Mail ?",
-      "a": "Pas directement. Claude n'a pas de connecteur Yandex intégré. Connecter un serveur MCP comme mcpemails à votre boîte Yandex en IMAP donne à Claude un accès en lecture, recherche, envoi, réponse, planification et organisation."
+      "a": "Pas directement. Claude n'a pas de connecteur Yandex intégré. Connecter un serveur MCP comme MCP Emails à votre boîte Yandex en IMAP donne à Claude un accès en lecture, recherche, envoi, réponse, planification et organisation."
     },
     {
       "q": "Quels sont les paramètres IMAP et SMTP de Yandex ?",

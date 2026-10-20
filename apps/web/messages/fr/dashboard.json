@@ -22,20 +22,20 @@
       "step1": "Dans claude.ai ou Claude Desktop, ouvrez Settings → Connectors.",
       "step2": "Cliquez sur « Add custom connector ».",
       "step3": "Collez l'URL ci-dessus comme URL du connecteur, puis cliquez sur « Add ».",
-      "step4": "Cliquez sur « Connect » et connectez-vous avec mcpemails pour autoriser. Aucune clé API nécessaire."
+      "step4": "Cliquez sur « Connect » et connectez-vous avec MCP Emails pour autoriser. Aucune clé API nécessaire."
     },
     "chatgpt": {
       "step1": "Ouvrez Settings → Apps & Connectors → Advanced settings et activez le mode développeur.",
       "step2": "De retour dans Apps & Connectors, cliquez sur « Create ».",
       "step3": "Saisissez un nom et collez l'URL ci-dessus comme Connector URL.",
-      "step4": "Choisissez OAuth, cliquez sur « Create », puis autorisez avec mcpemails.",
-      "step5": "Dans une conversation sur chatgpt.com, cliquez sur + → mode développeur et sélectionnez l'app mcpemails. Refaites-le dans chaque nouvelle conversation, sinon ChatGPT ne verra pas les outils.",
+      "step4": "Choisissez OAuth, cliquez sur « Create », puis autorisez avec MCP Emails.",
+      "step5": "Dans une conversation sur chatgpt.com, cliquez sur + → mode développeur et sélectionnez l'app MCP Emails. Refaites-le dans chaque nouvelle conversation, sinon ChatGPT ne verra pas les outils.",
       "note": "Fonctionne sur chatgpt.com (web uniquement) avec Plus, Pro, Business, Enterprise et Edu. Les comptes Free et Go ne peuvent pas ajouter de connecteur personnalisé. Sur Business et Enterprise, un administrateur doit parfois d'abord autoriser le mode développeur."
     },
     "cursor": {
       "step1": "Modifiez ~/.cursor/mcp.json (global) ou .cursor/mcp.json (projet).",
       "step2": "Ajoutez le serveur ci-dessous sous « mcpServers ».",
-      "step3": "Cursor vous invite à vous connecter via OAuth. Autorisez avec mcpemails."
+      "step3": "Cursor vous invite à vous connecter via OAuth. Autorisez avec MCP Emails."
     },
     "vscode": {
       "step1": "Ouvrez la palette de commandes (⇧⌘P) et exécutez « MCP: Add Server ».",
@@ -51,7 +51,7 @@
     "windsurf": {
       "step1": "Ouvrez les paramètres MCP de Cascade, ou modifiez ~/.codeium/windsurf/mcp_config.json.",
       "step2": "Ajoutez le serveur ci-dessous. Notez que le champ est « serverUrl », et non « url ».",
-      "step3": "Actualisez les serveurs MCP dans Cascade et autorisez avec mcpemails lorsque demandé."
+      "step3": "Actualisez les serveurs MCP dans Cascade et autorisez avec MCP Emails lorsque demandé."
     },
     "gemini": {
       "step1": "Modifiez ~/.gemini/settings.json (global) ou .gemini/settings.json (projet).",
@@ -61,7 +61,7 @@
     "zed": {
       "step1": "Dans les paramètres du panneau Agent, cliquez sur « Add Custom Server », ou modifiez settings.json.",
       "step2": "Ajoutez le serveur ci-dessous sous « context_servers ».",
-      "step3": "Zed déclenche le flux OAuth lorsqu'aucun en-tête Authorization n'est défini. Connectez-vous avec mcpemails."
+      "step3": "Zed déclenche le flux OAuth lorsqu'aucun en-tête Authorization n'est défini. Connectez-vous avec MCP Emails."
     },
     "jetbrains": {
       "step1": "Ouvrez Settings → Tools → AI Assistant → Model Context Protocol (MCP).",
@@ -71,7 +71,7 @@
     "raycast": {
       "step1": "Exécutez la commande « Install MCP Server » (ou « Manage MCP Servers »).",
       "step2": "Saisissez un nom, définissez Transport sur « HTTP » et collez l'URL ci-dessus.",
-      "step3": "Appuyez sur « Install MCP Server », puis cliquez sur « Sign In » pour autoriser avec mcpemails."
+      "step3": "Appuyez sur « Install MCP Server », puis cliquez sur « Sign In » pour autoriser avec MCP Emails."
     },
     "warp": {
       "step1": "Ouvrez Settings → Agents → MCP servers et cliquez sur « + Add ».",

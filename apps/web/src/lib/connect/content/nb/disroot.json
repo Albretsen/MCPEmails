@@ -20,7 +20,7 @@
     "titleLine1": "Koble Disroot til Claude,",
     "titleLine2": "Cursor, ChatGPT og enhver MCP-klient",
     "lead": "Gi AI-agenten din en ekte Disroot-innboks. Les, søk, send, svar, planlegg og organiser e-post over IMAP, i alle MCP-klienter i stedet for bare én, og med personvernavveiningen sagt rett ut.",
-    "answer": "Claude kan ikke nå en Disroot-postkasse på egen hånd. mcpemails er en hostet MCP-server som kobler den til over IMAP på disroot.org, port 993, og SMTP på port 465, og autentiserer med det samme Disroot-passordet du bruker for webmail og Cloud, slik at Claude, Cursor eller enhver MCP-klient kan lese, søke i, sende og organisere e-posten. Disroot utsteder ingen app-passord, så vær klar over at påloggingsopplysningen du lagrer, er kontopassordet ditt. Én innboks er gratis, for alltid.",
+    "answer": "Claude kan ikke nå en Disroot-postkasse på egen hånd. MCP Emails er en hostet MCP-server som kobler den til over IMAP på disroot.org, port 993, og SMTP på port 465, og autentiserer med det samme Disroot-passordet du bruker for webmail og Cloud, slik at Claude, Cursor eller enhver MCP-klient kan lese, søke i, sende og organisere e-posten. Disroot utsteder ingen app-passord, så vær klar over at påloggingsopplysningen du lagrer, er kontopassordet ditt. Én innboks er gratis, for alltid.",
     "meta0": "1 innboks gratis, for alltid",
     "meta1": "Passordet til Disroot-kontoen din",
     "meta2": "E-post hentes direkte, lagres aldri"
@@ -31,7 +31,7 @@
   },
   "setup": [
     {
-      "h": "Opprett en gratis mcpemails-konto",
+      "h": "Opprett en gratis MCP Emails-konto",
       "p": "Registrer deg på mcpemails.com. Gratisplanen kobler til én innboks, for alltid, uten kort. Til slutt får du en MCP-URL og en nøkkel."
     },
     {
@@ -39,7 +39,7 @@
       "p": "Disroots FAQ sier tydelig at kontopåloggingen er brukernavnet ditt <b>uten</b> domenet. De fleste e-postklienter autentiserer fint med hele <code>name@disroot.org</code>-adressen, men hvis serveren avviser deg og passordet helt sikkert er riktig, prøver du igjen med bare brukernavnet. Den ene detaljen forklarer de fleste mislykkede klientpålogginger hos Disroot."
     },
     {
-      "h": "Legg til postkassen i mcpemails",
+      "h": "Legg til postkassen i MCP Emails",
       "p": "Velg IMAP / SMTP, skriv inn Disroot-adressen og Disroot-passordet ditt. Vertene er forhåndsutfylt med <code>disroot.org</code> for begge retninger. Påloggingsopplysninger er kryptert ved lagring; selve e-posten hentes direkte per forespørsel og beholdes ikke."
     },
     {
@@ -66,14 +66,14 @@
     }
   ],
   "limits": [
-    "Å koble en postkasse til en AI-klient betyr at AI-leverandøren leser innholdet i meldingene dine. Det kan verken Disroot eller vi hindre. mcpemails henter e-post direkte fra Disroot per forespørsel og lagrer ikke meldingsinnhold, og påloggingsopplysninger er kryptert ved lagring, men teksten når likevel Claude, Cursor eller hvilken klient du enn peker den mot. Hvis en Disroot-postkasse inneholder korrespondanse du ikke vil at en stor AI-leverandør skal behandle, bør du ikke koble den til.",
-    "E-post som kommer GPG-kryptert, noe Disroot aktivt oppfordrer til, når en IMAP-klient som en armert chiffertekstblokk. mcpemails har ikke den private nøkkelen din, så en agent ser konvolutten og den krypterte nyttelasten, ikke meldingen. Slike tråder må leses i en klient som har nøkkelen din.",
-    "Det finnes ingen avgrenset påloggingsopplysning. Disroot tilbyr ikke app-passord, så mcpemails lagrer det samme passordet som åpner Cloud-filene dine."
+    "Å koble en postkasse til en AI-klient betyr at AI-leverandøren leser innholdet i meldingene dine. Det kan verken Disroot eller vi hindre. MCP Emails henter e-post direkte fra Disroot per forespørsel og lagrer ikke meldingsinnhold, og påloggingsopplysninger er kryptert ved lagring, men teksten når likevel Claude, Cursor eller hvilken klient du enn peker den mot. Hvis en Disroot-postkasse inneholder korrespondanse du ikke vil at en stor AI-leverandør skal behandle, bør du ikke koble den til.",
+    "E-post som kommer GPG-kryptert, noe Disroot aktivt oppfordrer til, når en IMAP-klient som en armert chiffertekstblokk. MCP Emails har ikke den private nøkkelen din, så en agent ser konvolutten og den krypterte nyttelasten, ikke meldingen. Slike tråder må leses i en klient som har nøkkelen din.",
+    "Det finnes ingen avgrenset påloggingsopplysning. Disroot tilbyr ikke app-passord, så MCP Emails lagrer det samme passordet som åpner Cloud-filene dine."
   ],
   "faq": [
     {
       "q": "Fungerer Claude med Disroot?",
-      "a": "Ikke direkte. Claude har ingen innebygd Disroot-kobling og ingen måte å snakke IMAP på. Kobler du en MCP-server som mcpemails til Disroot-postkassen din, får Claude tilgang til å lese, søke, sende, svare, planlegge og organisere, og den samme tilkoblingen fungerer i Cursor og andre MCP-klienter uten nytt oppsett."
+      "a": "Ikke direkte. Claude har ingen innebygd Disroot-kobling og ingen måte å snakke IMAP på. Kobler du en MCP-server som MCP Emails til Disroot-postkassen din, får Claude tilgang til å lese, søke, sende, svare, planlegge og organisere, og den samme tilkoblingen fungerer i Cursor og andre MCP-klienter uten nytt oppsett."
     },
     {
       "q": "Hva er IMAP- og SMTP-innstillingene for Disroot?",
@@ -89,7 +89,7 @@
     },
     {
       "q": "Kan AI-en min lese PGP-kryptert Disroot-e-post?",
-      "a": "Nei. En melding som er kryptert til OpenPGP-nøkkelen din, kommer over IMAP som chiffertekst, og mcpemails har aldri den private nøkkelen din. Agenten kan se avsender, emne og dato, og kan flytte eller flagge meldingen, men innholdet forblir uleselig. Det er slik det skal være, og det er grunnen til at ende-til-ende-krypterte tråder forblir private overfor en AI-klient."
+      "a": "Nei. En melding som er kryptert til OpenPGP-nøkkelen din, kommer over IMAP som chiffertekst, og MCP Emails har aldri den private nøkkelen din. Agenten kan se avsender, emne og dato, og kan flytte eller flagge meldingen, men innholdet forblir uleselig. Det er slik det skal være, og det er grunnen til at ende-til-ende-krypterte tråder forblir private overfor en AI-klient."
     },
     {
       "q": "Lagres Disroot-e-posten min på serverne deres?",

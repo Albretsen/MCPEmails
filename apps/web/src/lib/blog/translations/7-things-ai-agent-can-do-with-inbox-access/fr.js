@@ -2,7 +2,7 @@ const translation = {
   title: 'Sept choses que votre agent IA peut faire dès qu’il a accès à votre boîte mail',
   description:
     'Sept actions concrètes pour un agent IA avec accès à la boîte mail : trier les non-lus, résumer un fil, rédiger des réponses, retrouver des pièces jointes et relancer.',
-  coverAlt: 'Sept choses que votre agent IA peut faire avec un accès à la boîte mail via MCP — MCPEmails',
+  coverAlt: 'Sept choses que votre agent IA peut faire avec un accès à la boîte mail via MCP — MCP Emails',
   content: `Dès que votre agent peut lire et envoyer de vrais e-mails, les démonstrations gadget s’arrêtent et le vrai travail commence. Voici sept choses que vous pouvez lui confier dès aujourd’hui : trier la pile des non-lus, résumer un long fil de discussion, rédiger des réponses dans votre style, retrouver cette pièce jointe précise, relancer les échanges en attente, router le courrier au bon endroit et vous livrer un récapitulatif hebdomadaire.
 
 Chaque exemple ci-dessous correspond à de vrais outils MCP que vous pouvez appeler dès maintenant. Les outils sont les mêmes que vous connectiez Gmail, Outlook, iCloud, Fastmail ou une boîte IMAP générique. Si vous n’avez pas encore relié un agent à votre boîte mail, le [guide complet pour donner à votre agent IA un accès à l’e-mail](/blog/how-to-give-your-ai-agent-email-access) couvre la configuration ; le [tutoriel de connexion en 2 minutes](/blog/connect-email-to-ai-agent-under-2-minutes) est la voie rapide.

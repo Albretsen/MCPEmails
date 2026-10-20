@@ -9,7 +9,7 @@ export async function generateMetadata({ params }) {
   const title = t.has('meta.title') ? t('meta.title') : 'Security & Trust';
   const description = t.has('meta.description')
     ? t('meta.description')
-    : 'How MCPEmails protects your email: fetched live and never stored, credentials encrypted, and code you can read or self-host.';
+    : 'How MCP Emails protects your email: fetched live and never stored, credentials encrypted, and code you can read or self-host.';
   return {
     title,
     description,
@@ -17,14 +17,14 @@ export async function generateMetadata({ params }) {
     openGraph: {
       type: 'website',
       url: localePath(locale, '/security'),
-      title: `${title} · mcpemails`,
+      title: `${title} · MCP Emails`,
       description,
       locale: OG_LOCALE[locale],
       images: [OG_IMAGE],
     },
     twitter: {
       card: 'summary_large_image',
-      title: `${title} · mcpemails`,
+      title: `${title} · MCP Emails`,
       description,
       images: [OG_IMAGE.url],
     },

@@ -35,10 +35,10 @@
       "providerSub": "Gmail · Outlook · iCloud · IMAP",
       "logCalls": "l'agent appelle",
       "logReturns": "renvoie les ID de boîtes, sans copier-coller depuis le tableau de bord",
-      "logFetches": "mcpemails récupère en direct chez votre fournisseur",
+      "logFetches": "MCP Emails récupère en direct chez votre fournisseur",
       "logResult": "20 messages renvoyés",
       "logNothing": "rien n'est stocké",
-      "legendPipe": "mcpemails (le tuyau)",
+      "legendPipe": "MCP Emails (le tuyau)",
       "legendLive": "requête en direct",
       "legendData": "vos données, votre fournisseur"
     }
@@ -110,7 +110,7 @@
       },
       "2": {
         "h": "Votre agent travaille la boîte de réception",
-        "p": "L'agent appelle des outils comme <code>email_read()</code> ou <code>email_compose()</code>. MCPEmails récupère en direct depuis votre fournisseur et renvoie le résultat. Rien n'est mis en cache entre les appels."
+        "p": "L'agent appelle des outils comme <code>email_read()</code> ou <code>email_compose()</code>. MCP Emails récupère en direct depuis votre fournisseur et renvoie le résultat. Rien n'est mis en cache entre les appels."
       }
     },
     "tools": {
@@ -128,17 +128,17 @@
     "eyebrow": "De vraies demandes",
     "titleLine1": "Demandez, simplement.",
     "titleLine2": "Il lit, écrit et classe.",
-    "sub": "Aucun tableau de bord à apprendre. Dites à votre assistant IA ce que vous voulez en langage courant, et il utilise mcpemails pour le faire."
+    "sub": "Aucun tableau de bord à apprendre. Dites à votre assistant IA ce que vous voulez en langage courant, et il utilise MCP Emails pour le faire."
   },
   "quote": {
     "text": "Je voulais que mes agents travaillent ma boîte de réception, mais chaque option impliquait de confier une copie de mes e-mails à un tiers. Alors j'ai construit le tuyau dont je rêvais : connectez-vous une fois, votre boîte de réception est récupérée en direct et jamais stockée, et vous pouvez couper l'accès à n'importe quel agent en un clic. C'est le produit auquel je confie ma propre boîte de réception.",
-    "role": "fondateur, mcpemails"
+    "role": "fondateur, MCP Emails"
   },
   "reviews": {
     "eyebrow": "Avis",
     "titleLine1": "Ne nous croyez pas.",
     "titleLine2": "Croyez-les.",
-    "sub": "De vrais avis de personnes qui utilisent mcpemails sur leur propre boîte mail, publiés sous leur nom.",
+    "sub": "De vrais avis de personnes qui utilisent MCP Emails sur leur propre boîte mail, publiés sous leur nom.",
     "ratingLabel": "Noté {rating} sur 5",
     "count": "{count, plural, one {# avis} other {# avis}}",
     "via": "Avis publié sur {source}",
@@ -279,9 +279,9 @@
     "linkWithdrawal": "Droit de rétractation",
     "linkCancel": "Résilier des contrats ici",
     "linkImpressum": "Impressum",
-    "copyright": "© 2026 mcpemails.",
+    "copyright": "© 2026 MCP Emails.",
     "legal": "E-mails récupérés en direct, jamais stockés · Identifiants chiffrés au repos",
-    "legalEntity": "MCPEmails est un service d'Albretsen AS, numéro d'organisation 938 702 373, Håsteins gate 9, 5160 Laksevåg, Norvège.",
+    "legalEntity": "MCP Emails est un service d'Albretsen AS, numéro d'organisation 938 702 373, Håsteins gate 9, 5160 Laksevåg, Norvège.",
     "contactLabel": "Contact",
     "mcpLabel": "Point de terminaison MCP",
     "copy": "Copier",

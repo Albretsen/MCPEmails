@@ -35,10 +35,10 @@
       "providerSub": "Gmail · Outlook · iCloud · IMAP",
       "logCalls": "Agent ruft auf",
       "logReturns": "liefert Postfach-IDs, kein Kopieren aus dem Dashboard",
-      "logFetches": "mcpemails ruft live bei Ihrem Anbieter ab",
+      "logFetches": "MCP Emails ruft live bei Ihrem Anbieter ab",
       "logResult": "20 Nachrichten zurückgegeben",
       "logNothing": "nichts gespeichert",
-      "legendPipe": "mcpemails (die Leitung)",
+      "legendPipe": "MCP Emails (die Leitung)",
       "legendLive": "Live-Anfrage",
       "legendData": "Ihre Daten, Ihr Anbieter"
     }
@@ -279,7 +279,7 @@
     "linkWithdrawal": "Widerrufsrecht",
     "linkCancel": "Verträge hier kündigen",
     "linkImpressum": "Impressum",
-    "copyright": "© 2026 mcpemails.",
+    "copyright": "© 2026 MCP Emails.",
     "legal": "E-Mails live abgerufen, nie gespeichert · Zugangsdaten verschlüsselt gespeichert",
     "legalEntity": "MCP Emails ist ein Dienst der Albretsen AS, Organisationsnummer 938 702 373, Håsteins gate 9, 5160 Laksevåg, Norwegen.",
     "contactLabel": "Kontakt",

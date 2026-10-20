@@ -3,7 +3,7 @@ const post = {
   title: 'The Best Ways to Let Claude Manage Your Inbox in 2026',
   description: 'A frank roundup of the best ways to let Claude manage your inbox in 2026: native integrations, DIY MCP servers, copy-paste, browser extensions, and hosted MCP.',
   cover: '/blog/cover-best-ways-to-let-claude-manage-your-inbox.svg',
-  coverAlt: 'The best ways to let Claude manage your inbox in 2026 — MCPEmails',
+  coverAlt: 'The best ways to let Claude manage your inbox in 2026 — MCP Emails',
   authorId: 'asgeir',
   publishedAt: "2026-04-28T09:00:00.000Z",
   updatedAt: "2026-04-28T09:00:00.000Z",

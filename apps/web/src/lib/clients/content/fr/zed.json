@@ -37,7 +37,7 @@
     },
     {
       "h": "Autorisez",
-      "p": "Zed lance le flux OAuth quand aucun en-tête Authorization n'est défini. Connectez-vous avec mcpemails et approuvez les autorisations que Zed doit détenir."
+      "p": "Zed lance le flux OAuth quand aucun en-tête Authorization n'est défini. Connectez-vous avec MCP Emails et approuvez les autorisations que Zed doit détenir."
     }
   ],
   "gotchas": [

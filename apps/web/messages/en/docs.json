@@ -1,7 +1,7 @@
 {
   "meta": {
     "title": "MCP Email Server Documentation: Gmail, Outlook, IMAP & OAuth",
-    "description": "Set up mcpemails with Gmail, Outlook or IMAP, connect Claude and other MCP clients with OAuth or an API key, and use the complete email tool reference."
+    "description": "Set up MCP Emails with Gmail, Outlook or IMAP, connect Claude and other MCP clients with OAuth or an API key, and use the complete email tool reference."
   },
   "hero": {
     "eyebrow": "Documentation",
@@ -17,7 +17,7 @@
   "quickstart": {
     "eyebrow": "Quick start",
     "heading": "Up and running in minutes.",
-    "sub": "No SDK required. MCPEmails speaks standard MCP over HTTP, so it drops into any MCP-compatible agent.",
+    "sub": "No SDK required. MCP Emails speaks standard MCP over HTTP, so it drops into any MCP-compatible agent.",
     "steps": {
       "signup": {
         "label": "Sign up & connect an inbox",
@@ -31,7 +31,7 @@
         "body": "In Dashboard → API Keys, click \"Create key\". Name it, select the scopes your agent needs (read:email, search:email, send:email, manage:folders, delete:email, manage:drafts, manage:contacts, schedule:email, and manage:automations), then copy the key. It is shown only once."
       },
       "addclient": {
-        "label": "Add MCPEmails to your agent",
+        "label": "Add MCP Emails to your agent",
         "heading": "Paste the MCP endpoint into your client",
         "body": "Pick the tab for your client below. MCP clients with OAuth 2.0 support (claude.ai, Claude Desktop, Cursor, and others) just paste the URL and authorize, no API key needed. Clients without OAuth, plus scripted access, use the API key from step 02."
       },
@@ -63,7 +63,7 @@
     "infoFormat": "Response format: <b>JSON-RPC 2.0</b>. Successful results also carry a typed <code>structuredContent</code> object",
     "handshakeLabel": "Initialize handshake",
     "pollingHeading": "Polling, not push",
-    "pollingBody": "MCPEmails is request/response only: every result comes from a tool call your agent makes. There are <b>no webhooks, push notifications, or server-initiated events</b>, so an incoming email never triggers an agent call on its own. To react to new mail, have your agent <b>poll</b> on a schedule, e.g. call <code>email_read</code> with <code>action: \"list\"</code> and <code>unread: true</code> at whatever interval your workflow needs (mind the rate limits above)."
+    "pollingBody": "MCP Emails is request/response only: every result comes from a tool call your agent makes. There are <b>no webhooks, push notifications, or server-initiated events</b>, so an incoming email never triggers an agent call on its own. To react to new mail, have your agent <b>poll</b> on a schedule, e.g. call <code>email_read</code> with <code>action: \"list\"</code> and <code>unread: true</code> at whatever interval your workflow needs (mind the rate limits above)."
   },
   "operations": {
     "eyebrow": "Built for real inbox work",
@@ -100,8 +100,8 @@
     "sub": "MCP clients that support OAuth 2.0 (claude.ai, Claude Desktop, Cursor, and others) connect automatically via authorization code + PKCE. No API key, no config file. Paste the URL and click Connect.",
     "step1": "<b>Step 1:</b> Go to claude.ai → Customize → Connectors → Add connector",
     "step2": "<b>Step 2:</b> Paste <code>https://mcpemails.com/api/mcp</code> as the server URL",
-    "step3": "<b>Step 3:</b> Click Connect. MCPEmails opens an authorization screen",
-    "step4": "<b>Step 4:</b> Sign in with your mcpemails account and approve access",
+    "step3": "<b>Step 3:</b> Click Connect. MCP Emails opens an authorization screen",
+    "step4": "<b>Step 4:</b> Sign in with your MCP Emails account and approve access",
     "stepDone": "<b>Done:</b> Every tool your approved scopes allow is live. claude.ai refreshes tokens automatically",
     "howTitle": "How it works under the hood",
     "howP1": "claude.ai registers itself via <b>RFC 7591 Dynamic Client Registration</b>, so you never pre-register a client ID.",

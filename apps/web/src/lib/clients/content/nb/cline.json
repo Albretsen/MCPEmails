@@ -67,7 +67,7 @@
   "faq": [
     {
       "q": "Hvordan kobler jeg e-post til Cline?",
-      "a": "Legg til mcpemails som en ekstern server: MCP Servers, Remote Servers, lim inn https://mcpemails.com/api/mcp, sett Transport Type til Streamable HTTP, og legg til en Authorization Bearer-header med en API-nøkkel fra dashbordet ditt. Da har Cline verktøy for å lese, søke, sende, svare, videresende, organisere og planlegge e-post."
+      "a": "Legg til MCP Emails som en ekstern server: MCP Servers, Remote Servers, lim inn https://mcpemails.com/api/mcp, sett Transport Type til Streamable HTTP, og legg til en Authorization Bearer-header med en API-nøkkel fra dashbordet ditt. Da har Cline verktøy for å lese, søke, sende, svare, videresende, organisere og planlegge e-post."
     },
     {
       "q": "Hvorfor trenger Cline en API-nøkkel når Cursor ikke gjør det?",

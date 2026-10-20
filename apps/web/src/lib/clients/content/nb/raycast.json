@@ -16,7 +16,7 @@
     "meta0": "1 innboks gratis, for alltid",
     "meta1": "OAuth, ingen API-nøkkel nødvendig",
     "meta2": "E-post hentes direkte, lagres aldri",
-    "answer": "Kjør kommandoen Install MCP Server i Raycast, sett Transport til HTTP, lim inn https://mcpemails.com/api/mcp, installer, og klikk deretter Sign In for å autorisere med mcpemails."
+    "answer": "Kjør kommandoen Install MCP Server i Raycast, sett Transport til HTTP, lim inn https://mcpemails.com/api/mcp, installer, og klikk deretter Sign In for å autorisere med MCP Emails."
   },
   "method": {
     "title": "Slik kobler Raycast seg til: OAuth, ingen API-nøkkel",
@@ -37,7 +37,7 @@
     },
     {
       "h": "Installer og logg inn",
-      "p": "Trykk <b>Install MCP Server</b>, og klikk deretter <b>Sign In</b> for å autorisere med mcpemails. Godkjenn tilgangene du vil at Raycast skal ha."
+      "p": "Trykk <b>Install MCP Server</b>, og klikk deretter <b>Sign In</b> for å autorisere med MCP Emails. Godkjenn tilgangene du vil at Raycast skal ha."
     }
   ],
   "gotchas": [
@@ -62,7 +62,7 @@
   "faq": [
     {
       "q": "Hvordan kobler jeg e-post til Raycast?",
-      "a": "Kjør kommandoen Install MCP Server, sett Transport til HTTP, lim inn https://mcpemails.com/api/mcp, installer, og klikk deretter Sign In og autoriser med mcpemails. Da har Raycast AI verktøy for å lese, søke, sende, svare, videresende, organisere og planlegge e-post."
+      "a": "Kjør kommandoen Install MCP Server, sett Transport til HTTP, lim inn https://mcpemails.com/api/mcp, installer, og klikk deretter Sign In og autoriser med MCP Emails. Da har Raycast AI verktøy for å lese, søke, sende, svare, videresende, organisere og planlegge e-post."
     },
     {
       "q": "Trenger jeg en API-nøkkel for Raycast?",

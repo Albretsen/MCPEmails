@@ -20,7 +20,7 @@
     "titleLine1": "MCP-server for SiteGround-e-post:",
     "titleLine2": "alle firmaets postkasser, i Claude og ChatGPT",
     "lead": "Har du post@, salg@, support@ og faktura@ på eget domene hos SiteGround? Koble hver postkasse til ett arbeidsområde, så jobber AI-agenten din i alle sammen. Les, søk, send, svar, planlegg og organiser e-post via IMAP, med innstillingene Site Tools viser for kontoen din.",
-    "answer": "Claude når ikke en SiteGround-postkasse på egen hånd. mcpemails er en hostet MCP-server som kobler til via vanlig IMAP på port 993, slik at Claude, Cursor eller enhver MCP-klient kan lese, søke, sende og organisere den e-posten. SiteGround har ikke noe felles e-postvertsnavn: verten din er mail.yourdomain.com, eller det sikre servernavnet på formen secureNNN.sgcpanel.com, og Site Tools viser det riktige under Email, Accounts, Mail Configuration. Autentisering skjer med passordet som er satt på postkassen, aldri innloggingen til SiteGround Client Area. Hver firmaadresse, som post@ eller salg@, kobles til som sin egen postkasse: én postkasse er gratis, Personal kobler til tre, Pro opptil 10 og Business så mange du trenger.",
+    "answer": "Claude når ikke en SiteGround-postkasse på egen hånd. MCP Emails er en hostet MCP-server som kobler til via vanlig IMAP på port 993, slik at Claude, Cursor eller enhver MCP-klient kan lese, søke, sende og organisere den e-posten. SiteGround har ikke noe felles e-postvertsnavn: verten din er mail.yourdomain.com, eller det sikre servernavnet på formen secureNNN.sgcpanel.com, og Site Tools viser det riktige under Email, Accounts, Mail Configuration. Autentisering skjer med passordet som er satt på postkassen, aldri innloggingen til SiteGround Client Area. Hver firmaadresse, som post@ eller salg@, kobles til som sin egen postkasse: én postkasse er gratis, Personal kobler til tre, Pro opptil 10 og Business så mange du trenger.",
     "meta0": "Første postkasse gratis, planer for resten",
     "meta1": "Postkassepassord fra Site Tools",
     "meta2": "E-post hentes direkte, lagres aldri"
@@ -36,7 +36,7 @@
   },
   "setup": [
     {
-      "h": "Opprett en gratis mcpemails-konto",
+      "h": "Opprett en gratis MCP Emails-konto",
       "p": "Registrer deg på mcpemails.com. Gratisplanen kobler til én innboks og krever ikke kort."
     },
     {
@@ -45,7 +45,7 @@
     },
     {
       "h": "Bruk det sikre servernavnet, ikke bare mail.yourdomain.com",
-      "p": "Noter <code>secureNNN.sgcpanel.com</code>-verdien som vises for kontoen din, og bruk den for både IMAP og SMTP. Sett postkassepassordet fra den samme Accounts-skjermen hvis du ikke har det; det er ikke passordet til Client Area. Skriv så inn adressen, verten og passordet i mcpemails."
+      "p": "Noter <code>secureNNN.sgcpanel.com</code>-verdien som vises for kontoen din, og bruk den for både IMAP og SMTP. Sett postkassepassordet fra den samme Accounts-skjermen hvis du ikke har det; det er ikke passordet til Client Area. Skriv så inn adressen, verten og passordet i MCP Emails."
     },
     {
       "h": "Lim MCP-URL-en inn i AI-en",
@@ -68,12 +68,12 @@
   ],
   "limits": [
     "SiteGround har grenser for utgående sending per time etter abonnement. En serie automatiserte sendinger kan strupes, noe som vises som en avvist eller utsatt melding og ikke som en tilkoblingsfeil.",
-    "mcpemails kobler bare til postkassen. Filtre, videresendinger, autosvar og spambeskyttelse blir værende i Site Tools."
+    "MCP Emails kobler bare til postkassen. Filtre, videresendinger, autosvar og spambeskyttelse blir værende i Site Tools."
   ],
   "faq": [
     {
       "q": "Fungerer Claude med SiteGround-e-post?",
-      "a": "Ikke direkte. Claude har ingen SiteGround-kobling. Kobler du en MCP-server som mcpemails til SiteGround-postkassen din via IMAP, får Claude tilgang til å lese, søke, sende, svare, planlegge og organisere, med de samme påloggingsdetaljene du ville gitt Apple Mail eller Thunderbird."
+      "a": "Ikke direkte. Claude har ingen SiteGround-kobling. Kobler du en MCP-server som MCP Emails til SiteGround-postkassen din via IMAP, får Claude tilgang til å lese, søke, sende, svare, planlegge og organisere, med de samme påloggingsdetaljene du ville gitt Apple Mail eller Thunderbird."
     },
     {
       "q": "Hva er IMAP- og SMTP-innstillingene for SiteGround?",

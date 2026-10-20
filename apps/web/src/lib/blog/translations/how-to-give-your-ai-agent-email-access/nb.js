@@ -2,7 +2,7 @@ const translation = {
   title: 'Slik gir du AI-agenten din tilgang til e-post (den komplette 2026-guiden)',
   description:
     'Gi AI-agenten din lese- og sendetilgang til en ekte innboks over MCP — Gmail, Outlook, iCloud, Fastmail eller IMAP. Slik fungerer det: verktøyene, sikkerheten og oppsettet.',
-  coverAlt: 'Slik gir du AI-agenten din tilgang til e-post over MCP — MCPEmails',
+  coverAlt: 'Slik gir du AI-agenten din tilgang til e-post over MCP — MCP Emails',
   content: `For å gi en AI-agent tilgang til e-post kobler du innboksen din til en MCP-server og peker agenten mot én endepunkt-URL. Agenten får da et lite sett med verktøy for å lese, søke og sende e-post. Det vanskelige er ikke agenten — det er å gjøre dette uten å lekke passordet ditt inn i en prompt, en logg eller et vektorlager. Den siste biten er det denne guiden handler om.
 
 Hvis du bare vil ha den raske veien: koble til en innboks i dashbordet, lim MCP-endepunktet inn i [claude.ai](https://claude.ai), Claude Desktop, Cursor eller din egen agent, og kall \`inbox_list\` først. Resten av dette innlegget forklarer hva som faktisk skjer, hvorfor sikkerhetsmodellen er viktig, og hvordan du kobler opp hver støttede leverandør.

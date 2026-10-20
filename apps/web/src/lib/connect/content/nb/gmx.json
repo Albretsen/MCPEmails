@@ -27,7 +27,7 @@
     "meta0": "1 innboks gratis, for alltid",
     "meta1": "Kontopassordet ditt, uten OAuth-oppsett",
     "meta2": "E-post hentes direkte, lagres aldri",
-    "answer": "Claude kan ikke nå GMX på egen hånd. mcpemails er en driftet MCP-server som kobler den til over IMAP med kontopassordet ditt, slik at Claude, Cursor eller enhver MCP-klient kan lese, søke i, sende og organisere den e-posten. Oppsettet tar et par minutter, og én innboks er gratis."
+    "answer": "Claude kan ikke nå GMX på egen hånd. MCP Emails er en driftet MCP-server som kobler den til over IMAP med kontopassordet ditt, slik at Claude, Cursor eller enhver MCP-klient kan lese, søke i, sende og organisere den e-posten. Oppsettet tar et par minutter, og én innboks er gratis."
   },
   "method": {
     "title": "Slik kobles GMX til: IMAP og kontopassordet ditt",
@@ -36,14 +36,14 @@
   "setup": [
     {
       "h": "Opprett en gratis konto",
-      "p": "Registrer deg hos mcpemails, uten kort. Gratisplanen kobler til én innboks, for alltid."
+      "p": "Registrer deg hos MCP Emails, uten kort. Gratisplanen kobler til én innboks, for alltid."
     },
     {
       "h": "Slå på IMAP-tilgang i GMX",
       "p": "Logg inn på GMX i en nettleser, klikk på sirkelen med initialene dine, åpne E-Mail-Einstellungen, velg POP3/IMAP under E-Mail empfangen og flytt bryteren til POP3- und IMAP-Zugriff erlauben (tillat POP3- og IMAP-tilgang). På gmx.com: fanen Email, så Settings, så POP3 & IMAP."
     },
     {
-      "h": "Legg til postkassen i mcpemails",
+      "h": "Legg til postkassen i MCP Emails",
       "p": "Velg IMAP / SMTP, legg inn GMX-adressen din, vertene ovenfor og passordet for å koble til innboksen på en sikker måte."
     },
     {
@@ -80,7 +80,7 @@
   "faq": [
     {
       "q": "Fungerer Claude med GMX Mail?",
-      "a": "Ikke på egen hånd. Claude har ingen innebygd GMX-kobling. Kobler du en MCP-server som mcpemails til GMX-postkassen din over IMAP, får Claude tilgang til å lese, søke, sende, svare, planlegge og organisere den, og den samme tilkoblingen fungerer fra Cursor, ChatGPT og andre MCP-klienter. Du må slå på POP3- og IMAP-tilgang i GMX først."
+      "a": "Ikke på egen hånd. Claude har ingen innebygd GMX-kobling. Kobler du en MCP-server som MCP Emails til GMX-postkassen din over IMAP, får Claude tilgang til å lese, søke, sende, svare, planlegge og organisere den, og den samme tilkoblingen fungerer fra Cursor, ChatGPT og andre MCP-klienter. Du må slå på POP3- og IMAP-tilgang i GMX først."
     },
     {
       "q": "Hva er IMAP- og SMTP-innstillingene for GMX Mail?",

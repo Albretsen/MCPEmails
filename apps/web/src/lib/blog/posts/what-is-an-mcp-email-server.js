@@ -4,7 +4,7 @@ const post = {
   description:
     'An MCP email server is a tool that lets an AI agent read and send email through clean verbs instead of raw IMAP and passwords. Here is what that means.',
   cover: '/blog/cover-what-is-an-mcp-email-server.svg',
-  coverAlt: 'What is an MCP email server — a plain-English explanation from MCPEmails',
+  coverAlt: 'What is an MCP email server — a plain-English explanation from MCP Emails',
   authorId: 'asgeir',
   publishedAt: "2026-06-17T09:00:00.000Z",
   updatedAt: "2026-06-21T09:00:00.000Z",

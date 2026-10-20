@@ -27,7 +27,7 @@
     "meta0": "1 个收件箱永久免费",
     "meta1": "使用账户密码，无需 OAuth 配置",
     "meta2": "邮件实时获取，绝不存储",
-    "answer": "Claude 无法自行访问 GMX。mcpemails 是一个托管 MCP 服务器，使用你的账户密码通过 IMAP 与之连接，让 Claude、Cursor 或任意 MCP 客户端都能读取、搜索、发送并整理这些邮件。设置只需几分钟，1 个收件箱免费。"
+    "answer": "Claude 无法自行访问 GMX。MCP Emails 是一个托管 MCP 服务器，使用你的账户密码通过 IMAP 与之连接，让 Claude、Cursor 或任意 MCP 客户端都能读取、搜索、发送并整理这些邮件。设置只需几分钟，1 个收件箱免费。"
   },
   "method": {
     "title": "GMX 如何连接：IMAP 与你的账户密码",
@@ -36,14 +36,14 @@
   "setup": [
     {
       "h": "创建免费账户",
-      "p": "注册 mcpemails，无需信用卡。免费套餐可永久连接一个收件箱。"
+      "p": "注册 MCP Emails，无需信用卡。免费套餐可永久连接一个收件箱。"
     },
     {
       "h": "在 GMX 中开启 IMAP 访问",
       "p": "在浏览器中登录 GMX，点击带有你姓名首字母的圆形图标，打开 E-Mail-Einstellungen，在 E-Mail empfangen 下选择 POP3/IMAP，把开关拨到 POP3- und IMAP-Zugriff erlauben（允许 POP3 和 IMAP 访问）。gmx.com：Email 标签，然后 Settings，再到 POP3 & IMAP。"
     },
     {
-      "h": "在 mcpemails 中添加邮箱",
+      "h": "在 MCP Emails 中添加邮箱",
       "p": "选择 IMAP / SMTP，填入你的 GMX 地址、上方的服务器地址和密码，安全地连接收件箱。"
     },
     {
@@ -80,7 +80,7 @@
   "faq": [
     {
       "q": "Claude 能用于 GMX Mail 吗？",
-      "a": "不能单独使用。Claude 没有内置的 GMX 连接器。通过 IMAP 将 mcpemails 这样的 MCP 服务器连接到你的 GMX 邮箱后，Claude 就能读取、搜索、发送、回复、定时和整理其中的邮件，而且同一个连接也可在 Cursor、ChatGPT 和其他 MCP 客户端中使用。你需要先在 GMX 中启用 POP3 和 IMAP 访问。"
+      "a": "不能单独使用。Claude 没有内置的 GMX 连接器。通过 IMAP 将 MCP Emails 这样的 MCP 服务器连接到你的 GMX 邮箱后，Claude 就能读取、搜索、发送、回复、定时和整理其中的邮件，而且同一个连接也可在 Cursor、ChatGPT 和其他 MCP 客户端中使用。你需要先在 GMX 中启用 POP3 和 IMAP 访问。"
     },
     {
       "q": "GMX Mail 的 IMAP 和 SMTP 设置是什么？",

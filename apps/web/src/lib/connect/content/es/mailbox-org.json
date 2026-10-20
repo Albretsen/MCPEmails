@@ -21,7 +21,7 @@
     "titleLine1": "Conecta mailbox.org a Claude,",
     "titleLine2": "Cursor, ChatGPT y cualquier cliente MCP",
     "lead": "Dale a tu agente de IA una bandeja real de mailbox.org. Lee, busca, envía, responde, programa y organiza correo por IMAP, en todos los clientes MCP y no solo en uno, con la contrapartida del cifrado explicada claramente y no pasada por alto.",
-    "answer": "Claude no puede acceder por sí solo a mailbox.org. mcpemails es un servidor MCP alojado que lo conecta por IMAP en imap.mailbox.org en el puerto 993, y por SMTP en smtp.mailbox.org en el puerto 465, para que Claude, Cursor o cualquier cliente MCP pueda leer, buscar, enviar y organizar ese correo. Inicias sesión con tu dirección principal de mailbox.org, y con la autenticación en dos factores activada debes usar una contraseña de aplicación de correo creada en All settings, Security, Email app-passwords en lugar de la contraseña de tu buzón. Si has activado el cifrado de la bandeja de entrada, el correo entrante llega a cualquier cliente IMAP como texto cifrado PGP y un agente no podrá leerlo. Una bandeja es gratis, para siempre.",
+    "answer": "Claude no puede acceder por sí solo a mailbox.org. MCP Emails es un servidor MCP alojado que lo conecta por IMAP en imap.mailbox.org en el puerto 993, y por SMTP en smtp.mailbox.org en el puerto 465, para que Claude, Cursor o cualquier cliente MCP pueda leer, buscar, enviar y organizar ese correo. Inicias sesión con tu dirección principal de mailbox.org, y con la autenticación en dos factores activada debes usar una contraseña de aplicación de correo creada en All settings, Security, Email app-passwords en lugar de la contraseña de tu buzón. Si has activado el cifrado de la bandeja de entrada, el correo entrante llega a cualquier cliente IMAP como texto cifrado PGP y un agente no podrá leerlo. Una bandeja es gratis, para siempre.",
     "meta0": "1 bandeja gratis, para siempre",
     "meta1": "Contraseña de aplicación de correo con la 2FA activada",
     "meta2": "El correo se obtiene en vivo, nunca se almacena"
@@ -32,7 +32,7 @@
   },
   "setup": [
     {
-      "h": "Crea tu cuenta gratis en mcpemails",
+      "h": "Crea tu cuenta gratis en MCP Emails",
       "p": "Regístrate en mcpemails.com. El plan gratuito conecta una bandeja, para siempre, sin tarjeta. Al final obtienes una URL MCP y una clave."
     },
     {
@@ -40,7 +40,7 @@
       "p": "En la interfaz web abre <b>All settings</b>, luego <b>Security</b>, luego <b>Email app-passwords</b>. Ponle un nombre para esta conexión, marca <b>tanto</b> IMAP como SMTP en la lista de protocolos y haz clic en Generate password. Copia el valor de inmediato. Si la autenticación en dos factores está desactivada, puedes usar en su lugar la contraseña de tu buzón, pero una credencial limitada que puedes revocar por separado es mejor opción para dársela a un tercero."
     },
     {
-      "h": "Añade el buzón en mcpemails",
+      "h": "Añade el buzón en MCP Emails",
       "p": "Elige IMAP / SMTP e introduce tu dirección <b>principal</b> de mailbox.org como nombre de usuario y luego la contraseña de aplicación. Los servidores ya vienen rellenados con <code>imap.mailbox.org</code> y <code>smtp.mailbox.org</code> y se verificaron con una conexión TLS real. Las credenciales se cifran en reposo y el correo en sí se obtiene en cada solicitud en lugar de copiarse."
     },
     {
@@ -59,7 +59,7 @@
     },
     {
       "h": "El cifrado de la bandeja de entrada convierte el correo nuevo en texto cifrado para todos los clientes, incluido este",
-      "p": "En <b>All settings</b>, <b>Read and write e-mail</b>, <b>Inbox encryption</b>, mailbox.org puede cifrar con PGP cada mensaje que llega con tu clave pública mediante una regla Sieve del servidor, lo haya cifrado o no el remitente. Es una protección real y funciona exactamente como se anuncia: un cliente IMAP, este incluido, recibe un bloque con armadura en lugar del cuerpo. mcpemails no tiene tu clave privada, así que un agente puede ver el remitente, el asunto y la fecha y puede archivar o marcar el mensaje, pero no leerlo. La asimetría que conviene conocer es que mailbox.org no guarda actualmente cifrada tu carpeta Enviados, así que un agente sigue pudiendo leer lo que enviaste aunque no pueda leer lo que recibiste."
+      "p": "En <b>All settings</b>, <b>Read and write e-mail</b>, <b>Inbox encryption</b>, mailbox.org puede cifrar con PGP cada mensaje que llega con tu clave pública mediante una regla Sieve del servidor, lo haya cifrado o no el remitente. Es una protección real y funciona exactamente como se anuncia: un cliente IMAP, este incluido, recibe un bloque con armadura en lugar del cuerpo. MCP Emails no tiene tu clave privada, así que un agente puede ver el remitente, el asunto y la fecha y puede archivar o marcar el mensaje, pero no leerlo. La asimetría que conviene conocer es que mailbox.org no guarda actualmente cifrada tu carpeta Enviados, así que un agente sigue pudiendo leer lo que enviaste aunque no pueda leer lo que recibiste."
     },
     {
       "h": "Sin MOVE ni SPECIAL-USE, pero con UIDPLUS",
@@ -67,14 +67,14 @@
     }
   ],
   "limits": [
-    "Conectar cualquier buzón a un cliente de IA significa que ese proveedor de IA lee el contenido de los mensajes con los que se le pide trabajar. mcpemails obtiene el correo en vivo de mailbox.org en cada solicitud y no almacena el cuerpo de los mensajes, y las credenciales se cifran en reposo, pero el texto sigue llegando a Claude, Cursor o el cliente al que lo conectes. El alojamiento en Alemania y la política de protección de datos de mailbox.org cubren a mailbox.org, y no se extienden a un proveedor de IA que conectes tú.",
+    "Conectar cualquier buzón a un cliente de IA significa que ese proveedor de IA lee el contenido de los mensajes con los que se le pide trabajar. MCP Emails obtiene el correo en vivo de mailbox.org en cada solicitud y no almacena el cuerpo de los mensajes, y las credenciales se cifran en reposo, pero el texto sigue llegando a Claude, Cursor o el cliente al que lo conectes. El alojamiento en Alemania y la política de protección de datos de mailbox.org cubren a mailbox.org, y no se extienden a un proveedor de IA que conectes tú.",
     "Todo lo cifrado con tu clave OpenPGP, ya sea por un remitente o por el propio cifrado de la bandeja de entrada de mailbox.org, es ilegible para un agente por IMAP. Esos hilos hay que leerlos en la interfaz web o en un cliente que tenga tu clave privada.",
     "Como el servidor no anuncia MOVE, mover no es atómico. Si la conexión se corta a mitad de la operación, un mensaje puede existir un momento en las dos carpetas."
   ],
   "faq": [
     {
       "q": "¿Funciona Claude con mailbox.org?",
-      "a": "No por sí solo. Claude no tiene un conector integrado para mailbox.org y no puede hablar IMAP. Apuntar un servidor MCP como mcpemails al buzón le da a Claude acceso para leer, buscar, enviar, responder, programar y organizar por IMAP, y la misma conexión funciona después desde Cursor, ChatGPT y otros clientes MCP sin volver a configurar nada."
+      "a": "No por sí solo. Claude no tiene un conector integrado para mailbox.org y no puede hablar IMAP. Apuntar un servidor MCP como MCP Emails al buzón le da a Claude acceso para leer, buscar, enviar, responder, programar y organizar por IMAP, y la misma conexión funciona después desde Cursor, ChatGPT y otros clientes MCP sin volver a configurar nada."
     },
     {
       "q": "¿Cuáles son los ajustes IMAP y SMTP de mailbox.org?",
@@ -90,7 +90,7 @@
     },
     {
       "q": "¿Puede mi IA leer mi correo cifrado de mailbox.org?",
-      "a": "No. Un mensaje cifrado con tu clave OpenPGP llega por IMAP como un bloque de texto cifrado con armadura, y mcpemails nunca tiene tu clave privada. Eso se aplica tanto al correo que cifró un remitente como al que cifró al llegar el cifrado de la bandeja de entrada de mailbox.org. El agente ve las cabeceras y puede mover o marcar el mensaje; el cuerpo sigue sellado."
+      "a": "No. Un mensaje cifrado con tu clave OpenPGP llega por IMAP como un bloque de texto cifrado con armadura, y MCP Emails nunca tiene tu clave privada. Eso se aplica tanto al correo que cifró un remitente como al que cifró al llegar el cifrado de la bandeja de entrada de mailbox.org. El agente ve las cabeceras y puede mover o marcar el mensaje; el cuerpo sigue sellado."
     },
     {
       "q": "¿Se almacena mi correo de mailbox.org en sus servidores?",
