@@ -33,7 +33,7 @@ Before you touch a provider, decide how your AI agent will talk to MCP Emails. T
 2. Paste the endpoint: \`https://www.mcpemails.com/api/mcp\`
 3. Click **Connect**, sign in to your MCP Emails account, and approve the scopes you want (\`read:email\`, \`send:email\`, or both).
 
-That's the whole client side. Tokens are scoped to exactly what you approved, and you can revoke the connection from the dashboard in one click. If you want the trade-offs spelled out, see [OAuth vs API keys for AI email access](/blog/oauth-vs-api-keys-ai-email-access).
+That's the whole client side. Tokens are scoped to exactly what you approved, and you can revoke the connection from the dashboard in one click. If you want the trade-offs spelled out, see [OAuth vs API keys for AI email access](/blog/oauth-vs-api-keys-ai-email-access). For a client-specific walkthrough, see how to [connect Claude to your email](/blog/connect-claude-to-email) or [connect ChatGPT to your email](/blog/connect-chatgpt-to-email).
 
 **Path B — API-key client (Cline, JetBrains, cURL, custom agents).** For anything without built-in OAuth:
 
@@ -142,7 +142,7 @@ Antes de tocar un proveedor, decide cómo hablará tu agente de IA con MCP Email
 2. Pega el endpoint: \`https://www.mcpemails.com/api/mcp\`
 3. Pulsa **Conectar**, inicia sesión en tu cuenta de MCP Emails y aprueba los permisos que quieras (\`read:email\`, \`send:email\`, o ambos).
 
-Eso es todo en el lado del cliente. Los tokens se limitan exactamente a lo que aprobaste, y puedes revocar la conexión desde el panel con un clic. Si quieres ver los pros y contras al detalle, lee [OAuth frente a claves de API para el acceso al correo con IA](/blog/oauth-vs-api-keys-ai-email-access).
+Eso es todo en el lado del cliente. Los tokens se limitan exactamente a lo que aprobaste, y puedes revocar la conexión desde el panel con un clic. Si quieres ver los pros y contras al detalle, lee [OAuth frente a claves de API para el acceso al correo con IA](/blog/oauth-vs-api-keys-ai-email-access). Si quieres una guía para un cliente concreto, mira cómo [conectar Claude a tu correo](/blog/connect-claude-to-email) o [conectar ChatGPT a tu correo](/blog/connect-chatgpt-to-email).
 
 **Camino B — cliente con clave de API (Cline, JetBrains, cURL, agentes propios).** Para cualquier cosa sin OAuth integrado:
 

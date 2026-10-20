@@ -72,7 +72,7 @@ De dos formas: edítala por bandeja en el panel, o pídeselo a Claude — por ej
 
 Configura tu firma una vez, por bandeja, y cada correo que Claude envíe desde ese buzón (nuevo, respuesta, reenvío, borrador o programado) sale firmado como si lo hubieras escrito tú. Funciona en todos los proveedores, se coloca correctamente en los hilos y se aparta con \`include_signature\` cuando quieres una respuesta escueta.
 
-[Abre tu panel](/dashboard) para configurar una firma, o simplemente dile a Claude cuál debería ser la tuya. ¿Aún no te has conectado? [Empieza gratis](/signup) y conecta una bandeja en unos dos minutos.`,
+[Abre tu panel](/dashboard) para configurar una firma, o simplemente dile a Claude cuál debería ser la tuya. ¿Aún no te has conectado? [Empieza gratis](/signup) y conecta una bandeja en unos dos minutos. La [guía para conectar Claude a tu bandeja](/blog/connect-claude-to-email) explica cada paso.`,
 };
 
 export default translation;

@@ -427,6 +427,17 @@ export function WhatIs() {
             <Link href="/best-email-mcp-servers">Best email MCP servers compared</Link>
           )}
         </p>
+        {/*
+          The setup guides search sends people to, which the home page did not
+          link at all until 2026-10-20. /blog/connect-claude-to-email turns
+          more of its signups into payers than any provider page. All three
+          posts are translated into every locale, so the Link stays in-locale.
+        */}
+        <p className="whatis-links">
+          <Link href="/blog/connect-claude-to-email">{t('whatIs.guideClaude')}</Link>
+          <Link href="/blog/connect-chatgpt-to-email">{t('whatIs.guideChatgpt')}</Link>
+          <Link href="/blog/claude-imap-connector">{t('whatIs.guideImap')}</Link>
+        </p>
       </div>
     </section>
   );
@@ -1415,6 +1426,14 @@ export function Footer({ locales = null } = {}) {
             <SupportHelpLink label={t('footer.linkHelp')} LinkComponent={Link} />
             <Link href="/privacy">{t('footer.linkPrivacy')}</Link>
             <Link href="/terms">{t('footer.linkTerms')}</Link>
+            <Link href="/withdrawal">{t('footer.linkWithdrawal')}</Link>
+            {/* The §312k BGB entry point: reachable from every page, no login. */}
+            <Link href="/cancel">{t('footer.linkCancel')}</Link>
+            {/* The provider identification an Impressum asks for already sits
+                in section 1 of the terms (name, address, register, org and VAT
+                number, contact), so the link points there rather than at a
+                second copy that could drift. */}
+            <Link href="/terms#agreement">{t('footer.linkImpressum')}</Link>
           </div>
         </div>
         <div className="legal">

@@ -593,7 +593,7 @@
     "confirmNoteInterval": "立即从你已保存的卡片扣款，并抵扣当前周期剩余时间的费用。计费周期将从今天重新开始，因此下次续费日期会变。",
     "confirmNoteIntervalNoPreview": "我们无法提前计算这次变更的金额。差额将从你已保存的卡片扣款，并抵扣当前周期剩余时间的费用，准确金额会显示在账单上。计费周期将从今天重新开始，因此下次续费日期会变。",
     "confirmPay": "确认并支付 {amount}",
-    "confirmChange": "确认变更",
+    "confirmChange": "确认并付款",
     "confirmCancel": "取消",
     "confirming": "扣款中…",
     "planChangedCharged": "你已切换到 {plan}。已从你的银行卡扣款 {amount}。",
