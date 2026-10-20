@@ -9,11 +9,11 @@ const translation = {
 
 ## 为什么这些服务商用应用专用密码，而不是 OAuth
 
-Outlook 提供现代化的 OAuth API，所以 MCP Emails 通过**使用 Microsoft 登录**而不是密码来连接它。（工作或学校的 Microsoft 365 账户可能需要 IT 管理员先一次性批准该应用；[Outlook 与 Microsoft 365 指南](/blog/connect-outlook-microsoft-365-ai-agent-mcp)有说明。）Gmail 两种方式都支持：默认像本文这些服务商一样，通过 IMAP 使用 Google 应用专用密码，**使用 Google 登录**则是备选。iCloud 和 Fastmail 没有为第三方邮件工具提供这条路径。它们给你的是**应用专用密码**：一段随机生成的长密码，作用范围限定在单个应用，与你真正的账户密码相互独立，可以单独吊销。
+Outlook 提供现代化的 OAuth API，所以 MCP Emails 通过**使用 Microsoft 登录**而不是密码来连接它。（工作或学校的 Microsoft 365 账户可能需要 IT 管理员先一次性批准该应用；[Outlook 与 Microsoft 365 指南](/blog/connect-outlook-microsoft-365-ai-agent-mcp)有说明。）Gmail 和本文这些服务商一样：通过 IMAP 使用 Google 应用专用密码连接，而 Google 只有在开启两步验证后才允许你创建这种密码。iCloud 和 Fastmail 没有为第三方邮件工具提供这条路径。它们给你的是**应用专用密码**：一段随机生成的长密码，作用范围限定在单个应用，与你真正的账户密码相互独立，可以单独吊销。
 
 有一点值得纠正，因为不少旧文章把它搞错了：**Fastmail 只支持应用专用密码。**Fastmail 过去对某些集成支持过 OAuth 流程，但如今要连接 MCP Emails，你得在 Fastmail 的设置里生成一个应用专用密码，跟 iCloud 一样。如果某篇指南让你通过 OAuth「用 Fastmail 登录」，那它已经过时了。
 
-应用专用密码会成为 MCP Emails 为该邮箱存储的唯一凭据，[以 AES-256-GCM 加密保存于静态存储](/blog/why-email-never-stored-matters)，仅在调用时于隔离的 Edge Function 内部解密。你真正的邮件内容从不被存储——每次工具调用都从服务商那里实时获取，用完即弃。
+应用专用密码会成为 MCP Emails 为该邮箱存储的唯一凭据，[以 AES-256-GCM 加密保存于静态存储](/blog/why-email-never-stored-matters)，只有在请求需要时才在我们的服务器上解密，而且从不发送给 Claude。你真正的邮件内容从不被存储：每次工具调用都从服务商那里实时获取，用完即弃。
 
 ## 为 iCloud 生成应用专用密码
 

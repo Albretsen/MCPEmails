@@ -42,7 +42,7 @@ Dans le tableau de bord, ouvrez **Inboxes → Connect Inbox** et choisissez la v
 
 ### Google Workspace
 
-Workspace se connecte par défaut avec un **mot de passe d'application Google** en IMAP (\`imap.gmail.com\` sur le 993, \`smtp.gmail.com\` sur le 465) ; OAuth reste disponible. Les mots de passe d'application n'existent que si la validation en deux étapes est activée, et un administrateur peut les désactiver pour tout le domaine, auquel cas la page Google vous est tout simplement inaccessible. Les administrateurs peuvent aussi restreindre les applications OAuth tierces sous Sécurité → Contrôles des API, ce qui bloque cette voie sur l'écran de consentement de Google. Si les deux sont fermées, adressez-vous à votre administrateur.
+Workspace se connecte avec un **mot de passe d'application Google** en IMAP (\`imap.gmail.com\` sur le 993, \`smtp.gmail.com\` sur le 465). Les mots de passe d'application n'existent que si la validation en deux étapes est activée, et un administrateur peut les désactiver pour tout le domaine, auquel cas la page Google vous est tout simplement inaccessible. Dans ce cas, adressez-vous à votre administrateur.
 
 ### Zoho Mail
 
@@ -105,7 +105,7 @@ La [matrice des fournisseurs](/docs/providers) et les [pages fournisseur](/conne
 Consultez l'enregistrement MX de votre domaine, ou saisissez votre adresse dans le formulaire de connexion et laissez la détection automatique regarder le MX et les enregistrements de service pour vous.
 
 **Puis-je connecter une adresse Google Workspace ?**
-Oui, avec un mot de passe d'application Google en IMAP, ou avec OAuth. Votre administrateur peut bloquer l'une comme l'autre : les mots de passe d'application peuvent être désactivés pour tout le domaine et les applications OAuth tierces restreintes dans les contrôles des API.
+Oui, avec un mot de passe d'application Google en IMAP. La validation en deux étapes doit être activée pour en créer un, et votre administrateur peut désactiver les mots de passe d'application pour tout le domaine : demandez-lui si l'option n'apparaît pas.
 
 **Et si mon hébergeur ne publie aucun réglage IMAP ?**
 Saisissez-les vous-même : hôte, port, mode de sécurité et votre adresse complète comme nom d'utilisateur. Si le premier transport ne répond pas, les alternatives standard sont essayées automatiquement.

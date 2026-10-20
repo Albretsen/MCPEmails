@@ -68,11 +68,11 @@ A hosted MCP server flips the trade. You give up running the code; you get back 
 
 ### Setup is minutes, not an afternoon
 
-You sign up, go to **Dashboard → Inboxes → Connect Inbox**, pick Gmail, and paste a Google app password, or choose Sign in with Google instead. No Cloud project of your own, no consent screen to configure, no verification queue. Then you connect your agent. For [claude.ai or Claude Desktop](/blog/connect-email-to-ai-agent-under-2-minutes) you paste the MCP endpoint URL, sign in, and approve the scopes — no API key. For a client without OAuth, like [Cursor, Cline, or a raw script](/blog/email-for-ai-agents-cursor-cline-vscode), you mint a scoped API key in **Dashboard → API Keys** and send it as a bearer token.
+You sign up, go to **Dashboard → Inboxes → Connect Inbox**, pick Gmail, and paste a Google app password (Google asks you to turn on 2-Step Verification before it will create one). No Cloud project of your own, no consent screen to configure, no verification queue. Then you connect your agent. For [claude.ai or Claude Desktop](/blog/connect-email-to-ai-agent-under-2-minutes) you paste the MCP endpoint URL, sign in, and approve the scopes, with no API key. For a client without OAuth, like [Cursor, Cline, or a raw script](/blog/email-for-ai-agents-cursor-cline-vscode), you mint a scoped API key in **Dashboard → API Keys** and send it as a bearer token.
 
 ### Credentials are encrypted and email is never stored
 
-The inbox credential (the app password or OAuth token) is the only thing persisted per inbox, and it's encrypted with AES-256-GCM at rest. The key lives as an environment secret, separate from the database, and decryption happens only inside an isolated Edge Function at call time. The email itself is never stored at all — every \`email_read\` call (whether you're listing, reading, or searching) hits Gmail live, hands the result to your agent, and discards it. That's the encryption work from the self-hosted section, done and maintained. [Is it safe to give an AI agent email access](/blog/is-it-safe-to-give-ai-agent-email-access) walks through the full security model.
+The inbox credential (the app password or OAuth token) is the only thing persisted per inbox, and it's encrypted with AES-256-GCM at rest. The key is kept as a server secret, separate from the database, and the credential is decrypted on our servers only when a request needs it. It's never sent to your agent. The email itself is never stored at all. Every \`email_read\` call (whether you're listing, reading, or searching) hits Gmail live, hands the result to your agent, and discards it. That's the encryption work from the self-hosted section, done and maintained. [Is it safe to give an AI agent email access](/blog/is-it-safe-to-give-ai-agent-email-access) walks through the full security model.
 
 ### Multi-provider comes free
 
@@ -80,11 +80,11 @@ The same endpoint and the same core tools — \`inbox_list\`, \`email_read\`, \`
 
 ### Sending stays on your provider
 
-MCP Emails never relays mail from its own domain. \`email_compose\` (with the \`send\` action) goes out through your Gmail (or Microsoft Graph, or your own SMTP), so your domain reputation and deliverability stay yours. That's the same property you'd get self-hosting, without building it.
+MCP Emails never relays mail from its own domain. \`email_compose\` (with the \`send\` action) goes out through your provider (Gmail or another provider over SMTP, or Microsoft Graph for Outlook), so your domain reputation and deliverability stay yours. That's the same property you'd get self-hosting, without building it.
 
 ### The honest cost: you trust a vendor
 
-This is the real trade-off, and I won't dress it up. With a hosted server, your encrypted token sits in someone else's database and your agent's calls route through someone else's code. You're trusting that the encryption is real, the isolation holds, and the company doesn't do something dumb. For most people that trust is well-placed and saves enormous time. If your threat model forbids it outright, self-host — that's the legitimate reason to.
+This is the real trade-off, and I won't dress it up. With a hosted server, your encrypted token sits in someone else's database and your agent's calls route through someone else's code. You're trusting that the encryption is real, the access controls hold, and the company doesn't do something dumb. For most people that trust is well-placed and saves enormous time. If your threat model forbids it outright, self-host. That's the legitimate reason to.
 
 ## What it costs in dollars
 

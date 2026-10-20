@@ -38,7 +38,7 @@
       },
       {
         "data": "Token de OAuth o contraseña de aplicación",
-        "accessed": "Se descifra solo dentro de una función aislada en el momento de la llamada",
+        "accessed": "Se descifra en nuestros servidores solo para la petición que lo necesita",
         "stored": "Sí, cifrado en reposo con AES-256-GCM; la clave se guarda por separado"
       },
       {
@@ -52,12 +52,17 @@
         "stored": "Sí, cifrado en reposo hasta enviarse, luego se conserva como tu historial"
       },
       {
+        "data": "Envíos retenidos para tu aprobación",
+        "accessed": "Se conservan hasta que alguien los aprueba o rechaza, o caducan a las 24 horas",
+        "stored": "Sí, cifrados en reposo, luego se conservan como tu historial de aprobaciones"
+      },
+      {
         "data": "Actividad de llamadas a herramientas (metadatos)",
         "accessed": "Se registra para tu propio registro de auditoría",
         "stored": "Solo nombre de la herramienta, bandeja, marca de tiempo y estado. Ningún contenido de correo"
       }
     ],
-    "outro": "La única excepción deliberada es un mensaje que pides al agente que programe para más tarde. Tenemos que conservarlo hasta la hora de envío, así que lo almacenamos cifrado mientras tanto y luego guardamos un registro para tu historial."
+    "outro": "Las excepciones deliberadas son los mensajes salientes que tienen que esperar: un mensaje que pides al agente que programe para más tarde y un envío retenido para tu aprobación. Tenemos que conservarlos hasta que salen, así que los almacenamos cifrados mientras tanto y luego guardamos un registro para tu historial."
   },
   "verify": {
     "title": "3. No tienes que confiar en mí, puedes comprobarlo",
@@ -114,6 +119,11 @@
         "provider": "Vercel",
         "purpose": "Alojamiento del sitio web, del panel y del endpoint MCP",
         "location": "CDN global; servidores en EE. UU. (Este) y en la UE (Estocolmo)"
+      },
+      {
+        "provider": "Hetzner",
+        "purpose": "Relé de correo para los pocos proveedores que rechazan conexiones desde direcciones de la nube (un túnel TLS: no puede leer el correo ni las contraseñas)",
+        "location": "Alemania (UE)"
       },
       {
         "provider": "Stripe",

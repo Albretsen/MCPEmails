@@ -74,7 +74,7 @@
     }
   },
   "cardsFootnote": {
-    "all": "Alle planer inkluderer: e-post hentes i sanntid, lagres aldri · legitimasjon kryptert i hvile · hosting i EU og USA",
+    "all": "Alle planer inkluderer: e-post hentes i sanntid, lagres aldri · legitimasjon kryptert i hvile · data lagret i EU (Stockholm)",
     "business": "Én person som har flere firmapostkasser? Det er Pro, for opptil 10. <business>Se hvordan alle jobbpostkassene kjører på én agent</business>."
   },
   "enterprise": {
@@ -104,7 +104,7 @@
       "providers": {
         "label": "E-postleverandører",
         "rows": {
-          "gmail": "Gmail (app-passord eller Logg inn med Google)",
+          "gmail": "Gmail (Google-app-passord)",
           "outlook": "Outlook / Microsoft 365 (logg inn med Microsoft)",
           "fastmail": "Fastmail (app-passord)",
           "appPassword": "iCloud, Yahoo, Zoho, Yandex (app-passord)",
@@ -179,7 +179,7 @@
       },
       {
         "q": "Lagres e-postinnholdet mitt noe sted?",
-        "a": "E-posten agenten din leser lagres aldri: brødtekst, emnefelt, vedlegg og trådinnhold hentes direkte fra leverandøren din i sanntid og returneres rett til agenten, uten at noe beholdes mellom kall. Vi lagrer ditt krypterte OAuth-token eller app-passord, slik at vi kan autentisere fremtidige forespørsler. Det eneste unntaket er en melding du ber oss om å planlegge til senere. Den lagrer vi frem til den er sendt, og beholder deretter en oppføring for historikken din."
+        "a": "E-posten agenten din leser lagres aldri: brødtekst, emnefelt, vedlegg og trådinnhold hentes direkte fra leverandøren din i sanntid og returneres rett til agenten, uten at noe beholdes mellom kall. Vi lagrer ditt krypterte OAuth-token eller app-passord, slik at vi kan autentisere fremtidige forespørsler. Unntakene er utgående meldinger som må vente: en melding du ber oss om å planlegge til senere, eller en sending som holdes tilbake for godkjenning. Dem lagrer vi kryptert, og vi beholder deretter en oppføring for historikken din."
       },
       {
         "q": "Hva er forskjellen mellom Personal, Pro og Business?",
@@ -203,7 +203,7 @@
       },
       {
         "q": "Hvilke e-postleverandører støttes?",
-        "a": "Gmail kobles til med et app-passord som standard, eller ved å logge inn med Google (OAuth). Outlook og Microsoft 365 kobles til ved å logge inn med Microsoft (OAuth): personlige kontoer kobles til direkte, og en jobb- eller skolekonto kan trenge at IT-administratoren godkjenner appen én gang. Fastmail kobles til med et app-passord. iCloud, Yahoo, Zoho og Yandex kobles til med et app-spesifikt passord, og enhver annen postkasse fungerer gjennom den generiske IMAP- / SMTP-tilkoblingen."
+        "a": "Gmail og Google Workspace kobles til med et Google-app-passord over IMAP. Outlook og Microsoft 365 kobles til ved å logge inn med Microsoft (OAuth): personlige kontoer kobles til direkte, og en jobb- eller skolekonto kan trenge at IT-administratoren godkjenner appen én gang. Fastmail kobles til med et app-passord. iCloud, Yahoo, Zoho og Yandex kobles til med et app-spesifikt passord, og enhver annen postkasse fungerer gjennom den generiske IMAP- / SMTP-tilkoblingen."
       },
       {
         "q": "Finnes det en refusjonsordning?",

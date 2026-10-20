@@ -45,11 +45,12 @@ Ett felt gjør tre jobber. Hver postkasse har et visningsnavn: det er **Etikette
 
 «work2» er derfor et dårlig navn på to måter: agenten kan ikke se hva postkassen brukes til, og en eller annen klient kommer til å vise «work2» ved siden av adressen din. Bruk noe en fremmed kan lese, for eksempel «Jane Doe (Acme)» eller «Northside Studio». Sett det i dashbordet under postkassens **Avsendernavn** (Sender name), eller med \`signature_set\`, og les det tilbake med \`signature_get\`. Navn har en grense på 100 tegn.
 
-Å sende fra et alias er snevrere enn folk venter:
+Du kan sende fra et alias, men bare fra adresser du har vist at er dine:
 
 - Din egen tilkoblede adresse fungerer alltid som From-verdi, hos alle leverandører.
-- En **annen** adresse må være en verifisert Gmail Send As-identitet, oppført under \`sender_identities\` i den postkassens \`inbox_list\`-oppføring.
-- Hos en leverandør som ikke er Gmail, blir en From-adresse som ikke er postkassens egen, avvist i stedet for stilltiende omskrevet.
+- På en IMAP-postkasse (iCloud, Yahoo, Gmail tilkoblet med app-passord, hvilken som helst SMTP-server) fungerer en **annen** adresse så snart den er verifisert. Legg den til i postkassens innstillinger i dashbordet, og skriv inn koden MCP Emails sender til den adressen. Verifiserte adresser er oppført under \`sender_identities\` i den postkassens \`inbox_list\`-oppføring.
+- Outlook sender fra den tilkoblede adressen.
+- En From-adresse som ikke er verifisert for postkassen, blir avvist i stedet for stilltiende omskrevet.
 
 Signaturer er også per postkasse: en formell på jobbadressen, ingen på den private. Se [e-postsignaturer for Claude](/blog/email-signatures-for-claude).
 
@@ -102,7 +103,7 @@ En rutine på tvers av postkasser koster én handling per postkasse, så antalle
 Fra \`inbox_list\`, som returnerer adressen og visningsnavnet til hver postkasse den har lov til å bruke. Nevn adressen i forespørselen din. En postkasse-ID og en adresse som er uenige, blir avvist, ikke gjettet.
 
 **Går svarene ut fra riktig adresse?**
-Ja, når du sender fra postkassen som eier adressen: hver postkasse sender gjennom sin egen leverandør, sitt eget visningsnavn og sin egen signatur. En annen From-adresse krever en verifisert Gmail Send As-identitet, og blir avvist hos andre leverandører.
+Ja, når du sender fra postkassen som eier adressen: hver postkasse sender gjennom sin egen leverandør, sitt eget visningsnavn og sin egen signatur. En annen From-adresse fungerer på en IMAP-postkasse når du har verifisert den med en kode sendt til den adressen. Outlook sender fra den tilkoblede adressen, og en From-adresse som ikke er verifisert, blir avvist.
 
 **Kan jeg la agenten sende fritt fra én postkasse og holde tilbake en annen?**
 Ja. Gjennomgang før sending er en innstilling per postkasse, så én postkasse kan sende umiddelbart mens en annen venter på godkjenningen din i en innlogget nettleser.

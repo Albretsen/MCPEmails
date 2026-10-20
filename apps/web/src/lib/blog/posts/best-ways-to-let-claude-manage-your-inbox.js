@@ -26,9 +26,9 @@ Hold those four against each option. The differences get obvious fast.
 
 ## Option 1: A hosted MCP email server
 
-This is the [Model Context Protocol](https://modelcontextprotocol.io) approach, run for you. You connect your inbox once in a dashboard, paste one endpoint URL into Claude, and the agent gets a clean set of email tools. Claude calls them like any other tool: \`inbox_list\` to see your accounts, \`email_read\` to list, read, or search messages, \`email_compose\` to send, reply, or forward, plus \`email_organize\`, \`folder\`, \`draft\`, \`schedule\`, and \`contact_search\` for flags, folders, drafts, scheduling, and contacts — eight tools in all, each picking its operation with an \`action\` parameter.
+This is the [Model Context Protocol](https://modelcontextprotocol.io) approach, run for you. You connect your inbox once in a dashboard, paste one endpoint URL into Claude, and the agent gets a clean set of email tools. Claude calls them like any other tool: \`inbox_list\` to see your accounts, \`email_read\` to list, read, or search messages, \`email_compose\` to send, reply, or forward, plus \`email_organize\`, \`folder\`, \`draft\`, \`schedule\`, and \`contact_search\` for flags, folders, drafts, scheduling, and contacts. These are the core of the 19 tools, and most of them pick their operation with an \`action\` parameter.
 
-MCP Emails is the one I build, so take the recommendation with that in mind — but the architecture is the reason it wins for most people, not the marketing. Every tool call hits your provider live (Gmail API, Microsoft Graph, or IMAP/SMTP), hands the message to Claude, and discards it. **The email body is never stored.** The only thing persisted per inbox is an encrypted OAuth token or app password, AES-256-GCM encrypted at rest, decrypted only inside an isolated edge function at call time. If you want the long version of why that matters, read [why "email is never stored" matters](/blog/why-email-never-stored-matters).
+MCP Emails is the one I build, so take the recommendation with that in mind, but the architecture is the reason it wins for most people, not the marketing. Every tool call hits your provider live (IMAP/SMTP for Gmail and most providers, Microsoft Graph for Outlook), hands the message to Claude, and discards it. **The email body is never stored.** The only thing persisted per inbox is an encrypted OAuth token or app password, AES-256-GCM encrypted at rest, decrypted on our servers only when a request needs it, and never sent to Claude. If you want the long version of why that matters, read [why "email is never stored" matters](/blog/why-email-never-stored-matters).
 
 Setup is genuinely quick. In claude.ai you go to **Customize → Connectors → Add connector**, paste \`https://www.mcpemails.com/api/mcp\`, click Connect, sign in to your MCP Emails account, and approve the scopes you want (\`read:email\`, \`send:email\`, or both). No API key, no SDK, no config file. There's a [two-minute connect guide](/blog/connect-email-to-ai-agent-under-2-minutes) if you want the click-by-click.
 
@@ -82,7 +82,7 @@ Here's my opinionated take.
 
 **Skip the browser extension** unless you live in Gmail web and have read its data policy carefully. **Skip native integrations** unless yours already ships the feature and you're a single-client, single-provider person.
 
-One more thing that separates the serious options from the toys: sending. With MCP Emails, \`email_compose\` (action send or reply) goes through your own provider — Gmail API, Microsoft Graph, or your SMTP — so your domain reputation stays yours and threading headers are set automatically. Mail that relays from someone else's domain is a deliverability problem waiting to happen.
+One more thing that separates the serious options from the toys: sending. With MCP Emails, \`email_compose\` (action send or reply) goes through your own provider (Gmail's SMTP, Microsoft Graph, or your provider's SMTP), so your domain reputation stays yours and threading headers are set automatically. Mail that relays from someone else's domain is a deliverability problem waiting to happen.
 
 ## Get started
 

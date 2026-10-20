@@ -74,7 +74,7 @@ Ensáyalo antes de necesitarlo. Cada punto es una acción en el panel.
 - **Quitar a un miembro.** Eso revoca también las claves de API que esa persona creó en el espacio, y el mismo desmontaje ocurre cuando alguien se va por su cuenta.
 - **Bajar a viewer.** La bajada de rol revoca sus claves con permisos más allá de la lectura, en vez de debilitar en silencio una credencial de la que alguien todavía depende.
 - **Desconectar el buzón.** La credencial guardada es el único dato del buzón que se conserva, y desconectarlo la elimina.
-- **Revocar también en el proveedor.** Pide al cliente que borre la contraseña de aplicación o retire la concesión de Google. Ese camino no pasa por ti, y por eso tranquiliza.
+- **Revocar también en el proveedor.** Pide al cliente que borre la contraseña de aplicación o retire la concesión de Microsoft. Ese camino no pasa por ti, y por eso tranquiliza.
 
 No existe la transferencia de propiedad, así que no puedes entregar un espacio de trabajo al terminar un proyecto. El cliente que se lleva el correo a casa abre su propia cuenta y conecta sus propios buzones.
 

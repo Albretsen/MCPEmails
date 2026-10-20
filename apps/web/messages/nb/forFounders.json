@@ -49,7 +49,7 @@
   "does": {
     "eyebrow": "Hva det faktisk gjør",
     "title": "En ekte innboks, ikke et skrivebeskyttet glimt",
-    "sub": "Sytten handlingsbaserte verktøy agenten din kan bruke fra start til slutt.",
+    "sub": "Nitten handlingsbaserte verktøy agenten din kan bruke fra start til slutt.",
     "items": {
       "read": {
         "h": "Les og søk",
@@ -76,7 +76,7 @@
   "providers": {
     "eyebrow": "Hvilken som helst innboks, hvilken som helst AI",
     "title": "Koble til innboksen du allerede driver support fra",
-    "sub": "Outlook via Microsoft-innlogging, Gmail via et app-passord eller Google-innlogging, resten via et app-passord. Den samme innboksen fungerer så i Claude, Cursor, VS Code, ChatGPT og en hvilken som helst MCP-klient, så du er aldri låst til én app.",
+    "sub": "Outlook via Microsoft-innlogging, Gmail via et Google-app-passord, resten via et app-passord. Den samme innboksen fungerer så i Claude, Cursor, VS Code, ChatGPT og en hvilken som helst MCP-klient, så du er aldri låst til én app.",
     "ctaGmail": "Koble til Gmail",
     "ctaOutlook": "Koble til Outlook",
     "ctaFastmail": "Koble til Fastmail",

@@ -35,7 +35,7 @@
       "providerSub": "Gmail · Outlook · iCloud · IMAP",
       "logCalls": "l'agent appelle",
       "logReturns": "renvoie les ID de boîtes, sans copier-coller depuis le tableau de bord",
-      "logFetches": "mcpemails récupère via l'API Gmail (jeton renouvelé)",
+      "logFetches": "mcpemails récupère en direct chez votre fournisseur",
       "logResult": "20 messages renvoyés",
       "logNothing": "rien n'est stocké",
       "legendPipe": "mcpemails (le tuyau)",
@@ -62,13 +62,13 @@
     "items": {
       "0": {
         "tag": "Périmètre",
-        "h": "Dix-sept outils ciblés. L'essentiel, couvert.",
+        "h": "Dix-neuf outils ciblés. L'essentiel, couvert.",
         "p": "Les outils couvrent le travail quotidien : <code>inbox_list</code>, <code>email_read</code> (list, read, search) et <code>email_compose</code> (send, reply), ainsi que des outils ciblés pour organiser, supprimer, gérer les dossiers, les brouillons, la planification, les contacts, les signatures et les automatisations sans surveillance. Collez l'URL du point de terminaison MCP dans claude.ai, Claude Desktop, Cursor ou tout agent compatible MCP."
       },
       "1": {
         "tag": "Stockage",
         "h": "Les e-mails sont récupérés en direct. Jamais stockés.",
-        "p": "Chaque appel d'outil contacte votre fournisseur en temps réel : API Gmail, Microsoft Graph ou IMAP. Les corps de message, les objets et les pièces jointes vont à l'agent et sont immédiatement supprimés. Nous conservons une seule chose par boîte de réception, un jeton chiffré ou un mot de passe d'application, afin de pouvoir effectuer l'appel suivant. La seule exception est un message que vous programmez pour un envoi ultérieur : nous le conservons jusqu'à l'heure d'envoi, puis en gardons une trace pour votre historique."
+        "p": "Chaque appel d'outil contacte votre fournisseur en temps réel : API Gmail, Microsoft Graph ou IMAP. Les corps de message, les objets et les pièces jointes vont à l'agent et sont immédiatement supprimés. Nous conservons une seule chose par boîte de réception, un jeton chiffré ou un mot de passe d'application, afin de pouvoir effectuer l'appel suivant. Les exceptions sont les messages sortants qui doivent attendre : un message que vous programmez pour plus tard, ou un envoi retenu pour votre approbation, est stocké chiffré, et sa trace est conservée pour votre historique."
       },
       "2": {
         "tag": "Envoi",
@@ -78,7 +78,7 @@
       "3": {
         "tag": "Fournisseurs",
         "h": "Gmail, Outlook, iCloud, Fastmail et toute boîte IMAP.",
-        "p": "Un mot de passe d'application ou la connexion Google (OAuth 2.0) pour Gmail ; la connexion Microsoft (OAuth 2.0) pour Outlook / Microsoft 365 (un compte professionnel ou scolaire peut nécessiter que son administrateur informatique approuve l'application une fois) ; mots de passe d'application pour Fastmail, iCloud, Yahoo, Zoho et Yandex ; un connecteur IMAP / SMTP générique pour tout le reste. Connectez plusieurs boîtes, étiquetez-les par cas d'usage (work-gmail, ops-fastmail, support-imap) et limitez chaque clé API aux boîtes que vous souhaitez rendre accessibles à cet agent. Les équipes et les agences peuvent gérer toutes les boîtes de leurs clients dans un espace de travail partagé, avec rôles et journal d'audit."
+        "p": "Un mot de passe d'application Google via IMAP pour Gmail ; la connexion Microsoft (OAuth 2.0) pour Outlook / Microsoft 365 (un compte professionnel ou scolaire peut nécessiter que son administrateur informatique approuve l'application une fois) ; mots de passe d'application pour Fastmail, iCloud, Yahoo, Zoho et Yandex ; un connecteur IMAP / SMTP générique pour tout le reste. Connectez plusieurs boîtes, étiquetez-les par cas d'usage (work-gmail, ops-fastmail, support-imap) et limitez chaque clé API aux boîtes que vous souhaitez rendre accessibles à cet agent. Les équipes et les agences peuvent gérer toutes les boîtes de leurs clients dans un espace de travail partagé, avec rôles et journal d'audit."
       },
       "4": {
         "tag": "Accès",
@@ -88,7 +88,7 @@
       "5": {
         "tag": "Sécurité",
         "h": "Les identifiants sont chiffrés au repos.",
-        "p": "Les jetons OAuth et les mots de passe d'application sont chiffrés en AES-256-GCM avant d'être écrits dans la base de données. Le déchiffrement n'a lieu qu'à l'intérieur d'une Edge Function isolée, au moment de l'appel. La clé de chiffrement est stockée sous forme de secret d'environnement, séparée de la base de données."
+        "p": "Les jetons OAuth et les mots de passe d'application sont chiffrés en AES-256-GCM avant d'être écrits dans la base de données. Ils ne sont déchiffrés sur nos serveurs que pour la requête qui en a besoin. La clé de chiffrement est stockée sous forme de secret d'environnement, séparée de la base de données."
       }
     }
   },
@@ -212,7 +212,7 @@
     "items": [
       {
         "q": "MCP Emails est-il un serveur MCP pour IMAP ?",
-        "a": "Oui. En plus de la connexion Gmail et Outlook, il existe un connecteur IMAP et SMTP générique : toute boîte accessible en IMAP fonctionne, qu'elle soit sur votre propre domaine, chez un hébergeur ou chez un FAI régional. Vous saisissez les paramètres du serveur et un mot de passe d'application une seule fois, puis votre agent lit en IMAP et envoie via votre propre serveur SMTP."
+        "a": "Oui. En plus de Gmail et Outlook, il existe un connecteur IMAP et SMTP générique : toute boîte accessible en IMAP fonctionne, qu'elle soit sur votre propre domaine, chez un hébergeur ou chez un FAI régional. Vous saisissez les paramètres du serveur et un mot de passe d'application une seule fois, puis votre agent lit en IMAP et envoie via votre propre serveur SMTP."
       },
       {
         "q": "Un même agent peut-il travailler sur plusieurs boîtes à la fois ?",
@@ -232,11 +232,11 @@
       },
       {
         "q": "Quels fournisseurs d'e-mail puis-je connecter ?",
-        "a": "Gmail avec un mot de passe d'application ou en se connectant avec Google, Outlook et Microsoft 365 en se connectant avec Microsoft (un compte professionnel ou scolaire peut nécessiter que son administrateur informatique approuve l'application une fois), Fastmail, iCloud, Yahoo, Zoho et Yandex avec un mot de passe d'application, et toute autre boîte via une connexion IMAP / SMTP générique. Connectez autant de boîtes que vous le souhaitez et étiquetez-les par cas d'usage."
+        "a": "Gmail et Google Workspace avec un mot de passe d'application Google via IMAP, Outlook et Microsoft 365 en se connectant avec Microsoft (un compte professionnel ou scolaire peut nécessiter que son administrateur informatique approuve l'application une fois), Fastmail, iCloud, Yahoo, Zoho et Yandex avec un mot de passe d'application, et toute autre boîte via une connexion IMAP / SMTP générique. Connectez autant de boîtes que vous le souhaitez et étiquetez-les par cas d'usage."
       },
       {
         "q": "Mes e-mails sont-ils stockés quelque part ?",
-        "a": "Non. Le courrier que votre agent lit est récupéré en direct depuis votre fournisseur à chaque requête et n'est jamais stocké sur nos serveurs. La seule exception est un message que vous programmez explicitement pour un envoi ultérieur : il est conservé chiffré jusqu'à son départ."
+        "a": "Non. Le courrier que votre agent lit est récupéré en direct depuis votre fournisseur à chaque requête et n'est jamais stocké sur nos serveurs. Les exceptions sont les messages sortants qui doivent attendre : un message que vous programmez pour plus tard, ou un envoi retenu pour votre approbation, est stocké chiffré."
       },
       {
         "q": "Est-ce vraiment gratuit ?",
@@ -244,11 +244,11 @@
       },
       {
         "q": "Que peut réellement faire l'IA avec ma boîte de réception ?",
-        "a": "Lire et rechercher du courrier, envoyer, répondre et transférer de vrais messages, programmer des envois pour plus tard et organiser votre boîte de réception : déplacer, copier, marquer, archiver et supprimer. Dix-sept outils basés sur l'action, pour que l'agent termine le travail dans votre boîte au lieu de se contenter de rédiger."
+        "a": "Lire et rechercher du courrier, envoyer, répondre et transférer de vrais messages, programmer des envois pour plus tard et organiser votre boîte de réception : déplacer, copier, marquer, archiver et supprimer. Dix-neuf outils basés sur l'action, pour que l'agent termine le travail dans votre boîte au lieu de se contenter de rédiger."
       },
       {
         "q": "Comment connecter une boîte de réception ?",
-        "a": "Créez un compte gratuit, connectez votre boîte (mot de passe d'application ou connexion Google pour Gmail, connexion avec Microsoft pour Outlook, ou collez un mot de passe d'application pour les autres), puis déposez https://mcpemails.com/api/mcp dans votre client IA et autorisez. Votre agent dispose de la boîte en quelques minutes."
+        "a": "Créez un compte gratuit, connectez votre boîte (mot de passe d'application Google pour Gmail, connexion avec Microsoft pour Outlook, ou collez un mot de passe d'application pour les autres), puis déposez https://mcpemails.com/api/mcp dans votre client IA et autorisez. Votre agent dispose de la boîte en quelques minutes."
       },
       {
         "q": "Puis-je l'héberger moi-même ?",

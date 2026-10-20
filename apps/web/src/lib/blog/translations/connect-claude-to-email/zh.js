@@ -14,7 +14,7 @@ const translation = {
 
 - 支持自定义连接器的 **Claude 计划或应用**。
 - 一个免费的 **MCP Emails** 账户：[在此创建](/signup)。
-- 一个邮件收件箱。Outlook 通过**使用 Microsoft 登录**连接。Gmail、iCloud、Fastmail、Yahoo、Zoho 以及多数其他服务商使用应用专用密码，Gmail 也支持**使用 Google 登录**。
+- 一个邮件收件箱。Outlook 通过**使用 Microsoft 登录**连接。Gmail、iCloud、Fastmail、Yahoo、Zoho 以及多数其他服务商使用应用专用密码。
 
 ## 第 1 步：将收件箱连接到 MCP Emails
 
@@ -22,7 +22,7 @@ const translation = {
 
 ### Gmail 与 Google Workspace
 
-选择 **Gmail**，创建一个 Google 应用专用密码（你的 Google 账户需要先开启两步验证），然后连同 Gmail 地址一起填入。你也可以改用**使用 Google 登录**。无论哪种方式，MCP Emails 都不会拿到你的常规 Google 密码。如果 Workspace 管理员控制应用访问，请参阅专门的 [Gmail 指南](/blog/connect-gmail-to-claude)。
+选择 **Gmail**，在 myaccount.google.com/apppasswords 创建一个 Google 应用专用密码（只有开启两步验证后 Google 才会提供），然后把这 16 个字母连同完整的 Gmail 地址一起填入。常规 Google 密码在这里无法使用，你也可以随时撤销应用专用密码。如果 Workspace 管理员为你的域名关闭了应用专用密码，请参阅专门的 [Gmail 指南](/blog/connect-gmail-to-claude)。
 
 ### iCloud 邮件
 
@@ -79,7 +79,7 @@ Claude 会先找到已连接的收件箱，再列出并读取相关邮件。成�
 
 MCP Emails 为 Claude 提供的是专用邮件工具，而不是密码或原始 IMAP 连接：
 
-- **读取和搜索：** \`email_read\` 可以列出邮件、读取完整邮件以及搜索邮件。Gmail 搜索还支持 \`from:\` 和 \`is:unread\` 等 Gmail 运算符。
+- **读取和搜索：** \`email_read\` 可以列出邮件、读取完整邮件以及按发件人、主题、日期、未读状态等结构化字段搜索邮件。在 Gmail 中，标签显示为文件夹。
 - **发送、回复和转发：** \`email_compose\` 会通过你自己的服务商和地址发送。
 - **整理：** \`email_organize\` 可以移动、添加标签、标记和归档邮件。
 - **处理草稿、文件夹、日程和联系人：** \`draft\`、\`folder\`、\`schedule\` 和 \`contact_search\` 覆盖了实用邮件工作流的其余部分。
@@ -91,7 +91,7 @@ MCP Emails 采用轮询模式：Claude 会在你要求时检查新邮件，而�
 可以，前提是只授予连接所需的访问权限，并让人工参与对外操作。
 
 - **邮件不会被存储。** MCP Emails 在每次调用时实时获取邮件内容，并在交付后丢弃。唯一保留的收件箱数据，是重新连接到服务商所需的加密凭证。
-- **你的服务商仍控制身份验证。** Outlook 以及 Gmail 的**使用 Google 登录**选项使用 OAuth，因此 MCP Emails 永远不会收到你的密码。对于 Gmail 的应用专用密码和 IMAP 服务商，请使用可撤销的应用专用密码，而不是常规密码。
+- **你的服务商仍控制身份验证。** Outlook 使用 OAuth，因此 MCP Emails 永远看不到你的 Microsoft 密码。对于 Gmail 和其他使用应用专用密码的服务商，应用专用密码是一个独立的凭据，不是你的账户密码，你可以随时撤销。
 - **权限范围明确。** 如果 Claude 永远不应发送邮件，就只授予读取权限。仅在需要时添加发送权限，并可随时撤销。
 
 请将每封邮件正文都视为不可信输入。要求 Claude 先起草再发送，审查对外邮件，并且不要让邮件中的指令取代你的真实意图。[邮件访问安全指南](/blog/is-it-safe-to-give-ai-agent-email-access)会更详细地说明威胁模型。
@@ -99,7 +99,7 @@ MCP Emails 采用轮询模式：Claude 会在你要求时检查新邮件，而�
 ## 常见问题
 
 **Claude 可以连接 Gmail、Outlook 或 iCloud 吗？**  
-Gmail 通过 Google 应用专用密码或**使用 Google 登录**连接，Outlook 通过使用 Microsoft 登录连接，iCloud 通过应用专用密码连接。工作或学校的 Microsoft 365 账户可能需要 IT 管理员先一次性批准该应用。MCP Emails 也支持 Fastmail 和通用 IMAP，因此覆盖 Yahoo、Zoho 等服务。
+Gmail 通过 Google 应用专用密码连接，Outlook 通过使用 Microsoft 登录连接，iCloud 通过应用专用密码连接。工作或学校的 Microsoft 365 账户可能需要 IT 管理员先一次性批准该应用。MCP Emails 也支持 Fastmail 和通用 IMAP，因此覆盖 Yahoo、Zoho 等服务。
 
 **我需要 API 密钥吗？**  
 Claude 的 OAuth 连接器流程不需要。粘贴端点 URL 并登录即可。API 密钥用于没有内置 OAuth 的 MCP 客户端。

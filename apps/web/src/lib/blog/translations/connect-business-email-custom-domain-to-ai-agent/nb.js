@@ -42,7 +42,7 @@ Tjenesteoppføringer oppgir vert og port direkte, men de fleste domener publiser
 
 ### Google Workspace
 
-Workspace kobles til med et **Google-apppassord** over IMAP som standard (\`imap.gmail.com\` på 993, \`smtp.gmail.com\` på 465); OAuth er også tilgjengelig. Apppassord finnes bare når totrinnsbekreftelse er på, og en administrator kan slå dem av for hele domenet. Da er Google-siden rett og slett utilgjengelig for deg. Administratorer kan også begrense tredjeparts OAuth-apper under Sikkerhet → API-kontroller, noe som blokkerer den veien på Googles eget samtykkeskjermbilde. Er begge stengt, snakk med administratoren din.
+Workspace kobles til med et **Google-apppassord** over IMAP (\`imap.gmail.com\` på 993, \`smtp.gmail.com\` på 465). Apppassord finnes bare når totrinnsbekreftelse er på, og en administrator kan slå dem av for hele domenet. Da er Google-siden rett og slett utilgjengelig for deg. I så fall, snakk med administratoren din.
 
 ### Zoho Mail
 
@@ -105,7 +105,7 @@ Sett det per postkasse på detaljsiden for postkassen, der en forhåndsvisning v
 Slå opp MX-oppføringen til domenet, eller skriv adressen i tilkoblingsskjemaet og la autodeteksjonen sjekke MX og tjenesteoppføringene for deg.
 
 **Kan jeg koble til en Google Workspace-adresse?**
-Ja, med et Google-apppassord over IMAP, eller med OAuth. Administratoren din kan blokkere begge: apppassord kan slås av for hele domenet, og tredjeparts OAuth-apper kan begrenses under API-kontroller.
+Ja, med et Google-apppassord over IMAP. Totrinnsbekreftelse må være på for å lage et, og administratoren din kan slå av apppassord for hele domenet, så spør dem hvis valget mangler.
 
 **Hva om webhotellet mitt ikke publiserer IMAP-innstillinger?**
 Fyll dem inn selv: vert, port, sikkerhetsmodus og hele adressen din som brukernavn. Svarer ikke den første transporten, prøves standardalternativene automatisk.

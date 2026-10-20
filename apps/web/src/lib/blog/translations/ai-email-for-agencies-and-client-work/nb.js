@@ -74,7 +74,7 @@ Sett én forventning tidlig: MCP Emails spør, den blir ikke varslet. Agenten sj
 - **Fjern et medlem.** Det trekker også tilbake API-nøklene vedkommende opprettet i arbeidsområdet, og den samme opprydningen skjer når noen forlater det selv.
 - **Degrader til viewer.** Degraderingen trekker tilbake nøkler som bærer mer enn lesetilgang, i stedet for stille å svekke en legitimasjon noen fortsatt stoler på.
 - **Koble fra postkassen.** Den lagrede legitimasjonen er den eneste postkassedataen som noen gang beholdes, og frakobling fjerner den.
-- **Trekk tilbake hos leverandøren også.** Be kunden slette apppassordet eller trekke tilbake Google-tilgangen. Den veien går ikke via deg, og det er nettopp derfor den beroliger.
+- **Trekk tilbake hos leverandøren også.** Be kunden slette apppassordet eller trekke tilbake Microsoft-tilgangen. Den veien går ikke via deg, og det er nettopp derfor den beroliger.
 
 Det finnes ingen overføring av eierskap, så du kan ikke gi bort et arbeidsområde når et prosjekt avsluttes. En kunde som tar e-posten inn i eget hus, oppretter sin egen konto og kobler til sine egne postkasser.
 

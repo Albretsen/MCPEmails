@@ -16,11 +16,11 @@ This is the route for every provider that isn't Gmail or Microsoft. iCloud, Fast
 
 ## Why these providers use an app password, not OAuth
 
-Outlook exposes a modern OAuth API, so MCP Emails connects it with Sign in with Microsoft instead of a password. (A work or school Microsoft 365 account may need an IT admin to approve the app once first; the [Outlook and Microsoft 365 guide](/blog/connect-outlook-microsoft-365-ai-agent-mcp) explains it.) Gmail offers both routes: its default is a Google app password over IMAP, like the providers here, and Sign in with Google is the alternative. iCloud and Fastmail don't offer that path to third-party email tools. Instead they hand you an **app-specific password**: a long, randomly generated password scoped to a single application, separate from your real account password and revocable on its own.
+Outlook exposes a modern OAuth API, so MCP Emails connects it with Sign in with Microsoft instead of a password. (A work or school Microsoft 365 account may need an IT admin to approve the app once first; the [Outlook and Microsoft 365 guide](/blog/connect-outlook-microsoft-365-ai-agent-mcp) explains it.) Gmail works like the providers here: it connects with a Google app password over IMAP, and Google only lets you create one once 2-Step Verification is on. iCloud and Fastmail don't offer that path to third-party email tools. Instead they hand you an **app-specific password**: a long, randomly generated password scoped to a single application, separate from your real account password and revocable on its own.
 
 One correction worth making, because older write-ups get it wrong: **Fastmail is app-password only.** Fastmail used to support an OAuth flow for some integrations, but for connecting to MCP Emails today you generate an app password in Fastmail's settings. Same as iCloud. If a guide tells you to "sign in with Fastmail" through OAuth, it's stale.
 
-The app password becomes the one credential MCP Emails stores for that inbox, [encrypted with AES-256-GCM at rest](/blog/why-email-never-stored-matters) and decrypted only inside an isolated Edge Function at call time. Your actual email is never stored — every tool call fetches it live from the provider and discards it.
+The app password becomes the one credential MCP Emails stores for that inbox, [encrypted with AES-256-GCM at rest](/blog/why-email-never-stored-matters) and decrypted on our servers only when a request needs it. It's never sent to Claude. Your actual email is never stored: every tool call fetches it live from the provider and discards it.
 
 ## Generate an app-specific password for iCloud
 

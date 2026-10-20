@@ -49,7 +49,7 @@
   "does": {
     "eyebrow": "What it actually does",
     "title": "A real inbox, not a read-only peek",
-    "sub": "Seventeen action-based tools your agent can use end to end.",
+    "sub": "Nineteen action-based tools your agent can use end to end.",
     "items": {
       "read": {
         "h": "Read & search",
@@ -76,7 +76,7 @@
   "providers": {
     "eyebrow": "Any inbox, any AI",
     "title": "Connect the inbox you already run support from",
-    "sub": "Outlook over Microsoft sign-in, Gmail over an app password or Google sign-in, the rest over an app password. The same inbox then works in Claude, Cursor, VS Code, ChatGPT, and any MCP client, so you are never locked to one app.",
+    "sub": "Outlook over Microsoft sign-in, Gmail over a Google app password, the rest over an app password. The same inbox then works in Claude, Cursor, VS Code, ChatGPT, and any MCP client, so you are never locked to one app.",
     "ctaGmail": "Connect Gmail",
     "ctaOutlook": "Connect Outlook",
     "ctaFastmail": "Connect Fastmail",

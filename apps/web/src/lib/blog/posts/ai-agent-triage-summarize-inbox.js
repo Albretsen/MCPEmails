@@ -79,7 +79,7 @@ Triage is more valuable when it closes loops. Once you trust the summaries, let 
 
 > Same triage as usual. For anything in "needs a reply today" that I can answer in two sentences, draft the reply and show it to me. Don't send yet — I'll say "send 1 and 3" or edit them. Match my usual tone: short, direct, no corporate filler.
 
-The agent runs the read-only loop, then writes drafts inline. When you say "send 1 and 3," it calls \`email_compose\` with \`action: reply\` for those two. Replies thread automatically — MCP Emails sets the \`In-Reply-To\` and \`References\` headers for you, so your answer lands in the right conversation instead of starting a new one. The mail goes out through your own provider (Gmail API, Microsoft Graph, or your SMTP), so deliverability and your domain reputation stay yours. Nothing is relayed from some shared sending domain.
+The agent runs the read-only loop, then writes drafts inline. When you say "send 1 and 3," it calls \`email_compose\` with \`action: reply\` for those two. Replies thread automatically: MCP Emails sets the \`In-Reply-To\` and \`References\` headers for you, so your answer lands in the right conversation instead of starting a new one. The mail goes out through your own provider (Gmail's SMTP, Microsoft Graph, or your provider's SMTP), so deliverability and your domain reputation stay yours. Nothing is relayed from some shared sending domain.
 
 If you want to take the next step and remove yourself from the loop entirely, that's a different shape of automation — see [building an email auto-responder with an MCP agent](/blog/build-email-auto-responder-mcp-agent) for the guardrails I'd put on it before letting an agent send unattended.
 

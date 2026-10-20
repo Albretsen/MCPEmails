@@ -14,7 +14,7 @@ Du trenger ikke skrive kode, installere en SDK eller bruke en API-nøkkel når d
 
 - Et **Claude-abonnement eller en app som støtter egendefinerte connectors**.
 - En gratis **MCP Emails**-konto: [opprett en her](/signup).
-- En e-postinnboks. Outlook kobles til med Logg inn med Microsoft. Gmail, iCloud, Fastmail, Yahoo, Zoho og de fleste andre leverandører bruker et appspesifikt passord, og Gmail tilbyr også Logg inn med Google.
+- En e-postinnboks. Outlook kobles til med Logg inn med Microsoft. Gmail, iCloud, Fastmail, Yahoo, Zoho og de fleste andre leverandører bruker et appspesifikt passord.
 
 ## Steg 1: Koble innboksen til MCP Emails
 
@@ -22,7 +22,7 @@ Du trenger ikke skrive kode, installere en SDK eller bruke en API-nøkkel når d
 
 ### Gmail og Google Workspace
 
-Velg **Gmail**, lag et Google-apppassord (Google-kontoen din må ha totrinnsbekreftelse for det), og lim det inn sammen med Gmail-adressen din. Du kan velge Logg inn med Google i stedet. Uansett deles det vanlige Google-passordet ditt aldri med MCP Emails. Følg den [egne Gmail-guiden](/blog/connect-gmail-to-claude) hvis en Workspace-administrator styrer apptilgangen.
+Velg **Gmail**, lag et Google-apppassord på myaccount.google.com/apppasswords (Google tilbyr det bare når totrinnsbekreftelse er slått på), og lim inn de 16 bokstavene sammen med hele Gmail-adressen din. Det vanlige Google-passordet ditt fungerer ikke her, og du kan tilbakekalle apppassordet når som helst. Følg den [egne Gmail-guiden](/blog/connect-gmail-to-claude) hvis en Workspace-administrator har slått av apppassord for domenet ditt.
 
 ### iCloud Mail
 
@@ -79,7 +79,7 @@ For gjentakende rutiner kan du bruke [spilleboken for innbokstriering](/blog/ai-
 
 MCP Emails gir Claude fokuserte e-postverktøy i stedet for et passord eller en rå IMAP-tilkobling:
 
-- **Lese og søke:** \`email_read\` lister meldinger, leser hele meldinger og søker i e-post. Gmail-søk støtter også Gmail-operatorer som \`from:\` og \`is:unread\`.
+- **Lese og søke:** \`email_read\` lister meldinger, leser hele meldinger og søker i e-post etter avsender, emne, dato, ulest-status og andre strukturerte felt. I Gmail vises etiketter som mapper.
 - **Sende, svare og videresende:** \`email_compose\` sender gjennom din egen leverandør og adresse.
 - **Organisere:** \`email_organize\` flytter, merker, flagger og arkiverer meldinger.
 - **Jobbe med utkast, mapper, planlegging og kontakter:** \`draft\`, \`folder\`, \`schedule\` og \`contact_search\` dekker resten av en praktisk e-postflyt.
@@ -100,7 +100,7 @@ Hvis du fortsatt står fast, kan du sjekke [leverandørmatrisen](/docs/providers
 Ja, så lenge du gir tilkoblingen bare den tilgangen den trenger og holder et menneske involvert ved utgående handlinger.
 
 - **E-post lagres ikke.** MCP Emails henter meldingsinnhold live ved hvert kall og forkaster det etter levering. Den krypterte legitimasjonen som trengs for å koble til leverandøren igjen, er de eneste innboksdataene som beholdes.
-- **Leverandøren din beholder kontroll over autentisering.** Outlook, og Gmails valg Logg inn med Google, bruker OAuth, så MCP Emails mottar aldri passordet ditt. For Gmails apppassord og IMAP-leverandører bruker du et tilbakekallbart appspesifikt passord i stedet for det vanlige passordet.
+- **Leverandøren din beholder kontroll over autentisering.** Outlook bruker OAuth, så MCP Emails ser aldri Microsoft-passordet ditt. For Gmail og andre leverandører med apppassord er apppassordet en egen innloggingsnøkkel, ikke kontopassordet ditt, og du kan tilbakekalle det når som helst.
 - **Scopes er eksplisitte.** Gi skrivebeskyttet tilgang hvis Claude aldri skal kunne sende. Legg bare til sendetilgang når du trenger det, og tilbakekall tilgangen når som helst.
 
 Behandle hver e-posttekst som upålitelig inndata. Be Claude lage et utkast før den sender, gjennomgå meldinger til eksterne, og ikke la instrukser inne i en e-post overstyre det du faktisk vil. [Sikkerhetsguiden for e-posttilgang](/blog/is-it-safe-to-give-ai-agent-email-access) forklarer trusselmodellen mer detaljert.
@@ -108,7 +108,7 @@ Behandle hver e-posttekst som upålitelig inndata. Be Claude lage et utkast før
 ## Vanlige spørsmål
 
 **Kan Claude koble til Gmail, Outlook eller iCloud?**  
-Gmail kobles til med et Google-apppassord eller Logg inn med Google, Outlook med Logg inn med Microsoft, og iCloud med et appspesifikt passord. En jobb- eller skolekonto i Microsoft 365 kan trenge at en IT-ansvarlig først godkjenner appen én gang. MCP Emails støtter også Fastmail og generisk IMAP, som dekker tjenester som Yahoo og Zoho.
+Gmail kobles til med et Google-apppassord, Outlook med Logg inn med Microsoft, og iCloud med et appspesifikt passord. En jobb- eller skolekonto i Microsoft 365 kan trenge at en IT-ansvarlig først godkjenner appen én gang. MCP Emails støtter også Fastmail og generisk IMAP, som dekker tjenester som Yahoo og Zoho.
 
 **Trenger jeg en API-nøkkel?**  
 Nei, ikke for Claudes OAuth-baserte connector-flyt. Lim inn endepunkt-URL-en og logg inn. API-nøkler er for MCP-klienter uten innebygd OAuth.

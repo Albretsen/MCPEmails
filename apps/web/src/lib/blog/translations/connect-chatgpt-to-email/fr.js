@@ -24,7 +24,7 @@ Dans le tableau de bord MCP Emails, ouvrez **Inboxes**, puis **Connect Inbox**, 
 
 ### Gmail et Google Workspace
 
-Gmail se connecte par défaut avec un mot de passe d'application Google en IMAP, et la connexion Google OAuth est également disponible. Utilisez le mot de passe d'application si un administrateur Workspace restreint l'accès des applications tierces. Le [guide Gmail](/blog/connect-gmail-to-claude) détaille les étapes.
+Gmail se connecte avec un mot de passe d'application Google en IMAP. Activez la validation en deux étapes, créez le mot de passe d'application sur myaccount.google.com/apppasswords et collez les 16 lettres avec votre adresse Gmail complète ; votre mot de passe Google habituel ne fonctionne pas. Un administrateur Google Workspace peut désactiver les mots de passe d'application pour le domaine : demandez-lui si l'option n'apparaît pas. Le [guide Gmail](/blog/connect-gmail-to-claude) détaille les étapes.
 
 ### iCloud, Fastmail, Yahoo et Zoho
 
@@ -79,7 +79,7 @@ Pour des routines réutilisables, partez du [guide de tri de boîte de réceptio
 
 MCP Emails donne à ChatGPT des outils ciblés plutôt qu'un mot de passe ou une connexion IMAP brute :
 
-- **Lire et rechercher :** \`email_read\` couvre list, read, read_batch, search et attachment. Les recherches Gmail acceptent des opérateurs comme \`from:\` et \`is:unread\`.
+- **Lire et rechercher :** \`email_read\` couvre list, read, read_batch, search et attachment. La recherche utilise des champs structurés comme l'expéditeur, l'objet, la date et le statut non lu, et les libellés Gmail apparaissent comme des dossiers.
 - **Envoyer, répondre et transférer :** \`email_compose\` envoie via votre propre fournisseur et votre propre adresse.
 - **Organiser :** \`email_organize\`, \`email_search_and_move\` et \`email_delete\`.
 - **Brouillons, dossiers et planification :** \`draft\`, \`draft_list\`, \`folder\`, \`folder_list\`, \`schedule\` et \`schedule_list\`.

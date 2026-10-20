@@ -6,6 +6,7 @@ import RichText from './RichText';
 import { relatedProviders } from '@/lib/connect/release.mjs';
 import { OAUTH_VERIFICATION_PENDING } from '@/lib/oauth/verification-status';
 import { multiMailboxFaq, withProvider } from '@/lib/connect/multi-mailbox.mjs';
+import { MODEL_VISIBLE_TOOL_COUNT } from '@/lib/public-facts.mjs';
 
 /**
  * What a shared string needs to know about a provider name to stay
@@ -193,7 +194,7 @@ export default async function ConnectProviderView({ locale, provider, content, m
           <div className="section-head principles-head">
             <div className="eye-label">{t('caps.eyebrow')}</div>
             <h2>{t('caps.title', named)}</h2>
-            <p className="sub">{t('caps.sub', { provider: provider.name })}</p>
+            <p className="sub">{t('caps.sub', { provider: provider.name, toolCount: MODEL_VISIBLE_TOOL_COUNT })}</p>
           </div>
           <ol className="principle-list">
             {t.raw('capabilities').map((c, i) => (
@@ -337,7 +338,7 @@ export default async function ConnectProviderView({ locale, provider, content, m
           <div className="container">
             <div className="section-head">
               <h2>{t('related.title')}</h2>
-              <p className="sub">{t('related.sub')}</p>
+              <p className="sub">{t('related.sub', { toolCount: MODEL_VISIBLE_TOOL_COUNT })}</p>
             </div>
             <ul className="connect-related">
               {related.map((p) => (

@@ -49,12 +49,12 @@
       "p": "Google 宣布为其服务提供官方 MCP 支持，其中包括一个覆盖 Gmail 以及 Drive、Calendar 和 Chat 的 Workspace MCP 服务器。我们不会假装没有这回事。如果 Gmail 是你唯一想让助手接触的邮箱，而且你的客户端能连接 Google 的服务器，那就用它。把 mcpemails 指向 Gmail 的理由在于，同一台服务器还能容纳你的 iCloud、Fastmail、Zoho、Yahoo 或公司 IMAP 邮箱，通过<b>一个</b> MCP URL 提供所有这些邮箱，并且在 Claude、Cursor 和 ChatGPT 中表现一致。它要避免的，正是每家服务商一个连接器、各自有各自的认证和工具名称的局面。"
     },
     {
-      "h": "工作用的 Gmail 上，Workspace 管理员可能会阻止 Google 登录这一选项",
-      "p": "这只适用于 Google 登录选项，不适用于应用专用密码。Google Workspace 管理员在 Security、API controls、App access control 下控制第三方 API 访问。管理员可以直接阻止所有第三方应用，或者只允许某个应用使用指定的 OAuth 范围。如果开启了这项限制，Google 会在自己的授权页面上以 <code>Error 400: admin_policy_enforced</code> 拒绝，请求根本不会到达我们这里。我们这边无法绕过：必须由管理员为该应用放行 Gmail 范围。以 <code>@gmail.com</code> 结尾的个人账户没有这种策略，不受影响。"
+      "h": "从其他地址发信需要先验证发件地址",
+      "p": "用应用专用密码连接的邮箱从它自己的地址发信。若要让代理从别名或你拥有的其他地址发信，请在 MCP Emails 的收件箱设置中，把该地址添加到<b>发件地址</b>。我们会向该地址发送一个 6 位验证码，输入验证码后即可使用。Gmail 也必须接受这个地址，所以请先在 Gmail 中把它设置为 <b>Send mail as</b> 地址。既不是邮箱本身地址、也未经验证的 From 地址会被拒绝，而不会被悄悄改写。"
     },
     {
       "h": "Gmail 用的是标签而不是文件夹，所以移动并不是真正的移动",
-      "p": "Gmail 存储的是标签而不是文件夹。通过 IMAP，每个标签都显示为一个文件夹；Google 登录选项则直接操作标签。所以无论哪种方式，一封邮件都可以同时带有多个标签，并出现在多个文件夹中。移动邮件意味着添加一个标签并移除另一个，而归档只是移除 <code>INBOX</code>。删除会把邮件放入 Gmail 的 Trash，而不是彻底清除。如果你让代理把邮件归档到一个尚不存在的文件夹，需要先创建该标签，之后它会出现在所有设备的 Gmail 中。"
+      "p": "Gmail 存储的是标签而不是文件夹。通过 IMAP，每个标签都显示为一个文件夹，所以一封邮件可以同时带有多个标签，并出现在多个文件夹中。移动邮件意味着添加一个标签并移除另一个，而归档只是移除 <code>INBOX</code>。删除会把邮件放入 Gmail 的 Trash，而不是彻底清除。如果你让代理把邮件归档到一个尚不存在的文件夹，需要先创建该标签，之后它会出现在所有设备的 Gmail 中。"
     },
     {
       "h": "Google Workspace 管理员可以关闭应用专用密码",
@@ -62,8 +62,8 @@
     }
   ],
   "limits": [
-    "无论哪种方式，mcpemails 都只触及邮件：应用专用密码只用于 IMAP 和 SMTP，而 Google 登录选项只请求 Gmail 的读取、发送、修改和基本设置范围。Drive、Calendar、Chat 和 Docs 都无法访问。",
-    "Google Workspace 管理员可以在 Admin console 中关闭任一连接方式：为整个域名停用应用专用密码，或为 Google 登录选项阻止第三方 API 访问。这些决定只有管理员能够更改。",
+    "mcpemails 只访问邮件：应用专用密码仅用于 IMAP 和 SMTP。不会访问 Drive、Calendar、Chat 和 Docs。",
+    "Google Workspace 管理员可以在 Admin console 中为整个域关闭应用专用密码。只有管理员能更改这一决定。",
     "删除会把邮件移入 Gmail 的 Trash。要永久清除邮件，请在 Gmail 中操作。"
   ],
   "faq": [
@@ -77,19 +77,19 @@
     },
     {
       "q": "Gmail 需要应用专用密码吗？",
-      "a": "需要。Gmail 使用 Google 应用专用密码通过 IMAP 和 SMTP 连接，而不是你的普通 Google 密码。Google 只在开启了两步验证的账户上显示应用专用密码，所以请先开启两步验证，然后在 myaccount.google.com/apppasswords 创建一个，大约只需一分钟。Google 登录仍作为备选方式提供，但会显示一个应用未经验证的警告，你需要点击跳过。"
+      "a": "需要。Gmail 通过 IMAP 和 SMTP 使用 Google 应用专用密码连接，而不是你平常的 Google 密码。Google 只在开启了两步验证的账户上显示应用专用密码，所以请先开启两步验证，再到 myaccount.google.com/apppasswords 创建一个。大约只需一分钟。"
     },
     {
-      "q": "为什么 Google 在我的工作账户上拒绝 Google 登录选项？",
-      "a": "几乎总是管理员策略所致。Google Workspace 管理员在 Security、API controls、App access control 下限制哪些第三方应用可以使用 Gmail 范围。如果该应用未被允许，Google 会在任何请求到达我们之前，以 Error 400: admin_policy_enforced 终止流程。必须由你的管理员放行该应用；如果你的域名允许，也可以改用应用专用密码连接。个人 Gmail 账户不会遇到这种情况。"
+      "q": "为什么我的工作账户无法创建应用专用密码？",
+      "a": "Google 只在开启了两步验证的账户上提供应用专用密码，所以请先确认这一点。在 Google Workspace 账户上，管理员还可以为整个域关闭应用专用密码，这时无论你在邮箱里做什么，myaccount.google.com/apppasswords 都无法使用，只有管理员能更改。个人 Gmail 账户只需要开启两步验证。"
     },
     {
       "q": "可以用于 Google Workspace 自定义域名吗？",
-      "a": "可以。使用你自己域名的 Workspace 邮箱，与 gmail.com 地址一样用应用专用密码连接，之后的表现也完全相同。唯一的条件是管理员策略：域名必须允许应用专用密码；如果你使用 Google 登录选项，则必须允许该账户进行第三方 API 访问，否则 Google 会阻止授权页面。"
+      "a": "可以。你自有域名上的 Workspace 邮箱和 gmail.com 地址一样，用应用专用密码连接，连接后的表现也完全相同。唯一的条件是管理员策略：域名必须允许应用专用密码和 IMAP 访问。"
     },
     {
       "q": "我的 Gmail 邮件会存储在你们的服务器上吗？",
-      "a": "不会。每次请求都从 Google 实时获取邮件，并交给你的 AI 客户端。你的应用专用密码（如果使用 Google 登录，则是 OAuth 令牌）静态加密存储，邮件正文不会保留。在你的 Google 账户中撤销应用专用密码或访问权限，或在 mcpemails 中删除该收件箱，都会立即终止连接。"
+      "a": "不会。每次请求都从 Google 实时获取邮件，并交给你的 AI 客户端。你的应用专用密码静态加密存储，邮件正文不会保留。在你的 Google 账户中撤销应用专用密码，或在 mcpemails 中删除该收件箱，都会立即终止连接。"
     }
   ],
   "ctaBand": {

@@ -246,7 +246,7 @@ export function homeJsonLd(
           'Idempotency keys for safe outbound email retries',
           'Provider compatibility profiles',
           'Original email export as .eml (message/rfc822)',
-          'Verified Gmail send-as aliases',
+          'Verified Send As addresses for Gmail and IMAP inboxes',
           'Threaded reply drafts',
           'Outlook / Microsoft 365 via Microsoft Graph',
         ],

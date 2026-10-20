@@ -38,7 +38,7 @@
       },
       {
         "data": "OAuth token or app password",
-        "accessed": "Decrypted only inside an isolated function at call time",
+        "accessed": "Decrypted on our servers only for the request that needs it",
         "stored": "Yes, encrypted at rest with AES-256-GCM; key held separately"
       },
       {
@@ -52,12 +52,17 @@
         "stored": "Yes, encrypted at rest until sent, then kept as your history"
       },
       {
+        "data": "Sends held for your approval",
+        "accessed": "Held until a reviewer approves or rejects it, or it expires after 24 hours",
+        "stored": "Yes, encrypted at rest, then kept as your approval history"
+      },
+      {
         "data": "Tool-call activity (metadata)",
         "accessed": "Recorded for your own audit log",
         "stored": "Tool name, inbox, timestamp, and status only. No email content"
       }
     ],
-    "outro": "The one deliberate exception is a message you ask the agent to schedule for later. We have to hold it until the send time, so we store it encrypted in the meantime, then keep a record afterwards for your history."
+    "outro": "The deliberate exceptions are outgoing messages that have to wait: a message you ask the agent to schedule for later, and a send held for your approval. We have to hold them until they go out, so we store them encrypted in the meantime, then keep a record afterwards for your history."
   },
   "verify": {
     "title": "3. You don't have to trust me, you can check",
@@ -114,6 +119,11 @@
         "provider": "Vercel",
         "purpose": "Website, dashboard and MCP endpoint hosting",
         "location": "Global CDN; servers in the US (East) and the EU (Stockholm)"
+      },
+      {
+        "provider": "Hetzner",
+        "purpose": "Mail relay for the few providers that refuse connections from cloud addresses (a TLS tunnel: it cannot read mail or passwords)",
+        "location": "Germany (EU)"
       },
       {
         "provider": "Stripe",

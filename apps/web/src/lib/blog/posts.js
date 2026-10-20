@@ -115,7 +115,7 @@ This post walks through why that last mile is deceptively hard, and how the [Mod
 
 Email looks like a solved problem. It is not — at least not for an autonomous agent. Three things get in the way:
 
-1. **Auth is provider-specific.** Gmail wants OAuth with the right scopes. Outlook wants Microsoft identity. Fastmail wants an app password. Each has its own token lifecycle and failure modes.
+1. **Auth is provider-specific.** Gmail wants an app password and 2-Step Verification. Outlook wants Microsoft identity. Fastmail wants an app password. Each has its own token lifecycle and failure modes.
 2. **Credentials are radioactive.** You do not want a mailbox password sitting in a chat transcript, a log line, or a vector store. Ever.
 3. **The "shape" of email is messy.** MIME, threading, HTML vs. plain text, attachments, folders that are really labels. An agent needs a clean, predictable interface — not raw RFC 5322.
 

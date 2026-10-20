@@ -9,11 +9,11 @@ Dette er ruten for alle leverandører som ikke er Gmail eller Microsoft. iCloud,
 
 ## Hvorfor disse leverandørene bruker app-passord, ikke OAuth
 
-Outlook tilbyr et moderne OAuth-API, så MCP Emails kobler det til med Logg inn med Microsoft i stedet for et passord. (En jobb- eller skolekonto i Microsoft 365 kan trenge at en IT-ansvarlig først godkjenner appen én gang; [guiden for Outlook og Microsoft 365](/blog/connect-outlook-microsoft-365-ai-agent-mcp) forklarer det.) Gmail tilbyr begge veier: standard er et Google-apppassord over IMAP, som leverandørene her, og Logg inn med Google er alternativet. iCloud og Fastmail tilbyr ikke den veien til tredjeparts e-postverktøy. I stedet gir de deg et **app-spesifikt passord**: et langt, tilfeldig generert passord som er begrenset til én enkelt applikasjon, atskilt fra det egentlige kontopassordet ditt og som kan tilbakekalles for seg.
+Outlook tilbyr et moderne OAuth-API, så MCP Emails kobler det til med Logg inn med Microsoft i stedet for et passord. (En jobb- eller skolekonto i Microsoft 365 kan trenge at en IT-ansvarlig først godkjenner appen én gang; [guiden for Outlook og Microsoft 365](/blog/connect-outlook-microsoft-365-ai-agent-mcp) forklarer det.) Gmail fungerer som leverandørene her: det kobles til med et Google-apppassord over IMAP, og Google lar deg bare lage et når totrinnsbekreftelse er slått på. iCloud og Fastmail tilbyr ikke den veien til tredjeparts e-postverktøy. I stedet gir de deg et **app-spesifikt passord**: et langt, tilfeldig generert passord som er begrenset til én enkelt applikasjon, atskilt fra det egentlige kontopassordet ditt og som kan tilbakekalles for seg.
 
 Én korrigering som er verdt å gjøre, fordi eldre omtaler tar feil her: **Fastmail bruker kun app-passord.** Fastmail støttet tidligere en OAuth-flyt for enkelte integrasjoner, men for å koble til MCP Emails i dag genererer du et app-passord i Fastmails innstillinger. Akkurat som iCloud. Hvis en guide ber deg "logge inn med Fastmail" via OAuth, er den utdatert.
 
-App-passordet blir den ene legitimasjonen MCP Emails lagrer for den innboksen, [kryptert med AES-256-GCM i hvile](/blog/why-email-never-stored-matters) og dekryptert kun inne i en isolert Edge Function på kalltidspunktet. Selve e-posten din blir aldri lagret — hvert verktøykall henter den live fra leverandøren og forkaster den.
+App-passordet blir den ene legitimasjonen MCP Emails lagrer for den innboksen, [kryptert med AES-256-GCM i hvile](/blog/why-email-never-stored-matters) og dekryptert på serverne våre bare når en forespørsel trenger det. Det sendes aldri til Claude. Selve e-posten din blir aldri lagret: hvert verktøykall henter den live fra leverandøren og forkaster den.
 
 ## Generer et app-spesifikt passord for iCloud
 
