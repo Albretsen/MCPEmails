@@ -19,6 +19,15 @@ import {
 } from "./imap-folder-target.ts";
 import { fetchImapListPage } from "./imap-list-page.ts";
 import {
+  type FolderOverrideRole,
+  type FolderOverrides,
+  isFolderOverrideRole,
+  isRefusedCopy,
+  parseFolderOverrides,
+  pickFolderOverride,
+  sentCopyCandidatesWithOverride,
+} from "./folder-overrides.ts";
+import {
   firstPartyContext,
   flaggedField,
   gmailThreadField,
@@ -12991,6 +13000,8 @@ async function appendToSentFolder(inbox: InboxRow, mimeMessage: string | Uint8Ar
   let client: ImapClient | null = null;
   let saved = false;
   let error: string | null = null;
+  // The user's Sent folder pick, read while the connection opens. Never throws.
+  const overridesRead = readInboxFolderOverrides(inbox.id);
   try {
     const password = await decryptStoredToken(inbox.imap_password);
     client = await ImapClient.connect({
@@ -13002,7 +13013,13 @@ async function appendToSentFolder(inbox: InboxRow, mimeMessage: string | Uint8Ar
     });
     // A layout that cannot be listed still gets the legacy names tried.
     const mailboxes = await client.listMailboxes().catch(() => []);
-    for (const mbox of sentCopyCandidates(mailboxes)) {
+    // The user's pick first when the server lists it, then exactly the
+    // automatic order (folder-overrides.ts). A refused APPEND changes nothing,
+    // so walking on to the next candidate is the fallback.
+    const overrides = await overridesRead;
+    const override = mailboxes.length > 0 ? await imapRoleOverride(inbox, "sent", mailboxes, overrides) : null;
+    const candidates = override ? sentCopyCandidatesWithOverride(mailboxes, overrides) : sentCopyCandidates(mailboxes);
+    for (const mbox of candidates) {
       try {
         if (await client.append(mbox, mimeMessage)) {
           saved = true;
@@ -13011,6 +13028,7 @@ async function appendToSentFolder(inbox: InboxRow, mimeMessage: string | Uint8Ar
       } catch {
         // Try the next candidate folder name.
       }
+      if (mbox === override) logFolderOverrideFallback(inbox.id, "sent", "refused");
     }
     if (!saved) error = "no Sent mailbox accepted the copy";
   } catch (err) {
@@ -20517,6 +20535,14 @@ async function resolveFolderId(
         // further down gives. Guessing here is a read of, or a write into, a
         // folder nobody named.
         const forRead = opts.forRead === true && opts.strict === true;
+        // The folder the user picked for this role in the dashboard wins over
+        // detection, read or write, whenever the server still lists it. It is
+        // never created, and a pick that is gone falls through to detection.
+        const roleToken = alias.aliases[0];
+        if (isFolderOverrideRole(roleToken) && imapMailboxes) {
+          const override = await imapRoleOverride(inbox, roleToken, imapMailboxes);
+          if (override) return override;
+        }
         const role = resolveImapAlias(imapMailboxes ?? [], alias, { forRead });
         if (role.kind === "ambiguous") {
           throw new FolderTargetError({
@@ -21792,13 +21818,20 @@ async function imapArchiveEmail(
       email: imapAuthUser(inbox),
       password,
     });
-    // Resolve (or create) the Archive mailbox before touching the source.
+    // Resolve (or create) the Archive mailbox before touching the source. The
+    // user's pick wins when listed; it is never created.
     const mailboxes = await client.listMailboxes();
-    let target = matchImapAliasMailbox(mailboxes, archiveAlias);
-    if (!target) {
-      target = archiveAlias.imap; // "Archive"
-      await client.createMailbox(target);
-    }
+    const conn = client;
+    const automaticArchive = async (): Promise<string> => {
+      const matched = matchImapAliasMailbox(mailboxes, archiveAlias);
+      if (matched) return matched;
+      await conn.createMailbox(archiveAlias.imap); // "Archive"
+      return archiveAlias.imap;
+    };
+    const override = await imapRoleOverride(inbox, "archive", mailboxes);
+    let roleTarget: ImapRoleTarget = override
+      ? { name: override, override: true }
+      : { name: await automaticArchive(), override: false };
     await client.selectMailbox(imapMailboxForServerFolder(folder));
     // The message has to BE there before we say we acted on it: a UID command
     // against a UID nobody holds is a tagged OK, not an error. See
@@ -21806,15 +21839,18 @@ async function imapArchiveEmail(
     await assertUidPresent(client, uid);
     // Gmail, a message addressed by its All Mail id: archived by taking the
     // \\Inbox label off, and it keeps its id. See imap-gmail-relocate.ts.
-    if (await relocateFromGmailAllMail(client, folder, [uid], target, () => Promise.resolve(mailboxes))) {
-      return { newMessageId: messageId, destination: target };
+    if (await relocateFromGmailAllMail(client, folder, [uid], roleTarget.name, () => Promise.resolve(mailboxes))) {
+      return { newMessageId: messageId, destination: roleTarget.name };
     }
     // uidMove falls back internally if MOVE is unsupported (COPY + \\Deleted +
-    // EXPUNGE); the COPY runs before the destructive steps.
-    const moved = await client.uidMove([uid], target);
+    // EXPUNGE); the COPY runs before the destructive steps. A refused copy
+    // into the user's pick falls back once to detection (uidMoveIntoRoleTarget).
+    const result = await uidMoveIntoRoleTarget(client, inbox, "archive", [uid], roleTarget, automaticArchive);
+    roleTarget = result.target;
+    const target = roleTarget.name;
     // The old id is dead now; COPYUID (UIDPLUS) says what replaced it.
     return {
-      newMessageId: newMessageIdsFor([{ uid, messageId }], moved, target, encodeImapId)[messageId],
+      newMessageId: newMessageIdsFor([{ uid, messageId }], result.moved, target, encodeImapId)[messageId],
       destination: target,
     };
   } catch (err) {
@@ -22975,9 +23011,21 @@ async function executeCopyEmail(
  * connection cannot disturb a SELECT it is relying on (same reasoning as
  * resolveImapAliasMailbox's `session` option).
  */
-async function resolveImapTrashMailbox(client: ImapClient): Promise<string> {
-  const trashAlias = lookupCanonicalAlias("trash")!;
+async function resolveImapTrashMailbox(client: ImapClient, inbox: InboxRow): Promise<ImapRoleTarget> {
   const mailboxes = await client.listMailboxes();
+  // The user's pick wins when the server lists it. It is never created.
+  const override = await imapRoleOverride(inbox, "trash", mailboxes);
+  if (override) return { name: override, override: true };
+  return { name: await automaticImapTrashMailbox(client, mailboxes), override: false };
+}
+
+/** Automatic detection alone: the resolution described above resolveImapTrashMailbox. */
+async function automaticImapTrashMailbox(
+  client: ImapClient,
+  listed?: ImapMailboxInfo[],
+): Promise<string> {
+  const trashAlias = lookupCanonicalAlias("trash")!;
+  const mailboxes = listed ?? await client.listMailboxes();
   const matched = matchImapAliasMailbox(mailboxes, trashAlias);
   if (matched) return matched;
   // No \\Trash mailbox and nothing literally named "Trash": create the
@@ -23035,14 +23083,15 @@ async function imapDeleteEmail(
       // the server's real layout BEFORE the source is touched (see
       // resolveImapTrashMailbox). uidMove falls back to COPY+EXPUNGE if
       // RFC 6851 MOVE is unsupported.
-      const trash = await resolveImapTrashMailbox(client);
+      const trash = await resolveImapTrashMailbox(client, inbox);
       await client.selectMailbox(imapMailboxForServerFolder(folder));
       // SEARCH, not a FETCH of the flags: a message already flagged \\Deleted
       // and not yet expunged is still PRESENT, so re-deleting an
       // already-trashed message stays the idempotent no-op it has always been.
       // Only an id for a message that is genuinely gone fails here.
       await assertUidPresent(client, uid);
-      await client.uidMove([uid], trash);
+      const conn = client;
+      await uidMoveIntoRoleTarget(client, inbox, "trash", [uid], trash, () => automaticImapTrashMailbox(conn));
     }
   } catch (err) {
     if (err instanceof ImapAuthError) throw new Error("imap_auth_failed");
@@ -23839,7 +23888,7 @@ function imapBulkDelete(
   // soft-delete group also keeps a permanent delete at exactly the commands it
   // had before. The name stays valid if runImapFolderGroups invalidates the
   // session and reconnects between groups.
-  let trash: string | null = null;
+  let trash: ImapRoleTarget | null = null;
   // client-api only (first-party.ts `trashIds`): where each message landed in
   // Trash, so the client can undo. Read once, up front. For MCP traffic it is
   // false, nothing is collected, and the result has no `newMessageIds` key.
@@ -23855,10 +23904,15 @@ function imapBulkDelete(
       // trash mailbox, so "[Gmail]/Trash", "INBOX.Trash" and localized names
       // work instead of failing on a raw "Trash" literal. uidMove falls back to
       // COPY+EXPUNGE if MOVE is unsupported.
-      trash ??= await resolveImapTrashMailbox(client);
-      const moved = await client.uidMove(uids, trash);
+      trash ??= await resolveImapTrashMailbox(client, inbox);
+      // A refused copy into the user's pick falls back to detection, and the
+      // fallback is kept for the rest of the run.
+      const result = await uidMoveIntoRoleTarget(
+        client, inbox, "trash", uids, trash, () => automaticImapTrashMailbox(client),
+      );
+      trash = result.target;
       if (reportIds) {
-        Object.assign(newMessageIds, newMessageIdsFor(group.items, moved, trash, encodeImapId));
+        Object.assign(newMessageIds, newMessageIdsFor(group.items, result.moved, trash.name, encodeImapId));
       }
     }
   }).then((result) => (reportIds ? { ...result, newMessageIds } : result));
@@ -26107,7 +26161,9 @@ async function imapListDrafts(
     // to on accounts with a non-default Drafts folder name.
     const draftsAlias = lookupCanonicalAlias("drafts")!;
     const mailboxes = await client.listMailboxes();
-    let draftFolder = matchImapAliasMailbox(mailboxes, draftsAlias) ?? draftsAlias.imap;
+    // The user's pick first (when listed), so the list reads where drafts are saved.
+    let draftFolder = await imapRoleOverride(inbox, "drafts", mailboxes) ??
+      matchImapAliasMailbox(mailboxes, draftsAlias) ?? draftsAlias.imap;
     try {
       await client.selectMailbox(draftFolder);
       const uids = await client.uidSearch("ALL");
@@ -26228,13 +26284,24 @@ async function imapCreateDraft(
     // failed (100% reproducible, logged as error_code "provider_error").
     const draftsAlias = lookupCanonicalAlias("drafts")!;
     const mailboxes = await client.listMailboxes();
-    let draftFolder = matchImapAliasMailbox(mailboxes, draftsAlias);
-    if (!draftFolder) {
-      await client.createMailbox(draftsAlias.imap);
-      draftFolder = draftsAlias.imap;
-    }
+    const conn = client;
+    const automaticDrafts = async (): Promise<string> => {
+      const matched = matchImapAliasMailbox(mailboxes, draftsAlias);
+      if (matched) return matched;
+      await conn.createMailbox(draftsAlias.imap);
+      return draftsAlias.imap;
+    };
+    // The user's pick wins when listed (never created). A refused APPEND saved
+    // nothing, so it falls back once to detection.
+    const override = await imapRoleOverride(inbox, "drafts", mailboxes);
+    let draftFolder = override ?? await automaticDrafts();
 
-    const res = await client.appendWithFlags(draftFolder, mime, ["\\Draft", "\\Seen"]);
+    let res = await client.appendWithFlags(draftFolder, mime, ["\\Draft", "\\Seen"]);
+    if (!res.ok && override) {
+      logFolderOverrideFallback(inbox.id, "drafts", "refused");
+      draftFolder = await automaticDrafts();
+      res = await client.appendWithFlags(draftFolder, mime, ["\\Draft", "\\Seen"]);
+    }
     if (!res.ok) {
       throw new Error(`Could not save draft to "${draftFolder}"`);
     }
@@ -27551,6 +27618,89 @@ function withSignatureImages(inbox: InboxRow, htmlBody: string | undefined): Pro
  * card and today's plain payload, which is the pre-feature behaviour and is
  * exactly what an unreadable preference should fall back to.
  */
+/**
+ * The folders a user picked for this inbox's roles (Inboxes > Advanced >
+ * Folders in the dashboard), sanitized by parseFolderOverrides.
+ *
+ * Read on demand, in its own query, for the reason INBOX_SELECT_COLUMNS gives:
+ * a column the migration has not added yet must break this feature only, never
+ * every mail tool. Any failure answers {} (no overrides), which is automatic
+ * detection: exactly the behaviour before the setting existed.
+ */
+async function readInboxFolderOverrides(inboxId: string): Promise<FolderOverrides> {
+  if (INTROSPECTION_ONLY) return {};
+  try {
+    const { data, error } = await supabase
+      .from("inboxes")
+      .select("folder_overrides")
+      .eq("id", inboxId)
+      .maybeSingle();
+    if (error) {
+      console.warn("[mcp-server] folder_overrides_query_failed", { inbox_id: inboxId, error: error.message });
+      return {};
+    }
+    return parseFolderOverrides((data as { folder_overrides?: unknown } | null)?.folder_overrides);
+  } catch (error) {
+    console.warn("[mcp-server] folder_overrides_unavailable", {
+      inbox_id: inboxId,
+      error: error instanceof Error ? error.message : String(error),
+    });
+    return {};
+  }
+}
+
+/**
+ * Log that a stored folder choice was not used and automatic detection ran
+ * instead. The role and the reason only, never the folder name.
+ */
+function logFolderOverrideFallback(inboxId: string, role: FolderOverrideRole, reason: "not_listed" | "refused"): void {
+  console.warn("[mcp-server] folder_override_fallback", { inbox_id: inboxId, role, reason });
+}
+
+/**
+ * The folder the user picked for `role`, when the server still lists it, else
+ * null (the caller runs automatic detection). See folder-overrides.ts.
+ */
+async function imapRoleOverride(
+  inbox: InboxRow,
+  role: FolderOverrideRole,
+  mailboxes: readonly ImapMailboxInfo[],
+  overrides?: FolderOverrides,
+): Promise<string | null> {
+  const pick = pickFolderOverride(overrides ?? await readInboxFolderOverrides(inbox.id), role, mailboxes);
+  if (pick.kind === "not_listed") logFolderOverrideFallback(inbox.id, role, "not_listed");
+  return pick.kind === "override" ? pick.name : null;
+}
+
+/** A role's destination folder, and whether it came from the user's pick. */
+interface ImapRoleTarget {
+  name: string;
+  override: boolean;
+}
+
+/**
+ * UID MOVE into a role folder. When the folder is the user's pick and the
+ * server refuses the copy (which changes nothing: see isRefusedCopy), fall back
+ * once to automatic detection. Any other failure is thrown as before.
+ */
+async function uidMoveIntoRoleTarget(
+  client: ImapClient,
+  inbox: InboxRow,
+  role: FolderOverrideRole,
+  uids: number[],
+  target: ImapRoleTarget,
+  automatic: () => Promise<string>,
+): Promise<{ moved: Map<number, number>; target: ImapRoleTarget }> {
+  try {
+    return { moved: await client.uidMove(uids, target.name), target };
+  } catch (err) {
+    if (!target.override || !isRefusedCopy(err)) throw err;
+    logFolderOverrideFallback(inbox.id, role, "refused");
+    const fallback = { name: await automatic(), override: false };
+    return { moved: await client.uidMove(uids, fallback.name), target: fallback };
+  }
+}
+
 async function readInboxDraftEditorHidden(inboxId: string): Promise<boolean> {
   if (INTROSPECTION_ONLY) return true;
   try {
@@ -35607,6 +35757,8 @@ export {
   resolveInbox,
   // Folder alias/name/id -> provider folder id, for the `status` op.
   resolveFolderId,
+  // The folders a user picked per role, so `folders[].role` matches them.
+  readInboxFolderOverrides,
   // Provider credentials and paths the `status` op reads counters with.
   imapSessionFor,
   outlookFolderPathSegment,

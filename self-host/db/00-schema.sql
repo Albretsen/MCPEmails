@@ -205,7 +205,44 @@ ALTER TABLE public.inboxes
   ADD COLUMN IF NOT EXISTS bulk_review_mode       text NOT NULL DEFAULT 'off'
     CONSTRAINT inboxes_bulk_review_mode_check CHECK (bulk_review_mode IN ('off', 'plan')),
   ADD COLUMN IF NOT EXISTS draft_editor_hidden    boolean NOT NULL DEFAULT false,
-  ADD COLUMN IF NOT EXISTS signature_embed_images boolean NOT NULL DEFAULT false;  -- send signature images inline (cid:) instead of as https URLs
+  ADD COLUMN IF NOT EXISTS signature_embed_images boolean NOT NULL DEFAULT false,  -- send signature images inline (cid:) instead of as https URLs
+  ADD COLUMN IF NOT EXISTS folder_overrides       jsonb;  -- per-role IMAP folder picked by the user; NULL = automatic (20261020230000)
+-- The rules for folder_overrides, as in the hosted migration 20261020230000:
+-- keys sent/drafts/trash/spam/archive, string values of 1 to 512 characters,
+-- never INBOX, never one folder for two roles.
+CREATE OR REPLACE FUNCTION public.inbox_folder_overrides_valid(overrides jsonb)
+RETURNS boolean
+LANGUAGE sql
+IMMUTABLE
+SET search_path = ''
+AS $$
+  SELECT overrides IS NULL OR (
+    jsonb_typeof(overrides) = 'object'
+    AND (overrides - ARRAY['sent', 'drafts', 'trash', 'spam', 'archive']) = '{}'::jsonb
+    AND NOT EXISTS (
+      SELECT 1
+        FROM jsonb_each(overrides) AS e(key, value)
+       WHERE jsonb_typeof(e.value) <> 'string'
+          OR char_length(e.value #>> '{}') NOT BETWEEN 1 AND 512
+          OR upper(e.value #>> '{}') = 'INBOX'
+    )
+    AND (SELECT count(*) FROM jsonb_each(overrides))
+      = (SELECT count(DISTINCT e.value) FROM jsonb_each(overrides) AS e(key, value))
+  );
+$$;
+DO $$
+BEGIN
+  IF NOT EXISTS (
+    SELECT 1 FROM pg_constraint
+     WHERE conrelid = 'public.inboxes'::regclass
+       AND conname = 'inboxes_folder_overrides_check'
+  ) THEN
+    ALTER TABLE public.inboxes
+      ADD CONSTRAINT inboxes_folder_overrides_check
+      CHECK (public.inbox_folder_overrides_valid(folder_overrides));
+  END IF;
+END
+$$;
 CREATE INDEX IF NOT EXISTS idx_inboxes_workspace_id_status   ON public.inboxes (workspace_id, status);
 CREATE INDEX IF NOT EXISTS idx_inboxes_workspace_id_provider ON public.inboxes (workspace_id, provider);
 -- Full (non-partial) unique index so `provision-inbox` can upsert by this pair

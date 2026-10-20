@@ -96,6 +96,8 @@ export interface McpSeam {
     opts: { strict?: boolean; forRead?: boolean; session?: any },
   ): Promise<string>;
   imapSessionFor(inbox: InboxRow): ImapSessionLike | null;
+  /** The folders a user picked per role (sanitized; {} on any failure). Absent on older stand-ins. */
+  readInboxFolderOverrides?(inboxId: string): Promise<Partial<Record<string, string>>>;
   outlookFolderPathSegment(folder: string): string;
   withFreshGmailToken(inbox: InboxRow): Promise<string>;
   withFreshOutlookToken(inbox: InboxRow): Promise<string>;
