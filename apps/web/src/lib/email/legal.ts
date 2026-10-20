@@ -33,3 +33,24 @@ export const LEGAL_POSTAL_ADDRESS = 'Håsteins gate 9, 5160 Laksevåg, Norway';
  * so a reader who checks both sees the same registration and the same street.
  */
 export const POSTAL_ADDRESS_LINE = `MCPEmails is a service of ${LEGAL_ENTITY_NAME} (enkeltpersonforetak), organisation number ${LEGAL_ORG_NUMBER}, ${LEGAL_POSTAL_ADDRESS}.`;
+
+/**
+ * Consumer-law pages, as paths on the marketing site. /withdrawal is the
+ * statutory withdrawal notice plus the model form; /cancel is the public
+ * cancellation and withdrawal form (no login), the page §312k BGB and the
+ * withdrawal function of Directive (EU) 2023/2673 ask for.
+ */
+export const WITHDRAWAL_PATH = '/withdrawal';
+export const CANCEL_PATH = '/cancel';
+
+/**
+ * The one withdrawal sentence for an email that confirms a purchase. The
+ * contract confirmation on a durable medium has to carry the withdrawal
+ * information, so it points at the full notice and the online form.
+ */
+export function withdrawalLine(baseUrl: string): string {
+  return (
+    'You can withdraw from this contract within 14 days without giving a reason, ' +
+    `and we refund the first charge in full. How it works: ${baseUrl}${WITHDRAWAL_PATH}`
+  );
+}

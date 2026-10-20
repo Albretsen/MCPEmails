@@ -2,6 +2,7 @@
 
 import { useMemo, useState } from 'react';
 import { useTranslations, useLocale } from 'next-intl';
+import NextLink from 'next/link';
 import { Link } from '@/i18n/navigation';
 import { Nav, Footer } from './Sections';
 
@@ -15,8 +16,12 @@ function fmtDate(iso, locale) {
 }
 
 function PostCard({ post, t, locale }) {
+  // A post with no translation in this locale lives at its English URL only
+  // (the localized one 308s there), so link straight to it. next-intl's Link
+  // would add the current locale; its `locale` prop would emit /en/..., a 307.
+  const CardLink = post.canonicalLocale === locale ? Link : NextLink;
   return (
-    <Link href={`/blog/${post.slug}`} className="blog-card">
+    <CardLink href={`/blog/${post.slug}`} className="blog-card">
       <div className="blog-card-media">
         <img src={post.cover} alt={post.coverAlt} loading="lazy" decoding="async" />
       </div>
@@ -43,7 +48,7 @@ function PostCard({ post, t, locale }) {
           <span>{t('index.minRead', { minutes: post.readingMinutes })}</span>
         </div>
       </div>
-    </Link>
+    </CardLink>
   );
 }
 

@@ -31,13 +31,14 @@ export function metaAlternates(locale: string, pathname: string) {
 /**
  * hreflang for a page that exists in only some locales.
  *
- * The provider landing pages are the first pages here that are not translated
- * five ways: the long tail of hosting providers and regional ISPs ships in
- * English only, because 400-odd machine-translated pages about Bahnhof's IMAP
- * host is precisely the scaled-content pattern search engines demote. An
- * hreflang pointing at a locale that does not exist is worse than no hreflang,
- * so the alternates have to be built from the same list that decides which
- * pages get generated.
+ * Per the locale policy (src/i18n/locale-policy.mjs), en, nb, es and fr are
+ * kept fully translated, while zh is frozen: existing zh pages stay, but a new
+ * provider, client page or blog post may ship without one. /best-email-mcp-servers
+ * is English-only by design, and a blog post exists only in the locales it is
+ * translated into. An hreflang pointing at a locale that does not exist is
+ * worse than no hreflang, so the alternates have to be built from the same
+ * list that decides which pages get generated. The footer language switcher
+ * reads the same list (src/i18n/language-switcher.mjs).
  */
 export function languageAlternatesFor(
   pathname: string,

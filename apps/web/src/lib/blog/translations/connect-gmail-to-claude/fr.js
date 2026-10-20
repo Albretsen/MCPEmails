@@ -27,7 +27,7 @@ Votre mot de passe Google habituel n'est jamais utilisé. Le mot de passe d'appl
 
 ### Sur un compte Google Workspace
 
-Un administrateur Google Workspace peut désactiver les mots de passe d'application pour tout le domaine. Si **myaccount.google.com/apppasswords** ne vous est pas accessible, demandez à votre administrateur de les activer.
+Un administrateur Google Workspace peut désactiver les mots de passe d'application pour tout le domaine. Si **myaccount.google.com/apppasswords** ne vous est pas accessible, demandez à votre administrateur de les activer. La page [paramètres et limites de Gmail](/connect/gmail) rassemble les détails propres à Gmail en un seul endroit.
 
 ## Étape 2 : ajoutez MCP Emails à Claude
 
@@ -43,7 +43,7 @@ https://mcpemails.com/api/mcp
 
 4. Cliquez sur **Se connecter**, identifiez-vous avec votre compte MCP Emails, et approuvez les portées que vous souhaitez : \`read:email\`, \`send:email\`, ou les deux.
 
-Voilà tout ce qu'il faut faire côté client. La connexion est limitée exactement à ce que vous avez approuvé, et vous pouvez la révoquer depuis le tableau de bord en un clic. Si vous préférez comprendre l'approche par clé API (pour les clients sans OAuth intégré, comme Cline ou un script personnalisé), lisez [OAuth ou clés API pour l'accès e-mail par IA](/blog/oauth-vs-api-keys-ai-email-access).
+Voilà tout ce qu'il faut faire côté client. La connexion est limitée exactement à ce que vous avez approuvé, et vous pouvez la révoquer depuis le tableau de bord en un clic. Si vous préférez comprendre l'approche par clé API (pour les clients sans OAuth intégré, comme Cline ou un script personnalisé), lisez [OAuth ou clés API pour l'accès e-mail par IA](/blog/oauth-vs-api-keys-ai-email-access). Vous connectez aussi une autre boîte ? La [configuration pas à pas des e-mails dans Claude](/blog/connect-claude-to-email) couvre Outlook, iCloud, Fastmail et IMAP.
 
 ## Étape 3 : posez votre première requête à Claude
 

@@ -54,6 +54,7 @@ export const CLIENTS = [
     configFile: null,
     config: null,
     guide: 'https://support.claude.com/en/articles/11175166-get-started-with-custom-connectors-using-remote-mcp',
+    post: { key: 'claude', href: '/blog/connect-claude-to-email' },
     locales: ['en', 'nb', 'es', 'fr', 'zh'],
   },
   {
@@ -83,6 +84,7 @@ export const CLIENTS = [
     // MCP Emails is listed in the ChatGPT app directory as Any Mailbox. The
     // page links here from its setup steps (content `listingLink`).
     listingUrl: CHATGPT_DIRECTORY_LISTING_URL,
+    post: { key: 'chatgpt', href: '/blog/connect-chatgpt-to-email' },
     locales: ['en', 'nb', 'es', 'fr', 'zh'],
   },
   {
@@ -102,6 +104,7 @@ export const CLIENTS = [
   }
 }`,
     guide: 'https://cursor.com/docs/mcp',
+    post: { key: 'editors', href: '/blog/email-for-ai-agents-cursor-cline-vscode' },
     locales: ['en', 'nb', 'es', 'fr', 'zh'],
   },
   {
@@ -122,6 +125,7 @@ export const CLIENTS = [
   }
 }`,
     guide: 'https://code.visualstudio.com/docs/copilot/customization/mcp-servers',
+    post: { key: 'editors', href: '/blog/email-for-ai-agents-cursor-cline-vscode' },
     locales: ['en', 'nb', 'es', 'fr', 'zh'],
   },
   {
@@ -135,6 +139,7 @@ export const CLIENTS = [
     configFile: null,
     config: null,
     guide: 'https://docs.cline.bot/mcp/configuring-mcp-servers',
+    post: { key: 'editors', href: '/blog/email-for-ai-agents-cursor-cline-vscode' },
     locales: ['en', 'nb', 'es', 'fr', 'zh'],
   },
   {
@@ -154,6 +159,7 @@ export const CLIENTS = [
   }
 }`,
     guide: 'https://docs.windsurf.com/windsurf/cascade/mcp',
+    post: { key: 'editors', href: '/blog/email-for-ai-agents-cursor-cline-vscode' },
     locales: ['en', 'nb', 'es', 'fr', 'zh'],
   },
   {

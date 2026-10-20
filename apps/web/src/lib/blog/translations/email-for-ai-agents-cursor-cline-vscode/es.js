@@ -111,7 +111,7 @@ Cuando alcanzas un límite de tasa, el servidor devuelve un error que se puede r
 
 ## Para terminar
 
-Cursor te conecta con una URL y un inicio de sesión. Todo lo demás necesita una clave con permisos y una cabecera bearer. Ambos llegan al mismo endpoint y a las mismas herramientas, y ambos mantienen tus credenciales fuera de tu repositorio y fuera del contexto del modelo.
+Cursor te conecta con una URL y un inicio de sesión. Todo lo demás necesita una clave con permisos y una cabecera bearer. Ambos llegan al mismo endpoint y a las mismas herramientas, y ambos mantienen tus credenciales fuera de tu repositorio y fuera del contexto del modelo. ¿Usas ChatGPT o Codex fuera del editor? La [guía para configurar el correo en ChatGPT](/blog/connect-chatgpt-to-email) cubre ambos.
 
 [Empieza gratis](/signup) y conecta tu primera bandeja de entrada, o lee la [documentación](/docs) para la referencia completa de herramientas.`,
 };

@@ -53,6 +53,20 @@ export const ENTRIES = [
       'MCP Emails can now be installed from the ChatGPT app directory, where it is listed as Any Mailbox. Click Connect, sign in to MCP Emails and choose which mailboxes ChatGPT can reach, with no developer mode needed.',
   },
   {
+    date: '2026-10-20',
+    kind: 'fixed',
+    title: 'IONOS mailboxes outside the US get their own server settings',
+    body:
+      'Adding an address on your own domain hosted by IONOS in Germany or the UK filled in the US server imap.ionos.com, and France, Spain and Italy got no settings at all. The connect form now fills in the server for your region, such as imap.ionos.de, and the IONOS setup page lists each region\'s server names.',
+  },
+  {
+    date: '2026-10-20',
+    kind: 'fixed',
+    title: 'Language menu always opens a real page',
+    body:
+      'On a page that is not available in every language, the language menu in the footer used to lead to a missing page. It now opens that language\'s home page instead.',
+  },
+  {
     date: '2026-10-18',
     kind: 'added',
     title: 'Send As for IMAP inboxes',

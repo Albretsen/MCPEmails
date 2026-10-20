@@ -42,7 +42,7 @@ Tjenesteoppføringer oppgir vert og port direkte, men de fleste domener publiser
 
 ### Google Workspace
 
-Workspace kobles til med et **Google-apppassord** over IMAP (\`imap.gmail.com\` på 993, \`smtp.gmail.com\` på 465). Apppassord finnes bare når totrinnsbekreftelse er på, og en administrator kan slå dem av for hele domenet. Da er Google-siden rett og slett utilgjengelig for deg. I så fall, snakk med administratoren din.
+Workspace kobles til med et **Google-apppassord** over IMAP (\`imap.gmail.com\` på 993, \`smtp.gmail.com\` på 465). Apppassord finnes bare når totrinnsbekreftelse er på, og en administrator kan slå dem av for hele domenet. Da er Google-siden rett og slett utilgjengelig for deg. I så fall, snakk med administratoren din. [Innstillingssiden for Google Workspace](/connect/google-workspace) viser de samme verdiene.
 
 ### Zoho Mail
 
@@ -79,7 +79,7 @@ Gi MCP Emails fire ting per protokoll: vert, port, sikkerhetsmodus og hele adres
 - IMAP **993** er implisitt TLS; IMAP **143** er STARTTLS.
 - SMTP **465** er implisitt TLS; SMTP **587** er STARTTLS, og **25** er STARTTLS hos små verter som ikke tilbyr annet.
 
-Å blande disse var den klart største årsaken til mislykkede generiske tilkoblinger: STARTTLS på 993 blir stående og vente på en hilsen en ren TLS-lytter aldri sender, og implisitt TLS på 143 feiler i håndtrykket. Du trenger ikke lenger treffe på første forsøk. En tilkobling som aldri fikk en brukbar økt, prøves på nytt over de andre standardtransportene, opptil tre forsøk per protokoll, med det du ba om først. Et passord serveren avviste, prøves aldri på nytt: å sende det igjen ville bare tredoble antallet feilede innlogginger leverandøren din bruker til å låse kontoen.
+Å blande disse var den klart største årsaken til mislykkede generiske tilkoblinger: STARTTLS på 993 blir stående og vente på en hilsen en ren TLS-lytter aldri sender, og implisitt TLS på 143 feiler i håndtrykket. Du trenger ikke lenger treffe på første forsøk. En tilkobling som aldri fikk en brukbar økt, prøves på nytt over de andre standardtransportene, opptil tre forsøk per protokoll, med det du ba om først. Et passord serveren avviste, prøves aldri på nytt: å sende det igjen ville bare tredoble antallet feilede innlogginger leverandøren din bruker til å låse kontoen. Se også [siden for generisk IMAP-tilkobling](/connect/imap).
 
 Sending forhandler om én ting til som du aldri ser. Exchange-liknende verter annonserer **LOGIN** uten PLAIN, så MCP Emails leser hva serveren tilbyr, prøver PLAIN først når begge finnes, og faller tilbake på LOGIN. En avvist mekanisme rapporteres aldri som feil passord.
 
@@ -95,7 +95,7 @@ Sett det per postkasse på detaljsiden for postkassen, der en forhåndsvisning v
 - **Du bruker rett og slett feil passord.** Migadu, IONOS, Rackspace og cPanel skiller alle kontrollpanel-innloggingen fra postkassepassordet, og begge er som regel e-postadresser.
 - **Den får tidsavbrudd i stedet for å feile.** Da er det verten eller porten, ikke legitimasjonen. Les vertsnavnet på nytt i leverandørens eget panel.
 - **E-posten leses, men sendes ikke.** Den utgående halvdelen har sin egen vert, port og sikkerhetsmodus, og noen verter lytter ikke på 465. Bekreft at du ga \`send:email\`.
-- **Det er en Microsoft 365-postkasse.** Kjøpt direkte eller videresolgt av GoDaddy, IONOS eller Rackspace er den fortsatt en Microsoft-tenant. Koble den til med **Outlook** og Logg inn med Microsoft, ikke IMAP. Hvis Microsoft sier at administratorgodkjenning kreves, sender du lenken dashbordet viser til IT-ansvarlig.
+- **Det er en Microsoft 365-postkasse.** Kjøpt direkte eller videresolgt av GoDaddy, IONOS eller Rackspace er den fortsatt en Microsoft-tenant. Koble den til med **Outlook** og Logg inn med Microsoft, ikke IMAP. Hvis Microsoft sier at administratorgodkjenning kreves, sender du lenken dashbordet viser til IT-ansvarlig. [Tilkoblingssiden for Microsoft 365](/connect/office365) har detaljene.
 
 [Leverandørmatrisen](/docs/providers) og [leverandørsidene](/connect) har detaljene for hver enkelt.
 

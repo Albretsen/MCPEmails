@@ -189,8 +189,18 @@ Give your agent verbs, not passwords — and let it get to work.`,
  * reorder; any post not listed falls to the end (newest publishedAt first).
  */
 const RELEVANCE_ORDER = [
-  'approve-ai-agent-email-sends',
-  'ai-agent-email-workflows-and-prompts',
+  // The three posts search actually sends people to lead (GSC, 28 days to
+  // 2026-10-17: 79, 42 and 20 clicks, together 58% of blog clicks), and the
+  // first one turns signups into payers better than any provider page (5 of
+  // 42 in 90 days). Before 2026-10-20 they sat 10th to 12th, behind posts with
+  // no clicks. blog-order.test.mjs pins the first three.
+  'connect-claude-to-email',
+  'claude-imap-connector',
+  // `openai-mcp` is the best-converting MCP client we have (16% of those
+  // workspaces pay, against 8% for claude-code).
+  'connect-chatgpt-to-email',
+  'multiple-email-accounts-in-claude-and-chatgpt',
+  'connect-email-to-ai-agent-under-2-minutes',
   // Multi-mailbox is the buyer profile: every paying workspace to date runs two
   // or more inboxes, and inbox COUNT is the value metric the plans are priced
   // on, so this is the highest-intent page on the blog.
@@ -202,16 +212,12 @@ const RELEVANCE_ORDER = [
   // Agencies are the multi-mailbox buyer at its most extreme: a workspace per
   // client, and the only segment that needs Team.
   'ai-email-for-agencies-and-client-work',
+  // Led the index until 2026-10-20 with no search clicks and no signups.
+  'approve-ai-agent-email-sends',
+  'ai-agent-email-workflows-and-prompts',
   'extract-email-attachments-for-ai',
   'prevent-duplicate-ai-agent-email-sends',
   'gmail-labels-vs-imap-folders-ai-agents',
-  'connect-email-to-ai-agent-under-2-minutes',
-  'connect-claude-to-email',
-  // Sits beside the Claude setup guide because `openai-mcp` is the
-  // best-converting MCP client we have (16% of those workspaces pay, against
-  // 8% for claude-code), and until now nothing on the blog served it.
-  'connect-chatgpt-to-email',
-  'claude-imap-connector',
   // Retention content for the heaviest free users: the two largest free
   // workspaces run 70 and 57 standing triage rules between them.
   'automated-email-triage-rules',

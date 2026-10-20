@@ -2,8 +2,10 @@ import { MetadataRoute } from 'next';
 import { localePath, languageAlternates, languageAlternatesFor } from '@/i18n/seo';
 import { releasedProviders } from '@/lib/connect/release.mjs';
 import { CLIENTS } from '@/lib/clients/clients.mjs';
+import { clientHubLocales } from '@/lib/clients/content.mjs';
 import { getAllPosts, getPostLocales } from '@/lib/blog/posts';
 import { blogPostLanguageAlternates } from '@/lib/blog/seo.mjs';
+import { DATE_MODIFIED as NATIVE_MODIFIED } from '@/lib/compare/native-connectors.mjs';
 
 /**
  * The provider pages are gated by a release schedule (lib/connect/release.mjs)
@@ -38,7 +40,7 @@ const MARKETING_PAGES: {
   // and the visible last-verified date on the page itself.
   { path: '/docs/providers', lastModified: '2026-08-30', changeFrequency: 'monthly', priority: 0.8 },
   { path: '/docs/read-only-access', lastModified: '2026-10-16', changeFrequency: 'monthly', priority: 0.7 },
-  { path: '/native-connectors-vs-mcp', lastModified: '2026-08-27', changeFrequency: 'monthly', priority: 0.7 },
+  { path: '/native-connectors-vs-mcp', lastModified: NATIVE_MODIFIED, changeFrequency: 'monthly', priority: 0.7 },
   { path: '/self-hosting', lastModified: '2026-08-27', changeFrequency: 'monthly', priority: 0.7 },
   { path: '/security', lastModified: '2026-10-20', changeFrequency: 'monthly', priority: 0.6 },
   { path: '/about', lastModified: '2026-08-29', changeFrequency: 'yearly', priority: 0.5 },
@@ -52,7 +54,9 @@ const MARKETING_PAGES: {
   // changes daily even when nothing ships.
   { path: '/status', lastModified: '2026-09-08', changeFrequency: 'daily', priority: 0.6 },
   { path: '/privacy', lastModified: '2026-10-20', changeFrequency: 'yearly', priority: 0.3 },
-  { path: '/terms', lastModified: '2026-07-28', changeFrequency: 'yearly', priority: 0.3 },
+  { path: '/terms', lastModified: '2026-10-20', changeFrequency: 'yearly', priority: 0.3 },
+  { path: '/withdrawal', lastModified: '2026-10-20', changeFrequency: 'yearly', priority: 0.3 },
+  { path: '/cancel', lastModified: '2026-10-20', changeFrequency: 'yearly', priority: 0.3 },
 ];
 
 export default function sitemap(): MetadataRoute.Sitemap {
@@ -70,8 +74,9 @@ export default function sitemap(): MetadataRoute.Sitemap {
   // which locale/provider pages exist at all. They were hand-listed here while
   // there were six of them; at 106 a hand-maintained list is a list that drifts,
   // and a sitemap that promises a URL the router does not generate is worse
-  // than one that omits it. `languageAlternatesFor` is what keeps the hreflang
-  // honest for the long tail that ships in English only.
+  // than one that omits it. `languageAlternatesFor` keeps the hreflang honest
+  // when a provider is missing a locale: zh is frozen (src/i18n/locale-policy.mjs),
+  // so a provider added after the freeze may have no zh page.
   //
   // Priority follows how much the page can be expected to earn: the generic
   // IMAP page is the largest and best-retaining cohort of connected inboxes,
@@ -122,18 +127,22 @@ export default function sitemap(): MetadataRoute.Sitemap {
     });
 
   // Per-client setup pages and their hub, plus the comparison against the other
-  // email MCP servers. All English-only, so they must use
-  // `languageAlternatesFor` rather than the `languageAlternates` the static map
-  // applies: the latter would advertise hreflang for four locales whose routes
-  // deliberately 404, which is a worse signal than omitting them.
-  const englishOnlyEntries: MetadataRoute.Sitemap = [
-    { path: '/docs/clients', lastModified: '2026-09-08', priority: 0.9 },
+  // email MCP servers. Each lists only the locales its page really exists in,
+  // through `languageAlternatesFor` rather than the five-locale
+  // `languageAlternates` the static map applies: advertising a locale whose
+  // route 404s is a worse signal than omitting it. The client pages take their
+  // list from the same registry their routes are generated from (all five
+  // today; zh may be absent for a client added after the freeze). The
+  // comparison is English-only by design.
+  const partialLocaleEntries: MetadataRoute.Sitemap = [
+    { path: '/docs/clients', lastModified: '2026-09-08', priority: 0.9, locales: clientHubLocales() },
     // 2026-09-26: every client page now names Outlook / Microsoft 365 among the
     // mailboxes it can reach.
     ...CLIENTS.map((c) => ({
       path: `/docs/${c.slug}`,
       lastModified: '2026-09-26',
       priority: 0.8,
+      locales: c.locales,
     })),
     // Dated factual claims about named competitors. Re-verify the sources on
     // the page before moving this date. The old /email-mcp-servers-compared
@@ -143,14 +152,15 @@ export default function sitemap(): MetadataRoute.Sitemap {
       path: '/best-email-mcp-servers',
       lastModified: '2026-09-12',
       priority: 0.8,
+      locales: ['en'],
     },
-  ].map(({ path, lastModified, priority }) => ({
+  ].map(({ path, lastModified, priority, locales }) => ({
     url: localePath('en', path),
     lastModified: new Date(`${lastModified}T00:00:00.000Z`),
     changeFrequency: 'monthly' as const,
     priority,
-    alternates: { languages: languageAlternatesFor(path, ['en']) },
+    alternates: { languages: languageAlternatesFor(path, locales) },
   }));
 
-  return [...staticEntries, ...providerEntries, ...postEntries, ...englishOnlyEntries];
+  return [...staticEntries, ...providerEntries, ...postEntries, ...partialLocaleEntries];
 }

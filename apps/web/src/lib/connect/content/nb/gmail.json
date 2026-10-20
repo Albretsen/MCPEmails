@@ -64,7 +64,7 @@
   "limits": [
     "mcpemails når bare e-post: et app-passord brukes kun til IMAP og SMTP. Drive, Kalender, Chat og Dokumenter nås ikke.",
     "En Google Workspace-administrator kan slå av app-passord for domenet i Admin-konsollen. Bare en administrator kan endre den avgjørelsen.",
-    "Sletting flytter en melding til Gmails papirkurv. Permanent sletting av e-post gjøres i selve Gmail."
+    "Sletting flytter en melding til Gmails papirkurv. En permanent sletting følger Gmails IMAP-innstillinger: som standard fjerner den bare etiketten meldingen ble slettet fra, og en sletting fra papirkurven fjerner den for godt."
   ],
   "faq": [
     {

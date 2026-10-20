@@ -42,7 +42,7 @@ dig +short SRV _imaps._tcp.yourcompany.com
 
 ### Google Workspace
 
-Workspace 通过 **Google 应用专用密码** 以 IMAP 连接（\`imap.gmail.com\` 端口 993，\`smtp.gmail.com\` 端口 465）。只有开启两步验证后才会出现应用专用密码，而管理员可以为整个域名关闭它，那样 Google 的相应页面对你就是不存在的。遇到这种情况，请联系管理员。
+Workspace 通过 **Google 应用专用密码** 以 IMAP 连接（\`imap.gmail.com\` 端口 993，\`smtp.gmail.com\` 端口 465）。只有开启两步验证后才会出现应用专用密码，而管理员可以为整个域名关闭它，那样 Google 的相应页面对你就是不存在的。遇到这种情况，请联系管理员。[Google Workspace 设置页面](/connect/google-workspace)列出了同样的参数。
 
 ### Zoho Mail
 
@@ -79,7 +79,7 @@ IONOS 为**每个地址单独设置邮箱密码**，在控制面板的 Email 中
 - IMAP **993** 是隐式 TLS；IMAP **143** 是 STARTTLS。
 - SMTP **465** 是隐式 TLS；SMTP **587** 是 STARTTLS；在只提供这一种方式的小型主机上，**25** 也是 STARTTLS。
 
-把它们弄混曾是通用连接失败的最大单一原因：在 993 上使用 STARTTLS 会一直等待一个纯 TLS 监听端永远不会发出的问候，而在 143 上使用隐式 TLS 则会握手失败。现在你不必一次就填对。凡是从未建立起可用会话的连接，都会在其他标准传输方式上重试，每个协议最多三次，并从你指定的那一种开始。被服务器拒绝的密码则绝不重试：重发只会让服务商用于锁定账户的失败登录次数翻三倍。
+把它们弄混曾是通用连接失败的最大单一原因：在 993 上使用 STARTTLS 会一直等待一个纯 TLS 监听端永远不会发出的问候，而在 143 上使用隐式 TLS 则会握手失败。现在你不必一次就填对。凡是从未建立起可用会话的连接，都会在其他标准传输方式上重试，每个协议最多三次，并从你指定的那一种开始。被服务器拒绝的密码则绝不重试：重发只会让服务商用于锁定账户的失败登录次数翻三倍。另请参阅[通用 IMAP 连接页面](/connect/imap)。
 
 发信还会协商一件你永远看不到的事。Exchange 类主机只声明 **LOGIN** 而没有 PLAIN，因此 MCP Emails 会读取服务器声明的机制，两者都有时优先用 PLAIN，否则回退到 LOGIN。被拒绝的认证机制绝不会被当成密码错误报告给你。
 
@@ -95,7 +95,7 @@ IONOS 为**每个地址单独设置邮箱密码**，在控制面板的 Email 中
 - **你用错了密码。** Migadu、IONOS、Rackspace 和 cPanel 都把控制面板登录名与邮箱密码分开，而两者通常都是邮箱地址。
 - **连接超时而不是失败。** 那是主机或端口的问题，不是凭据。请回到服务商自己的面板重新确认主机名。
 - **能收信却发不出去。** 发件那一半有自己的主机、端口和安全模式，有些主机根本不监听 465。另外确认你已授予 \`send:email\`。
-- **它其实是 Microsoft 365 邮箱。** 无论是直接购买，还是由 GoDaddy、IONOS 或 Rackspace 转售，它仍然是 Microsoft 租户。请用 **Outlook** 并通过使用 Microsoft 登录来连接，而不是 IMAP。如果 Microsoft 提示需要管理员批准，请把控制台显示的链接发给你的 IT 管理员。
+- **它其实是 Microsoft 365 邮箱。** 无论是直接购买，还是由 GoDaddy、IONOS 或 Rackspace 转售，它仍然是 Microsoft 租户。请用 **Outlook** 并通过使用 Microsoft 登录来连接，而不是 IMAP。如果 Microsoft 提示需要管理员批准，请把控制台显示的链接发给你的 IT 管理员。详情见[Microsoft 365 连接页面](/connect/office365)。
 
 [服务商对照表](/docs/providers)和[各服务商页面](/connect)提供逐家的细节。
 

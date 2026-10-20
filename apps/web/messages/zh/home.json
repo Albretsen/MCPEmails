@@ -52,7 +52,10 @@
     "p2": "MCP Emails 就是一个托管的邮件 MCP 服务器。它支持 Gmail、Outlook 和 Microsoft 365、iCloud、Fastmail 以及任何支持 IMAP 的邮箱，同一个智能体可以同时处理多个邮箱。每次调用时，邮件都从你的服务商实时获取，从不存储在我们的服务器上。",
     "linkImap": "设置 IMAP MCP 服务器",
     "linkBusiness": "面向公司邮箱的邮件 MCP",
-    "linkProviders": "所有支持的邮箱服务商"
+    "linkProviders": "所有支持的邮箱服务商",
+    "guideClaude": "如何将 Claude 连接到你的邮箱",
+    "guideChatgpt": "如何将 ChatGPT 连接到你的邮箱",
+    "guideImap": "Claude IMAP 连接器指南"
   },
   "features": {
     "eyebrow": "原则",
@@ -274,8 +277,12 @@
     "linkOauth": "OAuth 连接",
     "linkProviders": "服务商支持",
     "linkReadOnly": "只读访问",
+    "linkClients": "MCP 客户端设置",
     "linkPrivacy": "隐私",
     "linkTerms": "条款",
+    "linkWithdrawal": "撤回权",
+    "linkCancel": "在此取消合同",
+    "linkImpressum": "Impressum",
     "copyright": "© 2026 mcpemails.",
     "legal": "邮件实时获取，从不存储 · 凭据静态加密",
     "legalEntity": "MCPEmails 由 Albretsen Consulting（enkeltpersonforetak，挪威独资企业）运营，组织机构号 926 646 753，地址：Håsteins gate 9, 5160 Laksevåg, 挪威。",

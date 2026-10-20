@@ -64,7 +64,7 @@
   "limits": [
     "mcpemails solo llega al correo: una contraseña de aplicación se usa únicamente para IMAP y SMTP. Drive, Calendar, Chat y Docs no son accesibles.",
     "Un administrador de Google Workspace puede desactivar las contraseñas de aplicación para el dominio desde la Admin console. Solo un administrador puede cambiar esa decisión.",
-    "Eliminar mueve un mensaje a la Papelera de Gmail. El borrado definitivo del correo se hace en el propio Gmail."
+    "Eliminar mueve un mensaje a la Papelera de Gmail. Un borrado permanente sigue los ajustes de IMAP de Gmail: por defecto solo quita la etiqueta desde la que se eliminó el mensaje, y eliminarlo desde la Papelera lo borra para siempre."
   ],
   "faq": [
     {

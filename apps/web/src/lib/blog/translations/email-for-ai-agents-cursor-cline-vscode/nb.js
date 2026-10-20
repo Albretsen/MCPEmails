@@ -111,7 +111,7 @@ Når du treffer en hastighetsgrense, returnerer serveren en gjentakbar feil (kod
 
 ## Oppsummering
 
-Cursor kobler deg opp med en URL og en innlogging. Alt annet krever en avgrenset nøkkel og en bearer-header. Begge treffer det samme endepunktet og de samme verktøyene, og begge holder legitimasjonen din utenfor repoet ditt og utenfor modellens kontekst.
+Cursor kobler deg opp med en URL og en innlogging. Alt annet krever en avgrenset nøkkel og en bearer-header. Begge treffer det samme endepunktet og de samme verktøyene, og begge holder legitimasjonen din utenfor repoet ditt og utenfor modellens kontekst. Bruker du ChatGPT eller Codex utenfor editoren? [Guiden for e-postoppsett i ChatGPT](/blog/connect-chatgpt-to-email) dekker begge.
 
 [Kom i gang gratis](/signup) og koble til din første innboks, eller les [dokumentasjonen](/docs) for den fullstendige verktøyreferansen.`,
 };

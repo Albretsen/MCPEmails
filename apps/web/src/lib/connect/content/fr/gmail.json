@@ -64,7 +64,7 @@
   "limits": [
     "mcpemails n'atteint que le courrier : un mot de passe d'application sert uniquement à IMAP et SMTP. Drive, Agenda, Chat et Docs restent inaccessibles.",
     "Un administrateur Google Workspace peut désactiver les mots de passe d'application pour le domaine depuis la console d'administration. Seul un administrateur peut revenir sur cette décision.",
-    "La suppression déplace un message dans la corbeille de Gmail. L'effacement définitif se fait dans Gmail lui-même."
+    "La suppression déplace un message dans la corbeille de Gmail. Une suppression définitive suit les réglages IMAP de Gmail : par défaut, elle retire seulement le libellé d'où le message a été supprimé, et un effacement depuis la corbeille le supprime pour de bon."
   ],
   "faq": [
     {
