@@ -53,6 +53,27 @@ export const ENTRIES = [
   {
     date: '2026-10-20',
     kind: 'added',
+    title: 'Free IMAP and SMTP settings lookup',
+    body:
+      'Type an email address or domain at mcpemails.com/tools/email-settings-lookup to see its incoming and outgoing server, port and security setting. For a company domain it reads the MX records to show which provider runs the mailbox.',
+  },
+  {
+    date: '2026-10-20',
+    kind: 'fixed',
+    title: 'Approved scheduled sends go out on time',
+    body:
+      'On an inbox that holds sends for approval, a scheduled email you approve now goes out at the time it was scheduled for. Before, the approved message could end in an error at that time instead of being sent.',
+  },
+  {
+    date: '2026-10-20',
+    kind: 'fixed',
+    title: 'Sent, Trash and Spam in your language',
+    body:
+      'On mail servers whose folders use localized names, such as "Éléments envoyés", "Gesendete Objekte" or "Отправленные", Sent copies are now saved and Trash, Spam, Drafts and Archive are recognised. Before, a copy of mail sent from these mailboxes was not saved to Sent.',
+  },
+  {
+    date: '2026-10-20',
+    kind: 'added',
     title: 'MCP Emails in German',
     body:
       'The website, sign-up, dashboard, setup guides for every AI client and the pages for German, Austrian and Swiss mailbox providers such as GMX, WEB.DE and T-Online are now in German. Checkout opens in German for German visitors too.',

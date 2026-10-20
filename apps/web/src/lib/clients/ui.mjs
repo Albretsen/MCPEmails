@@ -20,7 +20,7 @@ const EN = {
     answer: 'MCPEmails is a hosted MCP server for email. You connect a mailbox once, then paste one URL into the client you already work in. {oauth} of the {count} clients here run the OAuth browser flow and need no API key at all; the rest take a scoped API key in an Authorization header.',
     meta: {
       title: 'Connect Email to Claude, Cursor, ChatGPT and {count} MCP Clients',
-      description: 'Per-client setup guides for the MCPEmails MCP server. Connect a real inbox to Claude, Claude Code, Cursor, VS Code, ChatGPT, Cline, Windsurf, Gemini CLI, Zed, JetBrains, Raycast, Warp or curl.',
+      description: 'Per-client setup guides for the MCPEmails MCP server. Connect a real inbox to Claude, Claude Code, Cursor, VS Code, ChatGPT, Cline, Windsurf, Gemini CLI, Zed, JetBrains, Raycast, Warp, n8n or curl.',
     },
     genericTitle: 'Client not listed?',
     genericSub: 'Any client that speaks Streamable HTTP MCP works. The endpoint, the handshake and the tool catalogue are in the docs.',
@@ -100,7 +100,7 @@ const NB = {
     answer: 'MCPEmails er en hostet MCP-server for e-post. Du kobler til en postkasse én gang, og limer så inn én URL i klienten du allerede jobber i. {oauth} av de {count} klientene her bruker OAuth-flyten i nettleseren og trenger ingen API-nøkkel i det hele tatt; resten bruker en avgrenset API-nøkkel i en Authorization-header.',
     meta: {
       title: 'Koble e-post til Claude, Cursor, ChatGPT og {count} MCP-klienter',
-      description: 'Oppsettsguider per klient for MCP-serveren til MCPEmails. Koble en ekte innboks til Claude, Claude Code, Cursor, VS Code, ChatGPT, Cline, Windsurf, Gemini CLI, Zed, JetBrains, Raycast, Warp eller curl.',
+      description: 'Oppsettsguider per klient for MCP-serveren til MCPEmails. Koble en ekte innboks til Claude, Claude Code, Cursor, VS Code, ChatGPT, Cline, Windsurf, Gemini CLI, Zed, JetBrains, Raycast, Warp, n8n eller curl.',
     },
     genericTitle: 'Står ikke klienten din på listen?',
     genericSub: 'Alle klienter som snakker Streamable HTTP MCP fungerer. Endepunktet, håndtrykket og verktøykatalogen står i dokumentasjonen.',
@@ -180,7 +180,7 @@ const ES = {
     answer: 'MCPEmails es un servidor MCP alojado para el correo. Conectas un buzón una vez y luego pegas una URL en el cliente con el que ya trabajas. {oauth} de los {count} clientes de aquí usan el flujo OAuth en el navegador y no necesitan ninguna clave de API; el resto usa una clave de API con permisos limitados en un encabezado Authorization.',
     meta: {
       title: 'Conecta el correo a Claude, Cursor, ChatGPT y {count} clientes MCP',
-      description: 'Guías por cliente para el servidor MCP de MCPEmails. Conecta una bandeja real a Claude, Claude Code, Cursor, VS Code, ChatGPT, Cline, Windsurf, Gemini CLI, Zed, JetBrains, Raycast, Warp o curl.',
+      description: 'Guías por cliente para el servidor MCP de MCPEmails. Conecta una bandeja real a Claude, Claude Code, Cursor, VS Code, ChatGPT, Cline, Windsurf, Gemini CLI, Zed, JetBrains, Raycast, Warp, n8n o curl.',
     },
     genericTitle: '¿Tu cliente no aparece?',
     genericSub: 'Funciona cualquier cliente que hable MCP sobre Streamable HTTP. El endpoint, el handshake y el catálogo de herramientas están en la documentación.',
@@ -260,7 +260,7 @@ const FR = {
     answer: 'MCPEmails est un serveur MCP hébergé pour l’e-mail. Vous connectez une boîte une seule fois, puis vous collez une URL dans le client où vous travaillez déjà. {oauth} des {count} clients présentés ici utilisent le flux OAuth dans le navigateur et n’ont besoin d’aucune clé API ; les autres utilisent une clé API à portée limitée dans un en-tête Authorization.',
     meta: {
       title: 'Connecter l’e-mail à Claude, Cursor, ChatGPT et {count} clients MCP',
-      description: 'Guides par client pour le serveur MCP de MCPEmails. Connectez une vraie boîte à Claude, Claude Code, Cursor, VS Code, ChatGPT, Cline, Windsurf, Gemini CLI, Zed, JetBrains, Raycast, Warp ou curl.',
+      description: 'Guides par client pour le serveur MCP de MCPEmails. Connectez une vraie boîte à Claude, Claude Code, Cursor, VS Code, ChatGPT, Cline, Windsurf, Gemini CLI, Zed, JetBrains, Raycast, Warp, n8n ou curl.',
     },
     genericTitle: 'Votre client n’est pas dans la liste ?',
     genericSub: 'Tout client compatible MCP en Streamable HTTP fonctionne. Le point de terminaison, la poignée de main et le catalogue d’outils sont dans la documentation.',
@@ -420,7 +420,7 @@ const DE = {
     answer: 'MCPEmails ist ein gehosteter MCP-Server für E-Mail. Sie verbinden ein Postfach einmal und fügen dann eine URL in den Client ein, in dem Sie ohnehin arbeiten. {oauth} der {count} Clients hier nutzen den OAuth-Ablauf im Browser und brauchen gar keinen API-Schlüssel; die übrigen verwenden einen API-Schlüssel mit Scopes in einem Authorization-Header.',
     meta: {
       title: 'E-Mail mit Claude, Cursor, ChatGPT und {count} MCP-Clients verbinden',
-      description: 'Setup-Anleitungen pro Client für den MCP-Server von MCPEmails. Verbinden Sie ein echtes Postfach mit Claude, Claude Code, Cursor, VS Code, ChatGPT, Cline, Windsurf, Gemini CLI, Zed, JetBrains, Raycast, Warp oder curl.',
+      description: 'Setup-Anleitungen pro Client für den MCP-Server von MCPEmails. Verbinden Sie ein echtes Postfach mit Claude, Claude Code, Cursor, VS Code, ChatGPT, Cline, Windsurf, Gemini CLI, Zed, JetBrains, Raycast, Warp, n8n oder curl.',
     },
     genericTitle: 'Ihr Client fehlt?',
     genericSub: 'Jeder Client, der MCP über Streamable HTTP spricht, funktioniert. Endpunkt, Handshake und Tool-Katalog finden Sie in der Dokumentation.',

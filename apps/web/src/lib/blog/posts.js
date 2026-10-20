@@ -55,6 +55,11 @@ import automatedEmailTriageRules from './posts/automated-email-triage-rules';
 import connectBusinessCustomDomain from './posts/connect-business-email-custom-domain-to-ai-agent';
 import aiEmailForAgencies from './posts/ai-email-for-agencies-and-client-work';
 import multipleAccountsClaudeChatgpt from './posts/multiple-email-accounts-in-claude-and-chatgpt';
+import canClaudeReadMyEmail from './posts/can-claude-read-my-email';
+import claudeCustomConnectorsExplained from './posts/claude-custom-connectors-explained';
+import whatIsAnAppPassword from './posts/what-is-an-app-password';
+import scheduleEmailWithClaudeAndChatgpt from './posts/schedule-email-with-claude-and-chatgpt';
+import connectClaudeOutlookComHotmail from './posts/connect-claude-to-outlook-com-hotmail';
 
 // Sidecar translations: { [slug]: { [locale]: { title, description, coverAlt, content } } }.
 import TRANSLATIONS from './translations';
@@ -91,6 +96,11 @@ const MODULE_POSTS = [
   connectBusinessCustomDomain,
   aiEmailForAgencies,
   multipleAccountsClaudeChatgpt,
+  canClaudeReadMyEmail,
+  claudeCustomConnectorsExplained,
+  whatIsAnAppPassword,
+  scheduleEmailWithClaudeAndChatgpt,
+  connectClaudeOutlookComHotmail,
 ];
 
 /** @type {Array<import('./types').Post>} */
@@ -200,7 +210,9 @@ const RELEVANCE_ORDER = [
   // workspaces pay, against 8% for claude-code).
   'connect-chatgpt-to-email',
   'multiple-email-accounts-in-claude-and-chatgpt',
+  'can-claude-read-my-email',
   'connect-email-to-ai-agent-under-2-minutes',
+  'claude-custom-connectors-explained',
   // Multi-mailbox is the buyer profile: every paying workspace to date runs two
   // or more inboxes, and inbox COUNT is the value metric the plans are priced
   // on, so this is the highest-intent page on the blog.
@@ -209,6 +221,7 @@ const RELEVANCE_ORDER = [
   // and a custom-domain mailbox is the thing that identifies them, so this sits
   // directly behind the multi-mailbox page.
   'connect-business-email-custom-domain-to-ai-agent',
+  'what-is-an-app-password',
   // Agencies are the multi-mailbox buyer at its most extreme: a workspace per
   // client, and the only segment that needs Team.
   'ai-email-for-agencies-and-client-work',
@@ -221,7 +234,9 @@ const RELEVANCE_ORDER = [
   // Retention content for the heaviest free users: the two largest free
   // workspaces run 70 and 57 standing triage rules between them.
   'automated-email-triage-rules',
+  'schedule-email-with-claude-and-chatgpt',
   'connect-gmail-to-claude',
+  'connect-claude-to-outlook-com-hotmail',
   'email-signatures-for-claude',
   'inbox-zero-with-ai-claude',
   'how-to-give-your-ai-agent-email-access',

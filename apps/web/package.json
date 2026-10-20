@@ -30,6 +30,7 @@
     "test:blog-copy": "node --test src/lib/blog/copy-integrity.test.mjs src/lib/blog/anchors.test.mjs",
     "test:public-facts": "node --test src/lib/public-facts.test.mjs",
     "test:blog-links": "node --test src/lib/blog/internal-links.test.mjs",
+    "test:settings-lookup": "node --test --experimental-strip-types src/lib/tools/settings-lookup.test.ts",
     "test:reviews": "node --test components/marketing/reviews.test.mjs",
     "test:home-guides": "node --test --experimental-strip-types --experimental-test-module-mocks --import ./scripts/register-dom-tests.mjs components/marketing/home-guides.test.mjs",
     "test:acquisition": "node --test components/analytics/acquisition-capture.test.mjs",
