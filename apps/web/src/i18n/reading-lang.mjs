@@ -66,3 +66,13 @@ export function withReadingLang(href, locale) {
   const joined = query ? `${query}&${LANG_PARAM}=${lang}` : `${LANG_PARAM}=${lang}`;
   return `${path}?${joined}${hash}`;
 }
+
+/**
+ * withReadingLang for an href that is already HTML-escaped, as the blog
+ * renderer's links are (`&` arrives as `&amp;`). Undo the escape to edit the
+ * query, then redo it.
+ */
+export function withReadingLangEscaped(escapedHref, locale) {
+  if (typeof escapedHref !== 'string') return escapedHref;
+  return withReadingLang(escapedHref.replace(/&amp;/g, '&'), locale).replace(/&/g, '&amp;');
+}

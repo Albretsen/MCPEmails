@@ -8,7 +8,7 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
 import { readFileSync } from 'node:fs';
-import { APP_LOCALES, LANG_PARAM, readingLangFromParam, withReadingLang } from './reading-lang.mjs';
+import { APP_LOCALES, LANG_PARAM, readingLangFromParam, withReadingLang, withReadingLangEscaped } from './reading-lang.mjs';
 import { renderMarkdown } from '../lib/blog/markdown.js';
 
 test('the locale list matches routing.locales', () => {
@@ -76,7 +76,7 @@ test('other destinations are never touched', () => {
 
 test('a signup link in a translated blog post keeps the reader language', () => {
   const md = 'Start [here](/signup) or [with GMX](/signup?provider=gmx), read [the docs](/docs), or [elsewhere](https://example.com/signup).';
-  const { html } = renderMarkdown(md, { locale: 'fr' });
+  const { html } = renderMarkdown(md, { hrefFor: (h) => withReadingLangEscaped(h, 'fr') });
   assert.match(html, /<a href="\/signup\?lang=fr">here<\/a>/);
   assert.match(html, /<a href="\/signup\?provider=gmx&amp;lang=fr">with GMX<\/a>/);
   assert.match(html, /<a href="\/docs">the docs<\/a>/);
@@ -85,7 +85,7 @@ test('a signup link in a translated blog post keeps the reader language', () => 
 
 test('an English post, or no locale at all, renders links exactly as written', () => {
   const md = '[Sign up](/signup?provider=gmx&plan=solo)';
-  const en = renderMarkdown(md, { locale: 'en' }).html;
+  const en = renderMarkdown(md, { hrefFor: (h) => withReadingLangEscaped(h, 'en') }).html;
   const none = renderMarkdown(md).html;
   assert.equal(en, none);
   assert.match(none, /<a href="\/signup\?provider=gmx&amp;plan=solo">Sign up<\/a>/);

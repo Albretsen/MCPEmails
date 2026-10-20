@@ -1,53 +1,24 @@
-'use client';
-
-import { useState } from 'react';
-import { useTranslations, useLocale } from 'next-intl';
 import { Link } from '@/i18n/navigation';
 import { Nav, Footer } from './Sections';
 import { MIcon } from '../MarketingPrimitives';
+import { TABLE_ROWS, NOT_STATED, SOURCES } from '@/lib/compare/native-connectors.mjs';
 import { withReadingLang } from '@/i18n/reading-lang.mjs';
 
-const RICH = {
-  code: (chunks) => <code className="t-code-inline">{chunks}</code>,
-  b: (chunks) => <strong>{chunks}</strong>,
-};
+/*
+ * /native-connectors-vs-mcp. A server component: the copy arrives as `c` (one
+ * locale of src/lib/compare/native-connectors/<locale>.json) so it renders into
+ * the HTML of this page only, rather than riding along in the message payload
+ * of every marketing page. `dates` are preformatted by the page for `locale`.
+ *
+ * The FAQ answers are always rendered. An accordion that only mounts an answer
+ * after a click leaves crawlers and AI answer engines a list of questions with
+ * nothing under them.
+ */
 
-/* Accordion FAQ item, mirroring the /pricing + home faq-* markup. */
-function FaqItem({ q, a }) {
-  const [open, setOpen] = useState(false);
-  return (
-    <div className={'faq-item' + (open ? ' open' : '')}>
-      <button className="faq-q" onClick={() => setOpen((o) => !o)} aria-expanded={open}>
-        <span>{q}</span>
-        <span className="faq-chevron">
-          <MIcon name="arrow" size={14} color="var(--fg-3)" />
-        </span>
-      </button>
-      {open && <div className="faq-a">{a}</div>}
-    </div>
-  );
-}
+const AXES = ['coverage', 'actions', 'portable'];
+const COLUMNS = ['apps', 'provider', 'us'];
 
-/* Comparison-table rows. Each cell is either a boolean (check/dash) or a
-   message key resolved against the `compare` bundle. Feature labels resolve
-   from `table.rows.<key>`. */
-const TABLE_ROWS = [
-  { key: 'providers',  native: false, mcp: true },
-  { key: 'imap',       native: false, mcp: true },
-  // Native Gmail connectors gained send, reply and forward on 2026-08-18, so
-  // this row is parity now, not a gap. Kept rather than deleted: a comparison
-  // table that only ever scores against the other side reads as marketing.
-  { key: 'send',       native: true,  mcp: true },
-  { key: 'schedule',   native: false, mcp: true },
-  { key: 'organize',   native: false, mcp: true },
-  { key: 'multiAi',    native: false, mcp: true },
-  // Native connectors sign in to Gmail, and only some reach Outlook, so a
-  // plain check under "Gmail and Outlook over OAuth" would overclaim for them.
-  { key: 'oauth',      native: 'table.values.oauthNative', mcp: true },
-  { key: 'storage',    native: true,  mcp: true },
-];
-
-function Cell({ value }) {
+function Cell({ value, c }) {
   if (value === true) {
     return (
       <td className="tbl-check">
@@ -58,14 +29,12 @@ function Cell({ value }) {
   if (value === false) {
     return <td className="tbl-dash"><span>–</span></td>;
   }
-  return <td className="tbl-val">{value}</td>;
+  const text = value === NOT_STATED ? c.table.notStated : c.table.values[value];
+  return <td className="tbl-val">{text}</td>;
 }
 
-export default function CompareClient() {
-  const t = useTranslations('compare');
-  const locale = useLocale();
-  const isEnglish = locale === 'en';
-  const axisKeys = ['coverage', 'actions', 'portable'];
+export default function CompareClient({ c, checkedOn, isEnglish, locale }) {
+  const fill = (s) => s.replace('{date}', checkedOn);
 
   return (
     <div>
@@ -74,36 +43,56 @@ export default function CompareClient() {
       {/* Hero */}
       <section className="pricing-page-hero">
         <div className="container">
-          <div className="eye-label">{t('hero.eyebrow')}</div>
+          <div className="eye-label">{c.hero.eyebrow}</div>
           <h1 className="pricing-page-h1">
-            {t('hero.titleLine1')}<br />{t('hero.titleLine2')}
+            {c.hero.titleLine1}<br />{c.hero.titleLine2}
           </h1>
-          <p className="pricing-page-lead">{t('hero.lead')}</p>
+          <p className="pricing-page-lead">{c.hero.lead}</p>
+          <p className="pricing-footnote" style={{ textAlign: 'center', marginTop: 12 }}>
+            {fill(c.hero.updated)}
+          </p>
           <div className="hero-cta" style={{ justifyContent: 'center', marginTop: 24 }}>
-            <a className="btn btn-primary btn-lg" href={withReadingLang('/signup', locale)}>{t('hero.ctaPrimary')}</a>
-            <Link className="btn btn-secondary btn-lg" href="/docs">{t('hero.ctaSecondary')}</Link>
+            <a className="btn btn-primary btn-lg" href={withReadingLang('/signup', locale)}>{c.hero.ctaPrimary}</a>
+            <Link className="btn btn-secondary btn-lg" href="/docs">{c.hero.ctaSecondary}</Link>
           </div>
         </div>
       </section>
 
-      {/* Three honest axes */}
+      {/* The two kinds of "native", kept apart: see rule 3 in native-connectors.mjs. */}
+      <section className="section" id="kinds" style={{ paddingBottom: 32 }}>
+        <div className="container">
+          <div className="section-head" style={{ marginBottom: 24 }}>
+            <h2 style={{ fontSize: 36 }}>{c.kinds.title}</h2>
+            <p className="sub">{c.kinds.sub}</p>
+          </div>
+          <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(280px, 1fr))', gap: 16 }}>
+            {['apps', 'provider'].map((k) => (
+              <div className="connect-callout" key={k} style={{ display: 'block' }}>
+                <h3 style={{ margin: '0 0 6px', fontSize: 16 }}>{c.kinds[k].h}</h3>
+                <p style={{ margin: 0, color: 'var(--fg-2)', fontSize: 14, lineHeight: 1.6 }}>{c.kinds[k].p}</p>
+              </div>
+            ))}
+          </div>
+        </div>
+      </section>
+
+      {/* Three differences that still hold */}
       <section className="section principles">
         <div className="container">
           <div className="section-head principles-head">
-            <div className="eye-label">{t('axes.eyebrow')}</div>
-            <h2>{t('axes.title')}</h2>
-            <p className="sub">{t('axes.sub')}</p>
+            <h2>{c.axes.title}</h2>
+            <p className="sub">{c.axes.sub}</p>
           </div>
           <ol className="principle-list">
-            {axisKeys.map((k, i) => (
+            {AXES.map((k, i) => (
               <li className="principle" key={k}>
                 <div className="p-num">
                   <span className="n">{String(i + 1).padStart(2, '0')}</span>
-                  <span className="t">{t(`axes.items.${k}.tag`)}</span>
+                  <span className="t">{c.axes.items[k].tag}</span>
                 </div>
                 <div className="p-body">
-                  <h3>{t(`axes.items.${k}.h`)}</h3>
-                  <p>{t.rich(`axes.items.${k}.p`, RICH)}</p>
+                  <h3>{c.axes.items[k].h}</h3>
+                  <p>{c.axes.items[k].p}</p>
                 </div>
               </li>
             ))}
@@ -115,75 +104,110 @@ export default function CompareClient() {
       <section className="section" id="compare" style={{ paddingTop: 64, paddingBottom: 80, background: 'var(--bg-page)' }}>
         <div className="container">
           <div className="section-head" style={{ marginBottom: 32 }}>
-            <div className="eye-label">{t('table.eyebrow')}</div>
-            <h2 style={{ fontSize: 36 }}>{t('table.title')}</h2>
+            <h2 style={{ fontSize: 36 }}>{c.table.title}</h2>
           </div>
           <div className="comparison-wrap">
-            <table className="comparison-tbl">
+            {/* Fixed layout with even columns: the shared stylesheet sizes for a
+                grid of ticks (a 40% label column, headers that never wrap), and
+                here three of the columns hold sentences. The minimum width keeps
+                cells readable on a phone, where .comparison-wrap scrolls. */}
+            <table className="comparison-tbl" style={{ tableLayout: 'fixed', minWidth: 720 }}>
               <thead>
                 <tr>
-                  <th className="feat-col">{t('table.featureCol')}</th>
-                  <th>{t('table.nativeCol')}</th>
-                  <th className="featured-col">{t('table.mcpCol')}</th>
+                  <th className="feat-col" style={{ width: '22%', whiteSpace: 'normal' }}>{c.table.featureCol}</th>
+                  <th style={{ whiteSpace: 'normal' }}>{c.table.appsCol}</th>
+                  <th style={{ whiteSpace: 'normal' }}>{c.table.providerCol}</th>
+                  <th className="featured-col" style={{ whiteSpace: 'normal' }}>{c.table.usCol}</th>
                 </tr>
               </thead>
               <tbody>
                 {TABLE_ROWS.map((row) => (
                   <tr key={row.key}>
-                    <td className="feat-name">{t(`table.rows.${row.key}`)}</td>
-                    <Cell value={typeof row.native === 'string' ? t(row.native) : row.native} />
-                    <Cell value={typeof row.mcp === 'string' ? t(row.mcp) : row.mcp} />
+                    <td className="feat-name">{c.table.rows[row.key]}</td>
+                    {COLUMNS.map((col) => <Cell key={col} value={row[col]} c={c} />)}
                   </tr>
                 ))}
               </tbody>
             </table>
           </div>
           <p className="pricing-footnote" style={{ textAlign: 'center', marginTop: 20 }}>
-            {t('table.footnote')}
+            {fill(c.table.footnote)}
           </p>
         </div>
       </section>
 
-      {/* FAQ */}
-      {Array.isArray(t.raw('faq.items')) && t.raw('faq.items').length > 0 && (
-        <section className="section" id="faq" style={{ background: 'var(--bg-page)' }}>
-          <div className="container">
-            <div className="section-head" style={{ marginBottom: 32 }}>
-              <div className="eye-label">{t('faq.eyebrow')}</div>
-              <h2 style={{ fontSize: 36 }}>{t('faq.title')}</h2>
-              <p className="sub">{t('faq.sub')}</p>
-            </div>
-            <div className="faq-list">
-              {t.raw('faq.items').map((item) => (
-                <FaqItem key={item.q} q={item.q} a={item.a} />
-              ))}
-            </div>
+      {/* FAQ, answers always in the HTML */}
+      <section className="section" id="faq" style={{ background: 'var(--bg-page)' }}>
+        <div className="container">
+          <div className="section-head" style={{ marginBottom: 32 }}>
+            <h2 style={{ fontSize: 36 }}>{c.faq.title}</h2>
+            <p className="sub">{c.faq.sub}</p>
           </div>
-        </section>
-      )}
+          <div className="faq-list">
+            {c.faq.items.map((item) => (
+              <div className="faq-item" key={item.q}>
+                <h3
+                  style={{
+                    margin: 0,
+                    padding: '20px 0 8px',
+                    fontFamily: 'var(--font-sans)',
+                    fontSize: 16,
+                    fontWeight: 500,
+                    color: 'var(--fg-1)',
+                  }}
+                >
+                  {item.q}
+                </h3>
+                <div className="faq-a">{item.a}</div>
+              </div>
+            ))}
+          </div>
+        </div>
+      </section>
+
+      {/* Sources. Printed, not merely tracked. */}
+      <section className="section" id="sources" style={{ paddingTop: 48, background: 'var(--bg-page)' }}>
+        <div className="container">
+          <div className="section-head" style={{ marginBottom: 20 }}>
+            <h2 style={{ fontSize: 28 }}>{c.sources.title}</h2>
+            <p className="sub">{fill(c.sources.sub)}</p>
+          </div>
+          <ul
+            style={{
+              margin: '0 auto',
+              padding: 0,
+              maxWidth: 760,
+              listStyle: 'none',
+              display: 'grid',
+              gap: 10,
+              fontSize: 13.5,
+              lineHeight: 1.6,
+              color: 'var(--fg-2)',
+            }}
+          >
+            {SOURCES.map((s) => (
+              <li key={s.id} style={{ overflowWrap: 'anywhere' }}>
+                <span>{c.sources.items[s.id]}: </span>
+                <a href={s.url} rel="nofollow noopener noreferrer" target="_blank">{s.url}</a>
+              </li>
+            ))}
+          </ul>
+        </div>
+      </section>
 
       {/*
         Cross-link to the other comparison axis: this page answers "built-in
         connector or MCP", that one answers "which MCP email server". English
-        only, and the string is hardcoded rather than added to the `compare`
-        namespace for two reasons: the target route 404s in every other locale,
-        and this namespace is loaded on more than one page, so a key added here
-        ships in the HTML of all of them.
+        only, because the target route 404s in every other locale.
       */}
       {isEnglish && (
-        <section className="section" style={{ paddingTop: 0 }}>
+        <section className="section" style={{ paddingTop: 0, background: 'var(--bg-page)' }}>
           <div className="container">
             <div className="connect-callout">
               <MIcon name="server" size={20} color="var(--cobalt-600)" />
               <div>
-                <h2 style={{ margin: '0 0 6px', fontSize: 16 }}>
-                  Decided you want an MCP server?
-                </h2>
-                <p style={{ margin: '0 0 10px', color: 'var(--fg-2)', fontSize: 14, lineHeight: 1.6 }}>
-                  There are several, and they differ on price, mailbox coverage and what
-                  they do with your credentials. We ranked them, listed what each one is
-                  bad at, and dated every figure.
-                </p>
+                <h2 style={{ margin: '0 0 6px', fontSize: 16 }}>{c.more.h}</h2>
+                <p style={{ margin: '0 0 10px', color: 'var(--fg-2)', fontSize: 14, lineHeight: 1.6 }}>{c.more.p}</p>
                 <Link
                   href="/best-email-mcp-servers"
                   style={{
@@ -195,7 +219,7 @@ export default function CompareClient() {
                     color: 'var(--cobalt-600)',
                   }}
                 >
-                  Read: the best email MCP servers in 2026
+                  {c.more.link}
                   <MIcon name="arrow" size={13} color="var(--cobalt-600)" />
                 </Link>
               </div>
@@ -207,11 +231,11 @@ export default function CompareClient() {
       {/* CTA band */}
       <section className="pricing-cta-band">
         <div className="container">
-          <h2 className="pricing-cta-h">{t('ctaBand.title')}</h2>
-          <p className="pricing-cta-sub">{t('ctaBand.sub')}</p>
+          <h2 className="pricing-cta-h">{c.ctaBand.title}</h2>
+          <p className="pricing-cta-sub">{c.ctaBand.sub}</p>
           <div className="pricing-cta-btns">
-            <a className="btn btn-primary btn-lg" href={withReadingLang('/signup', locale)}>{t('ctaBand.ctaPrimary')}</a>
-            <Link className="btn btn-on-dark btn-lg" href="/docs">{t('ctaBand.ctaSecondary')}</Link>
+            <a className="btn btn-primary btn-lg" href={withReadingLang('/signup', locale)}>{c.ctaBand.ctaPrimary}</a>
+            <Link className="btn btn-on-dark btn-lg" href="/docs">{c.ctaBand.ctaSecondary}</Link>
           </div>
         </div>
       </section>

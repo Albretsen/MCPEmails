@@ -470,6 +470,12 @@ import {
   settleAfterResponse,
 } from "./request-pipeline.ts";
 import {
+  notePreflightError,
+  parsePreflight,
+  preflightParams,
+  preflightSkipped,
+} from "./tools-call-preflight.ts";
+import {
   buildUnappliedSearchNote,
   buildUnappliedSearchRefusal,
   DATE_INPUT_EXAMPLES,
@@ -2240,6 +2246,19 @@ async function authenticateRequest(
   req: Request,
   requestId: string | number | null,
 ): Promise<{ apiKey: ApiKeyRow } | Response> {
+  const incomingHash = await bearerKeyHash(req, requestId);
+  if (incomingHash instanceof Response) return incomingHash;
+  return await lookupApiKey(incomingHash, requestId);
+}
+
+/**
+ * Steps 1-3 of authenticateRequest: the bearer token's SHA-256 hash, or the
+ * 401 for a missing, malformed or query-string credential. No database I/O.
+ */
+async function bearerKeyHash(
+  req: Request,
+  requestId: string | number | null,
+): Promise<string | Response> {
   // ── Extract the API key ───────────────────────────────────────────────────
   // API keys and OAuth access tokens must be supplied in the Authorization
   // header. Query-string credentials are deliberately rejected: URLs are
@@ -2307,8 +2326,14 @@ async function authenticateRequest(
   // ── Hash the bearer token ─────────────────────────────────────────────────
   // Only the SHA-256 hash of the key is stored in the database. The raw key
   // is never logged or persisted after the user's initial key creation.
-  const incomingHash = await hashApiKey(bearerToken);
+  return await hashApiKey(bearerToken);
+}
 
+/** Step 4 of authenticateRequest: the api_keys lookup by hash, then acceptKeyRow. */
+async function lookupApiKey(
+  incomingHash: string,
+  requestId: string | number | null,
+): Promise<{ apiKey: ApiKeyRow } | Response> {
   // ── Database lookup ───────────────────────────────────────────────────────
   // Single query that simultaneously:
   //   • Authenticates (key_hash equality)
@@ -2324,7 +2349,20 @@ async function authenticateRequest(
     .or(`expires_at.is.null,expires_at.gt.${new Date().toISOString()}`)
     .maybeSingle();
 
-  if (error || !row) {
+  return acceptKeyRow(error ? null : row, incomingHash, requestId);
+}
+
+/**
+ * Steps 5-6 of authenticateRequest, for a row however it was looked up (the
+ * api_keys select above, or mcp_tools_call_preflight): null is the 401, a row
+ * passes the constant-time comparison and has its last_used_at stamped.
+ */
+function acceptKeyRow(
+  row: Record<string, unknown> | null,
+  incomingHash: string,
+  requestId: string | number | null,
+): { apiKey: ApiKeyRow } | Response {
+  if (!row) {
     // Not found, expired, or revoked. 401 (not 403) so the proxy attaches
     // WWW-Authenticate and OAuth clients refresh. Message is identical to the
     // other failures to avoid an oracle that distinguishes the cases.
@@ -2356,7 +2394,7 @@ async function authenticateRequest(
     );
   }
 
-  const apiKey = row as ApiKeyRow;
+  const apiKey = row as unknown as ApiKeyRow;
 
   // ── Fire-and-forget: update last_used_at ─────────────────────────────────
   // Does not block the response. A failure here is non-fatal — the dashboard
@@ -2375,6 +2413,106 @@ async function authenticateRequest(
     });
 
   return { apiKey };
+}
+
+/**
+ * The gate inputs mcp_tools_call_preflight already read, in the shape
+ * checkRateLimit, checkPlanQuota and the allowance read take them. Absent
+ * (null) whenever the per-query path ran instead.
+ */
+interface PreloadedGateReads {
+  rateLimit: PreloadedRateLimitCounts;
+  planQuota: PreloadedPlanQuotaReads;
+  /** Present only when the RPC was asked for the allowance row. */
+  allowance?: ActionAllowanceRow | null;
+}
+
+/**
+ * authenticateRequest for a tools/call, with the gate reads in the same round
+ * trip.
+ *
+ * mcp_tools_call_preflight (migration 20261020100000, tools-call-preflight.ts)
+ * looks the key up with the same three filters as lookupApiKey and, for a
+ * live key, returns the per-key window counts, the workspace row, the owner's
+ * entitlement, the workspace's minute count and (when the call may be metered)
+ * the allowance row. That replaces three sequential round trips with one.
+ * The decisions are untouched: the row goes through acceptKeyRow, and the
+ * counts through checkRateLimit and checkPlanQuota, exactly as if each had
+ * been queried on its own.
+ *
+ * Any RPC error, a missing function or an answer of the wrong shape falls
+ * back to lookupApiKey and `preloaded: null`, i.e. the per-query path with all
+ * of its per-check fail-open behaviour. So the RPC can only change latency:
+ * never whether a key is accepted or a call is limited.
+ */
+async function authenticateToolsCall(
+  req: Request,
+  requestId: string | number | null,
+  includeAllowance: boolean,
+): Promise<{ apiKey: ApiKeyRow; preloaded: PreloadedGateReads | null } | Response> {
+  const incomingHash = await bearerKeyHash(req, requestId);
+  if (incomingHash instanceof Response) return incomingHash;
+
+  const fallback = async () => {
+    const result = await lookupApiKey(incomingHash, requestId);
+    return result instanceof Response ? result : { apiKey: result.apiKey, preloaded: null };
+  };
+  // Deployed ahead of its migration: skip the RPC for a while (see preflightSkipped).
+  if (preflightSkipped()) return await fallback();
+
+  const now = Date.now();
+  const keyWindowStarts = rateLimitWindowStarts(now);
+  const workspaceWindowStart = planQuotaWindowStart(now);
+  let data: unknown;
+  try {
+    const { data: answer, error } = await supabase.rpc(
+      "mcp_tools_call_preflight",
+      preflightParams(incomingHash, keyWindowStarts, workspaceWindowStart, includeAllowance),
+    );
+    if (error) {
+      notePreflightError(error.code);
+      console.warn("[mcp-server] tools_call_preflight_failed", {
+        error: error.message,
+        error_code: error.code,
+      });
+      return await fallback();
+    }
+    data = answer;
+  } catch (err) {
+    console.warn("[mcp-server] tools_call_preflight_threw", {
+      error: err instanceof Error ? err.message : String(err),
+    });
+    return await fallback();
+  }
+
+  const preflight = parsePreflight(data, keyWindowStarts.length, includeAllowance);
+  if (preflight === null) {
+    console.warn("[mcp-server] tools_call_preflight_malformed", {});
+    return await fallback();
+  }
+  // An unknown, revoked or expired key: the same 401 lookupApiKey gives.
+  if (preflight.kind === "no_key") return acceptKeyRow(null, incomingHash, requestId) as Response;
+  const accepted = acceptKeyRow(preflight.key, incomingHash, requestId);
+  if (accepted instanceof Response) return accepted;
+
+  return {
+    apiKey: accepted.apiKey,
+    preloaded: {
+      rateLimit: {
+        windowStarts: keyWindowStarts,
+        counts: preflight.keyCounts.map((count) => ({ count, error: null })),
+      },
+      planQuota: {
+        windowStart: workspaceWindowStart,
+        workspace: preflight.workspace,
+        entitlement: preflight.entitlement,
+        windowCount: { count: preflight.workspaceCount, error: null },
+      },
+      ...(includeAllowance
+        ? { allowance: preflight.allowance as ActionAllowanceRow | null }
+        : {}),
+    },
+  };
 }
 
 // ---------------------------------------------------------------------------
@@ -2461,28 +2599,58 @@ interface PlanQuotaResult {
  * Fail-open: any DB error allows the request through, matching the per-key
  * rolling-window limiter.
  */
+/** Start of the plan ceiling's trailing window, as an ISO timestamp. */
+function planQuotaWindowStart(nowMs = Date.now()): string {
+  return new Date(nowMs - PLAN_RPM_WINDOW_MS).toISOString();
+}
+
+/** A PostgREST `count=exact` answer, or the same values from the preflight RPC. */
+interface WindowCountResult {
+  count: number | null;
+  error: { message: string } | null;
+}
+
+/**
+ * The three reads checkPlanQuota makes, already made by
+ * mcp_tools_call_preflight. `workspace` null is "no row", which fails open
+ * exactly like a failed lookup.
+ */
+interface PreloadedPlanQuotaReads {
+  windowStart: string;
+  // deno-lint-ignore no-explicit-any
+  workspace: Record<string, any> | null;
+  // deno-lint-ignore no-explicit-any
+  entitlement: Record<string, any> | null;
+  windowCount: WindowCountResult;
+}
+
 async function checkPlanQuota(
   workspaceId: string,
+  preloaded?: PreloadedPlanQuotaReads,
 ): Promise<PlanQuotaResult> {
   // The window count (step 2) needs nothing from the workspace row, so it is
   // issued first and overlaps the two lookups below instead of queueing behind
   // them. It is a read: when a lookup fails open the answer is simply unused.
-  const windowStart = new Date(Date.now() - PLAN_RPM_WINDOW_MS).toISOString();
-  const windowCount = Promise.resolve(
-    supabase
-      .from("activity_log")
-      .select("*", { count: "exact", head: true })
-      .eq("workspace_id", workspaceId)
-      .gte("created_at", windowStart),
-  );
+  const windowStart = preloaded?.windowStart ?? planQuotaWindowStart();
+  const windowCount: Promise<WindowCountResult> = preloaded
+    ? Promise.resolve(preloaded.windowCount)
+    : Promise.resolve(
+      supabase
+        .from("activity_log")
+        .select("*", { count: "exact", head: true })
+        .eq("workspace_id", workspaceId)
+        .gte("created_at", windowStart),
+    );
 
   // 1. Look up workspace plan. The two activation columns ride along for
   // markFirstProductUse (see PlanQuotaResult.firstUse); nothing here reads them.
-  const { data: workspace, error: wsError } = await supabase
-    .from("workspaces")
-    .select("plan, grandfathered, owner_id, analytics_first_tool_used_at, onboarding_value_activated_at")
-    .eq("id", workspaceId)
-    .maybeSingle();
+  const { data: workspace, error: wsError } = preloaded
+    ? { data: preloaded.workspace, error: null }
+    : await supabase
+      .from("workspaces")
+      .select("plan, grandfathered, owner_id, analytics_first_tool_used_at, onboarding_value_activated_at")
+      .eq("id", workspaceId)
+      .maybeSingle();
 
   if (wsError || !workspace) {
     console.error("[mcp-server] plan_quota_workspace_lookup_failed", {
@@ -2499,11 +2667,13 @@ async function checkPlanQuota(
     };
   }
 
-  const { data: entitlement, error: entitlementError } = await supabase
-    .from("user_usage_entitlements")
-    .select("kind, expires_at")
-    .eq("user_id", workspace.owner_id)
-    .maybeSingle();
+  const { data: entitlement, error: entitlementError } = preloaded
+    ? { data: preloaded.entitlement, error: null }
+    : await supabase
+      .from("user_usage_entitlements")
+      .select("kind, expires_at")
+      .eq("user_id", workspace.owner_id)
+      .maybeSingle();
   if (entitlementError) {
     console.error("[mcp-server] plan_quota_entitlement_lookup_failed", { error: entitlementError.message });
   }
@@ -2715,6 +2885,20 @@ interface RateLimitResult {
   retryAfterSeconds: number;
 }
 
+/** Start of each RATE_LIMIT_WINDOWS window, in table order, as ISO timestamps. */
+function rateLimitWindowStarts(nowMs = Date.now()): string[] {
+  return RATE_LIMIT_WINDOWS.map((window) => new Date(nowMs - window.intervalMs).toISOString());
+}
+
+/**
+ * The per-key window counts, already read by mcp_tools_call_preflight: one
+ * per RATE_LIMIT_WINDOWS entry, in table order, for these window starts.
+ */
+interface PreloadedRateLimitCounts {
+  windowStarts: string[];
+  counts: WindowCountResult[];
+}
+
 /**
  * Check per-key rolling-window rate limits against the `activity_log` table.
  *
@@ -2736,17 +2920,17 @@ interface RateLimitResult {
  */
 async function checkRateLimit(
   apiKeyId: string,
+  preloaded?: PreloadedRateLimitCounts,
 ): Promise<RateLimitResult> {
-  const windowStarts = RATE_LIMIT_WINDOWS.map((window) =>
-    new Date(Date.now() - window.intervalMs).toISOString()
-  );
-  const windowCounts = await Promise.all(windowStarts.map((windowStart) =>
-    supabase
-      .from("activity_log")
-      .select("*", { count: "exact", head: true })
-      .eq("api_key_id", apiKeyId)
-      .gte("created_at", windowStart)
-  ));
+  const windowStarts = preloaded?.windowStarts ?? rateLimitWindowStarts();
+  const windowCounts: WindowCountResult[] = preloaded?.counts ??
+    await Promise.all(windowStarts.map((windowStart) =>
+      supabase
+        .from("activity_log")
+        .select("*", { count: "exact", head: true })
+        .eq("api_key_id", apiKeyId)
+        .gte("created_at", windowStart)
+    ));
 
   for (const [index, window] of RATE_LIMIT_WINDOWS.entries()) {
     const windowStart = windowStarts[index];
@@ -34503,16 +34687,28 @@ async function handleMeteredRequest(req: Request): Promise<Response> {
   // than a skip: there is no `api_keys` table to check against, so the request
   // is routed with the synthetic full-scope key. It reaches exactly the same
   // handlers and the same response post-processing as a real one.
+  //
+  // A tools/call authenticates through mcp_tools_call_preflight, which also
+  // returns every read the three gates below need, so they cost no further
+  // round trip (see authenticateToolsCall). `preloaded` is null whenever that
+  // RPC was unavailable and the per-query path ran instead.
   let apiKey: ApiKeyRow;
+  let preloaded: PreloadedGateReads | null = null;
+  const callMayMeter = rpcRequest.method === "tools/call" &&
+    mayMeterToolCall((rpcRequest.params as Record<string, unknown> | undefined)?.["name"]);
   if (INTROSPECTION_ONLY) {
     apiKey = INTROSPECTION_API_KEY;
   } else {
-    const authResult = await authenticateRequest(req, requestId);
+    const authResult: { apiKey: ApiKeyRow; preloaded?: PreloadedGateReads | null } | Response =
+      rpcRequest.method === "tools/call"
+        ? await authenticateToolsCall(req, requestId, callMayMeter)
+        : await authenticateRequest(req, requestId);
     if (authResult instanceof Response) {
       // Authentication failed — return the error response directly.
       return authResult;
     }
     apiKey = authResult.apiKey;
+    preloaded = authResult.preloaded ?? null;
   }
 
   // ── Cheap-method rate limit ───────────────────────────────────────────────
@@ -34590,21 +34786,23 @@ async function handleMeteredRequest(req: Request): Promise<Response> {
   // have passed. In particular the allowance RESERVATION is still made inside
   // handleToolsCall, so a rate-limited call reserves nothing and consumes no
   // allowance. A denied request leaves the other reads to finish unused.
+  //
+  // After a preflight, all three reads are already answered and these are pure
+  // decisions over its values (see authenticateToolsCall).
   const quotaPending = isResourceMethod || !metered
     ? null
-    : checkPlanQuota(apiKey.workspace_id);
+    : checkPlanQuota(apiKey.workspace_id, preloaded?.planQuota);
   // Never awaited on a denial, so a rejection must not go unhandled.
   quotaPending?.catch(() => {});
-  if (
-    metered && rpcRequest.method === "tools/call" &&
-    mayMeterToolCall((rpcRequest.params as Record<string, unknown> | undefined)?.["name"])
-  ) {
-    ctx.allowance = loadActionAllowance(apiKey.workspace_id);
+  if (metered && callMayMeter) {
+    ctx.allowance = preloaded && "allowance" in preloaded
+      ? Promise.resolve(preloaded.allowance ?? null)
+      : loadActionAllowance(apiKey.workspace_id);
     ctx.allowance.catch(() => {});
   }
   const rateLimitResult = isResourceMethod || !metered
     ? { allowed: true as const }
-    : await checkRateLimit(apiKey.id);
+    : await checkRateLimit(apiKey.id, preloaded?.rateLimit);
   if (!rateLimitResult.allowed) {
     console.warn("[mcp-server] rate_limit_exceeded", {
       key_id: apiKey.id,
