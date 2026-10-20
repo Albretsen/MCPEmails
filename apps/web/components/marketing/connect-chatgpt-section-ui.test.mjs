@@ -54,7 +54,7 @@ const { renderToStaticMarkup } = await import('react-dom/server');
 const { PROVIDERS } = await import('../../src/lib/connect/providers.mjs');
 const { getProviderContent } = await import('../../src/lib/connect/content.mjs');
 const { getMultiMailboxCopy, showsMultiMailbox } = await import('../../src/lib/connect/multi-mailbox.mjs');
-const { CHATGPT_BLOG_SLUG, chatgptBlogLink, chatgptFaq, getChatgptCopy, showsChatgpt } =
+const { CHATGPT_BLOG_SLUG, CHATGPT_DIRECTORY_LISTING_URL, chatgptBlogLink, chatgptFaq, getChatgptCopy, showsChatgpt } =
   await import('../../src/lib/connect/chatgpt.mjs');
 const { getPost, getPostLocales } = await import('../../src/lib/blog/posts.js');
 
@@ -92,10 +92,11 @@ for (const slug of SAMPLE) {
       // Right after the setup steps.
       assert.equal(section.previousElementSibling?.id, 'how');
       assert.equal(section.querySelector('h2').textContent, fill(c.title, provider.name));
+      // The app-directory install: CHATGPT_DIRECTORY_LISTING_URL is set.
       const steps = [...section.querySelectorAll('ol.connect-chatgpt-steps li')];
-      assert.equal(steps.length, 4);
+      assert.equal(steps.length, c.directorySteps.length);
       assert.ok(steps[0].textContent.includes(provider.name));
-      assert.ok(steps.some((li) => li.querySelector('code')?.textContent === 'https://mcpemails.com/api/mcp'));
+      assert.ok(steps.some((li) => li.textContent.includes('Any Mailbox')), 'a step names Any Mailbox');
 
       const links = [...section.querySelectorAll('a')].map((a) => ({
         href: a.getAttribute('href'),
@@ -103,6 +104,7 @@ for (const slug of SAMPLE) {
         intl: a.hasAttribute('data-intl-link'),
       }));
       assert.deepEqual(links, [
+        { href: CHATGPT_DIRECTORY_LISTING_URL, text: c.directoryLink, intl: false },
         { href: '/docs/chatgpt', text: c.docsLink, intl: true },
         { href: `/blog/${CHATGPT_BLOG_SLUG}`, text: c.blogLink, intl: true },
       ]);

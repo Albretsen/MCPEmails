@@ -167,6 +167,12 @@ export default function ClientSetupView({ locale, client, content }) {
             ))}
           </div>
 
+          {client.listingUrl && content.listingLink && (
+            <p className="how-guide-link">
+              <a href={client.listingUrl} rel="noopener">{content.listingLink}</a>
+            </p>
+          )}
+
           {config && (
             <div style={{ maxWidth: 820, margin: '28px auto 0' }}>
               <CodeBlock label={configLabel} code={config} />
@@ -184,6 +190,31 @@ export default function ClientSetupView({ locale, client, content }) {
           </p>
         </div>
       </section>
+
+      {/*
+        A second way in, after the main one: on ChatGPT, developer mode and a
+        custom connector for anyone the app-directory install does not reach.
+      */}
+      {content.fallback?.steps?.length > 0 && (
+        <section className="section" id="fallback">
+          <div className="container">
+            <div className="section-head">
+              <div className="eye-label">{content.fallback.eyebrow}</div>
+              <h2>{content.fallback.title}</h2>
+              <p className="sub"><RichText>{content.fallback.sub}</RichText></p>
+            </div>
+            <div className="how-steps">
+              {content.fallback.steps.map((s, i) => (
+                <div className="step" key={i}>
+                  <span className="num">{String(i + 1).padStart(2, '0')}</span>
+                  <h3>{s.h}</h3>
+                  <p><RichText>{s.p}</RichText></p>
+                </div>
+              ))}
+            </div>
+          </div>
+        </section>
+      )}
 
       {/*
         The part only we can write: what goes wrong in this specific client.

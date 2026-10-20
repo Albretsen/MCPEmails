@@ -223,6 +223,10 @@
         "a": "Add a custom connector in your client settings, paste https://mcpemails.com/api/mcp as the server URL, and approve the sign-in. Clients that support OAuth need no API key. The same URL works in Cursor, VS Code and other MCP clients."
       },
       {
+        "q": "Is MCP Emails in the ChatGPT app directory?",
+        "a": "Yes. It is listed as Any Mailbox, by MCP Emails: {listingUrl}. Click Connect there, sign in to MCP Emails and choose which mailboxes ChatGPT can reach. It is the same server as the custom connector, so you need only one of the two."
+      },
+      {
         "q": "Do you use analytics?",
         "a": "We use privacy-preserving, cookieless product analytics to understand site and setup performance. We never collect email content, addresses, API keys, OAuth tokens, or MCP request data."
       },

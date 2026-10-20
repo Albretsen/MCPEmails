@@ -223,6 +223,10 @@
         "a": "在客户端设置中添加自定义连接器，将 https://mcpemails.com/api/mcp 粘贴为服务器 URL，然后批准登录。支持 OAuth 的客户端无需 API 密钥。同一个 URL 也适用于 Cursor、VS Code 和其他 MCP 客户端。"
       },
       {
+        "q": "MCP Emails 在 ChatGPT 应用目录中吗？",
+        "a": "在。它以 Any Mailbox 的名称上架，由 MCP Emails 发布：{listingUrl}。在那里点击 Connect，登录 MCP Emails，并选择 ChatGPT 可以访问哪些邮箱。它与自定义连接器是同一个服务器，所以两者只需其一。"
+      },
+      {
         "q": "你们使用分析工具吗？",
         "a": "我们使用保护隐私且无 Cookie 的产品分析来了解网站和设置表现。我们绝不会收集邮件内容、地址、API 密钥、OAuth 令牌或 MCP 请求数据。"
       },

@@ -2,7 +2,8 @@
   "_sources": [
     "apps/web/components/dashboard/Pages.jsx (MCP_CLIENTS) + apps/web/messages/en/dashboard.json (clients.*)",
     "apps/web/app/.well-known/oauth-authorization-server/route.ts",
-    "https://help.openai.com/en/articles/12584461"
+    "https://help.openai.com/en/articles/12584461",
+    "apps/web/app/authorize/page.js + apps/web/components/auth/AuthorizeApp.jsx + apps/web/messages/*/auth.json (authorize.*: the consent screen labels)"
   ],
   "meta": {
     "title": "将邮箱连接到 ChatGPT：MCP 连接器设置",
@@ -11,12 +12,12 @@
   "hero": {
     "eyebrow": "ChatGPT + 邮件",
     "titleLine1": "把你的收件箱连接到 ChatGPT",
-    "titleLine2": "作为自定义 MCP 连接器",
-    "lead": "开启开发者模式，创建一个指向某个 URL 的连接器，ChatGPT 就能读取、搜索、发送、回复、转发、定时发送并整理你的真实邮件。",
+    "titleLine2": "使用 Any Mailbox 应用",
+    "lead": "安装 Any Mailbox（MCP Emails 在 ChatGPT 应用目录中的应用）并登录，ChatGPT 就能读取、搜索、发送、回复、转发、定时发送并整理你的真实邮件。",
     "meta0": "1 个收件箱永久免费",
     "meta1": "OAuth，无需 API 密钥",
     "meta2": "邮件实时获取，从不存储",
-    "answer": "在 ChatGPT 中，于 Settings、Apps and Connectors、Advanced settings 下开启开发者模式。创建一个连接器，将 https://mcpemails.com/api/mcp 粘贴为连接器 URL，选择 OAuth，并通过 mcpemails 授权。开发者模式适用于 chatgpt.com 上的 Plus、Pro、Business、Enterprise 和 Edu，并且每个对话都要从 + 菜单中开启。"
+    "answer": "在 ChatGPT 的应用目录中打开 MCP Emails 发布的 Any Mailbox，点击 Connect，登录 MCP Emails，然后选择 ChatGPT 可以访问哪些邮箱以及拥有多少权限。不使用该应用时，可在 Settings、Apps and Connectors、Advanced settings 下开启开发者模式，并用 URL https://mcpemails.com/api/mcp 和 OAuth 创建一个连接器。开发者模式适用于 chatgpt.com 上的 Plus、Pro、Business、Enterprise 和 Edu。"
   },
   "method": {
     "title": "ChatGPT 如何连接：OAuth，无需 API 密钥",
@@ -28,26 +29,46 @@
       "p": "在 mcpemails.com 注册，无需绑卡，然后前往 Dashboard、Inboxes、Connect Inbox。Outlook 和 Microsoft 365 通过 Microsoft 登录连接；Gmail、iCloud、Fastmail、Yahoo、Zoho 和 Yandex 需要应用专用密码；其他邮箱都可通过标准 IMAP 与 SMTP 连接。免费版包含 1 个收件箱，永久有效。"
     },
     {
-      "h": "开启开发者模式",
-      "p": "打开 Settings、Apps and Connectors、Advanced settings，开启 Developer mode（开发者模式）。"
+      "h": "在 ChatGPT 应用目录中打开 Any Mailbox",
+      "p": "Any Mailbox 是 MCP Emails 在 ChatGPT 应用目录中发布的应用。打开下方链接的应用页面，或在目录中搜索 Any Mailbox，然后点击 Connect。"
     },
     {
-      "h": "创建连接器",
-      "p": "回到 Apps and Connectors，点击 Create。输入名称，并将 <code>https://mcpemails.com/api/mcp</code> 粘贴为 Connector URL。"
+      "h": "登录 MCP Emails",
+      "p": "ChatGPT 会把你带到 MCP Emails。用存放你邮箱的账户登录。如果你已经登录，会直接进入授权确认页面。"
     },
     {
-      "h": "选择 OAuth 并授权",
-      "p": "选择 OAuth，点击 Create，然后通过 mcpemails 授权，并批准你希望该连接器拥有的权限范围。"
-    },
-    {
-      "h": "在每个对话中开启",
-      "p": "在 chatgpt.com 打开一个新对话，点击 <b>+</b>，选择 Developer mode 并选中 mcpemails 应用。ChatGPT 只在完成这一步的对话中看得到这些工具，所以每个新对话都要重复。连接器会一直保留在 Apps and Connectors 中。"
+      "h": "选择邮箱和权限",
+      "p": "授权确认页面会询问 ChatGPT 能获得多少权限：只读、标准、完全访问，或选择自定义逐项挑选权限。选择所有收件箱或指定收件箱，然后点击<b>允许访问</b>。"
     }
   ],
+  "listingLink": "ChatGPT 应用目录中的 Any Mailbox",
+  "fallback": {
+    "eyebrow": "备选方式",
+    "title": "不使用应用：开发者模式加自定义连接器",
+    "sub": "如果你的 ChatGPT 账户或工作区无法使用 Any Mailbox，可以把同一个服务器添加为自定义连接器。这需要开发者模式，适用于 chatgpt.com 上的 Plus、Pro、Business、Enterprise 和 Edu。",
+    "steps": [
+      {
+        "h": "开启开发者模式",
+        "p": "打开 Settings、Apps and Connectors、Advanced settings，开启 Developer mode（开发者模式）。"
+      },
+      {
+        "h": "创建连接器",
+        "p": "回到 Apps and Connectors，点击 Create。输入名称，并将 <code>https://mcpemails.com/api/mcp</code> 粘贴为 Connector URL。"
+      },
+      {
+        "h": "选择 OAuth 并授权",
+        "p": "选择 OAuth，点击 Create，然后登录 MCP Emails，并批准你希望该连接器拥有的权限。"
+      },
+      {
+        "h": "在每个对话中开启",
+        "p": "在 chatgpt.com 打开一个新对话，点击 <b>+</b>，选择 Developer mode 并选中你的连接器。ChatGPT 只在完成这一步的对话中看得到这些工具，所以每个新对话都要重复。连接器会一直保留在 Apps and Connectors 中。"
+      }
+    ]
+  },
   "gotchas": [
     {
       "h": "开发者模式需要付费方案、网页版，并且每个对话都要开启",
-      "p": "自定义 MCP 连接器在 chatgpt.com 上向 Plus、Pro、Business、Enterprise 和 Edu 账户开放。Free 和 Go 账户无法添加，移动端和桌面端应用也不提供开发者模式。在 Business 和 Enterprise 上，可能需要管理员先为工作区允许开发者模式。最容易漏掉的是最后一步：在当前对话的 <b>+</b> 菜单中选择 Developer mode 和 mcpemails 应用之前，连接器不会起作用。"
+      "p": "自定义 MCP 连接器在 chatgpt.com 上向 Plus、Pro、Business、Enterprise 和 Edu 账户开放。Free 和 Go 账户无法添加，移动端和桌面端应用也不提供开发者模式。在 Business 和 Enterprise 上，可能需要管理员先为工作区允许开发者模式。最容易漏掉的是最后一步：在当前对话的 <b>+</b> 菜单中选择 Developer mode 和你的连接器之前，连接器不会起作用。"
     },
     {
       "h": "创建连接器时选择 OAuth，而不是无认证",
@@ -66,11 +87,15 @@
   "faq": [
     {
       "q": "ChatGPT 能读取和发送我的邮件吗？",
-      "a": "通过自定义 MCP 连接器可以。ChatGPT 本身无法访问邮箱；把连接器指向 mcpemails，就能为它提供读取、搜索、发送、回复、转发、整理和定时发送邮件的工具，并且仅限于你在设置时批准的权限范围。"
+      "a": "可以。安装 Any Mailbox（MCP Emails 在 ChatGPT 应用目录中的应用），或添加一个自定义 MCP 连接器。两种方式下，ChatGPT 都能获得读取、搜索、发送、回复、转发、整理和定时发送邮件的工具，并且仅限于你登录时批准的权限。"
+    },
+    {
+      "q": "Any Mailbox 和 MCP Emails 是同一个产品吗？",
+      "a": "是的。Any Mailbox 是 MCP Emails 在 ChatGPT 应用目录中的名称，由 MCP Emails 发布。它与指向 https://mcpemails.com/api/mcp 的自定义连接器使用同一个账户、同样的邮箱和同一个授权确认页面，所以两者只需其一。"
     },
     {
       "q": "为什么我无法在自己的 ChatGPT 账户中创建连接器？",
-      "a": "开发者模式需要网页版的 ChatGPT Plus、Pro、Business、Enterprise 或 Edu。Free 和 Go 账户无法添加自定义连接器，移动端和桌面端应用也不显示该选项。在 Business 或 Enterprise 工作区中，请管理员允许开发者模式。如果连接器已创建但 ChatGPT 没有使用它，请在对话中打开 <b>+</b> 菜单，选择 Developer mode 和 mcpemails 应用。"
+      "a": "开发者模式需要网页版的 ChatGPT Plus、Pro、Business、Enterprise 或 Edu。Free 和 Go 账户无法添加自定义连接器，移动端和桌面端应用也不显示该选项。在 Business 或 Enterprise 工作区中，请管理员允许开发者模式。如果连接器已创建但 ChatGPT 没有使用它，请在对话中打开 <b>+</b> 菜单，选择 Developer mode 和你的连接器。"
     },
     {
       "q": "ChatGPT 需要 API 密钥吗？",

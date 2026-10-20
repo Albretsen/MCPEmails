@@ -44,6 +44,15 @@ export const KINDS = ['added', 'improved', 'fixed', 'changed'];
 export const ENTRIES = [
   /* ── October 2026 ──────────────────────────────────────────── */
   {
+    // DATE PLACEHOLDER: set to the day this lands on main (the Any Mailbox
+    // launch PR merges only once OpenAI approves the listing).
+    date: '2026-10-20',
+    kind: 'added',
+    title: 'MCP Emails in the ChatGPT app directory',
+    body:
+      'MCP Emails can now be installed from the ChatGPT app directory, where it is listed as Any Mailbox. Click Connect, sign in to MCP Emails and choose which mailboxes ChatGPT can reach, with no developer mode needed.',
+  },
+  {
     date: '2026-10-18',
     kind: 'added',
     title: 'Send As for IMAP inboxes',

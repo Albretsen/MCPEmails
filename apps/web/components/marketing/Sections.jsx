@@ -12,6 +12,7 @@ import { pricingUpgradeHref } from '@/lib/billing/upgrade-intent.mjs';
 import { PLANS as CATALOGUE } from '@/lib/stripe/plans';
 import { formatPriceCents } from '@/lib/stripe/annual-offer';
 import { SupportHelpLink } from '../support/SupportHelpLink';
+import { CHATGPT_DIRECTORY_LISTING_URL, splitOnListingUrl } from '@/lib/connect/chatgpt.mjs';
 
 // Rich-text tag handlers shared across sections (inline code + bold).
 const RICH = {
@@ -1214,9 +1215,25 @@ function FaqItem({ q, a }) {
       {/* Always in the DOM, hidden until opened: the answers are emitted as
           FAQPage JSON-LD, and markup may only describe text the page actually
           serves. Rendering on click left them out of the HTML entirely. */}
-      <div className="faq-a" hidden={!open}>{a}</div>
+      <div className="faq-a" hidden={!open}><FaqAnswer text={a} /></div>
     </div>
   );
+}
+
+/**
+ * An answer, with any {listingUrl} token turned into a link to the Any Mailbox
+ * listing in the ChatGPT app directory (CHATGPT_DIRECTORY_LISTING_URL). The
+ * JSON-LD in app/[locale]/page.tsx writes the same URL out as text.
+ */
+function FaqAnswer({ text }) {
+  const parts = splitOnListingUrl(text);
+  if (parts.length === 1) return text;
+  return parts.flatMap((part, i) => (i === 0
+    ? [part]
+    : [
+        <a key={i} href={CHATGPT_DIRECTORY_LISTING_URL} rel="noopener">{CHATGPT_DIRECTORY_LISTING_URL}</a>,
+        part,
+      ]));
 }
 
 /**

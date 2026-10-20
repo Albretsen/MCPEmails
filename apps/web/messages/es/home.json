@@ -223,6 +223,10 @@
         "a": "Añade un conector personalizado en los ajustes de tu cliente, pega https://mcpemails.com/api/mcp como URL del servidor y aprueba el inicio de sesión. Los clientes compatibles con OAuth no necesitan clave de API. La misma URL funciona en Cursor, VS Code y otros clientes MCP."
       },
       {
+        "q": "¿Está MCP Emails en el directorio de apps de ChatGPT?",
+        "a": "Sí. Aparece como Any Mailbox, de MCP Emails: {listingUrl}. Haz clic en Connect, inicia sesión en MCP Emails y elige a qué buzones puede acceder ChatGPT. Es el mismo servidor que el conector personalizado, así que solo necesitas uno de los dos."
+      },
+      {
         "q": "¿Usan analítica?",
         "a": "Usamos analítica de producto sin cookies y respetuosa con la privacidad para comprender el sitio y la configuración. Nunca recopilamos contenido de correo, direcciones, claves API, tokens OAuth ni datos de solicitudes MCP."
       },

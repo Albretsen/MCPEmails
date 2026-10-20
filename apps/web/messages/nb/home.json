@@ -223,6 +223,10 @@
         "a": "Legg til en egendefinert connector i innstillingene til klienten, lim inn https://mcpemails.com/api/mcp som server-URL og godkjenn innloggingen. Klienter som støtter OAuth trenger ingen API-nøkkel. Den samme URL-en fungerer i Cursor, VS Code og andre MCP-klienter."
       },
       {
+        "q": "Finnes MCP Emails i appkatalogen i ChatGPT?",
+        "a": "Ja. Den heter Any Mailbox, fra MCP Emails: {listingUrl}. Klikk Connect der, logg inn hos MCP Emails og velg hvilke postkasser ChatGPT kan nå. Det er den samme serveren som den egendefinerte koblingen, så du trenger bare én av dem."
+      },
+      {
         "q": "Bruker dere analyseverktøy?",
         "a": "Vi bruker personvernvennlig, informasjonskapsel-fri produktanalyse for å forstå nettstedet og oppsettet. Vi samler aldri inn e-postinnhold, adresser, API-nøkler, OAuth-tokener eller MCP-forespørselsdata."
       },

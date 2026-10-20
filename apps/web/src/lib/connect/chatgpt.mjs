@@ -27,15 +27,52 @@
  *   - switched on per chat from the + menu
  *   - mail fetched live, never stored
  *
- * WHEN THE CHATGPT APP DIRECTORY LISTS US. Set CHATGPT_DIRECTORY_LISTING_URL to
- * the listing's URL. The block then shows the `directory*` copy (install the
- * app from the directory) instead of the developer-mode steps, links to the
- * listing, and the FAQ answer switches to `directoryFaqA`. Every locale already
- * carries those keys. Re-read them against the live listing before flipping it.
+ * THE CHATGPT APP DIRECTORY. MCP Emails is listed there as "Any Mailbox". With
+ * CHATGPT_DIRECTORY_LISTING_URL set, the block shows the `directory*` copy
+ * (install the app from the directory) instead of the developer-mode steps,
+ * links to the listing, and the FAQ answer switches to `directoryFaqA`. A null
+ * URL brings the developer-mode steps back. Re-read the copy against the live
+ * listing when the URL is set.
  */
 
-/** Null until OpenAI approves the listing. See the header comment. */
-export const CHATGPT_DIRECTORY_LISTING_URL = null;
+/**
+ * The name and developer the ChatGPT app directory shows. OpenAI does not
+ * allow "MCP" in an app's name, so the listing is not called MCP Emails.
+ */
+export const CHATGPT_APP_NAME = 'Any Mailbox';
+
+/**
+ * Stand-in for the listing URL, which OpenAI only publishes on approval.
+ * src/lib/connect/chatgpt-listing.test.mjs fails while
+ * CHATGPT_DIRECTORY_LISTING_URL still equals it, so the launch PR cannot merge
+ * with a URL that leads nowhere. Do not "fix" that test: set the real URL.
+ */
+export const CHATGPT_DIRECTORY_LISTING_PLACEHOLDER = 'https://chatgpt.com/apps/PLACEHOLDER-set-on-openai-approval';
+
+/**
+ * The Any Mailbox listing in the ChatGPT app directory. The one place it is
+ * written down: /connect/<provider>, /docs/chatgpt and the home FAQ read it
+ * from here, and a test checks public/llms.txt carries the same value.
+ * PLACEHOLDER until OpenAI approves the listing; see the header comment.
+ */
+export const CHATGPT_DIRECTORY_LISTING_URL = CHATGPT_DIRECTORY_LISTING_PLACEHOLDER;
+
+/** The token copy uses where the listing URL goes (home FAQ). */
+export const LISTING_URL_TOKEN = '{listingUrl}';
+
+/**
+ * Split copy on the listing token, for a renderer that turns the token into a
+ * link: `['before ', 'after']` for one token. Text with no token comes back as
+ * a single part.
+ */
+export function splitOnListingUrl(text) {
+  return String(text).split(LISTING_URL_TOKEN);
+}
+
+/** The same copy as plain text, with the URL written out (JSON-LD, meta). */
+export function fillListingUrl(text, listingUrl = CHATGPT_DIRECTORY_LISTING_URL) {
+  return String(text).replaceAll(LISTING_URL_TOKEN, listingUrl);
+}
 
 export const CHATGPT_LOCALES = Object.freeze(['en', 'es', 'fr', 'nb', 'zh']);
 export const CHATGPT_BLOG_SLUG = 'connect-chatgpt-to-email';

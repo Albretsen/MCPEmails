@@ -2,7 +2,8 @@
   "_sources": [
     "apps/web/components/dashboard/Pages.jsx (MCP_CLIENTS) + apps/web/messages/en/dashboard.json (clients.*)",
     "apps/web/app/.well-known/oauth-authorization-server/route.ts",
-    "https://help.openai.com/en/articles/12584461"
+    "https://help.openai.com/en/articles/12584461",
+    "apps/web/app/authorize/page.js + apps/web/components/auth/AuthorizeApp.jsx + apps/web/messages/*/auth.json (authorize.*: the consent screen labels)"
   ],
   "meta": {
     "title": "Connect Email to ChatGPT: MCP Connector Setup",
@@ -11,12 +12,12 @@
   "hero": {
     "eyebrow": "ChatGPT + email",
     "titleLine1": "Connect your inbox to ChatGPT",
-    "titleLine2": "as a custom MCP connector",
-    "lead": "Turn on developer mode, create a connector pointing at one URL, and ChatGPT can read, search, send, reply, forward, schedule and organize your real mail.",
+    "titleLine2": "with the Any Mailbox app",
+    "lead": "Install Any Mailbox, the MCP Emails app in the ChatGPT app directory, sign in, and ChatGPT can read, search, send, reply, forward, schedule and organize your real mail.",
     "meta0": "1 inbox free, forever",
     "meta1": "OAuth, no API key needed",
     "meta2": "Email fetched live, never stored",
-    "answer": "In ChatGPT, turn on developer mode under Settings, Apps and Connectors, Advanced settings. Create a connector, paste https://mcpemails.com/api/mcp as the connector URL, choose OAuth, and authorize with mcpemails. Developer mode works on chatgpt.com with Plus, Pro, Business, Enterprise and Edu, and in each chat you switch it on from the + menu."
+    "answer": "In ChatGPT, open Any Mailbox by MCP Emails in the app directory, click Connect, sign in to MCP Emails and choose which mailboxes ChatGPT can reach and how much access it gets. Without the app, turn on developer mode under Settings, Apps and Connectors, Advanced settings, and create a connector with the URL https://mcpemails.com/api/mcp and OAuth. Developer mode works on chatgpt.com with Plus, Pro, Business, Enterprise and Edu."
   },
   "method": {
     "title": "How ChatGPT connects: OAuth, no API key",
@@ -28,26 +29,46 @@
       "p": "Sign up at mcpemails.com, no card required, then go to Dashboard, Inboxes, Connect Inbox. Outlook and Microsoft 365 connect with Sign in with Microsoft; Gmail, iCloud, Fastmail, Yahoo, Zoho and Yandex take an app-specific password; anything else connects over plain IMAP and SMTP. The free plan holds one inbox, forever."
     },
     {
-      "h": "Turn on developer mode",
-      "p": "Open Settings, Apps and Connectors, Advanced settings, and turn on Developer mode."
+      "h": "Open Any Mailbox in the ChatGPT app directory",
+      "p": "Any Mailbox is the app MCP Emails publishes in ChatGPT's app directory. Open its listing, linked below, or search for Any Mailbox in the directory, and click Connect."
     },
     {
-      "h": "Create the connector",
-      "p": "Back in Apps and Connectors, click Create. Enter a name and paste <code>https://mcpemails.com/api/mcp</code> as the Connector URL."
+      "h": "Sign in to MCP Emails",
+      "p": "ChatGPT sends you to MCP Emails. Sign in with the account that holds your mailboxes. If you are already signed in, you go straight to the consent screen."
     },
     {
-      "h": "Choose OAuth and authorize",
-      "p": "Pick OAuth, click Create, then authorize with mcpemails and approve the scopes you want the connector to hold."
-    },
-    {
-      "h": "Switch it on in each chat",
-      "p": "Open a new chat on chatgpt.com, click <b>+</b>, choose Developer mode and select the mcpemails app. ChatGPT only sees the tools in a chat where you have done this, so repeat it in every new conversation. The connector stays listed under Apps and Connectors in between."
+      "h": "Choose mailboxes and access",
+      "p": "The consent screen asks how much access ChatGPT gets: Read-only, Standard, Full access, or Custom to pick permissions one by one. Choose All inboxes or Specific inboxes, then click <b>Allow access</b>."
     }
   ],
+  "listingLink": "Any Mailbox in the ChatGPT app directory",
+  "fallback": {
+    "eyebrow": "Fallback",
+    "title": "Without the app: developer mode and a custom connector",
+    "sub": "If Any Mailbox is not available in your ChatGPT account or workspace, add the same server as a custom connector. It needs developer mode, which works on chatgpt.com with Plus, Pro, Business, Enterprise and Edu.",
+    "steps": [
+      {
+        "h": "Turn on developer mode",
+        "p": "Open Settings, Apps and Connectors, Advanced settings, and turn on Developer mode."
+      },
+      {
+        "h": "Create the connector",
+        "p": "Back in Apps and Connectors, click Create. Enter a name and paste <code>https://mcpemails.com/api/mcp</code> as the Connector URL."
+      },
+      {
+        "h": "Choose OAuth and authorize",
+        "p": "Pick OAuth, click Create, then sign in to MCP Emails and approve the access you want the connector to hold."
+      },
+      {
+        "h": "Switch it on in each chat",
+        "p": "Open a new chat on chatgpt.com, click <b>+</b>, choose Developer mode and select your connector. ChatGPT only sees the tools in a chat where you have done this, so repeat it in every new conversation. The connector stays listed under Apps and Connectors in between."
+      }
+    ]
+  },
   "gotchas": [
     {
       "h": "Developer mode needs a paid plan, the web, and a switch in every chat",
-      "p": "Custom MCP connectors are available on chatgpt.com to Plus, Pro, Business, Enterprise and Edu accounts. Free and Go accounts cannot add one, and the mobile and desktop apps do not offer developer mode. On Business and Enterprise an admin may have to allow developer mode for the workspace first. The step people miss is the last one: the connector does nothing until you pick Developer mode and the mcpemails app from the <b>+</b> menu in the chat you are using."
+      "p": "Custom MCP connectors are available on chatgpt.com to Plus, Pro, Business, Enterprise and Edu accounts. Free and Go accounts cannot add one, and the mobile and desktop apps do not offer developer mode. On Business and Enterprise an admin may have to allow developer mode for the workspace first. The step people miss is the last one: the connector does nothing until you pick Developer mode and your connector from the <b>+</b> menu in the chat you are using."
     },
     {
       "h": "Pick OAuth, not no-authentication, when you create the connector",
@@ -66,11 +87,15 @@
   "faq": [
     {
       "q": "Can ChatGPT read and send my email?",
-      "a": "Through a custom MCP connector, yes. ChatGPT cannot reach a mailbox on its own; pointing a connector at mcpemails gives it tools for reading, searching, sending, replying, forwarding, organizing and scheduling mail, limited to the scopes you approve during setup."
+      "a": "Yes. Install Any Mailbox, the MCP Emails app in the ChatGPT app directory, or add a custom MCP connector. Either way ChatGPT gets tools for reading, searching, sending, replying, forwarding, organizing and scheduling mail, limited to the access you approve when you sign in."
+    },
+    {
+      "q": "Is Any Mailbox the same as MCP Emails?",
+      "a": "Yes. Any Mailbox is the name MCP Emails has in the ChatGPT app directory, published by MCP Emails. It uses the same account, mailboxes and consent screen as a custom connector at https://mcpemails.com/api/mcp, so you need only one of the two."
     },
     {
       "q": "Why can I not create a connector in my ChatGPT account?",
-      "a": "Developer mode needs ChatGPT Plus, Pro, Business, Enterprise or Edu, on the web. Free and Go accounts cannot add custom connectors, and the mobile and desktop apps do not show the option. On a Business or Enterprise workspace, ask an admin to allow developer mode. If the connector is created but ChatGPT ignores it, open the <b>+</b> menu in the chat and select Developer mode and the mcpemails app."
+      "a": "Developer mode needs ChatGPT Plus, Pro, Business, Enterprise or Edu, on the web. Free and Go accounts cannot add custom connectors, and the mobile and desktop apps do not show the option. On a Business or Enterprise workspace, ask an admin to allow developer mode. If the connector is created but ChatGPT ignores it, open the <b>+</b> menu in the chat and select Developer mode and your connector."
     },
     {
       "q": "Do I need an API key for ChatGPT?",

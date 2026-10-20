@@ -31,6 +31,8 @@
 // namespace to every marketing page, so putting thirteen clients' copy there
 // would put all of it in the bundle of the home page too.
 
+import { CHATGPT_DIRECTORY_LISTING_URL } from '../connect/chatgpt.mjs';
+
 /** The endpoint every one of these pages tells the reader to paste. */
 export const MCP_URL = 'https://mcpemails.com/api/mcp';
 
@@ -70,7 +72,7 @@ export const CLIENTS = [
   {
     slug: 'chatgpt',
     name: 'ChatGPT',
-    surface: 'ChatGPT Apps and connectors, developer mode',
+    surface: 'the ChatGPT app directory (Any Mailbox), or developer mode and a custom connector',
     category: 'assistant',
     logo: 'chatgpt',
     color: '#000000',
@@ -78,6 +80,9 @@ export const CLIENTS = [
     configFile: null,
     config: null,
     guide: 'https://help.openai.com/en/articles/12584461',
+    // MCP Emails is listed in the ChatGPT app directory as Any Mailbox. The
+    // page links here from its setup steps (content `listingLink`).
+    listingUrl: CHATGPT_DIRECTORY_LISTING_URL,
     locales: ['en', 'nb', 'es', 'fr', 'zh'],
   },
   {

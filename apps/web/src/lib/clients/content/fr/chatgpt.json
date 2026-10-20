@@ -2,7 +2,8 @@
   "_sources": [
     "apps/web/components/dashboard/Pages.jsx (MCP_CLIENTS) + apps/web/messages/en/dashboard.json (clients.*)",
     "apps/web/app/.well-known/oauth-authorization-server/route.ts",
-    "https://help.openai.com/en/articles/12584461"
+    "https://help.openai.com/en/articles/12584461",
+    "apps/web/app/authorize/page.js + apps/web/components/auth/AuthorizeApp.jsx + apps/web/messages/*/auth.json (authorize.*: the consent screen labels)"
   ],
   "meta": {
     "title": "Connecter l'e-mail à ChatGPT : connecteur MCP",
@@ -11,12 +12,12 @@
   "hero": {
     "eyebrow": "ChatGPT + e-mail",
     "titleLine1": "Connectez votre boîte à ChatGPT",
-    "titleLine2": "comme connecteur MCP personnalisé",
-    "lead": "Activez le mode développeur, créez un connecteur qui pointe vers une URL, et ChatGPT peut lire, rechercher, envoyer, répondre, transférer, planifier et organiser vos vrais e-mails.",
+    "titleLine2": "avec l'application Any Mailbox",
+    "lead": "Installez Any Mailbox, l'application MCP Emails de l'annuaire d'applications de ChatGPT, connectez-vous, et ChatGPT peut lire, rechercher, envoyer, répondre, transférer, planifier et organiser vos vrais e-mails.",
     "meta0": "1 boîte gratuite, pour toujours",
     "meta1": "OAuth, aucune clé API requise",
     "meta2": "E-mails récupérés en direct, jamais stockés",
-    "answer": "Dans ChatGPT, activez le mode développeur sous Settings, Apps and Connectors, Advanced settings. Créez un connecteur, collez https://mcpemails.com/api/mcp comme URL du connecteur, choisissez OAuth et autorisez avec mcpemails. Le mode développeur fonctionne sur chatgpt.com avec Plus, Pro, Business, Enterprise et Edu, et dans chaque conversation vous l'activez depuis le menu +."
+    "answer": "Dans ChatGPT, ouvrez Any Mailbox de MCP Emails dans l'annuaire d'applications, cliquez sur Connect, connectez-vous à MCP Emails et choisissez les boîtes que ChatGPT peut atteindre et le niveau d'accès qu'il obtient. Sans l'application, activez le mode développeur sous Settings, Apps and Connectors, Advanced settings, et créez un connecteur avec l'URL https://mcpemails.com/api/mcp et OAuth. Le mode développeur fonctionne sur chatgpt.com avec Plus, Pro, Business, Enterprise et Edu."
   },
   "method": {
     "title": "Comment ChatGPT se connecte : OAuth, sans clé API",
@@ -28,26 +29,46 @@
       "p": "Inscrivez-vous sur mcpemails.com, sans carte bancaire, puis allez dans Dashboard, Inboxes, Connect Inbox. Outlook et Microsoft 365 se connectent via la connexion Microsoft ; Gmail, iCloud, Fastmail, Yahoo, Zoho et Yandex demandent un mot de passe d'application ; tout le reste se connecte en IMAP et SMTP standard. Le plan gratuit inclut une boîte, pour toujours."
     },
     {
-      "h": "Activez le mode développeur",
-      "p": "Ouvrez Settings, Apps and Connectors, Advanced settings, et activez Developer mode (mode développeur)."
+      "h": "Ouvrez Any Mailbox dans l'annuaire d'applications de ChatGPT",
+      "p": "Any Mailbox est l'application que MCP Emails publie dans l'annuaire d'applications de ChatGPT. Ouvrez sa fiche, en lien ci-dessous, ou cherchez Any Mailbox dans l'annuaire, et cliquez sur Connect."
     },
     {
-      "h": "Créez le connecteur",
-      "p": "De retour dans Apps and Connectors, cliquez sur Create. Saisissez un nom et collez <code>https://mcpemails.com/api/mcp</code> comme Connector URL."
+      "h": "Connectez-vous à MCP Emails",
+      "p": "ChatGPT vous envoie vers MCP Emails. Connectez-vous avec le compte qui contient vos boîtes. Si vous êtes déjà connecté, vous arrivez directement sur l'écran de consentement."
     },
     {
-      "h": "Choisissez OAuth et autorisez",
-      "p": "Sélectionnez OAuth, cliquez sur Create, puis autorisez avec mcpemails et approuvez les autorisations que le connecteur doit détenir."
-    },
-    {
-      "h": "Activez-le dans chaque conversation",
-      "p": "Ouvrez une nouvelle conversation sur chatgpt.com, cliquez sur <b>+</b>, choisissez Developer mode et sélectionnez l'app mcpemails. ChatGPT ne voit les outils que dans une conversation où vous l'avez fait, donc recommencez dans chaque nouvelle conversation. Entre-temps, le connecteur reste dans Apps and Connectors."
+      "h": "Choisissez les boîtes et les accès",
+      "p": "L'écran de consentement demande quel niveau d'accès ChatGPT obtient : Lecture seule, Standard, Accès complet, ou Personnalisé pour choisir les autorisations une par une. Choisissez Toutes les boîtes ou Boîtes spécifiques, puis cliquez sur <b>Autoriser l'accès</b>."
     }
   ],
+  "listingLink": "Any Mailbox dans l'annuaire d'applications de ChatGPT",
+  "fallback": {
+    "eyebrow": "Solution de repli",
+    "title": "Sans l'application : mode développeur et connecteur personnalisé",
+    "sub": "Si Any Mailbox n'est pas disponible dans votre compte ou votre espace de travail ChatGPT, ajoutez le même serveur comme connecteur personnalisé. Il faut le mode développeur, qui fonctionne sur chatgpt.com avec Plus, Pro, Business, Enterprise et Edu.",
+    "steps": [
+      {
+        "h": "Activez le mode développeur",
+        "p": "Ouvrez Settings, Apps and Connectors, Advanced settings, et activez Developer mode (mode développeur)."
+      },
+      {
+        "h": "Créez le connecteur",
+        "p": "De retour dans Apps and Connectors, cliquez sur Create. Saisissez un nom et collez <code>https://mcpemails.com/api/mcp</code> comme Connector URL."
+      },
+      {
+        "h": "Choisissez OAuth et autorisez",
+        "p": "Sélectionnez OAuth, cliquez sur Create, puis connectez-vous à MCP Emails et approuvez les accès que le connecteur doit détenir."
+      },
+      {
+        "h": "Activez-le dans chaque conversation",
+        "p": "Ouvrez une nouvelle conversation sur chatgpt.com, cliquez sur <b>+</b>, choisissez Developer mode et sélectionnez votre connecteur. ChatGPT ne voit les outils que dans une conversation où vous l'avez fait, donc recommencez dans chaque nouvelle conversation. Entre-temps, le connecteur reste dans Apps and Connectors."
+      }
+    ]
+  },
   "gotchas": [
     {
       "h": "Le mode développeur exige un abonnement payant, le web et une activation dans chaque conversation",
-      "p": "Les connecteurs MCP personnalisés sont disponibles sur chatgpt.com pour les comptes Plus, Pro, Business, Enterprise et Edu. Les comptes Free et Go ne peuvent pas en ajouter, et les apps mobile et de bureau ne proposent pas le mode développeur. Sur Business et Enterprise, un administrateur doit parfois d'abord autoriser le mode développeur pour l'espace de travail. L'étape oubliée est la dernière : le connecteur ne fait rien tant que vous n'avez pas choisi Developer mode et l'app mcpemails dans le menu <b>+</b> de la conversation en cours."
+      "p": "Les connecteurs MCP personnalisés sont disponibles sur chatgpt.com pour les comptes Plus, Pro, Business, Enterprise et Edu. Les comptes Free et Go ne peuvent pas en ajouter, et les apps mobile et de bureau ne proposent pas le mode développeur. Sur Business et Enterprise, un administrateur doit parfois d'abord autoriser le mode développeur pour l'espace de travail. L'étape oubliée est la dernière : le connecteur ne fait rien tant que vous n'avez pas choisi Developer mode et votre connecteur dans le menu <b>+</b> de la conversation en cours."
     },
     {
       "h": "Choisissez OAuth, et non « aucune authentification », en créant le connecteur",
@@ -66,11 +87,15 @@
   "faq": [
     {
       "q": "ChatGPT peut-il lire et envoyer mes e-mails ?",
-      "a": "Via un connecteur MCP personnalisé, oui. ChatGPT ne peut pas atteindre une boîte tout seul ; pointer un connecteur vers mcpemails lui donne des outils pour lire, rechercher, envoyer, répondre, transférer, organiser et planifier des e-mails, dans la limite des autorisations que vous approuvez lors de la configuration."
+      "a": "Oui. Installez Any Mailbox, l'application MCP Emails de l'annuaire d'applications de ChatGPT, ou ajoutez un connecteur MCP personnalisé. Dans les deux cas, ChatGPT obtient des outils pour lire, rechercher, envoyer, répondre, transférer, organiser et planifier des e-mails, dans la limite des accès que vous approuvez à la connexion."
+    },
+    {
+      "q": "Any Mailbox, est-ce la même chose que MCP Emails ?",
+      "a": "Oui. Any Mailbox est le nom de MCP Emails dans l'annuaire d'applications de ChatGPT, publié par MCP Emails. Il utilise le même compte, les mêmes boîtes et le même écran de consentement qu'un connecteur personnalisé vers https://mcpemails.com/api/mcp, il vous en faut donc un seul des deux."
     },
     {
       "q": "Pourquoi ne puis-je pas créer de connecteur dans mon compte ChatGPT ?",
-      "a": "Le mode développeur exige ChatGPT Plus, Pro, Business, Enterprise ou Edu, sur le web. Les comptes Free et Go ne peuvent pas ajouter de connecteur personnalisé, et les apps mobile et de bureau n'affichent pas l'option. Dans un espace de travail Business ou Enterprise, demandez à un administrateur d'autoriser le mode développeur. Si le connecteur est créé mais que ChatGPT l'ignore, ouvrez le menu <b>+</b> de la conversation et sélectionnez Developer mode et l'app mcpemails."
+      "a": "Le mode développeur exige ChatGPT Plus, Pro, Business, Enterprise ou Edu, sur le web. Les comptes Free et Go ne peuvent pas ajouter de connecteur personnalisé, et les apps mobile et de bureau n'affichent pas l'option. Dans un espace de travail Business ou Enterprise, demandez à un administrateur d'autoriser le mode développeur. Si le connecteur est créé mais que ChatGPT l'ignore, ouvrez le menu <b>+</b> de la conversation et sélectionnez Developer mode et votre connecteur."
     },
     {
       "q": "Ai-je besoin d'une clé API pour ChatGPT ?",

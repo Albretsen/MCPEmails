@@ -34,8 +34,13 @@ const PLAN_LIST = /Plus.{1,3}Pro.{1,3}Business.{1,3}Enterprise.{1,6}Edu/;
 const MENU_PATH = /Settings[,、]\s*Apps and Connectors[,、]\s*Advanced settings/;
 const MCP_URL = 'https://mcpemails.com/api/mcp';
 
-test('the flag is off: OpenAI has not listed the app yet', () => {
-  assert.equal(CHATGPT_DIRECTORY_LISTING_URL, null);
+// Whether the URL is the real one is src/lib/connect/chatgpt-listing.test.mjs's
+// job (it fails on the placeholder by design). Here: the directory variant is on.
+test('the directory listing is on: the block and the FAQ default to Any Mailbox', () => {
+  assert.match(CHATGPT_DIRECTORY_LISTING_URL, /^https:\/\//);
+  const s = chatgptSection(copy('en'), 'AOL Mail');
+  assert.deepEqual(s.listing, { href: CHATGPT_DIRECTORY_LISTING_URL, label: copy('en').directoryLink });
+  assert.equal(chatgptFaq(copy('en'), 'AOL Mail').a, copy('en').directoryFaqA.replaceAll('{provider}', 'AOL Mail'));
 });
 
 test('every supported provider gets the block; the limited ones do not', () => {
@@ -109,7 +114,8 @@ test('the rendered block stays short enough not to bury the setup steps', () => 
 test('the provider name is filled in, and the directory variant swaps the steps', async () => {
   for (const locale of CHATGPT_LOCALES) {
     const c = await getChatgptCopy(locale);
-    const s = chatgptSection(c, 'AOL Mail');
+    // null: the developer-mode variant, which comes back if the listing goes.
+    const s = chatgptSection(c, 'AOL Mail', null);
     assert.ok(s.title.includes('AOL Mail'), locale);
     assert.ok(s.steps[0].includes('AOL Mail'), locale);
     assert.equal(s.steps.length, 4, locale);
@@ -122,8 +128,9 @@ test('the provider name is filled in, and the directory variant swaps the steps'
     assert.deepEqual(listed.listing, { href: 'https://chatgpt.com/apps/example', label: c.directoryLink });
     assert.ok(!listed.steps.join(' ').includes(MCP_URL), `${locale}: directory steps need no URL`);
 
-    const faq = chatgptFaq(c, 'AOL Mail');
+    const faq = chatgptFaq(c, 'AOL Mail', null);
     assert.ok(faq.q.includes('AOL Mail') && faq.a.includes('AOL Mail'), locale);
+    assert.equal(faq.a, c.faqA.replaceAll('{provider}', 'AOL Mail'), locale);
     assert.equal(chatgptFaq(c, 'AOL Mail', 'https://chatgpt.com/apps/example').a,
       c.directoryFaqA.replaceAll('{provider}', 'AOL Mail'));
   }
