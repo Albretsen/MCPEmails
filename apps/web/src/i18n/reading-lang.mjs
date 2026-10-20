@@ -26,7 +26,7 @@ export const LANG_PARAM = 'lang';
  * src/i18n/routing.ts (reading-lang.test.mjs compares the two), restated here
  * so this file stays importable without a TypeScript loader.
  */
-export const APP_LOCALES = ['en', 'nb', 'es', 'fr', 'zh'];
+export const APP_LOCALES = ['en', 'nb', 'es', 'fr', 'zh', 'de'];
 
 const DEFAULT_LOCALE = 'en';
 
