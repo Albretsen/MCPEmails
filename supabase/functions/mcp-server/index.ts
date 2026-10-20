@@ -229,6 +229,7 @@ import {
   sseResponse,
   TOOLS_LIST_CHANGED_NOTIFICATION,
 } from "./card-build-notify.ts";
+import { handleWebIngress, isWebIngress } from "./web-ingress.ts";
 import {
   cardEnvelopeIn,
   stampDiagnostics,
@@ -34654,6 +34655,16 @@ function triageDeps(): TriageDeps {
 // named function, so `Deno.serve(handleRequest)` at the bottom stays a bare
 // reference and the tests drive the entry point production serves.
 function handleRequest(req: Request): Promise<Response> {
+  // mcpemails.com/api/mcp arrives here through a Vercel rewrite to
+  // /mcp-server/web; that path keeps the old proxy route's contract (auth
+  // discovery, ?key=, CORS, SSE for calls past Vercel's 120 s). web-ingress.ts.
+  if (isWebIngress(req)) {
+    return handleWebIngress(req, serveMetered, { appUrl: APP_URL });
+  }
+  return serveMetered(req);
+}
+
+function serveMetered(req: Request): Promise<Response> {
   // The reservation mcp_tools_call_gate may make for this request. Any that
   // the allowance gate did not take is released before the response leaves,
   // on every path including a throw.
