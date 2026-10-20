@@ -74,7 +74,7 @@ export default async function ProviderDatasetPage({ params }) {
         url,
         license: copy.paths.license,
         isAccessibleForFree: true,
-        creator: { '@type': 'Organization', name: 'MCP Emails', url: APP_URL },
+        creator: { '@type': 'Organization', name: 'MCPEmails', url: APP_URL },
         dateModified: copy.stats.probedOn,
         temporalCoverage: copy.stats.probedOn,
         keywords: ['IMAP', 'SMTP', 'email providers', 'SASL', 'mail server settings', 'MCP'],
