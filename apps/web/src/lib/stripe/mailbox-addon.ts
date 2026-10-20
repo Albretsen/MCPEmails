@@ -1,3 +1,4 @@
+import { randomUUID } from 'node:crypto';
 import type Stripe from 'stripe';
 import type { SupabaseClient } from '@supabase/supabase-js';
 import type { Database } from '@/types/database.types';
@@ -43,8 +44,15 @@ import {
  *
  * IDEMPOTENT. Quantities are absolute, so a repeated update is a no-op and is
  * skipped before Stripe is called. The one non-absolute call, creating the
- * add-on item, carries an idempotency key per subscription and price, so two
- * concurrent first connects past ten cannot create two items.
+ * add-on item, carries an idempotency key, so two concurrent first connects
+ * past ten cannot create two items. The key names the intent (subscription,
+ * price, target quantity) and a ten-minute window, not only the subscription
+ * and price: Stripe replays a key's first response for 24 hours, so a key
+ * that never changes would answer "created" for an add-on that was removed
+ * since (a plan change away from Business and back) and the mailboxes would
+ * go unbilled. Because a replay can still land inside one window, a create
+ * is then checked against the live subscription and retried once with a
+ * one-off key when the item is not there.
  *
  * NEVER BLOCKS. A connect or a delete has already happened by the time this
  * runs; a Stripe failure is logged and returned, never thrown, and the next
@@ -213,17 +221,28 @@ export async function syncMailboxAddon(
     });
     if (items.length === 0) return { status: 'unchanged', quantity: extra };
 
-    const creating = !state.addonItem;
-    await stripe.subscriptions.update(
-      subscription.id,
-      {
-        items,
-        proration_behavior: extra > from ? 'always_invoice' : 'none',
-      },
-      creating
-        ? { idempotencyKey: `mailbox-addon-create:${subscription.id}:${String(items[0].price)}` }
-        : undefined,
-    );
+    const params: Stripe.SubscriptionUpdateParams = {
+      items,
+      proration_behavior: extra > from ? 'always_invoice' : 'none',
+    };
+    if (state.addonItem) {
+      await stripe.subscriptions.update(subscription.id, params);
+    } else {
+      const priceId = String(items[0].price);
+      await stripe.subscriptions.update(subscription.id, params, {
+        idempotencyKey: mailboxAddonCreateKey(subscription.id, priceId, extra, Date.now()),
+      });
+      // A replayed response describes the subscription as it was when the key
+      // was first used, so only the live subscription proves the item exists.
+      if (!(await hasAddonItem(stripe, subscription.id, priceId))) {
+        await stripe.subscriptions.update(subscription.id, params, {
+          idempotencyKey: `mailbox-addon-create:${subscription.id}:${priceId}:${extra}:retry:${randomUUID()}`,
+        });
+        if (!(await hasAddonItem(stripe, subscription.id, priceId))) {
+          return failed(new Error('addon_item_missing_after_create'));
+        }
+      }
+    }
     console.log('[mailbox-addon] quantity synced', {
       subscription: subscription.id,
       from,
@@ -233,6 +252,33 @@ export async function syncMailboxAddon(
   } catch (err) {
     return failed(err);
   }
+}
+
+/** Ten minutes: wide enough to cover concurrent and retried calls of one sync. */
+const CREATE_KEY_WINDOW_MS = 10 * 60_000;
+
+/**
+ * The idempotency key for creating the add-on item. Pure. The same intent in
+ * the same window gives the same key; a later creation, after the item was
+ * removed, gives a new one.
+ */
+export function mailboxAddonCreateKey(
+  subscriptionId: string,
+  priceId: string,
+  quantity: number,
+  atMs: number,
+): string {
+  const window = Math.floor(atMs / CREATE_KEY_WINDOW_MS);
+  return `mailbox-addon-create:${subscriptionId}:${priceId}:${quantity}:${window}`;
+}
+
+async function hasAddonItem(
+  stripe: Pick<Stripe, 'subscriptions'>,
+  subscriptionId: string,
+  priceId: string,
+): Promise<boolean> {
+  const live = await stripe.subscriptions.retrieve(subscriptionId);
+  return mailboxAddonItem(live.items?.data)?.price?.id === priceId;
 }
 
 function failed(err: unknown): MailboxAddonSyncResult {
