@@ -34,6 +34,8 @@ import {
   type AllowanceGateIo,
   checkAutomationAllowance,
   planLimitOfRefusal,
+  type PrereservedAction,
+  prereservationMatches,
   queueAutomationPausedNotice,
   reserveBillableAction,
   type UsageEmailInput,
@@ -717,4 +719,84 @@ Deno.test("tool calls alone: the warning at the line, the notice at the first re
   assertEquals(db.paywallRows.length, 1);
   assertEquals(emailsOf(db, "usage_limit_reached").length, 1);
   assertEquals(db.limitEventLookups, 0, "the once-per-period guard belongs to the pre-run check alone");
+});
+
+// ---------------------------------------------------------------------------
+// 9. A reservation made up front by the tools/call gate RPC decides the same
+// ---------------------------------------------------------------------------
+
+/**
+ * What mcp_tools_call_gate does: reserve with the allowance row's own terms
+ * BEFORE the gate is asked, then hand the answer in. `release` is recorded so
+ * a test can see a stale reservation given back.
+ */
+async function gatedToolCall(db: Ledger, released: string[], terms: Partial<PrereservedAction> = {}) {
+  const io = { ...ledgerIo(db), release: (id: string) => Promise.resolve(void released.push(id)) };
+  const row = db.allowances.get(WS)!;
+  const base = { toolName: "email_read", cap: row.cap!, periodStart: row.period_start, periodEnd: row.period_end, ...terms };
+  const outcome = await io.reserve({
+    workspaceId: WS, toolName: base.toolName, cap: base.cap, periodStart: base.periodStart, periodEnd: base.periodEnd,
+  });
+  return reserveBillableAction(io, WS, "email_read", undefined, { ...base, outcome });
+}
+
+Deno.test("a reservation made by the gate RPC gives the same answers, notices and events as one made here", async () => {
+  const here = ledger(allowanceRow({ used: 118 }));
+  const gated = ledger(allowanceRow({ used: 118 }));
+  const released: string[] = [];
+  for (let call = 0; call < 35; call++) {
+    assertEquals(await gatedToolCall(gated, released), await toolCall(here), `call ${call + 1}`);
+  }
+  assertEquals(gated.emails, here.emails);
+  assertEquals(gated.limitEvents, here.limitEvents);
+  assertEquals(gated.paywallRows, here.paywallRows);
+  assertEquals(gated.allowances.get(WS)!.used, here.allowances.get(WS)!.used);
+  assertEquals(released, [], "nothing to give back when the terms match");
+});
+
+Deno.test("a gate reservation that errored fails open exactly as io.reserve failing does", async () => {
+  const db = ledger(allowanceRow({ used: 149 }));
+  const result = await reserveBillableAction(ledgerIo(db), WS, "email_read", undefined, {
+    toolName: "email_read", cap: 150, periodStart: OCTOBER, periodEnd: NOVEMBER, outcome: { ok: false },
+  });
+  assertEquals(result, { outcome: "unmetered", reason: "reservation_error" });
+  assertEquals(db.allowances.get(WS)!.used, 149);
+});
+
+Deno.test("a gate reservation under other terms is released before the real one is made", async () => {
+  for (const terms of [{ cap: 999 }, { toolName: "email_send" }, { periodStart: "2026-09-01T00:00:00+00:00" }]) {
+    const db = ledger(allowanceRow({ used: 10 }));
+    const released: string[] = [];
+    const result = await gatedToolCall(db, released, terms);
+    assertEquals(released, ["res-11"], JSON.stringify(terms));
+    // This fake never un-counts, so the real reservation lands one higher;
+    // what matters is that it was released first and then MADE here.
+    assert(result.outcome === "reserved");
+    assertEquals(result.reservationId, "res-12");
+  }
+});
+
+Deno.test("an unmetered workspace releases a reservation the gate should not have made", async () => {
+  const db = ledger(allowanceRow({ exempt: true, exempt_reason: "comped", cap: null }));
+  const released: string[] = [];
+  const io = { ...ledgerIo(db), release: (id: string) => Promise.resolve(void released.push(id)) };
+  const result = await reserveBillableAction(io, WS, "email_read", undefined, {
+    toolName: "email_read", cap: 150, periodStart: OCTOBER, periodEnd: NOVEMBER,
+    outcome: { ok: true, row: { reservation_id: "stray", allowed: true, used_actions: 1 } },
+  });
+  assertEquals(result, { outcome: "unmetered", reason: "exempt" });
+  assertEquals(released, ["stray"]);
+});
+
+Deno.test("prereservationMatches compares instants, not spellings", () => {
+  const decision = { cap: 150, periodStart: "2026-10-01T00:00:00+00:00", periodEnd: "2026-11-01T00:00:00+00:00" };
+  const pre = (over: Partial<PrereservedAction>): PrereservedAction => ({
+    toolName: "email_read", cap: 150, periodStart: "2026-10-01T00:00:00.000Z", periodEnd: "2026-11-01T00:00:00Z",
+    outcome: { ok: false }, ...over,
+  });
+  assert(prereservationMatches(pre({}), "email_read", decision));
+  assert(!prereservationMatches(pre({}), "email_list", decision));
+  assert(!prereservationMatches(pre({ cap: 149 }), "email_read", decision));
+  assert(!prereservationMatches(pre({ periodEnd: "2026-11-01T00:00:01Z" }), "email_read", decision));
+  assert(!prereservationMatches(pre({ periodStart: "not a date" }), "email_read", { ...decision, periodStart: "not a date" }));
 });
