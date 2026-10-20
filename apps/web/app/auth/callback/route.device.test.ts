@@ -32,7 +32,7 @@ let user: { id: string; created_at: string } | null = null;
 let updates: Array<Record<string, unknown>> = [];
 /** Simulates production before the migration: the column does not exist. */
 let deviceColumnExists = true;
-/** The same, for 20261020100000_acquisition_country.sql. */
+/** The same, for 20261020140000_acquisition_country.sql. */
 let countryColumnExists = true;
 /** Which client each `.update()` went through. */
 let writers: Array<'user' | 'service'> = [];

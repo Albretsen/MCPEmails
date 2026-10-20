@@ -159,7 +159,7 @@ test('the dashboard page stamps the country from its own request, behind the dev
 
 test('the migration pins the same shape this file writes', () => {
   const sql = readFileSync(
-    fileURLToPath(new URL('../../../../supabase/migrations/20261020100000_acquisition_country.sql', import.meta.url)),
+    fileURLToPath(new URL('../../../../supabase/migrations/20261020140000_acquisition_country.sql', import.meta.url)),
     'utf8',
   );
   assert.match(sql, /ADD COLUMN IF NOT EXISTS acquisition_country text;/);

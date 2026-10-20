@@ -35,7 +35,7 @@ import { sanitizedCountry } from '@/lib/acquisition-country.mjs';
  * The one statement this file runs, until the generated types know the column.
  *
  * src/types/database.types.ts is generated from the production schema, which
- * gains acquisition_country only when 20261020100000_acquisition_country.sql
+ * gains acquisition_country only when 20261020140000_acquisition_country.sql
  * is applied, and supabase-js refuses (as a type error) an update naming a
  * column those types do not have. The types are never hand-edited, so the
  * workspaces builder is viewed through this narrow shape for this one write.

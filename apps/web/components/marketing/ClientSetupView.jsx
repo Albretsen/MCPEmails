@@ -180,6 +180,13 @@ export default function ClientSetupView({ locale, client, content }) {
               <a href={client.guide} target="_blank" rel="noopener noreferrer">{client.guide}</a>
             </p>
           )}
+          {/* The blog walkthrough for this client, where one exists (clients.mjs `post`). */}
+          {client.post && (
+            <p className="how-guide-link">
+              {ui.postLink.intro}{' '}
+              <Link href={client.post.href}>{ui.postLink[client.post.key]}</Link>
+            </p>
+          )}
           <p className="how-guide-link">
             {ui.providers.intro} <Link href="/docs/providers">{ui.providers.label}</Link>
           </p>

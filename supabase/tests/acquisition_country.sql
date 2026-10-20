@@ -1,5 +1,5 @@
 -- ============================================================
--- Signup country (20261020100000_acquisition_country.sql)
+-- Signup country (20261020140000_acquisition_country.sql)
 -- ============================================================
 -- Proves:
 --   1. A workspace made by the real signup trigger starts with no country,

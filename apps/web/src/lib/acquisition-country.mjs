@@ -18,7 +18,7 @@
  * return for addresses they cannot place more precisely.
  *
  * The shape is also pinned by workspaces_acquisition_country_check in
- * supabase/migrations/20261020100000_acquisition_country.sql.
+ * supabase/migrations/20261020140000_acquisition_country.sql.
  */
 const COUNTRY = /^[A-Z]{2}$/;
 

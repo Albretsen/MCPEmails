@@ -21,7 +21,7 @@ Por tanto, Claude nunca necesita una biblioteca IMAP, una configuración SMTP ni
 
 ## Qué necesitas antes de empezar
 
-Obtén estos datos de la página de ayuda de tu proveedor de correo o de tu administrador:
+Obtén estos datos de la página de ayuda de tu proveedor de correo o de tu administrador. También puedes consultar los [ajustes IMAP y SMTP verificados de cada proveedor](/connect):
 
 - **Dirección de correo:** por ejemplo, \`you@example.com\`. Es la dirección que aparece en la bandeja conectada.
 - **Nombre de usuario:** normalmente la dirección de correo completa. Algunos alojamientos con dominio propio asignan un usuario IMAP/SMTP distinto.
@@ -33,7 +33,7 @@ No deduzcas los nombres de servidor a partir del dominio si el proveedor publica
 
 Usa una **contraseña de aplicación** siempre que el proveedor la admita. Es independiente de la contraseña principal de la cuenta y puede revocarse sin cambiar la contraseña que utilizas para iniciar sesión. Los proveedores suelen exigir autenticación de dos factores antes de permitir su creación. Algunos también requieren activar primero el acceso IMAP en los ajustes del correo.
 
-MCPEmails incluye configuraciones predefinidas para iCloud, Yahoo, Zoho y Yandex, además de un flujo específico de contraseña de aplicación para Fastmail. Estas opciones rellenan automáticamente los servidores y puertos conocidos. Elige **Generic IMAP** para otro proveedor o tu propio servidor de correo e introduce tú mismo los valores.
+MCPEmails incluye configuraciones predefinidas para [iCloud](/connect/icloud), [Yahoo](/connect/yahoo), [Zoho](/connect/zoho) y [Yandex](/connect/yandex), además de un flujo específico de contraseña de aplicación para [Fastmail](/connect/fastmail). Estas opciones rellenan automáticamente los servidores y puertos conocidos. Elige **Generic IMAP** para otro proveedor o tu propio servidor de correo e introduce tú mismo los valores. Consulta la [página de configuración de IMAP genérico](/connect/imap).
 
 ## Paso 1: conecta el buzón IMAP/SMTP
 
