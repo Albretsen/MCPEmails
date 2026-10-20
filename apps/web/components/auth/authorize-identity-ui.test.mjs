@@ -152,6 +152,73 @@ test('LEGIT: ChatGPT on chatgpt.com keeps its name and is Verified', async (t) =
   assert.equal(q(container, 'az-destination-badge').textContent, 'Verified');
 });
 
+for (const host of [
+  'oauth-redirect.googleusercontent.com',
+  'oauth-redirect-test.googleusercontent.com',
+  'oauth-redirect-sandbox.googleusercontent.com',
+]) {
+  test(`LEGIT: Google on ${host} keeps its name and is Verified, no warnings`, async (t) => {
+    const { container } = await render(t, propsFor({
+      clientId: 'dyn_0123456789abcdef01234567',
+      clientName: 'Google',
+      redirectUri: `https://${host}/r/user_bound_custom-mcp-111522063632794171720-mcpemails_com`,
+    }));
+    assert.equal(container.querySelector('h1').textContent, 'Authorize Google?');
+    assert.equal(q(container, 'az-destination-host').textContent, host);
+    assert.equal(q(container, 'az-destination-badge').textContent, 'Verified');
+    assert.equal(q(container, 'az-impersonation'), null);
+    assert.equal(q(container, 'az-unverified'), null);
+  });
+}
+
+test('LEGIT: Grok on grok.com keeps its name and is Verified, no warnings', async (t) => {
+  const { container } = await render(t, propsFor({
+    clientId: 'dyn_0123456789abcdef01234567',
+    clientName: 'Grok',
+    redirectUri: 'https://grok.com/oauth/callback',
+  }));
+  assert.equal(container.querySelector('h1').textContent, 'Authorize Grok?');
+  assert.equal(q(container, 'az-destination-host').textContent, 'grok.com');
+  assert.equal(q(container, 'az-destination-badge').textContent, 'Verified');
+  assert.equal(q(container, 'az-impersonation'), null);
+  assert.equal(q(container, 'az-unverified'), null);
+});
+
+test('"Google" on an attacker host reads as that host, Unverified, with the red alert', async (t) => {
+  const { container } = await render(t, propsFor({
+    clientId: 'dyn_0123456789abcdef01234567',
+    clientName: 'Google',
+    redirectUri: 'https://oauth-redirect.googleusercontent.com.attacker.example/cb',
+  }));
+  assert.equal(container.querySelector('h1').textContent, 'Authorize oauth-redirect.googleusercontent.com.attacker.example?');
+  assert.equal(q(container, 'az-destination-badge').textContent, 'Unverified');
+  assert.match(q(container, 'az-impersonation').textContent, /uses the name Google, but access would be sent to oauth-redirect\.googleusercontent\.com\.attacker\.example/);
+});
+
+test('"MCP Emails" on a non-pinned path of Google\'s shared redirect host is Unverified with the red alert', async (t) => {
+  const host = 'oauth-redirect.googleusercontent.com';
+  const { container } = await render(t, propsFor({
+    clientId: 'dyn_0123456789abcdef01234567',
+    clientName: 'MCP Emails',
+    redirectUri: `https://${host}/r/some-other-project`,
+  }));
+  assert.equal(container.querySelector('h1').textContent, `Authorize ${host}?`);
+  assert.equal(q(container, 'az-destination-badge').textContent, 'Unverified');
+  assert.match(q(container, 'az-impersonation').textContent, /uses the name MCP Emails, but access would be sent to oauth-redirect\.googleusercontent\.com/);
+});
+
+test('"Google Sheets MCP" on its own host is Unverified with no red alert', async (t) => {
+  const { container } = await render(t, propsFor({
+    clientId: 'dyn_0123456789abcdef01234567',
+    clientName: 'Google Sheets MCP',
+    redirectUri: 'https://sheets-mcp.example/oauth/callback',
+  }));
+  assert.equal(container.querySelector('h1').textContent, 'Authorize sheets-mcp.example?');
+  assert.equal(q(container, 'az-destination-badge').textContent, 'Unverified');
+  assert.equal(q(container, 'az-impersonation'), null);
+  assert.ok(q(container, 'az-unverified'));
+});
+
 test('LEGIT: Cursor on cursor:// keeps its name and says the code stays on this device', async (t) => {
   const { container } = await render(t, propsFor({
     clientId: 'dyn_0123456789abcdef01234567',
