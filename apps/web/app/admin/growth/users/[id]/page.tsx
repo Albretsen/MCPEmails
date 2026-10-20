@@ -55,7 +55,7 @@ import '../../../../../styles/admin-kiosk.css';
 import '../../../../../styles/admin-growth.css';
 import '../../../../../styles/admin-users.css';
 
-export const metadata = { title: 'Person · MCP Emails', robots: { index: false, follow: false } };
+export const metadata = { title: 'Person', robots: { index: false, follow: false } };
 
 export default async function UserDetailPage({ params }: { params: Promise<{ id: string }> }) {
   await requireAdmin();

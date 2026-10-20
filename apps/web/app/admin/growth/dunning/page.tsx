@@ -43,7 +43,7 @@ import '../../../../styles/admin-board.css';
 import '../../../../styles/admin-experiments.css';
 
 export const metadata = {
-  title: 'Dunning · MCP Emails',
+  title: 'Dunning',
   robots: { index: false, follow: false },
 };
 

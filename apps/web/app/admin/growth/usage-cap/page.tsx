@@ -34,7 +34,7 @@ import { NO_DATA, formatCount } from '../../../../components/admin/charts/format
 import '../../../../styles/admin-board.css';
 import '../../../../styles/admin-experiments.css';
 
-export const metadata = { title: 'Usage cap · MCP Emails', robots: { index: false, follow: false } };
+export const metadata = { title: 'Usage cap', robots: { index: false, follow: false } };
 
 /** An exemption granted a second ago must be on the next render. */
 export const dynamic = 'force-dynamic';
