@@ -4,6 +4,7 @@ import { createClient } from '@/lib/supabase/server';
 import { createServiceRoleClient } from '@/lib/supabase/service';
 import { stripe } from '@/lib/stripe/client';
 import { getOrCreateStripeCustomer } from '@/lib/stripe/customer';
+import { adaptivePricingParam } from '@/lib/stripe/adaptive-pricing';
 import {
   PLANS,
   basePlanItem,
@@ -949,6 +950,10 @@ export async function runCheckout(input: {
       allow_promotion_codes: true,
       // Billing address is collected by Stripe: required for tax calculation.
       billing_address_collection: 'auto',
+      // Local-currency checkout for buyers outside the US. Prices stay USD and
+      // every amount Stripe hands back to us stays USD; see adaptive-pricing.ts.
+      // It converts the amount only, so the English pin below is unaffected.
+      adaptive_pricing: adaptivePricingParam(),
       // ── Presentation ────────────────────────────────────────────────────
       //
       // ENGLISH IS PINNED, deliberately. Left to itself Stripe localises its
@@ -970,10 +975,24 @@ export async function runCheckout(input: {
       // are plain sentences in the same register as the pricing page: no
       // exclamation marks, no urgency, no upsell.
       custom_text: {
-        // Sits directly above the subscribe button, where the hesitation is.
+        // Sits directly above the subscribe button, where the hesitation is,
+        // and is also the closest we can put consumer-law text to it. Stripe
+        // renders Markdown links here (checked in test mode 2026-10-20).
+        //
+        // THE BUTTON LABEL IS STRIPE'S, and in subscription mode it cannot be
+        // changed: `submit_type: 'pay'` is rejected ("You can not pass
+        // submit_type: 'pay' in subscription mode"), and the label follows
+        // `locale`. Under `locale: 'en'` it reads "Subscribe"; under 'de' it
+        // reads "Zahlungspflichtig abonnieren", which is the wording §312j
+        // BGB asks for. The first sentence below states the payment
+        // obligation in words next to the button; it does not replace a
+        // compliant label. See the PR that added it for the options.
         submit: {
           message:
-            'Cancel any time from your dashboard. Questions before you buy: hello@mcpemails.com',
+            'By subscribing you agree to pay the price shown, every billing period until you cancel. ' +
+            `Cancel any time from your dashboard or at [mcpemails.com/cancel](${appUrl}/cancel). ` +
+            `Consumers can withdraw within 14 days: [right of withdrawal](${appUrl}/withdrawal). ` +
+            'Questions before you buy: hello@mcpemails.com',
         },
         // Shown while Stripe hands the buyer back to us, covering the redirect.
         after_submit: {

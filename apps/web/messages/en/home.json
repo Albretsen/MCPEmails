@@ -273,8 +273,12 @@
     "linkOauth": "OAuth connection",
     "linkProviders": "Provider support",
     "linkReadOnly": "Read-only access",
+    "linkClients": "MCP client setup",
     "linkPrivacy": "Privacy",
     "linkTerms": "Terms",
+    "linkWithdrawal": "Right of withdrawal",
+    "linkCancel": "Cancel contracts here",
+    "linkImpressum": "Impressum",
     "copyright": "© 2026 mcpemails.",
     "legal": "Email fetched live, never stored · Credentials encrypted at rest",
     "legalEntity": "MCPEmails is a service of Albretsen Consulting (enkeltpersonforetak), organisation number 926 646 753, Håsteins gate 9, 5160 Laksevåg, Norway.",
@@ -297,7 +301,8 @@
     "nb": "Norsk",
     "es": "Español",
     "fr": "Français",
-    "zh": "中文"
+    "zh": "中文",
+    "de": "Deutsch"
   },
   "preview": {
     "eyebrow": "Product preview",

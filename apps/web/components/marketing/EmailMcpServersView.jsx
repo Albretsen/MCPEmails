@@ -267,7 +267,7 @@ function Entry({ e }) {
   );
 }
 
-export default function EmailMcpServersView() {
+export default function EmailMcpServersView({ locales }) {
   return (
     <div>
       <Nav />
@@ -499,7 +499,7 @@ export default function EmailMcpServersView() {
         </div>
       </section>
 
-      <Footer />
+      <Footer locales={locales} />
     </div>
   );
 }

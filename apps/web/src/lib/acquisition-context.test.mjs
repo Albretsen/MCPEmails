@@ -3,6 +3,7 @@ import { readFileSync } from 'node:fs';
 import { fileURLToPath } from 'node:url';
 import test from 'node:test';
 import {
+  LOCALES,
   SOURCES,
   UTM_CAMPAIGNS,
   UTM_MEDIA,
@@ -108,7 +109,7 @@ test('persona, comparison and hub pages keep their own landing path', () => {
 });
 
 test('a locale prefix is stripped from the new landing paths, as for every other page', () => {
-  for (const locale of ['nb', 'es', 'fr', 'zh']) {
+  for (const locale of ['nb', 'es', 'fr', 'zh', 'de']) {
     for (const path of NEW_LANDING_PATHS) {
       assert.equal(safeLandingPath(`/${locale}${path}`), path, `/${locale}${path}`);
       assert.equal(safeLandingPath(`/${locale}${path}/`), path, `/${locale}${path}/`);
@@ -486,5 +487,29 @@ test('the directory migration changes only the five allowlist lines of the signu
   assert.deepEqual(
     changed.map((index) => before[index].match(/^ {2}IF (v_[a-z_]+) NOT IN /)?.[1]),
     ['v_source', 'v_referrer', 'v_utm_source', 'v_utm_medium', 'v_utm_campaign'],
+  );
+});
+
+/* ---------------------------------------------------- locales, SQL/JS */
+
+const LOCALE_MIGRATION = '20261020130000_acquisition_locale_de.sql';
+
+test('the SQL locale allowlists match the JS LOCALES set', () => {
+  const lists = inLists(migration(LOCALE_MIGRATION), 'nb');
+  // One CHECK constraint and one trigger guard.
+  assert.equal(lists.length, 2);
+  for (const members of lists) assert.deepEqual([...members].sort(), [...LOCALES].sort());
+});
+
+test('the locale migration changes only the locale line of the signup trigger', () => {
+  const body = (sql) => sql.slice(sql.indexOf('CREATE OR REPLACE FUNCTION public.handle_new_user()')).split('\n');
+  const before = body(migration(DIRECTORY_MIGRATION));
+  const after = body(migration(LOCALE_MIGRATION));
+
+  assert.equal(after.length, before.length);
+  const changed = before.flatMap((line, index) => (line === after[index] ? [] : [index]));
+  assert.deepEqual(
+    changed.map((index) => before[index].match(/^ {2}IF (v_[a-z_]+) NOT IN /)?.[1]),
+    ['v_locale'],
   );
 });

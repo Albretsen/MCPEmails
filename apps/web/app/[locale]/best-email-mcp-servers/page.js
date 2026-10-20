@@ -150,7 +150,7 @@ export default async function BestEmailMcpServersPage({ params }) {
         type="application/ld+json"
         dangerouslySetInnerHTML={{ __html: JSON.stringify(jsonLd) }}
       />
-      <EmailMcpServersView />
+      <EmailMcpServersView locales={LOCALES} />
     </>
   );
 }

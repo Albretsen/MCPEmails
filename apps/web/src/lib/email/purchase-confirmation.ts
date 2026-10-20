@@ -67,6 +67,7 @@ import {
   type BillingInterval,
   type PlanId,
 } from '@/lib/stripe/plans';
+import { withdrawalLine, WITHDRAWAL_PATH } from '@/lib/email/legal';
 
 // ---------------------------------------------------------------------------
 // Configuration
@@ -93,6 +94,13 @@ export interface PurchaseConfirmationInput {
   amountTotalCents: number | null;
   /** ISO currency from the Stripe session. Null defaults to USD. */
   currency: string | null;
+  /**
+   * What the customer was actually charged when Stripe Adaptive Pricing showed
+   * them the price in their local currency (`session.presentment_details`).
+   * `amountTotalCents`/`currency` stay in our USD integration currency either
+   * way; this is only shown when its currency differs from that one.
+   */
+  presentment?: { amountCents: number; currency: string } | null;
 }
 
 export interface ComposedEmail {
@@ -109,17 +117,57 @@ function escapeHtml(value: string): string {
     .replace(/"/g, '&quot;');
 }
 
+/**
+ * Stripe's minor-unit exponent per currency. Most are two-decimal; these are
+ * the exceptions Stripe documents (https://docs.stripe.com/currencies#zero-decimal).
+ * They matter once Adaptive Pricing hands us a local amount: 1500 JPY is
+ * ¥1,500, not ¥15.
+ */
+const ZERO_DECIMAL = new Set([
+  'bif', 'clp', 'djf', 'gnf', 'jpy', 'kmf', 'krw', 'mga', 'pyg', 'rwf', 'ugx', 'vnd', 'vuv',
+  'xaf', 'xof', 'xpf',
+]);
+const THREE_DECIMAL = new Set(['bhd', 'jod', 'kwd', 'omr', 'tnd']);
+
+function minorUnitDivisor(currency: string): number {
+  const code = currency.toLowerCase();
+  if (ZERO_DECIMAL.has(code)) return 1;
+  if (THREE_DECIMAL.has(code)) return 1000;
+  return 100;
+}
+
 /** Format minor units as a currency string, e.g. 500 + 'usd' -> "$5.00". */
 export function formatAmount(amountCents: number, currency: string): string {
   const code = (currency || 'usd').toUpperCase();
+  const major = amountCents / minorUnitDivisor(code);
   try {
-    return new Intl.NumberFormat('en-US', { style: 'currency', currency: code }).format(
-      amountCents / 100,
-    );
+    return new Intl.NumberFormat('en-US', { style: 'currency', currency: code }).format(major);
   } catch {
     // Unknown currency code: never fail composition over formatting.
-    return `${(amountCents / 100).toFixed(2)} ${code}`;
+    return `${major.toFixed(2)} ${code}`;
   }
+}
+
+/**
+ * The local-currency charge, when there was one.
+ *
+ * With Adaptive Pricing a buyer in, say, Germany sees and pays the converted
+ * amount, while the session (and this email's Price line) stays in USD. Without
+ * this row the email would state a figure that matches nothing on their card
+ * statement. Renewals are converted again on each billing date, so the note
+ * says that instead of promising today's local figure forever.
+ */
+function localCharge(input: PurchaseConfirmationInput): { amount: string; note: string } | null {
+  const p = input.presentment;
+  if (!p || !p.currency || !Number.isFinite(p.amountCents)) return null;
+  const base = (input.currency || 'usd').toLowerCase();
+  if (p.currency.toLowerCase() === base) return null;
+  return {
+    amount: formatAmount(p.amountCents, p.currency),
+    note:
+      `You paid in ${p.currency.toUpperCase()}. Each renewal is the ${base.toUpperCase()} price above, ` +
+      'converted at the exchange rate on the day it renews.',
+  };
 }
 
 /**
@@ -158,6 +206,7 @@ export function buildPurchaseConfirmationEmail(input: PurchaseConfirmationInput)
     interval === 'year' ? plan.yearlyPriceCents ?? plan.monthlyPriceCents : plan.monthlyPriceCents;
   const cents = input.amountTotalCents ?? catalogueCents;
   const price = `${formatAmount(cents, input.currency ?? 'usd')} per ${interval === 'year' ? 'year' : 'month'}`;
+  const charged = localCharge(input);
 
   const base = appUrl();
   const inboxesUrl = `${base}/dashboard/inboxes`;
@@ -173,6 +222,7 @@ export function buildPurchaseConfirmationEmail(input: PurchaseConfirmationInput)
     'WHAT YOU BOUGHT',
     `Plan: ${name}`,
     `Price: ${price}`,
+    ...(charged ? [`Charged today: ${charged.amount}`, charged.note] : []),
     '',
     'WHAT YOU GET',
     inboxHeadline(planId),
@@ -187,6 +237,8 @@ export function buildPurchaseConfirmationEmail(input: PurchaseConfirmationInput)
     'Change plan, update your card, or cancel at any time. No email to us needed,',
     'and cancelling takes effect at the end of the period you have already paid for:',
     billingUrl,
+    '',
+    withdrawalLine(base),
     '',
     `Questions, or something looks wrong? Reply to this email or write to ${SUPPORT_ADDRESS}.`,
     'A person reads it.',
@@ -235,7 +287,14 @@ export function buildPurchaseConfirmationEmail(input: PurchaseConfirmationInput)
                 <tr>
                   <td style="padding:0 18px 14px;font-size:14px;color:#64748b;">Price</td>
                   <td style="padding:0 18px 14px;font-size:14px;color:#0f172a;font-weight:600;" align="right">${escapeHtml(price)}</td>
+                </tr>${charged ? `
+                <tr>
+                  <td style="padding:0 18px 14px;font-size:14px;color:#64748b;">Charged today</td>
+                  <td style="padding:0 18px 14px;font-size:14px;color:#0f172a;font-weight:600;" align="right">${escapeHtml(charged.amount)}</td>
                 </tr>
+                <tr>
+                  <td colspan="2" style="padding:0 18px 14px;font-size:13px;color:#64748b;line-height:1.5;">${escapeHtml(charged.note)}</td>
+                </tr>` : ''}
               </table>
               <p style="margin:0 0 8px;font-size:16px;font-weight:700;color:#0f172a;">What you get</p>
               <p style="margin:0 0 10px;font-size:15px;color:#0f172a;line-height:1.5;font-weight:600;">
@@ -260,6 +319,10 @@ export function buildPurchaseConfirmationEmail(input: PurchaseConfirmationInput)
                 Change plan, update your card, or cancel at any time from
                 <a href="${billingUrl}" style="color:#3b82f6;">your dashboard</a>.
                 Cancelling takes effect at the end of the period you have already paid for.
+              </p>
+              <p style="margin:0 0 28px;font-size:14px;color:#64748b;line-height:1.5;">
+                You can withdraw from this contract within 14 days without giving a reason, and we refund the first charge in full.
+                <a href="${base}${WITHDRAWAL_PATH}" style="color:#3b82f6;">How withdrawal works</a>.
               </p>
             </td>
           </tr>

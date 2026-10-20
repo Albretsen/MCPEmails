@@ -126,7 +126,7 @@ async function openDetail(view) {
 }
 
 test('the viewer note exists in every locale', async () => {
-  for (const locale of ['en', 'es', 'fr', 'nb', 'zh']) {
+  for (const locale of ['en', 'es', 'fr', 'nb', 'zh', 'de']) {
     const messages = (await import(`../../messages/${locale}/dashboard.json`, { with: { type: 'json' } })).default;
     assert.equal(typeof messages.inboxes.viewerActionsNote, 'string', `${locale} has the note`);
     assert.ok(messages.inboxes.viewerActionsNote.length > 0);

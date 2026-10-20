@@ -411,7 +411,82 @@ const zh = {
   cta: { title: '以只读方式连接邮箱', sub: '一个收件箱永久免费。', button: '开始使用', providers: '支持的服务商' },
 };
 
-export const READ_ONLY_ACCESS = { en, nb, es, fr, zh };
+const de = {
+  meta: {
+    title: 'Nur-Lese-Zugriff auf E-Mails für KI-Agenten',
+    description:
+      'Was eine MCP Emails Verbindung mit Nur-Lese-Zugriff kann und was nicht, wie unser Server und Ihr E-Mail-Anbieter Schreibzugriffe ablehnen, warum Lesen E-Mails nie als gelesen markiert und was beim Verbinden passiert.',
+  },
+  breadcrumb: 'Nur-Lese-Zugriff',
+  eyebrow: 'Dokumentation',
+  title: 'Nur-Lese-Zugriff',
+  lead:
+    'Eine Verbindung mit Nur-Lese-Zugriff erlaubt einer KI, Ihre E-Mails zu lesen und zu durchsuchen, und sonst nichts. Diese Seite zeigt, was sie kann, was nicht und wie jede Grenze durchgesetzt wird.',
+  sections: [
+    {
+      id: 'what',
+      h: 'Was eine Verbindung mit Nur-Lese-Zugriff kann',
+      items: [
+        'Sie hat die Berechtigung `read:email` und optional `search:email`, die nichts hinzufügt.',
+        'Sie kann Nachrichten auflisten, lesen und durchsuchen, Anhänge herunterladen sowie Postfächer und Ordner auflisten.',
+        'Sie kann nicht senden, antworten, Entwürfe anlegen, verschieben, markieren, als gelesen markieren, löschen, zeitversetzt senden oder Automatisierungen erstellen.',
+      ],
+    },
+    {
+      id: 'choose',
+      h: 'So wählen Sie ihn aus',
+      items: [
+        'Wenn Sie einen KI-Client verbinden, bietet der Zustimmungsbildschirm Zugriffsstufen an. Wählen Sie **Nur-Lese-Zugriff** („E-Mails lesen und durchsuchen. Kann nichts senden, ändern oder löschen.“) oder öffnen Sie **Berechtigungen anpassen** und gewähren Sie nur Lesen. Sie können die Verbindung auch auf einige Ihrer Postfächer beschränken.',
+        'ChatGPT öffnet diesen Bildschirm mit **Vollzugriff**, weil es später nicht zurückkommen und mehr Zugriff anfragen kann. Wählen Sie **Nur-Lese-Zugriff**, bevor Sie auf **Zugriff erlauben** klicken.',
+        'API-Schlüssel, die Sie im Dashboard erstellen, lassen sich auf dieselben Berechtigungen beschränken.',
+      ],
+    },
+    {
+      id: 'enforced',
+      h: 'Wie die Grenzen durchgesetzt werden',
+      items: [
+        'Jeder Tool-Aufruf wird mit den Berechtigungen der Verbindung abgeglichen, bevor wir Ihren Mailserver kontaktieren. Ein Aufruf außerhalb der Freigabe wird mit `insufficient_scope` abgelehnt.',
+        'Bei IMAP-Postfächern öffnet eine Verbindung mit Nur-Lese-Zugriff jeden Ordner mit `EXAMINE`, der schreibgeschützten Form von `SELECT`. Ihr E-Mail-Anbieter lehnt dann in dieser Sitzung jede Änderung von Markierungen, jedes Verschieben und jedes Löschen selbst ab, egal was unser Code tut.',
+        'Nachrichten werden mit `BODY.PEEK` abgerufen. Das Lesen einer Nachricht markiert sie daher nie als gelesen. Das gilt für jede Verbindung, nicht nur für solche mit Nur-Lese-Zugriff.',
+        'Das Lese-Tool ändert Ihr Postfach nie. Seine frühere Option `mark_as_read` wurde entfernt. Als gelesen markieren ist eine eigene Aktion, die die Berechtigung `manage:folders` braucht.',
+        'KI-Clients, die sich per OAuth anmelden, sehen die vollständige Tool-Liste, damit sie Sie um mehr Zugriff bitten können. Diese Aufrufe scheitern trotzdem, bis Sie den Zugriff gewähren.',
+      ],
+    },
+    {
+      id: 'connect',
+      h: 'Was beim Verbinden passiert',
+      items: [
+        'Wir öffnen eine TLS-Verbindung, prüfen das Zertifikat des Servers, melden uns einmal an, um Ihr Passwort oder App-Passwort zu prüfen, und melden uns wieder ab.',
+        'Nichts wird heruntergeladen, kopiert oder indexiert. Nachrichten werden nur dann bei Ihrem Anbieter abgerufen, wenn ein Tool sie anfordert.',
+        'Im Hintergrund laufen nur Automatisierungen und zeitversetzte Sendungen, und beide brauchen Schreibrechte, die eine Verbindung mit Nur-Lese-Zugriff nicht hat.',
+        'Wenn Sie von der Adresse nie senden möchten, wählen Sie beim Verbinden **Erweiterte Einstellungen** → **Verbindungstyp** → **Nur empfangen (IMAP)**. Dann wird kein SMTP-Server eingerichtet oder kontaktiert.',
+      ],
+    },
+    {
+      id: 'search',
+      h: 'Große Postfächer durchsuchen',
+      items: [
+        'Bei IMAP-Postfächern läuft die Suche mit IMAP `SEARCH` auf dem Server Ihres Anbieters. Wir laden nur die angeforderte Ergebnisseite herunter, bis zu 100 Nachrichten, und die KI blättert durch den Rest.',
+        'Die Suche umfasst den Posteingang, sofern kein Ordner angegeben ist, denn alle Ordner eines großen Kontos zu durchsuchen ist langsam.',
+        'Jede Suche ist auf 30 Sekunden begrenzt. Grenzen Sie in einem Postfach mit Zehntausenden Nachrichten eine breite Suche nach Absender, Betreff oder Datum ein.',
+      ],
+    },
+  ],
+  evidence: {
+    h: 'Prüfen Sie es selbst',
+    intro: 'MCP Emails ist Open Source. Diese Dateien setzen um und testen, was diese Seite beschreibt:',
+    labels: {
+      examine: 'EXAMINE für Verbindungen mit Nur-Lese-Zugriff',
+      examineTests: 'Tests für EXAMINE, einschließlich der Ablehnung einer Markierungsänderung durch den Anbieter',
+      scopes: 'Die Liste der Berechtigungen',
+      markAsRead: 'Entfernung von mark_as_read aus dem Lese-Tool',
+      peek: 'Der IMAP-Client: Jeder Abruf von Inhalten nutzt BODY.PEEK',
+    },
+  },
+  cta: { title: 'Postfach mit Nur-Lese-Zugriff verbinden', sub: 'Ein Postfach ist kostenlos, für immer.', button: 'Jetzt starten', providers: 'Unterstützte Anbieter' },
+};
+
+export const READ_ONLY_ACCESS = { en, nb, es, fr, zh, de };
 
 export function readOnlyAccessCopy(locale) {
   return READ_ONLY_ACCESS[locale] ?? en;

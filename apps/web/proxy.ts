@@ -11,8 +11,10 @@ import type { NextRequest } from 'next/server';
  * Next.js proxy entry point (formerly middleware.ts; renamed in Next.js 16).
  * Composes two concerns:
  *
- *  - next-intl handles locale negotiation, prefixing, and hreflang headers for
- *    the public marketing routes (URL-based locale).
+ *  - next-intl handles locale negotiation and prefixing for the public
+ *    marketing routes (URL-based locale). Its hreflang `Link:` header is off
+ *    (alternateLinks: false in src/i18n/routing.ts); pages declare hreflang in
+ *    their own <link rel="alternate"> tags.
  *  - updateSession refreshes the Supabase session cookie and guards protected
  *    routes for everything else (dashboard, auth, api).
  *
@@ -55,6 +57,10 @@ const MARKETING_PATHS = new Set([
   // admit, so listing it here exposes nothing; without it /help never reaches
   // the [locale] route and 404s even for staff. Stays at release.
   '/help',
+  // The public cancellation and withdrawal form, and the withdrawal notice.
+  // Both must open without a login (§312k BGB, Directive (EU) 2023/2673).
+  '/cancel',
+  '/withdrawal',
 ]);
 
 function isLocalizedRoute(pathname: string): boolean {

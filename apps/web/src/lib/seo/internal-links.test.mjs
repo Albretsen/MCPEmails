@@ -47,7 +47,7 @@ const { PROVIDERS } = await import('../connect/providers.mjs');
 const { CLIENTS } = await import('../clients/clients.mjs');
 const { clientUi } = await import('../clients/ui.mjs');
 
-const LOCALES = ['en', 'nb', 'es', 'fr', 'zh'];
+const LOCALES = ['en', 'nb', 'es', 'fr', 'zh', 'de'];
 const contentFor = (locale, slug) =>
   JSON.parse(readFileSync(new URL(`../connect/content/${locale}/${slug}.json`, import.meta.url), 'utf8'));
 const guideCopy = (locale) =>

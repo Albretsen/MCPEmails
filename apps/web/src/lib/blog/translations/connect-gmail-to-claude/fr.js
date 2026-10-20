@@ -36,7 +36,7 @@ Les deux voies continuent de fonctionner, et le choix décide de ce que Claude p
 - **Mot de passe d'application (IMAP) :** les libellés Gmail apparaissent comme des dossiers, la recherche utilise la recherche texte IMAP, et Claude peut copier des messages et les supprimer définitivement.
 - **Connexion avec Google (API Gmail) :** Claude travaille avec de vrais libellés Gmail et peut rechercher avec les opérateurs Gmail comme \`from:\`, \`is:unread\` et \`after:\`. La suppression envoie les e-mails dans la corbeille.
 
-Sur un compte Google Workspace, un administrateur peut désactiver les mots de passe d'application pour tout le domaine, ou bloquer les applications tierces sur la voie de connexion avec Google. Si une voie est bloquée, essayez l'autre, ou demandez à votre administrateur.
+Sur un compte Google Workspace, un administrateur peut désactiver les mots de passe d'application pour tout le domaine, ou bloquer les applications tierces sur la voie de connexion avec Google. Si une voie est bloquée, essayez l'autre, ou demandez à votre administrateur. La page [paramètres et limites de Gmail](/connect/gmail) rassemble les détails propres à Gmail en un seul endroit.
 
 ## Étape 2 : ajoutez MCP Emails à Claude
 
@@ -52,7 +52,7 @@ https://mcpemails.com/api/mcp
 
 4. Cliquez sur **Se connecter**, identifiez-vous avec votre compte MCP Emails, et approuvez les portées que vous souhaitez : \`read:email\`, \`send:email\`, ou les deux.
 
-Voilà tout ce qu'il faut faire côté client. La connexion est limitée exactement à ce que vous avez approuvé, et vous pouvez la révoquer depuis le tableau de bord en un clic. Si vous préférez comprendre l'approche par clé API (pour les clients sans OAuth intégré, comme Cline ou un script personnalisé), lisez [OAuth ou clés API pour l'accès e-mail par IA](/blog/oauth-vs-api-keys-ai-email-access).
+Voilà tout ce qu'il faut faire côté client. La connexion est limitée exactement à ce que vous avez approuvé, et vous pouvez la révoquer depuis le tableau de bord en un clic. Si vous préférez comprendre l'approche par clé API (pour les clients sans OAuth intégré, comme Cline ou un script personnalisé), lisez [OAuth ou clés API pour l'accès e-mail par IA](/blog/oauth-vs-api-keys-ai-email-access). Vous connectez aussi une autre boîte ? La [configuration pas à pas des e-mails dans Claude](/blog/connect-claude-to-email) couvre Outlook, iCloud, Fastmail et IMAP.
 
 ## Étape 3 : posez votre première requête à Claude
 

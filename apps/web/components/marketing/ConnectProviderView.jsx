@@ -1,4 +1,5 @@
 import { getTranslations } from 'next-intl/server';
+import { withReadingLang } from '@/i18n/reading-lang.mjs';
 import { Link } from '@/i18n/navigation';
 import { Nav, Footer } from './Sections';
 import { MIcon } from '../MarketingPrimitives';
@@ -33,7 +34,9 @@ export function nameGrammar(name) {
  */
 export default async function ConnectProviderView({ locale, provider, content, multiMailbox = null, guides = null }) {
   const t = await getTranslations({ locale, namespace: 'connect' });
-  const related = relatedProviders(provider.slug);
+  // Only providers whose page exists in this locale: next-intl's Link adds the
+  // locale prefix, so a provider missing here would be a link to a 404.
+  const related = relatedProviders(provider.slug, 6, new Date(), locale);
   const guideLinks = guides ? guideLinksFor(content) : [];
   const showGmailVerification = provider.slug === 'gmail' && OAUTH_VERIFICATION_PENDING;
   const ev = provider.evidence;
@@ -78,7 +81,7 @@ export default async function ConnectProviderView({ locale, provider, content, m
             </p>
           )}
           <div className="hero-cta" style={{ justifyContent: 'center', marginTop: 24 }}>
-            <a className="btn btn-primary btn-lg" href={`/signup?provider=${provider.slug}`}>
+            <a className="btn btn-primary btn-lg" href={withReadingLang(`/signup?provider=${provider.slug}`, locale)}>
               {t('cta.primary', { provider: provider.name })}
             </a>
             <Link className="btn btn-secondary btn-lg" href="/docs">{t('cta.secondary')}</Link>
@@ -378,7 +381,7 @@ export default async function ConnectProviderView({ locale, provider, content, m
           <h2>{content.ctaBand.title}</h2>
           <p className="sub">{content.ctaBand.sub}</p>
           <div className="hero-cta" style={{ justifyContent: 'center' }}>
-            <a className="btn btn-primary btn-lg" href={`/signup?provider=${provider.slug}`}>
+            <a className="btn btn-primary btn-lg" href={withReadingLang(`/signup?provider=${provider.slug}`, locale)}>
               {t('cta.primary', { provider: provider.name })}
             </a>
             <Link className="btn btn-secondary btn-lg" href="/docs">{t('cta.secondary')}</Link>
@@ -386,7 +389,7 @@ export default async function ConnectProviderView({ locale, provider, content, m
         </div>
       </section>
 
-      <Footer />
+      <Footer locales={provider.locales} />
     </div>
   );
 }

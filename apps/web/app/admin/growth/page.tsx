@@ -108,7 +108,7 @@ import '../../../styles/admin-board-parts.css';
 import '../../../styles/admin-kiosk.css';
 import '../../../styles/admin-growth.css';
 
-export const metadata = { title: 'Growth analytics · MCP Emails', robots: { index: false, follow: false } };
+export const metadata = { title: 'Growth analytics', robots: { index: false, follow: false } };
 
 /**
  * Windows for the figures that are genuinely windowed: MRR movements,

@@ -19,7 +19,10 @@ export async function generateMetadata({
   const description = t('description');
 
   return {
-    title,
+    // Absolute on purpose: the homepage title text is frozen until 2026-11-01
+    // for an SEO test, so it keeps the old suffix while the layout template
+    // now says "MCP Emails". Switch back to plain `title` after the test.
+    title: { absolute: `${title} · mcpemails` },
     description,
     alternates: metaAlternates(locale, ''),
     openGraph: {

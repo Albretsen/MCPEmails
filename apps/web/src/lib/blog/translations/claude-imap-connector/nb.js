@@ -21,7 +21,7 @@ Claude trenger derfor aldri et IMAP-bibliotek, en SMTP-konfigurasjon eller et pa
 
 ## Dette trenger du før oppsettet
 
-Finn disse verdiene på hjelpesiden til e-postleverandøren eller hos administratoren:
+Finn disse verdiene på hjelpesiden til e-postleverandøren eller hos administratoren. Du kan også se [verifiserte IMAP- og SMTP-innstillinger for hver leverandør](/connect):
 
 - **E-postadresse:** for eksempel \`you@example.com\`. Dette er adressen som vises på den tilkoblede innboksen.
 - **Brukernavn for innlogging:** vanligvis hele e-postadressen. Enkelte verter for egendefinerte domener oppgir et annet IMAP-/SMTP-brukernavn.
@@ -33,7 +33,7 @@ Ikke gjett servernavnene ut fra domenet dersom leverandøren publiserer innstill
 
 Bruk et **app-passord** når leverandøren støtter det. Det er atskilt fra hovedpassordet til kontoen og kan tilbakekalles uten å endre passordet du logger inn med. Leverandører krever ofte tofaktorautentisering før du kan opprette et. Noen krever også at du først aktiverer IMAP-tilgang i e-postinnstillingene.
 
-MCPEmails har forhåndsinnstillinger for iCloud, Yahoo, Zoho og Yandex, samt en egen app-passordflyt for Fastmail. Disse valgene fyller inn kjente verter og porter for deg. Velg **Generic IMAP** for en annen leverandør eller din egen e-postserver, og skriv inn verdiene selv.
+MCPEmails har forhåndsinnstillinger for [iCloud](/connect/icloud), [Yahoo](/connect/yahoo), [Zoho](/connect/zoho) og [Yandex](/connect/yandex), samt en egen app-passordflyt for [Fastmail](/connect/fastmail). Disse valgene fyller inn kjente verter og porter for deg. Velg **Generic IMAP** for en annen leverandør eller din egen e-postserver, og skriv inn verdiene selv. Se [oppsettsiden for generisk IMAP](/connect/imap).
 
 ## Steg 1: Koble til IMAP-/SMTP-postkassen
 

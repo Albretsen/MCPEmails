@@ -43,7 +43,7 @@ import {
 
 const here = path.dirname(fileURLToPath(import.meta.url));
 const webRoot = path.resolve(here, '../../..');
-const LOCALES = ['en', 'es', 'fr', 'nb', 'zh'] as const;
+const LOCALES = ['en', 'es', 'fr', 'nb', 'zh', 'de'] as const;
 type Locale = (typeof LOCALES)[number];
 type Json = string | number | boolean | null | Json[] | { [key: string]: Json };
 
@@ -244,7 +244,7 @@ test('the forBusiness prices and the Free allowance come from the plan catalogue
     assert.match(pro, new RegExp(`(^|\\D)${dollars('solo')}(\\D|$)`), `${locale}: Pro price`);
     assert.match(team, new RegExp(`(^|\\D)${dollars('pro')}(\\D|$)`), `${locale}: Business price`);
     assert.match(team, new RegExp(`(^|\\D)${BUSINESS_EXTRA_INBOX_MONTHLY_CENTS / 100}(\\D|$)`), `${locale}: Business per-mailbox price`);
-    assert.match(pro, new RegExp(`(^|\\D|[^\\d])${PRO_INBOX_CAP}|\\b(ten|ti|diez|dix)\\b|十`, 'i'), `${locale}: Pro's mailbox cap`);
+    assert.match(pro, new RegExp(`(^|\\D|[^\\d])${PRO_INBOX_CAP}|\\b(ten|ti|diez|dix|zehn)\\b|十`, 'i'), `${locale}: Pro's mailbox cap`);
     assert.ok(free.includes(String(FREE_ACTION_ALLOWANCE)), `${locale}: Free allowance in "${free}"`);
     assert.ok(free.includes(String(FREE_ACTION_GRACE_DAYS)), `${locale}: Free grace days in "${free}"`);
   }

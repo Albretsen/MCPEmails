@@ -82,6 +82,7 @@ export const FINGERPRINTS = {
   'catalog-es': () => catalogSentence('es'),
   'catalog-fr': () => catalogSentence('fr'),
   'catalog-zh': () => catalogSentence('zh'),
+  'catalog-de': () => catalogSentence('de'),
 };
 
 /** True when `source` holds `needle`, as written or as a JS string escape of it. */
