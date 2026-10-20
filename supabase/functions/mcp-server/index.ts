@@ -210,6 +210,7 @@ import {
   parseMailbox,
   parseMailboxHeader,
 } from "./address-header.ts";
+import { ASCII_DOMAIN_RE, envelopeAddress } from "./envelope-address.ts";
 import {
   consolidatedSecurityScopes,
   isOpenAiClientName,
@@ -10374,8 +10375,12 @@ function noteMissingTransport(inbox: InboxRow, kind: MissingTransport): void {
   const store = activityInboxStore.getStore();
   // Only the inbox the call acts on. A tool that sweeps several inboxes and
   // fails on another one for an unrelated reason must not be explained as this.
-  if (store && store.inboxId !== null && store.inboxId !== inbox.id) return;
-  if (store && !store.missingTransport) {
+  // With no resolved inbox (contact_search with no inbox scans them all) there
+  // is no inbox the call acts on, so nothing is recorded: otherwise one
+  // send-only inbox in the sweep turned another inbox's revoked credentials
+  // into "connected for sending only, do not reconnect".
+  if (!store || store.inboxId === null || store.inboxId !== inbox.id) return;
+  if (!store.missingTransport) {
     store.missingTransport = { kind, inboxId: inbox.id, emailAddress: inbox.email_address };
   }
 }
@@ -10594,7 +10599,22 @@ async function executeListInboxes(
     query = query.in("id", apiKey.inbox_ids);
   }
 
-  const { data, error } = await query;
+  // IMAP Send As addresses, fetched BESIDE the inbox query rather than after
+  // it (2026-10-20: the second sequential round trip took inbox_list p50 from
+  // 145 to 290 ms after #135). Scoped to the workspace, and to the key's
+  // allowlist when it has one; only matched IMAP rows read from the map below.
+  // A failure here only costs those inboxes their aliases, never the listing.
+  const aliasesPromise: Promise<Map<string, ImapSenderAlias[]> | null> = listImapSenderAliases(
+    apiKey.workspace_id,
+    apiKey.inbox_ids !== null && apiKey.inbox_ids.length > 0 ? apiKey.inbox_ids : null,
+  ).catch((err) => {
+    console.error("[mcp-server] inbox_list: imap_sender_aliases_failed", {
+      error: err instanceof Error ? err.message : String(err),
+    });
+    return null;
+  });
+
+  const [{ data, error }, imapAliases] = await Promise.all([query, aliasesPromise]);
 
   if (error) {
     console.error("[mcp-server] inbox_list: db_error", { error: error.message });
@@ -10621,19 +10641,6 @@ async function executeListInboxes(
   // Only the matched rows are expanded. The Gmail sender-identity lookup below
   // is a network call per row, so narrowing first is also why filtering in
   // memory is no more expensive than the predicate it replaced.
-  // IMAP Send As addresses for every matched IMAP inbox, in one query. A
-  // failure here only costs those inboxes their aliases, never the listing.
-  const imapIds = matchedRows.filter((row) => row.provider === "imap").map((row) => row.id);
-  let imapAliases: Map<string, ImapSenderAlias[]> | null = new Map();
-  try {
-    imapAliases = await listImapSenderAliases(apiKey.workspace_id, imapIds);
-  } catch (err) {
-    console.error("[mcp-server] inbox_list: imap_sender_aliases_failed", {
-      error: err instanceof Error ? err.message : String(err),
-    });
-    imapAliases = null;
-  }
-
   const inboxes = await Promise.all(matchedRows.map(async (row: InboxListRow) => {
     let senderIdentities: Array<Record<string, unknown>> = [{
       email_address: row.email_address,
@@ -11316,17 +11323,22 @@ async function listGmailSenderIdentities(inbox: InboxRow): Promise<SenderIdentit
  */
 async function listImapSenderAliases(
   workspaceId: string,
-  inboxIds: string[],
+  inboxIds: string[] | null,
 ): Promise<Map<string, ImapSenderAlias[]>> {
+  // `inboxIds` null: every verified alias in the workspace, so inbox_list can
+  // run this beside its inbox query instead of after it (2026-10-20: the
+  // sequential round trip doubled inbox_list p50). Callers pick their inboxes'
+  // entries out of the map. Bounded by the per-workspace verification limits
+  // (each alias needs a code mailed to it), far below PostgREST's 1000 rows.
   const byInbox = new Map<string, ImapSenderAlias[]>();
-  if (inboxIds.length === 0) return byInbox;
-  const { data, error } = await supabase
+  if (inboxIds !== null && inboxIds.length === 0) return byInbox;
+  let query = supabase
     .from("inbox_sender_aliases")
     .select("inbox_id, email_address, display_name")
     .eq("workspace_id", workspaceId)
-    .in("inbox_id", inboxIds)
-    .not("verified_at", "is", null)
-    .order("created_at", { ascending: true });
+    .not("verified_at", "is", null);
+  if (inboxIds !== null) query = query.in("inbox_id", inboxIds);
+  const { data, error } = await query.order("created_at", { ascending: true });
   if (error) throw new Error(`imap_sender_aliases_failed: ${error.message}`);
   for (const row of (data ?? []) as Array<ImapSenderAlias & { inbox_id: string }>) {
     const list = byInbox.get(row.inbox_id) ?? [];
@@ -15891,11 +15903,17 @@ class DraftInvalidRecipientError extends Error {
  * parsed structure-first from the RAW headers (parseAddressHeader), never
  * decoded and re-split.
  *
- * Every address must pass isValidEmailAddress (2026-10-16). These strings
+ * Every address must be one deliverable addr-spec (2026-10-16). These strings
  * become `RCPT TO:<...>` lines, and a stored draft is not trusted input:
  * another client, or a rebuilt reply to hostile mail, may have put anything in
  * its headers. A bad one throws DraftInvalidRecipientError, before any byte
  * goes to SMTP.
+ *
+ * Checked with envelopeAddress, not isValidEmailAddress (2026-10-20): drafts
+ * written by Thunderbird or Apple Mail carry IDN domains, punycode TLDs and
+ * quoted local parts, which sent before #126 and must still send. The returned
+ * list is the ASCII envelope form (IDN domain as punycode); the draft's own
+ * headers are sent unchanged.
  */
 function draftEnvelopeRecipients(headers: Map<string, string[]>): string[] {
   const recipients = [
@@ -15903,9 +15921,13 @@ function draftEnvelopeRecipients(headers: Map<string, string[]>): string[] {
     ...parseAddressHeader(getHeader(headers, "cc")),
     ...parseAddressHeader(getHeader(headers, "bcc")),
   ].map((a) => a.email.trim()).filter(Boolean);
-  const bad = recipients.find((r) => !isValidEmailAddress(r));
-  if (bad !== undefined) throw new DraftInvalidRecipientError(bad);
-  return recipients;
+  const envelope: string[] = [];
+  for (const r of recipients) {
+    const ascii = envelopeAddress(r);
+    if (ascii === null) throw new DraftInvalidRecipientError(r);
+    envelope.push(ascii);
+  }
+  return envelope;
 }
 
 function isValidEmailAddress(email: string): boolean {
@@ -15913,9 +15935,15 @@ function isValidEmailAddress(email: string): boolean {
   if (!trimmed || trimmed.length > 320) return false;
   // Simplified RFC 5322: local@domain.tld
   // Does not handle quoted strings or IP literals — rare and not needed here.
-  const EMAIL_RE =
-    /^[a-zA-Z0-9.!#$%&'*+/=?^_`{|}~-]+@[a-zA-Z0-9](?:[a-zA-Z0-9-]{0,61}[a-zA-Z0-9])?(?:\.[a-zA-Z0-9](?:[a-zA-Z0-9-]{0,61}[a-zA-Z0-9])?)*\.[a-zA-Z]{2,}$/;
-  return EMAIL_RE.test(trimmed);
+  // The TLD may be an IDNA A-label (`.xn--p1ai`) since 2026-10-20: still pure
+  // ASCII, so every header and envelope this feeds is unchanged in kind.
+  // Unicode domains and quoted local parts stay refused here: the MIME builder
+  // writes these addresses into headers as-is. Stored drafts, whose headers are
+  // sent as written, use envelopeAddress instead (draftEnvelopeRecipients).
+  const at = trimmed.lastIndexOf("@");
+  if (at <= 0) return false;
+  return /^[a-zA-Z0-9.!#$%&'*+/=?^_`{|}~-]+$/.test(trimmed.slice(0, at)) &&
+    ASCII_DOMAIN_RE.test(trimmed.slice(at + 1));
 }
 
 // ---------------------------------------------------------------------------
@@ -30548,6 +30576,11 @@ async function executeSearchContacts(
         logStatus: "error", logErrorCode: "inbox_not_found",
       };
     }
+    // One named inbox is the inbox this call acts on. Recording it keeps the
+    // accurate send-only explanation for it (noteMissingTransport ignores a
+    // call with no resolved inbox) and logs the inbox on the activity row.
+    const store = activityInboxStore.getStore();
+    if (store) store.inboxId = inbox.id;
     targets = [inbox];
   } else {
     let q = supabase

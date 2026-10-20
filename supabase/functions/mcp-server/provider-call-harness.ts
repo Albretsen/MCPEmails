@@ -81,10 +81,18 @@ export interface DbCall {
   target: string;
   query: string;
   body: unknown;
+  /** PostgREST answers already delivered when this request was issued. */
+  answeredBefore: number;
 }
 
 export interface World {
   inbox: Record<string, unknown>;
+  /** Further inboxes in the workspace, after `inbox`; empty for most tests. */
+  extraInboxes: Record<string, unknown>[];
+  /** Rows a list GET on another table returns (default: none). */
+  dbRows: Record<string, unknown[]>;
+  /** PostgREST answers delivered so far. */
+  dbAnswered: number;
   handler: ProviderHandler;
   /** Every non-PostgREST request, in issue order. */
   calls: ProviderCall[];
@@ -114,11 +122,16 @@ export function json(body: unknown, status = 200, headers: Record<string, string
 
 const sleep = (ms: number) => new Promise<void>((resolve) => setTimeout(resolve, ms));
 
-function answerDb(w: World, method: string, target: string, wantsObject: boolean): Response {
+function answerDb(w: World, method: string, target: string, wantsObject: boolean, query = ""): Response {
   if (target === "inboxes" && method === "GET") {
-    return wantsObject ? json(w.inbox) : json([w.inbox]);
+    if (w.extraInboxes.length === 0) return wantsObject ? json(w.inbox) : json([w.inbox]);
+    // Several inboxes: a list returns them all, a single-row read the one
+    // whose id the query names (the first when it names none).
+    const all = [w.inbox, ...w.extraInboxes];
+    const id = new URLSearchParams(query).get("id")?.replace(/^eq\./, "");
+    return wantsObject ? json(all.find((row) => row.id === id) ?? w.inbox) : json(all);
   }
-  if (method === "GET") return wantsObject ? json(null) : json([]);
+  if (method === "GET") return wantsObject ? json(null) : json(w.dbRows[target] ?? []);
   return new Response(null, { status: 204 });
 }
 
@@ -142,11 +155,12 @@ function fakeFetch(input: RequestInfo | URL, init?: RequestInit): Promise<Respon
     try {
       body = bodyText ? JSON.parse(bodyText) : null;
     } catch { /* not JSON */ }
-    w.db.push({ method, target, query: url.search, body });
+    w.db.push({ method, target, query: url.search, body, answeredBefore: w.dbAnswered });
     const wantsObject = (headers.get("accept") ?? "").includes("vnd.pgrst.object");
     return sleep(0).then(() => {
       w.activity++;
-      return answerDb(w, method, target, wantsObject);
+      w.dbAnswered++;
+      return answerDb(w, method, target, wantsObject, url.search);
     });
   }
 
@@ -279,6 +293,9 @@ export function alreadyExpired(): string {
 function newWorld(inbox: Record<string, unknown>, handler: ProviderHandler): World {
   return {
     inbox,
+    extraInboxes: [],
+    dbRows: {},
+    dbAnswered: 0,
     handler,
     calls: [],
     db: [],
@@ -347,6 +364,21 @@ export async function runTool<T>(
   body: () => Promise<T>,
 ): Promise<RunOutcome<T>> {
   const w = newWorld(inbox, handler);
+  const value = await inWorld(w, body);
+  return { value, world: w };
+}
+
+/** {@link runTool} for a workspace with several inboxes, listed in this order. */
+export async function runToolWithInboxes<T>(
+  inboxes: Record<string, unknown>[],
+  handler: ProviderHandler,
+  body: () => Promise<T>,
+  dbRows: Record<string, unknown[]> = {},
+): Promise<RunOutcome<T>> {
+  const [first, ...rest] = inboxes;
+  const w = newWorld(first, handler);
+  w.extraInboxes = rest;
+  w.dbRows = dbRows;
   const value = await inWorld(w, body);
   return { value, world: w };
 }
