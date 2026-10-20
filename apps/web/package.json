@@ -99,6 +99,8 @@
     "test:plan-limit-pauses": "node --test --experimental-strip-types --experimental-test-module-mocks --import ./scripts/register-ts-alias.mjs src/lib/billing/plan-limit-pauses.test.ts app/api/stripe/webhook/route.plan-limit-pause.test.ts",
     "test:onboarding": "node --test --experimental-strip-types src/lib/onboarding/state.test.ts src/lib/onboarding/multi-inbox-prompt.test.mjs",
     "test:segment": "node --test --experimental-strip-types --import ./scripts/register-ts-alias.mjs src/lib/segment/record-segment.test.ts src/lib/analytics/multi-inbox-prompt.test.ts",
+    "test:connect-chatgpt": "node --test --experimental-strip-types --import ./scripts/register-dom-tests.mjs src/lib/connect/chatgpt.test.mjs",
+    "test:connect-chatgpt-ui": "node --test --experimental-strip-types --experimental-test-module-mocks --import ./scripts/register-dom-tests.mjs components/marketing/connect-chatgpt-section-ui.test.mjs",
     "test:connect-multi-mailbox": "node --test --experimental-strip-types --import ./scripts/register-ts-alias.mjs src/lib/connect/multi-mailbox.test.ts",
     "test:marketing-consent": "node --test src/lib/marketing-consent.test.mjs",
     "test:connect-intent-auth-ui": "node --test --experimental-strip-types --experimental-test-module-mocks --import ./scripts/register-dom-tests.mjs components/auth/connect-intent-auth-ui.test.mjs",
