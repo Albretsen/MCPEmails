@@ -317,6 +317,9 @@ export const IMAP_ALIAS_ALTERNATE_NAMES: Record<string, readonly string[]> = {
 /** SPECIAL-USE flag of the mailbox that holds every message (Gmail's All Mail). */
 const IMAP_ALL_MAIL_FLAG = "\\all";
 
+/** Every SPECIAL-USE flag that gives a mailbox a role, lower-cased. */
+const IMAP_ROLE_FLAGS = new Set([...Object.values(IMAP_ALIAS_SPECIAL_USE), IMAP_ALL_MAIL_FLAG]);
+
 /** LIST attributes of a name that exists in the hierarchy but cannot be opened. */
 const IMAP_UNSELECTABLE_FLAGS = new Set(["\\noselect", "\\nonexistent"]);
 
@@ -487,15 +490,18 @@ export function resolveImapAlias(
 
   // (8)-(9) Only when everything above found nothing: the localized names, as a
   // whole name and then under INBOX + delimiter. Same unique-or-refuse rule; two
-  // localized names in one tier are ambiguous, never ranked.
+  // localized names in one tier are ambiguous, never ranked. A mailbox the
+  // server flags for a role (\\Sent, \\Trash, ..., \\All) already belongs to that
+  // role, so a localized name never hands it to a second one.
   const localized = new Set(
     (IMAP_ALIAS_ALTERNATE_NAMES[canonicalToken] ?? []).map(nameKey).filter((k) => !legacy.has(k)),
   );
+  const unflagged = (mb: MailboxListEntry) => !mb.flags.some((f) => IMAP_ROLE_FLAGS.has(f.toLowerCase()));
   const localizedAnswer = uniqueOrRefuse([
-    ["localized_name", (mb) => localized.has(nameKey(mb.name))],
+    ["localized_name", (mb) => unflagged(mb) && localized.has(nameKey(mb.name))],
     ["namespaced_localized_name", (mb) => {
       const rest = underInbox(mb);
-      return rest !== null && localized.has(nameKey(rest));
+      return unflagged(mb) && rest !== null && localized.has(nameKey(rest));
     }],
   ]);
   if (localizedAnswer) return localizedAnswer;

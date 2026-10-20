@@ -338,3 +338,66 @@ Deno.test("a whole localized name wins over a namespaced one, like the old tiers
   const layout = [listed("INBOX", "."), listed("Enviados", "."), listed("INBOX.Verzonden", ".")];
   assertEquals(resolveImapAlias(layout, alias("sent")), { kind: "matched", name: "Enviados", how: "localized_name" });
 });
+
+Deno.test("a mailbox the server flags for one role is never another role's by its localized name", () => {
+  const layout = [
+    listed("INBOX", "/"),
+    listed("Skräppost", "/", "\\Sent"),
+    listed("Kustutatud üksused", "/", "\\Junk"),
+    listed("[Gmail]/Отправленные", "/", "\\All"),
+    listed("INBOX/Corbeille-privée", "/"),
+  ];
+  assertEquals(resolveImapAlias(layout, alias("sent")), { kind: "matched", name: "Skräppost", how: "special_use" });
+  assertEquals(resolveImapAlias(layout, alias("spam")), { kind: "matched", name: "Kustutatud üksused", how: "special_use" });
+  assertEquals(resolveImapAlias(layout, alias("trash")), { kind: "none" });
+  const allMailOnly = [listed("INBOX", "/"), listed("Отправленные", "/", "\\All")];
+  assertEquals(resolveImapAlias(allMailOnly, alias("sent")), { kind: "none" });
+});
+
+Deno.test("parity, randomized: 20,000 seeded layouts agree with the old matcher wherever it answered", () => {
+  let seed = 20261020;
+  const rnd = () => (seed = (seed * 1103515245 + 12345) % 2147483648) / 2147483648;
+  const pick = <T>(a: readonly T[]): T => a[Math.floor(rnd() * a.length)];
+  const allNames = [...new Set(Object.values(IMAP_ALIAS_ALTERNATE_NAMES).flat())];
+  const legacyNames = Object.values(FROZEN_OLD_ALTERNATES).flat();
+  const canonicalNames = ["Sent", "Drafts", "Trash", "Archive", "Junk", "sent", "TRASH"];
+  const userNames = ["Receipts", "Projects", "Work", "Old", "Projects/Trash", "Archive/2019"];
+  const flags = ["\\Sent", "\\Trash", "\\Junk", "\\Drafts", "\\Archive", "\\All", "\\Noselect", "\\HasChildren"];
+  let compared = 0;
+  for (let i = 0; i < 20_000; i++) {
+    const delimiter = pick([".", "/", undefined]);
+    const layout: MailboxListEntry[] = [{ name: "INBOX", flags: [], delimiter }];
+    const count = 1 + Math.floor(rnd() * 8);
+    for (let j = 0; j < count; j++) {
+      const r = rnd();
+      let name = r < 0.35
+        ? pick(allNames)
+        : r < 0.55
+        ? pick(legacyNames)
+        : r < 0.7
+        ? pick(canonicalNames)
+        : r < 0.8
+        ? pick(userNames)
+        : pick(allNames).toUpperCase();
+      if (delimiter && rnd() < 0.3) name = `INBOX${delimiter}${name}`;
+      if (rnd() < 0.1) name = name.normalize("NFD");
+      layout.push({ name, flags: rnd() < 0.15 ? [pick(flags)] : [], delimiter });
+    }
+    const owners = new Map<string, string>();
+    for (const entry of CANONICAL_FOLDER_ALIASES) {
+      for (const forRead of [false, true]) {
+        const before = oldResolveImapAlias(layout, entry, { forRead });
+        const now = resolveImapAlias(layout, entry, { forRead });
+        if (before.kind !== "none") {
+          compared++;
+          assertEquals(now, before, JSON.stringify({ layout, role: entry.aliases[0], forRead }));
+        }
+        if (!forRead && now.kind === "matched" && now.how.includes("localized")) {
+          assert(!owners.has(now.name), `${now.name} claimed by ${owners.get(now.name)} and ${entry.aliases[0]}`);
+        }
+        if (!forRead && now.kind === "matched") owners.set(now.name, entry.aliases[0]);
+      }
+    }
+  }
+  assert(compared > 50_000, `only ${compared} comparisons`);
+});
