@@ -395,3 +395,70 @@ test('the hint never reaches the database, the signup metadata or attribution', 
     assert.ok(!/^import [^;]*connect\/providers\.mjs/m.test(source), `${file} imports the registry statically`);
   }
 });
+
+// ── Server settings carried from /tools/email-settings-lookup ────────────────
+import {
+  CONNECT_SETTINGS_KEY,
+  connectSettingsShape,
+  rememberConnectSettings,
+  takeConnectSettings,
+} from './intent-carry.mjs';
+
+function memStore() {
+  const m = new Map();
+  return { getItem: (k) => (m.has(k) ? m.get(k) : null), setItem: (k, v) => m.set(k, String(v)), removeItem: (k) => m.delete(k), m };
+}
+
+const OVH = {
+  imapHost: 'ex4.mail.ovh.net', imapPort: 993, imapSecurity: 'tls',
+  smtpHost: 'ex4.mail.ovh.net', smtpPort: 587, smtpSecurity: 'starttls', label: 'OVHcloud',
+};
+
+test('carried settings: remembered, read once, then gone', () => {
+  const s = memStore();
+  assert.equal(rememberConnectSettings(s, OVH, 1000), true);
+  assert.deepEqual(takeConnectSettings(s, 2000), { ...OVH });
+  assert.equal(s.m.has(CONNECT_SETTINGS_KEY), false);
+  assert.equal(takeConnectSettings(s, 3000), null);
+});
+
+test('carried settings: stale or malformed records are dropped', () => {
+  const s = memStore();
+  rememberConnectSettings(s, OVH, 0);
+  assert.equal(takeConnectSettings(s, 24 * 60 * 60 * 1000), null);
+  s.setItem(CONNECT_SETTINGS_KEY, '{nope');
+  assert.equal(takeConnectSettings(s, 0), null);
+});
+
+test('carried settings: only well-formed hosts, ports and security modes', () => {
+  assert.equal(connectSettingsShape({ ...OVH, imapHost: 'javascript:alert(1)' }), null);
+  assert.equal(connectSettingsShape({ ...OVH, smtpPort: 70000 }), null);
+  assert.equal(connectSettingsShape({ ...OVH, imapSecurity: 'none' }), null);
+  assert.equal(connectSettingsShape({ ...OVH, smtpHost: undefined }), null);
+  assert.equal(connectSettingsShape({ ...OVH, imapHost: 'EX4.Mail.OVH.net ' }).imapHost, 'ex4.mail.ovh.net');
+  assert.equal(rememberConnectSettings(memStore(), { ...OVH, imapPort: 'x' }), false);
+});
+
+test('carried settings never go into a URL', () => {
+  const carry = readFileSync(new URL('./intent-carry.mjs', import.meta.url), 'utf8');
+  const tool = readFileSync(new URL('../../../components/marketing/EmailSettingsLookup.jsx', import.meta.url), 'utf8');
+  assert.ok(!/searchParams\.set\([^)]*settings/i.test(carry));
+  assert.ok(tool.includes('rememberConnectSettings(connectIntentStorage()'));
+  assert.ok(tool.includes("signupHref(r.slug ?? 'imap')"));
+});
+
+test('withCarriedSettings: carried servers fill the generic form, never a dedicated card', async () => {
+  const { withCarriedSettings } = await import('./intent.mjs');
+  const { label, ...form } = OVH;
+  const generic = { slug: 'ovh', card: 'generic', label: 'OVHcloud', form: { imapHost: 'ssl0.ovh.net' } };
+  assert.deepEqual(withCarriedSettings(generic, OVH).form, form);
+  assert.equal(withCarriedSettings(generic, OVH).slug, 'ovh');
+  const gmail = { slug: 'gmail', card: 'gmail', label: 'Gmail', form: null };
+  assert.equal(withCarriedSettings(gmail, OVH), gmail);
+  const none = withCarriedSettings(null, OVH);
+  assert.equal(none.card, 'generic');
+  assert.equal(none.label, label);
+  assert.equal(withCarriedSettings(generic, null), generic);
+  const withPreset = withCarriedSettings(null, OVH, () => ({ requiresAppPassword: true, appPasswordHelpUrl: 'https://x.example/help' }));
+  assert.equal(withPreset.requiresAppPassword, true);
+});

@@ -22,9 +22,11 @@ import { isBusinessShapedWorkspace } from '@/lib/segment/consumer-domains.mjs';
 import {
   connectIntentStorage,
   takeConnectIntent,
+  takeConnectSettings,
   withoutConnectIntent,
 } from '@/lib/connect/intent-carry.mjs';
 import { findMailHostPreset } from '@/lib/email-providers/host-presets';
+
 
 /* App.jsx: dashboard root. Owns state, route, modals.
    firstrun param auto-opens the connect modal.
@@ -288,6 +290,8 @@ function DashboardInner({ initialRoute = 'overview', user, workspace: serverWork
   const [connectPreselect, setConnectPreselect] = useState(null);
   // undefined = not looked at yet, null = nothing (or already spent).
   const connectIntentSlug = useRef(undefined);
+  // Servers carried from /tools/email-settings-lookup (intent-carry.mjs).
+  const connectIntentSettings = useRef(null);
   // The shareable Microsoft 365 admin-consent link (AdminConsentLinkDialog).
   const [showAdminLink, setShowAdminLink] = useState(false);
   // When set, the ConnectModal opens in reconnect mode for this existing inbox
@@ -382,14 +386,16 @@ function DashboardInner({ initialRoute = 'overview', user, workspace: serverWork
       let slug = null;
       try {
         slug = takeConnectIntent({ search: window.location.search, storage: connectIntentStorage() });
+        connectIntentSettings.current = takeConnectSettings(connectIntentStorage());
         const stripped = withoutConnectIntent(window.location.href);
         if (stripped !== window.location.href) window.history.replaceState({}, '', stripped);
       } catch { /* a hint is never worth an error */ }
       connectIntentSlug.current = slug;
     }
     const slug = connectIntentSlug.current;
+    const carried = connectIntentSettings.current;
 
-    if (!slug) {
+    if (!slug && !carried) {
       if (firstrun) {
         const id = setTimeout(() => openConnect('first_run'), 400);
         return () => clearTimeout(id);
@@ -403,13 +409,14 @@ function DashboardInner({ initialRoute = 'overview', user, workspace: serverWork
     let cancelled = false;
     const welcome = new Promise(resolve => setTimeout(resolve, firstrun ? 400 : 0));
     const resolved = import('@/lib/connect/intent.mjs')
-      .then(({ resolveConnectIntent, connectPreselectFor }) =>
-        connectPreselectFor(resolveConnectIntent(slug), findMailHostPreset))
+      .then(({ resolveConnectIntent, connectPreselectFor, withCarriedSettings }) =>
+        withCarriedSettings(connectPreselectFor(resolveConnectIntent(slug), findMailHostPreset), carried, findMailHostPreset))
       // Failing to load a hint must leave the dashboard exactly as it was.
       .catch(() => null);
     Promise.all([resolved, welcome]).then(([preselect]) => {
       if (cancelled) return;
       connectIntentSlug.current = null;
+      connectIntentSettings.current = null;
       // An unknown, unreleased or unsupported provider resolves to null. So
       // does nothing at all: a first run still gets its modal, and an ordinary
       // sign-in gets the dashboard and no modal.

@@ -43,7 +43,7 @@ export default function EmailSettingsLookupView({ c, locale, registry, href, che
           <h1 className="pricing-page-h1">{c.hero.title}</h1>
           <p className="pricing-page-lead">{c.hero.lead}</p>
           <EmailSettingsLookup t={c.tool} registry={registry} locale={locale} appPasswordHref={href('appPassword')} />
-          <p className="pricing-footnote" style={{ textAlign: 'center', marginTop: 16 }}>{fill(c.hero.updated)}</p>
+          <p className="pricing-footnote tool-footnote">{fill(c.hero.updated)}</p>
         </div>
       </section>
 
@@ -91,7 +91,7 @@ export default function EmailSettingsLookupView({ c, locale, registry, href, che
               </tbody>
             </table>
           </div>
-          <p className="pricing-footnote" style={{ textAlign: 'center', marginTop: 16 }}>{c.ports.note}</p>
+          <p className="pricing-footnote tool-footnote">{c.ports.note}</p>
         </div>
       </section>
 

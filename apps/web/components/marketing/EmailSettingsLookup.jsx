@@ -3,6 +3,7 @@
 import { useState } from 'react';
 import { lookupMailSettings } from '@/lib/tools/settings-lookup.ts';
 import { withReadingLang } from '@/i18n/reading-lang.mjs';
+import { connectIntentStorage, rememberConnectSettings } from '@/lib/connect/intent-carry.mjs';
 import RichText from './RichText';
 
 /*
@@ -147,7 +148,21 @@ export default function EmailSettingsLookup({ t, registry, locale, appPasswordHr
               <h3>{t.ctaTitle}</h3>
               <p>{r.slug ? fill(t.ctaBody, { provider: r.label || nameOf(r.slug) }) : t.ctaBodyGeneric}</p>
               <div className="tool-cta-row">
-                <a className="btn btn-primary" href={signupHref(r.slug ?? 'imap')}>
+                <a
+                  className="btn btn-primary"
+                  href={signupHref(r.slug ?? 'imap')}
+                  onClick={() => {
+                    // The servers ride in local storage, never the URL, so the
+                    // connect form opens with exactly what this card shows.
+                    if (r.imap && r.smtp) {
+                      rememberConnectSettings(connectIntentStorage(), {
+                        imapHost: r.imap.host, imapPort: r.imap.port, imapSecurity: r.imap.security,
+                        smtpHost: r.smtp.host, smtpPort: r.smtp.port, smtpSecurity: r.smtp.security,
+                        label: r.label || r.domain || '',
+                      });
+                    }
+                  }}
+                >
                   {r.slug ? fill(t.ctaButton, { provider: nameOf(r.slug) }) : t.ctaButtonGeneric}
                 </a>
                 <a className="tool-link" href={connectHref(r.slug ?? 'imap')}>
