@@ -1,7 +1,7 @@
 {
   "meta": {
     "title": "Email MCP Server: Gmail, Outlook, IMAP & Claude",
-    "description": "Hosted email MCP server for Claude, ChatGPT and Cursor. Connect Gmail, Outlook or any IMAP mailbox, several at once. Mail is fetched live and never stored."
+    "description": "Hosted email MCP server and connector for Claude and ChatGPT. Connect Gmail, Outlook or any IMAP mailbox, several at once. Mail is never stored."
   },
   "nav": {
     "features": "Features",
@@ -48,7 +48,7 @@
   },
   "whatIs": {
     "title": "What is an email MCP server?",
-    "p1": "An email MCP server is the bridge between an AI assistant and a real mailbox. It speaks the Model Context Protocol, so Claude, ChatGPT, Cursor or any other MCP client can read, search, draft and send email through one endpoint, with no separate integration for each app.",
+    "p1": "An email MCP server, also called an email MCP connector, is the bridge between an AI assistant and a real mailbox. It speaks the Model Context Protocol, so Claude, ChatGPT, Cursor or any other MCP client can read, search, draft and send email through one endpoint, with no separate integration for each app.",
     "p2": "MCP Emails is a hosted one. It works with Gmail, Outlook and Microsoft 365, iCloud, Fastmail and any mailbox that speaks IMAP, and one agent can work several mailboxes at once. Mail is fetched live from your provider on each call and never stored on our servers.",
     "linkImap": "Set up the IMAP MCP server",
     "linkBusiness": "Email MCP for company mailboxes",
