@@ -921,7 +921,9 @@ export function OverviewPage({ inboxes, apiKeys = [], activity, stats, usageData
   // invitation to add the others (see MultiInboxInvite). Null for everyone
   // else, who get exactly the page they had. It does not depend on
   // `showGuide`, so it is still here after the first tool call.
-  const multiInbox = multiInboxPromptVariant({ businessShaped, inboxCount, atInboxLimit });
+  // A viewer cannot connect a mailbox (the connect routes refuse it), so a
+  // viewer is never invited to.
+  const multiInbox = userRole === 'viewer' ? null : multiInboxPromptVariant({ businessShaped, inboxCount, atInboxLimit });
 
   return (
     <div className="page">
@@ -1442,7 +1444,8 @@ export function InboxesPage({ inboxes, planLimits, stripePrices = null, business
   // Same rule and same component as the Overview: a business-shaped workspace
   // with exactly one mailbox is invited, under the list, to add the others.
   // Counted off the live `inboxes` array, like the cap above.
-  const multiInbox = multiInboxPromptVariant({ businessShaped, inboxCount: inboxes.length, atInboxLimit });
+  // Never for a viewer, who cannot connect one.
+  const multiInbox = canManage ? multiInboxPromptVariant({ businessShaped, inboxCount: inboxes.length, atInboxLimit }) : null;
 
   return (
     <div className="page">
