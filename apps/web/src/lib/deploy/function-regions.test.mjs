@@ -233,11 +233,27 @@ test('vercel.json region config stays inside what this test can model', () => {
   // key (trailingSlash, cleanUrls, crons, headers, redirects, rewrites, ...)
   // is new platform behaviour arriving through a file whose only reviewer is
   // this test. Headers and redirects live in next.config.js.
+  //
+  // One exception, pinned value for value: /api/mcp is an external rewrite to
+  // the mcp-server edge function (2026-10-20), so no Vercel function runs per
+  // MCP call. It lives here because a vercel.json rewrite is applied by the
+  // platform router; the response contract it relies on is
+  // supabase/functions/mcp-server/web-ingress.ts. us-east-1 keeps the function
+  // next to the US mail hosts, as the iad1 route it replaced did.
   assert.deepEqual(
     Object.keys(config).sort(),
-    ['$schema', 'functions'],
-    'apps/web/vercel.json may contain only "$schema" and "functions"',
+    ['$schema', 'functions', 'headers', 'rewrites'],
+    'apps/web/vercel.json may contain only "$schema", "functions" and the pinned /api/mcp rewrite',
   );
+  assert.deepEqual(config.rewrites, [
+    {
+      source: '/api/mcp',
+      destination: 'https://swvaxorwumispmjaaszb.supabase.co/functions/v1/mcp-server/web?forceFunctionRegion=us-east-1',
+    },
+  ]);
+  assert.deepEqual(config.headers, [
+    { source: '/api/mcp', headers: [{ key: 'x-vercel-enable-rewrite-caching', value: '0' }] },
+  ]);
   // A top-level `regions` overrides the project's Function Region setting for
   // every unmatched function, which would make PROJECT_DEFAULT_REGION a lie.
   assert.equal(config.regions, undefined, 'top-level "regions" is not allowed; pin per function');
