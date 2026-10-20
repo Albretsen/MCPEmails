@@ -16,6 +16,13 @@ export const routing = defineRouting({
   // must serve a stable English page with a stable canonical for SEO; visitors
   // reach other languages via an explicit prefix (/nb) or the language switcher.
   localeDetection: false,
+  // No `Link:` response header. next-intl's middleware builds it from this list
+  // alone, so it advertised all five locales on every page, including pages
+  // that exist only in some of them (English-only comparisons, untranslated
+  // blog posts, providers without zh). The <link rel="alternate"> tags each
+  // page emits from its real locale list (src/i18n/seo.ts) are the only
+  // hreflang source.
+  alternateLinks: false,
 });
 
 export type Locale = (typeof routing.locales)[number];

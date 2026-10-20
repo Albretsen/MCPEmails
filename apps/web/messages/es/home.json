@@ -273,6 +273,7 @@
     "linkOauth": "Conexión OAuth",
     "linkProviders": "Soporte de proveedores",
     "linkReadOnly": "Acceso de solo lectura",
+    "linkClients": "Configuración de clientes MCP",
     "linkPrivacy": "Privacidad",
     "linkTerms": "Términos",
     "linkWithdrawal": "Derecho de desistimiento",

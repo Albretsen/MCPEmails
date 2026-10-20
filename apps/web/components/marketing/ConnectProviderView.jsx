@@ -33,6 +33,8 @@ export function nameGrammar(name) {
  */
 export default async function ConnectProviderView({ locale, provider, content, multiMailbox = null, guides = null }) {
   const t = await getTranslations({ locale, namespace: 'connect' });
+  // Only providers whose page exists in this locale: next-intl's Link adds the
+  // locale prefix, so a provider missing here would be a link to a 404.
   const related = relatedProviders(provider.slug, 6, new Date(), locale);
   const guideLinks = guides ? guideLinksFor(content) : [];
   const showGmailVerification = provider.slug === 'gmail' && OAUTH_VERIFICATION_PENDING;

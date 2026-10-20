@@ -4,7 +4,8 @@
     "https://hilfe.web.de/pop-imap/index.html",
     "https://hilfe.web.de/pop-imap/imap/index.html",
     "https://hilfe.web.de/sicherheit/2fa/anwendungsspezifisches-passwort.html",
-    "https://hilfe.web.de/pop-imap/einrichtung-mailprogramm-scheitert.html"
+    "https://hilfe.web.de/pop-imap/einrichtung-mailprogramm-scheitert.html",
+    "https://hilfe.web.de/pop-imap/imap/imap-serverdaten.html"
   ],
   "auth": {
     "method": "account-password",
@@ -60,11 +61,11 @@
     },
     {
       "h": "Turning on two-factor authentication retires your password for mail clients",
-      "p": "WEB.DE two-factor authentication protects the web login, and once it is on, your ordinary WEB.DE password stops working in anything that speaks IMAP or SMTP. You then need an <b>anwendungsspezifisches Passwort</b>, generated in the mailbox under Account verwalten, then Login & Sicherheit, then Anwendungsspezifische Passwörter verwalten. Create one for mail, paste that into mcpemails instead of your normal password, and leave the normal password for the website. Without 2FA, the account password is the right credential and no app password exists to create."
+      "p": "WEB.DE files its app password under two-factor authentication and describes it as the password for external mail programs over POP3 and IMAP. Once 2FA protects your account, create one in a browser: click your initials, then <b>Account verwalten</b>, then <b>Login & Sicherheit</b>, then <b>App-Passwörter (für externe Apps)</b>, then <b>Neues App-Passwort erstellen</b>. Name it, for example MCP Emails, and copy it at once, because WEB.DE shows it only once. Paste it into MCP Emails instead of your normal password, and keep the normal password for the website. Without 2FA, the account password is the right credential."
     },
     {
-      "h": "Both SMTP transports answer, so a send failure is rarely the port",
-      "p": "Guides for WEB.DE disagree about outgoing mail: some give <code>smtp.web.de</code> on port 465 with implicit TLS, others give port 587 with STARTTLS. Both work, and our probe completed a TLS handshake on 465 with the server offering PLAIN and LOGIN. Cycling between the two ports is therefore wasted effort. If sending is refused, the cause is the retrieval slider, the missing app password, or a From address that is not one of the addresses registered on the account."
+      "h": "Both SMTP ports work, so a send failure is rarely the port",
+      "p": "WEB.DE's help lists <code>smtp.web.de</code> on port 587 with STARTTLS, with port 465 and SSL as the alternative, and accepts only TLS 1.2 or 1.3. Both ports work, and our probe completed a TLS handshake on 465 with the server offering PLAIN and LOGIN, so cycling between them is wasted effort. If sending is refused, the cause is the retrieval slider, the missing app password, or the From address: WEB.DE asks you to send only from addresses that verifiably belong to your mailbox."
     }
   ],
   "limits": [
@@ -79,7 +80,7 @@
     },
     {
       "q": "What are the WEB.DE IMAP and SMTP settings?",
-      "a": "IMAP is imap.web.de on port 993 with implicit TLS, and SMTP is smtp.web.de on port 465, also implicit TLS. WEB.DE additionally accepts 587 with STARTTLS for outgoing mail. The username is your complete WEB.DE address including the domain. Both hosts were confirmed from a live TLS connection on the date shown on this page."
+      "a": "IMAP is imap.web.de on port 993 with SSL. SMTP is smtp.web.de, on port 587 with STARTTLS as WEB.DE documents it, or on port 465 with SSL, which is what MCP Emails uses. The username is your complete WEB.DE address including the domain. Both hosts were confirmed from a live TLS connection on the date shown on this page."
     },
     {
       "q": "How do I enable IMAP in WEB.DE?",
@@ -91,7 +92,7 @@
     },
     {
       "q": "Does WEB.DE need an app password?",
-      "a": "Only if you have two-factor authentication turned on. With 2FA off, your normal WEB.DE password authenticates mail clients once retrieval is enabled. With 2FA on, generate an application-specific password under Account verwalten, Login & Sicherheit, Anwendungsspezifische Passwörter verwalten, and use that in mcpemails."
+      "a": "Only if you have two-factor authentication turned on. With 2FA off, your normal WEB.DE password authenticates mail clients once retrieval is enabled. With 2FA on, create an App-Passwort under Account verwalten, Login & Sicherheit, App-Passwörter (für externe Apps), and use that in MCP Emails. WEB.DE shows it only once; if you lose it, delete it and create a new one."
     },
     {
       "q": "Is my WEB.DE mail stored on your servers?",

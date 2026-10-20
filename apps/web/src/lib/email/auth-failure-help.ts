@@ -90,7 +90,7 @@ export const HOST_HELP: readonly HostHelp[] = [
     id: 'ionos',
     label: 'IONOS',
     sources: ['ionos'],
-    presetIds: ['ionos'],
+    presetIds: ['ionos', 'ionos-de', 'ionos-uk', 'ionos-fr', 'ionos-es', 'ionos-it'],
     hostSuffixes: ['imap.ionos.com', 'smtp.ionos.com'],
     whereKey: 'connect.authHelpWhereIonos',
   },

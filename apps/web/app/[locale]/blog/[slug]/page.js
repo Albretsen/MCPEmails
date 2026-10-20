@@ -148,6 +148,8 @@ export default async function BlogPostPage({ params }) {
     html,
     headings,
     author,
+    // The locales this post is really translated into, for the language switcher.
+    locales: post.locales,
   };
 
   return (
