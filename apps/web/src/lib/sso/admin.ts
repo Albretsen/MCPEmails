@@ -24,12 +24,6 @@ import { SSO_DEFAULT_ROLES, type SsoConnection, type SsoDefaultRole, type SsoDom
  * ENTITLEMENT. `enterprise` is an existing plan slug (workspaces_plan_check),
  * but nothing sells it yet: the owner sets it by hand. When the enterprise
  * tier gets its real slug or a feature flag, change isSsoEntitledPlan().
- *
- * WHY UNTYPED TABLE ACCESS. sso_connections, sso_domains and sso_audit_events
- * come from migrations that are not applied yet, so database.types.ts does
- * not know them. The narrow interface below is the one cast; once the
- * migrations are applied and `npm run gen:types` has run, delete it and use
- * the typed client.
  */
 
 export const SSO_ENTITLED_PLANS = ['enterprise'] as const;
@@ -40,37 +34,6 @@ export function isSsoEntitledPlan(plan: string | null | undefined): boolean {
 
 export function isSsoDefaultRole(value: unknown): value is SsoDefaultRole {
   return typeof value === 'string' && (SSO_DEFAULT_ROLES as readonly string[]).includes(value);
-}
-
-// ── Untyped access to the not-yet-generated tables ──────────────────────────
-
-export interface PgError {
-  code?: string;
-  message: string;
-}
-export interface PgResult {
-  data: unknown;
-  error: PgError | null;
-}
-export interface UntypedQuery extends PromiseLike<PgResult> {
-  select(columns?: string): UntypedQuery;
-  insert(values: Record<string, unknown>): UntypedQuery;
-  update(values: Record<string, unknown>): UntypedQuery;
-  delete(): UntypedQuery;
-  eq(column: string, value: unknown): UntypedQuery;
-  in(column: string, values: readonly unknown[]): UntypedQuery;
-  order(column: string, options?: { ascending?: boolean }): UntypedQuery;
-  limit(count: number): UntypedQuery;
-  maybeSingle(): PromiseLike<PgResult>;
-  single(): PromiseLike<PgResult>;
-}
-export interface SsoDb {
-  from(table: 'sso_connections' | 'sso_domains' | 'sso_audit_events' | 'users'): UntypedQuery;
-  rpc(fn: 'sso_admin_test_sign_in_seen', args: { p_connection_id: string }): PromiseLike<PgResult>;
-}
-
-function untyped(client: SupabaseClient<Database>): SsoDb {
-  return client as unknown as SsoDb;
 }
 
 // ── Errors ───────────────────────────────────────────────────────────────────
@@ -113,7 +76,7 @@ export interface SsoAdminContext {
   workspaceId: string;
   role: WorkspaceRole;
   /** Service-role access. Every query must filter on workspaceId. */
-  db: SsoDb;
+  db: SupabaseClient<Database>;
 }
 
 export type SsoAdminAuth = { ok: true; ctx: SsoAdminContext } | { ok: false; response: NextResponse };
@@ -152,7 +115,7 @@ export async function authorizeSsoAdmin(): Promise<SsoAdminAuth> {
     return { ok: false, response: ssoError(403, 'plan_required', 'Single sign-on is part of the Enterprise plan.') };
   }
 
-  return { ok: true, ctx: { userId: user.id, workspaceId, role, db: untyped(createServiceRoleClient()) } };
+  return { ok: true, ctx: { userId: user.id, workspaceId, role, db: createServiceRoleClient() } };
 }
 
 /** Parses a JSON object body, or null. */
