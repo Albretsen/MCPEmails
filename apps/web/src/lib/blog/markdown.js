@@ -51,12 +51,8 @@ function escapeHtml(s) {
     .replace(/>/g, '&gt;');
 }
 
-/**
- * Inline formatting: code, bold, italic, links. Operates on escaped text.
- * `mapHref`, when given, rewrites every site-internal link target (a path
- * starting with "/"); renderMarkdown passes the page's locale mapping here.
- */
-function inline(text, mapHref) {
+/** Inline formatting: code, bold, italic, links. Operates on escaped text. */
+function inline(text, hrefFor = (href) => href) {
   let out = escapeHtml(text);
   // inline code first so its contents aren't touched by other rules
   out = out.replace(/`([^`]+)`/g, (_m, c) => `<code>${c}</code>`);
@@ -69,8 +65,7 @@ function inline(text, mapHref) {
   out = out.replace(/\[([^\]]+)\]\(([^)\s]+)\)/g, (_m, label, href) => {
     const ext = /^https?:\/\//.test(href);
     const rel = ext ? ' target="_blank" rel="noopener noreferrer"' : '';
-    const target = !ext && mapHref && href.startsWith('/') ? mapHref(href) : href;
-    return `<a href="${target}"${rel}>${label}</a>`;
+    return `<a href="${ext ? href : hrefFor(href)}"${rel}>${label}</a>`;
   });
   // bold then italic
   out = out.replace(/\*\*([^*]+)\*\*/g, '<strong>$1</strong>');
@@ -81,16 +76,19 @@ function inline(text, mapHref) {
 /**
  * Render markdown to an HTML string and collect headings for a table of
  * contents. Returns { html, headings: [{ id, text, level }] }.
+ *
+ * `hrefFor` rewrites each internal (non-http) link target. The post page passes
+ * one that adds the locale prefix where the target exists in that locale (see
+ * links.mjs); without it, links render exactly as written.
  */
-export function renderMarkdown(markdown, { mapHref } = {}) {
-  const inl = (text) => inline(text, mapHref);
+export function renderMarkdown(markdown, { hrefFor = (href) => href } = {}) {
   const lines = markdown.replace(/\r\n/g, '\n').split('\n');
   const html = [];
   const headings = [];
   let i = 0;
 
   const flushParagraph = (buf) => {
-    if (buf.length) html.push(`<p>${inl(buf.join(' '))}</p>`);
+    if (buf.length) html.push(`<p>${inline(buf.join(' '), hrefFor)}</p>`);
     return [];
   };
 
@@ -134,7 +132,7 @@ export function renderMarkdown(markdown, { mapHref } = {}) {
       const text = h[2].trim();
       const id = uniqueId(text);
       if (level === 2 || level === 3) headings.push({ id, text, level });
-      html.push(`<h${level} id="${id}">${inl(text)}</h${level}>`);
+      html.push(`<h${level} id="${id}">${inline(text, hrefFor)}</h${level}>`);
       i++;
       continue;
     }
@@ -155,7 +153,7 @@ export function renderMarkdown(markdown, { mapHref } = {}) {
         quote.push(lines[i].replace(/^>\s?/, ''));
         i++;
       }
-      html.push(`<blockquote>${inl(quote.join(' '))}</blockquote>`);
+      html.push(`<blockquote>${inline(quote.join(' '), hrefFor)}</blockquote>`);
       continue;
     }
 
@@ -167,7 +165,7 @@ export function renderMarkdown(markdown, { mapHref } = {}) {
         items.push(lines[i].replace(/^\s*[-*]\s+/, ''));
         i++;
       }
-      html.push(`<ul>${items.map((it) => `<li>${inl(it)}</li>`).join('')}</ul>`);
+      html.push(`<ul>${items.map((it) => `<li>${inline(it, hrefFor)}</li>`).join('')}</ul>`);
       continue;
     }
 
@@ -183,7 +181,7 @@ export function renderMarkdown(markdown, { mapHref } = {}) {
         i++;
       }
       const startAttr = start === 1 ? '' : ` start="${start}"`;
-      html.push(`<ol${startAttr}>${items.map((it) => `<li>${inl(it)}</li>`).join('')}</ol>`);
+      html.push(`<ol${startAttr}>${items.map((it) => `<li>${inline(it, hrefFor)}</li>`).join('')}</ol>`);
       continue;
     }
 
@@ -198,7 +196,7 @@ export function renderMarkdown(markdown, { mapHref } = {}) {
     const img = line.match(/^!\[([^\]]*)\]\(([^)\s]+)\)\s*$/);
     if (img) {
       paragraph = flushParagraph(paragraph);
-      const caption = img[1] ? `<figcaption>${inl(img[1])}</figcaption>` : '';
+      const caption = img[1] ? `<figcaption>${inline(img[1], hrefFor)}</figcaption>` : '';
       html.push(
         `<figure><img src="${img[2]}" alt="${img[1]}" loading="lazy" decoding="async" />${caption}</figure>`,
       );

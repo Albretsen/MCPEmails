@@ -75,6 +75,12 @@ const EN = {
     guideLink: {
       intro: 'Official {client} documentation for remote MCP servers:',
     },
+    postLink: {
+      intro: 'Prefer a full walkthrough?',
+      claude: 'How to connect Claude to your email',
+      chatgpt: 'How to connect ChatGPT to your email',
+      editors: 'Email for AI agents in Cursor, Cline and VS Code',
+    },
     providers: {
       intro: 'Wondering which mailbox to connect first?',
       label: 'See the provider compatibility matrix',
@@ -148,6 +154,12 @@ const NB = {
     },
     guideLink: {
       intro: 'Offisiell dokumentasjon fra {client} for eksterne MCP-servere:',
+    },
+    postLink: {
+      intro: 'Vil du ha en fullstendig gjennomgang?',
+      claude: 'Slik kobler du Claude til e-posten din',
+      chatgpt: 'Slik kobler du ChatGPT til e-posten din',
+      editors: 'E-post for AI-agenter i Cursor, Cline og VS Code',
     },
     providers: {
       intro: 'Lurer du på hvilken postkasse du bør koble til først?',
@@ -223,6 +235,12 @@ const ES = {
     guideLink: {
       intro: 'Documentación oficial de {client} sobre servidores MCP remotos:',
     },
+    postLink: {
+      intro: '¿Prefieres una guía completa?',
+      claude: 'Cómo conectar Claude a tu correo',
+      chatgpt: 'Cómo conectar ChatGPT a tu correo',
+      editors: 'Correo para agentes de IA en Cursor, Cline y VS Code',
+    },
     providers: {
       intro: '¿No sabes qué buzón conectar primero?',
       label: 'Consulta la tabla de compatibilidad de proveedores',
@@ -297,6 +315,12 @@ const FR = {
     guideLink: {
       intro: 'Documentation officielle de {client} sur les serveurs MCP distants :',
     },
+    postLink: {
+      intro: 'Vous préférez un guide complet ?',
+      claude: 'Connecter Claude à vos e-mails',
+      chatgpt: 'Connecter ChatGPT à vos e-mails',
+      editors: 'L\'e-mail pour les agents IA dans Cursor, Cline et VS Code',
+    },
     providers: {
       intro: 'Vous ne savez pas quelle boîte connecter en premier ?',
       label: 'Voir le tableau de compatibilité des fournisseurs',
@@ -370,6 +394,12 @@ const ZH = {
     },
     guideLink: {
       intro: '{client} 关于远程 MCP 服务器的官方文档：',
+    },
+    postLink: {
+      intro: '想看完整教程？',
+      claude: '如何将 Claude 连接到你的邮箱',
+      chatgpt: '如何将 ChatGPT 连接到你的邮箱',
+      editors: '在 Cursor、Cline 和 VS Code 中为 AI 智能体接入邮件',
     },
     providers: {
       intro: '不确定先连接哪个邮箱？',
