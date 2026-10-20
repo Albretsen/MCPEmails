@@ -1,0 +1,97 @@
+{
+  "_sources": [
+    "https://www.swisscom.ch/en/residential/help/e-mail/setup.html",
+    "https://www.swisscom.ch/de/privatkunden/hilfe/internet/e-mail-setup-ssl.tab-auf-dem-computer.html"
+  ],
+  "auth": {
+    "method": "mail-password",
+    "label": "Bluewin E-Mail-Passwort",
+    "helpUrl": "https://www.swisscom.ch/en/residential/help/e-mail/setup.html",
+    "usernameForm": "Ihre vollständige Bluewin-Adresse, zum Beispiel vorname.nachname@bluewin.ch.",
+    "status": "active"
+  },
+  "meta": {
+    "title": "Bluewin (Swisscom) E-Mail per IMAP mit Claude verbinden",
+    "description": "Bluewin E-Mail per IMAP über imaps.bluewin.ch:993 mit Claude und jedem MCP-Client verbinden. Mail-Clients brauchen das separate E-Mail-Passwort von Swisscom, nicht Ihr Login."
+  },
+  "hero": {
+    "eyebrow": "Bluewin + KI",
+    "titleLine1": "Bluewin E-Mail mit Claude verbinden,",
+    "titleLine2": "mit Cursor, ChatGPT und jedem MCP-Client",
+    "lead": "Geben Sie Ihrem KI-Agenten ein echtes bluewin.ch-Postfach. Lesen, suchen, senden, beantworten, planen und sortieren Sie E-Mails per IMAP mit Ihrem E-Mail-Passwort von Swisscom, in jedem MCP-Client statt nur in einem.",
+    "answer": "Claude kann ein Bluewin-Postfach nicht selbst erreichen. MCP Emails ist ein gehosteter MCP-Server, der es per IMAP über imaps.bluewin.ch auf Port 993 verbindet. Die Anmeldung erfolgt mit Ihrer vollständigen bluewin.ch-Adresse und Ihrem Bluewin E-Mail-Passwort, das Swisscom getrennt von Ihrem Passwort für das My Swisscom Login führt. Danach können Claude, Cursor oder jeder andere MCP-Client diese E-Mails lesen, suchen, senden, beantworten und sortieren. Ein Postfach ist dauerhaft kostenlos.",
+    "meta0": "1 Postfach dauerhaft kostenlos",
+    "meta1": "E-Mail-Passwort, nicht das Swisscom Login",
+    "meta2": "E-Mails werden live abgerufen, nie gespeichert"
+  },
+  "method": {
+    "title": "So verbindet sich Bluewin: IMAP und das separate E-Mail-Passwort",
+    "body": "Swisscom stellt Bluewin-E-Mails per IMAP über <code>imaps.bluewin.ch</code> auf Port 993 bereit und nimmt ausgehende E-Mails über <code>smtpauths.bluewin.ch</code> auf Port 465 an, beide mit TLS ab dem Verbindungsaufbau. Beim Passwort unterscheidet sich Bluewin von den meisten Anbietern: Swisscom sagt klar, dass das E-Mail-Passwort nicht dem Passwort für das Swisscom Login entspricht. Es gibt ein E-Mail-Passwort pro Adresse, Sie legen es in My Swisscom fest oder ändern es dort, und dasselbe Passwort gilt für IMAP, SMTP sowie die Kalender- und Kontaktprotokolle. Ihr Benutzername ist die vollständige Adresse, normalerweise in der Form <code>firstname.lastname@bluewin.ch</code>."
+  },
+  "setup": [
+    {
+      "h": "Kostenloses MCP Emails-Konto erstellen",
+      "p": "Registrieren Sie sich auf mcpemails.com. Der Free-Tarif verbindet ein Postfach und fragt nicht nach einer Kreditkarte."
+    },
+    {
+      "h": "E-Mail-Passwort in My Swisscom festlegen oder prüfen",
+      "p": "Melden Sie sich bei My Swisscom an und öffnen Sie den Bereich, in dem Sie das E-Mail-Passwort für die Bluewin-Adresse ändern, die Sie verbinden möchten. Das ist ein anderes Passwort als das, mit dem Sie sich bei My Swisscom angemeldet haben. Haben Sie es noch nie festgelegt, tun Sie es jetzt; der hier gewählte Wert ist der, den ein Mail-Client verwendet."
+    },
+    {
+      "h": "Adresse und E-Mail-Passwort in MCP Emails eingeben",
+      "p": "Wählen Sie IMAP / SMTP, geben Sie Ihre vollständige <code>@bluewin.ch</code>-Adresse ein und fügen Sie das E-Mail-Passwort ein, nicht Ihr Passwort für das Swisscom Login. Die Bluewin-Hosts sind vorausgefüllt, samt der Buchstaben am Ende, bei denen man sich leicht vertippt."
+    },
+    {
+      "h": "MCP-URL in Ihre KI einfügen",
+      "p": "Fügen Sie https://mcpemails.com/api/mcp in Claude, Cursor oder ChatGPT ein, autorisieren Sie den Zugriff, und Ihr Agent hat das Postfach."
+    }
+  ],
+  "gotchas": [
+    {
+      "h": "Das Passwort für das Swisscom Login funktioniert in keinem Mail-Client",
+      "p": "Swisscom führt zwei Zugangsdaten für ein Konto: das Swisscom Login, mit dem Sie in My Swisscom und ins Kundenportal kommen, und das E-Mail-Passwort, das als einziges von IMAP und SMTP akzeptiert wird. Beide können unterschiedlich sein und sind es meistens auch. Fast jeder Anmeldefehler bei Bluewin hat diese Ursache. Das Passwort für das Swisscom Login zurückzusetzen hilft nicht, weil gar nicht dieses Passwort geprüft wird."
+    },
+    {
+      "h": "Die Hostnamen lauten imaps und smtpauths, nicht imap und smtp",
+      "p": "Die Servernamen von Bluewin haben zusätzliche Buchstaben, die man aus dem Gedächtnis gern weglässt: Der Eingangsserver endet auf <code>imaps</code> mit s, und der Ausgangsserver heißt <code>smtpauths</code>, nicht <code>smtp</code>. Ein verkürzter Name führt zu keinem Mailserver von Swisscom, der Client meldet also einen Verbindungsfehler statt eines Anmeldefehlers. Wenn Sie die Einstellungen woanders von Hand eintragen, kopieren Sie sie, statt sie abzutippen."
+    },
+    {
+      "h": "Kein SPECIAL-USE, Ordner werden also über den Namen aus dem Webmail zugeordnet",
+      "p": "Der IMAP-Server von Bluewin meldet die Erweiterung SPECIAL-USE nicht, über die ein Client normalerweise erfährt, welcher Ordner Gesendet und welcher Papierkorb ist. Ordner müssen daher über ihren Namen zugeordnet werden, und Bluewin benennt sie in der Sprache, auf die Ihr Webmail eingestellt ist. Ein deutsches Konto hat also Gesendet, wo ein englisches Sent hat. Legt ein Agent etwas am falschen Ort ab, nennen Sie den Zielordner genau so, wie das Bluewin-Webmail ihn anzeigt."
+    },
+    {
+      "h": "MOVE und UIDPLUS fehlen beide",
+      "p": "Dieser Server unterstützt weder MOVE noch UIDPLUS. Das Ablegen einer Nachricht läuft deshalb als COPY, dann STORE mit dem Gelöscht-Flag, dann EXPUNGE, und der Server meldet nie die ID, die er der neuen Kopie zugewiesen hat. MCP Emails übernimmt diese Abfolge, aber ein Verschieben ist hier nicht atomar, und eine abgelegte Nachricht wird durch eine Suche im Zielordner bestätigt statt über ihre ID."
+    }
+  ],
+  "limits": [
+    "Der SMTP-Host von Bluewin gibt eine maximale Nachrichtengröße von etwa 25 MB an. Das ist weniger als bei den meisten Anbietern auf dieser Website, eine E-Mail mit mehreren großen Anhängen wird also schon vor dem Versand abgelehnt.",
+    "Ordnerrollen werden über den Namen zugeordnet, weil SPECIAL-USE nicht gemeldet wird. Bei einem Postfach mit umbenannten Ordnern müssen Sie den Ordner eventuell ausdrücklich nennen."
+  ],
+  "faq": [
+    {
+      "q": "Funktioniert Claude mit Bluewin E-Mail?",
+      "a": "Nicht direkt. Claude hat keinen eingebauten Konnektor für Bluewin oder Swisscom. Verbinden Sie einen MCP-Server wie MCP Emails per IMAP mit dem Postfach, dann kann Claude Ihre bluewin.ch-E-Mails lesen, suchen, senden, beantworten, planen und sortieren. Dieselbe Verbindung funktioniert in Cursor, ChatGPT und anderen MCP-Clients."
+    },
+    {
+      "q": "Wie lauten die IMAP- und SMTP-Einstellungen für Bluewin?",
+      "a": "IMAP ist imaps.bluewin.ch auf Port 993 mit TLS ab Verbindungsbeginn. SMTP ist smtpauths.bluewin.ch auf Port 465, ebenfalls mit implizitem TLS und mit Pflicht zur Authentifizierung. Der Benutzername ist Ihre vollständige bluewin.ch-Adresse. Beide Hosts wurden an dem auf dieser Seite angegebenen Datum über eine echte TLS-Verbindung geprüft."
+    },
+    {
+      "q": "Warum wird mein Bluewin-Passwort abgelehnt?",
+      "a": "Weil ein Mail-Client das Bluewin E-Mail-Passwort braucht und die meisten das Passwort für das Swisscom Login versuchen. Swisscom dokumentiert beides als getrennte Zugangsdaten. Legen Sie das E-Mail-Passwort für genau diese Adresse in My Swisscom fest oder setzen Sie es zurück, und verwenden Sie dann den neuen Wert. Eine Änderung des Passworts für das Swisscom Login ändert nichts daran, was IMAP akzeptiert."
+    },
+    {
+      "q": "Brauche ich für Bluewin ein App-Passwort?",
+      "a": "Nein. Swisscom vergibt keine Passwörter pro Anwendung. Es gibt ein einziges E-Mail-Passwort pro Adresse, festgelegt in My Swisscom, und es gilt gleichermaßen für IMAP, SMTP sowie die Kalender- und Kontaktprotokolle. Das heißt auch: Wenn Sie es ändern, werden alle Clients auf einmal getrennt. Aktualisieren Sie sie also gemeinsam."
+    },
+    {
+      "q": "Werden meine Bluewin-E-Mails auf Ihren Servern gespeichert?",
+      "a": "Nein. Nachrichten werden bei jeder Anfrage live per IMAP von Swisscom abgerufen und an Ihren KI-Client übergeben. Zugangsdaten werden verschlüsselt gespeichert, und Nachrichteninhalte werden nicht aufbewahrt."
+    }
+  ],
+  "ctaBand": {
+    "title": "Geben Sie Ihrer KI ein Bluewin-Postfach",
+    "sub": "Verbinden Sie eine bluewin.ch-Adresse in wenigen Minuten mit Ihrem E-Mail-Passwort von Swisscom. Ein Postfach dauerhaft kostenlos, ohne Kreditkarte."
+  }
+}

@@ -1,7 +1,12 @@
 {
   "_sources": [
     "https://support.gmx.com/pop-imap/toggle.html",
-    "https://support.gmx.com/pop-imap/imap/index.html"
+    "https://support.gmx.com/pop-imap/imap/index.html",
+    "https://support.gmx.com/pop-imap/imap/server.html",
+    "https://hilfe.gmx.net/pop-imap/einschalten.html",
+    "https://hilfe.gmx.net/pop-imap/imap/imap-serverdaten.html",
+    "https://hilfe.gmx.net/sicherheit/2fa/anwendungsspezifisches-passwort.html",
+    "https://hilfe.gmx.net/pop-imap/einrichtung-mailprogramm-scheitert.html"
   ],
   "auth": {
     "method": "account-password",
@@ -26,7 +31,7 @@
   },
   "method": {
     "title": "Cómo se conecta GMX: IMAP y la contraseña de tu cuenta",
-    "body": "GMX se conecta por IMAP/SMTP, pero <b>el acceso POP3 e IMAP está desactivado por defecto</b>. Actívalo en GMX en la pestaña Email, Settings, POP3 & IMAP, y luego conéctate con tu dirección y tu contraseña de GMX. Si GMX te pide crear una contraseña específica de aplicación, usa esa. Las cuentas alemanas usan los servidores .net, <code>imap.gmx.net</code> y <code>mail.gmx.net</code>."
+    "body": "GMX se conecta por IMAP/SMTP, pero <b>el acceso POP3 e IMAP está desactivado por defecto</b>. En una cuenta alemana de GMX, actívalo en <b>E-Mail-Einstellungen</b> (ajustes de correo), <b>E-Mail empfangen</b>, <b>POP3/IMAP</b>; en gmx.com es la pestaña Email, Settings, POP3 & IMAP. Después conecta con tu dirección de GMX y tu contraseña, o con un App-Passwort si tienes activada la autenticación en dos factores. Las cuentas alemanas usan los servidores .net, <code>imap.gmx.net</code> y <code>mail.gmx.net</code>. La ayuda internacional de GMX indica <code>imap.gmx.com</code> y <code>mail.gmx.com</code> para gmx.com."
   },
   "setup": [
     {
@@ -35,7 +40,7 @@
     },
     {
       "h": "Activa el acceso IMAP en GMX",
-      "p": "En GMX, abre la pestaña Email, luego Settings, luego POP3 & IMAP, y permite el acceso POP3 e IMAP. GMX lo vuelve a desactivar si la cuenta pasa mucho tiempo sin usarse."
+      "p": "Inicia sesión en GMX desde un navegador, haz clic en el círculo con tus iniciales, abre E-Mail-Einstellungen, elige POP3/IMAP en E-Mail empfangen y mueve el interruptor a POP3- und IMAP-Zugriff erlauben (permitir el acceso POP3 e IMAP). En gmx.com: pestaña Email, luego Settings, luego POP3 & IMAP."
     },
     {
       "h": "Añade el buzón en mcpemails",
@@ -49,19 +54,23 @@
   "gotchas": [
     {
       "h": "GMX desactiva POP3 e IMAP por defecto, y los vuelve a desactivar más adelante",
-      "p": "El acceso externo a una cuenta de GMX Mail está desactivado hasta que lo activas: abre la pestaña Email, luego Settings, luego POP3 & IMAP, marca <b>Enable access to this account via POP3 and IMAP</b> y guarda. GMX documenta algo en lo que casi nadie se fija: vuelve a desactivar el permiso automáticamente, por seguridad, si el buzón pasa una larga temporada sin actividad POP3 o IMAP. Así que una conexión que lleva meses funcionando puede dejar de hacerlo con un fallo de inicio de sesión sin que haya cambiado absolutamente nada por tu parte. El ajuste tampoco aparece en la aplicación móvil de GMX, así que tienes que hacerlo desde un navegador."
+      "p": "El acceso externo a un buzón de GMX está desactivado hasta que lo habilitas. En una cuenta alemana, inicia sesión en gmx.net, haz clic en el círculo con tus iniciales en la barra superior, abre <b>E-Mail-Einstellungen</b>, elige <b>POP3/IMAP</b> en <b>E-Mail empfangen</b>, mueve el interruptor de <b>POP3-/IMAP-Abruf</b> a <b>POP3- und IMAP-Zugriff erlauben</b> y resuelve el pequeño rompecabezas que muestra GMX, en el que arrastras un símbolo encima de otro. En gmx.com el mismo interruptor está en la pestaña Email, Settings, POP3 & IMAP, <b>Enable access to this account via POP3 and IMAP</b>. GMX también documenta que vuelve a desactivar el permiso automáticamente, por seguridad, cuando el buzón pasa mucho tiempo sin uso de POP3 o IMAP. Así que una conexión que funcionó durante meses puede fallar al iniciar sesión sin que nada haya cambiado por tu parte."
     },
     {
-      "h": "El servidor de salida es mail.gmx.net, no smtp.gmx.net",
-      "p": "GMX rompe la convención de nombres que sigue casi cualquier otro proveedor. El de entrada es <code>imap.gmx.net</code>, pero el envío saliente es <code>mail.gmx.net</code> en el puerto 465. Un <code>smtp.gmx.net</code> supuesto no responde, y los clientes que rellenan los nombres de servidor por patrón se equivocan siempre. Los dos nombres de esta página se confirmaron abriendo una conexión TLS real con ellos, y el certificado que presenta GMX está emitido para <code>mail.gmx.net</code>."
+      "h": "El correo saliente va a mail.gmx.net, por el puerto 587 o 465",
+      "p": "GMX llama a su servidor saliente <code>mail.gmx.net</code>, donde la mayoría de proveedores usan un prefijo smtp. La ayuda de GMX indica el puerto 587 con STARTTLS, el puerto 465 con SSL como alternativa, y solo TLS 1.2 o 1.3: las versiones antiguas de TLS y el SMTP después de POP ya no se admiten. <code>smtp.gmx.net</code> también existe, como alias que apunta al mismo servidor y que figura en su certificado, así que ambos nombres funcionan. MCP Emails rellena <code>mail.gmx.net</code>, el nombre que documenta GMX, en el puerto 465."
     },
     {
       "h": "GMX acepta un mensaje de 135 MB que el destinatario luego rechazará",
       "p": "El servidor de envío de GMX Mail anuncia un tamaño máximo de mensaje de unos 135 MB, con mucha diferencia el mayor de todos los proveedores de este sitio. Es un límite de lo que GMX acepta de ti, no una promesa de entrega. El servidor de destino aplica su propio límite, y la mayoría están entre 10 MB y 50 MB, así que un adjunto grande que GMX acepta sin problema puede rebotar minutos después desde el otro extremo. Si un agente va a enviar algo grande, comparte un enlace en su lugar."
     },
     {
-      "h": "Activar la autenticación en dos factores cambia la contraseña que necesita el cliente",
-      "p": "Con la autenticación en dos factores desactivada, tu contraseña normal de GMX funciona en un cliente de correo en cuanto marcas la casilla de POP3 e IMAP. Si tienes la autenticación en dos factores activada y GMX te pide una contraseña específica de aplicación, usa esa: a partir de ese momento la contraseña normal deja de funcionar en programas externos, y el fallo parece una errata y no un cambio de política. El IMAP de GMX solo ofrece los mecanismos <code>PLAIN</code> y <code>LOGIN</code>, sin vía OAuth, así que la credencial siempre es una contraseña de un tipo u otro."
+      "h": "Con la autenticación en dos factores, los programas de correo necesitan un App-Passwort",
+      "p": "GMX coloca su contraseña de aplicación dentro de la autenticación en dos factores y la describe como la contraseña para programas de correo externos por POP3 e IMAP. Créala en un navegador: haz clic en tus iniciales, luego <b>Account verwalten</b>, luego <b>Login & Sicherheit</b>, luego <b>App-Passwörter (für externe Apps)</b> y luego <b>Neues App-Passwort erstellen</b>. Ponle un nombre, por ejemplo MCP Emails, y cópiala enseguida, porque GMX la muestra una sola vez. Si la pierdes, bórrala y crea otra. El IMAP de GMX solo ofrece los mecanismos <code>PLAIN</code> y <code>LOGIN</code>, sin OAuth, así que la credencial siempre es una contraseña, de un tipo o de otro."
+    },
+    {
+      "h": "Un programa de correo no puede decirte por qué GMX lo rechazó, pero el navegador sí",
+      "p": "Un inicio de sesión IMAP rechazado no trae ningún motivo, así que el acceso POP3/IMAP desactivado, un App-Passwort que falta y una contraseña mal escrita se ven iguales desde fuera. El consejo de GMX cuando un programa de correo no conecta es iniciar sesión directamente en GMX desde un navegador en un ordenador y leer el mensaje que aparece allí. Hazlo antes de cambiar nada más: distingue las tres causas en un solo paso."
     }
   ],
   "limits": [
@@ -75,15 +84,19 @@
     },
     {
       "q": "¿Cuáles son los ajustes IMAP y SMTP de GMX Mail?",
-      "a": "IMAP es imap.gmx.net en el puerto 993 con TLS implícito. El correo saliente va a mail.gmx.net en el puerto 465, también con TLS implícito, y no a un servidor llamado smtp.gmx.net, que no existe. El nombre de usuario es tu dirección de GMX completa. Ambos servidores se confirmaron con una conexión TLS real en la fecha que indica esta página."
+      "a": "Para una cuenta alemana de GMX, el IMAP es imap.gmx.net en el puerto 993 con SSL. El correo saliente va a mail.gmx.net, en el puerto 587 con STARTTLS o en el 465 con SSL; MCP Emails usa el 465. smtp.gmx.net es un alias del mismo servidor saliente. El usuario es tu dirección completa de GMX. La ayuda internacional de GMX indica imap.gmx.com y mail.gmx.com para las cuentas gmx.com."
     },
     {
       "q": "¿Cómo activo IMAP en GMX?",
-      "a": "Inicia sesión en GMX desde un navegador web, abre la pestaña Email, haz clic en Settings, luego en POP3 & IMAP, y marca la casilla que activa el acceso a la cuenta por POP3 e IMAP. Guarda. La opción no está en la aplicación móvil de GMX. Hasta que esté activada, GMX rechaza todos los inicios de sesión de clientes de correo y el error es idéntico al de una contraseña incorrecta."
+      "a": "Inicia sesión en GMX desde un navegador, haz clic en tus iniciales, abre E-Mail-Einstellungen, elige POP3/IMAP en E-Mail empfangen y mueve el interruptor a POP3- und IMAP-Zugriff erlauben; después resuelve el rompecabezas de arrastrar que muestra GMX. En gmx.com es la pestaña Email, Settings, POP3 & IMAP. Hasta que esto esté activado, GMX rechaza cualquier inicio de sesión desde un cliente de correo y el error parece exactamente una contraseña incorrecta."
     },
     {
       "q": "¿Por qué mi conexión con GMX dejó de funcionar sola?",
-      "a": "GMX documenta que desactiva automáticamente el acceso POP3 e IMAP, por motivos de seguridad, cuando un buzón pasa mucho tiempo sin usar esos protocolos. No tiene que cambiar nada por tu parte para que ocurra. Inicia sesión desde un navegador, vuelve a marcar la casilla de POP3 e IMAP en Settings y la conexión vuelve a funcionar con la misma contraseña."
+      "a": "GMX documenta que desactiva automáticamente el acceso POP3 e IMAP, por motivos de seguridad, cuando un buzón pasa mucho tiempo sin usar esos protocolos. No hace falta que cambie nada por tu parte para que ocurra. Inicia sesión en un navegador, vuelve a activar el acceso POP3/IMAP en los ajustes y la conexión funcionará de nuevo con la misma contraseña."
+    },
+    {
+      "q": "¿GMX necesita una contraseña de aplicación?",
+      "a": "Solo si tienes activada la autenticación en dos factores. En ese caso crea un App-Passwort en un navegador, en Account verwalten, Login & Sicherheit, App-Passwörter (für externe Apps), y úsalo en MCP Emails en lugar de tu contraseña de GMX. GMX lo muestra una sola vez; si lo pierdes, bórralo y crea otro."
     },
     {
       "q": "¿Se almacena mi correo de GMX en sus servidores?",

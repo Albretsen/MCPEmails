@@ -14,6 +14,7 @@ import { normalizeSenderName } from '@/lib/inboxes/sender-name';
 import { canChangeApiKey, keyScopeCap } from '@/lib/api-keys/key-authority';
 import { VIEWER_SCOPES } from '@/lib/api-keys/scopes';
 import { canOperateWorkspace } from '@/lib/workspace/roles';
+import { startVisiblePoll } from '@/lib/polling/visible-poll';
 import {
   hiddenFromShown,
   inboxDraftEditorControl,
@@ -4342,6 +4343,10 @@ export function KeysPage({ keys, inboxes = [], mcpUrl, onCreate, onKeyCreated, o
 // Stop is an operator action (owner/admin/member). Viewers are read-only, and
 // PATCH /api/workflows/runs refuses them with a 403, so for a viewer the button
 // is shown disabled with the reason beside it instead of failing on click.
+export const BULK_RUNS_ACTIVE_POLL_MS = 5_000;
+export const BULK_RUNS_IDLE_POLL_MS = 60_000;
+const isActiveBulkRun = (run) => run.status === 'running' || run.status === 'cancelling';
+
 function BulkRunsPanel({ userRole }) {
   const t = useTranslations('dashboard');
   const canStop = canOperateWorkspace(userRole);
@@ -4350,22 +4355,33 @@ function BulkRunsPanel({ userRole }) {
   const [error, setError] = useState('');
   const [cancelling, setCancelling] = useState(null);
 
+  // Whether the last answer had a run in flight. Read by the poll clock, so a
+  // ref rather than state: changing it must not restart the effect.
+  const activeRef = useRef(false);
+
   const load = async () => {
     try {
       const response = await fetch('/api/workflows/runs', { cache: 'no-store' });
       const payload = await response.json();
       if (!response.ok) throw new Error(payload.error || 'Failed to load runs.');
-      setRuns(payload.runs || []); setError('');
+      const next = payload.runs || [];
+      activeRef.current = next.some(isActiveBulkRun);
+      setRuns(next); setError('');
     } catch (err) { setError(err instanceof Error ? err.message : 'Failed to load runs.'); }
     finally { setLoading(false); }
   };
 
   useEffect(() => {
-    // Initial load plus a 5s poll; the fetch it runs necessarily sets state.
-    // eslint-disable-next-line react-hooks/set-state-in-effect
-    load();
-    const id = window.setInterval(load, 5000);
-    return () => window.clearInterval(id);
+    // Initial load, then 5 s while a run is in flight and 60 s while idle,
+    // paused while the tab is hidden and refreshed the moment it is shown.
+    // Runs are started from an MCP client, not this page, so the idle poll is
+    // what notices a new one. The fetch it runs necessarily sets state.
+    const poll = startVisiblePoll({
+      poll: load,
+      intervalMs: () => (activeRef.current ? BULK_RUNS_ACTIVE_POLL_MS : BULK_RUNS_IDLE_POLL_MS),
+      immediate: true,
+    });
+    return () => poll.stop();
   }, []);
 
   const cancel = async (id) => {
@@ -4387,7 +4403,7 @@ function BulkRunsPanel({ userRole }) {
     <div className="card" style={{ overflowX: 'auto' }}>
       {loading ? <p style={{ color: 'var(--fg-3)' }}>Loading runs…</p> : runs.length === 0 ? <div className="empty-state"><Icon name="activity" size={24} /><h3>No large-work runs yet</h3><p>Bulk move and flag actions will appear here while they run.</p></div> :
         <table className="data-table"><thead><tr><th>Action</th><th>Inbox</th><th>Progress</th><th>Status</th><th>Started</th><th /></tr></thead><tbody>{runs.map((run) => {
-          const active = run.status === 'running' || run.status === 'cancelling';
+          const active = isActiveBulkRun(run);
           const label = run.operation.replaceAll('_', ' ');
           return <tr key={run.id}><td style={{ textTransform: 'capitalize' }}>{label}</td><td>{run.inbox}</td><td>{run.processed} / {run.total} processed · {run.succeeded} changed{run.failed ? ` · ${run.failed} failed` : ''}</td><td><Badge tone={run.status === 'completed' ? 'live' : run.status === 'cancelled_partial' ? 'warning' : active ? 'neutral' : 'danger'}>{run.status.replaceAll('_', ' ')}</Badge></td><td>{new Date(run.createdAt).toLocaleString()}</td><td className="right">{active && <Btn variant="secondary" size="sm" disabled={!canStop || run.status === 'cancelling' || cancelling === run.id} title={canStop ? undefined : t('workflows.bulkRuns.stopViewerTitle')} onClick={canStop ? () => cancel(run.id) : undefined}>{run.status === 'cancelling' ? 'Stopping…' : 'Stop'}</Btn>}</td></tr>;
         })}</tbody></table>}
@@ -6651,7 +6667,7 @@ function LanguageSection() {
 
   // Each language is shown by its own native name (autonym) so the option is
   // recognizable regardless of the current interface language.
-  const LOCALE_LABELS = { en: 'English', nb: 'Norsk', es: 'Español', fr: 'Français', zh: '中文' };
+  const LOCALE_LABELS = { en: 'English', nb: 'Norsk', es: 'Español', fr: 'Français', zh: '中文', de: 'Deutsch' };
   const options = routing.locales.map((value) => ({ value, label: LOCALE_LABELS[value] || value }));
 
   return (

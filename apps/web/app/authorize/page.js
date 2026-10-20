@@ -20,7 +20,7 @@ import '../../styles/theme.css';
 export const dynamic = 'force-dynamic';
 
 export const metadata = {
-  title: 'Authorize · MCP Emails',
+  title: 'Authorize',
   description: 'Authorize an agent to access your inboxes',
 };
 

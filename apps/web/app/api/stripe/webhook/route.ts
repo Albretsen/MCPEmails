@@ -620,6 +620,14 @@ async function handleCheckoutSessionCompleted(
         interval,
         amountTotalCents: session.amount_total ?? null,
         currency: session.currency ?? null,
+        // Set when Adaptive Pricing charged the buyer in their local currency;
+        // amount_total/currency above stay in our USD integration currency.
+        presentment: session.presentment_details
+          ? {
+            amountCents: session.presentment_details.presentment_amount,
+            currency: session.presentment_details.presentment_currency,
+          }
+          : null,
         sessionId: session.id,
       }),
     );

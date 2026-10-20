@@ -44,7 +44,7 @@ Both routes keep working, and the choice decides what Claude can do afterwards:
 - **App password (IMAP):** Gmail labels appear as folders, search uses IMAP text search, and Claude can copy messages and delete them permanently.
 - **Sign in with Google (Gmail API):** Claude works with real Gmail labels and can search with Gmail operators such as \`from:\`, \`is:unread\` and \`after:\`. Deleting moves mail to Trash.
 
-On a Google Workspace account, an administrator can switch app passwords off for the whole domain, or block third-party apps on the Google sign-in route. If one route is blocked, try the other, or ask your admin.
+On a Google Workspace account, an administrator can switch app passwords off for the whole domain, or block third-party apps on the Google sign-in route. If one route is blocked, try the other, or ask your admin. The [Gmail settings and limits](/connect/gmail) page collects the Gmail-specific details in one place.
 
 ## Step 2: Add MCP Emails to Claude
 
@@ -60,7 +60,7 @@ https://mcpemails.com/api/mcp
 
 4. Click **Connect**, sign in with your MCP Emails account, and approve the scopes you want: \`read:email\`, \`send:email\`, or both.
 
-That's the entire client side. The connection is scoped to exactly what you approved, and you can revoke it from the dashboard in one click. If you'd rather understand the API-key path (for clients without built-in OAuth, like Cline or a custom script), read [OAuth vs API keys for AI email access](/blog/oauth-vs-api-keys-ai-email-access).
+That's the entire client side. The connection is scoped to exactly what you approved, and you can revoke it from the dashboard in one click. If you'd rather understand the API-key path (for clients without built-in OAuth, like Cline or a custom script), read [OAuth vs API keys for AI email access](/blog/oauth-vs-api-keys-ai-email-access). Connecting a different inbox too? The [step-by-step Claude email setup](/blog/connect-claude-to-email) covers Outlook, iCloud, Fastmail and IMAP.
 
 ## Step 3: Ask Claude your first prompt
 

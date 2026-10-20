@@ -6,6 +6,9 @@
 // callers depend on: a router whose methods record nothing, and empty search
 // params. A test that needs a route or a query parameter should pass it as a
 // prop rather than teaching this stub to lie in a new way.
+import { useContext } from 'react';
+import { SearchParamsContext } from 'next/dist/shared/lib/hooks-client-context.shared-runtime.js';
+
 export function useRouter() {
   return {
     push: () => {},
@@ -17,8 +20,11 @@ export function useRouter() {
   };
 }
 
+// Reads the same context the real hook reads, so a test that renders a
+// SearchParamsContext.Provider (the way Next's router hands a URL to the tree)
+// gets that URL. Without one, empty search params, as before.
 export function useSearchParams() {
-  return new URLSearchParams();
+  return useContext(SearchParamsContext) ?? new URLSearchParams();
 }
 
 export function usePathname() {

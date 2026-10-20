@@ -593,7 +593,7 @@
     "confirmNoteInterval": "Débité maintenant sur la carte enregistrée, avec un avoir pour le temps restant de la période en cours. Votre période de facturation repart aujourd’hui, votre prochaine date de renouvellement change donc.",
     "confirmNoteIntervalNoPreview": "Nous n’avons pas pu chiffrer ce changement à l’avance. La carte enregistrée est débitée de la différence, avec un avoir pour le temps restant de la période en cours, et le montant exact figure sur votre facture. Votre période de facturation repart aujourd’hui, votre prochaine date de renouvellement change donc.",
     "confirmPay": "Confirmer et payer {amount}",
-    "confirmChange": "Confirmer le changement",
+    "confirmChange": "Confirmer et payer",
     "confirmCancel": "Annuler",
     "confirming": "Débit en cours…",
     "planChangedCharged": "Vous êtes maintenant sur {plan}. {amount} ont été débités de votre carte.",

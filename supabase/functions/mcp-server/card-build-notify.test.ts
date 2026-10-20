@@ -1411,7 +1411,6 @@ Deno.test("the file list is git's, not a hand-maintained root list", () => {
   for (
     const tree of [
       "apps/web/components/",
-      "supabase/functions/gmail-token-refresh/",
       "supabase/functions/outlook-token-refresh/",
       "supabase/functions/synthetic-monitor/",
       "supabase/functions/system-notify/",

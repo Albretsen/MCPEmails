@@ -5,7 +5,7 @@ const translation = {
   coverAlt: '用 AI 实现收件箱清零——Claude 通过 MCP 在你真实的收件箱上分类、归档并撰写回复草稿',
   content: `收件箱清零一直有同一个问题：要达成它得花掉你根本挤不出来的一个小时，而到了明天你又回到了五十封未读。AI 代理改变了这道算式。不再是你一条一条地整理消息，而是你告诉 Claude “处理完毕”意味着什么，它就一次性把整个收件箱搞定——在你*真实的*邮件上实时分类、归档、贴标签并撰写回复草稿。
 
-这篇指南就是那套流程：一个你每天早上都能跑的可重复循环、驱动它的具体提示词，以及让它保持安全的那一条规则（任何内容都不会被存储）。它假设 Claude 已经能看到你的收件箱。如果还不能，先从[如何把 Gmail 连接到 Claude](/blog/connect-gmail-to-claude)（或 [Outlook 与 Microsoft 365 指南](/blog/connect-outlook-microsoft-365-ai-agent-mcp)） 开始——大约两分钟——然后再回来。
+这篇指南就是那套流程：一个你每天早上都能跑的可重复循环、驱动它的具体提示词，以及让它保持安全的那一条规则（任何内容都不会被存储）。它假设 Claude 已经能看到你的收件箱。如果还不能，先从[如何把 Gmail 连接到 Claude](/blog/connect-gmail-to-claude)（或 [Outlook 与 Microsoft 365 指南](/blog/connect-outlook-microsoft-365-ai-agent-mcp)） 开始——大约两分钟——然后再回来。如果你用的是 iCloud、Fastmail 或其他 IMAP 主机，请改看[Claude 邮箱连接指南](/blog/connect-claude-to-email)。
 
 ## 为什么“收件箱清零”在 AI 的加持下终于变得现实
 

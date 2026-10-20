@@ -55,7 +55,7 @@ export default async function BusinessPage({ params }) {
         type="application/ld+json"
         dangerouslySetInnerHTML={{ __html: JSON.stringify(jsonLd) }}
       />
-      <BusinessView copy={copy} />
+      <BusinessView copy={copy} locale={locale} />
     </>
   );
 }

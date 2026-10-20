@@ -1,9 +1,10 @@
 {
   "_sources": [
-    "https://www.telekom.de/hilfe/apps-dienste/e-mail/programme/passwort-definition",
     "https://www.telekom.de/hilfe/apps-dienste/e-mail/programm-passwort-verwalten",
-    "https://www.telekom.de/hilfe/vertrag-meine-daten/login-daten-passwoerter/welche-passwoerter-fuer-welchen-zweck",
-    "https://www.netzwelt.de/galerie/19784-e-mail-passwort-e-mail-adressen-t-online-einrichten.html"
+    "https://www.telekom.de/hilfe/apps-dienste/e-mail/app-programm-passwort",
+    "https://www.telekom.de/hilfe/apps-dienste/e-mail/posteingang-postausgang-server",
+    "https://www.telekom.de/hilfe/apps-dienste/e-mail/versand-blockiert",
+    "https://www.telekom.de/hilfe/vertrag-meine-daten/login-daten-passwoerter/welche-passwoerter-fuer-welchen-zweck"
   ],
   "auth": {
     "method": "mail-password",
@@ -28,7 +29,7 @@
   },
   "method": {
     "title": "How T-Online connects: IMAP and a second, separate password",
-    "body": "Telekom serves IMAP at <code>secureimap.t-online.de</code> on port 993 over implicit TLS, and SMTP submission at <code>securesmtp.t-online.de</code> on port 465. Both names sit in front of an IMAP proxy rather than a mailbox server you talk to directly, which explains several of the quirks below. The part almost everyone gets wrong is the credential. Telekom keeps two passwords on one account: the <b>Telekom Login</b> password, used for the Kundencenter and telekom.de, and a second <b>Passwort für E-Mail-Programme</b>, described in Telekom's own wording as being <b>für das Verwenden eines E-Mail-Programms</b>. Only the second one authenticates against <code>secureimap.t-online.de</code>. Telekom recommends the two never be the same, and on many accounts the mail-program password simply does not exist until somebody creates it."
+    "body": "Telekom documents the same servers for every @t-online.de and @magenta.de address: IMAP at <code>secureimap.t-online.de</code> on port 993 with SSL, and SMTP at <code>securesmtp.t-online.de</code> on port 465 or 587. Both names sit in front of an IMAP proxy rather than a mailbox server you talk to directly, which explains several of the quirks below. The part almost everyone gets wrong is the credential. Telekom keeps two passwords on one account: the <b>Telekom Login</b> password, used for the E-Mail Center, the Kundencenter and the MeinMagenta app, and a second <b>Passwort für E-Mail-Programme</b>, which Telekom says you need as soon as you read your mail in a program such as Outlook or Thunderbird instead of the E-Mail Center. Only the second one authenticates against <code>secureimap.t-online.de</code>, and Telekom advises that the two be different."
   },
   "setup": [
     {
@@ -37,7 +38,7 @@
     },
     {
       "h": "Create the Passwort für E-Mail-Programme",
-      "p": "In the E-Mail Center at email.t-online.de, open <b>Menü</b>, then <b>Einstellungen</b>, then <b>Passwörter</b> in the left column. Under the heading <b>E-Mail-Passwort, für das Verwenden eines E-Mail-Programms</b>, choose <b>E-Mail-Passwort ändern</b>, enter the new password twice and save. The same credential is reachable from the Kundencenter under <b>Profil</b>, then <b>Login-Daten und Passwörter</b>, then <b>weitere Passwörter</b>. Set it even if you think you already have one: on many accounts it has never been created."
+      "p": "In the E-Mail Center at email.t-online.de, click the gear icon (<b>Einstellungen</b>), then <b>Alle Einstellungen anzeigen</b>, then <b>Passwörter</b>, then <b>Passwort für E-Mail-Programme</b>, and set a new one. The other route is the Kundencenter: <b>Profil verwalten</b>, then <b>Login-Daten</b>, then <b>Weitere Passwörter</b>. Telekom advises making it different from your Telekom Login password."
     },
     {
       "h": "Paste it into mcpemails",
@@ -64,6 +65,10 @@
     {
       "h": "Sending is capped at 50 MB per message",
       "p": "<code>securesmtp.t-online.de</code> announces a maximum message size of 52,428,800 bytes. That is the size of the whole encoded message, so base64 attachments count roughly a third larger than their size on disk. An agent asked to forward a large attachment will get a hard SMTP rejection rather than a slow send."
+    },
+    {
+      "h": "Telekom can hold a send from an internet connection it does not know",
+      "p": "Telekom checks the internet connection a message is sent from. Its help says that when a mail program sends from an unknown or unapproved IP address, the message is not sent and the program gets an error, and it names another Wi-Fi network, a mobile network, a VPN or a connection abroad as common causes. Mail your agent sends through MCP Emails leaves from MCP Emails' servers, not from your home connection, so it can be held the same way. Telekom says you can approve (<b>freischalten</b>) the IP address if the attempt was yours. If it was not, do not approve it, and change your Telekom Login password."
     }
   ],
   "limits": [
@@ -77,19 +82,19 @@
     },
     {
       "q": "What are the T-Online IMAP and SMTP settings?",
-      "a": "IMAP is secureimap.t-online.de on port 993 with implicit TLS. SMTP is securesmtp.t-online.de on port 465, also implicit TLS. Log in with your full t-online.de address and the Passwort für E-Mail-Programme. Both hosts were confirmed from a live TLS connection and are shared across all T-Online mailboxes."
+      "a": "IMAP is secureimap.t-online.de on port 993 with SSL. SMTP is securesmtp.t-online.de on port 465 or 587, also with SSL; MCP Emails uses 465. Log in with your full address and the Passwort für E-Mail-Programme. Telekom lists the same servers for @t-online.de and @magenta.de addresses, and both hosts were confirmed from a live TLS connection."
     },
     {
       "q": "Why is my T-Online password rejected in an email program?",
-      "a": "Almost always because you entered the Telekom login password. Telekom issues a second credential, the Passwort für E-Mail-Programme, and only that one authenticates against the mail servers. Create or reset it in the E-Mail Center under Einstellungen, then Passwörter, or in the Kundencenter under Profil, then Login-Daten und Passwörter, then weitere Passwörter."
+      "a": "Almost always because you entered the Telekom Login password. Telekom issues a second credential, the Passwort für E-Mail-Programme, and only that one authenticates against the mail servers. Create or reset it in the E-Mail Center under the gear icon, Alle Einstellungen anzeigen, Passwörter, or in the Kundencenter under Profil verwalten, Login-Daten, Weitere Passwörter."
     },
     {
       "q": "Where do I create the Passwort für E-Mail-Programme?",
-      "a": "Sign in to the E-Mail Center at email.t-online.de, open Menü, then Einstellungen, then Passwörter. The block headed E-Mail-Passwort, für das Verwenden eines E-Mail-Programms has a change button. Enter the new password twice and save it. Use that value in your mail client and in mcpemails, for both the incoming and the outgoing server."
+      "a": "There are two places. In the E-Mail Center at email.t-online.de, click the gear icon (Einstellungen), then Alle Einstellungen anzeigen, then Passwörter, then Passwort für E-Mail-Programme. In the Kundencenter, open Profil verwalten, then Login-Daten, then Weitere Passwörter. Use the new value in MCP Emails, for both the incoming and the outgoing server."
     },
     {
-      "q": "Does this work with magenta.de and other Telekom mail domains?",
-      "a": "Any mailbox that lives in the Telekom E-Mail Center authenticates against the same secureimap.t-online.de and securesmtp.t-online.de hosts with the same mail-program password. What matters is that the mailbox is a Telekom E-Mail Center mailbox, not the text after the at sign."
+      "q": "Does this work with magenta.de addresses?",
+      "a": "Yes. Telekom documents the same servers for @magenta.de and @t-online.de addresses: secureimap.t-online.de for IMAP and securesmtp.t-online.de for SMTP, with the Passwort für E-Mail-Programme as the password and the full address as the username."
     },
     {
       "q": "Is my T-Online mail stored on your servers?",

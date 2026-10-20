@@ -23,7 +23,7 @@ const translation = {
 
 MCP Emails 是我自己做的产品，所以这条推荐请你带着这一点来看——但它对大多数人胜出的原因是架构，而不是营销。每一次工具调用都会实时打到你的服务商（Gmail API、Microsoft Graph 或 IMAP/SMTP），把邮件交给 Claude，然后丢弃。**邮件正文从不被存储。** 每个收件箱唯一持久化的东西，是一个加密的 OAuth 令牌或应用专用密码，以 AES-256-GCM 在静态时加密，仅在调用时于一个隔离的 edge function 内部解密。如果你想看看为什么这一点很重要的详细版本，读读[为什么“邮件从不存储”很重要](/blog/why-email-never-stored-matters)。
 
-设置过程是真的快。在 claude.ai 里，你进入 **Customize → Connectors → Add connector**，粘贴 \`https://www.mcpemails.com/api/mcp\`，点击 Connect，登录你的 MCP Emails 账户，并批准你想要的权限范围（\`read:email\`、\`send:email\`，或两者都要）。不用 API key，不用 SDK，不用配置文件。如果你想要逐步点击的说明，这里有一篇[两分钟连接指南](/blog/connect-email-to-ai-agent-under-2-minutes)。
+设置过程是真的快。在 claude.ai 里，你进入 **Customize → Connectors → Add connector**，粘贴 \`https://www.mcpemails.com/api/mcp\`，点击 Connect，登录你的 MCP Emails 账户，并批准你想要的权限范围（\`read:email\`、\`send:email\`，或两者都要）。不用 API key，不用 SDK，不用配置文件。如果你想要逐步点击的说明，这里有一篇[两分钟连接指南](/blog/connect-email-to-ai-agent-under-2-minutes)。[将 Claude 连接到邮箱的完整指南](/blog/connect-claude-to-email)则会逐一讲解每个服务商。
 
 **适合：** 几乎所有人——非技术用户、同时拥有 Gmail、Outlook 和 IMAP 的人，以及任何在意正文不被存储的人。
 

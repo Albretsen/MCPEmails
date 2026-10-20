@@ -11,15 +11,15 @@
   },
   "whoWeAre": {
     "title": "1. 我们是谁",
-    "p1": "在 <b>mcpemails.com</b> 提供的 MCPEmails 服务由 {companyName} 运营，该企业是一家挪威独资企业（enkeltpersonforetak），由 {ownerName} 拥有并经营，以“MCPEmails”作为商号开展业务。在本政策中，“MCPEmails”、“我们”和“我们的”均指 {companyName}。该服务包括所有仪表盘页面、API 端点，以及 AI 智能体用于访问已连接电子邮件账户的 Model Context Protocol（MCP）服务器。",
+    "p1": "在 <b>mcpemails.com</b> 提供的 MCPEmails 服务由 {companyName} 运营，该公司是一家挪威有限责任公司（aksjeselskap），由 {ownerName} 拥有并经营，以“MCPEmails”作为商号开展业务。在本政策中，“MCPEmails”、“我们”和“我们的”均指 {companyName}。该服务包括所有仪表盘页面、API 端点，以及 AI 智能体用于访问已连接电子邮件账户的 Model Context Protocol（MCP）服务器。",
     "p2": "就适用的数据保护法律（包括欧盟《通用数据保护条例》，即“GDPR”）而言，MCPEmails 是账户和使用数据的数据控制者。对于邮件内容，我们代表你充当数据处理者：我们传输你授权我们检索的内容，且我们不存储它。",
-    "p3": "服务提供者标识：{companyName} 是在挪威设立、由 {ownerName} 经营的独资企业（enkeltpersonforetak）。该企业已在 {register}（由 Brønnøysundregistrene 运营的挪威法律实体中央协调登记册）登记，组织机构号为 <b>{orgNumber}</b>。我们的注册地址为 {companyAddress}。",
-    "p4": "{companyName} 目前未在挪威增值税登记册（Merverdiavgiftsregisteret）中登记。如有隐私相关问题，你可以通过 <email></email> 联系我们。"
+    "p3": "服务提供者标识：{companyName} 是在挪威设立的有限责任公司（aksjeselskap），由 {ownerName} 拥有，并由其担任董事会主席。该公司已在 {register}（由 Brønnøysundregistrene 运营的挪威企业登记册）登记，组织机构号为 <b>{orgNumber}</b>。我们的注册地址为 {companyAddress}。",
+    "p4": "如有隐私相关问题，你可以通过 <email></email> 联系我们。"
   },
   "dataWeCollect": {
     "title": "2. 我们收集的数据",
     "accountTitle": "2.1 账户数据",
-    "accountP": "当你创建账户时，我们会收集你的电子邮件地址和经过哈希处理的密码（我们绝不存储明文密码）。你可以选择性地提供一个显示名称。此数据为创建和维护你的账户所必需。如果你在注册表单上勾选了通过邮件接收产品技巧和优惠信息的选项，我们还会记录你勾选了该选项、勾选时间以及你看到的具体措辞。注册时，我们还会根据你浏览器请求头判断你使用的是手机、平板还是电脑。我们只存储这一类别，绝不存储浏览器的用户代理字符串或任何设备标识符，并且仅用于了解注册来源。",
+    "accountP": "当你创建账户时，我们会收集你的电子邮件地址和经过哈希处理的密码（我们绝不存储明文密码）。你可以选择性地提供一个显示名称。此数据为创建和维护你的账户所必需。如果你在注册表单上勾选了通过邮件接收产品技巧和优惠信息的选项，我们还会记录你勾选了该选项、勾选时间以及你看到的具体措辞。注册时，我们还会根据你浏览器请求头判断你使用的是手机、平板还是电脑。我们只存储这一类别，绝不存储浏览器的用户代理字符串或任何设备标识符，并且仅用于了解注册来源。我们还会记录注册来自哪个国家，即托管服务商根据你的 IP 地址得出的两字母国家代码。我们只存储这个代码，绝不存储 IP 地址，并且仅用于了解注册来源。",
     "workspaceTitle": "2.2 工作区与配置数据",
     "workspaceP": "我们会存储你所选择的工作区名称，以及每个已连接收件箱的配置（服务商类型、电子邮件地址、OAuth 状态和连接时间戳）。我们<b>不会</b>以明文存储 OAuth 访问令牌或应用密码。它们在写入数据库之前会经过 AES-256-GCM 加密，加密密钥作为服务器密钥保存在我们的应用环境中，从不存入数据库。",
     "apiKeysTitle": "2.3 API 密钥",

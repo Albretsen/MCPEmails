@@ -1,9 +1,11 @@
 import { getTranslations } from 'next-intl/server';
+import { withReadingLang } from '@/i18n/reading-lang.mjs';
 import { Link } from '@/i18n/navigation';
 import { Nav, Footer } from './Sections';
 import { MIcon } from '../MarketingPrimitives';
 import RichText from './RichText';
 import { relatedProviders } from '@/lib/connect/release.mjs';
+import { guideLinksFor } from '@/lib/connect/guides.mjs';
 import { OAUTH_VERIFICATION_PENDING } from '@/lib/oauth/verification-status';
 import { multiMailboxFaq, withProvider } from '@/lib/connect/multi-mailbox.mjs';
 
@@ -30,9 +32,12 @@ export function nameGrammar(name) {
  * src/lib/connect/content, where only this page loads it. Nav and Footer are
  * still client components; they are the only things on the page that hydrate.
  */
-export default async function ConnectProviderView({ locale, provider, content, multiMailbox = null }) {
+export default async function ConnectProviderView({ locale, provider, content, multiMailbox = null, guides = null }) {
   const t = await getTranslations({ locale, namespace: 'connect' });
-  const related = relatedProviders(provider.slug);
+  // Only providers whose page exists in this locale: next-intl's Link adds the
+  // locale prefix, so a provider missing here would be a link to a 404.
+  const related = relatedProviders(provider.slug, 6, new Date(), locale);
+  const guideLinks = guides ? guideLinksFor(content) : [];
   const showGmailVerification = provider.slug === 'gmail' && OAUTH_VERIFICATION_PENDING;
   const ev = provider.evidence;
   const named = { provider: provider.name, ...nameGrammar(provider.name) };
@@ -76,7 +81,7 @@ export default async function ConnectProviderView({ locale, provider, content, m
             </p>
           )}
           <div className="hero-cta" style={{ justifyContent: 'center', marginTop: 24 }}>
-            <a className="btn btn-primary btn-lg" href={`/signup?provider=${provider.slug}`}>
+            <a className="btn btn-primary btn-lg" href={withReadingLang(`/signup?provider=${provider.slug}`, locale)}>
               {t('cta.primary', { provider: provider.name })}
             </a>
             <Link className="btn btn-secondary btn-lg" href="/docs">{t('cta.secondary')}</Link>
@@ -240,6 +245,22 @@ export default async function ConnectProviderView({ locale, provider, content, m
               <Link href={content.guide.href}>{content.guide.label}</Link>
             </p>
           )}
+          {/*
+            The blog walkthroughs that convert best, with generic anchors so the
+            blog keeps the generic query and this page keeps the provider one.
+            See lib/connect/guides.mjs.
+          */}
+          {guideLinks.length > 0 && (
+            <p className="how-guide-link">
+              {guides.intro}{' '}
+              {guideLinks.map((g, i) => (
+                <span key={g.key}>
+                  {i > 0 && ' · '}
+                  <Link href={g.href}>{guides[g.key]}</Link>
+                </span>
+              ))}
+            </p>
+          )}
           <p className="how-guide-link">
             {t('matrix.intro')} <Link href="/docs/providers">{t('matrix.label')}</Link>
           </p>
@@ -360,7 +381,7 @@ export default async function ConnectProviderView({ locale, provider, content, m
           <h2>{content.ctaBand.title}</h2>
           <p className="sub">{content.ctaBand.sub}</p>
           <div className="hero-cta" style={{ justifyContent: 'center' }}>
-            <a className="btn btn-primary btn-lg" href={`/signup?provider=${provider.slug}`}>
+            <a className="btn btn-primary btn-lg" href={withReadingLang(`/signup?provider=${provider.slug}`, locale)}>
               {t('cta.primary', { provider: provider.name })}
             </a>
             <Link className="btn btn-secondary btn-lg" href="/docs">{t('cta.secondary')}</Link>
@@ -368,7 +389,7 @@ export default async function ConnectProviderView({ locale, provider, content, m
         </div>
       </section>
 
-      <Footer />
+      <Footer locales={provider.locales} />
     </div>
   );
 }

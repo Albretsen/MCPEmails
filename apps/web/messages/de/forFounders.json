@@ -1,0 +1,118 @@
+{
+  "meta": {
+    "title": "KI-E-Mail für Gründer: Kundenpostfach mit Claude verwalten",
+    "description": "Sortieren und beantworten Sie Kunden-E-Mails mit Claude oder einem anderen MCP-Client. Lesen, entwerfen, senden, planen und organisieren Sie Postfächer bei Gmail, Outlook oder per IMAP in einem sicheren Workflow."
+  },
+  "hero": {
+    "eyebrow": "Für Gründer gebaut",
+    "titleLine1": "Jedem Kunden antworten,",
+    "titleLine2": "direkt aus Ihrer KI",
+    "lead": "Sie sind Support, Vertrieb und Gründer in einer Person. MCP Emails verbindet Ihr Postfach mit Claude. So sortieren Sie, entwerfen Antworten in Ihrem eigenen Ton, senden und planen Nachfassmails, ohne die Unterhaltung zu verlassen. Unser aktivster Nutzer macht genau das, jeden einzelnen Tag.",
+    "ctaPrimary": "Postfach kostenlos verbinden",
+    "ctaSecondary": "So funktioniert es"
+  },
+  "pains": {
+    "eyebrow": "Warum Gründer es wählen",
+    "title": "Support sollte nicht Ihren ganzen Tag fressen",
+    "sub": "Kunden-E-Mails sind die Arbeit, die Sie nicht liegen lassen können, und die Arbeit, die Ihre Konzentration zerreißt. Überlassen Sie das Postfach Ihrer KI und gewinnen Sie Stunden zurück.",
+    "items": {
+      "speed": {
+        "tag": "Tempo",
+        "h": "In Minuten antworten, nicht um Mitternacht",
+        "p": "Bitten Sie Claude, <b>die unbeantworteten Kundenthreads zu lesen und Antworten zu entwerfen</b>. Sie prüfen und senden. Ein Vormittag Support wird zu einem Durchgang von fünf Minuten, und Interessenten wie zahlende Kunden bekommen ihre Antwort noch am selben Tag."
+      },
+      "voice": {
+        "tag": "Ihr Ton",
+        "h": "Klingt nach Ihnen, nicht nach einem Bot",
+        "p": "Zeigen Sie Claude eine frühere Antwort und sagen Sie <b>triff meinen Ton</b>. Claude schreibt so, wie Sie schreiben: herzlich, direkt, passend zur Marke. Schluss mit kopierten Textbausteinen und Helpdesk-Sprache."
+      },
+      "context": {
+        "tag": "Kontext",
+        "h": "Nie den Faden verlieren",
+        "p": "Claude kann <b>jede frühere Unterhaltung mit einem Kunden durchsuchen</b>, bevor es antwortet. Die Antwort weiß also schon, was der Kunde gekauft hat, was beim letzten Mal schiefging und was Sie zugesagt haben. Kein Wühlen mehr im Postfach, um sich zu erinnern."
+      }
+    }
+  },
+  "day": {
+    "eyebrow": "Ein Tag in Ihrem Postfach",
+    "title": "Echte Prompts von Gründern",
+    "sub": "Keine neue App zum Lernen. Sie sprechen einfach mit Claude, und Claude arbeitet in Ihrem echten Postfach.",
+    "prompts": [
+      "Zeig mir unbeantwortete Kunden-E-Mails der letzten 3 Tage, die neuesten zuerst.",
+      "Entwirf eine Antwort auf Marias Rückerstattungsanfrage. Triff den Ton meiner letzten Antwort an sie.",
+      "Das ist ein Feature-Wunsch. Antworte mit einem Dankeschön und leg die E-Mail unter dem Label Feedback ab.",
+      "Durchsuche mein Postfach nach allem von acme.com und fass zusammen, wo der Deal steht.",
+      "Plane diese Nachfassmail für Montag um 8 Uhr, damit sie als Erstes ankommt.",
+      "Archiviere alle Newsletter und Benachrichtigungen, damit nur echte Menschen in meinem Postfach bleiben."
+    ]
+  },
+  "does": {
+    "eyebrow": "Was es tatsächlich kann",
+    "title": "Ein echtes Postfach, kein reiner Lesezugriff",
+    "sub": "Siebzehn aktionsbasierte Tools, die Ihr Agent durchgängig nutzen kann.",
+    "items": {
+      "read": {
+        "h": "Lesen & suchen",
+        "p": "Über Ordner und alle verbundenen Postfächer hinweg auflisten, lesen und suchen, live abgerufen."
+      },
+      "send": {
+        "h": "Senden & antworten",
+        "p": "Direkt senden, antworten und weiterleiten. Der Agent erledigt die E-Mail komplett, nicht nur einen Entwurf."
+      },
+      "schedule": {
+        "h": "Planen",
+        "p": "Einen Versand für später einplanen, damit Nachfassmails zum richtigen Zeitpunkt im Tag des Kunden ankommen."
+      },
+      "organize": {
+        "h": "Organisieren",
+        "p": "Verschieben, kopieren, markieren, archivieren und mit Labels versehen, damit die Triage beim Lesen passiert, nicht danach."
+      }
+    }
+  },
+  "proof": {
+    "quote": "Der Gründer, der MCP Emails am meisten nutzt, öffnet jeden Morgen Claude, arbeitet die Kundenanfragen ab und ist vor dem ersten Kaffee fertig. Mehr muss man nicht sagen.",
+    "label": "Unser aktivster Workflow in einem Satz"
+  },
+  "providers": {
+    "eyebrow": "Jedes Postfach, jede KI",
+    "title": "Verbinden Sie das Postfach, aus dem Sie schon Support machen",
+    "sub": "Outlook per Anmeldung mit Microsoft, Gmail per App-Passwort oder Anmeldung mit Google, alle anderen per App-Passwort. Dasselbe Postfach funktioniert dann in Claude, Cursor, VS Code, ChatGPT und jedem MCP-Client. Sie sind nie an eine App gebunden.",
+    "ctaGmail": "Gmail verbinden",
+    "ctaOutlook": "Outlook verbinden",
+    "ctaFastmail": "Fastmail verbinden",
+    "ctaIcloud": "iCloud verbinden"
+  },
+  "faq": {
+    "eyebrow": "Fragen von Gründern",
+    "title": "Was Gründer vor dem Verbinden fragen",
+    "sub": "Die praktischen Einwände, direkt beantwortet.",
+    "items": [
+      {
+        "q": "Ich gründe allein und mache meinen Support selbst. Ist das übertrieben?",
+        "a": "Im Gegenteil. Je weniger Leute Sie sind, desto mehr schmerzt ein Support-Rückstau. MCP Emails macht aus dem Beantworten von Kunden einen kurzen täglichen Durchgang in Claude statt einer Stunde ständiger Kontextwechsel, und der Einstieg ist kostenlos, ohne Kreditkarte."
+      },
+      {
+        "q": "Klingen die Antworten nicht generisch?",
+        "a": "Nur wenn Sie es zulassen. Sagen Sie Claude, es soll den Ton einer früheren Antwort treffen, oder fügen Sie ein paar Ihrer eigenen E-Mails ein, und es schreibt wie Sie. Sie prüfen immer, bevor etwas gesendet wird. Es geht also nichts raus, das nicht nach Ihnen klingt."
+      },
+      {
+        "q": "Sendet es wirklich oder entwirft es nur?",
+        "a": "Es sendet, antwortet, leitet weiter und plant wirklich. Sie können es zunächst auf Entwürfe beschränken, bis Sie Vertrauen gefasst haben, und es dann senden lassen. So oder so erledigt der Agent die Arbeit in Ihrem echten Postfach."
+      },
+      {
+        "q": "Werden meine Kunden-E-Mails irgendwo gespeichert?",
+        "a": "Nein. E-Mails werden jedes Mal live von Ihrem Anbieter abgerufen und nie auf unseren Servern gespeichert. Aufbewahrt wird nur ein verschlüsseltes Token oder App-Passwort, damit spätere Anfragen sich anmelden können, und Sie können den Zugriff mit einem Klick widerrufen."
+      },
+      {
+        "q": "Was kostet es, solange ich noch klein bin?",
+        "a": "Nichts, mit einem verbundenen Postfach und ohne Kreditkarte. Personal für $9 pro Monat verbindet drei Postfächer, Pro für $15 pro Monat bis zu 10, und Business ergänzt Mitglieder, Rollen und einen eigenen Workspace pro Kunde, mit 10 Postfächern inklusive."
+      }
+    ]
+  },
+  "ctaBand": {
+    "title": "Holen Sie sich Ihre Abende zurück",
+    "sub": "Verbinden Sie Ihr Postfach in wenigen Minuten und arbeiten Sie die Kundenanfragen gemeinsam mit Claude ab. Ein Postfach kostenlos zum Start, ohne Kreditkarte.",
+    "ctaPrimary": "Postfach kostenlos verbinden",
+    "ctaSecondary": "Zur Dokumentation"
+  }
+}

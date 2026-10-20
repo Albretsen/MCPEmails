@@ -118,7 +118,7 @@ When you hit a rate limit the server returns a retryable error (code \`-32003\`)
 
 ## Wrapping up
 
-Cursor gets you connected with a URL and a sign-in. Everything else takes a scoped key and a bearer header. Both hit the same endpoint and the same tools, and both keep your credentials out of your repo and out of the model's context.
+Cursor gets you connected with a URL and a sign-in. Everything else takes a scoped key and a bearer header. Both hit the same endpoint and the same tools, and both keep your credentials out of your repo and out of the model's context. Using ChatGPT or Codex outside the editor? The [ChatGPT email setup guide](/blog/connect-chatgpt-to-email) covers both.
 
 [Start free](/signup) and connect your first inbox, or read the [docs](/docs) for the full tool reference.`,
 };

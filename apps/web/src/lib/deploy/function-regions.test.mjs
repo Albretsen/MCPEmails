@@ -232,11 +232,14 @@ test('vercel.json region config stays inside what this test can model', () => {
   // it was added the project had no vercel.json at all, so ANY other top-level
   // key (trailingSlash, cleanUrls, crons, headers, redirects, rewrites, ...)
   // is new platform behaviour arriving through a file whose only reviewer is
-  // this test. Headers and redirects live in next.config.js.
+  // this test. Headers and redirects live in next.config.js. The one
+  // exception is `ignoreCommand` (build skipping, no runtime effect): previews
+  // stay skipped, and production skips only when nothing the web build reads
+  // changed since the first parent; a failing diff (no HEAD^) builds.
   assert.deepEqual(
     Object.keys(config).sort(),
-    ['$schema', 'functions'],
-    'apps/web/vercel.json may contain only "$schema" and "functions"',
+    ['$schema', 'functions', 'ignoreCommand'],
+    'apps/web/vercel.json may contain only "$schema", "functions" and "ignoreCommand"',
   );
   // A top-level `regions` overrides the project's Function Region setting for
   // every unmatched function, which would make PROJECT_DEFAULT_REGION a lie.
