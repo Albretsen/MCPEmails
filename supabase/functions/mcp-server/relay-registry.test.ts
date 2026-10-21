@@ -33,7 +33,13 @@ import {
   RelayUnavailableError,
   resetRelayStateForTests,
 } from "./smtp-relay.ts";
-import { relayedTransport, shouldRetrySmtpThroughRelay, SmtpAuthError, SmtpNotSentError } from "./smtp-client.ts";
+import {
+  mailFromRefusal,
+  relayedTransport,
+  shouldRetrySmtpThroughRelay,
+  SmtpAuthError,
+  SmtpNotSentError,
+} from "./smtp-client.ts";
 import {
   failedAfterPassword,
   ImapAuthError,
@@ -191,6 +197,21 @@ Deno.test("smtp: what earns the relay retry", async () => {
     assert(
       !shouldRetrySmtpThroughRelay(host, new SmtpNotSentError("SMTP RCPT TO <x@y.z> rejected: 452 4.2.2 mailbox full", true)),
       "an envelope refusal that does not name our address",
+    );
+    assert(
+      !shouldRetrySmtpThroughRelay(host, mailFromRefusal("a@b.no", { code: 550, text: "5.7.1 <a@b.no>... Command rejected", lines: [] })),
+      "a MAIL FROM policy refusal that does not name our address",
+    );
+    assert(
+      shouldRetrySmtpThroughRelay(
+        host,
+        mailFromRefusal("a@b.no", { code: 550, text: "[ACR04] Amazon AWS IP 1.2.3.4 may not use this server", lines: [] }),
+      ),
+      "a MAIL FROM refusal that names our address",
+    );
+    assert(
+      !mailFromRefusal("a@b.no", { code: 553, text: "5.1.8 sender domain does not exist", lines: [] }).retryable,
+      "a MAIL FROM refusal of the sender address itself repeats on every attempt",
     );
     assert(!shouldRetrySmtpThroughRelay(host, new SmtpAuthError("SMTP authentication failed: 535 5.7.8 bad")), "a wrong password");
     assert(!shouldRetrySmtpThroughRelay(host, new Error("after DATA: connection reset")), "possibly delivered");

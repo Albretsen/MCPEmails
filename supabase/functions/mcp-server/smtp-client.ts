@@ -401,7 +401,7 @@ async function submitOnce(
       if (isSenderOwnershipRefusal(mailFrom)) {
         throw new SmtpSenderRefusedError(`SMTP MAIL FROM <${msg.from}> refused: ${mailFrom.code} ${mailFrom.text}`);
       }
-      throw new Error(`SMTP: "MAIL" expected 250, got ${mailFrom.code} ${mailFrom.text}`);
+      throw mailFromRefusal(msg.from, mailFrom);
     }
     for (const rcpt of msg.recipients) {
       // 250 = accepted, 251 = forwarded.
@@ -447,6 +447,28 @@ async function submitOnce(
   } finally {
     session.close();
   }
+}
+
+/**
+ * A MAIL FROM answer other than 250, as a not-sent envelope verdict.
+ *
+ * Worded like the RCPT TO refusal so shouldRetrySmtpThroughRelay can tell the
+ * server judged the envelope and only sends it through the relay when the
+ * reply blames where we connect from (an ACR04, a listed IP). A plain policy
+ * refusal (`550 5.7.1 ... Command rejected`) fails the same from any address.
+ * Before 2026-10-21 this was a bare Error that submitOnce wrapped as a
+ * retryable not-sent error without the "MAIL FROM" words, so every MAIL-stage
+ * refusal earned a relay retry.
+ *
+ * Retryable unless the reply carries a 5.1.x address-status class: at MAIL
+ * that names the sender address itself (5.1.7, 5.1.8), which repeats on every
+ * attempt. Everything else keeps the one direct retry it had before.
+ */
+export function mailFromRefusal(from: string, reply: SmtpReply): SmtpNotSentError {
+  return new SmtpNotSentError(
+    `SMTP MAIL FROM <${from}> refused: ${reply.code} ${reply.text}`,
+    !isRecipientAddressRejection(reply),
+  );
 }
 
 function errorText(err: unknown): string {
