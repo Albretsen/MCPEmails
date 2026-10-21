@@ -8,6 +8,8 @@
 // requests:
 //   - the section shows only for password IMAP inboxes that can read, on TLS;
 //   - nothing is fetched until Advanced is opened;
+//   - the five labelled rows show before the folder list arrives, so the
+//     panel does not jump when it loads;
 //   - each role reads "Automatic (<detected folder>)" or "Automatic (not
 //     found)", greyed while automatic;
 //   - picking a folder PUTs {role, folder} and says so on one line, and
@@ -141,6 +143,34 @@ test('Advanced is collapsed and fetches nothing until it is opened', async (t) =
   await waitFor(() => view.container.querySelector('[data-role="sent"] select'), { message: 'rows after opening' });
   assert.equal(requests.length, 1);
   assert.equal(requests[0].method, 'GET');
+});
+
+test('the five labelled rows show, disabled, before the folder list arrives', async (t) => {
+  let release;
+  const gate = new Promise(resolve => { release = resolve; });
+  const previous = globalThis.fetch;
+  globalThis.fetch = async () => {
+    await gate;
+    return { ok: true, status: 200, json: async () => settings() };
+  };
+  t.after(() => { globalThis.fetch = previous; });
+
+  const view = await mount(createElement(AppLocaleProvider, null, createElement(Editor)));
+  t.after(() => view.unmount());
+  await flush();
+  const rows = () => [...view.container.querySelectorAll('.folder-override-row')];
+  assert.deepEqual(rows().map(r => r.dataset.role), ['sent', 'drafts', 'trash', 'spam', 'archive']);
+  assert.deepEqual(rows().map(r => r.querySelector('label').textContent), ['sent', 'drafts', 'trash', 'spam', 'archive'].map(role => F.roles[role]));
+  for (const row of rows()) {
+    const el = row.querySelector('select');
+    assert.equal(el.disabled, true, `${row.dataset.role} is disabled while loading`);
+    assert.equal(el.options[0].textContent, F.loading);
+  }
+
+  release();
+  await waitFor(() => !view.container.textContent.includes(F.loading), { message: 'folders loaded' });
+  assert.equal(rows().length, 5, 'same rows once loaded');
+  assert.equal(select(view, 'sent').disabled, false);
 });
 
 test('each role starts on Automatic, labelled with the detected folder or not found, greyed', async (t) => {
