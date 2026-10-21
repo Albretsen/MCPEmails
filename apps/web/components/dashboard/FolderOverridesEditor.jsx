@@ -15,8 +15,12 @@ import { useEffect, useState } from 'react';
  * mistake cannot be made in the first place.
  *
  * Mounted only while the Advanced section is open, so opening an inbox does
- * not dial its mail server.
+ * not dial its mail server. While the folder list loads, the five rows already
+ * show with disabled selects, so the panel keeps its height when it arrives.
  */
+
+// Same order as FOLDER_OVERRIDE_ROLES (supabase/functions/mcp-server/folder-overrides.ts).
+const ROLES = ['sent', 'drafts', 'trash', 'spam', 'archive'];
 
 const KNOWN_ERRORS = new Set([
   'inbox_not_allowed', 'not_listed', 'used_by_other_role', 'folders_unreachable', 'unavailable', 'unsupported_inbox',
@@ -86,7 +90,21 @@ export function FolderOverridesEditor({ inbox, t }) {
       {loadError ? (
         <div role="alert" style={{ ...line, color: 'var(--red-500)' }}>{t(`inboxes.detail.folders.errors.${loadError}`)}</div>
       ) : settings === null ? (
-        <div style={{ ...line, color: 'var(--fg-3)' }}>{t('inboxes.detail.folders.loading')}</div>
+        <div aria-busy="true">
+          {ROLES.map(role => {
+            const id = `folder-${inbox.id}-${role}`;
+            return (
+              <div key={role} className="folder-override-row" data-role={role}>
+                <label htmlFor={id}>{t(`inboxes.detail.folders.roles.${role}`)}</label>
+                <div className="folder-override-control">
+                  <select id={id} className="input folder-override-automatic" value="" disabled onChange={() => {}}>
+                    <option value="">{t('inboxes.detail.folders.loading')}</option>
+                  </select>
+                </div>
+              </div>
+            );
+          })}
+        </div>
       ) : (
         <>
           {settings.roles.map(({ role, automatic, override }) => {
