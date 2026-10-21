@@ -273,6 +273,7 @@
     "connectionModeBothHint": "E-Mails dieser Adresse lesen, organisieren und von ihr senden.",
     "connectionModeImapHint": "E-Mails lesen, durchsuchen und organisieren. Senden von dieser Adresse wird ausgeschaltet.",
     "connectionModeSmtpHint": "E-Mails von dieser Adresse senden. Lesen und Organisieren wird ausgeschaltet.",
+    "connectionModeReconnectHint": "Das Postfach behält seine ID und seine KI-Verbindungen. Füllen Sie die Server aus, die jetzt bearbeitbar sind.",
     "imapPortLabel": "IMAP-Port",
     "smtpHostLabel": "SMTP-Host",
     "smtpPortLabel": "SMTP-Port",

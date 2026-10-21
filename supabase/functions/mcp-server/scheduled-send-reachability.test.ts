@@ -610,3 +610,17 @@ Deno.test("the failing rule counts toward auto-disable rather than retrying fore
   assertEquals(release.enabled, false);
   assertStringIncludes(String(release.disabled_reason), "inbox_unavailable");
 });
+
+Deno.test("an inbox switched to receive only fails with what is true, not a credential error", async () => {
+  // Reconnect can change a generic inbox from send-and-receive to receive only
+  // in place, with sends still queued against it. Those must not reach SMTP and
+  // come back as `imap_auth_failed`, which reads as revoked credentials.
+  const { summary, send } = await dispatchAgainst([
+    inboxRow({ provider: "imap", imap_host: "imap.example.com", imap_port: 993, smtp_host: null, smtp_port: null }),
+  ]);
+  assertEquals(summary.errored, 1);
+  assertEquals(summary.deferred, 0);
+  assertEquals(send.status, "error");
+  assertStringIncludes(String(send.error_detail), "receiving only");
+  assertStringIncludes(String(send.error_detail), "Nothing was sent");
+});

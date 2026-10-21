@@ -33581,6 +33581,18 @@ async function handleScheduledDispatch(
         );
       }
       const inbox = inboxData as unknown as InboxRow;
+      // A receive-only inbox has no SMTP server. One that was switched to
+      // receive only after this message was queued (the dashboard's Reconnect
+      // can change the connection type in place) used to reach the SMTP send
+      // and fail with the `imap_auth_failed` sentinel, which reads as revoked
+      // credentials. Fail it terminally with what is actually true.
+      if (missingTransportOf(inbox) === "smtp") {
+        throw new Error(
+          `The mailbox this message was scheduled from is connected for receiving only, ` +
+            `so it cannot send. Nothing was sent. Reconnect it with the connection type ` +
+            `set to send and receive, then schedule the message again.`,
+        );
+      }
 
       // ── Plaintext payloads: approval markers only ──────────────────────
       // The product writes exactly one plaintext shape, the approval marker.
