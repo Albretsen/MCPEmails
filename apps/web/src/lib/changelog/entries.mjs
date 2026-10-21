@@ -46,6 +46,13 @@ export const ENTRIES = [
   {
     date: '2026-10-21',
     kind: 'added',
+    title: 'Change an inbox\'s connection type when reconnecting',
+    body:
+      'When you reconnect an IMAP inbox you can now switch it between send and receive, receive only and send only, under Advanced. The inbox keeps its ID and the AI apps already connected to it.',
+  },
+  {
+    date: '2026-10-21',
+    kind: 'added',
     title: 'Choose the folders MCPEmails uses',
     body:
       'For IMAP inboxes you can now pick which folder MCPEmails uses for Sent, Drafts, Trash, Spam and Archive, under Advanced in the inbox\'s settings. Automatic detection stays the default.',

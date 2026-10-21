@@ -273,6 +273,7 @@
     "connectionModeBothHint": "Les, organiser og send e-post fra denne adressen.",
     "connectionModeImapHint": "Les, søk i og organiser e-post. Sending fra denne adressen blir slått av.",
     "connectionModeSmtpHint": "Send e-post fra denne adressen. Lesing og organisering av e-post blir slått av.",
+    "connectionModeReconnectHint": "Innboksen beholder ID-en og AI-tilkoblingene sine. Fyll inn serverne som nå er åpne.",
     "imapPortLabel": "IMAP-port",
     "smtpHostLabel": "SMTP-vert",
     "smtpPortLabel": "SMTP-port",

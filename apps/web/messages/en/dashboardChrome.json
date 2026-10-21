@@ -273,6 +273,7 @@
     "connectionModeBothHint": "Read, organize and send mail from this address.",
     "connectionModeImapHint": "Read, search and organize mail. Sending from this address will be turned off.",
     "connectionModeSmtpHint": "Send mail from this address. Reading and organizing mail will be turned off.",
+    "connectionModeReconnectHint": "This inbox keeps its ID and its AI connections. Fill in any server that is now open.",
     "imapPortLabel": "IMAP port",
     "smtpHostLabel": "SMTP host",
     "smtpPortLabel": "SMTP port",
