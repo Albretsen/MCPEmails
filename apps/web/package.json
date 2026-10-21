@@ -14,6 +14,8 @@
     "test:delete-account": "node --test --experimental-strip-types --experimental-test-module-mocks --import ./scripts/register-ts-alias.mjs src/lib/stripe/cancel-on-account-delete.test.ts app/api/user/delete-account/route.test.ts",
     "test:checkout": "node --test --experimental-strip-types --experimental-test-module-mocks --import ./scripts/register-ts-alias.mjs src/lib/stripe/checkout-core.test.ts app/api/stripe/checkout/locale.routes.test.ts app/api/stripe/webhook/route.personal-reprice.test.ts src/lib/stripe/mailbox-addon.test.ts",
     "test:inbox-reconnect-mode": "node --test --experimental-strip-types --experimental-test-module-mocks --import ./scripts/register-ts-alias.mjs app/api/inboxes/imap-reconnect-mode.test.ts",
+    "test:inbox-connection": "node --test --experimental-strip-types --experimental-test-module-mocks --import ./scripts/register-ts-alias.mjs app/api/inboxes/inbox-connection-route.test.ts",
+    "test:connection-type-ui": "node --test --experimental-strip-types --import ./scripts/register-dom-tests.mjs components/dashboard/connection-type-ui.test.mjs",
     "test:inbox-route-roles": "node --test --experimental-strip-types --experimental-test-module-mocks --import ./scripts/register-ts-alias.mjs app/api/inboxes/inbox-routes.roles.test.ts",
     "test:inbox-limit": "node --test --experimental-strip-types --import ./scripts/register-ts-alias.mjs src/lib/plans/check-inbox-limit.test.ts src/lib/plans/inbox-cap-events.test.ts",
     "test:member-limit": "node --test --experimental-strip-types --import ./scripts/register-ts-alias.mjs src/lib/plans/check-member-limit.test.ts",

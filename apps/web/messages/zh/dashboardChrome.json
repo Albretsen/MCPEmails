@@ -273,7 +273,6 @@
     "connectionModeBothHint": "从此地址读取、整理和发送邮件。",
     "connectionModeImapHint": "读取、搜索和整理邮件。将关闭从此地址发送邮件。",
     "connectionModeSmtpHint": "从此地址发送邮件。将关闭读取和整理邮件。",
-    "connectionModeReconnectHint": "此收件箱保留其 ID 和 AI 连接。请填写现在可编辑的服务器。",
     "imapPortLabel": "IMAP 端口",
     "smtpHostLabel": "SMTP 主机",
     "smtpPortLabel": "SMTP 端口",

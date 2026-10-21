@@ -49,7 +49,7 @@
 //
 //   iad1  The routes that log in to a mail host from this function:
 //         inboxes/imap, inboxes/app-password, inboxes/fastmail-app-password,
-//         inboxes/[id]/check and inboxes/[id]/folders. About 12 database round trips would save
+//         inboxes/[id]/check, inboxes/[id]/folders and inboxes/[id]/connection. About 12 database round trips would save
 //         1,370 ms, but the IMAP + SMTP probes are 10 to 14 round trips to a
 //         host that for Gmail, Yahoo, iCloud and Fastmail is in the US, which
 //         costs 1,000 to 1,400 ms back: a wash, and a loss for a US caller.
@@ -102,6 +102,7 @@ export const PATTERNS_ALLOWED_MAX_DURATION = [];
 /** Every `export const maxDuration` under app/, in seconds. */
 export const ROUTE_MAX_DURATIONS = {
   'app/api/automations/preview/route.ts': 90,
+  'app/api/inboxes/[id]/connection/route.ts': 90, // same detection + relay retry as inboxes/imap, one half
   'app/api/inboxes/app-password/route.ts': 60,
   'app/api/inboxes/fastmail-app-password/route.ts': 60,
   'app/api/inboxes/imap/route.ts': 90, // relay retry after direct detection (relay-fallback.ts)
@@ -187,6 +188,7 @@ export const ROUTES = [
   ['app/api/automations/route.ts', 'arn1', '6', '-'],
   ['app/api/email/unsubscribe/route.ts', 'arn1', '3', '-'],
   ['app/api/inboxes/[id]/check/route.ts', 'iad1', '5', 'IMAP login to the mail host, or Gmail API / Microsoft Graph'],
+  ['app/api/inboxes/[id]/connection/route.ts', 'iad1', '4', 'IMAP or SMTP login probe to the mail host when a half is added'],
   ['app/api/inboxes/[id]/folders/route.ts', 'iad1', '5', 'IMAP login + LIST to the mail host'],
   ['app/api/inboxes/[id]/route.ts', 'iad1', '8', 'Google / Microsoft token revoke on delete'],
   ['app/api/inboxes/[id]/send-as/route.ts', 'arn1', '4-8', 'Resend (one verification mail on add / resend)'],

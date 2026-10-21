@@ -273,7 +273,6 @@
     "connectionModeBothHint": "Lee, organiza y envía correo desde esta dirección.",
     "connectionModeImapHint": "Lee, busca y organiza correo. El envío desde esta dirección quedará desactivado.",
     "connectionModeSmtpHint": "Envía correo desde esta dirección. La lectura y organización del correo quedarán desactivadas.",
-    "connectionModeReconnectHint": "La bandeja conserva su ID y sus conexiones de IA. Rellena los servidores que ahora están abiertos.",
     "imapPortLabel": "Puerto IMAP",
     "smtpHostLabel": "Servidor SMTP",
     "smtpPortLabel": "Puerto SMTP",

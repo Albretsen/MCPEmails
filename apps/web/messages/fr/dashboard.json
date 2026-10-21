@@ -292,6 +292,47 @@
           "unavailable": "Les réglages des dossiers ne sont pas encore disponibles.",
           "unsupported_inbox": "Les réglages des dossiers ne sont pas disponibles pour cette boîte."
         }
+      },
+      "connection": {
+        "title": "Type de connexion",
+        "help": "Choisissez ce que MCPEmails peut faire avec cette adresse. La boîte garde son identifiant et ses connexions IA.",
+        "typeLabel": "Type",
+        "modes": {
+          "both": "Envoyer et recevoir",
+          "imap": "Réception seule",
+          "smtp": "Envoi seul"
+        },
+        "turnsOff": {
+          "smtp": "L'envoi depuis cette adresse sera désactivé.",
+          "imap": "La lecture et le classement des e-mails seront désactivés."
+        },
+        "addHint": "Indiquez le serveur {server}. Il est vérifié avec votre mot de passe enregistré avant toute modification.",
+        "imapHost": "Serveur IMAP",
+        "smtpHost": "Serveur SMTP",
+        "port": "Port",
+        "security": "Sécurité",
+        "securityTls": "SSL/TLS",
+        "securityStarttls": "STARTTLS",
+        "username": "Identifiant",
+        "password": "Mot de passe",
+        "needsLogin": "Le serveur {server} n'a pas accepté vos identifiants enregistrés. Indiquez l'identifiant et le mot de passe qu'il utilise. Ils remplacent ceux enregistrés.",
+        "save": "Enregistrer",
+        "saving": "Enregistrement…",
+        "checking": "Vérification…",
+        "cancel": "Annuler",
+        "saved": {
+          "both": "Enregistré. Cette boîte envoie et reçoit désormais.",
+          "imap": "Enregistré. Cette boîte est désormais en réception seule.",
+          "smtp": "Enregistré. Cette boîte est désormais en envoi seul."
+        },
+        "errors": {
+          "hostRequired": "Indiquez le serveur {server}.",
+          "passwordRequired": "Indiquez le mot de passe.",
+          "loginRefused": "Le serveur {server} n'a pas accepté ces identifiants. Rien n'a été modifié.",
+          "loginInUse": "Ces identifiants sont déjà connectés à une autre boîte. Rien n'a été modifié.",
+          "unreachable": "Impossible de joindre le serveur {server} avec ces réglages. Rien n'a été modifié.",
+          "save": "Impossible d'enregistrer. Réessayez."
+        }
       }
     },
     "emptyAltLead": "Pas encore prêt à connecter une boîte ?",

@@ -628,55 +628,23 @@ export function ConnectModal({
    * Which halves of a generic IMAP/SMTP mailbox this connection carries:
    * 'both', 'imap' (receive only) or 'smtp' (send only). A receive-only
    * mailbox has no SMTP server to give and a send-only one has no IMAP server,
-   * and requiring both shut either out. A reconnect opens on the mode the inbox
-   * was stored with and may change it in any direction: the connect route
-   * upserts on (workspace, address), so the inbox keeps its id, its AI
-   * connections and its place under the plan's inbox cap.
+   * and requiring both shut either out. A reconnect keeps the mode the inbox
+   * was stored with, for the same reason it keeps the hosts: Reconnect means
+   * "re-enter my password". The type is changed on the inbox itself, under
+   * Advanced > Connection type (ConnectionTypeEditor.jsx).
    */
   const [connectionMode, setConnectionMode] = useState(reconnect?.connectionMode ?? 'both');
-  /**
-   * Which halves of the server settings a reconnect keeps locked: the ones the
-   * stored inbox already has. Their hosts are the row's identity, for the same
-   * reason the address is. A half the inbox never had has nothing stored to
-   * protect, so when a reconnect switches the type to add it, its fields are
-   * as open as on a first connect.
-   */
-  const storedMode = isReconnect ? (reconnect.connectionMode ?? 'both') : null;
-  const imapLocked = isReconnect && storedMode !== 'smtp';
-  const smtpLocked = isReconnect && storedMode !== 'imap';
-  const [form, setForm] = useState(() => {
-    // A half the stored inbox does not have starts from the known-provider
-    // table for its address when there is a match, and from the first-connect
-    // defaults otherwise, not from the NULLs on the row.
-    const known = isReconnect && storedMode !== 'both'
-      ? prefillFromDomain(emailDomain(String(reconnect.address ?? '')) ?? '')
-      : null;
-    const imap = isReconnect && !imapLocked
-      ? { host: known?.imapHost ?? '', port: known?.imapPort ?? GENERIC_IMAP_DEFAULTS.imapPort, security: known?.imapSecurity ?? 'tls' }
-      : {
-          host: reconnect?.imapHost ?? seedForm?.imapHost ?? '',
-          port: reconnect?.imapPort ?? seedForm?.imapPort ?? GENERIC_IMAP_DEFAULTS.imapPort,
-          security: reconnect?.imapSecurity ?? seedForm?.imapSecurity ?? (reconnect?.imapPort === 143 ? 'starttls' : 'tls'),
-        };
-    const smtp = isReconnect && !smtpLocked
-      ? { host: known?.smtpHost ?? '', port: known?.smtpPort ?? GENERIC_IMAP_DEFAULTS.smtpPort, security: known?.smtpSecurity ?? GENERIC_IMAP_DEFAULTS.smtpSecurity }
-      : {
-          host: reconnect?.smtpHost ?? seedForm?.smtpHost ?? '',
-          port: reconnect?.smtpPort ?? seedForm?.smtpPort ?? GENERIC_IMAP_DEFAULTS.smtpPort,
-          security: reconnect?.smtpSecurity ?? seedForm?.smtpSecurity ?? (reconnect?.smtpPort === 587 ? 'starttls' : 'tls'),
-        };
-    return {
-      email: reconnect?.address ?? '',
-      username: reconnect?.username ?? '',
-      password: '',
-      imapHost: imap.host,
-      imapPort: imap.port,
-      smtpHost: smtp.host,
-      smtpPort: smtp.port,
-      imapSecurity: imap.security,
-      smtpSecurity: smtp.security,
-    };
-  });
+  const [form, setForm] = useState(() => ({
+    email: reconnect?.address ?? '',
+    username: reconnect?.username ?? '',
+    password: '',
+    imapHost: reconnect?.imapHost ?? seedForm?.imapHost ?? '',
+    imapPort: reconnect?.imapPort ?? seedForm?.imapPort ?? GENERIC_IMAP_DEFAULTS.imapPort,
+    smtpHost: reconnect?.smtpHost ?? seedForm?.smtpHost ?? '',
+    smtpPort: reconnect?.smtpPort ?? seedForm?.smtpPort ?? GENERIC_IMAP_DEFAULTS.smtpPort,
+    imapSecurity: reconnect?.imapSecurity ?? seedForm?.imapSecurity ?? (reconnect?.imapPort === 143 ? 'starttls' : 'tls'),
+    smtpSecurity: reconnect?.smtpSecurity ?? seedForm?.smtpSecurity ?? (reconnect?.smtpPort === 587 ? 'starttls' : 'tls'),
+  }));
   /**
    * Zoho's data center and account class, recovered from the stored host on a
    * reconnect.
@@ -1292,10 +1260,9 @@ export function ConnectModal({
       parsed.portError === 'range' ||
       (parsed.port !== null && !ALLOWED_MAIL_PORTS[protocol].has(parsed.port));
     const result = { ...parsed, portRejected };
-    // Reconnect locks the server fields the inbox already has: nothing to
-    // rewrite, and the stored host is the row's identity. A half being added by
-    // a change of connection type is typed in fresh and normalised as usual.
-    if (protocol === 'imap' ? imapLocked : smtpLocked) return result;
+    // Reconnect locks the server fields: nothing to rewrite, and the stored
+    // host is the row's identity.
+    if (isReconnect) return result;
     if (parsed.host !== form[key]) {
       setForm(prev => ({ ...prev, [key]: parsed.host }));
     }
@@ -3082,8 +3049,8 @@ export function ConnectModal({
                             value={form.imapHost}
                             onChange={e => { setPortNote(null); setPortRangeError(null); setForm(prev => ({ ...prev, imapHost: e.target.value })); }}
                             onBlur={() => normalizeHostField('imap')}
-                            readOnly={imapLocked}
-                            aria-readonly={imapLocked || undefined}
+                            readOnly={isReconnect}
+                            aria-readonly={isReconnect || undefined}
                           />
                         </div>
                         <div className="field port-field">
@@ -3094,7 +3061,7 @@ export function ConnectModal({
                             protocol="imap"
                             value={form.imapPort}
                             onChange={value => setPort('imap', value)}
-                            disabled={imapLocked}
+                            disabled={isReconnect}
                             invalid={isInvalid('imapPort')}
                             describedBy={describedBy(
                               portNote?.protocol === 'imap' ? 'cm-imap-port-note' : null,
@@ -3155,8 +3122,8 @@ export function ConnectModal({
                             value={form.smtpHost}
                             onChange={e => { setPortNote(null); setPortRangeError(null); setForm(prev => ({ ...prev, smtpHost: e.target.value })); }}
                             onBlur={() => normalizeHostField('smtp')}
-                            readOnly={smtpLocked}
-                            aria-readonly={smtpLocked || undefined}
+                            readOnly={isReconnect}
+                            aria-readonly={isReconnect || undefined}
                           />
                         </div>
                         <div className="field port-field">
@@ -3167,7 +3134,7 @@ export function ConnectModal({
                             protocol="smtp"
                             value={form.smtpPort}
                             onChange={value => setPort('smtp', value)}
-                            disabled={smtpLocked}
+                            disabled={isReconnect}
                             invalid={isInvalid('smtpPort')}
                             describedBy={describedBy(
                               portNote?.protocol === 'smtp' ? 'cm-smtp-port-note' : null,
@@ -3445,10 +3412,7 @@ export function ConnectModal({
                           no SMTP server to give and a send-only one (a
                           transactional sender, a relay account) has no IMAP
                           server; choosing one hides the other half's host row
-                          above, so nobody is asked for a server they do not have.
-                          Open on reconnect too: changing the type there keeps
-                          the inbox id, where disconnecting and connecting again
-                          would cost the AI connections built on it. */}
+                          above, so nobody is asked for a server they do not have. */}
                       <div className="field">
                         <label htmlFor="cm-connection-mode">{tr('connect.connectionModeLabel')}</label>
                         <select
@@ -3456,6 +3420,7 @@ export function ConnectModal({
                           className="input"
                           value={connectionMode}
                           onChange={e => { setPortNote(null); setPortRangeError(null); setConnectionMode(e.target.value); }}
+                          disabled={isReconnect}
                           aria-describedby="cm-connection-mode-hint"
                         >
                           <option value="both">{tr('connect.connectionModeBoth')}</option>
@@ -3464,7 +3429,6 @@ export function ConnectModal({
                         </select>
                         <span id="cm-connection-mode-hint" style={{ fontFamily: 'var(--font-sans)', fontSize: 12, color: 'var(--fg-3)' }}>
                           {tr(connectionMode === 'imap' ? 'connect.connectionModeImapHint' : connectionMode === 'smtp' ? 'connect.connectionModeSmtpHint' : 'connect.connectionModeBothHint')}
-                          {isReconnect && connectionMode !== storedMode && <> {tr('connect.connectionModeReconnectHint')}</>}
                         </span>
                       </div>
 
@@ -3513,7 +3477,7 @@ export function ConnectModal({
                           </legend>
                           <div className="field">
                             <label htmlFor="cm-imap-security">{tr('connect.imapSecurityLabel')}</label>
-                            <select id="cm-imap-security" className="input" value={form.imapSecurity} onChange={e => setSecurity('imap', e.target.value)} disabled={imapLocked} aria-describedby="cm-imap-security-hint">
+                            <select id="cm-imap-security" className="input" value={form.imapSecurity} onChange={e => setSecurity('imap', e.target.value)} disabled={isReconnect} aria-describedby="cm-imap-security-hint">
                               <option value="tls">{tr('connect.securityTls')}</option>
                               <option value="starttls">{tr('connect.securityStarttls')}</option>
                             </select>
@@ -3531,7 +3495,7 @@ export function ConnectModal({
                           </legend>
                           <div className="field">
                             <label htmlFor="cm-smtp-security">{tr('connect.smtpSecurityLabel')}</label>
-                            <select id="cm-smtp-security" className="input" value={form.smtpSecurity} onChange={e => setSecurity('smtp', e.target.value)} disabled={smtpLocked} aria-describedby="cm-smtp-security-hint">
+                            <select id="cm-smtp-security" className="input" value={form.smtpSecurity} onChange={e => setSecurity('smtp', e.target.value)} disabled={isReconnect} aria-describedby="cm-smtp-security-hint">
                               <option value="tls">{tr('connect.securityTls')}</option>
                               <option value="starttls">{tr('connect.securityStarttls')}</option>
                             </select>

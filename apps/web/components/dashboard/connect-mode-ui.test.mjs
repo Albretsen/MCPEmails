@@ -12,9 +12,9 @@
 //   - the request carries `mode` and only the half it names, even when the
 //     hidden fields still hold what was typed before the switch;
 //   - an empty host in the one visible half is refused naming that half alone;
-//   - on Reconnect the type can be changed in every direction: the half the
-//     inbox already has stays locked, a half being added is editable, and a
-//     half being dropped is hidden and not sent.
+//   - on Reconnect the type is shown but locked, with every server field: the
+//     type is changed on the inbox itself (Advanced > Connection type), and
+//     Reconnect only re-enters the password.
 // ---------------------------------------------------------------------------
 
 import test from 'node:test';
@@ -222,79 +222,28 @@ async function openReconnect(t, connectionMode) {
   return opened;
 }
 
-test('reconnect: the connection type can be changed', async (t) => {
-  const { view } = await openReconnect(t, 'imap');
+test('reconnect: the connection type is locked and only the password is asked for', async (t) => {
+  const { view, requests } = await openReconnect(t, 'imap');
   const select = q(view, 'cm-connection-mode');
   assert.equal(select.value, 'imap', 'opens on the stored type');
-  assert.equal(select.disabled, false, 'not locked on reconnect');
+  assert.equal(select.disabled, true, 'the type is changed on the inbox page, not here');
   assert.equal(q(view, 'cm-email').readOnly, true, 'the address stays locked');
-});
+  assert.equal(q(view, 'cm-imap-host').readOnly, true, 'the IMAP host stays locked');
+  assert.equal(q(view, 'cm-smtp-host') === null, true, 'a receive-only inbox shows no SMTP half');
 
-test('reconnect: receive only to both opens the SMTP half and keeps IMAP locked', async (t) => {
-  const { view, requests } = await openReconnect(t, 'imap');
-  await choose(q(view, 'cm-connection-mode'), 'both');
-  assert.ok(view.container.textContent.includes(chrome.connect.connectionModeReconnectHint), 'says what the change does');
-  assert.equal(q(view, 'cm-imap-host').readOnly, true, 'existing IMAP host stays locked');
-  assert.equal(q(view, 'cm-imap-port').disabled, true, 'existing IMAP port stays locked');
-  const smtpHost = q(view, 'cm-smtp-host');
-  assert.ok(smtpHost, 'SMTP host shown');
-  assert.equal(smtpHost.readOnly, false, 'the added SMTP host is editable');
-  assert.equal(q(view, 'cm-smtp-port').disabled, false, 'the added SMTP port is editable');
-  assert.equal(q(view, 'cm-smtp-security').disabled, false, 'the added SMTP security is editable');
-
-  await type(smtpHost, 'smtp.example.com');
   await type(q(view, 'cm-password'), 'a-long-enough-password');
   await submit(view);
   await waitFor(() => requests.length === 1, { message: 'the connect request' });
   const [body] = requests;
-  assert.equal(body.mode, 'both');
-  assert.equal(body.email, 'box@example.com');
+  assert.equal(body.mode, 'imap', 'the stored type is sent back unchanged');
   assert.equal(body.imapHost, 'imap.example.com');
-  assert.equal(body.smtpHost, 'smtp.example.com');
-  assert.ok(Number(body.smtpPort) > 0);
+  assert.equal('smtpHost' in body, false);
 });
 
-test('reconnect: both to receive only hides and drops the SMTP half', async (t) => {
-  const { view, requests } = await openReconnect(t, 'both');
-  assert.equal(q(view, 'cm-connection-mode').disabled, false);
-  await choose(q(view, 'cm-connection-mode'), 'imap');
-  assert.equal(q(view, 'cm-smtp-host') === null, true, 'SMTP host hidden');
-  assert.ok(view.container.textContent.includes(chrome.connect.connectionModeImapHint), 'says sending turns off');
-  await type(q(view, 'cm-password'), 'a-long-enough-password');
-  await submit(view);
-  await waitFor(() => requests.length === 1, { message: 'the connect request' });
-  const [body] = requests;
-  assert.equal(body.mode, 'imap');
-  assert.equal(body.imapHost, 'imap.example.com');
-  assert.equal('smtpHost' in body, false, 'no SMTP host is sent');
-});
-
-test('reconnect: send only to both opens the IMAP half', async (t) => {
-  const { view, requests } = await openReconnect(t, 'smtp');
-  await choose(q(view, 'cm-connection-mode'), 'both');
-  assert.equal(q(view, 'cm-smtp-host').readOnly, true, 'existing SMTP host stays locked');
-  const imapHost = q(view, 'cm-imap-host');
-  assert.equal(imapHost.readOnly, false, 'the added IMAP host is editable');
-  assert.equal(q(view, 'cm-imap-port').disabled, false, 'the added IMAP port is editable');
-  await type(imapHost, 'imap.example.com');
-  await type(q(view, 'cm-password'), 'a-long-enough-password');
-  await submit(view);
-  await waitFor(() => requests.length === 1, { message: 'the connect request' });
-  const [body] = requests;
-  assert.equal(body.mode, 'both');
-  assert.equal(body.imapHost, 'imap.example.com');
-  assert.equal(body.smtpHost, 'smtp.example.com');
-});
-
-test('reconnect: an added half left empty is refused naming that half', async (t) => {
-  const { view, requests } = await openReconnect(t, 'imap');
-  await choose(q(view, 'cm-connection-mode'), 'smtp');
-  assert.equal(q(view, 'cm-imap-host') === null, true, 'IMAP host hidden');
-  await type(q(view, 'cm-password'), 'a-long-enough-password');
-  await submit(view);
-  await waitFor(
-    () => view.container.textContent.includes(chrome.connect.errorSmtpHostRequired),
-    { message: 'the SMTP-only host error' },
-  );
-  assert.equal(requests.length, 0, 'nothing was sent');
+test('reconnect: a send-and-receive inbox keeps both halves locked', async (t) => {
+  const { view } = await openReconnect(t, 'both');
+  assert.equal(q(view, 'cm-connection-mode').disabled, true);
+  assert.equal(q(view, 'cm-imap-host').readOnly, true);
+  assert.equal(q(view, 'cm-smtp-host').readOnly, true);
+  assert.equal(q(view, 'cm-smtp-port').disabled, true);
 });

@@ -1248,6 +1248,8 @@ body { background: var(--bg-page); }
 .inbox-advanced-details { margin: 8px 0 16px; }
 .inbox-advanced-details summary span:only-child { color: var(--fg-1); font-size: 13px; font-weight: 600; }
 .inbox-advanced-details [data-folder-overrides] { padding: 0 0 12px; }
+.inbox-advanced-details [data-connection-type] { padding: 0 0 14px; }
+.folder-override-control input.input { flex: 1 1 200px; height: 32px; max-width: 100%; min-width: 0; padding: 0 8px; }
 .folder-overrides-title { margin: 0 0 2px; color: var(--fg-1); font: 600 13.5px var(--font-sans); }
 .folder-overrides-help { margin: 0 0 10px; color: var(--fg-2); font: 12.5px/1.5 var(--font-sans); }
 .folder-override-row { align-items: center; display: grid; gap: 4px 12px; grid-template-columns: 76px minmax(0, 1fr); padding: 5px 0; }

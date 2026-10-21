@@ -292,6 +292,47 @@
           "unavailable": "Ordnereinstellungen sind noch nicht verfügbar.",
           "unsupported_inbox": "Ordnereinstellungen sind für dieses Postfach nicht verfügbar."
         }
+      },
+      "connection": {
+        "title": "Verbindungsart",
+        "help": "Legen Sie fest, was MCPEmails mit dieser Adresse tun kann. Das Postfach behält seine ID und seine KI-Verbindungen.",
+        "typeLabel": "Art",
+        "modes": {
+          "both": "Senden und empfangen",
+          "imap": "Nur empfangen",
+          "smtp": "Nur senden"
+        },
+        "turnsOff": {
+          "smtp": "Das Senden von dieser Adresse wird ausgeschaltet.",
+          "imap": "Lesen und Ordnen von E-Mails wird ausgeschaltet."
+        },
+        "addHint": "Geben Sie den {server}-Server ein. Er wird mit Ihrem gespeicherten Passwort geprüft, bevor sich etwas ändert.",
+        "imapHost": "IMAP-Server",
+        "smtpHost": "SMTP-Server",
+        "port": "Port",
+        "security": "Sicherheit",
+        "securityTls": "SSL/TLS",
+        "securityStarttls": "STARTTLS",
+        "username": "Benutzername",
+        "password": "Passwort",
+        "needsLogin": "Der {server}-Server hat Ihre gespeicherte Anmeldung nicht akzeptiert. Geben Sie den Benutzernamen und das Passwort ein, die er verwendet. Sie ersetzen die gespeicherten.",
+        "save": "Speichern",
+        "saving": "Wird gespeichert…",
+        "checking": "Wird geprüft…",
+        "cancel": "Abbrechen",
+        "saved": {
+          "both": "Gespeichert. Dieses Postfach sendet und empfängt jetzt.",
+          "imap": "Gespeichert. Dieses Postfach empfängt jetzt nur.",
+          "smtp": "Gespeichert. Dieses Postfach sendet jetzt nur."
+        },
+        "errors": {
+          "hostRequired": "Geben Sie den {server}-Server ein.",
+          "passwordRequired": "Geben Sie das Passwort ein.",
+          "loginRefused": "Der {server}-Server hat diese Anmeldung nicht akzeptiert. Es wurde nichts geändert.",
+          "loginInUse": "Diese Anmeldung ist bereits als anderes Postfach verbunden. Es wurde nichts geändert.",
+          "unreachable": "Keine Verbindung zum {server}-Server mit diesen Einstellungen. Es wurde nichts geändert.",
+          "save": "Speichern fehlgeschlagen. Bitte erneut versuchen."
+        }
       }
     },
     "emptyAltLead": "Noch nicht bereit, ein Postfach zu verbinden?",
