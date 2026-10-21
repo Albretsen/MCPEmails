@@ -273,7 +273,6 @@
     "connectionModeBothHint": "Lire, organiser et envoyer des e-mails depuis cette adresse.",
     "connectionModeImapHint": "Lire, rechercher et organiser les e-mails. L’envoi depuis cette adresse sera désactivé.",
     "connectionModeSmtpHint": "Envoyer des e-mails depuis cette adresse. La lecture et l’organisation des e-mails seront désactivées.",
-    "connectionModeReconnectHint": "La boîte conserve son identifiant et ses connexions IA. Renseignez les serveurs désormais modifiables.",
     "imapPortLabel": "Port IMAP",
     "smtpHostLabel": "Hôte SMTP",
     "smtpPortLabel": "Port SMTP",

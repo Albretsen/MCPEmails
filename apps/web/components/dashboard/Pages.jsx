@@ -24,6 +24,7 @@ import { ApprovalsPanel } from './ApprovalsPanel';
 import { AutomationsPanel } from './AutomationsPanel';
 import { SsoSettingsSection } from './SsoSettingsSection';
 import { FolderOverridesEditor } from './FolderOverridesEditor';
+import { ConnectionTypeEditor, connectionTypeAvailable } from './ConnectionTypeEditor';
 import { usePricingView } from '@/lib/analytics/use-pricing-view.mjs';
 import { PLANS as CATALOGUE } from '@/lib/stripe/plans';
 import { trimLeadingQuietDays } from '@/lib/analytics/retention';
@@ -1352,7 +1353,7 @@ function needsReconnect(status) {
 // and the modal's panel cannot classify one workspace two ways. It only changes
 // anything at the Free cap, where inboxCapOffer widens Personal alone to
 // Personal and Pro.
-export function InboxesPage({ inboxes, planLimits, stripePrices = null, businessShaped = false, onConnect, onRemove, onReconnect, onCheck, onSaveSignature, onSaveSenderName, onSaveDraftEditorHidden, draftEditorRolledOut = false, draftEditorWorkspaceHidden = false, userRole, onGoToKeys }) {
+export function InboxesPage({ inboxes, planLimits, stripePrices = null, businessShaped = false, onConnect, onRemove, onReconnect, onCheck, onSaveSignature, onSaveSenderName, onSaveDraftEditorHidden, onConnectionChanged, draftEditorRolledOut = false, draftEditorWorkspaceHidden = false, userRole, onGoToKeys }) {
   // The analytics window this plan buys. Every per-inbox call count on this
   // page is scoped to it server-side, so the label has to quote the same
   // number or the column silently means something different per plan.
@@ -1892,6 +1893,7 @@ export function InboxesPage({ inboxes, planLimits, stripePrices = null, business
           onSaveSignature={onSaveSignature}
           onSaveSenderName={onSaveSenderName}
           onSaveDraftEditorHidden={onSaveDraftEditorHidden}
+          onConnectionChanged={onConnectionChanged}
           draftEditorRolledOut={draftEditorRolledOut}
           draftEditorWorkspaceHidden={draftEditorWorkspaceHidden}
           canManageInbox={userRole !== 'viewer'}
@@ -3043,21 +3045,28 @@ export function folderChoiceAvailable(inbox) {
     && inbox.status !== 'pending';
 }
 
+/** Whether the inbox detail has anything to show under Advanced. */
+export function inboxAdvancedAvailable(inbox) {
+  return folderChoiceAvailable(inbox) || connectionTypeAvailable(inbox);
+}
+
 /**
- * The collapsed "Advanced" section of the inbox detail. Its contents mount
- * only while it is open, so opening an inbox never dials its mail server.
+ * The collapsed "Advanced" section of the inbox detail: connection type for a
+ * generic IMAP/SMTP inbox, then folder choice. Its contents mount only while
+ * it is open, so opening an inbox never dials its mail server.
  */
-export function InboxAdvancedSection({ inbox, t }) {
+export function InboxAdvancedSection({ inbox, t, onConnectionChanged }) {
   const [open, setOpen] = useState(false);
   return (
     <details className="inbox-sending-details inbox-advanced-details" onToggle={e => setOpen(e.currentTarget.open)}>
       <summary><span>{t('inboxes.detail.advanced')}</span></summary>
-      {open && <FolderOverridesEditor inbox={inbox} t={t} />}
+      {open && connectionTypeAvailable(inbox) && <ConnectionTypeEditor inbox={inbox} t={t} onChanged={onConnectionChanged} />}
+      {open && folderChoiceAvailable(inbox) && <FolderOverridesEditor inbox={inbox} t={t} />}
     </details>
   );
 }
 
-function InboxDetailModal({ inbox, checking, onClose, onReconnect, onCheck, onDisconnect, onSaveSignature, onSaveSenderName, onSaveDraftEditorHidden, draftEditorRolledOut = false, draftEditorWorkspaceHidden = false, canManageInbox = true, canManageReview = true, historyDays = 30 }) {
+function InboxDetailModal({ inbox, checking, onClose, onReconnect, onCheck, onDisconnect, onSaveSignature, onSaveSenderName, onSaveDraftEditorHidden, onConnectionChanged, draftEditorRolledOut = false, draftEditorWorkspaceHidden = false, canManageInbox = true, canManageReview = true, historyDays = 30 }) {
   const t = useTranslations('dashboard');
   if (!inbox) return null;
 
@@ -3195,7 +3204,7 @@ function InboxDetailModal({ inbox, checking, onClose, onReconnect, onCheck, onDi
             </details>
           )}
 
-          {canManageInbox && folderChoiceAvailable(inbox) && <InboxAdvancedSection inbox={inbox} t={t} />}
+          {canManageInbox && inboxAdvancedAvailable(inbox) && <InboxAdvancedSection inbox={inbox} t={t} onConnectionChanged={onConnectionChanged} />}
 
           {!canManageInbox ? (
             <p style={{ margin: 0, fontSize: 12, color: 'var(--fg-3)', textAlign: 'right' }}>

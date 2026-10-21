@@ -46,9 +46,9 @@ export const ENTRIES = [
   {
     date: '2026-10-21',
     kind: 'added',
-    title: 'Change an inbox\'s connection type when reconnecting',
+    title: 'Change an inbox\'s connection type from its settings',
     body:
-      'When you reconnect an IMAP inbox you can now switch it between send and receive, receive only and send only, under Advanced. The inbox keeps its ID and the AI apps already connected to it.',
+      'You can now switch an IMAP inbox between send and receive, receive only and send only from the inbox\'s Advanced settings, without entering your password again. The inbox keeps its ID and the AI apps already connected to it.',
   },
   {
     date: '2026-10-21',

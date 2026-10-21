@@ -292,6 +292,47 @@
           "unavailable": "Mappeinnstillinger er ikke tilgjengelige ennå.",
           "unsupported_inbox": "Mappeinnstillinger er ikke tilgjengelige for denne innboksen."
         }
+      },
+      "connection": {
+        "title": "Tilkoblingstype",
+        "help": "Velg hva MCPEmails kan gjøre med denne adressen. Innboksen beholder ID-en og AI-tilkoblingene sine.",
+        "typeLabel": "Type",
+        "modes": {
+          "both": "Sende og motta",
+          "imap": "Bare motta",
+          "smtp": "Bare sende"
+        },
+        "turnsOff": {
+          "smtp": "Sending fra denne adressen blir slått av.",
+          "imap": "Lesing og organisering av e-post blir slått av."
+        },
+        "addHint": "Fyll inn {server}-serveren. Den sjekkes med det lagrede passordet ditt før noe endres.",
+        "imapHost": "IMAP-server",
+        "smtpHost": "SMTP-server",
+        "port": "Port",
+        "security": "Sikkerhet",
+        "securityTls": "SSL/TLS",
+        "securityStarttls": "STARTTLS",
+        "username": "Brukernavn",
+        "password": "Passord",
+        "needsLogin": "{server}-serveren godtok ikke den lagrede påloggingen. Fyll inn brukernavnet og passordet den bruker. De erstatter de lagrede.",
+        "save": "Lagre",
+        "saving": "Lagrer…",
+        "checking": "Sjekker…",
+        "cancel": "Avbryt",
+        "saved": {
+          "both": "Lagret. Innboksen kan nå sende og motta.",
+          "imap": "Lagret. Innboksen kan nå bare motta.",
+          "smtp": "Lagret. Innboksen kan nå bare sende."
+        },
+        "errors": {
+          "hostRequired": "Fyll inn {server}-serveren.",
+          "passwordRequired": "Fyll inn passordet.",
+          "loginRefused": "{server}-serveren godtok ikke denne påloggingen. Ingenting ble endret.",
+          "loginInUse": "Denne påloggingen er allerede koblet til som en annen innboks. Ingenting ble endret.",
+          "unreachable": "Fikk ikke kontakt med {server}-serveren med disse innstillingene. Ingenting ble endret.",
+          "save": "Kunne ikke lagre. Prøv igjen."
+        }
       }
     },
     "emptyAltLead": "Ikke klar til å koble til en postkasse ennå?",

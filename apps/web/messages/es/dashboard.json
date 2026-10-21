@@ -292,6 +292,47 @@
           "unavailable": "Los ajustes de carpetas aún no están disponibles.",
           "unsupported_inbox": "Los ajustes de carpetas no están disponibles para esta bandeja."
         }
+      },
+      "connection": {
+        "title": "Tipo de conexión",
+        "help": "Elige qué puede hacer MCPEmails con esta dirección. La bandeja conserva su ID y sus conexiones de IA.",
+        "typeLabel": "Tipo",
+        "modes": {
+          "both": "Enviar y recibir",
+          "imap": "Solo recibir",
+          "smtp": "Solo enviar"
+        },
+        "turnsOff": {
+          "smtp": "Se desactivará el envío desde esta dirección.",
+          "imap": "Se desactivará la lectura y organización del correo."
+        },
+        "addHint": "Indica el servidor {server}. Se comprueba con tu contraseña guardada antes de cambiar nada.",
+        "imapHost": "Servidor IMAP",
+        "smtpHost": "Servidor SMTP",
+        "port": "Puerto",
+        "security": "Seguridad",
+        "securityTls": "SSL/TLS",
+        "securityStarttls": "STARTTLS",
+        "username": "Usuario",
+        "password": "Contraseña",
+        "needsLogin": "El servidor {server} no aceptó tu inicio de sesión guardado. Indica el usuario y la contraseña que usa. Sustituyen a los guardados.",
+        "save": "Guardar",
+        "saving": "Guardando…",
+        "checking": "Comprobando…",
+        "cancel": "Cancelar",
+        "saved": {
+          "both": "Guardado. Esta bandeja ahora envía y recibe.",
+          "imap": "Guardado. Esta bandeja ahora solo recibe.",
+          "smtp": "Guardado. Esta bandeja ahora solo envía."
+        },
+        "errors": {
+          "hostRequired": "Indica el servidor {server}.",
+          "passwordRequired": "Indica la contraseña.",
+          "loginRefused": "El servidor {server} no aceptó este inicio de sesión. No se cambió nada.",
+          "loginInUse": "Este inicio de sesión ya está conectado como otra bandeja. No se cambió nada.",
+          "unreachable": "No se pudo conectar con el servidor {server} con estos ajustes. No se cambió nada.",
+          "save": "No se pudo guardar. Inténtalo de nuevo."
+        }
       }
     },
     "emptyAltLead": "¿Todavía no quieres conectar un buzón?",

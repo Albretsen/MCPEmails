@@ -292,6 +292,47 @@
           "unavailable": "Folder settings are not available yet.",
           "unsupported_inbox": "Folder settings are not available for this inbox."
         }
+      },
+      "connection": {
+        "title": "Connection type",
+        "help": "Choose what MCPEmails can do with this address. The inbox keeps its ID and its AI connections.",
+        "typeLabel": "Type",
+        "modes": {
+          "both": "Send and receive",
+          "imap": "Receive only",
+          "smtp": "Send only"
+        },
+        "turnsOff": {
+          "smtp": "Sending from this address will be turned off.",
+          "imap": "Reading and organizing mail will be turned off."
+        },
+        "addHint": "Enter the {server} server. It is checked with your saved password before anything changes.",
+        "imapHost": "IMAP host",
+        "smtpHost": "SMTP host",
+        "port": "Port",
+        "security": "Security",
+        "securityTls": "SSL/TLS",
+        "securityStarttls": "STARTTLS",
+        "username": "Username",
+        "password": "Password",
+        "needsLogin": "The {server} server did not accept your saved login. Enter the username and password it uses. They replace the saved ones.",
+        "save": "Save",
+        "saving": "Saving…",
+        "checking": "Checking…",
+        "cancel": "Cancel",
+        "saved": {
+          "both": "Saved. This inbox now sends and receives.",
+          "imap": "Saved. This inbox is now receive only.",
+          "smtp": "Saved. This inbox is now send only."
+        },
+        "errors": {
+          "hostRequired": "Enter the {server} server.",
+          "passwordRequired": "Enter the password.",
+          "loginRefused": "The {server} server did not accept this login. Nothing was changed.",
+          "loginInUse": "This login is already connected as another inbox. Nothing was changed.",
+          "unreachable": "Could not connect to the {server} server with these settings. Nothing was changed.",
+          "save": "Could not save. Try again."
+        }
       }
     },
     "emptyAltLead": "Not ready to connect a mailbox yet?",
