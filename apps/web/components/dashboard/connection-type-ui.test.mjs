@@ -15,6 +15,8 @@
 //   - a failure is one line and nothing is reported as changed;
 //   - a refused stored login brings up username and password, and the next
 //     Save sends them;
+//   - a host on another domain (password_required) brings them up too, with
+//     its own line;
 //   - every locale has every key, without '<' or an em dash.
 // ---------------------------------------------------------------------------
 
@@ -226,4 +228,24 @@ test('a refused saved login asks for username and password, then sends them', as
   assert.equal(requests[1].body.smtpHost, 'smtp.example.invalid');
   await waitFor(() => changes.length === 1, { message: 'the change reported' });
   assert.equal(changes[0].fields.status, 'active');
+});
+
+test('a server on another domain asks for the password, then sends it', async (t) => {
+  const requests = stubFetch(t, [
+    [422, { error: 'Enter the password.', error_code: 'password_required', half: 'smtp', needs_login: true }],
+    [200, savedBody('both', { imapHost: 'imap.example.invalid', smtpHost: 'smtp.elsewhere.invalid' })],
+  ]);
+  const { view, changes } = await openAdvanced(t, inbox('imap'));
+  await choose(q(view, 'mode'), 'both');
+  await type(q(view, 'smtp-host'), 'smtp.elsewhere.invalid');
+  await save(view);
+  await waitFor(() => q(view, 'password'), { message: 'the password field' });
+  assert.equal(requests[0].body.appPassword, undefined, 'the first Save sends no password');
+  assert.equal(statusText(view), C.passwordForNewHost.replace('{server}', 'SMTP'));
+  await type(q(view, 'password'), 'typed-secret');
+  await save(view);
+  await waitFor(() => requests.length === 2, { message: 'the second PATCH' });
+  assert.equal(requests[1].body.appPassword, 'typed-secret');
+  assert.equal(requests[1].body.smtpHost, 'smtp.elsewhere.invalid');
+  await waitFor(() => changes.length === 1, { message: 'the change reported' });
 });

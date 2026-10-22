@@ -316,6 +316,7 @@
         "username": "Usuario",
         "password": "Contraseña",
         "needsLogin": "El servidor {server} no aceptó tu inicio de sesión guardado. Indica el usuario y la contraseña que usa. Sustituyen a los guardados.",
+        "passwordForNewHost": "El servidor {server} está en un dominio distinto al de tu servidor guardado, así que no le enviamos la contraseña guardada. Indica el usuario y la contraseña que usa. Sustituyen a los guardados.",
         "save": "Guardar",
         "saving": "Guardando…",
         "checking": "Comprobando…",

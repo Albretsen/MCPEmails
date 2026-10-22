@@ -14,6 +14,9 @@
 //   - a widening that fails answers 422 and writes nothing;
 //   - a refused stored login answers needs_login; a supplied login is then
 //     checked on every half the new mode keeps and replaces the stored one;
+//   - the stored password only goes to an added host on the registrable domain
+//     of a saved one; any other host is password_required until it is typed,
+//     and security 'none' is refused, both before any dial;
 //   - PATCH is the only exported method (others are 405 from Next).
 //
 // (Outside [id]/ because node --test reads its arguments as globs.)
@@ -368,4 +371,53 @@ test('the stored type again is a no-op', async () => {
   assert.equal((await res.json()).unchanged, true);
   assert.equal(writes().length, 0);
   assert.equal(world.dials.length, 0);
+});
+
+test('an added host on another domain needs the password typed: 422 before any dial', async () => {
+  reset('imap');
+  const res = await patch({ mode: 'both', smtpHost: 'smtp.attacker.example', smtpPort: 465, smtpSecurity: 'tls' });
+  assert.equal(res.status, 422);
+  const body = await res.json();
+  assert.equal(body.error_code, 'password_required');
+  assert.equal(body.half, 'smtp');
+  assert.equal(body.needs_login, true);
+  assert.equal(JSON.stringify(body).includes('secret'), false);
+  assert.equal(world.dials.length, 0, 'the stored password is never sent to it');
+  assert.equal(writes().length, 0);
+});
+
+test('an added host on the saved host\'s registrable domain dials with the stored password', async () => {
+  reset('imap');
+  const res = await patch({ mode: 'both', smtpHost: 'mail.out.example.test.', smtpPort: 465, smtpSecurity: 'tls' });
+  assert.equal(res.status, 200, JSON.stringify(await res.clone().json()));
+  assert.deepEqual(world.dials.map((d) => [d.protocol, d.password]), [['smtp', 'stored-secret']]);
+});
+
+test('an added host on another domain dials once the password is supplied', async () => {
+  reset('smtp');
+  const res = await patch({ mode: 'both', imapHost: 'imap.other.example', imapPort: 993, imapSecurity: 'tls', username: 'box-login', appPassword: 'typed-secret' });
+  assert.equal(res.status, 200, JSON.stringify(await res.clone().json()));
+  assert.deepEqual(world.dials.map((d) => d.protocol), ['imap', 'smtp']);
+  assert.ok(world.dials.every((d) => d.password === 'typed-secret'), 'only the typed password is sent');
+  assert.equal(world.row.imap_host, 'imap.other.example');
+  assert.equal(world.row.imap_password, 'enc:typed-secret');
+});
+
+test('an IP host matches only the same IP, never a shared suffix', async () => {
+  reset('imap', { row: { ...storedRow('imap'), imap_host: '203.0.113.5' } });
+  const res = await patch({ mode: 'both', smtpHost: '198.51.113.5', smtpPort: 465 });
+  assert.equal(res.status, 422);
+  assert.equal((await res.json()).error_code, 'password_required');
+  assert.equal(world.dials.length, 0);
+});
+
+test('security none on an added half is refused, with or without a password', async () => {
+  for (const extra of [{}, { appPassword: 'typed-secret' }]) {
+    reset('imap');
+    const res = await patch({ mode: 'both', smtpHost: 'smtp.example.test', smtpPort: 25, smtpSecurity: 'none', ...extra });
+    assert.equal(res.status, 422);
+    assert.equal((await res.json()).error_code, 'insecure_security');
+    assert.equal(world.dials.length, 0);
+    assert.equal(writes().length, 0);
+  }
 });

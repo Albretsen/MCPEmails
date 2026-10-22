@@ -316,6 +316,7 @@
         "username": "Benutzername",
         "password": "Passwort",
         "needsLogin": "Der {server}-Server hat Ihre gespeicherte Anmeldung nicht akzeptiert. Geben Sie den Benutzernamen und das Passwort ein, die er verwendet. Sie ersetzen die gespeicherten.",
+        "passwordForNewHost": "Der {server}-Server liegt auf einer anderen Domain als Ihr gespeicherter Server, daher wird das gespeicherte Passwort nicht an ihn gesendet. Geben Sie den Benutzernamen und das Passwort ein, die er verwendet. Sie ersetzen die gespeicherten.",
         "save": "Speichern",
         "saving": "Wird gespeichert…",
         "checking": "Wird geprüft…",

@@ -15,6 +15,8 @@ import {
 import { mailRelayConfigFromEnv } from '@/lib/email/mail-relay';
 import { detectWithRelay, refreshLearnedRelayHosts } from '@/lib/email/relay-fallback';
 import { guardMailHost } from '@/lib/email/host-guard';
+import { isIP } from 'node:net';
+import { registrableDomain } from '@/lib/tools/settings-lookup';
 import { findConflictingInbox } from '@/lib/email/imap-login-collision';
 import { explainAuthFailure } from '@/lib/email/auth-failure';
 import { captureError } from '@/lib/errors/capture';
@@ -47,6 +49,12 @@ export const maxDuration = 90;
  *     column serves both halves, a supplied password is checked against EVERY
  *     half the new mode keeps, not only the added one, and replaces the stored
  *     one only when all of them accept it.
+ *   - The stored password is only sent to an added half whose host shares a
+ *     registrable domain with a host the inbox already has (an IP needs the
+ *     same IP). Any other host answers 422 `password_required` until the
+ *     password is typed, so a workspace member cannot point a colleague's
+ *     inbox at a server they control and collect its password. A security
+ *     other than SSL/TLS or STARTTLS (for example 'none') is refused outright.
  *
  * Body: { mode, imapHost?, imapPort?, imapSecurity?, smtpHost?, smtpPort?,
  *         smtpSecurity?, username?, appPassword? }. Host fields are read only
@@ -98,6 +106,18 @@ function fail(error: string, status: number, extra: Record<string, unknown> = {}
 function isOwnSiteHost(host: string): boolean {
   const target = host.replace(/\.$/, '');
   return target === 'mcpemails.com' || target.endsWith('.mcpemails.com');
+}
+
+/** Whether the stored password may go to `host` without being typed again. */
+function sharesSavedDomain(row: InboxRow, host: string): boolean {
+  const bare = (value: string) => value.trim().toLowerCase().replace(/\.$/, '');
+  const target = bare(host);
+  return [row.imap_host, row.smtp_host].some((saved) => {
+    if (!saved) return false;
+    const known = bare(saved);
+    if (isIP(known) || isIP(target)) return known === target;
+    return registrableDomain(known) === registrableDomain(target);
+  });
 }
 
 function readHalf(body: Record<string, unknown>, half: Half): HalfSettings {
@@ -211,6 +231,17 @@ export async function PATCH(request: NextRequest, { params }: Params): Promise<N
       return fail(`The ${half.toUpperCase()} server is set to ${s.host}, which is MCPEmails itself, not your mail server.`, 422, {
         error_code: 'own_site_host',
         half,
+      });
+    }
+    const security = body[`${half}Security`];
+    if (security !== undefined && security !== 'tls' && security !== 'starttls') {
+      return fail(`The ${half.toUpperCase()} server must use SSL/TLS or STARTTLS.`, 422, { error_code: 'insecure_security', half });
+    }
+    if (!suppliedPassword && !sharesSavedDomain(row, s.host)) {
+      return fail(`Enter the password for ${s.host}. The saved password is only used on the servers it was saved for.`, 422, {
+        error_code: 'password_required',
+        half,
+        needs_login: true,
       });
     }
   }
