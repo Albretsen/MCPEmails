@@ -279,6 +279,13 @@ const EXPECTED_LABELS: Record<string, string> = {
   claude_directory: 'Claude Directory',
   chatgpt_directory: 'ChatGPT app directory',
   cursor_directory: 'Cursor Directory',
+  gemini: 'Gemini',
+  copilot: 'Copilot',
+  connector_claude: 'Claude connector',
+  connector_chatgpt: 'ChatGPT connector',
+  connector_cursor: 'Cursor connector',
+  connector_vscode: 'VS Code connector',
+  connector_other: 'Other MCP client',
   other: 'Other',
 };
 
