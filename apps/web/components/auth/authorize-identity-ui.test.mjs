@@ -93,7 +93,7 @@ async function render(t, props) {
 const q = (c, id) => c.querySelector(`[data-testid="${id}"]`);
 const button = (c, label) => [...c.querySelectorAll('button')].find((b) => b.textContent.trim() === label);
 
-test('THE ATTACK: "Claude · anthropic.com" redirecting to an attacker host reads as that host, unverified, with a warning', async (t) => {
+test('THE ATTACK: "Claude · anthropic.com" redirecting to an attacker host reads as that host, no badge, with the red alert', async (t) => {
   const { container } = await render(t, propsFor({
     clientId: 'dyn_0123456789abcdef01234567',
     clientName: 'Claude',
@@ -108,15 +108,15 @@ test('THE ATTACK: "Claude · anthropic.com" redirecting to an attacker host read
   assert.doesNotMatch(who, /anthropic\.com/i, 'self-asserted byline is not shown');
   assert.doesNotMatch(who, /Claude/, 'self-asserted name is not the requesting party');
   assert.equal(q(container, 'az-destination-host').textContent, 'claude-connect.example');
-  assert.equal(q(container, 'az-destination-badge').textContent, 'Unverified');
-  assert.match(q(container, 'az-self-reported').textContent, /Calls itself Claude\. This name is self-reported/);
+  assert.equal(q(container, 'az-destination-badge'), null, 'no badge for an app we cannot verify');
+  assert.match(q(container, 'az-self-reported').textContent, /^Calls itself Claude\.$/);
   const warning = q(container, 'az-impersonation');
   assert.ok(warning, 'impersonation warning is rendered');
   assert.equal(warning.getAttribute('role'), 'alert');
   assert.match(warning.textContent, /uses the name Claude \(Anthropic\), but access would be sent to claude-connect\.example/);
 });
 
-test('an unknown web host without a vendor name: unverified notice, no impersonation alert', async (t) => {
+test('an unknown web host without a vendor name: no badge, no "not verified" notice, no alert', async (t) => {
   const { container } = await render(t, propsFor({
     clientId: 'dyn_0123456789abcdef01234567',
     clientName: 'Smithery',
@@ -124,7 +124,10 @@ test('an unknown web host without a vendor name: unverified notice, no impersona
   }));
   assert.equal(container.querySelector('h1').textContent, 'Authorize smithery.example?');
   assert.equal(q(container, 'az-impersonation'), null);
-  assert.match(q(container, 'az-unverified').textContent, /has not verified this app.*trust smithery\.example/);
+  assert.equal(q(container, 'az-destination-badge'), null);
+  assert.equal(q(container, 'az-destination').getAttribute('style').includes('amber'), false);
+  assert.doesNotMatch(container.textContent, /verified/i);
+  assert.equal(q(container, 'az-self-reported').textContent, 'Calls itself Smithery.');
 });
 
 test('LEGIT: Claude on claude.ai keeps its name, shows claude.ai as Verified, no warnings', async (t) => {
@@ -138,7 +141,6 @@ test('LEGIT: Claude on claude.ai keeps its name, shows claude.ai as Verified, no
   assert.equal(q(container, 'az-destination-host').textContent, 'claude.ai');
   assert.equal(q(container, 'az-destination-badge').textContent, 'Verified');
   assert.equal(q(container, 'az-impersonation'), null);
-  assert.equal(q(container, 'az-unverified'), null);
   assert.match(q(container, 'az-self-reported').textContent, /“Claude” is a self-reported name\. The destination above is verified\./);
 });
 
@@ -167,8 +169,7 @@ for (const host of [
     assert.equal(q(container, 'az-destination-host').textContent, host);
     assert.equal(q(container, 'az-destination-badge').textContent, 'Verified');
     assert.equal(q(container, 'az-impersonation'), null);
-    assert.equal(q(container, 'az-unverified'), null);
-  });
+    });
 }
 
 test('LEGIT: Grok on grok.com keeps its name and is Verified, no warnings', async (t) => {
@@ -181,21 +182,20 @@ test('LEGIT: Grok on grok.com keeps its name and is Verified, no warnings', asyn
   assert.equal(q(container, 'az-destination-host').textContent, 'grok.com');
   assert.equal(q(container, 'az-destination-badge').textContent, 'Verified');
   assert.equal(q(container, 'az-impersonation'), null);
-  assert.equal(q(container, 'az-unverified'), null);
 });
 
-test('"Google" on an attacker host reads as that host, Unverified, with the red alert', async (t) => {
+test('"Google" on an attacker host reads as that host, no badge, with the red alert', async (t) => {
   const { container } = await render(t, propsFor({
     clientId: 'dyn_0123456789abcdef01234567',
     clientName: 'Google',
     redirectUri: 'https://oauth-redirect.googleusercontent.com.attacker.example/cb',
   }));
   assert.equal(container.querySelector('h1').textContent, 'Authorize oauth-redirect.googleusercontent.com.attacker.example?');
-  assert.equal(q(container, 'az-destination-badge').textContent, 'Unverified');
+  assert.equal(q(container, 'az-destination-badge'), null, 'no badge for an app we cannot verify');
   assert.match(q(container, 'az-impersonation').textContent, /uses the name Google, but access would be sent to oauth-redirect\.googleusercontent\.com\.attacker\.example/);
 });
 
-test('"MCPEmails" on a non-pinned path of Google\'s shared redirect host is Unverified with the red alert', async (t) => {
+test('"MCPEmails" on a non-pinned path of Google\'s shared redirect host has no badge and the red alert', async (t) => {
   const host = 'oauth-redirect.googleusercontent.com';
   const { container } = await render(t, propsFor({
     clientId: 'dyn_0123456789abcdef01234567',
@@ -203,20 +203,20 @@ test('"MCPEmails" on a non-pinned path of Google\'s shared redirect host is Unve
     redirectUri: `https://${host}/r/some-other-project`,
   }));
   assert.equal(container.querySelector('h1').textContent, `Authorize ${host}?`);
-  assert.equal(q(container, 'az-destination-badge').textContent, 'Unverified');
+  assert.equal(q(container, 'az-destination-badge'), null, 'no badge for an app we cannot verify');
   assert.match(q(container, 'az-impersonation').textContent, /uses the name MCPEmails, but access would be sent to oauth-redirect\.googleusercontent\.com/);
 });
 
-test('"Google Sheets MCP" on its own host is Unverified with no red alert', async (t) => {
+test('"Google Sheets MCP" on its own host has no badge and no red alert', async (t) => {
   const { container } = await render(t, propsFor({
     clientId: 'dyn_0123456789abcdef01234567',
     clientName: 'Google Sheets MCP',
     redirectUri: 'https://sheets-mcp.example/oauth/callback',
   }));
   assert.equal(container.querySelector('h1').textContent, 'Authorize sheets-mcp.example?');
-  assert.equal(q(container, 'az-destination-badge').textContent, 'Unverified');
+  assert.equal(q(container, 'az-destination-badge'), null, 'no badge for an app we cannot verify');
   assert.equal(q(container, 'az-impersonation'), null);
-  assert.ok(q(container, 'az-unverified'));
+  assert.doesNotMatch(container.textContent, /verified/i);
 });
 
 test('LEGIT: Cursor on cursor:// keeps its name and says the code stays on this device', async (t) => {
@@ -229,8 +229,8 @@ test('LEGIT: Cursor on cursor:// keeps its name and says the code stays on this 
   assert.equal(q(container, 'az-destination-host').textContent, 'the app that opens cursor:// links on this device');
   assert.equal(q(container, 'az-destination-badge').textContent, 'On this device');
   assert.equal(q(container, 'az-impersonation'), null);
-  assert.equal(q(container, 'az-unverified'), null);
-  assert.match(q(container, 'az-self-reported').textContent, /“Cursor” is the name the app reported/);
+  assert.equal(q(container, 'az-self-reported').textContent, 'Access stays on this device rather than going to a website.');
+  assert.doesNotMatch(container.textContent, /verified/i);
 });
 
 test('LEGIT: a loopback client shows its port on this device', async (t) => {
@@ -283,7 +283,7 @@ test('Allow refuses a javascript: redirect_to from the server and shows an error
   assert.equal(window.location.href, before);
 });
 
-test('THE BYPASS: a browser hand-off scheme reads as the web host, unverified, with the impersonation alert', async (t) => {
+test('THE BYPASS: a browser hand-off scheme reads as the web host, no badge, with the impersonation alert', async (t) => {
   const { container } = await render(t, propsFor({
     clientId: 'dyn_0123456789abcdef01234567',
     clientName: 'Claude',
@@ -291,20 +291,20 @@ test('THE BYPASS: a browser hand-off scheme reads as the web host, unverified, w
   }));
   assert.equal(container.querySelector('h1').textContent, 'Authorize attacker.example (microsoft-edge:)?');
   assert.equal(q(container, 'az-destination-host').textContent, 'attacker.example (microsoft-edge:)');
-  assert.equal(q(container, 'az-destination-badge').textContent, 'Unverified');
+  assert.equal(q(container, 'az-destination-badge'), null, 'no badge for an app we cannot verify');
   assert.ok(!container.textContent.includes('On this device'));
   assert.ok(!container.textContent.includes('stays on this device'));
   assert.ok(q(container, 'az-impersonation'));
 });
 
-test('an unknown custom scheme shows the scheme itself, unverified, not "the app that opens" copy', async (t) => {
+test('an unknown custom scheme shows the scheme itself, no badge, not "the app that opens" copy', async (t) => {
   const { container } = await render(t, propsFor({
     clientId: 'dyn_0123456789abcdef01234567',
     clientName: 'My Tool',
     redirectUri: 'com.example.app:/oauth2redirect',
   }));
   assert.equal(q(container, 'az-destination-host').textContent, 'com.example.app:');
-  assert.equal(q(container, 'az-destination-badge').textContent, 'Unverified');
+  assert.equal(q(container, 'az-destination-badge'), null, 'no badge for an app we cannot verify');
   assert.match(q(container, 'az-self-reported').textContent, /Calls itself My Tool/);
 });
 
