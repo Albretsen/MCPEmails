@@ -409,6 +409,7 @@ async function MoneyBoard({ days }: { days: number }) {
             value={formatMoney(mrr.atRiskMinor + mrr.leavingMinor, mrr.currency)}
             suffix="/mo"
             caption={riskCaption(mrr)}
+            goodDirection="down"
           />
           <FactRow
             facts={[
@@ -635,6 +636,7 @@ async function StickinessBoard({ days }: { days: number }) {
         >
           <BigNumber
             value={life.one_and_done}
+            goodDirection="down"
             caption={<>Of <strong>{formatCount(life.value_activated)}</strong> who ever reached a mailbox</>}
           />
         </Tile>
@@ -690,6 +692,7 @@ async function StickinessBoard({ days }: { days: number }) {
         <Tile label="Going quiet" aside="14d silent" span={3} className="kiosk-strip" tone={life.at_risk > 0 ? 'warn' : 'good'} detail="engagement">
           <BigNumber
             value={life.at_risk}
+            goodDirection="down"
             caption="Used it on two or more days, then stopped"
           />
         </Tile>
@@ -818,6 +821,7 @@ async function UptimeBoard({ days }: { days: number }) {
         <Tile label="Failures" aside={windowShort(activity)} span={3} tone={failures > 0 ? 'warn' : 'good'} detail="errors">
           <BigNumber
             value={failures}
+            goodDirection="down"
             caption={throttled > 0
               ? <><strong>{formatCount(throttled)}</strong> rate limited, counted separately</>
               : 'Nothing was rate limited'}

@@ -18,7 +18,8 @@
  *     decoration.
  *
  * Server components throughout: the board ships no JavaScript except the small
- * refresh ticker.
+ * refresh ticker and FlashValue, which tints a number for a moment when a
+ * refresh changes it.
  */
 
 import type { ReactNode } from 'react';
@@ -28,6 +29,7 @@ import type { ReactNode } from 'react';
 // the sake of two pure functions.
 import { NO_DATA, formatCount } from '../charts/format';
 import { TileLink } from './TileLink';
+import { FlashValue } from './FlashValue';
 
 /**
  * A framed tile. Everything on the board sits in one of these.
@@ -91,6 +93,7 @@ export function BigNumber({
   spark,
   sparkColor,
   plot,
+  goodDirection,
 }: {
   value: string | number;
   suffix?: string;
@@ -100,6 +103,11 @@ export function BigNumber({
   sparkColor?: string;
   /** A chart in the spark's slot, taking the tile's leftover height the same way. */
   plot?: ReactNode;
+  /**
+   * Which way is good news, for the flash when a refresh changes the number.
+   * Falls back to the trend's, then to up. Set it on tiles that count trouble.
+   */
+  goodDirection?: 'up' | 'down';
 }) {
   const tone = trendTone(trend);
   const text = typeof value === 'number' ? formatCount(value) : value;
@@ -111,10 +119,10 @@ export function BigNumber({
   return (
     <div className="kiosk-big">
       <div className="kiosk-big-row">
-        <span className={`kiosk-big-value${long ? ' is-long' : ''}`}>
+        <FlashValue text={text} goodDirection={goodDirection ?? trend?.goodDirection} className={`kiosk-big-value${long ? ' is-long' : ''}`}>
           {text}
           {suffix && <span className="kiosk-big-suffix">{suffix}</span>}
-        </span>
+        </FlashValue>
         {trend && tone && (
           <span className={`kiosk-trend is-${tone}`}>
             {trend.percent > 0 ? '▲' : trend.percent < 0 ? '▼' : '■'}
@@ -339,7 +347,9 @@ export function FactRow({ facts }: { facts: { label: string; value: string | num
       {facts.map((fact) => (
         <div key={fact.label}>
           <dt>{fact.label}</dt>
-          <dd>{typeof fact.value === 'number' ? formatCount(fact.value) : fact.value}</dd>
+          <dd>
+            <FlashValue text={typeof fact.value === 'number' ? formatCount(fact.value) : fact.value} />
+          </dd>
         </div>
       ))}
     </dl>
