@@ -59,6 +59,20 @@ export type SubscriptionFacts = {
   internal: boolean;
 };
 
+/** One rail row: how many customers, and their net monthly money. */
+export type Movement = { customers: number; mrrMinor: number };
+
+export type Movements = {
+  /** Started paying inside the window and still on track to renew. */
+  new: Movement;
+  /** Billing ended inside the window. */
+  stopped: Movement;
+  /** Still paying, scheduled to stop at period end. */
+  leaving: Movement;
+  /** Still paying, card failing, not scheduled to stop. */
+  failing: Movement;
+};
+
 export type DiscountFacts = {
   /** Total percentage off, 0..100. */
   percentOff: number;
@@ -147,6 +161,13 @@ export type RevenueSummary = {
   /** cancelled / base, 0..1, null when nobody paid in the window. */
   customerChurnRate: number | null;
   revenueChurnRate: number | null;
+  /**
+   * The movement rail's rows, with every customer on at most one of them.
+   * The fields above overlap on purpose (a cancel scheduled inside the window
+   * is both "cancelled" and "leaving"), and a rail that listed them side by
+   * side counted the same people twice. See `disjointMovements`.
+   */
+  movements: Movements;
   /** Where the money sits, biggest first. */
   byPlan: { label: string; customers: number; mrrMinor: number }[];
   /** Our own live subscriptions, excluded from every figure above. */
@@ -254,6 +275,7 @@ export function summarizeSubscriptions(
     (row) => row.sub.canceledAt !== null && row.sub.canceledAt >= windowStart && row.sub.canceledAt <= nowSeconds,
   );
   const baseMrrMinor = Math.round(sum(base.map((row) => row.monthly)));
+  const movements = disjointMovements(paying, churned, windowStart);
   const cancelledMrrMinor = Math.round(sum(cancelled.map((row) => row.monthly)));
 
   return {
@@ -278,10 +300,37 @@ export function summarizeSubscriptions(
     churnBaseMrrMinor: baseMrrMinor,
     customerChurnRate: base.length > 0 ? cancelled.length / base.length : null,
     revenueChurnRate: baseMrrMinor > 0 ? cancelledMrrMinor / baseMrrMinor : null,
+    movements,
     byPlan: groupByPlan(paying),
     internalCustomers: subscriptions.filter((sub) => sub.internal && LIVE_STATUSES.has(sub.status)).length,
     otherCurrencies,
   };
+}
+
+/**
+ * Put each customer on exactly one movement row.
+ *
+ * Precedence, first match wins: billing stopped, set to stop, card failing,
+ * new. A customer who signed up this month and already scheduled a cancel is
+ * "set to stop", not also "new"; a failing card that is also set to stop is
+ * leaving either way, so it is not double counted as "card failing". Ended
+ * subscriptions are never live, so `stopped` cannot meet the other three.
+ */
+function disjointMovements(
+  paying: { sub: SubscriptionFacts; monthly: number }[],
+  churned: { sub: SubscriptionFacts; monthly: number }[],
+  windowStart: number,
+): Movements {
+  const row = (rows: { monthly: number }[]): Movement => ({
+    customers: rows.length,
+    mrrMinor: Math.round(sum(rows.map((r) => r.monthly))),
+  });
+  const leaving = paying.filter((r) => r.sub.cancelAtPeriodEnd);
+  const failing = paying.filter((r) => !r.sub.cancelAtPeriodEnd && AT_RISK_STATUSES.has(r.sub.status));
+  const fresh = paying.filter(
+    (r) => !r.sub.cancelAtPeriodEnd && !AT_RISK_STATUSES.has(r.sub.status) && r.sub.createdAt >= windowStart,
+  );
+  return { new: row(fresh), stopped: row(churned), leaving: row(leaving), failing: row(failing) };
 }
 
 /**

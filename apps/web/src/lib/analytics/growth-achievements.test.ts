@@ -87,6 +87,12 @@ const REVENUE: RevenueSummary = {
   cancelledMrrMinor: 0,
   churnBaseCustomers: 0,
   churnBaseMrrMinor: 0,
+  movements: {
+    new: { customers: 0, mrrMinor: 0 },
+    stopped: { customers: 0, mrrMinor: 0 },
+    leaving: { customers: 0, mrrMinor: 0 },
+    failing: { customers: 0, mrrMinor: 0 },
+  },
   customerChurnRate: null,
   revenueChurnRate: null,
   netNewMrrMinor: 1_500,

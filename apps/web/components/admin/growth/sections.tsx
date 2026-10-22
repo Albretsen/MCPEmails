@@ -274,16 +274,12 @@ export async function TopSection({ days }: { days: number }) {
                 title: 'Recurring revenue',
                 rows: mrr
                   ? [
-                      move('new', mrr.newCustomers, 'New', mrr.newMrrMinor, money, 'good'),
-                      // The click and the loss are different days: "Cancelled"
-                      // is who pressed cancel in the window, "Churned" is whose
-                      // billing actually stopped in it. A cancel scheduled for
-                      // next month is on the first row today and the second
-                      // row then, and must not be invisible in between.
-                      move('cancelled', mrr.cancelledCustomers, 'Cancelled', -mrr.cancelledMrrMinor, money, 'bad'),
-                      move('churn', mrr.churnedCustomers, 'Billing stopped', -mrr.churnedMrrMinor, money, 'bad'),
-                      move('risk', mrr.atRiskCustomers, 'Card failing', mrr.atRiskMinor, money, 'warn'),
-                      move('leaving', mrr.leavingCustomers, 'Set to stop', mrr.leavingMinor, money, 'warn'),
+                      // One customer, one row: see disjointMovements. The
+                      // cancellation rate tile below still counts every click.
+                      move('new', mrr.movements.new.customers, 'New', mrr.movements.new.mrrMinor, money, 'good'),
+                      move('churn', mrr.movements.stopped.customers, 'Billing stopped', -mrr.movements.stopped.mrrMinor, money, 'bad'),
+                      move('leaving', mrr.movements.leaving.customers, 'Set to stop', mrr.movements.leaving.mrrMinor, money, 'warn'),
+                      move('risk', mrr.movements.failing.customers, 'Card failing', mrr.movements.failing.mrrMinor, money, 'warn'),
                       {
                         key: 'valuation',
                         label: `Worth at ${valuationMultiple()}\u00d7 ARR`,

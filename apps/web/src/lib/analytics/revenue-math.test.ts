@@ -290,3 +290,33 @@ test('churn rate is null, not zero, when nobody paid in the window', () => {
   assert.equal(summary.customerChurnRate, null);
   assert.equal(summary.revenueChurnRate, null);
 });
+
+test('movement rows never count the same customer twice', () => {
+  const summary = summarizeSubscriptions(
+    [
+      // New this month and already set to stop: only "set to stop".
+      sub({ id: 'new-leaving', createdAt: NOW - 3 * DAY, cancelAtPeriodEnd: true, canceledAt: NOW - DAY }),
+      // Card failing and set to stop: only "set to stop".
+      sub({ id: 'failing-leaving', status: 'past_due', cancelAtPeriodEnd: true }),
+      // New this month with a failing card: only "card failing".
+      sub({ id: 'new-failing', status: 'past_due', createdAt: NOW - 2 * DAY }),
+      // Cancelled and ended inside the window: only "billing stopped".
+      sub({ id: 'ended', status: 'canceled', canceledAt: NOW - 10 * DAY, endedAt: NOW - 5 * DAY }),
+      // Plain new customer.
+      sub({ id: 'new', createdAt: NOW - DAY }),
+      // Old, healthy: on no row.
+      sub({ id: 'steady' }),
+    ],
+    WINDOW,
+  );
+  const m = summary.movements;
+  assert.deepEqual(
+    [m.new.customers, m.stopped.customers, m.leaving.customers, m.failing.customers],
+    [1, 1, 2, 1],
+  );
+  assert.equal(m.new.mrrMinor, 2900);
+  assert.equal(m.leaving.mrrMinor, 5800);
+  // The overlapping fields keep their own meaning for the other tiles.
+  assert.equal(summary.newCustomers, 3);
+  assert.equal(summary.cancelledCustomers, 2);
+});
