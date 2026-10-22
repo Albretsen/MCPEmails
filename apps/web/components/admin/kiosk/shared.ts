@@ -611,6 +611,15 @@ const CHANNEL_LABELS: Record<string, string> = {
   claude_directory: 'Claude Directory',
   chatgpt_directory: 'ChatGPT app directory',
   cursor_directory: 'Cursor Directory',
+  // Since 2026-10-22: two assistants that used to hide under Google and Other,
+  // and connector installs that used to be Direct.
+  gemini: 'Gemini',
+  copilot: 'Copilot',
+  connector_claude: 'Claude connector',
+  connector_chatgpt: 'ChatGPT connector',
+  connector_cursor: 'Cursor connector',
+  connector_vscode: 'VS Code connector',
+  connector_other: 'Other MCP client',
 };
 
 export function prettyChannel(source: string): string {
