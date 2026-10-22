@@ -122,6 +122,7 @@ import {
   recordCheckoutCompleted,
 } from '@/lib/analytics/billing-funnel';
 import { verifyQueueyDelivery } from '@/lib/queuey/verify-delivery';
+import { expireGrowthCache } from '@/lib/analytics/growth-queries';
 
 // ---------------------------------------------------------------------------
 // Route config
@@ -433,8 +434,23 @@ export async function POST(request: NextRequest): Promise<NextResponse> {
     );
   }
 
+  // The growth board and kiosk cache their money reads for ten minutes. A
+  // billing event is exactly the change the owner is looking for, so expire
+  // them now instead of after the purchase email has long arrived.
+  if (GROWTH_EVENT_TYPES.has(event.type)) expireGrowthCache(`stripe:${event.type}`);
+
   return NextResponse.json({ received: true }, { status: 200 });
 }
+
+/** Stripe events that move a number on the growth board or the kiosk. */
+const GROWTH_EVENT_TYPES = new Set([
+  'checkout.session.completed',
+  'customer.subscription.created',
+  'customer.subscription.updated',
+  'customer.subscription.deleted',
+  'invoice.payment_succeeded',
+  'invoice.payment_failed',
+]);
 
 // ---------------------------------------------------------------------------
 // Event handlers

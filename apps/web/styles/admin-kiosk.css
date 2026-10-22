@@ -451,6 +451,21 @@
   color: var(--fg-1);
 }
 .kiosk-big-value.is-long { font-size: clamp(21px, 4.4dvh, 48px); }
+/* A number a refresh just changed (FlashValue). One short tint, then back to
+   normal: green for good news, red for bad, amber when it cannot be compared.
+   Long enough to catch from across the room, short enough to never read as an
+   alarm state; the health banner is the only thing allowed to stay lit. */
+.kiosk-flash { border-radius: 0.12em; animation: kiosk-flash 1.6s ease-out 2; }
+.kiosk-flash.is-flash-good { --kiosk-flash: var(--kiosk-good); }
+.kiosk-flash.is-flash-bad  { --kiosk-flash: var(--kiosk-bad); }
+.kiosk-flash.is-flash-warn { --kiosk-flash: var(--kiosk-warn); }
+@keyframes kiosk-flash {
+  0%   { color: var(--kiosk-flash); background: color-mix(in srgb, var(--kiosk-flash) 22%, transparent); text-shadow: 0 0 0.35em color-mix(in srgb, var(--kiosk-flash) 60%, transparent); }
+  100% { background: transparent; text-shadow: none; }
+}
+@media (prefers-reduced-motion: reduce) {
+  .kiosk-flash { animation-duration: 0.01s; animation-iteration-count: 1; }
+}
 .kiosk-big-suffix { font-size: 0.42em; font-weight: 550; color: var(--fg-3); margin-left: 0.12em; letter-spacing: 0; }
 .kiosk-trend {
   font-size: clamp(10px, 1.6dvh, 16px);

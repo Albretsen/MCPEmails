@@ -16,6 +16,28 @@ const NOTIFY_TO_EMAIL = "bjellanda@gmail.com";
 // entry to turn them back on.
 const MUTED_EVENT_TYPES = new Set(["user.signup"]);
 const REQUEST_TIMEOUT_MS = 30_000;
+
+// Events that move a number on /admin/growth and the kiosk. Their reads are
+// cached for ten minutes on the web app; this asks it to drop them now.
+const GROWTH_EVENT_TYPES = new Set(["user.signup"]);
+const GROWTH_EXPIRE_URL = Deno.env.get("GROWTH_EXPIRE_URL") ?? "https://mcpemails.com/api/internal/growth-expire";
+
+/** Best effort and bounded: a slow or failed expiry must never hold up or fail the event. */
+async function expireGrowthCache(eventType: string): Promise<void> {
+  const secret = Deno.env.get("DISPATCH_SECRET");
+  if (!secret) return;
+  try {
+    const response = await fetch(GROWTH_EXPIRE_URL, {
+      method: "POST",
+      headers: { "x-dispatch-secret": secret, "x-growth-reason": eventType },
+      signal: AbortSignal.timeout(5_000),
+    });
+    if (!response.ok) console.warn("growth cache expiry refused", response.status);
+    await response.body?.cancel();
+  } catch (error) {
+    console.warn("growth cache expiry failed", error instanceof Error ? error.message : error);
+  }
+}
 const UUID_RE = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
 
 type EventBody = { event_id?: unknown; event_type?: unknown; payload?: unknown };
@@ -533,6 +555,10 @@ Deno.serve(async (request) => {
   const markProcessed = async (status: "sent" | "failed", error: string | null) => {
     await supabase.from("system_events").update({ status, error, processed_at: new Date().toISOString() }).eq("id", eventId);
   };
+
+  // Before the mute check: signup emails are muted, but the board still has
+  // to count the signup.
+  if (GROWTH_EVENT_TYPES.has(eventType)) await expireGrowthCache(eventType);
 
   // Event types whose email is switched off. The system_events row is still
   // written (growth analytics read it); only the notification is skipped.

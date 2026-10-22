@@ -198,6 +198,7 @@ export const ROUTES = [
   ['app/api/inboxes/fastmail-app-password/route.ts', 'iad1', '~12', 'IMAP + SMTP login probes to the mail host'],
   ['app/api/inboxes/imap/route.ts', 'iad1', '~12', 'IMAP + SMTP login probes to the mail host'],
   ['app/api/internal/billing-lifecycle/dispatch/route.ts', 'arn1', '7', 'Stripe API + Resend per queued email; caller is the scheduler'],
+  ['app/api/internal/growth-expire/route.ts', 'arn1', '0', '-'],
   ['app/api/internal/paywall-followup/dispatch/route.ts', 'arn1', '2', 'Stripe API + Resend per queued email; caller is the scheduler'],
   ['app/api/kiosk/health/route.ts', 'arn1', '1+', '-'],
   ['app/api/kiosk/version/route.ts', 'arn1', '1+', '-'],
