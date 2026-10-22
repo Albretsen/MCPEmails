@@ -316,6 +316,7 @@
         "username": "Identifiant",
         "password": "Mot de passe",
         "needsLogin": "Le serveur {server} n'a pas accepté vos identifiants enregistrés. Indiquez l'identifiant et le mot de passe qu'il utilise. Ils remplacent ceux enregistrés.",
+        "passwordForNewHost": "Le serveur {server} est sur un autre domaine que votre serveur enregistré, donc le mot de passe enregistré ne lui est pas envoyé. Indiquez l'identifiant et le mot de passe qu'il utilise. Ils remplacent ceux enregistrés.",
         "save": "Enregistrer",
         "saving": "Enregistrement…",
         "checking": "Vérification…",

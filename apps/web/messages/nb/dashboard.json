@@ -316,6 +316,7 @@
         "username": "Brukernavn",
         "password": "Passord",
         "needsLogin": "{server}-serveren godtok ikke den lagrede påloggingen. Fyll inn brukernavnet og passordet den bruker. De erstatter de lagrede.",
+        "passwordForNewHost": "{server}-serveren ligger på et annet domene enn den lagrede serveren, så det lagrede passordet sendes ikke dit. Fyll inn brukernavnet og passordet den bruker. De erstatter de lagrede.",
         "save": "Lagre",
         "saving": "Lagrer…",
         "checking": "Sjekker…",

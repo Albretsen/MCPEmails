@@ -14,8 +14,10 @@ import { emailDomain, prefillFromDomain } from '@/lib/email-providers/host-prese
  *     Save confirms it.
  *   - Adding a half asks only for that half's server, port and security. The
  *     route checks it with the saved password before saving. If the new
- *     server refuses the saved login, the username and password fields appear
- *     and the next Save sends them.
+ *     server refuses the saved login, or sits on another domain than the saved
+ *     server (the route answers password_required and never sends the saved
+ *     password there), the username and password fields appear and the next
+ *     Save sends them.
  *
  * Reconnect no longer changes the type; it only re-enters the password.
  */
@@ -102,7 +104,10 @@ export function ConnectionTypeEditor({ inbox, t, onChanged }) {
       const data = await res.json().catch(() => ({}));
       if (!res.ok) {
         const server = String(data.half ?? added[0] ?? 'imap').toUpperCase();
-        if (data.needs_login && !needsLogin) {
+        if (data.error_code === 'password_required') {
+          setNeedsLogin(true);
+          setStatus({ kind: 'error', text: t(k('passwordForNewHost'), { server }) });
+        } else if (data.needs_login && !needsLogin) {
           setNeedsLogin(true);
           setStatus({ kind: 'error', text: t(k('needsLogin'), { server }) });
         } else if (data.error_code === 'auth_failed') {

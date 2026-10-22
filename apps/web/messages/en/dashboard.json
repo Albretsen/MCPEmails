@@ -316,6 +316,7 @@
         "username": "Username",
         "password": "Password",
         "needsLogin": "The {server} server did not accept your saved login. Enter the username and password it uses. They replace the saved ones.",
+        "passwordForNewHost": "The {server} server is on a different domain from your saved server, so the saved password is not sent to it. Enter the username and password it uses. They replace the saved ones.",
         "save": "Save",
         "saving": "Saving…",
         "checking": "Checking…",
