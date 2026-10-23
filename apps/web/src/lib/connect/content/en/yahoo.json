@@ -11,14 +11,14 @@
     "status": "active"
   },
   "meta": {
-    "title": "Connect Yahoo Mail to Claude, Cursor & MCP Clients",
-    "description": "Connect Yahoo Mail to Claude, Cursor and any MCP client over IMAP port 993 with a Yahoo app password. Your account password will not work. One inbox free."
+    "title": "Yahoo Mail MCP: Connect Yahoo Mail to Claude and ChatGPT",
+    "description": "Connect Yahoo Mail to Claude or ChatGPT with a Yahoo app password over IMAP, port 993. Your account password will not work. One inbox free, forever."
   },
   "hero": {
     "eyebrow": "Yahoo Mail + AI",
     "titleLine1": "Connect Yahoo Mail to Claude,",
     "titleLine2": "and Cursor, ChatGPT, any MCP client",
-    "lead": "Give your AI agent a real Yahoo inbox in minutes. Read, search, send, reply, schedule and organize mail with a single app password, and use the same inbox in every MCP client, not just one.",
+    "lead": "Give Claude or ChatGPT your real Yahoo inbox in minutes. Read, search, send, reply, schedule and organize mail with a single app password, and use the same inbox in every MCP client, not just one.",
     "meta0": "1 inbox free, forever",
     "meta1": "App password, no OAuth setup",
     "meta2": "Email fetched live, never stored",
@@ -72,6 +72,10 @@
     {
       "q": "Does Claude work with Yahoo Mail?",
       "a": "Not directly. Claude has no built-in Yahoo connector. Connecting an MCP server such as MCPEmails to your Yahoo mailbox over IMAP, using a Yahoo app password, gives Claude read, search, send, reply, schedule and organize access to it. The same connection then works unchanged from Cursor, ChatGPT and other MCP clients."
+    },
+    {
+      "q": "Can ChatGPT connect to Yahoo Mail?",
+      "a": "Yes, by adding MCPEmails as a custom connector. Turn on developer mode in ChatGPT (chatgpt.com, on Plus, Pro, Business, Enterprise and Edu), create a connector with the MCPEmails URL, choose OAuth and sign in. The Yahoo inbox you connected here is then available in any chat where you switch developer mode on, and the same app password serves Claude too."
     },
     {
       "q": "What are the Yahoo Mail IMAP and SMTP settings?",
