@@ -1,5 +1,5 @@
 const translation = {
-  title: 'ChatGPT mit E-Mail verbinden: Anleitung mit MCP (Gmail, Outlook, iCloud und IMAP)',
+  title: 'ChatGPT mit E-Mail verbinden: Yahoo, iCloud, Outlook und IMAP',
   description:
     'Schritt für Schritt: Gmail, Outlook, iCloud, Fastmail oder jedes IMAP-Postfach über einen benutzerdefinierten MCP-Konnektor mit ChatGPT verbinden, und mit OpenAI Codex über einen eingeschränkten Schlüssel. Keine E-Mail wird gespeichert.',
   coverAlt:

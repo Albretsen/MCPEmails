@@ -5,8 +5,8 @@
     "https://help.openai.com/en/articles/12584461"
   ],
   "meta": {
-    "title": "E-Mail mit ChatGPT verbinden: Setup des MCP-Konnektors",
-    "description": "Fügen Sie ChatGPT mit dem Entwicklermodus und einem benutzerdefinierten MCP-Konnektor ein echtes Postfach hinzu. OAuth, kein API-Schlüssel, dann E-Mails lesen, suchen, senden und planen. Ein Postfach kostenlos."
+    "title": "ChatGPT-Entwicklermodus: E-Mail-MCP-Konnektor hinzufügen",
+    "description": "Fügen Sie im Entwicklermodus von ChatGPT einen benutzerdefinierten MCP-Konnektor hinzu und geben Sie ihm ein echtes Postfach: Yahoo, iCloud, Outlook oder IMAP. OAuth, kein API-Schlüssel. Ein Postfach kostenlos."
   },
   "hero": {
     "eyebrow": "ChatGPT + E-Mail",

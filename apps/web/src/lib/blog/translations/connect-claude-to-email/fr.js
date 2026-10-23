@@ -1,14 +1,14 @@
 const translation = {
-  title: 'Connecter Claude à vos e-mails avec MCP (Gmail, Outlook, iCloud et IMAP)',
+  title: 'Connecter Claude à votre e-mail : iCloud, Apple Mail, Yahoo, IMAP',
   description:
-    'Guide pratique pour connecter Claude à Gmail, Outlook et Microsoft 365, iCloud, Fastmail, Yahoo, Zoho ou toute boîte IMAP avec MCP. Sans code et sans stockage des e-mails.',
+    'Comment connecter Claude à iCloud, Yahoo, Outlook ou toute boîte IMAP via MCP, y compris les comptes que vous lisez dans Apple Mail. Deux minutes, sans code, rien de stocké.',
   coverAlt:
     'Connecter Claude à Gmail, Outlook, iCloud, Fastmail, Yahoo, Zoho et aux e-mails IMAP avec MCPEmails',
   content: `Claude peut lire, rechercher, organiser et envoyer vos e-mails, mais il lui faut un serveur MCP pour atteindre une vraie boîte de réception. MCPEmails est ce pont : connectez une boîte une seule fois, ajoutez un endpoint sécurisé à Claude, et Claude dispose des mêmes outils de messagerie avec Gmail, Outlook et Microsoft 365, iCloud, Fastmail, Yahoo, Zoho et les autres fournisseurs IMAP.
 
 Vous n'avez aucun code à écrire, aucun SDK à installer et aucune clé API à utiliser lorsque vous passez par le flux OAuth de Claude. Les e-mails sont récupérés en direct auprès de votre fournisseur pour chaque requête et MCPEmails ne les stocke pas.
 
-**Accéder à votre fournisseur :** [Gmail](#gmail-et-google-workspace) · [iCloud](#icloud-mail) · [Fastmail](#fastmail) · [Outlook](#outlook-et-microsoft-365) · [Yahoo, Zoho, Yandex ou IMAP personnalisé](#yahoo-zoho-yandex-et-imap-personnalisé)
+**Accéder à votre fournisseur :** [Gmail](#gmail-et-google-workspace) · [iCloud](#icloud-mail) · [Apple Mail](#apple-mail) · [Fastmail](#fastmail) · [Outlook](#outlook-et-microsoft-365) · [Yahoo, Zoho, Yandex ou IMAP personnalisé](#yahoo-zoho-yandex-et-imap-personnalisé)
 
 ## Ce dont vous avez besoin
 
@@ -27,6 +27,10 @@ Choisissez **Gmail**, créez un mot de passe d'application Google sur myaccount.
 ### iCloud Mail
 
 Créez un mot de passe spécifique à l'application dans votre compte Apple, choisissez **iCloud** et utilisez ce mot de passe, pas celui de votre compte Apple. Le [guide iCloud et IMAP](/blog/connect-icloud-fastmail-imap-to-claude) présente les étapes exactes. Voir aussi [Connecter iCloud Mail à Claude](/connect/icloud).
+
+### Apple Mail
+
+Apple Mail est une application de messagerie : Claude se connecte donc au compte qu'elle affiche, pas à l'application. Une adresse iCloud se connecte comme décrit plus haut. Un compte Gmail, Outlook, Yahoo ou professionnel se connecte par son propre fournisseur. Les dossiers stockés uniquement Sur mon Mac ne sont sur aucun serveur, Claude ne peut donc pas les voir. Rien ne doit tourner sur votre Mac.
 
 ### Fastmail
 
