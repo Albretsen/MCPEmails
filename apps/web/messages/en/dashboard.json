@@ -879,6 +879,8 @@
       "label": "Review before sending",
       "off": "Send immediately",
       "offHint": "The assistant sends without asking. The right choice for an inbox you use for low-stakes mail.",
+      "chat": "Confirm in chat",
+      "chatHint": "Before sending, the assistant shows you the email, in the draft card when your AI app shows one, and asks you to say yes in the chat. This keeps a well-meaning assistant from sending too early; it is not a sign-in approval like the two options below.",
       "inline": "Review card in the conversation",
       "inlineHint": "A card appears in the AI conversation showing exactly what will be sent. You can reject it there; approving opens a page you have to be signed in to use.",
       "dashboard": "Review in the dashboard only",

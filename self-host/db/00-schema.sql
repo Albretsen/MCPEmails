@@ -115,6 +115,7 @@ ALTER TABLE public.workspaces
   ADD COLUMN IF NOT EXISTS draft_editor_enabled               boolean NOT NULL DEFAULT false,
   ADD COLUMN IF NOT EXISTS draft_editor_hidden                boolean NOT NULL DEFAULT false,
   ADD COLUMN IF NOT EXISTS card_diagnostics                   boolean NOT NULL DEFAULT false,
+  ADD COLUMN IF NOT EXISTS chat_send_confirm_enabled          boolean NOT NULL DEFAULT false,
   ADD COLUMN IF NOT EXISTS analytics_first_tool_name          text,
   ADD COLUMN IF NOT EXISTS analytics_first_tool_provider      text,
   ADD COLUMN IF NOT EXISTS analytics_first_tool_client        text,
@@ -201,7 +202,7 @@ ALTER TABLE public.inboxes
     CONSTRAINT inboxes_smtp_security_check CHECK (smtp_security IN ('tls', 'starttls')),
   ADD COLUMN IF NOT EXISTS send_approval_required boolean NOT NULL DEFAULT false,
   ADD COLUMN IF NOT EXISTS send_review_mode       text NOT NULL DEFAULT 'off'
-    CONSTRAINT inboxes_send_review_mode_check CHECK (send_review_mode IN ('off', 'inline', 'dashboard')),
+    CONSTRAINT inboxes_send_review_mode_check CHECK (send_review_mode IN ('off', 'chat', 'inline', 'dashboard')),
   ADD COLUMN IF NOT EXISTS bulk_review_mode       text NOT NULL DEFAULT 'off'
     CONSTRAINT inboxes_bulk_review_mode_check CHECK (bulk_review_mode IN ('off', 'plan')),
   ADD COLUMN IF NOT EXISTS draft_editor_hidden    boolean NOT NULL DEFAULT false,

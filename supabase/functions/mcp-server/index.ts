@@ -591,6 +591,15 @@ import {
   planDraftSend,
 } from "./draft-send-plan.ts";
 import {
+  CHAT_CONFIRM_ERROR_CODE,
+  CHAT_CONFIRM_MODE,
+  chatConfirmContent,
+  chatConfirmDigest,
+  chatConfirmRefusalText,
+  issueChatConfirmation,
+  verifyChatConfirmation,
+} from "./chat-confirm.ts";
+import {
   approvedDraftSnapshotFrom,
   checkApprovedDraft,
   DRAFT_DIGEST_KEY,
@@ -1941,6 +1950,9 @@ async function claimOutboundIdempotency(
   try {
     const request = { ...args };
     delete request["idempotency_key"];
+    // A "Confirm in chat" repeat (chat-confirm.ts) is the same request with the
+    // user's yes added: it must claim the key the refused first call released.
+    delete request["confirmation"];
     const [keyDigest, requestDigest] = await Promise.all([
       idempotencyDigest(key),
       idempotencyDigest(`${operation}:${stableJson(request)}`),
@@ -2066,7 +2078,10 @@ async function completeOutboundIdempotency(
   // fresh key. So release the key instead: delete the ledger row, and the next
   // attempt claims it clean and actually sends. Safe precisely because nothing
   // was transmitted, which is the whole content of SmtpNotSentError.
-  if (logErrorCode === PROVIDER_NOT_SENT_ERROR_CODE) {
+  //
+  // A "Confirm in chat" refusal is the same certainty (nothing was sent), and
+  // its repeat with the user's yes must be able to send under the same key.
+  if (logErrorCode === PROVIDER_NOT_SENT_ERROR_CODE || logErrorCode === CHAT_CONFIRM_ERROR_CODE) {
     const { error: releaseError } = await supabase.from("outbound_idempotency")
       .delete()
       .eq("api_key_id", apiKeyId)
@@ -4651,6 +4666,17 @@ const IDEMPOTENCY_KEY_PROPERTY = {
 } as const;
 
 /**
+ * The user's yes for an inbox set to "Confirm in chat" (chat-confirm.ts). Only
+ * ever copied from a `chat_confirmation_required` refusal, after the user
+ * answered; the server refuses a code it did not issue for this message.
+ */
+const CONFIRMATION_PROPERTY = {
+  type: "string",
+  maxLength: 64,
+  description: "Only after a chat_confirmation_required refusal and the user's yes in chat: the code it gave.",
+} as const;
+
+/**
  * The `attachments` array shared by email_send and email_reply.
  *
  * TWO SHAPES, ONE FLAT PROPERTY MAP. An entry is either inline bytes
@@ -5689,6 +5715,7 @@ const LEGACY_TOOLS: ToolDefinition[] = [
         },
         include_signature: INCLUDE_SIGNATURE_PROPERTY,
         idempotency_key: IDEMPOTENCY_KEY_PROPERTY,
+        confirmation: CONFIRMATION_PROPERTY,
       },
       required: ["to", "subject", "body"],
       additionalProperties: false,
@@ -5758,6 +5785,7 @@ const LEGACY_TOOLS: ToolDefinition[] = [
         attachments: ATTACHMENTS_PROPERTY,
         include_signature: INCLUDE_SIGNATURE_PROPERTY,
         idempotency_key: IDEMPOTENCY_KEY_PROPERTY,
+        confirmation: CONFIRMATION_PROPERTY,
       },
       required: ["message_id", "body"],
       additionalProperties: false,
@@ -5861,6 +5889,7 @@ const LEGACY_TOOLS: ToolDefinition[] = [
         },
         include_signature: INCLUDE_SIGNATURE_PROPERTY,
         idempotency_key: IDEMPOTENCY_KEY_PROPERTY,
+        confirmation: CONFIRMATION_PROPERTY,
       },
       // Only `to` is structurally required: the message to forward arrives as
       // either message_id or message_ids, and "exactly one of" is not a shape a
@@ -6181,6 +6210,7 @@ const LEGACY_TOOLS: ToolDefinition[] = [
             "changed since is refused as draft_changed. Omit it.",
         },
         idempotency_key: IDEMPOTENCY_KEY_PROPERTY,
+        confirmation: CONFIRMATION_PROPERTY,
       },
       required: ["draft_id"],
       additionalProperties: false,
@@ -6671,6 +6701,7 @@ const LEGACY_TOOLS: ToolDefinition[] = [
             "delivery can be up to 60s late.",
         },
         idempotency_key: IDEMPOTENCY_KEY_PROPERTY,
+        confirmation: CONFIRMATION_PROPERTY,
       },
       required: ["to", "subject", "body", "send_at"],
       additionalProperties: false,
@@ -8498,7 +8529,11 @@ const CONSOLIDATED_SPECS: Record<string, ConsolidatedSpec> = {
       "not guaranteed, so call draft_read before stating a draft's current " +
       "subject, recipients or whether it was sent. " +
       "draft_read returns a draft's current text; draft_list " +
-      "lists the drafts that exist with their draft_id and no body.",
+      "lists the drafts that exist with their draft_id and no body. " +
+      // Testers 2026-10-23: the model mixed this card up with another
+      // connector's draft tool, whose drafts never show in the card.
+      "Only drafts made here show in the card: for these inboxes, never use " +
+      "another connector's draft tool.",
     propertyNotes: {
       to:
         "Not for reply: a reply draft goes to the original sender, reply_all " +
@@ -17653,6 +17688,11 @@ async function executeForwardEmail(
     return { result: { content: [{ type: "text", text }], isError: true }, logStatus: "error", logErrorCode: senderIdentityErrorCode(message) };
   }
 
+  const chatRefusal = await chatConfirmGate({
+    apiKey, operation: "email_forward", inboxes: [inbox, senderInbox], args,
+  });
+  if (chatRefusal) return chatRefusal;
+
   // Approval is deliberately enforced after all caller-controlled input and
   // sender identity checks, but before reading/sending through the provider.
   // Preserve the original operation arguments so the approval dispatcher can
@@ -18042,6 +18082,11 @@ async function executeReplyToEmail(
             : "email_reply: unable to verify the requested sender identity.";
     return { result: { content: [{ type: "text", text }], isError: true }, logStatus: "error", logErrorCode: senderIdentityErrorCode(message) };
   }
+
+  const chatRefusal = await chatConfirmGate({
+    apiKey, operation: "email_reply", inboxes: [inbox, senderInbox], args,
+  });
+  if (chatRefusal) return chatRefusal;
 
   // Do not contact the provider until an authorized dashboard user approves
   // this exact reply request. The original args retain the message id needed
@@ -18457,11 +18502,183 @@ async function resolveApprovalSummaryFields(
  * cannot approve, disable, or otherwise bypass the gate. */
 /** True when `queueSendApproval` will hold this caller's send for a human. */
 function sendWillBeHeld(inbox: InboxRow, apiKey: ApiKeyRow): boolean {
-  if (!inbox.send_approval_required || apiKey.internalApprovalDispatch) return false;
-  // The web mail client's human sender (see ApiKeyRow.firstPartyHuman): the
-  // person pressing Send is the approver this gate exists to wait for.
-  if (apiKey.firstPartyHuman === true) return false;
-  return true;
+  if (!inbox.send_approval_required) return false;
+  return !sendDecidedByHuman(apiKey);
+}
+
+/**
+ * The send is already a human's decision: the approval dispatcher re-running
+ * an approved send, or the web mail client's human sender (see
+ * ApiKeyRow.firstPartyHuman), whose Send press is what both the approval hold
+ * and "Confirm in chat" exist to wait for. The marker's ONE read in
+ * mcp-server (client-api/tests/mcp-neutral.test.ts pins the count).
+ */
+function sendDecidedByHuman(apiKey: ApiKeyRow): boolean {
+  return apiKey.internalApprovalDispatch === true || apiKey.firstPartyHuman === true;
+}
+
+/**
+ * True when this inbox's `send_review_mode` is 'chat' (chat-confirm.ts).
+ *
+ * Its own query, like `readSendReviewMode`, for the deploy-order reason on
+ * INBOX_SELECT_COLUMNS. Fails OPEN on a read error: the mode is a guardrail
+ * against a confused assistant, not the approval boundary, and failing closed
+ * would refuse every send from every inbox while the database hiccups.
+ */
+async function inboxWantsChatConfirmation(inboxId: string): Promise<boolean> {
+  try {
+    const { data, error } = await supabase
+      .from("inboxes")
+      .select("send_review_mode")
+      .eq("id", inboxId)
+      .maybeSingle();
+    if (error) {
+      console.warn("[mcp-server] chat_confirm_mode_read_failed", { inbox_id: inboxId, error: error.message });
+      return false;
+    }
+    return (data as { send_review_mode?: unknown } | null)?.send_review_mode === CHAT_CONFIRM_MODE;
+  } catch (err) {
+    console.warn("[mcp-server] chat_confirm_mode_read_failed", {
+      inbox_id: inboxId,
+      error: err instanceof Error ? err.message : String(err),
+    });
+    return false;
+  }
+}
+
+/**
+ * `workspaces.chat_send_confirm_enabled`: OUR rollout gate for "Confirm in
+ * chat", internal only for now (seeded by 20261023200000). The dashboard and
+ * the PATCH route only offer 'chat' where it is on; this is the server half,
+ * so a mode set some other way does nothing until the rollout reaches it.
+ * Read only for an inbox already in 'chat' mode. Fails to "off" on an error,
+ * the same direction as `inboxWantsChatConfirmation`.
+ */
+async function workspaceChatConfirmRolledOut(workspaceId: string): Promise<boolean> {
+  try {
+    const { data, error } = await supabase
+      .from("workspaces")
+      .select("chat_send_confirm_enabled")
+      .eq("id", workspaceId)
+      .maybeSingle();
+    if (error) {
+      console.warn("[mcp-server] chat_confirm_rollout_read_failed", { workspace_id: workspaceId, error: error.message });
+      return false;
+    }
+    return (data as { chat_send_confirm_enabled?: unknown } | null)?.chat_send_confirm_enabled === true;
+  } catch (err) {
+    console.warn("[mcp-server] chat_confirm_rollout_read_failed", {
+      workspace_id: workspaceId,
+      error: err instanceof Error ? err.message : String(err),
+    });
+    return false;
+  }
+}
+
+/** A `chatConfirmGate` refusal, shaped like every send handler's return. */
+interface ChatConfirmRefusal {
+  result: { content: { type: string; text: string }[]; isError: boolean; _meta: Record<string, unknown> };
+  logStatus: "error";
+  logErrorCode: string;
+}
+
+/**
+ * The "Confirm in chat" gate (chat-confirm.ts). Null means go ahead; anything
+ * else is the refusal to return, and nothing has been sent.
+ *
+ * Runs where `queueSendApproval` runs: after every input check, before any
+ * provider is asked to send. A held send (`send_approval_required`) skips it,
+ * since the human approval there is the stronger check, and so do the approval
+ * dispatcher and the web mail client's human sender, who pressed Send.
+ */
+async function chatConfirmGate(input: {
+  apiKey: ApiKeyRow;
+  operation: string;
+  /** The resolved inbox and, when different, the sending identity's inbox. */
+  inboxes: InboxRow[];
+  args: Record<string, unknown>;
+  /** What the confirmation covers. Defaults to the arguments that shape the message. */
+  content?: () => Promise<unknown>;
+  /** draft_send: the draft being sent, for the refusal text. */
+  draftId?: string;
+  /** draft_send from the draft editor card: the user's Send press is the confirmation. */
+  cardSend?: boolean;
+}): Promise<ChatConfirmRefusal | null> {
+  const { apiKey } = input;
+  if (sendDecidedByHuman(apiKey) || input.cardSend) return null;
+  const seen = new Set<string>();
+  const inboxes = input.inboxes.filter((inbox) => !seen.has(inbox.id) && seen.add(inbox.id));
+  if (inboxes.some((inbox) => sendWillBeHeld(inbox, apiKey))) return null;
+  let gated: InboxRow | null = null;
+  for (const inbox of inboxes) {
+    if (await inboxWantsChatConfirmation(inbox.id)) {
+      gated = inbox;
+      break;
+    }
+  }
+  if (!gated) return null;
+  if (!(await workspaceChatConfirmRolledOut(apiKey.workspace_id))) return null;
+
+  const refuse =(text: string, meta: Record<string, unknown> = {}): ChatConfirmRefusal => {
+    const result = {
+      content: [{ type: "text", text }],
+      isError: true,
+      _meta: {
+        "com.mcpemails/chat_confirmation": {
+          error_code: CHAT_CONFIRM_ERROR_CODE,
+          retryable: true,
+          ...meta,
+        },
+      },
+    };
+    return { result, logStatus: "error", logErrorCode: CHAT_CONFIRM_ERROR_CODE };
+  };
+
+  try {
+    const binding = {
+      apiKeyId: apiKey.id,
+      inboxId: gated.id,
+      operation: input.operation,
+      contentDigest: await chatConfirmDigest(
+        input.content ? await input.content() : chatConfirmContent(input.args),
+      ),
+    };
+    const now = Date.now();
+    const verdict = await verifyChatConfirmation(idempotencyDigest, binding, input.args["confirmation"], now);
+    if (verdict === "ok") {
+      console.info("[mcp-server] chat_confirm_accepted", { inbox_id: gated.id, operation: input.operation });
+      return null;
+    }
+    const token = await issueChatConfirmation(idempotencyDigest, binding, now);
+    const gate = await workspaceDraftEditorGate(apiKey.workspace_id);
+    const cardAvailable = gate.rolledOut && !gate.hidden && !(await readInboxDraftEditorHidden(gated.id));
+    console.info("[mcp-server] chat_confirm_requested", {
+      inbox_id: gated.id,
+      operation: input.operation,
+      verdict,
+      card_available: cardAvailable,
+    });
+    return refuse(
+      chatConfirmRefusalText({
+        operation: input.operation,
+        verdict,
+        token,
+        inboxAddress: gated.email_address,
+        cardAvailable,
+        draftId: input.draftId,
+      }),
+      { verdict, confirmation: token },
+    );
+  } catch (err) {
+    console.error("[mcp-server] chat_confirm_failed", {
+      inbox_id: gated.id,
+      error: err instanceof Error ? err.message : String(err),
+    });
+    return refuse(
+      `${input.operation}: not sent. This inbox asks for the user's confirmation in the chat before sending, ` +
+        "and the confirmation could not be prepared. Retry shortly.",
+    );
+  }
 }
 
 async function queueSendApproval(
@@ -18929,6 +19146,11 @@ async function executeSendEmail(
   // `includeSignatureForSend`, with both halves of it written down.
   const includeSignature = includeSignatureForSend(args, apiKey.internalApprovalDispatch);
   applySignature(sendParams, senderInbox, { include_signature: includeSignature });
+
+  const chatRefusal = await chatConfirmGate({
+    apiKey, operation: "email_send", inboxes: [inbox, senderInbox], args,
+  });
+  if (chatRefusal) return chatRefusal;
 
   try {
     // `heldSendSnapshot` (not an object literal) because this payload carries a
@@ -29831,6 +30053,24 @@ async function executeSendDraft(
     }
   }
 
+  // The confirmation covers the draft as the provider holds it now, plus any
+  // send-time recipient override, so a draft rewritten after the user said yes
+  // needs a new yes. The read happens only for an inbox in chat mode.
+  const sendingDraftId = draftId;
+  const chatRefusal = await chatConfirmGate({
+    apiKey, operation: "draft_send", inboxes: [inbox], args,
+    draftId: sendingDraftId,
+    cardSend: baseRevision !== null,
+    content: async () => {
+      const read = await readDraftForApproval(inbox, sendingDraftId);
+      return {
+        draft: read ? await draftDigest(read) : null,
+        to: args["to"], cc: args["cc"], bcc: args["bcc"],
+      };
+    },
+  });
+  if (chatRefusal) return chatRefusal;
+
   let approvalRecord: Record<string, unknown> = {};
   if (sendWillBeHeld(inbox, apiKey)) {
     let read: DraftContent | null;
@@ -30917,6 +31157,11 @@ async function executeScheduleSend(
   if (htmlBody !== undefined) payload["html_body"] = htmlBody;
   if (attachments.length > 0) payload["attachments"] = attachments;
   if (replyTo !== undefined) payload["reply_to"] = replyTo;
+
+  const chatRefusal = await chatConfirmGate({
+    apiKey, operation: "schedule_create", inboxes: [inbox], args,
+  });
+  if (chatRefusal) return chatRefusal;
 
   payload["inbox_id"] = inbox.id;
   try {

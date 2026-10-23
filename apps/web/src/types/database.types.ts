@@ -4404,6 +4404,7 @@ export type Database = {
           analytics_first_tool_reported_at: string | null
           analytics_first_tool_used_at: string | null
           card_diagnostics: boolean
+          chat_send_confirm_enabled: boolean
           created_at: string
           deleted_at: string | null
           display_name: string
@@ -4453,6 +4454,7 @@ export type Database = {
           analytics_first_tool_reported_at?: string | null
           analytics_first_tool_used_at?: string | null
           card_diagnostics?: boolean
+          chat_send_confirm_enabled?: boolean
           created_at?: string
           deleted_at?: string | null
           display_name: string
@@ -4502,6 +4504,7 @@ export type Database = {
           analytics_first_tool_reported_at?: string | null
           analytics_first_tool_used_at?: string | null
           card_diagnostics?: boolean
+          chat_send_confirm_enabled?: boolean
           created_at?: string
           deleted_at?: string | null
           display_name?: string

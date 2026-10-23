@@ -879,6 +879,8 @@
       "label": "Vor dem Senden prüfen",
       "off": "Sofort senden",
       "offHint": "Der Assistent sendet ohne Rückfrage. Die richtige Wahl für ein Postfach mit unkritischen E-Mails.",
+      "chat": "Im Chat bestätigen",
+      "chatHint": "Vor dem Senden zeigt dir der Assistent die E-Mail, in der Entwurfskarte, wenn deine KI-App eine anzeigt, und bittet dich im Chat um ein Ja. Das hält einen gutwilligen Assistenten davon ab, zu früh zu senden; es ist keine Freigabe mit Anmeldung wie die beiden Optionen darunter.",
       "inline": "Prüfkarte in der Unterhaltung",
       "inlineHint": "In der KI-Unterhaltung erscheint eine Karte, die genau zeigt, was gesendet wird. Dort können Sie ablehnen. Zum Freigeben öffnet sich eine Seite, für die Sie angemeldet sein müssen.",
       "dashboard": "Nur im Dashboard prüfen",

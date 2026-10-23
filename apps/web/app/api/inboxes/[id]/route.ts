@@ -372,8 +372,11 @@ export async function PATCH(
     update.display_name = normalized.value;
   }
 
-  // Three-way review mode: off | inline | dashboard.
+  // Review mode: off | chat | inline | dashboard.
   //  - off        → the assistant sends without a human decision
+  //  - chat       → the assistant must show the message and get a yes in the
+  //                 conversation first (mcp-server chat-confirm.ts). Nothing
+  //                 is held, so `send_approval_required` stays false.
   //  - inline     → a review card appears in the AI conversation; approving it
   //                 still opens the authenticated /approvals/[id] page
   //  - dashboard  → no card; decisions happen in the dashboard only
@@ -381,16 +384,16 @@ export async function PATCH(
   // still gates on the boolean. Drop the mirroring once it reads the mode.
   if ('send_review_mode' in input) {
     const mode = input.send_review_mode;
-    if (mode !== 'off' && mode !== 'inline' && mode !== 'dashboard') {
+    if (mode !== 'off' && mode !== 'chat' && mode !== 'inline' && mode !== 'dashboard') {
       return NextResponse.json(
-        { error: "send_review_mode must be one of 'off', 'inline', 'dashboard'." },
+        { error: "send_review_mode must be one of 'off', 'chat', 'inline', 'dashboard'." },
         { status: 400 }
       );
     }
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
     (update as any).send_review_mode = mode;
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
-    (update as any).send_approval_required = mode !== 'off';
+    (update as any).send_approval_required = mode === 'inline' || mode === 'dashboard';
   } else if ('send_approval_required' in input) {
     if (typeof input.send_approval_required !== 'boolean') {
       return NextResponse.json({ error: 'send_approval_required must be a boolean.' }, { status: 400 });
@@ -487,7 +490,8 @@ export async function PATCH(
   if ('send_review_mode' in reviewUpdate || 'send_approval_required' in reviewUpdate) {
     const storedApproval = inbox.send_approval_required === true;
     const storedMode =
-      inbox.send_review_mode === 'off' || inbox.send_review_mode === 'inline' || inbox.send_review_mode === 'dashboard'
+      inbox.send_review_mode === 'off' || inbox.send_review_mode === 'chat' ||
+      inbox.send_review_mode === 'inline' || inbox.send_review_mode === 'dashboard'
         ? inbox.send_review_mode
         : storedApproval ? 'dashboard' : 'off';
     if (reviewUpdate.send_review_mode === storedMode && reviewUpdate.send_approval_required === storedApproval) {
@@ -501,6 +505,23 @@ export async function PATCH(
       insufficientRoleBody('Only workspace owners and admins can change the send review setting.'),
       { status: 403 },
     );
+  }
+
+  // "Confirm in chat" is internal-only for now: a change TO it needs the
+  // workspace's rollout flag (`workspaces.chat_send_confirm_enabled`). An
+  // unchanged 'chat' was dropped above, so this never blocks a signature save.
+  if (reviewUpdate.send_review_mode === 'chat') {
+    const { data: ws } = await supabase
+      .from('workspaces')
+      .select('chat_send_confirm_enabled')
+      .eq('id', workspaceId)
+      .maybeSingle();
+    if (ws?.chat_send_confirm_enabled !== true) {
+      return NextResponse.json(
+        { error: "send_review_mode must be one of 'off', 'inline', 'dashboard'." },
+        { status: 400 },
+      );
+    }
   }
 
   // 3. Signature edits pin the signature as user-owned; approval is independent.

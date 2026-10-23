@@ -662,7 +662,7 @@ export default async function DashboardPage({ params }) {
     // ones they own (for the Pro "create workspace" gate).
     supabase
       .from('workspaces')
-      .select('id, slug, display_name, plan, owner_id, grandfathered, draft_editor_enabled, draft_editor_hidden, analytics_first_tool_name, analytics_first_tool_provider, analytics_first_tool_client, analytics_first_tool_path, analytics_first_tool_reported_at')
+      .select('id, slug, display_name, plan, owner_id, grandfathered, draft_editor_enabled, draft_editor_hidden, chat_send_confirm_enabled, analytics_first_tool_name, analytics_first_tool_provider, analytics_first_tool_client, analytics_first_tool_path, analytics_first_tool_reported_at')
       .is('deleted_at', null)
       .order('created_at', { ascending: true }),
     supabase
@@ -903,6 +903,9 @@ export default async function DashboardPage({ params }) {
         // deliberately turned it off. See src/lib/drafts/editor-preference.ts.
         draftEditorEnabled: workspace?.draft_editor_enabled === true,
         draftEditorHidden: workspace?.draft_editor_hidden === true,
+        // "Confirm in chat" send review: OUR rollout gate, internal only for
+        // now. Without it the option is not offered (the API refuses it too).
+        chatConfirmEnabled: workspace?.chat_send_confirm_enabled === true,
       }}
       workspaces={workspaces}
       activeWorkspaceId={workspace?.id ?? ''}

@@ -1353,7 +1353,7 @@ function needsReconnect(status) {
 // and the modal's panel cannot classify one workspace two ways. It only changes
 // anything at the Free cap, where inboxCapOffer widens Personal alone to
 // Personal and Pro.
-export function InboxesPage({ inboxes, planLimits, stripePrices = null, businessShaped = false, onConnect, onRemove, onReconnect, onCheck, onSaveSignature, onSaveSenderName, onSaveDraftEditorHidden, onConnectionChanged, draftEditorRolledOut = false, draftEditorWorkspaceHidden = false, userRole, onGoToKeys }) {
+export function InboxesPage({ inboxes, planLimits, stripePrices = null, businessShaped = false, onConnect, onRemove, onReconnect, onCheck, onSaveSignature, onSaveSenderName, onSaveDraftEditorHidden, onConnectionChanged, draftEditorRolledOut = false, draftEditorWorkspaceHidden = false, chatConfirmRolledOut = false, userRole, onGoToKeys }) {
   // The analytics window this plan buys. Every per-inbox call count on this
   // page is scoped to it server-side, so the label has to quote the same
   // number or the column silently means something different per plan.
@@ -1895,6 +1895,7 @@ export function InboxesPage({ inboxes, planLimits, stripePrices = null, business
           onSaveDraftEditorHidden={onSaveDraftEditorHidden}
           onConnectionChanged={onConnectionChanged}
           draftEditorRolledOut={draftEditorRolledOut}
+          chatConfirmRolledOut={chatConfirmRolledOut}
           draftEditorWorkspaceHidden={draftEditorWorkspaceHidden}
           canManageInbox={userRole !== 'viewer'}
           // The review gate is owner/admin-only (lib/workspace/roles.ts).
@@ -2184,7 +2185,10 @@ function SignatureEditorPlaceholder({ sourceMode, t }) {
 }
 
 /** Order matters: this is the order the options are offered in. */
-const REVIEW_MODES = ['off', 'inline', 'dashboard'];
+const REVIEW_MODES = ['off', 'chat', 'inline', 'dashboard'];
+
+/** The modes that hold a send for a signed-in approver. 'chat' does not. */
+export const HOLDING_REVIEW_MODES = ['inline', 'dashboard'];
 
 /**
  * Resolves an inbox's review mode.
@@ -2200,7 +2204,7 @@ export function resolveReviewMode(inbox) {
 }
 
 /**
- * Three-way "review before sending" selector.
+ * "Review before sending" selector: off, chat, inline, dashboard.
  *
  * COPY RULE: do not write anything that claims the assistant "cannot" call a
  * tool. `_meta.ui.visibility` is a host UI hint, not an authorisation boundary
@@ -2209,14 +2213,17 @@ export function resolveReviewMode(inbox) {
  * here, is that nothing is delivered until a signed-in owner or admin approves
  * it in the browser, which holds in both `inline` and `dashboard`.
  */
-function ReviewModeSelector({ value, onChange, disabled, lockedNote = null }) {
+function ReviewModeSelector({ value, onChange, disabled, lockedNote = null, chatRolledOut = false }) {
   const t = useTranslations('dashboard');
+  // 'chat' is internal-only for now (workspaces.chat_send_confirm_enabled).
+  // Still shown when it is the stored value, so the radio never lies.
+  const modes = REVIEW_MODES.filter(mode => mode !== 'chat' || chatRolledOut || value === 'chat');
   return (
     <div className="review-mode">
       <div style={{ fontFamily: 'var(--font-sans)', fontSize: 13, fontWeight: 600, color: 'var(--fg-1)' }}>
         {t('approvals.mode.label')}
       </div>
-      {REVIEW_MODES.map(mode => (
+      {modes.map(mode => (
         <label key={mode} className={`review-mode-option${value === mode ? ' is-active' : ''}`}>
           <input
             type="radio"
@@ -2505,7 +2512,7 @@ export function SendAsEditor({ inbox, t, readOnly = false }) {
  * review gate is theirs alone, so for a member the selector is disabled with
  * the reason, and the save only sends the review fields when they changed.
  */
-function SignatureEditor({ inbox, onSave, t, readOnly = false, canManageReview = true }) {
+function SignatureEditor({ inbox, onSave, t, readOnly = false, canManageReview = true, chatConfirmRolledOut = false }) {
   const wasImported = inbox.signatureSource === 'gmail_import';
 
   const [enabled, setEnabled] = useState(inbox.signatureEnabled ?? true);
@@ -2752,11 +2759,11 @@ function SignatureEditor({ inbox, onSave, t, readOnly = false, canManageReview =
         // Sent only when the selection changed: the review gate is
         // owner/admin-only, and a member saving a signature must not be
         // refused for restating it. Both columns go together:
-        // `send_review_mode` is the three-way setting, `send_approval_required`
-        // the boolean the edge function still gates on. The API keeps them
-        // consistent; remove the boolean once the server reads the mode.
+        // `send_review_mode` is the setting, `send_approval_required` the
+        // boolean the edge function holds sends on ('chat' holds nothing).
+        // The API keeps them consistent.
         ...(reviewMode !== resolveReviewMode(inbox)
-          ? { send_review_mode: reviewMode, send_approval_required: reviewMode !== 'off' }
+          ? { send_review_mode: reviewMode, send_approval_required: HOLDING_REVIEW_MODES.includes(reviewMode) }
           : {}),
       });
     } catch {
@@ -2799,6 +2806,7 @@ function SignatureEditor({ inbox, onSave, t, readOnly = false, canManageReview =
       <ReviewModeSelector
         value={reviewMode}
         onChange={setReviewMode}
+        chatRolledOut={chatConfirmRolledOut}
         disabled={locked || !canManageReview}
         lockedNote={!readOnly && !canManageReview ? t('approvals.mode.ownerAdminOnly') : null}
       />
@@ -3066,7 +3074,7 @@ export function InboxAdvancedSection({ inbox, t, onConnectionChanged }) {
   );
 }
 
-function InboxDetailModal({ inbox, checking, onClose, onReconnect, onCheck, onDisconnect, onSaveSignature, onSaveSenderName, onSaveDraftEditorHidden, onConnectionChanged, draftEditorRolledOut = false, draftEditorWorkspaceHidden = false, canManageInbox = true, canManageReview = true, historyDays = 30 }) {
+function InboxDetailModal({ inbox, checking, onClose, onReconnect, onCheck, onDisconnect, onSaveSignature, onSaveSenderName, onSaveDraftEditorHidden, onConnectionChanged, draftEditorRolledOut = false, draftEditorWorkspaceHidden = false, chatConfirmRolledOut = false, canManageInbox = true, canManageReview = true, historyDays = 30 }) {
   const t = useTranslations('dashboard');
   if (!inbox) return null;
 
@@ -3200,7 +3208,7 @@ function InboxDetailModal({ inbox, checking, onClose, onReconnect, onCheck, onDi
               {/* IMAP inboxes that can send. Gmail's own Send As list comes
                   from Google; Outlook has none yet. */}
               {inbox.hasImap && inbox.connectionMode !== 'imap' && <SendAsEditor inbox={inbox} t={t} readOnly={!canManageInbox} />}
-              <SignatureEditor inbox={inbox} onSave={onSaveSignature} t={t} readOnly={!canManageInbox} canManageReview={canManageInbox && canManageReview} />
+              <SignatureEditor inbox={inbox} onSave={onSaveSignature} t={t} readOnly={!canManageInbox} canManageReview={canManageInbox && canManageReview} chatConfirmRolledOut={chatConfirmRolledOut} />
             </details>
           )}
 
