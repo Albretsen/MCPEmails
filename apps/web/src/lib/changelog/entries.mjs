@@ -51,6 +51,13 @@ export const ENTRIES = [
       'Set an inbox\'s "Review before sending" to "Confirm in chat" and your AI assistant shows you each email and asks for your yes in the conversation before it sends. MCPEmails refuses a send that skips the question.',
   },
   {
+    date: '2026-10-23',
+    kind: 'improved',
+    title: 'mcpemails.com opens your dashboard when you are signed in',
+    body:
+      'Opening mcpemails.com while signed in now takes you straight to your dashboard. Following a link from the dashboard or any page on the site still shows the homepage.',
+  },
+  {
     date: '2026-10-21',
     kind: 'added',
     title: 'Change an inbox\'s connection type from its settings',

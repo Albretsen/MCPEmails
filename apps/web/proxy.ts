@@ -1,5 +1,6 @@
 import createMiddleware from 'next-intl/middleware';
-import { updateSession } from '@/lib/supabase/middleware';
+import { signedInDashboardRedirect, updateSession } from '@/lib/supabase/middleware';
+import { isSignedInHomeCandidate } from '@/lib/home-redirect';
 import { isKioskPath, kioskUrlRedirect, refreshKioskCookie } from '@/lib/admin/kiosk-cookie';
 import { buildContentSecurityPolicy, generateNonce } from '@/lib/csp';
 import { SUBJECT_COOKIE, SUBJECT_HEADER, SUBJECT_ID_PATTERN } from '@/lib/experiments/constants';
@@ -215,9 +216,26 @@ export default async function proxy(request: NextRequest) {
  * The original routing decision, unchanged. Kept as a separate function purely
  * so the CSP wrapper above cannot get tangled up in it — this file has silently
  * disabled the dashboard auth guard once before, and every path through here
- * still ends in exactly one of intlMiddleware / kioskUrlRedirect / updateSession.
+ * still ends in exactly one of signedInDashboardRedirect / intlMiddleware /
+ * kioskUrlRedirect / updateSession.
  */
 async function routeRequest(request: NextRequest) {
+  // A signed-in visitor opening the homepage from outside the site (typed URL,
+  // bookmark, search result) goes to the dashboard. One who clicked through
+  // from another page on the site still gets the homepage. The cheap checks
+  // run first so only requests carrying an auth cookie pay for getUser().
+  if (
+    isSignedInHomeCandidate({
+      method: request.method,
+      url: request.nextUrl,
+      headers: request.headers,
+      cookieNames: request.cookies.getAll().map((c) => c.name),
+    })
+  ) {
+    const redirect = await signedInDashboardRedirect(request);
+    if (redirect) return redirect;
+  }
+
   if (isLocalizedRoute(request.nextUrl.pathname)) {
     const response = intlMiddleware(request);
     response.headers.set('Cache-Control', MARKETING_CACHE_CONTROL);
