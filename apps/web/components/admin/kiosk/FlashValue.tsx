@@ -1,13 +1,14 @@
 'use client';
 
 /**
- * A number that flashes when a refresh changes it.
+ * A number whose digits flash when a refresh changes it. Opt-in: BigNumber and
+ * FactRow use it only for signup and subscription figures (`flash`).
  *
  * The board re-renders in place every five minutes, so a new signup or payment
  * otherwise lands as a silently different digit that nobody walking past would
  * notice. This keeps the previous text across `router.refresh()` (the client
  * component survives a soft refresh at the same tree position) and, when the
- * text changes, plays one short tint: green when the number went the good way,
+ * text changes, tints the text colour (nothing else) for a moment: green when the number went the good way,
  * red when it went the bad way, amber when it changed but cannot be compared
  * (a label, a "—" turning into a figure).
  *

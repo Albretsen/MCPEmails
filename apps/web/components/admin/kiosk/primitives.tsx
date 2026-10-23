@@ -18,8 +18,8 @@
  *     decoration.
  *
  * Server components throughout: the board ships no JavaScript except the small
- * refresh ticker and FlashValue, which tints a number for a moment when a
- * refresh changes it.
+ * refresh ticker and FlashValue, which tints a signup or subscription number
+ * for a moment when a refresh changes it.
  */
 
 import type { ReactNode } from 'react';
@@ -93,6 +93,7 @@ export function BigNumber({
   spark,
   sparkColor,
   plot,
+  flash,
   goodDirection,
 }: {
   value: string | number;
@@ -104,8 +105,14 @@ export function BigNumber({
   /** A chart in the spark's slot, taking the tile's leftover height the same way. */
   plot?: ReactNode;
   /**
-   * Which way is good news, for the flash when a refresh changes the number.
-   * Falls back to the trend's, then to up. Set it on tiles that count trouble.
+   * Tint the number when a refresh changes it. Only signup and subscription
+   * figures set this: everything else on the board moves on most ticks, and a
+   * wall that lights up every five minutes stops meaning anything.
+   */
+  flash?: boolean;
+  /**
+   * Which way is good news, for the flash. Falls back to the trend's, then to
+   * up. Set it on tiles that count trouble.
    */
   goodDirection?: 'up' | 'down';
 }) {
@@ -116,13 +123,23 @@ export function BigNumber({
   // never get there; the money tile can, once MRR needs a thousands separator
   // beside a currency symbol and a "/mo". Long values step down a size.
   const long = text.length >= 7;
+  const className = `kiosk-big-value${long ? ' is-long' : ''}`;
+  const content = (
+    <>
+      {text}
+      {suffix && <span className="kiosk-big-suffix">{suffix}</span>}
+    </>
+  );
   return (
     <div className="kiosk-big">
       <div className="kiosk-big-row">
-        <FlashValue text={text} goodDirection={goodDirection ?? trend?.goodDirection} className={`kiosk-big-value${long ? ' is-long' : ''}`}>
-          {text}
-          {suffix && <span className="kiosk-big-suffix">{suffix}</span>}
-        </FlashValue>
+        {flash ? (
+          <FlashValue text={text} goodDirection={goodDirection ?? trend?.goodDirection} className={className}>
+            {content}
+          </FlashValue>
+        ) : (
+          <span className={className}>{content}</span>
+        )}
         {trend && tone && (
           <span className={`kiosk-trend is-${tone}`}>
             {trend.percent > 0 ? '▲' : trend.percent < 0 ? '▼' : '■'}
@@ -340,15 +357,21 @@ export function SplitList({ rows }: { rows: { label: string; count: number }[] }
   );
 }
 
-/** Two to four small numbers under a headline. */
-export function FactRow({ facts }: { facts: { label: string; value: string | number }[] }) {
+/** Two to four small numbers under a headline. `flash` works as on BigNumber. */
+export function FactRow({
+  facts,
+}: {
+  facts: { label: string; value: string | number; flash?: boolean; goodDirection?: 'up' | 'down' }[];
+}) {
   return (
     <dl className="kiosk-facts">
       {facts.map((fact) => (
         <div key={fact.label}>
           <dt>{fact.label}</dt>
           <dd>
-            <FlashValue text={typeof fact.value === 'number' ? formatCount(fact.value) : fact.value} />
+            {fact.flash ? (
+              <FlashValue text={typeof fact.value === 'number' ? formatCount(fact.value) : fact.value} goodDirection={fact.goodDirection} />
+            ) : typeof fact.value === 'number' ? formatCount(fact.value) : fact.value}
           </dd>
         </div>
       ))}
