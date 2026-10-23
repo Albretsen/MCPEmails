@@ -494,6 +494,22 @@ for (const role of ['owner', 'admin']) {
   });
 }
 
+test('PATCH: chat mode is stored without holding sends, whatever the client says', async () => {
+  reset({ role: 'owner' });
+  const res = await patch({ send_review_mode: 'chat', send_approval_required: true });
+  assert.equal(res.status, 200);
+  const payload = inboxCalls('service').find((c) => c.op === 'update')!.payload as Record<string, unknown>;
+  assert.equal(payload.send_review_mode, 'chat');
+  assert.equal(payload.send_approval_required, false);
+});
+
+test('verify PATCH: a member sending chat over stored dashboard is refused', async () => {
+  reset({ role: 'member', row: { ...appPasswordRow(), send_review_mode: 'dashboard', send_approval_required: true } });
+  const res = await patch({ send_review_mode: 'chat' });
+  assert.equal(res.status, 403);
+  assert.ok(noReviewWrite());
+});
+
 test('PATCH: a viewer is refused even a signature-only save', async () => {
   reset({ role: 'viewer' });
   const res = await patch(SIGNATURE);

@@ -2184,7 +2184,10 @@ function SignatureEditorPlaceholder({ sourceMode, t }) {
 }
 
 /** Order matters: this is the order the options are offered in. */
-const REVIEW_MODES = ['off', 'inline', 'dashboard'];
+const REVIEW_MODES = ['off', 'chat', 'inline', 'dashboard'];
+
+/** The modes that hold a send for a signed-in approver. 'chat' does not. */
+export const HOLDING_REVIEW_MODES = ['inline', 'dashboard'];
 
 /**
  * Resolves an inbox's review mode.
@@ -2200,7 +2203,7 @@ export function resolveReviewMode(inbox) {
 }
 
 /**
- * Three-way "review before sending" selector.
+ * "Review before sending" selector: off, chat, inline, dashboard.
  *
  * COPY RULE: do not write anything that claims the assistant "cannot" call a
  * tool. `_meta.ui.visibility` is a host UI hint, not an authorisation boundary
@@ -2752,11 +2755,11 @@ function SignatureEditor({ inbox, onSave, t, readOnly = false, canManageReview =
         // Sent only when the selection changed: the review gate is
         // owner/admin-only, and a member saving a signature must not be
         // refused for restating it. Both columns go together:
-        // `send_review_mode` is the three-way setting, `send_approval_required`
-        // the boolean the edge function still gates on. The API keeps them
-        // consistent; remove the boolean once the server reads the mode.
+        // `send_review_mode` is the setting, `send_approval_required` the
+        // boolean the edge function holds sends on ('chat' holds nothing).
+        // The API keeps them consistent.
         ...(reviewMode !== resolveReviewMode(inbox)
-          ? { send_review_mode: reviewMode, send_approval_required: reviewMode !== 'off' }
+          ? { send_review_mode: reviewMode, send_approval_required: HOLDING_REVIEW_MODES.includes(reviewMode) }
           : {}),
       });
     } catch {

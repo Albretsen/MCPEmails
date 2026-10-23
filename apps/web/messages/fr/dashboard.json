@@ -879,6 +879,8 @@
       "label": "Revue avant envoi",
       "off": "Envoyer immédiatement",
       "offHint": "L'assistant envoie sans demander. Le bon choix pour une boîte servant à du courrier sans enjeu.",
+      "chat": "Confirmer dans le chat",
+      "chatHint": "Avant l'envoi, l'assistant vous montre l'e-mail, dans la carte de brouillon si votre app d'IA en affiche une, et vous demande un oui dans le chat. Cela empêche un assistant bien intentionné d'envoyer trop tôt ; ce n'est pas une approbation avec connexion comme les deux options ci-dessous.",
       "inline": "Carte de revue dans la conversation",
       "inlineHint": "Une carte apparaît dans la conversation et montre exactement ce qui sera envoyé. Vous pouvez rejeter depuis la carte ; approuver ouvre une page qui exige d'être connecté.",
       "dashboard": "Revue uniquement dans le tableau de bord",

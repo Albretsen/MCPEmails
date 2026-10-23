@@ -800,7 +800,7 @@ test('member: can save a signature; the review fields are not sent, and the sele
   await view.openReady();
 
   const radios = reviewRadios(view);
-  assert.equal(radios.length, 3);
+  assert.equal(radios.length, 4);
   for (const r of radios) assert.equal(r.disabled, true, 'a member cannot change the review gate');
   assert.ok(view.container.textContent.includes(en.approvals.mode.ownerAdminOnly), 'the reason is shown');
   assert.equal(view.button(COPY.save).disabled, false, 'a member can still save');
@@ -820,6 +820,16 @@ test('admin: the review selector is enabled and a changed mode is sent', async (
   const patch = await view.save();
   assert.equal(patch.body.send_review_mode, 'inline');
   assert.equal(patch.body.send_approval_required, true);
+});
+
+test('admin: "Confirm in chat" is sent as the chat mode and holds nothing', async (t) => {
+  const view = await renderInboxes(t, { userRole: 'admin', inboxes: [inbox({ signatureHtml: STORED_HTML, signatureText: STORED_TEXT })] });
+  await view.openReady();
+  assert.ok(view.container.textContent.includes(en.approvals.mode.chat), 'the option is labelled');
+  await view.click(view.container.querySelector('input[name="send-review-mode"][value="chat"]'));
+  const patch = await view.save();
+  assert.equal(patch.body.send_review_mode, 'chat');
+  assert.equal(patch.body.send_approval_required, false, 'chat mode never holds a send for approval');
 });
 
 test('viewer: sender name and signature are read-only with the reason, and nothing is saved', async (t) => {

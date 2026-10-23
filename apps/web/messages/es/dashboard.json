@@ -879,6 +879,8 @@
       "label": "Revisión antes de enviar",
       "off": "Enviar de inmediato",
       "offHint": "El asistente envía sin preguntar. La opción adecuada para un buzón que usas para correo de poco riesgo.",
+      "chat": "Confirmar en el chat",
+      "chatHint": "Antes de enviar, el asistente te muestra el correo, en la tarjeta de borrador si tu app de IA la muestra, y te pide un sí en el chat. Esto evita que un asistente bienintencionado envíe demasiado pronto; no es una aprobación con inicio de sesión como las dos opciones de abajo.",
       "inline": "Tarjeta de revisión en la conversación",
       "inlineHint": "Aparece una tarjeta en la conversación con exactamente lo que se enviará. Puedes rechazarlo ahí; aprobar abre una página que requiere sesión iniciada.",
       "dashboard": "Revisar solo en el panel",

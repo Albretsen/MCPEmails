@@ -879,6 +879,8 @@
       "label": "Gjennomgang før sending",
       "off": "Send umiddelbart",
       "offHint": "Assistenten sender uten å spørre. Riktig valg for en innboks du bruker til mindre viktig e-post.",
+      "chat": "Bekreft i chatten",
+      "chatHint": "Før sending viser assistenten deg e-posten, i utkastkortet når AI-appen din viser det, og ber deg si ja i chatten. Dette hindrer en velmenende assistent i å sende for tidlig; det er ikke en godkjenning med innlogging som de to valgene under.",
       "inline": "Gjennomgangskort i samtalen",
       "inlineHint": "Et kort vises i KI-samtalen med nøyaktig hva som blir sendt. Du kan avvise der; godkjenning åpner en side du må være innlogget for å bruke.",
       "dashboard": "Gjennomgang bare i dashbordet",

@@ -1155,7 +1155,9 @@ Deno.test("draft: the description, the update hint and draft_list say what is tr
       .test(description),
     description,
   );
-  assert(/draft_read returns a draft's current text; draft_list lists the drafts that exist with their draft_id and no body\.$/.test(description));
+  assert(/draft_read returns a draft's current text; draft_list lists the drafts that exist with their draft_id and no body\. /.test(description));
+  // Testers 2026-10-23: the model mixed the card up with another connector's draft tool.
+  assert(/Only drafts made here show in the card: for these inboxes, never use another connector's draft tool\.$/.test(description));
 
   const list = registryEntry("draft_list").description;
   assert(/and no body: draft_read returns one draft's text\./.test(list), list);
