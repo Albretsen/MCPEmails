@@ -481,6 +481,8 @@ export async function MoneySection({ days }: { days: number }) {
           >
             <BigNumber
               value={formatMoney(mrr.atRiskMinor + mrr.leavingMinor, mrr.currency)}
+              flash
+              goodDirection="down"
               caption={
                 // Never netted into the headline: a card Stripe cannot charge
                 // and a subscription winding down at period end need different
