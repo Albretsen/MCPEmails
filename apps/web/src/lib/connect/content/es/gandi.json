@@ -13,7 +13,7 @@
     "status": "active"
   },
   "meta": {
-    "title": "Conecta Gandi Mail a Claude, Cursor y MCP",
+    "title": "Conecta Gandi Mail a Claude, ChatGPT y MCP",
     "description": "Conecta un buzón de Gandi a Claude, Cursor y cualquier cliente MCP por IMAP en mail.gandi.net:993, con la contraseña del buzón y no con el acceso a tu cuenta de Gandi."
   },
   "hero": {

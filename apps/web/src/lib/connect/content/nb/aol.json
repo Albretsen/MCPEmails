@@ -11,7 +11,7 @@
     "status": "active"
   },
   "meta": {
-    "title": "Koble AOL Mail til Claude, Cursor og MCP-klienter",
+    "title": "Koble AOL Mail til Claude, ChatGPT og MCP-klienter",
     "description": "Koble AOL Mail til Claude, Cursor og enhver MCP-klient over IMAP på imap.aol.com:993 med et AOL-app-passord. AOL-passordet alene fungerer ikke."
   },
   "hero": {

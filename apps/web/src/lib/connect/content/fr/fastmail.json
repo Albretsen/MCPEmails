@@ -13,7 +13,7 @@
     "status": "active"
   },
   "meta": {
-    "title": "Connecter Fastmail à Claude, Cursor et aux clients MCP",
+    "title": "Connecter Fastmail à Claude, ChatGPT et aux clients MCP",
     "description": "Connectez Fastmail à Claude, Cursor, ChatGPT et tout client MCP via IMAP sur imap.fastmail.com:993 avec un mot de passe d'application. 1 boîte gratuite."
   },
   "hero": {

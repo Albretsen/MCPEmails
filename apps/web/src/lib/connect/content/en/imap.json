@@ -15,7 +15,7 @@
     "status": "active"
   },
   "meta": {
-    "title": "Connect Any IMAP Mailbox to Claude, Cursor & MCP Clients",
+    "title": "Connect Any IMAP Mailbox to Claude, ChatGPT & MCP Clients",
     "description": "Connect any IMAP mailbox your company runs to Claude, Cursor and any MCP client. Bring host and password: IMAP on 993 or 143, SMTP on 465 or 587, detected for you."
   },
   "hero": {

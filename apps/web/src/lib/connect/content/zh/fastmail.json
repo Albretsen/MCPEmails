@@ -13,7 +13,7 @@
     "status": "active"
   },
   "meta": {
-    "title": "将 Fastmail 连接到 Claude、Cursor 与 MCP 客户端",
+    "title": "将 Fastmail 连接到 Claude、ChatGPT 与 MCP 客户端",
     "description": "使用 Fastmail 应用专用密码，通过 imap.fastmail.com:993 的 IMAP 将 Fastmail 连接到 Claude、Cursor、ChatGPT 及任意 MCP 客户端。1 个收件箱永久免费。"
   },
   "hero": {

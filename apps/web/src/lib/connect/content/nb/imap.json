@@ -15,7 +15,7 @@
     "status": "active"
   },
   "meta": {
-    "title": "Koble enhver IMAP-postkasse til Claude, Cursor og MCP",
+    "title": "Koble enhver IMAP-postkasse til Claude, ChatGPT og MCP",
     "description": "Koble enhver IMAP-postkasse bedriften din har til Claude, Cursor og enhver MCP-klient. Oppgi vert og passord: IMAP på 993 eller 143, SMTP på 465 eller 587, oppdages for deg."
   },
   "hero": {
