@@ -45,13 +45,6 @@ export const ENTRIES = [
   /* ── October 2026 ──────────────────────────────────────────── */
   {
     date: '2026-10-23',
-    kind: 'added',
-    title: 'Confirm sends in the chat',
-    body:
-      'Set an inbox\'s "Review before sending" to "Confirm in chat" and your AI assistant shows you each email and asks for your yes in the conversation before it sends. MCPEmails refuses a send that skips the question.',
-  },
-  {
-    date: '2026-10-23',
     kind: 'improved',
     title: 'mcpemails.com opens your dashboard when you are signed in',
     body:

@@ -18502,11 +18502,19 @@ async function resolveApprovalSummaryFields(
  * cannot approve, disable, or otherwise bypass the gate. */
 /** True when `queueSendApproval` will hold this caller's send for a human. */
 function sendWillBeHeld(inbox: InboxRow, apiKey: ApiKeyRow): boolean {
-  if (!inbox.send_approval_required || apiKey.internalApprovalDispatch) return false;
-  // The web mail client's human sender (see ApiKeyRow.firstPartyHuman): the
-  // person pressing Send is the approver this gate exists to wait for.
-  if (apiKey.firstPartyHuman === true) return false;
-  return true;
+  if (!inbox.send_approval_required) return false;
+  return !sendDecidedByHuman(apiKey);
+}
+
+/**
+ * The send is already a human's decision: the approval dispatcher re-running
+ * an approved send, or the web mail client's human sender (see
+ * ApiKeyRow.firstPartyHuman), whose Send press is what both the approval hold
+ * and "Confirm in chat" exist to wait for. The marker's ONE read in
+ * mcp-server (client-api/tests/mcp-neutral.test.ts pins the count).
+ */
+function sendDecidedByHuman(apiKey: ApiKeyRow): boolean {
+  return apiKey.internalApprovalDispatch === true || apiKey.firstPartyHuman === true;
 }
 
 /**
@@ -18532,6 +18540,35 @@ async function inboxWantsChatConfirmation(inboxId: string): Promise<boolean> {
   } catch (err) {
     console.warn("[mcp-server] chat_confirm_mode_read_failed", {
       inbox_id: inboxId,
+      error: err instanceof Error ? err.message : String(err),
+    });
+    return false;
+  }
+}
+
+/**
+ * `workspaces.chat_send_confirm_enabled`: OUR rollout gate for "Confirm in
+ * chat", internal only for now (seeded by 20261023200000). The dashboard and
+ * the PATCH route only offer 'chat' where it is on; this is the server half,
+ * so a mode set some other way does nothing until the rollout reaches it.
+ * Read only for an inbox already in 'chat' mode. Fails to "off" on an error,
+ * the same direction as `inboxWantsChatConfirmation`.
+ */
+async function workspaceChatConfirmRolledOut(workspaceId: string): Promise<boolean> {
+  try {
+    const { data, error } = await supabase
+      .from("workspaces")
+      .select("chat_send_confirm_enabled")
+      .eq("id", workspaceId)
+      .maybeSingle();
+    if (error) {
+      console.warn("[mcp-server] chat_confirm_rollout_read_failed", { workspace_id: workspaceId, error: error.message });
+      return false;
+    }
+    return (data as { chat_send_confirm_enabled?: unknown } | null)?.chat_send_confirm_enabled === true;
+  } catch (err) {
+    console.warn("[mcp-server] chat_confirm_rollout_read_failed", {
+      workspace_id: workspaceId,
       error: err instanceof Error ? err.message : String(err),
     });
     return false;
@@ -18568,7 +18605,7 @@ async function chatConfirmGate(input: {
   cardSend?: boolean;
 }): Promise<ChatConfirmRefusal | null> {
   const { apiKey } = input;
-  if (apiKey.internalApprovalDispatch || apiKey.firstPartyHuman === true || input.cardSend) return null;
+  if (sendDecidedByHuman(apiKey) || input.cardSend) return null;
   const seen = new Set<string>();
   const inboxes = input.inboxes.filter((inbox) => !seen.has(inbox.id) && seen.add(inbox.id));
   if (inboxes.some((inbox) => sendWillBeHeld(inbox, apiKey))) return null;
@@ -18580,8 +18617,9 @@ async function chatConfirmGate(input: {
     }
   }
   if (!gated) return null;
+  if (!(await workspaceChatConfirmRolledOut(apiKey.workspace_id))) return null;
 
-  const refuse = (text: string, meta: Record<string, unknown> = {}): ChatConfirmRefusal => {
+  const refuse =(text: string, meta: Record<string, unknown> = {}): ChatConfirmRefusal => {
     const result = {
       content: [{ type: "text", text }],
       isError: true,

@@ -507,6 +507,23 @@ export async function PATCH(
     );
   }
 
+  // "Confirm in chat" is internal-only for now: a change TO it needs the
+  // workspace's rollout flag (`workspaces.chat_send_confirm_enabled`). An
+  // unchanged 'chat' was dropped above, so this never blocks a signature save.
+  if (reviewUpdate.send_review_mode === 'chat') {
+    const { data: ws } = await supabase
+      .from('workspaces')
+      .select('chat_send_confirm_enabled')
+      .eq('id', workspaceId)
+      .maybeSingle();
+    if (ws?.chat_send_confirm_enabled !== true) {
+      return NextResponse.json(
+        { error: "send_review_mode must be one of 'off', 'inline', 'dashboard'." },
+        { status: 400 },
+      );
+    }
+  }
+
   // 3. Signature edits pin the signature as user-owned; approval is independent.
   const now = new Date().toISOString();
   if ('signature_text' in input || 'signature_html' in input || 'signature_enabled' in input || 'signature_reply_mode' in input) {

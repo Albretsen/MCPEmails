@@ -115,6 +115,7 @@ ALTER TABLE public.workspaces
   ADD COLUMN IF NOT EXISTS draft_editor_enabled               boolean NOT NULL DEFAULT false,
   ADD COLUMN IF NOT EXISTS draft_editor_hidden                boolean NOT NULL DEFAULT false,
   ADD COLUMN IF NOT EXISTS card_diagnostics                   boolean NOT NULL DEFAULT false,
+  ADD COLUMN IF NOT EXISTS chat_send_confirm_enabled          boolean NOT NULL DEFAULT false,
   ADD COLUMN IF NOT EXISTS analytics_first_tool_name          text,
   ADD COLUMN IF NOT EXISTS analytics_first_tool_provider      text,
   ADD COLUMN IF NOT EXISTS analytics_first_tool_client        text,
