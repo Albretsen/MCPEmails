@@ -139,9 +139,12 @@ export function Sidebar({ route, setRoute, counts, user, workspace, workspaces =
         className={'sidebar' + (isOpen ? ' sidebar-open' : '')}
         aria-label="Dashboard navigation"
       >
-        <div className="brand">
+        {/* A plain link, not next/link: the homepage only stays put for a
+            signed-in visitor when the request carries this page as its Referer
+            (src/lib/home-redirect.ts), and a full page load sends it. */}
+        <a className="brand" href="/">
           <img className="logo-light" src="/logo-wordmark.svg" alt="MCPEmails" /><img className="logo-dark" src="/logo-wordmark-dark.svg" alt="MCPEmails" />
-        </div>
+        </a>
 
         {/* Workspace switcher */}
         <div className="ws-switcher" ref={wsRef}>

@@ -22,7 +22,7 @@ body { background: var(--bg-page); }
   padding: 18px 14px;
 }
 .sidebar .brand {
-  display: flex; align-items: center; gap: 10px;
+  display: flex; text-decoration: none; align-items: center; gap: 10px;
   padding: 6px 8px 18px;
 }
 .sidebar .brand img { height: 30px; }
