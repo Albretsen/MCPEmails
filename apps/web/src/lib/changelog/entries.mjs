@@ -44,6 +44,13 @@ export const KINDS = ['added', 'improved', 'fixed', 'changed'];
 export const ENTRIES = [
   /* ── October 2026 ──────────────────────────────────────────── */
   {
+    date: '2026-10-23',
+    kind: 'improved',
+    title: 'mcpemails.com opens your dashboard when you are signed in',
+    body:
+      'Opening mcpemails.com while signed in now takes you straight to your dashboard. Following a link from the dashboard or any page on the site still shows the homepage.',
+  },
+  {
     date: '2026-10-21',
     kind: 'added',
     title: 'Change an inbox\'s connection type from its settings',
