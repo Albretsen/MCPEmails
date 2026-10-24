@@ -44,6 +44,13 @@ export const KINDS = ['added', 'improved', 'fixed', 'changed'];
 export const ENTRIES = [
   /* ── October 2026 ──────────────────────────────────────────── */
   {
+    date: '2026-10-24',
+    kind: 'improved',
+    title: 'Pick the date your cancellation takes effect',
+    body:
+      'On the cancel contracts page you can now choose the date your cancellation takes effect and send it with one button. The footer link "Withdraw from contract here" opens the same form with withdrawal selected.',
+  },
+  {
     date: '2026-10-23',
     kind: 'improved',
     title: 'mcpemails.com opens your dashboard when you are signed in',
