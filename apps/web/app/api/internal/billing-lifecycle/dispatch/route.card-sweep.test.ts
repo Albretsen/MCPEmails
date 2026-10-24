@@ -57,28 +57,54 @@ nodeMock.module('@/lib/billing/lifecycle-queue', {
   },
 });
 
+// The subscriptions the fake Stripe account holds; each test sets its own.
+let subscriptions: Array<Record<string, unknown>> = [];
+// Every page request the sweep made, as Stripe would see it.
+const pageRequests: Array<{ limit: number; starting_after?: string }> = [];
+
+/**
+ * Pages like the real SDK: `list()` resolves to the first page only, and
+ * iterating it with `for await` fetches the next page (by `starting_after`)
+ * as the loop reaches the end of the current one.
+ */
+function listSubscriptions(params: { limit: number }) {
+  const fetchPage = async (startingAfter?: string) => {
+    pageRequests.push({ limit: params.limit, starting_after: startingAfter });
+    const from = startingAfter ? subscriptions.findIndex((s) => s.id === startingAfter) + 1 : 0;
+    const data = subscriptions.slice(from, from + params.limit);
+    return { data, has_more: from + params.limit < subscriptions.length };
+  };
+  const first = fetchPage();
+  return Object.assign(first, {
+    async *[Symbol.asyncIterator]() {
+      let page = await first;
+      for (;;) {
+        yield* page.data;
+        if (!page.has_more) return;
+        page = await fetchPage(page.data[page.data.length - 1].id as string);
+      }
+    },
+  });
+}
+
+function subscription(id: string, overrides: Record<string, unknown> = {}) {
+  return {
+    id,
+    customer: `cus_${id}`,
+    currency: 'usd',
+    metadata: {},
+    default_payment_method: { id: `pm_${id}`, card },
+    items: {
+      data: [{ id: `si_${id}`, quantity: 1, price: { id: 'price_business_month', unit_amount: 3900 } }],
+    },
+    ...overrides,
+  };
+}
+
 nodeMock.module('@/lib/stripe/client', {
   namedExports: {
     stripe: {
-      subscriptions: {
-        list: async () => ({
-          data: [
-            {
-              id: 'sub_business',
-              customer: 'cus_1',
-              currency: 'usd',
-              metadata: {},
-              default_payment_method: { id: 'pm_1', card },
-              items: {
-                data: [
-                  { id: 'si_addon', quantity: 4, price: { id: 'price_addon_month', unit_amount: 300 } },
-                  { id: 'si_plan', quantity: 1, price: { id: 'price_business_month', unit_amount: 3900 } },
-                ],
-              },
-            },
-          ],
-        }),
-      },
+      subscriptions: { list: listSubscriptions },
       customers: { retrieve: async () => ({ deleted: false, email: 'owner@example.test' }) },
       paymentMethods: { retrieve: async () => ({ id: 'pm_1', card }) },
     },
@@ -87,15 +113,47 @@ nodeMock.module('@/lib/stripe/client', {
 
 const { POST } = await import('./route.ts');
 
-test('a Business card-expiry warning carries the plan and its price, with the add-on listed first', async () => {
-  const response = await POST(
+function sweep() {
+  return POST(
     new Request('https://mcpemails.test/api/internal/billing-lifecycle/dispatch?mode=sweep', {
       method: 'POST',
       headers: { 'x-dispatch-secret': 'dispatch_unit_secret' },
     }),
   );
+}
+
+test('a Business card-expiry warning carries the plan and its price, with the add-on listed first', async () => {
+  queued.length = 0;
+  subscriptions = [
+    subscription('business', {
+      items: {
+        data: [
+          { id: 'si_addon', quantity: 4, price: { id: 'price_addon_month', unit_amount: 300 } },
+          { id: 'si_plan', quantity: 1, price: { id: 'price_business_month', unit_amount: 3900 } },
+        ],
+      },
+    }),
+  ];
+  const response = await sweep();
   assert.equal(response.status, 200);
   assert.equal(queued.length, 1);
   assert.equal(queued[0].payload.planId, 'pro');
   assert.equal(queued[0].payload.amountCents, 3900);
+});
+
+test('the sweep reads every page: an expiring card past the first 100 subscriptions is queued', async () => {
+  queued.length = 0;
+  pageRequests.length = 0;
+  // 160 subscriptions without a card (skipped), except one on page 2.
+  subscriptions = Array.from({ length: 160 }, (_, i) =>
+    subscription(`s${i}`, i === 130 ? {} : { default_payment_method: { id: `pm_s${i}`, card: {} } }),
+  );
+  const response = await sweep();
+  assert.equal(response.status, 200);
+  const body = (await response.json()) as { scanned: number; skipped: number };
+  assert.equal(body.scanned, 160);
+  assert.equal(body.skipped, 159);
+  assert.equal(queued.length, 1);
+  assert.equal(pageRequests.length, 2);
+  assert.deepEqual(pageRequests[1], { limit: 100, starting_after: 's99' });
 });

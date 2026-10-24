@@ -1,0 +1,106 @@
+{
+  "_sources": [
+    "https://docs.mistral.ai/le-chat/knowledge-integrations/connectors/mcp-connectors",
+    "https://docs.mistral.ai/le-chat/knowledge-integrations/connectors",
+    "https://mistral.ai/news/le-chat-mcp-connectors-memories/",
+    "https://mistral.ai/products/vibe/",
+    "https://docs.mistral.ai/vibe/work/connectors/mcp-connectors",
+    "https://docs.mistral.ai/vibe/work/safety-and-approvals",
+    "https://docs.mistral.ai/vibe/choose-chat-work-code",
+    "https://help.mistral.ai/en/articles/393572-configuring-a-custom-connector",
+    "https://developers.make.com/mcp-server/connect-using-oauth/usage-with-mistral-ai (third party: Authentication Method dropdown, OAuth2.1)",
+    "https://docs.bko.finologee.com/docs/mcp-mistral (third party: empty client secret makes Le Chat use dynamic client registration)",
+    "https://docs.qonto.com/mcp/install/mistral (third party: workspace Admin adds custom connectors)",
+    "apps/web/app/.well-known/oauth-authorization-server/route.ts",
+    "apps/web/src/lib/clients/content/en/raycast.json (shared server facts: limits, scopes, approval, storage)"
+  ],
+  "meta": {
+    "title": "Koble e-post til Le Chat fra Mistral: oppsett av MCP-kobling",
+    "description": "Gi Le Chat fra Mistral en ekte innboks med en Custom MCP Connector. Lim inn én URL og logg inn. Ingen API-nøkkel. Én innboks gratis."
+  },
+  "hero": {
+    "eyebrow": "Le Chat + e-post",
+    "titleLine1": "Koble innboksen din til Le Chat",
+    "titleLine2": "med en Custom MCP Connector",
+    "lead": "Spør assistenten til Mistral om e-posten din, og la den gjøre noe med den. Les, søk i, send, svar på, videresend, planlegg og organiser e-post på tvers av alle innboksene du har koblet til.",
+    "meta0": "1 innboks gratis, for alltid",
+    "meta1": "OAuth, ingen API-nøkkel nødvendig",
+    "meta2": "E-post hentes direkte, lagres aldri",
+    "answer": "I Le Chat åpner du Connectors, klikker + Add Connector, velger fanen Custom MCP Connector, limer inn https://mcpemails.com/api/mcp som Server URL, klikker Connect og logger inn på MCPEmails."
+  },
+  "method": {
+    "title": "Slik kobler Le Chat seg til: OAuth, ingen API-nøkkel",
+    "body": "Når du skriver inn Server URL, finner Le Chat ut hvordan serveren autentiserer. Mistral ber OAuth-servere svare på en uautentisert forespørsel med <b>401</b> og en <code>WWW-Authenticate</code>-header, og det gjør denne serveren, med en peker til OAuth-metadataene sine, så Le Chat kjører OAuth 2.1 i stedet for å be om et bearer-token. Den registrerer seg selv med <b>RFC 7591 dynamisk klientregistrering</b>, så du trenger ikke opprette noen klient-ID, og autoriserer med <b>autorisasjonskode pluss PKCE</b> med S256. Ingen klienthemmelighet sendes noen gang, og tokenet har bare de tilgangene (scopes) du godkjenner på samtykkeskjermen vår. Tilgangstokenet den får varer i én time og fornyes automatisk. Det vises under Dashboard, API Keys som <code>OAuth:</code> etterfulgt av klientnavnet, og det er der du tilbakekaller tilkoblingen."
+  },
+  "setup": [
+    {
+      "h": "Opprett en gratis konto og koble til en postkasse",
+      "p": "Registrer deg på mcpemails.com, uten kort, og gå til Dashboard, Inboxes, Connect Inbox. Outlook og Microsoft 365 kobles til med Microsoft-innlogging; Gmail, iCloud, Fastmail, Yahoo, Zoho og Yandex krever et app-spesifikt passord; alt annet kobles til over vanlig IMAP og SMTP. Gratisplanen gir deg én innboks, for alltid."
+    },
+    {
+      "h": "Åpne Add Connector",
+      "p": "På chat.mistral.ai åpner du siden <b>Connectors</b> fra sidepanelet, klikker <b>+ Add Connector</b> og velger fanen <b>Custom MCP Connector</b>. Å legge til en kobling er en administratorfunksjon; på en Free-, Pro- eller Student-plan er kontoeieren administratoren."
+    },
+    {
+      "h": "Legg inn serveren",
+      "p": "Fyll inn <b>Connector name</b> med et unikt navn uten mellomrom eller spesialtegn (for eksempel MCPEmails), lim inn <code>https://mcpemails.com/api/mcp</code> i <b>Server URL</b>, og legg eventuelt til en <b>Description</b>."
+    },
+    {
+      "h": "Koble til og logg inn",
+      "p": "Klikk <b>Connect</b>. Le Chat oppdager OAuth og åpner innloggingen til MCPEmails; godkjenn tilgangene du vil at den skal ha. Dukker det opp et felt for <b>Authentication Method</b>, velger du OAuth 2.1 og lar eventuell klient-ID og klienthemmelighet stå tomme."
+    },
+    {
+      "h": "Slå den på i en samtale",
+      "p": "I en samtale klikker du <b>+</b>-ikonet eller skriver <code>/</code>, velger <b>Tools</b> og slår på MCPEmails-koblingen. Be den deretter vise innboksene dine."
+    }
+  ],
+  "gotchas": [
+    {
+      "h": "Le Chat heter nå Vibe",
+      "p": "Mistral har gitt Le Chat det nye navnet Vibe, og i dokumentasjonen ligger koblinger nå under Work. Adressen er fortsatt chat.mistral.ai, og siden Connectors og etikettene der er de samme, så stegene over gjelder uansett hvilket navn du ser."
+    },
+    {
+      "h": "På en Team- eller Enterprise-plan legger en administrator den til",
+      "p": "Custom MCP Connectors er en funksjon bare for administratorer. På Free, Pro og Student er kontoeieren administratoren, så du kan legge den til selv. I et Team- eller Enterprise-arbeidsområde ber du en administrator for arbeidsområdet legge til koblingen; den dukker da opp i organisasjonens liste, slik at medlemmene kan slå den på i sine egne samtaler. Organisasjonsadministratorer kan også slå av MCP Connectors for et arbeidsområde."
+    },
+    {
+      "h": "La sending stå på manuell godkjenning",
+      "p": "Le Chat spør før en kobling gjør noe, med <b>Continue</b>, <b>Always allow</b> og <b>Decline</b>. Vil du godkjenne en funksjon én gang for alle, åpner du Connectors, My Connectors, koblingskortet, Functions og slår på bryteren <b>Always allow</b> for den. Å gi leseverktøyene fast tillatelse sparer klikk. La verktøyene for sending, svar og videresending stå på manuell godkjenning, eller la <code>send:email</code> være helt ute av denne tilkoblingen."
+    }
+  ],
+  "limits": [
+    "Forespørsler er begrenset til 100 per minutt, 1 000 per time og 10 000 per døgn per nøkkel, i tillegg til planens tak for fakturerbare handlinger.",
+    "Serveren er rent forespørsel og svar. Det finnes ingen webhooks og ingen hendelser startet av serveren, så ny e-post vekker aldri agenten din av seg selv. Vil du reagere på innkommende e-post, må du polle etter en tidsplan.",
+    "E-post hentes direkte fra leverandøren ved hvert kall og lagres aldri. Bare det krypterte OAuth-tokenet eller app-passordet beholdes, så et tilbakekalt token eller et endret passord for postkassen stopper tilgangen umiddelbart."
+  ],
+  "faq": [
+    {
+      "q": "Hvordan kobler jeg e-post til Le Chat?",
+      "a": "Åpne Connectors i Le Chat, klikk + Add Connector, velg fanen Custom MCP Connector, lim inn https://mcpemails.com/api/mcp som Server URL og klikk Connect. Logg inn på MCPEmails, og slå deretter på koblingen i en samtale fra +-menyen under Tools."
+    },
+    {
+      "q": "Trenger jeg en API-nøkkel for Le Chat?",
+      "a": "Nei. Le Chat kjører OAuth-flyten med dynamisk klientregistrering, så ingenting hemmelig skrives inn i koblingsskjemaet. En bearer-nøkkel er tilgjengelig for andre klienter som ikke kan gjøre det."
+    },
+    {
+      "q": "Fungerer dette på gratisplanen til Le Chat?",
+      "a": "Ifølge Mistral er koblinger tilgjengelige for alle brukere av Le Chat. På Free, Pro og Student er kontoeieren administratoren som kan legge til en Custom MCP Connector. På Team og Enterprise legger en administrator for arbeidsområdet den til for organisasjonen."
+    },
+    {
+      "q": "Hvilke postkasser kan Le Chat nå på denne måten?",
+      "a": "Outlook.com og Microsoft 365 via Microsoft-innlogging, der en jobbkonto kan trenge at en IT-administrator godkjenner appen én gang; Gmail, iCloud, Fastmail, Yahoo, Zoho og Yandex med et app-spesifikt passord; og enhver annen postkasse som støtter IMAP og SMTP på standardportene. Agenten kaller inbox_list først for å finne alle tilkoblede postkasser og ID-ene deres, så du slipper å lime inn UUID-er noe sted."
+    },
+    {
+      "q": "Kan Le Chat sende e-post uten at jeg ser det?",
+      "a": "Bare hvis du tillater det. Sending krever tilgangen send:email, så et token uten den tilgangen kan ikke sende i det hele tatt, og Le Chat ber om godkjenning før en kobling gjør noe, med mindre du har valgt Always allow for den funksjonen. I tillegg kan eieren av en innboks kreve menneskelig godkjenning i dashbordet, som holder tilbake hver sending, hvert svar, hver videresending, hvert utkast som sendes og hver planlagte sending til en person slipper den gjennom."
+    },
+    {
+      "q": "Lagres e-posten min på serverne deres?",
+      "a": "Nei. Hver melding hentes direkte fra leverandøren din for forespørselen som ba om den, og sendes rett videre til klienten din. Bare det krypterte OAuth-tokenet eller app-passordet beholdes, slik at fremtidige kall kan autentiseres. Sletter du innboksen i dashbordet, eller tilbakekaller tilgangen hos leverandøren, avsluttes tilkoblingen med en gang."
+    }
+  ],
+  "ctaBand": {
+    "title": "Gi Le Chat innboksen din",
+    "sub": "Én kobling, én innlogging. Én innboks gratis for alltid, uten kort."
+  }
+}

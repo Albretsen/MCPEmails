@@ -1,0 +1,102 @@
+{
+  "_sources": [
+    "apps/web/components/dashboard/Pages.jsx (MCP_CLIENTS) + apps/web/messages/en/dashboard.json (clients.*)",
+    "apps/web/app/.well-known/oauth-authorization-server/route.ts",
+    "apps/web/app/api/oauth/register/route.ts",
+    "https://www.perplexity.ai/help-center/en/articles/13915507-adding-custom-remote-connectors",
+    "https://www.perplexity.ai/help-center/en/articles/11502712-local-and-remote-mcps-for-perplexity",
+    "https://www.perplexity.ai/help-center/en/articles/2026100703-where-did-connectors-and-skills-go",
+    "https://www.perplexity.ai/help-center/en/articles/2026091802-troubleshooting-connectors",
+    "https://www.perplexity.ai/changelog/what-we-shipped---march-13-2026",
+    "https://www.perplexity.ai/help-center/en/articles/14818152-connecting-perplexity-with-morningstar"
+  ],
+  "meta": {
+    "title": "Connect Email to Perplexity: Custom MCP Connector Setup",
+    "description": "Add a real inbox to Perplexity with a custom remote connector. Paste one URL, choose OAuth and sign in. No API key. Pro, Max and Enterprise."
+  },
+  "hero": {
+    "eyebrow": "Perplexity + email",
+    "titleLine1": "Connect your inbox to Perplexity",
+    "titleLine2": "as a custom connector",
+    "lead": "Ask Perplexity about your own mail next to the web. Read, search, send, reply, forward, schedule and organize mail across every inbox you have connected.",
+    "meta0": "1 inbox free, forever",
+    "meta1": "OAuth, no API key needed",
+    "meta2": "Email fetched live, never stored",
+    "answer": "On a Perplexity Pro, Max or Enterprise plan, open Plugins, select Add custom, then Connector and Add MCP connector. Choose Remote, paste https://mcpemails.com/api/mcp as the MCP Server URL, pick OAuth for Authentication, click Add, then click the connector card to sign in to MCPEmails."
+  },
+  "method": {
+    "title": "How Perplexity connects: OAuth, no API key",
+    "body": "Perplexity's custom remote connectors support OAuth 2.0 with discovery, and MCPEmails publishes its endpoints at <code>/.well-known/oauth-authorization-server</code>. Perplexity registers itself with <b>RFC 7591 dynamic client registration</b>, so there is no Client ID or Client Secret to create, and authorizes with <b>authorization code plus PKCE</b> using S256. The token carries only the scopes you approve on our consent screen. The access token lasts an hour and refreshes itself; it is listed in Dashboard, API Keys as <code>OAuth:</code> followed by the client name, which is where you revoke the connection."
+  },
+  "setup": [
+    {
+      "h": "Create a free account and connect a mailbox",
+      "p": "Sign up at mcpemails.com, no card required, then go to Dashboard, Inboxes, Connect Inbox. Outlook and Microsoft 365 connect with Sign in with Microsoft; Gmail, iCloud, Fastmail, Yahoo, Zoho and Yandex take an app-specific password; anything else connects over plain IMAP and SMTP. The free plan holds one inbox, forever."
+    },
+    {
+      "h": "Open Add custom in Perplexity",
+      "p": "On perplexity.ai, open <b>Plugins</b> in the sidebar and select <b>Add custom</b>, then <b>Connector</b>, then <b>Add MCP connector</b>. If you still see the older menu, go to <b>Customize</b>, <b>Connectors</b> instead."
+    },
+    {
+      "h": "Enter the server",
+      "p": "Select <b>Remote</b>, enter a <b>Name</b> such as MCPEmails, and paste <code>https://mcpemails.com/api/mcp</code> as the <b>MCP Server URL</b>. Set <b>Authentication</b> to <b>OAuth</b> and <b>Transport</b> to <b>Streamable HTTP</b>. Perplexity discovers our OAuth endpoints and registers itself, so there is no Client ID or Client Secret to fill in."
+    },
+    {
+      "h": "Add it and sign in",
+      "p": "Check the acknowledgement box and click <b>Add</b>. Then click the connector card to start authentication, sign in to MCPEmails and approve the scopes you want Perplexity to hold."
+    },
+    {
+      "h": "Pick it for your question",
+      "p": "Start a new query and type <code>@MCPEmails</code>, or click the <b>+</b> icon in the search box, open <b>Connectors and sources</b> and select MCPEmails. Then ask about your mail, for example which messages came in today."
+    }
+  ],
+  "gotchas": [
+    {
+      "h": "Free accounts do not get custom connectors",
+      "p": "Perplexity offers custom MCP servers on Pro, Max and Enterprise plans. On Enterprise, members can only add their own custom connectors once an admin turns on <b>Allow members to add custom connectors</b>, which is off by default. An admin can also add MCPEmails once for the whole organization."
+    },
+    {
+      "h": "Adding the connector is not the same as using it",
+      "p": "Some surfaces only call a connector you select for that chat, with the connector picker or an @ mention. If Sources or Focus is set to Web, Academic or Social only, Perplexity does not call connected apps, answers from the web and looks as if it cannot see your inbox. Check both before suspecting the connection."
+    },
+    {
+      "h": "Set it up on the web, not on mobile",
+      "p": "Perplexity notes that a connector can be available on the web but not yet on mobile. Add MCPEmails at perplexity.ai in a browser. If authorization never finishes, allow pop-ups and cross-site cookies for perplexity.ai, since an ad blocker can stop the OAuth window."
+    }
+  ],
+  "limits": [
+    "Requests are rate limited to 100 per minute, 1,000 per hour and 10,000 per day per key, plus your plan ceiling on billable actions.",
+    "The server is request and response only. There are no webhooks and no server-initiated events, so new mail never wakes your agent by itself. To react to arriving mail, poll on a schedule.",
+    "Mail is fetched live from your provider on every call and never stored. Only the encrypted OAuth token or app password is kept, so a revoked token or a changed mailbox password ends access immediately."
+  ],
+  "faq": [
+    {
+      "q": "How do I connect email to Perplexity?",
+      "a": "Open Plugins, select Add custom, then Connector and Add MCP connector. Choose Remote, paste https://mcpemails.com/api/mcp as the MCP Server URL, set Authentication to OAuth, click Add, then click the connector card and sign in to MCPEmails. In a query, type @MCPEmails or select it under Connectors and sources."
+    },
+    {
+      "q": "Which Perplexity plan do I need?",
+      "a": "Custom MCP connectors are available on Pro, Max and Enterprise. On Enterprise, an admin either adds the connector for the organization or allows members to add their own."
+    },
+    {
+      "q": "Do I need an API key for Perplexity?",
+      "a": "No. Perplexity runs the OAuth flow when you click the connector card, and MCPEmails supports dynamic client registration, so there is no Client ID, Client Secret or key to paste. A bearer key is available for other clients that cannot do OAuth."
+    },
+    {
+      "q": "Which mailboxes can Perplexity reach this way?",
+      "a": "Outlook.com and Microsoft 365 over Sign in with Microsoft, where a work account may need an IT admin to approve the app once; Gmail, iCloud, Fastmail, Yahoo, Zoho and Yandex with an app-specific password; and any other mailbox that speaks IMAP and SMTP on the standard ports. Perplexity sees them all through the same connection: it calls inbox_list first to discover every connected mailbox and its id, so there are no UUIDs to paste anywhere."
+    },
+    {
+      "q": "Can Perplexity send email without me seeing it?",
+      "a": "Only if you let it. Sending is gated on the send:email scope, so a token without that scope cannot send at all. On top of that, an inbox owner can require human approval in the dashboard, which holds every send, reply, forward, draft send and scheduled send until a person releases it."
+    },
+    {
+      "q": "Is my email stored on your servers?",
+      "a": "No. Every message is fetched live from your provider for the request that asked for it and handed straight to your client. Only the encrypted OAuth token or app password is kept, so future calls can authenticate. Deleting the inbox in the dashboard, or revoking access at your provider, ends the connection at once."
+    }
+  ],
+  "ctaBand": {
+    "title": "Search your inbox like you search the web",
+    "sub": "One connector, one sign-in. One inbox free forever, no card required."
+  }
+}

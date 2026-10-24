@@ -1,0 +1,108 @@
+{
+  "_sources": [
+    "https://learn.chatgpt.com/docs/extend/mcp?surface=cli (final URL; https://developers.openai.com/codex/mcp 308-redirects here; checked 2026-10-24)",
+    "https://learn.chatgpt.com/docs/extend/mcp?surface=app",
+    "https://learn.chatgpt.com/docs/auth (redirect target of https://developers.openai.com/codex/auth)",
+    "https://github.com/openai/codex/blob/rust-v0.164.0/codex-rs/cli/src/mcp_cmd.rs (latest release: --url, --bearer-token-env-var, codex mcp login --scopes and --no-browser)",
+    "https://github.com/openai/codex/blob/rust-v0.164.0/codex-rs/cli/src/mcp_login.rs (--no-browser prints the authorization URL and asks for the callback URL to be pasted)",
+    "https://github.com/openai/codex/blob/main/codex-rs/cli/src/mcp_cmd.rs (codex mcp add --url detects OAuth and starts the flow)",
+    "https://github.com/openai/codex/blob/main/codex-rs/rmcp-client/src/auth_status.rs (scopes taken from the 401 challenge first)",
+    "supabase/functions/mcp-server/web-ingress.ts (401 challenge with scope=\"read:email\")",
+    "apps/web/app/.well-known/oauth-authorization-server/route.ts (DCR, PKCE S256, client_id_metadata_document_supported)",
+    "apps/web/src/lib/oauth/consent-presets.ts (Codex observed in oauth_consents; default card per client)",
+    "apps/web/messages/en/auth.json (consent card titles Read-only, Standard, Full access)"
+  ],
+  "meta": {
+    "title": "Conecta el correo a OpenAI Codex: servidor MCP",
+    "description": "Añade una bandeja a OpenAI Codex con codex mcp add --url. Codex detecta OAuth y abre el navegador, sin clave de API. Funciona en la CLI, la extensión del IDE y la app de escritorio."
+  },
+  "hero": {
+    "eyebrow": "Codex + correo",
+    "titleLine1": "Conecta tu bandeja a OpenAI Codex",
+    "titleLine2": "con un solo comando",
+    "lead": "Dale a Codex un buzón real. Lee, busca, redacta, envía, responde, reenvía, programa y organiza correo desde la CLI de Codex, la extensión del IDE o la app de escritorio de ChatGPT, en todas las bandejas que tengas conectadas.",
+    "meta0": "1 bandeja gratis, para siempre",
+    "meta1": "OAuth en el navegador, sin clave de API",
+    "meta2": "Correo obtenido en vivo, nunca almacenado",
+    "answer": "Ejecuta codex mcp add mcpemails --url https://mcpemails.com/api/mcp. Codex detecta que el servidor admite OAuth, abre el navegador y tú apruebas el acceso en la pantalla de consentimiento de MCPEmails. La CLI, la extensión del IDE y la app de escritorio de ChatGPT comparten la misma configuración, así que basta con configurarlo una vez para las tres."
+  },
+  "method": {
+    "title": "Cómo se conecta Codex: OAuth, sin clave de API",
+    "body": "Codex ejecuta el flujo OAuth estándar de MCP contra este servidor. Se registra solo, ya sea con un <b>documento de metadatos de client ID</b> o mediante <b>registro dinámico de clientes RFC 7591</b>, así que no hay ningún client ID que crear, y se autoriza con <b>código de autorización más PKCE</b> usando S256. Nunca se transmite un secreto de cliente, y el token solo lleva los permisos que apruebas en nuestra pantalla de consentimiento. El token de acceso que recibe dura una hora y se renueva solo; aparece en Dashboard, API Keys como <code>OAuth:</code> seguido del nombre del cliente, y ahí es donde revocas la conexión."
+  },
+  "setup": [
+    {
+      "h": "Crea una cuenta gratis y conecta un buzón",
+      "p": "Regístrate en mcpemails.com, sin tarjeta, y luego ve a Dashboard, Inboxes, Connect Inbox. Outlook y Microsoft 365 se conectan con el inicio de sesión de Microsoft; Gmail, iCloud, Fastmail, Yahoo, Zoho y Yandex requieren una contraseña de aplicación; cualquier otro se conecta por IMAP y SMTP estándar. El plan gratuito incluye una bandeja, para siempre."
+    },
+    {
+      "h": "Añade el servidor desde la CLI",
+      "p": "Ejecuta el siguiente comando. Escribe una entrada <code>[mcp_servers.mcpemails]</code> con <code>url</code> en <code>~/.codex/config.toml</code>, luego muestra <b>Detected OAuth support. Starting OAuth flow…</b> y abre tu navegador."
+    },
+    {
+      "h": "O añádelo en la app de escritorio o la extensión del IDE",
+      "p": "En la app de escritorio de ChatGPT, abre <b>Settings</b> y luego <b>MCP servers</b>; en la extensión del IDE, abre el menú del engranaje y luego <b>MCP servers</b>. Elige <b>Add server</b>, escribe un nombre, elige <b>Streamable HTTP</b>, pega <code>https://mcpemails.com/api/mcp</code>, guarda y luego elige <b>Restart</b> (o <b>Restart extension</b>) y <b>Authenticate</b>."
+    },
+    {
+      "h": "Aprueba el acceso",
+      "p": "Inicia sesión en MCPEmails en el navegador, elige <b>Solo lectura</b>, <b>Estándar</b> o <b>Acceso completo</b> en la pantalla de consentimiento y haz clic en <b>Permitir acceso</b>. Si el flujo del navegador no se ha iniciado, ejecuta <code>codex mcp login mcpemails</code>."
+    },
+    {
+      "h": "Compruébalo y pídele algo",
+      "p": "Ejecuta <code>codex mcp list</code>, o <code>/mcp</code> dentro de una sesión de Codex, para ver el servidor. Después prueba con \"resume lo que tenga sin leer de hoy\". Codex llama primero a <code>inbox_list</code> para descubrir tus buzones, así que no hay ids que pegar."
+    }
+  ],
+  "gotchas": [
+    {
+      "h": "Fíjate en qué tarjeta abre la pantalla de consentimiento",
+      "p": "Codex pide los permisos que indica nuestro desafío 401, que es <code>read:email</code>, así que en algunos registros la pantalla de consentimiento se abre en <b>Solo lectura</b>. Para clasificar correo está bien. Si quieres que Codex redacte o envíe, elige <b>Estándar</b> o <b>Acceso completo</b> antes de hacer clic en Permitir acceso. Para ampliarlo más adelante, vuelve a ejecutar <code>codex mcp login mcpemails</code> y elige la tarjeta más amplia, o indica los permisos con <code>--scopes</code>, por ejemplo <code>--scopes read:email,search:email,manage:drafts</code>."
+    },
+    {
+      "h": "La CLI, la extensión del IDE y la app de escritorio comparten una configuración",
+      "p": "En la misma máquina, las tres leen el mismo <code>~/.codex/config.toml</code>, así que si añades el servidor en una aparece en las demás. Un proyecto también puede llevar su propio <code>.codex/config.toml</code>, que Codex solo lee en proyectos de confianza. ChatGPT en la web no lee este archivo en absoluto; para eso, usa la guía de ChatGPT."
+    },
+    {
+      "h": "En una máquina sin interfaz gráfica, prescinde del navegador local",
+      "p": "En un servidor al que accedes por SSH, ejecuta <code>codex mcp login mcpemails --no-browser</code>: Codex muestra el enlace de inicio de sesión, lo abres en cualquier máquina y pegas la dirección a la que llega el navegador. En CI, crea una clave con permisos en Dashboard, API Keys, expórtala y pon en <code>bearer_token_env_var</code> de la entrada del servidor el nombre de esa variable (o pasa <code>--bearer-token-env-var</code> a <code>codex mcp add</code>). Codex la envía entonces en la cabecera <code>Authorization</code>, y la clave nunca queda en el archivo de configuración."
+    },
+    {
+      "h": "Mantén el tiempo de espera predeterminado de las herramientas",
+      "p": "Por defecto, Codex espera 60 segundos por cada llamada a una herramienta (<code>tool_timeout_sec</code>). Basta incluso para trabajo masivo: mover o eliminar en una carpeta grande se detiene antes al llegar al límite de tiempo del propio servidor y devuelve un resultado marcado como <code>partial</code>, con los mensajes sin procesar listados en <code>remaining_message_ids</code>, para que Codex vuelva a llamar con esos ids. Si bajas mucho el tiempo de espera, la llamada puede cortarse antes de que llegue ese resultado."
+    }
+  ],
+  "limits": [
+    "Las solicitudes están limitadas a 100 por minuto, 1.000 por hora y 10.000 al día por clave, además del tope de acciones facturables de tu plan.",
+    "El servidor funciona solo por petición y respuesta. No hay webhooks ni eventos iniciados por el servidor, así que el correo nuevo nunca despierta a tu agente por sí solo. Para reaccionar al correo entrante, consulta periódicamente según un horario.",
+    "El correo se obtiene en vivo de tu proveedor en cada llamada y nunca se almacena. Solo se guarda el token OAuth o la contraseña de aplicación cifrados, así que un token revocado o un cambio de contraseña del buzón corta el acceso de inmediato."
+  ],
+  "faq": [
+    {
+      "q": "¿Cómo conecto el correo a OpenAI Codex?",
+      "a": "Ejecuta codex mcp add mcpemails --url https://mcpemails.com/api/mcp. Codex detecta que el servidor admite OAuth, abre el navegador y tú apruebas el acceso en la pantalla de consentimiento de MCPEmails. A partir de ahí Codex tiene herramientas para leer, buscar, redactar, enviar, responder, reenviar, organizar y programar correo."
+    },
+    {
+      "q": "¿Cómo es la entrada de config.toml?",
+      "a": "Dos líneas en ~/.codex/config.toml: una tabla llamada [mcp_servers.mcpemails] y url = \"https://mcpemails.com/api/mcp\". OAuth es lo predeterminado para un servidor con url, así que no hace falta nada más. Si escribes la entrada a mano, ejecuta codex mcp login mcpemails para iniciar sesión."
+    },
+    {
+      "q": "¿Necesito una clave de API para Codex?",
+      "a": "No. Codex inicia sesión con OAuth, así que no escribes nada secreto en la configuración. Para máquinas sin navegador existe la opción de una clave con permisos: guárdala en una variable de entorno y apunta bearer_token_env_var a esa variable."
+    },
+    {
+      "q": "¿Qué buzones puede alcanzar Codex de esta forma?",
+      "a": "Outlook.com y Microsoft 365 con el inicio de sesión de Microsoft, donde una cuenta del trabajo puede necesitar que un administrador de TI apruebe la aplicación una vez; Gmail, iCloud, Fastmail, Yahoo, Zoho y Yandex con una contraseña de aplicación; y cualquier otro buzón que hable IMAP y SMTP en los puertos estándar. El cliente los ve todos a través de la misma conexión: tu agente llama primero a inbox_list para descubrir cada buzón conectado y su id, así que no hay UUID que pegar en ningún sitio."
+    },
+    {
+      "q": "¿Puede Codex enviar correo sin que yo lo vea?",
+      "a": "Solo si tú lo permites. El envío depende del permiso send:email, así que un token sin ese permiso no puede enviar nada. Además, el propietario de una bandeja puede exigir aprobación humana en el panel, que retiene cada envío, respuesta, reenvío, envío de borrador y envío programado hasta que una persona lo libera."
+    },
+    {
+      "q": "¿Se guarda mi correo en los servidores de MCPEmails?",
+      "a": "No. Cada mensaje se obtiene en vivo de tu proveedor para la solicitud que lo pidió y se entrega directamente a tu cliente. Solo se guarda el token OAuth o la contraseña de aplicación cifrados, para que las llamadas futuras puedan autenticarse. Eliminar la bandeja en el panel, o revocar el acceso en tu proveedor, corta la conexión al instante."
+    }
+  ],
+  "ctaBand": {
+    "title": "Dale a Codex una bandeja real",
+    "sub": "Un comando, un inicio de sesión en el navegador. Una bandeja gratis para siempre, sin tarjeta."
+  }
+}
