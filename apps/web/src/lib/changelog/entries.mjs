@@ -66,6 +66,13 @@ export const ENTRIES = [
       'When your AI app searches a single named folder, the search now looks in that folder only. Before, a search that named the folder this way looked in the inbox instead.',
   },
   {
+    date: '2026-10-24',
+    kind: 'improved',
+    title: 'Pick the date your cancellation takes effect',
+    body:
+      'On the cancel contracts page you can now choose the date your cancellation takes effect and send it with one button. The footer link "Withdraw from contract here" opens the same form with withdrawal selected.',
+  },
+  {
     date: '2026-10-23',
     kind: 'improved',
     title: 'mcpemails.com opens your dashboard when you are signed in',

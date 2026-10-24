@@ -25,7 +25,7 @@ Commencez simple. C’est celui que je lance la plupart des jours. Collez-le dan
 
 > Regarde ma boîte de réception principale. Récupère tout ce qui n’est pas lu, puis donne-moi un résumé réparti en trois catégories : à répondre aujourd’hui, pour info / peut attendre, et probablement du bruit. Pour chaque élément des deux premières catégories, donne-moi une ligne : de qui ça vient et ce qu’ils veulent. N’ouvre rien dont je n’ai pas besoin — survole d’abord les objets et les expéditeurs, ne lis le corps que quand l’objet est ambigu.
 
-Remarquez ce que fait ce prompt. Il dit à l’agent de s’appuyer sur les métadonnées de \`email_read\` (action list) (expéditeur, objet, extrait) et de n’appeler \`email_read\` avec \`action: read\` que parcimonieusement. Cela garde la session rapide et reste bien en dessous des limites de débit — 100 requêtes par minute par clé API, et un plafond par espace de travail qui démarre à 60/min sur le plan Free. Une file de 40 messages non lus triée ainsi représente peut-être une douzaine d’appels d’outils, pas quarante.
+Remarquez ce que fait ce prompt. Il dit à l’agent de s’appuyer sur les métadonnées de \`email_read\` (action list) (expéditeur, objet, extrait) et de n’appeler \`email_read\` avec \`action: read\` que parcimonieusement. Cela garde la session rapide et bien en dessous des limites de débit : chaque clé API reçoit des fenêtres dimensionnées selon le plafond par minute de votre forfait, et plusieurs clés partagent ce plafond (voir [tarifs](/pricing)). Une file de 40 messages non lus triée ainsi représente peut-être une douzaine d’appels d’outils, pas quarante.
 
 Une bonne réponse ressemble à ceci :
 
