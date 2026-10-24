@@ -1,7 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { createClient } from '@/lib/supabase/server';
 import { resolveWebhookAccess, isUuid } from '@/lib/webhooks/access';
-import { DELIVERY_LOG_LIMIT, DELIVERY_PUBLIC_COLUMNS, webhookDb } from '@/lib/webhooks/db';
+import { DELIVERY_LOG_LIMIT, DELIVERY_PUBLIC_COLUMNS } from '@/lib/webhooks/endpoints';
 
 /**
  * GET /api/webhook-endpoints/[id]/deliveries
@@ -23,7 +23,7 @@ export async function GET(_request: NextRequest, { params }: Params): Promise<Ne
   const access = await resolveWebhookAccess(supabase, { manage: false });
   if (!access.ok) return NextResponse.json(access.body, { status: access.status });
 
-  const hooks = webhookDb(supabase);
+  const hooks = supabase;
   const { data: endpoint } = await hooks
     .from('webhook_endpoints')
     .select('id')
