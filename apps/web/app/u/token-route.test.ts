@@ -221,23 +221,30 @@ nodeMock.module('@/lib/analytics/billing-funnel', {
 nodeMock.module('next/server', {
   namedExports: {
     NextRequest: Request,
-    NextResponse: {
-      json: (body: unknown, init?: ResponseInit) => Response.json(body, init),
-      redirect: (url: string | URL, status: number) =>
-        new Response(null, { status, headers: { location: String(url) } }),
+    NextResponse: class extends Response {
+      static json(body: unknown, init?: ResponseInit) {
+        return Response.json(body, init);
+      }
+      static redirect(url: string | URL, status: number) {
+        return new Response(null, { status, headers: { location: String(url) } });
+      }
     },
   },
 });
 
 const route = (await import('./[token]/route.ts')) as Record<string, unknown>;
 const GET = route.GET as (req: unknown, ctx: unknown) => Promise<Response>;
+const HEAD = route.HEAD as () => Promise<Response>;
+
+const BROWSER_UA =
+  'Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/130.0 Safari/537.36';
 
 /** Every response from every test, so the header rules can be checked on all of them. */
 const allResponses: Response[] = [];
 
 async function open(token: string, headers: Record<string, string> = {}) {
   const url = new URL(`https://mcpemails.test/u/${encodeURIComponent(token)}`);
-  const req = Object.assign(new Request(url, { headers }), { nextUrl: url });
+  const req = Object.assign(new Request(url, { headers: { 'user-agent': BROWSER_UA, ...headers } }), { nextUrl: url });
   const res = await GET(req, { params: Promise.resolve({ token }) });
   allResponses.push(res);
   assert.equal(res.status, 303);
@@ -431,6 +438,51 @@ test('the hosted page is German for a German workspace or browser, English other
   }
 });
 
+// ── Link previews ──────────────────────────────────────────────────────────
+
+async function preview(token: string, headers: Record<string, string>) {
+  const url = new URL(`https://mcpemails.test/u/${token}`);
+  const req = Object.assign(new Request(url, { headers }), { nextUrl: url });
+  const res = await GET(req, { params: Promise.resolve({ token }) });
+  allResponses.push(res);
+  return res;
+}
+
+test('an unfurler, an empty User-Agent or a prefetch gets a blank page and touches nothing', async () => {
+  const token = newToken();
+  addLink(token);
+  const cases: Array<Record<string, string>> = [
+    { 'user-agent': 'Slackbot-LinkExpanding 1.0 (+https://api.slack.com/robots)' },
+    { 'user-agent': 'facebookexternalhit/1.1' },
+    { 'user-agent': 'Mozilla/5.0 (compatible; Discordbot/2.0; +https://discordapp.com)' },
+    { 'user-agent': 'WhatsApp/2.23.20.0' },
+    { 'user-agent': '' },
+    {},
+    { 'user-agent': BROWSER_UA, purpose: 'prefetch' },
+    { 'user-agent': BROWSER_UA, 'sec-purpose': 'prefetch;prerender' },
+    { 'user-agent': BROWSER_UA, 'x-purpose': 'preview' },
+  ];
+  for (const headers of cases) {
+    const res = await preview(token, headers);
+    assert.equal(res.status, 200, JSON.stringify(headers));
+    const html = await res.text();
+    assert.match(html, /<title>MCPEmails checkout<\/title>/);
+    assert.match(html, /noindex/);
+  }
+  assert.equal(rpcCalls.length, 0);
+  assert.equal(coreCalls.length, 0);
+  assert.equal(clicked.length, 0);
+  assert.equal(links.get(hashOf(token))?.open_count ?? 0, 0);
+});
+
+test('HEAD answers 200 with the same headers and touches nothing', async () => {
+  const res = await HEAD();
+  allResponses.push(res);
+  assert.equal(res.status, 200);
+  assert.equal(rpcCalls.length, 0);
+  assert.equal(coreCalls.length, 0);
+});
+
 // ── Every response ─────────────────────────────────────────────────────────
 
 test('no response from this route sets a cookie, and every one is no-store, no-referrer and noindex', () => {
@@ -443,7 +495,7 @@ test('no response from this route sets a cookie, and every one is no-store, no-r
   }
 });
 
-test('the route exports GET only; Next answers 405 to every other method', () => {
+test('the route exports GET and HEAD only; Next answers 405 to every other method', () => {
   const methods = ['GET', 'POST', 'PUT', 'PATCH', 'DELETE', 'HEAD', 'OPTIONS'];
-  assert.deepEqual(methods.filter((m) => typeof route[m] === 'function'), ['GET']);
+  assert.deepEqual(methods.filter((m) => typeof route[m] === 'function'), ['GET', 'HEAD']);
 });

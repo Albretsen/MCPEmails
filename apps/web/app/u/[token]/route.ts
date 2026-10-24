@@ -8,6 +8,7 @@ import {
   checkoutLinkLocale,
   checkoutLinkTokenHash,
   isCheckoutLinkToken,
+  isLinkPreviewRequest,
 } from '@/lib/stripe/checkout-link';
 import { recordChatLinkOpened } from '@/lib/analytics/billing-funnel';
 import { CHECKOUT_LINK_SUPERSEDED_KEY } from '@/lib/email/abandoned-checkout';
@@ -132,10 +133,37 @@ async function toStoredSession(request: NextRequest, sessionId: string): Promise
   }
 }
 
+/**
+ * What a link preview or prefetch gets: a blank titled page, no data, and no
+ * database or Stripe call, so an unfurler can neither create a Checkout
+ * Session nor count as the link's first open.
+ */
+const PREVIEW_HTML =
+  '<!doctype html><html><head><meta charset="utf-8"><meta name="robots" content="noindex, nofollow">' +
+  '<title>MCPEmails checkout</title></head><body></body></html>';
+
+function previewPage(): NextResponse {
+  return finish(
+    new NextResponse(PREVIEW_HTML, {
+      status: 200,
+      headers: { 'Content-Type': 'text/html; charset=utf-8' },
+    }),
+  );
+}
+
+/**
+ * HEAD, which Next would otherwise answer by running GET. Unfurlers send it to
+ * size up a link; it touches nothing.
+ */
+export async function HEAD(): Promise<NextResponse> {
+  return finish(new NextResponse(null, { status: 200 }));
+}
+
 export async function GET(
   request: NextRequest,
   context: { params: Promise<{ token: string }> },
 ): Promise<NextResponse> {
+  if (isLinkPreviewRequest(request.headers)) return previewPage();
   const { token } = await context.params;
   if (!isCheckoutLinkToken(token)) return toExpired(request);
 

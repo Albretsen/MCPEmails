@@ -51,6 +51,33 @@ export function checkoutLinkTokenHash(token: string): string {
   return `\\x${createHash('sha256').update(token, 'utf8').digest('hex')}`;
 }
 
+/**
+ * User-Agent fragments of link unfurlers and crawlers. A chat app that renders
+ * a preview of the link fetches it before (or instead of) the person, and that
+ * fetch must neither create a Checkout Session nor count as an open.
+ */
+const PREVIEW_UA_RE =
+  /slackbot|facebookexternalhit|facebot|twitterbot|discordbot|whatsapp|telegrambot|linkedinbot|skypeuripreview|applebot|googlebot|bingbot|embedly|iframely|redditbot|preview/i;
+
+/**
+ * True when a request to /u/<token> is a link preview or a prefetch rather
+ * than a person opening the link: a known unfurler or crawler User-Agent, an
+ * empty one, or a prefetch/preview purpose header. Pure; the route answers
+ * these with a blank page and makes no database or Stripe call.
+ */
+export function isLinkPreviewRequest(headers: {
+  get(name: string): string | null;
+}): boolean {
+  const ua = (headers.get('user-agent') ?? '').trim();
+  if (!ua || PREVIEW_UA_RE.test(ua)) return true;
+  const purpose = (name: string) => (headers.get(name) ?? '').trim().toLowerCase();
+  return (
+    purpose('purpose') === 'prefetch' ||
+    purpose('sec-purpose').split(';')[0].trim() === 'prefetch' ||
+    purpose('x-purpose') === 'preview'
+  );
+}
+
 /** A `checkout_links.id` from Stripe metadata, or null. */
 export function checkoutLinkIdOrNull(value: unknown): string | null {
   return typeof value === 'string' && UUID_RE.test(value) ? value.toLowerCase() : null;

@@ -104,6 +104,26 @@ test('the hash is sha256 over the UTF-8 token string, as a bytea hex literal', (
   assert.notEqual(lib.checkoutLinkTokenHash(token), `\\x${decoded}`);
 });
 
+test('link previews and prefetches are recognised; a real browser is not', () => {
+  const h = (o: Record<string, string>) => new Headers(o);
+  const browser = 'Mozilla/5.0 (iPhone; CPU iPhone OS 18_0 like Mac OS X) AppleWebKit/605.1.15 (KHTML, like Gecko) Version/18.0 Mobile/15E148 Safari/604.1';
+  for (const ua of [
+    'Slackbot-LinkExpanding 1.0', 'facebookexternalhit/1.1', 'Facebot', 'Twitterbot/1.0', 'Discordbot/2.0',
+    'WhatsApp/2.23', 'TelegramBot (like TwitterBot)', 'LinkedInBot/1.0', 'Mozilla/5.0 SkypeUriPreview Preview/0.5',
+    'Mozilla/5.0 (Applebot/0.1)', 'Googlebot/2.1', 'bingbot/2.0', 'Embedly/0.2', 'Iframely/1.3', 'redditbot/1.0',
+    'SomeApp link preview', '', '   ',
+  ]) {
+    assert.equal(lib.isLinkPreviewRequest(h({ 'user-agent': ua })), true, ua);
+  }
+  assert.equal(lib.isLinkPreviewRequest(h({})), true, 'no User-Agent at all');
+  assert.equal(lib.isLinkPreviewRequest(h({ 'user-agent': browser })), false);
+  assert.equal(lib.isLinkPreviewRequest(h({ 'user-agent': browser, purpose: 'prefetch' })), true);
+  assert.equal(lib.isLinkPreviewRequest(h({ 'user-agent': browser, 'sec-purpose': 'prefetch' })), true);
+  assert.equal(lib.isLinkPreviewRequest(h({ 'user-agent': browser, 'sec-purpose': 'prefetch;prerender' })), true);
+  assert.equal(lib.isLinkPreviewRequest(h({ 'user-agent': browser, 'x-purpose': 'preview' })), true);
+  assert.equal(lib.isLinkPreviewRequest(h({ 'user-agent': browser, 'x-purpose': 'other' })), false);
+});
+
 test('the session outlives Stripe\'s 30-minute minimum', () => {
   assert.ok(lib.CHECKOUT_LINK_SESSION_TTL_SECONDS > 30 * 60);
   assert.ok(lib.CHECKOUT_LINK_SESSION_TTL_SECONDS <= 35 * 60);
