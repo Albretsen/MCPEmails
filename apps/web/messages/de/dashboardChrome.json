@@ -125,7 +125,8 @@
     "searchPlaceholder": "Seiten, Postfächer, Mitglieder suchen…",
     "openSearch": "Suche öffnen (Befehlstaste K)",
     "navWorkflows": "Workflows",
-    "navAutomations": "Automatisierungen"
+    "navAutomations": "Automatisierungen",
+    "navInvite": "Freunde einladen"
   },
   "topbar": {
     "mcpLabel": "MCP-Endpunkt",

@@ -255,6 +255,7 @@ const EXPECTED_LABELS: Record<string, string> = {
   organic_duckduckgo: 'DuckDuckGo',
   google_ads: 'Google Ads',
   reddit: 'Reddit',
+  referral: 'Friend referral',
   hacker_news: 'Hacker News',
   x_twitter: 'X',
   linkedin: 'LinkedIn',

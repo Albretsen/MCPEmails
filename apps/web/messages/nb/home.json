@@ -308,5 +308,9 @@
     "eyebrow": "Produktforhåndsvisning",
     "title": "Se hele MCP-driften din med ett blikk.",
     "sub": "Et sanntidsdashbord for hver tilkoblet innboks, API-nøkkel og verktøykall, så du alltid vet hva agentene dine gjør."
+  },
+  "referralBanner": {
+    "text": "En venn har invitert deg til MCPEmails. Din andre betalte måned er gratis.",
+    "close": "Lukk"
   }
 }

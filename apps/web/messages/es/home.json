@@ -308,5 +308,9 @@
     "eyebrow": "Vista del producto",
     "title": "Ve toda tu operación MCP de un vistazo.",
     "sub": "Un panel en tiempo real para cada bandeja conectada, clave de API y llamada a herramientas, para que siempre sepas qué hacen tus agentes."
+  },
+  "referralBanner": {
+    "text": "Un amigo te ha invitado a MCPEmails. Tu segundo mes de pago es gratis.",
+    "close": "Cerrar"
   }
 }

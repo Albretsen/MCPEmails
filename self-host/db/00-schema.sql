@@ -473,8 +473,9 @@ CREATE TABLE IF NOT EXISTS public.user_usage_entitlements (
     created_at timestamp with time zone DEFAULT now() NOT NULL,
     updated_at timestamp with time zone DEFAULT now() NOT NULL,
     unlimited_inboxes boolean DEFAULT false NOT NULL,
-    CONSTRAINT user_usage_entitlements_kind_check CHECK ((kind = ANY (ARRAY['standard'::text, 'comped_scale'::text]))),
-    CONSTRAINT user_usage_entitlements_source_check CHECK ((source = ANY (ARRAY['migration'::text, 'support'::text, 'promotion'::text]))),
+    referral_personal_until timestamp with time zone,
+    CONSTRAINT user_usage_entitlements_kind_check CHECK ((kind = ANY (ARRAY['standard'::text, 'comped_scale'::text, 'referral_personal'::text]))),
+    CONSTRAINT user_usage_entitlements_source_check CHECK ((source = ANY (ARRAY['migration'::text, 'support'::text, 'promotion'::text, 'referral'::text]))),
     CONSTRAINT user_usage_entitlements_pkey PRIMARY KEY (user_id),
     CONSTRAINT user_usage_entitlements_granted_by_fkey FOREIGN KEY (granted_by) REFERENCES public.users(id) ON DELETE SET NULL,
     CONSTRAINT user_usage_entitlements_user_id_fkey FOREIGN KEY (user_id) REFERENCES public.users(id) ON DELETE CASCADE

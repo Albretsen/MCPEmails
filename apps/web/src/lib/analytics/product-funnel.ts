@@ -64,7 +64,12 @@ export type ProductFunnelEvent = {
     | 'multi_inbox_prompt'
     // A buy button on the inbox-cap offer was clicked. The matching "shown" is
     // the `paywall_reached` row with connection_type 'first_connect'.
-    | 'paywall_clicked';
+    | 'paywall_clicked'
+    // Referral program (20261025090000). `category` is the workspace's plan.
+    // `referral_click` has no workspace and is never written here.
+    | 'referral_link_viewed' | 'referral_link_copied' | 'referral_attached'
+    | 'referral_attach_refused' | 'referral_charged' | 'referral_qualified'
+    | 'referral_voided' | 'referral_held' | 'referral_capped';
   outcome: 'started' | 'success' | 'failure';
   category:
     | 'gmail' | 'outlook' | 'fastmail' | 'icloud' | 'yahoo' | 'zoho' | 'yandex' | 'generic_imap'

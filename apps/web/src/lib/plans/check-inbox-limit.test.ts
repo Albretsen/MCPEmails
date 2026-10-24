@@ -29,6 +29,8 @@ type EffectivePlanRow = {
   unlimited_inboxes: boolean;
   /** Pro cap cutover exemption / kill switch (20261019150000). Absent = false. */
   pro_unlimited_inboxes?: boolean;
+  /** Active referral month on a Free workspace (20261025090000). Absent = false. */
+  referral_personal?: boolean;
 };
 
 /**
@@ -380,4 +382,51 @@ test('the Pro exemption does not lift Personal or Free', async () => {
     );
     assert.equal(result.atLimit, true, `${plan} stays capped at ${cap}`);
   }
+});
+
+test('a Free workspace with an active referral month is checked as Personal', async () => {
+  const fourth = await checkInboxLimit(
+    fakeSupabase({
+      effectivePlan: { plan: 'free', comped_scale: false, unlimited_inboxes: false, referral_personal: true },
+      inboxCount: 2,
+    }),
+    WORKSPACE,
+  );
+  assert.equal(fourth.atLimit, false, 'a second and third inbox are allowed during the month');
+  assert.equal(fourth.maxInboxes, 3);
+  assert.equal(fourth.plan, 'personal');
+  assert.equal(fourth.planName, 'Personal');
+  assert.equal(fourth.referralPersonal, true);
+
+  const capped = await checkInboxLimit(
+    fakeSupabase({
+      effectivePlan: { plan: 'free', comped_scale: false, unlimited_inboxes: false, referral_personal: true },
+      inboxCount: 3,
+    }),
+    WORKSPACE,
+  );
+  assert.equal(capped.atLimit, true, 'Personal limits, not unlimited');
+});
+
+test('referral_personal is ignored on a paid plan and absent means Free limits', async () => {
+  const paid = await checkInboxLimit(
+    fakeSupabase({
+      effectivePlan: { plan: 'solo', comped_scale: false, unlimited_inboxes: false, referral_personal: true },
+      inboxCount: 4,
+    }),
+    WORKSPACE,
+  );
+  assert.equal(paid.plan, 'solo');
+  assert.equal(paid.referralPersonal, false);
+
+  const expired = await checkInboxLimit(
+    fakeSupabase({
+      effectivePlan: { plan: 'free', comped_scale: false, unlimited_inboxes: false, referral_personal: false },
+      inboxCount: 1,
+    }),
+    WORKSPACE,
+  );
+  assert.equal(expired.atLimit, true);
+  assert.equal(expired.maxInboxes, 1);
+  assert.equal(expired.plan, 'free');
 });

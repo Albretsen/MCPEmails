@@ -125,7 +125,8 @@
     "searchPlaceholder": "Søk i sider, innbokser, medlemmer…",
     "openSearch": "Åpne søk (Command K)",
     "navWorkflows": "Arbeidsflyter",
-    "navAutomations": "Automatiseringer"
+    "navAutomations": "Automatiseringer",
+    "navInvite": "Inviter en venn"
   },
   "topbar": {
     "mcpLabel": "MCP-endepunkt",

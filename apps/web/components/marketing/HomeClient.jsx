@@ -6,6 +6,7 @@ import {
   Nav, Hero, Trusted, WhatIs, Features, FeaturedReview, DashboardPreview, HowItWorks, Examples, Quote, Reviews,
   Pricing, Faq, Footer
 } from './Sections';
+import { ReferralBanner } from './ReferralBanner';
 
 const TWEAK_DEFAULTS = {
   heroVariant: 'pipe',
@@ -61,6 +62,7 @@ export default function HomeClient({ stripePrices }) {
         <Faq />
       </main>
       <Footer />
+      <ReferralBanner />
 
       <TweaksPanel>
         <TweakSection label="Hero" />

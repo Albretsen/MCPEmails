@@ -3133,6 +3133,156 @@ export type Database = {
         }
         Relationships: []
       }
+      referral_codes: {
+        Row: {
+          code: string
+          created_at: string
+          disabled_at: string | null
+          user_id: string
+        }
+        Insert: {
+          code: string
+          created_at?: string
+          disabled_at?: string | null
+          user_id: string
+        }
+        Update: {
+          code?: string
+          created_at?: string
+          disabled_at?: string | null
+          user_id?: string
+        }
+        Relationships: []
+      }
+      referral_rewards: {
+        Row: {
+          amount_cents: number | null
+          currency: string | null
+          entitlement_until: string | null
+          id: string
+          issued_at: string
+          kind: string
+          referral_id: string
+          side: string
+          stripe_balance_txn_id: string | null
+          stripe_customer_id: string | null
+        }
+        Insert: {
+          amount_cents?: number | null
+          currency?: string | null
+          entitlement_until?: string | null
+          id?: string
+          issued_at?: string
+          kind: string
+          referral_id: string
+          side: string
+          stripe_balance_txn_id?: string | null
+          stripe_customer_id?: string | null
+        }
+        Update: {
+          amount_cents?: number | null
+          currency?: string | null
+          entitlement_until?: string | null
+          id?: string
+          issued_at?: string
+          kind?: string
+          referral_id?: string
+          side?: string
+          stripe_balance_txn_id?: string | null
+          stripe_customer_id?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "referral_rewards_referral_id_fkey"
+            columns: ["referral_id"]
+            isOneToOne: false
+            referencedRelation: "referrals"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      referrals: {
+        Row: {
+          attached_at: string
+          attached_via: string
+          code: string
+          first_charge_at: string | null
+          first_charge_id: string | null
+          first_invoice_id: string | null
+          friend_user_id: string
+          friend_workspace_id: string | null
+          hold_reason: string | null
+          id: string
+          ip_hash: string | null
+          qualified_at: string | null
+          qualifies_at: string | null
+          referrer_user_id: string
+          status: string
+          updated_at: string
+          void_reason: string | null
+        }
+        Insert: {
+          attached_at?: string
+          attached_via: string
+          code: string
+          first_charge_at?: string | null
+          first_charge_id?: string | null
+          first_invoice_id?: string | null
+          friend_user_id: string
+          friend_workspace_id?: string | null
+          hold_reason?: string | null
+          id?: string
+          ip_hash?: string | null
+          qualified_at?: string | null
+          qualifies_at?: string | null
+          referrer_user_id: string
+          status?: string
+          updated_at?: string
+          void_reason?: string | null
+        }
+        Update: {
+          attached_at?: string
+          attached_via?: string
+          code?: string
+          first_charge_at?: string | null
+          first_charge_id?: string | null
+          first_invoice_id?: string | null
+          friend_user_id?: string
+          friend_workspace_id?: string | null
+          hold_reason?: string | null
+          id?: string
+          ip_hash?: string | null
+          qualified_at?: string | null
+          qualifies_at?: string | null
+          referrer_user_id?: string
+          status?: string
+          updated_at?: string
+          void_reason?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "referrals_code_fkey"
+            columns: ["code"]
+            isOneToOne: false
+            referencedRelation: "referral_codes"
+            referencedColumns: ["code"]
+          },
+          {
+            foreignKeyName: "referrals_friend_workspace_id_fkey"
+            columns: ["friend_workspace_id"]
+            isOneToOne: false
+            referencedRelation: "billing_funnel_by_workspace"
+            referencedColumns: ["workspace_id"]
+          },
+          {
+            foreignKeyName: "referrals_friend_workspace_id_fkey"
+            columns: ["friend_workspace_id"]
+            isOneToOne: false
+            referencedRelation: "workspaces"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       scheduled_sends: {
         Row: {
           created_at: string
@@ -4126,6 +4276,7 @@ export type Database = {
           granted_by: string | null
           kind: string
           reason: string
+          referral_personal_until: string | null
           source: string
           unlimited_inboxes: boolean
           updated_at: string
@@ -4138,6 +4289,7 @@ export type Database = {
           granted_by?: string | null
           kind: string
           reason: string
+          referral_personal_until?: string | null
           source: string
           unlimited_inboxes?: boolean
           updated_at?: string
@@ -4150,6 +4302,7 @@ export type Database = {
           granted_by?: string | null
           kind?: string
           reason?: string
+          referral_personal_until?: string | null
           source?: string
           unlimited_inboxes?: boolean
           updated_at?: string
@@ -4435,6 +4588,7 @@ export type Database = {
           owner_id: string
           plan: string
           pro_unlimited_inboxes_exempt: boolean
+          referral_enabled: boolean
           slug: string
           stripe_customer_id: string | null
           updated_at: string
@@ -4485,6 +4639,7 @@ export type Database = {
           owner_id: string
           plan?: string
           pro_unlimited_inboxes_exempt?: boolean
+          referral_enabled?: boolean
           slug: string
           stripe_customer_id?: string | null
           updated_at?: string
@@ -4535,6 +4690,7 @@ export type Database = {
           owner_id?: string
           plan?: string
           pro_unlimited_inboxes_exempt?: boolean
+          referral_enabled?: boolean
           slug?: string
           stripe_customer_id?: string | null
           updated_at?: string
@@ -4664,6 +4820,7 @@ export type Database = {
       }
       dispatch_inbox_watch: { Args: never; Returns: undefined }
       dispatch_paywall_followup: { Args: never; Returns: undefined }
+      dispatch_referrals: { Args: never; Returns: undefined }
       dispatch_scheduled_sends: { Args: never; Returns: undefined }
       dispatch_triage_rules: { Args: never; Returns: undefined }
       draft_lineage_record: {
@@ -4690,6 +4847,7 @@ export type Database = {
           comped_scale: boolean
           plan: string
           pro_unlimited_inboxes: boolean
+          referral_personal: boolean
           unlimited_inboxes: boolean
         }[]
       }
@@ -4801,6 +4959,10 @@ export type Database = {
           month: string
           new_grants: number
         }[]
+      }
+      grant_referral_personal: {
+        Args: { p_days?: number; p_reason?: string; p_user_id: string }
+        Returns: string
       }
       growth_acquisition_channels: {
         Args: { p_days?: number }
@@ -5381,6 +5543,19 @@ export type Database = {
           p_workspace_window_start: string
         }
         Returns: Json
+      }
+      my_referral_summary: {
+        Args: never
+        Returns: {
+          attached_at: string
+          entitlement_until: string
+          id: string
+          qualified_at: string
+          qualifies_at: string
+          reward_cents: number
+          reward_kind: string
+          status: string
+        }[]
       }
       my_workspace_ids: { Args: never; Returns: string[] }
       purge_activity_log_batch: {

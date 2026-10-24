@@ -125,7 +125,8 @@
     "searchPlaceholder": "搜索页面、收件箱、成员…",
     "openSearch": "打开搜索（Command K）",
     "navWorkflows": "工作流",
-    "navAutomations": "自动化"
+    "navAutomations": "自动化",
+    "navInvite": "邀请好友"
   },
   "topbar": {
     "mcpLabel": "MCP 端点",

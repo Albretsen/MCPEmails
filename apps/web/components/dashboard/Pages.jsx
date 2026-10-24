@@ -22,6 +22,7 @@ import {
 } from '@/lib/drafts/editor-preference';
 import { ApprovalsPanel } from './ApprovalsPanel';
 import { AutomationsPanel } from './AutomationsPanel';
+import { InvitePanel, OverviewReferral, referralTileEligible } from './InvitePanel';
 import { SsoSettingsSection } from './SsoSettingsSection';
 import { FolderOverridesEditor } from './FolderOverridesEditor';
 import { ConnectionTypeEditor, connectionTypeAvailable } from './ConnectionTypeEditor';
@@ -161,6 +162,11 @@ export function ApprovalsPage({ userRole }) {
 
 export function AutomationsPage({ userRole, inboxes, keys }) {
   return <AutomationsPanel userRole={userRole} inboxes={inboxes} keys={keys} />;
+}
+
+/** The referral program's Invite page (InvitePanel.jsx). */
+export function InvitePage() {
+  return <InvitePanel />;
 }
 
 // Rich-text tag handlers shared across pages (inline code + bold).
@@ -858,7 +864,7 @@ function StepDot({ num, done }) {
 }
 
 /* ---------------- Overview ---------------- */
-export function OverviewPage({ inboxes, apiKeys = [], activity, stats, usageData, planLimits, actionAllowance = null, plan: _plan = 'free', mcpUrl, memberCount = 0, onConnect, onGoToKeys, onGoToMembers, onboardingClient = null, onClientSelected, businessShaped = false, userRole }) {
+export function OverviewPage({ inboxes, apiKeys = [], activity, stats, usageData, planLimits, actionAllowance = null, plan: _plan = 'free', mcpUrl, memberCount = 0, onConnect, onGoToKeys, onGoToMembers, onboardingClient = null, onClientSelected, businessShaped = false, userRole, referralEnabled = false, referralTileFacts = null, onGoToInvite }) {
   const t = useTranslations('dashboard');
   // Counted off the same live arrays the sidebar counts, never off the server
   // stats snapshot. `stats.inboxCount` was a separate server-side query taken
@@ -942,6 +948,23 @@ export function OverviewPage({ inboxes, apiKeys = [], activity, stats, usageData
       />
 
       {multiInbox && <MultiInboxInvite variant={multiInbox} placement="overview" onConnect={onConnect} />}
+
+      {/* The referral program, while workspaces.referral_enabled is on: the
+          code field for a new account, or the tile once it is earned. The
+          Free branch counts active days off the same usage series the chart
+          below draws; the paid branch needs the two facts the page read on
+          the server (successful sends, first paid checkout). */}
+      {referralEnabled && (
+        <OverviewReferral
+          eligible={referralTileEligible({
+            plan: _plan,
+            successfulSends: referralTileFacts?.successfulSends ?? 0,
+            paidSince: referralTileFacts?.paidSince ?? null,
+            dailyCounts: usageData?.dailyCounts ?? [],
+          })}
+          onOpenInvite={onGoToInvite}
+        />
+      )}
 
       <div className="stat-grid">
         <div className="stat">

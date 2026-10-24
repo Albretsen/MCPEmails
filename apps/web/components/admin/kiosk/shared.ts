@@ -578,6 +578,8 @@ const CHANNEL_LABELS: Record<string, string> = {
   organic_duckduckgo: 'DuckDuckGo',
   google_ads: 'Google Ads',
   reddit: 'Reddit',
+  // A friend's /r/<code> link (the referral program, 2026-10-25).
+  referral: 'Friend referral',
   hn: 'Hacker News',
   hackernews: 'Hacker News',
   hacker_news: 'Hacker News',

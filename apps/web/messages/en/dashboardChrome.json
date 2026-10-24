@@ -125,7 +125,8 @@
     "searchPlaceholder": "Search pages, inboxes, members…",
     "openSearch": "Open search (Command K)",
     "navWorkflows": "Workflows",
-    "navAutomations": "Automations"
+    "navAutomations": "Automations",
+    "navInvite": "Invite a friend"
   },
   "topbar": {
     "mcpLabel": "MCP endpoint",

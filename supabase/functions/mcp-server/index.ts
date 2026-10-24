@@ -624,6 +624,7 @@ import { htmlCarriesSignatureBlock } from "./signature-compose.ts";
 import { textPartMatchingHtml } from "./html-text-merge.ts";
 import { configureRelayRegistry } from "./relay-registry.ts";
 import { relayConfigured } from "./smtp-relay.ts";
+import { referralPersonalActive } from "./referral-burst.ts";
 import {
   byteStringToBase64url,
   gmailHeaderValue,
@@ -2903,7 +2904,11 @@ async function checkPlanQuota(
   }
   const compedScale = entitlement?.kind === "comped_scale" &&
     (!entitlement.expires_at || new Date(entitlement.expires_at) > new Date());
-  const plan = compedScale ? "pro" : (workspace.plan as string) ?? "free";
+  // A Free workspace in an earned referral month bursts as Personal, matching
+  // the allowance SQL that meters it as Personal (referral-burst.ts).
+  const storedPlan = (workspace.plan as string) ?? "free";
+  const referralPersonal = !compedScale && referralPersonalActive({ storedPlan, entitlement });
+  const plan = compedScale ? "pro" : referralPersonal ? "personal" : storedPlan;
   // Grandfathered ("legacy") workspaces keep the launch-era ceiling. When usage
   // caps (e.g. a monthly total) are reintroduced here later, they must also
   // exempt grandfathered workspaces — see the workspaces.grandfathered column.

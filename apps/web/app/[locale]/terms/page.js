@@ -3,6 +3,8 @@ import { metaAlternates, localePath, OG_LOCALE, OG_IMAGE } from '@/i18n/seo';
 import { Link } from '@/i18n/navigation';
 import { Nav, Footer } from '../../../components/marketing/Sections';
 import { LAST_UPDATED, EFFECTIVE_DATE } from '@/lib/legal-config';
+import { planDisplayName } from '@/lib/stripe/plans';
+import { REWARD_CAP_PER_YEAR } from '@/lib/referrals/constants';
 
 export async function generateMetadata({ params }) {
   const { locale } = await params;
@@ -61,6 +63,11 @@ export default async function TermsPage({ params }) {
   const { locale } = await params;
   setRequestLocale(locale);
   const t = await getTranslations('terms');
+  const referralTerms = {
+    free: planDisplayName('free'),
+    personal: planDisplayName('personal'),
+    cap: REWARD_CAP_PER_YEAR,
+  };
   const richTags = {
     b: (c) => <strong>{c}</strong>,
     privacy: (c) => <Link href="/privacy">{c}</Link>,
@@ -200,6 +207,15 @@ export default async function TermsPage({ params }) {
               <h4>{t('plansAndPayment.h57')}</h4>
               <p>{t.rich('plansAndPayment.p57a', richTags)}</p>
               <p>{t('plansAndPayment.p57b')}</p>
+
+              {/* 5.8 The referral program. The plan names and the yearly cap
+                  are parameters, so the terms cannot drift from the catalogue
+                  or from REWARD_CAP_PER_YEAR. The id is the dashboard's
+                  "Program terms" link target. */}
+              <h4 id="referral-program">{t('plansAndPayment.h58')}</h4>
+              <p>{t('plansAndPayment.p58a')}</p>
+              <p>{t('plansAndPayment.p58b', referralTerms)}</p>
+              <p>{t('plansAndPayment.p58c')}</p>
             </LegalSection>
 
             {/* 6 - Intellectual property */}

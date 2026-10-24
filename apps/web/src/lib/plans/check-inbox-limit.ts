@@ -39,6 +39,13 @@ export interface InboxLimitCheckResult {
    * switch is off. Returned for every plan; only `solo` acts on it.
    */
   proUnlimitedInboxes: boolean;
+  /**
+   * True while a Free workspace's owner holds an earned referral month. The
+   * workspace is then checked, and reported, as Personal: `plan` is
+   * "personal" here even though `workspaces.plan` is still "free". When the
+   * month ends the extra inboxes pause through plan-limit-pauses.ts.
+   */
+  referralPersonal: boolean;
 }
 
 /**
@@ -76,7 +83,10 @@ export async function checkInboxLimit(
   ]);
 
   const effectivePlan = effectivePlanResult.data?.[0];
-  const plan = effectivePlan?.plan ?? 'free';
+  const storedPlan = effectivePlan?.plan ?? 'free';
+  // Absent on an RPC that predates 20261025090000: no referral month.
+  const referralPersonal = storedPlan === 'free' && (effectivePlan?.referral_personal ?? false);
+  const plan = referralPersonal ? 'personal' : storedPlan;
   const unlimitedInboxes = effectivePlan?.unlimited_inboxes ?? false;
   const proUnlimitedInboxes = effectivePlan?.pro_unlimited_inboxes ?? false;
   const limits = resolvePlanLimits(plan, {
@@ -96,6 +106,7 @@ export async function checkInboxLimit(
       maxInboxes: null,
       unlimitedInboxes,
       proUnlimitedInboxes,
+      referralPersonal,
     };
   }
 
@@ -107,6 +118,7 @@ export async function checkInboxLimit(
     maxInboxes: limits.maxInboxes,
     unlimitedInboxes,
     proUnlimitedInboxes,
+    referralPersonal,
   };
 }
 

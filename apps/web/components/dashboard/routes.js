@@ -20,6 +20,9 @@ export const DASHBOARD_SECTIONS = [
   'workflows',
   'approvals',
   'automations',
+  // The referral program. Behind workspaces.referral_enabled: the page 404s
+  // the segment while the flag is off, and the sidebar hides the entry.
+  'invite',
   'settings',
   'security',
 ];
