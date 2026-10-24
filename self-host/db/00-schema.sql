@@ -118,6 +118,9 @@ ALTER TABLE public.workspaces
   ADD COLUMN IF NOT EXISTS chat_send_confirm_enabled          boolean NOT NULL DEFAULT false,
   ADD COLUMN IF NOT EXISTS subscription_cleanup_enabled       boolean NOT NULL DEFAULT false,
   ADD COLUMN IF NOT EXISTS sends_frozen_at                    timestamptz,
+  ADD COLUMN IF NOT EXISTS payment_issue_since                timestamptz,
+  ADD COLUMN IF NOT EXISTS payment_issue_kind                 text CHECK (payment_issue_kind IS NULL OR payment_issue_kind IN ('declined', 'confirm')),
+  ADD COLUMN IF NOT EXISTS payment_notice_shown_on            date,
   ADD COLUMN IF NOT EXISTS chat_checkout_link_enabled         boolean NOT NULL DEFAULT false,
   ADD COLUMN IF NOT EXISTS analytics_first_tool_name          text,
   ADD COLUMN IF NOT EXISTS analytics_first_tool_provider      text,
@@ -679,6 +682,8 @@ CREATE TABLE IF NOT EXISTS public.user_billing (
     CONSTRAINT user_billing_user_id_fkey FOREIGN KEY (user_id) REFERENCES public.users(id) ON DELETE CASCADE
 );
 CREATE UNIQUE INDEX IF NOT EXISTS idx_user_billing_stripe_customer_id ON public.user_billing (stripe_customer_id) WHERE (stripe_customer_id IS NOT NULL);
+ALTER TABLE public.user_billing
+  ADD COLUMN IF NOT EXISTS last_decline_code text;
 
 CREATE TABLE IF NOT EXISTS public.user_usage_entitlements (
     user_id uuid NOT NULL,

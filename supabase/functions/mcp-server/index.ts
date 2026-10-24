@@ -472,6 +472,7 @@ import {
   summarizeForwardBatch,
 } from "./forward-batch.ts";
 import { attachResultNote, attachResultNotes, withResultNotesProperty } from "./result-notes.ts";
+import { maybeAttachPaymentNotice, type PaymentIssueMarkers } from "./payment-notice.ts";
 import { SENT_COPY_NOT_SAVED_NOTE, sentCopyCandidates } from "./sent-copy.ts";
 import {
   buildUsageLimitText,
@@ -1468,6 +1469,11 @@ interface RequestContext {
    * on the per-query path; stampCardDiagnostics then reads it itself.
    */
   cardDiagnostics?: boolean;
+  /**
+   * The failed-payment markers off the workspace row the plan check read
+   * (payment-notice.ts). Absent when that read failed open: no notice then.
+   */
+  paymentIssue?: PaymentIssueMarkers;
 }
 
 // ---------------------------------------------------------------------------
@@ -2860,6 +2866,11 @@ interface PlanQuotaResult {
   firstUse?: FirstUseMarkers;
   /** True only when the window count itself succeeded (not a fail-open answer). */
   counted?: boolean;
+  /**
+   * The failed-payment markers off the same row, for the once-a-day billing
+   * notice (payment-notice.ts). Absent when the workspace lookup failed open.
+   */
+  paymentIssue?: PaymentIssueMarkers;
 }
 
 /**
@@ -2924,12 +2935,14 @@ async function checkPlanQuota(
     );
 
   // 1. Look up workspace plan. The two activation columns ride along for
-  // markFirstProductUse (see PlanQuotaResult.firstUse); nothing here reads them.
+  // markFirstProductUse (see PlanQuotaResult.firstUse), and the three payment
+  // columns for the billing notice (PlanQuotaResult.paymentIssue); nothing
+  // here reads them.
   const { data: workspace, error: wsError } = preloaded
     ? { data: preloaded.workspace, error: null }
     : await supabase
       .from("workspaces")
-      .select("plan, grandfathered, owner_id, analytics_first_tool_used_at, onboarding_value_activated_at")
+      .select("plan, grandfathered, owner_id, analytics_first_tool_used_at, onboarding_value_activated_at, payment_issue_since, payment_issue_kind, payment_notice_shown_on")
       .eq("id", workspaceId)
       .maybeSingle();
 
@@ -2986,6 +2999,12 @@ async function checkPlanQuota(
     analytics_first_tool_used_at: workspace.analytics_first_tool_used_at,
     onboarding_value_activated_at: workspace.onboarding_value_activated_at,
   };
+  // Undefined on a gate RPC that predates the columns: then there is no notice.
+  const paymentIssue: PaymentIssueMarkers = {
+    payment_issue_since: workspace.payment_issue_since ?? null,
+    payment_issue_kind: workspace.payment_issue_kind ?? null,
+    payment_notice_shown_on: workspace.payment_notice_shown_on ?? null,
+  };
 
   // 2. Count the workspace's calls in the trailing 60s window (issued above).
   const { count, error: countError } = await windowCount;
@@ -3003,6 +3022,7 @@ async function checkPlanQuota(
       usedThisMinute: 0,
       retryAfterSeconds: 0,
       firstUse,
+      paymentIssue,
     };
   }
 
@@ -3018,6 +3038,7 @@ async function checkPlanQuota(
       retryAfterSeconds: 0,
       firstUse,
       counted: true,
+      paymentIssue,
     };
   }
 
@@ -34183,6 +34204,22 @@ async function handleToolsCall(
     ...(imapTimingStore.getStore()?.logFields() ?? {}),
   });
 
+  // The once-a-day billing notice, while the owner's renewal payment is
+  // failing (payment-notice.ts). Successful results only, at most once per
+  // workspace per UTC day (claimed in the database), and it never fails the
+  // call. After the audit log and the idempotency snapshot, like the card
+  // stamp below, so a replay does not repeat it. No query unless an issue is
+  // recorded and today's notice is still unclaimed.
+  await maybeAttachPaymentNotice({
+    db: supabase,
+    workspaceId: apiKey.workspace_id,
+    markers: ctx.paymentIssue,
+    succeeded: (logStatus as string) === "success" &&
+      "result" in toolResult &&
+      (toolResult.result as { isError?: unknown } | null)?.isError !== true,
+    attach: (note) => appendResultNote(toolResult, note),
+  });
+
   // Last thing before the result leaves: if this is one of our own
   // workspaces AND this result carries a card, let that card show its
   // protocol diagnostics line. Deliberately after the audit log and the
@@ -36564,6 +36601,7 @@ async function handleMeteredRequest(req: Request): Promise<Response> {
     return buildQuotaExceededResponse(requestId, quotaResult, await planLimitWording(apiKey));
   }
   if ("firstUse" in quotaResult) ctx.firstUse = quotaResult.firstUse;
+  if ("paymentIssue" in quotaResult) ctx.paymentIssue = quotaResult.paymentIssue;
 
   // ── RateLimit-* headers on an answered tools/call ────────────────────────
   // So a client can pace itself before it meets a 429. Built from what the

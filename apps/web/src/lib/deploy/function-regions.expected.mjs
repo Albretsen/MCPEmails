@@ -234,6 +234,7 @@ export const ROUTES = [
   ['app/api/stripe/checkout/route.ts', 'arn1', '~7', 'Stripe API x1-3'],
   ['app/api/stripe/checkout/start/route.ts', 'arn1', '~7', 'Stripe API x1-3'],
   ['app/api/stripe/portal/route.ts', 'arn1', '6', 'Stripe API x1-2'],
+  ['app/api/stripe/payment-fix/route.ts', 'arn1', '3', 'Stripe API x2-3'],
   ['app/api/stripe/webhook/route.ts', 'arn1', '7+', 'Stripe API, Resend; caller is Stripe (US)'],
   ['app/api/support/preview/route.ts', 'arn1', '1 (session)', '-'],
   ['app/api/support/tickets/route.ts', 'arn1', '4-8', 'Resend x2'],
