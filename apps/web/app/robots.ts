@@ -28,6 +28,10 @@ export default function robots(): MetadataRoute.Robots {
           '/authorize',
           '/api/',
           '/auth/',
+          // The chat checkout link and the two pages it lands on. Bearer
+          // links and per-purchase status pages; nothing here is content.
+          '/u/',
+          '/upgrade/',
         ],
       },
     ],
