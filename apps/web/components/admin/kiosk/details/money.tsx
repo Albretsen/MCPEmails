@@ -912,6 +912,7 @@ export async function AtRiskDetail({ days }: KioskDetailProps) {
             facts={[
               { label: 'Card failing', value: recurring.data.atRiskCustomers },
               { label: 'Winding down', value: recurring.data.leavingCustomers },
+              { label: 'Paused', value: recurring.data.pausedCustomers },
               { label: 'Of MRR', value: ratio(recurring.data.atRiskMinor + recurring.data.leavingMinor, recurring.data.mrrMinor) },
             ]}
           />

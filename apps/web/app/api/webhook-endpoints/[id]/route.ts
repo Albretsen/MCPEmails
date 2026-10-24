@@ -2,7 +2,7 @@ import { NextRequest, NextResponse } from 'next/server';
 import { createClient } from '@/lib/supabase/server';
 import { createServiceRoleClient } from '@/lib/supabase/service';
 import { resolveWebhookAccess, PLAN_REQUIRED_BODY, isUuid, validateInboxIds } from '@/lib/webhooks/access';
-import { ENDPOINT_PUBLIC_COLUMNS, endpointJson, webhookDb, type WebhookEndpointRow } from '@/lib/webhooks/db';
+import { ENDPOINT_PUBLIC_COLUMNS, endpointJson, type WebhookEndpointUpdate } from '@/lib/webhooks/endpoints';
 import { validateWebhookUrl } from '@/lib/webhooks/url';
 
 /**
@@ -45,8 +45,8 @@ export async function PATCH(request: NextRequest, { params }: Params): Promise<N
   const input = body as { url?: unknown; inboxIds?: unknown; payloadMode?: unknown; enabled?: unknown };
 
   const service = createServiceRoleClient();
-  const hooks = webhookDb(service);
-  const update: Partial<WebhookEndpointRow> = {};
+  const hooks = service;
+  const update: WebhookEndpointUpdate = {};
 
   if (input.enabled !== undefined && typeof input.enabled !== 'boolean') {
     return NextResponse.json({ error: 'enabled must be true or false.' }, { status: 400 });
@@ -101,7 +101,7 @@ export async function DELETE(_request: NextRequest, { params }: Params): Promise
   const access = await resolveWebhookAccess(supabase, { manage: true });
   if (!access.ok) return NextResponse.json(access.body, { status: access.status });
 
-  const { data, error } = await webhookDb(createServiceRoleClient())
+  const { data, error } = await createServiceRoleClient()
     .from('webhook_endpoints')
     .delete()
     .eq('id', id)

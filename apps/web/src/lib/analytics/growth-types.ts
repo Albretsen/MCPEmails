@@ -105,6 +105,29 @@ export type GrowthActivationFunnelRow = {
 };
 
 /**
+ * Where the workspaces that never made a tool call stopped.
+ * `activation_segments(days)` (service role only). One segment per workspace,
+ * first match wins, all six rows always returned; `workspaces` over the six
+ * rows sums to `total_workspaces`. The activation-rescue stages written from
+ * the dashboard (`connect_fix_shown`, `connect_fix_link_clicked`,
+ * `first_call_prompt_copied`, `waiting_state_shown`) are on the
+ * `ProductFunnelEvent` stage union in product-funnel.ts, not here: this file
+ * types what the growth RPCs return.
+ */
+export type ActivationSegmentRow = {
+  segment_index: number;
+  segment:
+    | 'called'
+    | 'connected_idle'
+    | 'failed'
+    | 'started_no_result'
+    | 'picked_provider'
+    | 'no_attempt';
+  workspaces: number;
+  total_workspaces: number;
+};
+
+/**
  * Per-provider connection funnel. `growth_provider_funnel(p_days)`.
  * `attempts`/`successes`/`failures` count `product_funnel_events` rows at
  * stage `inbox_connection`; the workspace counts are the deduplicated version,

@@ -1,6 +1,7 @@
 import type { SupabaseClient } from '@supabase/supabase-js';
 import { createServiceRoleClient } from '@/lib/supabase/service';
 import type { Database } from '@/types/database.types';
+import type { CancelReason } from '@/lib/billing/cancel-reasons';
 import {
   recordProductFunnelEvent,
   type BillingPlanCategory,
@@ -346,6 +347,21 @@ export async function recordPricingViewed(
     .maybeSingle();
   if (existing) return;
   await record({ workspaceId, stage: 'pricing_viewed', outcome: 'success', category: surface });
+}
+
+/**
+ * A subscriber said why they cancelled (/billing/feedback, from the post-cancel
+ * email or the billing card). Category is the reason, a fixed vocabulary; the
+ * optional typed text never reaches this table (it lives in
+ * `cancellation_feedback.detail`). A resubmit records a second row: the
+ * feedback table keeps one answer per cancellation, the funnel keeps the taps.
+ */
+export async function recordCancelReasonSubmitted(
+  workspaceId: string | null,
+  reason: CancelReason,
+): Promise<void> {
+  if (!workspaceId) return;
+  await record({ workspaceId, stage: 'cancel_reason_submitted', outcome: 'success', category: reason });
 }
 
 /**

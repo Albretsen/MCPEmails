@@ -505,6 +505,15 @@ export async function MoneySection({ days }: { days: number }) {
                 <>
                   <strong>{formatMoney(mrr.atRiskMinor, mrr.currency)}</strong> uncollectable,{' '}
                   <strong>{formatMoney(mrr.leavingMinor, mrr.currency)}</strong> set to stop
+                  {mrr.pausedCustomers > 0 && (
+                    // Paused is not MRR and not churn: shown beside the risk,
+                    // never added to it.
+                    <>
+                      {', '}
+                      <strong>{formatCount(mrr.pausedCustomers)}</strong> paused (
+                      {formatMoney(mrr.pausedMinor, mrr.currency)}/mo when they resume)
+                    </>
+                  )}
                 </>
               }
             />

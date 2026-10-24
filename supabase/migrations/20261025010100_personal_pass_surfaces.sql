@@ -80,6 +80,11 @@ BEGIN
     RAISE EXCEPTION 'billing_email_sends_template_check has no readable values: %', v_def;
   END IF;
 
+  -- Already complete: leave the constraint untouched.
+  IF v_add <@ v_values THEN
+    RETURN;
+  END IF;
+
   -- Keep the existing order, append only what is missing.
   SELECT v_values || coalesce(array_agg(t.a ORDER BY t.n), ARRAY[]::text[])
     INTO v_values

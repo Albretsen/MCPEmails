@@ -397,7 +397,8 @@ export type CancelReason =
   // 3-month pass notices (pass-notices.ts)
   | 'pass_refunded'
   | 'subscription_started'
-  | 'pass_renewed';
+  | 'pass_renewed'
+  | 'pause_changed';
 
 /**
  * Stop the unsent remainder of a sequence.
@@ -515,4 +516,116 @@ export async function cancelDunningForCustomer(
   }
 
   return cancelled;
+}
+
+// ---------------------------------------------------------------------------
+// Pause: the receipt and the notice 3 days before billing resumes
+// ---------------------------------------------------------------------------
+
+/** The reminder goes this many days before the renewal that bills again. */
+export const PAUSE_REMINDER_DAYS = 3;
+
+/** scope_key of both pause emails: `${subscriptionId}:${unix seconds}`. */
+export function pauseScopeKey(subscriptionId: string, seconds: number): string {
+  return `${subscriptionId}:${Math.floor(seconds)}`;
+}
+
+/**
+ * Queue `pause_ending_3` for the renewal at `billsAtSeconds`, after cancelling
+ * any reminder still open for this customer (an extension or an early resume
+ * moves the date, and the old one must never go out). Skipped when the
+ * renewal is less than 3 days away: there is nothing to warn about in time.
+ */
+export async function queuePauseReminder(options: {
+  db: SupabaseClient<Database>;
+  target: QueueTarget;
+  subscriptionId: string;
+  billsAtSeconds: number;
+  payload: LifecyclePayload;
+  now?: Date;
+}): Promise<number> {
+  const { db, target, subscriptionId, billsAtSeconds, payload } = options;
+  const now = options.now ?? new Date();
+  await cancelPauseReminders(db, target.stripeCustomerId, 'pause_changed');
+  const sendAfter = billsAtSeconds * 1000 - PAUSE_REMINDER_DAYS * DAY_MS;
+  if (sendAfter <= now.getTime()) return 0;
+  return insertRows(
+    db,
+    [
+      {
+        stripe_customer_id: target.stripeCustomerId,
+        user_id: target.userId,
+        recipient: target.recipient,
+        template: 'pause_ending_3',
+        scope_key: pauseScopeKey(subscriptionId, billsAtSeconds),
+        send_after: new Date(sendAfter).toISOString(),
+        payload,
+      },
+    ],
+    `pause reminder ${subscriptionId}`,
+  );
+}
+
+/**
+ * The pause receipt (now) and the reminder. One receipt per pause start:
+ * scope `${sub}:${pausedFrom}`, so a replay inserts nothing.
+ */
+export async function queuePauseEmails(options: {
+  db: SupabaseClient<Database>;
+  target: QueueTarget;
+  subscriptionId: string;
+  pausedFromSeconds: number;
+  billsAtSeconds: number;
+  payload: LifecyclePayload;
+  now?: Date;
+}): Promise<number> {
+  const { db, target, subscriptionId, pausedFromSeconds, payload } = options;
+  const now = options.now ?? new Date();
+  const receipt = await insertRows(
+    db,
+    [
+      {
+        stripe_customer_id: target.stripeCustomerId,
+        user_id: target.userId,
+        recipient: target.recipient,
+        template: 'pause_started',
+        scope_key: pauseScopeKey(subscriptionId, pausedFromSeconds),
+        send_after: now.toISOString(),
+        payload,
+      },
+    ],
+    `pause receipt ${subscriptionId}`,
+  );
+  const reminder = await queuePauseReminder({ ...options, now });
+  return receipt + reminder;
+}
+
+/** Cancel every unsent pause reminder for this customer. Never throws. */
+export async function cancelPauseReminders(
+  db: SupabaseClient<Database>,
+  stripeCustomerId: string,
+  reason: CancelReason,
+): Promise<number> {
+  return cancelOpenSequence({ db, stripeCustomerId, templates: ['pause_ending_3'], reason });
+}
+
+// ---------------------------------------------------------------------------
+// "Switch to Free" on the billing card
+// ---------------------------------------------------------------------------
+
+/**
+ * Subscription metadata written by POST /api/billing/downgrade switch_free,
+ * holding the period end (unix seconds) that cancel was set for. Read only
+ * for that same period end, so a later cancel from the portal, after an
+ * un-cancel, is not mistaken for one from the billing card.
+ */
+export const SWITCH_FREE_METADATA_KEY = 'mcpe_switch_free';
+
+/** 'billing_switch_free' when the scheduled cancel came from the billing card. */
+export function cancellationSource(
+  metadata: Record<string, string> | null | undefined,
+  periodEndSeconds: number | null,
+): 'billing_switch_free' | null {
+  const marked = metadata?.[SWITCH_FREE_METADATA_KEY];
+  return marked && periodEndSeconds != null && marked === String(periodEndSeconds) ? 'billing_switch_free' : null;
 }
