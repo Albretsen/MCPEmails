@@ -7,6 +7,7 @@ import { clientHubLocales } from '@/lib/clients/content.mjs';
 import { clientUi, fill } from '@/lib/clients/ui.mjs';
 import { Nav, Footer } from '../../../../components/marketing/Sections';
 import { MIcon } from '../../../../components/MarketingPrimitives';
+import { requireLocale } from '@/i18n/require-locale';
 
 /**
  * The hub for the per-client setup pages.
@@ -27,6 +28,7 @@ export function generateStaticParams() {
 
 export async function generateMetadata({ params }) {
   const { locale } = await params;
+  requireLocale(locale);
   const locales = clientHubLocales();
   if (!locales.includes(locale)) return {};
   const ui = clientUi(locale).hub;
@@ -56,6 +58,7 @@ export async function generateMetadata({ params }) {
 
 export default async function ClientHubPage({ params }) {
   const { locale } = await params;
+  requireLocale(locale);
   const available = clientsForLocale(locale);
   if (available.length === 0) notFound();
   setRequestLocale(locale);

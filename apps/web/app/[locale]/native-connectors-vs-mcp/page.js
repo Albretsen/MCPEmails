@@ -3,6 +3,7 @@ import { setRequestLocale } from 'next-intl/server';
 import { metaAlternates, localePath, OG_LOCALE, OG_IMAGE, pageJsonLd, APP_URL } from '@/i18n/seo';
 import * as N from '@/lib/compare/native-connectors.mjs';
 import CompareClient from '../../../components/marketing/CompareClient';
+import { requireLocale } from '@/i18n/require-locale';
 
 /**
  * /native-connectors-vs-mcp: Claude's and ChatGPT's built-in connectors and the
@@ -19,6 +20,7 @@ function formatDate(locale, iso) {
 
 export async function generateMetadata({ params }) {
   const { locale } = await params;
+  requireLocale(locale);
   const c = await N.getNativeContent(locale);
   if (!c) return {};
   const { title, description } = c.meta;
@@ -46,6 +48,7 @@ export async function generateMetadata({ params }) {
 
 export default async function ComparePage({ params }) {
   const { locale } = await params;
+  requireLocale(locale);
   const c = await N.getNativeContent(locale);
   if (!c) notFound();
   setRequestLocale(locale);

@@ -53,6 +53,10 @@ const ABSENT = {
   '/authorize': MARKETING,
   '/forgot-password': MARKETING,
   '/this-page-does-not-exist': MARKETING,
+  // Not a locale, so app/[locale]/pricing and docs 404 (src/i18n/require-locale.ts)
+  // without rendering their metadata or body into the 404 document.
+  '/xyz/pricing': MARKETING,
+  '/xyz/docs': MARKETING,
   '/blog/this-post-does-not-exist': MARKETING.filter((n) => !['home', 'compare', 'blog'].includes(n)),
   '/': MARKETING.filter((n) => !['home', 'compare'].includes(n)),
   '/pricing': MARKETING.filter((n) => !['home', 'compare', 'pricing'].includes(n)),
@@ -83,6 +87,7 @@ const MAX_BYTES = {
   '/signup': 80_000,
   '/authorize': 80_000,
   '/this-page-does-not-exist': 80_000,
+  '/xyz/pricing': 80_000,
   '/': 240_000,
   '/pricing': 170_000,
   // 92 KB today; 165 KB while it still carried the docs catalogue.

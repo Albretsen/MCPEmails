@@ -1,7 +1,6 @@
-import { notFound } from 'next/navigation';
 import { setRequestLocale } from 'next-intl/server';
-import { hasLocale } from 'next-intl';
 import { routing } from '@/i18n/routing';
+import { requireLocale } from '@/i18n/require-locale';
 import ClientMessages from '../../components/i18n/ClientMessages';
 
 /**
@@ -28,9 +27,7 @@ export default async function LocaleLayout({
   params: Promise<{ locale: string }>;
 }) {
   const { locale } = await params;
-  if (!hasLocale(routing.locales, locale)) {
-    notFound();
-  }
+  requireLocale(locale);
   setRequestLocale(locale);
   return <ClientMessages namespaces={['home', 'compare']}>{children}</ClientMessages>;
 }

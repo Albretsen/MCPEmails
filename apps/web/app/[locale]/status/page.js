@@ -5,6 +5,7 @@ import { getStatusContent } from '@/lib/status/content.mjs';
 import { getStatusSnapshot } from '@/lib/status/monitor';
 import { Nav, Footer } from '../../../components/marketing/Sections';
 import StatusView, { StatusBanner } from '../../../components/marketing/StatusView';
+import { requireLocale } from '@/i18n/require-locale';
 import '../../../styles/status.css';
 
 /**
@@ -34,6 +35,7 @@ export function generateStaticParams() {
 
 export async function generateMetadata({ params }) {
   const { locale } = await params;
+  requireLocale(locale);
   const content = await getStatusContent(locale);
   const { title, description } = content.meta;
   return {
@@ -59,6 +61,7 @@ export async function generateMetadata({ params }) {
 
 export default async function StatusPage({ params }) {
   const { locale } = await params;
+  requireLocale(locale);
   setRequestLocale(locale);
 
   const [content, snapshot] = await Promise.all([

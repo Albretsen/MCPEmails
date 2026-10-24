@@ -6,6 +6,7 @@ import { releasedProviders } from '@/lib/connect/release.mjs';
 import { routing } from '@/i18n/routing';
 import { Nav, Footer } from '../../../components/marketing/Sections';
 import { MIcon } from '../../../components/MarketingPrimitives';
+import { requireLocale } from '@/i18n/require-locale';
 
 /**
  * The hub for the provider landing pages.
@@ -26,6 +27,7 @@ export function generateStaticParams() {
 
 export async function generateMetadata({ params }) {
   const { locale } = await params;
+  requireLocale(locale);
   const t = await getTranslations({ locale, namespace: 'connect.hub' });
   // The count is whatever is actually public today, not the size of the
   // registry: during the staged rollout those differ, and a description
@@ -51,6 +53,7 @@ export async function generateMetadata({ params }) {
 
 export default async function ConnectHubPage({ params }) {
   const { locale } = await params;
+  requireLocale(locale);
   setRequestLocale(locale);
   const t = await getTranslations({ locale, namespace: 'connect.hub' });
 

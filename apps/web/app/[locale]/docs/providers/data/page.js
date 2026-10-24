@@ -4,6 +4,7 @@ import { metaAlternatesFor, localePath, OG_LOCALE, OG_IMAGE, pageJsonLd, APP_URL
 import { DATASET_PATH, FIELD_DOCS } from '@/lib/connect/provider-dataset.mjs';
 import { datasetCopy } from './content.mjs';
 import ProviderDatasetView from '../../../../../components/marketing/ProviderDatasetView';
+import { requireLocale } from '@/i18n/require-locale';
 
 /**
  * /docs/providers/data: the open IMAP/SMTP provider dataset.
@@ -25,6 +26,7 @@ export function generateStaticParams() {
 
 export async function generateMetadata({ params }) {
   const { locale } = await params;
+  requireLocale(locale);
   if (!LOCALES.includes(locale)) return {};
   const { title, description } = datasetCopy().meta;
   return {
@@ -50,6 +52,7 @@ export async function generateMetadata({ params }) {
 
 export default async function ProviderDatasetPage({ params }) {
   const { locale } = await params;
+  requireLocale(locale);
   if (!LOCALES.includes(locale)) notFound();
   setRequestLocale(locale);
 

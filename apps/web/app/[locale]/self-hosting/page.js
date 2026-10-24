@@ -2,9 +2,11 @@ import { setRequestLocale, getTranslations } from 'next-intl/server';
 import { metaAlternates, localePath, OG_LOCALE, OG_IMAGE } from '@/i18n/seo';
 import { Nav, Footer } from '../../../components/marketing/Sections';
 import { withReadingLang } from '@/i18n/reading-lang.mjs';
+import { requireLocale } from '@/i18n/require-locale';
 
 export async function generateMetadata({ params }) {
   const { locale } = await params;
+  requireLocale(locale);
   const t = await getTranslations({ locale, namespace: 'selfHosting' });
   const title = t.has('meta.title') ? t('meta.title') : 'Self-host MCPEmails';
   const description = t.has('meta.description')
@@ -45,6 +47,7 @@ make setup && make up`;
 
 export default async function SelfHostingPage({ params }) {
   const { locale } = await params;
+  requireLocale(locale);
   setRequestLocale(locale);
   const t = await getTranslations('selfHosting');
   const richTags = {

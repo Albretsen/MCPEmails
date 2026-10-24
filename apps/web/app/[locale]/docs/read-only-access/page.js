@@ -6,6 +6,7 @@ import { metaAlternates, localePath, APP_URL, OG_LOCALE, OG_IMAGE } from '@/i18n
 import { Nav, Footer } from '../../../../components/marketing/Sections';
 import { EVIDENCE_LINKS, readOnlyAccessCopy } from './content.mjs';
 import { withReadingLang } from '@/i18n/reading-lang.mjs';
+import { requireLocale } from '@/i18n/require-locale';
 
 /**
  * What a read-only connection can and cannot do, and how each limit is
@@ -25,6 +26,7 @@ export function generateStaticParams() {
 
 export async function generateMetadata({ params }) {
   const { locale } = await params;
+  requireLocale(locale);
   const { meta } = readOnlyAccessCopy(locale);
   return {
     title: meta.title,
@@ -62,6 +64,7 @@ function Inline({ text }) {
 
 export default async function ReadOnlyAccessPage({ params }) {
   const { locale } = await params;
+  requireLocale(locale);
   setRequestLocale(locale);
   const copy = readOnlyAccessCopy(locale);
   const url = localePath(locale, PATH);

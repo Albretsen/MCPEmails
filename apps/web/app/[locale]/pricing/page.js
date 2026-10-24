@@ -3,9 +3,11 @@ import { fetchStripePrices } from '@/lib/stripe/getPrices';
 import { eurPricesEnabled } from '@/lib/stripe/eur-prices';
 import { metaAlternates, localePath, OG_LOCALE, OG_IMAGE, pricingJsonLd } from '@/i18n/seo';
 import PricingClient from '../../../components/marketing/PricingClient';
+import { requireLocale } from '@/i18n/require-locale';
 
 export async function generateMetadata({ params }) {
   const { locale } = await params;
+  requireLocale(locale);
   const t = await getTranslations({ locale, namespace: 'pricing' });
   const title = t.has('meta.title') ? t('meta.title') : 'Pricing';
   const description = t.has('meta.description')
@@ -34,6 +36,7 @@ export async function generateMetadata({ params }) {
 
 export default async function PricingPage({ params }) {
   const { locale } = await params;
+  requireLocale(locale);
   setRequestLocale(locale);
   const stripePrices = await fetchStripePrices();
   // STRIPE_EUR_PRICES, read when this page renders and handed to the client,

@@ -4,9 +4,11 @@ import { getAllPosts, getAuthor, getLocalizedPost } from '@/lib/blog/posts';
 import { readingTime } from '@/lib/blog/markdown';
 import { blogPostCanonicalLocale } from '@/lib/blog/seo.mjs';
 import BlogIndexClient from '../../../components/marketing/BlogIndexClient';
+import { requireLocale } from '@/i18n/require-locale';
 
 export async function generateMetadata({ params }) {
   const { locale } = await params;
+  requireLocale(locale);
   const t = await getTranslations({ locale, namespace: 'blog' });
   const title = t('meta.title');
   const description = t('meta.description');
@@ -33,6 +35,7 @@ export async function generateMetadata({ params }) {
 
 export default async function BlogIndexPage({ params }) {
   const { locale } = await params;
+  requireLocale(locale);
   setRequestLocale(locale);
   const t = await getTranslations({ locale, namespace: 'blog' });
 

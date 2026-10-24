@@ -3,9 +3,11 @@ import { metaAlternates, localePath, OG_LOCALE, OG_IMAGE } from '@/i18n/seo';
 import { Link } from '@/i18n/navigation';
 import { Nav, Footer } from '../../../components/marketing/Sections';
 import { PRIVACY_LAST_UPDATED, EFFECTIVE_DATE } from '@/lib/legal-config';
+import { requireLocale } from '@/i18n/require-locale';
 
 export async function generateMetadata({ params }) {
   const { locale } = await params;
+  requireLocale(locale);
   const t = await getTranslations({ locale, namespace: 'privacy' });
   const title = t.has('meta.title') ? t('meta.title') : 'Privacy Policy';
   const description = t.has('meta.description')
@@ -59,6 +61,7 @@ const COMPANY_ADDRESS = 'Håsteins gate 9, 5160 Laksevåg, Norway';
 
 export default async function PrivacyPage({ params }) {
   const { locale } = await params;
+  requireLocale(locale);
   setRequestLocale(locale);
   const t = await getTranslations('privacy');
   const richTags = {
