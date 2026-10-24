@@ -226,9 +226,9 @@ Deno.test("no other client is listed a per-operation tool", async () => {
   assertEquals(
     (listed.result as { tools: Array<{ name: string }> }).tools.map((tool) => tool.name),
     // Pro tools are hidden until the features are visible (the gate's read
-    // fails closed here), exactly as for every customer before launch. Minus
-    // the subscription tools: tools/list drops them for a workspace without
-    // subscription_cleanup_enabled, which introspection mode is.
+    // fails closed here), exactly as for every customer before launch; and
+    // minus the subscription tools: tools/list drops them for a workspace
+    // without subscription_cleanup_enabled, which introspection mode is.
     hideProFeaturesFromListing(toolsForListing(claude(["read:email"])), decideProFeatureAccess(CLOSED_PRO_GATE))
       .map((tool) => tool.name)
       .filter((name) => !name.startsWith("subscriptions_")),

@@ -2049,7 +2049,7 @@ $$;
 
 -- ============================================================
 -- TABLE: reminders  (Pro follow-ups and snoozes; hosted migration
--- 20261024211000). message_ref and summary are AES-256-GCM wrappers
+-- 20261024235200). message_ref and summary are AES-256-GCM wrappers
 -- {"v":1,"data":...} under ENCRYPTION_KEY. The hosted pg_cron job that drives
 -- /reminders-dispatch is not part of self-host: POST that route with
 -- X-Dispatch-Secret from your own scheduler (every minute) to run reminders.
@@ -2091,6 +2091,49 @@ CREATE OR REPLACE TRIGGER reminders_updated_at
   BEFORE UPDATE ON public.reminders
   FOR EACH ROW EXECUTE FUNCTION public.set_updated_at();
 
+
+-- ── Re-arm on reconnect ─────────────────────────────────────────────────────
+-- A snooze never goes 'failed' on an auth, inbox or transport error: it backs
+-- off (5 min, 15 min, 1 h, 4 h, then daily) and keeps trying, because giving up
+-- would leave the message hidden. When the user reconnects or re-authorises the
+-- inbox, every backed-off reminder of it is due again at once, so a snoozed
+-- message comes back within a minute of the fix rather than at the next daily
+-- retry. Snoozes only once their own time has come; open follow-ups always.
+-- Fires on the inbox becoming active, or on a new password / refresh token
+-- while active. Harmless when nothing has failed (no row matches).
+CREATE OR REPLACE FUNCTION public.reminders_rearm_on_reconnect()
+RETURNS trigger
+LANGUAGE plpgsql
+SECURITY DEFINER
+SET search_path = public
+AS $$
+BEGIN
+  UPDATE public.reminders
+     SET next_check_at = now()
+   WHERE inbox_id = NEW.id
+     AND status IN ('pending', 'due')
+     AND consecutive_failures > 0
+     AND claimed_at IS NULL
+     AND next_check_at > now()
+     AND (kind = 'follow_up' OR due_at <= now());
+  RETURN NEW;
+END;
+$$;
+
+REVOKE EXECUTE ON FUNCTION public.reminders_rearm_on_reconnect() FROM PUBLIC, anon, authenticated;
+
+DROP TRIGGER IF EXISTS reminders_rearm_on_reconnect ON public.inboxes;
+CREATE TRIGGER reminders_rearm_on_reconnect
+  AFTER UPDATE OF status, imap_password, oauth_refresh_token ON public.inboxes
+  FOR EACH ROW
+  WHEN (
+    NEW.status = 'active' AND (
+      OLD.status IS DISTINCT FROM NEW.status
+      OR OLD.imap_password IS DISTINCT FROM NEW.imap_password
+      OR OLD.oauth_refresh_token IS DISTINCT FROM NEW.oauth_refresh_token
+    )
+  )
+  EXECUTE FUNCTION public.reminders_rearm_on_reconnect();
 -- ============================================================
 -- TABLE: morning_briefs  (Pro daily brief settings and schedule; hosted
 -- migration 20261024235400). The hosted pg_cron job that drives

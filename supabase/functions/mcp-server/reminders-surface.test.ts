@@ -28,8 +28,10 @@ const {
   PER_OPERATION_LISTING,
   PER_OPERATION_ONLY_TOOLS,
   renderWorkflowPrompt,
+  runSendWithFollowUp,
   TOOL_REGISTRY,
   toolsForListing,
+  withProArgumentsListed,
   WORKFLOW_PROMPTS,
 } = await import("./index.ts");
 
@@ -102,13 +104,13 @@ Deno.test("hidden before launch: no reminder tool and no follow_up_days on eithe
 });
 
 Deno.test("visible: the tools are listed and follow_up_days is on every send path", () => {
-  const consolidated = hideProFeaturesFromListing(toolsForListing(oauthKey()), VISIBLE);
+  const consolidated = withProArgumentsListed(hideProFeaturesFromListing(toolsForListing(oauthKey()), VISIBLE), VISIBLE);
   const names = consolidated.map((t) => t.name);
   assert(names.includes("reminder") && names.includes("reminder_list"));
   for (const name of ["email_compose", "draft"]) {
     assert(properties(consolidated.find((t) => t.name === name)!).includes("follow_up_days"), name);
   }
-  const perOperation = hideProFeaturesFromListing(PER_OPERATION_LISTING, VISIBLE);
+  const perOperation = withProArgumentsListed(hideProFeaturesFromListing(PER_OPERATION_LISTING, VISIBLE), VISIBLE);
   for (const name of ["email_send", "email_reply", "email_forward", "draft_send"]) {
     const tool = perOperation.find((t) => t.name === name)!;
     assert(properties(tool).includes("follow_up_days"), name);
@@ -155,11 +157,52 @@ Deno.test("executors refuse without Pro on their own (client-api runs them witho
 
 Deno.test("follow_up_days: an invalid value and a closed gate both refuse before anything is sent", async () => {
   const send = { to: ["someone@example.test"], subject: "s", body: "b" };
-  const invalid = await dispatchExecutor("email_send", { ...send, follow_up_days: 0 }, oauthKey());
+  const invalid = await runSendWithFollowUp("email_send", 0, send, oauthKey());
   assertEquals(invalid!.logErrorCode, "-32602");
   assert(JSON.stringify(invalid!.result).includes("Nothing was sent"));
-  const closed = await dispatchExecutor("email_send", { ...send, follow_up_days: 3 }, oauthKey());
+  const closed = await runSendWithFollowUp("email_send", 3, send, oauthKey());
   assertEquals(closed!.logErrorCode, PRO_FEATURE_ERROR_CODE);
+});
+
+Deno.test("not visible: follow_up_days is an unknown argument, byte-identical to any other", async () => {
+  // No registry schema carries it, so before launch a call passing it takes
+  // exactly the path of an argument that never existed: the same response
+  // with only the name differing, and no Pro refusal.
+  const call = async (extra: Record<string, unknown>) =>
+    JSON.stringify(
+      await handleToolsCall(
+        {
+          jsonrpc: "2.0",
+          id: 1,
+          method: "tools/call",
+          params: {
+            name: "email_compose",
+            arguments: { action: "send", to: ["someone@example.test"], subject: "s", body: "b", ...extra },
+          },
+        },
+        1,
+        oauthKey(),
+        { userAgent: null },
+      ),
+    );
+  const pro = await call({ follow_up_days: 3 });
+  const other = await call({ zzzz_up_days: 3 });
+  assert(!pro.includes(PRO_FEATURE_META_KEY) && !pro.includes(PRO_FEATURE_ERROR_CODE), pro.slice(0, 300));
+  assertEquals(pro.replaceAll("follow_up_days", "ARG"), other.replaceAll("zzzz_up_days", "ARG"));
+  for (const tool of TOOL_REGISTRY) {
+    assert(!("follow_up_days" in ((tool.inputSchema.properties ?? {}) as Record<string, unknown>)), tool.name);
+  }
+});
+
+Deno.test("the reminder code opens no IMAP connection of its own (one session per call)", async () => {
+  const source = await Deno.readTextFile(new URL("./index.ts", import.meta.url));
+  const start = source.indexOf("// Reminders (Pro): the index.ts half");
+  const end = source.indexOf("async function handleRemindersDispatch()");
+  assert(start > 0 && end > start);
+  const section = source.slice(start, end);
+  for (const forbidden of ["ImapClient.connect(", "imapCreateFolder(", "firstPartyContext.run("]) {
+    assert(!section.includes(forbidden), `the reminders section calls ${forbidden}`);
+  }
 });
 
 Deno.test("follow_up_radar: the base text until visible, reminder_list first once it is", async () => {

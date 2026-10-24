@@ -78,7 +78,9 @@ export const PRO_FEATURE_TOOLS: Readonly<Record<string, ProFeature>> = {
 export const PRO_FEATURE_ARGS: Readonly<Record<string, Readonly<Record<string, ProFeature>>>> = {
   // reminders: "follow up if nobody replies within N days" on every send path,
   // consolidated (email_compose send/reply/forward, draft send) and
-  // per-operation.
+  // per-operation. LISTED-ONLY: it is in no registry schema (index.ts
+  // PRO_LISTED_ARGUMENTS adds it to the listing when visible and takes it off
+  // an allowed call), so before launch it is an ordinary unknown argument.
   email_compose: { follow_up_days: "reminders" },
   draft: { follow_up_days: "reminders" },
   email_send: { follow_up_days: "reminders" },
