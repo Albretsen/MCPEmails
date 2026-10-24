@@ -178,7 +178,7 @@ async function fetchInboxes(supabase, workspaceId, historyDays = USAGE_WINDOW_DA
         'imap_username', 'created_at', 'signature_text', 'signature_html', 'signature_enabled',
         'signature_reply_mode', 'signature_source', 'send_approval_required', 'send_review_mode',
         'draft_editor_hidden', 'signature_embed_images', 'parked_at'],
-      // `parked_at` (20261024150000) degrades like the two preferences above:
+      // `parked_at` (20261024173000) degrades like the two preferences above:
       // without it every inbox reads as active, which is the pre-parking truth.
       [...PENDING_INBOX_COLUMNS, 'draft_editor_hidden', 'signature_embed_images', 'parked_at'],
       (columns) => supabase

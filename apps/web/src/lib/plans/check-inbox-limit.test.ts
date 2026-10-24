@@ -41,7 +41,7 @@ function fakeSupabase(opts: {
   effectivePlan: EffectivePlanRow | null;
   /** Live inboxes that are NOT parked. */
   inboxCount: number;
-  /** Live inboxes that are parked (20261024150000). Absent = 0. */
+  /** Live inboxes that are parked (20261024173000). Absent = 0. */
   parkedCount?: number;
   /** Answer a `parked_at` filter as PostgREST does before the migration. */
   parkedColumnMissing?: boolean;
@@ -399,7 +399,7 @@ test('the Pro exemption does not lift Personal or Free', async () => {
   }
 });
 
-// ── Parking (20261024150000) ────────────────────────────────────────────────
+// ── Parking (20261024173000) ────────────────────────────────────────────────
 
 test('a parked inbox does not hold a slot: a Free workspace with one parked inbox can connect one', async () => {
   const result = await checkInboxLimit(

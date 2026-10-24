@@ -1,7 +1,7 @@
 /**
  * Inbox parking: which inboxes stay active when a plan includes fewer.
  *
- * WHAT PARKED MEANS. `inboxes.parked_at` is set (migration 20261024150000):
+ * WHAT PARKED MEANS. `inboxes.parked_at` is set (migration 20261024173000):
  * credentials kept, nothing deleted, no MCP tool can resolve the inbox, its
  * automations are paused with `paused_reason = 'inbox_parked'`, new scheduled
  * sends from it are refused (ones created before parking still go out), and
@@ -53,7 +53,7 @@ export const PARKING_USAGE_DAYS = 30;
 // ── Types for the columns gen:types has not seen yet ─────────────────────────
 //
 // `src/types/database.types.ts` is generated from the linked project, and the
-// parking columns exist there only once 20261024150000 is applied. Until then
+// parking columns exist there only once 20261024173000 is applied. Until then
 // the client stays `SupabaseClient<Database>` and the two columns are handled
 // in exactly two narrow places: the inbox read below names its row shape
 // (`ParkingInboxRow`), and the inbox writes pass their patch as a

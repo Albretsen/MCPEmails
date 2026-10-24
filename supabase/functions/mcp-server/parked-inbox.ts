@@ -2,7 +2,7 @@
 // Parked inboxes: connected, credentials kept, but outside the plan's inbox
 // cap, so no tool may use them.
 //
-// `inboxes.parked_at` (migration 20261024150000) is set by the web app's
+// `inboxes.parked_at` (migration 20261024173000) is set by the web app's
 // parking module (apps/web/src/lib/billing/parking.ts) when a plan drops below
 // the number of connected inboxes, and cleared on upgrade or resume. On this
 // server that means:

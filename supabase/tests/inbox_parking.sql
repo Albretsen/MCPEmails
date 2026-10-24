@@ -1,7 +1,7 @@
 -- ============================================================
 -- public.inboxes.parked_at / parked_reason and the 'inbox_parked' rule pause
 -- ============================================================
--- Covers 20261024150000_inbox_parking.sql.
+-- Covers 20261024173000_inbox_parking.sql.
 --
 --   - the columns exist and default to NULL (nothing is parked by the migration)
 --   - the pair stays consistent: both NULL, or both set with a known reason

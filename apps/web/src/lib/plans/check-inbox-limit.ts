@@ -84,7 +84,7 @@ export async function checkInboxLimit(
       .rpc('effective_workspace_plan', { p_workspace_id: workspaceId }),
     countActive(true),
   ]);
-  // Before migration 20261024150000 is applied the column does not exist and
+  // Before migration 20261024173000 is applied the column does not exist and
   // PostgREST refuses the filter. A null count would read as 0 and open the
   // gate, so count the way this did before parking existed instead.
   const inboxCountResult = firstCount.error && isUnknownColumnError(firstCount.error)

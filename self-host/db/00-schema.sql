@@ -209,7 +209,7 @@ ALTER TABLE public.inboxes
   ADD COLUMN IF NOT EXISTS draft_editor_hidden    boolean NOT NULL DEFAULT false,
   ADD COLUMN IF NOT EXISTS signature_embed_images boolean NOT NULL DEFAULT false,  -- send signature images inline (cid:) instead of as https URLs
   ADD COLUMN IF NOT EXISTS folder_overrides       jsonb,  -- per-role IMAP folder picked by the user, NULL = automatic (20261020230000)
-  ADD COLUMN IF NOT EXISTS parked_at              timestamptz,  -- NULL = active; set when a lower plan parks the inbox (20261024150000)
+  ADD COLUMN IF NOT EXISTS parked_at              timestamptz,  -- NULL = active; set when a lower plan parks the inbox (20261024173000)
   ADD COLUMN IF NOT EXISTS parked_reason          text;         -- 'plan_limit' while parked, else NULL
 -- The rules for folder_overrides, as in the hosted migration 20261020230000:
 -- keys sent/drafts/trash/spam/archive, string values of 1 to 512 characters,
@@ -247,7 +247,7 @@ BEGIN
   END IF;
 END
 $$;
--- Parking, as in the hosted migration 20261024150000: both NULL, or both set
+-- Parking, as in the hosted migration 20261024173000: both NULL, or both set
 -- with a known reason.
 DO $$
 BEGIN
