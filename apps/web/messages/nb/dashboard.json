@@ -715,6 +715,37 @@
       "deleting": "Sletter…",
       "errFailed": "Kunne ikke slette konto. Prøv igjen.",
       "networkError": "Nettverksfeil. Sjekk tilkoblingen din og prøv igjen."
+    },
+    "morningBrief": {
+      "title": "Morgenoversikt",
+      "sub": "En daglig oversikt over ny e-post, VIP-avsendere, oppfølginger og planlagte sendinger, lagt i en av innboksene dine.",
+      "enable": "Legg en morgenoversikt i innboksen min hver dag",
+      "hour": "Klokkeslett",
+      "timezone": "Tidssone",
+      "inbox": "Lever til",
+      "inboxPlaceholder": "Velg en innboks",
+      "vip": "VIP-avsendere",
+      "vipPlaceholder": "sjefen@example.com\nexample.com",
+      "help": "Én adresse eller ett domene per linje. E-post fra VIP-er vises først. Oversikten legges rett i innboksen, den sendes ikke som e-post, og dager uten noe nytt hoppes over.",
+      "save": "Lagre",
+      "saved": "Lagret. Neste oversikt følger disse innstillingene.",
+      "loading": "Laster...",
+      "proOnly": "Morgenoversikten er en del av Pro.",
+      "upgrade": "Se planer",
+      "roleNote": "Bare eiere og administratorer av arbeidsområdet kan endre morgenoversikten.",
+      "lastSent": "Siste oversikt: {when}",
+      "paused": "Satt på pause etter gjentatte feil. Sjekk tilkoblingen til innboksen, og lagre for å fortsette.",
+      "errors": {
+        "load": "Kunne ikke laste innstillingene for morgenoversikten.",
+        "save": "Kunne ikke lagre. Prøv igjen.",
+        "unavailable": "Morgenoversikten er ikke tilgjengelig ennå.",
+        "pro_feature_required": "Morgenoversikten er en del av Pro.",
+        "invalid_vip": "Ikke en adresse eller et domene: {detail}",
+        "too_many_vips": "Opptil {max} VIP-avsendere.",
+        "inbox_required": "Velg en innboks oversikten skal leveres til.",
+        "invalid_inbox": "Den innboksen hører ikke til dette arbeidsområdet.",
+        "invalid_timezone": "Velg en tidssone fra listen."
+      }
     }
   },
   "billing": {

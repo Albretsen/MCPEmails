@@ -715,6 +715,37 @@
       "deleting": "Suppression…",
       "errFailed": "Échec de la suppression du compte. Veuillez réessayer.",
       "networkError": "Erreur réseau. Veuillez vérifier votre connexion et réessayer."
+    },
+    "morningBrief": {
+      "title": "Brief du matin",
+      "sub": "Un résumé quotidien des nouveaux e-mails, des expéditeurs VIP, des relances et des envois programmés, déposé dans l'une de vos boîtes de réception.",
+      "enable": "Déposer un brief du matin dans ma boîte de réception chaque jour",
+      "hour": "Heure",
+      "timezone": "Fuseau horaire",
+      "inbox": "Déposer dans",
+      "inboxPlaceholder": "Choisir une boîte de réception",
+      "vip": "Expéditeurs VIP",
+      "vipPlaceholder": "patron@example.com\nexample.com",
+      "help": "Une adresse ou un domaine par ligne. Les e-mails des VIP apparaissent en premier. Le brief est ajouté directement à la boîte de réception, il n'est pas envoyé par e-mail, et les jours sans nouveauté sont ignorés.",
+      "save": "Enregistrer",
+      "saved": "Enregistré. Le prochain brief suivra ces réglages.",
+      "loading": "Chargement...",
+      "proOnly": "Le brief du matin fait partie de Pro.",
+      "upgrade": "Voir les offres",
+      "roleNote": "Seuls les propriétaires et les administrateurs de l'espace de travail peuvent modifier le brief du matin.",
+      "lastSent": "Dernier brief : {when}",
+      "paused": "En pause après plusieurs échecs. Vérifiez la connexion de la boîte de réception, puis enregistrez pour reprendre.",
+      "errors": {
+        "load": "Impossible de charger les réglages du brief du matin.",
+        "save": "Impossible d'enregistrer. Réessayez.",
+        "unavailable": "Le brief du matin n'est pas encore disponible.",
+        "pro_feature_required": "Le brief du matin fait partie de Pro.",
+        "invalid_vip": "Ce n'est ni une adresse ni un domaine : {detail}",
+        "too_many_vips": "Jusqu'à {max} expéditeurs VIP.",
+        "inbox_required": "Choisissez la boîte de réception où déposer le brief.",
+        "invalid_inbox": "Cette boîte de réception n'appartient pas à cet espace de travail.",
+        "invalid_timezone": "Choisissez un fuseau horaire dans la liste."
+      }
     }
   },
   "billing": {
