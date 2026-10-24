@@ -51,6 +51,13 @@ export const ENTRIES = [
       'For two weeks after you subscribe, the dashboard Overview shows a short checklist with starter prompts you can copy, and ticks each step off as your assistant uses MCPEmails. If your inbox keeps failing, it takes you straight to Reconnect.',
   },
   {
+    date: '2026-10-24',
+    kind: 'fixed',
+    title: 'Searching one folder searches that folder',
+    body:
+      'When your AI app searches a single named folder, the search now looks in that folder only. Before, a search that named the folder this way looked in the inbox instead.',
+  },
+  {
     date: '2026-10-23',
     kind: 'improved',
     title: 'mcpemails.com opens your dashboard when you are signed in',

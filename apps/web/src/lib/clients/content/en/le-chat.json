@@ -1,0 +1,106 @@
+{
+  "_sources": [
+    "https://docs.mistral.ai/le-chat/knowledge-integrations/connectors/mcp-connectors",
+    "https://docs.mistral.ai/le-chat/knowledge-integrations/connectors",
+    "https://mistral.ai/news/le-chat-mcp-connectors-memories/",
+    "https://mistral.ai/products/vibe/",
+    "https://docs.mistral.ai/vibe/work/connectors/mcp-connectors",
+    "https://docs.mistral.ai/vibe/work/safety-and-approvals",
+    "https://docs.mistral.ai/vibe/choose-chat-work-code",
+    "https://help.mistral.ai/en/articles/393572-configuring-a-custom-connector",
+    "https://developers.make.com/mcp-server/connect-using-oauth/usage-with-mistral-ai (third party: Authentication Method dropdown, OAuth2.1)",
+    "https://docs.bko.finologee.com/docs/mcp-mistral (third party: empty client secret makes Le Chat use dynamic client registration)",
+    "https://docs.qonto.com/mcp/install/mistral (third party: workspace Admin adds custom connectors)",
+    "apps/web/app/.well-known/oauth-authorization-server/route.ts",
+    "apps/web/src/lib/clients/content/en/raycast.json (shared server facts: limits, scopes, approval, storage)"
+  ],
+  "meta": {
+    "title": "Connect Email to Le Chat by Mistral: MCP Connector Setup",
+    "description": "Add a real inbox to Mistral's Le Chat with a Custom MCP Connector. Paste one URL and sign in. No API key. One inbox free."
+  },
+  "hero": {
+    "eyebrow": "Le Chat + email",
+    "titleLine1": "Connect your inbox to Le Chat",
+    "titleLine2": "with a Custom MCP Connector",
+    "lead": "Ask Mistral's assistant about your mail and have it act on it. Read, search, send, reply, forward, schedule and organize mail across every inbox you have connected.",
+    "meta0": "1 inbox free, forever",
+    "meta1": "OAuth, no API key needed",
+    "meta2": "Email fetched live, never stored",
+    "answer": "In Le Chat, open Connectors, click + Add Connector, choose the Custom MCP Connector tab, paste https://mcpemails.com/api/mcp as the Server URL, click Connect and sign in to MCPEmails."
+  },
+  "method": {
+    "title": "How Le Chat connects: OAuth, no API key",
+    "body": "When you enter the Server URL, Le Chat detects how the server authenticates. Mistral asks OAuth servers to answer an unauthenticated request with <b>401</b> and a <code>WWW-Authenticate</code> header, and this server does, pointing at its OAuth metadata, so Le Chat runs OAuth 2.1 instead of asking for a bearer token. It registers itself with <b>RFC 7591 dynamic client registration</b>, so there is no client ID to create, and authorizes with <b>authorization code plus PKCE</b> using S256. No client secret is ever transmitted, and the token carries only the scopes you approve on our consent screen. The access token it receives lasts an hour and refreshes itself; it is listed in Dashboard, API Keys as <code>OAuth:</code> followed by the client name, which is where you revoke the connection."
+  },
+  "setup": [
+    {
+      "h": "Create a free account and connect a mailbox",
+      "p": "Sign up at mcpemails.com, no card required, then go to Dashboard, Inboxes, Connect Inbox. Outlook and Microsoft 365 connect with Sign in with Microsoft; Gmail, iCloud, Fastmail, Yahoo, Zoho and Yandex take an app-specific password; anything else connects over plain IMAP and SMTP. The free plan holds one inbox, forever."
+    },
+    {
+      "h": "Open Add Connector",
+      "p": "At chat.mistral.ai, open the <b>Connectors</b> page from the sidebar, click <b>+ Add Connector</b> and select the <b>Custom MCP Connector</b> tab. Adding one is an administrator feature; on a Free, Pro or Student plan the account owner is the administrator."
+    },
+    {
+      "h": "Enter the server",
+      "p": "Fill in <b>Connector name</b> with a unique name without spaces or special characters (for example MCPEmails), paste <code>https://mcpemails.com/api/mcp</code> into <b>Server URL</b>, and optionally add a <b>Description</b>."
+    },
+    {
+      "h": "Connect and sign in",
+      "p": "Click <b>Connect</b>. Le Chat detects OAuth and opens the MCPEmails sign-in; approve the scopes you want it to hold. If an <b>Authentication Method</b> field appears, choose OAuth 2.1 and leave any client ID and secret empty."
+    },
+    {
+      "h": "Turn it on in a chat",
+      "p": "In a conversation, click the <b>+</b> icon or type <code>/</code>, select <b>Tools</b> and turn on the MCPEmails connector. Then ask it to list your inboxes."
+    }
+  ],
+  "gotchas": [
+    {
+      "h": "Le Chat is now called Vibe",
+      "p": "Mistral has renamed Le Chat to Vibe, and its documentation files connectors under Work. The address is still chat.mistral.ai and the Connectors page and its labels are the same, so the steps above apply whichever name you see."
+    },
+    {
+      "h": "On a Team or Enterprise plan, an admin adds it",
+      "p": "Custom MCP Connectors are an administrator-only feature. On Free, Pro and Student plans the account owner is the administrator, so you can add it yourself. In a Team or Enterprise workspace, ask a workspace admin to add the connector; it then shows up in the organization list for members to turn on in their own chats. Organization admins can also switch MCP Connectors off for a workspace."
+    },
+    {
+      "h": "Keep sending on manual approval",
+      "p": "Le Chat asks before a connector acts, with <b>Continue</b>, <b>Always allow</b> and <b>Decline</b>. To pre-authorize a function for good, open Connectors, My Connectors, the connector card, Functions, and turn on its <b>Always allow</b> toggle. Allowing the read tools saves clicks. Leave the send, reply and forward tools on manual approval, or leave <code>send:email</code> off this connection entirely."
+    }
+  ],
+  "limits": [
+    "Requests are rate limited to 100 per minute, 1,000 per hour and 10,000 per day per key, plus your plan ceiling on billable actions.",
+    "The server is request and response only. There are no webhooks and no server-initiated events, so new mail never wakes your agent by itself. To react to arriving mail, poll on a schedule.",
+    "Mail is fetched live from your provider on every call and never stored. Only the encrypted OAuth token or app password is kept, so a revoked token or a changed mailbox password ends access immediately."
+  ],
+  "faq": [
+    {
+      "q": "How do I connect email to Le Chat?",
+      "a": "Open Connectors in Le Chat, click + Add Connector, choose the Custom MCP Connector tab, paste https://mcpemails.com/api/mcp as the Server URL and click Connect. Sign in to MCPEmails, then turn the connector on in a chat from the + menu under Tools."
+    },
+    {
+      "q": "Do I need an API key for Le Chat?",
+      "a": "No. Le Chat runs the OAuth flow with dynamic client registration, so nothing secret is typed into the connector form. A bearer key is available for other clients that cannot do that."
+    },
+    {
+      "q": "Does this work on the free Le Chat plan?",
+      "a": "Mistral says connectors are available to all Le Chat users. On Free, Pro and Student plans the account owner is the administrator who can add a Custom MCP Connector. On Team and Enterprise plans a workspace admin adds it for the organization."
+    },
+    {
+      "q": "Which mailboxes can Le Chat reach this way?",
+      "a": "Outlook.com and Microsoft 365 over Sign in with Microsoft, where a work account may need an IT admin to approve the app once; Gmail, iCloud, Fastmail, Yahoo, Zoho and Yandex with an app-specific password; and any other mailbox that speaks IMAP and SMTP on the standard ports. Your agent calls inbox_list first to discover every connected mailbox and its id, so there are no UUIDs to paste anywhere."
+    },
+    {
+      "q": "Can Le Chat send email without me seeing it?",
+      "a": "Only if you let it. Sending is gated on the send:email scope, so a token without that scope cannot send at all, and Le Chat asks for approval before a connector acts unless you chose Always allow for that function. On top of that, an inbox owner can require human approval in the dashboard, which holds every send, reply, forward, draft send and scheduled send until a person releases it."
+    },
+    {
+      "q": "Is my email stored on your servers?",
+      "a": "No. Every message is fetched live from your provider for the request that asked for it and handed straight to your client. Only the encrypted OAuth token or app password is kept, so future calls can authenticate. Deleting the inbox in the dashboard, or revoking access at your provider, ends the connection at once."
+    }
+  ],
+  "ctaBand": {
+    "title": "Give Le Chat your inbox",
+    "sub": "One connector, one sign-in. One inbox free forever, no card required."
+  }
+}

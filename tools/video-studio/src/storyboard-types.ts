@@ -70,12 +70,59 @@ export interface OutroScene extends SceneBase {
   sub?: string;
 }
 
+export interface ClipScene extends SceneBase {
+  type: 'clip';
+  /** Path from the tool directory, always under assets/clips/. */
+  src: string;
+  /** Seconds into the source file where the scene starts. */
+  from: number;
+  caption?: string;
+  muted: boolean;
+}
+
+export type QueryPlatform =
+  | 'reddit'
+  | 'x'
+  | 'hacker-news'
+  | 'stack-overflow'
+  | 'github'
+  | 'discord'
+  | 'forum'
+  | 'quora';
+
+export interface QueryScene extends SceneBase {
+  type: 'query';
+  question: string;
+  platform: QueryPlatform;
+  /** Evidence for post.json. Never drawn. */
+  sourceUrl: string;
+  lead?: string;
+}
+
 export type Scene =
   | TitleScene
   | CaptureScene
   | ChatScene
   | TerminalScene
-  | OutroScene;
+  | OutroScene
+  | ClipScene
+  | QueryScene;
+
+export type Format = 'landscape' | 'vertical';
+
+export interface TimerSpec {
+  /** Scene index the stopwatch starts at. */
+  from: number;
+  /** Scene index it stops in. */
+  to: number;
+  label?: string;
+}
+
+export interface PostSpec {
+  caption: string;
+  hashtags?: string[];
+  sourceUrl?: string;
+}
 
 export interface SceneBoundary {
   index: number;
@@ -95,6 +142,10 @@ export interface Storyboard {
   voiceover?: string;
   captions: boolean;
   posterFrame?: number;
+  format: Format;
+  automated: boolean;
+  timer?: TimerSpec;
+  post?: PostSpec;
   scenes: Scene[];
   durationInFrames: number;
   boundaries: SceneBoundary[];
@@ -147,6 +198,8 @@ export interface TranscriptTurn {
   args?: Record<string, unknown>;
   ok?: boolean;
   summary?: string;
+  /** Measured round trip of the real call, in milliseconds. */
+  ms?: number;
 }
 
 export interface Transcript {

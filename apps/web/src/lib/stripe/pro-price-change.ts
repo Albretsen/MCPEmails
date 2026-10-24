@@ -12,8 +12,10 @@
  *              that still quotes $15), so the checkout amount and the copy can
  *              only ever move together, in one deploy.
  *   announce   Shows the dated notice on /pricing and on the dashboard's Pro
- *              upgrade surfaces. Turned on by its own one-line PR on the
- *              announcement date, so each switch reverts alone.
+ *              upgrade surfaces, but only from `announceFrom`. On since
+ *              2026-10-24, so the notice starts by itself on the date (the
+ *              browser re-reads the clock, so a page built earlier still
+ *              shows it). Setting it false is the kill switch.
  *
  * Why constants and not a `pricing_switches` row: /pricing is statically
  * generated and CDN-cached, and about 190 sentences carry the price as text
@@ -21,7 +23,8 @@
  * checkout amount but not the copy.
  *
  * THE DEADLINE IS KEPT, NEVER EXTENDED. The notice is visible only while
- * `announce` is on, `priceLive` is off and the switch instant has not passed.
+ * `announce` is on, `priceLive` is off, `announceFrom` has come and the switch
+ * instant has not passed.
  * A late cutover therefore takes the notice down rather than leaving a passed
  * date on screen, and nothing can quietly roll the date forward: moving
  * `switchAt` later after announcing is the fake deadline this exists to avoid.
@@ -37,8 +40,14 @@ export interface ProPriceAmounts {
 export const PRO_PRICE_CHANGE = {
   /** SWITCH 1. Sell the new price. Off until the cutover PR. */
   priceLive: false,
-  /** SWITCH 2. Show the dated notice. Off until the announcement PR. */
-  announce: false,
+  /**
+   * SWITCH 2. Show the dated notice, from `announceFrom` on. Approved by the
+   * owner 2026-10-24 with these dates, so it is on and the date does the rest:
+   * nothing has to be deployed on the announcement day.
+   */
+  announce: true,
+  /** 2026-11-17 00:00 in Oslo (CET, UTC+1): the notice and the email start. */
+  announceFrom: '2026-11-16T23:00:00.000Z',
   /**
    * First instant at which new subscriptions pay the new price: 2026-12-08
    * 00:00 in Oslo (CET, UTC+1). The notice disappears at this instant whatever
@@ -69,12 +78,13 @@ export function proSoldAmounts(
  */
 export function proPriceNoticeVisible(
   now: number = Date.now(),
-  change: { announce: boolean; priceLive: boolean; switchAt: string } = PRO_PRICE_CHANGE,
+  change: { announce: boolean; priceLive: boolean; announceFrom: string; switchAt: string } = PRO_PRICE_CHANGE,
 ): boolean {
   if (!change.announce || change.priceLive) return false;
+  const from = Date.parse(change.announceFrom);
   const switchAt = Date.parse(change.switchAt);
-  if (!Number.isFinite(switchAt)) return false;
-  return now < switchAt;
+  if (!Number.isFinite(from) || !Number.isFinite(switchAt)) return false;
+  return now >= from && now < switchAt;
 }
 
 /** Whole dollars as "$19", cents as "$182.40". English-format, for email. */
