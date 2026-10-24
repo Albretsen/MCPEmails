@@ -24,7 +24,21 @@
  */
 
 import { appUrl, unsubscribeUrl } from '@/lib/email/lifecycle';
-import { POSTAL_ADDRESS_LINE } from '@/lib/email/legal';
+import { CANCEL_PATH, POSTAL_ADDRESS_LINE } from '@/lib/email/legal';
+
+/**
+ * Where a customer manages or cancels the subscription: Settings, section
+ * "Billing & plan", whose "Manage billing" button opens the Stripe portal
+ * (POST /api/stripe/portal). Same link the billing lifecycle emails use.
+ */
+export function billingSettingsUrl(base: string): string {
+  return `${base}/dashboard/settings`;
+}
+
+/** The public cancellation and withdrawal form (no login), where the 14-day refund is asked for. */
+export function cancelFormUrl(base: string): string {
+  return `${base}${CANCEL_PATH}`;
+}
 
 /** Suppression category for M3. Must be one of LIFECYCLE_CATEGORIES. */
 export const ACTIVITY_SUMMARY_CATEGORY = 'activity_summary' as const;
@@ -212,7 +226,7 @@ export function composeStuckNote(input: StuckNoteInput): ComposedStuckNote {
   for (const fix of fixes) lines.push(fix, '');
 
   lines.push(
-    "If you'd rather reply with what you're seeing, I read every reply myself. And if it's not for you, you can get a full refund within 14 days of your first payment from the billing page.",
+    `If you'd rather reply with what you're seeing, I read every reply myself. And if it's not for you, you can get a full refund within 14 days of your first payment with this form: ${cancelFormUrl(base)}`,
     '',
     'Asgeir',
   );
@@ -323,7 +337,8 @@ export function composeWeek1Summary(input: Week1Input): ComposedWeek1 | null {
   const dashboardUrl = `${base}/dashboard/usage`;
   const tip = week1Tip(input);
   const intro = `Here's what your assistant did through MCPEmails from ${formatDate(input.from)} to ${formatDate(input.to)}:`;
-  const closing = `You can see all of your activity in the dashboard: ${dashboardUrl}. You can manage or cancel your subscription from the billing page at any time.`;
+  const billingUrl = billingSettingsUrl(base);
+  const closing = `You can see all of your activity in the dashboard: ${dashboardUrl}. You can manage or cancel your subscription at any time under Billing & plan in your settings: ${billingUrl}`;
   const tipLine = tip ? tipText(tip, input.inboxAddresses) : null;
 
   const text = [
@@ -358,7 +373,7 @@ export function composeWeek1Summary(input: Week1Input): ComposedWeek1 | null {
       ${lines.map((l) => `<li>${escapeHtml(l)}</li>`).join('\n      ')}
     </ul>
     ${tipLine ? para(tipLine) : ''}
-    <p style="margin:0 0 16px;font-size:15px;color:#1f2937;line-height:1.6;">You can see all of your activity in the <a href="${escapeHtml(dashboardUrl)}" style="color:#1f2937;">dashboard</a>. You can manage or cancel your subscription from the billing page at any time.</p>
+    <p style="margin:0 0 16px;font-size:15px;color:#1f2937;line-height:1.6;">You can see all of your activity in the <a href="${escapeHtml(dashboardUrl)}" style="color:#1f2937;">dashboard</a>. You can manage or cancel your subscription at any time under Billing &amp; plan in your <a href="${escapeHtml(billingUrl)}" style="color:#1f2937;">settings</a>.</p>
     ${para('Asgeir')}
     <p style="margin:24px 0 0;font-size:12px;color:#6b7280;line-height:1.6;"><a href="${escapeHtml(unsub)}" style="color:#6b7280;text-decoration:underline;">Stop these activity summaries</a>. Billing and account notices are not affected.</p>
     <p style="margin:8px 0 0;font-size:11px;color:#9ca3af;line-height:1.6;">${escapeHtml(POSTAL_ADDRESS_LINE)}</p>

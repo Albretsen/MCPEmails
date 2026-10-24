@@ -782,3 +782,102 @@ function readMigration(): string {
   const here = path.dirname(fileURLToPath(import.meta.url));
   return readFileSync(path.resolve(here, '../../../../../supabase/migrations/20261024170000_first_30_days.sql'), 'utf8');
 }
+
+// ---------------------------------------------------------------------------
+// The 1000-row cap: a fake PostgREST client that truncates like the real one
+// ---------------------------------------------------------------------------
+
+type Row = Record<string, unknown>;
+
+/** Enough of the query builder for the paged reads, with PostgREST's silent 1000-row cap. */
+function fakeDb(tables: Record<string, Row[]>) {
+  return {
+    from(table: string) {
+      let rows = [...(tables[table] ?? [])];
+      const sorts: Array<[string, boolean]> = [];
+      let range: [number, number] | null = null;
+      let limit = Infinity;
+      const b = {
+        select: () => b,
+        eq: (c: string, v: unknown) => ((rows = rows.filter((r) => r[c] === v)), b),
+        gte: (c: string, v: string) => ((rows = rows.filter((r) => String(r[c]) >= v)), b),
+        lt: (c: string, v: string) => ((rows = rows.filter((r) => String(r[c]) < v)), b),
+        in: (c: string, v: unknown[]) => ((rows = rows.filter((r) => v.includes(r[c]))), b),
+        order: (c: string, o: { ascending: boolean }) => (sorts.push([c, o.ascending]), b),
+        range: (from: number, to: number) => ((range = [from, to]), b),
+        limit: (n: number) => ((limit = n), b),
+        then(resolve: (v: { data: Row[]; error: null }) => unknown) {
+          const sorted = [...rows].sort((x, y) => {
+            for (const [c, asc] of sorts) {
+              const a = x[c] as string | number;
+              const z = y[c] as string | number;
+              if (a !== z) return (a < z ? -1 : 1) * (asc ? 1 : -1);
+            }
+            return 0;
+          });
+          const [from, to] = range ?? [0, Infinity];
+          const size = Math.min(to - from + 1, limit, 1000);
+          return Promise.resolve({ data: sorted.slice(from, from + size), error: null }).then(resolve);
+        },
+      };
+      return b;
+    },
+  };
+}
+
+test('readAllPages reads past 1000 rows and refuses a truncated read', async () => {
+  const all = Array.from({ length: 2500 }, (_, i) => i);
+  const got = await storeMod.readAllPages(async (from, to) => ({ data: all.slice(from, to + 1), error: null }), 'x');
+  assert.equal(got.length, 2500);
+  await assert.rejects(
+    storeMod.readAllPages(async (from, to) => ({ data: all.slice(from, to + 1), error: null }), 'x', 1000, 2),
+    /refusing a truncated read/,
+  );
+});
+
+test('automations sorted sums every triage run, not the first 1000', async () => {
+  const runs: Row[] = Array.from({ length: 2300 }, (_, i) => ({
+    id: `run-${String(i).padStart(5, '0')}`,
+    workspace_id: WS,
+    started_at: new Date(T0.getTime() + i * 60_000).toISOString(),
+    succeeded: 2,
+  }));
+  runs.push({ id: 'other', workspace_id: 'someone-else', started_at: at(HOUR).toISOString(), succeeded: 999 });
+  const store = new storeMod.SupabaseFirst30Store(fakeDb({ triage_runs: runs }) as never);
+  const total = await store.sumAutomationsSorted(ctx(), at(7 * DAY).toISOString());
+  assert.equal(total, 4600);
+});
+
+test('a payer with more than 1000 earlier checkout rows in the batch is still seen as old', async () => {
+  const since = new Date('2026-11-01T00:00:00Z');
+  const events: Row[] = [];
+  let id = 0;
+  // 100 workspaces x 15 old checkouts = 1500 earlier rows in one batch, then
+  // one new checkout each. Only the workspace with no earlier row is new.
+  for (let w = 0; w < 100; w += 1) {
+    const ws = `ws-${String(w).padStart(3, '0')}`;
+    for (let k = 0; k < 15; k += 1) {
+      id += 1;
+      events.push({ id, workspace_id: ws, stage: 'checkout_completed', occurred_at: `2026-10-${String(10 + k).padStart(2, '0')}T00:00:00Z` });
+    }
+  }
+  for (let w = 0; w < 100; w += 1) {
+    id += 1;
+    events.push({ id, workspace_id: `ws-${String(w).padStart(3, '0')}`, stage: 'checkout_completed', occurred_at: '2026-11-02T00:00:00Z' });
+  }
+  id += 1;
+  events.push({ id, workspace_id: 'brand-new', stage: 'checkout_completed', occurred_at: '2026-11-03T00:00:00Z' });
+  const store = new storeMod.SupabaseFirst30Store(fakeDb({ product_funnel_events: events }) as never);
+  const firsts = await store.listFirstPayments(since);
+  assert.deepEqual(firsts.map((f) => f.workspaceId), ['brand-new']);
+});
+
+test('M2 and M3 point at the real cancel form and billing settings', () => {
+  const note = tpl.composeStuckNote({ firstName: null, paidAt: T0.toISOString(), ...DETAILS });
+  assert.ok(note.text.includes('full refund within 14 days of your first payment with this form: https://mcpemails.test/cancel'));
+  assert.ok(!/billing page/i.test(note.text));
+  const e = week1()!;
+  assert.ok(e.text.includes('under Billing & plan in your settings: https://mcpemails.test/dashboard/settings'));
+  assert.ok(e.html.includes('href="https://mcpemails.test/dashboard/settings"'));
+  assert.ok(!/billing page/i.test(e.text + e.html));
+});

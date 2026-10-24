@@ -82,6 +82,36 @@ export function activeDayCount(timestamps: string[], startMs: number): number {
   return days.size;
 }
 
+/** PostgREST's silent row cap, and the page size every paged read below uses. */
+export const PAGE_SIZE = 1000;
+/** A paged read that needs more pages than this throws rather than truncating. */
+export const MAX_PAGES = 100;
+
+/**
+ * Read every row of a query, one PostgREST page at a time. `fetchPage` must
+ * apply a TOTAL order (a unique tiebreaker last) and `.range(from, to)`; a
+ * short page ends the read. Too many pages throws: a silently truncated read
+ * is the bug this exists to prevent. Pure apart from the callback; exported
+ * for tests.
+ */
+export async function readAllPages<T>(
+  fetchPage: (from: number, to: number) => PromiseLike<{ data: T[] | null; error: { message: string } | null }>,
+  what: string,
+  pageSize = PAGE_SIZE,
+  maxPages = MAX_PAGES,
+): Promise<T[]> {
+  const out: T[] = [];
+  for (let page = 0; page < maxPages; page += 1) {
+    const from = page * pageSize;
+    const { data, error } = await fetchPage(from, from + pageSize - 1);
+    if (error) throw new Error(`${what} failed: ${error.message}`);
+    const rows = data ?? [];
+    out.push(...rows);
+    if (rows.length < pageSize) return out;
+  }
+  throw new Error(`${what} has more than ${maxPages * pageSize} rows; refusing a truncated read`);
+}
+
 export class SupabaseFirst30Store implements First30Store {
   private readonly db: Db;
 
@@ -90,28 +120,38 @@ export class SupabaseFirst30Store implements First30Store {
   }
 
   async listFirstPayments(since: Date): Promise<FirstPayment[]> {
-    const { data: recent, error } = await this.db
-      .from('product_funnel_events')
-      .select('workspace_id, occurred_at')
-      .eq('stage', 'checkout_completed')
-      .gte('occurred_at', since.toISOString())
-      .order('occurred_at', { ascending: true })
-      .limit(1000);
-    if (error) throw new Error(`checkout read failed: ${error.message}`);
+    const rows = await readAllPages(
+      (from, to) =>
+        this.db
+          .from('product_funnel_events')
+          .select('workspace_id, occurred_at')
+          .eq('stage', 'checkout_completed')
+          .gte('occurred_at', since.toISOString())
+          .order('occurred_at', { ascending: true })
+          .order('id', { ascending: true })
+          .range(from, to),
+      'checkout read',
+    );
 
-    const rows = recent ?? [];
+    // Which of these also paid BEFORE the window? Every earlier row is read
+    // (paged), so a payer from before go-live can never look new because a
+    // page was cut short.
     const ids = [...new Set(rows.map((r) => r.workspace_id))];
     const earlier = new Set<string>();
     for (const batch of chunks(ids)) {
-      const { data, error: earlierError } = await this.db
-        .from('product_funnel_events')
-        .select('workspace_id')
-        .eq('stage', 'checkout_completed')
-        .lt('occurred_at', since.toISOString())
-        .in('workspace_id', batch)
-        .limit(1000);
-      if (earlierError) throw new Error(`earlier checkout read failed: ${earlierError.message}`);
-      for (const row of data ?? []) earlier.add(row.workspace_id);
+      const data = await readAllPages(
+        (from, to) =>
+          this.db
+            .from('product_funnel_events')
+            .select('workspace_id')
+            .eq('stage', 'checkout_completed')
+            .lt('occurred_at', since.toISOString())
+            .in('workspace_id', batch)
+            .order('id', { ascending: true })
+            .range(from, to),
+        'earlier checkout read',
+      );
+      for (const row of data) earlier.add(row.workspace_id);
     }
     return pickFirstPayments(rows, earlier);
   }
@@ -295,14 +335,7 @@ export class SupabaseFirst30Store implements First30Store {
       .limit(1000);
     if (stampError) throw new Error(`activity days failed: ${stampError.message}`);
 
-    const { data: runs, error: runError } = await this.db
-      .from('triage_runs')
-      .select('succeeded')
-      .eq('workspace_id', ctx.workspaceId)
-      .gte('started_at', ctx.firstPaidAt)
-      .lt('started_at', endIso)
-      .limit(1000);
-    if (runError) throw new Error(`triage run read failed: ${runError.message}`);
+    const automationsSorted = await this.sumAutomationsSorted(ctx, endIso);
 
     const { count: rules, error: ruleError } = await this.db
       .from('triage_rules')
@@ -324,10 +357,32 @@ export class SupabaseFirst30Store implements First30Store {
       counts,
       totalSuccess,
       activeDays: activeDayCount((stamps ?? []).map((s) => s.created_at), startMs),
-      automationsSorted: (runs ?? []).reduce((sum, r) => sum + (r.succeeded ?? 0), 0),
+      automationsSorted,
       hasAutomation: (rules ?? 0) > 0,
       inboxAddresses: (inboxes ?? []).map((i) => i.email_address),
     };
+  }
+
+  /**
+   * sum(triage_runs.succeeded) in [firstPaidAt, endIso). Every run is read,
+   * paged in a total order: a busy automation runs far more than 1000 times a
+   * week, and this number is printed to the customer.
+   */
+  async sumAutomationsSorted(ctx: CandidateContext, endIso: string): Promise<number> {
+    const runs = await readAllPages(
+      (from, to) =>
+        this.db
+          .from('triage_runs')
+          .select('succeeded')
+          .eq('workspace_id', ctx.workspaceId)
+          .gte('started_at', ctx.firstPaidAt)
+          .lt('started_at', endIso)
+          .order('started_at', { ascending: true })
+          .order('id', { ascending: true })
+          .range(from, to),
+      'triage run read',
+    );
+    return runs.reduce((sum, r) => sum + (r.succeeded ?? 0), 0);
   }
 
   /**
