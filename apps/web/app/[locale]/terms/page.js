@@ -234,7 +234,7 @@ export default async function TermsPage({ params }) {
                   are parameters, so the terms cannot drift from the catalogue
                   or from REWARD_CAP_PER_YEAR. The id is the dashboard's
                   "Program terms" link target. */}
-              <h4 id="referral-program">{t('plansAndPayment.h510')}</h4>
+              <h4 id="referral-program">{t('plansAndPayment.h511')}</h4>
               <p>{t('plansAndPayment.p511a')}</p>
               <p>{t('plansAndPayment.p511b', referralTerms)}</p>
               <p>{t('plansAndPayment.p511c')}</p>
