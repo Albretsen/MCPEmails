@@ -3006,7 +3006,7 @@ async function checkPlanQuota(
 // ---------------------------------------------------------------------------
 // Pro feature gate (pro-features.ts holds the rule; this is its one read)
 //
-// workspace_pro_features() (migration 20261024150000) returns the effective
+// workspace_pro_features() (migration 20261024160000) returns the effective
 // plan, workspaces.pro_features_enabled and the pro_features_public switch in
 // one round trip. It is read at most once per request: memoised on the
 // ApiKeyRow object, which handleRequest creates per request and threads to
