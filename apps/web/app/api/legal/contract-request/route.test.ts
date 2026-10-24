@@ -221,6 +221,49 @@ test('a withdrawal says it refunds the first charge and takes effect immediately
   assert.match(String(receipt?.payload.text), /refund the first charge in full/);
 });
 
+test('a 3-month pass withdrawal needs no subscription and is told apart from a subscription withdrawal', async () => {
+  reset();
+  // The handler never looks up the account, so a pass buyer with no
+  // subscription goes through. A stray cancelType or reason is ignored.
+  const res = await post(body({ kind: 'withdraw_pass', cancelType: 'extraordinary', reason: '', contract: '' }));
+  assert.equal(res.status, 201);
+  const json = await res.json();
+  assert.equal(json.ok, true);
+
+  assert.equal(tickets.length, 1);
+  const row = tickets[0];
+  assert.equal(row.subject, 'Withdrawal from 3-month pass');
+  assert.equal(row.category, 'billing');
+  const ctx = row.context as Record<string, Record<string, unknown>>;
+  assert.equal(ctx.contract_request.kind, 'withdraw_pass');
+  assert.equal(ctx.contract_request.cancel_type, null);
+  assert.equal(ctx.contract_request.contract, null);
+  assert.match(String(row.message), /refund the 3-month pass payment in full/);
+  assert.match(String(row.message), /no subscription to cancel/);
+
+  assert.equal(sends.length, 2);
+  const notice = sends.find((s) => s.payload.to === 'support@mcpemails.com');
+  const receipt = sends.find((s) => s.payload.to === 'kari@example.com');
+  assert.match(String(notice?.payload.subject), /^\[MCPE-1001\] WITHDRAWAL \(3-month pass\): Kari Nordmann/);
+  assert.match(String(receipt?.payload.subject), /withdrawal is received \(MCPE-1001\)/);
+  const text = String(receipt?.payload.text);
+  assert.match(text, /Request: Withdrawal from your MCPEmails 3-month Personal pass/);
+  assert.match(text, /Takes effect: Immediately/);
+  assert.match(text, /refund the payment for your pass in full within 14 days/);
+  assert.ok(!/first charge/.test(text), 'a pass has no first charge');
+  assert.ok(!/30 days/.test(text));
+});
+
+test('a subscription withdrawal stays labelled as a subscription, not a pass', async () => {
+  reset();
+  const res = await post(body({ kind: 'withdraw', cancelType: undefined }));
+  assert.equal(res.status, 201);
+  const notice = sends.find((s) => s.payload.to === 'support@mcpemails.com');
+  assert.match(String(notice?.payload.subject), /^\[MCPE-1001\] WITHDRAWAL: /);
+  assert.ok(!/pass/i.test(String(notice?.payload.text)));
+  assert.equal((tickets[0].context as Record<string, Record<string, unknown>>).contract_request.kind, 'withdraw');
+});
+
 test('the receipt never echoes the free-text reason; the notice to support does', async () => {
   reset();
   const reason = 'Visit http://spam.example for cheap watches';

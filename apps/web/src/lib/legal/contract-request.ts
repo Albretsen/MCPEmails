@@ -16,6 +16,16 @@
  * declaration is legally effective when it is received, not when Stripe is
  * updated, which is why the receipt states the time we received it.
  *
+ * THREE KINDS. `cancel` stops a subscription's next renewal. `withdraw` is
+ * the 14-day withdrawal from a subscription. `withdraw_pass` is the 14-day
+ * withdrawal from the non-renewing 3-month Personal pass (a one-off payment,
+ * no subscription behind it). None of them looks up the account: a pass
+ * buyer with no subscription goes through exactly like everyone else, and
+ * the refund stays a manual step in Stripe (refunding the pass payment ends
+ * the pass through the `charge.refunded` webhook). The kind is stored on the
+ * row and named in the notice subject, so a pass request is never mistaken
+ * for a subscription one.
+ *
  * STORED AS A SUPPORT TICKET. Same table, same MCPE-1234 reference, same
  * rate limits as the /help form (src/lib/support/tickets.ts), so a request
  * lands in the support inbox with a ref and is findable with one query:
@@ -45,7 +55,7 @@ import { checkSupportFormToken } from '@/lib/support/form-token';
 import { isRateLimited, type TicketCounter } from '@/lib/support/rate-limit';
 import { normalizeEmail } from '@/lib/support/validation';
 
-export const CONTRACT_REQUEST_KINDS = ['cancel', 'withdraw'] as const;
+export const CONTRACT_REQUEST_KINDS = ['cancel', 'withdraw', 'withdraw_pass'] as const;
 export type ContractRequestKind = (typeof CONTRACT_REQUEST_KINDS)[number];
 
 export const CANCEL_TYPES = ['ordinary', 'extraordinary'] as const;
@@ -81,7 +91,7 @@ export interface ValidContractRequest {
   name: string;
   email: string;
   contract: string | null;
-  /** Null for a withdrawal. */
+  /** Null for either withdrawal. */
   cancelType: CancelType | null;
   /** Only for an extraordinary cancellation. */
   reason: string | null;
@@ -217,8 +227,14 @@ export function receivedAtLabel(iso: string): string {
   return `${iso.slice(0, 10)} ${iso.slice(11, 16)} UTC`;
 }
 
+/** True for both withdrawals (subscription and 3-month pass). */
+export function isWithdrawal(kind: ContractRequestKind): boolean {
+  return kind === 'withdraw' || kind === 'withdraw_pass';
+}
+
 function requestLabel(r: ValidContractRequest): string {
-  if (r.kind === 'withdraw') return 'Withdrawal from your MCPEmails contract';
+  if (r.kind === 'withdraw_pass') return 'Withdrawal from your MCPEmails 3-month Personal pass';
+  if (r.kind === 'withdraw') return 'Withdrawal from your MCPEmails subscription';
   return r.cancelType === 'extraordinary'
     ? 'Extraordinary cancellation of your MCPEmails subscription'
     : 'Cancellation of your MCPEmails subscription';
@@ -235,6 +251,9 @@ function effectiveLabel(r: ValidContractRequest): string {
 }
 
 function nextStep(r: ValidContractRequest): string {
+  if (r.kind === 'withdraw_pass') {
+    return 'We refund the payment for your pass in full within 14 days, to the card you paid with, and email you when it is done. The pass does not renew, so there is nothing else to cancel.';
+  }
   if (r.kind === 'withdraw') {
     return 'We refund the first charge in full within 14 days, to the card you paid with, and email you when it is done.';
   }
@@ -255,7 +274,7 @@ function factRows(r: ValidContractRequest, ref: string, receivedAt: string): Arr
 }
 
 export function buildContractReceiptEmail(r: ValidContractRequest, ref: string, receivedAt: string, baseUrl: string): ComposedEmail {
-  const what = r.kind === 'withdraw' ? 'withdrawal' : 'cancellation';
+  const what = isWithdrawal(r.kind) ? 'withdrawal' : 'cancellation';
   const subject = `Your ${what} is received (${oneLine(ref)})`;
   const rows = factRows(r, ref, receivedAt);
   const reasonNote = r.reason ? 'You also gave a reason, which we keep with this request.' : null;
@@ -297,16 +316,25 @@ ${reasonNote ? `<p>${escapeHtml(reasonNote)}</p>` : ''}
 }
 
 export function buildContractNoticeEmail(r: ValidContractRequest, ref: string, receivedAt: string): ComposedEmail {
-  const label = r.kind === 'withdraw' ? 'WITHDRAWAL' : r.cancelType === 'extraordinary' ? 'CANCEL (extraordinary)' : 'CANCEL';
+  const label =
+    r.kind === 'withdraw_pass'
+      ? 'WITHDRAWAL (3-month pass)'
+      : r.kind === 'withdraw'
+        ? 'WITHDRAWAL'
+        : r.cancelType === 'extraordinary'
+          ? 'CANCEL (extraordinary)'
+          : 'CANCEL';
   const subject = oneLine(`[${ref}] ${label}: ${r.name} <${r.email}>`).slice(0, 200);
   const todo =
-    r.kind === 'withdraw'
-      ? 'To do: refund the first charge in full and cancel the subscription now, within 14 days of the received time.'
-      : r.cancelType === 'extraordinary'
-        ? 'To do: read the reason, end the subscription now if it holds, and reply to the customer.'
-        : r.effectiveDate
-          ? `To do: set cancel_at in Stripe to ${r.effectiveDate} or the end of the paid period, whichever is later, then reply to the customer.`
-          : 'To do: set cancel_at to the end of the paid period in Stripe, then reply to the customer.';
+    r.kind === 'withdraw_pass'
+      ? 'To do: refund the 3-month pass payment in full in Stripe, within 14 days of the received time. The refund ends the pass; there is no subscription to cancel. If the account also has a subscription, ask the customer which one they meant.'
+      : r.kind === 'withdraw'
+        ? 'To do: refund the first charge in full and cancel the subscription now, within 14 days of the received time.'
+        : r.cancelType === 'extraordinary'
+          ? 'To do: read the reason, end the subscription now if it holds, and reply to the customer.'
+          : r.effectiveDate
+            ? `To do: set cancel_at in Stripe to ${r.effectiveDate} or the end of the paid period, whichever is later, then reply to the customer.`
+            : 'To do: set cancel_at to the end of the paid period in Stripe, then reply to the customer.';
   const lines = [
     todo,
     '',
@@ -384,7 +412,12 @@ export async function submitContractRequest(
   }
 
   const receivedAt = new Date(nowMs).toISOString();
-  const subject = r.kind === 'withdraw' ? 'Withdrawal from contract' : `Cancellation (${r.cancelType})`;
+  const subject =
+    r.kind === 'withdraw_pass'
+      ? 'Withdrawal from 3-month pass'
+      : r.kind === 'withdraw'
+        ? 'Withdrawal from contract'
+        : `Cancellation (${r.cancelType})`;
 
   let stored: { id: string; ref: string } | null = null;
   try {
