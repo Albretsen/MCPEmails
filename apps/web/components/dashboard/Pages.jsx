@@ -1567,7 +1567,7 @@ function needsReconnect(status) {
 // and the modal's panel cannot classify one workspace two ways. It only changes
 // anything at the Free cap, where inboxCapOffer widens Personal alone to
 // Personal and Pro.
-export function InboxesPage({ inboxes, planLimits, stripePrices = null, businessShaped = false, onConnect, onRemove, onReconnect, onCheck, onSaveSignature, onSaveSenderName, onSaveDraftEditorHidden, onConnectionChanged, draftEditorRolledOut = false, draftEditorWorkspaceHidden = false, chatConfirmRolledOut = false, proFeatures = null, userRole, onGoToKeys }) {
+export function InboxesPage({ inboxes, planLimits, stripePrices = null, businessShaped = false, onConnect, onRemove, onSwapParked, onReconnect, onCheck, onSaveSignature, onSaveSenderName, onSaveDraftEditorHidden, onConnectionChanged, draftEditorRolledOut = false, draftEditorWorkspaceHidden = false, chatConfirmRolledOut = false, proFeatures = null, userRole, onGoToKeys }) {
   // The analytics window this plan buys. Every per-inbox call count on this
   // page is scoped to it server-side, so the label has to quote the same
   // number or the column silently means something different per plan.
@@ -1612,6 +1612,11 @@ export function InboxesPage({ inboxes, planLimits, stripePrices = null, business
   // callbacks; lib/workspace/roles.ts). The buttons are shown disabled with
   // the reason instead of failing on click.
   const canManage = userRole !== 'viewer';
+  // Swapping which inbox is parked changes what the workspace can reach, so
+  // it is owner/admin only, as the server's /api/inboxes/swap-parked checks.
+  const canSwap = Boolean(onSwapParked) && (userRole === 'owner' || userRole === 'admin');
+  // parked inbox whose "Make active" dialog is open, or null
+  const [swapInbox, setSwapInbox] = useState(null);
   const viewerNote = t('inboxes.viewerActionsNote');
   const checkTitle = canManage ? t('inboxes.checkConnection') : viewerNote;
 
@@ -1986,6 +1991,11 @@ export function InboxesPage({ inboxes, planLimits, stripePrices = null, business
                   </td>
                   <td className="mono">{ib.calls.toLocaleString()}</td>
                   <td className="right" onClick={e => e.stopPropagation()}>
+                    {ib.parked && canSwap ? (
+                      <Btn variant="secondary" size="sm" onClick={() => setSwapInbox(ib)}>
+                        {t('inboxes.makeActive')}
+                      </Btn>
+                    ) : null}
                     {needsReconnect(ib.status) ? (
                       <Btn
                         variant="secondary"
@@ -2064,6 +2074,9 @@ export function InboxesPage({ inboxes, planLimits, stripePrices = null, business
                   {!ib.parked && isError && ib.lastError ? <p className="inbox-mobile-error">{ib.lastError}</p> : null}
                   <div className="inbox-mobile-actions" onClick={e => e.stopPropagation()}>
                     <Btn variant="secondary" size="sm" onClick={() => setDetailInbox(ib)}>View details</Btn>
+                    {ib.parked && canSwap ? (
+                      <Btn variant="secondary" size="sm" onClick={() => setSwapInbox(ib)}>{t('inboxes.makeActive')}</Btn>
+                    ) : null}
                     {canReconnect ? (
                       <Btn variant="secondary" size="sm" icon="refresh" disabled={!canManage} title={canManage ? undefined : viewerNote} onClick={() => onReconnect(ib)}>{t('inboxes.reconnect')}</Btn>
                     ) : (
@@ -2149,6 +2162,15 @@ export function InboxesPage({ inboxes, planLimits, stripePrices = null, business
       )}
 
       {/* Disconnect confirmation dialog */}
+      {swapInbox && (
+        <SwapParkedDialog
+          inbox={swapInbox}
+          activeInboxes={inboxes.filter(ib => !ib.parked)}
+          maxInboxes={maxInboxes}
+          onSwap={onSwapParked}
+          onClose={() => setSwapInbox(null)}
+        />
+      )}
       {confirmInbox && (
         <DisconnectDialog
           inbox={confirmInbox}
@@ -2157,6 +2179,92 @@ export function InboxesPage({ inboxes, planLimits, stripePrices = null, business
           onCancel={handleDisconnectCancel}
         />
       )}
+    </div>
+  );
+}
+
+/**
+ * "Make active" on a parked inbox (src/lib/billing/parking.ts). At the plan's
+ * cap the customer picks the active inbox that is parked in its place; with a
+ * free slot there is nothing to pick. One swap a day per workspace, enforced
+ * by /api/inboxes/swap-parked; a refusal is one line here.
+ */
+function SwapParkedDialog({ inbox, activeInboxes, maxInboxes, onSwap, onClose }) {
+  const t = useTranslations('dashboard');
+  const needsPick = maxInboxes !== null && activeInboxes.length >= maxInboxes;
+  const [pick, setPick] = useState(needsPick && activeInboxes[0] ? activeInboxes[0].id : '');
+  const [swapping, setSwapping] = useState(false);
+  const [error, setError] = useState(null);
+
+  const handleConfirm = async () => {
+    if (swapping) return;
+    if (needsPick && !pick) return;
+    setSwapping(true);
+    setError(null);
+    const result = await onSwap(inbox.id, needsPick ? pick : null);
+    setSwapping(false);
+    if (result?.ok) {
+      onClose();
+      return;
+    }
+    if (result?.error === 'swap_limit' && result.nextSwapAt) {
+      setError(t('inboxes.swapDialog.errorLimit', { time: new Date(result.nextSwapAt).toLocaleString() }));
+    } else {
+      setError(t('inboxes.swapDialog.errorFailed'));
+    }
+  };
+
+  return (
+    <div className="scrim" onClick={swapping ? undefined : onClose}>
+      <div
+        className="modal"
+        onClick={e => e.stopPropagation()}
+        style={{ width: 420 }}
+        role="dialog"
+        aria-modal="true"
+        aria-labelledby="swap-dialog-title"
+      >
+        <div className="modal-h">
+          <h2 id="swap-dialog-title" style={{ margin: 0 }}>
+            {t('inboxes.swapDialog.title', { label: inbox.label })}
+          </h2>
+          <div className="sub" style={{ marginTop: 4 }}>
+            {needsPick ? t('inboxes.swapDialog.pickLead') : t('inboxes.swapDialog.freeSlot')}
+          </div>
+        </div>
+        <div className="modal-body">
+          {needsPick ? (
+            <label style={{ display: 'block', marginBottom: 16 }}>
+              <span style={{ display: 'block', fontSize: 12.5, color: 'var(--fg-2)', marginBottom: 6 }}>
+                {t('inboxes.swapDialog.pickLabel')}
+              </span>
+              <select
+                className="input"
+                value={pick}
+                onChange={e => setPick(e.target.value)}
+                disabled={swapping}
+                data-testid="swap-pick"
+              >
+                {activeInboxes.map(ib => (
+                  <option key={ib.id} value={ib.id}>{ib.label} ({ib.address})</option>
+                ))}
+              </select>
+            </label>
+          ) : null}
+          <p style={{ margin: '0 0 16px', fontSize: 13, color: 'var(--fg-3)' }}>{t('inboxes.swapDialog.onceADay')}</p>
+          {error ? (
+            <p role="alert" data-testid="swap-error" style={{ margin: '0 0 16px', fontSize: 13, color: 'var(--red-700)' }}>{error}</p>
+          ) : null}
+          <div style={{ display: 'flex', gap: 8, justifyContent: 'flex-end' }}>
+            <Btn variant="secondary" onClick={onClose} disabled={swapping}>
+              {t('inboxes.swapDialog.cancel')}
+            </Btn>
+            <Btn variant="primary" onClick={handleConfirm} disabled={swapping || (needsPick && !pick)}>
+              {swapping ? t('inboxes.swapDialog.swapping') : t('inboxes.swapDialog.confirm')}
+            </Btn>
+          </div>
+        </div>
+      </div>
     </div>
   );
 }

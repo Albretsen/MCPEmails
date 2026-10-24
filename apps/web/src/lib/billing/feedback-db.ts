@@ -1,14 +1,11 @@
 /**
- * Writes to `public.cancellation_feedback`, through the client typed for it
- * (src/lib/supabase/feedback-service.ts explains why that client exists until
- * `npm run gen:types` has been rerun after the migration).
+ * Writes to `public.cancellation_feedback` (migration 20261024220000), through
+ * the normal service-role client: the generated types include the table.
  */
 import type { SupabaseClient } from '@supabase/supabase-js';
 
 import type { CancelReason } from '@/lib/billing/cancel-reasons';
-import type { Database } from '@/lib/supabase/feedback-service';
-
-export { createFeedbackServiceClient } from '@/lib/supabase/feedback-service';
+import type { Database } from '@/types/database.types';
 
 export type CancellationFeedbackSource = 'billing_card' | 'cancel_email';
 

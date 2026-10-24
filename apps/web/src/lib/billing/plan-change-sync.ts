@@ -261,6 +261,44 @@ export function inboxCapFor(
   return Number.isFinite(limits.maxInboxes) ? limits.maxInboxes : null;
 }
 
+/**
+ * The largest number of active (not parked, not deleted) inboxes in one of the
+ * owner's workspaces whose `plan` cap is below it, or 0 when parking down to
+ * `plan` would park nothing. Uses the same protections as parkOwner, so a
+ * grandfathered or comped owner reads 0. A failed read is 0. Never throws.
+ */
+export async function largestInboxCountAboveCap(db: Db, ownerId: string, plan: PlanId | 'free'): Promise<number> {
+  try {
+    const [workspaces, protections] = await Promise.all([ownerWorkspaces(db, ownerId), ownerProtections(db, ownerId)]);
+    if (!workspaces || workspaces.length === 0) return 0;
+    const capped = workspaces
+      .map((w) => ({ id: w.id, cap: inboxCapFor(plan, protections, w.pro_unlimited_inboxes_exempt) }))
+      .filter((w): w is { id: string; cap: number } => w.cap !== null);
+    if (capped.length === 0) return 0;
+    const { data, error } = await db
+      .from('inboxes')
+      .select('id, workspace_id')
+      .in('workspace_id', capped.map((w) => w.id))
+      .is('parked_at', null)
+      .is('deleted_at', null);
+    if (error) {
+      if (!isUnknownColumnError(error)) console.error(`[plan-change] inbox count failed for ${ownerId}: ${error.message}`);
+      return 0;
+    }
+    const counts = new Map<string, number>();
+    for (const row of data ?? []) counts.set(row.workspace_id, (counts.get(row.workspace_id) ?? 0) + 1);
+    let largest = 0;
+    for (const w of capped) {
+      const count = counts.get(w.id) ?? 0;
+      if (count > w.cap && count > largest) largest = count;
+    }
+    return largest;
+  } catch (err) {
+    console.error('[plan-change] inbox count threw, swallowed:', err instanceof Error ? err.message : String(err));
+    return 0;
+  }
+}
+
 export interface OwnerParkingResult {
   parked: number;
   unparked: number;
