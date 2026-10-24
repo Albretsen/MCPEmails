@@ -204,6 +204,11 @@ import {
   type PlanChangeRow,
 } from '@/lib/billing/plan-change-sync';
 import { PAUSE_EARLY_KEY } from '@/lib/billing/pause';
+import {
+  parkInboxCountForEmail,
+  parkOnSubscriptionEnd,
+  syncParkMarker,
+} from '@/lib/billing/park-on-cancel';
 import { recordProductFunnelEvent } from '@/lib/analytics/product-funnel';
 import { expireGrowthCache } from '@/lib/analytics/growth-queries';
 import {
@@ -919,6 +924,8 @@ async function syncPlanFromCheckoutSession(
     offer: session.metadata?.offer ?? null,
   });
 
+  if (resolvedPlan !== 'free') await unparkAfterCheckout(customerId, userId, resolvedPlan);
+
   return { userId, resolvedPlan, resolvedInterval };
 }
 
@@ -1226,6 +1233,12 @@ async function handleSubscriptionUpserted(
       subscriptionStatus: status,
       source: `customer.subscription.updated (status=${status}${neverPaid ? ', SEPA never paid' : ''})`,
     });
+    // Decision D3: a marked cancellation that ends here parks the inboxes
+    // above Free's cap. Unmarked ends (dunning, immediate cancels, anything
+    // cancelled before the flag) never park. src/lib/billing/park-on-cancel.ts.
+    if (status === 'canceled' || status === 'unpaid') {
+      await parkOnEndIfMarked(subscription, customerId, userId);
+    }
     return;
   }
 
@@ -1332,8 +1345,24 @@ async function handleSubscriptionUpserted(
   // Reading the boolean alone skipped the queue for those customers and then
   // ran the un-cancel branch below against them.
   const cancellation = cancellationAction(subscription);
+
+  // Decision D3: record, the first time a scheduled cancel is seen with
+  // BILLING_PARK_ON_CANCEL_ENABLED on, that this subscription's end parks the
+  // inboxes above Free's cap; clear it when the cancel is undone. BEFORE the
+  // queue call, so the cancel email can say so. Not gated on lifecycle email:
+  // the marker is a billing fact, the email only reports it. Cannot throw.
+  const parkOnEnd = ownerId
+    ? await syncParkMarker({
+        db: planChangeDb,
+        ownerId,
+        subscriptionId: subscription.id,
+        cancellation,
+        email: () => stripeCustomerEmail(customerId),
+      })
+    : false;
+
   if (lifecycleQueueingEnabled() && cancellation === 'queue') {
-    await maybeQueueCancellation(subscription, resolved.plan.id);
+    await maybeQueueCancellation(subscription, resolved.plan.id, parkOnEnd);
   }
 
   // Un-cancelled: they clicked "renew" in the portal before the period ended,
@@ -1363,6 +1392,7 @@ async function handleSubscriptionUpserted(
 async function maybeQueueCancellation(
   subscription: Stripe.Subscription,
   planId: PlanId,
+  parkOnEnd = false,
 ): Promise<void> {
   try {
     if (cancellationAction(subscription) !== 'queue') return;
@@ -1414,6 +1444,9 @@ async function maybeQueueCancellation(
       // "Switch to Free" on the billing card: the cancel email leaves out the
       // "switch to a cheaper plan" line for it.
       source: cancellationSource(subscription.metadata, periodEnd),
+      // D3: the confirmation says the extra inboxes park at the end, only
+      // when this subscription is marked and something would actually park.
+      ...(parkOnEnd && userId ? { parkInboxCount: await parkInboxCountForEmail(db, userId) } : {}),
     };
 
     await queueCancellationSequence({
@@ -1456,6 +1489,10 @@ async function handleSubscriptionDeleted(
   });
 
   await clearPlanChangeOnDelete(subscription, customerId, userId);
+
+  // Decision D3: park above Free's cap when this subscription's cancellation
+  // was marked. Never for an unmarked end. Cannot throw.
+  await parkOnEndIfMarked(subscription, customerId, userId);
 
   // The subscription is gone, so any dunning still queued for it is now a lie:
   // "update your card and this carries on" is not true once there is nothing
@@ -1923,6 +1960,58 @@ async function syncPlanChange(
     }
   } catch (err) {
     console.error('[stripe-webhook] syncPlanChange failed, swallowed:', {
+      error: err instanceof Error ? err.message : String(err),
+    });
+  }
+}
+
+/**
+ * Decision D3: a subscription ended (deleted, or projected to Free as
+ * canceled or unpaid). Parks the owner's inboxes above Free's cap when, and
+ * only when, the webhook marked this subscription's cancellation while
+ * BILLING_PARK_ON_CANCEL_ENABLED was on (src/lib/billing/park-on-cancel.ts).
+ * Cannot throw: it runs after the plan write, and parking never costs Stripe
+ * its 200.
+ */
+async function parkOnEndIfMarked(
+  subscription: Stripe.Subscription,
+  customerId: string | null,
+  metadataUserId: string | null,
+): Promise<void> {
+  try {
+    if (!customerId) return;
+    const db = createServiceRoleClient();
+    const ownerId = await resolveUserId(db, customerId, metadataUserId);
+    if (!ownerId) return;
+    await parkOnSubscriptionEnd(db, ownerId, subscription.id, `webhook ${subscription.id} (ended)`);
+  } catch (err) {
+    console.error('[stripe-webhook] parkOnEndIfMarked failed, swallowed:', {
+      error: err instanceof Error ? err.message : String(err),
+    });
+  }
+}
+
+/**
+ * A checkout bought a paid plan. Unpark up to its cap whatever parked the
+ * inboxes before (a cancel, a pause that ended in a cancel). Needed here and
+ * not only in syncPlanChange: when checkout.session.completed lands first,
+ * the subscription.created that follows already reads the paid plan as
+ * `before` and sees no upgrade. Cheap when nothing is parked (one read).
+ * Cannot throw.
+ */
+async function unparkAfterCheckout(
+  customerId: string | null,
+  metadataUserId: string | null,
+  plan: PlanId,
+): Promise<void> {
+  try {
+    const db = createServiceRoleClient();
+    const ownerId = customerId ? await resolveUserId(db, customerId, metadataUserId) : metadataUserId;
+    if (!ownerId) return;
+    const row = await readPlanChangeRow(db, ownerId);
+    await unparkOwner(db, ownerId, plan, row?.inbox_keep_order ?? null, `checkout ${plan}`);
+  } catch (err) {
+    console.error('[stripe-webhook] unparkAfterCheckout failed, swallowed:', {
       error: err instanceof Error ? err.message : String(err),
     });
   }
