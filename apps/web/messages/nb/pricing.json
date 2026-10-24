@@ -18,7 +18,8 @@
   "card": {
     "perForever": "/for alltid",
     "perMonth": "/måned",
-    "billedYearly": "Faktureres ${total}/år"
+    "billedYearly": "Faktureres ${total}/år",
+    "inclVat": "inkl. mva."
   },
   "plans": {
     "free": {
@@ -221,7 +222,7 @@
     "sub": "Start på Gratis: én innboks, uten kort. Tre postkasser koster $9 i måneden med Personal, opptil 10 koster $15 med Pro, og Business har 10 inkludert for $39, med $3 i måneden for hver ekstra.",
     "ctaPrimary": "Kom i gang gratis",
     "ctaSecondary": "Les dokumentasjonen",
-    "subFounder": "Start på Gratis: én innboks, uten kort. Tre postkasser koster $9 i måneden med Personal, opptil 10 koster $15 med Pro, og Business har 10 inkludert for ${price} med grunnleggerprisen, med $3 i måneden for hver ekstra."
+    "subFounder": "Start på Gratis: én innboks, uten kort. Tre postkasser koster $9 i måneden med Personal, opptil 10 koster $15 med Pro, og Business har 10 inkludert til grunnleggerprisen over, med $3 i måneden for hver ekstra."
   },
   "seasonal": {
     "badge": "Black Week",

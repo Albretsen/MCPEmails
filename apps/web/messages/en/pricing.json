@@ -18,7 +18,8 @@
   "card": {
     "perForever": "/forever",
     "perMonth": "/month",
-    "billedYearly": "Billed ${total}/year"
+    "billedYearly": "Billed ${total}/year",
+    "inclVat": "incl. VAT"
   },
   "plans": {
     "free": {
@@ -221,7 +222,7 @@
     "sub": "Start on Free: one inbox, no card required. Personal takes you to three mailboxes for $9 a month, Pro to 10 for $15, and Business includes 10 for $39 with $3 a month for each one after that.",
     "ctaPrimary": "Get started free",
     "ctaSecondary": "Read the docs",
-    "subFounder": "Start on Free: one inbox, no card required. Personal takes you to three mailboxes for $9 a month, Pro to 10 for $15, and Business includes 10 for ${price} at the founder price, with $3 a month for each one after that."
+    "subFounder": "Start on Free: one inbox, no card required. Personal takes you to three mailboxes for $9 a month, Pro to 10 for $15, and Business includes 10 at the founder price above, with $3 a month for each one after that."
   },
   "seasonal": {
     "badge": "Black Week",

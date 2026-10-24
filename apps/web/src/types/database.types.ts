@@ -4148,6 +4148,7 @@ export type Database = {
           created_at: string
           current_period_end: string | null
           current_period_start: string | null
+          last_decline_code: string | null
           plan: string
           stripe_customer_id: string | null
           stripe_subscription_id: string | null
@@ -4159,6 +4160,7 @@ export type Database = {
           created_at?: string
           current_period_end?: string | null
           current_period_start?: string | null
+          last_decline_code?: string | null
           plan?: string
           stripe_customer_id?: string | null
           stripe_subscription_id?: string | null
@@ -4170,6 +4172,7 @@ export type Database = {
           created_at?: string
           current_period_end?: string | null
           current_period_start?: string | null
+          last_decline_code?: string | null
           plan?: string
           stripe_customer_id?: string | null
           stripe_subscription_id?: string | null
@@ -4527,6 +4530,9 @@ export type Database = {
           onboarding_technical_activated_at: string | null
           onboarding_value_activated_at: string | null
           owner_id: string
+          payment_issue_kind: string | null
+          payment_issue_since: string | null
+          payment_notice_shown_on: string | null
           plan: string
           pro_unlimited_inboxes_exempt: boolean
           slug: string
@@ -4578,6 +4584,9 @@ export type Database = {
           onboarding_technical_activated_at?: string | null
           onboarding_value_activated_at?: string | null
           owner_id: string
+          payment_issue_kind?: string | null
+          payment_issue_since?: string | null
+          payment_notice_shown_on?: string | null
           plan?: string
           pro_unlimited_inboxes_exempt?: boolean
           slug: string
@@ -4629,6 +4638,9 @@ export type Database = {
           onboarding_technical_activated_at?: string | null
           onboarding_value_activated_at?: string | null
           owner_id?: string
+          payment_issue_kind?: string | null
+          payment_issue_since?: string | null
+          payment_notice_shown_on?: string | null
           plan?: string
           pro_unlimited_inboxes_exempt?: boolean
           slug?: string

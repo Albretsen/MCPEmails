@@ -18,7 +18,8 @@
   "card": {
     "perForever": "/para siempre",
     "perMonth": "/mes",
-    "billedYearly": "Facturado ${total}/año"
+    "billedYearly": "Facturado ${total}/año",
+    "inclVat": "IVA incluido"
   },
   "plans": {
     "free": {
@@ -221,7 +222,7 @@
     "sub": "Empieza en Gratis: una bandeja, sin tarjeta. Tres buzones cuestan $9 al mes con Personal, hasta 10 cuestan $15 con Pro, y Business incluye 10 por $39, con $3 al mes por cada uno adicional.",
     "ctaPrimary": "Empieza gratis",
     "ctaSecondary": "Lee la documentación",
-    "subFounder": "Empieza en Gratis: una bandeja, sin tarjeta. Tres buzones cuestan $9 al mes con Personal, hasta 10 cuestan $15 con Pro, y Business incluye 10 por ${price} con el precio fundador, con $3 al mes por cada uno adicional."
+    "subFounder": "Empieza en Gratis: una bandeja, sin tarjeta. Tres buzones cuestan $9 al mes con Personal, hasta 10 cuestan $15 con Pro, y Business incluye 10 con el precio fundador de arriba, con $3 al mes por cada uno adicional."
   },
   "seasonal": {
     "badge": "Black Week",

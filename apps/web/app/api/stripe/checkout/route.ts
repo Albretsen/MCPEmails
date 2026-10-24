@@ -1,5 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { runCheckout } from '@/lib/stripe/checkout-core';
+import { countryFromHeaders } from '@/lib/acquisition-country.mjs';
 
 /**
  * POST /api/stripe/checkout
@@ -71,11 +72,16 @@ export async function POST(request: NextRequest): Promise<NextResponse> {
 
   const { planId, interval, confirm, locale, offer, quotedPriceId } = body as Record<string, unknown>;
 
+  // Vercel's geolocation of this request, for the EUR currency choice and VAT
+  // evidence (see `country` on runCheckout). Absent locally and in tests.
+  const country = countryFromHeaders(request.headers);
+
   const outcome = await runCheckout({
     planId,
     interval,
     confirmChange: confirm,
     locale,
+    ...(country ? { country } : {}),
     ...(offer !== undefined ? { quotedOffer: offer } : {}),
     ...(quotedPriceId !== undefined ? { quotedPriceId } : {}),
   });

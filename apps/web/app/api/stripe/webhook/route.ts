@@ -22,6 +22,29 @@
  *   checkout.session.expired          : a checkout was left unpaid; one
  *                                       reminder email (or a holdout row), see
  *                                       src/lib/email/abandoned-checkout.ts
+ *   checkout.session.async_payment_succeeded : a delayed first payment (SEPA
+ *                                       Direct Debit) cleared; re-sync the plan
+ *   checkout.session.async_payment_failed    : a delayed first payment failed;
+ *                                       revoke the provisional access
+ *   charge.dispute.created            : a SEPA debit was disputed; log only
+ *
+ * Delayed payment methods (added 2026-10-24, for the EUR launch):
+ *   Stripe makes a SEPA Direct Debit subscription `active` while its first
+ *   debit is still processing (up to six business days), and
+ *   checkout.session.completed arrives with payment_status 'unpaid'. The buyer
+ *   gets the plan at once anyway: PROVISIONAL ACCESS, decided 2026-10-24.
+ *   Two things take it back if the money never arrives: the async_payment_failed
+ *   handler, and the "never paid" rule in src/lib/stripe/sepa-entitlement.ts,
+ *   which stops `past_due` / `unpaid` from keeping a SEPA subscription entitled
+ *   when it has never had a paid invoice.
+ *
+ * Failed-payment state (added 2026-10-24, src/lib/billing/payment-issue.ts):
+ *   `invoice.payment_failed` and `invoice.payment_action_required` store the
+ *   decline code and mark every owned workspace (dashboard banner +
+ *   once-a-day MCP note); a successful payment,
+ *   a subscription back out of past_due/unpaid, or a deleted subscription
+ *   clears it. Billing state only, never entitlement, and independent of the
+ *   lifecycle email flag.
  *
  * Billing lifecycle email (added 2026-09-02):
  *   The four subscription events above still do all the entitlement work; the
@@ -106,6 +129,7 @@ import {
 } from '@/lib/stripe/plans';
 import { syncMailboxAddon } from '@/lib/stripe/mailbox-addon';
 import { recordFounderPlace, recordFounderPlaceFromInvoice } from '@/lib/stripe/founder-places';
+import { hasPaidInvoice, neverPaidSepa } from '@/lib/stripe/sepa-entitlement';
 import { markCheckoutLinkComplete } from '@/lib/stripe/checkout-link';
 import { sendPurchaseConfirmationEmail } from '@/lib/email/purchase-confirmation';
 import {
@@ -128,6 +152,12 @@ import {
   type LifecyclePayload,
 } from '@/lib/email/billing-lifecycle';
 import { lifecycleQueueingEnabled } from '@/lib/billing/lifecycle-mode';
+import {
+  clearPaymentIssue,
+  hasPaymentIssue,
+  PAYMENT_ISSUE_STATUSES,
+  recordPaymentIssue,
+} from '@/lib/billing/payment-issue';
 import { invoiceLinePriceId } from '@/lib/billing/invoice-shape';
 import {
   liftPlanLimitPauses,
@@ -219,7 +249,13 @@ function signatureToleranceSeconds(): number {
  * appear to work and change nothing until the next deploy.
  */
 
-/** Subscription statuses that should keep the user ENTITLED to their paid plan. */
+/**
+ * Subscription statuses that should keep the user ENTITLED to their paid plan.
+ *
+ * One exception on top of this set: a `past_due` / `unpaid` subscription on
+ * SEPA Direct Debit that has never had a paid invoice is NOT entitled. See
+ * neverPaidSepa in src/lib/stripe/sepa-entitlement.ts, applied by the handlers.
+ */
 const ENTITLED_STATUSES: ReadonlySet<Stripe.Subscription.Status> = new Set([
   'active',
   'trialing',
@@ -380,13 +416,30 @@ export async function POST(request: NextRequest): Promise<NextResponse> {
   // If the subscription event won that race the invoice event would read as
   // stale and return here, and the dunning sequence would never be queued at
   // all. Exempting them is safe because neither one changes plan state: they
-  // only start and stop email sequences, both keyed on the invoice id.
+  // only start and stop email sequences, both keyed on the invoice id. They
+  // also write the failed-payment banner state, which is not entitlement; a
+  // late `payment_failed` re-reads the live invoice before it writes anything.
   //
   // `checkout.session.expired` changes no plan state either; it only decides
   // whether one reminder email goes out.
+  //
+  // The two `checkout.session.async_payment_*` events are exempt for the
+  // reason checkout.session.completed is: each fires once per Checkout
+  // session, and neither trusts its own payload for plan state. Both
+  // re-retrieve the subscription from Stripe and write what it says NOW, so a
+  // late delivery cannot write an old state. They also arrive days after the
+  // purchase, beside a burst of invoice and subscription events with the same
+  // second-granularity timestamps; reading as stale there would silently skip
+  // the one event that revokes an unpaid SEPA buyer's access.
+  //
+  // `charge.dispute.created` carries no customer id, so the guard never runs
+  // for it; listed for the reader, and because it only logs.
   const EXEMPT_FROM_STALENESS: ReadonlySet<string> = new Set([
     'checkout.session.completed',
     'checkout.session.expired',
+    'checkout.session.async_payment_succeeded',
+    'checkout.session.async_payment_failed',
+    'charge.dispute.created',
     'invoice.payment_failed',
     'invoice.payment_action_required',
     'invoice.payment_succeeded',
@@ -421,6 +474,22 @@ export async function POST(request: NextRequest): Promise<NextResponse> {
         );
         break;
 
+      case 'checkout.session.async_payment_succeeded':
+        await handleCheckoutAsyncPaymentSucceeded(
+          event.data.object as Stripe.Checkout.Session,
+        );
+        break;
+
+      case 'checkout.session.async_payment_failed':
+        await handleCheckoutAsyncPaymentFailed(
+          event.data.object as Stripe.Checkout.Session,
+        );
+        break;
+
+      case 'charge.dispute.created':
+        await handleChargeDisputeCreated(event.data.object as Stripe.Dispute);
+        break;
+
       case 'checkout.session.expired': {
         // Post-response and never throws: a reminder email can neither delay
         // the ack nor roll back the ledger row.
@@ -434,6 +503,8 @@ export async function POST(request: NextRequest): Promise<NextResponse> {
         await handleSubscriptionUpserted(
           event.data.object as Stripe.Subscription,
         );
+        // Billing state only, after the entitlement work, and never throws.
+        await clearPaymentIssueIfRecovered(event.data.object as Stripe.Subscription);
         break;
 
       case 'invoice.payment_failed':
@@ -455,11 +526,20 @@ export async function POST(request: NextRequest): Promise<NextResponse> {
         retryFounderPlace(event.data.object as Stripe.Invoice);
         break;
 
-      case 'customer.subscription.deleted':
-        await handleSubscriptionDeleted(
-          event.data.object as Stripe.Subscription,
-        );
+      case 'customer.subscription.deleted': {
+        const deleted = event.data.object as Stripe.Subscription;
+        await handleSubscriptionDeleted(deleted);
+        // Nothing left to pay for, so nothing left to warn about. Never throws.
+        const deletedCustomer =
+          typeof deleted.customer === 'string' ? deleted.customer : deleted.customer?.id;
+        if (deletedCustomer) {
+          await clearPaymentIssue(createServiceRoleClient(), {
+            stripeCustomerId: deletedCustomer,
+            source: 'customer.subscription.deleted',
+          });
+        }
         break;
+      }
 
       default:
         // Unhandled event types are acknowledged but not processed.
@@ -488,6 +568,8 @@ export async function POST(request: NextRequest): Promise<NextResponse> {
 /** Stripe events that move a number on the growth board or the kiosk. */
 const GROWTH_EVENT_TYPES = new Set([
   'checkout.session.completed',
+  'checkout.session.async_payment_succeeded',
+  'checkout.session.async_payment_failed',
   'customer.subscription.created',
   'customer.subscription.updated',
   'customer.subscription.deleted',
@@ -513,108 +595,21 @@ const GROWTH_EVENT_TYPES = new Set([
  * Stripe-provided `payment_status` as a best-effort hint, never an unconditional
  * 'active'. The authoritative state is still the subsequent
  * customer.subscription.* events.
+ *
+ * A SEPA Direct Debit purchase arrives here with payment_status 'unpaid' and an
+ * `active` subscription, and is granted the plan like any other (provisional
+ * access; see the file header). Its funnel row and purchase email go out now,
+ * not when the debit clears.
  */
 async function handleCheckoutSessionCompleted(
   session: Stripe.Checkout.Session,
 ): Promise<void> {
-  if (session.mode !== 'subscription') return;
-
-  const userId = session.metadata?.user_id ?? null;
-
-  // Accept any purchasable plan in the catalogue, derived rather than listed.
-  // A hardcoded ('solo' | 'pro') list here was the bug that would take a
-  // Personal customer's money and then leave them on free: the metadata is
-  // rejected, this handler returns early, and no plan is ever written.
-  // `free` is not purchasable, so it stays rejected along with any unknown id.
-  const rawPlanId = session.metadata?.plan_id;
-  const planId: PlanId | undefined =
-    typeof rawPlanId === 'string' && rawPlanId !== 'free' && rawPlanId in PLANS
-      ? (rawPlanId as PlanId)
-      : undefined;
-
-  if (!planId) {
-    console.error(
-      `[stripe-webhook] checkout.session.completed bad/missing plan_id "${rawPlanId}" (session ${session.id})`,
-    );
-    return;
-  }
-
-  const customerId =
-    typeof session.customer === 'string'
-      ? session.customer
-      : session.customer?.id ?? null;
-
-  const subscriptionId =
-    typeof session.subscription === 'string'
-      ? session.subscription
-      : session.subscription?.id ?? null;
-
-  // Derive the real subscription status instead of assuming 'active'.
-  let subscriptionStatus: string | null = null;
-  let currentPeriodEnd: number | null = null;
-  let currentPeriodStart: number | null = null;
-  let resolvedPlan: PlanId | 'free' = planId;
-  // Resolved from the price the customer actually subscribed to; the checkout
-  // metadata is only the fallback.
-  let resolvedInterval: BillingInterval | null = null;
-
-  if (subscriptionId) {
-    try {
-      const subscription = await stripe.subscriptions.retrieve(subscriptionId);
-      subscriptionStatus = subscription.status;
-      currentPeriodEnd =
-        basePlanItem(subscription.items.data)?.current_period_end ?? null;
-      currentPeriodStart =
-        basePlanItem(subscription.items.data)?.current_period_start ?? null;
-
-      // Prefer the price the customer actually subscribed to over the metadata
-      // plan_id (they should agree, but the subscription is authoritative).
-      const priceId = basePlanItem(subscription.items.data)?.price?.id;
-      const resolved = getPlanByStripePriceId(priceId);
-      if (resolved) {
-        resolvedPlan = resolved.plan.id;
-        resolvedInterval = resolved.interval;
-      } else if (priceId) {
-        console.error(
-          `[stripe-webhook] checkout.session.completed: price "${priceId}" on sub ${subscriptionId} does not map to a known plan; using metadata plan_id "${planId}" (session ${session.id})`,
-        );
-      }
-
-      // If the subscription is NOT entitled (e.g. incomplete), do not grant the
-      // paid plan; downgrade to free and persist the raw status for visibility.
-      if (!ENTITLED_STATUSES.has(subscription.status)) {
-        resolvedPlan = 'free';
-      }
-    } catch (err) {
-      const message = err instanceof Error ? err.message : String(err);
-      console.error(
-        `[stripe-webhook] checkout.session.completed: failed to retrieve subscription ${subscriptionId}: ${message}. Falling back to session.payment_status.`,
-      );
-      // Best-effort fallback: a paid checkout session implies an active sub.
-      subscriptionStatus =
-        session.payment_status === 'paid' ? 'active' : (session.payment_status ?? null);
-    }
-  } else {
-    // No subscription id on the session (unexpected for mode=subscription).
-    subscriptionStatus =
-      session.payment_status === 'paid' ? 'active' : (session.payment_status ?? null);
-  }
-
-  await applyUserPlan({
-    userId,
-    customerId,
-    subscriptionId,
-    newPlan: resolvedPlan,
-    subscriptionStatus,
-    currentPeriodEnd,
-    currentPeriodStart,
-    source: 'checkout.session.completed',
-    offer: session.metadata?.offer ?? null,
-  });
+  const synced = await syncPlanFromCheckoutSession(session, 'checkout.session.completed');
+  if (!synced) return;
+  const { userId, resolvedPlan, resolvedInterval } = synced;
 
   if (resolvedPlan === 'free') return;
-  // Re-bind to a const: `resolvedPlan` is a `let`, and TypeScript discards the
-  // non-'free' narrowing for a `let` captured by the `after()` closure below.
+  // Bound once, narrowed, for the `after()` closures below.
   const purchasedPlan: Exclude<PlanId, 'free'> = resolvedPlan;
 
   // The price the customer actually subscribed to is authoritative; the
@@ -699,12 +694,251 @@ async function handleCheckoutSessionCompleted(
           }
           : null,
         sessionId: session.id,
+        // 'unpaid' for a delayed method (SEPA Direct Debit): the email then
+        // says the debit is processing instead of "payment received".
+        paymentStatus: session.payment_status ?? null,
       }),
     );
   } else {
     console.error(
       `[stripe-webhook] checkout.session.completed ${session.id}: no email on the session; confirmation email skipped.`,
     );
+  }
+}
+
+/**
+ * The plan half of a completed Checkout session: resolve the plan the session
+ * paid for from the subscription Stripe holds NOW, and write it with
+ * applyUserPlan. Shared by checkout.session.completed and
+ * checkout.session.async_payment_succeeded, so the two can never disagree about
+ * what a session entitles. Idempotent: it writes the current state, so running
+ * it twice for the same session writes the same row twice.
+ *
+ * Returns null when there is nothing to sync (not a subscription session, or
+ * no usable plan id in its metadata).
+ */
+async function syncPlanFromCheckoutSession(
+  session: Stripe.Checkout.Session,
+  source: string,
+): Promise<{
+  userId: string | null;
+  resolvedPlan: PlanId | 'free';
+  resolvedInterval: BillingInterval | null;
+} | null> {
+  if (session.mode !== 'subscription') return null;
+
+  const userId = session.metadata?.user_id ?? null;
+
+  // Accept any purchasable plan in the catalogue, derived rather than listed.
+  // A hardcoded ('solo' | 'pro') list here was the bug that would take a
+  // Personal customer's money and then leave them on free: the metadata is
+  // rejected, this handler returns early, and no plan is ever written.
+  // `free` is not purchasable, so it stays rejected along with any unknown id.
+  const rawPlanId = session.metadata?.plan_id;
+  const planId: PlanId | undefined =
+    typeof rawPlanId === 'string' && rawPlanId !== 'free' && rawPlanId in PLANS
+      ? (rawPlanId as PlanId)
+      : undefined;
+
+  if (!planId) {
+    console.error(
+      `[stripe-webhook] ${source} bad/missing plan_id "${rawPlanId}" (session ${session.id})`,
+    );
+    return null;
+  }
+
+  const customerId =
+    typeof session.customer === 'string'
+      ? session.customer
+      : session.customer?.id ?? null;
+
+  const subscriptionId =
+    typeof session.subscription === 'string'
+      ? session.subscription
+      : session.subscription?.id ?? null;
+
+  // Derive the real subscription status instead of assuming 'active'.
+  let subscriptionStatus: string | null = null;
+  let currentPeriodEnd: number | null = null;
+  let currentPeriodStart: number | null = null;
+  let resolvedPlan: PlanId | 'free' = planId;
+  // Resolved from the price the customer actually subscribed to; the checkout
+  // metadata is only the fallback.
+  let resolvedInterval: BillingInterval | null = null;
+
+  if (subscriptionId) {
+    try {
+      const subscription = await stripe.subscriptions.retrieve(subscriptionId);
+      subscriptionStatus = subscription.status;
+      currentPeriodEnd =
+        basePlanItem(subscription.items.data)?.current_period_end ?? null;
+      currentPeriodStart =
+        basePlanItem(subscription.items.data)?.current_period_start ?? null;
+
+      // Prefer the price the customer actually subscribed to over the metadata
+      // plan_id (they should agree, but the subscription is authoritative).
+      const priceId = basePlanItem(subscription.items.data)?.price?.id;
+      const resolved = getPlanByStripePriceId(priceId);
+      if (resolved) {
+        resolvedPlan = resolved.plan.id;
+        resolvedInterval = resolved.interval;
+      } else if (priceId) {
+        console.error(
+          `[stripe-webhook] ${source}: price "${priceId}" on sub ${subscriptionId} does not map to a known plan; using metadata plan_id "${planId}" (session ${session.id})`,
+        );
+      }
+
+      // If the subscription is NOT entitled (e.g. incomplete), do not grant the
+      // paid plan; downgrade to free and persist the raw status for visibility.
+      // The same holds for a SEPA subscription in dunning that never paid.
+      if (
+        !ENTITLED_STATUSES.has(subscription.status) ||
+        (await neverPaidSepa(stripe, subscription))
+      ) {
+        resolvedPlan = 'free';
+      }
+    } catch (err) {
+      const message = err instanceof Error ? err.message : String(err);
+      console.error(
+        `[stripe-webhook] ${source}: failed to retrieve subscription ${subscriptionId}: ${message}. Falling back to session.payment_status.`,
+      );
+      // Best-effort fallback: a paid checkout session implies an active sub.
+      subscriptionStatus =
+        session.payment_status === 'paid' ? 'active' : (session.payment_status ?? null);
+    }
+  } else {
+    // No subscription id on the session (unexpected for mode=subscription).
+    subscriptionStatus =
+      session.payment_status === 'paid' ? 'active' : (session.payment_status ?? null);
+  }
+
+  await applyUserPlan({
+    userId,
+    customerId,
+    subscriptionId,
+    newPlan: resolvedPlan,
+    subscriptionStatus,
+    currentPeriodEnd,
+    currentPeriodStart,
+    source,
+    offer: session.metadata?.offer ?? null,
+  });
+
+  return { userId, resolvedPlan, resolvedInterval };
+}
+
+/**
+ * checkout.session.async_payment_succeeded
+ *
+ * The delayed first payment of a Checkout session cleared: in practice a SEPA
+ * Direct Debit, about six business days after the purchase. The buyer has had
+ * the plan since checkout.session.completed (provisional access), so this
+ * changes nothing in the normal case. It re-syncs anyway, through the same
+ * path checkout.session.completed uses, because it is the one event that says
+ * "this purchase is now paid", and it would repair a plan that a past_due
+ * blip in between had taken away. No funnel row and no email: both went out
+ * at completion, and this must not count the purchase twice.
+ */
+async function handleCheckoutAsyncPaymentSucceeded(
+  session: Stripe.Checkout.Session,
+): Promise<void> {
+  console.log(
+    `[stripe-webhook] checkout.session.async_payment_succeeded ${session.id}: delayed payment cleared (customer ${customerIdOf(session) ?? 'none'}).`,
+  );
+  await syncPlanFromCheckoutSession(session, 'checkout.session.async_payment_succeeded');
+}
+
+/**
+ * checkout.session.async_payment_failed
+ *
+ * The delayed first payment of a Checkout session failed: the bank refused the
+ * SEPA debit (no funds, closed account, mandate refused). The buyer has had
+ * the plan since checkout.session.completed, provisionally. If the
+ * subscription has never had a paid invoice, that access ends here, through
+ * applyUserPlan like every other downgrade. A subscription that has a paid
+ * invoice (the buyer paid the open invoice some other way in the meantime)
+ * keeps its plan.
+ *
+ * Errors throw on purpose, unlike the fail-open entitlement check: the route
+ * then answers 500 and Stripe redelivers, and a retried downgrade is harmless
+ * where a silently skipped one leaves an unpaid account on a paid plan.
+ */
+async function handleCheckoutAsyncPaymentFailed(
+  session: Stripe.Checkout.Session,
+): Promise<void> {
+  if (session.mode !== 'subscription') return;
+  const customerId = customerIdOf(session);
+  const subscriptionId =
+    typeof session.subscription === 'string'
+      ? session.subscription
+      : session.subscription?.id ?? null;
+
+  console.error(
+    `[stripe-webhook] checkout.session.async_payment_failed ${session.id}: delayed first payment failed (customer ${customerId ?? 'none'}, subscription ${subscriptionId ?? 'none'}).`,
+  );
+  if (!subscriptionId) return;
+
+  const subscription = await stripe.subscriptions.retrieve(subscriptionId);
+  const paid = await hasPaidInvoice(stripe, subscription.id);
+  if (paid === null) {
+    throw new Error(
+      `checkout.session.async_payment_failed ${session.id}: could not tell whether ${subscription.id} ever paid; retry.`,
+    );
+  }
+
+  if (ENTITLED_STATUSES.has(subscription.status) && paid) {
+    console.log(
+      `[stripe-webhook] checkout.session.async_payment_failed ${session.id}: ${subscription.id} has a paid invoice (status=${subscription.status}); plan kept.`,
+    );
+    return;
+  }
+
+  await applyUserPlan({
+    userId: session.metadata?.user_id ?? subscription.metadata?.user_id ?? null,
+    customerId,
+    subscriptionId: subscription.id,
+    newPlan: 'free',
+    subscriptionStatus: subscription.status,
+    source: `checkout.session.async_payment_failed (status=${subscription.status}, never paid)`,
+  });
+}
+
+/**
+ * charge.dispute.created, for SEPA Direct Debit only.
+ *
+ * A SEPA payer can dispute a debit with no questions asked for eight weeks
+ * (thirteen months if they say it was unauthorized), and the dispute is final:
+ * there is no evidence to submit. This logs one loud line so the owner can
+ * look at the workspace; it does not downgrade anyone, because a disputed
+ * renewal is not proof the customer wants to leave, and a dispute filed by
+ * mistake is withdrawn by paying again. Card disputes are left to the Stripe
+ * dashboard as before.
+ *
+ * Never throws: a log line is not worth a 500 and a redelivery.
+ */
+async function handleChargeDisputeCreated(dispute: Stripe.Dispute): Promise<void> {
+  try {
+    const chargeId =
+      typeof dispute.charge === 'string' ? dispute.charge : dispute.charge?.id ?? null;
+    // The dispute names its own method for a few types (card, klarna, paypal),
+    // never for SEPA, so a type on the dispute that is not SEPA ends it here.
+    const disputeType = dispute.payment_method_details?.type ?? null;
+    if (disputeType && disputeType !== 'sepa_debit') return;
+
+    let charge: Stripe.Charge | null =
+      typeof dispute.charge === 'object' && dispute.charge ? dispute.charge : null;
+    if (!charge && chargeId) charge = await stripe.charges.retrieve(chargeId);
+    if (charge?.payment_method_details?.type !== 'sepa_debit') return;
+
+    const customerId =
+      typeof charge.customer === 'string' ? charge.customer : charge.customer?.id ?? null;
+    console.error(
+      `[stripe-webhook] SEPA DISPUTE ${dispute.id} on charge ${chargeId ?? 'none'} (customer ${customerId ?? 'none'}): ${dispute.amount} ${dispute.currency}, reason=${dispute.reason}. SEPA disputes are final; review this account by hand. No plan change made.`,
+    );
+  } catch (err) {
+    console.error('[stripe-webhook] charge.dispute.created %s: could not inspect the charge:', dispute.id, {
+      error: err instanceof Error ? err.message : String(err),
+    });
   }
 }
 
@@ -727,16 +961,20 @@ async function handleSubscriptionUpserted(
   const status = subscription.status;
 
   // Persist status always (so a banner can read it), even when downgrading.
-  if (!ENTITLED_STATUSES.has(status)) {
-    // Not entitled (canceled / incomplete / incomplete_expired / paused):
-    // downgrade to free but keep the raw status for visibility.
+  //
+  // Not entitled: canceled / incomplete / incomplete_expired / paused, and a
+  // SEPA subscription in past_due / unpaid that has never had a paid invoice
+  // (sepa-entitlement.ts). Downgrade to free but keep the raw status for
+  // visibility. The SEPA check makes no Stripe call outside past_due / unpaid.
+  const neverPaid = ENTITLED_STATUSES.has(status) && (await neverPaidSepa(stripe, subscription));
+  if (!ENTITLED_STATUSES.has(status) || neverPaid) {
     await applyUserPlan({
       userId,
       customerId,
       subscriptionId: subscription.id,
       newPlan: 'free',
       subscriptionStatus: status,
-      source: `customer.subscription.updated (status=${status})`,
+      source: `customer.subscription.updated (status=${status}${neverPaid ? ', SEPA never paid' : ''})`,
     });
     return;
   }
@@ -1060,7 +1298,8 @@ async function maybeQueueCancellationOnDelete(
  * failing customer ENTITLED while the card is retried. Duplicating any of that
  * here would give two events the ability to write the same state, which is the
  * class of bug the out-of-order guard exists to prevent. This handler queues
- * email and nothing else.
+ * email and records the failed-payment banner state (decline code and the
+ * workspaces.payment_issue_* markers), which no entitlement check reads.
  *
  * WHAT IT REFUSES TO DUN
  *
@@ -1126,7 +1365,8 @@ async function queueDunningForInvoice(
   invoice: Stripe.Invoice,
   options: { eventType: string; declineCode?: string },
 ): Promise<void> {
-  if (!lifecycleQueueingEnabled()) return;
+  // NOT gated on lifecycleQueueingEnabled() here: the failed-payment state
+  // below is written whether or not lifecycle email is on.
   const tag = [options.eventType, invoice.id] as const;
 
   const customerId =
@@ -1151,6 +1391,15 @@ async function queueDunningForInvoice(
 
   // Resolved before the retry guard, because the guard depends on it.
   const declineCode = options.declineCode ?? (await invoiceDeclineCode(invoice));
+
+  // The failed-payment STATE (dashboard banner + once-a-day MCP note), for
+  // both invoice.payment_failed and invoice.payment_action_required. It runs
+  // whether or not lifecycle email is on, and before the retry guard below on
+  // purpose: an SCA invoice often has no retry scheduled, and that customer is
+  // the one who most needs to be told. Billing state only, never throws.
+  await recordPaymentIssueForInvoice(invoice, customerId, declineCode);
+
+  if (!lifecycleQueueingEnabled()) return;
 
   // Stripe scheduled no retry and has barely tried. The ordinary sequence
   // asserts that "the card gets retried automatically over the next two weeks",
@@ -1259,13 +1508,20 @@ function retryFounderPlace(invoice: Stripe.Invoice): void {
 }
 
 async function handleInvoicePaymentSucceeded(invoice: Stripe.Invoice): Promise<void> {
-  if (!lifecycleQueueingEnabled()) return;
-
   const customerId =
     typeof invoice.customer === 'string' ? invoice.customer : invoice.customer?.id ?? null;
   if (!customerId) return;
 
   const db = createServiceRoleClient();
+
+  // The payment went through: the banner and the MCP note stop. Independent of
+  // the lifecycle email flag, and never throws.
+  await clearPaymentIssue(db, {
+    stripeCustomerId: customerId,
+    source: 'invoice.payment_succeeded',
+  });
+
+  if (!lifecycleQueueingEnabled()) return;
 
   if (invoice.id) {
     await cancelOpenSequence({
@@ -1282,6 +1538,89 @@ async function handleInvoicePaymentSucceeded(invoice: Stripe.Invoice): Promise<v
     templates: ['winback_14', 'winback_30'],
     reason: 'subscription_reactivated',
   });
+}
+
+// ---------------------------------------------------------------------------
+// Failed-payment state (src/lib/billing/payment-issue.ts)
+// ---------------------------------------------------------------------------
+
+/**
+ * Record the failed-payment state for a declined renewal invoice, unless the
+ * invoice has been paid or voided since this event was emitted.
+ *
+ * Both invoice events are exempt from the out-of-order guard, so a redelivered
+ * `payment_failed` can land AFTER the `payment_succeeded` that settled it. The
+ * live invoice is the arbiter: one retrieve, only on a decline. If the
+ * retrieve fails the state is written anyway; the next success clears it.
+ *
+ * An `invoice.payment_action_required` handler records the same state through
+ * this, with the 'authentication_required' code. Never throws.
+ */
+async function recordPaymentIssueForInvoice(
+  invoice: Stripe.Invoice,
+  customerId: string,
+  declineCode: string | null,
+): Promise<void> {
+  try {
+    if (invoice.id) {
+      try {
+        const live = await stripe.invoices.retrieve(invoice.id);
+        if (live.status === 'paid' || live.status === 'void') {
+          console.log(
+            '[stripe-webhook] %s is already %s; no payment issue recorded.', invoice.id, live.status,
+          );
+          return;
+        }
+      } catch (err) {
+        console.error('[stripe-webhook] could not re-read invoice %s:', invoice.id, {
+          error: err instanceof Error ? err.message : String(err),
+        });
+      }
+    }
+    await recordPaymentIssue(createServiceRoleClient(), {
+      stripeCustomerId: customerId,
+      declineCode,
+    });
+  } catch (err) {
+    console.error('[stripe-webhook] recordPaymentIssueForInvoice failed, swallowed:', {
+      error: err instanceof Error ? err.message : String(err),
+    });
+  }
+}
+
+/**
+ * A subscription event says the subscription is no longer failing (active,
+ * trialing, canceled, ...). Clear the failed-payment state.
+ *
+ * The out-of-order guard compares whole seconds and strictly, so a sibling
+ * `subscription.updated` (still `active`) emitted in the same second as the
+ * `invoice.payment_failed` can arrive after it and is not stale. So, only when
+ * there is something to clear, the live subscription decides. Never throws.
+ */
+async function clearPaymentIssueIfRecovered(subscription: Stripe.Subscription): Promise<void> {
+  try {
+    if (PAYMENT_ISSUE_STATUSES.has(subscription.status)) return;
+    const customerId =
+      typeof subscription.customer === 'string'
+        ? subscription.customer
+        : subscription.customer?.id;
+    if (!customerId) return;
+
+    const db = createServiceRoleClient();
+    if (!(await hasPaymentIssue(db, customerId))) return;
+
+    const live = await stripe.subscriptions.retrieve(subscription.id);
+    if (PAYMENT_ISSUE_STATUSES.has(live.status)) return;
+
+    await clearPaymentIssue(db, {
+      stripeCustomerId: customerId,
+      source: `customer.subscription.updated (status=${live.status})`,
+    });
+  } catch (err) {
+    console.error('[stripe-webhook] clearPaymentIssueIfRecovered failed, swallowed:', {
+      error: err instanceof Error ? err.message : String(err),
+    });
+  }
 }
 
 // ---------------------------------------------------------------------------
@@ -1387,6 +1726,13 @@ function declineFrom(
   error: Stripe.PaymentIntent.LastPaymentError | null | undefined,
 ): string | null {
   return error?.decline_code ?? error?.code ?? null;
+}
+
+/** The customer id on a Checkout session, expanded or not. */
+function customerIdOf(session: Stripe.Checkout.Session): string | null {
+  return typeof session.customer === 'string'
+    ? session.customer
+    : session.customer?.id ?? null;
 }
 
 /** Best-effort extraction of the Stripe customer id from any event object. */

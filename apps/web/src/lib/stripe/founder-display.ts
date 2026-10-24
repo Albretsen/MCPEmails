@@ -103,6 +103,8 @@ export async function withFounderSubscriberPrices(
       ...prices.pro,
       monthlyCents: founder.monthlyCents,
       yearlyCents: founder.yearlyCents,
+      eurMonthlyCents: founder.monthlyCents,
+      eurYearlyCents: founder.yearlyCents,
       founderSubscriber: true,
     },
   };

@@ -181,6 +181,10 @@ export function pricesWithFounder<T extends StripePricesMap | null | undefined>(
       ...pro,
       monthlyCents: pro.founder.monthlyCents,
       yearlyCents: pro.founder.yearlyCents,
+      // EU visitors see the same digits in EUR, like every other price
+      // (eur-prices.ts), so the EUR card shows 29 too, not 39.
+      eurMonthlyCents: pro.founder.monthlyCents,
+      eurYearlyCents: pro.founder.yearlyCents,
       monthlyPriceConfigured: true,
       yearlyPriceConfigured: true,
     },

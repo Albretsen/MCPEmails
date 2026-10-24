@@ -1,5 +1,6 @@
 import { routing } from './routing';
 import { PLANS } from '@/lib/stripe/plans';
+import { EU_COUNTRIES } from '@/lib/stripe/eur-prices';
 import { REVIEW_SOURCES, publishedReviews, reviewSummary } from '../../components/marketing/reviews.mjs';
 
 export const APP_URL = (
@@ -104,13 +105,17 @@ export const OG_LOCALE: Record<string, string> = {
 /**
  * `founder` is the Business founder offer while it is open on /pricing: the
  * Business Offer then carries the founder monthly price, valid until its last
- * day. Absent, every price is the catalogue's.
+ * day, in USD and (same digits, like every EUR price) in EUR. Absent, every
+ * price is the catalogue's.
  */
 function planOffers(
   url: string,
-  founder?: { monthlyCents: number; validUntil: string } | null,
+  {
+    eur = false,
+    founder = null,
+  }: { eur?: boolean; founder?: { monthlyCents: number; validUntil: string } | null } = {},
 ) {
-  return (['free', 'personal', 'solo', 'pro'] as const).map((id) => {
+  const usd = (['free', 'personal', 'solo', 'pro'] as const).map((id) => {
     const plan = PLANS[id];
     const founderOffer = id === 'pro' && founder ? founder : null;
     const cents = founderOffer ? founderOffer.monthlyCents : plan.monthlyPriceCents;
@@ -134,6 +139,37 @@ function planOffers(
       },
     };
   });
+  if (!eur) return usd;
+  // EU visitors pay the same digits in EUR, VAT included
+  // (src/lib/stripe/eur-prices.ts). Paid tiers only: Free has no currency.
+  // The USD offers above stay exactly as they were.
+  const eurOffers = (['personal', 'solo', 'pro'] as const).map((id) => {
+    const plan = PLANS[id];
+    const founderOffer = id === 'pro' && founder ? founder : null;
+    const cents = founderOffer ? founderOffer.monthlyCents : plan.monthlyPriceCents;
+    const price = (cents / 100).toString();
+    return {
+      ...(founderOffer ? { priceValidUntil: founderOffer.validUntil } : {}),
+      '@type': 'Offer',
+      name: plan.name,
+      description: plan.description,
+      url,
+      price,
+      priceCurrency: 'EUR',
+      availability: 'https://schema.org/InStock',
+      eligibleRegion: EU_COUNTRIES.map((code) => ({ '@type': 'Country', name: code })),
+      priceSpecification: {
+        '@type': 'UnitPriceSpecification',
+        price,
+        priceCurrency: 'EUR',
+        valueAddedTaxIncluded: true,
+        unitText: 'MONTH',
+        billingDuration: 1,
+        billingIncrement: 1,
+      },
+    };
+  });
+  return [...usd, ...eurOffers];
 }
 
 /**
@@ -313,7 +349,10 @@ export function homeJsonLd(
 export function pricingJsonLd(
   locale: string,
   { title, description }: { title: string; description: string },
-  founder?: { monthlyCents: number; validUntil: string } | null,
+  {
+    eur = false,
+    founder = null,
+  }: { eur?: boolean; founder?: { monthlyCents: number; validUntil: string } | null } = {},
 ) {
   const url = localePath(locale, '/pricing');
   const graph = pageJsonLd(locale, { path: '/pricing', title, description })['@graph'];
@@ -334,7 +373,7 @@ export function pricingJsonLd(
           name: 'MCPEmails',
           url: APP_URL,
         },
-        offers: planOffers(url, founder),
+        offers: planOffers(url, { eur, founder }),
       },
     ],
   };

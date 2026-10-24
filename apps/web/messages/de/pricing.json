@@ -18,7 +18,8 @@
   "card": {
     "perForever": "/dauerhaft",
     "perMonth": "/Monat",
-    "billedYearly": "${total}/Jahr, jährlich abgerechnet"
+    "billedYearly": "${total}/Jahr, jährlich abgerechnet",
+    "inclVat": "inkl. MwSt."
   },
   "plans": {
     "free": {
@@ -221,7 +222,7 @@
     "sub": "Starten Sie mit Free: ein Postfach, keine Kreditkarte nötig. Personal bringt Sie auf drei Postfächer für $9 pro Monat, Pro auf 10 für $15, und Business enthält 10 für $39 mit $3 pro Monat für jedes weitere.",
     "ctaPrimary": "Kostenlos starten",
     "ctaSecondary": "Zur Doku",
-    "subFounder": "Starten Sie mit Free: ein Postfach, keine Kreditkarte nötig. Personal bringt Sie auf drei Postfächer für $9 pro Monat, Pro auf 10 für $15, und Business enthält 10 zum Gründerpreis von ${price} mit $3 pro Monat für jedes weitere."
+    "subFounder": "Starten Sie mit Free: ein Postfach, keine Kreditkarte nötig. Personal bringt Sie auf drei Postfächer für $9 pro Monat, Pro auf 10 für $15, und Business enthält 10 zum Gründerpreis oben, mit $3 pro Monat für jedes weitere."
   },
   "seasonal": {
     "badge": "Black Week",

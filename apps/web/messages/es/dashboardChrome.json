@@ -36,6 +36,8 @@
     "checkoutPanel": {
       "title": "Ya estás en {plan}",
       "subtitle": "Pago recibido. El recibo va de camino a tu correo electrónico.",
+      "subtitleEur": "Tu plan está activo. Si pagaste con adeudo bancario, puede tardar unos días hábiles en completarse, y mientras tanto tienes acceso completo.",
+      "subtitleProcessing": "Tu adeudo bancario se está procesando y puede tardar unos días hábiles. Mientras tanto tienes acceso completo.",
       "close": "Cerrar",
       "planLabel": "Plan",
       "priceLabel": "Precio",
@@ -51,6 +53,7 @@
       "activatingTitle": "Ya casi",
       "activating": "Estamos activando tu suscripción. Tarda unos segundos y la página se actualiza sola.",
       "activatingSlow": "Tu pago se ha completado. La activación está tardando más de lo habitual; vuelve a cargar la página dentro de un momento si sigue igual.",
+      "activatingSlowNeutral": "La activación está tardando más de lo habitual; vuelve a cargar la página dentro de un momento si sigue igual.",
       "billingDetailsNote": "Tu precio y tu fecha de renovación están en Facturación.",
       "connectCta": "Conectar otra bandeja de entrada",
       "billingCta": "Ver facturación"
@@ -94,6 +97,10 @@
     "firstRunTitle": "Te damos la bienvenida a MCPEmails",
     "firstRunBody": "Conecta tu primera bandeja de entrada para obtener un endpoint MCP funcional en menos de un minuto.",
     "firstRunCta": "Conectar bandeja de entrada",
+    "paymentIssueDeclined": "Tu último pago no se ha completado. Tu plan sigue activo mientras lo volvemos a intentar.",
+    "paymentIssueDeclinedCta": "Actualizar pago",
+    "paymentIssueConfirm": "Tu banco quiere que confirmes el último pago. Tu plan sigue activo.",
+    "paymentIssueConfirmCta": "Confirmar pago",
     "inviteSentNotDelivered": "Se creó la invitación para {email}, pero no se pudo enviar el correo. Usa Reenviar en la invitación pendiente.",
     "inviteResent": "Invitación reenviada a {email}.",
     "inviteResendFailed": "No se pudo reenviar la invitación.",

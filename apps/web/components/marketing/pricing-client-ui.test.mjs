@@ -384,7 +384,8 @@ test('founder offer open: the Business card prints the founder line and places l
   assert.match(card.querySelector('.num').textContent, /^\$23\.20/);
   assert.match(card.textContent, /Billed \$278\.40\/year/);
   assert.equal(host.querySelectorAll('[data-founder-line]').length, 1);
-  assert.match(host.textContent, /Business includes 10 for \$29 at the founder price/);
+  assert.match(host.textContent, /Business includes 10 at the founder price above/);
+  assert.doesNotMatch(host.textContent, /Business includes 10 for \$39/);
 });
 
 test('no founder offer: no founder line anywhere and the closing band quotes $39', () => {

@@ -18,7 +18,8 @@
   "card": {
     "perForever": "/pour toujours",
     "perMonth": "/mois",
-    "billedYearly": "Facturé {total} $/an"
+    "billedYearly": "Facturé {total} $/an",
+    "inclVat": "TVA incluse"
   },
   "plans": {
     "free": {
@@ -221,7 +222,7 @@
     "sub": "Commencez avec Gratuit : une boîte, sans carte bancaire. Trois boîtes coûtent 9 $ par mois avec Personal, jusqu'à 10 coûtent 15 $ avec Pro, et Business en inclut 10 pour 39 $, avec 3 $ par mois pour chaque boîte en plus.",
     "ctaPrimary": "Commencer gratuitement",
     "ctaSecondary": "Lire la documentation",
-    "subFounder": "Commencez avec Gratuit : une boîte, sans carte bancaire. Trois boîtes coûtent 9 $ par mois avec Personal, jusqu'à 10 coûtent 15 $ avec Pro, et Business en inclut 10 au prix fondateur de {price} $, avec 3 $ par mois pour chaque boîte en plus."
+    "subFounder": "Commencez avec Gratuit : une boîte, sans carte bancaire. Trois boîtes coûtent 9 $ par mois avec Personal, jusqu'à 10 coûtent 15 $ avec Pro, et Business en inclut 10 au prix fondateur indiqué plus haut, avec 3 $ par mois pour chaque boîte en plus."
   },
   "seasonal": {
     "badge": "Black Week",
