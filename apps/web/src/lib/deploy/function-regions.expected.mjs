@@ -110,6 +110,7 @@ export const ROUTE_MAX_DURATIONS = {
   'app/api/inboxes/app-password/route.ts': 60,
   'app/api/inboxes/fastmail-app-password/route.ts': 60,
   'app/api/inboxes/imap/route.ts': 90, // relay retry after direct detection (relay-fallback.ts)
+  'app/api/internal/activation-help/dispatch/route.ts': 60,
   'app/api/internal/billing-lifecycle/dispatch/route.ts': 60,
   'app/api/internal/black-week-email/dispatch/route.ts': 60,
   'app/api/internal/first-30-days/dispatch/route.ts': 60,
@@ -212,6 +213,7 @@ export const ROUTES = [
   ['app/api/inboxes/autodiscover/route.ts', 'arn1', '2', 'DNS SRV/MX + autoconfig fetch to the mailbox domain'],
   ['app/api/inboxes/fastmail-app-password/route.ts', 'iad1', '~12', 'IMAP + SMTP login probes to the mail host'],
   ['app/api/inboxes/imap/route.ts', 'iad1', '~12', 'IMAP + SMTP login probes to the mail host'],
+  ['app/api/internal/activation-help/dispatch/route.ts', 'arn1', '~8', 'Resend per email; auth admin read per send; caller is the scheduler'],
   ['app/api/internal/billing-lifecycle/dispatch/route.ts', 'arn1', '7', 'Stripe API + Resend per queued email; caller is the scheduler'],
   ['app/api/internal/black-week-email/dispatch/route.ts', 'arn1', '5+', 'paged user reads, Stripe API + Resend batches; caller is the scheduler'],
   ['app/api/internal/first-30-days/dispatch/route.ts', 'arn1', '2+', 'Resend per email; one IMAP APPEND per stuck-note draft; caller is the scheduler'],
