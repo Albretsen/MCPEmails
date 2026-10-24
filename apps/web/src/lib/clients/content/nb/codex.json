@@ -1,0 +1,108 @@
+{
+  "_sources": [
+    "https://learn.chatgpt.com/docs/extend/mcp?surface=cli (final URL; https://developers.openai.com/codex/mcp 308-redirects here; checked 2026-10-24)",
+    "https://learn.chatgpt.com/docs/extend/mcp?surface=app",
+    "https://learn.chatgpt.com/docs/auth (redirect target of https://developers.openai.com/codex/auth)",
+    "https://github.com/openai/codex/blob/rust-v0.164.0/codex-rs/cli/src/mcp_cmd.rs (latest release: --url, --bearer-token-env-var, codex mcp login --scopes and --no-browser)",
+    "https://github.com/openai/codex/blob/rust-v0.164.0/codex-rs/cli/src/mcp_login.rs (--no-browser prints the authorization URL and asks for the callback URL to be pasted)",
+    "https://github.com/openai/codex/blob/main/codex-rs/cli/src/mcp_cmd.rs (codex mcp add --url detects OAuth and starts the flow)",
+    "https://github.com/openai/codex/blob/main/codex-rs/rmcp-client/src/auth_status.rs (scopes taken from the 401 challenge first)",
+    "supabase/functions/mcp-server/web-ingress.ts (401 challenge with scope=\"read:email\")",
+    "apps/web/app/.well-known/oauth-authorization-server/route.ts (DCR, PKCE S256, client_id_metadata_document_supported)",
+    "apps/web/src/lib/oauth/consent-presets.ts (Codex observed in oauth_consents; default card per client)",
+    "apps/web/messages/en/auth.json (consent card titles Read-only, Standard, Full access)"
+  ],
+  "meta": {
+    "title": "Koble e-post til OpenAI Codex: oppsett av MCP-server",
+    "description": "Legg en innboks til i OpenAI Codex med codex mcp add --url. Codex oppdager OAuth og åpner nettleseren, ingen API-nøkkel. Fungerer i CLI-en, IDE-utvidelsen og skrivebordsappen."
+  },
+  "hero": {
+    "eyebrow": "Codex + e-post",
+    "titleLine1": "Koble innboksen din til OpenAI Codex",
+    "titleLine2": "med én kommando",
+    "lead": "Gi Codex en ekte postkasse. Les, søk i, skriv utkast til, send, svar på, videresend, planlegg og organiser e-post fra Codex CLI, IDE-utvidelsen eller ChatGPT-skrivebordsappen, på tvers av alle innboksene du har koblet til.",
+    "meta0": "1 innboks gratis, for alltid",
+    "meta1": "OAuth i nettleseren, ingen API-nøkkel",
+    "meta2": "E-post hentes direkte, lagres aldri",
+    "answer": "Kjør codex mcp add mcpemails --url https://mcpemails.com/api/mcp. Codex oppdager at serveren støtter OAuth, åpner nettleseren, og du godkjenner tilgangen på samtykkeskjermen til MCPEmails. CLI-en, IDE-utvidelsen og ChatGPT-skrivebordsappen deler den samme konfigurasjonen, så ett oppsett dekker alle tre."
+  },
+  "method": {
+    "title": "Slik kobler Codex seg til: OAuth, ingen API-nøkkel",
+    "body": "Codex kjører standard MCP OAuth-flyt mot denne serveren. Den registrerer seg selv, enten med et <b>metadatadokument for klient-ID</b> eller med <b>RFC 7591 dynamisk klientregistrering</b>, så du trenger ikke opprette noen klient-ID, og autoriserer med <b>autorisasjonskode pluss PKCE</b> med S256. Ingen klienthemmelighet sendes noen gang, og tokenet har bare de tilgangene (scopes) du godkjenner på samtykkeskjermen vår. Tilgangstokenet den får varer i én time og fornyes automatisk. Det vises under Dashboard, API Keys som <code>OAuth:</code> etterfulgt av klientnavnet, og det er der du tilbakekaller tilkoblingen."
+  },
+  "setup": [
+    {
+      "h": "Opprett en gratis konto og koble til en postkasse",
+      "p": "Registrer deg på mcpemails.com, uten kort, og gå til Dashboard, Inboxes, Connect Inbox. Outlook og Microsoft 365 kobles til med Microsoft-innlogging; Gmail, iCloud, Fastmail, Yahoo, Zoho og Yandex krever et app-spesifikt passord; alt annet kobles til over vanlig IMAP og SMTP. Gratisplanen gir deg én innboks, for alltid."
+    },
+    {
+      "h": "Legg til serveren fra CLI-en",
+      "p": "Kjør kommandoen nedenfor. Den skriver en <code>[mcp_servers.mcpemails]</code>-oppføring med <code>url</code> til <code>~/.codex/config.toml</code>, skriver deretter ut <b>Detected OAuth support. Starting OAuth flow…</b> og åpner nettleseren."
+    },
+    {
+      "h": "Eller legg den til i skrivebordsappen eller IDE-utvidelsen",
+      "p": "I ChatGPT-skrivebordsappen åpner du <b>Settings</b> og deretter <b>MCP servers</b>; i IDE-utvidelsen åpner du tannhjulmenyen og deretter <b>MCP servers</b>. Velg <b>Add server</b>, skriv inn et navn, velg <b>Streamable HTTP</b>, lim inn <code>https://mcpemails.com/api/mcp</code>, lagre, og velg så <b>Restart</b> (eller <b>Restart extension</b>) og <b>Authenticate</b>."
+    },
+    {
+      "h": "Godkjenn tilgangen",
+      "p": "Logg inn på MCPEmails i nettleseren, velg <b>Skrivebeskyttet</b>, <b>Standard</b> eller <b>Full tilgang</b> på samtykkeskjermen, og klikk <b>Gi tilgang</b>. Startet ikke innloggingen i nettleseren av seg selv, kjører du <code>codex mcp login mcpemails</code>."
+    },
+    {
+      "h": "Sjekk at den er på plass, og be om noe",
+      "p": "Kjør <code>codex mcp list</code>, eller <code>/mcp</code> i en Codex-økt, for å se serveren. Prøv deretter \"oppsummer alt som er ulest fra i dag\". Codex kaller <code>inbox_list</code> først for å finne postkassene dine, så du slipper å lime inn ID-er."
+    }
+  ],
+  "gotchas": [
+    {
+      "h": "Sjekk hvilket kort samtykkeskjermen åpner på",
+      "p": "Codex ber om tilgangene i 401-utfordringen vår, som er <code>read:email</code>, så ved enkelte registreringer åpner samtykkeskjermen på <b>Skrivebeskyttet</b>. Det holder for sortering. Vil du at Codex skal skrive utkast eller sende, velger du <b>Standard</b> eller <b>Full tilgang</b> før du klikker Gi tilgang. Vil du utvide senere, kjører du <code>codex mcp login mcpemails</code> på nytt og velger det bredere kortet, eller angir tilgangene med <code>--scopes</code>, for eksempel <code>--scopes read:email,search:email,manage:drafts</code>."
+    },
+    {
+      "h": "CLI-en, IDE-utvidelsen og skrivebordsappen deler én konfigurasjon",
+      "p": "På samme maskin leser alle tre den samme <code>~/.codex/config.toml</code>, så legger du til serveren i én av dem, dukker den opp i de andre. Et prosjekt kan også ha sin egen <code>.codex/config.toml</code>, som Codex bare leser for klarerte prosjekter. ChatGPT på nettet leser ikke denne filen i det hele tatt; der bruker du ChatGPT-oppsettet i stedet."
+    },
+    {
+      "h": "På en maskin uten skjerm hopper du over den lokale nettleseren",
+      "p": "På en server du når over SSH, kjører du <code>codex mcp login mcpemails --no-browser</code>: Codex skriver ut innloggingslenken, du åpner den på en hvilken som helst maskin, og limer så inn adressen nettleseren ender opp på. I CI oppretter du en avgrenset nøkkel under Dashboard, API Keys, legger den i en miljøvariabel og setter <code>bearer_token_env_var</code> på serveroppføringen til navnet på den variabelen (eller sender <code>--bearer-token-env-var</code> til <code>codex mcp add</code>). Codex sender den da i <code>Authorization</code>-headeren, og nøkkelen blir aldri liggende i konfigurasjonsfilen."
+    },
+    {
+      "h": "Behold standard tidsavbrudd for verktøy",
+      "p": "Codex venter som standard 60 sekunder på et verktøykall (<code>tool_timeout_sec</code>). Det holder selv for massearbeid: en flytting eller sletting i en stor mappe stopper på serverens egen tidsgrense før den tid og returnerer et resultat merket <code>partial</code>, med de urørte meldingene listet i <code>remaining_message_ids</code>, så Codex kan kalle på nytt med de ID-ene. Setter du tidsavbruddet mye lavere, kan et kall bli avbrutt før det resultatet kommer."
+    }
+  ],
+  "limits": [
+    "Forespørsler er begrenset til 100 per minutt, 1 000 per time og 10 000 per døgn per nøkkel, i tillegg til planens tak for fakturerbare handlinger.",
+    "Serveren er rent forespørsel og svar. Det finnes ingen webhooks og ingen hendelser startet av serveren, så ny e-post vekker aldri agenten din av seg selv. Vil du reagere på innkommende e-post, må du polle etter en tidsplan.",
+    "E-post hentes direkte fra leverandøren ved hvert kall og lagres aldri. Bare det krypterte OAuth-tokenet eller app-passordet beholdes, så et tilbakekalt token eller et endret passord for postkassen stopper tilgangen umiddelbart."
+  ],
+  "faq": [
+    {
+      "q": "Hvordan kobler jeg e-post til OpenAI Codex?",
+      "a": "Kjør codex mcp add mcpemails --url https://mcpemails.com/api/mcp. Codex oppdager OAuth-støtten, åpner nettleseren, og du godkjenner tilgangen på samtykkeskjermen til MCPEmails. Da har Codex verktøy for å lese, søke, skrive utkast, sende, svare, videresende, organisere og planlegge e-post."
+    },
+    {
+      "q": "Hvordan ser oppføringen i config.toml ut?",
+      "a": "To linjer i ~/.codex/config.toml: en tabell som heter [mcp_servers.mcpemails] og url = \"https://mcpemails.com/api/mcp\". OAuth er standard for en server med url, så mer trengs ikke. Skriver du oppføringen for hånd, kjører du codex mcp login mcpemails for å logge inn."
+    },
+    {
+      "q": "Trenger jeg en API-nøkkel for Codex?",
+      "a": "Nei. Codex logger inn med OAuth, så ingenting hemmelig skrives inn i konfigurasjonen. En avgrenset nøkkel finnes for maskiner uten nettleser: legg den i en miljøvariabel og pek bearer_token_env_var mot den variabelen."
+    },
+    {
+      "q": "Hvilke postkasser kan Codex nå på denne måten?",
+      "a": "Outlook.com og Microsoft 365 via Microsoft-innlogging, der en jobbkonto kan trenge at en IT-administrator godkjenner appen én gang; Gmail, iCloud, Fastmail, Yahoo, Zoho og Yandex med et app-spesifikt passord; og enhver annen postkasse som støtter IMAP og SMTP på standardportene. Klienten ser alle gjennom den samme tilkoblingen: agenten kaller inbox_list først for å finne alle tilkoblede postkasser og ID-ene deres, så du slipper å lime inn UUID-er noe sted."
+    },
+    {
+      "q": "Kan Codex sende e-post uten at jeg ser det?",
+      "a": "Bare hvis du tillater det. Sending krever tilgangen send:email, så et token uten den tilgangen kan ikke sende i det hele tatt. I tillegg kan eieren av en innboks kreve menneskelig godkjenning i dashbordet, som holder tilbake hver sending, hvert svar, hver videresending, hvert utkast som sendes og hver planlagte sending til en person slipper den gjennom."
+    },
+    {
+      "q": "Lagres e-posten min på serverne deres?",
+      "a": "Nei. Hver melding hentes direkte fra leverandøren din for forespørselen som ba om den, og sendes rett videre til klienten din. Bare det krypterte OAuth-tokenet eller app-passordet beholdes, slik at fremtidige kall kan autentiseres. Sletter du innboksen i dashbordet, eller tilbakekaller tilgangen hos leverandøren, avsluttes tilkoblingen med en gang."
+    }
+  ],
+  "ctaBand": {
+    "title": "Gi Codex en ekte innboks",
+    "sub": "Én kommando, én innlogging i nettleseren. Én innboks gratis for alltid, uten kort."
+  }
+}

@@ -1,0 +1,111 @@
+{
+  "_sources": [
+    "apps/web/components/dashboard/Pages.jsx (MCP_CLIENTS) + apps/web/messages/en/dashboard.json (clients.*)",
+    "apps/web/app/.well-known/oauth-authorization-server/route.ts",
+    "apps/web/src/lib/clients/content/en/raycast.json (shared limits and FAQ copy)",
+    "https://docs.openclaw.ai/tools/mcp",
+    "https://docs.openclaw.ai/cli/mcp",
+    "https://docs.openclaw.ai/cli/mcp/registry",
+    "https://docs.openclaw.ai/cli/mcp/transports",
+    "https://docs.openclaw.ai/cli/mcp/control-ui",
+    "https://docs.openclaw.ai/cli/gateway/service",
+    "https://docs.openclaw.ai/gateway/configuration",
+    "https://github.com/openclaw/openclaw",
+    "https://github.com/openclaw/openclaw/blob/main/src/agents/mcp-oauth-provider.ts",
+    "https://github.com/openclaw/openclaw/blob/main/src/agents/mcp-oauth-store.mutations.ts",
+    "apps/web/app/authorize/page.js (no scope param: full scope menu offered)"
+  ],
+  "meta": {
+    "title": "E-Mail mit OpenClaw verbinden: Remote-MCP-Server einrichten",
+    "description": "Geben Sie Ihrem OpenClaw-Agenten ein echtes Postfach. Einen Streamable-HTTP-MCP-Server mit OAuth hinzufügen, einmal anmelden und E-Mails lesen, suchen, entwerfen und senden."
+  },
+  "hero": {
+    "eyebrow": "OpenClaw + E-Mail",
+    "titleLine1": "Verbinden Sie Ihr Postfach mit OpenClaw",
+    "titleLine2": "als Remote-MCP-Server",
+    "lead": "Lassen Sie den persönlichen Agenten, dem Sie ohnehin schreiben, E-Mails über alle verbundenen Postfächer hinweg lesen, suchen, entwerfen, senden, beantworten, weiterleiten und ablegen, über einen einzigen MCP-Endpunkt und eine einzige Anmeldung.",
+    "meta0": "1 Postfach kostenlos, dauerhaft",
+    "meta1": "OAuth, kein API-Schlüssel nötig",
+    "meta2": "E-Mails werden live abgerufen, nie gespeichert",
+    "answer": "Stoppen Sie das Gateway mit openclaw gateway stop, führen Sie openclaw mcp add mcpemails --url https://mcpemails.com/api/mcp --transport streamable-http --auth oauth aus, dann openclaw mcp login mcpemails, und geben Sie den Zugriff im Browser frei. Starten Sie das Gateway anschließend mit openclaw gateway start wieder."
+  },
+  "method": {
+    "title": "So verbindet sich OpenClaw: OAuth, kein API-Schlüssel",
+    "body": "Der eingebaute MCP-Client von OpenClaw durchläuft den standardmäßigen MCP-OAuth-Ablauf für einen HTTP-Server, der mit <code>auth: \"oauth\"</code> gespeichert ist. Er registriert sich selbst per <b>dynamischer Client-Registrierung nach RFC 7591</b>, Sie müssen also keine Client-ID anlegen, und autorisiert sich per <b>Autorisierungscode mit PKCE</b> (S256). Das Token enthält nur die Scopes, die Sie auf unserem Zustimmungsbildschirm freigeben, gilt eine Stunde und erneuert sich selbst. OpenClaw speichert es auf dem Gateway, und unter Dashboard, API-Schlüssel erscheint es als <code>OAuth: OpenClaw MCP</code>. Dort widerrufen Sie die Verbindung auch."
+  },
+  "setup": [
+    {
+      "h": "Kostenloses Konto erstellen und Postfach verbinden",
+      "p": "Registrieren Sie sich auf mcpemails.com, ohne Kreditkarte, und öffnen Sie dann Dashboard, Postfächer, Postfach verbinden. Outlook und Microsoft 365 verbinden Sie über „Mit Microsoft anmelden“; Gmail, iCloud, Fastmail, Yahoo, Zoho und Yandex nutzen ein App-Passwort; alle anderen Postfächer verbinden sich ganz normal per IMAP und SMTP. Der Free-Tarif umfasst ein Postfach, dauerhaft."
+    },
+    {
+      "h": "Server mit OAuth speichern",
+      "p": "Führen Sie auf dem Rechner, auf dem Ihr Gateway läuft, <code>openclaw gateway stop</code> aus und dann <code>openclaw mcp add mcpemails --url https://mcpemails.com/api/mcp --transport streamable-http --auth oauth</code>. Das schreibt den Eintrag unter <code>mcp.servers</code> in <code>~/.openclaw/openclaw.json</code>. Solange das Gateway läuft, verweigert OpenClaw Änderungen an gespeicherten Servern."
+    },
+    {
+      "h": "Im Terminal anmelden",
+      "p": "Führen Sie bei weiterhin gestopptem Gateway <code>openclaw mcp login mcpemails</code> aus. Öffnen Sie die ausgegebene Autorisierungs-URL und geben Sie die Scopes frei, die OpenClaw erhalten soll. OpenClaw nimmt den Callback des Browsers entgegen und speichert die Zugangsdaten; führen Sie danach <code>openclaw gateway start</code> aus."
+    },
+    {
+      "h": "Oder in der Control UI anmelden",
+      "p": "Statt der Anmeldung im Terminal können Sie das Gateway starten und die Control UI über ihre eigene Loopback-Adresse oder eine öffentliche HTTPS-Adresse öffnen und dann <b>Settings → MCP</b> aufrufen. Wählen Sie als Administrator beim Server <code>mcpemails</code> <b>Sign in</b>, geben Sie den Zugriff im Browser frei und kehren Sie zu Settings zurück. Bei einer privaten Adresse oder einer, die nur über Tailscale erreichbar ist, nutzen Sie stattdessen die Anmeldung im Terminal."
+    },
+    {
+      "h": "Verbindung prüfen",
+      "p": "Führen Sie <code>openclaw mcp status --verbose</code> aus; das funktioniert auch bei laufendem Gateway. Meldet es <code>authorization-required</code>, melden Sie sich erneut an. Bitten Sie Ihren Agenten dann in einem beliebigen Kanal, Ihre Postfächer aufzulisten."
+    }
+  ],
+  "gotchas": [
+    {
+      "h": "Setzen Sie den Transport, sonst nutzt OpenClaw SSE",
+      "p": "Fehlt <code>transport</code> in einem HTTP-Eintrag, nutzt OpenClaw <code>sse</code>. Dieser Server spricht Streamable HTTP, übergeben Sie also immer <code>--transport streamable-http</code> oder wählen Sie in Settings <b>Streamable HTTP</b>. In einer von Hand geschriebenen Konfiguration liest OpenClaw die Schreibweise <code>transport: \"streamable-http\"</code>; ein <code>type: \"http\"</code> im CLI-Stil wird nur über <code>openclaw mcp set</code> akzeptiert oder von <code>openclaw doctor --fix</code> repariert."
+    },
+    {
+      "h": "Änderungen über die CLI erfordern ein gestopptes Gateway",
+      "p": "<code>openclaw mcp add</code>, <code>login</code>, <code>probe</code> und <code>doctor --probe</code> lassen sich nicht ausführen, solange ein lokales Gateway den Zustand von OpenClaw hält. Stoppen Sie es also zuerst und starten Sie es danach wieder. Läuft das Gateway auf einem Server und Ihr Browser woanders, erreicht der Loopback-Callback es nicht: Kopieren Sie den Code aus dem Browser und schließen Sie mit dem ausgegebenen Befehl <code>openclaw mcp login mcpemails --code</code> ab."
+    },
+    {
+      "h": "Gemeinsame Anmeldung heißt gemeinsames Postfach",
+      "p": "Standardmäßig ist das OAuth-Credential geteilt und wird vom Betreiber verwaltet: Jeder Agent auf diesem Gateway nutzt dieselbe Anmeldung, und jeder, der Ihrem Agenten schreiben kann, kann ihn bitten, Ihre E-Mails zu lesen. Beschränken Sie ihn auf Kanäle, die nur Sie nutzen, lassen Sie <code>send:email</code> auf dem Zustimmungsbildschirm weg, wenn der Agent nur lesen soll, oder schalten Sie für das Postfach die menschliche Freigabe ein, damit jedes Senden auf eine Person wartet. OpenClaw bietet auch eine Anmeldung je anfragender Person, bei der jeder Absender sein eigenes Konto verbindet; dafür muss <code>gateway.publicOrigin</code> auf die öffentliche HTTPS-Adresse des Gateways gesetzt sein."
+    },
+    {
+      "h": "Ein gespeicherter Server ist noch kein funktionierender Server",
+      "p": "OpenClaw speichert eine Definition, ohne zu prüfen, ob sie funktioniert, und ein Server, der noch eine Anmeldung braucht, fehlt einfach in den Tools des Agenten, statt den ganzen Durchlauf scheitern zu lassen. Sagt der Agent, er habe keine E-Mail-Tools, führen Sie <code>openclaw mcp status --verbose</code> aus: <code>authorization-required</code> bedeutet, dass Sie den Anmeldeschritt wiederholen müssen."
+    }
+  ],
+  "limits": [
+    "Anfragen sind auf 100 pro Minute, 1.000 pro Stunde und 10.000 pro Tag je Schlüssel begrenzt, dazu kommt die Obergrenze Ihres Tarifs für abrechenbare Aktionen.",
+    "Der Server arbeitet rein nach Anfrage und Antwort. Es gibt keine Webhooks und keine vom Server ausgelösten Ereignisse, neue E-Mails wecken Ihren Agenten also nie von selbst. Um auf eingehende E-Mails zu reagieren, fragen Sie in festen Abständen ab.",
+    "E-Mails werden bei jedem Aufruf live von Ihrem Anbieter abgerufen und nie gespeichert. Gespeichert wird nur das verschlüsselte OAuth-Token oder App-Passwort. Ein widerrufenes Token oder ein geändertes Postfachpasswort beendet den Zugriff deshalb sofort."
+  ],
+  "faq": [
+    {
+      "q": "Wie verbinde ich meine E-Mails mit OpenClaw?",
+      "a": "Stoppen Sie auf dem Gateway-Rechner das Gateway, führen Sie openclaw mcp add mcpemails --url https://mcpemails.com/api/mcp --transport streamable-http --auth oauth aus, melden Sie sich dann mit openclaw mcp login mcpemails an und starten Sie das Gateway wieder. Sie können sich auch in der Control UI unter Settings, MCP anmelden. Danach hat Ihr Agent Tools zum Lesen, Suchen, Entwerfen, Senden, Beantworten, Weiterleiten, Organisieren und Planen von E-Mails."
+    },
+    {
+      "q": "Brauche ich für OpenClaw einen API-Schlüssel?",
+      "a": "Nein. OpenClaw durchläuft den MCP-OAuth-Ablauf selbst und speichert das Token auf dem Gateway. HTTP-Einträge akzeptieren auch eine statische headers-Map, ein Schlüssel mit Scopes als Authorization-Bearer-Header funktioniert also ebenfalls. OpenClaw ignoriert statische Authorization-Header aber bei einem Eintrag mit auth oauth, nutzen Sie also das eine oder das andere."
+    },
+    {
+      "q": "Kann ich meinem Agenten nur einige der E-Mail-Tools zeigen?",
+      "a": "Ja. Ergänzen Sie beim Aufruf von openclaw mcp add --include mit einer kommagetrennten Liste von Tool-Namen oder einem Muster wie 'email_*', oder setzen Sie toolFilter unter dem Server in der Konfiguration. Das grenzt ein, was der Agent sieht. Was er tatsächlich darf, bestimmen weiterhin die Scopes, die Sie auf dem Zustimmungsbildschirm freigegeben haben."
+    },
+    {
+      "q": "Welche Postfächer erreicht OpenClaw auf diesem Weg?",
+      "a": "Outlook.com und Microsoft 365 über „Mit Microsoft anmelden“, wobei bei einem Arbeitskonto eventuell einmalig die IT-Administration die App freigeben muss; Gmail, iCloud, Fastmail, Yahoo, Zoho und Yandex mit einem App-Passwort; und jedes andere Postfach, das IMAP und SMTP auf den Standardports spricht. Ihr Agent ruft zuerst inbox_list auf und findet so jedes verbundene Postfach samt ID. Sie müssen also nirgends UUIDs einfügen."
+    },
+    {
+      "q": "Kann OpenClaw E-Mails senden, ohne dass ich es mitbekomme?",
+      "a": "Nur wenn Sie es zulassen. Senden erfordert den Scope send:email, ein Token ohne diesen Scope kann also überhaupt nicht senden. Zusätzlich kann der Inhaber eines Postfachs im Dashboard eine menschliche Freigabe verlangen. Dann wartet jedes Senden, Antworten, Weiterleiten, Senden eines Entwurfs und geplante Senden, bis eine Person es freigibt. Bei einem Agenten, der unbeaufsichtigt über mehrere Chat-Kanäle läuft, lohnt sich beides."
+    },
+    {
+      "q": "Werden meine E-Mails auf Ihren Servern gespeichert?",
+      "a": "Nein. Jede Nachricht wird für die Anfrage, die sie anfordert, live von Ihrem Anbieter abgerufen und direkt an Ihren Agenten übergeben. Gespeichert wird nur das verschlüsselte OAuth-Token oder App-Passwort, damit spätere Aufrufe sich authentifizieren können. Wenn Sie das Postfach im Dashboard löschen oder den Zugriff bei Ihrem Anbieter widerrufen, endet die Verbindung sofort."
+    }
+  ],
+  "ctaBand": {
+    "title": "Geben Sie Ihrem OpenClaw-Agenten ein echtes Postfach",
+    "sub": "Ein Server, eine Anmeldung. Ein Postfach dauerhaft kostenlos, keine Kreditkarte nötig."
+  }
+}

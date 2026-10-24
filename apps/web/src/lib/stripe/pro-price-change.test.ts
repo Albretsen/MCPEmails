@@ -17,10 +17,16 @@ import { PLANS, getPlanByStripePriceId, retainedPriceGenerationId } from './plan
 const SWITCH_AT = Date.parse(PRO_PRICE_CHANGE.switchAt);
 const DAY = 24 * 60 * 60 * 1000;
 
-test('both switches ship off, so merging this changes nothing a customer sees', () => {
+const ANNOUNCE_AT = Date.parse(PRO_PRICE_CHANGE.announceFrom);
+
+test('the price is not live; the notice is armed and waits for its date', () => {
   assert.equal(PRO_PRICE_CHANGE.priceLive, false);
-  assert.equal(PRO_PRICE_CHANGE.announce, false);
-  assert.equal(proPriceNoticeVisible(SWITCH_AT - DAY), false);
+  assert.equal(PRO_PRICE_CHANGE.announce, true);
+  assert.equal(proPriceNoticeVisible(Date.parse('2026-10-24T12:00:00Z')), false);
+  assert.equal(proPriceNoticeVisible(ANNOUNCE_AT - 1), false);
+  assert.equal(proPriceNoticeVisible(ANNOUNCE_AT), true);
+  assert.equal(proPriceNoticeVisible(SWITCH_AT - 1), true);
+  assert.equal(proPriceNoticeVisible(SWITCH_AT), false);
   // Pro still sells $15 / $144 from the unsuffixed variables.
   assert.deepEqual(proSoldAmounts(), PRO_PRICE_CHANGE.current);
   assert.equal(PLANS.solo.monthlyPriceCents, 1500);
@@ -47,10 +53,19 @@ test('the switch instant is midnight in Oslo on the switch date, the day after t
   });
   assert.equal(oslo.format(SWITCH_AT), `${PRO_PRICE_CHANGE.switchDate}, 00:00`);
   assert.equal(oslo.format(SWITCH_AT - 1).slice(0, 10), PRO_PRICE_CHANGE.lastLockInDate);
+  // The announcement starts at midnight in Oslo on 2026-11-17, three weeks out.
+  assert.equal(oslo.format(ANNOUNCE_AT), '2026-11-17, 00:00');
+  assert.equal(SWITCH_AT - ANNOUNCE_AT, 21 * DAY);
 });
 
 test('the notice shows only while announced, before the switch, and with the old price still sold', () => {
-  const on = { announce: true, priceLive: false, switchAt: PRO_PRICE_CHANGE.switchAt };
+  const on = {
+    announce: true,
+    priceLive: false,
+    announceFrom: PRO_PRICE_CHANGE.announceFrom,
+    switchAt: PRO_PRICE_CHANGE.switchAt,
+  };
+  assert.equal(proPriceNoticeVisible(ANNOUNCE_AT - 1, on), false);
   assert.equal(proPriceNoticeVisible(SWITCH_AT - DAY, on), true);
   assert.equal(proPriceNoticeVisible(SWITCH_AT - 1, on), true);
   // At and after the instant it is gone, whatever the switches say: a late

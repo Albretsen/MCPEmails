@@ -37,11 +37,11 @@ test('every locale stays under the same budget', async () => {
   }
 });
 
-test('it holds every released provider, 14 clients, the 7 articles, docs and FAQ', async () => {
+test('it holds every released provider, every public client, the 7 articles, docs and FAQ', async () => {
   const index = await indexFor('en');
   assert.equal(countKind(index, 'provider'), releasedProviders().length);
-  assert.equal(countKind(index, 'client'), 14);
-  assert.equal(CLIENTS.length, 14);
+  assert.equal(countKind(index, 'client'), CLIENTS.length);
+  assert.equal(CLIENTS.length, 21);
   assert.equal(countKind(index, 'article'), 7);
   assert.equal(countKind(index, 'docs'), 10);
   assert.equal(countKind(index, 'faq') > 0, true);
