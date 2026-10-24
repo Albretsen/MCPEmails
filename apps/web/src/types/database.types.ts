@@ -1426,6 +1426,7 @@ export type Database = {
           payload: Json
           period_start: string | null
           recipient: string
+          recovered_by: string | null
           resend_id: string | null
           scope_key: string
           send_after: string
@@ -1448,6 +1449,7 @@ export type Database = {
           payload?: Json
           period_start?: string | null
           recipient: string
+          recovered_by?: string | null
           resend_id?: string | null
           scope_key: string
           send_after: string
@@ -1470,6 +1472,7 @@ export type Database = {
           payload?: Json
           period_start?: string | null
           recipient?: string
+          recovered_by?: string | null
           resend_id?: string | null
           scope_key?: string
           send_after?: string
@@ -3568,6 +3571,7 @@ export type Database = {
       }
       stripe_webhook_events: {
         Row: {
+          cancellation_reason: string | null
           event_created: string | null
           event_id: string
           event_type: string | null
@@ -3575,6 +3579,7 @@ export type Database = {
           stripe_customer_id: string | null
         }
         Insert: {
+          cancellation_reason?: string | null
           event_created?: string | null
           event_id: string
           event_type?: string | null
@@ -3582,6 +3587,7 @@ export type Database = {
           stripe_customer_id?: string | null
         }
         Update: {
+          cancellation_reason?: string | null
           event_created?: string | null
           event_id?: string
           event_type?: string | null

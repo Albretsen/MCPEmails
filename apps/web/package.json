@@ -147,7 +147,8 @@
     "test:reading-lang": "node --test src/i18n/reading-lang.test.mjs",
     "test:billing-portal": "node --test --experimental-strip-types --experimental-test-module-mocks --import ./scripts/register-ts-alias.mjs src/lib/stripe/portal-customer.test.ts app/api/stripe/portal/route.test.ts",
     "test:payment-issue": "node --test --experimental-strip-types --experimental-test-module-mocks --import ./scripts/register-ts-alias.mjs app/api/stripe/webhook/route.payment-issue.test.ts app/api/stripe/payment-fix/route.test.ts",
-    "test:payment-issue-ui": "node --test --experimental-strip-types --import ./scripts/register-dom-tests.mjs components/dashboard/payment-issue-banner-ui.test.mjs",
+    "test:dunning-measurement": "node --test --experimental-strip-types --experimental-test-module-mocks --import ./scripts/register-ts-alias.mjs src/lib/billing/dunning-measurement.test.ts app/api/stripe/webhook/route.recovered-by.test.ts",
+    "test:payment-issue-ui":"node --test --experimental-strip-types --import ./scripts/register-dom-tests.mjs components/dashboard/payment-issue-banner-ui.test.mjs",
     "test:workspace-writes": "node --test --experimental-strip-types --experimental-test-module-mocks --import ./scripts/register-ts-alias.mjs app/api/analytics/first-tool-reported/route.test.ts",
     "bundle:budget": "node scripts/bundle-budget.mjs"
   },
