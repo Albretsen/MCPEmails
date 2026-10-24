@@ -98,6 +98,7 @@ const REVENUE: RevenueSummary = {
   netNewMrrMinor: 1_500,
   byPlan: [{ label: 'Personal', customers: 5, mrrMinor: 2_500 }],
   internalCustomers: 1,
+  byCurrency: [],
   otherCurrencies: [],
 };
 
@@ -114,6 +115,7 @@ const CASH: CashCollected = {
   since: '2026-08-29T10:00:00Z',
   truncated: false,
   mode: 'live',
+  otherCurrencies: [],
 };
 
 const CHECKOUT: CheckoutFunnel = {
